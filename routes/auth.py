@@ -34,9 +34,7 @@ def login(payload: dict = Body(...), db: Session = Depends(get_session)):
     user = create_user_if_missing(db, email)
     code_hash = hashlib.sha256(code.encode("utf-8")).hexdigest()
 
-    # Normalize datetime comparison (offset-naive vs offset-aware)
     now_aware = datetime.now(timezone.utc)
-
     lc = db.query(LoginCode).filter(
         LoginCode.user_id==user.id,
         LoginCode.code_hash==code_hash,
@@ -47,12 +45,7 @@ def login(payload: dict = Body(...), db: Session = Depends(get_session)):
         raise HTTPException(status_code=401, detail="Code ungültig oder abgelaufen")
 
     exp = lc.expires_at
-    # make both offset-aware in UTC for a safe comparison
-    if getattr(exp, "tzinfo", None) is None:
-        exp_aware = exp.replace(tzinfo=timezone.utc)
-    else:
-        exp_aware = exp.astimezone(timezone.utc)
-
+    exp_aware = exp.replace(tzinfo=timezone.utc) if getattr(exp, "tzinfo", None) is None else exp.astimezone(timezone.utc)
     if exp_aware < now_aware:
         raise HTTPException(status_code=401, detail="Code abgelaufen")
 
