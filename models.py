@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey
+from sqlalchemy import Integer, String, Boolean, DateTime, Text, ForeignKey
 from sqlalchemy.dialects.sqlite import JSON as SQLITE_JSON
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy import types as sqltypes, Index
 from core.db import Base
 
-# Portable JSON column
 class JSONType(sqltypes.TypeDecorator):
     impl = SQLITE_JSON
     cache_ok = True
@@ -17,7 +16,6 @@ class JSONType(sqltypes.TypeDecorator):
             return dialect.type_descriptor(JSONB(astext_type=sqltypes.Text()))
         return dialect.type_descriptor(SQLITE_JSON())
 
-# Helpers for tz-aware defaults
 def utcnow_aware() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -62,6 +60,8 @@ class Analysis(Base):
     html: Mapped[str] = mapped_column(Text, nullable=False)
     meta: Mapped[dict] = mapped_column(JSONType, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow_aware, nullable=False, index=True)
+
+    briefing = relationship("Briefing", back_populates="analyses")
 
 class Report(Base):
     __tablename__ = "reports"
