@@ -1,27 +1,27 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-from typing import Any, Dict, Optional
-from fastapi import APIRouter, Body, Depends, HTTPException
+from typing import Any, Dict
+from datetime import datetime, timezone
+import logging
+from fastapi import APIRouter, Depends, Body, HTTPException
 from sqlalchemy.orm import Session
 from core.db import get_session
-from services.auth import get_current_user
 from models import Briefing, Analysis
-from gpt_analyze import build_report
+from services.auth import get_current_user
+from gpt_analyze import analyze_briefing
 
-router = APIRouter(tags=["analyze"])
+logger = logging.getLogger("routes.analyze")
+router = APIRouter(prefix="/analyze", tags=["analyze"])  # mounted under /api
 
-@router.post("/analyze")
-def analyze(payload: Dict[str, Any] = Body(...), db: Session = Depends(get_session), user=Depends(get_current_user)):
-    lang = str(payload.get("lang", "de")).lower()
-    briefing_id: Optional[int] = payload.get("briefing_id")
-    if briefing_id:
-        b = db.query(Briefing).get(int(briefing_id))
-        if not b or (b.user_id and b.user_id != user.id and not user.is_admin):
-            raise HTTPException(status_code=404, detail="Briefing nicht gefunden")
-        answers = b.answers
-    else:
-        answers = payload
-    result = build_report(answers, lang=lang)
-    a = Analysis(user_id=user.id, briefing_id=briefing_id, html=result["html"], meta=result["meta"])
-    db.add(a); db.commit(); db.refresh(a)
-    return {"ok": True, "analysis_id": a.id, **result}
+@router.post("")
+def do_analyze(payload: Dict[str, Any] = Body(...), db: Session = Depends(get_session)):
+    """Erstelle eine Analyse für eine vorhandene Briefing-ID."""
+    try:
+        briefing_id = int(payload.get("briefing_id"))
+    except Exception:
+        raise HTTPException(status_code=422, detail="briefing_id fehlt oder ist ungültig")
+    br = db.get(Briefing, briefing_id)
+    if not br:
+        raise HTTPException(status_code=404, detail="Briefing nicht gefunden")
+    an_id, html, meta = analyze_briefing(db, briefing_id)
+    return {"ok": True, "analysis_id": an_id, "html": html, "meta": meta}
