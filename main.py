@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
 from settings import settings
 from core.db import Base, engine
+from core.migrate import run_migrations
 
 logging.basicConfig(level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
                     format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -18,9 +19,10 @@ async def lifespan(app: FastAPI):
     # DB init
     try:
         Base.metadata.create_all(bind=engine)
-        logger.info("DB initialized")
+        run_migrations(engine)
+        logger.info("DB initialized & migrated")
     except Exception as e:
-        logger.exception("DB init failed: %s", e)
+        logger.exception("DB init/migration failed: %s", e)
     yield
     # graceful shutdown hook (if needed)
 
