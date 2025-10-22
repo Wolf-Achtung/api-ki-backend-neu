@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Central settings (Pydantic v2) for KI-Status-Report backend."""
 from __future__ import annotations
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import AnyHttpUrl, field_validator
 from typing import List, Optional
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_prefix="", case_sensitive=False)
+
     # App
     APP_NAME: str = "KI Status Report API"
     ENV: str = "development"
@@ -22,9 +21,27 @@ class Settings(BaseSettings):
             return ["*"] if self.ENV != "production" else []
         return [o.strip() for o in self.CORS_ALLOW_ORIGINS.split(",") if o.strip()]
 
+    # Database
+    DATABASE_URL: str = "sqlite:///./app.db"
+
+    # Auth
+    JWT_SECRET: str = "change-me"
+    TOKEN_EXP_MINUTES: int = 60 * 24
+    CODE_EXP_MINUTES: int = 15
+    ADMIN_EMAILS: str = ""  # comma-separated list
+
     # External services
     PDF_SERVICE_URL: Optional[AnyHttpUrl] = None
     PDF_TIMEOUT_MS: int = 90000
+
+    # Mail (SMTP)
+    SMTP_HOST: Optional[str] = None
+    SMTP_PORT: int = 587
+    SMTP_USER: Optional[str] = None
+    SMTP_PASS: Optional[str] = None
+    SMTP_FROM: Optional[str] = None
+    SMTP_FROM_NAME: str = "KI-Readiness"
+    SMTP_TLS: bool = True
 
     # LLM
     OPENAI_API_KEY: Optional[str] = None
@@ -38,25 +55,8 @@ class Settings(BaseSettings):
     ANTHROPIC_TIMEOUT: float = 45.0
     OVERLAY_PROVIDER: str = "auto"
 
-    # Live / search
+    # Live / search (optional)
     TAVILY_API_KEY: Optional[str] = None
     SERPAPI_KEY: Optional[str] = None
-    SEARCH_DAYS_NEWS: int = 30
-    SEARCH_DAYS_TOOLS: int = 60
-    SEARCH_DAYS_FUNDING: int = 60
-    LIVE_MAX_ITEMS: int = 8
-
-    # Data & prompts
-    APP_BASE: str = "."
-    DATA_DIR: str = "data"
-    PROMPTS_DIR: str = "prompts"
-    TEMPLATE_DIR: str = "templates"
-    CONTENT_DIR: str = "content"
-    TEMPLATE_DE: str = "pdf_template.html"
-    TEMPLATE_EN: str = "pdf_template_en.html"
-    ASSETS_BASE_URL: str = "/assets"
-
-    # Auth / Security
-    JWT_SECRET: str = "change-me"  # to be set via env in production
 
 settings = Settings()
