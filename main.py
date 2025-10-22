@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 import logging
-from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,7 +27,7 @@ app = FastAPI(title=settings.APP_NAME, version=settings.VERSION, lifespan=lifesp
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=getattr(settings, "cors_origins", ["*"] if settings.ENV != "production" else []),
+    allow_origins=(settings.cors_origins or ["*"] if settings.ENV != "production" else settings.cors_origins),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -40,11 +39,7 @@ async def root() -> str:
 
 @app.get("/api/healthz", response_class=JSONResponse)
 async def healthz():
-    return {"ok": True, "time": datetime.now(timezone.utc).isoformat(), "env": settings.ENV, "version": settings.VERSION, "status": "ok"}
-
-@app.get("/api/diag", response_class=JSONResponse)
-async def diag():
-    return {"ok": True, "settings": {"ENV": settings.ENV, "VERSION": settings.VERSION}, "time": datetime.now(timezone.utc).isoformat()}
+    return {"ok": True, "env": settings.ENV, "version": settings.VERSION}
 
 from routes.auth import router as auth_router
 from routes.briefing import router as briefing_router

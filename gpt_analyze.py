@@ -1,695 +1,91 @@
 # -*- coding: utf-8 -*-
-"""
-KI-Status-Report Analyzer – Gold-Standard+ Version 2.2 (DE first)
-Fixes & Improvements:
-- KORREKTES Branchen-Mapping (Code → Label) gemäß Frontend-Select
-- Nutzung **aller** Fragebogenfelder inkl. Freitext
-- Labels für Unternehmensgröße & Bundesland
-- Zusätzliche Prompt-Variablen: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{BUNDESLAND_LABEL}}, {{ALL_ANSWERS_JSON}}, {{FREE_TEXT_NOTES}}
-"""
 from __future__ import annotations
-from dataclasses import dataclass, field
-from datetime import date
-from typing import Any, Dict, List, Optional
-from pathlib import Path
-from functools import lru_cache
-import json, re, os, logging, httpx
+import logging, json, time, os
+from typing import Dict, Any, Tuple, Optional
+from datetime import datetime, timezone
+import requests
+from sqlalchemy.orm import Session
+from sqlalchemy import select
+from core.db import SessionLocal
+from models import Briefing, Analysis
+from settings import settings
 
-LOG_LEVEL = os.getenv("LOG_LEVEL","INFO").upper()
-logging.basicConfig(level=getattr(logging, LOG_LEVEL, logging.INFO),
-                    format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-log = logging.getLogger("gpt_analyze")
+logger = logging.getLogger(__name__)
 
-# Verzeichnisse
-BASE_DIR = Path(os.getenv("APP_BASE") or os.getcwd()).resolve()
-DATA_DIR = Path(os.getenv("DATA_DIR") or BASE_DIR / "data").resolve()
-PROMPTS_DIR = Path(os.getenv("PROMPTS_DIR") or BASE_DIR / "prompts").resolve()
-TEMPLATES_DIR = Path(os.getenv("TEMPLATE_DIR") or BASE_DIR / "templates").resolve()
-CONTENT_DIR = Path(os.getenv("CONTENT_DIR") or BASE_DIR / "content").resolve()
+PROMPT_PATH = os.environ.get("PROMPT_PATH", "prompts/prompt_de.md")
 
-TEMPLATE_DE = os.getenv("TEMPLATE_DE", "pdf_template.html")
-TEMPLATE_EN = os.getenv("TEMPLATE_EN", "pdf_template_en.html")
-ASSETS_BASE_URL = os.getenv("ASSETS_BASE_URL", "/assets")
-
-# LLM / Provider
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY","")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL_DEFAULT","gpt-4o")
-EXEC_SUMMARY_MODEL = os.getenv("EXEC_SUMMARY_MODEL", OPENAI_MODEL)
-OPENAI_TIMEOUT = float(os.getenv("OPENAI_TIMEOUT","45"))
-OPENAI_MAX_TOKENS = int(os.getenv("OPENAI_MAX_TOKENS","1500"))
-GPT_TEMPERATURE = float(os.getenv("GPT_TEMPERATURE","0.2"))
-
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY","")
-CLAUDE_MODEL = os.getenv("CLAUDE_MODEL","claude-3-5-sonnet-20241022")
-ANTHROPIC_TIMEOUT = float(os.getenv("ANTHROPIC_TIMEOUT","45"))
-OVERLAY_PROVIDER = os.getenv("OVERLAY_PROVIDER","auto").lower()
-
-# Live
-SEARCH_DAYS_NEWS = int(os.getenv("SEARCH_DAYS_NEWS","30"))
-SEARCH_DAYS_TOOLS = int(os.getenv("SEARCH_DAYS_TOOLS","60"))
-SEARCH_DAYS_FUNDING = int(os.getenv("SEARCH_DAYS_FUNDING","60"))
-LIVE_MAX_ITEMS = int(os.getenv("LIVE_MAX_ITEMS","8"))
-TAVILY_API_KEY = os.getenv("TAVILY_API_KEY","")
-SERPAPI_KEY = os.getenv("SERPAPI_KEY","")
-
-ROI_BASELINE_MONTHS = float(os.getenv("ROI_BASELINE_MONTHS","4"))
-
-# Branchen Code → Label (aus Frontend-Select)
-BRANCHEN_MAP: Dict[str, str] = {
-    "marketing": "Marketing & Werbung",
-    "beratung": "Beratung & Dienstleistungen",
-    "it": "IT & Software",
-    "finanzen": "Finanzen & Versicherungen",
-    "handel": "Handel & E-Commerce",
-    "bildung": "Bildung",
-    "verwaltung": "Verwaltung",
-    "gesundheit": "Gesundheit & Pflege",
-    "bau": "Bauwesen & Architektur",
-    "medien": "Medien & Kreativwirtschaft",
-    "industrie": "Industrie & Produktion",
-    "logistik": "Transport & Logistik",
-}
-
-# Unternehmensgröße Code → Label (aus Frontend-Select)
-SIZE_LABELS: Dict[str, str] = {
-    "solo": "1 (Solo-Selbstständig/Freiberuflich)",
-    "team": "2–10 (Kleines Team)",
-    "kmu": "11–100 (KMU)",
-    "enterprise": "100+ (groß)"
-}
-
-# Bundesland: Short → ISO → Label
-BUNDESLAND_ISO = {
-    "bw":"DE-BW","by":"DE-BY","be":"DE-BE","bb":"DE-BB","hb":"DE-HB","hh":"DE-HH","he":"DE-HE",
-    "mv":"DE-MV","ni":"DE-NI","nw":"DE-NW","rp":"DE-RP","sl":"DE-SL","sn":"DE-SN","st":"DE-ST",
-    "sh":"DE-SH","th":"DE-TH"
-}
-BUNDESLAND_LABEL = {
-    "DE-BW":"Baden-Württemberg","DE-BY":"Bayern","DE-BE":"Berlin","DE-BB":"Brandenburg","DE-HB":"Bremen","DE-HH":"Hamburg",
-    "DE-HE":"Hessen","DE-MV":"Mecklenburg-Vorpommern","DE-NI":"Niedersachsen","DE-NW":"Nordrhein-Westfalen",
-    "DE-RP":"Rheinland-Pfalz","DE-SL":"Saarland","DE-SN":"Sachsen","DE-ST":"Sachsen-Anhalt","DE-SH":"Schleswig-Holstein","DE-TH":"Thüringen"
-}
-
-# ---------- helpers ----------
-def _read_text(path: Path) -> str:
+def _load_prompt_template() -> str:
     try:
-        return path.read_text(encoding="utf-8")
-    except Exception as exc:
-        log.warning("read failed %s: %s", path, exc)
-        return ""
-
-@lru_cache(maxsize=32)
-def _template_cached(lang_key: str) -> str:
-    p = TEMPLATES_DIR / (TEMPLATE_DE if lang_key == "de" else TEMPLATE_EN)
-    if not p.exists():
-        p = TEMPLATES_DIR / "pdf_template.html"
-    return _read_text(p)
-
-def _template(lang: str) -> str:
-    return _template_cached("de" if lang.lower().startswith("de") else "en")
-
-@lru_cache(maxsize=128)
-def _load_prompt_cached(lang: str, name: str) -> str:
-    candidates = [
-        PROMPTS_DIR / lang / f"{name}_{lang}.md",
-        PROMPTS_DIR / lang / f"{name}.md",
-        PROMPTS_DIR / f"{name}_{lang}.md",
-        PROMPTS_DIR / f"{name}.md",
-    ]
-    for p in candidates:
-        if p.exists():
-            log.info("Loaded prompt: %s", p.relative_to(PROMPTS_DIR))
-            return _read_text(p)
-    log.info("Prompt missing for '%s' (%s) – using fallback", name, lang)
-    return ""
-
-def _as_fragment(html: str) -> str:
-    if not html:
-        return ""
-    s = html
-    s = re.sub(r"(?is)<!doctype.*?>", "", s)
-    s = re.sub(r"(?is)<\s*html[^>]*>|</\s*html\s*>", "", s)
-    s = re.sub(r"(?is)<\s*head[^>]*>.*?</\s*head\s*>", "", s)
-    s = re.sub(r"(?is)<\s*body[^>]*>|</\s*body\s*>", "", s)
-    s = re.sub(r"(?is)<\s*style[^>]*>.*?</\>\s*style\s*>", "", s)
-    return s.strip()
-
-def _minify_html_soft(s: str) -> str:
-    if not s:
-        return s
-    s = re.sub(r"<!--.*?-->", "", s, flags=re.S)
-    s = re.sub(r">\s+<", "><", s)
-    s = re.sub(r"\s{2,}", " ", s)
-    return s.strip()
-
-def _strip_llm(text: str) -> str:
-    if not text:
-        return ""
-    text = re.sub(r"```[a-zA-Z0-9]*\s*", "", text).replace("```", "")
-    return text.strip()
-
-# ---------- Normalisierung ----------
-def _parse_percent_bucket(val: Any) -> int:
-    s = str(val or "").lower()
-    if "81" in s: return 90
-    if "61" in s: return 70
-    if "41" in s: return 50
-    if "21" in s: return 30
-    if "0"  in s: return 10
-    try:
-        return int(max(0,min(100,float(s))))
+        with open(PROMPT_PATH, "r", encoding="utf-8") as f:
+            return f.read()
     except Exception:
-        return 50
+        # Fallback: minimal system prompt
+        return ("Du bist ein erfahrener KI‑Berater für KMU. Erstelle eine klare, praxisnahe Analyse und Roadmap.\n"
+                "Gib strukturierte HTML‑Abschnitte zurück (ohne <html>/<body>). Nutze die Antworten des Fragebogens.")
 
-@dataclass
-class Normalized:
-    branche_code: str = "beratung"
-    branche_label: str = "Beratung & Dienstleistungen"
-    unternehmensgroesse: str = "solo"           # canonical code
-    unternehmensgroesse_label: str = "1 (Solo-Selbstständig/Freiberuflich)"
-    hauptleistung: str = ""
-    bundesland_code: str = "DE-BE"
-    bundesland_label: str = "Berlin"
-
-    kpi_digitalisierung: int = 60
-    kpi_automatisierung: int = 55
-    kpi_compliance: int = 60
-    kpi_prozessreife: int = 55
-    kpi_innovation: int = 60
-
-    pull_kpis: Dict[str, Any] = field(default_factory=dict)
-    raw: Dict[str,Any] = field(default_factory=dict)
-
-def _map_bundesland(val: str) -> tuple[str, str]:
-    """Return (iso_code, label) from various inputs (short codes, iso, names)."""
-    if not val:
-        return "DE-BE", "Berlin"
-    v = str(val).strip()
-    vl = v.lower()
-    # short code
-    if vl in BUNDESLAND_ISO:
-        iso = BUNDESLAND_ISO[vl]
-        return iso, BUNDESLAND_LABEL.get(iso, iso)
-    # ISO given
-    if vl.startswith("de-") and v.upper() in BUNDESLAND_LABEL:
-        return v.upper(), BUNDESLAND_LABEL[v.upper()]
-    # names
-    rev = {n.lower(): code for code, n in BUNDESLAND_LABEL.items()}
-    iso = rev.get(vl, "DE-BE")
-    return iso, BUNDESLAND_LABEL.get(iso, iso)
-
-def validate_and_extract_critical_fields(data: Dict[str, Any]) -> Dict[str, str]:
-    """
-    Extrahiert KRITISCHE Felder inkl. Label-Mapping (Branche, Größe, Leistung, Bundesland)
-    """
-    if 'answers' in data and isinstance(data['answers'], dict):
-        data = {**data, **data['answers']}
-
-    # 1) Branche (aus Frontend-Select: code → label)
-    raw_code = str(data.get('branche') or data.get('branche_code') or data.get('industry') or "").strip().lower()
-    if not raw_code:
-        # Fallback, wenn nichts gesetzt wurde
-        branche_code = "beratung"
-        branche_label = BRANCHEN_MAP[branche_code]
-    else:
-        branche_code = raw_code
-        branche_label = BRANCHEN_MAP.get(branche_code, raw_code.capitalize())
-
-    # 2) Unternehmensgröße (code → label)
-    groesse_raw = str(data.get('unternehmensgroesse') or data.get('company_size') or data.get('size') or "solo").strip().lower()
-    size_map = {"1":"solo","solo":"solo","2-10":"team","team":"team","11-100":"kmu","kmu":"kmu","100+":"enterprise","enterprise":"enterprise"}
-    groesse = size_map.get(groesse_raw, groesse_raw)
-    groesse_label = data.get('unternehmensgroesse_label') or SIZE_LABELS.get(groesse, groesse)
-
-    # 3) Hauptleistung/Produkt (Freitext)
-    hauptleistung = (
-        data.get('hauptleistung') or data.get('main_service') or data.get('produkt') or data.get('product') or
-        data.get('hauptdienstleistung') or "Nicht spezifiziert"
-    )
-
-    # 4) Bundesland (short / iso / name → iso + label)
-    bundesland_in = data.get('bundesland') or data.get('state') or data.get('bundesland_code') or data.get('state_code') or ""
-    bundesland_code, bundesland_label = _map_bundesland(str(bundesland_in))
-
-    log.info("KRITISCHE FELDER: Branche=%s (%s), Größe=%s (%s), Hauptleistung=%s, Bundesland=%s (%s)",
-             branche_code, branche_label, groesse, groesse_label, str(hauptleistung)[:60], bundesland_code, bundesland_label)
-
-    return {
-        "branche": branche_code,
-        "branche_label": branche_label,
-        "unternehmensgroesse": groesse,
-        "unternehmensgroesse_label": groesse_label,
-        "hauptleistung": str(hauptleistung),
-        "bundesland": bundesland_label,
-        "bundesland_code": bundesland_code,
-        "bundesland_label": bundesland_label,
-    }
-
-def _concat_free_texts(flat: Dict[str, Any]) -> str:
-    candidates = [
-        "hauptleistung","ki_projekte","ki_potenzial","ki_geschaeftsmodell_vision","moonshot",
-        "strategische_ziele","sonstiges","notes","bemerkungen","weitere_infos"
-    ]
-    parts: List[str] = []
-    for k in candidates:
-        v = flat.get(k)
-        if isinstance(v, str) and v.strip():
-            parts.append(f"{k}: {v.strip()}")
+def _format_answers(answers: Dict[str, Any]) -> str:
+    parts = []
+    for k, v in answers.items():
+        parts.append(f"- {k}: {json.dumps(v, ensure_ascii=False)}")
     return "\n".join(parts)
 
-def normalize_briefing(raw: Dict[str,Any], lang: str = "de") -> Normalized:
-    b: Dict[str,Any] = dict(raw or {})
-    if isinstance(raw, dict) and isinstance(raw.get("answers"), dict):
-        b = {**raw, **raw["answers"]}
-
-    critical = validate_and_extract_critical_fields(b)
-
-    def _derive_kpis(bb: Dict[str,Any]) -> Dict[str,int]:
-        digi = _parse_percent_bucket(bb.get("digitalisierungsgrad"))
-        papier = _parse_percent_bucket(bb.get("prozesse_papierlos"))
-        digitalisierung = int(round(0.6*digi + 0.4*papier))
-
-        auto = 70 if str(bb.get("automatisierungsgrad","")).lower() in ("eher_hoch","sehr_hoch") else 50
-        if isinstance(bb.get("ki_einsatz"), list) and bb["ki_einsatz"]:
-            auto = min(100, auto + 5)
-
-        comp = 40
-        if str(bb.get("datenschutzbeauftragter","")).lower() in ("ja","true","1"): comp += 15
-        if str(bb.get("folgenabschaetzung","")).lower() == "ja": comp += 10
-        if str(bb.get("loeschregeln","")).lower() == "ja": comp += 10
-        if str(bb.get("meldewege","")).lower() in ("ja","teilweise"): comp += 5
-        if str(bb.get("governance","")).lower() == "ja": comp += 10
-        comp = max(0,min(100,comp))
-
-        proz = 30 + (10 if str(bb.get("governance","")).lower()=="ja" else 0) + int(0.2*papier)
-        proz = max(0,min(100,proz))
-
-        know = 70 if str(bb.get("ki_knowhow","")).lower()=="fortgeschritten" else 55
-        inn = int(0.6*know + 0.4*65)
-
-        return {"digitalisierung": digitalisierung, "automatisierung": auto, "compliance": comp, "prozessreife": proz, "innovation": inn}
-
-    k = _derive_kpis(b)
-
-    pull = {
-        "umsatzziel": b.get("umsatzziel") or b.get("jahresumsatz") or "",
-        "top_use_case": b.get("usecase_priority") or (b.get("ki_usecases") or [""])[0] if b.get("ki_usecases") else "",
-        "zeitbudget": b.get("zeitbudget") or "",
-        "free_text_notes": _concat_free_texts(b),
+def _call_openai_chat(prompt: str) -> str:
+    if not settings.OPENAI_API_KEY:
+        logger.warning("OPENAI_API_KEY not set – returning fallback analysis.")
+        return "<h2>Analyse (Entwicklungsmodus)</h2><p>Kein API‑Key konfiguriert. Dies ist eine Platzhalter‑Analyse.</p>"
+    base = settings.OPENAI_API_BASE or "https://api.openai.com/v1"
+    url = f"{base}/chat/completions"
+    headers = {"Authorization": f"Bearer {settings.OPENAI_API_KEY}", "Content-Type": "application/json"}
+    body = {
+        "model": settings.OPENAI_MODEL,
+        "messages": [
+            {"role": "system", "content": _load_prompt_template()},
+            {"role": "user", "content": prompt},
+        ],
+        "temperature": 0.2,
     }
+    resp = requests.post(url, headers=headers, json=body, timeout=60)
+    if resp.status_code >= 400:
+        raise RuntimeError(f"OpenAI error {resp.status_code}: {resp.text[:200]}")
+    data = resp.json()
+    content = data["choices"][0]["message"]["content"].strip()
+    return content
 
-    return Normalized(
-        branche_code=critical["branche"],
-        branche_label=critical["branche_label"],
-        unternehmensgroesse=critical["unternehmensgroesse"],
-        unternehmensgroesse_label=critical["unternehmensgroesse_label"],
-        hauptleistung=critical["hauptleistung"],
-        bundesland_code=critical["bundesland_code"],
-        bundesland_label=critical["bundesland_label"],
-        kpi_digitalisierung=k["digitalisierung"],
-        kpi_automatisierung=k["automatisierung"],
-        kpi_compliance=k["compliance"],
-        kpi_prozessreife=k["prozessreife"],
-        kpi_innovation=k["innovation"],
-        pull_kpis=pull,
-        raw=b
+def analyze_briefing(db: Session, briefing_id: int) -> Tuple[int, str, Dict[str, Any]]:
+    br = db.get(Briefing, briefing_id)
+    if not br:
+        raise ValueError("Briefing not found")
+    prompt_user = (        "Unternehmens‑Kontext (Antworten aus dem Fragebogen):\n"
+        f"{_format_answers(br.answers)}\n\n"
+        "Bitte liefere eine strukturierte, handlungsorientierte Analyse mit konkreten Maßnahmen (Quick Wins, 30‑/90‑Tage‑Plan),\n"
+        "gegliedert in: Zusammenfassung, Quick‑Wins, Maßnahmen nach Bereich, Tool‑Vorschläge, Förder‑/Compliance‑Hinweise (Bundesland),\n"
+        "Risiken & Absicherung, Nächste Schritte. Nutze klare Zwischenüberschriften. Gebe HTML‑fragmente zurück."
     )
 
-# ---------- scoring/business ----------
-@dataclass
-class ScorePack:
-    total: int
-    badge: str
-    kpis: Dict[str, Dict[str,float]]
-    weights: Dict[str, float]
-    benchmarks: Dict[str, float]
-
-def _load_benchmarks(branche_code: str, groesse: str) -> Dict[str, float]:
-    patterns = [f"benchmarks_{branche_code}_{groesse}", f"benchmarks_{branche_code}", f"benchmarks_{groesse}", "benchmarks_default"]
-    for base in patterns:
-        p = DATA_DIR / f"{base}.json"
-        if p.exists():
-            try:
-                data = json.loads(_read_text(p))
-                log.info("Benchmarks geladen für %s/%s aus %s", branche_code, groesse, p.name)
-                return data
-            except Exception as e:
-                log.warning("Benchmark-Datei konnte nicht geladen werden: %s", e)
-    return {"digitalisierung":60.0,"automatisierung":55.0,"compliance":60.0,"prozessreife":55.0,"innovation":60.0}
-
-def compute_scores(n: Normalized) -> ScorePack:
-    weights = {"digitalisierung":0.2,"automatisierung":0.2,"compliance":0.2,"prozessreife":0.2,"innovation":0.2}
-    bm = _load_benchmarks(n.branche_code, n.unternehmensgroesse)
-    vals = {"digitalisierung":n.kpi_digitalisierung,"automatisierung":n.kpi_automatisierung,"compliance":n.kpi_compliance,"prozessreife":n.kpi_prozessreife,"innovation":n.kpi_innovation}
-    kpis: Dict[str, Dict[str,float]] = {}
-    total = 0.0
-    for k, v in vals.items():
-        m = float(bm.get(k, 60.0))
-        d = float(v) - m
-        kpis[k] = {"value": float(v), "benchmark": m, "delta": d}
-        total += weights[k] * float(v)
-    t = int(round(total))
-    badge = "EXCELLENT" if t >= 85 else "GOOD" if t >= 70 else "FAIR" if t >= 55 else "BASIC"
-    return ScorePack(total=t, badge=badge, kpis=kpis, weights=weights, benchmarks=bm)
-
-@dataclass
-class BusinessCase:
-    invest_eur: float
-    save_year_eur: float
-    payback_months: float
-    roi_year1_pct: float
-
-def business_case(n: Normalized) -> BusinessCase:
-    size_investments = {"solo":3000.0,"team":10000.0,"kmu":50000.0,"enterprise":100000.0}
-    invest = size_investments.get(n.unternehmensgroesse, 10000.0)
-    branch_multipliers = {"beratung":4.0,"it":5.0,"handel":3.5,"produktion":6.0,"gesundheit":3.0,"marketing":4.0,"finanzen":4.0,"bildung":3.0,"verwaltung":3.0,"medien":4.0,"industrie":5.0,"logistik":4.0}
-    multiplier = branch_multipliers.get(n.branche_code, 4.0)
-    monthly = invest / max(1.0, ROI_BASELINE_MONTHS) * multiplier
-    save_year = monthly * 12.0
-    payback_m = invest / max(1.0, monthly)
-    roi_y1 = (save_year - invest) / invest * 100.0
-    return BusinessCase(round(invest,2), round(save_year,2), round(payback_m,1), round(roi_y1,1))
-
-# ---------- LLM ----------
-def _openai_chat(messages: List[Dict[str,str]], model: Optional[str] = None, max_tokens: Optional[int] = None) -> str:
-    if not OPENAI_API_KEY:
-        log.warning("OpenAI API Key fehlt")
-        return ""
-    url = "https://api.openai.com/v1/chat/completions"
-    headers = {"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"}
-    payload = {"model": model or OPENAI_MODEL, "messages": messages, "max_tokens": int(max_tokens or OPENAI_MAX_TOKENS),
-               "temperature": GPT_TEMPERATURE, "top_p": 0.95}
-    try:
-        with httpx.Client(timeout=OPENAI_TIMEOUT) as cli:
-            r = cli.post(url, headers=headers, json=payload)
-            r.raise_for_status()
-            data = r.json()
-            return _strip_llm(data.get("choices", [{}])[0].get("message", {}).get("content", ""))
-    except Exception as exc:
-        log.warning("OpenAI call failed: %s", exc)
-        return ""
-
-def _anthropic_chat(messages: List[Dict[str,str]], model: Optional[str] = None, max_tokens: int = 1500) -> str:
-    if not ANTHROPIC_API_KEY:
-        return ""
-    url = "https://api.anthropic.com/v1/messages"
-    headers = {"x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json"}
-    sys = ""; user_content = ""
-    for m in messages:
-        role = m.get("role","")
-        if role == "system": sys = m.get("content","")
-        elif role == "user": user_content += m.get("content","") + "\n"
-    payload = {"model": model or CLAUDE_MODEL, "max_tokens": max_tokens, "system": sys,
-               "messages": [{"role":"user","content": user_content}]}
-    try:
-        with httpx.Client(timeout=ANTHROPIC_TIMEOUT) as cli:
-            r = cli.post(url, headers=headers, json=payload)
-            r.raise_for_status()
-            data = r.json() or {}
-            content = ""
-            for block in data.get("content", []):
-                if block.get("type") == "text":
-                    content += block.get("text","")
-            return _strip_llm(content)
-    except Exception as exc:
-        log.warning("Anthropic call failed: %s", exc)
-        return ""
-
-def render_overlay(name: str, lang: str, ctx: Dict[str,Any], critical_fields: Dict[str, str]) -> str:
-    prompt = _load_prompt_cached(lang, name)
-    if not prompt:
-        return ""
-
-    branche_code = critical_fields.get("branche", "beratung")
-    branche_label = critical_fields.get("branche_label", BRANCHEN_MAP.get(branche_code, branche_code))
-    groesse = critical_fields.get("unternehmensgroesse", "kmu")
-    groesse_label = critical_fields.get("unternehmensgroesse_label", SIZE_LABELS.get(groesse, groesse))
-    hauptleistung = critical_fields.get("hauptleistung", "Service")
-    bundesland_code = critical_fields.get("bundesland_code", "DE-BE")
-    bundesland_label = critical_fields.get("bundesland_label", "Berlin")
-
-    prompt = (prompt
-        .replace("{{BRANCHE}}", str(branche_code))
-        .replace("{{BRANCHE_LABEL}}", str(branche_label))
-        .replace("{{UNTERNEHMENSGROESSE}}", str(groesse))
-        .replace("{{UNTERNEHMENSGROESSE_LABEL}}", str(groesse_label))
-        .replace("{{HAUPTLEISTUNG}}", str(hauptleistung))
-        .replace("{{BUNDESLAND}}", str(bundesland_code))
-        .replace("{{BUNDESLAND_LABEL}}", str(bundesland_label))
-        .replace("{{BRIEFING_JSON}}", json.dumps(ctx.get("briefing", {}), ensure_ascii=False))
-        .replace("{{ALL_ANSWERS_JSON}}", json.dumps(ctx.get("all_answers", {}), ensure_ascii=False))
-        .replace("{{FREE_TEXT_NOTES}}", str(ctx.get("free_text_notes", "")))
-        .replace("{{SCORING_JSON}}", json.dumps(ctx.get("scoring", {}), ensure_ascii=False))
-        .replace("{{BENCHMARKS_JSON}}", json.dumps(ctx.get("benchmarks", {}), ensure_ascii=False))
-        .replace("{{TOOLS_JSON}}", json.dumps(ctx.get("tools", []), ensure_ascii=False))
-        .replace("{{FUNDING_JSON}}", json.dumps(ctx.get("funding", []), ensure_ascii=False))
-        .replace("{{BUSINESS_JSON}}", json.dumps(ctx.get("business", {}), ensure_ascii=False))
-        .replace("{{INDUSTRY_SNIPPET}}", str(ctx.get("industry_snippet", "")))
-    )
-
-    if lang.startswith("de"):
-        system = f"""Du bist ein KI-Berater spezialisiert auf {branche_label} (Code: {branche_code}).
-KRITISCH – alle Fragebogenfelder inkl. Freitext müssen berücksichtigt werden.
-- Branche: {branche_label}
-- Unternehmensgröße: {groesse_label}
-- Hauptleistung: {hauptleistung}
-- Region: {bundesland_label} ({bundesland_code})
-Antworte als sauberes HTML-Fragment ohne <html>/<head>/<body>-Tags."""
-    else:
-        system = f"""You are an AI consultant specialized in {branche_label} (code: {branche_code}).
-CRITICAL – consider all questionnaire fields including free text.
-- Industry: {branche_label}
-- Company size: {groesse_label}
-- Main service: {hauptleistung}
-- Region: {bundesland_label} ({bundesland_code})
-Answer as a clean HTML fragment without <html>/<head>/<body> tags."""
-
-    messages = [{"role": "system", "content": system}, {"role": "user", "content": prompt}]
-
-    provider = OVERLAY_PROVIDER
-    if provider == "auto":
-        provider = "anthropic" if ANTHROPIC_API_KEY else "openai"
-
-    if provider == "anthropic":
-        out = _anthropic_chat(messages, CLAUDE_MODEL if name != "executive_summary" else EXEC_SUMMARY_MODEL)
-        if not out and OPENAI_API_KEY:
-            out = _openai_chat(messages, OPENAI_MODEL, OPENAI_MAX_TOKENS)
-    else:
-        out = _openai_chat(messages, EXEC_SUMMARY_MODEL if name == "executive_summary" else OPENAI_MODEL, OPENAI_MAX_TOKENS)
-        if not out and ANTHROPIC_API_KEY:
-            out = _anthropic_chat(messages, CLAUDE_MODEL)
-
-    return _minify_html_soft(_as_fragment(out))
-
-# ---------- Live Daten (optional) ----------
-def fetch_live_data(n: Normalized, lang: str = "de") -> Dict[str, List[Dict[str, Any]]]:
-    news: List[Dict[str,Any]] = []
-    tools: List[Dict[str,Any]] = []
-    funding: List[Dict[str,Any]] = []
-    if not (TAVILY_API_KEY or SERPAPI_KEY):
-        log.info("Keine Live-Daten APIs konfiguriert")
-        return {"news": news, "tools": tools, "funding": funding}
-    try:
-        if TAVILY_API_KEY:
-            from tavily import TavilyClient
-            tavily = TavilyClient(api_key=TAVILY_API_KEY)
-            queries = [
-                f"KI News {n.branche_label} {n.hauptleistung[:30]}",
-                f"AI tools {n.branche_label} {n.unternehmensgroesse_label}",
-                f"Förderprogramme {n.bundesland_code} KI Digitalisierung {n.branche_label}",
-            ]
-            for query in queries:
-                try:
-                    results = tavily.search(query=query, search_depth="advanced", max_results=5)
-                    for r in results.get("results", []):
-                        item = {"title": r.get("title"), "url": r.get("url"), "date": r.get("published_date", ""),
-                                "domain": r.get("domain", ""), "score": r.get("score", 0)}
-                        if "förder" in query.lower() or "funding" in query.lower(): funding.append(item)
-                        elif "tool" in query.lower(): tools.append(item)
-                        else: news.append(item)
-                except Exception as e:
-                    log.warning("Tavily Fehler für '%s': %s", query, e)
-        if SERPAPI_KEY:
-            from serpapi import GoogleSearch
-            params = {"api_key": SERPAPI_KEY, "engine": "google", "q": f"{n.branche_label} {n.hauptleistung} KI tools",
-                      "location": "Germany", "hl": "de", "gl": "de", "num": 10}
-            search = GoogleSearch(params); results = search.get_dict()
-            for r in results.get("organic_results", [])[:5]:
-                tools.append({"title": r.get("title"), "url": r.get("link"), "date": "", "domain": r.get("displayed_link", ""), "score": 0})
-    except Exception as e:
-        log.error("Live-Daten Fehler: %s", e)
-    log.info("Live-Daten gefunden: %d News, %d Tools, %d Förderungen", len(news), len(tools), len(funding))
-    return {"news": news[:LIVE_MAX_ITEMS], "tools": tools[:LIVE_MAX_ITEMS], "funding": funding[:LIVE_MAX_ITEMS]}
-
-# ---------- HTML ----------
-def _kpi_bars_html(score: 'ScorePack', n: Normalized) -> str:
-    order = ["digitalisierung","automatisierung","compliance","prozessreife","innovation"]
-    labels = {"digitalisierung":"Digitalisierung","automatisierung":"Automatisierung","compliance":"Compliance","prozessreife":"Prozessreife","innovation":"Innovation"}
-    rows = []
-    for k in order:
-        v = score.kpis[k]["value"]; m = score.kpis[k]["benchmark"]; d = score.kpis[k]["delta"]
-        spark_class = "spark-pos" if d >= 0 else "spark-neg"
-        tooltip = f"Branchenschnitt {n.branche_label}: {int(m)}%"
-        rows.append(
-            f'<div class="bar" title="{tooltip}">'
-            f'<div class="label">{labels[k]}</div>'
-            f'<div class="bar__track">'
-            f'<div class="bar__fill" style="width:{max(0,min(100,int(round(v))))};"></div>'
-            f'<div class="bar__median" style="left:{max(0,min(100,int(round(m))))};"></div>'
-            f'</div>'
-            f'<div class="bar__delta"><span class="spark {spark_class}" data-delta="{int(round(d))}"></span> '
-            f'{("+" if d>=0 else "")}{int(round(d))} pp</div>'
-            f'</div>'
-        )
-    return '<div class="kpi">' + "".join(rows) + '</div>'
-
-def _profile_html(n: Normalized) -> str:
-    pl = n.pull_kpis or {}
-    pills = []
-    if pl.get("umsatzziel"): pills.append(f'<span class="pill">Umsatzziel: {pl["umsatzziel"]}</span>')
-    if pl.get("top_use_case"): pills.append(f'<span class="pill">Top Use-Case: {pl["top_use_case"]}</span>')
-    if pl.get("zeitbudget"): pills.append(f'<span class="pill">Zeitbudget: {pl["zeitbudget"]}</span>')
-    pills_html = " ".join(pills) if pills else '<span class="muted">–</span>'
-    return ('<div class="card">'
-            '<h2>Unternehmensprofil & Ziele</h2>'
-            f'<p><span class="hl">Branche:</span> <strong>{n.branche_label}</strong></p>'
-            f'<p><span class="hl">Hauptleistung:</span> <strong>{n.hauptleistung}</strong></p>'
-            f'<p><span class="muted">Größe:</span> {n.unternehmensgroesse_label} '
-            f'<span class="muted">&middot; Standort:</span> {n.bundesland_label} ({n.bundesland_code})</p>'
-            f'<p>{pills_html}</p>'
-            '</div>')
-
-def generate_tool_recommendations(n: Normalized) -> List[Dict[str, Any]]:
-    tools: List[Dict[str,Any]] = []
-    ug = n.unternehmensgroesse
-    if ug == "solo":
-        tools = [{"name":"Claude (Free)","cost":"Kostenlos","complexity":"Niedrig","use_case":"Textgenerierung"},
-                 {"name":"Canva","cost":"Kostenlos/12€","complexity":"Niedrig","use_case":"Design"},
-                 {"name":"Notion","cost":"Kostenlos/8€","complexity":"Niedrig","use_case":"Projektmanagement"}]
-    elif ug == "team":
-        tools = [{"name":"ChatGPT Team","cost":"25€/User","complexity":"Niedrig","use_case":"Team-KI"},
-                 {"name":"Make.com","cost":"Ab 9€","complexity":"Mittel","use_case":"Automation"},
-                 {"name":"Slack","cost":"7,25€/User","complexity":"Niedrig","use_case":"Kommunikation"}]
-    else:
-        tools = [{"name":"MS 365 Copilot","cost":"30€/User","complexity":"Mittel","use_case":"Office-KI"},
-                 {"name":"Salesforce","cost":"25€/User","complexity":"Hoch","use_case":"CRM"},
-                 {"name":"Power BI","cost":"10€/User","complexity":"Mittel","use_case":"Analytics"}]
-    b = n.branche_code
-    if b == "beratung": tools.append({"name":"Calendly","cost":"Kostenlos/10€","complexity":"Niedrig","use_case":"Terminplanung"})
-    elif b == "handel": tools.append({"name":"Shopify","cost":"Ab 27€","complexity":"Mittel","use_case":"E-Commerce"})
-    elif b in ("it","software"): tools.append({"name":"GitHub Copilot","cost":"10$/Monat","complexity":"Niedrig","use_case":"Code-Assistent"})
-    return tools
-
-def get_funding_programs(n: Normalized) -> List[Dict[str, Any]]:
-    programs = [
-        {"name":"Digital Jetzt","max_funding":"50.000€","eligibility":f"Perfekt für {n.unternehmensgroesse_label}","url":"https://www.bmwk.de/digital-jetzt"},
-        {"name":"go-digital","max_funding":"16.500€","eligibility":"KMU bis 100 Mitarbeiter","url":"https://www.bmwk.de/go-digital"}
-    ]
-    code = n.bundesland_code
-    if "DE-BE" == code:
-        programs.append({"name":"Digitalprämie Berlin","max_funding":"17.000€","eligibility":"Berliner KMU","url":"https://www.ibb.de/digitalpraemie"})
-    elif "DE-BY" == code:
-        programs.append({"name":"Digitalbonus Bayern","max_funding":"10.000€","eligibility":"Bayerische KMU","url":"https://www.stmwi.bayern.de/digitalbonus"})
-    elif "DE-NW" == code:
-        programs.append({"name":"Mittelstand Innovativ NRW","max_funding":"15.000€","eligibility":"NRW KMU","url":"https://www.mittelstand-innovativ.nrw"})
-    return programs
-
-# ---------- build ----------
-def build_html_report(raw: Dict[str,Any], lang: str = "de") -> Dict[str,Any]:
-    log.info("=== Starte Report-Generierung ===")
-    critical_fields = validate_and_extract_critical_fields(raw)
-    n = normalize_briefing(raw, lang=lang)
-    score = compute_scores(n)
-    case = business_case(n)
-
-    live_data = fetch_live_data(n, lang)
-    news = live_data["news"]; tools = live_data["tools"] or generate_tool_recommendations(n); funding = live_data["funding"] or get_funding_programs(n)
-
-    ctx = {
-        "briefing": {  # kompaktes Profil
-            "branche": n.branche_code,
-            "branche_label": n.branche_label,
-            "unternehmensgroesse": n.unternehmensgroesse,
-            "unternehmensgroesse_label": n.unternehmensgroesse_label,
-            "hauptleistung": n.hauptleistung,
-            "bundesland_code": n.bundesland_code,
-            "bundesland_label": n.bundesland_label,
-            "pull_kpis": n.pull_kpis,
-        },
-        "all_answers": n.raw,             # **ALLE** Antworten (flach)
-        "free_text_notes": n.pull_kpis.get("free_text_notes", ""),
-        "scoring": {"score_total": score.total, "badge": score.badge, "kpis": score.kpis, "weights": score.weights},
-        "benchmarks": score.benchmarks,
-        "tools": tools,
-        "funding": funding,
-        "business": {
-            "invest_eur": case.invest_eur, "save_year_eur": case.save_year_eur, "payback_months": case.payback_months, "roi_year1_pct": case.roi_year1_pct
-        },
-        "industry_snippet": f"Spezifisch für {n.branche_label} mit Fokus auf {n.hauptleistung}",
-    }
-
-    overlays = {}
-    overlay_names = ["executive_summary","quick_wins","roadmap","risks","compliance","business","recommendations"]
-    for name in overlay_names:
-        overlays[name] = render_overlay(name, lang, ctx, critical_fields)
-
-    tpl = _template(lang)
-    report_date = date.today().isoformat()
-    html = (tpl
-        .replace("{{LANG}}", "de" if lang.startswith("de") else "en")
-        .replace("{{ASSETS_BASE}}", ASSETS_BASE_URL)
-        .replace("{{REPORT_DATE}}", report_date)
-        .replace("{{PROFILE_HTML}}", _profile_html(n))
-        .replace("{{KPI_BARS_HTML}}", _kpi_bars_html(score, n))
-        .replace("{{EXEC_SUMMARY_HTML}}", overlays.get("executive_summary", ""))
-        .replace("{{QUICK_WINS_HTML}}", overlays.get("quick_wins", ""))
-        .replace("{{ROADMAP_HTML}}", overlays.get("roadmap", ""))
-        .replace("{{RISKS_HTML}}", overlays.get("risks", ""))
-        .replace("{{COMPLIANCE_HTML}}", overlays.get("compliance", ""))
-        .replace("{{BUSINESS_CASE_HTML}}", overlays.get("business", ""))
-        .replace("{{RECOMMENDATIONS_HTML}}", overlays.get("recommendations", ""))
-    )
-
+    html = _call_openai_chat(prompt_user)
     meta = {
-        "score": score.total,
-        "badge": score.badge,
-        "date": report_date,
-        "critical_fields": critical_fields,
-        "branche": n.branche_code,
-        "unternehmensgroesse": n.unternehmensgroesse,
-        "hauptleistung": n.hauptleistung,
-        "bundesland": n.bundesland_code,
-        "kpis": score.kpis,
-        "benchmarks": score.benchmarks,
-        "live_data_available": bool(news or tools or funding),
+        "model": settings.OPENAI_MODEL,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "briefing_id": briefing_id,
+        "prompt_chars": len(prompt_user),
+        "answers_keys": list(br.answers.keys()),
     }
-    log.info("=== Report generiert für %s/%s ===", n.branche_code, n.unternehmensgroesse)
-    log.info("Score: %s, Badge: %s", score.total, score.badge)
-    log.info("Kritische Felder verwendet: %s", critical_fields)
-    return {"html": html, "meta": meta, "normalized": n.__dict__, "raw": raw}
 
-def analyze_briefing(raw: Dict[str,Any], lang: str = "de") -> str:
-    return build_html_report(raw, lang)["html"]
+    an = Analysis(user_id=br.user_id, briefing_id=briefing_id, html=html, meta=meta, created_at=datetime.now(timezone.utc))
+    db.add(an)
+    db.commit()
+    db.refresh(an)
+    return an.id, html, meta
 
-def build_report(raw: Dict[str,Any], lang: str = "de") -> Dict[str,Any]:
-    return build_html_report(raw, lang)
-
-def analyze_briefing_enhanced(raw: Dict[str,Any], lang: str = "de", *, as_dict: bool = False):
-    result = build_html_report(raw, lang)
-    return result if as_dict else result["html"]
-
-__all__ = ["analyze_briefing","build_report","build_html_report","normalize_briefing","compute_scores","business_case","validate_and_extract_critical_fields"]
-
-if __name__ == "__main__":
-    test_data = {
-        "branche": "marketing",
-        "unternehmensgroesse": "team",
-        "hauptleistung": "Social-Media-Kampagnen",
-        "bundesland": "be",
-        "digitalisierungsgrad": "61-80%",
-        "automatisierungsgrad": "eher_hoch"
-    }
-    result = build_report(test_data)
-    print(f"Report generiert: {len(result['html'])} Zeichen")
-    print(f"Kritische Felder: {result['meta']['critical_fields']}")
-    print(f"Score: {result['meta']['score']}, Badge: {result['meta']['badge']}")
+def run_async(briefing_id: int, email: Optional[str] = None) -> None:
+    """Background‑friendly wrapper: eigene DB‑Session, Exceptions geloggt."""
+    try:
+        db = SessionLocal()
+        try:
+            an_id, html, meta = analyze_briefing(db, briefing_id)
+            logger.info("analysis created: id=%s", an_id)
+            # Report‑Erstellung & E‑Mail optional über separate Endpoints/Jobs
+        finally:
+            db.close()
+    except Exception as exc:
+        logger.exception("run_async failed for briefing_id=%s: %s", briefing_id, exc)
