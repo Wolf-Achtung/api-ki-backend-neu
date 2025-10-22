@@ -2,6 +2,7 @@
 from __future__ import annotations
 import logging
 from datetime import datetime, timezone
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
@@ -12,7 +13,18 @@ logging.basicConfig(level=getattr(logging, settings.LOG_LEVEL.upper(), logging.I
                     format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("ki-backend")
 
-app = FastAPI(title=settings.APP_NAME, version=settings.VERSION)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # DB init
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("DB initialized")
+    except Exception as e:
+        logger.exception("DB init failed: %s", e)
+    yield
+    # graceful shutdown hook (if needed)
+
+app = FastAPI(title=settings.APP_NAME, version=settings.VERSION, lifespan=lifespan)
 
 # CORS
 app.add_middleware(
@@ -22,10 +34,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-@app.on_event("startup")
-def init_db():
-    Base.metadata.create_all(bind=engine)
 
 @app.get("/", response_class=PlainTextResponse)
 async def root() -> str:

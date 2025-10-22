@@ -1,8 +1,26 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import AnyHttpUrl, field_validator
 from typing import List, Optional
+from pydantic import AnyHttpUrl
+
+def _sanitize_origins(val: str | None, env: str) -> List[str]:
+    if not val:
+        return ["*"] if env != "production" else []
+    raw = [x.strip() for x in val.split(",") if x.strip()]
+    clean: list[str] = []
+    for item in raw:
+        # fix accidental double '://'
+        if item.count("://") > 1:
+            first, rest = item.split("://", 1)
+            clean.append(first + "://" + rest.split("://")[0])
+            last = rest.split("://")[-1]
+            if last:
+                clean.append("https://" + last)
+        else:
+            clean.append(item)
+    # de-dup & drop empties
+    return [x for i, x in enumerate(clean) if x and x not in clean[:i]]
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_prefix="", case_sensitive=False)
@@ -14,12 +32,10 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
 
     # CORS
-    CORS_ALLOW_ORIGINS: str = ""  # comma-separated list
+    CORS_ALLOW_ORIGINS: str = ""
     @property
     def cors_origins(self) -> List[str]:
-        if not self.CORS_ALLOW_ORIGINS:
-            return ["*"] if self.ENV != "production" else []
-        return [o.strip() for o in self.CORS_ALLOW_ORIGINS.split(",") if o.strip()]
+        return _sanitize_origins(self.CORS_ALLOW_ORIGINS, self.ENV)
 
     # Database
     DATABASE_URL: str = "sqlite:///./app.db"
@@ -28,11 +44,20 @@ class Settings(BaseSettings):
     JWT_SECRET: str = "change-me"
     TOKEN_EXP_MINUTES: int = 60 * 24
     CODE_EXP_MINUTES: int = 15
-    ADMIN_EMAILS: str = ""  # comma-separated list
+    ADMIN_EMAILS: str = ""   # new (comma-separated)
+    ADMIN_EMAIL: str | None = None  # legacy fallback
+    @property
+    def admin_list(self) -> List[str]:
+        parts = [*(self.ADMIN_EMAILS.split(",") if self.ADMIN_EMAILS else []), *( [self.ADMIN_EMAIL] if self.ADMIN_EMAIL else [])]
+        return [p.strip().lower() for p in parts if p and p.strip()]
 
     # External services
     PDF_SERVICE_URL: Optional[AnyHttpUrl] = None
-    PDF_TIMEOUT_MS: int = 90000
+    PDF_TIMEOUT_MS: int = 90000  # ms (primary)
+    PDF_TIMEOUT: int | None = None  # legacy alias in ms
+    @property
+    def pdf_timeout_ms(self) -> int:
+        return int(self.PDF_TIMEOUT or self.PDF_TIMEOUT_MS or 90000)
 
     # Mail (SMTP)
     SMTP_HOST: Optional[str] = None
@@ -46,6 +71,7 @@ class Settings(BaseSettings):
     # LLM
     OPENAI_API_KEY: Optional[str] = None
     OPENAI_MODEL_DEFAULT: str = "gpt-4o"
+    EXEC_SUMMARY_MODEL: Optional[str] = None
     OPENAI_TIMEOUT: float = 45.0
     OPENAI_MAX_TOKENS: int = 1500
     GPT_TEMPERATURE: float = 0.2
@@ -55,7 +81,7 @@ class Settings(BaseSettings):
     ANTHROPIC_TIMEOUT: float = 45.0
     OVERLAY_PROVIDER: str = "auto"
 
-    # Live / search (optional)
+    # Optional live search
     TAVILY_API_KEY: Optional[str] = None
     SERPAPI_KEY: Optional[str] = None
 
