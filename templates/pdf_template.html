@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KI-Status-Report</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:#0f172a; margin:24px; }
+    h1,h2,h3 { color:#0b3b8f; }
+    .hl { color:#0b3b8f; }
+    .muted { color:#64748b; }
+    .pill { display:inline-block; background:#e2e8f0; border-radius:999px; padding:4px 10px; margin-right:8px; font-size:12px; }
+    .card { border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin:12px 0; background:#fff; }
+    .kpi .bar { display:flex; align-items:center; gap:12px; margin:8px 0; }
+    .kpi .label { min-width:150px; }
+    .kpi .bar__track { position:relative; flex:1; height:10px; background:#f1f5f9; border-radius:6px; overflow:hidden; }
+    .kpi .bar__fill { position:absolute; left:0; top:0; bottom:0; background:#60a5fa; }
+    .kpi .bar__median { position:absolute; top:-2px; width:2px; height:14px; background:#0ea5e9; }
+    .kpi .bar__delta { min-width:80px; text-align:right; font-size:12px; color:#334155; }
+    .section { margin:18px 0; padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; }
+  </style>
+</head>
+<body>
+  <h1>KI-Status-Report</h1>
+  <p class="muted">Datum: {{REPORT_DATE}}</p>
+
+  <div class="section">
+    <h2>Profil</h2>
+    {{PROFILE_HTML}}
+  </div>
+
+  <div class="section">
+    <h2>Scoring</h2>
+    {{KPI_BARS_HTML}}
+  </div>
+
+  <div class="section">
+    <h2>Executive Summary</h2>
+    {{EXEC_SUMMARY_HTML}}
+  </div>
+
+  <div class="section">
+    <h2>Quick Wins</h2>
+    {{QUICK_WINS_HTML}}
+  </div>
+
+  <div class="section">
+    <h2>Roadmap</h2>
+    {{ROADMAP_HTML}}
+  </div>
+
+  <div class="section">
+    <h2>Risiken</h2>
+    {{RISKS_HTML}}
+  </div>
+
+  <div class="section">
+    <h2>Compliance</h2>
+    {{COMPLIANCE_HTML}}
+  </div>
+
+  <div class="section">
+    <h2>Business Case</h2>
+    {{BUSINESS_CASE_HTML}}
+  </div>
+
+  <div class="section">
+    <h2>Empfehlungen</h2>
+    {{RECOMMENDATIONS_HTML}}
+  </div>
+</body>
+</html>
