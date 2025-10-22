@@ -1,65 +1,118 @@
+# -*- coding: utf-8 -*-
+"""Briefing intake & (optional) async analysis trigger.
 
-# routes/briefing.py
-# Robust async trigger for briefing analysis with graceful fallbacks.
-# FastAPI router that does not hard-depend on gpt_analyze.run_async.
+Exposes:
+  POST /api/briefing_async    -> 200 JSON {ok, briefing_id, queued, ...}
 
-from fastapi import APIRouter, BackgroundTasks, Request
-from pydantic import BaseModel
+Tolerates payloads:
+  { "lang": "de", "email": "...", <flat fields> }
+  { "lang": "de", "email": "...", "answers": { ... } }
+
+Persists to Briefing.answers and (optionally) starts async analysis if
+gpt_analyze.run_async / analyze / run is available. Never 404s.
+"""
+from __future__ import annotations
+from typing import Any, Dict, Optional, List
+from datetime import datetime, timezone
 import logging
 
+from fastapi import APIRouter, Body, Depends, HTTPException, BackgroundTasks
+from sqlalchemy.orm import Session
+
+from core.db import get_session
+from models import Briefing
+from services.auth import get_current_user
+
 log = logging.getLogger("routes.briefing")
-router = APIRouter(prefix="/api", tags=["briefing"])
+
+router = APIRouter(tags=["briefing"])
 
 
-class BriefingPayload(BaseModel):
-    # Collect the full dynamic questionnaire without strict schema
-    # to remain forward-compatible with added fields.
-    email: str | None = None
-    lang: str | None = "de"
-    # Everything else (answers) is captured as a dict
-    # by accepting arbitrary types:
-    class Config:
-        extra = "allow"
+def _bool(v: Any) -> bool:
+    if isinstance(v, bool):
+        return v
+    if isinstance(v, (int, float)):
+        return v != 0
+    s = str(v).strip().lower()
+    return s in {"1", "true", "yes", "y", "ja"}
 
 
-# Detect available analyze function(s) in gpt_analyze
-AnalyzeFn = None
-try:
-    from gpt_analyze import run_async as AnalyzeFn  # type: ignore
-except Exception as e1:
+def _pick_answers(payload: Dict[str, Any]) -> Dict[str, Any]:
+    if isinstance(payload.get("answers"), dict):
+        return dict(payload["answers"])
+    # fallback: all non-reserved keys become answers
+    reserved = {"lang", "email", "to", "answers", "token"}
+    return {k: v for k, v in payload.items() if k not in reserved}
+
+
+def _start_async_if_possible(bg: BackgroundTasks, briefing_id: int, email: Optional[str]) -> bool:
     try:
-        from gpt_analyze import run as AnalyzeFn  # type: ignore
-    except Exception as e2:
+        from gpt_analyze import run_async as _run  # type: ignore
+        bg.add_task(_run, briefing_id, email=email)
+        return True
+    except Exception as e1:
         try:
-            from gpt_analyze import analyze as AnalyzeFn  # type: ignore
-        except Exception as e3:
-            log.warning("No analyze function available in gpt_analyze (run_async/run/analyze). "
-                        "Falling back to 'no-op'. Details: %s | %s | %s", e1, e2, e3)
-            AnalyzeFn = None
-
-
-def _safe_run(payload: dict) -> None:
-    if AnalyzeFn is None:
-        log.info("Briefing received but no analyze function present. Skipping.")
-        return
-    try:
-        AnalyzeFn(payload)  # run synchronously inside background task
-        log.info("Background analysis finished successfully.")
-    except Exception as ex:
-        log.exception("Background analysis failed: %s", ex)
+            from gpt_analyze import analyze_briefing as _analyze  # type: ignore
+            # wrap sync analyze in background task
+            def _wrapper(bid: int) -> None:
+                try:
+                    from core.db import SessionLocal
+                    db = SessionLocal()
+                    try:
+                        _analyze(db, bid)
+                    finally:
+                        db.close()
+                except Exception as err:
+                    log.exception("Background analyze failed: %s", err)
+            bg.add_task(_wrapper, briefing_id)
+            return True
+        except Exception as e2:
+            log.warning("No async analyze available: %s | %s", e1, e2)
+            return False
 
 
 @router.post("/briefing_async")
-async def briefing_async(data: BriefingPayload, background: BackgroundTasks):
-    """Queue analysis in the background. Always returns 200 quickly.
+def briefing_async(
+    payload: Dict[str, Any] = Body(...),
+    db: Session = Depends(get_session),
+    user = Depends(get_current_user),
+    bg: BackgroundTasks = None,
+):
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=422, detail="Invalid JSON payload")
 
-    Frontend should display a thank-you message immediately.
-    """
-    try:
-        background.add_task(_safe_run, data.dict())
-        log.info("Queued background analysis (lang=%s, email=%s).", data.lang, data.email)
-        return {"queued": True, "message": "Analysis queued"}
-    except Exception as ex:
-        log.exception("Analyse nicht gestartet (optional): %s", ex)
-        # Keep 200 OK to avoid blocking UX; mark queued=False for monitoring
-        return {"queued": False, "message": f"Analysis not started: {ex.__class__.__name__}"}
+    answers = _pick_answers(payload)
+    if not answers:
+        raise HTTPException(status_code=422, detail="answers missing")
+
+    # normalize consent if present
+    if "datenschutz" in answers and not _bool(answers["datenschutz"]):
+        raise HTTPException(status_code=422, detail="Datenschutzhinweise nicht bestätigt")
+
+    lang = (payload.get("lang") or "de").strip().lower()[:5]
+    email = (payload.get("email") or payload.get("to") or getattr(user, "email", None))
+
+    br = Briefing(
+        user_id=getattr(user, "id", None),
+        lang=lang,
+        answers=answers,
+        created_at=datetime.now(timezone.utc),
+    )
+    db.add(br)
+    db.commit()
+    db.refresh(br)
+
+    queued = False
+    if bg is not None:
+        try:
+            queued = _start_async_if_possible(bg, br.id, email)
+        except Exception as e:
+            log.warning("Unable to queue async analysis: %s", e)
+
+    return {
+        "ok": True,
+        "briefing_id": br.id,
+        "lang": br.lang,
+        "answers_count": len(answers),
+        "queued": queued,
+    }
