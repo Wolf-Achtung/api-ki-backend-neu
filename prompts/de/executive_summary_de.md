@@ -1,6 +1,6 @@
 ## EXECUTIVE SUMMARY (DE)
 
-**KRITISCHE PARAMETER (MÜSSEN VERWENDET WERDEN):**
+**Kritisch zu verwenden:**
 - Branche: {{BRANCHE_LABEL}} (Code: {{BRANCHE}})
 - Unternehmensgröße: {{UNTERNEHMENSGROESSE_LABEL}} (Code: {{UNTERNEHMENSGROESSE}})
 - Hauptleistung: {{HAUPTLEISTUNG}}
@@ -8,15 +8,16 @@
 
 **Zusätzliche Daten:**
 - Briefing (kompakt): {{BRIEFING_JSON}}
-- **Alle Antworten:** {{ALL_ANSWERS_JSON}}
-- **Freitext-Zusammenfassung:** {{FREE_TEXT_NOTES}}
+- Alle Antworten: {{ALL_ANSWERS_JSON}}
+- Freitext-Zusammenfassung: {{FREE_TEXT_NOTES}}
 - Scoring: {{SCORING_JSON}}
 - Benchmarks: {{BENCHMARKS_JSON}}
 - Tools/Förderung: {{TOOLS_JSON}} / {{FUNDING_JSON}}
 
 ### Anforderungen
-- 5–6 Sätze, prägnant, managementtauglich; nutze spezifische Details aus **Freitext**.
-- 1–2 Quick Wins und 1 strategische Maßnahme (Roadmap-Vorschau).
+- 5–6 Sätze, prägnant, managementtauglich; nutze spezifische Details aus Freitext.
+- 1–2 Quick Wins und 1 strategische Maßnahme (Roadmap‑Vorschau).
+- **Keine Halluzinationen.** Wenn Informationen fehlen, **weise kurz darauf hin** und triff eine realistische Annahme.
 
 ### Ausgabeformat
-Sauberes HTML-Fragment mit `<h3>` und `<p>`.
+Gib **ausschließlich** ein sauberes HTML‑Fragment aus mit `<h3>` und `<p>` – **ohne** `<html>/<body>`.
