@@ -16,7 +16,6 @@ logger = logging.getLogger("ki-backend")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # DB init
     try:
         Base.metadata.create_all(bind=engine)
         run_migrations(engine)
@@ -24,14 +23,12 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.exception("DB init/migration failed: %s", e)
     yield
-    # graceful shutdown hook (if needed)
 
 app = FastAPI(title=settings.APP_NAME, version=settings.VERSION, lifespan=lifespan)
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=getattr(settings, "cors_origins", ["*"] if settings.ENV != "production" else []),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -49,7 +46,6 @@ async def healthz():
 async def diag():
     return {"ok": True, "settings": {"ENV": settings.ENV, "VERSION": settings.VERSION}, "time": datetime.now(timezone.utc).isoformat()}
 
-# Routers
 from routes.auth import router as auth_router
 from routes.briefing import router as briefing_router
 from routes.analyze import router as analyze_router
