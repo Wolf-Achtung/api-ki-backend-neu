@@ -1,50 +1,74 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-from datetime import datetime, timedelta
-from typing import Optional
-
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
+from datetime import datetime, timezone
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey
 from sqlalchemy.dialects.sqlite import JSON as SQLITE_JSON
-from sqlalchemy.types import JSON as PG_JSON
-
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy import types as sqltypes, Index
 from core.db import Base
 
-def JsonType():
-    try:
-        # Use PG JSON when available (postgres), else sqlite JSON (Text)
-        import sqlalchemy.dialects.postgresql as pg
-        return PG_JSON
-    except Exception:
-        return SQLITE_JSON
+class JSONType(sqltypes.TypeDecorator):
+    impl = SQLITE_JSON
+    cache_ok = True
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "postgresql":
+            return dialect.type_descriptor(JSONB(astext_type=sqltypes.Text()))
+        return dialect.type_descriptor(SQLITE_JSON())
+
+def utcnow_aware() -> datetime:
+    return datetime.now(timezone.utc)
 
 class User(Base):
     __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String(320), unique=True, nullable=False, index=True)
-    is_admin = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    email: Mapped[str] = mapped_column(String(320), unique=True, index=True, nullable=False)
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow_aware, nullable=False)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-class OneTimeCode(Base):
-    __tablename__ = "one_time_codes"
-    id = Column(Integer, primary_key=True)
-    email = Column(String(320), index=True, nullable=False)
-    code = Column(String(12), nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    briefings = relationship("Briefing", back_populates="user")
+
+    __table_args__ = (
+        Index("ix_users_email", "email", unique=True),
+    )
+
+class LoginCode(Base):
+    __tablename__ = "login_codes"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    code_hash: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
 
 class Briefing(Base):
     __tablename__ = "briefings"
-    id = Column(Integer, primary_key=True)
-    user_email = Column(String(320), index=True)
-    payload = Column(JsonType())
-    lang = Column(String(8), default="de")
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    lang: Mapped[str] = mapped_column(String(5), default="de", nullable=False, index=True)
+    answers: Mapped[dict] = mapped_column(JSONType, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow_aware, nullable=False, index=True)
+
+    user = relationship("User", back_populates="briefings")
+    analyses = relationship("Analysis", back_populates="briefing")
+
+class Analysis(Base):
+    __tablename__ = "analyses"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    briefing_id: Mapped[int] = mapped_column(Integer, ForeignKey("briefings.id", ondelete="SET NULL"), nullable=True, index=True)
+    html: Mapped[str] = mapped_column(Text, nullable=False)
+    meta: Mapped[dict] = mapped_column(JSONType, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow_aware, nullable=False, index=True)
+
+    briefing = relationship("Briefing", back_populates="analyses")
 
 class Report(Base):
     __tablename__ = "reports"
-    id = Column(Integer, primary_key=True)
-    user_email = Column(String(320), index=True)
-    briefing_id = Column(Integer, nullable=True)
-    html_len = Column(Integer, default=0)
-    pdf_url = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    briefing_id: Mapped[int] = mapped_column(Integer, ForeignKey("briefings.id", ondelete="SET NULL"), nullable=True, index=True)
+    analysis_id: Mapped[int] = mapped_column(Integer, ForeignKey("analyses.id", ondelete="SET NULL"), nullable=True, index=True)
+    pdf_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    pdf_bytes_len: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow_aware, nullable=False, index=True)
