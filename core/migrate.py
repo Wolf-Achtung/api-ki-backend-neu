@@ -10,35 +10,23 @@ def _is_postgres(engine: Engine) -> bool:
         return False
 
 def run_migrations(engine: Engine) -> None:
-    """Idempotente Minimal-Migrationen – TZ-Bereinigung & fehlende Tabellen/Indizes.
-    - Erzwingt timestamptz für relevante Spalten
-    - Fügt Spalten hinzu (falls ältere DB) und Indizes
-    - Legt Tabellen an (falls nicht vorhanden)
-    Nur PostgreSQL. SQLite wird durch ORM create_all bedient.
-    """
     if not _is_postgres(engine):
         return
     stmts = [
-        # users
-        """ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE;""",  # legacy
-        """ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP WITH TIME ZONE NULL;""",
-        """ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE;""",
-        # Falls created_at bereits existiert, auf timestamptz migrieren
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE;",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP WITH TIME ZONE NULL;",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE;",
         """DO $$ BEGIN
              IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='created_at' AND data_type='timestamp without time zone') THEN
                ALTER TABLE users ALTER COLUMN created_at TYPE TIMESTAMP WITH TIME ZONE USING created_at AT TIME ZONE 'UTC';
              END IF;
            END $$;""",
-        # Unique Index
         """DO $$ BEGIN
-             IF NOT EXISTS (
-               SELECT 1 FROM pg_indexes WHERE schemaname='public' AND indexname='ix_users_email'
-             ) THEN
+             IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE schemaname='public' AND indexname='ix_users_email') THEN
                CREATE UNIQUE INDEX ix_users_email ON users (email);
              END IF;
            END $$;""",
 
-        # login_codes
         """CREATE TABLE IF NOT EXISTS login_codes (
               id SERIAL PRIMARY KEY,
               user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -46,7 +34,7 @@ def run_migrations(engine: Engine) -> None:
               expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
               used BOOLEAN NOT NULL DEFAULT FALSE
             );""",
-        # briefings
+
         """CREATE TABLE IF NOT EXISTS briefings (
               id SERIAL PRIMARY KEY,
               user_id INTEGER NULL REFERENCES users(id) ON DELETE SET NULL,
@@ -54,7 +42,7 @@ def run_migrations(engine: Engine) -> None:
               answers JSONB NOT NULL DEFAULT '{}'::jsonb,
               created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
             );""",
-        # analyses
+
         """CREATE TABLE IF NOT EXISTS analyses (
               id SERIAL PRIMARY KEY,
               user_id INTEGER NULL REFERENCES users(id) ON DELETE SET NULL,
@@ -63,7 +51,7 @@ def run_migrations(engine: Engine) -> None:
               meta JSONB NOT NULL DEFAULT '{}'::jsonb,
               created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
             );""",
-        # reports
+
         """CREATE TABLE IF NOT EXISTS reports (
               id SERIAL PRIMARY KEY,
               user_id INTEGER NULL REFERENCES users(id) ON DELETE SET NULL,
