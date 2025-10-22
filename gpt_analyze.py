@@ -1,91 +1,198 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-import logging, json, time, os
-from typing import Dict, Any, Tuple, Optional
+"""
+Analyse-Orchestrator:
+- Baut aus Briefing-Antworten einen Kontext (Labels, Scoring, Tools/Förderung).
+- Rendert mehrere DE-Teilprompts (Executive Summary, Business, Quick Wins, Roadmap, Empfehlungen, Risiken, Compliance).
+- Ruft ein Chat-Modell (OpenAI) pro Abschnitt auf und setzt am Ende zu einem HTML-Report zusammen.
+- Robust auch ohne OPENAI_API_KEY (liefert Platzhalter-HTML).
+"""
+import logging, json, os
+from typing import Dict, Any, Tuple, List, Optional
 from datetime import datetime, timezone
+
 import requests
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+
 from core.db import SessionLocal
 from models import Briefing, Analysis
 from settings import settings
+from services.prompt_engine import render_file, dumps
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
-PROMPT_PATH = os.environ.get("PROMPT_PATH", "prompts/prompt_de.md")
+TEMPLATES_DE = {
+    "executive_summary": "prompts/de/executive_summary_de.md",
+    "business":          "prompts/de/business_de.md",
+    "quick_wins":        "prompts/de/quick_wins_de.md",
+    "roadmap":           "prompts/de/roadmap_de.md",
+    "recommendations":   "prompts/de/recommendations_de.md",
+    "risks":             "prompts/de/risks_de.md",
+    "compliance":        "prompts/de/compliance_de.md",
+}
 
-def _load_prompt_template() -> str:
+BRANCH_LABELS = {
+    "marketing": "Marketing & Werbung",
+    "beratung": "Beratung & Dienstleistungen",
+    "it": "IT & Software",
+    "finanzen": "Finanzen & Versicherungen",
+    "handel": "Handel & E‑Commerce",
+    "bildung": "Bildung",
+    "verwaltung": "Verwaltung",
+    "gesundheit": "Gesundheit & Pflege",
+    "bau": "Bauwesen & Architektur",
+    "medien": "Medien & Kreativwirtschaft",
+    "industrie": "Industrie & Produktion",
+    "logistik": "Transport & Logistik",
+}
+SIZE_LABELS = {
+    "solo": "1 (Solo‑Selbstständig/Freiberuflich)",
+    "team": "2–10 (Kleines Team)",
+    "kmu": "11–100 (KMU)",
+}
+STATE_LABELS = {
+    "bw":"Baden‑Württemberg","by":"Bayern","be":"Berlin","bb":"Brandenburg","hb":"Bremen","hh":"Hamburg","he":"Hessen",
+    "mv":"Mecklenburg‑Vorpommern","ni":"Niedersachsen","nw":"Nordrhein‑Westfalen","rp":"Rheinland‑Pfalz","sl":"Saarland",
+    "sn":"Sachsen","st":"Sachsen‑Anhalt","sh":"Schleswig‑Holstein","th":"Thüringen",
+}
+
+def _safe(obj: Any) -> Any:
     try:
-        with open(PROMPT_PATH, "r", encoding="utf-8") as f:
-            return f.read()
+        json.dumps(obj)  # just to check serializability
+        return obj
     except Exception:
-        # Fallback: minimal system prompt
-        return ("Du bist ein erfahrener KI‑Berater für KMU. Erstelle eine klare, praxisnahe Analyse und Roadmap.\n"
-                "Gib strukturierte HTML‑Abschnitte zurück (ohne <html>/<body>). Nutze die Antworten des Fragebogens.")
+        return str(obj)
 
-def _format_answers(answers: Dict[str, Any]) -> str:
+def _score(answers: Dict[str, Any]) -> Dict[str, Any]:
+    """Ableitung einfacher Scores (stabil, keine Ausreißer)."""
+    s = {}
+    try:
+        s["digitalisierungsgrad"] = int(answers.get("digitalisierungsgrad") or 0)
+    except Exception:
+        s["digitalisierungsgrad"] = 0
+    try:
+        s["risikofreude"] = int(answers.get("risikofreude") or 0)
+    except Exception:
+        s["risikofreude"] = 0
+    s["automation"] = (answers.get("automatisierungsgrad") or "unbekannt")
+    s["ki_knowhow"] = (answers.get("ki_knowhow") or "unbekannt")
+    return s
+
+def _free_text(answers: Dict[str, Any]) -> str:
+    keys = ["hauptleistung", "ki_projekte", "ki_potenzial", "ki_geschaeftsmodell_vision", "moonshot"]
     parts = []
-    for k, v in answers.items():
-        parts.append(f"- {k}: {json.dumps(v, ensure_ascii=False)}")
-    return "\n".join(parts)
+    for k in keys:
+        v = answers.get(k)
+        if v:
+            parts.append(f"{k}: {v}")
+    return " | ".join(parts) if parts else "—"
 
-def _call_openai_chat(prompt: str) -> str:
+def _tools_for(branch: str) -> List[Dict[str, Any]]:
+    """Unaufgeregte, anbieterneutrale Vorschläge; die inhaltliche Ausarbeitung macht das LLM im Prompt."""
+    generic = [
+        {"name":"RAG Wissensbasis", "zweck":"Interne Dokumente fragbar machen", "notizen":"Open‑source / Managed Optionen"},
+        {"name":"Dokument‑Automation", "zweck":"Texte/Angebote/Protokolle", "notizen":"Vorlagen + KI‑Korrektur"},
+        {"name":"Daten‑Pipelines", "zweck":"ETL/ELT für KI", "notizen":"SaaS/Cloud‑Services"},
+    ]
+    extra = {
+        "marketing":[{"name":"KI‑Ad‑Ops", "zweck":"Kampagnenvorschläge, Varianten", "notizen":"Guardrails & Freigaben"}],
+        "handel":[{"name":"Produkt‑Kategorisierung", "zweck":"Autom. Tags/Beschreibungen", "notizen":"Qualitätskontrollen"}],
+        "industrie":[{"name":"Prozess‑Monitoring", "zweck":"Anomalien & Wartung", "notizen":"Sensor/SCADA‑Anbindung"}],
+        "gesundheit":[{"name":"Termin & Doku Assist", "zweck":"Routine entlasten", "notizen":"Datenschutz streng beachten"}],
+    }
+    return generic + extra.get(branch, [])
+
+def _funding_for(state: str) -> List[Dict[str, Any]]:
+    return [
+        {"programm":"Digital Jetzt (BMWK)", "hinweis":"Investitionen & Qualifizierung – Prüfen Sie Antragsfenster."},
+        {"programm":"go‑digital (BMWK)", "hinweis":"Beratung & Umsetzung für KMU."},
+        {"programm":f"Landesprogramme ({STATE_LABELS.get(state,state).title()})", "hinweis":"Regionale Fördertöpfe je nach Thema."},
+    ]
+
+def _benchmarks_stub() -> Dict[str, Any]:
+    return {"source": "intern", "notes": "Pilotbetrieb – Platzhalter für künftige Vergleiche."}
+
+def _business_stub(answers: Dict[str, Any]) -> Dict[str, Any]:
+    return {"umsatz_range": answers.get("jahresumsatz") or "keine_angabe"}
+
+def _ctx_for(br: Briefing) -> Dict[str, Any]:
+    a = br.answers or {}
+    branche = str(a.get("branche") or "unbekannt")
+    size = str(a.get("unternehmensgroesse") or "unbekannt")
+    state = str(a.get("bundesland") or "unbekannt")
+    ctx = {
+        "BRANCHE": branche,
+        "BRANCHE_LABEL": BRANCH_LABELS.get(branche, branche.title()),
+        "UNTERNEHMENSGROESSE": size,
+        "UNTERNEHMENSGROESSE_LABEL": SIZE_LABELS.get(size, size),
+        "HAUPTLEISTUNG": a.get("hauptleistung") or "—",
+        "BUNDESLAND": state,
+        "BUNDESLAND_LABEL": STATE_LABELS.get(state, state),
+        "BRIEFING_JSON": dumps({k:a[k] for k in a.keys() if k in ("branche","unternehmensgroesse","bundesland","hauptleistung")}),
+        "ALL_ANSWERS_JSON": dumps(a),
+        "FREE_TEXT_NOTES": _free_text(a),
+        "SCORING_JSON": dumps(_score(a)),
+        "BENCHMARKS_JSON": dumps(_benchmarks_stub()),
+        "TOOLS_JSON": dumps(_tools_for(branche)),
+        "FUNDING_JSON": dumps(_funding_for(state)),
+        "BUSINESS_JSON": dumps(_business_stub(a)),
+    }
+    return ctx
+
+def _call_openai(prompt: str) -> str:
     if not settings.OPENAI_API_KEY:
-        logger.warning("OPENAI_API_KEY not set – returning fallback analysis.")
-        return "<h2>Analyse (Entwicklungsmodus)</h2><p>Kein API‑Key konfiguriert. Dies ist eine Platzhalter‑Analyse.</p>"
+        return f"<p><em>Entwicklungsmodus – kein OPENAI_API_KEY gesetzt.</em></p><div>{prompt[:300]}</div>"
     base = settings.OPENAI_API_BASE or "https://api.openai.com/v1"
     url = f"{base}/chat/completions"
-    headers = {"Authorization": f"Bearer {settings.OPENAI_API_KEY}", "Content-Type": "application/json"}
-    body = {
-        "model": settings.OPENAI_MODEL,
-        "messages": [
-            {"role": "system", "content": _load_prompt_template()},
-            {"role": "user", "content": prompt},
-        ],
-        "temperature": 0.2,
-    }
-    resp = requests.post(url, headers=headers, json=body, timeout=60)
-    if resp.status_code >= 400:
-        raise RuntimeError(f"OpenAI error {resp.status_code}: {resp.text[:200]}")
-    data = resp.json()
-    content = data["choices"][0]["message"]["content"].strip()
-    return content
+    hdr = {"Authorization": f"Bearer {settings.OPENAI_API_KEY}", "Content-Type": "application/json"}
+    body = {"model": settings.OPENAI_MODEL, "messages": [{"role":"user","content": prompt}], "temperature": 0.2}
+    r = requests.post(url, headers=hdr, json=body, timeout=60)
+    if r.status_code >= 400:
+        raise RuntimeError(f"OpenAI error {r.status_code}: {r.text[:200]}")
+    data = r.json()
+    return data["choices"][0]["message"]["content"].strip()
+
+def _render_section(name: str, template_path: str, ctx: Dict[str, Any]) -> str:
+    prompt = render_file(template_path, ctx)
+    html = _call_openai(prompt)
+    return f'<section id="{name}">{html}</section>'
+
+def build_full_report_html(br: Briefing) -> Dict[str, Any]:
+    ctx = _ctx_for(br)
+    sections = []
+    for key, path in TEMPLATES_DE.items():
+        try:
+            sections.append(_render_section(key, path, ctx))
+        except Exception as exc:
+            log.exception("Section %s failed: %s", key, exc)
+            sections.append(f'<section id="{key}"><p><em>Abschnitt "{key}" konnte nicht generiert werden.</em></p></section>')
+    toc = "".join([f'<li><a href="#{k}">{k.replace("_"," ").title()}</a></li>' for k in TEMPLATES_DE.keys()])
+    html = (
+        '<article class="ki-report">'
+        '<h2>KI‑Status‑Report</h2>'
+        f'<nav><ul class="toc">{toc}</ul></nav>'
+        + "".join(sections) +
+        '</article>'
+    )
+    meta = {"sections": list(TEMPLATES_DE.keys()), "lang": br.lang, "generated_at": datetime.now(timezone.utc).isoformat()}
+    return {"html": html, "meta": meta}
 
 def analyze_briefing(db: Session, briefing_id: int) -> Tuple[int, str, Dict[str, Any]]:
     br = db.get(Briefing, briefing_id)
     if not br:
         raise ValueError("Briefing not found")
-    prompt_user = (        "Unternehmens‑Kontext (Antworten aus dem Fragebogen):\n"
-        f"{_format_answers(br.answers)}\n\n"
-        "Bitte liefere eine strukturierte, handlungsorientierte Analyse mit konkreten Maßnahmen (Quick Wins, 30‑/90‑Tage‑Plan),\n"
-        "gegliedert in: Zusammenfassung, Quick‑Wins, Maßnahmen nach Bereich, Tool‑Vorschläge, Förder‑/Compliance‑Hinweise (Bundesland),\n"
-        "Risiken & Absicherung, Nächste Schritte. Nutze klare Zwischenüberschriften. Gebe HTML‑fragmente zurück."
-    )
-
-    html = _call_openai_chat(prompt_user)
-    meta = {
-        "model": settings.OPENAI_MODEL,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "briefing_id": briefing_id,
-        "prompt_chars": len(prompt_user),
-        "answers_keys": list(br.answers.keys()),
-    }
-
-    an = Analysis(user_id=br.user_id, briefing_id=briefing_id, html=html, meta=meta, created_at=datetime.now(timezone.utc))
-    db.add(an)
-    db.commit()
-    db.refresh(an)
-    return an.id, html, meta
+    result = build_full_report_html(br)
+    an = Analysis(user_id=br.user_id, briefing_id=briefing_id, html=result["html"], meta=result["meta"], created_at=datetime.now(timezone.utc))
+    db.add(an); db.commit(); db.refresh(an)
+    return an.id, result["html"], result["meta"]
 
 def run_async(briefing_id: int, email: Optional[str] = None) -> None:
-    """Background‑friendly wrapper: eigene DB‑Session, Exceptions geloggt."""
     try:
         db = SessionLocal()
         try:
             an_id, html, meta = analyze_briefing(db, briefing_id)
-            logger.info("analysis created: id=%s", an_id)
-            # Report‑Erstellung & E‑Mail optional über separate Endpoints/Jobs
+            log.info("analysis created: id=%s", an_id)
         finally:
             db.close()
     except Exception as exc:
-        logger.exception("run_async failed for briefing_id=%s: %s", briefing_id, exc)
+        log.exception("run_async failed for briefing_id=%s: %s", briefing_id, exc)
