@@ -1,36 +1,37 @@
 # -*- coding: utf-8 -*-
-"""Settings (Pydantic v2) – fixed import for Railway crash."""
 from __future__ import annotations
 from typing import List, Optional
-from pydantic import AnyHttpUrl, Field
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    # Meta
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
-    APP_NAME: str = Field("KI-Status-Report API", alias="APP_NAME")
-    VERSION: str = Field("1.0.0", alias="VERSION")
-    ENV: str = Field("production", alias="ENV")
-    LOG_LEVEL: str = Field("INFO", alias="LOG_LEVEL")
+
+    # Meta
+    APP_NAME: str = Field(default="KI-Status-Report API")
+    VERSION: str = Field(default="1.0.0")
+    ENV: str = Field(default="production")
+    LOG_LEVEL: str = Field(default="INFO")
 
     # DB
-    DATABASE_URL: str = Field(..., alias="DATABASE_URL")
+    DATABASE_URL: str
 
     # CORS
-    CORS_ORIGINS: str = Field("", alias="CORS_ORIGINS")
-    @property
-    def cors_origins(self) -> List[str]:
+    CORS_ORIGINS: str = Field(default="")  # comma-separated list
+    CORS_ALLOW_ANY: bool = Field(default=False)  # if true, use allow_origin_regex
+    def cors_list(self) -> List[str]:
         s = (self.CORS_ORIGINS or "").strip()
         if not s:
             return []
-        return [x.strip() for x in s.split(",") if x.strip()]
+        items = [x.strip().rstrip("/") for x in s.split(",") if x.strip()]
+        return items
 
     # LLM
-    OPENAI_API_KEY: Optional[str] = Field(default=None, alias="OPENAI_API_KEY")
-    OPENAI_API_BASE: Optional[str] = Field(default=None, alias="OPENAI_API_BASE")
-    OPENAI_MODEL: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
+    OPENAI_API_KEY: Optional[str] = None
+    OPENAI_API_BASE: Optional[str] = None
+    OPENAI_MODEL: str = Field(default="gpt-4o-mini")
 
     # PDF
-    PDF_SERVICE_URL: Optional[AnyHttpUrl] = Field(default=None, alias="PDF_SERVICE_URL")
+    PDF_SERVICE_URL: Optional[str] = None
 
 settings = Settings()
