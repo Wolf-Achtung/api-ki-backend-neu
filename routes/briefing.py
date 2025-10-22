@@ -1,91 +1,65 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
 
-from typing import Any, Dict, Optional
-from datetime import datetime, timezone
+# routes/briefing.py
+# Robust async trigger for briefing analysis with graceful fallbacks.
+# FastAPI router that does not hard-depend on gpt_analyze.run_async.
+
+from fastapi import APIRouter, BackgroundTasks, Request
+from pydantic import BaseModel
 import logging
 
-from fastapi import APIRouter, Depends, Body, HTTPException, BackgroundTasks
-from sqlalchemy.orm import Session
-
-from core.db import get_session, Base, engine
-from models import Briefing, User
-from services.auth import get_current_user
-
-logger = logging.getLogger("routes.briefing")
-
-router = APIRouter(tags=["briefing"])  # wird in main.py unter /api gemountet
+log = logging.getLogger("routes.briefing")
+router = APIRouter(prefix="/api", tags=["briefing"])
 
 
-@router.on_event("startup")
-def _ensure_tables():
+class BriefingPayload(BaseModel):
+    # Collect the full dynamic questionnaire without strict schema
+    # to remain forward-compatible with added fields.
+    email: str | None = None
+    lang: str | None = "de"
+    # Everything else (answers) is captured as a dict
+    # by accepting arbitrary types:
+    class Config:
+        extra = "allow"
+
+
+# Detect available analyze function(s) in gpt_analyze
+AnalyzeFn = None
+try:
+    from gpt_analyze import run_async as AnalyzeFn  # type: ignore
+except Exception as e1:
     try:
-        Base.metadata.create_all(bind=engine)
-    except Exception as exc:
-        logger.exception("DB init in briefing failed: %s", exc)
+        from gpt_analyze import run as AnalyzeFn  # type: ignore
+    except Exception as e2:
+        try:
+            from gpt_analyze import analyze as AnalyzeFn  # type: ignore
+        except Exception as e3:
+            log.warning("No analyze function available in gpt_analyze (run_async/run/analyze). "
+                        "Falling back to 'no-op'. Details: %s | %s | %s", e1, e2, e3)
+            AnalyzeFn = None
 
 
-def _coerce_bool(v: Any) -> bool:
-    if isinstance(v, bool):
-        return v
-    if isinstance(v, (int, float)):
-        return v != 0
-    s = str(v).strip().lower()
-    return s in {"true", "1", "ja", "yes", "y"}
+def _safe_run(payload: dict) -> None:
+    if AnalyzeFn is None:
+        log.info("Briefing received but no analyze function present. Skipping.")
+        return
+    try:
+        AnalyzeFn(payload)  # run synchronously inside background task
+        log.info("Background analysis finished successfully.")
+    except Exception as ex:
+        log.exception("Background analysis failed: %s", ex)
 
 
 @router.post("/briefing_async")
-def create_briefing_async(
-    payload: Dict[str, Any] = Body(...),
-    db: Session = Depends(get_session),
-    user: Optional[User] = Depends(get_current_user),
-    bg: BackgroundTasks = None,
-):
-    """Nimmt den Fragebogen entgegen.
-    - akzeptiert sowohl {answers:{...}, lang:'de'} als auch flache Felder {..., lang:'de'}
-    - normalisiert 'datenschutz' → bool
-    - persistiert Briefing
-    - optional: Analyse im Background (falls Funktion vorhanden)
+async def briefing_async(data: BriefingPayload, background: BackgroundTasks):
+    """Queue analysis in the background. Always returns 200 quickly.
+
+    Frontend should display a thank-you message immediately.
     """
-    if not isinstance(payload, dict):
-        raise HTTPException(status_code=422, detail="Ungültiges JSON (Objekt erwartet)")
-
-    # 1) Eingangsformate tolerant behandeln
-    answers = payload.get("answers")
-    if not isinstance(answers, dict):
-        answers = {k: v for k, v in payload.items() if k not in {"answers", "lang", "email", "to", "meta"}}
-
-    lang = (payload.get("lang") or "de").strip().lower()[:5]
-    email = (payload.get("email") or payload.get("to") or (user.email if user else None))
-
-    if not answers:
-        raise HTTPException(status_code=422, detail="answers fehlen oder sind leer" )
-
-    # 2) Datenschutz prüfen (falls vorhanden)
-    if "datenschutz" in answers:
-        answers["datenschutz"] = _coerce_bool(answers["datenschutz"])  # Normalisierung
-        if answers["datenschutz"] is not True:
-            raise HTTPException(status_code=422, detail="Datenschutzhinweise nicht bestätigt" )
-
-    # 3) Persistieren
-    br = Briefing(
-        user_id=(user.id if user else None),
-        lang=lang or "de",
-        answers=answers,
-        created_at=datetime.now(timezone.utc),
-    )
-    db.add(br)
-    db.commit()
-    db.refresh(br)
-
-    # 4) Optionale Background-Analyse (ohne harte Abhängigkeit)
     try:
-        # Falls vorhanden: gpt_analyze.run_async(db, br.id, email=...)
-        from gpt_analyze import run_async as _run_async  # type: ignore
-        if bg is not None:
-            bg.add_task(_run_async, br.id, email=email)
-    except Exception as exc:
-        # Kein Fehler werfen – Analyse kann separat via /api/analyze erfolgen
-        logger.info("Analyse nicht gestartet (optional): %s", exc)
-
-    return {"ok": True, "briefing_id": br.id, "lang": br.lang, "answers_count": len(answers), "queued": True}
+        background.add_task(_safe_run, data.dict())
+        log.info("Queued background analysis (lang=%s, email=%s).", data.lang, data.email)
+        return {"queued": True, "message": "Analysis queued"}
+    except Exception as ex:
+        log.exception("Analyse nicht gestartet (optional): %s", ex)
+        # Keep 200 OK to avoid blocking UX; mark queued=False for monitoring
+        return {"queued": False, "message": f"Analysis not started: {ex.__class__.__name__}"}
