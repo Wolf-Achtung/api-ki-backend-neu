@@ -1,21 +1,5 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-"""
-Analyse-Orchestrator (DE) – rendert alle Kernsektionen + optionale Zusatzsektionen,
-baut den finalen Report-HTML via templates/pdf_template.html und kümmert sich in
-run_async() zusätzlich um PDF-Erzeugung und optionalen E-Mail-Versand.
-
-Voraussetzungen:
-- services/prompt_engine.py    -> render_file(), dumps()
-- services/report_renderer.py  -> render()
-- services/pdf_client.py       -> render_pdf_from_html()
-- services/email.py            -> send_mail()
-
-Modelle:
-- Briefing (answers JSON, lang, user_id ...)
-- Analysis(html, meta, briefing_id, user_id, created_at)
-- Report(pdf_url | pdf_bytes_len, analysis_id, briefing_id, user_id, created_at)
-"""
 import json
 import logging
 from datetime import datetime, timezone
@@ -30,11 +14,13 @@ from services.prompt_engine import dumps, render_file
 from services.report_renderer import render as render_report_html
 from services.pdf_client import render_pdf_from_html
 from services.email import send_mail
+from services.research import search_funding_and_tools
+from services.knowledge import get_knowledge_blocks
 from settings import settings
 
 log = logging.getLogger(__name__)
 
-# -------------------------- Prompt-Mapping --------------------------
+# Existing mappings (assumed present in your previous version)
 CORE_SECTIONS = [
     ("executive_summary", "prompts/de/executive_summary_de.md", "EXEC_SUMMARY_HTML"),
     ("quick_wins",        "prompts/de/quick_wins_de.md",        "QUICK_WINS_HTML"),
@@ -91,7 +77,6 @@ STATE_LABELS = {
     "th": "Thüringen",
 }
 
-# -------------------------- Kontextaufbereitung --------------------------
 def _score(answers: Dict[str, Any]) -> Dict[str, Any]:
     s: Dict[str, Any] = {}
     try:
@@ -166,7 +151,6 @@ def _ctx_for(br: Briefing) -> Dict[str, Any]:
     }
     return ctx
 
-# -------------------------- LLM-Aufruf --------------------------
 def _call_openai(prompt: str) -> str:
     if not settings.OPENAI_API_KEY:
         return "<p><em>Entwicklungsmodus – kein OPENAI_API_KEY gesetzt.</em></p>"
@@ -185,7 +169,6 @@ def _render_section(template_path: str, ctx: Dict[str, Any]) -> str:
     prompt = render_file(template_path, ctx)
     return _call_openai(prompt)
 
-# -------------------------- Hilfs-HTML (ohne LLM) --------------------------
 def _build_profile_html(ctx: Dict[str, Any]) -> str:
     def pill(label: str, val: str) -> str:
         return f'<span class="pill"><b>{label}</b>: {val}</span>'
@@ -198,7 +181,6 @@ def _build_profile_html(ctx: Dict[str, Any]) -> str:
     return "<p>" + " ".join(items) + "</p>"
 
 def _build_kpi_bars_html(ctx: Dict[str, Any]) -> str:
-    s = {}
     try:
         s = json.loads(ctx.get("SCORING_JSON", "{}"))
     except Exception:
@@ -208,7 +190,6 @@ def _build_kpi_bars_html(ctx: Dict[str, Any]) -> str:
             v = int(val)
         except Exception:
             v = 0
-        # Interpret 0-10 Skalen als 0-100%
         v = v * 10 if v <= 10 else v
         v = max(0, min(100, v))
         return (
@@ -227,11 +208,10 @@ def _build_kpi_bars_html(ctx: Dict[str, Any]) -> str:
     ]
     return "\n".join(items)
 
-# -------------------------- Report-Bau --------------------------
 def build_full_report_html(br: Briefing) -> Dict[str, Any]:
     ctx = _ctx_for(br)
 
-    # Kernsektionen
+    # Core sections
     rendered: Dict[str, str] = {}
     order: List[str] = []
     for key, path, placeholder in CORE_SECTIONS:
@@ -253,11 +233,23 @@ def build_full_report_html(br: Briefing) -> Dict[str, Any]:
         except Exception as exc:
             log.warning("Extra section %s skipped: %s", key, exc)
 
-    # Nicht-LLM-Teile
-    rendered["PROFILE_HTML"] = _build_profile_html(ctx)
-    rendered["KPI_BARS_HTML"] = _build_kpi_bars_html(ctx)
-    rendered["REPORT_DATE"] = datetime.now(timezone.utc).date().isoformat()
-    rendered["EXTRA_SECTIONS_HTML"] = "\n".join(extra_blocks)
+    # Dynamic research (live links) and static knowledge blocks
+    branch_label = ctx.get("BRANCHE_LABEL", "")
+    state_label = ctx.get("BUNDESLAND_LABEL", "")
+    research = search_funding_and_tools(branch_label, state_label, lang="de")
+    kb = get_knowledge_blocks("de")
+
+    rendered.update({
+        "PROFILE_HTML": _build_profile_html(ctx),
+        "KPI_BARS_HTML": _build_kpi_bars_html(ctx),
+        "REPORT_DATE": datetime.now(timezone.utc).date().isoformat(),
+        "EXTRA_SECTIONS_HTML": "\n".join(extra_blocks),
+        "RESEARCH_HTML": research.get("html", ""),
+        "KB_FOUR_PILLARS_HTML": kb.get("KB_FOUR_PILLARS_HTML",""),
+        "KB_102070_HTML": kb.get("KB_102070_HTML",""),
+        "KB_LEGAL_PITFALLS_HTML": kb.get("KB_LEGAL_PITFALLS_HTML",""),
+        "KB_KMU_KEYPOINTS_HTML": kb.get("KB_KMU_KEYPOINTS_HTML",""),
+    })
 
     final_html = render_report_html("templates/pdf_template.html", rendered)
     meta = {"sections": order, "lang": br.lang, "generated_at": datetime.now(timezone.utc).isoformat()}
@@ -268,19 +260,12 @@ def analyze_briefing(db: Session, briefing_id: int) -> Tuple[int, str, Dict[str,
     if not br:
         raise ValueError("Briefing not found")
     result = build_full_report_html(br)
-    an = Analysis(
-        user_id=br.user_id,
-        briefing_id=briefing_id,
-        html=result["html"],
-        meta=result["meta"],
-        created_at=datetime.now(timezone.utc),
-    )
-    db.add(an)
-    db.commit()
-    db.refresh(an)
+    an = Analysis(user_id=br.user_id, briefing_id=briefing_id,
+                  html=result["html"], meta=result["meta"],
+                  created_at=datetime.now(timezone.utc))
+    db.add(an); db.commit(); db.refresh(an)
     return an.id, result["html"], result["meta"]
 
-# -------------------------- Auto-PDF & Mail --------------------------
 def _determine_recipient(db: Session, briefing: Briefing, email_override: Optional[str]) -> Optional[str]:
     if email_override:
         return email_override
@@ -291,7 +276,7 @@ def _determine_recipient(db: Session, briefing: Briefing, email_override: Option
     return None
 
 def run_async(briefing_id: int, email: Optional[str] = None) -> None:
-    """Background-freundlicher Wrapper: erstellt Analyse, PDF & versendet optional E‑Mail."""
+    """Create analysis, PDF and optional e-mail in background-friendly manner."""
     db = SessionLocal()
     try:
         an_id, html, meta = analyze_briefing(db, briefing_id)
@@ -299,8 +284,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
         log.info("analysis created: id=%s", an_id)
 
         pdf_info = render_pdf_from_html(html, meta={"analysis_id": an_id, "briefing_id": briefing_id})
-        pdf_url = pdf_info.get("pdf_url")
-        pdf_bytes = pdf_info.get("pdf_bytes")
+        pdf_url = pdf_info.get("pdf_url"); pdf_bytes = pdf_info.get("pdf_bytes")
 
         rep = Report(
             user_id=br.user_id if br else None,
@@ -310,9 +294,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
             pdf_bytes_len=(len(pdf_bytes) if pdf_bytes else None),
             created_at=datetime.now(timezone.utc),
         )
-        db.add(rep)
-        db.commit()
-        db.refresh(rep)
+        db.add(rep); db.commit(); db.refresh(rep)
         log.info("report created: id=%s url=%s bytes=%s", rep.id, rep.pdf_url, rep.pdf_bytes_len)
 
         recipient = _determine_recipient(db, br, email)
@@ -326,16 +308,10 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
             )
             attachments = []
             if pdf_bytes and not pdf_url:
-                attachments.append({
-                    "filename": f"KI-Status-Report-{an_id}.pdf",
-                    "content": pdf_bytes,
-                    "mimetype": "application/pdf",
-                })
+                attachments.append({"filename": f"KI-Status-Report-{an_id}.pdf","content": pdf_bytes,"mimetype": "application/pdf"})
             ok, err = send_mail(recipient, subject, body_html, text=None, attachments=attachments)
-            if ok:
-                log.info("report e-mail sent to %s", recipient)
-            else:
-                log.warning("report e-mail not sent: %s", err)
+            if ok: log.info("report e-mail sent to %s", recipient)
+            else:  log.warning("report e-mail not sent: %s", err)
 
     except Exception as exc:
         log.exception("run_async failed for briefing_id=%s: %s", briefing_id, exc)
