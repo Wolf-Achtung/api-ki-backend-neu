@@ -1,46 +1,229 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-import io, json, zipfile
-from typing import Any
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
-from core.db import get_session
-from services.auth import require_admin
-from models import Briefing, Analysis, Report
+"""Admin-API (JWT-geschützt).
+Voraussetzungen:
+- services.auth.get_current_user liefert User-Objekt (mit .email/.id)
+- models: User, Briefing, Analysis, Report (SQLAlchemy ORM)
+- core.db: get_session (Session dependency)
+- settings: optional ADMIN_EMAILS (comma-separated) oder User.is_admin/role
+"""
+import io
+import json
+import logging
+import os
+from typing import Any, Dict, List, Optional
 
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse, JSONResponse
+from sqlalchemy.orm import Session
+
+from core.db import get_session
+from models import User, Briefing, Analysis, Report
+from services.auth import get_current_user
+from services.admin_export import build_briefing_export_zip
+
+log = logging.getLogger("routes.admin")
 router = APIRouter(prefix="/admin", tags=["admin"])
 
+
+def _is_admin(user: User) -> bool:
+    # 1) Explicit attribute on model
+    if hasattr(user, "is_admin") and bool(getattr(user, "is_admin")):
+        return True
+    # 2) Role attribute
+    role = getattr(user, "role", None)
+    if isinstance(role, str) and role.lower() in {"admin", "owner"}:
+        return True
+    # 3) ENV allowlist
+    allow = os.getenv("ADMIN_EMAILS", "") or getattr(user, "admin_allow", "")
+    allowlist = [e.strip().lower() for e in allow.split(",") if e.strip()]
+    email = (getattr(user, "email", "") or "").lower()
+    return bool(email and email in allowlist)
+
+
+def _require_admin(user: User) -> None:
+    if not _is_admin(user):
+        raise HTTPException(status_code=403, detail="admin_required")
+
+
+@router.get("/overview")
+def overview(
+    db: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    _require_admin(user)
+    users_count = db.query(User).count()
+    briefings_count = db.query(Briefing).count()
+    analyses_count = db.query(Analysis).count()
+    reports_count = db.query(Report).count()
+
+    latest_briefings = (
+        db.query(Briefing).order_by(Briefing.id.desc()).limit(10).all()
+    )
+    items = []
+    for b in latest_briefings:
+        items.append(
+            {
+                "id": b.id,
+                "user_id": b.user_id,
+                "lang": getattr(b, "lang", "de"),
+                "created_at": getattr(b, "created_at", None),
+            }
+        )
+    return {
+        "ok": True,
+        "totals": {
+            "users": users_count,
+            "briefings": briefings_count,
+            "analyses": analyses_count,
+            "reports": reports_count,
+        },
+        "latest_briefings": items,
+    }
+
+
 @router.get("/briefings")
-def list_briefings(db: Session = Depends(get_session), admin=Depends(require_admin)):
-    items = db.query(Briefing).order_by(Briefing.id.desc()).limit(200).all()
-    return {"ok": True, "items": [{"id": b.id, "email": (b.answers or {}).get("email"), "created_at": b.created_at.isoformat()} for b in items]}
+def list_briefings(
+    q: Optional[str] = Query(None, description="Suche in E-Mail"),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    _require_admin(user)
+
+    qry = db.query(Briefing).order_by(Briefing.id.desc())
+    # Optional: Join auf User falls Filter q gesetzt ist
+    if q:
+        from sqlalchemy import or_
+        qry = qry.join(User, Briefing.user_id == User.id).filter(
+            or_(User.email.ilike(f"%{q}%"), User.name.ilike(f"%{q}%"))
+        )
+    total = qry.count()
+    rows = qry.offset(offset).limit(limit).all()
+    payload = []
+    for r in rows:
+        payload.append(
+            {
+                "id": r.id,
+                "user_id": r.user_id,
+                "lang": getattr(r, "lang", "de"),
+                "created_at": getattr(r, "created_at", None),
+            }
+        )
+    return {"ok": True, "total": total, "rows": payload}
+
 
 @router.get("/briefings/{briefing_id}")
-def get_briefing(briefing_id: int, db: Session = Depends(get_session), admin=Depends(require_admin)):
-    b = db.query(Briefing).get(int(briefing_id))
+def get_briefing(
+    briefing_id: int,
+    db: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    _require_admin(user)
+    b = db.get(Briefing, briefing_id)
     if not b:
-        raise HTTPException(status_code=404, detail="Not found")
-    a = db.query(Analysis).filter(Analysis.briefing_id == b.id).order_by(Analysis.id.desc()).first()
-    r = db.query(Report).filter(Report.briefing_id == b.id).order_by(Report.id.desc()).first()
-    return {"ok": True, "briefing": {"id": b.id, "answers": b.answers, "created_at": b.created_at.isoformat()},
-            "analysis": {"id": a.id, "created_at": a.created_at.isoformat()} if a else None,
-            "report": {"id": r.id, "pdf_url": r.pdf_url, "pdf_bytes_len": r.pdf_bytes_len} if r else None}
+        raise HTTPException(status_code=404, detail="briefing_not_found")
+    u = db.get(User, b.user_id) if b.user_id else None
+    return {
+        "ok": True,
+        "briefing": {
+            "id": b.id,
+            "user": {"id": getattr(u, "id", None), "email": getattr(u, "email", None)},
+            "lang": getattr(b, "lang", "de"),
+            "answers": getattr(b, "answers", {}),
+            "created_at": getattr(b, "created_at", None),
+        },
+    }
+
+
+@router.get("/analyses")
+def list_analyses(
+    briefing_id: Optional[int] = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    _require_admin(user)
+    qry = db.query(Analysis).order_by(Analysis.id.desc())
+    if briefing_id:
+        qry = qry.filter(Analysis.briefing_id == briefing_id)
+    total = qry.count()
+    rows = qry.offset(offset).limit(limit).all()
+    items = [
+        {
+            "id": a.id,
+            "briefing_id": a.briefing_id,
+            "user_id": a.user_id,
+            "created_at": getattr(a, "created_at", None),
+        }
+        for a in rows
+    ]
+    return {"ok": True, "total": total, "rows": items}
+
+
+@router.get("/analyses/{analysis_id}")
+def get_analysis(
+    analysis_id: int,
+    db: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    _require_admin(user)
+    a = db.get(Analysis, analysis_id)
+    if not a:
+        raise HTTPException(status_code=404, detail="analysis_not_found")
+    return {
+        "ok": True,
+        "analysis": {
+            "id": a.id,
+            "briefing_id": a.briefing_id,
+            "user_id": a.user_id,
+            "meta": getattr(a, "meta", {}),
+            "html_len": len(getattr(a, "html", "") or ""),
+            "created_at": getattr(a, "created_at", None),
+        },
+    }
+
+
+@router.get("/reports")
+def list_reports(
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    _require_admin(user)
+    qry = db.query(Report).order_by(Report.id.desc())
+    total = qry.count()
+    rows = qry.offset(offset).limit(limit).all()
+    items = [
+        {
+            "id": r.id,
+            "briefing_id": r.briefing_id,
+            "analysis_id": r.analysis_id,
+            "pdf_url": getattr(r, "pdf_url", None),
+            "pdf_bytes_len": getattr(r, "pdf_bytes_len", None),
+            "created_at": getattr(r, "created_at", None),
+        }
+        for r in rows
+    ]
+    return {"ok": True, "total": total, "rows": items}
+
 
 @router.get("/briefings/{briefing_id}/export.zip")
-def export_briefing_zip(briefing_id: int, db: Session = Depends(get_session), admin=Depends(require_admin)):
-    b = db.query(Briefing).get(int(briefing_id))
-    if not b:
-        raise HTTPException(status_code=404, detail="Not found")
-    a = db.query(Analysis).filter(Analysis.briefing_id == b.id).order_by(Analysis.id.desc()).first()
-    r = db.query(Report).filter(Report.briefing_id == b.id).order_by(Report.id.desc()).first()
-    buf = io.BytesIO()
-    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
-        z.writestr("briefing.json", json.dumps(b.answers, ensure_ascii=False, indent=2))
-        if a:
-            z.writestr("analysis.html", a.html)
-            z.writestr("meta.json", json.dumps(a.meta, ensure_ascii=False, indent=2))
-        if r:
-            z.writestr("report_url.txt", r.pdf_url or f"bytes_len={r.pdf_bytes_len}")
-    buf.seek(0)
-    return StreamingResponse(buf, media_type="application/zip", headers={"Content-Disposition": f"attachment; filename=briefing_{briefing_id}.zip"})
+def export_briefing_zip(
+    briefing_id: int,
+    include_pdf: bool = Query(False, description="Wenn vorhanden und intern gespeichert"),
+    db: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    _require_admin(user)
+    buf = build_briefing_export_zip(db, briefing_id, include_pdf=include_pdf)
+    if buf is None:
+        raise HTTPException(status_code=404, detail="briefing_not_found")
+    return StreamingResponse(
+        io.BytesIO(buf.getvalue()),
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="briefing-{briefing_id}.zip"'},
+    )
