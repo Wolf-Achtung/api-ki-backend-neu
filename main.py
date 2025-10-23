@@ -79,3 +79,5 @@ include_router_safe("routes.auth", "router")
 include_router_safe("routes.briefing", "router")
 include_router_safe("routes.analyze", "router")
 include_router_safe("routes.report", "router")
+# NEU: Drafts (Resume-Funktion) – optional vorhanden
+include_router_safe("routes.briefing_drafts", "router")
