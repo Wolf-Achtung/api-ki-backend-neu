@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin – Detail</title>
+  <meta name="api-base" content="https://api-ki-backend-neu-production.up.railway.app/api">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+  <main class="wrap">
+    <div class="card">
+      <div class="head">
+        <h1 class="headline">Detailansicht</h1>
+        <div class="r">
+          <a class="btn" href="/admin/index.html">Zurück</a>
+          <button id="logout" class="btn">Logout</button>
+        </div>
+      </div>
+      <p class="notice">Briefing, Analyse (Vorschau) & Report</p>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="ov">Überblick</button>
+        <button class="tab" data-tab="briefing">Briefing</button>
+        <button class="tab" data-tab="analysis">Analyse (Preview)</button>
+        <button class="tab" data-tab="report">Report</button>
+      </div>
+
+      <section id="tab-ov" class="tabpane active">
+        <div class="grid-3">
+          <div class="kpi-card"><h3>Briefing-ID</h3><div class="val" id="ov-briefing">–</div></div>
+          <div class="kpi-card"><h3>User</h3><div class="val" id="ov-user">–</div></div>
+          <div class="kpi-card"><h3>Analyse (neueste)</h3><div class="val" id="ov-analysis">–</div></div>
+        </div>
+        <div class="toolbar">
+          <button id="btn-rerun" class="btn">Analyse + Report neu erzeugen</button>
+          <a id="btn-export" class="btn" href="#" target="_blank">Export (.zip)</a>
+        </div>
+      </section>
+
+      <section id="tab-briefing" class="tabpane">
+        <pre id="briefing-json" class="pre"></pre>
+      </section>
+
+      <section id="tab-analysis" class="tabpane">
+        <div class="analysis-host">
+          <iframe id="analysis-frame" title="Analyse Vorschau"></iframe>
+        </div>
+      </section>
+
+      <section id="tab-report" class="tabpane">
+        <div id="reports-list">–</div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/admin/detail.js"></script>
+</body>
+</html>
