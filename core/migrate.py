@@ -10,17 +10,41 @@ def _is_postgres(engine: Engine) -> bool:
         return False
 
 def run_migrations(engine: Engine) -> None:
-    """Idempotente Minimal-Migrationen:
-    - sorgt dafür, dass 'reports.user_id' existiert (nullable, FK users.id, ON DELETE SET NULL)
-    - stellt sicher, dass Kernspalten vorhanden sind (analysis_id, briefing_id, pdf_url, pdf_bytes_len, created_at)
-    - setzt timestamptz bei created_at
+    """Idempotente Minimal-Migrationen für 'reports'.
+    Ziel: Kompatibilität mit asynchroner/inline Report-Erzeugung ohne Queue.
+    - reports.user_id            -> hinzufügen (nullable, FK users.id, ON DELETE SET NULL)
+    - reports.task_id            -> sicherstellen, aber NULL zulassen (DROP NOT NULL)
+    - reports.status             -> hinzufügen, NOT NULL, DEFAULT 'pending'
+    - reports.pdf_url            -> hinzufügen (falls fehlt)
+    - reports.pdf_bytes_len      -> hinzufügen (falls fehlt)
+    - reports.created_at         -> TIMESTAMPTZ sicherstellen
+    - reports.updated_at         -> hinzufügen (nullable), optional
     Mehrfaches Ausführen ist gefahrlos.
     """
     if not _is_postgres(engine):
         return
 
     stmts = [
+        # Spalten hinzufügen, falls nicht vorhanden
         """ALTER TABLE reports ADD COLUMN IF NOT EXISTS user_id INTEGER NULL;""",
+        """ALTER TABLE reports ADD COLUMN IF NOT EXISTS task_id VARCHAR(128);""",
+        """ALTER TABLE reports ADD COLUMN IF NOT EXISTS status VARCHAR(32) NOT NULL DEFAULT 'pending';""",
+        """ALTER TABLE reports ADD COLUMN IF NOT EXISTS pdf_url VARCHAR(1024);""",
+        """ALTER TABLE reports ADD COLUMN IF NOT EXISTS pdf_bytes_len INTEGER;""",
+        """ALTER TABLE reports ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE;""",
+        """ALTER TABLE reports ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE;""",
+
+        # task_id darf NULL sein (wir generieren optional eine lokale ID ohne externe Queue)
+        """DO $$ BEGIN
+             IF EXISTS (
+               SELECT 1 FROM information_schema.columns 
+               WHERE table_name='reports' AND column_name='task_id'
+             ) THEN
+               ALTER TABLE reports ALTER COLUMN task_id DROP NOT NULL;
+             END IF;
+           END $$;""",
+
+        # FK auf users.id (idempotent)
         """DO $$ BEGIN
              IF NOT EXISTS (
                SELECT 1 FROM information_schema.table_constraints 
@@ -35,11 +59,8 @@ def run_migrations(engine: Engine) -> None:
                END;
              END IF;
            END $$;""",
-        """ALTER TABLE reports ADD COLUMN IF NOT EXISTS briefing_id INTEGER NULL;""",
-        """ALTER TABLE reports ADD COLUMN IF NOT EXISTS analysis_id INTEGER NULL;""",
-        """ALTER TABLE reports ADD COLUMN IF NOT EXISTS pdf_url VARCHAR(1024);""",
-        """ALTER TABLE reports ADD COLUMN IF NOT EXISTS pdf_bytes_len INTEGER;""",
-        """ALTER TABLE reports ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE;""",
+
+        # created_at auf TIMESTAMPTZ heben, falls nötig
         """DO $$ BEGIN
              IF EXISTS (
                SELECT 1 FROM information_schema.columns 
