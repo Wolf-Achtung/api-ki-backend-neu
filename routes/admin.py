@@ -1,26 +1,20 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-"""Admin-API (JWT-geschützt).
-Voraussetzungen:
-- services.auth.get_current_user liefert User-Objekt (mit .email/.id)
-- models: User, Briefing, Analysis, Report (SQLAlchemy ORM)
-- core.db: get_session (Session dependency)
-- settings: optional ADMIN_EMAILS (comma-separated) oder User.is_admin/role
-"""
 import io
 import json
 import logging
 import os
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from fastapi.responses import StreamingResponse, JSONResponse, HTMLResponse
 from sqlalchemy.orm import Session
 
 from core.db import get_session
 from models import User, Briefing, Analysis, Report
 from services.auth import get_current_user
 from services.admin_export import build_briefing_export_zip
+import gpt_analyze  # für Neu-Erzeugen (run_async)
 
 log = logging.getLogger("routes.admin")
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -57,9 +51,7 @@ def overview(
     analyses_count = db.query(Analysis).count()
     reports_count = db.query(Report).count()
 
-    latest_briefings = (
-        db.query(Briefing).order_by(Briefing.id.desc()).limit(10).all()
-    )
+    latest_briefings = db.query(Briefing).order_by(Briefing.id.desc()).limit(10).all()
     items = []
     for b in latest_briefings:
         items.append(
@@ -91,9 +83,7 @@ def list_briefings(
     user: User = Depends(get_current_user),
 ):
     _require_admin(user)
-
     qry = db.query(Briefing).order_by(Briefing.id.desc())
-    # Optional: Join auf User falls Filter q gesetzt ist
     if q:
         from sqlalchemy import or_
         qry = qry.join(User, Briefing.user_id == User.id).filter(
@@ -133,6 +123,25 @@ def get_briefing(
             "lang": getattr(b, "lang", "de"),
             "answers": getattr(b, "answers", {}),
             "created_at": getattr(b, "created_at", None),
+        },
+    }
+
+
+@router.get("/briefings/{briefing_id}/latest-analysis")
+def latest_analysis_for_briefing(
+    briefing_id: int,
+    db: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    _require_admin(user)
+    a = db.query(Analysis).filter(Analysis.briefing_id == briefing_id).order_by(Analysis.id.desc()).first()
+    if not a:
+        return {"ok": False, "analysis_id": None}
+    return {
+        "ok": True,
+        "analysis": {
+            "id": a.id,
+            "created_at": getattr(a, "created_at", None),
         },
     }
 
@@ -186,6 +195,19 @@ def get_analysis(
     }
 
 
+@router.get("/analyses/{analysis_id}/html", response_class=HTMLResponse)
+def get_analysis_html(
+    analysis_id: int,
+    db: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    _require_admin(user)
+    a = db.get(Analysis, analysis_id)
+    if not a:
+        raise HTTPException(status_code=404, detail="analysis_not_found")
+    return HTMLResponse(getattr(a, "html", "") or "<p><em>empty</em></p>")
+
+
 @router.get("/reports")
 def list_reports(
     limit: int = Query(50, ge=1, le=200),
@@ -209,6 +231,47 @@ def list_reports(
         for r in rows
     ]
     return {"ok": True, "total": total, "rows": items}
+
+
+@router.get("/briefings/{briefing_id}/reports")
+def list_reports_for_briefing(
+    briefing_id: int,
+    db: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    _require_admin(user)
+    rows = (
+        db.query(Report)
+        .filter(Report.briefing_id == briefing_id)
+        .order_by(Report.id.desc())
+        .all()
+    )
+    items = [
+        {
+            "id": r.id,
+            "analysis_id": r.analysis_id,
+            "pdf_url": getattr(r, "pdf_url", None),
+            "pdf_bytes_len": getattr(r, "pdf_bytes_len", None),
+            "created_at": getattr(r, "created_at", None),
+        }
+        for r in rows
+    ]
+    return {"ok": True, "rows": items}
+
+
+@router.post("/briefings/{briefing_id}/rerun")
+def rerun_generation(
+    briefing_id: int,
+    background: BackgroundTasks,
+    db: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    _require_admin(user)
+    b = db.get(Briefing, briefing_id)
+    if not b:
+        raise HTTPException(status_code=404, detail="briefing_not_found")
+    background.add_task(gpt_analyze.run_async, briefing_id, None)
+    return {"ok": True, "queued": True}
 
 
 @router.get("/briefings/{briefing_id}/export.zip")
