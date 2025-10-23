@@ -7,7 +7,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
 from settings import settings
 
-# Optional DB bootstrap
 try:
     from core.db import Base, engine
     from core.migrate import run_migrations
@@ -36,7 +35,7 @@ app = FastAPI(title=getattr(settings, "APP_NAME", "KI-Status-Report API"),
               version=getattr(settings, "VERSION", "1.0.0"),
               lifespan=lifespan)
 
-# CORS
+# CORS config
 origins = []
 try:
     origins = settings.cors_list()
@@ -56,7 +55,6 @@ else:
     app.add_middleware(CORSMiddleware, allow_origins=origins, **kwargs)
     log.info("CORS: allowed origins = %s", origins)
 
-# Health
 @app.get("/", response_class=PlainTextResponse)
 async def root() -> str:
     return "KI–Status–Report backend is running.\n"
@@ -65,7 +63,6 @@ async def root() -> str:
 async def healthz():
     return {"OK": True, "env": getattr(settings, "ENV", "unknown"), "version": getattr(settings, "VERSION", "0")}
 
-# Routers
 def include_router_safe(module_path: str, attr: str, prefix: str = "/api"):
     try:
         mod = __import__(module_path, fromlist=[attr])
@@ -79,5 +76,6 @@ include_router_safe("routes.auth", "router")
 include_router_safe("routes.briefing", "router")
 include_router_safe("routes.analyze", "router")
 include_router_safe("routes.report", "router")
-# NEU: Drafts (Resume-Funktion) – optional vorhanden
 include_router_safe("routes.briefing_drafts", "router")
+# NEW: Admin routes
+include_router_safe("routes.admin", "router")
