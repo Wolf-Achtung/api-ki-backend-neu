@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin – KI-Status-Report</title>
+  <meta name="api-base" content="https://api-ki-backend-neu-production.up.railway.app/api">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+  <main class="wrap">
+    <div class="card">
+      <div class="head">
+        <h1 class="headline">Admin</h1>
+        <button id="logout" class="btn">Logout</button>
+      </div>
+      <p class="notice">Überblick & Export</p>
+
+      <section class="grid-3" id="stats">
+        <div class="kpi-card"><h3>Users</h3><div class="val" id="k-users">–</div></div>
+        <div class="kpi-card"><h3>Briefings</h3><div class="val" id="k-briefings">–</div></div>
+        <div class="kpi-card"><h3>Analysen</h3><div class="val" id="k-analyses">–</div></div>
+        <div class="kpi-card"><h3>Reports</h3><div class="val" id="k-reports">–</div></div>
+      </section>
+
+      <section class="card inner">
+        <div class="toolbar">
+          <input id="q" type="search" placeholder="Suche (E-Mail)" />
+          <button id="reload" class="btn">Neu laden</button>
+        </div>
+        <table class="table" id="tbl">
+          <thead><tr><th>ID</th><th>User</th><th>Datum</th><th>Aktionen</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+
+  <script src="/admin/admin.js"></script>
+</body>
+</html>
