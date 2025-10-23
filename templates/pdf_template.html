@@ -5,24 +5,52 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>KI-Status-Report</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:#0f172a; margin:24px; }
-    h1,h2,h3 { color:#0b3b8f; }
-    .hl { color:#0b3b8f; }
-    .muted { color:#64748b; }
-    .pill { display:inline-block; background:#e2e8f0; border-radius:999px; padding:4px 10px; margin-right:8px; font-size:12px; }
-    .card { border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin:12px 0; background:#fff; }
-    .kpi .bar { display:flex; align-items:center; gap:12px; margin:8px 0; }
-    .kpi .label { min-width:150px; }
-    .kpi .bar__track { position:relative; flex:1; height:10px; background:#f1f5f9; border-radius:6px; overflow:hidden; }
-    .kpi .bar__fill { position:absolute; left:0; top:0; bottom:0; background:#60a5fa; }
-    .kpi .bar__median { position:absolute; top:-2px; width:2px; height:14px; background:#0ea5e9; }
-    .kpi .bar__delta { min-width:80px; text-align:right; font-size:12px; color:#334155; }
-    .section { margin:18px 0; padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; }
+    /* --- Grundlayout (angepasst an Beispiel-PDF) --- */
+    :root{
+      --brand:#0b3b8f;
+      --text:#0f172a;
+      --muted:#64748b;
+      --card:#ffffff;
+      --line:#e6edf3;
+      --bg:#f6f9ff;
+    }
+    @page{ size: A4; margin: 18mm 14mm; }
+    *{ box-sizing: border-box; }
+    html,body{ height:100%; }
+    body{ font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:var(--text); background:#fff; line-height:1.5; }
+    h1,h2,h3{ color:var(--brand); line-height:1.25; margin:0 0 8px; }
+    h1{ font-size: 26px; letter-spacing:.2px; }
+    h2{ font-size: 18px; }
+    h3{ font-size: 15px; }
+    p,li{ font-size: 12.2px; }
+    .muted{ color:var(--muted); }
+    .brandbar{ display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid var(--brand); padding:0 0 8px 0; margin:0 0 12px 0; }
+    .brandbar .meta{ font-size: 11.5px; color: var(--muted); }
+    .pill{ display:inline-block; background:#e7eefb; border:1px solid #d6e2fb; color:#214b90; border-radius:999px; padding:3px 9px; margin-right:6px; font-size:11px; }
+    .section{ margin:12px 0 14px; padding:10px 12px; background:#fff; border:1px solid var(--line); border-radius:10px; }
+    .section h2{ margin-top: 2px; }
+    .toc a{ color:var(--brand); text-decoration:none; }
+    .kpi .bar{ display:flex; align-items:center; gap:10px; margin:6px 0; }
+    .kpi .label{ min-width:150px; font-size:11.5px; }
+    .kpi .bar__track{ position:relative; flex:1; height:9px; background:#f1f5f9; border-radius:5px; overflow:hidden; }
+    .kpi .bar__fill{ position:absolute; left:0; top:0; bottom:0; background:#60a5fa; }
+    .kpi .bar__median{ position:absolute; top:-1px; width:2px; height:11px; background:#0ea5e9; }
+    .kpi .bar__delta{ min-width:64px; text-align:right; font-size:11px; color:#334155; }
+    ul{ margin: 6px 0 6px 18px; }
+    /* Seiten-Footer */
+    footer{ position: running(footer); font-size:10.5px; color: var(--muted); }
+    @page{ @bottom-left{ content: element(footer) } @bottom-right{ content: counter(page) " / " counter(pages); } }
+    .footer-inner{ display:flex; gap:8px; align-items:center; }
+    .sep{ opacity:.5; margin:0 6px; }
+    /* Seitenumbrüche */
+    .page-break{ page-break-before: always; }
   </style>
 </head>
 <body>
-  <h1>KI-Status-Report</h1>
-  <p class="muted">Datum: {{REPORT_DATE}}</p>
+  <div class="brandbar">
+    <h1>KI‑Status‑Report</h1>
+    <div class="meta">Datum: {{REPORT_DATE}}</div>
+  </div>
 
   <div class="section">
     <h2>Profil</h2>
@@ -82,7 +110,17 @@
     {{KB_KMU_KEYPOINTS_HTML}}
   </div>
 
-  <!-- Appendix (optionale Zusatzsektionen) -->
+  <!-- Appendix -->
+  <div class="page-break"></div>
   {{EXTRA_SECTIONS_HTML}}
+
+  <footer>
+    <div class="footer-inner">
+      <span>TÜV‑zertifiziertes KI‑Management</span><span class="sep">·</span>
+      <span>© 2025 Wolf Hohl</span><span class="sep">·</span>
+      <span>KI‑Sicherheit.jetzt</span><span class="sep">·</span>
+      <span>DSGVO · ePrivacy · Digital Services Act · EU AI Act</span>
+    </div>
+  </footer>
 </body>
 </html>
