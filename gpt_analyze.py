@@ -2,6 +2,7 @@
 from __future__ import annotations
 import json
 import logging
+import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -20,7 +21,6 @@ from settings import settings
 
 log = logging.getLogger(__name__)
 
-# Existing mappings (assumed present in your previous version)
 CORE_SECTIONS = [
     ("executive_summary", "prompts/de/executive_summary_de.md", "EXEC_SUMMARY_HTML"),
     ("quick_wins",        "prompts/de/quick_wins_de.md",        "QUICK_WINS_HTML"),
@@ -210,8 +210,6 @@ def _build_kpi_bars_html(ctx: Dict[str, Any]) -> str:
 
 def build_full_report_html(br: Briefing) -> Dict[str, Any]:
     ctx = _ctx_for(br)
-
-    # Core sections
     rendered: Dict[str, str] = {}
     order: List[str] = []
     for key, path, placeholder in CORE_SECTIONS:
@@ -223,7 +221,6 @@ def build_full_report_html(br: Briefing) -> Dict[str, Any]:
         rendered[placeholder] = html
         order.append(key)
 
-    # Extras → Appendix
     extra_blocks: List[str] = []
     for key, path, title in EXTRA_PATTERNS:
         try:
@@ -233,7 +230,6 @@ def build_full_report_html(br: Briefing) -> Dict[str, Any]:
         except Exception as exc:
             log.warning("Extra section %s skipped: %s", key, exc)
 
-    # Dynamic research (live links) and static knowledge blocks
     branch_label = ctx.get("BRANCHE_LABEL", "")
     state_label = ctx.get("BUNDESLAND_LABEL", "")
     research = search_funding_and_tools(branch_label, state_label, lang="de")
@@ -276,27 +272,47 @@ def _determine_recipient(db: Session, briefing: Briefing, email_override: Option
     return None
 
 def run_async(briefing_id: int, email: Optional[str] = None) -> None:
-    """Create analysis, PDF and optional e-mail in background-friendly manner."""
+    """Create analysis, then create Report row (pending) and update to done/failed."""
     db = SessionLocal()
     try:
         an_id, html, meta = analyze_briefing(db, briefing_id)
         br = db.get(Briefing, briefing_id)
         log.info("analysis created: id=%s", an_id)
 
-        pdf_info = render_pdf_from_html(html, meta={"analysis_id": an_id, "briefing_id": briefing_id})
-        pdf_url = pdf_info.get("pdf_url"); pdf_bytes = pdf_info.get("pdf_bytes")
-
+        # Create report row in 'pending' state (if columns exist)
         rep = Report(
             user_id=br.user_id if br else None,
             briefing_id=briefing_id,
             analysis_id=an_id,
-            pdf_url=pdf_url,
-            pdf_bytes_len=(len(pdf_bytes) if pdf_bytes else None),
             created_at=datetime.now(timezone.utc),
         )
-        db.add(rep); db.commit(); db.refresh(rep)
-        log.info("report created: id=%s url=%s bytes=%s", rep.id, rep.pdf_url, rep.pdf_bytes_len)
 
+        # Optional fields: task_id, status (only if model has them)
+        task_id = f"local-{uuid.uuid4()}"
+        if hasattr(rep, "task_id"):
+            setattr(rep, "task_id", task_id)
+        if hasattr(rep, "status"):
+            setattr(rep, "status", "pending")
+        db.add(rep); db.commit(); db.refresh(rep)
+
+        # Render PDF
+        pdf_info = render_pdf_from_html(html, meta={"analysis_id": an_id, "briefing_id": briefing_id})
+        pdf_url = pdf_info.get("pdf_url"); pdf_bytes = pdf_info.get("pdf_bytes")
+
+        # Update report with results
+        if hasattr(rep, "pdf_url"):
+            rep.pdf_url = pdf_url
+        if hasattr(rep, "pdf_bytes_len") and pdf_bytes:
+            rep.pdf_bytes_len = len(pdf_bytes)
+        if hasattr(rep, "status"):
+            rep.status = "done"
+        # timestamp
+        if hasattr(rep, "updated_at"):
+            rep.updated_at = datetime.now(timezone.utc)
+        db.add(rep); db.commit(); db.refresh(rep)
+        log.info("report created: id=%s url=%s bytes=%s", getattr(rep, "id", None), getattr(rep, "pdf_url", None), getattr(rep, "pdf_bytes_len", None))
+
+        # E-Mail optional
         recipient = _determine_recipient(db, br, email)
         if recipient:
             subject = "Ihr KI‑Status‑Report"
@@ -308,12 +324,27 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
             )
             attachments = []
             if pdf_bytes and not pdf_url:
-                attachments.append({"filename": f"KI-Status-Report-{an_id}.pdf","content": pdf_bytes,"mimetype": "application/pdf"})
+                attachments.append({"filename": f"KI-Status-Report-{getattr(rep,'id',an_id)}.pdf","content": pdf_bytes,"mimetype": "application/pdf"})
             ok, err = send_mail(recipient, subject, body_html, text=None, attachments=attachments)
             if ok: log.info("report e-mail sent to %s", recipient)
             else:  log.warning("report e-mail not sent: %s", err)
 
     except Exception as exc:
         log.exception("run_async failed for briefing_id=%s: %s", briefing_id, exc)
+        # Try to mark last created report as failed (best-effort)
+        try:
+            rep_id = None
+            # Fetch the latest report for this briefing
+            r = db.query(Report).filter(Report.briefing_id == briefing_id).order_by(Report.id.desc()).first()
+            if r:
+                rep_id = getattr(r, "id", None)
+                if hasattr(r, "status"):
+                    r.status = "failed"
+                if hasattr(r, "updated_at"):
+                    r.updated_at = datetime.now(timezone.utc)
+                db.add(r); db.commit()
+                log.info("report marked failed: id=%s", rep_id)
+        except Exception as _inner:
+            log.warning("could not mark report failed: %s", _inner)
     finally:
         db.close()
