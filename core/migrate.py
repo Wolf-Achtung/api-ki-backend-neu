@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-Idempotente Minimal-Migrationen für 'reports' – kompatibel mit bestehender Alt-DB.
-Sicherstellt u. a.:
-- reports.user_id (nullable, FK users.id, ON DELETE SET NULL)
-- reports.task_id (existiert, darf NULL sein)
-- reports.status (NOT NULL, DEFAULT 'pending')
-- reports.pdf_url, reports.pdf_bytes_len
-- reports.created_at (TIMESTAMPTZ), reports.updated_at
-- E-Mail-Audit: reports.email_sent_user (bool, default false),
-               reports.email_sent_admin (bool, default false),
-               reports.email_error_user (text),
-               reports.email_error_admin (text)
+Idempotente Migrationen für 'reports':
+- user_id (nullable, FK users.id ON DELETE SET NULL)
+- user_email (falls nicht vorhanden – VARCHAR(320))
+- task_id (DROP NOT NULL)
+- status (NOT NULL DEFAULT 'pending')
+- pdf_url, pdf_bytes_len
+- created_at (TIMESTAMPTZ), updated_at
+- Audit: email_sent_user/admin + email_error_user/admin
 Mehrfaches Ausführen ist gefahrlos.
 """
 from sqlalchemy import text
@@ -28,19 +25,22 @@ def run_migrations(engine: Engine) -> None:
         return
 
     stmts = [
-        # Fehlende Spalten hinzufügen
+        # Basisspalten
         "ALTER TABLE reports ADD COLUMN IF NOT EXISTS user_id INTEGER NULL;",
+        "ALTER TABLE reports ADD COLUMN IF NOT EXISTS user_email VARCHAR(320);",
         "ALTER TABLE reports ADD COLUMN IF NOT EXISTS task_id VARCHAR(128);",
         "ALTER TABLE reports ADD COLUMN IF NOT EXISTS status VARCHAR(32) NOT NULL DEFAULT 'pending';",
         "ALTER TABLE reports ADD COLUMN IF NOT EXISTS pdf_url VARCHAR(1024);",
         "ALTER TABLE reports ADD COLUMN IF NOT EXISTS pdf_bytes_len INTEGER;",
         "ALTER TABLE reports ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE;",
         "ALTER TABLE reports ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE;",
-        # E-Mail Audit-Felder
+
+        # Auditspalten für E-Mail-Versand
         "ALTER TABLE reports ADD COLUMN IF NOT EXISTS email_sent_user BOOLEAN NOT NULL DEFAULT false;",
         "ALTER TABLE reports ADD COLUMN IF NOT EXISTS email_sent_admin BOOLEAN NOT NULL DEFAULT false;",
         "ALTER TABLE reports ADD COLUMN IF NOT EXISTS email_error_user TEXT;",
         "ALTER TABLE reports ADD COLUMN IF NOT EXISTS email_error_admin TEXT;",
+
         # task_id darf NULL sein
         """
         DO $$ BEGIN
@@ -52,7 +52,7 @@ def run_migrations(engine: Engine) -> None:
           END IF;
         END $$;
         """,
-        # FK auf users.id
+        # user_id FK
         """
         DO $$ BEGIN
           IF NOT EXISTS (
