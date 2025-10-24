@@ -1,190 +1,116 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
+
 """
-Idempotente, robuste Migration (v3) für heterogene Legacy-Schemata.
-Ziele:
-  1) login_codes-Tabelle bereitstellen (falls fehlt).
-  2) login_codes.email sicherstellen (Legacy-Umbenennungen: user_email/mail/email_address → email; sonst ADD COLUMN).
-  3) login_codes.code sicherstellen (Legacy-Umbenennungen: login_code/token → code; sonst ADD COLUMN).
-  4) UNIQUE-Constraint auf (code) nur, wenn Spalte existiert.
-  5) Index auf (email) nur, wenn Spalte existiert.
-  6) reports-Kompatibilitätsfixe (nullable Felder, Status/Audit, TIMESTAMPTZ).
-Mehrfaches Ausführen ist sicher.
+Defensive, idempotente Migrationen für Legacy-DBs.
+- Repariert login_codes (email, code, created_at, expires_at, consumed_at) inkl. Constraints/Indizes.
+- Härtet reports für PDF/E-Mail-Statusfelder ab.
+- Reihenfolge: erst Spalten sicherstellen/umbenennen, dann Constraints/Indizes.
 """
+import logging
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-def _is_postgres(engine: Engine) -> bool:
+log = logging.getLogger(__name__)
+
+def _exec(conn, sql: str) -> None:
+    sql = sql.strip()
+    if not sql:
+        return
     try:
-        return engine.url.get_backend_name().startswith("postgresql")
-    except Exception:
-        return False
+        log.debug("MIGRATE: %s", sql.replace("\n", " ")[:240])
+        conn.execute(text(sql))
+    except Exception as exc:
+        # Wir loggen den Fehler, geben ihn aber weiter, damit Startup fehlschlägt (sichtbar im Log)
+        log.error("MIGRATE failed: %s :: %s", exc.__class__.__name__, exc)
+        raise
 
 def run_migrations(engine: Engine) -> None:
-    if not _is_postgres(engine):
-        return
-
-    stmts = [
-        # 1) login_codes anlegen (falls fehlt) – email/code werden unten abgesichert
-        """
+    with engine.begin() as conn:
+        # --- 1) LOGIN_CODES: Tabelle anlegen, dann Spalten, dann Constraints/Indizes ---
+        _exec(conn, """
         CREATE TABLE IF NOT EXISTS login_codes (
             id SERIAL PRIMARY KEY,
-            email VARCHAR(320),              -- kann in Legacy fehlen; wird unten ggf. erzeugt/umbenannt
-            code VARCHAR(64),                -- kann in Legacy fehlen; wird unten ggf. erzeugt/umbenannt
-            purpose VARCHAR(40) NOT NULL DEFAULT 'login',
-            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-            expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-            consumed_at TIMESTAMP WITH TIME ZONE NULL,
-            attempts INTEGER NOT NULL DEFAULT 0,
-            ip_address VARCHAR(64) NULL,
-            user_agent TEXT NULL
+            email VARCHAR(320),
+            code VARCHAR(64),
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            expires_at TIMESTAMPTZ,
+            consumed_at TIMESTAMPTZ
         );
-        """,
+        """)
 
-        # 2) email-Spalte absichern (rename legacy → email; oder hinzufügen)
-        """
-        DO $$
-        BEGIN
-          IF NOT EXISTS (
-            SELECT 1 FROM information_schema.columns
-            WHERE table_name='login_codes' AND column_name='email'
-          ) THEN
+        # Bekannte Legacy-Spalten umbenennen → Zielschema
+        _exec(conn, """
+        DO $$ BEGIN
             IF EXISTS (
-              SELECT 1 FROM information_schema.columns
-              WHERE table_name='login_codes' AND column_name='user_email'
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name='login_codes' AND column_name='email_address'
+            ) AND NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name='login_codes' AND column_name='email'
             ) THEN
-              EXECUTE 'ALTER TABLE login_codes RENAME COLUMN user_email TO email';
-            ELSIF EXISTS (
-              SELECT 1 FROM information_schema.columns
-              WHERE table_name='login_codes' AND column_name='email_address'
-            ) THEN
-              EXECUTE 'ALTER TABLE login_codes RENAME COLUMN email_address TO email';
-            ELSIF EXISTS (
-              SELECT 1 FROM information_schema.columns
-              WHERE table_name='login_codes' AND column_name='mail'
-            ) THEN
-              EXECUTE 'ALTER TABLE login_codes RENAME COLUMN mail TO email';
-            ELSE
-              EXECUTE 'ALTER TABLE login_codes ADD COLUMN email VARCHAR(320)';
+                ALTER TABLE login_codes RENAME COLUMN email_address TO email;
             END IF;
-          END IF;
-        END
-        $$;
-        """,
+        END $$;
+        """)
 
-        # 3) code-Spalte absichern (rename legacy → code; oder hinzufügen)
-        """
-        DO $$
-        BEGIN
-          IF NOT EXISTS (
-            SELECT 1 FROM information_schema.columns
-            WHERE table_name='login_codes' AND column_name='code'
-          ) THEN
+        _exec(conn, """
+        DO $$ BEGIN
             IF EXISTS (
-              SELECT 1 FROM information_schema.columns
-              WHERE table_name='login_codes' AND column_name='login_code'
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name='login_codes' AND column_name='login_code'
+            ) AND NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name='login_codes' AND column_name='code'
             ) THEN
-              EXECUTE 'ALTER TABLE login_codes RENAME COLUMN login_code TO code';
-            ELSIF EXISTS (
-              SELECT 1 FROM information_schema.columns
-              WHERE table_name='login_codes' AND column_name='token'
-            ) THEN
-              EXECUTE 'ALTER TABLE login_codes RENAME COLUMN token TO code';
-            ELSE
-              EXECUTE 'ALTER TABLE login_codes ADD COLUMN code VARCHAR(64)';
+                ALTER TABLE login_codes RENAME COLUMN login_code TO code;
             END IF;
-          END IF;
-        END
-        $$;
-        """,
+        END $$;
+        """)
 
-        # 4) UNIQUE(code) nur, wenn Spalte existiert
-        """
-        DO $$
-        BEGIN
-          IF EXISTS (
-            SELECT 1 FROM information_schema.columns
-            WHERE table_name='login_codes' AND column_name='code'
-          ) THEN
-            IF NOT EXISTS (
-              SELECT 1 FROM pg_constraint WHERE conname = 'uq_login_codes_code'
+        _exec(conn, """
+        DO $$ BEGIN
+            IF EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name='login_codes' AND column_name='used_at'
+            ) AND NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name='login_codes' AND column_name='consumed_at'
             ) THEN
-              BEGIN
+                ALTER TABLE login_codes RENAME COLUMN used_at TO consumed_at;
+            END IF;
+        END $$;
+        """)
+
+        # Fehlende Spalten addieren (idempotent)
+        _exec(conn, "ALTER TABLE login_codes ADD COLUMN IF NOT EXISTS email VARCHAR(320);")
+        _exec(conn, "ALTER TABLE login_codes ADD COLUMN IF NOT EXISTS code VARCHAR(64);")
+        _exec(conn, "ALTER TABLE login_codes ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();")
+        _exec(conn, "ALTER TABLE login_codes ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;")
+        _exec(conn, "ALTER TABLE login_codes ADD COLUMN IF NOT EXISTS consumed_at TIMESTAMPTZ;")
+
+        # Constraints/Indizes NACHDEM die Spalten existieren
+        _exec(conn, """
+        DO $$ BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uq_login_codes_code') THEN
                 ALTER TABLE login_codes ADD CONSTRAINT uq_login_codes_code UNIQUE (code);
-              EXCEPTION WHEN undefined_column THEN
-                NULL;
-              WHEN duplicate_object THEN
-                NULL;
-              END;
             END IF;
-          END IF;
-        END
-        $$;
-        """,
-
-        # 5) Index(email) nur, wenn Spalte existiert
-        """
-        DO $$
-        BEGIN
-          IF EXISTS (
-            SELECT 1 FROM information_schema.columns
-            WHERE table_name='login_codes' AND column_name='email'
-          ) THEN
-            BEGIN
-              EXECUTE 'CREATE INDEX IF NOT EXISTS ix_login_codes_email ON login_codes (email)';
-            EXCEPTION WHEN undefined_column THEN
-              NULL;
-            END;
-          END IF;
-        END
-        $$;
-        """,
-
-        # Zusätzliche sinnvolle Indizes
-        "CREATE INDEX IF NOT EXISTS ix_login_codes_expires_at ON login_codes (expires_at);",            "CREATE INDEX IF NOT EXISTS ix_login_codes_consumed_at ON login_codes (consumed_at);",
-        # 6) reports – Kompatibilitätsfixe
-        "ALTER TABLE reports ADD COLUMN IF NOT EXISTS user_email VARCHAR(320);",            "ALTER TABLE reports ADD COLUMN IF NOT EXISTS task_id VARCHAR(128);",            "ALTER TABLE reports ADD COLUMN IF NOT EXISTS status VARCHAR(32) NOT NULL DEFAULT 'pending';",            "ALTER TABLE reports ADD COLUMN IF NOT EXISTS pdf_url VARCHAR(1024);",            "ALTER TABLE reports ADD COLUMN IF NOT EXISTS pdf_bytes_len INTEGER;",            "ALTER TABLE reports ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE;",            "ALTER TABLE reports ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE;",            "ALTER TABLE reports ADD COLUMN IF NOT EXISTS email_sent_user BOOLEAN NOT NULL DEFAULT false;",            "ALTER TABLE reports ADD COLUMN IF NOT EXISTS email_sent_admin BOOLEAN NOT NULL DEFAULT false;",            "ALTER TABLE reports ADD COLUMN IF NOT EXISTS email_error_user TEXT;",            "ALTER TABLE reports ADD COLUMN IF NOT EXISTS email_error_admin TEXT;",
-        # user_email darf NULL sein
-        """
-        DO $$ BEGIN
-          IF EXISTS (
-            SELECT 1 FROM information_schema.columns
-            WHERE table_name='reports' AND column_name='user_email' AND is_nullable='NO'
-          ) THEN
-            ALTER TABLE reports ALTER COLUMN user_email DROP NOT NULL;
-          END IF;
         END $$;
-        """,
+        """)
+        _exec(conn, "CREATE INDEX IF NOT EXISTS ix_login_codes_email ON login_codes (email);")
+        _exec(conn, "CREATE INDEX IF NOT EXISTS ix_login_codes_consumed_at ON login_codes (consumed_at);")
 
-        # task_id darf NULL sein
-        """
-        DO $$ BEGIN
-          IF EXISTS (
-            SELECT 1 FROM information_schema.columns
-            WHERE table_name='reports' AND column_name='task_id'
-          ) THEN
-            ALTER TABLE reports ALTER COLUMN task_id DROP NOT NULL;
-          END IF;
-        END $$;
-        """,
+        # --- 2) REPORTS: optionale Felder für PDF/E-Mail/Status/Audit absichern ---
+        _exec(conn, "ALTER TABLE reports ADD COLUMN IF NOT EXISTS user_email VARCHAR(320);")
+        _exec(conn, "ALTER TABLE reports ADD COLUMN IF NOT EXISTS task_id VARCHAR(64);")
+        _exec(conn, "ALTER TABLE reports ADD COLUMN IF NOT EXISTS pdf_url TEXT;")
+        _exec(conn, "ALTER TABLE reports ADD COLUMN IF NOT EXISTS pdf_bytes_len INTEGER;")
+        _exec(conn, "ALTER TABLE reports ADD COLUMN IF NOT EXISTS status VARCHAR(16) DEFAULT 'pending';")
+        _exec(conn, "ALTER TABLE reports ADD COLUMN IF NOT EXISTS email_sent_user BOOLEAN DEFAULT FALSE;")
+        _exec(conn, "ALTER TABLE reports ADD COLUMN IF NOT EXISTS email_sent_admin BOOLEAN DEFAULT FALSE;")
+        _exec(conn, "ALTER TABLE reports ADD COLUMN IF NOT EXISTS email_error_user TEXT;")
+        _exec(conn, "ALTER TABLE reports ADD COLUMN IF NOT EXISTS email_error_admin TEXT;")
+        _exec(conn, "ALTER TABLE reports ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ;")
 
-        # created_at → TIMESTAMPTZ heben (falls nötig)
-        """
-        DO $$ BEGIN
-          IF EXISTS (
-            SELECT 1 FROM information_schema.columns
-            WHERE table_name='reports'
-              AND column_name='created_at'
-              AND data_type='timestamp without time zone'
-          ) THEN
-            ALTER TABLE reports
-              ALTER COLUMN created_at TYPE TIMESTAMP WITH TIME ZONE
-              USING created_at AT TIME ZONE 'UTC';
-          END IF;
-        END $$;
-        """,
-    ]
-
-    with engine.begin() as conn:
-        for s in stmts:
-            conn.execute(text(s))
+        _exec(conn, "CREATE INDEX IF NOT EXISTS ix_reports_status ON reports (status);")
+        _exec(conn, "CREATE INDEX IF NOT EXISTS ix_reports_updated_at ON reports (updated_at);")
