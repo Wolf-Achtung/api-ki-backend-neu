@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin SQL Tool</title>
+  <style>
+    :root{--bg:#0f172a;--panel:#111827;--text:#e5e7eb;--muted:#94a3b8;--acc:#1d4ed8;--ok:#16a34a;--err:#ef4444}
+    html,body{background:var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial}
+    .wrap{max-width:920px;margin:40px auto;padding:0 16px}
+    .card{background:var(--panel);border-radius:12px;padding:20px;box-shadow:0 0 0 1px rgba(255,255,255,.04)}
+    h1{font-weight:700;margin:0 0 8px}
+    label{display:block;margin:14px 0 6px;color:var(--muted)}
+    input,select,textarea,button{width:100%;border-radius:8px;border:1px solid rgba(255,255,255,.08);padding:10px;background:#0b1220;color:#e5e7eb}
+    textarea{min-height:180px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .btns{display:flex;gap:12px;margin-top:16px}
+    button{cursor:pointer}
+    .hint{color:var(--muted);font-size:14px}
+    .log{white-space:pre-wrap;background:#0b1220;border-radius:8px;padding:12px;margin-top:12px;max-height:260px;overflow:auto}
+    .ok{color:var(--ok)} .err{color:var(--err)}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Admin SQL Tool</h1>
+    <p class="hint">Sicherer Weg, um den <b>vordefinierten Hotfix</b> auszuführen oder (optional) eigenes SQL zu senden.
+       Der Request geht immer an dein Backend (<code>/api/admin/…</code>), nicht direkt an Postgres.</p>
+
+    <label>Backend API Base URL</label>
+    <input id="api" placeholder="https://api-ki-backend-neu-production.up.railway.app">
+
+    <label>Admin Token (X-Admin-Token)</label>
+    <input id="tok" type="password" placeholder="setze ENV ADMIN_API_TOKEN im Backend">
+
+    <div class="row">
+      <div>
+        <label>Hotfix auswählen</label>
+        <select id="hotfix">
+          <option value="login_codes_reports_v1">login_codes_reports_v1</option>
+        </select>
+      </div>
+      <div>
+        <label>Timeout (ms)</label>
+        <input id="tout" type="number" value="30000" min="1000" max="300000">
+      </div>
+    </div>
+
+    <div class="btns">
+      <button id="apply">Hotfix ausführen</button>
+      <button id="send" title="Nur wenn im Backend ADMIN_ALLOW_RAW_SQL=1 gesetzt ist">Roh-SQL senden</button>
+    </div>
+
+    <label>Optional: eigenes SQL</label>
+    <textarea id="sql" placeholder="SQL hier einfügen (DDL/DML). Erfordert ADMIN_ALLOW_RAW_SQL=1 im Backend."></textarea>
+
+    <div id="out" class="log" aria-live="polite"></div>
+  </div>
+</div>
+<script>
+  const $ = sel => document.querySelector(sel);
+  const out = $("#out");
+
+  function log(msg, cls=""){ out.innerHTML = `<span class="${cls}">${msg}</span>` + "\n" + out.innerHTML; }
+
+  async function call(endpoint, body){
+    const api = $("#api").value.trim().replace(/\/$/,"");
+    const tok = $("#tok").value.trim();
+    if(!api || !tok){ log("Bitte API-URL und Admin-Token setzen.","err"); return; }
+    const url = api + endpoint;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {"Content-Type":"application/json","X-Admin-Token": tok},
+      body: JSON.stringify(body)
+    });
+    const txt = await res.text();
+    let json = null;
+    try { json = JSON.parse(txt); } catch(e) {}
+    if(!res.ok){
+      log(`❌ ${res.status} ${res.statusText}: ${txt}`,"err");
+    } else {
+      log(`✅ OK: ${JSON.stringify(json || txt)}`,"ok");
+    }
+  }
+
+  $("#apply").addEventListener("click", () => {
+    const name = $("#hotfix").value;
+    const timeout = parseInt($("#tout").value || "30000", 10);
+    log(`➡️ Hotfix '${name}'…`);
+    call("/api/admin/apply-hotfix", {name, statement_timeout_ms: timeout});
+  });
+
+  $("#send").addEventListener("click", () => {
+    const sql = $("#sql").value.trim();
+    if(!sql){ log("Kein SQL eingegeben.","err"); return; }
+    const timeout = parseInt($("#tout").value || "30000", 10);
+    log("➡️ Raw SQL…");
+    call("/api/admin/run-sql", {sql, statement_timeout_ms: timeout});
+  });
+</script>
+</body>
+</html>
