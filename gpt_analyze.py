@@ -1,17 +1,24 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-Analyse → Report (HTML/PDF) → E-Mail (User + Admin). Mit korreliertem Debug-Logging.
-- ADMIN_EMAILS (Komma-getrennt) wird als Admin-Empfängerliste verwendet.
-- REPORT_ADMIN_EMAIL ist optionaler Fallback (wird zusätzlich angehängt, falls gesetzt).
-- Setzt reports.user_email (falls Spalte existiert), um NOT NULL-Constraint zu bedienen.
-- Umfangreiche Debug-Logs via ENV-Toggles (s. unten).
+Analyse → Report (HTML/PDF) → E-Mail (User + Admin) mit korreliertem Debug‑Logging.
+Gold‑Standard‑Variante: PEP8‑konform, robustes Error‑Handling, optionale Artefakt‑Ablage.
+
+Verbesserungen gegenüber der zuvor hochgeladenen Version:
+- **Admin‑Empfänger** aus ADMIN_EMAILS (Kommaliste) + optional REPORT_ADMIN_EMAIL (Fallback)
+- **user_email** wird beim Report‑Insert gesetzt (falls Spalte vorhanden; ALT‑DB‑Kompatibilität)
+- **OpenAI‑Timeout/Temperatur/Modell** via ENV konfigurierbar
+- **Run‑ID** pro Durchlauf, strukturierte Debug‑Logs (LLM‑Prompts, HTML‑Snapshot, PDF‑Infos, E‑Mail)
+- **Optionale Artefakte** (Prompts/HTML) pro Run‑ID in /tmp/ki-artifacts (DEBUG_SAVE_ARTIFACTS=1)
+- Statusfluss: pending → done/failed, Auditfelder für E‑Mail‑Versand (falls vorhanden)
 """
 import json
 import logging
 import os
 import uuid
+from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
@@ -30,11 +37,18 @@ from settings import settings
 
 log = logging.getLogger(__name__)
 
-# ---------- Debug/Log-Toggles (über ENV steuerbar) ----------
-DBG_PROMPTS = (os.getenv("DEBUG_LOG_PROMPTS", "0") == "1")
-DBG_HTML = (os.getenv("DEBUG_LOG_HTML_SNAPSHOT", "0") == "1")
-DBG_PDF = (os.getenv("DEBUG_LOG_PDF_INFO", "1") == "1")
-DBG_MASK_EMAILS = (os.getenv("DEBUG_MASK_EMAILS", "1") == "1")
+# ---------- Konfiguration über ENV / settings ----------
+OPENAI_MODEL = getattr(settings, "OPENAI_MODEL", None) or os.getenv("OPENAI_MODEL", "gpt-4o")
+OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE", "0.2"))
+OPENAI_TIMEOUT = int(os.getenv("OPENAI_TIMEOUT", "60"))  # Sekunden
+
+DBG_PROMPTS = (os.getenv("DEBUG_LOG_PROMPTS", "0") == "1")           # Prompt-Snippet loggen
+DBG_HTML = (os.getenv("DEBUG_LOG_HTML_SNAPSHOT", "0") == "1")        # HTML Head-Snippet loggen
+DBG_PDF = (os.getenv("DEBUG_LOG_PDF_INFO", "1") == "1")              # PDF Start/Ende, Bytes/URL loggen
+DBG_MASK_EMAILS = (os.getenv("DEBUG_MASK_EMAILS", "1") == "1")       # E-Mail-Adressen im Log maskieren
+DBG_SAVE_ARTIFACTS = (os.getenv("DEBUG_SAVE_ARTIFACTS", "0") == "1") # Prompts/HTML in /tmp/ki-artifacts/<run>/ speichern
+
+ARTIFACTS_ROOT = Path("/tmp/ki-artifacts")
 
 def _mask_email(addr: Optional[str]) -> str:
     if not addr:
@@ -49,8 +63,8 @@ def _mask_email(addr: Optional[str]) -> str:
     except Exception:
         return "***"
 
-# ---------- Admin-Empfänger aus ENV ----------
 def _admin_recipients() -> List[str]:
+    """Admin-Empfängerliste aus ADMIN_EMAILS (Komma-getrennt) + optional REPORT_ADMIN_EMAIL als Fallback."""
     emails: List[str] = []
     raw1 = getattr(settings, "ADMIN_EMAILS", None) or os.getenv("ADMIN_EMAILS", "")
     raw2 = getattr(settings, "REPORT_ADMIN_EMAIL", None) or os.getenv("REPORT_ADMIN_EMAIL", "")
@@ -58,12 +72,12 @@ def _admin_recipients() -> List[str]:
         emails.extend([e.strip() for e in raw1.split(",") if e.strip()])
     if raw2:
         emails.append(raw2.strip())
-    # Deduplizieren bei Erhalt der Reihenfolge
-    dedup: Dict[str, None] = {}
+    # Deduplizieren (Reihenfolge bewahren)
+    seen: Dict[str, None] = {}
     out: List[str] = []
     for e in emails:
-        if e not in dedup:
-            dedup[e] = None
+        if e not in seen:
+            seen[e] = None
             out.append(e)
     return out
 
@@ -198,24 +212,40 @@ def _ctx_for(br: Briefing) -> Dict[str, Any]:
     }
     return ctx
 
-def _call_openai(prompt: str, run_id: str, section_key: str) -> str:
-    # Logging nur Metadaten oder optional prompt snippet
+@dataclass
+class OpenAIConfig:
+    model: str = OPENAI_MODEL
+    temperature: float = OPENAI_TEMPERATURE
+    timeout: int = OPENAI_TIMEOUT
+
+def _save_artifact(run_id: str, name: str, content: str) -> None:
+    if not DBG_SAVE_ARTIFACTS:
+        return
+    try:
+        p = ARTIFACTS_ROOT / run_id
+        p.mkdir(parents=True, exist_ok=True)
+        (p / name).write_text(content, encoding="utf-8")
+    except Exception as exc:
+        log.debug("[%s] could not save artifact %s: %s", run_id, name, exc)
+
+def _call_openai(prompt: str, run_id: str, section_key: str, cfg: Optional[OpenAIConfig] = None) -> str:
+    cfg = cfg or OpenAIConfig()
     if DBG_PROMPTS:
         snippet = prompt.replace("\n", "\\n")[:800]
         log.debug("[%s] OPENAI_PROMPT section=%s len=%s snippet=\"%s\"", run_id, section_key, len(prompt), snippet)
+        _save_artifact(run_id, f"{section_key}.prompt.txt", prompt)
 
     if not settings.OPENAI_API_KEY:
-        log.warning("[%s] OPENAI_DISABLED (kein OPENAI_API_KEY gesetzt) – gebe Platzhalter zurück", run_id)
+        log.warning("[%s] OPENAI_DISABLED – kein OPENAI_API_KEY gesetzt", run_id)
         return "<p><em>Entwicklungsmodus – kein OPENAI_API_KEY gesetzt.</em></p>"
 
     base = settings.OPENAI_API_BASE or "https://api.openai.com/v1"
     url = f"{base}/chat/completions"
     headers = {"Authorization": f"Bearer {settings.OPENAI_API_KEY}", "Content-Type": "application/json"}
-    model = getattr(settings, "OPENAI_MODEL", "gpt-4o")
-    body = {"model": model, "messages": [{"role": "user", "content": prompt}], "temperature": 0.2}
+    body = {"model": cfg.model, "messages": [{"role": "user", "content": prompt}], "temperature": cfg.temperature}
 
-    log.debug("[%s] OPENAI_CALL model=%s url=%s", run_id, model, url)
-    resp = requests.post(url, headers=headers, json=body, timeout=60)
+    log.debug("[%s] OPENAI_CALL model=%s url=%s", run_id, cfg.model, url)
+    resp = requests.post(url, headers=headers, json=body, timeout=cfg.timeout)
     if resp.status_code >= 400:
         log.error("[%s] OPENAI_ERROR status=%s body=%s", run_id, resp.status_code, resp.text[:500])
         raise RuntimeError(f"OpenAI error {resp.status_code}: {resp.text[:200]}")
@@ -313,7 +343,9 @@ def build_full_report_html(br: Briefing, run_id: str) -> Dict[str, Any]:
 
     final_html = render_report_html("templates/pdf_template.html", rendered)
     if DBG_HTML:
-        log.debug("[%s] HTML_SNAPSHOT len=%s head=\"%s\"", run_id, len(final_html), final_html[:400].replace("\n", "\\n"))
+        head = final_html[:400].replace("\n", "\\n")
+        log.debug("[%s] HTML_SNAPSHOT len=%s head=\"%s\"", run_id, len(final_html), head)
+        _save_artifact(run_id, "report.html", final_html)
     meta = {"sections": order, "lang": br.lang, "generated_at": datetime.now(timezone.utc).isoformat()}
     return {"html": final_html, "meta": meta}
 
@@ -334,7 +366,7 @@ def _send_emails(
     pdf_bytes: Optional[bytes],
     run_id: str,
 ) -> None:
-    """Versendet E-Mails; Fehler sind nicht-fatal und werden im Report auditierbar protokolliert."""
+    """Versendet E-Mails; Fehler sind nicht fatal und werden auditierbar im Report vermerkt (falls Felder existieren)."""
     # 1) Nutzer
     user_email = _determine_user_email(db, br, None)
     if user_email:
@@ -380,7 +412,6 @@ def _send_emails(
                 ok, err = send_mail(addr, subject, body_html, text=None, attachments=attachments)
                 any_ok = any_ok or ok
                 if not ok and hasattr(rep, "email_error_admin"):
-                    # mehrere Empfänger → gesammelt protokollieren
                     prev = getattr(rep, "email_error_admin", None) or ""
                     rep.email_error_admin = (prev + f"; {addr}: {err}").strip("; ")
             if any_ok and hasattr(rep, "email_sent_admin"):
@@ -395,14 +426,20 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> Tuple[int, s
     if not br:
         raise ValueError("Briefing not found")
     result = build_full_report_html(br, run_id=run_id)
-    an = Analysis(user_id=br.user_id, briefing_id=briefing_id,
-                  html=result["html"], meta=result["meta"],
-                  created_at=datetime.now(timezone.utc))
-    db.add(an); db.commit(); db.refresh(an)
+    an = Analysis(
+        user_id=br.user_id,
+        briefing_id=briefing_id,
+        html=result["html"],
+        meta=result["meta"],
+        created_at=datetime.now(timezone.utc),
+    )
+    db.add(an)
+    db.commit()
+    db.refresh(an)
     return an.id, result["html"], result["meta"]
 
 def run_async(briefing_id: int, email: Optional[str] = None) -> None:
-    """Erzeugt Analyse → Report (pending→done/failed) → E-Mails (User + Admin)."""
+    """Erzeugt Analyse → Report (pending→done/failed) → E‑Mails (User + Admin)."""
     run_id = f"run-{uuid.uuid4().hex[:8]}"
     db = SessionLocal()
     rep: Optional[Report] = None
@@ -411,33 +448,36 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
         br = db.get(Briefing, briefing_id)
         log.info("[%s] analysis_created id=%s briefing_id=%s user_id=%s", run_id, an_id, briefing_id, getattr(br, "user_id", None))
 
-        # 1) Report anlegen (pending)
+        # (1) Report anlegen (pending)
         rep = Report(
             user_id=br.user_id if br else None,
             briefing_id=briefing_id,
             analysis_id=an_id,
             created_at=datetime.now(timezone.utc),
         )
-        # WICHTIG: user_email setzen, falls Spalte im ORM existiert (NOT NULL in Alt-DB)
+        # ALT‑DB‑Kompatibilität: user_email setzen, falls Spalte vorhanden / NOT NULL
         if hasattr(rep, "user_email"):
             user_email = _determine_user_email(db, br, email)
-            rep.user_email = user_email or ""  # falls NOT NULL in Alt-DB
+            rep.user_email = user_email or ""
         if hasattr(rep, "task_id"):
             rep.task_id = f"local-{uuid.uuid4()}"
         if hasattr(rep, "status"):
             rep.status = "pending"
-        db.add(rep); db.commit(); db.refresh(rep)
+        db.add(rep)
+        db.commit()
+        db.refresh(rep)
         log.info("[%s] report_pending id=%s", run_id, getattr(rep, "id", None))
 
-        # 2) PDF rendern
+        # (2) PDF rendern
         if DBG_PDF:
             log.debug("[%s] pdf_render start", run_id)
         pdf_info = render_pdf_from_html(html, meta={"analysis_id": an_id, "briefing_id": briefing_id})
-        pdf_url = pdf_info.get("pdf_url"); pdf_bytes = pdf_info.get("pdf_bytes")
+        pdf_url = pdf_info.get("pdf_url")
+        pdf_bytes = pdf_info.get("pdf_bytes")
         if DBG_PDF:
             log.debug("[%s] pdf_render done url=%s bytes_len=%s", run_id, bool(pdf_url), len(pdf_bytes or b""))
 
-        # 3) Report aktualisieren
+        # (3) Report aktualisieren
         if hasattr(rep, "pdf_url"):
             rep.pdf_url = pdf_url
         if hasattr(rep, "pdf_bytes_len") and pdf_bytes:
@@ -446,20 +486,24 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
             rep.status = "done"
         if hasattr(rep, "updated_at"):
             rep.updated_at = datetime.now(timezone.utc)
-        db.add(rep); db.commit(); db.refresh(rep)
+        db.add(rep)
+        db.commit()
+        db.refresh(rep)
         log.info("[%s] report_done id=%s url=%s bytes=%s", run_id, getattr(rep, "id", None), bool(getattr(rep, "pdf_url", None)), getattr(rep, "pdf_bytes_len", None))
 
-        # 4) E-Mails verschicken (User + Admin, robust)
+        # (4) E‑Mails versenden (fehler‑tolerant)
         try:
             _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id=run_id)
             if hasattr(rep, "updated_at"):
                 rep.updated_at = datetime.now(timezone.utc)
-            db.add(rep); db.commit()
+            db.add(rep)
+            db.commit()
         except Exception as exc:
             log.warning("[%s] email_dispatch_failed: %s", run_id, exc)
 
     except Exception as exc:
         log.exception("[%s] run_async_failed briefing_id=%s err=%s", run_id, briefing_id, exc)
+        # (Best‑Effort) Report als failed markieren
         try:
             if rep is None:
                 r = db.query(Report).filter(Report.briefing_id == briefing_id).order_by(Report.id.desc()).first()
@@ -470,7 +514,8 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
                     r.status = "failed"
                 if hasattr(r, "updated_at"):
                     r.updated_at = datetime.now(timezone.utc)
-                db.add(r); db.commit()
+                db.add(r)
+                db.commit()
                 log.info("[%s] report_marked_failed id=%s", run_id, getattr(r, "id", None))
         except Exception as inner:
             log.warning("[%s] mark_failed_exception: %s", run_id, inner)
