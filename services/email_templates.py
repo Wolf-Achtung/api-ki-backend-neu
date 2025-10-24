@@ -1,15 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-"""
-E-Mail-Templates (HTML) für den Report-Versand.
-"""
 from html import escape
 from typing import Optional
 
 def render_report_ready_email(recipient: str, pdf_url: Optional[str]) -> str:
-    """
-    recipient: "user" oder "admin"
-    """
     if recipient == "admin":
         title = "Kopie: KI‑Status‑Report (inkl. Briefing)"
         intro = "dies ist die Admin‑Kopie des automatisch generierten KI‑Status‑Reports."
