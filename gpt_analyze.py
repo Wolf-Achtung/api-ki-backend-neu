@@ -1,7 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
+"""
+Erzeugt Analyse + Report (HTML/PDF) und sendet E-Mails:
+- an den eingeloggten Nutzer (E-Mail aus DB),
+- parallel an den Admin (inkl. Briefing-JSON als Anhang).
+Robuste Statuspflege (pending/done/failed) und idempotente DB-Aktualisierungen.
+"""
 import json
 import logging
+import os
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
@@ -15,12 +22,18 @@ from services.prompt_engine import dumps, render_file
 from services.report_renderer import render as render_report_html
 from services.pdf_client import render_pdf_from_html
 from services.email import send_mail
+from services.email_templates import render_report_ready_email
 from services.research import search_funding_and_tools
 from services.knowledge import get_knowledge_blocks
 from settings import settings
 
 log = logging.getLogger(__name__)
 
+# --- Konfiguration ---
+ADMIN_EMAIL = getattr(settings, "REPORT_ADMIN_EMAIL", None) or os.getenv("REPORT_ADMIN_EMAIL", "")
+ATTACH_BRIEFING_FOR_ADMIN = (os.getenv("REPORT_ATTACH_BRIEFING_JSON", "1") == "1")
+
+# --- Prompt/Template-Zuordnung ---
 CORE_SECTIONS = [
     ("executive_summary", "prompts/de/executive_summary_de.md", "EXEC_SUMMARY_HTML"),
     ("quick_wins",        "prompts/de/quick_wins_de.md",        "QUICK_WINS_HTML"),
@@ -210,6 +223,8 @@ def _build_kpi_bars_html(ctx: Dict[str, Any]) -> str:
 
 def build_full_report_html(br: Briefing) -> Dict[str, Any]:
     ctx = _ctx_for(br)
+
+    # Hauptabschnitte
     rendered: Dict[str, str] = {}
     order: List[str] = []
     for key, path, placeholder in CORE_SECTIONS:
@@ -221,6 +236,7 @@ def build_full_report_html(br: Briefing) -> Dict[str, Any]:
         rendered[placeholder] = html
         order.append(key)
 
+    # Zusatzabschnitte → Appendix
     extra_blocks: List[str] = []
     for key, path, title in EXTRA_PATTERNS:
         try:
@@ -230,6 +246,7 @@ def build_full_report_html(br: Briefing) -> Dict[str, Any]:
         except Exception as exc:
             log.warning("Extra section %s skipped: %s", key, exc)
 
+    # Dynamische Recherche + statische Wissensblöcke
     branch_label = ctx.get("BRANCHE_LABEL", "")
     state_label = ctx.get("BUNDESLAND_LABEL", "")
     research = search_funding_and_tools(branch_label, state_label, lang="de")
@@ -251,6 +268,71 @@ def build_full_report_html(br: Briefing) -> Dict[str, Any]:
     meta = {"sections": order, "lang": br.lang, "generated_at": datetime.now(timezone.utc).isoformat()}
     return {"html": final_html, "meta": meta}
 
+def _determine_user_email(db: Session, briefing: Briefing, email_override: Optional[str]) -> Optional[str]:
+    if email_override:
+        return email_override
+    if briefing and briefing.user_id:
+        u = db.get(User, briefing.user_id)
+        if u and getattr(u, "email", None):
+            return u.email
+    return None
+
+def _send_user_and_admin_emails(
+    db: Session,
+    rep: Report,
+    br: Briefing,
+    pdf_url: Optional[str],
+    pdf_bytes: Optional[bytes],
+) -> None:
+    """Versendet E-Mails; schlägt ein Versand fehl, wird der andere nicht blockiert."""
+    # 1) Nutzer
+    user_email = _determine_user_email(db, br, None)
+    user_err: Optional[str] = None
+    if user_email:
+        try:
+            subject = "Ihr KI‑Status‑Report"
+            body_html = render_report_ready_email(recipient="user", pdf_url=pdf_url)
+            attachments = []
+            if pdf_bytes and not pdf_url:
+                attachments.append({"filename": f"KI-Status-Report-{getattr(rep,'id', None) or 'report'}.pdf",
+                                    "content": pdf_bytes, "mimetype": "application/pdf"})
+            ok, err = send_mail(user_email, subject, body_html, text=None, attachments=attachments)
+            if ok:
+                if hasattr(rep, "email_sent_user"):
+                    rep.email_sent_user = True
+            else:
+                user_err = err or "send_mail returned False"
+        except Exception as exc:
+            user_err = str(exc)
+        finally:
+            if user_err and hasattr(rep, "email_error_user"):
+                rep.email_error_user = user_err
+
+    # 2) Admin
+    admin_err: Optional[str] = None
+    if ADMIN_EMAIL:
+        try:
+            subject = "Kopie: KI‑Status‑Report (inkl. Briefing)"
+            body_html = render_report_ready_email(recipient="admin", pdf_url=pdf_url)
+            attachments = []
+            if ATTACH_BRIEFING_FOR_ADMIN:
+                briefing_json = json.dumps(getattr(br, "answers", {}) or {}, ensure_ascii=False, indent=2)
+                attachments.append({"filename": f"briefing-{br.id}.json", "content": briefing_json.encode("utf-8"), "mimetype": "application/json"})
+            if pdf_bytes and not pdf_url:
+                attachments.append({"filename": f"KI-Status-Report-{getattr(rep,'id', None) or 'report'}.pdf",
+                                    "content": pdf_bytes, "mimetype": "application/pdf"})
+            ok, err = send_mail(ADMIN_EMAIL, subject, body_html, text=None, attachments=attachments)
+            if ok:
+                if hasattr(rep, "email_sent_admin"):
+                    rep.email_sent_admin = True
+            else:
+                admin_err = err or "send_mail returned False"
+        except Exception as exc:
+            admin_err = str(exc)
+        finally:
+            if admin_err and hasattr(rep, "email_error_admin"):
+                rep.email_error_admin = admin_err
+
 def analyze_briefing(db: Session, briefing_id: int) -> Tuple[int, str, Dict[str, Any]]:
     br = db.get(Briefing, briefing_id)
     if not br:
@@ -262,89 +344,68 @@ def analyze_briefing(db: Session, briefing_id: int) -> Tuple[int, str, Dict[str,
     db.add(an); db.commit(); db.refresh(an)
     return an.id, result["html"], result["meta"]
 
-def _determine_recipient(db: Session, briefing: Briefing, email_override: Optional[str]) -> Optional[str]:
-    if email_override:
-        return email_override
-    if briefing.user_id:
-        u = db.get(User, briefing.user_id)
-        if u and getattr(u, "email", None):
-            return u.email
-    return None
-
 def run_async(briefing_id: int, email: Optional[str] = None) -> None:
-    """Create analysis, then create Report row (pending) and update to done/failed."""
+    """Erzeugt Analyse → Report (pending→done/failed) → E-Mails (User/Admin)."""
     db = SessionLocal()
+    rep: Optional[Report] = None
     try:
         an_id, html, meta = analyze_briefing(db, briefing_id)
         br = db.get(Briefing, briefing_id)
         log.info("analysis created: id=%s", an_id)
 
-        # Create report row in 'pending' state (if columns exist)
+        # 1) Report anlegen (pending)
         rep = Report(
             user_id=br.user_id if br else None,
             briefing_id=briefing_id,
             analysis_id=an_id,
             created_at=datetime.now(timezone.utc),
         )
-
-        # Optional fields: task_id, status (only if model has them)
-        task_id = f"local-{uuid.uuid4()}"
         if hasattr(rep, "task_id"):
-            setattr(rep, "task_id", task_id)
+            rep.task_id = f"local-{uuid.uuid4()}"
         if hasattr(rep, "status"):
-            setattr(rep, "status", "pending")
+            rep.status = "pending"
         db.add(rep); db.commit(); db.refresh(rep)
 
-        # Render PDF
+        # 2) PDF rendern
         pdf_info = render_pdf_from_html(html, meta={"analysis_id": an_id, "briefing_id": briefing_id})
         pdf_url = pdf_info.get("pdf_url"); pdf_bytes = pdf_info.get("pdf_bytes")
 
-        # Update report with results
+        # 3) Report aktualisieren
         if hasattr(rep, "pdf_url"):
             rep.pdf_url = pdf_url
         if hasattr(rep, "pdf_bytes_len") and pdf_bytes:
             rep.pdf_bytes_len = len(pdf_bytes)
         if hasattr(rep, "status"):
             rep.status = "done"
-        # timestamp
         if hasattr(rep, "updated_at"):
             rep.updated_at = datetime.now(timezone.utc)
         db.add(rep); db.commit(); db.refresh(rep)
         log.info("report created: id=%s url=%s bytes=%s", getattr(rep, "id", None), getattr(rep, "pdf_url", None), getattr(rep, "pdf_bytes_len", None))
 
-        # E-Mail optional
-        recipient = _determine_recipient(db, br, email)
-        if recipient:
-            subject = "Ihr KI‑Status‑Report"
-            body_html = (
-                "<p>Guten Tag,</p>"
-                "<p>anbei erhalten Sie den automatisch generierten KI‑Status‑Report.</p>"
-                + (f'<p>Sie können den Report <a href="{pdf_url}">hier als PDF abrufen</a>.</p>' if pdf_url else "")
-                + "<p>Viele Grüße</p>"
-            )
-            attachments = []
-            if pdf_bytes and not pdf_url:
-                attachments.append({"filename": f"KI-Status-Report-{getattr(rep,'id',an_id)}.pdf","content": pdf_bytes,"mimetype": "application/pdf"})
-            ok, err = send_mail(recipient, subject, body_html, text=None, attachments=attachments)
-            if ok: log.info("report e-mail sent to %s", recipient)
-            else:  log.warning("report e-mail not sent: %s", err)
+        # 4) E-Mails verschicken (User + Admin, robust)
+        try:
+            _send_user_and_admin_emails(db, rep, br, pdf_url, pdf_bytes)
+            if hasattr(rep, "updated_at"):
+                rep.updated_at = datetime.now(timezone.utc)
+            db.add(rep); db.commit()
+        except Exception as exc:
+            log.warning("email dispatch failed (non-fatal): %s", exc)
 
     except Exception as exc:
         log.exception("run_async failed for briefing_id=%s: %s", briefing_id, exc)
-        # Try to mark last created report as failed (best-effort)
+        # Report auf failed setzen, falls bereits vorhanden
         try:
-            rep_id = None
-            # Fetch the latest report for this briefing
-            r = db.query(Report).filter(Report.briefing_id == briefing_id).order_by(Report.id.desc()).first()
+            if rep is None:
+                r = db.query(Report).filter(Report.briefing_id == briefing_id).order_by(Report.id.desc()).first()
+            else:
+                r = rep
             if r:
-                rep_id = getattr(r, "id", None)
                 if hasattr(r, "status"):
                     r.status = "failed"
                 if hasattr(r, "updated_at"):
                     r.updated_at = datetime.now(timezone.utc)
                 db.add(r); db.commit()
-                log.info("report marked failed: id=%s", rep_id)
-        except Exception as _inner:
-            log.warning("could not mark report failed: %s", _inner)
+        except Exception as inner:
+            log.warning("could not mark report failed: %s", inner)
     finally:
         db.close()
