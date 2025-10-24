@@ -1,81 +1,57 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
+import os
 import logging
-from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, PlainTextResponse
-from settings import settings
 
-try:
-    from core.db import Base, engine
-    from core.migrate import run_migrations
-except Exception:
-    Base = None
-    engine = None
-    run_migrations = None
-
-logging.basicConfig(level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
-                    format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(level=log_level, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("ki-backend")
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    if Base and engine:
-        try:
-            Base.metadata.create_all(bind=engine)
-            if callable(run_migrations):
-                run_migrations(engine)
-            log.info("DB initialized & migrated")
-        except Exception as e:
-            log.exception("DB init/migration failed: %s", e)
-    yield
+app = FastAPI(title="KI Backend")
 
-app = FastAPI(title=getattr(settings, "APP_NAME", "KI-Status-Report API"),
-              version=getattr(settings, "VERSION", "1.0.0"),
-              lifespan=lifespan)
-
-# CORS config
-origins = []
-try:
-    origins = settings.cors_list()
-except Exception:
-    raw = getattr(settings, "CORS_ORIGINS", "") or ""
-    origins = [s.strip().rstrip("/") for s in raw.split(",") if s.strip()]
-allow_any = False
-try:
-    allow_any = settings.allow_any_cors
-except Exception:
-    allow_any = False
-kwargs = dict(allow_methods=["*"], allow_headers=["*"], allow_credentials=True)
-if allow_any:
-    app.add_middleware(CORSMiddleware, allow_origin_regex=r"https?://.*", **kwargs)
-    log.warning("CORS: using allow_origin_regex (any origin). Set CORS_ORIGINS to lock down in production.")
+# CORS – erlaubt bekannte Frontends; REGEX-Fallback ist optional
+allowed = [o.strip() for o in os.getenv("CORS_ALLOW_ORIGINS", "").split(",") if o.strip()]
+if not allowed and os.getenv("CORS_ALLOW_ANY", "0") == "1":
+    app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True,
+                       allow_methods=["*"], allow_headers=["*"])
+    log.warning("CORS: allow all (development)")
 else:
-    app.add_middleware(CORSMiddleware, allow_origins=origins, **kwargs)
-    log.info("CORS: allowed origins = %s", origins)
+    app.add_middleware(CORSMiddleware, allow_origins=allowed or ["https://make.ki-sicherheit.jetzt"],
+                       allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+    log.info("CORS: allowed origins = %s", allowed or ["https://make.ki-sicherheit.jetzt"])
 
-@app.get("/", response_class=PlainTextResponse)
-async def root() -> str:
-    return "KI–Status–Report backend is running.\n"
+# Mount existing routers (falls dein Projekt andere Pfade nutzt, bleibt dies folgenlos)
+try:
+    from routes.auth import router as auth_router
+    app.include_router(auth_router, prefix="/api")
+    log.info("Mounted router: /api/auth")
+except Exception as exc:
+    log.warning("Router routes.auth not loaded: %s", exc)
 
-@app.get("/api/healthz", response_class=JSONResponse)
-async def healthz():
-    return {"OK": True, "env": getattr(settings, "ENV", "unknown"), "version": getattr(settings, "VERSION", "0")}
+try:
+    from routes.analyze import router as analyze_router
+    app.include_router(analyze_router, prefix="/api")
+    log.info("Mounted router: /api/analyze")
+except Exception as exc:
+    log.warning("Router routes.analyze not loaded: %s", exc)
 
-def include_router_safe(module_path: str, attr: str, prefix: str = "/api"):
-    try:
-        mod = __import__(module_path, fromlist=[attr])
-        router = getattr(mod, "router")
-        app.include_router(router, prefix=prefix)
-        log.info("Mounted router: %s%s", prefix, getattr(router, "prefix", ""))
-    except Exception as e:
-        log.warning("Router %s not loaded: %s", module_path, e)
+try:
+    from routes.report import router as report_router
+    app.include_router(report_router, prefix="/api")
+    log.info("Mounted router: /api/report")
+except Exception as exc:
+    log.warning("Router routes.report not loaded: %s", exc)
 
-include_router_safe("routes.auth", "router")
-include_router_safe("routes.briefing", "router")
-include_router_safe("routes.analyze", "router")
-include_router_safe("routes.report", "router")
-include_router_safe("routes.briefing_drafts", "router")
-# NEW: Admin routes
-include_router_safe("routes.admin", "router")
+# NEW: Admin SQL router
+try:
+    from routes.admin_sql import router as admin_sql_router
+    app.include_router(admin_sql_router)
+    log.info("Mounted router: /api/admin (sql)")
+except Exception as exc:
+    log.warning("Router routes.admin_sql not loaded: %s", exc)
+
+@app.get("/api/healthz")
+def healthz():
+    return {"ok": True}
