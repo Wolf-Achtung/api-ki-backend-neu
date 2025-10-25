@@ -1,24 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-
-"""Hardened migration – aligns `login_codes` & `reports` and tolerates legacy schemas.
-Idempotent: safe to run multiple times.
-"""
-
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-
 def run_migrations(engine: Engine) -> None:
     with engine.begin() as conn:
-        # login_codes baseline
-        conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS login_codes (
-                id BIGSERIAL PRIMARY KEY
-            );
-        """))
-
-        # Essential columns (both legacy & modern variants)
+        conn.execute(text("CREATE TABLE IF NOT EXISTS login_codes (id BIGSERIAL PRIMARY KEY);"))
         for ddl in [
             "ALTER TABLE login_codes ADD COLUMN IF NOT EXISTS user_id BIGINT",
             "ALTER TABLE login_codes ADD COLUMN IF NOT EXISTS email TEXT",
@@ -29,10 +16,8 @@ def run_migrations(engine: Engine) -> None:
             "ALTER TABLE login_codes ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now()",
             "ALTER TABLE login_codes ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ",
             "ALTER TABLE login_codes ADD COLUMN IF NOT EXISTS consumed_at TIMESTAMPTZ",
-        ]:
-            conn.execute(text(ddl))
+        ]: conn.execute(text(ddl))
 
-        # Unique constraint on code_hash if present, else on code
         conn.execute(text("""
         DO $$ BEGIN
             IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='uq_login_codes_codehash') THEN
@@ -40,8 +25,7 @@ def run_migrations(engine: Engine) -> None:
                     ALTER TABLE login_codes ADD CONSTRAINT uq_login_codes_codehash UNIQUE (code_hash);
                 END IF;
             END IF;
-        END $$;
-        """))
+        END $$;"""))
 
         conn.execute(text("""
         DO $$ BEGIN
@@ -50,19 +34,31 @@ def run_migrations(engine: Engine) -> None:
                     ALTER TABLE login_codes ADD CONSTRAINT uq_login_codes_code UNIQUE (code);
                 END IF;
             END IF;
-        END $$;
-        """))
+        END $$;"""))
 
-        # Helpful indices
         for idx in [
             "CREATE INDEX IF NOT EXISTS ix_login_codes_email ON login_codes(email)",
             "CREATE INDEX IF NOT EXISTS ix_login_codes_user_id ON login_codes(user_id)",
             "CREATE INDEX IF NOT EXISTS ix_login_codes_consumed_at ON login_codes(consumed_at)",
             "CREATE INDEX IF NOT EXISTS ix_login_codes_created_at ON login_codes(created_at)",
-        ]:
-            conn.execute(text(idx))
+        ]: conn.execute(text(idx))
 
-        # reports baseline (for PDF/mail status)
+        # audit table for rate limiting & visibility
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS login_audit (
+            id BIGSERIAL PRIMARY KEY,
+            ts TIMESTAMPTZ DEFAULT now(),
+            email TEXT,
+            ip TEXT,
+            action TEXT,
+            status TEXT,
+            user_agent TEXT,
+            detail TEXT
+        );"""))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_login_audit_email_ts ON login_audit(email, ts DESC);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_login_audit_ip_ts ON login_audit(ip, ts DESC);"))
+
+        # reports baseline
         conn.execute(text("CREATE TABLE IF NOT EXISTS reports (id BIGSERIAL PRIMARY KEY);"))
         for ddl in [
             "ALTER TABLE reports ADD COLUMN IF NOT EXISTS user_id BIGINT",
@@ -74,12 +70,9 @@ def run_migrations(engine: Engine) -> None:
             "ALTER TABLE reports ADD COLUMN IF NOT EXISTS pdf_bytes_len INTEGER",
             "ALTER TABLE reports ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now()",
             "ALTER TABLE reports ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ",
-        ]:
-            conn.execute(text(ddl))
-
+        ]: conn.execute(text(ddl))
         for idx in [
             "CREATE INDEX IF NOT EXISTS ix_reports_status ON reports(status)",
             "CREATE INDEX IF NOT EXISTS ix_reports_user_email ON reports(user_email)",
             "CREATE INDEX IF NOT EXISTS ix_reports_created_at ON reports(created_at)",
-        ]:
-            conn.execute(text(idx))
+        ]: conn.execute(text(idx))
