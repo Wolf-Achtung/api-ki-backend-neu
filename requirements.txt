@@ -1,10 +1,12 @@
-fastapi>=0.115
-uvicorn[standard]>=0.30
-pydantic>=2.7
-pydantic-settings>=2.4
-SQLAlchemy>=2.0
-psycopg[binary]>=3.2
-requests>=2.32
-python-jose[cryptography]>=3.3.0
-python-multipart>=0.0.9
-email-validator>=2.2.0
+# Production (HOTFIX) — keep current code, fix missing driver quickly
+fastapi>=0.115,<0.116
+uvicorn[standard]>=0.30,<0.31
+pydantic>=2.7,<3.0
+pydantic-settings>=2.4,<3.0
+SQLAlchemy>=2.0,<2.1
+psycopg2-binary==2.9.9   # Fixes: No module named 'psycopg2'
+requests>=2.32,<3.0
+python-jose[cryptography]>=3.3.0,<3.4.0
+python-multipart>=0.0.9,<0.1.0
+email-validator>=2.2.0,<2.3.0
+jinja2>=3.1,<3.2
