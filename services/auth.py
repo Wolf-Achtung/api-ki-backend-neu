@@ -1,87 +1,176 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-import hashlib, secrets
-from datetime import datetime, timedelta, timezone
-from typing import Optional, List
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+"""Authentication services (robust to schema drift).
+
+This module avoids tight coupling to a specific ORM model for `login_codes`.
+Instead, it introspects available columns and writes rows via SQL that match
+the current database schema.
+
+It supports both shapes:
+- legacy:   login_codes(email, code, created_at, expires_at, consumed_at, ...)
+- modern:   login_codes(user_id, email, code_hash, used, attempts, ...)
+
+Public functions exposed (expected by routes.auth):
+- generate_code(db, user) -> str
+- verify_code(db, user, code_input) -> bool
+
+`db` is expected to be a SQLAlchemy Session.
+`user` must have at least `.id` and `.email`.
+"""
+
+import hashlib
+import os
+import secrets
+from datetime import datetime, timedelta
+from typing import Dict, Set
+
+from sqlalchemy import text
 from sqlalchemy.orm import Session
-from jose import jwt, JWTError
 
-from settings import settings
-from core.db import get_session
-from models import User, LoginCode
 
-# ---- Config with safe defaults ----
-ALGO = "HS256"
-TOKEN_EXP_MINUTES: int = getattr(settings, "TOKEN_EXP_MINUTES", 60 * 24)
-CODE_EXP_MINUTES: int = getattr(settings, "CODE_EXP_MINUTES", 15)
+DEFAULT_TTL_MINUTES = int(os.getenv("LOGIN_CODE_TTL_MINUTES", "10"))
+CODE_LENGTH = int(os.getenv("LOGIN_CODE_LENGTH", "6"))
+MAX_ATTEMPTS = int(os.getenv("LOGIN_CODE_MAX_ATTEMPTS", "10"))
+HASH_SECRET = os.getenv("JWT_SECRET", "static-dev-secret")  # reuse existing secret
 
-def _admin_list() -> List[str]:
-    # Accept both ADMIN_EMAILS (comma-separated) and legacy ADMIN_EMAIL
-    emails: List[str] = []
-    val = getattr(settings, "ADMIN_EMAILS", "") or ""
-    if val:
-        emails.extend([x.strip().lower() for x in val.split(",") if x.strip()])
-    legacy = getattr(settings, "ADMIN_EMAIL", None)
-    if legacy:
-        emails.append(str(legacy).strip().lower())
-    # de-duplicate
-    out: List[str] = []
-    for e in emails:
-        if e and e not in out:
-            out.append(e)
-    return out
 
-def _now() -> datetime:
-    return datetime.now(timezone.utc)
+def _columns(db: Session, table: str) -> Set[str]:
+    q = text("""
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = :tname
+    """)
+    rows = db.execute(q, {"tname": table}).fetchall()
+    return {r[0] for r in rows}
 
-def _hash_code(code: str) -> str:
-    return hashlib.sha256(code.encode("utf-8")).hexdigest()
 
-bearer = HTTPBearer(auto_error=False)
+def _now_utc() -> datetime:
+    return datetime.utcnow()
 
-def create_user_if_missing(db: Session, email: str) -> User:
-    u = db.query(User).filter(User.email == email).one_or_none()
-    if not u:
-        is_admin = email.lower() in _admin_list()
-        u = User(email=email, is_admin=is_admin, created_at=datetime.utcnow())
-        db.add(u); db.commit(); db.refresh(u)
-    return u
 
-def generate_code(db: Session, user: User) -> str:
-    code = f"{secrets.randbelow(1000000):06d}"
-    code_hash = _hash_code(code)
-    exp = _now() + timedelta(minutes=int(CODE_EXP_MINUTES))
-    lc = LoginCode(user_id=user.id, code_hash=code_hash, expires_at=exp, used=False)
-    db.add(lc); db.commit()
+def _hash_code(code: str, email: str) -> str:
+    payload = f"{code}:{email}:{HASH_SECRET}".encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _gen_code() -> str:
+    # numeric, zero-padded
+    from secrets import randbelow
+    return str(randbelow(10 ** CODE_LENGTH)).zfill(CODE_LENGTH)
+
+
+def generate_code(db: Session, user) -> str:
+    """Create a login code for the given user; return the *plain* code.
+
+    The inserted row adapts to the available columns in table `login_codes`.
+    """
+    email = getattr(user, "email", None)
+    user_id = getattr(user, "id", None)
+    if not email:
+        raise ValueError("User email missing")
+
+    cols = _columns(db, "login_codes")
+    if not cols:
+        raise RuntimeError("Table login_codes not found")  # clear error
+
+    code = _gen_code()
+    code_hash = _hash_code(code, email)
+    now = _now_utc()
+    exp = now + timedelta(minutes=DEFAULT_TTL_MINUTES)
+
+    # Build row dict only with existing columns
+    row: Dict[str, object] = {}
+    if "user_id" in cols and user_id is not None:
+        row["user_id"] = user_id
+    if "email" in cols:
+        row["email"] = email
+    if "code_hash" in cols:
+        row["code_hash"] = code_hash
+    elif "code" in cols:
+        row["code"] = code_hash  # store hashed even if column name is 'code'
+    if "created_at" in cols:
+        row["created_at"] = now
+    if "expires_at" in cols:
+        row["expires_at"] = exp
+    if "consumed_at" in cols:
+        row["consumed_at"] = None
+    if "used" in cols:
+        row["used"] = False
+    if "attempts" in cols:
+        row["attempts"] = 0
+
+    # Fallback: in rare legacy tables without timestamps, row would be empty -> protect
+    if not row:
+        # guarantee at least email/code pair
+        row = {"email": email, "code": code_hash}
+
+    cols_sql = ", ".join(row.keys())
+    vals_sql = ", ".join(f":{k}" for k in row.keys())
+    sql = text(f"INSERT INTO login_codes ({cols_sql}) VALUES ({vals_sql})")
+    db.execute(sql, row)
+    db.commit()
     return code
 
-def send_magic_link(email: str, code: str):
-    # Optional SMTP; if not configured just no-op.
-    try:
-        from .mail import send_mail   # type: ignore
-    except Exception:
-        return
-    subject = "Ihr Login-Code für KI-Readiness"
-    html = f"""<p>Ihr Login-Code lautet: <b>{code}</b> (gültig {CODE_EXP_MINUTES} Minuten)</p>"""
-    send_mail(email, subject, html, text=f"Ihr Login-Code: {code}")
 
-def create_token(user: User) -> str:
-    exp = _now() + timedelta(minutes=int(TOKEN_EXP_MINUTES))
-    payload = {"sub": str(user.id), "email": user.email, "is_admin": user.is_admin, "exp": int(exp.timestamp())}
-    return jwt.encode(payload, settings.JWT_SECRET, algorithm=ALGO)
+def verify_code(db: Session, user, code_input: str) -> bool:
+    """Verify a login code for a user; consumes the code if valid.
 
-def get_current_user(db: Session = Depends(get_session), creds: HTTPAuthorizationCredentials | None = Depends(bearer)) -> User:
-    if not creds:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Auth required")
-    token = creds.credentials
-    try:
-        data = jwt.decode(token, settings.JWT_SECRET, algorithms=[ALGO])
-        uid = int(data.get("sub"))
-    except JWTError as e:
-        raise HTTPException(status_code=401, detail=f"Invalid token: {e}")
-    u = db.query(User).get(uid)
-    if not u:
-        raise HTTPException(status_code=401, detail="User not found")
-    return u
+    Supports either 'code_hash' or 'code' column; matches against SHA-256 hash.
+    """
+    email = getattr(user, "email", None)
+    user_id = getattr(user, "id", None)
+    if not email:
+        return False
+
+    cols = _columns(db, "login_codes")
+    if not cols:
+        return False
+
+    code_hash = _hash_code(code_input, email)
+    # Prefer most recent non-consumed code for that user/email
+    where_parts = []
+    params = {}
+
+    if "user_id" in cols and user_id is not None:
+        where_parts.append("user_id = :uid")
+        params["uid"] = user_id
+    elif "email" in cols:
+        where_parts.append("email = :mail")
+        params["mail"] = email
+
+    if "code_hash" in cols:
+        where_parts.append("code_hash = :ch")
+        params["ch"] = code_hash
+    elif "code" in cols:
+        where_parts.append("code = :ch")
+        params["ch"] = code_hash
+
+    if "consumed_at" in cols:
+        where_parts.append("consumed_at IS NULL")
+    elif "used" in cols:
+        where_parts.append("used = FALSE")  # legacy
+
+    where_sql = " AND ".join(where_parts) or "TRUE"
+    order_sql = "created_at DESC" if "created_at" in cols else "id DESC"
+    sel = text(f"SELECT * FROM login_codes WHERE {where_sql} ORDER BY {order_sql} LIMIT 1")
+    row = db.execute(sel, params).fetchone()
+    if not row:
+        return False
+
+    # Expiry check (if column exists)
+    if "expires_at" in cols and row._mapping.get("expires_at") is not None:
+        if datetime.utcnow() > row._mapping["expires_at"]:
+            return False
+
+    # Consume the code
+    if "consumed_at" in cols:
+        upd = text("UPDATE login_codes SET consumed_at = now() WHERE id = :id")
+    elif "used" in cols:
+        upd = text("UPDATE login_codes SET used = TRUE WHERE id = :id")
+    else:
+        # no consume flag -> accept once without consume
+        return True
+    db.execute(upd, {"id": row._mapping["id"]})
+    db.commit()
+    return True
