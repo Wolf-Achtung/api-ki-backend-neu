@@ -44,7 +44,7 @@ async def lifespan(app: FastAPI):
     # Auth-Tabellen sicherstellen
     try:
         from core.db import SessionLocal
-        from services_auth_fixed import _ensure_login_codes_table
+        from services.auth import _ensure_login_codes_table
         
         db = SessionLocal()
         try:
@@ -143,10 +143,10 @@ def mount_router(module_path: str, prefix: str, name: str) -> bool:
 # Mounted Router (Reihenfolge ist wichtig!)
 routers_config = [
     # Auth muss ZUERST geladen werden (Dependency für andere Router)
-    ("routes_auth_fixed", "/api", "auth"),
+    ("routes.auth", "/api", "auth"),
     
     # Core-Funktionalität
-    ("routes_briefings_fixed", "/api", "briefings"),
+    ("routes.briefings", "/api", "briefings"),
     ("routes.analyze", "/api", "analyze"),
     ("routes.report", "/api", "report"),
     

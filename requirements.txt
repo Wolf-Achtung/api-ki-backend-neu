@@ -1,12 +1,24 @@
-# Production (HOTFIX) — keep current code, fix missing driver quickly
+# Production requirements - KI-Sicherheit.jetzt Backend
+# Updated: 2025-10-26 - Fixed psycopg module issue
+
+# Core Framework
 fastapi>=0.115,<0.116
 uvicorn[standard]>=0.30,<0.31
 pydantic>=2.7,<3.0
 pydantic-settings>=2.4,<3.0
+
+# Database
 SQLAlchemy>=2.0,<2.1
-psycopg2-binary==2.9.9   # Fixes: No module named 'psycopg2'
+
+# PostgreSQL Drivers - BEIDE Versionen für Kompatibilität
+psycopg[binary]>=3.1.18,<3.2.0      # PostgreSQL driver v3 (neuere SQLAlchemy imports)
+psycopg2-binary>=2.9.9,<3.0.0       # PostgreSQL driver v2 (legacy imports)
+
+# HTTP & Auth
 requests>=2.32,<3.0
 python-jose[cryptography]>=3.3.0,<3.4.0
 python-multipart>=0.0.9,<0.1.0
 email-validator>=2.2.0,<2.3.0
+
+# Templates & Rendering
 jinja2>=3.1,<3.2
