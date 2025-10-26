@@ -12,6 +12,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi import Request, BackgroundTasks
 
 # Logging konfigurieren
 log_level = os.getenv("LOG_LEVEL", "INFO").upper()
@@ -220,6 +221,51 @@ def info():
         "mounted_routers": mounted_count,
         "database": os.getenv("DATABASE_URL", "").split("@")[-1] if "@" in os.getenv("DATABASE_URL", "") else "not configured"
     }
+
+
+# ============================================================================
+# Legacy Endpoints (für Abwärtskompatibilität)
+# ============================================================================
+
+@app.post("/api/briefing_async", status_code=202)
+async def legacy_briefing_async_endpoint(
+    request: Request,
+    background: BackgroundTasks,
+):
+    """
+    Legacy-Endpoint für Abwärtskompatibilität mit altem Frontend.
+    Leitet an /api/briefings/async weiter.
+    
+    Dieser Endpoint sollte nicht mehr verwendet werden.
+    Bitte auf /api/briefings/submit migrieren.
+    """
+    try:
+        # Import hier, um zirkuläre Abhängigkeiten zu vermeiden
+        from routes.briefings import briefing_async_legacy
+        from core.db import SessionLocal
+        
+        # Body parsen
+        body = await request.json()
+        
+        # Session erstellen
+        db = SessionLocal()
+        try:
+            # Weiterleitung an den eigentlichen Handler
+            return briefing_async_legacy(body, background, request, db)
+        finally:
+            db.close()
+            
+    except Exception as exc:
+        log.exception("Legacy endpoint /api/briefing_async failed: %s", exc)
+        return JSONResponse(
+            status_code=500,
+            content={
+                "ok": False,
+                "error": "internal_error",
+                "detail": "Briefing submission failed",
+                "hint": "Consider migrating to /api/briefings/submit"
+            }
+        )
 
 
 # ============================================================================
