@@ -1,144 +1,386 @@
 # -*- coding: utf-8 -*-
+"""
+Robuster Auth-Service mit Raw-SQL für Login-Codes.
+Schema-tolerant und ohne ORM Clause-Element-Probleme.
+"""
 from __future__ import annotations
 
 import hashlib
 import os
-from secrets import randbelow
-from datetime import datetime, timedelta
-from typing import Dict, Set, Optional
+import secrets
+from datetime import datetime, timedelta, timezone
+from typing import Dict, Optional, Set, Tuple
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-# Optional Project-Imports (werden nur genutzt, wenn vorhanden)
-try:
-    from core.db import get_db  # noqa: F401
-except Exception:
-    # Fallback wird nicht benutzt – get_db kommt aus dem Projekt.
-    pass
+log_enabled = os.getenv("AUTH_DEBUG_LOG", "0") == "1"
 
+# Konfiguration
+DEFAULT_CODE_LENGTH = int(os.getenv("LOGIN_CODE_LENGTH", "6"))
 DEFAULT_TTL_MINUTES = int(os.getenv("LOGIN_CODE_TTL_MINUTES", "10"))
-CODE_LENGTH = int(os.getenv("LOGIN_CODE_LENGTH", "6"))
-HASH_SECRET = os.getenv("JWT_SECRET", "static-dev-secret")
+HASH_SECRET = os.getenv("JWT_SECRET", "change-me-in-production")
 
 
-def _columns(db: Session, table: str) -> Set[str]:
-    rows = db.execute(
-        text("SELECT column_name FROM information_schema.columns WHERE table_name=:t"),
-        {"t": table},
-    ).fetchall()
-    return {r[0] for r in rows}
+def _log(msg: str, *args) -> None:
+    """Debug-Logging wenn aktiviert"""
+    if log_enabled:
+        import logging
+        logging.getLogger("services.auth").debug(msg, *args)
+
+
+def _utcnow() -> datetime:
+    """Timezone-aware UTC now"""
+    return datetime.now(timezone.utc)
 
 
 def _hash_code(code: str, email: str) -> str:
-    return hashlib.sha256(f"{code}:{email}:{HASH_SECRET}".encode("utf-8")).hexdigest()
+    """Hasht den Code mit Email und Secret"""
+    return hashlib.sha256(
+        f"{code}:{email.lower()}:{HASH_SECRET}".encode("utf-8")
+    ).hexdigest()
 
 
-def _gen_code() -> str:
-    return str(randbelow(10 ** CODE_LENGTH)).zfill(CODE_LENGTH)
+def _generate_code(length: int = DEFAULT_CODE_LENGTH) -> str:
+    """Generiert einen numerischen Code"""
+    # Sicherer als random
+    max_val = 10 ** length
+    code_int = secrets.randbelow(max_val)
+    return str(code_int).zfill(length)
 
 
-def generate_code(db: Session, user) -> str:
-    """Erzeugt einen Login‑Code und speichert einen Hash in login_codes.
-    Unterstützt altes (email/code/used) und neues Schema (user_id/code_hash/expires_at/…).
-    """
-    email = getattr(user, "email", None) or (user.get("email") if isinstance(user, dict) else None)
-    user_id = getattr(user, "id", None) if not isinstance(user, dict) else user.get("id")
-    if not email:
-        raise ValueError("User email missing")
-
-    cols = _columns(db, "login_codes")
-    if not cols:
-        raise RuntimeError("Table login_codes not found")
-
-    code = _gen_code()
-    ch = _hash_code(code, email)
-    now = datetime.utcnow()
-    exp = now + timedelta(minutes=DEFAULT_TTL_MINUTES)
-
-    row: Dict[str, object] = {}
-    if "user_id" in cols and user_id is not None:
-        row["user_id"] = user_id
-    if "email" in cols:
-        row["email"] = email
-    if "code_hash" in cols:
-        row["code_hash"] = ch
-    elif "code" in cols:
-        row["code"] = ch
-    if "created_at" in cols:
-        row["created_at"] = now
-    if "expires_at" in cols:
-        row["expires_at"] = exp
-    if "consumed_at" in cols:
-        row["consumed_at"] = None
-    if "used" in cols:
-        row["used"] = False
-    if "attempts" in cols:
-        row["attempts"] = 0
-
-    if not row:
-        # Minimales Fallback
-        row = {"email": email, "code": ch}
-
-    cols_sql = ", ".join(row.keys())
-    vals_sql = ", ".join(f":{k}" for k in row.keys())
-    db.execute(text(f"INSERT INTO login_codes ({cols_sql}) VALUES ({vals_sql})"), row)
-    db.commit()
-    return code
+def _get_columns(db: Session, table: str) -> Set[str]:
+    """Ermittelt vorhandene Spalten einer Tabelle"""
+    try:
+        result = db.execute(
+            text("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_schema = 'public' 
+                  AND table_name = :table
+            """),
+            {"table": table}
+        )
+        return {row[0] for row in result}
+    except Exception:
+        return set()
 
 
-def verify_code(db: Session, user, code_input: str) -> bool:
-    """Verifiziert einen Code. Schema‑robust und ohne Exceptions im Erfolgs/Fehlerfall.
-    Gibt True/False zurück. Setzt consumed_at bzw. used, wenn vorhanden.
-    """
-    email = getattr(user, "email", None) or (user.get("email") if isinstance(user, dict) else None)
-    user_id = getattr(user, "id", None) if not isinstance(user, dict) else user.get("id")
-    if not email:
-        return False
-
-    cols = _columns(db, "login_codes")
-    if not cols:
-        return False
-
-    ch = _hash_code(code_input, email)
-
-    where, p = [], {}
-    if "user_id" in cols and user_id is not None:
-        where += ["user_id=:uid"]; p["uid"] = user_id
-    elif "email" in cols:
-        where += ["email=:mail"]; p["mail"] = email
-
-    if "code_hash" in cols:
-        where += ["code_hash=:ch"]; p["ch"] = ch
-    elif "code" in cols:
-        where += ["code=:ch"]; p["ch"] = ch
-
-    if "consumed_at" in cols:
-        where += ["consumed_at IS NULL"]
-    elif "used" in cols:
-        where += ["used=FALSE"]
-
-    order_by = "created_at DESC" if "created_at" in cols else "id DESC"
-    sel = text(f"SELECT * FROM login_codes WHERE {' AND '.join(where) or 'TRUE'} ORDER BY {order_by} LIMIT 1")
-    row = db.execute(sel, p).fetchone()
-    if not row:
-        return False
-
-    m = getattr(row, "_mapping", row)
-    expires = m.get("expires_at") if isinstance(m, dict) else getattr(row, "expires_at", None)
-    if expires and datetime.utcnow() > expires:
-        return False
-
-    # Update bei Erfolg – ClauseElement niemals direkt in if auswerten!
-    upd = None
-    if "consumed_at" in cols:
-        upd = text("UPDATE login_codes SET consumed_at=now() WHERE id=:id")
-    elif "used" in cols:
-        upd = text("UPDATE login_codes SET used=TRUE WHERE id=:id")
-
-    row_id = m.get("id") if isinstance(m, dict) else getattr(row, "id", None)
-    if upd is not None and row_id is not None:
-        db.execute(upd, {"id": row_id})
+def _ensure_login_codes_table(db: Session) -> None:
+    """Stellt sicher dass login_codes Tabelle existiert (idempotent)"""
+    try:
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS login_codes (
+                id SERIAL PRIMARY KEY,
+                email TEXT NOT NULL,
+                code VARCHAR(64) NOT NULL,
+                purpose VARCHAR(40) DEFAULT 'login',
+                created_at TIMESTAMPTZ DEFAULT now(),
+                expires_at TIMESTAMPTZ NOT NULL,
+                consumed_at TIMESTAMPTZ,
+                attempts INTEGER DEFAULT 0,
+                ip_address VARCHAR(64),
+                user_agent TEXT
+            );
+        """))
+        
+        # Indizes
+        for idx_sql in [
+            "CREATE INDEX IF NOT EXISTS ix_login_codes_email ON login_codes(email)",
+            "CREATE INDEX IF NOT EXISTS ix_login_codes_code ON login_codes(code)",
+            "CREATE INDEX IF NOT EXISTS ix_login_codes_consumed_at ON login_codes(consumed_at)",
+            "CREATE INDEX IF NOT EXISTS ix_login_codes_created_at ON login_codes(created_at)",
+        ]:
+            db.execute(text(idx_sql))
+        
         db.commit()
+        _log("login_codes table ensured")
+    except Exception as exc:
+        _log("table setup warning (non-critical): %s", exc)
+        db.rollback()
 
-    return True
+
+def generate_code(
+    db: Session,
+    user: Dict[str, any] | any,
+    purpose: str = "login",
+    ttl_minutes: Optional[int] = None,
+    ip_address: Optional[str] = None,
+    user_agent: Optional[str] = None
+) -> str:
+    """
+    Generiert einen Login-Code und speichert ihn in login_codes.
+    
+    Args:
+        db: SQLAlchemy Session
+        user: Dict mit 'email' oder Objekt mit .email Attribut
+        purpose: Zweck des Codes (default: 'login')
+        ttl_minutes: TTL in Minuten (default: aus ENV)
+        ip_address: Optional IP-Adresse
+        user_agent: Optional User-Agent
+        
+    Returns:
+        Der generierte Code (Klartext) - muss per Email versendet werden
+        
+    Raises:
+        ValueError: Wenn user.email fehlt
+        RuntimeError: Bei Datenbankfehlern
+    """
+    _ensure_login_codes_table(db)
+    
+    # Email extrahieren (dict oder Objekt)
+    if isinstance(user, dict):
+        email = user.get("email")
+    else:
+        email = getattr(user, "email", None)
+    
+    if not email:
+        raise ValueError("User email is required")
+    
+    email = email.strip().lower()
+    ttl = ttl_minutes or DEFAULT_TTL_MINUTES
+    
+    # Code generieren
+    code = _generate_code()
+    now = _utcnow()
+    expires = now + timedelta(minutes=ttl)
+    
+    # Prüfe Schema
+    cols = _get_columns(db, "login_codes")
+    if not cols:
+        raise RuntimeError("login_codes table not found")
+    
+    # Baue Insert dynamisch basierend auf vorhandenen Spalten
+    values: Dict[str, any] = {
+        "email": email,
+        "code": code,  # Klartext für einfache Verifikation
+        "created_at": now,
+        "expires_at": expires,
+    }
+    
+    if "purpose" in cols:
+        values["purpose"] = purpose
+    if "consumed_at" in cols:
+        values["consumed_at"] = None
+    if "attempts" in cols:
+        values["attempts"] = 0
+    if "ip_address" in cols and ip_address:
+        values["ip_address"] = ip_address[:64]  # Limit length
+    if "user_agent" in cols and user_agent:
+        values["user_agent"] = user_agent[:500]  # Limit length
+    
+    # Insert
+    cols_sql = ", ".join(values.keys())
+    vals_sql = ", ".join(f":{k}" for k in values.keys())
+    
+    try:
+        db.execute(
+            text(f"INSERT INTO login_codes ({cols_sql}) VALUES ({vals_sql})"),
+            values
+        )
+        db.commit()
+        _log("Code generated for %s, expires at %s", email, expires)
+        return code
+        
+    except Exception as exc:
+        db.rollback()
+        _log("generate_code failed: %s", exc)
+        raise RuntimeError(f"Failed to generate code: {exc}")
+
+
+def verify_code(
+    db: Session,
+    user: Dict[str, any] | any,
+    code_input: str,
+    purpose: str = "login",
+    mark_consumed: bool = True
+) -> Tuple[bool, Optional[str]]:
+    """
+    Verifiziert einen Login-Code.
+    
+    Args:
+        db: SQLAlchemy Session
+        user: Dict mit 'email' oder Objekt mit .email
+        code_input: Vom User eingegebener Code
+        purpose: Erwarteter Zweck (default: 'login')
+        mark_consumed: Ob Code als verbraucht markiert werden soll
+        
+    Returns:
+        Tuple (success: bool, error_reason: Optional[str])
+        
+    Error reasons:
+        - "email_missing": User hat keine Email
+        - "no_code": Kein passender Code gefunden
+        - "expired": Code abgelaufen
+        - "already_used": Code bereits verwendet
+        - "max_attempts": Zu viele Versuche
+    """
+    _ensure_login_codes_table(db)
+    
+    # Email extrahieren
+    if isinstance(user, dict):
+        email = user.get("email")
+    else:
+        email = getattr(user, "email", None)
+    
+    if not email:
+        return (False, "email_missing")
+    
+    email = email.strip().lower()
+    code_input = code_input.strip()
+    
+    if not code_input:
+        return (False, "no_code")
+    
+    # Schema prüfen
+    cols = _get_columns(db, "login_codes")
+    if not cols:
+        return (False, "table_missing")
+    
+    # WHERE-Bedingungen bauen
+    where_parts = [
+        "LOWER(email) = LOWER(:email)",
+        "code = :code",
+    ]
+    params = {"email": email, "code": code_input}
+    
+    if "purpose" in cols:
+        where_parts.append("purpose = :purpose")
+        params["purpose"] = purpose
+    
+    if "consumed_at" in cols:
+        where_parts.append("consumed_at IS NULL")
+    
+    where_sql = " AND ".join(where_parts)
+    order_by = "created_at DESC" if "created_at" in cols else "id DESC"
+    
+    try:
+        # Hole den neuesten matching Code
+        result = db.execute(
+            text(f"""
+                SELECT id, expires_at, consumed_at, attempts
+                FROM login_codes
+                WHERE {where_sql}
+                ORDER BY {order_by}
+                LIMIT 1
+                FOR UPDATE  -- Lock für atomare Updates
+            """),
+            params
+        ).mappings().first()
+        
+        if not result:
+            _log("No matching code found for %s", email)
+            return (False, "no_code")
+        
+        row_id = result["id"]
+        expires_at = result["expires_at"]
+        consumed_at = result.get("consumed_at")
+        attempts = result.get("attempts", 0)
+        
+        # Prüfe ob abgelaufen
+        if expires_at and _utcnow() > expires_at:
+            _log("Code expired for %s", email)
+            return (False, "expired")
+        
+        # Prüfe ob bereits verwendet
+        if consumed_at is not None:
+            _log("Code already used for %s", email)
+            return (False, "already_used")
+        
+        # Prüfe Attempts (optional)
+        max_attempts = int(os.getenv("LOGIN_CODE_MAX_ATTEMPTS", "5"))
+        if "attempts" in cols and attempts >= max_attempts:
+            _log("Max attempts reached for %s", email)
+            return (False, "max_attempts")
+        
+        # ✅ Code ist gültig!
+        
+        if mark_consumed and "consumed_at" in cols:
+            # Markiere als verbraucht
+            db.execute(
+                text("""
+                    UPDATE login_codes 
+                    SET consumed_at = now(),
+                        attempts = attempts + 1
+                    WHERE id = :id
+                """),
+                {"id": row_id}
+            )
+            db.commit()
+            _log("Code consumed for %s", email)
+        elif "attempts" in cols:
+            # Inkrement attempts
+            db.execute(
+                text("UPDATE login_codes SET attempts = attempts + 1 WHERE id = :id"),
+                {"id": row_id}
+            )
+            db.commit()
+        
+        return (True, None)
+        
+    except Exception as exc:
+        db.rollback()
+        _log("verify_code exception: %s", exc)
+        return (False, "internal_error")
+
+
+def cleanup_expired_codes(db: Session, older_than_hours: int = 24) -> int:
+    """
+    Löscht abgelaufene/alte Login-Codes (Maintenance).
+    
+    Returns:
+        Anzahl gelöschter Codes
+    """
+    try:
+        cutoff = _utcnow() - timedelta(hours=older_than_hours)
+        result = db.execute(
+            text("""
+                DELETE FROM login_codes
+                WHERE created_at < :cutoff
+                  OR (consumed_at IS NOT NULL AND consumed_at < :cutoff)
+                RETURNING id
+            """),
+            {"cutoff": cutoff}
+        )
+        count = len(result.fetchall())
+        db.commit()
+        _log("Cleaned up %d old codes", count)
+        return count
+    except Exception as exc:
+        db.rollback()
+        _log("cleanup failed: %s", exc)
+        return 0
+
+
+def get_code_stats(db: Session, email: str) -> Dict[str, int]:
+    """
+    Gibt Statistiken für einen User zurück (für Rate-Limiting).
+    
+    Returns:
+        Dict mit: total, pending, consumed, expired
+    """
+    _ensure_login_codes_table(db)
+    
+    try:
+        result = db.execute(
+            text("""
+                SELECT 
+                    COUNT(*) as total,
+                    COUNT(*) FILTER (WHERE consumed_at IS NULL AND expires_at > now()) as pending,
+                    COUNT(*) FILTER (WHERE consumed_at IS NOT NULL) as consumed,
+                    COUNT(*) FILTER (WHERE consumed_at IS NULL AND expires_at <= now()) as expired
+                FROM login_codes
+                WHERE LOWER(email) = LOWER(:email)
+                  AND created_at > now() - interval '24 hours'
+            """),
+            {"email": email}
+        ).mappings().first()
+        
+        return {
+            "total": result["total"] or 0,
+            "pending": result["pending"] or 0,
+            "consumed": result["consumed"] or 0,
+            "expired": result["expired"] or 0,
+        }
+    except Exception:
+        return {"total": 0, "pending": 0, "consumed": 0, "expired": 0}
