@@ -11,8 +11,12 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional, Set, Tuple
 
+from fastapi import Depends, HTTPException, Header
+from jose import jwt, JWTError
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+
+from core.db import get_session
 
 log_enabled = os.getenv("AUTH_DEBUG_LOG", "0") == "1"
 
@@ -20,6 +24,8 @@ log_enabled = os.getenv("AUTH_DEBUG_LOG", "0") == "1"
 DEFAULT_CODE_LENGTH = int(os.getenv("LOGIN_CODE_LENGTH", "6"))
 DEFAULT_TTL_MINUTES = int(os.getenv("LOGIN_CODE_TTL_MINUTES", "10"))
 HASH_SECRET = os.getenv("JWT_SECRET", "change-me-in-production")
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "43200"))  # 30 Tage default
 
 
 def _log(msg: str, *args) -> None:
@@ -384,3 +390,162 @@ def get_code_stats(db: Session, email: str) -> Dict[str, int]:
         }
     except Exception:
         return {"total": 0, "pending": 0, "consumed": 0, "expired": 0}
+
+
+# ============================================================================
+# JWT Token Funktionen
+# ============================================================================
+
+def create_access_token(email: str, user_id: Optional[int] = None) -> str:
+    """
+    Erstellt einen JWT Access Token.
+    
+    Args:
+        email: User Email
+        user_id: Optional User ID
+        
+    Returns:
+        JWT Token String
+    """
+    expire = _utcnow() + timedelta(minutes=JWT_EXPIRE_MINUTES)
+    
+    payload = {
+        "sub": email,
+        "email": email,
+        "exp": expire,
+        "iat": _utcnow(),
+    }
+    
+    if user_id:
+        payload["user_id"] = user_id
+    
+    token = jwt.encode(payload, HASH_SECRET, algorithm=JWT_ALGORITHM)
+    return token
+
+
+def decode_token(token: str) -> Optional[Dict[str, any]]:
+    """
+    Dekodiert und validiert einen JWT Token.
+    
+    Returns:
+        Token Payload oder None bei Fehler
+    """
+    try:
+        payload = jwt.decode(token, HASH_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload
+    except JWTError as exc:
+        _log("Token decode failed: %s", exc)
+        return None
+
+
+# ============================================================================
+# FastAPI Dependency: get_current_user
+# ============================================================================
+
+class UserDict(dict):
+    """Simple User wrapper damit sowohl dict-access als auch attribute-access funktioniert"""
+    def __getattr__(self, key):
+        try:
+            return self[key]
+        except KeyError:
+            raise AttributeError(f"'{type(self).__name__}' object has no attribute '{key}'")
+    
+    def __setattr__(self, key, value):
+        self[key] = value
+
+
+def get_current_user(
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_session)
+) -> UserDict:
+    """
+    FastAPI Dependency: Extrahiert und validiert User aus JWT Token.
+    
+    Args:
+        authorization: Authorization Header (format: "Bearer <token>")
+        db: Database Session
+        
+    Returns:
+        User dict mit Attribut-Zugriff
+        
+    Raises:
+        HTTPException: 401 wenn Token fehlt oder ungültig
+    """
+    if not authorization:
+        raise HTTPException(
+            status_code=401,
+            detail="Authorization header missing",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Parse "Bearer <token>"
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid authorization header format",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    token = parts[1]
+    
+    # Token dekodieren
+    payload = decode_token(token)
+    if not payload:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    email = payload.get("email") or payload.get("sub")
+    if not email:
+        raise HTTPException(
+            status_code=401,
+            detail="Token missing email claim",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # User aus DB laden
+    try:
+        result = db.execute(
+            text("SELECT * FROM users WHERE LOWER(email) = LOWER(:email) LIMIT 1"),
+            {"email": email}
+        ).mappings().first()
+        
+        if not result:
+            # User existiert nicht - automatisch anlegen
+            db.execute(
+                text("""
+                    INSERT INTO users (email, created_at, last_login_at)
+                    VALUES (:email, now(), now())
+                    ON CONFLICT DO NOTHING
+                """),
+                {"email": email}
+            )
+            db.commit()
+            
+            # Nochmal laden
+            result = db.execute(
+                text("SELECT * FROM users WHERE LOWER(email) = LOWER(:email) LIMIT 1"),
+                {"email": email}
+            ).mappings().first()
+        else:
+            # Update last_login_at
+            db.execute(
+                text("UPDATE users SET last_login_at = now() WHERE id = :id"),
+                {"id": result["id"]}
+            )
+            db.commit()
+        
+        if not result:
+            raise HTTPException(status_code=500, detail="Failed to create/load user")
+        
+        # Konvertiere zu UserDict für kompatiblen Zugriff
+        return UserDict(result)
+        
+    except HTTPException:
+        raise
+    except Exception as exc:
+        _log("get_current_user failed: %s", exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
