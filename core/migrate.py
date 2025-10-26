@@ -149,7 +149,6 @@ def run_migrations(engine: Engine) -> None:
             CREATE TABLE IF NOT EXISTS briefing_drafts (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER,
-                email TEXT NOT NULL,
                 lang VARCHAR(5) DEFAULT 'de',
                 payload JSONB DEFAULT '{}'::jsonb,
                 created_at TIMESTAMPTZ DEFAULT now(),
@@ -157,10 +156,30 @@ def run_migrations(engine: Engine) -> None:
             );
         """))
         
-        # Unique constraint für email (ein Draft pro Email)
+        # Spalte "email" hinzufügen falls sie nicht existiert (WICHTIG!)
         conn.execute(text("""
             DO $$ BEGIN
                 IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema = 'public' 
+                      AND table_name = 'briefing_drafts' 
+                      AND column_name = 'email'
+                ) THEN
+                    ALTER TABLE briefing_drafts ADD COLUMN email TEXT;
+                END IF;
+            END $$;
+        """))
+        
+        # Unique constraint für email (ein Draft pro Email)
+        # ABER: Nur wenn die Spalte existiert!
+        conn.execute(text("""
+            DO $$ BEGIN
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema = 'public' 
+                      AND table_name = 'briefing_drafts' 
+                      AND column_name = 'email'
+                ) AND NOT EXISTS (
                     SELECT 1 FROM pg_constraint 
                     WHERE conname = 'uq_briefing_drafts_email'
                 ) THEN
@@ -171,7 +190,24 @@ def run_migrations(engine: Engine) -> None:
         """))
         
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_briefing_drafts_user_id ON briefing_drafts(user_id)"))
-        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_briefing_drafts_email ON briefing_drafts(LOWER(email))"))
+        
+        # Index auf email nur wenn Spalte existiert
+        conn.execute(text("""
+            DO $$ BEGIN
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema = 'public' 
+                      AND table_name = 'briefing_drafts' 
+                      AND column_name = 'email'
+                ) AND NOT EXISTS (
+                    SELECT 1 FROM pg_indexes 
+                    WHERE tablename = 'briefing_drafts' 
+                      AND indexname = 'ix_briefing_drafts_email'
+                ) THEN
+                    CREATE INDEX ix_briefing_drafts_email ON briefing_drafts(LOWER(email));
+                END IF;
+            END $$;
+        """))
         
         log.info("✓ briefing_drafts table ready")
         
