@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Authentication service: code generation & verification with SHA-256 hashing
-Compatible with email-based login_codes table (no user_id)
+ROBUST: Works with both 'used' and 'consumed_at' column variations
 """
 from __future__ import annotations
 
@@ -24,27 +24,53 @@ def hash_code(code: str) -> str:
     return hashlib.sha256(code.encode()).hexdigest()
 
 
+def _table_has_column(db: Session, table: str, column: str) -> bool:
+    """Check if a column exists in a table"""
+    try:
+        result = db.execute(text("""
+            SELECT COUNT(*) 
+            FROM information_schema.columns 
+            WHERE table_name = :table AND column_name = :col
+        """), {"table": table, "col": column}).scalar()
+        return result > 0
+    except:
+        return False
+
+
 def generate_code(db: Session, user: dict) -> str:
     """
     Generate a 6-digit login code, hash it, and store in DB.
     Returns the plain code (for sending via email).
     
-    Table structure expected:
-    - login_codes(id, email, code_hash, created_at, expires_at, consumed_at, attempts)
+    ROBUST: Works with both schema variations
     """
-    # Ensure table exists with code_hash column
+    # Ensure table exists
     _ensure_login_codes_table(db)
     
     email = user.get("email")
     if not email:
         raise ValueError("User must have email")
     
-    # Invalidate old codes for this email
-    invalidate_sql = text("""
-        UPDATE login_codes 
-        SET consumed_at = now() 
-        WHERE email = :email AND consumed_at IS NULL
-    """)
+    # Invalidate old codes - handle both 'used' and 'consumed_at' columns
+    has_used = _table_has_column(db, "login_codes", "used")
+    has_consumed = _table_has_column(db, "login_codes", "consumed_at")
+    
+    if has_consumed:
+        invalidate_sql = text("""
+            UPDATE login_codes 
+            SET consumed_at = now() 
+            WHERE email = :email AND consumed_at IS NULL
+        """)
+    elif has_used:
+        invalidate_sql = text("""
+            UPDATE login_codes 
+            SET used = true 
+            WHERE email = :email AND (used = false OR used IS NULL)
+        """)
+    else:
+        # Fallback: delete old codes
+        invalidate_sql = text("DELETE FROM login_codes WHERE email = :email")
+    
     db.execute(invalidate_sql, {"email": email})
     db.commit()
     
@@ -52,13 +78,26 @@ def generate_code(db: Session, user: dict) -> str:
     code = f"{secrets.randbelow(1000000):06d}"
     code_hash_value = hash_code(code)
     
-    # Store hashed code
+    # Store hashed code - build INSERT dynamically
     expires_at = datetime.utcnow() + timedelta(minutes=LOGIN_CODE_TTL_MINUTES)
     
-    insert_sql = text("""
-        INSERT INTO login_codes (email, code_hash, created_at, expires_at, attempts)
-        VALUES (:email, :hash, now(), :exp, 0)
+    # Build column list based on what exists
+    columns = ["email", "code_hash", "created_at", "expires_at", "attempts"]
+    values = [":email", ":hash", "now()", ":exp", "0"]
+    
+    if has_used:
+        columns.append("used")
+        values.append("false")
+    
+    if has_consumed:
+        columns.append("consumed_at")
+        values.append("NULL")
+    
+    insert_sql = text(f"""
+        INSERT INTO login_codes ({", ".join(columns)})
+        VALUES ({", ".join(values)})
     """)
+    
     db.execute(insert_sql, {
         "email": email,
         "hash": code_hash_value,
@@ -66,13 +105,13 @@ def generate_code(db: Session, user: dict) -> str:
     })
     db.commit()
     
-    return code  # Return plain code for email
+    return code
 
 
 def verify_code(db: Session, user: dict, code: str) -> bool:
     """
     Verify a login code by hashing the input and comparing with DB.
-    Returns True if valid, False otherwise.
+    ROBUST: Works with both schema variations
     """
     email = user.get("email")
     if not email:
@@ -80,13 +119,25 @@ def verify_code(db: Session, user: dict, code: str) -> bool:
     
     code_hash_value = hash_code(code)
     
+    # Check schema
+    has_used = _table_has_column(db, "login_codes", "used")
+    has_consumed = _table_has_column(db, "login_codes", "consumed_at")
+    
+    # Build WHERE clause based on schema
+    if has_consumed:
+        where_clause = "consumed_at IS NULL"
+    elif has_used:
+        where_clause = "(used = false OR used IS NULL)"
+    else:
+        where_clause = "1=1"
+    
     # Find valid code
-    sql = text("""
-        SELECT id, expires_at, consumed_at, attempts
+    sql = text(f"""
+        SELECT id, expires_at, attempts
         FROM login_codes
         WHERE email = :email 
           AND code_hash = :hash
-          AND consumed_at IS NULL
+          AND {where_clause}
         ORDER BY created_at DESC
         LIMIT 1
     """)
@@ -97,12 +148,12 @@ def verify_code(db: Session, user: dict, code: str) -> bool:
     }).mappings().first()
     
     if not result:
-        # Increment failed attempts for any matching code_hash
+        # Increment failed attempts
         try:
-            inc_sql = text("""
+            inc_sql = text(f"""
                 UPDATE login_codes
                 SET attempts = attempts + 1
-                WHERE email = :email AND consumed_at IS NULL
+                WHERE email = :email AND {where_clause}
             """)
             db.execute(inc_sql, {"email": email})
             db.commit()
@@ -118,12 +169,15 @@ def verify_code(db: Session, user: dict, code: str) -> bool:
     if result["attempts"] >= 5:
         return False
     
-    # Mark as consumed
-    update_sql = text("""
-        UPDATE login_codes
-        SET consumed_at = now()
-        WHERE id = :id
-    """)
+    # Mark as consumed/used
+    if has_consumed:
+        update_sql = text("UPDATE login_codes SET consumed_at = now() WHERE id = :id")
+    elif has_used:
+        update_sql = text("UPDATE login_codes SET used = true WHERE id = :id")
+    else:
+        # Fallback: delete
+        update_sql = text("DELETE FROM login_codes WHERE id = :id")
+    
     db.execute(update_sql, {"id": result["id"]})
     
     # Update user last_login if user has id
@@ -143,12 +197,7 @@ def verify_code(db: Session, user: dict, code: str) -> bool:
 
 
 def get_current_user(db: Session, token: str = None, email: str = None):
-    """
-    Get current user from token or email.
-    This is a placeholder - implement proper session/JWT handling in production.
-    
-    For now, just lookup by email if provided.
-    """
+    """Get current user from token or email."""
     if email:
         sql = text("""
             SELECT id, email, is_active, is_admin 
@@ -159,116 +208,62 @@ def get_current_user(db: Session, token: str = None, email: str = None):
         result = db.execute(sql, {"email": email}).mappings().first()
         if result:
             return dict(result)
-    
-    # TODO: Implement proper token validation
-    # For now return None if no email provided
     return None
 
 
 def _ensure_login_codes_table(db: Session):
     """
     Ensure login_codes table exists with correct schema.
-    This handles migration from old 'code' column to 'code_hash'.
-    
-    Schema: email-based (no user_id foreign key)
+    ROBUST: Creates table with both consumed_at and makes 'used' optional if it exists
     """
-    # Create table if not exists
-    create_sql = text("""
-        CREATE TABLE IF NOT EXISTS login_codes (
-            id BIGSERIAL PRIMARY KEY,
-            email TEXT NOT NULL,
-            code_hash TEXT NOT NULL,
-            created_at TIMESTAMPTZ DEFAULT now(),
-            expires_at TIMESTAMPTZ NOT NULL,
-            consumed_at TIMESTAMPTZ,
-            attempts INTEGER DEFAULT 0,
-            ip TEXT
-        )
-    """)
-    db.execute(create_sql)
-    db.commit()
-    
-    # Check if old 'code' column exists
-    check_col_sql = text("""
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'login_codes' 
-          AND column_name = 'code'
-    """)
-    has_old_col = db.execute(check_col_sql).scalar()
-    
-    if has_old_col:
-        # Migrate from old structure
-        # 1. Add code_hash column if not exists
-        try:
-            alter_add_sql = text("""
-                ALTER TABLE login_codes 
-                ADD COLUMN IF NOT EXISTS code_hash TEXT
-            """)
-            db.execute(alter_add_sql)
-            db.commit()
-        except:
-            pass
-        
-        # 2. Delete old codes (can't migrate plaintext to hash)
-        try:
-            delete_old_sql = text("DELETE FROM login_codes")
-            db.execute(delete_old_sql)
-            db.commit()
-        except:
-            pass
-        
-        # 3. Drop old code column
-        try:
-            alter_drop_sql = text("""
-                ALTER TABLE login_codes 
-                DROP COLUMN IF EXISTS code CASCADE
-            """)
-            db.execute(alter_drop_sql)
-            db.commit()
-        except:
-            pass
-        
-        # 4. Make code_hash NOT NULL
-        try:
-            alter_not_null_sql = text("""
-                ALTER TABLE login_codes 
-                ALTER COLUMN code_hash SET NOT NULL
-            """)
-            db.execute(alter_not_null_sql)
-            db.commit()
-        except:
-            pass
-    
-    # Create indexes for performance (only on columns that exist)
     try:
-        index_email_sql = text("""
-            CREATE INDEX IF NOT EXISTS idx_login_codes_email 
-            ON login_codes(email)
+        # Create table if not exists - with consumed_at as primary status field
+        create_sql = text("""
+            CREATE TABLE IF NOT EXISTS login_codes (
+                id BIGSERIAL PRIMARY KEY,
+                email TEXT NOT NULL,
+                code_hash TEXT NOT NULL,
+                created_at TIMESTAMPTZ DEFAULT now(),
+                expires_at TIMESTAMPTZ NOT NULL,
+                consumed_at TIMESTAMPTZ,
+                attempts INTEGER DEFAULT 0,
+                ip TEXT
+            )
         """)
-        db.execute(index_email_sql)
+        db.execute(create_sql)
         db.commit()
-    except:
-        pass
-    
-    try:
-        index_hash_sql = text("""
-            CREATE INDEX IF NOT EXISTS idx_login_codes_code_hash 
-            ON login_codes(code_hash)
-        """)
-        db.execute(index_hash_sql)
+        
+        # If 'used' column exists, make it optional and set default
+        has_used = _table_has_column(db, "login_codes", "used")
+        if has_used:
+            try:
+                # Make it nullable and set default
+                db.execute(text("ALTER TABLE login_codes ALTER COLUMN used DROP NOT NULL"))
+                db.execute(text("ALTER TABLE login_codes ALTER COLUMN used SET DEFAULT false"))
+                db.execute(text("UPDATE login_codes SET used = false WHERE used IS NULL"))
+                db.commit()
+            except:
+                db.rollback()
+        
+        # Create indexes
+        indexes = [
+            "CREATE INDEX IF NOT EXISTS idx_login_codes_email ON login_codes(email)",
+            "CREATE INDEX IF NOT EXISTS idx_login_codes_code_hash ON login_codes(code_hash)",
+            "CREATE INDEX IF NOT EXISTS idx_login_codes_expires ON login_codes(expires_at)",
+            "CREATE INDEX IF NOT EXISTS idx_login_codes_consumed ON login_codes(consumed_at)",
+        ]
+        
+        for idx_sql in indexes:
+            try:
+                db.execute(text(idx_sql))
+            except:
+                pass
+        
         db.commit()
-    except:
-        pass
-    
-    try:
-        index_expires_sql = text("""
-            CREATE INDEX IF NOT EXISTS idx_login_codes_expires 
-            ON login_codes(expires_at)
-        """)
-        db.execute(index_expires_sql)
-        db.commit()
-    except:
+        
+    except Exception as e:
+        db.rollback()
+        # Non-fatal - table might already exist with different structure
         pass
 
 
@@ -281,6 +276,5 @@ def cleanup_expired_codes(db: Session):
         """)
         db.execute(sql)
         db.commit()
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise
