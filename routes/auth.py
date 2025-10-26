@@ -1,261 +1,315 @@
-# -*- coding: utf-8 -*-
-"""
-Auth Router - Login via Magic Code (Email-basiert).
-"""
-from __future__ import annotations
-
+"""Authentication routes for Magic Link login"""
 import logging
-from typing import Dict, Optional
+import secrets
+import hashlib
+from datetime import datetime, timedelta
+from typing import Optional
+from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, EmailStr, validator
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from fastapi import APIRouter, Depends, HTTPException, Body, Request
-from pydantic import BaseModel, EmailStr
-from sqlalchemy.orm import Session
+from core.database import get_db
+from core.email_service import send_magic_link_email
 
-from core.db import get_session
-from services.auth import (
-    generate_code,
-    verify_code,
-    create_access_token,
-    get_current_user,
-    get_code_stats,
-)
+logger = logging.getLogger("routes.auth")
+router = APIRouter()
 
-log = logging.getLogger("routes.auth")
-router = APIRouter(prefix="/auth", tags=["auth"])
-
-
-# ============================================================================
-# Request/Response Models
-# ============================================================================
-
-class RequestCodePayload(BaseModel):
-    """Payload für Code-Anforderung"""
+# Models
+class EmailRequest(BaseModel):
     email: EmailStr
-
-
-class LoginPayload(BaseModel):
-    """Payload für Login"""
+    
+class LoginRequest(BaseModel):
     email: EmailStr
     code: str
+    
+    @validator('code')
+    def code_must_be_6_digits(cls, v):
+        if not v.isdigit() or len(v) != 6:
+            raise ValueError('Code must be 6 digits')
+        return v
 
+# Helper functions
+def hash_code(code: str) -> str:
+    """Hash a login code using SHA-256"""
+    return hashlib.sha256(code.encode()).hexdigest()
 
-class TokenResponse(BaseModel):
-    """Token Response"""
-    access_token: str
-    token_type: str = "bearer"
-    user: Dict
+def generate_6_digit_code() -> str:
+    """Generate a secure 6-digit code"""
+    return f"{secrets.randbelow(1000000):06d}"
 
-
-# ============================================================================
-# Endpoints
-# ============================================================================
-
-@router.post("/request-code")
-def request_login_code(
-    payload: RequestCodePayload,
-    request: Request,
-    db: Session = Depends(get_session)
+async def log_auth_event(
+    db: AsyncSession,
+    email: str,
+    action: str,
+    success: bool,
+    ip_address: Optional[str] = None,
+    user_agent: Optional[str] = None
 ):
-    """
-    Fordert einen Login-Code für eine Email-Adresse an.
-    
-    Der Code wird per Email versendet (muss extern implementiert werden).
-    """
-    email = payload.email.lower().strip()
-    
-    # Rate-Limiting Check
-    stats = get_code_stats(db, email)
-    
-    # Maximal 5 pending codes pro 24h
-    if stats["pending"] >= 5:
-        raise HTTPException(
-            status_code=429,
-            detail="Too many pending codes. Please wait or use existing code."
-        )
-    
-    # Maximal 10 codes total pro 24h
-    if stats["total"] >= 10:
-        raise HTTPException(
-            status_code=429,
-            detail="Rate limit exceeded. Please try again later."
-        )
-    
-    # IP-Adresse extrahieren
-    client_ip = request.client.host if request.client else None
-    user_agent = request.headers.get("user-agent")
-    
+    """Log authentication events for security auditing"""
     try:
-        # Code generieren
-        code = generate_code(
-            db=db,
-            user={"email": email},
-            purpose="login",
-            ip_address=client_ip,
-            user_agent=user_agent
-        )
-        
-        # TODO: Hier Email senden mit dem Code
-        # send_login_code_email(email, code)
-        
-        log.info("Login code generated for %s", email)
-        
-        return {
-            "ok": True,
-            "message": "Login code sent to your email",
-            "email": email,
-            # DEV ONLY: Code in Response (in Production entfernen!)
-            "code": code if log.level <= logging.DEBUG else None
-        }
-        
-    except Exception as exc:
-        log.error("Failed to generate code for %s: %s", email, exc)
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to generate login code"
-        )
-
-
-@router.post("/login", response_model=TokenResponse)
-def login(
-    payload: LoginPayload,
-    db: Session = Depends(get_session)
-):
-    """
-    Validiert einen Login-Code und gibt einen JWT Access Token zurück.
-    """
-    email = payload.email.lower().strip()
-    code = payload.code.strip()
-    
-    if not code:
-        raise HTTPException(status_code=400, detail="Code is required")
-    
-    # Code verifizieren
-    success, error_reason = verify_code(
-        db=db,
-        user={"email": email},
-        code_input=code,
-        purpose="login",
-        mark_consumed=True
-    )
-    
-    if not success:
-        error_messages = {
-            "no_code": "Invalid or expired code",
-            "expired": "Code has expired",
-            "already_used": "Code has already been used",
-            "max_attempts": "Too many failed attempts",
-            "email_missing": "Email is required",
-            "internal_error": "Internal server error"
-        }
-        
-        message = error_messages.get(error_reason, "Invalid code")
-        status_code = 401 if error_reason in ["no_code", "expired", "already_used"] else 500
-        
-        raise HTTPException(status_code=status_code, detail=message)
-    
-    # ✅ Code gültig - User laden oder erstellen
-    from sqlalchemy import text
-    
-    result = db.execute(
-        text("SELECT * FROM users WHERE LOWER(email) = LOWER(:email) LIMIT 1"),
-        {"email": email}
-    ).mappings().first()
-    
-    if not result:
-        # User anlegen
-        db.execute(
+        await db.execute(
             text("""
-                INSERT INTO users (email, created_at, last_login_at)
-                VALUES (:email, now(), now())
+                INSERT INTO login_audit (email, action, success, ip_address, user_agent)
+                VALUES (:email, :action, :success, :ip_address, :user_agent)
+            """),
+            {
+                "email": email,
+                "action": action,
+                "success": success,
+                "ip_address": ip_address,
+                "user_agent": user_agent
+            }
+        )
+        await db.commit()
+    except Exception as e:
+        logger.error(f"Failed to log auth event: {str(e)}")
+        await db.rollback()
+
+async def cleanup_expired_codes(db: AsyncSession):
+    """Clean up expired login codes"""
+    try:
+        await db.execute(
+            text("""
+                DELETE FROM login_codes 
+                WHERE expires_at < NOW()
+            """)
+        )
+        await db.commit()
+    except Exception as e:
+        logger.error(f"Failed to cleanup expired codes: {str(e)}")
+        await db.rollback()
+
+async def invalidate_previous_codes(db: AsyncSession, email: str):
+    """Invalidate all previous codes for an email"""
+    try:
+        await db.execute(
+            text("""
+                DELETE FROM login_codes 
+                WHERE email = :email AND consumed_at IS NULL
             """),
             {"email": email}
         )
-        db.commit()
-        
-        result = db.execute(
-            text("SELECT * FROM users WHERE LOWER(email) = LOWER(:email) LIMIT 1"),
-            {"email": email}
-        ).mappings().first()
-    else:
-        # Update last_login_at
-        db.execute(
-            text("UPDATE users SET last_login_at = now() WHERE id = :id"),
-            {"id": result["id"]}
-        )
-        db.commit()
-    
-    # JWT Token erstellen
-    access_token = create_access_token(
-        email=email,
-        user_id=result["id"]
-    )
-    
-    log.info("User %s logged in successfully", email)
-    
-    return TokenResponse(
-        access_token=access_token,
-        token_type="bearer",
-        user={
-            "id": result["id"],
-            "email": result["email"],
-            "is_admin": result.get("is_admin", False),
-            "created_at": str(result.get("created_at")),
-            "last_login_at": str(result.get("last_login_at"))
-        }
-    )
+        await db.commit()
+    except Exception as e:
+        logger.error(f"Failed to invalidate previous codes: {str(e)}")
+        await db.rollback()
 
-
-@router.get("/me")
-def get_current_user_info(
-    user = Depends(get_current_user)
+# Routes
+@router.post("/request-code")
+async def request_login_code(
+    request_data: EmailRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db)
 ):
-    """
-    Gibt Informationen über den aktuell eingeloggten User zurück.
+    """Request a magic link login code"""
+    email = request_data.email.lower()
+    ip_address = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
     
-    Requires: Authorization Header mit Bearer Token
-    """
-    return {
-        "ok": True,
-        "user": {
-            "id": user.get("id"),
-            "email": user.get("email"),
-            "is_admin": user.get("is_admin", False),
-            "created_at": str(user.get("created_at")),
-            "last_login_at": str(user.get("last_login_at"))
-        }
-    }
+    try:
+        # Cleanup expired codes
+        await cleanup_expired_codes(db)
+        
+        # Rate limiting check (max 3 requests per hour per email)
+        result = await db.execute(
+            text("""
+                SELECT COUNT(*) as count
+                FROM login_codes
+                WHERE email = :email 
+                AND created_at > NOW() - INTERVAL '1 hour'
+            """),
+            {"email": email}
+        )
+        count = result.scalar()
+        
+        if count and count >= 3:
+            await log_auth_event(db, email, "request_code_rate_limited", False, ip_address, user_agent)
+            raise HTTPException(
+                status_code=429,
+                detail="Too many requests. Please wait before requesting a new code."
+            )
+        
+        # Invalidate previous codes
+        await invalidate_previous_codes(db, email)
+        
+        # Generate new code and hash it
+        code = generate_6_digit_code()
+        code_hash = hash_code(code)
+        expires_at = datetime.utcnow() + timedelta(minutes=10)
+        
+        # Store hashed code in database
+        await db.execute(
+            text("""
+                INSERT INTO login_codes (email, code_hash, created_at, expires_at, attempts)
+                VALUES (:email, :code_hash, NOW(), :expires_at, 0)
+            """),
+            {
+                "email": email,
+                "code_hash": code_hash,
+                "expires_at": expires_at
+            }
+        )
+        await db.commit()
+        
+        # Send email with plain code (not hash!)
+        await send_magic_link_email(email, code)
+        
+        # Log success
+        await log_auth_event(db, email, "request_code", True, ip_address, user_agent)
+        
+        logger.info(f"✓ Login code sent to {email}")
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": "Code sent successfully",
+                "email": email,
+                "expires_in_minutes": 10
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to generate code for {email}: {str(e)}")
+        await db.rollback()
+        await log_auth_event(db, email, "request_code", False, ip_address, user_agent)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to send login code"
+        )
 
+@router.post("/verify-code")
+async def verify_login_code(
+    login_data: LoginRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    """Verify a login code and create session"""
+    email = login_data.email.lower()
+    code = login_data.code
+    code_hash = hash_code(code)
+    ip_address = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+    
+    try:
+        # Find valid code
+        result = await db.execute(
+            text("""
+                SELECT id, expires_at, consumed_at, attempts
+                FROM login_codes
+                WHERE email = :email 
+                AND code_hash = :code_hash
+                ORDER BY created_at DESC
+                LIMIT 1
+            """),
+            {"email": email, "code_hash": code_hash}
+        )
+        code_record = result.fetchone()
+        
+        if not code_record:
+            await log_auth_event(db, email, "verify_code_invalid", False, ip_address, user_agent)
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid code"
+            )
+        
+        code_id, expires_at, consumed_at, attempts = code_record
+        
+        # Check if already consumed
+        if consumed_at:
+            await log_auth_event(db, email, "verify_code_already_used", False, ip_address, user_agent)
+            raise HTTPException(
+                status_code=401,
+                detail="Code already used"
+            )
+        
+        # Check if expired
+        if expires_at < datetime.utcnow():
+            await log_auth_event(db, email, "verify_code_expired", False, ip_address, user_agent)
+            raise HTTPException(
+                status_code=401,
+                detail="Code expired"
+            )
+        
+        # Check attempts
+        if attempts >= 5:
+            await log_auth_event(db, email, "verify_code_too_many_attempts", False, ip_address, user_agent)
+            raise HTTPException(
+                status_code=401,
+                detail="Too many failed attempts"
+            )
+        
+        # Mark code as consumed
+        await db.execute(
+            text("""
+                UPDATE login_codes
+                SET consumed_at = NOW()
+                WHERE id = :code_id
+            """),
+            {"code_id": code_id}
+        )
+        
+        # Create or update user
+        await db.execute(
+            text("""
+                INSERT INTO users (email, last_login, is_active)
+                VALUES (:email, NOW(), TRUE)
+                ON CONFLICT (email) 
+                DO UPDATE SET last_login = NOW(), is_active = TRUE
+            """),
+            {"email": email}
+        )
+        
+        await db.commit()
+        
+        # Log success
+        await log_auth_event(db, email, "verify_code", True, ip_address, user_agent)
+        
+        logger.info(f"✓ Successful login for {email}")
+        
+        # In production, create proper session token here
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": "Login successful",
+                "email": email,
+                "session_token": f"temp_token_{secrets.token_urlsafe(32)}"
+            }
+        )
+        
+    except HTTPException:
+        # Increment attempts on failed verification
+        if code_hash:
+            try:
+                await db.execute(
+                    text("""
+                        UPDATE login_codes
+                        SET attempts = attempts + 1
+                        WHERE email = :email AND code_hash = :code_hash
+                    """),
+                    {"email": email, "code_hash": code_hash}
+                )
+                await db.commit()
+            except:
+                pass
+        raise
+    except Exception as e:
+        logger.error(f"Failed to verify code for {email}: {str(e)}")
+        await db.rollback()
+        await log_auth_event(db, email, "verify_code", False, ip_address, user_agent)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to verify login code"
+        )
 
 @router.post("/logout")
-def logout(
-    user = Depends(get_current_user)
-):
-    """
-    Logout-Endpoint (hauptsächlich Client-seitig).
-    
-    JWT Tokens können nicht serverseitig invalidiert werden,
-    aber Client sollte Token löschen.
-    """
-    log.info("User %s logged out", user.get("email"))
-    
-    return {
-        "ok": True,
-        "message": "Logged out successfully"
-    }
-
-
-@router.get("/stats")
-def auth_stats(
-    email: str,
-    db: Session = Depends(get_session)
-):
-    """
-    Gibt Code-Statistiken für eine Email zurück (für Debug/Admin).
-    """
-    stats = get_code_stats(db, email)
-    
-    return {
-        "ok": True,
-        "email": email,
-        "stats": stats
-    }
+async def logout(request: Request, db: AsyncSession = Depends(get_db)):
+    """Logout and invalidate session"""
+    # In production, invalidate session token
+    return JSONResponse(
+        status_code=200,
+        content={"message": "Logged out successfully"}
+    )
