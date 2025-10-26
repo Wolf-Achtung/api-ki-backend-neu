@@ -69,6 +69,30 @@ def run_migrations(engine: Engine) -> None:
             );
         """))
         
+        # WICHTIG: user_id Spalte entfernen falls sie existiert (legacy cleanup)
+        conn.execute(text("""
+            DO $$ BEGIN
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema = 'public' 
+                      AND table_name = 'login_codes' 
+                      AND column_name = 'user_id'
+                ) THEN
+                    -- Erst Foreign Key Constraint droppen falls vorhanden
+                    IF EXISTS (
+                        SELECT 1 FROM pg_constraint 
+                        WHERE conname = 'fk_login_codes_user_id'
+                    ) THEN
+                        ALTER TABLE login_codes DROP CONSTRAINT fk_login_codes_user_id;
+                    END IF;
+                    
+                    -- Dann Spalte droppen
+                    ALTER TABLE login_codes DROP COLUMN user_id;
+                    RAISE NOTICE 'Dropped legacy user_id column from login_codes';
+                END IF;
+            END $$;
+        """))
+        
         # Indizes
         for idx in [
             "CREATE INDEX IF NOT EXISTS ix_login_codes_email ON login_codes(LOWER(email))",
@@ -156,7 +180,7 @@ def run_migrations(engine: Engine) -> None:
             );
         """))
         
-        # Spalte "email" hinzufügen falls sie nicht existiert (WICHTIG!)
+        # Spalte "email" hinzufügen falls sie nicht existiert
         conn.execute(text("""
             DO $$ BEGIN
                 IF NOT EXISTS (
@@ -171,7 +195,6 @@ def run_migrations(engine: Engine) -> None:
         """))
         
         # Unique constraint für email (ein Draft pro Email)
-        # ABER: Nur wenn die Spalte existiert!
         conn.execute(text("""
             DO $$ BEGIN
                 IF EXISTS (
