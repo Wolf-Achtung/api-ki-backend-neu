@@ -8,7 +8,7 @@ from __future__ import annotations
 import os
 import secrets
 import hashlib
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from sqlalchemy.orm import Session
@@ -53,7 +53,7 @@ def generate_code(db: Session, user: dict) -> str:
     code_hash_value = hash_code(code)
     
     # Store hashed code
-    expires_at = datetime.utcnow() + timedelta(minutes=LOGIN_CODE_TTL_MINUTES)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=LOGIN_CODE_TTL_MINUTES)
     
     insert_sql = text("""
         INSERT INTO login_codes (email, code_hash, created_at, expires_at, attempts)
@@ -111,7 +111,7 @@ def verify_code(db: Session, user: dict, code: str) -> bool:
         return False
     
     # Check if expired
-    if result["expires_at"] < datetime.utcnow():
+    if result["expires_at"] < datetime.now(timezone.utc):
         return False
     
     # Check attempts (max 5)
