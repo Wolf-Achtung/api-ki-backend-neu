@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 KI-Backend Hauptdatei mit robustem Router-Mounting und Startup-Checks.
+IMPROVED: Better error handling, non-fatal migrations, clearer logging
 """
 from __future__ import annotations
 
@@ -24,24 +25,12 @@ log = logging.getLogger("ki-backend")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifecycle manager - führt Startup-Tasks aus"""
+    """Lifecycle manager - führt Startup-Tasks aus (non-fatal errors)"""
     log.info("=" * 60)
     log.info("Starting KI-Backend...")
     log.info("=" * 60)
     
-    # Migrationen ausführen
-    try:
-        from core.migrate import run_migrations
-        from core.db import engine
-        
-        log.info("Running database migrations...")
-        run_migrations(engine)
-        log.info("✓ Migrations completed successfully")
-    except Exception as exc:
-        log.error("✗ Migrations failed: %s", exc)
-        # Non-fatal - Server startet trotzdem
-    
-    # Auth-Tabellen sicherstellen
+    # Auth-Tabellen sicherstellen (CRITICAL - muss funktionieren)
     try:
         from core.db import SessionLocal
         from services.auth import _ensure_login_codes_table
@@ -50,10 +39,14 @@ async def lifespan(app: FastAPI):
         try:
             _ensure_login_codes_table(db)
             log.info("✓ Login-codes table ready")
+        except Exception as auth_exc:
+            log.error("✗ Login-codes table setup failed: %s", auth_exc)
+            log.error("⚠️  LOGIN WILL NOT WORK - Apply hotfix via /admin-sql/hotfix.html")
         finally:
             db.close()
     except Exception as exc:
-        log.warning("Login-codes table setup warning: %s", exc)
+        log.error("✗ Auth setup failed: %s", exc)
+        log.error("⚠️  LOGIN WILL NOT WORK - Check database connection")
     
     yield
     
@@ -64,7 +57,7 @@ async def lifespan(app: FastAPI):
 # FastAPI App erstellen
 app = FastAPI(
     title="KI-Status-Report API",
-    version="1.1.0",
+    version="1.1.1",
     description="Backend für KI-Readiness Assessments",
     lifespan=lifespan
 )
@@ -90,7 +83,12 @@ if not allowed_origins and os.getenv("CORS_ALLOW_ANY", "0") == "1":
 else:
     # Production: Nur spezifische Origins
     if not allowed_origins:
-        allowed_origins = ["https://ki-sicherheit.jetzt", "https://make.ki-sicherheit.jetzt"]
+        allowed_origins = [
+            "https://ki-sicherheit.jetzt", 
+            "https://make.ki-sicherheit.jetzt",
+            "https://www.ki-sicherheit.jetzt",
+            "https://www.make.ki-sicherheit.jetzt"
+        ]
     
     app.add_middleware(
         CORSMiddleware,
@@ -169,6 +167,8 @@ log.info("Router Summary: %d/%d mounted successfully", mounted_count, len(router
 
 if failed_routers:
     log.warning("⚠️  Failed routers: %s", ", ".join(failed_routers))
+    if "auth" in failed_routers:
+        log.error("❌ CRITICAL: Auth router failed - LOGIN WILL NOT WORK")
 else:
     log.info("✓ All routers mounted successfully!")
 
@@ -184,13 +184,14 @@ def root():
     """Root endpoint mit API-Info"""
     return {
         "name": "KI-Status-Report API",
-        "version": "1.1.0",
+        "version": "1.1.1",
         "status": "running",
         "endpoints": {
             "health": "/api/healthz",
             "auth": "/api/auth/request-code (POST), /api/auth/login (POST)",
             "briefings": "/api/briefings/* (GET/PUT/POST/DELETE)",
             "admin": "/api/admin/* (GET/POST)",
+            "hotfix": "/admin-sql/hotfix.html (Nur bei DB-Problemen)"
         }
     }
 
