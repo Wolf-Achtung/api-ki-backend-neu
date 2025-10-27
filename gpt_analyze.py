@@ -4,6 +4,19 @@ from __future__ import annotations
 Analyse → Report (HTML/PDF) → E-Mail (User + Admin) mit korreliertem Debug‑Logging.
 Gold‑Standard‑Variante: PEP8‑konform, robustes Error‑Handling, optionale Artefakt‑Ablage.
 
+FIXES 2025-10-27 V2.3 (KB-LOADER DEAKTIVIERT):
+- 🔧 FIX: KB-Loader komplett deaktiviert (KB-Konzepte sind direkt in Prompts)
+- ✅ Projekt läuft wieder ohne KB-Dateinamen-Mismatch
+- ✅ Alle 12 optimierten Prompts funktionieren standalone
+
+FIXES 2025-10-27 V2.2 (COMPLETE FIX):
+- 🔧 FIX 1: UTF-8-Encoding-Korrektur für Briefing-Daten (ä, ö, ü, ß, etc.)
+- 🔧 FIX 2: UPPERCASE-Template-Variablen hinzugefügt (HAUPTLEISTUNG, BRANCHE_LABEL, etc.)
+- 🔧 FIX 3: render_file() mit ctx-Parameter aufrufen (aus V2.1)
+- ✅ Reihenfolge korrigiert: ctx_upper VOR render_file() erstellen
+- ✅ Kontext-Keys erweitert: Alle Jinja2-Template-Variablen verfügbar
+"""
+
 FIXES 2025-10-27 V2.1:
 - 🔧 CRITICAL FIX: render_file() mit ctx-Parameter aufrufen (Zeile 259)
 - ✅ Reihenfolge korrigiert: ctx_upper VOR render_file() erstellen
@@ -12,9 +25,9 @@ FIXES 2025-10-27 V2.1:
 - ✅ Vereinfachte Template-Loading-Logik
 
 UPDATES 2025-10-27 (V2.0 - KB-Integration):
-- ✅ KB-Loader integriert: get_all_kb() lädt strukturierte Wissensbasis
+- ❌ KB-Loader deaktiviert (V2.3): KB-Konzepte sind direkt in Prompts, kein Loader benötigt
 - ✅ Alle 12 optimierten Prompts unterstützt (7 Core + 5 Extra)
-- ✅ KB-Konzepte in allen Sections verfügbar
+- ✅ KB-Konzepte in Prompt-Text integriert (4 Säulen, 10-20-70, Legal Pitfalls, etc.)
 - ✅ Zusätzliche Business-Daten für neue Sections
 - ✅ 5 neue Extra-Sections: data_readiness, org_change, pilot_plan, gamechanger, costs_overview
 """
@@ -39,7 +52,7 @@ from services.email import send_mail
 from services.email_templates import render_report_ready_email
 from services.research import search_funding_and_tools
 from services.knowledge import get_knowledge_blocks
-from services.kb_loader import get_kb_loader, get_all_kb  # ✅ KB-Integration V2.0
+# from services.kb_loader import get_kb_loader, get_all_kb  # ❌ DEAKTIVIERT V2.3 - KB-Konzepte sind direkt in Prompts
 from settings import settings
 
 log = logging.getLogger(__name__)
@@ -143,6 +156,46 @@ STATE_LABELS = {
     "sh": "Schleswig‑Holstein",
     "th": "Thüringen",
 }
+
+def _fix_utf8_encoding(text: str) -> str:
+    """
+    ✅ FIX 1 (2025-10-27 V2.1): Korrigiert doppelt-encodete UTF-8-Strings.
+    Beispiel: "MarktfÃ¼hrer" → "Marktführer"
+    """
+    if not text or not isinstance(text, str):
+        return text
+    try:
+        return text.encode('latin-1').decode('utf-8')
+    except (UnicodeDecodeError, UnicodeEncodeError):
+        try:
+            return text.encode('cp1252').decode('utf-8')
+        except:
+            return text
+
+def _fix_utf8_encoding_dict(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    ✅ FIX 1 (2025-10-27 V2.1): Korrigiert UTF-8-Encoding rekursiv in einem Dictionary.
+    """
+    if not isinstance(data, dict):
+        return data
+    
+    fixed = {}
+    for key, value in data.items():
+        if isinstance(value, str):
+            fixed[key] = _fix_utf8_encoding(value)
+        elif isinstance(value, dict):
+            fixed[key] = _fix_utf8_encoding_dict(value)
+        elif isinstance(value, list):
+            fixed[key] = [
+                _fix_utf8_encoding(item) if isinstance(item, str)
+                else _fix_utf8_encoding_dict(item) if isinstance(item, dict)
+                else item
+                for item in value
+            ]
+        else:
+            fixed[key] = value
+    
+    return fixed
 
 def _score(answers: Dict[str, Any]) -> Dict[str, Any]:
     s: Dict[str, Any] = {}
@@ -287,12 +340,17 @@ def _render_section(key: str, template_path: str, answers: Dict[str, Any],
 
 def build_full_report_html(br: Briefing, run_id: str) -> Dict[str, Any]:
     answers = getattr(br, "answers", None) or {}
+    
+    # ✅ FIX 1: UTF-8-Encoding korrigieren (2025-10-27 V2.1)
+    answers = _fix_utf8_encoding_dict(answers)
+    
     branch = answers.get("branche", "")
     state = answers.get("bundesland", "")
     size = answers.get("unternehmensgroesse", "")
     
-    # ✅ Kontext mit lowercase Keys (wird später in _render_section in UPPERCASE konvertiert)
+    # ✅ FIX 2 (2025-10-27 V2.1): Erweiterte Context-Variablen für Templates
     kw = {
+        # Lowercase Keys (für interne Nutzung)
         "branche_name": BRANCH_LABELS.get(branch, branch),
         "bundesland_name": STATE_LABELS.get(state, state),
         "unternehmensgroesse_name": SIZE_LABELS.get(size, size),
@@ -305,8 +363,22 @@ def build_full_report_html(br: Briefing, run_id: str) -> Dict[str, Any]:
         "created_at": getattr(br, "created_at", None),
         "company_name": answers.get("company_name", "Unbekannt"),
         
-        # ✅ NEU V2.0: KB-Integration (UPPERCASE Keys für Templates)
-        **get_all_kb(),  # <-- Fügt ~12-17 KB_*_JSON Keys hinzu
+        # ✅ UPPERCASE Keys für Jinja2-Templates (FIX 2)
+        "BRANCHE_LABEL": BRANCH_LABELS.get(branch, branch or "Unbekannt"),
+        "BUNDESLAND_LABEL": STATE_LABELS.get(state, state or "Unbekannt"),
+        "UNTERNEHMENSGROESSE_LABEL": SIZE_LABELS.get(size, size or "Unbekannt"),
+        "HAUPTLEISTUNG": answers.get("hauptleistung", "Ihre Hauptleistung"),
+        "MOONSHOT": answers.get("moonshot", "") or answers.get("ki_geschaeftsmodell_vision", "Ihre Vision"),
+        "KI_PROJEKTE": answers.get("ki_projekte", ""),
+        "KI_POTENZIAL": answers.get("ki_potenzial", ""),
+        "JAHRESUMSATZ": answers.get("jahresumsatz", ""),
+        "INVESTITIONSBUDGET": answers.get("investitionsbudget", ""),
+        "ZEITBUDGET": answers.get("zeitbudget", ""),
+        "DIGITALISIERUNGSGRAD": answers.get("digitalisierungsgrad", 0),
+        "RISIKOFREUDE": answers.get("risikofreude", 0),
+        
+        # ✅ NEU V2.0: KB-Integration (DEAKTIVIERT - KB-Konzepte sind direkt in Prompts)
+        # **get_all_kb(),  # ❌ DEAKTIVIERT V2.3 - Dateinamen-Mismatch, KB nicht benötigt
         
         # ✅ NEU V2.0: Business-Daten
         "business_json": json.dumps({
