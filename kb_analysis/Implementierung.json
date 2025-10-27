@@ -1,0 +1,14 @@
+{
+  "filename": "Implementierung.docx",
+  "sections": [
+    {
+      "title": "Einleitung",
+      "level": "intro",
+      "content": [
+        "4. Implementierungsplan"
+      ]
+    }
+  ],
+  "key_concepts": [],
+  "full_text": "4. Implementierungsplan\n\nDie Umsetzung der KI-Strategie bei Trailerhaus ONAIR erfolgt entlang eines strukturierten Fahrplans mit klaren Rollen, Pilotphasen und Feedbackzyklen. Ziel ist es, konkrete Anwendungsfälle unter realen Bedingungen zu testen, Erfolge sichtbar zu machen und eine breite Teamakzeptanz zu erreichen.\n\n1. Vorgehen in Phasen\n\nDie Einführung erfolgt in drei Phasen:\n\nPhase 1: Test & Schulung\n\nIdentifikation relevanter Tools (GPT, Midjourney, Runway)\n\nDurchführung interner Prompt-Trainings für Redaktion, Konzeption und Schnitt\n\nAufbau der Prompt Library mit ersten Use Cases\n\nPhase 2: Pilotierung\n\nAnwendung der Tools auf reale Projekte: z. B. Trailer-Skripte, Moodboards, Rohschnitt-Vorschauen\n\nEvaluation von Zeitersparnis, Ergebnisqualität und Akzeptanz\n\nDokumentation in einem strukturierten KI-Pilotprotokoll\n\nPhase 3: Rollout & Verankerung\n\nIntegration der Workflows in reguläre Produktionen\n\nPflege und Ausbau der Prompt Library\n\nEtablierung von Feedbackformaten, z. B. „KI-Runde“ im Teammeeting\n\n2. Rollenverteilung im Projekt\n\nDie Umsetzung erfolgt durch ein interdisziplinäres Team:\n\n3. Use Case-basierte Umsetzung\n\nZentrales Element ist die Umsetzung in konkreten Anwendungsfällen. Diese wurden so ausgewählt, dass sie typische kreative Engpässe adressieren und gleichzeitig rasch testbar sind:\n\nEin zusätzlicher strategischer Use Case ist die Entwicklung eines neuen, KI-gestützten Erklärvideo-Formats.\nDabei kommen GPT-Modelle für Texterstellung, Bild-KIs für visuelle Unterstützung sowie Tools wie Runway für die Videoproduktion zum Einsatz.\nIn einer ersten Phase wird dieses Format intern getestet – z. B. für Recruiting- oder Onboarding-Videos. Anschließend soll ein externer Pilot mit einem Bestandskunden folgen.\nZiel ist es, ein wiederholbares, modulares Produkt zu entwickeln, das klare Briefing-Strukturen, kurze Umsetzungszeiten und hohe gestalterische Konsistenz verbindet.\n\n4. Compliance-Check vor Tooleinsatz\n\nTrailerhaus ONAIR etabliert für jeden KI-gestützten Workflow einen strukturierten Freigabeprozess, der rechtliche und ethische Aspekte aktiv berücksichtigt:\n\nDieser Prozess schafft Rechtssicherheit, stärkt das Vertrauen im Team und trägt zur verantwortungsbewussten Nutzung generativer KI bei. Zudem fördert er eine bewusste Auseinandersetzung mit Risiken, Bias und möglichen Auswirkungen auf Auftraggeber:innen oder Konsument:innen.\n\nTrailerhaus ONAIR begreift Compliance nicht als bürokratische Hürde, sondern als Teil der kreativen Verantwortung in der digitalen Produktionskette."
+}

@@ -1,0 +1,14 @@
+{
+  "filename": "sicherheit-und-ehtik.docx",
+  "sections": [
+    {
+      "title": "Einleitung",
+      "level": "intro",
+      "content": [
+        "8. Sicherheit & Ethik"
+      ]
+    }
+  ],
+  "key_concepts": [],
+  "full_text": "8. Sicherheit & Ethik\n\nDer Einsatz generativer KI bringt nicht nur kreative Chancen, sondern auch neue Anforderungen an ethische Klarheit, Transparenz und Datenschutz. Trailerhaus ONAIR begegnet diesen Herausforderungen mit einem verantwortungsvollen, klar dokumentierten Ansatz. Ziel ist es, technologischen Fortschritt mit gestalterischer Integrität und rechtlicher Sicherheit zu vereinen.\n\nDatenschutz & DSGVO-Konformität\n\nKeine personenbezogenen Daten in Prompts\n→ Reale Namen, Marken, Kundendaten werden in KI-Eingaben konsequent vermieden.\n\nKein Upload sensibler Inhalte in offene KI-Systeme\n→ Rohschnitte, Serienmaterial oder unveröffentlichtes Kampagnenmaterial werden ausschließlich lokal oder über gesicherte EU-Infrastruktur bearbeitet.\n\nAzure OpenAI als technischer Standard\n→ GPT-4 wird über eine EU-gehostete API betrieben (z. B. Microsoft Azure), um den Schutz personenbezogener Daten zu gewährleisten.\n\nEU AI Act – Orientierung & Umsetzung\n\nTrailerhaus ONAIR orientiert sich bereits heute an den zentralen Prinzipien des europäischen KI-Gesetzes:\n\nEinstufung als geringes Risiko:\n→ Alle Workflows sind kreativ assistierend, nicht autonom entscheidend.\n\nTransparenzpflicht:\n→ Bei jeder Kundenkommunikation wird offengelegt, ob und wie KI zum Einsatz kam.\n\nDokumentation & Auditierbarkeit:\n→ Prompts, Testphasen, Toolauswahl und Anwendungsergebnisse werden in internen Protokollen festgehalten.\n\nTool-Prüfung vor dem Einsatz\n\nJedes neue Tool wird anhand eines internen Prüfprozesses bewertet:\n\nTools, die nicht transparent, kontrollierbar oder lizenzsicher sind, werden nicht eingesetzt – unabhängig von ihrer Leistungsfähigkeit.\n\nKreativethik & Verantwortung\n\nKI ist bei Trailerhaus ONAIR ein Werkzeug – kein Ersatz. Alle Inhalte werden vor Veröffentlichung von Menschen überprüft und ggf. überarbeitet.\n\nIn Schulungen wird ethisches Prompting thematisiert, z. B. in Bezug auf Sprache, Diversity und Wirkungsmechanismen.\n\nVerantwortung bleibt immer beim Team – nicht bei der KI oder dem Anbieter. Das gilt für Content, Copyright und Kommunikation.\n\nTransparenz gegenüber Kunden & Partnern\n\nOffener Umgang mit KI-Nutzung in Briefings und Abschlusspräsentationen\n\nKennzeichnung von KI-Inhalten (z. B. bei Moodboards) zur Vertrauenssicherung\n\nBereitschaft zur Diskussion ethischer Fragen im Kundenkontakt\n\nSicherheit & Ethik sind bei Trailerhaus ONAIR keine Nebenbedingungen – sie sind integraler Bestandteil kreativer Exzellenz."
+}
