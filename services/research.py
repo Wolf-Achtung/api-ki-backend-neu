@@ -1,105 +1,226 @@
 # -*- coding: utf-8 -*-
-from __future__ import annotations
 """
-Lightweight research wrapper for Förderprogramme & Tools.
-Providers: Tavily (preferred), Perplexity (optional). If no API keys are set,
-returns a graceful placeholder.
+Research Service mit Tavily Integration
+Optimiert für KI-Sicherheit.jetzt Report-System
 """
+
 import os
-import json
 import logging
-from typing import Dict, List, Any
-import requests
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+import json
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
-def _build_queries(branch_label: str, state_label: str, lang: str) -> Dict[str, str]:
-    state_q = (state_label or "").strip()
-    # Funding query focuses on official sources first (BMWK, KfW, Landesportale)
-    q_funding = f"{'Förderprogramme Digitalisierung' if lang=='de' else 'funding programs digitalization'} {state_q} BMWK KfW site:.de"
-    # Tools query focuses on practical AI tooling for the branch
-    q_tools = f"KI Tools {branch_label} Praxis 2025 site:.de"
-    return {"funding": q_funding, "tools": q_tools}
 
-def _tavily(api_key: str, query: str, max_results: int = 6) -> List[Dict[str, str]]:
-    try:
-        payload = {
-            "api_key": api_key,
-            "query": query,
-            "max_results": max_results,
-            "search_depth": "advanced",
-            "include_answer": False,
-        }
-        r = requests.post("https://api.tavily.com/search", json=payload, timeout=30)
-        r.raise_for_status()
-        data = r.json()
-        out: List[Dict[str, str]] = []
-        for it in data.get("results", [])[:max_results]:
-            url = it.get("url") or ""
-            title = it.get("title") or url
-            out.append({"title": title, "url": url, "source": "tavily"})
-        return out
-    except Exception as exc:
-        log.warning("Tavily search failed: %s", exc)
-        return []
-
-def _perplexity(api_key: str, query: str, max_items: int = 6) -> List[Dict[str, str]]:
+def search_funding_and_tools(branch: str, state: str = None) -> dict:
     """
-    Ask Perplexity to list top links (OpenAI-like chat completion). This keeps it simple.
+    Recherchiert aktuelle KI-Tools und Förderprogramme für Branche/Region.
+    
+    Args:
+        branch: Branche (z.B. 'beratung', 'handel', 'produktion')
+        state: Bundesland-Kürzel (z.B. 'be', 'by', 'nw')
+    
+    Returns:
+        Dict mit tools, foerderungen, und metadata
     """
     try:
-        headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-        body = {
-            "model": "sonar-small-online",
-            "messages": [
-                {"role": "system", "content": "List 5-6 high-quality, trustworthy links only. Return a JSON array of {title,url}."},
-                {"role": "user", "content": query},
-            ],
-            "temperature": 0.0,
+        # Prüfe ob Tavily verfügbar ist
+        api_key = os.getenv('TAVILY_API_KEY')
+        if not api_key:
+            logger.warning("TAVILY_API_KEY not found - returning empty results")
+            return _empty_research_result()
+        
+        # Import Tavily (lazy import)
+        try:
+            from tavily import TavilyClient
+        except ImportError:
+            logger.error("tavily-python not installed - run: pip install tavily-python")
+            return _empty_research_result()
+        
+        # Initialisiere Client
+        client = TavilyClient(api_key=api_key)
+        logger.info(f"[RESEARCH] Starting Tavily search for branch={branch}, state={state}")
+        
+        # Suche 1: KI-Tools für die Branche
+        tools_query = f"beste KI Tools für {branch} Deutschland 2025"
+        logger.info(f"[TAVILY] Query 1: {tools_query}")
+        
+        tools_results = client.search(
+            query=tools_query,
+            search_depth="advanced",
+            max_results=5,
+            include_domains=["heise.de", "t3n.de", "computerwoche.de", "it-zoom.de"]
+        )
+        
+        # Suche 2: Förderprogramme
+        if state:
+            funding_query = f"KI Förderung Digitalisierung {state} Deutschland 2025"
+        else:
+            funding_query = "KI Förderung Digitalisierung Deutschland Bundesweit 2025"
+        
+        logger.info(f"[TAVILY] Query 2: {funding_query}")
+        
+        funding_results = client.search(
+            query=funding_query,
+            search_depth="advanced",
+            max_results=5,
+            include_domains=["foerderdatenbank.de", "bmwk.de", "digitalagentur.de"]
+        )
+        
+        # Extrahiere und strukturiere Ergebnisse
+        tools = _extract_tools_from_results(tools_results.get('results', []))
+        foerderungen = _extract_funding_from_results(funding_results.get('results', []))
+        
+        logger.info(f"[RESEARCH] Found {len(tools)} tools and {len(foerderungen)} funding programs")
+        
+        return {
+            "tools": tools,
+            "foerderungen": foerderungen,
+            "metadata": {
+                "searched_at": datetime.now().isoformat(),
+                "branch": branch,
+                "state": state,
+                "queries": [tools_query, funding_query],
+                "source": "tavily"
+            }
         }
-        r = requests.post("https://api.perplexity.ai/chat/completions", headers=headers, json=body, timeout=45)
-        r.raise_for_status()
-        data = r.json()
-        content = data["choices"][0]["message"]["content"]
-        arr = json.loads(content) if content.strip().startswith("[") else []
-        out: List[Dict[str, str]] = []
-        for it in arr[:max_items]:
-            out.append({"title": it.get("title",""), "url": it.get("url",""), "source": "perplexity"})
-        return out
-    except Exception as exc:
-        log.warning("Perplexity search failed: %s", exc)
-        return []
+        
+    except Exception as e:
+        logger.error(f"[RESEARCH] Error in search_funding_and_tools: {e}", exc_info=True)
+        return _empty_research_result()
 
-def _render_links_block(title: str, items: List[Dict[str, str]]) -> str:
-    if not items:
-        return ""
-    lis = "".join([f'<li><a href="{it["url"]}">{it["title"]}</a></li>' for it in items if it.get("url")])
-    return f'<div class="card"><h3>{title}</h3><ul>{lis}</ul></div>'
 
-def search_funding_and_tools(branch_label: str, state_label: str, lang: str = "de") -> Dict[str, Any]:
-    provider = (os.getenv("RESEARCH_PROVIDER") or "tavily").lower()
-    tavily_key = os.getenv("TAVILY_API_KEY") or ""
-    perplexity_key = os.getenv("PERPLEXITY_API_KEY") or ""
+def _extract_tools_from_results(results: List[dict]) -> List[dict]:
+    """Extrahiert Tool-Informationen aus Tavily-Ergebnissen."""
+    tools = []
+    
+    for result in results[:5]:  # Max 5 Tools
+        tool = {
+            "name": _extract_tool_name(result.get('title', '')),
+            "description": result.get('content', '')[:200],  # Max 200 chars
+            "url": result.get('url', ''),
+            "category": _categorize_tool(result.get('content', '')),
+            "relevance_score": result.get('score', 0.0)
+        }
+        
+        # Nur hinzufügen wenn URL vorhanden
+        if tool['url']:
+            tools.append(tool)
+    
+    return tools
 
-    queries = _build_queries(branch_label, state_label, lang)
 
-    funding_links: List[Dict[str, str]] = []
-    tool_links: List[Dict[str, str]] = []
+def _extract_funding_from_results(results: List[dict]) -> List[dict]:
+    """Extrahiert Förderprogramm-Informationen aus Tavily-Ergebnissen."""
+    foerderungen = []
+    
+    for result in results[:5]:  # Max 5 Programme
+        program = {
+            "name": result.get('title', ''),
+            "description": result.get('content', '')[:300],  # Max 300 chars
+            "url": result.get('url', ''),
+            "provider": _extract_provider(result.get('url', '')),
+            "relevance_score": result.get('score', 0.0)
+        }
+        
+        # Nur hinzufügen wenn URL vorhanden
+        if program['url']:
+            foerderungen.append(program)
+    
+    return foerderungen
 
-    if provider == "tavily" and tavily_key:
-        funding_links = _tavily(tavily_key, queries["funding"])
-        tool_links = _tavily(tavily_key, queries["tools"])
-    elif provider == "perplexity" and perplexity_key:
-        funding_links = _perplexity(perplexity_key, queries["funding"])
-        tool_links = _perplexity(perplexity_key, queries["tools"])
+
+def _extract_tool_name(title: str) -> str:
+    """Extrahiert Tool-Namen aus Artikel-Titel."""
+    # Entferne gängige Präfixe/Suffixe
+    for prefix in ['Die besten', 'Top', 'Review:', 'Test:']:
+        if title.startswith(prefix):
+            title = title[len(prefix):].strip()
+    
+    # Nimm ersten Teil vor Trennzeichen
+    for separator in [' - ', ' | ', ': ']:
+        if separator in title:
+            title = title.split(separator)[0].strip()
+            break
+    
+    return title[:100]  # Max 100 chars
+
+
+def _categorize_tool(content: str) -> str:
+    """Kategorisiert Tool basierend auf Inhalt."""
+    content_lower = content.lower()
+    
+    if any(keyword in content_lower for keyword in ['chatbot', 'chat', 'konversation']):
+        return 'Kundenservice'
+    elif any(keyword in content_lower for keyword in ['text', 'schreiben', 'content']):
+        return 'Content-Erstellung'
+    elif any(keyword in content_lower for keyword in ['analyse', 'daten', 'insights']):
+        return 'Datenanalyse'
+    elif any(keyword in content_lower for keyword in ['automation', 'prozess', 'workflow']):
+        return 'Prozessautomatisierung'
     else:
-        # Graceful placeholder (no external calls)
-        msg = ("(Hinweis: Für aktuelle Links bitte TAVILY_API_KEY oder PERPLEXITY_API_KEY setzen.)")
-        html = f'<div class="card"><h3>Aktuelle Programme & Tools</h3><p class="muted">{msg}</p></div>'
-        return {"funding_links": [], "tool_links": [], "html": html}
+        return 'Sonstiges'
 
-    html = (
-        _render_links_block("Förderprogramme (aktuelle Quellen)", funding_links) +
-        _render_links_block("KI‑Tools & Praxis (aktuelle Quellen)", tool_links)
-    )
-    return {"funding_links": funding_links, "tool_links": tool_links, "html": html}
+
+def _extract_provider(url: str) -> str:
+    """Extrahiert Anbieter aus URL."""
+    if 'foerderdatenbank.de' in url:
+        return 'Bund'
+    elif 'bmwk.de' in url:
+        return 'BMWK'
+    elif any(state in url for state in ['.bayern.de', '.nrw.de', '.berlin.de']):
+        return 'Land'
+    else:
+        return 'Extern'
+
+
+def _empty_research_result() -> dict:
+    """Gibt leere Struktur zurück wenn Recherche fehlschlägt."""
+    return {
+        "tools": [],
+        "foerderungen": [],
+        "metadata": {
+            "searched_at": datetime.now().isoformat(),
+            "error": "No API key or search failed",
+            "source": "none"
+        }
+    }
+
+
+# Fallback-Funktion für Offline-Testing
+def get_mock_research_data(branch: str, state: str = None) -> dict:
+    """Mock-Daten für Testing ohne API-Key."""
+    return {
+        "tools": [
+            {
+                "name": "ChatGPT Enterprise",
+                "description": "Professionelle KI-Lösung für Unternehmen mit erweiterten Sicherheits- und Compliance-Features",
+                "url": "https://openai.com/enterprise",
+                "category": "Kundenservice",
+                "relevance_score": 0.95
+            },
+            {
+                "name": "Jasper.ai",
+                "description": "KI-gestützte Content-Erstellung für Marketing und Kommunikation",
+                "url": "https://jasper.ai",
+                "category": "Content-Erstellung",
+                "relevance_score": 0.88
+            }
+        ],
+        "foerderungen": [
+            {
+                "name": "Digital Jetzt",
+                "description": "Bundesförderung für Digitalisierung in KMU - bis zu 50.000 Euro Zuschuss",
+                "url": "https://www.bmwk.de/digital-jetzt",
+                "provider": "BMWK",
+                "relevance_score": 0.92
+            }
+        ],
+        "metadata": {
+            "searched_at": datetime.now().isoformat(),
+            "branch": branch,
+            "state": state,
+            "source": "mock"
+        }
+    }
