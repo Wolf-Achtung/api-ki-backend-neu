@@ -4,7 +4,9 @@ from __future__ import annotations
 Analyse → Report (HTML/PDF) → E-Mail (User + Admin) mit korreliertem Debug‑Logging.
 Gold‑Standard‑Variante: PEP8‑konform, robustes Error‑Handling, optionale Artefakt‑Ablage.
 
-FIXES 2025-10-27:
+FIXES 2025-10-27 V2.1:
+- 🔧 CRITICAL FIX: render_file() mit ctx-Parameter aufrufen (Zeile 259)
+- ✅ Reihenfolge korrigiert: ctx_upper VOR render_file() erstellen
 - ✅ Template-Rendering korrigiert: render_template() statt dumps()
 - ✅ Kontext-Keys in UPPERCASE konvertiert für Template-Matching
 - ✅ Vereinfachte Template-Loading-Logik
@@ -247,21 +249,23 @@ def _call_openai(req: ModelReq, run_id: str) -> str:
 def _render_section(key: str, template_path: str, answers: Dict[str, Any], 
                     context: Dict[str, Any], run_id: str) -> str:
     """
-    ✅ NEUE LOGIK (2025-10-27):
-    1. Template-Datei laden (Markdown)
-    2. Keys in UPPERCASE konvertieren
+    ✅ NEUE LOGIK (2025-10-27 V2 - FIXED):
+    1. Context mit UPPERCASE Keys erstellen
+    2. Template-Datei laden MIT Kontext (Markdown → Jinja2-Rendering)
     3. render_template() aufrufen → ergibt finalen Prompt-String
     4. Prompt an LLM senden
     5. HTML zurückgeben
+    
+    🔧 FIX 2025-10-27: render_file() benötigt ctx als 2. Parameter
     """
     try:
-        # 1. Template laden
-        prompt_md = render_file(template_path)
-        _save_artifact(run_id, f"{key}_template.md", prompt_md)
-        
-        # 2. Context mit UPPERCASE Keys erstellen
+        # 1. Context mit UPPERCASE Keys erstellen (MUSS VOR render_file sein!)
         ctx_upper = {k.upper(): v for k, v in context.items()}
         ctx_upper["ANSWERS"] = json.dumps(answers, ensure_ascii=False, indent=2)
+        
+        # 2. Template laden MIT Kontext (✅ FIX: ctx_upper als 2. Parameter übergeben)
+        prompt_md = render_file(template_path, ctx_upper)
+        _save_artifact(run_id, f"{key}_template.md", prompt_md)
         
         # 3. Template rendern → finaler Prompt
         full = render_template(prompt_md, ctx_upper)
