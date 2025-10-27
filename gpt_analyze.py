@@ -15,9 +15,7 @@ FIXES 2025-10-27 V2.2 (COMPLETE FIX):
 - [FIX] FIX 3: render_file() mit ctx-Parameter aufrufen (aus V2.1)
 - [OK] Reihenfolge korrigiert: ctx_upper VOR render_file() erstellen
 - [OK] Kontext-Keys erweitert: Alle Jinja2-Template-Variablen verfügbar
-"""
 
-FIXES 2025-10-27 V2.1:
 - [FIX] CRITICAL FIX: render_file() mit ctx-Parameter aufrufen (Zeile 259)
 - [OK] Reihenfolge korrigiert: ctx_upper VOR render_file() erstellen
 - [OK] Template-Rendering korrigiert: render_template() statt dumps()
