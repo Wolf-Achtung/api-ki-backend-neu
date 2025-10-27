@@ -1,35 +1,35 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-Analyse → Report (HTML/PDF) → E-Mail (User + Admin) mit korreliertem Debug‑Logging.
+Analyse -> Report (HTML/PDF) -> E-Mail (User + Admin) mit korreliertem Debug‑Logging.
 Gold‑Standard‑Variante: PEP8‑konform, robustes Error‑Handling, optionale Artefakt‑Ablage.
 
 FIXES 2025-10-27 V2.3 (KB-LOADER DEAKTIVIERT):
-- 🔧 FIX: KB-Loader komplett deaktiviert (KB-Konzepte sind direkt in Prompts)
-- ✅ Projekt läuft wieder ohne KB-Dateinamen-Mismatch
-- ✅ Alle 12 optimierten Prompts funktionieren standalone
+- [FIX] FIX: KB-Loader komplett deaktiviert (KB-Konzepte sind direkt in Prompts)
+- [OK] Projekt läuft wieder ohne KB-Dateinamen-Mismatch
+- [OK] Alle 12 optimierten Prompts funktionieren standalone
 
 FIXES 2025-10-27 V2.2 (COMPLETE FIX):
-- 🔧 FIX 1: UTF-8-Encoding-Korrektur für Briefing-Daten (ä, ö, ü, ß, etc.)
-- 🔧 FIX 2: UPPERCASE-Template-Variablen hinzugefügt (HAUPTLEISTUNG, BRANCHE_LABEL, etc.)
-- 🔧 FIX 3: render_file() mit ctx-Parameter aufrufen (aus V2.1)
-- ✅ Reihenfolge korrigiert: ctx_upper VOR render_file() erstellen
-- ✅ Kontext-Keys erweitert: Alle Jinja2-Template-Variablen verfügbar
+- [FIX] FIX 1: UTF-8-Encoding-Korrektur für Briefing-Daten (ä, ö, ü, ß, etc.)
+- [FIX] FIX 2: UPPERCASE-Template-Variablen hinzugefügt (HAUPTLEISTUNG, BRANCHE_LABEL, etc.)
+- [FIX] FIX 3: render_file() mit ctx-Parameter aufrufen (aus V2.1)
+- [OK] Reihenfolge korrigiert: ctx_upper VOR render_file() erstellen
+- [OK] Kontext-Keys erweitert: Alle Jinja2-Template-Variablen verfügbar
 """
 
 FIXES 2025-10-27 V2.1:
-- 🔧 CRITICAL FIX: render_file() mit ctx-Parameter aufrufen (Zeile 259)
-- ✅ Reihenfolge korrigiert: ctx_upper VOR render_file() erstellen
-- ✅ Template-Rendering korrigiert: render_template() statt dumps()
-- ✅ Kontext-Keys in UPPERCASE konvertiert für Template-Matching
-- ✅ Vereinfachte Template-Loading-Logik
+- [FIX] CRITICAL FIX: render_file() mit ctx-Parameter aufrufen (Zeile 259)
+- [OK] Reihenfolge korrigiert: ctx_upper VOR render_file() erstellen
+- [OK] Template-Rendering korrigiert: render_template() statt dumps()
+- [OK] Kontext-Keys in UPPERCASE konvertiert für Template-Matching
+- [OK] Vereinfachte Template-Loading-Logik
 
 UPDATES 2025-10-27 (V2.0 - KB-Integration):
-- ❌ KB-Loader deaktiviert (V2.3): KB-Konzepte sind direkt in Prompts, kein Loader benötigt
-- ✅ Alle 12 optimierten Prompts unterstützt (7 Core + 5 Extra)
-- ✅ KB-Konzepte in Prompt-Text integriert (4 Säulen, 10-20-70, Legal Pitfalls, etc.)
-- ✅ Zusätzliche Business-Daten für neue Sections
-- ✅ 5 neue Extra-Sections: data_readiness, org_change, pilot_plan, gamechanger, costs_overview
+- [NO] KB-Loader deaktiviert (V2.3): KB-Konzepte sind direkt in Prompts, kein Loader benötigt
+- [OK] Alle 12 optimierten Prompts unterstützt (7 Core + 5 Extra)
+- [OK] KB-Konzepte in Prompt-Text integriert (4 Säulen, 10-20-70, Legal Pitfalls, etc.)
+- [OK] Zusätzliche Business-Daten für neue Sections
+- [OK] 5 neue Extra-Sections: data_readiness, org_change, pilot_plan, gamechanger, costs_overview
 """
 import json
 import logging
@@ -52,7 +52,7 @@ from services.email import send_mail
 from services.email_templates import render_report_ready_email
 from services.research import search_funding_and_tools
 from services.knowledge import get_knowledge_blocks
-# from services.kb_loader import get_kb_loader, get_all_kb  # ❌ DEAKTIVIERT V2.3 - KB-Konzepte sind direkt in Prompts
+# from services.kb_loader import get_kb_loader, get_all_kb  # [NO] DEAKTIVIERT V2.3 - KB-Konzepte sind direkt in Prompts
 from settings import settings
 
 log = logging.getLogger(__name__)
@@ -159,8 +159,8 @@ STATE_LABELS = {
 
 def _fix_utf8_encoding(text: str) -> str:
     """
-    ✅ FIX 1 (2025-10-27 V2.1): Korrigiert doppelt-encodete UTF-8-Strings.
-    Beispiel: "MarktfÃ¼hrer" → "Marktführer"
+    [OK] FIX 1 (2025-10-27 V2.1): Korrigiert doppelt-encodete UTF-8-Strings.
+    Beispiel: "MarktfÃ¼hrer" -> "Marktführer"
     """
     if not text or not isinstance(text, str):
         return text
@@ -174,7 +174,7 @@ def _fix_utf8_encoding(text: str) -> str:
 
 def _fix_utf8_encoding_dict(data: Dict[str, Any]) -> Dict[str, Any]:
     """
-    ✅ FIX 1 (2025-10-27 V2.1): Korrigiert UTF-8-Encoding rekursiv in einem Dictionary.
+    [OK] FIX 1 (2025-10-27 V2.1): Korrigiert UTF-8-Encoding rekursiv in einem Dictionary.
     """
     if not isinstance(data, dict):
         return data
@@ -302,25 +302,25 @@ def _call_openai(req: ModelReq, run_id: str) -> str:
 def _render_section(key: str, template_path: str, answers: Dict[str, Any], 
                     context: Dict[str, Any], run_id: str) -> str:
     """
-    ✅ NEUE LOGIK (2025-10-27 V2 - FIXED):
+    [OK] NEUE LOGIK (2025-10-27 V2 - FIXED):
     1. Context mit UPPERCASE Keys erstellen
-    2. Template-Datei laden MIT Kontext (Markdown → Jinja2-Rendering)
-    3. render_template() aufrufen → ergibt finalen Prompt-String
+    2. Template-Datei laden MIT Kontext (Markdown -> Jinja2-Rendering)
+    3. render_template() aufrufen -> ergibt finalen Prompt-String
     4. Prompt an LLM senden
     5. HTML zurückgeben
     
-    🔧 FIX 2025-10-27: render_file() benötigt ctx als 2. Parameter
+    [FIX] FIX 2025-10-27: render_file() benötigt ctx als 2. Parameter
     """
     try:
         # 1. Context mit UPPERCASE Keys erstellen (MUSS VOR render_file sein!)
         ctx_upper = {k.upper(): v for k, v in context.items()}
         ctx_upper["ANSWERS"] = json.dumps(answers, ensure_ascii=False, indent=2)
         
-        # 2. Template laden MIT Kontext (✅ FIX: ctx_upper als 2. Parameter übergeben)
+        # 2. Template laden MIT Kontext ([OK] FIX: ctx_upper als 2. Parameter übergeben)
         prompt_md = render_file(template_path, ctx_upper)
         _save_artifact(run_id, f"{key}_template.md", prompt_md)
         
-        # 3. Template rendern → finaler Prompt
+        # 3. Template rendern -> finaler Prompt
         full = render_template(prompt_md, ctx_upper)
         _save_artifact(run_id, f"{key}_prompt.txt", full)
         
@@ -341,14 +341,14 @@ def _render_section(key: str, template_path: str, answers: Dict[str, Any],
 def build_full_report_html(br: Briefing, run_id: str) -> Dict[str, Any]:
     answers = getattr(br, "answers", None) or {}
     
-    # ✅ FIX 1: UTF-8-Encoding korrigieren (2025-10-27 V2.1)
+    # [OK] FIX 1: UTF-8-Encoding korrigieren (2025-10-27 V2.1)
     answers = _fix_utf8_encoding_dict(answers)
     
     branch = answers.get("branche", "")
     state = answers.get("bundesland", "")
     size = answers.get("unternehmensgroesse", "")
     
-    # ✅ FIX 2 (2025-10-27 V2.1): Erweiterte Context-Variablen für Templates
+    # [OK] FIX 2 (2025-10-27 V2.1): Erweiterte Context-Variablen für Templates
     kw = {
         # Lowercase Keys (für interne Nutzung)
         "branche_name": BRANCH_LABELS.get(branch, branch),
@@ -363,7 +363,7 @@ def build_full_report_html(br: Briefing, run_id: str) -> Dict[str, Any]:
         "created_at": getattr(br, "created_at", None),
         "company_name": answers.get("company_name", "Unbekannt"),
         
-        # ✅ UPPERCASE Keys für Jinja2-Templates (FIX 2)
+        # [OK] UPPERCASE Keys für Jinja2-Templates (FIX 2)
         "BRANCHE_LABEL": BRANCH_LABELS.get(branch, branch or "Unbekannt"),
         "BUNDESLAND_LABEL": STATE_LABELS.get(state, state or "Unbekannt"),
         "UNTERNEHMENSGROESSE_LABEL": SIZE_LABELS.get(size, size or "Unbekannt"),
@@ -377,17 +377,17 @@ def build_full_report_html(br: Briefing, run_id: str) -> Dict[str, Any]:
         "DIGITALISIERUNGSGRAD": answers.get("digitalisierungsgrad", 0),
         "RISIKOFREUDE": answers.get("risikofreude", 0),
         
-        # ✅ NEU V2.0: KB-Integration (DEAKTIVIERT - KB-Konzepte sind direkt in Prompts)
-        # **get_all_kb(),  # ❌ DEAKTIVIERT V2.3 - Dateinamen-Mismatch, KB nicht benötigt
+        # [OK] NEU V2.0: KB-Integration (DEAKTIVIERT - KB-Konzepte sind direkt in Prompts)
+        # **get_all_kb(),  # [NO] DEAKTIVIERT V2.3 - Dateinamen-Mismatch, KB nicht benötigt
         
-        # ✅ NEU V2.0: Business-Daten
+        # [OK] NEU V2.0: Business-Daten
         "business_json": json.dumps({
             "investitionsbudget": answers.get("investitionsbudget", "keine_angabe"),
             "zeitbudget": answers.get("zeitbudget", "unbekannt"),
             "roi_erwartung": answers.get("roi_erwartung", "keine_angabe"),
         }, ensure_ascii=False),
         
-        # ✅ NEU V2.0: Benchmarks
+        # [OK] NEU V2.0: Benchmarks
         "benchmarks_json": json.dumps({
             "branche_durchschnitt": 0,
             "groesse_durchschnitt": 0,
@@ -544,7 +544,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> Tuple[int, s
     return an.id, result["html"], result["meta"]
 
 def run_async(briefing_id: int, email: Optional[str] = None) -> None:
-    """Erzeugt Analyse → Report (pending→done/failed) → E‑Mails (User + Admin)."""
+    """Erzeugt Analyse -> Report (pending->done/failed) -> E‑Mails (User + Admin)."""
     run_id = f"run-{uuid.uuid4().hex[:8]}"
     db = SessionLocal()
     rep: Optional[Report] = None
@@ -590,7 +590,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
             log.debug("[%s] pdf_render done url=%s bytes_len=%s error=%s",
                      run_id, bool(pdf_url), len(pdf_bytes or b""), pdf_error)
 
-        # ✅ Prüfe ob PDF erfolgreich
+        # [OK] Prüfe ob PDF erfolgreich
         if not pdf_url and not pdf_bytes:
             error_msg = f"PDF generation failed: {pdf_error or 'no output returned'}"
             log.error("[%s] %s", run_id, error_msg)
