@@ -8,6 +8,13 @@ FIXES 2025-10-27:
 - ✅ Template-Rendering korrigiert: render_template() statt dumps()
 - ✅ Kontext-Keys in UPPERCASE konvertiert für Template-Matching
 - ✅ Vereinfachte Template-Loading-Logik
+
+UPDATES 2025-10-27 (V2.0 - KB-Integration):
+- ✅ KB-Loader integriert: get_all_kb() lädt strukturierte Wissensbasis
+- ✅ Alle 12 optimierten Prompts unterstützt (7 Core + 5 Extra)
+- ✅ KB-Konzepte in allen Sections verfügbar
+- ✅ Zusätzliche Business-Daten für neue Sections
+- ✅ 5 neue Extra-Sections: data_readiness, org_change, pilot_plan, gamechanger, costs_overview
 """
 import json
 import logging
@@ -30,6 +37,7 @@ from services.email import send_mail
 from services.email_templates import render_report_ready_email
 from services.research import search_funding_and_tools
 from services.knowledge import get_knowledge_blocks
+from services.kb_loader import get_kb_loader, get_all_kb  # ✅ KB-Integration V2.0
 from settings import settings
 
 log = logging.getLogger(__name__)
@@ -203,79 +211,60 @@ def _call_openai(req: ModelReq, run_id: str) -> str:
     }
     payload = {
         "model": OPENAI_MODEL,
+        "temperature": req.temperature,
+        "max_tokens": req.max_tokens,
         "messages": [
             {"role": "system", "content": req.system},
             {"role": "user", "content": req.user},
         ],
-        "max_tokens": req.max_tokens,
-        "temperature": req.temperature,
     }
+    
     if DBG_PROMPTS:
-        usnip = req.user[:200].replace("\n", "\\n")
-        log.debug("[%s] LLM_CALL model=%s temp=%.1f user_snippet=\"%s\"", run_id, OPENAI_MODEL, req.temperature, usnip)
+        sys_head = (req.system[:100] + "…") if len(req.system) > 100 else req.system
+        usr_head = (req.user[:200] + "…") if len(req.user) > 200 else req.user
+        log.debug("[%s] LLM_CALL model=%s temp=%.2f sys=\"%s\" usr=\"%s\"",
+                  run_id, OPENAI_MODEL, req.temperature,
+                  sys_head.replace("\n", "\\n"),
+                  usr_head.replace("\n", "\\n"))
+    
     try:
-        resp = requests.post(url, json=payload, headers=headers, timeout=OPENAI_TIMEOUT)
+        resp = requests.post(url, headers=headers, json=payload, timeout=OPENAI_TIMEOUT)
         resp.raise_for_status()
         data = resp.json()
         text = data["choices"][0]["message"]["content"]
+        
         if DBG_PROMPTS:
-            log.debug("[%s] LLM_RESPONSE len=%s", run_id, len(text))
+            resp_head = (text[:200] + "…") if len(text) > 200 else text
+            log.debug("[%s] LLM_RESPONSE len=%s resp=\"%s\"",
+                      run_id, len(text), resp_head.replace("\n", "\\n"))
+        
         return text
+        
     except Exception as exc:
-        log.exception("[%s] openai_call_failed: %s", run_id, exc)
+        log.exception("[%s] LLM_CALL_FAILED: %s", run_id, exc)
         raise
 
-def _render_section(key: str, tpl: str, answers: Dict[str, Any], kw: Dict[str, Any], run_id: str) -> str:
+def _render_section(key: str, template_path: str, answers: Dict[str, Any], 
+                    context: Dict[str, Any], run_id: str) -> str:
     """
-    ✅ FIX: Korrigierte Template-Rendering-Logik
-    - Verwendet render_template() statt dumps()
-    - Kontext mit UPPERCASE Keys für Template-Matching
+    ✅ NEUE LOGIK (2025-10-27):
+    1. Template-Datei laden (Markdown)
+    2. Keys in UPPERCASE konvertieren
+    3. render_template() aufrufen → ergibt finalen Prompt-String
+    4. Prompt an LLM senden
+    5. HTML zurückgeben
     """
     try:
-        # 1. Template-Datei laden
-        template_path = Path(tpl)
-        if not template_path.exists():
-            template_path = Path("app") / tpl
-        if not template_path.exists():
-            template_path = Path("/app") / tpl
+        # 1. Template laden
+        prompt_md = render_file(template_path)
+        _save_artifact(run_id, f"{key}_template.md", prompt_md)
         
-        if not template_path.exists():
-            raise ValueError(f"Template not found: {tpl}")
+        # 2. Context mit UPPERCASE Keys erstellen
+        ctx_upper = {k.upper(): v for k, v in context.items()}
+        ctx_upper["ANSWERS"] = json.dumps(answers, ensure_ascii=False, indent=2)
         
-        prompt_tmpl = template_path.read_text(encoding="utf-8")
-        
-        # 2. Kontext mit UPPERCASE Keys erstellen (für Template-Matching)
-        ctx = {}
-        
-        # Answers direkt übernehmen
-        for k, v in answers.items():
-            ctx[k.upper()] = v
-        
-        # kw-Keys in UPPERCASE konvertieren
-        for k, v in kw.items():
-            ctx[k.upper()] = v
-        
-        # Spezielle Keys für Templates
-        ctx["ANSWERS"] = answers
-        ctx["ALL_ANSWERS_JSON"] = json.dumps(answers, ensure_ascii=False, indent=2)
-        ctx["SCORING_JSON"] = json.dumps(kw.get("scores", {}), ensure_ascii=False)
-        ctx["TOOLS_JSON"] = json.dumps(kw.get("tools", []), ensure_ascii=False)
-        ctx["FUNDING_JSON"] = json.dumps(kw.get("funding", []), ensure_ascii=False)
-        ctx["FREE_TEXT_NOTES"] = kw.get("freitext", "")
-        ctx["BRIEFING_JSON"] = json.dumps({
-            "branche": kw.get("branche_name", ""),
-            "bundesland": kw.get("bundesland_name", ""),
-            "unternehmensgroesse": kw.get("unternehmensgroesse_name", ""),
-        }, ensure_ascii=False)
-        
-        # Labels für Templates
-        ctx["BRANCHE_LABEL"] = kw.get("branche_name", "")
-        ctx["BUNDESLAND_LABEL"] = kw.get("bundesland_name", "")
-        ctx["UNTERNEHMENSGROESSE_LABEL"] = kw.get("unternehmensgroesse_name", "")
-        ctx["HAUPTLEISTUNG"] = answers.get("hauptleistung", "")
-        
-        # 3. ✅ FIX: Template rendern mit render_template()
-        full = render_template(prompt_tmpl, ctx)
+        # 3. Template rendern → finaler Prompt
+        full = render_template(prompt_md, ctx_upper)
         _save_artifact(run_id, f"{key}_prompt.txt", full)
         
         # 4. LLM-Call
@@ -311,6 +300,23 @@ def build_full_report_html(br: Briefing, run_id: str) -> Dict[str, Any]:
         "knowledge_blocks": get_knowledge_blocks(br.lang if hasattr(br, 'lang') else "de"),
         "created_at": getattr(br, "created_at", None),
         "company_name": answers.get("company_name", "Unbekannt"),
+        
+        # ✅ NEU V2.0: KB-Integration (UPPERCASE Keys für Templates)
+        **get_all_kb(),  # <-- Fügt ~12-17 KB_*_JSON Keys hinzu
+        
+        # ✅ NEU V2.0: Business-Daten
+        "business_json": json.dumps({
+            "investitionsbudget": answers.get("investitionsbudget", "keine_angabe"),
+            "zeitbudget": answers.get("zeitbudget", "unbekannt"),
+            "roi_erwartung": answers.get("roi_erwartung", "keine_angabe"),
+        }, ensure_ascii=False),
+        
+        # ✅ NEU V2.0: Benchmarks
+        "benchmarks_json": json.dumps({
+            "branche_durchschnitt": 0,
+            "groesse_durchschnitt": 0,
+            "note": "Benchmark-Daten werden schrittweise ergänzt"
+        }, ensure_ascii=False),
     }
     
     order: List[str] = []
@@ -359,26 +365,23 @@ def _should_include_pattern(key: str, answers: Dict[str, Any]) -> bool:
 def _determine_user_email(db: Session, briefing: Briefing, email_override: Optional[str]) -> Optional[str]:
     if email_override:
         return email_override
-    if briefing and briefing.user_id:
-        u = db.get(User, briefing.user_id)
+    
+    user_id = getattr(briefing, "user_id", None)
+    if user_id:
+        u = db.get(User, user_id)
         if u and getattr(u, "email", None):
             return u.email
-    return None
+    
+    answers = getattr(briefing, "answers", None) or {}
+    return answers.get("email") or answers.get("kontakt_email")
 
-def _send_emails(
-    db: Session,
-    rep: Report,
-    br: Briefing,
-    pdf_url: Optional[str],
-    pdf_bytes: Optional[bytes],
-    run_id: str,
-) -> None:
-    """Versendet E-Mails; Fehler sind nicht fatal und werden auditierbar im Report vermerkt."""
-    # 1) Nutzer
-    user_email = _determine_user_email(db, br, None)
+def _send_emails(db: Session, rep: Report, br: Briefing, 
+                 pdf_url: Optional[str], pdf_bytes: Optional[bytes], run_id: str) -> None:
+    # 1) User
+    user_email = _determine_user_email(db, br, getattr(rep, "user_email", None))
     if user_email:
         try:
-            subject = "Ihr KI‑Status‑Report"
+            subject = "Ihr persönlicher KI‑Status‑Report ist fertig"
             body_html = render_report_ready_email(recipient="user", pdf_url=pdf_url)
             attachments = []
             if pdf_bytes and not pdf_url:
