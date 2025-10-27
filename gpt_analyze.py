@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-Analyse -> Report (HTML/PDF) -> E-Mail (User + Admin) mit korreliertem Debug‑Logging.
-Gold‑Standard‑Variante: PEP8‑konform, robustes Error‑Handling, optionale Artefakt‑Ablage.
+Analyse -> Report (HTML/PDF) -> E-Mail (User + Admin) mit korreliertem Debug-Logging.
+Gold-Standard-Variante: PEP8-konform, robustes Error-Handling, optionale Artefakt-Ablage.
 
 FIXES 2025-10-27 V2.3 (KB-LOADER DEAKTIVIERT):
 - [FIX] FIX: KB-Loader komplett deaktiviert (KB-Konzepte sind direkt in Prompts)
@@ -124,7 +124,7 @@ BRANCH_LABELS = {
     "beratung": "Beratung & Dienstleistungen",
     "it": "IT & Software",
     "finanzen": "Finanzen & Versicherungen",
-    "handel": "Handel & E‑Commerce",
+    "handel": "Handel & E-Commerce",
     "bildung": "Bildung",
     "verwaltung": "Verwaltung",
     "gesundheit": "Gesundheit & Pflege",
@@ -134,33 +134,33 @@ BRANCH_LABELS = {
     "logistik": "Transport & Logistik",
 }
 SIZE_LABELS = {
-    "solo": "1 (Solo‑Selbstständig/Freiberuflich)",
-    "team": "2–10 (Kleines Team)",
-    "kmu": "11–100 (KMU)",
+    "solo": "1 (Solo-Selbstständig/Freiberuflich)",
+    "team": "2-10 (Kleines Team)",
+    "kmu": "11-100 (KMU)",
 }
 STATE_LABELS = {
-    "bw": "Baden‑Württemberg",
+    "bw": "Baden-Württemberg",
     "by": "Bayern",
     "be": "Berlin",
     "bb": "Brandenburg",
     "hb": "Bremen",
     "hh": "Hamburg",
     "he": "Hessen",
-    "mv": "Mecklenburg‑Vorpommern",
+    "mv": "Mecklenburg-Vorpommern",
     "ni": "Niedersachsen",
-    "nw": "Nordrhein‑Westfalen",
-    "rp": "Rheinland‑Pfalz",
+    "nw": "Nordrhein-Westfalen",
+    "rp": "Rheinland-Pfalz",
     "sl": "Saarland",
     "sn": "Sachsen",
-    "st": "Sachsen‑Anhalt",
-    "sh": "Schleswig‑Holstein",
+    "st": "Sachsen-Anhalt",
+    "sh": "Schleswig-Holstein",
     "th": "Thüringen",
 }
 
 def _fix_utf8_encoding(text: str) -> str:
     """
     [OK] FIX 1 (2025-10-27 V2.1): Korrigiert doppelt-encodete UTF-8-Strings.
-    Beispiel: "MarktfÃ¼hrer" -> "Marktführer"
+    Beispiel: "Marktfuehrer" -> "Marktführer"
     """
     if not text or not isinstance(text, str):
         return text
@@ -218,27 +218,27 @@ def _free_text(answers: Dict[str, Any]) -> str:
         v = answers.get(k)
         if v:
             parts.append(f"{k}: {v}")
-    return " | ".join(parts) if parts else "—"
+    return " | ".join(parts) if parts else "-"
 
 def _tools_for(branch: str) -> List[Dict[str, Any]]:
     generic = [
-        {"name": "RAG Wissensbasis", "zweck": "Interne Dokumente fragbar machen", "notizen": "Open‑source / Managed Optionen"},
-        {"name": "Dokument‑Automation", "zweck": "Texte/Angebote/Protokolle", "notizen": "Vorlagen + KI‑Korrektur"},
-        {"name": "Daten‑Pipelines", "zweck": "ETL/ELT für KI", "notizen": "SaaS/Cloud‑Services"},
+        {"name": "RAG Wissensbasis", "zweck": "Interne Dokumente fragbar machen", "notizen": "Open-source / Managed Optionen"},
+        {"name": "Dokument-Automation", "zweck": "Texte/Angebote/Protokolle", "notizen": "Vorlagen + KI-Korrektur"},
+        {"name": "Daten-Pipelines", "zweck": "ETL/ELT für KI", "notizen": "SaaS/Cloud-Services"},
     ]
     extra = {
-        "marketing": [{"name": "KI‑Ad‑Ops", "zweck": "Kampagnenvorschläge, Varianten", "notizen": "Guardrails & Freigaben"}],
-        "handel": [{"name": "Produkt‑Kategorisierung", "zweck": "Autom. Tags/Beschreibungen", "notizen": "Qualitätskontrollen"}],
-        "industrie": [{"name": "Prozess‑Monitoring", "zweck": "Anomalien & Wartung", "notizen": "Sensor/SCADA‑Anbindung"}],
+        "marketing": [{"name": "KI-Ad-Ops", "zweck": "Kampagnenvorschläge, Varianten", "notizen": "Guardrails & Freigaben"}],
+        "handel": [{"name": "Produkt-Kategorisierung", "zweck": "Autom. Tags/Beschreibungen", "notizen": "Qualitätskontrollen"}],
+        "industrie": [{"name": "Prozess-Monitoring", "zweck": "Anomalien & Wartung", "notizen": "Sensor/SCADA-Anbindung"}],
         "gesundheit": [{"name": "Termin & Doku Assist", "zweck": "Routine entlasten", "notizen": "Datenschutz streng beachten"}],
     }
     return generic + extra.get(branch, [])
 
 def _funding_for(state: str) -> List[Dict[str, Any]]:
     return [
-        {"programm": "Digital Jetzt (BMWK)", "hinweis": "Investitionen & Qualifizierung – Prüfen Sie Antragsfenster."},
-        {"programm": "go‑digital (BMWK)", "hinweis": "Beratung & Umsetzung für KMU."},
-        {"programm": f"Landes‑Förderprogramme ({STATE_LABELS.get(state, state)})", "hinweis": "Länder‑spezifische Digitalisierungsinitiativen."},
+        {"programm": "Digital Jetzt (BMWK)", "hinweis": "Investitionen & Qualifizierung - Prüfen Sie Antragsfenster."},
+        {"programm": "go-digital (BMWK)", "hinweis": "Beratung & Umsetzung für KMU."},
+        {"programm": f"Landes-Förderprogramme ({STATE_LABELS.get(state, state)})", "hinweis": "Länder-spezifische Digitalisierungsinitiativen."},
     ]
 
 def _save_artifact(run_id: str, filename: str, content: str) -> None:
@@ -275,8 +275,8 @@ def _call_openai(req: ModelReq, run_id: str) -> str:
     }
     
     if DBG_PROMPTS:
-        sys_head = (req.system[:100] + "…") if len(req.system) > 100 else req.system
-        usr_head = (req.user[:200] + "…") if len(req.user) > 200 else req.user
+        sys_head = (req.system[:100] + "...") if len(req.system) > 100 else req.system
+        usr_head = (req.user[:200] + "...") if len(req.user) > 200 else req.user
         log.debug("[%s] LLM_CALL model=%s temp=%.2f sys=\"%s\" usr=\"%s\"",
                   run_id, OPENAI_MODEL, req.temperature,
                   sys_head.replace("\n", "\\n"),
@@ -289,7 +289,7 @@ def _call_openai(req: ModelReq, run_id: str) -> str:
         text = data["choices"][0]["message"]["content"]
         
         if DBG_PROMPTS:
-            resp_head = (text[:200] + "…") if len(text) > 200 else text
+            resp_head = (text[:200] + "...") if len(text) > 200 else text
             log.debug("[%s] LLM_RESPONSE len=%s resp=\"%s\"",
                       run_id, len(text), resp_head.replace("\n", "\\n"))
         
@@ -326,7 +326,7 @@ def _render_section(key: str, template_path: str, answers: Dict[str, Any],
         
         # 4. LLM-Call
         req = ModelReq(
-            system="Du bist KI‑Berater für KMU. Dein Output ist HTML‑Snippet (deutschsprachig, sachlich, klar).",
+            system="Du bist KI-Berater für KMU. Dein Output ist HTML-Snippet (deutschsprachig, sachlich, klar).",
             user=full
         )
         html = _call_openai(req, run_id=run_id)
@@ -457,7 +457,7 @@ def _send_emails(db: Session, rep: Report, br: Briefing,
     user_email = _determine_user_email(db, br, getattr(rep, "user_email", None))
     if user_email:
         try:
-            subject = "Ihr persönlicher KI‑Status‑Report ist fertig"
+            subject = "Ihr persönlicher KI-Status-Report ist fertig"
             body_html = render_report_ready_email(recipient="user", pdf_url=pdf_url)
             attachments = []
             if pdf_bytes and not pdf_url:
@@ -482,7 +482,7 @@ def _send_emails(db: Session, rep: Report, br: Briefing,
     admins = _admin_recipients()
     if admins:
         try:
-            subject = "Kopie: KI‑Status‑Report (inkl. Briefing)"
+            subject = "Kopie: KI-Status-Report (inkl. Briefing)"
             body_html = render_report_ready_email(recipient="admin", pdf_url=pdf_url)
             attachments = []
             
@@ -544,7 +544,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> Tuple[int, s
     return an.id, result["html"], result["meta"]
 
 def run_async(briefing_id: int, email: Optional[str] = None) -> None:
-    """Erzeugt Analyse -> Report (pending->done/failed) -> E‑Mails (User + Admin)."""
+    """Erzeugt Analyse -> Report (pending->done/failed) -> E-Mails (User + Admin)."""
     run_id = f"run-{uuid.uuid4().hex[:8]}"
     db = SessionLocal()
     rep: Optional[Report] = None
