@@ -232,7 +232,9 @@ def _call_openai(req: ModelReq, run_id: str) -> str:
 
 def _render_section(key: str, tpl: str, answers: Dict[str, Any], kw: Dict[str, Any], run_id: str) -> str:
     try:
-        prompt_tmpl = render_file(tpl)
+        # Merge answers and kw for complete template context
+        ctx = {**answers, **kw, "answers": answers}
+        prompt_tmpl = render_file(tpl, ctx)
         full = dumps(prompt_tmpl, answers=answers, **kw)
         _save_artifact(run_id, f"{key}_prompt.txt", full)
         req = ModelReq(system="Du bist KI‑Berater für KMU. Dein Output ist HTML‑Snippet (deutschsprachig, sachlich, klar).", user=full)
