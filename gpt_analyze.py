@@ -234,9 +234,38 @@ def _render_section(key: str, tpl: str, answers: Dict[str, Any], kw: Dict[str, A
     try:
         # Merge answers and kw for complete template context
         ctx = {**answers, **kw, "answers": answers}
-        prompt_tmpl = render_file(tpl, ctx)
+        
+        # Try multiple approaches to render the template
+        prompt_tmpl = None
+        
+        # Strategy 1: render_file with ctx
+        try:
+            prompt_tmpl = render_file(tpl, ctx)
+        except TypeError as e:
+            if "missing" in str(e) and "positional argument" in str(e):
+                # Strategy 2: render_file without ctx (load raw template)
+                try:
+                    prompt_tmpl = render_file(tpl)
+                except Exception:
+                    pass
+        
+        # Strategy 3: If render_file failed, read file directly
+        if prompt_tmpl is None:
+            try:
+                from pathlib import Path
+                template_path = Path(tpl)
+                if not template_path.exists():
+                    template_path = Path("app") / tpl
+                if not template_path.exists():
+                    template_path = Path("/app") / tpl
+                prompt_tmpl = template_path.read_text(encoding="utf-8")
+            except Exception:
+                raise ValueError(f"Could not load template: {tpl}")
+        
+        # Now render the prompt with dumps
         full = dumps(prompt_tmpl, answers=answers, **kw)
         _save_artifact(run_id, f"{key}_prompt.txt", full)
+        
         req = ModelReq(system="Du bist KI‑Berater für KMU. Dein Output ist HTML‑Snippet (deutschsprachig, sachlich, klar).", user=full)
         html = _call_openai(req, run_id=run_id)
         _save_artifact(run_id, f"{key}_response.html", html)
