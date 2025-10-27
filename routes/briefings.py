@@ -2,6 +2,8 @@
 """
 Konsolidierter Briefings-Router mit Draft-Management und Async-Submit.
 Vereint alle Briefing-Endpunkte in einem Router.
+
+FIX 2025-10-27: UTF-8 Encoding korrigiert - ensure_ascii=False bei json.dumps()
 """
 from __future__ import annotations
 
@@ -25,6 +27,27 @@ router = APIRouter(prefix="/briefings", tags=["briefings"])
 # ============================================================================
 # Hilfsfunktionen
 # ============================================================================
+
+def _fix_utf8_encoding(data: Any) -> Any:
+    """
+    Repariert doppelt-kodierte UTF-8 Strings rekursiv.
+    MarktfÃ¼hrer → Marktführer
+    """
+    if isinstance(data, str):
+        try:
+            # Versuche double-encoded UTF-8 zu reparieren
+            fixed = data.encode('latin1').decode('utf-8')
+            return fixed
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            # Wenn Fix fehlschlägt, Original behalten
+            return data
+    elif isinstance(data, dict):
+        return {k: _fix_utf8_encoding(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [_fix_utf8_encoding(item) for item in data]
+    else:
+        return data
+
 
 def _get_current_user_safe(request: Request) -> Optional[Dict[str, Any]]:
     """Versucht den aktuellen User zu ermitteln - gibt None zurück bei Fehler"""
@@ -197,6 +220,9 @@ def put_draft(
         return {"ok": False, "skipped": True, "reason": "email_missing"}
     
     try:
+        # ✅ FIX: UTF-8 korrekt behandeln mit ensure_ascii=False
+        payload_json = json.dumps(payload.answers, ensure_ascii=False)
+        
         # Upsert-Logik
         db.execute(
             text("""
@@ -212,7 +238,7 @@ def put_draft(
                 "email": email,
                 "user_id": user.get("id") if user else None,
                 "lang": payload.lang,
-                "payload": json.dumps(payload.answers),
+                "payload": payload_json,
             }
         )
         
@@ -231,7 +257,7 @@ def put_draft(
                         SET lang=:lang, payload=:payload::jsonb, updated_at=now()
                         WHERE LOWER(email)=LOWER(:email)
                     """),
-                    {"email": email, "lang": payload.lang, "payload": json.dumps(payload.answers)}
+                    {"email": email, "lang": payload.lang, "payload": payload_json}
                 )
             else:
                 db.execute(
@@ -243,7 +269,7 @@ def put_draft(
                         "email": email,
                         "user_id": user.get("id") if user else None,
                         "lang": payload.lang,
-                        "payload": json.dumps(payload.answers),
+                        "payload": payload_json,
                     }
                 )
         
@@ -382,6 +408,10 @@ def submit_briefing(
         raise HTTPException(status_code=422, detail="answers_required")
     
     try:
+        # ✅ FIX: Optional - repariere doppelt-kodierte UTF-8 Strings
+        # Kommentiere diese Zeile aus wenn du bereits korrekte UTF-8 Daten hast
+        cleaned_answers = _fix_utf8_encoding(payload.answers)
+        
         # 1. Erstelle finales Briefing
         user_obj = None
         if user and user.get("id"):
@@ -410,7 +440,7 @@ def submit_briefing(
         briefing = Briefing(
             user_id=user_obj.id if user_obj else None,
             lang=payload.lang,
-            answers=payload.answers,
+            answers=cleaned_answers,  # ✅ Verwende gereinigte Daten
             created_at=datetime.now(timezone.utc)
         )
         db.add(briefing)
