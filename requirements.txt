@@ -10,8 +10,8 @@ pydantic-settings>=2.4,<3.0
 # Database
 SQLAlchemy>=2.0,<2.1
 
-# PostgreSQL Drivers - BEIDE Versionen für Kompatibilität
-psycopg[binary]>=3.1.18,<3.2.0      # PostgreSQL driver v3 (neuere SQLAlchemy imports)
+# PostgreSQL Drivers - Both versions for compatibility
+psycopg[binary]>=3.1.18,<3.2.0      # PostgreSQL driver v3 (newer SQLAlchemy imports)
 psycopg2-binary>=2.9.9,<3.0.0       # PostgreSQL driver v2 (legacy imports)
 
 # HTTP & Auth
