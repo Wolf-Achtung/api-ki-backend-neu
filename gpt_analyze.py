@@ -4,6 +4,11 @@ from __future__ import annotations
 Analyse -> Report (HTML/PDF) -> E-Mail (User + Admin) mit korreliertem Debug-Logging.
 Gold-Standard-Variante: PEP8-konform, robustes Error-Handling, optionale Artefakt-Ablage.
 
+FIXES 2025-10-28 V2.4 (UTF-8-FIX + LIVE-DATA):
+- [FIX] UTF-8-Fix für PDF: HTML-Entities statt Latin-1/UTF-8-Probleme
+- [FIX] research_data wird auch encoded für PDF
+- [OK] Kompletter Context wird mit _encode_for_pdf_dict() verarbeitet
+
 FIXES 2025-10-27 V2.3 (KB-LOADER DEAKTIVIERT):
 - [FIX] FIX: KB-Loader komplett deaktiviert (KB-Konzepte sind direkt in Prompts)
 - [OK] Projekt läuft wieder ohne KB-Dateinamen-Mismatch
@@ -15,19 +20,6 @@ FIXES 2025-10-27 V2.2 (COMPLETE FIX):
 - [FIX] FIX 3: render_file() mit ctx-Parameter aufrufen (aus V2.1)
 - [OK] Reihenfolge korrigiert: ctx_upper VOR render_file() erstellen
 - [OK] Kontext-Keys erweitert: Alle Jinja2-Template-Variablen verfügbar
-
-- [FIX] CRITICAL FIX: render_file() mit ctx-Parameter aufrufen (Zeile 259)
-- [OK] Reihenfolge korrigiert: ctx_upper VOR render_file() erstellen
-- [OK] Template-Rendering korrigiert: render_template() statt dumps()
-- [OK] Kontext-Keys in UPPERCASE konvertiert für Template-Matching
-- [OK] Vereinfachte Template-Loading-Logik
-
-UPDATES 2025-10-27 (V2.0 - KB-Integration):
-- [NO] KB-Loader deaktiviert (V2.3): KB-Konzepte sind direkt in Prompts, kein Loader benötigt
-- [OK] Alle 12 optimierten Prompts unterstützt (7 Core + 5 Extra)
-- [OK] KB-Konzepte in Prompt-Text integriert (4 Säulen, 10-20-70, Legal Pitfalls, etc.)
-- [OK] Zusätzliche Business-Daten für neue Sections
-- [OK] 5 neue Extra-Sections: data_readiness, org_change, pilot_plan, gamechanger, costs_overview
 """
 import json
 import logging
@@ -50,7 +42,6 @@ from services.email import send_mail
 from services.email_templates import render_report_ready_email
 from services.research import search_funding_and_tools
 from services.knowledge import get_knowledge_blocks
-# from services.kb_loader import get_kb_loader, get_all_kb  # [NO] DEAKTIVIERT V2.3 - KB-Konzepte sind direkt in Prompts
 from settings import settings
 
 log = logging.getLogger(__name__)
@@ -67,6 +58,70 @@ DBG_MASK_EMAILS = (os.getenv("DEBUG_MASK_EMAILS", "1") == "1")
 DBG_SAVE_ARTIFACTS = (os.getenv("DEBUG_SAVE_ARTIFACTS", "0") == "1")
 
 ARTIFACTS_ROOT = Path("/tmp/ki-artifacts")
+
+# ========================================
+# UTF-8-FIX FUNKTIONEN (V2.4)
+# ========================================
+
+def _encode_for_pdf(text: str) -> str:
+    """
+    Konvertiert deutsche Umlaute und Sonderzeichen zu HTML-Entities
+    für korrekte Darstellung im PDF.
+    
+    Problem: PDF-Service interpretiert UTF-8-Bytes als Latin-1
+    Resultat: 'ü' (UTF-8: C3 BC) wird als 'Ã¼' dargestellt
+    
+    Lösung: Ersetze Umlaute mit HTML-Entities BEVOR sie zum PDF-Service gehen
+    """
+    if not isinstance(text, str):
+        return text
+    
+    # Deutsche Umlaute und Sonderzeichen
+    replacements = {
+        'ä': '&auml;',
+        'ö': '&ouml;',
+        'ü': '&uuml;',
+        'Ä': '&Auml;',
+        'Ö': '&Ouml;',
+        'Ü': '&Uuml;',
+        'ß': '&szlig;',
+        '€': '&euro;',
+        '°': '&deg;',
+        '§': '&sect;',
+        '©': '&copy;',
+        '®': '&reg;',
+        '™': '&trade;',
+    }
+    
+    result = text
+    for char, entity in replacements.items():
+        result = result.replace(char, entity)
+    
+    return result
+
+
+def _encode_for_pdf_dict(data):
+    """
+    Wendet _encode_for_pdf rekursiv auf alle Strings in einem Dict/List an.
+    
+    Args:
+        data: Dict, List, oder String
+    
+    Returns:
+        Gleiche Struktur mit encodeten Strings
+    """
+    if isinstance(data, str):
+        return _encode_for_pdf(data)
+    elif isinstance(data, dict):
+        return {key: _encode_for_pdf_dict(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [_encode_for_pdf_dict(item) for item in data]
+    else:
+        return data
+
+# ========================================
+# END UTF-8-FIX FUNKTIONEN
+# ========================================
 
 def _mask_email(addr: Optional[str]) -> str:
     if not addr:
@@ -154,46 +209,6 @@ STATE_LABELS = {
     "sh": "Schleswig-Holstein",
     "th": "Thüringen",
 }
-
-def _fix_utf8_encoding(text: str) -> str:
-    """
-    [OK] FIX 1 (2025-10-27 V2.1): Korrigiert doppelt-encodete UTF-8-Strings.
-    Beispiel: "Marktfuehrer" -> "Marktführer"
-    """
-    if not text or not isinstance(text, str):
-        return text
-    try:
-        return text.encode('latin-1').decode('utf-8')
-    except (UnicodeDecodeError, UnicodeEncodeError):
-        try:
-            return text.encode('cp1252').decode('utf-8')
-        except:
-            return text
-
-def _fix_utf8_encoding_dict(data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    [OK] FIX 1 (2025-10-27 V2.1): Korrigiert UTF-8-Encoding rekursiv in einem Dictionary.
-    """
-    if not isinstance(data, dict):
-        return data
-    
-    fixed = {}
-    for key, value in data.items():
-        if isinstance(value, str):
-            fixed[key] = _fix_utf8_encoding(value)
-        elif isinstance(value, dict):
-            fixed[key] = _fix_utf8_encoding_dict(value)
-        elif isinstance(value, list):
-            fixed[key] = [
-                _fix_utf8_encoding(item) if isinstance(item, str)
-                else _fix_utf8_encoding_dict(item) if isinstance(item, dict)
-                else item
-                for item in value
-            ]
-        else:
-            fixed[key] = value
-    
-    return fixed
 
 def _score(answers: Dict[str, Any]) -> Dict[str, Any]:
     s: Dict[str, Any] = {}
@@ -339,14 +354,14 @@ def _render_section(key: str, template_path: str, answers: Dict[str, Any],
 def build_full_report_html(br: Briefing, run_id: str) -> Dict[str, Any]:
     answers = getattr(br, "answers", None) or {}
     
-    # [OK] FIX 1: UTF-8-Encoding korrigieren (2025-10-27 V2.1)
-    answers = _fix_utf8_encoding_dict(answers)
-    
     branch = answers.get("branche", "")
     state = answers.get("bundesland", "")
     size = answers.get("unternehmensgroesse", "")
     
-    # [OK] FIX 2 (2025-10-27 V2.1): Erweiterte Context-Variablen für Templates
+    # [OK] FIX V2.4: Hole research_data VOR dem Encoding
+    research_data = search_funding_and_tools(branch, state)
+    
+    # [OK] FIX V2.4: Baue Context OHNE Encoding zunächst
     kw = {
         # Lowercase Keys (für interne Nutzung)
         "branche_name": BRANCH_LABELS.get(branch, branch),
@@ -356,7 +371,7 @@ def build_full_report_html(br: Briefing, run_id: str) -> Dict[str, Any]:
         "freitext": _free_text(answers),
         "tools": _tools_for(branch),
         "funding": _funding_for(state),
-        "research_data": search_funding_and_tools(branch, state),
+        "research_data": research_data,  # [OK] FIX V2.4: Wird später encoded
         "knowledge_blocks": get_knowledge_blocks(br.lang if hasattr(br, 'lang') else "de"),
         "created_at": getattr(br, "created_at", None),
         "company_name": answers.get("company_name", "Unbekannt"),
@@ -375,9 +390,6 @@ def build_full_report_html(br: Briefing, run_id: str) -> Dict[str, Any]:
         "DIGITALISIERUNGSGRAD": answers.get("digitalisierungsgrad", 0),
         "RISIKOFREUDE": answers.get("risikofreude", 0),
         
-        # [OK] NEU V2.0: KB-Integration (DEAKTIVIERT - KB-Konzepte sind direkt in Prompts)
-        # **get_all_kb(),  # [NO] DEAKTIVIERT V2.3 - Dateinamen-Mismatch, KB nicht benötigt
-        
         # [OK] NEU V2.0: Business-Daten
         "business_json": json.dumps({
             "investitionsbudget": answers.get("investitionsbudget", "keine_angabe"),
@@ -393,19 +405,29 @@ def build_full_report_html(br: Briefing, run_id: str) -> Dict[str, Any]:
         }, ensure_ascii=False),
     }
     
+    # [CRITICAL FIX V2.4] UTF-8-Encoding für PDF BEVOR Template-Rendering
+    # Alle String-Werte im Context werden zu HTML-Entities konvertiert
+    kw_encoded = _encode_for_pdf_dict(kw)
+    
+    # [CRITICAL FIX V2.4] Answers auch encoden
+    answers_encoded = _encode_for_pdf_dict(answers)
+    
+    log.debug("[%s] [UTF8-FIX] Context encoded for PDF (sample): moonshot=%s", 
+              run_id, kw_encoded.get("MOONSHOT", "")[:50])
+    
     order: List[str] = []
     rendered: Dict[str, str] = {}
     
-    # Core Sections
+    # Core Sections - MIT ENCODED CONTEXT
     for key, tpl, env_key in CORE_SECTIONS:
         order.append(key)
-        rendered[env_key] = _render_section(key, tpl, answers, kw, run_id=run_id)
+        rendered[env_key] = _render_section(key, tpl, answers_encoded, kw_encoded, run_id=run_id)
     
-    # Extra Patterns
+    # Extra Patterns - MIT ENCODED CONTEXT
     for key, tpl, label in EXTRA_PATTERNS:
         if _should_include_pattern(key, answers):
             order.append(key)
-            rendered[f"{key.upper()}_HTML"] = _render_section(key, tpl, answers, kw, run_id=run_id)
+            rendered[f"{key.upper()}_HTML"] = _render_section(key, tpl, answers_encoded, kw_encoded, run_id=run_id)
 
     final_html = render_report_html("templates/pdf_template.html", rendered)
     
