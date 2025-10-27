@@ -4,14 +4,10 @@ from __future__ import annotations
 Analyse → Report (HTML/PDF) → E-Mail (User + Admin) mit korreliertem Debug‑Logging.
 Gold‑Standard‑Variante: PEP8‑konform, robustes Error‑Handling, optionale Artefakt‑Ablage.
 
-Verbesserungen gegenüber der zuvor hochgeladenen Version:
-- **Admin‑Empfänger** aus ADMIN_EMAILS (Kommaliste) + optional REPORT_ADMIN_EMAIL (Fallback)
-- **user_email** wird beim Report‑Insert gesetzt (falls Spalte vorhanden; ALT‑DB‑Kompatibilität)
-- **OpenAI‑Timeout/Temperatur/Modell** via ENV konfigurierbar
-- **Run‑ID** pro Durchlauf, strukturierte Debug‑Logs (LLM‑Prompts, HTML‑Snapshot, PDF‑Infos, E‑Mail)
-- **Optionale Artefakte** (Prompts/HTML) pro Run‑ID in /tmp/ki-artifacts (DEBUG_SAVE_ARTIFACTS=1)
-- Statusfluss: pending → done/failed, Auditfelder für E‑Mail‑Versand (falls vorhanden)
-- **FIX 2025-10-27: Robustes PDF Error-Handling - Status nur auf 'done' wenn PDF erfolgreich**
+FIXES 2025-10-27:
+- ✅ Template-Rendering korrigiert: render_template() statt dumps()
+- ✅ Kontext-Keys in UPPERCASE konvertiert für Template-Matching
+- ✅ Vereinfachte Template-Loading-Logik
 """
 import json
 import logging
@@ -27,7 +23,7 @@ from sqlalchemy.orm import Session
 
 from core.db import SessionLocal
 from models import Analysis, Briefing, Report, User
-from services.prompt_engine import dumps, render_file
+from services.prompt_engine import render_template, render_file
 from services.report_renderer import render as render_report_html
 from services.pdf_client import render_pdf_from_html
 from services.email import send_mail
@@ -41,13 +37,13 @@ log = logging.getLogger(__name__)
 # ---------- Konfiguration über ENV / settings ----------
 OPENAI_MODEL = getattr(settings, "OPENAI_MODEL", None) or os.getenv("OPENAI_MODEL", "gpt-4o")
 OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE", "0.2"))
-OPENAI_TIMEOUT = int(os.getenv("OPENAI_TIMEOUT", "60"))  # Sekunden
+OPENAI_TIMEOUT = int(os.getenv("OPENAI_TIMEOUT", "60"))
 
-DBG_PROMPTS = (os.getenv("DEBUG_LOG_PROMPTS", "0") == "1")           # Prompt-Snippet loggen
-DBG_HTML = (os.getenv("DEBUG_LOG_HTML_SNAPSHOT", "0") == "1")        # HTML Head-Snippet loggen
-DBG_PDF = (os.getenv("DEBUG_LOG_PDF_INFO", "1") == "1")              # PDF Start/Ende, Bytes/URL loggen
-DBG_MASK_EMAILS = (os.getenv("DEBUG_MASK_EMAILS", "1") == "1")       # E-Mail-Adressen im Log maskieren
-DBG_SAVE_ARTIFACTS = (os.getenv("DEBUG_SAVE_ARTIFACTS", "0") == "1") # Prompts/HTML in /tmp/ki-artifacts/<run>/ speichern
+DBG_PROMPTS = (os.getenv("DEBUG_LOG_PROMPTS", "0") == "1")
+DBG_HTML = (os.getenv("DEBUG_LOG_HTML_SNAPSHOT", "0") == "1")
+DBG_PDF = (os.getenv("DEBUG_LOG_PDF_INFO", "1") == "1")
+DBG_MASK_EMAILS = (os.getenv("DEBUG_MASK_EMAILS", "1") == "1")
+DBG_SAVE_ARTIFACTS = (os.getenv("DEBUG_SAVE_ARTIFACTS", "0") == "1")
 
 ARTIFACTS_ROOT = Path("/tmp/ki-artifacts")
 
@@ -73,7 +69,6 @@ def _admin_recipients() -> List[str]:
         emails.extend([e.strip() for e in raw1.split(",") if e.strip()])
     if raw2:
         emails.append(raw2.strip())
-    # Deduplizieren (Reihenfolge bewahren)
     seen: Dict[str, None] = {}
     out: List[str] = []
     for e in emails:
@@ -231,45 +226,68 @@ def _call_openai(req: ModelReq, run_id: str) -> str:
         raise
 
 def _render_section(key: str, tpl: str, answers: Dict[str, Any], kw: Dict[str, Any], run_id: str) -> str:
+    """
+    ✅ FIX: Korrigierte Template-Rendering-Logik
+    - Verwendet render_template() statt dumps()
+    - Kontext mit UPPERCASE Keys für Template-Matching
+    """
     try:
-        # Merge answers and kw for complete template context
-        ctx = {**answers, **kw, "answers": answers}
+        # 1. Template-Datei laden
+        template_path = Path(tpl)
+        if not template_path.exists():
+            template_path = Path("app") / tpl
+        if not template_path.exists():
+            template_path = Path("/app") / tpl
         
-        # Try multiple approaches to render the template
-        prompt_tmpl = None
+        if not template_path.exists():
+            raise ValueError(f"Template not found: {tpl}")
         
-        # Strategy 1: render_file with ctx
-        try:
-            prompt_tmpl = render_file(tpl, ctx)
-        except TypeError as e:
-            if "missing" in str(e) and "positional argument" in str(e):
-                # Strategy 2: render_file without ctx (load raw template)
-                try:
-                    prompt_tmpl = render_file(tpl)
-                except Exception:
-                    pass
+        prompt_tmpl = template_path.read_text(encoding="utf-8")
         
-        # Strategy 3: If render_file failed, read file directly
-        if prompt_tmpl is None:
-            try:
-                from pathlib import Path
-                template_path = Path(tpl)
-                if not template_path.exists():
-                    template_path = Path("app") / tpl
-                if not template_path.exists():
-                    template_path = Path("/app") / tpl
-                prompt_tmpl = template_path.read_text(encoding="utf-8")
-            except Exception:
-                raise ValueError(f"Could not load template: {tpl}")
+        # 2. Kontext mit UPPERCASE Keys erstellen (für Template-Matching)
+        ctx = {}
         
-        # Now render the prompt with dumps
-        full = dumps(prompt_tmpl, answers=answers, **kw)
+        # Answers direkt übernehmen
+        for k, v in answers.items():
+            ctx[k.upper()] = v
+        
+        # kw-Keys in UPPERCASE konvertieren
+        for k, v in kw.items():
+            ctx[k.upper()] = v
+        
+        # Spezielle Keys für Templates
+        ctx["ANSWERS"] = answers
+        ctx["ALL_ANSWERS_JSON"] = json.dumps(answers, ensure_ascii=False, indent=2)
+        ctx["SCORING_JSON"] = json.dumps(kw.get("scores", {}), ensure_ascii=False)
+        ctx["TOOLS_JSON"] = json.dumps(kw.get("tools", []), ensure_ascii=False)
+        ctx["FUNDING_JSON"] = json.dumps(kw.get("funding", []), ensure_ascii=False)
+        ctx["FREE_TEXT_NOTES"] = kw.get("freitext", "")
+        ctx["BRIEFING_JSON"] = json.dumps({
+            "branche": kw.get("branche_name", ""),
+            "bundesland": kw.get("bundesland_name", ""),
+            "unternehmensgroesse": kw.get("unternehmensgroesse_name", ""),
+        }, ensure_ascii=False)
+        
+        # Labels für Templates
+        ctx["BRANCHE_LABEL"] = kw.get("branche_name", "")
+        ctx["BUNDESLAND_LABEL"] = kw.get("bundesland_name", "")
+        ctx["UNTERNEHMENSGROESSE_LABEL"] = kw.get("unternehmensgroesse_name", "")
+        ctx["HAUPTLEISTUNG"] = answers.get("hauptleistung", "")
+        
+        # 3. ✅ FIX: Template rendern mit render_template()
+        full = render_template(prompt_tmpl, ctx)
         _save_artifact(run_id, f"{key}_prompt.txt", full)
         
-        req = ModelReq(system="Du bist KI‑Berater für KMU. Dein Output ist HTML‑Snippet (deutschsprachig, sachlich, klar).", user=full)
+        # 4. LLM-Call
+        req = ModelReq(
+            system="Du bist KI‑Berater für KMU. Dein Output ist HTML‑Snippet (deutschsprachig, sachlich, klar).",
+            user=full
+        )
         html = _call_openai(req, run_id=run_id)
         _save_artifact(run_id, f"{key}_response.html", html)
+        
         return html
+        
     except Exception as exc:
         log.exception("[%s] section_render_failed key=%s: %s", run_id, key, exc)
         return f"<p><em>Fehler bei der Generierung von {key}</em></p>"
@@ -279,6 +297,8 @@ def build_full_report_html(br: Briefing, run_id: str) -> Dict[str, Any]:
     branch = answers.get("branche", "")
     state = answers.get("bundesland", "")
     size = answers.get("unternehmensgroesse", "")
+    
+    # ✅ Kontext mit lowercase Keys (wird später in _render_section in UPPERCASE konvertiert)
     kw = {
         "branche_name": BRANCH_LABELS.get(branch, branch),
         "bundesland_name": STATE_LABELS.get(state, state),
@@ -292,22 +312,34 @@ def build_full_report_html(br: Briefing, run_id: str) -> Dict[str, Any]:
         "created_at": getattr(br, "created_at", None),
         "company_name": answers.get("company_name", "Unbekannt"),
     }
+    
     order: List[str] = []
     rendered: Dict[str, str] = {}
+    
+    # Core Sections
     for key, tpl, env_key in CORE_SECTIONS:
         order.append(key)
         rendered[env_key] = _render_section(key, tpl, answers, kw, run_id=run_id)
+    
+    # Extra Patterns
     for key, tpl, label in EXTRA_PATTERNS:
         if _should_include_pattern(key, answers):
             order.append(key)
             rendered[f"{key.upper()}_HTML"] = _render_section(key, tpl, answers, kw, run_id=run_id)
 
     final_html = render_report_html("templates/pdf_template.html", rendered)
+    
     if DBG_HTML:
         head = final_html[:400].replace("\n", "\\n")
         log.debug("[%s] HTML_SNAPSHOT len=%s head=\"%s\"", run_id, len(final_html), head)
         _save_artifact(run_id, "report.html", final_html)
-    meta = {"sections": order, "lang": br.lang, "generated_at": datetime.now(timezone.utc).isoformat()}
+    
+    meta = {
+        "sections": order,
+        "lang": br.lang if hasattr(br, 'lang') else "de",
+        "generated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
     return {"html": final_html, "meta": meta}
 
 def _should_include_pattern(key: str, answers: Dict[str, Any]) -> bool:
@@ -341,7 +373,7 @@ def _send_emails(
     pdf_bytes: Optional[bytes],
     run_id: str,
 ) -> None:
-    """Versendet E-Mails; Fehler sind nicht fatal und werden auditierbar im Report vermerkt (falls Felder existieren)."""
+    """Versendet E-Mails; Fehler sind nicht fatal und werden auditierbar im Report vermerkt."""
     # 1) Nutzer
     user_email = _determine_user_email(db, br, None)
     if user_email:
@@ -350,8 +382,11 @@ def _send_emails(
             body_html = render_report_ready_email(recipient="user", pdf_url=pdf_url)
             attachments = []
             if pdf_bytes and not pdf_url:
-                attachments.append({"filename": f"KI-Status-Report-{getattr(rep,'id', None) or 'report'}.pdf",
-                                    "content": pdf_bytes, "mimetype": "application/pdf"})
+                attachments.append({
+                    "filename": f"KI-Status-Report-{getattr(rep,'id', None) or 'report'}.pdf",
+                    "content": pdf_bytes,
+                    "mimetype": "application/pdf"
+                })
             log.debug("[%s] MAIL_USER to=%s attach_pdf=%s link=%s",
                       run_id, _mask_email(user_email), bool(pdf_bytes and not pdf_url), bool(pdf_url))
             ok, err = send_mail(user_email, subject, body_html, text=None, attachments=attachments)
@@ -371,15 +406,26 @@ def _send_emails(
             subject = "Kopie: KI‑Status‑Report (inkl. Briefing)"
             body_html = render_report_ready_email(recipient="admin", pdf_url=pdf_url)
             attachments = []
-            # Briefing-JSON an Admin
+            
+            # Briefing-JSON
             try:
                 bjson = json.dumps(getattr(br, "answers", {}) or {}, ensure_ascii=False, indent=2).encode("utf-8")
-                attachments.append({"filename": f"briefing-{br.id}.json", "content": bjson, "mimetype": "application/json"})
+                attachments.append({
+                    "filename": f"briefing-{br.id}.json",
+                    "content": bjson,
+                    "mimetype": "application/json"
+                })
             except Exception:
                 pass
+            
+            # PDF
             if pdf_bytes and not pdf_url:
-                attachments.append({"filename": f"KI-Status-Report-{getattr(rep,'id', None) or 'report'}.pdf",
-                                    "content": pdf_bytes, "mimetype": "application/pdf"})
+                attachments.append({
+                    "filename": f"KI-Status-Report-{getattr(rep,'id', None) or 'report'}.pdf",
+                    "content": pdf_bytes,
+                    "mimetype": "application/pdf"
+                })
+            
             any_ok = False
             for addr in admins:
                 log.debug("[%s] MAIL_ADMIN to=%s attach_pdf=%s link=%s",
@@ -389,8 +435,10 @@ def _send_emails(
                 if not ok and hasattr(rep, "email_error_admin"):
                     prev = getattr(rep, "email_error_admin", None) or ""
                     rep.email_error_admin = (prev + f"; {addr}: {err}").strip("; ")
+            
             if any_ok and hasattr(rep, "email_sent_admin"):
                 rep.email_sent_admin = True
+                
         except Exception as exc:
             if hasattr(rep, "email_error_admin"):
                 rep.email_error_admin = str(exc)
@@ -400,7 +448,9 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> Tuple[int, s
     br = db.get(Briefing, briefing_id)
     if not br:
         raise ValueError("Briefing not found")
+    
     result = build_full_report_html(br, run_id=run_id)
+    
     an = Analysis(
         user_id=br.user_id,
         briefing_id=briefing_id,
@@ -411,6 +461,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> Tuple[int, s
     db.add(an)
     db.commit()
     db.refresh(an)
+    
     return an.id, result["html"], result["meta"]
 
 def run_async(briefing_id: int, email: Optional[str] = None) -> None:
@@ -418,19 +469,22 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     run_id = f"run-{uuid.uuid4().hex[:8]}"
     db = SessionLocal()
     rep: Optional[Report] = None
+    
     try:
+        # 1. Analyse erstellen
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
-        log.info("[%s] analysis_created id=%s briefing_id=%s user_id=%s", run_id, an_id, briefing_id, getattr(br, "user_id", None))
+        log.info("[%s] analysis_created id=%s briefing_id=%s user_id=%s",
+                 run_id, an_id, briefing_id, getattr(br, "user_id", None))
 
-        # (1) Report anlegen (pending)
+        # 2. Report anlegen (pending)
         rep = Report(
             user_id=br.user_id if br else None,
             briefing_id=briefing_id,
             analysis_id=an_id,
             created_at=datetime.now(timezone.utc),
         )
-        # ALT‑DB‑Kompatibilität: user_email setzen, falls Spalte vorhanden / NOT NULL
+        
         if hasattr(rep, "user_email"):
             user_email = _determine_user_email(db, br, email)
             rep.user_email = user_email or ""
@@ -438,12 +492,13 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
             rep.task_id = f"local-{uuid.uuid4()}"
         if hasattr(rep, "status"):
             rep.status = "pending"
+        
         db.add(rep)
         db.commit()
         db.refresh(rep)
         log.info("[%s] report_pending id=%s", run_id, getattr(rep, "id", None))
 
-        # (2) PDF rendern - MIT ERROR HANDLING
+        # 3. PDF rendern
         if DBG_PDF:
             log.debug("[%s] pdf_render start", run_id)
         
@@ -453,46 +508,47 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
         pdf_error = pdf_info.get("error")
         
         if DBG_PDF:
-            log.debug("[%s] pdf_render done url=%s bytes_len=%s error=%s", 
+            log.debug("[%s] pdf_render done url=%s bytes_len=%s error=%s",
                      run_id, bool(pdf_url), len(pdf_bytes or b""), pdf_error)
 
-        # ✅ FIX: Prüfe ob PDF erfolgreich generiert wurde
+        # ✅ Prüfe ob PDF erfolgreich
         if not pdf_url and not pdf_bytes:
             error_msg = f"PDF generation failed: {pdf_error or 'no output returned'}"
             log.error("[%s] %s", run_id, error_msg)
             
-            # Report als failed markieren
             if hasattr(rep, "status"):
                 rep.status = "failed"
             if hasattr(rep, "email_error_user"):
                 rep.email_error_user = error_msg
             if hasattr(rep, "updated_at"):
                 rep.updated_at = datetime.now(timezone.utc)
+            
             db.add(rep)
             db.commit()
             db.refresh(rep)
             
-            log.info("[%s] report_failed id=%s reason=pdf_generation_failed", run_id, getattr(rep, "id", None))
-            
-            # Exception werfen damit keine E-Mails versendet werden
+            log.info("[%s] report_failed id=%s reason=pdf_generation_failed",
+                     run_id, getattr(rep, "id", None))
             raise ValueError(error_msg)
 
-        # (3) Report aktualisieren - NUR WENN PDF ERFOLGREICH
+        # 4. Report aktualisieren (nur bei Erfolg!)
         if hasattr(rep, "pdf_url"):
             rep.pdf_url = pdf_url
         if hasattr(rep, "pdf_bytes_len") and pdf_bytes:
             rep.pdf_bytes_len = len(pdf_bytes)
         if hasattr(rep, "status"):
-            rep.status = "done"  # ✅ Nur hier setzen wenn PDF erfolgreich!
+            rep.status = "done"
         if hasattr(rep, "updated_at"):
             rep.updated_at = datetime.now(timezone.utc)
+        
         db.add(rep)
         db.commit()
         db.refresh(rep)
-        log.info("[%s] report_done id=%s url=%s bytes=%s", 
-                run_id, getattr(rep, "id", None), bool(pdf_url), len(pdf_bytes or b""))
+        
+        log.info("[%s] report_done id=%s url=%s bytes=%s",
+                 run_id, getattr(rep, "id", None), bool(pdf_url), len(pdf_bytes or b""))
 
-        # (4) E‑Mails versenden (fehler‑tolerant)
+        # 5. E-Mails versenden
         try:
             _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id=run_id)
             if hasattr(rep, "updated_at"):
@@ -504,12 +560,14 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
 
     except Exception as exc:
         log.exception("[%s] run_async_failed briefing_id=%s err=%s", run_id, briefing_id, exc)
-        # (Best‑Effort) Report als failed markieren
+        
+        # Report als failed markieren
         try:
             if rep is None:
                 r = db.query(Report).filter(Report.briefing_id == briefing_id).order_by(Report.id.desc()).first()
             else:
                 r = rep
+            
             if r:
                 if hasattr(r, "status"):
                     r.status = "failed"
@@ -518,7 +576,9 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
                 db.add(r)
                 db.commit()
                 log.info("[%s] report_marked_failed id=%s", run_id, getattr(r, "id", None))
+                
         except Exception as inner:
             log.warning("[%s] mark_failed_exception: %s", run_id, inner)
+            
     finally:
         db.close()
