@@ -257,7 +257,7 @@ def build_full_report_html(br: Briefing, run_id: str) -> Dict[str, Any]:
         "tools": _tools_for(branch),
         "funding": _funding_for(state),
         "research_data": search_funding_and_tools(branch, state),
-        "knowledge_blocks": get_knowledge_blocks(answers.get("ki_usecases", [])),
+        "knowledge_blocks": get_knowledge_blocks(br.lang if hasattr(br, 'lang') else "de"),
         "created_at": getattr(br, "created_at", None),
         "company_name": answers.get("company_name", "Unbekannt"),
     }
