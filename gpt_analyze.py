@@ -11,6 +11,7 @@ Verbesserungen gegenüber der zuvor hochgeladenen Version:
 - **Run‑ID** pro Durchlauf, strukturierte Debug‑Logs (LLM‑Prompts, HTML‑Snapshot, PDF‑Infos, E‑Mail)
 - **Optionale Artefakte** (Prompts/HTML) pro Run‑ID in /tmp/ki-artifacts (DEBUG_SAVE_ARTIFACTS=1)
 - Statusfluss: pending → done/failed, Auditfelder für E‑Mail‑Versand (falls vorhanden)
+- **FIX 2025-10-27: Robustes PDF Error-Handling - Status nur auf 'done' wenn PDF erfolgreich**
 """
 import json
 import logging
@@ -179,167 +180,96 @@ def _funding_for(state: str) -> List[Dict[str, Any]]:
     return [
         {"programm": "Digital Jetzt (BMWK)", "hinweis": "Investitionen & Qualifizierung – Prüfen Sie Antragsfenster."},
         {"programm": "go‑digital (BMWK)", "hinweis": "Beratung & Umsetzung für KMU."},
-        {"programm": f"Landesprogramme ({STATE_LABELS.get(state, state).title()})", "hinweis": "Regionale Fördertöpfe je nach Thema."},
+        {"programm": f"Landes‑Förderprogramme ({STATE_LABELS.get(state, state)})", "hinweis": "Länder‑spezifische Digitalisierungsinitiativen."},
     ]
 
-def _benchmarks_stub() -> Dict[str, Any]:
-    return {"source": "intern", "notes": "Pilotbetrieb – Platzhalter für künftige Vergleiche."}
-
-def _business_stub(answers: Dict[str, Any]) -> Dict[str, Any]:
-    return {"umsatz_range": answers.get("jahresumsatz") or "keine_angabe"}
-
-def _ctx_for(br: Briefing) -> Dict[str, Any]:
-    a = br.answers or {}
-    branche = str(a.get("branche") or "unbekannt")
-    size = str(a.get("unternehmensgroesse") or "unbekannt")
-    state = str(a.get("bundesland") or "unbekannt")
-    ctx: Dict[str, Any] = {
-        "BRANCHE": branche,
-        "BRANCHE_LABEL": BRANCH_LABELS.get(branche, branche.title()),
-        "UNTERNEHMENSGROESSE": size,
-        "UNTERNEHMENSGROESSE_LABEL": SIZE_LABELS.get(size, size),
-        "HAUPTLEISTUNG": a.get("hauptleistung") or "—",
-        "BUNDESLAND": state,
-        "BUNDESLAND_LABEL": STATE_LABELS.get(state, state),
-        "BRIEFING_JSON": dumps({k: a[k] for k in a.keys() if k in ("branche", "unternehmensgroesse", "bundesland", "hauptleistung")}),
-        "ALL_ANSWERS_JSON": dumps(a),
-        "FREE_TEXT_NOTES": _free_text(a),
-        "SCORING_JSON": dumps(_score(a)),
-        "BENCHMARKS_JSON": dumps(_benchmarks_stub()),
-        "TOOLS_JSON": dumps(_tools_for(branche)),
-        "FUNDING_JSON": dumps(_funding_for(state)),
-        "BUSINESS_JSON": dumps(_business_stub(a)),
-    }
-    return ctx
-
-@dataclass
-class OpenAIConfig:
-    model: str = OPENAI_MODEL
-    temperature: float = OPENAI_TEMPERATURE
-    timeout: int = OPENAI_TIMEOUT
-
-def _save_artifact(run_id: str, name: str, content: str) -> None:
+def _save_artifact(run_id: str, filename: str, content: str) -> None:
     if not DBG_SAVE_ARTIFACTS:
         return
     try:
-        p = ARTIFACTS_ROOT / run_id
-        p.mkdir(parents=True, exist_ok=True)
-        (p / name).write_text(content, encoding="utf-8")
+        run_dir = ARTIFACTS_ROOT / run_id
+        run_dir.mkdir(parents=True, exist_ok=True)
+        (run_dir / filename).write_text(content, encoding="utf-8")
     except Exception as exc:
-        log.debug("[%s] could not save artifact %s: %s", run_id, name, exc)
+        log.warning("[%s] artifact_save_failed file=%s: %s", run_id, filename, exc)
 
-def _call_openai(prompt: str, run_id: str, section_key: str, cfg: Optional[OpenAIConfig] = None) -> str:
-    cfg = cfg or OpenAIConfig()
+@dataclass
+class ModelReq:
+    system: str
+    user: str
+    max_tokens: int = 4000
+    temperature: float = OPENAI_TEMPERATURE
+
+def _call_openai(req: ModelReq, run_id: str) -> str:
+    url = "https://api.openai.com/v1/chat/completions"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY', '')}",
+    }
+    payload = {
+        "model": OPENAI_MODEL,
+        "messages": [
+            {"role": "system", "content": req.system},
+            {"role": "user", "content": req.user},
+        ],
+        "max_tokens": req.max_tokens,
+        "temperature": req.temperature,
+    }
     if DBG_PROMPTS:
-        snippet = prompt.replace("\n", "\\n")[:800]
-        log.debug("[%s] OPENAI_PROMPT section=%s len=%s snippet=\"%s\"", run_id, section_key, len(prompt), snippet)
-        _save_artifact(run_id, f"{section_key}.prompt.txt", prompt)
-
-    if not settings.OPENAI_API_KEY:
-        log.warning("[%s] OPENAI_DISABLED – kein OPENAI_API_KEY gesetzt", run_id)
-        return "<p><em>Entwicklungsmodus – kein OPENAI_API_KEY gesetzt.</em></p>"
-
-    base = settings.OPENAI_API_BASE or "https://api.openai.com/v1"
-    url = f"{base}/chat/completions"
-    headers = {"Authorization": f"Bearer {settings.OPENAI_API_KEY}", "Content-Type": "application/json"}
-    body = {"model": cfg.model, "messages": [{"role": "user", "content": prompt}], "temperature": cfg.temperature}
-
-    log.debug("[%s] OPENAI_CALL model=%s url=%s", run_id, cfg.model, url)
-    resp = requests.post(url, headers=headers, json=body, timeout=cfg.timeout)
-    if resp.status_code >= 400:
-        log.error("[%s] OPENAI_ERROR status=%s body=%s", run_id, resp.status_code, resp.text[:500])
-        raise RuntimeError(f"OpenAI error {resp.status_code}: {resp.text[:200]}")
-    data = resp.json()
-    usage = data.get("usage") or {}
-    log.debug("[%s] OPENAI_RESP ok usage=%s", run_id, usage)
-    return data["choices"][0]["message"]["content"].strip()
-
-def _render_section(template_path: str, ctx: Dict[str, Any], run_id: str, section_key: str) -> str:
-    prompt = render_file(template_path, ctx)
-    return _call_openai(prompt, run_id=run_id, section_key=section_key)
-
-def _build_profile_html(ctx: Dict[str, Any]) -> str:
-    def pill(label: str, val: str) -> str:
-        return f'<span class="pill"><b>{label}</b>: {val}</span>'
-    items = [
-        pill("Branche", ctx.get("BRANCHE_LABEL", "–")),
-        pill("Größe", ctx.get("UNTERNEHMENSGROESSE_LABEL", "–")),
-        pill("Hauptleistung", ctx.get("HAUPTLEISTUNG", "–")),
-        pill("Bundesland", ctx.get("BUNDESLAND_LABEL", "–")),
-    ]
-    return "<p>" + " ".join(items) + "</p>"
-
-def _build_kpi_bars_html(ctx: Dict[str, Any]) -> str:
+        usnip = req.user[:200].replace("\n", "\\n")
+        log.debug("[%s] LLM_CALL model=%s temp=%.1f user_snippet=\"%s\"", run_id, OPENAI_MODEL, req.temperature, usnip)
     try:
-        s = json.loads(ctx.get("SCORING_JSON", "{}"))
-    except Exception:
-        s = {}
-    def bar(label: str, val: Any, median: int = 50) -> str:
-        try:
-            v = int(val)
-        except Exception:
-            v = 0
-        v = v * 10 if v <= 10 else v
-        v = max(0, min(100, v))
-        return (
-            '<div class="kpi bar">'
-            f'<div class="label">{label}</div>'
-            '<div class="bar__track">'
-            f'<div class="bar__fill" style="width:{v}%"></div>'
-            f'<div class="bar__median" style="left:{median}%"></div>'
-            '</div>'
-            f'<div class="bar__delta">{v}%</div>'
-            '</div>'
-        )
-    items = [
-        bar("Digitalisierungsgrad", s.get("digitalisierungsgrad", 0)),
-        bar("Risikofreude", s.get("risikofreude", 0)),
-    ]
-    return "\n".join(items)
+        resp = requests.post(url, json=payload, headers=headers, timeout=OPENAI_TIMEOUT)
+        resp.raise_for_status()
+        data = resp.json()
+        text = data["choices"][0]["message"]["content"]
+        if DBG_PROMPTS:
+            log.debug("[%s] LLM_RESPONSE len=%s", run_id, len(text))
+        return text
+    except Exception as exc:
+        log.exception("[%s] openai_call_failed: %s", run_id, exc)
+        raise
+
+def _render_section(key: str, tpl: str, answers: Dict[str, Any], kw: Dict[str, Any], run_id: str) -> str:
+    try:
+        prompt_tmpl = render_file(tpl)
+        full = dumps(prompt_tmpl, answers=answers, **kw)
+        _save_artifact(run_id, f"{key}_prompt.txt", full)
+        req = ModelReq(system="Du bist KI‑Berater für KMU. Dein Output ist HTML‑Snippet (deutschsprachig, sachlich, klar).", user=full)
+        html = _call_openai(req, run_id=run_id)
+        _save_artifact(run_id, f"{key}_response.html", html)
+        return html
+    except Exception as exc:
+        log.exception("[%s] section_render_failed key=%s: %s", run_id, key, exc)
+        return f"<p><em>Fehler bei der Generierung von {key}</em></p>"
 
 def build_full_report_html(br: Briefing, run_id: str) -> Dict[str, Any]:
-    ctx = _ctx_for(br)
-
-    rendered: Dict[str, str] = {}
+    answers = getattr(br, "answers", None) or {}
+    branch = answers.get("branche", "")
+    state = answers.get("bundesland", "")
+    size = answers.get("unternehmensgroesse", "")
+    kw = {
+        "branche_name": BRANCH_LABELS.get(branch, branch),
+        "bundesland_name": STATE_LABELS.get(state, state),
+        "unternehmensgroesse_name": SIZE_LABELS.get(size, size),
+        "scores": _score(answers),
+        "freitext": _free_text(answers),
+        "tools": _tools_for(branch),
+        "funding": _funding_for(state),
+        "research_data": search_funding_and_tools(branch, state),
+        "knowledge_blocks": get_knowledge_blocks(answers.get("ki_usecases", [])),
+        "created_at": getattr(br, "created_at", None),
+        "company_name": answers.get("company_name", "Unbekannt"),
+    }
     order: List[str] = []
-
-    # Hauptabschnitte
-    for key, path, placeholder in CORE_SECTIONS:
-        try:
-            html = _render_section(path, ctx, run_id=run_id, section_key=key)
-        except Exception as exc:
-            log.exception("[%s] section_failed key=%s err=%s", run_id, key, exc)
-            html = f'<p><em>Abschnitt "{key}" konnte nicht generiert werden.</em></p>'
-        rendered[placeholder] = html
+    rendered: Dict[str, str] = {}
+    for key, tpl, env_key in CORE_SECTIONS:
         order.append(key)
-
-    # Zusatzabschnitte → Appendix
-    extra_blocks: List[str] = []
-    for key, path, title in EXTRA_PATTERNS:
-        try:
-            html = _render_section(path, ctx, run_id=run_id, section_key=key)
-            extra_blocks.append(f'<div class="section"><h2>{title}</h2>{html}</div>')
+        rendered[env_key] = _render_section(key, tpl, answers, kw, run_id=run_id)
+    for key, tpl, label in EXTRA_PATTERNS:
+        if _should_include_pattern(key, answers):
             order.append(key)
-        except Exception as exc:
-            log.warning("[%s] extra_skipped key=%s err=%s", run_id, key, exc)
-
-    # Dynamische Recherche + statische Wissensblöcke
-    branch_label = ctx.get("BRANCHE_LABEL", "")
-    state_label = ctx.get("BUNDESLAND_LABEL", "")
-    research = search_funding_and_tools(branch_label, state_label, lang="de")
-    kb = get_knowledge_blocks("de")
-
-    rendered.update({
-        "PROFILE_HTML": _build_profile_html(ctx),
-        "KPI_BARS_HTML": _build_kpi_bars_html(ctx),
-        "REPORT_DATE": datetime.now(timezone.utc).date().isoformat(),
-        "EXTRA_SECTIONS_HTML": "\n".join(extra_blocks),
-        "RESEARCH_HTML": research.get("html", ""),
-        "KB_FOUR_PILLARS_HTML": kb.get("KB_FOUR_PILLARS_HTML",""),
-        "KB_102070_HTML": kb.get("KB_102070_HTML",""),
-        "KB_LEGAL_PITFALLS_HTML": kb.get("KB_LEGAL_PITFALLS_HTML",""),
-        "KB_KMU_KEYPOINTS_HTML": kb.get("KB_KMU_KEYPOINTS_HTML",""),
-    })
+            rendered[f"{key.upper()}_HTML"] = _render_section(key, tpl, answers, kw, run_id=run_id)
 
     final_html = render_report_html("templates/pdf_template.html", rendered)
     if DBG_HTML:
@@ -348,6 +278,20 @@ def build_full_report_html(br: Briefing, run_id: str) -> Dict[str, Any]:
         _save_artifact(run_id, "report.html", final_html)
     meta = {"sections": order, "lang": br.lang, "generated_at": datetime.now(timezone.utc).isoformat()}
     return {"html": final_html, "meta": meta}
+
+def _should_include_pattern(key: str, answers: Dict[str, Any]) -> bool:
+    if key == "data_readiness":
+        return answers.get("datenquellen") not in [None, [], ["keine"]]
+    if key == "org_change":
+        return answers.get("unternehmensgroesse") != "solo"
+    if key == "gamechanger":
+        usecases = answers.get("ki_usecases") or []
+        return "produktinnovation" in usecases or "markterschliessung" in answers.get("projektziel", [])
+    if key == "pilot_plan":
+        return answers.get("zeitbudget") in ["2-5", "5-10", "ueber_10"]
+    if key == "costs_overview":
+        return answers.get("investitionsbudget") not in [None, "keine_angabe"]
+    return False
 
 def _determine_user_email(db: Session, briefing: Briefing, email_override: Optional[str]) -> Optional[str]:
     if email_override:
@@ -468,28 +412,54 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
         db.refresh(rep)
         log.info("[%s] report_pending id=%s", run_id, getattr(rep, "id", None))
 
-        # (2) PDF rendern
+        # (2) PDF rendern - MIT ERROR HANDLING
         if DBG_PDF:
             log.debug("[%s] pdf_render start", run_id)
+        
         pdf_info = render_pdf_from_html(html, meta={"analysis_id": an_id, "briefing_id": briefing_id})
         pdf_url = pdf_info.get("pdf_url")
         pdf_bytes = pdf_info.get("pdf_bytes")
+        pdf_error = pdf_info.get("error")
+        
         if DBG_PDF:
-            log.debug("[%s] pdf_render done url=%s bytes_len=%s", run_id, bool(pdf_url), len(pdf_bytes or b""))
+            log.debug("[%s] pdf_render done url=%s bytes_len=%s error=%s", 
+                     run_id, bool(pdf_url), len(pdf_bytes or b""), pdf_error)
 
-        # (3) Report aktualisieren
+        # ✅ FIX: Prüfe ob PDF erfolgreich generiert wurde
+        if not pdf_url and not pdf_bytes:
+            error_msg = f"PDF generation failed: {pdf_error or 'no output returned'}"
+            log.error("[%s] %s", run_id, error_msg)
+            
+            # Report als failed markieren
+            if hasattr(rep, "status"):
+                rep.status = "failed"
+            if hasattr(rep, "email_error_user"):
+                rep.email_error_user = error_msg
+            if hasattr(rep, "updated_at"):
+                rep.updated_at = datetime.now(timezone.utc)
+            db.add(rep)
+            db.commit()
+            db.refresh(rep)
+            
+            log.info("[%s] report_failed id=%s reason=pdf_generation_failed", run_id, getattr(rep, "id", None))
+            
+            # Exception werfen damit keine E-Mails versendet werden
+            raise ValueError(error_msg)
+
+        # (3) Report aktualisieren - NUR WENN PDF ERFOLGREICH
         if hasattr(rep, "pdf_url"):
             rep.pdf_url = pdf_url
         if hasattr(rep, "pdf_bytes_len") and pdf_bytes:
             rep.pdf_bytes_len = len(pdf_bytes)
         if hasattr(rep, "status"):
-            rep.status = "done"
+            rep.status = "done"  # ✅ Nur hier setzen wenn PDF erfolgreich!
         if hasattr(rep, "updated_at"):
             rep.updated_at = datetime.now(timezone.utc)
         db.add(rep)
         db.commit()
         db.refresh(rep)
-        log.info("[%s] report_done id=%s url=%s bytes=%s", run_id, getattr(rep, "id", None), bool(getattr(rep, "pdf_url", None)), getattr(rep, "pdf_bytes_len", None))
+        log.info("[%s] report_done id=%s url=%s bytes=%s", 
+                run_id, getattr(rep, "id", None), bool(pdf_url), len(pdf_bytes or b""))
 
         # (4) E‑Mails versenden (fehler‑tolerant)
         try:
