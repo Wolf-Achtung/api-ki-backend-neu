@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-import html
-from typing import List, Dict
+from typing import List, Dict, Any
 
-def items_to_html(items: List[Dict], title: str = "") -> str:
-    out = []
-    if title:
-        out.append(f"<p><strong>{html.escape(title)}</strong></p>")
-    out.append("<ul>")
+def items_to_html(items: List[Dict[str, Any]], title: str | None = None) -> str:
+    if not items:
+        return "<p>Keine aktuellen Einträge gefunden.</p>"
+    rows = []
     for it in items:
-        t = html.escape(it.get("title","Item"))
-        u = html.escape(it.get("url","#"))
-        s = html.escape((it.get("summary") or "")[:180])
-        out.append(f"<li><a href=\"{u}\">{t}</a><br><span class='small'>{s}</span></li>")
-    out.append("</ul>")
-    return "\n".join(out)
+        title = (it.get("title") or it.get("url") or "").strip()
+        url = (it.get("url") or "").strip()
+        snippet = (it.get("snippet") or "").strip()
+        row = f'<li><a href="{url}" rel="noopener" target="_blank">{title}</a><br><span style="font-size:12px;color:#5b6b7a">{snippet}</span></li>'
+        rows.append(row)
+    return "<ul>" + "\n".join(rows) + "</ul>"

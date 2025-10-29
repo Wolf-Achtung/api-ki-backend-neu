@@ -1,33 +1,61 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-from datetime import date
-from typing import Dict, Any, Optional
 import os
+import datetime as dt
+import re
+from typing import Dict, Any
 
-from services.metrics import derive_metrics
-from services.template_engine import render_template
-from services.sanitize import ensure_utf8, normalize_model_html, safe_text
+from ..utils.sanitize import ensure_utf8
 
-TEMPLATE_FILE = os.getenv("REPORT_TEMPLATE_PATH", "templates/pdf_template.html")
+# ---- Defaults (safe heuristics for Solo/KMU) ----
+DEFAULTS = {
+    "stundensatz_eur": int(os.getenv("DEFAULT_STUNDENSATZ_EUR", "60")),
+    "qw1_monat_stunden": int(os.getenv("DEFAULT_QW1_H", "10")),
+    "qw2_monat_stunden": int(os.getenv("DEFAULT_QW2_H", "8")),
+}
 
-def _read_file_utf8(path: str) -> str:
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read()
+CODE_FENCE_RE = re.compile(r"```+[a-zA-Z]*\s*|\u200b", flags=re.MULTILINE)
 
-def _normalize_snippet(snippet: Optional[str]) -> str:
-    return normalize_model_html(snippet or "")
+def _strip_code_fences(html: str) -> str:
+    return CODE_FENCE_RE.sub("", html or "").strip()
 
-def build_context(briefing: Dict[str, Any], model_snippets: Dict[str, str]) -> Dict[str, Any]:
+def _dash(value: Any) -> str:
+    return "—" if value in (None, "", [], {}) else str(value)
+
+def derive_metrics(briefing: Dict[str, Any]) -> Dict[str, Any]:
+    """Derive consistent metrics from minimal inputs; fall back to sensible defaults."""
+    stunden = DEFAULTS["qw1_monat_stunden"] + DEFAULTS["qw2_monat_stunden"]
+    stundensatz = DEFAULTS["stundensatz_eur"]
+
+    # Heuristics by size
+    size = (briefing.get("unternehmensgroesse") or "").lower()
+    if size in {"solo", "einzel", "freiberufler"}:
+        stundensatz = int(os.getenv("DEFAULT_STUNDENSATZ_SOLO", stundensatz))
+    elif size in {"kmu", "mittel"}:
+        stundensatz = int(os.getenv("DEFAULT_STUNDENSATZ_KMU", stundensatz))
+
+    monats_eur = stunden * stundensatz
+    jahres_stunden = stunden * 12
+    jahres_eur = monats_eur * 12
+
+    return {
+        "stundensatz_eur": stundensatz,
+        "monatsersparnis_stunden": stunden,
+        "monatsersparnis_eur": monats_eur,
+        "jahresersparnis_stunden": jahres_stunden,
+        "jahresersparnis_eur": jahres_eur,
+    }
+
+def build_context(briefing: Dict[str, Any], snippets: Dict[str, str]) -> Dict[str, Any]:
     metrics = derive_metrics(briefing or {})
-    ctx: Dict[str, Any] = {
-        "report_date": date.today().strftime("%d.%m.%Y"),
-        "report_year": date.today().strftime("%Y"),
-        "unternehmen_name": safe_text(briefing.get("unternehmen_name") or briefing.get("hauptleistung") or "—"),
-        "branche": safe_text(briefing.get("branche") or "—"),
-        "bundesland": safe_text(briefing.get("bundesland") or "—"),
-        "jahresumsatz": safe_text(briefing.get("jahresumsatz") or "—"),
-        "unternehmensgroesse": safe_text(briefing.get("unternehmensgroesse") or "—"),
-        "ki_knowhow": safe_text(briefing.get("ki_knowhow") or "—"),
+    today = dt.date.today()
+    context = {
+        "unternehmen_name": _dash(briefing.get("unternehmen_name")),
+        "branche": _dash(briefing.get("branche")),
+        "bundesland": _dash(briefing.get("bundesland")),
+        "jahresumsatz": _dash(briefing.get("jahresumsatz")),
+        "unternehmensgroesse": _dash(briefing.get("unternehmensgroesse")),
+        "ki_knowhow": _dash(briefing.get("ki_knowhow")),
         "score_governance": briefing.get("score_governance", 0),
         "score_sicherheit": briefing.get("score_sicherheit", 0),
         "score_nutzen": briefing.get("score_nutzen", 0),
@@ -35,26 +63,38 @@ def build_context(briefing: Dict[str, Any], model_snippets: Dict[str, str]) -> D
         "score_gesamt": briefing.get("score_gesamt", 0),
         "benchmark_avg": briefing.get("benchmark_avg", "—"),
         "benchmark_top": briefing.get("benchmark_top", "—"),
-        "eu_ai_act_risk": "gering (assistierend, menschliche Kontrolle)",
-        # Logo defaults for root/templates/
-        "logo_primary": briefing.get("logo_primary", "ki-sicherheit-logo.webp"),
-        "logo_tuv": briefing.get("logo_tuv", "tuev-logo-transparent.webp"),
-        "logo_dsgvo": briefing.get("logo_dsgvo", "dsgvo.svg"),
-        "logo_eu_ai": briefing.get("logo_eu_ai", "eu-ai.svg"),
-        "logo_ready": briefing.get("logo_ready", "ki-ready-2025.webp"),
-        **metrics,
+        "report_date": today.strftime("%d.%m.%Y"),
+        "report_year": today.year,
+        # Logos resolved relative to templates/
+        "logo_primary": "templates/ki-sicherheit-logo.webp",
+        "logo_tuv": "templates/tuev-logo-transparent.webp",
+        "logo_dsgvo": "templates/dsgvo.svg",
+        "logo_eu_ai": "templates/eu-ai.svg",
+        "logo_ready": "templates/ki-ready-2025.webp",
     }
-    html_keys = [
-        "EXECUTIVE_SUMMARY_HTML","QUICK_WINS_HTML_LEFT","QUICK_WINS_HTML_RIGHT",
-        "PILOT_PLAN_HTML","ROI_HTML","COSTS_OVERVIEW_HTML","RISKS_HTML",
-        "GAMECHANGER_HTML","FOERDERPROGRAMME_HTML","QUELLEN_HTML","TOOLS_HTML",
-    ]
-    for k in html_keys:
-        ctx[k] = _normalize_snippet(model_snippets.get(k, ""))
-    return ctx
+    # Merge metrics
+    context.update(metrics)
 
-def render_report_html(briefing: Dict[str, Any], model_snippets: Dict[str, str]) -> str:
-    template = _read_file_utf8(TEMPLATE_FILE)
-    ctx = build_context(briefing, model_snippets)
-    html = render_template(template, ctx, default="")
+    # Attach normalized HTML snippets
+    for key in (
+        "EXECUTIVE_SUMMARY_HTML","QUICK_WINS_HTML_LEFT","QUICK_WINS_HTML_RIGHT",
+        "PILOT_PLAN_HTML","ROI_HTML","COSTS_OVERVIEW_HTML","RISKS_HTML","GAMECHANGER_HTML",
+        "FOERDERPROGRAMME_HTML","QUELLEN_HTML","TOOLS_HTML"
+    ):
+        context[key] = _strip_code_fences(snippets.get(key, ""))
+
+    return context
+
+def render_report_html(briefing: Dict[str, Any], snippets: Dict[str, str]) -> str:
+    """Render final HTML from the pdf_template.html with context placeholders."""
+    context = build_context(briefing, snippets)
+    # Load template
+    template_path = os.getenv("REPORT_TEMPLATE_PATH", "templates/pdf_template.html")
+    with open(template_path, "r", encoding="utf-8") as f:
+        template = f.read()
+
+    html = template
+    for k, v in context.items():
+        html = html.replace("{{" + k + "}}", ensure_utf8(str(v)))
+
     return ensure_utf8(html)
