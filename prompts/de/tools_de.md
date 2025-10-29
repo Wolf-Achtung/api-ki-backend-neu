@@ -1,12 +1,11 @@
-# Tools – Prompt (DE)
-**Ziel:** Liste (JSON) → **HTML-Snippet** (ohne Codefences), gegliedert in „Pro“/„Open‑Source“ sofern erkennbar.
+# Sektion: Empfohlene Tools (Pro & Open‑Source)
 
-**Eingaben**
-- items_json: {{tools_items_json}}
-- Branche: {{branche}}, Größe: {{unternehmensgroesse}}, EU‑Hosting erwünscht | Stand: {{report_date}}
+Schreibe eine kurze, saubere HTML‑Liste (ohne Code‑Fence) mit 6–10 Tools für {{branche}} (Größe: {{unternehmensgroesse}}).
+Kriterien: EU‑Hosting bevorzugt, DSGVO‑geeignet, kurze Beschreibung, 1–2 Hauptvorteile, Preisspanne (falls bekannt), Link.
+Struktur:
 
-**Anforderungen**
-- <ul><li>Link, 1 Satz Nutzen, Tag „EU‑Hosting/Open‑Source“</li></ul>
-- Bis 8 Einträge, EU/OSS bevorzugen. Hinweis: Infos ohne Gewähr.
+<ul>
+  <li><strong>Toolname</strong> – Kurzbeschreibung (Vorteil 1, Vorteil 2) – Preisspanne – <a href="URL">Website</a></li>
+</ul>
 
-**Ausgabe:** Nur HTML-Snippet.
+Wenn keine Daten sicher sind, schreibe: „Keine belastbaren, aktuellen Angaben verfügbar; bitte manuell prüfen.“
