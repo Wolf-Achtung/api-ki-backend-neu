@@ -5,29 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>KI‑Status‑Report</title>
   <style>
-    :root{
-      --fg:#0b1f33; --muted:#5b6b7a; --border:#e5e7eb;
-      --brand:#2547d0; --bg:#ffffff; --card:#f8fafc;
-    }
-    html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";line-height:1.55;}
-    .container{max-width:960px;margin:0 auto;padding:20px;}
-    header.site{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding:10px 0;margin-bottom:16px;}
-    .logos{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-    .logos img{height:30px}
-    .stand{color:var(--muted);font-size:14px}
-    h1,h2,h3{margin:0 0 8px 0;line-height:1.25}
-    h1{font-size:28px}
-    h2{font-size:22px;margin-top:22px;border-bottom:2px solid var(--border);padding-bottom:6px}
-    h3{font-size:18px;margin-top:16px}
-    p{margin:6px 0}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin:10px 0}
-    .small{font-size:12px;color:var(--muted)}
-    .table{width:100%;border-collapse:collapse}
-    .table th,.table td{padding:8px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
-    .callout{border-left:4px solid var(--brand);padding:10px 12px;background:#F4F8FF;border-radius:6px}
-    .footer-note{font-size:12px;color:var(--muted);margin-top:24px}
-    @media print {.container{padding:0 12mm} a{color:#111;text-decoration:underline}}
+    :root{ --fg:#0b1f33; --muted:#5b6b7a; --border:#e5e7eb; --brand:#2547d0; --bg:#ffffff; --card:#f8fafc; }
+    html,body{ margin:0; padding:0; background:var(--bg); color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"; line-height:1.55; }
+    .container{ max-width:960px; margin:0 auto; padding:20px; }
+    header.site{ display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); padding:10px 0; margin-bottom:16px; }
+    .logos{ display:flex; align-items:center; gap:14px; flex-wrap:wrap }
+    .logos img{ height:30px }
+    .stand{ color:var(--muted); font-size:14px }
+    h1,h2,h3{ margin:0 0 8px 0; line-height:1.25 }
+    h1{ font-size:28px } h2{ font-size:22px; margin-top:22px; border-bottom:2px solid var(--border); padding-bottom:6px } h3{ font-size:18px; margin-top:16px }
+    p{ margin:6px 0 } .card{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px; margin:10px 0 }
+    .small{ font-size:12px; color:var(--muted) } .table{ width:100%; border-collapse:collapse }
+    .table th,.table td{ padding:8px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top }
+    .callout{ border-left:4px solid var(--brand); padding:10px 12px; background:#F4F8FF; border-radius:6px }
+    .footer-note{ font-size:12px; color:var(--muted); margin-top:24px }
+    @media print { .container{ padding:0 12mm } a{ color:#111; text-decoration:underline } }
   </style>
 </head>
 <body>
@@ -58,7 +51,7 @@
             <tr><th>KI‑Know‑how</th><td>{{ki_knowhow}}</td></tr>
           </tbody>
         </table>
-        <p class="small">Hinweis: Profilangaben werden aus dem Fragebogen übernommen. Felder ohne Angabe bleiben mit „—“ gekennzeichnet.</p>
+        <p class="small">Transparenz: {{transparency_text}}</p>
       </div>
       <div class="card">
         <h3>KI‑Reifegrad (Säulen)</h3>
@@ -72,8 +65,8 @@
             <tr><th>Gesamt</th><th>{{score_gesamt}}/100</th></tr>
           </tbody>
         </table>
-        <p class="small">(Optional) Benchmark: Branche {{branche}} – Schnitt {{benchmark_avg}}/100; Top‑Quartil {{benchmark_top}}/100.</p>
       </div>
+      <div class="card">{{BENCHMARK_HTML}}</div>
     </section>
 
     <section>
@@ -114,7 +107,7 @@
     <section>
       <h2>Risiko‑Assessment & Compliance</h2>
       <div class="card">{{RISKS_HTML}}</div>
-      <p class="small">EU AI Act: {{eu_ai_act_risk}}. Transparenz: „Dieser Report wurde teilweise mit KI‑Unterstützung erstellt.“</p>
+      <p class="small">EU AI Act: geringes Risiko (assistierend). Transparenz: {{transparency_text}}</p>
     </section>
 
     <section>
