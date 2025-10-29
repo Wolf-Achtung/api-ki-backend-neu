@@ -3,216 +3,135 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KI-Status-Report</title>
+  <title>KI‑Status‑Report</title>
   <style>
-    :root {
-      --bg: #ffffff;
-      --fg: #0b1f33;
-      --muted: #5b6b7a;
-      --brand: #245BFF;
-      --brand-2: #0E38B1;
-      --ok: #0E9F6E;
-      --warn: #D97706;
-      --err: #B91C1C;
-      --border: #E5E7EB;
-      --card: #F8FAFC;
+    :root{
+      --fg:#0b1f33; --muted:#5b6b7a; --border:#e5e7eb;
+      --brand:#2547d0; --bg:#ffffff; --card:#f8fafc;
+      --ok:#0E9F6E; --warn:#D97706; --err:#B91C1C;
     }
-    html, body {
-      margin: 0; padding: 0; background: var(--bg); color: var(--fg);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-      line-height: 1.5;
-    }
-    .page {
-      width: 100%;
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 24px;
-      box-sizing: border-box;
-    }
-    header.site-header {
-      display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      padding: 16px 0; margin-bottom: 12px;
-    }
-    .brand {
-      display: flex; align-items: center; gap: 12px;
-      font-weight: 700; letter-spacing: 0.25px;
-    }
-    .brand-logo {
-      width: 28px; height: 28px; border-radius: 6px; background: linear-gradient(135deg, var(--brand), var(--brand-2));
-      display: inline-block;
-    }
-    .meta { color: var(--muted); font-size: 14px; }
-    h1,h2,h3 { line-height: 1.25; margin: 0 0 8px 0; }
-    h1 { font-size: 28px; }
-    h2 { font-size: 22px; margin-top: 24px; border-bottom: 2px solid var(--border); padding-bottom: 6px; }
-    h3 { font-size: 18px; margin-top: 18px; }
-    p { margin: 8px 0; }
-    ul { margin: 6px 0 12px 20px; }
-    .grid-2 {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
-    }
-    .grid-3 {
-      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;
-    }
-    .card {
-      background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px;
-    }
-    .tag {
-      display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--border); color: var(--muted);
-    }
-    .kpi { font-weight: 700; }
-    .table { width: 100%; border-collapse: collapse; }
-    .table th, .table td { padding: 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
-    .table thead th { background: #f2f5f8; }
-    .callout {
-      border-left: 4px solid var(--brand); padding: 10px 12px; background: #F4F8FF; border-radius: 6px;
-    }
-    .muted { color: var(--muted); }
-    .small { font-size: 12px; }
-    .spacer { height: 12px; }
-    .footer-note { font-size: 12px; color: var(--muted); }
-    .section { margin-top: 16px; }
-    .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; background: #EEF2FF; color: #3730a3; font-size: 12px; border: 1px solid #E0E7FF; }
-    .ampel { display: inline-block; border-radius: 5px; padding: 2px 8px; font-size: 12px; border: 1px solid var(--border); }
-    .ampel-ok { background: #E8FBF1; color: #065F46; border-color: #A7F3D0; }
-    .ampel-warn { background: #FFF7ED; color: #92400E; border-color: #FED7AA; }
-    .ampel-err { background: #FEF2F2; color: #991B1B; border-color: #FECACA; }
-    /* print helpers */
-    @media print {
-      .page { padding: 0 12mm; }
-      a { color: #111; text-decoration: underline; }
-    }
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";line-height:1.55;}
+    .container{max-width:960px;margin:0 auto;padding:20px;}
+    header.site{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding:10px 0;margin-bottom:16px;}
+    .logos{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .logos img{height:28px}
+    .stand{color:var(--muted);font-size:14px}
+    h1,h2,h3{margin:0 0 8px 0;line-height:1.25}
+    h1{font-size:28px}
+    h2{font-size:22px;margin-top:22px;border-bottom:2px solid var(--border);padding-bottom:6px}
+    h3{font-size:18px;margin-top:16px}
+    p{margin:6px 0}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin:10px 0}
+    .small{font-size:12px;color:var(--muted)}
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{padding:8px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+    .callout{border-left:4px solid var(--brand);padding:10px 12px;background:#F4F8FF;border-radius:6px}
+    .footer-note{font-size:12px;color:var(--muted);margin-top:24px}
+    @media print {.container{padding:0 12mm} a{color:#111;text-decoration:underline}}
   </style>
 </head>
 <body>
-  <div class="page">
-    <header class="site-header">
-      <div class="brand">
-        <span class="brand-logo" aria-hidden="true"></span>
-        <div>
-          <div>KI‑Sicherheit.jetzt</div>
-          <div class="small muted">TÜV‑zertifiziertes KI‑Management</div>
-        </div>
+  <div class="container">
+    <header class="site">
+      <div class="logos">
+        <img src="{{logo_primary}}" alt="KI‑Sicherheit.jetzt">
+        <img src="{{logo_tuv}}" alt="TÜV">
+        <img src="{{logo_dsgvo}}" alt="DSGVO konform">
+        <img src="{{logo_shield}}" alt="Trust">
       </div>
-      <div class="meta">Stand: {{report_date}}</div>
+      <div class="stand">Stand: {{report_date}}</div>
     </header>
 
-    <!-- Cover / Titel -->
-    <section class="section">
+    <section>
       <h1>KI‑Status‑Report</h1>
-      <p class="muted">Ihr individueller Fahrplan zur erfolgreichen KI‑Integration</p>
-      <div class="grid-2">
-        <div class="card">
-          <h3>Unternehmensprofil</h3>
-          <table class="table">
-            <tbody>
-              <tr><th>Name</th><td>{{unternehmen_name}}</td></tr>
-              <tr><th>Branche</th><td>{{branche}}</td></tr>
-              <tr><th>Standort</th><td>{{bundesland}}</td></tr>
-              <tr><th>Umsatzklasse</th><td>{{jahresumsatz}}</td></tr>
-              <tr><th>Unternehmensgröße</th><td>{{unternehmensgroesse}}</td></tr>
-              <tr><th>KI‑Know-how</th><td>{{ki_knowhow}}</td></tr>
-            </tbody>
-          </table>
-          <p class="small muted">Hinweis: Profilangaben werden aus dem Fragebogen übernommen.</p>
-        </div>
-        <div class="card">
-          <h3>KI‑Reifegrad (Säulen)</h3>
-          <table class="table">
-            <thead><tr><th>Dimension</th><th>Score</th></tr></thead>
-            <tbody>
-              <tr><td>Governance</td><td>{{score_governance}}/100</td></tr>
-              <tr><td>Sicherheit & Compliance</td><td>{{score_sicherheit}}/100</td></tr>
-              <tr><td>Nutzen & Prozesse</td><td>{{score_nutzen}}/100</td></tr>
-              <tr><td>Befähigung & Kultur</td><td>{{score_befaehigung}}/100</td></tr>
-              <tr><th>Gesamt</th><th>{{score_gesamt}}/100</th></tr>
-            </tbody>
-          </table>
-          <p class="small muted">(Optional) Benchmark: Branche {{branche}} in {{bundesland}} – Schnitt: {{benchmark_avg}}/100; Top‑Quartil: {{benchmark_top}}/100</p>
-        </div>
+      <p class="small">Ihr individueller Fahrplan zur erfolgreichen KI‑Integration</p>
+      <div class="card">
+        <h3>Unternehmensprofil</h3>
+        <table class="table">
+          <tbody>
+            <tr><th>Name</th><td>{{unternehmen_name}}</td></tr>
+            <tr><th>Branche</th><td>{{branche}}</td></tr>
+            <tr><th>Standort</th><td>{{bundesland}}</td></tr>
+            <tr><th>Umsatzklasse</th><td>{{jahresumsatz}}</td></tr>
+            <tr><th>Unternehmensgröße</th><td>{{unternehmensgroesse}}</td></tr>
+            <tr><th>KI‑Know‑how</th><td>{{ki_knowhow}}</td></tr>
+          </tbody>
+        </table>
+        <p class="small">Hinweis: Profilangaben werden aus dem Fragebogen übernommen. Felder ohne Angabe bleiben mit „—“ gekennzeichnet.</p>
+      </div>
+      <div class="card">
+        <h3>KI‑Reifegrad (Säulen)</h3>
+        <table class="table">
+          <thead><tr><th>Dimension</th><th>Score</th></tr></thead>
+          <tbody>
+            <tr><td>Governance</td><td>{{score_governance}}/100</td></tr>
+            <tr><td>Sicherheit & Compliance</td><td>{{score_sicherheit}}/100</td></tr>
+            <tr><td>Nutzen & Prozesse</td><td>{{score_nutzen}}/100</td></tr>
+            <tr><td>Befähigung & Kultur</td><td>{{score_befaehigung}}/100</td></tr>
+            <tr><th>Gesamt</th><th>{{score_gesamt}}/100</th></tr>
+          </tbody>
+        </table>
+        <p class="small">(Optional) Benchmark: Branche {{branche}} – Schnitt {{benchmark_avg}}/100; Top‑Quartil {{benchmark_top}}/100.</p>
       </div>
     </section>
 
-    <!-- Executive Summary -->
-    <section class="section">
+    <section>
       <h2>Executive Summary</h2>
-      <div class="callout">
-        <!-- Insert sanitized HTML (kein Codefence) -->
-        {{EXECUTIVE_SUMMARY_HTML}}
-      </div>
+      <div class="callout">{{EXECUTIVE_SUMMARY_HTML}}</div>
     </section>
 
-    <!-- Quick Wins -->
-    <section class="section">
+    <section>
       <h2>Quick Wins (0–90 Tage)</h2>
-      <div class="grid-2">
-        <div class="card">{{QUICK_WINS_HTML_LEFT}}</div>
-        <div class="card">{{QUICK_WINS_HTML_RIGHT}}</div>
-      </div>
-      <p class="small muted">Metriken konsistent: Monats‑Ersparnis gesamt {{monatsersparnis_stunden}}h ({{monatsersparnis_eur}} €) → {{jahresersparnis_stunden}}h/Jahr ({{jahresersparnis_eur}} €).</p>
+      <div class="card">{{QUICK_WINS_HTML_LEFT}}</div>
+      <div class="card">{{QUICK_WINS_HTML_RIGHT}}</div>
+      <p class="small">Monats‑Ersparnis gesamt: {{monatsersparnis_stunden}} h (≈ {{monatsersparnis_eur}} €) → {{jahresersparnis_stunden}} h/Jahr (≈ {{jahresersparnis_eur}} €) bei {{stundensatz_eur}} €/h.</p>
     </section>
 
-    <!-- Roadmap -->
-    <section class="section">
+    <section>
       <h2>Roadmap (90 Tage – Test → Pilot → Rollout)</h2>
-      <div class="card">
-        {{PILOT_PLAN_HTML}}
-      </div>
+      <div class="card">{{PILOT_PLAN_HTML}}</div>
     </section>
 
-    <!-- ROI & Kostenübersicht -->
-    <section class="section">
+    <section>
       <h2>Business Case & Kostenübersicht</h2>
-      <div class="grid-2">
-        <div class="card">
-          <h3>ROI & Payback</h3>
-          {{ROI_HTML}}
-        </div>
-        <div class="card">
-          <h3>Kosten (Jahr 1)</h3>
-          {{COSTS_OVERVIEW_HTML}}
-        </div>
+      <div class="card">
+        <h3>ROI & Payback</h3>
+        {{ROI_HTML}}
+      </div>
+      <div class="card">
+        <h3>Kosten (Jahr 1)</h3>
+        {{COSTS_OVERVIEW_HTML}}
       </div>
     </section>
 
-    <!-- Risiko & Compliance -->
-    <section class="section">
+    <section>
       <h2>Risiko‑Assessment & Compliance</h2>
-      <div class="card">
-        {{RISKS_HTML}}
-      </div>
-      <p class="small muted">EU AI Act (Einstufung laut Use‑Case): {{eu_ai_act_risk}}. Transparenzhinweis gegenüber Kunden: „Dieser Report wurde teilweise mit KI‑Unterstützung erstellt.“</p>
+      <div class="card">{{RISKS_HTML}}</div>
+      <p class="small">EU AI Act: {{eu_ai_act_risk}}. Transparenz: „Dieser Report wurde teilweise mit KI‑Unterstützung erstellt.“</p>
     </section>
 
-    <!-- Gamechanger -->
-    <section class="section">
+    <section>
       <h2>Gamechanger‑Use Case</h2>
-      <div class="card">
-        {{GAMECHANGER_HTML}}
-      </div>
+      <div class="card">{{GAMECHANGER_HTML}}</div>
     </section>
 
-    <!-- Förderprogramme & Quellen -->
-    <section class="section">
+    <section>
       <h2>Aktuelle Förderprogramme & Quellen</h2>
-      <div class="grid-2">
-        <div class="card">
-          <h3>Förderungen ({{bundesland}})</h3>
-          {{FOERDERPROGRAMME_HTML}}
-          <p class="small muted">Bitte Fristen/Links prüfen (Stand: {{report_date}}).</p>
-        </div>
-        <div class="card">
-          <h3>Quellen & Referenzen</h3>
-          {{QUELLEN_HTML}}
-        </div>
+      <div class="card">
+        <h3>Förderungen (nach Standort)</h3>
+        {{FOERDERPROGRAMME_HTML}}
+        <p class="small">Bitte Fristen/Links prüfen (Stand: {{report_date}}).</p>
+      </div>
+      <div class="card">
+        <h3>Quellen & Referenzen</h3>
+        {{QUELLEN_HTML}}
       </div>
     </section>
 
-    <section class="section">
+    <section>
       <p class="footer-note">
-        © {{report_year}} {{berater_name}} • KI‑Sicherheit.jetzt • DSGVO • ePrivacy • DSA • EU AI Act<br>
-        Disclaimer: Alle Angaben nach bestem Wissen; rechtliche/technische Anforderungen können sich ändern.
+        © {{report_year}} KI‑Sicherheit.jetzt • DSGVO • ePrivacy • DSA • EU AI Act — Kontakt: {{unternehmen_name}}
       </p>
     </section>
   </div>
