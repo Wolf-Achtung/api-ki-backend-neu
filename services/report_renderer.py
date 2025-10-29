@@ -1,32 +1,27 @@
 # -*- coding: utf-8 -*-
-"""
-Report Renderer – orchestrates snippet enrichment (funding/tools) and renders the
-single-column HTML using the new pipeline and template.
-
-Usage:
-    html = build_full_report_html(briefing, generated_sections)
-    # send `html` to your PDF client
-"""
 from __future__ import annotations
 import logging
 import os
 from typing import Dict, Any, Optional
 
 from .report_pipeline import render_report_html
-from . import research_fetcher, research_html
+from . import research_fetcher, research_html, benchmarks
 from ..utils.sanitize import ensure_utf8
 
 LOGGER = logging.getLogger(__name__)
 
 DEFAULT_FUNDING_DAYS = int(os.getenv("FUNDING_DAYS", "30"))
 DEFAULT_TOOLS_DAYS = int(os.getenv("TOOLS_DAYS", "30"))
+TRANSPARENCY_TEXT = os.getenv(
+    "TRANSPARENCY_TEXT",
+    "Dieser Report wurde teilweise mit KI‑Unterstützung aus Europa unter strikter Einhaltung von Eu AI Acts sowie DSGVO erstellt."
+)
 
 def _enrich_snippets_with_fetchers(
     briefing: Dict[str, Any],
     snippets: Dict[str, str],
     use_fetchers: bool = True
 ) -> Dict[str, str]:
-    """Fill FOERDERPROGRAMME_HTML and TOOLS_HTML if missing/empty using web fetchers."""
     if not use_fetchers:
         return snippets
 
@@ -51,21 +46,24 @@ def _enrich_snippets_with_fetchers(
 
     return snippets
 
+def _enrich_with_benchmarks(briefing: Dict[str, Any], snippets: Dict[str, str]) -> Dict[str, str]:
+    branch = str(briefing.get("branche") or "")
+    b = benchmarks.lookup(branch)
+    snippets.setdefault("BENCHMARK_HTML", benchmarks.build_html(branch))
+    # Push numeric values for template (used in small headline line if present)
+    snippets.setdefault("benchmark_avg", b.get("avg", ""))
+    snippets.setdefault("benchmark_top", b.get("top25", ""))
+    # Transparency text propagated
+    snippets.setdefault("transparency_text", TRANSPARENCY_TEXT)
+    return snippets
+
 def build_full_report_html(
     briefing: Dict[str, Any],
     generated_sections: Optional[Dict[str, str]] = None,
     use_fetchers: bool = True
 ) -> str:
-    """
-    Render the final HTML. `generated_sections` may contain model-generated HTML snippets.
-    Missing snippets for funding/tools are auto-filled by the web fetchers (cache + recency).
-
-    Required keys in `generated_sections` (may be empty strings):
-        EXECUTIVE_SUMMARY_HTML, QUICK_WINS_HTML_LEFT, QUICK_WINS_HTML_RIGHT,
-        PILOT_PLAN_HTML, ROI_HTML, COSTS_OVERVIEW_HTML, RISKS_HTML, GAMECHANGER_HTML,
-        FOERDERPROGRAMME_HTML (optional), QUELLEN_HTML (optional), TOOLS_HTML (optional)
-    """
     snippets = dict(generated_sections or {})
     snippets = _enrich_snippets_with_fetchers(briefing, snippets, use_fetchers=use_fetchers)
+    snippets = _enrich_with_benchmarks(briefing, snippets)
     html = render_report_html(briefing, snippets)
     return ensure_utf8(html)
