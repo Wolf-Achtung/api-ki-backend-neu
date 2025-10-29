@@ -1,0 +1,98 @@
+{
+  "Marketing & Werbung": {
+    "avg": 72,
+    "top25": 90,
+    "source_title": "ifo Konjunkturumfrage (Juli 2024)",
+    "source_url": "https://www.ifo.de/2024-07-18/mehr-unternehmen-nutzen-kuenstliche-intelligenz",
+    "year": 2024,
+    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
+  },
+  "Beratung & Dienstleistungen": {
+    "avg": 55,
+    "top25": 80,
+    "source_title": "IW Köln Zukunftspanel (2025)",
+    "source_url": "https://www.iwd.de/artikel/noch-grosses-ki-potenzial-in-unternehmen-654534/",
+    "year": 2025,
+    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
+  },
+  "IT & Software": {
+    "avg": 60,
+    "top25": 85,
+    "source_title": "ifo Konjunkturumfrage (Juli 2024)",
+    "source_url": "https://www.ifo.de/2024-07-18/mehr-unternehmen-nutzen-kuenstliche-intelligenz",
+    "year": 2024,
+    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
+  },
+  "Finanzen & Versicherungen": {
+    "avg": 75,
+    "top25": 90,
+    "source_title": "PwC Studie KI im Finanzsektor (2025)",
+    "source_url": "https://www.pwc.de/de/finanzdienstleistungen/pwc-studie-ki-im-finanzsektor-2025.pdf",
+    "year": 2025,
+    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
+  },
+  "Handel & E-Commerce": {
+    "avg": 22,
+    "top25": 45,
+    "source_title": "ifo Konjunkturumfrage (Juli 2024)",
+    "source_url": "https://www.ifo.de/2024-07-18/mehr-unternehmen-nutzen-kuenstliche-intelligenz",
+    "year": 2024,
+    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
+  },
+  "Bildung": {
+    "avg": 20,
+    "top25": 50,
+    "source_title": "IU Lernreport (2024) / Bitkom Lehrer-Umfrage",
+    "source_url": "https://www.bildungsspiegel.de/news/weiterbildung-bildungspolitik/7641-iu-lernreport-2024-beleuchtet-einfluss-von-ki-auf-bildung",
+    "year": 2024,
+    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
+  },
+  "Verwaltung": {
+    "avg": 13,
+    "top25": 30,
+    "source_title": "Zukunftsradar Digitale Kommune (2024)",
+    "source_url": "https://www.iit-berlin.de/wp-content/uploads/2025/02/Zukunftsradar-Digitale-Kommune-2024_iit-DStGB_WEB.pdf",
+    "year": 2024,
+    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
+  },
+  "Gesundheit & Pflege": {
+    "avg": 15,
+    "top25": 30,
+    "source_title": "Bitkom/Hartmannbund (2025)",
+    "source_url": "https://www.bitkom.org/Presse/Presseinformation/KI-in-Praxis-und-Kliniken-im-Einsatz",
+    "year": 2025,
+    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
+  },
+  "Bauwesen & Architektur": {
+    "avg": 12,
+    "top25": 25,
+    "source_title": "ifo Konjunkturumfrage (Juli 2024)",
+    "source_url": "https://www.ifo.de/2024-07-18/mehr-unternehmen-nutzen-kuenstliche-intelligenz",
+    "year": 2024,
+    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
+  },
+  "Medien & Kreativwirtschaft": {
+    "avg": 96,
+    "top25": 100,
+    "source_title": "BDZV/Retresco KI-Reifegrad-Report (2025)",
+    "source_url": "https://www.bdzv.de/fileadmin/content/6_Service/6-1_Presse/6-1-2_Pressemitteilungen/2025/PDFs/BDZV_Retresco_KI_Reifegrad_Report_2025.pdf",
+    "year": 2025,
+    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
+  },
+  "Industrie & Produktion": {
+    "avg": 40,
+    "top25": 70,
+    "source_title": "IW Köln Zukunftspanel (2025)",
+    "source_url": "https://www.iwd.de/artikel/noch-grosses-ki-potenzial-in-unternehmen-654534/",
+    "year": 2025,
+    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
+  },
+  "Transport & Logistik": {
+    "avg": 20,
+    "top25": 45,
+    "source_title": "IW Köln Zukunftspanel (2025)",
+    "source_url": "https://www.iwd.de/artikel/noch-grosses-ki-potenzial-in-unternehmen-654534/",
+    "year": 2025,
+    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
+  }
+}
