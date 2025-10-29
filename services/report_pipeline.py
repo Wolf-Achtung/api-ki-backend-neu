@@ -47,6 +47,9 @@ def derive_metrics(briefing: Dict[str, Any]) -> Dict[str, Any]:
 def build_context(briefing: Dict[str, Any], snippets: Dict[str, str]) -> Dict[str, Any]:
     metrics = derive_metrics(briefing or {})
     today = dt.date.today()
+
+    user_email = briefing.get("user_email") or briefing.get("email") or ""
+
     context = {
         "unternehmen_name": _dash(briefing.get("unternehmen_name")),
         "branche": _dash(briefing.get("branche")),
@@ -54,6 +57,7 @@ def build_context(briefing: Dict[str, Any], snippets: Dict[str, str]) -> Dict[st
         "jahresumsatz": _dash(briefing.get("jahresumsatz")),
         "unternehmensgroesse": _dash(briefing.get("unternehmensgroesse")),
         "ki_knowhow": _dash(briefing.get("ki_knowhow")),
+        "user_email": _dash(user_email),
         "score_governance": briefing.get("score_governance", 0),
         "score_sicherheit": briefing.get("score_sicherheit", 0),
         "score_nutzen": briefing.get("score_nutzen", 0),
