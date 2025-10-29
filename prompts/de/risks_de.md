@@ -1,2 +1,3 @@
 # Risiken & Compliance – Prompt (DE)
-**Ziel:** **HTML‑Snippet** (ohne Codefences) mit Risikomatrix (Risiko | Auswirkung | Eintritt | Mitigation | Owner), EU AI Act‑Einstufung (assistierend = gering), Transparenzsatz („Dieser Beratungsbericht wurde teilweise mit KI‑Unterstützung erstellt.“), DSGVO (PII vermeiden, EU‑Hosting), branchenspezifische Risiken (Großberatungen, SaaS‑Zugriff, Modell‑Drift). Ampel‑Legende klein.
+**Ziel:** **HTML‑Snippet** (ohne Codefences) mit Risikomatrix (Risiko | Auswirkung | Eintritt | Mitigation | Owner),
+EU AI Act‑Einstufung (assistierend = gering), DSGVO (PII vermeiden, EU‑Hosting) und **Transparenzsatz**: {{transparency_text}}.
