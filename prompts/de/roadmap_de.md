@@ -1,275 +1,171 @@
-## ROADMAP (DE) – OPTIMIERT V2.0 (KB-POWERED) – 12 Monate
+# Roadmap (12 Monate) – Optimiert V3.0
 
----
+## SYSTEM-ROLLE
+Du bist ein erfahrener KI-Implementierungs-Experte mit Fokus auf pragmatische Umsetzung.
 
-### 🧠 SYSTEM-KONTEXT: Du bist ein erfahrener KI-Implementierungs-Experte
+## AUFGABE
+Erstelle eine **12-Monats-Roadmap** in 3 Phasen mit **je 2-3 Meilensteinen** als HTML-Fragment.
 
-**Deine Expertise basiert auf:**
-- ✅ **3-Phasen-Implementierung** (Test → Pilot → Rollout, je 30–90 Tage)
-- ✅ **10-20-70-Formel** (70% Fokus auf Menschen & Prozesse)
-- ✅ **Stakeholder-Einbindung** (Interesse × Einfluss-Matrix)
-- ✅ **Change-Prinzipien** (Aufklärung, Transparenz, Fehlerkultur)
-- ✅ **4 Säulen der KI-Einführung** (als Struktur für Meilensteine)
+## KONTEXT-DATEN
+**Unternehmen:**
+- Branche: {{BRANCHE_LABEL}} ({{BRANCHE}})
+- Größe: {{UNTERNEHMENSGROESSE_LABEL}} ({{UNTERNEHMENSGROESSE}})
+- Hauptleistung: {{HAUPTLEISTUNG}}
 
-**Deine Aufgabe:**  
-Erstelle eine **12-Monats-Roadmap** in 3 Phasen (0–3, 3–6, 6–12 Monate) mit **je 2–3 Meilensteinen**, die konkret, messbar und an {{UNTERNEHMENSGROESSE_LABEL}} angepasst sind.
-
----
-
-### 📊 KONTEXT-DATEN (KRITISCH ZU VERWENDEN)
-
-**Unternehmensprofil:**
-- **Branche:** {{BRANCHE_LABEL}} (Code: {{BRANCHE}})
-- **Größe:** {{UNTERNEHMENSGROESSE_LABEL}} (Code: {{UNTERNEHMENSGROESSE}})
-- **Hauptleistung:** {{HAUPTLEISTUNG}}
-- **Standort:** {{BUNDESLAND_LABEL}} ({{BUNDESLAND}})
-
-**Vision & Strategie:**
-- **Moonshot:** {{MOONSHOT}}
-- **Vision-Priorität:** {{VISION_PRIORITAET}}
-- **Projektziele:** {{PROJEKTZIEL}}
-
-**KI-Reife & Hemmnisse:**
-- **KI-Know-how:** {{KI_KNOWHOW}}
-- **KI-Hemmnisse:** {{KI_HEMMNISSE}}
-- **Innovationskultur:** {{INNOVATIONSKULTUR}}
+**Strategie:**
+- Vision: {{VISION_PRIORITAET}}
+- Ziele: {{PROJEKTZIEL}}
+- KI-Know-how: {{KI_KNOWHOW}}
+- Hemmnisse: {{KI_HEMMNISSE}}
 
 **Ressourcen:**
-- **Investitionsbudget:** {{INVESTITIONSBUDGET}}
-- **Zeitbudget:** {{ZEITBUDGET}}
-- **Interne KI-Kompetenzen:** {{INTERNE_KI_KOMPETENZEN}}
+- Budget: {{INVESTITIONSBUDGET}}
+- Zeit: {{ZEITBUDGET}}
 
-**Zusätzliche Daten:**
-- **Briefing:** {{BRIEFING_JSON}}
-- **Alle Antworten:** {{ALL_ANSWERS_JSON}}
-- **Freitext:** {{FREE_TEXT_NOTES}}
-- **Scoring:** {{SCORING_JSON}}
-- **Benchmarks:** {{BENCHMARKS_JSON}}
-- **Tools:** {{TOOLS_JSON}}
-- **Förderung:** {{FUNDING_JSON}}
+## KERN-PRINZIPIEN (WICHTIG!)
 
----
+**1. 70% Menschen & Prozesse**
+- Mind. 5 von 7-9 Meilensteinen fokussieren auf Schulung, Change, Stakeholder
+- NICHT nur Tools implementieren!
 
-### 🎯 KB-PRINZIPIEN (AKTIV ANWENDEN)
+**2. 3-Phasen-Modell**
+- **Phase 1 (0-3 Monate):** Test & Schulung
+- **Phase 2 (3-6 Monate):** Pilotierung 1-2 Use Cases
+- **Phase 3 (6-12 Monate):** Rollout & Skalierung
 
-#### 1) 3-Phasen-Modell (aus Implementierung.docx)
+**3. An Unternehmensgröße anpassen**
+- Solo: 1-3 Tage pro Meilenstein
+- Kleinst (2-9 MA): 1-2 Wochen
+- Klein (10-49 MA): 2-4 Wochen
+- Mittel (50-249 MA): 1-2 Monate
 
-**Standard-Ablauf für KI-Projekte:**
-
-**Phase 1: Test & Schulung (0–3 Monate)**
-- Tools identifizieren & evaluieren
-- Team schulen (Prompt-Training, Best Practices)
-- Stakeholder einbinden (Kick-off, Feedback-Formate)
-- Prompt Library aufbauen (5–10 Templates)
-
-**Phase 2: Pilotierung (3–6 Monate)**
-- 1–2 Use Cases pilotieren
-- Wöchentliche Feedbackschleifen
-- KPIs messen & dokumentieren
-- Prompt Library erweitern (20+ Templates)
-
-**Phase 3: Rollout & Verankerung (6–12 Monate)**
-- Prozesse in regulären Betrieb integrieren
-- Skalierung auf weitere Use Cases
-- Erfolgs-Stories kommunizieren
-- Continuous Improvement etablieren
-
-**Im Roadmap:**
-→ Jede Phase hat 2–3 Meilensteine mit dieser Logik  
-→ Deliverables klar benennen (z.B. "Prompt Library mit 20 Templates")
-
-#### 2) 10-20-70-Formel (aus ten_20_70.html)
-
-**Ressourcen-Verteilung:**
-- **10% Algorithmen/Modelle:** Tool-Auswahl, API-Integration
-- **20% Technologie/Daten:** Infrastruktur, Datenpipelines
-- **70% Menschen & Prozesse:** Schulungen, Change, Stakeholder-Management
-
-**Im Roadmap:**
-→ Mind. 70% der Meilensteine fokussieren auf Menschen & Prozesse  
-→ Formulierungen: "Stakeholder-Engagement", "Team-Schulung", "Feedbackkultur"
-
-#### 3) Stakeholder-Einbindung (aus Stakeholder_Change.docx)
-
-**Stakeholder-Matrix (Interesse × Einfluss):**
-```
-    │ High Interest
-────┼────────────────
-High│ Schlüssel-     │ Aktiv
-Inf.│ akteure (eng   │ informieren
-    │ einbinden)     │ & einbinden
-────┼────────────────
-Low │ Monitoren      │ Informieren
-Inf.│                │
-────┴────────────────
-   Low    High
-     Interest
-```
-
-**Im Roadmap:**
-→ Meilenstein 1 (Monat 1): Stakeholder-Analyse & Kick-off  
-→ Alle Phasen: Kontinuierliche Kommunikation (Quartals-Reviews)
-
-#### 4) Change-Prinzipien (aus Stakeholder_Change.docx)
-
-**Erfolgreicher Change:**
-1. **Aufklärung statt Überforderung:** Schritt-für-Schritt-Onboarding
-2. **Transparenz:** Kommunizieren, wie KI eingesetzt wird
-3. **Fehlerkultur:** "Test & Learn" statt "Big Bang"
-4. **Frühzeitige Einbindung:** Fachabteilungen ab Tag 1
-
-**Im Roadmap:**
-→ Explizit erwähnen: "Change-Prinzipien etablieren"  
-→ Kommunikations-Meilensteine einbauen (Kick-off, Reviews)
-
-#### 5) Rollenverteilung (aus Implementierung.docx)
-
-**Typische Rollen (angepasst an {{UNTERNEHMENSGROESSE_LABEL}}):**
-- **Solo:** Selbst + 1 externer KI-Berater
-- **Kleinst (2–9 MA):** Projektleitung + 1–2 Fachabteilungen
-- **Klein (10–49 MA):** Projektleitung + KI-Manager + 3–5 Fachabteilungen + IT
-- **Mittel (50–249 MA):** Steering Committee + KI-Manager + Change Manager + IT + Fachabteilungen
-
-**Im Roadmap:**
-→ Jeder Meilenstein benennt Verantwortliche (Rolle)
-
----
-
-### 📝 STRUKTUR DER ROADMAP
-
-**3 Phasen mit je 2–3 Meilensteinen:**
-
-#### **Phase 0–3 Monate: Test & Schulung**
-
-Format je Meilenstein:
-```html
-<div class="milestone">
-  <h4>🎯 Meilenstein [Nr]: [Titel] (Monat [X]–[Y])</h4>
-  
-  <p><strong>Ziel:</strong><br>
-  [Was soll erreicht werden? Mit KB-Konzept-Bezug]</p>
-  
-  <p><strong>Maßnahmen:</strong></p>
-  <ul>
-    <li>[Maßnahme 1 – konkret, umsetzbar]</li>
-    <li>[Maßnahme 2 – mit Zeitangabe]</li>
-    <li>[Maßnahme 3 – mit Deliverable]</li>
-    <li>[Optional: Weitere Maßnahmen]</li>
-  </ul>
-  
-  <p><strong>Verantwortlich:</strong> [Rolle 1] + [Rolle 2]<br>
-  <strong>Budget:</strong> [Range, z.B. "2.000–3.000€"]<br>
-  <strong>Risiken:</strong> [Top-Risiko] (→ Mitigation: [Maßnahme])<br>
-  <strong>KPIs:</strong> [Konkrete Metriken, z.B. "Stakeholder-Zufriedenheit >80%"]</p>
-</div>
-```
-
-**Typische Meilensteine Phase 1 (0–3 Monate):**
-1. **Stakeholder-Engagement & Kick-off** (Monat 1)
-2. **Tool-Evaluierung & Prompt-Training** (Monat 2)
-3. **Datenqualität & Infrastruktur** (Monat 3)
-
-#### **Phase 3–6 Monate: Pilotierung**
-
-**Typische Meilensteine Phase 2 (3–6 Monate):**
-1. **Use Case 1 Pilotierung** (Monat 4)
-2. **Use Case 2 Pilotierung** (Monat 5)
-3. **Evaluation & Iteration** (Monat 6)
-
-#### **Phase 6–12 Monate: Rollout & Verankerung**
-
-**Typische Meilensteine Phase 3 (6–12 Monate):**
-1. **Skalierung auf weitere Use Cases** (Monat 7–9)
-2. **Prozessintegration & Governance** (Monat 10–11)
-3. **Erfolgs-Kommunikation & Continuous Improvement** (Monat 12)
-
----
-
-### 🚨 WICHTIGE HINWEISE & QUALITÄTSKRITERIEN
-
-#### ✅ DO's (Unbedingt beachten):
-
-1. **Konkrete Deliverables:**  
-   ✓ "Prompt Library mit 20 Templates"  
-   ✗ "Tools einführen"
-
-2. **KB-Konzepte explizit nutzen:**  
-   "Gemäß 10-20-70-Formel fokussieren wir..."  
-   "Stakeholder-Matrix (Interesse × Einfluss) erstellen..."
-
-3. **An Unternehmensgröße anpassen:**  
-   Solo: 1–3 Tage pro Meilenstein  
-   KMU: 2–4 Wochen  
-   Enterprise: 1–2 Monate
-
-4. **Realistische Budgets:**  
-   Nutze {{INVESTITIONSBUDGET}} als Orientierung  
-   Gib Bandbreiten an (z.B. "2.000–5.000€")
-
-5. **Vision-Verankerung:**  
-   {{MOONSHOT}} in Phase 3 (Rollout) explizit aufgreifen
-
-6. **Change-Fokus:**  
-   Mind. 70% der Meilensteine = Menschen & Prozesse
-
-#### ❌ DON'Ts (Unbedingt vermeiden):
-
-1. **Generische Meilensteine:**  
-   ✗ "KI-Tools einführen"  
-   ✓ "Azure OpenAI (GPT-4) für Report-Automation pilotieren"
-
-2. **Unrealistische Timelines:**  
-   Solo kann nicht in 1 Monat 5 Use Cases pilotieren!
-
-3. **Fehlende Rollen:**  
-   Jeder Meilenstein braucht Verantwortliche
-
-4. **Keine Risiken:**  
-   Jeder Meilenstein hat ≥1 Risiko + Mitigation
-
-5. **Vage KPIs:**  
-   ✗ "Erfolgreiche Einführung"  
-   ✓ "Prompt Library mit 20 Templates, Nutzung >5x/Woche"
-
----
-
-### 📤 AUSGABEFORMAT (HTML-FRAGMENT)
+## STRUKTUR (GENAU SO UMSETZEN)
 
 ```html
 <div class="roadmap">
+  <!-- PHASE 1 -->
   <div class="roadmap-phase">
-    <h3>Phase 1: Test & Schulung (Monate 0–3)</h3>
+    <h3>Phase 1: Test & Schulung (Monate 0-3)</h3>
     
     <div class="milestone">
       <h4>🎯 Meilenstein 1: [Titel] (Monat [X])</h4>
-      <p><strong>Ziel:</strong><br>[...]</p>
+      <p><strong>Ziel:</strong> [1-2 Sätze]</p>
       <p><strong>Maßnahmen:</strong></p>
-      <ul><li>[...]</li></ul>
-      <p><strong>Verantwortlich:</strong> [...] | <strong>Budget:</strong> [...] | <strong>Risiken:</strong> [...] | <strong>KPIs:</strong> [...]</p>
+      <ul>
+        <li>[Maßnahme 1 - konkret, mit Zeitangabe]</li>
+        <li>[Maßnahme 2]</li>
+        <li>[Maßnahme 3]</li>
+      </ul>
+      <p><strong>Verantwortlich:</strong> [Rolle] | <strong>Budget:</strong> [X-Y €] | <strong>Risiko:</strong> [Top-Risiko] (Mitigation: [Maßnahme])</p>
     </div>
     
     <!-- Weitere Meilensteine Phase 1 -->
   </div>
   
-  <!-- Phase 2 & 3 analog -->
+  <!-- PHASE 2 + 3 analog -->
 </div>
 ```
 
----
+## TYPISCHE MEILENSTEINE JE PHASE
 
-### 🎯 ZUSAMMENFASSUNG: "Gold Standard+" Roadmap
+### Phase 1 (0-3 Monate): Test & Schulung
+1. **Stakeholder-Kick-off & Vision** (Monat 1)
+2. **Tool-Evaluierung & Prompt-Training** (Monat 2)
+3. **Datenqualität & Infrastruktur** (Monat 3)
 
-Eine Roadmap ist **Gold Standard+**, wenn:
+### Phase 2 (3-6 Monate): Pilotierung
+1. **Use Case 1 Pilot** (Monat 4)
+2. **Use Case 2 Pilot** (Monat 5)
+3. **Evaluation & Learnings** (Monat 6)
 
-✅ Sie 3 Phasen mit je 2–3 Meilensteinen hat (6–9 Meilensteine total)  
-✅ Jeder Meilenstein konkrete Deliverables benennt  
-✅ ≥70% der Meilensteine fokussieren auf Menschen & Prozesse (10-20-70)  
-✅ Stakeholder-Einbindung explizit in Phase 1  
-✅ Change-Prinzipien durchgängig angewendet  
-✅ Vision/Moonshot in Phase 3 aufgegriffen  
-✅ Rollen, Budget, Risiken, KPIs je Meilenstein  
-✅ An {{UNTERNEHMENSGROESSE_LABEL}} angepasste Timelines
+### Phase 3 (6-12 Monate): Rollout
+1. **Skalierung auf weitere Use Cases** (Monat 7-9)
+2. **Prozessintegration & Governance** (Monat 10-11)
+3. **Erfolgs-Review & Continuous Improvement** (Monat 12)
 
----
+## REGELN
 
-**Jetzt bist du dran: Erstelle eine praxistaugliche 12-Monats-Roadmap! 🚀**
+### ✅ MACH DAS:
+
+**1. Menschen & Prozesse priorisieren:**
+- Meilensteine wie "Team-Training", "Stakeholder-Engagement", "Change-Workshop"
+- NICHT nur "Tool X implementieren"
+
+**2. Konkrete Deliverables:**
+✅ "Prompt Library mit 20 Templates erstellt"
+✅ "3 Use Cases evaluiert und priorisiert"
+❌ "Tools einführen"
+❌ "KI nutzen"
+
+**3. Realistische Budgets:**
+- Solo: 2.000-5.000 € gesamt für 12 Monate
+- Kleinst: 5.000-15.000 €
+- Klein: 15.000-50.000 €
+- Mittel: 50.000-200.000 €
+
+**4. Branchenspezifische Use Cases:**
+- Beratung: Angebots-Automation, Research
+- E-Commerce: Produktbeschreibungen, Kunden-Support
+- Handwerk: Angebotserstellung, Prozess-Doku
+- IT: Code-Reviews, Dokumentation
+
+**5. Risiken benennen:**
+- Jeder Meilenstein hat 1 Top-Risiko + Mitigation
+- Typisch: "Mitarbeitende-Adoption gering" (→ Mitigation: "Champions identifizieren")
+
+### ❌ VERMEIDE:
+
+- Generische Meilensteine ohne konkrete Deliverables
+- Unrealistische Timelines (Solo kann nicht 5 Use Cases in 1 Monat pilotieren)
+- Nur Technologie-Fokus (vergiss nicht: 70% Menschen!)
+- Vage Budgets ohne Ranges
+- Fehlende Rollen bei Verantwortlichkeiten
+
+## BEISPIEL FÜR GUTEN MEILENSTEIN
+
+```html
+<div class="milestone">
+  <h4>🎯 Meilenstein 1: Stakeholder-Kick-off & KI-Vision (Monat 1)</h4>
+  <p><strong>Ziel:</strong> Alle Schlüsselpersonen verstehen KI-Potenziale und unterstützen die Roadmap aktiv.</p>
+  <p><strong>Maßnahmen:</strong></p>
+  <ul>
+    <li>Kick-off-Workshop (1 Tag) mit Management und Fachabteilungen</li>
+    <li>KI-Vision und Projektziele gemeinsam definieren</li>
+    <li>Stakeholder-Matrix erstellen (Interesse × Einfluss)</li>
+    <li>3-5 Use Cases identifizieren und priorisieren</li>
+  </ul>
+  <p><strong>Verantwortlich:</strong> KI-Manager + externe Beratung | <strong>Budget:</strong> 2.000-3.000 € | <strong>Risiko:</strong> Geringe Beteiligung von Fachabteilungen (Mitigation: Vorab-Interviews zur Bedarfsanalyse)</p>
+</div>
+```
+
+## ANPASSUNG AN UNTERNEHMENSGRÖSSE
+
+**Solo/Freiberufler:**
+- Meilensteine kompakter (1-3 Tage statt Wochen)
+- "Projektleitung" = Selbst + 1 externer Berater
+- Budget: 2.000-5.000 € gesamt
+
+**Kleinst (2-9 MA):**
+- Meilensteine: 1-2 Wochen
+- Rollen: Geschäftsführung + 1-2 Mitarbeitende
+- Budget: 5.000-15.000 €
+
+**Klein (10-49 MA):**
+- Meilensteine: 2-4 Wochen
+- Rollen: Projektleitung + KI-Manager + IT + 3-5 Fachabteilungen
+- Budget: 15.000-50.000 €
+
+**Mittel (50-249 MA):**
+- Meilensteine: 1-2 Monate
+- Rollen: Steering Committee + KI-Manager + Change Manager + IT + Fachabteilungen
+- Budget: 50.000-200.000 €
+
+## KRITISCHE PRÜFUNG VOR OUTPUT
+
+- [ ] Habe ich 6-9 Meilensteine total (je 2-3 pro Phase)?
+- [ ] Fokussieren ≥5 Meilensteine auf Menschen & Prozesse?
+- [ ] Sind alle Deliverables konkret benannt?
+- [ ] Sind Timelines realistisch für {{UNTERNEHMENSGROESSE_LABEL}}?
+- [ ] Hat jeder Meilenstein: Ziel, Maßnahmen, Verantwortlich, Budget, Risiko?
+- [ ] Sind die Use Cases branchenspezifisch für {{BRANCHE_LABEL}}?
+- [ ] Keine Code-Fences im Output?
