@@ -6,7 +6,7 @@ from typing import Dict, Any, Optional
 
 from .report_pipeline import render_report_html
 from . import research_fetcher, research_html, benchmarks
-from ..utils.sanitize import ensure_utf8
+from .sanitize import ensure_utf8
 
 LOGGER = logging.getLogger(__name__)
 

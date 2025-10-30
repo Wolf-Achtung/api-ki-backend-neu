@@ -5,7 +5,7 @@ import datetime as dt
 import re
 from typing import Dict, Any
 
-from ..utils.sanitize import ensure_utf8
+from .sanitize import ensure_utf8
 
 DEFAULTS = {
     "stundensatz_eur": int(os.getenv("DEFAULT_STUNDENSATZ_EUR", "60")),
