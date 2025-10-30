@@ -1,0 +1,14 @@
+# Nixpacks configuration for Railway deployment
+# Ensures PostgreSQL dependencies are available during build
+
+[phases.setup]
+# System packages needed for psycopg and other Python packages
+aptPkgs = ["postgresql-dev", "gcc", "musl-dev", "libpq-dev"]
+
+[phases.install]
+# Ensure pip is up-to-date
+cmds = ["pip install --upgrade pip"]
+
+[start]
+# Use Procfile for start command
+cmd = "uvicorn main:app --host 0.0.0.0 --port $PORT"
