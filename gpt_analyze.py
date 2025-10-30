@@ -36,7 +36,7 @@ from sqlalchemy.orm import Session
 from core.db import SessionLocal
 from models import Analysis, Briefing, Report, User
 from services.prompt_engine import render_template, render_file
-from services.report_renderer import render as render_report_html
+from services.report_renderer import render
 from services.pdf_client import render_pdf_from_html
 from services.email import send_mail
 from services.email_templates import render_report_ready_email
@@ -548,7 +548,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> Tuple[int, s
     if not br:
         raise ValueError("Briefing not found")
     
-    result = build_full_report_html(br, run_id=run_id)
+    result = render(br, run_id=run_id)
     
     an = Analysis(
         user_id=br.user_id,
