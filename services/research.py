@@ -1,226 +1,364 @@
-# -*- coding: utf-8 -*-
 """
-Research Service mit Tavily Integration
-Optimiert für KI-Sicherheit.jetzt Report-System
+GOLD STANDARD+ FIX 1.1: Web-Search Content-Filter
+================================================
+
+Dieses File enthält die erweiterte research.py mit:
+- NSFW/Pornografie-Filter
+- Spam-Domain-Blocking
+- Content-Validation
+- Besseres Logging
+
+INTEGRATION: Ersetze deine bestehende services/research.py mit diesem Code
 """
 
-import os
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional
-import json
+from typing import List, Dict, Optional, Any
+import os
+from tavily import TavilyClient
 
 logger = logging.getLogger(__name__)
 
+# ============================================================================
+# NSFW-FILTER CONFIGURATION
+# ============================================================================
 
-def search_funding_and_tools(branch: str, state: str = None) -> dict:
+# NSFW-Keywords (Deutsch + Englisch + Hindi/andere Sprachen)
+NSFW_KEYWORDS = [
+    # Englisch
+    'porn', 'sex', 'xxx', 'adult', 'nude', 'naked', 'erotic', '18+', 'nsfw',
+    'fetish', 'escort', 'dating', 'hookup', 'singles', 'webcam', 'camgirl',
+    'strip', 'massage', 'brothel', 'prostitute', 'pornstar', 'milf',
+    
+    # Hindi/andere
+    'chudai', 'sexy', 'bf video', 'desi sex', 'bhabhi',
+    
+    # Deutsch
+    'porno', 'sexfilm', 'erotik', 'bordell', 'huren', 'nutten',
+]
+
+# Spam/Adult-Domains
+SPAM_DOMAINS = [
+    # Bekannte Pornoseiten
+    'xvideos', 'pornhub', 'xhamster', 'youporn', 'redtube', 'tube8',
+    'beeg', 'spankbang', 'eporner', 'txxx', 'xnxx', 'porn.com',
+    
+    # Dating/Escort-Seiten
+    'tinder', 'bumble', 'escort', 'callgirl', 'dating',
+    
+    # Spam-Domains
+    'click-here', 'download-now', 'free-download', 'torrent',
+]
+
+
+def _is_safe_content(result: dict) -> bool:
     """
-    Recherchiert aktuelle KI-Tools und Förderprogramme für Branche/Region.
+    Prüft ob Suchergebnis sicher ist (kein NSFW/Spam).
     
     Args:
-        branch: Branche (z.B. 'beratung', 'handel', 'produktion')
-        state: Bundesland-Kürzel (z.B. 'be', 'by', 'nw')
+        result: Dict mit 'title', 'content', 'url' keys
     
     Returns:
-        Dict mit tools, foerderungen, und metadata
+        True wenn sicher, False wenn gefiltert werden soll
     """
-    try:
-        # Prüfe ob Tavily verfügbar ist
-        api_key = os.getenv('TAVILY_API_KEY')
-        if not api_key:
-            logger.warning("TAVILY_API_KEY not found - returning empty results")
-            return _empty_research_result()
-        
-        # Import Tavily (lazy import)
-        try:
-            from tavily import TavilyClient
-        except ImportError:
-            logger.error("tavily-python not installed - run: pip install tavily-python")
-            return _empty_research_result()
-        
-        # Initialisiere Client
-        client = TavilyClient(api_key=api_key)
-        logger.info(f"[RESEARCH] Starting Tavily search for branch={branch}, state={state}")
-        
-        # Suche 1: KI-Tools für die Branche
-        tools_query = f"beste KI Tools für {branch} Deutschland 2025"
-        logger.info(f"[TAVILY] Query 1: {tools_query}")
-        
-        tools_results = client.search(
-            query=tools_query,
-            search_depth="advanced",
-            max_results=5,
-            include_domains=["heise.de", "t3n.de", "computerwoche.de", "it-zoom.de"]
-        )
-        
-        # Suche 2: Förderprogramme
-        if state:
-            funding_query = f"KI Förderung Digitalisierung {state} Deutschland 2025"
-        else:
-            funding_query = "KI Förderung Digitalisierung Deutschland Bundesweit 2025"
-        
-        logger.info(f"[TAVILY] Query 2: {funding_query}")
-        
-        funding_results = client.search(
-            query=funding_query,
-            search_depth="advanced",
-            max_results=5,
-            include_domains=["foerderdatenbank.de", "bmwk.de", "digitalagentur.de"]
-        )
-        
-        # Extrahiere und strukturiere Ergebnisse
-        tools = _extract_tools_from_results(tools_results.get('results', []))
-        foerderungen = _extract_funding_from_results(funding_results.get('results', []))
-        
-        logger.info(f"[RESEARCH] Found {len(tools)} tools and {len(foerderungen)} funding programs")
-        
-        return {
-            "tools": tools,
-            "foerderungen": foerderungen,
-            "metadata": {
-                "searched_at": datetime.now().isoformat(),
-                "branch": branch,
-                "state": state,
-                "queries": [tools_query, funding_query],
-                "source": "tavily"
-            }
-        }
-        
-    except Exception as e:
-        logger.error(f"[RESEARCH] Error in search_funding_and_tools: {e}", exc_info=True)
-        return _empty_research_result()
-
-
-def _extract_tools_from_results(results: List[dict]) -> List[dict]:
-    """Extrahiert Tool-Informationen aus Tavily-Ergebnissen."""
-    tools = []
+    # Prüfe Title
+    title = (result.get('title', '') or '').lower()
+    for keyword in NSFW_KEYWORDS:
+        if keyword in title:
+            logger.warning(f"[FILTER] ❌ Blocked NSFW title: {title[:80]}...")
+            return False
     
-    for result in results[:5]:  # Max 5 Tools
-        tool = {
-            "name": _extract_tool_name(result.get('title', '')),
-            "description": result.get('content', '')[:200],  # Max 200 chars
-            "url": result.get('url', ''),
-            "category": _categorize_tool(result.get('content', '')),
-            "relevance_score": result.get('score', 0.0)
-        }
-        
-        # Nur hinzufügen wenn URL vorhanden
-        if tool['url']:
-            tools.append(tool)
+    # Prüfe Content
+    content = (result.get('content', '') or '').lower()
+    for keyword in NSFW_KEYWORDS:
+        if keyword in content:
+            logger.warning(f"[FILTER] ❌ Blocked NSFW content: {content[:80]}...")
+            return False
     
-    return tools
+    # Prüfe URL
+    url = (result.get('url', '') or '').lower()
+    for domain in SPAM_DOMAINS:
+        if domain in url:
+            logger.warning(f"[FILTER] ❌ Blocked spam domain: {url}")
+            return False
+    
+    logger.debug(f"[FILTER] ✅ Safe content: {title[:50]}")
+    return True
 
 
-def _extract_funding_from_results(results: List[dict]) -> List[dict]:
-    """Extrahiert Förderprogramm-Informationen aus Tavily-Ergebnissen."""
-    foerderungen = []
-    
-    for result in results[:5]:  # Max 5 Programme
-        program = {
-            "name": result.get('title', ''),
-            "description": result.get('content', '')[:300],  # Max 300 chars
-            "url": result.get('url', ''),
-            "provider": _extract_provider(result.get('url', '')),
-            "relevance_score": result.get('score', 0.0)
-        }
-        
-        # Nur hinzufügen wenn URL vorhanden
-        if program['url']:
-            foerderungen.append(program)
-    
-    return foerderungen
-
+# ============================================================================
+# TOOL EXTRACTION
+# ============================================================================
 
 def _extract_tool_name(title: str) -> str:
-    """Extrahiert Tool-Namen aus Artikel-Titel."""
-    # Entferne gängige Präfixe/Suffixe
-    for prefix in ['Die besten', 'Top', 'Review:', 'Test:']:
-        if title.startswith(prefix):
-            title = title[len(prefix):].strip()
+    """Extrahiert Tool-Name aus Title."""
+    # Entferne häufige Präfixe/Suffixe
+    name = title.replace(' - Test', '').replace(' Review', '').strip()
     
-    # Nimm ersten Teil vor Trennzeichen
-    for separator in [' - ', ' | ', ': ']:
-        if separator in title:
-            title = title.split(separator)[0].strip()
-            break
+    # Kürze auf ersten Teil vor Pipe/Dash
+    if '|' in name:
+        name = name.split('|')[0].strip()
+    if ' - ' in name and len(name.split(' - ')) > 1:
+        name = name.split(' - ')[0].strip()
     
-    return title[:100]  # Max 100 chars
+    return name[:100]  # Max 100 chars
 
 
 def _categorize_tool(content: str) -> str:
-    """Kategorisiert Tool basierend auf Inhalt."""
+    """Kategorisiert Tool basierend auf Content."""
     content_lower = content.lower()
     
-    if any(keyword in content_lower for keyword in ['chatbot', 'chat', 'konversation']):
-        return 'Kundenservice'
-    elif any(keyword in content_lower for keyword in ['text', 'schreiben', 'content']):
-        return 'Content-Erstellung'
-    elif any(keyword in content_lower for keyword in ['analyse', 'daten', 'insights']):
-        return 'Datenanalyse'
-    elif any(keyword in content_lower for keyword in ['automation', 'prozess', 'workflow']):
-        return 'Prozessautomatisierung'
-    else:
-        return 'Sonstiges'
+    categories = {
+        'Textgenerierung': ['text', 'schreiben', 'content', 'copywriting', 'artikel'],
+        'Bildgenerierung': ['bild', 'image', 'foto', 'grafik', 'design', 'midjourney', 'dalle'],
+        'Datenanalyse': ['daten', 'analytics', 'analyse', 'data', 'statistik'],
+        'Automatisierung': ['automation', 'workflow', 'zapier', 'make.com', 'n8n'],
+        'Kundenservice': ['customer', 'support', 'chatbot', 'chat', 'kunde'],
+        'Marketing': ['marketing', 'social media', 'ads', 'kampagne', 'seo'],
+        'Entwicklung': ['code', 'programming', 'entwicklung', 'github', 'api'],
+    }
+    
+    for category, keywords in categories.items():
+        if any(kw in content_lower for kw in keywords):
+            return category
+    
+    return 'Sonstiges'
 
+
+def _extract_tools_from_results(results: List[dict]) -> List[dict]:
+    """
+    Extrahiert Tool-Informationen aus Tavily-Ergebnissen.
+    
+    WICHTIG: Wendet NSFW-Filter an!
+    """
+    tools = []
+    filtered_count = 0
+    
+    # Hole mehr Ergebnisse als benötigt (wegen Filterung)
+    for result in results[:15]:
+        # ⚠️ CRITICAL: Content-Filter anwenden
+        if not _is_safe_content(result):
+            filtered_count += 1
+            continue
+        
+        tool = {
+            "name": _extract_tool_name(result.get('title', 'Unbekanntes Tool')),
+            "description": (result.get('content', '') or '')[:300],  # Max 300 chars
+            "url": result.get('url', ''),
+            "category": _categorize_tool(result.get('content', '')),
+            "relevance_score": result.get('score', 0.5)
+        }
+        
+        # Nur Tools mit URL aufnehmen
+        if tool['url'] and len(tool['description']) > 20:
+            tools.append(tool)
+        
+        # Stoppe bei 5 validen Tools
+        if len(tools) >= 5:
+            break
+    
+    logger.info(f"[TOOLS] ✅ Extracted {len(tools)} tools, filtered {filtered_count} NSFW/spam")
+    return tools
+
+
+# ============================================================================
+# FUNDING EXTRACTION
+# ============================================================================
 
 def _extract_provider(url: str) -> str:
-    """Extrahiert Anbieter aus URL."""
-    if 'foerderdatenbank.de' in url:
-        return 'Bund'
-    elif 'bmwk.de' in url:
-        return 'BMWK'
-    elif any(state in url for state in ['.bayern.de', '.nrw.de', '.berlin.de']):
-        return 'Land'
-    else:
-        return 'Extern'
-
-
-def _empty_research_result() -> dict:
-    """Gibt leere Struktur zurück wenn Recherche fehlschlägt."""
-    return {
-        "tools": [],
-        "foerderungen": [],
-        "metadata": {
-            "searched_at": datetime.now().isoformat(),
-            "error": "No API key or search failed",
-            "source": "none"
-        }
+    """Extrahiert Förder-Provider aus URL."""
+    url_lower = url.lower()
+    
+    providers = {
+        'BAFA': 'bafa',
+        'KfW': 'kfw',
+        'BMWi': ['bmwi', 'bmwk'],
+        'Bundesregierung': 'bundesregierung',
+        'Förderbank': 'foerderbank',
+        'IHK': 'ihk',
+        'Land': 'land',
     }
+    
+    for provider, keywords in providers.items():
+        if isinstance(keywords, str):
+            keywords = [keywords]
+        if any(kw in url_lower for kw in keywords):
+            return provider
+    
+    return 'Sonstige'
 
 
-# Fallback-Funktion für Offline-Testing
-def get_mock_research_data(branch: str, state: str = None) -> dict:
-    """Mock-Daten für Testing ohne API-Key."""
-    return {
-        "tools": [
-            {
-                "name": "ChatGPT Enterprise",
-                "description": "Professionelle KI-Lösung für Unternehmen mit erweiterten Sicherheits- und Compliance-Features",
-                "url": "https://openai.com/enterprise",
-                "category": "Kundenservice",
-                "relevance_score": 0.95
-            },
-            {
-                "name": "Jasper.ai",
-                "description": "KI-gestützte Content-Erstellung für Marketing und Kommunikation",
-                "url": "https://jasper.ai",
-                "category": "Content-Erstellung",
-                "relevance_score": 0.88
-            }
-        ],
-        "foerderungen": [
-            {
-                "name": "Digital Jetzt",
-                "description": "Bundesförderung für Digitalisierung in KMU - bis zu 50.000 Euro Zuschuss",
-                "url": "https://www.bmwk.de/digital-jetzt",
-                "provider": "BMWK",
-                "relevance_score": 0.92
-            }
-        ],
-        "metadata": {
-            "searched_at": datetime.now().isoformat(),
-            "branch": branch,
-            "state": state,
-            "source": "mock"
+def _extract_funding_from_results(results: List[dict]) -> List[dict]:
+    """
+    Extrahiert Förderprogramm-Informationen aus Tavily-Ergebnissen.
+    
+    WICHTIG: Wendet NSFW-Filter an!
+    """
+    foerderungen = []
+    filtered_count = 0
+    
+    # Hole mehr Ergebnisse als benötigt (wegen Filterung)
+    for result in results[:15]:
+        # ⚠️ CRITICAL: Content-Filter anwenden
+        if not _is_safe_content(result):
+            filtered_count += 1
+            continue
+        
+        program = {
+            "name": (result.get('title', '') or '')[:200],
+            "description": (result.get('content', '') or '')[:400],  # Max 400 chars
+            "url": result.get('url', ''),
+            "provider": _extract_provider(result.get('url', '')),
+            "relevance_score": result.get('score', 0.5)
         }
+        
+        # Nur Programme mit URL und sinnvoller Description
+        if program['url'] and len(program['description']) > 30:
+            foerderungen.append(program)
+        
+        # Stoppe bei 5 validen Programmen
+        if len(foerderungen) >= 5:
+            break
+    
+    logger.info(f"[FUNDING] ✅ Extracted {len(foerderungen)} programs, filtered {filtered_count} NSFW/spam")
+    return foerderungen
+
+
+# ============================================================================
+# MAIN SEARCH FUNCTION
+# ============================================================================
+
+def search_funding_and_tools(
+    branche: str,
+    bundesland: Optional[str] = None,
+    run_id: Optional[str] = "unknown"
+) -> Dict[str, Any]:
+    """
+    Sucht nach Förderprogrammen und KI-Tools für ein Unternehmen.
+    
+    Args:
+        branche: Branche des Unternehmens (z.B. "Maschinenbau", "E-Commerce")
+        bundesland: Bundesland (z.B. "Bayern", "NRW") - Optional
+        run_id: Run-ID für Logging
+    
+    Returns:
+        Dict mit 'funding' und 'tools' Listen
+    """
+    logger.info(f"[{run_id}] 🔍 Starting research for: {branche} in {bundesland or 'Deutschland'}")
+    
+    # Tavily-Client initialisieren
+    api_key = os.getenv("TAVILY_API_KEY")
+    if not api_key:
+        logger.error(f"[{run_id}] ❌ TAVILY_API_KEY nicht gesetzt!")
+        return {"funding": [], "tools": []}
+    
+    client = TavilyClient(api_key=api_key)
+    
+    result = {
+        "funding": [],
+        "tools": []
     }
+    
+    # ============================================================================
+    # SEARCH 1: Förderprogramme
+    # ============================================================================
+    try:
+        # Query für Förderprogramme
+        funding_query = f"KI Digitalisierung Förderprogramme {branche}"
+        if bundesland:
+            funding_query += f" {bundesland}"
+        
+        logger.info(f"[{run_id}] 🔍 Funding query: {funding_query}")
+        
+        funding_response = client.search(
+            query=funding_query,
+            search_depth="advanced",
+            max_results=15,  # Mehr holen wegen Filterung
+            include_domains=[
+                "bafa.de", "kfw.de", "bmwk.de", "foerderdatenbank.de",
+                "ihk.de", "handwerkskammer.de"
+            ]
+        )
+        
+        funding_results = funding_response.get("results", [])
+        logger.info(f"[{run_id}] 📊 Got {len(funding_results)} raw funding results")
+        
+        # Extrahiere + Filtere
+        result["funding"] = _extract_funding_from_results(funding_results)
+        
+    except Exception as e:
+        logger.exception(f"[{run_id}] ❌ Funding search failed: {e}")
+    
+    # ============================================================================
+    # SEARCH 2: KI-Tools
+    # ============================================================================
+    try:
+        # Query für KI-Tools
+        tools_query = f"beste KI Tools Software {branche} Deutschland 2024"
+        
+        logger.info(f"[{run_id}] 🔍 Tools query: {tools_query}")
+        
+        tools_response = client.search(
+            query=tools_query,
+            search_depth="advanced",
+            max_results=15,  # Mehr holen wegen Filterung
+            # Keine Domain-Einschränkung, aber Filter wird angewendet
+        )
+        
+        tools_results = tools_response.get("results", [])
+        logger.info(f"[{run_id}] 📊 Got {len(tools_results)} raw tool results")
+        
+        # Extrahiere + Filtere
+        result["tools"] = _extract_tools_from_results(tools_results)
+        
+    except Exception as e:
+        logger.exception(f"[{run_id}] ❌ Tools search failed: {e}")
+    
+    # ============================================================================
+    # FINAL SUMMARY
+    # ============================================================================
+    logger.info(
+        f"[{run_id}] ✅ Research completed: "
+        f"{len(result['funding'])} funding programs, "
+        f"{len(result['tools'])} tools"
+    )
+    
+    return result
+
+
+# ============================================================================
+# TESTING
+# ============================================================================
+
+if __name__ == "__main__":
+    # Test NSFW-Filter
+    print("\n=== TESTING NSFW FILTER ===\n")
+    
+    test_cases = [
+        {
+            'title': 'Die besten KI Tools für Marketing 2024',
+            'url': 'https://heise.de/ki-tools',
+            'content': 'Eine Übersicht über KI-gestützte Marketing-Tools...',
+        },
+        {
+            'title': 'Hindi Chudai Video XXX Adult Content',
+            'url': 'https://xvideos.com/something',
+            'content': 'Adult content porn sex xxx...',
+        },
+        {
+            'title': 'ChatGPT Tutorial für Anfänger',
+            'url': 'https://openai.com/blog/chatgpt',
+            'content': 'So nutzen Sie ChatGPT effektiv für Ihr Business...',
+        },
+        {
+            'title': 'Sexy Singles in Your Area - Dating',
+            'url': 'https://dating-spam.com',
+            'content': 'Meet hot singles now! Click here for hookup...',
+        },
+    ]
+    
+    for i, case in enumerate(test_cases, 1):
+        is_safe = _is_safe_content(case)
+        status = "✅ SAFE" if is_safe else "❌ BLOCKED"
+        print(f"{i}. {status}: {case['title'][:60]}")
+    
+    print("\n=== TEST COMPLETED ===\n")
