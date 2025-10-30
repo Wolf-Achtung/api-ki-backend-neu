@@ -62,8 +62,74 @@ def build_full_report_html(
     generated_sections: Optional[Dict[str, str]] = None,
     use_fetchers: bool = True
 ) -> str:
+    """
+    Erstellt vollständiges Report-HTML aus Briefing und generierten Sections.
+    
+    Args:
+        briefing: Briefing-Dict mit Antworten
+        generated_sections: Dict mit HTML-Sections (z.B. {"EXEC_SUMMARY_HTML": "..."})
+        use_fetchers: Ob externe Datenquellen (Tavily etc.) verwendet werden sollen
+    
+    Returns:
+        String mit vollständigem HTML
+    """
     snippets = dict(generated_sections or {})
     snippets = _enrich_snippets_with_fetchers(briefing, snippets, use_fetchers=use_fetchers)
     snippets = _enrich_with_benchmarks(briefing, snippets)
     html = render_report_html(briefing, snippets)
     return ensure_utf8(html)
+
+
+def render(briefing: Any, run_id: str = None, **kwargs) -> Dict[str, Any]:
+    """
+    High-Level Render-Funktion für gpt_analyze.py
+    
+    Diese Funktion wird von gpt_analyze.py aufgerufen und gibt ein Dict zurück.
+    
+    Args:
+        briefing: Briefing-Objekt oder Dict
+        run_id: Optional Run-ID für Logging
+        **kwargs: Zusätzliche Parameter (generated_sections, use_fetchers, etc.)
+    
+    Returns:
+        Dict mit keys:
+        - "html": Vollständiges Report-HTML
+        - "meta": Metadata-Dict
+    """
+    # Konvertiere Briefing-Objekt zu Dict falls nötig
+    if hasattr(briefing, '__dict__'):
+        briefing_dict = {
+            "id": getattr(briefing, "id", None),
+            "user_id": getattr(briefing, "user_id", None),
+            "lang": getattr(briefing, "lang", "de"),
+            "answers": getattr(briefing, "answers", {}),
+            "created_at": getattr(briefing, "created_at", None),
+        }
+        # Merge answers in top-level für einfacheren Zugriff
+        briefing_dict.update(briefing_dict.get("answers", {}))
+    else:
+        briefing_dict = briefing
+    
+    # Generiere HTML
+    generated_sections = kwargs.get("generated_sections")
+    use_fetchers = kwargs.get("use_fetchers", True)
+    
+    html = build_full_report_html(
+        briefing_dict,
+        generated_sections=generated_sections,
+        use_fetchers=use_fetchers
+    )
+    
+    # Erstelle Metadata
+    meta = {
+        "briefing_id": briefing_dict.get("id"),
+        "run_id": run_id,
+        "sections_count": len(generated_sections or {}),
+        "html_length": len(html),
+        "fetchers_used": use_fetchers,
+    }
+    
+    return {
+        "html": html,
+        "meta": meta,
+    }
