@@ -21,9 +21,7 @@
     .callout{ border-left:4px solid var(--brand); padding:10px 12px; background:#F4F8FF; border-radius:6px; page-break-inside: avoid; }
     .footer-note{ font-size:12px; color:var(--muted); margin-top:24px }
     a{ word-break: break-word; }
-    /* Kapitel-Umbrüche */
     .chapter{ break-before: page; page-break-before: always; }
-    /* Erste Kapitel-Seite (Deckblatt+Profil) ohne Umbruch */
     .no-break{ break-before: avoid; page-break-before: auto; }
     @media print { .container{ padding:0 12mm } a{ color:#111; text-decoration:underline } }
   </style>
@@ -85,6 +83,11 @@
       <div class="card">{{QUICK_WINS_HTML_LEFT}}</div>
       <div class="card">{{QUICK_WINS_HTML_RIGHT}}</div>
       <p class="small">Monats‑Ersparnis gesamt: {{monatsersparnis_stunden}} h (≈ {{monatsersparnis_eur}} €) → {{jahresersparnis_stunden}} h/Jahr (≈ {{jahresersparnis_eur}} €) bei {{stundensatz_eur}} €/h.</p>
+    </section>
+
+    <section class="chapter">
+      <h2>Handlungsempfehlungen (Priorität & Zeitrahmen)</h2>
+      <div class="card">{{RECOMMENDATIONS_HTML}}</div>
     </section>
 
     <section class="chapter">
