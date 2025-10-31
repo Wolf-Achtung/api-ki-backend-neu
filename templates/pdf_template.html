@@ -27,11 +27,11 @@
   <div class="container">
     <header class="site">
       <div class="logos">
-        <img src="{{logo_primary}}" alt="KI‑Sicherheit.jetzt Logo" />
-        <img src="{{logo_tuv}}" alt="TÜV Austria" />
-        <img src="{{logo_dsgvo}}" alt="DSGVO konform" />
-        <img src="{{logo_eu_ai}}" alt="EU AI Act" />
-        <img src="{{logo_ready}}" alt="KI‑Ready 2025" />
+        <img src="{{ logo_primary|default('assets/ki-sicherheit-logo.webp') }}" alt="KI‑Sicherheit.jetzt Logo" loading="lazy" />
+        <img src="{{ logo_tuv|default('assets/tuev-logo-transparent.webp') }}" alt="TÜV Austria" loading="lazy" />
+        <img src="{{ logo_dsgvo|default('assets/dsgvo.svg') }}" alt="DSGVO konform" loading="lazy" />
+        <img src="{{ logo_eu_ai|default('assets/eu-ai.svg') }}" alt="EU AI Act" loading="lazy" />
+        <img src="{{ logo_ready|default('assets/ki-ready-2025.webp') }}" alt="KI‑Ready 2025" loading="lazy" />
       </div>
       <div class="stand">Stand: {{report_date}}</div>
     </header>
@@ -52,7 +52,7 @@
             <tr><th>Kontakt (E‑Mail)</th><td>{{user_email}}</td></tr>
           </tbody>
         </table>
-        <p class="small">Transparenz: {{transparency_text}}</p>
+        <p class="small">{{transparency_text}}</p>
       </div>
       <div class="card">
         <h3>KI‑Reifegrad (Säulen)</h3>
@@ -108,7 +108,7 @@
     <section>
       <h2>Risiko‑Assessment & Compliance</h2>
       <div class="card">{{RISKS_HTML}}</div>
-      <p class="small">EU AI Act: geringes Risiko (assistierend). Transparenz: {{transparency_text}}</p>
+      <p class="small">{{transparency_text}}</p>
     </section>
 
     <section>
