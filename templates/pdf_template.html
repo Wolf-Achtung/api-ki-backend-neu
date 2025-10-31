@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang=\"de\">
+<html lang="de">
 <head>
-  <meta charset=\"utf-8\">
-  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>KI‑Status‑Report</title>
   <style>
     :root{ --fg:#0b1f33; --muted:#5b6b7a; --border:#e5e7eb; --brand:#2547d0; --bg:#ffffff; --card:#f8fafc; }
     html,body{ margin:0; padding:0; background:var(--bg); color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,\"Apple Color Emoji\",\"Segoe UI Emoji\"; line-height:1.55; }
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"; line-height:1.55; }
     .container{ max-width:960px; margin:0 auto; padding:20px; }
     header.site{ display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); padding:10px 0; margin-bottom:16px; }
     .logos{ display:flex; align-items:center; gap:14px; flex-wrap:wrap }
@@ -20,30 +20,30 @@
     .table th,.table td{ padding:8px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top }
     .callout{ border-left:4px solid var(--brand); padding:10px 12px; background:#F4F8FF; border-radius:6px; page-break-inside: avoid; }
     .footer-note{ font-size:12px; color:var(--muted); margin-top:24px }
-    .chapter{ page-break-before: always; }
-    section{ page-break-inside: avoid; }
+    /* Kapitelumbrüche: ab der zweiten Sektion */
+    section.chapter{ page-break-before: always; }
     @media print { .container{ padding:0 12mm } a{ color:#111; text-decoration:underline } }
   </style>
 </head>
 <body>
-  <div class=\"container\">
-    <header class=\"site\">
-      <div class=\"logos\">
-        <img src=\"{{logo_primary}}\" alt=\"KI‑Sicherheit.jetzt Logo\" />
-        <img src=\"{{logo_tuv}}\" alt=\"TÜV Austria\" />
-        <img src=\"{{logo_dsgvo}}\" alt=\"DSGVO konform\" />
-        <img src=\"{{logo_eu_ai}}\" alt=\"EU AI Act\" />
-        <img src=\"{{logo_ready}}\" alt=\"KI‑Ready 2025\" />
+  <div class="container">
+    <header class="site">
+      <div class="logos">
+        <img src="{{logo_primary}}" alt="KI‑Sicherheit.jetzt Logo" />
+        <img src="{{logo_tuv}}" alt="TÜV Austria" />
+        <img src="{{logo_dsgvo}}" alt="DSGVO konform" />
+        <img src="{{logo_eu_ai}}" alt="EU AI Act" />
+        <img src="{{logo_ready}}" alt="KI‑Ready 2025" />
       </div>
-      <div class=\"stand\">Stand: {{report_date}}</div>
+      <div class="stand">Stand: {{report_date}}</div>
     </header>
 
     <section>
       <h1>KI‑Status‑Report</h1>
-      <p class=\"small\">Ihr individueller Fahrplan zur erfolgreichen KI‑Integration</p>
-      <div class=\"card\">
+      <p class="small">Ihr individueller Fahrplan zur erfolgreichen KI‑Integration</p>
+      <div class="card">
         <h3>Unternehmensprofil</h3>
-        <table class=\"table\">
+        <table class="table">
           <tbody>
             <tr><th>Name</th><td>{{unternehmen_name}}</td></tr>
             <tr><th>Branche</th><td>{{branche}}</td></tr>
@@ -54,11 +54,11 @@
             <tr><th>Kontakt (E‑Mail)</th><td>{{user_email}}</td></tr>
           </tbody>
         </table>
-        <p class=\"small\">Transparenz: {{transparency_text}}</p>
+        <p class="small">Transparenz: {{transparency_text}}</p>
       </div>
-      <div class=\"card\">
+      <div class="card">
         <h3>KI‑Reifegrad (Säulen)</h3>
-        <table class=\"table\">
+        <table class="table">
           <thead><tr><th>Dimension</th><th>Score</th></tr></thead>
           <tbody>
             <tr><td>Governance</td><td>{{score_governance}}/100</td></tr>
@@ -69,86 +69,82 @@
           </tbody>
         </table>
       </div>
-      <div class=\"card\">{{BENCHMARK_HTML}}</div>
+      <div class="card">{{BENCHMARK_HTML}}</div>
     </section>
 
-    <section class=\"chapter\">
+    <section class="chapter">
       <h2>Executive Summary</h2>
-      <div class=\"callout\">{{EXECUTIVE_SUMMARY_HTML}}</div>
+      <div class="callout">{{EXECUTIVE_SUMMARY_HTML}}</div>
     </section>
 
-    <section class=\"chapter\">
+    <section class="chapter">
+      <h2>KPI‑Dashboard & Monitoring</h2>
+      <div class="card">
+        <h3>Überblick</h3>
+        {{KPI_HTML}}
+      </div>
+      <div class="card">
+        <h3>Branchenspezifische KPIs</h3>
+        {{KPI_BRANCHE_HTML}}
+      </div>
+    </section>
+
+    <section class="chapter">
       <h2>Quick Wins (0–90 Tage)</h2>
-      <div class=\"card\">{{QUICK_WINS_HTML_LEFT}}</div>
-      <div class=\"card\">{{QUICK_WINS_HTML_RIGHT}}</div>
-      <p class=\"small\">Monats‑Ersparnis gesamt: {{monatsersparnis_stunden}} h (≈ {{monatsersparnis_eur}} €) → {{jahresersparnis_stunden}} h/Jahr (≈ {{jahresersparnis_eur}} €) bei {{stundensatz_eur}} €/h.</p>
+      <div class="card">{{QUICK_WINS_HTML_LEFT}}</div>
+      <div class="card">{{QUICK_WINS_HTML_RIGHT}}</div>
+      <p class="small">Monats‑Ersparnis gesamt: {{monatsersparnis_stunden}} h (≈ {{monatsersparnis_eur}} €) → {{jahresersparnis_stunden}} h/Jahr (≈ {{jahresersparnis_eur}} €) bei {{stundensatz_eur}} €/h.</p>
     </section>
 
-    <section class=\"chapter\">
+    <section class="chapter">
       <h2>Roadmap (90 Tage – Test → Pilot → Rollout)</h2>
-      <div class=\"card\">{{PILOT_PLAN_HTML}}</div>
+      <div class="card">{{PILOT_PLAN_HTML}}</div>
     </section>
 
-    <section class=\"chapter\">
+    <section class="chapter">
       <h2>Business Case & Kostenübersicht</h2>
-      <div class=\"card\">
+      <div class="card">
         <h3>ROI & Payback</h3>
         {{ROI_HTML}}
       </div>
-      <div class=\"card\">
+      <div class="card">
         <h3>Kosten (Jahr 1)</h3>
         {{COSTS_OVERVIEW_HTML}}
       </div>
     </section>
 
-    <section class=\"chapter\">
-      <h2>Ensemble‑Assessment & Prioritäten</h2>
-      <div class=\"card\">
-        <h3>Gewichtete Teilnoten</h3>
-        {{ENSEMBLE_SUMMARY_HTML}}
-      </div>
-      <div class=\"card\">
-        <h3>Top‑Maßnahmen (konsolidiert)</h3>
-        {{ENSEMBLE_ACTIONS_HTML}}
-      </div>
-      <div class=\"card\">
-        <h3>Erkannte Zielkonflikte</h3>
-        {{ENSEMBLE_CONFLICTS_HTML}}
-      </div>
-    </section>
-
-    <section class=\"chapter\">
+    <section class="chapter">
       <h2>Empfohlene Tools (Pro & Open‑Source)</h2>
-      <div class=\"card\">{{TOOLS_HTML}}</div>
-      <p class=\"small\">Hinweis: Bevorzugt EU‑Hosting/DSGVO‑konform. Preise/Leistungsdaten können sich ändern.</p>
+      <div class="card">{{TOOLS_HTML}}</div>
+      <p class="small">Hinweis: Bevorzugt EU‑Hosting/DSGVO‑konform. Preise/Leistungsdaten können sich ändern.</p>
     </section>
 
-    <section class=\"chapter\">
+    <section class="chapter">
       <h2>Risiko‑Assessment & Compliance</h2>
-      <div class=\"card\">{{RISKS_HTML}}</div>
-      <p class=\"small\">EU AI Act: geringes Risiko (assistierend). Transparenz: {{transparency_text}}</p>
+      <div class="card">{{RISKS_HTML}}</div>
+      <p class="small">EU AI Act: geringes Risiko (assistierend). Transparenz: {{transparency_text}}</p>
     </section>
 
-    <section class=\"chapter\">
+    <section class="chapter">
       <h2>Gamechanger‑Use Case</h2>
-      <div class=\"card\">{{GAMECHANGER_HTML}}</div>
+      <div class="card">{{GAMECHANGER_HTML}}</div>
     </section>
 
-    <section class=\"chapter\">
+    <section class="chapter">
       <h2>Aktuelle Förderprogramme & Quellen</h2>
-      <div class=\"card\">
+      <div class="card">
         <h3>Förderungen (nach Standort)</h3>
         {{FOERDERPROGRAMME_HTML}}
-        <p class=\"small\">Bitte Fristen/Links prüfen (Stand: {{report_date}}).</p>
+        <p class="small">Bitte Fristen/Links prüfen (Stand: {{report_date}}).</p>
       </div>
-      <div class=\"card\">
+      <div class="card">
         <h3>Quellen & Referenzen</h3>
         {{QUELLEN_HTML}}
       </div>
     </section>
 
     <section>
-      <p class=\"footer-note\">© {{report_year}} KI‑Sicherheit.jetzt • DSGVO • ePrivacy • DSA • EU AI Act — Kontakt: {{unternehmen_name}}</p>
+      <p class="footer-note">© {{report_year}} KI‑Sicherheit.jetzt • DSGVO • ePrivacy • DSA • EU AI Act — Kontakt: {{unternehmen_name}}</p>
     </section>
   </div>
 </body>
