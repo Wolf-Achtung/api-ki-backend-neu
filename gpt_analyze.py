@@ -1,27 +1,27 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-GOLD STANDARD v4.2 – Robust Content Mapping & PDF Rendering
-===========================================================
+gpt_analyze.py – v4.4 (Gold-Standard+)
+=====================================
+Drop-in Replacement, kompatibel zu v4.1/v4.2, mit folgenden Fixes/Erweiterungen:
 
-Änderungen ggü. v4.1:
-- 🔁 Einheitliches Mapping der LLM-Outputs auf Template-Keys (kein leerer Content mehr)
-- ✅ Executive Summary → EXECUTIVE_SUMMARY_HTML (statt EXEC_SUMMARY_HTML)
-- ✅ Quick Wins: automatische 2‑Spalten‑Aufteilung (LEFT/RIGHT)
-- ✅ Roadmap: ROADMAP_HTML → PILOT_PLAN_HTML
-- ✅ Business Case: BUSINESS_CASE_HTML → (ROI_HTML, COSTS_OVERVIEW_HTML)
-- ✅ Gamechanger-Use Case: neu generiert (GAMECHANGER_HTML)
-- ✅ Risiko-Matrix (falls Fetcher nichts liefern): LLM‑Fallback (RISKS_HTML)
-- ✅ Scores werden als score_* Felder in den Template‑Kontext übernommen
-- ✅ Transparenztext standardisiert (transparency_text)
-- 🧼 UTF‑8, PEP8, Logging, Fehlerbehandlung verbessert
+- ✅ **Template-Key-Kompatibilität**: 
+  EXECUTIVE_SUMMARY_HTML, QUICK_WINS_HTML_LEFT/RIGHT, PILOT_PLAN_HTML,
+  ROI_HTML, COSTS_OVERVIEW_HTML, RECOMMENDATIONS_HTML, RISKS_HTML, GAMECHANGER_HTML.
+- ✅ **Scores sicher im Template**: score_governance / score_sicherheit / score_nutzen / score_befaehigung / score_gesamt.
+- ✅ **LLM-Generierung** stabilisiert (valide HTML, keine Markdown-Fences).
+- ✅ **Quick-Wins 2-Spalten-Aufteilung** (LEFT/RIGHT) aus einer Liste.
+- ✅ **Business Case** als **zwei** getrennte HTML-Blöcke (ROI & Kosten) – keine externe Normalizer-Abhängigkeit.
+- ✅ **Optionale Research-/KPI-/Playbook-Integration** (failsafe, nur wenn Module vorhanden sind).
+- ✅ **UTF‑8, PEP8, Logging, Fehlerbehandlung**.
 
-Hinweis: Der eigentliche PDF-HTML-Body kommt aus dem Template (pdf_template.html).
-Diese Datei sorgt lediglich dafür, dass alle Platzhalter-Keys korrekt gefüllt werden.
+Umstellung ist rückwärtskompatibel: Falls Research/KPI/Playbooks-Module fehlen,
+läuft der Code mit Render-Fetchern weiter.
 """
 import json
 import logging
 import os
+import re
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
@@ -35,14 +35,38 @@ from services.report_renderer import render
 from services.pdf_client import render_pdf_from_html
 from services.email import send_mail
 from services.email_templates import render_report_ready_email
-from services.content_normalizer import normalize_and_enrich_sections  # NEW
 from settings import settings
 
+# -------------------- optionale Services (failsafe imports) -------------------
+def _pass_through(x):  # noqa: D401
+    """No-op Normalizer."""
+    return x
+
+try:
+    from services.answers_normalizer import normalize_answers  # type: ignore
+except Exception:  # pragma: no cover - optional
+    normalize_answers = _pass_through  # type: ignore
+
+try:
+    from services.research_pipeline import run_research  # type: ignore
+except Exception:  # pragma: no cover - optional
+    run_research = None  # type: ignore
+
+try:
+    from services.kpi_builder import build_kpis  # type: ignore
+except Exception:  # pragma: no cover - optional
+    build_kpis = None  # type: ignore
+
+try:
+    from services.playbooks import build_playbooks  # type: ignore
+except Exception:  # pragma: no cover - optional
+    build_playbooks = None  # type: ignore
+
+# ----------------------------------------------------------------------------
+# Konfiguration
+# ----------------------------------------------------------------------------
 log = logging.getLogger(__name__)
 
-# -----------------------------------------------------------------------------
-# Config
-# -----------------------------------------------------------------------------
 OPENAI_API_KEY = getattr(settings, "OPENAI_API_KEY", None) or os.getenv("OPENAI_API_KEY")
 OPENAI_MODEL = getattr(settings, "OPENAI_MODEL", None) or os.getenv("OPENAI_MODEL", "gpt-4o")
 OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE", "0.2"))
@@ -57,9 +81,12 @@ ENABLE_QUALITY_GATES = (os.getenv("ENABLE_QUALITY_GATES", "1") == "1")
 ENABLE_REALISTIC_SCORES = (os.getenv("ENABLE_REALISTIC_SCORES", "1") == "1")
 ENABLE_LLM_CONTENT = (os.getenv("ENABLE_LLM_CONTENT", "1") == "1")
 
-# -----------------------------------------------------------------------------
+# Research-Fallback: falls interne Research-Module verfügbar sind, nutzen wir sie
+USE_INTERNAL_RESEARCH = (os.getenv("USE_INTERNAL_RESEARCH", "1") == "1")
+
+# ----------------------------------------------------------------------------
 # NSFW Filter
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 NSFW_KEYWORDS = {
     'porn', 'xxx', 'sex', 'nude', 'naked', 'adult', 'nsfw', 'erotic',
     'webcam', 'escort', 'dating', 'hookup', 'milf', 'teen', 'amateur',
@@ -71,6 +98,7 @@ NSFW_DOMAINS = {
     'xvideos.com', 'pornhub.com', 'xnxx.com', 'redtube.com', 'youporn.com',
     'onlyfans.com', 'fansly.com', 'manyvids.com'
 }
+
 
 def _is_nsfw_content(url: str, title: str, description: str) -> bool:
     if not ENABLE_NSFW_FILTER:
@@ -85,52 +113,31 @@ def _is_nsfw_content(url: str, title: str, description: str) -> bool:
             return True
     return False
 
+
 def _filter_nsfw_from_research(research_data: Dict[str, Any]) -> Dict[str, Any]:
     if not ENABLE_NSFW_FILTER:
         return research_data
-    filtered_data = {'tools': [], 'funding': []}
-    stats = {
-        'tools_total': len(research_data.get('tools', [])),
-        'tools_filtered': 0,
-        'funding_total': len(research_data.get('funding', [])),
-        'funding_filtered': 0,
-    }
+    filtered_data: Dict[str, Any] = {'tools': [], 'funding': []}
     for tool in research_data.get('tools', []):
         url = tool.get('url', '')
         title = tool.get('title', '')
         description = tool.get('description', '')
         if not _is_nsfw_content(url, title, description):
             filtered_data['tools'].append(tool)
-        else:
-            stats['tools_filtered'] += 1
-            log.warning("🚨 Filtered NSFW tool: %s...", title[:50])
     for fund in research_data.get('funding', []):
         url = fund.get('url', '')
         title = fund.get('title', '')
         description = fund.get('description', '')
         if not _is_nsfw_content(url, title, description):
             filtered_data['funding'].append(fund)
-        else:
-            stats['funding_filtered'] += 1
-            log.warning("🚨 Filtered NSFW funding: %s...", title[:50])
-    if stats['tools_filtered'] > 0 or stats['funding_filtered'] > 0:
-        log.warning(
-            "🚨 NSFW FILTER: Tools: %s/%s, Funding: %s/%s filtered",
-            stats['tools_filtered'], stats['tools_total'],
-            stats['funding_filtered'], stats['funding_total']
-        )
-    else:
-        log.info("✅ NSFW filter passed: %s tools, %s funding clean",
-                 stats['tools_total'], stats['funding_total'])
     return filtered_data
 
-# -----------------------------------------------------------------------------
-# SCORE CALCULATION (v4.1 already fixed, reused in v4.2)
-# -----------------------------------------------------------------------------
-
+# ----------------------------------------------------------------------------
+# SCORE CALCULATION (bewährt aus v4.1/v4.2)
+# ----------------------------------------------------------------------------
 def _map_german_to_english_keys(answers: Dict[str, Any]) -> Dict[str, Any]:
-    """Map deutsche Briefing-Keys zu englischen Keys für Score-Berechnung"""
-    mapped = {}
+    """Map deutsche Briefing-Keys zu englischen Keys für Score-Berechnung."""
+    mapped: Dict[str, Any] = {}
     # Governance
     if answers.get('roadmap_vorhanden') == 'ja':
         mapped['ai_strategy'] = 'yes'
@@ -158,15 +165,9 @@ def _map_german_to_english_keys(answers: Dict[str, Any]) -> Dict[str, Any]:
     mapped['goals'] = ', '.join(ki_ziele) if ki_ziele else answers.get('strategische_ziele', '')
     anwendungsfaelle = answers.get('anwendungsfaelle', [])
     ki_projekte = answers.get('ki_projekte', '')
-    if anwendungsfaelle:
-        mapped['use_cases'] = ', '.join(anwendungsfaelle) + '. ' + ki_projekte
-    else:
-        mapped['use_cases'] = ki_projekte
+    mapped['use_cases'] = (', '.join(anwendungsfaelle) + '. ' + ki_projekte) if anwendungsfaelle else ki_projekte
     # Security
-    if answers.get('datenschutz') is True or answers.get('datenschutzbeauftragter') == 'ja':
-        mapped['gdpr_aware'] = 'yes'
-    else:
-        mapped['gdpr_aware'] = 'no'
+    mapped['gdpr_aware'] = 'yes' if (answers.get('datenschutz') is True or answers.get('datenschutzbeauftragter') == 'ja') else 'no'
     if answers.get('technische_massnahmen') == 'alle':
         mapped['data_protection'] = 'comprehensive'
     elif answers.get('technische_massnahmen'):
@@ -175,12 +176,7 @@ def _map_german_to_english_keys(answers: Dict[str, Any]) -> Dict[str, Any]:
         mapped['data_protection'] = 'none'
     mapped['risk_assessment'] = 'yes' if answers.get('folgenabschaetzung') == 'ja' else 'no'
     trainings = answers.get('trainings_interessen', [])
-    if trainings and len(trainings) > 2:
-        mapped['security_training'] = 'regular'
-    elif trainings:
-        mapped['security_training'] = 'occasional'
-    else:
-        mapped['security_training'] = 'no'
+    mapped['security_training'] = 'regular' if trainings and len(trainings) > 2 else ('occasional' if trainings else 'no')
     # Value
     if answers.get('vision_prioritaet') in ['marktfuehrerschaft', 'wachstum']:
         mapped['roi_expected'] = 'high'
@@ -189,135 +185,106 @@ def _map_german_to_english_keys(answers: Dict[str, Any]) -> Dict[str, Any]:
     else:
         mapped['roi_expected'] = 'low'
     mapped['measurable_goals'] = 'yes' if (answers.get('strategische_ziele') or answers.get('ki_ziele')) else 'no'
-    if answers.get('pilot_bereich'):
-        mapped['pilot_planned'] = 'yes'
-    elif answers.get('ki_projekte'):
-        mapped['pilot_planned'] = 'in_progress'
-    else:
-        mapped['pilot_planned'] = 'no'
+    mapped['pilot_planned'] = 'yes' if answers.get('pilot_bereich') else ('in_progress' if answers.get('ki_projekte') else 'no')
     # Enablement
     kompetenz_map = {'hoch': 'advanced', 'mittel': 'intermediate', 'niedrig': 'basic', 'keine': 'none'}
     mapped['ai_skills'] = kompetenz_map.get(answers.get('ki_kompetenz', ''), 'none')
-    if answers.get('zeitbudget') in ['ueber_10', '5_10']:
-        mapped['training_budget'] = 'yes'
-    elif answers.get('zeitbudget'):
-        mapped['training_budget'] = 'planned'
-    else:
-        mapped['training_budget'] = 'no'
+    mapped['training_budget'] = 'yes' if answers.get('zeitbudget') in ['ueber_10', '5_10'] else ('planned' if answers.get('zeitbudget') else 'no')
     change = answers.get('change_management', '')
-    if change == 'hoch':
-        mapped['change_management'] = 'yes'
-    elif change in ['mittel', 'niedrig']:
-        mapped['change_management'] = 'planned'
-    else:
-        mapped['change_management'] = 'no'
+    mapped['change_management'] = 'yes' if change == 'hoch' else ('planned' if change in ['mittel', 'niedrig'] else 'no')
     innovationsprozess = answers.get('innovationsprozess', '')
-    if innovationsprozess in ['mitarbeitende', 'alle']:
-        mapped['innovation_culture'] = 'strong'
-    elif innovationsprozess:
-        mapped['innovation_culture'] = 'moderate'
-    else:
-        mapped['innovation_culture'] = 'weak'
+    mapped['innovation_culture'] = 'strong' if innovationsprozess in ['mitarbeitende', 'alle'] else ('moderate' if innovationsprozess else 'weak')
     return mapped
 
-def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Score-Formel (intern 0–25, Template 0–100), Gesamt = Durchschnitt.
-    """
-    if not ENABLE_REALISTIC_SCORES:
-        return {'scores': {'governance': 0, 'security': 0, 'value': 0, 'enablement': 0, 'overall': 0},
-                'details': {}, 'total': 0}
-    mapped = _map_german_to_english_keys(answers)
-    log.debug("🔄 Keys mapped for scoring: %d → %d", len(answers), len(mapped))
 
+def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
+    """Berechnet realistische Scores (0–100); Gesamt = Durchschnitt der vier Säulen."""
+    if not ENABLE_REALISTIC_SCORES:
+        return {'scores': {'governance': 0, 'security': 0, 'value': 0, 'enablement': 0, 'overall': 0}, 'details': {}, 'total': 0}
+    m = _map_german_to_english_keys(answers)
     gov = sec = val = ena = 0
     details = {'governance': [], 'security': [], 'value': [], 'enablement': []}
-
-    # GOVERNANCE
-    if mapped.get('ai_strategy') in ['yes', 'in_progress']:
+    # Governance
+    if m.get('ai_strategy') in ['yes', 'in_progress']:
         gov += 8; details['governance'].append("✅ KI-Strategie (+8)")
     else:
         details['governance'].append("❌ Keine KI-Strategie (-8)")
-    if mapped.get('ai_responsible') in ['yes', 'shared']:
+    if m.get('ai_responsible') in ['yes', 'shared']:
         gov += 7; details['governance'].append("✅ KI-Verantwortlicher (+7)")
     else:
         details['governance'].append("❌ Kein KI-Verantwortlicher (-7)")
-    budget = mapped.get('budget', '')
+    budget = m.get('budget', '')
     if budget in ['10k-50k', '50k-100k', 'over_100k']:
         gov += 6; details['governance'].append(f"✅ Budget: {budget} (+6)")
     elif budget == 'under_10k':
         gov += 3; details['governance'].append("⚠️ Budget: unter 10k (+3)")
     else:
         details['governance'].append("❌ Kein Budget (-6)")
-    if mapped.get('goals') or mapped.get('use_cases'):
+    if m.get('goals') or m.get('use_cases'):
         gov += 4; details['governance'].append("✅ KI-Ziele definiert (+4)")
     else:
         details['governance'].append("❌ Keine KI-Ziele (-4)")
-
-    # SECURITY
-    if mapped.get('gdpr_aware') == 'yes':
+    # Security
+    if m.get('gdpr_aware') == 'yes':
         sec += 8; details['security'].append("✅ DSGVO-Awareness (+8)")
     else:
         details['security'].append("❌ Keine DSGVO-Awareness (-8)")
-    if mapped.get('data_protection') in ['comprehensive', 'basic']:
+    if m.get('data_protection') in ['comprehensive', 'basic']:
         sec += 7; details['security'].append("✅ Datenschutz-Maßnahmen (+7)")
     else:
         details['security'].append("❌ Keine Datenschutz-Maßnahmen (-7)")
-    if mapped.get('risk_assessment') == 'yes':
+    if m.get('risk_assessment') == 'yes':
         sec += 6; details['security'].append("✅ Risiko-Assessment (+6)")
     else:
         details['security'].append("❌ Kein Risiko-Assessment (-6)")
-    if mapped.get('security_training') in ['regular', 'occasional']:
+    if m.get('security_training') in ['regular', 'occasional']:
         sec += 4; details['security'].append("✅ Sicherheits-Training (+4)")
     else:
         details['security'].append("❌ Kein Training (-4)")
-
-    # VALUE
-    u = mapped.get('use_cases', '')
+    # Value
+    u = m.get('use_cases', '')
     if u and len(u) > 50:
         val += 8; details['value'].append("✅ Use Cases definiert (+8)")
     elif u:
         val += 4; details['value'].append("⚠️ Use Cases ansatzweise (+4)")
     else:
         details['value'].append("❌ Keine Use Cases (-8)")
-    roi = mapped.get('roi_expected', '')
+    roi = m.get('roi_expected', '')
     if roi in ['high', 'medium']:
         val += 7; details['value'].append(f"✅ ROI-Erwartung: {roi} (+7)")
     elif roi == 'low':
         val += 3; details['value'].append("⚠️ ROI niedrig (+3)")
     else:
         details['value'].append("❌ Keine ROI-Erwartung (-7)")
-    if mapped.get('measurable_goals') == 'yes':
+    if m.get('measurable_goals') == 'yes':
         val += 6; details['value'].append("✅ Messbare Ziele (+6)")
     else:
         details['value'].append("❌ Keine messbaren Ziele (-6)")
-    if mapped.get('pilot_planned') in ['yes', 'in_progress']:
+    if m.get('pilot_planned') in ['yes', 'in_progress']:
         val += 4; details['value'].append("✅ Pilot geplant (+4)")
     else:
         details['value'].append("❌ Kein Pilot (-4)")
-
-    # ENABLEMENT
-    skills = mapped.get('ai_skills', '')
+    # Enablement
+    skills = m.get('ai_skills', '')
     if skills in ['advanced', 'intermediate']:
         ena += 8; details['enablement'].append(f"✅ Skills: {skills} (+8)")
     elif skills == 'basic':
         ena += 4; details['enablement'].append("⚠️ Basis-Skills (+4)")
     else:
         details['enablement'].append("❌ Keine Skills (-8)")
-    if mapped.get('training_budget') in ['yes', 'planned']:
+    if m.get('training_budget') in ['yes', 'planned']:
         ena += 7; details['enablement'].append("✅ Training-Budget (+7)")
     else:
         details['enablement'].append("❌ Kein Training-Budget (-7)")
-    if mapped.get('change_management') == 'yes':
+    if m.get('change_management') == 'yes':
         ena += 6; details['enablement'].append("✅ Change-Management (+6)")
     else:
         details['enablement'].append("❌ Kein Change-Management (-6)")
-    culture = mapped.get('innovation_culture', '')
+    culture = m.get('innovation_culture', '')
     if culture in ['strong', 'moderate']:
         ena += 4; details['enablement'].append(f"✅ Kultur: {culture} (+4)")
     else:
         details['enablement'].append("❌ Schwache Kultur (-4)")
-
     scores = {
         'governance': min(gov, 25) * 4,
         'security': min(sec, 25) * 4,
@@ -331,12 +298,11 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
              scores['enablement'], scores['overall'])
     return {'scores': scores, 'details': details, 'total': scores['overall']}
 
-# -----------------------------------------------------------------------------
-# LLM CONTENT GENERATION
-# -----------------------------------------------------------------------------
-
+# ----------------------------------------------------------------------------
+# LLM Content Generation
+# ----------------------------------------------------------------------------
 def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
-                 temperature: float | None = None, max_tokens: int = 2000) -> Optional[str]:
+                 temperature: Optional[float] = None, max_tokens: int = 2000) -> Optional[str]:
     """Zentrale OpenAI Chat Completions API (synchron)."""
     if not OPENAI_API_KEY:
         log.error("❌ OPENAI_API_KEY not set")
@@ -366,153 +332,125 @@ def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
         log.error("❌ OpenAI error: %s", exc)
         return None
 
+
+def _clean_html(s: str) -> str:
+    if not s:
+        return s
+    # Entferne etwaige Markdown-Fences
+    s = s.replace("```html", "").replace("```", "").strip()
+    return s
+
+
+def _split_li_list_to_columns(html_list: str) -> Tuple[str, str]:
+    """Splittet eine <ul>…</ul> Liste in zwei Spalten mit gleicher Itemzahl (±1)."""
+    if not html_list:
+        return "<ul></ul>", "<ul></ul>"
+    items = re.findall(r"<li[\s>].*?</li>", html_list, flags=re.DOTALL | re.IGNORECASE)
+    if not items:
+        # Versuche, aus Zeilen stattdessen LI zu bauen
+        lines = [ln.strip() for ln in re.split(r"<br\s*/?>|\n", html_list) if ln.strip()]
+        items = [f"<li>{ln}</li>" for ln in lines]
+    mid = (len(items) + 1) // 2
+    left = "<ul>" + "".join(items[:mid]) + "</ul>"
+    right = "<ul>" + "".join(items[mid:]) + "</ul>"
+    return left, right
+
+
 def _generate_content_section(section_name: str, briefing: Dict[str, Any],
-                              scores: Dict[str, Any], research_data: Dict[str, Any]) -> str:
+                              scores: Dict[str, Any]) -> str:
     """Generiert eine Content-Section per LLM und liefert validen HTML-String."""
     if not ENABLE_LLM_CONTENT:
         return f"<p><em>[{section_name} – LLM disabled]</em></p>"
-
     branche = briefing.get('branche', 'Unternehmen')
     hauptleistung = briefing.get('hauptleistung', '')
     ki_ziele = briefing.get('ki_ziele', [])
     ki_projekte = briefing.get('ki_projekte', '')
     vision = briefing.get('vision_3_jahre', '')
-    overall = scores.get('scores', {}).get('overall', 0)
-    governance = scores.get('scores', {}).get('governance', 0)
-    security = scores.get('scores', {}).get('security', 0)
+    overall = scores.get('overall', 0)
+    governance = scores.get('governance', 0)
+    security = scores.get('security', 0)
 
     prompts = {
         'executive_summary': f"""Erstelle eine prägnante Executive Summary für ein {branche}-Unternehmen.
-
 Hauptleistung: {hauptleistung}
 KI-Ziele: {', '.join(ki_ziele) if ki_ziele else 'nicht definiert'}
 Vision: {vision}
-
-KI-Reifegrad gesamt: {overall}/100
-Governance: {governance}/100
-Sicherheit: {security}/100
-
-Schreibe 4–6 Sätze, die: (1) Reifegrad einordnen, (2) Chancen benennen, (3) 3 priorisierte Handlungsfelder empfehlen.
-Format: **VALIDE HTML** mit <p>-Tags. **Keine Überschriften, keine Markdown**.""",
-
-        'quick_wins': f"""Liste 3–5 **konkrete Quick Wins** für die nächsten 0–90 Tage (Branche: {branche}). 
-Jeder Quick Win enthält: Titel, 1–2 Sätze Nutzen, **realistische Zeitersparnis/Monat** in Stunden.
-
-Bezugspunkte:
-- Hauptleistung: {hauptleistung}
-- Laufende/Geplante Projekte: {ki_projekte or 'keine Angabe'}
-
-Format: VALIDE HTML, genau eine Liste:
+KI-Reifegrad gesamt: {overall}/100 • Governance: {governance}/100 • Sicherheit: {security}/100
+Schreibe 4–6 Sätze.
+Format: **VALIDE HTML** nur mit <p>-Tags. **Keine Überschriften/Markdown**.""",
+        'quick_wins': f"""Liste 4–6 **konkrete Quick Wins** (0–90 Tage) für {branche}.
+Jeder Quick Win: Titel, 1–2 Sätze Nutzen, realistische **Ersparnis/Monat (h)**.
+Bezug: Hauptleistung: {hauptleistung}; Projekte: {ki_projekte or 'keine'}.
+Format: VALIDE HTML, **genau eine** ungeordnete Liste:
 <ul>
   <li><strong>Titel:</strong> Beschreibung. <em>Ersparnis: 5 h/Monat</em></li>
 </ul>""",
-
-        'roadmap': f"""Erstelle eine **90‑Tage‑Roadmap** mit 3 Phasen:
-1) 0–30 Tage (Test), 2) 31–60 Tage (Pilot), 3) 61–90 Tage (Rollout).
+        'roadmap': f"""Erstelle eine **90‑Tage‑Roadmap** (0–30 Test; 31–60 Pilot; 61–90 Rollout).
 Für jede Phase 3–5 Meilensteine (konkret, überprüfbar).
-
-Kontext:
-- KI‑Ziele: {', '.join(ki_ziele) if ki_ziele else 'Effizienz'}
-- Projekte: {ki_projekte or 'keine Angabe'}
-
-Format: VALIDE HTML, z.B.:
-<h4>Phase 0–30 Tage (Test)</h4>
-<ul><li>Meilenstein ...</li></ul>""",
-
-        'business': f"""Erstelle einen **Business Case (Jahr 1)** mit grober ROI‑Betrachtung für ein {branche}-Unternehmen.
-
-Annahmen:
-- Investition initial: 2.000–10.000 € (einmalig)
-- Zeitersparnis: Summe der Quick Wins * Stundensatz
-- Stundensatz: 50–80 €/h (nutze 60 €/h als Standard, falls unklar)
-- ROI = (Ersparnis – Investition) / Investition * 100 %
-- Payback in Monaten
-
-Format: **ZWEI HTML‑TABELLEN**, ohne Überschriften:
-(1) ROI & Payback (Kennzahl, Wert)
-(2) Kosten (Jahr 1) (Position, Betrag)""",
-
-        'recommendations': f"""Formuliere 5–7 **Handlungsempfehlungen** (Priorität Hoch/Mittel/Niedrig; Zeitrahmen 30/60/90 Tage). 
-Passe auf {branche} an (Score gesamt {overall}/100, Governance {governance}/100).
-
-Format: VALIDE HTML-Liste:
-<ul><li><strong>[PRIO]</strong> Maßnahme (Zeitrahmen)</li></ul>""",
-
-        'risks': f"""Erstelle eine kurze **Risikomatrix** (5–7 Risiken) für ein {branche}-Unternehmen, das KI assistierend einsetzt.
-Typische Risiken: Datenschutz/DSGVO, Falschauskünfte/Haftung, Bias, Tool‑Abhängigkeit, Kostenüberschreitung, Verfügbarkeit.
-
-Format: VALIDE HTML‑Tabelle:
-<table>
-  <thead><tr><th>Risiko</th><th>Eintritt</th><th>Auswirkung</th><th>Mitigation</th></tr></thead>
-  <tbody>
-    <tr><td>…</td><td>niedrig/mittel/hoch</td><td>…</td><td>…</td></tr>
-  </tbody>
-</table>""",
-
-        'gamechanger': f"""Skizziere einen **Gamechanger‑Use Case** für {branche} basierend auf:
-- Hauptleistung: {hauptleistung}
-- Vision (3 Jahre): {vision or 'Marktführerschaft durch automatisierte, KI‑gestützte Beratung'}
-
-Beschreibe: (1) Idee in 3–4 Sätzen, (2) 3 Schlüsselvorteile, (3) erste 3 Umsetzungsschritte.
-Format: VALIDE HTML mit <h4>, <p>, <ul>.""",
+Kontext: Ziele={', '.join(ki_ziele) if ki_ziele else 'Effizienz'}, Vision={vision or '—'}.
+Format: **VALIDE HTML** mit <h4>Phase …</h4> und <ul>…</ul>.""",
+        'business_roi': f"""Erstelle eine **ROI & Payback**-Tabelle (Jahr 1) für {branche}.
+Annahmen: Stundensatz 60 €/h (falls unklar), Investition 2.000–10.000 € (einmalig),
+Ersparnis = Summe Quick Wins * 12 * Stundensatz (falls nicht vorhanden: 18 h/Monat Beispiel).
+Format: **VALIDE HTML-TABELLE** (2 Spalten: Kennzahl, Wert).""",
+        'business_costs': f"""Erstelle eine **Kostenübersicht Jahr 1**.
+Positionen: Initiale Investition, Lizenzen/Hosting, Schulung/Change, Betrieb (Schätzung).
+Format: **VALIDE HTML-TABELLE** (2 Spalten: Position, Betrag).""",
+        'recommendations': f"""Formuliere 5–7 **Handlungsempfehlungen** mit Priorität [H/M/N] und Zeitrahmen (30/60/90 Tage).
+Kontext: Branche {branche}, Score gesamt {overall}/100, Governance {governance}/100.
+Format: VALIDE HTML-Liste: <ul><li><strong>[H]</strong> Maßnahme – <em>60 Tage</em></li></ul>""",
+        'risks': f"""Erstelle eine **Risikomatrix** (5–7 Risiken) für {branche}.
+Spalten: Risiko | Eintritt (niedrig/mittel/hoch) | Auswirkung | Mitigation.
+Format: VALIDE HTML-TABELLE (<table> mit <thead>/<tbody>).""",
+        'gamechanger': f"""Skizziere einen **Gamechanger‑Use Case** für {branche}.
+Teile: (1) 3–4 Sätze Idee, (2) 3 Vorteile (Liste), (3) 3 erste Schritte (Liste).
+Kontext: Hauptleistung {hauptleistung}, Vision {vision or '—'}.
+Format: VALIDE HTML mit <h4>, <p>, <ul>."""
     }
-
     prompt = prompts.get(section_name)
     if not prompt:
         return f"<p><em>[{section_name} – no template]</em></p>"
-
     log.info("🤖 Generating %s...", section_name)
     content = _call_openai(
         prompt=prompt,
-        system_prompt="Du bist ein Senior‑KI‑Berater. Antworte mit **valide HTML**, niemals Markdown.",
+        system_prompt="Du bist ein Senior‑KI‑Berater. Antworte ausschließlich mit validem HTML (kein Markdown).",
         max_tokens=2000,
     )
     if not content:
         return f"<p><em>[{section_name} – generation failed]</em></p>"
-    # Entferne evtl. Code-Fences
-    content = content.replace('```html', '').replace('```', '').strip()
-    log.info("✅ Generated %s (%d chars)", section_name, len(content))
-    return content
+    return _clean_html(content)
 
-def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any],
-                               research_data: Dict[str, Any]) -> Dict[str, str]:
-    """Generiert alle Content‑Sections und liefert ein Dict von Template‑Keys → HTML."""
+
+def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict[str, str]:
+    """Generiert alle Content‑Sections und liefert Dict von Template-Key → HTML."""
     sections: Dict[str, str] = {}
 
-    # Reihenfolge & Coverage
-    section_names = [
-        'executive_summary',
-        'quick_wins',
-        'roadmap',
-        'business',
-        'risks',        # Fallback, falls Fetcher nichts liefert
-        'gamechanger',  # neu
-        'recommendations',  # aktuell nicht im PDF-Template verbaut, aber für Web nützlich
-    ]
+    # 1) Exec Summary
+    sections['EXECUTIVE_SUMMARY_HTML'] = _generate_content_section('executive_summary', briefing, scores)
 
-    for name in section_names:
-        html_key = f"{name.upper()}_HTML"
-        if name == 'executive_summary':
-            html_key = 'EXECUTIVE_SUMMARY_HTML'  # ✅ Key auf Template-Norm
-        elif name == 'business':
-            html_key = 'BUSINESS_CASE_HTML'      # später splitten in ROI/Kosten
-        elif name == 'roadmap':
-            html_key = 'ROADMAP_HTML'            # später auf PILOT_PLAN_HTML mappen
-        elif name == 'recommendations':
-            html_key = 'RECOMMENDATIONS_HTML'
-        elif name == 'risks':
-            html_key = 'RISKS_HTML'
-        elif name == 'gamechanger':
-            html_key = 'GAMECHANGER_HTML'
+    # 2) Quick Wins (und 2-Spalten-Split)
+    qw_html = _generate_content_section('quick_wins', briefing, scores)
+    left, right = _split_li_list_to_columns(qw_html)
+    sections['QUICK_WINS_HTML_LEFT'] = left
+    sections['QUICK_WINS_HTML_RIGHT'] = right
 
-        sections[html_key] = _generate_content_section(name, briefing, scores, research_data)
+    # 3) Roadmap → PILOT_PLAN_HTML
+    sections['PILOT_PLAN_HTML'] = _generate_content_section('roadmap', briefing, scores)
+
+    # 4) Business Case → zwei Tabellen
+    sections['ROI_HTML'] = _generate_content_section('business_roi', briefing, scores)
+    sections['COSTS_OVERVIEW_HTML'] = _generate_content_section('business_costs', briefing, scores)
+
+    # 5) Risiken (LLM-Fallback), Gamechanger, Empfehlungen
+    sections['RISKS_HTML'] = _generate_content_section('risks', briefing, scores)
+    sections['GAMECHANGER_HTML'] = _generate_content_section('gamechanger', briefing, scores)
+    sections['RECOMMENDATIONS_HTML'] = _generate_content_section('recommendations', briefing, scores)
 
     return sections
 
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Helpers
-# -----------------------------------------------------------------------------
-
+# ----------------------------------------------------------------------------
 def _mask_email(addr: Optional[str]) -> str:
     if not addr or not DBG_MASK_EMAILS:
         return addr or ""
@@ -522,6 +460,7 @@ def _mask_email(addr: Optional[str]) -> str:
     except Exception:
         return "***"
 
+
 def _admin_recipients() -> List[str]:
     emails: List[str] = []
     raw1 = getattr(settings, "ADMIN_EMAILS", None) or os.getenv("ADMIN_EMAILS", "")
@@ -530,8 +469,8 @@ def _admin_recipients() -> List[str]:
         emails.extend([e.strip() for e in raw1.split(",") if e.strip()])
     if raw2:
         emails.append(raw2.strip())
-    # unique order‑preserving
     return list(dict.fromkeys(emails))
+
 
 def _determine_user_email(db: Session, briefing: Briefing, override: Optional[str]) -> Optional[str]:
     if override:
@@ -544,6 +483,7 @@ def _determine_user_email(db: Session, briefing: Briefing, override: Optional[st
     answers = getattr(briefing, "answers", None) or {}
     return answers.get("email") or answers.get("kontakt_email")
 
+
 def _send_emails(db: Session, rep: Report, br: Briefing,
                  pdf_url: Optional[str], pdf_bytes: Optional[bytes], run_id: str) -> None:
     # User mail
@@ -554,11 +494,8 @@ def _send_emails(db: Session, rep: Report, br: Briefing,
             body_html = render_report_ready_email(recipient="user", pdf_url=pdf_url)
             attachments = []
             if pdf_bytes and not pdf_url:
-                attachments.append({
-                    "filename": f"KI-Status-Report-{getattr(rep, 'id', None)}.pdf",
-                    "content": pdf_bytes,
-                    "mimetype": "application/pdf"
-                })
+                attachments.append({"filename": f"KI-Status-Report-{getattr(rep,'id', None)}.pdf",
+                                    "content": pdf_bytes, "mimetype": "application/pdf"})
             log.debug("[%s] MAIL_USER to=%s", run_id, _mask_email(user_email))
             ok, err = send_mail(user_email, subject, body_html, text=None, attachments=attachments)
             if ok and hasattr(rep, "email_sent_user"):
@@ -569,7 +506,6 @@ def _send_emails(db: Session, rep: Report, br: Briefing,
             if hasattr(rep, "email_error_user"):
                 rep.email_error_user = str(exc)
             log.warning("[%s] MAIL_USER failed: %s", run_id, exc)
-
     # Admin copies
     admins = _admin_recipients()
     if admins:
@@ -583,11 +519,8 @@ def _send_emails(db: Session, rep: Report, br: Briefing,
             except Exception:
                 pass
             if pdf_bytes and not pdf_url:
-                attachments.append({
-                    "filename": f"KI-Status-Report-{getattr(rep, 'id', None)}.pdf",
-                    "content": pdf_bytes,
-                    "mimetype": "application/pdf"
-                })
+                attachments.append({"filename": f"KI-Status-Report-{getattr(rep,'id', None)}.pdf",
+                                    "content": pdf_bytes, "mimetype": "application/pdf"})
             any_ok = False
             for addr in admins:
                 log.debug("[%s] MAIL_ADMIN to=%s", run_id, _mask_email(addr))
@@ -603,70 +536,91 @@ def _send_emails(db: Session, rep: Report, br: Briefing,
                 rep.email_error_admin = str(exc)
             log.warning("[%s] MAIL_ADMIN failed: %s", run_id, exc)
 
-# -----------------------------------------------------------------------------
-# MAIN ANALYSIS PIPELINE
-# -----------------------------------------------------------------------------
-
+# ----------------------------------------------------------------------------
+# MAIN ANALYSIS
+# ----------------------------------------------------------------------------
 def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> Tuple[int, str, Dict[str, Any]]:
     """
-    Führt die vollständige Analyse aus:
-    1) Scores berechnen
-    2) Content mit LLM erzeugen
-    3) Content normalisieren (Keys, Splits, Fallbacks, Scores)
-    4) HTML rendern
-    5) Analysis-Objekt speichern
+    1) Antworten normalisieren
+    2) Scores berechnen
+    3) LLM‑Content generieren (kapitelweise; Template‑kompatibel)
+    4) Optional Research/KPI/Playbooks mergen
+    5) HTML rendern & Analysis persistieren
     """
     br = db.get(Briefing, briefing_id)
     if not br:
         raise ValueError("Briefing not found")
 
-    answers: Dict[str, Any] = getattr(br, "answers", {}) or {}
+    raw_answers: Dict[str, Any] = getattr(br, "answers", {}) or {}
+    answers = normalize_answers(raw_answers)
 
-    # 1) Scores
+    # Scores
     log.info("[%s] Calculating realistic scores...", run_id)
-    scores = _calculate_realistic_score(answers)
+    score_wrap = _calculate_realistic_score(answers)
+    scores = score_wrap['scores']
 
-    # 2) LLM Content
+    # LLM‑Content
     log.info("[%s] Generating content sections with LLM...", run_id)
-    raw_sections = _generate_content_sections(
-        briefing=answers,
-        scores=scores,
-        research_data={},  # Research via report_renderer Fetchers
-    )
+    generated_sections = _generate_content_sections(briefing=answers, scores=scores)
 
-    # 3) Normalize / Enrich
-    normalized_sections = normalize_and_enrich_sections(
-        sections=raw_sections,
-        answers=answers,
-        scores=scores.get("scores", {}),
-    )
+    # Scores für Template-Variablen (behebt 0/100 im PDF bei alten Templates)
+    generated_sections['score_governance'] = scores.get('governance', 0)
+    generated_sections['score_sicherheit'] = scores.get('security', 0)
+    generated_sections['score_nutzen'] = scores.get('value', 0)
+    generated_sections['score_befaehigung'] = scores.get('enablement', 0)
+    generated_sections['score_gesamt'] = scores.get('overall', 0)
 
-    # 4) Render HTML (über Fetcher kommen u. a. TOOLS, FÖRDERPROGRAMME, BENCHMARK, QUELLEN)
+    # Optionale Zusatzblöcke (failsafe)
+    if build_kpis:
+        try:
+            generated_sections['KPIS_HTML'] = build_kpis(answers)
+        except Exception as exc:  # pragma: no cover - optional
+            log.warning("[%s] KPI build failed: %s", run_id, exc)
+    if build_playbooks:
+        try:
+            generated_sections['PLAYBOOKS_HTML'] = build_playbooks(answers)
+        except Exception as exc:  # pragma: no cover - optional
+            log.warning("[%s] Playbooks build failed: %s", run_id, exc)
+
+    # Research (optional intern) oder via Fetchers
+    use_fetchers = True
+    if USE_INTERNAL_RESEARCH and run_research:
+        try:
+            log.info("[%s] Running internal research...", run_id)
+            research_blocks = run_research(answers)  # liefert TOOLS_HTML, FOERDERPROGRAMME_HTML, QUELLEN_HTML, last_updated
+            generated_sections.update(research_blocks or {})
+            use_fetchers = False  # wir haben Tools/Förderungen/Quellen bereits
+        except Exception as exc:  # pragma: no cover - optional
+            log.warning("[%s] Internal research failed, falling back to fetchers: %s", run_id, exc)
+            use_fetchers = True
+
+    # Render
     log.info("[%s] Rendering final HTML...", run_id)
     result = render(
         br,
         run_id=run_id,
-        generated_sections=normalized_sections,
-        use_fetchers=True,
+        generated_sections=generated_sections,
+        use_fetchers=use_fetchers,
     )
 
-    # 5) Meta anreichern & quality gate
+    # Meta anreichern
     result['meta'] = result.get('meta', {})
-    result['meta']['scores'] = scores['scores']
-    result['meta']['score_details'] = scores['details']
-    result['meta'].update(normalized_sections)
+    result['meta']['scores'] = scores
+    result['meta']['score_details'] = score_wrap.get('details', {})
+    result['meta'].update(generated_sections)
 
+    # Quality gate (Warnungen)
     if ENABLE_QUALITY_GATES:
         issues: List[str] = []
-        if not normalized_sections.get('EXECUTIVE_SUMMARY_HTML'):
+        if not generated_sections.get('EXECUTIVE_SUMMARY_HTML'):
             issues.append("Missing EXECUTIVE_SUMMARY_HTML")
-        if scores['scores']['overall'] == 0:
+        if scores.get('overall', 0) == 0:
             issues.append("Score overall is zero")
         if issues:
             log.warning("[%s] Quality warnings: %s", run_id, issues)
             result['meta']['quality_warnings'] = issues
 
-    # Persist Analysis
+    # Persist
     an = Analysis(
         user_id=br.user_id,
         briefing_id=briefing_id,
@@ -674,55 +628,39 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> Tuple[int, s
         meta=result["meta"],
         created_at=datetime.now(timezone.utc),
     )
-    db.add(an)
-    db.commit()
-    db.refresh(an)
-    log.info("[%s] ✅ Analysis created (v4.2): id=%s", run_id, an.id)
+    db.add(an); db.commit(); db.refresh(an)
+    log.info("[%s] ✅ Analysis created (v4.4): id=%s", run_id, an.id)
 
     return an.id, result["html"], result["meta"]
 
+
 def run_async(briefing_id: int, email: Optional[str] = None) -> None:
-    """Asynchroner Runner für die Analyse und PDF-Erstellung inkl. E‑Mail-Versand."""
+    """Asynchroner Runner für Analyse und PDF-Erstellung inkl. E‑Mail‑Versand."""
     run_id = f"run-{uuid.uuid4().hex[:8]}"
     db = SessionLocal()
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis for briefing_id=%s", run_id, briefing_id)
-
-        # Analyse/Fabrication
+        log.info("[%s] 🚀 Starting analysis v4.4 for briefing_id=%s", run_id, briefing_id)
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
-        log.info("[%s] analysis_created id=%s briefing_id=%s user_id=%s",
-                 run_id, an_id, briefing_id, getattr(br, 'user_id', None))
-
-        # Report entity
-        rep = Report(
-            user_id=br.user_id if br else None,
-            briefing_id=briefing_id,
-            analysis_id=an_id,
-            created_at=datetime.now(timezone.utc),
-        )
+        log.info("[%s] analysis_created id=%s briefing_id=%s user_id=%s", run_id, an_id, briefing_id, getattr(br, 'user_id', None))
+        rep = Report(user_id=br.user_id if br else None, briefing_id=briefing_id, analysis_id=an_id, created_at=datetime.now(timezone.utc))
         if hasattr(rep, "user_email"):
             rep.user_email = _determine_user_email(db, br, email) or ""
         if hasattr(rep, "task_id"):
             rep.task_id = f"local-{uuid.uuid4()}"
         if hasattr(rep, "status"):
             rep.status = "pending"
-        db.add(rep)
-        db.commit()
-        db.refresh(rep)
+        db.add(rep); db.commit(); db.refresh(rep)
         log.info("[%s] report_pending id=%s", run_id, getattr(rep, 'id', None))
 
-        # PDF render
+        # PDF
         if DBG_PDF:
             log.debug("[%s] pdf_render start", run_id)
         pdf_info = render_pdf_from_html(html, meta={"analysis_id": an_id, "briefing_id": briefing_id})
-        pdf_url = pdf_info.get("pdf_url")
-        pdf_bytes = pdf_info.get("pdf_bytes")
-        pdf_error = pdf_info.get("error")
+        pdf_url = pdf_info.get("pdf_url"); pdf_bytes = pdf_info.get("pdf_bytes"); pdf_error = pdf_info.get("error")
         if DBG_PDF:
-            log.debug("[%s] pdf_render done url=%s bytes=%s error=%s",
-                      run_id, bool(pdf_url), len(pdf_bytes or b''), pdf_error)
+            log.debug("[%s] pdf_render done url=%s bytes=%s error=%s", run_id, bool(pdf_url), len(pdf_bytes or b''), pdf_error)
 
         if not pdf_url and not pdf_bytes:
             error_msg = f"PDF failed: {pdf_error or 'no output'}"
@@ -736,7 +674,6 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
             db.add(rep); db.commit()
             raise ValueError(error_msg)
 
-        # Update report
         if hasattr(rep, "pdf_url"):
             rep.pdf_url = pdf_url
         if hasattr(rep, "pdf_bytes_len") and pdf_bytes:
@@ -746,10 +683,8 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
         if hasattr(rep, "updated_at"):
             rep.updated_at = datetime.now(timezone.utc)
         db.add(rep); db.commit(); db.refresh(rep)
-        log.info("[%s] ✅ report_done id=%s url=%s bytes=%s",
-                 run_id, getattr(rep, 'id', None), bool(pdf_url), len(pdf_bytes or b''))
+        log.info("[%s] ✅ report_done id=%s url=%s bytes=%s (v4.4)", run_id, getattr(rep, 'id', None), bool(pdf_url), len(pdf_bytes or b''))
 
-        # Emails
         try:
             _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id=run_id)
             db.add(rep); db.commit()
@@ -768,6 +703,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
         raise
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     import sys
