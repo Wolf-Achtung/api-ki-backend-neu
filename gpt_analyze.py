@@ -1,22 +1,20 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-gpt_analyze.py – v4.4 (Gold-Standard+)
-=====================================
-Drop-in Replacement, kompatibel zu v4.1/v4.2, mit folgenden Fixes/Erweiterungen:
+gpt_analyze.py – v4.5 (Gold-Standard+ with Ensemble Evaluators)
+==============================================================
+Drop-in Replacement auf Basis v4.4 mit folgenden Erweiterungen:
 
-- ✅ **Template-Key-Kompatibilität**: 
-  EXECUTIVE_SUMMARY_HTML, QUICK_WINS_HTML_LEFT/RIGHT, PILOT_PLAN_HTML,
-  ROI_HTML, COSTS_OVERVIEW_HTML, RECOMMENDATIONS_HTML, RISKS_HTML, GAMECHANGER_HTML.
-- ✅ **Scores sicher im Template**: score_governance / score_sicherheit / score_nutzen / score_befaehigung / score_gesamt.
-- ✅ **LLM-Generierung** stabilisiert (valide HTML, keine Markdown-Fences).
-- ✅ **Quick-Wins 2-Spalten-Aufteilung** (LEFT/RIGHT) aus einer Liste.
-- ✅ **Business Case** als **zwei** getrennte HTML-Blöcke (ROI & Kosten) – keine externe Normalizer-Abhängigkeit.
-- ✅ **Optionale Research-/KPI-/Playbook-Integration** (failsafe, nur wenn Module vorhanden sind).
-- ✅ **UTF‑8, PEP8, Logging, Fehlerbehandlung**.
+- ✅ **Ensemble‑Evaluatoren** (Compliance, Innovation, Effizienz) als optionale Module.
+- ✅ Liefert zusätzliche HTML-Blöcke:
+     • ENSEMBLE_SUMMARY_HTML – Scores & Gewichte als Tabelle
+     • ENSEMBLE_ACTIONS_HTML – priorisierte Maßnahmenliste
+     • ENSEMBLE_CONFLICTS_HTML – erkannte Zielkonflikte
+- ✅ Scores & Content bleiben rückwärtskompatibel (alle bisherigen Keys vorhanden).
+- ✅ Fehlerrobust: Falls Evaluator-Module fehlen, läuft alles wie in v4.4 weiter.
 
-Umstellung ist rückwärtskompatibel: Falls Research/KPI/Playbooks-Module fehlen,
-läuft der Code mit Render-Fetchern weiter.
+Hinweis: Dieses File importiert optionale Module aus `services.evaluators.*`. Sind diese
+nicht vorhanden, wird der Ensemble-Teil still übersprungen.
 """
 import json
 import logging
@@ -37,7 +35,7 @@ from services.email import send_mail
 from services.email_templates import render_report_ready_email
 from settings import settings
 
-# -------------------- optionale Services (failsafe imports) -------------------
+# ---------------- optional: bestehende Services (failsafe) -------------------
 def _pass_through(x):  # noqa: D401
     """No-op Normalizer."""
     return x
@@ -61,6 +59,12 @@ try:
     from services.playbooks import build_playbooks  # type: ignore
 except Exception:  # pragma: no cover - optional
     build_playbooks = None  # type: ignore
+
+# ------------------- NEW: Ensemble Evaluators (optional) ---------------------
+try:
+    from services.evaluators.ensemble import run_ensemble  # type: ignore
+except Exception:  # pragma: no cover - optional
+    run_ensemble = None  # type: ignore
 
 # ----------------------------------------------------------------------------
 # Konfiguration
@@ -133,7 +137,7 @@ def _filter_nsfw_from_research(research_data: Dict[str, Any]) -> Dict[str, Any]:
     return filtered_data
 
 # ----------------------------------------------------------------------------
-# SCORE CALCULATION (bewährt aus v4.1/v4.2)
+# SCORE CALCULATION (wie v4.4)
 # ----------------------------------------------------------------------------
 def _map_german_to_english_keys(answers: Dict[str, Any]) -> Dict[str, Any]:
     """Map deutsche Briefing-Keys zu englischen Keys für Score-Berechnung."""
@@ -292,14 +296,12 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
         'enablement': min(ena, 25) * 4,
         'overall': round((min(gov, 25) + min(sec, 25) + min(val, 25) + min(ena, 25)) * 4 / 4)
     }
-    log.info("📊 REALISTIC SCORES: Governance=%s/100, Security=%s/100, Value=%s/100, "
-             "Enablement=%s/100, OVERALL=%s/100",
-             scores['governance'], scores['security'], scores['value'],
-             scores['enablement'], scores['overall'])
+    log.info("📊 REALISTIC SCORES v4.5: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
+             scores['governance'], scores['security'], scores['value'], scores['enablement'], scores['overall'])
     return {'scores': scores, 'details': details, 'total': scores['overall']}
 
 # ----------------------------------------------------------------------------
-# LLM Content Generation
+# LLM Content Generation (wie v4.4)
 # ----------------------------------------------------------------------------
 def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
                  temperature: Optional[float] = None, max_tokens: int = 2000) -> Optional[str]:
@@ -336,7 +338,6 @@ def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
 def _clean_html(s: str) -> str:
     if not s:
         return s
-    # Entferne etwaige Markdown-Fences
     s = s.replace("```html", "").replace("```", "").strip()
     return s
 
@@ -347,7 +348,6 @@ def _split_li_list_to_columns(html_list: str) -> Tuple[str, str]:
         return "<ul></ul>", "<ul></ul>"
     items = re.findall(r"<li[\s>].*?</li>", html_list, flags=re.DOTALL | re.IGNORECASE)
     if not items:
-        # Versuche, aus Zeilen stattdessen LI zu bauen
         lines = [ln.strip() for ln in re.split(r"<br\s*/?>|\n", html_list) if ln.strip()]
         items = [f"<li>{ln}</li>" for ln in lines]
     mid = (len(items) + 1) // 2
@@ -369,7 +369,6 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any],
     overall = scores.get('overall', 0)
     governance = scores.get('governance', 0)
     security = scores.get('security', 0)
-
     prompts = {
         'executive_summary': f"""Erstelle eine prägnante Executive Summary für ein {branche}-Unternehmen.
 Hauptleistung: {hauptleistung}
@@ -424,28 +423,17 @@ Format: VALIDE HTML mit <h4>, <p>, <ul>."""
 def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict[str, str]:
     """Generiert alle Content‑Sections und liefert Dict von Template-Key → HTML."""
     sections: Dict[str, str] = {}
-
-    # 1) Exec Summary
     sections['EXECUTIVE_SUMMARY_HTML'] = _generate_content_section('executive_summary', briefing, scores)
-
-    # 2) Quick Wins (und 2-Spalten-Split)
     qw_html = _generate_content_section('quick_wins', briefing, scores)
     left, right = _split_li_list_to_columns(qw_html)
     sections['QUICK_WINS_HTML_LEFT'] = left
     sections['QUICK_WINS_HTML_RIGHT'] = right
-
-    # 3) Roadmap → PILOT_PLAN_HTML
     sections['PILOT_PLAN_HTML'] = _generate_content_section('roadmap', briefing, scores)
-
-    # 4) Business Case → zwei Tabellen
     sections['ROI_HTML'] = _generate_content_section('business_roi', briefing, scores)
     sections['COSTS_OVERVIEW_HTML'] = _generate_content_section('business_costs', briefing, scores)
-
-    # 5) Risiken (LLM-Fallback), Gamechanger, Empfehlungen
     sections['RISKS_HTML'] = _generate_content_section('risks', briefing, scores)
     sections['GAMECHANGER_HTML'] = _generate_content_section('gamechanger', briefing, scores)
     sections['RECOMMENDATIONS_HTML'] = _generate_content_section('recommendations', briefing, scores)
-
     return sections
 
 # ----------------------------------------------------------------------------
@@ -539,12 +527,12 @@ def _send_emails(db: Session, rep: Report, br: Briefing,
 # ----------------------------------------------------------------------------
 # MAIN ANALYSIS
 # ----------------------------------------------------------------------------
-def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> Tuple[int, str, Dict[str, Any]]:
+def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, str, Dict[str, Any]]:
     """
     1) Antworten normalisieren
     2) Scores berechnen
     3) LLM‑Content generieren (kapitelweise; Template‑kompatibel)
-    4) Optional Research/KPI/Playbooks mergen
+    4) Optional Ensemble, Research, KPI, Playbooks mergen
     5) HTML rendern & Analysis persistieren
     """
     br = db.get(Briefing, briefing_id)
@@ -555,7 +543,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> Tuple[int, s
     answers = normalize_answers(raw_answers)
 
     # Scores
-    log.info("[%s] Calculating realistic scores...", run_id)
+    log.info("[%s] Calculating realistic scores (v4.5)...", run_id)
     score_wrap = _calculate_realistic_score(answers)
     scores = score_wrap['scores']
 
@@ -563,23 +551,37 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> Tuple[int, s
     log.info("[%s] Generating content sections with LLM...", run_id)
     generated_sections = _generate_content_sections(briefing=answers, scores=scores)
 
-    # Scores für Template-Variablen (behebt 0/100 im PDF bei alten Templates)
+    # Scores in Template-Variablen
     generated_sections['score_governance'] = scores.get('governance', 0)
     generated_sections['score_sicherheit'] = scores.get('security', 0)
     generated_sections['score_nutzen'] = scores.get('value', 0)
     generated_sections['score_befaehigung'] = scores.get('enablement', 0)
     generated_sections['score_gesamt'] = scores.get('overall', 0)
 
+    # NEW: Ensemble Evaluators (optional)
+    if run_ensemble:
+        try:
+            log.info("[%s] Running ensemble evaluators...", run_id)
+            ens = run_ensemble(answers)
+            if isinstance(ens, dict):
+                generated_sections.update({
+                    'ENSEMBLE_SUMMARY_HTML': ens.get('summary_html', ''),
+                    'ENSEMBLE_ACTIONS_HTML': ens.get('actions_html', ''),
+                    'ENSEMBLE_CONFLICTS_HTML': ens.get('conflicts_html', ''),
+                })
+        except Exception as exc:  # pragma: no cover - optional
+            log.warning("[%s] Ensemble evaluators failed: %s", run_id, exc)
+
     # Optionale Zusatzblöcke (failsafe)
     if build_kpis:
         try:
             generated_sections['KPIS_HTML'] = build_kpis(answers)
-        except Exception as exc:  # pragma: no cover - optional
+        except Exception as exc:
             log.warning("[%s] KPI build failed: %s", run_id, exc)
     if build_playbooks:
         try:
             generated_sections['PLAYBOOKS_HTML'] = build_playbooks(answers)
-        except Exception as exc:  # pragma: no cover - optional
+        except Exception as exc:
             log.warning("[%s] Playbooks build failed: %s", run_id, exc)
 
     # Research (optional intern) oder via Fetchers
@@ -589,8 +591,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> Tuple[int, s
             log.info("[%s] Running internal research...", run_id)
             research_blocks = run_research(answers)  # liefert TOOLS_HTML, FOERDERPROGRAMME_HTML, QUELLEN_HTML, last_updated
             generated_sections.update(research_blocks or {})
-            use_fetchers = False  # wir haben Tools/Förderungen/Quellen bereits
-        except Exception as exc:  # pragma: no cover - optional
+            use_fetchers = False
+        except Exception as exc:
             log.warning("[%s] Internal research failed, falling back to fetchers: %s", run_id, exc)
             use_fetchers = True
 
@@ -609,7 +611,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> Tuple[int, s
     result['meta']['score_details'] = score_wrap.get('details', {})
     result['meta'].update(generated_sections)
 
-    # Quality gate (Warnungen)
+    # Quality gate
     if ENABLE_QUALITY_GATES:
         issues: List[str] = []
         if not generated_sections.get('EXECUTIVE_SUMMARY_HTML'):
@@ -629,8 +631,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> Tuple[int, s
         created_at=datetime.now(timezone.utc),
     )
     db.add(an); db.commit(); db.refresh(an)
-    log.info("[%s] ✅ Analysis created (v4.4): id=%s", run_id, an.id)
-
+    log.info("[%s] ✅ Analysis created (v4.5): id=%s", run_id, an.id)
     return an.id, result["html"], result["meta"]
 
 
@@ -640,7 +641,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     db = SessionLocal()
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v4.4 for briefing_id=%s", run_id, briefing_id)
+        log.info("[%s] 🚀 Starting analysis v4.5 for briefing_id=%s", run_id, briefing_id)
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
         log.info("[%s] analysis_created id=%s briefing_id=%s user_id=%s", run_id, an_id, briefing_id, getattr(br, 'user_id', None))
@@ -683,7 +684,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
         if hasattr(rep, "updated_at"):
             rep.updated_at = datetime.now(timezone.utc)
         db.add(rep); db.commit(); db.refresh(rep)
-        log.info("[%s] ✅ report_done id=%s url=%s bytes=%s (v4.4)", run_id, getattr(rep, 'id', None), bool(pdf_url), len(pdf_bytes or b''))
+        log.info("[%s] ✅ report_done id=%s url=%s bytes=%s (v4.5)", run_id, getattr(rep, 'id', None), bool(pdf_url), len(pdf_bytes or b''))
 
         try:
             _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id=run_id)
