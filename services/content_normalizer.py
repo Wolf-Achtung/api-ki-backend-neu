@@ -1,126 +1,142 @@
 # -*- coding: utf-8 -*-
 """
-services/content_normalizer.py
-------------------------------
-Sorgt dafür, dass die vom LLM gelieferten Inhalte **immer** zu den
-Platzhaltern im PDF-Template passen – inkl. Spaltensplitting, Alias-Keys,
-Score-Feldern und sinnvollen Defaults (Transparenztext, Ersparniswerte).
+Content‑Normalizer & Enricher
+=============================
+- Vereinheitlicht Keys der LLM‑Outputs für das PDF‑Template
+- Quick‑Wins: 2‑Spalten‑Split + Stunden‑Parsing → €‑Ersparnisse (konservativ)
+- Scores → Template‑Keys (score_*)
+- Transparenztext säubern
+- KPI‑Dashboard + Branchen‑Playbooks
+- **Neu:** Tools/Förderungen aus ResearchPolicy (Whitelist + Zeitfenster 7/30/60)
+
+Diese Datei ist ohne externe Abhängigkeiten lauffähig.
 """
 from __future__ import annotations
 
+import html
+import os
 import re
-from html import unescape
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple
 
-LI_RE = re.compile(r"<li\b[^>]*>.*?</li>", re.IGNORECASE | re.DOTALL)
-HOURS_RE = re.compile(r"(?P<val>\d+(?:[.,]\d+)?)\s*(?:h|std|stunden)\b", re.IGNORECASE)
-MIN_RE = re.compile(r"(?P<val>\d+(?:[.,]\d+)?)\s*(?:min|minute[n]?)\b", re.IGNORECASE)
+from services.playbooks import build_playbooks_html, normalize_industry
+from services.research_policy import ResearchPolicy
 
-def _to_float(s: str) -> float:
-    s = s.replace(",", ".")
-    try:
-        return float(s)
-    except Exception:
-        return 0.0
 
-def _split_ul_two_columns(ul_html: str) -> Tuple[str, str]:
-    if not ul_html:
-        return "<ul></ul>", "<ul></ul>"
-    items = LI_RE.findall(ul_html) or []
-    if not items:
-        return f"<ul>{ul_html}</ul>", "<ul></ul>"
-    mid = (len(items) + 1) // 2
-    left = "<ul>" + "".join(items[:mid]) + "</ul>"
-    right = "<ul>" + "".join(items[mid:]) + "</ul>"
-    return left, right
+def _clean_html(s: str | None) -> str:
+    s = (s or "").strip()
+    s = s.replace("```html", "").replace("```", "")
+    return s
 
-def _split_business_case(html: str) -> Tuple[str, str]:
-    if not html:
-        return "", ""
-    parts = re.split(r"</table>", html, flags=re.IGNORECASE)
-    if len(parts) >= 2:
-        roi = parts[0] + "</table>"
-        costs = "</table>".join(parts[1:]).strip()
-        if costs and "<table" not in costs.lower():
-            costs = f"<div>{costs}</div>"
-        return roi, costs
-    half = len(html) // 2
-    return html[:half], html[half:]
 
-def _sanitize_html(value: str) -> str:
-    if not isinstance(value, str):
-        return ""
-    v = value.strip()
-    if v.startswith("```"):
-        v = re.sub(r"^```[a-zA-Z]*\s*|\s*```$", "", v, flags=re.DOTALL).strip()
-    v = unescape(v)
-    return v
+def _split_quickwins_to_columns(qw_html: str) -> Tuple[str, str, int]:
+    """Zerteilt eine <ul> Liste in zwei Spalten; liefert (left, right, sum_hours)."""
+    items = re.findall(r"<li>(.*?)</li>", qw_html, flags=re.IGNORECASE | re.DOTALL)
+    hours_total = 0
+    parsed_items: List[str] = []
+    for it in items:
+        # Stunden parsen: „Ersparnis: 5 h/Monat“
+        m = re.search(r"ersparnis[:\s]*([0-9]+)\s*h", it, flags=re.IGNORECASE)
+        h = int(m.group(1)) if m else 0
+        hours_total += h
+        parsed_items.append(f"<li>{it}</li>")
+    half = (len(parsed_items) + 1) // 2
+    left = "<ul>" + "".join(parsed_items[:half]) + "</ul>"
+    right = "<ul>" + "".join(parsed_items[half:]) + "</ul>"
+    return left, right, hours_total
 
-def _compute_savings_from_quickwins(html: str, default_hourly: float = 60.0) -> Dict[str, Any]:
-    if not html:
-        return {
-            "stundensatz_eur": int(default_hourly),
-            "monatsersparnis_stunden": 0,
-            "monatsersparnis_eur": 0,
-            "jahresersparnis_stunden": 0,
-            "jahresersparnis_eur": 0,
-        }
-    total_hours = 0.0
-    for m in HOURS_RE.finditer(html):
-        total_hours += float(str(m.group("val")).replace(",", "."))
-    for m in MIN_RE.finditer(html):
-        total_hours += float(str(m.group("val")).replace(",", ".")) / 60.0
-    total_hours = round(total_hours, 1)
-    monthly_eur = int(round(total_hours * default_hourly))
-    yearly_hours = int(round(total_hours * 12))
-    yearly_eur = int(round(monthly_eur * 12))
-    return {
-        "stundensatz_eur": int(default_hourly),
-        "monatsersparnis_stunden": total_hours,
-        "monatsersparnis_eur": monthly_eur,
-        "jahresersparnis_stunden": yearly_hours,
-        "jahresersparnis_eur": yearly_eur,
-    }
 
-def normalize_and_enrich_sections(
-    sections: Dict[str, str] | None,
-    answers: Dict[str, Any] | None = None,
-    scores: Dict[str, Any] | None = None,
-) -> Dict[str, Any]:
-    sections = dict(sections or {})
+def _eur(x: float) -> str:
+    return f"{int(round(x, 0)):,}".replace(",", ".")  # 12.960
+
+
+def normalize_and_enrich_sections(sections: Dict[str, str], answers: Dict[str, Any], scores: Dict[str, Any]) -> Dict[str, Any]:
     out: Dict[str, Any] = {}
-    for k, v in sections.items():
-        out[k] = _sanitize_html(v)
 
-    if "EXECUTIVE_SUMMARY_HTML" not in out and "EXEC_SUMMARY_HTML" in out:
-        out["EXECUTIVE_SUMMARY_HTML"] = out["EXEC_SUMMARY_HTML"]
-    if "PILOT_PLAN_HTML" not in out and "ROADMAP_HTML" in out:
-        out["PILOT_PLAN_HTML"] = out["ROADMAP_HTML"]
-    if ("ROI_HTML" not in out or "COSTS_OVERVIEW_HTML" not in out) and "BUSINESS_CASE_HTML" in out:
-        roi, costs = _split_business_case(out.get("BUSINESS_CASE_HTML", ""))
-        out.setdefault("ROI_HTML", roi)
-        out.setdefault("COSTS_OVERVIEW_HTML", costs)
-    if ("QUICK_WINS_HTML_LEFT" not in out or "QUICK_WINS_HTML_RIGHT" not in out) and "QUICK_WINS_HTML" in out:
-        left, right = _split_ul_two_columns(out.get("QUICK_WINS_HTML", ""))
-        out.setdefault("QUICK_WINS_HTML_LEFT", left)
-        out.setdefault("QUICK_WINS_HTML_RIGHT", right)
-    if "RISKS_HTML" not in out and "RISK_HTML" in out:
-        out["RISKS_HTML"] = out["RISK_HTML"]
+    # --- Key‑Mapping ---
+    out["EXECUTIVE_SUMMARY_HTML"] = _clean_html(sections.get("EXECUTIVE_SUMMARY_HTML") or sections.get("EXEC_SUMMARY_HTML"))
+    out["PILOT_PLAN_HTML"] = _clean_html(sections.get("PILOT_PLAN_HTML") or sections.get("ROADMAP_HTML"))
+    # Business: trennen in ROI und Kosten, wenn nötig
+    business_html = _clean_html(sections.get("ROI_HTML") or sections.get("BUSINESS_CASE_HTML") or "")
+    if "<table" in business_html:
+        # sehr einfacher Split: erste/zweite Tabelle
+        parts = re.split(r"</table>", business_html, flags=re.IGNORECASE)
+        roi = parts[0] + "</table>" if parts else ""
+        costs = parts[1] + "</table>" if len(parts) > 1 else ""
+        out["ROI_HTML"] = roi
+        out["COSTS_OVERVIEW_HTML"] = costs or "<p>—</p>"
+    else:
+        out["ROI_HTML"] = "<p>—</p>"
+        out["COSTS_OVERVIEW_HTML"] = "<p>—</p>"
 
-    # Requested transparency text (default)
-    out.setdefault("transparency_text",
-        "Hinweis zur Transparenz: Dieser Report wurde teilweise mithilfe von KI‑Systemen erstellt und im europäischen Rechtsrahmen (EU AI Act, DSGVO) geprüft. Alle Empfehlungen werden künftig redaktionell kuratiert."
+    # Quick Wins
+    qw_html = _clean_html(sections.get("QUICK_WINS_HTML") or sections.get("QUICK_WINS"))
+    left, right, hpm = _split_quickwins_to_columns(qw_html)
+    out["QUICK_WINS_HTML_LEFT"] = left
+    out["QUICK_WINS_HTML_RIGHT"] = right
+
+    stundensatz = float(os.getenv("DEFAULT_STUNDENSATZ_EUR", "60") or "60")
+    out["monatsersparnis_stunden"] = str(hpm)
+    out["monatsersparnis_eur"] = _eur(hpm * stundensatz)
+    out["jahresersparnis_stunden"] = str(hpm * 12)
+    out["jahresersparnis_eur"] = _eur(hpm * 12 * stundensatz)
+    out["stundensatz_eur"] = str(int(stundensatz))
+
+    # Scores → Template
+    out["score_governance"] = scores.get("governance", 0)
+    out["score_sicherheit"] = scores.get("security", 0)
+    out["score_nutzen"] = scores.get("value", 0)
+    out["score_befaehigung"] = scores.get("enablement", 0)
+    out["score_gesamt"] = scores.get("overall", 0)
+
+    # Transparenz
+    t = os.getenv("TRANSPARENCY_TEXT", "")\
+        .replace("ich schwöre", "").replace("ich schwoere", "").strip()
+    if not t:
+        t = ("Dieser Report wurde teilweise mithilfe von KI‑Systemen erstellt und im europäischen "
+             "Rechtsrahmen (EU AI Act, DSGVO) geprüft. Alle Empfehlungen werden künftig redaktionell kuratiert.")
+    out["transparency_text"] = html.escape(t)
+
+    # KPI‑Dashboard (kompakt)
+    out["KPI_HTML"] = (
+        "<table class='table'>"
+        "<tbody>"
+        f"<tr><th>Reifegrad gesamt</th><td>{out['score_gesamt']}/100</td></tr>"
+        f"<tr><th>Monats‑Ersparnis</th><td>{out['monatsersparnis_stunden']} h (≈ {out['monatsersparnis_eur']} €)</td></tr>"
+        f"<tr><th>Jahres‑Ersparnis</th><td>{out['jahresersparnis_stunden']} h (≈ {out['jahresersparnis_eur']} €)</td></tr>"
+        f"<tr><th>Stundensatz</th><td>{out['stundensatz_eur']} €/h</td></tr>"
+        "</tbody></table>"
     )
 
-    scores = scores or {}
-    out.setdefault("score_governance", int(scores.get("governance", 0)))
-    out.setdefault("score_sicherheit", int(scores.get("security", 0)))
-    out.setdefault("score_nutzen", int(scores.get("value", 0)))
-    out.setdefault("score_befaehigung", int(scores.get("enablement", 0)))
-    out.setdefault("score_gesamt", int(scores.get("overall", 0)))
+    # Branchen‑Playbooks
+    out["PLAYBOOKS_HTML"] = build_playbooks_html(
+        branche=answers.get("branche") or answers.get("branche_name"),
+        unternehmensgroesse=answers.get("unternehmensgroesse"),
+    )
 
-    if "stundensatz_eur" not in out or "monatsersparnis_stunden" not in out:
-        savings = _compute_savings_from_quickwins(out.get("QUICK_WINS_HTML", ""), default_hourly=60.0)
-        out.update(savings)
+    # Research‑Policy – Tools & Förderungen (Whitelist + Zeitfenster 7/30/60)
+    rp = ResearchPolicy()
+    branche = normalize_industry(answers.get("branche"))
+    tools = rp.search_tools(branche=branche, days=None)
+    out["TOOLS_HTML"] = rp.results_to_html(tools, "Aktuell keine qualifizierten Tool‑Ergebnisse.")
+
+    foerd = rp.search_funding(
+        bundesland=answers.get("bundesland", ""),
+        branche=branche,
+        days=None,
+    )
+    out["FOERDERPROGRAMME_HTML"] = rp.results_to_html(foerd, "Keine passenden Förderprogramme gefunden.")
+
+    # Risiken – Falls leer, Minimal‑Fallback
+    out["RISKS_HTML"] = _clean_html(sections.get("RISKS_HTML") or "") or (
+        "<table class='table'><thead><tr><th>Risiko</th><th>Eintritt</th><th>Auswirkung</th><th>Mitigation</th></tr></thead>"
+        "<tbody>"
+        "<tr><td>Datenschutz/DSGVO</td><td>mittel</td><td>Bußgelder/Vertrauen</td><td>DPA/TOMs, Löschkonzept</td></tr>"
+        "<tr><td>Halluzinationen</td><td>hoch</td><td>Fehlentscheidungen</td><td>4‑Augen‑Prinzip, Quellenpflicht</td></tr>"
+        "<tr><td>Abhängigkeit</td><td>niedrig</td><td>Lock‑in</td><td>Offene Schnittstellen, Export</td></tr>"
+        "</tbody></table>"
+    )
+
+    # Gamechanger
+    out["GAMECHANGER_HTML"] = _clean_html(sections.get("GAMECHANGER_HTML") or "")
 
     return out
