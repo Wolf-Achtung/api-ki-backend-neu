@@ -15,10 +15,10 @@
     .stand{ color:var(--muted); font-size:14px }
     h1,h2,h3{ margin:0 0 8px 0; line-height:1.25 }
     h1{ font-size:28px } h2{ font-size:22px; margin-top:22px; border-bottom:2px solid var(--border); padding-bottom:6px } h3{ font-size:18px; margin-top:16px }
-    p{ margin:6px 0 } .card{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px; margin:10px 0 }
+    p{ margin:6px 0 } .card{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px; margin:10px 0; page-break-inside: avoid; }
     .small{ font-size:12px; color:var(--muted) } .table{ width:100%; border-collapse:collapse }
     .table th,.table td{ padding:8px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top }
-    .callout{ border-left:4px solid var(--brand); padding:10px 12px; background:#F4F8FF; border-radius:6px }
+    .callout{ border-left:4px solid var(--brand); padding:10px 12px; background:#F4F8FF; border-radius:6px; page-break-inside: avoid; }
     .footer-note{ font-size:12px; color:var(--muted); margin-top:24px }
     @media print { .container{ padding:0 12mm } a{ color:#111; text-decoration:underline } }
   </style>
@@ -27,7 +27,7 @@
   <div class="container">
     <header class="site">
       <div class="logos">
-        <img src="{{logo_primary}}" alt="KI‑Sicherheit.jetzt" />
+        <img src="{{logo_primary}}" alt="KI‑Sicherheit.jetzt Logo" />
         <img src="{{logo_tuv}}" alt="TÜV Austria" />
         <img src="{{logo_dsgvo}}" alt="DSGVO konform" />
         <img src="{{logo_eu_ai}}" alt="EU AI Act" />
