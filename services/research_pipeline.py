@@ -2,8 +2,8 @@
 """
 services/research_pipeline.py
 -----------------------------
-Orchestriert Recherche über Tavily & Perplexity gemäß Research-Policy und
-liefert strukturierte HTML-Blöcke für das PDF-Template.
+Orchestriert Recherche über Tavily & Perplexity gemäß Research-Policy.
+Dynamische Zeitfenster (7/30/60) werden aus den Antworten oder ENV gelesen.
 
 Public:
     run_research(briefing: dict, policy: ResearchPolicy = DEFAULT_POLICY) -> dict
@@ -15,9 +15,10 @@ Return keys (merge-ready for template):
     - "last_updated": "YYYY-MM-DD"
 """
 from __future__ import annotations
+import os
 import logging
 import datetime as dt
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List
 from urllib.parse import urlparse
 
 from .research_policy import ResearchPolicy, DEFAULT_POLICY, queries_for_briefing
@@ -26,10 +27,6 @@ from .research_clients import TavilyClient, PerplexityClient
 log = logging.getLogger(__name__)
 
 
-# -----------------------------------------------------------------------------
-# Helpers
-# -----------------------------------------------------------------------------
-
 def _host(url: str) -> str:
     try:
         return urlparse(url).netloc.lower()
@@ -37,14 +34,13 @@ def _host(url: str) -> str:
         return ""
 
 def _domain_score(host: str, policy: ResearchPolicy) -> float:
-    # einfache Qualitätsgewichtung
     if any(h in host for h in policy.include_funding):
         return 1.0
     if any(h in host for h in policy.include_tools_hint):
         return 0.7
     return 0.5
 
-def _dedup(items: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def _dedup(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     seen = set()
     out = []
     for it in items:
@@ -55,7 +51,7 @@ def _dedup(items: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
         out.append(it)
     return out
 
-def _filter_domains(items: Iterable[Dict[str, Any]], policy: ResearchPolicy) -> List[Dict[str, Any]]:
+def _filter_domains(items: List[Dict[str, Any]], policy: ResearchPolicy) -> List[Dict[str, Any]]:
     out = []
     for it in items:
         h = _host(it.get("url", ""))
@@ -66,25 +62,7 @@ def _filter_domains(items: Iterable[Dict[str, Any]], policy: ResearchPolicy) -> 
         out.append(it)
     return out
 
-def _filter_recency(items: Iterable[Dict[str, Any]], min_days: int, max_days: int) -> List[Dict[str, Any]]:
-    today = dt.date.today()
-    out = []
-    for it in items:
-        dstr = (it.get("published_at") or "").strip()
-        if not dstr:
-            # kein Datum -> zulassen, aber später niedriger score
-            out.append(it)
-            continue
-        try:
-            d = dt.date.fromisoformat(dstr[:10])
-            delta = (today - d).days
-            if min_days <= delta <= max_days:
-                out.append(it)
-        except Exception:
-            out.append(it)
-    return out
-
-def _rank(items: Iterable[Dict[str, Any]], policy: ResearchPolicy) -> List[Dict[str, Any]]:
+def _rank(items: List[Dict[str, Any]], policy: ResearchPolicy) -> List[Dict[str, Any]]:
     ranked = []
     for it in items:
         h = _host(it.get("url", ""))
@@ -96,107 +74,136 @@ def _rank(items: Iterable[Dict[str, Any]], policy: ResearchPolicy) -> List[Dict[
     ranked.sort(key=lambda x: x["score"], reverse=True)
     return ranked
 
+def _a(label: str, href: str) -> str:
+    return f'<a href="{href}" target="_blank" rel="noopener noreferrer">{label}</a>'
+
 def _html_table(rows: List[List[str]], header: List[str]) -> str:
     head = "<thead><tr>" + "".join(f"<th>{h}</th>" for h in header) + "</tr></thead>"
     body = "<tbody>" + "".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in rows) + "</tbody>"
     return f'<table class="table">{head}{body}</table>'
 
-def _a(label: str, href: str) -> str:
-    return f'<a href="{href}" target="_blank" rel="noopener noreferrer">{label}</a>'
+def _days_from_answers(answers: Dict[str, Any], fallback: int) -> int:
+    # UI-Feld „research_days“: erlaubt 7, 30, 60
+    v = (answers or {}).get("research_days") or (answers or {}).get("tools_days") or (answers or {}).get("funding_days")
+    if v:
+        try:
+            v = int(v)
+            if v in (7, 30, 60):
+                return v
+        except Exception:
+            pass
+    # ENV Fallbacks
+    for name in ("TOOLS_DAYS", "FUNDING_DAYS", "RESEARCH_DAYS_DEFAULT"):
+        val = os.getenv(name)
+        if val:
+            try:
+                x = int(val)
+                if x in (7, 30, 60):
+                    return x
+            except Exception:
+                pass
+    return fallback
 
-# -----------------------------------------------------------------------------
-# Builders
-# -----------------------------------------------------------------------------
-
-def _build_tools_html(items: List[Dict[str, Any]]) -> str:
-    if not items:
-        return "<p><em>Keine verlässlichen Tool‑Quellen im Zeitraum gefunden.</em></p>"
-    # Kompakte Tabelle: Tool/Anbieter (Host), Link
+def _tools_rows(items: List[Dict[str, Any]]) -> List[List[str]]:
     rows = []
     for it in items[:10]:
         host = _host(it["url"])
-        rows.append([it["title"], host, _a("Quelle", it["url"])])
-    return _html_table(rows, ["Tool/Produkt", "Host", "Link"])
+        rows.append([it["title"], host, it.get("price_hint", "—"), it.get("tc", "—"), _a("Quelle", it["url"])])
+    return rows
 
-def _build_funding_html(items: List[Dict[str, Any]]) -> str:
-    if not items:
-        return "<p><em>Keine geeigneten Förderprogramme im Zeitraum gefunden.</em></p>"
-    # Tabelle: Programm, Träger/Region, Deadline, Link
+def _funding_rows(items: List[Dict[str, Any]]) -> List[List[str]]:
     rows = []
     for it in items[:12]:
         host = _host(it["url"])
         rows.append([it["title"], host, (it.get("published_at") or "—"), _a("Details", it["url"])])
-    return _html_table(rows, ["Programm", "Träger/Region", "Deadline/Datum", "Link"])
+    return rows
 
-def _build_sources_html(items: List[Dict[str, Any]]) -> str:
-    if not items:
-        return "<p><em>Keine Quellen verfügbar.</em></p>"
+def _sources_rows(items: List[Dict[str, Any]]) -> List[List[str]]:
     rows = []
     for it in items[:12]:
         host = _host(it["url"])
         rows.append([it["title"], host, (it.get("published_at") or "—"), _a("Link", it["url"])])
-    return _html_table(rows, ["Titel", "Host", "Datum", "Link"])
-
-# -----------------------------------------------------------------------------
-# Public
-# -----------------------------------------------------------------------------
+    return rows
 
 def run_research(briefing: Dict[str, Any], policy: ResearchPolicy = DEFAULT_POLICY) -> Dict[str, Any]:
-    """
-    Führt die Recherche aus und liefert HTML-Blöcke + last_updated.
-    """
     tavily = TavilyClient()
     pplx = PerplexityClient()
-
     q = queries_for_briefing(briefing)
+
+    days = _days_from_answers(briefing or {}, policy.default_days)
+
     all_tools: List[Dict[str, Any]] = []
     all_funding: List[Dict[str, Any]] = []
     all_sources: List[Dict[str, Any]] = []
 
-    # --- Tools ---
+    # Tools
     for query in q["tools"]:
         all_tools += tavily.search(
             query,
             include_domains=policy.include_tools_hint,
             exclude_domains=policy.exclude_global,
-            days=policy.max_days,
+            days=days,
             max_results=policy.max_results_tools,
         )
     if len(all_tools) < 4 and pplx.available():
         all_tools += pplx.ask_json("Gib 6 aktuelle (7–60 Tage) KI‑Tools/Produkt-Updates für KMU in DE/EU mit Link und Datum – nur Primärquellen (Hersteller/Docs/Trust Center) – JSON array.")
 
-    # --- Funding ---
+    # Funding
     for query in q["funding"]:
         all_funding += tavily.search(
             query,
             include_domains=policy.include_funding,
             exclude_domains=policy.exclude_global,
-            days=policy.max_days,
+            days=days,
             max_results=policy.max_results_funding,
         )
     if len(all_funding) < 4 and pplx.available():
         all_funding += pplx.ask_json("Gib 6 aktuelle (7–60 Tage) Förderaufrufe/Programme (DE/EU) für KMU mit Deadlines – NUR Primärquellen (BMWK, EU, Landesbanken) – JSON array.")
 
-    # --- AI Act / Quellen ---
+    # AI Act / Sources
     for query in q["ai_act"]:
         all_sources += tavily.search(
             query,
             exclude_domains=policy.exclude_global,
-            days=policy.max_days,
+            days=days,
             max_results=policy.max_results_sources,
         )
     if len(all_sources) < 4 and pplx.available():
         all_sources += pplx.ask_json("Liste 6 aktuelle (7–60 Tage) Primärquellen (DE/EU) zum EU AI Act / Leitfäden für Unternehmen – JSON array.")
 
     # Filter/Dedup/Rank
-    tools = _rank(_dedup(_filter_domains(all_tools, policy)), policy)
-    funding = _rank(_dedup(_filter_domains(all_funding, policy)), policy)
-    sources = _rank(_dedup(_filter_domains(all_sources, policy)), policy)
+    def pipeline(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        out = [x for x in items if x.get("url")]
+        # Filter global domains
+        out = [x for x in out if not any(bad in (urlparse(x["url"]).netloc.lower()) for bad in policy.exclude_global)]
+        # Dedup by URL
+        deduped = []
+        seen = set()
+        for x in out:
+            u = x["url"]
+            if u in seen:
+                continue
+            seen.add(u)
+            deduped.append(x)
+        # Rank
+        ranked = []
+        for it in deduped:
+            h = urlparse(it["url"]).netloc.lower()
+            score = 1.0 if any(hint in h for hint in policy.include_funding) else 0.7 if any(hint in h for hint in policy.include_tools_hint) else 0.5
+            if not it.get("published_at"):
+                score -= 0.1
+            it["score"] = max(0.0, score)
+            ranked.append(it)
+        ranked.sort(key=lambda x: x["score"], reverse=True)
+        return ranked
 
-    # HTML bauen
-    tools_html = _build_tools_html(tools)
-    funding_html = _build_funding_html(funding)
-    sources_html = _build_sources_html(sources)
+    tools = pipeline(all_tools)
+    funding = pipeline(all_funding)
+    sources = pipeline(all_sources)
+
+    tools_html = _html_table(_tools_rows(tools), ["Tool/Produkt", "Anbieter (Host)", "Preis‑Hinweis", "DSGVO/Trust Center", "Link"])
+    funding_html = _html_table(_funding_rows(funding), ["Programm", "Träger/Region", "Deadline/Datum", "Link"])
+    sources_html = _html_table(_sources_rows(sources), ["Titel", "Host", "Datum", "Link"])
 
     today = dt.date.today().isoformat()
     return {
