@@ -366,15 +366,20 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any],
     ki_ziele = briefing.get('ki_ziele', [])
     ki_projekte = briefing.get('ki_projekte', '')
     vision = briefing.get('vision_3_jahre', '')
+    
+    # ✅ FIX: Alle 4 Score-Dimensionen für bessere Prompt-Qualität
     overall = scores.get('overall', 0)
     governance = scores.get('governance', 0)
     security = scores.get('security', 0)
+    value = scores.get('value', 0)
+    enablement = scores.get('enablement', 0)
+    
     prompts = {
         'executive_summary': f"""Erstelle eine prägnante Executive Summary für ein {branche}-Unternehmen.
 Hauptleistung: {hauptleistung}
 KI-Ziele: {', '.join(ki_ziele) if ki_ziele else 'nicht definiert'}
 Vision: {vision}
-KI-Reifegrad gesamt: {overall}/100 • Governance: {governance}/100 • Sicherheit: {security}/100
+KI-Reifegrad: Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/100 • Nutzen {value}/100 • Befähigung {enablement}/100
 Schreibe 4–6 Sätze.
 Format: **VALIDE HTML** nur mit <p>-Tags. **Keine Überschriften/Markdown**.""",
         'quick_wins': f"""Liste 4–6 **konkrete Quick Wins** (0–90 Tage) für {branche}.
@@ -396,7 +401,7 @@ Format: **VALIDE HTML-TABELLE** (2 Spalten: Kennzahl, Wert).""",
 Positionen: Initiale Investition, Lizenzen/Hosting, Schulung/Change, Betrieb (Schätzung).
 Format: **VALIDE HTML-TABELLE** (2 Spalten: Position, Betrag).""",
         'recommendations': f"""Formuliere 5–7 **Handlungsempfehlungen** mit Priorität [H/M/N] und Zeitrahmen (30/60/90 Tage).
-Kontext: Branche {branche}, Score gesamt {overall}/100, Governance {governance}/100.
+Kontext: Branche {branche}, Score Gesamt {overall}/100 (Governance {governance}/100, Sicherheit {security}/100, Nutzen {value}/100, Befähigung {enablement}/100).
 Format: VALIDE HTML-Liste: <ul><li><strong>[H]</strong> Maßnahme – <em>60 Tage</em></li></ul>""",
         'risks': f"""Erstelle eine **Risikomatrix** (5–7 Risiken) für {branche}.
 Spalten: Risiko | Eintritt (niedrig/mittel/hoch) | Auswirkung | Mitigation.
@@ -551,12 +556,21 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     log.info("[%s] Generating content sections with LLM...", run_id)
     generated_sections = _generate_content_sections(briefing=answers, scores=scores)
 
-    # Scores in Template-Variablen
+    # Scores in Template-Variablen (einzeln UND als realistic_scores Dictionary)
     generated_sections['score_governance'] = scores.get('governance', 0)
     generated_sections['score_sicherheit'] = scores.get('security', 0)
     generated_sections['score_nutzen'] = scores.get('value', 0)
     generated_sections['score_befaehigung'] = scores.get('enablement', 0)
     generated_sections['score_gesamt'] = scores.get('overall', 0)
+    
+    # ✅ FIX: realistic_scores Format für Template hinzufügen
+    generated_sections['realistic_scores'] = {
+        'governance': scores.get('governance', 0),
+        'security': scores.get('security', 0),
+        'value': scores.get('value', 0),
+        'enablement': scores.get('enablement', 0),
+        'overall': scores.get('overall', 0)
+    }
 
     # NEW: Ensemble Evaluators (optional)
     if run_ensemble:
@@ -596,19 +610,27 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             log.warning("[%s] Internal research failed, falling back to fetchers: %s", run_id, exc)
             use_fetchers = True
 
-    # Render
+    # ✅ FIX: Meta VOR render() vorbereiten
+    meta = {
+        'scores': scores,
+        'score_details': score_wrap.get('details', {}),
+        'realistic_scores': generated_sections['realistic_scores']
+    }
+
+    # Render MIT scores/meta
     log.info("[%s] Rendering final HTML...", run_id)
     result = render(
         br,
         run_id=run_id,
         generated_sections=generated_sections,
         use_fetchers=use_fetchers,
+        scores=scores,  # ✅ FIX: scores explizit übergeben
+        meta=meta  # ✅ FIX: meta explizit übergeben
     )
 
-    # Meta anreichern
+    # Meta anreichern (für Rückgabewert)
     result['meta'] = result.get('meta', {})
-    result['meta']['scores'] = scores
-    result['meta']['score_details'] = score_wrap.get('details', {})
+    result['meta'].update(meta)
     result['meta'].update(generated_sections)
 
     # Quality gate
