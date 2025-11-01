@@ -2,12 +2,20 @@
 """
 Content-Normalizer & Enricher - FIXED VERSION (Gold Standard+)
 ===============================================================
+
 FIXES:
 1. ✅ Score-Rendering: Scores aus Analysis-Meta korrekt ins Template
 2. ✅ {{KPI_HTML}} / {{KPI_BRANCHE_HTML}} werden generiert (nicht leer)
 3. ✅ UTF-8 konsistent
 4. ✅ Tavily/Perplexity nur ergänzt wenn Sections leer
+5. ✅ Fallback: ROI & Kosten werden berechnet, wenn das LLM keine Tabellen liefert
+
+Diese Version bereitet alle Content-Sections auf, berechnet Quick‑Win-Zeiten,
+erstellt KPI-Dashboards und erzeugt ROI-/Kosten-Tabellen, falls diese nicht
+vom LLM geliefert wurden. So werden leere oder inkonsistente Werte im
+finalen PDF vermieden.
 """
+
 from __future__ import annotations
 
 import html
@@ -104,8 +112,8 @@ def _int_env(name: str, default: int) -> int:
 # --------------------------- Normalizer Core -----------------------------
 
 def normalize_and_enrich_sections(
-    sections: Dict[str, str], 
-    answers: Dict[str, Any], 
+    sections: Dict[str, str],
+    answers: Dict[str, Any],
     scores: Dict[str, Any],
     meta: Dict[str, Any] = None
 ) -> Dict[str, Any]:
@@ -122,17 +130,10 @@ def normalize_and_enrich_sections(
         Dict mit allen Template-Variablen (UPPERCASE keys)
     """
     out: Dict[str, Any] = {}
-    
     # =====================================================================
-    # ✅ FIX 1: SCORES AUS META ODER SCORES-DICT EXTRAHIEREN
+    # ✅ FIX 1: SCORES AUS META ODER SCORES-DICT EXTRAHIEREN
     # =====================================================================
-    
-    # Scores können in zwei Formaten vorliegen:
-    # 1. Im scores-Dict direkt: {"governance": 88, "security": 100, ...}
-    # 2. Im meta-Dict unter 'realistic_scores': {"gov": 88, "sec": 100, ...}
-    
     if meta and 'realistic_scores' in meta:
-        # Format aus gpt_analyze.py Logs
         rs = meta['realistic_scores']
         out["score_governance"] = rs.get("gov", scores.get("governance", 0))
         out["score_sicherheit"] = rs.get("sec", scores.get("security", 0))
@@ -140,31 +141,25 @@ def normalize_and_enrich_sections(
         out["score_befaehigung"] = rs.get("ena", scores.get("enablement", 0))
         out["score_gesamt"] = rs.get("overall", scores.get("overall", 0))
     else:
-        # Fallback: Aus scores-Dict
         out["score_governance"] = scores.get("governance", 0)
         out["score_sicherheit"] = scores.get("security", 0)
         out["score_nutzen"] = scores.get("value", 0)
         out["score_befaehigung"] = scores.get("enablement", 0)
         out["score_gesamt"] = scores.get("overall", 0)
-    
     # =====================================================================
-    # ✅ FIX 2: KPI_HTML / KPI_BRANCHE_HTML GENERIEREN
+    # ✅ FIX 2: KPI_HTML / KPI_BRANCHE_HTML GENERIEREN
     # =====================================================================
-    
     rate = float(os.getenv("DEFAULT_STUNDENSATZ_EUR", "60") or "60")
-    
     # Quick Wins verarbeiten
     qw_html = _clean_html(sections.get("QUICK_WINS_HTML") or sections.get("QUICK_WINS"))
     left, right, hpm = _split_quickwins_to_columns(qw_html)
     out["QUICK_WINS_HTML_LEFT"] = left
     out["QUICK_WINS_HTML_RIGHT"] = right
-    
     out["monatsersparnis_stunden"] = str(int(round(hpm)))
     out["monatsersparnis_eur"] = _eur(hpm * rate)
     out["jahresersparnis_stunden"] = str(int(round(hpm * 12)))
     out["jahresersparnis_eur"] = _eur(hpm * 12 * rate)
     out["stundensatz_eur"] = str(int(rate))
-    
     # KPI-Dashboard (Überblick)
     out["KPI_HTML"] = (
         "<table class='table'>"
@@ -175,21 +170,17 @@ def normalize_and_enrich_sections(
         f"<tr><th>Stundensatz</th><td>{out['stundensatz_eur']} €/h</td></tr>"
         "</tbody></table>"
     )
-    
     # KPI Branche-spezifisch
     out["KPI_BRANCHE_HTML"] = build_kpi_table_html(answers.get("branche"))
-    
     # =====================================================================
     # 3. BASIS-HTML SECTIONS
     # =====================================================================
-    
     out["EXECUTIVE_SUMMARY_HTML"] = _clean_html(
         sections.get("EXECUTIVE_SUMMARY_HTML") or sections.get("EXEC_SUMMARY_HTML")
     )
     out["PILOT_PLAN_HTML"] = _clean_html(
         sections.get("PILOT_PLAN_HTML") or sections.get("ROADMAP_HTML")
     )
-    
     # Business Case - ROI / Kosten trennen
     business_html = _clean_html(
         sections.get("ROI_HTML") or sections.get("BUSINESS_CASE_HTML") or ""
@@ -203,11 +194,9 @@ def normalize_and_enrich_sections(
     else:
         out["ROI_HTML"] = "<p>—</p>"
         out["COSTS_OVERVIEW_HTML"] = "<p>—</p>"
-    
     # =====================================================================
     # 4. TRANSPARENZ-TEXT
     # =====================================================================
-    
     t = (os.getenv("TRANSPARENCY_TEXT", "") or "").strip()
     if not t:
         t = (
@@ -216,25 +205,20 @@ def normalize_and_enrich_sections(
             "werden redaktionell kuratiert."
         )
     out["transparency_text"] = html.escape(t)
-    
     # =====================================================================
     # 5. PLAYBOOKS
     # =====================================================================
-    
     out["PLAYBOOKS_HTML"] = build_playbooks_html(
         branche=answers.get("branche") or answers.get("branche_name"),
         unternehmensgroesse=answers.get("unternehmensgroesse"),
     )
-    
     # =====================================================================
     # 6. RESEARCH-POLICY (Tools & Förderungen)
     # =====================================================================
-    
     rp = ResearchPolicy()
     branche_norm = normalize_industry(answers.get("branche"))
     tools_days = _int_env("TOOLS_DAYS", 30)
     funding_days = _int_env("FUNDING_DAYS", 30)
-    
     # Tools: Nur ergänzen wenn Section leer
     if not sections.get("TOOLS_HTML"):
         try:
@@ -246,13 +230,12 @@ def normalize_and_enrich_sections(
             out["TOOLS_HTML"] = "<p>Keine Tool-Recherche verfügbar.</p>"
     else:
         out["TOOLS_HTML"] = sections.get("TOOLS_HTML")
-    
     # Förderungen: Nur ergänzen wenn Section leer
     if not sections.get("FOERDERPROGRAMME_HTML"):
         try:
             foerd = rp.search_funding(
-                bundesland=answers.get("bundesland", ""), 
-                branche=branche_norm, 
+                bundesland=answers.get("bundesland", ""),
+                branche=branche_norm,
                 days=funding_days
             )
             out["FOERDERPROGRAMME_HTML"] = rp.results_to_html(
@@ -262,11 +245,9 @@ def normalize_and_enrich_sections(
             out["FOERDERPROGRAMME_HTML"] = "<p>Keine Förder-Recherche verfügbar.</p>"
     else:
         out["FOERDERPROGRAMME_HTML"] = sections.get("FOERDERPROGRAMME_HTML")
-    
     # =====================================================================
     # 7. RISIKEN & GAMECHANGER (Fallbacks)
     # =====================================================================
-    
     out["RISKS_HTML"] = _clean_html(sections.get("RISKS_HTML") or "") or (
         "<table class='table'>"
         "<thead><tr><th>Risiko</th><th>Eintritt</th><th>Auswirkung</th><th>Mitigation</th></tr></thead>"
@@ -275,17 +256,50 @@ def normalize_and_enrich_sections(
         "<tr><td>Halluzinationen</td><td>hoch</td><td>Fehlentscheidungen</td><td>4-Augen-Prinzip</td></tr>"
         "</tbody></table>"
     )
-    
     out["GAMECHANGER_HTML"] = _clean_html(sections.get("GAMECHANGER_HTML") or "")
-    
     # =====================================================================
     # 8. LOGOS & DATUM
     # =====================================================================
-    
     for k, v in LOGO_DEFAULTS.items():
         out.setdefault(k, v)
-    
     out.setdefault("report_date", datetime.now().strftime("%d.%m.%Y"))
     out.setdefault("report_year", datetime.now().strftime("%Y"))
-    
+    # =====================================================================
+    # 9. ROI & Kosten Fallback (neu)
+    # =====================================================================
+    # Wenn LLM keine validen Tabellen geliefert hat, berechne ROI und Kosten
+    try:
+        if out.get("ROI_HTML") == "<p>—</p>" or out.get("COSTS_OVERVIEW_HTML") == "<p>—</p>":
+            size_raw = (answers.get("unternehmensgroesse") or "").lower()
+            base_cost = 2000.0
+            if any(k in size_raw for k in ["2", "team", "klein"]):
+                base_cost = 5000.0
+            elif any(k in size_raw for k in ["11", "100", "kmu", "mittel"]):
+                base_cost = 8000.0
+            ersparnis_jahr = hpm * 12.0 * rate
+            profit = ersparnis_jahr - base_cost
+            roi_percent = int(round((profit / base_cost) * 100)) if base_cost > 0 else 0
+            payback_months = (base_cost / (hpm * rate)) if (hpm > 0 and rate > 0) else 0
+            out["ROI_HTML"] = (
+                "<table class='table'><tbody>"
+                f"<tr><th>Investition (Jahr 1)</th><td>{_eur(base_cost)} €</td></tr>"
+                f"<tr><th>Ersparnis (Jahr 1)</th><td>{_eur(ersparnis_jahr)} €</td></tr>"
+                f"<tr><th>Netto-ROI</th><td>{roi_percent} %</td></tr>"
+                f"<tr><th>Amortisationszeit</th><td>{int(round(payback_months))} Monate</td></tr>"
+                "</tbody></table>"
+            )
+            init = base_cost * 0.5
+            lic = base_cost * 0.3
+            training = base_cost * 0.1
+            op = base_cost * 0.1
+            out["COSTS_OVERVIEW_HTML"] = (
+                "<table class='table'><tbody>"
+                f"<tr><th>Initiale Investition</th><td>{_eur(init)} €</td></tr>"
+                f"<tr><th>Lizenzen & Hosting</th><td>{_eur(lic)} €</td></tr>"
+                f"<tr><th>Schulung & Change</th><td>{_eur(training)} €</td></tr>"
+                f"<tr><th>Betrieb (Jahr 1)</th><td>{_eur(op)} €</td></tr>"
+                "</tbody></table>"
+            )
+    except Exception:
+        pass
     return out
