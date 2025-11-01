@@ -1,241 +1,263 @@
 # -*- coding: utf-8 -*-
 """
-Research‑Policy Wrapper für Tavily/Perplexity
-=============================================
-- Domänen‑Whitelist (seriöse Quellen, EU/DE Fokus)
-- Optional: Blocklist (Werbe‑/Affiliate‑Lastig)
-- Zeitfenster 7/30/60 Tage (pro Recherchekategorie)
-- Einheitliches Rückgabeformat
-- Defensive Fehlerbehandlung (nie Exception nach außen)
+services/research_policy.py
+===========================
+Research-Policy: Domain-Whitelists, Query-Generierung, Config.
 
-Integration:
-    from services.research_policy import ResearchPolicy
-
-    rp = ResearchPolicy()
-    tools = rp.search_tools(query="beste RAG Tools EU Hosting", days=30)
-    funding = rp.search_funding(state="BE", topic="KI Förderung", days=30)
-
-Wenn RESEARCH_PROVIDER in ENV nicht gesetzt ist, wird Tavily genutzt (so wie bisher).
+Usage:
+    from services.research_policy import ResearchPolicy, DEFAULT_POLICY, queries_for_briefing
+    
+    # Get queries for briefing
+    queries = queries_for_briefing(briefing_answers)
+    # -> {"tools": [...], "funding": [...], "ai_act": [...]}
+    
+    # Use policy for filtering
+    policy = DEFAULT_POLICY
+    if policy.is_allowed_domain("heise.de"):
+        ...
 """
 from __future__ import annotations
 
 import os
-import re
-import time
-import html
-import json
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
 import logging
-
-import requests
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
 
 log = logging.getLogger(__name__)
 
 
-def _d(val: str, default: str) -> str:
-    return (val or "").strip() or default
+# ============================================================================
+# DOMAIN WHITELISTS & BLACKLISTS
+# ============================================================================
 
-
-def _int_env(name: str, default: int) -> int:
-    try:
-        return int(os.getenv(name, default))
-    except Exception:
-        return default
-
-
-# ------------------------------ Whitelists ------------------------------
-
-DEFAULT_WHITELIST = [
-    # EU/DE Behörden & Programme
+# Funding-spezifische Domains (Deutschland + EU)
+FUNDING_DOMAINS = [
+    # Bund
+    "bmwk.de", "bmbf.de", "foerderdatenbank.de", "bafa.de",
+    "digitale-dienste.eu", "bundesregierung.de",
+    # EU
     "ec.europa.eu", "europe.eu", "digital-strategy.ec.europa.eu",
-    "bmwk.de", "foerderdatenbank.de", "bmbf.de",
-    # Länder (Beispiele, Liste beliebig erweiterbar)
-    "bayern.de", "stmwi.bayern.de", "nrw.de", "mkw.nrw", "berlin.de",
-    "hamburg.de", "sachsen.de", "baden-wuerttemberg.de", "rlp.de",
-    # Sicherheit/Datenschutz
-    "bsi.bund.de", "bfdi.bund.de", "gematik.de",
-    # Fachpresse/Tech (DE/EU)
-    "heise.de", "ct.de", "t3n.de", "golem.de",
-    # Open Source/Standards
-    "github.com", "huggingface.co", "apache.org",
+    "eismea.ec.europa.eu", "cordis.europa.eu",
+    # Länder
+    "bayern.de", "stmwi.bayern.de", "nrw.de", "mkw.nrw",
+    "berlin.de", "hamburg.de", "sachsen.de", "bw.de",
+    # Förderbanken
+    "kfw.de", "nbank.de", "lbank.de", "saarland.de",
 ]
 
-DEFAULT_BLOCKLIST = [
-    "youtube.com", "youtu.be", "facebook.com", "instagram.com", "pinterest.com",
-    "medium.com", "slideshare.net", "kiberatung.de", "everlast.ai"  # Werbung/Promo häufig
+# Tools/Tech Domains (vertrauenswürdige Quellen)
+TOOLS_DOMAINS = [
+    # Hersteller
+    "openai.com", "anthropic.com", "google.com", "microsoft.com",
+    # Tech-News (DE/EU)
+    "heise.de", "ct.de", "t3n.de", "golem.de", "computerwoche.de",
+    # Developer
+    "github.com", "gitlab.com", "huggingface.co",
+    # Reviews/Vergleiche
+    "g2.com", "capterra.com", "trustpilot.com",
+]
+
+# Global Exclude (Spam/Low-Quality)
+EXCLUDE_DOMAINS = [
+    # Social Media (nicht-primär)
+    "youtube.com", "youtu.be", "facebook.com", "instagram.com",
+    "pinterest.com", "tiktok.com", "linkedin.com",
+    # Affiliate/Marketing
+    "medium.com", "slideshare.net", "kiberatung.de",
+    # Low-Quality
+    "everlast.ai", "spam.com", "click-here.com",
 ]
 
 
-def clamp_days(days: Optional[int], default_env_name: str, default_value: int = 30) -> int:
-    dv = _int_env(default_env_name, default_value)
-    n = int(days or dv)
-    return 7 if n <= 7 else 30 if n <= 30 else 60
-
-
-def _map_days_to_provider(days: int) -> Tuple[str, str]:
-    """Mappt Tage auf Provider‑Parameter (Tavily, Perplexity)."""
-    # Tavily: time_range ∈ {"day","week","month","year"} – wir nehmen week/month
-    # Perplexity: search_recency ∈ {"past_day","past_week","past_month","past_year"}
-    if days <= 7:
-        return ("week", "past_week")
-    if days <= 30:
-        return ("month", "past_month")
-    return ("month", "past_month")  # 60 Tage ≈ past_month, da kein 2‑Monate Fenster
-
+# ============================================================================
+# RESEARCH POLICY
+# ============================================================================
 
 @dataclass
-class Result:
-    title: str
-    url: str
-    snippet: str = ""
-    published: Optional[str] = None
-    source: Optional[str] = None
-
-
-def _domain(url: str) -> str:
-    try:
-        return re.sub(r"^www\.", "", re.findall(r"://([^/]+)/?", url)[0]).lower()
-    except Exception:
-        return ""
-
-
-def _allowed(url: str, whitelist: List[str], blocklist: List[str]) -> bool:
-    dom = _domain(url)
-    if any(b in dom for b in blocklist):
-        return False
-    return any(w in dom for w in whitelist)
-
-
 class ResearchPolicy:
-    def __init__(self) -> None:
-        self.provider = _d(os.getenv("RESEARCH_PROVIDER", "tavily"), "tavily").lower()
-        self.tavily_key = os.getenv("TAVILY_API_KEY", "")
-        self.perplexity_key = os.getenv("PERPLEXITY_API_KEY", "")
-        self.whitelist = list(filter(None, [x.strip() for x in os.getenv("RESEARCH_WHITELIST", "").split(",")])) or DEFAULT_WHITELIST
-        self.blocklist = list(filter(None, [x.strip() for x in os.getenv("RESEARCH_BLOCKLIST", "").split(",")])) or DEFAULT_BLOCKLIST
-        self.timeout = _int_env("RESEARCH_TIMEOUT_SEC", 25)
-        self.max_results = _int_env("RESEARCH_MAX_RESULTS", 8)
+    """
+    Research-Policy: Konfiguration für Recherche-Verhalten.
+    
+    Attributes:
+        include_funding: Whitelist für Förderprogramme
+        include_tools_hint: Whitelist für Tools
+        exclude_global: Global Blacklist
+        max_results_tools: Max. Ergebnisse für Tools
+        max_results_funding: Max. Ergebnisse für Funding
+        max_results_sources: Max. Ergebnisse für Sources
+        default_days: Default Zeitfenster in Tagen
+    """
+    include_funding: List[str] = field(default_factory=lambda: FUNDING_DOMAINS.copy())
+    include_tools_hint: List[str] = field(default_factory=lambda: TOOLS_DOMAINS.copy())
+    exclude_global: List[str] = field(default_factory=lambda: EXCLUDE_DOMAINS.copy())
+    
+    max_results_tools: int = 10
+    max_results_funding: int = 10
+    max_results_sources: int = 8
+    
+    default_days: int = 30
+    
+    def is_allowed_domain(self, url: str) -> bool:
+        """Prüft ob Domain erlaubt ist."""
+        url_lower = url.lower()
+        
+        # Check Blacklist
+        if any(bad in url_lower for bad in self.exclude_global):
+            return False
+        
+        # Check Whitelists
+        if any(good in url_lower for good in self.include_funding):
+            return True
+        if any(good in url_lower for good in self.include_tools_hint):
+            return True
+        
+        # Default: erlaubt wenn .de oder .eu
+        if url_lower.endswith('.de') or url_lower.endswith('.eu'):
+            return True
+        
+        return False
 
-    # ------------------- Provider Calls (defensive) -------------------
 
-    def _call_tavily(self, query: str, include_domains: List[str], days: int) -> List[Result]:
-        if not self.tavily_key:
-            log.warning("Tavily API key missing; returning empty results")
-            return []
-        tr_tav, _ = _map_days_to_provider(days)
-        payload = {
-            "api_key": self.tavily_key,
-            "query": query,
-            "include_domains": include_domains,
-            "exclude_domains": self.blocklist,
-            "search_depth": "advanced",
-            "time_range": tr_tav,
-            "max_results": self.max_results,
+# Global Default Policy
+DEFAULT_POLICY = ResearchPolicy()
+
+
+# ============================================================================
+# QUERY GENERATION
+# ============================================================================
+
+def queries_for_briefing(briefing: Dict[str, Any]) -> Dict[str, List[str]]:
+    """
+    Generiert Search-Queries basierend auf Briefing-Antworten.
+    
+    Args:
+        briefing: Briefing-Antworten Dict mit keys wie:
+            - branche (str)
+            - bundesland (str)
+            - ki_ziele (list)
+            - hauptleistung (str)
+            
+    Returns:
+        Dict mit Query-Listen:
+        {
+            "tools": ["query1", "query2", ...],
+            "funding": ["query1", "query2", ...],
+            "ai_act": ["query1", "query2", ...]
         }
+    """
+    branche = (briefing.get('branche') or 'Unternehmen').strip()
+    bundesland = (briefing.get('bundesland') or 'Deutschland').strip()
+    hauptleistung = (briefing.get('hauptleistung') or '').strip()
+    ki_ziele = briefing.get('ki_ziele', [])
+    
+    # Bundesland-Mapping (Abkürzung -> Vollname)
+    bundesland_map = {
+        "BE": "Berlin", "BY": "Bayern", "BW": "Baden-Württemberg",
+        "NW": "Nordrhein-Westfalen", "HE": "Hessen", "HH": "Hamburg",
+        "HB": "Bremen", "RP": "Rheinland-Pfalz", "SL": "Saarland",
+        "SN": "Sachsen", "ST": "Sachsen-Anhalt", "TH": "Thüringen",
+        "MV": "Mecklenburg-Vorpommern", "NI": "Niedersachsen",
+        "SH": "Schleswig-Holstein"
+    }
+    bundesland = bundesland_map.get(bundesland.upper(), bundesland)
+    
+    queries: Dict[str, List[str]] = {
+        "tools": [],
+        "funding": [],
+        "ai_act": []
+    }
+    
+    # ========== TOOLS QUERIES ==========
+    queries["tools"].append(f"KI Tools {branche} Deutschland EU DSGVO")
+    queries["tools"].append(f"generative AI {branche} SaaS Open Source")
+    
+    if hauptleistung:
+        queries["tools"].append(f"KI Software {hauptleistung} Automation")
+    
+    if ki_ziele:
+        # Nutze erstes Ziel für spezifischere Query
+        ziel = ki_ziele[0] if isinstance(ki_ziele, list) else str(ki_ziele)
+        queries["tools"].append(f"KI {ziel} {branche} Best Practices")
+    
+    # ========== FUNDING QUERIES ==========
+    queries["funding"].append(f"Förderprogramme KI {bundesland} KMU")
+    queries["funding"].append(f"Digitalisierung Förderung {branche} {bundesland}")
+    queries["funding"].append(f"BAFA KfW Förderung Künstliche Intelligenz {bundesland}")
+    
+    if branche.lower() not in ['unternehmen', 'firma']:
+        queries["funding"].append(f"Branchenprogramm {branche} Digitalisierung Förderung")
+    
+    # ========== AI ACT / SOURCES QUERIES ==========
+    queries["ai_act"].append("EU AI Act Deutschland KMU Leitfaden")
+    queries["ai_act"].append("KI Verordnung Compliance Deutschland 2024")
+    queries["ai_act"].append("DSGVO KI Datenschutz Best Practices Deutschland")
+    
+    log.debug("Generated queries: tools=%d, funding=%d, ai_act=%d", 
+             len(queries["tools"]), len(queries["funding"]), len(queries["ai_act"]))
+    
+    return queries
+
+
+# ============================================================================
+# ENVIRONMENT-BASED CONFIG
+# ============================================================================
+
+def load_policy_from_env() -> ResearchPolicy:
+    """
+    Lädt ResearchPolicy aus Environment Variables.
+    
+    ENV Variables:
+        RESEARCH_INCLUDE_FUNDING: Comma-separated domains
+        RESEARCH_INCLUDE_TOOLS: Comma-separated domains
+        RESEARCH_EXCLUDE: Comma-separated domains
+        RESEARCH_MAX_RESULTS_TOOLS: int
+        RESEARCH_MAX_RESULTS_FUNDING: int
+        RESEARCH_MAX_RESULTS_SOURCES: int
+        RESEARCH_DEFAULT_DAYS: int (7, 30, 60)
+    """
+    policy = ResearchPolicy()
+    
+    # Include Funding
+    if os.getenv("RESEARCH_INCLUDE_FUNDING"):
+        custom = [d.strip() for d in os.getenv("RESEARCH_INCLUDE_FUNDING", "").split(",") if d.strip()]
+        policy.include_funding.extend(custom)
+    
+    # Include Tools
+    if os.getenv("RESEARCH_INCLUDE_TOOLS"):
+        custom = [d.strip() for d in os.getenv("RESEARCH_INCLUDE_TOOLS", "").split(",") if d.strip()]
+        policy.include_tools_hint.extend(custom)
+    
+    # Exclude
+    if os.getenv("RESEARCH_EXCLUDE"):
+        custom = [d.strip() for d in os.getenv("RESEARCH_EXCLUDE", "").split(",") if d.strip()]
+        policy.exclude_global.extend(custom)
+    
+    # Max Results
+    if os.getenv("RESEARCH_MAX_RESULTS_TOOLS"):
         try:
-            r = requests.post("https://api.tavily.com/search", json=payload, timeout=self.timeout)
-            r.raise_for_status()
-            data = r.json()
-            items = []
-            for it in data.get("results", []):
-                items.append(Result(
-                    title=it.get("title") or "",
-                    url=it.get("url") or "",
-                    snippet=it.get("content") or "",
-                    published=it.get("published_date") or None,
-                    source=_domain(it.get("url") or ""),
-                ))
-            return items
-        except Exception as exc:
-            log.warning("Tavily error: %s", exc)
-            return []
-
-    def _call_perplexity(self, query: str, include_domains: List[str], days: int) -> List[Result]:
-        if not self.perplexity_key:
-            log.warning("Perplexity API key missing; returning empty results")
-            return []
-        _, rec = _map_days_to_provider(days)
-        headers = {"Authorization": f"Bearer {self.perplexity_key}", "Content-Type": "application/json"}
-        payload = {
-            "model": "sonar-small-online",
-            "search_recency": rec,
-            "return_images": False,
-            "top_k": self.max_results,
-            "search_focus": "news",
-            "query": f"{query}",
-            "include_domains": include_domains,
-            "exclude_domains": self.blocklist,
-        }
+            policy.max_results_tools = int(os.getenv("RESEARCH_MAX_RESULTS_TOOLS"))
+        except ValueError:
+            pass
+    
+    if os.getenv("RESEARCH_MAX_RESULTS_FUNDING"):
         try:
-            r = requests.post("https://api.perplexity.ai/search", json=payload, headers=headers, timeout=self.timeout)
-            r.raise_for_status()
-            data = r.json()
-            items = []
-            for it in (data.get("results") or []):
-                items.append(Result(
-                    title=it.get("title") or "",
-                    url=it.get("url") or "",
-                    snippet=it.get("snippet") or "",
-                    published=it.get("date") or None,
-                    source=_domain(it.get("url") or ""),
-                ))
-            return items
-        except Exception as exc:
-            log.warning("Perplexity error: %s", exc)
-            return []
-
-    # ------------------- Public Facade -------------------
-
-    def _search(self, query: str, days: int, include_domains: Optional[List[str]] = None) -> List[Result]:
-        include = include_domains or self.whitelist
-        if self.provider == "perplexity":
-            results = self._call_perplexity(query, include, days)
-        else:
-            results = self._call_tavily(query, include, days)
-
-        # Filter/Normalize/Unique
-        seen = set()
-        filtered: List[Result] = []
-        for res in results:
-            if not res.url or not _allowed(res.url, include, self.blocklist):
-                continue
-            key = _domain(res.url) + "|" + (res.title or "")
-            if key in seen:
-                continue
-            seen.add(key)
-            filtered.append(res)
-        return filtered[: self.max_results]
-
-    # Semantic helpers for the renderer/normalizer
-    def search_tools(self, branche: str, days: Optional[int] = None) -> List[Result]:
-        d = clamp_days(days, "TOOLS_DAYS", 30)
-        q = f"KI Tools {branche} EU DSGVO Open Source Preise Bewertung"
-        return self._search(q, days=d)
-
-    def search_funding(self, bundesland: str, branche: Optional[str] = None, days: Optional[int] = None) -> List[Result]:
-        d = clamp_days(days, "FUNDING_DAYS", 30)
-        state = (bundesland or "").upper()
-        loc = {
-            "BE": "Berlin", "BY": "Bayern", "BW": "Baden‑Württemberg", "NW": "Nordrhein‑Westfalen",
-            "HE": "Hessen", "HH": "Hamburg", "HB": "Bremen", "RP": "Rheinland‑Pfalz", "SL": "Saarland",
-            "SN": "Sachsen", "ST": "Sachsen‑Anhalt", "TH": "Thüringen", "MV": "Mecklenburg‑Vorpommern",
-            "NI": "Niedersachsen", "SH": "Schleswig‑Holstein"
-        }.get(state, state or "Deutschland/EU")
-        q = f"Förderprogramme {loc} Künstliche Intelligenz KMU Zuschuss Laufzeit Antragsfrist"
-        return self._search(q, days=d)
-
-    # ------------------- HTML helpers -------------------
-
-    @staticmethod
-    def results_to_html(items: List[Result], empty_text: str) -> str:
-        if not items:
-            return f"<p class='small'>{html.escape(empty_text)}</p>"
-        lis = []
-        for r in items:
-            dom = html.escape(r.source or "")
-            title = html.escape(r.title or r.url)
-            url = html.escape(r.url)
-            snip = html.escape((r.snippet or "")[:220])
-            lis.append(f"<li><a href='{url}' rel='noopener noreferrer'>{title}</a> <em>({dom})</em><br/><span class='small'>{snip}</span></li>")
-        return "<ul>" + "".join(lis) + "</ul>"
+            policy.max_results_funding = int(os.getenv("RESEARCH_MAX_RESULTS_FUNDING"))
+        except ValueError:
+            pass
+    
+    if os.getenv("RESEARCH_MAX_RESULTS_SOURCES"):
+        try:
+            policy.max_results_sources = int(os.getenv("RESEARCH_MAX_RESULTS_SOURCES"))
+        except ValueError:
+            pass
+    
+    # Default Days
+    if os.getenv("RESEARCH_DEFAULT_DAYS"):
+        try:
+            days = int(os.getenv("RESEARCH_DEFAULT_DAYS"))
+            if days in (7, 30, 60):
+                policy.default_days = days
+        except ValueError:
+            pass
+    
+    return policy
