@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
 """Content Normalizer & Enricher (Gold-Standard+)
 ==================================================
-- Füllt leere Platzhalter (KPI, ROI, Kosten, Tools, Förderungen)
-- Liefert robuste Defaults abhängig von Branche/Unternehmensgröße
-- Bleibt funktionsfähig, wenn externe Recherche (Tavily/Perplexity) ausfällt
+- Füllt leere Platzhalter (KPI, ROI, Kosten, Tools, Förderungen, Quellen)
+- Größen-/branchenabhängige Defaults
+- Akzeptiert **kwargs + alias 'sections' (Kompatibilität zu Renderer)
 """
 from __future__ import annotations
 
 import re
 from typing import Dict, Any
 
-from .sanitize import ensure_utf8
+try:
+    from .sanitize import ensure_utf8  # type: ignore
+except Exception:  # Fallback, falls Modul nicht existiert
+    def ensure_utf8(x: str) -> str:
+        return (x or "").encode("utf-8", errors="ignore").decode("utf-8", errors="ignore")
 
 EM_DASH = "—"
 
@@ -26,7 +30,7 @@ def _to_eur(v: float) -> str:
     return f"{v:,.2f} €".replace(",", "X").replace(".", ",").replace("X", ".")
 
 def _parse_budget_range(text: str) -> float:
-    """Parse strings like "2000_10000" and return midpoint as float."""
+    """Parse strings like '2000_10000' and return midpoint as float."""
     if not text:
         return 0.0
     m = re.match(r"(\d+)[^\d]+(\d+)", str(text))
@@ -41,40 +45,43 @@ def _parse_budget_range(text: str) -> float:
     except Exception:
         return 0.0
 
-def _branch_defaults(branche: str) -> Dict[str, Any]:
+def _branch_defaults(branche: str, size: str) -> Dict[str, Any]:
     b = (branche or "").lower()
-    # Minimal, aber praxistauglich – kann jederzeit erweitert werden
+    size = (size or "").lower()
+    # KPIs baseline für Beratung – wird unten je Größe justiert
     defaults = {
         "beratung": {
             "kpis": [
-                ("Durchlaufzeit Angebot", "Zeit von Anfrage bis Angebot", "≤ 24 h"),
-                ("Antwortzeit Kundenchat", "Median in Bürozeiten", "≤ 30 min"),
-                ("Wiederverwendbare Vorlagen", "Anteil standardisierter Antworten", "≥ 60 %"),
-                ("Automatisierungsgrad", "Anteil automatisierter Schritte", "≥ 40 %"),
+                ["Durchlaufzeit Angebot", "Zeit von Anfrage bis Angebot", "≤ 24 h"],
+                ["Antwortzeit Kundenchat", "Median in Bürozeiten", "≤ 30 min"],
+                ["Wiederverwendbare Vorlagen", "Anteil standardisierter Antworten", "≥ 60 %"],
+                ["Automatisierungsgrad", "Anteil automatisierter Schritte", "≥ 40 %"],
             ],
             "tools": [
-                ("Notion AI (Business)", "Notion", "ab ~20 €/User/Monat", "Wissensbasis & Doku (EU-Optionen)"),
-                ("Typeform (EU API)", "Typeform", "ab ~30–70 €/Monat", "Formulare/Fragebögen mit EU-Endpunkt"),
-                ("Make.com", "Make", "ab ~9–29 €/Monat", "No‑Code Automationen, Webhooks"),
-                ("n8n (Self‑Hosted)", "n8n", "Open Source", "Automationsplattform, On‑Prem möglich"),
-                ("Claude/Anthropic", "Anthropic", "Pay‑per‑use", "LLM für Auswertung/Content, DE‑stark"),
+                ["Notion AI (Business)", "Notion", "ab ~20 €/User/Monat", "Wissensbasis & Doku (EU‑Optionen)"],
+                ["Typeform (EU API)", "Typeform", "ab ~30–70 €/Monat", "Formulare/Fragebögen mit EU‑Endpunkt"],
+                ["Make.com", "Make", "ab ~9–29 €/Monat", "No‑Code Automationen, Webhooks"],
+                ["n8n (Self‑Hosted)", "n8n", "Open Source", "Automationsplattform, On‑Prem möglich"],
+                ["Claude (Workplaces)", "Anthropic", "Pay‑per‑use", "LLM für Auswertung/Content, DE‑stark"],
             ],
-        },
-        "it & software": {
-            "kpis": [
-                ("MTTR (Support)", "Mean‑Time‑to‑Resolve", "≤ 24 h"),
-                ("Deploy‑Frequenz", "Produktionsdeploys/Monat", "≥ 4"),
-            ],
-            "tools": [
-                ("GitHub Copilot Business", "GitHub", "ab ~19 €/User/Monat", "Code‑Assistenz, Policies"),
-                ("Sentry", "Sentry", "Staffelpreis", "Error Tracking & APM"),
-            ],
-        },
+        }
     }
-    return defaults.get(b, defaults["beratung"])  # Fallback
+    d = defaults.get(b, defaults["beratung"])
 
-def _kpi_tables(branche: str) -> Dict[str, str]:
-    d = _branch_defaults(branche)
+    # Größen‑Tuning
+    kpis = list(d["kpis"])
+    if size == "solo":
+        kpis[0][2] = "≤ 48 h"
+        kpis[1][2] = "≤ 60 min"
+    elif size == "team_2_10":
+        kpis[0][2] = "≤ 36 h"
+        kpis[1][2] = "≤ 45 min"
+    # kmu_11_100 bleibt baseline
+
+    return {"kpis": kpis, "tools": d.get("tools", [])}
+
+def _kpi_tables(branche: str, size: str) -> Dict[str, str]:
+    d = _branch_defaults(branche, size)
     overview = _table(["KPI", "Definition", "Ziel"], d["kpis"]) if d.get("kpis") else ""
     return {
         "KPI_HTML": overview or f"<p>{ensure_utf8(EM_DASH)}</p>",
@@ -84,6 +91,7 @@ def _kpi_tables(branche: str) -> Dict[str, str]:
 def _roi_and_costs(briefing: Dict[str, Any], metrics: Dict[str, Any]) -> Dict[str, str]:
     invest_hint = _parse_budget_range(briefing.get("investitionsbudget"))
     invest = invest_hint if invest_hint > 0 else 6000.0
+    # Quick‑Wins Kennzahlen (von gpt_analyze gesetzt)
     yearly = float(metrics.get("jahresersparnis_eur", 0))
     monthly = float(metrics.get("monatsersparnis_eur", 0))
     roi_pct = ((yearly - invest) / invest * 100.0) if invest > 0 else 0.0
@@ -97,8 +105,8 @@ def _roi_and_costs(briefing: Dict[str, Any], metrics: Dict[str, Any]) -> Dict[st
         ("Payback‑Periode", f"{payback_months:.1f} Monate" if monthly > 0 else EM_DASH),
     ]
     costs_rows = [
-        ("Initiale Investition", _to_eur(invest)),
-        ("Lizenzen/Hosting", _to_eur(max(180.0, metrics.get("stundensatz_eur", 60) * 3.0))),  # grobe Daumenregel
+        ("Initiale Investition (CapEx)", _to_eur(invest)),
+        ("Lizenzen/Hosting (OpEx)", _to_eur(max(180.0, metrics.get("stundensatz_eur", 60) * 3.0))),
         ("Schulung/Change", _to_eur(600.0)),
         ("Betrieb (Schätzung)", _to_eur(360.0)),
     ]
@@ -107,14 +115,12 @@ def _roi_and_costs(briefing: Dict[str, Any], metrics: Dict[str, Any]) -> Dict[st
         "COSTS_OVERVIEW_HTML": _table(["Position", "Betrag"], costs_rows),
     }
 
-def _default_tools_and_funding(briefing: Dict[str, Any]) -> Dict[str, str]:
-    """Fallback‑Tabellen, falls keine Recherche/LLM‑Daten vorliegen."""
+def _default_tools_and_funding(briefing: Dict[str, Any], last_updated: str) -> Dict[str, str]:
     b = (briefing.get("bundesland") or "").lower()
     branche = briefing.get("branche") or "beratung"
 
-    tools = _branch_defaults(branche).get("tools", [])
-    tools_rows = [(t[0], t[1], t[2], t[3]) for t in tools]
-    tools_html = _table(["Tool/Produkt", "Anbieter", "Preis‑Hinweis", "Einsatz"], tools_rows)
+    tools = _branch_defaults(branche, briefing.get("unternehmensgroesse") or "").get("tools", [])
+    tools_html = _table(["Tool/Produkt", "Anbieter", "Preis‑Hinweis", "Einsatz"], tools)
 
     funding_rows = []
     if b == "be":  # Berlin
@@ -130,31 +136,35 @@ def _default_tools_and_funding(briefing: Dict[str, Any]) -> Dict[str, str]:
             ("Förderdatenbank (Bund/Land)", "BMWK", "—", "Filter: Digitalisierung/KI"),
         ])
     funding_html = _table(["Programm", "Träger", "Deadline/Datum", "Kurzbeschreibung"], funding_rows)
-
+    funding_html += f'<p class="small">Stand Research: {ensure_utf8(last_updated or briefing.get("report_date") or "—")}</p>'
     return {
         "TOOLS_HTML": tools_html,
         "FOERDERPROGRAMME_HTML": funding_html,
     }
 
-def normalize_and_enrich_sections(briefing: Dict[str, Any] = None, snippets: Dict[str, str] = None, metrics: Dict[str, Any] = None, **kwargs) -> Dict[str, str]:
-    """Return a copy of snippets with all critical placeholders filled."
-    """
-    snippets = snippets or kwargs.get('sections') or {}
-    briefing = briefing or kwargs.get('answers') or {}
-    metrics = metrics or kwargs.get('metrics') or {}
+def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
+                                  snippets: Dict[str, str] = None,
+                                  metrics: Dict[str, Any] = None,
+                                  **kwargs) -> Dict[str, str]:
+    """Mergt Snippets mit robusten Defaults. Kompatibel zu call mit sections=..., answers=..., metrics=..."""
+    snippets = snippets or kwargs.get("sections") or {}
+    briefing = briefing or kwargs.get("answers") or {}
+    metrics  = metrics  or kwargs.get("metrics") or {}
     out = dict(snippets or {})
+
     # KPI tables
-    kpis = _kpi_tables(briefing.get("branche") or "beratung")
-    out.setdefault("KPI_HTML", kpis["KPI_HTML"])
-    out.setdefault("KPI_BRANCHE_HTML", kpis["KPI_BRANCHE_HTML"])
+    kpi = _kpi_tables(briefing.get("branche") or "beratung", briefing.get("unternehmensgroesse") or "")
+    out.setdefault("KPI_HTML", kpi["KPI_HTML"])
+    out.setdefault("KPI_BRANCHE_HTML", kpi["KPI_BRANCHE_HTML"])
 
     # ROI & Costs
-    if not out.get("ROI_HTML") or "Berechnung erforderlich" in out.get("ROI_HTML", ""):
+    if not out.get("ROI_HTML") or len(out.get("ROI_HTML","").strip()) < 20:
         out.update(_roi_and_costs(briefing, metrics))
 
-    # Tools & Funding fallback
-    if not out.get("TOOLS_HTML") or len(out.get("TOOLS_HTML", "").strip()) < 32:
-        out.update(_default_tools_and_funding(briefing))
+    # Tools & Funding fallback (mit Stand)
+    last_updated = snippets.get("last_updated") or kwargs.get("last_updated") or briefing.get("research_last_updated") or ""
+    if not out.get("TOOLS_HTML") or len(out.get("TOOLS_HTML","").strip()) < 24:
+        out.update(_default_tools_and_funding(briefing, last_updated))
 
     # Quellenliste – minimaler Fallback, wenn leer
     if not out.get("QUELLEN_HTML") or len(out.get("QUELLEN_HTML", "").strip()) < 16:
