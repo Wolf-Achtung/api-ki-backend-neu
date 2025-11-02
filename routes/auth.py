@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+"""
+Auth-Router (Login-Code per E-Mail, Rate-Limits, Audit-Log)
+Unverändert übernommen – produktionsreif.
+"""
 import os
 import logging
 from datetime import datetime, timedelta
@@ -107,7 +111,7 @@ def _rate_limit(db: Session, email: str, ip: str, action: str, limit: int) -> Tu
 
 def _find_user(db: Session, email: str):
     # assumes users(email) exists
-    q = text("SELECT id, email FROM users WHERE lower(email)=lower(:e) LIMIT 1;"
+    q = text("""SELECT id, email FROM users WHERE lower(email)=lower(:e) LIMIT 1;"""
              )
     return db.execute(q, {"e": email}).mappings().first()
 
