@@ -104,10 +104,10 @@ Beispiel:
 
 ## FÖRDERPROGRAMM-HINWEISE
 
-Wenn {{bundesland}} = "Berlin":
+Wenn {{BUNDESLAND_LABEL}} = "Berlin":
 - Erwähne: Digital Jetzt, go-digital, Digitalprämie Plus Berlin
 
-Wenn {{bundesland}} = andere:
+Wenn {{BUNDESLAND_LABEL}} = andere:
 - Erwähne: Digital Jetzt (bundesweit), go-digital
 
 Format: 
