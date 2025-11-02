@@ -73,6 +73,10 @@
           </tbody>
         </table>
       </div>
+      <div class="card">
+        <h3>Was heißt das konkret?</h3>
+        {{REIFEGRAD_SOWHAT_HTML}}
+      </div>
       <div class="card">{{BENCHMARK_HTML}}</div>
     </section>
 
@@ -97,7 +101,7 @@
       <h2>Quick Wins (0–90 Tage)</h2>
       <div class="card">{{QUICK_WINS_HTML_LEFT}}</div>
       <div class="card">{{QUICK_WINS_HTML_RIGHT}}</div>
-      <p class="small">Monats‑Ersparnis gesamt: {{monatsersparnis_stunden}} h (≈ {{monatsersparnis_eur}} €) → {{jahresersparnis_stunden}} h/Jahr (≈ {{jahresersparnis_eur}} €) bei {{stundensatz_eur}} €/h.</p>
+      <p class="small">Monats‑Ersparnis gesamt: {{monatsersparnis_stunden}} h (≈ {{monatsersparnis_eur}} €) → {{jahresersparnis_stunden}} h/Jahr (≈ {{jahresersparnis_eur}} €) bei {{stundensatz_eur}} €/h (Benchmark).</p>
     </section>
 
     <section class="chapter">
@@ -112,14 +116,9 @@
 
     <section class="chapter">
       <h2>Business Case & Kostenübersicht</h2>
-      <div class="card">
-        <h3>ROI & Payback</h3>
-        {{ROI_HTML}}
-      </div>
-      <div class="card">
-        <h3>Kosten (Jahr 1)</h3>
-        {{COSTS_OVERVIEW_HTML}}
-      </div>
+      <div class="card"><h3>ROI & Payback</h3>{{ROI_HTML}}</div>
+      <div class="card"><h3>Kosten (Jahr 1)</h3>{{COSTS_OVERVIEW_HTML}}</div>
+      <div class="card"><h3>Business Case – Sensitivität (100/80/60 %)</h3>{{BUSINESS_SENSITIVITY_HTML}}</div>
     </section>
 
     <section class="chapter">
@@ -146,7 +145,7 @@
     <section class="chapter">
       <h2>Risiko‑Assessment & Compliance</h2>
       <div class="card">{{RISKS_HTML}}</div>
-      <p class="small">EU AI Act: geringes Risiko (assistierend). Transparenz: {{transparency_text}}</p>
+      <p class="small">EU AI Act: kategorisiert als assistierend/geringes Risiko – mit Pflichtenliste im Kapitel. Transparenz: {{transparency_text}}</p>
     </section>
 
     <section class="chapter">
@@ -159,7 +158,6 @@
       <div class="card">
         <h3>Förderungen (nach Standort)</h3>
         {{FOERDERPROGRAMME_HTML}}
-        <p class="small">Bitte Fristen/Links prüfen (Stand: {{report_date}} • Research: {{research_last_updated}}).</p>
       </div>
       <div class="card">
         <h3>Quellen & Referenzen</h3>
