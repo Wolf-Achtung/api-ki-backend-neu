@@ -136,9 +136,12 @@ def _default_tools_and_funding(briefing: Dict[str, Any]) -> Dict[str, str]:
         "FOERDERPROGRAMME_HTML": funding_html,
     }
 
-def normalize_and_enrich_sections(briefing: Dict[str, Any], snippets: Dict[str, str], metrics: Dict[str, Any]) -> Dict[str, str]:
+def normalize_and_enrich_sections(briefing: Dict[str, Any] = None, snippets: Dict[str, str] = None, metrics: Dict[str, Any] = None, **kwargs) -> Dict[str, str]:
     """Return a copy of snippets with all critical placeholders filled."
     """
+    snippets = snippets or kwargs.get('sections') or {}
+    briefing = briefing or kwargs.get('answers') or {}
+    metrics = metrics or kwargs.get('metrics') or {}
     out = dict(snippets or {})
     # KPI tables
     kpis = _kpi_tables(briefing.get("branche") or "beratung")
