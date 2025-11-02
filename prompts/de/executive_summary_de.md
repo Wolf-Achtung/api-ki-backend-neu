@@ -8,7 +8,7 @@ Erstelle ein Executive Summary als **HTML-Fragment** (ohne Code-Fences, ohne `<h
 
 ## KONTEXT-DATEN
 **Unternehmen:**
-- Name: {{unternehmen_name}}
+- Name: das Unternehmen
 - Branche: {{branche}}
 - Größe: {{unternehmensgroesse}}
 - Standort: {{bundesland}}
@@ -28,7 +28,7 @@ Erstelle ein Executive Summary als **HTML-Fragment** (ohne Code-Fences, ohne `<h
 <div class="executive-summary">
   <p><strong>Stand:</strong> {{report_date}}</p>
   
-  <p>Der KI-Reifegrad von {{unternehmen_name}} liegt bei <strong>{{score_gesamt}}/100 Punkten</strong>. 
+  <p>Der KI-Reifegrad von das Unternehmen liegt bei <strong>{{score_gesamt}}/100 Punkten</strong>. 
   [1-2 Sätze: Einordnung im Vergleich zu Benchmarks. Wo steht das Unternehmen?]</p>
   
   <p><strong>Stärken:</strong><br>
