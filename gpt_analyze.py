@@ -380,7 +380,7 @@ Hauptleistung: {hauptleistung}
 KI-Ziele: {', '.join(ki_ziele) if ki_ziele else 'nicht definiert'}
 Vision: {vision}
 KI-Reifegrad: Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/100 • Nutzen {value}/100 • Befähigung {enablement}/100
-Schreibe 4–6 Sätze.
+Schreibe 4–6 Sätze, neutral in dritter Person (keine Wir/Ich-Formulierungen).
 Format: **VALIDE HTML** nur mit <p>-Tags. **Keine Überschriften/Markdown**.""",
         'quick_wins': f"""Liste 4–6 **konkrete Quick Wins** (0–90 Tage) für {branche}.
 Jeder Quick Win: Titel, 1–2 Sätze Nutzen, realistische **Ersparnis/Monat (h)**.
@@ -411,26 +411,27 @@ Teile: (1) 3–4 Sätze Idee, (2) 3 Vorteile (Liste), (3) 3 erste Schritte (List
 Kontext: Hauptleistung {hauptleistung}, Vision {vision or '—'}.
 Format: VALIDE HTML mit <h4>, <p>, <ul>."""
     }
-    prompt = prompts.get(section_name)
-    # Inject new sections (12M Roadmap, Data Readiness, Org Change, Business Case)
+    
+    # Neue Kapitel (12M Roadmap, Data-Readiness, Org-Change, Business-Case)
     prompts.update({
         'roadmap_12m': f"""Erstelle eine **12-Monats-Roadmap** in 3 Phasen fuer {branche}.
 Phase 1 (0-3 Monate): Test & Schulung; Phase 2 (3-6): Pilotierung; Phase 3 (6-12): Rollout & Skalierung.
-Fuer jede Phase **2-3 Meilensteine** mit Ziel, Massnahmen (3 Bullet-Points) und Abnahmekriterium.
+Je Phase 2-3 Meilensteine mit Ziel, Massnahmen (3 Bullets) und Abnahmekriterium.
 Bezug: Hauptleistung {hauptleistung}, Ziele {', '.join(ki_ziele) if ki_ziele else 'Effizienz'}, Vision {vision or '-'}.
-Format: VALIDE HTML mit <div class="roadmap">, je Phase ein <div class="roadmap-phase"> mit <h4> und <ul>.""",
-        'data_readiness': f"""Erstelle eine kompakte **Dateninventar & -Qualitaet**-Uebersicht fuer {branche}.
-Abschnitte: (1) Inventar (Quellen, Formate, Volumen), (2) Qualitaet (Vollstaendigkeit, Aktualitaet, Konsistenz),
-(3) **Top-3 Gaps** mit Massnahme, Aufwand (N/M/H) und Abhaengigkeiten.
-Bezug: Hauptleistung {hauptleistung}. Format: VALIDE HTML mit <div class="data-readiness"> und <h4>-Zwischenueberschriften.""",
-        'org_change': f"""Beschreibe **Organisation & Change** fuer {branche} mit Governance-Rollen, Skill-Programm und Kommunikation.
-Bausteine: KI-Beirat (Rollen), Projektleitung/Champions, Prompt-Training (3 Sessions), Brown-Bags, Stakeholder-Updates.
-Format: VALIDE HTML mit <div class="org-change">, Abschnitte <h4>Governance</h4>, <h4>Kompetenzen</h4>, <h4>Kommunikation</h4>.""",
-        'business_case': f"""Erstelle einen kompakten **Business Case (detailliert)** fuer {branche}.
-Inhalte: Annahmen (2-3 Bullet-Points), Nutzen (Jahr 1), Kosten (CapEx/OpEx), **Payback (Monate)** und **ROI (%)**,
-plus kurze **Sensitivitaet** (100/80/60% Adoption). Format: VALIDE HTML mit <div class="business-case">, Listen & <p>.""",
-    })
+Format: VALIDE HTML mit <div class="roadmap"> und je Phase <div class="roadmap-phase">.""",
 
+        'data_readiness': f"""Erstelle eine **Dateninventar & -Qualitaet**-Uebersicht fuer {branche}.
+(1) Inventar (Quellen, Formate, Volumen) (2) Qualitaet (Vollstaendigkeit, Aktualitaet, Konsistenz)
+(3) Top-3 Gaps mit Massnahme, Aufwand (N/M/H), Abhaengigkeiten. HTML: <div class="data-readiness">.""",
+
+        'org_change': f"""Beschreibe **Organisation & Change** fuer {branche}: Governance-Rollen, Skill-Programm, Kommunikation.
+HTML: <div class="org-change"> mit Abschnitten <h4>Governance</h4>, <h4>Kompetenzen</h4>, <h4>Kommunikation</h4>.""",
+
+        'business_case': f"""Erstelle **Business Case (detailliert)** fuer {branche}: Annahmen, Nutzen (Jahr 1), Kosten (CapEx/OpEx),
+Payback (Monate), ROI (%), kurze Sensitivitaet (100/80/60%). HTML: <div class="business-case">."""
+
+    })
+    prompt = prompts.get(section_name)
     if not prompt:
         return f"<p><em>[{section_name} – no template]</em></p>"
     log.info("🤖 Generating %s...", section_name)
@@ -452,17 +453,32 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     left, right = _split_li_list_to_columns(qw_html)
     sections['QUICK_WINS_HTML_LEFT'] = left
     sections['QUICK_WINS_HTML_RIGHT'] = right
+    # Summen aus Quick Wins berechnen
+    try:
+        import re
+        nums = [int(n) for n in re.findall(r'Ersparnis:\s*(\d+)\s*h/Monat', qw_html, flags=re.IGNORECASE)]
+        total_h = sum(nums)
+    except Exception:
+        total_h = 0
+    if total_h > 0:
+        stundensatz = 60
+        sections['monatsersparnis_stunden'] = total_h
+        sections['monatsersparnis_eur'] = total_h * stundensatz
+        sections['jahresersparnis_stunden'] = total_h * 12
+        sections['jahresersparnis_eur'] = total_h * stundensatz * 12
+        sections['stundensatz_eur'] = stundensatz
+
     sections['PILOT_PLAN_HTML'] = _generate_content_section('roadmap', briefing, scores)
     sections['ROI_HTML'] = _generate_content_section('business_roi', briefing, scores)
     sections['COSTS_OVERVIEW_HTML'] = _generate_content_section('business_costs', briefing, scores)
     sections['RISKS_HTML'] = _generate_content_section('risks', briefing, scores)
     sections['GAMECHANGER_HTML'] = _generate_content_section('gamechanger', briefing, scores)
     sections['RECOMMENDATIONS_HTML'] = _generate_content_section('recommendations', briefing, scores)
-
     sections['ROADMAP_12M_HTML'] = _generate_content_section('roadmap_12m', briefing, scores)
     sections['DATA_READINESS_HTML'] = _generate_content_section('data_readiness', briefing, scores)
     sections['ORG_CHANGE_HTML'] = _generate_content_section('org_change', briefing, scores)
     sections['BUSINESS_CASE_HTML'] = _generate_content_section('business_case', briefing, scores)
+
     return sections
 
 # ----------------------------------------------------------------------------
@@ -579,6 +595,28 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     # LLM‑Content
     log.info("[%s] Generating content sections with LLM...", run_id)
     generated_sections = _generate_content_sections(briefing=answers, scores=scores)
+    # Labels + Meta für Template
+    BRANCHEN_LABELS = {
+        "beratung": "Beratung & Dienstleistungen","marketing":"Marketing & Werbung","it_software":"IT & Software",
+        "finanzen":"Finanzen & Versicherungen","handel":"Handel & E-Commerce","bildung":"Bildung","verwaltung":"Verwaltung",
+        "gesundheit":"Gesundheit & Pflege","bau":"Bauwesen & Architektur","medien":"Medien & Kreativwirtschaft",
+        "industrie":"Industrie & Produktion","logistik":"Transport & Logistik"
+    }
+    BUNDESLAENDER_LABELS = {
+        "bw":"Baden-Württemberg","by":"Bayern","be":"Berlin","bb":"Brandenburg","hb":"Bremen","hh":"Hamburg","he":"Hessen",
+        "mv":"Mecklenburg-Vorpommern","ni":"Niedersachsen","nw":"Nordrhein-Westfalen","rp":"Rheinland-Pfalz","sl":"Saarland",
+        "sn":"Sachsen","st":"Sachsen-Anhalt","sh":"Schleswig-Holstein","th":"Thüringen"
+    }
+    GROESSEN_LABELS = {"solo":"Solo","team_2_10":"2–10 (Kleines Team)","kmu_11_100":"11–100 (KMU)"}
+    bcode = answers.get('branche',''); blcode = answers.get('bundesland',''); gcode = answers.get('unternehmensgroesse','')
+    generated_sections['BRANCHE_LABEL'] = BRANCHEN_LABELS.get(bcode, bcode)
+    generated_sections['BUNDESLAND_LABEL'] = BUNDESLAENDER_LABELS.get(blcode, blcode.upper())
+    generated_sections['UNTERNEHMENSGROESSE_LABEL'] = GROESSEN_LABELS.get(gcode, gcode)
+    generated_sections['ki_kompetenz'] = answers.get('ki_kompetenz') or answers.get('ki_knowhow','')
+    from datetime import datetime
+    generated_sections['report_date'] = datetime.now().strftime("%d.%m.%Y")
+    generated_sections['report_year'] = datetime.now().strftime("%Y")
+
 
     # Scores in Template-Variablen (einzeln UND als realistic_scores Dictionary)
     generated_sections['score_governance'] = scores.get('governance', 0)
@@ -643,6 +681,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
 
     # Render MIT scores/meta
     log.info("[%s] Rendering final HTML...", run_id)
+    user_email = _determine_user_email(db, br, None)
+    generated_sections['user_email'] = user_email or ''
     result = render(
         br,
         run_id=run_id,
