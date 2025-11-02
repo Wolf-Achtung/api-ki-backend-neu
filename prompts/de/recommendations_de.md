@@ -1,3 +1,4 @@
+Antworte ausschließlich mit **validem HTML** (keine Markdown‑Fences).
 # Empfehlungen – Optimiert V3.0
 
 ## SYSTEM-ROLLE
@@ -39,7 +40,7 @@ Ordne jede Empfehlung einer Säule zu:
 
 ## STRUKTUR JE EMPFEHLUNG
 
-```html
+
 <div class="recommendation">
   <h4>[🔥/⭐/💡] [Säule X] - [Titel]</h4>
   
@@ -58,7 +59,7 @@ Ordne jede Empfehlung einer Säule zu:
   <p><strong>Ressourcen:</strong> [Zeit] | [Budget-Range]<br>
   <strong>KPIs:</strong> [Konkrete, messbare Metriken]</p>
 </div>
-```
+
 
 ## PRIORITÄTS-STUFEN
 
@@ -141,12 +142,12 @@ Ordne jede Empfehlung einer Säule zu:
 - Vage Umsetzungsschritte
 - Unrealistische Budgets/Timelines
 - Nicht messbare KPIs
-- Code-Fences (```)
+- Code-Fences ()
 
 ## BEISPIELE FÜR GUTE EMPFEHLUNGEN
 
 ### Beispiel 1: Säule 4 (Kritisch)
-```html
+
 <div class="recommendation">
   <h4>🔥 [Säule 4] - Prompt-Engineering-Training für alle Mitarbeitenden</h4>
   
@@ -165,10 +166,10 @@ Ordne jede Empfehlung einer Säule zu:
   <p><strong>Ressourcen:</strong> 6 Wochen | 2.000-4.000€ (extern) oder 40h intern<br>
   <strong>KPIs:</strong> >80% Teilnahme, Prompt Library mit 15+ Templates, Nutzung >5x/Woche/Person</p>
 </div>
-```
+
 
 ### Beispiel 2: Säule 1 (Kritisch)
-```html
+
 <div class="recommendation">
   <h4>🔥 [Säule 1] - KI-Richtlinie und Governance etablieren</h4>
   
@@ -188,10 +189,10 @@ Ordne jede Empfehlung einer Säule zu:
   <p><strong>Ressourcen:</strong> 6 Wochen | 1.000-3.000€ (externe Beratung optional)<br>
   <strong>KPIs:</strong> Richtlinie verabschiedet, 100% Team geschult, KI-Manager aktiv</p>
 </div>
-```
+
 
 ### Beispiel 3: Säule 3 (Wichtig)
-```html
+
 <div class="recommendation">
   <h4>⭐ [Säule 3] - Top-3 Use Cases pilotieren und ROI messen</h4>
   
@@ -211,7 +212,7 @@ Ordne jede Empfehlung einer Säule zu:
   <p><strong>Ressourcen:</strong> 3 Monate | 5.000-15.000€ (Tools, Setup, Schulung)<br>
   <strong>KPIs:</strong> 3 Pilots abgeschlossen, ROI >150%, Zeitersparnis dokumentiert</p>
 </div>
-```
+
 
 ## KRITISCHE PRÜFUNG VOR OUTPUT
 

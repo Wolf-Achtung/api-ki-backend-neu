@@ -1,3 +1,4 @@
+Antworte ausschließlich mit **validem HTML** (keine Markdown‑Fences).
 ## DATENINVENTAR & -QUALITÄT (DE) – NEU V2.0 (KB-POWERED)
 
 ---
@@ -54,7 +55,7 @@
 
 ### 📝 STRUKTUR
 
-```html
+
 <div class="data-readiness">
   <h3>Dateninventar & -Qualität</h3>
   
@@ -83,7 +84,7 @@
     <li><strong>Gap 3:</strong> [...]</li>
   </ol>
 </div>
-```
+
 
 ---
 

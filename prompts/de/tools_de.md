@@ -1,3 +1,4 @@
+Antworte ausschließlich mit **validem HTML** (keine Markdown‑Fences).
 # Sektion: Empfohlene Tools (Pro & Open‑Source)
 
 Schreibe eine kurze, saubere HTML‑Liste (ohne Code‑Fence) mit 6–10 Tools für {{branche}} (Größe: {{unternehmensgroesse}}).

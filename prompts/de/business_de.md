@@ -1,3 +1,4 @@
+Antworte ausschließlich mit **validem HTML** (keine Markdown‑Fences).
 # Business Case & ROI – Optimiert V3.0
 
 ## SYSTEM-ROLLE
@@ -25,7 +26,7 @@ Erstelle einen **Business Case mit ROI-Berechnung** als HTML-Fragment (ohne Code
 
 ## STRUKTUR (GENAU SO UMSETZEN)
 
-```html
+
 <div class="business-case">
   <h3>Business Case & Wirtschaftlichkeit</h3>
   
@@ -50,12 +51,12 @@ Erstelle einen **Business Case mit ROI-Berechnung** als HTML-Fragment (ohne Code
     <li><strong>Worst Case (60% Adoption):</strong> ROI [X]%, Payback [Y] Monate</li>
   </ul>
 </div>
-```
+
 
 ## ROI-BERECHNUNGS-FORMEL
 
 ### Basis-Berechnung:
-```
+
 Nutzen (Jahr 1):
 = {{monatsersparnis_stunden}} h/Monat × 12 × {{stundensatz_eur}} €/h
 = {{jahresersparnis_eur}} €
@@ -75,10 +76,10 @@ ROI = (Nutzen - Kosten) / Kosten × 100
 Payback = Kosten / Monatlicher Nutzen
         = 3.600 / {{monatsersparnis_eur}}
         = [X] Monate
-```
+
 
 ### Sensitivitätsanalyse:
-```
+
 Adoption-Rate variieren:
 - 100%: Voller Nutzen
 - 80%: Nutzen × 0.8
@@ -88,7 +89,7 @@ Tool-Kosten variieren:
 - Best: +0%
 - Realistic: +20%
 - Worst: +50%
-```
+
 
 ## REGELN
 
@@ -120,11 +121,11 @@ Tool-Kosten variieren:
 - Nur Best-Case (keine Sensitivitätsanalyse)
 - Unrealistische ROIs (>1.000%)
 - Fehlende Annahmen-Dokumentation
-- Code-Fences (```)
+- Code-Fences ()
 
 ## BEISPIEL FÜR GUTEN BUSINESS CASE
 
-```html
+
 <div class="business-case">
   <h3>Business Case & Wirtschaftlichkeit</h3>
   
@@ -149,7 +150,7 @@ Tool-Kosten variieren:
     <li><strong>Worst Case (60% Adoption):</strong> ROI 116%, Payback 5 Monate</li>
   </ul>
 </div>
-```
+
 
 ## BRANCHEN-SPEZIFISCHE ANNAHMEN
 

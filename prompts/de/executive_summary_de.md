@@ -1,3 +1,4 @@
+Antworte ausschließlich mit **validem HTML** (keine Markdown‑Fences).
 # Executive Summary – Optimiert V3.0
 
 ## SYSTEM-ROLLE
@@ -24,7 +25,7 @@ Erstelle ein Executive Summary als **HTML-Fragment** (ohne Code-Fences, ohne `<h
 
 ## STRUKTUR (GENAU SO UMSETZEN)
 
-```html
+
 <div class="executive-summary">
   <p><strong>Stand:</strong> {{report_date}}</p>
   
@@ -46,7 +47,7 @@ Erstelle ein Executive Summary als **HTML-Fragment** (ohne Code-Fences, ohne `<h
   
   <p><em>{{transparency_text}}</em></p>
 </div>
-```
+
 
 ## REGELN
 
@@ -65,11 +66,11 @@ Erstelle ein Executive Summary als **HTML-Fragment** (ohne Code-Fences, ohne `<h
 - Vage Aussagen wie "könnte verbessert werden"
 - Erfinde keine Zahlen, die nicht in den Variablen stehen
 - Keine eigene Überschrift "Executive Summary"
-- Keine Code-Fences (```)
+- Keine Code-Fences ()
 
 ## BEISPIEL FÜR GUTEN OUTPUT
 
-```html
+
 <div class="executive-summary">
   <p><strong>Stand:</strong> 30.10.2025</p>
   
@@ -91,7 +92,7 @@ Erstelle ein Executive Summary als **HTML-Fragment** (ohne Code-Fences, ohne `<h
   
   <p><em>Dieser Report wurde teilweise mit KI-Unterstützung aus Europa unter strikter Einhaltung von EU AI Acts sowie DSGVO erstellt.</em></p>
 </div>
-```
+
 
 ## WICHTIG
 Verwende EXAKT den Text aus {{transparency_text}} - füge nichts hinzu, ändere nichts.

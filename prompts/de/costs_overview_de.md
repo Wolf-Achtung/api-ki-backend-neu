@@ -1,3 +1,4 @@
+Antworte ausschließlich mit **validem HTML** (keine Markdown‑Fences).
 # Kostenübersicht & ROI – Prompt (DE)
 **Ziel:** Erzeuge zwei **HTML‑Snippets** (ohne Codefences): (A) ROI_HTML, (B) COSTS_OVERVIEW_HTML.
 

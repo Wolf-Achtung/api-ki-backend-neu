@@ -1,3 +1,4 @@
+Antworte ausschließlich mit **validem HTML** (keine Markdown‑Fences).
 Erzeuge valides HTML für **Business Case (detailliert)** (keine Markdown‑Fences).
 Sprache: neutral, dritte Person.
 Nutze vorhandene Variablen: Stundensatz {{stundensatz_eur}} €/h; Ersparnis Monat {{monatsersparnis_stunden}} h.
