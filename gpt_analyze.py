@@ -439,7 +439,12 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections['RISKS_HTML'] = _generate_content_section('risks', briefing, scores)
     sections['GAMECHANGER_HTML'] = _generate_content_section('gamechanger', briefing, scores)
     sections['RECOMMENDATIONS_HTML'] = _generate_content_section('recommendations', briefing, scores)
-    return sections
+    
+    sections['ROADMAP_12M_HTML'] = _generate_content_section('roadmap_12m', briefing, scores)
+    sections['DATA_READINESS_HTML'] = _generate_content_section('data_readiness', briefing, scores)
+    sections['ORG_CHANGE_HTML'] = _generate_content_section('org_change', briefing, scores)
+    sections['BUSINESS_CASE_HTML'] = _generate_content_section('business_case', briefing, scores)
+return sections
 
 # ----------------------------------------------------------------------------
 # Helpers
