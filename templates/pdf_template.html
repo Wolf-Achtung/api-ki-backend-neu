@@ -50,12 +50,11 @@
         <h3>Unternehmensprofil</h3>
         <table class="table">
           <tbody>
-            <tr><th>Name</th><td>{{unternehmen_name}}</td></tr>
-            <tr><th>Branche</th><td>{{branche}}</td></tr>
-            <tr><th>Standort</th><td>{{bundesland}}</td></tr>
+            <tr><th>Branche</th><td>{{BRANCHE_LABEL}}</td></tr>
+            <tr><th>Standort</th><td>{{BUNDESLAND_LABEL}}</td></tr>
             <tr><th>Umsatzklasse</th><td>{{jahresumsatz}}</td></tr>
-            <tr><th>Unternehmensgröße</th><td>{{unternehmensgroesse}}</td></tr>
-            <tr><th>KI‑Know‑how</th><td>{{ki_knowhow}}</td></tr>
+            <tr><th>Unternehmensgröße</th><td>{{UNTERNEHMENSGROESSE_LABEL}}</td></tr>
+            <tr><th>KI‑Know‑how</th><td>{{ki_kompetenz}}</td></tr>
             <tr><th>Kontakt (E‑Mail)</th><td>{{user_email}}</td></tr>
           </tbody>
         </table>
@@ -107,6 +106,11 @@
     </section>
 
     <section class="chapter">
+      <h2>Roadmap (12 Monate)</h2>
+      <div class="card">{{ROADMAP_12M_HTML}}</div>
+    </section>
+
+    <section class="chapter">
       <h2>Business Case & Kostenübersicht</h2>
       <div class="card">
         <h3>ROI & Payback</h3>
@@ -119,9 +123,24 @@
     </section>
 
     <section class="chapter">
+      <h2>Business Case (detailliert)</h2>
+      <div class="card">{{BUSINESS_CASE_HTML}}</div>
+    </section>
+
+    <section class="chapter">
       <h2>Empfohlene Tools (Pro & Open‑Source)</h2>
       <div class="card">{{TOOLS_HTML}}</div>
       <p class="small">Hinweis: Bevorzugt EU‑Hosting/DSGVO‑konform. Preise/Leistungsdaten können sich ändern.</p>
+    </section>
+
+    <section class="chapter">
+      <h2>Dateninventar & ‑Qualität</h2>
+      <div class="card">{{DATA_READINESS_HTML}}</div>
+    </section>
+
+    <section class="chapter">
+      <h2>Organisation & Change</h2>
+      <div class="card">{{ORG_CHANGE_HTML}}</div>
     </section>
 
     <section class="chapter">
@@ -140,7 +159,7 @@
       <div class="card">
         <h3>Förderungen (nach Standort)</h3>
         {{FOERDERPROGRAMME_HTML}}
-        <p class="small">Bitte Fristen/Links prüfen (Stand: {{report_date}}).</p>
+        <p class="small">Bitte Fristen/Links prüfen (Stand: {{report_date}} • Research: {{research_last_updated}}).</p>
       </div>
       <div class="card">
         <h3>Quellen & Referenzen</h3>
@@ -149,7 +168,7 @@
     </section>
 
     <section>
-      <p class="footer-note">© {{report_year}} KI‑Sicherheit.jetzt • DSGVO • ePrivacy • DSA • EU AI Act — Kontakt: {{unternehmen_name}}</p>
+      <p class="footer-note">© {{report_year}} KI‑Sicherheit.jetzt • DSGVO • ePrivacy • DSA • EU AI Act — Kontakt: {{user_email}}</p>
     </section>
     </main>
   </div>
