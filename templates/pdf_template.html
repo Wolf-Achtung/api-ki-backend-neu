@@ -50,7 +50,6 @@
         <h3>Unternehmensprofil</h3>
         <table class="table">
           <tbody>
-            <tr><th>Name</th><td>{{unternehmen_name}}</td></tr>
             <tr><th>Branche</th><td>{{branche}}</td></tr>
             <tr><th>Standort</th><td>{{bundesland}}</td></tr>
             <tr><th>Umsatzklasse</th><td>{{jahresumsatz}}</td></tr>
@@ -104,7 +103,12 @@
     <section class="chapter">
       <h2>Roadmap (90 Tage – Test → Pilot → Rollout)</h2>
       <div class="card">{{PILOT_PLAN_HTML}}</div>
+    
+    <section class="chapter">
+      <h2>Roadmap (12 Monate)</h2>
+      <div class="card">{{ROADMAP_12M_HTML}}</div>
     </section>
+</section>
 
     <section class="chapter">
       <h2>Business Case & Kostenübersicht</h2>
@@ -116,12 +120,27 @@
         <h3>Kosten (Jahr 1)</h3>
         {{COSTS_OVERVIEW_HTML}}
       </div>
+    
+    <section class="chapter">
+      <h2>Business Case (detailliert)</h2>
+      <div class="card">{{BUSINESS_CASE_HTML}}</div>
+    </section>
+</section>
+
+    <section class="chapter">
+      <h2>Empfohlene Tools (Pro & Open-Source)</h2>
+      <div class="card">{{TOOLS_HTML}}</div>
+      <p class="small">Hinweis: Bevorzugt EU‑Hosting/DSGVO‑konform. Preise/Leistungsdaten können sich ändern.</p>
     </section>
 
     <section class="chapter">
-      <h2>Empfohlene Tools (Pro & Open‑Source)</h2>
-      <div class="card">{{TOOLS_HTML}}</div>
-      <p class="small">Hinweis: Bevorzugt EU‑Hosting/DSGVO‑konform. Preise/Leistungsdaten können sich ändern.</p>
+      <h2>Dateninventar & ‑Qualität</h2>
+      <div class="card">{{DATA_READINESS_HTML}}</div>
+    </section>
+
+    <section class="chapter">
+      <h2>Organisation & Change</h2>
+      <div class="card">{{ORG_CHANGE_HTML}}</div>
     </section>
 
     <section class="chapter">
@@ -149,7 +168,7 @@
     </section>
 
     <section>
-      <p class="footer-note">© {{report_year}} KI‑Sicherheit.jetzt • DSGVO • ePrivacy • DSA • EU AI Act — Kontakt: {{unternehmen_name}}</p>
+      <p class="footer-note">© {{report_year}} KI‑Sicherheit.jetzt • DSGVO • ePrivacy • DSA • EU AI Act — Kontakt: {{user_email}}</p>
     </section>
     </main>
   </div>
