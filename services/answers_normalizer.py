@@ -105,4 +105,43 @@ def normalize_answers(answers: Dict) -> Dict:
             except Exception:
                 pass
     
+
+    # Labels ergänzen + Aliasse
+    b_code = out.get("branche", "") or ""
+    g_code = out.get("unternehmensgroesse", "") or ""
+    bl_code = out.get("bundesland", "") or ""
+    out["BRANCHE_LABEL"] = BRANCHEN_LABELS.get(b_code, b_code)
+    out["UNTERNEHMENSGROESSE_LABEL"] = UNTERNEHMENSGROESSEN_LABELS.get(g_code, g_code)
+    out["BUNDESLAND_LABEL"] = BUNDESLAENDER_LABELS.get(bl_code, bl_code.upper())
+    if "ki_kompetenz" in out and "ki_knowhow" not in out:
+        out["ki_knowhow"] = out["ki_kompetenz"]
     return out
+
+
+# Lesbare Labels für Codes
+BRANCHEN_LABELS = {
+    "beratung": "Beratung & Dienstleistungen",
+    "marketing": "Marketing & Werbung",
+    "it_software": "IT & Software",
+    "finanzen": "Finanzen & Versicherungen",
+    "handel": "Handel & E-Commerce",
+    "bildung": "Bildung",
+    "verwaltung": "Verwaltung",
+    "gesundheit": "Gesundheit & Pflege",
+    "bau": "Bauwesen & Architektur",
+    "medien": "Medien & Kreativwirtschaft",
+    "industrie": "Industrie & Produktion",
+    "logistik": "Transport & Logistik",
+}
+UNTERNEHMENSGROESSEN_LABELS = {
+    "solo": "Solo",
+    "team_2_10": "2–10 (Kleines Team)",
+    "kmu_11_100": "11–100 (KMU)",
+}
+BUNDESLAENDER_LABELS = {
+    "bw": "Baden-Württemberg", "by": "Bayern", "be": "Berlin", "bb": "Brandenburg",
+    "hb": "Bremen", "hh": "Hamburg", "he": "Hessen", "mv": "Mecklenburg-Vorpommern",
+    "ni": "Niedersachsen", "nw": "Nordrhein-Westfalen", "rp": "Rheinland-Pfalz",
+    "sl": "Saarland", "sn": "Sachsen", "st": "Sachsen-Anhalt",
+    "sh": "Schleswig-Holstein", "th": "Thüringen"
+}
