@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""Simple Quality Harness (Gold-Standard+)
-- HTML sanity (no fenced code blocks, presence of basic tags)
-- Tone check (no "Wir/Unser/Ich" in Summary)
-- Quick-Wins sums consistency (optional; calculated upstream)
-"""
 from __future__ import annotations
 import re
 from typing import Dict, List
@@ -22,7 +17,6 @@ def run_quality_checks(sections: Dict[str,str]) -> List[str]:
     if _needs_basic_tags(es): issues.append("Executive Summary ohne Basistags")
     if re.search(r"\b(wir|unser|ich)\b", es, flags=re.IGNORECASE):
         issues.append("Executive Summary nicht neutral (Wir/Ich-Formulierungen)")
-
     qw = (sections.get("QUICK_WINS_HTML_LEFT","") or "") + (sections.get("QUICK_WINS_HTML_RIGHT","") or "")
     if _has_fenced_code(qw): issues.append("Quick Wins enthalten Code-Fences")
     return issues
