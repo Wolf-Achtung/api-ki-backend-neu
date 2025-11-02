@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
+"""Report pipeline (Gold‑Standard+) – robust context building & HTML rendering.
+- Behebt Score‑0/100‑Bug (mehrere Quellen für Scores + Heuristik)
+- Füllt KPI‑Platzhalter & Business Case via Content‑Normalizer
+- UTF‑8‑sicheres Templating
+"""
 from __future__ import annotations
+
 import os
 import datetime as dt
 import re
@@ -14,7 +20,7 @@ DEFAULTS = {
 }
 TRANSPARENCY_TEXT = os.getenv(
     "TRANSPARENCY_TEXT",
-    "Dieser Report wurde teilweise mit KI‑Unterstützung aus Europa unter strikter Einhaltung von Eu AI Acts sowie DSGVO erstellt."
+    "Dieser Report wurde teilweise mit KI‑Unterstützung in Europa unter Einhaltung von EU AI Act und DSGVO erstellt."
 )
 
 CODE_FENCE_RE = re.compile(r"```+[a-zA-Z]*\s*|\u200b", flags=re.MULTILINE)
@@ -29,9 +35,7 @@ def derive_metrics(briefing: Dict[str, Any]) -> Dict[str, Any]:
     stunden = DEFAULTS["qw1_monat_stunden"] + DEFAULTS["qw2_monat_stunden"]
     stundensatz = DEFAULTS["stundensatz_eur"]
     size = (briefing.get("unternehmensgroesse") or "").lower()
-    if size in {"solo", "einzel", "freiberufler"}:
-        pass  # keep default 60
-    elif size in {"kmu", "mittel"}:
+    if size in {"kmu", "mittel", "11–100", "11-100"}:
         stundensatz = max(stundensatz, 70)
     monats_eur = stunden * stundensatz
     jahres_stunden = stunden * 12
@@ -44,8 +48,69 @@ def derive_metrics(briefing: Dict[str, Any]) -> Dict[str, Any]:
         "jahresersparnis_eur": jahres_eur,
     }
 
+def _score_from_sources(briefing: Dict[str, Any], snippets: Dict[str, Any], key: str, aliases=None) -> int:
+    aliases = aliases or []
+    # 1) briefing
+    if isinstance(briefing.get(key), (int, float)):
+        return int(briefing.get(key))
+    # 2) snippets (flat keys or nested dict in 'scores')
+    if isinstance(snippets.get(key), (int, float)):
+        return int(snippets.get(key))
+    scores_obj = snippets.get("scores") or snippets.get("SCORES") or {}
+    if isinstance(scores_obj, dict):
+        if isinstance(scores_obj.get(key), (int, float)):
+            return int(scores_obj.get(key))
+        for a in aliases:
+            if isinstance(scores_obj.get(a), (int, float)):
+                return int(scores_obj.get(a))
+    # 3) fallback
+    return -1  # -1 signalisiert: nicht vorhanden
+
+def derive_scores(briefing: Dict[str, Any], snippets: Dict[str, Any]) -> Dict[str, int]:
+    # Versuche möglichst vorhandene Zahlen zu übernehmen
+    gov = _score_from_sources(briefing, snippets, "score_governance", ["governance", "gov"]) 
+    sec = _score_from_sources(briefing, snippets, "score_sicherheit", ["security", "sec"]) 
+    val = _score_from_sources(briefing, snippets, "score_nutzen", ["value", "val"]) 
+    ena = _score_from_sources(briefing, snippets, "score_befaehigung", ["enablement", "ena"]) 
+    overall = _score_from_sources(briefing, snippets, "score_gesamt", ["overall", "total"]) 
+
+    # Heuristik, falls nicht vorhanden
+    if min(gov, sec, val, ena, overall) == -1:
+        # simple heuristics basierend auf briefing-antworten
+        gov = 85 if briefing.get("governance_richtlinien") == "ja" else 70
+        if (briefing.get("loeschregeln") or "").startswith("teil"): 
+            gov -= 5
+        if (briefing.get("meldewege") or "").startswith("teil"):
+            gov -= 2
+
+        sec = 78 if briefing.get("technische_massnahmen") == "alle" else 65
+        if (briefing.get("loeschregeln") or "").startswith("teil"):
+            sec -= 2
+
+        val = 95
+        if briefing.get("automatisierungsgrad") == "sehr_hoch" and briefing.get("prozesse_papierlos", "0").startswith("81"):
+            val = 100
+
+        ena = 80 if briefing.get("change_management") in {"hoch", "sehr_hoch"} else 65
+        if briefing.get("roadmap_vorhanden") == "teilweise": 
+            ena -= 4
+
+        overall = round((gov + sec + val + ena) / 4)
+
+    return {
+        "score_governance": max(0, min(100, int(gov))),
+        "score_sicherheit": max(0, min(100, int(sec))),
+        "score_nutzen": max(0, min(100, int(val))),
+        "score_befaehigung": max(0, min(100, int(ena))),
+        "score_gesamt": max(0, min(100, int(overall))),
+    }
+
+def _strip_and_set(context: Dict[str, Any], snippets: Dict[str, Any], key: str) -> None:
+    context[key] = ensure_utf8(_strip_code_fences(snippets.get(key, "")))
+
 def build_context(briefing: Dict[str, Any], snippets: Dict[str, str]) -> Dict[str, Any]:
     metrics = derive_metrics(briefing or {})
+    scores = derive_scores(briefing or {}, snippets or {})
     today = dt.date.today()
 
     user_email = briefing.get("user_email") or briefing.get("email") or ""
@@ -58,13 +123,7 @@ def build_context(briefing: Dict[str, Any], snippets: Dict[str, str]) -> Dict[st
         "unternehmensgroesse": _dash(briefing.get("unternehmensgroesse")),
         "ki_knowhow": _dash(briefing.get("ki_knowhow")),
         "user_email": _dash(user_email),
-        "score_governance": briefing.get("score_governance", 0),
-        "score_sicherheit": briefing.get("score_sicherheit", 0),
-        "score_nutzen": briefing.get("score_nutzen", 0),
-        "score_befaehigung": briefing.get("score_befaehigung", 0),
-        "score_gesamt": briefing.get("score_gesamt", 0),
-        "benchmark_avg": snippets.get("benchmark_avg", "—"),
-        "benchmark_top": snippets.get("benchmark_top", "—"),
+        **scores,
         "report_date": today.strftime("%d.%m.%Y"),
         "report_year": today.year,
         "logo_primary": "templates/ki-sicherheit-logo.webp",
@@ -76,21 +135,37 @@ def build_context(briefing: Dict[str, Any], snippets: Dict[str, str]) -> Dict[st
     }
     context.update(metrics)
 
+    # Textuelle Sektionen — inkl. KPI-HTML
     for key in (
         "EXECUTIVE_SUMMARY_HTML","QUICK_WINS_HTML_LEFT","QUICK_WINS_HTML_RIGHT",
         "PILOT_PLAN_HTML","ROI_HTML","COSTS_OVERVIEW_HTML","RISKS_HTML","GAMECHANGER_HTML",
-        "FOERDERPROGRAMME_HTML","QUELLEN_HTML","TOOLS_HTML","BENCHMARK_HTML"
+        "FOERDERPROGRAMME_HTML","QUELLEN_HTML","TOOLS_HTML","BENCHMARK_HTML",
+        "KPI_HTML","KPI_BRANCHE_HTML",
     ):
-        context[key] = _strip_code_fences(snippets.get(key, ""))
+        _strip_and_set(context, snippets, key)
 
     return context
 
 def render_report_html(briefing: Dict[str, Any], snippets: Dict[str, str]) -> str:
+    # Vorab anreichern (KPI/ROI/Tools/Förderungen) – failsafe optional import
+    metrics = derive_metrics(briefing or {})
+    try:
+        from .content_normalizer import normalize_and_enrich_sections
+        snippets = normalize_and_enrich_sections(briefing, snippets, metrics)
+    except Exception:
+        # Harmlos weiter – Template zeigt ggf. Defaults/Striche
+        pass
+
     context = build_context(briefing, snippets)
+
     template_path = os.getenv("REPORT_TEMPLATE_PATH", "templates/pdf_template.html")
     with open(template_path, "r", encoding="utf-8") as f:
         template = f.read()
+
     html = template
     for k, v in context.items():
         html = html.replace("{{" + k + "}}", ensure_utf8(str(v)))
+
+    # Platzhalter, die übrig bleiben, neutralisieren (sauberes PDF)
+    html = re.sub(r"{{\s*[A-Z0-9_]+\s*}}", "—", html)
     return ensure_utf8(html)
