@@ -7,7 +7,6 @@ from fastapi import APIRouter, Depends, Body, HTTPException
 from sqlalchemy.orm import Session
 from core.db import get_session
 from models import Analysis, Report
-from services.auth import get_current_user
 from services.pdf_client import render_pdf_from_html
 
 logger = logging.getLogger("routes.report")

@@ -7,14 +7,14 @@ import os
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
-from fastapi.responses import StreamingResponse, JSONResponse, HTMLResponse
+from fastapi.responses import StreamingResponse, HTMLResponse
 from sqlalchemy.orm import Session
 
 from core.db import get_session
 from models import User, Briefing, Analysis, Report
 from services.auth import get_current_user
 from services.admin_export import build_briefing_export_zip
-import gpt_analyze  # für Neu-Erzeugen (run_async)
+import gpt_analyze  # run_async
 
 log = logging.getLogger("routes.admin")
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -40,11 +40,19 @@ def _require_admin(user: User) -> None:
         raise HTTPException(status_code=403, detail="admin_required")
 
 
-@router.get("/overview")
+def _iso(dt) -> Optional[str]:
+    try:
+        return dt.isoformat() if dt else None
+    except Exception:
+        return None
+
+
+@router.get("/overview", response_model=None)
 def overview(
     db: Session = Depends(get_session),
     user: User = Depends(get_current_user),
 ):
+    """Admin-Übersicht: Zähler & letzte Briefings (keine personenbezogenen Daten außer IDs/E-Mail via User)."""
     _require_admin(user)
     users_count = db.query(User).count()
     briefings_count = db.query(Briefing).count()
@@ -52,14 +60,14 @@ def overview(
     reports_count = db.query(Report).count()
 
     latest_briefings = db.query(Briefing).order_by(Briefing.id.desc()).limit(10).all()
-    items = []
+    items: List[Dict[str, Any]] = []
     for b in latest_briefings:
         items.append(
             {
                 "id": b.id,
                 "user_id": b.user_id,
                 "lang": getattr(b, "lang", "de"),
-                "created_at": getattr(b, "created_at", None),
+                "created_at": _iso(getattr(b, "created_at", None)),
             }
         )
     return {
@@ -74,9 +82,9 @@ def overview(
     }
 
 
-@router.get("/briefings")
+@router.get("/briefings", response_model=None)
 def list_briefings(
-    q: Optional[str] = Query(None, description="Suche in E-Mail"),
+    q: Optional[str] = Query(None, description="Suche in E-Mail/Name"),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_session),
@@ -98,13 +106,13 @@ def list_briefings(
                 "id": r.id,
                 "user_id": r.user_id,
                 "lang": getattr(r, "lang", "de"),
-                "created_at": getattr(r, "created_at", None),
+                "created_at": _iso(getattr(r, "created_at", None)),
             }
         )
     return {"ok": True, "total": total, "rows": payload}
 
 
-@router.get("/briefings/{briefing_id}")
+@router.get("/briefings/{briefing_id}", response_model=None)
 def get_briefing(
     briefing_id: int,
     db: Session = Depends(get_session),
@@ -122,12 +130,12 @@ def get_briefing(
             "user": {"id": getattr(u, "id", None), "email": getattr(u, "email", None)},
             "lang": getattr(b, "lang", "de"),
             "answers": getattr(b, "answers", {}),
-            "created_at": getattr(b, "created_at", None),
+            "created_at": _iso(getattr(b, "created_at", None)),
         },
     }
 
 
-@router.get("/briefings/{briefing_id}/latest-analysis")
+@router.get("/briefings/{briefing_id}/latest-analysis", response_model=None)
 def latest_analysis_for_briefing(
     briefing_id: int,
     db: Session = Depends(get_session),
@@ -141,12 +149,12 @@ def latest_analysis_for_briefing(
         "ok": True,
         "analysis": {
             "id": a.id,
-            "created_at": getattr(a, "created_at", None),
+            "created_at": _iso(getattr(a, "created_at", None)),
         },
     }
 
 
-@router.get("/analyses")
+@router.get("/analyses", response_model=None)
 def list_analyses(
     briefing_id: Optional[int] = Query(None),
     limit: int = Query(50, ge=1, le=200),
@@ -165,14 +173,14 @@ def list_analyses(
             "id": a.id,
             "briefing_id": a.briefing_id,
             "user_id": a.user_id,
-            "created_at": getattr(a, "created_at", None),
+            "created_at": _iso(getattr(a, "created_at", None)),
         }
         for a in rows
     ]
     return {"ok": True, "total": total, "rows": items}
 
 
-@router.get("/analyses/{analysis_id}")
+@router.get("/analyses/{analysis_id}", response_model=None)
 def get_analysis(
     analysis_id: int,
     db: Session = Depends(get_session),
@@ -190,7 +198,7 @@ def get_analysis(
             "user_id": a.user_id,
             "meta": getattr(a, "meta", {}),
             "html_len": len(getattr(a, "html", "") or ""),
-            "created_at": getattr(a, "created_at", None),
+            "created_at": _iso(getattr(a, "created_at", None)),
         },
     }
 
@@ -201,6 +209,7 @@ def get_analysis_html(
     db: Session = Depends(get_session),
     user: User = Depends(get_current_user),
 ):
+    """Rohes HTML (nur Admin)."""
     _require_admin(user)
     a = db.get(Analysis, analysis_id)
     if not a:
@@ -208,7 +217,7 @@ def get_analysis_html(
     return HTMLResponse(getattr(a, "html", "") or "<p><em>empty</em></p>")
 
 
-@router.get("/reports")
+@router.get("/reports", response_model=None)
 def list_reports(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
@@ -226,14 +235,14 @@ def list_reports(
             "analysis_id": r.analysis_id,
             "pdf_url": getattr(r, "pdf_url", None),
             "pdf_bytes_len": getattr(r, "pdf_bytes_len", None),
-            "created_at": getattr(r, "created_at", None),
+            "created_at": _iso(getattr(r, "created_at", None)),
         }
         for r in rows
     ]
     return {"ok": True, "total": total, "rows": items}
 
 
-@router.get("/briefings/{briefing_id}/reports")
+@router.get("/briefings/{briefing_id}/reports", response_model=None)
 def list_reports_for_briefing(
     briefing_id: int,
     db: Session = Depends(get_session),
@@ -252,14 +261,14 @@ def list_reports_for_briefing(
             "analysis_id": r.analysis_id,
             "pdf_url": getattr(r, "pdf_url", None),
             "pdf_bytes_len": getattr(r, "pdf_bytes_len", None),
-            "created_at": getattr(r, "created_at", None),
+            "created_at": _iso(getattr(r, "created_at", None)),
         }
         for r in rows
     ]
     return {"ok": True, "rows": items}
 
 
-@router.post("/briefings/{briefing_id}/rerun")
+@router.post("/briefings/{briefing_id}/rerun", response_model=None)
 def rerun_generation(
     briefing_id: int,
     background: BackgroundTasks,
@@ -274,7 +283,7 @@ def rerun_generation(
     return {"ok": True, "queued": True}
 
 
-@router.get("/briefings/{briefing_id}/export.zip")
+@router.get("/briefings/{briefing_id}/export.zip", response_model=None)
 def export_briefing_zip(
     briefing_id: int,
     include_pdf: bool = Query(False, description="Wenn vorhanden und intern gespeichert"),
