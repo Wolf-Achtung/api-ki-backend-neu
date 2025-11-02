@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
+"""
+routes.admin – gehärtet (response_model=None & sichere Serialisierung) • 2025-11-02
+- Verhindert FastAPI/Pydantic-Fehler beim Mounten (keine Session/ORM im Response-Model)
+- Strikte Admin-Prüfung: is_admin/role + ENV-Whitelist
+- Datumswerte via ISO 8601 serialisiert
+"""
 import io
-import json
 import logging
 import os
 from typing import Any, Dict, List, Optional
@@ -20,16 +25,17 @@ log = logging.getLogger("routes.admin")
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 
+# ---------------------------- Helpers ----------------------------
 def _is_admin(user: User) -> bool:
-    # 1) Explicit attribute on model
+    # 1) Attribut
     if hasattr(user, "is_admin") and bool(getattr(user, "is_admin")):
         return True
-    # 2) Role attribute
+    # 2) Rolle
     role = getattr(user, "role", None)
     if isinstance(role, str) and role.lower() in {"admin", "owner"}:
         return True
-    # 3) ENV allowlist
-    allow = os.getenv("ADMIN_EMAILS", "") or getattr(user, "admin_allow", "")
+    # 3) ENV-Whitelist
+    allow = os.getenv("ADMIN_EMAILS", "") or getattr(user, "admin_allow", "") or ""
     allowlist = [e.strip().lower() for e in allow.split(",") if e.strip()]
     email = (getattr(user, "email", "") or "").lower()
     return bool(email and email in allowlist)
@@ -47,12 +53,13 @@ def _iso(dt) -> Optional[str]:
         return None
 
 
+# ---------------------------- Endpoints ----------------------------
 @router.get("/overview", response_model=None)
 def overview(
     db: Session = Depends(get_session),
     user: User = Depends(get_current_user),
 ):
-    """Admin-Übersicht: Zähler & letzte Briefings (keine personenbezogenen Daten außer IDs/E-Mail via User)."""
+    """Admin-Übersicht (Zähler & letzte Briefings) – neutralisiert personenbezogene Details."""
     _require_admin(user)
     users_count = db.query(User).count()
     briefings_count = db.query(Briefing).count()
@@ -297,5 +304,5 @@ def export_briefing_zip(
     return StreamingResponse(
         io.BytesIO(buf.getvalue()),
         media_type="application/zip",
-        headers={"Content-Disposition": f'attachment; filename="briefing-{briefing_id}.zip"'},
+        headers={"Content-Disposition": f'attachment; filename="briefing-{briefing_id}.zip"'}
     )
