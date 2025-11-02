@@ -412,6 +412,25 @@ Kontext: Hauptleistung {hauptleistung}, Vision {vision or '—'}.
 Format: VALIDE HTML mit <h4>, <p>, <ul>."""
     }
     prompt = prompts.get(section_name)
+    # Inject new sections (12M Roadmap, Data Readiness, Org Change, Business Case)
+    prompts.update({
+        'roadmap_12m': f"""Erstelle eine **12-Monats-Roadmap** in 3 Phasen fuer {branche}.
+Phase 1 (0-3 Monate): Test & Schulung; Phase 2 (3-6): Pilotierung; Phase 3 (6-12): Rollout & Skalierung.
+Fuer jede Phase **2-3 Meilensteine** mit Ziel, Massnahmen (3 Bullet-Points) und Abnahmekriterium.
+Bezug: Hauptleistung {hauptleistung}, Ziele {', '.join(ki_ziele) if ki_ziele else 'Effizienz'}, Vision {vision or '-'}.
+Format: VALIDE HTML mit <div class="roadmap">, je Phase ein <div class="roadmap-phase"> mit <h4> und <ul>.""",
+        'data_readiness': f"""Erstelle eine kompakte **Dateninventar & -Qualitaet**-Uebersicht fuer {branche}.
+Abschnitte: (1) Inventar (Quellen, Formate, Volumen), (2) Qualitaet (Vollstaendigkeit, Aktualitaet, Konsistenz),
+(3) **Top-3 Gaps** mit Massnahme, Aufwand (N/M/H) und Abhaengigkeiten.
+Bezug: Hauptleistung {hauptleistung}. Format: VALIDE HTML mit <div class="data-readiness"> und <h4>-Zwischenueberschriften.""",
+        'org_change': f"""Beschreibe **Organisation & Change** fuer {branche} mit Governance-Rollen, Skill-Programm und Kommunikation.
+Bausteine: KI-Beirat (Rollen), Projektleitung/Champions, Prompt-Training (3 Sessions), Brown-Bags, Stakeholder-Updates.
+Format: VALIDE HTML mit <div class="org-change">, Abschnitte <h4>Governance</h4>, <h4>Kompetenzen</h4>, <h4>Kommunikation</h4>.""",
+        'business_case': f"""Erstelle einen kompakten **Business Case (detailliert)** fuer {branche}.
+Inhalte: Annahmen (2-3 Bullet-Points), Nutzen (Jahr 1), Kosten (CapEx/OpEx), **Payback (Monate)** und **ROI (%)**,
+plus kurze **Sensitivitaet** (100/80/60% Adoption). Format: VALIDE HTML mit <div class="business-case">, Listen & <p>.""",
+    })
+
     if not prompt:
         return f"<p><em>[{section_name} – no template]</em></p>"
     log.info("🤖 Generating %s...", section_name)
@@ -439,12 +458,12 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections['RISKS_HTML'] = _generate_content_section('risks', briefing, scores)
     sections['GAMECHANGER_HTML'] = _generate_content_section('gamechanger', briefing, scores)
     sections['RECOMMENDATIONS_HTML'] = _generate_content_section('recommendations', briefing, scores)
-    
+
     sections['ROADMAP_12M_HTML'] = _generate_content_section('roadmap_12m', briefing, scores)
     sections['DATA_READINESS_HTML'] = _generate_content_section('data_readiness', briefing, scores)
     sections['ORG_CHANGE_HTML'] = _generate_content_section('org_change', briefing, scores)
     sections['BUSINESS_CASE_HTML'] = _generate_content_section('business_case', briefing, scores)
-return sections
+    return sections
 
 # ----------------------------------------------------------------------------
 # Helpers
