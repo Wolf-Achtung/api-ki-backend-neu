@@ -1,3 +1,4 @@
+Antworte ausschließlich mit **validem HTML** (keine Markdown‑Fences).
 # Roadmap (12 Monate) – Optimiert V3.0
 
 ## SYSTEM-ROLLE
@@ -41,7 +42,7 @@ Erstelle eine **12-Monats-Roadmap** in 3 Phasen mit **je 2-3 Meilensteinen** als
 
 ## STRUKTUR (GENAU SO UMSETZEN)
 
-```html
+
 <div class="roadmap">
   <!-- PHASE 1 -->
   <div class="roadmap-phase">
@@ -64,7 +65,7 @@ Erstelle eine **12-Monats-Roadmap** in 3 Phasen mit **je 2-3 Meilensteinen** als
   
   <!-- PHASE 2 + 3 analog -->
 </div>
-```
+
 
 ## TYPISCHE MEILENSTEINE JE PHASE
 
@@ -123,7 +124,7 @@ Erstelle eine **12-Monats-Roadmap** in 3 Phasen mit **je 2-3 Meilensteinen** als
 
 ## BEISPIEL FÜR GUTEN MEILENSTEIN
 
-```html
+
 <div class="milestone">
   <h4>🎯 Meilenstein 1: Stakeholder-Kick-off & KI-Vision (Monat 1)</h4>
   <p><strong>Ziel:</strong> Alle Schlüsselpersonen verstehen KI-Potenziale und unterstützen die Roadmap aktiv.</p>
@@ -136,7 +137,7 @@ Erstelle eine **12-Monats-Roadmap** in 3 Phasen mit **je 2-3 Meilensteinen** als
   </ul>
   <p><strong>Verantwortlich:</strong> KI-Manager + externe Beratung | <strong>Budget:</strong> 2.000-3.000 € | <strong>Risiko:</strong> Geringe Beteiligung von Fachabteilungen (Mitigation: Vorab-Interviews zur Bedarfsanalyse)</p>
 </div>
-```
+
 
 ## ANPASSUNG AN UNTERNEHMENSGRÖSSE
 

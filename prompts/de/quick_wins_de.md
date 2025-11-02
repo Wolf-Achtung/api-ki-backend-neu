@@ -1,3 +1,4 @@
+Antworte ausschließlich mit **validem HTML** (keine Markdown‑Fences).
 # Quick Wins – Optimiert V3.0
 
 ## SYSTEM-ROLLE
@@ -24,7 +25,7 @@ Erstelle **2-3 Quick Wins** als HTML-Fragment (ohne Code-Fences).
 
 Jeder Quick Win:
 
-```html
+
 <div class="quick-win">
   <h3>[Titel - konkret und spezifisch]</h3>
   <ul>
@@ -36,7 +37,7 @@ Jeder Quick Win:
     <li><strong>Compliance:</strong> DSGVO-konform bei EU-Hosting, EU AI Act Risikoklasse "minimal" (assistierende Systeme)</li>
   </ul>
 </div>
-```
+
 
 ## REGELN FÜR QUICK WINS
 
@@ -49,7 +50,7 @@ Jeder Quick Win:
 - **ERFINDE KEINE EIGENEN ZAHLEN!**
 
 **2. ROI-Berechnung:**
-```
+
 Beispiel:
 - Zeitersparnis: 10 h/Monat
 - Stundensatz: 60 €/h
@@ -57,7 +58,7 @@ Beispiel:
 - Tool-Kosten: ~600€/Jahr
 - ROI: (7.200€ - 600€) / 600€ × 100 = 1.100%
 - Payback: 1 Monat
-```
+
 
 **3. Tool-Empfehlungen (EU-DSGVO-konform):**
 - Mistral AI (Paris) - Open-Source-Alternative
@@ -84,11 +85,11 @@ Beispiel:
 - Vage Aufwände ("schnell umsetzbar")
 - US-Tools ohne EU-Hosting
 - Generische Quick Wins ohne Branchenbezug
-- Code-Fences (```)
+- Code-Fences ()
 
 ## BEISPIEL FÜR GUTEN QUICK WIN
 
-```html
+
 <div class="quick-win">
   <h3>Automatisierte Angebotserstellung mit KI-Assistent</h3>
   <ul>
@@ -100,7 +101,7 @@ Beispiel:
     <li><strong>Compliance:</strong> DSGVO-konform bei EU-Hosting (keine Kundendaten in Prompts), EU AI Act Risikoklasse "minimal" (assistierende Systeme)</li>
   </ul>
 </div>
-```
+
 
 ## FÖRDERPROGRAMM-HINWEISE
 
@@ -111,9 +112,9 @@ Wenn {{BUNDESLAND_LABEL}} = andere:
 - Erwähne: Digital Jetzt (bundesweit), go-digital
 
 Format: 
-```html
+
 <p><strong>Fördermöglichkeiten:</strong> [Programm 1], [Programm 2] – bis zu 50% Förderquote möglich</p>
-```
+
 
 ## KRITISCHE PRÜFUNG VOR OUTPUT
 

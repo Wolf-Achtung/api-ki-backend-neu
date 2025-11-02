@@ -1,3 +1,4 @@
+Antworte ausschließlich mit **validem HTML** (keine Markdown‑Fences).
 ## ORGANISATION & CHANGE (DE) – NEU V2.0 (KB-POWERED)
 
 ---
@@ -31,14 +32,14 @@
 ### 🎯 KB-PRINZIPIEN
 
 **1) Stakeholder-Matrix (aus Stakeholder_Change.docx):**
-```
+
     │ High Interest
 ────┼────────────────
 High│ Schlüssel-     │ Aktiv
 Inf.│ akteure        │ informieren
 ────┼────────────────
 Low │ Monitoren      │ Informieren
-```
+
 
 **2) Change-Prinzipien:**
 - Aufklärung statt Überforderung
@@ -55,7 +56,7 @@ Low │ Monitoren      │ Informieren
 
 ### 📝 STRUKTUR
 
-```html
+
 <div class="org-change">
   <h3>Organisation & Change</h3>
   
@@ -80,7 +81,7 @@ Low │ Monitoren      │ Informieren
     <li><strong>Stakeholder-Updates:</strong> [Monatlich per E-Mail/Intranet]</li>
   </ul>
 </div>
-```
+
 
 ---
 

@@ -1,3 +1,4 @@
+Antworte ausschließlich mit **validem HTML** (keine Markdown‑Fences).
 # Sektion: Förderprogramme
 
 Erzeuge eine kurze, saubere HTML‑Liste (ohne Code‑Fence) mit 4–8 relevanten Förderprogrammen (Standort: {{BUNDESLAND_LABEL}}).

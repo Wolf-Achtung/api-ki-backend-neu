@@ -1,3 +1,4 @@
+Antworte ausschließlich mit **validem HTML** (keine Markdown‑Fences).
 ## COMPLIANCE (DE) – OPTIMIERT V2.0 (KB-POWERED)
 
 ---
@@ -50,7 +51,7 @@
 
 ### 📝 STRUKTUR
 
-```html
+
 <div class="compliance">
   <h3>Praxisnahe Übersicht: DSGVO und EU AI Act</h3>
   
@@ -75,7 +76,7 @@
     <li><strong>TOMs-Checkliste:</strong> Art. 32 DSGVO</li>
   </ul>
 </div>
-```
+
 
 ---
 
