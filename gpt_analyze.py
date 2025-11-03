@@ -1,19 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-gpt_analyze.py – v4.8 (Merged: v4.5 + ABCE)
-==========================================
-- Beinhaltet alle Funktionen aus v4.5 (Scores, Ensemble optional, E-Mail, Render, Research)
-- PLUS
-  A) HTML-Repair-Gate + robuster Quick-Wins-Parser
-  B) Transparenz-Text & Research-Stand
-  C) „So-what?” erfolgt im content_normalizer (scores werden übergeben)
-  E) Business-Case-Sensitivität über content_normalizer (deterministisch)
-- Fallbacks:
-  • Stunden-Ersparnis: nutzt Quick-Wins-Parsing; wenn leer → FALLBACK_QW_MONTHLY_H 
-    (oder DEFAULT_QW1_H + DEFAULT_QW2_H), sonst 0.
-  • Stundensatz: kommt primär aus answers_normalizer (Branch-Benchmark). 
-    Fallback: DEFAULT_STUNDENSATZ_EUR (ENV).
+gpt_analyze.py – v4.8.1-gs (Gold‑Standard+ Patch)
+- basiert auf eurer v4.8
+- Ergänzt: Admin‑Notify (inkl. ADMIN_NOTIFY_EMAIL), PDF‑Anhang (via bytes oder per URL fetch), Briefing‑JSON‑Anhang
+- Template: liefert jetzt 'user_email' und 'JAHRESUMSATZ_LABEL'
+- Quick‑Wins/ROI/Sensitivität bleiben wie v4.8
 """
 import json
 import logging
@@ -49,7 +41,6 @@ ENABLE_QUALITY_GATES = (os.getenv("ENABLE_QUALITY_GATES", "1") == "1")
 ENABLE_REALISTIC_SCORES = (os.getenv("ENABLE_REALISTIC_SCORES", "1") == "1")
 ENABLE_LLM_CONTENT = (os.getenv("ENABLE_LLM_CONTENT", "1") == "1")
 ENABLE_REPAIR_HTML = (os.getenv("ENABLE_REPAIR_HTML", "1") == "1")
-
 USE_INTERNAL_RESEARCH = (os.getenv("USE_INTERNAL_RESEARCH", "1") == "1")
 
 DBG_PDF = (os.getenv("DEBUG_LOG_PDF_INFO", "1") == "1")
@@ -211,7 +202,7 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
     elif skills == 'basic': ena += 4; details['enablement'].append("⚠️ Basis-Skills (+4)")
     else: details['enablement'].append("❌ Keine Skills (-8)")
     if m.get('training_budget') in ['yes','planned']: ena += 7; details['enablement'].append("✅ Training-Budget (+7)")
-    else: details['enablement'].append("❌ Kein Training-Budget (-7)")
+    else: details['enablement'].append("❌ Kein Training (-7)")
     if m.get('change_management') == 'yes': ena += 6; details['enablement'].append("✅ Change-Management (+6)")
     else: details['enablement'].append("❌ Kein Change-Management (-6)")
     culture = m.get('innovation_culture','')
@@ -338,7 +329,7 @@ Kontext: Branche {branche}, Score Gesamt {overall}/100 (Governance {governance}/
 {tone} {only_html} Format: <ul><li><strong>[H]</strong> Maßnahme – <em>60 Tage</em></li></ul>.""",
         'risks': f"""Erstelle eine **Risikomatrix** (5–7 Risiken).
 Spalten: Risiko | Eintritt (niedrig/mittel/hoch) | Auswirkung | Mitigation.
-Nenne zusätzlich am Ende die **EU AI Act‑Risikokategorie** und eine **Pflichtenliste** (Transparenz, Logging, Daten‑Governance, Human Oversight).
+Nenne zusätzlich am Ende die **EU AI Act‑Risikokategorie** (assistentisch/gering) und eine **Pflichtenliste** (Transparenz, Logging, Daten‑Governance, Human Oversight).
 {tone} {only_html} Format: <table> mit <thead>/<tbody>.""",
         'gamechanger': f"""Skizziere einen **Gamechanger‑Use Case**.
 (1) 3–4 Sätze Idee, (2) 3 Vorteile (Liste), (3) 3 erste Schritte (Liste).
@@ -434,7 +425,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 
     return sections
 
-# --------------------------------- Helpers ----------------------------------
+# --------------------------------- Mail Helpers ------------------------------
 def _mask_email(addr: Optional[str]) -> str:
     if not addr or not DBG_MASK_EMAILS: return addr or ""
     try:
@@ -447,8 +438,11 @@ def _admin_recipients() -> List[str]:
     emails: List[str] = []
     raw1 = getattr(settings, "ADMIN_EMAILS", None) or os.getenv("ADMIN_EMAILS", "")
     raw2 = getattr(settings, "REPORT_ADMIN_EMAIL", None) or os.getenv("REPORT_ADMIN_EMAIL", "")
-    if raw1: emails.extend([e.strip() for e in raw1.split(",") if e.strip()])
-    if raw2: emails.append(raw2.strip())
+    raw3 = os.getenv("ADMIN_NOTIFY_EMAIL", "")
+    for raw in (raw1, raw2, raw3):
+        if raw:
+            emails.extend([e.strip() for e in raw.split(",") if e.strip()])
+    # de-dup
     return list(dict.fromkeys(emails))
 
 def _determine_user_email(db: Session, briefing: Briefing, override: Optional[str]) -> Optional[str]:
@@ -460,39 +454,61 @@ def _determine_user_email(db: Session, briefing: Briefing, override: Optional[st
     answers = getattr(briefing, "answers", None) or {}
     return answers.get("email") or answers.get("kontakt_email")
 
+def _fetch_pdf_if_needed(pdf_url: Optional[str], pdf_bytes: Optional[bytes]) -> Optional[bytes]:
+    if pdf_bytes: return pdf_bytes
+    if not pdf_url: return None
+    try:
+        r = requests.get(pdf_url, timeout=30)
+        if r.ok: return r.content
+    except Exception:
+        return None
+    return None
+
 def _send_emails(db: Session, rep: Report, br: Briefing,
                  pdf_url: Optional[str], pdf_bytes: Optional[bytes], run_id: str) -> None:
-    user_email = _determine_user_email(db, br, getattr(rep, "user_email", None))
-    if user_email:
-        try:
-            subject = "Ihr KI‑Status‑Report ist fertig"
-            body_html = render_report_ready_email(recipient="user", pdf_url=pdf_url)
-            attachments = []
-            if pdf_bytes and not pdf_url:
-                attachments.append({"filename": f"KI-Status-Report-{getattr(rep,'id', None)}.pdf",
-                                    "content": pdf_bytes, "mimetype": "application/pdf"})
-            send_mail(user_email, subject, body_html, text=None, attachments=attachments)
-        except Exception as exc:
-            log.warning("[%s] MAIL_USER failed: %s", run_id, exc)
+    """Sendet User- und Admin-Mail; hängt PDF (Bytes oder fetched von URL) + Briefing-JSON an."""
+    if os.getenv("ENABLE_ADMIN_NOTIFY", "1") not in ("1","true","TRUE","yes","YES"):
+        log.info("[%s] Admin notify disabled via ENABLE_ADMIN_NOTIFY", run_id)
+    # common attachments (best-effort PDF, plus briefing json)
+    best_pdf = _fetch_pdf_if_needed(pdf_url, pdf_bytes)
+    attachments_admin: List[Dict[str, Any]] = []
+    if best_pdf:
+        attachments_admin.append({"filename": f"KI-Status-Report-{getattr(rep,'id', None)}.pdf",
+                                  "content": best_pdf, "mimetype": "application/pdf"})
+    try:
+        bjson = json.dumps(getattr(br, "answers", {}) or {}, ensure_ascii=False, indent=2).encode("utf-8")
+        attachments_admin.append({"filename": f"briefing-{br.id}.json", "content": bjson, "mimetype": "application/json"})
+    except Exception:
+        pass
 
-    admins = _admin_recipients()
-    if admins:
-        try:
-            subject = "Kopie: KI‑Status‑Report"
-            body_html = render_report_ready_email(recipient="admin", pdf_url=pdf_url)
-            attachments = []
-            try:
-                bjson = json.dumps(getattr(br, "answers", {}) or {}, ensure_ascii=False, indent=2).encode("utf-8")
-                attachments.append({"filename": f"briefing-{br.id}.json", "content": bjson, "mimetype": "application/json"})
-            except Exception:
-                pass
-            if pdf_bytes and not pdf_url:
-                attachments.append({"filename": f"KI-Status-Report-{getattr(rep,'id', None)}.pdf",
-                                    "content": pdf_bytes, "mimetype": "application/pdf"})
-            for addr in admins:
-                send_mail(addr, subject, body_html, text=None, attachments=attachments)
-        except Exception as exc:
-            log.warning("[%s] MAIL_ADMIN failed: %s", run_id, exc)
+    # 1) User
+    try:
+        user_email = _determine_user_email(db, br, getattr(rep, "user_email", None))
+        if user_email:
+            subject_u = "Ihr KI‑Status‑Report ist fertig"
+            body_html_u = render_report_ready_email(recipient="user", pdf_url=pdf_url)
+            attachments_user = [] if pdf_url else attachments_admin[:1]  # PDF nur anhängen, wenn keine URL
+            ok, err = send_mail(user_email, subject_u, body_html_u, text=None, attachments=attachments_user)
+            if ok: log.info("[%s] 📧 Mail sent to user %s", run_id, _mask_email(user_email))
+            else: log.warning("[%s] MAIL_USER failed: %s", run_id, err)
+    except Exception as exc:
+        log.warning("[%s] MAIL_USER failed: %s", run_id, exc)
+
+    # 2) Admin(s)
+    try:
+        if os.getenv("ENABLE_ADMIN_NOTIFY", "1") in ("1","true","TRUE","yes","YES"):
+            admins = _admin_recipients()
+            if admins:
+                subject_a = f"Neuer KI‑Status‑Report – Analysis #{rep.analysis_id} / Briefing #{rep.briefing_id}"
+                body_html_a = render_report_ready_email(recipient="admin", pdf_url=pdf_url)
+                for addr in admins:
+                    ok, err = send_mail(addr, subject_a, body_html_a, text=None, attachments=attachments_admin)
+                    if ok: log.info("[%s] 📧 Admin notify sent to %s", run_id, _mask_email(addr))
+                    else: log.warning("[%s] MAIL_ADMIN failed for %s: %s", run_id, _mask_email(addr), err)
+            else:
+                log.info("[%s] Admin notify: no recipients configured", run_id)
+    except Exception as exc:
+        log.warning("[%s] MAIL_ADMIN block failed: %s", run_id, exc)
 
 # --------------------------------- Main Pipeline -----------------------------
 def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, str, Dict[str, Any]]:
@@ -515,10 +531,13 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections['BRANCHE_LABEL'] = answers.get('BRANCHE_LABEL','')
     sections['BUNDESLAND_LABEL'] = answers.get('BUNDESLAND_LABEL','')
     sections['UNTERNEHMENSGROESSE_LABEL'] = answers.get('UNTERNEHMENSGROESSE_LABEL','')
+    sections['JAHRESUMSATZ_LABEL'] = answers.get('JAHRESUMSATZ_LABEL', answers.get('jahresumsatz',''))
     sections['ki_kompetenz'] = answers.get('ki_kompetenz') or answers.get('ki_knowhow','')
     sections['report_date'] = datetime.now().strftime("%d.%m.%Y")
     sections['report_year'] = datetime.now().strftime("%Y")
     sections['transparency_text'] = getattr(settings, "TRANSPARENCY_TEXT", None) or os.getenv("TRANSPARENCY_TEXT", "") or ""
+    # user_email für Template
+    sections['user_email'] = answers.get('email') or answers.get('kontakt_email') or ""
 
     # Scores einzeln + as dict
     sections['score_governance'] = scores.get('governance', 0)
@@ -534,7 +553,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     if USE_INTERNAL_RESEARCH and run_research:
         try:
             log.info("[%s] Running internal research...", run_id)
-            research_blocks = run_research(answers)  # sollte TOOLS_HTML, FOERDERPROGRAMME_HTML, QUELLEN_HTML, last_updated liefern
+            research_blocks = run_research(answers)
             if isinstance(research_blocks, dict):
                 for k, v in research_blocks.items():
                     if isinstance(v, str):
@@ -591,7 +610,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         created_at=datetime.now(timezone.utc),
     )
     db.add(an); db.commit(); db.refresh(an)
-    log.info("[%s] ✅ Analysis created (v4.8): id=%s", run_id, an.id)
+    log.info("[%s] ✅ Analysis created (v4.8.1-gs): id=%s", run_id, an.id)
+
     return an.id, result["html"], result.get("meta", {})
 
 def run_async(briefing_id: int, email: Optional[str] = None) -> None:
@@ -599,7 +619,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     db = SessionLocal()
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v4.8 for briefing_id=%s", run_id, briefing_id)
+        log.info("[%s] 🚀 Starting analysis v4.8.1-gs for briefing_id=%s", run_id, briefing_id)
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
         rep = Report(user_id=br.user_id if br else None, briefing_id=briefing_id, analysis_id=an_id, created_at=datetime.now(timezone.utc))
@@ -629,15 +649,8 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
         if hasattr(rep, "updated_at"): rep.updated_at = datetime.now(timezone.utc)
         db.add(rep); db.commit(); db.refresh(rep)
 
-        try:
-            subject = "Ihr KI‑Status‑Report ist fertig"
-            body_html = render_report_ready_email(recipient="user", pdf_url=pdf_url)
-            attachments = []
-            if pdf_bytes and not pdf_url:
-                attachments.append({"filename": f"KI-Status-Report-{getattr(rep,'id', None)}.pdf", "content": pdf_bytes, "mimetype": "application/pdf"})
-            send_mail(_determine_user_email(db, br, email) or "", subject, body_html, text=None, attachments=attachments)
-        except Exception as exc:
-            log.warning("[%s] email error: %s", run_id, exc)
+        # unified mail handling (user + admin)
+        _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id)
 
     except Exception as exc:
         log.error("[%s] ❌ Analysis failed: %s", run_id, exc, exc_info=True)
@@ -649,10 +662,3 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
         raise
     finally:
         db.close()
-
-if __name__ == "__main__":
-    import sys
-    if len(sys.argv) < 2:
-        print("Usage: python gpt_analyze.py <briefing_id>")
-        raise SystemExit(1)
-    run_async(int(sys.argv[1]))
