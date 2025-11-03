@@ -1,61 +1,73 @@
-<!-- file: templates/pdf_template.html -->
 <!DOCTYPE html>
+<!-- file: templates/pdf_template.html -->
 <html lang="de">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>KI‑Status‑Report</title>
   <style>
-    /* Mikro‑Typografie & Hierarchie */
-    html,body{ margin:0; padding:0; background:#ffffff; color:#0b1f33;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"; font-size:11pt; line-height:1.25; }
-    h1{ font-size:19pt; margin:0 0 .2em 0; line-height:1.2 }
-    h2{ font-size:15pt; margin:0 0 .2em 0; line-height:1.25; border-bottom:2px solid #e5e7eb; padding-bottom:.1em }
-    h3{ font-size:13pt; margin:0.6em 0 .2em 0 }
-    h4{ font-size:12pt; margin:0.6em 0 .2em 0 }
-    p{ margin:.4em 0 }
-    .container{ max-width:960px; margin:0 auto; padding:20px }
-    .card{ background:#f8fafc; border:1px solid #e5e7eb; border-radius:10px; padding:14px; margin:10px 0; page-break-inside:avoid }
-    .small{ font-size:10pt; color:#55677a }
-    .muted{ color:#64748b }
-    .table{ width:100%; border-collapse:collapse }
-    .table th,.table td{ padding:8px; border-bottom:1px solid #e5e7eb; text-align:left; vertical-align:top; word-break:break-word }
-    .table tr{ page-break-inside:avoid }
-    .callout{ border-left:4px solid #2547d0; padding:10px 12px; background:#F4F8FF; border-radius:6px; page-break-inside:avoid }
-    section.chapter{ page-break-before:always }
-    a{ color:#2547d0; text-decoration:underline; word-break:break-word }
-    .section-lead{ margin-top:.6em; margin-bottom:.2em; font-size:11pt; font-style:italic; color:#0f2a5a }
-    .legend{ font-size:10pt; color:#475569 }
-    .reality-note{ border-left:4px solid #94a3b8; background:#f1f5f9; padding:8px 10px; border-radius:6px; font-size:10pt; color:#334155 }
-    /* Watermark: nur auf Deckblatt & Schlussseite einbinden */
-    .watermark{ position:fixed; bottom:12mm; right:10mm; opacity:.07; font-size:9pt; letter-spacing:.05em }
-    @page{ size:A4; margin:22mm }
-    @media print { *{-webkit-print-color-adjust:exact; print-color-adjust:exact} .container{padding:0 12mm} }
+    /* Mikro‑Typografie & Druck */
+    @page { size: A4; margin: 22mm; }
+    :root{ --fg:#0b1f33; --muted:#5b6b7a; --border:#e5e7eb; --brand:#2547d0; --bg:#ffffff; --card:#f8fafc; }
+    html,body{ margin:0; padding:0; background:var(--bg); color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"; line-height:1.25; font-size:11pt; }
+    .container{ max-width:960px; margin:0 auto; padding:18px; }
+    header.site{ display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); padding:8px 0; margin-bottom:14px; }
+    .logos{ display:flex; align-items:center; gap:12px; flex-wrap:wrap }
+    .logos img{ height:28px; image-rendering:auto }
+    .stand{ color:var(--muted); font-size:10.5pt }
+    h1,h2,h3{ margin:0 0 .2em 0; line-height:1.2 }
+    h1{ font-size:20pt } 
+    h2{ font-size:16pt; margin-top:.6em; border-bottom:2px solid var(--border); padding-bottom:.2em }
+    h3{ font-size:13pt; margin-top:.6em; margin-bottom:.2em }
+    p{ margin:.35em 0 } 
+    .section-lead{ font-style:italic; color:#374151; margin:.2em 0 .4em 0 }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px; margin:10px 0; page-break-inside: avoid; }
+    .small{ font-size:10pt; color:var(--muted) } 
+    .table{ width:100%; border-collapse:collapse; }
+    .table th,.table td{ padding:6px 8px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; word-break: break-word; }
+    .table tr{ page-break-inside: avoid; }
+    .callout{ border-left:4px solid var(--brand); padding:10px 12px; background:#F4F8FF; border-radius:6px; page-break-inside: avoid; }
+    .footer-note{ font-size:10pt; color:var(--muted); margin-top:20px }
+    section.chapter{ page-break-before: always; }
+    a{ color:#2547d0; text-decoration:underline; word-break: break-word; }
+    .aside{ background:#f5f5f5; border-left:4px solid #d1d5db; color:#374151; padding:8px 10px; border-radius:6px; }
+    .watermark { position: fixed; bottom: 12mm; right: 10mm; opacity: 0.07; font-size: 9pt; letter-spacing: .05em; }
+    .meta-grid{ display:grid; grid-template-columns: 180px 1fr; gap:4px 12px; }
+    .version { position:absolute; right:0; bottom:0; font-size:9pt; color:#6b7280 }
+    @media print { .container{ padding:0 10mm } * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Deckblatt -->
+    <header class="site">
+      <div class="logos">
+        <img src="{{logo_primary}}" alt="KI‑Sicherheit.jetzt Logo" />
+        <img src="{{logo_tuv}}" alt="TÜV Austria" />
+        <img src="{{logo_dsgvo}}" alt="DSGVO konform" />
+        <img src="{{logo_eu_ai}}" alt="EU AI Act" />
+        <img src="{{logo_ready}}" alt="KI‑Ready 2025" />
+      </div>
+      <div class="stand">Stand: {{report_date}}</div>
+    </header>
+
+    <!-- DECKBLATT -->
     <section>
       <div class="watermark">{{WATERMARK_TEXT}}</div>
       <h1>KI‑Status‑Report</h1>
       <p class="small">Ihr individueller Fahrplan zur erfolgreichen KI‑Integration</p>
-
       <div class="card">
         <h3>Mini‑Meta</h3>
-        <table class="table">
-          <tbody>
-            <tr><th>Kundenname</th><td>{{kundenname}}</td></tr>
-            <tr><th>Branche</th><td>{{BRANCHE_LABEL}}</td></tr>
-            <tr><th>Unternehmensgröße</th><td>{{UNTERNEHMENSGROESSE_LABEL}}</td></tr>
-            <tr><th>Standort (Bundesland)</th><td>{{BUNDESLAND_LABEL}}</td></tr>
-            <tr><th>Erstellungsdatum</th><td>{{report_date}}</td></tr>
-            <tr><th>Prüferkürzel</th><td>{{AUDITOR_INITIALS}}</td></tr>
-          </tbody>
-        </table>
-        <p class="small muted">Transparenz: {{transparency_text}}</p>
+        <div class="meta-grid">
+          <div><strong>Kundenname</strong></div><div>{{COMPANY_NAME}}</div>
+          <div><strong>Branche</strong></div><div>{{BRANCHE_LABEL}}</div>
+          <div><strong>Unternehmensgröße</strong></div><div>{{UNTERNEHMENSGROESSE_LABEL}}</div>
+          <div><strong>Erstellungsdatum</strong></div><div>{{report_date}}</div>
+          <div><strong>Prüferkürzel</strong></div><div>{{AUDITOR_INITIALS}}</div>
+        </div>
+        <p class="small">Transparenz: {{transparency_text}}</p>
+        <div class="version">v{{report_version}} – {{CHANGELOG_SHORT}}</div>
       </div>
-
       <div class="card">
         <h3>KI‑Reifegrad (Säulen)</h3>
         <table class="table">
@@ -69,25 +81,19 @@
           </tbody>
         </table>
       </div>
-
       <div class="card">
         <h3>Was heißt das konkret?</h3>
         {{REIFEGRAD_SOWHAT_HTML}}
       </div>
-
-      <p class="small muted" style="text-align:right; margin-top:8mm;">
-        v{{report_version}} · Änderungslog kurz: „{{CHANGELOG_SHORT}}“
-      </p>
     </section>
 
-    <!-- Executive Summary -->
+    <main>
     <section class="chapter">
       <h2>Executive Summary</h2>
       <p class="section-lead">{{LEAD_EXEC}}</p>
       <div class="callout">{{EXECUTIVE_SUMMARY_HTML}}</div>
     </section>
 
-    <!-- KPI -->
     <section class="chapter">
       <h2>KPI‑Dashboard & Monitoring</h2>
       <p class="section-lead">{{LEAD_KPI}}</p>
@@ -101,31 +107,27 @@
       </div>
     </section>
 
-    <!-- Quick Wins -->
     <section class="chapter">
       <h2>Quick Wins (0–90 Tage)</h2>
       <p class="section-lead">{{LEAD_QW}}</p>
       <div class="card">{{QUICK_WINS_HTML_LEFT}}</div>
       <div class="card">{{QUICK_WINS_HTML_RIGHT}}</div>
-      <div class="reality-note">{{REALITY_NOTE_QW}}</div>
+      <div class="aside">{{REALITY_NOTE_QW}}</div>
       <p class="small">Monats‑Ersparnis gesamt: {{monatsersparnis_stunden}} h (≈ {{monatsersparnis_eur}} €) → {{jahresersparnis_stunden}} h/Jahr (≈ {{jahresersparnis_eur}} €) bei {{stundensatz_eur}} €/h.</p>
     </section>
 
-    <!-- Roadmap 90 -->
     <section class="chapter">
       <h2>Roadmap (90 Tage – Test → Pilot → Rollout)</h2>
       <p class="section-lead">{{LEAD_ROADMAP_90}}</p>
       <div class="card">{{PILOT_PLAN_HTML}}</div>
     </section>
 
-    <!-- Roadmap 12 -->
     <section class="chapter">
       <h2>Roadmap (12 Monate)</h2>
       <p class="section-lead">{{LEAD_ROADMAP_12}}</p>
       <div class="card">{{ROADMAP_12M_HTML}}</div>
     </section>
 
-    <!-- Business Case & Kosten -->
     <section class="chapter">
       <h2>Business Case & Kostenübersicht</h2>
       <p class="section-lead">{{LEAD_BUSINESS}}</p>
@@ -134,14 +136,12 @@
       <div class="card"><h3>Business Case – Sensitivität (100/80/60 %)</h3>{{BUSINESS_SENSITIVITY_HTML}}</div>
     </section>
 
-    <!-- Business Case detailliert -->
     <section class="chapter">
       <h2>Business Case (detailliert)</h2>
       <p class="section-lead">{{LEAD_BUSINESS_DETAIL}}</p>
       <div class="card">{{BUSINESS_CASE_HTML}}</div>
     </section>
 
-    <!-- Tools -->
     <section class="chapter">
       <h2>Empfohlene Tools (Pro & Open‑Source)</h2>
       <p class="section-lead">{{LEAD_TOOLS}}</p>
@@ -149,36 +149,31 @@
       <p class="small">Hinweis: Bevorzugt EU‑Hosting/DSGVO‑konform. Preise/Leistungsdaten können sich ändern.</p>
     </section>
 
-    <!-- Dateninventar -->
     <section class="chapter">
       <h2>Dateninventar & ‑Qualität</h2>
       <p class="section-lead">{{LEAD_DATA}}</p>
       <div class="card">{{DATA_READINESS_HTML}}</div>
     </section>
 
-    <!-- Organisation & Change -->
     <section class="chapter">
       <h2>Organisation & Change</h2>
       <p class="section-lead">{{LEAD_ORG}}</p>
       <div class="card">{{ORG_CHANGE_HTML}}</div>
     </section>
 
-    <!-- Risiko & Compliance -->
     <section class="chapter">
       <h2>Risiko‑Assessment & Compliance</h2>
       <p class="section-lead">{{LEAD_RISKS}}</p>
       <div class="card">{{RISKS_HTML}}</div>
-      <p class="small">EU AI Act: Einordnung im Kapitel; Transparenz: {{transparency_text}}</p>
+      <p class="small">EU AI Act: Einordnung im Kapitel. Transparenz: {{transparency_text}}</p>
     </section>
 
-    <!-- Gamechanger -->
     <section class="chapter">
       <h2>Gamechanger‑Use Case</h2>
       <p class="section-lead">{{LEAD_GC}}</p>
       <div class="card">{{GAMECHANGER_HTML}}</div>
     </section>
 
-    <!-- EU AI Act Kapitel -->
     <section class="chapter">
       <h2>EU AI Act – Überblick & Fristen ({{ai_act_phase_label}})</h2>
       <p class="section-lead">{{LEAD_AI_ACT}}</p>
@@ -192,7 +187,6 @@
       <div class="card">{{AI_ACT_ADDON_PACKAGES_HTML}}</div>
     </section>
 
-    <!-- Förderungen & Quellen -->
     <section class="chapter">
       <h2>Aktuelle Förderprogramme & Quellen</h2>
       <p class="section-lead">{{LEAD_FUNDING}}</p>
@@ -206,21 +200,21 @@
       </div>
     </section>
 
-    <!-- Next Actions -->
     <section class="chapter">
       <h2>Nächste Schritte (30 Tage)</h2>
       <p class="section-lead">{{LEAD_NEXT_ACTIONS}}</p>
-      <p class="legend">Legende: ⏱ Aufwand, 🎯 Impact, 👤 Owner, 📆 Termin</p>
-      <div class="card">{{NEXT_ACTIONS_HTML}}</div>
+      <div class="card">
+        <p><strong>Legende:</strong> ⏱ Aufwand · 🎯 Impact · 👤 Owner · 📆 Termin</p>
+        {{NEXT_ACTIONS_HTML}}
+      </div>
     </section>
 
-    <!-- Schlussseite / Footer -->
+    <!-- SCHLUSSSEITE -->
     <section class="chapter">
       <div class="watermark">{{WATERMARK_TEXT}}</div>
-      <p class="small muted">© {{report_year}} KI‑Sicherheit.jetzt • DSGVO • ePrivacy • DSA • EU AI Act — Kontakt: {{user_email}}</p>
-      <p class="small muted">Report‑ID: {{report_id}} · Kundencode: {{kundencode}} · Version: v{{report_version}} — Mini‑Änderungslog: {{CHANGELOG_SHORT}}</p>
+      <p class="footer-note">© {{report_year}} KI‑Sicherheit.jetzt • DSGVO • ePrivacy • DSA • EU AI Act — Kontakt: {{user_email}}</p>
     </section>
-
+    </main>
   </div>
 </body>
 </html>
