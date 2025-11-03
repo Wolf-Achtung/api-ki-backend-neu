@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """Robuster PDF‑Client mit Backoff/Timeout & sauberen Headern.
-Fix: X-Request-Id immer als str; prefer run_id/request_id."""
+Fix: X-Request-Id immer als str; prefer run_id/request_id. Add: Accept header & richer logging."""
 import json
 import logging
 import os
@@ -32,15 +32,15 @@ def render_pdf_from_html(html: str, meta: Optional[Dict[str, Any]] = None) -> Di
     if not PDF_SERVICE_URL:
         return {"error": "PDF_SERVICE_URL not configured"}
     meta = meta or {}
-    # Bevorzugt stringbasierte Korrelations-ID
     rid = meta.get("request_id") or meta.get("run_id") or meta.get("analysis_id") or uuid4().hex
     rid = _as_str(rid)
     url = f"{PDF_SERVICE_URL}/generate-pdf"
 
     payload = {"html": html, "meta": meta}
     headers = {
-        "Content-Type": "application/json",
-        "X-Request-Id": rid,                  # Fix: sicher als str
+        "Content-Type": "application/json; charset=utf-8",
+        "Accept": "application/pdf, application/json;q=0.9, */*;q=0.1",
+        "X-Request-Id": rid,  # Fix: sicher als str
         "User-Agent": "ki-backend/1 pdf-client",
     }
 
@@ -59,9 +59,13 @@ def render_pdf_from_html(html: str, meta: Optional[Dict[str, Any]] = None) -> Di
                     data = r.json()
                 except Exception:
                     data = {}
-                log.info("services.pdf_client: PDF service returned URL response (rid=%s)", rid)
-                return {"pdf_bytes": None, "pdf_url": data.get("url"), "meta": data}
-            last_err = f"{r.status_code} {r.text[:200]}"
+                if data.get("url"):
+                    log.info("services.pdf_client: PDF service returned URL response (rid=%s)", rid)
+                    return {"pdf_bytes": None, "pdf_url": data.get("url"), "meta": data}
+                # Kein PDF/keine URL -> Fehlertext
+                last_err = f"unexpected content-type={ct} body={r.text[:200]}"
+            else:
+                last_err = f"{r.status_code} {r.text[:200]}"
         except Exception as exc:
             last_err = str(exc)
         # Exponentielles Backoff + Jitter
