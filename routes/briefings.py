@@ -1,7 +1,7 @@
 # file: routes/briefings.py
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-"""Briefing‑Submit + Background‑Analyse (Rate‑Limit, Schema)."""
+"""Briefing‑Submit (Rate‑Limited) + Analyse‑Queueing (BackgroundTasks)."""
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
@@ -19,11 +19,13 @@ class BriefingSubmit(SecureModel):
     email_override: Optional[str] = Field(default=None)
     lang: str = Field(default="de", min_length=2, max_length=5)
 
-@router.post("/submit", status_code=status.HTTP_202_ACCEPTED, dependencies=[Depends(rate_limiter("briefings:submit", 8, 60))])
-def submit_briefing(body: BriefingSubmit, background: BackgroundTasks, request: Request, db: Session = Depends(get_db)) -> dict:
+@router.post("/submit", status_code=status.HTTP_202_ACCEPTED,
+             dependencies=[Depends(rate_limiter("briefings:submit", 8, 60))])
+def submit_briefing(body: BriefingSubmit, background: BackgroundTasks,
+                    request: Request, db: Session = Depends(get_db)) -> dict:
     if not body.answers:
         raise HTTPException(status_code=422, detail="answers required")
-    # Warum: IP & UA helfen bei Missbrauchsanalysen
+    # IP & User‑Agent für Abuse‑Analysen anhängen
     ans = dict(body.answers)
     ans.setdefault("client_ip", client_ip(request))
     ans.setdefault("user_agent", request.headers.get("user-agent", ""))

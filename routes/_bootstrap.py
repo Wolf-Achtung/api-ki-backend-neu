@@ -1,10 +1,16 @@
 # file: routes/_bootstrap.py
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-"""Gemeinsame FastAPI‑Hilfen: CORS, DB, Rate‑Limiter, Schemas."""
+"""Gemeinsame FastAPI‑Hilfen (Gold‑Standard)
+- Einheitliche DB‑Session
+- IP‑Ermittlung hinter Proxies
+- Lightweight Rate‑Limiter (prozesslokal; Redis in verteilten Setups)
+- Pydantic‑Basisklasse mit harten Schemas
+- CORS via Settings
+"""
 import time
 from collections import defaultdict, deque
-from typing import Deque, Dict, Iterator, Optional
+from typing import Deque, Dict, Iterator
 
 from fastapi import Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +20,7 @@ from sqlalchemy.orm import Session
 from core.db import SessionLocal
 from settings import settings
 
-# Warum: einfache in‑Memory‑Buckets; in verteilten Setups Redis verwenden.
+# In‑Memory Token‑Buckets: key = "<ip>:<name>" → timestamps
 _BUCKETS: Dict[str, Deque[float]] = defaultdict(deque)
 
 def get_db() -> Iterator[Session]:
@@ -25,26 +31,44 @@ def get_db() -> Iterator[Session]:
         db.close()
 
 def client_ip(request: Request) -> str:
-    # Warum: robuste IP‑Ermittlung hinter Proxy
-    return (request.headers.get("x-forwarded-for") or request.client.host or "0.0.0.0").split(",")[0].strip()
+    # Warum: robuste IP‑Ermittlung hinter Proxy (X‑Forwarded‑For bevorzugt)
+    xf = (request.headers.get("x-forwarded-for") or "").strip()
+    if xf:
+        return xf.split(",")[0].strip()
+    return request.client.host if request.client else "0.0.0.0"
 
-def rate_limiter(key: str, max_calls: int, window_sec: int):
-    """Factory für simple Token‑Bucket pro key+ip."""
+def rate_limiter(name: str, max_calls: int, window_sec: int):
+    """Erzeugt eine FastAPI‑Dependency für einfache Rate‑Limits.
+    Warum: Schutz vor Brute‑Force/Spam. Für Multi‑Instance Redis/DB nutzen.
+    """
+    max_calls = int(max_calls)
+    window_sec = int(window_sec)
+
     def _dep(request: Request) -> None:
         ip = client_ip(request)
         now = time.time()
-        bucket_key = f"{ip}:{key}"
+        bucket_key = f"{ip}:{name}"
         q = _BUCKETS[bucket_key]
-        # Cleanup veralteter Timestamps
-        while q and now - q[0] > window_sec:
+
+        # Alte Einträge entfernen
+        cutoff = now - window_sec
+        while q and q[0] < cutoff:
             q.popleft()
+
         if len(q) >= max_calls:
-            raise HTTPException(status_code=429, detail="Rate limit exceeded")
+            # Minimaler Leak: keine Details
+            raise HTTPException(status_code=429, detail="rate_limited")
         q.append(now)
+
+        # Opportunistische GC großer Buckets
+        if len(q) > max_calls * 5:
+            while len(q) > max_calls:
+                q.popleft()
+
     return _dep
 
 class SecureModel(BaseModel):
-    """Basisklasse: schützt gegen überflüssige Felder & trimmt Strings."""
+    """Basisklasse für Anfragen/Antworten: harte Schemas & Trim."""
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
 def mount_cors(app) -> None:
