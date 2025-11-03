@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>KI‑Status‑Report</title>
   <style>
-    /* Mikro‑Typografie & Hierarchie */
+    /* Mikro‑Typografie & Hierarchie (H1 19.5pt, H2 15.5pt, Text ~10.8pt, 1.25 LH) */
     :root{ --fg:#0b1f33; --muted:#5b6b7a; --border:#e5e7eb; --brand:#2547d0; --bg:#ffffff; --card:#f8fafc; }
     html,body{ margin:0; padding:0; background:var(--bg); color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
@@ -20,9 +20,9 @@
     h1{ font-size:19.5pt }
     h2{ font-size:15.5pt; margin-top:0.6em; margin-bottom:0.2em; border-bottom:2px solid var(--border); padding-bottom:4px }
     h3{ font-size:13pt; margin-top:0.6em; margin-bottom:0.2em }
-    p{ margin:6px 0 } 
+    p{ margin:6px 0 }
     .card{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin:10px 0; page-break-inside: avoid; }
-    .small{ font-size:10pt; color:var(--muted) } 
+    .small{ font-size:10pt; color:var(--muted) }
     .table{ width:100%; border-collapse:collapse; }
     .table th,.table td{ padding:8px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; word-break: break-word; }
     .table tr{ page-break-inside: avoid; }
@@ -34,11 +34,11 @@
     /* One‑liner (Abschnitts‑Summenzeile) */
     .section-lead{ font-size:11pt; color:#0f172a; margin: 6px 0 8px; }
 
-    /* Watermark nur auf Außenseiten (Deckblatt & Schlussseite separat eingefügt) */
+    /* Watermark (nur Deckblatt + Schlussseite) */
     @page { size: A4; margin: 22mm; }
     .watermark{ position: fixed; bottom: 12mm; right: 10mm; opacity: 0.07; font-size: 9pt; letter-spacing: .05em; }
 
-    /* Reality‑Check Randnotiz */
+    /* Reality‑Check Randnotiz (grau ~5%) */
     .reality{ float:right; width:28%; background:#00000008; border-left:3px solid #cbd5e1;
       padding:8px 10px; margin:6px 0 10px 12px; font-size:10.3pt; color:#0f172a }
 
@@ -53,8 +53,7 @@
 </head>
 <body>
   <div class="container">
-
-    <!-- Deckblatt (mit Watermark) -->
+    <!-- Deckblatt -->
     <header class="site">
       <div class="logos">
         <img src="{{logo_primary}}" alt="KI‑Sicherheit.jetzt" />
@@ -118,14 +117,8 @@
     <section class="chapter">
       <h2>KPI‑Dashboard & Monitoring</h2>
       <p class="section-lead">{{LEAD_KPI}}</p>
-      <div class="card">
-        <h3>Überblick</h3>
-        {{KPI_HTML}}
-      </div>
-      <div class="card">
-        <h3>Branchenspezifische KPIs</h3>
-        {{KPI_BRANCHE_HTML}}
-      </div>
+      <div class="card"><h3>Überblick</h3>{{KPI_HTML}}</div>
+      <div class="card"><h3>Branchenspezifische KPIs</h3>{{KPI_BRANCHE_HTML}}</div>
     </section>
 
     <section class="chapter">
@@ -189,19 +182,25 @@
       <h2>Risiko‑Assessment & Compliance</h2>
       <p class="section-lead">{{LEAD_RISKS}}</p>
       <div class="card">{{RISKS_HTML}}</div>
-      <p class="small">EU AI Act: kategorisiert als assistierend/geringes Risiko – mit Pflichtenliste im Kapitel. Transparenz: {{transparency_text}}</p>
+      <p class="small">EU AI Act: Pflichtenliste und Einordnung im Kapitel. Transparenz: {{transparency_text}}</p>
     </section>
 
-    <!-- NEU: EU AI Act – zusammengefasst (aus Datei) -->
+    <section class="chapter">
+      <h2>Gamechanger‑Use Case</h2>
+      <p class="section-lead">{{LEAD_GC}}</p>
+      <div class="card">{{GAMECHANGER_HTML}}</div>
+    </section>
+
+    <!-- EU AI Act -->
     <section class="chapter">
       <h2>EU AI Act – Überblick & Fristen ({{ai_act_phase_label}})</h2>
       <p class="section-lead">{{LEAD_AI_ACT}}</p>
       <div class="card">{{AI_ACT_SUMMARY_HTML}}</div>
+      <div class="card"><h3>Timeline {{ai_act_phase_label}} (kompakt)</h3>{{AI_ACT_TABLE_HTML}}</div>
       <div class="callout">{{AI_ACT_TABLE_OFFER_HTML}}</div>
-      <p class="small">Hinweis: Zeitliche Staffelungen & Stichtage gem. öffentlich verfügbarer Infos; betriebliche Einordnung im individuellen Kontext empfohlen.</p>
     </section>
 
-    <!-- NEU: Angebotserweiterung / Vertiefung -->
+    <!-- Add-on -->
     <section class="chapter">
       <h2>Optionale Vertiefung: EU‑AI‑Act‑Add‑on</h2>
       <p class="section-lead">{{LEAD_AI_ACT_ADDON}}</p>
@@ -211,17 +210,11 @@
     <section class="chapter">
       <h2>Aktuelle Förderprogramme & Quellen</h2>
       <p class="section-lead">{{LEAD_FUNDING}}</p>
-      <div class="card">
-        <h3>Förderungen (nach Standort)</h3>
-        {{FOERDERPROGRAMME_HTML}}
-      </div>
-      <div class="card">
-        <h3>Quellen & Referenzen</h3>
-        {{QUELLEN_HTML}}
-      </div>
+      <div class="card"><h3>Förderungen (nach Standort)</h3>{{FOERDERPROGRAMME_HTML}}</div>
+      <div class="card"><h3>Quellen & Referenzen</h3>{{QUELLEN_HTML}}</div>
     </section>
 
-    <!-- Schlussseite: Next‑Actions (mit Watermark) -->
+    <!-- Schlussseite -->
     <section class="chapter" style="position:relative;">
       <div class="watermark">{{WATERMARK_TEXT}}</div>
       <h2>Nächste Schritte (30 Tage)</h2>
