@@ -1,17 +1,6 @@
 name: Smoke Test
 
 on:
-  workflow_dispatch:
-    inputs:
-      base_url:
-        description: 'Base URL (z.B. https://api.ki-sicherheit.jetzt)'
-        required: true
-      briefing_id:
-        description: 'Optional: Briefing-ID für Analyze'
-        required: false
-      analysis_id:
-        description: 'Optional: Analysis-ID für Report'
-        required: false
   push:
     branches: [ main ]
     paths:
@@ -21,6 +10,8 @@ on:
       - 'services/**'
       - 'gpt_analyze.py'
       - 'main.py'
+  repository_dispatch:
+    types: [railway-deploy-succeeded]  # optionaler Hook-Name, falls Railway Webhook sendet
 
 jobs:
   smoke:
@@ -37,11 +28,11 @@ jobs:
       - name: Install deps
         run: pip install requests
 
-      - name: Run smoke
+      - name: Run smoke (public URL)
         env:
-          BASE_URL: ${{ inputs.base_url || secrets.SMOKE_BASE_URL }}
-          SMOKE_BRIEFING_ID: ${{ inputs.briefing_id || secrets.SMOKE_BRIEFING_ID }}
-          SMOKE_ANALYSIS_ID: ${{ inputs.analysis_id || secrets.SMOKE_ANALYSIS_ID }}
-          AUTH_TOKEN: ${{ secrets.SMOKE_AUTH_TOKEN }}
+          BASE_URL: ${{ secrets.SMOKE_BASE_URL }}           # z.B. https://api-ki-backend-neu-production.up.railway.app
+          SMOKE_BRIEFING_ID: ${{ secrets.SMOKE_BRIEFING_ID }}   # optional, sonst legt Script selbst ein Briefing an
+          SMOKE_ANALYSIS_ID: ${{ secrets.SMOKE_ANALYSIS_ID }}   # optional, für isolierten Report-Test
+          AUTH_TOKEN: ${{ secrets.SMOKE_AUTH_TOKEN }}           # optional, nur wenn eure API Auth erfordert
           TIMEOUT: '25'
         run: python scripts/smoke_ci.py
