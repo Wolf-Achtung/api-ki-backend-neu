@@ -1,68 +1,51 @@
+# file: services/email.py
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-import logging, smtplib, ssl
-from typing import List, Optional, Tuple, Dict, Any
+"""SMTP‑Mailer (robust, pooled).
+Warum: stabile Zustellung, weniger Overhead pro Mail."""
+import os, smtplib, ssl, mimetypes
 from email.message import EmailMessage
+from typing import List, Dict, Any, Optional, Tuple
 
-from settings import settings
+_SMTP_POOL: dict[tuple[str,int,str], smtplib.SMTP] = {}
 
-log = logging.getLogger(__name__)
+def _smtp_conn() -> smtplib.SMTP:
+    host = os.getenv("SMTP_HOST"); port = int(os.getenv("SMTP_PORT","587"))
+    user = os.getenv("SMTP_USER"); password = os.getenv("SMTP_PASS")
+    use_tls = os.getenv("SMTP_TLS","true").lower() in ("1","true","yes")
+    key = (host, port, user or "")
+    if key in _SMTP_POOL:
+        try: _SMTP_POOL[key].noop(); return _SMTP_POOL[key]
+        except Exception: _SMTP_POOL.pop(key, None)
+    ctx = ssl.create_default_context()
+    s = smtplib.SMTP(host, port, timeout=15)
+    if use_tls: s.starttls(context=ctx)
+    if user and password: s.login(user, password)
+    _SMTP_POOL[key] = s
+    return s
 
-def _smtp_configured() -> bool:
-    host = getattr(settings, "SMTP_HOST", None) or None
-    sender = getattr(settings, "SMTP_FROM", None) or getattr(settings, "EMAIL_FROM", None) or None
-    return bool(host and sender)
-
-def send_mail(to: str, subject: str, html: str, text: Optional[str] = None,
-              attachments: Optional[List[Dict[str, Any]]] = None) -> Tuple[bool, Optional[str]]:
-    """Send a simple HTML email (optionally with attachments).
-
-    Returns (ok, error_message).
-    If SMTP is not configured, returns (False, "smtp_not_configured") but does not raise.
-    """
-    if not _smtp_configured():
-        return (False, "smtp_not_configured")
-
-    host = getattr(settings, "SMTP_HOST", None)
-    port = int(getattr(settings, "SMTP_PORT", 587))
-    user = getattr(settings, "SMTP_USER", None)
-    password = getattr(settings, "SMTP_PASS", None)
-    sender = getattr(settings, "SMTP_FROM", None) or getattr(settings, "EMAIL_FROM", None)
-    sender_name = getattr(settings, "SMTP_FROM_NAME", "KI-Check")
-    use_tls = bool(getattr(settings, "SMTP_TLS", True))
-
+def send_mail(to: str, subject: str, html: str, text: Optional[str]=None,
+              attachments: Optional[List[Dict[str, Any]]]=None) -> Tuple[bool, Optional[str]]:
     try:
+        frm = os.getenv("SMTP_FROM") or os.getenv("SMTP_USER")
+        frm_name = os.getenv("SMTP_FROM_NAME", "KI-Check")
         msg = EmailMessage()
-        msg["From"] = f"{sender_name} <{sender}>"
+        msg["From"] = f"{frm_name} <{frm}>"
         msg["To"] = to
         msg["Subject"] = subject
+        msg["X-Priority"] = "3"
+        msg["List-Unsubscribe"] = "<mailto:unsubscribe@ki-sicherheit.jetzt>"
         if text:
             msg.set_content(text)
-            msg.add_alternative(html, subtype="html")
+            msg.add_alternative(html or "", subtype="html")
         else:
-            # text fallback from HTML (very light)
-            msg.set_content("Bitte öffnen Sie diese Nachricht als HTML.")
-            msg.add_alternative(html, subtype="html")
-
-        # Attachments
+            msg.set_content("HTML‑Mail. Bitte HTML‑Ansicht aktivieren.")
+            msg.add_alternative(html or "", subtype="html")
         for att in attachments or []:
-            try:
-                filename = att.get("filename", "attachment.bin")
-                content = att.get("content", b"")
-                mimetype = att.get("mimetype", "application/octet-stream")
-                maintype, subtype = mimetype.split("/", 1)
-                msg.add_attachment(content, maintype=maintype, subtype=subtype, filename=filename)
-            except Exception as e_att:
-                log.warning("Attachment skipped (%s): %s", att, e_att)
-
-        context = ssl.create_default_context()
-        with smtplib.SMTP(host, port, timeout=30) as smtp:
-            if use_tls:
-                smtp.starttls(context=context)
-            if user and password:
-                smtp.login(user, password)
-            smtp.send_message(msg)
-        return (True, None)
+            ctype = att.get("mimetype") or mimetypes.guess_type(att.get("filename",""))[0] or "application/octet-stream"
+            msg.add_attachment(att["content"], maintype=ctype.split("/")[0], subtype=ctype.split("/")[1],
+                               filename=att.get("filename","attachment.bin"))
+        _smtp_conn().send_message(msg)
+        return True, None
     except Exception as exc:
-        log.exception("send_mail failed: %s", exc)
-        return (False, str(exc))
+        return False, str(exc)
