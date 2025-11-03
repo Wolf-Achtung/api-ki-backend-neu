@@ -33,6 +33,14 @@ BUNDESLAENDER_LABELS = {
     "mv":"Mecklenburg‑Vorpommern","ni":"Niedersachsen","nw":"Nordrhein‑Westfalen","rp":"Rheinland‑Pfalz","sl":"Saarland",
     "sn":"Sachsen","st":"Sachsen‑Anhalt","sh":"Schleswig‑Holstein","th":"Thüringen"
 }
+UMSATZ_LABELS = {
+    "unter_100k": "unter 100 T€",
+    "100k_500k": "100 T€ – 500 T€",
+    "500k_2m": "0,5 – 2 Mio. €",
+    "2m_10m": "2 – 10 Mio. €",
+    "ueber_10m": "> 10 Mio. €",
+    "keine_angabe": "keine Angabe",
+}
 
 def _fix_utf8_mojibake(text: str) -> str:
     if not text or not isinstance(text, str): return text
@@ -46,7 +54,7 @@ def _parse_int(s, default):
     try: return int(str(s).strip())
     except Exception: return default
 
-# Branch-Benchmark (zur Wahrung der Sensibilität, keine exakte Kundenangabe erforderlich)
+# Branch-Benchmark (sensibel → kein exakter Kundensatz nötig)
 DEFAULT_RATE = int(os.getenv("DEFAULT_STUNDENSATZ_EUR", "60"))
 BRANCH_RATE = {
     "beratung": 90, "marketing": 75, "it_software": 95, "finanzen": 100, "handel": 60,
@@ -85,7 +93,7 @@ def normalize_answers(answers: Dict[str, Any]) -> Dict[str, Any]:
     for k in ("research_days","tools_days","funding_days"):
         if k in out: out[k] = _parse_int(out[k], 30)
 
-    # Stundensatz – **sensibel**: Standard = Branchen-Benchmark (keine exakte Kundenangabe nötig)
+    # Stundensatz – Benchmark
     band = out.get("stundensatz_band")  # optionales Feld (Bandbreite, nicht exakt)
     if not out.get("stundensatz_eur"):
         out["stundensatz_eur"] = _derive_rate(out.get("branche"), out.get("unternehmensgroesse"), band)
@@ -94,6 +102,8 @@ def normalize_answers(answers: Dict[str, Any]) -> Dict[str, Any]:
     out["BRANCHE_LABEL"] = BRANCHEN_LABELS.get(out.get("branche",""), out.get("branche","") or "—")
     out["UNTERNEHMENSGROESSE_LABEL"] = UNTERNEHMENSGROESSEN_LABELS.get(out.get("unternehmensgroesse",""), out.get("unternehmensgroesse","") or "—")
     out["BUNDESLAND_LABEL"] = BUNDESLAENDER_LABELS.get(out.get("bundesland",""), out.get("bundesland","").upper() or "—")
+    rev = str(out.get("jahresumsatz","") or "").strip().lower()
+    out["JAHRESUMSATZ_LABEL"] = UMSATZ_LABELS.get(rev, out.get("jahresumsatz","") or "—")
 
     # Alias: ki_knowhow
     if "ki_kompetenz" in out and "ki_knowhow" not in out:
