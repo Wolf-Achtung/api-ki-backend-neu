@@ -1,0 +1,50 @@
+Ich möchte Ihnen einen kompakten Überblick über den EU KI‑Verordnung (Regulation (EU) 2024/1689) (kurz: „AI Act“) geben – eine wichtige Grundlage, gerade wenn Sie KMU und Freiberufler zur KI‑Sicherheit beraten.
+
+![Image](https://fpf.org/wp-content/uploads/2024/05/FPF-EU-AI-Act-Timeline-R3-1_Page_1-copy-scaled.jpeg)
+
+![Image](https://cdn.prod.website-files.com/64d39f3feec1e3615e150507/64d94dcd28972bb41cf2e739_643d435b1e7e6902756fa5de_risk_pyramide_blog.png)
+
+![Image](https://naaia.ai/wp-content/uploads/2025/09/Infographie-V4-EN-scaled.png)
+
+---
+
+### Wesentliche Eckdaten
+
+* Der AI Act wurde am **12. Juli 2024** im Amtsblatt der Europäischen Union veröffentlicht. ([artificialintelligenceact.eu][1])
+* Er trat **20 Tage später**, am **1. August 2024**, in Kraft. ([whitecase.com][2])
+* Die Anwendung des Gesetzes erfolgt gestaffelt:
+
+  * Ab **2. Februar 2025** gelten die Vorschriften aus Kapitel I & II (z. B. Verbote „inakzeptabler“ KI‑Systeme, allgemeine Bestimmungen). ([artificialintelligenceact.eu][3])
+  * Ab **2. August 2025** treten Governance‑Regeln, Pflichten für allgemeine KI‑Modelle („GPAI“) sowie bestimmte Durchsetzungs‑/Melde‑Mechanismen in Kraft. ([digital-strategy.ec.europa.eu][4])
+  * Der **große Teil** der Verordnung – darunter die meisten Anforderungen für hoch‑riskante KI‑Systeme – wird ab **2. August 2026** wirksam. ([CCBJ][5])
+  * Für einige besonders regulierte Kategorien („Anhang I“) gelten noch längere Übergangsfristen bis **2. August 2027**. ([Matheson][6])
+
+---
+
+### Bedeutung für KMU, Freiberufler und Selbstständige
+
+* Wenn Sie KI‑Systeme **bereitstellen**, **modifizieren** oder **überwachen**, insbesondere solche, die in den Anhängen als **hoch‑riskant** gelistet sind (z. B. Anhang III und/oder I), dann heißt das:
+
+  * Vorbereitung auf Risikomanagementprozesse, technische Dokumentation, Logging & Post‑Market‑Monitoring sind **frühzeitig notwendig**.
+  * Ebenfalls denkbar: Konformitätsbewertung, Registrierung bei Behörden, wenn Ihre Systeme unter die Hochrisiko‑Definition fallen.
+  * Prozess‑ und Organisationsanforderungen gelten schon vor „voller“ Wirksamkeit – es ist also kein „Warten bis 2026“ ratsam.
+* Für Systeme außerhalb der Hochrisiko‑Kategorie gilt zwar ein längerer Zeitraum, aber Risikoanalysen sollten von jetzt an laufen.
+
+---
+
+### Warum ich Ihnen das jetzt anraten möchte
+
+* Als Berater mit Fokus auf KI‑Sicherheit, DSGVO & EU‑AI‑Act‑Förderung ist es **essenziell**, diese Fristen zu lokalisieren und in Ihre Beratungsmatrix aufzunehmen.
+* Ihre Zielgruppe (KMU, Freiberufler, Selbstständige) muss **jetzt** beginnen, auch wenn viele Pflichten erst später vollständig gelten. Zeitliche Untätigkeit kann später erhebliche Anstrengungen oder gar Bußgelder nach sich ziehen.
+* Ein proaktiver Ansatz stärkt Ihre Dienstleistung („Trusted KI‑Check“) qualitativ – Sie können eine Roadmap mit klaren Meilensteinen liefern.
+
+---
+
+Wenn Sie wollen, kann ich Ihnen auf Wunsch **eine tabellarische Übersicht** mit allen zentralen Terminen, Übergangsfristen und Praxis‑Checkpoints speziell für Ihre Zielgruppe erstellen – mit Fokus auf die Phase 2025‑2027.
+
+[1]: https://artificialintelligenceact.eu/the-act/?utm_source=chatgpt.com "The Act Texts | EU Artificial Intelligence Act"
+[2]: https://www.whitecase.com/insight-alert/long-awaited-eu-ai-act-becomes-law-after-publication-eus-official-journal?utm_source=chatgpt.com "Long awaited EU AI Act becomes law after publication in the EU's ..."
+[3]: https://artificialintelligenceact.eu/implementation-timeline/?utm_source=chatgpt.com "Implementation Timeline | EU Artificial Intelligence Act"
+[4]: https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai?utm_source=chatgpt.com "AI Act | Shaping Europe's digital future - European Union"
+[5]: https://ccbjournal.com/articles/key-dates-to-know-when-eu-ai-act-compliance-gets-real?utm_source=chatgpt.com "Countdown to Compliance: Essential EU AI Act Milestones"
+[6]: https://www.matheson.com/insights/detail/eu-ai-act-finalised?utm_source=chatgpt.com "EU AI Act Finalised - Matheson"
