@@ -16,7 +16,8 @@ class RunAnalyze(SecureModel):
     briefing_id: int = Field(gt=0)
     email_override: str | None = None
 
-@router.post("/run", status_code=status.HTTP_202_ACCEPTED, dependencies=[Depends(rate_limiter("analyze:run", 5, 60))])
+@router.post("/run", status_code=status.HTTP_202_ACCEPTED,
+             dependencies=[Depends(rate_limiter("analyze:run", 5, 60))])
 def analyze(body: RunAnalyze, db: Session = Depends(get_db)) -> dict:
     br = db.get(Briefing, body.briefing_id)
     if not br:
