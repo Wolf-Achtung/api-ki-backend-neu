@@ -1,34 +1,28 @@
+# file: app/models.py
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-Zentrales ORM-Modellmodul (SQLAlchemy, PEP8).
-Enthält: User, Briefing, Analysis, Report, LoginCode.
-- Kompatibel mit Postgres (JSONB).
-- Zeitstempel timezone-aware.
-- Felder sind konservativ gewählt (keine Breaking Changes beabsichtigt).
+SQLAlchemy‑Modelle, Portabilität: Postgres JSONB mit Fallback auf generisches JSON (z. B. SQLite).
+Warum: Dev/CI ohne Postgres soll nicht brechen.
 """
+
 from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import (
-    Boolean,
-    DateTime,
-    ForeignKey,
-    Integer,
-    String,
-    Text,
-    UniqueConstraint,
-    Index,
+    Boolean, DateTime, ForeignKey, Integer, String, Text,
+    UniqueConstraint, Index
 )
 from sqlalchemy.orm import declarative_base, Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import JSONB
+
+# Fallback für nicht‑Postgres‑Umgebungen
+try:
+    from sqlalchemy.dialects.postgresql import JSONB as JSONType  # Postgres bevorzugt
+except Exception:  # pragma: no cover
+    from sqlalchemy.types import JSON as JSONType  # z. B. SQLite
 
 Base = declarative_base()
 
-
-# ---------------------------
-# Modelle
-# ---------------------------
 
 class User(Base):
     __tablename__ = "users"
@@ -37,7 +31,9 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True, nullable=False)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
     )
 
     def __repr__(self) -> str:  # pragma: no cover
@@ -52,12 +48,13 @@ class Briefing(Base):
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
     lang: Mapped[str] = mapped_column(String(5), default="de", nullable=False)
-    answers: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
+    answers: Mapped[dict] = mapped_column(JSONType, default=dict, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
     )
 
-    # Optional: Beziehungen
     user = relationship("User", lazy="joined")
 
     def __repr__(self) -> str:  # pragma: no cover
@@ -75,9 +72,11 @@ class Analysis(Base):
         Integer, ForeignKey("briefings.id", ondelete="SET NULL"), nullable=True, index=True
     )
     html: Mapped[str] = mapped_column(Text, nullable=False)
-    meta: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
+    meta: Mapped[dict] = mapped_column(JSONType, default=dict, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
     )
 
     user = relationship("User", lazy="joined")
@@ -94,7 +93,6 @@ class Report(Base):
     user_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
-    # Wichtig: Alt-DB-Kompatibilität – in manchen Schemata ist user_email NOT NULL
     user_email: Mapped[Optional[str]] = mapped_column(String(320), nullable=True)
     briefing_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("briefings.id", ondelete="SET NULL"), nullable=True, index=True
@@ -113,7 +111,9 @@ class Report(Base):
     email_error_admin: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
     )
     updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
@@ -136,10 +136,12 @@ class LoginCode(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     email: Mapped[str] = mapped_column(String(320), nullable=False)
-    code: Mapped[str] = mapped_column(String(64), nullable=False)  # Einmalcode (z. B. 6-8 Stellen oder UUID)
+    code: Mapped[str] = mapped_column(String(64), nullable=False)
     purpose: Mapped[str] = mapped_column(String(40), default="login", nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
     )
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     consumed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
