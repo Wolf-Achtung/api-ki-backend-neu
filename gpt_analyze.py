@@ -1,22 +1,25 @@
-# file: app/gpt_analyze.py
+# file: gpt_analyze.py
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
 Analysiert Briefings, generiert Sections & Meta und rendert HTML/PDF + Mails.
 
 v4.10.4 (Gold‑Standard+)
-- Prompts enthalten jetzt **Branche, Unternehmensgröße, Haupt‑Leistung, Bundesland** konsistent.
-- One‑liner je Kapitel; "Next Actions" (30 Tage); AI‑Act‑Summary + Add‑on‑Pakete.
-- Watermark/Version/Changelog + Kundencode/Report‑ID für Deck‑ & Schlussseite (Template‑Support).
-- Robuster Quick‑Wins‑Parser; Fallbacks (ENV).
-- UTF‑8 strikt; Azure/OpenAI API‑Base kompatibel; Timeouts/Logging konsistent.
+- Einbindung „Branche + Unternehmensgröße + Haupt‑Leistung + Bundesland“ in **alle** Prompts.
+- One‑liner für alle H2‑Abschnitte (Erkenntnis; Wirkung → nächster Schritt).
+- EU‑AI‑Act‑Kapitel inkl. CTA‑Box & Add‑on‑Pakete (Lite/Pro/Max) und Phase‑Label (ENV).
+- Sensitivitätstabelle (100/80/60 %) für Business Case.
+- Reality‑Check‑Randnotiz bei Quick‑Wins.
+- Watermark‑Text (nur Deckblatt/Schlussseite im Template).
+- Stabilität: robuste Fallbacks (Labels, Summen), UTF‑8‑sicher, Logs.
 """
+
 import json
 import logging
 import os
 import re
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
@@ -48,7 +51,7 @@ ENABLE_LLM_CONTENT = (os.getenv("ENABLE_LLM_CONTENT", "1") == "1")
 ENABLE_REPAIR_HTML = (os.getenv("ENABLE_REPAIR_HTML", "1") == "1")
 USE_INTERNAL_RESEARCH = (os.getenv("USE_INTERNAL_RESEARCH", "1") == "1")
 
-# AI‑Act Kapitel
+# EU‑AI‑Act
 ENABLE_AI_ACT_SECTION = (os.getenv("ENABLE_AI_ACT_SECTION", "1") == "1")
 AI_ACT_INFO_PATH = os.getenv("AI_ACT_INFO_PATH", "EU-AI-ACT-Infos-wichtig.txt")
 AI_ACT_PHASE_LABEL = os.getenv("AI_ACT_PHASE_LABEL", "2025–2027")
@@ -56,8 +59,7 @@ AI_ACT_PHASE_LABEL = os.getenv("AI_ACT_PHASE_LABEL", "2025–2027")
 DBG_PDF = (os.getenv("DEBUG_LOG_PDF_INFO", "1") == "1")
 DBG_MASK_EMAILS = (os.getenv("DEBUG_MASK_EMAILS", "1") == "1")
 
-
-# -------------------- Helpers: NSFW‑Filter (Research) ------------------------
+# -------------------- NSFW‑Filter (Research) ----------------------
 NSFW_KEYWORDS = {
     'porn','xxx','sex','nude','naked','adult','nsfw','erotic','webcam','escort','dating','hookup','milf','teen','amateur',
     'porno','nackt','fick','muschi','schwanz','titten','chudai','chut','lund','gaand','bhabhi','desi',
@@ -204,7 +206,7 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
 # ------------------------------ OpenAI --------------------------------------
 def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
                  temperature: Optional[float] = None, max_tokens: Optional[int] = None) -> Optional[str]:
-    """Chat Completions; unterstützt OPENAI_API_BASE (Azure: header 'api-key')."""
+    """Chat Completions; unterstützt OPENAI_API_BASE (Azure: Header 'api-key')."""
     if not OPENAI_API_KEY:
         log.error("❌ OPENAI_API_KEY not set")
         return None
@@ -213,7 +215,7 @@ def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
     api_base = (OPENAI_API_BASE or "https://api.openai.com").rstrip("/")
     url = f"{api_base}/v1/chat/completions"
     headers = {"Content-Type": "application/json"}
-    # Warum: Azure verlangt 'api-key'; Standard‑OpenAI nutzt 'Authorization'.
+    # Warum: Azure verlangt 'api-key'.
     if "openai.azure.com" in api_base:
         headers["api-key"] = OPENAI_API_KEY
     else:
@@ -265,10 +267,10 @@ Abschnitt: {section}. Antworte ausschließlich mit HTML.
 
 # -------------------------- Quick‑Wins Parser --------------------------------
 _QW_COMPILED = re.compile(
-    r"(?:Ersparnis\\s*[:=]\\s*)?"          # optionales Label
-    r"(\\d+(?:[.,]\\d{1,2})?)\\s*"          # Zahl (ggf. Dezimal)
-    r"(?:h|std\\.?|stunden?)\\s*"          # Einheit
-    r"(?:[/\\s]*(?:pro|/)?\\s*Monat)",     # Monatsmarker
+    r"(?:Ersparnis\s*[:=]\s*)?"          # optionales Label
+    r"(\d+(?:[.,]\d{1,2})?)\s*"          # Zahl (ggf. Dezimal)
+    r"(?:h|std\.?|stunden?)\s*"          # Einheit
+    r"(?:[/\s]*(?:pro|/)?\s*Monat)",     # Monatsmarker
     flags=re.IGNORECASE
 )
 
@@ -294,29 +296,43 @@ def _sum_hours_from_quick_wins(html: str) -> int:
 
 
 # ----------------------- LLM‑Content Generator ------------------------------
+def _context_line(answers: Dict[str, Any]) -> str:
+    branche = answers.get('BRANCHE_LABEL') or answers.get('branche') or 'Unternehmen'
+    groesse = answers.get('UNTERNEHMENSGROESSE_LABEL') or answers.get('unternehmensgroesse') or '—'
+    bundesland = answers.get('BUNDESLAND_LABEL') or answers.get('bundesland') or '—'
+    hauptleistung = answers.get('hauptleistung') or answers.get('hauptprodukt') or answers.get('haupt_dienstleistung') or ''
+    return f"Kontext: Branche {branche}; Unternehmensgröße {groesse}; Standort (Bundesland) {bundesland}; Haupt‑Produkt/Leistung: {hauptleistung}."
+
 def _generate_content_section(section_name: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
     if not ENABLE_LLM_CONTENT:
         return f"<p><em>[{section_name} – LLM disabled]</em></p>"
-    branche = briefing.get('branche', 'Unternehmen')
-    hauptleistung = briefing.get('hauptleistung', '')
-    bundesland = briefing.get('BUNDESLAND_LABEL') or briefing.get('bundesland') or ''
-    groesse = briefing.get('UNTERNEHMENSGROESSE_LABEL') or briefing.get('unternehmensgroesse') or ''
+    branche = briefing.get('BRANCHE_LABEL') or briefing.get('branche','Unternehmen')
+    hauptleistung = briefing.get('hauptleistung') or briefing.get('hauptprodukt') or briefing.get('haupt_dienstleistung') or ''
+    groesse = briefing.get('UNTERNEHMENSGROESSE_LABEL') or briefing.get('unternehmensgroesse') or '—'
+    bundesland = briefing.get('BUNDESLAND_LABEL') or briefing.get('bundesland') or '—'
+    ki_ziele = briefing.get('ki_ziele', [])
+    ki_projekte = briefing.get('ki_projekte', '')
+    vision = briefing.get('vision_3_jahre', '')
 
     overall = scores.get('overall', 0); governance = scores.get('governance', 0)
     security = scores.get('security', 0); value = scores.get('value', 0); enablement = scores.get('enablement', 0)
 
-    ctx = f"Kontext: Branche={branche}; Unternehmensgröße={groesse}; Haupt‑Leistung={hauptleistung}; Bundesland/Region={bundesland}."
     tone = "Sprache: neutral, dritte Person; keine Wir/Ich‑Formulierungen."
     only_html = "Antworte ausschließlich mit validem HTML (ohne Markdown‑Fences)."
+    ctx = _context_line(briefing)
 
     prompts = {
         'executive_summary': f"""{ctx}
-Erstelle eine prägnante Executive Summary.
-KI‑Reifegrad: Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/100 • Nutzen {value}/100 • Befähigung {enablement}/100.
+Erstelle eine prägnante Executive Summary für ein {branche}-Unternehmen.
+Hauptleistung: {hauptleistung}
+KI‑Ziele: {', '.join(ki_ziele) if ki_ziele else 'nicht definiert'}
+Vision: {vision}
+KI‑Reifegrad: Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/100 • Nutzen {value}/100 • Befähigung {enablement}/100
 {tone} {only_html} Verwende nur <p>-Absätze.""",
         'quick_wins': f"""{ctx}
-Liste 4–6 **konkrete Quick Wins** (0–90 Tage).
+Liste 4–6 **konkrete Quick Wins** (0–90 Tage) für {branche}.
 Jeder Quick Win: Titel, 1–2 Sätze Nutzen, realistische **Ersparnis: … h/Monat**.
+Bezug: Hauptleistung {hauptleistung}; Projekte: {ki_projekte or 'keine'}.
 {tone} {only_html} Liefere exakt eine <ul>-Liste mit <li>-Einträgen:
 <li><strong>Titel:</strong> Beschreibung. <em>Ersparnis: 5 h/Monat</em></li>""",
         'roadmap': f"""{ctx}
@@ -324,7 +340,7 @@ Erstelle eine **90‑Tage‑Roadmap** (0–30 Test; 31–60 Pilot; 61–90 Rollo
 {tone} {only_html} Pro Phase 3–5 Meilensteine. Format: <h4>Phase …</h4> + <ul>…</ul>.""",
         'business_roi': f"""{ctx}
 Erstelle eine **ROI & Payback**‑Tabelle (Jahr 1). {tone} {only_html}
-Format: <table> mit 2 Spalten (Kennzahl, Wert).""",
+Format: <table> mit 2 Spalten (Kennzahl, Wert). Keine Fließtexte.""",        
         'business_costs': f"""{ctx}
 Erstelle eine **Kostenübersicht Jahr 1**. {tone} {only_html}
 Format: <table> mit 2 Spalten (Position, Betrag).""",
@@ -339,20 +355,16 @@ Skizziere einen **Gamechanger‑Use Case**. (Idee: 3–4 Sätze; 3 Vorteile; 3 S
 {tone} {only_html} Verwende <h4>, <p>, <ul>.""",
         'roadmap_12m': f"""{ctx}
 Erstelle eine **12‑Monats‑Roadmap** in 3 Phasen (0–3/3–6/6–12).
-{tone} {only_html} Format: <div class="roadmap"><div class="roadmap-phase">…</div></div>.""",
+{tone} {only_html} Format: <div class=\"roadmap\"><div class=\"roadmap-phase\">…</div></div>.""",
         'data_readiness': f"""{ctx}
 Erstelle eine kompakte **Dateninventar & ‑Qualität**‑Übersicht.
-{tone} {only_html} Format: <div class="data-readiness"><h4>…</h4><ul>…</ul></div>.""",
+{tone} {only_html} Format: <div class=\"data-readiness\"><h4>…</h4><ul>…</ul></div>.""",
         'org_change': f"""{ctx}
 Beschreibe **Organisation & Change**: Governance‑Rollen, Skill‑Programm, Kommunikation.
-{tone} {only_html} Format: <div class="org-change">…</div>.""",
+{tone} {only_html} Format: <div class=\"org-change\">…</div>.""",
         'business_case': f"""{ctx}
 Erstelle einen kompakten **Business Case (detailliert)** – Annahmen, Nutzen (J1), Kosten (CapEx/OpEx), Payback, ROI, Sensitivität.
-{tone} {only_html} Format: <div class="business-case"> mit Listen & <p>.""",
-        'reifegrad_sowhat': f"""{ctx}
-Erkläre kurz: **Was heißt der Reifegrad konkret?**
-Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/100 • Nutzen {value}/100 • Befähigung {enablement}/100.
-{tone} {only_html} Gib 4–6 Bullet‑Points (<ul>) aus."""
+{tone} {only_html} Format: <div class=\"business-case\"> mit Listen & <p>."""
     }
     out = _call_openai(
         prompt=prompts[section_name],
@@ -367,12 +379,11 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
 
 def _one_liner(title: str, section_html: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
     """Erzeugt One‑liner gemäß Vorlage (Erkenntnis; Wirkung → nächster Schritt)."""
-    prefix = f"Kontext: Branche={briefing.get('branche','')}; Größe={briefing.get('UNTERNEHMENSGROESSE_LABEL','')}; Leistung={briefing.get('hauptleistung','')}; Region={briefing.get('BUNDESLAND_LABEL','')}."
-    base = f"""{prefix}
-Erzeuge einen prägnanten **One‑liner** unter der H2‑Überschrift "{title}".
-Formel: "Kernaussage; Konsequenz → konkreter nächster Schritt".
+    base = f"""{_context_line(briefing)}
+Erzeuge einen prägnanten **One‑liner** unter der H2‑Überschrift \"{title}\".
+Formel: \"Kernaussage; Konsequenz → konkreter nächster Schritt\".
 Gib nur **eine** Zeile ohne HTML‑Tags zurück."""
-    text = _call_openai(base + "\\n---\\n" + re.sub(r"<[^>]+>", " ", section_html)[:1800],
+    text = _call_openai(base + "\n---\n" + re.sub(r"<[^>]+>", " ", section_html)[:1800],
                         system_prompt="Du formulierst prägnante One‑liner auf Deutsch.",
                         temperature=0.1, max_tokens=80)
     return (text or "").strip()
@@ -380,15 +391,15 @@ Gib nur **eine** Zeile ohne HTML‑Tags zurück."""
 
 def _split_li_list_to_columns(html_list: str) -> Tuple[str, str]:
     if not html_list: return "<ul></ul>", "<ul></ul>"
-    items = re.findall(r"<li[\\s>].*?</li>", html_list, flags=re.DOTALL | re.IGNORECASE)
+    items = re.findall(r"<li[\s>].*?</li>", html_list, flags=re.DOTALL | re.IGNORECASE)
     if not items:
-        lines = [ln.strip() for ln in re.split(r"<br\\s*/?>|\\n", html_list) if ln.strip()]
+        lines = [ln.strip() for ln in re.split(r"<br\s*/?>|\n", html_list) if ln.strip()]
         items = [f"<li>{ln}</li>" for ln in lines]
     mid = (len(items) + 1) // 2
     return "<ul>" + "".join(items[:mid]) + "</ul>", "<ul>" + "".join(items[mid:]) + "</ul>"
 
 
-# ----------------------- AI-Act: Datei → HTML‑Blöcke ------------------------
+# ----------------------- AI‑Act: Datei → HTML‑Blöcke ------------------------
 def _try_read(path: str) -> Optional[str]:
     # Warum: Datei kann je nach Deployment unter /app oder /mnt/data liegen.
     if os.path.exists(path):
@@ -418,7 +429,7 @@ def _md_to_simple_html(md: str) -> str:
             continue
         if line.startswith("!["):  # Bilder im PDF weglassen
             continue
-        if re.match(r"^\\[\\d+\\]:\\s*https?://", line):  # Fußnoten-Links unterdrücken
+        if re.match(r"^\[\d+\]:\s*https?://", line):  # Fußnoten-Links unterdrücken
             continue
         if line.startswith("#### "):
             if in_ul: out.append("</ul>"); in_ul = False
@@ -433,12 +444,13 @@ def _md_to_simple_html(md: str) -> str:
                 in_ul = True; out.append("<ul>")
             out.append(f"<li>{line[2:].strip()}</li>")
             continue
+        # sonst: Absatz
         if in_ul:
             out.append("</ul>"); in_ul = False
         out.append(f"<p>{line}</p>")
     if in_ul:
         out.append("</ul>")
-    return "\\n".join(out)
+    return "\n".join(out)
 
 def _build_ai_act_blocks() -> Dict[str, str]:
     if not ENABLE_AI_ACT_SECTION:
@@ -449,8 +461,8 @@ def _build_ai_act_blocks() -> Dict[str, str]:
         html = (
             "<h3>Wesentliche Eckdaten</h3>"
             "<ul>"
-            "<li>Gestaffelte Anwendung ab 2025; Kernpflichten 2025–2027.</li>"
-            "<li>Frühzeitige Vorbereitung: Risiko‑/Governance‑Prozesse, Dokumentation, Monitoring.</li>"
+            "<li>Gestaffelte Anwendung ab 2025; Kernpflichten für viele Anwendungsfälle zwischen 2025–2027.</li>"
+            "<li>Frühzeitige Vorbereitung: Risiko- & Governance-Prozesse, Dokumentation, Monitoring.</li>"
             "</ul>"
         )
     cta = (
@@ -466,12 +478,12 @@ def _build_ai_act_blocks() -> Dict[str, str]:
         "<thead><tr><th>Paket</th><th>Umfang</th><th>Ergebnisse</th></tr></thead><tbody>"
         "<tr><td><strong>Lite: Tabellen‑Kit</strong></td>"
         "<td>Individuelle Termin‑ & Fristen‑Tabelle (2025–2027), 10–15 Praxis‑Checkpoints, Verantwortliche & Nachweise.</td>"
-        "<td>PDF/CSV + kurze Einordnung pro Zeile.</td></tr>"
+        "<td>PDF/CSV + kurze Einordnung pro Zeile (Risiko, Reifegrad‑Voraussetzung).</td></tr>"
         "<tr><td><strong>Pro: Compliance‑Kit</strong></td>"
         "<td>Alles aus Lite + Vorlagen (Risikomanagement, Logging, Post‑Market‑Monitoring), Kurz‑Guideline zu Pflichten.</td>"
-        "<td>Dokupaket (editierbar) + 60‑Tage‑Plan.</td></tr>"
+        "<td>Dokupaket (editierbar) + 60‑Tage‑Aktionsplan (3 Phasen).</td></tr>"
         "<tr><td><strong>Max: Audit‑Ready</strong></td>"
-        "<td>Alles aus Pro + Abgleich mit Prozessen, Nachweis‑Mapping, Brown‑Bag‑Session.</td>"
+        "<td>Alles aus Pro + Abgleich mit bestehenden Prozessen, Nachweis‑Mapping, Brown‑Bag‑Session.</td>"
         "<td>Audit‑Map + Meilensteinplan, Q&A‑Session.</td></tr>"
         "</tbody></table>"
     )
@@ -492,11 +504,28 @@ def _derive_kundencode(answers: Dict[str, Any], user_email: str) -> str:
     return (code[:3] or "KND")
 
 def _version_major_minor(v: str) -> str:
-    m = re.match(r"^\\s*(\\d+)\\.(\\d+)", v or "")
+    m = re.match(r"^\s*(\d+)\.(\d+)", v or "")
     return f"{m.group(1)}.{m.group(2)}" if m else "1.0"
 
 def _build_watermark_text(report_id: str, version_mm: str) -> str:
     return f"Trusted KI‑Check · Report‑ID: {report_id} · v{version_mm}"
+
+def _sensitivity_table(monthly_hours: int, rate_eur: int) -> str:
+    """Einfache 100/80/60‑% Sensitivität als HTML‑Tabelle."""
+    def row(pct: int) -> str:
+        h = int(round(monthly_hours * pct/100.0))
+        eur_m = h * rate_eur
+        eur_y = eur_m * 12
+        return f"<tr><td>{pct} %</td><td>{h} h/Monat</td><td>{eur_m} €</td><td>{eur_y} €</td></tr>"
+    return ("<table class=\"table\"><thead><tr><th>Szenario</th><th>Zeitersparnis</th><th>Wert/Monat</th><th>Wert/Jahr</th></tr></thead>"
+            f"<tbody>{row(100)}{row(80)}{row(60)}</tbody></table>")
+
+def _company_name(answers: Dict[str, Any]) -> str:
+    for k in ("unternehmen","firma","company","organization","org","kunde","kundename"):
+        v = answers.get(k)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    return "—"
 
 def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict[str, str]:
     sections: Dict[str, str] = {}
@@ -530,6 +559,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         sections['stundensatz_eur'] = rate
         lo = max(1, int(round(total_h * 0.7))); hi = int(round(total_h * 1.2))
         sections['REALITY_NOTE_QW'] = f"Praxis‑Hinweis: Diese Quick‑Wins sparen ~{lo}–{hi} h/Monat (konservativ geschätzt)."
+        sections['BUSINESS_SENSITIVITY_HTML'] = _sensitivity_table(total_h, rate)
 
     # Weitere Abschnitte
     sections['PILOT_PLAN_HTML']     = _generate_content_section('roadmap', briefing, scores)
@@ -542,11 +572,10 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections['RISKS_HTML']          = _generate_content_section('risks', briefing, scores)
     sections['GAMECHANGER_HTML']    = _generate_content_section('gamechanger', briefing, scores)
     sections['RECOMMENDATIONS_HTML']= _generate_content_section('recommendations', briefing, scores)
-    sections['REIFEGRAD_SOWHAT_HTML'] = _generate_content_section('reifegrad_sowhat', briefing, scores)
 
     # Next Actions (30 Tage)
     nxt = _call_openai(
-        f"""{'Kontext: ' + briefing.get('branche','') if briefing else ''}
+        f"""{_context_line(briefing)}
 Erstelle 3–7 **Next Actions (30 Tage)** in <ol>.
 Jede Zeile: 👤 Owner, ⏱ Aufwand (z. B. ½ Tag), 🎯 Impact (hoch/mittel/niedrig), 📆 Termin (TT.MM.JJJJ) — kurze Maßnahme.
 Antwort NUR als <ol>…</ol>.""",
@@ -607,10 +636,10 @@ def _determine_user_email(db: Session, briefing: Briefing, override: Optional[st
     if override: return override
     if getattr(briefing, "user_id", None):
         u = db.get(User, briefing.user_id)
-        if u and getattr(u, "email", ""):
-            return u.email
+        if u and getattr(u, "email", ""): return u.email
     answers = getattr(briefing, "answers", None) or {}
     return answers.get("email") or answers.get("kontakt_email")
+
 
 def _fetch_pdf_if_needed(pdf_url: Optional[str], pdf_bytes: Optional[bytes]) -> Optional[bytes]:
     if pdf_bytes: return pdf_bytes
@@ -677,11 +706,6 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     except Exception:
         pass
 
-    # Labels & Kontextlabels (für Prompts/Template)
-    answers['BRANCHE_LABEL'] = answers.get('BRANCHE_LABEL', answers.get('branche',''))
-    answers['BUNDESLAND_LABEL'] = answers.get('BUNDESLAND_LABEL', answers.get('bundesland',''))
-    answers['UNTERNEHMENSGROESSE_LABEL'] = answers.get('UNTERNEHMENSGROESSE_LABEL', answers.get('unternehmensgroesse',''))
-
     # Scores
     log.info("[%s] Calculating realistic scores (v4.10.4)...", run_id)
     score_wrap = _calculate_realistic_score(answers)
@@ -691,17 +715,17 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     log.info("[%s] Generating content sections...", run_id)
     sections = _generate_content_sections(briefing=answers, scores=scores)
 
-    # Meta/Felder für Template
-    sections['BRANCHE_LABEL'] = answers.get('BRANCHE_LABEL','')
-    sections['BUNDESLAND_LABEL'] = answers.get('BUNDESLAND_LABEL','')
-    sections['UNTERNEHMENSGROESSE_LABEL'] = answers.get('UNTERNEHMENSGROESSE_LABEL','')
+    # Labels & Meta
+    sections['BRANCHE_LABEL'] = answers.get('BRANCHE_LABEL','') or answers.get('branche','')
+    sections['BUNDESLAND_LABEL'] = answers.get('BUNDESLAND_LABEL','') or answers.get('bundesland','')
+    sections['UNTERNEHMENSGROESSE_LABEL'] = answers.get('UNTERNEHMENSGROESSE_LABEL','') or answers.get('unternehmensgroesse','')
     sections['JAHRESUMSATZ_LABEL'] = answers.get('JAHRESUMSATZ_LABEL', answers.get('jahresumsatz',''))
     sections['ki_kompetenz'] = answers.get('ki_kompetenz') or answers.get('ki_knowhow','')
     sections['report_date'] = datetime.now().strftime("%d.%m.%Y")
     sections['report_year'] = datetime.now().strftime("%Y")
     sections['transparency_text'] = getattr(settings, "TRANSPARENCY_TEXT", None) or os.getenv("TRANSPARENCY_TEXT", "") or ""
     sections['user_email'] = answers.get('email') or answers.get('kontakt_email') or ""
-    sections['kundenname'] = answers.get("unternehmen") or answers.get("firma") or ""
+    sections['COMPANY_NAME'] = _company_name(answers)
 
     # Scores ins Template
     sections['score_governance'] = scores.get('governance', 0)
