@@ -1,15 +1,16 @@
-# file: gpt_analyze.py
+# file: app/gpt_analyze.py
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-Analyse-Pipeline: Briefing → Sections & Meta → HTML/PDF → Mailversand.
+Analysiert Briefings, generiert Sections & Meta und rendert HTML/PDF + Mails.
 
-Version v4.10.3 – Änderungen:
-- Fix: PDF-Header (X-Request-Id) ist jetzt sicher ein String (request_id=run_id).
-- Add: AI-Act CSV-Timeline (2025–2027) optional als Mail-Anhang (ENV).
-- Beibehaltung aller v4.9.x Features (One-liner, Next-Actions, AI-Act-Kapitel etc.).
+v4.10.4 (Gold‑Standard+)
+- Prompts enthalten jetzt **Branche, Unternehmensgröße, Haupt‑Leistung, Bundesland** konsistent.
+- One‑liner je Kapitel; "Next Actions" (30 Tage); AI‑Act‑Summary + Add‑on‑Pakete.
+- Watermark/Version/Changelog + Kundencode/Report‑ID für Deck‑ & Schlussseite (Template‑Support).
+- Robuster Quick‑Wins‑Parser; Fallbacks (ENV).
+- UTF‑8 strikt; Azure/OpenAI API‑Base kompatibel; Timeouts/Logging konsistent.
 """
-
 import json
 import logging
 import os
@@ -31,7 +32,7 @@ from settings import settings
 
 log = logging.getLogger(__name__)
 
-# ----------------------------- Konfiguration ---------------------------------
+# ----- LLM / API -----
 OPENAI_API_KEY = getattr(settings, "OPENAI_API_KEY", None) or os.getenv("OPENAI_API_KEY")
 OPENAI_MODEL = getattr(settings, "OPENAI_MODEL", None) or os.getenv("OPENAI_MODEL", "gpt-4o")
 OPENAI_API_BASE = getattr(settings, "OPENAI_API_BASE", None) or os.getenv("OPENAI_API_BASE")
@@ -39,7 +40,7 @@ OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE", "0.2"))
 OPENAI_TIMEOUT = int(os.getenv("OPENAI_TIMEOUT", "120"))
 OPENAI_MAX_TOKENS = int(os.getenv("OPENAI_MAX_TOKENS", "3000"))
 
-# Feature Flags
+# ----- Feature Flags -----
 ENABLE_NSFW_FILTER = (os.getenv("ENABLE_NSFW_FILTER", "1") == "1")
 ENABLE_QUALITY_GATES = (os.getenv("ENABLE_QUALITY_GATES", "1") == "1")
 ENABLE_REALISTIC_SCORES = (os.getenv("ENABLE_REALISTIC_SCORES", "1") == "1")
@@ -47,24 +48,22 @@ ENABLE_LLM_CONTENT = (os.getenv("ENABLE_LLM_CONTENT", "1") == "1")
 ENABLE_REPAIR_HTML = (os.getenv("ENABLE_REPAIR_HTML", "1") == "1")
 USE_INTERNAL_RESEARCH = (os.getenv("USE_INTERNAL_RESEARCH", "1") == "1")
 
-# EU‑AI‑Act (Kapitel & CSV‑Add‑on)
+# AI‑Act Kapitel
 ENABLE_AI_ACT_SECTION = (os.getenv("ENABLE_AI_ACT_SECTION", "1") == "1")
-ENABLE_AI_ACT_ATTACH_CSV = (os.getenv("ENABLE_AI_ACT_ATTACH_CSV", "1") == "1")
 AI_ACT_INFO_PATH = os.getenv("AI_ACT_INFO_PATH", "EU-AI-ACT-Infos-wichtig.txt")
 AI_ACT_PHASE_LABEL = os.getenv("AI_ACT_PHASE_LABEL", "2025–2027")
 
-# Debug/Masking
 DBG_PDF = (os.getenv("DEBUG_LOG_PDF_INFO", "1") == "1")
-DBG_MASK_EMAILS = (os.getenv("DEBUG_MASK_EMAILS", os.getenv("MASK_EMAILS", "1")) == "1")
+DBG_MASK_EMAILS = (os.getenv("DEBUG_MASK_EMAILS", "1") == "1")
 
-# --------------------------- NSFW‑Filter (Research) --------------------------
+
+# -------------------- Helpers: NSFW‑Filter (Research) ------------------------
 NSFW_KEYWORDS = {
-    'porn', 'xxx', 'sex', 'nude', 'naked', 'adult', 'nsfw', 'erotic', 'webcam',
-    'escort', 'dating', 'hookup', 'milf', 'teen', 'amateur',
-    'porno', 'nackt', 'fick', 'muschi', 'schwanz', 'titten',
-    'onlyfans', 'patreon', 'leaked', 'torrent', 'pirate', 'crack'
+    'porn','xxx','sex','nude','naked','adult','nsfw','erotic','webcam','escort','dating','hookup','milf','teen','amateur',
+    'porno','nackt','fick','muschi','schwanz','titten','chudai','chut','lund','gaand','bhabhi','desi',
+    'onlyfans','patreon','leaked','torrent','pirate','crack'
 }
-NSFW_DOMAINS = {'xvideos.com', 'pornhub.com', 'xnxx.com', 'redtube.com', 'youporn.com', 'onlyfans.com'}
+NSFW_DOMAINS = {'xvideos.com','pornhub.com','xnxx.com','redtube.com','youporn.com','onlyfans.com','fansly.com','manyvids.com'}
 
 def _is_nsfw_content(url: str, title: str, description: str) -> bool:
     if not ENABLE_NSFW_FILTER:
@@ -80,15 +79,15 @@ def _filter_nsfw_from_research(research_data: Dict[str, Any]) -> Dict[str, Any]:
         return research_data
     filtered: Dict[str, Any] = {'tools': [], 'funding': []}
     for tool in research_data.get('tools', []):
-        if not _is_nsfw_content(tool.get('url', ''), tool.get('title', ''), tool.get('description', '')):
+        if not _is_nsfw_content(tool.get('url',''), tool.get('title',''), tool.get('description','')):
             filtered['tools'].append(tool)
     for fund in research_data.get('funding', []):
-        if not _is_nsfw_content(fund.get('url', ''), fund.get('title', ''), fund.get('description', '')):
+        if not _is_nsfw_content(fund.get('url',''), fund.get('title',''), fund.get('description','')):
             filtered['funding'].append(fund)
     return filtered
 
 
-# --------------------------------- Scoring -----------------------------------
+# ------------------------------- Scoring ------------------------------------
 def _map_german_to_english_keys(answers: Dict[str, Any]) -> Dict[str, Any]:
     mapped: Dict[str, Any] = {}
     # Governance
@@ -98,19 +97,16 @@ def _map_german_to_english_keys(answers: Dict[str, Any]) -> Dict[str, Any]:
         mapped['ai_strategy'] = 'in_progress'
     else:
         mapped['ai_strategy'] = 'no'
-    if answers.get('governance_richtlinien') in ['ja', 'alle']:
+    if answers.get('governance_richtlinien') in ['ja','alle']:
         mapped['ai_responsible'] = 'yes'
     elif answers.get('governance_richtlinien') == 'teilweise':
         mapped['ai_responsible'] = 'shared'
     else:
         mapped['ai_responsible'] = 'no'
-    budget_map = {
-        'unter_2000': 'under_10k', '2000_10000': 'under_10k',
-        '10000_50000': '10k-50k', '50000_100000': '50k-100k', 'ueber_100000': 'over_100k'
-    }
-    mapped['budget'] = budget_map.get(answers.get('investitionsbudget', ''), 'none')
+    budget_map = {'unter_2000': 'under_10k', '2000_10000':'under_10k', '10000_50000':'10k-50k', '50000_100000':'50k-100k', 'ueber_100000':'over_100k'}
+    mapped['budget'] = budget_map.get(answers.get('investitionsbudget',''), 'none')
     ki_ziele = answers.get('ki_ziele', [])
-    mapped['goals'] = ', '.join(ki_ziele) if ki_ziele else answers.get('strategische_ziele', '')
+    mapped['goals'] = ', '.join(ki_ziele) if ki_ziele else answers.get('strategische_ziele','')
     anwendungsfaelle = answers.get('anwendungsfaelle', [])
     ki_projekte = answers.get('ki_projekte', '')
     mapped['use_cases'] = (', '.join(anwendungsfaelle) + '. ' + ki_projekte) if anwendungsfaelle else ki_projekte
@@ -127,40 +123,37 @@ def _map_german_to_english_keys(answers: Dict[str, Any]) -> Dict[str, Any]:
     mapped['security_training'] = 'regular' if trainings and len(trainings) > 2 else ('occasional' if trainings else 'no')
     # Value
     u = mapped['use_cases']
-    if u and len(u) > 50:
-        val_points = 8
-    elif u:
-        val_points = 4
-    else:
-        val_points = 0
+    if u and len(u) > 50: val_points = 8
+    elif u: val_points = 4
+    else: val_points = 0
     mapped['_value_points_from_uses'] = val_points
-    roi = answers.get('vision_prioritaet', '')
-    mapped['roi_expected'] = 'high' if roi in ['marktfuehrerschaft', 'wachstum'] else ('medium' if roi else 'low')
+    roi = answers.get('vision_prioritaet','')
+    mapped['roi_expected'] = 'high' if roi in ['marktfuehrerschaft','wachstum'] else ('medium' if roi else 'low')
     mapped['measurable_goals'] = 'yes' if (answers.get('strategische_ziele') or answers.get('ki_ziele')) else 'no'
     mapped['pilot_planned'] = 'yes' if answers.get('pilot_bereich') else ('in_progress' if answers.get('ki_projekte') else 'no')
     # Enablement
-    kompetenz_map = {'hoch': 'advanced', 'mittel': 'intermediate', 'niedrig': 'basic', 'keine': 'none'}
-    mapped['ai_skills'] = kompetenz_map.get(answers.get('ki_kompetenz', ''), 'none')
-    mapped['training_budget'] = 'yes' if answers.get('zeitbudget') in ['ueber_10', '5_10'] else ('planned' if answers.get('zeitbudget') else 'no')
-    change = answers.get('change_management', '')
-    mapped['change_management'] = 'yes' if change == 'hoch' else ('planned' if change in ['mittel', 'niedrig'] else 'no')
-    innovationsprozess = answers.get('innovationsprozess', '')
-    mapped['innovation_culture'] = 'strong' if innovationsprozess in ['mitarbeitende', 'alle'] else ('moderate' if innovationsprozess else 'weak')
+    kompetenz_map = {'hoch':'advanced','mittel':'intermediate','niedrig':'basic','keine':'none'}
+    mapped['ai_skills'] = kompetenz_map.get(answers.get('ki_kompetenz',''), 'none')
+    mapped['training_budget'] = 'yes' if answers.get('zeitbudget') in ['ueber_10','5_10'] else ('planned' if answers.get('zeitbudget') else 'no')
+    change = answers.get('change_management','')
+    mapped['change_management'] = 'yes' if change == 'hoch' else ('planned' if change in ['mittel','niedrig'] else 'no')
+    innovationsprozess = answers.get('innovationsprozess','')
+    mapped['innovation_culture'] = 'strong' if innovationsprozess in ['mitarbeitende','alle'] else ('moderate' if innovationsprozess else 'weak')
     return mapped
 
 def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
     if not ENABLE_REALISTIC_SCORES:
-        return {'scores': {'governance': 0, 'security': 0, 'value': 0, 'enablement': 0, 'overall': 0}, 'details': {}, 'total': 0}
+        return {'scores': {'governance':0,'security':0,'value':0,'enablement':0,'overall':0}, 'details':{}, 'total':0}
     m = _map_german_to_english_keys(answers)
     gov = sec = val = ena = 0
     details = {'governance': [], 'security': [], 'value': [], 'enablement': []}
     # Governance
-    if m.get('ai_strategy') in ['yes', 'in_progress']: gov += 8; details['governance'].append("✅ KI-Strategie (+8)")
+    if m.get('ai_strategy') in ['yes','in_progress']: gov += 8; details['governance'].append("✅ KI-Strategie (+8)")
     else: details['governance'].append("❌ Keine KI-Strategie (-8)")
-    if m.get('ai_responsible') in ['yes', 'shared']: gov += 7; details['governance'].append("✅ KI-Verantwortlicher (+7)")
+    if m.get('ai_responsible') in ['yes','shared']: gov += 7; details['governance'].append("✅ KI-Verantwortlicher (+7)")
     else: details['governance'].append("❌ Kein KI-Verantwortlicher (-7)")
-    budget = m.get('budget', '')
-    if budget in ['10k-50k', '50k-100k', 'over_100k']: gov += 6; details['governance'].append(f"✅ Budget: {budget} (+6)")
+    budget = m.get('budget','')
+    if budget in ['10k-50k','50k-100k','over_100k']: gov += 6; details['governance'].append(f"✅ Budget: {budget} (+6)")
     elif budget == 'under_10k': gov += 3; details['governance'].append("⚠️ Budget: unter 10k (+3)")
     else: details['governance'].append("❌ Kein Budget (-6)")
     if m.get('goals') or m.get('use_cases'): gov += 4; details['governance'].append("✅ KI-Ziele definiert (+4)")
@@ -168,51 +161,50 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
     # Security
     if m.get('gdpr_aware') == 'yes': sec += 8; details['security'].append("✅ DSGVO-Awareness (+8)")
     else: details['security'].append("❌ Keine DSGVO-Awareness (-8)")
-    if m.get('data_protection') in ['comprehensive', 'basic']: sec += 7; details['security'].append("✅ Datenschutz-Maßnahmen (+7)")
+    if m.get('data_protection') in ['comprehensive','basic']: sec += 7; details['security'].append("✅ Datenschutz-Maßnahmen (+7)")
     else: details['security'].append("❌ Keine Datenschutz-Maßnahmen (-7)")
     if m.get('risk_assessment') == 'yes': sec += 6; details['security'].append("✅ Risiko-Assessment (+6)")
     else: details['security'].append("❌ Kein Risiko-Assessment (-6)")
-    if m.get('security_training') in ['regular', 'occasional']: sec += 4; details['security'].append("✅ Sicherheits-Training (+4)")
+    if m.get('security_training') in ['regular','occasional']: sec += 4; details['security'].append("✅ Sicherheits-Training (+4)")
     else: details['security'].append("❌ Kein Training (-4)")
     # Value
-    val += m.get('_value_points_from_uses', 0)
-    roi = m.get('roi_expected', '')
-    if roi in ['high', 'medium']: val += 7; details['value'].append(f"✅ ROI-Erwartung: {roi} (+7)")
+    val += m.get('_value_points_from_uses',0)
+    roi = m.get('roi_expected','')
+    if roi in ['high','medium']: val += 7; details['value'].append(f"✅ ROI-Erwartung: {roi} (+7)")
     elif roi == 'low': val += 3; details['value'].append("⚠️ ROI niedrig (+3)")
     else: details['value'].append("❌ Keine ROI-Erwartung (-7)")
     if m.get('measurable_goals') == 'yes': val += 6; details['value'].append("✅ Messbare Ziele (+6)")
     else: details['value'].append("❌ Keine messbaren Ziele (-6)")
-    if m.get('pilot_planned') in ['yes', 'in_progress']: val += 4; details['value'].append("✅ Pilot geplant (+4)")
+    if m.get('pilot_planned') in ['yes','in_progress']: val += 4; details['value'].append("✅ Pilot geplant (+4)")
     else: details['value'].append("❌ Kein Pilot (-4)")
     # Enablement
-    skills = m.get('ai_skills', '')
-    if skills in ['advanced', 'intermediate']: ena += 8; details['enablement'].append(f"✅ Skills: {skills} (+8)")
+    skills = m.get('ai_skills','')
+    if skills in ['advanced','intermediate']: ena += 8; details['enablement'].append(f"✅ Skills: {skills} (+8)")
     elif skills == 'basic': ena += 4; details['enablement'].append("⚠️ Basis-Skills (+4)")
-    else: ena += 0; details['enablement'].append("❌ Keine Skills (-8)")
-    if m.get('training_budget') in ['yes', 'planned']: ena += 7; details['enablement'].append("✅ Training-Budget (+7)")
+    else: details['enablement'].append("❌ Keine Skills (-8)")
+    if m.get('training_budget') in ['yes','planned']: ena += 7; details['enablement'].append("✅ Training-Budget (+7)")
     else: details['enablement'].append("❌ Kein Training (-7)")
     if m.get('change_management') == 'yes': ena += 6; details['enablement'].append("✅ Change-Management (+6)")
     else: details['enablement'].append("❌ Kein Change-Management (-6)")
-    culture = m.get('innovation_culture', '')
-    if culture in ['strong', 'moderate']: ena += 4; details['enablement'].append(f"✅ Kultur: {culture} (+4)")
+    culture = m.get('innovation_culture','')
+    if culture in ['strong','moderate']: ena += 4; details['enablement'].append(f"✅ Kultur: {culture} (+4)")
     else: details['enablement'].append("❌ Schwache Kultur (-4)")
-
     scores = {
         'governance': min(gov, 25) * 4,
         'security': min(sec, 25) * 4,
         'value': min(val, 25) * 4,
         'enablement': min(ena, 25) * 4,
-        'overall': round((min(gov, 25) + min(sec, 25) + min(val, 25) + min(ena, 25)) * 4 / 4),
+        'overall': round((min(gov,25)+min(sec,25)+min(val,25)+min(ena,25))*4/4)
     }
-    log.info("📊 REALISTIC SCORES v4.10.3: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
+    log.info("📊 REALISTIC SCORES v4.10.4: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
              scores['governance'], scores['security'], scores['value'], scores['enablement'], scores['overall'])
     return {'scores': scores, 'details': details, 'total': scores['overall']}
 
 
-# ---------------------------- OpenAI (Chat API) ------------------------------
+# ------------------------------ OpenAI --------------------------------------
 def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
                  temperature: Optional[float] = None, max_tokens: Optional[int] = None) -> Optional[str]:
-    """Azure/Std‑OpenAI kompatibel; Timeout/Model aus ENV."""
+    """Chat Completions; unterstützt OPENAI_API_BASE (Azure: header 'api-key')."""
     if not OPENAI_API_KEY:
         log.error("❌ OPENAI_API_KEY not set")
         return None
@@ -221,7 +213,7 @@ def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
     api_base = (OPENAI_API_BASE or "https://api.openai.com").rstrip("/")
     url = f"{api_base}/v1/chat/completions"
     headers = {"Content-Type": "application/json"}
-    # Warum: Azure setzt 'api-key' statt 'Authorization'
+    # Warum: Azure verlangt 'api-key'; Standard‑OpenAI nutzt 'Authorization'.
     if "openai.azure.com" in api_base:
         headers["api-key"] = OPENAI_API_KEY
     else:
@@ -245,17 +237,15 @@ def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
         return None
 
 
-# ------------------------------ HTML‑Sanitizer -------------------------------
+# ------------------------------ HTML Repair ---------------------------------
 def _clean_html(s: str) -> str:
-    if not s:
-        return s
+    if not s: return s
     return s.replace("```html", "").replace("```", "").strip()
 
 def _needs_repair(s: str) -> bool:
-    if not s:
-        return True
+    if not s: return True
     sl = s.lower()
-    return ("<" not in sl) or not any(t in sl for t in ("<p", "<ul", "<table", "<div", "<h4"))
+    return ("<" not in sl) or not any(t in sl for t in ("<p","<ul","<table","<div","<h4"))
 
 def _repair_html(section: str, s: str) -> str:
     if not ENABLE_REPAIR_HTML:
@@ -273,12 +263,12 @@ Abschnitt: {section}. Antworte ausschließlich mit HTML.
     return _clean_html(fixed or s)
 
 
-# -------------------------- Quick‑Wins Parser (robust) -----------------------
+# -------------------------- Quick‑Wins Parser --------------------------------
 _QW_COMPILED = re.compile(
-    r"(?:Ersparnis\s*[:=]\s*)?"          # optionales Label
-    r"(\d+(?:[.,]\d{1,2})?)\s*"          # Zahl (ggf. Dezimal)
-    r"(?:h|std\.?|stunden?)\s*"          # Einheit
-    r"(?:[/\s]*(?:pro|/)?\s*Monat)",     # Monatsmarker
+    r"(?:Ersparnis\\s*[:=]\\s*)?"          # optionales Label
+    r"(\\d+(?:[.,]\\d{1,2})?)\\s*"          # Zahl (ggf. Dezimal)
+    r"(?:h|std\\.?|stunden?)\\s*"          # Einheit
+    r"(?:[/\\s]*(?:pro|/)?\\s*Monat)",     # Monatsmarker
     flags=re.IGNORECASE
 )
 
@@ -309,49 +299,58 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
         return f"<p><em>[{section_name} – LLM disabled]</em></p>"
     branche = briefing.get('branche', 'Unternehmen')
     hauptleistung = briefing.get('hauptleistung', '')
-    ki_ziele = briefing.get('ki_ziele', [])
-    ki_projekte = briefing.get('ki_projekte', '')
-    vision = briefing.get('vision_3_jahre', '')
+    bundesland = briefing.get('BUNDESLAND_LABEL') or briefing.get('bundesland') or ''
+    groesse = briefing.get('UNTERNEHMENSGROESSE_LABEL') or briefing.get('unternehmensgroesse') or ''
 
     overall = scores.get('overall', 0); governance = scores.get('governance', 0)
     security = scores.get('security', 0); value = scores.get('value', 0); enablement = scores.get('enablement', 0)
 
+    ctx = f"Kontext: Branche={branche}; Unternehmensgröße={groesse}; Haupt‑Leistung={hauptleistung}; Bundesland/Region={bundesland}."
     tone = "Sprache: neutral, dritte Person; keine Wir/Ich‑Formulierungen."
     only_html = "Antworte ausschließlich mit validem HTML (ohne Markdown‑Fences)."
 
     prompts = {
-        'executive_summary': f"""Erstelle eine prägnante Executive Summary für ein {branche}-Unternehmen.
-Hauptleistung: {hauptleistung}
-KI‑Ziele: {', '.join(ki_ziele) if ki_ziele else 'nicht definiert'}
-Vision: {vision}
-KI‑Reifegrad: Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/100 • Nutzen {value}/100 • Befähigung {enablement}/100
+        'executive_summary': f"""{ctx}
+Erstelle eine prägnante Executive Summary.
+KI‑Reifegrad: Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/100 • Nutzen {value}/100 • Befähigung {enablement}/100.
 {tone} {only_html} Verwende nur <p>-Absätze.""",
-        'quick_wins': f"""Liste 4–6 **konkrete Quick Wins** (0–90 Tage) für {branche}.
+        'quick_wins': f"""{ctx}
+Liste 4–6 **konkrete Quick Wins** (0–90 Tage).
 Jeder Quick Win: Titel, 1–2 Sätze Nutzen, realistische **Ersparnis: … h/Monat**.
-Bezug: Hauptleistung {hauptleistung}; Projekte: {ki_projekte or 'keine'}.
 {tone} {only_html} Liefere exakt eine <ul>-Liste mit <li>-Einträgen:
 <li><strong>Titel:</strong> Beschreibung. <em>Ersparnis: 5 h/Monat</em></li>""",
-        'roadmap': f"""Erstelle eine **90‑Tage‑Roadmap** (0–30 Test; 31–60 Pilot; 61–90 Rollout).
+        'roadmap': f"""{ctx}
+Erstelle eine **90‑Tage‑Roadmap** (0–30 Test; 31–60 Pilot; 61–90 Rollout).
 {tone} {only_html} Pro Phase 3–5 Meilensteine. Format: <h4>Phase …</h4> + <ul>…</ul>.""",
-        'business_roi': f"""Erstelle eine **ROI & Payback**‑Tabelle (Jahr 1). {tone} {only_html}
-Format: <table> mit 2 Spalten (Kennzahl, Wert). Keine Fließtexte.""",
-        'business_costs': f"""Erstelle eine **Kostenübersicht Jahr 1**. {tone} {only_html}
+        'business_roi': f"""{ctx}
+Erstelle eine **ROI & Payback**‑Tabelle (Jahr 1). {tone} {only_html}
+Format: <table> mit 2 Spalten (Kennzahl, Wert).""",
+        'business_costs': f"""{ctx}
+Erstelle eine **Kostenübersicht Jahr 1**. {tone} {only_html}
 Format: <table> mit 2 Spalten (Position, Betrag).""",
-        'recommendations': f"""Formuliere 5–7 **Handlungsempfehlungen** mit Priorität [H/M/N] und Zeitrahmen (30/60/90).
+        'recommendations': f"""{ctx}
+Formuliere 5–7 **Handlungsempfehlungen** mit Priorität [H/M/N] und Zeitrahmen (30/60/90).
 {tone} {only_html} Format: <ol><li><strong>[H]</strong> Maßnahme – <em>60 Tage</em></li></ol>.""",
-        'risks': f"""Erstelle eine **Risikomatrix** (5–7 Risiken) + EU AI Act Pflichtenliste.
+        'risks': f"""{ctx}
+Erstelle eine **Risikomatrix** (5–7 Risiken) + EU AI Act Pflichtenliste.
 {tone} {only_html} Format: <table> mit <thead>/<tbody>.""",
-        'gamechanger': f"""Skizziere einen **Gamechanger‑Use Case**. (Idee: 3–4 Sätze; 3 Vorteile; 3 Schritte)
+        'gamechanger': f"""{ctx}
+Skizziere einen **Gamechanger‑Use Case**. (Idee: 3–4 Sätze; 3 Vorteile; 3 Schritte)
 {tone} {only_html} Verwende <h4>, <p>, <ul>.""",
-        'roadmap_12m': f"""Erstelle eine **12‑Monats‑Roadmap** in 3 Phasen (0–3/3–6/6–12).
+        'roadmap_12m': f"""{ctx}
+Erstelle eine **12‑Monats‑Roadmap** in 3 Phasen (0–3/3–6/6–12).
 {tone} {only_html} Format: <div class="roadmap"><div class="roadmap-phase">…</div></div>.""",
-        'data_readiness': f"""Erstelle eine kompakte **Dateninventar & ‑Qualität**‑Übersicht.
+        'data_readiness': f"""{ctx}
+Erstelle eine kompakte **Dateninventar & ‑Qualität**‑Übersicht.
 {tone} {only_html} Format: <div class="data-readiness"><h4>…</h4><ul>…</ul></div>.""",
-        'org_change': f"""Beschreibe **Organisation & Change**: Governance‑Rollen, Skill‑Programm, Kommunikation.
+        'org_change': f"""{ctx}
+Beschreibe **Organisation & Change**: Governance‑Rollen, Skill‑Programm, Kommunikation.
 {tone} {only_html} Format: <div class="org-change">…</div>.""",
-        'business_case': f"""Erstelle einen kompakten **Business Case (detailliert)** – Annahmen, Nutzen (J1), Kosten (CapEx/OpEx), Payback, ROI, Sensitivität.
+        'business_case': f"""{ctx}
+Erstelle einen kompakten **Business Case (detailliert)** – Annahmen, Nutzen (J1), Kosten (CapEx/OpEx), Payback, ROI, Sensitivität.
 {tone} {only_html} Format: <div class="business-case"> mit Listen & <p>.""",
-        'reifegrad_sowhat': f"""Erkläre kurz: **Was heißt der Reifegrad konkret?**
+        'reifegrad_sowhat': f"""{ctx}
+Erkläre kurz: **Was heißt der Reifegrad konkret?**
 Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/100 • Nutzen {value}/100 • Befähigung {enablement}/100.
 {tone} {only_html} Gib 4–6 Bullet‑Points (<ul>) aus."""
     }
@@ -367,29 +366,29 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
 
 
 def _one_liner(title: str, section_html: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
-    """One‑liner gem. Formel: Erkenntnis; Wirkung → nächster Schritt."""
-    base = f"""Erzeuge einen prägnanten **One‑liner** unter der H2‑Überschrift "{title}".
-Formel: "Kernaussage; Konsequenz → konkreter nächster Schritt". Antworte als eine Zeile (ohne HTML)."""
-    text = _call_openai(
-        base + "\n---\n" + re.sub(r"<[^>]+>", " ", section_html)[:1800],
-        system_prompt="Du formulierst prägnante One‑liner auf Deutsch.",
-        temperature=0.1, max_tokens=80
-    )
+    """Erzeugt One‑liner gemäß Vorlage (Erkenntnis; Wirkung → nächster Schritt)."""
+    prefix = f"Kontext: Branche={briefing.get('branche','')}; Größe={briefing.get('UNTERNEHMENSGROESSE_LABEL','')}; Leistung={briefing.get('hauptleistung','')}; Region={briefing.get('BUNDESLAND_LABEL','')}."
+    base = f"""{prefix}
+Erzeuge einen prägnanten **One‑liner** unter der H2‑Überschrift "{title}".
+Formel: "Kernaussage; Konsequenz → konkreter nächster Schritt".
+Gib nur **eine** Zeile ohne HTML‑Tags zurück."""
+    text = _call_openai(base + "\\n---\\n" + re.sub(r"<[^>]+>", " ", section_html)[:1800],
+                        system_prompt="Du formulierst prägnante One‑liner auf Deutsch.",
+                        temperature=0.1, max_tokens=80)
     return (text or "").strip()
 
 
 def _split_li_list_to_columns(html_list: str) -> Tuple[str, str]:
-    if not html_list:
-        return "<ul></ul>", "<ul></ul>"
-    items = re.findall(r"<li[\s>].*?</li>", html_list, flags=re.DOTALL | re.IGNORECASE)
+    if not html_list: return "<ul></ul>", "<ul></ul>"
+    items = re.findall(r"<li[\\s>].*?</li>", html_list, flags=re.DOTALL | re.IGNORECASE)
     if not items:
-        lines = [ln.strip() for ln in re.split(r"<br\s*/?>|\n", html_list) if ln.strip()]
+        lines = [ln.strip() for ln in re.split(r"<br\\s*/?>|\\n", html_list) if ln.strip()]
         items = [f"<li>{ln}</li>" for ln in lines]
     mid = (len(items) + 1) // 2
     return "<ul>" + "".join(items[:mid]) + "</ul>", "<ul>" + "".join(items[mid:]) + "</ul>"
 
 
-# ----------------------- AI‑Act: Datei → HTML/CSV ----------------------------
+# ----------------------- AI-Act: Datei → HTML‑Blöcke ------------------------
 def _try_read(path: str) -> Optional[str]:
     # Warum: Datei kann je nach Deployment unter /app oder /mnt/data liegen.
     if os.path.exists(path):
@@ -406,7 +405,7 @@ def _try_read(path: str) -> Optional[str]:
     return None
 
 def _md_to_simple_html(md: str) -> str:
-    """Sehr schlanker Markdown→HTML Konverter; keine externen Abhängigkeiten."""
+    """Sehr schlanker Markdown→HTML Konverter (H3/H4, Listen, Absätze)."""
     if not md:
         return ""
     out: List[str] = []
@@ -419,7 +418,7 @@ def _md_to_simple_html(md: str) -> str:
             continue
         if line.startswith("!["):  # Bilder im PDF weglassen
             continue
-        if re.match(r"^\[\d+\]:\s*https?://", line):  # Fußnoten unterdrücken
+        if re.match(r"^\\[\\d+\\]:\\s*https?://", line):  # Fußnoten-Links unterdrücken
             continue
         if line.startswith("#### "):
             if in_ul: out.append("</ul>"); in_ul = False
@@ -434,29 +433,14 @@ def _md_to_simple_html(md: str) -> str:
                 in_ul = True; out.append("<ul>")
             out.append(f"<li>{line[2:].strip()}</li>")
             continue
-        # Absatz
         if in_ul:
             out.append("</ul>"); in_ul = False
         out.append(f"<p>{line}</p>")
     if in_ul:
         out.append("</ul>")
-    return "\n".join(out)
-
-def _build_ai_act_csv() -> bytes:
-    """Erstellt eine kleine Timeline‑CSV (2025–2027) – robust, ohne externe Parser."""
-    # Warum: Klare, auditierbare Meilensteine als Anhang/Weiterverkauf.
-    rows = [
-        ["Datum", "Meilenstein", "Fristentyp", "Praxis‑Checkpoint", "Owner", "Impact", "Nachweise"],
-        ["2025-02-02", "Kapitel I–II wirksam (Verbote/Allg.)", "Start", "Transparenz‑ & Verbotsprüfung abschließen", "Recht/IT", "hoch", "Policy, Register"],
-        ["2025-08-02", "GPAI/Governance‑Regeln", "Pflicht", "GPAI‑Modelle inventarisieren & Dokumentation", "IT", "mittel", "Doku, Logs"],
-        ["2026-08-02", "Hochrisiko‑Anforderungen", "Pflicht", "Risikomanagement, PMM, Konformitätsbewertung", "Produkt/Qualität", "hoch", "RM‑Plan, PMM"],
-        ["2027-08-02", "Erweiterte Kategorien (Anhang I)", "Auslauf", "Langfristige Übergänge finalisieren", "Compliance", "mittel", "Konformitätsakte"],
-    ]
-    buf = "\n".join(";".join(c.replace("\n", " ").strip()) for c in rows)
-    return buf.encode("utf-8")
+    return "\\n".join(out)
 
 def _build_ai_act_blocks() -> Dict[str, str]:
-    """Liest AI‑Act‑Infos, erstellt Summary + CTA + Add‑on‑Pakete."""
     if not ENABLE_AI_ACT_SECTION:
         return {}
     text = _try_read(AI_ACT_INFO_PATH) or ""
@@ -465,8 +449,8 @@ def _build_ai_act_blocks() -> Dict[str, str]:
         html = (
             "<h3>Wesentliche Eckdaten</h3>"
             "<ul>"
-            "<li>Gestaffelte Anwendung ab 2025; Kernpflichten zwischen 2025–2027.</li>"
-            "<li>Frühzeitige Vorbereitung: Risikomanagement, Dokumentation, Monitoring.</li>"
+            "<li>Gestaffelte Anwendung ab 2025; Kernpflichten 2025–2027.</li>"
+            "<li>Frühzeitige Vorbereitung: Risiko‑/Governance‑Prozesse, Dokumentation, Monitoring.</li>"
             "</ul>"
         )
     cta = (
@@ -481,13 +465,13 @@ def _build_ai_act_blocks() -> Dict[str, str]:
         '<table class="table">'
         "<thead><tr><th>Paket</th><th>Umfang</th><th>Ergebnisse</th></tr></thead><tbody>"
         "<tr><td><strong>Lite: Tabellen‑Kit</strong></td>"
-        "<td>Termin‑ & Fristen‑Tabelle (2025–2027), 10–15 Praxis‑Checkpoints, Rollen/Nachweise.</td>"
-        "<td>PDF/CSV + kurze Einordnung je Zeile.</td></tr>"
+        "<td>Individuelle Termin‑ & Fristen‑Tabelle (2025–2027), 10–15 Praxis‑Checkpoints, Verantwortliche & Nachweise.</td>"
+        "<td>PDF/CSV + kurze Einordnung pro Zeile.</td></tr>"
         "<tr><td><strong>Pro: Compliance‑Kit</strong></td>"
-        "<td>Lite + Vorlagen (Risikomanagement, Logging, PMM), Kurz‑Guideline zu Pflichten.</td>"
+        "<td>Alles aus Lite + Vorlagen (Risikomanagement, Logging, Post‑Market‑Monitoring), Kurz‑Guideline zu Pflichten.</td>"
         "<td>Dokupaket (editierbar) + 60‑Tage‑Plan.</td></tr>"
         "<tr><td><strong>Max: Audit‑Ready</strong></td>"
-        "<td>Pro + Abgleich mit Prozessen, Nachweis‑Mapping, Brown‑Bag‑Session.</td>"
+        "<td>Alles aus Pro + Abgleich mit Prozessen, Nachweis‑Mapping, Brown‑Bag‑Session.</td>"
         "<td>Audit‑Map + Meilensteinplan, Q&A‑Session.</td></tr>"
         "</tbody></table>"
     )
@@ -508,7 +492,7 @@ def _derive_kundencode(answers: Dict[str, Any], user_email: str) -> str:
     return (code[:3] or "KND")
 
 def _version_major_minor(v: str) -> str:
-    m = re.match(r"^\s*(\d+)\.(\d+)", v or "")
+    m = re.match(r"^\\s*(\\d+)\\.(\\d+)", v or "")
     return f"{m.group(1)}.{m.group(2)}" if m else "1.0"
 
 def _build_watermark_text(report_id: str, version_mm: str) -> str:
@@ -562,7 +546,8 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 
     # Next Actions (30 Tage)
     nxt = _call_openai(
-        """Erstelle 3–7 **Next Actions (30 Tage)** in <ol>.
+        f"""{'Kontext: ' + briefing.get('branche','') if briefing else ''}
+Erstelle 3–7 **Next Actions (30 Tage)** in <ol>.
 Jede Zeile: 👤 Owner, ⏱ Aufwand (z. B. ½ Tag), 🎯 Impact (hoch/mittel/niedrig), 📆 Termin (TT.MM.JJJJ) — kurze Maßnahme.
 Antwort NUR als <ol>…</ol>.""",
         system_prompt="Du bist PMO‑Lead. Antworte nur mit HTML.",
@@ -586,26 +571,21 @@ Antwort NUR als <ol>…</ol>.""",
     sections['LEAD_FUNDING']          = _one_liner("Aktuelle Förderprogramme & Quellen", "", briefing, scores)
     sections['LEAD_NEXT_ACTIONS']     = _one_liner("Nächste Schritte (30 Tage)", sections['NEXT_ACTIONS_HTML'], briefing, scores)
 
-    # ---- EU AI Act – Summary + Angebot ----
+    # ---- EU AI Act – Zusammenfassung + Angebot ----
     if ENABLE_AI_ACT_SECTION:
         ai_act = _build_ai_act_blocks()
         sections.update(ai_act)
-        sections['LEAD_AI_ACT'] = _one_liner(
-            f"EU AI Act – Überblick & Fristen ({ai_act.get('ai_act_phase_label', AI_ACT_PHASE_LABEL)})",
-            ai_act.get("AI_ACT_SUMMARY_HTML", ""), briefing, scores
-        )
-        sections['LEAD_AI_ACT_ADDON'] = _one_liner(
-            "Optionale Vertiefung: EU‑AI‑Act‑Add‑on",
-            ai_act.get("AI_ACT_ADDON_PACKAGES_HTML", ""), briefing, scores
-        )
+        sections['LEAD_AI_ACT'] = _one_liner(f"EU AI Act – Überblick & Fristen ({ai_act.get('ai_act_phase_label', AI_ACT_PHASE_LABEL)})",
+                                             ai_act.get("AI_ACT_SUMMARY_HTML", ""), briefing, scores)
+        sections['LEAD_AI_ACT_ADDON'] = _one_liner("Optionale Vertiefung: EU‑AI‑Act‑Add‑on",
+                                                   ai_act.get("AI_ACT_ADDON_PACKAGES_HTML", ""), briefing, scores)
 
     return sections
 
 
 # ------------------------------ Mail/Meta ------------------------------------
 def _mask_email(addr: Optional[str]) -> str:
-    if not addr or not DBG_MASK_EMAILS:
-        return addr or ""
+    if not addr or not DBG_MASK_EMAILS: return addr or ""
     try:
         name, domain = addr.split("@", 1)
         return f"{name[:3]}***@{domain}" if len(name) > 3 else f"{name}***@{domain}"
@@ -624,8 +604,7 @@ def _admin_recipients() -> List[str]:
     return list(dict.fromkeys(emails))
 
 def _determine_user_email(db: Session, briefing: Briefing, override: Optional[str]) -> Optional[str]:
-    if override:
-        return override
+    if override: return override
     if getattr(briefing, "user_id", None):
         u = db.get(User, briefing.user_id)
         if u and getattr(u, "email", ""):
@@ -634,37 +613,27 @@ def _determine_user_email(db: Session, briefing: Briefing, override: Optional[st
     return answers.get("email") or answers.get("kontakt_email")
 
 def _fetch_pdf_if_needed(pdf_url: Optional[str], pdf_bytes: Optional[bytes]) -> Optional[bytes]:
-    if pdf_bytes:
-        return pdf_bytes
-    if not pdf_url:
-        return None
+    if pdf_bytes: return pdf_bytes
+    if not pdf_url: return None
     try:
         r = requests.get(pdf_url, timeout=30)
-        if r.ok:
-            return r.content
+        if r.ok: return r.content
     except Exception:
         return None
     return None
 
 def _send_emails(db: Session, rep: Report, br: Briefing,
-                 pdf_url: Optional[str], pdf_bytes: Optional[bytes],
-                 run_id: str, extra_attachments: Optional[List[Dict[str, Any]]] = None) -> None:
-    """Sendet User- und Admin-Mail; hängt PDF + Briefing‑JSON + optionale Attachments an."""
+                 pdf_url: Optional[str], pdf_bytes: Optional[bytes], run_id: str) -> None:
     best_pdf = _fetch_pdf_if_needed(pdf_url, pdf_bytes)
-
     attachments_admin: List[Dict[str, Any]] = []
     if best_pdf:
-        attachments_admin.append({
-            "filename": f"KI-Status-Report-{getattr(rep, 'id', None)}.pdf",
-            "content": best_pdf, "mimetype": "application/pdf"
-        })
+        attachments_admin.append({"filename": f"KI-Status-Report-{getattr(rep,'id', None)}.pdf",
+                                  "content": best_pdf, "mimetype": "application/pdf"})
     try:
         bjson = json.dumps(getattr(br, "answers", {}) or {}, ensure_ascii=False, indent=2).encode("utf-8")
         attachments_admin.append({"filename": f"briefing-{br.id}.json", "content": bjson, "mimetype": "application/json"})
     except Exception:
         pass
-    for a in (extra_attachments or []):
-        attachments_admin.append(a)
 
     # User
     try:
@@ -682,7 +651,7 @@ def _send_emails(db: Session, rep: Report, br: Briefing,
 
     # Admins
     try:
-        if os.getenv("ENABLE_ADMIN_NOTIFY", "1") in ("1", "true", "TRUE", "yes", "YES"):
+        if os.getenv("ENABLE_ADMIN_NOTIFY", "1") in ("1","true","TRUE","yes","YES"):
             for addr in _admin_recipients():
                 ok, err = send_mail(
                     addr, f"Neuer KI‑Status‑Report – Analysis #{rep.analysis_id} / Briefing #{rep.briefing_id}",
@@ -698,20 +667,23 @@ def _send_emails(db: Session, rep: Report, br: Briefing,
 # ------------------------------ Pipeline -------------------------------------
 def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, str, Dict[str, Any]]:
     br = db.get(Briefing, briefing_id)
-    if not br:
-        raise ValueError("Briefing not found")
+    if not br: raise ValueError("Briefing not found")
 
     raw_answers: Dict[str, Any] = getattr(br, "answers", {}) or {}
     answers = (_pass_through := lambda x: x)(raw_answers)
     try:
-        # warum: normalisierte Labels/Enums (optional)
         from services.answers_normalizer import normalize_answers  # type: ignore
         answers = normalize_answers(raw_answers)
     except Exception:
         pass
 
+    # Labels & Kontextlabels (für Prompts/Template)
+    answers['BRANCHE_LABEL'] = answers.get('BRANCHE_LABEL', answers.get('branche',''))
+    answers['BUNDESLAND_LABEL'] = answers.get('BUNDESLAND_LABEL', answers.get('bundesland',''))
+    answers['UNTERNEHMENSGROESSE_LABEL'] = answers.get('UNTERNEHMENSGROESSE_LABEL', answers.get('unternehmensgroesse',''))
+
     # Scores
-    log.info("[%s] Calculating realistic scores (v4.10.3)...", run_id)
+    log.info("[%s] Calculating realistic scores (v4.10.4)...", run_id)
     score_wrap = _calculate_realistic_score(answers)
     scores = score_wrap['scores']
 
@@ -719,16 +691,17 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     log.info("[%s] Generating content sections...", run_id)
     sections = _generate_content_sections(briefing=answers, scores=scores)
 
-    # Labels & Meta
-    sections['BRANCHE_LABEL'] = answers.get('BRANCHE_LABEL', '')
-    sections['BUNDESLAND_LABEL'] = answers.get('BUNDESLAND_LABEL', '')
-    sections['UNTERNEHMENSGROESSE_LABEL'] = answers.get('UNTERNEHMENSGROESSE_LABEL', '')
-    sections['JAHRESUMSATZ_LABEL'] = answers.get('JAHRESUMSATZ_LABEL', answers.get('jahresumsatz', ''))
-    sections['ki_kompetenz'] = answers.get('ki_kompetenz') or answers.get('ki_knowhow', '')
+    # Meta/Felder für Template
+    sections['BRANCHE_LABEL'] = answers.get('BRANCHE_LABEL','')
+    sections['BUNDESLAND_LABEL'] = answers.get('BUNDESLAND_LABEL','')
+    sections['UNTERNEHMENSGROESSE_LABEL'] = answers.get('UNTERNEHMENSGROESSE_LABEL','')
+    sections['JAHRESUMSATZ_LABEL'] = answers.get('JAHRESUMSATZ_LABEL', answers.get('jahresumsatz',''))
+    sections['ki_kompetenz'] = answers.get('ki_kompetenz') or answers.get('ki_knowhow','')
     sections['report_date'] = datetime.now().strftime("%d.%m.%Y")
     sections['report_year'] = datetime.now().strftime("%Y")
     sections['transparency_text'] = getattr(settings, "TRANSPARENCY_TEXT", None) or os.getenv("TRANSPARENCY_TEXT", "") or ""
     sections['user_email'] = answers.get('email') or answers.get('kontakt_email') or ""
+    sections['kundenname'] = answers.get("unternehmen") or answers.get("firma") or ""
 
     # Scores ins Template
     sections['score_governance'] = scores.get('governance', 0)
@@ -800,7 +773,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         created_at=datetime.now(timezone.utc),
     )
     db.add(an); db.commit(); db.refresh(an)
-    log.info("[%s] ✅ Analysis created (v4.10.3): id=%s", run_id, an.id)
+    log.info("[%s] ✅ Analysis created (v4.10.4): id=%s", run_id, an.id)
 
     return an.id, result["html"], result.get("meta", {})
 
@@ -810,45 +783,28 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     db = SessionLocal()
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v4.10.3 for briefing_id=%s", run_id, briefing_id)
+        log.info("[%s] 🚀 Starting analysis v4.10.4 for briefing_id=%s", run_id, briefing_id)
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
-        rep = Report(
-            user_id=br.user_id if br else None,
-            briefing_id=briefing_id,
-            analysis_id=an_id,
-            created_at=datetime.now(timezone.utc)
-        )
-        if hasattr(rep, "user_email"):
-            rep.user_email = _determine_user_email(db, br, email) or ""
-        if hasattr(rep, "task_id"):
-            rep.task_id = f"local-{uuid.uuid4()}"
-        if hasattr(rep, "status"):
-            rep.status = "pending"
+        rep = Report(user_id=br.user_id if br else None, briefing_id=briefing_id, analysis_id=an_id, created_at=datetime.now(timezone.utc))
+        if hasattr(rep, "user_email"): rep.user_email = _determine_user_email(db, br, email) or ""
+        if hasattr(rep, "task_id"): rep.task_id = f"local-{uuid.uuid4()}"
+        if hasattr(rep, "status"): rep.status = "pending"
         db.add(rep); db.commit(); db.refresh(rep)
 
-        if DBG_PDF:
-            log.debug("[%s] pdf_render start", run_id)
-        # Fix: request_id sicher als String → vermeidet Integer-Header
-        pdf_info = render_pdf_from_html(
-            html,
-            meta={"analysis_id": an_id, "briefing_id": briefing_id, "request_id": run_id}
-        )
-        pdf_url = pdf_info.get("pdf_url")
-        pdf_bytes = pdf_info.get("pdf_bytes")
-        pdf_error = pdf_info.get("error")
-        if DBG_PDF:
-            log.debug("[%s] pdf_render done url=%s bytes=%s error=%s",
-                      run_id, bool(pdf_url), len(pdf_bytes or b''), pdf_error)
+        if DBG_PDF: log.debug("[%s] pdf_render start", run_id)
+        pdf_info = render_pdf_from_html(html, meta={"analysis_id": an_id, "briefing_id": briefing_id, "run_id": run_id})
+        pdf_url = pdf_info.get("pdf_url"); pdf_bytes = pdf_info.get("pdf_bytes"); pdf_error = pdf_info.get("error")
+        if DBG_PDF: log.debug("[%s] pdf_render done url=%s bytes=%s error=%s", run_id, bool(pdf_url), len(pdf_bytes or b''), pdf_error)
 
         if not pdf_url and not pdf_bytes:
-            err = f"PDF failed: {pdf_error or 'no output'}"
-            log.error("[%s] %s", run_id, err)
+            error_msg = f"PDF failed: {pdf_error or 'no output'}"
+            log.error("[%s] %s", run_id, error_msg)
             if hasattr(rep, "status"): rep.status = "failed"
-            if hasattr(rep, "email_error_user"): rep.email_error_user = err
+            if hasattr(rep, "email_error_user"): rep.email_error_user = error_msg
             if hasattr(rep, "updated_at"): rep.updated_at = datetime.now(timezone.utc)
             db.add(rep); db.commit()
-            raise ValueError(err)
+            raise ValueError(error_msg)
 
         if hasattr(rep, "pdf_url"): rep.pdf_url = pdf_url
         if hasattr(rep, "pdf_bytes_len") and pdf_bytes: rep.pdf_bytes_len = len(pdf_bytes)
@@ -856,19 +812,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
         if hasattr(rep, "updated_at"): rep.updated_at = datetime.now(timezone.utc)
         db.add(rep); db.commit(); db.refresh(rep)
 
-        # Optionale AI‑Act CSV (Add‑on) als Attachment
-        extra_atts: List[Dict[str, Any]] = []
-        if ENABLE_AI_ACT_SECTION and ENABLE_AI_ACT_ATTACH_CSV:
-            try:
-                extra_atts.append({
-                    "filename": f"AI-Act-Timeline-{AI_ACT_PHASE_LABEL}.csv",
-                    "content": _build_ai_act_csv(),  # bewusst hier generiert (nicht im JSON‑Meta)
-                    "mimetype": "text/csv"
-                })
-            except Exception:
-                pass
-
-        _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id, extra_attachments=extra_atts)
+        _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id)
 
     except Exception as exc:
         log.error("[%s] ❌ Analysis failed: %s", run_id, exc, exc_info=True)
