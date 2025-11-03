@@ -4,13 +4,12 @@ from __future__ import annotations
 """
 Analysiert Briefings, generiert Sections & Meta und rendert HTML/PDF + Mails.
 
-Änderungen (v4.9.0):
-- OPENAI_API_BASE (Azure/Custom) – Header/URL automatisch.
-- REIFEGRAD_SOWHAT_HTML sicher befüllt.
-- One‑liner („section‑lead“) unter jeder H2 (Erkenntnis+Wirkung+Aktion).
-- Next‑Actions (30 Tage) inkl. Icons & Deadlines.
-- Watermark/Version/Report‑ID + Mini‑Meta (Prüferkürzel, Change‑Log).
-- Robuster Quick‑Wins‑Parser (Dezimal, h|Std, „/Monat“, Dedupe, Range für Reality‑Note).
+Änderungen (v4.9.1):
+- AI-Act-Integration für jeden Report:
+  * Liest EU-AI-Act-Infos aus Datei (ENV: AI_ACT_INFO_PATH) und wandelt Kerninhalte nach HTML um.
+  * Kapitel: "EU AI Act – Überblick & Fristen ({{ai_act_phase_label}})" inkl. One-liner + CTA-Box für Tabellierung.
+  * Kapitel: "Optionale Vertiefung: EU‑AI‑Act‑Add‑on" (Lite/Pro/Max) zur Angebotserweiterung.
+- Beibehaltung aller v4.9.0-Fixes (One-liner, Watermark, Next-Actions, Quick-Wins-Parser etc.).
 """
 
 import json
@@ -50,9 +49,13 @@ ENABLE_LLM_CONTENT = (os.getenv("ENABLE_LLM_CONTENT", "1") == "1")
 ENABLE_REPAIR_HTML = (os.getenv("ENABLE_REPAIR_HTML", "1") == "1")
 USE_INTERNAL_RESEARCH = (os.getenv("USE_INTERNAL_RESEARCH", "1") == "1")
 
+# Neu: AI-Act Kapitel aktivieren & konfigurieren
+ENABLE_AI_ACT_SECTION = (os.getenv("ENABLE_AI_ACT_SECTION", "1") == "1")
+AI_ACT_INFO_PATH = os.getenv("AI_ACT_INFO_PATH", "EU-AI-ACT-Infos-wichtig.txt")
+AI_ACT_PHASE_LABEL = os.getenv("AI_ACT_PHASE_LABEL", "2025–2027")
+
 DBG_PDF = (os.getenv("DEBUG_LOG_PDF_INFO", "1") == "1")
 DBG_MASK_EMAILS = (os.getenv("DEBUG_MASK_EMAILS", "1") == "1")
-
 
 # -------------------- Helpers: NSFW‑Filter für Research ----------------------
 NSFW_KEYWORDS = {
@@ -193,7 +196,7 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
         'enablement': min(ena, 25) * 4,
         'overall': round((min(gov,25)+min(sec,25)+min(val,25)+min(ena,25))*4/4)
     }
-    log.info("📊 REALISTIC SCORES v4.9: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
+    log.info("📊 REALISTIC SCORES v4.9.1: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
              scores['governance'], scores['security'], scores['value'], scores['enablement'], scores['overall'])
     return {'scores': scores, 'details': details, 'total': scores['overall']}
 
@@ -290,7 +293,7 @@ def _sum_hours_from_quick_wins(html: str) -> int:
     return int(round(total))
 
 
-# ------------------------ LLM‑Content Generator ------------------------------
+# ----------------------- LLM‑Content Generator ------------------------------
 def _generate_content_section(section_name: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
     if not ENABLE_LLM_CONTENT:
         return f"<p><em>[{section_name} – LLM disabled]</em></p>"
@@ -354,8 +357,8 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
 
 
 def _one_liner(title: str, section_html: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
-    """Erzeugt den One‑liner gemäß Vorlage. Warum: konsistente H2‑Leads."""
-    base = f"""Erzeuge einen **One‑liner** unter der H2‑Überschrift "{title}".
+    """Erzeugt One‑liner gemäß Vorlage (Erkenntnis; Wirkung → nächster Schritt)."""
+    base = f"""Erzeuge einen prägnanten **One‑liner** unter der H2‑Überschrift "{title}".
 Formel: "Kernaussage; Konsequenz → konkreter nächster Schritt".
 Gib nur **eine** Zeile ohne HTML‑Tags zurück."""
     text = _call_openai(base + "\n---\n" + re.sub(r"<[^>]+>", " ", section_html)[:1800],
@@ -374,9 +377,106 @@ def _split_li_list_to_columns(html_list: str) -> Tuple[str, str]:
     return "<ul>" + "".join(items[:mid]) + "</ul>", "<ul>" + "".join(items[mid:]) + "</ul>"
 
 
+# ----------------------- AI-Act: Datei → HTML‑Blöcke ------------------------
+def _try_read(path: str) -> Optional[str]:
+    # Warum: Datei kann je nach Deployment unter /app oder /mnt/data liegen.
+    if os.path.exists(path):
+        try:
+            return open(path, "r", encoding="utf-8").read()
+        except Exception:
+            return None
+    alt = os.path.join("/mnt/data", os.path.basename(path))
+    if os.path.exists(alt):
+        try:
+            return open(alt, "r", encoding="utf-8").read()
+        except Exception:
+            return None
+    return None
+
+def _md_to_simple_html(md: str) -> str:
+    """Sehr schlanker Markdown→HTML Konverter (H3/H4, Listen, Absätze). Warum: keine externe Lib im Worker."""
+    if not md:
+        return ""
+    out: List[str] = []
+    in_ul = False
+    for raw in md.splitlines():
+        line = raw.strip()
+        if not line:
+            if in_ul:
+                out.append("</ul>"); in_ul = False
+            continue
+        if line.startswith("!["):  # Bilder im PDF weglassen
+            continue
+        if re.match(r"^\[\d+\]:\s*https?://", line):  # Fußnoten-Links unterdrücken
+            continue
+        if line.startswith("#### "):
+            if in_ul: out.append("</ul>"); in_ul = False
+            out.append(f"<h4>{line[5:].strip()}</h4>")
+            continue
+        if line.startswith("### "):
+            if in_ul: out.append("</ul>"); in_ul = False
+            out.append(f"<h3>{line[4:].strip()}</h3>")
+            continue
+        if line.startswith(("* ", "- ")):
+            if not in_ul:
+                in_ul = True; out.append("<ul>")
+            out.append(f"<li>{line[2:].strip()}</li>")
+            continue
+        # sonst: Absatz
+        if in_ul:
+            out.append("</ul>"); in_ul = False
+        out.append(f"<p>{line}</p>")
+    if in_ul:
+        out.append("</ul>")
+    return "\n".join(out)
+
+def _build_ai_act_blocks() -> Dict[str, str]:
+    """Liest die AI-Act-Datei, erstellt Summary + CTA + Add-on-Pakete."""
+    if not ENABLE_AI_ACT_SECTION:
+        return {}
+    text = _try_read(AI_ACT_INFO_PATH) or ""
+    html = _md_to_simple_html(text) if text else ""
+    if not html:
+        # Minimal-Default, falls Datei fehlt
+        html = (
+            "<h3>Wesentliche Eckdaten</h3>"
+            "<ul>"
+            "<li>Gestaffelte Anwendung ab 2025; Kernpflichten für viele Anwendungsfälle zwischen 2025–2027.</li>"
+            "<li>Frühzeitige Vorbereitung: Risiko- & Governance-Prozesse, Dokumentation, Monitoring.</li>"
+            "</ul>"
+        )
+    cta = (
+        '<div class="callout">'
+        "<strong>Auf Wunsch:</strong> eine <em>tabellarische Übersicht</em> mit allen zentralen Terminen, "
+        "Übergangsfristen und Praxis‑Checkpoints <strong>speziell für Ihre Zielgruppe</strong> – Fokus "
+        f"auf die Phase <strong>{AI_ACT_PHASE_LABEL}</strong>. "
+        "Inklusive Verantwortlichkeiten, Nachweisen und Starter‑Checkliste."
+        "</div>"
+    )
+    packages = (
+        '<table class="table">'
+        "<thead><tr><th>Paket</th><th>Umfang</th><th>Ergebnisse</th></tr></thead><tbody>"
+        "<tr><td><strong>Lite: Tabellen‑Kit</strong></td>"
+        "<td>Individuelle Termin‑ & Fristen‑Tabelle (2025–2027), 10–15 Praxis‑Checkpoints, Verantwortliche & Nachweise.</td>"
+        "<td>PDF/CSV + kurze Einordnung pro Zeile (Risiko, Reifegrad‑Voraussetzung).</td></tr>"
+        "<tr><td><strong>Pro: Compliance‑Kit</strong></td>"
+        "<td>Alles aus Lite + Vorlagen (Risikomanagement, Logging, Post‑Market‑Monitoring), Kurz‑Guideline zu Pflichten.</td>"
+        "<td>Dokupaket (editierbar) + 60‑Tage‑Aktionsplan (3 Phasen).</td></tr>"
+        "<tr><td><strong>Max: Audit‑Ready</strong></td>"
+        "<td>Alles aus Pro + Abgleich mit bestehenden Prozessen, Nachweis‑Mapping, Brown‑Bag‑Session.</td>"
+        "<td>Audit‑Map + Meilensteinplan, Q&A‑Session.</td></tr>"
+        "</tbody></table>"
+    )
+    return {
+        "AI_ACT_SUMMARY_HTML": html,
+        "AI_ACT_TABLE_OFFER_HTML": cta,
+        "AI_ACT_ADDON_PACKAGES_HTML": packages,
+        "ai_act_phase_label": AI_ACT_PHASE_LABEL,
+    }
+
+
 # ----------------------- Section Composer (+Meta) ----------------------------
 def _derive_kundencode(answers: Dict[str, Any], user_email: str) -> str:
-    # Warum: Watermark-Anforderung (R-YYYYMMDD-KND)
     raw = (answers.get("unternehmen") or answers.get("firma") or answers.get("company") or "")[:32]
     if not raw and user_email and "@" in user_email:
         raw = user_email.split("@", 1)[-1].split(".")[0]
@@ -407,16 +507,11 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     try: total_h = _sum_hours_from_quick_wins(qw_html)
     except Exception: total_h = 0
     if total_h <= 0:
-        # ENV‑Fallback (Summe), falls Parser nichts findet
-        try:
-            fb = int(os.getenv("FALLBACK_QW_MONTHLY_H", "0"))
-        except Exception:
-            fb = 0
+        try: fb = int(os.getenv("FALLBACK_QW_MONTHLY_H", "0"))
+        except Exception: fb = 0
         if fb <= 0:
-            try:
-                fb = int(os.getenv("DEFAULT_QW1_H", "0")) + int(os.getenv("DEFAULT_QW2_H", "0"))
-            except Exception:
-                fb = 0
+            try: fb = int(os.getenv("DEFAULT_QW1_H", "0")) + int(os.getenv("DEFAULT_QW2_H", "0"))
+            except Exception: fb = 0
         total_h = max(0, fb)
     rate = int(briefing.get("stundensatz_eur") or os.getenv("DEFAULT_STUNDENSATZ_EUR", "60") or 60)
     if total_h > 0:
@@ -466,6 +561,15 @@ Antwort NUR als <ol>…</ol>.""",
     sections['LEAD_GC']               = _one_liner("Gamechanger‑Use Case", sections['GAMECHANGER_HTML'], briefing, scores)
     sections['LEAD_FUNDING']          = _one_liner("Aktuelle Förderprogramme & Quellen", "", briefing, scores)
     sections['LEAD_NEXT_ACTIONS']     = _one_liner("Nächste Schritte (30 Tage)", sections['NEXT_ACTIONS_HTML'], briefing, scores)
+
+    # ---- NEU: EU AI Act – Zusammenfassung + Angebot ----
+    if ENABLE_AI_ACT_SECTION:
+        ai_act = _build_ai_act_blocks()
+        sections.update(ai_act)
+        sections['LEAD_AI_ACT'] = _one_liner(f"EU AI Act – Überblick & Fristen ({ai_act.get('ai_act_phase_label', AI_ACT_PHASE_LABEL)})",
+                                             ai_act.get("AI_ACT_SUMMARY_HTML", ""), briefing, scores)
+        sections['LEAD_AI_ACT_ADDON'] = _one_liner("Optionale Vertiefung: EU‑AI‑Act‑Add‑on",
+                                                   ai_act.get("AI_ACT_ADDON_PACKAGES_HTML", ""), briefing, scores)
 
     return sections
 
@@ -565,7 +669,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         pass
 
     # Scores
-    log.info("[%s] Calculating realistic scores (v4.9)...", run_id)
+    log.info("[%s] Calculating realistic scores (v4.9.1)...", run_id)
     score_wrap = _calculate_realistic_score(answers)
     scores = score_wrap['scores']
 
@@ -654,7 +758,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         created_at=datetime.now(timezone.utc),
     )
     db.add(an); db.commit(); db.refresh(an)
-    log.info("[%s] ✅ Analysis created (v4.9.0): id=%s", run_id, an.id)
+    log.info("[%s] ✅ Analysis created (v4.9.1): id=%s", run_id, an.id)
 
     return an.id, result["html"], result.get("meta", {})
 
@@ -664,7 +768,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     db = SessionLocal()
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v4.9.0 for briefing_id=%s", run_id, briefing_id)
+        log.info("[%s] 🚀 Starting analysis v4.9.1 for briefing_id=%s", run_id, briefing_id)
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
         rep = Report(user_id=br.user_id if br else None, briefing_id=briefing_id, analysis_id=an_id, created_at=datetime.now(timezone.utc))
