@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
+"""
+services.quality_harness – v1.1
+- Fix: Regex für neutrale Tonalität nutzt jetzt Wortgrenzen korrekt (\b statt literal '\\b').
+- Pflicht-Abschnitte unverändert.
+"""
 import re
 from typing import Dict, List
 
@@ -19,16 +24,18 @@ def _needs_basic_tags(s: str) -> bool:
 
 def run_quality_checks(sections: Dict[str,str]) -> List[str]:
     issues: List[str] = []
-    # neutral tone check for Exec-Summary
-    es = sections.get("EXECUTIVE_SUMMARY_HTML","")
+    es = sections.get("EXECUTIVE_SUMMARY_HTML","") or ""
     if _has_fenced_code(es): issues.append("Executive Summary enthält Code-Fences")
     if _needs_basic_tags(es): issues.append("Executive Summary ohne Basistags")
-    if re.search(r"\\b(wir|unser|ich)\\b", es, flags=re.IGNORECASE):
+    # KORREKT: Wortgrenzen
+    if re.search(r"\b(wir|unser|ich)\b", es, flags=re.IGNORECASE) is None:
+        pass  # no issue
+    else:
         issues.append("Executive Summary nicht neutral (Wir/Ich-Formulierungen)")
-    # presence of required sections
+
     for k in REQUIRED_SECTIONS:
         if not sections.get(k): issues.append(f"Abschnitt fehlt oder leer: {k}")
-    # quick wins shouldn't contain fences
+
     qw = (sections.get("QUICK_WINS_HTML_LEFT","") or "") + (sections.get("QUICK_WINS_HTML_RIGHT","") or "")
     if _has_fenced_code(qw): issues.append("Quick Wins enthalten Code-Fences")
     return issues

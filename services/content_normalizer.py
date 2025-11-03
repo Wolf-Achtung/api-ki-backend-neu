@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-services.content_normalizer – v4.8.1 (syntax-safe)
-Fix für SyntaxError: "unexpected character after line continuation character" (typisch bei Backslash-Zeilenumbrüchen).
-Diese Version vermeidet Backslashes in String-Literalen vollständig und nutzt robuste Builder.
+services.content_normalizer – v4.8.2
+- Fix: Regex-Korrektur in _parse_budget_range (\\d → \d), damit Zahlenbereiche korrekt erkannt werden.
+- Beibehaltung der v4.8.1-Änderungen (keine Backslash-Zeilenumbrüche).
 """
-
 from typing import Dict, Any
 import re
 
-# Optional: sanitize helper (falls Projektfunktion fehlt)
 try:
     from .sanitize import ensure_utf8  # type: ignore
 except Exception:  # pragma: no cover
@@ -18,9 +16,7 @@ except Exception:  # pragma: no cover
 
 EM_DASH = "—"
 
-
 def _table(headers, rows) -> str:
-    """Erzeugt eine HTML-Tabelle ohne Backslash-Escapes."""
     parts = []
     parts.append('<table class="table"><thead><tr>')
     for h in headers:
@@ -34,20 +30,19 @@ def _table(headers, rows) -> str:
     parts.append("</tbody></table>")
     return "".join(parts)
 
-
 def _to_eur(v: float) -> str:
     s = f"{v:,.2f} €"
     s = s.replace(",", "X").replace(".", ",").replace("X", ".")
     return s
 
-
 def _parse_budget_range(text: str) -> float:
     if not text:
         return 0.0
-    t = str(text)
-    m = re.match(r"(\\d+)[^\\d]+(\\d+)", t)
+    t = str(text).strip()
+    # KORREKT: echte Ziffern-Pattern (\d), nicht literal '\\d'
+    m = re.match(r"(\d+)[^\d]+(\d+)", t)
     if not m:
-        m = re.match(r"(\\d+)_?(\\d+)?", t)
+        m = re.match(r"(\d+)_?(\d+)?", t)
     if m:
         low = float(m.group(1))
         high = float(m.group(2) or m.group(1))
@@ -56,7 +51,6 @@ def _parse_budget_range(text: str) -> float:
         return float(t)
     except Exception:
         return 0.0
-
 
 def _branch_defaults(branche: str, size: str) -> Dict[str, Any]:
     b = (branche or "").lower()
@@ -78,8 +72,6 @@ def _branch_defaults(branche: str, size: str) -> Dict[str, Any]:
         }
     }
     d = defaults.get(b, defaults["beratung"])
-
-    # größenabhängige Anpassung
     kpis = list(d["kpis"])
     s = (size or "").lower()
     if s == "solo":
@@ -90,7 +82,6 @@ def _branch_defaults(branche: str, size: str) -> Dict[str, Any]:
         kpis[1] = (kpis[1][0], kpis[1][1], "≤ 45 min")
     return {"kpis": kpis, "tools": d.get("tools", [])}
 
-
 def _kpi_tables(branche: str, size: str) -> Dict[str, str]:
     d = _branch_defaults(branche, size)
     overview = _table(["KPI", "Definition", "Ziel"], d["kpis"]) if d.get("kpis") else ""
@@ -98,7 +89,6 @@ def _kpi_tables(branche: str, size: str) -> Dict[str, str]:
         "KPI_HTML": overview or f"<p>{ensure_utf8(EM_DASH)}</p>",
         "KPI_BRANCHE_HTML": overview or f"<p>{ensure_utf8(EM_DASH)}</p>",
     }
-
 
 def _roi_and_costs(briefing: Dict[str, Any], metrics: Dict[str, Any]) -> Dict[str, str]:
     invest_hint = _parse_budget_range(briefing.get("investitionsbudget"))
@@ -127,7 +117,6 @@ def _roi_and_costs(briefing: Dict[str, Any], metrics: Dict[str, Any]) -> Dict[st
         "invest_value": invest,
     }
 
-
 def _sensitivity_table(invest: float, monthly_base: float, rate: float) -> str:
     if invest <= 0 or monthly_base <= 0:
         return "<p>—</p>"
@@ -139,7 +128,6 @@ def _sensitivity_table(invest: float, monthly_base: float, rate: float) -> str:
         pb = (invest / mon) if mon > 0 else 0.0
         rows.append((f"{int(f * 100)} %", f"{_to_eur(yr)} / {_to_eur(mon)}", f"{roi:.0f} %", f"{pb:.1f} Monate"))
     return _table(["Adoption", "Ersparnis Jahr / Monat", "ROI", "Payback"], rows)
-
 
 def _so_what(scores: Dict[str, int]) -> str:
     g = scores.get("governance", 0)
@@ -158,7 +146,6 @@ def _so_what(scores: Dict[str, int]) -> str:
     if not items:
         items.append("<li>Reifegrad solide – Fokus auf Skalierung: wiederverwendbare Bausteine & Automatisierungsgrad erhöhen.</li>")
     return "<ul>" + "".join(items) + "</ul>"
-
 
 def _default_tools_and_funding(briefing: Dict[str, Any], last_updated: str, report_date: str) -> Dict[str, str]:
     b = (briefing.get("bundesland") or "").lower()
@@ -184,19 +171,13 @@ def _default_tools_and_funding(briefing: Dict[str, Any], last_updated: str, repo
         funding_html += f'<p class="small">Stand: {ensure_utf8(report_date)} • Research: {ensure_utf8(last_updated or report_date)}</p>'
     return {"TOOLS_HTML": tools_html, "FOERDERPROGRAMME_HTML": funding_html}
 
-
 def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
                                   snippets: Dict[str, str] = None,
                                   metrics: Dict[str, Any] = None,
                                   **kwargs) -> Dict[str, str]:
-    """
-    Kompatible Signatur (nimmt auch sections=, answers=, metrics= via kwargs entgegen).
-    Befüllt fehlende Blöcke deterministisch und liefert HTML zurück.
-    """
     snippets = snippets or kwargs.get("sections") or {}
     briefing = briefing or kwargs.get("answers") or {}
     metrics = metrics or kwargs.get("metrics") or {}
-
     out = dict(snippets or {})
 
     # KPI
@@ -233,5 +214,4 @@ def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
                 ("INQA‑Coaching", "inqa.de", "—", "https://inqa.de"),
             ],
         )
-
     return out
