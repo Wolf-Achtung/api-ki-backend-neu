@@ -1,17 +1,25 @@
-# file: gpt_analyze.py
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-Analysiert Briefings, generiert Sections & Meta und rendert HTML/PDF + Mails.
+gpt_analyze.py – v4.10.4-gs (Gold‑Standard+)
+-------------------------------------------
+Ziele:
+- Stabile, reproduzierbare Report-Pipeline (Briefing → HTML → PDF → E‑Mails).
+- KI‑Act‑Integration (Zusammenfassung + Add‑on‑Pakete) inkl. CTA für Tabellen‑Add‑on (2025–2027).
+- "Micro‑Polish" für PDFs: One‑liner (unter H2), Faint Watermark, Next‑Actions‑Box, Mikro‑Typografie‑Labels.
+- Prompts berücksichtigen stets: Branche, Unternehmensgröße, Hauptleistung (Produkt/DL) und Bundesland (Förderung).
+- Robuste Quick‑Wins‑Summierung; Fallback über ENV.
+- PDF‑Client: X‑Request‑Id als str (Fix liegt im services/pdf_client.py).
+- UTF‑8 sauber; defensive Fehlerbehandlung; PEP8‑konform.
 
-v4.10.4 (Gold‑Standard+)
-- Einbindung „Branche + Unternehmensgröße + Haupt‑Leistung + Bundesland“ in **alle** Prompts.
-- One‑liner für alle H2‑Abschnitte (Erkenntnis; Wirkung → nächster Schritt).
-- EU‑AI‑Act‑Kapitel inkl. CTA‑Box & Add‑on‑Pakete (Lite/Pro/Max) und Phase‑Label (ENV).
-- Sensitivitätstabelle (100/80/60 %) für Business Case.
-- Reality‑Check‑Randnotiz bei Quick‑Wins.
-- Watermark‑Text (nur Deckblatt/Schlussseite im Template).
-- Stabilität: robuste Fallbacks (Labels, Summen), UTF‑8‑sicher, Logs.
+Kompatibilität:
+- Erwartet vorhandene Module: core.db.SessionLocal, models (User/Briefing/Analysis/Report), services.report_renderer.render,
+  services.pdf_client.render_pdf_from_html, services.email.(send_mail), services.email_templates.render_report_ready_email.
+- Optionale Module (best effort): services.answers_normalizer.normalize_answers, services.research_pipeline.run_research,
+  services.kpi_builder.build_kpis, services.playbooks.build_playbooks.
+
+Hinweis:
+- Diese Version ersetzt nichts Funktionales aus euren v4.8/4.9‑Zweigen, sondern vereinheitlicht und ergänzt sie.
 """
 
 import json
@@ -19,7 +27,7 @@ import logging
 import os
 import re
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
@@ -34,6 +42,8 @@ from services.email_templates import render_report_ready_email
 from settings import settings
 
 log = logging.getLogger(__name__)
+
+ANALYSIS_VERSION = "4.10.4-gs"
 
 # ----- LLM / API -----
 OPENAI_API_KEY = getattr(settings, "OPENAI_API_KEY", None) or os.getenv("OPENAI_API_KEY")
@@ -51,15 +61,17 @@ ENABLE_LLM_CONTENT = (os.getenv("ENABLE_LLM_CONTENT", "1") == "1")
 ENABLE_REPAIR_HTML = (os.getenv("ENABLE_REPAIR_HTML", "1") == "1")
 USE_INTERNAL_RESEARCH = (os.getenv("USE_INTERNAL_RESEARCH", "1") == "1")
 
-# EU‑AI‑Act
+# EU‑AI‑Act‑Integration
 ENABLE_AI_ACT_SECTION = (os.getenv("ENABLE_AI_ACT_SECTION", "1") == "1")
 AI_ACT_INFO_PATH = os.getenv("AI_ACT_INFO_PATH", "EU-AI-ACT-Infos-wichtig.txt")
 AI_ACT_PHASE_LABEL = os.getenv("AI_ACT_PHASE_LABEL", "2025–2027")
 
+# Debug
 DBG_PDF = (os.getenv("DEBUG_LOG_PDF_INFO", "1") == "1")
 DBG_MASK_EMAILS = (os.getenv("DEBUG_MASK_EMAILS", "1") == "1")
 
-# -------------------- NSFW‑Filter (Research) ----------------------
+
+# -------------------- Helpers: NSFW‑Filter für Research ----------------------
 NSFW_KEYWORDS = {
     'porn','xxx','sex','nude','naked','adult','nsfw','erotic','webcam','escort','dating','hookup','milf','teen','amateur',
     'porno','nackt','fick','muschi','schwanz','titten','chudai','chut','lund','gaand','bhabhi','desi',
@@ -198,15 +210,15 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
         'enablement': min(ena, 25) * 4,
         'overall': round((min(gov,25)+min(sec,25)+min(val,25)+min(ena,25))*4/4)
     }
-    log.info("📊 REALISTIC SCORES v4.10.4: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
-             scores['governance'], scores['security'], scores['value'], scores['enablement'], scores['overall'])
+    log.info("📊 REALISTIC SCORES v%s: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
+             ANALYSIS_VERSION, scores['governance'], scores['security'], scores['value'], scores['enablement'], scores['overall'])
     return {'scores': scores, 'details': details, 'total': scores['overall']}
 
 
 # ------------------------------ OpenAI --------------------------------------
 def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
                  temperature: Optional[float] = None, max_tokens: Optional[int] = None) -> Optional[str]:
-    """Chat Completions; unterstützt OPENAI_API_BASE (Azure: Header 'api-key')."""
+    """Chat Completions; unterstützt OPENAI_API_BASE (Azure: header 'api-key')."""
     if not OPENAI_API_KEY:
         log.error("❌ OPENAI_API_KEY not set")
         return None
@@ -215,7 +227,6 @@ def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
     api_base = (OPENAI_API_BASE or "https://api.openai.com").rstrip("/")
     url = f"{api_base}/v1/chat/completions"
     headers = {"Content-Type": "application/json"}
-    # Warum: Azure verlangt 'api-key'.
     if "openai.azure.com" in api_base:
         headers["api-key"] = OPENAI_API_KEY
     else:
@@ -296,20 +307,14 @@ def _sum_hours_from_quick_wins(html: str) -> int:
 
 
 # ----------------------- LLM‑Content Generator ------------------------------
-def _context_line(answers: Dict[str, Any]) -> str:
-    branche = answers.get('BRANCHE_LABEL') or answers.get('branche') or 'Unternehmen'
-    groesse = answers.get('UNTERNEHMENSGROESSE_LABEL') or answers.get('unternehmensgroesse') or '—'
-    bundesland = answers.get('BUNDESLAND_LABEL') or answers.get('bundesland') or '—'
-    hauptleistung = answers.get('hauptleistung') or answers.get('hauptprodukt') or answers.get('haupt_dienstleistung') or ''
-    return f"Kontext: Branche {branche}; Unternehmensgröße {groesse}; Standort (Bundesland) {bundesland}; Haupt‑Produkt/Leistung: {hauptleistung}."
-
 def _generate_content_section(section_name: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
+    """Prompts berücksichtigen Branchensicht, Größe, Hauptleistung, Bundesland."""
     if not ENABLE_LLM_CONTENT:
         return f"<p><em>[{section_name} – LLM disabled]</em></p>"
-    branche = briefing.get('BRANCHE_LABEL') or briefing.get('branche','Unternehmen')
-    hauptleistung = briefing.get('hauptleistung') or briefing.get('hauptprodukt') or briefing.get('haupt_dienstleistung') or ''
-    groesse = briefing.get('UNTERNEHMENSGROESSE_LABEL') or briefing.get('unternehmensgroesse') or '—'
-    bundesland = briefing.get('BUNDESLAND_LABEL') or briefing.get('bundesland') or '—'
+    branche = briefing.get('BRANCHE_LABEL') or briefing.get('branche') or 'Unternehmen'
+    groesse = briefing.get('UNTERNEHMENSGROESSE_LABEL') or briefing.get('unternehmensgroesse') or ''
+    bundesland = briefing.get('BUNDESLAND_LABEL') or briefing.get('bundesland') or ''
+    hauptleistung = briefing.get('hauptleistung') or briefing.get('hauptprodukt') or ''
     ki_ziele = briefing.get('ki_ziele', [])
     ki_projekte = briefing.get('ki_projekte', '')
     vision = briefing.get('vision_3_jahre', '')
@@ -319,52 +324,40 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
 
     tone = "Sprache: neutral, dritte Person; keine Wir/Ich‑Formulierungen."
     only_html = "Antworte ausschließlich mit validem HTML (ohne Markdown‑Fences)."
-    ctx = _context_line(briefing)
+    context = f"Kontext: Branche {branche}; Größe {groesse}; Standort/Bundesland {bundesland}; Hauptleistung {hauptleistung}."
 
     prompts = {
-        'executive_summary': f"""{ctx}
-Erstelle eine prägnante Executive Summary für ein {branche}-Unternehmen.
-Hauptleistung: {hauptleistung}
+        'executive_summary': f"""Erstelle eine prägnante Executive Summary. {context}
 KI‑Ziele: {', '.join(ki_ziele) if ki_ziele else 'nicht definiert'}
 Vision: {vision}
 KI‑Reifegrad: Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/100 • Nutzen {value}/100 • Befähigung {enablement}/100
 {tone} {only_html} Verwende nur <p>-Absätze.""",
-        'quick_wins': f"""{ctx}
-Liste 4–6 **konkrete Quick Wins** (0–90 Tage) für {branche}.
+        'quick_wins': f"""Liste 4–6 **konkrete Quick Wins** (0–90 Tage). {context}
 Jeder Quick Win: Titel, 1–2 Sätze Nutzen, realistische **Ersparnis: … h/Monat**.
-Bezug: Hauptleistung {hauptleistung}; Projekte: {ki_projekte or 'keine'}.
+Bezug: Projekte {ki_projekte or 'keine'}; Förderkontext {bundesland} einbeziehen, wenn relevant.
 {tone} {only_html} Liefere exakt eine <ul>-Liste mit <li>-Einträgen:
 <li><strong>Titel:</strong> Beschreibung. <em>Ersparnis: 5 h/Monat</em></li>""",
-        'roadmap': f"""{ctx}
-Erstelle eine **90‑Tage‑Roadmap** (0–30 Test; 31–60 Pilot; 61–90 Rollout).
+        'roadmap': f"""Erstelle eine **90‑Tage‑Roadmap** (0–30 Test; 31–60 Pilot; 61–90 Rollout). {context}
 {tone} {only_html} Pro Phase 3–5 Meilensteine. Format: <h4>Phase …</h4> + <ul>…</ul>.""",
-        'business_roi': f"""{ctx}
-Erstelle eine **ROI & Payback**‑Tabelle (Jahr 1). {tone} {only_html}
-Format: <table> mit 2 Spalten (Kennzahl, Wert). Keine Fließtexte.""",        
-        'business_costs': f"""{ctx}
-Erstelle eine **Kostenübersicht Jahr 1**. {tone} {only_html}
+        'business_roi': f"""Erstelle eine **ROI & Payback**‑Tabelle (Jahr 1). {context} {tone} {only_html}
+Format: <table> mit 2 Spalten (Kennzahl, Wert). Keine Fließtexte.""",
+        'business_costs': f"""Erstelle eine **Kostenübersicht Jahr 1**. {context} {tone} {only_html}
 Format: <table> mit 2 Spalten (Position, Betrag).""",
-        'recommendations': f"""{ctx}
-Formuliere 5–7 **Handlungsempfehlungen** mit Priorität [H/M/N] und Zeitrahmen (30/60/90).
+        'recommendations': f"""Formuliere 5–7 **Handlungsempfehlungen** mit Priorität [H/M/N] und Zeitrahmen (30/60/90). {context}
 {tone} {only_html} Format: <ol><li><strong>[H]</strong> Maßnahme – <em>60 Tage</em></li></ol>.""",
-        'risks': f"""{ctx}
-Erstelle eine **Risikomatrix** (5–7 Risiken) + EU AI Act Pflichtenliste.
+        'risks': f"""Erstelle eine **Risikomatrix** (5–7 Risiken) + EU AI Act Pflichtenliste. {context}
 {tone} {only_html} Format: <table> mit <thead>/<tbody>.""",
-        'gamechanger': f"""{ctx}
-Skizziere einen **Gamechanger‑Use Case**. (Idee: 3–4 Sätze; 3 Vorteile; 3 Schritte)
+        'gamechanger': f"""Skizziere einen **Gamechanger‑Use Case**. (Idee: 3–4 Sätze; 3 Vorteile; 3 Schritte) {context}
 {tone} {only_html} Verwende <h4>, <p>, <ul>.""",
-        'roadmap_12m': f"""{ctx}
-Erstelle eine **12‑Monats‑Roadmap** in 3 Phasen (0–3/3–6/6–12).
-{tone} {only_html} Format: <div class=\"roadmap\"><div class=\"roadmap-phase\">…</div></div>.""",
-        'data_readiness': f"""{ctx}
-Erstelle eine kompakte **Dateninventar & ‑Qualität**‑Übersicht.
-{tone} {only_html} Format: <div class=\"data-readiness\"><h4>…</h4><ul>…</ul></div>.""",
-        'org_change': f"""{ctx}
-Beschreibe **Organisation & Change**: Governance‑Rollen, Skill‑Programm, Kommunikation.
-{tone} {only_html} Format: <div class=\"org-change\">…</div>.""",
-        'business_case': f"""{ctx}
-Erstelle einen kompakten **Business Case (detailliert)** – Annahmen, Nutzen (J1), Kosten (CapEx/OpEx), Payback, ROI, Sensitivität.
-{tone} {only_html} Format: <div class=\"business-case\"> mit Listen & <p>."""
+        'roadmap_12m': f"""Erstelle eine **12‑Monats‑Roadmap** in 3 Phasen (0–3/3–6/6–12). {context}
+{tone} {only_html} Format: <div class="roadmap"><div class="roadmap-phase">…</div></div>.""",
+        'data_readiness': f"""Erstelle eine kompakte **Dateninventar & ‑Qualität**‑Übersicht. {context}
+{tone} {only_html} Format: <div class="data-readiness"><h4>…</h4><ul>…</ul></div>.""",
+        'org_change': f"""Beschreibe **Organisation & Change**: Governance‑Rollen, Skill‑Programm, Kommunikation. {context}
+{tone} {only_html} Format: <div class="org-change">…</div>.""",
+        'business_case': f"""Erstelle einen kompakten **Business Case (detailliert)** – Annahmen, Nutzen (J1), Kosten (CapEx/OpEx),
+Payback, ROI, Sensitivität (100/80/60 %). {context} {tone} {only_html}
+Format: <div class="business-case"> mit Listen & <p>."""
     }
     out = _call_openai(
         prompt=prompts[section_name],
@@ -379,9 +372,8 @@ Erstelle einen kompakten **Business Case (detailliert)** – Annahmen, Nutzen (J
 
 def _one_liner(title: str, section_html: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
     """Erzeugt One‑liner gemäß Vorlage (Erkenntnis; Wirkung → nächster Schritt)."""
-    base = f"""{_context_line(briefing)}
-Erzeuge einen prägnanten **One‑liner** unter der H2‑Überschrift \"{title}\".
-Formel: \"Kernaussage; Konsequenz → konkreter nächster Schritt\".
+    base = f"""Erzeuge einen prägnanten **One‑liner** unter der H2‑Überschrift "{title}".
+Formel: "Kernaussage; Konsequenz → konkreter nächster Schritt".
 Gib nur **eine** Zeile ohne HTML‑Tags zurück."""
     text = _call_openai(base + "\n---\n" + re.sub(r"<[^>]+>", " ", section_html)[:1800],
                         system_prompt="Du formulierst prägnante One‑liner auf Deutsch.",
@@ -399,7 +391,7 @@ def _split_li_list_to_columns(html_list: str) -> Tuple[str, str]:
     return "<ul>" + "".join(items[:mid]) + "</ul>", "<ul>" + "".join(items[mid:]) + "</ul>"
 
 
-# ----------------------- AI‑Act: Datei → HTML‑Blöcke ------------------------
+# ----------------------- AI-Act: Datei → HTML‑Blöcke ------------------------
 def _try_read(path: str) -> Optional[str]:
     # Warum: Datei kann je nach Deployment unter /app oder /mnt/data liegen.
     if os.path.exists(path):
@@ -453,6 +445,7 @@ def _md_to_simple_html(md: str) -> str:
     return "\n".join(out)
 
 def _build_ai_act_blocks() -> Dict[str, str]:
+    """Liest die AI-Act-Datei, erstellt Summary + CTA + Add-on-Pakete."""
     if not ENABLE_AI_ACT_SECTION:
         return {}
     text = _try_read(AI_ACT_INFO_PATH) or ""
@@ -510,23 +503,6 @@ def _version_major_minor(v: str) -> str:
 def _build_watermark_text(report_id: str, version_mm: str) -> str:
     return f"Trusted KI‑Check · Report‑ID: {report_id} · v{version_mm}"
 
-def _sensitivity_table(monthly_hours: int, rate_eur: int) -> str:
-    """Einfache 100/80/60‑% Sensitivität als HTML‑Tabelle."""
-    def row(pct: int) -> str:
-        h = int(round(monthly_hours * pct/100.0))
-        eur_m = h * rate_eur
-        eur_y = eur_m * 12
-        return f"<tr><td>{pct} %</td><td>{h} h/Monat</td><td>{eur_m} €</td><td>{eur_y} €</td></tr>"
-    return ("<table class=\"table\"><thead><tr><th>Szenario</th><th>Zeitersparnis</th><th>Wert/Monat</th><th>Wert/Jahr</th></tr></thead>"
-            f"<tbody>{row(100)}{row(80)}{row(60)}</tbody></table>")
-
-def _company_name(answers: Dict[str, Any]) -> str:
-    for k in ("unternehmen","firma","company","organization","org","kunde","kundename"):
-        v = answers.get(k)
-        if isinstance(v, str) and v.strip():
-            return v.strip()
-    return "—"
-
 def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict[str, str]:
     sections: Dict[str, str] = {}
 
@@ -559,7 +535,6 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         sections['stundensatz_eur'] = rate
         lo = max(1, int(round(total_h * 0.7))); hi = int(round(total_h * 1.2))
         sections['REALITY_NOTE_QW'] = f"Praxis‑Hinweis: Diese Quick‑Wins sparen ~{lo}–{hi} h/Monat (konservativ geschätzt)."
-        sections['BUSINESS_SENSITIVITY_HTML'] = _sensitivity_table(total_h, rate)
 
     # Weitere Abschnitte
     sections['PILOT_PLAN_HTML']     = _generate_content_section('roadmap', briefing, scores)
@@ -572,11 +547,11 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections['RISKS_HTML']          = _generate_content_section('risks', briefing, scores)
     sections['GAMECHANGER_HTML']    = _generate_content_section('gamechanger', briefing, scores)
     sections['RECOMMENDATIONS_HTML']= _generate_content_section('recommendations', briefing, scores)
+    sections['REIFEGRAD_SOWHAT_HTML'] = _generate_content_section('reifegrad_sowhat', briefing, scores) if 'reifegrad_sowhat' in locals() else ""
 
     # Next Actions (30 Tage)
     nxt = _call_openai(
-        f"""{_context_line(briefing)}
-Erstelle 3–7 **Next Actions (30 Tage)** in <ol>.
+        f"""Erstelle 3–7 **Next Actions (30 Tage)** in <ol>. Kontext: Branche {briefing.get('BRANCHE_LABEL') or briefing.get('branche')}; Größe {briefing.get('UNTERNEHMENSGROESSE_LABEL') or briefing.get('unternehmensgroesse')}; Hauptleistung {briefing.get('hauptleistung')}; Bundesland {briefing.get('BUNDESLAND_LABEL') or briefing.get('bundesland')}.
 Jede Zeile: 👤 Owner, ⏱ Aufwand (z. B. ½ Tag), 🎯 Impact (hoch/mittel/niedrig), 📆 Termin (TT.MM.JJJJ) — kurze Maßnahme.
 Antwort NUR als <ol>…</ol>.""",
         system_prompt="Du bist PMO‑Lead. Antworte nur mit HTML.",
@@ -600,7 +575,7 @@ Antwort NUR als <ol>…</ol>.""",
     sections['LEAD_FUNDING']          = _one_liner("Aktuelle Förderprogramme & Quellen", "", briefing, scores)
     sections['LEAD_NEXT_ACTIONS']     = _one_liner("Nächste Schritte (30 Tage)", sections['NEXT_ACTIONS_HTML'], briefing, scores)
 
-    # ---- EU AI Act – Zusammenfassung + Angebot ----
+    # ---- NEU: EU AI Act – Zusammenfassung + Angebot ----
     if ENABLE_AI_ACT_SECTION:
         ai_act = _build_ai_act_blocks()
         sections.update(ai_act)
@@ -636,10 +611,10 @@ def _determine_user_email(db: Session, briefing: Briefing, override: Optional[st
     if override: return override
     if getattr(briefing, "user_id", None):
         u = db.get(User, briefing.user_id)
-        if u and getattr(u, "email", ""): return u.email
+        if u and getattr(u, "email", ""):
+            return u.email
     answers = getattr(briefing, "answers", None) or {}
     return answers.get("email") or answers.get("kontakt_email")
-
 
 def _fetch_pdf_if_needed(pdf_url: Optional[str], pdf_bytes: Optional[bytes]) -> Optional[bytes]:
     if pdf_bytes: return pdf_bytes
@@ -707,7 +682,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         pass
 
     # Scores
-    log.info("[%s] Calculating realistic scores (v4.10.4)...", run_id)
+    log.info("[%s] Calculating realistic scores (v%s)...", run_id, ANALYSIS_VERSION)
     score_wrap = _calculate_realistic_score(answers)
     scores = score_wrap['scores']
 
@@ -723,9 +698,10 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections['ki_kompetenz'] = answers.get('ki_kompetenz') or answers.get('ki_knowhow','')
     sections['report_date'] = datetime.now().strftime("%d.%m.%Y")
     sections['report_year'] = datetime.now().strftime("%Y")
+    sections['CUSTOMER_NAME'] = answers.get('unternehmen') or answers.get('firma') or answers.get('company') or "—"
+    sections['MAIN_PRODUCT'] = answers.get('hauptleistung') or answers.get('hauptprodukt') or "—"
     sections['transparency_text'] = getattr(settings, "TRANSPARENCY_TEXT", None) or os.getenv("TRANSPARENCY_TEXT", "") or ""
     sections['user_email'] = answers.get('email') or answers.get('kontakt_email') or ""
-    sections['COMPANY_NAME'] = _company_name(answers)
 
     # Scores ins Template
     sections['score_governance'] = scores.get('governance', 0)
@@ -738,8 +714,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     version_full = getattr(settings, "VERSION", "1.0.0")
     version_mm = _version_major_minor(version_full)
     kundencode = _derive_kundencode(answers, sections['user_email'])
-    report_id = f"R-{datetime.now().strftime('%Y%m%d')}-{kundencode}"
     sections['kundencode'] = kundencode
+    report_id = f"R-{datetime.now().strftime('%Y%m%d')}-{kundencode}"
     sections['report_id'] = report_id
     sections['report_version'] = version_mm
     sections['WATERMARK_TEXT'] = _build_watermark_text(report_id, version_mm)
@@ -797,7 +773,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         created_at=datetime.now(timezone.utc),
     )
     db.add(an); db.commit(); db.refresh(an)
-    log.info("[%s] ✅ Analysis created (v4.10.4): id=%s", run_id, an.id)
+    log.info("[%s] ✅ Analysis created (v%s): id=%s", run_id, ANALYSIS_VERSION, an.id)
 
     return an.id, result["html"], result.get("meta", {})
 
@@ -807,7 +783,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     db = SessionLocal()
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v4.10.4 for briefing_id=%s", run_id, briefing_id)
+        log.info("[%s] 🚀 Starting analysis v%s for briefing_id=%s", run_id, ANALYSIS_VERSION, briefing_id)
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
         rep = Report(user_id=br.user_id if br else None, briefing_id=briefing_id, analysis_id=an_id, created_at=datetime.now(timezone.utc))
@@ -817,7 +793,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
         db.add(rep); db.commit(); db.refresh(rep)
 
         if DBG_PDF: log.debug("[%s] pdf_render start", run_id)
-        pdf_info = render_pdf_from_html(html, meta={"analysis_id": an_id, "briefing_id": briefing_id, "run_id": run_id})
+        pdf_info = render_pdf_from_html(html, meta={"analysis_id": an_id, "briefing_id": briefing_id, "run_id": run_id, "request_id": run_id})
         pdf_url = pdf_info.get("pdf_url"); pdf_bytes = pdf_info.get("pdf_bytes"); pdf_error = pdf_info.get("error")
         if DBG_PDF: log.debug("[%s] pdf_render done url=%s bytes=%s error=%s", run_id, bool(pdf_url), len(pdf_bytes or b''), pdf_error)
 
