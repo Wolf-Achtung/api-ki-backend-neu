@@ -4,35 +4,28 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'scripts/smoke_ci.py'
-      - '.github/workflows/smoke.yml'
+      - 'scripts/**'
       - 'routes/**'
       - 'services/**'
       - 'gpt_analyze.py'
       - 'main.py'
+      - '.github/workflows/smoke.yml'
+  # optional: externe Auslösung direkt nach Railway-Deploy
   repository_dispatch:
-    types: [railway-deploy-succeeded]  # optionaler Hook-Name, falls Railway Webhook sendet
+    types: [railway-deploy-succeeded]
 
 jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
       - name: Install deps
-        run: pip install requests
-
+        run: pip install --no-input --upgrade pip requests
       - name: Run smoke (public URL)
         env:
-          BASE_URL: ${{ secrets.SMOKE_BASE_URL }}           # z.B. https://api-ki-backend-neu-production.up.railway.app
-          SMOKE_BRIEFING_ID: ${{ secrets.SMOKE_BRIEFING_ID }}   # optional, sonst legt Script selbst ein Briefing an
-          SMOKE_ANALYSIS_ID: ${{ secrets.SMOKE_ANALYSIS_ID }}   # optional, für isolierten Report-Test
-          AUTH_TOKEN: ${{ secrets.SMOKE_AUTH_TOKEN }}           # optional, nur wenn eure API Auth erfordert
+          BASE_URL: ${{ secrets.SMOKE_BASE_URL }}            # z.B. https://api-ki-backend-neu-production.up.railway.app
+          AUTH_TOKEN: ${{ secrets.SMOKE_AUTH_TOKEN }}        # optional, nur wenn API auth braucht
           TIMEOUT: '25'
         run: python scripts/smoke_ci.py
