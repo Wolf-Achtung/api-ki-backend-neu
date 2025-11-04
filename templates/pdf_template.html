@@ -1,367 +1,202 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KI-Status-Report</title>
+  <title>KI‑Status‑Report</title>
   <style>
-    /* ===== Print & Page Setup ===== */
+    /* Paged media baseline */
     @page { size: A4; margin: 22mm; }
-    @media print { * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+           font-size: 11pt; line-height: 1.25; color: #111; }
+    h1 { font-size: 20pt; margin: 0 0 .2em 0; }
+    h2 { font-size: 15pt; margin: .6em 0 .2em 0; border-bottom: 1px solid #e5e7eb; padding-bottom: .2em;}
+    h3 { font-size: 12.5pt; margin: .6em 0 .2em 0; }
+    h4 { font-size: 11.5pt; margin: .6em 0 .2em 0; }
+    p, li { font-size: 11pt; }
+    .muted { color: #6b7280; }
+    .small { font-size: 9pt; }
+    .grid { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+    .lead { font-style: italic; margin: .15em 0 .4em 0; color: #374151; }
+    .pill { display: inline-block; padding: .1em .5em; border-radius: 6px; background: #f3f4f6; }
+    .table { width: 100%; border-collapse: collapse; }
+    .table th, .table td { border: 1px solid #e5e7eb; padding: 6px 8px; vertical-align: top; }
+    .cols { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+    .callout { border-left: 3px solid #111827; padding: .5em .75em; background: #f9fafb; }
+    .sidebar-note { border-left: 4px solid #d1d5db; background: #f5f6f7; padding: .5em .75em; font-size: 10pt; color: #374151; }
 
-    /* ===== Design Tokens / Baseline Grid ===== */
-    :root{
-      /* Farb-Token (Audit-Stil) */
-      --fg:#1A1A1A;
-      --muted:#5A5A5A;
-      --border:#E6E6E6;
-      --brand:#0B6BFF;
-      --bg:#ffffff;
-      --card:#F8FAFC;
+    /* Watermark: nur Deckblatt & Schlussseite */
+    .watermark { position: fixed; bottom: 12mm; right: 10mm; opacity: 0.07; font-size: 9pt; letter-spacing: .05em; }
+    .cover .watermark { display: block; }
+    .page { page-break-after: always; }
+    .last-page { page-break-before: always; }
+    .page .watermark { display: none; }
 
-      /* Grid & Spacing (8px-Raster -> in pt angenähert) */
-      --g: 6pt;               /* ≈ 8px */
-      --s-1: calc(var(--g)*1.0);  /* 6pt  */
-      --s-2: calc(var(--g)*1.25); /* 7.5pt ~ 8pt */
-      --s-3: calc(var(--g)*1.5);  /* 9pt   */
-      --s-4: calc(var(--g)*2.0);  /* 12pt  */
-      --s-5: calc(var(--g)*2.5);  /* 15pt  */
-      --s-6: calc(var(--g)*3.0);  /* 18pt  */
-      --s-7: calc(var(--g)*3.5);  /* 21pt  */
-
-      /* Typo */
-      --fs-body: 11pt; /* Zeilenlänge 70-85ch */
-      --lh-body: 1.55;
-
-      --fs-h1: 22pt;
-      --fs-h2: 16.5pt;
-      --fs-h3: 14pt;
-      --fs-h4: 12pt;
-    }
-
-    /* ===== Base ===== */
-    html,body{
-      margin:0; padding:0; background:var(--bg); color:var(--fg);
-      font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Apple Color Emoji","Segoe UI Emoji";
-      font-size: var(--fs-body); line-height: var(--lh-body); letter-spacing:.01em;
-    }
-    .container{ max-width: 960px; margin: 0 auto; padding: 0; }
-
-    h1,h2,h3,h4{ font-weight:600; line-height:1.25; margin: var(--s-5) 0 var(--s-2); }
-    h1{ font-size: var(--fs-h1); margin-top: var(--s-6); }
-    h2{ font-size: var(--fs-h2); padding-bottom: 2pt; border-bottom: 2px solid var(--border); }
-    h3{ font-size: var(--fs-h3); }
-    h4{ font-size: var(--fs-h4); }
-
-    p{ margin: 0 0 var(--s-3) 0; }
-    a{ color: var(--brand); text-decoration: underline; text-underline-offset: 2px; }
-
-    /* ===== Utility ===== */
-    .small{ font-size: 9.5pt; color: var(--muted); }
-    .muted{ color: var(--muted); }
-    .section-lead{ margin: 0 0 var(--s-4); font-style: italic; color:#223a6b; }
-
-    .card{
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: var(--s-4);
-      margin: var(--s-3) 0;
-      page-break-inside: avoid;
-    }
-    .callout{
-      border-left: 4pt solid var(--brand);
-      padding: var(--s-3) var(--s-4);
-      background: #F4F8FF;
-      border-radius: 6pt;
-      page-break-inside: avoid;
-    }
-    .aside{
-      border-left: 2pt solid var(--border);
-      padding-left: var(--s-4);
-      margin: var(--s-3) 0;
-      color:#334155;
-      background: linear-gradient(90deg,#f1f5f9,transparent);
-    }
-    .next-actions{
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: var(--s-4);
-      background: #fff;
-    }
-    .legend{ font-size:10pt; color:var(--muted); margin-top: var(--s-2); }
-    .footer-note{ font-size:10pt; color:var(--muted); margin-top: var(--s-6); }
-
-    .two-col{ display:flex; gap: var(--s-4); }
-    .two-col > .col{ flex:1; }
-
-    .kv{ display:grid; grid-template-columns: 180pt 1fr; gap: var(--s-2) var(--s-4); }
-    .kv div{ padding: 2pt 0; }
-
-    .meta-version{ text-align:right; font-size:9.5pt; color:var(--muted) }
-
-    .watermark{
-      position: fixed; bottom: 12mm; right: 10mm; opacity: 0.07;
-      font-size: 9pt; letter-spacing: .05em;
-    }
-
-    /* ===== Tables (audit-tauglich) ===== */
-    .table{ width:100%; border-collapse: collapse; margin: var(--s-4) 0; }
-    .table thead th{
-      text-align:left; font-weight:600; padding: 7pt 9pt;
-      background: #F7F7F8; border-bottom: 1px solid var(--border);
-    }
-    .table td{
-      padding: 7pt 9pt; border-bottom: 1px solid var(--border);
-      vertical-align: top; word-break: break-word;
-    }
-    .table tr{ page-break-inside: avoid; }
-    .num{ text-align:right; }
-
-    /* ===== Branding: Logo-Bänder ===== */
-    .brandbar{
-      display:flex; align-items:center; gap: var(--s-5);
-      padding: var(--s-4); border:1px solid var(--border);
-      border-radius: 12pt; background:#FFFFFF; margin: var(--s-4) 0 var(--s-5);
-    }
-    .brandbar__left{ display:flex; align-items:center; gap: var(--s-4); flex-wrap:wrap; }
-    .brandbar__right{ margin-left:auto; display:flex; align-items:center; gap: var(--s-4); }
-    .brandbar img{ display:block; height: 36pt; }
-
-    /* Compliance strip for AI Act / DSGVO */
-    .compliance-strip{
-      display:flex; align-items:center; gap: var(--s-4);
-      background:#EFF6FF; border:1px solid #D8E6FF; border-radius:10pt;
-      padding: var(--s-3) var(--s-4); margin: var(--s-4) 0;
-    }
-    .compliance-strip img{ height: 20pt; }
-
-    /* Cover Badge Positioning (optional visual punch) */
-    .cover-badges{
-      display:flex; gap: var(--s-4); align-items:center; flex-wrap:wrap; margin-top: var(--s-4);
-    }
-    .cover-badges img{ height: 48pt; }
-
-    /* Page control helpers */
-    .page-cover{ page-break-after: always; }
-    .avoid-break{ page-break-inside: avoid; }
+    /* Meta header/footer */
+    .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .meta .kv > div { margin: 2px 0; }
+    .footer-note { margin-top: 6px; font-size: 9pt; color: #6b7280; }
+    .kpis { margin-top: 4px; }
   </style>
 </head>
 <body>
-  <!-- Watermark nur Deckblatt & Schluss -->
-  <div class="watermark">{{WATERMARK_TEXT}}</div>
+  <!-- Deckblatt -->
+  <section class="cover page">
+    <h1>KI‑Status‑Report</h1>
+    <p class="muted">Ihr individueller Fahrplan zur erfolgreichen KI‑Integration · DSGVO · EU AI Act</p>
 
-  <div class="container">
-
-    <!-- ===== Cover mit prominenter Logo-Brandbar ===== -->
-    <section class="page-cover">
-      <div class="brandbar">
-        <div class="brandbar__left">
-          <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt Logo" />
-          <img src="tuev-logo-transparent.webp" alt="TÜV Austria – zertifiziert" />
-        </div>
-        <div class="brandbar__right">
-          <img src="ki-ready-2025.webp" alt="KI-READY 2025 Badge" />
-        </div>
+    <div class="meta">
+      <div class="kv">
+        <div><strong>Branche:</strong> {{ BRANCHE_LABEL }}</div>
+        <div><strong>Unternehmensgröße:</strong> {{ UNTERNEHMENSGROESSE_LABEL }}</div>
+        <div><strong>Standort (Bundesland):</strong> {{ BUNDESLAND_LABEL }}</div>
+        <div><strong>Erstellungsdatum:</strong> {{ report_date }}</div>
+        <div><strong>Prüferkürzel:</strong> {{ AUDITOR_INITIALS }}</div>
       </div>
-
-      <h1>KI-Status-Report</h1>
-      <p class="small">Ihr individueller Fahrplan zur erfolgreichen KI-Integration</p>
-
-      <div class="cover-badges">
-        <!-- kleine Compliance-Icons als zusätzlicher Vertrauensanker -->
-        <img src="dsgvo.svg" alt="DSGVO" />
-        <img src="eu-ai.svg" alt="EU AI Act" />
+      <div class="kv">
+        <div class="small muted">Transparenz: Dieser Report wurde teilweise mithilfe von KI‑Systemen erstellt und im europäischen Rechtsrahmen (EU AI Act, DSGVO) geprüft. Alle Empfehlungen werden redaktionell kuratiert.</div>
+        <div class="small"><strong>Version:</strong> v{{ report_version }} · <strong>Report‑ID:</strong> {{ report_id }}</div>
+        <div class="small muted">Änderungslog kurz: „{{ CHANGELOG_SHORT }}“</div>
       </div>
+    </div>
 
-      <div class="card avoid-break">
-        <h3>Mini-Meta</h3>
-        <div class="kv">
-          <div>Branche</div><div>{{BRANCHE_LABEL}}</div>
-          <div>Unternehmensgröße</div><div>{{UNTERNEHMENSGROESSE_LABEL}}</div>
-          <div>Standort (Bundesland)</div><div>{{BUNDESLAND_LABEL}}</div>
-          <div>Erstellungsdatum</div><div>{{report_date}}</div>
-          <div>Prüferkürzel</div><div>{{AUDITOR_INITIALS}}</div>
-        </div>
-        <div class="meta-version">v{{report_version}} · Änderungslog kurz: „{{CHANGELOG_SHORT}}“</div>
-      </div>
+    <div class="kpis">
+      <table class="table">
+        <thead><tr><th>Dimension</th><th>Score</th></tr></thead>
+        <tbody>
+          <tr><td>Governance</td><td>{{ score_governance }}/100</td></tr>
+          <tr><td>Sicherheit &amp; Compliance</td><td>{{ score_sicherheit }}/100</td></tr>
+          <tr><td>Nutzen &amp; Prozesse</td><td>{{ score_nutzen }}/100</td></tr>
+          <tr><td>Befähigung &amp; Kultur</td><td>{{ score_befaehigung }}/100</td></tr>
+          <tr><td><strong>Gesamt</strong></td><td><strong>{{ score_gesamt }}/100</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
 
-      <div class="card avoid-break">
-        <h3>KI-Reifegrad (Säulen)</h3>
-        <table class="table">
-          <thead><tr><th>Dimension</th><th class="num">Score</th></tr></thead>
-          <tbody>
-            <tr><td>Governance</td><td class="num">{{score_governance}}/100</td></tr>
-            <tr><td>Sicherheit &amp; Compliance</td><td class="num">{{score_sicherheit}}/100</td></tr>
-            <tr><td>Nutzen &amp; Prozesse</td><td class="num">{{score_nutzen}}/100</td></tr>
-            <tr><td>Befähigung &amp; Kultur</td><td class="num">{{score_befaehigung}}/100</td></tr>
-            <tr><th>Gesamt</th><th class="num">{{score_gesamt}}/100</th></tr>
-          </tbody>
-        </table>
-        <p class="small">Transparenz: {{transparency_text}}</p>
-      </div>
-    </section>
+    <div class="watermark">{{ WATERMARK_TEXT }}</div>
+  </section>
 
-    <!-- ===== Executive Summary ===== -->
-    <section>
-      <h2>Executive Summary</h2>
-      <p class="section-lead">{{LEAD_EXEC}}</p>
-      <div class="callout">{{EXECUTIVE_SUMMARY_HTML}}</div>
-    </section>
+  <!-- Executive Summary -->
+  <section class="page">
+    <h2>Executive Summary</h2>
+    <p class="lead">{{ LEAD_EXEC }}</p>
+    {{ EXECUTIVE_SUMMARY_HTML }}
+  </section>
 
-    <!-- ===== KPI ===== -->
-    <section>
-      <h2>KPI-Dashboard &amp; Monitoring</h2>
-      <p class="section-lead">{{LEAD_KPI}}</p>
-      <div class="card avoid-break">
-        <h3>Überblick</h3>
-        {{KPI_HTML}}
-      </div>
-      <div class="card avoid-break">
-        <h3>Branchenspezifische KPIs</h3>
-        {{KPI_BRANCHE_HTML}}
-      </div>
-    </section>
+  <!-- KPI -->
+  <section class="page">
+    <h2>KPI‑Dashboard &amp; Monitoring</h2>
+    <p class="lead">{{ LEAD_KPI }}</p>
+    {{ KPI_HTML }}
+  </section>
 
-    <!-- ===== Quick Wins ===== -->
-    <section>
-      <h2>Quick Wins (0–90 Tage)</h2>
-      <p class="section-lead">{{LEAD_QW}}</p>
-      <div class="two-col">
-        <div class="col card avoid-break">{{QUICK_WINS_HTML_LEFT}}</div>
-        <div class="col card avoid-break">{{QUICK_WINS_HTML_RIGHT}}</div>
-      </div>
-      <div class="aside small">{{REALITY_NOTE_QW}}</div>
-      <p class="small">Monats-Ersparnis gesamt: {{monatsersparnis_stunden}} h (≈ {{monatsersparnis_eur}} €) → {{jahresersparnis_stunden}} h/Jahr (≈ {{jahresersparnis_eur}} €) bei {{stundensatz_eur}} €/h.</p>
-    </section>
+  <!-- Quick Wins -->
+  <section class="page">
+    <h2>Quick Wins (0–90 Tage)</h2>
+    <p class="lead">{{ LEAD_QW }}</p>
+    <div class="cols">
+      <div>{{ QUICK_WINS_HTML_LEFT }}</div>
+      <div>{{ QUICK_WINS_HTML_RIGHT }}</div>
+    </div>
+    {% if REALITY_NOTE_QW %}<div class="sidebar-note">{{ REALITY_NOTE_QW }}</div>{% endif %}
+  </section>
 
-    <!-- ===== Roadmap 90 ===== -->
-    <section>
-      <h2>Roadmap (90 Tage – Test → Pilot → Rollout)</h2>
-      <p class="section-lead">{{LEAD_ROADMAP_90}}</p>
-      <div class="card avoid-break">{{PILOT_PLAN_HTML}}</div>
-    </section>
+  <!-- Roadmap 90 Tage -->
+  <section class="page">
+    <h2>Roadmap (90 Tage – Test → Pilot → Rollout)</h2>
+    <p class="lead">{{ LEAD_ROADMAP_90 }}</p>
+    {{ PILOT_PLAN_HTML }}
+  </section>
 
-    <!-- ===== Roadmap 12 ===== -->
-    <section>
-      <h2>Roadmap (12 Monate)</h2>
-      <p class="section-lead">{{LEAD_ROADMAP_12}}</p>
-      <div class="card avoid-break">{{ROADMAP_12M_HTML}}</div>
-    </section>
+  <!-- 12 Monate -->
+  <section class="page">
+    <h2>Roadmap (12 Monate)</h2>
+    <p class="lead">{{ LEAD_ROADMAP_12 }}</p>
+    {{ ROADMAP_12M_HTML }}
+  </section>
 
-    <!-- ===== Business ===== -->
-    <section>
-      <h2>Business Case &amp; Kostenübersicht</h2>
-      <p class="section-lead">{{LEAD_BUSINESS}}</p>
-      <div class="card avoid-break"><h3>ROI &amp; Payback</h3>{{ROI_HTML}}</div>
-      <div class="card avoid-break"><h3>Kosten (Jahr 1)</h3>{{COSTS_OVERVIEW_HTML}}</div>
-      <div class="card avoid-break"><h3>Business Case – Sensitivität (100/80/60 %)</h3>{{BUSINESS_SENSITIVITY_HTML}}</div>
-    </section>
+  <!-- Business Case & Kosten -->
+  <section class="page">
+    <h2>Business Case &amp; Kostenübersicht</h2>
+    <p class="lead">{{ LEAD_BUSINESS }}</p>
+    <div class="grid">
+      <div>{{ ROI_HTML }}</div>
+      <div>{{ COSTS_OVERVIEW_HTML }}</div>
+    </div>
+    <div>{{ BUSINESS_SENSITIVITY_HTML }}</div>
+    <div class="sidebar-note">„Stand“ der externen Quellen: {{ research_last_updated }}.</div>
+  </section>
 
-    <section>
-      <h2>Business Case (detailliert)</h2>
-      <p class="section-lead">{{LEAD_BUSINESS_DETAIL}}</p>
-      <div class="card avoid-break">{{BUSINESS_CASE_HTML}}</div>
-    </section>
+  <section class="page">
+    <h2>Business Case (detailliert)</h2>
+    <p class="lead">{{ LEAD_BUSINESS_DETAIL }}</p>
+    {{ BUSINESS_CASE_HTML }}
+  </section>
 
-    <!-- ===== Tools ===== -->
-    <section>
-      <h2>Empfohlene Tools (Pro &amp; Open-Source)</h2>
-      <p class="section-lead">{{LEAD_TOOLS}}</p>
-      <div class="card avoid-break">{{TOOLS_HTML}}</div>
-      <p class="small">Hinweis: Bevorzugt EU-Hosting/DSGVO-konform. Preise/Leistungsdaten können sich ändern.</p>
-    </section>
+  <!-- Dateninventar -->
+  <section class="page">
+    <h2>Dateninventar &amp; ‑Qualität</h2>
+    <p class="lead">{{ LEAD_DATA }}</p>
+    {{ DATA_READINESS_HTML }}
+  </section>
 
-    <!-- ===== Data ===== -->
-    <section>
-      <h2>Dateninventar &amp; -Qualität</h2>
-      <p class="section-lead">{{LEAD_DATA}}</p>
-      <div class="card avoid-break">{{DATA_READINESS_HTML}}</div>
-    </section>
+  <!-- Organisation & Change -->
+  <section class="page">
+    <h2>Organisation &amp; Change</h2>
+    <p class="lead">{{ LEAD_ORG }}</p>
+    {{ ORG_CHANGE_HTML }}
+  </section>
 
-    <!-- ===== Org ===== -->
-    <section>
-      <h2>Organisation &amp; Change</h2>
-      <p class="section-lead">{{LEAD_ORG}}</p>
-      <div class="card avoid-break">{{ORG_CHANGE_HTML}}</div>
-    </section>
+  <!-- Risiken & Compliance -->
+  <section class="page">
+    <h2>Risiko‑Assessment &amp; Compliance</h2>
+    <p class="lead">{{ LEAD_RISKS }}</p>
+    {{ RISKS_HTML }}
+  </section>
 
-    <!-- ===== Risks & Compliance (mit Icon-Leiste) ===== -->
-    <section>
-      <h2>Risiko-Assessment &amp; Compliance</h2>
-      <p class="section-lead">{{LEAD_RISKS}}</p>
+  <!-- Gamechanger -->
+  <section class="page">
+    <h2>Gamechanger‑Use Case</h2>
+    <p class="lead">{{ LEAD_GC }}</p>
+    {{ GAMECHANGER_HTML }}
+  </section>
 
-      <div class="compliance-strip">
-        <img src="dsgvo.svg" alt="DSGVO" />
-        <img src="eu-ai.svg" alt="EU AI Act" />
-        <span class="small">Abgleich auf Basis EU-AI-Act/DSGVO • Phase: {{ai_act_phase_label}}</span>
-      </div>
+  <!-- Tools & Förderungen -->
+  <section class="page">
+    <h2>Empfohlene Tools (Pro &amp; Open‑Source)</h2>
+    <p class="lead">{{ LEAD_TOOLS }}</p>
+    {% if TOOLS_TABLE_HTML %}{{ TOOLS_TABLE_HTML }}{% else %}<p class="muted">Hinweis: Quellenlage dünn – bitte manuell prüfen.</p>{% endif %}
+    <div class="small muted">„Stand“: {{ research_last_updated }}.</div>
+  </section>
 
-      <div class="card avoid-break">{{RISKS_HTML}}</div>
-      <p class="small">Transparenz: {{transparency_text}}</p>
-    </section>
+  <section class="page">
+    <h2>Aktuelle Förderprogramme &amp; Quellen</h2>
+    <p class="lead">{{ LEAD_FUNDING }}</p>
+    {% if FUNDING_TABLE_HTML %}{{ FUNDING_TABLE_HTML }}{% else %}<p class="muted">Für das angegebene Bundesland liegen aktuell keine verlässlichen Programme vor.</p>{% endif %}
+    <div class="small muted">„Stand“: {{ research_last_updated }}.</div>
+  </section>
 
-    <!-- ===== Gamechanger ===== -->
-    <section>
-      <h2>Gamechanger-Use Case</h2>
-      <p class="section-lead">{{LEAD_GC}}</p>
-      <div class="card avoid-break">{{GAMECHANGER_HTML}}</div>
-    </section>
+  <!-- EU AI Act -->
+  <section class="page">
+    <h2>EU AI Act – Überblick &amp; Fristen ({{ ai_act_phase_label }})</h2>
+    <p class="lead">{{ LEAD_AI_ACT }}</p>
+    {{ AI_ACT_SUMMARY_HTML }}
+    <div class="callout">{{ AI_ACT_TABLE_OFFER_HTML }}</div>
+    <div>{{ AI_ACT_ADDON_PACKAGES_HTML }}</div>
+  </section>
 
-    <!-- ===== EU AI Act ===== -->
-    <section>
-      <h2>EU AI Act – Überblick &amp; Fristen ({{ai_act_phase_label}})</h2>
-      <p class="section-lead">{{LEAD_AI_ACT}}</p>
-      <div class="card avoid-break">{{AI_ACT_SUMMARY_HTML}}</div>
-      <div class="card avoid-break">{{AI_ACT_TABLE_OFFER_HTML}}</div>
-    </section>
+  <!-- Nächste Schritte -->
+  <section class="page">
+    <h2>Nächste Schritte (30 Tage)</h2>
+    <p class="lead">{{ LEAD_NEXT_ACTIONS }}</p>
+    <div class="small muted">Legende: ⏱ Aufwand · 🎯 Impact · 👤 Owner · 📆 Termin</div>
+    {{ NEXT_ACTIONS_HTML }}
+  </section>
 
-    <section>
-      <h2>Optionale Vertiefung: EU-AI-Act-Add-on</h2>
-      <p class="section-lead">{{LEAD_AI_ACT_ADDON}}</p>
-      <div class="card avoid-break">{{AI_ACT_ADDON_PACKAGES_HTML}}</div>
-    </section>
-
-    <!-- ===== Funding & Quellen ===== -->
-    <section>
-      <h2>Aktuelle Förderprogramme &amp; Quellen</h2>
-      <p class="section-lead">{{LEAD_FUNDING}}</p>
-      <div class="card avoid-break">
-        <h3>Förderungen (nach Standort)</h3>
-        {{FOERDERPROGRAMME_HTML}}
-      </div>
-      <div class="card avoid-break">
-        <h3>Quellen &amp; Referenzen</h3>
-        {{QUELLEN_HTML}}
-      </div>
-    </section>
-
-    <!-- ===== Next Actions (Ende) ===== -->
-    <section>
-      <h2>Nächste Schritte (30 Tage)</h2>
-      <p class="section-lead">{{LEAD_NEXT_ACTIONS}}</p>
-      <div class="next-actions avoid-break">
-        {{NEXT_ACTIONS_HTML}}
-        <div class="legend small">Legende: ⏱ Aufwand · 🎯 Impact · 👤 Owner · 📆 Termin</div>
-      </div>
-    </section>
-
-    <!-- ===== Schluss / Footer mit Logos ===== -->
-    <section>
-      <div class="brandbar" style="margin-top: var(--s-6);">
-        <div class="brandbar__left">
-          <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt Logo" />
-        </div>
-        <div class="brandbar__right">
-          <img src="tuev-logo-transparent.webp" alt="TÜV Austria – zertifiziert" />
-          <img src="ki-ready-2025.webp" alt="KI-READY 2025 Badge" />
-        </div>
-      </div>
-
-      <p class="footer-note">© {{report_year}} KI-Sicherheit.jetzt • DSGVO • ePrivacy • DSA • EU AI Act — Kontakt: {{user_email}}</p>
-      <div class="watermark">{{WATERMARK_TEXT}}</div>
-    </section>
-
-  </div>
+  <!-- Schlussseite -->
+  <section class="last-page">
+    <div class="small muted">© {{ report_year }} KI‑Sicherheit.jetzt • DSGVO • ePrivacy • DSA • EU AI Act — Kontakt:</div>
+    <div class="watermark">{{ WATERMARK_TEXT }}</div>
+  </section>
 </body>
 </html>
