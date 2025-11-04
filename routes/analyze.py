@@ -5,7 +5,7 @@ from __future__ import annotations
 - POST /api/analyze/run: manueller Trigger, robust gegen Analyzer-Importfehler
 - Rate-Limits, Pydantic-Schema, UTF‑8
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import Field
 from sqlalchemy.orm import Session
 
@@ -21,7 +21,18 @@ class RunAnalyze(SecureModel):
 
 
 @router.post("/run", status_code=status.HTTP_202_ACCEPTED, dependencies=[Depends(rate_limiter("analyze:run", 5, 60))])
-def analyze(body: RunAnalyze, db: Session = Depends(get_db)) -> dict:
+def analyze(body: RunAnalyze, request: Request, db: Session = Depends(get_db)) -> dict:
+    dry_run = (request.headers.get("x-dry-run", "").lower() in {"1", "true", "yes"})
+    if dry_run:
+        # why: CI darf Import prüfen ohne echte Analyse zu starten
+        try:
+            import importlib
+            importlib.import_module("gpt_analyze")
+            analyzer_ok = True
+        except Exception:
+            analyzer_ok = False
+        return {"accepted": True, "dry_run": True, "analyzer_import_ok": analyzer_ok}
+
     br = db.get(Briefing, body.briefing_id)
     if not br:
         raise HTTPException(status_code=404, detail="Briefing not found")
