@@ -1,33 +1,28 @@
 # file: routes/analyze.py
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-"""Analyze API (Gold‑Standard+)
-- POST /api/analyze/run: manueller Trigger, robust gegen Analyzer-Importfehler
-- Rate-Limits, Pydantic-Schema, UTF‑8
+"""Analyze API – manueller Trigger.
+- Prefix: /analyze  → wird in main mit /api gemountet → /api/analyze/run
 """
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import Field
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from models import Briefing
-from routes._bootstrap import SecureModel, get_db, rate_limiter
+from routes._bootstrap import get_db, rate_limiter
 
-router = APIRouter(prefix="/api/analyze", tags=["analyze"])
+router = APIRouter(prefix="/analyze", tags=["analyze"])
 
-
-class RunAnalyze(SecureModel):
-    briefing_id: int = Field(gt=0, description="Bestehende Briefing-ID")
+class RunAnalyze(BaseModel):
+    briefing_id: int = Field(gt=0)
     email_override: str | None = None
 
-
 @router.post("/run", status_code=status.HTTP_202_ACCEPTED, dependencies=[Depends(rate_limiter("analyze:run", 5, 60))])
-def analyze(body: RunAnalyze, request: Request, db: Session = Depends(get_db)) -> dict:
-    dry_run = (request.headers.get("x-dry-run", "").lower() in {"1", "true", "yes"})
-    if dry_run:
-        # why: CI darf Import prüfen ohne echte Analyse zu starten
+def run(body: RunAnalyze, request: Request, db: Session = Depends(get_db)) -> dict:
+    # CI/Smoke: kein echtes LLM
+    if (request.headers.get("x-dry-run", "").lower() in {"1", "true", "yes"}):
         try:
-            import importlib
-            importlib.import_module("gpt_analyze")
+            import importlib; importlib.import_module("gpt_analyze")
             analyzer_ok = True
         except Exception:
             analyzer_ok = False

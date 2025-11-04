@@ -1,11 +1,10 @@
 # file: routes/briefings.py
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-"""Briefings API (robust body parsing)
-- Akzeptiert JSON **und** form/multipart (answers als JSON-String erlaubt).
-- Liefert klare 422-Fehlertexte statt „Not Found“.
-- Lazy-Import des Analyzers → Route bleibt online.
-- Rate-Limits, UTF‑8, kurze „Warum“-Kommentare.
+"""Briefings API – robuster Submit.
+- Prefix: /briefings  → wird in main mit /api gemountet → /api/briefings/submit
+- Akzeptiert JSON **und** FormData; answers darf JSON‑String sein.
+- Lazy‑Import des Analyzers, Rate‑Limit, klare 422‑Fehler.
 """
 from typing import Any, Dict, Optional
 import json
@@ -17,12 +16,11 @@ from sqlalchemy.orm import Session
 from models import Briefing
 from routes._bootstrap import client_ip, get_db, rate_limiter
 
-router = APIRouter(prefix="/api/briefings", tags=["briefings"])
+router = APIRouter(prefix="/briefings", tags=["briefings"])
 
 MAX_ANSWERS_BYTES = int(os.getenv("MAX_ANSWERS_BYTES", "250000"))
 
 def _coerce_answers(raw: Any) -> Dict[str, Any]:
-    """why: Frontend sendet teils JSON-String oder Form-Felder."""
     if raw is None:
         return {}
     if isinstance(raw, (bytes, bytearray)):
@@ -43,7 +41,6 @@ def _coerce_answers(raw: Any) -> Dict[str, Any]:
     raise HTTPException(status_code=422, detail="answers must be object or JSON-string")
 
 async def _parse_body(request: Request) -> Dict[str, Any]:
-    """Unterstützt JSON und Formdaten; nie 500 bei Body-Fehlern."""
     ctype = (request.headers.get("content-type") or "").lower()
     payload: Dict[str, Any] = {}
     try:
@@ -53,7 +50,6 @@ async def _parse_body(request: Request) -> Dict[str, Any]:
             form = await request.form()
             payload = {k: v for k, v in form.multi_items()}
         else:
-            # Versuch JSON, sonst leer
             try:
                 payload = await request.json()
             except Exception:
@@ -74,12 +70,10 @@ async def submit_briefing(
     background: BackgroundTasks,
     db: Session = Depends(get_db),
 ) -> dict:
-    # Dry-run (CI/Smoke)
-    dry_run = (request.headers.get("x-dry-run", "").lower() in {"1", "true", "yes"})
-    if dry_run:
+    # CI/Smoke: keine DB/LLM
+    if (request.headers.get("x-dry-run", "").lower() in {"1", "true", "yes"}):
         try:
-            import importlib
-            importlib.import_module("gpt_analyze")
+            import importlib; importlib.import_module("gpt_analyze")
             analyzer_ok = True
         except Exception:
             analyzer_ok = False
@@ -95,14 +89,14 @@ async def submit_briefing(
     lang = (payload.get("lang") or "de").strip()[:5] or "de"
     email_override = payload.get("email_override") or None
 
-    # Abuse-Signale mitschreiben
+    # Kontext anreichern
     answers.setdefault("client_ip", client_ip(request))
     answers.setdefault("user_agent", request.headers.get("user-agent", ""))
 
     br = Briefing(user_id=None, lang=lang, answers=answers)
     db.add(br); db.commit(); db.refresh(br)
 
-    # Analyzer **erst hier** importieren
+    # Analyzer erst jetzt importieren → Router bleibt online wenn Analyzer kaputt ist
     try:
         from gpt_analyze import run_async  # type: ignore
     except Exception as exc:
