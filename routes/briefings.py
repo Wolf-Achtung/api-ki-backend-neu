@@ -4,7 +4,7 @@ from __future__ import annotations
 """Briefings API (Gold‑Standard+)
 - POST /api/briefings/submit: nimmt Fragebogen an, queued Analyse (BackgroundTasks)
 - Robust gegen Analyzer-Importfehler (lazy import → 503 statt Route-Verlust)
-- Rate-Limits, saubere Pydantic-Schemas, Logging, UTF‑8
+- Rate-Limits, Pydantic-Schema, Logging, UTF‑8
 """
 from typing import Any, Dict, Optional
 
@@ -25,7 +25,7 @@ class BriefingSubmit(SecureModel):
 
     @validator("answers")
     def _validate_answers(cls, v: Dict[str, Any]) -> Dict[str, Any]:
-        # Warum: leere/übergroße Payloads sofort abweisen
+        # why: leere/übergroße Payloads verhindern 500/DoS
         if not v:
             raise ValueError("answers must not be empty")
         if len(str(v)) > 250_000:
@@ -44,20 +44,28 @@ def submit_briefing(
     request: Request,
     db: Session = Depends(get_db),
 ) -> dict:
-    # Minimale Normalisierung + Abuse Signals
+    dry_run = (request.headers.get("x-dry-run", "").lower() in {"1", "true", "yes"})
+    if dry_run:
+        # why: CI/Smoke ohne DB/LLM ausführen; Analyzer-Verfügbarkeit prüfen
+        try:
+            import importlib
+            importlib.import_module("gpt_analyze")
+            analyzer_ok = True
+        except Exception:
+            analyzer_ok = False
+        return {"accepted": True, "dry_run": True, "analyzer_import_ok": analyzer_ok}
+
     answers = dict(body.answers)
     answers.setdefault("client_ip", client_ip(request))
     answers.setdefault("user_agent", request.headers.get("user-agent", ""))
 
     br = Briefing(user_id=None, lang=body.lang, answers=answers)
-    db.add(br)
-    db.commit()
-    db.refresh(br)
+    db.add(br); db.commit(); db.refresh(br)
 
     # Analyzer erst hier importieren → Router bleibt auch bei Analyzer-Fehlern online
     try:
         from gpt_analyze import run_async  # type: ignore
-    except Exception as exc:  # why: wir wollen 503 statt 404
+    except Exception as exc:  # why: 503 signalisiert temporären Fehler (Analyzer) statt Route-Verlust
         raise HTTPException(status_code=503, detail=f"analyzer_unavailable: {exc}")
 
     background.add_task(run_async, br.id, body.email_override)
