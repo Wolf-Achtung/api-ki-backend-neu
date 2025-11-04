@@ -1,15 +1,39 @@
-# file: app/services/report_renderer.py
 # -*- coding: utf-8 -*-
 from __future__ import annotations
+"""
+services.report_renderer – Gold‑Standard+
+- Fester UTF‑8‑Pfad; robustes Laden des Templates.
+- Fallbacks: render_template/content_normalizer optional – verhindert Import‑Hard‑fail.
+- Public API:
+    render(briefing, run_id, generated_sections, use_fetchers, scores, meta) -> {"html": str, "meta": dict}
+"""
 from typing import Any, Dict, Optional
 from pathlib import Path
-import os, logging
+import os
+import logging
 
 from settings import settings
-from .template_engine import render_template
-from .content_normalizer import normalize_and_enrich_sections  # hält KPIs/Defaults aktuell
 
 LOGGER = logging.getLogger(__name__)
+
+# Fallback‑Implementierungen, falls optionale Module fehlen.
+try:
+    from .template_engine import render_template  # type: ignore
+except Exception:  # why: App darf auch ohne Template‑Engine starten
+    def render_template(template_str: str, context: Dict[str, Any], default: str = "") -> str:
+        out = template_str or ""
+        # sehr einfache {{key}}‑Ersetzung (nur für Fallback)
+        for k, v in (context or {}).items():
+            out = out.replace("{{" + k + "}}", str(v))
+        return out or default
+
+try:
+    from .content_normalizer import normalize_and_enrich_sections  # type: ignore
+except Exception:  # why: Notfalls ohne Enrichment
+    def normalize_and_enrich_sections(briefing: Dict[str, Any], snippets: Dict[str, Any], **_: Any) -> Dict[str, Any]:
+        base = dict(briefing or {})
+        base.update(snippets or {})
+        return base
 
 def _read_file(p: Path) -> str:
     try:
@@ -27,23 +51,18 @@ def build_full_report_html(
 ) -> str:
     """Mergen: Briefing + generierte Sections -> finaler Context -> Template."""
     snippets: Dict[str, Any] = dict(generated_sections or {})
-    # Normalize/Enrich (füllt KPI/Quellen/Tools + „So‑What“ Fallbacks u. a.)
     enriched = normalize_and_enrich_sections(
         briefing=briefing, snippets=snippets,
         metrics={"scores": scores or {}},
         scores=scores or {}, meta=meta or {}
     )
     # Logos optional (keine Pflicht)
-    enriched.setdefault("logo_primary", enriched.get("logo_primary", ""))
-    enriched.setdefault("logo_tuv", enriched.get("logo_tuv", ""))
-    enriched.setdefault("logo_dsgvo", enriched.get("logo_dsgvo", ""))
-    enriched.setdefault("logo_eu_ai", enriched.get("logo_eu_ai", ""))
-    enriched.setdefault("logo_ready", enriched.get("logo_ready", ""))
+    for key in ("logo_primary","logo_tuv","logo_dsgvo","logo_eu_ai","logo_ready"):
+        enriched.setdefault(key, enriched.get(key, ""))
 
     # Template laden (ENV: REPORT_TEMPLATE_PATH, sonst Fallback)
     tpl_path = Path(getattr(settings, "REPORT_TEMPLATE_PATH", "") or os.getenv("REPORT_TEMPLATE_PATH", "") or "templates/pdf_template.html")
     if not tpl_path.exists():
-        # Fallback: lokale Datei im Arbeitsverzeichnis
         alt = Path("pdf_template.html")
         tpl_path = alt if alt.exists() else tpl_path
     tpl = _read_file(tpl_path)
