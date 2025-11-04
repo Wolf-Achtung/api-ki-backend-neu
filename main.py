@@ -1,12 +1,11 @@
-
 # -*- coding: utf-8 -*-
 """
 KI-Backend Hauptdatei mit robustem Router-Mounting und Startup-Checks.
-Version 1.2.0 – Änderungen:
+Version 1.2.0 - Aenderungen:
 - Admin-Router werden nur geladen, wenn per ENV freigeschaltet (ENABLE_ADMIN_ROUTES / ADMIN_ALLOW_RAW_SQL).
-- CORS liest jetzt **CORS_ORIGINS** (neu) und fällt zurück auf **CORS_ALLOW_ORIGINS** (alt).
+- CORS liest jetzt **CORS_ORIGINS** (neu) und faellt zurueck auf **CORS_ALLOW_ORIGINS** (alt).
 - Besseres Logging der Router-Summary.
-- Optionaler __main__-Block für lokale Starts (PORT aus ENV).
+- Optionaler __main__-Block fuer lokale Starts (PORT aus ENV).
 """
 from __future__ import annotations
 
@@ -44,7 +43,7 @@ async def lifespan(app: FastAPI):
     log.info("Starting KI-Backend...")
     log.info("=" * 60)
 
-    # Auth-Tabellen sicherstellen (kritisch für Login)
+    # Auth-Tabellen sicherstellen (kritisch fuer Login)
     try:
         from core.db import SessionLocal
         from services.auth import _ensure_login_codes_table
@@ -72,7 +71,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=os.getenv("APP_NAME", "KI-Status-Report API"),
     version="1.2.0",
-    description="Backend für KI-Readiness Assessments",
+    description="Backend fuer KI-Readiness Assessments",
     lifespan=lifespan
 )
 
@@ -113,10 +112,10 @@ else:
 
 
 # ---------------------------------------------------------------------------
-# Router Mounting (mit ENV-Guards für Admin)
+# Router Mounting (mit ENV-Guards fuer Admin)
 # ---------------------------------------------------------------------------
 def mount_router(module_path: str, prefix: str, name: str) -> bool:
-    """Versucht einen Router zu mounten; gibt True bei Erfolg zurück."""
+    """Versucht einen Router zu mounten; gibt True bei Erfolg zurueck."""
     try:
         parts = module_path.split(".")
         module = __import__(module_path, fromlist=[parts[-1]])
@@ -125,7 +124,7 @@ def mount_router(module_path: str, prefix: str, name: str) -> bool:
             return False
         app.include_router(getattr(module, "router"), prefix=prefix)
         full_path = f"{prefix}/{name}".rstrip("/")
-        log.info("✓ Mounted: %s → %s", module_path, full_path)
+        log.info("✓ Mounted: %s -> %s", module_path, full_path)
         return True
     except ImportError as exc:
         log.error("✗ Import failed for %s: %s", module_path, exc)
@@ -166,7 +165,7 @@ log.info("Router Summary: %d/%d mounted successfully", mounted_count, len(router
 if failed_routers:
     log.warning("⚠️  Failed routers: %s", ", ".join(failed_routers))
     if "auth" in failed_routers:
-        log.error("❌ CRITICAL: Auth router failed - LOGIN WILL NOT WORK")
+        log.error("⌧ CRITICAL: Auth router failed - LOGIN WILL NOT WORK")
 else:
     log.info("✓ All routers mounted successfully!")
 log.info("-" * 60)
@@ -200,7 +199,7 @@ def root():
 @app.get("/api/healthz")
 @app.get("/healthz")
 def healthz():
-    """Health check für Monitoring"""
+    """Health check fuer Monitoring"""
     return {"status": "ok", "healthy": True}
 
 
@@ -221,7 +220,7 @@ def info():
 
 
 # ---------------------------------------------------------------------------
-# Legacy Endpoint (Abwärtskompatibilität)
+# Legacy Endpoint (Abwaertskompatibilitaet)
 # ---------------------------------------------------------------------------
 @app.post("/api/briefing_async", status_code=202)
 async def legacy_briefing_async_endpoint(
@@ -229,7 +228,7 @@ async def legacy_briefing_async_endpoint(
     background: BackgroundTasks,
 ):
     """
-    Legacy-Endpoint für altes Frontend. Leitet an /api/briefings/async weiter.
+    Legacy-Endpoint fuer altes Frontend. Leitet an /api/briefings/async weiter.
     Bitte auf /api/briefings/submit umstellen.
     """
     try:
@@ -278,7 +277,7 @@ async def internal_error_handler(request, exc):
         status_code=500,
         content={
             "error": "internal_error",
-            "detail": "Interner Serverfehler. Bitte später erneut versuchen.",
+            "detail": "Interner Serverfehler. Bitte spaeter erneut versuchen.",
             "support": "Bei anhaltenden Problemen kontaktieren Sie bitte den Support."
         }
     )
