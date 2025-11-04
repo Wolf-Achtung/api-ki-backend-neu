@@ -39,7 +39,9 @@ def render_pdf_from_html(html: str, meta: Optional[Dict[str, Any]] = None) -> Di
     payload = {"html": html, "meta": meta}
     headers = {
         "Content-Type": "application/json",
+        "Accept": "application/pdf, application/json",
         "X-Request-Id": rid,                  # Fix: sicher als str
+        "X-Client-Version": "ki-backend/1 pdf-client",
         "User-Agent": "ki-backend/1 pdf-client",
     }
 
