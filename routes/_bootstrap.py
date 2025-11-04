@@ -1,85 +1,56 @@
 # file: routes/_bootstrap.py
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-"""Gemeinsame FastAPI‑Hilfen (Gold‑Standard)
-- Einheitliche DB‑Session
-- IP‑Ermittlung hinter Proxies
-- Lightweight Rate‑Limiter (prozesslokal; Redis in verteilten Setups)
-- Pydantic‑Basisklasse mit harten Schemas
-- CORS via Settings
-"""
+"""Gemeinsame Router‑Utilities (leichtgewichtig, keine externen Abhängigkeiten)."""
+from typing import Callable, Generator, Optional
 import time
-from collections import defaultdict, deque
-from typing import Deque, Dict, Iterator
-
+import threading
 from fastapi import Depends, HTTPException, Request
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, ConfigDict
-from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
-from core.db import SessionLocal
-from settings import settings
+# DB‑Session Lokalimport (Projektvarianten unterstützen)
+try:
+    from db import SessionLocal  # type: ignore
+except Exception:  # pragma: no cover
+    try:
+        from core.db import SessionLocal  # type: ignore
+    except Exception as exc:
+        SessionLocal = None  # type: ignore
 
-# In‑Memory Token‑Buckets: key = "<ip>:<name>" → timestamps
-_BUCKETS: Dict[str, Deque[float]] = defaultdict(deque)
+class SecureModel(BaseModel):
+    class Config:
+        anystr_strip_whitespace = True
+        extra = "forbid"
 
-def get_db() -> Iterator[Session]:
+def get_db():
+    """Liefert eine DB‑Session oder 503, wenn nicht verfügbar."""
+    if SessionLocal is None:
+        raise HTTPException(status_code=503, detail="database_unavailable")
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
 
-def client_ip(request: Request) -> str:
-    # Warum: robuste IP‑Ermittlung hinter Proxy (X‑Forwarded‑For bevorzugt)
-    xf = (request.headers.get("x-forwarded-for") or "").strip()
-    if xf:
-        return xf.split(",")[0].strip()
-    return request.client.host if request.client else "0.0.0.0"
+# sehr einfacher In‑Memory Rate‑Limiter (pro‑Prozess)
+_RATE: dict[str, list[float]] = {}
+_LOCK = threading.Lock()
 
-def rate_limiter(name: str, max_calls: int, window_sec: int):
-    """Erzeugt eine FastAPI‑Dependency für einfache Rate‑Limits.
-    Warum: Schutz vor Brute‑Force/Spam. Für Multi‑Instance Redis/DB nutzen.
-    """
-    max_calls = int(max_calls)
-    window_sec = int(window_sec)
-
-    def _dep(request: Request) -> None:
-        ip = client_ip(request)
+def rate_limiter(bucket: str, limit: int, window_seconds: int) -> Callable:
+    """why: Grundschutz gegen Flooding; in verteilten Setups LB/Redis nehmen."""
+    def _dep(request: Request):
+        key = f"{bucket}:{request.client.host}"
         now = time.time()
-        bucket_key = f"{ip}:{name}"
-        q = _BUCKETS[bucket_key]
-
-        # Alte Einträge entfernen
-        cutoff = now - window_sec
-        while q and q[0] < cutoff:
-            q.popleft()
-
-        if len(q) >= max_calls:
-            # Minimaler Leak: keine Details
-            raise HTTPException(status_code=429, detail="rate_limited")
-        q.append(now)
-
-        # Opportunistische GC großer Buckets
-        if len(q) > max_calls * 5:
-            while len(q) > max_calls:
-                q.popleft()
-
+        with _LOCK:
+            times = [t for t in _RATE.get(key, []) if now - t < window_seconds]
+            if len(times) >= limit:
+                raise HTTPException(status_code=429, detail="rate_limit_exceeded")
+            times.append(now)
+            _RATE[key] = times
     return _dep
 
-class SecureModel(BaseModel):
-    """Basisklasse für Anfragen/Antworten: harte Schemas & Trim."""
-    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
-
-def mount_cors(app) -> None:
-    origins = settings.cors_list()
-    allow_any = settings.allow_any_cors
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins if not allow_any else ["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-        expose_headers=["Content-Disposition"],
-        max_age=86400,
-    )
+def client_ip(request: Request) -> str:
+    fwd = request.headers.get("x-forwarded-for", "")
+    if fwd:
+        return fwd.split(",")[0].strip()
+    return request.client.host if request.client else ""
