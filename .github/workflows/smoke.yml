@@ -1,31 +1,21 @@
-name: Smoke Test
-
+name: smoke
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'scripts/**'
-      - 'routes/**'
-      - 'services/**'
-      - 'gpt_analyze.py'
-      - 'main.py'
-      - '.github/workflows/smoke.yml'
-  # optional: externe Auslösung direkt nach Railway-Deploy
-  repository_dispatch:
-    types: [railway-deploy-succeeded]
-
+  workflow_dispatch:
+env:
+  BACKEND_BASE: ${{ secrets.BACKEND_BASE }}
 jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
-      - name: Install deps
-        run: pip install --no-input --upgrade pip requests
-      - name: Run smoke (public URL)
-        env:
-          BASE_URL: ${{ secrets.SMOKE_BASE_URL }}            # z.B. https://api-ki-backend-neu-production.up.railway.app
-          AUTH_TOKEN: ${{ secrets.SMOKE_AUTH_TOKEN }}        # optional, nur wenn API auth braucht
-          TIMEOUT: '25'
-        run: python scripts/smoke_ci.py
+      - name: Checkout (for scripts only)
+        uses: actions/checkout@v4
+      - name: Install curl & python
+        run: sudo apt-get update && sudo apt-get install -y curl python3
+      - name: Run smoke
+        shell: bash
+        run: |
+          chmod +x ./scripts/smoke.sh
+          ./scripts/smoke.sh
+
