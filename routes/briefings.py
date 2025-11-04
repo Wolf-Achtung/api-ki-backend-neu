@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-routes/briefings.py – Gehärteter Briefing‑Submit (Privacy‑Policy: kein Firmenname).
-- Endpoint: /api/briefings/submit  (POST; JSON & FormData)
-- Entfernt keys: unternehmen, firma, company (falls doch gesendet)
-- Legt Briefing ab, stößt Analyse im Background an (Lazy‑Import, damit /gpt_analyze erst bei Bedarf geladen wird).
+routes/briefings.py – Gehärteter Briefing‑Submit (Privacy‑Policy ohne Unternehmensnamen)
+Pfad: /api/briefings/submit  (POST; auch FormData)
+- Entfernt Keys: unternehmen, firma, company
+- Legt Briefing ab, stößt Analyse im Background an (Lazy‑Import von gpt_analyze)
 """
 import json
 from typing import Any, Dict
-from importlib import import_module
-
 from fastapi import APIRouter, Request, BackgroundTasks, HTTPException
 from fastapi.responses import JSONResponse
 
@@ -42,30 +40,32 @@ def _sanitize_answers(d: Dict[str, Any]) -> Dict[str, Any]:
     out = dict(d or {})
     for k in list(out.keys()):
         if k.lower() in _SANITIZE_KEYS:
-            # Policy: kein Unternehmensname im Report
+            # Warum: Policy „kein Unternehmensname im Report“
             out.pop(k, None)
     return out
+
+def _extract_user_email_from_headers(request: Request) -> str:
+    # Fallbacks: Frontend kann optional Header mitsenden
+    for name in ("x-user-email", "x-auth-email", "x-client-email"):
+        v = request.headers.get(name)
+        if v:
+            return v.strip()
+    return ""
+
+def _trigger_analysis_lazy(briefing_id: int, email: str | None) -> None:
+    # Lazy‑Import, um Router‑Mounting nicht zu blockieren
+    from gpt_analyze import run_async  # noqa: WPS433 (intentional lazy import)
+    run_async(briefing_id=briefing_id, email=email)
 
 @router.options("/submit")
 async def submit_opts() -> JSONResponse:
     return JSONResponse({"ok": True})
 
-def _bg_run(briefing_id: int, email: str | None) -> None:
-    # Lazy‑Import vermeidet schwere Imports beim App‑Start
-    try:
-        mod = import_module("gpt_analyze")
-        run_async = getattr(mod, "run_async")
-        run_async(briefing_id=briefing_id, email=email)
-    except Exception as exc:
-        # Wichtig: Fehler landen im App‑Log
-        import logging
-        logging.getLogger("briefings").error("Background run_async failed: %s", exc, exc_info=True)
-
 @router.post("/submit", status_code=202)
 async def submit_briefing(request: Request, background: BackgroundTasks) -> JSONResponse:
-    # CI dry‑run?
-    if (request.headers.get("x-dry-run") or "").strip().lower() in {"1","true","yes"}:
-        return JSONResponse({"ok": True, "dry_run": True, "briefing_id": -1})
+    # CI/Dry‑Run?
+    if request.headers.get("x-dry-run", "").strip().lower() in {"1", "true", "yes"}:
+        return JSONResponse({"ok": True, "dry_run": True, "briefing_id": -1}, status_code=202)
 
     content_type = (request.headers.get("content-type") or "").lower()
     payload: Dict[str, Any] = {}
@@ -76,22 +76,26 @@ async def submit_briefing(request: Request, background: BackgroundTasks) -> JSON
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid JSON body")
     else:
-        # multipart/form-data
+        # multipart/form-data (FormData)
         form = await request.form()
-        answers_raw = form.get("answers") or form.get("data") or "{}"
-        payload = _coerce_json(answers_raw)
+        payload = _coerce_json(form.get("answers") or form.get("data") or "{}")
 
     if not isinstance(payload, dict):
         raise HTTPException(status_code=422, detail="answers must be an object")
 
     answers = _sanitize_answers(payload)
-
     db = SessionLocal()
     try:
-        b = Briefing(answers=answers, lang=answers.get("lang","de"))
-        db.add(b); db.commit(); db.refresh(b)
-        email = answers.get("email") or answers.get("kontakt_email")
-        background.add_task(_bg_run, b.id, email)
+        b = Briefing(answers=answers, lang=answers.get("lang", "de"))
+        db.add(b)
+        db.commit()
+        db.refresh(b)
+
+        # E-Mail: entweder im Body oder per Header-Fallback
+        email = answers.get("email") or answers.get("kontakt_email") or _extract_user_email_from_headers(request) or None
+
+        # Background‑Task (Lazy‑Import, stabil beim Router‑Mounting)
+        background.add_task(_trigger_analysis_lazy, briefing_id=b.id, email=email)
         return JSONResponse({"ok": True, "id": b.id}, status_code=202)
     finally:
         db.close()
