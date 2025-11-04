@@ -1,29 +1,27 @@
 # -*- coding: utf-8 -*-
 """
-KI-Backend Hauptdatei mit robustem Router-Mounting und Startup-Checks.
-Version 1.2.0 - Aenderungen:
-- Admin-Router werden nur geladen, wenn per ENV freigeschaltet (ENABLE_ADMIN_ROUTES / ADMIN_ALLOW_RAW_SQL).
-- CORS liest jetzt **CORS_ORIGINS** (neu) und faellt zurueck auf **CORS_ALLOW_ORIGINS** (alt).
-- Besseres Logging der Router-Summary.
-- Optionaler __main__-Block fuer lokale Starts (PORT aus ENV).
+KI-Backend Hauptdatei (Gold‑Standard+, konsolidiert)
+- Bewahrt alle bisherigen Features (Lifespan, CORS mit ENV, Admin-Guards, Legacy-Endpunkt, Fehlerhandler).
+- Neu: /api/router-status (zeigt montierte Router + Pfade + Analyzer-Import).
+- Neu: Start‑Zeitprüfung, ob /api/briefings/submit existiert; Warnung bei Doppel-Prefix.
+- Optional: Alias-Fix bei Doppel-Prefix (env ALLOW_ALIAS_SUBMIT=1 → legt /api/briefings/submit mit 307-Redirect an).
 """
 from __future__ import annotations
 
 import os
 import logging
 from contextlib import asynccontextmanager
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi import Request, BackgroundTasks
+from fastapi.responses import JSONResponse, RedirectResponse
 
 # ---------------------------------------------------------------------------
-# Logging
+# Helpers
 # ---------------------------------------------------------------------------
 def _bool_env(name: str, default: str = "0") -> bool:
-    return (os.getenv(name, default) or "").strip() in {"1", "true", "True", "YES", "yes"}
+    return (os.getenv(name, default) or "").strip().lower() in {"1", "true", "yes"}
 
 log_level = (os.getenv("LOG_LEVEL") or "INFO").upper()
 logging.basicConfig(
@@ -68,9 +66,10 @@ async def lifespan(app: FastAPI):
 # ---------------------------------------------------------------------------
 # FastAPI App
 # ---------------------------------------------------------------------------
+APP_VERSION = os.getenv("APP_VERSION", "1.2.0")
 app = FastAPI(
     title=os.getenv("APP_NAME", "KI-Status-Report API"),
-    version="1.2.0",
+    version=APP_VERSION,
     description="Backend fuer KI-Readiness Assessments",
     lifespan=lifespan
 )
@@ -135,7 +134,6 @@ def mount_router(module_path: str, prefix: str, name: str) -> bool:
 
 
 def _build_router_config() -> List[Tuple[str, str, str]]:
-    """Liste der zu mountenden Router; Admin nur bei Freigabe."""
     cfg: List[Tuple[str, str, str]] = [
         ("routes.auth", "/api", "auth"),
         ("routes.briefings", "/api", "briefings"),
@@ -144,7 +142,6 @@ def _build_router_config() -> List[Tuple[str, str, str]]:
     ]
     if _bool_env("ENABLE_ADMIN_ROUTES", "0"):
         cfg.append(("routes.admin", "/api", "admin"))
-    # Raw-SQL nur, wenn explizit erlaubt
     if _bool_env("ADMIN_ALLOW_RAW_SQL", "0"):
         cfg.append(("routes.admin_sql", "", "admin-sql"))
     return cfg
@@ -172,16 +169,61 @@ log.info("-" * 60)
 
 
 # ---------------------------------------------------------------------------
-# Health / Root / Info
+# Health / Root / Info / Router-Status
 # ---------------------------------------------------------------------------
+def _paths_set() -> set[str]:
+    return {getattr(r, "path", "") for r in app.routes if getattr(r, "path", "")}
+
+def _status_snapshot() -> Dict[str, Any]:
+    ps = _paths_set()
+    try:
+        import importlib
+        importlib.import_module("gpt_analyze")
+        analyzer_ok = True
+    except Exception:
+        analyzer_ok = False
+    return {
+        "routers": {
+            "auth": any(p.startswith("/api/auth") for p in ps),
+            "briefings": any(p.startswith("/api/briefings") for p in ps),
+            "analyze": any(p.startswith("/api/analyze") for p in ps),
+            "report": any(p.startswith("/api/report") for p in ps),
+        },
+        "paths": sorted([p for p in ps if p.startswith("/api/")]),
+        "analyzer_import_ok": analyzer_ok,
+        "version": APP_VERSION,
+    }
+
+def _check_and_alias_submit_path() -> None:
+    ps = _paths_set()
+    expected = "/api/briefings/submit"
+    double = "/api/api/briefings/submit"
+    has_expected = expected in ps
+    has_double = double in ps
+    if has_expected:
+        log.info("✓ Endpoint present: %s", expected)
+        return
+    if has_double:
+        log.warning("⚠️  Detected double prefix route: %s", double)
+        if _bool_env("ALLOW_ALIAS_SUBMIT", "1"):
+            @app.post(expected)
+            async def _alias_submit(request: Request):
+                # why: 307 erhält Methode/Body
+                return RedirectResponse(url=double, status_code=307)
+            log.warning("↪  Added temporary alias %s → %s (307). Set ALLOW_ALIAS_SUBMIT=0 to disable.", expected, double)
+        else:
+            log.warning("No alias created (ALLOW_ALIAS_SUBMIT=0).")
+
+
 @app.get("/")
 def root():
     """Root endpoint mit API-Info"""
     endpoints = {
         "health": "/api/healthz",
         "auth": "/api/auth/request-code (POST), /api/auth/login (POST)",
-        "briefings": "/api/briefings/* (GET/PUT/POST/DELETE)",
+        "briefings": "/api/briefings/submit (POST)",
         "report": "/api/report (POST)",
+        "router_status": "/api/router-status",
     }
     if _bool_env("ENABLE_ADMIN_ROUTES", "0"):
         endpoints["admin"] = "/api/admin/* (GET/POST)"
@@ -190,10 +232,17 @@ def root():
 
     return {
         "name": os.getenv("APP_NAME", "KI-Status-Report API"),
-        "version": "1.2.0",
+        "version": APP_VERSION,
         "status": "running",
-        "endpoints": endpoints
+        "endpoints": endpoints,
+        "mounted_paths": _status_snapshot()["paths"],
     }
+
+
+@app.get("/api/router-status")
+def router_status():
+    """Live Router-Status + Analyzer-Importprüfung"""
+    return _status_snapshot()
 
 
 @app.get("/api/healthz")
@@ -284,13 +333,16 @@ async def internal_error_handler(request, exc):
 
 
 # ---------------------------------------------------------------------------
-# Startup Banner
+# Startup Banner & route checks
 # ---------------------------------------------------------------------------
 log.info("=" * 60)
 log.info("KI-Backend ready!")
 log.info("Environment: %s", os.getenv("ENV", "production"))
 log.info("Log Level: %s", log_level)
 log.info("=" * 60)
+
+# Prüfen & ggf. Alias anlegen (nur wenn Doppel-Prefix erkannt)
+_check_and_alias_submit_path()
 
 
 # ---------------------------------------------------------------------------
