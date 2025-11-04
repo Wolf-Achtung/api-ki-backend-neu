@@ -1,22 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-gpt_analyze.py – v4.11.0-gs
-Gold‑Standard+ Analysepipeline:
-- Prompts immer mit Branche, Unternehmensgröße, Hauptleistung/‑produkt und Bundesland.
-- One‑liner je Abschnitt; Next‑Actions (30 Tage) mit Owner/Impact/Termin.
-- EU‑AI‑Act: Summary + CTA für Tabellen‑Add‑on (2025–2027) + Paketübersicht.
-- Robuste Quick‑Wins‑Summierung; Watermark/Report‑ID/Version; UTF‑8 sicher.
-- Defensive Fehlerbehandlung, Logging, PEP8‑konform.
-Kompatibel mit: services.report_renderer.render, services.pdf_client.render_pdf_from_html,
-                services.email.send_mail, services.email_templates.render_report_ready_email
+gpt_analyze.py – v4.12.1-gs (Gold‑Standard+, Privacy‑Härtung)
+Wichtigste Änderung: **Keine Unternehmensnamen im Report**.
+- Entfernt jede Verwendung von "unternehmen"/"firma"/"company" für Darstellung & ID.
+- Report‑ID nutzt einen **pseudonymen Hash‑Kundencode** (aus Branche, Größe, Hauptleistung, Bundesland).
+- Prompts und Template‑Kontext enthalten ausschließlich: Branche, Unternehmensgröße, Hauptleistung/-produkt, Bundesland.
+- UTF‑8 überall, robuste Fehlerbehandlung, Logging.
 """
-
 import json
 import logging
 import os
 import re
 import uuid
+import hashlib
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -32,8 +29,6 @@ from services.email_templates import render_report_ready_email
 from settings import settings
 
 log = logging.getLogger(__name__)
-
-ANALYSIS_VERSION = "4.11.0-gs"
 
 # ----- LLM / API -----
 OPENAI_API_KEY = getattr(settings, "OPENAI_API_KEY", None) or os.getenv("OPENAI_API_KEY")
@@ -51,15 +46,13 @@ ENABLE_LLM_CONTENT = (os.getenv("ENABLE_LLM_CONTENT", "1") == "1")
 ENABLE_REPAIR_HTML = (os.getenv("ENABLE_REPAIR_HTML", "1") == "1")
 USE_INTERNAL_RESEARCH = (os.getenv("USE_INTERNAL_RESEARCH", "1") == "1")
 
-# EU‑AI‑Act‑Integration
+# AI‑Act: Kapitel/CTA
 ENABLE_AI_ACT_SECTION = (os.getenv("ENABLE_AI_ACT_SECTION", "1") == "1")
 AI_ACT_INFO_PATH = os.getenv("AI_ACT_INFO_PATH", "EU-AI-ACT-Infos-wichtig.txt")
 AI_ACT_PHASE_LABEL = os.getenv("AI_ACT_PHASE_LABEL", "2025–2027")
 
-# Debug
 DBG_PDF = (os.getenv("DEBUG_LOG_PDF_INFO", "1") == "1")
 DBG_MASK_EMAILS = (os.getenv("DEBUG_MASK_EMAILS", "1") == "1")
-
 
 # -------------------- Helpers: NSFW‑Filter für Research ----------------------
 NSFW_KEYWORDS = {
@@ -200,8 +193,8 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
         'enablement': min(ena, 25) * 4,
         'overall': round((min(gov,25)+min(sec,25)+min(val,25)+min(ena,25))*4/4)
     }
-    log.info("📊 REALISTIC SCORES v%s: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
-             ANALYSIS_VERSION, scores['governance'], scores['security'], scores['value'], scores['enablement'], scores['overall'])
+    log.info("📊 REALISTIC SCORES v4.12.1: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
+             scores['governance'], scores['security'], scores['value'], scores['enablement'], scores['overall'])
     return {'scores': scores, 'details': details, 'total': scores['overall']}
 
 
@@ -235,8 +228,7 @@ def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
             timeout=OPENAI_TIMEOUT,
         )
         r.raise_for_status()
-        data = r.json()
-        return data["choices"][0]["message"]["content"]
+        return r.json()["choices"][0]["message"]["content"]
     except Exception as exc:
         log.error("❌ OpenAI error: %s", exc)
         return None
@@ -302,10 +294,10 @@ def _sum_hours_from_quick_wins(html: str) -> int:
 def _generate_content_section(section_name: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
     if not ENABLE_LLM_CONTENT:
         return f"<p><em>[{section_name} – LLM disabled]</em></p>"
-    branche = briefing.get('BRANCHE_LABEL') or briefing.get('branche') or 'Unternehmen'
-    hauptleistung = briefing.get('hauptleistung') or briefing.get('hauptprodukt') or ''
-    unternehmensgroesse = briefing.get('UNTERNEHMENSGROESSE_LABEL') or briefing.get('unternehmensgroesse') or ''
-    bundesland = briefing.get('BUNDESLAND_LABEL') or briefing.get('bundesland') or ''
+    branche = briefing.get('branche', 'Unternehmen')
+    hauptleistung = briefing.get('hauptleistung', '—')
+    unternehmensgroesse = briefing.get('UNTERNEHMENSGROESSE_LABEL') or briefing.get('unternehmensgroesse') or '—'
+    bundesland = briefing.get('BUNDESLAND_LABEL') or briefing.get('bundesland') or '—'
     ki_ziele = briefing.get('ki_ziele', [])
     ki_projekte = briefing.get('ki_projekte', '')
     vision = briefing.get('vision_3_jahre', '')
@@ -314,7 +306,7 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
     security = scores.get('security', 0); value = scores.get('value', 0); enablement = scores.get('enablement', 0)
 
     context = f"Branche: {branche}; Größe: {unternehmensgroesse}; Bundesland: {bundesland}; Hauptleistung/-produkt: {hauptleistung}."
-    tone = "Sprache: neutral, dritte Person; keine Wir/Ich‑Formulierungen."
+    tone = "Sprache: neutral, dritte Person; keine Eigennamen; keine Wir/Ich‑Formulierungen."
     only_html = "Antworte ausschließlich mit validem HTML (ohne Markdown‑Fences)."
 
     prompts = {
@@ -366,7 +358,7 @@ def _one_liner(title: str, section_html: str, briefing: Dict[str, Any], scores: 
     """Erzeugt One‑liner gemäß Vorlage (Erkenntnis; Wirkung → nächster Schritt)."""
     base = f"""Erzeuge einen prägnanten One‑liner unter der H2‑Überschrift "{title}".
 Formel: "Kernaussage; Konsequenz → konkreter nächster Schritt".
-Gib nur **eine** Zeile ohne HTML‑Tags zurück."""
+Gib nur **eine** Zeile ohne HTML‑Tags zurück. Keine Eigennamen."""
     text = _call_openai(base + "\n---\n" + re.sub(r"<[^>]+>", " ", section_html)[:1800],
                         system_prompt="Du formulierst prägnante One‑liner auf Deutsch.",
                         temperature=0.1, max_tokens=80)
@@ -411,9 +403,9 @@ def _md_to_simple_html(md: str) -> str:
             if in_ul:
                 out.append("</ul>"); in_ul = False
             continue
-        if line.startswith("!["):
+        if line.startswith("!["):  # Bilder im PDF weglassen
             continue
-        if re.match(r"^\[\d+\]:\s*https?://", line):
+        if re.match(r"^\[\d+\]:\s*https?://", line):  # Fußnoten-Links unterdrücken
             continue
         if line.startswith("#### "):
             if in_ul: out.append("</ul>"); in_ul = False
@@ -421,13 +413,14 @@ def _md_to_simple_html(md: str) -> str:
             continue
         if line.startswith("### "):
             if in_ul: out.append("</ul>"); in_ul = False
-            out.append(f"<h3>{line[4:].strip()}</h3>")
+            out.append(f"<h3>{line[4:].strip()}</h3}")
             continue
         if line.startswith(("* ", "- ")):
             if not in_ul:
                 in_ul = True; out.append("<ul>")
             out.append(f"<li>{line[2:].strip()}</li>")
             continue
+        # Absatz
         if in_ul:
             out.append("</ul>"); in_ul = False
         out.append(f"<p>{line}</p>")
@@ -478,12 +471,17 @@ def _build_ai_act_blocks() -> Dict[str, str]:
 
 
 # ----------------------- Section Composer (+Meta) ----------------------------
-def _derive_kundencode(answers: Dict[str, Any], user_email: str) -> str:
-    raw = (answers.get("unternehmen") or answers.get("firma") or answers.get("company") or "")[:32]
-    if not raw and user_email and "@" in user_email:
-        raw = user_email.split("@", 1)[-1].split(".")[0]
-    code = re.sub(r"[^A-Za-z0-9]", "", raw.upper())
-    return (code[:3] or "KND")
+def _derive_kundencode(answers: Dict[str, Any]) -> str:
+    """
+    Erzeugt einen **pseudonymen** 3‑Buchstaben‑Code OHNE Personen-/Unternehmensbezug.
+    Grundlage: (Branche, Größe, Hauptleistung, Bundesland) → SHA1 → Buchstaben aus einer
+    Konsonanten‑Alphabetmenge (besser lesbar, schwer rückrechenbar).
+    """
+    alphabet = "BCDFGHJKLMNPQRSTVWXYZ"
+    base = f"{answers.get('branche','')}-{answers.get('unternehmensgroesse','')}-{answers.get('hauptleistung','')}-{answers.get('bundesland','')}"
+    h = hashlib.sha1(base.encode("utf-8")).digest()
+    code = "".join(alphabet[b % len(alphabet)] for b in h[:3])
+    return code or "KND"
 
 def _version_major_minor(v: str) -> str:
     m = re.match(r"^\s*(\d+)\.(\d+)", v or "")
@@ -492,9 +490,6 @@ def _version_major_minor(v: str) -> str:
 def _build_watermark_text(report_id: str, version_mm: str) -> str:
     return f"Trusted KI‑Check · Report‑ID: {report_id} · v{version_mm}"
 
-def _company_name(answers: Dict[str, Any]) -> str:
-    return (answers.get("unternehmen") or answers.get("firma") or answers.get("company") or "—").strip()
-
 def _build_sensitivity_table() -> str:
     return (
         '<table class="table">'
@@ -502,7 +497,7 @@ def _build_sensitivity_table() -> str:
         '<tbody>'
         '<tr><td>100 %</td><td>Planmäßige Wirkung der Maßnahmen.</td></tr>'
         '<tr><td>80 %</td><td>Leichte Abweichungen – Payback +2–3 Monate.</td></tr>'
-        '<tr><td>60 %</td><td>Konservativ – nur Kernmaßnahmen; Payback länger.</td></tr>'
+        '<tr><td>60 %</td><td> konservativ – nur Kernmaßnahmen; Payback länger.</td></tr>'
         '</tbody></table>'
     )
 
@@ -557,7 +552,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     nxt = _call_openai(
         """Erstelle 3–7 **Next Actions (30 Tage)** in <ol>.
 Jede Zeile: 👤 Owner, ⏱ Aufwand (z. B. ½ Tag), 🎯 Impact (hoch/mittel/niedrig), 📆 Termin (TT.MM.JJJJ) — kurze Maßnahme.
-Antwort NUR als <ol>…</ol>.""",
+Antwort NUR als <ol>…</ol>. Keine Eigennamen.""",
         system_prompt="Du bist PMO‑Lead. Antworte nur mit HTML.",
         temperature=0.2, max_tokens=600
     ) or ""
@@ -584,7 +579,7 @@ Antwort NUR als <ol>…</ol>.""",
         ai_act = _build_ai_act_blocks()
         sections.update(ai_act)
         sections['LEAD_AI_ACT'] = _one_liner(f"EU AI Act – Überblick & Fristen ({ai_act.get('ai_act_phase_label', AI_ACT_PHASE_LABEL)})",
-                                             ai_act.get("AI_ACT_SUMMARY_HTML", ""), briefing, scores)
+                                             ai_act.get('AI_ACT_SUMMARY_HTML', ''), briefing, scores)
         sections['LEAD_AI_ACT_ADDON'] = _one_liner("Optionale Vertiefung: EU‑AI‑Act‑Add‑on",
                                                    ai_act.get("AI_ACT_ADDON_PACKAGES_HTML", ""), briefing, scores)
 
@@ -680,13 +675,13 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     raw_answers: Dict[str, Any] = getattr(br, "answers", {}) or {}
     answers = (_pass_through := lambda x: x)(raw_answers)
     try:
-        from services.answers_normalizer import normalize_answers  # type: ignore
+        from services.answers_normalizer import normalize_answers  # optional
         answers = normalize_answers(raw_answers)
     except Exception:
         pass
 
     # Scores
-    log.info("[%s] Calculating realistic scores (v%s)...", run_id, ANALYSIS_VERSION)
+    log.info("[%s] Calculating realistic scores (v4.12.1)...", run_id)
     score_wrap = _calculate_realistic_score(answers)
     scores = score_wrap['scores']
 
@@ -695,16 +690,15 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections = _generate_content_sections(briefing=answers, scores=scores)
 
     # Labels & Meta
-    sections['BRANCHE_LABEL'] = answers.get('BRANCHE_LABEL','') or answers.get('branche','')
-    sections['BUNDESLAND_LABEL'] = answers.get('BUNDESLAND_LABEL','') or answers.get('bundesland','')
-    sections['UNTERNEHMENSGROESSE_LABEL'] = answers.get('UNTERNEHMENSGROESSE_LABEL','') or answers.get('unternehmensgroesse','')
+    sections['BRANCHE_LABEL'] = answers.get('BRANCHE_LABEL','')
+    sections['BUNDESLAND_LABEL'] = answers.get('BUNDESLAND_LABEL','')
+    sections['UNTERNEHMENSGROESSE_LABEL'] = answers.get('UNTERNEHMENSGROESSE_LABEL','')
     sections['JAHRESUMSATZ_LABEL'] = answers.get('JAHRESUMSATZ_LABEL', answers.get('jahresumsatz',''))
     sections['ki_kompetenz'] = answers.get('ki_kompetenz') or answers.get('ki_knowhow','')
     sections['report_date'] = datetime.now().strftime("%d.%m.%Y")
     sections['report_year'] = datetime.now().strftime("%Y")
     sections['transparency_text'] = getattr(settings, "TRANSPARENCY_TEXT", None) or os.getenv("TRANSPARENCY_TEXT", "") or ""
     sections['user_email'] = answers.get('email') or answers.get('kontakt_email') or ""
-    sections['company_name'] = _company_name(answers)
 
     # Scores ins Template
     sections['score_governance'] = scores.get('governance', 0)
@@ -713,10 +707,10 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections['score_befaehigung'] = scores.get('enablement', 0)
     sections['score_gesamt'] = scores.get('overall', 0)
 
-    # Version/Watermark
+    # Version/Watermark (pseudonymer Kundencode)
     version_full = getattr(settings, "VERSION", "1.0.0")
     version_mm = _version_major_minor(version_full)
-    kundencode = _derive_kundencode(answers, sections['user_email'])
+    kundencode = _derive_kundencode(answers)
     report_id = f"R-{datetime.now().strftime('%Y%m%d')}-{kundencode}"
     sections['kundencode'] = kundencode
     sections['report_id'] = report_id
@@ -729,7 +723,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     use_fetchers = True
     research_last_updated = ""
     try:
-        from services.research_pipeline import run_research  # type: ignore
+        from services.research_pipeline import run_research  # optional
     except Exception:
         run_research = None  # type: ignore
     if USE_INTERNAL_RESEARCH and run_research:
@@ -749,13 +743,13 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
 
     # KPIs/Playbooks (optional)
     try:
-        from services.kpi_builder import build_kpis  # type: ignore
+        from services.kpi_builder import build_kpis  # optional
         sections['KPI_HTML'] = sections.get('KPI_HTML') or build_kpis(answers)
         sections.setdefault('KPI_BRANCHE_HTML', sections.get('KPI_HTML', ''))
     except Exception:
         pass
     try:
-        from services.playbooks import build_playbooks  # type: ignore
+        from services.playbooks import build_playbooks  # optional
         sections['PLAYBOOKS_HTML'] = build_playbooks(answers)
     except Exception:
         pass
@@ -776,7 +770,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         created_at=datetime.now(timezone.utc),
     )
     db.add(an); db.commit(); db.refresh(an)
-    log.info("[%s] ✅ Analysis created (v%s): id=%s", run_id, ANALYSIS_VERSION, an.id)
+    log.info("[%s] ✅ Analysis created (v4.12.1-gs): id=%s", run_id, an.id)
 
     return an.id, result["html"], result.get("meta", {})
 
@@ -786,7 +780,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     db = SessionLocal()
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v%s for briefing_id=%s", run_id, ANALYSIS_VERSION, briefing_id)
+        log.info("[%s] 🚀 Starting analysis v4.12.1-gs for briefing_id=%s", run_id, briefing_id)
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
         rep = Report(user_id=br.user_id if br else None, briefing_id=briefing_id, analysis_id=an_id, created_at=datetime.now(timezone.utc))
@@ -796,7 +790,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
         db.add(rep); db.commit(); db.refresh(rep)
 
         if DBG_PDF: log.debug("[%s] pdf_render start", run_id)
-        pdf_info = render_pdf_from_html(html, meta={"analysis_id": an_id, "briefing_id": briefing_id, "run_id": run_id, "request_id": run_id})
+        pdf_info = render_pdf_from_html(html, meta={"analysis_id": an_id, "briefing_id": briefing_id, "run_id": run_id})
         pdf_url = pdf_info.get("pdf_url"); pdf_bytes = pdf_info.get("pdf_bytes"); pdf_error = pdf_info.get("error")
         if DBG_PDF: log.debug("[%s] pdf_render done url=%s bytes=%s error=%s", run_id, bool(pdf_url), len(pdf_bytes or b''), pdf_error)
 
