@@ -254,8 +254,7 @@ Erlaube nur: <p>, <ul>, <ol>, <li>, <table>, <thead>, <tbody>, <tr>, <th>, <td>,
 Abschnitt: {section}. Antworte ausschließlich mit HTML.
 ---
 {s}
-""",
-        system_prompt="Du bist ein strenger HTML‑Sanitizer. Gib nur validen HTML‑Code aus.",
+""",        system_prompt="Du bist ein strenger HTML‑Sanitizer. Gib nur validen HTML‑Code aus.",
         temperature=0.0, max_tokens=1200
     )
     return _clean_html(fixed or s)
@@ -263,10 +262,10 @@ Abschnitt: {section}. Antworte ausschließlich mit HTML.
 
 # -------------------------- Quick‑Wins Parser --------------------------------
 _QW_COMPILED = re.compile(
-    r"(?:Ersparnis\\s*[:=]\\s*)?"          # optionales Label
-    r"(\\d+(?:[.,]\\d{1,2})?)\\s*"          # Zahl
-    r"(?:h|std\\.?|stunden?)\\s*"          # Einheit
-    r"(?:[/\\s]*(?:pro|/)?\\s*Monat)",     # Monatsmarker
+    r"(?:Ersparnis\s*[:=]\s*)?"          # optionales Label
+    r"(\d+(?:[.,]\d{1,2})?)\s*"          # Zahl
+    r"(?:h|std\.?|stunden?)\s*"          # Einheit
+    r"(?:[/\s]*(?:pro|/)?\s*Monat)",     # Monatsmarker
     flags=re.IGNORECASE
 )
 
@@ -314,36 +313,23 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
         'executive_summary': f"""Erstelle eine prägnante Executive Summary. {context}
 KI‑Ziele: {', '.join(ki_ziele) if ki_ziele else 'nicht definiert'} • Vision: {vision}
 KI‑Reifegrad: Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/100 • Nutzen {value}/100 • Befähigung {enablement}/100
-{tone} {only_html} Verwende nur <p>-Absätze.""",
-        'quick_wins': f"""Liste 4–6 **konkrete Quick Wins** (0–90 Tage) für {context}
+{tone} {only_html} Verwende nur <p>-Absätze.""",        'quick_wins': f"""Liste 4–6 **konkrete Quick Wins** (0–90 Tage) für {context}
 Jeder Quick Win: Titel, 1–2 Sätze Nutzen, realistische **Ersparnis: … h/Monat**.
 Bezug: Hauptleistung {hauptleistung}; Projekte: {ki_projekte or 'keine'}.
 {tone} {only_html} Liefere exakt eine <ul>-Liste mit <li>-Einträgen im Format:
-<li><strong>Titel:</strong> Beschreibung. <em>Ersparnis: 5 h/Monat</em></li>""",
-        'roadmap': f"""Erstelle eine **90‑Tage‑Roadmap** (0–30 Test; 31–60 Pilot; 61–90 Rollout) mit Bezug auf {context}
-{tone} {only_html} Pro Phase 3–5 Meilensteine. Format: <h4>Phase …</h4> + <ul>…</ul>.""",
-        'business_roi': f"""Erstelle eine **ROI & Payback**‑Tabelle (Jahr 1) für {context}. {tone} {only_html}
-Format: <table> mit 2 Spalten (Kennzahl, Wert).""",
-        'business_costs': f"""Erstelle eine **Kostenübersicht Jahr 1** für {context}. {tone} {only_html}
-Format: <table> mit 2 Spalten (Position, Betrag).""",
-        'recommendations': f"""Formuliere 5–7 **Handlungsempfehlungen** mit Priorität [H/M/N] und Zeitrahmen (30/60/90). Kontext: {context}
-{tone} {only_html} Format: <ol><li><strong>[H]</strong> Maßnahme — <em>60 Tage</em></li></ol>.""",
-        'risks': f"""Erstelle eine **Risikomatrix** (5–7 Risiken) für {context} + EU‑AI‑Act Pflichtenliste.
-{tone} {only_html} Format: <table> mit <thead>/<tbody>. """,
-        'gamechanger': f"""Skizziere einen **Gamechanger‑Use Case** für {context}. (Idee: 3–4 Sätze; 3 Vorteile; 3 Schritte)
-{tone} {only_html} Verwende <h4>, <p>, <ul>. """,
-        'roadmap_12m': f"""Erstelle eine **12‑Monats‑Roadmap** in 3 Phasen (0–3/3–6/6–12) für {context}.
-{tone} {only_html} Format: <div class=\\"roadmap\\"><div class=\\"roadmap-phase\\">…</div></div>. """,
-        'data_readiness': f"""Erstelle eine kompakte **Dateninventar & ‑Qualität**‑Übersicht für {context}.
-{tone} {only_html} Format: <div class=\\"data-readiness\\"><h4>…</h4><ul>…</ul></div>. """,
-        'org_change': f"""Beschreibe **Organisation & Change** (Governance‑Rollen, Skill‑Programm, Kommunikation) für {context}.
-{tone} {only_html} Format: <div class=\\"org-change\\">…</div>. """,
-        'business_case': f"""Erstelle einen kompakten **Business Case (detailliert)** für {context} – Annahmen, Nutzen (J1), Kosten (CapEx/OpEx), Payback, ROI, Sensitivität.
-{tone} {only_html} Format: <div class=\\"business-case\\"> … </div>. """,
-        'reifegrad_sowhat': f"""Erkläre kurz: **Was heißt der Reifegrad konkret?** Kontext: {context}
+<li><strong>Titel:</strong> Beschreibung. <em>Ersparnis: 5 h/Monat</em></li>""",        'roadmap': f"""Erstelle eine **90‑Tage‑Roadmap** (0–30 Test; 31–60 Pilot; 61–90 Rollout) mit Bezug auf {context}
+{tone} {only_html} Pro Phase 3–5 Meilensteine. Format: <h4>Phase …</h4> + <ul>…</ul>.""",        'business_roi': f"""Erstelle eine **ROI & Payback**‑Tabelle (Jahr 1) für {context}. {tone} {only_html}
+Format: <table> mit 2 Spalten (Kennzahl, Wert).""",        'business_costs': f"""Erstelle eine **Kostenübersicht Jahr 1** für {context}. {tone} {only_html}
+Format: <table> mit 2 Spalten (Position, Betrag).""",        'recommendations': f"""Formuliere 5–7 **Handlungsempfehlungen** mit Priorität [H/M/N] und Zeitrahmen (30/60/90). Kontext: {context}
+{tone} {only_html} Format: <ol><li><strong>[H]</strong> Maßnahme — <em>60 Tage</em></li></ol>.""",        'risks': f"""Erstelle eine **Risikomatrix** (5–7 Risiken) für {context} + EU‑AI‑Act Pflichtenliste.
+{tone} {only_html} Format: <table> mit <thead>/<tbody>. """,        'gamechanger': f"""Skizziere einen **Gamechanger‑Use Case** für {context}. (Idee: 3–4 Sätze; 3 Vorteile; 3 Schritte)
+{tone} {only_html} Verwende <h4>, <p>, <ul>. """,        'roadmap_12m': f"""Erstelle eine **12‑Monats‑Roadmap** in 3 Phasen (0–3/3–6/6–12) für {context}.
+{tone} {only_html} Format: <div class=\"roadmap\"><div class=\"roadmap-phase\">…</div></div>. """,        'data_readiness': f"""Erstelle eine kompakte **Dateninventar & ‑Qualität**‑Übersicht für {context}.
+{tone} {only_html} Format: <div class=\"data-readiness\"><h4>…</h4><ul>…</ul></div>. """,        'org_change': f"""Beschreibe **Organisation & Change** (Governance‑Rollen, Skill‑Programm, Kommunikation) für {context}.
+{tone} {only_html} Format: <div class=\"org-change\">…</div>. """,        'business_case': f"""Erstelle einen kompakten **Business Case (detailliert)** für {context} – Annahmen, Nutzen (J1), Kosten (CapEx/OpEx), Payback, ROI, Sensitivität.
+{tone} {only_html} Format: <div class=\"business-case\"> … </div>. """,        'reifegrad_sowhat': f"""Erkläre kurz: **Was heißt der Reifegrad konkret?** Kontext: {context}
 Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/100 • Nutzen {value}/100 • Befähigung {enablement}/100.
-{tone} {only_html} Gib 4–6 Bullet‑Points (<ul>) aus."""
-    }
+{tone} {only_html} Gib 4–6 Bullet‑Points (<ul>) aus."""    }
     out = _call_openai(
         prompt=prompts[section_name],
         system_prompt="Du bist ein Senior‑KI‑Berater. Antworte nur mit validem HTML.",
@@ -357,8 +343,8 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
 
 def _one_liner(title: str, section_html: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
     """Erzeugt One‑liner gemäß Vorlage (Erkenntnis; Wirkung → nächster Schritt)."""
-    base = f"""Erzeuge einen prägnanten One‑liner unter der H2‑Überschrift "{title}".
-Formel: "Kernaussage; Konsequenz → konkreter nächster Schritt".
+    base = f"""Erzeuge einen prägnanten One‑liner unter der H2‑Überschrift \"{title}\".
+Formel: \"Kernaussage; Konsequenz → konkreter nächster Schritt\".
 Gib nur **eine** Zeile ohne HTML‑Tags zurück."""
     text = _call_openai(base + "\n---\n" + re.sub(r"<[^>]+>", " ", section_html)[:1800],
                         system_prompt="Du formulierst prägnante One‑liner auf Deutsch.",
@@ -368,9 +354,9 @@ Gib nur **eine** Zeile ohne HTML‑Tags zurück."""
 
 def _split_li_list_to_columns(html_list: str) -> Tuple[str, str]:
     if not html_list: return "<ul></ul>", "<ul></ul>"
-    items = re.findall(r"<li[\\s>].*?</li>", html_list, flags=re.DOTALL | re.IGNORECASE)
+    items = re.findall(r"<li[\s>].*?</li>", html_list, flags=re.DOTALL | re.IGNORECASE)
     if not items:
-        lines = [ln.strip() for ln in re.split(r"<br\\s*/?>|\\n", html_list) if ln.strip()]
+        lines = [ln.strip() for ln in re.split(r"<br\s*/?>|\n", html_list) if ln.strip()]
         items = [f"<li>{ln}</li>" for ln in lines]
     mid = (len(items) + 1) // 2
     return "<ul>" + "".join(items[:mid]) + "</ul>", "<ul>" + "".join(items[mid:]) + "</ul>"
@@ -405,7 +391,7 @@ def _md_to_simple_html(md: str) -> str:
             continue
         if line.startswith("!["):
             continue  # Bilder weglassen
-        if re.match(r"^\\[\\d+\\]:\\s*https?://", line):
+        if re.match(r"^\[\d+\]:\s*https?://", line):
             continue  # Fußnoten-Links unterdrücken
         if line.startswith("#### "):
             if in_ul: out.append("</ul>"); in_ul = False
@@ -475,7 +461,7 @@ def _derive_kundencode(answers: Dict[str, Any], user_email: str) -> str:
     return code[:3] or "KND"
 
 def _version_major_minor(v: str) -> str:
-    m = re.match(r"^\\s*(\\d+)\\.(\\d+)", v or "")
+    m = re.match(r"^\s*(\d+)\.(\d+)", v or "")
     return f"{m.group(1)}.{m.group(2)}" if m else "1.0"
 
 def _build_watermark_text(report_id: str, version_mm: str) -> str:
@@ -728,6 +714,12 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             log.warning("[%s] Internal research failed: %s", run_id, exc)
             use_fetchers = True
     sections['research_last_updated'] = research_last_updated or sections['report_date']
+
+    # Vereinheitliche Schlüsselnamen für Tools/Förderprogramme
+    if 'TOOLS_TABLE_HTML' in sections:
+        sections['TOOLS_HTML'] = sections['TOOLS_TABLE_HTML']; sections.pop('TOOLS_TABLE_HTML', None)
+    if 'FUNDING_TABLE_HTML' in sections:
+        sections['FOERDERPROGRAMME_HTML'] = sections['FUNDING_TABLE_HTML']; sections.pop('FUNDING_TABLE_HTML', None)
 
     # KPIs/Playbooks (optional)
     try:
