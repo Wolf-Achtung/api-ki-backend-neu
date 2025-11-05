@@ -10,7 +10,7 @@
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
            font-size: 11pt; line-height: 1.25; color: #111; }
     h1 { font-size: 20pt; margin: 0 0 .2em 0; }
-    h2 { font-size: 15pt; margin: .6em 0 .2em 0; border-bottom: 1px solid #e5e7eb; padding-bottom: .2em;}
+    h2 { font-size: 15pt; margin: .6em 0 .2em 0; border-bottom: 1px solid #e5e7eb; padding-bottom: .2em; }
     h3 { font-size: 12.5pt; margin: .6em 0 .2em 0; }
     h4 { font-size: 11.5pt; margin: .6em 0 .2em 0; }
     p, li { font-size: 11pt; }
@@ -98,7 +98,7 @@
       <div>{{ QUICK_WINS_HTML_LEFT }}</div>
       <div>{{ QUICK_WINS_HTML_RIGHT }}</div>
     </div>
-    {% if REALITY_NOTE_QW %}<div class="sidebar-note">{{ REALITY_NOTE_QW }}</div>{% endif %}
+    <div class="sidebar-note">{{ REALITY_NOTE_QW }}</div>
   </section>
 
   <!-- Roadmap 90 Tage -->
@@ -165,15 +165,64 @@
   <section class="page">
     <h2>Empfohlene Tools (Pro &amp; Open‑Source)</h2>
     <p class="lead">{{ LEAD_TOOLS }}</p>
-    {% if TOOLS_TABLE_HTML %}{{ TOOLS_TABLE_HTML }}{% else %}<p class="muted">Hinweis: Quellenlage dünn – bitte manuell prüfen.</p>{% endif %}
+    {{ TOOLS_HTML }}
     <div class="small muted">„Stand“: {{ research_last_updated }}.</div>
   </section>
 
+  <!-- Aktuelle Förderprogramme & Quellen -->
   <section class="page">
     <h2>Aktuelle Förderprogramme &amp; Quellen</h2>
     <p class="lead">{{ LEAD_FUNDING }}</p>
-    {% if FUNDING_TABLE_HTML %}{{ FUNDING_TABLE_HTML }}{% else %}<p class="muted">Für das angegebene Bundesland liegen aktuell keine verlässlichen Programme vor.</p>{% endif %}
+    {{ FOERDERPROGRAMME_HTML }}
     <div class="small muted">„Stand“: {{ research_last_updated }}.</div>
+  </section>
+
+  <!-- Kreativ-Special -->
+  <section class="page">
+    <h2>Kreativ-Special: Wer braucht noch Adobe?</h2>
+    <p>Figma, Affinity 3, DaVinci Resolve, Blender und Milanote sind 2025 etablierte Kreativtools, die vielfältige professionelle Bedürfnisse abdecken und als vollwertige oder sogar bessere Alternativen zu Adobe gelten. Adobe wird nur noch für spezielle Workflows oder Spezialfunktionen benötigt. Für viele Designer, Agenturen und Kreativteams reichen die genannten Tools völlig aus und bieten oft bessere Konditionen, moderne Kollaboration und spezialisierte Features.</p>
+    <h3>Figma vs Affinity 3</h3>
+    <ul>
+      <li>Figma – Cloudbasierte UI/UX-Plattform mit Echtzeit-Kollaboration und Prototyping, ideal für Teams und Interface-Design.</li>
+      <li>Affinity Designer 3 – Leistungsstarke Vektor- und Rastergrafiksoftware mit Einmalkauf, beliebt bei Illustratoren und klassischen Grafikdesignern.</li>
+      <li>Beide sind funktional auf Augenhöhe mit Adobe; Figma punktet bei Teamarbeit, Affinity mit umfassenden Werkzeugen ohne Abozwang.[1][2]</li>
+    </ul>
+    <h3>DaVinci Resolve vs Adobe Premiere &amp; After Effects</h3>
+    <ul>
+      <li>DaVinci Resolve – Erstklassige Videobearbeitungsplattform, konkurrenzfähig mit Adobe Premiere/After Effects, insbesondere dank herausragender Farbkorrektur-Tools.</li>
+      <li>Bietet eine kostenlose Version mit sehr umfangreichen Funktionen und ist damit attraktiver als Adobes Abo-Modelle.[3]</li>
+    </ul>
+    <h3>Blender als 3D-Tool</h3>
+    <ul>
+      <li>Blender – Mächtiges Open-Source-3D-Modellierungs- und Animationsprogramm, das viele Bereiche der 3D-Produktion abdeckt.</li>
+      <li>Gerade für 3D-Animation und VFX eine feste Größe – komplett kostenfrei und stetig weiterentwickelt.</li>
+    </ul>
+    <h3>Milanote als Kreativ- und Planungstool</h3>
+    <ul>
+      <li>Milanote – Visuelle Notiz-, Moodboard- und Planungssoftware für Kreativteams; sinnvolle Ergänzung/Alternative zu Adobe Cloud Services.</li>
+      <li>Stark in der frühen Ideen- und Planungsphase, einem Bereich, den Adobe-Programme oft nicht direkt abdecken.</li>
+    </ul>
+    <h3>Wer braucht da noch Adobe?</h3>
+    <ul>
+      <li>Adobe bleibt Marktführer mit einem umfangreichen Ökosystem und unverzichtbar für einige Profis mit spezifischen Workflows.</li>
+      <li>Doch immer mehr Designer und Agenturen ersetzen Adobe-Programme (Illustrator, Photoshop, Premiere etc.) durch modernere Tools wie Affinity, Figma und DaVinci Resolve.</li>
+      <li>Gründe gegen Adobe sind oft die Abokosten, hoher Einstiegspreis und der Wunsch nach mehr Flexibilität und Tool-Vielfalt.[1][3]</li>
+    </ul>
+    <p>Fazit: Wer auf moderne, kollaborative und bezahlbare Tools setzt, kommt mit Figma, Affinity 3, DaVinci Resolve, Blender und Milanote hervorragend zurecht – Adobe ist nicht mehr zwingend nötig. Für Profis mit tiefen Adobe-Workflows bleibt Adobe relevant, aber der Trend geht zu modularen, spezialisierten Toolsets weg vom monolithischen Adobe-Paket.</p>
+    <p>Somit lässt sich die Frage "Wer braucht da noch Adobe?" für viele mit "Nicht mehr allzu viele" beantworten, da die Alternativen ausgereift und meist günstiger sind.[2][3][1]</p>
+    <p class="small"><strong>Quellen:</strong></p>
+    <ul class="small">
+      <li>[1] Figma vs. Affinity Designer – Was soll man wählen? (figtowp.com)</li>
+      <li>[2] Top UX and UI Design Tools for 2025 (interaction-design.org)</li>
+      <li>[3] The Best Adobe Alternatives for 2024 (YouTube)</li>
+      <li>[4] Design Trends 2025 (behance.net)</li>
+      <li>[5] The 5 Best Design Proposal Tools of 2025 (dotbrand.design)</li>
+      <li>[6] 12 Tools, die besser sind als ihre Adobe-Pendants (xda-developers.com)</li>
+      <li>[7] Graphic Design Trends 2025 (adobe.com/express)</li>
+      <li>[8] Affinity vs Adobe – Diskussion (reddit.com)</li>
+      <li>[9] Design-Trends 2025 – Prognosen (designerinaction.de)</li>
+      <li>[10] 18 Must-Have Creative Agency Tools 2025 (manyrequests.com)</li>
+    </ul>
   </section>
 
   <!-- EU AI Act -->
