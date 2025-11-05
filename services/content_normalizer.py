@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-
+"""
+services.content_normalizer – Gold-Standard+ (hotfix 2025-11-05)
+Fix: Glossar-Builder akzeptiert jetzt NICHT-String-Werte (int/float/None/bytes),
+indem er alle Snippet-Werte vor dem Regex-Strip robust in Strings konvertiert.
+Weitere Funktionalität (KPI/ROI/Tools/Förderungen, Kreativ-Special, Leistung & Nachweis,
+Feedback-Link-Obfuskation) bleibt unverändert.
+"""
 from typing import Dict, Any, List, Tuple
 import os, re, base64, hmac, hashlib
 
@@ -204,22 +210,39 @@ GLOSSARY = {
     "Guardrails": "Sicherheitsmechanismen/Regeln zur Begrenzung unerwünschter KI-Ausgaben.",
     "Halluzination": "Falsche, aber plausibel klingende KI-Antwort ohne Faktenbasis.",
     "Embedding": "Vektor-Repräsentation von Texten/Bildern; Grundlage für semantische Suche.",
-    "Vektor-Datenbank": "Datenbank für Embeddings zur Ähnlichkeitssuche (z. B. FAISS, Milvus).",
-    "ROI": "Return on Investment; Verhältnis von Gewinn zu eingesetztem Kapital.",
+    "Vektor-Datenbank": "Datenbank für Embeddings zur Ähnlichkeitssuche (z. B. FAISS, Milvus).",    "ROI": "Return on Investment; Verhältnis von Gewinn zu eingesetztem Kapital.",
     "Payback": "Zeit, bis sich eine Investition amortisiert.",
     "Zero‑Shot": "Modell löst eine Aufgabe ohne Beispiele; Gegenteil: Few‑Shot.",
-    "Prompt": "Anweisung/Eingabetext an ein Sprachmodell, der die Ausgabe steuert."
+    "Prompt": "Anweisung/Eingabetext an ein Sprachmodell, der die Ausgabe steuert.",
 }
 
-def _build_glossar_html(snippets: Dict[str, str]) -> str:
-    # sammle Text
-    text = " ".join([re.sub(r"<[^>]+>", " ", (snippets.get(k, "") or "")) for k in list(snippets.keys())])
+def _build_glossar_html(snippets: Dict[str, Any]) -> str:
+    """Builds a Glossary card.
+    Robust gegen nicht-string Snippets (int/float/None/bytes); HTML wird vorher entfernt.
+    """
+    pieces: List[str] = []
+    for k, v in (snippets or {}).items():
+        # bytes -> str
+        if isinstance(v, bytes):
+            try:
+                v = v.decode("utf-8", errors="ignore")
+            except Exception:
+                v = ""
+        # alles andere -> str
+        if not isinstance(v, str):
+            v = "" if v is None else str(v)
+        try:
+            clean = re.sub(r"<[^>]+>", " ", v)
+        except Exception:
+            clean = str(v)
+        pieces.append(clean)
+    text = " ".join(pieces)
     text_l = text.lower()
-    used = []
+    used: List[Tuple[str, str]] = []
     for term, definition in GLOSSARY.items():
         if term.lower() in text_l:
             used.append((term, definition))
-    # Mindestmenge sicherstellen
+    # Mindestmenge
     base_terms = ["KI", "DSGVO", "DSFA", "EU AI Act", "Quick Win", "MVP", "ROI", "Payback", "LLM", "Prompt"]
     for t in base_terms:
         if (t, GLOSSARY[t]) not in used:
@@ -237,7 +260,8 @@ def _build_leistung_nachweis_html(owner: str, email: str, site: str) -> str:
     ]
     lis = "".join([f"<li><strong>{ensure_utf8(a)}:</strong> {ensure_utf8(b)}</li>" for a, b in bullets])
     email_link = f"<a href='mailto:{ensure_utf8(email)}'>{ensure_utf8(email)}</a>" if email else "—"
-    site_link = f"<a href='{ensure_utf8(site)}'>{ensure_utf8(site.replace('https://','').replace('http://',''))}</a>" if site else "—"
+    site_label = site.replace("https://","").replace("http://","") if site else "—"
+    site_link = f"<a href='{ensure_utf8(site)}'>{ensure_utf8(site_label)}</a>" if site else "—"
     return (
         "<div class='card'>"
         "<p>Als TÜV‑zertifizierter KI‑Manager begleite ich Unternehmen bei der sicheren Einführung, Nutzung und Audit‑Vorbereitung von KI – mit klarer Strategie, dokumentierter Förderfähigkeit und DSGVO‑Konformität.</p>"
@@ -298,7 +322,8 @@ def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
 
     # KPI
     kpi = _kpi_tables(briefing.get("branche") or "beratung", briefing.get("unternehmensgroesse") or "")
-    out.setdefault("KPI_HTML", kpi["KPI_HTML"])
+    out.setdefault("KPI_HTML", kpi["KPI_HTML"]
+    )
     out.setdefault("KPI_BRANCHE_HTML", kpi["KPI_BRANCHE_HTML"])
 
     # Governance „So‑what?“
@@ -366,7 +391,7 @@ def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
     # Leistung & Nachweis
     out.setdefault("LEISTUNG_NACHWEIS_HTML", _build_leistung_nachweis_html(owner, email, site))
 
-    # Glossar
+    # Glossar (robust)
     out.setdefault("GLOSSAR_HTML", _build_glossar_html(out))
 
     # Feedback box
