@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-"""
-services.content_normalizer – Gold-Standard+ (hotfix 2025-11-05)
-Fix: Glossar-Builder akzeptiert jetzt NICHT-String-Werte (int/float/None/bytes),
-indem er alle Snippet-Werte vor dem Regex-Strip robust in Strings konvertiert.
-Weitere Funktionalität (KPI/ROI/Tools/Förderungen, Kreativ-Special, Leistung & Nachweis,
-Feedback-Link-Obfuskation) bleibt unverändert.
-"""
+
 from typing import Dict, Any, List, Tuple
 import os, re, base64, hmac, hashlib
 
@@ -18,7 +12,6 @@ except Exception:  # pragma: no cover - fallback for standalone usage
 
 EM_DASH = "—"
 
-# ---------- small HTML helpers ----------
 def _table(headers: List[str], rows: List[Tuple[str, ...]]) -> str:
     parts: List[str] = []
     parts.append('<table class="table"><thead><tr>')
@@ -36,7 +29,6 @@ def _table(headers: List[str], rows: List[Tuple[str, ...]]) -> str:
 def _p(s: str) -> str:
     return f"<p>{ensure_utf8(s)}</p>"
 
-# ---------- currency & simple parsing ----------
 def _to_eur(v: float) -> str:
     s = f"{v:,.2f} €"
     return s.replace(",", "X").replace(".", ",").replace("X", ".")
@@ -56,7 +48,6 @@ def _parse_budget_range(text: str) -> float:
     except Exception:
         return 0.0
 
-# ---------- branch defaults & KPI ----------
 def _branch_defaults(branche: str, size: str) -> Dict[str, Any]:
     b = (branche or "").lower()
     defaults = {
@@ -90,12 +81,9 @@ def _branch_defaults(branche: str, size: str) -> Dict[str, Any]:
 def _kpi_tables(branche: str, size: str) -> Dict[str, str]:
     d = _branch_defaults(branche, size)
     overview = _table(["KPI", "Definition", "Ziel"], d["kpis"]) if d.get("kpis") else ""
-    return {
-        "KPI_HTML": overview or f"<p>{ensure_utf8(EM_DASH)}</p>",
-        "KPI_BRANCHE_HTML": overview or f"<p>{ensure_utf8(EM_DASH)}</p>",
-    }
+    return {"KPI_HTML": overview or f"<p>{ensure_utf8(EM_DASH)}</p>",
+            "KPI_BRANCHE_HTML": overview or f"<p>{ensure_utf8(EM_DASH)}</p>"}
 
-# ---------- ROI, Payback & sensitivity ----------
 def _roi_and_costs(briefing: Dict[str, Any], metrics: Dict[str, Any]) -> Dict[str, str]:
     invest_hint = _parse_budget_range(briefing.get("investitionsbudget"))
     invest = invest_hint if invest_hint > 0 else 6000.0
@@ -117,11 +105,9 @@ def _roi_and_costs(briefing: Dict[str, Any], metrics: Dict[str, Any]) -> Dict[st
         ("Schulung/Change", _to_eur(600.0)),
         ("Betrieb (Schätzung)", _to_eur(360.0)),
     ]
-    return {
-        "ROI_HTML": _table(["Kennzahl", "Wert"], roi_rows),
-        "COSTS_OVERVIEW_HTML": _table(["Position", "Betrag"], costs_rows),
-        "invest_value": invest,
-    }
+    return {"ROI_HTML": _table(["Kennzahl", "Wert"], roi_rows),
+            "COSTS_OVERVIEW_HTML": _table(["Position", "Betrag"], costs_rows),
+            "invest_value": invest}
 
 def _sensitivity_table(invest: float, monthly_base: float, rate: float) -> str:
     if invest <= 0 or monthly_base <= 0:
@@ -135,7 +121,6 @@ def _sensitivity_table(invest: float, monthly_base: float, rate: float) -> str:
         rows.append((f"{int(f * 100)} %", f"{_to_eur(yr)} / {_to_eur(mon)}", f"{roi:.0f} %", f"{pb:.1f} Monate"))
     return _table(["Adoption", "Ersparnis Jahr / Monat", "ROI", "Payback"], rows)
 
-# ---------- So-what (governance) ----------
 def _so_what(scores: Dict[str, int]) -> str:
     g = scores.get("governance", 0); s = scores.get("security", 0)
     v = scores.get("value", 0); e = scores.get("enablement", 0)
@@ -152,7 +137,6 @@ def _so_what(scores: Dict[str, int]) -> str:
         items.append("<li>Reifegrad solide – Fokus auf Skalierung: wiederverwendbare Bausteine & Automatisierungsgrad erhöhen.</li>")
     return "<ul>" + "".join(items) + "</ul>"
 
-# ---------- Kreativ-Special: read Markdown ----------
 def _read_text_candidates(path: str) -> str:
     candidates = [path, os.path.join("content", os.path.basename(path)), os.path.join("/mnt/data", os.path.basename(path))]
     for p in candidates:
@@ -181,7 +165,6 @@ def _md_to_simple_html(md: str) -> str:
                 out.append("<ul>"); in_ul = True
             out.append(f"<li>{ensure_utf8(line[2:].strip())}</li>")
             continue
-        # paragraph
         if in_ul: out.append("</ul>"); in_ul = False
         out.append(f"<p>{ensure_utf8(line)}</p>")
     if in_ul: out.append("</ul>")
@@ -191,12 +174,10 @@ def _build_kreativ_special_html() -> str:
     path = os.getenv("KREATIV_TOOLS_PATH", "kreativ-tools.txt")
     raw = _read_text_candidates(path)
     if not raw:
-        # conservative fallback text
         return _p("Hinweis: Die Datei 'kreativ-tools.txt' wurde nicht gefunden. Bitte hinterlegen (ENV KREATIV_TOOLS_PATH) – dann erscheint hier die stets aktuelle Abschätzung & Tool‑Übersicht.")
     html = _md_to_simple_html(raw)
     return html or _p("—")
 
-# ---------- Glossary ----------
 GLOSSARY = {
     "KI": "Technologien, die aus Daten lernen und selbstständig Entscheidungen treffen oder Empfehlungen geben.",
     "LLM": "Large Language Model; Sprachmodell, das Texteingaben verarbeitet und Antworten generiert.",
@@ -210,25 +191,21 @@ GLOSSARY = {
     "Guardrails": "Sicherheitsmechanismen/Regeln zur Begrenzung unerwünschter KI-Ausgaben.",
     "Halluzination": "Falsche, aber plausibel klingende KI-Antwort ohne Faktenbasis.",
     "Embedding": "Vektor-Repräsentation von Texten/Bildern; Grundlage für semantische Suche.",
-    "Vektor-Datenbank": "Datenbank für Embeddings zur Ähnlichkeitssuche (z. B. FAISS, Milvus).",    "ROI": "Return on Investment; Verhältnis von Gewinn zu eingesetztem Kapital.",
+    "Vektor-Datenbank": "Datenbank für Embeddings zur Ähnlichkeitssuche (z. B. FAISS, Milvus).",
+    "ROI": "Return on Investment; Verhältnis von Gewinn zu eingesetztem Kapital.",
     "Payback": "Zeit, bis sich eine Investition amortisiert.",
     "Zero‑Shot": "Modell löst eine Aufgabe ohne Beispiele; Gegenteil: Few‑Shot.",
-    "Prompt": "Anweisung/Eingabetext an ein Sprachmodell, der die Ausgabe steuert.",
+    "Prompt": "Anweisung/Eingabetext an ein Sprachmodell, der die Ausgabe steuert."
 }
 
 def _build_glossar_html(snippets: Dict[str, Any]) -> str:
-    """Builds a Glossary card.
-    Robust gegen nicht-string Snippets (int/float/None/bytes); HTML wird vorher entfernt.
-    """
     pieces: List[str] = []
-    for k, v in (snippets or {}).items():
-        # bytes -> str
+    for _, v in (snippets or {}).items():
         if isinstance(v, bytes):
             try:
                 v = v.decode("utf-8", errors="ignore")
             except Exception:
                 v = ""
-        # alles andere -> str
         if not isinstance(v, str):
             v = "" if v is None else str(v)
         try:
@@ -236,13 +213,11 @@ def _build_glossar_html(snippets: Dict[str, Any]) -> str:
         except Exception:
             clean = str(v)
         pieces.append(clean)
-    text = " ".join(pieces)
-    text_l = text.lower()
+    text = " ".join(pieces).lower()
     used: List[Tuple[str, str]] = []
     for term, definition in GLOSSARY.items():
-        if term.lower() in text_l:
+        if term.lower() in text:
             used.append((term, definition))
-    # Mindestmenge
     base_terms = ["KI", "DSGVO", "DSFA", "EU AI Act", "Quick Win", "MVP", "ROI", "Payback", "LLM", "Prompt"]
     for t in base_terms:
         if (t, GLOSSARY[t]) not in used:
@@ -250,7 +225,6 @@ def _build_glossar_html(snippets: Dict[str, Any]) -> str:
     items = "".join([f"<li><strong>{ensure_utf8(t)}:</strong> {ensure_utf8(d)}</li>" for t, d in used])
     return f"<div class='card'><ul>{items}</ul></div>"
 
-# ---------- Leistung & Nachweis ----------
 def _build_leistung_nachweis_html(owner: str, email: str, site: str) -> str:
     bullets = [
         ("KI‑Strategie & Audit", "TÜV‑zertifizierte Entwicklung und Vorbereitung auf Prüfungen"),
@@ -262,19 +236,17 @@ def _build_leistung_nachweis_html(owner: str, email: str, site: str) -> str:
     email_link = f"<a href='mailto:{ensure_utf8(email)}'>{ensure_utf8(email)}</a>" if email else "—"
     site_label = site.replace("https://","").replace("http://","") if site else "—"
     site_link = f"<a href='{ensure_utf8(site)}'>{ensure_utf8(site_label)}</a>" if site else "—"
-    return (
-        "<div class='card'>"
-        "<p>Als TÜV‑zertifizierter KI‑Manager begleite ich Unternehmen bei der sicheren Einführung, Nutzung und Audit‑Vorbereitung von KI – mit klarer Strategie, dokumentierter Förderfähigkeit und DSGVO‑Konformität.</p>"
-        f"<ul>{lis}</ul>"
-        f"<p>Kontakt: {email_link} · {site_link}</p>"
-        "</div>"
-    )
+    return ("<div class='card'>"
+            "<p>Als TÜV‑zertifizierter KI‑Manager begleite ich Unternehmen bei der sicheren Einführung, Nutzung und Audit‑Vorbereitung von KI – mit klarer Strategie, dokumentierter Förderfähigkeit und DSGVO‑Konformität.</p>"
+            f"<ul>{lis}</ul>"
+            f"<p>Kontakt: {email_link} · {site_link}</p>"
+            "</div>")
 
-# ---------- Feedback URL (optional obfuscation) ----------
 def _obfuscate_url(url: str) -> str:
     base = os.getenv("FEEDBACK_REDIRECT_BASE", "").rstrip("/")
     secret = os.getenv("FEEDBACK_SECRET", "")
     if base and secret and url:
+        import base64, hmac, hashlib
         b64 = base64.urlsafe_b64encode(url.encode("utf-8")).decode("ascii").rstrip("=")
         sig = hmac.new(secret.encode("utf-8"), b64.encode("ascii"), hashlib.sha256).hexdigest()[:16]
         return f"{base}/fb?u={b64}&s={sig}"
@@ -282,10 +254,8 @@ def _obfuscate_url(url: str) -> str:
 
 def _build_feedback_box(feedback_url: str) -> str:
     url = _obfuscate_url(feedback_url)
-    label = "Feedback geben (2–3 Min.)"
-    return f"<a href='{ensure_utf8(url)}'>{label}</a>"
+    return f"<a href='{ensure_utf8(url)}'>Feedback geben (2–3 Min.)</a>"
 
-# ---------- Tools & Funding defaults ----------
 def _default_tools_and_funding(briefing: Dict[str, Any], last_updated: str, report_date: str) -> Dict[str, str]:
     b = (briefing.get("bundesland") or "").lower()
     branche = briefing.get("branche") or "beratung"
@@ -310,7 +280,32 @@ def _default_tools_and_funding(briefing: Dict[str, Any], last_updated: str, repo
         funding_html += f'<p class="small">Stand: {ensure_utf8(report_date)} • Research: {ensure_utf8(last_updated or report_date)}</p>'
     return {"TOOLS_HTML": tools_html, "FOERDERPROGRAMME_HTML": funding_html}
 
-# ---------- Public: normalize & enrich ----------
+def _build_zim_alert_html() -> str:
+    enabled = os.getenv("ZIM_ALERT_ENABLED", "1").strip() not in {"0", "false", "False", ""}
+    if not enabled:
+        return ""
+    date = os.getenv("ZIM_ALERT_DATE", "03.11.2025")
+    img1 = os.getenv("ZIM_ALERT_IMG1", "https://www.aif-projekt-gmbh.de/fileadmin/_processed_/d/e/csm_AdobeStock_555433125_Gorodenkoff_834x556px_d1e69d4f3e.jpg")
+    img2 = os.getenv("ZIM_ALERT_IMG2", "https://www.zim.de/ZIM/Redaktion/DE/Bilder/webinare.jpg?__blob=normal&size=420w&v=1")
+    link1 = os.getenv("ZIM_ALERT_LINK_1", "https://www.zim.de/ZIM/Redaktion/DE/Meldungen/2025/4/2025-11-03-foerderzentrale.html")
+    link2 = os.getenv("ZIM_ALERT_LINK_2", "https://www.zim.de/ZIM/Redaktion/DE/Dossiers/foerderzentrale/digitale-antragstellung-im-zim-fzd.html")
+    link3 = os.getenv("ZIM_ALERT_LINK_3", "https://www.gtai.de/en/invest/industries/digital-economy/half-billion-euro-program-for-german-smes-goes-digital-1942648")
+    return ("<div class='spotlight'>"
+            "<div class='zim-grid'>"
+            f"<div><img src='{ensure_utf8(img1)}' alt='ZIM – digitale Antragstellung (Symbolbild)'></div>"
+            f"<div><img src='{ensure_utf8(img2)}' alt='ZIM – Webinare & Infos'></div>"
+            "</div>"
+            "<div class='cta'>"
+            f"<p><strong>Neu seit {ensure_utf8(date)}:</strong> ZIM‑Anträge können <em>vollständig elektronisch</em> über das Online‑Portal der <strong>Förderzentrale Deutschland</strong> eingereicht und <em>kollaborativ</em> bearbeitet werden.</p>"
+            "<ul>"
+            "<li>Einheitliches Online‑Formularsystem mit Hilfen & automatischer Prüfung.</li>"
+            "<li>Weniger Verwaltungsaufwand, schnellere Prozesse – ideal für KMU/Kooperationsprojekte.</li>"
+            "<li>Passgenau für Ihr Beratungs‑ & Innovationsumfeld (KI, F&E, Prototyping).</li>"
+            "</ul>"
+            f"<p class='small'>Quellen: <a href='{ensure_utf8(link1)}'>zim.de (Meldung)</a> · <a href='{ensure_utf8(link2)}'>zim.de (Dossier)</a> · <a href='{ensure_utf8(link3)}'>GTAI</a></p>"
+            "</div>"
+            "</div>")
+
 def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
                                   snippets: Dict[str, str] = None,
                                   metrics: Dict[str, Any] = None,
@@ -320,27 +315,21 @@ def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
     metrics = metrics or kwargs.get("metrics") or {}
     out = dict(snippets or {})
 
-    # KPI
     kpi = _kpi_tables(briefing.get("branche") or "beratung", briefing.get("unternehmensgroesse") or "")
-    out.setdefault("KPI_HTML", kpi["KPI_HTML"]
-    )
+    out.setdefault("KPI_HTML", kpi["KPI_HTML"])
     out.setdefault("KPI_BRANCHE_HTML", kpi["KPI_BRANCHE_HTML"])
 
-    # Governance „So‑what?“
     scores = kwargs.get("scores") or {}
     out.setdefault("REIFEGRAD_SOWHAT_HTML", _so_what(scores))
 
-    # ROI & Kosten
     if not out.get("ROI_HTML") or len(out.get("ROI_HTML", "").strip()) < 20:
         out.update(_roi_and_costs(briefing, metrics))
 
-    # Sensitivität
     invest = float(out.get("invest_value", 0) or 0)
     monthly = float(metrics.get("monatsersparnis_eur", 0) or 0)
     rate = float(metrics.get("stundensatz_eur", 60) or 60)
     out.setdefault("BUSINESS_SENSITIVITY_HTML", _sensitivity_table(invest, monthly, rate))
 
-    # Tools/Förderungen
     last_updated = snippets.get("last_updated") or kwargs.get("last_updated") or briefing.get("research_last_updated") or ""
     report_date = briefing.get("report_date", "")
     if not out.get("TOOLS_HTML") or len(out.get("TOOLS_HTML", "").strip()) < 24:
@@ -365,7 +354,6 @@ def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
             funding_html += f'<p class="small">Stand: {ensure_utf8(report_date)} • Research: {ensure_utf8(last_updated or report_date)}</p>'
         out["FOERDERPROGRAMME_HTML"] = funding_html
 
-    # Quellen (Fallback)
     if not out.get("QUELLEN_HTML") or len(out.get("QUELLEN_HTML", "").strip()) < 16:
         out["QUELLEN_HTML"] = _table(
             ["Titel", "Host", "Datum", "Link"],
@@ -375,7 +363,6 @@ def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
             ],
         )
 
-    # ---- NEW: owner/contact defaults ----
     owner = os.getenv("OWNER_NAME", "Wolf Hohl")
     email = os.getenv("CONTACT_EMAIL", "kontakt@ki-sicherheit.jetzt")
     site = os.getenv("SITE_URL", "https://ki-sicherheit.jetzt")
@@ -385,16 +372,13 @@ def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
     out["CONTACT_EMAIL"] = email
     out["SITE_URL"] = site
 
-    # Kreativ‑Special
     out.setdefault("KREATIV_SPECIAL_HTML", _build_kreativ_special_html())
-
-    # Leistung & Nachweis
     out.setdefault("LEISTUNG_NACHWEIS_HTML", _build_leistung_nachweis_html(owner, email, site))
-
-    # Glossar (robust)
     out.setdefault("GLOSSAR_HTML", _build_glossar_html(out))
 
-    # Feedback box
+    out.setdefault("ZIM_ALERT_HTML", _build_zim_alert_html())
+    out.setdefault("LEAD_ZIM_ALERT", "ZIM: Antrag jetzt volldigital — nutzen Sie den Vorsprung für schnellere Förderprozesse.")
+
     out.setdefault("FEEDBACK_BOX_HTML", _build_feedback_box(feedback_url))
 
     return out

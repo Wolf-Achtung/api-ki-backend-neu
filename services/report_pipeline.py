@@ -1,20 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-"""
-Report pipeline (Gold‑Standard+) – context building & HTML rendering with new sections:
-- Kreativ-Special (Markdown-Datei)
-- Leistung & Nachweis (Kontakt/Owner)
-- Glossar (dynamisch)
-- Feedback-Box (optional obfuskiert)
-"""
-
 import os
 import datetime as dt
 import re
 from typing import Dict, Any
 
-from .sanitize import ensure_utf8
+def ensure_utf8(x: str) -> str:
+    return (x or "").encode("utf-8", errors="ignore").decode("utf-8", errors="ignore")
 
 CODE_FENCE_RE = re.compile(r"```+[a-zA-Z]*\s*|\u200b", flags=re.MULTILINE)
 
@@ -31,7 +24,6 @@ def build_context(briefing: Dict[str, Any], snippets: Dict[str, str]) -> Dict[st
     today = dt.date.today()
     user_email = briefing.get("user_email") or briefing.get("email") or ""
 
-    # --- Meta & placeholders ---
     context = {
         "unternehmen_name": _dash(briefing.get("unternehmen_name")),
         "branche": _dash(briefing.get("branche")),
@@ -45,13 +37,11 @@ def build_context(briefing: Dict[str, Any], snippets: Dict[str, str]) -> Dict[st
         "CHANGELOG_SHORT": os.getenv("CHANGELOG_SHORT", "—"),
         "AUDITOR_INITIALS": os.getenv("AUDITOR_INITIALS", "KSJ"),
         "WATERMARK_TEXT": os.getenv("WATERMARK_TEXT", "Trusted KI‑Check"),
-        # Owner/contact (for footer & Nachweis)
         "OWNER_NAME": os.getenv("OWNER_NAME", "Wolf Hohl"),
         "CONTACT_EMAIL": os.getenv("CONTACT_EMAIL", "kontakt@ki-sicherheit.jetzt"),
         "SITE_URL": os.getenv("SITE_URL", "https://ki-sicherheit.jetzt"),
     }
 
-    # --- Sections that are always passed through if present ---
     for key in (
         "EXECUTIVE_SUMMARY_HTML","QUICK_WINS_HTML_LEFT","QUICK_WINS_HTML_RIGHT","PILOT_PLAN_HTML",
         "ROI_HTML","COSTS_OVERVIEW_HTML","RISKS_HTML","GAMECHANGER_HTML","FOERDERPROGRAMME_HTML",
@@ -64,7 +54,8 @@ def build_context(briefing: Dict[str, Any], snippets: Dict[str, str]) -> Dict[st
         "LEAD_RISKS","LEAD_GC","LEAD_FUNDING","LEAD_NEXT_ACTIONS","LEAD_AI_ACT","LEAD_AI_ACT_ADDON",
         "BRANCHE_LABEL","BUNDESLAND_LABEL","UNTERNEHMENSGROESSE_LABEL","JAHRESUMSATZ_LABEL",
         "score_governance","score_sicherheit","score_nutzen","score_befaehigung","score_gesamt",
-        "report_version","report_id","research_last_updated","WATERMARK_TEXT"
+        "report_version","report_id","research_last_updated","WATERMARK_TEXT",
+        "LEAD_ZIM_ALERT","ZIM_ALERT_HTML"
     ):
         if key in snippets:
             _strip_and_set(context, snippets, key)
@@ -72,7 +63,6 @@ def build_context(briefing: Dict[str, Any], snippets: Dict[str, str]) -> Dict[st
     return context
 
 def render_report_html(briefing: Dict[str, Any], snippets: Dict[str, str]) -> str:
-    # Enrichment wird durch services.content_normalizer erledigt (siehe report_renderer)
     template_path = os.getenv("REPORT_TEMPLATE_PATH", "templates/pdf_template.html")
     with open(template_path, "r", encoding="utf-8") as f:
         template = f.read()
@@ -83,6 +73,5 @@ def render_report_html(briefing: Dict[str, Any], snippets: Dict[str, str]) -> st
     for k, v in context.items():
         html = html.replace("{{" + k + "}}", ensure_utf8(str(v)))
 
-    # Platzhalter neutralisieren
     html = re.sub(r"{{\s*[A-Z0-9_]+\s*}}", "—", html)
     return ensure_utf8(html)
