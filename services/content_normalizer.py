@@ -12,6 +12,7 @@ except Exception:  # pragma: no cover - fallback for standalone usage
 
 EM_DASH = "—"
 
+# ---------- small HTML helpers ----------
 def _table(headers: List[str], rows: List[Tuple[str, ...]]) -> str:
     parts: List[str] = []
     parts.append('<table class="table"><thead><tr>')
@@ -29,6 +30,7 @@ def _table(headers: List[str], rows: List[Tuple[str, ...]]) -> str:
 def _p(s: str) -> str:
     return f"<p>{ensure_utf8(s)}</p>"
 
+# ---------- currency & simple parsing ----------
 def _to_eur(v: float) -> str:
     s = f"{v:,.2f} €"
     return s.replace(",", "X").replace(".", ",").replace("X", ".")
@@ -48,6 +50,7 @@ def _parse_budget_range(text: str) -> float:
     except Exception:
         return 0.0
 
+# ---------- branch defaults & KPI ----------
 def _branch_defaults(branche: str, size: str) -> Dict[str, Any]:
     b = (branche or "").lower()
     defaults = {
@@ -81,9 +84,12 @@ def _branch_defaults(branche: str, size: str) -> Dict[str, Any]:
 def _kpi_tables(branche: str, size: str) -> Dict[str, str]:
     d = _branch_defaults(branche, size)
     overview = _table(["KPI", "Definition", "Ziel"], d["kpis"]) if d.get("kpis") else ""
-    return {"KPI_HTML": overview or f"<p>{ensure_utf8(EM_DASH)}</p>",
-            "KPI_BRANCHE_HTML": overview or f"<p>{ensure_utf8(EM_DASH)}</p>"}
+    return {
+        "KPI_HTML": overview or f"<p>{ensure_utf8(EM_DASH)}</p>",
+        "KPI_BRANCHE_HTML": overview or f"<p>{ensure_utf8(EM_DASH)}</p>",
+    }
 
+# ---------- ROI, Payback & sensitivity ----------
 def _roi_and_costs(briefing: Dict[str, Any], metrics: Dict[str, Any]) -> Dict[str, str]:
     invest_hint = _parse_budget_range(briefing.get("investitionsbudget"))
     invest = invest_hint if invest_hint > 0 else 6000.0
@@ -105,9 +111,11 @@ def _roi_and_costs(briefing: Dict[str, Any], metrics: Dict[str, Any]) -> Dict[st
         ("Schulung/Change", _to_eur(600.0)),
         ("Betrieb (Schätzung)", _to_eur(360.0)),
     ]
-    return {"ROI_HTML": _table(["Kennzahl", "Wert"], roi_rows),
-            "COSTS_OVERVIEW_HTML": _table(["Position", "Betrag"], costs_rows),
-            "invest_value": invest}
+    return {
+        "ROI_HTML": _table(["Kennzahl", "Wert"], roi_rows),
+        "COSTS_OVERVIEW_HTML": _table(["Position", "Betrag"], costs_rows),
+        "invest_value": invest,
+    }
 
 def _sensitivity_table(invest: float, monthly_base: float, rate: float) -> str:
     if invest <= 0 or monthly_base <= 0:
@@ -121,6 +129,7 @@ def _sensitivity_table(invest: float, monthly_base: float, rate: float) -> str:
         rows.append((f"{int(f * 100)} %", f"{_to_eur(yr)} / {_to_eur(mon)}", f"{roi:.0f} %", f"{pb:.1f} Monate"))
     return _table(["Adoption", "Ersparnis Jahr / Monat", "ROI", "Payback"], rows)
 
+# ---------- So-what (governance) ----------
 def _so_what(scores: Dict[str, int]) -> str:
     g = scores.get("governance", 0); s = scores.get("security", 0)
     v = scores.get("value", 0); e = scores.get("enablement", 0)
@@ -137,6 +146,7 @@ def _so_what(scores: Dict[str, int]) -> str:
         items.append("<li>Reifegrad solide – Fokus auf Skalierung: wiederverwendbare Bausteine & Automatisierungsgrad erhöhen.</li>")
     return "<ul>" + "".join(items) + "</ul>"
 
+# ---------- Kreativ-Special: read Markdown ----------
 def _read_text_candidates(path: str) -> str:
     candidates = [path, os.path.join("content", os.path.basename(path)), os.path.join("/mnt/data", os.path.basename(path))]
     for p in candidates:
@@ -165,6 +175,7 @@ def _md_to_simple_html(md: str) -> str:
                 out.append("<ul>"); in_ul = True
             out.append(f"<li>{ensure_utf8(line[2:].strip())}</li>")
             continue
+        # paragraph
         if in_ul: out.append("</ul>"); in_ul = False
         out.append(f"<p>{ensure_utf8(line)}</p>")
     if in_ul: out.append("</ul>")
@@ -178,6 +189,7 @@ def _build_kreativ_special_html() -> str:
     html = _md_to_simple_html(raw)
     return html or _p("—")
 
+# ---------- Glossary ----------
 GLOSSARY = {
     "KI": "Technologien, die aus Daten lernen und selbstständig Entscheidungen treffen oder Empfehlungen geben.",
     "LLM": "Large Language Model; Sprachmodell, das Texteingaben verarbeitet und Antworten generiert.",
@@ -225,6 +237,7 @@ def _build_glossar_html(snippets: Dict[str, Any]) -> str:
     items = "".join([f"<li><strong>{ensure_utf8(t)}:</strong> {ensure_utf8(d)}</li>" for t, d in used])
     return f"<div class='card'><ul>{items}</ul></div>"
 
+# ---------- Leistung & Nachweis ----------
 def _build_leistung_nachweis_html(owner: str, email: str, site: str) -> str:
     bullets = [
         ("KI‑Strategie & Audit", "TÜV‑zertifizierte Entwicklung und Vorbereitung auf Prüfungen"),
@@ -242,11 +255,11 @@ def _build_leistung_nachweis_html(owner: str, email: str, site: str) -> str:
             f"<p>Kontakt: {email_link} · {site_link}</p>"
             "</div>")
 
+# ---------- Feedback URL (optional obfuscation) ----------
 def _obfuscate_url(url: str) -> str:
     base = os.getenv("FEEDBACK_REDIRECT_BASE", "").rstrip("/")
     secret = os.getenv("FEEDBACK_SECRET", "")
     if base and secret and url:
-        import base64, hmac, hashlib
         b64 = base64.urlsafe_b64encode(url.encode("utf-8")).decode("ascii").rstrip("=")
         sig = hmac.new(secret.encode("utf-8"), b64.encode("ascii"), hashlib.sha256).hexdigest()[:16]
         return f"{base}/fb?u={b64}&s={sig}"
@@ -256,6 +269,7 @@ def _build_feedback_box(feedback_url: str) -> str:
     url = _obfuscate_url(feedback_url)
     return f"<a href='{ensure_utf8(url)}'>Feedback geben (2–3 Min.)</a>"
 
+# ---------- Tools & Funding defaults ----------
 def _default_tools_and_funding(briefing: Dict[str, Any], last_updated: str, report_date: str) -> Dict[str, str]:
     b = (briefing.get("bundesland") or "").lower()
     branche = briefing.get("branche") or "beratung"
@@ -280,6 +294,7 @@ def _default_tools_and_funding(briefing: Dict[str, Any], last_updated: str, repo
         funding_html += f'<p class="small">Stand: {ensure_utf8(report_date)} • Research: {ensure_utf8(last_updated or report_date)}</p>'
     return {"TOOLS_HTML": tools_html, "FOERDERPROGRAMME_HTML": funding_html}
 
+# ---------- ZIM Spotlight ----------
 def _build_zim_alert_html() -> str:
     enabled = os.getenv("ZIM_ALERT_ENABLED", "1").strip() not in {"0", "false", "False", ""}
     if not enabled:
@@ -290,6 +305,7 @@ def _build_zim_alert_html() -> str:
     link1 = os.getenv("ZIM_ALERT_LINK_1", "https://www.zim.de/ZIM/Redaktion/DE/Meldungen/2025/4/2025-11-03-foerderzentrale.html")
     link2 = os.getenv("ZIM_ALERT_LINK_2", "https://www.zim.de/ZIM/Redaktion/DE/Dossiers/foerderzentrale/digitale-antragstellung-im-zim-fzd.html")
     link3 = os.getenv("ZIM_ALERT_LINK_3", "https://www.gtai.de/en/invest/industries/digital-economy/half-billion-euro-program-for-german-smes-goes-digital-1942648")
+
     return ("<div class='spotlight'>"
             "<div class='zim-grid'>"
             f"<div><img src='{ensure_utf8(img1)}' alt='ZIM – digitale Antragstellung (Symbolbild)'></div>"
@@ -306,6 +322,45 @@ def _build_zim_alert_html() -> str:
             "</div>"
             "</div>")
 
+# ---------- NEW: ZIM Workflow (one-page) ----------
+def _build_zim_workflow_html() -> str:
+    enabled = os.getenv("ZIM_WORKFLOW_ENABLED", "1").strip() not in {"0", "false", "False", ""}
+    if not enabled:
+        return ""
+    img1 = os.getenv("ZIM_WORKFLOW_IMG1", os.getenv("ZIM_ALERT_IMG2", "https://www.zim.de/ZIM/Redaktion/DE/Bilder/webinare.jpg?__blob=normal&size=420w&v=1"))
+    img2 = os.getenv("ZIM_WORKFLOW_IMG2", os.getenv("ZIM_ALERT_IMG1", "https://www.aif-projekt-gmbh.de/fileadmin/_processed_/_/csm_AdobeStock_555433125_Gorodenkoff_834x556px_d1e69d4f3e.jpg"))
+    link_portal = os.getenv("ZIM_WORKFLOW_LINK_PORTAL", "https://www.zim.de/ZIM/Redaktion/DE/Dossiers/foerderzentrale/digitale-antragstellung-im-zim-fzd.html")
+    link_webinar = os.getenv("ZIM_WORKFLOW_LINK_WEBINAR", "https://www.zim.de/ZIM/Redaktion/DE/Veranstaltungen/Webinare/2025-11-25-webinar_fzd-antragstellung.html")
+
+    steps = [
+        ("Voraussetzungen prüfen", "Förderfähigkeit, Projektidee, Partner, Kostenrahmen skizzieren."),
+        ("Registrierung & Zugang", "Zugang/Registrierung im Online‑Portal (FZD) einrichten."),
+        ("Projekt/Konsortium anlegen", "Einzel‑ oder Kooperationsprojekt mit Partnerrollen definieren."),
+        ("Antragsdaten erfassen", "Formulare online ausfüllen; Hilfen & Plausibilitätsprüfungen nutzen."),
+        ("Kollaborativ bearbeiten", "Partner einladen, zeitgleich befüllen, Kommentare/Änderungen abstimmen."),
+        ("Uploads & Nachweise", "Pflichtanhänge (z. B. Skizzen, Kalkulation, Kooperationserklärungen) hochladen."),
+        ("Validierung & Check", "Automatische Prüfungen und Hinweise abarbeiten."),
+        ("Elektronisch einreichen", "Ohne Papier – sichere Authentifizierung, digitale Einreichung."),
+        ("Eingangsbestätigung & Rückfragen", "Status im Portal verfolgen; ggf. Ergänzungen nachreichen."),
+        ("Bewilligung & Projektstart", "Zuwendungsbescheid abwarten, Kick‑off & Dokumentation planen."),
+    ]
+
+    step_items = "".join([f"<li><strong>{ensure_utf8(a)}:</strong> {ensure_utf8(b)}</li>" for a,b in steps])
+
+    return (
+        "<div class='card'>"
+        "<div class='callout'><strong>Praxisleitfaden:</strong> So funktioniert die volldigitale ZIM‑Antragstellung – auf einer Seite.</div>"
+        f"<ol class='steps'>{step_items}</ol>"
+        "<div class='img-row'>"
+        f"<div><img src='{ensure_utf8(img1)}' alt='ZIM Webinar / Portal'></div>"
+        f"<div><img src='{ensure_utf8(img2)}' alt='ZIM Portal – Symbolbild'></div>"
+        "</div>"
+        f"<p class='small'>Weiterführend: <a href='{ensure_utf8(link_portal)}'>Digitale Antragstellung (Dossier)</a> · "
+        f"<a href='{ensure_utf8(link_webinar)}'>Webinar – Schritt für Schritt</a></p>"
+        "</div>"
+    )
+
+# ---------- Public: normalize & enrich ----------
 def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
                                   snippets: Dict[str, str] = None,
                                   metrics: Dict[str, Any] = None,
@@ -315,21 +370,26 @@ def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
     metrics = metrics or kwargs.get("metrics") or {}
     out = dict(snippets or {})
 
+    # KPI
     kpi = _kpi_tables(briefing.get("branche") or "beratung", briefing.get("unternehmensgroesse") or "")
     out.setdefault("KPI_HTML", kpi["KPI_HTML"])
     out.setdefault("KPI_BRANCHE_HTML", kpi["KPI_BRANCHE_HTML"])
 
+    # Governance „So‑what?“
     scores = kwargs.get("scores") or {}
     out.setdefault("REIFEGRAD_SOWHAT_HTML", _so_what(scores))
 
+    # ROI & Kosten
     if not out.get("ROI_HTML") or len(out.get("ROI_HTML", "").strip()) < 20:
         out.update(_roi_and_costs(briefing, metrics))
 
+    # Sensitivität
     invest = float(out.get("invest_value", 0) or 0)
     monthly = float(metrics.get("monatsersparnis_eur", 0) or 0)
     rate = float(metrics.get("stundensatz_eur", 60) or 60)
     out.setdefault("BUSINESS_SENSITIVITY_HTML", _sensitivity_table(invest, monthly, rate))
 
+    # Tools/Förderungen
     last_updated = snippets.get("last_updated") or kwargs.get("last_updated") or briefing.get("research_last_updated") or ""
     report_date = briefing.get("report_date", "")
     if not out.get("TOOLS_HTML") or len(out.get("TOOLS_HTML", "").strip()) < 24:
@@ -354,6 +414,7 @@ def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
             funding_html += f'<p class="small">Stand: {ensure_utf8(report_date)} • Research: {ensure_utf8(last_updated or report_date)}</p>'
         out["FOERDERPROGRAMME_HTML"] = funding_html
 
+    # Quellen (Fallback)
     if not out.get("QUELLEN_HTML") or len(out.get("QUELLEN_HTML", "").strip()) < 16:
         out["QUELLEN_HTML"] = _table(
             ["Titel", "Host", "Datum", "Link"],
@@ -363,6 +424,7 @@ def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
             ],
         )
 
+    # Owner/Contact
     owner = os.getenv("OWNER_NAME", "Wolf Hohl")
     email = os.getenv("CONTACT_EMAIL", "kontakt@ki-sicherheit.jetzt")
     site = os.getenv("SITE_URL", "https://ki-sicherheit.jetzt")
@@ -372,13 +434,18 @@ def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
     out["CONTACT_EMAIL"] = email
     out["SITE_URL"] = site
 
+    # Kreativ‑Special / Leistung / Glossar
     out.setdefault("KREATIV_SPECIAL_HTML", _build_kreativ_special_html())
     out.setdefault("LEISTUNG_NACHWEIS_HTML", _build_leistung_nachweis_html(owner, email, site))
     out.setdefault("GLOSSAR_HTML", _build_glossar_html(out))
 
+    # ZIM Spotlight + NEW: ZIM Workflow
     out.setdefault("ZIM_ALERT_HTML", _build_zim_alert_html())
     out.setdefault("LEAD_ZIM_ALERT", "ZIM: Antrag jetzt volldigital — nutzen Sie den Vorsprung für schnellere Förderprozesse.")
+    out.setdefault("ZIM_WORKFLOW_HTML", _build_zim_workflow_html())
+    out.setdefault("LEAD_ZIM_WORKFLOW", "So funktioniert die neue digitale ZIM‑Antragstellung – Schritt für Schritt (1 Seite).")
 
+    # Feedback box
     out.setdefault("FEEDBACK_BOX_HTML", _build_feedback_box(feedback_url))
 
     return out
