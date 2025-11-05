@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-services.content_normalizer – v4.8.2
-- Fix: Regex-Korrektur in _parse_budget_range (\\d → \d), damit Zahlenbereiche korrekt erkannt werden.
-- Beibehaltung der v4.8.1-Änderungen (keine Backslash-Zeilenumbrüche).
+services.content_normalizer – Gold-Standard+
+- Tools- und Fördertabellen: Standardwerte bei fehlenden Live-Daten
+- Einheitliche Platzhalter-Nutzung
 """
 from typing import Dict, Any
 import re
 
 try:
     from .sanitize import ensure_utf8  # type: ignore
-except Exception:  # pragma: no cover
-    def ensure_utf8(x: str) -> str:  # type: ignore
+except Exception:
+    def ensure_utf8(x: str) -> str:
         return (x or "").encode("utf-8", errors="ignore").decode("utf-8", errors="ignore")
 
 EM_DASH = "—"
@@ -39,7 +39,6 @@ def _parse_budget_range(text: str) -> float:
     if not text:
         return 0.0
     t = str(text).strip()
-    # KORREKT: echte Ziffern-Pattern (\d), nicht literal '\\d'
     m = re.match(r"(\d+)[^\d]+(\d+)", t)
     if not m:
         m = re.match(r"(\d+)_?(\d+)?", t)
@@ -204,6 +203,25 @@ def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
     report_date = briefing.get("report_date", "")
     if not out.get("TOOLS_HTML") or len(out.get("TOOLS_HTML", "").strip()) < 24:
         out.update(_default_tools_and_funding(briefing, last_updated, report_date))
+    if not out.get("FOERDERPROGRAMME_HTML") or len(out.get("FOERDERPROGRAMME_HTML", "").strip()) < 20:
+        b = (briefing.get("bundesland") or "").lower()
+        funding_rows = []
+        if b == "be":
+            funding_rows.extend([
+                ("KOMPASS (Solo‑Selbständige)", "ESF+/BA", "bis 29.02.2028", "Qualifizierung/Coaching bis 4.500 €"),
+                ("INQA‑Coaching (KMU)", "BMAS/ESF+", "laufend", "80 % Zuschuss bis 12 Tage"),
+                ("Transfer BONUS", "IBB", "laufend", "bis 45.000 € (70 %)"),
+                ("Pro FIT", "IBB", "laufend", "Zuschuss + Darlehen für F&E"),
+            ])
+        else:
+            funding_rows.extend([
+                ("INQA‑Coaching (KMU)", "BMAS/ESF+", "laufend", "80 % Zuschuss bis 12 Tage"),
+                ("Förderdatenbank (Bund/Land)", "BMWK", "—", "Filter: Digitalisierung/KI"),
+            ])
+        funding_html = _table(["Programm", "Träger", "Deadline/Datum", "Kurzbeschreibung"], funding_rows)
+        if last_updated or report_date:
+            funding_html += f'<p class="small">Stand: {ensure_utf8(report_date)} • Research: {ensure_utf8(last_updated or report_date)}</p>'
+        out["FOERDERPROGRAMME_HTML"] = funding_html
 
     # Quellen (Fallback)
     if not out.get("QUELLEN_HTML") or len(out.get("QUELLEN_HTML", "").strip()) < 16:

@@ -33,6 +33,15 @@ except Exception:  # why: Notfalls ohne Enrichment
     def normalize_and_enrich_sections(briefing: Dict[str, Any], snippets: Dict[str, Any], **_: Any) -> Dict[str, Any]:
         base = dict(briefing or {})
         base.update(snippets or {})
+        # Vereinheitliche Platzhalter: Tools/Förderungen
+        if base.get("TOOLS_TABLE_HTML"):
+            base.setdefault("TOOLS_HTML", base["TOOLS_TABLE_HTML"])
+        if base.get("FUNDING_TABLE_HTML"):
+            base.setdefault("FOERDERPROGRAMME_HTML", base["FUNDING_TABLE_HTML"])
+        # Forschungsdatum übernehmen
+        research_date = base.get("research_last_updated") or base.get("report_date") or ""
+        if research_date:
+            base.setdefault("research_last_updated", research_date)
         return base
 
 def _read_file(p: Path) -> str:

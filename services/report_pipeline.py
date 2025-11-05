@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Report pipeline (Gold‑Standard+) – robust context building & HTML rendering.
+from __future__ import annotations
+
+"""
+Report pipeline (Gold‑Standard+) – robust context building & HTML rendering.
 - Behebt Score‑0/100‑Bug (mehrere Quellen für Scores + Heuristik)
 - Füllt KPI‑Platzhalter & Business Case via Content‑Normalizer
 - UTF‑8‑sicheres Templating
 """
-from __future__ import annotations
 
 import os
 import datetime as dt
@@ -143,6 +145,19 @@ def build_context(briefing: Dict[str, Any], snippets: Dict[str, str]) -> Dict[st
         "KPI_HTML","KPI_BRANCHE_HTML",
     ):
         _strip_and_set(context, snippets, key)
+
+    # Globale Kontextvariablen ergänzen
+    domain = (user_email.split("@")[1] if "@" in user_email else "")
+    kundencode = (domain.split(".")[0][:3] if domain else "XXX").upper()
+    report_id = f"R-{today.strftime('%Y%m%d')}-{kundencode}"
+    version_full = os.getenv("VERSION", "1.0.0")
+    version_mm = ".".join(version_full.split(".")[:2])
+    context["report_id"] = report_id
+    context["report_version"] = version_mm
+    context["WATERMARK_TEXT"] = f"Trusted KI-Check · Report-ID: {report_id} · v{version_mm}"
+    context["CHANGELOG_SHORT"] = os.getenv("CHANGELOG_SHORT", "—")
+    context["AUDITOR_INITIALS"] = os.getenv("AUDITOR_INITIALS", "KSJ")
+    context["research_last_updated"] = briefing.get("research_last_updated") or context.get("report_date", "")
 
     return context
 
