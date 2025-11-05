@@ -36,10 +36,16 @@
     .meta .kv > div { margin: 2px 0; }
     .footer-note { margin-top: 6px; font-size: 9pt; color: #6b7280; }
     .kpis { margin-top: 4px; }
+
+    /* Spotlight / ZIM */
+    .spotlight { border: 2px solid #1d4ed8; background: #eff6ff; border-radius: 10px; padding: 10px 14px; }
+    .spotlight .zim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .spotlight img { max-width: 100%; height: auto; border-radius: 6px; border: 1px solid #dbeafe; }
+    .spotlight .cta { margin-top: 8px; }
+    .spotlight a { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <!-- Deckblatt -->
   <section class="cover page">
     <h1>KI‑Status‑Report</h1>
     <p class="muted">Ihr individueller Fahrplan zur erfolgreichen KI‑Integration · DSGVO · EU AI Act</p>
@@ -75,21 +81,18 @@
     <div class="watermark">{{ WATERMARK_TEXT }}</div>
   </section>
 
-  <!-- Executive Summary -->
   <section class="page">
     <h2>Executive Summary</h2>
     <p class="lead">{{ LEAD_EXEC }}</p>
     {{ EXECUTIVE_SUMMARY_HTML }}
   </section>
 
-  <!-- KPI -->
   <section class="page">
     <h2>KPI‑Dashboard &amp; Monitoring</h2>
     <p class="lead">{{ LEAD_KPI }}</p>
     {{ KPI_HTML }}
   </section>
 
-  <!-- Quick Wins -->
   <section class="page">
     <h2>Quick Wins (0–90 Tage)</h2>
     <p class="lead">{{ LEAD_QW }}</p>
@@ -100,21 +103,18 @@
     <div class="sidebar-note">{{ REALITY_NOTE_QW }}</div>
   </section>
 
-  <!-- Roadmap 90 Tage -->
   <section class="page">
     <h2>Roadmap (90 Tage – Test → Pilot → Rollout)</h2>
     <p class="lead">{{ LEAD_ROADMAP_90 }}</p>
     {{ PILOT_PLAN_HTML }}
   </section>
 
-  <!-- 12 Monate -->
   <section class="page">
     <h2>Roadmap (12 Monate)</h2>
     <p class="lead">{{ LEAD_ROADMAP_12 }}</p>
     {{ ROADMAP_12M_HTML }}
   </section>
 
-  <!-- Business Case & Kosten -->
   <section class="page">
     <h2>Business Case &amp; Kostenübersicht</h2>
     <p class="lead">{{ LEAD_BUSINESS }}</p>
@@ -132,35 +132,30 @@
     {{ BUSINESS_CASE_HTML }}
   </section>
 
-  <!-- Dateninventar -->
   <section class="page">
     <h2>Dateninventar &amp; ‑Qualität</h2>
     <p class="lead">{{ LEAD_DATA }}</p>
     {{ DATA_READINESS_HTML }}
   </section>
 
-  <!-- Organisation & Change -->
   <section class="page">
     <h2>Organisation &amp; Change</h2>
     <p class="lead">{{ LEAD_ORG }}</p>
     {{ ORG_CHANGE_HTML }}
   </section>
 
-  <!-- Risiken & Compliance -->
   <section class="page">
     <h2>Risiko‑Assessment &amp; Compliance</h2>
     <p class="lead">{{ LEAD_RISKS }}</p>
     {{ RISKS_HTML }}
   </section>
 
-  <!-- Gamechanger -->
   <section class="page">
     <h2>Gamechanger‑Use Case</h2>
     <p class="lead">{{ LEAD_GC }}</p>
     {{ GAMECHANGER_HTML }}
   </section>
 
-  <!-- Tools & Förderungen -->
   <section class="page">
     <h2>Empfohlene Tools (Pro &amp; Open‑Source)</h2>
     <p class="lead">{{ LEAD_TOOLS }}</p>
@@ -168,7 +163,12 @@
     <div class="small muted">„Stand“: {{ research_last_updated }}.</div>
   </section>
 
-  <!-- Aktuelle Förderprogramme & Quellen -->
+  <section class="page">
+    <h2>Förder‑Update: ZIM – volldigitale Antragstellung</h2>
+    <p class="lead">{{ LEAD_ZIM_ALERT }}</p>
+    {{ ZIM_ALERT_HTML }}
+  </section>
+
   <section class="page">
     <h2>Aktuelle Förderprogramme &amp; Quellen</h2>
     <p class="lead">{{ LEAD_FUNDING }}</p>
@@ -176,25 +176,21 @@
     <div class="small muted">„Stand“: {{ research_last_updated }}.</div>
   </section>
 
-  <!-- Kreativ-Special (aus kreativ-tools.txt) -->
   <section class="page">
     <h2>Kreativ-Special</h2>
     {{ KREATIV_SPECIAL_HTML }}
   </section>
 
-  <!-- Leistung & Nachweis -->
   <section class="page">
     <h2>Leistung &amp; Nachweis</h2>
     {{ LEISTUNG_NACHWEIS_HTML }}
   </section>
 
-  <!-- Glossar -->
   <section class="page">
     <h2>Glossar</h2>
     {{ GLOSSAR_HTML }}
   </section>
 
-  <!-- EU AI Act -->
   <section class="page">
     <h2>EU AI Act – Überblick &amp; Fristen ({{ ai_act_phase_label }})</h2>
     <p class="lead">{{ LEAD_AI_ACT }}</p>
@@ -203,7 +199,6 @@
     <div>{{ AI_ACT_ADDON_PACKAGES_HTML }}</div>
   </section>
 
-  <!-- Nächste Schritte -->
   <section class="page">
     <h2>Nächste Schritte (30 Tage)</h2>
     <p class="lead">{{ LEAD_NEXT_ACTIONS }}</p>
@@ -211,7 +206,6 @@
     {{ NEXT_ACTIONS_HTML }}
   </section>
 
-  <!-- Schlussseite -->
   <section class="last-page">
     <div class="feedback-box"><strong>Ihre Meinung zählt:</strong> {{ FEEDBACK_BOX_HTML }}</div>
     <div class="small muted" style="margin-top:10px;">© {{ report_year }} KI‑Sicherheit.jetzt – DSGVO &amp; EU‑AI‑Act‑Ready – {{ OWNER_NAME }}</div>
