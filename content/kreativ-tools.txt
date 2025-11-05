@@ -1,0 +1,44 @@
+Figma, Affinity 3, DaVinci Resolve, Blender, and Milanote sind 2025 massiv etablierte Kreativtools, die vielfältige professionelle Bedürfnisse abdecken und in vielen Designkontexten als vollwertige oder sogar bessere Alternativen zu Adobe-Produkten gelten. Adobe wird vor allem von denen noch benötigt, die auf spezifische Adobe-Ökosystem-Workflows angewiesen sind, oder für bestimmte Spezialfunktionen. Für viele Designer, Agenturen und Kreativteams sind die genannten Tools aber mehr als ausreichend und bieten teilweise sogar bessere Konditionen, moderne Kollaborationsmöglichkeiten und spezialisierte Features.
+
+### Figma vs Affinity 3
+- Figma ist eine cloudbasierte UI/UX-Plattform mit hervorragender Echtzeit-Kollaboration und Prototyping, ideal für Teams und Interface-Design.
+- Affinity Designer 3 bietet eine starke Vektor- und Raster-Grafiksoftware mit einmaligem Kaufmodell, wird gern von Illustratoren und klassischen Grafikdesignern genutzt.
+- Beide können sich in Funktionalität und Qualität auf Augenhöhe mit Adobe messen, Figma punktet durch Teamarbeit, Affinity durch umfassende Designwerkzeuge ohne Abozwang.[1][2]
+
+### DaVinci Resolve vs Adobe Premiere & After Effects
+- DaVinci Resolve gilt als erstklassige Videobearbeitungsplattform und ist in professionellen Kreisen mit Adobe Premiere sowie After Effects konkurrenzfähig bis überlegen, insbesondere wegen seiner Farbkorrektur-Tools.
+- Es gibt eine kostenlose Version mit sehr umfangreichen Funktionen, was es attraktiv macht gegenüber den Abomodelle von Adobe.[3]
+
+### Blender als 3D-Tool
+- Blender ist ein mächtiges Open-Source-3D-Modellierungs-, Animations- und Rendering-Programm, das in vielen Bereichen der 3D-Produktion Adobe-Substitute oder Ergänzungen darstellt.
+- Besonders für 3D-Animation und Visual Effects ist Blender eine feste Größe, komplett kostenfrei und stetig weiterentwickelt.
+
+### Milanote als Kreativ- und Planungstool
+- Milanote punktet als visuelle Notiz-, Moodboard- und Planungssoftware für Kreativteams, somit ergänzend oder alternativ zu Adobe Creative Cloud Services.
+- Es fokussiert sich stark auf die frühe Ideations- und Planungsphase, was Adobe-Programme oft nicht direkt abdecken.
+
+### Wer braucht da noch Adobe?
+- Adobe ist weiterhin stark, weil es in einem umfangreichen Ökosystem mit etablierten Workflows, tiefen Funktionen und Marktführerschaft für einige Profis unverzichtbar ist.
+- Trotzdem ersetzen immer mehr Designer und Agenturen Adobe-Programme wie Illustrator, Photoshop, Premiere oder After Effects durch spezialisierte, modernere Tools wie Affinity, Figma und DaVinci Resolve.
+- Gründe gegen Adobe sind oft die Abogebühren, der hohe Einstiegspreis und der Wunsch nach mehr Flexibilität und Vielfalt in Tools.[1][3]
+
+In der Praxis heißt das: Wer auf moderne, kollaborative und bezahlbare Designwerkzeuge setzt, kann mit Figma, Affinity 3, DaVinci Resolve, Blender und Milanote hervorragend arbeiten und braucht Adobe nicht zwingend. Für Profis mit tiefen Adobe-Workflows bleibt Adobe aber weiterhin relevant. Insgesamt zeichnet sich ein Trend zum modularen Set von spezialisierten Tools ab, weg vom monolithischen Adobe-Paket. 
+
+Thus, for many design, video, 3D, and planning needs today, "Wer braucht da noch Adobe?" lässt sich mit "Nicht unbedingt viele mehr" beantworten, da die Alternativen technologisch ausgereift und vielfach günstiger geworden sind.[2][3][1]
+
+https://www.youtube.com/watch?v=UP_TBaKODlw 
+
+Die neue Affinity-App, die seit dem Kauf durch Canva angeboten wird, ist jetzt kostenlos verfügbar. Sie vereint die bisher getrennten Programme Photo, Designer und Publisher in einer einzigen App, die vollständig offline nutzbar ist. Damit ersetzt sie die früheren Apps, die nicht mehr verkauft werden. Besitzer der alten Apps können diese weiterhin nutzen und herunterladen. Diese neue Affinity richtet sich vor allem an professionelle Anwender und bietet weiterhin keine Abo-Pflicht. Sie ist also im Gegensatz zu Adobe-Produkten wie der Creative Cloud nicht an ein monatliches Abonnement gebunden, was für Nutzer eine erhebliche Kostenersparnis bedeutet.
+Allerdings ist zu beachten, dass eine tiefere Integration in das Canva-Ökosystem und die Nutzung der KI-Funktionalitäten von Canva in der Affinity-App ein kostenpflichtiges Premium-Canva-Abo erfordern. Die reine Nutzung der Affinity-App selbst bleibt aber kostenlos und ohne Abonnementpflicht. Das bedeutet vereinfacht, dass Affinity umsonst für Nutzer ist und eine günstigere Alternative zu Adobe darstellt, das vor allem durch seine Abo-Kosten bekannt ist. Canva könnte in Zukunft aber einige Profi-Funktionen an ein Abomodell knüpfen. Bislang ist die App aber eine ernsthafte, kostenlose Alternative zu Adobe-Produkten .
+
+Quellen
+[1] Figma vs. Affinity Designer: Was soll man wählen https://figtowp.com/de/figma-vs-affinity-designer/
+[2] Top UX and UI Design Tools for 2025 https://www.interaction-design.org/literature/article/ux-design-tools-definitive-guide
+[3] The Best Adobe Alternatives For 2024 (Free Software TIER ... https://www.youtube.com/watch?v=bBkMmxphl8w
+[4] Design Trends 2025 https://www.behance.net/gallery/209674381/Design-Trends-2025?locale=de_DE
+[5] The 5 Best Design Proposal Tools of 2025 – Win Every Pitch! https://www.dotbrand.design/post/the-5-best-design-proposal-tools-of-2025-win-every-pitch
+[6] 12 creative tools I'll always use before their Adobe ... https://www.xda-developers.com/creative-tools-better-than-their-adobe-counterparts/
+[7] Graphic design trends for 2025 https://www.adobe.com/express/learn/blog/design-trends-2025
+[8] AFFINITY VS ADOBE - Which do you use as a professional ... https://www.reddit.com/r/graphic_design/comments/10bo9yw/affinity_vs_adobe_which_do_you_use_as_a/
+[9] Design Trends 2025 [11 Trendberichte & Prognosen von ... https://www.designerinaction.de/gestaltung/design-trends-2025/
+[10] 18 Must-Have Creative Agency Tools for 2025 https://www.manyrequests.com/blog/creative-agency-tools
