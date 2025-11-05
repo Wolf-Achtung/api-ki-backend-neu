@@ -5,10 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>KI‑Status‑Report</title>
   <style>
-    /* Paged media baseline */
     @page { size: A4; margin: 22mm; }
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
-           font-size: 11pt; line-height: 1.25; color: #111; }
+           font-size: 11pt; line-height: 1.35; color: #111; }
     h1 { font-size: 20pt; margin: 0 0 .2em 0; }
     h2 { font-size: 15pt; margin: .6em 0 .2em 0; border-bottom: 1px solid #e5e7eb; padding-bottom: .2em; }
     h3 { font-size: 12.5pt; margin: .6em 0 .2em 0; }
@@ -22,17 +21,17 @@
     .table { width: 100%; border-collapse: collapse; }
     .table th, .table td { border: 1px solid #e5e7eb; padding: 6px 8px; vertical-align: top; }
     .cols { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
-    .callout { border-left: 3px solid #111827; padding: .5em .75em; background: #f9fafb; }
+    .callout { border-left: 3px solid #111827; padding: .6em .85em; background: #f9fafb; }
     .sidebar-note { border-left: 4px solid #d1d5db; background: #f5f6f7; padding: .5em .75em; font-size: 10pt; color: #374151; }
+    .card { border: 1px solid #e5e7eb; background: #f9fafb; padding: 10px 14px; border-radius: 6px; }
+    .feedback-box { border: 1px solid #c7d2fe; background: #eef2ff; padding: 10px 14px; border-radius: 10px; }
+    .feedback-box a { text-decoration: underline; }
 
-    /* Watermark: nur Deckblatt & Schlussseite */
     .watermark { position: fixed; bottom: 12mm; right: 10mm; opacity: 0.07; font-size: 9pt; letter-spacing: .05em; }
     .cover .watermark { display: block; }
     .page { page-break-after: always; }
     .last-page { page-break-before: always; }
-    .page .watermark { display: none; }
 
-    /* Meta header/footer */
     .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
     .meta .kv > div { margin: 2px 0; }
     .footer-note { margin-top: 6px; font-size: 9pt; color: #6b7280; }
@@ -177,52 +176,22 @@
     <div class="small muted">„Stand“: {{ research_last_updated }}.</div>
   </section>
 
-  <!-- Kreativ-Special -->
+  <!-- Kreativ-Special (aus kreativ-tools.txt) -->
   <section class="page">
-    <h2>Kreativ-Special: Wer braucht noch Adobe?</h2>
-    <p>Figma, Affinity 3, DaVinci Resolve, Blender und Milanote sind 2025 etablierte Kreativtools, die vielfältige professionelle Bedürfnisse abdecken und als vollwertige oder sogar bessere Alternativen zu Adobe gelten. Adobe wird nur noch für spezielle Workflows oder Spezialfunktionen benötigt. Für viele Designer, Agenturen und Kreativteams reichen die genannten Tools völlig aus und bieten oft bessere Konditionen, moderne Kollaboration und spezialisierte Features.</p>
-    <h3>Figma vs Affinity 3</h3>
-    <ul>
-      <li>Figma – Cloudbasierte UI/UX-Plattform mit Echtzeit-Kollaboration und Prototyping, ideal für Teams und Interface-Design.</li>
-      <li>Affinity Designer 3 – Leistungsstarke Vektor- und Rastergrafiksoftware mit Einmalkauf, beliebt bei Illustratoren und klassischen Grafikdesignern.</li>
-      <li>Beide sind funktional auf Augenhöhe mit Adobe; Figma punktet bei Teamarbeit, Affinity mit umfassenden Werkzeugen ohne Abozwang.[1][2]</li>
-    </ul>
-    <h3>DaVinci Resolve vs Adobe Premiere &amp; After Effects</h3>
-    <ul>
-      <li>DaVinci Resolve – Erstklassige Videobearbeitungsplattform, konkurrenzfähig mit Adobe Premiere/After Effects, insbesondere dank herausragender Farbkorrektur-Tools.</li>
-      <li>Bietet eine kostenlose Version mit sehr umfangreichen Funktionen und ist damit attraktiver als Adobes Abo-Modelle.[3]</li>
-    </ul>
-    <h3>Blender als 3D-Tool</h3>
-    <ul>
-      <li>Blender – Mächtiges Open-Source-3D-Modellierungs- und Animationsprogramm, das viele Bereiche der 3D-Produktion abdeckt.</li>
-      <li>Gerade für 3D-Animation und VFX eine feste Größe – komplett kostenfrei und stetig weiterentwickelt.</li>
-    </ul>
-    <h3>Milanote als Kreativ- und Planungstool</h3>
-    <ul>
-      <li>Milanote – Visuelle Notiz-, Moodboard- und Planungssoftware für Kreativteams; sinnvolle Ergänzung/Alternative zu Adobe Cloud Services.</li>
-      <li>Stark in der frühen Ideen- und Planungsphase, einem Bereich, den Adobe-Programme oft nicht direkt abdecken.</li>
-    </ul>
-    <h3>Wer braucht da noch Adobe?</h3>
-    <ul>
-      <li>Adobe bleibt Marktführer mit einem umfangreichen Ökosystem und unverzichtbar für einige Profis mit spezifischen Workflows.</li>
-      <li>Doch immer mehr Designer und Agenturen ersetzen Adobe-Programme (Illustrator, Photoshop, Premiere etc.) durch modernere Tools wie Affinity, Figma und DaVinci Resolve.</li>
-      <li>Gründe gegen Adobe sind oft die Abokosten, hoher Einstiegspreis und der Wunsch nach mehr Flexibilität und Tool-Vielfalt.[1][3]</li>
-    </ul>
-    <p>Fazit: Wer auf moderne, kollaborative und bezahlbare Tools setzt, kommt mit Figma, Affinity 3, DaVinci Resolve, Blender und Milanote hervorragend zurecht – Adobe ist nicht mehr zwingend nötig. Für Profis mit tiefen Adobe-Workflows bleibt Adobe relevant, aber der Trend geht zu modularen, spezialisierten Toolsets weg vom monolithischen Adobe-Paket.</p>
-    <p>Somit lässt sich die Frage "Wer braucht da noch Adobe?" für viele mit "Nicht mehr allzu viele" beantworten, da die Alternativen ausgereift und meist günstiger sind.[2][3][1]</p>
-    <p class="small"><strong>Quellen:</strong></p>
-    <ul class="small">
-      <li>[1] Figma vs. Affinity Designer – Was soll man wählen? (figtowp.com)</li>
-      <li>[2] Top UX and UI Design Tools for 2025 (interaction-design.org)</li>
-      <li>[3] The Best Adobe Alternatives for 2024 (YouTube)</li>
-      <li>[4] Design Trends 2025 (behance.net)</li>
-      <li>[5] The 5 Best Design Proposal Tools of 2025 (dotbrand.design)</li>
-      <li>[6] 12 Tools, die besser sind als ihre Adobe-Pendants (xda-developers.com)</li>
-      <li>[7] Graphic Design Trends 2025 (adobe.com/express)</li>
-      <li>[8] Affinity vs Adobe – Diskussion (reddit.com)</li>
-      <li>[9] Design-Trends 2025 – Prognosen (designerinaction.de)</li>
-      <li>[10] 18 Must-Have Creative Agency Tools 2025 (manyrequests.com)</li>
-    </ul>
+    <h2>Kreativ-Special</h2>
+    {{ KREATIV_SPECIAL_HTML }}
+  </section>
+
+  <!-- Leistung & Nachweis -->
+  <section class="page">
+    <h2>Leistung &amp; Nachweis</h2>
+    {{ LEISTUNG_NACHWEIS_HTML }}
+  </section>
+
+  <!-- Glossar -->
+  <section class="page">
+    <h2>Glossar</h2>
+    {{ GLOSSAR_HTML }}
   </section>
 
   <!-- EU AI Act -->
@@ -244,7 +213,9 @@
 
   <!-- Schlussseite -->
   <section class="last-page">
-    <div class="small muted">© {{ report_year }} KI‑Sicherheit.jetzt • DSGVO • ePrivacy • DSA • EU AI Act — Kontakt:</div>
+    <div class="feedback-box"><strong>Ihre Meinung zählt:</strong> {{ FEEDBACK_BOX_HTML }}</div>
+    <div class="small muted" style="margin-top:10px;">© {{ report_year }} KI‑Sicherheit.jetzt – DSGVO &amp; EU‑AI‑Act‑Ready – {{ OWNER_NAME }}</div>
+    <div class="small muted">TÜV‑zertifiziertes KI‑Management © {{ report_year }}: {{ OWNER_NAME }} · E‑Mail: {{ CONTACT_EMAIL }} · Alle Angaben ohne Gewähr; keine Rechtsberatung.</div>
     <div class="watermark">{{ WATERMARK_TEXT }}</div>
   </section>
 </body>
