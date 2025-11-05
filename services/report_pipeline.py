@@ -55,7 +55,8 @@ def build_context(briefing: Dict[str, Any], snippets: Dict[str, str]) -> Dict[st
         "BRANCHE_LABEL","BUNDESLAND_LABEL","UNTERNEHMENSGROESSE_LABEL","JAHRESUMSATZ_LABEL",
         "score_governance","score_sicherheit","score_nutzen","score_befaehigung","score_gesamt",
         "report_version","report_id","research_last_updated","WATERMARK_TEXT",
-        "LEAD_ZIM_ALERT","ZIM_ALERT_HTML"
+        "LEAD_ZIM_ALERT","ZIM_ALERT_HTML",
+        "LEAD_ZIM_WORKFLOW","ZIM_WORKFLOW_HTML"
     ):
         if key in snippets:
             _strip_and_set(context, snippets, key)
