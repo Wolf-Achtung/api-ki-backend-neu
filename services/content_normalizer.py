@@ -1,23 +1,20 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-"""
-services.content_normalizer – Gold-Standard+
-- Tools- und Fördertabellen: Standardwerte bei fehlenden Live-Daten
-- Einheitliche Platzhalter-Nutzung
-"""
-from typing import Dict, Any
-import re
+
+from typing import Dict, Any, List, Tuple
+import os, re, base64, hmac, hashlib
 
 try:
     from .sanitize import ensure_utf8  # type: ignore
-except Exception:
+except Exception:  # pragma: no cover - fallback for standalone usage
     def ensure_utf8(x: str) -> str:
         return (x or "").encode("utf-8", errors="ignore").decode("utf-8", errors="ignore")
 
 EM_DASH = "—"
 
-def _table(headers, rows) -> str:
-    parts = []
+# ---------- small HTML helpers ----------
+def _table(headers: List[str], rows: List[Tuple[str, ...]]) -> str:
+    parts: List[str] = []
     parts.append('<table class="table"><thead><tr>')
     for h in headers:
         parts.append(f"<th>{ensure_utf8(h)}</th>")
@@ -30,10 +27,13 @@ def _table(headers, rows) -> str:
     parts.append("</tbody></table>")
     return "".join(parts)
 
+def _p(s: str) -> str:
+    return f"<p>{ensure_utf8(s)}</p>"
+
+# ---------- currency & simple parsing ----------
 def _to_eur(v: float) -> str:
     s = f"{v:,.2f} €"
-    s = s.replace(",", "X").replace(".", ",").replace("X", ".")
-    return s
+    return s.replace(",", "X").replace(".", ",").replace("X", ".")
 
 def _parse_budget_range(text: str) -> float:
     if not text:
@@ -43,14 +43,14 @@ def _parse_budget_range(text: str) -> float:
     if not m:
         m = re.match(r"(\d+)_?(\d+)?", t)
     if m:
-        low = float(m.group(1))
-        high = float(m.group(2) or m.group(1))
+        low = float(m.group(1)); high = float(m.group(2) or m.group(1))
         return (low + high) / 2.0
     try:
         return float(t)
     except Exception:
         return 0.0
 
+# ---------- branch defaults & KPI ----------
 def _branch_defaults(branche: str, size: str) -> Dict[str, Any]:
     b = (branche or "").lower()
     defaults = {
@@ -89,6 +89,7 @@ def _kpi_tables(branche: str, size: str) -> Dict[str, str]:
         "KPI_BRANCHE_HTML": overview or f"<p>{ensure_utf8(EM_DASH)}</p>",
     }
 
+# ---------- ROI, Payback & sensitivity ----------
 def _roi_and_costs(briefing: Dict[str, Any], metrics: Dict[str, Any]) -> Dict[str, str]:
     invest_hint = _parse_budget_range(briefing.get("investitionsbudget"))
     invest = invest_hint if invest_hint > 0 else 6000.0
@@ -128,12 +129,11 @@ def _sensitivity_table(invest: float, monthly_base: float, rate: float) -> str:
         rows.append((f"{int(f * 100)} %", f"{_to_eur(yr)} / {_to_eur(mon)}", f"{roi:.0f} %", f"{pb:.1f} Monate"))
     return _table(["Adoption", "Ersparnis Jahr / Monat", "ROI", "Payback"], rows)
 
+# ---------- So-what (governance) ----------
 def _so_what(scores: Dict[str, int]) -> str:
-    g = scores.get("governance", 0)
-    s = scores.get("security", 0)
-    v = scores.get("value", 0)
-    e = scores.get("enablement", 0)
-    items = []
+    g = scores.get("governance", 0); s = scores.get("security", 0)
+    v = scores.get("value", 0); e = scores.get("enablement", 0)
+    items: List[str] = []
     if g < 50:
         items.append("<li><strong>Governance:</strong> Rollen & Leitlinien klären (1–2 Seiten), Freigabepfade definieren.</li>")
     if s < 50:
@@ -146,6 +146,122 @@ def _so_what(scores: Dict[str, int]) -> str:
         items.append("<li>Reifegrad solide – Fokus auf Skalierung: wiederverwendbare Bausteine & Automatisierungsgrad erhöhen.</li>")
     return "<ul>" + "".join(items) + "</ul>"
 
+# ---------- Kreativ-Special: read Markdown ----------
+def _read_text_candidates(path: str) -> str:
+    candidates = [path, os.path.join("content", os.path.basename(path)), os.path.join("/mnt/data", os.path.basename(path))]
+    for p in candidates:
+        if p and os.path.exists(p):
+            try:
+                return open(p, "r", encoding="utf-8").read()
+            except Exception:
+                continue
+    return ""
+
+def _md_to_simple_html(md: str) -> str:
+    if not md: return ""
+    out: List[str] = []; in_ul = False
+    for raw in md.splitlines():
+        line = raw.rstrip()
+        if not line:
+            if in_ul: out.append("</ul>"); in_ul = False
+            continue
+        if line.startswith(("### ", "## ")):
+            if in_ul: out.append("</ul>"); in_ul = False
+            tag = "h3" if line.startswith("### ") else "h2"
+            out.append(f"<{tag}>{ensure_utf8(line.lstrip('# ').strip())}</{tag}>")
+            continue
+        if line.startswith(("* ", "- ")):
+            if not in_ul:
+                out.append("<ul>"); in_ul = True
+            out.append(f"<li>{ensure_utf8(line[2:].strip())}</li>")
+            continue
+        # paragraph
+        if in_ul: out.append("</ul>"); in_ul = False
+        out.append(f"<p>{ensure_utf8(line)}</p>")
+    if in_ul: out.append("</ul>")
+    return "\n".join(out)
+
+def _build_kreativ_special_html() -> str:
+    path = os.getenv("KREATIV_TOOLS_PATH", "kreativ-tools.txt")
+    raw = _read_text_candidates(path)
+    if not raw:
+        # conservative fallback text
+        return _p("Hinweis: Die Datei 'kreativ-tools.txt' wurde nicht gefunden. Bitte hinterlegen (ENV KREATIV_TOOLS_PATH) – dann erscheint hier die stets aktuelle Abschätzung & Tool‑Übersicht.")
+    html = _md_to_simple_html(raw)
+    return html or _p("—")
+
+# ---------- Glossary ----------
+GLOSSARY = {
+    "KI": "Technologien, die aus Daten lernen und selbstständig Entscheidungen treffen oder Empfehlungen geben.",
+    "LLM": "Large Language Model; Sprachmodell, das Texteingaben verarbeitet und Antworten generiert.",
+    "DSGVO": "Datenschutz-Grundverordnung der EU; regelt den Umgang mit personenbezogenen Daten.",
+    "DSFA": "Datenschutz-Folgenabschätzung (DPIA); Analyse der Risiken für Betroffene bei bestimmten Datenverarbeitungen.",
+    "EU AI Act": "EU-Verordnung mit Anforderungen, Risikoklassen und Pflichten für KI-Systeme.",
+    "Quick Win": "Maßnahme mit geringem Aufwand und schnellem, messbarem Nutzen.",
+    "MVP": "Minimum Viable Product; erste funktionsfähige Version mit minimalem Funktionsumfang.",
+    "RAG": "Retrieval-Augmented Generation; Abruf externer Wissensquellen zur besseren Antwortqualität.",
+    "Fine‑Tuning": "Nachtrainieren eines Modells auf spezifische Daten zur Leistungsverbesserung.",
+    "Guardrails": "Sicherheitsmechanismen/Regeln zur Begrenzung unerwünschter KI-Ausgaben.",
+    "Halluzination": "Falsche, aber plausibel klingende KI-Antwort ohne Faktenbasis.",
+    "Embedding": "Vektor-Repräsentation von Texten/Bildern; Grundlage für semantische Suche.",
+    "Vektor-Datenbank": "Datenbank für Embeddings zur Ähnlichkeitssuche (z. B. FAISS, Milvus).",
+    "ROI": "Return on Investment; Verhältnis von Gewinn zu eingesetztem Kapital.",
+    "Payback": "Zeit, bis sich eine Investition amortisiert.",
+    "Zero‑Shot": "Modell löst eine Aufgabe ohne Beispiele; Gegenteil: Few‑Shot.",
+    "Prompt": "Anweisung/Eingabetext an ein Sprachmodell, der die Ausgabe steuert."
+}
+
+def _build_glossar_html(snippets: Dict[str, str]) -> str:
+    # sammle Text
+    text = " ".join([re.sub(r"<[^>]+>", " ", (snippets.get(k, "") or "")) for k in list(snippets.keys())])
+    text_l = text.lower()
+    used = []
+    for term, definition in GLOSSARY.items():
+        if term.lower() in text_l:
+            used.append((term, definition))
+    # Mindestmenge sicherstellen
+    base_terms = ["KI", "DSGVO", "DSFA", "EU AI Act", "Quick Win", "MVP", "ROI", "Payback", "LLM", "Prompt"]
+    for t in base_terms:
+        if (t, GLOSSARY[t]) not in used:
+            used.append((t, GLOSSARY[t]))
+    items = "".join([f"<li><strong>{ensure_utf8(t)}:</strong> {ensure_utf8(d)}</li>" for t, d in used])
+    return f"<div class='card'><ul>{items}</ul></div>"
+
+# ---------- Leistung & Nachweis ----------
+def _build_leistung_nachweis_html(owner: str, email: str, site: str) -> str:
+    bullets = [
+        ("KI‑Strategie & Audit", "TÜV‑zertifizierte Entwicklung und Vorbereitung auf Prüfungen"),
+        ("EU AI Act & DSGVO", "Beratung entlang aktueller Vorschriften und Standards"),
+        ("Dokumentation & Governance", "Aufbau förderfähiger KI‑Prozesse und Nachweise"),
+        ("Minimiertes Haftungsrisiko", "Vertrauen bei Kunden, Partnern und Behörden"),
+    ]
+    lis = "".join([f"<li><strong>{ensure_utf8(a)}:</strong> {ensure_utf8(b)}</li>" for a, b in bullets])
+    email_link = f"<a href='mailto:{ensure_utf8(email)}'>{ensure_utf8(email)}</a>" if email else "—"
+    site_link = f"<a href='{ensure_utf8(site)}'>{ensure_utf8(site.replace('https://','').replace('http://',''))}</a>" if site else "—"
+    return (
+        "<div class='card'>"
+        "<p>Als TÜV‑zertifizierter KI‑Manager begleite ich Unternehmen bei der sicheren Einführung, Nutzung und Audit‑Vorbereitung von KI – mit klarer Strategie, dokumentierter Förderfähigkeit und DSGVO‑Konformität.</p>"
+        f"<ul>{lis}</ul>"
+        f"<p>Kontakt: {email_link} · {site_link}</p>"
+        "</div>"
+    )
+
+# ---------- Feedback URL (optional obfuscation) ----------
+def _obfuscate_url(url: str) -> str:
+    base = os.getenv("FEEDBACK_REDIRECT_BASE", "").rstrip("/")
+    secret = os.getenv("FEEDBACK_SECRET", "")
+    if base and secret and url:
+        b64 = base64.urlsafe_b64encode(url.encode("utf-8")).decode("ascii").rstrip("=")
+        sig = hmac.new(secret.encode("utf-8"), b64.encode("ascii"), hashlib.sha256).hexdigest()[:16]
+        return f"{base}/fb?u={b64}&s={sig}"
+    return url
+
+def _build_feedback_box(feedback_url: str) -> str:
+    url = _obfuscate_url(feedback_url)
+    label = "Feedback geben (2–3 Min.)"
+    return f"<a href='{ensure_utf8(url)}'>{label}</a>"
+
+# ---------- Tools & Funding defaults ----------
 def _default_tools_and_funding(briefing: Dict[str, Any], last_updated: str, report_date: str) -> Dict[str, str]:
     b = (briefing.get("bundesland") or "").lower()
     branche = briefing.get("branche") or "beratung"
@@ -170,6 +286,7 @@ def _default_tools_and_funding(briefing: Dict[str, Any], last_updated: str, repo
         funding_html += f'<p class="small">Stand: {ensure_utf8(report_date)} • Research: {ensure_utf8(last_updated or report_date)}</p>'
     return {"TOOLS_HTML": tools_html, "FOERDERPROGRAMME_HTML": funding_html}
 
+# ---------- Public: normalize & enrich ----------
 def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
                                   snippets: Dict[str, str] = None,
                                   metrics: Dict[str, Any] = None,
@@ -184,7 +301,7 @@ def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
     out.setdefault("KPI_HTML", kpi["KPI_HTML"])
     out.setdefault("KPI_BRANCHE_HTML", kpi["KPI_BRANCHE_HTML"])
 
-    # Governance „So-what?“
+    # Governance „So‑what?“
     scores = kwargs.get("scores") or {}
     out.setdefault("REIFEGRAD_SOWHAT_HTML", _so_what(scores))
 
@@ -232,4 +349,27 @@ def normalize_and_enrich_sections(briefing: Dict[str, Any] = None,
                 ("INQA‑Coaching", "inqa.de", "—", "https://inqa.de"),
             ],
         )
+
+    # ---- NEW: owner/contact defaults ----
+    owner = os.getenv("OWNER_NAME", "Wolf Hohl")
+    email = os.getenv("CONTACT_EMAIL", "kontakt@ki-sicherheit.jetzt")
+    site = os.getenv("SITE_URL", "https://ki-sicherheit.jetzt")
+    feedback_url = os.getenv("FEEDBACK_URL", "https://make.ki-sicherheit.jetzt/feedback/feedback.html")
+
+    out["OWNER_NAME"] = owner
+    out["CONTACT_EMAIL"] = email
+    out["SITE_URL"] = site
+
+    # Kreativ‑Special
+    out.setdefault("KREATIV_SPECIAL_HTML", _build_kreativ_special_html())
+
+    # Leistung & Nachweis
+    out.setdefault("LEISTUNG_NACHWEIS_HTML", _build_leistung_nachweis_html(owner, email, site))
+
+    # Glossar
+    out.setdefault("GLOSSAR_HTML", _build_glossar_html(out))
+
+    # Feedback box
+    out.setdefault("FEEDBACK_BOX_HTML", _build_feedback_box(feedback_url))
+
     return out
