@@ -5,62 +5,97 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>KI‑Status‑Report</title>
   <style>
-    @page { size: A4; margin: 22mm; }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
-           font-size: 11pt; line-height: 1.35; color: #111; }
-    h1 { font-size: 20pt; margin: 0 0 .2em 0; }
-    h2 { font-size: 15pt; margin: .6em 0 .2em 0; border-bottom: 1px solid #e5e7eb; padding-bottom: .2em; }
-    h3 { font-size: 12.5pt; margin: .6em 0 .2em 0; }
-    h4 { font-size: 11.5pt; margin: .6em 0 .2em 0; }
+    /* --------- Page & Base --------- */
+    @page { size: A4; margin: 18mm 20mm; }
+    :root{
+      --c-text:#0f172a;        /* slate-900 */
+      --c-muted:#475569;       /* slate-600 */
+      --c-line:#e2e8f0;        /* slate-200 */
+      --c-soft:#f8fafc;        /* slate-50  */
+      --c-brand:#2563eb;       /* indigo-600 */
+      --c-brand-weak:#dbeafe;  /* indigo-100 */
+      --c-accent:#1e3a5f;      /* slate-indigo mix */
+      --radius:12px;
+    }
+    html, body { color: var(--c-text); }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      font-size: 11pt; line-height: 1.5; background:#fff;
+    }
+    a { color: #0b63ff; text-decoration: underline; }
+    h1 { font-size: 22pt; margin: 0 0 .2em 0; color: var(--c-accent); }
+    h2 { font-size: 15.5pt; margin: .8em 0 .25em 0; padding-bottom: .2em; border-bottom: 1px solid var(--c-line); }
+    h3 { font-size: 13pt; margin: .7em 0 .2em 0; }
+    h4 { font-size: 11.5pt; margin: .6em 0 .15em 0; }
     p, li { font-size: 11pt; }
-    .muted { color: #6b7280; }
-    .small { font-size: 9pt; }
-    .grid { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
-    .lead { font-style: italic; margin: .15em 0 .4em 0; color: #374151; }
-    .pill { display: inline-block; padding: .1em .5em; border-radius: 6px; background: #f3f4f6; }
-    .table { width: 100%; border-collapse: collapse; }
-    .table th, .table td { border: 1px solid #e5e7eb; padding: 6px 8px; vertical-align: top; }
-    .cols { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
-    .callout { border-left: 3px solid #111827; padding: .6em .85em; background: #f9fafb; }
-    .sidebar-note { border-left: 4px solid #d1d5db; background: #f5f6f7; padding: .5em .75em; font-size: 10pt; color: #374151; }
-    .card { border: 1px solid #e5e7eb; background: #f9fafb; padding: 10px 14px; border-radius: 6px; }
-    .feedback-box { border: 1px solid #c7d2fe; background: #eef2ff; padding: 10px 14px; border-radius: 10px; }
-    .feedback-box a { text-decoration: underline; }
-
-    .watermark { position: fixed; bottom: 12mm; right: 10mm; opacity: 0.07; font-size: 9pt; letter-spacing: .05em; }
-    .cover .watermark { display: block; }
+    .muted { color: var(--c-muted); }
+    .small { font-size: 9pt; color: var(--c-muted); }
+    .lead { margin: .2em 0 .6em 0; color: var(--c-muted); }
     .page { page-break-after: always; }
     .last-page { page-break-before: always; }
-
-    .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
-    .meta .kv > div { margin: 2px 0; }
-    .footer-note { margin-top: 6px; font-size: 9pt; color: #6b7280; }
-    .kpis { margin-top: 4px; }
-
-    /* Spotlight / ZIM */
-    .spotlight { border: 2px solid #1d4ed8; background: #eff6ff; border-radius: 10px; padding: 10px 14px; }
-    .spotlight .zim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .spotlight img { max-width: 100%; height: auto; border-radius: 6px; border: 1px solid #dbeafe; }
-    .spotlight .cta { margin-top: 8px; }
-    .spotlight a { text-decoration: underline; }
-
-    /* Workflow (ZIM) */
-    .steps { counter-reset: step; list-style: none; padding-left: 0; }
-    .steps li { position: relative; margin: .55em 0 .55em 2.2em; }
-    .steps li::before {
-      counter-increment: step; content: counter(step);
-      position: absolute; left: -2.2em; top: 0; width: 1.6em; height: 1.6em;
-      border-radius: 999px; border: 2px solid #2563eb; text-align: center; line-height: 1.4em; font-weight: 600; background: #eff6ff;
+    /* Prevent bad page breaks */
+    h2, h3 { break-after: avoid; }
+    .no-break, .card, .callout, .table, .kpi-table, .spotlight, .fb-section, .grid, .cols, .content-block {
+      break-inside: avoid; page-break-inside: avoid;
     }
-    .img-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
-    .img-row img { max-width: 100%; height: auto; border-radius: 6px; border: 1px solid #e5e7eb; }
+    table, tr, td, th, thead, tbody, tfoot {
+      break-inside: avoid; page-break-inside: avoid;
+    }
+    thead { display: table-header-group; }  /* repeat header on page break */
+    tfoot { display: table-footer-group; }
+
+    /* --------- Layout Helpers --------- */
+    .grid { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+    .cols { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+    .table { width: 100%; border-collapse: collapse; background:#fff; }
+    .table th, .table td { border: 1px solid var(--c-line); padding: 7px 9px; vertical-align: top; }
+    .table th { background: #f1f5f9; text-align: left; }
+    .kpi-table td { padding: 7px 9px; }
+    .pill { display:inline-block; padding:.1em .55em; border-radius: 999px; background: var(--c-soft); border:1px solid var(--c-line); }
+    .callout { border-left: 4px solid var(--c-brand); background: linear-gradient(135deg,#e0f2fe,#dbeafe); padding: 10px 14px; border-radius: var(--radius); color:#0b2d59; }
+    .sidebar-note { border-left: 4px solid #cbd5e1; background: #f5f7fb; padding: 8px 12px; border-radius: 10px; }
+    .card { border: 1px solid var(--c-line); background: #fff; padding: 12px 14px; border-radius: var(--radius); box-shadow: 0 4px 20px rgba(0,0,0,.03); }
+    .feedback-box { border: 1px solid #c7d2fe; background: #eef2ff; padding: 10px 14px; border-radius: 10px; }
+    .watermark { position: fixed; bottom: 12mm; right: 10mm; opacity: 0.07; font-size: 9pt; letter-spacing: .05em; }
+
+    /* --------- Header / Branding --------- */
+    .cover-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .brand { display:flex; align-items:center; gap:12px; }
+    .brand .logo{height:28px;width:auto}
+    .brand .subtitle{color:var(--c-muted);font-size:10.5pt}
+    .meta { display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .meta .kv > div { margin: 2px 0; }
+    .kpis { margin-top: 6px; }
+    .kpis .kpi-table th, .kpis .kpi-table td { border-color: var(--c-line); }
+
+    /* --------- Section styling inspired by 06.png --------- */
+    .fb-section{background:#fff;border:1px solid var(--c-line);border-radius:20px;padding:22px;margin:18px 0;box-shadow:0 4px 20px rgba(0,0,0,.03)}
+    .fb-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .fb-step{display:inline-block;background:var(--c-brand-weak);color:var(--c-accent);padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700}
+    .fb-title{font-size:18px;font-weight:800;color:var(--c-accent);margin:0}
+    .section-intro{background:linear-gradient(135deg,#e0f2fe,#dbeafe);border-left:4px solid var(--c-brand);border-radius:12px;padding:12px 16px;margin:8px 0 18px;color:#0b2d59}
+    .guidance{font-size:10.5pt;color:#475569;margin:8px 0 12px;background:#f0f9ff;padding:10px;border-radius:10px;border-left:3px solid #dbeafe}
+
+    /* --------- Content image policy (remove stock photos) --------- */
+    .content-block img{display:none!important}       /* suppress images injected from dynamic content */
+    .logo, .allow-img{display:inline-block!important}/* allow brand/logo images explicitly */
+
   </style>
 </head>
 <body>
   <!-- Deckblatt -->
   <section class="cover page">
-    <h1>KI‑Status‑Report</h1>
-    <p class="muted">Ihr individueller Fahrplan zur erfolgreichen KI‑Integration · DSGVO · EU AI Act</p>
+    <div class="cover-head">
+      <div class="brand">
+        <!-- Optional: inject org/company logo (must exist in templates folder); kept outside .content-block so not hidden -->
+        {% if LOGO_PRIMARY_SRC %}<img class="logo" src="{{ LOGO_PRIMARY_SRC }}" alt="Logo">{% endif %}
+        <div>
+          <h1 style="margin:0">KI‑Status‑Report</h1>
+          <div class="subtitle">Ihr individueller Fahrplan zur erfolgreichen KI‑Integration · DSGVO · EU AI Act</div>
+        </div>
+      </div>
+      <div class="small muted"><span class="pill">Report</span></div>
+    </div>
 
     <div class="meta">
       <div class="kv">
@@ -77,8 +112,12 @@
       </div>
     </div>
 
-    <div class="kpis">
-      <table class="table">
+    <div class="kpis fb-section">
+      <div class="fb-head">
+        <span class="fb-step">Überblick</span>
+        <h3 class="fb-title">Reifegrad & Kennzahlen</h3>
+      </div>
+      <table class="table kpi-table">
         <thead><tr><th>Dimension</th><th>Score</th></tr></thead>
         <tbody>
           <tr><td>Governance</td><td>{{ score_governance }}/100</td></tr>
@@ -94,153 +133,213 @@
   </section>
 
   <!-- Executive Summary -->
-  <section class="page">
-    <h2>Executive Summary</h2>
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">1</span>
+      <h2 class="fb-title">Executive Summary</h2>
+    </div>
     <p class="lead">{{ LEAD_EXEC }}</p>
-    {{ EXECUTIVE_SUMMARY_HTML }}
+    <div class="content-block">{{ EXECUTIVE_SUMMARY_HTML }}</div>
   </section>
 
   <!-- KPI -->
-  <section class="page">
-    <h2>KPI‑Dashboard &amp; Monitoring</h2>
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">2</span>
+      <h2 class="fb-title">KPI‑Dashboard &amp; Monitoring</h2>
+    </div>
     <p class="lead">{{ LEAD_KPI }}</p>
-    {{ KPI_HTML }}
+    <div class="content-block">{{ KPI_HTML }}</div>
   </section>
 
   <!-- Quick Wins -->
-  <section class="page">
-    <h2>Quick Wins (0–90 Tage)</h2>
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">3</span>
+      <h2 class="fb-title">Quick Wins (0–90 Tage)</h2>
+    </div>
     <p class="lead">{{ LEAD_QW }}</p>
     <div class="cols">
-      <div>{{ QUICK_WINS_HTML_LEFT }}</div>
-      <div>{{ QUICK_WINS_HTML_RIGHT }}</div>
+      <div class="content-block">{{ QUICK_WINS_HTML_LEFT }}</div>
+      <div class="content-block">{{ QUICK_WINS_HTML_RIGHT }}</div>
     </div>
     <div class="sidebar-note">{{ REALITY_NOTE_QW }}</div>
   </section>
 
   <!-- Roadmap 90 Tage -->
-  <section class="page">
-    <h2>Roadmap (90 Tage – Test → Pilot → Rollout)</h2>
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">4</span>
+      <h2 class="fb-title">Roadmap (90 Tage – Test → Pilot → Rollout)</h2>
+    </div>
     <p class="lead">{{ LEAD_ROADMAP_90 }}</p>
-    {{ PILOT_PLAN_HTML }}
+    <div class="content-block">{{ PILOT_PLAN_HTML }}</div>
   </section>
 
   <!-- 12 Monate -->
-  <section class="page">
-    <h2>Roadmap (12 Monate)</h2>
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">5</span>
+      <h2 class="fb-title">Roadmap (12 Monate)</h2>
+    </div>
     <p class="lead">{{ LEAD_ROADMAP_12 }}</p>
-    {{ ROADMAP_12M_HTML }}
+    <div class="content-block">{{ ROADMAP_12M_HTML }}</div>
   </section>
 
   <!-- Business Case & Kosten -->
-  <section class="page">
-    <h2>Business Case &amp; Kostenübersicht</h2>
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">6</span>
+      <h2 class="fb-title">Business Case &amp; Kostenübersicht</h2>
+    </div>
     <p class="lead">{{ LEAD_BUSINESS }}</p>
     <div class="grid">
-      <div>{{ ROI_HTML }}</div>
-      <div>{{ COSTS_OVERVIEW_HTML }}</div>
+      <div class="content-block">{{ ROI_HTML }}</div>
+      <div class="content-block">{{ COSTS_OVERVIEW_HTML }}</div>
     </div>
-    <div>{{ BUSINESS_SENSITIVITY_HTML }}</div>
+    <div class="content-block">{{ BUSINESS_SENSITIVITY_HTML }}</div>
     <div class="sidebar-note">„Stand“ der externen Quellen: {{ research_last_updated }}.</div>
   </section>
 
-  <section class="page">
-    <h2>Business Case (detailliert)</h2>
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">7</span>
+      <h2 class="fb-title">Business Case (detailliert)</h2>
+    </div>
     <p class="lead">{{ LEAD_BUSINESS_DETAIL }}</p>
-    {{ BUSINESS_CASE_HTML }}
+    <div class="content-block">{{ BUSINESS_CASE_HTML }}</div>
   </section>
 
   <!-- Dateninventar -->
-  <section class="page">
-    <h2>Dateninventar &amp; ‑Qualität</h2>
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">8</span>
+      <h2 class="fb-title">Dateninventar &amp; ‑Qualität</h2>
+    </div>
     <p class="lead">{{ LEAD_DATA }}</p>
-    {{ DATA_READINESS_HTML }}
+    <div class="content-block">{{ DATA_READINESS_HTML }}</div>
   </section>
 
   <!-- Organisation & Change -->
-  <section class="page">
-    <h2>Organisation &amp; Change</h2>
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">9</span>
+      <h2 class="fb-title">Organisation &amp; Change</h2>
+    </div>
     <p class="lead">{{ LEAD_ORG }}</p>
-    {{ ORG_CHANGE_HTML }}
+    <div class="content-block">{{ ORG_CHANGE_HTML }}</div>
   </section>
 
   <!-- Risiken & Compliance -->
-  <section class="page">
-    <h2>Risiko‑Assessment &amp; Compliance</h2>
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">10</span>
+      <h2 class="fb-title">Risiko‑Assessment &amp; Compliance</h2>
+    </div>
     <p class="lead">{{ LEAD_RISKS }}</p>
-    {{ RISKS_HTML }}
+    <div class="content-block">{{ RISKS_HTML }}</div>
   </section>
 
   <!-- Gamechanger -->
-  <section class="page">
-    <h2>Gamechanger‑Use Case</h2>
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">11</span>
+      <h2 class="fb-title">Gamechanger‑Use Case</h2>
+    </div>
     <p class="lead">{{ LEAD_GC }}</p>
-    {{ GAMECHANGER_HTML }}
+    <div class="content-block">{{ GAMECHANGER_HTML }}</div>
   </section>
 
   <!-- Tools -->
-  <section class="page">
-    <h2>Empfohlene Tools (Pro &amp; Open‑Source)</h2>
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">12</span>
+      <h2 class="fb-title">Empfohlene Tools (Pro &amp; Open‑Source)</h2>
+    </div>
     <p class="lead">{{ LEAD_TOOLS }}</p>
-    {{ TOOLS_HTML }}
+    <div class="content-block">{{ TOOLS_HTML }}</div>
     <div class="small muted">„Stand“: {{ research_last_updated }}.</div>
   </section>
 
-  <!-- Förder-Update (ZIM) -->
-  <section class="page">
-    <h2>Förder‑Update: ZIM – volldigitale Antragstellung</h2>
+  <!-- Förder-Update (ZIM) – ohne Bilder -->
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">13</span>
+      <h2 class="fb-title">Förder‑Update: ZIM – volldigitale Antragstellung</h2>
+    </div>
     <p class="lead">{{ LEAD_ZIM_ALERT }}</p>
-    {{ ZIM_ALERT_HTML }}
+    <div class="content-block">{{ ZIM_ALERT_HTML }}</div>
   </section>
 
-  <!-- NEU: Workflow-Übersicht ZIM digital (1 Seite) -->
-  <section class="page">
-    <h2>Workflow‑Übersicht: ZIM digital (1 Seite)</h2>
+  <!-- ZIM Workflow – reine Text-/Listenform -->
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">14</span>
+      <h2 class="fb-title">Workflow‑Übersicht: ZIM digital (1 Seite)</h2>
+    </div>
     <p class="lead">{{ LEAD_ZIM_WORKFLOW }}</p>
-    {{ ZIM_WORKFLOW_HTML }}
+    <div class="content-block">{{ ZIM_WORKFLOW_HTML }}</div>
   </section>
 
-  <!-- Aktuelle Förderprogramme & Quellen -->
-  <section class="page">
-    <h2>Aktuelle Förderprogramme &amp; Quellen</h2>
+  <!-- Förderprogramme & Quellen -->
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">15</span>
+      <h2 class="fb-title">Aktuelle Förderprogramme &amp; Quellen</h2>
+    </div>
     <p class="lead">{{ LEAD_FUNDING }}</p>
-    {{ FOERDERPROGRAMME_HTML }}
+    <div class="content-block">{{ FOERDERPROGRAMME_HTML }}</div>
     <div class="small muted">„Stand“: {{ research_last_updated }}.</div>
   </section>
 
-  <!-- Kreativ-Special (aus kreativ-tools.txt) -->
-  <section class="page">
-    <h2>Kreativ-Special</h2>
-    {{ KREATIV_SPECIAL_HTML }}
+  <!-- Kreativ-Special -->
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">16</span>
+      <h2 class="fb-title">Kreativ‑Special</h2>
+    </div>
+    <div class="content-block">{{ KREATIV_SPECIAL_HTML }}</div>
   </section>
 
   <!-- Leistung & Nachweis -->
-  <section class="page">
-    <h2>Leistung &amp; Nachweis</h2>
-    {{ LEISTUNG_NACHWEIS_HTML }}
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">17</span>
+      <h2 class="fb-title">Leistung &amp; Nachweis</h2>
+    </div>
+    <div class="content-block">{{ LEISTUNG_NACHWEIS_HTML }}</div>
   </section>
 
   <!-- Glossar -->
-  <section class="page">
-    <h2>Glossar</h2>
-    {{ GLOSSAR_HTML }}
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">18</span>
+      <h2 class="fb-title">Glossar</h2>
+    </div>
+    <div class="content-block">{{ GLOSSAR_HTML }}</div>
   </section>
 
   <!-- EU AI Act -->
-  <section class="page">
-    <h2>EU AI Act – Überblick &amp; Fristen ({{ ai_act_phase_label }})</h2>
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">19</span>
+      <h2 class="fb-title">EU AI Act – Überblick &amp; Fristen ({{ ai_act_phase_label }})</h2>
+    </div>
     <p class="lead">{{ LEAD_AI_ACT }}</p>
-    {{ AI_ACT_SUMMARY_HTML }}
-    <div class="callout">{{ AI_ACT_TABLE_OFFER_HTML }}</div>
-    <div>{{ AI_ACT_ADDON_PACKAGES_HTML }}</div>
+    <div class="content-block">{{ AI_ACT_SUMMARY_HTML }}</div>
+    <div class="callout content-block">{{ AI_ACT_TABLE_OFFER_HTML }}</div>
+    <div class="content-block">{{ AI_ACT_ADDON_PACKAGES_HTML }}</div>
   </section>
 
   <!-- Nächste Schritte -->
-  <section class="page">
-    <h2>Nächste Schritte (30 Tage)</h2>
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">20</span>
+      <h2 class="fb-title">Nächste Schritte (30 Tage)</h2>
+    </div>
     <p class="lead">{{ LEAD_NEXT_ACTIONS }}</p>
-    <div class="small muted">Legende: ⏱ Aufwand · 🎯 Impact · 👤 Owner · 📆 Termin</div>
-    {{ NEXT_ACTIONS_HTML }}
+    <div class="small muted">Legende: ⏱ Aufwand · 🎯 Impact · 👤 Owner/Rolle · 📆 Termin</div>
+    <div class="content-block">{{ NEXT_ACTIONS_HTML }}</div>
   </section>
 
   <!-- Schlussseite -->
