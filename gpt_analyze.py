@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-gpt_analyze.py – v4.13.1-gs (Gold‑Standard+)
+gpt_analyze.py – v4.13.2-gs (Gold‑Standard+)
 ---------------------------------------------------------------------
-Fixes (aus Log abgeleitet):
-- SyntaxError durch falsche Escape-Sequenzen in f-Strings behoben (siehe Log: line 76).
-- Vollständige Datei; PEP8; robuste Strings (keine unnötigen Backslashes).
-- Unverändert: Branch- & Größen‑Benchmarks, Quellenkasten, THEME_CSS_VARS (Blautöne),
-  Footer‑Logos, stabile HTML-Reparatur, Quick‑Wins‑Summierung, rollenbasierte Next‑Actions,
-  Mail‑Versand inkl. Admins.
+Fixes gegenüber der fehlerhaften Upload-Version:
+- Alle kaputten String-Literale repariert (kein aufgespaltetes "\n---\n", keine rohen Newlines im Regex).
+- Stellen wie `re.split(..., "\n", ...)` und `"\n".join(out)` korrekt geschrieben.
+- Sonst unverändert: Benchmarks (Branche+Größe), Quellenkasten, THEME_CSS_VARS (Blautöne),
+  Footer‑Logos, HTML‑Repair, Quick‑Wins‑Summierung, Next‑Actions, Mails.
 ---------------------------------------------------------------------
-Privacy: keine Unternehmensnamen speichern/ausgeben; nur Branche/Größe/Standort.
 """
 import json
 import logging
@@ -24,7 +22,11 @@ from urllib.parse import urlparse
 import requests
 from sqlalchemy.orm import Session
 
-from core.db import SessionLocal  # type: ignore
+try:
+    from core.db import SessionLocal  # type: ignore
+except Exception:  # pragma: no cover
+    SessionLocal = None  # type: ignore
+
 from models import Analysis, Briefing, Report, User  # type: ignore
 from services.report_renderer import render  # type: ignore
 from services.pdf_client import render_pdf_from_html  # type: ignore
@@ -206,7 +208,7 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
         "enablement": min(ena, 25) * 4,
         "overall": round((min(gov, 25) + min(sec, 25) + min(val, 25) + min(ena, 25)) * 4 / 4),
     }
-    log.info("📊 REALISTIC SCORES v4.13.1: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
+    log.info("📊 REALISTIC SCORES v4.13.2: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
              scores["governance"], scores["security"], scores["value"], scores["enablement"], scores["overall"])
     return {"scores": scores, "details": details, "total": scores["overall"]}
 
@@ -471,9 +473,7 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
 def _one_liner(title: str, section_html: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
     base = f'Erzeuge einen prägnanten One‑liner unter der H2‑Überschrift "{title}". Formel: "Kernaussage; Konsequenz → nächster Schritt". Nur 1 Zeile.'
     text = _call_openai(
-        base + "
----
-" + re.sub(r"<[^>]+>", " ", section_html)[:1800],
+        base + "\n---\n" + re.sub(r"<[^>]+>", " ", section_html)[:1800],
         system_prompt="Du formulierst prägnante One‑liner auf Deutsch.",
         temperature=0.1,
         max_tokens=80,
@@ -486,8 +486,7 @@ def _split_li_list_to_columns(html_list: str) -> Tuple[str, str]:
         return "<ul></ul>", "<ul></ul>"
     items = re.findall(r"<li[\s>].*?</li>", html_list, flags=re.DOTALL | re.IGNORECASE)
     if not items:
-        lines = [ln.strip() for ln in re.split(r"<br\s*/?>|
-", html_list) if ln.strip()]
+        lines = [ln.strip() for ln in re.split(r"<br\s*/?>|\n", html_list) if ln.strip()]
         items = [f"<li>{ln}</li>" for ln in lines]
     mid = (len(items) + 1) // 2
     return "<ul>" + "".join(items[:mid]) + "</ul>", "<ul>" + "".join(items[mid:]) + "</ul>"
@@ -548,8 +547,7 @@ def _md_to_simple_html(md: str) -> str:
         out.append(f"<p>{line}</p>")
     if in_ul:
         out.append("</ul>")
-    return "
-".join(out)
+    return "\n".join(out)
 
 
 def _build_ai_act_blocks() -> Dict[str, str]:
@@ -758,7 +756,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         pass
 
     # Scores
-    log.info("[%s] Calculating realistic scores (v4.13.1)...", run_id)
+    log.info("[%s] Calculating realistic scores (v4.13.2)...", run_id)
     score_wrap = _calculate_realistic_score(answers)
     scores = score_wrap["scores"]
 
@@ -776,7 +774,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["report_date"] = now.strftime("%d.%m.%Y")
     sections["report_year"] = now.strftime("%Y")
     sections["transparency_text"] = getattr(settings, "TRANSPARENCY_TEXT", None) or os.getenv("TRANSPARENCY_TEXT", "") or ""
-    sections["user_email"] = answers.get("email") or answers.get("kontakt_email") or ""
+    sections["user_email"] = answers.get("email") or answers.get("kontakt_email") or "";
 
     # Scores ins Template
     sections["score_governance"] = scores.get("governance", 0)
@@ -868,7 +866,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     db.add(an)
     db.commit()
     db.refresh(an)
-    log.info("[%s] ✅ Analysis created (v4.13.1-gs): id=%s", run_id, an.id)
+    log.info("[%s] ✅ Analysis created (v4.13.2-gs): id=%s", run_id, an.id)
 
     return an.id, result["html"], result.get("meta", {})
 
@@ -940,10 +938,12 @@ def _send_emails(db: Session, rep: Report, br: Briefing,
 
 def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     run_id = f"run-{uuid.uuid4().hex[:8]}"
+    if SessionLocal is None:
+        raise RuntimeError("database_unavailable")
     db = SessionLocal()
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v4.13.1-gs for briefing_id=%s", run_id, briefing_id)
+        log.info("[%s] 🚀 Starting analysis v4.13.2-gs for briefing_id=%s", run_id, briefing_id)
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
         rep = Report(
