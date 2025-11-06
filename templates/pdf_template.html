@@ -12,13 +12,14 @@
       --c-muted:#475569;       /* slate-600 */
       --c-line:#e2e8f0;        /* slate-200 */
       --c-soft:#f8fafc;        /* slate-50  */
-      --c-brand:#2563eb;       /* indigo-600 */
-      --c-brand-weak:#dbeafe;  /* indigo-100 */
-      --c-accent:#1e3a5f;      /* slate-indigo mix */
+      --c-brand:#2563eb;       /* primary blue */
+      --c-brand-weak:#dbeafe;  /* light blue */
+      --c-accent:#1e3a5f;      /* deep blue */
       --radius:12px;
     }
     html, body { color: var(--c-text); }
     body {
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
       font-size: 11pt; line-height: 1.5; background:#fff;
     }
@@ -41,7 +42,7 @@
     table, tr, td, th, thead, tbody, tfoot {
       break-inside: avoid; page-break-inside: avoid;
     }
-    thead { display: table-header-group; }  /* repeat header on page break */
+    thead { display: table-header-group; }
     tfoot { display: table-footer-group; }
 
     /* --------- Layout Helpers --------- */
@@ -56,7 +57,7 @@
     .sidebar-note { border-left: 4px solid #cbd5e1; background: #f5f7fb; padding: 8px 12px; border-radius: 10px; }
     .card { border: 1px solid var(--c-line); background: #fff; padding: 12px 14px; border-radius: var(--radius); box-shadow: 0 4px 20px rgba(0,0,0,.03); }
     .feedback-box { border: 1px solid #c7d2fe; background: #eef2ff; padding: 10px 14px; border-radius: 10px; }
-    .watermark { position: fixed; bottom: 12mm; right: 10mm; opacity: 0.07; font-size: 9pt; letter-spacing: .05em; }
+    .watermark { position: fixed; bottom: 14mm; right: 10mm; opacity: 0.07; font-size: 9pt; letter-spacing: .05em; }
 
     /* --------- Header / Branding --------- */
     .cover-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
@@ -68,7 +69,7 @@
     .kpis { margin-top: 6px; }
     .kpis .kpi-table th, .kpis .kpi-table td { border-color: var(--c-line); }
 
-    /* --------- Section styling inspired by 06.png --------- */
+    /* --------- Section styling (06 look) --------- */
     .fb-section{background:#fff;border:1px solid var(--c-line);border-radius:20px;padding:22px;margin:18px 0;box-shadow:0 4px 20px rgba(0,0,0,.03)}
     .fb-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
     .fb-step{display:inline-block;background:var(--c-brand-weak);color:var(--c-accent);padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700}
@@ -76,19 +77,48 @@
     .section-intro{background:linear-gradient(135deg,#e0f2fe,#dbeafe);border-left:4px solid var(--c-brand);border-radius:12px;padding:12px 16px;margin:8px 0 18px;color:#0b2d59}
     .guidance{font-size:10.5pt;color:#475569;margin:8px 0 12px;background:#f0f9ff;padding:10px;border-radius:10px;border-left:3px solid #dbeafe}
 
-    /* --------- Content image policy (remove stock photos) --------- */
-    .content-block img{display:none!important}       /* suppress images injected from dynamic content */
-    .logo, .allow-img{display:inline-block!important}/* allow brand/logo images explicitly */
+    /* --------- Content image policy --------- */
+    .content-block img{display:none!important}       /* hide any non-brand images */
+    .brand-logo{display:inline-block!important}       /* allow brand logos */
 
+    /* --------- Mini Score Bars (CSS-only) --------- */
+    .scorecell{min-width:120px}
+    .meter{height:8px;background:linear-gradient(180deg,#eef2ff,#e2e8f0);border:1px solid var(--c-line);border-radius:6px;overflow:hidden;position:relative;margin-top:2px}
+    .meter > span{display:block;height:100%;width:0%}
+    .meter--gov > span{background:linear-gradient(90deg,var(--c-brand),#3b82f6)}
+    .meter--sec > span{background:linear-gradient(90deg,#0ea5e9,#38bdf8)} /* sky-ish blue */
+    .meter--val > span{background:linear-gradient(90deg,#2563eb,#60a5fa)}
+    .meter--ena > span{background:linear-gradient(90deg,#1e40af,#3b82f6)}
+    .scoreval{font-variant-numeric:tabular-nums; font-size:10pt; color:var(--c-accent)}
+    .scorewrap{display:grid;grid-template-columns:60% 1fr;gap:8px;align-items:center}
+
+    /* --------- Footer branding (repeats every page) --------- */
+    .page-footer{
+      position:fixed; left:20mm; right:20mm; bottom:8mm;
+      border-top:1px solid var(--c-line); padding-top:4mm;
+      display:flex; align-items:center; justify-content:space-between; font-size:8.5pt; color:var(--c-muted);
+    }
+    .page-footer .logos img{height:14px;margin-right:8px}
   </style>
+  <!-- Optional theme overrides injected from backend -->
+  {{ THEME_CSS_VARS }}
 </head>
 <body>
+  <!-- Fixed footer on every page -->
+  <div class="page-footer">
+    <div class="logos">
+      {% if FOOTER_LEFT_LOGO_SRC %}<img class="brand-logo" src="{{ FOOTER_LEFT_LOGO_SRC }}" alt="Footer-Logo links">{% endif %}
+      {% if FOOTER_MID_LOGO_SRC %}<img class="brand-logo" src="{{ FOOTER_MID_LOGO_SRC }}" alt="Footer-Logo mitte">{% endif %}
+      {% if FOOTER_RIGHT_LOGO_SRC %}<img class="brand-logo" src="{{ FOOTER_RIGHT_LOGO_SRC }}" alt="Footer-Logo rechts">{% endif %}
+    </div>
+    <div>Stand: {{ research_last_updated }}</div>
+  </div>
+
   <!-- Deckblatt -->
   <section class="cover page">
     <div class="cover-head">
       <div class="brand">
-        <!-- Optional: inject org/company logo (must exist in templates folder); kept outside .content-block so not hidden -->
-        {% if LOGO_PRIMARY_SRC %}<img class="logo" src="{{ LOGO_PRIMARY_SRC }}" alt="Logo">{% endif %}
+        {% if LOGO_PRIMARY_SRC %}<img class="logo brand-logo" src="{{ LOGO_PRIMARY_SRC }}" alt="Logo">{% endif %}
         <div>
           <h1 style="margin:0">KI‑Status‑Report</h1>
           <div class="subtitle">Ihr individueller Fahrplan zur erfolgreichen KI‑Integration · DSGVO · EU AI Act</div>
@@ -120,11 +150,51 @@
       <table class="table kpi-table">
         <thead><tr><th>Dimension</th><th>Score</th></tr></thead>
         <tbody>
-          <tr><td>Governance</td><td>{{ score_governance }}/100</td></tr>
-          <tr><td>Sicherheit &amp; Compliance</td><td>{{ score_sicherheit }}/100</td></tr>
-          <tr><td>Nutzen &amp; Prozesse</td><td>{{ score_nutzen }}/100</td></tr>
-          <tr><td>Befähigung &amp; Kultur</td><td>{{ score_befaehigung }}/100</td></tr>
-          <tr><td><strong>Gesamt</strong></td><td><strong>{{ score_gesamt }}/100</strong></td></tr>
+          <tr>
+            <td>Governance</td>
+            <td class="scorecell">
+              <div class="scorewrap">
+                <div class="meter meter--gov"><span style="width: {{ score_governance }}%"></span></div>
+                <div class="scoreval">{{ score_governance }}/100</div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>Sicherheit &amp; Compliance</td>
+            <td class="scorecell">
+              <div class="scorewrap">
+                <div class="meter meter--sec"><span style="width: {{ score_sicherheit }}%"></span></div>
+                <div class="scoreval">{{ score_sicherheit }}/100</div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>Nutzen &amp; Prozesse</td>
+            <td class="scorecell">
+              <div class="scorewrap">
+                <div class="meter meter--val"><span style="width: {{ score_nutzen }}%"></span></div>
+                <div class="scoreval">{{ score_nutzen }}/100</div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>Befähigung &amp; Kultur</td>
+            <td class="scorecell">
+              <div class="scorewrap">
+                <div class="meter meter--ena"><span style="width: {{ score_befaehigung }}%"></span></div>
+                <div class="scoreval">{{ score_befaehigung }}/100</div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Gesamt</strong></td>
+            <td class="scorecell">
+              <div class="scorewrap">
+                <div class="meter meter--val"><span style="width: {{ score_gesamt }}%"></span></div>
+                <div class="scoreval"><strong>{{ score_gesamt }}/100</strong></div>
+              </div>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -138,8 +208,17 @@
       <span class="fb-step">1</span>
       <h2 class="fb-title">Executive Summary</h2>
     </div>
-    <p class="lead">{{ LEAD_EXEC }}</p>
+    <p class="lead section-intro">{{ LEAD_EXEC }}</p>
     <div class="content-block">{{ EXECUTIVE_SUMMARY_HTML }}</div>
+  </section>
+
+  <!-- Benchmark (Branche & Größe) -->
+  <section class="page fb-section">
+    <div class="fb-head">
+      <span class="fb-step">Bench</span>
+      <h2 class="fb-title">Branchen‑ &amp; Größen‑Benchmark</h2>
+    </div>
+    <div class="content-block">{{ BENCHMARK_HTML }}</div>
   </section>
 
   <!-- KPI -->
@@ -148,7 +227,7 @@
       <span class="fb-step">2</span>
       <h2 class="fb-title">KPI‑Dashboard &amp; Monitoring</h2>
     </div>
-    <p class="lead">{{ LEAD_KPI }}</p>
+    <p class="lead section-intro">{{ LEAD_KPI }}</p>
     <div class="content-block">{{ KPI_HTML }}</div>
   </section>
 
@@ -158,7 +237,7 @@
       <span class="fb-step">3</span>
       <h2 class="fb-title">Quick Wins (0–90 Tage)</h2>
     </div>
-    <p class="lead">{{ LEAD_QW }}</p>
+    <p class="lead section-intro">{{ LEAD_QW }}</p>
     <div class="cols">
       <div class="content-block">{{ QUICK_WINS_HTML_LEFT }}</div>
       <div class="content-block">{{ QUICK_WINS_HTML_RIGHT }}</div>
@@ -172,7 +251,7 @@
       <span class="fb-step">4</span>
       <h2 class="fb-title">Roadmap (90 Tage – Test → Pilot → Rollout)</h2>
     </div>
-    <p class="lead">{{ LEAD_ROADMAP_90 }}</p>
+    <p class="lead section-intro">{{ LEAD_ROADMAP_90 }}</p>
     <div class="content-block">{{ PILOT_PLAN_HTML }}</div>
   </section>
 
@@ -182,7 +261,7 @@
       <span class="fb-step">5</span>
       <h2 class="fb-title">Roadmap (12 Monate)</h2>
     </div>
-    <p class="lead">{{ LEAD_ROADMAP_12 }}</p>
+    <p class="lead section-intro">{{ LEAD_ROADMAP_12 }}</p>
     <div class="content-block">{{ ROADMAP_12M_HTML }}</div>
   </section>
 
@@ -192,7 +271,7 @@
       <span class="fb-step">6</span>
       <h2 class="fb-title">Business Case &amp; Kostenübersicht</h2>
     </div>
-    <p class="lead">{{ LEAD_BUSINESS }}</p>
+    <p class="lead section-intro">{{ LEAD_BUSINESS }}</p>
     <div class="grid">
       <div class="content-block">{{ ROI_HTML }}</div>
       <div class="content-block">{{ COSTS_OVERVIEW_HTML }}</div>
@@ -206,7 +285,7 @@
       <span class="fb-step">7</span>
       <h2 class="fb-title">Business Case (detailliert)</h2>
     </div>
-    <p class="lead">{{ LEAD_BUSINESS_DETAIL }}</p>
+    <p class="lead section-intro">{{ LEAD_BUSINESS_DETAIL }}</p>
     <div class="content-block">{{ BUSINESS_CASE_HTML }}</div>
   </section>
 
@@ -216,7 +295,7 @@
       <span class="fb-step">8</span>
       <h2 class="fb-title">Dateninventar &amp; ‑Qualität</h2>
     </div>
-    <p class="lead">{{ LEAD_DATA }}</p>
+    <p class="lead section-intro">{{ LEAD_DATA }}</p>
     <div class="content-block">{{ DATA_READINESS_HTML }}</div>
   </section>
 
@@ -226,7 +305,7 @@
       <span class="fb-step">9</span>
       <h2 class="fb-title">Organisation &amp; Change</h2>
     </div>
-    <p class="lead">{{ LEAD_ORG }}</p>
+    <p class="lead section-intro">{{ LEAD_ORG }}</p>
     <div class="content-block">{{ ORG_CHANGE_HTML }}</div>
   </section>
 
@@ -236,7 +315,7 @@
       <span class="fb-step">10</span>
       <h2 class="fb-title">Risiko‑Assessment &amp; Compliance</h2>
     </div>
-    <p class="lead">{{ LEAD_RISKS }}</p>
+    <p class="lead section-intro">{{ LEAD_RISKS }}</p>
     <div class="content-block">{{ RISKS_HTML }}</div>
   </section>
 
@@ -246,7 +325,7 @@
       <span class="fb-step">11</span>
       <h2 class="fb-title">Gamechanger‑Use Case</h2>
     </div>
-    <p class="lead">{{ LEAD_GC }}</p>
+    <p class="lead section-intro">{{ LEAD_GC }}</p>
     <div class="content-block">{{ GAMECHANGER_HTML }}</div>
   </section>
 
@@ -256,18 +335,18 @@
       <span class="fb-step">12</span>
       <h2 class="fb-title">Empfohlene Tools (Pro &amp; Open‑Source)</h2>
     </div>
-    <p class="lead">{{ LEAD_TOOLS }}</p>
+    <p class="lead section-intro">{{ LEAD_TOOLS }}</p>
     <div class="content-block">{{ TOOLS_HTML }}</div>
     <div class="small muted">„Stand“: {{ research_last_updated }}.</div>
   </section>
 
-  <!-- Förder-Update (ZIM) – ohne Bilder -->
+  <!-- Förder-Update (Text only) -->
   <section class="page fb-section">
     <div class="fb-head">
       <span class="fb-step">13</span>
       <h2 class="fb-title">Förder‑Update: ZIM – volldigitale Antragstellung</h2>
     </div>
-    <p class="lead">{{ LEAD_ZIM_ALERT }}</p>
+    <p class="lead section-intro">{{ LEAD_ZIM_ALERT }}</p>
     <div class="content-block">{{ ZIM_ALERT_HTML }}</div>
   </section>
 
@@ -277,7 +356,7 @@
       <span class="fb-step">14</span>
       <h2 class="fb-title">Workflow‑Übersicht: ZIM digital (1 Seite)</h2>
     </div>
-    <p class="lead">{{ LEAD_ZIM_WORKFLOW }}</p>
+    <p class="lead section-intro">{{ LEAD_ZIM_WORKFLOW }}</p>
     <div class="content-block">{{ ZIM_WORKFLOW_HTML }}</div>
   </section>
 
@@ -287,48 +366,18 @@
       <span class="fb-step">15</span>
       <h2 class="fb-title">Aktuelle Förderprogramme &amp; Quellen</h2>
     </div>
-    <p class="lead">{{ LEAD_FUNDING }}</p>
+    <p class="lead section-intro">{{ LEAD_FUNDING }}</p>
     <div class="content-block">{{ FOERDERPROGRAMME_HTML }}</div>
     <div class="small muted">„Stand“: {{ research_last_updated }}.</div>
   </section>
 
-  <!-- Kreativ-Special -->
+  <!-- Quellen & Aktualisierung (aggregiert) -->
   <section class="page fb-section">
     <div class="fb-head">
-      <span class="fb-step">16</span>
-      <h2 class="fb-title">Kreativ‑Special</h2>
+      <span class="fb-step">Q</span>
+      <h2 class="fb-title">Quellen &amp; Aktualisierung</h2>
     </div>
-    <div class="content-block">{{ KREATIV_SPECIAL_HTML }}</div>
-  </section>
-
-  <!-- Leistung & Nachweis -->
-  <section class="page fb-section">
-    <div class="fb-head">
-      <span class="fb-step">17</span>
-      <h2 class="fb-title">Leistung &amp; Nachweis</h2>
-    </div>
-    <div class="content-block">{{ LEISTUNG_NACHWEIS_HTML }}</div>
-  </section>
-
-  <!-- Glossar -->
-  <section class="page fb-section">
-    <div class="fb-head">
-      <span class="fb-step">18</span>
-      <h2 class="fb-title">Glossar</h2>
-    </div>
-    <div class="content-block">{{ GLOSSAR_HTML }}</div>
-  </section>
-
-  <!-- EU AI Act -->
-  <section class="page fb-section">
-    <div class="fb-head">
-      <span class="fb-step">19</span>
-      <h2 class="fb-title">EU AI Act – Überblick &amp; Fristen ({{ ai_act_phase_label }})</h2>
-    </div>
-    <p class="lead">{{ LEAD_AI_ACT }}</p>
-    <div class="content-block">{{ AI_ACT_SUMMARY_HTML }}</div>
-    <div class="callout content-block">{{ AI_ACT_TABLE_OFFER_HTML }}</div>
-    <div class="content-block">{{ AI_ACT_ADDON_PACKAGES_HTML }}</div>
+    <div class="content-block">{{ SOURCES_BOX_HTML }}</div>
   </section>
 
   <!-- Nächste Schritte -->
@@ -337,8 +386,8 @@
       <span class="fb-step">20</span>
       <h2 class="fb-title">Nächste Schritte (30 Tage)</h2>
     </div>
-    <p class="lead">{{ LEAD_NEXT_ACTIONS }}</p>
-    <div class="small muted">Legende: ⏱ Aufwand · 🎯 Impact · 👤 Owner/Rolle · 📆 Termin</div>
+    <p class="lead section-intro">{{ LEAD_NEXT_ACTIONS }}</p>
+    <div class="small muted">Legende: ⏱ Aufwand · 🎯 Impact · 👤 Rolle · 📆 Termin</div>
     <div class="content-block">{{ NEXT_ACTIONS_HTML }}</div>
   </section>
 
