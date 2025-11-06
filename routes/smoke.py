@@ -1,19 +1,15 @@
+# file: routes/smoke.py
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-"""routes.smoke – einfache Health/Ready-Probes"""
-from fastapi import APIRouter
-from starlette.responses import JSONResponse
 
-router = APIRouter(prefix="/smoke", tags=["smoke"], include_in_schema=False)
+from datetime import datetime, timezone
+from fastapi import APIRouter, Response
 
-@router.get("/ok")
-async def ok() -> JSONResponse:
-    return JSONResponse({"status": "ok"})
+router = APIRouter(tags=["health"])
 
-@router.get("/healthz")
-async def healthz() -> JSONResponse:
-    return JSONResponse({"status": "healthy"})
-
-@router.get("/readyz")
-async def readyz() -> JSONResponse:
-    return JSONResponse({"status": "ready"})
+@router.get("/smoke")
+@router.get("/api/smoke")
+@router.get("/scripts/smoke")
+def smoke(_: Response):
+    now = datetime.now(timezone.utc).isoformat()
+    return {"ok": True, "ts": now, "service": "ki-backend", "endpoint": "smoke"}
