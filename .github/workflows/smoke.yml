@@ -1,21 +1,53 @@
 name: smoke
+
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
-env:
-  BACKEND_BASE: ${{ secrets.BACKEND_BASE }}
+
 jobs:
   smoke:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      # Prefer repository Actions Variable; fallback to secret if provided
+      BACKEND_BASE: ${{ (vars.BACKEND_BASE != '' && vars.BACKEND_BASE) || (secrets.BACKEND_BASE != '' && secrets.BACKEND_BASE) }}
     steps:
-      - name: Checkout (for scripts only)
-        uses: actions/checkout@v4
-      - name: Install curl & python
-        run: sudo apt-get update && sudo apt-get install -y curl python3
-      - name: Run smoke
-        shell: bash
+      - name: Show runner info
         run: |
-          chmod +x ./scripts/smoke.sh
-          ./scripts/smoke.sh
+          echo "Runner: $(uname -a)"
+          echo "Using BACKEND_BASE=${BACKEND_BASE:-<not-set>}"
 
+      - name: Validate BACKEND_BASE
+        run: |
+          if [ -z "${BACKEND_BASE}" ]; then
+            echo "BACKEND_BASE is not set (e.g. https://api-ki-backend-neu-production.up.railway.app)"
+            exit 2
+          fi
+          case "${BACKEND_BASE}" in
+            http://*|https://*) : ;;
+            *)
+              echo "BACKEND_BASE must include scheme (https://...) — got: '${BACKEND_BASE}'"
+              exit 2
+              ;;
+          esac
+
+      - name: Smoke - healthz
+        run: |
+          set -euo pipefail
+          curl -fsSL "${BACKEND_BASE}/api/healthz" | tee /dev/stderr
+
+      - name: Smoke - basic API
+        run: |
+          set -euo pipefail
+          curl -fsSL "${BACKEND_BASE}/api/smoke" | tee /dev/stderr
+
+      - name: Smoke - report route (404 expected for missing id → success if 404/JSON)
+        run: |
+          set -euo pipefail
+          code=$(curl -s -o /tmp/out.txt -w "%{http_code}" "${BACKEND_BASE}/api/report/0" || true)
+          if [ "${code}" = "404" ] || [ "${code}" = "200" ]; then
+            echo "report check ok with status ${code}"; cat /tmp/out.txt
+          else
+            echo "unexpected status ${code} for /api/report/0"; cat /tmp/out.txt; exit 1
+          fi
