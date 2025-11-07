@@ -3,955 +3,175 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KI‑Status‑Report</title>
+  <title>{{ REPORT_TITLE or "KI-Status & Empfehlungen" }} – {{ COMPANY_NAME or "Individuelle Auswertung" }}</title>
   <style>
-    /* ============================================
-       PREMIUM DESIGN SYSTEM
-       Professionelle Gestaltung mit Fokus auf
-       Lesbarkeit, visuelle Hierarchie & Eleganz
-       ============================================ */
-    
-    /* === ROOT VARIABLES === */
-    :root {
-      /* Hauptfarbpalette - Professionelles Blau */
-      --primary-900: #0f172a;
-      --primary-800: #1e293b;
-      --primary-700: #334155;
-      --primary-600: #475569;
-      --primary-500: #64748b;
-      
-      /* Akzentfarben - Lebendiges Blau */
-      --accent-900: #1e3a8a;
-      --accent-800: #1e40af;
-      --accent-700: #1d4ed8;
-      --accent-600: #2563eb;
-      --accent-500: #3b82f6;
-      --accent-400: #60a5fa;
-      --accent-300: #93c5fd;
-      --accent-200: #bfdbfe;
-      --accent-100: #dbeafe;
-      --accent-50: #eff6ff;
-      
-      /* Neutrale Farben */
-      --neutral-50: #f8fafc;
-      --neutral-100: #f1f5f9;
-      --neutral-200: #e2e8f0;
-      --neutral-300: #cbd5e1;
-      --neutral-400: #94a3b8;
-      --neutral-500: #64748b;
-      --neutral-600: #475569;
-      --neutral-700: #334155;
-      --neutral-800: #1e293b;
-      --neutral-900: #0f172a;
-      
-      /* Status-Farben */
-      --success-600: #059669;
-      --success-100: #d1fae5;
-      --warning-600: #d97706;
-      --warning-100: #fef3c7;
-      --error-600: #dc2626;
-      --error-100: #fee2e2;
-      
-      /* Spacing System */
-      --space-xs: 4px;
-      --space-sm: 8px;
-      --space-md: 16px;
-      --space-lg: 24px;
-      --space-xl: 32px;
-      --space-2xl: 48px;
-      
-      /* Border Radius */
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 14px;
-      --radius-xl: 18px;
-      
-      /* Shadows */
-      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-      
-      /* Original Variables für Kompatibilität */
-      --c-brand: #2563eb;
-      --c-brand-weak: #dbeafe;
-      --c-accent: #1e3a5f;
-    }
-    
-    /* === PAGE SETUP === */
-    @page { 
-      size: A4; 
-      margin: 22mm; 
-    }
-    
-    /* === TYPOGRAPHY === */
-    body { 
-      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
-      font-size: 11pt; 
-      line-height: 1.6; 
-      color: var(--neutral-800);
-      background: #ffffff;
-      font-feature-settings: "kern" 1, "liga" 1;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-    
-    h1 { 
-      font-size: 28pt; 
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      margin: 0 0 var(--space-sm) 0; 
-      color: var(--primary-900);
-      line-height: 1.1;
-      background: linear-gradient(135deg, var(--accent-700), var(--accent-900));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    
-    h2 { 
-      font-size: 18pt; 
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      margin: var(--space-lg) 0 var(--space-md) 0; 
-      color: var(--primary-900);
-      border-bottom: 3px solid var(--accent-600);
-      padding-bottom: var(--space-sm);
-      line-height: 1.2;
-    }
-    
-    h3 { 
-      font-size: 13.5pt; 
-      font-weight: 600;
-      margin: var(--space-lg) 0 var(--space-sm) 0; 
-      color: var(--primary-800);
-      line-height: 1.3;
-    }
-    
-    h4 { 
-      font-size: 11.5pt; 
-      font-weight: 600;
-      margin: var(--space-md) 0 var(--space-sm) 0; 
-      color: var(--primary-700);
-      line-height: 1.4;
-    }
-    
-    p, li { 
-      font-size: 11pt; 
-      line-height: 1.6;
-      color: var(--neutral-700);
-    }
-    
-    strong {
-      font-weight: 600;
-      color: var(--primary-800);
-    }
-    
-    /* === UTILITY CLASSES === */
-    .muted { 
-      color: var(--neutral-500); 
-      font-weight: 400;
-    }
-    
-    .small { 
-      font-size: 9pt; 
-      line-height: 1.5;
-    }
-    
-    .lead { 
-      font-size: 11.5pt;
-      font-weight: 400;
-      font-style: italic; 
-      margin: var(--space-sm) 0 var(--space-lg) 0; 
-      color: var(--primary-600);
-      line-height: 1.5;
-      border-left: 4px solid var(--accent-400);
-      padding-left: var(--space-md);
-      background: linear-gradient(to right, var(--accent-50), transparent);
-      padding: var(--space-sm) var(--space-md);
-      border-radius: var(--radius-sm);
-    }
-    
-    /* === LAYOUT === */
-    .grid { 
-      display: grid; 
-      gap: var(--space-lg); 
-      grid-template-columns: 1fr 1fr; 
-    }
-    
-    .cols { 
-      display: grid; 
-      gap: var(--space-lg); 
-      grid-template-columns: 1fr 1fr; 
-    }
-    
-    /* === COMPONENTS === */
-    
-    /* Pill/Badge */
-    .pill { 
-      display: inline-block; 
-      padding: 4px 12px; 
-      border-radius: 999px; 
-      background: linear-gradient(135deg, var(--accent-100), var(--accent-50));
-      color: var(--accent-800);
-      font-size: 9pt;
-      font-weight: 600;
-      border: 1px solid var(--accent-200);
-    }
-    
-    /* Tables */
-    .table { 
-      width: 100%; 
-      border-collapse: separate;
-      border-spacing: 0;
-      page-break-inside: avoid; 
-      break-inside: avoid;
-      background: white;
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      box-shadow: var(--shadow-md);
-      border: 1px solid var(--neutral-200);
-    }
-    
-    .table thead {
-      background: linear-gradient(180deg, var(--accent-600), var(--accent-700));
-    }
-    
-    .table th { 
-      border: none;
-      padding: 12px 14px; 
-      vertical-align: middle;
-      font-weight: 600;
-      font-size: 10pt;
-      text-align: left;
-      color: white;
-      letter-spacing: 0.01em;
-    }
-    
-    .table td { 
-      border: none;
-      border-bottom: 1px solid var(--neutral-200);
-      padding: 10px 14px; 
-      vertical-align: top;
-      page-break-inside: avoid;
-      font-size: 10pt;
-    }
-    
-    .table tbody tr:last-child td {
-      border-bottom: none;
-    }
-    
-    .table tbody tr:nth-child(even) {
-      background: var(--neutral-50);
-    }
-    
-    /* Cards */
-    .card { 
-      border: 1px solid var(--neutral-200);
-      background: linear-gradient(135deg, var(--neutral-50), white);
-      padding: var(--space-md) var(--space-lg);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-sm);
-      page-break-inside: avoid;
-    }
-    
-    /* Callout Boxes */
-    .callout { 
-      border-left: 4px solid var(--accent-600);
-      padding: var(--space-md) var(--space-lg);
-      background: linear-gradient(to right, var(--accent-50), white);
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-sm);
-      margin: var(--space-lg) 0;
-    }
-    
-    .sidebar-note { 
-      border-left: 4px solid var(--neutral-400);
-      background: linear-gradient(to right, var(--neutral-100), var(--neutral-50));
-      padding: var(--space-md) var(--space-lg);
-      font-size: 10pt;
-      color: var(--neutral-600);
-      border-radius: var(--radius-md);
-      margin: var(--space-lg) 0;
-      box-shadow: var(--shadow-sm);
-    }
-    
-    .feedback-box { 
-      border: 2px solid var(--accent-300);
-      background: linear-gradient(135deg, var(--accent-50), white);
-      padding: var(--space-lg) var(--space-xl);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-md);
-      margin: var(--space-xl) 0;
-    }
-    
-    .feedback-box strong {
-      font-size: 12pt;
-      color: var(--accent-800);
-      display: block;
-      margin-bottom: var(--space-sm);
-    }
-    
-    .feedback-box a { 
-      text-decoration: none;
-      color: var(--accent-600);
-      font-weight: 600;
-      border-bottom: 2px solid var(--accent-300);
-      transition: all 0.2s;
-    }
-    
-    /* === SCORE VISUALIZATION === */
-    .band {
-      background: linear-gradient(135deg, var(--accent-50), white);
-      border: 2px solid var(--accent-200);
-      border-radius: var(--radius-lg);
-      padding: var(--space-lg) var(--space-xl);
-      margin: var(--space-lg) 0;
-      box-shadow: var(--shadow-md);
-    }
-    
-    .scorebars {
-      margin-top: var(--space-lg);
-      display: grid;
-      gap: var(--space-md);
-      padding: var(--space-lg);
-      background: linear-gradient(135deg, var(--neutral-50), white);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--neutral-200);
-    }
-    
-    .score-row {
-      display: grid;
-      grid-template-columns: 200px 1fr auto;
-      align-items: center;
-      gap: var(--space-md);
-    }
-    
-    .score-label {
-      font-size: 10pt;
-      font-weight: 600;
-      color: var(--primary-800);
-    }
-    
-    .bar {
-      height: 14px;
-      background: var(--neutral-200);
-      border-radius: 999px;
-      overflow: hidden;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-      position: relative;
-      border: 1px solid var(--neutral-300);
-    }
-    
-    .bar > .fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--c-brand), #3b82f6);
-      border-radius: 999px;
-      position: relative;
-      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.4);
-      transition: width 0.3s ease;
-    }
-    
-    .bar > .fill::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 50%;
-      background: linear-gradient(180deg, rgba(255,255,255,0.4), transparent);
-      border-radius: 999px;
-    }
-    
-    /* === SPOTLIGHT / FÖRDERUNG === */
-    .spotlight { 
-      border: 3px solid var(--accent-600);
-      background: linear-gradient(135deg, var(--accent-50), white);
-      border-radius: var(--radius-xl);
-      padding: var(--space-lg) var(--space-xl);
-      box-shadow: var(--shadow-lg);
-      margin: var(--space-xl) 0;
-    }
-    
-    .spotlight h3 {
-      color: var(--accent-900);
-      margin-top: 0;
-    }
-    
-    .spotlight .zim-grid { 
-      display: grid; 
-      grid-template-columns: 1fr 1fr; 
-      gap: var(--space-lg); 
-    }
-    
-    .spotlight img { 
-      max-width: 100%; 
-      height: auto; 
-      border-radius: var(--radius-md);
-      border: 2px solid var(--accent-200);
-      box-shadow: var(--shadow-md);
-    }
-    
-    .spotlight .cta { 
-      margin-top: var(--space-md);
-      padding: var(--space-md);
-      background: white;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--accent-200);
-    }
-    
-    .spotlight a { 
-      text-decoration: none;
-      color: var(--accent-700);
-      font-weight: 600;
-      border-bottom: 2px solid var(--accent-400);
-    }
-    
-    /* === WORKFLOW STEPS === */
-    .steps { 
-      counter-reset: step; 
-      list-style: none; 
-      padding-left: 0; 
-      margin: var(--space-lg) 0;
-    }
-    
-    .steps li { 
-      position: relative; 
-      margin: var(--space-lg) 0 var(--space-lg) 3em;
-      padding: var(--space-md);
-      background: linear-gradient(to right, var(--neutral-50), white);
-      border-radius: var(--radius-md);
-      border-left: 3px solid var(--accent-400);
-      box-shadow: var(--shadow-sm);
-    }
-    
-    .steps li::before {
-      counter-increment: step; 
-      content: counter(step);
-      position: absolute; 
-      left: -3em; 
-      top: 0;
-      width: 2.2em; 
-      height: 2.2em;
-      border-radius: 50%;
-      border: 3px solid var(--accent-600);
-      text-align: center; 
-      line-height: 1.9em;
-      font-weight: 700;
-      font-size: 11pt;
-      background: linear-gradient(135deg, white, var(--accent-50));
-      color: var(--accent-700);
-      box-shadow: var(--shadow-md);
-    }
-    
-    .img-row { 
-      display: grid; 
-      grid-template-columns: 1fr 1fr; 
-      gap: var(--space-md); 
-      margin-top: var(--space-md); 
-    }
-    
-    .img-row img { 
-      max-width: 100%; 
-      height: auto; 
-      border-radius: var(--radius-md);
-      border: 1px solid var(--neutral-300);
-      box-shadow: var(--shadow-sm);
-    }
-    
-    /* === FEEDBACK SECTIONS === */
-    .fb-section {
-      background: white;
-      border: 2px solid var(--accent-200);
-      border-radius: var(--radius-lg);
-      padding: var(--space-lg) var(--space-xl);
-      margin: var(--space-lg) 0;
-      box-shadow: var(--shadow-md);
-      page-break-inside: avoid;
-    }
-    
-    .fb-head {
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-      margin-bottom: var(--space-md);
-      padding-bottom: var(--space-sm);
-      border-bottom: 2px solid var(--accent-100);
-    }
-    
-    .fb-step {
-      display: inline-block;
-      background: linear-gradient(135deg, var(--accent-600), var(--accent-700));
-      color: white;
-      padding: 6px 14px;
-      border-radius: 999px;
-      font-size: 10pt;
-      font-weight: 700;
-      box-shadow: var(--shadow-sm);
-    }
-    
-    .fb-title {
-      font-size: 13pt;
-      font-weight: 700;
-      color: var(--primary-900);
-      margin: 0;
-    }
-    
-    /* === METADATA GRID === */
-    .meta { 
-      display: grid; 
-      grid-template-columns: 1fr 1fr; 
-      gap: var(--space-lg); 
-      margin-top: var(--space-xl);
-      padding: var(--space-lg);
-      background: linear-gradient(135deg, var(--neutral-50), white);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--neutral-200);
-      box-shadow: var(--shadow-sm);
-    }
-    
-    .meta .kv > div { 
-      margin: var(--space-sm) 0;
-      padding: var(--space-xs) 0;
-    }
-    
-    .meta .kv > div:not(:last-child) {
-      border-bottom: 1px solid var(--neutral-200);
-    }
-    
-    .footer-note { 
-      margin-top: var(--space-md);
-      font-size: 9pt;
-      color: var(--neutral-500);
-      line-height: 1.5;
-    }
-    
-    /* === KPI DASHBOARD === */
-    .kpis { 
-      margin-top: var(--space-xl);
-    }
-    
-    /* === WATERMARK === */
-    .watermark { 
-      position: fixed; 
-      bottom: 12mm; 
-      right: 10mm; 
-      opacity: 0.07;
-      font-size: 9pt;
-      letter-spacing: 0.05em;
-      color: var(--neutral-400);
-      font-weight: 600;
-    }
-    
-    .cover .watermark { 
-      display: block; 
-    }
-    
-    /* === PAGE BREAKS === */
-    .page { 
-      page-break-after: always; 
-    }
-    
-    .last-page { 
-      page-break-before: always; 
-    }
-    
-    /* === PRINT OPTIMIZATIONS === */
-    @media print {
-      body {
-        background: white;
-      }
-      
-      .page {
-        page-break-after: always;
-      }
-      
-      .card, .callout, .spotlight, .fb-section {
-        page-break-inside: avoid;
-      }
-    }
-    
-    /* === ACCESSIBILITY === */
-    a:focus, button:focus {
-      outline: 2px solid var(--accent-600);
-      outline-offset: 2px;
-    }
-    
-    /* === ENHANCED STYLING === */
-    
-    /* Enhanced section spacing */
-    section {
-      margin-bottom: var(--space-2xl);
-    }
-    
-    /* Professional list styling */
-    ul, ol {
-      padding-left: 1.5em;
-      margin: var(--space-md) 0;
-    }
-    
-    li {
-      margin: var(--space-sm) 0;
-    }
-    
-    /* Enhanced link styling */
-    a {
-      color: var(--accent-600);
-      transition: all 0.2s ease;
-    }
-    
-    a:hover {
-      color: var(--accent-700);
-    }
-  
-    /* Global Footer */
-    .pdf-footer{
-      position: fixed; bottom: 10mm; left: 18mm; right: 18mm;
-      display:flex; align-items:center; justify-content:space-between;
-      gap: 16px; padding-top:8px; border-top:1px solid var(--neutral-200);
-      font-size: 9.5pt; color: var(--neutral-600);
-    }
-    .pdf-footer .footer-logos img{ height:16px; margin-right:12px; }
-    .pdf-footer .footer-logos img[src=""]{ display:none; }
-    .cover-logos img{ height:26px; }
-    .cover-logos img[src=""]{ display:none; }
-    
-</style>
+    :root{
+      --c-bg:#f8fafc;
+      --c-text:#0f172a;
+      --c-muted:#475569;
+      --c-brand:#2563eb;
+      --c-brand-weak:#dbeafe;
+      --c-accent:#1e3a5f;
+      --radius:16px;
+      --shadow:0 6px 26px rgba(0,0,0,.06);
+      --page-w:820px;
+    }
+    @page{ size: A4; margin: 22mm 16mm 26mm 16mm; }
+    html,body{ font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, Helvetica, "Noto Sans", "Segoe UI Emoji"; color:var(--c-text); background:#fff; }
+    h1,h2,h3{ margin:0 0 10px; line-height:1.25 }
+    h1{ font-size:26px; color:var(--c-accent) }
+    h2{ font-size:20px; color:var(--c-accent) }
+    h3{ font-size:16px; color:var(--c-accent) }
+    p{ line-height:1.55; color:var(--c-text); margin:8px 0 12px }
+    small, .muted{ color:var(--c-muted) }
+    a{ color:var(--c-brand); text-decoration:none; }
+    a:hover{text-decoration:underline}
+    .wrap{ max-width:var(--page-w); margin:0 auto; }
+    .pill{ display:inline-block; background:var(--c-brand-weak); color:var(--c-accent); font-weight:700; padding:6px 12px; border-radius:999px; font-size:12px; letter-spacing:.3px }
+    .card{ background:#fff; border:1px solid #e2e8f0; border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow); margin:14px 0 }
+    .lead{ font-size:14.5px; color:var(--c-muted) }
+    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .grid-3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px }
+    .badge{ background:var(--c-brand-weak); color:var(--c-accent); padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+    .band{ background:linear-gradient(135deg, #e0f2fe, #dbeafe); padding:14px 18px; border-left:4px solid var(--c-brand); border-radius:12px; }
+    .cover{ margin-top:-8mm; padding:18mm 0 10mm; }
+    .cover .brand{ display:flex; align-items:center; gap:10px; margin-bottom:14px }
+    .cover .brand img{ height:36px }
+    .cover h1{ font-size:32px }
+    .cover .meta{ display:flex; gap:10px; flex-wrap:wrap; margin-top:8px }
+    .cover .meta .kv{ background:var(--c-brand-weak); padding:6px 12px; border-radius:10px; font-size:12px }
+    .section-title{ display:flex; align-items:center; gap:10px; margin:18px 0 8px }
+    .section-title .num{ width:28px; height:28px; display:inline-grid; place-items:center; border-radius:999px; background:var(--c-brand); color:#fff; font-weight:800; }
+    .score{ display:flex; align-items:center; gap:10px; }
+    .score .bar{ flex:1; height:8px; background:var(--c-brand-weak); border-radius:8px; overflow:hidden; }
+    .score .bar i{ display:block; height:100%; background:var(--c-brand); width:var(--w,0%); }
+    .table{ width:100%; border-collapse:separate; border-spacing:0; font-size:13px }
+    .table th, .table td{ padding:9px 10px; border-top:1px solid #e2e8f0 }
+    .table th{ text-align:left; color:var(--c-accent); background: #f8fafc }
+    .kachel{ background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px 14px }
+    .mutebox{ background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; }
+    .footlogos{ display:flex; align-items:center; gap:18px }
+    header.page-h{ position:fixed; top:-16mm; left:0; right:0; height:12mm; }
+    footer.page-f{ position:fixed; bottom:-20mm; left:0; right:0; height:16mm; color:#334155 }
+    footer .wrap{ display:flex; justify-content:space-between; align-items:center; }
+    footer .wrap .footlogos img{ height:14px }
+    .source-list li{ margin-bottom:6px }
+    .chip{ display:inline-block; background:#eef2ff; color:#3730a3; border:1px solid #e2e8f0; padding:2px 8px; border-radius:999px; font-size:11px; margin-right:6px }
+    .blueband{ background:#e0f2fe; border-left:4px solid var(--c-brand); border-radius:12px; padding:10px 12px }
+    .print-break{ page-break-before:always }
+  </style>
+  {{ THEME_OVERRIDES|safe }}
 </head>
 <body>
-  <!-- ============================================
-       DECKBLATT / COVER PAGE
-       ============================================ -->
-  <section class="cover page">
-    <h1>KI‑Status‑Report</h1>
-    
-    <div class="cover-logos" style="display:flex; align-items:center; gap:18px; margin-top: 18px;">
-      <img class="logo-main" alt="Logo" src="{{ COVER_MAIN_LOGO_SRC }}"/>
-      <img class="logo-badge" alt="Badge" src="{{ COVER_BADGE_LOGO_SRC }}"/>
-      <img class="logo-cert" alt="TÜV" src="{{ COVER_CERT_LOGO_SRC }}"/>
-      <img class="logo-legal" alt="DSGVO/EU-AI" src="{{ COVER_LEGAL_LOGO_SRC }}"/>
-    </div>
-
-    <p class="muted" style="font-size: 11pt; margin-top: var(--space-md); font-weight: 500;">
-      Ihr individueller Fahrplan zur erfolgreichen KI‑Integration · DSGVO · EU AI Act
-    </p>
-
-    <div class="meta">
-      <div class="kv">
-        <div><strong>Branche:</strong> {{ BRANCHE_LABEL }}</div>
-        <div><strong>Unternehmensgröße:</strong> {{ UNTERNEHMENSGROESSE_LABEL }}</div>
-        <div><strong>Standort (Bundesland):</strong> {{ BUNDESLAND_LABEL }}</div>
-        <div><strong>Erstellungsdatum:</strong> {{ report_date }}</div>
-        <div><strong>Prüferkürzel:</strong> {{ AUDITOR_INITIALS }}</div>
+  <header class="page-h"></header>
+  <footer class="page-f">
+    <div class="wrap">
+      <div class="footlogos">
+        {% if FOOTER_LEFT_LOGO_SRC %}<img src="{{ FOOTER_LEFT_LOGO_SRC }}" alt="Partner links">{% endif %}
+        {% if FOOTER_MID_LOGO_SRC %}<img src="{{ FOOTER_MID_LOGO_SRC }}" alt="Partner mitte">{% endif %}
+        {% if FOOTER_RIGHT_LOGO_SRC %}<img src="{{ FOOTER_RIGHT_LOGO_SRC }}" alt="Partner rechts">{% endif %}
       </div>
-      <div class="kv">
-        <div class="small muted">
-          <strong>Transparenz:</strong> Dieser Report wurde teilweise mithilfe von KI‑Systemen erstellt und im europäischen Rechtsrahmen (EU AI Act, DSGVO) geprüft. Alle Empfehlungen werden redaktionell kuratiert.
-        </div>
-        <div class="small">
-          <strong>Version:</strong> v{{ report_version }} · <strong>Report‑ID:</strong> {{ report_id }}
-        </div>
-        <div class="small muted">
-          Änderungslog kurz: „{{ CHANGELOG_SHORT }}"
-        </div>
+      <div class="muted">
+        {{ BUILD_STAMP or "" }} · Stand: {{ LAST_UPDATED or "—" }}
       </div>
-    </div>
-
-    <div class="kpis">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Dimension</th>
-            <th style="text-align: center;">Score</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>Governance</strong></td>
-            <td style="text-align: center; font-weight: 600; color: var(--accent-700);">{{ score_governance }}/100</td>
-          </tr>
-          <tr>
-            <td><strong>Sicherheit &amp; Compliance</strong></td>
-            <td style="text-align: center; font-weight: 600; color: var(--accent-700);">{{ score_sicherheit }}/100</td>
-          </tr>
-          <tr>
-            <td><strong>Nutzen &amp; Prozesse</strong></td>
-            <td style="text-align: center; font-weight: 600; color: var(--accent-700);">{{ score_nutzen }}/100</td>
-          </tr>
-          <tr>
-            <td><strong>Befähigung &amp; Kultur</strong></td>
-            <td style="text-align: center; font-weight: 600; color: var(--accent-700);">{{ score_befaehigung }}/100</td>
-          </tr>
-          <tr style="background: var(--accent-50); font-weight: 700;">
-            <td><strong>Gesamt</strong></td>
-            <td style="text-align: center; font-weight: 700; color: var(--accent-800); font-size: 11pt;">{{ score_gesamt }}/100</td>
-          </tr>
-        </tbody>
-      </table>
-      
-      <div class="scorebars">
-        <div class="score-row">
-          <div class="score-label">Governance</div>
-          <div class="bar"><div class="fill" style="width: {{ score_governance }}%;"></div></div>
-        </div>
-        <div class="score-row">
-          <div class="score-label">Sicherheit &amp; Compliance</div>
-          <div class="bar"><div class="fill" style="width: {{ score_sicherheit }}%;"></div></div>
-        </div>
-        <div class="score-row">
-          <div class="score-label">Nutzen &amp; Prozesse</div>
-          <div class="bar"><div class="fill" style="width: {{ score_nutzen }}%;"></div></div>
-        </div>
-        <div class="score-row">
-          <div class="score-label">Befähigung &amp; Kultur</div>
-          <div class="bar"><div class="fill" style="width: {{ score_befaehigung }}%;"></div></div>
-        </div>
-        <div class="score-row" style="padding-top: var(--space-md); border-top: 2px solid var(--accent-300); margin-top: var(--space-sm);">
-          <div class="score-label" style="font-size: 11pt;"><strong>Gesamt</strong></div>
-          <div class="bar" style="height: 16px;"><div class="fill" style="width: {{ score_gesamt }}%;"></div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="watermark">{{ WATERMARK_TEXT }}</div>
-  </section>
-
-  <!-- ============================================
-       EXECUTIVE SUMMARY
-       ============================================ -->
-  <section class="page">
-    <h2>Executive Summary</h2>
-    <p class="lead">{{ LEAD_EXEC }}</p>
-    {{ EXECUTIVE_SUMMARY_HTML }}
-  </section>
-
-  <!-- ============================================
-       KPI DASHBOARD & MONITORING
-       ============================================ -->
-  <section class="page">
-    <h2>KPI‑Dashboard &amp; Monitoring</h2>
-    <p class="lead">{{ LEAD_KPI }}</p>
-    {{ KPI_HTML }}
-  </section>
-
-  <!-- ============================================
-       QUICK WINS (0-90 TAGE)
-       ============================================ -->
-  <section class="page">
-    <h2>Quick Wins (0–90 Tage)</h2>
-    <p class="lead">{{ LEAD_QW }}</p>
-    <div class="cols">
-      <div>{{ QUICK_WINS_HTML_LEFT }}</div>
-      <div>{{ QUICK_WINS_HTML_RIGHT }}</div>
-    </div>
-    <div class="sidebar-note">{{ REALITY_NOTE_QW }}</div>
-  </section>
-
-  <!-- ============================================
-       ROADMAP 90 TAGE
-       ============================================ -->
-  <section class="page">
-    <h2>Roadmap (90 Tage – Test → Pilot → Rollout)</h2>
-    <p class="lead">{{ LEAD_ROADMAP_90 }}</p>
-    {{ PILOT_PLAN_HTML }}
-  </section>
-
-  <!-- ============================================
-       ROADMAP 12 MONATE
-       ============================================ -->
-  <section class="page">
-    <h2>Roadmap (12 Monate)</h2>
-    <p class="lead">{{ LEAD_ROADMAP_12 }}</p>
-    {{ ROADMAP_12M_HTML }}
-  </section>
-
-  <!-- ============================================
-       BUSINESS CASE & KOSTEN
-       ============================================ -->
-  <section class="page">
-    <h2>Business Case &amp; Kostenübersicht</h2>
-    <p class="lead">{{ LEAD_BUSINESS }}</p>
-    <div class="grid">
-      <div>{{ ROI_HTML }}</div>
-      <div>{{ COSTS_OVERVIEW_HTML }}</div>
-    </div>
-    <div>{{ BUSINESS_SENSITIVITY_HTML }}</div>
-    <div class="sidebar-note">„Stand" der externen Quellen: {{ research_last_updated }}.</div>
-  </section>
-
-  <section class="page">
-    <h2>Business Case (detailliert)</h2>
-    <p class="lead">{{ LEAD_BUSINESS_DETAIL }}</p>
-    {{ BUSINESS_CASE_HTML }}
-  </section>
-
-  <!-- ============================================
-       DATENINVENTAR & QUALITÄT
-       ============================================ -->
-  <section class="page">
-    <h2>Dateninventar &amp; ‑Qualität</h2>
-    <p class="lead">{{ LEAD_DATA }}</p>
-    {{ DATA_READINESS_HTML }}
-  </section>
-
-  <!-- ============================================
-       ORGANISATION & CHANGE
-       ============================================ -->
-  <section class="page">
-    <h2>Organisation &amp; Change</h2>
-    <p class="lead">{{ LEAD_ORG }}</p>
-    {{ ORG_CHANGE_HTML }}
-  </section>
-
-  <!-- ============================================
-       RISIKO-ASSESSMENT & COMPLIANCE
-       ============================================ -->
-  <section class="page">
-    <h2>Risiko‑Assessment &amp; Compliance</h2>
-    <p class="lead">{{ LEAD_RISKS }}</p>
-    {{ RISKS_HTML }}
-  </section>
-
-  <!-- ============================================
-       GAMECHANGER USE CASE
-       ============================================ -->
-  <section class="page">
-    <h2>Gamechanger‑Use Case</h2>
-    <p class="lead">{{ LEAD_GC }}</p>
-    {{ GAMECHANGER_HTML }}
-  </section>
-
-  <!-- ============================================
-       EMPFOHLENE TOOLS
-       ============================================ -->
-  <section class="page">
-    <h2>Empfohlene Tools (Pro &amp; Open‑Source)</h2>
-    <p class="lead">{{ LEAD_TOOLS }}</p>
-    {{ TOOLS_HTML }}
-    <div class="small muted">„Stand": {{ research_last_updated }}.</div>
-  </section>
-
-  <!-- ============================================
-       KREATIV-TOOLS
-       ============================================ -->
-  <section class="page">
-    <h2>Kreativ‑Tools (kuratierte Liste)</h2>
-    {{ KREATIV_TOOLS_HTML }}
-  </section>
-
-  <!-- ============================================
-       FÖRDER-UPDATE: ZIM
-       ============================================ -->
-  <section class="page">
-    <h2>Förder‑Update: ZIM – volldigitale Antragstellung</h2>
-    <p class="lead">{{ LEAD_ZIM_ALERT }}</p>
-    {{ ZIM_ALERT_HTML }}
-  </section>
-
-  <!-- ============================================
-       WORKFLOW-ÜBERSICHT ZIM DIGITAL
-       ============================================ -->
-  <section class="page">
-    <h2>Workflow‑Übersicht: ZIM digital (1 Seite)</h2>
-    <p class="lead">{{ LEAD_ZIM_WORKFLOW }}</p>
-    {{ ZIM_WORKFLOW_HTML }}
-  </section>
-
-  <!-- ============================================
-       AKTUELLE FÖRDERPROGRAMME
-       ============================================ -->
-  <section class="page">
-    <h2>Aktuelle Förderprogramme &amp; Quellen</h2>
-    <p class="lead">{{ LEAD_FUNDING }}</p>
-    {{ FOERDERPROGRAMME_HTML }}
-    <div class="small muted">„Stand": {{ research_last_updated }}.</div>
-  </section>
-
-  <!-- ============================================
-       LEISTUNG & NACHWEIS
-       ============================================ -->
-  <section class="page">
-    <h2>Leistung &amp; Nachweis</h2>
-    {{ LEISTUNG_NACHWEIS_HTML }}
-  </section>
-
-  <!-- ============================================
-       GLOSSAR
-       ============================================ -->
-  <section class="page">
-    <h2>Glossar</h2>
-    {{ GLOSSAR_HTML }}
-  </section>
-
-  <!-- ============================================
-       EU AI ACT
-       ============================================ -->
-  <section class="page">
-    <h2>EU AI Act – Überblick &amp; Fristen ({{ ai_act_phase_label }})</h2>
-    <p class="lead">{{ LEAD_AI_ACT }}</p>
-    {{ AI_ACT_SUMMARY_HTML }}
-    <div class="callout">{{ AI_ACT_TABLE_OFFER_HTML }}</div>
-    <div>{{ AI_ACT_ADDON_PACKAGES_HTML }}</div>
-  </section>
-
-  <!-- ============================================
-       NÄCHSTE SCHRITTE
-       ============================================ -->
-  <section class="page">
-    <h2>Nächste Schritte (30 Tage)</h2>
-    <p class="lead">{{ LEAD_NEXT_ACTIONS }}</p>
-    <div class="small muted" style="margin-bottom: var(--space-md); padding: var(--space-sm); background: var(--neutral-50); border-radius: var(--radius-sm);">
-      <strong>Legende:</strong> ⏱ Aufwand · 🎯 Impact · 👤 Owner · 📆 Termin
-    </div>
-    {{ NEXT_ACTIONS_HTML }}
-  </section>
-
-  <!-- ============================================
-       WERKBANK – BEISPIEL-STACKS
-       ============================================ -->
-  <section class="page">
-    <h2>Werkbank – Beispiel‑Stacks</h2>
-    {{ WERKBANK_HTML }}
-  </section>
-
-  <!-- ============================================
-       SCHLUSSSEITE / CLOSING PAGE
-       ============================================ -->
-  <section class="last-page">
-    <div class="feedback-box">
-      <strong>Ihre Meinung zählt:</strong>
-      {{ FEEDBACK_BOX_HTML }}<p class="small" style="margin-top:8px"><a class="feedback-link" href="{{ FEEDBACK_LINK }}">Jetzt Feedback geben</a></p>
-    </div>
-    
-    <div class="small muted" style="margin-top: var(--space-xl); padding-top: var(--space-lg); border-top: 2px solid var(--neutral-200);">
-      © {{ report_year }} KI‑Sicherheit.jetzt – DSGVO &amp; EU‑AI‑Act‑Ready – {{ OWNER_NAME }}
-    </div>
-    
-    <div class="small muted" style="margin-top: var(--space-sm);">
-      TÜV‑zertifiziertes KI‑Management © {{ report_year }}: {{ OWNER_NAME }} · E‑Mail: {{ CONTACT_EMAIL }} · Alle Angaben ohne Gewähr; keine Rechtsberatung.
-    </div>
-    
-    <div class="watermark">{{ WATERMARK_TEXT }}</div>
-  </section>
-
-  <footer class="pdf-footer">
-    <div class="footer-logos">
-      <img alt="Footer-Logo links" src="{{ FOOTER_LEFT_LOGO_SRC }}" />
-      <img alt="Footer-Logo mitte" src="{{ FOOTER_MID_LOGO_SRC }}" />
-      <img alt="Footer-Logo rechts" src="{{ FOOTER_RIGHT_LOGO_SRC }}" />
-    </div>
-    <div class="footer-meta">
-      <span>Stand: {{ report_date }}</span>
-      <span>· Build: {{ build_stamp }}</span>
-      <span class="watermark">{{ WATERMARK_TEXT }}</span>
     </div>
   </footer>
 
-
-  <section class="page">
-    <h2>Quellen & Aktualisierung</h2>
-    {{ SOURCES_BOX_HTML }}
+  <!-- Cover -->
+  <section class="wrap cover">
+    <div class="brand">
+      {% if LOGO_PRIMARY_SRC %}<img src="{{ LOGO_PRIMARY_SRC }}" alt="Logo">{% endif %}
+      {% if KI_READY_BADGE_SRC %}<img src="{{ KI_READY_BADGE_SRC }}" alt="KI Ready 2025 Badge" style="height:36px">{% endif %}
+    </div>
+    <h1>{{ REPORT_TITLE or "KI-Status & Handlungsempfehlungen" }}</h1>
+    <p class="lead">{{ REPORT_SUBTITLE or "Praxisnahe Quick Wins, Förderungen & Roadmap – individuell abgestimmt." }}</p>
+    <div class="meta">
+      <span class="kv"><strong>Unternehmen:</strong> {{ COMPANY_NAME or "—" }}</span>
+      <span class="kv"><strong>Branche:</strong> {{ COMPANY_BRANCH or "—" }}</span>
+      <span class="kv"><strong>Größe:</strong> {{ COMPANY_SIZE or "—" }}</span>
+      <span class="kv"><strong>Bundesland:</strong> {{ COMPANY_STATE or "—" }}</span>
+    </div>
   </section>
 
+  <!-- Executive Summary -->
+  <section class="wrap">
+    <div class="section-title"><span class="num">1</span><h2>Executive Summary</h2></div>
+    <div class="card">
+      {{ EXEC_SUMMARY_HTML|safe }}
+    </div>
+    <div class="grid">
+      <div class="kachel">
+        <strong>Status / Reifegrad</strong>
+        <div class="score" title="{{ MATURITY_SCORE }} %">
+          <div class="bar" style="--w: {{ MATURITY_SCORE }}%"></div>
+          <b>{{ MATURITY_SCORE }}%</b>
+        </div>
+        <p class="muted">Einschätzung anhand Fragebogen + Benchmarks.</p>
+      </div>
+      <div class="kachel">
+        <strong>ROI‑Horizont</strong>
+        <p>{{ ROI_SUMMARY or "—" }}</p>
+      </div>
+      <div class="kachel">
+        <strong>Förder-Quick Wins</strong>
+        <div>{{ FOERDER_SUMMARY_HTML|safe }}</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Wins -->
+  <section class="wrap print-break">
+    <div class="section-title"><span class="num">2</span><h2>Quick Wins (3–6 Monate)</h2></div>
+    <div class="grid">
+      <div class="card">{{ QUICK_WINS_HTML_LEFT|safe }}</div>
+      <div class="card">{{ QUICK_WINS_HTML_RIGHT|safe }}</div>
+    </div>
+    <div class="blueband" style="margin-top:12px">
+      {{ QUICK_WINS_SUMMARY_HTML|safe }}
+    </div>
+  </section>
+
+  <!-- Werkbank / Starter-Stacks -->
+  <section class="wrap print-break">
+    <div class="section-title"><span class="num">3</span><h2>Werkbank: Starter‑Stacks</h2></div>
+    <div class="card">{{ STARTER_STACKS_HTML|safe }}</div>
+  </section>
+
+  <!-- Governance, Compliance & Risiko -->
+  <section class="wrap print-break">
+    <div class="section-title"><span class="num">4</span><h2>Governance, DSGVO & EU‑AI‑Act (kompakt)</h2></div>
+    <div class="card">{{ COMPLIANCE_HTML|safe }}</div>
+  </section>
+
+  <!-- Wettbewerbs-/Branchenvergleich -->
+  <section class="wrap print-break">
+    <div class="section-title"><span class="num">5</span><h2>Branchen‑Benchmarks & Vergleich</h2></div>
+    <div class="card">{{ BENCHMARKS_HTML|safe }}</div>
+  </section>
+
+  <!-- Kreativ-Tools -->
+  <section class="wrap print-break">
+    <div class="section-title"><span class="num">6</span><h2>Kreativ‑Tools (kuratierte Liste)</h2></div>
+    <div class="card">{{ KREATIV_TOOLS_HTML|safe }}</div>
+  </section>
+
+  <!-- Glossar -->
+  <section class="wrap print-break">
+    <div class="section-title"><span class="num">7</span><h2>Glossar</h2></div>
+    <div class="card">{{ GLOSSAR_HTML|safe }}</div>
+  </section>
+
+  <!-- Quellen -->
+  <section class="wrap print-break">
+    <div class="section-title"><span class="num">8</span><h2>Quellen & Aktualisierung</h2></div>
+    <div class="card">
+      <p class="muted">Stand der externen Quellen: {{ LAST_UPDATED or "—" }}.</p>
+      {{ SOURCES_HTML|safe }}
+    </div>
+    <div class="mutebox" style="margin-top:12px">
+      <strong>Ihre Meinung zählt:</strong> Feedback willkommen – was war hilfreich, was fehlt?
+      {% if FEEDBACK_URL %} <a href="{{ FEEDBACK_URL }}">Feedback geben</a>{% endif %}
+    </div>
+  </section>
 </body>
 </html>
