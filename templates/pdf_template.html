@@ -2,200 +2,175 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
+  <title>{{ TITLE or 'KI‑Status‑Report' }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KI‑Status‑Report</title>
   <style>
-    /* A4 layout */
-    @page { size: A4; margin: 22mm; }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
-           font-size: 11pt; line-height: 1.35; color: #0f172a; }
-    h1 { font-size: 22pt; margin: 0 0 .25em 0; color: #0f172a; }
-    h2 { font-size: 15.5pt; margin: .6em 0 .25em 0; border-bottom: 1px solid #e5e7eb; padding-bottom: .25em; }
-    h3 { font-size: 12.5pt; margin: .6em 0 .2em 0; }
-    h4 { font-size: 11.5pt; margin: .6em 0 .2em 0; }
-    p, li { font-size: 11pt; }
-    .muted { color: #64748b; }
-    .small { font-size: 9pt; }
-    .lead { font-style: italic; margin: .15em 0 .4em 0; color: #334155; }
-    .table { width: 100%; border-collapse: collapse; }
-    .table th, .table td { border: 1px solid #e5e7eb; padding: 6px 8px; vertical-align: top; }
-    .card { border: 1px solid #e5e7eb; background: #f8fafc; padding: 10px 14px; border-radius: 10px; }
-    .watermark { position: fixed; bottom: 12mm; right: 10mm; opacity: .06; font-size: 9pt; letter-spacing: .05em; }
-    .page { page-break-after: always; }
-    .last-page { page-break-before: always; }
+    /* ==== Base Theme (Blue only) ==== */
+    :root {
+      --c-primary:#1d4ed8;        /* default primary */
+      --c-primary-strong:#1e40af; /* darker */
+      --c-accent:#60a5fa;
+      --c-soft-bg:#f0f7ff;
+      --c-soft-bd:#dbeafe;
+      --text:#0f172a;
+      --muted:#475569;
+      --bg:#ffffff;
+    }
+    {{ THEME_CSS_VARS or '' }}
+    html,body { font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
+                color: var(--text); background: var(--bg); line-height: 1.45; }
+    h1,h2,h3 { color: var(--c-primary-strong); margin: 0 0 8px; }
+    h1 { font-size: 28pt; }
+    h2 { font-size: 16pt; margin-top: 12px; }
+    h3 { font-size: 12.5pt; margin-top: 10px; }
+    p, li { font-size: 10.5pt; }
+    .muted { color: var(--muted); }
+    .soft { background: var(--c-soft-bg); border:1px solid var(--c-soft-bd); border-radius: 12px; padding: 12px 16px; }
+    .section { page-break-inside: avoid; margin: 18px 0; }
+    .pill { display: inline-block; background: linear-gradient(135deg,var(--c-accent),#e0f2fe); color:#0b3b73;
+            font-size: 9pt; border:1px solid var(--c-soft-bd); border-radius:999px; padding:4px 10px; font-weight:600; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .table { width:100%; border-collapse: separate; border-spacing:0; }
+    .table th, .table td { font-size:9.8pt; text-align:left; border-top:1px solid #e2e8f0; padding:8px 10px; }
+    .table thead th { background: var(--c-soft-bg); border-bottom:1px solid var(--c-soft-bd); }
+    .callout { border-left:4px solid var(--c-primary); background:#f8fbff; padding:10px 14px; border-radius:10px; }
+    .hr { height:1px; background:#e5e7eb; border:0; margin:20px 0; }
 
-    /* Scorebars */
-    .scorebars { margin-top: 8px; }
-    .score-row { display: grid; grid-template-columns: 140px 1fr; gap: 10px; align-items: center; margin: 6px 0; }
-    .score-label { font-size: 10pt; color: #0f172a; }
-    .bar { height: 10px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
-    .fill { height: 100%; background: linear-gradient(90deg, #93c5fd, #3b82f6); }
+    /* mini bars (CSS‑only) */
+    .bars { display:grid; gap:6px; }
+    .bar { position:relative; height:8px; background:#e5eaf6; border-radius:6px; overflow:hidden; }
+    .bar > i { position:absolute; left:0; top:0; bottom:0; width:var(--w,0%); background:linear-gradient(90deg,var(--c-primary),var(--c-accent)); }
+    .bar > span { position:absolute; right:6px; top:-18px; font-size:9pt; color:#334155; }
 
-    /* Footer brand bar */
-    .footerbar { position: fixed; bottom: 10mm; left: 22mm; right: 22mm; display: flex; justify-content: space-between; align-items: center; opacity: .95; }
-    .footerbar img { height: 18px; }
+    /* header/footer with paged media */
+    .pdf-header { position: running(header); }
+    .pdf-footer { position: running(footer); }
+    @page {
+      size: A4;
+      margin: 18mm 16mm 20mm 16mm;
+      @top-left { content: element(header) }
+      @bottom-left { content: element(footer) }
+    }
 
-    /* Cover logo */
-    .brand-cover { margin-top: 4px; }
-    .brand-cover img { height: 34px; }
+    .header-wrap { display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #e5e7eb; padding-bottom:6px; }
+    .branding { display:flex; align-items:center; gap:10px; }
+    .branding img { height:18px; }
+    .build { font-size:9pt; color:#64748b; }
+
+    .footer-wrap { border-top:1px solid #e5e7eb; padding-top:6px; display:flex; align-items:center; justify-content:space-between; }
+    .f-logos { display:flex; align-items:center; gap:12px; }
+    .f-logos img { height:16px; }
+    .feedback a { color: var(--c-primary-strong); text-decoration: none; border-bottom:1px dotted var(--c-primary-strong); }
+
+    /* cover */
+    .cover { page-break-after: always; background: #ffffff; }
+    .cover .hero { display:flex; align-items:center; gap:16px; }
+    .cover img.logo { height:52px; }
+    .cover .shield { height:64px; }
+    .cover .meta { color:#475569; }
   </style>
 </head>
 <body>
-  <!-- Deckblatt -->
-  <section class="page cover">
-    <h1>KI‑Status‑Report</h1>
-    <div class="brand-cover">
-      {% if LOGO_PRIMARY_SRC %}<img src="{{ LOGO_PRIMARY_SRC }}" alt="Logo">{% endif %}
+
+<!-- Header / Footer -->
+<header class="pdf-header">
+  <div class="header-wrap">
+    <div class="branding">
+      {% if LOGO_PRIMARY_DATA_URI %}<img src="{{ LOGO_PRIMARY_DATA_URI }}" alt="Logo">{% endif %}
+      <strong>KI‑Status‑Report</strong>
     </div>
-    <p class="muted">Ihr individueller Fahrplan zur erfolgreichen KI‑Integration · DSGVO · EU AI Act</p>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
-      <div class="small">
-        <div><strong>Branche:</strong> {{ BRANCHE_LABEL }}</div>
-        <div><strong>Unternehmensgröße:</strong> {{ UNTERNEHMENSGROESSE_LABEL }}</div>
-        <div><strong>Standort (Bundesland):</strong> {{ BUNDESLAND_LABEL }}</div>
-        <div><strong>Erstellungsdatum:</strong> {{ report_date }}</div>
-      </div>
-      <div class="small">
-        <div class="muted">Transparenz: Dieser Report wurde automatisiert erzeugt und redaktionell geprüft.</div>
-        <div><strong>Version:</strong> v{{ report_version }} · <strong>Report‑ID:</strong> {{ report_id }}</div>
-        <div class="muted">Änderungslog kurz: „{{ CHANGELOG_SHORT }}“</div>
-      </div>
+    <div class="build">
+      {{ BUILD_STAMP or '' }} · {{ report_date or '' }}
     </div>
-
-    <div style="margin-top:8px;">
-      <table class="table">
-        <thead><tr><th>Dimension</th><th>Score</th></tr></thead>
-        <tbody>
-          <tr><td>Governance</td><td>{{ score_governance }}/100</td></tr>
-          <tr><td>Sicherheit &amp; Compliance</td><td>{{ score_sicherheit }}/100</td></tr>
-          <tr><td>Nutzen &amp; Prozesse</td><td>{{ score_nutzen }}/100</td></tr>
-          <tr><td>Befähigung &amp; Kultur</td><td>{{ score_befaehigung }}/100</td></tr>
-          <tr><td><strong>Gesamt</strong></td><td><strong>{{ score_gesamt }}/100</strong></td></tr>
-        </tbody>
-      </table>
-
-      <div class="scorebars">
-        <div class="score-row">
-          <div class="score-label">Governance</div>
-          <div class="bar"><div class="fill" style="width: {{ score_governance }}%;"></div></div>
-        </div>
-        <div class="score-row">
-          <div class="score-label">Sicherheit &amp; Compliance</div>
-          <div class="bar"><div class="fill" style="width: {{ score_sicherheit }}%;"></div></div>
-        </div>
-        <div class="score-row">
-          <div class="score-label">Nutzen &amp; Prozesse</div>
-          <div class="bar"><div class="fill" style="width: {{ score_nutzen }}%;"></div></div>
-        </div>
-        <div class="score-row">
-          <div class="score-label">Befähigung &amp; Kultur</div>
-          <div class="bar"><div class="fill" style="width: {{ score_befaehigung }}%;"></div></div>
-        </div>
-        <div class="score-row">
-          <div class="score-label"><strong>Gesamt</strong></div>
-          <div class="bar"><div class="fill" style="width: {{ score_gesamt }}%;"></div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="watermark">{{ WATERMARK_TEXT }}</div>
-  </section>
-
-  <!-- Executive Summary -->
-  <section class="page">
-    <h2>Executive Summary</h2>
-    <p class="lead">{{ LEAD_EXEC }}</p>
-    {{ EXECUTIVE_SUMMARY_HTML }}
-  </section>
-
-  <!-- Quick Wins -->
-  <section class="page">
-    <h2>Quick Wins (30–45 Tage)</h2>
-    <p class="lead">{{ LEAD_QW }}</p>
-    {{ QUICK_WINS_HTML }}
-  </section>
-
-  <!-- Roadmap 90 Tage -->
-  <section class="page">
-    <h2>Roadmap (90 Tage – Test → Pilot → Rollout)</h2>
-    <p class="lead">{{ LEAD_ROADMAP_90 }}</p>
-    {{ PILOT_PLAN_HTML }}
-  </section>
-
-  <!-- 12 Monate -->
-  <section class="page">
-    <h2>Roadmap (12 Monate)</h2>
-    <p class="lead">{{ LEAD_ROADMAP_12 }}</p>
-    {{ ROADMAP_12M_HTML }}
-  </section>
-
-  <!-- Business Case & Kosten -->
-  <section class="page">
-    <h2>Business Case &amp; Kostenübersicht</h2>
-    <p class="lead">{{ LEAD_BUSINESS }}</p>
-    <div class="card">{{ ROI_HTML }}</div>
-    <div class="card">{{ COSTS_OVERVIEW_HTML }}</div>
-    <div class="small muted">„Stand“ der externen Quellen: {{ research_last_updated }}.</div>
-  </section>
-
-  <!-- AI‑Act & Governance -->
-  <section class="page">
-    <h2>EU AI Act – Governance &amp; Pflichten</h2>
-    {{ AI_ACT_HTML }}
-  </section>
-
-  <!-- Förderprogramme & Quellen -->
-  <section class="page">
-    <h2>Aktuelle Förderprogramme &amp; Quellen</h2>
-    <p class="lead">{{ LEAD_FUNDING }}</p>
-    {{ FOERDERPROGRAMME_HTML }}
-    <h3>Quellen (ausgewählte)</h3>
-    {{ SOURCES_BOX_HTML }}
-    <div class="small muted">„Stand“: {{ research_last_updated }}.</div>
-  </section>
-
-  <!-- Kreativ-Special -->
-  <section class="page">
-    <h2>Kreativ‑Tools (kuratierte Liste)</h2>
-    {{ KREATIV_SPECIAL_HTML }}
-  </section>
-
-  <!-- Glossar -->
-  <section class="page">
-    <h2>Glossar</h2>
-    {{ GLOSSAR_HTML }}
-  </section>
-
-  <!-- Nächste Schritte -->
-  <section class="page">
-    <h2>Nächste Schritte (30 Tage)</h2>
-    <p class="lead">{{ LEAD_NEXT_ACTIONS }}</p>
-    {{ NEXT_ACTIONS_HTML }}
-  </section>
-
-  <!-- Werkbank -->
-  <section class="page">
-    <h2>Werkbank – Beispiel‑Stacks</h2>
-    {{ WERKBANK_HTML }}
-  </section>
-
-  <!-- Schlussseite -->
-  <section class="last-page">
-    <div class="card"><strong>Ihre Meinung zählt:</strong> {{ FEEDBACK_BOX_HTML }}</div>
-    <div class="small muted" style="margin-top:10px;">
-      © {{ report_year }} KI‑Sicherheit.jetzt – DSGVO &amp; EU‑AI‑Act‑Ready – {{ OWNER_NAME }}
-      · Kontakt: {{ CONTACT_EMAIL }}
-    </div>
-    <div class="watermark">{{ WATERMARK_TEXT }}</div>
-  </section>
-
-  <!-- Footer brand bar -->
-  <div class="footerbar">
-    {% if FOOTER_LEFT_LOGO_SRC %}<img src="{{ FOOTER_LEFT_LOGO_SRC }}" alt="Logo links">{% endif %}
-    {% if FOOTER_MID_LOGO_SRC %}<img src="{{ FOOTER_MID_LOGO_SRC }}" alt="Logo mitte">{% endif %}
-    {% if FOOTER_RIGHT_LOGO_SRC %}<img src="{{ FOOTER_RIGHT_LOGO_SRC }}" alt="Logo rechts">{% endif %}
-    <div class="small muted">Build: v{{ report_version }} • {{ report_year }}</div>
   </div>
+</header>
+
+<footer class="pdf-footer">
+  <div class="footer-wrap">
+    <div class="f-logos">
+      {% if FOOTER_LEFT_LOGO_DATA_URI %}<img src="{{ FOOTER_LEFT_LOGO_DATA_URI }}" alt="Logo links">{% endif %}
+      {% if FOOTER_MID_LOGO_DATA_URI %}<img src="{{ FOOTER_MID_LOGO_DATA_URI }}" alt="Logo mitte">{% endif %}
+      {% if FOOTER_RIGHT_LOGO_DATA_URI %}<img src="{{ FOOTER_RIGHT_LOGO_DATA_URI }}" alt="Logo rechts">{% endif %}
+    </div>
+    <div class="feedback">
+      {% if FEEDBACK_URL %}Ihre Meinung zählt: <a href="{{ FEEDBACK_URL }}">Feedback geben</a>{% else %}&nbsp;{% endif %}
+    </div>
+  </div>
+</footer>
+
+<!-- Cover -->
+<section class="cover section">
+  <div class="hero">
+    {% if LOGO_PRIMARY_DATA_URI %}<img class="logo" src="{{ LOGO_PRIMARY_DATA_URI }}" alt="Logo">{% endif %}
+    {% if BADGE_KI_READY_DATA_URI %}<img class="shield" src="{{ BADGE_KI_READY_DATA_URI }}" alt="KI‑Ready">{% endif %}
+  </div>
+  <h1>{{ TITLE or 'KI‑Status‑Report' }}</h1>
+  <p class="meta">Branche: {{ BRANCHE_LABEL or branche or '-' }} · Größe: {{ unternehmensgroesse_label or '-' }} · Region: {{ bundesland_label or '-' }}</p>
+  <div class="callout soft">
+    <strong>Executive Summary</strong>
+    {{ EXEC_SUMMARY_HTML or '' }}
+  </div>
+</section>
+
+<section class="section">
+  <h2>Reifegrad (Überblick)</h2>
+  <div class="bars">
+    <div class="bar" style="--w: {{ SCORE_GOV or 0 }}%"><i></i><span>Governance {{ SCORE_GOV or 0 }}%</span></div>
+    <div class="bar" style="--w: {{ SCORE_SEC or 0 }}%"><i></i><span>Sicherheit {{ SCORE_SEC or 0 }}%</span></div>
+    <div class="bar" style="--w: {{ SCORE_VAL or 0 }}%"><i></i><span>Nutzen {{ SCORE_VAL or 0 }}%</span></div>
+    <div class="bar" style="--w: {{ SCORE_ENA or 0 }}%"><i></i><span>Befähigung {{ SCORE_ENA or 0 }}%</span></div>
+    <div class="bar" style="--w: {{ SCORE_OVERALL or 0 }}%"><i></i><span>Gesamt {{ SCORE_OVERALL or 0 }}%</span></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Quick Wins (30–60 Tage)</h2>
+  {{ QUICK_WINS_HTML or '' }}
+</section>
+
+<section class="section">
+  <h2>Pilot & 12‑Monate‑Roadmap</h2>
+  {{ PILOT_PLAN_HTML or '' }}
+  <div class="hr"></div>
+  {{ ROADMAP_12M_HTML or '' }}
+</section>
+
+<section class="section">
+  <h2>Business‑Case & ROI</h2>
+  {{ BUSINESS_CASE_HTML or '' }}
+  <div class="hr"></div>
+  {{ ROI_HTML or '' }}
+</section>
+
+<section class="section">
+  <h2>Werkbank – Starter‑Stacks</h2>
+  {{ WERKBANK_HTML or '' }}
+</section>
+
+<section class="section">
+  <h2>Empfohlene Tools</h2>
+  {{ TOOLS_HTML or TOOLS_TABLE_HTML or '' }}
+</section>
+
+<section class="section">
+  <h2>Förderprogramme</h2>
+  {{ FOERDER_HTML or FOERDER_TABLE_HTML or '' }}
+</section>
+
+<section class="section">
+  <h2>Kreativ‑Tools (kuratierte Liste)</h2>
+  {{ KREATIV_TOOLS_HTML or '' }}
+</section>
+
+<section class="section">
+  <h2>Quellen & Aktualisierung</h2>
+  {{ SOURCES_BOX_HTML or SOURCES_HTML or '' }}
+</section>
+
+<section class="section">
+  <h2>Glossar (Auszug)</h2>
+  {{ GLOSSAR_HTML or '' }}
+</section>
+
 </body>
 </html>
