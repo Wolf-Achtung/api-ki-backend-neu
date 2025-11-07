@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-gpt_analyze.py – v4.13.4-gs
+gpt_analyze.py – v4.13.5-gs
 ---------------------------------------------------------------------
 Neu in 4.13.4:
 - Quellenkasten: sortiert **amtliche** Domains zuerst, dann **Medien**, zuletzt **Hersteller/sonstige**.
@@ -35,6 +35,7 @@ from services.pdf_client import render_pdf_from_html  # type: ignore
 from services.email import send_mail  # type: ignore
 from services.email_templates import render_report_ready_email  # type: ignore
 from settings import settings  # type: ignore
+from services.coverage_guard import analyze_coverage, build_html_report  # type: ignore
 
 log = logging.getLogger(__name__)
 
@@ -54,6 +55,8 @@ ENABLE_AI_ACT_SECTION = (os.getenv("ENABLE_AI_ACT_SECTION", "1") in ("1", "true"
 
 AI_ACT_INFO_PATH = os.getenv("AI_ACT_INFO_PATH", "EU-AI-ACT-Infos-wichtig.txt")
 AI_ACT_PHASE_LABEL = os.getenv("AI_ACT_PHASE_LABEL", "2025–2027")
+GLOSSAR_PATH = os.getenv("GLOSSAR_PATH", "content/glossar-de.md")
+INCLUDE_COVERAGE_BOX = os.getenv("INCLUDE_COVERAGE_BOX", "0") in ("1","true","TRUE","yes","YES")
 
 DBG_PDF = (os.getenv("DEBUG_LOG_PDF_INFO", "1") in ("1", "true", "TRUE", "yes", "YES"))
 DBG_MASK_EMAILS = (os.getenv("MASK_EMAILS", "1") in ("1", "true", "TRUE", "yes", "YES"))
@@ -767,7 +770,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["WATERMARK_TEXT"] = _build_watermark_text(report_id, version_mm)
     sections["CHANGELOG_SHORT"] = os.getenv("CHANGELOG_SHORT", "—")
     sections["AUDITOR_INITIALS"] = os.getenv("AUDITOR_INITIALS", "KSJ")
-    sections.setdefault("KPI_HTML",""); sections.setdefault("FEEDBACK_BOX_HTML","Feedback willkommen – was war hilfreich, was fehlt?")
+    sections.setdefault("KPI_HTML",""); sections.setdefault("FEEDBACK_BOX_HTML","Feedback willkommen – was war hilfreich, was fehlt?"); sections.setdefault("DATA_COVERAGE_HTML","")
     sections.setdefault("KREATIV_SPECIAL_HTML",""); sections.setdefault("LEISTUNG_NACHWEIS_HTML",""); sections.setdefault("GLOSSAR_HTML","")
     kreat_path = os.getenv("KREATIV_TOOLS_PATH", "").strip()
     if kreat_path:
@@ -794,6 +797,23 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     if sections.get("TOOLS_HTML"): sections["TOOLS_HTML"] = _rewrite_table_links_with_labels(sections["TOOLS_HTML"])
     if sections.get("FOERDERPROGRAMME_HTML"): sections["FOERDERPROGRAMME_HTML"] = _rewrite_table_links_with_labels(sections["FOERDERPROGRAMME_HTML"])
     sections["SOURCES_BOX_HTML"] = _build_sources_box_html(sections, sections["research_last_updated"])
+    # Glossar laden
+    gloss_raw = _try_read(GLOSSAR_PATH) or ""
+    if gloss_raw:
+        if GLOSSAR_PATH.lower().endswith(".md"):
+            sections["GLOSSAR_HTML"] = _md_to_simple_html(gloss_raw)
+        else:
+            sections["GLOSSAR_HTML"] = gloss_raw
+
+    # Coverage‑Guard
+    try:
+        cov = analyze_coverage(answers)
+        log.info("[%s] Coverage: %s%% (present=%s, missing=%s)", run_id, cov.get("coverage_pct"), len(cov.get("present",[])), len(cov.get("missing",[])))
+        if INCLUDE_COVERAGE_BOX:
+            sections["LEISTUNG_NACHWEIS_HTML"] = (sections.get("LEISTUNG_NACHWEIS_HTML","") + build_html_report(cov))
+    except Exception as _exc:
+        log.warning("[%s] Coverage-guard warning: %s", run_id, _exc)
+
     sections["LOGO_PRIMARY_SRC"] = os.getenv("LOGO_PRIMARY_SRC", "")
     sections["FOOTER_LEFT_LOGO_SRC"] = os.getenv("FOOTER_LEFT_LOGO_SRC", "")
     sections["FOOTER_MID_LOGO_SRC"] = os.getenv("FOOTER_MID_LOGO_SRC", "")
