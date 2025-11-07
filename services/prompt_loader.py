@@ -1,102 +1,128 @@
-"""
-Prompt Loader – i18n‑fähig, manifest‑gesteuert, mit Branch/Größen‑Overrides.
-
-- Lädt Prompts aus ./prompts/<lang>/
-- Optionales Manifest (prompts/prompt_manifest.json) definiert Reihenfolge, Aliase & Typen.
-- Unterstützt dynamische Overrides pro Branche und Unternehmensgröße: 
-  ./prompts/<lang>/overrides/<branche>/<size>/<key>.md
-"""
+# -*- coding: utf-8 -*-
 from __future__ import annotations
-from dataclasses import dataclass
+
+"""Prompt Loader (Gold-Standard+)
+Exports:
+    - load_prompt(section: str, lang: str = "de", vars_dict: dict | None = None) -> str | dict
+      * Loads prompts from ./prompts/<lang>/... with fallback to default language.
+      * Supports prompt_manifest.json (global or language-specific) to map sections to files.
+      * Performs safe variable interpolation for {{var}} and ${var}.
+      * Returns str for .md/.txt; dict for .json (recursively interpolated).
+"""
+
+import json
+import logging
+import os
+import re
+from functools import lru_cache
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, Optional, Tuple
 
-DEFAULT_LANG = "de"
+log = logging.getLogger(__name__)
 
-@dataclass
-class PromptSpec:
-    key: str
-    path: Path
-    required: bool = True
-    title: Optional[str] = None
-    purpose: Optional[str] = None
+DEFAULT_LANG = os.getenv("PROMPTS_DEFAULT_LANG", "de")
+BASE_DIR = Path(os.getenv("PROMPTS_BASE_DIR", "prompts")).resolve()
 
-class PromptLoader:
-    def __init__(self, base_dir: str | Path = "prompts", manifest_path: str | Path = "prompts/prompt_manifest.json"):
-        self.base_dir = Path(base_dir)
-        self.manifest_path = Path(manifest_path)
+_SUPPORTED_EXT = (".md", ".txt", ".json", ".yaml", ".yml")
 
-    # ---------- public API ----------
-    def load_bundle(
-        self,
-        lang: str = DEFAULT_LANG,
-        keys: Optional[List[str]] = None,
-        branche: Optional[str] = None,
-        size: Optional[str] = None,
-    ) -> Dict[str, str]:
-        """
-        Liefert ein Dict {key: content}. 
-        Reihenfolge nach Manifest, wenn vorhanden; sonst alphabetisch.
-        """
-        lang_dir = self.base_dir / (lang or DEFAULT_LANG)
-        manifest = self._read_manifest().get(lang or DEFAULT_LANG, {})
 
-        bundle: Dict[str, str] = {}
-        if keys is None:
-            # gesamte Menge aus Manifest oder Dateisystem
-            keys = list(manifest.keys()) if manifest else self._discover_keys(lang_dir)
+def _interpolate_text(s: str, vars_dict: Optional[Dict[str, Any]]) -> str:
+    if not s or not isinstance(s, str) or not vars_dict:
+        return s
+    def repl_curly(m: re.Match) -> str:
+        key = m.group(1).strip()
+        return str(vars_dict.get(key, m.group(0)))
+    s = re.sub(r"\{\{\s*([a-zA-Z0-9_.-]+)\s*\}\}", repl_curly, s)
+    s = re.sub(r"\$\{\s*([a-zA-Z0-9_.-]+)\s*\}", repl_curly, s)
+    return s
 
-        for key in keys:
-            content = self._resolve_content(key, lang_dir, manifest, branche, size)
-            if content is None:
-                continue
-            bundle[key] = content
-        return bundle
 
-    # ---------- intern ----------
-    def _resolve_content(
-        self, key: str, lang_dir: Path, manifest: Dict[str, dict], branche: Optional[str], size: Optional[str]
-    ) -> Optional[str]:
-        # 1) Override <branche>/<size>
-        ov_path = lang_dir / "overrides"
-        cand: List[Path] = []
-        if branche and size:
-            cand.append(ov_path / branche / size / f"{key}.md")
-        if branche:
-            cand.append(ov_path / branche / f"{key}.md")
-        # 2) Manifest‑Pfad
-        if key in manifest and manifest[key].get("path"):
-            cand.append(lang_dir / manifest[key]["path"])
-        # 3) Fallbacks
-        cand.append(lang_dir / f"{key}.md")
-        cand.append(lang_dir / f"{key}.txt")
+def _interpolate(obj: Any, vars_dict: Optional[Dict[str, Any]]) -> Any:
+    if isinstance(obj, str):
+        return _interpolate_text(obj, vars_dict)
+    if isinstance(obj, dict):
+        return {k: _interpolate(v, vars_dict) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_interpolate(v, vars_dict) for v in obj]
+    return obj
 
-        for p in cand:
-            if p.exists():
-                try:
-                    return p.read_text(encoding="utf-8")
-                except Exception:
-                    return p.read_text(errors="ignore")
-        return None
 
-    def _discover_keys(self, lang_dir: Path) -> List[str]:
-        keys = []
-        if lang_dir.exists():
-            for p in sorted(lang_dir.glob("*.md")):
-                keys.append(p.stem)
-            for p in sorted(lang_dir.glob("*.txt")):
-                if p.stem not in keys:
-                    keys.append(p.stem)
-        return keys
-
-    def _read_manifest(self) -> Dict[str, Dict[str, dict]]:
-        if not self.manifest_path.exists():
-            return {}
+@lru_cache(maxsize=64)
+def _read_manifest(lang: str) -> Dict[str, str]:
+    """Load prompt_manifest.json (lang-specific preferred, else global)."""
+    # lang-level manifest
+    lang_manifest = BASE_DIR / lang / "prompt_manifest.json"
+    if lang_manifest.exists():
         try:
-            return json.loads(self.manifest_path.read_text(encoding="utf-8"))
-        except Exception:
-            try:
-                import json as _json
-                return _json.loads(self.manifest_path.read_text(errors="ignore"))
-            except Exception:
-                return {}
+            return json.loads(lang_manifest.read_text(encoding="utf-8"))
+        except Exception as exc:
+            log.warning("Invalid manifest at %s: %s", lang_manifest, exc)
+    # global fallback
+    global_manifest = BASE_DIR / "prompt_manifest.json"
+    if global_manifest.exists():
+        try:
+            return json.loads(global_manifest.read_text(encoding="utf-8"))
+        except Exception as exc:
+            log.warning("Invalid manifest at %s: %s", global_manifest, exc)
+    return {}
+
+
+def _resolve_section_path(section: str, lang: str) -> Tuple[Optional[Path], str]:
+    """Resolve a section to a file path using manifest or naming heuristics."""
+    manifest = _read_manifest(lang)
+    rel = manifest.get(section)
+    if rel:
+        p = (BASE_DIR / lang / rel).resolve()
+        if p.exists():
+            return p, lang
+
+    # Heuristics: try known extensions
+    for ext in _SUPPORTED_EXT:
+        p = (BASE_DIR / lang / f"{section}{ext}").resolve()
+        if p.exists():
+            return p, lang
+
+    # Fallback to default language
+    if lang != DEFAULT_LANG:
+        p, used = _resolve_section_path(section, DEFAULT_LANG)
+        if p:
+            return p, used
+
+    return None, lang
+
+
+def _read_file(path: Path) -> Any:
+    ext = path.suffix.lower()
+    if ext in (".md", ".txt"):
+        return path.read_text(encoding="utf-8")
+    if ext == ".json":
+        return json.loads(path.read_text(encoding="utf-8"))
+    if ext in (".yaml", ".yml"):
+        try:
+            import yaml  # optional
+        except Exception as exc:  # pragma: no cover
+            raise RuntimeError("YAML prompts require PyYAML installed") from exc
+        return yaml.safe_load(path.read_text(encoding="utf-8"))
+    raise ValueError(f"Unsupported prompt file extension: {ext}")
+
+
+def load_prompt(section: str, lang: str = "de", vars_dict: Optional[Dict[str, Any]] = None) -> Any:
+    """Public API expected by gpt_analyze.py.
+
+    Returns str for text prompts; dict for structured (JSON/YAML).
+
+    Performs safe interpolation for {{var}} and ${var}.
+
+    """
+    if not section or not isinstance(section, str):
+        raise ValueError("section must be a non-empty string")
+
+    if not lang:
+        lang = DEFAULT_LANG
+
+    p, used_lang = _resolve_section_path(section, lang)
+    if not p:
+        raise FileNotFoundError(f"Prompt section '{section}' not found for lang '{lang}' in {BASE_DIR}")
+
+    data = _read_file(p)
+    return _interpolate(data, vars_dict)
