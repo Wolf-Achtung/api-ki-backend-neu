@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from models import Report
 from routes._bootstrap import SecureModel, get_db, rate_limiter
 
-router = APIRouter(prefix="/api/report", tags=["report"])
+router = APIRouter(prefix="/report", tags=["report"])
 
 class ReportQuery(SecureModel):
     id: int = Field(gt=0)
