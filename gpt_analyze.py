@@ -663,32 +663,44 @@ def _derive_kundencode(answers: Dict[str, Any], user_email: str) -> str:
     return code[:3] or "KND"
 
 def _theme_vars_for_branch(branch_label: str) -> str:
+    """Return a CSS <style> tag with theme variables tuned per branch label."""
+    b = (branch_label or "").lower()
+    brand, weak, accent = "#2563eb", "#dbeafe", "#1e3a5f"
+    if "it" in b or "software" in b:
+        brand, weak, accent = "#1d4ed8", "#c7d2fe", "#16327a"
+    elif "marketing" in b or "werbung" in b:
+        brand, weak, accent = "#0ea5e9", "#bae6fd", "#0c4a6e"
+    elif "industrie" in b or "produktion" in b:
+        brand, weak, accent = "#1e40af", "#c7d2fe", "#112a63"
+    elif "verwaltung" in b:
+        brand, weak, accent = "#1e3a8a", "#c7d2fe", "#0f2c5a"
+    return f"<style>:root{{--c-brand:{brand};--c-brand-weak:{weak};--c-accent:{accent};}}</style>"
+
 def _build_freetext_snippets_html(ans: Dict[str, Any]) -> str:
+    """Render selected freetext answers as a compact bullet list block."""
     keys = [
-        ("hauptleistung","Hauptleistung/Produkt"),
-        ("ki_projekte","Laufende/geplante KI‑Projekte"),
-        ("zeitersparnis_prioritaet","Zeitersparnis‑Priorität"),
-        ("geschaeftsmodell_evolution","Geschäftsmodell‑Idee"),
-        ("vision_3_jahre","Vision 3 Jahre"),
-        ("strategische_ziele","Strategische Ziele")
+        ("hauptleistung", "Hauptleistung/Produkt"),
+        ("ki_projekte", "Laufende/geplante KI‑Projekte"),
+        ("zeitersparnis_prioritaet", "Zeitersparnis‑Priorität"),
+        ("geschaeftsmodell_evolution", "Geschäftsmodell‑Idee"),
+        ("vision_3_jahre", "Vision 3 Jahre"),
+        ("strategische_ziele", "Strategische Ziele"),
     ]
-    items = []
-    for k,label in keys:
+    items: list[str] = []
+    for k, label in keys:
         val = (ans.get(k) or "").strip()
         if val:
             items.append(f"<li><strong>{html.escape(label)}:</strong> {html.escape(val)}</li>")
-    if not items: 
+    if not items:
         return ""
-    return "<div class='fb-section'><div class='fb-head'><span class='fb-step'>Kontext</span><h3 class='fb-title'>Ihre Freitext‑Eingaben (Kurzüberblick)</h3></div><ul>"+ "".join(items) +"</ul></div>"
-
-    b = (branch_label or "").lower()
-    brand, weak, accent = "#2563eb", "#dbeafe", "#1e3a5f"
-    if "it" in b or "software" in b: brand, weak, accent = "#1d4ed8", "#c7d2fe", "#16327a"
-    elif "marketing" in b or "werbung" in b: brand, weak, accent = "#0ea5e9", "#bae6fd", "#0c4a6e"
-    elif "industrie" in b or "produktion" in b: brand, weak, accent = "#1e40af", "#c7d2fe", "#112a63"
-    elif "verwaltung" in b: brand, weak, accent = "#1e3a8a", "#c7d2fe", "#0f2c5a"
-    return f"<style>:root{{--c-brand:{brand};--c-brand-weak:{weak};--c-accent:{accent};}}</style>"
-
+    title = "Ihre Freitext‑Eingaben (Kurzüberblick)"
+    return (
+        "<section class='fb-section'>"
+        "<div class='fb-head'><span class='fb-step'>F</span>"
+        f"<h3 class='fb-title'>{html.escape(title)}</h3></div>"
+        "<ul>" + "".join(items) + "</ul>"
+        "</section>"
+    )
 # -------------------- Composer ----------------
 def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict[str, str]:
     sections: Dict[str, str] = {}
@@ -850,7 +862,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     result = render(br, run_id=run_id, generated_sections=sections, use_fetchers=False, scores=scores, meta={"scores": scores, "score_details": score_wrap.get("details", {}), "research_last_updated": sections["research_last_updated"]})
     an = Analysis(user_id=br.user_id, briefing_id=briefing_id, html=result["html"], meta=result.get("meta", {}), created_at=datetime.now(timezone.utc))
     db.add(an); db.commit(); db.refresh(an)
-    log.info("[%s] ✅ Analysis created (v4.13.4-gs): id=%s", run_id, an.id)
+    log.info("[%s] ✅ Analysis created (v4.13.5-gs): id=%s", run_id, an.id)
     return an.id, result["html"], result.get("meta", {})
 
 # -------------------- runner ----------------
@@ -899,7 +911,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     db = SessionLocal()
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v4.13.4-gs for briefing_id=%s", run_id, briefing_id)
+        log.info("[%s] 🚀 Starting analysis v4.13.5-gs for briefing_id=%s", run_id, briefing_id)
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
         rep = Report(user_id=br.user_id if br else None, briefing_id=briefing_id, analysis_id=an_id, created_at=datetime.now(timezone.utc))
