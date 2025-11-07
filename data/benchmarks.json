@@ -1,98 +1,194 @@
 {
-  "Marketing & Werbung": {
-    "avg": 72,
-    "top25": 90,
-    "source_title": "ifo Konjunkturumfrage (Juli 2024)",
-    "source_url": "https://www.ifo.de/2024-07-18/mehr-unternehmen-nutzen-kuenstliche-intelligenz",
-    "year": 2024,
-    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
+  "version": "2025-11-07",
+  "sizes": [
+    "solo",
+    "team",
+    "kmu"
+  ],
+  "metrics": {
+    "maturity_index": {
+      "unit": "%",
+      "desc": "KI-Reifegrad (Selbstauskunft + externe Benchmarks)"
+    },
+    "automation_potential": {
+      "unit": "%",
+      "desc": "Anteil der repetitiven Tätigkeiten, die in 6–12 Monaten automatisierbar sind"
+    },
+    "time_savings_h_month": {
+      "unit": "h/Monat",
+      "desc": "Konservativ geschätzte Zeitersparnis"
+    },
+    "tool_spend_eur_month": {
+      "unit": "€/Monat",
+      "desc": "Durchschnittlicher SaaS-/Inference-Aufwand"
+    },
+    "roi_months": {
+      "unit": "Monate",
+      "desc": "Amortisations-Horizont (Median)"
+    }
   },
-  "Beratung & Dienstleistungen": {
-    "avg": 55,
-    "top25": 80,
-    "source_title": "IW Köln Zukunftspanel (2025)",
-    "source_url": "https://www.iwd.de/artikel/noch-grosses-ki-potenzial-in-unternehmen-654534/",
-    "year": 2025,
-    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
+  "benchmarks": {
+    "beratung": {
+      "solo": {
+        "maturity_index": 48,
+        "automation_potential": 35,
+        "time_savings_h_month": 12,
+        "tool_spend_eur_month": 60,
+        "roi_months": 2
+      },
+      "team": {
+        "maturity_index": 52,
+        "automation_potential": 42,
+        "time_savings_h_month": 55,
+        "tool_spend_eur_month": 240,
+        "roi_months": 3
+      },
+      "kmu": {
+        "maturity_index": 58,
+        "automation_potential": 45,
+        "time_savings_h_month": 160,
+        "tool_spend_eur_month": 590,
+        "roi_months": 4
+      }
+    },
+    "it": {
+      "solo": {
+        "maturity_index": 56,
+        "automation_potential": 40,
+        "time_savings_h_month": 18,
+        "tool_spend_eur_month": 80,
+        "roi_months": 2
+      },
+      "team": {
+        "maturity_index": 62,
+        "automation_potential": 50,
+        "time_savings_h_month": 70,
+        "tool_spend_eur_month": 280,
+        "roi_months": 3
+      },
+      "kmu": {
+        "maturity_index": 68,
+        "automation_potential": 54,
+        "time_savings_h_month": 190,
+        "tool_spend_eur_month": 640,
+        "roi_months": 4
+      }
+    },
+    "handel": {
+      "solo": {
+        "maturity_index": 40,
+        "automation_potential": 30,
+        "time_savings_h_month": 10,
+        "tool_spend_eur_month": 50,
+        "roi_months": 3
+      },
+      "team": {
+        "maturity_index": 46,
+        "automation_potential": 40,
+        "time_savings_h_month": 60,
+        "tool_spend_eur_month": 190,
+        "roi_months": 4
+      },
+      "kmu": {
+        "maturity_index": 52,
+        "automation_potential": 45,
+        "time_savings_h_month": 140,
+        "tool_spend_eur_month": 520,
+        "roi_months": 6
+      }
+    },
+    "gesundheit": {
+      "solo": {
+        "maturity_index": 35,
+        "automation_potential": 25,
+        "time_savings_h_month": 8,
+        "tool_spend_eur_month": 45,
+        "roi_months": 5
+      },
+      "team": {
+        "maturity_index": 40,
+        "automation_potential": 32,
+        "time_savings_h_month": 36,
+        "tool_spend_eur_month": 220,
+        "roi_months": 7
+      },
+      "kmu": {
+        "maturity_index": 44,
+        "automation_potential": 35,
+        "time_savings_h_month": 100,
+        "tool_spend_eur_month": 560,
+        "roi_months": 8
+      }
+    }
   },
-  "IT & Software": {
-    "avg": 60,
-    "top25": 85,
-    "source_title": "ifo Konjunkturumfrage (Juli 2024)",
-    "source_url": "https://www.ifo.de/2024-07-18/mehr-unternehmen-nutzen-kuenstliche-intelligenz",
-    "year": 2024,
-    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
-  },
-  "Finanzen & Versicherungen": {
-    "avg": 75,
-    "top25": 90,
-    "source_title": "PwC Studie KI im Finanzsektor (2025)",
-    "source_url": "https://www.pwc.de/de/finanzdienstleistungen/pwc-studie-ki-im-finanzsektor-2025.pdf",
-    "year": 2025,
-    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
-  },
-  "Handel & E-Commerce": {
-    "avg": 22,
-    "top25": 45,
-    "source_title": "ifo Konjunkturumfrage (Juli 2024)",
-    "source_url": "https://www.ifo.de/2024-07-18/mehr-unternehmen-nutzen-kuenstliche-intelligenz",
-    "year": 2024,
-    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
-  },
-  "Bildung": {
-    "avg": 20,
-    "top25": 50,
-    "source_title": "IU Lernreport (2024) / Bitkom Lehrer-Umfrage",
-    "source_url": "https://www.bildungsspiegel.de/news/weiterbildung-bildungspolitik/7641-iu-lernreport-2024-beleuchtet-einfluss-von-ki-auf-bildung",
-    "year": 2024,
-    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
-  },
-  "Verwaltung": {
-    "avg": 13,
-    "top25": 30,
-    "source_title": "Zukunftsradar Digitale Kommune (2024)",
-    "source_url": "https://www.iit-berlin.de/wp-content/uploads/2025/02/Zukunftsradar-Digitale-Kommune-2024_iit-DStGB_WEB.pdf",
-    "year": 2024,
-    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
-  },
-  "Gesundheit & Pflege": {
-    "avg": 15,
-    "top25": 30,
-    "source_title": "Bitkom/Hartmannbund (2025)",
-    "source_url": "https://www.bitkom.org/Presse/Presseinformation/KI-in-Praxis-und-Kliniken-im-Einsatz",
-    "year": 2025,
-    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
-  },
-  "Bauwesen & Architektur": {
-    "avg": 12,
-    "top25": 25,
-    "source_title": "ifo Konjunkturumfrage (Juli 2024)",
-    "source_url": "https://www.ifo.de/2024-07-18/mehr-unternehmen-nutzen-kuenstliche-intelligenz",
-    "year": 2024,
-    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
-  },
-  "Medien & Kreativwirtschaft": {
-    "avg": 96,
-    "top25": 100,
-    "source_title": "BDZV/Retresco KI-Reifegrad-Report (2025)",
-    "source_url": "https://www.bdzv.de/fileadmin/content/6_Service/6-1_Presse/6-1-2_Pressemitteilungen/2025/PDFs/BDZV_Retresco_KI_Reifegrad_Report_2025.pdf",
-    "year": 2025,
-    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
-  },
-  "Industrie & Produktion": {
-    "avg": 40,
-    "top25": 70,
-    "source_title": "IW Köln Zukunftspanel (2025)",
-    "source_url": "https://www.iwd.de/artikel/noch-grosses-ki-potenzial-in-unternehmen-654534/",
-    "year": 2025,
-    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
-  },
-  "Transport & Logistik": {
-    "avg": 20,
-    "top25": 45,
-    "source_title": "IW Köln Zukunftspanel (2025)",
-    "source_url": "https://www.iwd.de/artikel/noch-grosses-ki-potenzial-in-unternehmen-654534/",
-    "year": 2025,
-    "notes": "Anteil KI-Nutzer; Top25 geschätzt."
+  "starter_stacks": {
+    "beratung": {
+      "solo": {
+        "open_source": [
+          {
+            "name": "LM Studio",
+            "why": "Kleine, lokale LLM-Experimente (offline)"
+          },
+          {
+            "name": "OpenWebUI",
+            "why": "Lokale Chat-Oberfläche, RAG leicht integrierbar"
+          }
+        ],
+        "pro": [
+          {
+            "name": "ChatGPT Team/Enterprise",
+            "why": "Schnelle Automatisierung & sichere Freigaben"
+          },
+          {
+            "name": "Zapier / Make",
+            "why": "No‑Code Workflows für Angebote & Reporting"
+          }
+        ]
+      },
+      "team": {
+        "open_source": [
+          {
+            "name": "Haystack / LangChain",
+            "why": "Dokumenten‑RAG & Pipelines"
+          },
+          {
+            "name": "Ollama",
+            "why": "Schnelle lokale Inferenz + Modelle testen"
+          }
+        ],
+        "pro": [
+          {
+            "name": "Microsoft 365 Copilot",
+            "why": "Outlook/Teams/SharePoint produktiv verknüpfen"
+          },
+          {
+            "name": "Notion+AI / ClickUp",
+            "why": "Wissensbasis & SOP‑Automation"
+          }
+        ]
+      },
+      "kmu": {
+        "open_source": [
+          {
+            "name": "Kubernetes + vLLM",
+            "why": "Skalierbare Inferenz"
+          },
+          {
+            "name": "Airbyte + dbt",
+            "why": "Datenintegration & Analytics"
+          }
+        ],
+        "pro": [
+          {
+            "name": "Azure OpenAI",
+            "why": "Compliance‑ready Inferenz & RAG"
+          },
+          {
+            "name": "Power Automate / UiPath",
+            "why": "Automatisierung End‑to‑End"
+          }
+        ]
+      }
+    }
   }
 }
