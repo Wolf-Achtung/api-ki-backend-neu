@@ -1,33 +1,38 @@
-# file: routes/report.py
 # -*- coding: utf-8 -*-
-from __future__ import annotations
-"""Report‑Abfrage (schlank, sicher)."""
-from typing import Optional
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from typing import Any, Dict
+from pathlib import Path
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import Field
-from sqlalchemy.orm import Session
+from gpt_analyze import run_async
 
-from models import Report
-from routes._bootstrap import SecureModel, get_db, rate_limiter
+router = APIRouter(prefix="/api/report", tags=["report"])
 
-router = APIRouter(prefix="/report", tags=["report"])
+class ReportPayload(BaseModel):
+  lang: str = "de"
+  answers: Dict[str, Any]
 
-class ReportQuery(SecureModel):
-    id: int = Field(gt=0)
+def _jinja_env(template_dir: str | Path):
+  env = Environment(
+    loader=FileSystemLoader(str(template_dir)),
+    autoescape=select_autoescape(enabled_extensions=("html","xml"))
+  )
+  return env
 
-class ReportOut(SecureModel):
-    id: int
-    status: str
-    pdf_url: Optional[str] = None
-    analysis_id: Optional[int] = None
+@router.get("/ping")
+def ping()->Dict[str,str]:
+  return {"status":"ok"}
 
-@router.get("/{report_id}", response_model=ReportOut,
-            dependencies=[Depends(rate_limiter("report:get", 30, 60))])
-def get_report(report_id: int, db: Session = Depends(get_db)) -> ReportOut:
-    rep = db.get(Report, report_id)
-    if not rep:
-        raise HTTPException(status_code=404, detail="Report not found")
-    return ReportOut(id=rep.id, status=rep.status,
-                     pdf_url=getattr(rep, "pdf_url", None),
-                     analysis_id=getattr(rep, "analysis_id", None))
+@router.post("/render")
+def render_html(payload: ReportPayload):
+  try:
+    vars = run_async(payload.dict())
+    template_dir = Path("templates")
+    tpl_name = "pdf_template.html"
+    env = _jinja_env(template_dir)
+    tpl = env.get_template(tpl_name)
+    html = tpl.render(**vars)
+    return {"html": html, "vars": vars}
+  except Exception as e:
+    raise HTTPException(status_code=500, detail=f"render failed: {e}")
