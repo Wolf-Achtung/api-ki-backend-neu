@@ -1,157 +1,72 @@
 {
-  "version": "1.0",
-  "default_language": "de",
-  "languages": {
-    "de": {
-      "dir": "prompts/de",
-      "sections": {},
-      "aliases": {}
+  "de": {
+    "system": {
+      "title": "Systemleitplanken",
+      "path": "system.md",
+      "purpose": "Guardrails & Tonalität",
+      "required": true
     },
-    "en": {
-      "dir": "prompts/en",
-      "status": "planned"
+    "analysis": {
+      "title": "Analyse (Status & Ziele)",
+      "path": "analysis.md",
+      "purpose": "Interpretation Fragebogen",
+      "required": true
+    },
+    "quickwins": {
+      "title": "Quick Wins",
+      "path": "quickwins.md",
+      "purpose": "Kurzfristige Maßnahmen",
+      "required": true
+    },
+    "compliance": {
+      "title": "Compliance",
+      "path": "compliance.md",
+      "purpose": "DSGVO / EU AI Act",
+      "required": true
+    },
+    "foerderung": {
+      "title": "Förderprogramme",
+      "path": "foerderung.md",
+      "purpose": "ZIM / go-digital / Land",
+      "required": false
+    },
+    "report": {
+      "title": "Report-Schreibeplan",
+      "path": "report.md",
+      "purpose": "Strukturierte Ausgabe",
+      "required": true
     }
   },
-  "sections": {
-    "executive_summary": {
-      "file": "executive_summary_de.md",
-      "html": true
+  "en": {
+    "system": {
+      "title": "System Guardrails",
+      "path": "system.md",
+      "purpose": "Tone & Safety",
+      "required": true
     },
-    "quick_wins": {
-      "file": "quick_wins_de.md",
-      "html": true
+    "analysis": {
+      "title": "Analysis",
+      "path": "analysis.md",
+      "purpose": "Interpretation of questionnaire",
+      "required": true
     },
-    "pilot_plan": {
-      "file": "pilot_plan_de.md",
-      "html": true
+    "quickwins": {
+      "title": "Quick Wins",
+      "path": "quickwins.md",
+      "purpose": "Short-term actions",
+      "required": true
     },
-    "roadmap_12m": {
-      "file": "roadmap_12m_de.md",
-      "html": true
+    "compliance": {
+      "title": "Compliance",
+      "path": "compliance.md",
+      "purpose": "GDPR/EU AI Act",
+      "required": false
     },
-    "business_roi": {
-      "file": "business_roi_de.md",
-      "html": true
-    },
-    "costs_overview": {
-      "file": "costs_overview_de.md",
-      "html": true
-    },
-    "business_case": {
-      "file": "business_case_de.md",
-      "html": true
-    },
-    "recommendations": {
-      "file": "recommendations_de.md",
-      "html": true
-    },
-    "risks": {
-      "file": "risks_de.md",
-      "html": true
-    },
-    "gamechanger": {
-      "file": "gamechanger_de.md",
-      "html": true
-    },
-    "data_readiness": {
-      "file": "data_readiness_de.md",
-      "html": true
-    },
-    "org_change": {
-      "file": "org_change_de.md",
-      "html": true
-    },
-    "ai_act_summary": {
-      "file": "ai_act_summary_de.md",
-      "html": true
-    },
-    "reifegrad_sowhat": {
-      "file": "reifegrad_sowhat_de.md",
-      "html": true
-    },
-    "next_actions": {
-      "file": "pilot_plan_de.md",
-      "preferred": "deterministic",
-      "disabled": true
-    }
-  },
-  "variables": {
-    "common": [
-      "BRANCHE_LABEL",
-      "UNTERNEHMENSGROESSE_LABEL",
-      "BUNDESLAND_LABEL",
-      "HAUPTLEISTUNG",
-      "KI_ZIELE",
-      "KI_PROJEKTE",
-      "VISION_3_JAHRE",
-      "TRAININGS_INTERESSEN"
-    ],
-    "scores": [
-      "governance",
-      "security",
-      "value",
-      "enablement",
-      "overall"
-    ],
-    "synonyms": {
-      "BRANCHE_LABEL": [
-        "branche",
-        "BRANCHE",
-        "branche_label"
-      ],
-      "UNTERNEHMENSGROESSE_LABEL": [
-        "unternehmensgroesse",
-        "UNTERNEHMENSGROESSE"
-      ],
-      "BUNDESLAND_LABEL": [
-        "bundesland"
-      ],
-      "HAUPTLEISTUNG": [
-        "hauptleistung"
-      ],
-      "KI_ZIELE": [
-        "ki_ziele",
-        "strategische_ziele"
-      ],
-      "KI_PROJEKTE": [
-        "ki_projekte",
-        "anwendungsfaelle"
-      ],
-      "VISION_3_JAHRE": [
-        "vision_3_jahre",
-        "vision"
-      ],
-      "TRAININGS_INTERESSEN": [
-        "trainings_interessen"
-      ]
-    }
-  },
-  "policy": {
-    "html_only": true,
-    "allowed_tags": [
-      "p",
-      "ul",
-      "ol",
-      "li",
-      "table",
-      "thead",
-      "tbody",
-      "tr",
-      "th",
-      "td",
-      "div",
-      "h4",
-      "em",
-      "strong",
-      "br"
-    ],
-    "no_images": true
-  },
-  "overrides": {
-    "by_branch": {
-      "quick_wins": "overrides/branche/{branch}/quick_wins_de.md",
-      "recommendations": "overrides/branche/{branch}/recommendations_de.md",
-      "gamechanger": "overrides/branche/{branch}/gamechanger_de.md"
+    "report": {
+      "title": "Report Writer",
+      "path": "report.md",
+      "purpose": "Structured output",
+      "required": true
     }
   }
 }
