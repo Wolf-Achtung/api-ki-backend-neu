@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-gpt_analyze.py – v4.14.0-gs
+gpt_analyze.py – v4.13.5-gs
 ---------------------------------------------------------------------
 Neu in 4.13.4:
 - Quellenkasten: sortiert **amtliche** Domains zuerst, dann **Medien**, zuletzt **Hersteller/sonstige**.
@@ -20,7 +20,6 @@ import html
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
-import mimetypes, base64
 
 import requests
 from sqlalchemy.orm import Session
@@ -37,6 +36,7 @@ from services.email import send_mail  # type: ignore
 from services.email_templates import render_report_ready_email  # type: ignore
 from settings import settings  # type: ignore
 from services.coverage_guard import analyze_coverage, build_html_report  # type: ignore
+from services.prompt_loader import load_prompt  # type: ignore
 
 log = logging.getLogger(__name__)
 
@@ -464,45 +464,9 @@ def _build_kreativ_tools_html(path: str, report_date: str) -> str:
             "</div>")
 
 # -------------------- Werkbank ----------------
-def _build_werkbank_html(briefing: Dict[str, Any]) -> str:
-    def ul(items): return "<ul>" + "".join(f"<li>{html.escape(x)}</li>" for x in items) + "</ul>"
-    branche = (briefing.get("BRANCHE_LABEL") or briefing.get("branche") or "").lower()
-    size = (briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse") or "").lower()
-    solo = ("solo" in size) or (size.strip()=="1")
-    blocks = []
-    # Base stacks
-    rag = ["LLM: Mistral 7B / Llama‑3.x (lokal/gehostet)",
-           "Embeddings: E5 / Instructor",
-           "Vektordb: FAISS / Chroma",
-           "Orchestrierung: LangChain / LiteLLM",
-           "Guardrails: Pydantic‑Validatoren / Rebuff",
-           "Observability: OpenTelemetry Hooks (einfach)"]
-    azure = ["Azure OpenAI (Chat/Assistants)",
-             "Azure Cognitive Search (RAG)",
-             "Functions + Blob Storage",
-             "Content Safety + Key Vault",
-             "Azure Monitor/App Insights"]
-    saas = ["LLM: GPT‑4.1/4o",
-            "Automatisierung: Make/Zapier",
-            "Wissensablage: Notion/Confluence",
-            "Kommunikation: Slack/MS Teams",
-            "Formulare: Tally/Typeform"]
-    # Variationen nach Branche/Größe
-    if "beratung" in branche or "dienst" in branche:
-        if solo:
-            saas += ["Abrechnung: Lexoffice/Fakturoid","CRM-Mini: Pipedrive/HubSpot Starter"]
-        else:
-            azure += ["Power BI / Fabric","Databricks (optional)"]
-    elif "it" in branche or "software" in branche:
-        rag += ["Reranking: ColBERTv2","Evaluation: Ragas/DeepEval"]
-    elif "verwaltung" in branche:
-        azure += ["SharePoint/OneDrive DLP","Purview (Catalog/Compliance)"]
-    # Assemble
-    blocks.append("<h3>RAG‑Stack (Open‑Source & lokal)</h3>"+ul(rag))
-    blocks.append("<h3>Azure‑only Stack (Enterprise/DSGVO)</h3>"+ul(azure))
-    blocks.append("<h3>Schneller Assistenz‑Stack (SaaS)</h3>"+ul(saas))
-    note = "<p class='small muted'>Hinweis: Stacks sind exemplarisch und anpassbar; Auswahl hängt von Datenschutz, Budget und IT‑Landschaft ab.</p>"
-    return "<div class='fb-section'>" + "".join(blocks) + note + "</div>"
+def _build_werkbank_html() -> str:
+    def ul(items: List[str]) -> str:
+        return "<ul>" + "".join(f"<li>{html.escape(x)}</li>" for x in items) + "</ul>"
     blocks = []
     blocks.append("<h3>RAG‑Stack (Open‑Source & lokal)</h3>" + ul([
         "LLM: Mistral 7B / Llama‑3.x (lokal oder gehostet)",
@@ -699,6 +663,24 @@ def _derive_kundencode(answers: Dict[str, Any], user_email: str) -> str:
     return code[:3] or "KND"
 
 def _theme_vars_for_branch(branch_label: str) -> str:
+def _build_freetext_snippets_html(ans: Dict[str, Any]) -> str:
+    keys = [
+        ("hauptleistung","Hauptleistung/Produkt"),
+        ("ki_projekte","Laufende/geplante KI‑Projekte"),
+        ("zeitersparnis_prioritaet","Zeitersparnis‑Priorität"),
+        ("geschaeftsmodell_evolution","Geschäftsmodell‑Idee"),
+        ("vision_3_jahre","Vision 3 Jahre"),
+        ("strategische_ziele","Strategische Ziele")
+    ]
+    items = []
+    for k,label in keys:
+        val = (ans.get(k) or "").strip()
+        if val:
+            items.append(f"<li><strong>{html.escape(label)}:</strong> {html.escape(val)}</li>")
+    if not items: 
+        return ""
+    return "<div class='fb-section'><div class='fb-head'><span class='fb-step'>Kontext</span><h3 class='fb-title'>Ihre Freitext‑Eingaben (Kurzüberblick)</h3></div><ul>"+ "".join(items) +"</ul></div>"
+
     b = (branch_label or "").lower()
     brand, weak, accent = "#2563eb", "#dbeafe", "#1e3a5f"
     if "it" in b or "software" in b: brand, weak, accent = "#1d4ed8", "#c7d2fe", "#16327a"
@@ -706,72 +688,6 @@ def _theme_vars_for_branch(branch_label: str) -> str:
     elif "industrie" in b or "produktion" in b: brand, weak, accent = "#1e40af", "#c7d2fe", "#112a63"
     elif "verwaltung" in b: brand, weak, accent = "#1e3a8a", "#c7d2fe", "#0f2c5a"
     return f"<style>:root{{--c-brand:{brand};--c-brand-weak:{weak};--c-accent:{accent};}}</style>"
-
-# ---------- Utilities (logos, sanitize, feedback, dedupe, headings, next actions) ----------
-def _try_read_file_bytes(path: str) -> bytes:
-    if not path: return b""
-    candidates = [path, os.path.join('/mnt/data', path), os.path.join('/mnt/data', os.path.basename(path)),
-                  os.path.join('templates', os.path.basename(path)), os.path.join('templares', os.path.basename(path))]
-    for p in candidates:
-        try:
-            if os.path.exists(p) and os.path.isfile(p):
-                with open(p, 'rb') as fh: return fh.read()
-        except Exception: continue
-    return b""
-
-def _as_data_uri(path: str) -> str:
-    data = _try_read_file_bytes(path)
-    if not data: return path
-    mt, _ = mimetypes.guess_type(path); mt = mt or "image/png"
-    return f"data:{mt};base64,{base64.b64encode(data).decode('ascii')}"
-
-def _sanitize_no_images(html_block: str) -> str:
-    if not html_block: return html_block
-    html_block = re.sub(r'<figure[^>]*>.*?</figure>', '', html_block, flags=re.IGNORECASE|re.DOTALL)
-    html_block = re.sub(r'<img[^>]*>', '', html_block, flags=re.IGNORECASE)
-    return html_block
-
-def _compose_feedback_link(report_id: str) -> str:
-    fb = os.getenv("FEEDBACK_URL", "").strip() or os.getenv("FEEDBACK_REDIRECT_BASE", "").strip()
-    if not fb: return ""
-    joiner = "&" if "?" in fb else "?"
-    return f"{fb}{joiner}rid={report_id}"
-
-def _dedupe_theads(html_block: str) -> str:
-    if not html_block: return html_block
-    parts = re.split(r'(<thead.*?</thead>)', html_block, flags=re.IGNORECASE|re.DOTALL)
-    if len(parts) <= 3: return html_block
-    first = parts[1]
-    tail = ''.join(p for i,p in enumerate(parts[2:]) if (i % 2)==0)  # drop subsequent <thead>
-    return parts[0] + first + tail
-
-def _strip_md_heading(line: Optional[str]) -> str:
-    return re.sub(r'^\s*#{1,6}\s+', '', (line or '').strip())
-
-def _deterministic_next_actions(sections: Dict[str, Any], answers: Dict[str, Any]) -> str:
-    try:
-        base_dt = datetime.strptime(sections.get("report_date"), "%d.%m.%Y")
-    except Exception:
-        base_dt = datetime.now()
-    size = (answers.get("UNTERNEHMENSGROESSE_LABEL") or answers.get("unternehmensgroesse") or "").lower()
-    solo = ("solo" in size) or (size.strip() == "1")
-    roles = ["Owner/Beratung", "Kunde (Pilot)", "Freelancer/VA", "Owner/Beratung", "Owner/Beratung"] if solo else \
-            ["Product Owner", "Fachbereich", "IT/Dev", "DSB/Legal", "PMO"]
-    steps = [(7,"Kick‑off & Scope fixieren","½ Tag","hoch"),
-             (14,"Datenaufnahme & Rechte (RAG/Pilot)","1 Tag","hoch"),
-             (21,"Prompt‑/Workflow‑Blueprint finalisieren","1 Tag","mittel"),
-             (24,"Pilot‑Setup & Tests","1½ Tage","hoch"),
-             (28,"Go/No‑Go & Backlog 60/90 Tage","½ Tag","mittel")]
-    lis = []
-    from html import escape
-    import datetime as _dt
-    for i,(delta,title,effort,impact) in enumerate(steps, start=1):
-        dt = (base_dt + _dt.timedelta(days=delta)).strftime("%d.%m.%Y")
-        role = roles[min(i-1, len(roles)-1)]
-        lis.append(f"<li>{escape(role)}, ⏱ {effort}, Impact: {impact}, Termin: {dt} — {escape(title)}</li>")
-    return "<ol>" + "".join(lis) + "</ol>"
-
-
 
 # -------------------- Composer ----------------
 def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict[str, str]:
@@ -816,21 +732,22 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections["GAMECHANGER_HTML"] = _generate_content_section("gamechanger", briefing, scores)
     sections["RECOMMENDATIONS_HTML"] = _generate_content_section("recommendations", briefing, scores)
     sections["REIFEGRAD_SOWHAT_HTML"] = _generate_content_section("reifegrad_sowhat", briefing, scores)
-    sections["NEXT_ACTIONS_HTML"] = _deterministic_next_actions(sections, briefing)
-    sections["LEAD_EXEC"] = _strip_md_heading(_one_liner("Executive Summary", sections["EXECUTIVE_SUMMARY_HTML"], briefing, scores)
-    sections["LEAD_KPI"] = _strip_md_heading(_one_liner("KPI‑Dashboard & Monitoring", "", briefing, scores)
-    sections["LEAD_QW"] = _strip_md_heading(_one_liner("Quick Wins (0–90 Tage)", qw_html, briefing, scores)
-    sections["LEAD_ROADMAP_90"] = _strip_md_heading(_one_liner("Roadmap (90 Tage – Test → Pilot → Rollout)", sections["PILOT_PLAN_HTML"], briefing, scores)
-    sections["LEAD_ROADMAP_12"] = _strip_md_heading(_one_liner("Roadmap (12 Monate)", sections["ROADMAP_12M_HTML"], briefing, scores)
-    sections["LEAD_BUSINESS"] = _strip_md_heading(_one_liner("Business Case & Kostenübersicht", sections["ROI_HTML"], briefing, scores)
-    sections["LEAD_BUSINESS_DETAIL"] = _strip_md_heading(_one_liner("Business Case (detailliert)", sections["BUSINESS_CASE_HTML"], briefing, scores)
-    sections["LEAD_TOOLS"] = _strip_md_heading(_one_liner("Empfohlene Tools (Pro & Open‑Source)", sections.get("TOOLS_HTML",""), briefing, scores)
-    sections["LEAD_DATA"] = _strip_md_heading(_one_liner("Dateninventar & ‑Qualität", sections["DATA_READINESS_HTML"], briefing, scores)
-    sections["LEAD_ORG"] = _strip_md_heading(_one_liner("Organisation & Change", sections["ORG_CHANGE_HTML"], briefing, scores)
-    sections["LEAD_RISKS"] = _strip_md_heading(_one_liner("Risiko‑Assessment & Compliance", sections["RISKS_HTML"], briefing, scores)
-    sections["LEAD_GC"] = _strip_md_heading(_one_liner("Gamechanger‑Use Case", sections["GAMECHANGER_HTML"], briefing, scores)
-    sections["LEAD_FUNDING"] = _strip_md_heading(_one_liner("Aktuelle Förderprogramme & Quellen", sections.get("FOERDERPROGRAMME_HTML",""), briefing, scores)
-    sections["LEAD_NEXT_ACTIONS"] = _strip_md_heading(_one_liner("Nächste Schritte (30 Tage)", sections["NEXT_ACTIONS_HTML"], briefing, scores)
+    nxt = _call_openai("Erstelle 3–7 **Next Actions (30 Tage)** in <ol>. Jede Zeile: 👤 Rolle (kein Name), ⏱ Aufwand (z. B. ½ Tag), 🎯 Impact (hoch/mittel/niedrig), 📆 Termin (TT.MM.JJJJ) — Maßnahme. Antwort NUR als <ol>…</ol>.", system_prompt="Du bist PMO‑Lead. Antworte nur mit HTML.", temperature=0.2, max_tokens=600) or ""
+    sections["NEXT_ACTIONS_HTML"] = _clean_html(nxt) if nxt else "<ol></ol>"
+    sections["LEAD_EXEC"] = _one_liner("Executive Summary", sections["EXECUTIVE_SUMMARY_HTML"], briefing, scores)
+    sections["LEAD_KPI"] = _one_liner("KPI‑Dashboard & Monitoring", "", briefing, scores)
+    sections["LEAD_QW"] = _one_liner("Quick Wins (0–90 Tage)", qw_html, briefing, scores)
+    sections["LEAD_ROADMAP_90"] = _one_liner("Roadmap (90 Tage – Test → Pilot → Rollout)", sections["PILOT_PLAN_HTML"], briefing, scores)
+    sections["LEAD_ROADMAP_12"] = _one_liner("Roadmap (12 Monate)", sections["ROADMAP_12M_HTML"], briefing, scores)
+    sections["LEAD_BUSINESS"] = _one_liner("Business Case & Kostenübersicht", sections["ROI_HTML"], briefing, scores)
+    sections["LEAD_BUSINESS_DETAIL"] = _one_liner("Business Case (detailliert)", sections["BUSINESS_CASE_HTML"], briefing, scores)
+    sections["LEAD_TOOLS"] = _one_liner("Empfohlene Tools (Pro & Open‑Source)", sections.get("TOOLS_HTML",""), briefing, scores)
+    sections["LEAD_DATA"] = _one_liner("Dateninventar & ‑Qualität", sections["DATA_READINESS_HTML"], briefing, scores)
+    sections["LEAD_ORG"] = _one_liner("Organisation & Change", sections["ORG_CHANGE_HTML"], briefing, scores)
+    sections["LEAD_RISKS"] = _one_liner("Risiko‑Assessment & Compliance", sections["RISKS_HTML"], briefing, scores)
+    sections["LEAD_GC"] = _one_liner("Gamechanger‑Use Case", sections["GAMECHANGER_HTML"], briefing, scores)
+    sections["LEAD_FUNDING"] = _one_liner("Aktuelle Förderprogramme & Quellen", sections.get("FOERDERPROGRAMME_HTML",""), briefing, scores)
+    sections["LEAD_NEXT_ACTIONS"] = _one_liner("Nächste Schritte (30 Tage)", sections["NEXT_ACTIONS_HTML"], briefing, scores)
     sections["BENCHMARK_HTML"] = _build_benchmark_html(briefing)
     return sections
 
@@ -872,7 +789,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["WATERMARK_TEXT"] = _build_watermark_text(report_id, version_mm)
     sections["CHANGELOG_SHORT"] = os.getenv("CHANGELOG_SHORT", "—")
     sections["AUDITOR_INITIALS"] = os.getenv("AUDITOR_INITIALS", "KSJ")
-    sections.setdefault("KPI_HTML",""); sections.setdefault("FEEDBACK_BOX_HTML","Feedback willkommen – was war hilfreich, was fehlt?"); sections.setdefault("DATA_COVERAGE_HTML","")
+    sections.setdefault("KPI_HTML",""); sections.setdefault("FEEDBACK_BOX_HTML","Feedback willkommen – was war hilfreich, was fehlt?"); sections.setdefault("DATA_COVERAGE_HTML",""); sections.setdefault("FREITEXT_SNIPPETS_HTML","")
     sections.setdefault("KREATIV_SPECIAL_HTML",""); sections.setdefault("LEISTUNG_NACHWEIS_HTML",""); sections.setdefault("GLOSSAR_HTML","")
     kreat_path = os.getenv("KREATIV_TOOLS_PATH", "").strip()
     if kreat_path:
@@ -900,31 +817,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     if sections.get("FOERDERPROGRAMME_HTML"): sections["FOERDERPROGRAMME_HTML"] = _rewrite_table_links_with_labels(sections["FOERDERPROGRAMME_HTML"])
     sections["SOURCES_BOX_HTML"] = _build_sources_box_html(sections, sections["research_last_updated"])
 
-    # Sanitize: remove any inline images from content sections (logos handled separately)
-    for k in list(sections.keys()):
-        if k.endswith("_HTML"):
-            sections[k] = _sanitize_no_images(sections[k])
-
-    # Dedupe table headers
-    for k in ("TOOLS_HTML","FOERDERPROGRAMME_HTML"):
-        if sections.get(k): sections[k] = _dedupe_theads(sections[k])
-
-    # Compose feedback link
-    sections["FEEDBACK_LINK"] = _compose_feedback_link(sections.get("report_id",""))
-
-    # Embed logos as data URIs; also prepare cover-logo variants
-    for key in ("LOGO_PRIMARY_SRC","FOOTER_LEFT_LOGO_SRC","FOOTER_MID_LOGO_SRC","FOOTER_RIGHT_LOGO_SRC"):
-        if sections.get(key): sections[key] = _as_data_uri(sections[key])
-    sections["COVER_MAIN_LOGO_SRC"] = sections.get("LOGO_PRIMARY_SRC","")
-    sections["COVER_BADGE_LOGO_SRC"] = sections.get("FOOTER_RIGHT_LOGO_SRC","")
-    sections["COVER_CERT_LOGO_SRC"] = sections.get("FOOTER_LEFT_LOGO_SRC","")
-    sections["COVER_LEGAL_LOGO_SRC"] = sections.get("FOOTER_MID_LOGO_SRC","")
-
-    # Build stamp for footer
-    template_version = os.getenv("TEMPLATE_VERSION","premium-v2")
-    ts = datetime.now().strftime("%Y-%m-%d %H:%M")
-    sections["build_stamp"] = f"Analyzer v{sections.get('report_version','1.0')} · Template {template_version} · {ts}"
-
+    # Freitext‑Kurzübersicht
+    sections['FREITEXT_SNIPPETS_HTML'] = _build_freetext_snippets_html(answers)
     # Glossar laden
     gloss_raw = _try_read(GLOSSAR_PATH) or ""
     if gloss_raw:
@@ -951,7 +845,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["CONTACT_EMAIL"] = getattr(settings, "CONTACT_EMAIL", None) or os.getenv("CONTACT_EMAIL", "info@example.com")
     sections["THEME_CSS_VARS"] = _theme_vars_for_branch(sections.get("BRANCHE_LABEL") or sections.get("branche", ""))
     # Werkbank
-    sections["WERKBANK_HTML"] = _build_werkbank_html(answers)
+    sections["WERKBANK_HTML"] = _build_werkbank_html()
     log.info("[%s] Rendering final HTML...", run_id)
     result = render(br, run_id=run_id, generated_sections=sections, use_fetchers=False, scores=scores, meta={"scores": scores, "score_details": score_wrap.get("details", {}), "research_last_updated": sections["research_last_updated"]})
     an = Analysis(user_id=br.user_id, briefing_id=briefing_id, html=result["html"], meta=result.get("meta", {}), created_at=datetime.now(timezone.utc))
