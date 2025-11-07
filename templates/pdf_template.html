@@ -1,133 +1,159 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{{ title|default("KI‑Status‑Report") }}</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KI‑Status‑Report</title>
   <style>
-    @page { size: A4; margin: 18mm 18mm 22mm 18mm; }
+    @page { size: A4; margin: 20mm 18mm 26mm 18mm; }
     :root{
-      --c-ink:#0f172a;
-      --c-muted:#475569;
-      --c-line:#e2e8f0;
-      --c-blue:#2563eb;
-      --c-blue-2:#1e40af;
-      --c-bg:#ffffff;
-      --c-pill:#eff6ff;
+      --ink:#0f172a; --muted:#475569; --line:#e2e8f0;
+      --b50:#eff6ff; --b100:#dbeafe; --b400:#60a5fa; --b600:#2563eb;
     }
     *{ box-sizing: border-box; }
-    body{ font: 11pt/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Inter,"Helvetica Neue",Arial,sans-serif; color:var(--c-ink); background:var(--c-bg); }
-    h1{ font-size:22pt; margin:.2em 0 .2em 0; }
-    h2{ font-size:15pt; margin:1.0em 0 .35em 0; border-bottom:1px solid var(--c-line); padding-bottom:.25em; }
-    h3{ font-size:12.5pt; margin:.75em 0 .25em 0; }
+    body{ font: 11pt/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Inter,"Helvetica Neue",Arial,sans-serif; color:var(--ink); }
+    h1{ font-size:22pt; margin:.1em 0 .2em 0; }
+    h2{ font-size:15pt; margin:.9em 0 .35em 0; border-bottom:1px solid var(--line); padding-bottom:.2em; }
+    h3{ font-size:12.5pt; margin:.6em 0 .2em 0; }
     p,li{ font-size:11pt; }
-    .muted{ color:var(--c-muted); }
-    .small{ font-size:9pt; color:var(--c-muted); }
-    .lead{ margin:.1em 0 .5em 0; color:#1f2937; }
-    .pill{ display:inline-block; background:var(--c-pill); padding:.1em .5em; border-radius:8px; font-weight:600; color:var(--c-blue-2); }
-    .card{ border:1px solid var(--c-line); border-radius:12px; padding:12px 14px; background:#fff; }
-    .accent{ background:linear-gradient(135deg,#e0f2fe,#dbeafe); border:1px solid #dbeafe; padding:12px 14px; border-radius:12px; }
+    .muted{ color:var(--muted); } .small{ font-size:9pt; color:var(--muted); }
+    .pill{ display:inline-block; padding:.1em .55em; border-radius:8px; background:var(--b100); color:#1e3a8a; font-weight:700; }
+    .card{ border:1px solid var(--line); border-radius:12px; padding:12px 14px; background:#fff; }
     .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     .grid-3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
-    .table{ width:100%; border-collapse:collapse; }
-    .table th,.table td{ border:1px solid var(--c-line); padding:6px 8px; vertical-align:top; }
-    .kicker{ font-weight:700; letter-spacing:.02em; text-transform:uppercase; color:var(--c-blue-2); font-size:10pt; }
-    .mb-1{ margin-bottom:.5rem; } .mb-2{ margin-bottom:1rem; } .mt-1{ margin-top:.5rem; } .mt-2{ margin-top:1rem; }
-    .break-before{ page-break-before:always; }
-    .break-inside-avoid{ page-break-inside:avoid; }
-    /* Mini score bars (CSS only) */
-    .score{ --val:0; background:#eff6ff; border-radius:8px; height:8px; position:relative; overflow:hidden; }
-    .score::after{ content:""; position:absolute; inset:0 100% 0 0; width:calc(var(--val) * 1%); background:linear-gradient(90deg,#60a5fa,#2563eb); border-radius:8px; }
-    .legend{ display:flex; justify-content:space-between; font-size:9pt; color:var(--c-muted); margin-top:4px; }
-    /* Header/Footer for print */
-    header{ display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--c-line); padding-bottom:8px; margin-bottom:10px; }
+    .band{ background:linear-gradient(135deg,var(--b50),var(--b100)); border:1px solid var(--b100); border-radius:12px; padding:10px 12px; }
+
+    /* Score bars (brace-only) */
+    .score-row{ display:flex; align-items:center; gap:10px; margin:6px 0; }
+    .score-label{ min-width:160px; font-weight:600; }
+    .bar{ flex:1 1 auto; height:8px; background:var(--b100); border-radius:999px; overflow:hidden; }
+    .fill{ height:100%; background:linear-gradient(90deg,var(--b400),var(--b600)); }
+
+    /* Header/Footer */
+    header{ display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--line); padding-bottom:8px; margin-bottom:10px; }
     header img{ height:28px; }
-    footer{ position:fixed; left:18mm; right:18mm; bottom:10mm; border-top:1px solid var(--c-line); padding-top:6px; display:flex; align-items:center; justify-content:space-between; }
-    .f-logos{ display:flex; gap:14px; align-items:center; }
+    footer{ position:fixed; left:18mm; right:18mm; bottom:10mm; border-top:1px solid var(--line); padding-top:6px; display:flex; align-items:center; justify-content:space-between; }
+    .f-logos{ display:flex; align-items:center; gap:14px; }
     .f-logos img{ height:16px; }
+
+    /* Hide assets/sections when values are empty */
+    img[src=""], img[src="#"], img:not([src]){ display:none; }
+    .hide-if-empty:empty{ display:none; }
   </style>
 </head>
 <body>
-  <!-- Header -->
-  <header class="break-inside-avoid">
-    {% if LOGO_PRIMARY_SRC %}<img src="{{ LOGO_PRIMARY_SRC }}" alt="Logo" />{% endif %}
-    {% if COVER_BADGE_SRC %}<img src="{{ COVER_BADGE_SRC }}" alt="Badge" />{% endif %}
+  <!-- Header (no control tags; assets hidden by CSS if src empty) -->
+  <header>
+    <img src="{{ LOGO_PRIMARY_SRC }}" alt="Logo">
+    <img src="{{ COVER_BADGE_SRC }}" alt="Badge">
     <div>
-      <div class="kicker">KI‑Status‑Report</div>
-      <h1>{{ customer_name|default("Individueller Report") }}</h1>
-      <p class="lead muted">Branche: {{ branche_label|default("-") }} · Größe: {{ groesse_label|default("-") }} · Standort: {{ bundesland_label|default("-") }}</p>
+      <div class="pill">KI‑Status‑Report</div>
+      <h1>{{ COMPANY_NAME }}</h1>
+      <p class="muted">Branche: {{ BRANCHE_LABEL }} · Größe: {{ UNTERNEHMENSGROESSE_LABEL }} · Standort: {{ BUNDESLAND_LABEL }}</p>
     </div>
   </header>
 
   <!-- Executive Summary -->
-  <section class="card break-inside-avoid">
+  <section class="card">
     <h2>Executive Summary</h2>
-    {{ executive_summary_html|default("<p class='muted'>Zusammenfassung folgt…</p>") | safe }}
+    <div class="hide-if-empty">{{ EXECUTIVE_SUMMARY_HTML }}</div>
   </section>
 
-  <!-- Scores -->
-  {% if scores %}
-  <section class="grid-3 mt-2">
-    {% for s in scores %}
-      <div class="card break-inside-avoid">
-        <strong>{{ s.label }}</strong>
-        <div class="score" style="--val: {{ s.value|default(0) }}"></div>
-        <div class="legend"><span>0</span><span>100</span></div>
-        <p class="small muted">{{ s.hint|default("") }}</p>
-      </div>
-    {% endfor %}
-  </section>
-  {% endif %}
-
-  <!-- Empfehlungen / Quick Wins -->
-  <section class="mt-2">
-    <h2>Empfehlungen (90 Tage)</h2>
-    {{ recommendations_html|default("<ul><li>Erste Quick Wins folgen nach Auswertung…</li></ul>") | safe }}
-  </section>
-
-  <!-- Kreativ‑Tools -->
-  {% if kreativ_tools_html %}
-  <section class="break-before">
-    <div class="kicker">Kreativ‑Tools (kuratierte Liste)</div>
+  <!-- Scores (fixed rows; no loops) -->
+  <section class="grid-2">
     <div class="card">
-      {{ kreativ_tools_html | safe }}
+      <div class="score-row">
+        <div class="score-label">Governance</div>
+        <div class="bar"><div class="fill" style="width: {{ score_governance }}%;"></div></div>
+        <div class="small">{{ score_governance }}/100</div>
+      </div>
+      <div class="score-row">
+        <div class="score-label">Sicherheit &amp; Compliance</div>
+        <div class="bar"><div class="fill" style="width: {{ score_sicherheit }}%;"></div></div>
+        <div class="small">{{ score_sicherheit }}/100</div>
+      </div>
+      <div class="score-row">
+        <div class="score-label">Nutzen &amp; Prozesse</div>
+        <div class="bar"><div class="fill" style="width: {{ score_nutzen }}%;"></div></div>
+        <div class="small">{{ score_nutzen }}/100</div>
+      </div>
+      <div class="score-row">
+        <div class="score-label">Befähigung &amp; Kultur</div>
+        <div class="bar"><div class="fill" style="width: {{ score_befaehigung }}%;"></div></div>
+        <div class="small">{{ score_befaehigung }}/100</div>
+      </div>
+      <div class="score-row">
+        <div class="score-label"><strong>Gesamt</strong></div>
+        <div class="bar"><div class="fill" style="width: {{ score_gesamt }}%;"></div></div>
+        <div class="small"><strong>{{ score_gesamt }}/100</strong></div>
+      </div>
     </div>
-  </section>
-  {% endif %}
 
-  <!-- Quellen & Aktualisierung -->
-  {% if sources_html %}
-  <section class="break-before">
-    <h2>Quellen & Aktualisierung</h2>
-    <div class="accent">
-      <div class="small">Stand der externen Quellen: {{ last_updated|default("") }}</div>
+    <div class="card">
+      <h3>Business Case (konservativ)</h3>
+      <div class="hide-if-empty">{{ ROI_HTML }}</div>
+      <div class="hide-if-empty">{{ COSTS_OVERVIEW_HTML }}</div>
+      <p class="small muted">Stand der externen Quellen: {{ research_last_updated }}</p>
     </div>
-    {{ sources_html | safe }}
   </section>
-  {% endif %}
+
+  <!-- Quick Wins -->
+  <section>
+    <h2>Quick Wins (3–6 Monate)</h2>
+    <div class="grid-2">
+      <div class="card hide-if-empty">{{ QUICK_WINS_HTML_LEFT }}</div>
+      <div class="card hide-if-empty">{{ QUICK_WINS_HTML_RIGHT }}</div>
+    </div>
+    <div class="card hide-if-empty">{{ QUICK_WINS_HTML }}</div>
+  </section>
+
+  <!-- Werkbank & Tools -->
+  <section>
+    <h2>Werkbank – Starter‑Stacks</h2>
+    <div class="hide-if-empty">{{ WERKBANK_HTML }}</div>
+  </section>
+
+  <section>
+    <h2>Empfohlene Tools</h2>
+    <div class="hide-if-empty">{{ TOOLS_TABLE_HTML }}</div>
+  </section>
+
+  <!-- Förderung & Quellen -->
+  <section>
+    <h2>Förderprogramme &amp; Quellen</h2>
+    <div class="hide-if-empty">{{ FOERDERPROGRAMME_HTML }}</div>
+    <div class="hide-if-empty">{{ SOURCES_BOX_HTML }}</div>
+  </section>
+
+  <!-- Kreativ-Liste -->
+  <section>
+    <h2>Kreativ‑Tools (kuratierte Liste)</h2>
+    <div class="hide-if-empty">{{ KREATIV_TOOLS_HTML }}</div>
+    <div class="hide-if-empty">{{ KREATIV_SPECIAL_HTML }}</div>
+  </section>
+
+  <!-- Glossar -->
+  <section>
+    <h2>Glossar</h2>
+    <div class="hide-if-empty">{{ GLOSSAR_HTML }}</div>
+  </section>
 
   <!-- Feedback -->
-  <section class="break-before">
+  <section>
     <h2>Ihre Meinung zählt</h2>
     <p>Was war hilfreich, was fehlt? Wir freuen uns über Ihr Feedback.</p>
-    {% if FEEDBACK_URL %}
-      <p><a href="{{ FEEDBACK_URL }}">Zum Feedback‑Formular</a></p>
-    {% elif FEEDBACK_REDIRECT_BASE and REPORT_PUBLIC_ID %}
-      <p><a href="{{ FEEDBACK_REDIRECT_BASE }}?rid={{ REPORT_PUBLIC_ID }}">Zum Feedback‑Formular</a></p>
-    {% else %}
-      <p class="muted small">Feedback‑Link wird in der finalen Fassung ergänzt.</p>
-    {% endif %}
+    <p class="hide-if-empty"><a href="{{ FEEDBACK_URL }}">Zum Feedback‑Formular</a></p>
   </section>
 
-  <!-- Footer (fixed) -->
+  <!-- Footer -->
   <footer>
     <div class="f-logos">
-      {% if FOOTER_LEFT_LOGO_SRC %}<img src="{{ FOOTER_LEFT_LOGO_SRC }}" alt="Footer‑Logo links" />{% endif %}
-      {% if FOOTER_MID_LOGO_SRC %}<img src="{{ FOOTER_MID_LOGO_SRC }}" alt="Footer‑Logo mitte" />{% endif %}
-      {% if FOOTER_RIGHT_LOGO_SRC %}<img src="{{ FOOTER_RIGHT_LOGO_SRC }}" alt="Footer‑Logo rechts" />{% endif %}
+      <img src="{{ FOOTER_LEFT_LOGO_SRC }}" alt="Footer‑Logo links">
+      <img src="{{ FOOTER_MID_LOGO_SRC }}" alt="Footer‑Logo mitte">
+      <img src="{{ FOOTER_RIGHT_LOGO_SRC }}" alt="Footer‑Logo rechts">
     </div>
     <div class="small muted">
-      Stand: {{ last_updated|default(rendered_at) }} · Build: {{ BUILD_STAMP|default(BUILD_COMMIT|default("-")) }}
+      Stand: {{ report_date }} · Report‑ID: {{ report_id }} · v{{ report_version }}
     </div>
   </footer>
 </body>
