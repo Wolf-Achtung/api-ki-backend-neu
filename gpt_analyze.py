@@ -63,37 +63,6 @@ DBG_PDF = (os.getenv("DEBUG_LOG_PDF_INFO", "1") in ("1", "true", "TRUE", "yes", 
 DBG_MASK_EMAILS = (os.getenv("MASK_EMAILS", "1") in ("1", "true", "TRUE", "yes", "YES"))
 
 # -------------------- helpers --------------------
-
-# --- image embedding helper ---
-def _to_data_uri(path: str) -> str:
-    """Read a local image and return a data: URI. Returns empty string on failure."""
-    if not path:
-        return ""
-    try:
-        p = path
-        # allow environment path prefixes
-        if not os.path.isabs(p):
-            # try relative to current working dir and to /app
-            candidates = [p, os.path.join(os.getcwd(), p), os.path.join("/app", p)]
-            for c in candidates:
-                if os.path.exists(c):
-                    p = c
-                    break
-        mime = "image/png"
-        low = p.lower()
-        if low.endswith(".svg"):
-            mime = "image/svg+xml"
-        elif low.endswith(".webp"):
-            mime = "image/webp"
-        elif low.endswith(".jpg") or low.endswith(".jpeg"):
-            mime = "image/jpeg"
-        elif low.endswith(".png"):
-            mime = "image/png"
-        with open(p, "rb") as fh:
-            b64 = base64.b64encode(fh.read()).decode("ascii")
-        return f"data:{mime};base64,{b64}"
-    except Exception:
-        return ""
 def _ellipsize(s: str, max_len: int) -> str:
     s = (s or "").strip()
     if len(s) <= max_len:
@@ -694,64 +663,44 @@ def _derive_kundencode(answers: Dict[str, Any], user_email: str) -> str:
     return code[:3] or "KND"
 
 def _theme_vars_for_branch(branch_label: str) -> str:
-    """
-    Liefert CSS-Variablen (als :root Block) für leichte Farbnuancen je Branche.
-    Bewusst nur Blautöne – abgestimmt auf Corporate Design. Fallback ist "default".
-    """
-    palette = {
-        "Marketing & Werbung": ("#1d4ed8", "#1e40af", "#60a5fa", "#eff6ff", "#dbeafe"),
-        "Beratung & Dienstleistungen": ("#1e3a8a", "#172554", "#93c5fd", "#eef2ff", "#c7d2fe"),
-        "IT & Software": ("#0e7490", "#155e75", "#67e8f9", "#ecfeff", "#a5f3fc"),
-        "Finanzen & Versicherungen": ("#1e293b", "#0f172a", "#7dd3fc", "#f0f9ff", "#bae6fd"),
-        "Handel & E-Commerce": ("#1e40af", "#1e3a8a", "#93c5fd", "#eff6ff", "#bfdbfe"),
-        "Bildung": ("#2563eb", "#1d4ed8", "#60a5fa", "#eff6ff", "#dbeafe"),
-        "Verwaltung": ("#334155", "#1f2937", "#93c5fd", "#f1f5f9", "#cbd5e1"),
-        "Gesundheit & Pflege": ("#2563eb", "#1e40af", "#86efac", "#ecfeff", "#a7f3d0"),
-        "Bauwesen & Architektur": ("#1f2937", "#0f172a", "#93c5fd", "#e5e7eb", "#cbd5e1"),
-        "Medien & Kreativwirtschaft": ("#4338ca", "#3730a3", "#a5b4fc", "#eef2ff", "#c7d2fe"),
-        "Industrie & Produktion": ("#1e293b", "#0f172a", "#7dd3fc", "#e2e8f0", "#cbd5e1"),
-        "Transport & Logistik": ("#1d4ed8", "#1e3a8a", "#93c5fd", "#eff6ff", "#bfdbfe"),
-        "default": ("#1d4ed8", "#1e40af", "#60a5fa", "#eff6ff", "#dbeafe"),
-    }
-    key = str(branch_label or "").strip() or "default"
-    aliases = {
-        "marketing":"Marketing & Werbung","beratung":"Beratung & Dienstleistungen","it":"IT & Software",
-        "finanzen":"Finanzen & Versicherungen","handel":"Handel & E-Commerce","bildung":"Bildung",
-        "verwaltung":"Verwaltung","gesundheit":"Gesundheit & Pflege","bau":"Bauwesen & Architektur",
-        "medien":"Medien & Kreativwirtschaft","industrie":"Industrie & Produktion","logistik":"Transport & Logistik",
-    }
-    if key not in palette:
-        key = aliases.get(key.lower(), "default")
-    primary, strong, accent, softbg, softbd = palette.get(key, palette["default"])
-    return (
-        f":root{{--c-primary:{primary};--c-primary-strong:{strong};--c-accent:{accent};--c-soft-bg:{softbg};--c-soft-bd:{softbd};}}"
-    )
+    """Return a CSS <style> tag with theme variables tuned per branch label."""
+    b = (branch_label or "").lower()
+    brand, weak, accent = "#2563eb", "#dbeafe", "#1e3a5f"
+    if "it" in b or "software" in b:
+        brand, weak, accent = "#1d4ed8", "#c7d2fe", "#16327a"
+    elif "marketing" in b or "werbung" in b:
+        brand, weak, accent = "#0ea5e9", "#bae6fd", "#0c4a6e"
+    elif "industrie" in b or "produktion" in b:
+        brand, weak, accent = "#1e40af", "#c7d2fe", "#112a63"
+    elif "verwaltung" in b:
+        brand, weak, accent = "#1e3a8a", "#c7d2fe", "#0f2c5a"
+    return f"<style>:root{{--c-brand:{brand};--c-brand-weak:{weak};--c-accent:{accent};}}</style>"
+
 def _build_freetext_snippets_html(ans: Dict[str, Any]) -> str:
+    """Render selected freetext answers as a compact bullet list block."""
     keys = [
-        ("hauptleistung","Hauptleistung/Produkt"),
-        ("ki_projekte","Laufende/geplante KI‑Projekte"),
-        ("zeitersparnis_prioritaet","Zeitersparnis‑Priorität"),
-        ("geschaeftsmodell_evolution","Geschäftsmodell‑Idee"),
-        ("vision_3_jahre","Vision 3 Jahre"),
-        ("strategische_ziele","Strategische Ziele")
+        ("hauptleistung", "Hauptleistung/Produkt"),
+        ("ki_projekte", "Laufende/geplante KI‑Projekte"),
+        ("zeitersparnis_prioritaet", "Zeitersparnis‑Priorität"),
+        ("geschaeftsmodell_evolution", "Geschäftsmodell‑Idee"),
+        ("vision_3_jahre", "Vision 3 Jahre"),
+        ("strategische_ziele", "Strategische Ziele"),
     ]
-    items = []
-    for k,label in keys:
+    items: list[str] = []
+    for k, label in keys:
         val = (ans.get(k) or "").strip()
         if val:
             items.append(f"<li><strong>{html.escape(label)}:</strong> {html.escape(val)}</li>")
-    if not items: 
+    if not items:
         return ""
-    return "<div class='fb-section'><div class='fb-head'><span class='fb-step'>Kontext</span><h3 class='fb-title'>Ihre Freitext‑Eingaben (Kurzüberblick)</h3></div><ul>"+ "".join(items) +"</ul></div>"
-
-    b = (branch_label or "").lower()
-    brand, weak, accent = "#2563eb", "#dbeafe", "#1e3a5f"
-    if "it" in b or "software" in b: brand, weak, accent = "#1d4ed8", "#c7d2fe", "#16327a"
-    elif "marketing" in b or "werbung" in b: brand, weak, accent = "#0ea5e9", "#bae6fd", "#0c4a6e"
-    elif "industrie" in b or "produktion" in b: brand, weak, accent = "#1e40af", "#c7d2fe", "#112a63"
-    elif "verwaltung" in b: brand, weak, accent = "#1e3a8a", "#c7d2fe", "#0f2c5a"
-    return f"<style>:root{{--c-brand:{brand};--c-brand-weak:{weak};--c-accent:{accent};}}</style>"
-
+    title = "Ihre Freitext‑Eingaben (Kurzüberblick)"
+    return (
+        "<section class='fb-section'>"
+        "<div class='fb-head'><span class='fb-step'>F</span>"
+        f"<h3 class='fb-title'>{html.escape(title)}</h3></div>"
+        "<ul>" + "".join(items) + "</ul>"
+        "</section>"
+    )
 # -------------------- Composer ----------------
 def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict[str, str]:
     sections: Dict[str, str] = {}
@@ -903,19 +852,14 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["FOOTER_LEFT_LOGO_SRC"] = os.getenv("FOOTER_LEFT_LOGO_SRC", "")
     sections["FOOTER_MID_LOGO_SRC"] = os.getenv("FOOTER_MID_LOGO_SRC", "")
     sections["FOOTER_RIGHT_LOGO_SRC"] = os.getenv("FOOTER_RIGHT_LOGO_SRC", "")
+    # Feedback & Build‑Stamp
+    sections["FEEDBACK_URL"] = (os.getenv("FEEDBACK_URL") or os.getenv("FEEDBACK_REDIRECT_BASE") or "").strip()
+    version_full = getattr(settings, "VERSION", "1.0.0")
+    version_mm = _version_major_minor(version_full)
+    sections["version_mm"] = version_mm
+    # Build stamp combines date/time, report id and version (filled later when report_id is set)
+
     sections["FOOTER_BRANDS_HTML"] = os.getenv("FOOTER_BRANDS_HTML", "")
-    # compute data URIs so the PDF engine can render logos without filesystem lookups
-    sections["LOGO_PRIMARY_DATA_URI"] = _to_data_uri(sections.get("LOGO_PRIMARY_SRC", ""))
-    sections["FOOTER_LEFT_LOGO_DATA_URI"] = _to_data_uri(sections.get("FOOTER_LEFT_LOGO_SRC", ""))
-    sections["FOOTER_MID_LOGO_DATA_URI"] = _to_data_uri(sections.get("FOOTER_MID_LOGO_SRC", ""))
-    sections["FOOTER_RIGHT_LOGO_DATA_URI"] = _to_data_uri(sections.get("FOOTER_RIGHT_LOGO_SRC", ""))
-    sections["FEEDBACK_URL"] = os.getenv("FEEDBACK_URL", os.getenv("FEEDBACK_REDIRECT_BASE", ""))
-    # Build stamp for footer (e.g., R-20251107 • v1.0 • run-id)
-    try:
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    except Exception:
-        today = datetime.utcnow().strftime("%Y-%m-%d")
-    sections["BUILD_STAMP"] = os.getenv("BUILD_STAMP", f"R-{today}")
     sections["OWNER_NAME"] = getattr(settings, "OWNER_NAME", None) or os.getenv("OWNER_NAME", "KI‑Sicherheit.jetzt")
     sections["CONTACT_EMAIL"] = getattr(settings, "CONTACT_EMAIL", None) or os.getenv("CONTACT_EMAIL", "info@example.com")
     sections["THEME_CSS_VARS"] = _theme_vars_for_branch(sections.get("BRANCHE_LABEL") or sections.get("branche", ""))
@@ -925,7 +869,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     result = render(br, run_id=run_id, generated_sections=sections, use_fetchers=False, scores=scores, meta={"scores": scores, "score_details": score_wrap.get("details", {}), "research_last_updated": sections["research_last_updated"]})
     an = Analysis(user_id=br.user_id, briefing_id=briefing_id, html=result["html"], meta=result.get("meta", {}), created_at=datetime.now(timezone.utc))
     db.add(an); db.commit(); db.refresh(an)
-    log.info("[%s] ✅ Analysis created (v4.13.4-gs): id=%s", run_id, an.id)
+    log.info("[%s] ✅ Analysis created (v4.13.5-gs): id=%s", run_id, an.id)
     return an.id, result["html"], result.get("meta", {})
 
 # -------------------- runner ----------------
@@ -974,7 +918,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     db = SessionLocal()
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v4.13.4-gs for briefing_id=%s", run_id, briefing_id)
+        log.info("[%s] 🚀 Starting analysis v4.13.5-gs for briefing_id=%s", run_id, briefing_id)
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
         rep = Report(user_id=br.user_id if br else None, briefing_id=briefing_id, analysis_id=an_id, created_at=datetime.now(timezone.utc))
