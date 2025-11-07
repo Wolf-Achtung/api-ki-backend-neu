@@ -1,0 +1,38 @@
+name: smoke
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve base URL
+        run: |
+          if [ -n "${{ vars.BACKEND_BASE }}" ]; then
+            echo "BASE_URL=${{ vars.BACKEND_BASE }}" >> $GITHUB_ENV
+          elif [ -n "${{ secrets.BACKEND_BASE }}" ]; then
+            echo "BASE_URL=${{ secrets.BACKEND_BASE }}" >> $GITHUB_ENV
+          else
+            echo "::error ::BACKEND_BASE is not set (e.g. https://<railway-app>.up.railway.app)"
+            exit 2
+          fi
+
+      - name: Ping /api/healthz
+        run: |
+          set -euxo pipefail
+          curl -fsS "$BASE_URL/api/healthz"
+
+      - name: Ping /api/smoke
+        run: |
+          set -euxo pipefail
+          curl -fsS "$BASE_URL/api/smoke"
+
+      - name: Ping /api/report/ping (optional)
+        continue-on-error: true
+        run: |
+          set -euxo pipefail
+          curl -fsS "$BASE_URL/api/report/ping" || echo "::warning ::/api/report/ping missing (optional)"
