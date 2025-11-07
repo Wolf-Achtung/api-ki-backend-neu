@@ -1,11 +1,21 @@
 # -*- coding: utf-8 -*-
 """
-services.prompt_loader – v1.2
-Mehrsprachiger Prompt-Loader mit Manifest-Support, Branch-Overrides und {{var}}-Interpolation.
+services.prompt_loader – v1.3
+Manifest‑basierter Prompt‑Loader mit Branch‑Overrides und {{var}}/{{UPPER}}‑Interpolation.
+
+Änderungen ggü. v1.2
+--------------------
+- Zentralisierte Interpolation via ``services.prompt_engine`` (vermeidet Doppel‑Logik).
+- Kleiner LRU‑Cache für Templates (IO‑Reduktion).
+- Strengeres Fehlerbild + klare Exceptions.
+- Einheitliche Normalisierung von Branchenlabels.
 """
 from __future__ import annotations
 from typing import Dict, Any, Optional
-import os, json, io, re, html
+import os, json, io, re
+from functools import lru_cache
+
+from .prompt_engine import render_template  # zentrale Interpolation
 
 class PromptNotFound(FileNotFoundError):
     pass
@@ -20,6 +30,7 @@ def _find_root() -> str:
 def _manifest_path(root: str) -> str:
     return os.getenv("PROMPT_MANIFEST", os.path.join(root, "prompt_manifest.json"))
 
+@lru_cache(maxsize=1)
 def _load_manifest(root: str) -> Dict[str, Any]:
     p = _manifest_path(root)
     if not os.path.exists(p):
@@ -29,64 +40,59 @@ def _load_manifest(root: str) -> Dict[str, Any]:
 
 def _normalize_branch_code(label: str) -> str:
     if not label: return ""
-    label = label.lower()
-    m = {
-        "marketing & werbung":"marketing","beratung & dienstleistungen":"beratung","it & software":"it",
-        "finanzen & versicherungen":"finanzen","handel & e-commerce":"handel","bildung":"bildung",
-        "verwaltung":"verwaltung","gesundheit & pflege":"gesundheit","bauwesen & architektur":"bau",
-        "medien & kreativwirtschaft":"medien","industrie & produktion":"industrie","transport & logistik":"logistik"
+    label = label.strip().lower()
+    mapping = {
+        "marketing & werbung":"marketing", "marketing":"marketing",
+        "beratung & dienstleistungen":"beratung", "beratung":"beratung",
+        "it & software":"it", "software":"it", "it":"it",
+        "finanzen & versicherungen":"finanzen", "finanzen":"finanzen",
+        "handel & e-commerce":"handel", "e-commerce":"handel",
+        "bildung":"bildung",
+        "verwaltung":"verwaltung",
+        "gesundheit & pflege":"gesundheit", "gesundheit":"gesundheit",
+        "bauwesen & architektur":"bau", "bau":"bau",
+        "medien & kreativwirtschaft":"medien", "medien":"medien",
+        "industrie & produktion":"industrie", "industrie":"industrie",
+        "transport & logistik":"logistik", "logistik":"logistik",
     }
-    return m.get(label, re.sub(r"[^a-z0-9]+","_", label).strip("_"))
+    return mapping.get(label, re.sub(r"[^a-z0-9]+","_", label).strip("_"))
 
-def _interpolate(template: str, vars_dict: Dict[str, Any]) -> str:
-    def repl(m):
-        key = m.group(1).strip()
-        val = vars_dict.get(key, "")
-        if isinstance(val, (dict, list)):
-            try:
-                val = json.dumps(val, ensure_ascii=False)
-            except Exception:
-                val = str(val)
-        return html.escape(str(val))
-    return re.sub(r"\{\{\s*([^}]+?)\s*\}\}", repl, template)
-
-def load_prompt(section: str, lang: str="de", vars_dict: Optional[Dict[str, Any]]=None) -> str:
+def load_prompt(section: str, lang: str="de", vars_dict: Optional[Dict[str, Any]] = None) -> str:
     root = _find_root()
-    m = _load_manifest(root) or {}
-    langs = (m.get("languages") or {})
-    cfg = langs.get(lang) or {}
-    dir_ = cfg.get("dir") or lang
-    sections = cfg.get("sections") or {}
-    aliases = cfg.get("aliases") or {}
-    ov = (m.get("overrides") or {}).get("by_branch") or {}
+    manifest = _load_manifest(root) or {}
 
-    # resolve section by aliases
-    key = section
-    if key not in sections and key in aliases:
-        key = aliases.get(key, key)
+    langs = manifest.get("languages", {})
+    cfg = langs.get(lang, {})
+    dir_ = cfg.get("dir", lang)
+    sections = cfg.get("sections", {})
+    aliases = cfg.get("aliases", {})
+    ov = (manifest.get("overrides", {}) or {}).get("by_branch", {})
 
+    # Alias-Auflösung
+    key = aliases.get(section, section)
     file_rel = sections.get(key)
     if not file_rel:
-        # fallback default path
+        # Fallback: prompts/<lang>/<section>.txt
         file_rel = f"{lang}/{section}.txt"
 
-    # override by branch (if pattern present and vars_dict has BRANCHE_LABEL)
-    branch_label = (vars_dict or {}).get("BRANCHE_LABEL") or (vars_dict or {}).get("branche") or ""
+    vars_dict = vars_dict or {}
+
+    # Branch-Override prüfen
+    branch_label = vars_dict.get("BRANCHE_LABEL") or vars_dict.get("branche") or ""
     branch_code = _normalize_branch_code(branch_label)
     if branch_code and key in ov:
-        pattern = ov[key]  # e.g., overrides/recommendations/{branch}_de.txt
-        rel = pattern.replace("{branch}", branch_code)
-        ovr_path = os.path.join(root, dir_, rel)
+        pattern = ov[key]  # z. B. overrides/recommendations/{branch}_de.txt ODER overrides/branche/{branch}/*
+        candidate_rel = pattern.replace("{branch}", branch_code)
+        ovr_path = os.path.join(root, dir_, candidate_rel)
         if os.path.exists(ovr_path):
-            template = _read_text(ovr_path)
-            return _interpolate(template, vars_dict or {})
+            return render_template(_read_text(ovr_path), vars_dict, escape=True)
 
-    # default path via manifest
+    # Default-Pfad über Manifest
     p = os.path.join(root, dir_, file_rel)
     if not os.path.exists(p):
-        # final fallback: prompts/<lang>/<section>.txt
+        # finaler Fallback
         p = os.path.join(root, lang, f"{section}.txt")
         if not os.path.exists(p):
             raise PromptNotFound(f"Prompt not found for section='{section}', lang='{lang}' (tried {file_rel})")
-    template = _read_text(p)
-    return _interpolate(template, vars_dict or {})
+
+    return render_template(_read_text(p), vars_dict, escape=True)
