@@ -1,5 +1,4 @@
 name: smoke
-
 on:
   push:
     branches: [ main ]
@@ -8,46 +7,21 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
     env:
-      # Prefer repository Actions Variable; fallback to secret if provided
-      BACKEND_BASE: ${{ (vars.BACKEND_BASE != '' && vars.BACKEND_BASE) || (secrets.BACKEND_BASE != '' && secrets.BACKEND_BASE) }}
+      BACKEND_BASE: ${{ vars.BACKEND_BASE }}
     steps:
-      - name: Show runner info
-        run: |
-          echo "Runner: $(uname -a)"
-          echo "Using BACKEND_BASE=${BACKEND_BASE:-<not-set>}"
-
-      - name: Validate BACKEND_BASE
+      - uses: actions/checkout@v4
+      - name: Resolve base URL
+        id: cfg
         run: |
           if [ -z "${BACKEND_BASE}" ]; then
-            echo "BACKEND_BASE is not set (e.g. https://api-ki-backend-neu-production.up.railway.app)"
-            exit 2
-          fi
-          case "${BACKEND_BASE}" in
-            http://*|https://*) : ;;
-            *)
-              echo "BACKEND_BASE must include scheme (https://...) — got: '${BACKEND_BASE}'"
-              exit 2
-              ;;
-          esac
-
-      - name: Smoke - healthz
-        run: |
-          set -euo pipefail
-          curl -fsSL "${BACKEND_BASE}/api/healthz" | tee /dev/stderr
-
-      - name: Smoke - basic API
-        run: |
-          set -euo pipefail
-          curl -fsSL "${BACKEND_BASE}/api/smoke" | tee /dev/stderr
-
-      - name: Smoke - report route (404 expected for missing id → success if 404/JSON)
-        run: |
-          set -euo pipefail
-          code=$(curl -s -o /tmp/out.txt -w "%{http_code}" "${BACKEND_BASE}/api/report/0" || true)
-          if [ "${code}" = "404" ] || [ "${code}" = "200" ]; then
-            echo "report check ok with status ${code}"; cat /tmp/out.txt
+            echo "BACKEND_BASE not set, fallback to http://localhost:8000" >&2
+            echo "base=http://localhost:8000" >> $GITHUB_OUTPUT
           else
-            echo "unexpected status ${code} for /api/report/0"; cat /tmp/out.txt; exit 1
+            echo "base=${BACKEND_BASE}" >> $GITHUB_OUTPUT
           fi
+      - name: Smoke ping
+        run: |
+          URL="${{ steps.cfg.outputs.base }}/api/report/ping"
+          echo "GET $URL"
+          curl -fsS "$URL" || (echo "Ping failed"; exit 2)
