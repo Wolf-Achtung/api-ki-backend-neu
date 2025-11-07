@@ -1,98 +1,157 @@
 {
-  "version": "5.0-gs",
+  "version": "1.0",
   "default_language": "de",
   "languages": {
     "de": {
-      "dir": "de",
-      "encoding": "utf-8",
-      "sections": {
-        "executive_summary": "executive_summary_de.txt",
-        "quick_wins": "quick_wins_de.txt",
-        "roadmap_90d": "pilot_plan_de.txt",
-        "roadmap_12m": "roadmap_12m_de.txt",
-        "business_roi": "business_de.txt",
-        "business_costs": "costs_overview_de.txt",
-        "business_case": "business_case_de.txt",
-        "data_readiness": "data_readiness_de.txt",
-        "org_change": "org_change_de.txt",
-        "risks": "risks_de.txt",
-        "gamechanger": "gamechanger_de.txt",
-        "recommendations": "recommendations_de.txt",
-        "reifegrad_sowhat": "compliance_de.txt",
-        "next_actions": "next_actions_de.txt",
-        "tools": "tools_de.txt",
-        "funding": "funding_de.txt",
-        "ai_act_summary": "ai_act_summary_de.txt"
-      },
-      "variables": [
-        "branche",
-        "unternehmensgroesse",
-        "bundesland",
-        "hauptleistung",
-        "ki_ziele",
-        "ki_projekte",
-        "vision",
-        "trainings_interessen",
-        "scores_json",
-        "report_date",
-        "report_year"
-      ],
-      "style": {
-        "html_only": true,
-        "allowed_tags": [
-          "h3",
-          "h4",
-          "p",
-          "ul",
-          "ol",
-          "li",
-          "table",
-          "thead",
-          "tbody",
-          "tr",
-          "th",
-          "td",
-          "em",
-          "strong",
-          "div",
-          "br"
-        ],
-        "no_images": true,
-        "tone": "neutral_professional",
-        "length": "concise"
-      },
-      "aliases": {
-        "pilot_plan": "roadmap_90d",
-        "costs_overview": "business_costs",
-        "business": "business_roi",
-        "compliance": "reifegrad_sowhat"
-      }
+      "dir": "prompts/de",
+      "sections": {},
+      "aliases": {}
     },
     "en": {
-      "dir": "en",
-      "encoding": "utf-8",
-      "sections": {}
-    },
-    "fr": {
-      "dir": "fr",
-      "encoding": "utf-8",
-      "sections": {}
-    },
-    "it": {
-      "dir": "it",
-      "encoding": "utf-8",
-      "sections": {}
-    },
-    "es": {
-      "dir": "es",
-      "encoding": "utf-8",
-      "sections": {}
+      "dir": "prompts/en",
+      "status": "planned"
     }
+  },
+  "sections": {
+    "executive_summary": {
+      "file": "executive_summary_de.md",
+      "html": true
+    },
+    "quick_wins": {
+      "file": "quick_wins_de.md",
+      "html": true
+    },
+    "pilot_plan": {
+      "file": "pilot_plan_de.md",
+      "html": true
+    },
+    "roadmap_12m": {
+      "file": "roadmap_12m_de.md",
+      "html": true
+    },
+    "business_roi": {
+      "file": "business_roi_de.md",
+      "html": true
+    },
+    "costs_overview": {
+      "file": "costs_overview_de.md",
+      "html": true
+    },
+    "business_case": {
+      "file": "business_case_de.md",
+      "html": true
+    },
+    "recommendations": {
+      "file": "recommendations_de.md",
+      "html": true
+    },
+    "risks": {
+      "file": "risks_de.md",
+      "html": true
+    },
+    "gamechanger": {
+      "file": "gamechanger_de.md",
+      "html": true
+    },
+    "data_readiness": {
+      "file": "data_readiness_de.md",
+      "html": true
+    },
+    "org_change": {
+      "file": "org_change_de.md",
+      "html": true
+    },
+    "ai_act_summary": {
+      "file": "ai_act_summary_de.md",
+      "html": true
+    },
+    "reifegrad_sowhat": {
+      "file": "reifegrad_sowhat_de.md",
+      "html": true
+    },
+    "next_actions": {
+      "file": "pilot_plan_de.md",
+      "preferred": "deterministic",
+      "disabled": true
+    }
+  },
+  "variables": {
+    "common": [
+      "BRANCHE_LABEL",
+      "UNTERNEHMENSGROESSE_LABEL",
+      "BUNDESLAND_LABEL",
+      "HAUPTLEISTUNG",
+      "KI_ZIELE",
+      "KI_PROJEKTE",
+      "VISION_3_JAHRE",
+      "TRAININGS_INTERESSEN"
+    ],
+    "scores": [
+      "governance",
+      "security",
+      "value",
+      "enablement",
+      "overall"
+    ],
+    "synonyms": {
+      "BRANCHE_LABEL": [
+        "branche",
+        "BRANCHE",
+        "branche_label"
+      ],
+      "UNTERNEHMENSGROESSE_LABEL": [
+        "unternehmensgroesse",
+        "UNTERNEHMENSGROESSE"
+      ],
+      "BUNDESLAND_LABEL": [
+        "bundesland"
+      ],
+      "HAUPTLEISTUNG": [
+        "hauptleistung"
+      ],
+      "KI_ZIELE": [
+        "ki_ziele",
+        "strategische_ziele"
+      ],
+      "KI_PROJEKTE": [
+        "ki_projekte",
+        "anwendungsfaelle"
+      ],
+      "VISION_3_JAHRE": [
+        "vision_3_jahre",
+        "vision"
+      ],
+      "TRAININGS_INTERESSEN": [
+        "trainings_interessen"
+      ]
+    }
+  },
+  "policy": {
+    "html_only": true,
+    "allowed_tags": [
+      "p",
+      "ul",
+      "ol",
+      "li",
+      "table",
+      "thead",
+      "tbody",
+      "tr",
+      "th",
+      "td",
+      "div",
+      "h4",
+      "em",
+      "strong",
+      "br"
+    ],
+    "no_images": true
   },
   "overrides": {
     "by_branch": {
-      "recommendations": "overrides/recommendations/{branch}_de.txt",
-      "gamechanger": "overrides/gamechanger/{branch}_de.txt"
+      "quick_wins": "overrides/branche/{branch}/quick_wins_de.md",
+      "recommendations": "overrides/branche/{branch}/recommendations_de.md",
+      "gamechanger": "overrides/branche/{branch}/gamechanger_de.md"
     }
   }
 }
