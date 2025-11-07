@@ -22,17 +22,11 @@ jobs:
           fi
 
       - name: Ping /api/healthz
-        run: |
-          set -euxo pipefail
-          curl -fsS "$BASE_URL/api/healthz"
+        run: curl -fsS "$BASE_URL/api/healthz" -o /dev/null
 
       - name: Ping /api/smoke
-        run: |
-          set -euxo pipefail
-          curl -fsS "$BASE_URL/api/smoke"
+        run: curl -fsS "$BASE_URL/api/smoke" -o /dev/null
 
       - name: Ping /api/report/ping (optional)
         continue-on-error: true
-        run: |
-          set -euxo pipefail
-          curl -fsS "$BASE_URL/api/report/ping" || echo "::warning ::/api/report/ping missing (optional)"
+        run: curl -fsS "$BASE_URL/api/report/ping" -o /dev/null || echo "::warning ::/api/report/ping missing (optional)"
