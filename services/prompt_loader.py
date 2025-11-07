@@ -1,98 +1,102 @@
-# -*- coding: utf-8 -*-
 """
-services.prompt_loader – v1.3
-Manifest‑basierter Prompt‑Loader mit Branch‑Overrides und {{var}}/{{UPPER}}‑Interpolation.
+Prompt Loader – i18n‑fähig, manifest‑gesteuert, mit Branch/Größen‑Overrides.
 
-Änderungen ggü. v1.2
---------------------
-- Zentralisierte Interpolation via ``services.prompt_engine`` (vermeidet Doppel‑Logik).
-- Kleiner LRU‑Cache für Templates (IO‑Reduktion).
-- Strengeres Fehlerbild + klare Exceptions.
-- Einheitliche Normalisierung von Branchenlabels.
+- Lädt Prompts aus ./prompts/<lang>/
+- Optionales Manifest (prompts/prompt_manifest.json) definiert Reihenfolge, Aliase & Typen.
+- Unterstützt dynamische Overrides pro Branche und Unternehmensgröße: 
+  ./prompts/<lang>/overrides/<branche>/<size>/<key>.md
 """
 from __future__ import annotations
-from typing import Dict, Any, Optional
-import os, json, io, re
-from functools import lru_cache
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, List, Optional
 
-from .prompt_engine import render_template  # zentrale Interpolation
+DEFAULT_LANG = "de"
 
-class PromptNotFound(FileNotFoundError):
-    pass
+@dataclass
+class PromptSpec:
+    key: str
+    path: Path
+    required: bool = True
+    title: Optional[str] = None
+    purpose: Optional[str] = None
 
-def _read_text(path: str) -> str:
-    with io.open(path, "r", encoding="utf-8") as f:
-        return f.read()
+class PromptLoader:
+    def __init__(self, base_dir: str | Path = "prompts", manifest_path: str | Path = "prompts/prompt_manifest.json"):
+        self.base_dir = Path(base_dir)
+        self.manifest_path = Path(manifest_path)
 
-def _find_root() -> str:
-    return os.getenv("PROMPTS_ROOT", "prompts")
+    # ---------- public API ----------
+    def load_bundle(
+        self,
+        lang: str = DEFAULT_LANG,
+        keys: Optional[List[str]] = None,
+        branche: Optional[str] = None,
+        size: Optional[str] = None,
+    ) -> Dict[str, str]:
+        """
+        Liefert ein Dict {key: content}. 
+        Reihenfolge nach Manifest, wenn vorhanden; sonst alphabetisch.
+        """
+        lang_dir = self.base_dir / (lang or DEFAULT_LANG)
+        manifest = self._read_manifest().get(lang or DEFAULT_LANG, {})
 
-def _manifest_path(root: str) -> str:
-    return os.getenv("PROMPT_MANIFEST", os.path.join(root, "prompt_manifest.json"))
+        bundle: Dict[str, str] = {}
+        if keys is None:
+            # gesamte Menge aus Manifest oder Dateisystem
+            keys = list(manifest.keys()) if manifest else self._discover_keys(lang_dir)
 
-@lru_cache(maxsize=1)
-def _load_manifest(root: str) -> Dict[str, Any]:
-    p = _manifest_path(root)
-    if not os.path.exists(p):
-        return {}
-    with io.open(p, "r", encoding="utf-8") as f:
-        return json.load(f)
+        for key in keys:
+            content = self._resolve_content(key, lang_dir, manifest, branche, size)
+            if content is None:
+                continue
+            bundle[key] = content
+        return bundle
 
-def _normalize_branch_code(label: str) -> str:
-    if not label: return ""
-    label = label.strip().lower()
-    mapping = {
-        "marketing & werbung":"marketing", "marketing":"marketing",
-        "beratung & dienstleistungen":"beratung", "beratung":"beratung",
-        "it & software":"it", "software":"it", "it":"it",
-        "finanzen & versicherungen":"finanzen", "finanzen":"finanzen",
-        "handel & e-commerce":"handel", "e-commerce":"handel",
-        "bildung":"bildung",
-        "verwaltung":"verwaltung",
-        "gesundheit & pflege":"gesundheit", "gesundheit":"gesundheit",
-        "bauwesen & architektur":"bau", "bau":"bau",
-        "medien & kreativwirtschaft":"medien", "medien":"medien",
-        "industrie & produktion":"industrie", "industrie":"industrie",
-        "transport & logistik":"logistik", "logistik":"logistik",
-    }
-    return mapping.get(label, re.sub(r"[^a-z0-9]+","_", label).strip("_"))
+    # ---------- intern ----------
+    def _resolve_content(
+        self, key: str, lang_dir: Path, manifest: Dict[str, dict], branche: Optional[str], size: Optional[str]
+    ) -> Optional[str]:
+        # 1) Override <branche>/<size>
+        ov_path = lang_dir / "overrides"
+        cand: List[Path] = []
+        if branche and size:
+            cand.append(ov_path / branche / size / f"{key}.md")
+        if branche:
+            cand.append(ov_path / branche / f"{key}.md")
+        # 2) Manifest‑Pfad
+        if key in manifest and manifest[key].get("path"):
+            cand.append(lang_dir / manifest[key]["path"])
+        # 3) Fallbacks
+        cand.append(lang_dir / f"{key}.md")
+        cand.append(lang_dir / f"{key}.txt")
 
-def load_prompt(section: str, lang: str="de", vars_dict: Optional[Dict[str, Any]] = None) -> str:
-    root = _find_root()
-    manifest = _load_manifest(root) or {}
+        for p in cand:
+            if p.exists():
+                try:
+                    return p.read_text(encoding="utf-8")
+                except Exception:
+                    return p.read_text(errors="ignore")
+        return None
 
-    langs = manifest.get("languages", {})
-    cfg = langs.get(lang, {})
-    dir_ = cfg.get("dir", lang)
-    sections = cfg.get("sections", {})
-    aliases = cfg.get("aliases", {})
-    ov = (manifest.get("overrides", {}) or {}).get("by_branch", {})
+    def _discover_keys(self, lang_dir: Path) -> List[str]:
+        keys = []
+        if lang_dir.exists():
+            for p in sorted(lang_dir.glob("*.md")):
+                keys.append(p.stem)
+            for p in sorted(lang_dir.glob("*.txt")):
+                if p.stem not in keys:
+                    keys.append(p.stem)
+        return keys
 
-    # Alias-Auflösung
-    key = aliases.get(section, section)
-    file_rel = sections.get(key)
-    if not file_rel:
-        # Fallback: prompts/<lang>/<section>.txt
-        file_rel = f"{lang}/{section}.txt"
-
-    vars_dict = vars_dict or {}
-
-    # Branch-Override prüfen
-    branch_label = vars_dict.get("BRANCHE_LABEL") or vars_dict.get("branche") or ""
-    branch_code = _normalize_branch_code(branch_label)
-    if branch_code and key in ov:
-        pattern = ov[key]  # z. B. overrides/recommendations/{branch}_de.txt ODER overrides/branche/{branch}/*
-        candidate_rel = pattern.replace("{branch}", branch_code)
-        ovr_path = os.path.join(root, dir_, candidate_rel)
-        if os.path.exists(ovr_path):
-            return render_template(_read_text(ovr_path), vars_dict, escape=True)
-
-    # Default-Pfad über Manifest
-    p = os.path.join(root, dir_, file_rel)
-    if not os.path.exists(p):
-        # finaler Fallback
-        p = os.path.join(root, lang, f"{section}.txt")
-        if not os.path.exists(p):
-            raise PromptNotFound(f"Prompt not found for section='{section}', lang='{lang}' (tried {file_rel})")
-
-    return render_template(_read_text(p), vars_dict, escape=True)
+    def _read_manifest(self) -> Dict[str, Dict[str, dict]]:
+        if not self.manifest_path.exists():
+            return {}
+        try:
+            return json.loads(self.manifest_path.read_text(encoding="utf-8"))
+        except Exception:
+            try:
+                import json as _json
+                return _json.loads(self.manifest_path.read_text(errors="ignore"))
+            except Exception:
+                return {}
