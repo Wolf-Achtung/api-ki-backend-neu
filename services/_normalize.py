@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 def _briefing_to_dict(briefing: Any) -> Dict[str, Any]:
     """Toleranter Normalizer: akzeptiert dict, pydantic/SQLAlchemy-Objekte, dataclasses.
-    Gibt stets ein normales Dict zurück (lower-case Keys enthalten).
+    Gibt stets ein normales Dict zurück.
     """
     if briefing is None:
         return {}
@@ -22,14 +22,14 @@ def _briefing_to_dict(briefing: Any) -> Dict[str, Any]:
             return dict(briefing.dict())
     except Exception:
         pass
-    # dataclass
+    # dataclasses
     try:
         from dataclasses import asdict, is_dataclass
         if is_dataclass(briefing):
             return asdict(briefing)
     except Exception:
         pass
-    # SQLAlchemy/ORM: __dict__ ohne private Felder
+    # ORMs / arbitrary objects: use public attrs only
     try:
         data = {}
         for k in dir(briefing):
@@ -39,15 +39,12 @@ def _briefing_to_dict(briefing: Any) -> Dict[str, Any]:
                 v = getattr(briefing, k)
             except Exception:
                 continue
-            # uninteressante Callables/Methods filtern
             if callable(v):
                 continue
-            # einfache Typen übernehmen
             if isinstance(v, (str, int, float, bool, list, dict, tuple)) or v is None:
                 data[k] = v
         if data:
             return data
     except Exception:
         pass
-    # Fallback: leeres Dict
     return {}

@@ -13,6 +13,8 @@ from .security_roadmap import build_security_roadmap, to_html as security_html
 from .competitor_insights import build_insights, to_html as competitors_html
 from .roi_calculator import calc_roi, to_html as roi_html
 
+STRICT_DATASET = os.getenv("RENDER_STRICT_DATASET", "1") == "1"
+
 def _is_abs(u: str) -> bool:
     try:
         p = urlparse(u or "")
@@ -47,8 +49,9 @@ def _to_data_uri(path: str) -> str:
     except Exception:
         return ""
 
-def _alias(sections: Dict[str,Any]) -> Dict[str,Any]:
+def _alias(sections: Dict[str,Any], meta: Optional[Dict[str,Any]] = None) -> Dict[str,Any]:
     ctx = dict(sections or {})
+    # Aliases
     ctx.setdefault("COMPANY_NAME", ctx.get("COMPANY_NAME") or ctx.get("customer_name") or "")
     ctx.setdefault("BRANCHE_LABEL", ctx.get("BRANCHE_LABEL") or ctx.get("branche_label") or "")
     ctx.setdefault("UNTERNEHMENSGROESSE_LABEL", ctx.get("UNTERNEHMENSGROESSE_LABEL") or ctx.get("groesse_label") or "")
@@ -59,7 +62,7 @@ def _alias(sections: Dict[str,Any]) -> Dict[str,Any]:
     ctx["groesse_label"]    = ctx.get("UNTERNEHMENSGROESSE_LABEL","")
     ctx["bundesland_label"] = ctx.get("BUNDESLAND_LABEL","")
 
-    # Scores-Array für Balken
+    # Scores
     def num(x):
         try:
             return int(round(float(x)))
@@ -73,14 +76,28 @@ def _alias(sections: Dict[str,Any]) -> Dict[str,Any]:
         {"label":"Gesamt","value":num(ctx.get("score_gesamt") or 0)},
     ]
 
-    # Logos in Data-URIs wandeln falls relative Pfade
+    # Logos: erst aus ctx, dann ENV
     for k in ("LOGO_PRIMARY_SRC","COVER_BADGE_SRC","FOOTER_LEFT_LOGO_SRC","FOOTER_MID_LOGO_SRC","FOOTER_RIGHT_LOGO_SRC"):
         v = str(ctx.get(k) or "").strip()
+        if not v:
+            v = os.getenv(k,"").strip()
+            if v:
+                ctx[k] = v
         if v and not _is_abs(v):
             data_uri = _to_data_uri(v)
             if data_uri:
                 ctx[k] = data_uri
 
+    # Feedback-URL aus ENV, falls leer
+    if not ctx.get("FEEDBACK_URL"):
+        env_fb = os.getenv("FEEDBACK_URL")
+        if env_fb:
+            ctx["FEEDBACK_URL"] = env_fb
+
+    # Research-Stand
+    ctx["RESEARCH_LAST_UPDATED"] = ctx.get("RESEARCH_LAST_UPDATED") or (meta or {}).get("research_last_updated") or os.getenv("REPORT_DATE") or ""
+
+    # Build-Stempel
     ctx.setdefault("BUILD_STAMP", f"Stand: {ctx.get('report_date','')} · Report-ID: {ctx.get('REPORT_PUBLIC_ID','')}")
     return ctx
 
@@ -88,30 +105,38 @@ def render(briefing: Any, run_id: Optional[str]=None, generated_sections: Option
            use_fetchers: Optional[Dict[str,Any]]=None, scores: Optional[Dict[str,Any]]=None,
            meta: Optional[Dict[str,Any]]=None) -> Dict[str,Any]:
     sections = generated_sections or {}
-    ctx = _alias(sections)
+    ctx = _alias(sections, meta=meta)
     b = _briefing_to_dict(briefing)
 
-    # Autofüll-Abschnitte
-    if not sections.get("TOOLS_HTML"):
+    # Daten aus kuratierten Modulen — strikt (überschreibt ggf. LLM-Ausgaben)
+    if STRICT_DATASET or not sections.get("TOOLS_HTML"):
         rec = recommend_tools(b)
         ctx["TOOLS_HTML"] = tools_html(rec)
-    if not sections.get("FOERDERPROGRAMME_HTML"):
+
+    if STRICT_DATASET or not sections.get("FOERDERPROGRAMME_HTML"):
         progs = suggest_programs(b)
-        ctx["FOERDERPROGRAMME_HTML"] = funding_html(progs)
-    if not sections.get("SECURITY_ROADMAP_HTML"):
+        ctx["FOERDERPROGRAMME_HTML"] = funding_html(progs, research_stand=ctx.get("RESEARCH_LAST_UPDATED",""))
+
+    if STRICT_DATASET or not sections.get("SECURITY_ROADMAP_HTML"):
         rd = build_security_roadmap(b, scores or {})
         ctx["SECURITY_ROADMAP_HTML"] = security_html(rd)
-    if not sections.get("COMPETITORS_HTML"):
+
+    if STRICT_DATASET or not sections.get("COMPETITORS_HTML"):
         ins = build_insights(b)
         ctx["COMPETITORS_HTML"] = competitors_html(ins)
-    if not sections.get("ROI_HTML"):
+
+    if STRICT_DATASET or not sections.get("ROI_HTML"):
         ctx["ROI_HTML"] = roi_html(calc_roi(b, []))
 
+    # Template
     tpl_path = os.getenv("REPORT_TEMPLATE_PATH", "templates/pdf_template.html")
-    env = Environment(loader=FileSystemLoader(Path(tpl_path).parent or "templates"),
+    tpl_dir = Path(tpl_path).parent or Path("templates")
+    env = Environment(loader=FileSystemLoader(tpl_dir),
                       autoescape=select_autoescape(["html","xml"]), trim_blocks=True, lstrip_blocks=True)
     tpl = env.get_template(Path(tpl_path).name)
     html = tpl.render(**ctx)
+
     out_meta = dict(meta or {})
     out_meta.setdefault("scores", ctx.get("scores"))
+    out_meta.setdefault("research_last_updated", ctx.get("RESEARCH_LAST_UPDATED",""))
     return {"html": html, "meta": out_meta}

@@ -6,36 +6,33 @@ from typing import List, Dict, Any
 
 from ._normalize import _briefing_to_dict
 
-DEFAULT_PROGRAMS = [
+DEFAULT_PROGRAMS: List[Dict[str,Any]] = [
     {
         "name":"Digital Jetzt (BMWK)",
         "region":"DE",
         "target":"KMU (bis 499 MA)",
-        "amount":"bis 50.000 € (50%)",
+        "amount":"bis 50.000 € (bis 50%)",
         "deadline":"31.03.2026",
-        "url":"https://www.bmwi.de/Redaktion/DE/Dossier/digital-jetzt.html",
-        "best_for_size":["solo","kmu"],
-        "best_for_industries":["beratung","dienstleistungen","handel","it"],
+        "url":"https://www.bmwk.de",
+        "notes":"Investitionen in digitale Technologien & Qualifizierung"
     },
     {
         "name":"go-digital (BMWK)",
         "region":"DE",
-        "target":"Beratungszuschuss",
+        "target":"Beratungszuschuss für KMU",
         "amount":"bis 16.500 € (50%)",
         "deadline":"laufend",
-        "url":"https://www.bmwi.de/Redaktion/DE/Dossier/go-digital.html",
-        "best_for_size":["kmu"],
-        "best_for_industries":["beratung","dienstleistungen","handel","it"],
+        "url":"https://www.bmwk.de",
+        "notes":"Module: Digitalisierungsstrategie, IT‑Sicherheit, Datenkompetenz"
     },
     {
-        "name":"Berlin – Pro FIT",
+        "name":"Berlin – Pro FIT (IBB)",
         "region":"BE",
         "target":"FuE/Innovation",
-        "amount":"variabel (Zuschuss/Darlehen)",
+        "amount":"Zuschuss/Darlehen (variabel)",
         "deadline":"rollierend",
-        "url":"https://www.ibb.de/de/foerderprogramme/pro-fit.html",
-        "best_for_size":["kmu","enterprise"],
-        "best_for_industries":["it","industrie","forschung"],
+        "url":"https://www.ibb.de",
+        "notes":"Typisch für technologiegetriebene Vorhaben; Kombination möglich"
     }
 ]
 
@@ -54,39 +51,48 @@ def suggest_programs(briefing: Dict[str,Any] | Any) -> List[Dict[str,Any]]:
     land = (b.get("bundesland") or b.get("bundesland_label") or "").upper()
     branche = (b.get("branche") or b.get("branche_label") or "").lower()
     groesse = (b.get("unternehmensgroesse") or b.get("groesse") or "").lower()
-    ranked = []
+
+    ranked: List[Dict[str,Any]] = []
     for f in progs:
         score = 0
         if f.get("region") in ("DE", land):
             score += 2
-        if not branche or any(branche.startswith(bi) for bi in f.get("best_for_industries", [])):
+        # Beratungen/Solo priorisieren bei DE-Programmen
+        if branche.startswith("beratung"):
             score += 1
-        if not groesse or (groesse in f.get("best_for_size", [])):
+        if groesse in ("solo","kmu"):
             score += 1
-        f["_score"] = score
-        ranked.append(f)
-    ranked.sort(key=lambda x: x["_score"], reverse=True)
+        ranked.append({**f, "_score": score})
+    ranked.sort(key=lambda x: x.get("_score", 0), reverse=True)
     return ranked[:5]
 
-def to_html(programs: List[Dict[str,Any]]) -> str:
+def _link(label: str, url: str | None) -> str:
+    if not url:
+        return ""
+    return f'<a href="{url}" target="_blank" rel="noopener">{label}</a>'
+
+def to_html(programs: List[Dict[str,Any]], research_stand: str | None = None) -> str:
+    head = ""
+    if research_stand:
+        head = f'<div class="stand-hint">Stand: {research_stand}</div>'
     if not programs:
-        return "<p class='muted'>Keine passenden Förderprogramme gefunden.</p>"
-    rows = []
-    rows.append("""<table style="width:100%;border-collapse:collapse">
+        return head + "<p class='muted'>Keine passenden Förderprogramme gefunden.</p>"
+    rows = [head]
+    rows.append("""<table class="table">
 <thead><tr>
-<th style="text-align:left;border-bottom:1px solid #e2e8f0;padding:6px">Programm</th>
-<th style="text-align:left;border-bottom:1px solid #e2e8f0;padding:6px">Förderung</th>
-<th style="text-align:left;border-bottom:1px solid #e2e8f0;padding:6px">Zielgruppe</th>
-<th style="text-align:left;border-bottom:1px solid #e2e8f0;padding:6px">Deadline</th>
-<th style="text-align:left;border-bottom:1px solid #e2e8f0;padding:6px">Link</th>
+<th>Programm</th>
+<th>Förderung</th>
+<th>Zielgruppe</th>
+<th>Deadline</th>
+<th>Quelle</th>
 </tr></thead><tbody>""")
     for f in programs:
         rows.append(f"""<tr>
-<td style="padding:6px;border-bottom:1px solid #f1f5f9"><strong>{f['name']}</strong></td>
-<td style="padding:6px;border-bottom:1px solid #f1f5f9">{f.get('amount','')}</td>
-<td style="padding:6px;border-bottom:1px solid #f1f5f9">{f.get('target','')}</td>
-<td style="padding:6px;border-bottom:1px solid #f1f5f9">{f.get('deadline','')}</td>
-<td style="padding:6px;border-bottom:1px solid #f1f5f9"><a href="{f.get('url','')}" target="_blank">Quelle</a></td>
+<td><strong>{f.get('name','')}</strong></td>
+<td>{f.get('amount','')}</td>
+<td>{f.get('target','')}</td>
+<td>{f.get('deadline','')}</td>
+<td>{_link('Förderrichtlinie', f.get('url')) or '—'}</td>
 </tr>""")
     rows.append("</tbody></table>")
     return "\n".join(rows)

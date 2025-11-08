@@ -4,13 +4,18 @@ from typing import Dict, Any, List
 from ._normalize import _briefing_to_dict
 
 def _estimate_hourly_rate(b: Dict[str,Any]) -> float:
+    # konservative Heuristik aus Umsatzklasse
     rev = b.get("jahresumsatz")
     try:
         if isinstance(rev, (int,float)) and rev > 0:
             return max(30.0, float(rev) / 1800.0)
     except Exception:
         pass
-    return 50.0
+    # Textlabels (z. B. "unter_100k")
+    lab = str(rev or "").lower()
+    if "unter" in lab or "under" in lab or "100k" in lab:
+        return 60.0
+    return 80.0
 
 def _parse_budget(b: Dict[str,Any]) -> float:
     rng = str(b.get("investitionsbudget","")).lower()
@@ -24,18 +29,16 @@ def _parse_budget(b: Dict[str,Any]) -> float:
 
 def calc_roi(briefing: Dict[str,Any] | Any, quickwins: List[Dict[str,Any]] | None = None) -> Dict[str,Any]:
     b = _briefing_to_dict(briefing)
+    # konservativ 40 h/Monat Einsparung ohne Quickwins-Angaben
     hours = 40.0
     if quickwins:
         s = 0.0
         for q in quickwins:
-            v = q.get("time_saved_monthly_hours")
-            if v:
-                try:
-                    s += float(v)
-                except Exception:
-                    pass
-        if s > 0:
-            hours = s
+            try:
+                s += float(q.get("time_saved_monthly_hours") or 0.0)
+            except Exception:
+                pass
+        hours = max(10.0, s) if s > 0 else hours
     rate = _estimate_hourly_rate(b)
     monthly = hours * rate
     invest = _parse_budget(b)

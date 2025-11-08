@@ -6,61 +6,118 @@ from typing import List, Dict, Any
 
 from ._normalize import _briefing_to_dict
 
-DEFAULT_TOOLS = [
+# Kuratierter Seed; kann per data/tools_seed.json überschrieben/ergänzt werden.
+DEFAULT_TOOLS: List[Dict[str, Any]] = [
     {
-        "name":"Tally.so", "url":"https://tally.so",
-        "category":"Fragebogen / Intake",
-        "price":"0–29 €/Monat",
-        "gdpr":"✓ EU-Server (optionen)",
-        "host":"EU (Option)",
-        "best_for_size":["solo","kmu"],
-        "best_for_industries":["beratung","dienstleistungen","marketing"]
+        "name": "Tally.so",
+        "url": "https://tally.so",
+        "trust_url": "https://tally.so/help/privacy",
+        "category": "Fragebogen / Intake",
+        "price": "0–29 €/Monat",
+        "gdpr": "EU-Option",
+        "host": "EU (Option)",
+        "best_for_size": ["solo","kmu"],
+        "best_for_industries": ["beratung","dienstleistungen","marketing"]
     },
     {
-        "name":"Make (Integromat)", "url":"https://www.make.com",
-        "category":"Automation / Workflows",
-        "price":"ab 9 €/Monat",
-        "gdpr":"✓ EU-Server",
-        "host":"EU",
-        "best_for_size":["solo","kmu","enterprise"],
-        "best_for_industries":["beratung","dienstleistungen","handel","it"]
+        "name": "Make (Integromat)",
+        "url": "https://www.make.com",
+        "trust_url": "https://www.make.com/en/privacy-notice",
+        "category": "Automation / Workflows",
+        "price": "ab 9 €/Monat",
+        "gdpr": "EU-Server",
+        "host": "EU",
+        "best_for_size": ["solo","kmu","enterprise"],
+        "best_for_industries": ["beratung","dienstleistungen","handel","it"]
     },
     {
-        "name":"Railway.app", "url":"https://railway.app",
-        "category":"Hosting / Deployment",
-        "price":"ab ~5 € (Nutzung)",
-        "gdpr":"⚠︎ US-Hosting",
-        "host":"US",
-        "best_for_size":["solo","kmu"],
-        "best_for_industries":["it","dienstleistungen","beratung"]
+        "name": "Railway.app",
+        "url": "https://railway.app",
+        "trust_url": "https://railway.app/legal/privacy",
+        "category": "Hosting / Deployment",
+        "price": "ab ~5 € (Nutzung)",
+        "gdpr": "US (AVV prüfen)",
+        "host": "US",
+        "best_for_size": ["solo","kmu"],
+        "best_for_industries": ["it","dienstleistungen","beratung"]
     },
     {
-        "name":"Notion", "url":"https://www.notion.so",
-        "category":"Wissensmanagement",
-        "price":"0–10 €/Monat",
-        "gdpr":"✓ EU-Option",
-        "host":"EU/US",
-        "best_for_size":["solo","kmu","enterprise"],
-        "best_for_industries":["beratung","dienstleistungen","marketing"]
+        "name": "Notion",
+        "url": "https://www.notion.so",
+        "trust_url": "https://www.notion.so/privacy",
+        "category": "Wissensmanagement",
+        "price": "0–10 €/Monat",
+        "gdpr": "EU-Option",
+        "host": "EU/US",
+        "best_for_size": ["solo","kmu","enterprise"],
+        "best_for_industries": ["beratung","dienstleistungen","marketing"]
     },
     {
-        "name":"HubSpot", "url":"https://www.hubspot.de",
-        "category":"CRM / Sales",
-        "price":"Free / ab 18 €/Monat",
-        "gdpr":"✓ AVV verfügbar",
-        "host":"EU/US",
-        "best_for_size":["kmu","enterprise"],
-        "best_for_industries":["beratung","dienstleistungen","handel"]
+        "name": "HubSpot",
+        "url": "https://www.hubspot.de",
+        "trust_url": "https://legal.hubspot.com/privacy-policy",
+        "category": "CRM / Sales",
+        "price": "Free / ab 18 €/Monat",
+        "gdpr": "AVV verfügbar",
+        "host": "EU/US",
+        "best_for_size": ["kmu","enterprise"],
+        "best_for_industries": ["beratung","dienstleistungen","handel"]
     },
     {
-        "name":"OpenAI API", "url":"https://platform.openai.com",
-        "category":"KI-API",
-        "price":"Usage-basiert",
-        "gdpr":"⚠︎ US (Vendor-Assessment)",
-        "host":"US",
-        "best_for_size":["solo","kmu","enterprise"],
-        "best_for_industries":["it","dienstleistungen","beratung","marketing"]
+        "name": "OpenAI API",
+        "url": "https://platform.openai.com",
+        "trust_url": "https://openai.com/policies/privacy-policy",
+        "category": "KI-API",
+        "price": "Usage-basiert",
+        "gdpr": "US (Vendor-Assessment)",
+        "host": "US",
+        "best_for_size": ["solo","kmu","enterprise"],
+        "best_for_industries": ["it","dienstleistungen","beratung","marketing"]
     },
+    {
+        "name": "Mistral AI",
+        "url": "https://mistral.ai",
+        "trust_url": "https://mistral.ai/legal/privacy/",
+        "category": "KI-API (EU)",
+        "price": "Usage-basiert",
+        "gdpr": "EU-Anbieter",
+        "host": "EU",
+        "best_for_size": ["solo","kmu","enterprise"],
+        "best_for_industries": ["it","dienstleistungen","beratung"]
+    },
+    {
+        "name": "Perplexity API",
+        "url": "https://www.perplexity.ai",
+        "trust_url": "https://www.perplexity.ai/privacy",
+        "category": "Antwort-/Recherche-API",
+        "price": "Usage/Pro",
+        "gdpr": "US (Vendor-Assessment)",
+        "host": "US",
+        "best_for_size": ["solo","kmu"],
+        "best_for_industries": ["beratung","dienstleistungen","marketing","it"]
+    },
+    {
+        "name": "Tavily",
+        "url": "https://www.tavily.com",
+        "trust_url": "https://www.tavily.com/privacy",
+        "category": "Web-Recherche (API)",
+        "price": "Usage",
+        "gdpr": "US (Vendor-Assessment)",
+        "host": "US",
+        "best_for_size": ["solo","kmu","enterprise"],
+        "best_for_industries": ["it","dienstleistungen","beratung"]
+    },
+    {
+        "name": "Cloudflare Turnstile",
+        "url": "https://www.cloudflare.com/products/turnstile/",
+        "trust_url": "https://www.cloudflare.com/privacypolicy/",
+        "category": "Formular-Schutz",
+        "price": "Kostenlos",
+        "gdpr": "EU/US (AVV)",
+        "host": "EU/US",
+        "best_for_size": ["solo","kmu","enterprise"],
+        "best_for_industries": ["alle"]
+    }
 ]
 
 def _load_seed() -> List[Dict[str,Any]]:
@@ -77,41 +134,56 @@ def recommend_tools(briefing: Dict[str,Any] | Any) -> List[Dict[str,Any]]:
     b = _briefing_to_dict(briefing)
     branche = (b.get("branche") or b.get("branche_label") or "").lower()
     groesse = (b.get("unternehmensgroesse") or b.get("groesse") or "").lower()
-    ranked = []
+
+    ranked: List[Dict[str,Any]] = []
     for t in tools:
         score = 0
-        if not branche or any(branche.startswith(bi) for bi in t.get("best_for_industries", [])):
+        industries = [x.lower() for x in t.get("best_for_industries", [])]
+        sizes = [x.lower() for x in t.get("best_for_size", [])]
+        if not branche or any(branche.startswith(bi) or bi == "alle" for bi in industries):
             score += 2
-        if not groesse or (groesse in t.get("best_for_size", [])):
+        if not groesse or (groesse in sizes or "alle" in sizes):
             score += 2
-        if "automation" in (t.get("category","").lower()):
+        # leichte Bevorzugung Intake/Automation bei Beratungen
+        cat = (t.get("category","") or "").lower()
+        if "fragebogen" in cat or "intake" in cat or "automation" in cat:
             score += 1
-        if "fragebogen" in (t.get("category","").lower()) or "intake" in (t.get("category","").lower()):
-            score += 1
+        t = dict(t)
         t["_score"] = score
         ranked.append(t)
-    ranked.sort(key=lambda x: x["_score"], reverse=True)
+    ranked.sort(key=lambda x: x.get("_score", 0), reverse=True)
     return ranked[:10]
+
+def _link(label: str, url: str | None) -> str:
+    if not url:
+        return ""
+    return f'<a href="{url}" target="_blank" rel="noopener">{label}</a>'
 
 def to_html(tools: List[Dict[str,Any]]) -> str:
     if not tools:
         return "<p class='muted'>Keine passenden Tools gefunden.</p>"
     rows = []
-    rows.append("""<table style="width:100%;border-collapse:collapse">
+    rows.append("""<table class="table">
 <thead><tr>
-<th style="text-align:left;border-bottom:1px solid #e2e8f0;padding:6px">Tool/Produkt</th>
-<th style="text-align:left;border-bottom:1px solid #e2e8f0;padding:6px">Kategorie</th>
-<th style="text-align:left;border-bottom:1px solid #e2e8f0;padding:6px">Preis</th>
-<th style="text-align:left;border-bottom:1px solid #e2e8f0;padding:6px">DSGVO/Host</th>
-<th style="text-align:left;border-bottom:1px solid #e2e8f0;padding:6px">Link</th>
+<th>Tool/Produkt</th>
+<th>Kategorie</th>
+<th>Preis</th>
+<th>DSGVO/Host</th>
+<th>Links</th>
 </tr></thead><tbody>""")
     for t in tools:
+        links = []
+        if t.get("url"):
+            links.append(_link("Quelle", t["url"]))
+        if t.get("trust_url"):
+            links.append(_link("Trust&nbsp;Center", t["trust_url"]))
+        link_html = " · ".join(links) if links else "—"
         rows.append(f"""<tr>
-<td style="padding:6px;border-bottom:1px solid #f1f5f9"><strong>{t['name']}</strong></td>
-<td style="padding:6px;border-bottom:1px solid #f1f5f9">{t.get('category','')}</td>
-<td style="padding:6px;border-bottom:1px solid #f1f5f9">{t.get('price','')}</td>
-<td style="padding:6px;border-bottom:1px solid #f1f5f9">{t.get('gdpr','')} – {t.get('host','')}</td>
-<td style="padding:6px;border-bottom:1px solid #f1f5f9"><a href="{t.get('url','')}" target="_blank">Quelle</a></td>
+<td><strong>{t.get('name','')}</strong></td>
+<td>{t.get('category','')}</td>
+<td>{t.get('price','')}</td>
+<td>{t.get('gdpr','')} – {t.get('host','')}</td>
+<td>{link_html}</td>
 </tr>""")
     rows.append("</tbody></table>")
     return "\n".join(rows)
