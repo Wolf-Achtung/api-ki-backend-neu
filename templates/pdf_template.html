@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="de">
 <head>
@@ -17,11 +16,10 @@
     .muted{ color:var(--muted); } .small{ font-size:9pt; color:var(--muted); }
     .pill{ display:inline-block; padding:.1em .55em; border-radius:8px; background:var(--b100); color:#1e3a8a; font-weight:700; }
     .card{ border:1px solid var(--line); border-radius:12px; padding:12px 14px; background:#fff; }
-    .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     .grid-3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
     .band{ background:linear-gradient(135deg,var(--b50),var(--b100)); border:1px solid var(--b100); border-radius:12px; padding:10px 12px; }
 
-    /* Mini score bars */
+    /* Mini-Balken (CSS only) */
     .score{ --val:0; background:#eff6ff; border-radius:8px; height:8px; position:relative; overflow:hidden; }
     .score::after{ content:""; position:absolute; inset:0 100% 0 0; width:calc(var(--val) * 1%); background:linear-gradient(90deg,#60a5fa,#2563eb); border-radius:8px; }
     .legend{ display:flex; justify-content:space-between; font-size:9pt; color:var(--muted); margin-top:4px; }
@@ -128,7 +126,7 @@
       {% if FOOTER_MID_LOGO_SRC %}<img src="{{ FOOTER_MID_LOGO_SRC }}" alt="Footer‑Logo mitte">{% endif %}
       {% if FOOTER_RIGHT_LOGO_SRC %}<img src="{{ FOOTER_RIGHT_LOGO_SRC }}" alt="Footer‑Logo rechts">{% endif %}
     </div>
-    <div class="small muted">Stand: {{ last_updated or report_date or rendered_at }} · {{ BUILD_STAMP or ("v" ~ report_version) }}</div>
+    <div class="small muted">{{ BUILD_STAMP or ("v" ~ report_version) }}</div>
   </footer>
 </body>
 </html>
