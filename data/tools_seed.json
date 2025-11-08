@@ -1,0 +1,109 @@
+[
+  {
+    "name": "Tally.so",
+    "url": "https://tally.so",
+    "category": "Fragebogen / Intake",
+    "price": "0–29 €/Monat",
+    "gdpr": "✓ EU-Server (optionen)",
+    "host": "EU (Option)",
+    "best_for_size": [
+      "solo",
+      "kmu"
+    ],
+    "best_for_industries": [
+      "beratung",
+      "dienstleistungen",
+      "marketing"
+    ]
+  },
+  {
+    "name": "Make (Integromat)",
+    "url": "https://www.make.com",
+    "category": "Automation / Workflows",
+    "price": "ab 9 €/Monat",
+    "gdpr": "✓ EU-Server",
+    "host": "EU",
+    "best_for_size": [
+      "solo",
+      "kmu",
+      "enterprise"
+    ],
+    "best_for_industries": [
+      "beratung",
+      "dienstleistungen",
+      "handel",
+      "it"
+    ]
+  },
+  {
+    "name": "Railway.app",
+    "url": "https://railway.app",
+    "category": "Hosting / Deployment",
+    "price": "ab ~5 € (Nutzung)",
+    "gdpr": "⚠︎ US-Hosting",
+    "host": "US",
+    "best_for_size": [
+      "solo",
+      "kmu"
+    ],
+    "best_for_industries": [
+      "it",
+      "dienstleistungen",
+      "beratung"
+    ]
+  },
+  {
+    "name": "Notion",
+    "url": "https://www.notion.so",
+    "category": "Wissensmanagement",
+    "price": "0–10 €/Monat",
+    "gdpr": "✓ EU-Option",
+    "host": "EU/US",
+    "best_for_size": [
+      "solo",
+      "kmu",
+      "enterprise"
+    ],
+    "best_for_industries": [
+      "beratung",
+      "dienstleistungen",
+      "marketing"
+    ]
+  },
+  {
+    "name": "HubSpot",
+    "url": "https://www.hubspot.de",
+    "category": "CRM / Sales",
+    "price": "Free / ab 18 €/Monat",
+    "gdpr": "✓ AVV verfügbar",
+    "host": "EU/US",
+    "best_for_size": [
+      "kmu",
+      "enterprise"
+    ],
+    "best_for_industries": [
+      "beratung",
+      "dienstleistungen",
+      "handel"
+    ]
+  },
+  {
+    "name": "OpenAI API",
+    "url": "https://platform.openai.com",
+    "category": "KI-API",
+    "price": "Usage-basiert",
+    "gdpr": "⚠︎ US (Vendor-Assessment)",
+    "host": "US",
+    "best_for_size": [
+      "solo",
+      "kmu",
+      "enterprise"
+    ],
+    "best_for_industries": [
+      "it",
+      "dienstleistungen",
+      "beratung",
+      "marketing"
+    ]
+  }
+]
