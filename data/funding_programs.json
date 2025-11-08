@@ -3,52 +3,27 @@
     "name": "Digital Jetzt (BMWK)",
     "region": "DE",
     "target": "KMU (bis 499 MA)",
-    "amount": "bis 50.000 € (50%)",
+    "amount": "bis 50.000 € (bis 50%)",
     "deadline": "31.03.2026",
-    "url": "https://www.bmwi.de/Redaktion/DE/Dossier/digital-jetzt.html",
-    "best_for_size": [
-      "solo",
-      "kmu"
-    ],
-    "best_for_industries": [
-      "beratung",
-      "dienstleistungen",
-      "handel",
-      "it"
-    ]
+    "url": "https://www.bmwk.de",
+    "notes": "Investitionen in digitale Technologien & Qualifizierung"
   },
   {
     "name": "go-digital (BMWK)",
     "region": "DE",
-    "target": "Beratungszuschuss",
+    "target": "Beratungszuschuss für KMU",
     "amount": "bis 16.500 € (50%)",
     "deadline": "laufend",
-    "url": "https://www.bmwi.de/Redaktion/DE/Dossier/go-digital.html",
-    "best_for_size": [
-      "kmu"
-    ],
-    "best_for_industries": [
-      "beratung",
-      "dienstleistungen",
-      "handel",
-      "it"
-    ]
+    "url": "https://www.bmwk.de",
+    "notes": "Module: Digitalisierungsstrategie, IT‑Sicherheit, Datenkompetenz"
   },
   {
-    "name": "Berlin – Pro FIT",
+    "name": "Berlin – Pro FIT (IBB)",
     "region": "BE",
     "target": "FuE/Innovation",
-    "amount": "variabel (Zuschuss/Darlehen)",
+    "amount": "Zuschuss/Darlehen (variabel)",
     "deadline": "rollierend",
-    "url": "https://www.ibb.de/de/foerderprogramme/pro-fit.html",
-    "best_for_size": [
-      "kmu",
-      "enterprise"
-    ],
-    "best_for_industries": [
-      "it",
-      "industrie",
-      "forschung"
-    ]
+    "url": "https://www.ibb.de",
+    "notes": "Typisch für technologiegetriebene Vorhaben; Kombination möglich"
   }
 ]
