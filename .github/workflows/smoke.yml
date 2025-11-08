@@ -1,4 +1,5 @@
 name: smoke
+
 on:
   push:
   workflow_dispatch:
@@ -8,25 +9,45 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Resolve base URL
+        id: resolve
         run: |
           if [ -n "${{ vars.BACKEND_BASE }}" ]; then
             echo "BASE_URL=${{ vars.BACKEND_BASE }}" >> $GITHUB_ENV
           elif [ -n "${{ secrets.BACKEND_BASE }}" ]; then
             echo "BASE_URL=${{ secrets.BACKEND_BASE }}" >> $GITHUB_ENV
+          elif [ -n "${{ env.BACKEND_BASE }}" ]; then
+            echo "BASE_URL=${{ env.BACKEND_BASE }}" >> $GITHUB_ENV
           else
             echo "::error ::BACKEND_BASE is not set (e.g. https://<railway-app>.up.railway.app)"
             exit 2
           fi
+          echo "::notice ::Using \$BASE_URL for smoke tests"
 
       - name: Ping /api/healthz
-        run: curl -fsS "$BASE_URL/api/healthz" -o /dev/null
+        run: |
+          set -e
+          curl -fsS "$BASE_URL/api/healthz" -o /dev/null
 
       - name: Ping /api/smoke
-        run: curl -fsS "$BASE_URL/api/smoke" -o /dev/null
+        run: |
+          set -e
+          curl -fsS "$BASE_URL/api/smoke" -o /dev/null
 
       - name: Ping /api/report/ping (optional)
         continue-on-error: true
-        run: curl -fsS "$BASE_URL/api/report/ping" -o /dev/null || echo "::warning ::/api/report/ping missing (optional)"
+        run: |
+          curl -fsS "$BASE_URL/api/report/ping" -o /dev/null || echo "::warning ::/api/report/ping missing (optional)"
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "### Smoke summary"
+            echo ""
+            echo "* Base URL: $BASE_URL"
+            echo "* Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          } >> $GITHUB_STEP_SUMMARY
