@@ -1,105 +1,144 @@
 <!doctype html>
 <html lang="de">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ title|default("KI‑Status‑Report") }}</title>
-<style>
-@page{ size:A4; margin:18mm 18mm 24mm 18mm; }
-:root{ --ink:#0f172a; --muted:#475569; --line:#e2e8f0; --b50:#eff6ff; --b100:#dbeafe; --b400:#60a5fa; --b600:#2563eb; }
-*{ box-sizing:border-box } body{ font:11pt/1.5 system-ui,Inter,Arial,sans-serif; color:var(--ink) }
-h1{ font-size:22pt; margin:.1em 0 .2em } h2{ font-size:15pt; margin:.9em 0 .35em; border-bottom:1px solid var(--line); padding-bottom:.25em }
-h3{ font-size:12pt; margin:.5em 0 .25em } .muted{ color:var(--muted) } .small{ font-size:9pt; color:var(--muted) }
-.card{ border:1px solid var(--line); border-radius:12px; padding:12px 14px; background:#fff }
-.grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px } .band{ background:linear-gradient(135deg,var(--b50),var(--b100)); border:1px solid var(--b100); border-radius:12px; padding:10px 12px }
-.score{ --val:0; background:#eff6ff; border-radius:8px; height:8px; position:relative; overflow:hidden }
-.score::after{ content:""; position:absolute; inset:0 100% 0 0; width:calc(var(--val) * 1%); background:linear-gradient(90deg,#60a5fa,#2563eb); border-radius:8px }
-.legend{ display:flex; justify-content:space-between; font-size:9pt; color:var(--muted); margin-top:4px }
-header{ display:flex; gap:12px; align-items:center; border-bottom:1px solid var(--line); padding-bottom:8px; margin-bottom:10px }
-header img{ height:28px } footer{ position:fixed; left:18mm; right:18mm; bottom:10mm; border-top:1px solid var(--line); padding-top:6px; display:flex; justify-content:space-between; align-items:center }
-.f-logos{ display:flex; gap:14px; align-items:center } .f-logos img{ height:16px }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KI-Status-Report</title>
+  <style>
+    :root{
+      --brand:#1e3a5f; --brand-2:#2563eb; --bg:#ffffff; --muted:#475569; --border:#e2e8f0;
+      --chip:#dbeafe; --chip-text:#1e3a5f; --card:#f8fafc;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans",sans-serif;line-height:1.45;color:#0f172a;background:#fff}
+    h1,h2,h3{color:var(--brand);margin:0 0 10px}
+    h1{font-size:28px} h2{font-size:22px} h3{font-size:18px}
+    p{margin:0 0 10px}
+    .container{padding:28px}
+    .cover{padding:48px 28px 24px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,#e0f2fe,#dbeafe)}
+    .meta{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 0}
+    .chip{display:inline-block;background:var(--chip);color:var(--chip-text);padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600}
+    .logos{display:flex;gap:12px;align-items:center;justify-content:flex-end}
+    .logos img{height:28px;display:block}
+    .grid{display:grid;grid-template-columns:1fr;gap:18px}
+    .card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px}
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{padding:8px;border-bottom:1px solid #f1f5f9;text-align:left;vertical-align:top}
+    .table thead th{border-bottom:1px solid var(--border);background:#f8fafc}
+    .muted{color:var(--muted)}
+    .bars{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:10px 0 0}
+    .bar{background:#eef2ff;border:1px solid #e2e8f0;border-radius:999px;height:12px;position:relative;overflow:hidden}
+    .bar-fill{position:absolute;left:0;top:0;bottom:0;width:0%}
+    .bar-label{display:flex;justify-content:space-between;font-size:12px;margin-top:6px;color:#0f172a}
+    .section{margin:20px 0}
+    .stand-hint{font-size:12px;color:var(--muted);margin:0 0 8px}
+    .footer{position:fixed;bottom:0;left:0;right:0;border-top:1px solid var(--border);padding:6px 12px;display:flex;align-items:center;gap:10px;background:#fff}
+    .footer .f-logos{display:flex;align-items:center;gap:10px}
+    .footer img{height:18px}
+    .footer .build{margin-left:auto;font-size:12px;color:#334155}
+    /* Avoid breaking rows across pages */
+    table, tr, td, th { page-break-inside: avoid; }
+    .break-avoid{page-break-inside: avoid;}
+    a{color:var(--brand-2);text-decoration:none}
+  </style>
 </head>
 <body>
-<header>
-  {% if LOGO_PRIMARY_SRC %}<img src="{{ LOGO_PRIMARY_SRC }}" alt="Logo">{% endif %}
-  {% if COVER_BADGE_SRC %}<img src="{{ COVER_BADGE_SRC }}" alt="Badge">{% endif %}
-  <div>
-    <div class="band"><strong>KI‑Status‑Report</strong></div>
-    <h1>{{ customer_name or COMPANY_NAME or "Individueller Report" }}</h1>
-    <div class="muted">Branche: {{ branche_label or BRANCHE_LABEL or "-" }} · Größe: {{ groesse_label or UNTERNEHMENSGROESSE_LABEL or "-" }} · Standort: {{ bundesland_label or BUNDESLAND_LABEL or "-" }}</div>
+
+  <!-- Cover -->
+  <div class="cover">
+    <div style="display:flex;align-items:flex-start;gap:12px;justify-content:space-between">
+      <div>
+        <h1>KI‑Status‑Report</h1>
+        <div class="meta">
+          {% if branche_label %}<span class="chip">Branche: {{ branche_label }}</span>{% endif %}
+          {% if groesse_label %}<span class="chip">Größe: {{ groesse_label }}</span>{% endif %}
+          {% if bundesland_label %}<span class="chip">Standort: {{ bundesland_label }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="logos">
+        {% if LOGO_PRIMARY_SRC %}<img src="{{ LOGO_PRIMARY_SRC }}" alt="Logo">{% endif %}
+        {% if COVER_BADGE_SRC %}<img src="{{ COVER_BADGE_SRC }}" alt="Badge">{% endif %}
+      </div>
+    </div>
   </div>
-</header>
 
-<section class="card">
-  <h2>Executive Summary</h2>
-  {{ executive_summary_html | safe }}
-</section>
+  <div class="container">
 
-{% if scores %}
-<section class="grid-3">
-  {% for s in scores %}
-  <div class="card">
-    <strong>{{ s.label }}</strong>
-    <div class="score" style="--val: {{ s.value|default(0) }}"></div>
-    <div class="legend"><span>0</span><span>100</span></div>
+    <!-- Executive Summary -->
+    <div class="section card break-avoid">
+      <h2>Executive Summary</h2>
+      {% if COMPANY_NAME %}<p class="muted">{{ COMPANY_NAME }} – Kurzüberblick</p>{% endif %}
+      <div class="bars">
+        {% for s in scores %}
+        <div>
+          <div class="bar"><div class="bar-fill" style="width: {{ s.value }}%; background: linear-gradient(90deg,#2563eb,#3b82f6)"></div></div>
+          <div class="bar-label"><span>{{ s.label }}</span><span>{{ s.value }}/100</span></div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Quick Wins (Platzhalter: werden aus Sections generiert, hier nur Rahmen) -->
+    <div class="section card break-avoid">
+      <h2>Quick Wins (90 Tage)</h2>
+      {% if QUICK_WINS_HTML %}{{ QUICK_WINS_HTML|safe }}{% else %}
+      <p class="muted">Konkrete Maßnahmen in 30/60/90 Tagen mit Aufwand/Kosten – siehe Roadmap unten.</p>
+      {% endif %}
+    </div>
+
+    <!-- Konsistenter ROI-Block (ersetzt alte Umsatz-Tabelle) -->
+    <div class="section card break-avoid">
+      <h2>Business Case</h2>
+      {{ ROI_HTML|safe }}
+      <p class="muted" style="font-size:12px;margin-top:6px">Annahmen: konservative Zeitersparnis & Stundensatz basierend auf Umsatzklasse. Werte dienen der Orientierung.</p>
+    </div>
+
+    <!-- Empfohlene Tools -->
+    <div class="section card break-avoid">
+      <h2>Empfohlene Tools (Preis &amp; DSGVO)</h2>
+      {{ TOOLS_HTML|safe }}
+    </div>
+
+    <!-- Sicherheits-Roadmap -->
+    <div class="section card break-avoid">
+      <h2>Sicherheits‑Roadmap</h2>
+      {{ SECURITY_ROADMAP_HTML|safe }}
+    </div>
+
+    <!-- Wettbewerb -->
+    <div class="section card break-avoid">
+      <h2>Wettbewerbs‑Überblick</h2>
+      {{ COMPETITORS_HTML|safe }}
+    </div>
+
+    <!-- Förderprogramme -->
+    <div class="section card break-avoid">
+      <h2>Förderprogramme</h2>
+      {{ FOERDERPROGRAMME_HTML|safe }}
+    </div>
+
+    <!-- Feedback -->
+    <div class="section card break-avoid">
+      <h2>Ihre Meinung zählt</h2>
+      <p>Was war hilfreich, was fehlt? Wir freuen uns über Ihr Feedback.</p>
+      {% if FEEDBACK_URL %}
+        <p><a href="{{ FEEDBACK_URL }}" target="_blank" rel="noopener">Zum Feedback‑Formular</a></p>
+      {% else %}
+        <p class="muted">Feedback‑Link wird nachgereicht.</p>
+      {% endif %}
+    </div>
+
   </div>
-  {% endfor %}
-</section>
-{% endif %}
 
-<section>
-  <h2>Quick Wins (90 Tage)</h2>
-  <div class="card">{{ recommendations_html | safe }}</div>
-</section>
-
-{% if ROI_HTML %}
-<section>
-  <h2>Business Case</h2>
-  {{ ROI_HTML | safe }}
-</section>
-{% endif %}
-
-{% if TOOLS_HTML %}
-<section>
-  <h2>Empfohlene Tools (Preis & DSGVO)</h2>
-  <div class="card">{{ TOOLS_HTML | safe }}</div>
-</section>
-{% endif %}
-
-{% if SECURITY_ROADMAP_HTML %}
-<section>
-  <h2>Sicherheits‑Roadmap</h2>
-  <div class="card">{{ SECURITY_ROADMAP_HTML | safe }}</div>
-</section>
-{% endif %}
-
-{% if COMPETITORS_HTML %}
-<section>
-  <h2>Wettbewerbs‑Überblick</h2>
-  <div class="card">{{ COMPETITORS_HTML | safe }}</div>
-</section>
-{% endif %}
-
-{% if FOERDERPROGRAMME_HTML %}
-<section>
-  <h2>Förderprogramme</h2>
-  <div class="card">{{ FOERDERPROGRAMME_HTML | safe }}</div>
-</section>
-{% endif %}
-
-<section>
-  <h2>Ihre Meinung zählt</h2>
-  <p>Was war hilfreich, was fehlt? Wir freuen uns über Ihr Feedback.</p>
-  {% if FEEDBACK_URL %}<p><a href="{{ FEEDBACK_URL }}">Zum Feedback‑Formular</a></p>{% endif %}
-</section>
-
-<footer>
-  <div class="f-logos">
-    {% if FOOTER_LEFT_LOGO_SRC %}<img src="{{ FOOTER_LEFT_LOGO_SRC }}" alt="Footer‑Logo links">{% endif %}
-    {% if FOOTER_MID_LOGO_SRC %}<img src="{{ FOOTER_MID_LOGO_SRC }}" alt="Footer‑Logo mitte">{% endif %}
-    {% if FOOTER_RIGHT_LOGO_SRC %}<img src="{{ FOOTER_RIGHT_LOGO_SRC }}" alt="Footer‑Logo rechts">{% endif %}
+  <!-- Footer -->
+  <div class="footer">
+    <div class="f-logos">
+      {% if FOOTER_LEFT_LOGO_SRC %}<img src="{{ FOOTER_LEFT_LOGO_SRC }}" alt="Footer‑Logo links">{% endif %}
+      {% if FOOTER_MID_LOGO_SRC %}<img src="{{ FOOTER_MID_LOGO_SRC }}" alt="Footer‑Logo mitte">{% endif %}
+      {% if FOOTER_RIGHT_LOGO_SRC %}<img src="{{ FOOTER_RIGHT_LOGO_SRC }}" alt="Footer‑Logo rechts">{% endif %}
+    </div>
+    <div class="build">{{ BUILD_STAMP }}</div>
   </div>
-  <div class="small muted">{{ BUILD_STAMP or "" }}</div>
-</footer>
+
 </body>
 </html>
