@@ -2,9 +2,10 @@
   {
     "name": "Tally.so",
     "url": "https://tally.so",
+    "trust_url": "https://tally.so/help/privacy",
     "category": "Fragebogen / Intake",
     "price": "0–29 €/Monat",
-    "gdpr": "✓ EU-Server (optionen)",
+    "gdpr": "EU-Option",
     "host": "EU (Option)",
     "best_for_size": [
       "solo",
@@ -19,9 +20,10 @@
   {
     "name": "Make (Integromat)",
     "url": "https://www.make.com",
+    "trust_url": "https://www.make.com/en/privacy-notice",
     "category": "Automation / Workflows",
     "price": "ab 9 €/Monat",
-    "gdpr": "✓ EU-Server",
+    "gdpr": "EU-Server",
     "host": "EU",
     "best_for_size": [
       "solo",
@@ -38,9 +40,10 @@
   {
     "name": "Railway.app",
     "url": "https://railway.app",
+    "trust_url": "https://railway.app/legal/privacy",
     "category": "Hosting / Deployment",
     "price": "ab ~5 € (Nutzung)",
-    "gdpr": "⚠︎ US-Hosting",
+    "gdpr": "US (AVV prüfen)",
     "host": "US",
     "best_for_size": [
       "solo",
@@ -55,9 +58,10 @@
   {
     "name": "Notion",
     "url": "https://www.notion.so",
+    "trust_url": "https://www.notion.so/privacy",
     "category": "Wissensmanagement",
     "price": "0–10 €/Monat",
-    "gdpr": "✓ EU-Option",
+    "gdpr": "EU-Option",
     "host": "EU/US",
     "best_for_size": [
       "solo",
@@ -73,9 +77,10 @@
   {
     "name": "HubSpot",
     "url": "https://www.hubspot.de",
+    "trust_url": "https://legal.hubspot.com/privacy-policy",
     "category": "CRM / Sales",
     "price": "Free / ab 18 €/Monat",
-    "gdpr": "✓ AVV verfügbar",
+    "gdpr": "AVV verfügbar",
     "host": "EU/US",
     "best_for_size": [
       "kmu",
@@ -90,9 +95,10 @@
   {
     "name": "OpenAI API",
     "url": "https://platform.openai.com",
+    "trust_url": "https://openai.com/policies/privacy-policy",
     "category": "KI-API",
     "price": "Usage-basiert",
-    "gdpr": "⚠︎ US (Vendor-Assessment)",
+    "gdpr": "US (Vendor-Assessment)",
     "host": "US",
     "best_for_size": [
       "solo",
@@ -104,6 +110,80 @@
       "dienstleistungen",
       "beratung",
       "marketing"
+    ]
+  },
+  {
+    "name": "Mistral AI",
+    "url": "https://mistral.ai",
+    "trust_url": "https://mistral.ai/legal/privacy/",
+    "category": "KI-API (EU)",
+    "price": "Usage-basiert",
+    "gdpr": "EU-Anbieter",
+    "host": "EU",
+    "best_for_size": [
+      "solo",
+      "kmu",
+      "enterprise"
+    ],
+    "best_for_industries": [
+      "it",
+      "dienstleistungen",
+      "beratung"
+    ]
+  },
+  {
+    "name": "Perplexity API",
+    "url": "https://www.perplexity.ai",
+    "trust_url": "https://www.perplexity.ai/privacy",
+    "category": "Antwort-/Recherche-API",
+    "price": "Usage/Pro",
+    "gdpr": "US (Vendor-Assessment)",
+    "host": "US",
+    "best_for_size": [
+      "solo",
+      "kmu"
+    ],
+    "best_for_industries": [
+      "beratung",
+      "dienstleistungen",
+      "marketing",
+      "it"
+    ]
+  },
+  {
+    "name": "Tavily",
+    "url": "https://www.tavily.com",
+    "trust_url": "https://www.tavily.com/privacy",
+    "category": "Web-Recherche (API)",
+    "price": "Usage",
+    "gdpr": "US (Vendor-Assessment)",
+    "host": "US",
+    "best_for_size": [
+      "solo",
+      "kmu",
+      "enterprise"
+    ],
+    "best_for_industries": [
+      "it",
+      "dienstleistungen",
+      "beratung"
+    ]
+  },
+  {
+    "name": "Cloudflare Turnstile",
+    "url": "https://www.cloudflare.com/products/turnstile/",
+    "trust_url": "https://www.cloudflare.com/privacypolicy/",
+    "category": "Formular-Schutz",
+    "price": "Kostenlos",
+    "gdpr": "EU/US (AVV)",
+    "host": "EU/US",
+    "best_for_size": [
+      "solo",
+      "kmu",
+      "enterprise"
+    ],
+    "best_for_industries": [
+      "alle"
     ]
   }
 ]
