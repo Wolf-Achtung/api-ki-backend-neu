@@ -1,132 +1,105 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ title|default("KI‑Status‑Report") }}</title>
-  <style>
-    @page { size: A4; margin: 18mm 18mm 24mm 18mm; }
-    :root{ --ink:#0f172a; --muted:#475569; --line:#e2e8f0; --b50:#eff6ff; --b100:#dbeafe; --b400:#60a5fa; --b600:#2563eb; }
-    *{ box-sizing: border-box; }
-    body{ font: 11pt/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Inter,"Helvetica Neue",Arial,sans-serif; color:var(--ink); }
-    h1{ font-size:22pt; margin:.15em 0 .25em 0; }
-    h2{ font-size:15pt; margin:.9em 0 .35em 0; border-bottom:1px solid var(--line); padding-bottom:.25em; }
-    h3{ font-size:12.5pt; margin:.6em 0 .25em 0; }
-    p,li{ font-size:11pt; }
-    .muted{ color:var(--muted); } .small{ font-size:9pt; color:var(--muted); }
-    .pill{ display:inline-block; padding:.1em .55em; border-radius:8px; background:var(--b100); color:#1e3a8a; font-weight:700; }
-    .card{ border:1px solid var(--line); border-radius:12px; padding:12px 14px; background:#fff; }
-    .grid-3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
-    .band{ background:linear-gradient(135deg,var(--b50),var(--b100)); border:1px solid var(--b100); border-radius:12px; padding:10px 12px; }
-
-    /* Mini-Balken (CSS only) */
-    .score{ --val:0; background:#eff6ff; border-radius:8px; height:8px; position:relative; overflow:hidden; }
-    .score::after{ content:""; position:absolute; inset:0 100% 0 0; width:calc(var(--val) * 1%); background:linear-gradient(90deg,#60a5fa,#2563eb); border-radius:8px; }
-    .legend{ display:flex; justify-content:space-between; font-size:9pt; color:var(--muted); margin-top:4px; }
-
-    header{ display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--line); padding-bottom:8px; margin-bottom:10px; }
-    header img{ height:28px; }
-    footer{ position:fixed; left:18mm; right:18mm; bottom:10mm; border-top:1px solid var(--line); padding-top:6px; display:flex; align-items:center; justify-content:space-between; }
-    .f-logos{ display:flex; align-items:center; gap:14px; }
-    .f-logos img{ height:16px; }
-  </style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title|default("KI‑Status‑Report") }}</title>
+<style>
+@page{ size:A4; margin:18mm 18mm 24mm 18mm; }
+:root{ --ink:#0f172a; --muted:#475569; --line:#e2e8f0; --b50:#eff6ff; --b100:#dbeafe; --b400:#60a5fa; --b600:#2563eb; }
+*{ box-sizing:border-box } body{ font:11pt/1.5 system-ui,Inter,Arial,sans-serif; color:var(--ink) }
+h1{ font-size:22pt; margin:.1em 0 .2em } h2{ font-size:15pt; margin:.9em 0 .35em; border-bottom:1px solid var(--line); padding-bottom:.25em }
+h3{ font-size:12pt; margin:.5em 0 .25em } .muted{ color:var(--muted) } .small{ font-size:9pt; color:var(--muted) }
+.card{ border:1px solid var(--line); border-radius:12px; padding:12px 14px; background:#fff }
+.grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px } .band{ background:linear-gradient(135deg,var(--b50),var(--b100)); border:1px solid var(--b100); border-radius:12px; padding:10px 12px }
+.score{ --val:0; background:#eff6ff; border-radius:8px; height:8px; position:relative; overflow:hidden }
+.score::after{ content:""; position:absolute; inset:0 100% 0 0; width:calc(var(--val) * 1%); background:linear-gradient(90deg,#60a5fa,#2563eb); border-radius:8px }
+.legend{ display:flex; justify-content:space-between; font-size:9pt; color:var(--muted); margin-top:4px }
+header{ display:flex; gap:12px; align-items:center; border-bottom:1px solid var(--line); padding-bottom:8px; margin-bottom:10px }
+header img{ height:28px } footer{ position:fixed; left:18mm; right:18mm; bottom:10mm; border-top:1px solid var(--line); padding-top:6px; display:flex; justify-content:space-between; align-items:center }
+.f-logos{ display:flex; gap:14px; align-items:center } .f-logos img{ height:16px }
+</style>
 </head>
 <body>
-  <!-- Header -->
-  <header>
-    {% if LOGO_PRIMARY_SRC %}<img src="{{ LOGO_PRIMARY_SRC }}" alt="Logo">{% endif %}
-    {% if COVER_BADGE_SRC %}<img src="{{ COVER_BADGE_SRC }}" alt="Badge">{% endif %}
-    <div>
-      <div class="pill">KI‑Status‑Report</div>
-      <h1>{{ customer_name or COMPANY_NAME or "Individueller Report" }}</h1>
-      <p class="muted">Branche: {{ branche_label or BRANCHE_LABEL or "-" }} · Größe: {{ groesse_label or UNTERNEHMENSGROESSE_LABEL or "-" }} · Standort: {{ bundesland_label or BUNDESLAND_LABEL or "-" }}</p>
-    </div>
-  </header>
+<header>
+  {% if LOGO_PRIMARY_SRC %}<img src="{{ LOGO_PRIMARY_SRC }}" alt="Logo">{% endif %}
+  {% if COVER_BADGE_SRC %}<img src="{{ COVER_BADGE_SRC }}" alt="Badge">{% endif %}
+  <div>
+    <div class="band"><strong>KI‑Status‑Report</strong></div>
+    <h1>{{ customer_name or COMPANY_NAME or "Individueller Report" }}</h1>
+    <div class="muted">Branche: {{ branche_label or BRANCHE_LABEL or "-" }} · Größe: {{ groesse_label or UNTERNEHMENSGROESSE_LABEL or "-" }} · Standort: {{ bundesland_label or BUNDESLAND_LABEL or "-" }}</div>
+  </div>
+</header>
 
-  <!-- Executive Summary -->
-  <section class="card">
-    <h2>Executive Summary</h2>
-    {{ executive_summary_html | safe }}
-  </section>
+<section class="card">
+  <h2>Executive Summary</h2>
+  {{ executive_summary_html | safe }}
+</section>
 
-  <!-- Scores -->
-  {% if scores %}
-  <section class="grid-3">
-    {% for s in scores %}
-    <div class="card">
-      <strong>{{ s.label }}</strong>
-      <div class="score" style="--val: {{ s.value|default(0) }}"></div>
-      <div class="legend"><span>0</span><span>100</span></div>
-    </div>
-    {% endfor %}
-  </section>
-  {% endif %}
+{% if scores %}
+<section class="grid-3">
+  {% for s in scores %}
+  <div class="card">
+    <strong>{{ s.label }}</strong>
+    <div class="score" style="--val: {{ s.value|default(0) }}"></div>
+    <div class="legend"><span>0</span><span>100</span></div>
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
 
-  <!-- Quick Wins -->
-  <section>
-    <h2>Quick Wins (90 Tage)</h2>
-    <div class="card">{{ recommendations_html | safe }}</div>
-  </section>
+<section>
+  <h2>Quick Wins (90 Tage)</h2>
+  <div class="card">{{ recommendations_html | safe }}</div>
+</section>
 
-  <!-- Werkbank -->
-  {% if WERKBANK_HTML %}
-  <section>
-    <h2>Werkbank – Starter‑Stacks</h2>
-    <div class="card">{{ WERKBANK_HTML | safe }}</div>
-  </section>
-  {% endif %}
+{% if ROI_HTML %}
+<section>
+  <h2>Business Case</h2>
+  {{ ROI_HTML | safe }}
+</section>
+{% endif %}
 
-  <!-- Tools -->
-  {% if TOOLS_HTML %}
-  <section>
-    <h2>Empfohlene Tools</h2>
-    <div class="card">{{ TOOLS_HTML | safe }}</div>
-  </section>
-  {% endif %}
+{% if TOOLS_HTML %}
+<section>
+  <h2>Empfohlene Tools (Preis & DSGVO)</h2>
+  <div class="card">{{ TOOLS_HTML | safe }}</div>
+</section>
+{% endif %}
 
-  <!-- Förderungen & Quellen -->
-  {% if FOERDERPROGRAMME_HTML %}
-  <section>
-    <h2>Förderprogramme & Aktuelles</h2>
-    <div class="card">{{ FOERDERPROGRAMME_HTML | safe }}</div>
-  </section>
-  {% endif %}
+{% if SECURITY_ROADMAP_HTML %}
+<section>
+  <h2>Sicherheits‑Roadmap</h2>
+  <div class="card">{{ SECURITY_ROADMAP_HTML | safe }}</div>
+</section>
+{% endif %}
 
-  {% if sources_html %}
-  <section>
-    <h2>Quellen & Aktualisierung</h2>
-    <div class="band small">Stand der externen Quellen: {{ last_updated }}</div>
-    <div class="card">{{ sources_html | safe }}</div>
-  </section>
-  {% endif %}
+{% if COMPETITORS_HTML %}
+<section>
+  <h2>Wettbewerbs‑Überblick</h2>
+  <div class="card">{{ COMPETITORS_HTML | safe }}</div>
+</section>
+{% endif %}
 
-  <!-- Kreativ -->
-  {% if kreativ_tools_html %}
-  <section>
-    <h2>Kreativ‑Tools (kuratierte Liste)</h2>
-    <div class="card">{{ kreativ_tools_html | safe }}</div>
-  </section>
-  {% endif %}
+{% if FOERDERPROGRAMME_HTML %}
+<section>
+  <h2>Förderprogramme</h2>
+  <div class="card">{{ FOERDERPROGRAMME_HTML | safe }}</div>
+</section>
+{% endif %}
 
-  <!-- Feedback -->
-  <section>
-    <h2>Ihre Meinung zählt</h2>
-    <p>Was war hilfreich, was fehlt? Wir freuen uns über Ihr Feedback.</p>
-    {% if FEEDBACK_URL %}
-      <p><a href="{{ FEEDBACK_URL }}">Zum Feedback‑Formular</a></p>
-    {% else %}
-      <p class="small muted">Feedback‑Link wird in der finalen Fassung ergänzt.</p>
-    {% endif %}
-  </section>
+<section>
+  <h2>Ihre Meinung zählt</h2>
+  <p>Was war hilfreich, was fehlt? Wir freuen uns über Ihr Feedback.</p>
+  {% if FEEDBACK_URL %}<p><a href="{{ FEEDBACK_URL }}">Zum Feedback‑Formular</a></p>{% endif %}
+</section>
 
-  <!-- Footer -->
-  <footer>
-    <div class="f-logos">
-      {% if FOOTER_LEFT_LOGO_SRC %}<img src="{{ FOOTER_LEFT_LOGO_SRC }}" alt="Footer‑Logo links">{% endif %}
-      {% if FOOTER_MID_LOGO_SRC %}<img src="{{ FOOTER_MID_LOGO_SRC }}" alt="Footer‑Logo mitte">{% endif %}
-      {% if FOOTER_RIGHT_LOGO_SRC %}<img src="{{ FOOTER_RIGHT_LOGO_SRC }}" alt="Footer‑Logo rechts">{% endif %}
-    </div>
-    <div class="small muted">{{ BUILD_STAMP or ("v" ~ report_version) }}</div>
-  </footer>
+<footer>
+  <div class="f-logos">
+    {% if FOOTER_LEFT_LOGO_SRC %}<img src="{{ FOOTER_LEFT_LOGO_SRC }}" alt="Footer‑Logo links">{% endif %}
+    {% if FOOTER_MID_LOGO_SRC %}<img src="{{ FOOTER_MID_LOGO_SRC }}" alt="Footer‑Logo mitte">{% endif %}
+    {% if FOOTER_RIGHT_LOGO_SRC %}<img src="{{ FOOTER_RIGHT_LOGO_SRC }}" alt="Footer‑Logo rechts">{% endif %}
+  </div>
+  <div class="small muted">{{ BUILD_STAMP or "" }}</div>
+</footer>
 </body>
 </html>
