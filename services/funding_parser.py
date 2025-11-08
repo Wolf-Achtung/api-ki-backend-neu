@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-"""Förderprogramm-Parser (statisch + JSON seed, filtert nach Bundesland/Größe)."""
 import json
 from pathlib import Path
 from typing import List, Dict, Any
+
+from ._normalize import _briefing_to_dict
 
 DEFAULT_PROGRAMS = [
     {
@@ -47,17 +48,18 @@ def _load_seed() -> List[Dict[str,Any]]:
             pass
     return DEFAULT_PROGRAMS
 
-def suggest_programs(briefing: Dict[str,Any]) -> List[Dict[str,Any]]:
+def suggest_programs(briefing: Dict[str,Any] | Any) -> List[Dict[str,Any]]:
     progs = _load_seed()
-    land = (briefing.get("bundesland") or "").upper()
-    branche = (briefing.get("branche") or "").lower()
-    groesse = (briefing.get("unternehmensgroesse") or "").lower()
+    b = _briefing_to_dict(briefing)
+    land = (b.get("bundesland") or b.get("bundesland_label") or "").upper()
+    branche = (b.get("branche") or b.get("branche_label") or "").lower()
+    groesse = (b.get("unternehmensgroesse") or b.get("groesse") or "").lower()
     ranked = []
     for f in progs:
         score = 0
         if f.get("region") in ("DE", land):
             score += 2
-        if not branche or any(branche.startswith(b) for b in f.get("best_for_industries", [])):
+        if not branche or any(branche.startswith(bi) for bi in f.get("best_for_industries", [])):
             score += 1
         if not groesse or (groesse in f.get("best_for_size", [])):
             score += 1

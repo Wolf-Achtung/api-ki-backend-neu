@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-"""Leichte Wettbewerbs-Insights (statisch/kuratiert nach Branche)."""
 from typing import Dict, Any, List
+
+from ._normalize import _briefing_to_dict
 
 MAP = {
     "beratung": [
@@ -13,8 +14,9 @@ MAP = {
     ],
 }
 
-def build_insights(briefing: Dict[str,Any]) -> Dict[str,Any]:
-    branche = (briefing.get("branche") or "").lower()
+def build_insights(briefing: Dict[str,Any] | Any) -> Dict[str,Any]:
+    b = _briefing_to_dict(briefing)
+    branche = (b.get("branche") or b.get("branche_label") or "").lower()
     lst = MAP.get(branche, MAP.get("beratung", []))
     usp = [
         "Vollautomatisierte Pipeline (kein manueller Aufwand)",

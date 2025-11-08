@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-"""Kuratiertes Werkzeug: Tools-Recommender mit Preis/DSGVO.
-   Keine DB-Pflicht – liest aus data/tools_seed.json (falls vorhanden),
-   sonst nutzt es eine eingebaute Kuratierung.
-"""
-import json, os
+import json
 from pathlib import Path
 from typing import List, Dict, Any
+
+from ._normalize import _briefing_to_dict
 
 DEFAULT_TOOLS = [
     {
@@ -74,23 +72,21 @@ def _load_seed() -> List[Dict[str,Any]]:
             pass
     return DEFAULT_TOOLS
 
-def recommend_tools(briefing: Dict[str,Any]) -> List[Dict[str,Any]]:
+def recommend_tools(briefing: Dict[str,Any] | Any) -> List[Dict[str,Any]]:
     tools = _load_seed()
-    branche = (briefing.get("branche") or "").lower()
-    groesse = (briefing.get("unternehmensgroesse") or "").lower()
-    # simple filter
+    b = _briefing_to_dict(briefing)
+    branche = (b.get("branche") or b.get("branche_label") or "").lower()
+    groesse = (b.get("unternehmensgroesse") or b.get("groesse") or "").lower()
     ranked = []
     for t in tools:
         score = 0
-        if not branche or any(branche.startswith(b) for b in t.get("best_for_industries", [])):
+        if not branche or any(branche.startswith(bi) for bi in t.get("best_for_industries", [])):
             score += 2
         if not groesse or (groesse in t.get("best_for_size", [])):
             score += 2
-        # Bonus: Kategorie-Abdeckung
-        cat = (t.get("category") or "").lower()
-        if "automation" in cat or "workflow" in cat:
+        if "automation" in (t.get("category","").lower()):
             score += 1
-        if "fragebogen" in cat or "intake" in cat:
+        if "fragebogen" in (t.get("category","").lower()) or "intake" in (t.get("category","").lower()):
             score += 1
         t["_score"] = score
         ranked.append(t)
