@@ -493,6 +493,80 @@ def _build_werkbank_html() -> str:
     note = "<p class='small muted'>Hinweis: Stacks sind exemplarisch und anpassbar; Auswahl hängt von Datenschutz, Budget und IT‑Landschaft ab.</p>"
     return "<div class='fb-section'>" + "".join(blocks) + note + "</div>"
 
+# -------------------- Score Bars (CSS-only) ----------------
+def _build_score_bars_html(scores: Dict[str, Any]) -> str:
+    """Erzeugt Mini-Balken in Blautönen für die wichtigsten Scores."""
+    def row(label: str, key: str) -> str:
+        val = 0
+        try:
+            val = max(0, min(100, int(float(scores.get(key, 0)))))
+        except Exception:
+            val = 0
+        return (
+            f"<tr><td style='padding:6px 8px;width:160px'>{html.escape(label)}</td>"
+            f"<td style='padding:6px 8px;width:100%'>"
+            f"<div style='height:8px;border-radius:6px;background:#eef2ff;overflow:hidden'>"
+            f"<i style='display:block;height:100%;width:{val}%;background:linear-gradient(90deg,#3b82f6,#2563eb)'></i>"
+            f"</div>"
+            f"<div style='font-size:10px;color:#475569'>{val}/100</div>"
+            f"</td></tr>"
+        )
+    rows = "".join([
+        row("Governance", "governance"),
+        row("Sicherheit", "security"),
+        row("Wertschöpfung", "value"),
+        row("Befähigung", "enablement"),
+        row("Gesamt", "overall"),
+    ])
+    return f"<table style='width:100%;border-collapse:collapse'>{rows}</table>"
+
+# -------------------- Werkbank (dynamisch nach Branche/Größe) ----------------
+def _build_werkbank_html_dynamic(answers: Dict[str, Any]) -> str:
+    """
+    Nutzt optional STARTER_STACKS_PATH (JSON: { "common": {"solo":[..],"team":[..],"kmu":[..]}, "<branche>": {...} })
+    und fällt auf die statische _build_werkbank_html() zurück.
+    """
+    path = os.getenv("STARTER_STACKS_PATH", "").strip()
+    branche = (answers.get("BRANCHE_LABEL") or answers.get("branche") or "").strip().lower()
+    size = (answers.get("UNTERNEHMENSGROESSE_LABEL") or answers.get("unternehmensgroesse") or "").strip().lower()
+
+    def _safe_ul(items):
+        return "<ul>" + "".join(f"<li>{html.escape(x)}</li>" for x in (items or [])) + "</ul>"
+
+    if path and os.path.exists(path):
+        try:
+            import json as _json
+            data = _json.load(open(path, "r", encoding="utf-8"))
+            common = (data.get("common") or {})
+            bran = (data.get(branche) or {})
+            blocks = []
+            if size in (common or {}):
+                blocks.append("<h3>Common</h3>" + _safe_ul(common[size]))
+            if size in (bran or {}):
+                title = (branche.capitalize() if branche else "Branche")
+                blocks.append(f"<h3>{html.escape(title)}</h3>" + _safe_ul(bran[size]))
+            if blocks:
+                note = "<p class='small muted'>Stacks aus Starter‑Registry · anpassbar je Datenschutz/Budget/IT‑Landschaft.</p>"
+                return "<div class='fb-section'>" + "".join(blocks) + note + "</div>"
+        except Exception:
+            pass
+    # Fallback: statische Variante
+    return _build_werkbank_html()
+
+# -------------------- Feedback-Box ----------------
+def _build_feedback_box(feedback_url: str, report_date: str) -> str:
+    if not feedback_url:
+        return ""
+    link = html.escape(feedback_url.strip())
+    return (
+        "<div class='fb-section'>"
+        "<div class='fb-head'><span class='fb-step'>Feedback</span><h3 class='fb-title'>Ihre Meinung zählt</h3></div>"
+        "<p>Was war hilfreich, was fehlt? Teilen Sie uns Ihr Feedback mit – es dauert weniger als 2 Minuten.</p>"
+        f"<p><a href='{link}' target='_blank' rel='noopener'>Feedback geben</a> "
+        f"<span class='small muted'>· Stand: {html.escape(report_date)}</span></p>"
+        "</div>"
+    )
+
 # -------------------- LLM sections ----------------
 def _generate_content_section(section_name: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
     if not ENABLE_LLM_CONTENT: return f"<p><em>[{section_name} – LLM disabled]</em></p>"
@@ -799,6 +873,14 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     report_id = f"R-{now.strftime('%Y%m%d')}-{kundencode}"
     sections["kundencode"] = kundencode; sections["report_id"] = report_id; sections["report_version"] = version_mm
     sections["WATERMARK_TEXT"] = _build_watermark_text(report_id, version_mm)
+
+# Build‑Stempel & Feedback‑Box
+sections["BUILD_STAMP"] = f"{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')} · {report_id} · v{version_mm}"
+if sections.get("FEEDBACK_URL"):
+    fb_html = _build_feedback_box(sections["FEEDBACK_URL"], sections["report_date"])
+    if fb_html:
+        sections["FEEDBACK_BOX_HTML"] = fb_html
+
     sections["CHANGELOG_SHORT"] = os.getenv("CHANGELOG_SHORT", "—")
     sections["AUDITOR_INITIALS"] = os.getenv("AUDITOR_INITIALS", "KSJ")
     sections.setdefault("KPI_HTML",""); sections.setdefault("FEEDBACK_BOX_HTML","Feedback willkommen – was war hilfreich, was fehlt?"); sections.setdefault("DATA_COVERAGE_HTML",""); sections.setdefault("FREITEXT_SNIPPETS_HTML","")
@@ -864,7 +946,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["CONTACT_EMAIL"] = getattr(settings, "CONTACT_EMAIL", None) or os.getenv("CONTACT_EMAIL", "info@example.com")
     sections["THEME_CSS_VARS"] = _theme_vars_for_branch(sections.get("BRANCHE_LABEL") or sections.get("branche", ""))
     # Werkbank
-    sections["WERKBANK_HTML"] = _build_werkbank_html()
+    sections["WERKBANK_HTML"] = _build_werkbank_html_dynamic(answers)
     log.info("[%s] Rendering final HTML...", run_id)
     result = render(br, run_id=run_id, generated_sections=sections, use_fetchers=False, scores=scores, meta={"scores": scores, "score_details": score_wrap.get("details", {}), "research_last_updated": sections["research_last_updated"]})
     an = Analysis(user_id=br.user_id, briefing_id=briefing_id, html=result["html"], meta=result.get("meta", {}), created_at=datetime.now(timezone.utc))
