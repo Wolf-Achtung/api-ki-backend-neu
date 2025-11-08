@@ -1,0 +1,6 @@
+-- migrations/2025-11-08_add_code_column_sqlite.sql
+-- Hinweis: SQLite unterstützt kein IF NOT EXISTS für Spalten.
+-- Prüfen Sie vor Ausführung über:
+--   PRAGMA table_info(login_codes);
+-- Und führen Sie nur aus, wenn 'code' fehlt:
+--   ALTER TABLE login_codes ADD COLUMN code TEXT;
