@@ -21,7 +21,7 @@ def build_insights(briefing: Dict[str,Any] | Any) -> Dict[str,Any]:
     usp = [
         "Vollautomatisierte Pipeline (kein manueller Aufwand)",
         "GPT‑gestützte Tiefenanalyse statt Checklisten",
-        "Aktualität durch Web‑Recherche (Tavily)",
+        "Aktualität durch Web‑Recherche (Tavily/Perplexity)",
         "Individuelle PDF‑Reports statt generischer PDFs",
     ]
     return {"competitors": lst, "usp": usp}
@@ -29,17 +29,14 @@ def build_insights(briefing: Dict[str,Any] | Any) -> Dict[str,Any]:
 def to_html(ins: Dict[str,Any]) -> str:
     if not ins:
         return ""
-    rows = ["<h3>Wettbewerber (Auswahl)</h3><table style='width:100%;border-collapse:collapse'>",
-            "<thead><tr><th style='text-align:left;border-bottom:1px solid #e2e8f0;padding:6px'>Anbieter</th>",
-            "<th style='text-align:left;border-bottom:1px solid #e2e8f0;padding:6px'>Modell</th>",
-            "<th style='text-align:left;border-bottom:1px solid #e2e8f0;padding:6px'>Preis</th>",
-            "<th style='text-align:left;border-bottom:1px solid #e2e8f0;padding:6px'>Schwäche</th></tr></thead><tbody>"]
+    rows = ["<h3>Wettbewerber (Auswahl)</h3><table class='table'>",
+            "<thead><tr><th>Anbieter</th><th>Modell</th><th>Preis</th><th>Schwäche</th></tr></thead><tbody>"]
     for c in ins.get("competitors", []):
         rows.append(f"""<tr>
-<td style="padding:6px;border-bottom:1px solid #f1f5f9">{c['name']}</td>
-<td style="padding:6px;border-bottom:1px solid #f1f5f9">{c['model']}</td>
-<td style="padding:6px;border-bottom:1px solid #f1f5f9">{c['price']}</td>
-<td style="padding:6px;border-bottom:1px solid #f1f5f9">{c['weakness']}</td>
+<td>{c['name']}</td>
+<td>{c['model']}</td>
+<td>{c['price']}</td>
+<td>{c['weakness']}</td>
 </tr>""")
     rows.append("</tbody></table>")
     rows.append("<h3>Ihr Vorteil</h3><ul>")

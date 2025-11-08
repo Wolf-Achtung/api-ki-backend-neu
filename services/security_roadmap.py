@@ -7,11 +7,10 @@ def build_security_roadmap(briefing: Dict[str,Any] | Any, scores: Dict[str,Any] 
     b = _briefing_to_dict(briefing)
     gaps: List[Dict[str,Any]] = []
     steps: List[Dict[str,Any]] = []
-    # grobe Heuristik anhand b:
     if not b.get("zweifaktor") and not b.get("mfa_enabled"):
         gaps.append({"item":"2FA für Admin-Logins", "points":3})
         steps.append({"title":"2FA für Admin-Zugänge aktivieren", "impact_points":3, "effort":"< 1 Tag", "cost":"~0–100 €"})
-    if not b.get("dpa_avv"):
+    if not b.get("dpa_avv") and (b.get("datenschutz") or True):
         gaps.append({"item":"AVV/DPAs für KI-Anbieter", "points":2})
         steps.append({"title":"AVV mit KI-Anbietern abschließen", "impact_points":2, "effort":"1–2 Tage", "cost":"0 €"})
     gaps.append({"item":"Penetrationstest (jährlich)", "points":5})
