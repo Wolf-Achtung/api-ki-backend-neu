@@ -1,7 +1,5 @@
-
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-
 """services.report_renderer – Jinja2-basiertes Rendering (Gold-Standard+)
 
 Exportiert:
@@ -16,7 +14,6 @@ Voraussetzungen: jinja2 (pip install Jinja2)
 """
 
 import os
-import base64
 from pathlib import Path
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse
@@ -25,7 +22,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
 def _is_absolute_url(s: str) -> bool:
-    if not s or not isinstance(s, str): 
+    if not s or not isinstance(s, str):
         return False
     try:
         u = urlparse(s)
@@ -35,11 +32,12 @@ def _is_absolute_url(s: str) -> bool:
 
 
 def _to_data_uri(path: str) -> str:
+    """Liest eine Bilddatei und gibt eine Data-URI zurück. Fällt bei Fehlern auf '' zurück."""
     if not path:
         return ""
     p = Path(path)
     if not p.exists():
-        # Try relative to templates/
+        # Versuch relativ zu templates/
         tp = Path("templates") / path
         if tp.exists():
             p = tp
@@ -68,33 +66,31 @@ def _to_data_uri(path: str) -> str:
         return ""
 
 
-def _alias_context(sections: Dict[str, Any], scores: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-    """Mappt UPPERCASE-Keys auf die im Template verwendeten lower_snake_case-Keys und baut helpers."""
+def _alias_context(sections: Dict[str, Any]) -> Dict[str, Any]:
+    """Mappt UPPERCASE-Keys auf die im Template verwendeten lower_snake_case-Keys und baut Helfer."""
     ctx = dict(sections)
 
-    # Build stamp / version
+    # Version / Build-Stempel
     version_full = str(sections.get("version") or sections.get("VERSION") or os.getenv("VERSION") or "1.0.0")
     version_mm = ".".join(version_full.split(".")[:2]) if version_full else "1.0"
     ctx.setdefault("report_version", version_mm)
 
-    # Primary aliases for header
+    # Header-Aliase
     ctx.setdefault("COMPANY_NAME", sections.get("COMPANY_NAME") or sections.get("customer_name") or "")
     ctx.setdefault("BRANCHE_LABEL", sections.get("BRANCHE_LABEL") or sections.get("branche_label") or "")
     ctx.setdefault("UNTERNEHMENSGROESSE_LABEL", sections.get("UNTERNEHMENSGROESSE_LABEL") or sections.get("groesse_label") or "")
     ctx.setdefault("BUNDESLAND_LABEL", sections.get("BUNDESLAND_LABEL") or sections.get("bundesland_label") or "")
 
-    # Lowercase aliases used by some templates
-    ctx["customer_name"]    = ctx.get("COMPANY_NAME", "")
-    ctx["branche_label"]    = ctx.get("BRANCHE_LABEL", "")
-    ctx["groesse_label"]    = ctx.get("UNTERNEHMENSGROESSE_LABEL", "")
-    ctx["bundesland_label"] = ctx.get("BUNDESLAND_LABEL", "")
+    ctx["customer_name"]     = ctx.get("COMPANY_NAME", "")
+    ctx["branche_label"]     = ctx.get("BRANCHE_LABEL", "")
+    ctx["groesse_label"]     = ctx.get("UNTERNEHMENSGROESSE_LABEL", "")
+    ctx["bundesland_label"]  = ctx.get("BUNDESLAND_LABEL", "")
 
-    # Content blocks (keep both cases)
+    # Inhaltsblöcke
     ctx["executive_summary_html"] = sections.get("EXECUTIVE_SUMMARY_HTML") or sections.get("executive_summary_html") or ""
-    # recommendations_html: bevorzugt vorbereitete Quick-Wins (Links + Rechts konsolidiert)
     rec = sections.get("QUICK_WINS_HTML") or ""
     if not rec:
-        left = sections.get("QUICK_WINS_HTML_LEFT") or ""
+        left  = sections.get("QUICK_WINS_HTML_LEFT") or ""
         right = sections.get("QUICK_WINS_HTML_RIGHT") or ""
         rec = (left or "") + (right or "")
     ctx["recommendations_html"] = rec
@@ -103,41 +99,32 @@ def _alias_context(sections: Dict[str, Any], scores: Optional[Dict[str, Any]]) -
     ctx["sources_html"]         = sections.get("QUELLEN_HTML") or sections.get("SOURCES_BOX_HTML") or ""
     ctx["last_updated"]         = sections.get("research_last_updated") or sections.get("report_date") or ""
 
-    # Scores: build array for mini-bars + keep individual values (0..100)
-    score_list = []
-    def _to_num(x): 
+    # Scores-Array für Mini-Balken (0..100)
+    def _num(x):
         try: return int(round(float(x)))
         except Exception: return 0
-    sg = _to_num(sections.get("score_governance", 0))
-    ss = _to_num(sections.get("score_sicherheit", 0))
-    sv = _to_num(sections.get("score_nutzen", 0))
-    se = _to_num(sections.get("score_befaehigung", 0))
-    so = _to_num(sections.get("score_gesamt", max(0, min(100, (sg+ss+sv+se)//4))))
-    score_list.extend([
-        {"label": "Governance", "value": sg, "hint": ""},
-        {"label": "Sicherheit", "value": ss, "hint": ""},
-        {"label": "Nutzen", "value": sv, "hint": ""},
-        {"label": "Befähigung", "value": se, "hint": ""},
-        {"label": "Gesamt", "value": so, "hint": ""},
-    ])
-    ctx["scores"] = score_list
+    sg = _num(sections.get("score_governance", 0))
+    ss = _num(sections.get("score_sicherheit", 0))
+    sv = _num(sections.get("score_nutzen", 0))
+    se = _num(sections.get("score_befaehigung", 0))
+    so = _num(sections.get("score_gesamt", max(0, min(100, (sg+ss+sv+se)//4))))
+    ctx["scores"] = [
+        {"label": "Governance",  "value": sg},
+        {"label": "Sicherheit",  "value": ss},
+        {"label": "Nutzen",      "value": sv},
+        {"label": "Befähigung",  "value": se},
+        {"label": "Gesamt",      "value": so},
+    ]
 
-    # Logos: if not absolute URL, build data-URI (stable in PaaS)
-    def _abs(s: str) -> bool:
-        try:
-            from urllib.parse import urlparse
-            u = urlparse(s or "")
-            return bool(u.scheme and u.netloc) or (s or "").startswith("/")
-        except Exception:
-            return False
+    # Logos ggf. in Data-URIs wandeln (stabil im PDF)
     for key in ("LOGO_PRIMARY_SRC", "COVER_BADGE_SRC", "FOOTER_LEFT_LOGO_SRC", "FOOTER_MID_LOGO_SRC", "FOOTER_RIGHT_LOGO_SRC"):
         src = str(sections.get(key) or "").strip()
-        if src and not _abs(src):
+        if src and not _is_absolute_url(src):
             data_uri = _to_data_uri(src)
             if data_uri:
-                ctx[key] = data_uri  # overwrite with data-URI for stability
+                ctx[key] = data_uri
 
-    # Build stamp
+    # Build-Stempel
     if "BUILD_STAMP" not in ctx:
         report_date = ctx.get("report_date") or ctx.get("last_updated") or ""
         report_id   = ctx.get("report_id") or ctx.get("REPORT_PUBLIC_ID") or ""
@@ -163,8 +150,7 @@ def render(briefing: Any, run_id: Optional[str] = None, generated_sections: Opti
     )
     tpl = env.get_template(tpl_name)
 
-    ctx = _alias_context(sections, scores)
-    # zusätzliche Standardwerte
+    ctx = _alias_context(sections)
     ctx.setdefault("FEEDBACK_URL", os.getenv("FEEDBACK_URL", os.getenv("FEEDBACK_REDIRECT_BASE", "")))
     ctx.setdefault("rendered_at", sections.get("report_date", ""))
 
