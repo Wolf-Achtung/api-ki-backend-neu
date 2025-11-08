@@ -1,0 +1,423 @@
+{
+  "version": "2025.11.08",
+  "schema": {
+    "branch_keys": [
+      "beratung",
+      "it_software",
+      "finanzen",
+      "handel_ecommerce",
+      "bildung",
+      "verwaltung",
+      "gesundheit_pflege",
+      "bau_architektur",
+      "medien_kreativ",
+      "industrie_produktion",
+      "transport_logistik"
+    ],
+    "size_keys": [
+      "solo",
+      "team_2_10",
+      "kmu_11_100"
+    ]
+  },
+  "common_core": {
+    "solo": [
+      {
+        "category": "LLM/Text",
+        "name": "OpenAI API (gpt-4o-mini) oder Mistral Small",
+        "license": "proprietary",
+        "notes": "EU-Hosting bevorzugen, API-Key im Secret-Store; Temperature ≤0.3"
+      },
+      {
+        "category": "Prompting/IDE",
+        "name": "Continue + VS Code",
+        "license": "open_source",
+        "notes": "lokales Prompting, Repos kontextualisieren"
+      },
+      {
+        "category": "Automation",
+        "name": "Make.com (oder n8n self-hosted)",
+        "license": "proprietary|open_source",
+        "notes": "Formular → Queue → Mail, Webhooks"
+      },
+      {
+        "category": "RAG/Index",
+        "name": "LiteLLM + Chroma (oder Weaviate Cloud)",
+        "license": "open_source|proprietary",
+        "notes": "Kleine Wissensbasis, DSGVO-konforme Speicherung"
+      },
+      {
+        "category": "Datenanalyse",
+        "name": "DuckDB + Python (Polars/Pandas)",
+        "license": "open_source",
+        "notes": "Ad-hoc-Analysen lokal"
+      },
+      {
+        "category": "Comms/Trust",
+        "name": "Privacy-Policy Generator + AVV-Vorlagen",
+        "license": "open_source",
+        "notes": "KI-Anbieter-AVV prüfen"
+      },
+      {
+        "category": "Monitoring",
+        "name": "UptimeRobot/Healthchecks",
+        "license": "proprietary",
+        "notes": "Smoke-Check der API-/PDF-Services"
+      }
+    ],
+    "team_2_10": [
+      {
+        "category": "LLM/Text",
+        "name": "OpenAI via Azure OpenAI (EU) + Mistral Medium",
+        "license": "proprietary",
+        "notes": "Routing über LiteLLM"
+      },
+      {
+        "category": "Orchestration",
+        "name": "n8n (self-hosted) + Redis Queue",
+        "license": "open_source",
+        "notes": "Skalierung + Retry"
+      },
+      {
+        "category": "RAG/Index",
+        "name": "Qdrant (managed EU) + LangChain",
+        "license": "open_source",
+        "notes": "Mehr-Dokumente, ACLs"
+      },
+      {
+        "category": "Collab",
+        "name": "Notion/Confluence + Git",
+        "license": "proprietary|open_source",
+        "notes": "Wissen + Versionierung"
+      },
+      {
+        "category": "Analytics",
+        "name": "Metabase (self-hosted)",
+        "license": "open_source",
+        "notes": "Dashboards/Controlling"
+      },
+      {
+        "category": "Compliance",
+        "name": "DPAs/AVVs + Verfahrensverzeichnis",
+        "license": "open_source",
+        "notes": "Vorlagen pflegen"
+      },
+      {
+        "category": "Monitoring",
+        "name": "Grafana + Loki + Prometheus",
+        "license": "open_source",
+        "notes": "Metriken/Logs"
+      }
+    ],
+    "kmu_11_100": [
+      {
+        "category": "LLM/Text",
+        "name": "Azure OpenAI (EU) + Anthropic via Bedrock EU + Mistral Large",
+        "license": "proprietary",
+        "notes": "Policy Routing, Model-Failover"
+      },
+      {
+        "category": "Orchestration",
+        "name": "Temporal.io + n8n",
+        "license": "open_source|proprietary",
+        "notes": "Langlaufende Workflows, SLAs"
+      },
+      {
+        "category": "RAG/Index",
+        "name": "OpenSearch Serverless EU + Guardrails",
+        "license": "open_source|proprietary",
+        "notes": "PII-Masking, Zugriffsebenen"
+      },
+      {
+        "category": "Data",
+        "name": "Snowflake/BigQuery EU + dbt",
+        "license": "proprietary",
+        "notes": "ELT + Governance"
+      },
+      {
+        "category": "Compliance",
+        "name": "Audit Trails + DLP (M365/Google)",
+        "license": "proprietary",
+        "notes": "KI-Nutzung überwachen"
+      },
+      {
+        "category": "Monitoring",
+        "name": "Datadog (EU)",
+        "license": "proprietary",
+        "notes": "APM + Synthetic Checks"
+      }
+    ]
+  },
+  "overrides": {
+    "beratung": {
+      "solo": [
+        {
+          "category": "CRM",
+          "name": "Fakturoid/Bexio oder Odoo",
+          "license": "proprietary|open_source",
+          "notes": "Angebot → Rechnung → Mahnwesen"
+        },
+        {
+          "category": "Formulare",
+          "name": "Tally/Typeform (→Webhook)",
+          "license": "proprietary",
+          "notes": "Fragebögen, DSGVO-EU"
+        }
+      ],
+      "team_2_10": [
+        {
+          "category": "CRM",
+          "name": "HubSpot Starter (DE) oder Odoo",
+          "license": "proprietary|open_source",
+          "notes": "Lead → Deal → Projekt"
+        },
+        {
+          "category": "Doku",
+          "name": "SLA/Leistungsbeschreibungen Vorlagen",
+          "license": "open_source",
+          "notes": "Repo-getrieben"
+        }
+      ],
+      "kmu_11_100": [
+        {
+          "category": "PSA",
+          "name": "Jira Service Management + Tempo",
+          "license": "proprietary",
+          "notes": "Projekte, Abrechnung, SLAs"
+        }
+      ]
+    },
+    "it_software": {
+      "solo": [
+        {
+          "category": "CI",
+          "name": "GitHub Actions",
+          "license": "proprietary",
+          "notes": "Test/Build/Release"
+        }
+      ],
+      "team_2_10": [
+        {
+          "category": "Feature Flags",
+          "name": "Unleash",
+          "license": "open_source",
+          "notes": "Rollouts"
+        }
+      ],
+      "kmu_11_100": [
+        {
+          "category": "SAST/DAST",
+          "name": "GitHub Advanced Security/Snyk",
+          "license": "proprietary"
+        }
+      ]
+    },
+    "finanzen": {
+      "solo": [
+        {
+          "category": "LLM",
+          "name": "Modelle mit PII-Masking + On‑Prem RAG",
+          "license": "mixed"
+        }
+      ],
+      "team_2_10": [
+        {
+          "category": "Compliance",
+          "name": "ISMS/BAIT-Doku",
+          "license": "open_source"
+        }
+      ],
+      "kmu_11_100": [
+        {
+          "category": "Daten",
+          "name": "Warehouse mit DSGVO/SOX-Kontrollen",
+          "license": "proprietary"
+        }
+      ]
+    },
+    "handel_ecommerce": {
+      "solo": [
+        {
+          "category": "Shop",
+          "name": "Shopify + AI-Assists",
+          "license": "proprietary"
+        }
+      ],
+      "team_2_10": [
+        {
+          "category": "Recommender",
+          "name": "Open-source Recsys (Implicit/LightFM)",
+          "license": "open_source"
+        }
+      ],
+      "kmu_11_100": [
+        {
+          "category": "CDP",
+          "name": "Segment + Reverse ETL",
+          "license": "proprietary"
+        }
+      ]
+    },
+    "bildung": {
+      "solo": [
+        {
+          "category": "LMS",
+          "name": "Moodle + RAG",
+          "license": "open_source"
+        }
+      ],
+      "team_2_10": [
+        {
+          "category": "Proctoring",
+          "name": "Lightweight, DSGVO-konform",
+          "license": "proprietary"
+        }
+      ],
+      "kmu_11_100": [
+        {
+          "category": "Analytics",
+          "name": "Learning Analytics (Open edX/Metabase)",
+          "license": "open_source"
+        }
+      ]
+    },
+    "verwaltung": {
+      "solo": [
+        {
+          "category": "Dokumente",
+          "name": "eAkte-kompatible Formulare",
+          "license": "proprietary"
+        }
+      ],
+      "team_2_10": [
+        {
+          "category": "OCR",
+          "name": "Tesseract + Workflow",
+          "license": "open_source"
+        }
+      ],
+      "kmu_11_100": [
+        {
+          "category": "Search",
+          "name": "OpenSearch + Aktenplan",
+          "license": "open_source"
+        }
+      ]
+    },
+    "gesundheit_pflege": {
+      "solo": [
+        {
+          "category": "KI",
+          "name": "LLM mit strengen HIPAA/DSGVO-Policies",
+          "license": "proprietary"
+        }
+      ],
+      "team_2_10": [
+        {
+          "category": "Daten",
+          "name": "FHIR-Server + Terminologie",
+          "license": "open_source"
+        }
+      ],
+      "kmu_11_100": [
+        {
+          "category": "Compliance",
+          "name": "Audit Trails + DLP (stark)",
+          "license": "proprietary"
+        }
+      ]
+    },
+    "bau_architektur": {
+      "solo": [
+        {
+          "category": "CAD",
+          "name": "Blender/FreeCAD + RAG",
+          "license": "open_source"
+        }
+      ],
+      "team_2_10": [
+        {
+          "category": "BIM",
+          "name": "BIMserver + IFC-Parser",
+          "license": "open_source"
+        }
+      ],
+      "kmu_11_100": [
+        {
+          "category": "VR/Sim",
+          "name": "Unreal Twinmotion pipeline",
+          "license": "proprietary"
+        }
+      ]
+    },
+    "medien_kreativ": {
+      "solo": [
+        {
+          "category": "Design",
+          "name": "Affinity/DaVinci + Blender",
+          "license": "proprietary|open_source"
+        }
+      ],
+      "team_2_10": [
+        {
+          "category": "Pipeline",
+          "name": "Frame.io + n8n + Storage EU",
+          "license": "proprietary|open_source"
+        }
+      ],
+      "kmu_11_100": [
+        {
+          "category": "DAM",
+          "name": "Headless DAM (ResourceSpace)",
+          "license": "open_source"
+        }
+      ]
+    },
+    "industrie_produktion": {
+      "solo": [
+        {
+          "category": "IoT",
+          "name": "Nodered + MQTT + LLM Assist",
+          "license": "open_source"
+        }
+      ],
+      "team_2_10": [
+        {
+          "category": "MES-Light",
+          "name": "Open‑source MES + RAG Handbuch",
+          "license": "open_source"
+        }
+      ],
+      "kmu_11_100": [
+        {
+          "category": "Simulation",
+          "name": "Digital Twin + Timeseries DB",
+          "license": "proprietary|open_source"
+        }
+      ]
+    },
+    "transport_logistik": {
+      "solo": [
+        {
+          "category": "Routen",
+          "name": "OpenRouteService + LLM Planer",
+          "license": "open_source"
+        }
+      ],
+      "team_2_10": [
+        {
+          "category": "TMS‑Light",
+          "name": "Open‑source TMS + RAG SOPs",
+          "license": "open_source"
+        }
+      ],
+      "kmu_11_100": [
+        {
+          "category": "Optimierung",
+          "name": "Heuristics/OR‑Tools",
+          "license": "open_source"
+        }
+      ]
+    }
+  }
+}
