@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-"""Einfache Sicherheits-Gap-Analyse mit next steps (+Punkte)."""
 from typing import Dict, Any, List
+from ._normalize import _briefing_to_dict
 
-def build_security_roadmap(briefing: Dict[str,Any], scores: Dict[str,Any]|None=None) -> Dict[str,Any]:
-    # Dummy-Heuristik: nimmt vorhandene Felder, erzeugt plausible Gaps
+def build_security_roadmap(briefing: Dict[str,Any] | Any, scores: Dict[str,Any] | None = None) -> Dict[str,Any]:
+    b = _briefing_to_dict(briefing)
     gaps: List[Dict[str,Any]] = []
     steps: List[Dict[str,Any]] = []
-    # Beispiel-Gaps (würde man mit echten Feldern befüllen)
+    # grobe Heuristik anhand b:
+    if not b.get("zweifaktor") and not b.get("mfa_enabled"):
+        gaps.append({"item":"2FA für Admin-Logins", "points":3})
+        steps.append({"title":"2FA für Admin-Zugänge aktivieren", "impact_points":3, "effort":"< 1 Tag", "cost":"~0–100 €"})
+    if not b.get("dpa_avv"):
+        gaps.append({"item":"AVV/DPAs für KI-Anbieter", "points":2})
+        steps.append({"title":"AVV mit KI-Anbietern abschließen", "impact_points":2, "effort":"1–2 Tage", "cost":"0 €"})
     gaps.append({"item":"Penetrationstest (jährlich)", "points":5})
-    gaps.append({"item":"Verschlüsselung at rest", "points":4})
-    gaps.append({"item":"2FA für Admin-Logins", "points":3})
-    # Schritte
-    steps.append({"title":"2FA für Admin-Zugänge aktivieren", "impact_points":3, "effort":"< 1 Tag", "cost":"~0–100 €"})
     steps.append({"title":"Penetrationstest beauftragen", "impact_points":5, "effort":"2 Wochen", "cost":"2.000–5.000 €"})
-    steps.append({"title":"DPIA durchführen (falls zutreffend)", "impact_points":4, "effort":"1 Tag", "cost":"0–500 €"})
     return {"gaps":gaps, "steps":steps}
 
 def to_html(roadmap: Dict[str,Any]) -> str:
