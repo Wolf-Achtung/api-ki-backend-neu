@@ -3,142 +3,232 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KI-Status-Report</title>
+  <title>KI‑Status‑Report</title>
+  <!-- pdf_template.html · v4.13.6-gs · modernisiert: Header/Footer‑Logos, Build‑Stempel, Feedback-Block -->
   <style>
-    :root{
-      --brand:#1e3a5f; --brand-2:#2563eb; --bg:#ffffff; --muted:#475569; --border:#e2e8f0;
-      --chip:#dbeafe; --chip-text:#1e3a5f; --card:#f8fafc;
+    /* --- Page & global --- */
+    @page {
+      size: A4;
+      margin: 28mm 18mm 26mm; /* Platz für festen Header (oben) & Footer (unten) */
     }
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans",sans-serif;line-height:1.45;color:#0f172a;background:#fff}
-    h1,h2,h3{color:var(--brand);margin:0 0 10px}
-    h1{font-size:28px} h2{font-size:22px} h3{font-size:18px}
-    p{margin:0 0 10px}
-    .container{padding:28px}
-    .cover{padding:48px 28px 24px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,#e0f2fe,#dbeafe)}
-    .meta{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 0}
-    .chip{display:inline-block;background:var(--chip);color:var(--chip-text);padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600}
-    .logos{display:flex;gap:12px;align-items:center;justify-content:flex-end}
-    .logos img{height:28px;display:block}
-    .grid{display:grid;grid-template-columns:1fr;gap:18px}
-    .card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px}
-    .table{width:100%;border-collapse:collapse}
-    .table th,.table td{padding:8px;border-bottom:1px solid #f1f5f9;text-align:left;vertical-align:top}
-    .table thead th{border-bottom:1px solid var(--border);background:#f8fafc}
+    :root{
+      --ink:#0f172a;           /* Slate-900 */
+      --muted:#475569;         /* Slate-600 */
+      --line:#e5e7eb;          /* Gray-200 */
+      --blue:#2563eb;          /* Blue-600 */
+      --blue-50:#eff6ff;
+      --blue-100:#dbeafe;
+    }
+    html,body{height:100%}
+    body{font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+         font-size: 11pt; line-height: 1.35; color: var(--ink);}
+    h1{font-size:22pt;margin:0 0 .25em 0}
+    h2{font-size:15.5pt;margin:.7em 0 .25em 0;border-bottom:1px solid var(--line);padding-bottom:.2em}
+    h3{font-size:12.5pt;margin:.6em 0 .15em 0}
+    h4{font-size:11.5pt;margin:.5em 0 .15em 0}
+    p,li{font-size:11pt}
+    a{color:var(--blue);text-decoration:underline}
     .muted{color:var(--muted)}
-    .bars{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:10px 0 0}
-    .bar{background:#eef2ff;border:1px solid #e2e8f0;border-radius:999px;height:12px;position:relative;overflow:hidden}
-    .bar-fill{position:absolute;left:0;top:0;bottom:0;width:0%}
-    .bar-label{display:flex;justify-content:space-between;font-size:12px;margin-top:6px;color:#0f172a}
-    .section{margin:20px 0}
-    .stand-hint{font-size:12px;color:var(--muted);margin:0 0 8px}
-    .footer{position:fixed;bottom:0;left:0;right:0;border-top:1px solid var(--border);padding:6px 12px;display:flex;align-items:center;gap:10px;background:#fff}
-    .footer .f-logos{display:flex;align-items:center;gap:10px}
-    .footer img{height:18px}
-    .footer .build{margin-left:auto;font-size:12px;color:#334155}
-    /* Avoid breaking rows across pages */
-    table, tr, td, th { page-break-inside: avoid; }
-    .break-avoid{page-break-inside: avoid;}
-    a{color:var(--brand-2);text-decoration:none}
+    .small{font-size:9pt}
+    .lead{font-style:italic;margin:.15em 0 .5em 0;color:#374151}
+    .pill{display:inline-block;padding:.1em .5em;border-radius:6px;background:#f3f4f6}
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{border:1px solid var(--line);padding:6px 8px;vertical-align:top}
+    .grid{display:grid;gap:16px}
+    .cols-2{grid-template-columns:1fr 1fr}
+    .card{border:1px solid var(--line);background:#f9fafb;padding:10px 14px;border-radius:10px}
+    .feedback-box{border:1px solid var(--blue-100);background:var(--blue-50);padding:12px 14px;border-radius:10px}
+    .watermark{position:fixed;bottom:12mm;right:10mm;opacity:.07;font-size:9pt;letter-spacing:.05em}
+    .page{page-break-after:always}
+    .last-page{page-break-before:always}
+    .meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+    .meta .kv>div{margin:2px 0}
+
+    /* --- Fixed header/footer (appear auf jeder Seite) --- */
+    .pdf-header{
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 22mm; display:flex; align-items:center; justify-content:space-between;
+      border-bottom:1px solid var(--line);
+    }
+    .brand{display:flex;align-items:center;gap:10px;padding:6mm 0 4mm 0}
+    .brand img.logo{height:12mm;object-fit:contain}
+    .brand .app{font-weight:700;letter-spacing:.3px}
+    .badge img{height:14mm;object-fit:contain}
+
+    .pdf-footer{
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 20mm; border-top:1px solid var(--line);
+      display:flex;align-items:center;justify-content:space-between;
+      gap:12px;
+    }
+    .pdf-footer .logos{display:flex;align-items:center;gap:12px}
+    .pdf-footer .logos img{height:12mm;object-fit:contain}
+    .pdf-footer .stamp{font-size:8.5pt;color:var(--muted)}
+
+    /* --- Section helpers --- */
+    .cover .kpis .table td:first-child{width:55%}
+    .kv strong{font-weight:600}
   </style>
 </head>
 <body>
-
-  <!-- Cover -->
-  <div class="cover">
-    <div style="display:flex;align-items:flex-start;gap:12px;justify-content:space-between">
-      <div>
-        <h1>KI‑Status‑Report</h1>
-        <div class="meta">
-          {% if branche_label %}<span class="chip">Branche: {{ branche_label }}</span>{% endif %}
-          {% if groesse_label %}<span class="chip">Größe: {{ groesse_label }}</span>{% endif %}
-          {% if bundesland_label %}<span class="chip">Standort: {{ bundesland_label }}</span>{% endif %}
-        </div>
-      </div>
-      <div class="logos">
-        {% if LOGO_PRIMARY_SRC %}<img src="{{ LOGO_PRIMARY_SRC }}" alt="Logo">{% endif %}
-        {% if COVER_BADGE_SRC %}<img src="{{ COVER_BADGE_SRC }}" alt="Badge">{% endif %}
-      </div>
+  <!-- ===== Fixed header (every page) ===== -->
+  <header class="pdf-header">
+    <div class="brand">
+      {% if LOGO_PRIMARY_DATA_URI or LOGO_PRIMARY_SRC %}
+        <img class="logo" src="{{ LOGO_PRIMARY_DATA_URI or LOGO_PRIMARY_SRC }}" alt="Logo">
+      {% endif %}
+      <div class="app">{{ APP_NAME or "KI‑Status‑Report" }}</div>
     </div>
-  </div>
-
-  <div class="container">
-
-    <!-- Executive Summary -->
-    <div class="section card break-avoid">
-      <h2>Executive Summary</h2>
-      {% if COMPANY_NAME %}<p class="muted">{{ COMPANY_NAME }} – Kurzüberblick</p>{% endif %}
-      <div class="bars">
-        {% for s in scores %}
-        <div>
-          <div class="bar"><div class="bar-fill" style="width: {{ s.value }}%; background: linear-gradient(90deg,#2563eb,#3b82f6)"></div></div>
-          <div class="bar-label"><span>{{ s.label }}</span><span>{{ s.value }}/100</span></div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-
-    <!-- Quick Wins (Platzhalter: werden aus Sections generiert, hier nur Rahmen) -->
-    <div class="section card break-avoid">
-      <h2>Quick Wins (90 Tage)</h2>
-      {% if QUICK_WINS_HTML %}{{ QUICK_WINS_HTML|safe }}{% else %}
-      <p class="muted">Konkrete Maßnahmen in 30/60/90 Tagen mit Aufwand/Kosten – siehe Roadmap unten.</p>
+    <div class="badge">
+      {% if COVER_BADGE_DATA_URI or COVER_BADGE_SRC %}
+        <img src="{{ COVER_BADGE_DATA_URI or COVER_BADGE_SRC }}" alt="Badge">
       {% endif %}
     </div>
+  </header>
 
-    <!-- Konsistenter ROI-Block (ersetzt alte Umsatz-Tabelle) -->
-    <div class="section card break-avoid">
-      <h2>Business Case</h2>
-      {{ ROI_HTML|safe }}
-      <p class="muted" style="font-size:12px;margin-top:6px">Annahmen: konservative Zeitersparnis & Stundensatz basierend auf Umsatzklasse. Werte dienen der Orientierung.</p>
+  <!-- ===== Fixed footer (every page) ===== -->
+  <footer class="pdf-footer">
+    <div class="logos">
+      {% if FOOTER_LEFT_LOGO_DATA_URI or FOOTER_LEFT_LOGO_SRC %}
+        <img src="{{ FOOTER_LEFT_LOGO_DATA_URI or FOOTER_LEFT_LOGO_SRC }}" alt="Footer‑Logo links">
+      {% endif %}
+      {% if FOOTER_MID_LOGO_DATA_URI or FOOTER_MID_LOGO_SRC %}
+        <img src="{{ FOOTER_MID_LOGO_DATA_URI or FOOTER_MID_LOGO_SRC }}" alt="Footer‑Logo mitte">
+      {% endif %}
+      {% if FOOTER_RIGHT_LOGO_DATA_URI or FOOTER_RIGHT_LOGO_SRC %}
+        <img src="{{ FOOTER_RIGHT_LOGO_DATA_URI or FOOTER_RIGHT_LOGO_SRC }}" alt="Footer‑Logo rechts">
+      {% endif %}
+    </div>
+    <div class="stamp">
+      Stand: {{ REPORT_DATE or report_date or TODAY or "" }}
+      {% if BUILD_STAMP or BUILD_ID %} · Build: {{ BUILD_STAMP or BUILD_ID }}{% endif %}
+      {% if report_id %} · Report‑ID: {{ report_id }}{% endif %}
+      {% if report_version %} · v{{ report_version }}{% endif %}
+    </div>
+  </footer>
+
+  <!-- ===== Cover ===== -->
+  <section class="cover page">
+    <h1>KI‑Status‑Report</h1>
+    <div class="lead">Individueller Report</div>
+    <div class="meta">
+      <div class="kv">
+        <div><strong>Branche:</strong> {{ branche_label }}</div>
+        <div><strong>Größe:</strong> {{ unternehmensgroesse_label }}</div>
+        <div><strong>Standort:</strong> {{ bundesland_label }}</div>
+      </div>
+      <div class="kv">
+        <div class="small muted">{{ TRANSPARENCY_TEXT }}</div>
+        <div class="small"><strong>Version:</strong> v{{ report_version }} · <strong>Report‑ID:</strong> {{ report_id }}</div>
+        <div class="small muted">Änderungslog kurz: „{{ CHANGELOG_SHORT }}“</div>
+      </div>
     </div>
 
-    <!-- Empfohlene Tools -->
-    <div class="section card break-avoid">
-      <h2>Empfohlene Tools (Preis &amp; DSGVO)</h2>
-      {{ TOOLS_HTML|safe }}
+    <div class="kpis" style="margin-top:10px">
+      <table class="table">
+        <thead><tr><th>Dimension</th><th>Score</th></tr></thead>
+        <tbody>
+          <tr><td>Governance</td><td>{{ score_governance }}/100</td></tr>
+          <tr><td>Sicherheit &amp; Compliance</td><td>{{ score_sicherheit }}/100</td></tr>
+          <tr><td>Nutzen &amp; Prozesse</td><td>{{ score_nutzen }}/100</td></tr>
+          <tr><td>Befähigung</td><td>{{ score_befaehigung }}/100</td></tr>
+          <tr><td><strong>Gesamt</strong></td><td><strong>{{ score_overall }}/100</strong></td></tr>
+        </tbody>
+      </table>
     </div>
+  </section>
 
-    <!-- Sicherheits-Roadmap -->
-    <div class="section card break-avoid">
-      <h2>Sicherheits‑Roadmap</h2>
-      {{ SECURITY_ROADMAP_HTML|safe }}
-    </div>
+  <!-- ===== Executive Summary ===== -->
+  <section class="page">
+    <h2>Executive Summary</h2>
+    <p class="lead">{{ EXEC_SUMMARY_LEAD }}</p>
+    {{ EXEC_SUMMARY_HTML }}
+  </section>
 
-    <!-- Wettbewerb -->
-    <div class="section card break-avoid">
-      <h2>Wettbewerbs‑Überblick</h2>
-      {{ COMPETITORS_HTML|safe }}
-    </div>
+  <!-- ===== Quick Wins ===== -->
+  <section class="page">
+    <h2>Quick Wins (90 Tage)</h2>
+    <p class="lead">{{ QW_LEAD }}</p>
+    {{ QUICK_WINS_HTML }}
+    <div class="small muted footer-note">Legende: ⏱ Aufwand · 🎯 Impact · 👤 Owner · 📆 Termin</div>
+  </section>
 
-    <!-- Förderprogramme -->
-    <div class="section card break-avoid">
-      <h2>Förderprogramme</h2>
-      {{ FOERDERPROGRAMME_HTML|safe }}
-    </div>
+  <!-- ===== Business Case ===== -->
+  <section class="page">
+    <h2>Business Case</h2>
+    {{ BUSINESS_CASE_HTML }}
+  </section>
 
-    <!-- Feedback -->
-    <div class="section card break-avoid">
-      <h2>Ihre Meinung zählt</h2>
-      <p>Was war hilfreich, was fehlt? Wir freuen uns über Ihr Feedback.</p>
-      {% if FEEDBACK_URL %}
-        <p><a href="{{ FEEDBACK_URL }}" target="_blank" rel="noopener">Zum Feedback‑Formular</a></p>
+  <!-- ===== Tools ===== -->
+  <section class="page">
+    <h2>Empfohlene Tools (Pro &amp; Open‑Source)</h2>
+    <p class="lead">Effiziente Tools steigern Produktivität; Auswahl treffen → Implementierung starten.</p>
+    {{ TOOLS_TABLE_HTML }}
+  </section>
+
+  <!-- ===== Sicherheits‑Roadmap ===== -->
+  <section class="page">
+    <h2>Sicherheits‑Roadmap</h2>
+    {{ SECURITY_ROADMAP_HTML }}
+  </section>
+
+  <!-- ===== Förderprogramme ===== -->
+  <section class="page">
+    <h2>Förderprogramme</h2>
+    {{ FOERDERPROGRAMME_HTML }}
+  </section>
+
+  <!-- ===== Kreativ‑Tools ===== -->
+  <section class="page">
+    <h2>Kreativ‑Tools (kuratierte Liste)</h2>
+    {{ KREATIV_TOOLS_HTML }}
+  </section>
+
+  <!-- ===== Glossar ===== -->
+  <section class="page">
+    <h2>Glossar</h2>
+    {{ GLOSSAR_HTML }}
+  </section>
+
+  <!-- ===== EU AI Act ===== -->
+  <section class="page">
+    <h2>EU AI Act – Überblick &amp; Fristen ({{ ai_act_phase_label }})</h2>
+    <p class="lead">{{ LEAD_AI_ACT }}</p>
+    {{ AI_ACT_SUMMARY_HTML }}
+    <div class="card">{{ AI_ACT_TABLE_OFFER_HTML }}</div>
+    <div style="margin-top:6px">{{ AI_ACT_ADDON_PACKAGES_HTML }}</div>
+  </section>
+
+  <!-- ===== Nächste Schritte ===== -->
+  <section class="page">
+    <h2>Nächste Schritte (30 Tage)</h2>
+    <p class="lead">{{ LEAD_NEXT_ACTIONS }}</p>
+    <div class="small muted">Legende: ⏱ Aufwand · 🎯 Impact · 👤 Owner · 📆 Termin</div>
+    {{ NEXT_ACTIONS_HTML }}
+  </section>
+
+  <!-- ===== Schlussseite ===== -->
+  <section class="last-page">
+    <div class="feedback-box">
+      <strong>Ihre Meinung zählt:</strong>
+      {% if FEEDBACK_BOX_HTML %}
+        {{ FEEDBACK_BOX_HTML }}
       {% else %}
-        <p class="muted">Feedback‑Link wird nachgereicht.</p>
+        <span>Was war hilfreich, was fehlt?</span>
+        {% if FEEDBACK_URL %}
+          <a href="{{ FEEDBACK_URL }}" target="_blank" rel="noopener">Zum Feedback‑Formular</a>.
+        {% endif %}
       {% endif %}
     </div>
-
-  </div>
-
-  <!-- Footer -->
-  <div class="footer">
-    <div class="f-logos">
-      {% if FOOTER_LEFT_LOGO_SRC %}<img src="{{ FOOTER_LEFT_LOGO_SRC }}" alt="Footer‑Logo links">{% endif %}
-      {% if FOOTER_MID_LOGO_SRC %}<img src="{{ FOOTER_MID_LOGO_SRC }}" alt="Footer‑Logo mitte">{% endif %}
-      {% if FOOTER_RIGHT_LOGO_SRC %}<img src="{{ FOOTER_RIGHT_LOGO_SRC }}" alt="Footer‑Logo rechts">{% endif %}
+    <div class="small muted" style="margin-top:10px;">
+      © {{ REPORT_YEAR or report_year or "2025" }} KI‑Sicherheit.jetzt – DSGVO &amp; EU‑AI‑Act‑Ready – {{ OWNER_NAME }}
     </div>
-    <div class="build">{{ BUILD_STAMP }}</div>
-  </div>
-
+    <div class="small muted">
+      TÜV‑zertifiziertes KI‑Management © {{ REPORT_YEAR or report_year or "2025" }} ·
+      E‑Mail: {{ OWNER_EMAIL or CONTACT_EMAIL or "kontakt@ki-sicherheit.jetzt" }} ·
+      Alle Angaben ohne Gewähr; keine Rechtsberatung.
+    </div>
+    <div class="watermark">{{ WATERMARK_TEXT }}</div>
+  </section>
 </body>
 </html>
