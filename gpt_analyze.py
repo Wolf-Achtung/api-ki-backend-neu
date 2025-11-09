@@ -25,6 +25,11 @@ import requests
 from sqlalchemy.orm import Session
 
 try:
+    import resend  # type: ignore
+except ImportError:
+    resend = None  # type: ignore
+
+try:
     from core.db import SessionLocal  # type: ignore
 except Exception:  # pragma: no cover
     SessionLocal = None  # type: ignore
@@ -32,7 +37,6 @@ except Exception:  # pragma: no cover
 from models import Analysis, Briefing, Report, User  # type: ignore
 from services.report_renderer import render  # type: ignore
 from services.pdf_client import render_pdf_from_html  # type: ignore
-from services.email import send_mail  # type: ignore
 from services.email_templates import render_report_ready_email  # type: ignore
 from settings import settings  # type: ignore
 from services.coverage_guard import analyze_coverage, build_html_report  # type: ignore
@@ -61,6 +65,47 @@ INCLUDE_COVERAGE_BOX = os.getenv("INCLUDE_COVERAGE_BOX", "0") in ("1","true","TR
 
 DBG_PDF = (os.getenv("DEBUG_LOG_PDF_INFO", "1") in ("1", "true", "TRUE", "yes", "YES"))
 DBG_MASK_EMAILS = (os.getenv("MASK_EMAILS", "1") in ("1", "true", "TRUE", "yes", "YES"))
+
+# Resend Configuration
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+SMTP_FROM = os.getenv("SMTP_FROM", "bewertung@send.ki-sicherheit.jetzt")
+
+def _send_email_via_resend(to_email: str, subject: str, html_body: str, attachments: Optional[List[Dict[str, Any]]] = None) -> Tuple[bool, Optional[str]]:
+    """Send email via Resend API with optional attachments"""
+    if not resend or not RESEND_API_KEY:
+        return False, "Resend not configured"
+    
+    try:
+        resend.api_key = RESEND_API_KEY
+        
+        # Prepare attachments for Resend
+        resend_attachments = []
+        if attachments:
+            import base64
+            for att in attachments:
+                if "content" in att and "filename" in att:
+                    content_bytes = att["content"] if isinstance(att["content"], bytes) else att["content"].encode("utf-8")
+                    resend_attachments.append({
+                        "filename": att["filename"],
+                        "content": list(content_bytes)  # Resend expects list of bytes
+                    })
+        
+        params = {
+            "from": SMTP_FROM,
+            "to": [to_email],
+            "subject": subject,
+            "html": html_body
+        }
+        
+        if resend_attachments:
+            params["attachments"] = resend_attachments
+        
+        response = resend.Emails.send(params)
+        return True, None
+        
+    except Exception as exc:
+        return False, str(exc)
+
 
 # -------------------- helpers --------------------
 def _ellipsize(s: str, max_len: int) -> str:
@@ -965,6 +1010,7 @@ def _fetch_pdf_if_needed(pdf_url: Optional[str], pdf_bytes: Optional[bytes]) -> 
     return None
 
 def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str], pdf_bytes: Optional[bytes], run_id: str) -> None:
+    """Send emails via Resend API"""
     best_pdf = _fetch_pdf_if_needed(pdf_url, pdf_bytes)
     attachments_admin: List[Dict[str, Any]] = []
     if best_pdf:
@@ -974,22 +1020,45 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
         attachments_admin.append({"filename": f"briefing-{br.id}.json", "content": bjson, "mimetype": "application/json"})
     except Exception:
         pass
+    
+    # Send to user
     try:
         user_email = None
-        try: user_email = _determine_user_email(db, br, getattr(rep, "user_email", None))
-        except Exception: user_email = None
+        try: 
+            user_email = _determine_user_email(db, br, getattr(rep, "user_email", None))
+        except Exception: 
+            user_email = None
+        
         if user_email:
-            ok, err = send_mail(user_email, "Ihr KI‑Status‑Report ist fertig", render_report_ready_email(recipient="user", pdf_url=pdf_url), text=None, attachments=([] if pdf_url else attachments_admin[:1]))
-            if ok: log.info("[%s] 📧 Mail sent to user %s", run_id, _mask_email(user_email))
-            else: log.warning("[%s] MAIL_USER failed: %s", run_id, err)
+            # For user: attach PDF only if no URL available
+            user_attachments = [] if pdf_url else attachments_admin[:1]
+            ok, err = _send_email_via_resend(
+                user_email, 
+                "Ihr KI‑Status‑Report ist fertig", 
+                render_report_ready_email(recipient="user", pdf_url=pdf_url),
+                attachments=user_attachments
+            )
+            if ok: 
+                log.info("[%s] 📧 Mail sent to user %s via Resend", run_id, _mask_email(user_email))
+            else: 
+                log.warning("[%s] MAIL_USER failed: %s", run_id, err)
     except Exception as exc:
         log.warning("[%s] MAIL_USER failed: %s", run_id, exc)
+    
+    # Send to admins
     try:
         if os.getenv("ENABLE_ADMIN_NOTIFY", "1") in ("1","true","TRUE","yes","YES"):
             for addr in _admin_recipients():
-                ok, err = send_mail(addr, f"Neuer KI‑Status‑Report – Analysis #{rep.analysis_id} / Briefing #{rep.briefing_id}", render_report_ready_email(recipient="admin", pdf_url=pdf_url), text=None, attachments=attachments_admin)
-                if ok: log.info("[%s] 📧 Admin notify sent to %s", run_id, _mask_email(addr))
-                else: log.warning("[%s] MAIL_ADMIN failed for %s: %s", run_id, _mask_email(addr), err)
+                ok, err = _send_email_via_resend(
+                    addr, 
+                    f"Neuer KI‑Status‑Report – Analysis #{rep.analysis_id} / Briefing #{rep.briefing_id}", 
+                    render_report_ready_email(recipient="admin", pdf_url=pdf_url),
+                    attachments=attachments_admin
+                )
+                if ok: 
+                    log.info("[%s] 📧 Admin notify sent to %s via Resend", run_id, _mask_email(addr))
+                else: 
+                    log.warning("[%s] MAIL_ADMIN failed for %s: %s", run_id, _mask_email(addr), err)
     except Exception as exc:
         log.warning("[%s] MAIL_ADMIN block failed: %s", run_id, exc)
 
