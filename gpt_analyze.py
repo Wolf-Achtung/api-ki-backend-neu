@@ -873,13 +873,12 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     report_id = f"R-{now.strftime('%Y%m%d')}-{kundencode}"
     sections["kundencode"] = kundencode; sections["report_id"] = report_id; sections["report_version"] = version_mm
     sections["WATERMARK_TEXT"] = _build_watermark_text(report_id, version_mm)
-
-# Build‑Stempel & Feedback‑Box
-sections["BUILD_STAMP"] = f"{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')} · {report_id} · v{version_mm}"
-if sections.get("FEEDBACK_URL"):
-    fb_html = _build_feedback_box(sections["FEEDBACK_URL"], sections["report_date"])
-    if fb_html:
-        sections["FEEDBACK_BOX_HTML"] = fb_html
+    # Build‑Stempel & Feedback‑Box
+    sections["BUILD_STAMP"] = f"{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')} · {report_id} · v{version_mm}"
+    if sections.get("FEEDBACK_URL"):
+        fb_html = _build_feedback_box(sections["FEEDBACK_URL"], sections["report_date"])
+        if fb_html:
+            sections["FEEDBACK_BOX_HTML"] = fb_html
 
     sections["CHANGELOG_SHORT"] = os.getenv("CHANGELOG_SHORT", "—")
     sections["AUDITOR_INITIALS"] = os.getenv("AUDITOR_INITIALS", "KSJ")
