@@ -993,6 +993,10 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
     except Exception as exc:
         log.warning("[%s] MAIL_ADMIN block failed: %s", run_id, exc)
 
+def run_analysis_for_briefing(briefing_id: int, email: Optional[str] = None) -> None:
+    """Public API: Start analysis for a briefing (called from routes/briefings.py)"""
+    run_async(briefing_id, email)
+
 def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     run_id = f"run-{uuid.uuid4().hex[:8]}"
     if SessionLocal is None: raise RuntimeError("database_unavailable")
