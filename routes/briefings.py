@@ -295,9 +295,16 @@ async def submit(request: Request, background: BackgroundTasks):
     answers = extracted.get("answers") if isinstance(extracted.get("answers"), dict) else extracted
     email = extracted.get("email")
     
+    # WICHTIG: Email muss IN answers sein, nicht als separates Feld!
+    if isinstance(answers, dict):
+        answers["email"] = email
+    
+    logger.info(f"💾 Speichere Briefing mit Email in answers: {email}")
+    
     db = SessionLocal()
     try:
-        obj = Briefing(answers=answers, lang=lang, email=email)
+        # Briefing-Model hat NUR: answers, lang (kein email-Parameter!)
+        obj = Briefing(answers=answers, lang=lang)
         db.add(obj)
         db.commit()
         db.refresh(obj)
