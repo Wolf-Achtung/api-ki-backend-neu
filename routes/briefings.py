@@ -25,17 +25,21 @@ logger.setLevel(logging.INFO)
 SessionLocal = None
 Briefing = None
 try:
-    from db import SessionLocal as _SessionLocal
+    from core.db import SessionLocal as _SessionLocal
     from models import Briefing as _Briefing
     SessionLocal = _SessionLocal
     Briefing = _Briefing
-except Exception:
+    logger.info("✅ DB-Layer erfolgreich importiert (core.db)")
+except Exception as e:
+    logger.warning(f"⚠️ DB-Import fehlgeschlagen (core.db): {e}")
     try:
-        from .db import SessionLocal as _SessionLocal  # type: ignore
-        from .models import Briefing as _Briefing      # type: ignore
+        from ..core.db import SessionLocal as _SessionLocal  # type: ignore
+        from ..models import Briefing as _Briefing      # type: ignore
         SessionLocal = _SessionLocal
         Briefing = _Briefing
-    except Exception:
+        logger.info("✅ DB-Layer erfolgreich importiert (relative import)")
+    except Exception as e2:
+        logger.warning(f"⚠️ DB-Import fehlgeschlagen (relative): {e2}")
         pass
 
 # ------------------- JWT Helper mit BESSEREM LOGGING -------------------
