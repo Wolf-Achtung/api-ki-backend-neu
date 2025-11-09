@@ -1,10 +1,11 @@
 # file: routes/briefings.py
 # -*- coding: utf-8 -*-
 """
-Gold-Standard+ Briefing-Submit (vollständig optimiert)
+Gold-Standard+ Briefing-Submit (JWT-Email-Extraktion)
 - Akzeptiert JSON und multipart/form-data
+- Extrahiert Email aus JWT-Token falls nicht im Body
 - Eingebauter Label-Normalizer (Branche/Unternehmensgröße/Bundesland)
-- Pflichtfeld-Validierung mit klaren 422-Fehlern + Debug-Info
+- Pflichtfeld-Validierung mit klaren 422-Fehlern
 - Persistenz + Background-Analyse (lazy import), 202 Accepted
 """
 from __future__ import annotations
@@ -13,7 +14,7 @@ import json
 import logging
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr, Field
 
@@ -36,6 +37,52 @@ except Exception:
         Briefing = _Briefing
     except Exception:
         pass
+
+# ------------------- JWT Helper (optional) -------------------
+def get_current_user_email(request: Request) -> Optional[str]:
+    """
+    Extrahiert Email aus JWT-Token falls vorhanden.
+    Tolerant - gibt None zurück wenn Token fehlt oder ungültig.
+    """
+    try:
+        # Versuche JWT aus Authorization Header zu laden
+        auth_header = request.headers.get("authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return None
+        
+        token = auth_header.replace("Bearer ", "")
+        
+        # Lazy import von JWT-Decoder
+        try:
+            import jwt
+            import os
+            
+            secret = os.getenv("JWT_SECRET")
+            if not secret:
+                logger.warning("JWT_SECRET nicht gesetzt")
+                return None
+            
+            # Decode token
+            payload = jwt.decode(token, secret, algorithms=["HS256"])
+            
+            # Email extrahieren (verschiedene mögliche Keys)
+            email = (
+                payload.get("email") or 
+                payload.get("sub") or 
+                payload.get("user_email") or
+                payload.get("userEmail")
+            )
+            
+            if email:
+                logger.info(f"Email aus JWT extrahiert: {email}")
+                return email
+                
+        except Exception as e:
+            logger.debug(f"JWT decode fehlgeschlagen: {e}")
+            return None
+            
+    except Exception:
+        return None
 
 router = APIRouter(prefix="/briefings", tags=["briefings"])
 
@@ -93,7 +140,10 @@ BUNDESLAND_MAP = {
     "nordrhein-westfalen": "NW", "nrw": "NW", "nw": "NW",
     "brandenburg": "BB", "bb": "BB",
 }
-REQUIRED = ("email", "branche", "unternehmensgroesse", "bundesland", "hauptleistung")
+
+# Email ist optional im Body (kann aus JWT kommen)
+REQUIRED = ("branche", "unternehmensgroesse", "bundesland", "hauptleistung")
+REQUIRED_WITH_EMAIL = ("email", "branche", "unternehmensgroesse", "bundesland", "hauptleistung")
 
 # ------------------- Utilities -------------------
 def _slug(s: Any) -> str:
@@ -110,15 +160,16 @@ def _get_value(data: Dict[str, Any], key: str) -> Any:
         return data["answers"][key]
     return None
 
-def _normalize(data: Dict[str, Any]) -> Dict[str, Any]:
+def _normalize(data: Dict[str, Any], jwt_email: Optional[str] = None) -> Dict[str, Any]:
     """
     Akzeptiert UI-Labels oder Slugs und liefert kanonische Werte zurück.
     Erstellt flache Struktur mit allen relevanten Feldern.
+    Nutzt jwt_email als Fallback wenn email nicht im Body.
     """
     out = dict(data or {})
     
     # Extrahiere Werte aus beiden möglichen Positionen
-    email = _get_value(out, "email")
+    email = _get_value(out, "email") or jwt_email  # JWT-Email als Fallback!
     branche_raw = _get_value(out, "branche")
     groesse_raw = _get_value(out, "unternehmensgroesse")
     bundesland_raw = _get_value(out, "bundesland")
@@ -159,7 +210,7 @@ def _validate_required(data: Dict[str, Any]) -> None:
     missing = []
     invalid = []
     
-    for key in REQUIRED:
+    for key in REQUIRED_WITH_EMAIL:
         value = data.get(key)
         
         # Prüfe ob Wert existiert und nicht leer ist
@@ -200,9 +251,17 @@ def _trigger_analysis(briefing_id: int, email: Optional[str]) -> None:
 @router.post("/submit")
 async def submit(request: Request, background: BackgroundTasks):
     """
-    Briefing-Submit Endpoint mit verbesserter Fehlerbehandlung.
+    Briefing-Submit Endpoint mit JWT-Email-Extraktion.
     Akzeptiert JSON oder multipart/form-data.
+    Extrahiert Email aus JWT-Token falls nicht im Body vorhanden.
     """
+    # 0) Versuche Email aus JWT zu extrahieren
+    jwt_email = get_current_user_email(request)
+    if jwt_email:
+        logger.info(f"JWT-Email gefunden: {jwt_email}")
+    else:
+        logger.debug("Keine JWT-Email gefunden, erwarte Email im Body")
+    
     # 1) Tolerant parsen
     ctype = request.headers.get("content-type", "")
     data: Dict[str, Any] = {}
@@ -229,9 +288,9 @@ async def submit(request: Request, background: BackgroundTasks):
     # Debug-Logging für eingehende Daten
     logger.debug(f"Raw Request Data: {json.dumps(data, ensure_ascii=False, indent=2)}")
     
-    # 2) Normalisieren & validieren
+    # 2) Normalisieren & validieren (mit JWT-Email als Fallback)
     try:
-        normalized = _normalize(data)
+        normalized = _normalize(data, jwt_email=jwt_email)
         logger.debug(f"Normalisierte Daten: {json.dumps(normalized, ensure_ascii=False, indent=2)}")
         
         _validate_required(normalized)
@@ -269,7 +328,7 @@ async def submit(request: Request, background: BackgroundTasks):
         db.commit()
         db.refresh(obj)
         
-        logger.info(f"Briefing {obj.id} erfolgreich gespeichert für {email}")
+        logger.info(f"✅ Briefing {obj.id} erfolgreich gespeichert für {email}")
         
         # 4) Analyse asynchron starten
         background.add_task(_trigger_analysis, briefing_id=obj.id, email=email)
