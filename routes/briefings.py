@@ -38,19 +38,31 @@ except Exception:
     except Exception:
         pass
 
-# ------------------- JWT Helper (optional) -------------------
+# ------------------- JWT Helper mit BESSEREM LOGGING -------------------
 def get_current_user_email(request: Request) -> Optional[str]:
     """
     Extrahiert Email aus JWT-Token falls vorhanden.
     Tolerant - gibt None zurück wenn Token fehlt oder ungültig.
+    WICHTIG: Loggt jetzt WARUM kein Token extrahiert werden konnte!
     """
     try:
         # Versuche JWT aus Authorization Header zu laden
         auth_header = request.headers.get("authorization", "")
+        
+        # DEBUG: Zeige ob Authorization-Header vorhanden ist
+        if not auth_header:
+            logger.warning("⚠️ Kein Authorization-Header vorhanden!")
+            return None
+            
         if not auth_header.startswith("Bearer "):
+            logger.warning(f"⚠️ Authorization-Header hat falsches Format: '{auth_header[:20]}...'")
             return None
         
-        token = auth_header.replace("Bearer ", "")
+        token = auth_header.replace("Bearer ", "").strip()
+        
+        if not token:
+            logger.warning("⚠️ Authorization-Header ist leer nach 'Bearer '")
+            return None
         
         # Lazy import von JWT-Decoder
         try:
@@ -59,10 +71,11 @@ def get_current_user_email(request: Request) -> Optional[str]:
             
             secret = os.getenv("JWT_SECRET")
             if not secret:
-                logger.warning("JWT_SECRET nicht gesetzt")
+                logger.error("❌ JWT_SECRET nicht gesetzt in ENV!")
                 return None
             
             # Decode token
+            logger.debug(f"🔍 Versuche JWT zu decoden (Token-Länge: {len(token)})")
             payload = jwt.decode(token, secret, algorithms=["HS256"])
             
             # Email extrahieren (verschiedene mögliche Keys)
@@ -77,14 +90,23 @@ def get_current_user_email(request: Request) -> Optional[str]:
                 logger.info(f"✅ JWT-Email gefunden: {email}")
                 return email
             else:
-                logger.debug("JWT Token vorhanden, aber keine Email darin")
+                # Zeige welche Keys im Payload sind
+                available_keys = list(payload.keys())
+                logger.warning(f"⚠️ JWT Token vorhanden, aber keine Email darin! Keys: {available_keys}")
                 return None
                 
+        except jwt.ExpiredSignatureError:
+            logger.warning("⚠️ JWT Token ist abgelaufen!")
+            return None
+        except jwt.InvalidTokenError as e:
+            logger.warning(f"⚠️ JWT decode fehlgeschlagen: {type(e).__name__}: {str(e)}")
+            return None
         except Exception as e:
-            logger.debug(f"JWT decode fehlgeschlagen: {e}")
+            logger.error(f"❌ Unerwarteter Fehler beim JWT-Decode: {type(e).__name__}: {str(e)}")
             return None
             
-    except Exception:
+    except Exception as e:
+        logger.error(f"❌ Unerwarteter Fehler in get_current_user_email: {type(e).__name__}: {str(e)}")
         return None
 
 router = APIRouter(prefix="/briefings", tags=["briefings"])
@@ -115,6 +137,9 @@ def _extract_fields(data: Dict[str, Any], jwt_email: Optional[str] = None) -> Di
     groesse = _get_value(out, "unternehmensgroesse")
     bundesland = _get_value(out, "bundesland")
     hauptleistung = _get_value(out, "hauptleistung")
+    
+    # Logging für Debugging
+    logger.info(f"📋 Email-Quellen: Body={_get_value(out, 'email')}, JWT={jwt_email}, Final={email}")
     
     # Erstelle flache Struktur
     result = dict(out)
@@ -188,11 +213,14 @@ async def submit(request: Request, background: BackgroundTasks):
     Extrahiert Email aus JWT-Token falls nicht im Body vorhanden.
     """
     # 0) Versuche Email aus JWT zu extrahieren
+    logger.info("=" * 60)
+    logger.info("🚀 Briefing-Submit gestartet")
+    
     jwt_email = get_current_user_email(request)
     if jwt_email:
-        logger.info(f"✅ JWT-Email gefunden: {jwt_email}")
+        logger.info(f"✅ JWT-Email erfolgreich extrahiert: {jwt_email}")
     else:
-        logger.debug("Keine JWT-Email gefunden, erwarte Email im Body")
+        logger.warning("⚠️ Keine JWT-Email gefunden - erwarte Email im Request-Body")
     
     # 1) Tolerant parsen
     ctype = request.headers.get("content-type", "")
@@ -217,13 +245,13 @@ async def submit(request: Request, background: BackgroundTasks):
         logger.error(f"❌ Request-Parsing fehlgeschlagen: {e}")
         raise HTTPException(status_code=400, detail=f"Ungültiges Request-Format: {str(e)}")
     
-    # Debug-Logging für eingehende Daten
+    # Debug-Logging für eingehende Daten (erste 500 Zeichen)
     logger.debug(f"Raw Request Data: {json.dumps(data, ensure_ascii=False, indent=2)[:500]}")
     
     # 2) Felder extrahieren & validieren (mit JWT-Email als Fallback)
     try:
         extracted = _extract_fields(data, jwt_email=jwt_email)
-        logger.debug(f"Extrahierte Felder - Email: {extracted.get('email')}, Branche: {extracted.get('branche')}, Größe: {extracted.get('unternehmensgroesse')}")
+        logger.info(f"📋 Extrahiert - Email: {extracted.get('email')}, Branche: {extracted.get('branche')}, Größe: {extracted.get('unternehmensgroesse')}")
         
         _validate_required(extracted)
         logger.info("✅ Validierung erfolgreich")
