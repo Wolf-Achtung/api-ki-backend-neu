@@ -1,5 +1,5 @@
 # Production requirements - KI-Sicherheit.jetzt Backend
-# Updated: 2025-11-09 - Added JWT, AI SDKs, SMTP libs, Resend
+# Updated: 2025-11-09 - Fixed resend dependency conflict
 # Python 3.11+
 
 # ============================================================
@@ -7,8 +7,8 @@
 # ============================================================
 fastapi>=0.115,<0.116
 uvicorn[standard]>=0.30,<0.31
-pydantic>=2.9,<3.0                  # Updated from 2.7
-pydantic-settings>=2.5,<3.0         # Updated from 2.4
+pydantic>=2.9,<3.0
+pydantic-settings>=2.5,<3.0
 
 # ============================================================
 # DATABASE
@@ -16,23 +16,23 @@ pydantic-settings>=2.5,<3.0         # Updated from 2.4
 SQLAlchemy>=2.0,<2.1
 
 # PostgreSQL Drivers - Both versions for compatibility
-psycopg[binary]>=3.1.18,<3.2.0      # PostgreSQL driver v3 (newer SQLAlchemy imports)
-psycopg2-binary>=2.9.9,<3.0.0       # PostgreSQL driver v2 (legacy imports)
+psycopg[binary]>=3.1.18,<3.2.0
+psycopg2-binary>=2.9.9,<3.0.0
 
 # ============================================================
 # HTTP & AUTH
 # ============================================================
-requests>=2.32,<3.0
+requests>=2.31,<3.0                 # Lowered to 2.31 for resend compatibility
 python-jose[cryptography]>=3.3.0,<3.4.0
-PyJWT>=2.8.0,<3.0.0                 # NEW: JWT token handling for email extraction
+PyJWT>=2.8.0,<3.0.0
 python-multipart>=0.0.9,<0.1.0
 email-validator>=2.2.0,<2.3.0
 
 # ============================================================
 # EMAIL
 # ============================================================
-resend>=0.8.0,<1.0.0                # NEW: Resend.com API (better than SMTP!)
-aiosmtplib>=3.0.0,<4.0.0            # Async SMTP client (fallback)
+resend>=0.8.0,<1.0.0                # Resend.com API
+aiosmtplib>=3.0.0,<4.0.0            # Async SMTP (fallback)
 
 # ============================================================
 # TEMPLATES & RENDERING
@@ -42,27 +42,20 @@ jinja2>=3.1,<3.2
 # ============================================================
 # AI / LLM SDKS
 # ============================================================
-openai>=1.45.0,<2.0.0               # OpenAI API (GPT-4o)
+openai>=1.45.0,<2.0.0
 
 # ============================================================
 # RESEARCH & SEARCH TOOLS
 # ============================================================
-tavily-python>=0.5.0,<1.0.0         # Updated from 0.3.0 - Live web research
+tavily-python>=0.5.0,<1.0.0
 
 # ============================================================
 # DATA PROCESSING
 # ============================================================
-python-dateutil>=2.8.0,<3.0.0       # Date parsing utilities
-pytz>=2024.1                         # Timezone support
+python-dateutil>=2.8.0,<3.0.0
+pytz>=2024.1
 
 # ============================================================
 # UTILITIES
 # ============================================================
-python-dotenv>=1.0.0,<2.0.0         # ENV file support (dev & setup scripts)
-
-# ============================================================
-# OPTIONAL (uncomment if needed)
-# ============================================================
-# sentry-sdk[fastapi]>=2.0.0,<3.0.0  # Error tracking
-# sendgrid>=6.11.0,<7.0.0            # SendGrid API
-# mailgun>=0.1.0,<0.2.0              # Mailgun API
+python-dotenv>=1.0.0,<2.0.0
