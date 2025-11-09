@@ -64,6 +64,16 @@ def get_current_user_email(request: Request) -> Optional[str]:
             logger.warning("⚠️ Authorization-Header ist leer nach 'Bearer '")
             return None
         
+        # DEBUG: Zeige Token-Format (erste 50 Zeichen)
+        logger.info(f"🔍 Token empfangen (Länge: {len(token)}, Anfang: '{token[:50]}...')")
+        
+        # Prüfe ob Token JWT-Format hat (3 Teile mit Punkten)
+        token_parts = token.split(".")
+        if len(token_parts) != 3:
+            logger.error(f"❌ Token hat falsches Format! Erwartet 3 Teile (header.payload.signature), erhalten: {len(token_parts)} Teile")
+            logger.error(f"Token-Inhalt: '{token[:100]}...'")
+            return None
+        
         # Lazy import von JWT-Decoder
         try:
             import jwt
@@ -75,7 +85,7 @@ def get_current_user_email(request: Request) -> Optional[str]:
                 return None
             
             # Decode token
-            logger.debug(f"🔍 Versuche JWT zu decoden (Token-Länge: {len(token)})")
+            logger.debug(f"🔍 Versuche JWT zu decoden")
             payload = jwt.decode(token, secret, algorithms=["HS256"])
             
             # Email extrahieren (verschiedene mögliche Keys)
