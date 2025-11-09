@@ -3,12 +3,15 @@
 """
 Auth-Router – robust gegen SMTP-Probleme (Timeout/Only-SSL) und Schema-Abweichungen.
 
-Neuerungen:
-- SMTP: Auto‑Switch STARTTLS (587) / SSL (465), Retries, klarer DEV‑Fallback ohne 500.
-- Idempotente Schema‑Prüfung (login_codes, code_hash/consumed_at/expires_at).
-- Rate‑Limit + Audit‑Trace (wie gehabt).
+Neuerungen v2:
+- EMAIL: Resend.com als Primary, SMTP als Fallback
+- SMTP: Auto-Switch STARTTLS (587) / SSL (465), Retries, klarer DEV-Fallback ohne 500.
+- Idempotente Schema-Prüfung (login_codes, code_hash/consumed_at/expires_at).
+- Rate-Limit + Audit-Trace (wie gehabt).
 
 ENV (relevant):
+  EMAIL_PROVIDER=resend|smtp (default: resend)
+  RESEND_API_KEY=re_xxx (für Resend)
   SMTP_HOST, SMTP_PORT=587, SMTP_STARTTLS=1|0, SMTP_USER, SMTP_PASSWORD, SMTP_FROM, SMTP_FROM_NAME
   AUTH_SEND_MAIL=1|0, AUTH_ALLOW_DEV_CONSOLE=1|0, AUTH_MAIL_RETRIES=2, SMTP_TIMEOUT_SEC=20
 """
@@ -35,14 +38,19 @@ logger.setLevel(logging.INFO)
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/ki-auth.db")
 
+# Email Provider Config
+EMAIL_PROVIDER = os.getenv("EMAIL_PROVIDER", "resend").lower()  # resend or smtp
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+
+# SMTP Config (Fallback)
 SMTP_HOST = os.getenv("SMTP_HOST", "")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_STARTTLS = os.getenv("SMTP_STARTTLS", "1").lower() in {"1","true","yes"}
 SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
-SMTP_FROM = os.getenv("SMTP_FROM", "")
-SMTP_FROM_NAME = os.getenv("SMTP_FROM_NAME", "KI‑Sicherheit")
-SMTP_TIMEOUT_SEC = int(os.getenv("SMTP_TIMEOUT_SEC", "20"))
+SMTP_FROM = os.getenv("SMTP_FROM", "bewertung@send.ki-sicherheit.jetzt")  # Updated for Resend
+SMTP_FROM_NAME = os.getenv("SMTP_FROM_NAME", "KI-Sicherheit.jetzt")
+SMTP_TIMEOUT_SEC = int(os.getenv("SMTP_TIMEOUT_SEC", "30"))  # Increased from 20
 AUTH_MAIL_RETRIES = int(os.getenv("AUTH_MAIL_RETRIES", "2"))
 
 AUTH_SEND_MAIL = os.getenv("AUTH_SEND_MAIL", "1").lower() in {"1","true","yes"}
@@ -169,13 +177,55 @@ def _verify_code(email: str, code: str) -> bool:
         """), dict(now=datetime.now(timezone.utc), email=email, code=_hash(code)))
         return True
 
-# SMTP robust
-def _smtp_send(email_to: str, subject: str, body: str) -> str:
-    """Versendet E-Mail robust. Rückgabe: 'email' oder 'console'."""
-    if (not AUTH_SEND_MAIL) or (not SMTP_HOST) or (not SMTP_FROM):
-        logger.info("DEV-DELIVERY: %s", body)
-        return "console"
+# ---------------------------------------------------------------------------
+# EMAIL SENDING (Resend + SMTP Fallback)
+# ---------------------------------------------------------------------------
 
+def _resend_send(email_to: str, subject: str, body: str) -> bool:
+    """
+    Versendet Email via Resend API.
+    Returns True bei Erfolg, False bei Fehler.
+    """
+    if not RESEND_API_KEY:
+        logger.warning("RESEND_API_KEY nicht gesetzt, überspringe Resend")
+        return False
+    
+    try:
+        import resend
+        
+        resend.api_key = RESEND_API_KEY
+        
+        # HTML-Version des Body
+        html_body = body.replace("\n", "<br>")
+        
+        params = {
+            "from": f"{SMTP_FROM_NAME} <{SMTP_FROM}>",  # Nutzt send.ki-sicherheit.jetzt
+            "to": [email_to],
+            "subject": subject,
+            "html": f"<div style='font-family: Arial, sans-serif;'>{html_body}</div>",
+        }
+        
+        email = resend.Emails.send(params)
+        logger.info(f"✅ Email via Resend gesendet: {email.get('id', 'unknown')}")
+        return True
+        
+    except ImportError:
+        logger.warning("resend package nicht installiert, Fallback auf SMTP")
+        return False
+    except Exception as exc:
+        logger.warning(f"Resend fehlgeschlagen: {exc}, Fallback auf SMTP")
+        return False
+
+
+def _smtp_send_raw(email_to: str, subject: str, body: str) -> bool:
+    """
+    Versendet Email via SMTP (alte Methode).
+    Returns True bei Erfolg, False bei Fehler.
+    """
+    if not SMTP_HOST or not SMTP_FROM:
+        logger.warning("SMTP nicht konfiguriert (SMTP_HOST oder SMTP_FROM fehlt)")
+        return False
+    
     for attempt in range(1, AUTH_MAIL_RETRIES + 2):
         try:
             # Auto-SSL: Port 465 => SMTP_SSL, sonst SMTP + optional STARTTLS
@@ -183,38 +233,63 @@ def _smtp_send(email_to: str, subject: str, body: str) -> str:
                 server = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=SMTP_TIMEOUT_SEC)
             else:
                 server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=SMTP_TIMEOUT_SEC)
+            
             with server:
                 if SMTP_STARTTLS and SMTP_PORT != 465:
                     server.starttls()
                 if SMTP_USER and SMTP_PASSWORD:
                     server.login(SMTP_USER, SMTP_PASSWORD)
+                
                 msg = EmailMessage()
                 msg["Subject"] = subject
                 msg["From"] = f"{SMTP_FROM_NAME} <{SMTP_FROM}>"
                 msg["To"] = email_to
                 msg.set_content(body)
                 server.send_message(msg)
-            return "email"
+            
+            logger.info(f"✅ Email via SMTP gesendet an {email_to}")
+            return True
+            
         except (smtplib.SMTPException, OSError, socket.timeout) as exc:
-            logger.warning("SMTP attempt %s/%s failed: %s", attempt, AUTH_MAIL_RETRIES + 1, exc)
+            logger.warning(f"⚠️ SMTP attempt {attempt}/{AUTH_MAIL_RETRIES + 1} failed: {exc}")
             if attempt <= AUTH_MAIL_RETRIES:
                 time.sleep(3 * attempt)
                 continue
-            if AUTH_ALLOW_DEV_CONSOLE:
-                logger.info("DEV-DELIVERY (fallback): %s", body)
-                return "console"
-            # strikter Modus
-            raise
+            return False
+    
+    return False
 
-# ---------------------------------------------------------------------------
-# Schemas
-# ---------------------------------------------------------------------------
-class RequestCodePayload(BaseModel):
-    email: EmailStr = Field(...)
 
-class LoginPayload(BaseModel):
-    email: EmailStr
-    code: str = Field(..., min_length=4, max_length=12)
+def _send_email(email_to: str, subject: str, body: str) -> str:
+    """
+    Smart Email-Versand mit Resend Primary + SMTP Fallback.
+    Rückgabe: 'resend', 'smtp', 'console', oder raises Exception
+    """
+    if not AUTH_SEND_MAIL:
+        logger.info("DEV-DELIVERY (AUTH_SEND_MAIL=0): %s", body)
+        return "console"
+    
+    # Primary: Resend (falls EMAIL_PROVIDER=resend oder als Default)
+    if EMAIL_PROVIDER == "resend" or (EMAIL_PROVIDER != "smtp" and RESEND_API_KEY):
+        logger.info("Versuche Email via Resend...")
+        if _resend_send(email_to, subject, body):
+            return "resend"
+        else:
+            logger.warning("Resend fehlgeschlagen, versuche SMTP Fallback...")
+    
+    # Fallback: SMTP
+    logger.info("Versuche Email via SMTP...")
+    if _smtp_send_raw(email_to, subject, body):
+        return "smtp"
+    
+    # Letzter Fallback: Console (falls AUTH_ALLOW_DEV_CONSOLE)
+    if AUTH_ALLOW_DEV_CONSOLE:
+        logger.info("DEV-DELIVERY (Fallback): %s", body)
+        return "console"
+    
+    # Alle Methoden fehlgeschlagen
+    raise Exception("Email konnte nicht versendet werden (Resend + SMTP fehlgeschlagen)")
+
 
 # ---------------------------------------------------------------------------
 # Routes
@@ -232,21 +307,27 @@ def request_code(payload: RequestCodePayload, request: Request):
     code_plain = _gen_code(6)
     _store_code(email, _hash(code_plain), ip, ua)
 
-    subject = "Ihr Login‑Code"
-    body = f"Ihr Login‑Code: {code_plain}\nGültig: {CODE_EXP_MINUTES} Minuten.\n"
+    subject = "Ihr Login-Code"
+    body = f"Ihr Login-Code: {code_plain}\nGültig: {CODE_EXP_MINUTES} Minuten.\n"
+    
     try:
-        channel = _smtp_send(email, subject, body)
+        channel = _send_email(email, subject, body)
+        _audit(email, ip, "request-code", "ok", ua, f"channel={channel}")
+        return JSONResponse(status_code=200, content={
+            "ok": True, "delivery": channel, "ttl_minutes": CODE_EXP_MINUTES, "masked": _mask_email(email)
+        })
     except Exception as exc:
         _audit(email, ip, "request-code", "mail_error", ua, str(exc))
-        # Sicher: DEV-Response (kein 500)
-        return JSONResponse(status_code=200, content={
-            "ok": True, "delivery": "console", "ttl_minutes": CODE_EXP_MINUTES, "masked": _mask_email(email)
-        })
+        logger.error(f"❌ Email-Versand komplett fehlgeschlagen: {exc}")
+        
+        # Sicherer DEV-Response (kein 500)
+        if AUTH_ALLOW_DEV_CONSOLE:
+            return JSONResponse(status_code=200, content={
+                "ok": True, "delivery": "console", "ttl_minutes": CODE_EXP_MINUTES, "masked": _mask_email(email)
+            })
+        else:
+            raise HTTPException(status_code=500, detail="Email-Versand fehlgeschlagen")
 
-    _audit(email, ip, "request-code", "ok", ua, f"channel={channel}")
-    return JSONResponse(status_code=200, content={
-        "ok": True, "delivery": channel, "ttl_minutes": CODE_EXP_MINUTES, "masked": _mask_email(email)
-    })
 
 @router.post("/login")
 def login(payload: LoginPayload, request: Request):
@@ -265,6 +346,18 @@ def login(payload: LoginPayload, request: Request):
     _audit(email, ip, "login", "ok")
     return JSONResponse(status_code=200, content={"ok": True, "token": token, "expires_in": CODE_EXP_MINUTES * 60})
 
+
 @router.get("/ping")
 def ping():
     return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Schemas (moved to end for better organization)
+# ---------------------------------------------------------------------------
+class RequestCodePayload(BaseModel):
+    email: EmailStr = Field(...)
+
+class LoginPayload(BaseModel):
+    email: EmailStr
+    code: str = Field(..., min_length=4, max_length=12)
