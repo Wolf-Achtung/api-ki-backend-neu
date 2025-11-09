@@ -342,9 +342,37 @@ def login(payload: LoginPayload, request: Request):
         _audit(email, ip, "login", "invalid_code")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Ungültiger oder abgelaufener Code.")
 
-    token = _hash(f"{email}|{time.time()}")[:32]
+    # JWT_SECRET aus ENV laden (KRITISCH!)
+    jwt_secret = os.getenv("JWT_SECRET")
+    if not jwt_secret:
+        logger.error("❌ JWT_SECRET nicht gesetzt in ENV!")
+        raise HTTPException(status_code=500, detail="Server-Konfigurationsfehler")
+    
+    # Erstelle ECHTEN JWT-Token mit Email im Payload
+    try:
+        import jwt as jwt_lib
+        
+        # Token-Payload mit Email
+        payload_data = {
+            "email": email,
+            "iat": datetime.now(timezone.utc),  # Issued At
+            "exp": datetime.now(timezone.utc) + timedelta(hours=24)  # Expires in 24h
+        }
+        
+        # Erstelle JWT
+        token = jwt_lib.encode(payload_data, jwt_secret, algorithm="HS256")
+        
+        logger.info(f"✅ JWT erstellt für {email} (Länge: {len(token)}, Teile: {len(token.split('.'))})")
+        
+    except ImportError:
+        logger.error("❌ PyJWT nicht installiert!")
+        raise HTTPException(status_code=500, detail="Server-Konfigurationsfehler")
+    except Exception as e:
+        logger.error(f"❌ JWT-Erstellung fehlgeschlagen: {e}")
+        raise HTTPException(status_code=500, detail="Token-Erstellung fehlgeschlagen")
+    
     _audit(email, ip, "login", "ok")
-    return JSONResponse(status_code=200, content={"ok": True, "token": token, "expires_in": CODE_EXP_MINUTES * 60})
+    return JSONResponse(status_code=200, content={"ok": True, "token": token, "expires_in": 24 * 3600})
 
 
 @router.get("/ping")
