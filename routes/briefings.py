@@ -1,10 +1,10 @@
 # file: routes/briefings.py
 # -*- coding: utf-8 -*-
 """
-Gold-Standard+ Briefing-Submit (JWT-Email-Extraktion)
+Simplified Briefing-Submit mit JWT-Email-Extraktion
 - Akzeptiert JSON und multipart/form-data
 - Extrahiert Email aus JWT-Token falls nicht im Body
-- Eingebauter Label-Normalizer (Branche/Unternehmensgröße/Bundesland)
+- KEINE Mappings nötig (Fragebogen sendet bereits normalisierte Values!)
 - Pflichtfeld-Validierung mit klaren 422-Fehlern
 - Persistenz + Background-Analyse (lazy import), 202 Accepted
 """
@@ -14,7 +14,7 @@ import json
 import logging
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status, Depends
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr, Field
 
@@ -74,8 +74,11 @@ def get_current_user_email(request: Request) -> Optional[str]:
             )
             
             if email:
-                logger.info(f"Email aus JWT extrahiert: {email}")
+                logger.info(f"✅ JWT-Email gefunden: {email}")
                 return email
+            else:
+                logger.debug("JWT Token vorhanden, aber keine Email darin")
+                return None
                 
         except Exception as e:
             logger.debug(f"JWT decode fehlgeschlagen: {e}")
@@ -86,72 +89,10 @@ def get_current_user_email(request: Request) -> Optional[str]:
 
 router = APIRouter(prefix="/briefings", tags=["briefings"])
 
-# ------------------- Mapping-Tabellen -------------------
-BRANCH_MAP = {
-    "beratung & dienstleistungen": "beratung",
-    "beratung": "beratung",
-    "it & software": "it",
-    "it": "it",
-    "finanzen & versicherungen": "finanzen",
-    "finanzen": "finanzen",
-    "handel & e-commerce": "handel",
-    "e-commerce": "handel",
-    "handel": "handel",
-    "bildung": "bildung",
-    "verwaltung": "verwaltung",
-    "gesundheit & pflege": "gesundheit",
-    "gesundheit": "gesundheit",
-    "bauwesen & architektur": "bau",
-    "bau": "bau",
-    "medien & kreativwirtschaft": "medien",
-    "medien": "medien",
-    "industrie & produktion": "industrie",
-    "industrie": "industrie",
-    "transport & logistik": "logistik",
-    "logistik": "logistik",
-}
-SIZE_MAP = {
-    "1 (solo-selbstständig/freiberuflich)": "solo",
-    "solo": "solo",
-    "2–10 (kleines team)": "team",
-    "2-10 (kleines team)": "team",
-    "2-10": "team",
-    "team": "team",
-    "11–100 (kmu)": "kmu",
-    "11-100 (kmu)": "kmu",
-    "11-100": "kmu",
-    "kmu": "kmu",
-}
-BUNDESLAND_MAP = {
-    "berlin": "BE", "be": "BE",
-    "bayern": "BY", "by": "BY",
-    "baden-württemberg": "BW", "bw": "BW",
-    "niedersachsen": "NI", "ni": "NI",
-    "hessen": "HE", "he": "HE",
-    "hamburg": "HH", "hh": "HH",
-    "bremen": "HB", "hb": "HB",
-    "sachsen": "SN", "sn": "SN",
-    "sachsen-anhalt": "ST", "st": "ST",
-    "thüringen": "TH", "th": "TH",
-    "mecklenburg-vorpommern": "MV", "mv": "MV",
-    "schleswig-holstein": "SH", "sh": "SH",
-    "rheinland-pfalz": "RP", "rp": "RP",
-    "saarland": "SL", "sl": "SL",
-    "nordrhein-westfalen": "NW", "nrw": "NW", "nw": "NW",
-    "brandenburg": "BB", "bb": "BB",
-}
-
-# Email ist optional im Body (kann aus JWT kommen)
-REQUIRED = ("branche", "unternehmensgroesse", "bundesland", "hauptleistung")
+# Pflichtfelder (mit Email)
 REQUIRED_WITH_EMAIL = ("email", "branche", "unternehmensgroesse", "bundesland", "hauptleistung")
 
 # ------------------- Utilities -------------------
-def _slug(s: Any) -> str:
-    """Normalisiert String zu lowercase slug"""
-    if s is None:
-        return ""
-    return " ".join(str(s).strip().lower().replace("_", " ").split())
-
 def _get_value(data: Dict[str, Any], key: str) -> Any:
     """Extrahiert Wert aus data oder data['answers']"""
     if key in data and data[key]:
@@ -160,51 +101,42 @@ def _get_value(data: Dict[str, Any], key: str) -> Any:
         return data["answers"][key]
     return None
 
-def _normalize(data: Dict[str, Any], jwt_email: Optional[str] = None) -> Dict[str, Any]:
+def _extract_fields(data: Dict[str, Any], jwt_email: Optional[str] = None) -> Dict[str, Any]:
     """
-    Akzeptiert UI-Labels oder Slugs und liefert kanonische Werte zurück.
-    Erstellt flache Struktur mit allen relevanten Feldern.
+    Extrahiert die wichtigen Felder aus dem Request.
     Nutzt jwt_email als Fallback wenn email nicht im Body.
+    KEINE Normalisierung nötig - Fragebogen sendet bereits normalisierte Values!
     """
     out = dict(data or {})
     
     # Extrahiere Werte aus beiden möglichen Positionen
     email = _get_value(out, "email") or jwt_email  # JWT-Email als Fallback!
-    branche_raw = _get_value(out, "branche")
-    groesse_raw = _get_value(out, "unternehmensgroesse")
-    bundesland_raw = _get_value(out, "bundesland")
+    branche = _get_value(out, "branche")
+    groesse = _get_value(out, "unternehmensgroesse")
+    bundesland = _get_value(out, "bundesland")
     hauptleistung = _get_value(out, "hauptleistung")
     
-    # Normalisiere mit Mapping-Tabellen
-    branche_slug = _slug(branche_raw)
-    groesse_slug = _slug(groesse_raw)
-    bundesland_slug = _slug(bundesland_raw)
-    
-    canon_branche = BRANCH_MAP.get(branche_slug, branche_raw)
-    canon_groesse = SIZE_MAP.get(groesse_slug, groesse_raw)
-    canon_bundesland = BUNDESLAND_MAP.get(bundesland_slug, bundesland_raw)
-    
-    # Schreibe normalisierte Werte zurück (flach UND in answers)
+    # Erstelle flache Struktur
     result = dict(out)
     result["email"] = email
-    result["branche"] = canon_branche
-    result["unternehmensgroesse"] = canon_groesse
-    result["bundesland"] = canon_bundesland
+    result["branche"] = branche
+    result["unternehmensgroesse"] = groesse
+    result["bundesland"] = bundesland
     result["hauptleistung"] = hauptleistung
     
     # Wenn answers existiert, aktualisiere auch dort
     if isinstance(result.get("answers"), dict):
         result["answers"]["email"] = email
-        result["answers"]["branche"] = canon_branche
-        result["answers"]["unternehmensgroesse"] = canon_groesse
-        result["answers"]["bundesland"] = canon_bundesland
+        result["answers"]["branche"] = branche
+        result["answers"]["unternehmensgroesse"] = groesse
+        result["answers"]["bundesland"] = bundesland
         result["answers"]["hauptleistung"] = hauptleistung
     
     return result
 
 def _validate_required(data: Dict[str, Any]) -> None:
     """
-    Validiert Pflichtfelder in normalisierten Daten.
+    Validiert Pflichtfelder.
     Gibt detaillierte Fehlermeldung mit tatsächlichen Werten zurück.
     """
     missing = []
@@ -230,7 +162,7 @@ def _validate_required(data: Dict[str, Any]) -> None:
         error_msg = "; ".join(error_parts)
         
         # Debug-Logging
-        logger.warning(f"Validierung fehlgeschlagen: {error_msg}")
+        logger.warning(f"❌ Validierung fehlgeschlagen: {error_msg}")
         logger.debug(f"Erhaltene Daten: {json.dumps(data, ensure_ascii=False, indent=2)}")
         
         raise HTTPException(
@@ -243,9 +175,9 @@ def _trigger_analysis(briefing_id: int, email: Optional[str]) -> None:
     try:
         from gpt_analyze import run_analysis_for_briefing  # type: ignore
         run_analysis_for_briefing(briefing_id=briefing_id, email=email)
-        logger.info(f"Analyse für Briefing {briefing_id} gestartet")
+        logger.info(f"✅ Analyse für Briefing {briefing_id} gestartet")
     except Exception as exc:
-        logger.exception(f"Analyse fehlgeschlagen für Briefing {briefing_id}: {exc}")
+        logger.exception(f"❌ Analyse fehlgeschlagen für Briefing {briefing_id}: {exc}")
 
 # ------------------- Endpoint -------------------
 @router.post("/submit")
@@ -258,7 +190,7 @@ async def submit(request: Request, background: BackgroundTasks):
     # 0) Versuche Email aus JWT zu extrahieren
     jwt_email = get_current_user_email(request)
     if jwt_email:
-        logger.info(f"JWT-Email gefunden: {jwt_email}")
+        logger.info(f"✅ JWT-Email gefunden: {jwt_email}")
     else:
         logger.debug("Keine JWT-Email gefunden, erwarte Email im Body")
     
@@ -269,7 +201,7 @@ async def submit(request: Request, background: BackgroundTasks):
     try:
         if "application/json" in ctype:
             data = await request.json()
-            logger.info("Empfangen: JSON Request")
+            logger.info("📥 Empfangen: JSON Request")
         else:
             form = await request.form()
             for k, v in form.multi_items():
@@ -280,33 +212,33 @@ async def submit(request: Request, background: BackgroundTasks):
                     data["answers"] = json.loads(data["answers"])
                 except Exception as e:
                     logger.warning(f"Konnte answers-String nicht parsen: {e}")
-            logger.info("Empfangen: Form Data Request")
+            logger.info("📥 Empfangen: Form Data Request")
     except Exception as e:
-        logger.error(f"Request-Parsing fehlgeschlagen: {e}")
+        logger.error(f"❌ Request-Parsing fehlgeschlagen: {e}")
         raise HTTPException(status_code=400, detail=f"Ungültiges Request-Format: {str(e)}")
     
     # Debug-Logging für eingehende Daten
-    logger.debug(f"Raw Request Data: {json.dumps(data, ensure_ascii=False, indent=2)}")
+    logger.debug(f"Raw Request Data: {json.dumps(data, ensure_ascii=False, indent=2)[:500]}")
     
-    # 2) Normalisieren & validieren (mit JWT-Email als Fallback)
+    # 2) Felder extrahieren & validieren (mit JWT-Email als Fallback)
     try:
-        normalized = _normalize(data, jwt_email=jwt_email)
-        logger.debug(f"Normalisierte Daten: {json.dumps(normalized, ensure_ascii=False, indent=2)}")
+        extracted = _extract_fields(data, jwt_email=jwt_email)
+        logger.debug(f"Extrahierte Felder - Email: {extracted.get('email')}, Branche: {extracted.get('branche')}, Größe: {extracted.get('unternehmensgroesse')}")
         
-        _validate_required(normalized)
-        logger.info("Validierung erfolgreich")
+        _validate_required(extracted)
+        logger.info("✅ Validierung erfolgreich")
     except HTTPException:
         # Validation error - re-raise
         raise
     except Exception as e:
-        logger.exception(f"Normalisierung/Validierung fehlgeschlagen: {e}")
+        logger.exception(f"❌ Extraktion/Validierung fehlgeschlagen: {e}")
         raise HTTPException(
             status_code=500,
             detail=f"Interne Verarbeitung fehlgeschlagen: {str(e)}"
         )
     
-    lang = (normalized.get("lang") or 
-            (normalized.get("answers", {}) if isinstance(normalized.get("answers"), dict) else {}).get("lang") or 
+    lang = (extracted.get("lang") or 
+            (extracted.get("answers", {}) if isinstance(extracted.get("answers"), dict) else {}).get("lang") or 
             "de")
     
     # 3) Persistenz
@@ -318,8 +250,8 @@ async def submit(request: Request, background: BackgroundTasks):
         )
     
     # Bereite answers-Objekt vor (entweder aus nested structure oder flach)
-    answers = normalized.get("answers") if isinstance(normalized.get("answers"), dict) else normalized
-    email = normalized.get("email")
+    answers = extracted.get("answers") if isinstance(extracted.get("answers"), dict) else extracted
+    email = extracted.get("email")
     
     db = SessionLocal()
     try:
@@ -338,7 +270,7 @@ async def submit(request: Request, background: BackgroundTasks):
             status_code=202
         )
     except Exception as exc:
-        logger.exception(f"Briefing-Persistenz fehlgeschlagen: {exc}")
+        logger.exception(f"❌ Briefing-Persistenz fehlgeschlagen: {exc}")
         db.rollback()
         raise HTTPException(
             status_code=500,
