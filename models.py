@@ -13,7 +13,10 @@ from sqlalchemy import (
     Boolean, DateTime, ForeignKey, Integer, String, Text,
     UniqueConstraint, Index
 )
-from sqlalchemy.orm import declarative_base, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+# Import Base aus core.db (KRITISCH für DB-Kompatibilität!)
+from core.db import Base
 
 # Fallback für nicht‑Postgres‑Umgebungen
 try:
@@ -21,7 +24,8 @@ try:
 except Exception:  # pragma: no cover
     from sqlalchemy.types import JSON as JSONType  # z. B. SQLite
 
-Base = declarative_base()
+
+
 
 
 class User(Base):
