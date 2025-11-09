@@ -1,10 +1,10 @@
 # file: routes/briefings.py
 # -*- coding: utf-8 -*-
 """
-Gold-Standard+ Briefing-Submit (vollständig)
+Gold-Standard+ Briefing-Submit (vollständig optimiert)
 - Akzeptiert JSON und multipart/form-data
 - Eingebauter Label-Normalizer (Branche/Unternehmensgröße/Bundesland)
-- Pflichtfeld-Validierung mit klaren 422-Fehlern
+- Pflichtfeld-Validierung mit klaren 422-Fehlern + Debug-Info
 - Persistenz + Background-Analyse (lazy import), 202 Accepted
 """
 from __future__ import annotations
@@ -72,6 +72,7 @@ SIZE_MAP = {
     "team": "team",
     "11–100 (kmu)": "kmu",
     "11-100 (kmu)": "kmu",
+    "11-100": "kmu",
     "kmu": "kmu",
 }
 BUNDESLAND_MAP = {
@@ -96,97 +97,194 @@ REQUIRED = ("email", "branche", "unternehmensgroesse", "bundesland", "hauptleist
 
 # ------------------- Utilities -------------------
 def _slug(s: Any) -> str:
+    """Normalisiert String zu lowercase slug"""
     if s is None:
         return ""
     return " ".join(str(s).strip().lower().replace("_", " ").split())
 
+def _get_value(data: Dict[str, Any], key: str) -> Any:
+    """Extrahiert Wert aus data oder data['answers']"""
+    if key in data and data[key]:
+        return data[key]
+    if isinstance(data.get("answers"), dict) and key in data["answers"]:
+        return data["answers"][key]
+    return None
+
 def _normalize(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Akzeptiert UI-Labels oder Slugs und liefert kanonische Werte zurück."""
+    """
+    Akzeptiert UI-Labels oder Slugs und liefert kanonische Werte zurück.
+    Erstellt flache Struktur mit allen relevanten Feldern.
+    """
     out = dict(data or {})
-    base = out.get("answers") if isinstance(out.get("answers"), dict) else out
-
-    email = base.get("email") or out.get("email")
-    b = _slug(base.get("branche") or out.get("branche"))
-    s = _slug(base.get("unternehmensgroesse") or out.get("unternehmensgroesse"))
-    bl = _slug(base.get("bundesland") or out.get("bundesland"))
-    hl = (base.get("hauptleistung") or out.get("hauptleistung") or "").strip()
-
-    canon_b = BRANCH_MAP.get(b, base.get("branche") or out.get("branche"))
-    canon_s = SIZE_MAP.get(s, base.get("unternehmensgroesse") or out.get("unternehmensgroesse"))
-    canon_bl = BUNDESLAND_MAP.get(bl, base.get("bundesland") or out.get("bundesland"))
-
-    def put(k, v):
-        if isinstance(out.get("answers"), dict):
-            out["answers"][k] = v
-        out[k] = v
-
-    put("email", email)
-    put("branche", canon_b)
-    put("unternehmensgroesse", canon_s)
-    put("bundesland", canon_bl)
-    put("hauptleistung", hl)
-
-    return out
+    
+    # Extrahiere Werte aus beiden möglichen Positionen
+    email = _get_value(out, "email")
+    branche_raw = _get_value(out, "branche")
+    groesse_raw = _get_value(out, "unternehmensgroesse")
+    bundesland_raw = _get_value(out, "bundesland")
+    hauptleistung = _get_value(out, "hauptleistung")
+    
+    # Normalisiere mit Mapping-Tabellen
+    branche_slug = _slug(branche_raw)
+    groesse_slug = _slug(groesse_raw)
+    bundesland_slug = _slug(bundesland_raw)
+    
+    canon_branche = BRANCH_MAP.get(branche_slug, branche_raw)
+    canon_groesse = SIZE_MAP.get(groesse_slug, groesse_raw)
+    canon_bundesland = BUNDESLAND_MAP.get(bundesland_slug, bundesland_raw)
+    
+    # Schreibe normalisierte Werte zurück (flach UND in answers)
+    result = dict(out)
+    result["email"] = email
+    result["branche"] = canon_branche
+    result["unternehmensgroesse"] = canon_groesse
+    result["bundesland"] = canon_bundesland
+    result["hauptleistung"] = hauptleistung
+    
+    # Wenn answers existiert, aktualisiere auch dort
+    if isinstance(result.get("answers"), dict):
+        result["answers"]["email"] = email
+        result["answers"]["branche"] = canon_branche
+        result["answers"]["unternehmensgroesse"] = canon_groesse
+        result["answers"]["bundesland"] = canon_bundesland
+        result["answers"]["hauptleistung"] = hauptleistung
+    
+    return result
 
 def _validate_required(data: Dict[str, Any]) -> None:
-    miss = [k for k in REQUIRED if not (data.get(k) or (isinstance(data.get("answers"), dict) and data["answers"].get(k)))]
-    if miss:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Fehlende/ungültige Felder: {', '.join(miss)}")
+    """
+    Validiert Pflichtfelder in normalisierten Daten.
+    Gibt detaillierte Fehlermeldung mit tatsächlichen Werten zurück.
+    """
+    missing = []
+    invalid = []
+    
+    for key in REQUIRED:
+        value = data.get(key)
+        
+        # Prüfe ob Wert existiert und nicht leer ist
+        if value is None or (isinstance(value, str) and not value.strip()):
+            missing.append(key)
+        # Zusätzliche Validierung für Email
+        elif key == "email" and "@" not in str(value):
+            invalid.append(f"{key}='{value}' (keine gültige Email)")
+    
+    if missing or invalid:
+        error_parts = []
+        if missing:
+            error_parts.append(f"Fehlende Felder: {', '.join(missing)}")
+        if invalid:
+            error_parts.append(f"Ungültige Werte: {', '.join(invalid)}")
+        
+        error_msg = "; ".join(error_parts)
+        
+        # Debug-Logging
+        logger.warning(f"Validierung fehlgeschlagen: {error_msg}")
+        logger.debug(f"Erhaltene Daten: {json.dumps(data, ensure_ascii=False, indent=2)}")
+        
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=error_msg
+        )
 
 def _trigger_analysis(briefing_id: int, email: Optional[str]) -> None:
     """Lazy import, damit fehlende Analyse-Module den Submit nicht blockieren."""
     try:
         from gpt_analyze import run_analysis_for_briefing  # type: ignore
         run_analysis_for_briefing(briefing_id=briefing_id, email=email)
-    except Exception as exc:  # pragma: no cover
-        logger.exception("analysis failed: %s", exc)
+        logger.info(f"Analyse für Briefing {briefing_id} gestartet")
+    except Exception as exc:
+        logger.exception(f"Analyse fehlgeschlagen für Briefing {briefing_id}: {exc}")
 
 # ------------------- Endpoint -------------------
 @router.post("/submit")
 async def submit(request: Request, background: BackgroundTasks):
+    """
+    Briefing-Submit Endpoint mit verbesserter Fehlerbehandlung.
+    Akzeptiert JSON oder multipart/form-data.
+    """
     # 1) Tolerant parsen
     ctype = request.headers.get("content-type", "")
     data: Dict[str, Any] = {}
-    if "application/json" in ctype:
-        try:
+    
+    try:
+        if "application/json" in ctype:
             data = await request.json()
-        except Exception:
-            raise HTTPException(status_code=400, detail="Ungültiges JSON")
-    else:
-        form = await request.form()
-        for k, v in form.multi_items():
-            data[k] = v
-        if isinstance(data.get("answers"), str):
-            try:
-                data["answers"] = json.loads(data["answers"])
-            except Exception:
-                pass
-
+            logger.info("Empfangen: JSON Request")
+        else:
+            form = await request.form()
+            for k, v in form.multi_items():
+                data[k] = v
+            # Parse answers-JSON falls als String gesendet
+            if isinstance(data.get("answers"), str):
+                try:
+                    data["answers"] = json.loads(data["answers"])
+                except Exception as e:
+                    logger.warning(f"Konnte answers-String nicht parsen: {e}")
+            logger.info("Empfangen: Form Data Request")
+    except Exception as e:
+        logger.error(f"Request-Parsing fehlgeschlagen: {e}")
+        raise HTTPException(status_code=400, detail=f"Ungültiges Request-Format: {str(e)}")
+    
+    # Debug-Logging für eingehende Daten
+    logger.debug(f"Raw Request Data: {json.dumps(data, ensure_ascii=False, indent=2)}")
+    
     # 2) Normalisieren & validieren
-    normalized = _normalize(data)
-    _validate_required(normalized)
-    lang = (normalized.get("lang") or (normalized.get("answers") or {}).get("lang") or "de")
-
+    try:
+        normalized = _normalize(data)
+        logger.debug(f"Normalisierte Daten: {json.dumps(normalized, ensure_ascii=False, indent=2)}")
+        
+        _validate_required(normalized)
+        logger.info("Validierung erfolgreich")
+    except HTTPException:
+        # Validation error - re-raise
+        raise
+    except Exception as e:
+        logger.exception(f"Normalisierung/Validierung fehlgeschlagen: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Interne Verarbeitung fehlgeschlagen: {str(e)}"
+        )
+    
+    lang = (normalized.get("lang") or 
+            (normalized.get("answers", {}) if isinstance(normalized.get("answers"), dict) else {}).get("lang") or 
+            "de")
+    
     # 3) Persistenz
     if not SessionLocal or not Briefing:
         logger.warning("DB layer not available – dry acknowledge")
-        return JSONResponse({"ok": True, "id": None, "dry_run": True, "lang": lang}, status_code=202)
-
+        return JSONResponse(
+            {"ok": True, "id": None, "dry_run": True, "lang": lang},
+            status_code=202
+        )
+    
+    # Bereite answers-Objekt vor (entweder aus nested structure oder flach)
     answers = normalized.get("answers") if isinstance(normalized.get("answers"), dict) else normalized
     email = normalized.get("email")
-
+    
     db = SessionLocal()
     try:
         obj = Briefing(answers=answers, lang=lang, email=email)
-        db.add(obj); db.commit(); db.refresh(obj)
-
+        db.add(obj)
+        db.commit()
+        db.refresh(obj)
+        
+        logger.info(f"Briefing {obj.id} erfolgreich gespeichert für {email}")
+        
         # 4) Analyse asynchron starten
         background.add_task(_trigger_analysis, briefing_id=obj.id, email=email)
-
-        return JSONResponse({"ok": True, "id": obj.id, "lang": lang}, status_code=202)
+        
+        return JSONResponse(
+            {"ok": True, "id": obj.id, "lang": lang},
+            status_code=202
+        )
     except Exception as exc:
-        logger.exception("briefing persist failed: %s", exc)
-        raise HTTPException(status_code=500, detail="Persistenz fehlgeschlagen")
+        logger.exception(f"Briefing-Persistenz fehlgeschlagen: {exc}")
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Datenbank-Fehler: {str(exc)}"
+        )
     finally:
         try:
             db.close()
