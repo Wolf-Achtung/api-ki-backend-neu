@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KI‑Status‑Report</title>
+  <title>KI-Status-Report</title>
   <style>
     :root{
       --blue-50:#eff6ff; --blue-100:#dbeafe; --blue-200:#bfdbfe; --blue-300:#93c5fd;
@@ -56,7 +56,7 @@
       {% endif %}
     </div>
     <div class="header-right small">
-      Report‑ID: {{ REPORT_ID }} · Build: {{ BUILD_ID }}
+      Report-ID: {{ REPORT_ID }} · Build: {{ BUILD_ID }}
     </div>
   </header>
 
@@ -64,17 +64,17 @@
   <footer class="doc-footer">
     <div class="footer-logos">
       {% if FOOTER_LEFT_LOGO_SRC %}<img src="{{ FOOTER_LEFT_LOGO_SRC }}" alt="Zertifizierung"/>{% endif %}
-      {% if FOOTER_MID_LOGO_SRC %}<img src="{{ FOOTER_MID_LOGO_SRC }}" alt="DSGVO‑Ready"/>{% endif %}
-      {% if FOOTER_RIGHT_LOGO_SRC %}<img src="{{ FOOTER_RIGHT_LOGO_SRC }}" alt="KI‑READY 2025"/>{% endif %}
+      {% if FOOTER_MID_LOGO_SRC %}<img src="{{ FOOTER_MID_LOGO_SRC }}" alt="DSGVO-Ready"/>{% endif %}
+      {% if FOOTER_RIGHT_LOGO_SRC %}<img src="{{ FOOTER_RIGHT_LOGO_SRC }}" alt="KI-READY 2025"/>{% endif %}
     </div>
-    <div class="small">„Stand“: {{ research_last_updated }} · © {{ report_year }} KI‑Sicherheit.jetzt – {{ OWNER_NAME }}</div>
+    <div class="small">"Stand": {{ research_last_updated }} · © {{ report_year }} KI-Sicherheit.jetzt – {{ OWNER_NAME }}</div>
   </footer>
 
   <main class="content">
     <!-- Deckblatt -->
     <section class="cover page">
-      <h1>KI‑Status‑Report</h1>
-      <p class="lead">Ihr individueller Fahrplan zur erfolgreichen KI‑Integration · DSGVO · EU AI Act</p>
+      <h1>KI-Status-Report</h1>
+      <p class="lead">Ihr individueller Fahrplan zur erfolgreichen KI-Integration · DSGVO · EU AI Act</p>
       <div class="kv" style="margin-top:8px">
         <div><strong>Branche:</strong></div><div>{{ BRANCHE_LABEL }}</div>
         <div><strong>Unternehmensgröße:</strong></div><div>{{ UNTERNEHMENSGROESSE_LABEL }}</div>
@@ -92,16 +92,16 @@
       {{ EXECUTIVE_SUMMARY_HTML }}
     </section>
 
-    <!-- KPI mit Mini‑Balken -->
+    <!-- KPI mit Mini-Balken -->
     <section class="page">
-      <h2>KI‑Reife – Ergebnisüberblick</h2>
+      <h2>KI-Reife – Ergebnisüberblick</h2>
       <div class="cols">
         <div class="card">
           <h3>Scores (0–100)</h3>
           <table class="table small">
             <tbody>
               <tr><td>Governance &amp; Compliance</td><td>{{ score_governance }}/100<div class="bar"><i style="width: {{ score_governance }}%"></i></div></td></tr>
-              <tr><td>IT‑/Datensicherheit</td><td>{{ score_sicherheit }}/100<div class="bar"><i style="width: {{ score_sicherheit }}%"></i></div></td></tr>
+              <tr><td>IT-/Datensicherheit</td><td>{{ score_sicherheit }}/100<div class="bar"><i style="width: {{ score_sicherheit }}%"></i></div></td></tr>
               <tr><td>Wertschöpfung</td><td>{{ score_wertschoepfung }}/100<div class="bar"><i style="width: {{ score_wertschoepfung }}%"></i></div></td></tr>
               <tr><td>Befähigung &amp; Kultur</td><td>{{ score_befaehigung }}/100<div class="bar"><i style="width: {{ score_befaehigung }}%"></i></div></td></tr>
               <tr><td><strong>Gesamt</strong></td><td><strong>{{ score_gesamt }}/100</strong><div class="bar"><i style="width: {{ score_gesamt }}%"></i></div></td></tr>
@@ -122,50 +122,65 @@
       {{ QUICK_WINS_HTML }}
     </section>
 
-    <!-- Roadmap -->
+    <!-- Roadmap 90 Tage -->
     <section class="page">
-      <h2>Roadmap (90–365 Tage)</h2>
-      <p class="lead">{{ LEAD_ROADMAP }}</p>
-      {{ ROADMAP_HTML }}
+      <h2>Roadmap (90 Tage – Test → Pilot → Rollout)</h2>
+      <p class="lead">{{ LEAD_ROADMAP_90 }}</p>
+      {{ PILOT_PLAN_HTML }}
     </section>
+
+    <!-- Roadmap 12 Monate (optional) -->
+    {% if ROADMAP_12M_HTML %}
+    <section class="page">
+      <h2>Roadmap (12 Monate)</h2>
+      <p class="lead">{{ LEAD_ROADMAP_12 }}</p>
+      {{ ROADMAP_12M_HTML }}
+    </section>
+    {% endif %}
 
     <!-- Empfohlene Tools -->
     <section class="page">
-      <h2>Empfohlene Tools (Pro &amp; Open‑Source)</h2>
+      <h2>Empfohlene Tools (Pro &amp; Open-Source)</h2>
       <p class="lead">{{ LEAD_TOOLS }}</p>
       {{ TOOLS_HTML }}
-      <div class="small muted">„Stand“: {{ research_last_updated }}.</div>
+      <div class="small muted">"Stand": {{ research_last_updated }}.</div>
     </section>
 
-    <!-- Förder‑Update / ZIM (optional) -->
+    <!-- Förder-Update / ZIM (optional) -->
+    {% if ZIM_ALERT_HTML %}
     <section class="page">
-      <h2>Förder‑Update: ZIM – volldigitale Antragstellung</h2>
+      <h2>Förder-Update: ZIM – volldigitale Antragstellung</h2>
       <p class="lead">{{ LEAD_ZIM_ALERT }}</p>
       {{ ZIM_ALERT_HTML }}
     </section>
+    {% endif %}
 
     <!-- Workflow ZIM (optional) -->
+    {% if ZIM_WORKFLOW_HTML %}
     <section class="page">
-      <h2>Workflow‑Übersicht: ZIM digital (1 Seite)</h2>
+      <h2>Workflow-Übersicht: ZIM digital (1 Seite)</h2>
       <p class="lead">{{ LEAD_ZIM_WORKFLOW }}</p>
       {{ ZIM_WORKFLOW_HTML }}
     </section>
+    {% endif %}
 
     <!-- Förderprogramme & Quellen -->
     <section class="page">
       <h2>Aktuelle Förderprogramme &amp; Quellen</h2>
       <p class="lead">{{ LEAD_FUNDING }}</p>
       {{ FOERDERPROGRAMME_HTML }}
-      <div class="small muted">„Stand“: {{ research_last_updated }}.</div>
+      <div class="small muted">"Stand": {{ research_last_updated }}.</div>
     </section>
 
-    <!-- Kreativ‑Special -->
+    <!-- Kreativ-Special (optional) -->
+    {% if KREATIV_TOOLS_HTML %}
     <section class="page">
-      <h2>Kreativ‑Tools (kuratierte Liste)</h2>
+      <h2>Kreativ-Tools (kuratierte Liste)</h2>
       <p class="lead">{{ LEAD_CREATIV }}</p>
       {{ KREATIV_TOOLS_HTML }}
       <div class="small muted">Stand: {{ research_last_updated }} · Quelle: kreativ-tools.txt</div>
     </section>
+    {% endif %}
 
     <!-- Nächste Schritte -->
     <section class="page">
@@ -179,12 +194,12 @@
     <section class="last-page">
       <div class="feedback-box"><strong>Ihre Meinung zählt:</strong>
         {% if FEEDBACK_URL %}
-          <a href="{{ FEEDBACK_URL }}" target="_blank" rel="noopener">Zum Feedback‑Formular</a>
+          <a href="{{ FEEDBACK_URL }}" target="_blank" rel="noopener">Zum Feedback-Formular</a>
         {% endif %}
         {{ FEEDBACK_BOX_HTML }}
       </div>
-      <div class="small muted" style="margin-top:10px;">© {{ report_year }} KI‑Sicherheit.jetzt – DSGVO &amp; EU‑AI‑Act‑Ready – {{ OWNER_NAME }}</div>
-      <div class="small muted">TÜV‑zertifiziertes KI‑Management © {{ report_year }}: {{ CONTACT_EMAIL }} · Alle Angaben ohne Gewähr; keine Rechtsberatung.</div>
+      <div class="small muted" style="margin-top:10px;">© {{ report_year }} KI-Sicherheit.jetzt – DSGVO &amp; EU-AI-Act-Ready – {{ OWNER_NAME }}</div>
+      <div class="small muted">TÜV-zertifiziertes KI-Management © {{ report_year }}: {{ CONTACT_EMAIL }} · Alle Angaben ohne Gewähr; keine Rechtsberatung.</div>
       <div class="watermark">{{ WATERMARK_TEXT }}</div>
     </section>
   </main>
