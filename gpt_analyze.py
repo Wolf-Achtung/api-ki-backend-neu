@@ -1371,6 +1371,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["score_governance"] = scores.get("governance", 0)
     sections["score_sicherheit"] = scores.get("security", 0)
     sections["score_nutzen"] = scores.get("value", 0)
+    sections["score_wertschoepfung"] = scores.get("value", 0)  # Fix Bug 1: Für PDF-Template
     sections["score_befaehigung"] = scores.get("enablement", 0)
     sections["score_gesamt"] = scores.get("overall", 0)
     
