@@ -45,6 +45,12 @@ from services.pdf_client import render_pdf_from_html  # type: ignore
 from services.email_templates import render_report_ready_email  # type: ignore
 from settings import settings  # type: ignore
 from services.coverage_guard import analyze_coverage, build_html_report  # type: ignore
+from services.profile_box import build_profile_box  # type: ignore
+try:
+    from services.research_hybrid_addon import augment_sections_with_perplexity  # type: ignore
+except Exception:
+    augment_sections_with_perplexity = None  # type: ignore
+
 from services.prompt_loader import load_prompt  # type: ignore
 from services.html_sanitizer import sanitize_sections_dict  # type: ignore
 
@@ -1429,6 +1435,20 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["research_last_updated"] = research_last_updated or sections["report_date"]
     
     # Map research results
+
+# Add Profile box so that many answers + Freitext reliably appear
+try:
+    sections["PROFILE_BOX_HTML"] = build_profile_box(answers)
+except Exception as _exc:
+    log.warning("[%s] ⚠️ profile_box failed: %s", run_id, _exc)
+
+# Optional Perplexity "hybrid" augmentation
+try:
+    if (os.getenv("RESEARCH_PROVIDER","hybrid").lower() in ("hybrid","perplexity")) and augment_sections_with_perplexity:
+        sections = augment_sections_with_perplexity(sections, answers)
+except Exception as _exc:
+    log.warning("[%s] ⚠️ Perplexity hybrid augmentation failed: %s", run_id, _exc)
+
     if "TOOLS_TABLE_HTML" in sections: 
         sections["TOOLS_HTML"] = sections.pop("TOOLS_TABLE_HTML", "")
     if "FUNDING_TABLE_HTML" in sections: 
