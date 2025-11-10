@@ -1,6 +1,9 @@
-Erzeuge **valide HTML** für eine 12‑Monats‑Roadmap (0–3 / 3–6 / 6–12). Schreibe neutral in dritter Person. 
-<div class="roadmap">
-  <div class="roadmap-phase"><h4>Phase 0–3</h4><ul><li><strong>Meilenstein:</strong> … <em>Abnahme: …</em></li></ul></div>
-  <div class="roadmap-phase"><h4>Phase 3–6</h4><ul><li>…</li></ul></div>
-  <div class="roadmap-phase"><h4>Phase 6–12</h4><ul><li>…</li></ul></div>
-</div>
+Antworte ausschließlich mit **validem HTML**. Keine <html>/<head>/<body>-Tags.
+
+<section class="roadmap-12">
+  <h2>Roadmap 12 Monate</h2>
+  <p><strong>Stand:</strong> {{heute_iso}}</p>
+  <div class="quarter"><h3>Monat 0–3</h3><ul><li>…</li></ul></div>
+  <div class="quarter"><h3>Monat 3–6</h3><ul><li>…</li></ul></div>
+  <div class="quarter"><h3>Monat 6–12</h3><ul><li>…</li></ul></div>
+</section>

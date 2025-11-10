@@ -1,98 +1,29 @@
-Antworte ausschließlich mit **validem HTML** (keine Markdown‑Fences).
-# Executive Summary – Optimiert V3.0
+Antworte ausschließlich mit **validem HTML** (kein <html>, <head> oder <body>, keine Markdown-Fences).
 
-## SYSTEM-ROLLE
-Du bist ein erfahrener KI-Berater, der prägnante Management-Summaries erstellt.
+<section class="executive-summary" data-branche="{{BRANCHE_LABEL}}" data-groesse="{{UNTERNEHMENSGROESSE_LABEL}}" data-bundesland="{{BUNDESLAND_LABEL}}" data-hauptleistung="{{HAUPTLEISTUNG}}">
+  <h2>Executive Summary</h2>
+  <p><strong>Stand:</strong> {{heute_iso}}</p>
+  <p><strong>Kontext:</strong> {{BRANCHE_LABEL}} · {{UNTERNEHMENSGROESSE_LABEL}} · {{BUNDESLAND_LABEL}} · {{HAUPTLEISTUNG}}</p>
 
-## AUFGABE
-Erstelle ein Executive Summary als **HTML-Fragment** (ohne Code-Fences, ohne `<h2>` Überschrift).
+  <ul class="key-points">
+    <li><strong>KI‑Reifegrad (0–100):</strong> Gesamt {{score_gesamt}} · Governance {{score_gov}} · Sicherheit {{score_sec}} · Wertschöpfung {{score_val}} · Befähigung {{score_enable}}.</li>
+    <li><strong>Stärken:</strong> <!-- 2–3 Kernaussagen, branchenspezifisch --></li>
+    <li><strong>Entwicklungsbereiche:</strong> <!-- 2–3 Lücken mit kurzer Begründung --></li>
+  </ul>
 
-## KONTEXT-DATEN
-**Unternehmen:**
-- Name: das Unternehmen
-- Branche: {{branche}}
-- Größe: {{unternehmensgroesse}}
-- Standort: {{bundesland}}
-
-**KI-Reifegrad (0-100 Punkte):**
-- Governance: {{score_governance}}/100
-- Sicherheit: {{score_sicherheit}}/100
-- Nutzen: {{score_nutzen}}/100
-- Befähigung: {{score_befaehigung}}/100
-- **Gesamt: {{score_gesamt}}/100**
-
-**Benchmarks:** Durchschnitt {{benchmark_avg}}, Top 25%: {{benchmark_top}}
-
-## STRUKTUR (GENAU SO UMSETZEN)
-
-
-<div class="executive-summary">
-  <p><strong>Stand:</strong> {{report_date}}</p>
-  
-  <p>Der KI-Reifegrad von das Unternehmen liegt bei <strong>{{score_gesamt}}/100 Punkten</strong>. 
-  [1-2 Sätze: Einordnung im Vergleich zu Benchmarks. Wo steht das Unternehmen?]</p>
-  
-  <p><strong>Stärken:</strong><br>
-  [2-3 konkrete Stärken aus den Scores ableiten. Welche Säule ist am besten?]</p>
-  
-  <p><strong>Entwicklungsbereiche:</strong><br>
-  [2-3 konkrete Schwächen aus den Scores ableiten. Welche Säule braucht Arbeit?]</p>
-  
-  <p><strong>Empfohlene Nächste Schritte (0-90 Tage):</strong></p>
+  <h3>Nächste Schritte (0–90 Tage)</h3>
   <ol>
-    <li>[Schritt 1 - konkret, mit Zeitrahmen]</li>
-    <li>[Schritt 2 - konkret, mit Zeitrahmen]</li>
-    <li>[Schritt 3 - konkret, mit Zeitrahmen]</li>
+    <li><!-- Schritt 1 (Woche 1–3) --></li>
+    <li><!-- Schritt 2 (Woche 4–6) --></li>
+    <li><!-- Schritt 3 (Woche 7–9) --></li>
   </ol>
-  
-  <p><em>{{transparency_text}}</em></p>
-</div>
 
-
-## REGELN
-
-### ✅ MACH DAS:
-- Nutze die **tatsächlichen Scores** zur Einschätzung
-- Score 0-30: "erheblicher Nachholbedarf"
-- Score 31-60: "solide Basis, Verbesserungspotenzial"
-- Score 61-85: "fortgeschritten"
-- Score 86-100: "sehr gut aufgestellt"
-- Leite Stärken/Schwächen aus den 4 Säulen-Scores ab
-- Benenne die schwächste Säule explizit
-- Nächste Schritte: Konkret, umsetzbar, zeitlich definiert
-
-### ❌ VERMEIDE:
-- Marketing-Sprache oder Übertreibungen
-- Vage Aussagen wie "könnte verbessert werden"
-- Erfinde keine Zahlen, die nicht in den Variablen stehen
-- Keine eigene Überschrift "Executive Summary"
-- Keine Code-Fences ()
-
-## BEISPIEL FÜR GUTEN OUTPUT
-
-
-<div class="executive-summary">
-  <p><strong>Stand:</strong> 30.10.2025</p>
-  
-  <p>Der KI-Reifegrad von Beispiel GmbH liegt bei <strong>64/100 Punkten</strong>. 
-  Das entspricht einer soliden Basis mit Verbesserungspotenzial. Im Vergleich zum Branchendurchschnitt (58 Punkte) liegt das Unternehmen leicht über dem Schnitt.</p>
-  
-  <p><strong>Stärken:</strong><br>
-  Die Säule "Nutzen" (78/100) zeigt bereits konkrete KI-Anwendungsfälle. Die Security-Grundlagen (72/100) sind vorhanden, DSGVO-Awareness ist ausgeprägt.</p>
-  
-  <p><strong>Entwicklungsbereiche:</strong><br>
-  Die Säule "Befähigung" (42/100) weist den größten Nachholbedarf auf. Systematische Schulungen fehlen. Die Governance-Struktur (58/100) benötigt klare Rollen und Verantwortlichkeiten für KI-Projekte.</p>
-  
-  <p><strong>Empfohlene Nächste Schritte (0-90 Tage):</strong></p>
-  <ol>
-    <li>Prompt-Engineering-Training für 5-10 Mitarbeitende (Woche 1-4)</li>
-    <li>KI-Richtlinie erstellen und mit Team abstimmen (Woche 5-8)</li>
-    <li>Ersten Pilot-Use-Case definieren und starten (Woche 9-12)</li>
-  </ol>
-  
-  <p><em>Dieser Report wurde teilweise mit KI-Unterstützung aus Europa unter strikter Einhaltung von EU AI Acts sowie DSGVO erstellt.</em></p>
-</div>
-
-
-## WICHTIG
-Verwende EXAKT den Text aus {{transparency_text}} - füge nichts hinzu, ändere nichts.
+  <aside class="transparency-box">
+    <h4>Transparenz</h4>
+    <ul>
+      <li>Genutzte Dienste/Modelle: <!-- OpenAI API, Perplexity API, Tavily API, ggf. Mistral --></li>
+      <li>Recherchefenster: <!-- z. B. letzte 7–14 Tage --></li>
+      <li>Build/Report‑ID: {{build_id}}</li>
+    </ul>
+  </aside>
+</section>
