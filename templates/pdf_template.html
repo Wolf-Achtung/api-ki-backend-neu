@@ -27,8 +27,7 @@
 </head>
 <body>
   <header>
-    {% if LOGO_PRIMARY_SRC %}<div style="display:flex;align-items:center;gap:12px;"><img src="{{ LOGO_PRIMARY_SRC }}" alt="Logo" style="height:28px"><h1 style="margin:0;">KI‑Status‑Report</h1></div>{% else %}{% endif %}
-    
+    <div style="display:flex;align-items:center;gap:12px;justify-content:space-between"><div style="display:flex;align-items:center;gap:12px"><img src="{{ LOGO_PRIMARY_SRC }}" alt="Logo" style="height:28px;{% if not LOGO_PRIMARY_SRC %}display:none{% endif %}"><h1>KI‑Status‑Report</h1></div><div style="display:flex;gap:10px;align-items:center"><img src="{{ FOOTER_LEFT_LOGO_SRC }}" alt="" style="height:20px;{% if not FOOTER_LEFT_LOGO_SRC %}display:none{% endif %}"><img src="{{ FOOTER_MID_LOGO_SRC }}" alt="" style="height:20px;{% if not FOOTER_MID_LOGO_SRC %}display:none{% endif %}"><img src="{{ FOOTER_RIGHT_LOGO_SRC }}" alt="" style="height:20px;{% if not FOOTER_RIGHT_LOGO_SRC %}display:none{% endif %}"></div></div>
     <ul>
       <li>Branche: {{ BRANCHE_LABEL }}</li>
       <li>Größe: {{ UNTERNEHMENSGROESSE_LABEL }}</li>
@@ -45,19 +44,29 @@
       <div>{{ EXECUTIVE_SUMMARY_HTML }}</div>
     </section>
 
-    <section id="news" class="card">
-      <h2>News & Änderungen</h2>
-      <div>{{ NEWS_BOX_HTML }}</div>
-    </section>
-
     <section id="kpi" class="card">
       <h2>KI‑Reife – Ergebnisüberblick</h2>
       <div>{{ KPI_SCORES_HTML }}</div>
+      <div>{{ KPI_CONTEXT_HTML }}</div>
+      <div>{{ BENCHMARK_HTML }}</div>
+    </section>
+
+    <section id="news" class="card">
+      <h2>News & Änderungen</h2>
+      <div>{{ NEWS_BOX_HTML }}</div>
+      <div>{{ AI_ACT_SUMMARY_HTML }}</div>
     </section>
 
     <section id="quick-wins" class="card">
       <h2>Quick Wins (0–90 Tage)</h2>
+      {% if QUICK_WINS_HTML_LEFT or QUICK_WINS_HTML_RIGHT %}
+      <div style="display:flex;gap:16px">
+        <div style="flex:1">{{ QUICK_WINS_HTML_LEFT }}</div>
+        <div style="flex:1">{{ QUICK_WINS_HTML_RIGHT }}</div>
+      </div>
+      {% elif QUICK_WINS_HTML %}
       <div>{{ QUICK_WINS_HTML }}</div>
+      {% endif %}
     </section>
 
     <section id="roadmap-90" class="card">
@@ -77,7 +86,7 @@
 
     <section id="funding" class="card">
       <h2>Förderprogramme & Quellen</h2>
-      <div>{{ FOERDERPROGRAMME_HTML or FUNDING_HTML }}</div>
+      <div>{{ FUNDING_HTML }}</div>
     </section>
 
     <section id="next-steps" class="card">
@@ -85,19 +94,20 @@
       <div>{{ NEXT_STEPS_HTML }}</div>
     </section>
 
-    <section id="transparency" class="card">
-      <h2>Transparenz</h2>
-      <div>{{ TRANSPARENCY_HTML }}</div>
-    </section>
-      <section id="sources" class="card">
+    <section id="sources" class="card">
       <h2>Quellen & Aktualisierung</h2>
       <div>{{ SOURCES_BOX_HTML }}</div>
     </section>
 
+    <section id="transparency" class="card">
+      <h2>Transparenz</h2>
+      <div>{{ TRANSPARENCY_HTML }}</div>
+    </section>
   </main>
 
   <footer class="small muted" style="padding:0 28px 28px">
     © 2025 KI‑Sicherheit.jetzt – DSGVO & EU‑AI‑Act‑Ready – {{ OWNER_NAME }} · Alle Angaben ohne Gewähr; keine Rechtsberatung.
+  <div style="margin-top:8px">{{ FOOTER_BRANDS_HTML }}</div>
   </footer>
 </body>
 </html>
