@@ -27,21 +27,69 @@
     "notes": "Typisch für technologiegetriebene Vorhaben; Kombination möglich"
   },
   {
-    "name": "ZIM (BMWK)",
-    "region": "DE",
-    "target": "KMU bis 499 MA",
-    "amount": "Zuschuss je nach Projekt",
+    "name": "Berlin – Coaching BONUS (IBB Business Team)",
+    "region": "BE",
+    "target": "Beratung/Coaching für KMU & Solo‑Selbständige",
+    "amount": "bis ~4.000 € Zuschuss (i.d.R. 50%)",
     "deadline": "laufend",
-    "url": "https://www.zim.de",
-    "notes": "FuE-Einzel- und Kooperationsprojekte; KI-/Digitalprojekte förderfähig"
+    "url": "https://www.ibb-business-team.de/coaching-bonus",
+    "fit": "Solo, Team, KMU",
+    "priority": 1,
+    "notes": "Fördert externes Coaching zu Strategie, Digitalisierung, Markteintritt."
   },
   {
-    "name": "INVEST BW – Digitalisierung",
-    "region": "BW",
-    "target": "Unternehmen in Baden‑Württemberg",
-    "amount": "variabel",
-    "deadline": "förderaufrufspezifisch",
-    "url": "https://www.invest-bw.de",
-    "notes": "Landesförderung, häufige Calls; KI‑Vorhaben möglich"
+    "name": "Berlin – Transfer BONUS",
+    "region": "BE",
+    "target": "Kooperation mit Forschungseinrichtungen",
+    "amount": "bis 45.000 € (Zuschuss)",
+    "deadline": "laufend",
+    "url": "https://www.berlin.de/sen/wirtschaft/wirtschaft/foerderprogramme/transfer-bonus/",
+    "fit": "Team, KMU",
+    "priority": 2,
+    "notes": "Fördert Technologietransfer; auch KI‑Vorhaben mit Forschungspartnern."
+  },
+  {
+    "name": "Berlin – Pro FIT (IBB) – FuE/Validierung",
+    "region": "BE",
+    "target": "Forschung & Entwicklung, Validierung",
+    "amount": "Zuschuss/Darlehen, Quote nach Projektphase",
+    "deadline": "rollierend",
+    "url": "https://www.ibb.de/de/foerderprogramme/pro-fit",
+    "fit": "Team, KMU",
+    "priority": 3,
+    "notes": "Für technologiegetriebene Projekte; Kombination aus Zuschuss & Darlehen."
+  },
+  {
+    "name": "Bayern – Digitalbonus (Standard/Plus)",
+    "region": "BY",
+    "target": "Digitalisierung & IT‑Sicherheit",
+    "amount": "Standard: bis 10.000 € · Plus: bis 50.000 €",
+    "deadline": "laufend",
+    "url": "https://www.digitalbonus.bayern",
+    "fit": "Solo, Team, KMU",
+    "priority": 1,
+    "notes": "Fördert Hard‑/Software und Maßnahmen zur Digitalisierung & IT‑Sicherheit."
+  },
+  {
+    "name": "Bayern – Innovationsgutschein (Bayern Innovativ)",
+    "region": "BY",
+    "target": "Externe Entwicklungs‑/Dienstleistungen (z. B. Prototyping, Studien)",
+    "amount": "Gutschein i.d.R. 50% bis 30.000 €",
+    "deadline": "laufend",
+    "url": "https://www.bayern-innovativ.de/innovationsgutschein",
+    "fit": "Team, KMU",
+    "priority": 2,
+    "notes": "Fördert externe F&E‑Leistungen; geeignet für KMU und Handwerk."
+  },
+  {
+    "name": "Bayern – Förderung von Künstlicher Intelligenz (versch. Programme)",
+    "region": "BY",
+    "target": "KI‑Vorhaben (u. a. BayVFP/BayIntAn)",
+    "amount": "variabel je Programm",
+    "deadline": "stichtagsbezogen",
+    "url": "https://www.stmwi.bayern.de/foerderungen/",
+    "fit": "Team, KMU",
+    "priority": 3,
+    "notes": "Übersichtsseite des bayerischen Wirtschaftsministeriums zu F&E/Innovation."
   }
 ]
