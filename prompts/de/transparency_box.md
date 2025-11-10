@@ -1,10 +1,8 @@
-Antworte ausschließlich mit **validem HTML**.
-
+Antworte ausschließlich mit validem HTML.
 <aside class="transparency-box">
-  <h4>Transparenz & Nachvollziehbarkeit</h4>
   <ul>
-    <li>Modelle/APIs: {{genutzte_dienste}}</li>
-    <li>Recherchefenster: {{research_window}}</li>
-    <li>Build/Report‑ID: {{build_id}}</li>
+    <li>Build: {{BUILD_STAMP}}</li>
+    <li>Report‑ID: {{report_id}}</li>
+    <li>Recherche: letzte 7–14 Tage, Quellen im Abschnitt „Empfohlene Tools“/„Förderprogramme“</li>
   </ul>
 </aside>
