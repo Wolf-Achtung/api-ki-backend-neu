@@ -1,194 +1,65 @@
 {
-  "version": "2025-11-07",
-  "sizes": [
-    "solo",
-    "team",
-    "kmu"
-  ],
-  "metrics": {
-    "maturity_index": {
-      "unit": "%",
-      "desc": "KI-Reifegrad (Selbstauskunft + externe Benchmarks)"
-    },
-    "automation_potential": {
-      "unit": "%",
-      "desc": "Anteil der repetitiven Tätigkeiten, die in 6–12 Monaten automatisierbar sind"
-    },
-    "time_savings_h_month": {
-      "unit": "h/Monat",
-      "desc": "Konservativ geschätzte Zeitersparnis"
-    },
-    "tool_spend_eur_month": {
-      "unit": "€/Monat",
-      "desc": "Durchschnittlicher SaaS-/Inference-Aufwand"
-    },
-    "roi_months": {
-      "unit": "Monate",
-      "desc": "Amortisations-Horizont (Median)"
-    }
+  "last_updated": "2025-11-10",
+  "schema": 1,
+  "notes": "Konservative Richtwerte (Ø=Durchschnitt; Top‑25%=oberes Quartil) – Meta‑Benchmark 2024/25; für Projekte bitte kalibrieren.",
+  "marketing & werbung": {
+    "avg": 45,
+    "top25": 64,
+    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
   },
-  "benchmarks": {
-    "beratung": {
-      "solo": {
-        "maturity_index": 48,
-        "automation_potential": 35,
-        "time_savings_h_month": 12,
-        "tool_spend_eur_month": 60,
-        "roi_months": 2
-      },
-      "team": {
-        "maturity_index": 52,
-        "automation_potential": 42,
-        "time_savings_h_month": 55,
-        "tool_spend_eur_month": 240,
-        "roi_months": 3
-      },
-      "kmu": {
-        "maturity_index": 58,
-        "automation_potential": 45,
-        "time_savings_h_month": 160,
-        "tool_spend_eur_month": 590,
-        "roi_months": 4
-      }
-    },
-    "it": {
-      "solo": {
-        "maturity_index": 56,
-        "automation_potential": 40,
-        "time_savings_h_month": 18,
-        "tool_spend_eur_month": 80,
-        "roi_months": 2
-      },
-      "team": {
-        "maturity_index": 62,
-        "automation_potential": 50,
-        "time_savings_h_month": 70,
-        "tool_spend_eur_month": 280,
-        "roi_months": 3
-      },
-      "kmu": {
-        "maturity_index": 68,
-        "automation_potential": 54,
-        "time_savings_h_month": 190,
-        "tool_spend_eur_month": 640,
-        "roi_months": 4
-      }
-    },
-    "handel": {
-      "solo": {
-        "maturity_index": 40,
-        "automation_potential": 30,
-        "time_savings_h_month": 10,
-        "tool_spend_eur_month": 50,
-        "roi_months": 3
-      },
-      "team": {
-        "maturity_index": 46,
-        "automation_potential": 40,
-        "time_savings_h_month": 60,
-        "tool_spend_eur_month": 190,
-        "roi_months": 4
-      },
-      "kmu": {
-        "maturity_index": 52,
-        "automation_potential": 45,
-        "time_savings_h_month": 140,
-        "tool_spend_eur_month": 520,
-        "roi_months": 6
-      }
-    },
-    "gesundheit": {
-      "solo": {
-        "maturity_index": 35,
-        "automation_potential": 25,
-        "time_savings_h_month": 8,
-        "tool_spend_eur_month": 45,
-        "roi_months": 5
-      },
-      "team": {
-        "maturity_index": 40,
-        "automation_potential": 32,
-        "time_savings_h_month": 36,
-        "tool_spend_eur_month": 220,
-        "roi_months": 7
-      },
-      "kmu": {
-        "maturity_index": 44,
-        "automation_potential": 35,
-        "time_savings_h_month": 100,
-        "tool_spend_eur_month": 560,
-        "roi_months": 8
-      }
-    }
+  "beratung & dienstleistungen": {
+    "avg": 42,
+    "top25": 60,
+    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
   },
-  "starter_stacks": {
-    "beratung": {
-      "solo": {
-        "open_source": [
-          {
-            "name": "LM Studio",
-            "why": "Kleine, lokale LLM-Experimente (offline)"
-          },
-          {
-            "name": "OpenWebUI",
-            "why": "Lokale Chat-Oberfläche, RAG leicht integrierbar"
-          }
-        ],
-        "pro": [
-          {
-            "name": "ChatGPT Team/Enterprise",
-            "why": "Schnelle Automatisierung & sichere Freigaben"
-          },
-          {
-            "name": "Zapier / Make",
-            "why": "No‑Code Workflows für Angebote & Reporting"
-          }
-        ]
-      },
-      "team": {
-        "open_source": [
-          {
-            "name": "Haystack / LangChain",
-            "why": "Dokumenten‑RAG & Pipelines"
-          },
-          {
-            "name": "Ollama",
-            "why": "Schnelle lokale Inferenz + Modelle testen"
-          }
-        ],
-        "pro": [
-          {
-            "name": "Microsoft 365 Copilot",
-            "why": "Outlook/Teams/SharePoint produktiv verknüpfen"
-          },
-          {
-            "name": "Notion+AI / ClickUp",
-            "why": "Wissensbasis & SOP‑Automation"
-          }
-        ]
-      },
-      "kmu": {
-        "open_source": [
-          {
-            "name": "Kubernetes + vLLM",
-            "why": "Skalierbare Inferenz"
-          },
-          {
-            "name": "Airbyte + dbt",
-            "why": "Datenintegration & Analytics"
-          }
-        ],
-        "pro": [
-          {
-            "name": "Azure OpenAI",
-            "why": "Compliance‑ready Inferenz & RAG"
-          },
-          {
-            "name": "Power Automate / UiPath",
-            "why": "Automatisierung End‑to‑End"
-          }
-        ]
-      }
-    }
+  "it & software": {
+    "avg": 58,
+    "top25": 76,
+    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+  },
+  "finanzen & versicherungen": {
+    "avg": 48,
+    "top25": 68,
+    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+  },
+  "handel & e-commerce": {
+    "avg": 46,
+    "top25": 66,
+    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+  },
+  "bildung": {
+    "avg": 38,
+    "top25": 58,
+    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+  },
+  "verwaltung": {
+    "avg": 35,
+    "top25": 54,
+    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+  },
+  "gesundheit & pflege": {
+    "avg": 36,
+    "top25": 56,
+    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+  },
+  "bauwesen & architektur": {
+    "avg": 37,
+    "top25": 57,
+    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+  },
+  "medien & kreativwirtschaft": {
+    "avg": 44,
+    "top25": 62,
+    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+  },
+  "industrie & produktion": {
+    "avg": 50,
+    "top25": 70,
+    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+  },
+  "transport & logistik": {
+    "avg": 41,
+    "top25": 61,
+    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
   }
 }
