@@ -25,5 +25,23 @@
     "deadline": "rollierend",
     "url": "https://www.ibb.de",
     "notes": "Typisch für technologiegetriebene Vorhaben; Kombination möglich"
+  },
+  {
+    "name": "ZIM (BMWK)",
+    "region": "DE",
+    "target": "KMU bis 499 MA",
+    "amount": "Zuschuss je nach Projekt",
+    "deadline": "laufend",
+    "url": "https://www.zim.de",
+    "notes": "FuE-Einzel- und Kooperationsprojekte; KI-/Digitalprojekte förderfähig"
+  },
+  {
+    "name": "INVEST BW – Digitalisierung",
+    "region": "BW",
+    "target": "Unternehmen in Baden‑Württemberg",
+    "amount": "variabel",
+    "deadline": "förderaufrufspezifisch",
+    "url": "https://www.invest-bw.de",
+    "notes": "Landesförderung, häufige Calls; KI‑Vorhaben möglich"
   }
 ]
