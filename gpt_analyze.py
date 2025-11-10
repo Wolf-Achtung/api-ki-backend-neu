@@ -57,6 +57,16 @@ OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE", "0.2"))
 OPENAI_TIMEOUT = int(os.getenv("OPENAI_TIMEOUT", "120"))
 OPENAI_MAX_TOKENS = int(os.getenv("OPENAI_MAX_TOKENS", "3000"))
 
+# Per-Section temperatures (env-overridable)
+TEMP_DEFAULT = float(os.getenv('OPENAI_TEMPERATURE', '0.2'))
+TEMP_GAMECHANGER = float(os.getenv('TEMP_GAMECHANGER', '0.4'))
+TEMP_EXEC_SUMMARY = float(os.getenv('TEMP_EXEC_SUMMARY', str(TEMP_DEFAULT)))
+TEMP_QUICK_WINS = float(os.getenv('TEMP_QUICK_WINS', str(TEMP_DEFAULT)))
+TEMP_ROADMAP = float(os.getenv('TEMP_ROADMAP', str(TEMP_DEFAULT)))
+TEMP_ROADMAP_12M = float(os.getenv('TEMP_ROADMAP_12M', str(TEMP_DEFAULT)))
+TEMP_NEXT_ACTIONS = float(os.getenv('TEMP_NEXT_ACTIONS', str(TEMP_DEFAULT)))
+
+
 ENABLE_NSFW_FILTER = (os.getenv("ENABLE_NSFW_FILTER", "1") in ("1", "true", "TRUE", "yes", "YES"))
 ENABLE_REALISTIC_SCORES = (os.getenv("ENABLE_REALISTIC_SCORES", "1") in ("1", "true", "TRUE", "yes", "YES"))
 ENABLE_LLM_CONTENT = (os.getenv("ENABLE_LLM_CONTENT", "1") in ("1", "true", "TRUE", "yes", "YES"))
@@ -912,6 +922,24 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     return fallbacks.get(section_key, f"<p><em>[{section_key} – Content wird erstellt]</em></p>")
 
 # -------------------- 🎯 NEW: Use prompt system instead of hardcoded prompts ----------------
+def _section_temp(section_name: str) -> float:
+    m = {
+        'executive_summary': TEMP_EXEC_SUMMARY,
+        'quick_wins': TEMP_QUICK_WINS,
+        'roadmap': TEMP_ROADMAP,
+        'roadmap_12m': TEMP_ROADMAP_12M,
+        'business_roi': TEMP_DEFAULT,
+        'business_costs': TEMP_DEFAULT,
+        'business_case': TEMP_DEFAULT,
+        'data_readiness': TEMP_DEFAULT,
+        'org_change': TEMP_DEFAULT,
+        'risks': TEMP_DEFAULT,
+        'gamechanger': TEMP_GAMECHANGER,
+        'recommendations': TEMP_DEFAULT,
+        'reifegrad_sowhat': TEMP_DEFAULT,
+    }
+    return m.get(section_name, TEMP_DEFAULT)
+
 def _generate_content_section(section_name: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
     """🎯 UPDATED: Now uses prompt_loader system with variable interpolation!"""
     if not ENABLE_LLM_CONTENT:
@@ -953,7 +981,7 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
             result = _call_openai(
                 prompt=prompt_text,
                 system_prompt="Du bist ein Senior‑KI‑Berater. Antworte nur mit validem HTML.",
-                temperature=0.2,
+                temperature=_section_temp(section_name),
                 max_tokens=OPENAI_MAX_TOKENS
             ) or ""
             
@@ -1025,7 +1053,12 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
 {tone} {only_html} Gib 4–6 Bullet‑Points (<ul>) aus.""",
     }
     
-    out = _call_openai(prompt=prompts.get(section_name, ""), system_prompt="Du bist ein Senior‑KI‑Berater. Antworte nur mit validem HTML.", temperature=0.2, max_tokens=OPENAI_MAX_TOKENS) or ""
+    out = _call_openai(
+        prompt=prompts.get(section_name, ""),
+        system_prompt="Du bist ein Senior‑KI‑Berater. Antworte nur mit validem HTML.",
+        temperature=_section_temp(section_name),
+        max_tokens=OPENAI_MAX_TOKENS
+    ) or ""
     out = _clean_html(out)
     if _needs_repair(out): out = _repair_html(section_name, out)
     
@@ -1302,6 +1335,19 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     
     # Benchmark table
     sections["BENCHMARK_HTML"] = _build_benchmark_html(briefing)
+    # KPI table + score bars
+    try:
+        bars = _build_score_bars_html(scores)
+    except Exception:
+        bars = ""
+    kpi_tbl = (
+        "<div class='fb-section'>"
+        "<div class='fb-head'><span class='fb-step'>KPI</span><h3 class='fb-title'>Scores & Benchmark</h3></div>"
+        f"{bars}"
+        f"{sections['BENCHMARK_HTML']}"
+        "</div>"
+    )
+    sections['KPI_SCORES_HTML'] = kpi_tbl
     
     # ===== NEW: Additional sections required by PDF template =====
     
@@ -1323,12 +1369,6 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 <p><strong>Benchmark:</strong> Durchschnitt {benchmark_avg}/100 · Top-Quartil {benchmark_top}/100</p>
 </div>"""
     sections["KPI_CONTEXT_HTML"] = kpi_context
-    # KPI score bars HTML (visual summary)
-    try:
-        sections["KPI_SCORES_HTML"] = _build_score_bars_html(scores)
-    except Exception:
-        sections["KPI_SCORES_HTML"] = ""
-
     
     # ZIM Förderung (optional, from environment)
     # These are funding program specific sections that can be configured via ENV
@@ -1445,8 +1485,15 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         sections["TOOLS_HTML"] = _rewrite_table_links_with_labels(sections["TOOLS_HTML"])
     if sections.get("FOERDERPROGRAMME_HTML"): 
         sections["FOERDERPROGRAMME_HTML"] = _rewrite_table_links_with_labels(sections["FOERDERPROGRAMME_HTML"])
+    # Alias for template
+    if not sections.get('FUNDING_HTML'):
+        sections['FUNDING_HTML'] = sections.get('FOERDERPROGRAMME_HTML', '')
+
     
     sections["SOURCES_BOX_HTML"] = _build_sources_box_html(sections, sections["research_last_updated"])
+    if not sections.get('TRANSPARENCY_HTML'):
+        sections['TRANSPARENCY_HTML'] = sections.get('SOURCES_BOX_HTML','')
+
 
     # Freitext snippets
     sections['FREITEXT_SNIPPETS_HTML'] = _build_freetext_snippets_html(answers)
