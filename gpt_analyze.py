@@ -46,6 +46,7 @@ from services.email_templates import render_report_ready_email  # type: ignore
 from settings import settings  # type: ignore
 from services.coverage_guard import analyze_coverage, build_html_report  # type: ignore
 from services.prompt_loader import load_prompt  # type: ignore
+from services.html_sanitizer import sanitize_sections_dict  # type: ignore
 
 log = logging.getLogger(__name__)
 
@@ -582,6 +583,10 @@ def _build_werkbank_html_dynamic(answers: Dict[str, Any]) -> str:
     path = os.getenv("STARTER_STACKS_PATH", "").strip()
     branche = (answers.get("BRANCHE_LABEL") or answers.get("branche") or "").strip().lower()
     size = (answers.get("UNTERNEHMENSGROESSE_LABEL") or answers.get("unternehmensgroesse") or "").strip().lower()
+    # normalize size to keys used in starter_stacks.json
+    if "solo" in size or "freiberuf" in size: size = "solo"
+    elif "2" in size or "kleines" in size or "team" in size: size = "team"
+    elif "11" in size or "kmu" in size: size = "kmu"
 
     def _safe_ul(items):
         return "<ul>" + "".join(f"<li>{html.escape(x)}</li>" for x in (items or [])) + "</ul>"
@@ -689,6 +694,7 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # Used in next_actions_de.md for dynamic deadlines
     base_vars = {
         "TODAY": today,
+        "heute_iso": today,
         "DATE_30D": date_30d,
         "report_date": today,
         "report_year": report_year,
@@ -949,10 +955,12 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 raise ValueError("Non-string prompt")
             
             # Call GPT with loaded prompt
+            # Temperature tweak: Gamechanger etwas kreativer
+            _temp = float(os.getenv("GAMECHANGER_TEMPERATURE", "0.4")) if section_name == "gamechanger" else 0.2
             result = _call_openai(
                 prompt=prompt_text,
                 system_prompt="Du bist ein Senior‑KI‑Berater. Antworte nur mit validem HTML.",
-                temperature=0.2,
+                temperature=_temp,
                 max_tokens=OPENAI_MAX_TOKENS
             ) or ""
             
@@ -1024,7 +1032,7 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
 {tone} {only_html} Gib 4–6 Bullet‑Points (<ul>) aus.""",
     }
     
-    out = _call_openai(prompt=prompts.get(section_name, ""), system_prompt="Du bist ein Senior‑KI‑Berater. Antworte nur mit validem HTML.", temperature=0.2, max_tokens=OPENAI_MAX_TOKENS) or ""
+    out = _call_openai(prompt=prompts.get(section_name, ""), system_prompt="Du bist ein Senior‑KI‑Berater. Antworte nur mit validem HTML.", temperature=_section_temperature(section_name), max_tokens=OPENAI_MAX_TOKENS) or ""
     out = _clean_html(out)
     if _needs_repair(out): out = _repair_html(section_name, out)
     
@@ -1190,7 +1198,10 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     # Executive Summary
     sections["EXECUTIVE_SUMMARY_HTML"] = _generate_content_section("executive_summary", briefing, scores)
     
-    # Quick Wins - with improved fallbacks
+    
+    # Robustness: replace leftover placeholders with actual values
+    sections["EXECUTIVE_SUMMARY_HTML"] = _fix_exec_placeholders(sections["EXECUTIVE_SUMMARY_HTML"], scores, briefing, sections.get("report_date",""))
+# Quick Wins - with improved fallbacks
     qw_html = _generate_content_section("quick_wins", briefing, scores)
     if _needs_repair(qw_html): 
         qw_html = _repair_html("quick_wins", qw_html)
@@ -1198,7 +1209,6 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     # Split into columns
     left, right = _split_li_list_to_columns(qw_html)
     sections["QUICK_WINS_HTML_LEFT"] = left
-    sections["QUICK_WINS_HTML"] = qw_html
     sections["QUICK_WINS_HTML_RIGHT"] = right
     
     # Calculate hours saved from Quick Wins
@@ -1323,8 +1333,24 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 <p><strong>Benchmark:</strong> Durchschnitt {benchmark_avg}/100 · Top-Quartil {benchmark_top}/100</p>
 </div>"""
     sections["KPI_CONTEXT_HTML"] = kpi_context
-    # KPI Bars table for template
-    sections["KPI_SCORES_HTML"] = _build_score_bars_html(scores)
+
+    # Build KPI table (Scores + Benchmark) for the PDF template
+try:
+    _s = scores
+    kpi_rows = (
+        "<tr><td>Governance</td><td>" + str(_s.get("governance", 0)) + "</td></tr>"
+        "<tr><td>Sicherheit</td><td>" + str(_s.get("security", 0)) + "</td></tr>"
+        "<tr><td>Wertschöpfung</td><td>" + str(_s.get("value", 0)) + "</td></tr>"
+        "<tr><td>Befähigung</td><td>" + str(_s.get("enablement", 0)) + "</td></tr>"
+        "<tr><td><strong>Gesamt</strong></td><td><strong>" + str(_s.get("overall", 0)) + "</strong></td></tr>"
+    )
+    sections["KPI_SCORES_HTML"] = (
+        "<table class='table'><thead><tr><th>Dimension</th><th>Score (0–100)</th></tr></thead><tbody>"
+        + kpi_rows + "</tbody></table>" + sections.get("BENCHMARK_HTML","") + sections.get("KPI_CONTEXT_HTML","")
+    )
+except Exception:
+    sections.setdefault("KPI_SCORES_HTML", sections.get("KPI_CONTEXT_HTML",""))
+
     
     # ZIM Förderung (optional, from environment)
     # These are funding program specific sections that can be configured via ENV
@@ -1443,21 +1469,6 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         sections["FOERDERPROGRAMME_HTML"] = _rewrite_table_links_with_labels(sections["FOERDERPROGRAMME_HTML"])
     
     sections["SOURCES_BOX_HTML"] = _build_sources_box_html(sections, sections["research_last_updated"])
-    # Build News/Changes box (AI‑Act milestones, update stamps)
-    _news_items = []
-    if sections.get("ai_act_phase_label"):
-        _news_items.append(f"EU‑AI‑Act Phase: {sections.get('ai_act_phase_label')}")
-    if sections.get("research_last_updated"):
-        _news_items.append(f"Recherche aktualisiert: {sections.get('research_last_updated')}")
-    if sections.get("CHANGELOG_SHORT") and sections["CHANGELOG_SHORT"] not in ("—", "", None):
-        _news_items.append(str(sections.get("CHANGELOG_SHORT")))
-    if _news_items:
-        items_html = "".join(f"<li>{html.escape(x)}</li>" for x in _news_items)
-        sections["NEWS_BOX_HTML"] = ("<div class='card'><h3>News & Änderungen</h3>"
-                                     "<ul>" + items_html + "</ul></div>")
-    else:
-        sections.setdefault("NEWS_BOX_HTML", "")
-
 
     # Freitext snippets
     sections['FREITEXT_SNIPPETS_HTML'] = _build_freetext_snippets_html(answers)
@@ -1499,8 +1510,28 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     # AI Act blocks
     ai_act_blocks = _build_ai_act_blocks()
     sections.update(ai_act_blocks)
+    # News/Änderungen box (AI Act phase + research timestamp)
+sections["NEWS_BOX_HTML"] = (
+    "<div class='callout'><strong>EU AI Act – Phase:</strong> "
+    + html.escape(sections.get("ai_act_phase_label","2025–2027"))
+    + " · <strong>Quellenstand:</strong> " + html.escape(sections.get("research_last_updated", sections.get("report_date",""))) + "</div>"
+)
+
     
+    # Aliases for PDF template variables
+if sections.get("FOERDERPROGRAMME_HTML"):
+    sections["FUNDING_HTML"] = sections["FOERDERPROGRAMME_HTML"]
+
     log.info("[%s] 🎨 Rendering final HTML...", run_id)
+    # --- Sanitize dynamic sections to prevent HTML leaks (z. B. eingebettetes <html> im Pilot-Plan) ---
+    try:
+        if os.getenv("ENABLE_REPAIR_HTML", "1") in ("1","true","TRUE","yes","YES"):
+            _pre_sanitize_count = sum(1 for _k,_v in sections.items() if isinstance(_v, str))
+            sections = sanitize_sections_dict(sections, truthy_env=True)
+            log.info("[%s] 🧼 HTML sanitized for %s string sections", run_id, _pre_sanitize_count)
+    except Exception as _exc:
+        log.warning("[%s] ⚠️ Sanitizer skipped: %s", run_id, _exc)
+
     result = render(
         br, 
         run_id=run_id, 
@@ -1678,3 +1709,39 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
         raise
     finally:
         db.close()
+
+def _section_temperature(section_name: str) -> float:
+    """Per‑Sektion‑Temperatur. Default = OPENAI_TEMPERATURE; Gamechanger 0.35–0.45."
+    try:
+        if section_name == "gamechanger":
+            # env overrides allowed
+            return float(os.getenv("TEMP_GAMECHANGER", os.getenv("OPENAI_TEMPERATURE_GAMECHANGER", "0.4")))
+    except Exception:
+        pass
+    try:
+        return float(os.getenv("OPENAI_TEMPERATURE", "0.2"))
+    except Exception:
+        return 0.2
+
+
+def _fix_exec_placeholders(html_block: str, scores: Dict[str, Any], briefing: Dict[str, Any], report_date: str) -> str:
+    """Ersetzt eventuell mit-ausgegebenen Prompt-Platzhalter in der Executive Summary (Robustheits-Fix)."""
+    if not html_block:
+        return html_block
+    rep = {
+        "{{heute_iso}}": report_date,
+        "{{report_date}}": report_date,
+        "{{score_gov}}": str(scores.get("governance", 0)),
+        "{{score_sec}}": str(scores.get("security", 0)),
+        "{{score_val}}": str(scores.get("value", 0)),
+        "{{score_enable}}": str(scores.get("enablement", 0)),
+        "{{score_gesamt}}": str(scores.get("overall", 0)),
+        "{{BRANCHE_LABEL}}": briefing.get("BRANCHE_LABEL") or briefing.get("branche",""),
+        "{{UNTERNEHMENSGROESSE_LABEL}}": briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse",""),
+        "{{BUNDESLAND_LABEL}}": briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland",""),
+        "{{HAUPTLEISTUNG}}": briefing.get("HAUPTLEISTUNG") or briefing.get("hauptleistung",""),
+    }
+    fixed = html_block
+    for k,v in rep.items():
+        fixed = fixed.replace(k, str(v))
+    return fixed
