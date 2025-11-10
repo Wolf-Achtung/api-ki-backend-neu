@@ -15,6 +15,7 @@ seed JSON files in data/funding_programs.json and data/tools_seed.json.
 """
 from __future__ import annotations
 import os, re, json, html, time
+from . import research_clients as rc
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
@@ -327,4 +328,17 @@ def run_research(answers: Dict[str, Any]) -> Dict[str, Any]:
     except Exception:
         pass
 
+    return out
+
+
+def _merge_results(*lists):
+    seen = set()
+    out = []
+    for lst in lists:
+        for item in (lst or []):
+            href = (item.get("url") or "").strip()
+            if not href or href in seen:
+                continue
+            seen.add(href)
+            out.append(item)
     return out
