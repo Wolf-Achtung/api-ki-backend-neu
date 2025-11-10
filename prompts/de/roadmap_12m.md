@@ -1,5 +1,3 @@
-Antworte ausschließlich mit **validem HTML**. Keine <html>/<head>/<body>-Tags.
-
 <section class="roadmap-12">
   <h2>Roadmap 12 Monate</h2>
   <p><strong>Stand:</strong> {{heute_iso}}</p>
