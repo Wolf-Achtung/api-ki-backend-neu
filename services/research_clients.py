@@ -1,75 +1,49 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-import os, time, logging
-from typing import List, Dict, Any
-import requests
+# services/research_clients.py – Hybrid (Tavily + Perplexity)
+import os, time, json, requests
 
-log = logging.getLogger(__name__)
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY","")
+PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY","")
+TIMEOUT = float(os.getenv("RESEARCH_TIMEOUT","20"))
 
-TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
-PPLX_API_KEY   = os.getenv("PPLX_API_KEY", "") or os.getenv("PERPLEXITY_API_KEY","")
-
-def tavily_search(q: str, k: int = 10, days: int = 7) -> List[Dict[str,Any]]:
+def tavily_search(q, num_results=10):
     if not TAVILY_API_KEY:
         return []
+    url = "https://api.tavily.com/search"
     try:
-        r = requests.post(
-            "https://api.tavily.com/search",
-            json={"api_key": TAVILY_API_KEY, "query": q, "search_depth": "advanced", "max_results": k, "include_answer": False, "days": days},
-            timeout=25
-        )
+        r = requests.post(url, json={"api_key": TAVILY_API_KEY, "query": q, "search_depth": "basic", "max_results": num_results}, timeout=TIMEOUT)
         r.raise_for_status()
         data = r.json() or {}
-        out = []
-        for it in data.get("results", []):
-            out.append({"title": it.get("title",""), "url": it.get("url",""), "snippet": it.get("content","")})
-        return out
-    except Exception as exc:
-        log.warning("Tavily error: %s", exc)
+        return data.get("results", [])
+    except Exception:
         return []
 
-def perplexity_search(q: str, k: int = 8) -> List[Dict[str,Any]]:
-    if not PPLX_API_KEY:
+def perplexity_search(q, num_results=8):
+    if not PERPLEXITY_API_KEY:
         return []
+    url = "https://api.perplexity.ai/search"
+    headers = {"Authorization": f"Bearer {PERPLEXITY_API_KEY}", "Content-Type":"application/json"}
     try:
-        r = requests.post(
-            "https://api.perplexity.ai/chat/completions",
-            headers={"Authorization": f"Bearer {PPLX_API_KEY}", "Content-Type": "application/json"},
-            json={
-                "model": os.getenv("PPLX_MODEL","sonar-small-online"),
-                "messages": [{"role":"system","content":"You are a search/research assistant. Return concise list of sources with URLs."},
-                             {"role":"user","content": f"Find up-to-date sources (URLs) for: {q}. Output only as bullet list with title – url"}],
-                "temperature": 0.0,
-                "top_p": 1.0
-            },
-            timeout=30
-        )
+        r = requests.post(url, headers=headers, json={"q": q, "size": num_results}, timeout=TIMEOUT)
         r.raise_for_status()
-        data = r.json()
-        content = (data.get("choices",[{}])[0].get("message",{}) or {}).get("content","")
+        data = r.json() or {}
+        items = data.get("results", [])
         out = []
-        for line in content.splitlines():
-            line = line.strip("-• ").strip()
-            if "http" in line:
-                # naive split
-                parts = line.split("http",1)
-                title = parts[0].strip(" –-:") or "Quelle"
-                url   = "http" + parts[1].strip()
-                out.append({"title": title, "url": url, "snippet": ""})
-        return out[:k]
-    except Exception as exc:
-        log.warning("Perplexity error: %s", exc)
+        for it in items:
+            # normalize to fields: title, url, description
+            out.append({"title": it.get("title") or it.get("source",""), "url": it.get("url") or "", "description": it.get("snippet") or ""})
+        return out
+    except Exception:
         return []
 
-def hybrid(q: str, k: int = 10, days: int = 7) -> List[Dict[str,Any]]:
-    a = tavily_search(q, k=k, days=days)
-    b = perplexity_search(q, k=max(3, k//2))
-    # Merge by URL
-    seen = set()
-    res = []
-    for L in (a+b):
-        u = L.get("url","")
-        if u and u not in seen:
-            seen.add(u)
-            res.append(L)
-    return res[:k]
+def hybrid_search(q, num_results=10):
+    out = []
+    out.extend(tavily_search(q, num_results))
+    out.extend(perplexity_search(q, max(6, num_results//2)))
+    # deduplicate by url
+    seen = set(); uniq = []
+    for x in out:
+        url = (x.get("url") or "").strip()
+        if not url or url in seen: 
+            continue
+        seen.add(url); uniq.append(x)
+    return uniq[:max(num_results, 10)]
