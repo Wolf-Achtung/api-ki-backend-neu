@@ -27,7 +27,21 @@ __all__ = ["load_prompt"]
 log = logging.getLogger(__name__)
 
 DEFAULT_LANG = os.getenv("PROMPTS_DEFAULT_LANG", "de")
-BASE_DIR = Path(os.getenv("PROMPTS_BASE_DIR", "prompts")).resolve()
+
+# FIX: Use absolute path based on this file's location
+# __file__ = /app/services/prompt_loader.py
+# .parent = /app/services/
+# .parent.parent = /app/
+# / "prompts" = /app/prompts/
+if os.getenv("PROMPTS_BASE_DIR"):
+    # Allow override via environment variable
+    BASE_DIR = Path(os.getenv("PROMPTS_BASE_DIR")).resolve()
+else:
+    # Default: Calculate from this file's location (works everywhere)
+    BASE_DIR = Path(__file__).resolve().parent.parent / "prompts"
+
+log.info(f"🔍 Prompt loader initialized: BASE_DIR={BASE_DIR} (exists: {BASE_DIR.exists()})")
+
 _SUPPORTED_EXT = (".md", ".txt", ".json", ".yaml", ".yml")
 
 
@@ -80,18 +94,22 @@ def _resolve_section_path(section: str, lang: str) -> Tuple[Optional[Path], str]
         if isinstance(rel, str):
             p = (BASE_DIR / lang / rel).resolve()
             if p.exists():
+                log.debug(f"✅ Found prompt via manifest: {p}")
                 return p, lang
 
     # try common extensions
     for ext in _SUPPORTED_EXT:
         p = (BASE_DIR / lang / f"{section}{ext}").resolve()
         if p.exists():
+            log.debug(f"✅ Found prompt: {p}")
             return p, lang
 
     # fallback to default lang
     if lang != DEFAULT_LANG:
+        log.debug(f"⚠️ Prompt '{section}' not found for lang '{lang}', trying default lang '{DEFAULT_LANG}'")
         return _resolve_section_path(section, DEFAULT_LANG)
 
+    log.warning(f"❌ Prompt '{section}' not found in {BASE_DIR / lang}/ (tried extensions: {_SUPPORTED_EXT})")
     return None, lang
 
 
@@ -116,8 +134,25 @@ def load_prompt(section: str, lang: str = "de", vars_dict: Optional[Dict[str, An
 
     lang = lang or DEFAULT_LANG
     path, used_lang = _resolve_section_path(section, lang)
+    
     if not path:
-        raise FileNotFoundError(f"Prompt section '{section}' not found for lang '{lang}' in {BASE_DIR}")
+        # More detailed error message for debugging
+        error_msg = (
+            f"Prompt section '{section}' not found for lang '{lang}'\n"
+            f"  BASE_DIR: {BASE_DIR}\n"
+            f"  Expected path: {BASE_DIR / lang / section}_de.md\n"
+            f"  BASE_DIR exists: {BASE_DIR.exists()}\n"
+        )
+        if BASE_DIR.exists():
+            lang_dir = BASE_DIR / lang
+            if lang_dir.exists():
+                files = list(lang_dir.glob("*.md"))
+                error_msg += f"  Files in {lang_dir}: {[f.name for f in files[:5]]}\n"
+            else:
+                error_msg += f"  Language directory {lang_dir} does not exist!\n"
+        log.error(error_msg)
+        raise FileNotFoundError(error_msg)
 
+    log.debug(f"✅ Loading prompt: {path}")
     payload = _read_file(path)
     return _interpolate(payload, vars_dict)
