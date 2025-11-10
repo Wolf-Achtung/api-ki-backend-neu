@@ -1,207 +1,92 @@
 <!doctype html>
-<html lang="de">
+<html lang="{{LANG|de}}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KI-Status-Report</title>
+  <title>KI‑Status‑Report</title>
   <style>
-    :root{
-      --blue-50:#eff6ff; --blue-100:#dbeafe; --blue-200:#bfdbfe; --blue-300:#93c5fd;
-      --blue-400:#60a5fa; --blue-500:#3b82f6; --blue-600:#2563eb; --blue-700:#1d4ed8;
-      --ink:#0f172a; --muted:#475569; --line:#e5e7eb;
-    }
-    @page { size: A4; margin: 30mm 20mm 26mm; } /* space for header/footer */
-    html,body{font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans", "Liberation Sans", sans-serif; font-size:11pt; line-height:1.42; color:var(--ink);}
-    h1{font-size:22pt;margin:0 0 .25em 0;}
-    h2{font-size:16pt;margin:.8em 0 .35em 0;border-bottom:1px solid var(--line);padding-bottom:.2em;}
-    h3{font-size:13pt;margin:.6em 0 .2em 0;}
-    p,li{font-size:11pt;}
-    .lead{color:var(--muted)}
+    html,body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#111827;}
+    header,section,footer{page-break-inside:avoid}
+    header{padding:24px 28px;background:#0b1020;color:#e5e7eb}
+    header h1{margin:0 0 6px 0;font-size:22px}
+    header ul{list-style:none;padding:0;margin:6px 0 0 0;display:flex;flex-wrap:wrap;gap:10px 18px;font-size:12px;color:#cbd5e1}
+    main{padding:24px 28px}
+    h2{font-size:18px;margin:28px 0 10px 0;color:#0b1020}
+    h3{font-size:16px;margin:16px 0 8px 0;color:#111827}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px 18px;margin:12px 0}
+    .table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}
+    .table th,.table td{border:1px solid #e5e7eb;padding:8px;vertical-align:top;text-align:left}
+    .stand{font-size:12px;color:#6b7280}
+    .progress{background:#e5e7eb;border-radius:6px;height:8px;position:relative;overflow:hidden}
+    .bar__fill{background:#2563eb;height:8px;display:block}
+    .bar__median{position:absolute;top:0;bottom:0;width:2px;background:#111827;left:50%}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#f3f4f6;color:#111827;font-size:12px}
+    .small{font-size:12px}
     .muted{color:#6b7280}
-    .small{font-size:9.5pt}
-    .page{page-break-after:always;}
-    .last-page{page-break-before:always;}
-    .card{border:1px solid var(--line);background:#f9fafb;padding:12px 14px;border-radius:10px}
-    .tag{display:inline-block;background:var(--blue-100);color:#1e3a8a;padding:4px 10px;border-radius:999px;font-size:10pt;font-weight:600;margin-right:6px}
-    .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 12px}
-    .cols{display:grid;gap:16px;grid-template-columns:1fr 1fr}
-    .table{width:100%;border-collapse:collapse}
-    .table th,.table td{border:1px solid var(--line);padding:6px 8px;vertical-align:top}
-    .bar{height:8px;border-radius:6px;background:#eef2ff;overflow:hidden}
-    .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--blue-500),var(--blue-600));}
-    .feedback-box{border:1px solid var(--blue-200);background:var(--blue-50);padding:12px 14px;border-radius:12px}
-    .feedback-box a{text-decoration:underline}
-    /* fixed header / footer */
-    .doc-header,.doc-footer{position:fixed;left:20mm;right:20mm;display:flex;align-items:center;justify-content:space-between;color:var(--muted)}
-    .doc-header{top:12mm}
-    .doc-footer{bottom:10mm;border-top:1px solid var(--line);padding-top:6px;font-size:9pt}
-    .logo-primary{height:20px}
-    .footer-logos{display:flex;gap:10px;align-items:center}
-    .footer-logos img{height:18px;object-fit:contain}
-    .content{}
-    .watermark{position:fixed;bottom:14mm;right:12mm;opacity:.07;font-size:9pt;letter-spacing:.05em}
-    /* spotlight */
-    .spotlight{border:2px solid var(--blue-700);background:#eff6ff;border-radius:10px;padding:10px 14px}
-    .steps{counter-reset:step;list-style:none;padding-left:0}
-    .steps li{position:relative;margin:.55em 0 .55em 2.2em}
-    .steps li::before{counter-increment:step;content:counter(step);position:absolute;left:-2.2em;top:0;width:1.6em;height:1.6em;border-radius:999px;border:2px solid var(--blue-600);text-align:center;line-height:1.4em;font-weight:600;background:#eff6ff}
   </style>
 </head>
 <body>
-  <!-- fixed header -->
-  <header class="doc-header">
-    <div class="header-left">
-      {% if LOGO_PRIMARY_SRC %}
-        <img class="logo-primary" src="{{ LOGO_PRIMARY_SRC }}" alt="Logo"/>
-      {% endif %}
-    </div>
-    <div class="header-right small">
-      Report-ID: {{ REPORT_ID }} · Build: {{ BUILD_ID }}
-    </div>
+  <header>
+    <h1>KI‑Status‑Report</h1>
+    <ul>
+      <li>Branche: {{BRANCHE_LABEL}}</li>
+      <li>Größe: {{UNTERNEHMENSGROESSE_LABEL}}</li>
+      <li>Bundesland: {{BUNDESLAND_LABEL}}</li>
+      <li>Hauptleistung: {{HAUPTLEISTUNG}}</li>
+      <li>Erstellungsdatum: {{heute_iso}}</li>
+      <li>Report‑ID/Build: {{build_id}}</li>
+    </ul>
   </header>
 
-  <!-- fixed footer -->
-  <footer class="doc-footer">
-    <div class="footer-logos">
-      {% if FOOTER_LEFT_LOGO_SRC %}<img src="{{ FOOTER_LEFT_LOGO_SRC }}" alt="Zertifizierung"/>{% endif %}
-      {% if FOOTER_MID_LOGO_SRC %}<img src="{{ FOOTER_MID_LOGO_SRC }}" alt="DSGVO-Ready"/>{% endif %}
-      {% if FOOTER_RIGHT_LOGO_SRC %}<img src="{{ FOOTER_RIGHT_LOGO_SRC }}" alt="KI-READY 2025"/>{% endif %}
-    </div>
-    <div class="small">"Stand": {{ research_last_updated }} · © {{ report_year }} KI-Sicherheit.jetzt – {{ OWNER_NAME }}</div>
-  </footer>
-
-  <main class="content">
-    <!-- Deckblatt -->
-    <section class="cover page">
-      <h1>KI-Status-Report</h1>
-      <p class="lead">Ihr individueller Fahrplan zur erfolgreichen KI-Integration · DSGVO · EU AI Act</p>
-      <div class="kv" style="margin-top:8px">
-        <div><strong>Branche:</strong></div><div>{{ BRANCHE_LABEL }}</div>
-        <div><strong>Unternehmensgröße:</strong></div><div>{{ UNTERNEHMENSGROESSE_LABEL }}</div>
-        <div><strong>Standort (Bundesland):</strong></div><div>{{ BUNDESLAND_LABEL }}</div>
-        <div><strong>Erstellungsdatum:</strong></div><div>{{ report_date }}</div>
-        <div><strong>Prüferkürzel:</strong></div><div>{{ AUDITOR_INITIALS }}</div>
-      </div>
-      <div class="watermark">{{ WATERMARK_TEXT }}</div>
-    </section>
-
-    <!-- Executive Summary -->
-    <section class="page">
+  <main>
+    <section id="exec-summary" class="card">
       <h2>Executive Summary</h2>
-      <p class="lead">{{ LEAD_EXEC }}</p>
-      {{ EXECUTIVE_SUMMARY_HTML }}
+      <div>{EXECUTIVE_SUMMARY_HTML}<!--EXEC_SUMMARY_HTML--></div>
     </section>
 
-    <!-- KPI mit Mini-Balken -->
-    <section class="page">
-      <h2>KI-Reife – Ergebnisüberblick</h2>
-      <div class="cols">
-        <div class="card">
-          <h3>Scores (0–100)</h3>
-          <table class="table small">
-            <tbody>
-              <tr><td>Governance &amp; Compliance</td><td>{{ score_governance }}/100<div class="bar"><i style="width: {{ score_governance }}%"></i></div></td></tr>
-              <tr><td>IT-/Datensicherheit</td><td>{{ score_sicherheit }}/100<div class="bar"><i style="width: {{ score_sicherheit }}%"></i></div></td></tr>
-              <tr><td>Wertschöpfung</td><td>{{ score_wertschoepfung }}/100<div class="bar"><i style="width: {{ score_wertschoepfung }}%"></i></div></td></tr>
-              <tr><td>Befähigung &amp; Kultur</td><td>{{ score_befaehigung }}/100<div class="bar"><i style="width: {{ score_befaehigung }}%"></i></div></td></tr>
-              <tr><td><strong>Gesamt</strong></td><td><strong>{{ score_gesamt }}/100</strong><div class="bar"><i style="width: {{ score_gesamt }}%"></i></div></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="card">
-          <h3>Kontext</h3>
-          {{ KPI_CONTEXT_HTML }}
-        </div>
-      </div>
+    <section id="kpi" class="card">
+      <h2>KI‑Reife – Ergebnisüberblick</h2>
+      <div>{KPI_SCORES_HTML}<!--KPI_SCORES_HTML--></div>
     </section>
 
-    <!-- Quick Wins -->
-    <section class="page">
+    <section id="quick-wins" class="card">
       <h2>Quick Wins (0–90 Tage)</h2>
-      <p class="lead">{{ LEAD_QW }}</p>
-      {{ QUICK_WINS_HTML }}
+      <div>{QUICK_WINS_HTML}<!--QUICK_WINS_HTML--></div>
     </section>
 
-    <!-- Roadmap 90 Tage -->
-    <section class="page">
-      <h2>Roadmap (90 Tage – Test → Pilot → Rollout)</h2>
-      <p class="lead">{{ LEAD_ROADMAP_90 }}</p>
-      {{ PILOT_PLAN_HTML }}
+    <section id="roadmap-90" class="card">
+      <h2>Roadmap 90 Tage</h2>
+      <div>{ROADMAP_90_HTML}<!--ROADMAP_90_HTML--></div>
     </section>
 
-    <!-- Roadmap 12 Monate (optional) -->
-    {% if ROADMAP_12M_HTML %}
-    <section class="page">
-      <h2>Roadmap (12 Monate)</h2>
-      <p class="lead">{{ LEAD_ROADMAP_12 }}</p>
-      {{ ROADMAP_12M_HTML }}
-    </section>
-    {% endif %}
-
-    <!-- Empfohlene Tools -->
-    <section class="page">
-      <h2>Empfohlene Tools (Pro &amp; Open-Source)</h2>
-      <p class="lead">{{ LEAD_TOOLS }}</p>
-      {{ TOOLS_HTML }}
-      <div class="small muted">"Stand": {{ research_last_updated }}.</div>
+    <section id="roadmap-12" class="card">
+      <h2>Roadmap 12 Monate</h2>
+      <div>{ROADMAP_12_HTML}<!--ROADMAP_12_HTML--></div>
     </section>
 
-    <!-- Förder-Update / ZIM (optional) -->
-    {% if ZIM_ALERT_HTML %}
-    <section class="page">
-      <h2>Förder-Update: ZIM – volldigitale Antragstellung</h2>
-      <p class="lead">{{ LEAD_ZIM_ALERT }}</p>
-      {{ ZIM_ALERT_HTML }}
-    </section>
-    {% endif %}
-
-    <!-- Workflow ZIM (optional) -->
-    {% if ZIM_WORKFLOW_HTML %}
-    <section class="page">
-      <h2>Workflow-Übersicht: ZIM digital (1 Seite)</h2>
-      <p class="lead">{{ LEAD_ZIM_WORKFLOW }}</p>
-      {{ ZIM_WORKFLOW_HTML }}
-    </section>
-    {% endif %}
-
-    <!-- Förderprogramme & Quellen -->
-    <section class="page">
-      <h2>Aktuelle Förderprogramme &amp; Quellen</h2>
-      <p class="lead">{{ LEAD_FUNDING }}</p>
-      {{ FOERDERPROGRAMME_HTML }}
-      <div class="small muted">"Stand": {{ research_last_updated }}.</div>
+    <section id="tools" class="card">
+      <h2>Empfohlene Tools</h2>
+      <div>{TOOLS_HTML}<!--TOOLS_HTML--></div>
     </section>
 
-    <!-- Kreativ-Special (optional) -->
-    {% if KREATIV_TOOLS_HTML %}
-    <section class="page">
-      <h2>Kreativ-Tools (kuratierte Liste)</h2>
-      <p class="lead">{{ LEAD_CREATIV }}</p>
-      {{ KREATIV_TOOLS_HTML }}
-      <div class="small muted">Stand: {{ research_last_updated }} · Quelle: kreativ-tools.txt</div>
-    </section>
-    {% endif %}
-
-    <!-- Nächste Schritte -->
-    <section class="page">
-      <h2>Nächste Schritte</h2>
-      <p class="lead">{{ LEAD_NEXT_ACTIONS }}</p>
-      <div class="small muted">Legende: ⏱ Aufwand · 🎯 Impact · 👤 Owner · 📆 Termin</div>
-      {{ NEXT_ACTIONS_HTML }}
+    <section id="funding" class="card">
+      <h2>Förderprogramme & Quellen</h2>
+      <div>{FUNDING_HTML}<!--FUNDING_HTML--></div>
     </section>
 
-    <!-- Schlussseite -->
-    <section class="last-page">
-      <div class="feedback-box"><strong>Ihre Meinung zählt:</strong>
-        {% if FEEDBACK_URL %}
-          <a href="{{ FEEDBACK_URL }}" target="_blank" rel="noopener">Zum Feedback-Formular</a>
-        {% endif %}
-        {{ FEEDBACK_BOX_HTML }}
-      </div>
-      <div class="small muted" style="margin-top:10px;">© {{ report_year }} KI-Sicherheit.jetzt – DSGVO &amp; EU-AI-Act-Ready – {{ OWNER_NAME }}</div>
-      <div class="small muted">TÜV-zertifiziertes KI-Management © {{ report_year }}: {{ CONTACT_EMAIL }} · Alle Angaben ohne Gewähr; keine Rechtsberatung.</div>
-      <div class="watermark">{{ WATERMARK_TEXT }}</div>
+    <section id="next-steps" class="card">
+      <h2>Nächste Schritte (30 Tage)</h2>
+      <div>{NEXT_STEPS_HTML}<!--NEXT_STEPS_HTML--></div>
+    </section>
+
+    <section id="transparency" class="card">
+      <h2>Transparenz</h2>
+      <div>{TRANSPARENCY_HTML}<!--TRANSPARENCY_HTML--></div>
     </section>
   </main>
+
+  <footer class="small muted" style="padding:0 28px 28px">
+    © 2025 KI‑Sicherheit.jetzt – DSGVO & EU‑AI‑Act‑Ready – {{OWNER_NAME}} · Alle Angaben ohne Gewähr; keine Rechtsberatung.
+  </footer>
 </body>
 </html>
