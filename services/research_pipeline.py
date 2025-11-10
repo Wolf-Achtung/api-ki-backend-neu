@@ -1,310 +1,121 @@
 # -*- coding: utf-8 -*-
 """
-services/research_pipeline.py
------------------------------
-Orchestriert Recherche über Tavily & Perplexity gemäß Research-Policy.
-Dynamische Zeitfenster (7/30/60) werden aus den Antworten oder ENV gelesen.
-
-Public:
-    run_research(briefing: dict, policy: ResearchPolicy = DEFAULT_POLICY) -> dict
-
-Return keys (merge-ready for template):
-    - "TOOLS_HTML"
-    - "FOERDERPROGRAMME_HTML"
-    - "QUELLEN_HTML"
-    - "last_updated": "YYYY-MM-DD"
+services.research_pipeline
+Bündelt Recherche über Tavily + Perplexity (Hybrid).
+Erzeugt HTML-Tabellen, die gpt_analyze konsumiert:
+- TOOLS_TABLE_HTML
+- FUNDING_TABLE_HTML
+- last_updated
 """
 from __future__ import annotations
-import os
-import logging
-import datetime as dt
-from typing import Any, Dict, Iterable, List
+import os, logging, html
+from datetime import datetime, timezone
+from typing import Dict, List, Tuple
 from urllib.parse import urlparse
 
-from .research_policy import ResearchPolicy, DEFAULT_POLICY, queries_for_briefing
-from .research_clients import TavilyClient, PerplexityClient
+from .research_clients import hybrid_search, tavily_search, perplexity_search
 
 log = logging.getLogger(__name__)
 
+PROVIDER = os.getenv("RESEARCH_PROVIDER", "hybrid").strip().lower()
+RECENCY_DAYS = int(os.getenv("RESEARCH_DAYS", "7"))
+MAX_RESULTS = int(os.getenv("RESEARCH_MAX_RESULTS", "12"))
 
-def _host(url: str) -> str:
+_OFFICIAL = {"bmwk.de","bund.de","bmbf.de","bmi.bund.de","europa.eu","ec.europa.eu","commission.europa.eu",
+             "berlin.de","service.berlin.de","foerderdatenbank.de","bsi.bund.de","bafin.de"}
+
+def _provider_search(queries: List[str]) -> List[Dict[str,str]]:
+    if PROVIDER == "disabled":
+        return []
+    if PROVIDER == "tavily":
+        out = []
+        for q in queries:
+            out.extend(tavily_search(q, max_results=MAX_RESULTS, days=RECENCY_DAYS))
+        return out
+    if PROVIDER == "perplexity":
+        out = []
+        for q in queries:
+            out.extend(perplexity_search(q, max_results=MAX_RESULTS))
+        return out
+    # default hybrid
+    return hybrid_search(queries, max_results=MAX_RESULTS, days=RECENCY_DAYS)
+
+def _table(head: List[str], rows: List[List[str]]) -> str:
+    thead = "<thead><tr>" + "".join(f"<th>{h}</th>" for h in head) + "</tr></thead>"
+    body = "<tbody>" + "".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in rows) + "</tbody>"
+    return f"<table class='table'>{thead}{body}</table>"
+
+def _domain(url: str) -> str:
     try:
         return urlparse(url).netloc.lower()
     except Exception:
         return ""
 
-def _domain_score(host: str, policy: ResearchPolicy) -> float:
-    if any(h in host for h in policy.include_funding):
-        return 1.0
-    if any(h in host for h in policy.include_tools_hint):
-        return 0.7
-    return 0.5
+def _sort_links(urls: List[Tuple[str,str]]) -> List[Tuple[str,str]]:
+    def key(x):
+        dom = _domain(x[0])
+        cat = 0 if any(dom==d or dom.endswith("."+d) for d in _OFFICIAL) else 1
+        return (cat, dom, x[1].lower())
+    return sorted(urls, key=key)
 
-def _dedup(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    seen = set()
-    out = []
-    for it in items:
-        key = it.get("url", "")
-        if not key or key in seen:
+def _size_hint(size_label: str) -> str:
+    s = (size_label or "").lower()
+    if "solo" in s: return "Solo/Selbstständig"
+    if "2" in s or "team" in s: return "Kleines Team"
+    if "kmu" in s or "11" in s or "100" in s: return "KMU"
+    return "KMU"
+
+def run_research(answers: Dict[str, str]) -> Dict[str, str]:
+    branche = answers.get("BRANCHE_LABEL") or answers.get("branche") or ""
+    bundesland = answers.get("BUNDESLAND_LABEL") or answers.get("bundesland") or ""
+    groesse = answers.get("UNTERNEHMENSGROESSE_LABEL") or answers.get("unternehmensgroesse") or ""
+    size_hint = _size_hint(groesse)
+
+    # --------- Queries ---------
+    tool_queries = [
+        f"beste KI Tools {branche} 2025 DSGVO EU hosting pricing",
+        f"{branche} generative AI tools Germany GDPR 2025 review",
+        f"{branche} workflow automation tools 2025 EU",
+        "Azure OpenAI EU alternatives Mistral Aleph Alpha German market"
+    ]
+    funding_queries = [
+        f"{bundesland} Förderprogramm Digitalisierung KI 2025 KMU Zuschuss",
+        f"{bundesland} Innovationsförderung 2025 Pro FIT ZIM go-digital",
+        "Deutschland Förderprogramme KI Mittelstand 2025 Liste",
+        "EU-Programme KI KMU 2025 Ausschreibungen"
+    ]
+
+    # --------- Search ---------
+    tools_items = _provider_search(tool_queries)
+    fund_items = _provider_search(funding_queries)
+
+    # --------- Build TOOLS table ---------
+    tool_rows: List[List[str]] = []
+    for it in tools_items[:MAX_RESULTS]:
+        href = it.get("url","").strip()
+        if not href: 
             continue
-        seen.add(key)
-        out.append(it)
-    return out
+        title = html.escape((it.get("title") or href).strip())
+        link = f"<a href='{href}' target='_blank' rel='noopener'>{title}</a>"
+        # Kategorie/Preis/DSGVO: Platzhalter – werden später von _rewrite_table_links_with_labels überschrieben/ergänzt
+        tool_rows.append([title, "—", "—", "—", link])
+    tools_html = _table(["Tool/Produkt","Kategorie","Preis","DSGVO/Host","Links"], tool_rows) if tool_rows else ""
 
-def _filter_domains(items: List[Dict[str, Any]], policy: ResearchPolicy) -> List[Dict[str, Any]]:
-    out = []
-    for it in items:
-        h = _host(it.get("url", ""))
-        if not h:
+    # --------- Build FUNDING table ---------
+    fund_rows: List[List[str]] = []
+    for it in fund_items[:MAX_RESULTS]:
+        href = it.get("url","").strip()
+        if not href:
             continue
-        if any(bad in h for bad in policy.exclude_global):
-            continue
-        out.append(it)
-    return out
+        title = html.escape((it.get("title") or href).strip())
+        link = f"<a href='{href}' target='_blank' rel='noopener'>Förderrichtlinie</a>"
+        ziel = "Solo" if "solo" in size_hint.lower() else "KMU"
+        fund_rows.append([title, "—", ziel, "—", f"{ziel}-Passung kurz", link])
+    funding_html = _table(["Programm","Förderung","Zielgruppe","Deadline","Eligibility","Quelle"], fund_rows) if fund_rows else ""
 
-def _rank(items: List[Dict[str, Any]], policy: ResearchPolicy) -> List[Dict[str, Any]]:
-    ranked = []
-    for it in items:
-        h = _host(it.get("url", ""))
-        score = _domain_score(h, policy)
-        if not it.get("published_at"):
-            score -= 0.1
-        it["score"] = max(0.0, score)
-        ranked.append(it)
-    ranked.sort(key=lambda x: x["score"], reverse=True)
-    return ranked
-
-def _a(label: str, href: str) -> str:
-    return f'<a href="{href}" target="_blank" rel="noopener noreferrer">{label}</a>'
-
-def _html_table(rows: List[List[str]], header: List[str]) -> str:
-    head = "<thead><tr>" + "".join(f"<th>{h}</th>" for h in header) + "</tr></thead>"
-    body = "<tbody>" + "".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in rows) + "</tbody>"
-    return f'<table class="table">{head}{body}</table>'
-
-def _days_from_answers(answers: Dict[str, Any], fallback: int) -> int:
-    """
-    Extrahiert Zeitfenster aus Briefing-Antworten oder ENV.
-    UI-Feld „research_days": erlaubt 7, 30, 60
-    """
-    v = (answers or {}).get("research_days") or (answers or {}).get("tools_days") or (answers or {}).get("funding_days")
-    if v:
-        try:
-            v = int(v)
-            if v in (7, 30, 60):
-                return v
-        except Exception:
-            pass
-    # ENV Fallbacks
-    for name in ("TOOLS_DAYS", "FUNDING_DAYS", "RESEARCH_DAYS_DEFAULT"):
-        val = os.getenv(name)
-        if val:
-            try:
-                x = int(val)
-                if x in (7, 30, 60):
-                    return x
-            except Exception:
-                pass
-    return fallback
-
-def _tools_rows(items: List[Dict[str, Any]]) -> List[List[str]]:
-    rows = []
-    for it in items[:10]:
-        host = _host(it["url"])
-        rows.append([it["title"], host, it.get("price_hint", "—"), it.get("tc", "—"), _a("Quelle", it["url"])])
-    return rows
-
-def _funding_rows(items: List[Dict[str, Any]]) -> List[List[str]]:
-    rows = []
-    for it in items[:12]:
-        host = _host(it["url"])
-        rows.append([it["title"], host, (it.get("published_at") or "—"), _a("Details", it["url"])])
-    return rows
-
-def _sources_rows(items: List[Dict[str, Any]]) -> List[List[str]]:
-    rows = []
-    for it in items[:12]:
-        host = _host(it["url"])
-        rows.append([it["title"], host, (it.get("published_at") or "—"), _a("Link", it["url"])])
-    return rows
-
-def run_research(briefing: Dict[str, Any], policy: ResearchPolicy = DEFAULT_POLICY) -> Dict[str, Any]:
-    """
-    Hauptfunktion: Recherchiert Tools, Förderprogramme und AI-Act-Quellen.
-    
-    Args:
-        briefing: Briefing-Antworten Dict
-        policy: ResearchPolicy mit Domain-Whitelists/Blacklists
-        
-    Returns:
-        Dict mit HTML-Tabellen für Template:
-        - TOOLS_HTML
-        - FOERDERPROGRAMME_HTML  
-        - QUELLEN_HTML
-        - last_updated
-    """
-    # ✅ Clients mit Error-Handling initialisieren
-    try:
-        tavily = TavilyClient()
-    except Exception as exc:
-        log.error("❌ TavilyClient init failed: %s", exc)
-        tavily = None
-    
-    try:
-        pplx = PerplexityClient()
-    except Exception as exc:
-        log.warning("⚠️ PerplexityClient init failed (optional): %s", exc)
-        pplx = None
-
-    q = queries_for_briefing(briefing)
-    days = _days_from_answers(briefing or {}, policy.default_days)
-    
-    log.info("🔍 Research starting: days=%d, queries=%s", days, {k: len(v) for k, v in q.items()})
-
-    all_tools: List[Dict[str, Any]] = []
-    all_funding: List[Dict[str, Any]] = []
-    all_sources: List[Dict[str, Any]] = []
-
-    # ========== TOOLS ==========
-    if tavily:
-        for query in q["tools"]:
-            try:
-                results = tavily.search(
-                    query,
-                    include_domains=policy.include_tools_hint,
-                    exclude_domains=policy.exclude_global,
-                    days=days,
-                    max_results=policy.max_results_tools,
-                )
-                all_tools += results
-                log.debug("📦 Tavily tools: query='%s' -> %d results", query, len(results))
-            except Exception as exc:
-                log.warning("⚠️ Tavily tools search failed for '%s': %s", query, exc)
-    
-    # Perplexity Fallback für Tools
-    if len(all_tools) < 4 and pplx and pplx.available():
-        try:
-            fallback = pplx.ask_json(
-                "Gib 6 aktuelle (7–60 Tage) KI-Tools/Produkt-Updates für KMU in DE/EU "
-                "mit Link und Datum – nur Primärquellen (Hersteller/Docs/Trust Center) – JSON array."
-            )
-            all_tools += fallback
-            log.info("🔄 Perplexity tools fallback: +%d results", len(fallback))
-        except Exception as exc:
-            log.warning("⚠️ Perplexity tools fallback failed: %s", exc)
-
-    # ========== FUNDING ==========
-    if tavily:
-        for query in q["funding"]:
-            try:
-                results = tavily.search(
-                    query,
-                    include_domains=policy.include_funding,
-                    exclude_domains=policy.exclude_global,
-                    days=days,
-                    max_results=policy.max_results_funding,
-                )
-                all_funding += results
-                log.debug("💰 Tavily funding: query='%s' -> %d results", query, len(results))
-            except Exception as exc:
-                log.warning("⚠️ Tavily funding search failed for '%s': %s", query, exc)
-    
-    # Perplexity Fallback für Funding
-    if len(all_funding) < 4 and pplx and pplx.available():
-        try:
-            fallback = pplx.ask_json(
-                "Gib 6 aktuelle (7–60 Tage) Förderaufrufe/Programme (DE/EU) für KMU "
-                "mit Deadlines – NUR Primärquellen (BMWK, EU, Landesbanken) – JSON array."
-            )
-            all_funding += fallback
-            log.info("🔄 Perplexity funding fallback: +%d results", len(fallback))
-        except Exception as exc:
-            log.warning("⚠️ Perplexity funding fallback failed: %s", exc)
-
-    # ========== AI ACT / SOURCES ==========
-    if tavily:
-        for query in q["ai_act"]:
-            try:
-                results = tavily.search(
-                    query,
-                    exclude_domains=policy.exclude_global,
-                    days=days,
-                    max_results=policy.max_results_sources,
-                )
-                all_sources += results
-                log.debug("📚 Tavily sources: query='%s' -> %d results", query, len(results))
-            except Exception as exc:
-                log.warning("⚠️ Tavily sources search failed for '%s': %s", query, exc)
-    
-    # Perplexity Fallback für Sources
-    if len(all_sources) < 4 and pplx and pplx.available():
-        try:
-            fallback = pplx.ask_json(
-                "Liste 6 aktuelle (7–60 Tage) Primärquellen (DE/EU) zum EU AI Act / "
-                "Leitfäden für Unternehmen – JSON array."
-            )
-            all_sources += fallback
-            log.info("🔄 Perplexity sources fallback: +%d results", len(fallback))
-        except Exception as exc:
-            log.warning("⚠️ Perplexity sources fallback failed: %s", exc)
-
-    # ========== FILTER/DEDUP/RANK PIPELINE ==========
-    def pipeline(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Filter -> Dedup -> Rank"""
-        # 1. Filter: Nur Items mit URL
-        out = [x for x in items if x.get("url")]
-        
-        # 2. Filter: Global exclude domains
-        out = [x for x in out if not any(bad in urlparse(x["url"]).netloc.lower() for bad in policy.exclude_global)]
-        
-        # 3. Dedup by URL
-        deduped = []
-        seen = set()
-        for x in out:
-            u = x["url"]
-            if u in seen:
-                continue
-            seen.add(u)
-            deduped.append(x)
-        
-        # 4. Rank by domain quality
-        ranked = []
-        for it in deduped:
-            h = urlparse(it["url"]).netloc.lower()
-            score = 1.0 if any(hint in h for hint in policy.include_funding) else \
-                    0.7 if any(hint in h for hint in policy.include_tools_hint) else 0.5
-            if not it.get("published_at"):
-                score -= 0.1
-            it["score"] = max(0.0, score)
-            ranked.append(it)
-        ranked.sort(key=lambda x: x["score"], reverse=True)
-        return ranked
-
-    tools = pipeline(all_tools)
-    funding = pipeline(all_funding)
-    sources = pipeline(all_sources)
-    
-    log.info("✅ Research complete: tools=%d, funding=%d, sources=%d", len(tools), len(funding), len(sources))
-
-    # ========== HTML GENERATION ==========
-    tools_html = _html_table(
-        _tools_rows(tools), 
-        ["Tool/Produkt", "Anbieter (Host)", "Preis-Hinweis", "DSGVO/Trust Center", "Link"]
-    )
-    funding_html = _html_table(
-        _funding_rows(funding), 
-        ["Programm", "Träger/Region", "Deadline/Datum", "Link"]
-    )
-    sources_html = _html_table(
-        _sources_rows(sources), 
-        ["Titel", "Host", "Datum", "Link"]
-    )
-
-    today = dt.date.today().isoformat()
-    
+    last_updated = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     return {
-        "TOOLS_HTML": tools_html,
-        "FOERDERPROGRAMME_HTML": funding_html,
-        "QUELLEN_HTML": sources_html,
-        "last_updated": today,
+        "TOOLS_TABLE_HTML": tools_html,
+        "FUNDING_TABLE_HTML": funding_html,
+        "last_updated": last_updated
     }
