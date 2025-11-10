@@ -8,17 +8,15 @@ try:
 except Exception:  # pragma: no cover
     redis = None  # type: ignore
 
-
 def _rand_code(n: int = 6) -> str:
     return "".join(random.choices(string.digits, k=n))
-
 
 class _MemStore:
     def __init__(self) -> None:
         self._store = {}
         self._lock = threading.Lock()
 
-    def set(self, key: str, value: str, ttl: int) -> None:
+    def setex(self, key: str, ttl: int, value: str) -> None:
         with self._lock:
             self._store[key] = (value, time.time() + ttl)
 
@@ -38,19 +36,18 @@ class _MemStore:
             if key in self._store:
                 del self._store[key]
 
-
 class OTPStore:
     def __init__(self, prefix: str = "otp:") -> None:
         self.prefix = prefix
-        self._mem = _MemStore()
         self._r = None
         url = os.getenv("REDIS_URL", "")
         if url and redis is not None:
             try:
-                self._r = redis.Redis.from_url(url, decode_responses=True, socket_timeout=2)
+                self._r = redis.Redis.from_url(url, decode_responses=True, socket_timeout=2, retry_on_timeout=True)
                 self._r.ping()
             except Exception:
                 self._r = None
+        self._mem = _MemStore()
 
     def _k(self, email: str) -> str:
         return f"{self.prefix}{email.lower()}"
@@ -64,7 +61,7 @@ class OTPStore:
                 return code
             except Exception:
                 pass
-        self._mem.set(key, code, ttl)
+        self._mem.setex(key, ttl, code)
         return code
 
     def get_code(self, email: str) -> Optional[str]:
@@ -82,7 +79,7 @@ class OTPStore:
             return False
         if expected.strip() != code.strip():
             return False
-        # Single-use
+        # single-use
         self.delete(email)
         return True
 
