@@ -29,12 +29,12 @@
   <header>
     <h1>KI‑Status‑Report</h1>
     <ul>
-      <li>Branche: {{ BRANCHE_LABEL or branche or '-' }}</li>
-      <li>Größe: {{ UNTERNEHMENSGROESSE_LABEL or unternehmensgroesse or '-' }}</li>
-      <li>Bundesland: {{ BUNDESLAND_LABEL or bundesland or '-' }}</li>
-      <li>Hauptleistung: {{ HAUPTLEISTUNG or hauptleistung or '-' }}</li>
-      <li>Erstellungsdatum: {{ report_date or heute_iso or '-' }}</li>
-      <li>Report‑ID/Build: {{ report_id or BUILD_ID or '-' }}</li>
+      <li>Branche: {{ BRANCHE_LABEL }}</li>
+      <li>Größe: {{ UNTERNEHMENSGROESSE_LABEL }}</li>
+      <li>Bundesland: {{ BUNDESLAND_LABEL }}</li>
+      <li>Hauptleistung: {{ HAUPTLEISTUNG }}</li>
+      <li>Erstellungsdatum: {{ report_date }}</li>
+      <li>Report‑ID/Build: {{ report_id }}</li>
     </ul>
   </header>
 
@@ -43,11 +43,6 @@
       <h2>Executive Summary</h2>
       <div>{{ EXECUTIVE_SUMMARY_HTML }}</div>
     </section>
-
-<section id="profile" class="card">
-  <h2>Profil (Kurzüberblick)</h2>
-  <div>{{ PROFILE_BOX_HTML }}</div>
-</section>
 
     <section id="kpi" class="card">
       <h2>KI‑Reife – Ergebnisüberblick</h2>
@@ -72,13 +67,11 @@
     <section id="tools" class="card">
       <h2>Empfohlene Tools</h2>
       <div>{{ TOOLS_HTML }}</div>
-      <p class="stand">Stand: {{ research_last_updated }}</p>
     </section>
 
     <section id="funding" class="card">
       <h2>Förderprogramme & Quellen</h2>
       <div>{{ FUNDING_HTML }}</div>
-      <p class="stand">Stand: {{ research_last_updated }}</p>
     </section>
 
     <section id="next-steps" class="card">
@@ -90,6 +83,17 @@
       <h2>Transparenz</h2>
       <div>{{ TRANSPARENCY_HTML }}</div>
     </section>
+  
+    <section id="freetext" class="card">
+      <h2>Ihre Freitext‑Angaben</h2>
+      <div>{{ FREITEXT_SNIPPETS_HTML }}</div>
+    </section>
+
+    <section id="sources" class="card">
+      <h2>Quellen & Aktualisierung</h2>
+      <div>{{ SOURCES_BOX_HTML }}</div>
+    </section>
+
   </main>
 
   <footer class="small muted" style="padding:0 28px 28px">
