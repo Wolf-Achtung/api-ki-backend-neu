@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-gpt_analyze.py – v4.14.0-GOLD-PLUS
+gpt_analyze.py – v4.15.0-GOLD-PLUS
 ---------------------------------------------------------------------
 🎯 GOLD STANDARD+ OPTIMIERUNGEN (Phase 2):
 - ✅ Nutzt prompt_loader.py System (statt hardcoded prompts)
@@ -27,6 +27,10 @@ from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 
 import requests
+try:
+    import redis  # type: ignore
+except Exception:  # pragma: no cover
+    redis = None  # type: ignore
 from sqlalchemy.orm import Session
 
 try:
@@ -46,7 +50,6 @@ from services.email_templates import render_report_ready_email  # type: ignore
 from settings import settings  # type: ignore
 from services.coverage_guard import analyze_coverage, build_html_report  # type: ignore
 from services.prompt_loader import load_prompt  # type: ignore
-from services.html_sanitizer import sanitize_sections_dict  # type: ignore
 
 log = logging.getLogger(__name__)
 
@@ -56,6 +59,10 @@ OPENAI_API_BASE = getattr(settings, "OPENAI_API_BASE", None) or os.getenv("OPENA
 OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE", "0.2"))
 OPENAI_TIMEOUT = int(os.getenv("OPENAI_TIMEOUT", "120"))
 OPENAI_MAX_TOKENS = int(os.getenv("OPENAI_MAX_TOKENS", "3000"))
+GC_TEMPERATURE = float(os.getenv("GAMECHANGER_TEMPERATURE", os.getenv("GC_TEMPERATURE","0.4")))
+ENABLE_LLM_CACHE = os.getenv("ENABLE_LLM_CACHE","1") in ("1","true","TRUE","yes","YES")
+LLM_CACHE_TTL_SECONDS = int(os.getenv("LLM_CACHE_TTL_SECONDS","21600"))
+REDIS_URL = os.getenv("REDIS_URL","")
 
 ENABLE_NSFW_FILTER = (os.getenv("ENABLE_NSFW_FILTER", "1") in ("1", "true", "TRUE", "yes", "YES"))
 ENABLE_REALISTIC_SCORES = (os.getenv("ENABLE_REALISTIC_SCORES", "1") in ("1", "true", "TRUE", "yes", "YES"))
@@ -113,6 +120,34 @@ def _send_email_via_resend(to_email: str, subject: str, html_body: str, attachme
     except Exception as exc:
         return False, str(exc)
 
+
+
+# -------------------- cache (optional Redis) --------------------
+_redis_client = None
+def _get_redis():
+    global _redis_client
+    if not ENABLE_LLM_CACHE or not REDIS_URL or redis is None:
+        return None
+    try:
+        if _redis_client is None:
+            _redis_client = redis.from_url(REDIS_URL, decode_responses=True)
+        return _redis_client
+    except Exception:
+        return None
+
+def _cache_get(key: str):
+    r = _get_redis()
+    if not r: return None
+    try: return r.get(key)
+    except Exception: return None
+
+def _cache_set(key: str, val: str, ttl: int = LLM_CACHE_TTL_SECONDS):
+    r = _get_redis()
+    if not r: return False
+    try:
+        r.setex(key, ttl, val)
+        return True
+    except Exception: return False
 
 # -------------------- helpers --------------------
 def _ellipsize(s: str, max_len: int) -> str:
@@ -246,13 +281,13 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
         "enablement": min(ena, 25) * 4,
         "overall": round((min(gov, 25) + min(sec, 25) + min(val, 25) + min(ena, 25)) * 4 / 4),
     }
-    log.info("📊 REALISTIC SCORES v4.14.0-GOLD-PLUS: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
+    log.info("📊 REALISTIC SCORES v4.15.0-GOLD-PLUS: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
              scores["governance"], scores["security"], scores["value"], scores["enablement"], scores["overall"])
     return {"scores": scores, "details": details, "total": scores["overall"]}
 
 # -------------------- OpenAI client ----------------
 def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
-                 temperature: Optional[float] = None, max_tokens: Optional[int] = None) -> Optional[str]:
+                 temperature: Optional[float] = None, max_tokens: Optional[int] = None, cache_key_hint: Optional[str] = None) -> Optional[str]:
     if not OPENAI_API_KEY:
         log.error("❌ OPENAI_API_KEY not set"); return None
     if temperature is None: temperature = OPENAI_TEMPERATURE
@@ -262,14 +297,24 @@ def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
     headers = {"Content-Type": "application/json"}
     if "openai.azure.com" in api_base: headers["api-key"] = OPENAI_API_KEY
     else: headers["Authorization"] = f"Bearer {OPENAI_API_KEY}"
+    # simple cache key
     try:
+        ck_raw = (cache_key_hint or "") + "|" + OPENAI_MODEL + "|" + str(temperature) + "|" + system_prompt + "|" + prompt
+        import hashlib
+        ck = "oa:" + hashlib.sha256(ck_raw.encode("utf-8")).hexdigest()
+        cached = _cache_get(ck)
+        if cached:
+            return cached
         r = requests.post(url, headers=headers, json={
             "model": OPENAI_MODEL,
             "messages": [{"role": "system","content": system_prompt},{"role": "user","content": prompt}],
             "temperature": float(temperature), "max_tokens": int(max_tokens),
         }, timeout=OPENAI_TIMEOUT)
         r.raise_for_status()
-        return r.json()["choices"][0]["message"]["content"]
+        out = r.json()["choices"][0]["message"]["content"]
+        if out:
+            _cache_set(ck, out)
+        return out
     except Exception as exc:
         log.error("❌ OpenAI error: %s", exc); return None
 
@@ -474,6 +519,51 @@ def _build_sources_box_html(sections: Dict[str, str], last_updated: str) -> str:
             f"<p class='small muted'>Stand der externen Quellen: {html.escape(last_updated)}.</p>{ul}"
             "</div>")
 
+# -------------------- Funding fallback from seeds ----------------
+def _build_funding_table_from_seeds(bundesland_label: str) -> str:
+    path = os.getenv("FUNDING_SEEDS_PATH", "data/funding_programs.json")
+    data = _read_json_first(path, path) or []
+    if not isinstance(data, list): 
+        return ""
+    bl = (bundesland_label or "").lower()
+    region_map = {
+        "berlin": {"BE"},
+        "be": {"BE"},
+        "bayern": {"BY"},
+        "by": {"BY"},
+    }
+    target_regions = region_map.get(bl, set())
+    # Always include DE/EU entries as generic
+    def region_ok(item):
+        r = (item.get("region") or "").upper()
+        return r in target_regions or r in {"DE","EU"}
+    items = [x for x in data if region_ok(x)]
+    # Sort by priority then name
+    def sort_key(x):
+        return (int(x.get("priority", 9)), str(x.get("name","")))
+    items.sort(key=sort_key)
+    # Build table
+    rows = []
+    for it in items:
+        url = it.get("url","")
+        link = f"<a href='{url}'>Quelle</a>" if url else ""
+        rows.append(
+            "<tr>"
+            f"<td><strong>{html.escape(it.get('name',''))}</strong></td>"
+            f"<td>{html.escape(it.get('target',''))}</td>"
+            f"<td>{html.escape(it.get('amount',''))}</td>"
+            f"<td>{html.escape(it.get('deadline','laufend'))}</td>"
+            f"<td>{html.escape(it.get('fit',''))}</td>"
+            f"<td>{link}</td>"
+            "</tr>"
+        )
+    if not rows:
+        return ""
+    head = "<thead><tr><th>Programm</th><th>Ziel</th><th>Volumen</th><th>Deadline</th><th>Fit</th><th>Link</th></tr></thead>"
+    body = "<tbody>" + "".join(rows) + "</tbody>"
+    return "<table class='table'>" + head + body + "</table>"
+
+
 # -------------------- Kreativ-Tools ----------------
 def _read_text(path: str) -> Optional[str]:
     if not path: return None
@@ -583,10 +673,6 @@ def _build_werkbank_html_dynamic(answers: Dict[str, Any]) -> str:
     path = os.getenv("STARTER_STACKS_PATH", "").strip()
     branche = (answers.get("BRANCHE_LABEL") or answers.get("branche") or "").strip().lower()
     size = (answers.get("UNTERNEHMENSGROESSE_LABEL") or answers.get("unternehmensgroesse") or "").strip().lower()
-    # normalize size to keys used in starter_stacks.json
-    if "solo" in size or "freiberuf" in size: size = "solo"
-    elif "2" in size or "kleines" in size or "team" in size: size = "team"
-    elif "11" in size or "kmu" in size: size = "kmu"
 
     def _safe_ul(items):
         return "<ul>" + "".join(f"<li>{html.escape(x)}</li>" for x in (items or [])) + "</ul>"
@@ -694,7 +780,6 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # Used in next_actions_de.md for dynamic deadlines
     base_vars = {
         "TODAY": today,
-        "heute_iso": today,
         "DATE_30D": date_30d,
         "report_date": today,
         "report_year": report_year,
@@ -825,6 +910,18 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     
     # ===== BLOCK 10: JSON Dumps =====
     # Complex data structures for advanced prompts
+
+    # Legacy/alias keys for older prompts
+    base_vars.update({
+        "heute_iso": now.strftime("%Y-%m-%d"),
+        "build_id": now.strftime("%Y%m%d-%H%M"),
+        "BUILD_ID": now.strftime("%Y%m%d-%H%M"),
+        "score_gov": scores.get("governance", 0),
+        "score_sec": scores.get("security", 0),
+        "score_val": scores.get("value", 0),
+        "score_enable": scores.get("enablement", 0),
+        "REPORT_ID": f"R-{now.strftime('%Y%m%d')}",
+    })
     base_vars.update({
         "ALL_ANSWERS_JSON": json.dumps(briefing, ensure_ascii=False, indent=2)[:2000],
         "BRIEFING_JSON": json.dumps(briefing, ensure_ascii=False, indent=2)[:2000],
@@ -955,13 +1052,13 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 raise ValueError("Non-string prompt")
             
             # Call GPT with loaded prompt
-            # Temperature tweak: Gamechanger etwas kreativer
-            _temp = float(os.getenv("GAMECHANGER_TEMPERATURE", "0.4")) if section_name == "gamechanger" else 0.2
+            temp = GC_TEMPERATURE if section_name == "gamechanger" else 0.2
             result = _call_openai(
                 prompt=prompt_text,
                 system_prompt="Du bist ein Senior‑KI‑Berater. Antworte nur mit validem HTML.",
-                temperature=_temp,
-                max_tokens=OPENAI_MAX_TOKENS
+                temperature=temp,
+                max_tokens=OPENAI_MAX_TOKENS,
+                cache_key_hint=section_name
             ) or ""
             
             result = _clean_html(result)
@@ -1032,7 +1129,8 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
 {tone} {only_html} Gib 4–6 Bullet‑Points (<ul>) aus.""",
     }
     
-    out = _call_openai(prompt=prompts.get(section_name, ""), system_prompt="Du bist ein Senior‑KI‑Berater. Antworte nur mit validem HTML.", temperature=0.2, max_tokens=OPENAI_MAX_TOKENS) or ""
+    temp = GC_TEMPERATURE if section_name == "gamechanger" else 0.2
+    out = _call_openai(prompt=prompts.get(section_name, ""), system_prompt="Du bist ein Senior‑KI‑Berater. Antworte nur mit validem HTML.", temperature=temp, max_tokens=OPENAI_MAX_TOKENS, cache_key_hint=section_name) or ""
     out = _clean_html(out)
     if _needs_repair(out): out = _repair_html(section_name, out)
     
@@ -1310,6 +1408,24 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     # Benchmark table
     sections["BENCHMARK_HTML"] = _build_benchmark_html(briefing)
     
+    # KPI block (pretty bars + context + benchmark)
+    try:
+        sections["KPI_SCORES_HTML"] = _build_score_bars_html(scores) + sections.get("KPI_CONTEXT_HTML","") + sections.get("BENCHMARK_HTML","")
+    except Exception:
+        sections["KPI_SCORES_HTML"] = _build_score_bars_html(scores)
+
+    # Aliases for PDF template placeholders
+    sections.setdefault("QUICK_WINS_HTML", qw_html)
+    sections.setdefault("ROADMAP_90_HTML", sections.get("PILOT_PLAN_HTML",""))
+    sections.setdefault("ROADMAP_12_HTML", sections.get("ROADMAP_12M_HTML",""))
+    if sections.get("FOERDERPROGRAMME_HTML") and not sections.get("FUNDING_HTML"):
+        sections["FUNDING_HTML"] = sections["FOERDERPROGRAMME_HTML"]
+    if sections.get("SOURCES_BOX_HTML") and not sections.get("TRANSPARENCY_HTML"):
+        sections["TRANSPARENCY_HTML"] = sections["SOURCES_BOX_HTML"]
+    if sections.get("NEXT_ACTIONS_HTML") and not sections.get("NEXT_STEPS_HTML"):
+        sections["NEXT_STEPS_HTML"] = sections["NEXT_ACTIONS_HTML"]
+
+    
     # ===== NEW: Additional sections required by PDF template =====
     
     # KPI Context - Interpretation of scores with benchmark comparison
@@ -1330,24 +1446,6 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 <p><strong>Benchmark:</strong> Durchschnitt {benchmark_avg}/100 · Top-Quartil {benchmark_top}/100</p>
 </div>"""
     sections["KPI_CONTEXT_HTML"] = kpi_context
-
-    # Build KPI table (Scores + Benchmark) for the PDF template
-try:
-    _s = scores
-    kpi_rows = (
-        "<tr><td>Governance</td><td>" + str(_s.get("governance", 0)) + "</td></tr>"
-        "<tr><td>Sicherheit</td><td>" + str(_s.get("security", 0)) + "</td></tr>"
-        "<tr><td>Wertschöpfung</td><td>" + str(_s.get("value", 0)) + "</td></tr>"
-        "<tr><td>Befähigung</td><td>" + str(_s.get("enablement", 0)) + "</td></tr>"
-        "<tr><td><strong>Gesamt</strong></td><td><strong>" + str(_s.get("overall", 0)) + "</strong></td></tr>"
-    )
-    sections["KPI_SCORES_HTML"] = (
-        "<table class='table'><thead><tr><th>Dimension</th><th>Score (0–100)</th></tr></thead><tbody>"
-        + kpi_rows + "</tbody></table>" + sections.get("BENCHMARK_HTML","") + sections.get("KPI_CONTEXT_HTML","")
-    )
-except Exception:
-    sections.setdefault("KPI_SCORES_HTML", sections.get("KPI_CONTEXT_HTML",""))
-
     
     # ZIM Förderung (optional, from environment)
     # These are funding program specific sections that can be configured via ENV
@@ -1377,7 +1475,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     except Exception:
         pass
     
-    log.info("[%s] 📊 Calculating realistic scores (v4.14.0-GOLD-PLUS)...", run_id)
+    log.info("[%s] 📊 Calculating realistic scores (v4.15.0-GOLD-PLUS)...", run_id)
     score_wrap = _calculate_realistic_score(answers)
     scores = score_wrap["scores"]
     
@@ -1459,6 +1557,11 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     if "FUNDING_TABLE_HTML" in sections: 
         sections["FOERDERPROGRAMME_HTML"] = sections.pop("FUNDING_TABLE_HTML", "")
     
+
+    # Funding fallback from seeds when research didn't return a table
+    if not sections.get("FOERDERPROGRAMME_HTML"):
+        sections["FOERDERPROGRAMME_HTML"] = _build_funding_table_from_seeds(sections.get("BUNDESLAND_LABEL",""))
+
     # Rewrite table link labels
     if sections.get("TOOLS_HTML"): 
         sections["TOOLS_HTML"] = _rewrite_table_links_with_labels(sections["TOOLS_HTML"])
@@ -1507,28 +1610,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     # AI Act blocks
     ai_act_blocks = _build_ai_act_blocks()
     sections.update(ai_act_blocks)
-    # News/Änderungen box (AI Act phase + research timestamp)
-sections["NEWS_BOX_HTML"] = (
-    "<div class='callout'><strong>EU AI Act – Phase:</strong> "
-    + html.escape(sections.get("ai_act_phase_label","2025–2027"))
-    + " · <strong>Quellenstand:</strong> " + html.escape(sections.get("research_last_updated", sections.get("report_date",""))) + "</div>"
-)
-
     
-    # Aliases for PDF template variables
-if sections.get("FOERDERPROGRAMME_HTML"):
-    sections["FUNDING_HTML"] = sections["FOERDERPROGRAMME_HTML"]
-
     log.info("[%s] 🎨 Rendering final HTML...", run_id)
-    # --- Sanitize dynamic sections to prevent HTML leaks (z. B. eingebettetes <html> im Pilot-Plan) ---
-    try:
-        if os.getenv("ENABLE_REPAIR_HTML", "1") in ("1","true","TRUE","yes","YES"):
-            _pre_sanitize_count = sum(1 for _k,_v in sections.items() if isinstance(_v, str))
-            sections = sanitize_sections_dict(sections, truthy_env=True)
-            log.info("[%s] 🧼 HTML sanitized for %s string sections", run_id, _pre_sanitize_count)
-    except Exception as _exc:
-        log.warning("[%s] ⚠️ Sanitizer skipped: %s", run_id, _exc)
-
     result = render(
         br, 
         run_id=run_id, 
@@ -1553,7 +1636,7 @@ if sections.get("FOERDERPROGRAMME_HTML"):
     db.commit()
     db.refresh(an)
     
-    log.info("[%s] ✅ Analysis created (v4.14.0-GOLD-PLUS): id=%s", run_id, an.id)
+    log.info("[%s] ✅ Analysis created (v4.15.0-GOLD-PLUS): id=%s", run_id, an.id)
     return an.id, result["html"], result.get("meta", {})
 
 # -------------------- runner (kept from original) ----------------
@@ -1638,7 +1721,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     db = SessionLocal()
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v4.14.0-GOLD-PLUS for briefing_id=%s", run_id, briefing_id)
+        log.info("[%s] 🚀 Starting analysis v4.15.0-GOLD-PLUS for briefing_id=%s", run_id, briefing_id)
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
         rep = Report(
