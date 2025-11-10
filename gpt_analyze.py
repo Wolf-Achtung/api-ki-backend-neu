@@ -46,6 +46,7 @@ from services.email_templates import render_report_ready_email  # type: ignore
 from settings import settings  # type: ignore
 from services.coverage_guard import analyze_coverage, build_html_report  # type: ignore
 from services.prompt_loader import load_prompt  # type: ignore
+from services.html_sanitizer import sanitize_sections_dict  # type: ignore
 
 log = logging.getLogger(__name__)
 
@@ -1483,6 +1484,15 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections.update(ai_act_blocks)
     
     log.info("[%s] 🎨 Rendering final HTML...", run_id)
+    # --- Sanitize dynamic sections to prevent HTML leaks (z. B. eingebettetes <html> im Pilot-Plan) ---
+    try:
+        if os.getenv("ENABLE_REPAIR_HTML", "1") in ("1","true","TRUE","yes","YES"):
+            _pre_sanitize_count = sum(1 for _k,_v in sections.items() if isinstance(_v, str))
+            sections = sanitize_sections_dict(sections, truthy_env=True)
+            log.info("[%s] 🧼 HTML sanitized for %s string sections", run_id, _pre_sanitize_count)
+    except Exception as _exc:
+        log.warning("[%s] ⚠️ Sanitizer skipped: %s", run_id, _exc)
+
     result = render(
         br, 
         run_id=run_id, 
