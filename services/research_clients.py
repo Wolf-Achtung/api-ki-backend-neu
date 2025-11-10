@@ -1,126 +1,152 @@
+
 # -*- coding: utf-8 -*-
 """
 services.research_clients
-Hybrid-Research-Clients für Tavily und Perplexity.
-
-ENV:
-- RESEARCH_PROVIDER=hybrid|tavily|perplexity|disabled
-- TAVILY_API_KEY=xxx
-- PERPLEXITY_API_KEY=xxx
-- RESEARCH_DAYS=7 (Recency)
-- RESEARCH_TIMEOUT=20 (Sekunden)
+Hybrid-Research-Clients: Tavily + Perplexity
+- Keine harten Abhängigkeiten: Wenn API-Key fehlt, wird die Quelle automatisch übersprungen.
+- Einheitliches Normalisierungsformat für Treffer.
 """
 from __future__ import annotations
-import os, time, json, logging
-from typing import Dict, List, Optional
+import os, time, json, re
+from typing import List, Dict, Any, Optional, Tuple
+from urllib.parse import urlparse
+
 import requests
 
-log = logging.getLogger(__name__)
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "").strip()
+PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY", "").strip()
+PERPLEXITY_MODEL = os.getenv("PERPLEXITY_MODEL", "sonar-pro").strip()
 
-DEFAULT_TIMEOUT = int(os.getenv("RESEARCH_TIMEOUT", "20"))
-RECENCY_DAYS = int(os.getenv("RESEARCH_DAYS", "7"))
+USER_AGENT = os.getenv("RESEARCH_UA", "ki-sicherheit-research/1.0 (+https://ki-sicherheit.jetzt)")
 
-def _time_depth_from_days(days: int) -> str:
-    # Tavily option: "day", "week", "month", "year"
-    if days <= 1: return "day"
-    if days <= 7: return "week"
-    if days <= 31: return "month"
-    return "year"
 
-def normalize_item(url: str, title: str = "", description: str = "") -> Dict[str, str]:
+def _norm_url(u: str) -> str:
+    try:
+        p = urlparse((u or "").strip())
+        scheme = p.scheme or "https"
+        netloc = p.netloc.lower()
+        path = re.sub(r"/+$", "", p.path or "")
+        return f"{scheme}://{netloc}{path}"
+    except Exception:
+        return (u or "").strip()
+
+
+def _norm_item(title: str, url: str, description: str, source: str) -> Dict[str, str]:
     return {
-        "url": (url or "").strip(),
-        "title": (title or "").strip() or (url or "").strip(),
-        "description": (description or "").strip()
+        "title": (title or "").strip()[:200],
+        "url": _norm_url(url),
+        "description": (description or "").strip()[:500],
+        "source": source,
     }
 
-def dedup_by_url(items: List[Dict[str, str]]) -> List[Dict[str, str]]:
-    seen, out = set(), []
-    for it in items:
-        u = (it.get("url") or "").strip()
-        if u and u not in seen:
-            seen.add(u); out.append(it)
-    return out
 
 # ---------------- Tavily ----------------
-def tavily_search(query: str, max_results: int = 10, days: Optional[int] = None) -> List[Dict[str, str]]:
-    key = os.getenv("TAVILY_API_KEY", "").strip()
-    if not key:
-        log.warning("Tavily disabled (no API key)")
+def search_tavily(query: str, max_results: int = 8, days: Optional[int] = None) -> List[Dict[str, str]]:
+    if not TAVILY_API_KEY:
         return []
-    url = "https://api.tavily.com/search"
-    payload = {
-        "api_key": key,
-        "query": query,
-        "max_results": int(max_results),
-        "include_answer": False,
-        "search_depth": "advanced",
-        "topic": "general",
-        "time_depth": _time_depth_from_days(days or RECENCY_DAYS)
-    }
     try:
-        r = requests.post(url, json=payload, timeout=DEFAULT_TIMEOUT)
+        payload = {
+            "api_key": TAVILY_API_KEY,
+            "query": query,
+            "search_depth": "advanced",
+            "max_results": max_results,
+            "include_answer": False,
+            "include_images": False,
+            "include_domains": [],
+        }
+        if days is not None:
+            payload["days"] = int(days)
+        r = requests.post("https://api.tavily.com/search", json=payload, timeout=20)
         r.raise_for_status()
         data = r.json() or {}
-        results = []
-        for ritem in data.get("results", []):
-            results.append(normalize_item(ritem.get("url",""), ritem.get("title",""), ritem.get("content","")))
-        return dedup_by_url(results)
-    except Exception as exc:
-        log.warning("Tavily error: %s", exc)
+        out: List[Dict[str, str]] = []
+        for item in (data.get("results") or []):
+            out.append(_norm_item(item.get("title",""), item.get("url",""), item.get("content",""), "tavily"))
+        return out
+    except Exception:
         return []
+
 
 # ---------------- Perplexity ----------------
-def perplexity_search(query: str, max_results: int = 10) -> List[Dict[str, str]]:
-    key = os.getenv("PERPLEXITY_API_KEY", "").strip() or os.getenv("PPLX_API_KEY", "").strip()
-    if not key:
-        log.warning("Perplexity disabled (no API key)")
+def search_perplexity(query: str, max_results: int = 8, days: Optional[int] = None, model: Optional[str] = None) -> List[Dict[str, str]]:
+    if not PERPLEXITY_API_KEY:
         return []
-    url = "https://api.perplexity.ai/chat/completions"
-    headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
-    body = {
-        "model": os.getenv("PERPLEXITY_MODEL","sonar-small-online"),
-        "temperature": 0.0,
-        "top_p": 1.0,
-        "return_citations": True,
-        "messages": [
-            {"role": "system", "content": "Be concise. Return factual citations relevant to the user's query."},
-            {"role": "user", "content": f"{query}\n\nPlease provide authoritative sources."}
-        ]
-    }
+    model = (model or PERPLEXITY_MODEL or "sonar-pro").strip()
     try:
-        r = requests.post(url, headers=headers, json=body, timeout=DEFAULT_TIMEOUT)
+        headers = {
+            "Authorization": f"Bearer {PERPLEXITY_API_KEY}",
+            "Content-Type": "application/json",
+            "User-Agent": USER_AGENT,
+        }
+        system = "You are a web researcher. Return concise, trustworthy sources (official and vendor pages preferred)."
+        query_aug = query
+        if days:
+            query_aug = f"{query} updated within last {int(days)} days"
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": f"Provide 8 high-quality links with titles and one-sentence summaries for: {query_aug}. Output JSON array with objects: title,url,description."}
+            ],
+            "temperature": 0.0,
+        }
+        r = requests.post("https://api.perplexity.ai/chat/completions", headers=headers, json=payload, timeout=30)
         r.raise_for_status()
-        data = r.json() or {}
-        items: List[Dict[str,str]] = []
-        # Try new-style citations on the message
+        data = r.json()
+        content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+        # Try parsing JSON payload if model complied
+        items: List[Dict[str, Any]] = []
         try:
-            msg = (data.get("choices") or [{}])[0].get("message", {})
-            cits = msg.get("citations") or []
-            for u in cits:
-                items.append(normalize_item(str(u)))
+            # Find first JSON array in content
+            start = content.find("[")
+            end = content.rfind("]")
+            if start != -1 and end != -1 and end > start:
+                items = json.loads(content[start:end+1])
         except Exception:
-            pass
-        # Fallback: parse "citations" on the top-level or URLs from text
-        if not items:
-            for u in (data.get("citations") or []):
-                items.append(normalize_item(str(u)))
-        # Best effort: scrape URLs from the content
-        if not items:
-            import re
-            content = (data.get("choices") or [{}])[0].get("message",{}).get("content","")
-            for u in re.findall(r"https?://[^\s)>\]]+", content or ""):
-                items.append(normalize_item(u))
-        return dedup_by_url(items)[:max_results]
-    except Exception as exc:
-        log.warning("Perplexity error: %s", exc)
+            items = []
+        out: List[Dict[str, str]] = []
+        for it in items or []:
+            out.append(_norm_item(it.get("title",""), it.get("url",""), it.get("description",""), "perplexity"))
+        # Fallback: use citations if present
+        if not out:
+            citations = (data.get("citations") or []) if isinstance(data.get("citations"), list) else []
+            for c in citations[:max_results]:
+                out.append(_norm_item(c, c, "", "perplexity"))
+        return out[:max_results]
+    except Exception:
         return []
 
-def hybrid_search(queries: List[str], max_results:int = 10, days:int = RECENCY_DAYS) -> List[Dict[str,str]]:
+
+# --------------- Dedup & Filter ---------------
+NSFW_DOMAINS = {"xvideos.com","pornhub.com","xnxx.com","redtube.com","youporn.com","onlyfans.com"}
+NSFW_WORDS = {"porn","xxx","sex","nude","naked","adult","nsfw","erotic","escort","dating","porno","nackt","fick","titten","onlyfans","torrent","crack"}
+
+def _is_nsfw(item: Dict[str,str]) -> bool:
+    u = (item.get("url") or "").lower()
+    if any(d in u for d in NSFW_DOMAINS):
+        return True
+    txt = f"{item.get('title','')} {item.get('description','')}".lower()
+    return any(w in txt for w in NSFW_WORDS)
+
+def dedup_and_filter(items: List[Dict[str,str]]) -> List[Dict[str,str]]:
+    seen = set()
     out: List[Dict[str,str]] = []
+    for it in items:
+        if _is_nsfw(it): 
+            continue
+        u = it.get("url","")
+        if u and u not in seen:
+            seen.add(u)
+            out.append(it)
+    return out
+
+
+def search_hybrid(queries: List[str], max_results_per_query: int = 8, days: Optional[int] = None) -> List[Dict[str, str]]:
+    """Run Tavily + Perplexity and merge results."""
+    all_items: List[Dict[str,str]] = []
     for q in queries:
-        # Tavily
-        out.extend(tavily_search(q, max_results=max_results, days=days))
-        # Perplexity
-        out.extend(perplexity_search(q, max_results=max_results))
-    return dedup_by_url(out)[:max_results*len(queries)]
+        tav = search_tavily(q, max_results=max_results_per_query, days=days)
+        ppl = search_perplexity(q, max_results=max_results_per_query, days=days)
+        all_items.extend(tav)
+        all_items.extend(ppl)
+    return dedup_and_filter(all_items)
