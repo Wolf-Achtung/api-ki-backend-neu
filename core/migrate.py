@@ -1,104 +1,84 @@
 # -*- coding: utf-8 -*-
-"""Database migration module for KI-Backend (synchron, mit kompatiblem async-Wrapper)."""
-import logging
+from __future__ import annotations
+"""Synchrones Migrations‑Hilfsmodul (SQLAlchemy 2.x)
+- nutzt Engine.begin() Kontext für atomare Transaktionen
+- kompatibel zu psycopg v3
+- Idempotenz: CREATE TABLE IF NOT EXISTS + CREATE INDEX IF NOT EXISTS
+"""
 from sqlalchemy import text
-from core.db import engine
+from sqlalchemy.engine import Engine
+import logging
 
-logger = logging.getLogger("core.migrate")
+log = logging.getLogger("core.migrate")
 
 DDL = [
     # users
-    """    CREATE TABLE IF NOT EXISTS users (
+    text("""    CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        last_login TIMESTAMP WITH TIME ZONE,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        last_login TIMESTAMPTZ,
         is_active BOOLEAN DEFAULT TRUE,
         is_admin BOOLEAN DEFAULT FALSE
-    )""",
-
-    # login_codes (mit code_hash)
-    """    CREATE TABLE IF NOT EXISTS login_codes (
+    )"""),
+    # login_codes
+    text("""    CREATE TABLE IF NOT EXISTS login_codes (
         id SERIAL PRIMARY KEY,
         email VARCHAR(255) NOT NULL,
         code_hash VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-        consumed_at TIMESTAMP WITH TIME ZONE,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        expires_at TIMESTAMPTZ NOT NULL,
+        consumed_at TIMESTAMPTZ,
         attempts INTEGER DEFAULT 0,
         ip_address VARCHAR(45)
-    )""",
-    "CREATE INDEX IF NOT EXISTS idx_login_codes_email  ON login_codes(email)",
-    "CREATE INDEX IF NOT EXISTS idx_login_codes_expires ON login_codes(expires_at)",
-
+    )"""),
+    text("CREATE INDEX IF NOT EXISTS idx_login_codes_email ON login_codes(email)"),
+    text("CREATE INDEX IF NOT EXISTS idx_login_codes_expires ON login_codes(expires_at)"),
     # login_audit
-    """    CREATE TABLE IF NOT EXISTS login_audit (
+    text("""    CREATE TABLE IF NOT EXISTS login_audit (
         id SERIAL PRIMARY KEY,
         email VARCHAR(255) NOT NULL,
         action VARCHAR(50) NOT NULL,
         success BOOLEAN NOT NULL,
         ip_address VARCHAR(45),
         user_agent TEXT,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    )""",
-    "CREATE INDEX IF NOT EXISTS idx_login_audit_email ON login_audit(email)",
-
-    # briefings
-    """    CREATE TABLE IF NOT EXISTS briefings (
+        created_at TIMESTAMPTZ DEFAULT NOW()
+    )"""),
+    text("CREATE INDEX IF NOT EXISTS idx_login_audit_email ON login_audit(email)"),
+    # briefings (leichtgewichtig – answers/jsonb optional je nach Modell)
+    text("""    CREATE TABLE IF NOT EXISTS briefings (
         id SERIAL PRIMARY KEY,
-        title VARCHAR(500) NOT NULL,
-        content TEXT NOT NULL,
-        topic VARCHAR(200) NOT NULL,
-        language VARCHAR(10) DEFAULT 'de',
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        published_at TIMESTAMP WITH TIME ZONE,
-        is_draft BOOLEAN DEFAULT TRUE,
-        author_email VARCHAR(255),
-        metadata JSONB DEFAULT '{}'::jsonb
-    )""",
-
-    # briefing_drafts
-    """    CREATE TABLE IF NOT EXISTS briefing_drafts (
-        id SERIAL PRIMARY KEY,
-        briefing_id INTEGER REFERENCES briefings(id) ON DELETE CASCADE,
-        content TEXT NOT NULL,
-        version INTEGER NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        created_by VARCHAR(255)
-    )""",
-
+        user_id INTEGER,
+        lang VARCHAR(10) DEFAULT 'de',
+        answers JSONB DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+    )"""),
     # analyses
-    """    CREATE TABLE IF NOT EXISTS analyses (
+    text("""    CREATE TABLE IF NOT EXISTS analyses (
         id SERIAL PRIMARY KEY,
-        user_email VARCHAR(255) NOT NULL,
-        company_name VARCHAR(500),
-        analysis_data JSONB NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        completed_at TIMESTAMP WITH TIME ZONE,
-        status VARCHAR(50) DEFAULT 'pending'
-    )""",
-
+        briefing_id INTEGER,
+        user_id INTEGER,
+        analysis_data JSONB DEFAULT '{}'::jsonb,
+        html TEXT,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+    )"""),
     # reports
-    """    CREATE TABLE IF NOT EXISTS reports (
+    text("""    CREATE TABLE IF NOT EXISTS reports (
         id SERIAL PRIMARY KEY,
-        analysis_id INTEGER REFERENCES analyses(id) ON DELETE CASCADE,
-        user_email VARCHAR(255) NOT NULL,
-        report_data JSONB NOT NULL,
+        briefing_id INTEGER,
+        analysis_id INTEGER,
+        user_email VARCHAR(255),
+        report_data JSONB DEFAULT '{}'::jsonb,
         pdf_url VARCHAR(1000),
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        downloaded_at TIMESTAMP WITH TIME ZONE
-    )"""
+        pdf_bytes_len INTEGER,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+    )"""),
 ]
 
-def migrate_all_sync() -> None:
-    logger.info("Starting database migrations (sync)...")
+def migrate_all(engine: Engine) -> None:
+    log.info("Starting DB migrations (sync/psycopg3)...")
     with engine.begin() as conn:
-        for ddl in DDL:
-            conn.execute(text(ddl))
-    logger.info("✅ All migrations completed successfully (sync)")
-
-# Kompatibler async-Wrapper (ruft die sync-Variante auf)
-async def migrate_all() -> None:  # pragma: no cover
-    migrate_all_sync()
+        for stmt in DDL:
+            conn.execute(stmt)
+    log.info("✓ Migrations completed.")
