@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 FastAPI Auth endpoints (OTP via Email)
-- Bietet jetzt zusätzlich /auth/login und /api/auth/login als Alias zu verify-code.
-- Sendet Codes via services.email_sender; OTP in Redis (services.otp).
+- Provides both /api/auth/... and /auth/... variants to be robust to mount prefixes.
+- Adds /api/auth/login (alias of verify-code) for frontend compatibility.
+- Does NOT require any database package (no psycopg dependency).
 """
 from __future__ import annotations
 from fastapi import APIRouter, HTTPException, status, Depends
@@ -62,8 +63,7 @@ def verify_code(body: VerifyBody, store: OTPStore = Depends(_otp)) -> Dict[str, 
     token = f"token-{int(time.time())}"
     return {"ok": True, "token": token, "expires_in": 3600}
 
-# ---- NEU: /login als Alias für verify-code (Kompatibilität mit Frontends) ----
-
+# ---- NEU: /login als Alias für verify-code ----
 @router.post("/auth/login", summary="Alias: verify code and return session token (no /api prefix)")
 @router.post("/api/auth/login", summary="Alias: verify code and return session token (with /api prefix)")
 def login(body: LoginBody, store: OTPStore = Depends(_otp)) -> Dict[str, Any]:
