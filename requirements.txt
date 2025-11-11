@@ -1,38 +1,61 @@
 # Production requirements - KI-Sicherheit.jetzt Backend
-# Patch: login+pipeline fix (psycopg v3, email-validator) – 2025-11-11
+# Updated: 2025-11-09 - Fixed resend dependency conflict
 # Python 3.11+
 
-# --- Core ---
+# ============================================================
+# CORE FRAMEWORK
+# ============================================================
 fastapi>=0.115,<0.116
 uvicorn[standard]>=0.30,<0.31
 pydantic>=2.9,<3.0
 pydantic-settings>=2.5,<3.0
-starlette>=0.39,<0.41
 
-# --- Database (psycopg v3) ---
+# ============================================================
+# DATABASE
+# ============================================================
 SQLAlchemy>=2.0,<2.1
-psycopg[binary]>=3.2,<3.3
 
-# --- Validation helpers ---
-email-validator>=2.1,<3.0
+# PostgreSQL Drivers - Both versions for compatibility
+psycopg[binary]>=3.1.18,<3.2.0
+# Removed psycopg2-binary dependency. psycopg3 is used for DSN normalisation in core/db.py
 
-# --- Templating/PDF ---
+# ============================================================
+# HTTP & AUTH
+# ============================================================
+requests>=2.31,<3.0                 # Lowered to 2.31 for resend compatibility
+python-jose[cryptography]>=3.3.0,<3.4.0
+PyJWT>=2.8.0,<3.0.0
+python-multipart>=0.0.9,<0.1.0
+email-validator>=2.2.0,<2.3.0
+
+# ============================================================
+# EMAIL
+# ============================================================
+resend>=0.8.0,<1.0.0                # Resend.com API
+aiosmtplib>=3.0.0,<4.0.0            # Async SMTP (fallback)
+
+# ============================================================
+# TEMPLATES & RENDERING
+# ============================================================
 jinja2>=3.1,<3.2
 
-# --- Email ---
-resend>=0.8,<1.0
+# ============================================================
+# AI / LLM SDKS
+# ============================================================
+openai>=1.45.0,<2.0.0
 
-# --- LLM / Clients ---
-requests>=2.31,<3.0
-openai>=1.51,<2.0
+# ============================================================
+# RESEARCH & SEARCH TOOLS
+# ============================================================
 tavily-python>=0.5.0,<1.0.0
-# Perplexity: HTTP calls via requests
 
-# --- Cache/Utils ---
-redis>=5.0,<6.0
-tenacity>=8.2,<9.0
-python-dateutil>=2.8,<3.0
+# ============================================================
+# DATA PROCESSING
+# ============================================================
+python-dateutil>=2.8.0,<3.0.0
 pytz>=2024.1
-python-dotenv>=1.0,<2.0
-PyJWT>=2.8,<3.0
-aiofiles>=24.1,<25.0
+
+# ============================================================
+# UTILITIES
+# ============================================================
+python-dotenv>=1.0.0,<2.0.0
