@@ -1,0 +1,72 @@
+{
+  "de": {
+    "system": {
+      "title": "Systemleitplanken",
+      "path": "system.md",
+      "purpose": "Guardrails & Tonalität",
+      "required": true
+    },
+    "analysis": {
+      "title": "Analyse (Status & Ziele)",
+      "path": "analysis.md",
+      "purpose": "Interpretation Fragebogen",
+      "required": true
+    },
+    "quickwins": {
+      "title": "Quick Wins",
+      "path": "quickwins.md",
+      "purpose": "Kurzfristige Maßnahmen",
+      "required": true
+    },
+    "compliance": {
+      "title": "Compliance",
+      "path": "compliance.md",
+      "purpose": "DSGVO / EU AI Act",
+      "required": true
+    },
+    "foerderung": {
+      "title": "Förderprogramme",
+      "path": "foerderung.md",
+      "purpose": "ZIM / go-digital / Land",
+      "required": false
+    },
+    "report": {
+      "title": "Report-Schreibeplan",
+      "path": "report.md",
+      "purpose": "Strukturierte Ausgabe",
+      "required": true
+    }
+  },
+  "en": {
+    "system": {
+      "title": "System Guardrails",
+      "path": "system.md",
+      "purpose": "Tone & Safety",
+      "required": true
+    },
+    "analysis": {
+      "title": "Analysis",
+      "path": "analysis.md",
+      "purpose": "Interpretation of questionnaire",
+      "required": true
+    },
+    "quickwins": {
+      "title": "Quick Wins",
+      "path": "quickwins.md",
+      "purpose": "Short-term actions",
+      "required": true
+    },
+    "compliance": {
+      "title": "Compliance",
+      "path": "compliance.md",
+      "purpose": "GDPR/EU AI Act",
+      "required": false
+    },
+    "report": {
+      "title": "Report Writer",
+      "path": "report.md",
+      "purpose": "Structured output",
+      "required": true
+    }
+  }
+}
