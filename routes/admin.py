@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
+"""
+routes.admin – gehärtet gegen fehlende DB/Module
+- Keine harten DB/Model‑Imports beim Modul‑Load
+- get_db als Dependency liefert 503, wenn DB nicht bereit
+- Models werden pro Endpoint lazy importiert
+- gpt_analyze nur im betroffenen Endpoint importieren
+"""
 from __future__ import annotations
-"""
-routes.admin – gehärtet (response_model=None & sichere Serialisierung) • 2025-11-02
-- Verhindert FastAPI/Pydantic-Fehler beim Mounten (keine Session/ORM im Response-Model)
-- Strikte Admin-Prüfung: is_admin/role + ENV-Whitelist
-- Datumswerte via ISO 8601 serialisiert
-"""
+
 import io
 import logging
 import os
@@ -13,38 +15,52 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from fastapi.responses import StreamingResponse, HTMLResponse
-from sqlalchemy.orm import Session
-
-from core.db import get_session
-from models import User, Briefing, Analysis, Report
-from services.auth import get_current_user
-from services.admin_export import build_briefing_export_zip
-import gpt_analyze  # run_async
 
 log = logging.getLogger("routes.admin")
 router = APIRouter(prefix="/admin", tags=["admin"])
 
+# ---------- DB/Auth Dependencies (guarded) ----------
+try:
+    from core.db import get_session as _get_session  # type: ignore
+    DB_READY = True
+except Exception as exc:  # pragma: no cover
+    _get_session = None  # type: ignore
+    DB_READY = False
+    log.warning("Admin: DB not ready at import: %s", exc)
 
-# ---------------------------- Helpers ----------------------------
-def _is_admin(user: User) -> bool:
-    # 1) Attribut
+def get_db():
+    if not DB_READY or _get_session is None:  # pragma: no cover
+        raise HTTPException(status_code=503, detail="admin_db_unavailable")
+    return _get_session()
+
+def get_current_user():
+    try:
+        from services.auth import get_current_user as _get_current_user  # type: ignore
+        return _get_current_user
+    except Exception as exc:  # pragma: no cover
+        raise HTTPException(status_code=503, detail=f"auth_unavailable: {exc}")
+
+def _models():
+    try:
+        from models import User, Briefing, Analysis, Report  # type: ignore
+        return User, Briefing, Analysis, Report
+    except Exception as exc:  # pragma: no cover
+        raise HTTPException(status_code=503, detail=f"models_unavailable: {exc}")
+
+def _is_admin(user: Any) -> bool:
     if hasattr(user, "is_admin") and bool(getattr(user, "is_admin")):
         return True
-    # 2) Rolle
     role = getattr(user, "role", None)
     if isinstance(role, str) and role.lower() in {"admin", "owner"}:
         return True
-    # 3) ENV-Whitelist
     allow = os.getenv("ADMIN_EMAILS", "") or getattr(user, "admin_allow", "") or ""
     allowlist = [e.strip().lower() for e in allow.split(",") if e.strip()]
     email = (getattr(user, "email", "") or "").lower()
     return bool(email and email in allowlist)
 
-
-def _require_admin(user: User) -> None:
+def _require_admin(user: Any) -> None:
     if not _is_admin(user):
         raise HTTPException(status_code=403, detail="admin_required")
-
 
 def _iso(dt) -> Optional[str]:
     try:
@@ -52,15 +68,15 @@ def _iso(dt) -> Optional[str]:
     except Exception:
         return None
 
-
 # ---------------------------- Endpoints ----------------------------
+
 @router.get("/overview", response_model=None)
 def overview(
-    db: Session = Depends(get_session),
-    user: User = Depends(get_current_user),
+    db = Depends(get_db),
+    user = Depends(get_current_user()),
 ):
-    """Admin-Übersicht (Zähler & letzte Briefings) – neutralisiert personenbezogene Details."""
     _require_admin(user)
+    User, Briefing, Analysis, Report = _models()
     users_count = db.query(User).count()
     briefings_count = db.query(Briefing).count()
     analyses_count = db.query(Analysis).count()
@@ -88,16 +104,16 @@ def overview(
         "latest_briefings": items,
     }
 
-
 @router.get("/briefings", response_model=None)
 def list_briefings(
     q: Optional[str] = Query(None, description="Suche in E-Mail/Name"),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
-    db: Session = Depends(get_session),
-    user: User = Depends(get_current_user),
+    db = Depends(get_db),
+    user = Depends(get_current_user()),
 ):
     _require_admin(user)
+    User, Briefing, Analysis, Report = _models()
     qry = db.query(Briefing).order_by(Briefing.id.desc())
     if q:
         from sqlalchemy import or_
@@ -118,14 +134,14 @@ def list_briefings(
         )
     return {"ok": True, "total": total, "rows": payload}
 
-
 @router.get("/briefings/{briefing_id}", response_model=None)
 def get_briefing(
     briefing_id: int,
-    db: Session = Depends(get_session),
-    user: User = Depends(get_current_user),
+    db = Depends(get_db),
+    user = Depends(get_current_user()),
 ):
     _require_admin(user)
+    User, Briefing, Analysis, Report = _models()
     b = db.get(Briefing, briefing_id)
     if not b:
         raise HTTPException(status_code=404, detail="briefing_not_found")
@@ -141,14 +157,14 @@ def get_briefing(
         },
     }
 
-
 @router.get("/briefings/{briefing_id}/latest-analysis", response_model=None)
 def latest_analysis_for_briefing(
     briefing_id: int,
-    db: Session = Depends(get_session),
-    user: User = Depends(get_current_user),
+    db = Depends(get_db),
+    user = Depends(get_current_user()),
 ):
     _require_admin(user)
+    User, Briefing, Analysis, Report = _models()
     a = db.query(Analysis).filter(Analysis.briefing_id == briefing_id).order_by(Analysis.id.desc()).first()
     if not a:
         return {"ok": False, "analysis_id": None}
@@ -160,16 +176,16 @@ def latest_analysis_for_briefing(
         },
     }
 
-
 @router.get("/analyses", response_model=None)
 def list_analyses(
     briefing_id: Optional[int] = Query(None),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
-    db: Session = Depends(get_session),
-    user: User = Depends(get_current_user),
+    db = Depends(get_db),
+    user = Depends(get_current_user()),
 ):
     _require_admin(user)
+    User, Briefing, Analysis, Report = _models()
     qry = db.query(Analysis).order_by(Analysis.id.desc())
     if briefing_id:
         qry = qry.filter(Analysis.briefing_id == briefing_id)
@@ -186,14 +202,14 @@ def list_analyses(
     ]
     return {"ok": True, "total": total, "rows": items}
 
-
 @router.get("/analyses/{analysis_id}", response_model=None)
 def get_analysis(
     analysis_id: int,
-    db: Session = Depends(get_session),
-    user: User = Depends(get_current_user),
+    db = Depends(get_db),
+    user = Depends(get_current_user()),
 ):
     _require_admin(user)
+    User, Briefing, Analysis, Report = _models()
     a = db.get(Analysis, analysis_id)
     if not a:
         raise HTTPException(status_code=404, detail="analysis_not_found")
@@ -209,29 +225,28 @@ def get_analysis(
         },
     }
 
-
 @router.get("/analyses/{analysis_id}/html", response_class=HTMLResponse)
 def get_analysis_html(
     analysis_id: int,
-    db: Session = Depends(get_session),
-    user: User = Depends(get_current_user),
+    db = Depends(get_db),
+    user = Depends(get_current_user()),
 ):
-    """Rohes HTML (nur Admin)."""
     _require_admin(user)
+    User, Briefing, Analysis, Report = _models()
     a = db.get(Analysis, analysis_id)
     if not a:
         raise HTTPException(status_code=404, detail="analysis_not_found")
     return HTMLResponse(getattr(a, "html", "") or "<p><em>empty</em></p>")
 
-
 @router.get("/reports", response_model=None)
 def list_reports(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
-    db: Session = Depends(get_session),
-    user: User = Depends(get_current_user),
+    db = Depends(get_db),
+    user = Depends(get_current_user()),
 ):
     _require_admin(user)
+    User, Briefing, Analysis, Report = _models()
     qry = db.query(Report).order_by(Report.id.desc())
     total = qry.count()
     rows = qry.offset(offset).limit(limit).all()
@@ -248,14 +263,14 @@ def list_reports(
     ]
     return {"ok": True, "total": total, "rows": items}
 
-
 @router.get("/briefings/{briefing_id}/reports", response_model=None)
 def list_reports_for_briefing(
     briefing_id: int,
-    db: Session = Depends(get_session),
-    user: User = Depends(get_current_user),
+    db = Depends(get_db),
+    user = Depends(get_current_user()),
 ):
     _require_admin(user)
+    User, Briefing, Analysis, Report = _models()
     rows = (
         db.query(Report)
         .filter(Report.briefing_id == briefing_id)
@@ -274,30 +289,34 @@ def list_reports_for_briefing(
     ]
     return {"ok": True, "rows": items}
 
-
 @router.post("/briefings/{briefing_id}/rerun", response_model=None)
 def rerun_generation(
     briefing_id: int,
     background: BackgroundTasks,
-    db: Session = Depends(get_session),
-    user: User = Depends(get_current_user),
+    db = Depends(get_db),
+    user = Depends(get_current_user()),
 ):
     _require_admin(user)
-    b = db.get(Briefing, briefing_id)
-    if not b:
-        raise HTTPException(status_code=404, detail="briefing_not_found")
-    background.add_task(gpt_analyze.run_async, briefing_id, None)
+    # gpt_analyze nur hier importieren (nicht beim Modul-Load)
+    try:
+        from gpt_analyze import run_async  # type: ignore
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"analyzer_unavailable: {exc}")
+    background.add_task(run_async, briefing_id, None)
     return {"ok": True, "queued": True}
-
 
 @router.get("/briefings/{briefing_id}/export.zip", response_model=None)
 def export_briefing_zip(
     briefing_id: int,
     include_pdf: bool = Query(False, description="Wenn vorhanden und intern gespeichert"),
-    db: Session = Depends(get_session),
-    user: User = Depends(get_current_user),
+    db = Depends(get_db),
+    user = Depends(get_current_user()),
 ):
     _require_admin(user)
+    try:
+        from services.admin_export import build_briefing_export_zip  # type: ignore
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"exporter_unavailable: {exc}")
     buf = build_briefing_export_zip(db, briefing_id, include_pdf=include_pdf)
     if buf is None:
         raise HTTPException(status_code=404, detail="briefing_not_found")

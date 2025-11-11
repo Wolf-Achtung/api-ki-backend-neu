@@ -1,14 +1,10 @@
-# file: routes/analyze.py
 # -*- coding: utf-8 -*-
+"""Analyze API – manueller Trigger (gehärtet: keine Model‑Imports auf Modulebene)."""
 from __future__ import annotations
-"""Analyze API – manueller Trigger.
-- Prefix: /analyze  → wird in main mit /api gemountet → /api/analyze/run
-"""
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
 
-from models import Briefing
 from routes._bootstrap import get_db, rate_limiter
 
 router = APIRouter(prefix="/analyze", tags=["analyze"])
@@ -17,9 +13,17 @@ class RunAnalyze(BaseModel):
     briefing_id: int = Field(gt=0)
     email_override: str | None = None
 
+def _get_briefing_model():
+    """Lazy Import der Models, damit der Router auch ohne DB‑Treiber mountet."""
+    try:
+        from models import Briefing  # type: ignore
+        return Briefing
+    except Exception as exc:  # pragma: no cover
+        raise HTTPException(status_code=503, detail=f"models_unavailable: {exc}")
+
 @router.post("/run", status_code=status.HTTP_202_ACCEPTED, dependencies=[Depends(rate_limiter("analyze:run", 5, 60))])
-def run(body: RunAnalyze, request: Request, db: Session = Depends(get_db)) -> dict:
-    # CI/Smoke: kein echtes LLM
+def run(body: RunAnalyze, request: Request, db = Depends(get_db)) -> dict:
+    # CI/Smoke: kein echtes LLM, nur Importprobe
     if (request.headers.get("x-dry-run", "").lower() in {"1", "true", "yes"}):
         try:
             import importlib; importlib.import_module("gpt_analyze")
@@ -28,6 +32,7 @@ def run(body: RunAnalyze, request: Request, db: Session = Depends(get_db)) -> di
             analyzer_ok = False
         return {"accepted": True, "dry_run": True, "analyzer_import_ok": analyzer_ok}
 
+    Briefing = _get_briefing_model()
     br = db.get(Briefing, body.briefing_id)
     if not br:
         raise HTTPException(status_code=404, detail="Briefing not found")
