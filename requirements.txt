@@ -1,5 +1,5 @@
 # Production requirements - KI-Sicherheit.jetzt Backend
-# Updated: Patch DB/Core – psycopg3 binary; SQLAlchemy 2.x; FastAPI 0.115.x
+# Updated: 2025-11-11 (Auth Router Fix)
 # Python 3.11+
 
 # ============================================================
@@ -7,7 +7,7 @@
 # ============================================================
 fastapi>=0.115,<0.116
 uvicorn[standard]>=0.30,<0.31
-pydantic>=2.9,<3.0
+pydantic[email]>=2.9,<3.0          # <-- EmailStr support (installs email-validator)
 pydantic-settings>=2.5,<3.0
 starlette>=0.39,<0.41
 
@@ -15,7 +15,8 @@ starlette>=0.39,<0.41
 # DB
 # ============================================================
 SQLAlchemy>=2.0,<2.1
-psycopg[binary]>=3.1.18,<3.2    # ← psycopg3 statt psycopg2-binary
+psycopg[binary]>=3.2,<3.3          # <-- matches core/db.py (postgresql+psycopg)
+# (remove psycopg2-binary; not used with postgresql+psycopg)
 
 # ============================================================
 # TEMPLATING / PDF
@@ -33,7 +34,7 @@ resend>=0.8,<1.0
 requests>=2.31,<3.0
 openai>=1.51,<2.0
 tavily-python>=0.5.0,<1.0.0
-# Perplexity: HTTP-API via requests
+# Perplexity: via plain HTTP (requests)
 
 # ============================================================
 # CACHING / UTILITIES
