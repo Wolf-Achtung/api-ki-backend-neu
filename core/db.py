@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
+"""DB bootstrap (SQLAlchemy 2.x + psycopg v3)
+- akzeptiert postgres://, postgresql:// und ergänzt treiber automatisch
+- stellt Engine, SessionLocal, session_scope() bereit
 """
-core.db – stabile SQLAlchemy-Initialisierung für Postgres (psycopg3) & SQLite
-- Normalisiert DSN (postgres:// → postgresql+psycopg:// …)
-- Engine/Session via SQLAlchemy 2.x
-- get_session() als Generator für FastAPI-Depends
-"""
+from contextlib import contextmanager
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from sqlalchemy.engine.url import make_url
-from settings import settings
+from typing import Iterator
+import os
+
+from settings import settings  # type: ignore
 
 def _normalize_dsn(url: str) -> str:
-    # Railway/Render geben häufig postgres:// oder postgresql:// ohne Driver aus
+    # railway liefert teils postgres:// oder postgresql:// ohne treiber
     if url.startswith("postgres://"):
         url = "postgresql://" + url[len("postgres://"):]
     try:
@@ -20,29 +22,35 @@ def _normalize_dsn(url: str) -> str:
         if u.drivername == "postgresql":  # kein expliziter Treiber
             url = url.replace("postgresql://", "postgresql+psycopg://", 1)
     except Exception:
-        # Bei ungültiger URL nicht hart fehlschlagen; Engine-Fehler kommt später klarer.
+        # defensive fallback – unverändert zurückgeben
         pass
     return url
 
 class Base(DeclarativeBase):
     pass
 
-dsn = _normalize_dsn(settings.DATABASE_URL)
-is_sqlite = dsn.startswith("sqlite")
+DSN = _normalize_dsn(settings.DATABASE_URL)
+IS_SQLITE = DSN.startswith("sqlite")
 
 engine = create_engine(
-    dsn,
+    DSN,
     echo=False,
     pool_pre_ping=True,
-    connect_args={"check_same_thread": False} if is_sqlite else {},
+    connect_args={"check_same_thread": False} if IS_SQLITE else {},
     future=True,
 )
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
 
-def get_session():
+@contextmanager
+def session_scope() -> Iterator[object]:
+    """Contextmanager für saubere Sessions (Commit/Rollback)."""
     db = SessionLocal()
     try:
         yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
