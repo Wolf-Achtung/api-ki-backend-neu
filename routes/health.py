@@ -1,4 +1,3 @@
-# file: routes/health.py
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """Health/Status – wird in main unter /api gemountet."""
@@ -13,7 +12,7 @@ router = APIRouter(tags=["health"])
 def _mounted_map(request: Request) -> Dict[str, bool]:
     paths = {getattr(r, "path", "") for r in request.app.routes}
     return {
-        "auth": any(p.startswith("/api/auth") for p in paths),
+        "auth": any(p.startswith("/api/auth") or p.startswith("/auth") for p in paths),
         "briefings": any(p.startswith("/api/briefings") for p in paths),
         "analyze": any(p.startswith("/api/analyze") for p in paths),
         "report": any(p.startswith("/api/report") for p in paths),
