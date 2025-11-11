@@ -1,56 +1,62 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-"""DB bootstrap (SQLAlchemy 2.x + psycopg v3)
-- akzeptiert postgres://, postgresql:// und ergänzt treiber automatisch
-- stellt Engine, SessionLocal, session_scope() bereit
+
 """
-from contextlib import contextmanager
+Robuster SQLAlchemy-Engine-Builder
+- Erkennt postgres:// & postgresql:// und ergänzt den passenden Driver.
+- Bevorzugt psycopg (v3); fällt auf psycopg2 zurück, wenn v3 fehlt.
+- Verwendet Pool-Pre-Ping und future=True.
+"""
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from sqlalchemy.engine.url import make_url
-from typing import Iterator
-import os
+from settings import settings
 
-from settings import settings  # type: ignore
+def _choose_driver() -> str:
+    try:
+        import psycopg  # noqa: F401
+        return "psycopg"   # v3
+    except Exception:
+        try:
+            import psycopg2  # noqa: F401
+            return "psycopg2"  # v2
+        except Exception:
+            # Fallback: keine Extradaten – SA versucht Standardtreiber
+            return ""
 
 def _normalize_dsn(url: str) -> str:
-    # railway liefert teils postgres:// oder postgresql:// ohne treiber
+    # Railway/Heroku-Kompatibilität
     if url.startswith("postgres://"):
         url = "postgresql://" + url[len("postgres://"):]
     try:
         u = make_url(url)
-        if u.drivername == "postgresql":  # kein expliziter Treiber
-            url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+        driver = _choose_driver()
+        if u.drivername == "postgresql" and driver:
+            url = url.replace("postgresql://", f"postgresql+{driver}://", 1)
     except Exception:
-        # defensive fallback – unverändert zurückgeben
         pass
     return url
 
 class Base(DeclarativeBase):
     pass
 
-DSN = _normalize_dsn(settings.DATABASE_URL)
-IS_SQLITE = DSN.startswith("sqlite")
+dsn = _normalize_dsn(settings.DATABASE_URL)
+is_sqlite = dsn.startswith("sqlite")
 
 engine = create_engine(
-    DSN,
+    dsn,
     echo=False,
     pool_pre_ping=True,
-    connect_args={"check_same_thread": False} if IS_SQLITE else {},
+    connect_args={"check_same_thread": False} if is_sqlite else {},
     future=True,
 )
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
 
-@contextmanager
-def session_scope() -> Iterator[object]:
-    """Contextmanager für saubere Sessions (Commit/Rollback)."""
+def get_session():
     db = SessionLocal()
     try:
         yield db
-        db.commit()
-    except Exception:
-        db.rollback()
-        raise
     finally:
         db.close()
