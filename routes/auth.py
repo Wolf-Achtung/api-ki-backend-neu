@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-routes.auth – E-Mail‑OTP Login (ohne DB‑Pflicht, ohne email-validator)
-- Registriert beide Varianten: /api/auth/... UND /auth/...
-- Nutzt absolute Importe (kein "beyond top-level package")
-- E-Mail-Validierung via Regex, kein EmailStr nötig
+routes.auth – OTP Login ohne DB-Abhängigkeit
+Fix: FastAPI/Starlette erlaubt bei 204 **keinen** Response-Body.
+→ Wir setzen explizit response_class=Response und geben eine leere Response zurück.
+→ Entfernt EmailStr (keine email-validator-Abhängigkeit).
+→ Bietet sowohl /api/auth/... als auch /auth/... Endpunkte.
 """
 from __future__ import annotations
 
@@ -13,10 +14,10 @@ import re
 import time
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, field_validator
 
-from services.otp import OTPStore           # ABSOLUTE imports
+from services.otp import OTPStore
 from services.email_sender import send_code
 
 log = logging.getLogger(__name__)
@@ -51,34 +52,32 @@ class VerifyBody(BaseModel):
             raise ValueError("Ungültige E‑Mail‑Adresse")
         return v
 
-# Einfacher In‑Proc Rate‑Limiter je E‑Mail
 _last_req_ts: Dict[str, float] = {}
 
 def _rate_limit(email: str) -> None:
     now = time.time()
     ts = _last_req_ts.get(email.lower(), 0.0)
     if now - ts < RATE_LIMIT_SECONDS:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Zu viele Anfragen. Bitte kurz warten."
-        )
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Zu viele Anfragen. Bitte kurz warten.")
     _last_req_ts[email.lower()] = now
 
 def _otp() -> OTPStore:
     return OTPStore(prefix=os.getenv("OTP_PREFIX", "otp:"))
 
-# ------------ Endpoints ------------
+# -------- Endpoints --------
 
-@router.post("/auth/request-code", status_code=204, summary="OTP anfordern (ohne /api Prefix)")
-@router.post("/api/auth/request-code", status_code=204, summary="OTP anfordern (mit /api Prefix)")
-def request_code(body: RequestCodeBody, store: OTPStore = Depends(_otp)) -> None:
+@router.post("/auth/request-code", status_code=204, response_class=Response, summary="OTP-Code anfordern (ohne /api)")
+@router.post("/api/auth/request-code", status_code=204, response_class=Response, summary="OTP-Code anfordern (mit /api)")
+def request_code(body: RequestCodeBody, store: OTPStore = Depends(_otp)) -> Response:
     _rate_limit(body.email)
     code = store.new_code(body.email, ttl=OTP_TTL, length=OTP_LEN)
     send_code(body.email, code)
     log.info("Auth: code requested for %s", body.email)
+    # Leere Antwort gemäß RFC 7231 §6.3.5
+    return Response(status_code=204)
 
-@router.post("/auth/verify-code", summary="OTP prüfen (ohne /api Prefix)")
-@router.post("/api/auth/verify-code", summary="OTP prüfen (mit /api Prefix)")
+@router.post("/auth/verify-code", summary="OTP prüfen → Kurzlebiges Session-Token", status_code=200)
+@router.post("/api/auth/verify-code", summary="OTP prüfen → Kurzlebiges Session-Token", status_code=200)
 def verify_code(body: VerifyBody, store: OTPStore = Depends(_otp)) -> Dict[str, Any]:
     ok = store.verify(body.email, body.code)
     if not ok:
