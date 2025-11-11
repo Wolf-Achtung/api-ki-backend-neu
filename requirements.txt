@@ -1,5 +1,5 @@
 # Production requirements - KI-Sicherheit.jetzt Backend
-# Updated: 2025-11-10 (Patch 02+b) – add Redis cache, Jinja2, OpenAI http client, Perplexity/Tavily deps
+# Updated: Patch DB/Core – psycopg3 binary; SQLAlchemy 2.x; FastAPI 0.115.x
 # Python 3.11+
 
 # ============================================================
@@ -15,7 +15,7 @@ starlette>=0.39,<0.41
 # DB
 # ============================================================
 SQLAlchemy>=2.0,<2.1
-psycopg2-binary>=2.9,<3.0
+psycopg[binary]>=3.1.18,<3.2    # ← psycopg3 statt psycopg2-binary
 
 # ============================================================
 # TEMPLATING / PDF
@@ -33,7 +33,7 @@ resend>=0.8,<1.0
 requests>=2.31,<3.0
 openai>=1.51,<2.0
 tavily-python>=0.5.0,<1.0.0
-# Perplexity has no official SDK – we call the HTTP API via requests.
+# Perplexity: HTTP-API via requests
 
 # ============================================================
 # CACHING / UTILITIES
