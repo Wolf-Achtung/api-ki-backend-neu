@@ -1,31 +1,53 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """
-services.email_sender – robuster Versand für Login-Codes
-- Provider-Kette: RESEND → SMTP → Log
-- Klares Logging inkl. Fehlertext vom Provider (z. B. 422 bei Resend)
-- Hebt Fehler NICHT bis zum Endpoint – /auth/request-code bleibt 204
-ENV (in settings):
-  RESEND_API_KEY, RESEND_FROM (verifizierte Absenderdomain bei Resend)
-  SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM
+services.email_sender – robuster Versand für Login-Codes (Resend bevorzugt)
+Änderungen (v2):
+- Liest RESEND_*/SMTP_* aus settings **oder** os.environ (Fallback)
+- Respektiert EMAIL_PROVIDER ("resend" | "smtp"), default "resend"
+- Besseres Logging: WARUM wurde ein Pfad übersprungen (z. B. fehlender Key)
 """
 import json
 import logging
+import os
 from typing import Optional
 
 import requests
 
-from settings import settings
+try:
+    from settings import settings
+except Exception:  # pragma: no cover
+    class _Dummy:
+        pass
+    settings = _Dummy()  # type: ignore
 
 log = logging.getLogger("services.email_sender")
 
 
+def _env(name: str, default: Optional[str] = None) -> Optional[str]:
+    """Liest zuerst aus settings, dann aus os.environ."""
+    try:
+        v = getattr(settings, name)  # type: ignore[attr-defined]
+        if v is not None:
+            return str(v)
+    except Exception:
+        pass
+    return os.getenv(name, default)
+
+
+def _truthy(name: str, default: bool = False) -> bool:
+    val = _env(name)
+    if val is None:
+        return default
+    return str(val).strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _build_subject() -> str:
-    return "Dein Login-Code – KI‑Sicherheit.jetzt"
+    return _env("SMTP_SUBJECT_LOGIN", "Dein Login‑Code – KI‑Sicherheit.jetzt")
 
 
 def _build_text(code: str) -> str:
-    ttl = int(getattr(settings, "OTP_TTL_SECONDS", 600))
+    ttl = int(_env("OTP_TTL_SECONDS", "600") or "600")
     mins = max(1, ttl // 60)
     return (
         "Hallo!\n\n"
@@ -38,35 +60,40 @@ def _build_text(code: str) -> str:
 
 
 def _send_via_resend(to_email: str, subject: str, text: str) -> bool:
-    api_key = getattr(settings, "RESEND_API_KEY", None)
-    from_addr = getattr(settings, "RESEND_FROM", None) or getattr(settings, "SMTP_FROM", None)
-    if not api_key or not from_addr:
+    api_key = _env("RESEND_API_KEY")
+    from_addr = _env("RESEND_FROM") or _env("SMTP_FROM")
+    if not api_key:
+        log.info("Resend übersprungen: RESEND_API_KEY fehlt.")
         return False
+    if not from_addr:
+        log.info("Resend übersprungen: RESEND_FROM/SMTP_FROM fehlt.")
+        return False
+
     try:
+        payload = {
+            "from": from_addr,
+            "to": [to_email],
+            "subject": subject,
+            "text": text,
+        }
         resp = requests.post(
             "https://api.resend.com/emails",
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
             },
-            json={
-                "from": from_addr,
-                "to": [to_email],
-                "subject": subject,
-                "text": text,
-            },
-            timeout=15,
+            json=payload,
+            timeout=int(_env("SMTP_TIMEOUT", "30") or "30"),
         )
         resp.raise_for_status()
-        j = {}
+        rid = ""
         try:
-            j = resp.json()
+            rid = resp.json().get("id", "")
         except Exception:
             pass
-        log.info("Resend: Mail verschickt (id=%s) an %s", j.get("id"), to_email)
+        log.info("Resend: Mail verschickt (id=%s) an %s", rid, to_email)
         return True
     except requests.HTTPError as e:
-        # typischer Fall: 422 bei nicht verifiziertem From
         try:
             err = e.response.json()
         except Exception:
@@ -79,14 +106,40 @@ def _send_via_resend(to_email: str, subject: str, text: str) -> bool:
 
 
 def _send_via_smtp(to_email: str, subject: str, text: str) -> bool:
-    try:
-        from core.mailer import send_mail as smtp_send  # lazy import
-    except Exception as e:
-        log.debug("SMTP nicht verfügbar: %s", e)
+    host = _env("SMTP_HOST")
+    sender = _env("SMTP_FROM")
+    if not host or not sender:
+        log.info("SMTP übersprungen: SMTP_HOST/SMTP_FROM fehlen.")
         return False
+
     try:
-        smtp_send(to_email, subject, text)
-        log.info("SMTP: Mail verschickt an %s über %s", to_email, getattr(settings, "SMTP_HOST", "?"))
+        from email.message import EmailMessage
+        import smtplib
+        msg = EmailMessage()
+        msg["From"] = sender
+        msg["To"] = to_email
+        msg["Subject"] = subject
+        msg.set_content(text)
+
+        port = int(_env("SMTP_PORT", "587") or "587")
+        timeout = int(_env("SMTP_TIMEOUT", "30") or "30")
+        user = _env("SMTP_USER")
+        pwd = _env("SMTP_PASS") or _env("SMTP_PASSWORD")
+        use_starttls = _truthy("SMTP_STARTTLS", True)
+
+        with smtplib.SMTP(host, port, timeout=timeout) as s:
+            if use_starttls:
+                try:
+                    s.starttls()
+                except Exception as e:
+                    log.warning("SMTP: STARTTLS fehlgeschlagen (fahre fort): %s", e)
+            if user and pwd:
+                s.login(user, pwd)
+                log.info("SMTP: eingeloggt als %s", user)
+            else:
+                log.info("SMTP ohne Login (user/pass fehlen) – Server könnte 530 verlangen.")
+            s.send_message(msg)
+        log.info("SMTP: Mail verschickt an %s über %s:%s", to_email, host, port)
         return True
     except Exception as e:
         log.error("SMTP error: %s", e)
@@ -94,21 +147,26 @@ def _send_via_smtp(to_email: str, subject: str, text: str) -> bool:
 
 
 def send_code(to_email: str, code: str) -> bool:
-    """
-    Versendet den Login‑Code.
-    Rückgabe: True wenn mind. ein Provider erfolgreich war, sonst False (Code wird geloggt).
-    """
+    """Versendet den Login‑Code gemäß EMAIL_PROVIDER (default: resend)."""
     subject = _build_subject()
     text = _build_text(code)
+    provider = (_env("EMAIL_PROVIDER", "resend") or "resend").strip().lower()
 
-    # 1) Resend
-    if _send_via_resend(to_email, subject, text):
-        return True
+    tried = []
+    ok = False
+    if provider == "smtp":
+        tried.append("smtp")
+        ok = _send_via_smtp(to_email, subject, text)
+        if not ok:
+            tried.append("resend")
+            ok = _send_via_resend(to_email, subject, text)
+    else:
+        tried.append("resend")
+        ok = _send_via_resend(to_email, subject, text)
+        if not ok:
+            tried.append("smtp")
+            ok = _send_via_smtp(to_email, subject, text)
 
-    # 2) SMTP
-    if _send_via_smtp(to_email, subject, text):
-        return True
-
-    # 3) Fallback: Log (damit man den Code zur Not im Log findet)
-    log.warning("Kein Mail‑Provider aktiv – Code für %s lautet: %s", to_email, code)
-    return False
+    if not ok:
+        log.warning("Kein Mail‑Provider erfolgreich (%s) – Code für %s lautet: %s", "→".join(tried), to_email, code)
+    return ok
