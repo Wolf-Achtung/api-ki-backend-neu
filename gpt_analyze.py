@@ -1335,37 +1335,36 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections["KPI_CONTEXT_HTML"] = kpi_context
 
     # Build KPI table (Scores + Benchmark) for the PDF template
-try:
-    _s = scores
-    kpi_rows = (
-        "<tr><td>Governance</td><td>" + str(_s.get("governance", 0)) + "</td></tr>"
-        "<tr><td>Sicherheit</td><td>" + str(_s.get("security", 0)) + "</td></tr>"
-        "<tr><td>Wertschöpfung</td><td>" + str(_s.get("value", 0)) + "</td></tr>"
-        "<tr><td>Befähigung</td><td>" + str(_s.get("enablement", 0)) + "</td></tr>"
-        "<tr><td><strong>Gesamt</strong></td><td><strong>" + str(_s.get("overall", 0)) + "</strong></td></tr>"
-    )
-    sections["KPI_SCORES_HTML"] = (
-        "<table class='table'><thead><tr><th>Dimension</th><th>Score (0–100)</th></tr></thead><tbody>"
-        + kpi_rows + "</tbody></table>" + sections.get("BENCHMARK_HTML","") + sections.get("KPI_CONTEXT_HTML","")
-    )
-except Exception:
-    sections.setdefault("KPI_SCORES_HTML", sections.get("KPI_CONTEXT_HTML",""))
+    try:
+        _s = scores
+        kpi_rows = (
+            "<tr><td>Governance</td><td>" + str(_s.get("governance", 0)) + "</td></tr>"
+            "<tr><td>Sicherheit</td><td>" + str(_s.get("security", 0)) + "</td></tr>"
+            "<tr><td>Wertschöpfung</td><td>" + str(_s.get("value", 0)) + "</td></tr>"
+            "<tr><td>Befähigung</td><td>" + str(_s.get("enablement", 0)) + "</td></tr>"
+            "<tr><td><strong>Gesamt</strong></td><td><strong>" + str(_s.get("overall", 0)) + "</strong></td></tr>"
+        )
+        sections["KPI_SCORES_HTML"] = (
+            "<table class='table'><thead><tr><th>Dimension</th><th>Score (0–100)</th></tr></thead><tbody>"
+            + kpi_rows + "</tbody></table>" + sections.get("BENCHMARK_HTML","") + sections.get("KPI_CONTEXT_HTML","")
+        )
+    except Exception:
+        sections.setdefault("KPI_SCORES_HTML", sections.get("KPI_CONTEXT_HTML",""))
 
-    
     # ZIM Förderung (optional, from environment)
     # These are funding program specific sections that can be configured via ENV
     sections["ZIM_ALERT_HTML"] = os.getenv("ZIM_ALERT_HTML", "")
     sections["ZIM_WORKFLOW_HTML"] = os.getenv("ZIM_WORKFLOW_HTML", "")
-    
+
     # Kreativ Tools (will be set later from file if available)
     sections.setdefault("KREATIV_TOOLS_HTML", "")
-    
+
     # LEADs for new sections
     sections["LEAD_ZIM_ALERT"] = "Wichtige Änderung ab 2025"
     sections["LEAD_ZIM_WORKFLOW"] = "Schritt-für-Schritt-Anleitung zur volldigitalen Antragstellung"
     sections["LEAD_CREATIV"] = "Kuratierte Tools für kreative Branchen"
     sections.setdefault("LEAD_ROADMAP", _one_liner("Roadmap", sections.get("PILOT_PLAN_HTML", ""), briefing, scores))
-    
+
     return sections
 
 # -------------------- pipeline (kept from original with minor logging updates) ----------------
@@ -1511,16 +1510,17 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     ai_act_blocks = _build_ai_act_blocks()
     sections.update(ai_act_blocks)
     # News/Änderungen box (AI Act phase + research timestamp)
-sections["NEWS_BOX_HTML"] = (
-    "<div class='callout'><strong>EU AI Act – Phase:</strong> "
-    + html.escape(sections.get("ai_act_phase_label","2025–2027"))
-    + " · <strong>Quellenstand:</strong> " + html.escape(sections.get("research_last_updated", sections.get("report_date",""))) + "</div>"
-)
+    sections["NEWS_BOX_HTML"] = (
+        "<div class='callout'><strong>EU AI Act – Phase:</strong> "
+        + html.escape(sections.get("ai_act_phase_label","2025–2027"))
+        + " · <strong>Quellenstand:</strong> "
+        + html.escape(sections.get("research_last_updated", sections.get("report_date","")))
+        + "</div>"
+    )
 
-    
     # Aliases for PDF template variables
-if sections.get("FOERDERPROGRAMME_HTML"):
-    sections["FUNDING_HTML"] = sections["FOERDERPROGRAMME_HTML"]
+    if sections.get("FOERDERPROGRAMME_HTML"):
+        sections["FUNDING_HTML"] = sections["FOERDERPROGRAMME_HTML"]
 
     log.info("[%s] 🎨 Rendering final HTML...", run_id)
     # --- Sanitize dynamic sections to prevent HTML leaks (z. B. eingebettetes <html> im Pilot-Plan) ---
@@ -1711,7 +1711,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
         db.close()
 
 def _section_temperature(section_name: str) -> float:
-    """Per‑Sektion‑Temperatur. Default = OPENAI_TEMPERATURE; Gamechanger 0.35–0.45."
+    """Per‑Sektion‑Temperatur. Default = OPENAI_TEMPERATURE; Gamechanger 0.35–0.45."""
     try:
         if section_name == "gamechanger":
             # env overrides allowed
