@@ -65,7 +65,23 @@ def _email_from_jwt(request: Request) -> Optional[str]:
     auth = request.headers.get("authorization") or request.headers.get("Authorization")
     if not auth or not auth.lower().startswith("bearer "):
         return None
-    token = auth.split(" ", 1)[1].strip()
+
+    # Token extrahieren und validieren
+    parts = auth.split(" ", 1)
+    if len(parts) < 2:
+        logger.warning("Authorization Header ungültig: kein Token nach 'Bearer'")
+        return None
+
+    token = parts[1].strip()
+    if not token:
+        logger.warning("Authorization Header ungültig: leerer Token")
+        return None
+
+    # JWT muss mindestens 3 Segmente haben (header.payload.signature)
+    if token.count('.') < 2:
+        logger.warning("JWT-Format ungültig: nicht genug Segmente (erwartet 3). Token-Anfang: %s...", token[:20])
+        return None
+
     try:
         import jwt  # PyJWT
     except Exception:
