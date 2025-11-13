@@ -75,7 +75,7 @@ DBG_MASK_EMAILS = (os.getenv("MASK_EMAILS", "1") in ("1", "true", "TRUE", "yes",
 
 # Resend Configuration
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
-SMTP_FROM = os.getenv("SMTP_FROM", "bewertung@send.ki-sicherheit.jetzt")
+SMTP_FROM = os.getenv("RESEND_FROM") or os.getenv("SMTP_FROM", "bewertung@send.ki-sicherheit.jetzt")
 
 def _send_email_via_resend(to_email: str, subject: str, html_body: str, attachments: Optional[List[Dict[str, Any]]] = None) -> Tuple[bool, Optional[str]]:
     """Send email via Resend API with optional attachments"""
@@ -94,7 +94,7 @@ def _send_email_via_resend(to_email: str, subject: str, html_body: str, attachme
                     content_bytes = att["content"] if isinstance(att["content"], bytes) else att["content"].encode("utf-8")
                     resend_attachments.append({
                         "filename": att["filename"],
-                        "content": list(content_bytes)  # Resend expects list of bytes
+                        "content": base64.b64encode(content_bytes).decode('ascii')  # Resend expects list of bytes
                     })
         
         params = {
@@ -1210,6 +1210,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     left, right = _split_li_list_to_columns(qw_html)
     sections["QUICK_WINS_HTML_LEFT"] = left
     sections["QUICK_WINS_HTML_RIGHT"] = right
+sections["QUICK_WINS_HTML"] = ("<div style='display:grid;grid-template-columns:1fr 1fr;gap:16px'>" + left + right + "</div>")
     
     # Calculate hours saved from Quick Wins
     total_h = 0
