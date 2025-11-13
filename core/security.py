@@ -1,59 +1,52 @@
-# -*- coding: utf-8 -*-
+# core/security.py
 from __future__ import annotations
-import time, jwt
 from datetime import datetime, timedelta, timezone
-from typing import Optional
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import logging, os
+from typing import Any, Dict
+import jwt  # PyJWT
 
-from settings import settings
+try:
+    from settings import settings  # type: ignore
+except Exception:
+    settings = None  # type: ignore
 
-ALGO = getattr(settings, "JWT_ALG", "HS256")
-bearer_scheme = HTTPBearer(auto_error=False)
+def _get(name: str, default: Any) -> Any:
+    if settings is not None and hasattr(settings, name):
+        val = getattr(settings, name)
+        if val not in (None, ""):
+            return val
+    env_val = os.getenv(name)
+    if env_val not in (None, ""):
+        if name.endswith("_DAYS"):
+            try:
+                return int(env_val)
+            except ValueError:
+                logging.warning("Invalid int for %s=%r – using default %r", name, env_val, default)
+                return default
+        return env_val
+    return default
 
-# Optional Felder – wenn in settings vorhanden, werden sie gesetzt/validiert
-_JWT_ISS: Optional[str] = getattr(settings, "JWT_ISS", None)
-_JWT_AUD: Optional[str] = getattr(settings, "JWT_AUD", None)
+JWT_SECRET: str = _get("JWT_SECRET", "")
+if not JWT_SECRET:
+    JWT_SECRET = os.urandom(32).hex()
+    logging.warning("JWT_SECRET not set – using ephemeral secret. Tokens will invalidate on restart.")
 
-def create_jwt(email: str, is_admin: bool = False) -> str:
-    """Erzeugt einen signierten JWT für das Frontend.
-    Claims: sub, email, admin, iat, exp (+ optional iss/aud)
-    """
+JWT_ALGORITHM: str = _get("JWT_ALGORITHM", "HS256")
+JWT_EXPIRE_DAYS: int = _get("JWT_EXPIRE_DAYS", 7)
+
+def create_jwt(email: str) -> str:
     now = datetime.now(timezone.utc)
-    exp = now + timedelta(days=settings.JWT_EXPIRE_DAYS)
-    payload = {
-        "sub": email,
-        "email": email,
-        "admin": bool(is_admin),
-        "iat": int(now.timestamp()),
-        "exp": int(exp.timestamp()),
-    }
-    if _JWT_ISS:
-        payload["iss"] = _JWT_ISS
-    if _JWT_AUD:
-        payload["aud"] = _JWT_AUD
-    return jwt.encode(payload, settings.JWT_SECRET, algorithm=ALGO)
+    exp = now + timedelta(days=JWT_EXPIRE_DAYS)
+    payload: Dict[str, Any] = {"sub": email, "iat": int(now.timestamp()), "exp": int(exp.timestamp())}
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
-def decode_jwt(token: str) -> dict:
-    """Validiert + dekodiert einen JWT. Iss/Aud werden nur geprüft, wenn konfiguriert."""
-    options = {"require": ["exp", "iat", "sub"]}
-    kwargs = {"algorithms": [ALGO]}
-    if _JWT_AUD:
-        kwargs["audience"] = _JWT_AUD
-        options["require"].append("aud")
-    if _JWT_ISS:
-        kwargs["issuer"] = _JWT_ISS
-        options["require"].append("iss")
-    try:
-        return jwt.decode(token, settings.JWT_SECRET, options=options, **kwargs)
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token abgelaufen")
-    except Exception:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Token")
+def verify_jwt(token: str) -> Dict[str, Any]:
+    return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
 
-def current_user(credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme)) -> dict:
-    if not credentials or credentials.scheme.lower() != "bearer":
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization erforderlich")
-    token = credentials.credentials
-    data = decode_jwt(token)
-    return {"email": data.get("email") or data.get("sub"), "is_admin": bool(data.get("admin"))}
+def bearer_from_header(auth_header: str | None) -> str | None:
+    if not auth_header:
+        return None
+    parts = auth_header.split()
+    if len(parts) == 2 and parts[0].lower() == "bearer":
+        return parts[1]
+    return None
