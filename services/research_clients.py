@@ -1,107 +1,69 @@
-# services/research_clients.py – Hybrid (Tavily + Perplexity)
-import os, time, json, requests
+# -*- coding: utf-8 -*-
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import List, Dict, Any
+import html, json, os
 
-TAVILY_API_KEY = os.getenv("TAVILY_API_KEY","")
-PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY","")
-TIMEOUT = float(os.getenv("RESEARCH_TIMEOUT","20"))
+@dataclass
+class Tool:
+    title: str
+    url: str
+    category: str = "General"
+    note: str = ""
 
-def tavily_search(q, num_results=10):
-    if not TAVILY_API_KEY:
-        return []
-    url = "https://api.tavily.com/search"
-    try:
-        r = requests.post(url, json={"api_key": TAVILY_API_KEY, "query": q, "search_depth": "basic", "max_results": num_results}, timeout=TIMEOUT)
-        r.raise_for_status()
-        data = r.json() or {}
-        return data.get("results", [])
-    except Exception:
-        return []
+def _e(s: str) -> str:
+    return html.escape(str(s or ""), quote=True)
 
-def perplexity_search(q, num_results=8):
-    if not PERPLEXITY_API_KEY:
-        return []
-    url = "https://api.perplexity.ai/search"
-    headers = {"Authorization": f"Bearer {PERPLEXITY_API_KEY}", "Content-Type":"application/json"}
-    try:
-        r = requests.post(url, headers=headers, json={"q": q, "size": num_results}, timeout=TIMEOUT)
-        r.raise_for_status()
-        data = r.json() or {}
-        items = data.get("results", [])
-        out = []
-        for it in items:
-            # normalize to fields: title, url, description
-            out.append({"title": it.get("title") or it.get("source",""), "url": it.get("url") or "", "description": it.get("snippet") or ""})
-        return out
-    except Exception:
-        return []
+def get_tools_for(answers: Dict[str, Any]) -> List[Tool]:
+    branche = (answers.get("BRANCHE_LABEL") or answers.get("branche") or "").lower()
+    size = (answers.get("UNTERNEHMENSGROESSE_LABEL") or answers.get("unternehmensgroesse") or "").lower()
+    tools: List[Tool] = [
+        Tool("Microsoft 365 Copilot", "https://www.microsoft.com/microsoft-copilot", "Produktivität"),
+        Tool("Notion AI", "https://www.notion.so/product/ai", "Wissensarbeit"),
+        Tool("OpenAI GPT‑4o", "https://openai.com", "LLM"),
+        Tool("Hugging Face", "https://huggingface.co", "Open‑Source/Models"),
+        Tool("Make.com", "https://www.make.com", "Automatisierung"),
+    ]
+    if "marketing" in branche:
+        tools.insert(0, Tool("Jasper", "https://www.jasper.ai", "Marketing"))
+    if any(k in branche for k in ("industrie","produktion")):
+        tools.insert(0, Tool("Azure Cognitive Search", "https://azure.microsoft.com/services/search/", "RAG"))
+    if "solo" in size or "freiberuf" in size:
+        tools.append(Tool("Tally Forms", "https://tally.so", "Formulare"))
+    else:
+        tools.append(Tool("Typeform", "https://www.typeform.com", "Formulare"))
+    return tools
 
-def hybrid_search(q, num_results=10):
-    out = []
-    out.extend(tavily_search(q, num_results))
-    out.extend(perplexity_search(q, max(6, num_results//2)))
-    # deduplicate by url
-    seen = set(); uniq = []
-    for x in out:
-        url = (x.get("url") or "").strip()
-        if not url or url in seen: 
-            continue
-        seen.add(url); uniq.append(x)
-    return uniq[:max(num_results, 10)]
+def tools_table_html(tools: List[Tool]) -> str:
+    if not tools:
+        return "<p class='small muted'>Keine passenden Tools gefunden.</p>"
+    rows = []
+    for t in tools:
+        rows.append(f"<tr><td><strong>{_e(t.title)}</strong></td><td><a href='{_e(t.url)}'>{_e(t.url)}</a></td><td>{_e(t.category)}</td><td>{_e(t.note)}</td></tr>")
+    return ("<table class='table'><thead><tr><th>Tool</th><th>Link</th><th>Kategorie</th><th>Hinweis</th></tr></thead>"
+            f"<tbody>{''.join(rows)}</tbody></table>")
 
+def load_funding_programs(path: str = "data/funding_programs.json"):
+    for p in (path, os.path.join('/mnt/data', 'funding_programs.json')):
+        try:
+            if os.path.exists(p):
+                with open(p, 'r', encoding='utf-8') as fh:
+                    data = json.load(fh)
+                    if isinstance(data, list):
+                        return data
+        except Exception:
+            pass
+    return []
 
-# --- Perplexity client (optional second research source) ---
-import os, requests, time
-
-def search_perplexity(query: str, k: int = 10, timeout: int = 40) -> list[dict]:
-    """Query Perplexity Chat Completions API and extract citations as search results.
-    Returns list of dicts with keys: title, url, source, score(optional).
-    """
-    api_key = os.getenv("PERPLEXITY_API_KEY", "")
-    if not api_key:
-        return []
-    url = os.getenv("PERPLEXITY_API_URL", "https://api.perplexity.ai/chat/completions")
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    payload = {
-        "model": os.getenv("PERPLEXITY_MODEL","sonar-pro"),
-        "temperature": float(os.getenv("PERPLEXITY_TEMPERATURE","0.0")),
-        "messages": [
-            {"role": "system", "content": "Act as a research meta-search. Return concise answer and cite sources."},
-            {"role": "user", "content": f"Find high-quality, current sources for: {query}. Return up to {k} citations with title and URL."}
-        ]
-    }
-    try:
-        r = requests.post(url, headers=headers, json=payload, timeout=timeout)
-        r.raise_for_status()
-        data = r.json()
-    except Exception:
-        return []
-    citations = []
-    # Try typical locations for citation links
-    try:
-        # Some responses include 'citations' at top level:
-        for c in data.get("citations") or []:
-            if isinstance(c, dict):
-                citations.append({"title": c.get("title") or c.get("url") or "", "url": c.get("url") or "", "source": "perplexity"})
-        # Or inside the first choice message content as JSON-like text
-        if not citations:
-            choice = (data.get("choices") or [{}])[0]
-            msg = (choice.get("message") or {})
-            content = (msg.get("content") or "") if isinstance(msg, dict) else ""
-            # naive URL scrape
-            urls = re.findall(r"https?://[^\s)]+", content)
-            for u in urls:
-                citations.append({"title": u, "url": u, "source": "perplexity"})
-    except Exception:
-        pass
-    # Deduplicate
-    seen = set()
-    out = []
-    for item in citations:
-        href = (item.get("url") or "").strip()
-        if not href or href in seen:
-            continue
-        seen.add(href)
-        out.append(item)
-        if len(out) >= k:
-            break
-    return out
+def funding_table_html(programs):
+    if not programs:
+        return "<p class='small muted'>Keine Förderprogramme gefunden.</p>"
+    rows = []
+    for p in programs[:20]:
+        title = _e(p.get('title'))
+        url = _e(p.get('url'))
+        typ = _e(p.get('type','Förderung'))
+        region = _e(p.get('region','DE/EU'))
+        rows.append(f"<tr><td><strong>{title}</strong></td><td>{typ}</td><td>{region}</td><td><a href='{url}'>{url}</a></td></tr>")
+    return ("<table class='table'><thead><tr><th>Programm</th><th>Typ</th><th>Region</th><th>Link</th></tr></thead>"
+            f"<tbody>{''.join(rows)}</tbody></table>")
