@@ -1,69 +1,170 @@
+
 # -*- coding: utf-8 -*-
+"""
+services.research_clients
+-------------------------
+Leichtgewichtige HTTP/RSS-Client-Helper für die Live-Recherche.
+- Keine externen Such-APIs notwendig
+- Nutzt RSS/Atom (verlässlich, „scraping-light“)
+- Robust: Timeouts, Fallbacks, Domain-Filter
+
+Benötigte Pakete (requirements):
+    requests>=2.31.0
+    feedparser>=6.0.11
+    beautifulsoup4>=4.12.3
+    lxml>=5.3.0
+"""
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import List, Dict, Any
-import html, json, os
 
-@dataclass
-class Tool:
-    title: str
-    url: str
-    category: str = "General"
-    note: str = ""
+import re
+import time
+import json
+import hashlib
+import logging
+from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
 
-def _e(s: str) -> str:
-    return html.escape(str(s or ""), quote=True)
+import requests
+import feedparser
+from bs4 import BeautifulSoup
 
-def get_tools_for(answers: Dict[str, Any]) -> List[Tool]:
-    branche = (answers.get("BRANCHE_LABEL") or answers.get("branche") or "").lower()
-    size = (answers.get("UNTERNEHMENSGROESSE_LABEL") or answers.get("unternehmensgroesse") or "").lower()
-    tools: List[Tool] = [
-        Tool("Microsoft 365 Copilot", "https://www.microsoft.com/microsoft-copilot", "Produktivität"),
-        Tool("Notion AI", "https://www.notion.so/product/ai", "Wissensarbeit"),
-        Tool("OpenAI GPT‑4o", "https://openai.com", "LLM"),
-        Tool("Hugging Face", "https://huggingface.co", "Open‑Source/Models"),
-        Tool("Make.com", "https://www.make.com", "Automatisierung"),
-    ]
-    if "marketing" in branche:
-        tools.insert(0, Tool("Jasper", "https://www.jasper.ai", "Marketing"))
-    if any(k in branche for k in ("industrie","produktion")):
-        tools.insert(0, Tool("Azure Cognitive Search", "https://azure.microsoft.com/services/search/", "RAG"))
-    if "solo" in size or "freiberuf" in size:
-        tools.append(Tool("Tally Forms", "https://tally.so", "Formulare"))
-    else:
-        tools.append(Tool("Typeform", "https://www.typeform.com", "Formulare"))
-    return tools
+log = logging.getLogger(__name__)
 
-def tools_table_html(tools: List[Tool]) -> str:
-    if not tools:
-        return "<p class='small muted'>Keine passenden Tools gefunden.</p>"
-    rows = []
-    for t in tools:
-        rows.append(f"<tr><td><strong>{_e(t.title)}</strong></td><td><a href='{_e(t.url)}'>{_e(t.url)}</a></td><td>{_e(t.category)}</td><td>{_e(t.note)}</td></tr>")
-    return ("<table class='table'><thead><tr><th>Tool</th><th>Link</th><th>Kategorie</th><th>Hinweis</th></tr></thead>"
-            f"<tbody>{''.join(rows)}</tbody></table>")
+DEFAULT_TIMEOUT = (10, 20)  # (connect, read)
 
-def load_funding_programs(path: str = "data/funding_programs.json"):
-    for p in (path, os.path.join('/mnt/data', 'funding_programs.json')):
-        try:
-            if os.path.exists(p):
-                with open(p, 'r', encoding='utf-8') as fh:
-                    data = json.load(fh)
-                    if isinstance(data, list):
-                        return data
-        except Exception:
-            pass
-    return []
+USER_AGENT = (
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/118.0 Safari/537.36"
+)
 
-def funding_table_html(programs):
-    if not programs:
-        return "<p class='small muted'>Keine Förderprogramme gefunden.</p>"
-    rows = []
-    for p in programs[:20]:
-        title = _e(p.get('title'))
-        url = _e(p.get('url'))
-        typ = _e(p.get('type','Förderung'))
-        region = _e(p.get('region','DE/EU'))
-        rows.append(f"<tr><td><strong>{title}</strong></td><td>{typ}</td><td>{region}</td><td><a href='{url}'>{url}</a></td></tr>")
-    return ("<table class='table'><thead><tr><th>Programm</th><th>Typ</th><th>Region</th><th>Link</th></tr></thead>"
-            f"<tbody>{''.join(rows)}</tbody></table>")
+def _headers(extra: Optional[Dict[str, str]] = None) -> Dict[str, str]:
+    h = {
+        "User-Agent": USER_AGENT,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "de,en;q=0.9",
+    }
+    if extra:
+        h.update(extra)
+    return h
+
+# --- simple, file-based cache (avoids Redis dependency) ---
+
+_CACHE_PATH = "/tmp/ksj_research_cache.json"
+
+def _load_cache() -> Dict[str, Any]:
+    try:
+        with open(_CACHE_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def _save_cache(cache: Dict[str, Any]) -> None:
+    try:
+        with open(_CACHE_PATH, "w", encoding="utf-8") as f:
+            json.dump(cache, f, ensure_ascii=False)
+    except Exception:
+        pass
+
+def _cache_get(key: str, max_age_sec: int) -> Optional[Any]:
+    cache = _load_cache()
+    item = cache.get(key)
+    if not item:
+        return None
+    ts = item.get("ts", 0)
+    if time.time() - ts > max_age_sec:
+        return None
+    return item.get("val")
+
+def _cache_set(key: str, val: Any) -> None:
+    cache = _load_cache()
+    cache[key] = {"ts": time.time(), "val": val}
+    _save_cache(cache)
+
+def _cache_key(prefix: str, url: str) -> str:
+    return prefix + "_" + hashlib.sha1(url.encode("utf-8")).hexdigest()[:12]
+
+# --- HTTP helpers ---
+
+def http_get(url: str, timeout: Optional[tuple] = None) -> Optional[str]:
+    """GET text content with UA + timeout + basic cache (5 minutes)."""
+    if not timeout:
+        timeout = DEFAULT_TIMEOUT
+    key = _cache_key("GET", url)
+    cached = _cache_get(key, 300)  # 5 min
+    if cached:
+        return cached
+    try:
+        r = requests.get(url, headers=_headers(), timeout=timeout)
+        if r.ok and r.text:
+            _cache_set(key, r.text)
+            return r.text
+        log.warning("GET failed %s: %s", url, r.status_code)
+    except Exception as exc:
+        log.warning("GET exception %s: %s", url, exc)
+    return None
+
+def http_get_json(url: str, timeout: Optional[tuple] = None) -> Optional[dict]:
+    raw = http_get(url, timeout=timeout)
+    if not raw:
+        return None
+    try:
+        return json.loads(raw)
+    except Exception:
+        return None
+
+# --- RSS parsing ---
+
+def parse_rss(url: str, limit: int = 12) -> List[Dict[str, Any]]:
+    key = _cache_key("RSS", url)
+    cached = _cache_get(key, 300)  # 5 min
+    if cached:
+        return cached
+    try:
+        d = feedparser.parse(url)
+        items: List[Dict[str, Any]] = []
+        for entry in d.entries[:limit]:
+            title = entry.get("title", "").strip()
+            link = entry.get("link", "").strip()
+            summary = BeautifulSoup(entry.get("summary", "") or entry.get("description", ""), "lxml").get_text(" ", strip=True)
+            date = entry.get("published", "") or entry.get("updated", "")
+            source = urlparse(link).netloc
+            if title and link:
+                items.append({
+                    "title": title,
+                    "url": link,
+                    "summary": summary[:280],
+                    "date": date,
+                    "source": source,
+                })
+        _cache_set(key, items)
+        return items
+    except Exception as exc:
+        log.warning("parse_rss failed %s: %s", url, exc)
+        return []
+
+# --- Lightweight HTML harvesting (links on curated pages) ---
+
+def harvest_links(url: str, allow_domains: Optional[List[str]] = None, limit: int = 20) -> List[Dict[str, str]]:
+    """
+    Holt alle <a>-Links von einer Seite und filtert nach Domains.
+    Nützlich z. B. für Tool-Kataloge oder Programmlisten.
+    """
+    html = http_get(url)
+    if not html:
+        return []
+    soup = BeautifulSoup(html, "lxml")
+    out: List[Dict[str, str]] = []
+    for a in soup.find_all("a", href=True):
+        href = a["href"].strip()
+        text = a.get_text(" ", strip=True)
+        if not href.startswith(("http://", "https://")):
+            continue
+        dom = urlparse(href).netloc.lower()
+        if allow_domains and not any(dom == d or dom.endswith("." + d) for d in allow_domains):
+            continue
+        title = text or dom
+        if title and href:
+            out.append({"title": title[:140], "url": href, "source": dom})
+        if len(out) >= limit:
+            break
+    return out
