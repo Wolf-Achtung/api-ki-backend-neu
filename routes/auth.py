@@ -2,8 +2,8 @@
 """
 FastAPI Auth endpoints (OTP via Email)
 - Provides both /api/auth/... and /auth/... variants to be robust to mount prefixes.
-- Uses absolute imports to avoid "attempted relative import beyond top-level package".
-- Does NOT require any database package (no psycopg dependency).
+- Absolute imports to avoid relative import issues.
+- No DB dependency required.
 """
 from __future__ import annotations
 from fastapi import APIRouter, HTTPException, status, Depends, Response
@@ -11,8 +11,9 @@ from pydantic import BaseModel, EmailStr
 from typing import Dict, Any
 import os, time, logging
 
-from services.otp import OTPStore        # ABSOLUTE imports
+from services.otp import OTPStore
 from services.email_sender import send_code
+from security import create_jwt  # nutzt JWT_SECRET aus settings
 
 log = logging.getLogger(__name__)
 
@@ -52,25 +53,22 @@ def request_code(body: RequestCodeBody, store: OTPStore = Depends(_otp)) -> Resp
     code = store.new_code(str(body.email), ttl=OTP_TTL, length=OTP_LEN)
     send_code(str(body.email), code)
     log.info("Auth: code requested for %s", body.email)
-    # return explicit empty response (204 cannot have body)
     return Response(status_code=204)
 
-@router.post("/auth/verify-code", summary="Verify code and return a session token (no /api prefix)")
-@router.post("/api/auth/verify-code", summary="Verify code and return a session token (with /api prefix)")
+@router.post("/auth/verify-code", summary="Verify code and return a JWT (no /api prefix)")
+@router.post("/api/auth/verify-code", summary="Verify code and return a JWT (with /api prefix)")
 def verify_code(body: VerifyBody, store: OTPStore = Depends(_otp)) -> Dict[str, Any]:
     ok = store.verify(str(body.email), body.code)
     if not ok:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiger Code oder abgelaufen.")
-    token = f"token-{int(time.time())}"
-    return {"ok": True, "token": token, "expires_in": 3600}
+    # ► ECHTEN JWT ausgeben
+    token = create_jwt(str(body.email))
+    log.info("Auth: login ok for %s", body.email)
+    return {"ok": True, "email": str(body.email), "token": token, "token_type": "bearer"}
 
 # Alias endpoints for login (backwards compatibility with frontend calling /login)
-@router.post("/auth/login", summary="Alias for verify-code: verify code and return token (no /api prefix)")
-@router.post("/api/auth/login", summary="Alias for verify-code: verify code and return token (with /api prefix)")
+@router.post("/auth/login", summary="Alias for verify-code: verify code and return JWT (no /api prefix)")
+@router.post("/api/auth/login", summary="Alias for verify-code: verify code and return JWT (with /api prefix)")
 def login(body: VerifyBody, store: OTPStore = Depends(_otp)) -> Dict[str, Any]:
-    """Alias endpoint mapping login to verify_code.
-
-    Some frontends call /auth/login or /api/auth/login to verify a code. This route
-    simply delegates to verify_code() to maintain compatibility.
-    """
+    """Alias endpoint mapping login to verify_code for compatibility."""
     return verify_code(body, store)
