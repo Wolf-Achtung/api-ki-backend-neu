@@ -1,4 +1,4 @@
-# services/otp.py  — Redis entfernt, reiner In‑Memory‑OTPStore
+# services/otp.py — HOTFIX: shared in‑memory store across all OTPStore instances
 from __future__ import annotations
 import time, threading, random, string
 from typing import Optional
@@ -34,13 +34,20 @@ class _MemStore:
             if key in self._store:
                 del self._store[key]
 
+# --- shared, module-wide memory (so that ANY OTPStore() shares the same storage) ---
+_GLOBAL_MEM = _MemStore()
+
 class OTPStore:
-    """Einfacher OTP‑Store ohne externe Abhängigkeiten.
-    Hinweis: In Multi‑Instance‑Setups nur gültig pro Instanz.
+    """In‑Memory OTP store.
+    This hotfix ensures that *all* OTPStore() instances share the same memory
+    by pointing to the same module-wide _GLOBAL_MEM. That way, codes created in
+    /api/auth/request-code are still available in /api/auth/login even if a new
+    OTPStore() object is constructed by the route handler.
     """
     def __init__(self, prefix: str = "otp:") -> None:
         self.prefix = prefix
-        self._mem = _MemStore()
+        # IMPORTANT: use shared memory instead of per-instance store
+        self._mem = _GLOBAL_MEM
 
     def _k(self, email: str) -> str:
         return f"{self.prefix}{email.lower()}"
@@ -59,7 +66,7 @@ class OTPStore:
             return False
         ok = expected.strip() == code.strip()
         if ok:
-            self.delete(email)   # single‑use
+            self.delete(email)  # single‑use
         return ok
 
     def delete(self, email: str) -> None:
