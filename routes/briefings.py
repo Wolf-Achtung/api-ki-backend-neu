@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Robuste Briefings-Route
+routes/briefings.py
+------------------------------------------------------------------
+Robuste Briefings-Route:
 - POST /api/briefings/submit
-- Akzeptiert JSON & Form-Data (answers darf String sein)
-- Zieht Pflichtfelder (email, branche, unternehmensgroesse, bundesland, hauptleistung)
-  aus `answers` hoch
-- Liest E-Mail optional aus JWT (Authorization: Bearer ...; Claim: sub/email)
-- Startet Analyse via gpt_analyze.run_async() oder run_analysis_for_briefing()
-- Bei fehlender DB: 202 Accepted + Analyse trotzdem starten
+  Akzeptiert JSON & Form-Data. `answers` darf String (JSON) sein.
+  Zieht Pflichtfelder (email, branche, unternehmensgroesse, bundesland, hauptleistung)
+  aus `answers` hoch. E-Mail wird – wenn nicht im Body – optional aus JWT entnommen.
+  Startet Analyse im Hintergrund. Falls keine DB vorhanden: 202 Accepted + Analyse dennoch.
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from fastapi.responses import JSONResponse
 
 logger = logging.getLogger("briefings")
 
-# optionale DB-Objekte (wenn das Projekt ohne DB läuft)
+# optionale DB-Imports
 SessionLocal = None
 Briefing = None
 try:
@@ -30,8 +30,8 @@ try:
     SessionLocal = _SessionLocal
     Briefing = _Briefing
     logger.info("✅ DB-Layer importiert (core.db)")
-except Exception as e:
-    logger.warning("⚠️ DB-Import fehlgeschlagen (läuft ohne DB): %s", e)
+except Exception as e:  # pragma: no cover
+    logger.warning("⚠️  DB-Import fehlgeschlagen (läuft ohne DB): %s", e)
 
 router = APIRouter(prefix="/briefings", tags=["briefings"])
 
@@ -61,46 +61,30 @@ def _get(data: Dict[str, Any], key: str) -> Any:
 
 
 def _email_from_jwt(request: Request) -> Optional[str]:
-    """Email aus Authorization: Bearer <JWT> ziehen (Claims: sub/email)."""
     auth = request.headers.get("authorization") or request.headers.get("Authorization")
     if not auth or not auth.lower().startswith("bearer "):
         return None
-
-    # Token extrahieren und validieren
     parts = auth.split(" ", 1)
     if len(parts) < 2:
-        logger.warning("Authorization Header ungültig: kein Token nach 'Bearer'")
         return None
-
     token = parts[1].strip()
-    if not token:
-        logger.warning("Authorization Header ungültig: leerer Token")
+    if not token or token.count(".") < 2:
         return None
-
-    # JWT muss mindestens 3 Segmente haben (header.payload.signature)
-    if token.count('.') < 2:
-        logger.warning("JWT-Format ungültig: nicht genug Segmente (erwartet 3). Token-Anfang: %s...", token[:20])
-        return None
-
     try:
         import jwt  # PyJWT
     except Exception:
-        logger.warning("PyJWT nicht installiert – JWT wird ignoriert.")
         return None
     try:
         secret = os.getenv("JWT_SECRET", "")
         if not secret:
-            logger.warning("JWT_SECRET nicht gesetzt – JWT wird ignoriert.")
             return None
         payload = jwt.decode(token, secret, algorithms=["HS256"])  # type: ignore[arg-type]
         return payload.get("email") or payload.get("sub") or payload.get("user_email")
-    except Exception as e:
-        logger.warning("JWT-Decode fehlgeschlagen: %s", e)
+    except Exception:
         return None
 
 
 def _normalize_payload(raw: Dict[str, Any], jwt_email: Optional[str]) -> Dict[str, Any]:
-    """answers normalisieren, Pflichtfelder hochziehen, email ggf. aus JWT ergänzen."""
     data = dict(raw or {})
     data["answers"] = _answers_to_dict(data.get("answers"))
 
@@ -118,7 +102,6 @@ def _normalize_payload(raw: Dict[str, Any], jwt_email: Optional[str]) -> Dict[st
         "hauptleistung": hauptleistung,
     })
 
-    # Spiegeln in answers (hilft späteren Prompts/Renderer)
     if isinstance(data.get("answers"), dict):
         data["answers"].update({
             "email": email,
@@ -133,10 +116,8 @@ def _normalize_payload(raw: Dict[str, Any], jwt_email: Optional[str]) -> Dict[st
 def _validate_required(data: Dict[str, Any]) -> None:
     missing = [k for k in REQUIRED if not data.get(k)]
     if missing:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Fehlende Pflichtfelder: {', '.join(missing)}"
-        )
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail=f"Fehlende Pflichtfelder: {', '.join(missing)}")
 
 
 def _trigger_analysis(briefing_id: Optional[int], email: Optional[str]) -> None:
@@ -144,7 +125,7 @@ def _trigger_analysis(briefing_id: Optional[int], email: Optional[str]) -> None:
         from gpt_analyze import run_async  # type: ignore
         run_async(briefing_id, email)
         logger.info("✅ Analyse via run_async gestartet (briefing_id=%s)", briefing_id)
-    except Exception as e1:
+    except Exception as e1:  # pragma: no cover
         try:
             from gpt_analyze import run_analysis_for_briefing  # type: ignore
             run_analysis_for_briefing(briefing_id=briefing_id, email=email)
@@ -155,7 +136,6 @@ def _trigger_analysis(briefing_id: Optional[int], email: Optional[str]) -> None:
 
 @router.post("/submit")
 async def submit(request: Request, background: BackgroundTasks):
-    # 1) Payload einlesen (JSON oder Form)
     ctype = (request.headers.get("content-type") or "").lower()
     data: Dict[str, Any] = {}
     try:
@@ -167,17 +147,15 @@ async def submit(request: Request, background: BackgroundTasks):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Ungültiges Request-Format: {e}")
 
-    # 2) Normalisieren + validieren
     norm = _normalize_payload(data, jwt_email=_email_from_jwt(request))
     _validate_required(norm)
+
     lang = norm.get("lang") or (norm.get("answers", {}).get("lang") if isinstance(norm.get("answers"), dict) else None) or "de"
 
-    # 3) Ohne DB: 202 + Analyse dennoch starten
     if not SessionLocal or not Briefing:
         background.add_task(_trigger_analysis, briefing_id=None, email=norm.get("email"))
         return JSONResponse({"ok": True, "dry_run": True, "id": None, "lang": lang}, status_code=202)
 
-    # 4) Mit DB speichern
     db = SessionLocal()
     try:
         answers = norm.get("answers") if isinstance(norm.get("answers"), dict) else {}
