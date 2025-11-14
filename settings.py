@@ -162,6 +162,13 @@ class AppSettings(BaseSettings):
             val = os.getenv(name, str(int(default)))
             return val in ("1", "true", "True", "yes", "on")
 
+        def get_list(name: str, default: str = "") -> list:
+            """Konvertiere CSV-String aus ENV in Liste"""
+            val = os.getenv(name, default)
+            if not val:
+                return []
+            return [s.strip() for s in val.split(",") if s.strip()]
+
         s = cls(
             app_name=os.getenv("APP_NAME", "KI Status Report API"),
             env=os.getenv("ENV", "production"),
@@ -171,7 +178,7 @@ class AppSettings(BaseSettings):
             database_url=os.getenv("DATABASE_URL", ""),
             redis_url=os.getenv("REDIS_URL"),
             cors_allow_any=get_bool("CORS_ALLOW_ANY", False),
-            cors_origins=os.getenv("CORS_ORIGINS", ""),
+            cors_origins=get_list("CORS_ORIGINS"),
             enable_llm_cache=get_bool("ENABLE_LLM_CACHE", True),
             enable_perplexity=get_bool("ENABLE_PERPLEXITY", True),
             enable_quality_gates=get_bool("ENABLE_QUALITY_GATES", True),
