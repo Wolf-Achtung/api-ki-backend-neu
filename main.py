@@ -53,7 +53,7 @@ app = FastAPI(
 # ----------------------------------------------------------------------------
 # CORS
 # ----------------------------------------------------------------------------
-if settings.allow_any_cors:
+if settings.cors_allow_any:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -63,7 +63,7 @@ if settings.allow_any_cors:
     )
     log.info("CORS: allow_any=true (ENV!=production oder CORS_ALLOW_ANY=1)")
 else:
-    origins = settings.cors_list()
+    origins = settings.cors_origins
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
