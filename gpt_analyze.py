@@ -71,12 +71,12 @@ from services.html_sanitizer import sanitize_sections_dict  # type: ignore
 
 log = logging.getLogger(__name__)
 
-OPENAI_API_KEY = getattr(settings, "OPENAI_API_KEY", None) or os.getenv("OPENAI_API_KEY")
-OPENAI_MODEL = getattr(settings, "OPENAI_MODEL", None) or os.getenv("OPENAI_MODEL", "gpt-4o")
-OPENAI_API_BASE = getattr(settings, "OPENAI_API_BASE", None) or os.getenv("OPENAI_API_BASE")
-OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE", "0.2"))
-OPENAI_TIMEOUT = int(os.getenv("OPENAI_TIMEOUT", "120"))
-OPENAI_MAX_TOKENS = int(os.getenv("OPENAI_MAX_TOKENS", "3000"))
+OPENAI_API_KEY = settings.openai.api_key or os.getenv("OPENAI_API_KEY")
+OPENAI_MODEL = settings.openai.model or os.getenv("OPENAI_MODEL", "gpt-4o")
+OPENAI_API_BASE = os.getenv("OPENAI_API_BASE")  # Not in new settings structure
+OPENAI_TEMPERATURE = settings.openai.temperature
+OPENAI_TIMEOUT = settings.openai.timeout
+OPENAI_MAX_TOKENS = settings.openai.max_tokens
 
 ENABLE_NSFW_FILTER = (os.getenv("ENABLE_NSFW_FILTER", "1") in ("1", "true", "TRUE", "yes", "YES"))
 ENABLE_REALISTIC_SCORES = (os.getenv("ENABLE_REALISTIC_SCORES", "1") in ("1", "true", "TRUE", "yes", "YES"))
@@ -1189,8 +1189,8 @@ def _mask_email(addr: Optional[str]) -> str:
 
 def _admin_recipients() -> List[str]:
     emails: List[str] = []
-    for raw in (getattr(settings, "ADMIN_EMAILS", None) or os.getenv("ADMIN_EMAILS", ""),
-                getattr(settings, "REPORT_ADMIN_EMAIL", None) or os.getenv("REPORT_ADMIN_EMAIL", ""),
+    for raw in (os.getenv("ADMIN_EMAILS", ""),
+                os.getenv("REPORT_ADMIN_EMAIL", ""),
                 os.getenv("ADMIN_NOTIFY_EMAIL", "")):
         if raw: emails.extend([e.strip() for e in raw.split(",") if e.strip()])
     return list(dict.fromkeys(emails))
@@ -1458,7 +1458,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["ki_kompetenz"] = answers.get("ki_kompetenz") or answers.get("ki_knowhow", "")
     sections["report_date"] = now.strftime("%d.%m.%Y")
     sections["report_year"] = now.strftime("%Y")
-    sections["transparency_text"] = getattr(settings, "TRANSPARENCY_TEXT", None) or os.getenv("TRANSPARENCY_TEXT", "") or ""
+    sections["transparency_text"] = os.getenv("TRANSPARENCY_TEXT", "")
     sections["user_email"] = answers.get("email") or answers.get("kontakt_email") or ""
     sections["score_governance"] = scores.get("governance", 0)
     sections["score_sicherheit"] = scores.get("security", 0)
@@ -1466,8 +1466,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["score_wertschoepfung"] = scores.get("value", 0)  # Fix Bug 1: Für PDF-Template
     sections["score_befaehigung"] = scores.get("enablement", 0)
     sections["score_gesamt"] = scores.get("overall", 0)
-    
-    version_full = getattr(settings, "VERSION", "1.0.0")
+
+    version_full = os.getenv("VERSION", "1.0.0")
     version_mm = re.match(r"^\s*(\d+)\.(\d+)", version_full or "")
     version_mm = f"{version_mm.group(1)}.{version_mm.group(2)}" if version_mm else "1.0"
     kundencode = _derive_kundencode(answers, sections["user_email"])
@@ -1560,8 +1560,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["FOOTER_RIGHT_LOGO_SRC"] = os.getenv("FOOTER_RIGHT_LOGO_SRC", "")
     sections["FEEDBACK_URL"] = (os.getenv("FEEDBACK_URL") or os.getenv("FEEDBACK_REDIRECT_BASE") or "").strip()
     sections["FOOTER_BRANDS_HTML"] = os.getenv("FOOTER_BRANDS_HTML", "")
-    sections["OWNER_NAME"] = getattr(settings, "OWNER_NAME", None) or os.getenv("OWNER_NAME", "KI‑Sicherheit.jetzt")
-    sections["CONTACT_EMAIL"] = getattr(settings, "CONTACT_EMAIL", None) or os.getenv("CONTACT_EMAIL", "info@example.com")
+    sections["OWNER_NAME"] = os.getenv("OWNER_NAME", "KI‑Sicherheit.jetzt")
+    sections["CONTACT_EMAIL"] = os.getenv("CONTACT_EMAIL", "info@example.com")
     sections["THEME_CSS_VARS"] = _theme_vars_for_branch(sections.get("BRANCHE_LABEL") or sections.get("branche", ""))
     
     # BUILD_ID - timestamp for report generation tracking
