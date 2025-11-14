@@ -127,7 +127,8 @@ def healthz() -> JSONResponse:
 def info() -> JSONResponse:
     return JSONResponse({
         "name": "KI Status Report API",
-        "version": "1.2.0",
+        "version": "1.2.1-debug",  # Geändert um Deployment zu verifizieren
+        "git_commit": "bce996f",   # Letzter Commit mit Debug-Code
         "status": "running",
         "endpoints": {
             "health": "/api/healthz",

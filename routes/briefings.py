@@ -21,6 +21,19 @@ router = APIRouter()
 log = logging.getLogger(__name__)
 
 
+# Debug-Endpoint um zu prüfen ob Requests ankommen
+@router.get("/debug")
+async def debug_endpoint(request: Request):
+    log.info("🚨 DEBUG ENDPOINT CALLED!")
+    log.info("🚨 Headers: %s", dict(request.headers))
+    return {
+        "message": "Debug endpoint reached!",
+        "version": "1.2.1-debug",
+        "git_commit": "bce996f",
+        "auth_header_present": "authorization" in request.headers
+    }
+
+
 class BriefingSubmitIn(BaseModel):
     # Rohdaten durchleiten; Validierung findet in der Analyse statt
     lang: str = "de"
