@@ -128,12 +128,12 @@ from core.security import (
 
 ### Sofort beheben (kritisch):
 1. ✅ .gitignore erstellen
-2. ⏳ core/db.py:44 → `settings.database_url` verwenden
-3. ⏳ services/mail.py entweder entfernen oder auf neue Settings-Struktur migrieren
+2. ✅ core/db.py:44 → `settings.database_url` verwenden (BEHOBEN)
+3. ✅ services/mail.py auf neue Settings-Struktur migriert (BEHOBEN)
 
 ### Mittelfristig:
-4. ⏳ gpt_analyze.py auf neue Settings-Struktur migrieren
-5. ⏳ Wildcard-Import in services/security.py durch explizite Imports ersetzen
+4. ✅ gpt_analyze.py auf neue Settings-Struktur migriert (BEHOBEN)
+5. ✅ Wildcard-Import in services/security.py durch explizite Imports ersetzt (BEHOBEN)
 
 ### Optional:
 6. Konsistente Settings-Import-Strategie dokumentieren und durchsetzen
@@ -146,3 +146,55 @@ from core.security import (
 Der Code ist insgesamt gut strukturiert und folgt modernen Python-Best-Practices. Die Hauptprobleme sind Inkompatibilitäten zwischen der alten und neuen Settings-Struktur nach der Pydantic v2 Migration. Diese müssen behoben werden, damit die Anwendung korrekt funktioniert.
 
 **Priorität:** Die drei kritischen Fehler sollten vor dem nächsten Deployment behoben werden.
+
+---
+
+## ✅ Durchgeführte Korrekturen (2025-11-14)
+
+Alle identifizierten Fehler wurden behoben:
+
+### 1. core/db.py (Zeile 44)
+**Vorher:**
+```python
+dsn = _normalize_dsn(settings.DATABASE_URL)
+```
+
+**Nachher:**
+```python
+dsn = _normalize_dsn(settings.database_url)
+```
+
+### 2. services/mail.py
+Alle Settings-Zugriffe auf neue Pydantic v2 Struktur migriert:
+- `settings.SMTP_HOST` → `settings.mail.host`
+- `settings.SMTP_FROM` → `settings.mail.from_email`
+- `settings.SMTP_FROM_NAME` → `settings.mail.from_name`
+- `settings.SMTP_PORT` → `settings.mail.port`
+- `settings.SMTP_TLS` → `settings.mail.starttls`
+- `settings.SMTP_USER` → `settings.mail.user`
+- `settings.SMTP_PASS` → `settings.mail.password`
+
+### 3. gpt_analyze.py
+Alle `getattr(settings, ...)` Aufrufe korrigiert:
+- **Zeilen 74-79:** OpenAI-Konfiguration auf `settings.openai.*` umgestellt
+- **Zeilen 1192-1193:** ADMIN_EMAILS direkt aus ENV geladen (nicht in Settings-Struktur)
+- **Zeile 1461:** TRANSPARENCY_TEXT direkt aus ENV
+- **Zeile 1470:** VERSION direkt aus ENV
+- **Zeilen 1563-1564:** OWNER_NAME und CONTACT_EMAIL direkt aus ENV
+
+### 4. services/security.py
+Wildcard-Import durch explizite Imports ersetzt:
+```python
+from core.security import (
+    TokenPayload,
+    create_access_token,
+    verify_access_token,
+    bearer_token,
+)
+```
+
+---
+
+## 🎯 Ergebnis
+
+Alle kritischen und mittelfristigen Fehler sind behoben. Der Code ist nun vollständig kompatibel mit der Pydantic v2 Settings-Struktur und folgt Python Best Practices.
