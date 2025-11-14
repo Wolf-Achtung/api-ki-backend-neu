@@ -1,17 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-core/security.py
-------------------------------------------------------------------
-Minimal, robuste JWT-Helfer auf Basis von PyJWT.
-- Liest Konfiguration aus ENV:
-    JWT_SECRET        (erforderlich; sinnvoller Default für Dev)
-    JWT_ALGORITHM     (Default: HS256)
-    JWT_EXPIRE_DAYS   (Default: 7)
-    JWT_ISSUER        (optional; Default: "ki-status-api")
-- Bietet:
-    create_jwt(email: str) -> str
-    decode_jwt(token: str) -> dict | None
-------------------------------------------------------------------
+"""core/security.py
+Konsolidierte JWT-Helfer:
+- Liest Konfiguration aus settings.py (pydantic BaseSettings) oder ENV
+- Stabile Defaults: JWT_ALGORITHM=HS256, JWT_EXPIRE_DAYS=7
+- Klare HTTP-Fehler (401/500) statt Tracebacks
+- Optional ISS/AUD via ENV
 """
 from __future__ import annotations
 
@@ -19,59 +12,60 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
+import jwt
+from fastapi import HTTPException, status
+
 try:
-    import jwt  # PyJWT
-except Exception as e:  # pragma: no cover
-    raise RuntimeError("PyJWT ist nicht installiert. Bitte 'PyJWT>=2.8.0' in requirements.txt aufnehmen.") from e
+    from settings import settings  # type: ignore
+except Exception:
+    settings = None  # type: ignore
 
+def _get(name: str, default: Any) -> Any:
+    if settings is not None and hasattr(settings, name):
+        val = getattr(settings, name)
+        if val not in (None, ""):
+            return val
+    env_val = os.getenv(name)
+    if env_val not in (None, ""):
+        if name.endswith("_DAYS"):
+            try:
+                return int(env_val)
+            except Exception:
+                return default
+        return env_val
+    return default
 
-class Settings:
-    def __init__(self) -> None:
-        self.JWT_SECRET: str = os.getenv("JWT_SECRET", "dev-secret-change-me")
-        self.JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
-        # **WICHTIG**: Standardwert setzen, damit Attribut garantiert existiert
-        try:
-            self.JWT_EXPIRE_DAYS: int = int(os.getenv("JWT_EXPIRE_DAYS", "7"))
-        except Exception:
-            self.JWT_EXPIRE_DAYS = 7
-        self.JWT_ISSUER: str = os.getenv("JWT_ISSUER", "ki-status-api")
+JWT_SECRET: str = _get("JWT_SECRET", "")
+if not JWT_SECRET:
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="JWT_SECRET ist nicht gesetzt.")
 
-    def __repr__(self) -> str:  # pragma: no cover
-        return f"Settings(alg={self.JWT_ALGORITHM}, days={self.JWT_EXPIRE_DAYS})"
+JWT_ALGORITHM: str = _get("JWT_ALGORITHM", "HS256")
+JWT_EXPIRE_DAYS: int = _get("JWT_EXPIRE_DAYS", 7)
+JWT_ISS: Optional[str] = _get("JWT_ISS", None)
+JWT_AUD: Optional[str] = _get("JWT_AUD", None)
 
+def create_jwt(email: str, *, is_admin: bool = False, ttl_days: Optional[int] = None) -> str:
+    now = datetime.now(timezone.utc)
+    exp = now + timedelta(days=int(ttl_days if ttl_days is not None else JWT_EXPIRE_DAYS))
+    payload: Dict[str, Any] = {"sub": email, "email": email, "admin": bool(is_admin), "iat": int(now.timestamp()), "exp": int(exp.timestamp())}
+    if JWT_ISS:
+        payload["iss"] = JWT_ISS
+    if JWT_AUD:
+        payload["aud"] = JWT_AUD
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
-settings = Settings()
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc)
-
-
-def create_jwt(email: str) -> str:
-    """
-    Erzeugt ein signiertes JWT für die angegebene E-Mail.
-    Claims: iss, sub, email, iat, exp
-    """
-    now = _now()
-    exp = now + timedelta(days=settings.JWT_EXPIRE_DAYS)
-    payload: Dict[str, Any] = {
-        "iss": settings.JWT_ISSUER,
-        "sub": email,
-        "email": email,
-        "iat": int(now.timestamp()),
-        "exp": int(exp.timestamp()),
-    }
-    token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
-    # PyJWT 2.x gibt unter Py3 immer str zurück
-    return token  # type: ignore[return-value]
-
-
-def decode_jwt(token: str) -> Optional[Dict[str, Any]]:
-    """
-    Dekodiert/verifiziert ein JWT. Liefert Payload oder None.
-    """
+def decode_jwt(token: str) -> Dict[str, Any]:
+    options = {"require": ["sub", "iat", "exp"]}
+    kwargs: Dict[str, Any] = {"algorithms": [JWT_ALGORITHM]}
+    if JWT_ISS:
+        kwargs["issuer"] = JWT_ISS
+        options["require"].append("iss")
+    if JWT_AUD:
+        kwargs["audience"] = JWT_AUD
+        options["require"].append("aud")
     try:
-        data = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
-        return dict(data)
+        return jwt.decode(token, JWT_SECRET, options=options, **kwargs)  # type: ignore[arg-type]
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token abgelaufen.")
     except Exception:
-        return None
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Token.")
