@@ -145,13 +145,21 @@ class AppSettings(BaseSettings):
     report_date: bool = True
 
     model_config = SettingsConfigDict(
-        env_prefix="", 
-        case_sensitive=False, 
+        env_prefix="",
+        case_sensitive=False,
         extra="ignore",
         # Deaktiviere automatisches ENV-Loading - wir nutzen from_env()
         env_ignore_empty=True,
         env_parse_none_str="null"
     )
+
+    # ------------------------------------------------------------------
+    # Backwards compatibility helpers
+    # ------------------------------------------------------------------
+    @property
+    def DATABASE_URL(self) -> str:
+        """Allow legacy uppercase access used in older modules."""
+        return self.database_url
 
     @field_validator("cors_origins", mode="before")
     @classmethod
