@@ -5,6 +5,7 @@ Achtung: Dieser Router hat KEIN Prefix; main.py mountet ihn unter /api/auth.
 """
 from __future__ import annotations
 
+import logging
 import secrets
 import time
 from typing import Optional
@@ -20,6 +21,7 @@ from utils.idempotency import IdempotencyBox
 from core.security import create_access_token
 
 router = APIRouter()
+log = logging.getLogger(__name__)
 
 # Speicher für Codes (Fallback, wenn kein Redis verfügbar)
 _inmem_codes: dict[str, tuple[str, float]] = {}  # email -> (code, expires_at)
@@ -93,7 +95,16 @@ async def login(payload: LoginIn, request: Request):
 
     stored = _read_code(str(payload.email))
     if not stored or stored != payload.code:
+        log.warning("❌ Login failed for %s: invalid or expired code", payload.email)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired code")
 
+    log.info("🔑 Creating access token for user: %s", payload.email)
+    log.info("🔍 JWT_SECRET is set: %s, length: %d",
+             bool(s.security.jwt_secret),
+             len(s.security.jwt_secret) if s.security.jwt_secret else 0)
+
     token = create_access_token(email=str(payload.email))
+    log.info("✅ Token created successfully, length: %d", len(token))
+    log.info("🔍 Token preview: %s...%s", token[:20], token[-20:])
+
     return {"access_token": token, "token_type": "bearer"}
