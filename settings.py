@@ -250,3 +250,7 @@ class AppSettings(BaseSettings):
 @lru_cache
 def get_settings() -> AppSettings:
     return AppSettings.from_env()
+
+
+# Singleton-Instanz für direkten Import (z.B. "from settings import settings")
+settings = get_settings()
