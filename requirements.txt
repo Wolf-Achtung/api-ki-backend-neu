@@ -1,42 +1,31 @@
-# --- Core Framework ---
-fastapi>=0.115,<0.116
-uvicorn[standard]>=0.30,<0.31
-starlette>=0.39,<0.41
-
-# --- Pydantic / Settings ---
+# Production-ready minimal requirements for the backend (pinned, Pydantic v2 compatible)
+# --- Web & Settings ---
+fastapi>=0.111,<0.116
+uvicorn[standard]>=0.30,<0.32
 pydantic[email]>=2.9,<3.0
-pydantic-settings>=2.5,<3.0
+pydantic-settings>=2.4,<3.0
 
 # --- Database ---
 SQLAlchemy>=2.0,<2.1
-psycopg[binary]>=3.2,<3.3
+psycopg[binary,pool]>=3.1,<3.2
+alembic>=1.13,<2.0
 
-# --- Templates / Utils ---
-jinja2>=3.1,<3.2
-email-validator>=2.1,<3.0
-aiofiles>=24.1,<25.0
-python-dateutil>=2.8,<3.0
-python-dotenv>=1.0,<2.0
-pytz>=2024.1
-
-# --- Security / Auth ---
+# --- Auth / JWT ---
 PyJWT>=2.8,<3.0
 
-# --- Email (Resend) ---
-resend>=0.8,<1.0
+# --- HTTP / Templates / Utils ---
+httpx>=0.27,<0.28
+jinja2>=3.1,<4.0
 
-# --- HTTP / Research ---
-requests>=2.31,<3.0
-feedparser>=6.0.11,<7.0
-beautifulsoup4>=4.12.3,<5.0
-lxml>=5.3.0,<6.0
+# --- Mail (Resend) ---
+resend>=2.0,<3.0
 
-# --- Live-Recherche APIs ---
-tavily-python>=0.5.0,<1.0.0
+# --- Optional: Caching / Rate limiting (only if ENABLE_REDIS=1) ---
+# redis>=5.0,<6.0
+
+# --- Optional: LLM / Research clients ---
 openai>=1.51,<2.0
+tavily-python>=0.3,<0.4
 
-# --- Helpers ---
-tenacity>=8.2,<9.0
-
-# --- OPTIONAL: Perplexity SDK (falls genutzt – sonst auskommentieren) ---
-# perplexity-ai>=0.7.0
+# --- PDF generation (if you render HTML->PDF locally) ---
+# weasyprint>=61.0
