@@ -1,6 +1,6 @@
-from field_registry import fields  # added by Patch03
 # -*- coding: utf-8 -*-
 from __future__ import annotations
+from field_registry import fields  # added by Patch03
 """
 gpt_analyze.py – v4.14.0-GOLD-PLUS
 ---------------------------------------------------------------------
@@ -715,47 +715,47 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # Used in next_actions_de.md for dynamic deadlines
     
 # --- Patch03: derive label fields from registry ---
-try:
-    # Source dict may be named 'briefing' or 'answers'; try both
-    _src = briefing if 'briefing' in locals() else (answers if 'answers' in locals() else {})
-    if isinstance(_src, dict):
-        # Single-choice fields
-        for _k, _label_key in [('branche','BRANCHE_LABEL'),
-                               ('unternehmensgroesse','UNTERNEHMENSGROESSE_LABEL'),
-                               ('bundesland','BUNDESLAND_LABEL'),
-                               ('jahresumsatz','JAHRESUMSATZ_LABEL'),
-                               ('it_infrastruktur','IT_INFRASTRUKTUR_LABEL'),
-                               ('prozesse_papierlos','PROZESSE_PAPIERLOS_LABEL'),
-                               ('automatisierungsgrad','AUTOMATISIERUNGSGRAD_LABEL'),
-                               ('interne_ki_kompetenzen','INTERNE_KI_KOMPETENZEN_LABEL'),
-                               ('roadmap_vorhanden','ROADMAP_VORHANDEN_LABEL'),
-                               ('governance_richtlinien','GOVERNANCE_RICHTLINIEN_LABEL'),
-                               ('change_management','CHANGE_MANAGEMENT_LABEL'),
-                               ('interesse_foerderung','INTERESSE_FOERDERUNG_LABEL'),
-                               ('marktposition','MARKTPOSITION_LABEL'),
-                               ('benchmark_wettbewerb','BENCHMARK_WETTBEWERB_LABEL'),
-                               ('selbststaendig','SELBSTSTAENDIG_LABEL'),
-                               ('zeitersparnis_prioritaet','ZEITERSPARNIS_PRIORITAET_LABEL')]:
-            _val = _src.get(_k)
-            if _val is not None and not _src.get(_label_key):
-                _src[_label_key] = _label_for(_k, _val)
+    try:
+        # Source dict may be named 'briefing' or 'answers'; try both
+        _src = briefing if 'briefing' in locals() else (answers if 'answers' in locals() else {})
+        if isinstance(_src, dict):
+            # Single-choice fields
+            for _k, _label_key in [('branche','BRANCHE_LABEL'),
+                                   ('unternehmensgroesse','UNTERNEHMENSGROESSE_LABEL'),
+                                   ('bundesland','BUNDESLAND_LABEL'),
+                                   ('jahresumsatz','JAHRESUMSATZ_LABEL'),
+                                   ('it_infrastruktur','IT_INFRASTRUKTUR_LABEL'),
+                                   ('prozesse_papierlos','PROZESSE_PAPIERLOS_LABEL'),
+                                   ('automatisierungsgrad','AUTOMATISIERUNGSGRAD_LABEL'),
+                                   ('interne_ki_kompetenzen','INTERNE_KI_KOMPETENZEN_LABEL'),
+                                   ('roadmap_vorhanden','ROADMAP_VORHANDEN_LABEL'),
+                                   ('governance_richtlinien','GOVERNANCE_RICHTLINIEN_LABEL'),
+                                   ('change_management','CHANGE_MANAGEMENT_LABEL'),
+                                   ('interesse_foerderung','INTERESSE_FOERDERUNG_LABEL'),
+                                   ('marktposition','MARKTPOSITION_LABEL'),
+                                   ('benchmark_wettbewerb','BENCHMARK_WETTBEWERB_LABEL'),
+                                   ('selbststaendig','SELBSTSTAENDIG_LABEL'),
+                                   ('zeitersparnis_prioritaet','ZEITERSPARNIS_PRIORITAET_LABEL')]:
+                _val = _src.get(_k)
+                if _val is not None and not _src.get(_label_key):
+                    _src[_label_key] = _label_for(_k, _val)
 
-        # Multi-choice fields → comma-joined labels
-        for _k, _label_key in [('zielgruppen','ZIELGRUPPEN_LABELS'),
-                               ('ki_ziele','KI_ZIELE_LABELS'),
-                               ('ki_hemmnisse','KI_HEMMNISSE_LABELS'),
-                               ('anwendungsfaelle','ANWENDUNGSFAELLE_LABELS'),
-                               ('datenquellen','DATENQUELLEN_LABELS'),
-                               ('vorhandene_tools','VORHANDENE_TOOLS_LABELS'),
-                               ('regulierte_branche','REGULIERTE_BRANCHE_LABELS'),
-                               ('trainings_interessen','TRAININGS_INTERESSEN_LABELS')]:
-            _vals = _src.get(_k)
-            if _vals is not None and not _src.get(_label_key):
-                _src[_label_key] = _labels_for_list(_k, _vals)
+            # Multi-choice fields → comma-joined labels
+            for _k, _label_key in [('zielgruppen','ZIELGRUPPEN_LABELS'),
+                                   ('ki_ziele','KI_ZIELE_LABELS'),
+                                   ('ki_hemmnisse','KI_HEMMNISSE_LABELS'),
+                                   ('anwendungsfaelle','ANWENDUNGSFAELLE_LABELS'),
+                                   ('datenquellen','DATENQUELLEN_LABELS'),
+                                   ('vorhandene_tools','VORHANDENE_TOOLS_LABELS'),
+                                   ('regulierte_branche','REGULIERTE_BRANCHE_LABELS'),
+                                   ('trainings_interessen','TRAININGS_INTERESSEN_LABELS')]:
+                _vals = _src.get(_k)
+                if _vals is not None and not _src.get(_label_key):
+                    _src[_label_key] = _labels_for_list(_k, _vals)
 
-except Exception as _e:
-    pass
-base_vars = {
+    except Exception as _e:
+        pass
+    base_vars = {
         "TODAY": today,
         "heute_iso": today,
         "DATE_30D": date_30d,
@@ -1273,7 +1273,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     left, right = _split_li_list_to_columns(qw_html)
     sections["QUICK_WINS_HTML_LEFT"] = left
     sections["QUICK_WINS_HTML_RIGHT"] = right
-sections["QUICK_WINS_HTML"] = ("<div style='display:grid;grid-template-columns:1fr 1fr;gap:16px'>" + left + right + "</div>")
+    sections["QUICK_WINS_HTML"] = ("<div style='display:grid;grid-template-columns:1fr 1fr;gap:16px'>" + left + right + "</div>")
     
     # Calculate hours saved from Quick Wins
     total_h = 0
