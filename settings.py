@@ -144,11 +144,21 @@ class AppSettings(BaseSettings):
     ai_act_info_path: str = "EU-AI-ACT-Infos-wichtig.txt"
     report_date: bool = True
 
-    model_config = SettingsConfigDict(env_prefix="", case_sensitive=False, extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="", 
+        case_sensitive=False, 
+        extra="ignore",
+        # Deaktiviere automatisches ENV-Loading - wir nutzen from_env()
+        env_ignore_empty=True,
+        env_parse_none_str="null"
+    )
 
     @field_validator("cors_origins", mode="before")
     @classmethod
     def split_csv(cls, v):
+        # Wenn v None oder leer ist, gib leere Liste zurück
+        if v is None or v == "":
+            return []
         if isinstance(v, str):
             return [s.strip() for s in v.split(",") if s.strip()]
         return v
@@ -169,7 +179,8 @@ class AppSettings(BaseSettings):
                 return []
             return [s.strip() for s in val.split(",") if s.strip()]
 
-        s = cls(
+        # Verwende model_construct um automatisches ENV-Loading zu umgehen
+        s = cls.model_construct(
             app_name=os.getenv("APP_NAME", "KI Status Report API"),
             env=os.getenv("ENV", "production"),
             log_level=os.getenv("LOG_LEVEL", "info"),
