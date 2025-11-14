@@ -41,7 +41,21 @@ def _normalize_dsn(url: str) -> str:
 class Base(DeclarativeBase):
     pass
 
-dsn = _normalize_dsn(settings.DATABASE_URL)
+try:
+    raw_dsn = settings.database_url
+except AttributeError as exc:  # pragma: no cover - safeguards legacy configs
+    raise AttributeError(
+        "AppSettings missing 'database_url'. Ensure settings expose a lower-case"
+        " attribute or update database configuration."
+    ) from exc
+
+if not raw_dsn:
+    raise RuntimeError(
+        "DATABASE_URL is empty. Please configure a valid connection string via the"
+        " environment variable DATABASE_URL."
+    )
+
+dsn = _normalize_dsn(raw_dsn)
 is_sqlite = dsn.startswith("sqlite")
 
 engine = create_engine(
