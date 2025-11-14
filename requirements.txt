@@ -15,6 +15,7 @@ PyJWT>=2.8,<3.0
 
 # --- HTTP / Templates / Utils ---
 httpx>=0.27,<0.28
+requests>=2.31,<3.0
 jinja2>=3.1,<4.0
 
 # --- Mail (Resend) ---
@@ -26,6 +27,8 @@ resend>=2.0,<3.0
 # --- Optional: LLM / Research clients ---
 openai>=1.51,<2.0
 tavily-python>=0.3,<0.4
+beautifulsoup4>=4.11,<5.0
+feedparser>=6.0,<7.0
 
 # --- PDF generation (if you render HTML->PDF locally) ---
 # weasyprint>=61.0
