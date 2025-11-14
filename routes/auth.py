@@ -1,93 +1,99 @@
-# -*- coding: utf-8 -*-
+
 """
-routes/auth.py
-------------------------------------------------------------------
-OTP-Login per E-Mail.
-Stellt doppelt gemappte Endpoints bereit (/auth/* und /api/auth/*),
-damit bestehende Frontends weiter funktionieren.
-- POST /auth/request-code  | /api/auth/request-code  -> 204
-- POST /auth/verify-code   | /api/auth/verify-code   -> { ok, email, token }
-- POST /auth/login         | /api/auth/login         -> Alias von verify-code
+routes/auth.py — Magic-Link Auth (Code anfordern & Login)
+Achtung: Dieser Router hat KEIN Prefix; main.py mountet ihn unter /api/auth.
 """
 from __future__ import annotations
 
-import logging
-import os
+import secrets
 import time
-from typing import Dict, Any
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr
 
-from services.otp import OTPStore
-from services.email_sender import send_code
-from core.security import create_jwt
+from settings import get_settings
+from services.mailer import Mailer
+from services.rate_limit import RateLimiter
+from services.redis_utils import RedisBox
+from utils.idempotency import IdempotencyBox
+from core.security import create_access_token
 
-log = logging.getLogger(__name__)
+router = APIRouter()
 
-router = APIRouter(tags=["auth"])
+# Speicher für Codes (Fallback, wenn kein Redis verfügbar)
+_inmem_codes: dict[str, tuple[str, float]] = {}  # email -> (code, expires_at)
 
-OTP_TTL = int(os.getenv("OTP_TTL_SECONDS", "600"))
-OTP_LEN = int(os.getenv("OTP_LENGTH", "6"))
-RATE_LIMIT_SECONDS = int(os.getenv("OTP_RATE_LIMIT_SECONDS", "5"))
-
-
-class RequestCodeBody(BaseModel):
+class RequestCodeIn(BaseModel):
     email: EmailStr
 
 
-class VerifyBody(BaseModel):
+class LoginIn(BaseModel):
     email: EmailStr
     code: str
 
 
-_last_request_ts: Dict[str, float] = {}
+def _store_code(email: str, code: str, ttl_sec: int = 600) -> None:
+    s = get_settings()
+    if RedisBox.enabled():
+        RedisBox.setex(f"login:{email}", ttl_sec, code)
+    else:
+        _inmem_codes[email] = (code, time.time() + ttl_sec)
 
 
-def _rate_limit(email: str) -> None:
-    now = time.time()
-    key = email.lower()
-    ts = _last_request_ts.get(key, 0.0)
-    if now - ts < RATE_LIMIT_SECONDS:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Zu viele Anfragen. Bitte kurz warten.",
-        )
-    _last_request_ts[key] = now
+def _read_code(email: str) -> Optional[str]:
+    if RedisBox.enabled():
+        return RedisBox.get(f"login:{email}")
+    data = _inmem_codes.get(email)
+    if not data:
+        return None
+    code, exp = data
+    if time.time() > exp:
+        _inmem_codes.pop(email, None)
+        return None
+    return code
 
 
-def _otp() -> OTPStore:
-    return OTPStore(prefix=os.getenv("OTP_PREFIX", "otp:"))
+@router.post("/request-code", status_code=204)
+async def request_code(payload: RequestCodeIn, request: Request):
+    s = get_settings()
+    limiter = RateLimiter(namespace="request_code", limit=s.rate.max_request_code, window_sec=s.rate.window_sec)
+    limiter.hit(key=str(payload.email))
+
+    # Idempotency berücksichtigen (Header: Idempotency-Key)
+    idem = IdempotencyBox(namespace="request_code")
+    if idem.is_duplicate(request):
+        return
+
+    code = f"{secrets.randbelow(1000000):06d}"
+    _store_code(str(payload.email), code, ttl_sec=600)
+
+    mailer = Mailer.from_settings(s)
+    await mailer.send(
+        to=str(payload.email),
+        subject="Ihr KI‑Sicherheits‑Login-Code",
+        text=f"Ihr einmaliger Code lautet: {code} (gültig für 10 Minuten).",
+        html=f"<p>Ihr einmaliger Code lautet: <strong>{code}</strong> (gültig für 10 Minuten).</p>",
+    )
+    return
 
 
-# -------------------------- Endpoints --------------------------
+@router.post("/login")
+async def login(payload: LoginIn, request: Request):
+    s = get_settings()
+    limiter = RateLimiter(namespace="login", limit=s.rate.max_login, window_sec=s.rate.window_sec)
+    limiter.hit(key=str(payload.email))
 
-@router.post("/auth/request-code", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
-@router.post("/api/auth/request-code", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
-def request_code(body: RequestCodeBody, store: OTPStore = Depends(_otp)) -> Response:
-    email = str(body.email)
-    _rate_limit(email)
-    code = store.new_code(email, ttl=OTP_TTL, length=OTP_LEN)
-    send_code(email, code)
-    log.info("Auth: request-code sent to %s", email)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    # Idempotency
+    idem = IdempotencyBox(namespace="login")
+    if idem.is_duplicate(request):
+        # Bei echter Idempotenz könnte man hier das vorherige Ergebnis liefern.
+        # Für den einfachen Fall: einfach 200 OK ohne Token verhindern wir Doppel-POSTs.
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Duplicate request")
 
+    stored = _read_code(str(payload.email))
+    if not stored or stored != payload.code:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired code")
 
-@router.post("/auth/verify-code")
-@router.post("/api/auth/verify-code")
-def verify_code(body: VerifyBody, store: OTPStore = Depends(_otp)) -> Dict[str, Any]:
-    email = str(body.email)
-    code = body.code.strip()
-    ok = store.verify(email, code)
-    if not ok:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiger Code oder abgelaufen.")
-    token = create_jwt(email)
-    log.info("Auth: login ok for %s", email)
-    return {"ok": True, "email": email, "token": token, "token_type": "bearer"}
-
-
-@router.post("/auth/login")
-@router.post("/api/auth/login")
-def login(body: VerifyBody, store: OTPStore = Depends(_otp)) -> Dict[str, Any]:
-    # Alias für verify_code – hält Frontends kompatibel
-    return verify_code(body, store)
+    token = create_access_token(email=str(payload.email))
+    return {"access_token": token, "token_type": "bearer"}
