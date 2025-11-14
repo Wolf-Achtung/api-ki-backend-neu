@@ -41,7 +41,7 @@ def _normalize_dsn(url: str) -> str:
 class Base(DeclarativeBase):
     pass
 
-dsn = _normalize_dsn(settings.DATABASE_URL)
+dsn = _normalize_dsn(settings.database_url)
 is_sqlite = dsn.startswith("sqlite")
 
 engine = create_engine(
