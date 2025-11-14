@@ -1,71 +1,48 @@
-# -*- coding: utf-8 -*-
-"""core/security.py
-Konsolidierte JWT-Helfer:
-- Liest Konfiguration aus settings.py (pydantic BaseSettings) oder ENV
-- Stabile Defaults: JWT_ALGORITHM=HS256, JWT_EXPIRE_DAYS=7
-- Klare HTTP-Fehler (401/500) statt Tracebacks
-- Optional ISS/AUD via ENV
+
+"""
+core/security.py — JWT & Request-Helfer
 """
 from __future__ import annotations
-
-import os
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, Optional
+import time
+from typing import Optional, Tuple
 
 import jwt
-from fastapi import HTTPException, status
+from fastapi import Header, HTTPException, status
+from pydantic import BaseModel
 
-try:
-    from settings import settings  # type: ignore
-except Exception:
-    settings = None  # type: ignore
+from settings import get_settings
 
-def _get(name: str, default: Any) -> Any:
-    if settings is not None and hasattr(settings, name):
-        val = getattr(settings, name)
-        if val not in (None, ""):
-            return val
-    env_val = os.getenv(name)
-    if env_val not in (None, ""):
-        if name.endswith("_DAYS"):
-            try:
-                return int(env_val)
-            except Exception:
-                return default
-        return env_val
-    return default
+class TokenPayload(BaseModel):
+    sub: str
+    email: str
+    iat: int
+    exp: int
 
-JWT_SECRET: str = _get("JWT_SECRET", "")
-if not JWT_SECRET:
-    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="JWT_SECRET ist nicht gesetzt.")
 
-JWT_ALGORITHM: str = _get("JWT_ALGORITHM", "HS256")
-JWT_EXPIRE_DAYS: int = _get("JWT_EXPIRE_DAYS", 7)
-JWT_ISS: Optional[str] = _get("JWT_ISS", None)
-JWT_AUD: Optional[str] = _get("JWT_AUD", None)
+def create_access_token(email: str, subject: str = "user") -> str:
+    s = get_settings()
+    now = int(time.time())
+    exp = now + s.security.jwt_expire_days * 24 * 60 * 60
+    payload = {"sub": subject, "email": email, "iat": now, "exp": exp}
+    token = jwt.encode(payload, s.security.jwt_secret, algorithm=s.security.jwt_algorithm)
+    return token
 
-def create_jwt(email: str, *, is_admin: bool = False, ttl_days: Optional[int] = None) -> str:
-    now = datetime.now(timezone.utc)
-    exp = now + timedelta(days=int(ttl_days if ttl_days is not None else JWT_EXPIRE_DAYS))
-    payload: Dict[str, Any] = {"sub": email, "email": email, "admin": bool(is_admin), "iat": int(now.timestamp()), "exp": int(exp.timestamp())}
-    if JWT_ISS:
-        payload["iss"] = JWT_ISS
-    if JWT_AUD:
-        payload["aud"] = JWT_AUD
-    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
-def decode_jwt(token: str) -> Dict[str, Any]:
-    options = {"require": ["sub", "iat", "exp"]}
-    kwargs: Dict[str, Any] = {"algorithms": [JWT_ALGORITHM]}
-    if JWT_ISS:
-        kwargs["issuer"] = JWT_ISS
-        options["require"].append("iss")
-    if JWT_AUD:
-        kwargs["audience"] = JWT_AUD
-        options["require"].append("aud")
+def verify_access_token(token: str) -> TokenPayload:
+    s = get_settings()
     try:
-        return jwt.decode(token, JWT_SECRET, options=options, **kwargs)  # type: ignore[arg-type]
+        data = jwt.decode(token, s.security.jwt_secret, algorithms=[s.security.jwt_algorithm])
+        return TokenPayload(**data)
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token abgelaufen.")
-    except Exception:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Token.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+
+def bearer_token(authorization: Optional[str] = Header(None)) -> str:
+    if not authorization:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing Authorization header")
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Authorization header")
+    return token
