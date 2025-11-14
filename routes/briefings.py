@@ -6,6 +6,7 @@ KEIN Prefix; main.py mountet ihn unter /api/briefings
 from __future__ import annotations
 
 import json
+import logging
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -17,6 +18,7 @@ from services.rate_limit import RateLimiter
 from utils.idempotency import IdempotencyBox
 
 router = APIRouter()
+log = logging.getLogger(__name__)
 
 
 class BriefingSubmitIn(BaseModel):
@@ -43,15 +45,48 @@ async def submit_briefing(payload: BriefingSubmitIn, request: Request):
     auth = request.headers.get("authorization")
     if auth:
         try:
-            token = auth.split(" ", 1)[1]
+            # Robuste Token-Extraktion mit besserer Fehlerbehandlung
+            parts = auth.split(" ", 1)
+            if len(parts) != 2:
+                log.warning("Invalid Authorization header format: %s", auth[:20])
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid Authorization header format"
+                )
+
+            scheme, token = parts
+            if scheme.lower() != "bearer":
+                log.warning("Invalid Authorization scheme: %s", scheme)
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid Authorization scheme, expected Bearer"
+                )
+
+            if not token:
+                log.warning("Empty token in Authorization header")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Empty token"
+                )
+
+            # Token validieren
             verify_access_token(token)
-        except Exception:
-            # Token invalid -> 401 wäre okay, hier tolerant:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+            log.info("Token validated successfully")
+
+        except HTTPException:
+            # HTTPException direkt weiterwerfen
+            raise
+        except Exception as e:
+            # Andere Fehler loggen und als 401 zurückgeben
+            log.error("Token verification failed: %s - %s", type(e).__name__, str(e))
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Token verification failed: {type(e).__name__}"
+            )
 
     # Persistieren der Rohdaten ist abhängig vom bestehenden Projekt (DB-Modell).
     # Hier nur ein Log für Nachvollziehbarkeit:
-    request.app.logger.info("briefing received len=%s", len(json.dumps(payload.model_dump())))
+    log.info("briefing received len=%s", len(json.dumps(payload.model_dump())))
 
     # Hintergrund-Analyse anstoßen: abhängig von eurer Implementierung
     # z.B. via internal queue / task runner; hier nur Antwort:
