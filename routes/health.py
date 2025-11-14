@@ -68,7 +68,7 @@ def router_status(request: Request) -> Dict[str, Any]:
         analyzer_ok = False
     return {
         "time": datetime.utcnow().isoformat() + "Z",
-        "version": getattr(settings, "VERSION", "1.2.0"),
+        "version": getattr(settings, "VERSION", "1.2.1"),
         "routers": _mounted_map(request),
         "analyzer_import_ok": analyzer_ok,
     }
@@ -76,7 +76,7 @@ def router_status(request: Request) -> Dict[str, Any]:
 
 @router.get("/healthz")
 def healthz() -> Dict[str, str]:
-    return {"status": "ok", "version": getattr(settings, "VERSION", "1.2.0")}
+    return {"status": "ok", "version": getattr(settings, "VERSION", "1.2.1")}
 
 
 @router.get("/info")
@@ -87,7 +87,7 @@ def info(request: Request) -> Dict[str, Any]:
 
     return {
         "name": "KI Status Report API",
-        "version": getattr(settings, "VERSION", "1.2.0"),
+        "version": getattr(settings, "VERSION", "1.2.1"),
         "status": "running",
         "endpoints": {
             "health": "/api/healthz",

@@ -44,7 +44,7 @@ log = logging.getLogger("backend.main")
 # ----------------------------------------------------------------------------
 app = FastAPI(
     title="KI Status Report API",
-    version="1.2.0",
+    version="1.2.1",
     docs_url="/docs",
     redoc_url="/redoc",
 )
@@ -127,7 +127,7 @@ def healthz() -> JSONResponse:
 def info() -> JSONResponse:
     return JSONResponse({
         "name": "KI Status Report API",
-        "version": "1.2.0",
+        "version": "1.2.1",
         "status": "running",
         "endpoints": {
             "health": "/api/healthz",
@@ -149,7 +149,7 @@ def router_status() -> JSONResponse:
         "routers": mounted,
         "paths": paths,
         "analyzer_import_ok": bool(mounted.get("analyze")),
-        "version": "1.2.0",
+        "version": "1.2.1",
     })
 
 
@@ -161,7 +161,7 @@ def debug_config() -> JSONResponse:
             "name": settings.app_name,
             "env": settings.env,
             "log_level": settings.log_level,
-            "version": "1.2.0",
+            "version": "1.2.1",
         },
         "urls": {
             "site_url": settings.site_url,
@@ -285,7 +285,7 @@ def root() -> JSONResponse:
             paths.append(route.path)
     return JSONResponse({
         "name": "KI Status Report API",
-        "version": "1.2.0",
+        "version": "1.2.1",
         "status": "running",
         "endpoints": {
             "health": "/api/healthz",
