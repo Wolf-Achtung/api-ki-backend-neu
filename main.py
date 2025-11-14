@@ -153,6 +153,129 @@ def router_status() -> JSONResponse:
     })
 
 
+@app.get("/api/debug/config", tags=["debug"])
+def debug_config() -> JSONResponse:
+    """Debug endpoint für Konfigurationsinformationen (ohne Secrets)"""
+    return JSONResponse({
+        "app": {
+            "name": settings.app_name,
+            "env": settings.env,
+            "log_level": settings.log_level,
+            "version": "1.2.0",
+        },
+        "urls": {
+            "site_url": settings.site_url,
+            "backend_base": settings.backend_base,
+        },
+        "database": {
+            "url_set": bool(settings.database_url),
+            "redis_url_set": bool(settings.redis_url),
+        },
+        "cors": {
+            "allow_any": settings.cors_allow_any,
+            "origins": settings.cors_origins,
+        },
+        "features": {
+            "enable_llm_cache": settings.enable_llm_cache,
+            "enable_perplexity": settings.enable_perplexity,
+            "enable_quality_gates": settings.enable_quality_gates,
+            "enable_realistic_scores": settings.enable_realistic_scores,
+            "enable_ai_act_section": settings.enable_ai_act_section,
+            "enable_ai_act_table": settings.enable_ai_act_table,
+            "enable_admin_notify": settings.enable_admin_notify,
+            "enable_repair_html": settings.enable_repair_html,
+        },
+        "mail": {
+            "provider": settings.mail.provider,
+            "from_email": settings.mail.from_email,
+            "from_name": settings.mail.from_name,
+        },
+        "security": {
+            "jwt_secret_set": bool(settings.security.jwt_secret),
+            "jwt_secret_length": len(settings.security.jwt_secret) if settings.security.jwt_secret else 0,
+            "jwt_algorithm": settings.security.jwt_algorithm,
+            "jwt_expire_days": settings.security.jwt_expire_days,
+        },
+        "openai": {
+            "api_key_set": bool(settings.openai.api_key),
+            "model": settings.openai.model,
+            "temperature": settings.openai.temperature,
+            "max_tokens": settings.openai.max_tokens,
+        },
+        "research": {
+            "provider": settings.research.provider,
+            "lang": settings.research.lang,
+            "country": settings.research.country,
+        },
+    })
+
+
+@app.get("/api/debug/env", tags=["debug"])
+def debug_env() -> JSONResponse:
+    """Debug endpoint für wichtige Umgebungsvariablen (ohne Secrets)"""
+    env_vars = {}
+
+    # Sichere Env-Vars die keinen Secret enthalten
+    safe_vars = [
+        "ENV", "LOG_LEVEL", "APP_NAME", "SITE_URL", "BACKEND_BASE",
+        "CORS_ALLOW_ANY", "EMAIL_PROVIDER", "RESEARCH_PROVIDER",
+        "OPENAI_MODEL", "PERPLEXITY_MODEL", "ENABLE_LLM_CACHE",
+        "ENABLE_PERPLEXITY", "ENABLE_QUALITY_GATES",
+    ]
+
+    for var in safe_vars:
+        value = os.getenv(var)
+        if value is not None:
+            env_vars[var] = value
+
+    # Secret-Status (nur ob gesetzt, nicht der Wert)
+    secrets_status = {}
+    secret_vars = [
+        "JWT_SECRET", "OPENAI_API_KEY", "PERPLEXITY_API_KEY",
+        "TAVILY_API_KEY", "DATABASE_URL", "REDIS_URL",
+        "SMTP_PASSWORD",
+    ]
+
+    for var in secret_vars:
+        value = os.getenv(var)
+        secrets_status[var] = {
+            "set": bool(value),
+            "length": len(value) if value else 0,
+        }
+
+    return JSONResponse({
+        "environment": env_vars,
+        "secrets_status": secrets_status,
+    })
+
+
+@app.get("/api/debug/system", tags=["debug"])
+def debug_system() -> JSONResponse:
+    """Debug endpoint für System-Informationen"""
+    import platform
+    import sys
+
+    return JSONResponse({
+        "python": {
+            "version": sys.version,
+            "version_info": {
+                "major": sys.version_info.major,
+                "minor": sys.version_info.minor,
+                "micro": sys.version_info.micro,
+            },
+            "executable": sys.executable,
+        },
+        "platform": {
+            "system": platform.system(),
+            "release": platform.release(),
+            "version": platform.version(),
+            "machine": platform.machine(),
+            "processor": platform.processor(),
+        },
+        "mounted_routers": mounted,
+    })
+
+
 # Root: kleine Übersicht (nützlich für Railway Ping)
 @app.get("/", include_in_schema=False)
 def root() -> JSONResponse:

@@ -108,3 +108,64 @@ async def login(payload: LoginIn, request: Request):
     log.info("🔍 Token preview: %s...%s", token[:20], token[-20:])
 
     return {"access_token": token, "token_type": "bearer"}
+
+
+@router.get("/debug")
+async def debug_auth(request: Request):
+    """Debug endpoint für Auth-Informationen"""
+    s = get_settings()
+
+    # Token aus Header extrahieren
+    auth_header = request.headers.get("authorization", "")
+    token_info = {
+        "header_present": bool(auth_header),
+        "header_length": len(auth_header) if auth_header else 0,
+    }
+
+    if auth_header:
+        parts = auth_header.split(" ", 1)
+        if len(parts) == 2:
+            scheme, token = parts
+            token_info["scheme"] = scheme
+            token_info["token_length"] = len(token)
+            token_info["token_preview"] = f"{token[:20]}...{token[-20:]}" if len(token) > 40 else "too_short"
+
+            # Versuche Token zu dekodieren (unverified)
+            try:
+                import jwt as jwt_lib
+                decoded = jwt_lib.decode(token, options={"verify_signature": False})
+                token_info["payload"] = {
+                    "sub": decoded.get("sub"),
+                    "email": decoded.get("email"),
+                    "exp": decoded.get("exp"),
+                }
+            except Exception as e:
+                token_info["decode_error"] = str(e)
+
+            # Versuche Token zu verifizieren
+            try:
+                result = verify_access_token(token)
+                token_info["verified"] = True
+                token_info["verified_email"] = result.email
+            except Exception as e:
+                token_info["verified"] = False
+                token_info["verify_error"] = str(e)
+
+    return {
+        "endpoint": "/api/auth/debug",
+        "jwt_config": {
+            "secret_set": bool(s.security.jwt_secret),
+            "secret_length": len(s.security.jwt_secret) if s.security.jwt_secret else 0,
+            "algorithm": s.security.jwt_algorithm,
+            "expire_days": s.security.jwt_expire_days,
+        },
+        "token_info": token_info,
+        "redis_enabled": RedisBox.enabled(),
+        "mail_provider": s.mail.provider,
+        "mail_from": s.mail.from_email,
+        "rate_limits": {
+            "login_max": s.rate.max_login,
+            "request_code_max": s.rate.max_request_code,
+            "window_sec": s.rate.window_sec,
+        },
+    }
