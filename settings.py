@@ -267,7 +267,11 @@ class AppSettings(BaseSettings):
 
 @lru_cache
 def get_settings() -> AppSettings:
-    return AppSettings.from_env()
+    s = AppSettings.from_env()
+    # Explizite Validierung nach model_construct
+    if not s.security.jwt_secret:
+        raise ValueError("JWT_SECRET muss gesetzt sein! Bitte setzen Sie die Umgebungsvariable JWT_SECRET.")
+    return s
 
 
 # Singleton-Instanz für direkten Import (z.B. "from settings import settings")
