@@ -1,84 +1,37 @@
 # -*- coding: utf-8 -*-
+"""settings.py – Patch02 (Pydantic BaseSettings)
+- Einheitliche Defaults für CORS & JWT
+- Einfache Listenverarbeitung für CORS_ORIGINS (Komma-getrennt)
+- LOG_LEVEL und APP_NAME als Basis
+"""
 from __future__ import annotations
-from typing import List, Optional
-from pydantic import Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
+from typing import List
+from pydantic import BaseSettings, Field
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False)
+    APP_NAME: str = Field(default="KI-Status API")
+    LOG_LEVEL: str = Field(default="INFO")
 
-    # Meta
-    APP_NAME: str = "KI-Status-Report API"
-    VERSION: str = "1.0.0"
-    ENV: str = "production"      # production | staging | development
-    LOG_LEVEL: str = "INFO"
-
-    # Database
-    DATABASE_URL: str
-
-    # Auth / JWT
-    JWT_SECRET: str = "change-me"   # override in production
-    TOKEN_MINUTES: int = 60*24      # legacy alias (kept for safety)
-    TOKEN_EXP_MINUTES: int = 60*24  # preferred
-    CODE_EXP_MINUTES: int = 15
-
-    # Admins
-    ADMIN_EMAILS: str = ""          # comma-separated
-    ADMIN_EMAIL: Optional[str] = None
+    # JWT
+    JWT_SECRET: str = Field(default="changeme")  # in Prod zwingend via ENV setzen!
+    JWT_ALGORITHM: str = Field(default="HS256")
+    JWT_EXPIRE_DAYS: int = Field(default=7)
+    JWT_ISS: str | None = Field(default=None)
+    JWT_AUD: str | None = Field(default=None)
 
     # CORS
-    CORS_ORIGINS: str = ""          # comma separated
-    CORS_ALLOW_ANY: bool = False    # if true or if CORS_ORIGINS empty & ENV!=production, allow any http(s)
+    CORS_ALLOW_ANY: int = Field(default=0)  # 1=alle Origins zulassen (nur Dev)
+    CORS_ORIGINS: str = Field(default="https://make.ki-sicherheit.jetzt,https://www.make.ki-sicherheit.jetzt,https://ki-sicherheit.jetzt,https://www.ki-sicherheit.jetzt,https://ki-foerderung.jetzt")
+    CORS_ALLOW_HEADERS: str = Field(default="authorization,content-type,idempotency-key")
+    CORS_ALLOW_METHODS: str = Field(default="GET,POST,OPTIONS")
 
-    # LLM
-    OPENING_REM: str = ""           # reserved
-    OPENAI_API_KEY: Optional[str] = None
-    OPENAI_MODEL: str = "gpt-4o"
-    OPENAI_API_BASE: Optional[str] = None
+    def allowed_origins(self) -> List[str]:
+        if self.CORS_ALLOW_ANY:
+            return ["*"]
+        return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
 
-    # PDF
-    PDF_SERVICE_URL: Optional[str] = None
-
-    # SMTP (optional)
-    SMTP_HOST: Optional[str] = None
-    SMTP_PORT: int = 587
-    SMTP_USER: Optional[str] = None
-    SMTP_PASS: Optional[str] = None
-    SMTP_FROM: Optional[str] = None
-    SMTP_FROM_NAME: str = "KI-Readiness"
-    SMTP_TLS: bool = True
-
-    # ---- Helpers ----
-    def cors_list(self) -> List[str]:
-        raw = (self.CORS_ORIGINS or "").strip()
-        if not raw:
-            return []
-        items = [s.strip().rstrip("/") for s in raw.split(",") if s.strip()]
-        seen = set()
-        out: List[str] = []
-        for x in items:
-            if x not in seen:
-                seen.add(x); out.append(x)
-        return out
-
-    @property
-    def allow_any_cors(self) -> bool:
-        return bool(self.CORS_ALLOW_ANY) or (not self.cors_list() and self.maybe_non_prod())
-
-    def maybe_non_prod(self) -> bool:
-        return (self.ENV or "").lower() != "production"
-
-    def admin_list(self) -> List[str]:
-        vals = []
-        if self.ADMIN_EMAILS:
-            vals.extend([p.strip().lower() for p in self.ADMIN_EMAILS.split(",") if p and p.strip()])
-        if self.ADMIN_EMAIL:
-            vals.append(self.ADMIN_EMAIL.strip().lower())
-        # dedupe
-        seen = set(); out = []
-        for v in vals:
-            if v and v not in seen:
-                seen.add(v); out.append(v)
-        return out
+    class Config:
+        case_sensitive = False
 
 settings = Settings()
