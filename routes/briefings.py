@@ -110,3 +110,63 @@ async def submit_briefing(payload: BriefingSubmitIn, request: Request):
     # Hintergrund-Analyse anstoßen: abhängig von eurer Implementierung
     # z.B. via internal queue / task runner; hier nur Antwort:
     return {"status": "queued", "lang": payload.lang}
+
+
+@router.get("/debug")
+async def debug_briefings(request: Request):
+    """Debug endpoint für Briefings-Informationen"""
+    s = get_settings()
+
+    # Token aus Header extrahieren und validieren
+    auth_header = request.headers.get("authorization", "")
+    token_info = {
+        "header_present": bool(auth_header),
+        "header_length": len(auth_header) if auth_header else 0,
+    }
+
+    authenticated = False
+    user_email = None
+
+    if auth_header:
+        parts = auth_header.split(" ", 1)
+        if len(parts) == 2:
+            scheme, token = parts
+            token_info["scheme"] = scheme
+            token_info["token_length"] = len(token)
+
+            # Versuche Token zu verifizieren
+            try:
+                result = verify_access_token(token)
+                authenticated = True
+                user_email = result.email
+                token_info["verified"] = True
+                token_info["user_email"] = user_email
+            except Exception as e:
+                token_info["verified"] = False
+                token_info["verify_error"] = str(e)
+
+    return {
+        "endpoint": "/api/briefings/debug",
+        "authenticated": authenticated,
+        "user_email": user_email,
+        "token_info": token_info,
+        "jwt_config": {
+            "secret_set": bool(s.security.jwt_secret),
+            "secret_length": len(s.security.jwt_secret) if s.security.jwt_secret else 0,
+            "algorithm": s.security.jwt_algorithm,
+        },
+        "rate_limits": {
+            "limit": 10,
+            "window_sec": 300,
+        },
+        "client_info": {
+            "host": request.client.host if request.client else None,
+            "port": request.client.port if request.client else None,
+        },
+        "request_headers": {
+            "content-type": request.headers.get("content-type"),
+            "user-agent": request.headers.get("user-agent"),
+            "origin": request.headers.get("origin"),
+            "referer": request.headers.get("referer"),
+        },
+    }
