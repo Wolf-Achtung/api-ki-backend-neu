@@ -245,8 +245,12 @@
             <div class="section">
                 <h2>⚙️ Konfiguration</h2>
                 <div class="form-group">
-                    <label>Backend URL:</label>
+                    <label>Backend URL (ohne trailing slash):</label>
                     <input type="text" id="backendUrl" placeholder="https://api.beispiel.de" value="">
+                    <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">
+                        ✅ Richtig: https://api.beispiel.de<br>
+                        ❌ Falsch: https://api.beispiel.de/
+                    </small>
                 </div>
             </div>
 
@@ -321,7 +325,7 @@
         }
 
         async function requestCode() {
-            const backendUrl = document.getElementById('backendUrl').value.trim();
+            const backendUrl = document.getElementById('backendUrl').value.trim().replace(/\/+$/, ''); // Remove trailing slashes
             const email = document.getElementById('email').value.trim();
             const btn = document.getElementById('requestCodeBtn');
 
@@ -375,7 +379,7 @@
         }
 
         async function login() {
-            const backendUrl = document.getElementById('backendUrl').value.trim();
+            const backendUrl = document.getElementById('backendUrl').value.trim().replace(/\/+$/, ''); // Remove trailing slashes
             const email = document.getElementById('email').value.trim();
             const code = document.getElementById('code').value.trim();
             const btn = document.getElementById('loginBtn');
