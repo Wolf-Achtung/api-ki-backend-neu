@@ -1,7 +1,7 @@
 
 """
 routes/auth.py — Magic-Link Auth (Code anfordern & Login)
-Achtung: Dieser Router hat KEIN Prefix; main.py mountet ihn unter /api/auth.
+Router mit /auth Prefix; main.py mountet ihn unter /api -> /api/auth/*
 """
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from services.redis_utils import RedisBox
 from utils.idempotency import IdempotencyBox
 from core.security import create_access_token
 
-router = APIRouter()
+router = APIRouter(prefix="/auth", tags=["auth"])
 log = logging.getLogger(__name__)
 
 # Speicher für Codes (Fallback, wenn kein Redis verfügbar)

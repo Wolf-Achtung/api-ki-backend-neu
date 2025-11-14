@@ -1,7 +1,7 @@
 
 """
 routes/briefings.py — Formular-Submit
-KEIN Prefix; main.py mountet ihn unter /api/briefings
+Router mit /briefings Prefix; main.py mountet ihn unter /api -> /api/briefings/*
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from settings import get_settings
 from services.rate_limit import RateLimiter
 from utils.idempotency import IdempotencyBox
 
-router = APIRouter()
+router = APIRouter(prefix="/briefings", tags=["briefings"])
 log = logging.getLogger(__name__)
 
 
