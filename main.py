@@ -156,6 +156,8 @@ def _build_router_config() -> List[Tuple[str, str, str]]:
         ("routes.report", "/api", "report"),
         # Smoke‑Test Router: bietet /api/smoke zur Überprüfung des Systems
         ("routes.smoke", "/api", "smoke"),
+        # Test Login Page: bietet /test/login für Debugging
+        ("routes.test_login", "", "test"),
     ]
     # optionale Admin‑Routen
     if _bool_env("ENABLE_ADMIN_ROUTES", "0"):
