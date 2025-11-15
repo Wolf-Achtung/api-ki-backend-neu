@@ -23,7 +23,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 try:
     from core.db import get_session as _get_session  # type: ignore
     DB_READY = True
-except Exception as exc:  # pragma: no cover
+except (ImportError, RuntimeError) as exc:  # pragma: no cover
     _get_session = None  # type: ignore
     DB_READY = False
     log.warning("Admin: DB not ready at import: %s", exc)
@@ -37,14 +37,14 @@ def get_current_user():
     try:
         from services.auth import get_current_user as _get_current_user  # type: ignore
         return _get_current_user
-    except Exception as exc:  # pragma: no cover
+    except (ImportError, RuntimeError) as exc:  # pragma: no cover
         raise HTTPException(status_code=503, detail=f"auth_unavailable: {exc}")
 
 def _models():
     try:
         from models import User, Briefing, Analysis, Report  # type: ignore
         return User, Briefing, Analysis, Report
-    except Exception as exc:  # pragma: no cover
+    except (ImportError, RuntimeError) as exc:  # pragma: no cover
         raise HTTPException(status_code=503, detail=f"models_unavailable: {exc}")
 
 def _is_admin(user: Any) -> bool:
@@ -117,8 +117,10 @@ def list_briefings(
     qry = db.query(Briefing).order_by(Briefing.id.desc())
     if q:
         from sqlalchemy import or_
+        # Escape wildcard characters to prevent LIKE injection
+        q_escaped = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         qry = qry.join(User, Briefing.user_id == User.id).filter(
-            or_(User.email.ilike(f"%{q}%"), User.name.ilike(f"%{q}%"))
+            or_(User.email.ilike(f"%{q_escaped}%"), User.name.ilike(f"%{q_escaped}%"))
         )
     total = qry.count()
     rows = qry.offset(offset).limit(limit).all()
@@ -300,7 +302,7 @@ def rerun_generation(
     # gpt_analyze nur hier importieren (nicht beim Modul-Load)
     try:
         from gpt_analyze import run_async  # type: ignore
-    except Exception as exc:
+    except (ImportError, RuntimeError) as exc:
         raise HTTPException(status_code=503, detail=f"analyzer_unavailable: {exc}")
     background.add_task(run_async, briefing_id, None)
     return {"ok": True, "queued": True}
@@ -315,7 +317,7 @@ def export_briefing_zip(
     _require_admin(user)
     try:
         from services.admin_export import build_briefing_export_zip  # type: ignore
-    except Exception as exc:
+    except (ImportError, RuntimeError) as exc:
         raise HTTPException(status_code=503, detail=f"exporter_unavailable: {exc}")
     buf = build_briefing_export_zip(db, briefing_id, include_pdf=include_pdf)
     if buf is None:
