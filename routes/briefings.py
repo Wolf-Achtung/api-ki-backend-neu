@@ -48,42 +48,31 @@ async def submit_briefing(
     limiter.hit(key=request.client.host if request.client else "unknown")
 
     # JWT optional (falls Frontend ohne Token sendet, nicht hart blockieren)
-    auth = request.headers.get("authorization")
+    # Prüfe SOWOHL Cookie als auch Authorization Header (wie in get_current_user)
     authenticated_user = None  # Track if user is authenticated
     user_id = None  # Database user ID
 
-    if auth:
-        # Wenn ein Authorization Header vorhanden ist, muss er valide sein
-        parts = auth.split(" ", 1)
+    token = None
 
-        if len(parts) != 2:
-            log.warning("Invalid Authorization header format")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authorization header format"
-            )
+    # Priority 1: Check httpOnly cookie
+    cookie_token = request.cookies.get("auth_token")
+    if cookie_token:
+        token = cookie_token
+        log.debug("Found auth_token in cookie")
+    # Fallback: Check Authorization header
+    elif request.headers.get("authorization"):
+        auth_header = request.headers.get("authorization")
+        scheme, _, header_token = auth_header.partition(" ")
+        if scheme.lower() == "bearer" and header_token:
+            token = header_token
+            log.debug("Found token in Authorization header")
 
-        scheme, token = parts
-
-        if scheme.lower() != "bearer":
-            log.warning("Invalid Authorization scheme: %s (expected 'Bearer')", scheme)
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authorization scheme"
-            )
-
-        if not token:
-            log.warning("Empty token in Authorization header")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Empty token"
-            )
-
+    if token:
         # Token validieren - bei Fehler abbrechen
         try:
             result = verify_access_token(token)
             authenticated_user = result.email
-            log.info("Token validated successfully for user: %s", authenticated_user)
+            log.info("✅ Token validated successfully for user: %s", authenticated_user)
 
             # User aus DB holen oder erstellen
             try:
@@ -93,20 +82,22 @@ async def submit_briefing(
                     user = User(email=authenticated_user, name=authenticated_user.split("@")[0])
                     db.add(user)
                     db.flush()
-                    log.info("Created new user: %s", authenticated_user)
+                    log.info("✅ Created new user: %s", authenticated_user)
+                else:
+                    log.info("✅ Found existing user: %s (ID=%s)", authenticated_user, user.id)
                 user_id = user.id
             except Exception as e:
                 log.warning("Could not get/create user: %s", str(e))
                 # Weiter ohne user_id - nicht kritisch
 
         except Exception as e:
-            log.error("Token verification failed: %s - %s", type(e).__name__, str(e))
+            log.error("❌ Token verification failed: %s - %s", type(e).__name__, str(e))
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid or expired token"
             )
     else:
-        log.debug("No Authorization header - proceeding without authentication")
+        log.debug("No authentication found (no cookie or Authorization header) - proceeding without authentication")
 
     # Briefing in Datenbank speichern
     try:
