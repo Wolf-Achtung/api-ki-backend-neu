@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
 from routes._bootstrap import get_db, rate_limiter
 
@@ -11,14 +11,14 @@ router = APIRouter(prefix="/analyze", tags=["analyze"])
 
 class RunAnalyze(BaseModel):
     briefing_id: int = Field(gt=0)
-    email_override: str | None = None
+    email_override: EmailStr | None = None  # Use EmailStr for proper validation
 
 def _get_briefing_model():
     """Lazy Import der Models, damit der Router auch ohne DB‑Treiber mountet."""
     try:
         from models import Briefing  # type: ignore
         return Briefing
-    except Exception as exc:  # pragma: no cover
+    except (ImportError, RuntimeError) as exc:  # pragma: no cover
         raise HTTPException(status_code=503, detail=f"models_unavailable: {exc}")
 
 @router.post("/run", status_code=status.HTTP_202_ACCEPTED, dependencies=[Depends(rate_limiter("analyze:run", 5, 60))])
@@ -38,7 +38,7 @@ def run(body: RunAnalyze, request: Request, db = Depends(get_db)) -> dict:
         raise HTTPException(status_code=404, detail="Briefing not found")
     try:
         from gpt_analyze import run_async  # type: ignore
-    except Exception as exc:
+    except (ImportError, RuntimeError) as exc:
         raise HTTPException(status_code=503, detail=f"analyzer_unavailable: {exc}")
     run_async(body.briefing_id, body.email_override)
     return {"accepted": True, "briefing_id": body.briefing_id}

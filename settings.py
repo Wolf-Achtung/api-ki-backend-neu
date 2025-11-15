@@ -271,6 +271,8 @@ def get_settings() -> AppSettings:
     # Explizite Validierung nach model_construct
     if not s.security.jwt_secret:
         raise ValueError("JWT_SECRET muss gesetzt sein! Bitte setzen Sie die Umgebungsvariable JWT_SECRET.")
+    if not s.database_url:
+        raise ValueError("DATABASE_URL muss gesetzt sein! Bitte setzen Sie die Umgebungsvariable DATABASE_URL.")
     return s
 
 
