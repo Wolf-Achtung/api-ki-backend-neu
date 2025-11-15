@@ -7,7 +7,7 @@ import time
 from typing import Optional, Tuple
 
 import jwt
-from fastapi import Header, HTTPException, status
+from fastapi import Cookie, Header, HTTPException, status
 from pydantic import BaseModel
 
 from settings import get_settings
@@ -46,3 +46,42 @@ def bearer_token(authorization: Optional[str] = Header(None)) -> str:
     if scheme.lower() != "bearer" or not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Authorization header")
     return token
+
+
+def get_current_user(
+    auth_token: Optional[str] = Cookie(None),
+    authorization: Optional[str] = Header(None)
+) -> TokenPayload:
+    """
+    Phase 1 Hybrid Mode: Accept tokens from httpOnly cookies (priority) or Authorization headers.
+
+    This dependency checks for authentication in the following order:
+    1. httpOnly cookie (auth_token) - preferred method
+    2. Authorization header (Bearer token) - fallback for backward compatibility
+
+    Returns:
+        TokenPayload: The verified token payload containing user information
+
+    Raises:
+        HTTPException: 401 if no valid token is found
+    """
+    token = None
+
+    # Priority 1: Check httpOnly cookie
+    if auth_token:
+        token = auth_token
+    # Fallback: Check Authorization header
+    elif authorization:
+        scheme, _, header_token = authorization.partition(" ")
+        if scheme.lower() == "bearer" and header_token:
+            token = header_token
+
+    # No token found in either location
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required. Please provide token via cookie or Authorization header."
+        )
+
+    # Verify and return token payload
+    return verify_access_token(token)
