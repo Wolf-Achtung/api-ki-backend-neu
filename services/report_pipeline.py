@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import html
 import os
 import datetime as dt
 import re
@@ -64,15 +65,28 @@ def build_context(briefing: Dict[str, Any], snippets: Dict[str, str]) -> Dict[st
     return context
 
 def render_report_html(briefing: Dict[str, Any], snippets: Dict[str, str]) -> str:
+    """
+    DEPRECATED: This function uses unsafe string replacement.
+    Use services/report_renderer.py (Jinja2 with auto-escaping) instead.
+
+    This function is kept for backward compatibility only.
+    """
     template_path = os.getenv("REPORT_TEMPLATE_PATH", "templates/pdf_template.html")
     with open(template_path, "r", encoding="utf-8") as f:
         template = f.read()
 
     context = build_context(briefing, snippets)
 
-    html = template
+    html_content = template
     for k, v in context.items():
-        html = html.replace("{{" + k + "}}", ensure_utf8(str(v)))
+        # SECURITY: Escape HTML to prevent XSS
+        # Skip escaping for keys that contain pre-sanitized HTML snippets
+        if k.endswith('_HTML'):
+            # These are already sanitized by html_sanitizer.py
+            html_content = html_content.replace("{{" + k + "}}", ensure_utf8(str(v)))
+        else:
+            # User input must be HTML-escaped
+            html_content = html_content.replace("{{" + k + "}}", html.escape(ensure_utf8(str(v))))
 
-    html = re.sub(r"{{\s*[A-Z0-9_]+\s*}}", "—", html)
-    return ensure_utf8(html)
+    html_content = re.sub(r"{{\s*[A-Z0-9_]+\s*}}", "—", html_content)
+    return ensure_utf8(html_content)
