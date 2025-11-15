@@ -217,18 +217,30 @@
           addLog('success', '✅ Briefing Submit erfolgreich');
           successCount++;
         } else {
-          // Formatiere Fehlermeldung korrekt
+          // Formatiere Fehlermeldung korrekt mit vollständigen Details
           let errorMsg = 'Unknown error';
           if (data.detail) {
             if (typeof data.detail === 'string') {
               errorMsg = data.detail;
             } else if (Array.isArray(data.detail)) {
-              errorMsg = data.detail.map(e => e.msg || e).join(', ');
+              // Pydantic ValidationError gibt Array mit Details
+              errorMsg = data.detail.map(e => {
+                if (typeof e === 'string') return e;
+                const loc = e.loc ? e.loc.join('.') : 'unknown';
+                const msg = e.msg || 'validation error';
+                const type = e.type || '';
+                return `[${loc}] ${msg}${type ? ' (' + type + ')' : ''}`;
+              }).join(', ');
             } else {
               errorMsg = JSON.stringify(data.detail);
             }
           }
           addLog('error', '❌ Briefing Submit fehlgeschlagen (HTTP ' + res.status + '): ' + errorMsg);
+          addLog('info', 'DEBUG - Gesendete Payload: ' + JSON.stringify({
+            lang: 'de',
+            answers: { branche: 'IT', bundesland: 'Bayern', jahresumsatz: '1-5M', unternehmensgroesse: '10-50', ki_kompetenz: 'Anfänger', hauptleistung: 'Software-Entwicklung' },
+            queue_analysis: false
+          }));
         }
       } catch (err) {
         addLog('error', '❌ Briefing Submit Error: ' + err.message);
