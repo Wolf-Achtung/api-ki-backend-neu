@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KI-Backend Test (Minimal)</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; margin-bottom: 20px; }
+    .config {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    button:hover { background: #5568d3; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    .result {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .success { border-left: 4px solid #10b981; }
+    .error { border-left: 4px solid #ef4444; }
+    .log {
+      background: #1a1a1a;
+      color: #e0e0e0;
+      padding: 15px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+    .log-entry { margin-bottom: 8px; }
+    .log-success { color: #10b981; }
+    .log-error { color: #ef4444; }
+    .log-info { color: #3b82f6; }
+  </style>
+</head>
+<body>
+  <h1>🧪 KI-Backend Test (Minimal Version)</h1>
+
+  <div class="config">
+    <label for="apiUrl">Backend API-URL:</label>
+    <input type="text" id="apiUrl" value="https://make.ki-sicherheit.jetzt" placeholder="https://make.ki-sicherheit.jetzt">
+
+    <button id="testBtn" onclick="runTests()">▶️ Tests starten</button>
+  </div>
+
+  <div class="result" id="result" style="display:none;">
+    <h3>Ergebnisse:</h3>
+    <div class="log" id="log"></div>
+  </div>
+
+  <script>
+    function addLog(type, message) {
+      const log = document.getElementById('log');
+      const time = new Date().toLocaleTimeString('de-DE');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry log-' + type;
+      entry.textContent = time + ' [' + type.toUpperCase() + '] ' + message;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function runTests() {
+      const apiUrl = document.getElementById('apiUrl').value.trim().replace(/\/$/, '');
+      const resultDiv = document.getElementById('result');
+      const logDiv = document.getElementById('log');
+      const btn = document.getElementById('testBtn');
+
+      // Reset
+      resultDiv.style.display = 'block';
+      logDiv.innerHTML = '';
+      btn.disabled = true;
+
+      addLog('info', 'Starte Tests für: ' + apiUrl);
+
+      // Test 1: Health Check
+      try {
+        addLog('info', 'Test 1/5: Health Check...');
+        const res = await fetch(apiUrl + '/health');
+        const data = await res.json();
+
+        if (data.status === 'ok') {
+          addLog('success', '✅ Health Check erfolgreich');
+        } else {
+          addLog('error', '❌ Health Check fehlgeschlagen: Unexpected status');
+        }
+      } catch (err) {
+        addLog('error', '❌ Health Check Error: ' + err.message);
+      }
+
+      // Test 2: Root Endpoint
+      try {
+        addLog('info', 'Test 2/5: Root Endpoint...');
+        const res = await fetch(apiUrl + '/');
+        const data = await res.json();
+
+        if (data.status === 'running') {
+          addLog('success', '✅ Root Endpoint erfolgreich');
+          addLog('info', 'API Name: ' + (data.name || 'N/A'));
+          addLog('info', 'Version: ' + (data.version || 'N/A'));
+        } else {
+          addLog('error', '❌ Root Endpoint fehlgeschlagen');
+        }
+      } catch (err) {
+        addLog('error', '❌ Root Endpoint Error: ' + err.message);
+      }
+
+      // Test 3: Login-Code anfordern
+      try {
+        addLog('info', 'Test 3/5: Login-Code anfordern...');
+        const res = await fetch(apiUrl + '/api/auth/request-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Idempotency-Key': 'test-' + Date.now()
+          },
+          body: JSON.stringify({ email: 'test@example.com' })
+        });
+
+        if (res.status === 204) {
+          addLog('success', '✅ Login-Code Request erfolgreich');
+        } else {
+          const data = await res.json().catch(() => ({ detail: 'Unknown error' }));
+          addLog('error', '❌ Login-Code Request fehlgeschlagen: HTTP ' + res.status + ' - ' + (data.detail || ''));
+        }
+      } catch (err) {
+        addLog('error', '❌ Login-Code Request Error: ' + err.message);
+      }
+
+      // Test 4: Briefing Submit
+      try {
+        addLog('info', 'Test 4/5: Briefing einreichen...');
+        const res = await fetch(apiUrl + '/api/briefings/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Idempotency-Key': 'test-briefing-' + Date.now()
+          },
+          body: JSON.stringify({
+            lang: 'de',
+            branche: 'IT',
+            bundesland: 'Bayern',
+            jahresumsatz: '1-5M',
+            unternehmensgroesse: '10-50',
+            ki_kompetenz: 'Anfänger',
+            hauptleistung: 'Software-Entwicklung',
+            antworten: []
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.status === 'queued') {
+          addLog('success', '✅ Briefing Submit erfolgreich');
+        } else {
+          addLog('error', '❌ Briefing Submit fehlgeschlagen: ' + (data.detail || 'Unknown error'));
+        }
+      } catch (err) {
+        addLog('error', '❌ Briefing Submit Error: ' + err.message);
+      }
+
+      // Test 5: Analyze Dry-Run
+      try {
+        addLog('info', 'Test 5/5: Analyze Dry-Run...');
+        const res = await fetch(apiUrl + '/api/analyze/run', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-dry-run': 'true'
+          },
+          body: JSON.stringify({ briefing_id: 1 })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.analyzer_import_ok) {
+          addLog('success', '✅ Analyze Dry-Run erfolgreich');
+        } else {
+          addLog('error', '❌ Analyze Dry-Run fehlgeschlagen: ' + (data.detail || 'Unknown error'));
+        }
+      } catch (err) {
+        addLog('error', '❌ Analyze Dry-Run Error: ' + err.message);
+      }
+
+      addLog('info', '═══════════════════════════════');
+      addLog('info', 'Alle Tests abgeschlossen!');
+
+      btn.disabled = false;
+    }
+
+    // Auto-Test bei URL-Parameter
+    window.addEventListener('DOMContentLoaded', function() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('autorun') === 'true') {
+        setTimeout(runTests, 500);
+      }
+    });
+  </script>
+</body>
+</html>
