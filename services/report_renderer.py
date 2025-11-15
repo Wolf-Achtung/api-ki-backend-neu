@@ -3,7 +3,7 @@ from __future__ import annotations
 import os, logging
 from pathlib import Path
 from typing import Any, Dict, Optional
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2 import Environment, FileSystemLoader, select_autoescape, Undefined
 
 log = logging.getLogger(__name__)
 
@@ -12,7 +12,7 @@ def _env() -> Environment:
     env = Environment(
         loader=FileSystemLoader(str(tpl_dir)),
         autoescape=select_autoescape(["html","xml"]),
-        undefined=None,  # allow missing vars
+        undefined=Undefined,  # ✅ Fixed: Use Undefined class instead of None
         trim_blocks=True, lstrip_blocks=True,
     )
     # Backwards-compat filter for old templates using {{LANG|de}}
