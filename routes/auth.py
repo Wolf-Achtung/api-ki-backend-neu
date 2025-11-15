@@ -24,7 +24,9 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 log = logging.getLogger(__name__)
 
 # Speicher für Codes (Fallback, wenn kein Redis verfügbar)
+import threading
 _inmem_codes: dict[str, tuple[str, float]] = {}  # email -> (code, expires_at)
+_inmem_lock = threading.Lock()
 
 class RequestCodeIn(BaseModel):
     email: EmailStr
@@ -40,20 +42,22 @@ def _store_code(email: str, code: str, ttl_sec: int = 600) -> None:
     if RedisBox.enabled():
         RedisBox.setex(f"login:{email}", ttl_sec, code)
     else:
-        _inmem_codes[email] = (code, time.time() + ttl_sec)
+        with _inmem_lock:
+            _inmem_codes[email] = (code, time.time() + ttl_sec)
 
 
 def _read_code(email: str) -> Optional[str]:
     if RedisBox.enabled():
         return RedisBox.get(f"login:{email}")
-    data = _inmem_codes.get(email)
-    if not data:
-        return None
-    code, exp = data
-    if time.time() > exp:
-        _inmem_codes.pop(email, None)
-        return None
-    return code
+    with _inmem_lock:
+        data = _inmem_codes.get(email)
+        if not data:
+            return None
+        code, exp = data
+        if time.time() > exp:
+            _inmem_codes.pop(email, None)
+            return None
+        return code
 
 
 @router.post("/request-code", status_code=204)
@@ -71,12 +75,19 @@ async def request_code(payload: RequestCodeIn, request: Request):
     _store_code(str(payload.email), code, ttl_sec=600)
 
     mailer = Mailer.from_settings(s)
-    await mailer.send(
-        to=str(payload.email),
-        subject="Ihr KI‑Sicherheits‑Login-Code",
-        text=f"Ihr einmaliger Code lautet: {code} (gültig für 10 Minuten).",
-        html=f"<p>Ihr einmaliger Code lautet: <strong>{code}</strong> (gültig für 10 Minuten).</p>",
-    )
+    try:
+        await mailer.send(
+            to=str(payload.email),
+            subject="Ihr KI‑Sicherheits‑Login-Code",
+            text=f"Ihr einmaliger Code lautet: {code} (gültig für 10 Minuten).",
+            html=f"<p>Ihr einmaliger Code lautet: <strong>{code}</strong> (gültig für 10 Minuten).</p>",
+        )
+    except Exception as e:
+        log.error("Failed to send login code email to %s: %s", payload.email, str(e))
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Failed to send email. Please try again later."
+        )
     return
 
 
@@ -98,14 +109,9 @@ async def login(payload: LoginIn, request: Request, response: Response):
         log.warning("❌ Login failed for %s: invalid or expired code", payload.email)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired code")
 
-    log.info("🔑 Creating access token for user: %s", payload.email)
-    log.info("🔍 JWT_SECRET is set: %s, length: %d",
-             bool(s.security.jwt_secret),
-             len(s.security.jwt_secret) if s.security.jwt_secret else 0)
-
+    log.info("Creating access token for user: %s", payload.email)
     token = create_access_token(email=str(payload.email))
-    log.info("✅ Token created successfully, length: %d", len(token))
-    log.info("🔍 Token preview: %s...%s", token[:20], token[-20:])
+    log.debug("Token created successfully for user: %s", payload.email)
 
     # Phase 1: Set httpOnly cookie (hybrid mode)
     # Cookie specs: name=auth_token, httpOnly, Secure, SameSite=Lax, max_age=3600
