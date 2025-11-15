@@ -412,11 +412,17 @@ if os.path.exists("public"):
         @app.get("/test-dashboard.html", include_in_schema=False)
         async def serve_test_dashboard():
             """Serviert das interaktive Test-Dashboard"""
-            return FileResponse("public/test-dashboard.html", media_type="text/html")
+            return FileResponse("public/test-dashboard.html", media_type="text/html; charset=utf-8")
+
+        # Minimale Version des Dashboards
+        @app.get("/test-dashboard-minimal.html", include_in_schema=False)
+        async def serve_test_dashboard_minimal():
+            """Serviert das minimale Test-Dashboard (garantiert funktionierend)"""
+            return FileResponse("public/test-dashboard-minimal.html", media_type="text/html; charset=utf-8")
 
         # Mount public directory für weitere statische Dateien
         app.mount("/public", StaticFiles(directory="public"), name="public")
-        log.info("✓ Test-Dashboard verfügbar unter: /test-dashboard.html")
+        log.info("✓ Test-Dashboard verfügbar unter: /test-dashboard.html und /test-dashboard-minimal.html")
     except Exception as exc:
         log.warning("⚠️  Public directory exists but mount failed: %s", exc)
 else:
