@@ -1,6 +1,6 @@
 
 """
-services/redis_utils.py — Optionaler Redis‑Wrapper
+services/redis_utils.py — Optionaler Redis‑Wrapper (Synchronous)
 """
 from __future__ import annotations
 
@@ -8,9 +8,10 @@ from typing import Optional
 import os
 
 try:
-    import redis.asyncio as redis  # type: ignore
+    # Use synchronous redis instead of async for simplicity
+    import redis  # type: ignore
     _HAS_REDIS = True
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     _HAS_REDIS = False
 
 class RedisBox:
@@ -26,7 +27,7 @@ class RedisBox:
         if not cls.enabled():
             return None
         if cls._client is None:
-            cls._client = redis.from_url(os.getenv("REDIS_URL"))
+            cls._client = redis.from_url(os.getenv("REDIS_URL"), decode_responses=True)
         return cls._client
 
     @classmethod
@@ -44,6 +45,4 @@ class RedisBox:
         val = c.get(key)
         if val is None:
             return None
-        if isinstance(val, bytes):
-            return val.decode("utf-8")
         return str(val)

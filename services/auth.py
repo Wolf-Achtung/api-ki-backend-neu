@@ -5,6 +5,7 @@ Compatible with email-based login_codes table (no user_id)
 """
 from __future__ import annotations
 
+import logging
 import os
 import secrets
 import hashlib
@@ -13,6 +14,8 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+
+log = logging.getLogger(__name__)
 
 # Configuration
 LOGIN_CODE_TTL_MINUTES = int(os.getenv("LOGIN_CODE_TTL_MINUTES", "10"))
@@ -106,8 +109,9 @@ def verify_code(db: Session, user: dict, code: str) -> bool:
             """)
             db.execute(inc_sql, {"email": email})
             db.commit()
-        except:
-            pass
+        except Exception as e:
+            log.warning("Failed to increment login attempts for %s: %s", email, str(e))
+            db.rollback()
         return False
     
     # Check if expired
@@ -135,8 +139,8 @@ def verify_code(db: Session, user: dict, code: str) -> bool:
                 WHERE id = :uid
             """)
             db.execute(update_user_sql, {"uid": user["id"]})
-        except:
-            pass
+        except Exception as e:
+            log.warning("Failed to update last_login for user %s: %s", user["id"], str(e))
     
     db.commit()
     return True
@@ -217,95 +221,104 @@ def _ensure_login_codes_table(db: Session):
         # 1. Add code_hash column if not exists
         try:
             alter_add_sql = text("""
-                ALTER TABLE login_codes 
+                ALTER TABLE login_codes
                 ADD COLUMN IF NOT EXISTS code_hash TEXT
             """)
             db.execute(alter_add_sql)
             db.commit()
-        except:
-            pass
-        
+        except Exception as e:
+            log.warning("Failed to add code_hash column: %s", str(e))
+            db.rollback()
+
         # 2. Delete old codes (can't migrate plaintext to hash)
         try:
             delete_old_sql = text("DELETE FROM login_codes")
             db.execute(delete_old_sql)
             db.commit()
-        except:
-            pass
-        
+        except Exception as e:
+            log.warning("Failed to delete old codes: %s", str(e))
+            db.rollback()
+
         # 3. Drop old code column
         try:
             alter_drop_sql = text("""
-                ALTER TABLE login_codes 
+                ALTER TABLE login_codes
                 DROP COLUMN IF EXISTS code CASCADE
             """)
             db.execute(alter_drop_sql)
             db.commit()
-        except:
-            pass
-        
+        except Exception as e:
+            log.warning("Failed to drop old code column: %s", str(e))
+            db.rollback()
+
         # 4. Make code_hash NOT NULL
         try:
             alter_not_null_sql = text("""
-                ALTER TABLE login_codes 
+                ALTER TABLE login_codes
                 ALTER COLUMN code_hash SET NOT NULL
             """)
             db.execute(alter_not_null_sql)
             db.commit()
-        except:
-            pass
+        except Exception as e:
+            log.warning("Failed to make code_hash NOT NULL: %s", str(e))
+            db.rollback()
     
     # Create indexes for performance (only on columns that exist)
     try:
         index_email_sql = text("""
-            CREATE INDEX IF NOT EXISTS idx_login_codes_email 
+            CREATE INDEX IF NOT EXISTS idx_login_codes_email
             ON login_codes(email)
         """)
         db.execute(index_email_sql)
         db.commit()
-    except:
-        pass
-    
+    except Exception as e:
+        log.debug("Failed to create email index: %s", str(e))
+        db.rollback()
+
     try:
         index_hash_sql = text("""
-            CREATE INDEX IF NOT EXISTS idx_login_codes_code_hash 
+            CREATE INDEX IF NOT EXISTS idx_login_codes_code_hash
             ON login_codes(code_hash)
         """)
         db.execute(index_hash_sql)
         db.commit()
-    except:
-        pass
-    
+    except Exception as e:
+        log.debug("Failed to create code_hash index: %s", str(e))
+        db.rollback()
+
     try:
         index_expires_sql = text("""
-            CREATE INDEX IF NOT EXISTS idx_login_codes_expires 
+            CREATE INDEX IF NOT EXISTS idx_login_codes_expires
             ON login_codes(expires_at)
         """)
         db.execute(index_expires_sql)
         db.commit()
-    except:
-        pass
-    
+    except Exception as e:
+        log.debug("Failed to create expires index: %s", str(e))
+        db.rollback()
+
     # Create indexes for login_audit (rate limiting)
     try:
         index_audit_action_sql = text("""
-            CREATE INDEX IF NOT EXISTS idx_login_audit_action_ts 
+            CREATE INDEX IF NOT EXISTS idx_login_audit_action_ts
             ON login_audit(action, ts)
         """)
         db.execute(index_audit_action_sql)
         db.commit()
-    except:
-        pass
-    
+    except Exception as e:
+        log.debug("Failed to create audit action index: %s", str(e))
+        db.rollback()
+
     try:
         index_audit_email_ip_sql = text("""
-            CREATE INDEX IF NOT EXISTS idx_login_audit_email_ip 
+            CREATE INDEX IF NOT EXISTS idx_login_audit_email_ip
             ON login_audit(email, ip)
         """)
         db.execute(index_audit_email_ip_sql)
         db.commit()
-    except:
-        pass
+    except Exception as e:
+        log.debug("Failed to create audit email/ip index: %s", str(e))
+        db.rollback()
 
 
 def cleanup_expired_codes(db: Session):
