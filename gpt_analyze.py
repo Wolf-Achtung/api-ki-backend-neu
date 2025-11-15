@@ -20,8 +20,8 @@ def _label_for(field_key, value):
         for o in opts:
             if str(o.get("value")) == str(value):
                 return o.get("label") or value
-    except Exception:
-        pass
+    except Exception as e:
+        log.debug("Failed to get label for field %s: %s", field_key, str(e)[:100])
     return value
 
 def _labels_for_list(field_key, values):
@@ -284,15 +284,32 @@ def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
     if "openai.azure.com" in api_base: headers["api-key"] = OPENAI_API_KEY
     else: headers["Authorization"] = f"Bearer {OPENAI_API_KEY}"
     try:
+        # Sanitize headers for logging (remove API keys)
+        safe_headers = {k: '***' if k.lower() in ['authorization', 'api-key'] else v for k, v in headers.items()}
+        log.debug("OpenAI request headers: %s", safe_headers)
+
         r = requests.post(url, headers=headers, json={
             "model": OPENAI_MODEL,
             "messages": [{"role": "system","content": system_prompt},{"role": "user","content": prompt}],
             "temperature": float(temperature), "max_tokens": int(max_tokens),
         }, timeout=OPENAI_TIMEOUT)
         r.raise_for_status()
-        return r.json()["choices"][0]["message"]["content"]
+
+        # Validate response structure
+        try:
+            data = r.json()
+            content = data["choices"][0]["message"]["content"]
+            return content
+        except (KeyError, IndexError, TypeError) as e:
+            log.error("Unexpected OpenAI response structure: %s. Response: %s", e, str(data)[:500])
+            return None
+
+    except requests.exceptions.RequestException as exc:
+        log.error("❌ OpenAI request error: %s", str(exc)[:200])
+        return None
     except Exception as exc:
-        log.error("❌ OpenAI error: %s", exc); return None
+        log.error("❌ OpenAI unexpected error: %s", str(exc)[:200])
+        return None
 
 # -------------------- HTML repair ----------------
 def _clean_html(s: str) -> str:
@@ -341,7 +358,8 @@ def _read_json_first(*paths: str) -> Optional[dict]:
             if os.path.exists(p):
                 with open(p, "r", encoding="utf-8") as fh:
                     return json.load(fh)
-        except Exception:
+        except (FileNotFoundError, json.JSONDecodeError, IOError) as e:
+            log.debug("Failed to read JSON from %s: %s", p, str(e)[:100])
             continue
     return None
 def _load_branch_benchmarks() -> Dict[str, Any]:
@@ -397,6 +415,54 @@ def _build_benchmark_html(briefing: Dict[str, Any]) -> str:
 
 # -------------------- Quellenkasten & Links ----------------
 _LINK_RE = re.compile(r"""<a\s+[^>]*href=['"]([^'"]+)['"][^>]*>(.*?)</a>""", re.IGNORECASE | re.DOTALL)
+
+def _sanitize_url(url: str) -> Optional[str]:
+    """
+    Sanitize and validate URL to prevent XSS and SSRF attacks.
+
+    Returns sanitized URL or None if invalid.
+    """
+    if not url or not isinstance(url, str):
+        return None
+
+    url = url.strip()
+
+    # Limit URL length
+    if len(url) > 2000:
+        log.warning("URL too long (>2000 chars), rejecting")
+        return None
+
+    try:
+        parsed = urlparse(url)
+
+        # Only allow http and https schemes
+        if parsed.scheme not in ['http', 'https']:
+            log.warning("Invalid URL scheme: %s", parsed.scheme[:20])
+            return None
+
+        # Block localhost and internal IPs (SSRF protection)
+        hostname = parsed.hostname
+        if hostname:
+            hostname_lower = hostname.lower()
+            # Block localhost variants
+            if hostname_lower in ['localhost', '127.0.0.1', '0.0.0.0', '::1']:
+                log.warning("Blocked localhost URL")
+                return None
+            # Block AWS metadata endpoint
+            if hostname_lower.startswith('169.254.'):
+                log.warning("Blocked metadata endpoint URL")
+                return None
+            # Block private IP ranges (simplified check)
+            if hostname_lower.startswith('10.') or hostname_lower.startswith('192.168.') or hostname_lower.startswith('172.'):
+                log.warning("Blocked private IP URL")
+                return None
+
+        # HTML escape the URL to prevent XSS
+        return html.escape(url, quote=True)
+
+    except Exception as e:
+        log.warning("URL validation failed: %s", str(e)[:100])
+        return None
 
 def _strip_tags(s: str) -> str:
     return re.sub(r"<[^>]+>", "", s or "")
@@ -463,7 +529,10 @@ def _rewrite_table_links_with_labels(table_html: str) -> str:
         title = _ellipsize(html.unescape(_strip_tags(cells[0])).strip(), _LABEL_MAX)
         def repl(m):
             href = m.group(1)
-            return f"<a href='{href}'>{html.escape(title)}</a>"
+            safe_href = _sanitize_url(href)
+            if not safe_href:
+                return html.escape(title)  # No link if URL is invalid
+            return f"<a href='{safe_href}'>{html.escape(title)}</a>"
         row2 = re.sub(_LINK_RE, repl, row, count=0)
         out_rows.append(row2)
     body = "".join(f"<tr>{r}</tr>" for r in out_rows)
@@ -486,9 +555,15 @@ def _build_sources_box_html(sections: Dict[str, str], last_updated: str) -> str:
     pairs = _sort_pairs(pairs)
     lis = []
     for href, label in pairs:
-        dom = urlparse(href).netloc.lower()
+        safe_href = _sanitize_url(href)
+        if not safe_href:
+            continue  # Skip invalid URLs
+        try:
+            dom = urlparse(href).netloc.lower()
+        except Exception:
+            dom = "unknown"
         label_clean = html.escape(label)
-        lis.append(f"<li><a href='{href}'>{label_clean}</a> <span class='small muted'>({dom})</span></li>")
+        lis.append(f"<li><a href='{safe_href}'>{label_clean}</a> <span class='small muted'>({dom})</span></li>")
     ul = "<ul>" + "".join(lis) + "</ul>"
     return ("<div class='fb-section'>"
             "<div class='fb-head'><span class='fb-step'>Quellen</span><h3 class='fb-title'>Quellen & Aktualisierung</h3></div>"
@@ -499,12 +574,18 @@ def _build_sources_box_html(sections: Dict[str, str], last_updated: str) -> str:
 def _read_text(path: str) -> Optional[str]:
     if not path: return None
     if os.path.exists(path):
-        try: return open(path, "r", encoding="utf-8").read()
-        except Exception: return None
+        try:
+            return open(path, "r", encoding="utf-8").read()
+        except (IOError, UnicodeDecodeError) as e:
+            log.debug("Failed to read file %s: %s", path, str(e)[:100])
+            return None
     alt = os.path.join("/mnt/data", os.path.basename(path))
     if os.path.exists(alt):
-        try: return open(alt, "r", encoding="utf-8").read()
-        except Exception: return None
+        try:
+            return open(alt, "r", encoding="utf-8").read()
+        except (IOError, UnicodeDecodeError) as e:
+            log.debug("Failed to read file %s: %s", alt, str(e)[:100])
+            return None
     return None
 
 def _parse_kreativ_tools(raw: str) -> List[Tuple[str, str]]:
@@ -535,8 +616,14 @@ def _build_kreativ_tools_html(path: str, report_date: str) -> str:
     items = []
     for label, href in pairs:
         label_html = html.escape(_ellipsize(label, _LABEL_MAX))
-        if href: items.append(f"<li><a href='{href}'>{label_html}</a></li>")
-        else: items.append(f"<li>{label_html}</li>")
+        if href:
+            safe_href = _sanitize_url(href)
+            if safe_href:
+                items.append(f"<li><a href='{safe_href}'>{label_html}</a></li>")
+            else:
+                items.append(f"<li>{label_html}</li>")  # No link if URL invalid
+        else:
+            items.append(f"<li>{label_html}</li>")
     ul = "<ul>" + "".join(items) + "</ul>"
     return ("<div class='fb-section'>"
             "<div class='fb-head'><span class='fb-step'>Kreativ</span><h3 class='fb-title'>Kreativ‑Tools (kuratierte Liste)</h3></div>"
@@ -579,7 +666,8 @@ def _build_score_bars_html(scores: Dict[str, Any]) -> str:
         val = 0
         try:
             val = max(0, min(100, int(float(scores.get(key, 0)))))
-        except Exception:
+        except (ValueError, TypeError) as e:
+            log.debug("Failed to parse score for %s: %s", key, str(e)[:50])
             val = 0
         return (
             f"<tr><td style='padding:6px 8px;width:160px'>{html.escape(label)}</td>"
@@ -635,12 +723,15 @@ def _build_werkbank_html_dynamic(answers: Dict[str, Any]) -> str:
 def _build_feedback_box(feedback_url: str, report_date: str) -> str:
     if not feedback_url:
         return ""
-    link = html.escape(feedback_url.strip())
+    safe_link = _sanitize_url(feedback_url.strip())
+    if not safe_link:
+        log.warning("Invalid feedback URL, skipping feedback box")
+        return ""
     return (
         "<div class='fb-section'>"
         "<div class='fb-head'><span class='fb-step'>Feedback</span><h3 class='fb-title'>Ihre Meinung zählt</h3></div>"
         "<p>Was war hilfreich, was fehlt? Teilen Sie uns Ihr Feedback mit – es dauert weniger als 2 Minuten.</p>"
-        f"<p><a href='{link}' target='_blank' rel='noopener'>Feedback geben</a> "
+        f"<p><a href='{safe_link}' target='_blank' rel='noopener'>Feedback geben</a> "
         f"<span class='small muted'>· Stand: {html.escape(report_date)}</span></p>"
         "</div>"
     )
@@ -1433,6 +1524,12 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 
 # -------------------- pipeline (kept from original with minor logging updates) ----------------
 def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, str, Dict[str, Any]]:
+    # Validate briefing_id
+    if not isinstance(briefing_id, int):
+        raise ValueError(f"briefing_id must be an integer, got {type(briefing_id)}")
+    if briefing_id <= 0:
+        raise ValueError(f"briefing_id must be positive, got {briefing_id}")
+
     br = db.get(Briefing, briefing_id)
     if not br: raise ValueError("Briefing not found")
     raw_answers: Dict[str, Any] = getattr(br, "answers", {}) or {}
@@ -1627,10 +1724,17 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
 def _fetch_pdf_if_needed(pdf_url: Optional[str], pdf_bytes: Optional[bytes]) -> Optional[bytes]:
     if pdf_bytes: return pdf_bytes
     if not pdf_url: return None
+
+    # SECURITY: Validate URL to prevent SSRF attacks
+    if not _sanitize_url(pdf_url):
+        log.error("Invalid or unsafe PDF URL, rejecting: %s", pdf_url[:100])
+        return None
+
     try:
         r = requests.get(pdf_url, timeout=30)
         if r.ok: return r.content
-    except Exception:
+    except Exception as e:
+        log.warning("Failed to fetch PDF from URL: %s", str(e)[:100])
         return None
     return None
 
