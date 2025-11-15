@@ -26,7 +26,8 @@ from typing import List, Tuple, Dict, Any
 
 from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 
 
 # ---------------------------------------------------------------------------
@@ -261,6 +262,8 @@ def root() -> Dict[str, Any]:
         endpoints["admin"] = "/api/admin/* (GET/POST)"
     if _bool_env("ADMIN_ALLOW_RAW_SQL", "0"):
         endpoints["hotfix"] = "/admin-sql/hotfix.html"
+    if os.path.exists("public"):
+        endpoints["test_dashboard"] = "/test-dashboard.html (Interactive Test UI)"
     return {
         "name": os.getenv("APP_NAME", "KI-Status-Report API"),
         "version": APP_VERSION,
@@ -399,6 +402,31 @@ log.info("KI-Backend ready!")
 log.info("Environment: %s", os.getenv("ENV", "production"))
 log.info("Log Level: %s", log_level)
 log.info("=" * 60)
+
+# ---------------------------------------------------------------------------
+# Static Files für Test-Dashboard (falls vorhanden)
+# ---------------------------------------------------------------------------
+if os.path.exists("public"):
+    try:
+        # Spezifischer Route für test-dashboard.html
+        @app.get("/test-dashboard.html", include_in_schema=False)
+        async def serve_test_dashboard():
+            """Serviert das interaktive Test-Dashboard"""
+            return FileResponse("public/test-dashboard.html", media_type="text/html; charset=utf-8")
+
+        # Minimale Version des Dashboards
+        @app.get("/test-dashboard-minimal.html", include_in_schema=False)
+        async def serve_test_dashboard_minimal():
+            """Serviert das minimale Test-Dashboard (garantiert funktionierend)"""
+            return FileResponse("public/test-dashboard-minimal.html", media_type="text/html; charset=utf-8")
+
+        # Mount public directory für weitere statische Dateien
+        app.mount("/public", StaticFiles(directory="public"), name="public")
+        log.info("✓ Test-Dashboard verfügbar unter: /test-dashboard.html und /test-dashboard-minimal.html")
+    except Exception as exc:
+        log.warning("⚠️  Public directory exists but mount failed: %s", exc)
+else:
+    log.debug("ℹ️  Public directory not found - Test-Dashboard not available")
 
 # Prüfen & ggf. Alias anlegen (nur wenn Doppel-Prefix erkannt)
 _check_and_alias_submit_path()

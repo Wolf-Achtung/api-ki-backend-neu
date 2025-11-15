@@ -161,7 +161,7 @@ def run_research(answers: Dict[str, Any]) -> Dict[str, Any]:
     # fallback to static json
     if not funding:
         try:
-            import json, os
+            import json  # os already imported at top
             path = os.getenv("FUNDING_FALLBACK_PATH", "data/funding_programs.json")
             if os.path.exists(path):
                 raw = json.load(open(path, "r", encoding="utf-8"))
