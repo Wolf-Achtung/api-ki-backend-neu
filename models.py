@@ -21,7 +21,7 @@ from core.db import Base
 # Fallback für nicht‑Postgres‑Umgebungen
 try:
     from sqlalchemy.dialects.postgresql import JSONB as JSONType  # Postgres bevorzugt
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     from sqlalchemy.types import JSON as JSONType  # z. B. SQLite
 
 

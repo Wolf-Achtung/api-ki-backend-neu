@@ -97,14 +97,17 @@ allowed_origins_raw = os.getenv("CORS_ORIGINS", "") or os.getenv("CORS_ALLOW_ORI
 allowed_origins = [o.strip() for o in allowed_origins_raw.split(",") if o.strip()]
 
 if not allowed_origins and _bool_env("CORS_ALLOW_ANY", "0"):
+    # SECURITY: Cannot use allow_credentials=True with allow_origins=["*"]
+    # Choose one: either allow all origins OR allow credentials
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
-        allow_credentials=True,
+        allow_credentials=False,  # Changed from True for security
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    log.warning("⚠️  CORS: Allowing ALL origins (development mode)")
+    log.warning("⚠️  CORS: Allowing ALL origins WITHOUT credentials (development mode)")
+    log.warning("⚠️  For production with credentials, set specific CORS_ORIGINS environment variable")
 else:
     if not allowed_origins:
         # konservative Defaults
@@ -317,9 +320,22 @@ async def legacy_briefing_async_endpoint(
     background: BackgroundTasks,
 ):
     """
-    Legacy‑Endpoint für das alte Frontend. Leitet an /api/briefings/async weiter.
-    Bitte auf /api/briefings/submit umstellen.
+    DEPRECATED: Legacy‑Endpoint für das alte Frontend.
+
+    SECURITY WARNING: This endpoint has limited security controls.
+    Please migrate to /api/briefings/submit which has proper authentication.
+
+    This endpoint will be removed in a future version.
     """
+    # Log deprecation warning
+    log.warning("⚠️  DEPRECATED ENDPOINT CALLED: /api/briefing_async - Please migrate to /api/briefings/submit")
+    log.warning("⚠️  Client: %s", request.client.host if request.client else "unknown")
+
+    # Rate limiting for legacy endpoint
+    from services.rate_limit import RateLimiter
+    limiter = RateLimiter(namespace="legacy_briefing", limit=5, window_sec=300)
+    limiter.hit(key=request.client.host if request.client else "unknown")
+
     try:
         from routes.briefings import briefing_async_legacy
         from core.db import SessionLocal
