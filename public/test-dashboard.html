@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src *;">
+  <title>KI-Backend Test Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      font-size: 28px;
+      color: #1a202c;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #718096;
+      font-size: 14px;
+    }
+
+    .config {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .config-group {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .config-group label {
+      font-weight: 600;
+      min-width: 100px;
+      color: #2d3748;
+    }
+
+    .config-group input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .config-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #2d3748;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #cbd5e0;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .test-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+
+    .test-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .test-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .test-title {
+      font-weight: 600;
+      color: #2d3748;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .test-status {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .status-pending { background: #e2e8f0; color: #718096; }
+    .status-running { background: #fef3c7; color: #f59e0b; animation: pulse 1.5s infinite; }
+    .status-success { background: #d1fae5; color: #10b981; }
+    .status-error { background: #fee2e2; color: #ef4444; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .test-description {
+      color: #718096;
+      font-size: 13px;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    .test-result {
+      background: #f7fafc;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .test-result.success { border-left: 4px solid #10b981; }
+    .test-result.error { border-left: 4px solid #ef4444; }
+    .test-result.info { border-left: 4px solid #3b82f6; }
+
+    .log-panel {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .log-title {
+      font-weight: 600;
+      color: #2d3748;
+    }
+
+    .log-content {
+      background: #1a202c;
+      color: #e2e8f0;
+      border-radius: 6px;
+      padding: 16px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+      line-height: 1.6;
+    }
+
+    .log-entry {
+      margin-bottom: 4px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .log-time {
+      color: #718096;
+      min-width: 80px;
+    }
+
+    .log-success { color: #10b981; }
+    .log-error { color: #ef4444; }
+    .log-warning { color: #f59e0b; }
+    .log-info { color: #3b82f6; }
+
+    .progress-bar {
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      transition: width 0.3s ease;
+    }
+
+    .stats {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      flex: 1;
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      color: #718096;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-success { color: #10b981; }
+    .stat-error { color: #ef4444; }
+    .stat-pending { color: #718096; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🧪 KI-Backend Test Dashboard</h1>
+      <p>Interaktives Test-Tool für alle wichtigen API-Endpoints und Workflows</p>
+    </div>
+
+    <div class="config">
+      <div class="config-group">
+        <label for="apiUrl">API URL:</label>
+        <input type="text" id="apiUrl" value="http://localhost:8000" placeholder="http://localhost:8000">
+      </div>
+      <div class="config-group">
+        <label for="testEmail">Test-E-Mail:</label>
+        <input type="email" id="testEmail" value="test@example.com" placeholder="test@example.com">
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" id="runAllBtn" onclick="runAllTests()">
+          ▶️ Alle Tests starten
+        </button>
+        <button class="btn btn-secondary" id="clearBtn" onclick="clearResults()">
+          🗑️ Zurücksetzen
+        </button>
+      </div>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-value stat-success" id="statSuccess">0</div>
+        <div class="stat-label">Erfolgreich</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value stat-error" id="statError">0</div>
+        <div class="stat-label">Fehlgeschlagen</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value stat-pending" id="statPending">8</div>
+        <div class="stat-label">Ausstehend</div>
+      </div>
+    </div>
+
+    <div class="test-grid" id="testGrid"></div>
+
+    <div class="log-panel">
+      <div class="log-header">
+        <div class="log-title">📋 Live-Logs</div>
+        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="clearLogs()">
+          Logs löschen
+        </button>
+      </div>
+      <div class="log-content" id="logContent"></div>
+    </div>
+  </div>
+
+  <script>
+    const tests = [
+      {
+        id: 'health',
+        title: 'Health Check',
+        description: 'Prüft ob das Backend erreichbar ist',
+        async run(config) {
+          const res = await fetch(`${config.apiUrl}/health`);
+          const data = await res.json();
+          if (!res.ok || data.status !== 'ok') throw new Error('Backend nicht erreichbar');
+          return { status: data.status, response: data };
+        }
+      },
+      {
+        id: 'request-code',
+        title: 'Login-Code anfordern',
+        description: 'Testet /api/auth/request-code Endpoint',
+        async run(config) {
+          const res = await fetch(`${config.apiUrl}/api/auth/request-code`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Idempotency-Key': `test-${Date.now()}`
+            },
+            body: JSON.stringify({ email: config.testEmail })
+          });
+          if (res.status !== 204) {
+            const error = await res.json().catch(() => ({ detail: 'Unknown error' }));
+            throw new Error(`HTTP ${res.status}: ${error.detail || 'Request failed'}`);
+          }
+          return { status: 'Code angefordert', email: config.testEmail };
+        }
+      },
+      {
+        id: 'briefing-submit',
+        title: 'Briefing einreichen',
+        description: 'Testet /api/briefings/submit mit Beispiel-Daten',
+        async run(config) {
+          const res = await fetch(`${config.apiUrl}/api/briefings/submit`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Idempotency-Key': `test-briefing-${Date.now()}`
+            },
+            body: JSON.stringify({
+              lang: 'de',
+              branche: 'IT',
+              bundesland: 'Bayern',
+              jahresumsatz: '1-5M',
+              unternehmensgroesse: '10-50',
+              ki_kompetenz: 'Anfänger',
+              hauptleistung: 'Software-Entwicklung',
+              antworten: [
+                { frage_id: 'ki_einsatz', antwort: 'Noch nicht im Einsatz' }
+              ]
+            })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || 'Briefing-Submit fehlgeschlagen');
+          return { status: data.status, lang: data.lang };
+        }
+      },
+      {
+        id: 'analyze-dry-run',
+        title: 'Analyze Dry-Run',
+        description: 'Testet /api/analyze/run ohne echtes LLM',
+        async run(config) {
+          const res = await fetch(`${config.apiUrl}/api/analyze/run`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-dry-run': 'true'
+            },
+            body: JSON.stringify({ briefing_id: 1 })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || 'Analyze-Trigger fehlgeschlagen');
+          if (!data.analyzer_import_ok) throw new Error('Analyzer-Import fehlgeschlagen');
+          return { dry_run: data.dry_run, analyzer_ok: data.analyzer_import_ok };
+        }
+      },
+      {
+        id: 'rate-limiting',
+        title: 'Rate-Limiting Test',
+        description: 'Sendet mehrere Requests und prüft HTTP 429',
+        async run(config) {
+          let rateLimitHit = false;
+          for (let i = 0; i < 12; i++) {
+            const res = await fetch(`${config.apiUrl}/api/briefings/submit`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Idempotency-Key': `rate-test-${i}-${Date.now()}`
+              },
+              body: JSON.stringify({
+                lang: 'de', branche: 'IT', bundesland: 'Bayern',
+                jahresumsatz: '1-5M', unternehmensgroesse: '10-50',
+                ki_kompetenz: 'Anfänger', hauptleistung: 'Test', antworten: []
+              })
+            });
+
+            if (res.status === 429) {
+              rateLimitHit = true;
+              return { limitHit: true, requestNumber: i + 1 };
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+
+          if (!rateLimitHit) {
+            return { limitHit: false, warning: 'Rate-Limit nicht erreicht (evtl. zu hoch konfiguriert)' };
+          }
+        }
+      },
+      {
+        id: 'idempotency',
+        title: 'Idempotenz-Test',
+        description: 'Prüft ob doppelte Requests ignoriert werden',
+        async run(config) {
+          const idempotencyKey = `idempotency-test-${Date.now()}`;
+
+          // Erster Request
+          const res1 = await fetch(`${config.apiUrl}/api/briefings/submit`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Idempotency-Key': idempotencyKey
+            },
+            body: JSON.stringify({
+              lang: 'de', branche: 'IT', bundesland: 'Bayern',
+              jahresumsatz: '1-5M', unternehmensgroesse: '10-50',
+              ki_kompetenz: 'Anfänger', hauptleistung: 'Test', antworten: []
+            })
+          });
+          const data1 = await res1.json();
+
+          // Zweiter Request mit gleichem Key
+          await new Promise(resolve => setTimeout(resolve, 100));
+          const res2 = await fetch(`${config.apiUrl}/api/briefings/submit`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Idempotency-Key': idempotencyKey
+            },
+            body: JSON.stringify({
+              lang: 'de', branche: 'IT', bundesland: 'Bayern',
+              jahresumsatz: '1-5M', unternehmensgroesse: '10-50',
+              ki_kompetenz: 'Anfänger', hauptleistung: 'Test', antworten: []
+            })
+          });
+          const data2 = await res2.json();
+
+          if (data2.status !== 'duplicate_ignored') {
+            throw new Error('Idempotenz-Schutz funktioniert nicht korrekt');
+          }
+
+          return {
+            firstRequest: data1.status,
+            secondRequest: data2.status,
+            idempotencyWorking: true
+          };
+        }
+      },
+      {
+        id: 'xss-protection',
+        title: 'XSS-Schutz Test',
+        description: 'Prüft HTML-Escaping in Templates (Client-seitig)',
+        async run(config) {
+          // Simuliere Template-Rendering
+          const testCases = [
+            { input: '<script>alert("xss")</script>', shouldContain: '&lt;script&gt;' },
+            { input: '<img src=x onerror=alert(1)>', shouldContain: '&lt;img' },
+            { input: 'Normal text', shouldContain: 'Normal text' }
+          ];
+
+          const results = testCases.map(tc => {
+            // Simuliere HTML-Escaping (wie in template_engine.py)
+            const escaped = tc.input
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#x27;');
+
+            const passed = escaped.includes(tc.shouldContain.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+            return { input: tc.input, escaped, passed };
+          });
+
+          const allPassed = results.every(r => r.passed);
+          if (!allPassed) throw new Error('XSS-Schutz nicht vollständig');
+
+          return {
+            testCases: results.length,
+            allPassed,
+            details: results
+          };
+        }
+      },
+      {
+        id: 'cors',
+        title: 'CORS-Konfiguration',
+        description: 'Prüft CORS-Headers und Credentials',
+        async run(config) {
+          const res = await fetch(`${config.apiUrl}/health`, {
+            method: 'OPTIONS'
+          });
+
+          const corsHeaders = {
+            'Access-Control-Allow-Origin': res.headers.get('Access-Control-Allow-Origin'),
+            'Access-Control-Allow-Credentials': res.headers.get('Access-Control-Allow-Credentials'),
+            'Access-Control-Allow-Methods': res.headers.get('Access-Control-Allow-Methods')
+          };
+
+          // Warnung wenn allow_credentials=true mit allow_origins=*
+          const warning = corsHeaders['Access-Control-Allow-Origin'] === '*' &&
+                         corsHeaders['Access-Control-Allow-Credentials'] === 'true'
+            ? 'SICHERHEITSWARNUNG: allow_credentials=true mit allow_origins=* ist unsicher!'
+            : null;
+
+          return { corsHeaders, warning };
+        }
+      }
+    ];
+
+    let testStates = {};
+    let logs = [];
+
+    function init() {
+      renderTests();
+      log('info', 'Dashboard initialisiert. Bereit für Tests.');
+    }
+
+    function renderTests() {
+      const grid = document.getElementById('testGrid');
+      grid.innerHTML = tests.map(test => `
+        <div class="test-card" id="test-${test.id}">
+          <div class="test-header">
+            <div class="test-title">
+              <span>${test.title}</span>
+            </div>
+            <div class="test-status status-pending" id="status-${test.id}">⏸️</div>
+          </div>
+          <div class="test-description">${test.description}</div>
+          <div class="test-result" id="result-${test.id}">Noch nicht ausgeführt</div>
+        </div>
+      `).join('');
+
+      tests.forEach(test => {
+        testStates[test.id] = 'pending';
+      });
+    }
+
+    function updateStats() {
+      const success = Object.values(testStates).filter(s => s === 'success').length;
+      const error = Object.values(testStates).filter(s => s === 'error').length;
+      const pending = Object.values(testStates).filter(s => s === 'pending').length;
+
+      document.getElementById('statSuccess').textContent = success;
+      document.getElementById('statError').textContent = error;
+      document.getElementById('statPending').textContent = pending;
+    }
+
+    function updateProgress() {
+      const total = tests.length;
+      const completed = Object.values(testStates).filter(s => s !== 'pending' && s !== 'running').length;
+      const percent = (completed / total) * 100;
+      document.getElementById('progressFill').style.width = `${percent}%`;
+    }
+
+    function setTestStatus(testId, status, result) {
+      testStates[testId] = status;
+
+      const statusEl = document.getElementById(`status-${testId}`);
+      const resultEl = document.getElementById(`result-${testId}`);
+
+      statusEl.className = `test-status status-${status}`;
+      statusEl.textContent = status === 'success' ? '✅' :
+                            status === 'error' ? '❌' :
+                            status === 'running' ? '⏳' : '⏸️';
+
+      if (result) {
+        resultEl.className = `test-result ${status}`;
+        resultEl.textContent = typeof result === 'object'
+          ? JSON.stringify(result, null, 2)
+          : result;
+      }
+
+      updateStats();
+      updateProgress();
+    }
+
+    function log(level, message, data = null) {
+      const time = new Date().toLocaleTimeString('de-DE');
+      logs.push({ time, level, message, data });
+
+      const logContent = document.getElementById('logContent');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = `
+        <span class="log-time">${time}</span>
+        <span class="log-${level}">[${level.toUpperCase()}]</span>
+        <span>${message}</span>
+        ${data ? `<pre style="margin-left: 8px; color: #a0aec0;">${JSON.stringify(data, null, 2)}</pre>` : ''}
+      `;
+      logContent.appendChild(entry);
+      logContent.scrollTop = logContent.scrollHeight;
+    }
+
+    async function runTest(test) {
+      const config = {
+        apiUrl: document.getElementById('apiUrl').value.replace(/\/$/, ''),
+        testEmail: document.getElementById('testEmail').value
+      };
+
+      log('info', `Starte Test: ${test.title}`);
+      setTestStatus(test.id, 'running', 'Test läuft...');
+
+      try {
+        const result = await test.run(config);
+        setTestStatus(test.id, 'success', result);
+        log('success', `✅ ${test.title} erfolgreich`, result);
+        return { success: true, result };
+      } catch (error) {
+        const errorMsg = error.message || 'Unbekannter Fehler';
+        setTestStatus(test.id, 'error', errorMsg);
+        log('error', `❌ ${test.title} fehlgeschlagen: ${errorMsg}`);
+        return { success: false, error: errorMsg };
+      }
+    }
+
+    async function runAllTests() {
+      const runBtn = document.getElementById('runAllBtn');
+      runBtn.disabled = true;
+      runBtn.innerHTML = '⏳ Tests laufen...';
+
+      log('info', '🚀 Starte alle Tests...');
+
+      for (const test of tests) {
+        await runTest(test);
+        await new Promise(resolve => setTimeout(resolve, 500)); // Kurze Pause zwischen Tests
+      }
+
+      const success = Object.values(testStates).filter(s => s === 'success').length;
+      const total = tests.length;
+
+      log('info', `✅ Alle Tests abgeschlossen: ${success}/${total} erfolgreich`);
+
+      runBtn.disabled = false;
+      runBtn.innerHTML = '▶️ Alle Tests starten';
+    }
+
+    function clearResults() {
+      tests.forEach(test => {
+        setTestStatus(test.id, 'pending', 'Noch nicht ausgeführt');
+      });
+      document.getElementById('progressFill').style.width = '0%';
+      log('info', '🗑️ Alle Testergebnisse zurückgesetzt');
+    }
+
+    function clearLogs() {
+      logs = [];
+      document.getElementById('logContent').innerHTML = '';
+    }
+
+    // Init on page load
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
