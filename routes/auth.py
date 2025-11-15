@@ -10,7 +10,7 @@ import secrets
 import time
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, EmailStr
 
 from settings import get_settings
@@ -18,7 +18,7 @@ from services.mailer import Mailer
 from services.rate_limit import RateLimiter
 from services.redis_utils import RedisBox
 from utils.idempotency import IdempotencyBox
-from core.security import create_access_token
+from core.security import create_access_token, get_current_user, TokenPayload
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 log = logging.getLogger(__name__)
@@ -81,7 +81,7 @@ async def request_code(payload: RequestCodeIn, request: Request):
 
 
 @router.post("/login")
-async def login(payload: LoginIn, request: Request):
+async def login(payload: LoginIn, request: Request, response: Response):
     s = get_settings()
     limiter = RateLimiter(namespace="login", limit=s.rate.max_login, window_sec=s.rate.window_sec)
     limiter.hit(key=str(payload.email))
@@ -107,4 +107,62 @@ async def login(payload: LoginIn, request: Request):
     log.info("✅ Token created successfully, length: %d", len(token))
     log.info("🔍 Token preview: %s...%s", token[:20], token[-20:])
 
+    # Phase 1: Set httpOnly cookie (hybrid mode)
+    # Cookie specs: name=auth_token, httpOnly, Secure, SameSite=Lax, max_age=3600
+    response.set_cookie(
+        key="auth_token",
+        value=token,
+        httponly=True,
+        secure=True,  # Only send over HTTPS
+        samesite="lax",  # CSRF protection
+        max_age=3600,  # 1 hour in seconds
+        path="/",  # Cookie available for entire domain
+    )
+    log.info("🍪 Set httpOnly cookie for user: %s", payload.email)
+
+    # Phase 1: Also return token in response body for backward compatibility
     return {"access_token": token, "token_type": "bearer"}
+
+
+@router.get("/me")
+async def get_me(current_user: TokenPayload = Depends(get_current_user)):
+    """
+    Get current user information from httpOnly cookie or Authorization header.
+
+    Phase 1 Hybrid Mode: This endpoint accepts authentication via:
+    - httpOnly cookie (auth_token) - preferred
+    - Authorization header (Bearer token) - fallback
+
+    Returns:
+        dict: User information including email and token expiration
+    """
+    return {
+        "email": current_user.email,
+        "sub": current_user.sub,
+        "exp": current_user.exp,
+        "iat": current_user.iat,
+    }
+
+
+@router.post("/logout")
+async def logout(response: Response):
+    """
+    Logout by clearing the authentication cookie.
+
+    This endpoint deletes the httpOnly auth_token cookie, effectively
+    logging out the user on the server side.
+
+    Returns:
+        dict: Success message
+    """
+    # Delete the auth_token cookie by setting max_age to 0
+    response.delete_cookie(
+        key="auth_token",
+        path="/",
+        httponly=True,
+        secure=True,
+        samesite="lax",
+    )
+    log.info("🚪 User logged out, cookie cleared")
+
+    return {"ok": True, "message": "Logged out successfully"}
