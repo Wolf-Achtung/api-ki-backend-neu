@@ -200,13 +200,15 @@
           },
           body: JSON.stringify({
             lang: 'de',
-            branche: 'IT',
-            bundesland: 'Bayern',
-            jahresumsatz: '1-5M',
-            unternehmensgroesse: '10-50',
-            ki_kompetenz: 'Anfänger',
-            hauptleistung: 'Software-Entwicklung',
-            antworten: []
+            answers: {
+              branche: 'IT',
+              bundesland: 'Bayern',
+              jahresumsatz: '1-5M',
+              unternehmensgroesse: '10-50',
+              ki_kompetenz: 'Anfänger',
+              hauptleistung: 'Software-Entwicklung'
+            },
+            queue_analysis: false  // Für Test: keine echte Analyse starten
           })
         });
 
