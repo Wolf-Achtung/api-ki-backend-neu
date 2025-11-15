@@ -4,6 +4,7 @@ utils/idempotency.py — Header "Idempotency-Key" auswerten, um doppelte POSTs z
 """
 from __future__ import annotations
 
+import threading
 import time
 from collections import OrderedDict
 
@@ -13,17 +14,20 @@ class IdempotencyBox:
         self.ttl = ttl_sec
         self.max_size = max_size
         self._box: "OrderedDict[str, float]" = OrderedDict()
+        self._lock = threading.Lock()
 
     def is_duplicate(self, request) -> bool:
         key = request.headers.get("Idempotency-Key")
         if not key:
             return False
-        now = time.time()
-        # Cleanup
-        for k, ts in list(self._box.items()):
-            if now - ts > self.ttl or len(self._box) > self.max_size:
-                self._box.pop(k, None)
-        if key in self._box:
-            return True
-        self._box[key] = now
-        return False
+
+        with self._lock:
+            now = time.time()
+            # Cleanup
+            for k, ts in list(self._box.items()):
+                if now - ts > self.ttl or len(self._box) > self.max_size:
+                    self._box.pop(k, None)
+            if key in self._box:
+                return True
+            self._box[key] = now
+            return False
