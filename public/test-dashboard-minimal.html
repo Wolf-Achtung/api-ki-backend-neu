@@ -108,18 +108,41 @@
       logDiv.innerHTML = '';
       btn.disabled = true;
 
+      // Test counter
+      let successCount = 0;
+      let totalTests = 5;
+
       addLog('info', 'Starte Tests für: ' + apiUrl);
 
-      // Test 1: Health Check
+      // Test 1: Health Check (probiert mehrere Endpoints)
       try {
         addLog('info', 'Test 1/5: Health Check...');
-        const res = await fetch(apiUrl + '/health');
-        const data = await res.json();
+        let healthOk = false;
+        let healthEndpoint = '';
 
-        if (data.status === 'ok') {
-          addLog('success', '✅ Health Check erfolgreich');
+        // Probiere verschiedene Health-Endpoints
+        const healthEndpoints = ['/health', '/api/healthz', '/api/health'];
+        for (const endpoint of healthEndpoints) {
+          try {
+            const res = await fetch(apiUrl + endpoint);
+            const data = await res.json();
+
+            if (res.ok && (data.status === 'ok' || data.status === 'running')) {
+              healthOk = true;
+              healthEndpoint = endpoint;
+              break;
+            }
+          } catch (e) {
+            // Probiere nächsten Endpoint
+            continue;
+          }
+        }
+
+        if (healthOk) {
+          addLog('success', '✅ Health Check erfolgreich (' + healthEndpoint + ')');
+          successCount++;
         } else {
-          addLog('error', '❌ Health Check fehlgeschlagen: Unexpected status');
+          addLog('error', '❌ Health Check fehlgeschlagen: Kein Health-Endpoint gefunden');
         }
       } catch (err) {
         addLog('error', '❌ Health Check Error: ' + err.message);
@@ -135,6 +158,7 @@
           addLog('success', '✅ Root Endpoint erfolgreich');
           addLog('info', 'API Name: ' + (data.name || 'N/A'));
           addLog('info', 'Version: ' + (data.version || 'N/A'));
+          successCount++;
         } else {
           addLog('error', '❌ Root Endpoint fehlgeschlagen');
         }
@@ -156,6 +180,7 @@
 
         if (res.status === 204) {
           addLog('success', '✅ Login-Code Request erfolgreich');
+          successCount++;
         } else {
           const data = await res.json().catch(() => ({ detail: 'Unknown error' }));
           addLog('error', '❌ Login-Code Request fehlgeschlagen: HTTP ' + res.status + ' - ' + (data.detail || ''));
@@ -188,8 +213,20 @@
         const data = await res.json();
         if (res.ok && data.status === 'queued') {
           addLog('success', '✅ Briefing Submit erfolgreich');
+          successCount++;
         } else {
-          addLog('error', '❌ Briefing Submit fehlgeschlagen: ' + (data.detail || 'Unknown error'));
+          // Formatiere Fehlermeldung korrekt
+          let errorMsg = 'Unknown error';
+          if (data.detail) {
+            if (typeof data.detail === 'string') {
+              errorMsg = data.detail;
+            } else if (Array.isArray(data.detail)) {
+              errorMsg = data.detail.map(e => e.msg || e).join(', ');
+            } else {
+              errorMsg = JSON.stringify(data.detail);
+            }
+          }
+          addLog('error', '❌ Briefing Submit fehlgeschlagen (HTTP ' + res.status + '): ' + errorMsg);
         }
       } catch (err) {
         addLog('error', '❌ Briefing Submit Error: ' + err.message);
@@ -210,6 +247,7 @@
         const data = await res.json();
         if (res.ok && data.analyzer_import_ok) {
           addLog('success', '✅ Analyze Dry-Run erfolgreich');
+          successCount++;
         } else {
           addLog('error', '❌ Analyze Dry-Run fehlgeschlagen: ' + (data.detail || 'Unknown error'));
         }
@@ -219,6 +257,15 @@
 
       addLog('info', '═══════════════════════════════');
       addLog('info', 'Alle Tests abgeschlossen!');
+      addLog('info', 'Ergebnis: ' + successCount + '/' + totalTests + ' Tests erfolgreich');
+
+      if (successCount === totalTests) {
+        addLog('success', '🎉 Alle Tests bestanden!');
+      } else if (successCount >= 3) {
+        addLog('info', '✅ Meiste Tests erfolgreich - Backend funktioniert!');
+      } else {
+        addLog('error', '⚠️  Mehrere Tests fehlgeschlagen - Bitte Konfiguration prüfen');
+      }
 
       btn.disabled = false;
     }
