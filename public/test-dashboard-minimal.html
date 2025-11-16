@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KI-Backend Test (Minimal)</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; margin-bottom: 20px; }
+    .config {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    button:hover { background: #5568d3; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    .result {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .success { border-left: 4px solid #10b981; }
+    .error { border-left: 4px solid #ef4444; }
+    .log {
+      background: #1a1a1a;
+      color: #e0e0e0;
+      padding: 15px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+    .log-entry { margin-bottom: 8px; }
+    .log-success { color: #10b981; }
+    .log-error { color: #ef4444; }
+    .log-info { color: #3b82f6; }
+  </style>
+</head>
+<body>
+  <h1>🧪 KI-Backend Test (Minimal Version)</h1>
+
+  <div class="config">
+    <label for="apiUrl">Backend API-URL:</label>
+    <input type="text" id="apiUrl" value="https://make.ki-sicherheit.jetzt" placeholder="https://make.ki-sicherheit.jetzt">
+
+    <label for="testEmail">Test-E-Mail (für Login-Test):</label>
+    <input type="email" id="testEmail" value="wolf.hohl@web.de" placeholder="test@example.com">
+
+    <button id="testBtn" onclick="runTests()">▶️ Tests starten</button>
+    <button id="loginTestBtn" onclick="testLoginFlow()" style="background: #10b981; margin-left: 10px;">🔐 Login-Flow testen</button>
+  </div>
+
+  <div class="result" id="result" style="display:none;">
+    <h3>Ergebnisse:</h3>
+    <div class="log" id="log"></div>
+  </div>
+
+  <script>
+    function addLog(type, message) {
+      const log = document.getElementById('log');
+      const time = new Date().toLocaleTimeString('de-DE');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry log-' + type;
+      entry.textContent = time + ' [' + type.toUpperCase() + '] ' + message;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function runTests() {
+      const apiUrl = document.getElementById('apiUrl').value.trim().replace(/\/$/, '');
+      const resultDiv = document.getElementById('result');
+      const logDiv = document.getElementById('log');
+      const btn = document.getElementById('testBtn');
+
+      // Reset
+      resultDiv.style.display = 'block';
+      logDiv.innerHTML = '';
+      btn.disabled = true;
+
+      // Test counter
+      let successCount = 0;
+      let totalTests = 5;
+
+      addLog('info', 'Starte Tests für: ' + apiUrl);
+
+      // Test 1: Health Check (probiert mehrere Endpoints)
+      try {
+        addLog('info', 'Test 1/5: Health Check...');
+        let healthOk = false;
+        let healthEndpoint = '';
+
+        // Probiere verschiedene Health-Endpoints
+        const healthEndpoints = ['/health', '/api/healthz', '/api/health'];
+        for (const endpoint of healthEndpoints) {
+          try {
+            const res = await fetch(apiUrl + endpoint);
+            const data = await res.json();
+
+            if (res.ok && (data.status === 'ok' || data.status === 'running')) {
+              healthOk = true;
+              healthEndpoint = endpoint;
+              break;
+            }
+          } catch (e) {
+            // Probiere nächsten Endpoint
+            continue;
+          }
+        }
+
+        if (healthOk) {
+          addLog('success', '✅ Health Check erfolgreich (' + healthEndpoint + ')');
+          successCount++;
+        } else {
+          addLog('error', '❌ Health Check fehlgeschlagen: Kein Health-Endpoint gefunden');
+        }
+      } catch (err) {
+        addLog('error', '❌ Health Check Error: ' + err.message);
+      }
+
+      // Test 2: Root Endpoint
+      try {
+        addLog('info', 'Test 2/5: Root Endpoint...');
+        const res = await fetch(apiUrl + '/');
+        const data = await res.json();
+
+        if (data.status === 'running') {
+          addLog('success', '✅ Root Endpoint erfolgreich');
+          addLog('info', 'API Name: ' + (data.name || 'N/A'));
+          addLog('info', 'Version: ' + (data.version || 'N/A'));
+          successCount++;
+        } else {
+          addLog('error', '❌ Root Endpoint fehlgeschlagen');
+        }
+      } catch (err) {
+        addLog('error', '❌ Root Endpoint Error: ' + err.message);
+      }
+
+      // Test 3: Login-Code anfordern
+      try {
+        addLog('info', 'Test 3/5: Login-Code anfordern...');
+        const res = await fetch(apiUrl + '/api/auth/request-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Idempotency-Key': 'test-' + Date.now()
+          },
+          body: JSON.stringify({ email: 'test@example.com' })
+        });
+
+        if (res.status === 204) {
+          addLog('success', '✅ Login-Code Request erfolgreich');
+          successCount++;
+        } else {
+          const data = await res.json().catch(() => ({ detail: 'Unknown error' }));
+          addLog('error', '❌ Login-Code Request fehlgeschlagen: HTTP ' + res.status + ' - ' + (data.detail || ''));
+        }
+      } catch (err) {
+        addLog('error', '❌ Login-Code Request Error: ' + err.message);
+      }
+
+      // Test 4: Briefing Submit
+      try {
+        addLog('info', 'Test 4/5: Briefing einreichen...');
+        const res = await fetch(apiUrl + '/api/briefings/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Idempotency-Key': 'test-briefing-' + Date.now()
+          },
+          body: JSON.stringify({
+            lang: 'de',
+            answers: {
+              branche: 'IT',
+              bundesland: 'Bayern',
+              jahresumsatz: '1-5M',
+              unternehmensgroesse: '10-50',
+              ki_kompetenz: 'Anfänger',
+              hauptleistung: 'Software-Entwicklung'
+            },
+            queue_analysis: false  // Für Test: keine echte Analyse starten
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.status === 'queued') {
+          addLog('success', '✅ Briefing Submit erfolgreich');
+          successCount++;
+        } else {
+          // Formatiere Fehlermeldung korrekt mit vollständigen Details
+          let errorMsg = 'Unknown error';
+          if (data.detail) {
+            if (typeof data.detail === 'string') {
+              errorMsg = data.detail;
+            } else if (Array.isArray(data.detail)) {
+              // Pydantic ValidationError gibt Array mit Details
+              errorMsg = data.detail.map(e => {
+                if (typeof e === 'string') return e;
+                const loc = e.loc ? e.loc.join('.') : 'unknown';
+                const msg = e.msg || 'validation error';
+                const type = e.type || '';
+                return `[${loc}] ${msg}${type ? ' (' + type + ')' : ''}`;
+              }).join(', ');
+            } else {
+              errorMsg = JSON.stringify(data.detail);
+            }
+          }
+          addLog('error', '❌ Briefing Submit fehlgeschlagen (HTTP ' + res.status + '): ' + errorMsg);
+          addLog('info', 'DEBUG - Gesendete Payload: ' + JSON.stringify({
+            lang: 'de',
+            answers: { branche: 'IT', bundesland: 'Bayern', jahresumsatz: '1-5M', unternehmensgroesse: '10-50', ki_kompetenz: 'Anfänger', hauptleistung: 'Software-Entwicklung' },
+            queue_analysis: false
+          }));
+        }
+      } catch (err) {
+        addLog('error', '❌ Briefing Submit Error: ' + err.message);
+      }
+
+      // Test 5: Analyze Dry-Run
+      try {
+        addLog('info', 'Test 5/5: Analyze Dry-Run...');
+        const res = await fetch(apiUrl + '/api/analyze/run', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-dry-run': 'true'
+          },
+          body: JSON.stringify({ briefing_id: 1 })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.analyzer_import_ok) {
+          addLog('success', '✅ Analyze Dry-Run erfolgreich');
+          successCount++;
+        } else {
+          addLog('error', '❌ Analyze Dry-Run fehlgeschlagen: ' + (data.detail || 'Unknown error'));
+        }
+      } catch (err) {
+        addLog('error', '❌ Analyze Dry-Run Error: ' + err.message);
+      }
+
+      addLog('info', '═══════════════════════════════');
+      addLog('info', 'Alle Tests abgeschlossen!');
+      addLog('info', 'Ergebnis: ' + successCount + '/' + totalTests + ' Tests erfolgreich');
+
+      if (successCount === totalTests) {
+        addLog('success', '🎉 Alle Tests bestanden!');
+      } else if (successCount >= 3) {
+        addLog('info', '✅ Meiste Tests erfolgreich - Backend funktioniert!');
+      } else {
+        addLog('error', '⚠️  Mehrere Tests fehlgeschlagen - Bitte Konfiguration prüfen');
+      }
+
+      btn.disabled = false;
+    }
+
+    // Login-Flow-Test (interaktiv)
+    async function testLoginFlow() {
+      const apiUrl = document.getElementById('apiUrl').value.trim().replace(/\/$/, '');
+      const testEmail = document.getElementById('testEmail').value.trim();
+      const resultDiv = document.getElementById('result');
+      const logDiv = document.getElementById('log');
+      const btn = document.getElementById('loginTestBtn');
+
+      // Reset
+      resultDiv.style.display = 'block';
+      logDiv.innerHTML = '';
+      btn.disabled = true;
+
+      addLog('info', '🔐 Login-Flow-Test gestartet');
+      addLog('info', 'Email: ' + testEmail);
+
+      // Schritt 1: Code anfordern
+      try {
+        addLog('info', 'Schritt 1/4: Code anfordern...');
+        const res1 = await fetch(apiUrl + '/api/auth/request-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Idempotency-Key': 'login-test-' + Date.now()
+          },
+          body: JSON.stringify({ email: testEmail })
+        });
+
+        if (res1.status === 204) {
+          addLog('success', '✅ Code wurde angefordert');
+          addLog('info', '📧 Bitte prüfen Sie Ihr Email-Postfach: ' + testEmail);
+        } else {
+          addLog('error', '❌ Code-Request fehlgeschlagen: HTTP ' + res1.status);
+          btn.disabled = false;
+          return;
+        }
+      } catch (err) {
+        addLog('error', '❌ Code-Request Error: ' + err.message);
+        btn.disabled = false;
+        return;
+      }
+
+      // Schritt 2: Auf Benutzereingabe warten
+      addLog('info', '');
+      addLog('info', 'Schritt 2/4: Code-Eingabe');
+      addLog('info', '⏸️  Bitte geben Sie den Code ein, den Sie per Email erhalten haben:');
+
+      const code = prompt('Geben Sie den 6-stelligen Code ein:');
+      if (!code) {
+        addLog('error', '❌ Abgebrochen - Kein Code eingegeben');
+        btn.disabled = false;
+        return;
+      }
+
+      addLog('info', 'Code eingegeben: ' + code);
+
+      // Schritt 3: Login durchführen
+      try {
+        addLog('info', 'Schritt 3/4: Login mit Code...');
+        const res2 = await fetch(apiUrl + '/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Idempotency-Key': 'login-verify-' + Date.now()
+          },
+          body: JSON.stringify({ email: testEmail, code: code }),
+          credentials: 'include'  // WICHTIG: Sendet und empfängt Cookies
+        });
+
+        if (!res2.ok) {
+          const data = await res2.json().catch(() => ({ detail: 'Unknown error' }));
+          addLog('error', '❌ Login fehlgeschlagen: HTTP ' + res2.status + ' - ' + (data.detail || ''));
+          btn.disabled = false;
+          return;
+        }
+
+        const loginData = await res2.json();
+        addLog('success', '✅ Login erfolgreich!');
+        addLog('info', 'Token-Typ: ' + (loginData.token_type || 'N/A'));
+        addLog('info', 'Access-Token (ersten 20 Zeichen): ' + (loginData.access_token || '').substring(0, 20) + '...');
+
+        // Prüfe Cookies
+        const cookies = document.cookie;
+        if (cookies.includes('auth_token')) {
+          addLog('success', '✅ Cookie "auth_token" wurde gesetzt');
+        } else {
+          addLog('error', '❌ Cookie "auth_token" NICHT gefunden!');
+          addLog('info', 'Verfügbare Cookies: ' + (cookies || 'keine'));
+        }
+
+        // Speichere Token im localStorage (für Frontend-Debugging)
+        if (loginData.access_token) {
+          localStorage.setItem('debug_access_token', loginData.access_token);
+          addLog('info', '💾 Token im localStorage gespeichert (debug_access_token)');
+        }
+
+        // Schritt 4: /me Endpoint testen
+        addLog('info', '');
+        addLog('info', 'Schritt 4/4: Auth-Status prüfen mit /me Endpoint...');
+
+        // Test mit Cookie
+        try {
+          const res3a = await fetch(apiUrl + '/api/auth/me', {
+            method: 'GET',
+            credentials: 'include'  // Sendet Cookie mit
+          });
+
+          if (res3a.ok) {
+            const meData = await res3a.json();
+            addLog('success', '✅ /me mit Cookie funktioniert!');
+            addLog('info', 'Eingeloggt als: ' + meData.email);
+          } else {
+            addLog('error', '❌ /me mit Cookie fehlgeschlagen: HTTP ' + res3a.status);
+          }
+        } catch (err) {
+          addLog('error', '❌ /me Cookie-Test Error: ' + err.message);
+        }
+
+        // Test mit Authorization Header
+        try {
+          const res3b = await fetch(apiUrl + '/api/auth/me', {
+            method: 'GET',
+            headers: {
+              'Authorization': 'Bearer ' + loginData.access_token
+            }
+          });
+
+          if (res3b.ok) {
+            const meData = await res3b.json();
+            addLog('success', '✅ /me mit Authorization Header funktioniert!');
+            addLog('info', 'Eingeloggt als: ' + meData.email);
+          } else {
+            addLog('error', '❌ /me mit Header fehlgeschlagen: HTTP ' + res3b.status);
+          }
+        } catch (err) {
+          addLog('error', '❌ /me Header-Test Error: ' + err.message);
+        }
+
+        addLog('info', '');
+        addLog('info', '═══════════════════════════════');
+        addLog('success', '✅ Login-Flow-Test abgeschlossen!');
+        addLog('info', '');
+        addLog('info', '📝 Diagnose für Frontend:');
+        addLog('info', '1. Speichert das Frontend das access_token?');
+        addLog('info', '2. Sendet das Frontend credentials: "include" bei Requests?');
+        addLog('info', '3. Setzt das Frontend den Authorization Header?');
+        addLog('info', '4. Sind Frontend & Backend auf gleicher Domain? (für Cookies)');
+
+      } catch (err) {
+        addLog('error', '❌ Login Error: ' + err.message);
+      }
+
+      btn.disabled = false;
+    }
+
+    // Auto-Test bei URL-Parameter
+    window.addEventListener('DOMContentLoaded', function() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('autorun') === 'true') {
+        setTimeout(runTests, 500);
+      }
+    });
+  </script>
+</body>
+</html>
