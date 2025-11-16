@@ -1078,6 +1078,7 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
     
     # Map section names to prompt files (without _de suffix for load_prompt)
     prompt_map = {
+        # Core sections
         "executive_summary": "executive_summary",
         "quick_wins": "quick_wins",
         "roadmap": "pilot_plan",  # 90-day roadmap
@@ -1091,6 +1092,16 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
         "gamechanger": "gamechanger",
         "recommendations": "recommendations",
         "reifegrad_sowhat": "executive_summary",  # fallback to exec summary prompt
+        # ✅ NEW: Previously unused prompts - now activated
+        "ai_act_summary": "ai_act_summary",
+        "strategie_governance": "strategie_governance",
+        "wettbewerb_benchmark": "wettbewerb_benchmark",
+        "technologie_prozesse": "technologie_prozesse",
+        "unternehmensprofil_markt": "unternehmensprofil_markt",
+        "tools_empfehlungen": "tools_empfehlungen",
+        "foerderpotenzial": "foerderpotenzial",
+        "transparency_box": "transparency_box",
+        "ki_aktivitaeten_ziele": "ki_aktivitaeten_ziele",
     }
     
     prompt_key = prompt_map.get(section_name)
@@ -1420,7 +1431,18 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections["GAMECHANGER_HTML"] = _generate_content_section("gamechanger", briefing, scores)
     sections["RECOMMENDATIONS_HTML"] = _generate_content_section("recommendations", briefing, scores)
     sections["REIFEGRAD_SOWHAT_HTML"] = _generate_content_section("reifegrad_sowhat", briefing, scores)
-    
+
+    # ✅ NEW: Previously unused prompts - now activated for report generation
+    sections["AI_ACT_SUMMARY_HTML"] = _generate_content_section("ai_act_summary", briefing, scores)
+    sections["STRATEGIE_GOVERNANCE_HTML"] = _generate_content_section("strategie_governance", briefing, scores)
+    sections["WETTBEWERB_BENCHMARK_HTML"] = _generate_content_section("wettbewerb_benchmark", briefing, scores)
+    sections["TECHNOLOGIE_PROZESSE_HTML"] = _generate_content_section("technologie_prozesse", briefing, scores)
+    sections["UNTERNEHMENSPROFIL_MARKT_HTML"] = _generate_content_section("unternehmensprofil_markt", briefing, scores)
+    sections["TOOLS_EMPFEHLUNGEN_HTML"] = _generate_content_section("tools_empfehlungen", briefing, scores)
+    sections["FOERDERPOTENZIAL_HTML"] = _generate_content_section("foerderpotenzial", briefing, scores)
+    sections["TRANSPARENCY_BOX_HTML"] = _generate_content_section("transparency_box", briefing, scores)
+    sections["KI_AKTIVITAETEN_ZIELE_HTML"] = _generate_content_section("ki_aktivitaeten_ziele", briefing, scores)
+
     # 🎯 NEW: Next Actions with DYNAMIC DATES via prompt system
     if USE_PROMPT_SYSTEM:
         try:
@@ -1464,6 +1486,17 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections["LEAD_GC"] = _one_liner("Gamechanger‑Use Case", sections["GAMECHANGER_HTML"], briefing, scores)
     sections["LEAD_FUNDING"] = _one_liner("Aktuelle Förderprogramme & Quellen", sections.get("FOERDERPROGRAMME_HTML",""), briefing, scores)
     sections["LEAD_NEXT_ACTIONS"] = _one_liner("Nächste Schritte (30 Tage)", sections["NEXT_ACTIONS_HTML"], briefing, scores)
+
+    # ✅ NEW: One-liners for newly activated sections
+    sections["LEAD_AI_ACT"] = _one_liner("EU AI Act – Zusammenfassung & Compliance", sections["AI_ACT_SUMMARY_HTML"], briefing, scores)
+    sections["LEAD_STRATEGIE"] = _one_liner("Strategie & Governance", sections["STRATEGIE_GOVERNANCE_HTML"], briefing, scores)
+    sections["LEAD_WETTBEWERB"] = _one_liner("Wettbewerb & Benchmarking", sections["WETTBEWERB_BENCHMARK_HTML"], briefing, scores)
+    sections["LEAD_TECH"] = _one_liner("Technologie & Prozesse", sections["TECHNOLOGIE_PROZESSE_HTML"], briefing, scores)
+    sections["LEAD_UNTERNEHMEN"] = _one_liner("Unternehmensprofil & Markt", sections["UNTERNEHMENSPROFIL_MARKT_HTML"], briefing, scores)
+    sections["LEAD_TOOLS_EMPF"] = _one_liner("Tool‑Empfehlungen & Einführungsreihenfolge", sections["TOOLS_EMPFEHLUNGEN_HTML"], briefing, scores)
+    sections["LEAD_FOERDER"] = _one_liner("Förderpotenzial", sections["FOERDERPOTENZIAL_HTML"], briefing, scores)
+    sections["LEAD_TRANSPARENCY"] = _one_liner("Transparenz & Methodik", sections["TRANSPARENCY_BOX_HTML"], briefing, scores)
+    sections["LEAD_KI_AKTIVITAETEN"] = _one_liner("KI-Aktivitäten & Ziele", sections["KI_AKTIVITAETEN_ZIELE_HTML"], briefing, scores)
     
     # Benchmark table
     sections["BENCHMARK_HTML"] = _build_benchmark_html(briefing)
