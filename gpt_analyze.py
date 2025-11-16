@@ -1373,7 +1373,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     
     
     # Robustness: replace leftover placeholders with actual values
-    sections["EXECUTIVE_SUMMARY_HTML"] = _fix_exec_placeholders(sections["EXECUTIVE_SUMMARY_HTML"], scores, briefing, sections.get("report_date",""))
+    sections["EXECUTIVE_SUMMARY_HTML"] = _fix_exec_placeholders(sections["EXECUTIVE_SUMMARY_HTML"], scores, sections, sections.get("report_date",""))
 # Quick Wins - with improved fallbacks
     qw_html = _generate_content_section("quick_wins", briefing, scores)
     if _needs_repair(qw_html): 
@@ -1739,7 +1739,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         placeholder_fix_count = 0
         for key, value in sections.items():
             if isinstance(value, str) and ("{" in value):
-                fixed_value = _fix_exec_placeholders(value, scores, br_dict, sections.get("report_date", ""))
+                fixed_value = _fix_exec_placeholders(value, scores, sections, sections.get("report_date", ""))
                 if fixed_value != value:
                     sections[key] = fixed_value
                     placeholder_fix_count += 1
@@ -2049,16 +2049,22 @@ def _section_temperature(section_name: str) -> float:
         return 0.2
 
 
-def _fix_exec_placeholders(html_block: str, scores: Dict[str, Any], briefing: Dict[str, Any], report_date: str) -> str:
+def _fix_exec_placeholders(html_block: str, scores: Dict[str, Any], sections: Dict[str, Any], report_date: str) -> str:
     """Ersetzt eventuell mit-ausgegebenen Prompt-Platzhalter in der Executive Summary (Robustheits-Fix).
 
     FIX: Ersetzt BEIDE Varianten - mit doppelten {{}} UND einfachen {} geschweiften Klammern,
     da GPT manchmal einfache Klammern zurückgibt.
+
+    Args:
+        html_block: HTML-String zum Fixen
+        scores: Score-Dictionary
+        sections: Sections-Dictionary mit allen verfügbaren Werten
+        report_date: Berichtsdatum
     """
     if not html_block:
         return html_block
 
-    # Mapping: Platzhalter -> Wert
+    # Mapping: Platzhalter -> Wert (aus sections oder scores)
     replacements = {
         "heute_iso": report_date,
         "report_date": report_date,
@@ -2071,21 +2077,25 @@ def _fix_exec_placeholders(html_block: str, scores: Dict[str, Any], briefing: Di
         "score_sicherheit": str(scores.get("security", 0)),
         "score_nutzen": str(scores.get("value", 0)),
         "score_befaehigung": str(scores.get("enablement", 0)),
-        "BRANCHE_LABEL": briefing.get("BRANCHE_LABEL") or briefing.get("branche",""),
-        "UNTERNEHMENSGROESSE_LABEL": briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse",""),
-        "BUNDESLAND_LABEL": briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland",""),
-        "HAUPTLEISTUNG": briefing.get("HAUPTLEISTUNG") or briefing.get("hauptleistung",""),
-        "report_year": briefing.get("report_year", ""),
-        "report_month": briefing.get("report_month", ""),
-        "kundencode": briefing.get("kundencode", ""),
-        "report_id": briefing.get("report_id", ""),
-        "KI_PROJEKTE": briefing.get("ki_projekte", ""),
-        "IT_INFRASTRUKTUR_LABEL": briefing.get("IT_INFRASTRUKTUR_LABEL", ""),
-        "PROZESSE_PAPIERLOS_LABEL": briefing.get("PROZESSE_PAPIERLOS_LABEL", ""),
-        "AUTOMATISIERUNGSGRAD_LABEL": briefing.get("AUTOMATISIERUNGSGRAD_LABEL", ""),
-        "ZEITERSPARNIS_PRIORITAET_LABEL": briefing.get("ZEITERSPARNIS_PRIORITAET_LABEL", ""),
-        "GESCHAEFTSMODELL_EVOLUTION": briefing.get("GESCHAEFTSMODELL_EVOLUTION", ""),
-        "research_last_updated": briefing.get("research_last_updated", ""),
+        "BRANCHE_LABEL": sections.get("BRANCHE_LABEL", ""),
+        "UNTERNEHMENSGROESSE_LABEL": sections.get("UNTERNEHMENSGROESSE_LABEL", ""),
+        "BUNDESLAND_LABEL": sections.get("BUNDESLAND_LABEL", ""),
+        "HAUPTLEISTUNG": sections.get("HAUPTLEISTUNG", ""),
+        "report_year": sections.get("report_year", ""),
+        "report_month": sections.get("report_month", ""),
+        "kundencode": sections.get("kundencode", ""),
+        "report_id": sections.get("report_id", ""),
+        "KI_PROJEKTE": sections.get("ki_projekte", ""),
+        "IT_INFRASTRUKTUR_LABEL": sections.get("IT_INFRASTRUKTUR_LABEL", ""),
+        "PROZESSE_PAPIERLOS_LABEL": sections.get("PROZESSE_PAPIERLOS_LABEL", ""),
+        "AUTOMATISIERUNGSGRAD_LABEL": sections.get("AUTOMATISIERUNGSGRAD_LABEL", ""),
+        "ZEITERSPARNIS_PRIORITAET_LABEL": sections.get("ZEITERSPARNIS_PRIORITAET_LABEL", ""),
+        "GESCHAEFTSMODELL_EVOLUTION": sections.get("GESCHAEFTSMODELL_EVOLUTION", ""),
+        "research_last_updated": sections.get("research_last_updated", ""),
+        "STRATEGISCHE_ZIELE": sections.get("STRATEGISCHE_ZIELE", ""),
+        "ROADMAP_VORHANDEN_LABEL": sections.get("ROADMAP_VORHANDEN_LABEL", ""),
+        "GOVERNANCE_RICHTLINIEN_LABEL": sections.get("GOVERNANCE_RICHTLINIEN_LABEL", ""),
+        "CHANGE_MANAGEMENT_LABEL": sections.get("CHANGE_MANAGEMENT_LABEL", ""),
     }
 
     fixed = html_block
