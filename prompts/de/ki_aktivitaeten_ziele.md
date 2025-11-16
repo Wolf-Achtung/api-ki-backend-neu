@@ -8,19 +8,15 @@
 
 <section class="section ki-aktivitaeten">
   <h2>KI‑Aktivitäten &amp; Ziele</h2>
-  <p>Schildern Sie die aktuellen und geplanten KI‑Projekte des Unternehmens sowie den primären Nutzenfokus. Verwenden Sie die Angaben aus dem Briefing (z. B. {{ki_projekte}}, {{ki_ziele}}, {{vision_3_jahre}}). Verwende klare Überschriften und einen sachlichen, optimistischen Ton.</p>
+  <p>Beschreibe die aktuellen und geplanten KI‑Projekte des Unternehmens sowie den primären Nutzenfokus. Nutze die Angaben aus dem Briefing (z. B. {{ki_projekte}}, {{ki_ziele}}, {{vision_3_jahre}}) und fasse sie in klaren Absätzen zusammen. Verwende einen sachlichen, optimistischen Ton.</p>
   <h3>Laufende und geplante Projekte</h3>
+  <p>Liste die KI‑Projekte des Unternehmens auf und beschreibe jeweils kurz Zweck, aktueller Status und geplante nächste Schritte. Nutze die Informationen aus {{ki_projekte}}. Wenn keine Projekte bekannt sind, empfehle passende Projekte basierend auf den Zielen.</p>
   <ul>
-    <li>Projekt 1: Titel – Zweck und derzeitiger Status.</li>
-    <li>Projekt 2: Titel – Zweck und derzeitiger Status.</li>
-    <li>Projekt 3: Titel – Zweck und derzeitiger Status.</li>
+    <!-- Das Modell soll hier für jedes Projekt einen Listeneintrag erzeugen. Jeder Eintrag enthält den Projekttitel, eine kurze Beschreibung des Zwecks, den aktuellen Status und die nächsten Schritte. Anzahl der Einträge entsprechend der im Briefing angegebenen Projekte. -->
   </ul>
   <h3>Primärer Nutzenfokus</h3>
-  <p>Liste den Hauptnutzen, der mit KI‑Einführung angestrebt wird (z. B. Effizienzsteigerung, Automatisierung, neue Produkte, bessere Kundenbeziehungen). Gib 2–4 Schwerpunkte an und begründe sie kurz.</p>
+  <p>Führe 2–4 Hauptnutzen auf, die mit der KI‑Einführung erzielt werden sollen (z. B. Effizienzsteigerung, Automatisierung, neue Produkte, bessere Kundenbeziehungen). Für jeden Nutzenpunkt gib eine kurze Begründung basierend auf {{ki_ziele}} und der Vision {{vision_3_jahre}}.</p>
   <ul>
-    <li>Nutzen 1 – kurze Begründung.</li>
-    <li>Nutzen 2 – kurze Begründung.</li>
-    <li>Nutzen 3 – kurze Begründung.</li>
-    <li>Nutzen 4 – kurze Begründung.</li>
+    <!-- Das Modell soll hier für jeden Nutzenpunkt einen Listeneintrag generieren. Für 2–4 priorisierte Nutzen der KI‑Einführung jeweils eine kurze Begründung liefern. -->
   </ul>
 </section>

@@ -8,16 +8,16 @@
 
 <section class="section business-case">
   <h2>Business Case</h2>
-  <p>Berechne einen groben Business‑Case für die Einführung der identifizierten Quick Wins. Verwende die Gesamtsumme der monatlichen Zeiteinsparungen (in Stunden) und multipliziere sie mit einem Stundensatz von {{DEFAULT_STUNDENSATZ_EUR}} €. Berücksichtige eine Einführungskosten‑Summe (z. B. 10 000 €) und laufende Kosten (z. B. 500 € pro Monat). Zeige die Amortisationszeit (in Monaten) und den ROI nach 12 Monaten. Stelle die Ergebnisse übersichtlich in einer Tabelle dar.</p>
+  <p>Berechne einen groben Business‑Case für die Einführung der identifizierten Quick Wins. Summiere die monatlichen Zeiteinsparungen (in Stunden) und multipliziere sie mit dem Stundensatz {{DEFAULT_STUNDENSATZ_EUR}} €. Schätze eine einmalige Einführungssumme (passend zur Unternehmensgröße, z. B. 2 000–5 000 € für ein Solo‑Unternehmen) und laufende Kosten (z. B. 100–300 € pro Monat). Ermittle daraus die Amortisationszeit (in Monaten) und den ROI nach 12 Monaten. Stelle die Ergebnisse übersichtlich in einer Tabelle dar.</p>
   <table class="table">
     <tr><th>Parameter</th><th>Wert</th><th>Erläuterung</th></tr>
-    <tr><td>Gesamteinsparung</td><td>X h/Monat</td><td>Summe der Quick Wins</td></tr>
-    <tr><td>Stundensatz</td><td>{{DEFAULT_STUNDENSATZ_EUR}} €</td><td>Angenommener Wert</td></tr>
-    <tr><td>Monetärer Nutzen</td><td>Y €/Monat</td><td>Gesamteinsparung × Stundensatz</td></tr>
-    <tr><td>Einführungskosten</td><td>10 000 €</td><td>Einmaliger Invest</td></tr>
-    <tr><td>Laufende Kosten</td><td>500 €/Monat</td><td>Betrieb & Lizenzen</td></tr>
-    <tr><td>Amortisation</td><td>Z Monate</td><td>Einführungskosten ÷ (Monetärer Nutzen – laufende Kosten)</td></tr>
-    <tr><td>ROI nach 12 Monaten</td><td>R €</td><td>Summe der Einsparungen minus Kosten</td></tr>
+    <tr><td>Gesamteinsparung</td><td></td><td>Summe der monatlichen Zeiteinsparungen aus den Quick Wins</td></tr>
+    <tr><td>Stundensatz</td><td>{{DEFAULT_STUNDENSATZ_EUR}} €</td><td>Angenommener Beratungsstundensatz</td></tr>
+    <tr><td>Monetärer Nutzen</td><td></td><td>Gesamteinsparung × Stundensatz</td></tr>
+    <tr><td>Einführungskosten</td><td></td><td>Einmaliger Invest für Software & Setup</td></tr>
+    <tr><td>Laufende Kosten</td><td></td><td>Abos, Lizenzen & Betrieb</td></tr>
+    <tr><td>Amortisation</td><td></td><td>Einführungskosten ÷ (Monetärer Nutzen – laufende Kosten)</td></tr>
+    <tr><td>ROI nach 12 Monaten</td><td></td><td>Monetäre Einsparungen nach 12 Monaten abzüglich aller Kosten</td></tr>
   </table>
-  <p class="small muted">Alle Angaben dienen der groben Orientierung und müssen individuell geprüft werden.</p>
+  <p class="small muted">Diese Berechnung dient als grobe Orientierung und muss individuell geprüft werden.</p>
 </section>

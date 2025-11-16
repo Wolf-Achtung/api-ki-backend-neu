@@ -10,9 +10,6 @@
   <h2>Roadmap 12 Monate</h2>
   <p>Skizziere die wesentlichen Meilensteine für die nächsten 12 Monate. Gliedere die Roadmap in Quartale (Q1 bis Q4) oder Monatsblöcke. Jeder Punkt sollte Ziele, Hauptaktivitäten, verantwortliche Rollen und messbare Kennzahlen enthalten. Beziehe die langfristige Vision des Unternehmens (z. B. Skalierung der automatisierten Analyseplattform, Ausbau der KI‑Beratung) ein.</p>
   <ol>
-    <li><strong>Q1 (Monat 1–3):</strong> Ziele und Hauptaktivitäten.</li>
-    <li><strong>Q2 (Monat 4–6):</strong> Ziele und Hauptaktivitäten.</li>
-    <li><strong>Q3 (Monat 7–9):</strong> Ziele und Hauptaktivitäten.</li>
-    <li><strong>Q4 (Monat 10–12):</strong> Ziele und Hauptaktivitäten.</li>
+    <!-- Das Modell soll für jedes Quartal (Q1–Q4) einen Listeneintrag generieren. Jeder Eintrag soll 2–3 Ziele, die wichtigsten Aktivitäten zur Erreichung dieser Ziele, die verantwortlichen Rollen und mindestens eine messbare Kennzahl enthalten. -->
   </ol>
 </section>
