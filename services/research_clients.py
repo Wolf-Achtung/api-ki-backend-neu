@@ -125,7 +125,12 @@ def parse_rss(url: str, limit: int = 12) -> List[Dict[str, Any]]:
         for entry in d.entries[:limit]:
             title = entry.get("title", "").strip()
             link = entry.get("link", "").strip()
-            summary = BeautifulSoup(entry.get("summary", "") or entry.get("description", ""), "lxml").get_text(" ", strip=True)
+            # Fallback to html.parser if lxml is not installed or parsing fails
+            raw_summary = entry.get("summary", "") or entry.get("description", "")
+            try:
+                summary = BeautifulSoup(raw_summary, "lxml").get_text(" ", strip=True)
+            except Exception:
+                summary = BeautifulSoup(raw_summary, "html.parser").get_text(" ", strip=True)
             date = entry.get("published", "") or entry.get("updated", "")
             source = urlparse(link).netloc
             if title and link:
@@ -152,7 +157,11 @@ def harvest_links(url: str, allow_domains: Optional[List[str]] = None, limit: in
     html = http_get(url)
     if not html:
         return []
-    soup = BeautifulSoup(html, "lxml")
+    # Attempt to parse with lxml; fallback to html.parser if lxml isn't available
+    try:
+        soup = BeautifulSoup(html, "lxml")
+    except Exception:
+        soup = BeautifulSoup(html, "html.parser")
     out: List[Dict[str, str]] = []
     for a in soup.find_all("a", href=True):
         href = a["href"].strip()
