@@ -127,10 +127,18 @@ def _send_email_via_resend(to_email: str, subject: str, html_body: str, attachme
         
         if resend_attachments:
             params["attachments"] = resend_attachments
-        
+
         response = resend.Emails.send(params)
+
+        # Log email ID for debugging in Resend dashboard
+        email_id = response.get("id") if isinstance(response, dict) else None
+        if email_id:
+            log.info(f"📬 Resend Email ID: {email_id} → {_mask_email(to_email)}")
+        else:
+            log.warning(f"⚠️ Resend response missing email ID for {_mask_email(to_email)}")
+
         return True, None
-        
+
     except Exception as exc:
         return False, str(exc)
 
@@ -1726,6 +1734,20 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     except Exception as _exc:
         log.warning("[%s] ⚠️ Sanitizer skipped: %s", run_id, _exc)
 
+    # 🔧 FIX: Replace ALL placeholders in ALL sections (GPT sometimes returns {var} instead of {{var}})
+    try:
+        placeholder_fix_count = 0
+        for key, value in sections.items():
+            if isinstance(value, str) and ("{" in value):
+                fixed_value = _fix_exec_placeholders(value, scores, br_dict, sections.get("report_date", ""))
+                if fixed_value != value:
+                    sections[key] = fixed_value
+                    placeholder_fix_count += 1
+        if placeholder_fix_count > 0:
+            log.info("[%s] 🔧 Fixed placeholders in %s sections", run_id, placeholder_fix_count)
+    except Exception as _exc:
+        log.warning("[%s] ⚠️ Placeholder fix failed: %s", run_id, _exc)
+
     result = render(
         br, 
         run_id=run_id, 
@@ -2028,23 +2050,57 @@ def _section_temperature(section_name: str) -> float:
 
 
 def _fix_exec_placeholders(html_block: str, scores: Dict[str, Any], briefing: Dict[str, Any], report_date: str) -> str:
-    """Ersetzt eventuell mit-ausgegebenen Prompt-Platzhalter in der Executive Summary (Robustheits-Fix)."""
+    """Ersetzt eventuell mit-ausgegebenen Prompt-Platzhalter in der Executive Summary (Robustheits-Fix).
+
+    FIX: Ersetzt BEIDE Varianten - mit doppelten {{}} UND einfachen {} geschweiften Klammern,
+    da GPT manchmal einfache Klammern zurückgibt.
+    """
     if not html_block:
         return html_block
-    rep = {
-        "{{heute_iso}}": report_date,
-        "{{report_date}}": report_date,
-        "{{score_gov}}": str(scores.get("governance", 0)),
-        "{{score_sec}}": str(scores.get("security", 0)),
-        "{{score_val}}": str(scores.get("value", 0)),
-        "{{score_enable}}": str(scores.get("enablement", 0)),
-        "{{score_gesamt}}": str(scores.get("overall", 0)),
-        "{{BRANCHE_LABEL}}": briefing.get("BRANCHE_LABEL") or briefing.get("branche",""),
-        "{{UNTERNEHMENSGROESSE_LABEL}}": briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse",""),
-        "{{BUNDESLAND_LABEL}}": briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland",""),
-        "{{HAUPTLEISTUNG}}": briefing.get("HAUPTLEISTUNG") or briefing.get("hauptleistung",""),
+
+    # Mapping: Platzhalter -> Wert
+    replacements = {
+        "heute_iso": report_date,
+        "report_date": report_date,
+        "score_gov": str(scores.get("governance", 0)),
+        "score_sec": str(scores.get("security", 0)),
+        "score_val": str(scores.get("value", 0)),
+        "score_enable": str(scores.get("enablement", 0)),
+        "score_gesamt": str(scores.get("overall", 0)),
+        "score_governance": str(scores.get("governance", 0)),
+        "score_sicherheit": str(scores.get("security", 0)),
+        "score_nutzen": str(scores.get("value", 0)),
+        "score_befaehigung": str(scores.get("enablement", 0)),
+        "BRANCHE_LABEL": briefing.get("BRANCHE_LABEL") or briefing.get("branche",""),
+        "UNTERNEHMENSGROESSE_LABEL": briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse",""),
+        "BUNDESLAND_LABEL": briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland",""),
+        "HAUPTLEISTUNG": briefing.get("HAUPTLEISTUNG") or briefing.get("hauptleistung",""),
+        "report_year": briefing.get("report_year", ""),
+        "report_month": briefing.get("report_month", ""),
+        "kundencode": briefing.get("kundencode", ""),
+        "report_id": briefing.get("report_id", ""),
+        "KI_PROJEKTE": briefing.get("ki_projekte", ""),
+        "IT_INFRASTRUKTUR_LABEL": briefing.get("IT_INFRASTRUKTUR_LABEL", ""),
+        "PROZESSE_PAPIERLOS_LABEL": briefing.get("PROZESSE_PAPIERLOS_LABEL", ""),
+        "AUTOMATISIERUNGSGRAD_LABEL": briefing.get("AUTOMATISIERUNGSGRAD_LABEL", ""),
+        "ZEITERSPARNIS_PRIORITAET_LABEL": briefing.get("ZEITERSPARNIS_PRIORITAET_LABEL", ""),
+        "GESCHAEFTSMODELL_EVOLUTION": briefing.get("GESCHAEFTSMODELL_EVOLUTION", ""),
+        "research_last_updated": briefing.get("research_last_updated", ""),
     }
+
     fixed = html_block
-    for k,v in rep.items():
-        fixed = fixed.replace(k, str(v))
+    for placeholder, value in replacements.items():
+        # Ersetze BEIDE Varianten: {{placeholder}} UND {placeholder}
+        fixed = fixed.replace(f"{{{{{placeholder}}}}}", str(value))  # Doppelte {{}}
+        fixed = fixed.replace(f"{{{placeholder}}}", str(value))       # Einfache {}
+
+    # Entferne fälschlich von GPT kopierte Template-Platzhalter (sollten nie im Output sein!)
+    template_placeholders = [
+        "TOOLS_TABLE_HTML", "FUNDING_TABLE_HTML", "NEWS_BOX_HTML",
+        "TOOLS_HTML", "FUNDING_HTML", "FOERDERPROGRAMME_HTML"
+    ]
+    for tpl in template_placeholders:
+        fixed = fixed.replace(f"{{{{{tpl}}}}}", "")  # Doppelte {{}}
+        fixed = fixed.replace(f"{{{tpl}}}", "")       # Einfache {}
+
     return fixed
