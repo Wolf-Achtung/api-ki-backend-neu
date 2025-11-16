@@ -1753,6 +1753,76 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     log.info("[%s] ✅ Analysis created (v4.14.0-GOLD-PLUS): id=%s", run_id, an.id)
     return an.id, result["html"], result.get("meta", {})
 
+# -------------------- briefing summary for admin ----------------
+def _build_briefing_summary_html(br: Briefing, rep: Report, user_email: str) -> str:
+    """Build HTML summary of briefing for admin email"""
+    answers = getattr(br, "answers", {}) or {}
+
+    # Key metrics
+    metrics = f"""
+    <div style="background:#f8f9fa;padding:16px;border-radius:8px;margin:16px 0">
+        <h3 style="margin:0 0 12px 0;color:#111827">📊 Briefing-Übersicht</h3>
+        <table style="width:100%;border-collapse:collapse">
+            <tr><td><b>Briefing ID:</b></td><td>{br.id}</td></tr>
+            <tr><td><b>Analysis ID:</b></td><td>{getattr(rep, 'analysis_id', 'N/A')}</td></tr>
+            <tr><td><b>User:</b></td><td>{user_email}</td></tr>
+            <tr><td><b>Erstellt:</b></td><td>{getattr(br, 'created_at', 'N/A')}</td></tr>
+            <tr><td><b>Sprache:</b></td><td>{getattr(br, 'lang', 'de')}</td></tr>
+        </table>
+    </div>
+    """
+
+    # Scores
+    scores_html = f"""
+    <div style="background:#eff6ff;padding:16px;border-radius:8px;margin:16px 0">
+        <h3 style="margin:0 0 12px 0;color:#1e40af">🎯 Scores</h3>
+        <table style="width:100%;border-collapse:collapse">
+            <tr><td><b>Gesamt:</b></td><td>{getattr(rep, 'score_overall', 0)}/100</td></tr>
+            <tr><td><b>Governance:</b></td><td>{getattr(rep, 'score_governance', 0)}/100</td></tr>
+            <tr><td><b>Sicherheit:</b></td><td>{getattr(rep, 'score_security', 0)}/100</td></tr>
+            <tr><td><b>Wertschöpfung:</b></td><td>{getattr(rep, 'score_value', 0)}/100</td></tr>
+            <tr><td><b>Befähigung:</b></td><td>{getattr(rep, 'score_enablement', 0)}/100</td></tr>
+        </table>
+    </div>
+    """
+
+    # Key answers (top 10 most important)
+    key_fields = {
+        "branche": "Branche",
+        "unternehmensgroesse": "Unternehmensgröße",
+        "bundesland": "Bundesland",
+        "hauptleistung": "Hauptleistung",
+        "ai_experience": "KI-Erfahrung",
+        "ai_budget": "KI-Budget",
+        "data_quality": "Datenqualität",
+        "gdpr_aware": "DSGVO-Bewusstsein",
+        "ai_goals": "KI-Ziele",
+        "biggest_challenge": "Größte Herausforderung",
+    }
+
+    answers_rows = []
+    for key, label in key_fields.items():
+        value = answers.get(key, "—")
+        if value and value != "—":
+            # Truncate long values
+            if isinstance(value, str) and len(value) > 80:
+                value = value[:77] + "..."
+            answers_rows.append(f"<tr><td><b>{label}:</b></td><td>{html.escape(str(value))}</td></tr>")
+
+    answers_html = f"""
+    <div style="background:#fef3c7;padding:16px;border-radius:8px;margin:16px 0">
+        <h3 style="margin:0 0 12px 0;color:#92400e">📝 Wichtige Antworten</h3>
+        <table style="width:100%;border-collapse:collapse">
+            {''.join(answers_rows)}
+        </table>
+        <p style="margin:8px 0 0 0;font-size:12px;color:#78716c">
+            <i>Vollständige Antworten siehe JSON-Attachment</i>
+        </p>
+    </div>
+    """
+
+    return metrics + scores_html + answers_html
+
 # -------------------- runner (kept from original) ----------------
 def _fetch_pdf_if_needed(pdf_url: Optional[str], pdf_bytes: Optional[bytes]) -> Optional[bytes]:
     if pdf_bytes: return pdf_bytes
@@ -1782,14 +1852,34 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
             "mimetype": "application/pdf"
         })
     try:
-        bjson = json.dumps(getattr(br, "answers", {}) or {}, ensure_ascii=False, indent=2).encode("utf-8")
+        # Build comprehensive briefing data with metadata for admin review
+        user_email = _determine_user_email(db, br, getattr(rep, "user_email", None)) or "unknown"
+
+        briefing_data = {
+            "briefing_id": br.id,
+            "analysis_id": getattr(rep, "analysis_id", None),
+            "user_email": user_email,
+            "created_at": str(getattr(br, "created_at", "")),
+            "lang": getattr(br, "lang", "de"),
+            "scores": {
+                "overall": getattr(rep, "score_overall", 0),
+                "governance": getattr(rep, "score_governance", 0),
+                "security": getattr(rep, "score_security", 0),
+                "value": getattr(rep, "score_value", 0),
+                "enablement": getattr(rep, "score_enablement", 0),
+            },
+            "answers": getattr(br, "answers", {}) or {},
+        }
+
+        bjson = json.dumps(briefing_data, ensure_ascii=False, indent=2).encode("utf-8")
         attachments_admin.append({
-            "filename": f"briefing-{br.id}.json", 
-            "content": bjson, 
+            "filename": f"briefing-{br.id}-full.json",
+            "content": bjson,
             "mimetype": "application/json"
         })
-    except Exception:
-        pass
+        log.info("[%s] 📎 Added briefing JSON attachment for admin (%d bytes)", run_id, len(bjson))
+    except Exception as e:
+        log.warning("[%s] ⚠️ Could not create briefing JSON attachment: %s", run_id, str(e))
     
     # Send to user
     try:
@@ -1817,16 +1907,28 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
     # Send to admins
     try:
         if os.getenv("ENABLE_ADMIN_NOTIFY", "1") in ("1","true","TRUE","yes","YES"):
+            # Generate briefing summary HTML for admin emails
+            briefing_summary_html = None
+            try:
+                briefing_summary_html = _build_briefing_summary_html(br, rep, user_email or "unknown")
+                log.info("[%s] 📋 Generated briefing summary HTML for admin email", run_id)
+            except Exception as e:
+                log.warning("[%s] ⚠️ Could not generate briefing summary HTML: %s", run_id, str(e))
+
             for addr in _admin_recipients():
                 ok, err = _send_email_via_resend(
-                    addr, 
-                    f"Neuer KI‑Status‑Report – Analysis #{rep.analysis_id} / Briefing #{rep.briefing_id}", 
-                    render_report_ready_email(recipient="admin", pdf_url=pdf_url),
+                    addr,
+                    f"Neuer KI‑Status‑Report – Analysis #{rep.analysis_id} / Briefing #{rep.briefing_id}",
+                    render_report_ready_email(
+                        recipient="admin",
+                        pdf_url=pdf_url,
+                        briefing_summary_html=briefing_summary_html
+                    ),
                     attachments=attachments_admin
                 )
-                if ok: 
+                if ok:
                     log.info("[%s] 📧 Admin notify sent to %s via Resend", run_id, _mask_email(addr))
-                else: 
+                else:
                     log.warning("[%s] ⚠️ MAIL_ADMIN failed for %s: %s", run_id, _mask_email(addr), err)
     except Exception as exc:
         log.warning("[%s] ⚠️ MAIL_ADMIN block failed: %s", run_id, exc)

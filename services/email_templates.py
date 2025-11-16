@@ -4,7 +4,7 @@ from __future__ import annotations
 from html import escape
 from typing import Optional
 
-def render_report_ready_email(recipient: str, pdf_url: Optional[str]) -> str:
+def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_summary_html: Optional[str] = None) -> str:
     if recipient == "admin":
         title = "Kopie: KI‑Status‑Report (inkl. Briefing)"
         intro = "dies ist die Admin‑Kopie des automatisch generierten KI‑Status‑Reports."
@@ -15,6 +15,16 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str]) -> str:
         cta_hint = "Auf Wunsch erstelle ich eine tabellarische Übersicht mit allen zentralen EU‑AI‑Act‑Terminen (2025–2027)."
 
     link_html = f'<p>Sie können den Report <a href="{escape(pdf_url)}">hier als PDF abrufen</a>.</p>' if pdf_url else ""
+
+    # Add briefing summary for admin emails
+    briefing_section = ""
+    if recipient == "admin" and briefing_summary_html:
+        briefing_section = f"""
+        <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
+        <h2 style="color:#0b3b8f;font-size:18px;margin:16px 0 8px">📋 Briefing-Details</h2>
+        <p class="muted">Nachfolgend die wichtigsten Angaben des Users für Qualitätskontrolle und Nachvollziehbarkeit:</p>
+        {briefing_summary_html}
+        """
 
     return f"""<!doctype html>
 <html lang="de">
@@ -39,6 +49,7 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str]) -> str:
         <p>Guten Tag,</p>
         <p>{escape(intro)}</p>
         {link_html}
+        {briefing_section}
         <p class="muted">{escape(cta_hint)}</p>
         <p class="muted">Hinweis: Diese E‑Mail wurde automatisch erzeugt.</p>
       </div>
