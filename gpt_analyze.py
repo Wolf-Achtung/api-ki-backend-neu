@@ -127,10 +127,18 @@ def _send_email_via_resend(to_email: str, subject: str, html_body: str, attachme
         
         if resend_attachments:
             params["attachments"] = resend_attachments
-        
+
         response = resend.Emails.send(params)
+
+        # Log email ID for debugging in Resend dashboard
+        email_id = response.get("id") if isinstance(response, dict) else None
+        if email_id:
+            log.info(f"📬 Resend Email ID: {email_id} → {_mask_email(to_email)}")
+        else:
+            log.warning(f"⚠️ Resend response missing email ID for {_mask_email(to_email)}")
+
         return True, None
-        
+
     except Exception as exc:
         return False, str(exc)
 
