@@ -8,15 +8,10 @@
 
 <section class="section tools-empfehlungen">
   <h2>Empfohlene KI‑Tools &amp; Software</h2>
-  <p>Basierend auf der aktuellen Recherche (Tavily/Perplexity) und deiner Expertise: Stelle 4–6 konkrete Tools vor, die {{BRANCHE_LABEL}} in {{BUNDESLAND_LABEL}} mit {{UNTERNEHMENSGROESSE_LABEL}} dabei unterstützen, KI schnell einzuführen. Erstelle eine Tabelle mit den Spalten <strong>Name</strong>, <strong>Beschreibung</strong>, <strong>Kernfunktion</strong>, <strong>Preismodell</strong> (z. B. frei, Abo, einmalig, pay‑per‑use) und <strong>DSGVO/Hinweis</strong> (Datenstandort, Risikoklasse). Erläutere kurz, warum jedes Tool geeignet ist und welche Integrationen möglich sind (z. B. Zapier/Make, ChatGPT‑Plugin). Ordne die Tools nach Relevanz.</p>
+  <p>Basierend auf der aktuellen Recherche (Tavily/Perplexity) und deiner Expertise: Stelle 4–6 konkrete Tools vor, die {{BRANCHE_LABEL}} in {{BUNDESLAND_LABEL}} mit {{UNTERNEHMENSGROESSE_LABEL}} dabei unterstützen, KI schnell einzuführen. Erstelle eine Tabelle mit den Spalten <strong>Name</strong>, <strong>Beschreibung</strong>, <strong>Kernfunktion</strong>, <strong>Preismodell</strong> (z. B. frei, Abo, einmalig, pay‑per‑use) und <strong>DSGVO/Hinweis</strong> (Datenstandort, Risikoklasse). Erläutere kurz, warum jedes Tool geeignet ist und welche Integrationen möglich sind (z. B. Zapier/Make, ChatGPT‑Plugin). Ordne die Tools nach Relevanz. Wenn keine Rechercheergebnisse vorliegen, wähle etablierte Tools für Beratungs‑ und Automatisierungsaufgaben.</p>
   <table class="table">
     <tr><th>Name</th><th>Beschreibung</th><th>Kernfunktion</th><th>Preismodell</th><th>DSGVO/Hinweis</th></tr>
-    <tr><td>Tool 1</td><td>Beschreibung</td><td>Kernfunktion</td><td>Preismodell</td><td>DSGVO/Hinweis</td></tr>
-    <tr><td>Tool 2</td><td>Beschreibung</td><td>Kernfunktion</td><td>Preismodell</td><td>DSGVO/Hinweis</td></tr>
-    <tr><td>Tool 3</td><td>Beschreibung</td><td>Kernfunktion</td><td>Preismodell</td><td>DSGVO/Hinweis</td></tr>
-    <tr><td>Tool 4</td><td>Beschreibung</td><td>Kernfunktion</td><td>Preismodell</td><td>DSGVO/Hinweis</td></tr>
-    <tr><td>Tool 5</td><td>Beschreibung</td><td>Kernfunktion</td><td>Preismodell</td><td>DSGVO/Hinweis</td></tr>
-    <tr><td>Tool 6</td><td>Beschreibung</td><td>Kernfunktion</td><td>Preismodell</td><td>DSGVO/Hinweis</td></tr>
+    <!-- Das Modell soll hier 4–6 Zeilen mit konkreten Tools generieren (z. B. Typeform, Notion AI, Zapier/Make, Airtable, GPT‑Plugins). Jede Zeile enthält Name, kurze Beschreibung, Kernfunktion, Preismodell und DSGVO‑Hinweis. -->
   </table>
   <p class="small muted">Diese Auswahl basiert auf öffentlich verfügbaren Informationen (Recherchezeitraum: letzte 30 Tage) und stellt keine Rechtsberatung dar.</p>
 </section>
