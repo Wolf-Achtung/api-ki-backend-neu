@@ -25,136 +25,12 @@
     .small{font-size:12px}
     .muted{color:#6b7280}
   </style>
-<style id="gold-std-typo">
-@page { size: A4; margin: 22mm; }
-@media print { * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-
-:root{
-  --fg:#1A1A1A; --muted:#5A5A5A; --border:#E6E6E6;
-  --brand:#0B6BFF; --bg:#ffffff; --card:#F8FAFC;
-  /* 8px-Baseline als pt-Näherung */
-  --g: 6pt; --s-1: calc(var(--g)*1.0); --s-2: calc(var(--g)*1.25);
-  --s-3: calc(var(--g)*1.5); --s-4: calc(var(--g)*2.0);
-  --s-5: calc(var(--g)*2.5); --s-6: calc(var(--g)*3.0); --s-7: calc(var(--g)*3.5);
-  --fs-body: 11pt; --lh-body: 1.55;
-  --fs-h1: 22pt; --fs-h2: 16.5pt; --fs-h3: 14pt; --fs-h4: 12pt;
-}
-
-html,body{
-  margin:0; padding:0; background:var(--bg); color:var(--fg);
-  font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
-  font-size: var(--fs-body); line-height: var(--lh-body); letter-spacing:.01em;
-}
-.container{ max-width: 960px; margin: 0 auto; padding: 0; }
-
-h1,h2,h3,h4{ font-weight:600; line-height:1.25; margin: var(--s-5) 0 var(--s-2); }
-h1{ font-size: var(--fs-h1); margin-top: var(--s-6); }
-h2{ font-size: var(--fs-h2); padding-bottom: 2pt; border-bottom: 2px solid var(--border); }
-h3{ font-size: var(--fs-h3); } h4{ font-size: var(--fs-h4); }
-p{ margin: 0 0 var(--s-3) 0; }
-a{ color: var(--brand); text-decoration: underline; text-underline-offset: 2px; }
-.small{ font-size: 9.5pt; color: var(--muted); }
-
-.card{
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: var(--s-4);
-  margin: var(--s-3) 0;
-  page-break-inside: avoid;
-}
-.callout{
-  border-left: 4pt solid var(--brand);
-  padding: var(--s-3) var(--s-4);
-  background: #F4F8FF;
-  border-radius: 6pt;
-  page-break-inside: avoid;
-}
-.aside{
-  border-left: 2pt solid var(--border);
-  padding-left: var(--s-4);
-  margin: var(--s-3) 0;
-  color:#334155;
-  background: linear-gradient(90deg,#f1f5f9,transparent);
-}
-.two-col{ display:flex; gap: var(--s-4); }
-.two-col>.col{ flex:1; }
-
-.kv{ display:grid; grid-template-columns: 180pt 1fr; gap: var(--s-2) var(--s-4); }
-.meta-version{ text-align:right; font-size:9.5pt; color:var(--muted); }
-
-.watermark{
-  position: fixed; bottom: 12mm; right: 10mm; opacity: .07;
-  font-size: 9pt; letter-spacing: .05em;
-}
-
-/* Tabellen */
-.table{ width:100%; border-collapse: collapse; margin: var(--s-4) 0; }
-.table thead th{
-  text-align:left; font-weight:600; padding: 7pt 9pt;
-  background:#F7F7F8; border-bottom: 1px solid var(--border);
-}
-.table td{
-  padding: 7pt 9pt; border-bottom: 1px solid var(--border);
-  vertical-align: top; word-break: break-word;
-}
-.table tr{ page-break-inside: avoid; }
-.num{ text-align:right; }
-
-/* Branding-Leisten */
-.brandbar{
-  display:flex; align-items:center; gap: var(--s-5);
-  padding: var(--s-4); border:1px solid var(--border);
-  border-radius: 12pt; background:#FFFFFF; margin: var(--s-4) 0 var(--s-5);
-}
-.brandbar__left{ display:flex; align-items:center; gap: var(--s-4); flex-wrap:wrap; }
-.brandbar__right{ margin-left:auto; display:flex; align-items:center; gap: var(--s-4); }
-.brandbar img{ display:block; height: 36pt; }
-
-/* Compliance-Icons */
-.compliance-strip{
-  display:flex; align-items:center; gap: var(--s-4);
-  background:#EFF6FF; border:1px solid #D8E6FF;
-  border-radius:10pt; padding: var(--s-3) var(--s-4); margin: var(--s-4) 0;
-}
-.compliance-strip img{ height: 20pt; }
-
-/* Cover-Badges */
-.cover-badges{ display:flex; gap: var(--s-4); align-items:center; flex-wrap:wrap; margin-top: var(--s-4); }
-.cover-badges img{ height: 48pt; }
-
-.page-cover{ page-break-after: always; }
-.avoid-break{ page-break-inside: avoid; }
-
-.legend{ font-size:10pt; color:var(--muted); margin-top: var(--s-2); }
-</style>
-
 </head>
 <body>
-<div class="container">
-<!-- BRAND:HEADER:START -->
-<div class="brandbar">
-  <div class="brandbar__left">
-    <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt Logo">
-    <img src="tuev-logo-transparent.webp" alt="TÜV Austria – zertifiziert">
-  </div>
-  <div class="brandbar__right">
-    <img src="ki-ready-2025.webp" alt="KI-READY 2025 Badge">
-  </div>
-</div>
-<div class="compliance-strip">
-  <img src="dsgvo.svg" alt="DSGVO">
-  <img src="eu-ai.svg" alt="EU AI Act">
-  <span class="small">Abgleich EU-AI-Act &amp; DSGVO • Phase: {{ai_act_phase_label}}</span>
-</div>
-<!-- BRAND:HEADER:END -->
   <header>
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div style="display:flex;align-items:center">
         <h1 style="margin:0 16px 0 0;">KI-Status-Report</h1>
-<!-- MINI-LEGEND:START -->
-<p class="legend small">Legende: ⏱ Aufwand · 🎯 Impact · 👤 Owner · 📆 Termin (Damit Entscheidungen schneller fallen.)</p>
-<!-- MINI-LEGEND:END -->
         {% if LOGO_PRIMARY_SRC %}
         <img src="{{ LOGO_PRIMARY_SRC }}" alt="Logo" style="height:40px;">
         {% endif %}
@@ -487,18 +363,5 @@ a{ color: var(--brand); text-decoration: underline; text-underline-offset: 2px; 
       {% endif %}
     </div>
   </footer>
-<!-- BRAND:FOOTER:START -->
-<div class="brandbar" style="margin-top: var(--s-6);">
-  <div class="brandbar__left">
-    <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt Logo">
-  </div>
-  <div class="brandbar__right">
-    <img src="tuev-logo-transparent.webp" alt="TÜV Austria – zertifiziert">
-    <img src="ki-ready-2025.webp" alt="KI-READY 2025 Badge">
-  </div>
-</div>
-<p class="small">© {{report_year}} KI-Sicherheit.jetzt — Kontakt: {{user_email}}</p>
-<!-- BRAND:FOOTER:END -->
-</div>
 </body>
 </html>
