@@ -41,6 +41,35 @@ UMSATZ_LABELS = {
     "ueber_10m": "> 10 Mio. €",
     "keine_angabe": "keine Angabe",
 }
+IT_INFRASTRUKTUR_LABELS = {
+    "cloud": "Cloud",
+    "on_premise": "On-Premise",
+    "hybrid": "Hybrid (Cloud + On-Premise)",
+}
+PROZESSE_PAPIERLOS_LABELS = {
+    "0-20": "0–20%",
+    "21-40": "21–40%",
+    "41-60": "41–60%",
+    "61-80": "61–80%",
+    "81-100": "81–100%",
+}
+AUTOMATISIERUNGSGRAD_LABELS = {
+    "eher_niedrig": "Eher niedrig",
+    "mittel": "Mittel",
+    "eher_hoch": "Eher hoch",
+}
+YESNO_LABELS = {
+    "ja": "Ja",
+    "nein": "Nein",
+    "teilweise": "Teilweise",
+    "unklar": "Unklar",
+}
+LEVEL_LABELS = {
+    "niedrig": "Niedrig",
+    "mittel": "Mittel",
+    "hoch": "Hoch",
+    "sehr_hoch": "Sehr hoch",
+}
 
 def _fix_utf8_mojibake(text: str) -> str:
     if not text or not isinstance(text, str): return text
@@ -104,6 +133,30 @@ def normalize_answers(answers: Dict[str, Any]) -> Dict[str, Any]:
     out["BUNDESLAND_LABEL"] = BUNDESLAENDER_LABELS.get(out.get("bundesland",""), out.get("bundesland","").upper() or "—")
     rev = str(out.get("jahresumsatz","") or "").strip().lower()
     out["JAHRESUMSATZ_LABEL"] = UMSATZ_LABELS.get(rev, out.get("jahresumsatz","") or "—")
+
+    # Additional labels for all fields used in templates
+    out["HAUPTLEISTUNG"] = out.get("hauptleistung", "") or "—"
+    out["IT_INFRASTRUKTUR_LABEL"] = IT_INFRASTRUKTUR_LABELS.get(out.get("it_infrastruktur", ""), out.get("it_infrastruktur", "") or "—")
+    out["PROZESSE_PAPIERLOS_LABEL"] = PROZESSE_PAPIERLOS_LABELS.get(out.get("prozesse_papierlos", ""), out.get("prozesse_papierlos", "") or "—")
+    out["AUTOMATISIERUNGSGRAD_LABEL"] = AUTOMATISIERUNGSGRAD_LABELS.get(out.get("automatisierungsgrad", ""), out.get("automatisierungsgrad", "") or "—")
+    out["ROADMAP_VORHANDEN_LABEL"] = YESNO_LABELS.get(out.get("roadmap_vorhanden", ""), out.get("roadmap_vorhanden", "") or "—")
+    out["GOVERNANCE_RICHTLINIEN_LABEL"] = YESNO_LABELS.get(out.get("governance_richtlinien", ""), out.get("governance_richtlinien", "") or "—")
+    out["CHANGE_MANAGEMENT_LABEL"] = LEVEL_LABELS.get(out.get("change_management", ""), out.get("change_management", "") or "—")
+    out["MELDEWEGE_LABEL"] = YESNO_LABELS.get(out.get("meldewege", ""), out.get("meldewege", "") or "—")
+    out["DATENSCHUTZ_LABEL"] = YESNO_LABELS.get(str(out.get("datenschutz", "")).lower() if out.get("datenschutz") is not None else "", "—")
+    out["LOESCHREGELN_LABEL"] = YESNO_LABELS.get(out.get("loeschregeln", ""), out.get("loeschregeln", "") or "—")
+    out["DATENSCHUTZBEAUFTRAGTER_LABEL"] = YESNO_LABELS.get(out.get("datenschutzbeauftragter", ""), out.get("datenschutzbeauftragter", "") or "—")
+    out["FOLGENABSCHAETZUNG_LABEL"] = YESNO_LABELS.get(out.get("folgenabschaetzung", ""), out.get("folgenabschaetzung", "") or "—")
+    out["INTERNE_KI_KOMPETENZEN_LABEL"] = YESNO_LABELS.get(out.get("interne_ki_kompetenzen", ""), out.get("interne_ki_kompetenzen", "") or "—")
+
+    # Freitext fields (pass through as-is)
+    out["STRATEGISCHE_ZIELE"] = out.get("strategische_ziele", "") or "—"
+    out["GESCHAEFTSMODELL_EVOLUTION"] = out.get("geschaeftsmodell_evolution", "") or "—"
+    out["ZEITERSPARNIS_PRIORITAET"] = out.get("zeitersparnis_prioritaet", "") or "—"
+    out["KI_PROJEKTE"] = out.get("ki_projekte", "") or "—"
+    out["VISION_3_JAHRE"] = out.get("vision_3_jahre", "") or "—"
+    out["MITARBEITER_LABEL"] = out.get("unternehmensgroesse", "") or "—"  # Alias for employee count
+    out["UMSATZ_LABEL"] = out.get("JAHRESUMSATZ_LABEL", "—")  # Alias
 
     # Alias: ki_knowhow
     if "ki_kompetenz" in out and "ki_knowhow" not in out:

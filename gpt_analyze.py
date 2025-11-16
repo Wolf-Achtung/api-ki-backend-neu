@@ -1605,6 +1605,28 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["score_befaehigung"] = scores.get("enablement", 0)
     sections["score_gesamt"] = scores.get("overall", 0)
 
+    # Copy all normalized labels from answers to sections
+    sections["HAUPTLEISTUNG"] = answers.get("HAUPTLEISTUNG", "")
+    sections["IT_INFRASTRUKTUR_LABEL"] = answers.get("IT_INFRASTRUKTUR_LABEL", "")
+    sections["PROZESSE_PAPIERLOS_LABEL"] = answers.get("PROZESSE_PAPIERLOS_LABEL", "")
+    sections["AUTOMATISIERUNGSGRAD_LABEL"] = answers.get("AUTOMATISIERUNGSGRAD_LABEL", "")
+    sections["ROADMAP_VORHANDEN_LABEL"] = answers.get("ROADMAP_VORHANDEN_LABEL", "")
+    sections["GOVERNANCE_RICHTLINIEN_LABEL"] = answers.get("GOVERNANCE_RICHTLINIEN_LABEL", "")
+    sections["CHANGE_MANAGEMENT_LABEL"] = answers.get("CHANGE_MANAGEMENT_LABEL", "")
+    sections["MELDEWEGE_LABEL"] = answers.get("MELDEWEGE_LABEL", "")
+    sections["DATENSCHUTZ_LABEL"] = answers.get("DATENSCHUTZ_LABEL", "")
+    sections["LOESCHREGELN_LABEL"] = answers.get("LOESCHREGELN_LABEL", "")
+    sections["DATENSCHUTZBEAUFTRAGTER_LABEL"] = answers.get("DATENSCHUTZBEAUFTRAGTER_LABEL", "")
+    sections["FOLGENABSCHAETZUNG_LABEL"] = answers.get("FOLGENABSCHAETZUNG_LABEL", "")
+    sections["INTERNE_KI_KOMPETENZEN_LABEL"] = answers.get("INTERNE_KI_KOMPETENZEN_LABEL", "")
+    sections["STRATEGISCHE_ZIELE"] = answers.get("STRATEGISCHE_ZIELE", "")
+    sections["GESCHAEFTSMODELL_EVOLUTION"] = answers.get("GESCHAEFTSMODELL_EVOLUTION", "")
+    sections["ZEITERSPARNIS_PRIORITAET"] = answers.get("ZEITERSPARNIS_PRIORITAET", "")
+    sections["KI_PROJEKTE"] = answers.get("KI_PROJEKTE", "")
+    sections["VISION_3_JAHRE"] = answers.get("VISION_3_JAHRE", "")
+    sections["MITARBEITER_LABEL"] = answers.get("MITARBEITER_LABEL", "")
+    sections["UMSATZ_LABEL"] = answers.get("UMSATZ_LABEL", "")
+
     version_full = os.getenv("VERSION", "1.0.0")
     version_mm = re.match(r"^\s*(\d+)\.(\d+)", version_full or "")
     version_mm = f"{version_mm.group(1)}.{version_mm.group(2)}" if version_mm else "1.0"
