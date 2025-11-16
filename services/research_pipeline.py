@@ -51,6 +51,8 @@ FUNDING_HINT_PAGES = [
     "https://www.foerderdatenbank.de/",
     "https://www.bmwk.de/Navigation/DE/Home/home.html",
     "https://digital-strategy.ec.europa.eu/en/activities/digital-programme",
+    "https://www.ibb.de/de/foerderprogramme/",
+    "https://www.berlin.de/sen/wirtschaft/wirtschaft/foerderprogramme/",
 ]
 
 def _kw(answers: Dict[str, Any]) -> List[str]:
@@ -77,7 +79,8 @@ def _tools_table(items: List[Dict[str, str]]) -> str:
         return ""
     rows = []
     for it in items:
-        title = html.escape(it.get("title","") or it.get("source","Tool"))
+        # Support both "title" and "name" fields for robustness
+        title = html.escape(it.get("title") or it.get("name") or it.get("source") or "Tool")
         url = html.escape(it.get("url",""))
         src = html.escape(it.get("source",""))
         rows.append(f"<tr><td>{title}</td><td><a href='{url}'>{src or url}</a></td></tr>")
@@ -88,7 +91,8 @@ def _funding_table(items: List[Dict[str, str]]) -> str:
         return ""
     rows = []
     for it in items:
-        title = html.escape(it.get("title","Programm"))
+        # Support both "title" and "name" fields for robustness
+        title = html.escape(it.get("title") or it.get("name") or "Programm")
         url = html.escape(it.get("url",""))
         src = html.escape(it.get("source",""))
         rows.append(f"<tr><td>{title}</td><td><a href='{url}'>{src or url}</a></td></tr>")
@@ -166,8 +170,10 @@ def run_research(answers: Dict[str, Any]) -> Dict[str, Any]:
             if os.path.exists(path):
                 raw = json.load(open(path, "r", encoding="utf-8"))
                 for it in raw[:12]:
+                    # Fix: Support both "title" and "name" fields (JSON uses "name")
+                    title = it.get("title") or it.get("name") or "Programm"
                     funding.append({
-                        "title": it.get("title","Programm"),
+                        "title": title,
                         "url": it.get("url",""),
                         "source": it.get("url","")
                     })
