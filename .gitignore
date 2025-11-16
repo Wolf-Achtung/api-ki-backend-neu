@@ -58,3 +58,6 @@ htmlcov/
 # Data and Cache
 data/research_cache.json
 *.cache
+
+# Download archives
+*.zip
