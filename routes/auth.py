@@ -114,13 +114,13 @@ async def login(payload: LoginIn, request: Request, response: Response):
     log.debug("Token created successfully for user: %s", payload.email)
 
     # Phase 1: Set httpOnly cookie (hybrid mode)
-    # Cookie specs: name=auth_token, httpOnly, Secure, SameSite=Lax, max_age=3600
+    # Cookie specs: name=auth_token, httpOnly, Secure, SameSite=None, max_age=3600
     response.set_cookie(
         key="auth_token",
         value=token,
         httponly=True,
         secure=True,  # Only send over HTTPS
-        samesite="lax",  # CSRF protection
+        samesite="none",  # Allow cross-site cookies (required for cross-origin requests)
         max_age=3600,  # 1 hour in seconds
         path="/",  # Cookie available for entire domain
     )
@@ -167,7 +167,7 @@ async def logout(response: Response):
         path="/",
         httponly=True,
         secure=True,
-        samesite="lax",
+        samesite="none",
     )
     log.info("🚪 User logged out, cookie cleared")
 
