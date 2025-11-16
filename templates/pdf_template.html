@@ -40,6 +40,16 @@
   </header>
 
   <main>
+    <!-- Mini-Legende auf der ersten Seite -->
+    <section id="mini-legend" class="card">
+      <div class="small muted">
+        <strong>Mini-Legende:</strong><br>
+        • Auf dieser Seite: Executive Summary &amp; KI-Reife-Überblick<br>
+        • In den folgenden Kapiteln: Detaillierte Analysen, Roadmaps, Risiken &amp; Empfehlungen<br>
+        • Im Anhang: Hintergrund zum Digital Omnibus 2025, KI-Glossar (DE) &amp; Kreativ-Tools 2025
+      </div>
+    </section>
+
     <!-- Executive Summary -->
     <section id="exec-summary" class="card">
       <h2>Executive Summary</h2>
@@ -167,22 +177,6 @@
     </section>
     {% endif %}
 
-    <!-- Digital Omnibus 2025 – Regulatorische Großwetterlage -->
-    {% if DIGITAL_OMNIBUS_HTML %}
-    <section id="digital-omnibus" class="card">
-      <h2>Digital Omnibus 2025 – Auswirkungen auf GDPR & EU AI Act</h2>
-      <div>{{ DIGITAL_OMNIBUS_HTML }}</div>
-    </section>
-    {% endif %}
-
-    <!-- Omnibus-Auswirkungsprofil für das Unternehmen -->
-    {% if OMNIBUS_PROFILE_HTML %}
-    <section id="omnibus-profile" class="card">
-      <h2>Omnibus-Auswirkungsprofil für Ihr Unternehmen</h2>
-      <div>{{ OMNIBUS_PROFILE_HTML }}</div>
-    </section>
-    {% endif %}
-
     <!-- Förderpotenzial -->
     {% if FOERDERPOTENZIAL_HTML %}
     <section id="foerderpotenzial" class="card">
@@ -218,6 +212,136 @@
       <div>{{ TRANSPARENCY_BOX_HTML }}</div>
     </section>
     {% endif %}
+
+    <!-- ANHANG: Hintergrund & Nachschlagebereich -->
+    <section id="appendix" class="card">
+      <h2>Anhang: Hintergrund & Nachschlagebereich</h2>
+
+      <!-- Digital Omnibus 2025 -->
+      <h3>Digital Omnibus 2025 – Auswirkungen auf GDPR & EU AI Act</h3>
+      <p>
+        Die Europäische Kommission arbeitet am sogenannten
+        <strong>„Digital Omnibus“</strong>, einem Gesetzespaket, das zentrale digitale
+        Regelwerke wie die <strong>Datenschutz-Grundverordnung (GDPR)</strong>,
+        ePrivacy-Regeln und den <strong>EU AI Act</strong> anpassen soll. Ziel ist,
+        Doppelregulierungen zu reduzieren, Rechtsrahmen zu vereinfachen und den
+        digitalen Binnenmarkt zu stärken.
+      </p>
+      <ul>
+        <li>
+          <strong>GDPR &amp; ePrivacy:</strong> Geplant sind Erleichterungen bei der
+          Nutzung personenbezogener Daten – insbesondere für KI-Training – sowie
+          eine mögliche Annäherung oder Anpassung von ePrivacy-Vorgaben
+          (z. B. Tracking, Cookies).
+        </li>
+        <li>
+          <strong>EU AI Act:</strong> Diskutiert werden zusätzliche Übergangsfristen,
+          vereinfachte Pflichten für bestimmte Hochrisiko-KI-Systeme und eine
+          stärkere Rolle eines zentralen EU-AI-Office.
+        </li>
+        <li>
+          <strong>Kontroverse:</strong> Zivilgesellschaftliche Organisationen warnen vor
+          einer faktischen Absenkung des Schutzniveaus („Mindeststandard light“)
+          und vor einer schrittweisen Aushöhlung digitaler Grundrechte.
+        </li>
+      </ul>
+      <p>
+        Für Unternehmen bedeutet das: Die <strong>gesetzlichen Mindestanforderungen</strong>
+        können sich in den kommenden Jahren verändern. Die Empfehlung dieses Reports
+        orientiert sich bewusst an einem <strong>stabilen Vertrauensstandard</strong>,
+        der über wahrscheinlichen Mindestanforderungen eines Digital Omnibus liegt
+        und damit langfristig tragfähig ist.
+      </p>
+
+      <!-- KI-Glossar (DE) -->
+      <h3>KI-Glossar (DE) – kompakt</h3>
+      <p><strong>AI Act (EU)</strong> – Europäische Verordnung zu KI-Systemen mit Pflichten je nach Risikoklasse (Transparenz, Datenqualität, Aufsicht, Dokumentation).</p>
+      <p><strong>Alignment</strong> – Ausrichtung eines Modells auf gewünschte Ziele/Verhalten (Sicherheit, Ethik, Stil).</p>
+      <p><strong>API</strong> – Programmierschnittstelle zur Anbindung oder Automatisierung von Software.</p>
+      <p><strong>Assistive AI</strong> – KI als Unterstützung in Workflows (nicht vollautonom).</p>
+      <p><strong>Benchmark</strong> – Vergleichsmaßstab zur Einordnung der eigenen Performance.</p>
+      <p><strong>Chatbot</strong> – Dialogsystem auf Basis eines LLMs, z. B. für Support oder interne Auskünfte.</p>
+      <p><strong>Context Window</strong> – Menge an Tokens, die ein Modell pro Anfrage verarbeiten kann.</p>
+      <p><strong>Copilot</strong> – Assistent, der in bestehende Tools integriert (z. B. M365 Copilot).</p>
+      <p><strong>Data Leakage</strong> – Unbeabsichtigte Preisgabe sensibler Daten durch Logs, Trainingsdaten oder Prompting.</p>
+      <p><strong>Data Loss Prevention (DLP)</strong> – Techniken/Regeln, die Datenabflüsse verhindern.</p>
+      <p><strong>Dataset Governance</strong> – Richtlinien für Herkunft, Qualität und Nutzung von Trainings-/Kontextdaten.</p>
+      <p><strong>Embeddings</strong> – Vektordarstellung von Text/Bildern für Suche, RAG u. ä.</p>
+      <p><strong>Enterprise Readiness</strong> – Erfüllung von Anforderungen an Sicherheit, Compliance, Betrieb &amp; Support.</p>
+      <p><strong>Few-shot Prompting</strong> – Beispiele im Prompt, um das Modell zu steuern.</p>
+      <p><strong>Fine-Tuning</strong> – Nachtrainieren eines Modells auf eigene Daten.</p>
+      <p><strong>Guardrails</strong> – Prüfschritte (Policies, Tools), die Ausgaben validieren/filtern.</p>
+      <p><strong>Halluzination</strong> – Plausibel klingende, aber faktisch falsche Ausgabe eines Modells.</p>
+      <p><strong>Inference</strong> – Ausführung eines Modells zur Beantwortung einer Anfrage.</p>
+      <p><strong>KB / Wissensbasis</strong> – Kuratierte, versionierte Sammlung relevanter Dokumente.</p>
+      <p><strong>Latency</strong> – Antwortzeit eines Systems.</p>
+      <p><strong>LLM</strong> – Large Language Model (z. B. GPT-4.1, Claude 3.5, Llama 3.1).</p>
+      <p><strong>Maturity Index</strong> – Indikator für den KI-Reifegrad eines Unternehmens.</p>
+      <p><strong>Open-Source Modelle</strong> – Frei verfügbare Modelle (z. B. Llama, Mistral) – oft lokal einsetzbar.</p>
+      <p><strong>Prompt</strong> – Eingabeinstruktion an ein LLM.</p>
+      <p><strong>Prompt Leakage</strong> – Preisgabe sensibler Systeminstruktionen (z. B. durch Rückfragen).</p>
+      <p><strong>RAG</strong> – Retrieval-Augmented Generation: Modell nutzt eigene Wissensbasis.</p>
+      <p><strong>Red Teaming</strong> – Systematische Tests gegen Missbrauch/Fehler (Sicherheit).</p>
+      <p><strong>Responsible AI</strong> – Verantwortungsvolle Entwicklung/Nutzung mit Ethik &amp; Compliance.</p>
+      <p><strong>Runtime Cost</strong> – Laufzeit-/Token-Kosten pro Anfrage.</p>
+      <p><strong>Service Levels (SLA)</strong> – Vereinbarte Verfügbarkeits-/Performance-Grenzen.</p>
+      <p><strong>Shadow-IT</strong> – Nicht genehmigte Tools/Automationen, die Risiken bergen.</p>
+      <p><strong>SLA Drift</strong> – Schleichende Verschlechterung gegenüber vereinbarten Werten.</p>
+      <p><strong>Tavily / Perplexity</strong> – Recherche-APIs, die Web-Quellen strukturiert aufbereiten.</p>
+      <p><strong>Token</strong> – Grundeinheit der Modellverarbeitung (~3-4 Zeichen).</p>
+      <p><strong>Toolformer</strong> – Modell nutzt externe Tools/Plugins zur Problemlösung.</p>
+      <p><strong>Vector Store</strong> – Datenbank für Embeddings (z. B. FAISS, pgvector).</p>
+      <p class="small muted">Quelle: kuratiert, Stand 2025.</p>
+
+      <!-- Kreativ-Tools 2025 -->
+      <h3>Kreativ-Tools 2025 – Alternativen zu Adobe</h3>
+      <p>
+        Figma, Affinity 3, DaVinci Resolve, Blender und Milanote sind 2025 etablierte
+        Kreativtools, die viele professionelle Bedürfnisse abdecken und in vielen
+        Designkontexten als vollwertige oder sogar bessere Alternativen zu Adobe-Produkten
+        gelten. Adobe bleibt vor allem dort relevant, wo spezialisierte Workflows im
+        Adobe-Ökosystem unverzichtbar sind.
+      </p>
+
+      <h4>Figma vs Affinity 3</h4>
+      <ul>
+        <li><strong>Figma</strong>: Cloudbasierte UI/UX-Plattform mit starker Echtzeit-Kollaboration und Prototyping – ideal für Teams und Interface-Design.</li>
+        <li><strong>Affinity Designer 3</strong>: Leistungsstarke Vektor- und Raster-Grafiksoftware mit Einmalkaufmodell, beliebt bei Illustratoren und klassischen Grafikdesigner:innen.</li>
+        <li>Beide sind in Funktionalität und Qualität mit Adobe-Tools vergleichbar, Figma punktet bei Teamarbeit, Affinity bei umfassenden Designwerkzeugen ohne Abo.</li>
+      </ul>
+
+      <h4>DaVinci Resolve vs Premiere &amp; After Effects</h4>
+      <ul>
+        <li><strong>DaVinci Resolve</strong> gilt als erstklassige Videobearbeitungsplattform, in vielen Bereichen konkurrenzfähig bis überlegen zu Premiere und After Effects.</li>
+        <li>Besonders stark ist Resolve in der Farbkorrektur. Es existiert eine sehr leistungsfähige kostenlose Version, was es gegenüber Abo-Modellen attraktiv macht.</li>
+      </ul>
+
+      <h4>Blender als 3D-Tool</h4>
+      <ul>
+        <li><strong>Blender</strong> ist ein mächtiges Open-Source-3D-Programm für Modellierung, Animation und Rendering.</li>
+        <li>Es deckt viele 3D-Produktionsbereiche ab und ist vollständig kostenfrei, mit aktiver Weiterentwicklung.</li>
+      </ul>
+
+      <h4>Milanote als Kreativ- und Planungstool</h4>
+      <ul>
+        <li><strong>Milanote</strong> ist ein visuelles Notiz-, Moodboard- und Planungs-Tool für Kreativteams.</li>
+        <li>Besonders geeignet für Ideation-, Mood- und Konzeptphasen, in denen klassische Adobe-Programme weniger fokussiert sind.</li>
+      </ul>
+
+      <h4>Wer braucht da noch Adobe?</h4>
+      <p>
+        Adobe bleibt stark durch sein großes Ökosystem, etablierte Workflows und sehr tiefe
+        Funktionsbreite. Gleichzeitig ersetzen immer mehr Designer:innen und Agenturen einzelne
+        Adobe-Programme durch spezialisierte moderne Tools. Gründe sind oft Abo-Kosten,
+        Einstiegspreis und der Wunsch nach mehr Flexibilität.
+      </p>
+      <p class="small muted">
+        Fazit: Für viele Design-, Video-, 3D- und Planungsaufgaben sind Figma, Affinity 3,
+        DaVinci Resolve, Blender und Milanote heute vollwertige Alternativen. Adobe ist
+        nicht mehr zwingend, aber weiterhin ein relevanter Baustein, wo bestehende
+        Prof-Workflows darauf aufbauen.
+      </p>
+    </section>
   </main>
 
   <footer class="small muted" style="padding:0 28px 28px">
