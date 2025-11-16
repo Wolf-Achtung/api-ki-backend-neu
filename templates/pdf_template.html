@@ -41,92 +41,90 @@
 
   <main>
     <!-- Mini-Legende auf der ersten Seite -->
-    <section id="mini-legend" class="card">
-      <div class="small muted">
-        <strong>Mini-Legende:</strong><br>
-        • Auf dieser Seite: Executive Summary &amp; KI-Reife-Überblick<br>
-        • In den folgenden Kapiteln: Detaillierte Analysen, Roadmaps, Risiken &amp; Empfehlungen<br>
-        • Im Anhang: Hintergrund zum Digital Omnibus 2025, KI-Glossar (DE) &amp; Kreativ-Tools 2025
-      </div>
+    <section id="mini-legend" class="card small muted">
+      <strong>Mini-Legende:</strong><br>
+      • Auf dieser Seite: Executive Summary &amp; KI-Reife-Überblick<br>
+      • In den folgenden Kapiteln: Detaillierte Analysen, Roadmaps, Risiken &amp; Empfehlungen<br>
+      • Im Anhang: Hintergrund zum Digital Omnibus 2025, KI-Glossar (DE) &amp; Kreativ-Tools 2025
     </section>
 
     <!-- Executive Summary -->
     <section id="exec-summary" class="card">
       <h2>Executive Summary</h2>
-      <div>{{ EXECUTIVE_SUMMARY_HTML }}</div>
+      {{ EXECUTIVE_SUMMARY_HTML|safe }}
     </section>
 
     <!-- Unternehmensprofil & Markt -->
     {% if UNTERNEHMENSPROFIL_MARKT_HTML %}
     <section id="unternehmensprofil" class="card">
-      <div>{{ UNTERNEHMENSPROFIL_MARKT_HTML }}</div>
+      {{ UNTERNEHMENSPROFIL_MARKT_HTML|safe }}
     </section>
     {% endif %}
 
     <!-- KI-Reife Scores -->
     <section id="kpi" class="card">
       <h2>KI-Reife – Ergebnisüberblick</h2>
-      <div>{{ KPI_SCORES_HTML }}</div>
+      {{ KPI_SCORES_HTML|safe }}
     </section>
 
     <!-- Strategie & Governance -->
     {% if STRATEGIE_GOVERNANCE_HTML %}
     <section id="strategie-governance" class="card">
-      <div>{{ STRATEGIE_GOVERNANCE_HTML }}</div>
+      {{ STRATEGIE_GOVERNANCE_HTML|safe }}
     </section>
     {% endif %}
 
     <!-- Technologie & Prozesse -->
     {% if TECHNOLOGIE_PROZESSE_HTML %}
     <section id="technologie-prozesse" class="card">
-      <div>{{ TECHNOLOGIE_PROZESSE_HTML }}</div>
+      {{ TECHNOLOGIE_PROZESSE_HTML|safe }}
     </section>
     {% endif %}
 
     <!-- Wettbewerb & Benchmarking -->
     {% if WETTBEWERB_BENCHMARK_HTML %}
     <section id="wettbewerb-benchmark" class="card">
-      <div>{{ WETTBEWERB_BENCHMARK_HTML }}</div>
+      {{ WETTBEWERB_BENCHMARK_HTML|safe }}
     </section>
     {% endif %}
 
     <!-- KI-Aktivitäten & Ziele -->
     {% if KI_AKTIVITAETEN_ZIELE_HTML %}
     <section id="ki-aktivitaeten" class="card">
-      <div>{{ KI_AKTIVITAETEN_ZIELE_HTML }}</div>
+      {{ KI_AKTIVITAETEN_ZIELE_HTML|safe }}
     </section>
     {% endif %}
 
     <!-- Quick Wins -->
     <section id="quick-wins" class="card">
       <h2>Quick Wins (0–90 Tage)</h2>
-      <div>{{ QUICK_WINS_HTML }}</div>
+      {{ QUICK_WINS_HTML|safe }}
     </section>
 
     <!-- Tool-Empfehlungen -->
     {% if TOOLS_EMPFEHLUNGEN_HTML %}
     <section id="tools-empfehlungen" class="card">
-      <div>{{ TOOLS_EMPFEHLUNGEN_HTML }}</div>
+      {{ TOOLS_EMPFEHLUNGEN_HTML|safe }}
     </section>
     {% endif %}
 
     <!-- Roadmap 90 Tage -->
     <section id="roadmap-90" class="card">
       <h2>Roadmap 90 Tage</h2>
-      <div>{{ PILOT_PLAN_HTML|default(ROADMAP_90_HTML) }}</div>
+      {{ (PILOT_PLAN_HTML|default(ROADMAP_90_HTML))|safe }}
     </section>
 
     <!-- Roadmap 12 Monate -->
     <section id="roadmap-12" class="card">
       <h2>Roadmap 12 Monate</h2>
-      <div>{{ ROADMAP_12M_HTML|default(ROADMAP_12_HTML) }}</div>
+      {{ (ROADMAP_12M_HTML|default(ROADMAP_12_HTML))|safe }}
     </section>
 
     <!-- Business Case & ROI -->
     {% if BUSINESS_CASE_HTML %}
     <section id="business-case" class="card">
       <h2>Business Case</h2>
-      <div>{{ BUSINESS_CASE_HTML }}</div>
+      {{ BUSINESS_CASE_HTML|safe }}
     </section>
     {% endif %}
 
@@ -134,7 +132,7 @@
     {% if DATA_READINESS_HTML %}
     <section id="data-readiness" class="card">
       <h2>Dateninventar & Qualität</h2>
-      <div>{{ DATA_READINESS_HTML }}</div>
+      {{ DATA_READINESS_HTML|safe }}
     </section>
     {% endif %}
 
@@ -142,7 +140,7 @@
     {% if ORG_CHANGE_HTML %}
     <section id="org-change" class="card">
       <h2>Organisation & Change Management</h2>
-      <div>{{ ORG_CHANGE_HTML }}</div>
+      {{ ORG_CHANGE_HTML|safe }}
     </section>
     {% endif %}
 
@@ -150,7 +148,7 @@
     {% if RISKS_HTML %}
     <section id="risks" class="card">
       <h2>Risiko-Assessment</h2>
-      <div>{{ RISKS_HTML }}</div>
+      {{ RISKS_HTML|safe }}
     </section>
     {% endif %}
 
@@ -158,7 +156,7 @@
     {% if GAMECHANGER_HTML %}
     <section id="gamechanger" class="card">
       <h2>Gamechanger Use Case</h2>
-      <div>{{ GAMECHANGER_HTML }}</div>
+      {{ GAMECHANGER_HTML|safe }}
     </section>
     {% endif %}
 
@@ -166,21 +164,21 @@
     {% if RECOMMENDATIONS_HTML %}
     <section id="recommendations" class="card">
       <h2>Empfehlungen</h2>
-      <div>{{ RECOMMENDATIONS_HTML }}</div>
+      {{ RECOMMENDATIONS_HTML|safe }}
     </section>
     {% endif %}
 
     <!-- EU AI Act Summary -->
     {% if AI_ACT_SUMMARY_HTML %}
     <section id="ai-act" class="card">
-      <div>{{ AI_ACT_SUMMARY_HTML }}</div>
+      {{ AI_ACT_SUMMARY_HTML|safe }}
     </section>
     {% endif %}
 
     <!-- Förderpotenzial -->
     {% if FOERDERPOTENZIAL_HTML %}
     <section id="foerderpotenzial" class="card">
-      <div>{{ FOERDERPOTENZIAL_HTML }}</div>
+      {{ FOERDERPOTENZIAL_HTML|safe }}
     </section>
     {% endif %}
 
@@ -188,7 +186,7 @@
     {% if FOERDERPROGRAMME_HTML or FUNDING_HTML %}
     <section id="funding" class="card">
       <h2>Förderprogramme & Quellen</h2>
-      <div>{{ FOERDERPROGRAMME_HTML|default(FUNDING_HTML) }}</div>
+      {{ (FOERDERPROGRAMME_HTML or FUNDING_HTML)|safe }}
     </section>
     {% endif %}
 
@@ -196,20 +194,20 @@
     {% if TOOLS_HTML and not TOOLS_EMPFEHLUNGEN_HTML %}
     <section id="tools" class="card">
       <h2>Empfohlene Tools</h2>
-      <div>{{ TOOLS_HTML }}</div>
+      {{ TOOLS_HTML|safe }}
     </section>
     {% endif %}
 
     <!-- Nächste Schritte -->
     <section id="next-steps" class="card">
       <h2>Nächste Schritte (30 Tage)</h2>
-      <div>{{ NEXT_ACTIONS_HTML|default(NEXT_STEPS_HTML) }}</div>
+      {{ (NEXT_ACTIONS_HTML or NEXT_STEPS_HTML)|safe }}
     </section>
 
     <!-- Transparenz & Methodik -->
     {% if TRANSPARENCY_BOX_HTML %}
     <section id="transparency" class="card">
-      <div>{{ TRANSPARENCY_BOX_HTML }}</div>
+      {{ TRANSPARENCY_BOX_HTML|safe }}
     </section>
     {% endif %}
 
