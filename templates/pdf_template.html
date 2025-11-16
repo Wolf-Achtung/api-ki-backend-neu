@@ -28,15 +28,22 @@
 </head>
 <body>
   <header>
-    <h1>KI-Status-Report</h1>
-    <ul>
-      <li>Branche: {{ BRANCHE_LABEL }}</li>
-      <li>Größe: {{ UNTERNEHMENSGROESSE_LABEL }}</li>
-      <li>Bundesland: {{ BUNDESLAND_LABEL }}</li>
-      <li>Hauptleistung: {{ HAUPTLEISTUNG }}</li>
-      <li>Erstellungsdatum: {{ report_date }}</li>
-      <li>Report-ID/Build: {{ report_id }}</li>
-    </ul>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center">
+        <h1 style="margin:0 16px 0 0;">KI-Status-Report</h1>
+        {% if LOGO_PRIMARY_SRC %}
+        <img src="{{ LOGO_PRIMARY_SRC }}" alt="Logo" style="height:40px;">
+        {% endif %}
+      </div>
+      <ul>
+        <li>Branche: {{ BRANCHE_LABEL }}</li>
+        <li>Größe: {{ UNTERNEHMENSGROESSE_LABEL }}</li>
+        <li>Bundesland: {{ BUNDESLAND_LABEL }}</li>
+        <li>Hauptleistung: {{ HAUPTLEISTUNG }}</li>
+        <li>Erstellungsdatum: {{ report_date }}</li>
+        <li>Report-ID/Build: {{ report_id }}</li>
+      </ul>
+    </div>
   </header>
 
   <main>
@@ -186,7 +193,7 @@
     {% if FOERDERPROGRAMME_HTML or FUNDING_HTML %}
     <section id="funding" class="card">
       <h2>Förderprogramme & Quellen</h2>
-      {{ (FOERDERPROGRAMME_HTML or FUNDING_HTML)|safe }}
+      {{ (FOERDERPROGRAMME_HTML|default(FUNDING_HTML))|safe }}
     </section>
     {% endif %}
 
@@ -201,7 +208,7 @@
     <!-- Nächste Schritte -->
     <section id="next-steps" class="card">
       <h2>Nächste Schritte (30 Tage)</h2>
-      {{ (NEXT_ACTIONS_HTML or NEXT_STEPS_HTML)|safe }}
+      {{ (NEXT_ACTIONS_HTML|default(NEXT_STEPS_HTML))|safe }}
     </section>
 
     <!-- Transparenz & Methodik -->
@@ -343,7 +350,18 @@
   </main>
 
   <footer class="small muted" style="padding:0 28px 28px">
-    © 2025 KI-Sicherheit.jetzt – DSGVO & EU-AI-Act-Ready – {{ OWNER_NAME }} · Alle Angaben ohne Gewähr; keine Rechtsberatung.
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      {% if FOOTER_LEFT_LOGO_SRC %}
+      <img src="{{ FOOTER_LEFT_LOGO_SRC }}" alt="Footer Left Logo" style="height:28px;">
+      {% endif %}
+      {% if FOOTER_MID_LOGO_SRC %}
+      <img src="{{ FOOTER_MID_LOGO_SRC }}" alt="Footer Middle Logo" style="height:28px;">
+      {% endif %}
+      <span>© 2025 KI-Sicherheit.jetzt – DSGVO &amp; EU-AI-Act-Ready – {{ OWNER_NAME }} · Alle Angaben ohne Gewähr; keine Rechtsberatung.</span>
+      {% if FOOTER_RIGHT_LOGO_SRC %}
+      <img src="{{ FOOTER_RIGHT_LOGO_SRC }}" alt="Footer Right Logo" style="height:28px;">
+      {% endif %}
+    </div>
   </footer>
 </body>
 </html>
