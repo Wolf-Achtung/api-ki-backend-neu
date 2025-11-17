@@ -1,1 +1,1 @@
-# package marker
+"""Package marker for mypy/module resolution."""
