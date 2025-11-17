@@ -1,18 +1,36 @@
-# Business‑Case (realistische Berechnung)
+<!--
+Business‑Case (DE) — Steuerung & Regeln
+Eingaben (numerisch, bereits berechnet und im Template-Kontext verfügbar):
+  - CAPEX_REALISTISCH_EUR (€, einmalig)
+  - OPEX_REALISTISCH_EUR (€/Monat)
+  - EINSPARUNG_MONAT_EUR (€/Monat, Quick‑Wins)
+  - PAYBACK_MONTHS (Monate)
+  - ROI_12M (0..1, als Anteil)
 
-Verwende die folgenden bereits berechneten Variablen konsequent für ROI & Amortisationszeit:
+WICHTIG:
+  - Keine Zahlen erfinden. Ausschließlich die oben genannten Variablen verwenden.
+  - Kurz, sachlich und zuversichtlich – kein Marketing‑Wording.
+  - Zielgruppe: Entscheider:innen. Nutzen, Amortisation und Risiken klar benennen.
+-->
 
-- CAPEX: {{CAPEX_REALISTISCH_EUR}} €
-- OPEX_MONAT: {{OPEX_REALISTISCH_EUR}} €/Monat
-- EINSPARUNG_MONAT: {{EINSPARUNG_MONAT_EUR}} €/Monat
-- PAYBACK_MONATE: {{PAYBACK_MONTHS}}
-- ROI_12M_EUR: {{ROI_12M}} €
+### Business‑Case (Ergebnis)
 
-## Aufgabe
-1. Erkläre in 3–5 Sätzen den Business‑Case und die zugrunde liegenden Annahmen (Solo‑Beratung, realistische, konservative Werte).
-2. Beschreibe Payback und ROI verständlich für Entscheider:innen (ohne Buzzwords).
-3. Gib eine kurze Empfehlung, wie CAPEX gesenkt und ROI erhöht werden kann (z.B. stufenweise Einführung, Open‑Source, vorhandene Lizenzen nutzen).
+**Monatliche Einsparung:** {{EINSPARUNG_MONAT_EUR}} €  
+**CAPEX:** {{CAPEX_REALISTISCH_EUR}} € · **OPEX:** {{OPEX_REALISTISCH_EUR}} €/Monat  
+**Amortisation:** {{PAYBACK_MONTHS}} Monate · **ROI (12 Monate):** {{ (ROI_12M*100)|round(1) }} %
 
-## Stil
-Sachlich, zuversichtlich, prägnant. Deutsch (duzen oder siezen gemäß Report).
+#### Interpretation
+Die Quick‑Win‑Einsparungen von {{EINSPARUNG_MONAT_EUR}} €/Monat tragen die laufenden Kosten (OPEX) und führen zu einer Amortisation nach {{PAYBACK_MONTHS}} Monaten.
+Der ROI nach 12 Monaten von {{ (ROI_12M*100)|round(1) }} % ergibt sich ausschließlich aus den bereitgestellten Zahlen — ohne zusätzliche Annahmen.
 
+#### Sensitivität (±20 %)
+- **Einsparung −20 %:** Längere Amortisationszeit, ROI verringert sich entsprechend.  
+- **Einsparung +20 %:** Schnellere Amortisation, höherer ROI.  
+- **Kosten +/−20 %:** Payback verschiebt sich proportional, Aussage bleibt robust, wenn Prozesse und Nutzung stabil sind.
+
+#### Empfehlungen zur ROI‑Hebelung (konkret)
+1) **Stufenweise Einführung (MVP → Skalierung):** Erst Pilot, dann Ausrollen; verhindert Überinvestitionen.  
+2) **Tooling optimieren:** Vorhandene Lizenzen nutzen, Verträge bündeln, Automationsgrad erhöhen.  
+3) **Enablement & Standards:** Rollen schulen, klare Messgrößen (Zeit, Qualität, Risiko) definieren, regelmäßiges Review.
+
+*Hinweis:* Für Solo‑Beratung gelten konservative Annahmen; Anpassungen (z. B. Stundensatz, Tool‑Mix) ändern die Kennzahlen entsprechend.
