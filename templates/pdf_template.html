@@ -211,7 +211,14 @@
       {{ (NEXT_ACTIONS_HTML|default(NEXT_STEPS_HTML))|safe }}
     </section>
 
-    <!-- Transparenz & Methodik -->
+    <!-- 
+    {# === KSJ: Zusatzsektionen (minimal-invasiv eingefügt) =================== #}
+    {{ BENCHMARKS_SECTION_HTML|default(BENCHMARK_HTML)|safe }}
+    {{ BUSINESS_CASE_TABLE_HTML|safe }}
+    {{ STARTER_STACKS_HTML|safe }}
+    {{ RESPONSIBLE_AI_HTML|safe }}
+    {# ======================================================================== #}
+Transparenz & Methodik -->
     {% if TRANSPARENCY_BOX_HTML %}
     <section id="transparency" class="card">
       {{ TRANSPARENCY_BOX_HTML|safe }}
