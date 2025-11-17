@@ -1,13 +1,18 @@
-### Business‑Case (Ergebnis)
+# Business‑Case (realistische Berechnung)
 
-**Monatliche Einsparung:** {{ monthly_savings_eur | round(0) }} €  
+Verwende die folgenden bereits berechneten Variablen konsequent für ROI & Amortisationszeit:
 
-**CAPEX:** {{ capex_realistisch_eur | round(0) }} € · **OPEX:** {{ opex_realistisch_eur | round(0) }} €/Monat  
+- CAPEX: {{CAPEX_REALISTISCH_EUR}} €
+- OPEX_MONAT: {{OPEX_REALISTISCH_EUR}} €/Monat
+- EINSPARUNG_MONAT: {{EINSPARUNG_MONAT_EUR}} €/Monat
+- PAYBACK_MONATE: {{PAYBACK_MONTHS}}
+- ROI_12M_EUR: {{ROI_12M}} €
 
-**Payback:** {{ payback_months | round(1) }} Monate · **ROI (12 Monate):** {{ (roi_12m*100) | round(1) }} %
+## Aufgabe
+1. Erkläre in 3–5 Sätzen den Business‑Case und die zugrunde liegenden Annahmen (Solo‑Beratung, realistische, konservative Werte).
+2. Beschreibe Payback und ROI verständlich für Entscheider:innen (ohne Buzzwords).
+3. Gib eine kurze Empfehlung, wie CAPEX gesenkt und ROI erhöht werden kann (z.B. stufenweise Einführung, Open‑Source, vorhandene Lizenzen nutzen).
 
-**Fazit:** Die kalkulierten Quick‑Wins von {{ qw_hours_total }} h/Monat und ein Stundensatz von {{ default_stundensatz_eur }} €/h ergeben eine solide Wirtschaftlichkeit. Mit einem **Payback von {{ payback_months | round(1) }} Monaten** und **{{ (roi_12m*100) | round(1) }} % ROI** ist ein schneller Pilotstart empfehlenswert.
+## Stil
+Sachlich, zuversichtlich, prägnant. Deutsch (duzen oder siezen gemäß Report).
 
-**Sensitivität (±20 %):** Niedrigere Einsparungen verlängern die Amortisationszeit moderat; höhere Einsparungen verkürzen sie entsprechend. Bei ±20 % Kostenänderung bleibt der Case robust – unter der Bedingung konsequenter Nutzung und Automationsdisziplin.
-
-**Empfehlung:** Starten Sie **in 30 Tagen** mit einem fokussierten Pilot (1 Prozess, klare Metriken); skalieren Sie nach erfolgreicher Zielerreichung.
