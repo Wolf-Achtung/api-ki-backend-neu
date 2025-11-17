@@ -153,7 +153,6 @@ from services.html_sanitizer import sanitize_sections_dict  # type: ignore
 import os
 from jinja2 import Environment, BaseLoader  # KSJ: for prompt/HTML rendering
 
-# KSJ: extra sections (business case, benchmarks, stacks, compliance)
 try:
     from services.extra_sections import (
         calc_business_case,
@@ -161,8 +160,11 @@ try:
         build_starter_stacks,
         build_responsible_ai_section,
     )
-except Exception as _e:
-    calc_business_case = build_benchmarks_section = build_starter_stacks = build_responsible_ai_section = None
+except Exception:
+    calc_business_case = None
+    build_benchmarks_section = None
+    build_starter_stacks = None
+    build_responsible_ai_section = None
 
 def _env_float(name: str, default: float) -> float:
     try:
@@ -1928,6 +1930,24 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         log.warning("[%s] ⚠️ Placeholder fix failed: %s", run_id, _exc)
 
     sections.update(build_extra_sections(answers, scores))
+
+    # Zusätzliche Context-Erweiterung mit expliziten Checks
+    if calc_business_case:
+        bc = calc_business_case(answers, os.environ)
+        sections.update(bc)  # stellt z.B. EINSPARUNG_MONAT_EUR, ROI_12M etc. bereit
+
+    if build_benchmarks_section:
+        sections["BENCHMARKS_HTML"] = build_benchmarks_section(scores, path="data/benchmarks.json")
+
+    if build_starter_stacks:
+        sections["STARTER_STACKS_HTML"] = build_starter_stacks(answers, path="data/starter_stacks.json")
+
+    if build_responsible_ai_section:
+        sections["RESPONSIBLE_AI_HTML"] = build_responsible_ai_section({
+            "four_pillars": "knowledge/four_pillars.html",
+            "legal_pitfalls": "knowledge/legal_pitfalls.html"
+        })
+
     result = render(
         br,
         run_id=run_id,
