@@ -14,6 +14,87 @@ gpt_analyze.py – v4.14.0-GOLD-PLUS
 
 
 # --- Patch03: field label helper ---
+
+# === KSJ helpers: Jinja rendering & placeholder fix =======================
+_ksj_jinja_env = Environment(loader=BaseLoader(), autoescape=False)
+
+def ksj_render_string(tpl_text: str, ctx: dict) -> str:
+    try:
+        return _ksj_jinja_env.from_string(tpl_text).render(**ctx)
+    except Exception as e:
+        return tpl_text  # be permissive in prod
+
+def ksj_build_numeric_ctx(answers: dict, env: dict, calc: dict | None) -> dict:
+    # merge numeric context for Exec Summary & Business Case
+    ctx = {}
+    if calc:
+        ctx.update({
+            "CAPEX_REALISTISCH_EUR": calc.get("CAPEX_REALISTISCH_EUR"),
+            "OPEX_REALISTISCH_EUR": calc.get("OPEX_REALISTISCH_EUR"),
+            "EINSPARUNG_MONAT_EUR": calc.get("EINSPARUNG_MONAT_EUR"),
+            "PAYBACK_MONTHS": calc.get("PAYBACK_MONTHS"),
+            "ROI_12M": calc.get("ROI_12M"),
+            "BUSINESS_CASE_TABLE_HTML": calc.get("BUSINESS_CASE_TABLE_HTML"),
+        })
+    # quick-win hours if present
+    for k in ("qw_hours_total", "quick_wins_total_hours", "sum_quickwin_hours"):
+        if k in answers and isinstance(answers[k], (int,float)):
+            ctx["qw_hours_total"] = int(answers[k])
+            break
+    return ctx
+
+def ksj_fix_placeholders_in_sections(sections: dict, answers: dict, scores: dict) -> dict:
+    """Render any Jinja-like placeholders in section strings using numeric ctx."""
+    env_defaults = {
+        "DEFAULT_STUNDENSATZ_EUR": 60,
+        "DEFAULT_QW1_H": 10,
+        "DEFAULT_QW2_H": 8,
+        "FALLBACK_QW_MONTHLY_H": 18,
+    }
+    calc = None
+    if callable(calc_business_case):
+        try:
+            calc = calc_business_case(answers, env_defaults)
+            # ensure business case html in sections for template placeholders
+            if isinstance(calc, dict) and calc.get("BUSINESS_CASE_TABLE_HTML"):
+                sections.setdefault("BUSINESS_CASE_TABLE_HTML", calc["BUSINESS_CASE_TABLE_HTML"])
+        except Exception as e:
+            pass
+    numeric = ksj_build_numeric_ctx(answers, env_defaults, calc or {})
+    # also bring scores if present
+    if isinstance(scores, dict):
+        numeric.update({
+            "score_gesamt": scores.get("overall") or scores.get("gesamt") or "",
+            "score_befaehigung": scores.get("enablement") or scores.get("befaehigung") or "",
+            "score_governance": scores.get("governance") or "",
+            "score_sicherheit": scores.get("security") or scores.get("sicherheit") or "",
+            "score_nutzen": scores.get("value") or scores.get("nutzen") or "",
+        })
+    # render string values
+    for k,v in list(sections.items()):
+        if isinstance(v, str) and "{{" in v and "}}" in v:
+            sections[k] = ksj_render_string(v, numeric)
+    # append extra sections if missing but available via builders
+    if callable(build_benchmarks_section) and "BENCHMARKS_SECTION_HTML" not in sections:
+        try:
+            sections["BENCHMARKS_SECTION_HTML"] = build_benchmarks_section(scores or {})
+        except Exception:
+            pass
+    if callable(build_starter_stacks) and "STARTER_STACKS_HTML" not in sections:
+        try:
+            sections["STARTER_STACKS_HTML"] = build_starter_stacks(answers or {})
+        except Exception:
+            pass
+    if callable(build_responsible_ai_section) and "RESPONSIBLE_AI_HTML" not in sections:
+        try:
+            sections["RESPONSIBLE_AI_HTML"] = build_responsible_ai_section({
+                "four_pillars": os.getenv("FOUR_PILLARS_PATH", "knowledge/four_pillars.html"),
+                "legal_pitfalls": os.getenv("LEGAL_PITFALLS_PATH", "knowledge/legal_pitfalls.html"),
+            })
+        except Exception:
+            pass
+    return sections
+# ========================================================================
 def _label_for(field_key, value):
     try:
         opts = fields.get(field_key, {}).get("options") or []
@@ -70,6 +151,19 @@ from services.prompt_loader import load_prompt  # type: ignore
 from services.html_sanitizer import sanitize_sections_dict  # type: ignore
 # === KSJ EXEC-SUMMARY OVERRIDES (auto-insert) ============================
 import os
+from jinja2 import Environment, BaseLoader  # KSJ: for prompt/HTML rendering
+
+# KSJ: extra sections (business case, benchmarks, stacks, compliance)
+try:
+    from services.extra_sections import (
+        calc_business_case,
+        build_benchmarks_section,
+        build_starter_stacks,
+        build_responsible_ai_section,
+    )
+except Exception as _e:
+    calc_business_case = build_benchmarks_section = build_starter_stacks = build_responsible_ai_section = None
+
 def _env_float(name: str, default: float) -> float:
     try:
         return float(os.getenv(name, str(default)))
