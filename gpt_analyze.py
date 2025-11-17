@@ -68,6 +68,39 @@ from settings import settings  # type: ignore
 from services.coverage_guard import analyze_coverage, build_html_report  # type: ignore
 from services.prompt_loader import load_prompt  # type: ignore
 from services.html_sanitizer import sanitize_sections_dict  # type: ignore
+# === KSJ EXEC-SUMMARY OVERRIDES (auto-insert) ============================
+import os
+def _env_float(name: str, default: float) -> float:
+    try:
+        return float(os.getenv(name, str(default)))
+    except Exception:
+        return default
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, str(default)))
+    except Exception:
+        return default
+OPENAI_MODEL_DEFAULT = os.getenv("OPENAI_MODEL", "gpt-4o")
+OPENAI_TEMP_DEFAULT = _env_float("OPENAI_TEMPERATURE", 0.2)
+OPENAI_MAX_TOKENS_DEFAULT = _env_int("OPENAI_MAX_TOKENS", 3000)
+OPENAI_TIMEOUT_SEC = _env_int("OPENAI_TIMEOUT", 120)
+EXEC_SUMMARY_MODEL = os.getenv("OPENAI_MODEL_EXEC_SUMMARY", OPENAI_MODEL_DEFAULT)
+EXEC_SUMMARY_TEMP = _env_float("OPENAI_TEMP_EXEC_SUMMARY", OPENAI_TEMP_DEFAULT)
+EXEC_SUMMARY_MAX_TOKENS = _env_int("OPENAI_MAX_TOKENS_EXEC_SUMMARY", OPENAI_MAX_TOKENS_DEFAULT)
+GAMECHANGER_MODEL = os.getenv("OPENAI_MODEL_GAMECHANGER", OPENAI_MODEL_DEFAULT)
+GAMECHANGER_TEMP = _env_float("OPENAI_TEMP_GAMECHANGER", _env_float("OPENAI_TEMPERATURE_GAMECHANGER", OPENAI_TEMP_DEFAULT))
+GAMECHANGER_MAX_TOKENS = _env_int("OPENAI_MAX_TOKENS_GAMECHANGER", OPENAI_MAX_TOKENS_DEFAULT)
+def _llm_params_for(section_key: str):
+    key = (section_key or "").lower()
+    if key in {"executive_summary", "exec_summary", "summary"}:
+        return {"model": EXEC_SUMMARY_MODEL, "temperature": EXEC_SUMMARY_TEMP,
+                "max_tokens": EXEC_SUMMARY_MAX_TOKENS, "timeout": OPENAI_TIMEOUT_SEC}
+    if key == "gamechanger":
+        return {"model": GAMECHANGER_MODEL, "temperature": GAMECHANGER_TEMP,
+                "max_tokens": GAMECHANGER_MAX_TOKENS, "timeout": OPENAI_TIMEOUT_SEC}
+    return {"model": OPENAI_MODEL_DEFAULT, "temperature": OPENAI_TEMP_DEFAULT,
+            "max_tokens": OPENAI_MAX_TOKENS_DEFAULT, "timeout": OPENAI_TIMEOUT_SEC}
+# ========================================================================
 
 def build_extra_sections(answers: dict, scores: dict) -> dict:
     """Compute extra sections and values for the template context."""
