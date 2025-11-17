@@ -1932,21 +1932,27 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections.update(build_extra_sections(answers, scores))
 
     # Zusätzliche Context-Erweiterung mit expliziten Checks
+    # Business Case berechnen
     if calc_business_case:
         bc = calc_business_case(answers, os.environ)
+        sections["business_case_table_html"] = bc.get("BUSINESS_CASE_TABLE_HTML", "")
         sections.update(bc)  # stellt z.B. EINSPARUNG_MONAT_EUR, ROI_12M etc. bereit
 
+    # Benchmarks / Starter-Stacks / Responsible AI
     if build_benchmarks_section:
-        sections["BENCHMARKS_HTML"] = build_benchmarks_section(scores, path="data/benchmarks.json")
+        sections["benchmarks_html"] = build_benchmarks_section(scores)
+        sections["BENCHMARKS_HTML"] = sections["benchmarks_html"]  # Uppercase alias für Kompatibilität
 
     if build_starter_stacks:
-        sections["STARTER_STACKS_HTML"] = build_starter_stacks(answers, path="data/starter_stacks.json")
+        sections["starter_stacks_html"] = build_starter_stacks(answers)
+        sections["STARTER_STACKS_HTML"] = sections["starter_stacks_html"]  # Uppercase alias für Kompatibilität
 
     if build_responsible_ai_section:
-        sections["RESPONSIBLE_AI_HTML"] = build_responsible_ai_section({
+        sections["responsible_ai_html"] = build_responsible_ai_section({
             "four_pillars": "knowledge/four_pillars.html",
             "legal_pitfalls": "knowledge/legal_pitfalls.html"
         })
+        sections["RESPONSIBLE_AI_HTML"] = sections["responsible_ai_html"]  # Uppercase alias für Kompatibilität
 
     result = render(
         br,
