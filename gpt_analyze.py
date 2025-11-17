@@ -17,6 +17,70 @@ gpt_analyze.py – v4.14.0-GOLD-PLUS
 
 # === KSJ helpers: Jinja rendering & placeholder fix =======================
 _ksj_jinja_env = Environment(loader=BaseLoader(), autoescape=False)
+# === KSJ helpers: inject extra sections & render placeholders ==============
+_ksj_jinja_env = Environment(loader=BaseLoader(), autoescape=False)
+
+def _ksj_render_string(tpl_text: str, ctx: dict) -> str:
+    try:
+        return _ksj_jinja_env.from_string(tpl_text).render(**ctx)
+    except Exception:
+        return tpl_text
+
+def _ksj_inject_extra_sections(sections: dict, *, answers: dict, scores: dict) -> dict:
+    import os, logging
+    log = logging.getLogger(__name__)
+    extra = {}
+
+    # 1) Business case
+    if callable(calc_business_case):
+        try:
+            bc = calc_business_case(answers or {}, {
+                "DEFAULT_STUNDENSATZ_EUR": int(os.getenv("DEFAULT_STUNDENSATZ_EUR", "60")),
+                "DEFAULT_QW1_H": int(os.getenv("DEFAULT_QW1_H", "10")),
+                "DEFAULT_QW2_H": int(os.getenv("DEFAULT_QW2_H", "8")),
+                "FALLBACK_QW_MONTHLY_H": int(os.getenv("FALLBACK_QW_MONTHLY_H", "18")),
+            })
+            if isinstance(bc, dict):
+                extra.update({k: v for k, v in bc.items() if v is not None})
+                if "BUSINESS_CASE_TABLE_HTML" in bc:
+                    sections["BUSINESS_CASE_TABLE_HTML"] = bc["BUSINESS_CASE_TABLE_HTML"]
+        except Exception as e:
+            log.warning("Business case calculation failed: %s", e)
+
+    # 2) Benchmarks
+    if callable(build_benchmarks_section):
+        try:
+            sections["BENCHMARKS_SECTION_HTML"] = build_benchmarks_section(scores or {})
+        except Exception as e:
+            log.warning("Benchmarks section failed: %s", e)
+
+    # 3) Starter stacks
+    if callable(build_starter_stacks):
+        try:
+            sections["STARTER_STACKS_HTML"] = build_starter_stacks(answers or {})
+        except Exception as e:
+            log.warning("Starter stacks failed: %s", e)
+
+    # 4) Responsible AI & Compliance
+    if callable(build_responsible_ai_section):
+        try:
+            sections["RESPONSIBLE_AI_HTML"] = build_responsible_ai_section({
+                "four_pillars": os.getenv("FOUR_PILLARS_PATH", "knowledge/four_pillars.html"),
+                "legal_pitfalls": os.getenv("LEGAL_PITFALLS_PATH", "knowledge/legal_pitfalls.html"),
+            })
+        except Exception as e:
+            log.warning("Responsible AI section failed: %s", e)
+
+    # Render any remaining Jinja placeholders in string values using extra numbers
+    if extra:
+        for k, v in list(sections.items()):
+            if isinstance(v, str) and "{{" in v and "}}" in v:
+                sections[k] = _ksj_render_string(v, extra)
+
+    # Also return extra so caller can merge into its context if needed
+    sections.update(extra)
+    return sections
+# ==========================================================================
 
 def ksj_render_string(tpl_text: str, ctx: dict) -> str:
     try:
@@ -2320,3 +2384,4 @@ def _fix_exec_placeholders(html_block: str, scores: Dict[str, Any], sections: Di
         fixed = fixed.replace(f"{{{tpl}}}", "")       # Einfache {}
 
     return fixed
+# KSJ: NOTE – call _ksj_inject_extra_sections(sections, answers=answers, scores=scores) before rendering
