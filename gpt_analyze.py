@@ -17,16 +17,10 @@ gpt_analyze.py – v4.14.0-GOLD-PLUS
 
 # === KSJ helpers: Jinja rendering & placeholder fix =======================
 _ksj_jinja_env = Environment(loader=BaseLoader(), autoescape=False)
-# === KSJ helpers: inject extra sections & render placeholders ==============
-_ksj_jinja_env = Environment(loader=BaseLoader(), autoescape=False)
+# === KSJ: inject extra sections & render numeric placeholders =============
+_KSJ_ENV = Environment(loader=BaseLoader(), autoescape=False)
 
-def _ksj_render_string(tpl_text: str, ctx: dict) -> str:
-    try:
-        return _ksj_jinja_env.from_string(tpl_text).render(**ctx)
-    except Exception:
-        return tpl_text
-
-def _ksj_inject_extra_sections(sections: dict, *, answers: dict, scores: dict) -> dict:
+def _ksj_integrate_extra_sections(sections: dict, answers: dict, scores: dict) -> dict:
     import os, logging
     log = logging.getLogger(__name__)
     extra = {}
@@ -35,10 +29,10 @@ def _ksj_inject_extra_sections(sections: dict, *, answers: dict, scores: dict) -
     if callable(calc_business_case):
         try:
             bc = calc_business_case(answers or {}, {
-                "DEFAULT_STUNDENSATZ_EUR": int(os.getenv("DEFAULT_STUNDENSATZ_EUR", "60")),
-                "DEFAULT_QW1_H": int(os.getenv("DEFAULT_QW1_H", "10")),
-                "DEFAULT_QW2_H": int(os.getenv("DEFAULT_QW2_H", "8")),
-                "FALLBACK_QW_MONTHLY_H": int(os.getenv("FALLBACK_QW_MONTHLY_H", "18")),
+                "DEFAULT_STUNDENSATZ_EUR": int(os.getenv("DEFAULT_STUNDENSATZ_EUR", 60)),
+                "DEFAULT_QW1_H": int(os.getenv("DEFAULT_QW1_H", 10)),
+                "DEFAULT_QW2_H": int(os.getenv("DEFAULT_QW2_H", 8)),
+                "FALLBACK_QW_MONTHLY_H": int(os.getenv("FALLBACK_QW_MONTHLY_H", 18)),
             })
             if isinstance(bc, dict):
                 extra.update({k: v for k, v in bc.items() if v is not None})
@@ -54,14 +48,14 @@ def _ksj_inject_extra_sections(sections: dict, *, answers: dict, scores: dict) -
         except Exception as e:
             log.warning("Benchmarks section failed: %s", e)
 
-    # 3) Starter stacks
+    # 3) Starter‑Stacks
     if callable(build_starter_stacks):
         try:
             sections["STARTER_STACKS_HTML"] = build_starter_stacks(answers or {})
         except Exception as e:
             log.warning("Starter stacks failed: %s", e)
 
-    # 4) Responsible AI & Compliance
+    # 4) Verantwortungsvolle KI & Compliance
     if callable(build_responsible_ai_section):
         try:
             sections["RESPONSIBLE_AI_HTML"] = build_responsible_ai_section({
@@ -71,14 +65,16 @@ def _ksj_inject_extra_sections(sections: dict, *, answers: dict, scores: dict) -
         except Exception as e:
             log.warning("Responsible AI section failed: %s", e)
 
-    # Render any remaining Jinja placeholders in string values using extra numbers
+    # Render remaining Jinja placeholders with numeric context
     if extra:
         for k, v in list(sections.items()):
             if isinstance(v, str) and "{{" in v and "}}" in v:
-                sections[k] = _ksj_render_string(v, extra)
+                try:
+                    sections[k] = _KSJ_ENV.from_string(v).render(**extra)
+                except Exception:
+                    pass
+        sections.update(extra)
 
-    # Also return extra so caller can merge into its context if needed
-    sections.update(extra)
     return sections
 # ==========================================================================
 
@@ -2384,4 +2380,3 @@ def _fix_exec_placeholders(html_block: str, scores: Dict[str, Any], sections: Di
         fixed = fixed.replace(f"{{{tpl}}}", "")       # Einfache {}
 
     return fixed
-# KSJ: NOTE – call _ksj_inject_extra_sections(sections, answers=answers, scores=scores) before rendering
