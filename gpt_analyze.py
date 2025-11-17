@@ -69,6 +69,36 @@ from services.coverage_guard import analyze_coverage, build_html_report  # type:
 from services.prompt_loader import load_prompt  # type: ignore
 from services.html_sanitizer import sanitize_sections_dict  # type: ignore
 
+def build_extra_sections(answers: dict, scores: dict) -> dict:
+    """Compute extra sections and values for the template context."""
+    env_defaults = {
+        "DEFAULT_STUNDENSATZ_EUR": int(os.getenv("DEFAULT_STUNDENSATZ_EUR", "60")),
+        "DEFAULT_QW1_H": int(os.getenv("DEFAULT_QW1_H", "10")),
+        "DEFAULT_QW2_H": int(os.getenv("DEFAULT_QW2_H", "8")),
+        "FALLBACK_QW_MONTHLY_H": int(os.getenv("FALLBACK_QW_MONTHLY_H", "18")),
+    }
+    extra = {}
+    try:
+        extra.update(calc_business_case(answers, env_defaults))
+    except Exception as exc:
+        log.warning("Business case calculation failed: %s", exc)
+    try:
+        extra["BENCHMARKS_SECTION_HTML"] = build_benchmarks_section(scores)
+    except Exception as exc:
+        log.warning("Benchmarks section failed: %s", exc)
+    try:
+        extra["STARTER_STACKS_HTML"] = build_starter_stacks(answers)
+    except Exception as exc:
+        log.warning("Starter stacks failed: %s", exc)
+    try:
+        extra["RESPONSIBLE_AI_HTML"] = build_responsible_ai_section({
+            "four_pillars": os.getenv("FOUR_PILLARS_PATH", "knowledge/four_pillars.html"),
+            "legal_pitfalls": os.getenv("LEGAL_PITFALLS_PATH", "knowledge/legal_pitfalls.html"),
+        })
+    except Exception as exc:
+        log.warning("Responsible AI section failed: %s", exc)
+    return extra
+
 log = logging.getLogger(__name__)
 
 OPENAI_API_KEY = settings.openai.api_key or os.getenv("OPENAI_API_KEY")
@@ -1770,7 +1800,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     except Exception as _exc:
         log.warning("[%s] ⚠️ Placeholder fix failed: %s", run_id, _exc)
 
-    result = render(
+    result =     sections.update(build_extra_sections(answers, scores))
+render(
         br, 
         run_id=run_id, 
         generated_sections=sections, 
