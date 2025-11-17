@@ -23,13 +23,14 @@ def check_feed(url: str, timeout: int = 10) -> dict:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--json", help="Path to JSON with list of feeds", default="data/rss_sources_extra.json")
+    ap.add_argument("--timeout", type=int, default=10)
     args = ap.parse_args()
     feeds = []
     with open(args.json, "r", encoding="utf-8") as f:
         obj = json.load(f)
         for grp in obj.values():
             feeds.extend([x["url"] for x in grp])
-    results = [check_feed(u) for u in feeds]
+    results = [check_feed(u, timeout=args.timeout) for u in feeds]
     print(json.dumps(results, indent=2))
 
 if __name__ == "__main__":
