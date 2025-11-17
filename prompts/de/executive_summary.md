@@ -24,11 +24,10 @@
   </div>
 
   <h3>Top‑3 Quick Wins (30–60 Tage)</h3>
-  <p>Fasse bis zu drei der wichtigsten Quick‑Wins aus dem Abschnitt „Quick Wins (0–90 Tage)“ prägnant zusammen. Gib pro Eintrag den Titel, den zentralen Nutzen für das Unternehmen und die geschätzte monatliche Einsparung in Stunden an. Verwende einen sachlichen, zuversichtlichen Ton. Wenn weniger als drei Quick Wins identifiziert wurden, liste nur die verfügbaren auf.</p>
   <ul>
-    <!-- Das Modell soll hier 1–3 Listeneinträge mit realen Quick‑Wins generieren. Jeder Eintrag soll den Titel, Nutzen und die monatliche Einsparung enthalten. -->
+    <!-- Generiere bis zu drei Listeneinträge mit den wichtigsten Quick‑Wins aus dem Abschnitt „Quick Wins (0–90 Tage)“. Jeder Eintrag soll den Titel, den zentralen Nutzen für das Unternehmen und die geschätzte monatliche Einsparung (h/Monat) enthalten. -->
   </ul>
 
   <h3>Startpunkt (Pilot)</h3>
-  <p>Leite aus den Quick Wins und der Vision des Unternehmens einen konkreten Pilotbereich ab. Beschreibe Zielbild, Verantwortlichkeiten, Minimalumfang (MVP) und Erfolgskriterien in 2–3 Sätzen. Achte auf einen motivierenden, aber fachlich soliden Ton.</p>
+  <p><!-- Formuliere hier 2–3 Sätze, die einen konkreten Pilotbereich auf Basis der Quick Wins und der Unternehmensvision beschreiben. Nenne Zielbild, verantwortliche Rollen, Minimalumfang (MVP) und Erfolgskriterien. Der Ton soll motivierend, aber fachlich fundiert sein. --></p>
 </section>

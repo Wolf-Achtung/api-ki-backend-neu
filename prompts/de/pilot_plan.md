@@ -8,9 +8,9 @@
 
 <section class="section pilot-plan">
   <h2>Roadmap 90 Tage (Pilot‑Phase)</h2>
-  <p>Erstelle einen detaillierten Plan für die ersten 90 Tage, der als Pilot‑Projekt dient. Leite die Schritte aus den identifizierten Quick Wins ab und ordne sie chronologisch. Jeder Eintrag soll ein konkretes Ziel, verantwortliche Rolle(n) (z. B. Geschäftsführung, externer Entwickler), einen groben Zeitrahmen und die benötigten Ressourcen enthalten.</p>
+  <p>Der folgende 90‑Tage‑Plan dient als Pilot‑Projekt für die Umsetzung der identifizierten Quick Wins.</p>
   <ol>
-    <!-- Das Modell soll hier für jedes 2‑Wochen‑Segment (insgesamt 6 Segmente) einen Listeneintrag generieren. Jeder Eintrag enthält das Zeitfenster, eine kurze Beschreibung der Maßnahme, das erwartete Ergebnis, die verantwortlichen Rollen und die notwendigen Ressourcen. -->
+    <!-- Erstelle für jedes 2‑Wochen‑Segment (insgesamt 6 Segmente) einen Listeneintrag. Jeder Eintrag soll das Zeitfenster, ein konkretes Ziel, das erwartete Ergebnis, die verantwortlichen Rollen (z. B. Geschäftsführung, externer Entwickler) und die benötigten Ressourcen enthalten. -->
   </ol>
   <p class="small muted">Dieser Plan dient als Leitfaden und sollte je nach Projektfortschritt angepasst werden.</p>
 </section>
