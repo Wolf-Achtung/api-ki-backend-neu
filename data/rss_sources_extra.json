@@ -1,0 +1,104 @@
+{
+  "de_ai_tech_news": [
+    {
+      "name": "heise online (IT/Tech)",
+      "url": "https://www.heise.de/rss/heise-atom.xml"
+    },
+    {
+      "name": "t3n – News",
+      "url": "https://t3n.de/news/feed/"
+    },
+    {
+      "name": "Golem – IT-News",
+      "url": "https://rss.golem.de/rss.php?feed=RSS2.0"
+    },
+    {
+      "name": "Netzpolitik.org",
+      "url": "https://netzpolitik.org/feed/"
+    }
+  ],
+  "eu_regulation_policy": [
+    {
+      "name": "EU Commission – AI Act updates (Digital Strategy)",
+      "url": "https://digital-strategy.ec.europa.eu/en/news/feed"
+    },
+    {
+      "name": "European Parliament – Press releases (all)",
+      "url": "https://www.europarl.europa.eu/rss/en/news.xml"
+    },
+    {
+      "name": "European Environment Agency – Publications",
+      "url": "https://www.eea.europa.eu/en/feeds/publications"
+    },
+    {
+      "name": "ECB – Press releases",
+      "url": "https://www.ecb.europa.eu/press/rss/press.en.rss"
+    },
+    {
+      "name": "EDPB – News",
+      "url": "https://www.edpb.europa.eu/rss/news_en"
+    }
+  ],
+  "security_compliance": [
+    {
+      "name": "BSI – CERT-Bund Meldungen",
+      "url": "https://www.bsi.bund.de/SiteGlobals/Functions/RSSFeed/DE/RSSNewsfeed/RSSCertbund/RSSCertbund.xml"
+    },
+    {
+      "name": "BSI – Sicherheitshinweise Verbraucher:innen",
+      "url": "https://www.bsi.bund.de/SiteGlobals/Functions/RSSFeed/DE/RSSNewsfeed/RSSVerbraucher/RSSVerbraucher.xml"
+    }
+  ],
+  "funding_programmes": [
+    {
+      "name": "Förderdatenbank – Förderprogramme",
+      "url": "https://www.foerderdatenbank.de/SiteGlobals/Functions/RSSFeed/DE/RSSNewsfeed/RSS_Foerderprogramme/RSS_Foerderprogramme.xml"
+    },
+    {
+      "name": "Förderdatenbank – Pressemitteilungen",
+      "url": "https://www.foerderdatenbank.de/SiteGlobals/Functions/RSSFeed/DE/RSSNewsfeed/RSS_Pressemitteilungen/RSS_Pressemitteilungen.xml"
+    }
+  ],
+  "vendor_product_updates": [
+    {
+      "name": "OpenAI – Blog",
+      "url": "https://openai.com/blog/rss"
+    },
+    {
+      "name": "Microsoft – AI Blog",
+      "url": "https://blogs.microsoft.com/ai/feed/"
+    },
+    {
+      "name": "Azure – Updates",
+      "url": "https://azurecomcdn.azureedge.net/en-us/updates/feed/"
+    },
+    {
+      "name": "Google Cloud – AI & ML Blog",
+      "url": "https://cloud.google.com/blog/topics/ai-machine-learning/rss"
+    },
+    {
+      "name": "AWS – Machine Learning Blog",
+      "url": "https://aws.amazon.com/blogs/machine-learning/feed/"
+    },
+    {
+      "name": "Hugging Face – Blog",
+      "url": "https://huggingface.co/blog/feed.xml"
+    },
+    {
+      "name": "LangChain – Blog",
+      "url": "https://blog.langchain.com/rss/"
+    },
+    {
+      "name": "Make.com – Blog",
+      "url": "https://www.make.com/en/blog/rss"
+    },
+    {
+      "name": "Zapier – AI",
+      "url": "https://zapier.com/blog/ai/rss"
+    },
+    {
+      "name": "Notion – Blog",
+      "url": "https://www.notion.so/blog/rss"
+    }
+  ]
+}
