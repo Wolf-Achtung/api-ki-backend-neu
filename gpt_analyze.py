@@ -1833,16 +1833,16 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     except Exception as _exc:
         log.warning("[%s] ⚠️ Placeholder fix failed: %s", run_id, _exc)
 
-    result =     sections.update(build_extra_sections(answers, scores))
-render(
-        br, 
-        run_id=run_id, 
-        generated_sections=sections, 
-        use_fetchers=False, 
-        scores=scores, 
+    sections.update(build_extra_sections(answers, scores))
+    result = render(
+        br,
+        run_id=run_id,
+        generated_sections=sections,
+        use_fetchers=False,
+        scores=scores,
         meta={
-            "scores": scores, 
-            "score_details": score_wrap.get("details", {}), 
+            "scores": scores,
+            "score_details": score_wrap.get("details", {}),
             "research_last_updated": sections["research_last_updated"]
         }
     )
