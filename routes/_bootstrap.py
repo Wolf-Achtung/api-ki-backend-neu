@@ -22,12 +22,12 @@ from pydantic import BaseModel, ConfigDict
 
 # DB‑Session Lokalimport (Projektvarianten unterstützen)
 try:
-    from db import SessionLocal  # type: ignore
+    from db import SessionLocal
 except Exception:  # pragma: no cover
     try:
-        from core.db import SessionLocal  # type: ignore
+        from core.db import SessionLocal
     except Exception:
-        SessionLocal = None  # type: ignore
+        SessionLocal = None
 
 
 class SecureModel(BaseModel):
@@ -62,8 +62,8 @@ def client_ip(request: Request) -> str:
     """Ermittelt die Client‑IP; bevorzugt X‑Forwarded‑For."""
     fwd = request.headers.get("x-forwarded-for", "") or request.headers.get("x-real-ip", "")
     if fwd:
-        return fwd.split(",")[0].strip()
-    return request.client.host if request.client else ""
+        return str(fwd.split(",")[0].strip())
+    return str(request.client.host) if request.client else ""
 
 
 def rate_limit_snapshot() -> Dict[str, int]:

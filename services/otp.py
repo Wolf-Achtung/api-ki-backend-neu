@@ -8,7 +8,7 @@ def _rand_code(n: int = 6) -> str:
 
 class _MemStore:
     def __init__(self) -> None:
-        self._store = {}
+        self._store: dict[str, tuple[str, float]] = {}
         self._lock = threading.Lock()
 
     def setex(self, key: str, ttl: int, value: str) -> None:
@@ -27,7 +27,7 @@ class _MemStore:
                 except Exception:
                     pass
                 return None
-            return val
+            return str(val)
 
     def delete(self, key: str) -> None:
         with self._lock:

@@ -262,7 +262,9 @@ class AppSettings(BaseSettings):
             ai_act_info_path=os.getenv("AI_ACT_INFO_PATH", "EU-AI-ACT-Infos-wichtig.txt"),
             report_date=os.getenv("REPORT_DATE", "1") in ("1","true","True"),
         )
-        return s
+        # Cast to AppSettings to satisfy mypy
+        validated: AppSettings = cls.model_validate(s)
+        return validated
 
 
 @lru_cache

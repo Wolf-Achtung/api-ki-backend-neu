@@ -20,7 +20,7 @@ except Exception:  # pragma: no cover
 
 def _env(name: str, default=None):
     try:
-        v = getattr(settings, name)  # type: ignore[attr-defined]
+        v = getattr(settings, name)
         if v is not None:
             return v
     except Exception:
