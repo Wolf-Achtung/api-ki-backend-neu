@@ -160,7 +160,7 @@ class PromptEnhancer:
                 # Find the first <section> or <div> tag
                 import re
                 match = re.search(r'(<(?:section|div)[^>]*>)', base_prompt, re.IGNORECASE)
-                if match:
+                if match is not None:
                     # Insert context right after opening tag
                     pos = match.end()
                     enhanced = base_prompt[:pos] + "\n" + context_block + "\n" + base_prompt[pos:]
