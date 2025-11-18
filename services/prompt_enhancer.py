@@ -152,7 +152,6 @@ class PromptEnhancer:
             
             # Inject context block
             # Look for {CONTEXT_BLOCK} placeholder in the prompt
-            enhanced: str
             if '{CONTEXT_BLOCK}' in base_prompt:
                 enhanced = base_prompt.replace('{CONTEXT_BLOCK}', context_block)
                 log.debug("✅ Injected context block into prompt '%s'", prompt_name)
