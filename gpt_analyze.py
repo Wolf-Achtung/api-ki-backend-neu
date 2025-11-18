@@ -1272,7 +1272,7 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
         # Core sections
         "executive_summary": "executive_summary",
         "quick_wins": "quick_wins",
-        "roadmap": "pilot_plan",  # 90-day roadmap
+        "roadmap": "roadmap_90d",  # 90-day roadmap - FIXED: use enhanced prompt
         "roadmap_12m": "roadmap_12m",
         "business_roi": "costs_overview",
         "business_costs": "costs_overview",
@@ -1315,7 +1315,7 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                            prompt_key, type(prompt_text))
                 raise ValueError("Non-string prompt")
             
-            log.debug("✅ Using enhanced prompt for %s (with context)", section_name)
+            log.info("✅ Using enhanced prompt for %s (with context)", section_name)
             
             # 4. Call GPT with enhanced prompt
             _temp = float(os.getenv("GAMECHANGER_TEMPERATURE", "0.4")) if section_name == "gamechanger" else 0.2
