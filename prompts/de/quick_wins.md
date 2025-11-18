@@ -1,4 +1,4 @@
-<!-- Quick Wins (DE) -->
+<!-- Quick Wins (DE) - ENHANCED mit Context-System v2.0 -->
 <!-- Antworte ausschließlich mit **validem HTML**.
      KEIN <html>, <head> oder <body>. KEINE Markdown‑Fences.
      Nutze die Platzhalter:
@@ -7,15 +7,53 @@
      Schreibe präzise, fachlich, motivierend – kein Marketing‑Sprech. -->
 
 <section class="section quick-wins">
-  <h2>Quick Wins (0–90 Tage)</h2>
-  <p>Liste 4–6 konkrete, schnell umsetzbare KI‑Maßnahmen, die auf die Hauptleistung {{HAUPTLEISTUNG}} und die Bedürfnisse typischer Unternehmen in der Branche {{BRANCHE_LABEL}} zugeschnitten sind. Jede Maßnahme sollte einen prägnanten Titel, 1–2 Sätze zum Nutzen sowie eine realistische monatliche Zeit‑ oder Kosteneinsparung enthalten. Fokussiere dich auf Beratungs‑, Analyse- und Automatisierungsaufgaben (z. B. automatisierte Umfragen, KI‑gestützte Content‑Erstellung, Chatbots für Kundenservice, Datenanalyse‑Automatisierung, Prozessoptimierung, personalisierte Kundeninteraktionen) und vermeide branchenfremde Beispiele wie Logistik oder Fertigung. Halte den Ton sachlich und zuversichtlich.</p>
-  <ul>
-    <li><strong>Maßnahme 1:</strong> Titel – Beschreibung, Nutzen. <em>Ersparnis: X h/Monat</em></li>
-    <li><strong>Maßnahme 2:</strong> Titel – Beschreibung, Nutzen. <em>Ersparnis: X h/Monat</em></li>
-    <li><strong>Maßnahme 3:</strong> Titel – Beschreibung, Nutzen. <em>Ersparnis: X h/Monat</em></li>
-    <li><strong>Maßnahme 4:</strong> Titel – Beschreibung, Nutzen. <em>Ersparnis: X h/Monat</em></li>
-    <li><strong>Maßnahme 5:</strong> Titel – Beschreibung, Nutzen. <em>Ersparnis: X h/Monat</em></li>
-    <li><strong>Maßnahme 6:</strong> Titel – Beschreibung, Nutzen. <em>Ersparnis: X h/Monat</em></li>
+  <h2>Quick Wins (0–90 Tage)</h2>
+  
+  <!-- CONTEXT-INJECTION BLOCK - wird vom PromptBuilder dynamisch eingefügt -->
+  {CONTEXT_BLOCK}
+  <!-- END CONTEXT-INJECTION -->
+  
+  <p><strong>Aufgabe:</strong> Erstelle 6 konkrete Quick Wins die <em>spezifisch</em> auf {{HAUPTLEISTUNG}} in der Branche {{BRANCHE_LABEL}} für ein Unternehmen der Größe {{UNTERNEHMENSGROESSE_LABEL}} zugeschnitten sind.</p>
+  
+  <p><strong>Anforderungen pro Quick Win:</strong></p>
+  <ul class="requirements small">
+    <li>Titel: Prägnant, maximal 6 Worte, KEIN Marketing-Sprech</li>
+    <li>Beschreibung: 1-2 Sätze, KONKRETES Tool/API nennen (z.B. "GPT-4 API", "Fireflies.ai", "Make.com")</li>
+    <li>Zeitersparnis: Realistisch für die Unternehmensgröße {{UNTERNEHMENSGROESSE_LABEL}}
+      <ul>
+        <li>Solo: 3-15h/Monat pro Quick Win</li>
+        <li>Team (2-10): 5-25h/Monat pro Quick Win</li>
+        <li>KMU (11-100): 10-40h/Monat pro Quick Win</li>
+      </ul>
+    </li>
   </ul>
-  <p class="summary">Gesamt‑Ersparnis: <strong>XX–YY Stunden/Monat</strong></p>
+  
+  <p><strong>Quick Wins müssen:</strong></p>
+  <ol class="constraints small">
+    <li><strong>Branchen-typische Workflows</strong> optimieren (siehe Context oben)</li>
+    <li><strong>Pain Points</strong> der Branche addressieren (siehe Context oben)</li>
+    <li><strong>Mit vorhandenen Tools</strong> kompatibel sein (siehe Context oben)</li>
+    <li><strong>Budget-konform</strong> sein (siehe Context oben für Max-Budgets)</li>
+    <li><strong>Verbotene Empfehlungen vermeiden</strong> (siehe Context oben)</li>
+    <li><strong>Hauptleistung direkt verbessern:</strong> "{{HAUPTLEISTUNG}}"</li>
+  </ol>
+  
+  <p><strong>Output-Format:</strong></p>
+  <ul class="quick-wins-list">
+    <li>
+      <strong>[Prägnanter Titel]:</strong>
+      [Beschreibung mit konkretem Tool/API-Namen]
+      Ersparnis: <em>[X] h/Monat</em>
+    </li>
+    <!-- 5 weitere Quick Wins nach gleichem Format -->
+  </ul>
+  
+  <p class="summary"><strong>Gesamt-Zeitersparnis: [Summe aller Quick Wins] h/Monat</strong></p>
+  
+  <p class="note small muted">
+    <strong>Hinweis:</strong> Diese Quick Wins basieren auf den typischen Workflows und Pain Points 
+    der Branche {{BRANCHE_LABEL}} für Unternehmen der Größe {{UNTERNEHMENSGROESSE_LABEL}}.
+    Die Zeitersparnisse sind konservativ geschätzt und setzen voraus, dass die Tools 
+    kontinuierlich genutzt werden.
+  </p>
 </section>

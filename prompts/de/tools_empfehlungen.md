@@ -1,4 +1,4 @@
-<!-- Tools Empfehlungen (DE) -->
+<!-- Tools Empfehlungen (DE) - ENHANCED mit Context-System v2.0 -->
 <!-- Antworte ausschließlich mit **validem HTML**.
      KEIN <html>, <head> oder <body>. KEINE Markdown‑Fences.
      Nutze die Platzhalter:
@@ -8,10 +8,64 @@
 
 <section class="section tools-empfehlungen">
   <h2>Empfohlene KI‑Tools &amp; Software</h2>
-  <p>Die folgende Tabelle stellt ausgewählte KI‑Tools vor, die {{BRANCHE_LABEL}} als {{UNTERNEHMENSGROESSE_LABEL}} im Bundesland {{BUNDESLAND_LABEL}} bei der schnellen Einführung unterstützen können.</p>
+  
+  <!-- CONTEXT-INJECTION BLOCK -->
+  {CONTEXT_BLOCK}
+  <!-- END CONTEXT-INJECTION -->
+  
+  <p>Die folgende Tabelle stellt ausgewählte KI‑Tools vor, die {{BRANCHE_LABEL}} als {{UNTERNEHMENSGROESSE_LABEL}} 
+  im Bundesland {{BUNDESLAND_LABEL}} bei der Optimierung von "{{HAUPTLEISTUNG}}" unterstützen können.</p>
+  
+  <p><strong>Tool-Auswahl-Kriterien:</strong></p>
+  <ul class="criteria small">
+    <li><strong>Branchen-Fit:</strong> Passt zu typischen Tools der Branche (siehe Context oben)</li>
+    <li><strong>Budget-konform:</strong> Innerhalb der Budget-Grenzen (siehe Context oben)</li>
+    <li><strong>Quick Wins-relevant:</strong> Setzt die Quick Wins um</li>
+    <li><strong>Integration:</strong> Kompatibel mit vorhandenen Standard-Tools</li>
+    <li><strong>DSGVO:</strong> EU-Hosting oder DSGVO-konform</li>
+  </ul>
+  
   <table class="table">
-    <tr><th>Name</th><th>Beschreibung</th><th>Kernfunktion</th><th>Preismodell</th><th>DSGVO/Hinweis</th></tr>
-    <!-- Füge hier 4–6 Zeilen mit konkreten Tools hinzu (z. B. Typeform, Notion AI, Zapier/Make, Airtable, GPT‑Plugins). Jede Zeile sollte Name, kurze Beschreibung, Kernfunktion, Preismodell und DSGVO‑Hinweis enthalten. -->
+    <thead>
+      <tr>
+        <th style="width:15%;">Name</th>
+        <th style="width:30%;">Beschreibung</th>
+        <th style="width:20%;">Kernfunktion</th>
+        <th style="width:20%;">Preismodell</th>
+        <th style="width:15%;">DSGVO/Hinweis</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- 
+      WICHTIG: Empfehle 5-7 Tools die:
+      1. Aus dem Context "Typische Tools" kompatibel sind
+      2. Die Quick Wins umsetzen
+      3. Budget-konform sind (siehe Context)
+      4. NICHT aus der verbotenen Liste stammen
+      
+      Beispiel für {{BRANCHE_LABEL}} + {{UNTERNEHMENSGROESSE_LABEL}}:
+      - GPT-4 API (wenn KI-Content relevant)
+      - Make.com oder Zapier (wenn Automation relevant)
+      - Fireflies.ai (wenn Meetings dokumentiert werden)
+      - Notion AI (wenn Dokumentation wichtig ist)
+      - etc.
+      
+      Format pro Zeile:
+      -->
+      <tr>
+        <td><strong>[Tool-Name]</strong></td>
+        <td>[Kurze Beschreibung, 1-2 Sätze, bezogen auf {{HAUPTLEISTUNG}}]</td>
+        <td>[Kernfunktion für diese Branche]</td>
+        <td>[Preis/Monat oder Pricing-Modell]</td>
+        <td>[DSGVO-Status + relevante Hinweise]</td>
+      </tr>
+      <!-- 4-6 weitere Tools -->
+    </tbody>
   </table>
-  <p class="small muted">Diese Auswahl basiert auf öffentlich verfügbaren Informationen (Recherchezeitraum: letzte 30 Tage) und stellt keine Rechtsberatung dar.</p>
+  
+  <p class="small muted">
+    <strong>Hinweis:</strong> Diese Auswahl basiert auf öffentlich verfügbaren Informationen und 
+    berücksichtigt die typischen Workflows der Branche {{BRANCHE_LABEL}} sowie die Budget-Constraints 
+    für {{UNTERNEHMENSGROESSE_LABEL}}. Die Liste stellt keine Rechtsberatung dar.
+  </p>
 </section>
