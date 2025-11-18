@@ -22,8 +22,9 @@ from routes._bootstrap import get_db
 router = APIRouter(prefix="/briefings", tags=["briefings"])
 log = logging.getLogger(__name__)
 
-# Rate limiter as module-level variable to persist state across requests
+# Rate limiter and idempotency box as module-level variables to persist state across requests
 _briefing_rate_limiter = RateLimiter(namespace="briefings", limit=10, window_sec=300)
+_idempotency_box = IdempotencyBox(namespace="briefing_submit")
 
 
 class BriefingSubmitIn(BaseModel):
@@ -42,8 +43,7 @@ async def submit_briefing(
     s = get_settings()
 
     # Idempotency
-    idem = IdempotencyBox(namespace="briefing_submit")
-    if idem.is_duplicate(request):
+    if _idempotency_box.is_duplicate(request):
         return {"status": "duplicate_ignored"}
 
     # Rate-Limit pauschal

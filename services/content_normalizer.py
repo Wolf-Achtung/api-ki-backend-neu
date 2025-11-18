@@ -58,7 +58,7 @@ def build_kreativ_tools_html(path: str) -> str:
             items.append(f"<li><a href='{_safe(url)}' target='_blank' rel='noopener'>{_safe(label)}</a></li>")
         else:
             # falls keine URL erkannt wird → als Text zeigen
-            items.append(f"<li>{_safe(ln)}</li>")
+            items.append(f"<li>{_safe(ln)}</li>")  # type: ignore[unreachable]
     return "<ul>" + "".join(items) + "</ul>"
 
 # ---------------- Tool-Stacks nach Branche/Größe ----------------
