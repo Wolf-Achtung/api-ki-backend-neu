@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 import os, json, logging, requests
-from typing import List, Dict
+from typing import List, Dict, Any
 
 LOGGER = logging.getLogger(__name__)
 PPLX_API_KEY = os.getenv("PERPLEXITY_API_KEY", "")
@@ -11,11 +11,12 @@ PPLX_MODEL = os.getenv("PPLX_MODEL", "llama-3.1-sonar-large-128k-online")
 SYSTEM = "You are a research assistant. Return concise JSON with a list of items [{title, url, summary}]. No markdown."
 USER_TMPL = "Find the most recent (last {days} days) {topic}. Return JSON only."
 
-def _post_json(url: str, payload: dict, timeout: int = 45) -> dict:
+def _post_json(url: str, payload: dict, timeout: int = 45) -> dict[Any, Any]:
     headers = {"Content-Type":"application/json","Accept":"application/json","Authorization": f"Bearer {PPLX_API_KEY}" if PPLX_API_KEY else ""}
     resp = requests.post(url, headers=headers, data=json.dumps(payload), timeout=timeout)
     resp.raise_for_status()
-    return resp.json()
+    data = resp.json()
+    return data if isinstance(data, dict) else {}
 
 def search(topic: str, days: int = 30, max_items: int = 8) -> List[Dict]:
     if not PPLX_API_KEY:

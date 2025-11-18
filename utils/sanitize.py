@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unicodedata
 
-def ensure_utf8(text: str) -> str:
+def ensure_utf8(text: str | bytes | None) -> str:
     if text is None:
         return ""
     if isinstance(text, bytes):

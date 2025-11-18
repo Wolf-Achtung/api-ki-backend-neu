@@ -54,7 +54,8 @@ _CACHE_PATH = "/tmp/ksj_research_cache.json"
 def _load_cache() -> Dict[str, Any]:
     try:
         with open(_CACHE_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+            return data if isinstance(data, dict) else {}
     except Exception:
         return {}
 
@@ -85,30 +86,31 @@ def _cache_key(prefix: str, url: str) -> str:
 
 # --- HTTP helpers ---
 
-def http_get(url: str, timeout: Optional[tuple] = None) -> Optional[str]:
+def http_get(url: str, timeout: Optional[tuple] = None) -> str | None:
     """GET text content with UA + timeout + basic cache (5 minutes)."""
     if not timeout:
         timeout = DEFAULT_TIMEOUT
     key = _cache_key("GET", url)
     cached = _cache_get(key, 300)  # 5 min
     if cached:
-        return cached
+        return str(cached) if isinstance(cached, str) else None
     try:
         r = requests.get(url, headers=_headers(), timeout=timeout)
         if r.ok and r.text:
             _cache_set(key, r.text)
-            return r.text
+            return str(r.text)
         log.warning("GET failed %s: %s", url, r.status_code)
     except Exception as exc:
         log.warning("GET exception %s: %s", url, exc)
     return None
 
-def http_get_json(url: str, timeout: Optional[tuple] = None) -> Optional[dict]:
+def http_get_json(url: str, timeout: Optional[tuple] = None) -> dict[Any, Any] | None:
     raw = http_get(url, timeout=timeout)
     if not raw:
         return None
     try:
-        return json.loads(raw)
+        data = json.loads(raw)
+        return data if isinstance(data, dict) else None
     except Exception:
         return None
 
@@ -117,7 +119,7 @@ def http_get_json(url: str, timeout: Optional[tuple] = None) -> Optional[dict]:
 def parse_rss(url: str, limit: int = 12) -> List[Dict[str, Any]]:
     key = _cache_key("RSS", url)
     cached = _cache_get(key, 300)  # 5 min
-    if cached:
+    if cached and isinstance(cached, list):
         return cached
     try:
         d = feedparser.parse(url)

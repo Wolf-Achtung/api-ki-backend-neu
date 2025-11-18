@@ -9,7 +9,7 @@ import os
 
 try:
     # Use synchronous redis instead of async for simplicity
-    import redis  # type: ignore
+    import redis
     _HAS_REDIS = True
 except ImportError:  # pragma: no cover
     _HAS_REDIS = False

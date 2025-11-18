@@ -133,7 +133,8 @@ def _load_file(path: str) -> Dict[str, Any]:
     if os.path.exists(path):
         try:
             with open(path, "r", encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
+                return data if isinstance(data, dict) else DEFAULT_BENCHMARKS
         except Exception:
             pass
     return DEFAULT_BENCHMARKS
@@ -156,7 +157,8 @@ def canonicalize(branche: str) -> str:
 def lookup(branche: str) -> Dict[str, Any]:
     data = _load_file(BENCHMARKS_PATH)
     canon = canonicalize(branche)
-    return data.get(canon, DEFAULT_BENCHMARKS["Beratung & Dienstleistungen"])
+    result = data.get(canon, DEFAULT_BENCHMARKS["Beratung & Dienstleistungen"])
+    return result if isinstance(result, dict) else DEFAULT_BENCHMARKS["Beratung & Dienstleistungen"]
 
 def build_html(branche: str) -> str:
     b = lookup(branche)

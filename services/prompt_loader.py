@@ -74,14 +74,16 @@ def _read_manifest(lang: str) -> Dict[str, Any]:
     lang_manifest = BASE_DIR / lang / "prompt_manifest.json"
     if lang_manifest.exists():
         try:
-            return json.loads(lang_manifest.read_text(encoding="utf-8"))
+            data = json.loads(lang_manifest.read_text(encoding="utf-8"))
+            return data if isinstance(data, dict) else {}
         except Exception as exc:
             log.warning("Invalid manifest at %s: %s", lang_manifest, exc)
     # fallback to global manifest
     global_manifest = BASE_DIR / "prompt_manifest.json"
     if global_manifest.exists():
         try:
-            return json.loads(global_manifest.read_text(encoding="utf-8"))
+            data = json.loads(global_manifest.read_text(encoding="utf-8"))
+            return data if isinstance(data, dict) else {}
         except Exception as exc:
             log.warning("Invalid manifest at %s: %s", global_manifest, exc)
     return {}
@@ -118,13 +120,15 @@ def _read_file(path: Path) -> Any:
     if ext in (".md", ".txt"):
         return path.read_text(encoding="utf-8")
     if ext == ".json":
-        return json.loads(path.read_text(encoding="utf-8"))
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
     if ext in (".yaml", ".yml"):
         try:
-            import yaml  # optional
+            import yaml
         except Exception as exc:  # pragma: no cover
             raise RuntimeError("YAML support requires PyYAML installed") from exc
-        return yaml.safe_load(path.read_text(encoding="utf-8"))
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
     raise ValueError(f"Unsupported prompt file extension: {ext}")
 
 

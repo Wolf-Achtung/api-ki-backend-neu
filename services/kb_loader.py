@@ -40,7 +40,8 @@ class KnowledgeBaseLoader:
         """
         # Cache-Check
         if filename in self._cache:
-            return self._cache[filename]
+            cached_data = self._cache[filename]
+            return cached_data if isinstance(cached_data, dict) else None
         
         file_path = self.kb_dir / filename
         
@@ -51,7 +52,10 @@ class KnowledgeBaseLoader:
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-            
+
+            if not isinstance(data, dict):
+                return None
+
             self._cache[filename] = data
             log.debug(f"Loaded KB: {filename}")
             return data

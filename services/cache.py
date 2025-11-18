@@ -5,7 +5,7 @@ from typing import Any, Optional
 
 class _MemoryCache:
     def __init__(self) -> None:
-        self._store = {}
+        self._store: dict[str, tuple[str, float | None]] = {}
 
     def get(self, key: str) -> Optional[str]:
         raw = self._store.get(key)

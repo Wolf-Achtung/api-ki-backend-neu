@@ -22,7 +22,8 @@ def _load_cache() -> Dict[str, Any]:
         return {}
     try:
         with open(CACHE_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+            return data if isinstance(data, dict) else {}
     except Exception:
         return {}
 
@@ -65,7 +66,7 @@ def fetch_funding(state: str, days: int = 30, max_items: int = 8) -> List[Dict[s
     cache = _load_cache()
     key = _cache_key("funding", state=state, days=days)
     cached = _get_cached(cache, key, DEFAULT_TTL_SECONDS)
-    if cached:
+    if cached and isinstance(cached, list):
         return cached
 
     queries = [
@@ -74,7 +75,8 @@ def fetch_funding(state: str, days: int = 30, max_items: int = 8) -> List[Dict[s
         f"KMU Förderung KI {state} Fristen",
     ]
     items = _search_union(queries, max_items=max_items)
-    _set_cached(cache, key, items)
+    items_result: list[dict[str, Any]] = items if isinstance(items, list) else []
+    _set_cached(cache, key, items_result)
     _save_cache(cache)
     return items
 
@@ -83,7 +85,7 @@ def fetch_tools(branch: str, company_size: str, days: int = 30, include_open_sou
     cache = _load_cache()
     key = _cache_key("tools", branch=branch, size=company_size, days=days, oss=include_open_source)
     cached = _get_cached(cache, key, DEFAULT_TTL_SECONDS)
-    if cached:
+    if cached and isinstance(cached, list):
         return cached
 
     base = [

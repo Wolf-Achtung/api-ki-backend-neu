@@ -7,13 +7,14 @@ from __future__ import annotations
 import threading
 import time
 from collections import defaultdict, deque
+from typing import Any
 
 class RateLimiter:
     def __init__(self, namespace: str, limit: int, window_sec: int):
         self.namespace = namespace
         self.limit = limit
         self.window = window_sec
-        self._hits = defaultdict(deque)  # key -> deque[timestamps]
+        self._hits: defaultdict[str, deque[float]] = defaultdict(deque)  # key -> deque[timestamps]
         self._lock = threading.Lock()
 
     def hit(self, key: str):
