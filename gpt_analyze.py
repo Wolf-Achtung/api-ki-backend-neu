@@ -16,7 +16,57 @@ Version History:
 ---------------------------------------------------------------------
 """
 from __future__ import annotations
+
+# === IMPORTS FIRST ===
+import json
+import logging
+import os
+import re
+import uuid
+import html
+from datetime import datetime, timezone, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import urlparse
+
+import requests
+from sqlalchemy.orm import Session
+from jinja2 import Environment, BaseLoader
+
+try:
+    import resend
+except ImportError:
+    resend = None
+
+try:
+    from core.db import SessionLocal
+except Exception:  # pragma: no cover
+    SessionLocal = None
+
 from field_registry import fields  # added by Patch03
+from models import Analysis, Briefing, Report, User
+from services.report_renderer import render
+from services.pdf_client import render_pdf_from_html
+from services.email_templates import render_report_ready_email
+from settings import settings
+from services.coverage_guard import analyze_coverage, build_html_report
+from services.prompt_loader import load_prompt
+from services.html_sanitizer import sanitize_sections_dict
+
+try:
+    from services.extra_sections import (
+        calc_business_case,
+        build_benchmarks_section,
+        build_starter_stacks,
+        build_responsible_ai_section,
+    )
+except Exception:
+    calc_business_case = None
+    build_benchmarks_section = None
+    build_starter_stacks = None
+    build_responsible_ai_section = None
+
+# Initialize logger
+log = logging.getLogger(__name__)
 
 # --- Patch03: field label helper ---
 
@@ -118,53 +168,8 @@ def _labels_for_list(field_key, values):
         out.append(_label_for(field_key, v))
     return ", ".join([x for x in out if x])
 
-import json
-import logging
-import os
-import re
-import uuid
-import html
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import urlparse
-
-import requests
-from sqlalchemy.orm import Session
-
-try:
-    import resend
-except ImportError:
-    resend = None
-
-try:
-    from core.db import SessionLocal
-except Exception:  # pragma: no cover
-    SessionLocal = None
-
-from models import Analysis, Briefing, Report, User
-from services.report_renderer import render
-from services.pdf_client import render_pdf_from_html
-from services.email_templates import render_report_ready_email
-from settings import settings
-from services.coverage_guard import analyze_coverage, build_html_report
-from services.prompt_loader import load_prompt
-from services.html_sanitizer import sanitize_sections_dict
 # === KSJ EXEC-SUMMARY OVERRIDES (auto-insert) ============================
-import os
-from jinja2 import Environment, BaseLoader  # KSJ: for prompt/HTML rendering
-
-try:
-    from services.extra_sections import (
-        calc_business_case,
-        build_benchmarks_section,
-        build_starter_stacks,
-        build_responsible_ai_section,
-    )
-except Exception:
-    calc_business_case = None
-    build_benchmarks_section = None
-    build_starter_stacks = None
-    build_responsible_ai_section = None
+# (Imports already at top of file)
 
 def _env_float(name: str, default: float) -> float:
     try:
@@ -228,7 +233,7 @@ def build_extra_sections(answers: dict, scores: dict) -> dict:
         log.warning("Responsible AI section failed: %s", exc)
     return extra
 
-log = logging.getLogger(__name__)
+# Logger already initialized at top of file
 
 OPENAI_API_KEY = settings.openai.api_key or os.getenv("OPENAI_API_KEY")
 OPENAI_MODEL = settings.openai.model or os.getenv("OPENAI_MODEL", "gpt-4o")
