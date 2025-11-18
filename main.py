@@ -340,15 +340,15 @@ async def legacy_briefing_async_endpoint(
     limiter.hit(key=request.client.host if request.client else "unknown")
 
     try:
-        from routes.briefings import briefing_async_legacy
-        from core.db import SessionLocal
-
-        body = await request.json()
-        db = SessionLocal()
-        try:
-            return briefing_async_legacy(body, background, request, db)  # pragma: no cover
-        finally:
-            db.close()
+        # Legacy implementation removed - redirect to new endpoint
+        return JSONResponse(
+            status_code=410,  # Gone
+            content={
+                "ok": False,
+                "error": "This endpoint has been removed. Please use /api/briefings/submit instead.",
+                "migration_guide": "POST to /api/briefings/submit with JSON body: {lang: 'de', answers: {...}, queue_analysis: true}"
+            }
+        )
     except Exception as exc:
         log.exception("Legacy endpoint /api/briefing_async failed: %s", exc)
         return JSONResponse(
