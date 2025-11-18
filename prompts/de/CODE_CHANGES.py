@@ -59,11 +59,14 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
         try:
             # Build variables for interpolation
             vars_dict = _build_prompt_vars(briefing, scores)
-            
+
             # Load prompt with variable interpolation
             prompt_text = load_prompt(prompt_key, lang="de", vars_dict=vars_dict)
-            
+
             # ... rest of the code ...
+        except Exception as e:
+            # ... error handling ...
+            pass
 
 # NACHHER (ersetze Zeile 670-677):
 def _generate_content_section(section_name: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
