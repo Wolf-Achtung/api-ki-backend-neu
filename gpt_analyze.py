@@ -974,8 +974,8 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     
 # --- Patch03: derive label fields from registry ---
     try:
-        # Source dict may be named 'briefing' or 'answers'; try both
-        _src = briefing if 'briefing' in locals() else (answers if 'answers' in locals() else {})
+        # Use briefing parameter as source
+        _src = briefing
         if isinstance(_src, dict):
             # Single-choice fields
             for _k, _label_key in [('branche','BRANCHE_LABEL'),
@@ -1934,7 +1934,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     # Zusätzliche Context-Erweiterung mit expliziten Checks
     # Business Case berechnen
     if calc_business_case:
-        bc = calc_business_case(answers, os.environ)
+        bc = calc_business_case(answers, dict(os.environ))
         sections["business_case_table_html"] = bc.get("BUSINESS_CASE_TABLE_HTML", "")
         sections.update(bc)  # stellt z.B. EINSPARUNG_MONAT_EUR, ROI_12M etc. bereit
 
