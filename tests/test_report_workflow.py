@@ -163,27 +163,38 @@ class TestReportWorkflow:
         assert data["analyzer_import_ok"] is True
 
     @patch("gpt_analyze.run_async")
-    def test_03_analyze_trigger_mocked(self, mock_run_async, client):
+    def test_03_analyze_trigger_mocked(self, mock_run_async, client, auth_headers):
         """Test 3: Analyze-Trigger mit gemocktem LLM"""
-        with patch("routes.analyze._get_briefing_model") as mock_model:
-            # Mock Briefing model
-            mock_briefing = Mock()
-            mock_briefing.id = 1
-            mock_model.return_value = Mock(
-                __name__="Briefing"
+        # Create a real briefing in the test database first
+        from models import Briefing
+        from routes._bootstrap import get_db
+
+        # Get the test database session
+        db_gen = client.app.dependency_overrides[get_db]()
+        db = next(db_gen)
+
+        try:
+            # Create a test briefing
+            briefing = Briefing(
+                user_id=1,
+                lang="de",
+                answers={"branche": "IT", "bundesland": "Bayern"}
+            )
+            db.add(briefing)
+            db.commit()
+            db.refresh(briefing)
+            briefing_id = briefing.id
+
+            # Now test the analyze endpoint with mocked run_async
+            response = client.post(
+                "/api/analyze/run",
+                json={"briefing_id": briefing_id, "email_override": "test@example.com"}
             )
 
-            # Mock DB session
-            with patch("routes.analyze.get_db") as mock_db:
-                mock_db.return_value.get.return_value = mock_briefing
-
-                response = client.post(
-                    "/api/analyze/run",
-                    json={"briefing_id": 1, "email_override": "test@example.com"}
-                )
-
-                assert response.status_code == 202
-                assert mock_run_async.called
+            assert response.status_code == 202
+            assert mock_run_async.called
+        finally:
+            db.close()
 
     def test_04_rate_limiting(self, client, auth_headers):
         """Test 4: Rate-Limiting funktioniert"""
