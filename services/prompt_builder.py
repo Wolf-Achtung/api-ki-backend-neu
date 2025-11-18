@@ -59,7 +59,8 @@ class PromptBuilder:
         try:
             with open(self.mappings_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                return data.get("mapping", {})
+                mapping = data.get("mapping", {})
+                return dict(mapping) if isinstance(mapping, dict) else {}
         except Exception as e:
             log.error(f"❌ Failed to load mappings.json: {e}")
             return {}
@@ -125,7 +126,8 @@ class PromptBuilder:
             with open(context_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 log.debug(f"✅ Loaded context: {context_file.name}")
-                return data
+                # Ensure we return a dict, not Any
+                return dict(data) if isinstance(data, dict) else {}
         except Exception as e:
             log.error(f"❌ Failed to load {context_file}: {e}")
             return {}
