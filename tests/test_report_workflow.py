@@ -9,15 +9,85 @@ import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import Mock, patch, MagicMock, AsyncMock
 
-# Set test environment
+# Set test environment BEFORE any imports
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 os.environ["JWT_SECRET"] = "test-secret-key-for-testing-only"
 
 @pytest.fixture
 def client():
     """FastAPI TestClient mit In-Memory-Datenbank"""
+    # Import SQLAlchemy components
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy.pool import StaticPool
+    import sys
+
+    # Create a new in-memory SQLite engine for tests with StaticPool
+    # StaticPool ensures all connections share the same in-memory database
+    test_engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+        echo=False
+    )
+
+    # Create sessionmaker for tests
+    TestSessionLocal = sessionmaker(bind=test_engine, autoflush=False, autocommit=False, future=True)
+
+    # Import core.db and replace its SessionLocal and engine
+    import core.db
+    original_session = core.db.SessionLocal
+    original_engine = core.db.engine
+
+    core.db.SessionLocal = TestSessionLocal
+    core.db.engine = test_engine
+
+    # Import Base and models AFTER replacing SessionLocal
+    from core.db import Base
+    from models import User, Briefing, Analysis, Report, LoginCode  # noqa: F401
+
+    # Create all tables in the test database
+    Base.metadata.create_all(bind=test_engine)
+
+    # Remove main from sys.modules to force reimport with new SessionLocal
+    for key in list(sys.modules.keys()):
+        if key.startswith('routes') or key == 'main':
+            del sys.modules[key]
+
+    # Now import app - it will use the replaced SessionLocal
     from main import app
-    return TestClient(app)
+
+    # Override the database dependency to use test database
+    def override_get_db():
+        db = TestSessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
+
+    from routes._bootstrap import get_db
+    app.dependency_overrides[get_db] = override_get_db
+
+    # Create test client
+    test_client = TestClient(app)
+
+    try:
+        yield test_client
+    finally:
+        # Restore original SessionLocal and engine
+        core.db.SessionLocal = original_session
+        core.db.engine = original_engine
+        # Clear dependency overrides
+        app.dependency_overrides.clear()
+        # Clean up: drop all tables after tests
+        Base.metadata.drop_all(bind=test_engine)
+        test_engine.dispose()
+
+        # Clean up sys.modules
+        for key in list(sys.modules.keys()):
+            if key.startswith('routes') or key == 'main':
+                if key in sys.modules:
+                    del sys.modules[key]
 
 @pytest.fixture
 def auth_headers(client):
@@ -74,7 +144,7 @@ class TestReportWorkflow:
             headers=auth_headers | {"Idempotency-Key": "test-briefing-001"}
         )
 
-        assert response.status_code == 200
+        assert response.status_code == 202
         data = response.json()
         assert data["status"] == "queued"
         assert data["lang"] == "de"
@@ -137,7 +207,7 @@ class TestReportWorkflow:
             )
 
             if i < 10:
-                assert response.status_code == 200
+                assert response.status_code == 202
             else:
                 # 11. Request sollte geblockt werden
                 assert response.status_code == 429
@@ -161,11 +231,11 @@ class TestReportWorkflow:
 
         # Erster Request
         response1 = client.post("/api/briefings/submit", json=payload, headers=headers)
-        assert response1.status_code == 200
+        assert response1.status_code == 202
 
         # Zweiter Request mit gleichem Key
         response2 = client.post("/api/briefings/submit", json=payload, headers=headers)
-        assert response2.status_code == 200
+        assert response2.status_code == 202
         assert response2.json()["status"] == "duplicate_ignored"
 
 
