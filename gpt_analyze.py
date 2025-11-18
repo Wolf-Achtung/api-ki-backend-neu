@@ -40,7 +40,7 @@ except ImportError:
 try:
     import core.db
 except Exception:  # pragma: no cover
-    core.db = None  # type: ignore
+    core.db = None  # type: ignore[assignment]
 
 from field_registry import fields  # added by Patch03
 from models import Analysis, Briefing, Report, User
@@ -776,7 +776,7 @@ def _parse_kreativ_tools(raw: str) -> List[Tuple[str, str]]:
         if m:
             out.append((m.group(1).strip(), m.group(2).strip()))
             continue
-        m = re.match(r"^\[(.+?)\]\((https?://[^)]+)\)$", ln)
+        m = re.match(r"^\[(.+?)\]\((https?://[^)]+)\)$", ln)  # type: ignore[unreachable]
         if m:
             out.append((m.group(1).strip(), m.group(2).strip()))
             continue
@@ -1422,7 +1422,7 @@ def _md_to_simple_html(md: str) -> str:
             continue
         if re.match(r"^\[\d+\]:\s*https?://", line):
             continue
-        if line.startswith("#### "):
+        if line.startswith("#### "):  # type: ignore[unreachable]
             if in_ul: out.append("</ul>"); in_ul = False
             out.append(f"<h4>{html.escape(line[5:].strip())}</h4>")
             continue
