@@ -150,26 +150,27 @@ class PromptEnhancer:
             # Build context block
             context_block = self.build_context_block(briefing_data)
             
-            # Inject context block
-            # Look for {CONTEXT_BLOCK} placeholder in the prompt
+            # Inject context block - three strategies in order of preference
+            enhanced: str
+            
+            # Strategy 1: Replace {CONTEXT_BLOCK} placeholder if present
             if '{CONTEXT_BLOCK}' in base_prompt:
                 enhanced = base_prompt.replace('{CONTEXT_BLOCK}', context_block)
                 log.debug("✅ Injected context block into prompt '%s'", prompt_name)
-            else:
-                # If no placeholder, prepend context at the beginning (after any HTML comments)
-                # Find the first <section> or <div> tag
-                import re
-                match = re.search(r'(<(?:section|div)[^>]*>)', base_prompt, re.IGNORECASE)
-                if match:
-                    # Insert context right after opening tag
-                    pos = match.end()
-                    enhanced = base_prompt[:pos] + "\n" + context_block + "\n" + base_prompt[pos:]
-                    log.debug("✅ Prepended context block to prompt '%s'", prompt_name)
-                else:
-                    # Fallback: just prepend
-                    enhanced = context_block + "\n\n" + base_prompt
-                    log.debug("⚠️ No suitable injection point found, prepended context to '%s'", prompt_name)
+                return enhanced
             
+            # Strategy 2: Insert after first <section> or <div> tag
+            import re
+            match = re.search(r'(<(?:section|div)[^>]*>)', base_prompt, re.IGNORECASE)
+            if match:
+                pos = match.end()
+                enhanced = base_prompt[:pos] + "\n" + context_block + "\n" + base_prompt[pos:]
+                log.debug("✅ Prepended context block to prompt '%s'", prompt_name)
+                return enhanced
+            
+            # Strategy 3: Fallback - just prepend to beginning
+            enhanced = context_block + "\n\n" + base_prompt
+            log.debug("⚠️ No suitable injection point found, prepended context to '%s'", prompt_name)
             return enhanced
             
         except FileNotFoundError as e:
