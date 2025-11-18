@@ -1019,7 +1019,7 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
 
     except Exception as _e:
         pass
-    base_vars = {
+    base_vars: Dict[str, Any] = {
         "TODAY": today,
         "heute_iso": today,
         "DATE_30D": date_30d,
