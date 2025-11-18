@@ -120,7 +120,7 @@ def parse_rss(url: str, limit: int = 12) -> List[Dict[str, Any]]:
     key = _cache_key("RSS", url)
     cached = _cache_get(key, 300)  # 5 min
     if cached and isinstance(cached, list):
-        return cached
+        return list(cached)
     try:
         d = feedparser.parse(url)
         items: List[Dict[str, Any]] = []
