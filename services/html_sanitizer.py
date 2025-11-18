@@ -71,7 +71,7 @@ def sanitize_section_html(html: Optional[str], compress_ws: bool = True) -> str:
 def sanitize_sections_dict(sections: dict, truthy_env: Optional[bool] = True) -> dict:
     """Sanitisiert alle string‑Werte in einem Sections‑Dict."""
     if not isinstance(sections, dict):
-        return sections  # type: ignore[return-value]
+        return sections  # type: ignore[unreachable]
     out = {}
     for k, v in sections.items():
         if isinstance(v, str):
