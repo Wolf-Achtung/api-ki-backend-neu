@@ -7,7 +7,7 @@ from __future__ import annotations
 import os
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch, MagicMock, AsyncMock
 
 # Set test environment
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
@@ -22,9 +22,15 @@ def client():
 @pytest.fixture
 def auth_headers(client):
     """Authentifizierte Headers für Tests"""
-    # Mock JWT token creation
-    with patch("core.security.create_access_token") as mock_token:
+    # Mock JWT token creation and email sending
+    with patch("core.security.create_access_token") as mock_token, \
+         patch("routes.auth.Mailer.from_settings") as mock_mailer_factory:
         mock_token.return_value = "test-token-123"
+
+        # Mock the mailer instance with async send method
+        mock_mailer = MagicMock()
+        mock_mailer.send = AsyncMock(return_value=None)
+        mock_mailer_factory.return_value = mock_mailer
 
         # Request login code
         response = client.post("/api/auth/request-code", json={"email": "test@example.com"})
