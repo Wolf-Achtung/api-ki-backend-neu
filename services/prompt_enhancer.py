@@ -55,6 +55,8 @@ class PromptEnhancer:
         branch_ctx = self.builder.load_context('branch', branche)
         size_ctx = self.builder.load_context('size', groesse)
         
+        log.info("✅ Context loaded: branch=%s, size=%s", branche, groesse)
+        
         # Build compact HTML context block
         context_html = self._build_html_block(branch_ctx, size_ctx)
         
@@ -154,7 +156,7 @@ class PromptEnhancer:
             # Look for {CONTEXT_BLOCK} placeholder in the prompt
             if '{CONTEXT_BLOCK}' in base_prompt:
                 enhanced = base_prompt.replace('{CONTEXT_BLOCK}', context_block)
-                log.debug("✅ Injected context block into prompt '%s'", prompt_name)
+                log.info("✅ Injected context block into prompt '%s'", prompt_name)
             else:
                 # If no placeholder, prepend context at the beginning (after any HTML comments)
                 # Find the first <section> or <div> tag
