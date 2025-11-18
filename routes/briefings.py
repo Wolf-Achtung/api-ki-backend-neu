@@ -79,7 +79,7 @@ async def submit_briefing(
                 from models import User
                 user = db.query(User).filter(User.email == authenticated_user).first()
                 if not user:
-                    user = User(email=authenticated_user, name=authenticated_user.split("@")[0])
+                    user = User(email=authenticated_user)
                     db.add(user)
                     db.flush()
                     log.info("✅ Created new user: %s", authenticated_user)

@@ -16,13 +16,16 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 # Import Base aus core.db (KRITISCH für DB-Kompatibilität!)
-from core.db import Base
+from core.db import Base, is_sqlite
 
-# Fallback für nicht‑Postgres‑Umgebungen
-try:
-    from sqlalchemy.dialects.postgresql import JSONB as JSONType  # Postgres bevorzugt
-except ImportError:  # pragma: no cover
-    from sqlalchemy.types import JSON as JSONType  # z. B. SQLite
+# Dynamische JSON-Type-Auswahl basierend auf der Datenbank
+if is_sqlite:
+    from sqlalchemy.types import JSON as JSONType  # SQLite verwendet JSON
+else:
+    try:
+        from sqlalchemy.dialects.postgresql import JSONB as JSONType  # Postgres bevorzugt
+    except ImportError:  # pragma: no cover
+        from sqlalchemy.types import JSON as JSONType  # Fallback
 
 
 
