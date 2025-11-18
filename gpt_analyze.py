@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import annotations
-from field_registry import fields  # added by Patch03
 """
 gpt_analyze.py – v4.14.0-GOLD-PLUS
 ---------------------------------------------------------------------
@@ -12,6 +10,13 @@ gpt_analyze.py – v4.14.0-GOLD-PLUS
 - ✅ Roadmap mit Variablen-Interpolation
 - ✅ ROI Calculator Integration vorbereitet
 
+Version History:
+- 4.13.5-gs: Original mit Research-Integration
+- 4.14.0-GOLD-PLUS: Prompt-System aktiviert, dynamische Daten
+---------------------------------------------------------------------
+"""
+from __future__ import annotations
+from field_registry import fields  # added by Patch03
 
 # --- Patch03: field label helper ---
 
@@ -173,11 +178,6 @@ def _labels_for_list(field_key, values):
         out.append(_label_for(field_key, v))
     return ", ".join([x for x in out if x])
 
-Version History:
-- 4.13.5-gs: Original mit Research-Integration
-- 4.14.0-GOLD-PLUS: Prompt-System aktiviert, dynamische Daten
----------------------------------------------------------------------
-"""
 import json
 import logging
 import os
