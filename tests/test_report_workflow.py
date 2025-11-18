@@ -55,15 +55,17 @@ class TestReportWorkflow:
         """Test 1: Briefing erfolgreich einreichen"""
         payload = {
             "lang": "de",
-            "branche": "IT",
-            "bundesland": "Bayern",
-            "jahresumsatz": "1-5M",
-            "unternehmensgroesse": "10-50",
-            "ki_kompetenz": "Anfänger",
-            "hauptleistung": "Software-Entwicklung",
-            "antworten": [
-                {"frage_id": "ki_einsatz", "antwort": "Noch nicht im Einsatz"}
-            ]
+            "answers": {
+                "branche": "IT",
+                "bundesland": "Bayern",
+                "jahresumsatz": "1-5M",
+                "unternehmensgroesse": "10-50",
+                "ki_kompetenz": "Anfänger",
+                "hauptleistung": "Software-Entwicklung",
+                "antworten": [
+                    {"frage_id": "ki_einsatz", "antwort": "Noch nicht im Einsatz"}
+                ]
+            }
         }
 
         response = client.post(
