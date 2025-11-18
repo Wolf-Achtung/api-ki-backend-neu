@@ -166,7 +166,8 @@ def harvest_links(url: str, allow_domains: Optional[List[str]] = None, limit: in
         soup = BeautifulSoup(html, "html.parser")
     out: List[Dict[str, str]] = []
     for a in soup.find_all("a", href=True):
-        href = a["href"].strip()
+        href_val = a.get("href", "")
+        href = str(href_val).strip() if href_val else ""
         text = a.get_text(" ", strip=True)
         if not href.startswith(("http://", "https://")):
             continue
