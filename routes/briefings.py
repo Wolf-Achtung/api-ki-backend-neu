@@ -22,6 +22,9 @@ from routes._bootstrap import get_db
 router = APIRouter(prefix="/briefings", tags=["briefings"])
 log = logging.getLogger(__name__)
 
+# Rate limiter as module-level variable to persist state across requests
+_briefing_rate_limiter = RateLimiter(namespace="briefings", limit=10, window_sec=300)
+
 
 class BriefingSubmitIn(BaseModel):
     # Rohdaten durchleiten; Validierung findet in der Analyse statt
@@ -44,8 +47,7 @@ async def submit_briefing(
         return {"status": "duplicate_ignored"}
 
     # Rate-Limit pauschal
-    limiter = RateLimiter(namespace="briefings", limit=10, window_sec=300)
-    limiter.hit(key=request.client.host if request.client else "unknown")
+    _briefing_rate_limiter.hit(key=request.client.host if request.client else "unknown")
 
     # JWT optional (falls Frontend ohne Token sendet, nicht hart blockieren)
     # Prüfe SOWOHL Cookie als auch Authorization Header (wie in get_current_user)
@@ -123,7 +125,7 @@ async def submit_briefing(
                 run_async(briefing.id, authenticated_user)
                 log.info("✅ Analysis queued for briefing_id=%s", briefing.id)
             except Exception as e:
-                log.error("❌ Failed to trigger analysis: %s", str(e))
+                log.error("❌ Failed to trigger analysis: %s", str(e), exc_info=True)
                 # Nicht abbrechen - Briefing ist gespeichert, Analyse kann später manuell getriggert werden
 
         return {
@@ -135,7 +137,7 @@ async def submit_briefing(
 
     except Exception as e:
         db.rollback()
-        log.error("Failed to save briefing: %s", str(e))
+        log.error("Failed to save briefing: %s", str(e), exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to save briefing"

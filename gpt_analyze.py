@@ -38,9 +38,9 @@ except ImportError:
     resend = None
 
 try:
-    from core.db import SessionLocal
+    import core.db
 except Exception:  # pragma: no cover
-    SessionLocal = None
+    core.db = None  # type: ignore
 
 from field_registry import fields  # added by Patch03
 from models import Analysis, Briefing, Report, User
@@ -2185,9 +2185,9 @@ def run_analysis_for_briefing(briefing_id: int, email: Optional[str] = None) -> 
 
 def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     run_id = f"run-{uuid.uuid4().hex[:8]}"
-    if SessionLocal is None: 
+    if core.db is None or not hasattr(core.db, 'SessionLocal'):
         raise RuntimeError("database_unavailable")
-    db = SessionLocal()
+    db = core.db.SessionLocal()
     rep: Optional[Report] = None
     try:
         log.info("[%s] 🚀 Starting analysis v4.14.0-GOLD-PLUS for briefing_id=%s", run_id, briefing_id)
