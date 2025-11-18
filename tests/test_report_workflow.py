@@ -55,15 +55,17 @@ class TestReportWorkflow:
         """Test 1: Briefing erfolgreich einreichen"""
         payload = {
             "lang": "de",
-            "branche": "IT",
-            "bundesland": "Bayern",
-            "jahresumsatz": "1-5M",
-            "unternehmensgroesse": "10-50",
-            "ki_kompetenz": "Anfänger",
-            "hauptleistung": "Software-Entwicklung",
-            "antworten": [
-                {"frage_id": "ki_einsatz", "antwort": "Noch nicht im Einsatz"}
-            ]
+            "answers": {
+                "branche": "IT",
+                "bundesland": "Bayern",
+                "jahresumsatz": "1-5M",
+                "unternehmensgroesse": "10-50",
+                "ki_kompetenz": "Anfänger",
+                "hauptleistung": "Software-Entwicklung",
+                "antworten": [
+                    {"frage_id": "ki_einsatz", "antwort": "Noch nicht im Einsatz"}
+                ]
+            }
         }
 
         response = client.post(
@@ -121,13 +123,15 @@ class TestReportWorkflow:
                 "/api/briefings/submit",
                 json={
                     "lang": "de",
-                    "branche": "IT",
-                    "bundesland": "Bayern",
-                    "jahresumsatz": "1-5M",
-                    "unternehmensgroesse": "10-50",
-                    "ki_kompetenz": "Anfänger",
-                    "hauptleistung": "Test",
-                    "antworten": []
+                    "answers": {
+                        "branche": "IT",
+                        "bundesland": "Bayern",
+                        "jahresumsatz": "1-5M",
+                        "unternehmensgroesse": "10-50",
+                        "ki_kompetenz": "Anfänger",
+                        "hauptleistung": "Test",
+                        "antworten": []
+                    }
                 },
                 headers=auth_headers | {"Idempotency-Key": f"test-rate-{i}"}
             )
@@ -142,13 +146,15 @@ class TestReportWorkflow:
         """Test 5: Idempotenz verhindert doppelte Requests"""
         payload = {
             "lang": "de",
-            "branche": "IT",
-            "bundesland": "Bayern",
-            "jahresumsatz": "1-5M",
-            "unternehmensgroesse": "10-50",
-            "ki_kompetenz": "Anfänger",
-            "hauptleistung": "Software",
-            "antworten": []
+            "answers": {
+                "branche": "IT",
+                "bundesland": "Bayern",
+                "jahresumsatz": "1-5M",
+                "unternehmensgroesse": "10-50",
+                "ki_kompetenz": "Anfänger",
+                "hauptleistung": "Software",
+                "antworten": []
+            }
         }
 
         headers = auth_headers | {"Idempotency-Key": "unique-key-12345"}
