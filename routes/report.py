@@ -51,18 +51,22 @@ async def generate(payload: Dict[str, Any]) -> Dict[str, Any]:
     # Note: run_async returns None, it's a fire-and-forget operation
     # It expects briefing_id as int, not a dict
     try:
-        briefing_id = payload.get("briefing_id") if isinstance(payload, dict) else payload
+        if isinstance(payload, dict):
+            briefing_id = payload.get("briefing_id", 0)
+        else:
+            briefing_id = payload
         if asyncio.iscoroutinefunction(run_async):
-            await run_async(briefing_id)
+            await run_async(briefing_id)  # type: ignore[func-returns-value]
         else:
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(None, lambda: run_async(briefing_id))
     except (TypeError, KeyError):
         # Fall back - try with payload directly if it's already an int
+        fallback_id = payload if isinstance(payload, int) else 0
         if asyncio.iscoroutinefunction(run_async):
-            await run_async(payload if isinstance(payload, int) else 0)
+            await run_async(fallback_id)  # type: ignore[func-returns-value]
         else:
             loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, lambda: run_async(payload if isinstance(payload, int) else 0))
+            await loop.run_in_executor(None, lambda: run_async(fallback_id))
 
     return {"ok": True}
