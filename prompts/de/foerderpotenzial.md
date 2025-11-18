@@ -1,17 +1,87 @@
-<!-- Förderpotenzial (DE) -->
-<!-- Antworte ausschließlich mit **validem HTML**.
-     KEIN <html>, <head> oder <body>. KEINE Markdown‑Fences.
-     Nutze die Platzhalter:
-     - {BRANCHE_LABEL}, {UNTERNEHMENSGROESSE_LABEL}, {BUNDESLAND_LABEL}, {HAUPTLEISTUNG}
-     - {report_date}, {report_year}, {kundencode}, {report_id}
-     Schreibe präzise, fachlich, motivierend – kein Marketing‑Sprech. -->
+# PROMPT: Förderpotenzial - Finanzierungs-Möglichkeiten
 
+## ZWECK
+Liste relevante Förderprogramme für:
+1. **{{BUNDESLAND_LABEL}}** (Landes-Förderungen)
+2. **{{BRANCHE_LABEL}}** (Branchen-Förderungen)
+3. **KI-Projekte** (Bund/EU)
+
+**Zielgruppe:** CFO, Geschäftsführung
+**Stil:** Prägnant, mit Links, Antragsfristen
+
+---
+
+## ⚠️ KRITISCHE REGELN
+
+### ❌ VERBOTEN:
+1. **KEINE veralteten Programme (vor 2024)**
+2. **KEINE generischen Listen ohne Relevanz-Check**
+3. **KEINE Förderungen ohne Antragslink**
+
+### ✅ STATTDESSEN:
+1. **Aktuell & relevant:**
+   - "Digital Jetzt (BMWi): Bis €100k, Antragsfrist 31.12.2025"
+   - Link: www.innovation-beratung-foerderung.de
+
+2. **Konkrete Zahlen:**
+   - "50% Zuschuss auf Beratung (max. €10k)"
+   - "Zinsfreies Darlehen bis €500k"
+
+---
+
+## 💡 BEISPIEL (kompakt)
+
+```html
 <section class="section foerderpotenzial">
-  <h2>Förderpotenzial &amp; Programme</h2>
-  <p>Die folgende Tabelle fasst relevante Förderprogramme und Zuschüsse zusammen, die {{BRANCHE_LABEL}} als {{UNTERNEHMENSGROESSE_LABEL}} im Bundesland {{BUNDESLAND_LABEL}} für KI‑Projekte nutzen kann.</p>
+  <h2>Förderpotenzial & Finanzierung</h2>
+  
+  <p><strong>Relevante Programme für:</strong> {{BRANCHE_LABEL}}, {{BUNDESLAND_LABEL}}</p>
+
+  <h3>Bundes-Programme (Deutschland)</h3>
   <table class="table">
-    <tr><th>Name</th><th>Beschreibung/Zweck</th><th>Förderhöhe</th><th>Region & Zielgruppe</th><th>Link/Quelle</th></tr>
-    <!-- Füge hier 4–6 Zeilen mit realen oder recherchierten Förderprogrammen hinzu (z. B. Digital Jetzt, Pro FIT, Coaching BONUS, Transfer BONUS, Innovationsgutscheine). Jede Zeile sollte Name, Zweck, Förderhöhe, Region und einen Link oder eine Quelle enthalten. Vermeide Dubletten. -->
+    <thead><tr><th>Programm</th><th>Förderung</th><th>Frist</th><th>Link</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Digital Jetzt</td>
+        <td>Bis €100k (50% Zuschuss)</td>
+        <td>Laufend bis 31.12.2025</td>
+        <td><a href="https://www.innovation-beratung-foerderung.de/INNO/Navigation/DE/Digital-Jetzt/digital-jetzt.html">Beantragen</a></td>
+      </tr>
+      <tr>
+        <td>go-digital</td>
+        <td>50% auf IT-Beratung (max. €16.500)</td>
+        <td>Laufend</td>
+        <td><a href="https://www.bmwk.de/Redaktion/DE/Artikel/Mittelstand/go-digital.html">Beantragen</a></td>
+      </tr>
+    </tbody>
   </table>
-  <p class="small muted">Es handelt sich um eine unverbindliche Auswahl; beachten Sie spezifische Teilnahmebedingungen und Einreichfristen.</p>
+
+  <h3>Landes-Programme ({{BUNDESLAND_LABEL}})</h3>
+  <ul>
+    <li><strong>Berlin:</strong> IBB Digitalisierungskredit (bis €500k, 0,5% Zinsen)</li>
+    <li><strong>Bayern:</strong> Bayern Digital II (bis €50k Zuschuss)</li>
+    <li>[Programm spezifisch für {{BUNDESLAND_LABEL}} recherchieren]</li>
+  </ul>
+
+  <h3>Empfohlene nächste Schritte</h3>
+  <ol>
+    <li>Digital Jetzt prüfen: Passt für Batch-Processing-Projekt (€5k Investment)</li>
+    <li>go-digital: DSGVO-Beratung fördern lassen (€1.500 → €750 Eigenanteil)</li>
+    <li>Fördermittel-Berater kontaktieren (€200/h, aber spart 40h Recherche)</li>
+  </ol>
 </section>
+```
+
+---
+
+## 🎯 ERFOLGS-KRITERIEN
+
+1. ✅ Aktuell (2024/2025)
+2. ✅ Relevant für Bundesland
+3. ✅ Mit Links & Fristen
+4. ✅ Konkrete Empfehlungen
+
+---
+
+**VERSION:** v2.1 GOLD STANDARD+
+**OUTPUT:** Valides HTML
