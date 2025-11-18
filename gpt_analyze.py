@@ -50,6 +50,7 @@ from services.email_templates import render_report_ready_email
 from settings import settings
 from services.coverage_guard import analyze_coverage, build_html_report
 from services.prompt_loader import load_prompt
+from services.prompt_enhancer import PromptEnhancer
 from services.html_sanitizer import sanitize_sections_dict
 
 try:
@@ -249,6 +250,18 @@ ENABLE_REPAIR_HTML = (os.getenv("ENABLE_REPAIR_HTML", "1") in ("1", "true", "TRU
 USE_INTERNAL_RESEARCH = (os.getenv("RESEARCH_PROVIDER", "hybrid") != "disabled")
 ENABLE_AI_ACT_SECTION = (os.getenv("ENABLE_AI_ACT_SECTION", "1") in ("1", "true", "TRUE", "yes", "YES"))
 USE_PROMPT_SYSTEM = (os.getenv("USE_PROMPT_SYSTEM", "1") in ("1", "true", "TRUE", "yes", "YES"))
+# Initialize PromptEnhancer (einmal beim App-Start) - NEU!
+if USE_PROMPT_SYSTEM:
+    try:
+        _prompt_enhancer = PromptEnhancer(data_dir="data")
+        log.info("✅ PromptEnhancer initialized with context system")
+    except Exception as e:
+        log.warning("⚠️ PromptEnhancer failed to initialize: %s", e)
+        _prompt_enhancer = None
+else:
+    _prompt_enhancer = None
+    log.info("ℹ️ PromptEnhancer disabled (USE_PROMPT_SYSTEM=0)")
+
 
 AI_ACT_INFO_PATH = os.getenv("AI_ACT_INFO_PATH", "EU-AI-ACT-Infos-wichtig.txt")
 AI_ACT_PHASE_LABEL = os.getenv("AI_ACT_PHASE_LABEL", "2025–2027")
@@ -1285,20 +1298,26 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
     prompt_key = prompt_map.get(section_name)
     
     # Try to use prompt system if enabled and prompt exists
-    if USE_PROMPT_SYSTEM and prompt_key:
+    if USE_PROMPT_SYSTEM and prompt_key and _prompt_enhancer:
         try:
-            # Build variables for interpolation
+            # 1. Enhance prompt with context (branch + size specific info)
+            enhanced_prompt = _prompt_enhancer.enhance_prompt(prompt_key, briefing)
+            
+            # 2. Build variables for final interpolation
             vars_dict = _build_prompt_vars(briefing, scores)
             
-            # Load prompt with variable interpolation
-            prompt_text = load_prompt(prompt_key, lang="de", vars_dict=vars_dict)
+            # 3. Interpolate variables into enhanced prompt
+            from services.prompt_loader import _interpolate
+            prompt_text = _interpolate(enhanced_prompt, vars_dict)
             
             if not isinstance(prompt_text, str):
-                log.warning("⚠️ Prompt %s returned non-string: %s, falling back", prompt_key, type(prompt_text))
+                log.warning("⚠️ Enhanced prompt %s returned non-string: %s, falling back", 
+                           prompt_key, type(prompt_text))
                 raise ValueError("Non-string prompt")
             
-            # Call GPT with loaded prompt
-            # Temperature tweak: Gamechanger etwas kreativer
+            log.debug("✅ Using enhanced prompt for %s (with context)", section_name)
+            
+            # 4. Call GPT with enhanced prompt
             _temp = float(os.getenv("GAMECHANGER_TEMPERATURE", "0.4")) if section_name == "gamechanger" else 0.2
             result = _call_openai(
                 prompt=prompt_text,
@@ -1313,7 +1332,8 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
             
             # Check if result is substantial enough
             if not result or len(result.strip()) < 50:
-                log.warning("⚠️ GPT returned too little for %s (%d chars), using fallback", section_name, len(result))
+                log.warning("⚠️ GPT returned too little for %s (%d chars), using fallback", 
+                           section_name, len(result))
                 return _get_fallback_content(section_name, briefing, scores)
             
             return result
