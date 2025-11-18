@@ -40,7 +40,7 @@ except ImportError:
 try:
     import core.db
 except Exception:  # pragma: no cover
-    core.db = None  # type: ignore[assignment]
+    core.db = None
 
 from field_registry import fields  # added by Patch03
 from models import Analysis, Briefing, Report, User
