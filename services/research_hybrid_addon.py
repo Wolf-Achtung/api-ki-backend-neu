@@ -35,7 +35,8 @@ def _pplx_chat(prompt: str, temperature: float = 0.0, max_tokens: int = 1200) ->
         )
         r.raise_for_status()
         data = r.json()
-        return (data.get("choices", [{}])[0].get("message", {}) or {}).get("content","")
+        result = (data.get("choices", [{}])[0].get("message", {}) or {}).get("content","")
+        return str(result) if result else ""
     except Exception:
         return ""
 

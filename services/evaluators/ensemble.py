@@ -37,10 +37,13 @@ def _prioritize_actions(results: List[EvalResult]) -> List[str]:
             else:
                 bucket_M.append(act)
     # dedup, Reihenfolge beibehalten
-    def dedup(lst): 
-        seen=set(); out=[]
+    def dedup(lst: List[str]) -> List[str]:
+        seen: set[str] = set()
+        out: List[str] = []
         for x in lst:
-            if x not in seen: seen.add(x); out.append(x)
+            if x not in seen:
+                seen.add(x)
+                out.append(x)
         return out
     return dedup(bucket_H) + dedup(bucket_M) + dedup(bucket_L)
 

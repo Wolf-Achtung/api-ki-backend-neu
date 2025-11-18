@@ -59,7 +59,7 @@ def _kw(answers: Dict[str, Any]) -> List[str]:
     """Bestimme einfache Schlagwörter aus Fragebogen (Branche/Use-Cases)."""
     branche = (answers.get("BRANCHE_LABEL") or answers.get("branche") or "").lower()
     uses = answers.get("anwendungsfaelle", []) or []
-    kws = set()
+    kws: set[str] = set()
     if branche:
         kws.update(word.strip() for word in branche.replace("/", " ").split())
     for u in uses:

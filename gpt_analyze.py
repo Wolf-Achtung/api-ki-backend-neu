@@ -25,7 +25,7 @@ _ksj_jinja_env = Environment(loader=BaseLoader(), autoescape=False)
 
 def ksj_render_string(tpl_text: str, ctx: dict) -> str:
     try:
-        return _ksj_jinja_env.from_string(tpl_text).render(**ctx)
+        return str(_ksj_jinja_env.from_string(tpl_text).render(**ctx))
     except Exception as e:
         return tpl_text  # be permissive in prod
 
@@ -132,23 +132,23 @@ import requests
 from sqlalchemy.orm import Session
 
 try:
-    import resend  # type: ignore
+    import resend
 except ImportError:
-    resend = None  # type: ignore
+    resend = None
 
 try:
-    from core.db import SessionLocal  # type: ignore
+    from core.db import SessionLocal
 except Exception:  # pragma: no cover
-    SessionLocal = None  # type: ignore
+    SessionLocal = None
 
-from models import Analysis, Briefing, Report, User  # type: ignore
-from services.report_renderer import render  # type: ignore
-from services.pdf_client import render_pdf_from_html  # type: ignore
-from services.email_templates import render_report_ready_email  # type: ignore
-from settings import settings  # type: ignore
-from services.coverage_guard import analyze_coverage, build_html_report  # type: ignore
-from services.prompt_loader import load_prompt  # type: ignore
-from services.html_sanitizer import sanitize_sections_dict  # type: ignore
+from models import Analysis, Briefing, Report, User
+from services.report_renderer import render
+from services.pdf_client import render_pdf_from_html
+from services.email_templates import render_report_ready_email
+from settings import settings
+from services.coverage_guard import analyze_coverage, build_html_report
+from services.prompt_loader import load_prompt
+from services.html_sanitizer import sanitize_sections_dict
 # === KSJ EXEC-SUMMARY OVERRIDES (auto-insert) ============================
 import os
 from jinja2 import Environment, BaseLoader  # KSJ: for prompt/HTML rendering
@@ -277,13 +277,13 @@ def _send_email_via_resend(to_email: str, subject: str, html_body: str, attachme
                         "content": base64.b64encode(content_bytes).decode('ascii')  # Resend expects list of bytes
                     })
         
-        params = {
+        params: Dict[str, Any] = {
             "from": SMTP_FROM,
             "to": [to_email],
             "subject": subject,
             "html": html_body
         }
-        
+
         if resend_attachments:
             params["attachments"] = resend_attachments
 
@@ -399,7 +399,7 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
         return {"scores": {"governance": 0, "security": 0, "value": 0, "enablement": 0, "overall": 0}, "details": {}, "total": 0}
     m = _map_german_to_english_keys(answers)
     gov = sec = val = ena = 0
-    details = {"governance": [], "security": [], "value": [], "enablement": []}
+    details: Dict[str, List[str]] = {"governance": [], "security": [], "value": [], "enablement": []}
     gov += 8 if m.get("ai_strategy") in ["yes", "in_progress"] else 0
     details["governance"].append("✅ KI-Strategie" if m.get("ai_strategy") in ["yes", "in_progress"] else "❌ Keine KI-Strategie")
     gov += 7 if m.get("ai_responsible") in ["yes", "shared"] else 0
@@ -466,7 +466,7 @@ def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
         try:
             data = r.json()
             content = data["choices"][0]["message"]["content"]
-            return content
+            return str(content)
         except (KeyError, IndexError, TypeError) as e:
             log.error("Unexpected OpenAI response structure: %s. Response: %s", e, str(data)[:500])
             return None
@@ -524,7 +524,8 @@ def _read_json_first(*paths: str) -> Optional[dict]:
         try:
             if os.path.exists(p):
                 with open(p, "r", encoding="utf-8") as fh:
-                    return json.load(fh)
+                    data = json.load(fh)
+                    return dict(data) if isinstance(data, dict) else {}
         except (FileNotFoundError, json.JSONDecodeError, IOError) as e:
             log.debug("Failed to read JSON from %s: %s", p, str(e)[:100])
             continue
@@ -764,11 +765,16 @@ def _parse_kreativ_tools(raw: str) -> List[Tuple[str, str]]:
         if len(parts) >= 2 and parts[1].startswith(("http://","https://")):
             label = parts[0]; href = parts[1]
             if len(parts) >= 3 and parts[2]: label = f"{label} – {parts[2]}"
-            out.append((label, href)); continue
+            out.append((label, href))
+            continue
         m = re.match(r"^(.*?)[\-\u2013\u2014]\s*(https?://\S+)$", ln)
-        if m: out.append((m.group(1).strip(), m.group(2).strip())); continue
+        if m:
+            out.append((m.group(1).strip(), m.group(2).strip()))
+            continue
         m = re.match(r"^\[(.+?)\]\((https?://[^)]+)\)$", ln)
-        if m: out.append((m.group(1).strip(), m.group(2).strip())); continue
+        if m:
+            out.append((m.group(1).strip(), m.group(2).strip()))
+            continue
         m = re.search(r"(https?://\S+)", ln)
         if m:
             href = m.group(1).strip(); label = urlparse(href).netloc
@@ -1407,11 +1413,14 @@ def _md_to_simple_html(md: str) -> str:
         if not line:
             if in_ul: out.append("</ul>"); in_ul = False
             continue
-        if line.startswith("!["): continue
-        if re.match(r"^\[\d+\]:\s*https?://", line): continue
+        if line.startswith("!["):
+            continue
+        if re.match(r"^\[\d+\]:\s*https?://", line):
+            continue
         if line.startswith("#### "):
             if in_ul: out.append("</ul>"); in_ul = False
-            out.append(f"<h4>{html.escape(line[5:].strip())}</h4>"); continue
+            out.append(f"<h4>{html.escape(line[5:].strip())}</h4>")
+            continue
         if line.startswith("### "):
             if in_ul: out.append("</ul>"); in_ul = False
             out.append(f"<h3>{html.escape(line[4:].strip())}</h3>"); continue
@@ -1468,9 +1477,12 @@ def _determine_user_email(db: Session, briefing: Briefing, override: Optional[st
     if override: return override
     if getattr(briefing, "user_id", None):
         u = db.get(User, briefing.user_id)
-        if u and getattr(u, "email", ""): return u.email
+        if u and getattr(u, "email", ""):
+            email = getattr(u, "email", "")
+            return str(email) if email else None
     answers = getattr(briefing, "answers", None) or {}
-    return answers.get("email") or answers.get("kontakt_email")
+    email_value = answers.get("email") or answers.get("kontakt_email")
+    return str(email_value) if email_value else None
 
 def _version_major_minor(v: str) -> str:
     m = re.match(r"^\s*(\d+)\.(\d+)", v or ""); return f"{m.group(1)}.{m.group(2)}" if m else "1.0"
@@ -1523,9 +1535,9 @@ def _build_freetext_snippets_html(ans: Dict[str, Any]) -> str:
         "</section>"
     )
 # -------------------- 🎯 UPDATED: Main composer with prompt system ----------------
-def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict[str, str]:
+def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict[str, Any]:
     """Generate all content sections - now using prompt system where available!"""
-    sections: Dict[str, str] = {}
+    sections: Dict[str, Any] = {}
     
     # Executive Summary
     sections["EXECUTIVE_SUMMARY_HTML"] = _generate_content_section("executive_summary", briefing, scores)
@@ -1735,7 +1747,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     raw_answers: Dict[str, Any] = getattr(br, "answers", {}) or {}
     answers = (lambda x: x)(raw_answers)
     try:
-        from services.answers_normalizer import normalize_answers  # type: ignore
+        from services.answers_normalizer import normalize_answers
         answers = normalize_answers(raw_answers)
     except Exception:
         pass
@@ -1787,8 +1799,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["UMSATZ_LABEL"] = answers.get("UMSATZ_LABEL", "")
 
     version_full = os.getenv("VERSION", "1.0.0")
-    version_mm = re.match(r"^\s*(\d+)\.(\d+)", version_full or "")
-    version_mm = f"{version_mm.group(1)}.{version_mm.group(2)}" if version_mm else "1.0"
+    version_mm_match = re.match(r"^\s*(\d+)\.(\d+)", version_full or "")
+    version_mm = f"{version_mm_match.group(1)}.{version_mm_match.group(2)}" if version_mm_match else "1.0"
     kundencode = _derive_kundencode(answers, sections["user_email"])
     report_id = f"R-{now.strftime('%Y%m%d')}-{kundencode}"
     sections["kundencode"] = kundencode
@@ -1824,7 +1836,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     # Research integration
     research_last_updated = ""
     try:
-        from services.research_pipeline import run_research  # type: ignore
+        from services.research_pipeline import run_research
         if USE_INTERNAL_RESEARCH and run_research:
             log.info("[%s] 🔬 Running internal research...", run_id)
             research_blocks = run_research(answers)
@@ -2063,7 +2075,8 @@ def _fetch_pdf_if_needed(pdf_url: Optional[str], pdf_bytes: Optional[bytes]) -> 
 
     try:
         r = requests.get(pdf_url, timeout=30)
-        if r.ok: return r.content
+        if r.ok:
+            return bytes(r.content)
     except Exception as e:
         log.warning("Failed to fetch PDF from URL: %s", str(e)[:100])
         return None

@@ -25,8 +25,8 @@ def _briefing_to_dict(briefing: Any) -> Dict[str, Any]:
     # dataclasses
     try:
         from dataclasses import asdict, is_dataclass
-        if is_dataclass(briefing):
-            return asdict(briefing)
+        if is_dataclass(briefing) and not isinstance(briefing, type):
+            return dict(asdict(briefing))
     except Exception:
         pass
     # ORMs / arbitrary objects: use public attrs only

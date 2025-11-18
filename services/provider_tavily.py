@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 import os, json, logging, requests
-from typing import List, Dict
+from typing import List, Dict, Any
 
 LOGGER = logging.getLogger(__name__)
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 TAVILY_ENDPOINT = os.getenv("TAVILY_ENDPOINT", "https://api.tavily.com/search")
 
-def _post_json(url: str, payload: dict, timeout: int = 20) -> dict:
+def _post_json(url: str, payload: dict, timeout: int = 20) -> dict[Any, Any]:
     headers = {"Content-Type":"application/json","Accept":"application/json"}
     resp = requests.post(url, headers=headers, data=json.dumps(payload), timeout=timeout)
     resp.raise_for_status()
-    return resp.json()
+    data = resp.json()
+    return data if isinstance(data, dict) else {}
 
 def search(query: str, max_results: int = 6, days: int = 30) -> List[Dict]:
     if not TAVILY_API_KEY:

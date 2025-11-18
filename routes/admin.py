@@ -21,10 +21,10 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 # ---------- DB/Auth Dependencies (guarded) ----------
 try:
-    from core.db import get_session as _get_session  # type: ignore
+    from core.db import get_session as _get_session
     DB_READY = True
 except (ImportError, RuntimeError) as exc:  # pragma: no cover
-    _get_session = None  # type: ignore
+    _get_session = None
     DB_READY = False
     log.warning("Admin: DB not ready at import: %s", exc)
 
@@ -35,14 +35,14 @@ def get_db():
 
 def get_current_user():
     try:
-        from services.auth import get_current_user as _get_current_user  # type: ignore
+        from services.auth import get_current_user as _get_current_user
         return _get_current_user
     except (ImportError, RuntimeError) as exc:  # pragma: no cover
         raise HTTPException(status_code=503, detail=f"auth_unavailable: {exc}")
 
 def _models():
     try:
-        from models import User, Briefing, Analysis, Report  # type: ignore
+        from models import User, Briefing, Analysis, Report
         return User, Briefing, Analysis, Report
     except (ImportError, RuntimeError) as exc:  # pragma: no cover
         raise HTTPException(status_code=503, detail=f"models_unavailable: {exc}")
@@ -62,9 +62,9 @@ def _require_admin(user: Any) -> None:
     if not _is_admin(user):
         raise HTTPException(status_code=403, detail="admin_required")
 
-def _iso(dt) -> Optional[str]:
+def _iso(dt) -> str | None:
     try:
-        return dt.isoformat() if dt else None
+        return str(dt.isoformat()) if dt else None
     except Exception:
         return None
 
@@ -301,7 +301,7 @@ def rerun_generation(
     _require_admin(user)
     # gpt_analyze nur hier importieren (nicht beim Modul-Load)
     try:
-        from gpt_analyze import run_async  # type: ignore
+        from gpt_analyze import run_async
     except (ImportError, RuntimeError) as exc:
         raise HTTPException(status_code=503, detail=f"analyzer_unavailable: {exc}")
     background.add_task(run_async, briefing_id, None)
@@ -316,7 +316,7 @@ def export_briefing_zip(
 ):
     _require_admin(user)
     try:
-        from services.admin_export import build_briefing_export_zip  # type: ignore
+        from services.admin_export import build_briefing_export_zip
     except (ImportError, RuntimeError) as exc:
         raise HTTPException(status_code=503, detail=f"exporter_unavailable: {exc}")
     buf = build_briefing_export_zip(db, briefing_id, include_pdf=include_pdf)

@@ -25,7 +25,7 @@ def create_access_token(email: str, subject: str = "user") -> str:
     exp = now + s.security.jwt_expire_days * 24 * 60 * 60
     payload = {"sub": subject, "email": email, "iat": now, "exp": exp}
     token = jwt.encode(payload, s.security.jwt_secret, algorithm=s.security.jwt_algorithm)
-    return token
+    return str(token)
 
 
 def verify_access_token(token: str) -> TokenPayload:

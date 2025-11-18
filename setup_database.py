@@ -78,10 +78,10 @@ ADMIN_USER: str = "bewertung@ki-sicherheit.jetzt"
 
 def get_database_url(args=None) -> str:
     """Hole DATABASE_URL aus Command-Line, Environment oder .env"""
-    
+
     # 1. Priorität: Command-Line Argument
     if args and args.db_url:
-        return args.db_url
+        return str(args.db_url)
     
     # 2. Priorität: Environment Variable
     db_url = os.getenv("DATABASE_URL")
