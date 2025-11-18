@@ -292,7 +292,7 @@ def _send_email_via_resend(to_email: str, subject: str, html_body: str, attachme
         if resend_attachments:
             params["attachments"] = resend_attachments
 
-        response = resend.Emails.send(params)
+        response = resend.Emails.send(params)  # type: ignore[arg-type]
 
         # Log email ID for debugging in Resend dashboard
         email_id = response.get("id") if isinstance(response, dict) else None
@@ -1482,8 +1482,8 @@ def _determine_user_email(db: Session, briefing: Briefing, override: Optional[st
     if override: return override
     if getattr(briefing, "user_id", None):
         u = db.get(User, briefing.user_id)
-        if u and getattr(u, "email", ""):
-            email = getattr(u, "email", "")
+        if u and getattr(u, "email", None):
+            email = getattr(u, "email", None)
             return str(email) if email else None
     answers = getattr(briefing, "answers", None) or {}
     email_value = answers.get("email") or answers.get("kontakt_email")
