@@ -1,0 +1,54 @@
+{
+  "groesse": "team",
+  "display_name": "2–10 (Kleines Team)",
+  "description": "Kleines Team mit 2-10 Mitarbeitern. Erste Arbeitsteilung, aber noch keine festen Abteilungen.",
+  
+  "characteristics": {
+    "mitarbeiter": "2-10",
+    "abteilungen": false,
+    "jahresumsatz_typical": "150.000 - 1.000.000€",
+    "time_constraint": "hoch",
+    "decision_speed": "schnell (Tage bis Wochen)",
+    "budget_sensitivity": "mittel",
+    "tech_affinity": "mittel bis hoch",
+    "risk_tolerance": "mittel"
+  },
+  
+  "typical_challenges": [
+    "Koordination: Wer macht was wann?",
+    "Wissenstransfer: Wie teilen wir Know-how?",
+    "Prozesse fehlen: Jeder macht es anders",
+    "Bottleneck bei Gründer: Alle Entscheidungen durch eine Person",
+    "Skalierung: Wachstum bringt Chaos",
+    "Kultur bewahren: Startup-Feeling vs. Struktur"
+  ],
+  
+  "focus_priorities": [
+    "Kollaboration verbessern",
+    "Prozesse standardisieren",
+    "Wissensmanagement aufbauen",
+    "Bottlenecks beseitigen",
+    "Skalierbarkeit schaffen"
+  ],
+  
+  "forbidden_recommendations": [
+    "Enterprise-Software",
+    "Dedicated IT-Abteilung",
+    "Komplexe Hierarchien",
+    "Zu viele Tools (Tool-Zoo vermeiden)"
+  ],
+  
+  "budget_realistic": {
+    "capex_max": 50000,
+    "capex_typical": 20000,
+    "opex_monthly_max": 1500,
+    "opex_monthly_typical": 600
+  },
+  
+  "automation_priorities": [
+    "Teamkoordination (Projekte, Tasks, Deadlines)",
+    "Wissensmanagement (Dokumentation, Best Practices)",
+    "Kundenmanagement (Shared CRM)",
+    "Zeiterfassung (wer arbeitet woran?)"
+  ]
+}

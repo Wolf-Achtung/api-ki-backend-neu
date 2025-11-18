@@ -1,0 +1,162 @@
+{
+  "branche": "beratung",
+  "display_name": "Beratung & Dienstleistungen",
+  "description": "Professionelle Dienstleistungen: Unternehmensberatung, Managementberatung, Fachberatung, Coaching",
+  
+  "typical_workflows": [
+    "Kundenakquise via Netzwerk, Empfehlungen und LinkedIn",
+    "Erstgespräche und Bedarfsanalyse (oft 1-2h pro Kunde)",
+    "Angebotserstellung (individuell, zeitaufwändig: 2-4h pro Angebot)",
+    "Projektdurchführung: Workshops, Analysen, Coaching-Sessions",
+    "Dokumentation: Protokolle, Reports, Präsentationen",
+    "Follow-up: Nachfassen bei Angeboten, Kundenpflege",
+    "Administration: Rechnungen, Zeiterfassung, Buchhaltung"
+  ],
+  
+  "common_pain_points": [
+    "Akquise frisst produktive Zeit: 30-40% für Marketing statt Delivery",
+    "Angebote schreiben dauert zu lang: Jedes individuell anpassen",
+    "Standardisierung schwierig: Jeder Kunde will individuelle Lösung",
+    "Skalierung nur mit mehr Zeit: Kapazitätsgrenze bei Solo/kleinen Teams",
+    "Marketing oft vernachlässigt: Keine Zeit für regelmäßigen Content",
+    "Administration unterschätzt: Rechnungen, Verträge, Dokumentation",
+    "Wissensmanagement fehlt: Jedes Projekt von Null aufbauen",
+    "Preisfindung unsicher: Stundensätze vs. Value-Based-Pricing"
+  ],
+  
+  "ai_opportunities": [
+    "Angebotserstellung automatisieren: Templates + GPT = 5 statt 120 Minuten",
+    "Content-Marketing: LinkedIn-Posts, Blog-Artikel, Newsletter per GPT",
+    "Report-Generation: Analysen und Präsentationen automatisch erstellen",
+    "Meeting-Dokumentation: Transkription + Zusammenfassung + Action Items",
+    "Research-Assistenten: Kundenanalyse, Marktrecherche, Konkurrenzanalyse",
+    "Email-Automation: Follow-ups, Nurturing-Sequenzen, Terminbestätigung",
+    "CRM-Automation: Lead-Scoring, Aktivitäten-Tracking, Pipeline-Management",
+    "Wissensmanagement: RAG-Systeme für firmeninternes Know-how"
+  ],
+  
+  "typical_tools": [
+    "Microsoft Office / Google Workspace für Dokumente",
+    "Excel / Google Sheets für Kalkulationen und Listen",
+    "Email als Haupt-Kommunikationskanal",
+    "Zoom / Microsoft Teams für Online-Meetings",
+    "LinkedIn für Netzwerk und Marketing",
+    "Kein oder sehr simples CRM (oft Excel-Listen)",
+    "Manuelle Buchhaltung oder DATEV/Lexoffice",
+    "WhatsApp für schnelle Kundenkommunikation"
+  ],
+  
+  "tool_ecosystem": {
+    "communication": ["Email", "Zoom", "Teams", "WhatsApp"],
+    "documentation": ["Word", "Google Docs", "PowerPoint", "Notion"],
+    "calculation": ["Excel", "Google Sheets"],
+    "crm": ["Kein CRM", "Excel", "HubSpot Free", "Pipedrive"],
+    "accounting": ["DATEV", "Lexoffice", "sevDesk"],
+    "marketing": ["LinkedIn", "Mailchimp", "Website"]
+  },
+  
+  "realistic_quick_wins_solo": [
+    {
+      "title": "GPT-gestützte Angebotserstellung",
+      "description": "Erstelle Angebote aus Templates in 5 statt 30 Minuten. Kundendaten + Briefing → GPT generiert individualisiertes Angebot mit Preis, Leistungen, Timeline.",
+      "hours_saved": 8,
+      "tool": "GPT-4 API oder ChatGPT Team (20€/Monat)",
+      "implementation": "Templates als Prompts anlegen, Workflow: Kundendaten → GPT → Word-Export",
+      "difficulty": "niedrig",
+      "investment": "20-50€/Monat"
+    },
+    {
+      "title": "Automatisierte LinkedIn-Content-Pipeline",
+      "description": "Wöchentliche Fachbeiträge per GPT generieren, anpassen, schedulen. Themen-Liste → GPT → 3-5 Posts pro Woche.",
+      "hours_saved": 6,
+      "tool": "GPT-4 + Buffer oder Hootsuite",
+      "implementation": "Themen-Backlog aufbauen, Prompt-Templates, Posting-Schedule",
+      "difficulty": "niedrig",
+      "investment": "15-30€/Monat"
+    },
+    {
+      "title": "Meeting-Protokolle automatisiert",
+      "description": "Zoom/Teams-Aufnahmen → automatische Transkription → Zusammenfassung → Action Items → Protokoll per Email.",
+      "hours_saved": 5,
+      "tool": "Fireflies.ai (19€/Monat) oder Otter.ai",
+      "implementation": "Integration mit Zoom/Teams, automatischer Versand nach Meeting",
+      "difficulty": "niedrig",
+      "investment": "19€/Monat"
+    },
+    {
+      "title": "Email-Follow-up-Sequenzen",
+      "description": "Automatische Nachfass-Emails nach Erstgespräch, Angebot, Projekt-Abschluss. Trigger-basiert, personalisiert.",
+      "hours_saved": 4,
+      "tool": "Make.com (9€/Monat) oder Zapier + Gmail",
+      "implementation": "Trigger definieren (z.B. 3 Tage nach Angebot), Email-Templates, Automation",
+      "difficulty": "mittel",
+      "investment": "9-29€/Monat"
+    },
+    {
+      "title": "Research-Assistent für Kundenanalyse",
+      "description": "Automatische Recherche zu potenziellem Kunden: LinkedIn-Profil, Firmen-Website, aktuelle News → Zusammenfassung für Erstgespräch.",
+      "hours_saved": 7,
+      "tool": "GPT-4 + Tavily API (bereits vorhanden!)",
+      "implementation": "Script für automatische Recherche, Template für Briefing",
+      "difficulty": "mittel",
+      "investment": "0€ (bei vorhandener API)"
+    },
+    {
+      "title": "Rechnungserstellung automatisiert",
+      "description": "Aus Projektdaten automatisch Rechnung erstellen: Stunden/Leistungen → Rechnung per API → Email an Kunde.",
+      "hours_saved": 3,
+      "tool": "Lexoffice API oder sevDesk",
+      "implementation": "Template-Automation, Integration mit Zeiterfassung",
+      "difficulty": "mittel",
+      "investment": "16-24€/Monat"
+    }
+  ],
+  
+  "realistic_quick_wins_team": [
+    {
+      "title": "Zentrales Wissensmanagement mit RAG",
+      "description": "Alle Projektdokumente, Best Practices, Templates in einer durchsuchbaren Wissensbasis. Team findet Infos in Sekunden statt Stunden.",
+      "hours_saved": 15,
+      "tool": "Notion AI oder Custom RAG mit Pinecone",
+      "implementation": "Dokumente sammeln, strukturieren, RAG aufsetzen",
+      "difficulty": "hoch",
+      "investment": "50-200€/Monat"
+    }
+  ],
+  
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise CRM mit KI-Pipeline-Management",
+      "description": "Automatisches Lead-Scoring, Pipeline-Prognosen, Next-Best-Actions für Vertrieb.",
+      "hours_saved": 25,
+      "tool": "HubSpot Enterprise + KI-Features",
+      "implementation": "CRM-Migration, Prozesse definieren, Team schulen",
+      "difficulty": "hoch",
+      "investment": "800-2000€/Monat"
+    }
+  ],
+  
+  "industry_specific_notes": {
+    "unternehmensberatung": "Fokus auf strategische Analysen, Workshops, Change-Management",
+    "it_beratung": "Technische Expertise, Systemauswahl, Implementierungsbegleitung",
+    "marketingberatung": "Content-Strategie, Kampagnen-Management, Analytics",
+    "hr_beratung": "Recruiting, Organisationsentwicklung, Talent-Management",
+    "finanzberatung": "Compliance-getrieben, hohe Dokumentationsanforderungen"
+  },
+  
+  "success_metrics": [
+    "Angebots-Hit-Rate: % gewonnener Projekte",
+    "Time-to-Offer: Stunden von Anfrage bis Angebot",
+    "Utilization Rate: % produktive vs. administrative Zeit",
+    "Client Lifetime Value: Wert pro Kunde über Zeit",
+    "Referral Rate: % Kunden die weiterempfehlen"
+  ],
+  
+  "typical_pricing_models": [
+    "Stundensätze (60-250€/h je nach Expertise)",
+    "Tagessätze (500-2500€/Tag)",
+    "Projektpauschalen",
+    "Retainer-Modelle (monatlich)",
+    "Value-Based-Pricing (selten bei KMU)"
+  ]
+}

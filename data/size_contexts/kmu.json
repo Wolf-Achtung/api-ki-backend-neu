@@ -1,0 +1,53 @@
+{
+  "groesse": "kmu",
+  "display_name": "11–100 (KMU)",
+  "description": "Mittelständisches Unternehmen mit ersten Abteilungen und Managementebene.",
+  
+  "characteristics": {
+    "mitarbeiter": "11-100",
+    "abteilungen": true,
+    "jahresumsatz_typical": "1.000.000 - 10.000.000€",
+    "time_constraint": "mittel",
+    "decision_speed": "mittel (Wochen bis Monate)",
+    "budget_sensitivity": "mittel",
+    "tech_affinity": "variabel",
+    "risk_tolerance": "mittel bis hoch"
+  },
+  
+  "typical_challenges": [
+    "Silos: Abteilungen arbeiten isoliert",
+    "Legacy-Systeme: Gewachsene Tool-Landschaft",
+    "Change Management: Widerstand gegen neue Tools",
+    "Governance: Wer entscheidet was?",
+    "Compliance: DSGVO, Betriebsrat, ISO-Zertifizierungen",
+    "Skalierung: Prozesse wachsen nicht mit"
+  ],
+  
+  "focus_priorities": [
+    "Prozess-Standardisierung über Abteilungen hinweg",
+    "Governance und Compliance",
+    "Change Management strukturiert angehen",
+    "Enterprise-Readiness (Sicherheit, Skalierung)",
+    "ROI muss belastbar sein"
+  ],
+  
+  "forbidden_recommendations": [
+    "Quick-and-Dirty-Lösungen",
+    "Tools ohne SSO/Enterprise-Features",
+    "Keine Compliance-Prüfung"
+  ],
+  
+  "budget_realistic": {
+    "capex_max": 200000,
+    "capex_typical": 80000,
+    "opex_monthly_max": 8000,
+    "opex_monthly_typical": 3000
+  },
+  
+  "automation_priorities": [
+    "Enterprise CRM mit Pipeline-Management",
+    "ERP-Integration oder -Upgrade",
+    "HR-Prozesse (Recruiting, Onboarding)",
+    "Compliance-Automation (DSGVO, Dokumentation)"
+  ]
+}

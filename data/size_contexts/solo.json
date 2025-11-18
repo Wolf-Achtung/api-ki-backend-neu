@@ -1,0 +1,148 @@
+{
+  "groesse": "solo",
+  "display_name": "Solo-Selbstständig/Freiberuflich",
+  "description": "Ein-Personen-Unternehmen ohne festangestellte Mitarbeiter. Alle Rollen werden von einer Person übernommen.",
+  
+  "characteristics": {
+    "mitarbeiter": 0,
+    "abteilungen": false,
+    "jahresumsatz_typical": "30.000 - 150.000€",
+    "time_constraint": "extrem hoch",
+    "decision_speed": "sehr schnell (Stunden bis Tage)",
+    "budget_sensitivity": "hoch",
+    "tech_affinity": "variabel (von niedrig bis sehr hoch)",
+    "risk_tolerance": "mittel bis niedrig"
+  },
+  
+  "typical_challenges": [
+    "Allrounder-Zwang: Marketing, Verkauf, Delivery, Admin in einer Person",
+    "Kapazitätsgrenze: Skalierung nur durch mehr eigene Arbeitsstunden",
+    "Akquise vs. Delivery: Entweder Kunden suchen ODER Projekte machen",
+    "Keine Vertretung: Urlaub = kein Umsatz",
+    "Isoliert: Keine Kollegen für Feedback, Brainstorming, Motivation",
+    "Preisdruck: Oft Konkurrenzkampf mit größeren Agenturen",
+    "Cash-Flow: Keine Rücklagen für Investitionen",
+    "Admin-Overhead: Buchhaltung, Steuern, Versicherungen selbst managen"
+  ],
+  
+  "focus_priorities": [
+    "Zeitersparnis (absolute Top-Priorität!)",
+    "Automatisierung repetitiver Tasks",
+    "Marketing-Effizienz (wenig Zeit = Maximum rausholen)",
+    "Tools die SOFORT funktionieren (kein Trainings-Overhead)",
+    "Keine Abhängigkeit von teuren Dienstleistern",
+    "ROI muss klar und schnell sein",
+    "Self-Service-Tools (keine Implementierungs-Projekte)"
+  ],
+  
+  "forbidden_recommendations": [
+    "Team aufbauen",
+    "Mitarbeiter einstellen",
+    "Freelancer-Pool aufbauen",
+    "Abteilungsstrukturen definieren",
+    "Organisationsberater engagieren",
+    "Change-Management-Programme",
+    "Team-Workshops",
+    "Führungskräfte-Coaching",
+    "Rollen definieren (außer eigene)",
+    "Enterprise-Software (SAP, Oracle, etc.)",
+    "ERP-Systeme (viel zu komplex)",
+    "Dedicated IT-Support",
+    "Komplexe Multi-Tool-Integrationen"
+  ],
+  
+  "recommended_instead": [
+    "No-Code-Automation (Make, Zapier)",
+    "All-in-One-Tools statt Tool-Zoo",
+    "Outsourcing punktuell (VA, Buchhalter)",
+    "Templates statt Custom-Entwicklung",
+    "SaaS-Tools mit Self-Service",
+    "Community-Support statt teurem Support"
+  ],
+  
+  "budget_realistic": {
+    "capex_max": 10000,
+    "capex_typical": 3000,
+    "capex_note": "Oft aus Rücklagen, nicht kreditfinanziert",
+    "opex_monthly_max": 300,
+    "opex_monthly_typical": 120,
+    "opex_note": "Jeder Euro wird 3x überlegt",
+    "hidden_costs": "Eigene Zeit für Setup, Learning Curve, Wartung"
+  },
+  
+  "decision_criteria": [
+    "ROI muss klar ersichtlich sein (idealerweise Rechner)",
+    "Amortisation unter 6 Monaten (besser 3 Monate)",
+    "Tools müssen self-service sein (keine Abhängigkeit)",
+    "Keine lange Einarbeitungszeit (max 1-2 Tage)",
+    "Skalierbar wenn Business wächst (nicht neu kaufen)",
+    "Kündbar (keine lange Vertragsbindung)",
+    "DSGVO-konform (EU-Hosting bevorzugt)"
+  ],
+  
+  "time_allocation_typical": {
+    "delivery": "40-50%",
+    "akquise_marketing": "20-30%",
+    "administration": "15-20%",
+    "weiterbildung": "5-10%",
+    "strategie": "5%"
+  },
+  
+  "time_allocation_ideal": {
+    "delivery": "60-70%",
+    "akquise_marketing": "15-20%",
+    "administration": "5-10%",
+    "weiterbildung": "5-10%",
+    "strategie": "5-10%"
+  },
+  
+  "automation_priorities": [
+    "Email-Marketing und Follow-ups (höchster Impact)",
+    "Angebotserstellung (sehr zeitaufwändig)",
+    "Social Media Posting (oft vernachlässigt)",
+    "Rechnungserstellung (nervt am meisten)",
+    "Meeting-Dokumentation (unterschätzt)",
+    "Terminvereinbarung (Ping-Pong vermeiden)"
+  ],
+  
+  "quick_win_criteria": {
+    "hours_saved_min": 3,
+    "hours_saved_max": 15,
+    "note": "Mehr als 15h/Monat für Solo unrealistisch",
+    "payback_max_months": 6,
+    "implementation_max_hours": 8,
+    "learning_curve_max_hours": 4
+  },
+  
+  "tool_selection_preferences": [
+    "Freemium-Modelle zum Testen",
+    "Monatliche Kündbarkeit statt Jahresabo",
+    "Deutscher Support bevorzugt",
+    "YouTube-Tutorials verfügbar",
+    "Community/Forum aktiv",
+    "Mobile App vorhanden",
+    "Integrationen mit Standard-Tools (Gmail, Google Calendar, etc.)"
+  ],
+  
+  "success_patterns": [
+    "Nische finden statt Generalist",
+    "Productized Services (standardisierte Pakete)",
+    "Passive Income aufbauen (Kurse, Templates)",
+    "Premium-Pricing statt Masse",
+    "Retainer-Kunden aufbauen (planbare Einnahmen)",
+    "Community/Netzwerk als Akquise-Kanal"
+  ],
+  
+  "typical_stundensatz": {
+    "einsteiger": "40-70€",
+    "etabliert": "70-120€",
+    "experte": "120-250€",
+    "note": "Große Varianz je nach Branche und Region"
+  },
+  
+  "roadmap_horizons": {
+    "quick_wins": "0-3 Monate",
+    "scaling": "3-12 Monate",
+    "transformation": "12-24 Monate"
+  }
+}
