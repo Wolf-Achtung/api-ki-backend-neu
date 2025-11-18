@@ -224,7 +224,7 @@ def build_starter_stacks(answers: Dict[str, Any], path: str = "data/starter_stac
 
     cards: List[Dict[str, Any]] = data.get("all") or data.get("global") or []
     if not isinstance(cards, list):
-        cards = []
+        cards = []  # type: ignore[unreachable]
 
     items_html = []
     for c in cards[:8]:
