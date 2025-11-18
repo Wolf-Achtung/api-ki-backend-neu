@@ -16,7 +16,7 @@ class RunAnalyze(BaseModel):
 def _get_briefing_model():
     """Lazy Import der Models, damit der Router auch ohne DB‑Treiber mountet."""
     try:
-        from models import Briefing  # type: ignore
+        from models import Briefing
         return Briefing
     except (ImportError, RuntimeError) as exc:  # pragma: no cover
         raise HTTPException(status_code=503, detail=f"models_unavailable: {exc}")
@@ -37,7 +37,7 @@ def run(body: RunAnalyze, request: Request, db = Depends(get_db)) -> dict:
     if not br:
         raise HTTPException(status_code=404, detail="Briefing not found")
     try:
-        from gpt_analyze import run_async  # type: ignore
+        from gpt_analyze import run_async
     except (ImportError, RuntimeError) as exc:
         raise HTTPException(status_code=503, detail=f"analyzer_unavailable: {exc}")
     run_async(body.briefing_id, body.email_override)

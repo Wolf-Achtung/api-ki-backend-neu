@@ -27,7 +27,7 @@ log = logging.getLogger("services.email_sender")
 def _env(name: str, default: Optional[str] = None) -> Optional[str]:
     """Liest zuerst aus settings, dann aus os.environ."""
     try:
-        v = getattr(settings, name)  # type: ignore[attr-defined]
+        v = getattr(settings, name)
         if v is not None:
             return str(v)
     except Exception:

@@ -252,8 +252,8 @@ def search_funding_and_tools(
         return {"funding": [], "tools": []}
     
     client = TavilyClient(api_key=api_key)
-    
-    result = {
+
+    result: dict[str, list[dict[str, Any]]] = {
         "funding": [],
         "tools": []
     }

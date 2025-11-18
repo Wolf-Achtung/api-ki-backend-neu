@@ -5,7 +5,7 @@ services/content_normalizer.py
 Hilfsfunktionen für Report-HTML: Score-Balken, Kreativ-Tools, Tool-Stacks, Glossar.
 """
 from typing import Dict, Any, List
-import os, re, html
+import os, re, html, json
 
 def _read_file(path: str) -> str:
     try:
@@ -83,10 +83,10 @@ _DEFAULT_STACKS = {
 def build_tool_stack_html(branche: str, size: str) -> str:
     # Externe Datei erlaubt: STARTER_STACKS_PATH (JSON)
     path = os.getenv("STARTER_STACKS_PATH", "data/starter_stacks.json")
-    stacks = {}
+    stacks: dict[str, Any] = {}
     try:
         with open(path, "r", encoding="utf-8") as f:
-            stacks = dict(os.path.splitext(os.path.basename(path))[0] and (stacks := {}) or json.load(f))  # noqa
+            stacks = json.load(f)
     except Exception:
         stacks = {}
     # Merge: common + branche

@@ -40,7 +40,8 @@ def _load_seed() -> List[Dict[str,Any]]:
     p = Path("data/funding_programs.json")
     if p.exists():
         try:
-            return json.loads(p.read_text(encoding="utf-8"))
+            data = json.loads(p.read_text(encoding="utf-8"))
+            return data if isinstance(data, list) else DEFAULT_PROGRAMS
         except Exception:
             pass
     return DEFAULT_PROGRAMS

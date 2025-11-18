@@ -20,7 +20,7 @@ Tooltabelle/Research separat aktuell eingespielt werden kann.
 """
 from __future__ import annotations
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Any
 import html
 import re
 
@@ -70,7 +70,7 @@ def normalize_industry(value: str | None) -> str:
 
 # Für jede Branche: Liste von Playbooks (dict)
 # Key-Namen sind stabil, damit PDF/Frontend darauf rendern kann.
-Playbooks: Dict[str, List[Dict[str, object]]] = {
+Playbooks: Dict[str, List[Dict[str, Any]]] = {
     # Bereits vorhanden im ersten Paket: "beratung" – belassen + leicht gestrafft
     "beratung": [
         {

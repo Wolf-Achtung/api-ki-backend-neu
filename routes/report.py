@@ -48,18 +48,21 @@ async def generate(payload: Dict[str, Any]) -> Dict[str, Any]:
         ) from exc
 
     # Support sync/async implementations transparently
+    # Note: run_async returns None, it's a fire-and-forget operation
+    # It expects briefing_id as int, not a dict
     try:
+        briefing_id = payload.get("briefing_id") if isinstance(payload, dict) else payload
         if asyncio.iscoroutinefunction(run_async):
-            result = await run_async(**payload)  # type: ignore[misc]
+            await run_async(briefing_id)
         else:
             loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(None, lambda: run_async(**payload))  # type: ignore[misc]
-    except TypeError:
-        # Fall back if the analyzer uses a simpler signature
+            await loop.run_in_executor(None, lambda: run_async(briefing_id))
+    except (TypeError, KeyError):
+        # Fall back - try with payload directly if it's already an int
         if asyncio.iscoroutinefunction(run_async):
-            result = await run_async(payload)  # type: ignore[misc]
+            await run_async(payload if isinstance(payload, int) else 0)
         else:
             loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(None, lambda: run_async(payload))  # type: ignore[misc]
+            await loop.run_in_executor(None, lambda: run_async(payload if isinstance(payload, int) else 0))
 
-    return {"ok": True, "result": result}
+    return {"ok": True}

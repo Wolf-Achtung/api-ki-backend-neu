@@ -124,7 +124,8 @@ def _load_seed() -> List[Dict[str,Any]]:
     seed_file = Path("data/tools_seed.json")
     if seed_file.exists():
         try:
-            return json.loads(seed_file.read_text(encoding="utf-8"))
+            data = json.loads(seed_file.read_text(encoding="utf-8"))
+            return data if isinstance(data, list) else DEFAULT_TOOLS
         except Exception:
             pass
     return DEFAULT_TOOLS
