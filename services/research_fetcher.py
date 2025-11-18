@@ -67,7 +67,7 @@ def fetch_funding(state: str, days: int = 30, max_items: int = 8) -> List[Dict[s
     key = _cache_key("funding", state=state, days=days)
     cached = _get_cached(cache, key, DEFAULT_TTL_SECONDS)
     if cached and isinstance(cached, list):
-        return cached
+        return list(cached)
 
     queries = [
         f"Förderprogramm KI {state} {days} Tage site:.de",
@@ -86,7 +86,7 @@ def fetch_tools(branch: str, company_size: str, days: int = 30, include_open_sou
     key = _cache_key("tools", branch=branch, size=company_size, days=days, oss=include_open_source)
     cached = _get_cached(cache, key, DEFAULT_TTL_SECONDS)
     if cached and isinstance(cached, list):
-        return cached
+        return list(cached)
 
     base = [
         f"beste KI Tools {branch} Deutschland {days} Tage",
