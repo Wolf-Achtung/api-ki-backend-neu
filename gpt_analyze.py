@@ -1999,6 +1999,21 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
                  bc.get("PAYBACK_MONTHS", "N/A"),
                  bc.get("ROI_12M", "N/A"))
 
+        # FIX: Apply calculated values to HTML sections
+        for section_key in ['BUSINESS_CASE_HTML', 'LEAD_BUSINESS_DETAIL']:
+            if section_key in sections:
+                sections[section_key] = sections[section_key].replace(
+                    '{CAPEX_REALISTISCH_EUR}', str(bc.get('CAPEX_REALISTISCH_EUR', 6000))
+                ).replace(
+                    '{OPEX_REALISTISCH_EUR}', str(bc.get('OPEX_REALISTISCH_EUR', 120))
+                ).replace(
+                    '{EINSPARUNG_MONAT_EUR}', str(bc.get('EINSPARUNG_MONAT_EUR', 4500))
+                ).replace(
+                    '{PAYBACK_MONTHS}', str(bc.get('PAYBACK_MONTHS', 2.9))
+                ).replace(
+                    '{COMPANY_SIZE}', answers.get('unternehmensgroesse', 'solo')
+                )
+
     sections.update(build_extra_sections(answers, scores))
 
     # === Placeholder-Fix (jetzt mit Business Case Variablen verfügbar!) ===
