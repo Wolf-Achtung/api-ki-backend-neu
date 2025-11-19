@@ -52,7 +52,10 @@ from services.coverage_guard import analyze_coverage, build_html_report
 from services.prompt_loader import load_prompt
 from services.prompt_enhancer import PromptEnhancer
 from services.html_sanitizer import sanitize_sections_dict
+from utils.hotfix_gold_standard import apply_hotfix, UTF8Handler
 
+# Und direkt nach Zeile 61, vor try:
+UTF8Handler.setup_encoding()  # Global UTF-8 fix beim Start
 try:
     from services.extra_sections import (
         calc_business_case,
