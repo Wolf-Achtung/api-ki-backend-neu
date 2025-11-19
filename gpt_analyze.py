@@ -1866,7 +1866,21 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections.setdefault("KREATIV_SPECIAL_HTML","")
     sections.setdefault("LEISTUNG_NACHWEIS_HTML","")
     sections.setdefault("GLOSSAR_HTML","")
-    
+
+    # === VALIDATION GATE - Wolf 2025-11-19 ===
+    from services.report_validator import validate_report
+
+    log.info(f"[{rid}] 🔍 Running report validation...")
+    is_valid = validate_report(sections, briefing)
+
+    if not is_valid:
+        log.warning(f"[{rid}] ⚠️ Report has validation errors (see above) - continuing anyway")
+        # TODO: Later enable Quality Gate:
+        # raise ValueError("Report validation failed - fix errors first!")
+    else:
+        log.info(f"[{rid}] ✅ Report validation passed - GOLD STANDARD+")
+    # === END VALIDATION ===
+
     # Kreativ Tools
     kreat_path = os.getenv("KREATIV_TOOLS_PATH", "").strip()
     if kreat_path:
