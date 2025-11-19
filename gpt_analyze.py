@@ -2035,7 +2035,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         br,
         run_id=run_id,
         generated_sections=sections,
-        use_fetchers=False,
+        use_fetchers=True,
         scores=scores,
         meta={
             "scores": scores,
