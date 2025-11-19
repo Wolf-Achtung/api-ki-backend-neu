@@ -16,8 +16,8 @@ BRANCHE_MAP = {
 }
 UNTERNEHMENSGROESSE_MAP = {
     "1 (solo-selbstständig/freiberuflich)":"solo", "solo":"solo",
-    "2–10 (kleines team)":"team_2_10","2-10":"team_2_10","team":"team_2_10",
-    "11–100 (kmu)":"kmu_11_100","11-100":"kmu_11_100","kmu":"kmu_11_100",
+    "2–10 (kleines team)":"team","2-10":"team","team":"team",
+    "11–100 (kmu)":"kmu","11-100":"kmu","kmu":"kmu",
 }
 
 # Display labels
@@ -27,7 +27,7 @@ BRANCHEN_LABELS = {
     "gesundheit":"Gesundheit & Pflege","bau":"Bauwesen & Architektur","medien":"Medien & Kreativwirtschaft",
     "industrie":"Industrie & Produktion","logistik":"Transport & Logistik",
 }
-UNTERNEHMENSGROESSEN_LABELS = {"solo":"Solo","team_2_10":"2–10 (Kleines Team)","kmu_11_100":"11–100 (KMU)"}
+UNTERNEHMENSGROESSEN_LABELS = {"solo":"Solo","team":"2–10 (Kleines Team)","kmu":"11–100 (KMU)"}
 BUNDESLAENDER_LABELS = {
     "bw":"Baden‑Württemberg","by":"Bayern","be":"Berlin","bb":"Brandenburg","hb":"Bremen","hh":"Hamburg","he":"Hessen",
     "mv":"Mecklenburg‑Vorpommern","ni":"Niedersachsen","nw":"Nordrhein‑Westfalen","rp":"Rheinland‑Pfalz","sl":"Saarland",
