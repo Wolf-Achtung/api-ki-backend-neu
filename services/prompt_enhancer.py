@@ -7,7 +7,7 @@ This service works WITH Wolf's existing prompt_loader.py system.
 It loads prompts via prompt_loader, injects context, and returns enhanced prompts.
 
 Author: Wolf Hohl / Claude
-Version: 2.1.0-Backend-Optimized
+Version: 2.2.0-Context-Whitelist-Fix
 """
 from __future__ import annotations
 
@@ -127,7 +127,7 @@ class PromptEnhancer:
         This method:
         1. Loads the base prompt from /prompts/de/ via prompt_loader
         2. Builds a context block from branch/size contexts
-        3. Injects the context block into the prompt
+        3. Injects the context block into the prompt (ONLY for whitelisted prompts!)
         4. Returns the enhanced prompt
         
         Args:
@@ -135,8 +135,17 @@ class PromptEnhancer:
             briefing_data: Complete briefing data
             
         Returns:
-            Enhanced prompt with injected context
+            Enhanced prompt with injected context (or plain prompt if not whitelisted)
         """
+        # === WHITELIST: Only these prompts get context block ===
+        # Context should only appear on Unternehmensprofil page, not everywhere!
+        # This fixes the "10× context duplication" bug reported by Wolf
+        PROMPTS_WITH_CONTEXT = {
+            'unternehmensprofil_markt',  # Main profile page - needs context
+            # Add more here if needed, but keep it minimal!
+            # Most prompts DON'T need context - they have specific instructions
+        }
+        
         try:
             # Import prompt_loader dynamically to avoid circular imports
             from services.prompt_loader import load_prompt
@@ -149,7 +158,12 @@ class PromptEnhancer:
                 log.warning("⚠️ Prompt '%s' returned non-string type: %s", prompt_name, type(base_prompt))
                 return str(base_prompt)
             
-            # Build context block
+            # === FIX: Check if this prompt should get context ===
+            if prompt_name not in PROMPTS_WITH_CONTEXT:
+                log.debug("⏭️  Skipping context for '%s' (not in whitelist)", prompt_name)
+                return base_prompt  # Return WITHOUT context!
+            
+            # Build context block (only for whitelisted prompts)
             context_block = self.build_context_block(briefing_data)
             
             # Inject context block
@@ -222,3 +236,22 @@ if __name__ == "__main__":
     print("=" * 80)
     print(summary)
     print("=" * 80)
+    
+    # Test whitelist
+    print("\n" + "=" * 80)
+    print("WHITELIST TEST:")
+    print("=" * 80)
+    
+    test_prompts = [
+        "unternehmensprofil_markt",  # Should get context
+        "quick_wins",                 # Should NOT get context
+        "executive_summary",          # Should NOT get context
+    ]
+    
+    for prompt_name in test_prompts:
+        try:
+            enhanced = enhancer.enhance_prompt(prompt_name, test_briefing)
+            has_context = "Branchen-Context:" in enhanced
+            print(f"✅ {prompt_name}: Context={'YES ✓' if has_context else 'NO ✗'}")
+        except Exception as e:
+            print(f"❌ {prompt_name}: Error - {e}")
