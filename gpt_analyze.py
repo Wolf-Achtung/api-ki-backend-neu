@@ -2000,19 +2000,38 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
                  bc.get("ROI_12M", "N/A"))
 
         # FIX: Apply calculated values to HTML sections
-        for section_key in ['BUSINESS_CASE_HTML', 'LEAD_BUSINESS_DETAIL']:
-            if section_key in sections:
-                sections[section_key] = sections[section_key].replace(
-                    '{CAPEX_REALISTISCH_EUR}', str(bc.get('CAPEX_REALISTISCH_EUR', 6000))
-                ).replace(
-                    '{OPEX_REALISTISCH_EUR}', str(bc.get('OPEX_REALISTISCH_EUR', 120))
-                ).replace(
-                    '{EINSPARUNG_MONAT_EUR}', str(bc.get('EINSPARUNG_MONAT_EUR', 4500))
-                ).replace(
-                    '{PAYBACK_MONTHS}', str(bc.get('PAYBACK_MONTHS', 2.9))
-                ).replace(
-                    '{COMPANY_SIZE}', answers.get('unternehmensgroesse', 'solo')
-                )
+        sections_to_fix = [
+            'BUSINESS_CASE_HTML',
+            'LEAD_BUSINESS_DETAIL',
+            'EXECUTIVE_SUMMARY_HTML',
+            'QUICK_WINS_HTML',
+            'PILOT_PLAN_HTML',
+            'ORG_CHANGE_HTML',
+            'ROADMAP_12M_HTML',
+            'GAMECHANGER_HTML'
+        ]
+
+        replacements = {
+            '{CAPEX_REALISTISCH_EUR}': str(bc.get('CAPEX_REALISTISCH_EUR', 6000)),
+            '{OPEX_REALISTISCH_EUR}': str(bc.get('OPEX_REALISTISCH_EUR', 120)),
+            '{EINSPARUNG_MONAT_EUR}': str(bc.get('EINSPARUNG_MONAT_EUR', 4500)),
+            '{PAYBACK_MONTHS}': str(bc.get('PAYBACK_MONTHS', 2.9)),
+            '{ROI_12M}': f"{bc.get('ROI_12M', 0) * 100:.1f}" if bc.get('ROI_12M') else "0",
+            '{ROI_12M_EUR}': str(bc.get('ROI_12M_EUR', 0)),
+            '{COMPANY_SIZE}': answers.get('unternehmensgroesse', 'solo'),
+        }
+
+        replaced_count = 0
+        for section_key in sections_to_fix:
+            if section_key in sections and isinstance(sections[section_key], str):
+                original = sections[section_key]
+                for old_val, new_val in replacements.items():
+                    sections[section_key] = sections[section_key].replace(old_val, new_val)
+                if original != sections[section_key]:
+                    replaced_count += 1
+
+        if replaced_count > 0:
+            log.info("[%s] 🔧 Business Case variables replaced in %s sections", run_id, replaced_count)
 
     sections.update(build_extra_sections(answers, scores))
 
