@@ -1822,6 +1822,23 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["VISION_3_JAHRE"] = answers.get("VISION_3_JAHRE", "")
     sections["MITARBEITER_LABEL"] = answers.get("MITARBEITER_LABEL", "")
     sections["UMSATZ_LABEL"] = answers.get("UMSATZ_LABEL", "")
+    sections["SELBSTSTAENDIG_LABEL"] = briefing.get("SELBSTSTAENDIG_LABEL", "")
+    sections["ZIELGRUPPEN_LABELS"] = briefing.get("ZIELGRUPPEN_LABELS", "")
+    sections["MARKTPOSITION_LABEL"] = briefing.get("MARKTPOSITION_LABEL", "")
+    sections["BENCHMARK_WETTBEWERB_LABEL"] = briefing.get("BENCHMARK_WETTBEWERB_LABEL", "")
+    sections["INTERESSE_FOERDERUNG_LABEL"] = briefing.get("INTERESSE_FOERDERUNG_LABEL", "")
+
+# Multi-choice labels (comma-separated)
+    sections["KI_ZIELE_LABELS"] = briefing.get("KI_ZIELE_LABELS", "")
+    sections["KI_HEMMNISSE_LABELS"] = briefing.get("KI_HEMMNISSE_LABELS", "")
+    sections["ANWENDUNGSFAELLE_LABELS"] = briefing.get("ANWENDUNGSFAELLE_LABELS", "")
+    sections["DATENQUELLEN_LABELS"] = briefing.get("DATENQUELLEN_LABELS", "")
+    sections["VORHANDENE_TOOLS_LABELS"] = briefing.get("VORHANDENE_TOOLS_LABELS", "")
+    sections["REGULIERTE_BRANCHE_LABELS"] = briefing.get("REGULIERTE_BRANCHE_LABELS", "")
+    sections["TRAININGS_INTERESSEN_LABELS"] = briefing.get("TRAININGS_INTERESSEN_LABELS", "")
+
+    log.info(f"[{rid}] ✅ Copied {12} label variables to sections")
+# === END LABELS FIX ===
 
     version_full = os.getenv("VERSION", "1.0.0")
     version_mm_match = re.match(r"^\s*(\d+)\.(\d+)", version_full or "")
