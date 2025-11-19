@@ -27,7 +27,7 @@ def _self_check(env: Environment, template_name: str) -> None:
             log.warning("⚠️ Template uses deprecated '|de' filter. Please switch to '|default(\"de\")'.")
         # Try compile (will raise if invalid)
         env.get_template(template_name)
-        log.info("✓ Template validated: %s", template_name)
+        log.info("✔ Template validated: %s", template_name)
     except Exception as exc:
         log.error("❌ Template validation failed: %s", exc)
         raise
@@ -38,6 +38,14 @@ def render(briefing_obj: Any,
            use_fetchers: bool = False,
            scores: Optional[Dict[str, Any]] = None,
            meta: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """
+    Render report HTML from sections.
+    
+    GOLD STANDARD+ v4.14.1:
+    - Fixed UTF-8 encoding issues
+    - Clean variable replacement
+    - Consistent score handling
+    """
     tpl_path = os.getenv("REPORT_TEMPLATE_PATH", "templates/pdf_template.html")
     tpl_dir = Path(tpl_path).parent
     tpl_name = Path(tpl_path).name
@@ -47,24 +55,34 @@ def render(briefing_obj: Any,
 
     # Context
     sections = dict(generated_sections or {})
+    
     # Alias FUNDING if necessary
     if not sections.get("FUNDING_HTML") and sections.get("FOERDERPROGRAMME_HTML"):
         sections["FUNDING_HTML"] = sections["FOERDERPROGRAMME_HTML"]
 
-    # Safe defaults
+    # Safe defaults with FIXED UTF-8
     ctx = {
         "LANG": sections.get("LANG", "de"),
-        "OWNER_NAME": sections.get("OWNER_NAME", os.getenv("OWNER_NAME","KI‑Sicherheit.jetzt")),
+        "OWNER_NAME": sections.get("OWNER_NAME", os.getenv("OWNER_NAME", "KI-Sicherheit.jetzt")),  # ✅ FIXED
         "report_date": sections.get("report_date", ""),
         "report_id": sections.get("report_id", ""),
         "report_year": sections.get("report_year", ""),
-        "BRANCHE_LABEL": sections.get("BRANCHE_LABEL",""),
-        "UNTERNEHMENSGROESSE_LABEL": sections.get("UNTERNEHMENSGROESSE_LABEL",""),
-        "BUNDESLAND_LABEL": sections.get("BUNDESLAND_LABEL",""),
-        "HAUPTLEISTUNG": sections.get("HAUPTLEISTUNG",""),
+        "BRANCHE_LABEL": sections.get("BRANCHE_LABEL", ""),
+        "UNTERNEHMENSGROESSE_LABEL": sections.get("UNTERNEHMENSGROESSE_LABEL", ""),
+        "BUNDESLAND_LABEL": sections.get("BUNDESLAND_LABEL", ""),
+        "HAUPTLEISTUNG": sections.get("HAUPTLEISTUNG", ""),
         # dynamic sections
         **sections,
     }
 
+    # Log what we're rendering (for debugging)
+    log.info(f"🎨 Rendering report {run_id} with {len(sections)} sections")
+    log.debug(f"Sections available: {list(sections.keys())}")
+    
     html = env.get_template(tpl_name).render(**ctx)
+    
+    # Quick validation check
+    if "{{" in html:
+        log.warning(f"⚠️ Template still contains unreplaced variables in report {run_id}")
+    
     return {"html": html, "meta": meta or {}}
