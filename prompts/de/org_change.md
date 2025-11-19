@@ -1,7 +1,7 @@
-<!-- org_change.md - v2.2 GOLD STANDARD+ -->
+<!-- org_change.md - v2.3 GOLD STANDARD+ FIXED -->
 <!-- Antworte ausschließlich mit **validem HTML**.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
-     VERSION: 2.2 GOLD STANDARD+ (Size-Awareness Fix) -->
+     VERSION: 2.3 GOLD STANDARD+ (UTF-8 Fixed + Abteilung removed) -->
 
 # PROMPT: Organizational Change - Change-Management
 
@@ -18,17 +18,17 @@
 - ✅ Fokus: **Eigene Workflows** anpassen
 - ✅ Dokumentation für spätere Skalierung (Freelancer, Partner)
 - ✅ Self-Learning: Tutorials, Checklisten
-- ❌ NIEMALS: "Change-Management-Prozess", "Stakeholder-Analyse", "Change-Agents"
+- ❌ NIEMALS: "Change-Management-Prozess", "Stakeholder-Analyse", "Change-Agents", "Abteilung"
 
 **{{COMPANY_SIZE}} = "team" (2-10 MA):**
 - ✅ Fokus: **Team-Alignment**
 - ✅ Informelle Kommunikation: "Weekly Show & Tell"
 - ✅ Hands-on-Training: "Learning by Doing"
-- ❌ NIEMALS: "Change-Board", "Formelle Change-Rollen", "Umfassende Trainings-Programme"
+- ❌ NIEMALS: "Change-Board", "Formelle Change-Rollen", "Umfassende Trainings-Programme", "Abteilung"
 
 **{{COMPANY_SIZE}} = "kmu" (11-100 MA):**
 - ✅ Fokus: **Strukturiertes Change**
-- ✅ Pilot-Teams, Change-Agents (1-2 Personen)
+- ✅ Pilot-Teams, Change-Agents (1-2 Personen pro Bereich/Team)  # ← FIXED: "Bereich/Team" statt "Abteilung"
 - ✅ Formelle Trainings, Change-Kommunikation
 - ✅ "Change Manager" oder "Projektleiter Change" (ab ~50 MA)
 
@@ -54,6 +54,7 @@ Erstelle realistische Change-Management-Empfehlungen die:
 - ❌ "Stakeholder-Analyse durchführen"
 - ❌ "Change-Agents ernennen" (bei Solo!)
 - ❌ "Change-Readiness-Assessment"
+- ❌ "Abteilung" oder "Abteilungsleiter" (bei Solo/Team!)  # ← ADDED
 
 ### ❌ Generische Trainings:
 - ❌ "KI-Grundlagen-Schulung für alle"
@@ -85,7 +86,7 @@ Erstelle realistische Change-Management-Empfehlungen die:
 
 ### ✅ KMU (11-100 MA):
 - "Pilot-Team bilden (5-8 Personen)"
-- "Change-Agents ernennen (1-2 pro Abteilung)"
+- "Change-Agents ernennen (1-2 pro Team/Bereich)"  # ← FIXED
 - "Formelle Trainings: 4h Workshop + 2h Hands-on"
 - "Change-Kommunikation: Newsletter, Town Hall"
 - "Feedback-Loops: Monatliche Reviews mit Pilot-Team"
@@ -184,8 +185,8 @@ Erstelle realistische Change-Management-Empfehlungen die:
 ```html
 <h3>1. Strukturiertes Change-Programm (Monate 1-3)</h3>
 <ul>
-  <li><strong>Pilot-Team bilden:</strong> 5-8 Personen aus verschiedenen Abteilungen</li>
-  <li><strong>Change-Agents ernennen:</strong> 1-2 engagierte Mitarbeiter pro Abteilung (keine formelle Rolle, 10% Zeit)</li>
+  <li><strong>Pilot-Team bilden:</strong> 5-8 Personen aus verschiedenen Teams/Bereichen</li>  <!-- FIXED -->
+  <li><strong>Change-Agents ernennen:</strong> 1-2 engagierte Mitarbeiter pro Team/Bereich (keine formelle Rolle, 10% Zeit)</li>  <!-- FIXED -->
   <li><strong>Kick-off Workshop:</strong> 4h mit allen Stakeholdern: "Warum KI? Was ist der Plan?"</li>
 </ul>
 
@@ -212,7 +213,7 @@ Erstelle realistische Change-Management-Empfehlungen die:
 
 1. Check {{COMPANY_SIZE}} Variable
 2. Wähle passenden Change-Ansatz
-3. Passe Terminologie an (kein "Change Manager" bei Solo!)
+3. Passe Terminologie an (kein "Change Manager" bei Solo, keine "Abteilung" bei Solo/Team!)
 4. Passe Timelines an (Solo: +50% Zeit, weniger Parallel-Aktivitäten)
 
 ### SCHRITT 2: Hauptleistungs-spezifische Maßnahmen
@@ -236,14 +237,14 @@ Erstelle realistische Change-Management-Empfehlungen die:
 **PRÜFE JEDEN PUNKT:**
 
 1. [ ] **Change-Ansatz passt zur Größe {{COMPANY_SIZE}}?**
-   - Solo: Eigene Workflows, KEIN Team-Change
-   - Klein: Team-Alignment, informell
-   - KMU: Strukturiert, Change-Agents OK
+   - Solo: Eigene Workflows, KEIN Team-Change, KEINE "Abteilung"
+   - Klein: Team-Alignment, informell, KEINE "Abteilung"
+   - KMU: Strukturiert, Change-Agents OK (aber pro "Team/Bereich" nicht "Abteilung")
 
 2. [ ] **Terminologie größen-angemessen?**
-   - Solo: KEIN "Change-Agents", KEIN "Stakeholder-Analyse"
-   - Klein: KEIN "Change Manager", KEIN "Formelles Change-Programm"
-   - KMU: OK für formelle Change-Strukturen
+   - Solo: KEIN "Change-Agents", KEIN "Stakeholder-Analyse", KEIN "Abteilung"
+   - Klein: KEIN "Change Manager", KEIN "Formelles Change-Programm", KEIN "Abteilung"
+   - KMU: OK für formelle Change-Strukturen, aber "Team/Bereich" statt "Abteilung"
 
 3. [ ] **Maßnahmen spezifisch für {{HAUPTLEISTUNG}}?**
    - NICHT generisch!
@@ -263,10 +264,11 @@ Erstelle realistische Change-Management-Empfehlungen die:
 3. ✅ Konkrete Maßnahmen (nicht Theorie)
 4. ✅ Quick Wins als Katalysatoren genutzt
 5. ✅ Realistischer Zeitrahmen
+6. ✅ KEINE unpassenden Begriffe ("Abteilung" bei Solo/Team)  # ← ADDED
 
 **Wenn ALLE ✅ → Output generieren!**
 
 ---
 
-**VERSION:** v2.2 GOLD STANDARD+ (Size-Awareness Fixed)  
+**VERSION:** v2.3 GOLD STANDARD+ (UTF-8 & Size-Awareness Fixed)  
 **AUSGABE:** Valides HTML (keine Markdown-Fences!)
