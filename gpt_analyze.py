@@ -1822,22 +1822,22 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["VISION_3_JAHRE"] = answers.get("VISION_3_JAHRE", "")
     sections["MITARBEITER_LABEL"] = answers.get("MITARBEITER_LABEL", "")
     sections["UMSATZ_LABEL"] = answers.get("UMSATZ_LABEL", "")
-    sections["SELBSTSTAENDIG_LABEL"] = briefing.get("SELBSTSTAENDIG_LABEL", "")
-    sections["ZIELGRUPPEN_LABELS"] = briefing.get("ZIELGRUPPEN_LABELS", "")
-    sections["MARKTPOSITION_LABEL"] = briefing.get("MARKTPOSITION_LABEL", "")
-    sections["BENCHMARK_WETTBEWERB_LABEL"] = briefing.get("BENCHMARK_WETTBEWERB_LABEL", "")
-    sections["INTERESSE_FOERDERUNG_LABEL"] = briefing.get("INTERESSE_FOERDERUNG_LABEL", "")
+    sections["SELBSTSTAENDIG_LABEL"] = answers.get("SELBSTSTAENDIG_LABEL", "")
+    sections["ZIELGRUPPEN_LABELS"] = answers.get("ZIELGRUPPEN_LABELS", "")
+    sections["MARKTPOSITION_LABEL"] = answers.get("MARKTPOSITION_LABEL", "")
+    sections["BENCHMARK_WETTBEWERB_LABEL"] = answers.get("BENCHMARK_WETTBEWERB_LABEL", "")
+    sections["INTERESSE_FOERDERUNG_LABEL"] = answers.get("INTERESSE_FOERDERUNG_LABEL", "")
 
 # Multi-choice labels (comma-separated)
-    sections["KI_ZIELE_LABELS"] = briefing.get("KI_ZIELE_LABELS", "")
-    sections["KI_HEMMNISSE_LABELS"] = briefing.get("KI_HEMMNISSE_LABELS", "")
-    sections["ANWENDUNGSFAELLE_LABELS"] = briefing.get("ANWENDUNGSFAELLE_LABELS", "")
-    sections["DATENQUELLEN_LABELS"] = briefing.get("DATENQUELLEN_LABELS", "")
-    sections["VORHANDENE_TOOLS_LABELS"] = briefing.get("VORHANDENE_TOOLS_LABELS", "")
-    sections["REGULIERTE_BRANCHE_LABELS"] = briefing.get("REGULIERTE_BRANCHE_LABELS", "")
-    sections["TRAININGS_INTERESSEN_LABELS"] = briefing.get("TRAININGS_INTERESSEN_LABELS", "")
+    sections["KI_ZIELE_LABELS"] = answers.get("KI_ZIELE_LABELS", "")
+    sections["KI_HEMMNISSE_LABELS"] = answers.get("KI_HEMMNISSE_LABELS", "")
+    sections["ANWENDUNGSFAELLE_LABELS"] = answers.get("ANWENDUNGSFAELLE_LABELS", "")
+    sections["DATENQUELLEN_LABELS"] = answers.get("DATENQUELLEN_LABELS", "")
+    sections["VORHANDENE_TOOLS_LABELS"] = answers.get("VORHANDENE_TOOLS_LABELS", "")
+    sections["REGULIERTE_BRANCHE_LABELS"] = answers.get("REGULIERTE_BRANCHE_LABELS", "")
+    sections["TRAININGS_INTERESSEN_LABELS"] = answers.get("TRAININGS_INTERESSEN_LABELS", "")
 
-    log.info(f"[{rid}] ✅ Copied {12} label variables to sections")
+    log.info(f"[{run_id}] ✅ Copied {12} label variables to sections")
 # === END LABELS FIX ===
 
     version_full = os.getenv("VERSION", "1.0.0")
@@ -1870,15 +1870,15 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     # === VALIDATION GATE - Wolf 2025-11-19 ===
     from services.report_validator import validate_report
 
-    log.info(f"[{rid}] 🔍 Running report validation...")
-    is_valid = validate_report(sections, briefing)
+    log.info(f"[{run_id}] 🔍 Running report validation...")
+    is_valid = validate_report(sections, answers)
 
     if not is_valid:
-        log.warning(f"[{rid}] ⚠️ Report has validation errors (see above) - continuing anyway")
+        log.warning(f"[{run_id}] ⚠️ Report has validation errors (see above) - continuing anyway")
         # TODO: Later enable Quality Gate:
         # raise ValueError("Report validation failed - fix errors first!")
     else:
-        log.info(f"[{rid}] ✅ Report validation passed - GOLD STANDARD+")
+        log.info(f"[{run_id}] ✅ Report validation passed - GOLD STANDARD+")
     # === END VALIDATION ===
 
     # Kreativ Tools
