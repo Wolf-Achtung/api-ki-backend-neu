@@ -1761,6 +1761,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 
 # -------------------- pipeline (kept from original with minor logging updates) ----------------
 def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, str, Dict[str, Any]]:
+    """Analyze briefing and generate AI report."""
     # Validate briefing_id
     if not isinstance(briefing_id, int):
         raise ValueError(f"briefing_id must be an integer, got {type(briefing_id)}")
