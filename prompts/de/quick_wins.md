@@ -191,23 +191,52 @@ Du erhältst folgende Variablen:
 
 ---
 
-## Quick Win 1: [Titel]
-[Kompletter Quick Win nach Schema]
+## Quick Win 1: [ECHTER Titel - max 8 Wörter, KEIN Platzhalter!]
 
-## Quick Win 2: [Titel]
-[Kompletter Quick Win nach Schema]
+**Problem:** [Beschreibe ECHTES Problem mit Zahlen]
+**Lösung:** [Beschreibe ECHTE Lösung - 1 Satz]
+**Umsetzung:**
+<ul>
+  <li>[ECHTER Schritt 1 - technisch konkret, KEIN "Schritt 1"]</li>
+  <li>[ECHTER Schritt 2 - technisch konkret]</li>
+  <li>[ECHTER Schritt 3 - technisch konkret]</li>
+</ul>
+**Aufwand:** [ECHTE Zahl: "4-6h" oder "2 Tage"] | **Kosten:** [ECHTE Zahl: "€2.000" oder "€0"] | **Impact:** [ECHTER messbarer Impact: "+200% Durchsatz"]
 
-## Quick Win 3: [Titel]
-[Kompletter Quick Win nach Schema]
+---
 
-## Quick Win 4: [Titel]
-[Kompletter Quick Win nach Schema]
+## Quick Win 2: [NÄCHSTER echter Titel]
 
-## Quick Win 5: [Titel]
-[Kompletter Quick Win nach Schema]
+[KOMPLETTE Wiederholung der Struktur mit ECHTEM Content]
 
-## Quick Win 6: [Titel]
-[Kompletter Quick Win nach Schema]
+---
+
+## Quick Win 3: [NÄCHSTER echter Titel]
+
+[KOMPLETTE Wiederholung der Struktur mit ECHTEM Content]
+
+---
+
+## Quick Win 4: [NÄCHSTER echter Titel]
+
+[KOMPLETTE Wiederholung der Struktur mit ECHTEM Content]
+
+---
+
+## Quick Win 5: [NÄCHSTER echter Titel]
+
+[KOMPLETTE Wiederholung der Struktur mit ECHTEM Content]
+
+---
+
+## Quick Win 6: [NÄCHSTER echter Titel]
+
+[KOMPLETTE Wiederholung der Struktur mit ECHTEM Content]
+
+---
+
+🚨 **KRITISCH: KEINE Platzhalter wie "[Schritt 1]" oder "[Titel]" im Output!**
+✅ **NUR echte Werte wie "GPT-4 Batch-Processing" oder "4-6h Setup"!**
 
 ---
 

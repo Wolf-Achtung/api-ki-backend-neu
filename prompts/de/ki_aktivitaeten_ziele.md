@@ -15,11 +15,35 @@ Dokumentiere:
 
 ### ❌ VERBOTEN:
 1. **KEINE erfundenen bisherigen Aktivitäten**
+   - ❌ "Projekt: Automatisierte Angebotserstellung" wenn nicht im Briefing
+   - ❌ "KI-gestützte Kundenakquise" wenn nicht erwähnt
+   - ❌ Generische Projekte wie "Chatbot-Entwicklung" erfinden
+   - ✅ NUR Projekte aus `{{KI_PROJEKTE}}` oder `{{HAUPTLEISTUNG}}` nutzen!
+
 2. **KEINE unrealistischen Ziele**
+   - ❌ "100× Umsatzsteigerung in 6 Monaten"
+   - ❌ "Marktführer werden in Q2"
+   - ❌ Ziele die nicht aus Quick Wins/Gamechanger ableitbar sind
+
+3. **KEINE Tools in IST-Stand die nicht vorhanden sind**
+   - ❌ "ChatGPT Pro" wenn nur Free Version genutzt wird
+   - ❌ "Make.com" wenn nicht in `{{TOOLS_AKTUELL}}`
+   - ✅ Nur Tools die WIRKLICH im Einsatz sind!
 
 ### ✅ STATTDESSEN:
-1. **IST:** Nur was wirklich genutzt wird
-2. **SOLL:** Aus Quick Wins + Gamechanger ableiten
+1. **IST:** Nur was in Briefing erwähnt ist
+   - Prüfe: `{{KI_PROJEKTE}}`, `{{HAUPTLEISTUNG}}`, `{{TOOLS_AKTUELL}}`
+   - Wenn leer: "Noch keine KI-Projekte im Einsatz" → Fokus auf Potenzial!
+
+2. **SOLL:** Direkt aus Quick Wins + Gamechanger ableiten
+   - Q1: Quick Wins 1-3 umsetzen
+   - Q2-Q3: Gamechanger MVP starten
+   - Q4: Skalierung + neue Features
+
+3. **Keine generischen Füller-Projekte!**
+   - ✅ "Batch-Processing für Assessment-Skalierung" (spezifisch!)
+   - ❌ "Prozessoptimierung mit KI" (zu vage!)
+
 
 ---
 

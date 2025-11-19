@@ -380,6 +380,32 @@ else:
 
 ---
 
+## ✅ VALIDIERUNG - FINAL CHECK VOR OUTPUT
+
+**BEVOR du die Executive Summary ausgibst, prüfe:**
+
+1. ❌ Enthält Text noch Platzhalter `{{...}}` oder `{...}`? → FEHLER!
+2. ❌ Enthält Text Begriffe wie "[...]" oder "PLACEHOLDER"? → FEHLER!
+3. ❌ Sind Quick Wins generisch ("Chatbot", "Schulungen")? → FEHLER!
+4. ❌ Sind Zahlen erfunden (nicht aus Variablen)? → FEHLER!
+5. ✅ Alle Variablen durch echte Werte ersetzt? → GUT!
+6. ✅ Quick Wins spezifisch für Hauptleistung? → GUT!
+7. ✅ Pilot ist konkret und umsetzbar? → GUT!
+
+**Wenn auch nur EINE der Fehler-Checks positiv ist:**
+→ Executive Summary NEU SCHREIBEN mit korrekten Werten!
+
+**Spezial-Check für Variablen:**
+```
+Wenn du siehst: "{{BRANCHE_LABEL}}" im Output → Das ist FALSCH!
+Richtig sollte sein: "Beratung & Dienstleistungen" (echter Wert)
+
+Wenn du siehst: "{CONTEXT_QUICK_WINS}" im Output → Das ist FALSCH!
+Richtig: Die Quick Wins extrahiert und formatiert!
+```
+
+---
+
 ## 🎯 ERFOLGS-KRITERIEN
 
 Eine Executive Summary ist GOLD STANDARD+ wenn:
