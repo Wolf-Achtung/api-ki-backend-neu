@@ -42,7 +42,7 @@ AI_ACT_NEWS_RSS = [
 
 TOOLS_PAGES = [
     # Produktplattformen (teilweise ohne RSS; wir harvesten Links)
-    "https://www.producthunt.com/topics/artificial-intelligence",
+    # "https://www.producthunt.com/topics/artificial-intelligence",  # DISABLED: ProductHunt blockiert Scraping - benötigt API-Key
     "https://huggingface.co/models",
 ]
 
@@ -51,8 +51,8 @@ FUNDING_HINT_PAGES = [
     "https://www.foerderdatenbank.de/",
     "https://www.bmwk.de/Navigation/DE/Home/home.html",
     "https://digital-strategy.ec.europa.eu/en/activities/digital-programme",
-    "https://www.ibb.de/de/foerderprogramme/",
-    "https://www.berlin.de/sen/wirtschaft/wirtschaft/foerderprogramme/",
+    "https://www.ibb.de/de/foerderprogramme.html",  # Korrigiert: vorher /foerderprogramme/ (ohne .html)
+    # "https://www.berlin.de/sen/wirtschaft/wirtschaft/foerderprogramme/",  # DISABLED: 404 Error - ersetzt durch IBB URL oben
 ]
 
 def _kw(answers: Dict[str, Any]) -> List[str]:
