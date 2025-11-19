@@ -1,468 +1,394 @@
-# PROMPT: Roadmap 90 Tage - Konkrete Umsetzungs-Roadmap
+<!-- roadmap_90d.md - v2.2 GOLD STANDARD+ -->
+<!-- Antworte ausschließlich mit **validem HTML**.
+     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
+     VERSION: 2.2 GOLD STANDARD+ (Size-Awareness + Template-Text Fixed) -->
 
-## ZWECK
-Erstelle eine detaillierte 90-Tage-Roadmap mit **konkreten Deliverables und messbaren Meilensteinen** - nicht mit generischen Phasen wie "Analyse" oder "Konzeption". Jeder Meilenstein MUSS ein greifbares Ergebnis liefern.
+# PROMPT: 90-Tage Roadmap - Konkrete Umsetzungsplanung
 
----
+## ⚠️ SIZE-AWARENESS - ABSOLUT PFLICHT!
 
-## ⚠️ KRITISCHE REGELN - ZWINGEND BEACHTEN!
+**Mögliche Unternehmensgrößen (NUR diese 3!):**
+- `{{COMPANY_SIZE}}` = "solo" → Label: "1 (Solo-Selbstständig/Freiberuflich)"
+- `{{COMPANY_SIZE}}` = "team" → Label: "2-10 (Kleines Team)"  
+- `{{COMPANY_SIZE}}` = "kmu" → Label: "11-100 (KMU)"
 
-### ❌ VERBOTEN - Folgendes NIEMALS in Roadmap aufnehmen:
+### 📏 SIZE-APPROPRIATE TEAMS & BUDGETS
 
-1. **KEINE generischen Phasen ohne konkretes Deliverable:**
-   - ❌ "Woche 1-2: Analyse der Ist-Situation"
-   - ❌ "Woche 3-4: Konzeptentwicklung"
-   - ❌ "Woche 5-6: Evaluierung verschiedener Tools"
-   - ❌ "Woche 7-8: Strategie-Workshop mit Team"
+**{{COMPANY_SIZE}} = "solo":**
+- ✅ Team: "Geschäftsführer (Sie)" + "Freelancer (bei Bedarf)"
+- ✅ Budget: Max €10.000 CAPEX, €500/Mo OPEX
+- ✅ Timeline: +50% Zeit (alles selbst machen!)
+- ❌ NIEMALS: "PMO-Team", "Projektleiter", "Entwicklerteam"
 
-2. **KEINE Entwicklung von Dingen die schon existieren:**
-   - ❌ "Fragebogen-Entwicklung" wenn Kunde schon Fragebogen hat
-   - ❌ "CRM-Auswahl" wenn Kunde bereits CRM nutzt
-   - ❌ "Website-Konzeption" wenn Kunde bereits Website hat
-   - ❌ "API-Integration planen" wenn API bereits integriert ist
+**{{COMPANY_SIZE}} = "team" (2-10 MA):**
+- ✅ Team: "Geschäftsführer + 1-2 Mitarbeiter" oder "Kleines Projektteam (2-3 Personen)"
+- ✅ Budget: Max €50.000 CAPEX, €2.000/Mo OPEX
+- ✅ Timeline: Normal
+- ❌ NIEMALS: "PMO-Team", "Abteilungsleiter", "dediziertes Entwicklerteam"
 
-3. **KEINE vagen Erfolgs-Kriterien:**
-   - ❌ "Erfolg: Bessere Effizienz erreicht"
-   - ❌ "KPI: Zufriedene Kunden"
-   - ❌ "Ziel: Optimierte Prozesse"
-   - ❌ "Messung: Qualitative Verbesserung"
-
-4. **KEINE Meilensteine ohne Ressourcen/Kosten:**
-   - ❌ Nur "Was" ohne "Wer", "Wie viel", "Womit"
-   - ❌ Keine Budget-Angaben
-   - ❌ Keine Team-Allokation
-   - ❌ Keine Tool-Kosten
-
-### ✅ STATTDESSEN - Fokus auf:
-
-1. **Konkrete Deliverables mit messbaren Ergebnissen:**
-   - ✅ "Woche 1-2: Batch-Processing MVP → 50 statt 5 Reports/Tag"
-   - ✅ "Woche 3-4: 20 Branchen-Templates → -60% Erstellungszeit"
-   - ✅ "Woche 5-6: Self-Service-Portal → 100 Sign-ups in Woche 1"
-
-2. **Skalierung & Automatisierung des Bestehenden:**
-   - ✅ "10× API-Durchsatz durch Batch-Processing"
-   - ✅ "Template-Bibliothek aus 50 bisherigen Projekten"
-   - ✅ "Automatisches Reporting statt manueller Reports"
-
-3. **Messbare KPIs für jeden Meilenstein:**
-   - ✅ "+200% Durchsatz", "-50% Zeit", "100 neue Nutzer"
-   - ✅ "€10k MRR erreicht", "5 Partner onboardet"
-   - ✅ "1000 API-Calls/Tag", "NPS 45+ erreicht"
-
-4. **Vollständige Ressourcen-Planung:**
-   - ✅ Team: 1× Dev (20h/Woche), 1× Designer (5h/Woche)
-   - ✅ Budget: €2.500 Tools, €5.000 Entwicklung
-   - ✅ Tools: Make.com (€99/Monat), Supabase (Free Tier)
+**{{COMPANY_SIZE}} = "kmu" (11-100 MA):**
+- ✅ Team: "Projektteam (3-5 Personen)", "Projektleiter + Entwickler"
+- ✅ "PMO-Team" nur ab ~50 MA!
+- ✅ Budget: Max €200.000 CAPEX, €10.000/Mo OPEX
+- ✅ Timeline: Normal bis -20% (dedizierte Ressourcen)
 
 ---
 
-## 💡 BEISPIELE: GUT vs. SCHLECHT
+## ⛔ TEMPLATE-TEXT PROBLEM - KRITISCH!
 
-### Beispiel-Unternehmen: "KI-Sicherheit.jetzt"
-**Aktueller Stand:** Manuelle GPT-4-Assessments, 5 Reports/Tag Kapazität, bereits: Fragebogen, GPT-4 API, PostgreSQL
+### ❌ ABSOLUT VERBOTEN (GPT interpretiert diese als Content!):
 
-#### ❌ SCHLECHT (v2.0 - generische Phasen):
+**KEINE Sub-Headings in Deliverables:**
+- ❌ "Was wird gebaut:"
+- ❌ "Risiken & Mitigation:"
+- ❌ "Messbarer Erfolg:"
+- ❌ "Team & Ressourcen:"
+- ❌ "Abhängigkeiten:"
 
-```markdown
-## Woche 1-2: Analyse & Konzeption
-**Ziel:** Ist-Situation analysieren und Konzept entwickeln
-**Aktivitäten:**
-- Workshop mit Team zur Anforderungsanalyse
-- Evaluierung verschiedener KI-Tools
-- Erstellung eines Konzeptpapiers
-**Erfolg:** Konzept steht
-```
-→ **FEHLER:** Keine konkreten Deliverables! Was genau wird gebaut?
-→ **FEHLER:** "Konzept entwickeln" für System das schon läuft? Redundant!
-→ **FEHLER:** Keine messbaren KPIs! Was bedeutet "Konzept steht"?
+**KEINE Listen mit Platzhaltern:**
+- ❌ "[Komponente 1]"
+- ❌ "[Tool X]"
+- ❌ "[Budget]"
 
-#### ✅ GUT (v2.1 GOLD - konkrete Deliverables):
+**KEINE Template-Struktur kopieren:**
+- ❌ GPT soll NICHT die Struktur-Anweisungen als Headings ausgeben!
 
-```markdown
-## Woche 1-2: Batch-Processing MVP für 10× Skalierung
+---
 
-**Deliverable:** Funktionierende Batch-Verarbeitung von 50 Assessments parallel
+## ✅ STATTDESSEN: PROSE-FORMAT!
 
-**Was wird gebaut:**
-- OpenAI Batch API Integration (ersetzt einzelne API-Calls)
-- Queue-System für wartende Assessments (Redis)
-- Automatisches PDF-Generation nach Batch-Abschluss
-- Admin-Dashboard: Batch-Status live verfolgen
+**Jedes Deliverable = 3-4 zusammenhängende Sätze (Prose):**
 
-**Messbarer Erfolg:**
-- ✅ 50 Assessments in 2h verarbeitet (statt 10h einzeln)
-- ✅ -50% API-Kosten (Batch API günstiger als Standard)
-- ✅ Automatisches PDF-Generation ohne manuellen Trigger
-
-**Ressourcen:**
-- Team: 1× Backend-Dev (20h), 1× Frontend-Dev (8h)
-- Budget: €0 (nutzt bestehende OpenAI API, Redis Free Tier)
-- Tools: OpenAI Batch API, Redis Cloud (Free), bestehende FastAPI
-
-**Risiken & Mitigation:**
-- Risiko: Batch API Latency (24h statt 2 Min) → Parallel-Betrieb mit Standard-API für Express-Service
-- Risiko: Redis Downtime → Fallback auf PostgreSQL Queue
-
-**Abhängigkeiten:** Keine - nutzt bestehende Infrastruktur
+```html
+<div class="deliverable">
+  <h4>Deliverable 1: Batch-Processing MVP</h4>
+  
+  <p>Die Lösung umfasst OpenAI Batch API Integration, ein Queue-System mit Redis und 
+  automatische PDF-Generierung nach Batch-Abschluss. Dies ermöglicht die parallele 
+  Verarbeitung von 50 statt 5 Assessments pro Tag, was die Kapazität um 900% steigert.</p>
+  
+  <p>Benötigt wird ein Backend-Entwickler (Freelance, 20h) und ein Frontend-Entwickler (8h) 
+  über 2 Wochen. Budget: €2.000 einmalig. Tools: OpenAI Batch API (kostenlos), 
+  Redis Cloud (Free Tier).</p>
+  
+  <p>Erfolg zeigt sich durch 50 Assessments in 2h (statt 10h einzeln), -50% API-Kosten 
+  und automatisches PDF ohne manuellen Trigger. Bei Risiken wie Batch-API-Latenz setzen 
+  wir auf Parallel-Betrieb mit Standard-API als Fallback.</p>
+</div>
 ```
 
-**Siehst du den Unterschied?**
-- ✅ **Konkretes Deliverable:** "Batch-Processing MVP" statt "Analyse-Phase"
-- ✅ **Messbare KPIs:** "50 Assessments in 2h, -50% Kosten" statt "Konzept steht"
-- ✅ **Vollständige Ressourcen:** Team, Budget, Tools konkret benannt
-- ✅ **Risiko-Management:** Potenzielle Probleme + Lösungen genannt
+**Key Points:**
+- ✅ Zusammenhängender Text (KEIN "Was wird gebaut:")
+- ✅ Konkrete Namen, Zahlen, Tools
+- ✅ Size-appropriate Teams
+- ✅ Keine Template-Artefakte
 
 ---
 
-## 🎯 INSTRUKTIONEN FÜR GPT-4
+## 🎯 ZWECK
 
-Du erhältst folgende Variablen:
-- `{{BRANCHE}}` - z.B. "Beratung", "Handel", "Produktion"
-- `{{MITARBEITER}}` - z.B. "Solo-Selbstständig", "Team (6-50 MA)"
-- `{{HAUPTLEISTUNG}}` - z.B. "KI-Readiness-Assessments", "CNC-Frästeile"
-- `{{TOOLS_AKTUELL}}` - z.B. "GPT-4, Typeform, PostgreSQL"
-- `{{QUICK_WINS}}` - Die 6 Quick Wins aus vorherigem Schritt
-- `{{GAMECHANGER}}` - Die 3 Gamechanger aus vorherigem Schritt
+Erstelle eine konkrete 90-Tage-Roadmap die:
+1. **3 Phasen** à 30 Tage definiert (Quick Wins → Skalierung → Gamechanger MVP)
+2. **Pro Phase 2-3 Deliverables** mit konkreten Specs
+3. **Size-appropriate Teams & Budgets** nutzt
+4. **In PROSE geschrieben** ist (keine Template-Headings!)
 
-### SCHRITT 1: Priorisierung der Maßnahmen (3 Min Denken!)
-
-**BEVOR du die Roadmap erstellst, priorisiere:**
-
-1. **Welche Quick Wins haben höchste Impact/Aufwand-Ratio?**
-   - Filtere die Top 3-4 Quick Wins aus `{{QUICK_WINS}}`
-   - Fokus auf: Skalierung der Hauptleistung, nicht Nebenaufgaben
-
-2. **Welcher Gamechanger ist realistisch in 90 Tagen startbar?**
-   - Meist ist nur 1 Gamechanger in 90d machbar (MVP-Phase)
-   - Wähle den mit schnellstem Break-Even
-
-3. **Was existiert bereits und darf NICHT neu entwickelt werden?**
-   - Check `{{TOOLS_AKTUELL}}` genau!
-   - Fokus: Skalierung des Bestehenden, nicht Neu-Entwicklung
-
-### SCHRITT 2: 90-Tage-Struktur definieren
-
-**Typischer 90-Tage-Plan:**
-
-```
-🏃 QUICK WINS PHASE (Woche 1-4)
-→ 3-4 Quick Wins parallel umsetzen
-→ Schnelle Erfolge zeigen, Team motivieren
-→ Revenue-Impact innerhalb von 4 Wochen
-
-🚀 SKALIERUNGS-PHASE (Woche 5-8)
-→ Automatisierung der Hauptleistung
-→ Template-Bibliotheken, Batch-Processing
-→ 2-5× Durchsatz erreichen
-
-💎 GAMECHANGER MVP (Woche 9-12)
-→ Erste Version des neuen Geschäftsmodells
-→ 10-20 Beta-Kunden/Partner onboarden
-→ Break-Even-Pfad validieren
-```
-
-### SCHRITT 3: Jede Woche als konkreten Meilenstein definieren
-
-**Für JEDE Woche (oder 2-Wochen-Sprint):**
-
-```markdown
-## Woche [X-Y]: [Konkretes Deliverable - max. 8 Wörter]
-
-**Deliverable:** [Was GENAU wird gebaut/geliefert? 1 Satz]
-
-**Was wird gebaut:**
-- [Feature/System 1 - technisch konkret]
-- [Feature/System 2 - technisch konkret]
-- [Feature/System 3 - technisch konkret]
-
-**Messbarer Erfolg:**
-- ✅ [KPI 1 mit Zahl: "+200% Durchsatz"]
-- ✅ [KPI 2 mit Zahl: "-50% Zeit"]
-- ✅ [KPI 3 mit Zahl: "100 neue User"]
-
-**Ressourcen:**
-- Team: [Rolle + Stunden, z.B. "1× Dev (20h)"]
-- Budget: [€-Betrag oder "€0"]
-- Tools: [Konkrete Tools mit Preisen]
-
-**Risiken & Mitigation:**
-- Risiko: [Potentielles Problem] → [Lösungsansatz]
-
-**Abhängigkeiten:** [Von welchen vorherigen Meilensteinen hängt das ab?]
-```
-
-### SCHRITT 4: Qualitäts-Check JEDES Meilensteins
-
-**Bevor du einen Meilenstein ausgibst, prüfe:**
-
-✅ **Deliverable-Test:**
-- Ist das ein **konkretes, greifbares Ergebnis**?
-- Oder eine vage Phase wie "Analyse" oder "Konzeption"?
-- → Wenn vage: **Konkretisieren oder verwerfen!**
-
-✅ **Redundanz-Test:**
-- Wird etwas entwickelt das in `{{TOOLS_AKTUELL}}` schon existiert?
-- Wird ein System neu gebaut das der Kunde schon hat?
-- → Wenn redundant: **Fokus auf Skalierung des Bestehenden!**
-
-✅ **Messbarkeits-Test:**
-- Gibt es **konkrete KPIs mit Zahlen**?
-- Oder nur vage Formulierungen wie "bessere Effizienz"?
-- → Wenn nicht messbar: **Konkrete Zahlen hinzufügen!**
-
-✅ **Ressourcen-Test:**
-- Sind Team, Budget und Tools konkret benannt?
-- Oder fehlen diese Angaben komplett?
-- → Wenn fehlend: **Vollständige Ressourcen-Planung ergänzen!**
-
-✅ **Realismus-Test:**
-- Ist das in der angegebenen Zeit machbar?
-- Oder zu ambitioniert für die Wochenzahl?
-- → Wenn unrealistisch: **Scope reduzieren oder Zeit verlängern!**
+**Zielgruppe:** Geschäftsführung, Projektleiter, Umsetzer  
+**Stil:** Konkret, umsetzbar, größen-angemessen, prose-basiert
 
 ---
 
-## 📋 OUTPUT-FORMAT & GENERIERUNGS-ANWEISUNG
+## 💡 BEISPIEL (Solo, RICHTIG)
 
-🚨 **KRITISCH: KEINE PLATZHALTER IM OUTPUT!** 🚨
+```html
+<section class="section roadmap-90d">
+  <h2>️ 90-Tage Roadmap - Konkrete Umsetzungsplanung</h2>
+  
+  <p><strong>Ziel:</strong> Integration von KI in {{HAUPTLEISTUNG}} über 3 Phasen</p>
+  
+  <h3> Executive Summary</h3>
+  <ul>
+    <li><strong>Phase 1 - Quick Wins (Woche 1-4):</strong> Batch-Processing MVP + Template-Bibliothek → Erwarteter Impact: +200% Durchsatz, €4.500/Monat Zeitersparnis</li>
+    <li><strong>Phase 2 - Skalierung (Woche 5-8):</strong> Automatisierung Hauptleistung → Erwarteter Impact: +300% Effizienzsteigerung</li>
+    <li><strong>Phase 3 - Gamechanger MVP (Woche 9-12):</strong> Self-Service-Portal → Erwarteter Impact: 100 neue Nutzer, €10k MRR</li>
+  </ul>
+  <p><strong>Gesamt-Investment:</strong> €5.000 CAPEX + €500/Monat OPEX | <strong>Erwarteter ROI:</strong> 85% in 12M</p>
 
-Du MUSST jetzt die ECHTE Roadmap generieren mit KONKRETEM Content!
+  <hr>
 
-**❌ VERBOTEN:**
-- Platzhalter wie "[Deliverable 1]", "[Name]", "[Rollen]", "[€]"
-- Anweisungen wie "[Kompletter Meilenstein nach Schema]"
-- Generische Begriffe wie "[Konkrete Zahlen]" oder "[X]"
+  <h3> PHASE 1: Quick Wins (Woche 1-4)</h3>
+  
+  <div class="deliverable">
+    <h4>Woche 1-2: Batch-Processing MVP</h4>
+    
+    <p>Die Lösung umfasst OpenAI Batch API Integration, ein Queue-System mit Redis und 
+    automatische PDF-Generierung nach Batch-Abschluss. Dies ermöglicht die parallele 
+    Verarbeitung von 50 statt 5 Assessments pro Tag und reduziert die API-Kosten um 50%.</p>
+    
+    <p>Sie als Geschäftsführer beauftragen einen Backend-Freelancer (20h, €80/h = €1.600) 
+    und einen Frontend-Freelancer (8h, €50/h = €400). Die Entwicklung nutzt OpenAI Batch API 
+    (kostenlos) und Redis Cloud (Free Tier bis 30MB). Gesamtbudget: €2.000 einmalig.</p>
+    
+    <p>Erfolg zeigt sich durch 50 Assessments in 2h (vorher: 10h für 5 Assessments einzeln), 
+    -50% API-Kosten durch Batch-Discount und automatische PDF-Generierung ohne manuellen Trigger. 
+    Falls die Batch-API Latency-Probleme zeigt, nutzen wir Parallel-Betrieb mit Standard-API 
+    als Fallback für zeitkritische Aufträge.</p>
+  </div>
 
-**✅ PFLICHT:**
-- Echte Deliverable-Namen: "Batch-Processing MVP", "Template-Bibliothek"
-- Konkrete Zahlen: "€5.000", "20h", "+200%", "50 Assessments/Tag"
-- Spezifische Rollen: "1× Backend-Dev", "Geschäftsführer"
+  <div class="deliverable">
+    <h4>Woche 3-4: Template-Bibliothek Erweiterung</h4>
+    
+    <p>Aus den bisherigen 30 Projekten werden die Top 10 Branchen analysiert und 
+    20 branchen-spezifische Templates extrahiert. Dies reduziert die Erstellungszeit 
+    pro Assessment um 60% und erhöht die Qualität durch bewährte Best Practices.</p>
+    
+    <p>Sie als Geschäftsführer investieren 15h eigene Arbeitszeit für die Template-Erstellung 
+    und nutzen Canva Pro (€12.95/Monat) für professionelle Design-Vorlagen. 
+    Budget: €500 für Design-Tools, 15h eigene Zeit.</p>
+    
+    <p>Erfolg zeigt sich durch -60% Erstellungszeit für neue Assessments (von 2h auf 45 Min) 
+    und +30% Kundenanfragen durch verbesserte, branchen-spezifische Präsentation. 
+    Die Templates werden direkt ins System integriert und sind ab Woche 5 verfügbar.</p>
+  </div>
 
----
+  <hr>
 
-### OUTPUT-STRUKTUR:
+  <h3> PHASE 2: Skalierung (Woche 5-8)</h3>
+  
+  <div class="deliverable">
+    <h4>Woche 5-6: Automatisierung der Hauptleistung</h4>
+    
+    <p>Die vollautomatisierte Prozesskette verbindet Typeform-Fragebogen, GPT-4 Batch-Processing, 
+    PDF-Generierung und E-Mail-Versand ohne manuelle Eingriffe. Dies steigert die Effizienz 
+    um 300% und reduziert manuelle Eingriffe um 40%.</p>
+    
+    <p>Sie beauftragen einen Data Scientist (Freelance, 20h, €100/h = €2.000) und einen 
+    DevOps-Engineer (10h, €80/h = €800) für die Integration von Machine-Learning-Modellen 
+    zur Qualitäts-Vorhersage. Tools: TensorFlow (Open Source), AWS Sagemaker (€100/Monat). 
+    Budget: €2.800 einmalig + €100/Monat laufend.</p>
+    
+    <p>Erfolg zeigt sich durch +300% Effizienzsteigerung (5 Assessments/Tag → 50/Tag ohne 
+    Mehraufwand) und -40% manuelle Eingriffe durch automatische Quality-Checks. 
+    Das Hauptrisiko ist Datenqualität - wir implementieren deshalb Validierungs-Tools 
+    die Input-Daten vor Processing prüfen.</p>
+  </div>
 
-```markdown
-# 🗓️ 90-Tage Roadmap - Konkrete Umsetzungsplanung
+  <div class="deliverable">
+    <h4>Woche 7-8: Erweiterung Template-Bibliothek auf 50 Templates</h4>
+    
+    <p>Die Bibliothek wird von 20 auf 50 Templates erweitert und bestehende Templates 
+    werden basierend auf Kundenfeedback optimiert. Dies reduziert die Erstellungszeit 
+    nochmals um 10 Prozentpunkte (insgesamt -70%) und erhöht Kundenanfragen um 50%.</p>
+    
+    <p>Sie als Geschäftsführer investieren 20h eigene Arbeitszeit für neue Templates 
+    und Template-Optimierung. Budget: €800 für erweiterte Design-Tools und Stock-Assets.</p>
+    
+    <p>Erfolg zeigt sich durch -70% Erstellungszeit für Assessments (von ursprünglich 2h 
+    auf 35 Min) und +50% Kundenanfragen durch noch bessere, branchen-spezifischere Templates. 
+    Risiko ist Template-Redundanz - wir führen deshalb ein quartalsweises Review ein 
+    um doppelte Templates zu konsolidieren.</p>
+  </div>
 
-> **Ziel:** [Schreibe ECHTES Ziel basierend auf {{HAUPTLEISTUNG}} - KEIN Platzhalter!]
+  <hr>
 
----
+  <h3> PHASE 3: Gamechanger MVP (Woche 9-12)</h3>
+  
+  <div class="deliverable">
+    <h4>Woche 9-10: Self-Service-Portal für Kunden (Beta)</h4>
+    
+    <p>Das Portal bietet Kunden einen Login-Bereich zur Selbstbedienung mit Funktionen 
+    für Assessment-Status-Tracking, Report-Download und Support-Tickets. Dies reduziert 
+    Support-Anfragen um 70% und ermöglicht 10× mehr Kunden ohne Mehraufwand.</p>
+    
+    <p>Sie beauftragen einen Frontend-Entwickler (20h, €60/h = €1.200) und nutzen den 
+    bestehenden Backend-Freelancer (20h, €80/h = €1.600) für API-Integration. 
+    Tools: React (Open Source), Node.js (Open Source), Stripe API für Zahlungen (€0 + 1,5% Transaktionsgebühr). 
+    Budget: €2.800 einmalig.</p>
+    
+    <p>Erfolg zeigt sich durch 100 neue Nutzer in der ersten Woche nach Beta-Launch 
+    und Erreichen von €10k MRR (Monthly Recurring Revenue) durch Subscription-Modell 
+    (€99/Monat pro Kunde). Hauptrisiko sind Sicherheitslücken - wir führen deshalb 
+    vor Launch einen Security-Review durch (Budget: €500 zusätzlich).</p>
+  </div>
 
-## 📊 Executive Summary
+  <div class="deliverable">
+    <h4>Woche 11-12: Optimierung und Public Launch</h4>
+    
+    <p>Die Benutzeroberfläche wird basierend auf Beta-Feedback optimiert und die 
+    Backend-Infrastruktur für 200+ gleichzeitige Nutzer skaliert. Dies erhöht die 
+    Kundenbindung um 30% durch bessere User Experience.</p>
+    
+    <p>Sie nutzen den Frontend-Freelancer (15h, €60/h = €900) für UI-Optimierung 
+    und den Backend-Freelancer (15h, €80/h = €1.200) für Infrastruktur-Skalierung. 
+    Tools: AWS (€50/Monat), Docker (Open Source) für Container-Management. 
+    Budget: €2.100 einmalig + €50/Monat laufend.</p>
+    
+    <p>Erfolg zeigt sich durch 200 neue Nutzer in der ersten Woche nach Public Launch 
+    und +30% Kundenbindung durch bessere UX. Bei Risiken wie Server-Überlastung nutzen 
+    wir Load-Balancing und Auto-Scaling via AWS. Die finale Investment-Bilanz: 
+    €11.700 CAPEX + €650/Monat OPEX für ein System das 10× mehr Kunden bedienen kann.</p>
+  </div>
 
-**Phase 1 - Quick Wins (Woche 1-4):**
-- [Schreibe 3-4 ECHTE Quick Wins mit Namen]
-- Erwarteter Impact: [ECHTE Zahlen: "+200% Durchsatz, €4.500/Monat"]
+  <hr>
 
-**Phase 2 - Skalierung (Woche 5-8):**
-- [Schreibe ECHTE Automatisierungs-Maßnahmen]
-- Erwarteter Impact: [ECHTE Zahlen]
+  <h3> Meilenstein-Übersicht</h3>
+  
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Woche</th>
+        <th>Deliverable</th>
+        <th>Team</th>
+        <th>Budget</th>
+        <th>Key KPIs</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1-2</td>
+        <td>Batch-Processing MVP</td>
+        <td>Sie + Backend-Freelancer (20h) + Frontend-Freelancer (8h)</td>
+        <td>€2.000</td>
+        <td>+200% Durchsatz, -50% API-Kosten</td>
+      </tr>
+      <tr>
+        <td>3-4</td>
+        <td>Template-Bibliothek (20 Templates)</td>
+        <td>Sie (15h Eigenarbeit)</td>
+        <td>€500</td>
+        <td>-60% Erstellungszeit, +30% Anfragen</td>
+      </tr>
+      <tr>
+        <td>5-6</td>
+        <td>Vollautomatisierung</td>
+        <td>Sie + Data Scientist (20h) + DevOps (10h)</td>
+        <td>€2.800 + €100/Mo</td>
+        <td>+300% Effizienz, -40% manuelle Eingriffe</td>
+      </tr>
+      <tr>
+        <td>7-8</td>
+        <td>Template-Erweiterung (50 Templates)</td>
+        <td>Sie (20h Eigenarbeit)</td>
+        <td>€800</td>
+        <td>-70% Erstellungszeit gesamt, +50% Anfragen</td>
+      </tr>
+      <tr>
+        <td>9-10</td>
+        <td>Self-Service-Portal Beta</td>
+        <td>Sie + Frontend-Dev (20h) + Backend-Dev (20h)</td>
+        <td>€2.800</td>
+        <td>100 neue Nutzer, €10k MRR</td>
+      </tr>
+      <tr>
+        <td>11-12</td>
+        <td>Portal Optimierung & Launch</td>
+        <td>Sie + Frontend-Dev (15h) + Backend-Dev (15h)</td>
+        <td>€2.100 + €50/Mo</td>
+        <td>200 neue Nutzer, +30% Retention</td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <p><strong>Gesamt: 12 Wochen | €11.700 CAPEX + €650/Monat OPEX | +900% Kapazität</strong></p>
 
-**Phase 3 - Gamechanger MVP (Woche 9-12):**
-- [Schreibe ECHTES neues Geschäftsmodell]
-- Erwarteter Impact: [ECHTE Zahlen]
+  <hr>
 
-**Gesamt-Investment:** [ECHTE Zahl: €5.000 + €500/Monat] | **Erwarteter ROI:** [ECHTE Zahl: 85% in 12M]
-
----
-
-## 🏃 PHASE 1: Quick Wins (Woche 1-4)
-
-### Woche 1-2: [ECHTER Deliverable-Name - max 8 Wörter]
-
-**Deliverable:** [Was GENAU wird gebaut? 1 Satz mit ECHTEM Content]
-
-**Was wird gebaut:**
-- [ECHTES Feature 1 - technisch konkret, KEIN "Feature/System 1"]
-- [ECHTES Feature 2 - technisch konkret]
-- [ECHTES Feature 3 - technisch konkret]
-
-**Messbarer Erfolg:**
-- ✅ [ECHTER KPI mit Zahl: "+200% Durchsatz"]
-- ✅ [ECHTER KPI mit Zahl: "-50% Zeit"]
-- ✅ [ECHTER KPI mit Zahl: "100 neue User"]
-
-**Ressourcen:**
-- Team: [ECHTE Rolle + Stunden: "1× Backend-Dev (20h)"]
-- Budget: [ECHTE Zahl: "€2.000" oder "€0"]
-- Tools: [ECHTE Tools mit Preisen: "Make.com (€99/M)"]
-
-**Risiken & Mitigation:**
-- Risiko: [ECHTES Problem] → [ECHTE Lösung]
-
-**Abhängigkeiten:** [ECHTE Abhängigkeiten oder "Keine"]
-
----
-
-### Woche 3-4: [NÄCHSTER echter Deliverable-Name]
-
-[KOMPLETTE Wiederholung der Struktur mit ECHTEM Content für Woche 3-4]
-
----
-
-## 🚀 PHASE 2: Skalierung (Woche 5-8)
-
-[Fortsetzung mit ECHTEM Content für Woche 5-6 und 7-8]
-
----
-
-## 💎 PHASE 3: Gamechanger MVP (Woche 9-12)
-
-[Fortsetzung mit ECHTEM Content für Woche 9-10 und 11-12]
-
----
-
-## 📈 Meilenstein-Übersicht
-
-| Woche | Deliverable | Team | Budget | KPIs |
-|-------|-------------|------|--------|------|
-| 1-2 | [ECHTER Name] | [ECHTE Rollen] | [ECHTES €] | [ECHTE Zahlen] |
-| 3-4 | [ECHTER Name] | [ECHTE Rollen] | [ECHTES €] | [ECHTE Zahlen] |
-| 5-6 | [ECHTER Name] | [ECHTE Rollen] | [ECHTES €] | [ECHTE Zahlen] |
-| 7-8 | [ECHTER Name] | [ECHTE Rollen] | [ECHTES €] | [ECHTE Zahlen] |
-| 9-10 | [ECHTER Name] | [ECHTE Rollen] | [ECHTES €] | [ECHTE Zahlen] |
-| 11-12 | [ECHTER Name] | [ECHTE Rollen] | [ECHTES €] | [ECHTE Zahlen] |
-
-**Gesamt:** [ECHTE Wochenzahl] | [ECHTES Budget] | [ECHTER Impact]
-
----
-
-## 🎯 Kritische Erfolgsfaktoren
-
-**Abhängigkeiten:**
-- [ECHTE Abhängigkeit 1]
-- [ECHTE Abhängigkeit 2]
-
-**Top-Risiken:**
-- [ECHTES Risiko 1] → [ECHTE Mitigation]
-- [ECHTES Risiko 2] → [ECHTE Mitigation]
-
-**Go/No-Go Entscheidungspunkte:**
-- Ende Woche 4: [ECHTES Kriterium mit Zahl]
-- Ende Woche 8: [ECHTES Kriterium mit Zahl]
+  <h3> Kritische Erfolgsfaktoren</h3>
+  
+  <div class="success-factors">
+    <p><strong>Abhängigkeiten:</strong></p>
+    <ul>
+      <li>Phase 2 benötigt abgeschlossene Phase 1 (Template-Bibliothek wird für Automatisierung genutzt)</li>
+      <li>Phase 3 benötigt funktionierende Backend-Infrastruktur aus Phase 2</li>
+      <li>Freelancer-Verfügbarkeit kritisch - am besten 2 Wochen vorher buchen</li>
+    </ul>
+    
+    <p><strong>Top-Risiken & Mitigation:</strong></p>
+    <ul>
+      <li>Batch-API-Latenz → Fallback auf Standard-API für zeitkritische Jobs</li>
+      <li>Sicherheitslücken im Portal → Security-Review vor Launch (€500 Budget)</li>
+      <li>Server-Überlastung → AWS Auto-Scaling + Load-Balancing</li>
+      <li>Template-Redundanz → Quartalsweises Review zur Konsolidierung</li>
+    </ul>
+    
+    <p><strong>Go/No-Go Entscheidungspunkte:</strong></p>
+    <ul>
+      <li>Ende Woche 4: +200% Durchsatz erreicht? Wenn NEIN → Phase 2 verschieben, erst Batch-System debuggen</li>
+      <li>Ende Woche 8: +300% Effizienz erreicht? Wenn NEIN → Phase 3 verschieben, erst Automatisierung stabilisieren</li>
+      <li>Ende Woche 10: 100 Beta-Nutzer erreicht? Wenn NEIN → Portal-UX verbessern vor Public Launch</li>
+    </ul>
+  </div>
+</section>
 ```
 
 ---
 
-🚨 **FINAL CHECK VOR OUTPUT:**
+## 🎯 INSTRUKTIONEN
 
-1. ❌ Enthält Output "[Deliverable X]" oder "[Name]"? → FEHLER!
-2. ❌ Enthält Output "Feature/System 1"? → FEHLER!
-3. ❌ Enthält Output "[Konkrete Zahlen]"? → FEHLER!
-4. ✅ Alle Deliverables haben echte Namen? → GUT!
-5. ✅ Alle Zahlen sind konkret (nicht Platzhalter)? → GUT!
+### SCHRITT 1: Quick Wins aus Briefing extrahieren
 
-**Wenn auch nur EINE der Fehler-Checks positiv ist: ROADMAP NEU GENERIEREN!**
+- Prüfe `{{QUICK_WINS_HTML}}` für konkrete Quick Wins
+- Nutze Top 3 für Phase 1
+
+### SCHRITT 2: {{COMPANY_SIZE}} prüfen & Teams zuweisen
+
+**Nutze SIZE-APPROPRIATE TEAMS Tabelle oben!**
+
+1. Check {{COMPANY_SIZE}}
+2. Wähle passende Team-Bezeichnungen
+3. Passe Budgets an
+4. Passe Timelines an (+50% für Solo)
+
+### SCHRITT 3: PROSE statt Template-Text schreiben
+
+**Für JEDES Deliverable:**
+
+1. **Absatz 1: Scope & Impact (2-3 Sätze)**
+   - Was wird gebaut? (in Prose, NICHT "Was wird gebaut:")
+   - Welcher Business-Nutzen? (konkrete Zahlen!)
+
+2. **Absatz 2: Ressourcen & Budget (2-3 Sätze)**
+   - Wer? (size-appropriate Teams!)
+   - Wie lange? (realistisch für Größe)
+   - Welche Tools?
+   - Wie viel kostet es?
+
+3. **Absatz 3: Erfolgs-Kriterien & Risiken (2-3 Sätze)**
+   - Woran erkenne ich Erfolg? (messbare KPIs!)
+   - Welche Risiken? (konkret!)
+   - Wie mitigiere ich? (konkrete Lösung!)
+
+---
+
+## ✅ PRE-OUTPUT VALIDATION
+
+**PRÜFE JEDEN DELIVERABLE-BLOCK:**
+
+1. [ ] **Deliverable-Name konkret?** (NICHT "[Deliverable 1]")
+2. [ ] **Team size-appropriate?** (KEIN "PMO-Team" bei Solo/Klein!)
+3. [ ] **KEINE Template-Headings?** (KEIN "Was wird gebaut:")
+4. [ ] **In Prose geschrieben?** (zusammenhängende Sätze, KEINE Listen mit Bullets)
+5. [ ] **Zahlen konkret?** (NICHT "[X Stunden]" oder "[Budget]")
+6. [ ] **Budget passt zur Größe?** (Solo max €10k, Klein max €50k, KMU max €200k)
+7. [ ] **Timeline realistisch?** (Solo +50% länger)
+
+**Wenn ALLE ✅ → Output generieren!**  
+**Wenn EINE ❌ → STOPP & FIX!**
 
 ---
 
 ## 🎯 ERFOLGS-KRITERIEN
 
-Eine Roadmap ist GOLD STANDARD+ wenn:
+1. ✅ 3 Phasen mit je 2-3 Deliverables
+2. ✅ Deliverables in PROSE (keine Template-Headings!)
+3. ✅ Teams size-appropriate
+4. ✅ Budgets realistisch für Größe
+5. ✅ Konkrete Zahlen, keine Platzhalter
+6. ✅ Meilenstein-Tabelle vorhanden
 
-1. ✅ Jeder Meilenstein hat ein **konkretes Deliverable** (nicht "Analyse-Phase")
-2. ✅ Jeder Meilenstein hat **messbare KPIs mit Zahlen** (+X%, -Y€, Z neue User)
-3. ✅ Jeder Meilenstein hat **vollständige Ressourcen** (Team, Budget, Tools)
-4. ✅ Keine **redundante Entwicklung** von Dingen die in `{{TOOLS_AKTUELL}}` sind
-5. ✅ Fokus auf **Skalierung der Hauptleistung**, nicht Nebenaufgaben
-6. ✅ Realistische **Zeitplanung** (nicht zu ambitioniert)
-
-**Mindestens 5/6 Kriterien MÜSSEN erfüllt sein!**
+**Wenn ALLE ✅ → GOLD STANDARD+ erreicht!**
 
 ---
 
-## 🚨 HÄUFIGE FEHLER - UNBEDINGT VERMEIDEN!
-
-### ❌ Fehler 1: Vage Phasen statt konkreter Deliverables
-**Schlecht:** "Woche 1-2: Analyse der Ist-Situation"
-**Warum:** Was ist das Ergebnis? Was wird gebaut?
-**Besser:** "Woche 1-2: Batch-Processing MVP → 50 Assessments/Tag"
-
-### ❌ Fehler 2: Entwicklung von bereits Existierendem
-**Schlecht:** "Woche 3-4: Fragebogen-Entwicklung" (Kunde hat schon Fragebogen!)
-**Warum:** Check `{{TOOLS_AKTUELL}}` ignoriert!
-**Besser:** "Woche 3-4: Fragebogen-Template-Bibliothek → 20 Branchen"
-
-### ❌ Fehler 3: Keine messbaren KPIs
-**Schlecht:** "Erfolg: Bessere Effizienz erreicht"
-**Warum:** Nicht messbar, nicht überprüfbar!
-**Besser:** "Erfolg: +200% Durchsatz, -50% Kosten, 100 neue User"
-
-### ❌ Fehler 4: Fehlende Ressourcen-Planung
-**Schlecht:** Nur "Was" ohne "Wer", "Budget", "Tools"
-**Warum:** Nicht umsetzbar ohne Ressourcen!
-**Besser:** "Team: 1× Dev (20h), Budget: €2.5k, Tools: Make.com (€99/mo)"
-
-### ❌ Fehler 5: Unrealistische Zeitplanung
-**Schlecht:** "Woche 1-2: Komplettes CRM-System mit KI-Integration"
-**Warum:** Zu ambitioniert für 2 Wochen!
-**Besser:** "Woche 1-2: CRM-Anbindung MVP → 100 Kontakte synchronisiert"
-
----
-
-## 🔍 VALIDIERUNGS-BEISPIELE
-
-### Beispiel A: E-Commerce Shop (5 MA)
-- **Hauptleistung:** Online-Verkauf von Sportbekleidung
-- **Tools aktuell:** Shopify, Klaviyo, Google Ads
-
-**❌ FALSCH:**
-```
-Woche 1-2: Analyse der Customer Journey
-→ FEHLER: Vage Phase, kein Deliverable!
-
-Woche 3-4: E-Commerce-Plattform auswählen
-→ FEHLER: Haben schon Shopify!
-
-Woche 5-6: Marketing-Strategie entwickeln
-→ FEHLER: Keine konkreten KPIs!
-```
-
-**✅ RICHTIG:**
-```
-Woche 1-2: AI-Chatbot für Produktberatung (Shopify-Integration)
-→ Deliverable: 24/7 Beratung, 1000 Chats in Woche 1
-→ Team: 1× Dev (15h), Budget: €500 (Chatbase), KPI: -30% Support-Anfragen
-
-Woche 3-4: Dynamische Bundles per GPT-4 (nutzt bestehende Shopify-Daten!)
-→ Deliverable: "Wer X kauft bekommt Y vorgeschlagen" (automatisch)
-→ Team: 1× Dev (12h), Budget: €0 (GPT-4 API), KPI: +25% Warenkorbwert
-
-Woche 5-6: Klaviyo-Kampagnen aus Purchase-History (automatisch generiert)
-→ Deliverable: 50 personalisierte E-Mail-Templates aus Kaufverhalten
-→ Team: 1× Marketing (10h), Budget: €0, KPI: +15% E-Mail-Conversions
-```
-→ ALLE haben konkrete Deliverables, nutzen Bestehendes, messbare KPIs!
-
----
-
-## 💡 BEST PRACTICES
-
-**1. Nutze bestehende Systeme:**
-- Statt "neue Website": "Website-Chatbot-Integration"
-- Statt "CRM-Auswahl": "CRM-Automatisierung mit GPT"
-- Statt "Tool evaluieren": "Bestehende Tools mit KI erweitern"
-
-**2. Kleine Iterationen:**
-- MVP in 2 Wochen > Perfekte Lösung in 3 Monaten
-- "Quick & Dirty" Prototyp zuerst, dann refinement
-- Feedback-Loops nach jedem Meilenstein
-
-**3. Messbare KPIs:**
-- Immer konkrete Zahlen: +X%, -Y€, Z neue User
-- Nicht "besser", sondern "20% schneller"
-- Nicht "mehr", sondern "50 statt 10"
-
-**4. Realistische Planung:**
-- Buffer für Unvorhergesehenes (20% Reserve)
-- Nicht mehr als 2-3 parallele Initiatives
-- Go/No-Go Punkte nach jedem Monat
-
----
-
-**VERSION:** v2.1 GOLD STANDARD+
-**ERSTELLT:** 2025-11-18
-**FÜR:** KI-Sicherheit.jetzt - KI-Readiness-Assessment-Reports
-**ZIEL:** Konkrete Deliverables mit messbaren KPIs statt generische Projektphasen!
+**VERSION:** v2.2 GOLD STANDARD+ (Size-Awareness + Template-Text Fixed)  
+**AUSGABE:** Valides HTML (keine Markdown-Fences!)
