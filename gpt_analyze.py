@@ -1984,7 +1984,21 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     except Exception as _exc:
         log.warning("[%s] ⚠️ Sanitizer skipped: %s", run_id, _exc)
 
-    # 🔧 FIX: Replace ALL placeholders in ALL sections (GPT sometimes returns {var} instead of {{var}})
+    # === Business Case ZUERST berechnen (muss vor Placeholder-Fix!) ===
+    if calc_business_case:
+        bc = calc_business_case(answers, dict(os.environ))
+        sections["business_case_table_html"] = bc.get("BUSINESS_CASE_TABLE_HTML", "")
+        sections.update(bc)  # CAPEX_REALISTISCH_EUR, OPEX_REALISTISCH_EUR, PAYBACK_MONTHS, ROI_12M, etc.
+        log.info("[%s] 💰 Business Case calculated: CAPEX=%s, OPEX=%s, Payback=%sm, ROI=%s%%",
+                 run_id,
+                 bc.get("CAPEX_REALISTISCH_EUR", "N/A"),
+                 bc.get("OPEX_REALISTISCH_EUR", "N/A"),
+                 bc.get("PAYBACK_MONTHS", "N/A"),
+                 bc.get("ROI_12M", "N/A"))
+
+    sections.update(build_extra_sections(answers, scores))
+
+    # === Placeholder-Fix (jetzt mit Business Case Variablen verfügbar!) ===
     try:
         placeholder_fix_count = 0
         for key, value in sections.items():
@@ -1997,15 +2011,6 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             log.info("[%s] 🔧 Fixed placeholders in %s sections", run_id, placeholder_fix_count)
     except Exception as _exc:
         log.warning("[%s] ⚠️ Placeholder fix failed: %s", run_id, _exc)
-
-    sections.update(build_extra_sections(answers, scores))
-
-    # Zusätzliche Context-Erweiterung mit expliziten Checks
-    # Business Case berechnen
-    if calc_business_case:
-        bc = calc_business_case(answers, dict(os.environ))
-        sections["business_case_table_html"] = bc.get("BUSINESS_CASE_TABLE_HTML", "")
-        sections.update(bc)  # stellt z.B. EINSPARUNG_MONAT_EUR, ROI_12M etc. bereit
 
     # Benchmarks / Starter-Stacks / Responsible AI
     if build_benchmarks_section:
