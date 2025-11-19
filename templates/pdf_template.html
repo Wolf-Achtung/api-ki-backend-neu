@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>KI-Status-Report {{report_id}} - {{company_name}}</title>
+    
+    <style id="gold-std-typo">
+        /* ============================================
+           GOLD STANDARD+ PDF TEMPLATE v3.0
+           Mit erweiterter Farbpalette & Visualisierungen
+           ============================================ */
+        
+        @page {
+            size: A4;
+            margin: 20mm 15mm;
+            @bottom-center {
+                content: "Seite " counter(page) " von " counter(pages);
+                font-size: 9pt;
+                color: #64748B;
+            }
+        }
+        
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            .no-print { display: none !important; }
+            .page-break { page-break-after: always; }
+            .avoid-break { page-break-inside: avoid; }
+        }
+        
+        :root {
+            /* Erweiterte Farbpalette - Blau-Grün Spektrum */
+            --primary-50: #EFF6FF;
+            --primary-100: #DBEAFE;
+            --primary-200: #BFDBFE;
+            --primary-300: #93C5FD;
+            --primary-400: #60A5FA;
+            --primary-500: #3B82F6;
+            --primary-600: #2563EB;
+            --primary-700: #1D4ED8;
+            --primary-800: #1E40AF;
+            --primary-900: #1E3A8A;
+            
+            --success-50: #F0FDF4;
+            --success-100: #DCFCE7;
+            --success-200: #BBF7D0;
+            --success-300: #86EFAC;
+            --success-400: #4ADE80;
+            --success-500: #22C55E;
+            --success-600: #16A34A;
+            --success-700: #15803D;
+            --success-800: #166534;
+            --success-900: #14532D;
+            
+            --teal-50: #F0FDFA;
+            --teal-100: #CCFBF1;
+            --teal-200: #99F6E4;
+            --teal-300: #5EEAD4;
+            --teal-400: #2DD4BF;
+            --teal-500: #14B8A6;
+            --teal-600: #0D9488;
+            --teal-700: #0F766E;
+            
+            --cyan-50: #ECFEFF;
+            --cyan-100: #CFFAFE;
+            --cyan-200: #A5F3FC;
+            --cyan-300: #67E8F9;
+            --cyan-400: #22D3EE;
+            --cyan-500: #06B6D4;
+            
+            /* Basis-Farben */
+            --fg: #0F172A;
+            --muted: #64748B;
+            --border: #E2E8F0;
+            --brand: #2563EB;
+            --bg: #FFFFFF;
+            --card: #F8FAFC;
+            
+            /* Score-Farben */
+            --score-excellent: #10B981;
+            --score-good: #3B82F6;
+            --score-fair: #F59E0B;
+            --score-poor: #EF4444;
+            
+            /* Priority-Farben */
+            --priority-critical: #DC2626;
+            --priority-high: #EA580C;
+            --priority-medium: #0891B2;
+            --priority-low: #059669;
+            
+            /* Spacing (8px Baseline) */
+            --g: 6pt;
+            --s-1: calc(var(--g) * 1.0);
+            --s-2: calc(var(--g) * 1.25);
+            --s-3: calc(var(--g) * 1.5);
+            --s-4: calc(var(--g) * 2.0);
+            --s-5: calc(var(--g) * 2.5);
+            --s-6: calc(var(--g) * 3.0);
+            --s-7: calc(var(--g) * 3.5);
+            --s-8: calc(var(--g) * 4.0);
+            
+            /* Typography */
+            --fs-body: 11pt;
+            --lh-body: 1.6;
+            --fs-h1: 24pt;
+            --fs-h2: 18pt;
+            --fs-h3: 14pt;
+            --fs-h4: 12pt;
+            --fs-small: 9pt;
+        }
+        
+        /* Base Styles */
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--fg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: var(--fs-body);
+            line-height: var(--lh-body);
+            letter-spacing: 0.01em;
+        }
+        
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0;
+        }
+        
+        /* Typography */
+        h1, h2, h3, h4 {
+            font-weight: 600;
+            line-height: 1.3;
+            margin: var(--s-5) 0 var(--s-3);
+            color: var(--fg);
+        }
+        
+        h1 {
+            font-size: var(--fs-h1);
+            margin-top: var(--s-6);
+            color: var(--primary-900);
+            border-bottom: 3px solid var(--primary-200);
+            padding-bottom: var(--s-3);
+        }
+        
+        h2 {
+            font-size: var(--fs-h2);
+            color: var(--primary-800);
+            padding-bottom: var(--s-2);
+            border-bottom: 2px solid var(--teal-200);
+            margin-top: var(--s-6);
+        }
+        
+        h3 {
+            font-size: var(--fs-h3);
+            color: var(--teal-700);
+            margin-top: var(--s-4);
+        }
+        
+        h4 {
+            font-size: var(--fs-h4);
+            color: var(--cyan-600);
+        }
+        
+        p {
+            margin: 0 0 var(--s-3) 0;
+        }
+        
+        a {
+            color: var(--brand);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+        
+        .small {
+            font-size: var(--fs-small);
+            color: var(--muted);
+        }
+        
+        /* Score Visualization */
+        .score-dashboard {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: var(--s-4);
+            margin: var(--s-5) 0;
+            padding: var(--s-4);
+            background: linear-gradient(135deg, var(--primary-50), var(--cyan-50));
+            border-radius: 16px;
+            border: 1px solid var(--primary-200);
+        }
+        
+        .score-item {
+            text-align: center;
+            background: white;
+            padding: var(--s-3);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .score-value {
+            font-size: 28pt;
+            font-weight: 700;
+            display: block;
+            margin: var(--s-2) 0;
+        }
+        
+        .score-label {
+            font-size: var(--fs-small);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+        }
+        
+        .score-excellent { color: var(--success-600); }
+        .score-good { color: var(--primary-600); }
+        .score-fair { color: #F59E0B; }
+        .score-poor { color: #EF4444; }
+        
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--s-3);
+            margin: var(--s-4) 0;
+        }
+        
+        .kpi-card {
+            background: linear-gradient(135deg, white, var(--teal-50));
+            border: 2px solid var(--teal-200);
+            border-radius: 12px;
+            padding: var(--s-4);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-500), var(--teal-500));
+        }
+        
+        .kpi-icon {
+            font-size: 20pt;
+            margin-bottom: var(--s-2);
+        }
+        
+        .kpi-value {
+            font-size: 20pt;
+            font-weight: 700;
+            color: var(--primary-700);
+            display: block;
+        }
+        
+        .kpi-label {
+            font-size: var(--fs-small);
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: var(--s-1);
+        }
+        
+        /* Quick Win Cards */
+        .quick-win-card {
+            background: linear-gradient(135deg, var(--success-50), var(--teal-50));
+            border-left: 4px solid var(--success-500);
+            border-radius: 12px;
+            padding: var(--s-4);
+            margin: var(--s-4) 0;
+            position: relative;
+            page-break-inside: avoid;
+        }
+        
+        .quick-win-card h4 {
+            margin-top: 0;
+            color: var(--success-700);
+        }
+        
+        .impact-badge {
+            position: absolute;
+            top: var(--s-3);
+            right: var(--s-3);
+            background: linear-gradient(135deg, var(--success-500), var(--teal-500));
+            color: white;
+            padding: 4pt 12pt;
+            border-radius: 20px;
+            font-size: var(--fs-small);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .quick-win-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--s-3);
+            margin-top: var(--s-3);
+            padding-top: var(--s-3);
+            border-top: 1px solid var(--success-200);
+        }
+        
+        .metric-item {
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 16pt;
+            font-weight: 700;
+            color: var(--teal-700);
+            display: block;
+        }
+        
+        .metric-label {
+            font-size: var(--fs-small);
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        /* Cards & Sections */
+        .card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: var(--s-4);
+            margin: var(--s-4) 0;
+            page-break-inside: avoid;
+            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.05);
+        }
+        
+        .card-primary {
+            background: linear-gradient(135deg, var(--primary-50), white);
+            border-color: var(--primary-200);
+        }
+        
+        .card-success {
+            background: linear-gradient(135deg, var(--success-50), white);
+            border-color: var(--success-200);
+        }
+        
+        .card-teal {
+            background: linear-gradient(135deg, var(--teal-50), white);
+            border-color: var(--teal-200);
+        }
+        
+        /* Callouts & Highlights */
+        .callout {
+            border-left: 4pt solid var(--primary-500);
+            padding: var(--s-3) var(--s-4);
+            background: linear-gradient(90deg, var(--primary-50), transparent);
+            border-radius: 8px;
+            page-break-inside: avoid;
+            margin: var(--s-4) 0;
+        }
+        
+        .callout-success {
+            border-left-color: var(--success-500);
+            background: linear-gradient(90deg, var(--success-50), transparent);
+        }
+        
+        .callout-warning {
+            border-left-color: #F59E0B;
+            background: linear-gradient(90deg, #FEF3C7, transparent);
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, var(--cyan-50), var(--teal-50));
+            border: 2px solid var(--cyan-300);
+            border-radius: 12px;
+            padding: var(--s-4);
+            margin: var(--s-4) 0;
+            position: relative;
+        }
+        
+        .highlight-box::before {
+            content: '💡';
+            position: absolute;
+            top: -12pt;
+            left: var(--s-4);
+            background: white;
+            padding: 0 var(--s-2);
+            font-size: 16pt;
+        }
+        
+        /* Tables */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: var(--s-4) 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .table thead th {
+            text-align: left;
+            font-weight: 600;
+            padding: 10pt 12pt;
+            background: linear-gradient(135deg, var(--primary-100), var(--teal-100));
+            border-bottom: 2px solid var(--primary-200);
+            color: var(--primary-900);
+        }
+        
+        .table td {
+            padding: 8pt 12pt;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+        
+        .table tr:hover {
+            background: var(--primary-50);
+        }
+        
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* Priority & Status Tags */
+        .tag {
+            display: inline-block;
+            padding: 2pt 8pt;
+            border-radius: 12pt;
+            font-size: var(--fs-small);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .tag-critical {
+            background: #FEE2E2;
+            color: var(--priority-critical);
+        }
+        
+        .tag-high {
+            background: #FED7AA;
+            color: var(--priority-high);
+        }
+        
+        .tag-medium {
+            background: var(--cyan-100);
+            color: var(--priority-medium);
+        }
+        
+        .tag-low {
+            background: var(--success-100);
+            color: var(--priority-low);
+        }
+        
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 40pt;
+            margin: var(--s-4) 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 12pt;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, var(--primary-500), var(--teal-500));
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: var(--s-5);
+            page-break-inside: avoid;
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            left: -32pt;
+            width: 16pt;
+            height: 16pt;
+            background: white;
+            border: 3px solid var(--primary-500);
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px var(--primary-100);
+        }
+        
+        .timeline-content {
+            background: linear-gradient(135deg, white, var(--primary-50));
+            padding: var(--s-3);
+            border-radius: 8px;
+            border: 1px solid var(--primary-200);
+        }
+        
+        .timeline-date {
+            font-size: var(--fs-small);
+            color: var(--primary-600);
+            font-weight: 600;
+            margin-bottom: var(--s-2);
+        }
+        
+        /* Progress Bars */
+        .progress {
+            height: 12pt;
+            background: var(--border);
+            border-radius: 6pt;
+            overflow: hidden;
+            margin: var(--s-2) 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-500), var(--teal-500));
+            border-radius: 6pt;
+            transition: width 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        /* Branding */
+        .brandbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--s-4);
+            padding: var(--s-4);
+            border: 2px solid var(--primary-200);
+            border-radius: 16px;
+            background: linear-gradient(135deg, white, var(--primary-50));
+            margin: var(--s-4) 0;
+        }
+        
+        .brandbar__left,
+        .brandbar__right {
+            display: flex;
+            align-items: center;
+            gap: var(--s-4);
+            flex-wrap: wrap;
+        }
+        
+        .brandbar img {
+            display: block;
+            height: 40pt;
+            max-width: 150pt;
+            object-fit: contain;
+        }
+        
+        .compliance-strip {
+            display: flex;
+            align-items: center;
+            gap: var(--s-4);
+            background: linear-gradient(135deg, var(--teal-50), var(--cyan-50));
+            border: 1px solid var(--teal-200);
+            border-radius: 12px;
+            padding: var(--s-3) var(--s-4);
+            margin: var(--s-4) 0;
+        }
+        
+        .compliance-strip img {
+            height: 24pt;
+        }
+        
+        /* Legend */
+        .legend {
+            font-size: var(--fs-small);
+            color: var(--muted);
+            padding: var(--s-2) var(--s-3);
+            background: var(--card);
+            border-left: 3px solid var(--primary-300);
+            border-radius: 4px;
+            margin: var(--s-3) 0;
+        }
+        
+        /* Impressum & Footer */
+        .impressum {
+            margin-top: var(--s-8);
+            padding-top: var(--s-6);
+            border-top: 3px solid var(--primary-200);
+            page-break-before: always;
+        }
+        
+        .impressum h2 {
+            color: var(--primary-800);
+            border-bottom-color: var(--primary-200);
+        }
+        
+        .impressum h3 {
+            color: var(--teal-700);
+            margin-top: var(--s-4);
+        }
+        
+        .impressum-box {
+            background: linear-gradient(135deg, var(--card), white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: var(--s-4);
+            margin: var(--s-3) 0;
+        }
+        
+        .feedback-section {
+            background: linear-gradient(135deg, var(--success-50), var(--teal-50));
+            border: 2px solid var(--success-200);
+            border-radius: 16px;
+            padding: var(--s-5);
+            margin: var(--s-6) 0;
+            text-align: center;
+            page-break-before: always;
+        }
+        
+        .feedback-section h2 {
+            color: var(--success-700);
+            border: none;
+        }
+        
+        .feedback-button {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--success-500), var(--teal-500));
+            color: white;
+            padding: var(--s-3) var(--s-5);
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: var(--fs-h4);
+            margin: var(--s-4) 0;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
+        
+        .feedback-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+        }
+        
+        /* Watermark */
+        .watermark {
+            position: fixed;
+            bottom: 10mm;
+            right: 10mm;
+            opacity: 0.05;
+            font-size: 9pt;
+            letter-spacing: 0.05em;
+            color: var(--primary-300);
+            transform: rotate(-45deg);
+        }
+        
+        /* Print Optimizations */
+        @media print {
+            h1, h2, h3 {
+                page-break-after: avoid;
+            }
+            
+            .card, .quick-win-card, .timeline-item {
+                page-break-inside: avoid;
+            }
+            
+            a[href]:after {
+                content: "";
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- BRAND:HEADER:START -->
+        <div class="brandbar">
+            <div class="brandbar__left">
+                <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt Logo">
+                <img src="tuev-logo-transparent.webp" alt="TÜV Austria – AI Manager zertifiziert">
+            </div>
+            <div class="brandbar__right">
+                <img src="ki-ready-2025.webp" alt="KI-READY 2025 Badge">
+            </div>
+        </div>
+        
+        <div class="compliance-strip">
+            <img src="dsgvo.svg" alt="DSGVO konform">
+            <img src="eu-ai.svg" alt="EU AI Act ready">
+            <span class="small"><strong>Compliance-Status:</strong> DSGVO-konform • EU AI Act vorbereitet • Stand: {{report_date}}</span>
+        </div>
+        <!-- BRAND:HEADER:END -->
+        
+        <h1>KI-Status-Report</h1>
+        
+        <!-- MINI-LEGEND:START -->
+        <p class="legend">
+            <strong>Quick-Legende:</strong> 
+            📊 Score (0-100) • 
+            ⏱ Zeitaufwand • 
+            💰 Investment • 
+            🎯 Impact-Level • 
+            👤 Verantwortlich • 
+            📅 Timeline
+        </p>
+        <!-- MINI-LEGEND:END -->
+        
+        <!-- Executive Summary Dashboard -->
+        <section class="card card-primary">
+            <h2>Executive Summary</h2>
+            
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon">📊</div>
+                    <span class="kpi-value">{{overall_score}}/100</span>
+                    <span class="kpi-label">KI-Readiness</span>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">⚡</div>
+                    <span class="kpi-value">{{monthly_hours}}h</span>
+                    <span class="kpi-label">Zeitersparnis/Monat</span>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">💰</div>
+                    <span class="kpi-value">{{roi_12m}}%</span>
+                    <span class="kpi-label">ROI (12 Monate)</span>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">📅</div>
+                    <span class="kpi-value">{{payback_months}}</span>
+                    <span class="kpi-label">Payback (Monate)</span>
+                </div>
+            </div>
+            
+            <p>{{EXECUTIVE_SUMMARY_HTML}}</p>
+        </section>
+        
+        <!-- Score Dashboard -->
+        <section class="score-dashboard">
+            <div class="score-item">
+                <span class="score-label">Governance</span>
+                <span class="score-value score-{{governance_class}}">{{governance_score}}</span>
+                <div class="progress">
+                    <div class="progress-fill" style="width: {{governance_score}}%"></div>
+                </div>
+            </div>
+            <div class="score-item">
+                <span class="score-label">Sicherheit</span>
+                <span class="score-value score-{{security_class}}">{{security_score}}</span>
+                <div class="progress">
+                    <div class="progress-fill" style="width: {{security_score}}%"></div>
+                </div>
+            </div>
+            <div class="score-item">
+                <span class="score-label">Wertschöpfung</span>
+                <span class="score-value score-{{value_class}}">{{value_score}}</span>
+                <div class="progress">
+                    <div class="progress-fill" style="width: {{value_score}}%"></div>
+                </div>
+            </div>
+            <div class="score-item">
+                <span class="score-label">Befähigung</span>
+                <span class="score-value score-{{enablement_class}}">{{enablement_score}}</span>
+                <div class="progress">
+                    <div class="progress-fill" style="width: {{enablement_score}}%"></div>
+                </div>
+            </div>
+            <div class="score-item">
+                <span class="score-label">GESAMT</span>
+                <span class="score-value score-{{overall_class}}">{{overall_score}}</span>
+                <div class="progress">
+                    <div class="progress-fill" style="width: {{overall_score}}%"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Quick Wins -->
+        <section class="page-break">
+            <h2>Quick Wins</h2>
+            {{QUICK_WINS_HTML}}
+        </section>
+        
+        <!-- Roadmap -->
+        <section class="page-break">
+            <h2>90-Tage Roadmap</h2>
+            {{PILOT_PLAN_HTML}}
+        </section>
+        
+        <!-- Business Case -->
+        <section class="card card-teal">
+            <h2>Business Case</h2>
+            {{BUSINESS_CASE_HTML}}
+        </section>
+        
+        <!-- Weitere Sections -->
+        <section>
+            {{STRATEGIE_GOVERNANCE_HTML}}
+        </section>
+        
+        <section>
+            {{TECHNOLOGIE_PROZESSE_HTML}}
+        </section>
+        
+        <section>
+            {{WETTBEWERB_BENCHMARK_HTML}}
+        </section>
+        
+        <section>
+            {{KI_AKTIVITAETEN_HTML}}
+        </section>
+        
+        <section>
+            {{TOOLS_EMPFEHLUNGEN_HTML}}
+        </section>
+        
+        <section>
+            {{DATA_READINESS_HTML}}
+        </section>
+        
+        <section>
+            {{ORG_CHANGE_HTML}}
+        </section>
+        
+        <section>
+            {{RISKS_HTML}}
+        </section>
+        
+        <section>
+            {{GAMECHANGER_HTML}}
+        </section>
+        
+        <section>
+            {{RECOMMENDATIONS_HTML}}
+        </section>
+        
+        <section>
+            {{FOERDERPOTENZIAL_HTML}}
+        </section>
+        
+        <!-- Feedback Section -->
+        <div class="feedback-section">
+            <h2>Ihr Feedback ist uns wichtig!</h2>
+            <p>Helfen Sie uns, diesen Report noch besser zu machen. Ihre Rückmeldung hilft anderen Unternehmen.</p>
+            
+            <div class="highlight-box">
+                <p><strong>Was hat Ihnen gefallen?</strong> Was können wir verbessern?</p>
+                <p>Nehmen Sie sich 2 Minuten Zeit für unser Feedback-Formular:</p>
+            </div>
+            
+            <a href="https://make.ki-sicherheit.jetzt/feedback/feedback.html" class="feedback-button" target="_blank">
+                📝 Feedback geben
+            </a>
+            
+            <p class="small">Ihre Angaben werden anonym ausgewertet und helfen uns bei der Weiterentwicklung.</p>
+        </div>
+        
+        <!-- Impressum -->
+        <div class="impressum">
+            <h2>Rechtliches & Transparenz</h2>
+            
+            <div class="impressum-box">
+                <h3>Verantwortlich für diesen Report</h3>
+                <p>
+                    <strong>Wolf Hohl</strong><br>
+                    TÜV-zertifizierter AI Manager<br>
+                    Greifswalder Str. 224a<br>
+                    10405 Berlin<br>
+                    E-Mail: <a href="mailto:wolf@ki-sicherheit.jetzt">wolf@ki-sicherheit.jetzt</a>
+                </p>
+            </div>
+            
+            <div class="impressum-box">
+                <h3>Wichtige Hinweise</h3>
+                
+                <h4>Haftungsausschluss</h4>
+                <p>Dieser Report dient ausschließlich der Information und ersten Orientierung. Die Empfehlungen basieren auf den von Ihnen bereitgestellten Angaben und wurden KI-gestützt erstellt. Trotz sorgfältiger Prüfung übernehmen wir keine Haftung für die Vollständigkeit, Richtigkeit und Aktualität der Inhalte. Die Umsetzung erfolgt auf eigene Verantwortung.</p>
+                
+                <h4>Keine Rechtsberatung</h4>
+                <p>Dieser Report informiert über Anforderungen, Risiken und Möglichkeiten beim KI-Einsatz nach EU AI Act und DSGVO. Er ersetzt jedoch keine individuelle Rechts-, Steuer- oder Unternehmensberatung. Für verbindliche Auskünfte konsultieren Sie bitte entsprechende Fachexperten.</p>
+                
+                <h4>Urheberrecht</h4>
+                <p>Alle Inhalte dieses Reports unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung. Der Report ist ausschließlich für den internen Gebrauch des beauftragenden Unternehmens bestimmt.</p>
+                
+                <h4>KI-Transparenz</h4>
+                <p>Dieser Report wurde unter Verwendung von KI-Systemen erstellt und anschließend manuell qualitätsgesichert. Die KI-Nutzung erfolgt DSGVO-konform mit Auftragsverarbeitungsvertrag.</p>
+            </div>
+            
+            <div class="impressum-box">
+                <h3>Datenschutzhinweis</h3>
+                
+                <h4>Verarbeitung Ihrer Daten</h4>
+                <p>Die von Ihnen im Fragebogen angegebenen Daten wurden ausschließlich zur Erstellung dieses Reports verwendet und werden nach 6 Monaten automatisch gelöscht.</p>
+                
+                <h4>Ihre Rechte nach DSGVO</h4>
+                <ul>
+                    <li>Auskunft über gespeicherte Daten</li>
+                    <li>Berichtigung unrichtiger Daten</li>
+                    <li>Löschung Ihrer Daten</li>
+                    <li>Einschränkung der Verarbeitung</li>
+                    <li>Datenübertragbarkeit</li>
+                    <li>Widerruf erteilter Einwilligungen</li>
+                    <li>Beschwerde bei der Datenschutzbehörde</li>
+                </ul>
+                
+                <p class="small">Bei Fragen zum Datenschutz: <a href="mailto:datenschutz@ki-sicherheit.jetzt">datenschutz@ki-sicherheit.jetzt</a></p>
+            </div>
+        </div>
+        
+        <!-- BRAND:FOOTER:START -->
+        <div class="brandbar" style="margin-top: var(--s-6);">
+            <div class="brandbar__left">
+                <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt">
+            </div>
+            <div class="brandbar__right">
+                <img src="tuev-logo-transparent.webp" alt="TÜV Austria">
+                <img src="ki-ready-2025.webp" alt="KI-READY 2025">
+            </div>
+        </div>
+        
+        <p class="small" style="text-align: center;">
+            © {{report_year}} KI-Sicherheit.jetzt — 
+            Report ID: {{report_id}} — 
+            Erstellt: {{report_date}} — 
+            Kontakt: {{user_email}}
+        </p>
+        <!-- BRAND:FOOTER:END -->
+    </div>
+    
+    <!-- Watermark -->
+    <div class="watermark">VERTRAULICH</div>
+</body>
+</html>
