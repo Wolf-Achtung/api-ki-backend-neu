@@ -223,66 +223,94 @@ Du erhältst folgende Variablen:
 
 ---
 
-## 📋 OUTPUT-FORMAT
+## 📋 OUTPUT-FORMAT & GENERIERUNGS-ANWEISUNG
+
+🚨 **KRITISCH: KEINE PLATZHALTER IM OUTPUT!** 🚨
+
+Du MUSST jetzt die ECHTE Roadmap generieren mit KONKRETEM Content!
+
+**❌ VERBOTEN:**
+- Platzhalter wie "[Deliverable 1]", "[Name]", "[Rollen]", "[€]"
+- Anweisungen wie "[Kompletter Meilenstein nach Schema]"
+- Generische Begriffe wie "[Konkrete Zahlen]" oder "[X]"
+
+**✅ PFLICHT:**
+- Echte Deliverable-Namen: "Batch-Processing MVP", "Template-Bibliothek"
+- Konkrete Zahlen: "€5.000", "20h", "+200%", "50 Assessments/Tag"
+- Spezifische Rollen: "1× Backend-Dev", "Geschäftsführer"
+
+---
+
+### OUTPUT-STRUKTUR:
 
 ```markdown
 # 🗓️ 90-Tage Roadmap - Konkrete Umsetzungsplanung
 
-> **Ziel:** In 90 Tagen die Hauptleistung skalieren und ein neues Geschäftsmodell-MVP launchen.
+> **Ziel:** [Schreibe ECHTES Ziel basierend auf {{HAUPTLEISTUNG}} - KEIN Platzhalter!]
 
 ---
 
 ## 📊 Executive Summary
 
 **Phase 1 - Quick Wins (Woche 1-4):**
-- [3-4 Quick Wins]
-- Erwarteter Impact: [Konkrete Zahlen]
+- [Schreibe 3-4 ECHTE Quick Wins mit Namen]
+- Erwarteter Impact: [ECHTE Zahlen: "+200% Durchsatz, €4.500/Monat"]
 
 **Phase 2 - Skalierung (Woche 5-8):**
-- [Automatisierungs-Maßnahmen]
-- Erwarteter Impact: [Konkrete Zahlen]
+- [Schreibe ECHTE Automatisierungs-Maßnahmen]
+- Erwarteter Impact: [ECHTE Zahlen]
 
 **Phase 3 - Gamechanger MVP (Woche 9-12):**
-- [Neues Geschäftsmodell]
-- Erwarteter Impact: [Konkrete Zahlen]
+- [Schreibe ECHTES neues Geschäftsmodell]
+- Erwarteter Impact: [ECHTE Zahlen]
 
-**Gesamt-Investment:** [€X Budget] | **Erwarteter ROI:** [X× in 12 Monaten]
+**Gesamt-Investment:** [ECHTE Zahl: €5.000 + €500/Monat] | **Erwarteter ROI:** [ECHTE Zahl: 85% in 12M]
 
 ---
 
 ## 🏃 PHASE 1: Quick Wins (Woche 1-4)
 
-### Woche 1-2: [Deliverable 1]
-[Kompletter Meilenstein nach Schema]
+### Woche 1-2: [ECHTER Deliverable-Name - max 8 Wörter]
+
+**Deliverable:** [Was GENAU wird gebaut? 1 Satz mit ECHTEM Content]
+
+**Was wird gebaut:**
+- [ECHTES Feature 1 - technisch konkret, KEIN "Feature/System 1"]
+- [ECHTES Feature 2 - technisch konkret]
+- [ECHTES Feature 3 - technisch konkret]
+
+**Messbarer Erfolg:**
+- ✅ [ECHTER KPI mit Zahl: "+200% Durchsatz"]
+- ✅ [ECHTER KPI mit Zahl: "-50% Zeit"]
+- ✅ [ECHTER KPI mit Zahl: "100 neue User"]
+
+**Ressourcen:**
+- Team: [ECHTE Rolle + Stunden: "1× Backend-Dev (20h)"]
+- Budget: [ECHTE Zahl: "€2.000" oder "€0"]
+- Tools: [ECHTE Tools mit Preisen: "Make.com (€99/M)"]
+
+**Risiken & Mitigation:**
+- Risiko: [ECHTES Problem] → [ECHTE Lösung]
+
+**Abhängigkeiten:** [ECHTE Abhängigkeiten oder "Keine"]
 
 ---
 
-### Woche 3-4: [Deliverable 2]
-[Kompletter Meilenstein nach Schema]
+### Woche 3-4: [NÄCHSTER echter Deliverable-Name]
+
+[KOMPLETTE Wiederholung der Struktur mit ECHTEM Content für Woche 3-4]
 
 ---
 
 ## 🚀 PHASE 2: Skalierung (Woche 5-8)
 
-### Woche 5-6: [Deliverable 3]
-[Kompletter Meilenstein nach Schema]
-
----
-
-### Woche 7-8: [Deliverable 4]
-[Kompletter Meilenstein nach Schema]
+[Fortsetzung mit ECHTEM Content für Woche 5-6 und 7-8]
 
 ---
 
 ## 💎 PHASE 3: Gamechanger MVP (Woche 9-12)
 
-### Woche 9-10: [Deliverable 5]
-[Kompletter Meilenstein nach Schema]
-
----
-
-### Woche 11-12: [Deliverable 6]
-[Kompletter Meilenstein nach Schema]
+[Fortsetzung mit ECHTEM Content für Woche 9-10 und 11-12]
 
 ---
 
@@ -290,31 +318,43 @@ Du erhältst folgende Variablen:
 
 | Woche | Deliverable | Team | Budget | KPIs |
 |-------|-------------|------|--------|------|
-| 1-2 | [Name] | [Rollen] | [€] | [Zahlen] |
-| 3-4 | [Name] | [Rollen] | [€] | [Zahlen] |
-| 5-6 | [Name] | [Rollen] | [€] | [Zahlen] |
-| 7-8 | [Name] | [Rollen] | [€] | [Zahlen] |
-| 9-10 | [Name] | [Rollen] | [€] | [Zahlen] |
-| 11-12 | [Name] | [Rollen] | [€] | [Zahlen] |
+| 1-2 | [ECHTER Name] | [ECHTE Rollen] | [ECHTES €] | [ECHTE Zahlen] |
+| 3-4 | [ECHTER Name] | [ECHTE Rollen] | [ECHTES €] | [ECHTE Zahlen] |
+| 5-6 | [ECHTER Name] | [ECHTE Rollen] | [ECHTES €] | [ECHTE Zahlen] |
+| 7-8 | [ECHTER Name] | [ECHTE Rollen] | [ECHTES €] | [ECHTE Zahlen] |
+| 9-10 | [ECHTER Name] | [ECHTE Rollen] | [ECHTES €] | [ECHTE Zahlen] |
+| 11-12 | [ECHTER Name] | [ECHTE Rollen] | [ECHTES €] | [ECHTE Zahlen] |
 
-**Gesamt:** [X Wochen] | [€Y Budget] | [Z erwarteter Impact]
+**Gesamt:** [ECHTE Wochenzahl] | [ECHTES Budget] | [ECHTER Impact]
 
 ---
 
 ## 🎯 Kritische Erfolgsfaktoren
 
 **Abhängigkeiten:**
-- [Kritische Abhängigkeit 1]
-- [Kritische Abhängigkeit 2]
+- [ECHTE Abhängigkeit 1]
+- [ECHTE Abhängigkeit 2]
 
 **Top-Risiken:**
-- [Risiko 1] → [Mitigation]
-- [Risiko 2] → [Mitigation]
+- [ECHTES Risiko 1] → [ECHTE Mitigation]
+- [ECHTES Risiko 2] → [ECHTE Mitigation]
 
 **Go/No-Go Entscheidungspunkte:**
-- Ende Woche 4: [Kriterium für Weitermachen]
-- Ende Woche 8: [Kriterium für Gamechanger-Start]
+- Ende Woche 4: [ECHTES Kriterium mit Zahl]
+- Ende Woche 8: [ECHTES Kriterium mit Zahl]
 ```
+
+---
+
+🚨 **FINAL CHECK VOR OUTPUT:**
+
+1. ❌ Enthält Output "[Deliverable X]" oder "[Name]"? → FEHLER!
+2. ❌ Enthält Output "Feature/System 1"? → FEHLER!
+3. ❌ Enthält Output "[Konkrete Zahlen]"? → FEHLER!
+4. ✅ Alle Deliverables haben echte Namen? → GUT!
+5. ✅ Alle Zahlen sind konkret (nicht Platzhalter)? → GUT!
+
+**Wenn auch nur EINE der Fehler-Checks positiv ist: ROADMAP NEU GENERIEREN!**
 
 ---
 
