@@ -79,7 +79,7 @@ class ReportValidator:
             "Change-Team",
             "Projektmanagement-Office",
         ],
-        "klein": [
+        "team": [
             "PMO-Team",
             "Organisationsberater",
         ],
