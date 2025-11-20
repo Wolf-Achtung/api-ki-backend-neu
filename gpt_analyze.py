@@ -27,6 +27,7 @@ import html
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 from sqlalchemy.orm import Session
@@ -1564,46 +1565,98 @@ def _build_freetext_snippets_html(ans: Dict[str, Any]) -> str:
     )
 # -------------------- 🎯 UPDATED: Main composer with prompt system ----------------
 def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict[str, Any]:
-    """Generate all content sections - now using prompt system where available!"""
+    """Generate all content sections - now using PARALLEL execution for performance!"""
     sections: Dict[str, Any] = {}
-    
-    # Executive Summary
-    sections["EXECUTIVE_SUMMARY_HTML"] = _generate_content_section("executive_summary", briefing, scores)
-    
-    
-    # Robustness: replace leftover placeholders with actual values
-    sections["EXECUTIVE_SUMMARY_HTML"] = _fix_exec_placeholders(sections["EXECUTIVE_SUMMARY_HTML"], scores, sections, sections.get("report_date",""))
-# Quick Wins - with improved fallbacks
-    qw_html = _generate_content_section("quick_wins", briefing, scores)
-    if _needs_repair(qw_html): 
+
+    # Define all sections to generate in parallel
+    parallel_sections = [
+        ("executive_summary", "EXECUTIVE_SUMMARY_HTML"),
+        ("quick_wins", "_QUICK_WINS_RAW"),  # Special handling after
+        ("roadmap", "PILOT_PLAN_HTML"),
+        ("roadmap_12m", "ROADMAP_12M_HTML"),
+        ("business_roi", "ROI_HTML"),
+        ("business_costs", "COSTS_OVERVIEW_HTML"),
+        ("business_case", "BUSINESS_CASE_HTML"),
+        ("data_readiness", "DATA_READINESS_HTML"),
+        ("org_change", "ORG_CHANGE_HTML"),
+        ("risks", "RISKS_HTML"),
+        ("gamechanger", "GAMECHANGER_HTML"),
+        ("recommendations", "RECOMMENDATIONS_HTML"),
+        ("reifegrad_sowhat", "REIFEGRAD_SOWHAT_HTML"),
+        ("ai_act_summary", "AI_ACT_SUMMARY_HTML"),
+        ("strategie_governance", "STRATEGIE_GOVERNANCE_HTML"),
+        ("wettbewerb_benchmark", "WETTBEWERB_BENCHMARK_HTML"),
+        ("technologie_prozesse", "TECHNOLOGIE_PROZESSE_HTML"),
+        ("unternehmensprofil_markt", "UNTERNEHMENSPROFIL_MARKT_HTML"),
+        ("tools_empfehlungen", "TOOLS_EMPFEHLUNGEN_HTML"),
+        ("foerderpotenzial", "FOERDERPOTENZIAL_HTML"),
+        ("transparency_box", "TRANSPARENCY_BOX_HTML"),
+        ("ki_aktivitaeten_ziele", "KI_AKTIVITAETEN_ZIELE_HTML"),
+    ]
+
+    # Get max workers from env (default: 10 for good parallelization without overwhelming API)
+    max_workers = int(os.getenv("GPT_PARALLEL_WORKERS", "10"))
+
+    log.info("🚀 Generating %d sections in PARALLEL (max_workers=%d)...", len(parallel_sections), max_workers)
+    start_time = datetime.now()
+
+    # Execute all GPT calls in parallel
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all tasks
+        future_to_section = {
+            executor.submit(_generate_content_section, section_name, briefing, scores): (section_name, key)
+            for section_name, key in parallel_sections
+        }
+
+        # Collect results as they complete
+        for future in as_completed(future_to_section):
+            section_name, key = future_to_section[future]
+            try:
+                result = future.result()
+                sections[key] = result
+            except Exception as exc:
+                log.error("❌ Section %s failed: %s", section_name, exc)
+                sections[key] = f"<p><em>[{section_name} – Error: {exc}]</em></p>"
+
+    elapsed = (datetime.now() - start_time).total_seconds()
+    log.info("✅ Parallel generation completed in %.1fs (vs ~%ds sequential)", elapsed, len(parallel_sections) * 15)
+
+    # Post-processing: Executive Summary placeholder fix
+    sections["EXECUTIVE_SUMMARY_HTML"] = _fix_exec_placeholders(
+        sections["EXECUTIVE_SUMMARY_HTML"], scores, sections, sections.get("report_date", "")
+    )
+
+    # Post-processing: Quick Wins - repair and split into columns
+    qw_html = sections.pop("_QUICK_WINS_RAW", "")
+    if _needs_repair(qw_html):
         qw_html = _repair_html("quick_wins", qw_html)
-    
+
     # Split into columns
     left, right = _split_li_list_to_columns(qw_html)
     sections["QUICK_WINS_HTML_LEFT"] = left
     sections["QUICK_WINS_HTML_RIGHT"] = right
     sections["QUICK_WINS_HTML"] = ("<div style='display:grid;grid-template-columns:1fr 1fr;gap:16px'>" + left + right + "</div>")
-    
+
     # Calculate hours saved from Quick Wins
     total_h = 0
-    try: 
+    try:
         total_h = _sum_hours_from_quick_wins(qw_html)
-    except Exception: 
+    except Exception:
         total_h = 0
-    
+
     # Fallback if no hours detected
     if total_h <= 0:
-        try: 
+        try:
             fb = int(os.getenv("FALLBACK_QW_MONTHLY_H", "0"))
-        except Exception: 
+        except Exception:
             fb = 0
         if fb <= 0:
-            try: 
+            try:
                 fb = int(os.getenv("DEFAULT_QW1_H", "20")) + int(os.getenv("DEFAULT_QW2_H", "15"))
-            except Exception: 
+            except Exception:
                 fb = 35  # conservative default
         total_h = max(0, fb)
-    
+
     # Calculate ROI metrics
     rate = int(briefing.get("stundensatz_eur") or os.getenv("DEFAULT_STUNDENSATZ_EUR", "60") or 60)
     if total_h > 0:
@@ -1615,40 +1668,14 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             "stundensatz_eur": rate,
             "REALITY_NOTE_QW": f"Praxis‑Hinweis: Diese Quick‑Wins sparen ~{max(1, int(round(total_h*0.7)))}–{int(round(total_h*1.2))} h/Monat (konservativ geschätzt)."
         })
-    
-    # Roadmaps - with improved prompts
-    sections["PILOT_PLAN_HTML"] = _generate_content_section("roadmap", briefing, scores)
-    sections["ROADMAP_12M_HTML"] = _generate_content_section("roadmap_12m", briefing, scores)
-    
-    # Business sections
-    sections["ROI_HTML"] = _generate_content_section("business_roi", briefing, scores)
-    sections["COSTS_OVERVIEW_HTML"] = _generate_content_section("business_costs", briefing, scores)
-    sections["BUSINESS_CASE_HTML"] = _generate_content_section("business_case", briefing, scores)
+
+    # Static section
     sections["BUSINESS_SENSITIVITY_HTML"] = (
         '<table class="table"><thead><tr><th>Adoption</th><th>Kommentar</th></tr></thead>'
         "<tbody><tr><td>100%</td><td>Planmäßige Wirkung der Maßnahmen.</td></tr>"
         "<tr><td>80%</td><td>Leichte Abweichungen – Payback +2–3 Monate.</td></tr>"
         "<tr><td>60%</td><td>Konservativ – nur Kernmaßnahmen; Payback länger.</td></tr></tbody></table>"
     )
-    
-    # Other detailed sections
-    sections["DATA_READINESS_HTML"] = _generate_content_section("data_readiness", briefing, scores)
-    sections["ORG_CHANGE_HTML"] = _generate_content_section("org_change", briefing, scores)
-    sections["RISKS_HTML"] = _generate_content_section("risks", briefing, scores)
-    sections["GAMECHANGER_HTML"] = _generate_content_section("gamechanger", briefing, scores)
-    sections["RECOMMENDATIONS_HTML"] = _generate_content_section("recommendations", briefing, scores)
-    sections["REIFEGRAD_SOWHAT_HTML"] = _generate_content_section("reifegrad_sowhat", briefing, scores)
-
-    # ✅ NEW: Previously unused prompts - now activated for report generation
-    sections["AI_ACT_SUMMARY_HTML"] = _generate_content_section("ai_act_summary", briefing, scores)
-    sections["STRATEGIE_GOVERNANCE_HTML"] = _generate_content_section("strategie_governance", briefing, scores)
-    sections["WETTBEWERB_BENCHMARK_HTML"] = _generate_content_section("wettbewerb_benchmark", briefing, scores)
-    sections["TECHNOLOGIE_PROZESSE_HTML"] = _generate_content_section("technologie_prozesse", briefing, scores)
-    sections["UNTERNEHMENSPROFIL_MARKT_HTML"] = _generate_content_section("unternehmensprofil_markt", briefing, scores)
-    sections["TOOLS_EMPFEHLUNGEN_HTML"] = _generate_content_section("tools_empfehlungen", briefing, scores)
-    sections["FOERDERPOTENZIAL_HTML"] = _generate_content_section("foerderpotenzial", briefing, scores)
-    sections["TRANSPARENCY_BOX_HTML"] = _generate_content_section("transparency_box", briefing, scores)
-    sections["KI_AKTIVITAETEN_ZIELE_HTML"] = _generate_content_section("ki_aktivitaeten_ziele", briefing, scores)
 
     # 🎯 NEW: Next Actions with DYNAMIC DATES via prompt system
     if USE_PROMPT_SYSTEM:
