@@ -2016,6 +2016,34 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
                  bc.get("PAYBACK_MONTHS", "N/A"),
                  bc.get("ROI_12M", "N/A"))
 
+        # Pre-calculate sensitivity values for Jinja2 template
+        # These are used in template expressions like {{ ROI_12M * 0.8 }}
+        try:
+            capex = float(bc.get('CAPEX_REALISTISCH_EUR', 6000))
+            opex = float(bc.get('OPEX_REALISTISCH_EUR', 120))
+            einsparung = float(bc.get('EINSPARUNG_MONAT_EUR', 4500))
+            roi_12m = float(bc.get('ROI_12M', 0))
+
+            # Ensure numeric values are available for Jinja2 calculations
+            sections['CAPEX_REALISTISCH_EUR'] = capex
+            sections['OPEX_REALISTISCH_EUR'] = opex
+            sections['EINSPARUNG_MONAT_EUR'] = einsparung
+            sections['ROI_12M'] = roi_12m
+
+            # Sensitivity calculations (pessimistic 80%, optimistic 120%)
+            sections['ROI_12M_LOW'] = round(roi_12m * 0.8 * 100, 1)  # in %
+            sections['ROI_12M_HIGH'] = round(roi_12m * 1.2 * 100, 1)  # in %
+            sections['EINSPARUNG_MONAT_EUR_LOW'] = round(einsparung * 0.8)
+            sections['EINSPARUNG_MONAT_EUR_HIGH'] = round(einsparung * 1.2)
+
+            # Payback calculations for different scenarios
+            einsparung_low = einsparung * 0.8 - opex
+            einsparung_high = einsparung * 1.2 - opex
+            sections['PAYBACK_MONTHS_PESSIMISTIC'] = round(capex / einsparung_low, 1) if einsparung_low > 0 else 99
+            sections['PAYBACK_MONTHS_OPTIMISTIC'] = round(capex / einsparung_high, 1) if einsparung_high > 0 else 0
+        except (ValueError, ZeroDivisionError) as e:
+            log.warning("[%s] ⚠️ Sensitivity calculation failed: %s", run_id, e)
+
         # FIX: Apply calculated values to HTML sections
         sections_to_fix = [
             'BUSINESS_CASE_HTML',
