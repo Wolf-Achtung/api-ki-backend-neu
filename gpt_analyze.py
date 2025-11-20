@@ -1871,20 +1871,6 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections.setdefault("LEISTUNG_NACHWEIS_HTML","")
     sections.setdefault("GLOSSAR_HTML","")
 
-    # === VALIDATION GATE - Wolf 2025-11-19 ===
-    from services.report_validator import validate_report
-
-    log.info(f"[{run_id}] 🔍 Running report validation...")
-    is_valid = validate_report(sections, answers)
-
-    if not is_valid:
-        log.warning(f"[{run_id}] ⚠️ Report has validation errors (see above) - continuing anyway")
-        # TODO: Later enable Quality Gate:
-        # raise ValueError("Report validation failed - fix errors first!")
-    else:
-        log.info(f"[{run_id}] ✅ Report validation passed - GOLD STANDARD+")
-    # === END VALIDATION ===
-
     # Kreativ Tools
     kreat_path = os.getenv("KREATIV_TOOLS_PATH", "").strip()
     if kreat_path:
@@ -2048,6 +2034,20 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             log.info("[%s] 🔧 Fixed placeholders in %s sections", run_id, placeholder_fix_count)
     except Exception as _exc:
         log.warning("[%s] ⚠️ Placeholder fix failed: %s", run_id, _exc)
+
+    # === VALIDATION GATE - Wolf 2025-11-19 (moved after placeholder replacement) ===
+    from services.report_validator import validate_report
+
+    log.info(f"[{run_id}] 🔍 Running report validation...")
+    is_valid = validate_report(sections, answers)
+
+    if not is_valid:
+        log.warning(f"[{run_id}] ⚠️ Report has validation errors (see above) - continuing anyway")
+        # TODO: Later enable Quality Gate:
+        # raise ValueError("Report validation failed - fix errors first!")
+    else:
+        log.info(f"[{run_id}] ✅ Report validation passed - GOLD STANDARD+")
+    # === END VALIDATION ===
 
     # Benchmarks / Starter-Stacks / Responsible AI
     if build_benchmarks_section:
