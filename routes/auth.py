@@ -18,10 +18,32 @@ from services.rate_limit import RateLimiter
 from services.redis_utils import RedisBox
 from utils.idempotency import IdempotencyBox
 from core.security import create_access_token, get_current_user, TokenPayload
-from setup_database import TESTUSERS, ADMIN_USER
 
 # Whitelist für erlaubte E-Mail-Adressen (Testphase)
-EMAIL_WHITELIST = set(email.lower() for email in TESTUSERS + [ADMIN_USER])
+# Diese Liste muss synchron mit setup_database.py TESTUSERS gehalten werden
+EMAIL_WHITELIST = {
+    "j.hohl@freenet.de",
+    "kerstin.geffert@gmail.com",
+    "post@zero2.de",
+    "giselapeter@peter-partner.de",
+    "wolf.hohl@web.de",
+    "geffertj@mac.com",
+    "geffertkilian@gmail.com",
+    "levent.graef@posteo.de",
+    "birgit.cook@ulitzka-partner.de",
+    "alexander.luckow@icloud.com",
+    "frank.beer@kabelmail.de",
+    "patrick@silk-relations.com",
+    "marc@trailerhaus-onair.de",
+    "norbert@trailerhaus.de",
+    "sonia-souto@mac.com",
+    "christian.ulitzka@ulitzka-partner.de",
+    "srack@gmx.net",
+    "buss@maria-hilft.de",
+    "w.beestermoeller@web.de",
+    "bewertung@ki-sicherheit.jetzt",  # Admin
+    "test@example.com",  # Für CI/CD Tests
+}
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 log = logging.getLogger(__name__)

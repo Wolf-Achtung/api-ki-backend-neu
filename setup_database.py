@@ -23,15 +23,17 @@ import os
 import sys
 import argparse
 from datetime import datetime
-from typing import List, Tuple
+from typing import List, Tuple, Any, TYPE_CHECKING
 
-try:
+# psycopg2 wird nur benötigt wenn das Script direkt ausgeführt wird
+# Import wird in main() gemacht, nicht auf Modul-Ebene
+if TYPE_CHECKING:
     import psycopg2
     from psycopg2 import sql, extras
-except ImportError:
-    print("❌ Fehler: psycopg2 nicht installiert!")
-    print("Installation: pip install psycopg2-binary")
-    sys.exit(1)
+else:
+    psycopg2: Any = None
+    sql: Any = None
+    extras: Any = None
 
 # python-dotenv ist OPTIONAL
 try:
@@ -268,6 +270,19 @@ def insert_users(cursor, emails: List[str], is_admin: bool = False) -> int:
 
 def main():
     """Hauptfunktion"""
+    # Import psycopg2 nur wenn das Script direkt ausgeführt wird
+    global psycopg2, sql, extras
+    try:
+        import psycopg2 as _psycopg2
+        from psycopg2 import sql as _sql, extras as _extras
+        psycopg2 = _psycopg2
+        sql = _sql
+        extras = _extras
+    except ImportError:
+        print("❌ Fehler: psycopg2 nicht installiert!")
+        print("Installation: pip install psycopg2-binary")
+        return 1
+
     # Parse Command-Line Arguments
     parser = argparse.ArgumentParser(
         description='Setup database for KI-Sicherheit.jetzt',
