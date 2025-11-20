@@ -55,10 +55,15 @@ def render(briefing_obj: Any,
 
     # Context
     sections = dict(generated_sections or {})
-    
+
     # Alias FUNDING if necessary
     if not sections.get("FUNDING_HTML") and sections.get("FOERDERPROGRAMME_HTML"):
         sections["FUNDING_HTML"] = sections["FOERDERPROGRAMME_HTML"]
+
+    # Ensure qw_hours_total has a fallback value if not set
+    if not sections.get('qw_hours_total'):
+        # Fallback: 10 + 8 + 18 = 36 hours (DEFAULT_QW1_H + DEFAULT_QW2_H + FALLBACK_QW_MONTHLY_H)
+        sections['qw_hours_total'] = 36
 
     # Safe defaults with FIXED UTF-8
     ctx = {
@@ -78,7 +83,7 @@ def render(briefing_obj: Any,
     # Log what we're rendering (for debugging)
     log.info(f"🎨 Rendering report {run_id} with {len(sections)} sections")
     log.debug(f"Sections available: {list(sections.keys())}")
-    
+
     html = env.get_template(tpl_name).render(**ctx)
 
     # Post-processing: Replace unevaluated Jinja2 math expressions with pre-calculated values
