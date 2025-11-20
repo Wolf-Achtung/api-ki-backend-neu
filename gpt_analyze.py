@@ -1947,6 +1947,10 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             sections["GLOSSAR_HTML"] = _md_to_simple_html(gloss_raw)
         else:
             sections["GLOSSAR_HTML"] = gloss_raw
+        # Replace {LAST_UPDATED} placeholder in glossar
+        if "{LAST_UPDATED}" in sections["GLOSSAR_HTML"]:
+            last_updated = sections.get("research_last_updated") or sections.get("report_date", "")
+            sections["GLOSSAR_HTML"] = sections["GLOSSAR_HTML"].replace("{LAST_UPDATED}", last_updated)
 
     # Coverage guard
     try:
