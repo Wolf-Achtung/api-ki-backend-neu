@@ -2035,6 +2035,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             sections['ROI_12M_HIGH'] = round(roi_12m * 1.2 * 100, 1)  # in %
             sections['EINSPARUNG_MONAT_EUR_LOW'] = round(einsparung * 0.8)
             sections['EINSPARUNG_MONAT_EUR_HIGH'] = round(einsparung * 1.2)
+            sections['OPEX_REALISTISCH_EUR_LOW'] = round(opex * 0.8)
+            sections['OPEX_REALISTISCH_EUR_HIGH'] = round(opex * 1.2)
 
             # Payback calculations for different scenarios
             einsparung_low = einsparung * 0.8 - opex
