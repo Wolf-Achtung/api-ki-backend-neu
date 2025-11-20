@@ -66,6 +66,7 @@ TESTUSERS: List[str] = [
     "christian.ulitzka@ulitzka-partner.de",
     "srack@gmx.net",
     "buss@maria-hilft.de",
+    "w.beestermoeller@web.de",
 ]
 
 # Admin User
