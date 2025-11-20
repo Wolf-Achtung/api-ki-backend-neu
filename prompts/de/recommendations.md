@@ -141,12 +141,19 @@ Erstelle 5-7 konkrete, priorisierte Handlungsempfehlungen die:
         (eigene Arbeit, 8h), Template-Struktur definieren, in System integrieren. 
         <strong>Zeitrahmen:</strong> 30 Tage.</li>
     
-    <li><strong>[M] White-Label-Partner-Programm launchen (Gamechanger)</strong> – 
-        SaaS-Plattform für Unternehmensberater: €299/Monat Lizenz + 20% Commission 
-        pro Assessment. <strong>Nutzen:</strong> Neuer Revenue Stream, €10k MRR 
-        nach 30 Partnern. <strong>Nächste Aktion:</strong> MVP mit Partner-Dashboard 
-        entwickeln (Retool), 5 Beta-Partner onboarden. <strong>Zeitrahmen:</strong> 
-        60 Tage MVP, 90 Tage erste 10 Partner.</li>
+    <li><strong>[M] White-Label-Partner-Programm launchen (Gamechanger)</strong> –
+        SaaS-Plattform für Unternehmensberater, Agenturen und IT-Dienstleister:
+        €299/Monat Lizenz + 20% Commission pro Assessment.
+        <strong>Partner-Vorteile:</strong> Eigenes Branding (Logo, Farben),
+        Custom-Domain, automatische Rechnungsstellung an deren Kunden.
+        <strong>Tech-Stack:</strong> Multi-Tenant-Architektur, Partner-API-Keys,
+        separierte Datenbanken pro Partner.
+        <strong>Nutzen:</strong> Neuer Revenue Stream, €10k MRR nach 30 Partnern,
+        skaliert ohne zusätzlichen Vertriebsaufwand.
+        <strong>Nächste Aktion:</strong> MVP mit Partner-Dashboard entwickeln (Retool),
+        5 Beta-Partner aus bestehendem Netzwerk onboarden,
+        Vertrags-Template erstellen (Anwalt: €500).
+        <strong>Zeitrahmen:</strong> 60 Tage MVP, 90 Tage erste 10 Partner.</li>
     
     <li><strong>[M] Cyber-Security-Audit für Backend durchführen</strong> – 
         Schließt Sicherheits-Gap (Score: 65/100). Penetration-Test durch Experten, 
