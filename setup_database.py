@@ -23,13 +23,17 @@ import os
 import sys
 import argparse
 from datetime import datetime
-from typing import List, Tuple
+from typing import List, Tuple, Any, TYPE_CHECKING
 
 # psycopg2 wird nur benötigt wenn das Script direkt ausgeführt wird
 # Import wird in main() gemacht, nicht auf Modul-Ebene
-psycopg2 = None
-sql = None
-extras = None
+if TYPE_CHECKING:
+    import psycopg2
+    from psycopg2 import sql, extras
+else:
+    psycopg2: Any = None
+    sql: Any = None
+    extras: Any = None
 
 # python-dotenv ist OPTIONAL
 try:
