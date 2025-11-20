@@ -21,7 +21,8 @@ from core.security import create_access_token, get_current_user, TokenPayload
 
 # Whitelist für erlaubte E-Mail-Adressen (Testphase)
 # Diese Liste muss synchron mit setup_database.py TESTUSERS gehalten werden
-EMAIL_WHITELIST = {
+# Alle Emails sind lowercase für case-insensitive Vergleich
+EMAIL_WHITELIST = {email.lower() for email in [
     "j.hohl@freenet.de",
     "kerstin.geffert@gmail.com",
     "post@zero2.de",
@@ -43,7 +44,7 @@ EMAIL_WHITELIST = {
     "w.beestermoeller@web.de",
     "bewertung@ki-sicherheit.jetzt",  # Admin
     "test@example.com",  # Für CI/CD Tests
-}
+]}
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 log = logging.getLogger(__name__)
