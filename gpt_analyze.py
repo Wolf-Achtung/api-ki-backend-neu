@@ -96,11 +96,16 @@ def ksj_build_numeric_ctx(answers: dict, env: dict, calc: dict | None) -> dict:
             "ROI_12M": calc.get("ROI_12M"),
             "BUSINESS_CASE_TABLE_HTML": calc.get("BUSINESS_CASE_TABLE_HTML"),
         })
-    # quick-win hours if present
+    # quick-win hours if present, otherwise use fallback
+    qw_hours = None
     for k in ("qw_hours_total", "quick_wins_total_hours", "sum_quickwin_hours"):
         if k in answers and isinstance(answers[k], (int,float)):
-            ctx["qw_hours_total"] = int(answers[k])
+            qw_hours = int(answers[k])
             break
+    if qw_hours is None:
+        # Fallback calculation: DEFAULT_QW1_H + DEFAULT_QW2_H + FALLBACK_QW_MONTHLY_H
+        qw_hours = int(env.get("DEFAULT_QW1_H", 10)) + int(env.get("DEFAULT_QW2_H", 8)) + int(env.get("FALLBACK_QW_MONTHLY_H", 18))
+    ctx["qw_hours_total"] = qw_hours
     return ctx
 
 def ksj_fix_placeholders_in_sections(sections: dict, answers: dict, scores: dict) -> dict:
