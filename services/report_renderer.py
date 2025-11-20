@@ -80,9 +80,15 @@ def render(briefing_obj: Any,
     log.debug(f"Sections available: {list(sections.keys())}")
     
     html = env.get_template(tpl_name).render(**ctx)
-    
-    # Quick validation check
+
+    # Quick validation check - find which variables are missing
     if "{{" in html:
-        log.warning(f"⚠️ Template still contains unreplaced variables in report {run_id}")
-    
+        import re
+        missing = re.findall(r'\{\{\s*([^}]+)\s*\}\}', html)
+        if missing:
+            unique_missing = list(set(m.strip() for m in missing))[:5]  # Show max 5
+            log.warning(f"⚠️ Template still contains unreplaced variables in report {run_id}: {unique_missing}")
+        else:
+            log.warning(f"⚠️ Template still contains unreplaced variables in report {run_id}")
+
     return {"html": html, "meta": meta or {}}
