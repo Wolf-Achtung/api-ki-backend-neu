@@ -174,6 +174,22 @@ Erstelle eine prägnante, entscheiderfreundliche Executive Summary (max. 1 Seite
         Skalierungs-Entscheidung für White-Label-Plattform (siehe Gamechanger-Section), 
         DSGVO-Compliance für Batch-Verarbeitung dokumentieren.</li>
   </ol>
+
+  <h3>Vision: Ihr Unternehmen in 12 Monaten</h3>
+  <div class="card-teal">
+    <p><strong>Wenn Sie heute starten, erreichen Sie:</strong></p>
+    <ul>
+      <li><strong>Kapazität:</strong> {{HAUPTLEISTUNG}} skaliert von [aktuell] auf [10× Kapazität] –
+          ohne zusätzliches Personal</li>
+      <li><strong>Zeitgewinn:</strong> {{qw_hours_total}} h/Monat für strategische Arbeit
+          statt repetitive Aufgaben</li>
+      <li><strong>Wettbewerbsvorteil:</strong> KI-Score {{score_gesamt}} → 85+ (Top 15% der Branche)</li>
+      <li><strong>Neue Geschäftsmodelle:</strong> White-Label-Partnerschaften, API-Ökosystem,
+          Self-Service-Portal</li>
+    </ul>
+    <p><em>Das Ziel ist nicht "KI nutzen", sondern: <strong>schneller skalieren, profitabler wachsen,
+       Kunden besser bedienen</strong> – mit KI als Hebel.</em></p>
+  </div>
 </section>
 ```
 
