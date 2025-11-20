@@ -126,11 +126,11 @@ def ksj_fix_placeholders_in_sections(sections: dict, answers: dict, scores: dict
         except Exception as e:
             pass
     numeric = ksj_build_numeric_ctx(answers, env_defaults, calc or {})
-    # Copy numeric values to sections for template access
+    # Copy numeric values to sections for template access (use direct assignment, not setdefault)
     for key in ['qw_hours_total', 'CAPEX_REALISTISCH_EUR', 'OPEX_REALISTISCH_EUR',
                 'EINSPARUNG_MONAT_EUR', 'PAYBACK_MONTHS', 'ROI_12M']:
         if key in numeric and numeric[key] is not None:
-            sections.setdefault(key, numeric[key])
+            sections[key] = numeric[key]
     # also bring scores if present
     if isinstance(scores, dict):
         numeric.update({
