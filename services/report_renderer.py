@@ -83,7 +83,8 @@ def render(briefing_obj: Any,
 
     # Post-processing: Replace unevaluated Jinja2 math expressions with pre-calculated values
     # This handles cases where Jinja2 fails to evaluate expressions like {{ EINSPARUNG_MONAT_EUR * 0.8 }}
-    if "{{" in html:
+    # Also handles single-brace placeholders that GPT may generate incorrectly
+    if "{{" in html or "{" in html:
         import re
 
         # Map of common unevaluated expressions to their pre-calculated section keys
@@ -94,6 +95,8 @@ def render(briefing_obj: Any,
             r'\{\{\s*ROI_12M\s*\*\s*1\.2\s*\}\}': str(sections.get('ROI_12M_HIGH', '')),
             r'\{\{\s*ROI_12M\s*\*\s*0\.8\s*\*\s*100\s*\}\}': str(sections.get('ROI_12M_LOW', '')),
             r'\{\{\s*ROI_12M\s*\*\s*1\.2\s*\*\s*100\s*\}\}': str(sections.get('ROI_12M_HIGH', '')),
+            # ROI percentage expression
+            r'\{\{\s*\(ROI_12M\s*\*\s*100\)\s*\|\s*round\s*\(\s*1\s*\)\s*\}\}': str(round(float(sections.get('ROI_12M', 0) or 0) * 100, 1)),
             # OPEX calculations
             r'\{\{\s*OPEX_REALISTISCH_EUR\s*\*\s*1\.2\s*\}\}': str(sections.get('OPEX_REALISTISCH_EUR_HIGH', '')),
             r'\{\{\s*OPEX_REALISTISCH_EUR\s*\*\s*0\.8\s*\}\}': str(sections.get('OPEX_REALISTISCH_EUR_LOW', '')),
@@ -102,6 +105,16 @@ def render(briefing_obj: Any,
             r'\{\{\s*CAPEX_REALISTISCH_EUR\s*/\s*\(\s*EINSPARUNG_MONAT_EUR\s*-\s*OPEX_REALISTISCH_EUR\s*\*\s*1\.2\s*\)\s*\}\}': str(sections.get('PAYBACK_MONTHS_PESSIMISTIC', '')),
             r'\{\{\s*CAPEX_REALISTISCH_EUR\s*/\s*\(\s*EINSPARUNG_MONAT_EUR\s*\*\s*1\.2\s*-\s*OPEX_REALISTISCH_EUR\s*\)\s*\}\}': str(sections.get('PAYBACK_MONTHS_OPTIMISTIC', '')),
         }
+
+        # Also replace single-brace placeholders (GPT sometimes generates these incorrectly)
+        single_brace_replacements = {
+            r'\{CAPEX_REALISTISCH_EUR\}': str(sections.get('CAPEX_REALISTISCH_EUR', '')),
+            r'\{OPEX_REALISTISCH_EUR\}': str(sections.get('OPEX_REALISTISCH_EUR', '')),
+            r'\{EINSPARUNG_MONAT_EUR\}': str(sections.get('EINSPARUNG_MONAT_EUR', '')),
+            r'\{PAYBACK_MONTHS\}': str(sections.get('PAYBACK_MONTHS', '')),
+            r'\{ROI_12M\}': str(sections.get('ROI_12M', '')),
+        }
+        expr_replacements.update(single_brace_replacements)
 
         for pattern, replacement in expr_replacements.items():
             if replacement:  # Only replace if we have a value
