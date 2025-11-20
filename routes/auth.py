@@ -18,6 +18,10 @@ from services.rate_limit import RateLimiter
 from services.redis_utils import RedisBox
 from utils.idempotency import IdempotencyBox
 from core.security import create_access_token, get_current_user, TokenPayload
+from setup_database import TESTUSERS, ADMIN_USER
+
+# Whitelist für erlaubte E-Mail-Adressen (Testphase)
+EMAIL_WHITELIST = set(email.lower() for email in TESTUSERS + [ADMIN_USER])
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 log = logging.getLogger(__name__)
@@ -64,6 +68,15 @@ async def request_code(payload: RequestCodeIn, request: Request):
     s = get_settings()
     limiter = RateLimiter(namespace="request_code", limit=s.rate.max_request_code, window_sec=s.rate.window_sec)
     limiter.hit(key=str(payload.email))
+
+    # Whitelist-Prüfung (Testphase)
+    email_lower = str(payload.email).lower()
+    if email_lower not in EMAIL_WHITELIST:
+        log.warning("🚫 Login-Code verweigert für nicht-whitelisted E-Mail: %s", payload.email)
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Diese E-Mail-Adresse ist nicht für die Testphase freigeschaltet."
+        )
 
     # Idempotency berücksichtigen (Header: Idempotency-Key)
     idem = IdempotencyBox(namespace="request_code")
