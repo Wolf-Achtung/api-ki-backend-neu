@@ -6,7 +6,7 @@ from typing import List, Dict, Any
 LOGGER = logging.getLogger(__name__)
 PPLX_API_KEY = os.getenv("PERPLEXITY_API_KEY", "")
 PPLX_ENDPOINT = os.getenv("PPLX_ENDPOINT", "https://api.perplexity.ai/chat/completions")
-PPLX_MODEL = os.getenv("PPLX_MODEL", "llama-3.1-sonar-large-128k-online")
+PPLX_MODEL = os.getenv("PERPLEXITY_MODEL") or os.getenv("PPLX_MODEL", "sonar-pro")
 
 SYSTEM = "You are a research assistant. Return concise JSON with a list of items [{title, url, summary}]. No markdown."
 USER_TMPL = "Find the most recent (last {days} days) {topic}. Return JSON only."
