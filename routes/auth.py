@@ -43,6 +43,7 @@ EMAIL_WHITELIST = {
     "buss@maria-hilft.de",
     "w.beestermoeller@web.de",
     "bewertung@ki-sicherheit.jetzt",  # Admin
+    "test@example.com",  # Für CI/CD Tests
 }
 
 router = APIRouter(prefix="/auth", tags=["auth"])
