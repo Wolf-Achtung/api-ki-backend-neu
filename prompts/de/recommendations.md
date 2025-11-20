@@ -127,7 +127,7 @@ Erstelle 5-7 konkrete, priorisierte Handlungsempfehlungen die:
     
     <li><strong>[H] DSGVO-Compliance für GPT-4-Nutzung dokumentieren</strong> – 
         Schließt Governance-Gap (Score: 58/100). Audit durch spezialisierten Anwalt, 
-        AVV mit OpenAI prüfen, Datenfluss dokumentieren, DSFA erstellen. 
+        AVV (Auftragsverarbeitungsvertrag) mit OpenAI prüfen, Datenfluss dokumentieren, DSFA (Datenschutz-Folgenabschätzung) erstellen. 
         <strong>Nutzen:</strong> Eliminiert Compliance-Risiko (DSGVO Art. 35), 
         ermöglicht B2B-Kunden-Akquise. <strong>Kosten:</strong> €1.500 Anwalt, 
         €500 DSFA-Template. <strong>Nächste Aktion:</strong> DSGVO-Anwalt mit 
