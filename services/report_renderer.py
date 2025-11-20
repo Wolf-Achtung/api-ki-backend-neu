@@ -121,6 +121,17 @@ def render(briefing_obj: Any,
         }
         expr_replacements.update(single_brace_replacements)
 
+        # Replace simple variable placeholders
+        simple_replacements = {
+            r'\{\{\s*qw_hours_total\s*\}\}': str(sections.get('qw_hours_total', '')),
+            r'\{\{\s*CAPEX_REALISTISCH_EUR\s*\}\}': str(sections.get('CAPEX_REALISTISCH_EUR', '')),
+            r'\{\{\s*OPEX_REALISTISCH_EUR\s*\}\}': str(sections.get('OPEX_REALISTISCH_EUR', '')),
+            r'\{\{\s*EINSPARUNG_MONAT_EUR\s*\}\}': str(sections.get('EINSPARUNG_MONAT_EUR', '')),
+            r'\{\{\s*PAYBACK_MONTHS\s*\}\}': str(sections.get('PAYBACK_MONTHS', '')),
+            r'\{\{\s*ROI_12M\s*\}\}': str(sections.get('ROI_12M', '')),
+        }
+        expr_replacements.update(simple_replacements)
+
         for pattern, replacement in expr_replacements.items():
             if replacement:  # Only replace if we have a value
                 html = re.sub(pattern, replacement, html)
