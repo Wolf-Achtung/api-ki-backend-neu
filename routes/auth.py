@@ -1,6 +1,5 @@
-
 """
-routes/auth.py — Magic-Link Auth (Code anfordern & Login)
+routes/auth.py – Magic-Link Auth (Code anfordern & Login)
 Router mit /auth Prefix; main.py mountet ihn unter /api -> /api/auth/*
 """
 from __future__ import annotations
@@ -76,182 +75,54 @@ async def request_code(payload: RequestCodeIn, request: Request):
 
     mailer = Mailer.from_settings(s)
     
-    # Professionelle HTML-E-Mail-Vorlage im Blau-Design passend zur Website
-    # Optional: Füge hier die Login-URL ein, wenn du einen direkten Link möchtest
-    # login_url = f"https://make.ki-sicherheit.jetzt/login?email={payload.email}&code={code}"
-    
+    # Einfache aber professionelle HTML-E-Mail
     html_template = f"""
-    <!DOCTYPE html>
-    <html lang="de">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Ihr Login-Code</title>
-        <!--[if mso]>
-        <noscript>
-            <xml>
-                <o:OfficeDocumentSettings>
-                    <o:PixelsPerInch>96</o:PixelsPerInch>
-                </o:OfficeDocumentSettings>
-            </xml>
-        </noscript>
-        <![endif]-->
-    </head>
-    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6;">
-        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f3f4f6; padding: 20px 0;">
-            <tr>
-                <td align="center">
-                    <table cellpadding="0" cellspacing="0" border="0" width="600" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-                        <!-- Header -->
-                        <tr>
-                            <td style="background: linear-gradient(135deg, #1a5f87 0%, #2a7fb8 100%); padding: 35px; border-radius: 12px 12px 0 0; text-align: center;">
-                                <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 600; letter-spacing: -0.5px;">
-                                    KI-Sicherheit.jetzt
-                                </h1>
-                                <p style="color: #e1f0f8; margin: 8px 0 0 0; font-size: 15px;">
-                                    Zertifiziert. Dokumentiert. KI-konform.
-                                </p>
-                            </td>
-                        </tr>
-                        
-                        <!-- Robot Illustration (optional) -->
-                        <tr>
-                            <td style="padding: 30px 30px 0 30px; text-align: center;">
-                                <div style="font-size: 48px;">🤖</div>
-                            </td>
-                        </tr>
-                        
-                        <!-- Content -->
-                        <tr>
-                            <td style="padding: 20px 40px 40px 40px;">
-                                <h2 style="color: #1a5f87; font-size: 24px; margin: 0 0 20px 0; font-weight: 500; text-align: center;">
-                                    Ihr Sicherheits-Code ist da!
-                                </h2>
-                                
-                                <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0; text-align: center;">
-                                    Bitte geben Sie diesen 6-stelligen Code ein<br>
-                                    (Magic-Link):
-                                </p>
-                                
-                                <!-- Code Box -->
-                                <table cellpadding="0" cellspacing="0" border="0" width="100%">
-                                    <tr>
-                                        <td align="center">
-                                            <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #2a7fb8; border-radius: 10px; padding: 28px 40px; display: inline-block; margin: 0 0 25px 0;">
-                                                <span style="font-size: 42px; font-weight: bold; color: #1a5f87; letter-spacing: 10px; font-family: 'SF Mono', Monaco, 'Courier New', monospace;">
-                                                    {code}
-                                                </span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </table>
-                                
-                                <!-- Optional: Direct Login Button -->
-                                <!-- Uncomment if you want to include a direct login link
-                                <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin: 0 0 25px 0;">
-                                    <tr>
-                                        <td align="center">
-                                            <a href="{login_url}" style="display: inline-block; background-color: #2a7fb8; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 16px;">
-                                                Direkt einloggen
-                                            </a>
-                                        </td>
-                                    </tr>
-                                </table>
-                                -->
-                                
-                                <!-- Timer Notice -->
-                                <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin: 0 0 25px 0;">
-                                    <tr>
-                                        <td style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 6px;">
-                                            <p style="margin: 0; color: #92400e; font-size: 14px;">
-                                                <strong>⏱️ Hinweis:</strong> Dieser Code ist nur <strong>10 Minuten</strong> gültig und wird nach Nutzung ungültig.
-                                            </p>
-                                        </td>
-                                    </tr>
-                                </table>
-                                
-                                <!-- Help Box -->
-                                <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin: 0 0 25px 0;">
-                                    <h3 style="color: #1a5f87; font-size: 16px; margin: 0 0 12px 0; font-weight: 600;">
-                                        Hilfe bei Problemen
-                                    </h3>
-                                    <ul style="color: #6b7280; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
-                                        <li><strong>Kein Code erhalten?</strong> Prüfen Sie Spam/Werbung. Warten Sie bis zu 2 Minuten.</li>
-                                        <li><strong>Erneut senden:</strong> Klicken Sie einfach nochmal auf "Code anfordern".</li>
-                                        <li><strong>E-Mail nicht freigeschaltet?</strong> Kontakt: <a href="mailto:support@ki-sicherheit.jetzt" style="color: #2a7fb8; text-decoration: none;">support@ki-sicherheit.jetzt</a></li>
-                                    </ul>
-                                </div>
-                                
-                                <!-- Security Notice -->
-                                <div style="background-color: #eff6ff; padding: 18px; border-radius: 8px; border: 1px solid #bfdbfe; margin: 0 0 20px 0;">
-                                    <p style="margin: 0; color: #1e40af; font-size: 13px; line-height: 1.6;">
-                                        <strong>🔒 Datenschutz-Hinweis:</strong> Ihr Login-Code ist nur kurz gültig und wird nach Nutzung ungültig. Teilen Sie diesen Code niemals mit anderen.
-                                    </p>
-                                </div>
-                            </td>
-                        </tr>
-                        
-                        <!-- Footer -->
-                        <tr>
-                            <td style="background-color: #f9fafb; padding: 25px 30px; border-radius: 0 0 12px 12px; text-align: center; border-top: 1px solid #e5e7eb;">
-                                <table cellpadding="0" cellspacing="0" border="0" width="100%">
-                                    <tr>
-                                        <td align="center" style="padding-bottom: 15px;">
-                                            <!-- Trust Badges -->
-                                            <span style="display: inline-block; margin: 0 8px; font-size: 12px; color: #6b7280;">
-                                                ✓ DSGVO- & EU AI Act-konform
-                                            </span>
-                                            <span style="display: inline-block; margin: 0 8px; font-size: 12px; color: #6b7280;">
-                                                ✓ TÜV-zertifizierte KI-Beratung
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <p style="color: #9ca3af; font-size: 12px; margin: 0 0 5px 0;">
-                                                © 2024 KI-Sicherheit.jetzt | Alle Rechte vorbehalten
-                                            </p>
-                                            <p style="color: #9ca3af; font-size: 11px; margin: 0;">
-                                                Diese E-Mail wurde automatisch generiert. Bitte antworten Sie nicht darauf.
-                                            </p>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-    </body>
-    </html>
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #1a5f87; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0;">KI-Sicherheit.jetzt</h1>
+        </div>
+        <div style="background: white; padding: 30px; border: 1px solid #ddd; border-radius: 0 0 10px 10px;">
+            <h2 style="color: #1a5f87;">Ihr Login-Code</h2>
+            <p>Bitte geben Sie diesen 6-stelligen Code ein:</p>
+            <div style="background: #f0f9ff; border: 2px solid #2a7fb8; padding: 20px; text-align: center; margin: 20px 0; border-radius: 5px;">
+                <span style="font-size: 32px; font-weight: bold; color: #1a5f87; letter-spacing: 5px; font-family: monospace;">{code}</span>
+            </div>
+            <p style="color: #666; font-size: 14px;"><strong>Hinweis:</strong> Dieser Code ist nur 10 Minuten gültig.</p>
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 5px;">
+                <p style="margin: 0 0 10px 0; font-weight: bold; color: #1a5f87;">Hilfe bei Problemen:</p>
+                <ul style="margin: 0; padding-left: 20px; color: #666; font-size: 14px;">
+                    <li>Kein Code erhalten? Prüfen Sie Spam/Werbung.</li>
+                    <li>Erneut senden: Klicken Sie nochmal auf "Code anfordern".</li>
+                    <li>Support: support@ki-sicherheit.jetzt</li>
+                </ul>
+            </div>
+        </div>
+    </div>
     """
     
-    # Plain-Text-Version für E-Mail-Clients ohne HTML-Unterstützung
+    # Plain-Text-Version
     text_template = f"""
 KI-Sicherheit.jetzt - Ihr Login-Code
 
 Ihr Sicherheits-Code lautet: {code}
 
-Dieser Code ist 10 Minuten gültig und wird nach Nutzung ungültig.
+Dieser Code ist 10 Minuten gültig.
 
-HILFE BEI PROBLEMEN:
-• Kein Code erhalten? Prüfen Sie Spam/Werbung. Warten Sie bis zu 2 Minuten.
-• Erneut senden: Klicken Sie einfach nochmal auf "Code anfordern".
-• Support: support@ki-sicherheit.jetzt
+Hilfe bei Problemen:
+- Kein Code erhalten? Prüfen Sie Spam/Werbung.
+- Erneut senden: Klicken Sie nochmal auf "Code anfordern".
+- Support: support@ki-sicherheit.jetzt
 
-DATENSCHUTZ-HINWEIS:
-Ihr Login-Code ist nur kurz gültig. Teilen Sie diesen Code niemals mit anderen.
-
-© 2024 KI-Sicherheit.jetzt | TÜV-zertifizierte KI-Beratung
+© 2024 KI-Sicherheit.jetzt
     """
     
     try:
         await mailer.send(
             to=str(payload.email),
-            subject="🔐 Ihr KI-Sicherheit Login-Code",
+            subject="Ihr KI-Sicherheit Login-Code",
             text=text_template.strip(),
-            html=html_template,
+            html=html_template.strip(),
         )
     except Exception as e:
         log.error("Failed to send login code email to %s: %s", payload.email, str(e))
