@@ -18,15 +18,29 @@ def search(query: str, max_results: int = 6, days: int = 30) -> List[Dict]:
     if not TAVILY_API_KEY:
         LOGGER.warning("TAVILY_API_KEY not set")
         return []
+
+    # Map days to valid Tavily time_range values
+    if days <= 1:
+        time_range = "day"
+    elif days <= 7:
+        time_range = "week"
+    elif days <= 30:
+        time_range = "month"
+    else:
+        time_range = "year"
+
     payload = {
         "api_key": TAVILY_API_KEY,
         "query": query,
         "max_results": max(1, min(max_results, 10)),
         "search_depth": "advanced",
-        "time_range": f"{max(1, days)}d",
         "include_answer": False,
         "include_raw_content": False,
     }
+
+    # Only add time_range if not searching all time
+    if days < 365:
+        payload["days"] = days  # Tavily uses 'days' parameter directly
     try:
         data = _post_json(TAVILY_ENDPOINT, payload)
         out = []
