@@ -296,8 +296,19 @@ else:
      <strong>Hauptleistung:</strong> {{HAUPTLEISTUNG}}</p>
 
   <!-- 2. ZUSAMMENFASSUNG (2-3 Sätze) -->
-  <p>[Fasse die Kernaussagen zusammen: Score-Interpretation, Anzahl Quick Wins, 
+  <p>[Fasse die Kernaussagen zusammen: Score-Interpretation, Anzahl Quick Wins,
       Zeitersparnis, Startpunkt. Max. 3 Sätze!]</p>
+
+  <!-- 2b. KEY FACTS BULLET-LISTE (NEU - für schnelles Erfassen!) -->
+  <div class="key-facts">
+    <h4>Auf einen Blick:</h4>
+    <ul>
+      <li><strong>KI-Readiness:</strong> {{score_gesamt}}/100 – [Score-Interpretation: exzellent/sehr gut/solide/ausbaufähig]</li>
+      <li><strong>Quick Wins:</strong> [Anzahl] identifiziert – {{qw_hours_total}} h/Monat Einsparung (~{{EINSPARUNG_MONAT_EUR}} €)</li>
+      <li><strong>Payback:</strong> {{PAYBACK_MONTHS}} Monate bei {{CAPEX_REALISTISCH_EUR}} € Invest</li>
+      <li><strong>Pilot:</strong> [Kurzbeschreibung des empfohlenen Startpunkts]</li>
+    </ul>
+  </div>
 
   <!-- 3. KPI-CARDS (IMMER mit exakten Scores!) -->
   <div class="kpi-cards">
