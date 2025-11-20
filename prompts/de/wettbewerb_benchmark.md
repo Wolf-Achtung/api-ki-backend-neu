@@ -102,7 +102,7 @@ Zeige:
     <li><strong>Q4:</strong> [Top 10% erreichen in Kategorie Z]</li>
   </ol>
 
-  <p><strong>Ziel:</strong> Gesamt-Score {{score_gesamt}} → 80+ (Top 10%) bis Ende 2025</p>
+  <p><strong>Ziel:</strong> Gesamt-Score {{score_gesamt}} → {% if score_gesamt >= 80 %}90+ (Top 5%){% elif score_gesamt >= 60 %}80+ (Top 10%){% else %}70+ (Top 25%){% endif %} bis Ende 2025</p>
 </section>
 ```
 

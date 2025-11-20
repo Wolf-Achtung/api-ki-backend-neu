@@ -104,8 +104,8 @@ Erstelle konkrete Governance-Empfehlungen die:
     <li><strong>Verantwortlich:</strong> Geschäftsführer (Sie - als Verantwortlicher i.S.d. DSGVO)</li>
     <li><strong>Prozess:</strong>
       <ul>
-        <li>AVV mit OpenAI unterschreiben (via OpenAI-Dashboard → DPA Download)</li>
-        <li>DSFA für Assessment-Datenverarbeitung erstellen (€500 Template + Anpassung)</li>
+        <li>AVV (Auftragsverarbeitungsvertrag) mit OpenAI unterschreiben (via OpenAI-Dashboard → DPA Download)</li>
+        <li>DSFA (Datenschutz-Folgenabschätzung) für Assessment-Datenverarbeitung erstellen (€500 Template + Anpassung)</li>
         <li>Datenschutz-Hinweise im Fragebogen ergänzen (Checkbox: "Einwilligung Datenverarbeitung")</li>
         <li>Datenfluss dokumentieren: Typeform → Backend → OpenAI → PostgreSQL → PDF</li>
       </ul>
