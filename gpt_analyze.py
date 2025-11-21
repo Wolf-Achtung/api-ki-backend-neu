@@ -2065,17 +2065,34 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             'PILOT_PLAN_HTML',
             'ORG_CHANGE_HTML',
             'ROADMAP_12M_HTML',
-            'GAMECHANGER_HTML'
+            'GAMECHANGER_HTML',
+            'REIFEGRAD_SOWHAT_HTML',
+            'RECOMMENDATIONS_HTML',
+            'BUSINESS_ROI_HTML',
+            'BUSINESS_COSTS_HTML',
         ]
 
+        # Get qw_hours_total from sections or calculate fallback
+        qw_hours = sections.get('qw_hours_total', 36)
+
         replacements = {
-            '{CAPEX_REALISTISCH_EUR}': str(bc.get('CAPEX_REALISTISCH_EUR', 6000)),
-            '{OPEX_REALISTISCH_EUR}': str(bc.get('OPEX_REALISTISCH_EUR', 120)),
-            '{EINSPARUNG_MONAT_EUR}': str(bc.get('EINSPARUNG_MONAT_EUR', 4500)),
-            '{PAYBACK_MONTHS}': str(bc.get('PAYBACK_MONTHS', 2.9)),
+            # Single-brace patterns (GPT sometimes generates these)
+            '{CAPEX_REALISTISCH_EUR}': str(int(bc.get('CAPEX_REALISTISCH_EUR', 6000))),
+            '{OPEX_REALISTISCH_EUR}': str(int(bc.get('OPEX_REALISTISCH_EUR', 120))),
+            '{EINSPARUNG_MONAT_EUR}': str(int(bc.get('EINSPARUNG_MONAT_EUR', 4500))),
+            '{PAYBACK_MONTHS}': str(round(bc.get('PAYBACK_MONTHS', 2.9), 1)),
             '{ROI_12M}': f"{bc.get('ROI_12M', 0) * 100:.1f}" if bc.get('ROI_12M') else "0",
-            '{ROI_12M_EUR}': str(bc.get('ROI_12M_EUR', 0)),
+            '{ROI_12M_EUR}': str(int(bc.get('ROI_12M_EUR', 0))),
             '{COMPANY_SIZE}': answers.get('unternehmensgroesse', 'solo'),
+            '{qw_hours_total}': str(qw_hours),
+            # Double-brace patterns (Jinja2-style that GPT may use)
+            '{{CAPEX_REALISTISCH_EUR}}': str(int(bc.get('CAPEX_REALISTISCH_EUR', 6000))),
+            '{{OPEX_REALISTISCH_EUR}}': str(int(bc.get('OPEX_REALISTISCH_EUR', 120))),
+            '{{EINSPARUNG_MONAT_EUR}}': str(int(bc.get('EINSPARUNG_MONAT_EUR', 4500))),
+            '{{PAYBACK_MONTHS}}': str(round(bc.get('PAYBACK_MONTHS', 2.9), 1)),
+            '{{ROI_12M}}': f"{bc.get('ROI_12M', 0) * 100:.1f}" if bc.get('ROI_12M') else "0",
+            '{{qw_hours_total}}': str(qw_hours),
+            '{{ qw_hours_total }}': str(qw_hours),
         }
 
         replaced_count = 0
@@ -2485,6 +2502,13 @@ def _fix_exec_placeholders(html_block: str, scores: Dict[str, Any], sections: Di
         "ROADMAP_VORHANDEN_LABEL": sections.get("ROADMAP_VORHANDEN_LABEL", ""),
         "GOVERNANCE_RICHTLINIEN_LABEL": sections.get("GOVERNANCE_RICHTLINIEN_LABEL", ""),
         "CHANGE_MANAGEMENT_LABEL": sections.get("CHANGE_MANAGEMENT_LABEL", ""),
+        # Business Case variables
+        "CAPEX_REALISTISCH_EUR": str(int(sections.get("CAPEX_REALISTISCH_EUR", 6000) or 6000)),
+        "OPEX_REALISTISCH_EUR": str(int(sections.get("OPEX_REALISTISCH_EUR", 120) or 120)),
+        "EINSPARUNG_MONAT_EUR": str(int(sections.get("EINSPARUNG_MONAT_EUR", 4500) or 4500)),
+        "PAYBACK_MONTHS": str(round(float(sections.get("PAYBACK_MONTHS", 2.9) or 2.9), 1)),
+        "ROI_12M": f"{float(sections.get('ROI_12M', 0) or 0) * 100:.1f}",
+        "qw_hours_total": str(sections.get("qw_hours_total", 36)),
     }
 
     fixed = html_block
