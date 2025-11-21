@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-import os, logging
+import os, logging, re
 from pathlib import Path
 from typing import Any, Dict, Optional
 from jinja2 import Environment, FileSystemLoader, select_autoescape, Undefined
+from markupsafe import Markup
 
 log = logging.getLogger(__name__)
 
@@ -65,6 +66,16 @@ def render(briefing_obj: Any,
         # Fallback: 10 + 8 + 18 = 36 hours (DEFAULT_QW1_H + DEFAULT_QW2_H + FALLBACK_QW_MONTHLY_H)
         sections['qw_hours_total'] = 36
 
+    # Mark HTML sections as safe (prevent escaping)
+    safe_sections = {}
+    for key, value in sections.items():
+        if isinstance(value, str) and key.endswith('_HTML') and '<' in value:
+            safe_sections[key] = Markup(value)
+            log.debug(f"[RENDER] Marked section '{key}' as safe HTML")
+        else:
+            safe_sections[key] = value
+    sections = safe_sections
+
     # Safe defaults with FIXED UTF-8
     ctx = {
         "LANG": sections.get("LANG", "de"),
@@ -85,6 +96,16 @@ def render(briefing_obj: Any,
     log.debug(f"Sections available: {list(sections.keys())}")
 
     html = env.get_template(tpl_name).render(**ctx)
+
+    # Save debug HTML for troubleshooting
+    report_id = sections.get('report_id', run_id)
+    debug_path = f'/tmp/report_debug_{report_id}.html'
+    try:
+        with open(debug_path, 'w', encoding='utf-8') as f:
+            f.write(html)
+        log.info(f"[RENDER] Debug HTML saved: {debug_path}")
+    except Exception as e:
+        log.warning(f"[RENDER] Failed to save debug HTML: {e}")
 
     # Post-processing: Replace unevaluated Jinja2 math expressions with pre-calculated values
     # This handles cases where Jinja2 fails to evaluate expressions like {{ EINSPARUNG_MONAT_EUR * 0.8 }}
