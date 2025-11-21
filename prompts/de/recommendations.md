@@ -109,12 +109,14 @@ Erstelle 5-7 konkrete, priorisierte Handlungsempfehlungen die:
 
 #### ✅ GUT (v2.1 GOLD - konkret & spezifisch):
 
+**WICHTIG:** Im echten Output IMMER {{score_gesamt}}, {{score_governance}} etc. verwenden!
+
 ```html
 <section class="section recommendations">
   <h2>Empfehlungen</h2>
-  
-  <p>Basierend auf den Analyse-Ergebnissen (Score Gesamt: 67/100, Governance-Gap: 58/100) 
-     und der Hauptleistung "GPT-4-basierte KI-Readiness-Assessments" folgen 6 priorisierte 
+
+  <p>Basierend auf den Analyse-Ergebnissen (Score Gesamt: {{score_gesamt}}/100, Governance-Gap: {{score_governance}}/100)
+     und der Hauptleistung "{{HAUPTLEISTUNG}}" folgen 6 priorisierte
      Handlungsempfehlungen mit klarem ROI-Bezug.</p>
   
   <ol>
