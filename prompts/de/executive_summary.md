@@ -120,30 +120,32 @@ Erstelle eine prägnante, entscheiderfreundliche Executive Summary (max. 1 Seite
 
 #### ✅ GUT (v2.1 GOLD - konkret & zahlenbasiert):
 
+**WICHTIG:** Im echten Output IMMER {{score_gesamt}}, {{qw_hours_total}}, {{CAPEX_REALISTISCH_EUR}} etc. verwenden!
+
 ```html
 <section class="section executive-summary">
   <h2>Executive Summary</h2>
-  <p><strong>Unternehmen:</strong> Beratung – Solo-Selbstständig – Berlin<br>
-     <strong>Hauptleistung:</strong> GPT-4-basierte KI-Readiness-Assessments für deutsche KMUs</p>
+  <p><strong>Unternehmen:</strong> {{BRANCHE_LABEL}} – {{UNTERNEHMENSGROESSE_LABEL}} – {{BUNDESLAND_LABEL}}<br>
+     <strong>Hauptleistung:</strong> {{HAUPTLEISTUNG}}</p>
 
-  <p>Diese Kurzfassung fasst die wichtigsten Ergebnisse der KI-Analyse zusammen 
-     (Stand: 18.11.2025): Solide KI-Basis vorhanden (Score: 67/100), drei Quick Wins 
-     identifiziert mit 45h/Monat Zeitersparnis, klarer Startpunkt durch 
+  <p>Diese Kurzfassung fasst die wichtigsten Ergebnisse der KI-Analyse zusammen
+     (Stand: {{report_date}}): Solide KI-Basis vorhanden (Score: {{score_gesamt}}/100), Quick Wins
+     identifiziert mit {{qw_hours_total}} h/Monat Zeitersparnis, klarer Startpunkt durch
      Automatisierung der Kern-Leistung.</p>
 
   <div class="kpi-cards">
-    <div class="kpi"><div class="kpi-label">Gesamt</div><div class="kpi-value">67</div></div>
-    <div class="kpi"><div class="kpi-label">Befähigung</div><div class="kpi-value">72</div></div>
-    <div class="kpi"><div class="kpi-label">Governance</div><div class="kpi-value">58</div></div>
-    <div class="kpi"><div class="kpi-label">Sicherheit</div><div class="kpi-value">65</div></div>
-    <div class="kpi"><div class="kpi-label">Wertschöpfung</div><div class="kpi-value">70</div></div>
+    <div class="kpi"><div class="kpi-label">Gesamt</div><div class="kpi-value">{{score_gesamt}}</div></div>
+    <div class="kpi"><div class="kpi-label">Befähigung</div><div class="kpi-value">{{score_befaehigung}}</div></div>
+    <div class="kpi"><div class="kpi-label">Governance</div><div class="kpi-value">{{score_governance}}</div></div>
+    <div class="kpi"><div class="kpi-label">Sicherheit</div><div class="kpi-value">{{score_sicherheit}}</div></div>
+    <div class="kpi"><div class="kpi-label">Wertschöpfung</div><div class="kpi-value">{{score_nutzen}}</div></div>
   </div>
 
   <h3>Wirtschaftliche Eckdaten</h3>
   <ul>
-    <li><strong>Quick-Win-Einsparungen:</strong> 45 h/Monat = €4.500/Monat (€100/h Stundensatz)</li>
-    <li><strong>Invest (CAPEX):</strong> €5.000; <strong>laufende Kosten (OPEX):</strong> €500/Monat</li>
-    <li><strong>Amortisation:</strong> 8 Monate; <strong>ROI (12 Monate):</strong> 85%</li>
+    <li><strong>Quick-Win-Einsparungen:</strong> {{qw_hours_total}} h/Monat = {{EINSPARUNG_MONAT_EUR}} €/Monat</li>
+    <li><strong>Invest (CAPEX):</strong> {{CAPEX_REALISTISCH_EUR}} €; <strong>laufende Kosten (OPEX):</strong> {{OPEX_REALISTISCH_EUR}} €/Monat</li>
+    <li><strong>Amortisation:</strong> {{PAYBACK_MONTHS}} Monate; <strong>ROI (12 Monate):</strong> {{ROI_12M}}%</li>
   </ul>
 
   <h3>Top-3 Quick Wins (30-60 Tage)</h3>
