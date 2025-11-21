@@ -54,6 +54,7 @@ from services.prompt_loader import load_prompt
 from services.prompt_enhancer import PromptEnhancer
 from services.html_sanitizer import sanitize_sections_dict
 from utils.hotfix_gold_standard import apply_hotfix, UTF8Handler
+from utils.encoding_fixer import clean_briefing_data
 
 # Und direkt nach Zeile 61, vor try:
 UTF8Handler.setup_encoding()  # Global UTF-8 fix beim Start
@@ -1811,6 +1812,11 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     br = db.get(Briefing, briefing_id)
     if not br: raise ValueError("Briefing not found")
     raw_answers: Dict[str, Any] = getattr(br, "answers", {}) or {}
+
+    # Double-check encoding (safety net for old DB data)
+    log.info("[%s] [ENCODING-FIX] Double-check on briefing %s", run_id, briefing_id)
+    raw_answers = clean_briefing_data(raw_answers)
+
     answers = (lambda x: x)(raw_answers)
     try:
         from services.answers_normalizer import normalize_answers

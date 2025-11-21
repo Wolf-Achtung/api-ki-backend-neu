@@ -18,6 +18,7 @@ from settings import get_settings
 from services.rate_limit import RateLimiter
 from utils.idempotency import IdempotencyBox
 from routes._bootstrap import get_db
+from utils.encoding_fixer import clean_briefing_data
 
 router = APIRouter(prefix="/briefings", tags=["briefings"])
 log = logging.getLogger(__name__)
@@ -105,10 +106,14 @@ async def submit_briefing(
     try:
         from models import Briefing
 
+        # Fix UTF-8 encoding before saving
+        log.info("[ENCODING-FIX] Cleaning briefing data before save")
+        cleaned_answers = clean_briefing_data(payload.answers)
+
         briefing = Briefing(
             user_id=user_id,
             lang=payload.lang,
-            answers=payload.answers
+            answers=cleaned_answers
         )
         db.add(briefing)
         db.commit()
