@@ -7,6 +7,7 @@ Ziele:
 - Entfernt komplette Dokument‑Wrapper (<html>, <head>, <body>, <!DOCTYPE>)
 - Entfernt <script>, <iframe>, <object>, <embed>, <link>, <meta>
 - Entfernt Inline‑Eventhandler (onClick, onload, …)
+- Behebt UTF-8 Mojibake (Ã¶ → ö)
 - Optional: komprimiert Whitespace
 - Erhält valide Teil‑HTML (Listen, Tabellen, Divs, etc.) unverändert
 
@@ -14,9 +15,30 @@ Hinweis: bewusst konservativ, um Layout nicht zu zerstören.
 """
 from __future__ import annotations
 import re
+import html
 from typing import Optional
 
 _TRUTHY = {"1","true","TRUE","yes","YES","on","y"}
+
+def _fix_utf8_mojibake(text: str) -> str:
+    """Behebt falsch encodierte UTF-8 Zeichen (Mojibake).
+
+    Beispiele:
+    - "FragebÃ¶gen" → "Fragebögen"
+    - "MarktfÃ¼hrer" → "Marktführer"
+    """
+    if not text or not isinstance(text, str):
+        return text
+    if 'Ã' not in text and 'â' not in text:
+        return text
+    try:
+        # Versuche als Latin-1 zu decodieren und als UTF-8 zu encoden
+        return text.encode('latin-1', errors='ignore').decode('utf-8', errors='ignore')
+    except Exception:
+        try:
+            return html.unescape(text)
+        except Exception:
+            return text
 
 RE_DOCTYPES = re.compile(r"(?is)<!DOCTYPE.*?>")
 RE_HTML_TAGS = re.compile(r"(?is)</?\s*html\b.*?>")
@@ -37,10 +59,13 @@ RE_ON_EVENT_ATTR = re.compile(r"(?i)\s+on[a-z]+\s*=\s*(\"[^\"]*\"|'[^']*')")
 # Daten‑/Sicherheitsfilter: Entferne javascript: URIs in href/src
 RE_JS_PROTOCOL = re.compile(r"(?is)(\s(?:href|src)\s*=\s*['\"])\s*javascript:[^'\"]*(['\"])")
 
-def sanitize_section_html(html: Optional[str], compress_ws: bool = True) -> str:
-    if not html:
+def sanitize_section_html(html_content: Optional[str], compress_ws: bool = True) -> str:
+    if not html_content:
         return ""
-    s = html
+    s = html_content
+
+    # ZUERST: Behebe UTF-8 Mojibake (Ã¶ → ö)
+    s = _fix_utf8_mojibake(s)
 
     # Entferne Dokument‑Wrapper & kritische Blöcke
     s = RE_DOCTYPES.sub("", s)
