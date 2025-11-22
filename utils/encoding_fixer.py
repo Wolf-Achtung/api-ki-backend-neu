@@ -40,7 +40,7 @@ def fix_utf8_encoding(text: str) -> str:
         Fixed string with correct German umlauts
     """
     if not text:
-        return text  # type: ignore[unreachable]
+        return text
 
     # Quick check if there's anything to fix
     if 'Ã' not in text and 'â' not in text:
