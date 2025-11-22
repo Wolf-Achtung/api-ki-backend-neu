@@ -8,17 +8,19 @@ Enhanced with ftfy library for better accuracy when available.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Optional
+import types
 
 logger = logging.getLogger(__name__)
 
 # Try to import ftfy for enhanced fixing
+_ftfy_module: Optional[types.ModuleType] = None
 try:
-    import ftfy
+    import ftfy as _ftfy_imported
+    _ftfy_module = _ftfy_imported
     HAS_FTFY = True
     logger.info("✅ ftfy library available for enhanced UTF-8 fixing")
 except ImportError:
-    ftfy = None
     HAS_FTFY = False
     logger.debug("⚠️ ftfy not installed, using fallback encoding fix")
 
@@ -47,8 +49,8 @@ def fix_utf8_encoding(text: str) -> str:
     original = text
 
     # Use ftfy if available (more robust)
-    if ftfy is not None:
-        text = ftfy.fix_text(text)
+    if _ftfy_module is not None:
+        text = _ftfy_module.fix_text(text)
         if original != text:
             logger.debug(f"[ENCODING-FIX-FTFY] Fixed: '{original[:50]}...' -> '{text[:50]}...'")
         return text
