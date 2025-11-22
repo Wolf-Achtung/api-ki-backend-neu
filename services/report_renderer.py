@@ -183,8 +183,8 @@ def render(briefing_obj: Any,
             log.warning(f"⚠️ Template still contains unreplaced variables in report {run_id}")
 
     # Embed logos as base64 for PDF service compatibility
-    tpl_dir = str(Path(tpl_path).parent)
-    html = embed_logos_in_html(html, tpl_dir)
+    tpl_dir_str = str(Path(tpl_path).parent)
+    html = embed_logos_in_html(html, tpl_dir_str)
     log.info(f"[RENDER] Embedded logos in HTML for report {run_id}")
 
     return {"html": html, "meta": meta or {}}
