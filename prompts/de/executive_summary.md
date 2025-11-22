@@ -1,14 +1,22 @@
 # PROMPT: Executive Summary - Erste Seite des KI-Readiness Reports
 
 ## ZWECK
-Erstelle eine prägnante, entscheiderfreundliche Executive Summary (max. 1 Seite) die:
-1. Die **wichtigsten Erkenntnisse** aus ALLEN Report-Sections auf einen Blick zusammenfasst
-2. **Konkrete Zahlen** (Scores, ROI, Payback, Quick-Win-Einsparungen) prominent platziert
-3. Einen **klaren Startpunkt** (Pilot) und nächste Schritte (30/60/90 Tage) definiert
-4. Die **Top 3 Quick Wins** hervorhebt (falls vorhanden)
+Erstelle eine **einladende, freundliche** Executive Summary (max. 1 Seite) die:
+1. Den Leser **positiv abholt** mit einem warmen, persönlichen Einstieg (2-3 Sätze Fließtext)
+2. Die **wichtigsten Erkenntnisse** verständlich und ermutigend zusammenfasst
+3. **Konkrete Zahlen** (Scores, ROI, Payback, Quick-Win-Einsparungen) in Kontext setzt
+4. Einen **klaren Startpunkt** (Pilot) und nächste Schritte (30/60/90 Tage) definiert
+5. Die **Top 3 Quick Wins** hervorhebt (falls vorhanden)
 
 **Zielgruppe:** Geschäftsführung, Entscheider:innen (5 Min Lesezeit)
-**Stil:** Professionell, prägnant, motivierend - KEINE Marketing-Sprache!
+**Stil:** Freundlich-professionell, ermutigend, klar - KEINE Marketing-Sprache aber auch KEINE trockenen Bullet-Listen am Anfang!
+
+### 🎯 WICHTIG: Der Einstieg muss den User "an die Hand nehmen"
+- Beginne mit 2-3 Sätzen **warmem Fließtext** der die Situation würdigt
+- Zeige Verständnis für die Herausforderungen des Users
+- Sei positiv und ermutigend ohne übertrieben zu loben
+- Erst DANACH kommen die Fakten und Zahlen
+- Vermeide einen "Prüfungsergebnis"-Ton, es soll sich wie ein hilfreiches Gespräch anfühlen
 
 ---
 
@@ -125,13 +133,19 @@ Erstelle eine prägnante, entscheiderfreundliche Executive Summary (max. 1 Seite
 ```html
 <section class="section executive-summary">
   <h2>Executive Summary</h2>
-  <p><strong>Unternehmen:</strong> {{BRANCHE_LABEL}} – {{UNTERNEHMENSGROESSE_LABEL}} – {{BUNDESLAND_LABEL}}<br>
-     <strong>Hauptleistung:</strong> {{HAUPTLEISTUNG}}</p>
 
-  <p>Diese Kurzfassung fasst die wichtigsten Ergebnisse der KI-Analyse zusammen
-     (Stand: {{report_date}}): Solide KI-Basis vorhanden (Score: {{score_gesamt}}/100), Quick Wins
-     identifiziert mit {{qw_hours_total}} h/Monat Zeitersparnis, klarer Startpunkt durch
-     Automatisierung der Kern-Leistung.</p>
+  <p>Vielen Dank, dass Sie sich die Zeit für diese Analyse genommen haben. Ihre Antworten
+     zeigen, dass Sie Ihr Geschäft gut kennen und bereits wichtige Grundlagen für den
+     KI-Einsatz geschaffen haben. Mit diesem Report möchten wir Ihnen einen klaren,
+     umsetzbaren Fahrplan an die Hand geben, der zu Ihrer Situation passt.</p>
+
+  <p><strong>Ihr Profil:</strong> {{BRANCHE_LABEL}} – {{UNTERNEHMENSGROESSE_LABEL}} – {{BUNDESLAND_LABEL}}<br>
+     <strong>Ihre Kern-Leistung:</strong> {{HAUPTLEISTUNG}}</p>
+
+  <p>Die gute Nachricht: Sie haben bereits eine solide Basis (Score: {{score_gesamt}}/100).
+     Besonders erfreulich ist, dass wir konkrete Quick Wins identifizieren konnten, die Ihnen
+     {{qw_hours_total}} Stunden pro Monat einsparen können. Damit haben Sie einen klaren
+     Startpunkt für Ihre nächsten Schritte.</p>
 
   <div class="kpi-cards">
     <div class="kpi"><div class="kpi-label">Gesamt</div><div class="kpi-value">{{score_gesamt}}</div></div>
@@ -308,14 +322,22 @@ else:
 ```html
 <section class="section executive-summary">
   <h2>Executive Summary</h2>
-  
-  <!-- 1. UNTERNEHMEN & HAUPTLEISTUNG -->
-  <p><strong>Unternehmen:</strong> {{BRANCHE_LABEL}} – {{UNTERNEHMENSGROESSE_LABEL}} – {{BUNDESLAND_LABEL}}<br>
-     <strong>Hauptleistung:</strong> {{HAUPTLEISTUNG}}</p>
 
-  <!-- 2. ZUSAMMENFASSUNG (2-3 Sätze) -->
-  <p>[Fasse die Kernaussagen zusammen: Score-Interpretation, Anzahl Quick Wins,
-      Zeitersparnis, Startpunkt. Max. 3 Sätze!]</p>
+  <!-- 1. FREUNDLICHER EINSTIEG (2-3 Sätze warmem Fließtext!) -->
+  <p>[Beginne mit einem persönlichen, ermutigenden Satz wie: "Vielen Dank, dass Sie sich
+      die Zeit genommen haben, Ihre KI-Readiness analysieren zu lassen. Ihre Antworten zeigen,
+      dass Sie bereits wichtige Schritte unternommen haben und nun bereit sind, die nächste
+      Stufe zu erreichen." - Würdige die Ausgangssituation positiv und schaffe Vertrauen.]</p>
+
+  <!-- 2. UNTERNEHMEN & HAUPTLEISTUNG -->
+  <p><strong>Ihr Profil:</strong> {{BRANCHE_LABEL}} – {{UNTERNEHMENSGROESSE_LABEL}} – {{BUNDESLAND_LABEL}}<br>
+     <strong>Ihre Kern-Leistung:</strong> {{HAUPTLEISTUNG}}</p>
+
+  <!-- 3. ZUSAMMENFASSUNG (2-3 Sätze - freundlich formuliert!) -->
+  <p>[Fasse die Kernaussagen zusammen aber in einem ermutigenden Ton: "Die Analyse zeigt, dass
+      Sie mit einem Score von {{score_gesamt}}/100 eine solide Basis haben. Besonders erfreulich:
+      Wir konnten X Quick Wins identifizieren, die Ihnen schnelle Erfolge bringen können." -
+      Kein Prüfungston!]</p>
 
   <!-- 2b. KEY FACTS BULLET-LISTE (NEU - für schnelles Erfassen!) -->
   <div class="key-facts">
