@@ -1,0 +1,108 @@
+2025-11-22T19:40:09.189895543Z [inf]  INFO:     100.64.0.2:30174 - "OPTIONS /api/auth/request-code HTTP/1.1" 200 OK
+2025-11-22T19:40:09.189902107Z [err]  2025-11-22 19:40:04 [INFO] services.mailer: 📧 Resend: Sending email FROM=KI-Sicherheit.jetzt <noreply@ki-sicherheit.jetzt> TO=wolf.hohl@web.de SUBJECT=Ihr KI-Sicherheit Login-Code...
+2025-11-22T19:40:09.189908635Z [err]  2025-11-22 19:40:05 [INFO] httpx: HTTP Request: POST https://api.resend.com/emails "HTTP/1.1 200 OK"
+2025-11-22T19:40:09.189914619Z [err]  2025-11-22 19:40:05 [INFO] services.mailer: ✅ Resend Response [200]: {"id": "95832019-e5a8-4f9b-8c2c-b57def90b0ed"}
+2025-11-22T19:40:09.189922982Z [err]  2025-11-22 19:40:05 [INFO] services.mailer: 📬 Email ID: 95832019-e5a8-4f9b-8c2c-b57def90b0ed
+2025-11-22T19:40:09.189929033Z [inf]  INFO:     100.64.0.3:60804 - "POST /api/auth/request-code HTTP/1.1" 204 No Content
+2025-11-22T19:40:28.676233686Z [inf]  INFO:     100.64.0.2:20494 - "OPTIONS /api/auth/login HTTP/1.1" 200 OK
+2025-11-22T19:40:28.676239599Z [err]  2025-11-22 19:40:19 [INFO] routes.auth: Creating access token for user: wolf.hohl@web.de
+2025-11-22T19:40:28.676244250Z [err]  2025-11-22 19:40:19 [INFO] routes.auth: 🍪 Set httpOnly cookie for user: wolf.hohl@web.de
+2025-11-22T19:40:28.676249446Z [inf]  INFO:     100.64.0.3:43426 - "POST /api/auth/login HTTP/1.1" 200 OK
+2025-11-22T19:40:28.676254611Z [inf]  INFO:     100.64.0.2:20494 - "OPTIONS /api/briefings/submit HTTP/1.1" 200 OK
+2025-11-22T19:40:28.676259197Z [err]  2025-11-22 19:40:21 [INFO] routes.briefings: ✅ Token validated successfully for user: wolf.hohl@web.de
+2025-11-22T19:40:28.676264088Z [err]  2025-11-22 19:40:21 [INFO] routes.briefings: ✅ Found existing user: wolf.hohl@web.de (ID=6)
+2025-11-22T19:40:28.676268748Z [err]  2025-11-22 19:40:21 [INFO] routes.briefings: [ENCODING-FIX] Cleaning briefing data before save
+2025-11-22T19:40:28.676272622Z [err]  2025-11-22 19:40:21 [INFO] routes.briefings: ✅ Briefing saved to database: ID=116, user_id=6, len=2150
+2025-11-22T19:40:28.676281569Z [err]  2025-11-22 19:40:22 [INFO] services.prompt_loader: 🔍 Prompt loader initialized: BASE_DIR=/app/prompts (exists: True)
+2025-11-22T19:40:28.676286031Z [err]  2025-11-22 19:40:22 [INFO] services.prompt_builder: 📁 Using data_dir: /app/data
+2025-11-22T19:40:28.676290556Z [err]  2025-11-22 19:40:22 [INFO] services.prompt_enhancer: ✅ PromptEnhancer initialized (data_dir=data)
+2025-11-22T19:40:28.676297145Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: ✅ PromptEnhancer initialized with context system
+2025-11-22T19:40:28.676355340Z [err]  2025-11-22 19:40:22 [INFO] routes.briefings: 🚀 Triggering analysis for briefing_id=116
+2025-11-22T19:40:28.676371057Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: [run-ceb00330] 🚀 Starting analysis v4.14.0-GOLD-PLUS for briefing_id=116
+2025-11-22T19:40:28.679856999Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: ✅ Using enhanced prompt for business_roi (with context)
+2025-11-22T19:40:28.679866088Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: ✅ Using enhanced prompt for business_case (with context)
+2025-11-22T19:40:28.679882272Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: [run-ceb00330] [ENCODING-FIX] Double-check on briefing 116
+2025-11-22T19:40:28.679888124Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: [run-ceb00330] 📊 Calculating realistic scores (v4.14.0-GOLD-PLUS)...
+2025-11-22T19:40:28.679893021Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: 📊 REALISTIC SCORES v4.14.0-GOLD-PLUS: Gov=88 Sec=76 Val=100 Ena=100 Overall=91
+2025-11-22T19:40:28.679899160Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: [run-ceb00330] 🎨 Generating content sections with PROMPT SYSTEM...
+2025-11-22T19:40:28.679903869Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: 🚀 Generating 22 sections in PARALLEL (max_workers=12)...
+2025-11-22T19:40:28.679909300Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: ✅ Using enhanced prompt for quick_wins (with context)
+2025-11-22T19:40:28.679913538Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: ✅ Using enhanced prompt for executive_summary (with context)
+2025-11-22T19:40:28.679920039Z [err]  2025-11-22 19:40:22 [INFO] services.prompt_enhancer: 🎯 Applying roadmap size constraints for 'roadmap_12m'
+2025-11-22T19:40:28.679924659Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: ✅ Using enhanced prompt for roadmap_12m (with context)
+2025-11-22T19:40:28.679929558Z [err]  2025-11-22 19:40:22 [INFO] services.prompt_enhancer: 🎯 Applying roadmap size constraints for 'roadmap_90d'
+2025-11-22T19:40:28.679934779Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: ✅ Using enhanced prompt for roadmap (with context)
+2025-11-22T19:40:28.679939521Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: ✅ Using enhanced prompt for business_costs (with context)
+2025-11-22T19:40:28.682960653Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: ✅ Using enhanced prompt for data_readiness (with context)
+2025-11-22T19:40:28.682970448Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: ✅ Using enhanced prompt for org_change (with context)
+2025-11-22T19:40:28.682977315Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: ✅ Using enhanced prompt for risks (with context)
+2025-11-22T19:40:28.682985894Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: ✅ Using enhanced prompt for gamechanger (with context)
+2025-11-22T19:40:28.682993304Z [err]  2025-11-22 19:40:22 [INFO] gpt_analyze: ✅ Using enhanced prompt for recommendations (with context)
+2025-11-22T19:40:28.683000391Z [err]  2025-11-22 19:40:27 [INFO] gpt_analyze: ✅ Using enhanced prompt for reifegrad_sowhat (with context)
+2025-11-22T19:40:28.683007810Z [err]  2025-11-22 19:40:27 [INFO] gpt_analyze: ✅ Using enhanced prompt for ai_act_summary (with context)
+2025-11-22T19:40:28.683016030Z [err]  2025-11-22 19:40:27 [INFO] gpt_analyze: ✅ Using enhanced prompt for strategie_governance (with context)
+2025-11-22T19:40:30.331003662Z [err]  2025-11-22 19:40:30 [INFO] gpt_analyze: ✅ Using enhanced prompt for wettbewerb_benchmark (with context)
+2025-11-22T19:40:31.335569862Z [err]  2025-11-22 19:40:31 [INFO] gpt_analyze: ✅ Using enhanced prompt for technologie_prozesse (with context)
+2025-11-22T19:40:32.418945793Z [err]  2025-11-22 19:40:32 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo
+2025-11-22T19:40:32.418958212Z [err]  2025-11-22 19:40:32 [INFO] services.prompt_enhancer: ✅ Injected context block into prompt 'unternehmensprofil_markt'
+2025-11-22T19:40:32.418964566Z [err]  2025-11-22 19:40:32 [INFO] gpt_analyze: ✅ Using enhanced prompt for unternehmensprofil_markt (with context)
+2025-11-22T19:40:32.424430794Z [err]  2025-11-22 19:40:32 [INFO] gpt_analyze: ✅ Using enhanced prompt for tools_empfehlungen (with context)
+2025-11-22T19:40:32.564312208Z [err]  2025-11-22 19:40:32 [INFO] gpt_analyze: ✅ Using enhanced prompt for foerderpotenzial (with context)
+2025-11-22T19:40:33.287269973Z [err]  2025-11-22 19:40:32 [INFO] gpt_analyze: ✅ Using enhanced prompt for transparency_box (with context)
+2025-11-22T19:40:35.297889264Z [err]  2025-11-22 19:40:34 [INFO] gpt_analyze: ✅ Using enhanced prompt for ki_aktivitaeten_ziele (with context)
+2025-11-22T19:40:42.441046335Z [err]  2025-11-22 19:40:42 [INFO] gpt_analyze: ✅ Parallel generation completed in 20.0s (vs ~330s sequential)
+2025-11-22T19:41:21.813180302Z [err]  2025-11-22 19:41:14 [INFO] gpt_analyze: [run-ceb00330] ✅ Copied 12 label variables to sections
+2025-11-22T19:41:21.813192957Z [err]  2025-11-22 19:41:14 [INFO] gpt_analyze: [run-ceb00330] 🔬 Running internal research...
+2025-11-22T19:41:21.813202790Z [err]  2025-11-22 19:41:14 [INFO] services.research_pipeline: 🔬 Running HYBRID research (Tavily + Perplexity + RSS)...
+2025-11-22T19:41:21.813211749Z [err]  2025-11-22 19:41:14 [INFO] services.research_pipeline: 🔍 Tavily tools search: KI Tools AI Software Beratung & Dienstleistungen content_generation datenanalyse 2025
+2025-11-22T19:41:21.813220908Z [err]  2025-11-22 19:41:14 [INFO] services.research_pipeline: 🔍 Tavily funding search: Förderprogramme KI Digitalisierung KMU Berlin Beratung & Dienstleistungen 2025
+2025-11-22T19:41:21.813227549Z [err]  2025-11-22 19:41:14 [INFO] services.research_pipeline: 🔍 Perplexity market insights: KI Einsatz und Trends in der Branche Beratung & Dienstleistungen für Beratung von Unternehmen zur Integration von KI in ihre Unternehmen mittels eines Fragebogens und anschliessender GPT-Auswertung Deutschland
+2025-11-22T19:41:21.813235144Z [err]  2025-11-22 19:41:14 [INFO] services.research_pipeline: 🔍 Perplexity competitor analysis: Wettbewerber und Marktführer KI-Lösungen Beratung & Dienstleistungen Deutschland 2025
+2025-11-22T19:41:21.813242585Z [err]  2025-11-22 19:41:14 [INFO] services.research_pipeline: ✅ Tavily returned 8 funding results
+2025-11-22T19:41:21.813250725Z [err]  2025-11-22 19:41:14 [INFO] services.research_pipeline: ✅ Tavily returned 8 tools results
+2025-11-22T19:41:21.813259138Z [err]  2025-11-22 19:41:21 [INFO] services.research_pipeline: ✅ Perplexity returned 5 competitor insights
+2025-11-22T19:41:23.804495888Z [err]  2025-11-22 19:41:23 [INFO] services.research_pipeline: ✅ Perplexity returned 4 market insights
+2025-11-22T19:41:24.824695875Z [err]  2025-11-22 19:41:17.666 UTC [27] LOG:  checkpoint starting: time
+2025-11-22T19:41:24.824702888Z [err]  2025-11-22 19:41:18.307 UTC [27] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.604 s, sync=0.010 s, total=0.641 s; sync files=7, longest=0.009 s, average=0.002 s; distance=17 kB, estimate=80 kB; lsn=0/28EC628, redo lsn=0/28EC5D0
+2025-11-22T19:41:25.624134041Z [err]  2025-11-22 19:41:25 [INFO] services.report_renderer: 🎨 Rendering report run-ceb00330 with 179 sections
+2025-11-22T19:41:25.624145930Z [err]  2025-11-22 19:41:25 [INFO] services.report_renderer: [RENDER] Debug HTML saved: /tmp/report_debug_R-20251122-KND.html
+2025-11-22T19:41:25.624155474Z [err]  2025-11-22 19:41:25 [INFO] services.report_renderer: 🔧 Applied 28 expression replacements for report run-ceb00330
+2025-11-22T19:41:25.624162451Z [err]  2025-11-22 19:41:25 [INFO] utils.logo_embedder: [LOGO-EMBED] Loaded 3 logos for embedding
+2025-11-22T19:41:25.624169675Z [err]  2025-11-22 19:41:25 [INFO] utils.logo_embedder: [LOGO-EMBED] Made 3 logo replacements in HTML
+2025-11-22T19:41:25.624176497Z [err]  2025-11-22 19:41:25 [INFO] services.report_renderer: [RENDER] Embedded logos in HTML for report run-ceb00330
+2025-11-22T19:41:25.624214746Z [err]  2025-11-22 19:41:25 [INFO] gpt_analyze: [run-ceb00330] ✅ Analysis created (v4.14.0-GOLD-PLUS): id=91
+2025-11-22T19:41:25.624222056Z [err]  2025-11-22 19:41:25 [INFO] services.pdf_client: services.pdf_client: Calling PDF service: https://make-ki-pdfservice-production.up.railway.app/generate-pdf (timeout=90.0s, rid=run-ceb00330)
+2025-11-22T19:41:25.624228977Z [inf]  
+2025-11-22T19:41:25.624237290Z [inf]  ================================================================================
+2025-11-22T19:41:25.624246445Z [inf]  📋 REPORT VALIDATION RESULTS
+2025-11-22T19:41:25.624255521Z [inf]  ================================================================================
+2025-11-22T19:41:25.624270106Z [inf]  ✅ ALLE CHECKS BESTANDEN! Report ist GOLD STANDARD+
+2025-11-22T19:41:25.624279312Z [err]  2025-11-22 19:41:25 [INFO] gpt_analyze: [run-ceb00330] ✅ Report validation passed - GOLD STANDARD+
+2025-11-22T19:41:25.624287963Z [err]  2025-11-22 19:41:25 [INFO] services.report_renderer: ✔ Template validated: pdf_template.html
+2025-11-22T19:41:25.624582913Z [err]  2025-11-22 19:41:24 [INFO] services.research_pipeline: 📊 Research complete: 8 tools, 8 funding, 2 news, 9 market insights
+2025-11-22T19:41:25.624592618Z [err]  2025-11-22 19:41:24 [INFO] gpt_analyze: [run-ceb00330] 📈 Coverage: 100% (present=25, missing=0)
+2025-11-22T19:41:25.624601647Z [err]  2025-11-22 19:41:24 [INFO] gpt_analyze: [run-ceb00330] 🎨 Rendering final HTML...
+2025-11-22T19:41:25.624611517Z [err]  2025-11-22 19:41:25 [INFO] gpt_analyze: [run-ceb00330] 🧼 HTML sanitized for 137 string sections
+2025-11-22T19:41:25.624628666Z [err]  2025-11-22 19:41:25 [INFO] services.extra_sections: [BUSINESS-CASE] Capped hours from 36.0 to 20 for size 'solo'
+2025-11-22T19:41:25.624637241Z [err]  2025-11-22 19:41:25 [INFO] gpt_analyze: [run-ceb00330] 💰 Business Case calculated: CAPEX=5000, OPEX=120, Payback=4.4m, ROI=1.329192546583851%
+2025-11-22T19:41:25.624643740Z [err]  2025-11-22 19:41:25 [INFO] gpt_analyze: [run-ceb00330] 🔧 Business Case variables replaced in 3 sections
+2025-11-22T19:41:25.624650919Z [err]  2025-11-22 19:41:25 [INFO] services.extra_sections: [BUSINESS-CASE] Capped hours from 36.0 to 20 for size 'solo'
+2025-11-22T19:41:25.624658664Z [err]  2025-11-22 19:41:25 [INFO] gpt_analyze: ✅ Score context added: exzellent - Sie gehören zu den Top 10% for solo (avg=65, top10=82)
+2025-11-22T19:41:25.624666340Z [err]  2025-11-22 19:41:25 [INFO] gpt_analyze: ✅ Research provenance added: 22.11.2025
+2025-11-22T19:41:25.624673746Z [err]  2025-11-22 19:41:25 [INFO] gpt_analyze: [run-ceb00330] 🔍 Applying size-inappropriate content filter...
+2025-11-22T19:41:25.624683426Z [err]  2025-11-22 19:41:25 [INFO] services.report_validator: [CONTENT-FILTER] Filtering size-inappropriate content for solo
+2025-11-22T19:41:25.624691091Z [err]  2025-11-22 19:41:25 [INFO] services.report_validator: [CONTENT-FILTER] Replacing 'Mitarbeiter' with 'Freelancer oder Partner' for solo
+2025-11-22T19:41:25.624699616Z [err]  2025-11-22 19:41:25 [INFO] gpt_analyze: [run-ceb00330] 🔍 Running report validation...
+2025-11-22T19:41:29.677843309Z [err]  2025-11-22 19:41:29 [INFO] gpt_analyze: [run-ceb00330] 📎 Added briefing JSON attachment for admin (2777 bytes)
+2025-11-22T19:41:29.678008424Z [err]  2025-11-22 19:41:29 [INFO] services.pdf_client: services.pdf_client: PDF generated successfully: 2540447 bytes
+2025-11-22T19:41:30.638187324Z [err]  2025-11-22 19:41:30 [INFO] gpt_analyze: 📬 Resend Email ID: ae9f6673-0417-4337-8401-2414e373ac97 → wol***@web.de
+2025-11-22T19:41:30.638192165Z [err]  2025-11-22 19:41:30 [INFO] gpt_analyze: [run-ceb00330] 📧 Mail sent to user wol***@web.de via Resend
+2025-11-22T19:41:30.638196830Z [err]  2025-11-22 19:41:30 [INFO] gpt_analyze: [run-ceb00330] 📋 Generated briefing summary HTML for admin email
+2025-11-22T19:41:31.666958656Z [err]  2025-11-22 19:41:31 [INFO] gpt_analyze: 📬 Resend Email ID: 03e6067c-6c1d-4c97-a01c-e2b882601be2 → bew***@ki-sicherheit.jetzt
+2025-11-22T19:41:31.666962647Z [err]  2025-11-22 19:41:31 [INFO] gpt_analyze: [run-ceb00330] 📧 Admin notify sent to bew***@ki-sicherheit.jetzt via Resend
+2025-11-22T19:41:31.900020731Z [err]  2025-11-22 19:41:31 [INFO] gpt_analyze: 📬 Resend Email ID: cc66fad7-633f-467e-9f73-ebc030681974 → wol***@ki-sicherheit.jetzt
+2025-11-22T19:41:31.900026298Z [err]  2025-11-22 19:41:31 [INFO] gpt_analyze: [run-ceb00330] 📧 Admin notify sent to wol***@ki-sicherheit.jetzt via Resend
+2025-11-22T19:41:31.900035483Z [err]  2025-11-22 19:41:31 [INFO] routes.briefings: ✅ Analysis queued for briefing_id=116
+2025-11-22T19:41:31.900041789Z [inf]  INFO:     100.64.0.3:43426 - "POST /api/briefings/submit HTTP/1.1" 202 Accepted
+2025-11-22T19:46:17.648662109Z [err]  2025-11-22 19:46:17.407 UTC [27] LOG:  checkpoint starting: time
+2025-11-22T19:46:25.539711951Z [err]  2025-11-22 19:46:25.043 UTC [27] LOG:  checkpoint complete: wrote 77 buffers (0.5%); 0 WAL file(s) added, 0 removed, 0 recycled; write=7.621 s, sync=0.004 s, total=7.637 s; sync files=19, longest=0.003 s, average=0.001 s; distance=524 kB, estimate=524 kB; lsn=0/296F748, redo lsn=0/296F6B8
