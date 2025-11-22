@@ -1,0 +1,160 @@
+{
+  "branche": "logistik",
+  "display_name": "Transport & Logistik",
+  "description": "Speditionen, KEP-Dienste, Lagerhaltung, Fulfillment, Supply Chain Management",
+
+  "typical_workflows": [
+    "Auftragsannahme: Kundenanfragen, Angebote, Auftragserfassung",
+    "Disposition: Tourenplanung, Fahrzeug-/Fahrerzuweisung",
+    "Transport: Durchführung, Tracking, Statusupdates",
+    "Lager: Einlagerung, Kommissionierung, Auslagerung",
+    "Dokumentation: Frachtbriefe, Zolldokumente, Lieferscheine",
+    "Abrechnung: Frachtkostenberechnung, Rechnungsstellung",
+    "Kundenservice: Sendungsverfolgung, Reklamationen"
+  ],
+
+  "common_pain_points": [
+    "Tourenplanung komplex: Viele Variablen, häufige Änderungen",
+    "Leerfahrten: Rückfahrten ohne Ladung",
+    "Kundenanfragen: Viele Anrufe zu Sendungsstatus",
+    "Dokumentation: Frachtbriefe, Zoll, Gefahrgut aufwändig",
+    "Preisgestaltung: Frachtraten schnell kalkulieren",
+    "Fahrermangel: Qualifizierte Fahrer schwer zu finden",
+    "Schadensabwicklung: Aufwändige Reklamationsprozesse"
+  ],
+
+  "ai_opportunities": [
+    "Tourenoptimierung: Routen, Reihenfolge, Zeitfenster optimieren",
+    "Automatische Statusupdates: Tracking-Info an Kunden per Bot",
+    "Frachtpreisberechnung: Schnelle Angebote aus Anfrage",
+    "Nachfrageprognose: Kapazitätsbedarf vorhersagen",
+    "Dokumenten-Automation: Frachtbriefe, CMR automatisch erstellen",
+    "Chatbot für Kunden: Sendungsstatus, FAQs, Buchungen",
+    "Lageroptimierung: Einlagerplätze, Kommissionierwege",
+    "Schadenserkennung: Fotos automatisch analysieren"
+  ],
+
+  "typical_tools": [
+    "TMS: Transport Management System",
+    "WMS: Warehouse Management System",
+    "Telematiksysteme: GPS-Tracking, Fahrzeugdaten",
+    "Office: Excel für Planung, Word für Dokumente",
+    "Telefon für Disposition und Kundenservice",
+    "Scanner für Wareneingang/-ausgang",
+    "Buchhaltung: DATEV, Lexoffice",
+    "Email für Auftragsbestätigungen"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Telefon", "Email", "WhatsApp", "App"],
+    "tms": ["Transporeon", "CargoWise", "TimoCom"],
+    "wms": ["SAP EWM", "JDA", "Manhattan"],
+    "telematics": ["Webfleet", "Verizon Connect", "Samsara"],
+    "documentation": ["Excel", "PDF", "EDI"],
+    "accounting": ["DATEV", "Lexoffice", "Billomat"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "Automatische Sendungsstatus-Auskunft",
+      "description": "Kunden fragen Chatbot statt anzurufen. Entlastet Disposition.",
+      "hours_saved": 8,
+      "tool": "Chatbot + TMS-Anbindung",
+      "implementation": "Bot aufsetzen, Tracking-API anbinden",
+      "difficulty": "mittel",
+      "investment": "50-100€/Monat"
+    },
+    {
+      "title": "Frachtangebote per KI",
+      "description": "Aus Kundenanfrage automatisch Frachtpreis berechnen und Angebot erstellen.",
+      "hours_saved": 6,
+      "tool": "GPT-4 + Preistabellen",
+      "implementation": "Preislogik abbilden, Angebots-Template",
+      "difficulty": "mittel",
+      "investment": "20-50€/Monat"
+    },
+    {
+      "title": "Dokumenten-Automation",
+      "description": "Frachtbriefe, CMR, Lieferscheine automatisch aus Auftragsdaten erstellen.",
+      "hours_saved": 5,
+      "tool": "Make.com + PDF-Generator",
+      "implementation": "Templates erstellen, Automation einrichten",
+      "difficulty": "mittel",
+      "investment": "30-60€/Monat"
+    },
+    {
+      "title": "Touren-Optimierung Basis",
+      "description": "Einfache Routenoptimierung für tägliche Touren.",
+      "hours_saved": 4,
+      "tool": "Google Maps API oder RouteXL",
+      "implementation": "Adressen importieren, Route berechnen",
+      "difficulty": "niedrig",
+      "investment": "0-50€/Monat"
+    },
+    {
+      "title": "Email-Automation für Auftragsbestätigung",
+      "description": "Automatische Bestätigung mit Tracking-Link nach Auftragseingang.",
+      "hours_saved": 3,
+      "tool": "Make.com + Email",
+      "implementation": "Trigger definieren, Email-Template",
+      "difficulty": "niedrig",
+      "investment": "9-29€/Monat"
+    },
+    {
+      "title": "Schadens-Dokumentation per Foto",
+      "description": "Fahrer fotografiert Schaden → KI beschreibt → automatisches Protokoll.",
+      "hours_saved": 3,
+      "tool": "GPT-4 Vision + Mobile App",
+      "implementation": "App einrichten, Protokoll-Template",
+      "difficulty": "mittel",
+      "investment": "20-50€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Zentrales Auftrags-Dashboard",
+      "description": "Alle Aufträge, Status, Probleme auf einen Blick. Weniger Rückfragen.",
+      "hours_saved": 10,
+      "tool": "TMS oder Custom Dashboard",
+      "implementation": "Daten zusammenführen, Visualisierung aufbauen",
+      "difficulty": "mittel",
+      "investment": "100-300€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise TMS mit KI-Optimierung",
+      "description": "Vollständige Tourenoptimierung, Leerfahrten-Minimierung, Carrier-Matching.",
+      "hours_saved": 50,
+      "tool": "Transporeon oder project44",
+      "implementation": "TMS-Implementierung, Integration, Rollout",
+      "difficulty": "hoch",
+      "investment": "2000-5000€/Monat"
+    }
+  ],
+
+  "industry_specific_notes": {
+    "spedition": "Sammelgut, Teil-/Komplettladung, Disposition",
+    "kep": "Hohe Volumina, letzte Meile, Sendungsverfolgung",
+    "lager": "Bestandsführung, Kommissionierung, Inventur",
+    "fulfillment": "E-Commerce, Same-Day, Retouren"
+  },
+
+  "success_metrics": [
+    "Auslastung: % Ladekapazität genutzt",
+    "Pünktlichkeit: % termingerechte Lieferungen",
+    "Kosten pro Sendung: €/Sendung",
+    "Leerkilometer: % Leerfahrten",
+    "Kundenzufriedenheit: Bewertungen, NPS"
+  ],
+
+  "typical_pricing_models": [
+    "Frachtraten pro kg/Palette/cbm",
+    "Pauschalpreise für Relationen",
+    "Lagergebühren pro Palette/Tag",
+    "Pick & Pack Gebühren",
+    "Zuschläge (Diesel, Maut, Express)"
+  ]
+}

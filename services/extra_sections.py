@@ -488,11 +488,14 @@ def build_starter_stacks(answers: Dict[str, Any], path: str = "data/starter_stac
 
 def build_responsible_ai_section(paths: Dict[str, str]) -> str:
     """
-    Liest die HTML‑Partials (vier Säulen + rechtliche Fallstricke) und rendert sie als einen Abschnitt.
-    Erwartete Keys in 'paths': 'four_pillars' und 'legal_pitfalls'.
+    Liest die HTML‑Partials (vier Säulen, rechtliche Fallstricke, 10-20-70, KMU-Keypoints)
+    und rendert sie als einen Abschnitt.
+    Erwartete Keys in 'paths': 'four_pillars', 'legal_pitfalls', 'ten_20_70', 'kmu_keypoints'.
     """
     four = _safe_read_text(paths.get("four_pillars", "knowledge/four_pillars.html"))
     legal = _safe_read_text(paths.get("legal_pitfalls", "knowledge/legal_pitfalls.html"))
+    ten_20_70 = _safe_read_text(paths.get("ten_20_70", "knowledge/ten_20_70.html"))
+    kmu_keypoints = _safe_read_text(paths.get("kmu_keypoints", "knowledge/kmu_keypoints.html"))
 
     # Fallbacks
     if not four:
@@ -500,12 +503,20 @@ def build_responsible_ai_section(paths: Dict[str, str]) -> str:
     if not legal:
         legal = "<p><em>(Hinweis)</em> Rechtliche Fallstricke nicht gefunden.</p>"
 
+    # Optional sections - only include if file exists
+    additional_sections = ""
+    if ten_20_70:
+        additional_sections += f"<div>{ten_20_70}</div>"
+    if kmu_keypoints:
+        additional_sections += f"<div>{kmu_keypoints}</div>"
+
     html = f"""
 <section class="card">
   <h2>Verantwortungsvolle KI & Compliance</h2>
   <div class="grid" style="display:grid;grid-template-columns:1fr;gap:12px">
     <div>{four}</div>
     <div>{legal}</div>
+    {additional_sections}
   </div>
 </section>""".strip()
     return html

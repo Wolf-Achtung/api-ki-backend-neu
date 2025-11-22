@@ -1,0 +1,160 @@
+{
+  "branche": "bau",
+  "display_name": "Bauwesen & Architektur",
+  "description": "Architekturbüros, Ingenieurbüros, Bauunternehmen, Handwerksbetriebe, Projektentwickler",
+
+  "typical_workflows": [
+    "Projektakquise: Ausschreibungen, Wettbewerbe, Direktaufträge",
+    "Planung: Entwurf, Genehmigungsplanung, Ausführungsplanung",
+    "Kalkulation: Mengenermittlung, Kostenberechnung, Angebote",
+    "Ausschreibung: Leistungsverzeichnisse, Vergabe",
+    "Bauleitung: Koordination, Überwachung, Dokumentation",
+    "Abrechnung: Aufmaß, Rechnungsprüfung, Nachtragsmanagement",
+    "Dokumentation: Bautagebuch, Protokolle, Abnahmen"
+  ],
+
+  "common_pain_points": [
+    "Ausschreibungstexte erstellen: LV-Positionen zeitaufwändig formulieren",
+    "Mengenermittlung: Manuelles Auszählen aus Plänen",
+    "Dokumentation auf der Baustelle: Bautagebuch, Mängelfotos",
+    "Nachtragsforderungen: Schwierige Begründung und Durchsetzung",
+    "Kostencontrolling: Ist-Soll-Vergleich aufwändig",
+    "BIM-Implementierung: Komplexität, Schulungsbedarf",
+    "Fachkräftemangel: Qualifizierte Planer und Bauleiter fehlen"
+  ],
+
+  "ai_opportunities": [
+    "LV-Texte generieren: Beschreibungen für Ausschreibungen",
+    "Automatische Mengenermittlung: KI liest Pläne aus",
+    "Bautagebuch per Sprache: Diktieren statt tippen auf Baustelle",
+    "Mängeldokumentation: Foto → automatische Beschreibung und Kategorie",
+    "Angebots-Analyse: Eingegangene Angebote vergleichen",
+    "Normen-Recherche: Schnell relevante DIN/EN finden",
+    "Terminplan-Optimierung: Ressourcen und Abhängigkeiten analysieren",
+    "Nachtragsformulierung: Begründungen rechtssicher formulieren"
+  ],
+
+  "typical_tools": [
+    "CAD: AutoCAD, ArchiCAD, Revit",
+    "AVA: ORCA, California, iTWO",
+    "Projektmanagement: MS Project, Powerproject",
+    "Office: Word, Excel für Dokumentation",
+    "BIM-Software: Revit, Allplan, Vectorworks",
+    "Baudokumentation: PlanRadar, BauDoc",
+    "Buchhaltung: DATEV, spezialisierte Bau-Software",
+    "Kommunikation: Email, Teams, WhatsApp"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Email", "Teams", "WhatsApp", "Vor-Ort-Meetings"],
+    "cad_bim": ["AutoCAD", "Revit", "ArchiCAD", "Allplan"],
+    "ava": ["ORCA AVA", "California", "Nevaris", "iTWO"],
+    "documentation": ["PlanRadar", "BauDoc", "Dalux"],
+    "scheduling": ["MS Project", "Powerproject", "Asta"],
+    "accounting": ["DATEV", "BauSU", "ProBau"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "LV-Texte per KI generieren",
+      "description": "Leistungsbeschreibungen für Ausschreibungen automatisch erstellen.",
+      "hours_saved": 10,
+      "tool": "GPT-4 mit Bau-Fachwissen",
+      "implementation": "Prompts mit Gewerken und Standards, Templates für LV-Format",
+      "difficulty": "mittel",
+      "investment": "20-50€/Monat"
+    },
+    {
+      "title": "Sprach-Bautagebuch",
+      "description": "Bautagebuch auf der Baustelle diktieren statt abends tippen.",
+      "hours_saved": 6,
+      "tool": "Otter.ai oder Dragon + Word",
+      "implementation": "Spracherkennung einrichten, Template für Bautagebuch",
+      "difficulty": "niedrig",
+      "investment": "19-50€/Monat"
+    },
+    {
+      "title": "Mängel-Foto-Dokumentation",
+      "description": "Foto machen → KI beschreibt Mangel → in System übertragen.",
+      "hours_saved": 4,
+      "tool": "PlanRadar oder eigene GPT-4 Vision Lösung",
+      "implementation": "App einrichten, Kategorien definieren",
+      "difficulty": "niedrig",
+      "investment": "29-79€/Monat"
+    },
+    {
+      "title": "Normen-Schnellsuche",
+      "description": "Relevante DIN/EN-Normen schnell finden und zusammenfassen.",
+      "hours_saved": 3,
+      "tool": "GPT-4 + Normen-Zugang",
+      "implementation": "Prompts für Normen-Recherche, Zusammenfassungs-Templates",
+      "difficulty": "niedrig",
+      "investment": "20€/Monat"
+    },
+    {
+      "title": "Angebots-Vergleich automatisieren",
+      "description": "Eingegangene Angebote automatisch in Vergleichsmatrix übertragen.",
+      "hours_saved": 4,
+      "tool": "GPT-4 + Excel",
+      "implementation": "PDFs einlesen, Daten extrahieren, Excel befüllen",
+      "difficulty": "mittel",
+      "investment": "20-40€/Monat"
+    },
+    {
+      "title": "Nachtrags-Begründungen formulieren",
+      "description": "Technische und rechtliche Begründungen für Nachträge erstellen.",
+      "hours_saved": 5,
+      "tool": "GPT-4 mit VOB-Kenntnissen",
+      "implementation": "Templates für Nachtragstypen, VOB-konforme Formulierungen",
+      "difficulty": "mittel",
+      "investment": "20€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Zentrale Projektdatenbank",
+      "description": "Alle Projekte, LVs, Referenzen durchsuchbar für neue Angebote.",
+      "hours_saved": 12,
+      "tool": "Notion oder SharePoint + KI-Suche",
+      "implementation": "Projekte erfassen, Tags vergeben, Team schulen",
+      "difficulty": "mittel",
+      "investment": "50-150€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise BIM mit KI-Auswertung",
+      "description": "Automatische Mengenermittlung, Kollisionsprüfung, 4D/5D-Integration.",
+      "hours_saved": 40,
+      "tool": "Autodesk Construction Cloud oder Nemetschek Bluebeam",
+      "implementation": "BIM-Implementierung, Team-Schulung, Prozesse anpassen",
+      "difficulty": "hoch",
+      "investment": "1000-3000€/Monat"
+    }
+  ],
+
+  "industry_specific_notes": {
+    "architektur": "Entwurf, Genehmigung, HOAI-Phasen 1-5",
+    "ingenieurbuero": "Tragwerksplanung, TGA, Bauphysik",
+    "bauunternehmen": "Ausführung, Subunternehmer, Baustellenlogistik",
+    "handwerk": "Spezialisierte Gewerke, regionale Aufträge"
+  },
+
+  "success_metrics": [
+    "Auftragsquote: % gewonnene Angebote",
+    "Projektmarge: Gewinn pro Projekt",
+    "Termintreue: % pünktlich fertiggestellte Projekte",
+    "Nachtragserfolg: % durchgesetzte Nachträge",
+    "Baustellenproduktivität: Output pro Arbeitsstunde"
+  ],
+
+  "typical_pricing_models": [
+    "HOAI-Honorar (Architekten/Ingenieure)",
+    "Einheitspreise (Bauausführung)",
+    "Pauschalpreise für definierte Leistungen",
+    "Stundenlohnarbeiten",
+    "GMP (Guaranteed Maximum Price)"
+  ]
+}
