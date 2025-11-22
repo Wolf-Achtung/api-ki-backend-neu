@@ -86,8 +86,8 @@ def _read_code(email: str) -> Optional[str]:
         return code
 
 
-@router.post("/request-code", status_code=204)
-async def request_code(payload: RequestCodeIn, request: Request) -> None:
+@router.post("/request-code", status_code=204, response_model=None)
+async def request_code(payload: RequestCodeIn, request: Request):
     """
     Request a login code via email.
 
