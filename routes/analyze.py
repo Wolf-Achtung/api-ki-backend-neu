@@ -23,6 +23,24 @@ def _get_briefing_model():
 
 @router.post("/run", status_code=status.HTTP_202_ACCEPTED, dependencies=[Depends(rate_limiter("analyze:run", 5, 60))])
 def run(body: RunAnalyze, request: Request, db = Depends(get_db)) -> dict:
+    """
+    Manually trigger GPT analysis for a briefing.
+
+    Starts the asynchronous analysis process for the specified briefing.
+    Supports dry-run mode for CI/smoke tests via x-dry-run header.
+
+    Args:
+        body: Contains briefing_id and optional email_override
+        request: FastAPI request for dry-run header check
+        db: Database session
+
+    Returns:
+        dict: Acceptance status with briefing_id
+
+    Raises:
+        HTTPException 404: Briefing not found
+        HTTPException 503: Models or analyzer unavailable
+    """
     # CI/Smoke: kein echtes LLM, nur Importprobe
     if (request.headers.get("x-dry-run", "").lower() in {"1", "true", "yes"}):
         try:

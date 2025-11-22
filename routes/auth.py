@@ -87,7 +87,24 @@ def _read_code(email: str) -> Optional[str]:
 
 
 @router.post("/request-code", status_code=204)
-async def request_code(payload: RequestCodeIn, request: Request):
+async def request_code(payload: RequestCodeIn, request: Request) -> None:
+    """
+    Request a login code via email.
+
+    Sends a 6-digit verification code to the provided email address.
+    The code is valid for 10 minutes.
+
+    Args:
+        payload: Contains the email address to send the code to
+        request: FastAPI request object for rate limiting and idempotency
+
+    Raises:
+        HTTPException 403: Email not in whitelist (test phase)
+        HTTPException 503: Email sending failed
+
+    Returns:
+        None (204 No Content on success)
+    """
     s = get_settings()
     limiter = RateLimiter(namespace="request_code", limit=s.rate.max_request_code, window_sec=s.rate.window_sec)
     limiter.hit(key=str(payload.email))
@@ -170,7 +187,25 @@ Hilfe bei Problemen:
 
 
 @router.post("/login")
-async def login(payload: LoginIn, request: Request, response: Response):
+async def login(payload: LoginIn, request: Request, response: Response) -> dict:
+    """
+    Authenticate user with email and verification code.
+
+    Validates the 6-digit code sent via /request-code and returns a JWT token.
+    Also sets an httpOnly cookie for secure authentication.
+
+    Args:
+        payload: Email and verification code
+        request: FastAPI request object
+        response: FastAPI response object for cookie setting
+
+    Returns:
+        dict: Contains access_token and token_type
+
+    Raises:
+        HTTPException 401: Invalid or expired code
+        HTTPException 409: Duplicate request (idempotency)
+    """
     s = get_settings()
     limiter = RateLimiter(namespace="login", limit=s.rate.max_login, window_sec=s.rate.window_sec)
     limiter.hit(key=str(payload.email))
