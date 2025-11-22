@@ -153,6 +153,47 @@ Du erhältst folgende Variablen:
 - `{{MITARBEITER}}` - z.B. "Solo-Selbstständig", "Team (6-50 MA)"
 - `{{HAUPTLEISTUNG}}` - z.B. "Steuerberatung", "Maschinenbau", "Rechtsberatung"
 - `{{AKTUELLES_MODELL}}` - z.B. "Stundensätze", "Projektpreise", "Produktverkauf"
+- `{{UNTERNEHMENSGROESSE}}` - z.B. "solo", "klein", "mittel", "gross"
+- `{{INVESTITIONSBUDGET}}` - z.B. "unter_2000", "2000_10000", "10000_50000"
+
+---
+
+## ⚠️ REALISTISCHE GAMECHANGER-SKALIERUNG NACH GRÖẞE
+
+**KRITISCH: Passen Sie die Gamechanger an die tatsächliche Unternehmensgröße an!**
+
+### Wenn {{UNTERNEHMENSGROESSE}} = "solo":
+Solo-Betrieb - Gamechanger in 12-18 Monaten alleine/mit 1-2 Freelancern erreichbar:
+- Erste 5-10 Partner/Kunden in 12 Monaten (NICHT 100!)
+- ARR-Ziel: €50k-150k im ersten Jahr (NICHT €3.4 Mio!)
+- Team-Wachstum: Von 1 auf 2-3 Personen
+- Investition: Max. €10-20k
+
+**Beispiel GUTER Solo-Gamechanger:**
+"White-Label für 10 Partner in 12 Monaten → €30k MRR (€360k ARR)"
+
+**Beispiel SCHLECHTER Solo-Gamechanger (unrealistisch!):**
+"100 Partner in 6 Monaten → €3.4 Mio ARR" ❌
+
+### Wenn {{UNTERNEHMENSGROESSE}} = "klein":
+Klein-Unternehmen - Mit bestehendem Team + Budget umsetzbar:
+- 20-50 neue Kunden/Partner in 12 Monaten
+- ARR-Ziel: €250k-1M
+- Team-Wachstum: +3-5 Personen
+- Investition: €50-100k
+
+### Wenn {{UNTERNEHMENSGROESSE}} = "mittel" oder "gross":
+Mittelstand/Konzern - Ambitionierte aber machbare Skalierung:
+- 100+ neue Kunden in 12-18 Monaten
+- ARR-Ziel: €1M-10M
+- Dediziertes Produktteam
+- Investition: €100k-500k
+
+### VERMEIDE IMMER:
+- Fantasy-Zahlen ohne VC-Funding
+- "10× Wachstum in 3 Monaten" für Solo
+- Benchmarks von Venture-Backed Startups
+- Unrealistische Teamgrößen für die Unternehmensgröße
 
 ### SCHRITT 1: Analyse des aktuellen Geschäftsmodells (3 Min Denken!)
 
