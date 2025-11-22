@@ -15,10 +15,10 @@ logger = logging.getLogger(__name__)
 # Try to import ftfy for enhanced fixing
 try:
     import ftfy
-    HAS_FTFY: bool = True
+    HAS_FTFY = True
     logger.info("✅ ftfy library available for enhanced UTF-8 fixing")
 except ImportError:
-    ftfy = None  # type: ignore[assignment]
+    ftfy = None
     HAS_FTFY = False
     logger.debug("⚠️ ftfy not installed, using fallback encoding fix")
 
@@ -47,7 +47,7 @@ def fix_utf8_encoding(text: str) -> str:
     original = text
 
     # Use ftfy if available (more robust)
-    if HAS_FTFY and ftfy is not None:
+    if ftfy is not None:
         text = ftfy.fix_text(text)
         if original != text:
             logger.debug(f"[ENCODING-FIX-FTFY] Fixed: '{original[:50]}...' -> '{text[:50]}...'")
