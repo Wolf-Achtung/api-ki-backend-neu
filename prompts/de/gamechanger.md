@@ -5,6 +5,32 @@ Entwickle 3 ambitionierte, transformative KI-Strategien, die das **GESCHÄFTSMOD
 
 ---
 
+## 🚨🚨🚨 ALLERWICHTIGSTE REGEL - VOR ALLEM ANDEREN LESEN! 🚨🚨🚨
+
+**AKTUELLE UNTERNEHMENSGRÖSSE: {{UNTERNEHMENSGROESSE}}**
+**INVESTITIONSBUDGET: {{INVESTITIONSBUDGET}}**
+
+### ❗ WENN {{UNTERNEHMENSGROESSE}} = "solo":
+
+**STOPP! Du erstellst Gamechanger für einen EINZELUNTERNEHMER!**
+
+- ❌ NIEMALS €3.4 Mio ARR oder €1M+ Ziele verwenden!
+- ❌ NIEMALS "100 Partner" oder "1000 Kunden" schreiben!
+- ❌ NIEMALS "3-4 Monate Entwicklungsaufwand mit Team" vorschlagen!
+- ❌ NIEMALS die großen Beispiele unten kopieren - die sind für Mittelstand!
+
+**✅ STATTDESSEN für Solo:**
+- ARR-Ziele: €50k-150k (MAX €360k bei sehr ambitioniert)
+- Partner: 5-10 im ersten Jahr
+- Investment: Max €10-20k CAPEX
+- Team: Sie alleine + 1-2 Freelancer
+- Entwicklung: Was SIE SELBST in 2-4 Monaten schaffen
+
+**BEISPIEL für Solo-Gamechanger:**
+"10 White-Label-Partner × €99/Monat = €12k ARR Jahr 1, Ziel €50k ARR Jahr 2"
+
+---
+
 ## ⚠️ KRITISCHE REGELN - ZWINGEND BEACHTEN!
 
 ### ❌ VERBOTEN - Folgendes NIEMALS als "Gamechanger" verkaufen:

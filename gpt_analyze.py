@@ -1108,6 +1108,17 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # ===== BLOCK 2: Company Basics =====
     # Core company information needed across all prompts
     # Both uppercase and lowercase variants for compatibility
+
+    # Map unternehmensgroesse to COMPANY_SIZE for roadmap/gamechanger prompts
+    size_raw = briefing.get("unternehmensgroesse", "solo")
+    size_map = {
+        "solo": "solo",
+        "klein": "team",
+        "mittel": "kmu",
+        "gross": "kmu",  # Map gross to kmu (closest match)
+    }
+    company_size = size_map.get(size_raw, "team")
+
     base_vars.update({
         "BRANCHE": briefing.get("branche", ""),
         "branche": briefing.get("branche", ""),
@@ -1115,10 +1126,12 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "UNTERNEHMENSGROESSE": briefing.get("unternehmensgroesse", ""),
         "unternehmensgroesse": briefing.get("unternehmensgroesse", ""),
         "UNTERNEHMENSGROESSE_LABEL": briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", ""),
+        "COMPANY_SIZE": company_size,  # For roadmap_90d.md and gamechanger.md
         "BUNDESLAND_LABEL": briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", ""),
         "bundesland": briefing.get("bundesland", ""),
         "HAUPTLEISTUNG": briefing.get("hauptleistung", ""),
         "JAHRESUMSATZ_LABEL": briefing.get("JAHRESUMSATZ_LABEL", briefing.get("jahresumsatz", "")),
+        "INVESTITIONSBUDGET": briefing.get("investitionsbudget", ""),  # For gamechanger.md
     })
     
     # ===== BLOCK 3: Strategy & Vision =====
