@@ -821,22 +821,38 @@ def _build_sources_box_html(sections: Dict[str, str], last_updated: str) -> str:
             "</div>")
 
 # -------------------- Kreativ-Tools ----------------
-def _read_text(path: str) -> Optional[str]:
-    if not path: return None
+def _read_file_with_fallback(path: str) -> Optional[str]:
+    """Read file content with fallback to /mnt/data directory.
+
+    Unified file reader that replaces _read_text and _try_read.
+    """
+    if not path:
+        return None
+
+    # Try primary path
     if os.path.exists(path):
         try:
-            return open(path, "r", encoding="utf-8").read()
+            with open(path, "r", encoding="utf-8") as f:
+                return f.read()
         except (IOError, UnicodeDecodeError) as e:
             log.debug("Failed to read file %s: %s", path, str(e)[:100])
             return None
+
+    # Fallback to /mnt/data
     alt = os.path.join("/mnt/data", os.path.basename(path))
     if os.path.exists(alt):
         try:
-            return open(alt, "r", encoding="utf-8").read()
+            with open(alt, "r", encoding="utf-8") as f:
+                return f.read()
         except (IOError, UnicodeDecodeError) as e:
             log.debug("Failed to read file %s: %s", alt, str(e)[:100])
             return None
+
     return None
+
+# Backward compatibility aliases
+_read_text = _read_file_with_fallback
+_try_read = _read_file_with_fallback
 
 def _parse_kreativ_tools(raw: str) -> List[Tuple[str, str]]:
     out: List[Tuple[str, str]] = []
@@ -1497,15 +1513,7 @@ def _split_li_list_to_columns(html_list: str) -> Tuple[str, str]:
     return "<ul>" + "".join(items[:mid]) + "</ul>", "<ul>" + "".join(items[mid:]) + "</ul>"
 
 # -------------------- AI Act ----------------
-def _try_read(path: str) -> Optional[str]:
-    if os.path.exists(path):
-        try: return open(path, "r", encoding="utf-8").read()
-        except Exception: return None
-    alt = os.path.join("/mnt/data", os.path.basename(path))
-    if os.path.exists(alt):
-        try: return open(alt, "r", encoding="utf-8").read()
-        except Exception: return None
-    return None
+# _try_read is now an alias for _read_file_with_fallback (defined above)
 
 def _md_to_simple_html(md: str) -> str:
     if not md: return ""
@@ -1778,32 +1786,51 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         ) or ""
         sections["NEXT_ACTIONS_HTML"] = _clean_html(nxt) if nxt else _get_fallback_content("next_actions", briefing, scores)
     
-    # Generate one-liners for all sections
-    sections["LEAD_EXEC"] = _one_liner("Executive Summary", sections["EXECUTIVE_SUMMARY_HTML"], briefing, scores)
-    sections["LEAD_KPI"] = _one_liner("KPI‑Dashboard & Monitoring", "", briefing, scores)
-    sections["LEAD_QW"] = _one_liner("Quick Wins (0–90 Tage)", qw_html, briefing, scores)
-    sections["LEAD_ROADMAP_90"] = _one_liner("Roadmap (90 Tage – Test → Pilot → Rollout)", sections["PILOT_PLAN_HTML"], briefing, scores)
-    sections["LEAD_ROADMAP_12"] = _one_liner("Roadmap (12 Monate)", sections["ROADMAP_12M_HTML"], briefing, scores)
-    sections["LEAD_BUSINESS"] = _one_liner("Business Case & Kostenübersicht", sections["ROI_HTML"], briefing, scores)
-    sections["LEAD_BUSINESS_DETAIL"] = _one_liner("Business Case (detailliert)", sections["BUSINESS_CASE_HTML"], briefing, scores)
-    sections["LEAD_TOOLS"] = _one_liner("Empfohlene Tools (Pro & Open‑Source)", sections.get("TOOLS_HTML",""), briefing, scores)
-    sections["LEAD_DATA"] = _one_liner("Dateninventar & ‑Qualität", sections["DATA_READINESS_HTML"], briefing, scores)
-    sections["LEAD_ORG"] = _one_liner("Organisation & Change", sections["ORG_CHANGE_HTML"], briefing, scores)
-    sections["LEAD_RISKS"] = _one_liner("Risiko‑Assessment & Compliance", sections["RISKS_HTML"], briefing, scores)
-    sections["LEAD_GC"] = _one_liner("Gamechanger‑Use Case", sections["GAMECHANGER_HTML"], briefing, scores)
-    sections["LEAD_FUNDING"] = _one_liner("Aktuelle Förderprogramme & Quellen", sections.get("FOERDERPROGRAMME_HTML",""), briefing, scores)
-    sections["LEAD_NEXT_ACTIONS"] = _one_liner("Nächste Schritte (30 Tage)", sections["NEXT_ACTIONS_HTML"], briefing, scores)
+    # Generate one-liners for all sections - PARALLELIZED for performance
+    one_liner_tasks = [
+        ("LEAD_EXEC", "Executive Summary", sections["EXECUTIVE_SUMMARY_HTML"]),
+        ("LEAD_KPI", "KPI‑Dashboard & Monitoring", ""),
+        ("LEAD_QW", "Quick Wins (0–90 Tage)", qw_html),
+        ("LEAD_ROADMAP_90", "Roadmap (90 Tage – Test → Pilot → Rollout)", sections["PILOT_PLAN_HTML"]),
+        ("LEAD_ROADMAP_12", "Roadmap (12 Monate)", sections["ROADMAP_12M_HTML"]),
+        ("LEAD_BUSINESS", "Business Case & Kostenübersicht", sections["ROI_HTML"]),
+        ("LEAD_BUSINESS_DETAIL", "Business Case (detailliert)", sections["BUSINESS_CASE_HTML"]),
+        ("LEAD_TOOLS", "Empfohlene Tools (Pro & Open‑Source)", sections.get("TOOLS_HTML", "")),
+        ("LEAD_DATA", "Dateninventar & ‑Qualität", sections["DATA_READINESS_HTML"]),
+        ("LEAD_ORG", "Organisation & Change", sections["ORG_CHANGE_HTML"]),
+        ("LEAD_RISKS", "Risiko‑Assessment & Compliance", sections["RISKS_HTML"]),
+        ("LEAD_GC", "Gamechanger‑Use Case", sections["GAMECHANGER_HTML"]),
+        ("LEAD_FUNDING", "Aktuelle Förderprogramme & Quellen", sections.get("FOERDERPROGRAMME_HTML", "")),
+        ("LEAD_NEXT_ACTIONS", "Nächste Schritte (30 Tage)", sections["NEXT_ACTIONS_HTML"]),
+        ("LEAD_AI_ACT", "EU AI Act – Zusammenfassung & Compliance", sections["AI_ACT_SUMMARY_HTML"]),
+        ("LEAD_STRATEGIE", "Strategie & Governance", sections["STRATEGIE_GOVERNANCE_HTML"]),
+        ("LEAD_WETTBEWERB", "Wettbewerb & Benchmarking", sections["WETTBEWERB_BENCHMARK_HTML"]),
+        ("LEAD_TECH", "Technologie & Prozesse", sections["TECHNOLOGIE_PROZESSE_HTML"]),
+        ("LEAD_UNTERNEHMEN", "Unternehmensprofil & Markt", sections["UNTERNEHMENSPROFIL_MARKT_HTML"]),
+        ("LEAD_TOOLS_EMPF", "Tool‑Empfehlungen & Einführungsreihenfolge", sections["TOOLS_EMPFEHLUNGEN_HTML"]),
+        ("LEAD_FOERDER", "Förderpotenzial", sections["FOERDERPOTENZIAL_HTML"]),
+        ("LEAD_TRANSPARENCY", "Transparenz & Methodik", sections["TRANSPARENCY_BOX_HTML"]),
+        ("LEAD_KI_AKTIVITAETEN", "KI-Aktivitäten & Ziele", sections["KI_AKTIVITAETEN_ZIELE_HTML"]),
+    ]
 
-    # ✅ NEW: One-liners for newly activated sections
-    sections["LEAD_AI_ACT"] = _one_liner("EU AI Act – Zusammenfassung & Compliance", sections["AI_ACT_SUMMARY_HTML"], briefing, scores)
-    sections["LEAD_STRATEGIE"] = _one_liner("Strategie & Governance", sections["STRATEGIE_GOVERNANCE_HTML"], briefing, scores)
-    sections["LEAD_WETTBEWERB"] = _one_liner("Wettbewerb & Benchmarking", sections["WETTBEWERB_BENCHMARK_HTML"], briefing, scores)
-    sections["LEAD_TECH"] = _one_liner("Technologie & Prozesse", sections["TECHNOLOGIE_PROZESSE_HTML"], briefing, scores)
-    sections["LEAD_UNTERNEHMEN"] = _one_liner("Unternehmensprofil & Markt", sections["UNTERNEHMENSPROFIL_MARKT_HTML"], briefing, scores)
-    sections["LEAD_TOOLS_EMPF"] = _one_liner("Tool‑Empfehlungen & Einführungsreihenfolge", sections["TOOLS_EMPFEHLUNGEN_HTML"], briefing, scores)
-    sections["LEAD_FOERDER"] = _one_liner("Förderpotenzial", sections["FOERDERPOTENZIAL_HTML"], briefing, scores)
-    sections["LEAD_TRANSPARENCY"] = _one_liner("Transparenz & Methodik", sections["TRANSPARENCY_BOX_HTML"], briefing, scores)
-    sections["LEAD_KI_AKTIVITAETEN"] = _one_liner("KI-Aktivitäten & Ziele", sections["KI_AKTIVITAETEN_ZIELE_HTML"], briefing, scores)
+    log.info("🚀 Generating %d one-liners in PARALLEL...", len(one_liner_tasks))
+    oneliner_start = datetime.now()
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_key = {
+            executor.submit(_one_liner, title, html_content, briefing, scores): key
+            for key, title, html_content in one_liner_tasks
+        }
+        for future in as_completed(future_to_key):
+            key = future_to_key[future]
+            try:
+                sections[key] = future.result()
+            except Exception as exc:
+                log.warning("One-liner %s failed: %s", key, exc)
+                sections[key] = ""
+
+    oneliner_elapsed = (datetime.now() - oneliner_start).total_seconds()
+    log.info("✅ One-liners completed in %.1fs (vs ~%ds sequential)", oneliner_elapsed, len(one_liner_tasks) * 3)
     
     # Benchmark table
     sections["BENCHMARK_HTML"] = _build_benchmark_html(briefing)
@@ -1894,59 +1921,52 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections = _generate_content_sections(briefing=answers, scores=scores)
     
     now = datetime.now()
-    sections["BRANCHE_LABEL"] = answers.get("BRANCHE_LABEL", "") or answers.get("branche", "")
-    sections["BUNDESLAND_LABEL"] = answers.get("BUNDESLAND_LABEL", "") or answers.get("bundesland", "")
-    sections["UNTERNEHMENSGROESSE_LABEL"] = answers.get("UNTERNEHMENSGROESSE_LABEL", "") or answers.get("unternehmensgroesse", "")
-    sections["JAHRESUMSATZ_LABEL"] = answers.get("JAHRESUMSATZ_LABEL", answers.get("jahresumsatz", ""))
-    sections["ki_kompetenz"] = answers.get("ki_kompetenz") or answers.get("ki_knowhow", "")
+    # Core metadata
     sections["report_date"] = now.strftime("%d.%m.%Y")
     sections["report_year"] = now.strftime("%Y")
     sections["transparency_text"] = os.getenv("TRANSPARENCY_TEXT", "")
     sections["user_email"] = answers.get("email") or answers.get("kontakt_email") or ""
+    sections["ki_kompetenz"] = answers.get("ki_kompetenz") or answers.get("ki_knowhow", "")
+
+    # Scores
     sections["score_governance"] = scores.get("governance", 0)
     sections["score_sicherheit"] = scores.get("security", 0)
     sections["score_nutzen"] = scores.get("value", 0)
-    sections["score_wertschoepfung"] = scores.get("value", 0)  # Fix Bug 1: Für PDF-Template
+    sections["score_wertschoepfung"] = scores.get("value", 0)
     sections["score_befaehigung"] = scores.get("enablement", 0)
     sections["score_gesamt"] = scores.get("overall", 0)
 
-    # Copy all normalized labels from answers to sections
-    sections["HAUPTLEISTUNG"] = answers.get("HAUPTLEISTUNG", "")
-    sections["IT_INFRASTRUKTUR_LABEL"] = answers.get("IT_INFRASTRUKTUR_LABEL", "")
-    sections["PROZESSE_PAPIERLOS_LABEL"] = answers.get("PROZESSE_PAPIERLOS_LABEL", "")
-    sections["AUTOMATISIERUNGSGRAD_LABEL"] = answers.get("AUTOMATISIERUNGSGRAD_LABEL", "")
-    sections["ROADMAP_VORHANDEN_LABEL"] = answers.get("ROADMAP_VORHANDEN_LABEL", "")
-    sections["GOVERNANCE_RICHTLINIEN_LABEL"] = answers.get("GOVERNANCE_RICHTLINIEN_LABEL", "")
-    sections["CHANGE_MANAGEMENT_LABEL"] = answers.get("CHANGE_MANAGEMENT_LABEL", "")
-    sections["MELDEWEGE_LABEL"] = answers.get("MELDEWEGE_LABEL", "")
-    sections["DATENSCHUTZ_LABEL"] = answers.get("DATENSCHUTZ_LABEL", "")
-    sections["LOESCHREGELN_LABEL"] = answers.get("LOESCHREGELN_LABEL", "")
-    sections["DATENSCHUTZBEAUFTRAGTER_LABEL"] = answers.get("DATENSCHUTZBEAUFTRAGTER_LABEL", "")
-    sections["FOLGENABSCHAETZUNG_LABEL"] = answers.get("FOLGENABSCHAETZUNG_LABEL", "")
-    sections["INTERNE_KI_KOMPETENZEN_LABEL"] = answers.get("INTERNE_KI_KOMPETENZEN_LABEL", "")
-    sections["STRATEGISCHE_ZIELE"] = answers.get("STRATEGISCHE_ZIELE", "")
-    sections["GESCHAEFTSMODELL_EVOLUTION"] = answers.get("GESCHAEFTSMODELL_EVOLUTION", "")
-    sections["ZEITERSPARNIS_PRIORITAET"] = answers.get("ZEITERSPARNIS_PRIORITAET", "")
-    sections["KI_PROJEKTE"] = answers.get("KI_PROJEKTE", "")
-    sections["VISION_3_JAHRE"] = answers.get("VISION_3_JAHRE", "")
-    sections["MITARBEITER_LABEL"] = answers.get("MITARBEITER_LABEL", "")
-    sections["UMSATZ_LABEL"] = answers.get("UMSATZ_LABEL", "")
-    sections["SELBSTSTAENDIG_LABEL"] = answers.get("SELBSTSTAENDIG_LABEL", "")
-    sections["ZIELGRUPPEN_LABELS"] = answers.get("ZIELGRUPPEN_LABELS", "")
-    sections["MARKTPOSITION_LABEL"] = answers.get("MARKTPOSITION_LABEL", "")
-    sections["BENCHMARK_WETTBEWERB_LABEL"] = answers.get("BENCHMARK_WETTBEWERB_LABEL", "")
-    sections["INTERESSE_FOERDERUNG_LABEL"] = answers.get("INTERESSE_FOERDERUNG_LABEL", "")
+    # Copy all label variables from answers to sections using loops
+    # Single-choice labels with fallback
+    label_with_fallback = [
+        ("BRANCHE_LABEL", "branche"),
+        ("BUNDESLAND_LABEL", "bundesland"),
+        ("UNTERNEHMENSGROESSE_LABEL", "unternehmensgroesse"),
+        ("JAHRESUMSATZ_LABEL", "jahresumsatz"),
+    ]
+    for label_key, fallback_key in label_with_fallback:
+        sections[label_key] = answers.get(label_key, "") or answers.get(fallback_key, "")
 
-# Multi-choice labels (comma-separated)
-    sections["KI_ZIELE_LABELS"] = answers.get("KI_ZIELE_LABELS", "")
-    sections["KI_HEMMNISSE_LABELS"] = answers.get("KI_HEMMNISSE_LABELS", "")
-    sections["ANWENDUNGSFAELLE_LABELS"] = answers.get("ANWENDUNGSFAELLE_LABELS", "")
-    sections["DATENQUELLEN_LABELS"] = answers.get("DATENQUELLEN_LABELS", "")
-    sections["VORHANDENE_TOOLS_LABELS"] = answers.get("VORHANDENE_TOOLS_LABELS", "")
-    sections["REGULIERTE_BRANCHE_LABELS"] = answers.get("REGULIERTE_BRANCHE_LABELS", "")
-    sections["TRAININGS_INTERESSEN_LABELS"] = answers.get("TRAININGS_INTERESSEN_LABELS", "")
+    # Direct copy labels (single-choice and multi-choice)
+    direct_copy_keys = [
+        "HAUPTLEISTUNG", "IT_INFRASTRUKTUR_LABEL", "PROZESSE_PAPIERLOS_LABEL",
+        "AUTOMATISIERUNGSGRAD_LABEL", "ROADMAP_VORHANDEN_LABEL", "GOVERNANCE_RICHTLINIEN_LABEL",
+        "CHANGE_MANAGEMENT_LABEL", "MELDEWEGE_LABEL", "DATENSCHUTZ_LABEL",
+        "LOESCHREGELN_LABEL", "DATENSCHUTZBEAUFTRAGTER_LABEL", "FOLGENABSCHAETZUNG_LABEL",
+        "INTERNE_KI_KOMPETENZEN_LABEL", "STRATEGISCHE_ZIELE", "GESCHAEFTSMODELL_EVOLUTION",
+        "ZEITERSPARNIS_PRIORITAET", "KI_PROJEKTE", "VISION_3_JAHRE",
+        "MITARBEITER_LABEL", "UMSATZ_LABEL", "SELBSTSTAENDIG_LABEL",
+        "ZIELGRUPPEN_LABELS", "MARKTPOSITION_LABEL", "BENCHMARK_WETTBEWERB_LABEL",
+        "INTERESSE_FOERDERUNG_LABEL",
+        # Multi-choice labels
+        "KI_ZIELE_LABELS", "KI_HEMMNISSE_LABELS", "ANWENDUNGSFAELLE_LABELS",
+        "DATENQUELLEN_LABELS", "VORHANDENE_TOOLS_LABELS", "REGULIERTE_BRANCHE_LABELS",
+        "TRAININGS_INTERESSEN_LABELS",
+    ]
+    for key in direct_copy_keys:
+        sections[key] = answers.get(key, "")
 
-    log.info(f"[{run_id}] ✅ Copied {12} label variables to sections")
+    log.info("[%s] Copied %d label variables to sections", run_id, len(direct_copy_keys) + len(label_with_fallback))
 # === END LABELS FIX ===
 
     version_full = os.getenv("VERSION", "1.0.0")
