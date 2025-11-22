@@ -21,6 +21,122 @@ from typing import Dict, Any, List, Optional
 
 log = logging.getLogger(__name__)
 
+# ----------------------------- Score Context (Fix #6) -----------------------
+
+BENCHMARK_SCORES = {
+    "solo": {"avg": 65, "top10": 82},
+    "klein": {"avg": 72, "top10": 88},
+    "mittel": {"avg": 78, "top10": 92},
+    "gross": {"avg": 82, "top10": 95}
+}
+
+
+def get_score_context(overall_score: int, size: str) -> Dict[str, Any]:
+    """
+    Generate contextual score interpretation for size-relative benchmarking.
+
+    Args:
+        overall_score: The calculated overall score (0-100)
+        size: Company size (solo, klein, mittel, gross)
+
+    Returns:
+        Dict with score_rating, size_label, benchmark values
+    """
+    benchmark = BENCHMARK_SCORES.get(size.lower(), BENCHMARK_SCORES["klein"])
+
+    if overall_score >= benchmark["top10"]:
+        rating = "exzellent - Sie gehören zu den Top 10%"
+    elif overall_score >= benchmark["avg"] + 10:
+        rating = "überdurchschnittlich"
+    elif overall_score >= benchmark["avg"]:
+        rating = "gut - über dem Durchschnitt"
+    elif overall_score >= benchmark["avg"] - 10:
+        rating = "solide - im Durchschnitt"
+    else:
+        rating = "ausbaufähig - unter dem Durchschnitt"
+
+    size_labels = {
+        "solo": "Solo-Berater",
+        "klein": "Kleinunternehmen",
+        "mittel": "mittelständisches Unternehmen",
+        "gross": "Großunternehmen"
+    }
+
+    return {
+        "score_rating": rating,
+        "size_label": size_labels.get(size.lower(), "Unternehmen"),
+        "avg_score_for_size": benchmark["avg"],
+        "top10_score_for_size": benchmark["top10"]
+    }
+
+
+def get_research_provenance() -> Dict[str, Any]:
+    """
+    Generate research data provenance information for transparency.
+
+    Returns:
+        Dict with research sources, report date, disclaimer
+    """
+    from datetime import datetime
+
+    report_date = datetime.now().strftime("%d.%m.%Y")
+
+    research_sources = [
+        {
+            "provider": "Tavily",
+            "query_type": "Tools & Funding",
+            "date": report_date
+        },
+        {
+            "provider": "Perplexity",
+            "query_type": "Markt & Wettbewerb",
+            "date": report_date
+        }
+    ]
+
+    return {
+        "research_sources": research_sources,
+        "report_date": report_date,
+        "provenance_html": build_research_provenance_html(research_sources, report_date)
+    }
+
+
+def build_research_provenance_html(sources: List[Dict[str, str]], report_date: str) -> str:
+    """
+    Build HTML snippet for research provenance display.
+
+    Args:
+        sources: List of research source dicts
+        report_date: Report generation date
+
+    Returns:
+        HTML string for embedding in report
+    """
+    source_texts = []
+    for source in sources:
+        source_texts.append(f"{source['provider']} ({source['query_type']}, {source['date']})")
+
+    sources_str = " • ".join(source_texts)
+
+    html = f"""
+<div class="research-provenance" style="
+    font-size: 0.85em;
+    color: #64748b;
+    margin-top: 1rem;
+    padding: 0.5rem;
+    background: #f8fafc;
+    border-radius: 4px;
+">
+    <strong>📊 Datenquellen:</strong> {sources_str}
+    <br>
+    <small style="opacity: 0.8;">
+        Diese Informationen wurden am {report_date} recherchiert und können sich ändern.
+    </small>
+</div>"""
+
+    return html.strip()
+
+
 # ----------------------------- Utilities ------------------------------------
 
 def _fmt_eur(value: Optional[float | int]) -> str:
@@ -79,9 +195,107 @@ def _small_bar_svg(pairs: List[tuple[str, float]], max_width: int = 260, height:
 
 # ------------------------ Business Case -------------------------------------
 
+def get_size_constraints(unternehmensgroesse: str, jahresumsatz_range: str, investitionsbudget: str) -> Dict[str, Any]:
+    """
+    Define realistic constraints by company size.
+    CRITICAL: Prevents unrealistic numbers for small businesses.
+    """
+    # Parse revenue range
+    revenue_mapping = {
+        "unter_100k": 50000,
+        "100k_500k": 250000,
+        "500k_2m": 1000000,
+        "2m_10m": 5000000,
+        "ueber_10m": 20000000
+    }
+    annual_revenue = revenue_mapping.get(jahresumsatz_range, 100000)
+    monthly_revenue = annual_revenue / 12
+
+    # Parse investment budget
+    investment_mapping = {
+        "unter_2000": 1000,
+        "2000_10000": 5000,
+        "10000_50000": 25000,
+        "50000_250000": 125000,
+        "ueber_250000": 500000
+    }
+    max_investment = investment_mapping.get(investitionsbudget, 10000)
+
+    # Size-specific constraints - CRITICAL for realistic reports
+    constraints = {
+        "solo": {
+            "max_monthly_savings": min(monthly_revenue * 0.3, 2000),
+            "max_capex": min(max_investment, 10000),
+            "max_opex_monthly": 200,
+            "hourly_rate": 80,
+            "max_time_savings_hours": 20,
+        },
+        "klein": {
+            "max_monthly_savings": min(monthly_revenue * 0.4, 10000),
+            "max_capex": min(max_investment, 50000),
+            "max_opex_monthly": 1000,
+            "hourly_rate": 100,
+            "max_time_savings_hours": 80,
+        },
+        "mittel": {
+            "max_monthly_savings": min(monthly_revenue * 0.5, 50000),
+            "max_capex": min(max_investment, 250000),
+            "max_opex_monthly": 5000,
+            "hourly_rate": 120,
+            "max_time_savings_hours": 200,
+        },
+        "gross": {
+            "max_monthly_savings": monthly_revenue * 0.6,
+            "max_capex": max_investment,
+            "max_opex_monthly": 20000,
+            "hourly_rate": 150,
+            "max_time_savings_hours": 500,
+        }
+    }
+
+    size = unternehmensgroesse.lower() if unternehmensgroesse.lower() in constraints else "klein"
+    return constraints[size]
+
+
+def validate_business_case_plausibility(business_case: Dict[str, Any], answers: Dict[str, Any]) -> List[str]:
+    """
+    Plausibility checks - return warnings if unrealistic.
+    """
+    warnings = []
+
+    revenue_map = {
+        "unter_100k": 50000,
+        "100k_500k": 250000,
+        "500k_2m": 1000000,
+        "2m_10m": 5000000,
+        "ueber_10m": 20000000
+    }
+    annual_revenue = revenue_map.get(str(answers.get("jahresumsatz", "")).lower(), 100000)
+    monthly_revenue = annual_revenue / 12
+
+    einsparung = business_case.get("EINSPARUNG_MONAT_EUR", 0)
+
+    # Check: Savings vs Revenue
+    if einsparung > monthly_revenue * 0.5:
+        warnings.append(
+            f"⚠️ Monatliche Einsparung ({einsparung}€) übersteigt 50% des Monatsumsatzes (~{monthly_revenue:.0f}€)"
+        )
+
+    # Check: ROI too good to be true
+    roi = business_case.get("ROI_12M")
+    if roi is not None and roi > 5:  # > 500%
+        warnings.append(
+            f"⚠️ ROI von {roi*100:.0f}% unrealistisch hoch"
+        )
+
+    return warnings
+
+
 def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str, Any]:
     """
     Liefert realistische Kennzahlen + HTML-Tabelle.
+
+    ENHANCED: Now applies size-aware constraints for realistic numbers.
 
     Returns:
         dict mit Schlüsseln:
@@ -91,8 +305,17 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
         - ROI_12M_EUR (absoluter Euro-Gewinn nach 12M)
         - BUSINESS_CASE_TABLE_HTML (HTML-Snippet)
     """
-    # Defaults aus ENV oder Fallbacks
-    stundensatz = int(os.getenv("DEFAULT_STUNDENSATZ_EUR", env.get("DEFAULT_STUNDENSATZ_EUR", 60)))
+    # Get size constraints
+    groesse = str(answers.get("unternehmensgroesse", "solo")).lower()
+    rev = str(answers.get("jahresumsatz", "unter_100k")).lower()
+    budget = str(answers.get("investitionsbudget", "2000_10000")).lower()
+
+    constraints = get_size_constraints(groesse, rev, budget)
+
+    # Use size-appropriate hourly rate
+    stundensatz = constraints["hourly_rate"]
+
+    # Defaults aus ENV oder Fallbacks (for hours estimation)
     qw1 = int(os.getenv("DEFAULT_QW1_H", env.get("DEFAULT_QW1_H", 10)))
     qw2 = int(os.getenv("DEFAULT_QW2_H", env.get("DEFAULT_QW2_H", 8)))
     fallback = int(os.getenv("FALLBACK_QW_MONTHLY_H", env.get("FALLBACK_QW_MONTHLY_H", 18)))
@@ -106,9 +329,16 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
     if total_hours is None:
         total_hours = float(qw1 + qw2 + fallback)
 
-    einsparung_monat_eur = int(round(total_hours * stundensatz))
+    # CRITICAL: Cap time savings to realistic maximum for company size
+    capped_hours = min(total_hours, constraints["max_time_savings_hours"])
+    if capped_hours < total_hours:
+        log.info(f"[BUSINESS-CASE] Capped hours from {total_hours} to {capped_hours} for size '{groesse}'")
 
-    # CAPEX aus Budgetband
+    # Calculate monthly savings with cap
+    einsparung_monat_eur = int(round(capped_hours * stundensatz))
+    einsparung_monat_eur = min(einsparung_monat_eur, int(constraints["max_monthly_savings"]))
+
+    # CAPEX aus Budgetband - aber mit size-cap
     band = str(answers.get("investitionsbudget", "")).lower()
     if "unter_2000" in band:
         capex = 1500
@@ -119,12 +349,14 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
     else:
         capex = 4000
 
-    # OPEX abhängig von Größe / Umsatz
-    groesse = str(answers.get("unternehmensgroesse", "solo")).lower()
-    rev = str(answers.get("jahresumsatz", "unter_100k")).lower()
+    # Cap CAPEX to size-appropriate maximum
+    capex = min(capex, int(constraints["max_capex"]))
+
+    # OPEX - size-appropriate
     opex = 180 if "solo" in groesse else 350
     if "unter_100k" in rev:
         opex = max(120, opex - 60)
+    opex = min(opex, int(constraints["max_opex_monthly"]))
 
     # Wirtschaftssicht
     monatlicher_nutzen = einsparung_monat_eur - opex

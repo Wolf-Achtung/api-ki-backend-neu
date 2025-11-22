@@ -84,6 +84,24 @@ class ReportValidator:
             "Organisationsberater",
         ],
     }
+
+    # Replacement terms for size-inappropriate content
+    SIZE_REPLACEMENTS = {
+        "solo": {
+            "Abteilung": "Bereich",
+            "Abteilungen": "Bereiche",
+            "die Geschäftsleitung": "Sie",
+            "das Management": "Sie",
+            "Ihr Team": "Sie",
+            "Mitarbeiter": "Freelancer oder Partner",
+            "HR-Abteilung": "HR-Prozesse",
+            "IT-Abteilung": "IT-Setup",
+        },
+        "klein": {
+            "der Konzern": "das Unternehmen",
+            "Vorstand": "Geschäftsführung",
+        }
+    }
     
     # Minimum Content-Length pro Section (Zeichen)
     MIN_SECTION_LENGTH = {
@@ -332,19 +350,74 @@ class ReportValidator:
 def validate_report(sections: Dict[str, Any], briefing: Dict[str, Any]) -> bool:
     """
     Main validation function - to be called from gpt_analyze.py
-    
+
     Args:
         sections: Report sections dict
         briefing: Original briefing data
-        
+
     Returns:
         True if report passes validation, False if critical errors found
     """
     validator = ReportValidator(sections, briefing)
     is_valid, errors = validator.validate_all()
     validator.print_report()
-    
+
     return is_valid
+
+
+def filter_size_inappropriate_content(content: str, unternehmensgroesse: str) -> str:
+    """
+    Replace size-inappropriate terms with better alternatives.
+
+    Args:
+        content: HTML/text content to filter
+        unternehmensgroesse: Company size (solo, klein, mittel, gross)
+
+    Returns:
+        Filtered content with replacements applied
+    """
+    import logging
+    log = logging.getLogger(__name__)
+
+    size = unternehmensgroesse.lower() if unternehmensgroesse.lower() in ReportValidator.SIZE_REPLACEMENTS else "solo"
+    replacements = ReportValidator.SIZE_REPLACEMENTS.get(size, {})
+
+    for inappropriate, replacement in replacements.items():
+        if inappropriate in content:
+            log.info(f"[CONTENT-FILTER] Replacing '{inappropriate}' with '{replacement}' for {size}")
+            content = content.replace(inappropriate, replacement)
+
+    return content
+
+
+def filter_all_sections(sections: Dict[str, Any], briefing: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Apply size-inappropriate content filter to all sections.
+
+    Args:
+        sections: Report sections dict
+        briefing: Original briefing data
+
+    Returns:
+        Filtered sections dict
+    """
+    import logging
+    log = logging.getLogger(__name__)
+
+    unternehmensgroesse = briefing.get("unternehmensgroesse", "klein")
+    log.info(f"[CONTENT-FILTER] Filtering size-inappropriate content for {unternehmensgroesse}")
+
+    filtered_sections = {}
+    for section_key, section_value in sections.items():
+        if isinstance(section_value, str):
+            filtered_sections[section_key] = filter_size_inappropriate_content(
+                section_value,
+                unternehmensgroesse
+            )
+        else:
+            filtered_sections[section_key] = section_value
+
+    return filtered_sections
 
 
 # ============================================================================
