@@ -6,6 +6,8 @@ from typing import Any, Dict, Optional
 from jinja2 import Environment, FileSystemLoader, select_autoescape, Undefined
 from markupsafe import Markup
 
+from utils.logo_embedder import embed_logos_in_html
+
 log = logging.getLogger(__name__)
 
 def _env() -> Environment:
@@ -147,6 +149,12 @@ def render(briefing_obj: Any,
         }
         expr_replacements.update(single_brace_replacements)
 
+        # Strip braces from numeric literals that GPT erroneously wrapped
+        # Pattern: {number} or {number.decimal} -> just the number
+        numeric_brace_pattern = r'\{(\d+(?:\.\d+)?)\}'
+        html = re.sub(numeric_brace_pattern, r'\1', html)
+        log.debug(f"[RENDER] Stripped braces from numeric literals")
+
         # Replace simple variable placeholders
         simple_replacements = {
             r'\{\{\s*qw_hours_total\s*\}\}': str(sections.get('qw_hours_total', '')),
@@ -173,5 +181,10 @@ def render(briefing_obj: Any,
             log.warning(f"⚠️ Template still contains unreplaced variables in report {run_id}: {unique_missing}")
         else:
             log.warning(f"⚠️ Template still contains unreplaced variables in report {run_id}")
+
+    # Embed logos as base64 for PDF service compatibility
+    tpl_dir = str(Path(tpl_path).parent)
+    html = embed_logos_in_html(html, tpl_dir)
+    log.info(f"[RENDER] Embedded logos in HTML for report {run_id}")
 
     return {"html": html, "meta": meta or {}}
