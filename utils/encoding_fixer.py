@@ -37,7 +37,7 @@ def fix_utf8_encoding(text: str) -> str:
     Returns:
         Fixed string with correct German umlauts
     """
-    if not isinstance(text, str):
+    if not text:
         return text
 
     # Quick check if there's anything to fix
