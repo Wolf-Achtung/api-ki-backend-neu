@@ -2,6 +2,8 @@
 """
 UTF-8 Encoding fixer for German umlauts.
 Fixes double-encoded UTF-8 characters (Mojibake).
+
+Enhanced with ftfy library for better accuracy when available.
 """
 from __future__ import annotations
 
@@ -9,6 +11,15 @@ import logging
 from typing import Any, Dict, List, Union
 
 logger = logging.getLogger(__name__)
+
+# Try to import ftfy for enhanced fixing
+try:
+    import ftfy
+    HAS_FTFY = True
+    logger.info("✅ ftfy library available for enhanced UTF-8 fixing")
+except ImportError:
+    HAS_FTFY = False
+    logger.debug("⚠️ ftfy not installed, using fallback encoding fix")
 
 
 def fix_utf8_encoding(text: str) -> str:
@@ -32,7 +43,16 @@ def fix_utf8_encoding(text: str) -> str:
     if 'Ã' not in text and 'â' not in text:
         return text
 
-    # Direct replacements for common Mojibake patterns
+    original = text
+
+    # Use ftfy if available (more robust)
+    if HAS_FTFY:
+        text = ftfy.fix_text(text)
+        if original != text:
+            logger.debug(f"[ENCODING-FIX-FTFY] Fixed: '{original[:50]}...' -> '{text[:50]}...'")
+        return text
+
+    # Fallback: Direct replacements for common Mojibake patterns
     replacements = {
         'Ã¤': 'ä', 'Ã¶': 'ö', 'Ã¼': 'ü',
         'Ã„': 'Ä', 'Ã–': 'Ö', 'Ãœ': 'Ü',
@@ -44,7 +64,6 @@ def fix_utf8_encoding(text: str) -> str:
         'â€"': '–', 'â€"': '—', 'â€¢': '•',
     }
 
-    original = text
     for wrong, correct in replacements.items():
         text = text.replace(wrong, correct)
 

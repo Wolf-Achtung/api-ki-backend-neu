@@ -19,6 +19,90 @@ from services.prompt_builder import PromptBuilder
 log = logging.getLogger(__name__)
 
 
+# Roadmap constraints by company size - Fix #5
+ROADMAP_CONSTRAINTS = {
+    "solo": {
+        "max_budget_total": 10000,
+        "max_budget_per_phase": 3000,
+        "team_structure": "Sie + maximal 1-2 Freelancer",
+        "phase_duration_weeks": 4,
+        "example_team": "1 Backend-Dev (Freelance, 20h)",
+        "realistic_capacity": "Sie arbeiten hauptsächlich selbst, Freelancer für Spezialaufgaben"
+    },
+    "klein": {
+        "max_budget_total": 50000,
+        "max_budget_per_phase": 15000,
+        "team_structure": "Kernteam + externe Experten",
+        "phase_duration_weeks": 4,
+        "example_team": "2-3 Entwickler + 1 Projektleiter",
+        "realistic_capacity": "Kleines internes Team + punktuelle Verstärkung"
+    },
+    "mittel": {
+        "max_budget_total": 200000,
+        "max_budget_per_phase": 60000,
+        "team_structure": "Dediziertes Projektteam",
+        "phase_duration_weeks": 6,
+        "example_team": "5-8 Entwickler + PM + Architect",
+        "realistic_capacity": "Vollständiges Projektteam mit verschiedenen Rollen"
+    }
+}
+
+
+def enhance_roadmap_prompt(base_prompt: str, context: Dict[str, Any]) -> str:
+    """
+    Inject size-specific constraints into roadmap prompt.
+
+    Args:
+        base_prompt: Original prompt text
+        context: Briefing data with unternehmensgroesse, investitionsbudget
+
+    Returns:
+        Enhanced prompt with size constraints
+    """
+    size = context.get("unternehmensgroesse", "klein").lower()
+    constraints = ROADMAP_CONSTRAINTS.get(size, ROADMAP_CONSTRAINTS["klein"])
+
+    # Get investment budget from briefing
+    investment_budget = context.get("investitionsbudget", "2000_10000")
+    investment_map = {
+        "unter_2000": 2000,
+        "2000_10000": 10000,
+        "10000_50000": 50000,
+        "50000_250000": 250000,
+        "ueber_250000": 500000
+    }
+    max_realistic_budget = min(
+        constraints["max_budget_total"],
+        investment_map.get(investment_budget, 10000)
+    )
+
+    size_context = f"""
+KRITISCHE VORGABEN - Unternehmensgröße: {size.upper()}
+
+Budget-Grenzen (STRIKT EINHALTEN!):
+- Gesamt-Budget für 90 Tage: MAX €{max_realistic_budget:,}
+- Budget pro Phase: MAX €{constraints['max_budget_per_phase']:,}
+- Angegebenes Investment-Budget: {investment_budget}
+
+Team-Struktur (REALISTISCH!):
+- {constraints['team_structure']}
+- Beispiel: {constraints['example_team']}
+- Kapazität: {constraints['realistic_capacity']}
+
+VERBOTEN für {size}:
+- KEINE "5 Entwickler + Projektleiter" bei Solo/Klein
+- KEINE Budgets > €{max_realistic_budget:,}
+- KEINE unrealistischen Teamgrößen
+
+Die Roadmap MUSS mit dem realen Budget und der Unternehmensgröße umsetzbar sein!
+
+---
+
+"""
+
+    return size_context + base_prompt
+
+
 class PromptEnhancer:
     """
     Enhances existing prompts with contextual information.
@@ -161,7 +245,14 @@ class PromptEnhancer:
             # === FIX: Check if this prompt should get context ===
             if prompt_name not in PROMPTS_WITH_CONTEXT:
                 log.debug("⏭️  Skipping context for '%s' (not in whitelist)", prompt_name)
-                return base_prompt  # Return WITHOUT context!
+
+                # === Fix #5: Apply roadmap constraints for roadmap prompts ===
+                ROADMAP_PROMPTS = {"roadmap", "roadmap_12m", "pilot_plan", "roadmap_90d"}
+                if prompt_name in ROADMAP_PROMPTS:
+                    log.info("🎯 Applying roadmap size constraints for '%s'", prompt_name)
+                    base_prompt = enhance_roadmap_prompt(base_prompt, briefing_data)
+
+                return base_prompt  # Return WITHOUT context (but with roadmap constraints if applicable)!
             
             # Build context block (only for whitelisted prompts)
             context_block = self.build_context_block(briefing_data)

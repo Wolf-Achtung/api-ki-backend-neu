@@ -32,3 +32,6 @@ feedparser>=6.0,<7.0
 
 # --- PDF generation (if you render HTML->PDF locally) ---
 # weasyprint>=61.0
+
+# --- UTF-8 encoding fix (optional, for enhanced Mojibake fixing) ---
+ftfy>=6.1,<7.0
