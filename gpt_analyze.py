@@ -1860,7 +1860,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
 
     # Double-check encoding (safety net for old DB data)
     log.info("[%s] [ENCODING-FIX] Double-check on briefing %s", run_id, briefing_id)
-    raw_answers = clean_briefing_data(raw_answers)
+    raw_answers = clean_briefing_data(raw_answers)  # type: ignore[assignment]
 
     answers = (lambda x: x)(raw_answers)
     try:
@@ -2178,7 +2178,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     from services.report_validator import validate_report, filter_all_sections
 
     log.info(f"[{run_id}] 🔍 Applying size-inappropriate content filter...")
-    sections = filter_all_sections(sections, answers)  # type: ignore[assignment]
+    sections = filter_all_sections(sections, answers)
 
     # === VALIDATION GATE - Wolf 2025-11-19 (moved after placeholder replacement) ===
     log.info(f"[{run_id}] 🔍 Running report validation...")
