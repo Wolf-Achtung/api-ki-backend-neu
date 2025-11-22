@@ -44,7 +44,9 @@ Erstelle eine Risiko-Matrix (5-8 Risiken) die:
 
 ## 💡 BEISPIEL: GUT vs. SCHLECHT
 
-**Kontext:** GPT-4-basierte Assessments, Score Governance 58, Score Sicherheit 65
+**Kontext:** GPT-4-basierte Assessments
+
+⚠️ **WICHTIG:** Die tatsächlichen Scores MÜSSEN aus den Variablen `{{score_governance}}` und `{{score_sicherheit}}` übernommen werden! NIEMALS die Beispiel-Zahlen (58, 65) verwenden!
 
 #### ❌ SCHLECHT:
 ```html
