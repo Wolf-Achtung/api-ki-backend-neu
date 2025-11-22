@@ -1,0 +1,160 @@
+{
+  "branche": "industrie",
+  "display_name": "Industrie & Produktion",
+  "description": "Fertigungsunternehmen, Maschinenbau, Automobilzulieferer, Elektronik, Prozessindustrie",
+
+  "typical_workflows": [
+    "Produktionsplanung: Auftragssteuerung, Kapazitätsplanung, Reihenfolge",
+    "Fertigungssteuerung: Maschinen, Personal, Material koordinieren",
+    "Qualitätssicherung: Prüfungen, Dokumentation, Reklamationen",
+    "Instandhaltung: Wartung, Reparatur, Ersatzteile",
+    "Lieferantenmanagement: Bestellung, Wareneingang, Bewertung",
+    "Arbeitsvorbereitung: Stücklisten, Arbeitspläne, NC-Programme",
+    "Dokumentation: Fertigungsberichte, CE, Normen"
+  ],
+
+  "common_pain_points": [
+    "Produktionsplanung komplex: Viele Abhängigkeiten, häufige Umplanung",
+    "Maschinenausfälle: Ungeplante Stillstände kosten viel",
+    "Qualitätsprobleme: Ausschuss, Nacharbeit, Reklamationen",
+    "Dokumentationsaufwand: Normen, Audits, Kundenanforderungen",
+    "Lieferengpässe: Materialverfügbarkeit unsicher",
+    "Know-how-Verlust: Wissen in wenigen Köpfen",
+    "Fachkräftemangel: Qualifiziertes Personal schwer zu finden"
+  ],
+
+  "ai_opportunities": [
+    "Predictive Maintenance: Maschinenausfälle vorhersagen",
+    "Qualitätsprognose: Ausschuss vor Produktion erkennen",
+    "Produktionsoptimierung: Reihenfolge, Losgrößen optimieren",
+    "Automatische Dokumentation: Reports, Protokolle generieren",
+    "Visuelle Qualitätsprüfung: KI-Bildanalyse für Defekte",
+    "Lieferanten-Risiko: Früherkennung von Engpässen",
+    "Prozess-Monitoring: Anomalien in Echtzeit erkennen",
+    "Wissensmanagement: Technisches Know-how durchsuchbar"
+  ],
+
+  "typical_tools": [
+    "ERP: SAP, Microsoft Dynamics, proALPHA",
+    "MES: Manufacturing Execution System",
+    "CAD/CAM: SolidWorks, CATIA, Siemens NX",
+    "Excel für Planung und Listen",
+    "SPS/PLC für Maschinensteuerung",
+    "QM-Software: IBS QMS, Babtec",
+    "Instandhaltungs-Software: SAP PM, IBM Maximo",
+    "Office für Dokumentation"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Email", "Teams", "Shopfloor-Terminals"],
+    "erp": ["SAP S/4HANA", "Microsoft Dynamics", "proALPHA"],
+    "mes": ["MPDV", "FORCAM", "Siemens"],
+    "cad_cam": ["SolidWorks", "CATIA", "Siemens NX"],
+    "qm": ["IBS QMS", "Babtec", "SAP QM"],
+    "maintenance": ["SAP PM", "IBM Maximo", "Infor"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "Automatische Fertigungsberichte",
+      "description": "Produktionsdaten → formatierter Tages-/Wochenbericht.",
+      "hours_saved": 5,
+      "tool": "GPT-4 + Excel/ERP-Export",
+      "implementation": "Datenexport automatisieren, Report-Template, GPT-Zusammenfassung",
+      "difficulty": "mittel",
+      "investment": "20-50€/Monat"
+    },
+    {
+      "title": "Technische Dokumentation per KI",
+      "description": "Arbeitsanweisungen, SOPs, Prüfpläne schneller erstellen.",
+      "hours_saved": 6,
+      "tool": "GPT-4",
+      "implementation": "Templates für verschiedene Dok-Typen, Fachbegriffe definieren",
+      "difficulty": "niedrig",
+      "investment": "20€/Monat"
+    },
+    {
+      "title": "Normen-Schnellsuche",
+      "description": "Relevante ISO/DIN-Normen schnell finden und zusammenfassen.",
+      "hours_saved": 3,
+      "tool": "GPT-4 + Normen-Zugang",
+      "implementation": "Prompts für Normen-Recherche",
+      "difficulty": "niedrig",
+      "investment": "20€/Monat"
+    },
+    {
+      "title": "Lieferanten-Email-Automation",
+      "description": "Standardanfragen (Liefertermin, Preisanfrage) automatisch versenden.",
+      "hours_saved": 4,
+      "tool": "Make.com + Email",
+      "implementation": "Templates, Trigger aus ERP",
+      "difficulty": "mittel",
+      "investment": "29€/Monat"
+    },
+    {
+      "title": "Reklamations-Analyse",
+      "description": "Kundenreklamationen kategorisieren, Ursachen analysieren.",
+      "hours_saved": 3,
+      "tool": "GPT-4",
+      "implementation": "Reklamationen exportieren, Analyse-Prompt",
+      "difficulty": "niedrig",
+      "investment": "20€/Monat"
+    },
+    {
+      "title": "Meeting-Protokolle für Shopfloor",
+      "description": "Schichtübergaben und Besprechungen automatisch protokollieren.",
+      "hours_saved": 4,
+      "tool": "Fireflies.ai oder Otter.ai",
+      "implementation": "Aufnahme-Workflow, Template für Protokoll",
+      "difficulty": "niedrig",
+      "investment": "19€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Wissensmanagement für Produktion",
+      "description": "Technisches Know-how, Einstellparameter, Troubleshooting durchsuchbar.",
+      "hours_saved": 15,
+      "tool": "Notion AI oder SharePoint + Copilot",
+      "implementation": "Wissen sammeln, strukturieren, Team schulen",
+      "difficulty": "hoch",
+      "investment": "100-200€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Predictive Maintenance mit KI",
+      "description": "Maschinendaten analysieren, Ausfälle vorhersagen, Wartung optimieren.",
+      "hours_saved": 50,
+      "tool": "Siemens MindSphere oder Azure IoT",
+      "implementation": "Sensoren anbinden, Daten sammeln, ML-Modelle trainieren",
+      "difficulty": "hoch",
+      "investment": "2000-10000€/Monat"
+    }
+  ],
+
+  "industry_specific_notes": {
+    "maschinenbau": "Einzelfertigung, lange Durchlaufzeiten, komplexe Produkte",
+    "automotive": "Just-in-Time, hohe Qualitätsanforderungen, IATF 16949",
+    "elektronik": "Schnelle Produktzyklen, ESD-Schutz, Rückverfolgbarkeit",
+    "prozessindustrie": "Kontinuierliche Fertigung, Rezepturen, Chargenverfolgung"
+  },
+
+  "success_metrics": [
+    "OEE: Overall Equipment Effectiveness",
+    "First Pass Yield: % ohne Nacharbeit",
+    "Durchlaufzeit: Zeit von Auftragseingang bis Versand",
+    "Liefertreue: % pünktliche Lieferungen",
+    "Ausschussquote: % Ausschuss"
+  ],
+
+  "typical_pricing_models": [
+    "Stückpreise mit Staffelung",
+    "Rahmenverträge mit Abrufaufträgen",
+    "Projektpreise für Sondermaschinen",
+    "Werkzeugkosten + Stückpreise",
+    "Cost-Plus für Prototypen"
+  ]
+}

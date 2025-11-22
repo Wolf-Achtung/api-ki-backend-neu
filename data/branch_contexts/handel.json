@@ -1,0 +1,160 @@
+{
+  "branche": "handel",
+  "display_name": "Handel & E-Commerce",
+  "description": "Einzelhandel, Großhandel, Online-Shops, Multi-Channel-Handel, Marktplatz-Verkäufer",
+
+  "typical_workflows": [
+    "Produktmanagement: Einkauf, Preisgestaltung, Sortimentsplanung",
+    "Bestandsmanagement: Lager, Nachbestellung, Inventur",
+    "Auftragsabwicklung: Bestelleingang, Kommissionierung, Versand",
+    "Kundenservice: Anfragen, Reklamationen, Retouren",
+    "Marketing: Newsletter, Social Media, Kampagnen",
+    "Produktdatenpflege: Beschreibungen, Bilder, Kategorisierung",
+    "Reporting: Umsatz, Margen, Bestseller, Lagerumschlag"
+  ],
+
+  "common_pain_points": [
+    "Produktbeschreibungen erstellen: Hunderte Artikel texten",
+    "Multi-Channel-Komplexität: Shop, Amazon, eBay synchron halten",
+    "Kundenservice-Volumen: Viele Standardanfragen",
+    "Preisgestaltung: Marktpreise monitoren, Margen optimieren",
+    "Retouren-Management: Aufwändige Abwicklung",
+    "SEO für Produkte: Jedes Produkt optimieren",
+    "Bestandsplanung: Über-/Unterbestände vermeiden"
+  ],
+
+  "ai_opportunities": [
+    "Produktbeschreibungen automatisieren: Stammdaten → SEO-Text",
+    "Kundenservice-Bot: Standardanfragen automatisch beantworten",
+    "Dynamische Preisgestaltung: Marktpreise analysieren, Empfehlungen",
+    "Retouren-Analyse: Gründe analysieren, Produktverbesserungen",
+    "Personalisierung: Produktempfehlungen für Kunden",
+    "Demand Forecasting: Bestellmengen vorhersagen",
+    "Review-Analyse: Kundenfeedback auswerten",
+    "Social Media Content: Produkt-Posts automatisch erstellen"
+  ],
+
+  "typical_tools": [
+    "Shopsystem: Shopify, WooCommerce, Shopware",
+    "ERP/Warenwirtschaft: JTL, pixi, Billbee",
+    "Marktplatz-Tools: Amazon Seller Central, Magnalister",
+    "Email-Marketing: Klaviyo, Mailchimp",
+    "Kundenservice: Zendesk, Freshdesk, Email",
+    "Excel für Auswertungen und Listen",
+    "Versanddienstleister: DHL, DPD, Sendcloud",
+    "Buchhaltung: DATEV, Lexoffice, sevDesk"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Email", "WhatsApp Business", "Live-Chat"],
+    "shop": ["Shopify", "WooCommerce", "Shopware"],
+    "erp": ["JTL", "pixi", "Billbee", "Xentral"],
+    "marketplace": ["Amazon", "eBay", "Otto", "Zalando"],
+    "marketing": ["Klaviyo", "Mailchimp", "Google Ads"],
+    "shipping": ["DHL", "DPD", "Sendcloud", "Shipcloud"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "KI-generierte Produktbeschreibungen",
+      "description": "Aus Stammdaten (Titel, Specs) SEO-optimierte Beschreibungen generieren. 100 Produkte in 2 Stunden statt 2 Tagen.",
+      "hours_saved": 20,
+      "tool": "GPT-4 API oder ChatGPT Team",
+      "implementation": "CSV-Import → GPT → Export, Prompt-Templates für verschiedene Kategorien",
+      "difficulty": "niedrig",
+      "investment": "20-50€/Monat"
+    },
+    {
+      "title": "Automatisierte Kundenanfragen",
+      "description": "Standardfragen (Lieferzeit, Retoure, Status) per KI-Bot beantworten.",
+      "hours_saved": 10,
+      "tool": "Tidio oder Intercom (29€/Monat)",
+      "implementation": "FAQ erfassen, Bot trainieren, Eskalationsregeln",
+      "difficulty": "mittel",
+      "investment": "29-79€/Monat"
+    },
+    {
+      "title": "Social Media Produkt-Posts",
+      "description": "Produkte automatisch als Instagram/Facebook-Posts aufbereiten.",
+      "hours_saved": 6,
+      "tool": "Canva + GPT für Captions",
+      "implementation": "Templates, Prompt für Captions, Posting-Schedule",
+      "difficulty": "niedrig",
+      "investment": "12-30€/Monat"
+    },
+    {
+      "title": "Newsletter-Automatisierung",
+      "description": "Produktempfehlungen per Kaufhistorie, automatische Flows (Willkommen, Abandoned Cart).",
+      "hours_saved": 5,
+      "tool": "Klaviyo oder Mailchimp",
+      "implementation": "Flows einrichten, Segmente definieren, Templates",
+      "difficulty": "mittel",
+      "investment": "0-60€/Monat"
+    },
+    {
+      "title": "Review-Zusammenfassung",
+      "description": "Kundenbewertungen analysieren: Häufige Kritikpunkte, Verbesserungsvorschläge.",
+      "hours_saved": 3,
+      "tool": "GPT-4 mit Export aus Shop/Amazon",
+      "implementation": "Reviews exportieren, Analyse-Prompt, monatlicher Report",
+      "difficulty": "niedrig",
+      "investment": "20€/Monat"
+    },
+    {
+      "title": "Automatische Preisüberwachung",
+      "description": "Wettbewerberpreise monitoren, Alerts bei Unterschreitung.",
+      "hours_saved": 4,
+      "tool": "Prisync oder Competera (ab 99€)",
+      "implementation": "Konkurrenten definieren, Produkte matchen, Alerts",
+      "difficulty": "niedrig",
+      "investment": "99-199€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Zentrales PIM mit KI-Anreicherung",
+      "description": "Product Information Management: Zentrale Produktdaten, automatische Übersetzung und Kanal-Optimierung.",
+      "hours_saved": 25,
+      "tool": "Akeneo oder Pimcore",
+      "implementation": "Daten migrieren, Workflows definieren, Team schulen",
+      "difficulty": "hoch",
+      "investment": "200-500€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise-Commerce-Plattform mit KI",
+      "description": "Personalisierung, Demand Forecasting, automatisches Merchandising.",
+      "hours_saved": 50,
+      "tool": "Shopify Plus oder commercetools",
+      "implementation": "Plattform-Migration, KI-Features, Team-Schulung",
+      "difficulty": "hoch",
+      "investment": "2000-5000€/Monat"
+    }
+  ],
+
+  "industry_specific_notes": {
+    "fashion": "Saisonware, hohe Retourenquote, Größen-Thematik",
+    "elektronik": "Schnelle Produktzyklen, Preisdruck, Garantie",
+    "lebensmittel": "MHD-Tracking, Kühlkette, Frische",
+    "b2b_handel": "Staffelpreise, Rahmenverträge, EDI"
+  },
+
+  "success_metrics": [
+    "Conversion Rate: % Besucher → Käufer",
+    "Average Order Value: Ø Warenkorbwert",
+    "Return Rate: % Retouren",
+    "Customer Lifetime Value: Wert pro Kunde",
+    "Inventory Turnover: Lagerumschlag"
+  ],
+
+  "typical_pricing_models": [
+    "Einzelhandelspreise mit festen Margen",
+    "Dynamische Preisgestaltung nach Nachfrage",
+    "Staffelpreise für B2B",
+    "Aktionspreise und Sales",
+    "Subscription/Abo-Modelle"
+  ]
+}

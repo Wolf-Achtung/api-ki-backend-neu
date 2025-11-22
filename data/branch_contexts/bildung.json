@@ -1,0 +1,160 @@
+{
+  "branche": "bildung",
+  "display_name": "Bildung",
+  "description": "Weiterbildungsanbieter, Sprachschulen, Coaching-Institute, E-Learning-Anbieter, Nachhilfe",
+
+  "typical_workflows": [
+    "Kursplanung: Curriculum-Entwicklung, Terminplanung, Dozentenkoordination",
+    "Teilnehmermanagement: Anmeldung, Rechnungsstellung, Zertifikate",
+    "Content-Erstellung: Schulungsunterlagen, Präsentationen, E-Learning-Module",
+    "Durchführung: Präsenz- oder Online-Schulungen",
+    "Evaluation: Feedback, Tests, Erfolgsmessung",
+    "Marketing: Kursvermarktung, Social Media, Email-Kampagnen",
+    "Administration: Fördermittel, Zertifizierungen, Qualitätsmanagement"
+  ],
+
+  "common_pain_points": [
+    "Content-Erstellung zeitaufwändig: 10-20h pro Schulungstag",
+    "Individualisierung schwierig: Verschiedene Vorkenntnisse der Teilnehmer",
+    "Feedback-Auswertung manuell: Viele Bögen händisch auswerten",
+    "Zertifikate erstellen: Jedes einzeln ausfüllen und versenden",
+    "Marketing-Content: Regelmäßig neue Kursbeschreibungen",
+    "Teilnehmerbetreuung: Viele individuelle Anfragen",
+    "Qualitätssicherung: Dokumentation für Zertifizierungen (ISO, AZAV)"
+  ],
+
+  "ai_opportunities": [
+    "Schulungsunterlagen generieren: Thema → Präsentation + Handout",
+    "Quiz/Test-Erstellung: Automatische Prüfungsfragen aus Content",
+    "Personalisiertes Lernen: Individuelle Lernpfade basierend auf Niveau",
+    "Feedback-Analyse: Evaluationsbögen automatisch auswerten",
+    "Kursbeschreibungen: Marketing-Texte für neue Kurse",
+    "Chatbot für Teilnehmer: FAQs, Kursinfos, Anmeldehilfe",
+    "Übersetzungen: Kursmaterial in mehrere Sprachen",
+    "Zertifikate automatisieren: Massengeneration personalisierter PDFs"
+  ],
+
+  "typical_tools": [
+    "PowerPoint / Google Slides für Präsentationen",
+    "Moodle / iSpring für E-Learning",
+    "Zoom / Teams für Online-Schulungen",
+    "Excel für Teilnehmerlisten und Planung",
+    "Word für Handouts und Unterlagen",
+    "Mailchimp für Newsletter",
+    "Website mit Kurskalender",
+    "Buchhaltung: DATEV, Lexoffice"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Email", "Zoom", "Teams", "WhatsApp-Gruppen"],
+    "lms": ["Moodle", "iSpring", "Teachable", "LearnDash"],
+    "content": ["PowerPoint", "Canva", "Articulate", "Camtasia"],
+    "crm": ["Excel", "HubSpot", "ActiveCampaign"],
+    "video": ["Zoom", "Teams", "Vimeo", "YouTube"],
+    "admin": ["Excel", "Eventbrite", "Buchhaltungssoftware"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "KI-gestützte Kursunterlagen",
+      "description": "Aus Stichpunkten komplette Schulungspräsentationen und Handouts generieren.",
+      "hours_saved": 15,
+      "tool": "GPT-4 + PowerPoint/Canva",
+      "implementation": "Prompt-Templates für verschiedene Kurstypen, Brand-Vorlagen",
+      "difficulty": "niedrig",
+      "investment": "20-50€/Monat"
+    },
+    {
+      "title": "Automatische Quiz-Generierung",
+      "description": "Aus Schulungscontent Multiple-Choice-Fragen für Tests erstellen.",
+      "hours_saved": 6,
+      "tool": "GPT-4",
+      "implementation": "Content → GPT → Quiz-Format, Export in LMS",
+      "difficulty": "niedrig",
+      "investment": "20€/Monat"
+    },
+    {
+      "title": "Feedback-Auswertung per KI",
+      "description": "Evaluationsbögen automatisch analysieren: Stärken, Verbesserungen, Trends.",
+      "hours_saved": 4,
+      "tool": "GPT-4 + Typeform/Google Forms",
+      "implementation": "Formulare digitalisieren, Export, Analyse-Prompt",
+      "difficulty": "niedrig",
+      "investment": "20-50€/Monat"
+    },
+    {
+      "title": "Kursbeschreibungen automatisieren",
+      "description": "Neue Kurse schnell mit Marketing-Text, Lernzielen, Zielgruppe beschreiben.",
+      "hours_saved": 3,
+      "tool": "GPT-4",
+      "implementation": "Template mit Platzhaltern, SEO-optimierte Prompts",
+      "difficulty": "niedrig",
+      "investment": "20€/Monat"
+    },
+    {
+      "title": "Zertifikate automatisch erstellen",
+      "description": "Teilnehmerdaten → personalisierte Zertifikate als PDF → automatischer Email-Versand.",
+      "hours_saved": 5,
+      "tool": "Make.com + Canva/PDF-Generator",
+      "implementation": "Template in Canva, Automation mit Make.com",
+      "difficulty": "mittel",
+      "investment": "20-40€/Monat"
+    },
+    {
+      "title": "Chatbot für Kursinteressenten",
+      "description": "FAQs automatisch beantworten: Termine, Preise, Voraussetzungen, Anmeldung.",
+      "hours_saved": 4,
+      "tool": "Tidio oder Chatbase (29€/Monat)",
+      "implementation": "FAQ-Katalog erstellen, Bot trainieren, Website einbinden",
+      "difficulty": "mittel",
+      "investment": "29-49€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Zentrale Content-Bibliothek mit KI",
+      "description": "Alle Schulungsmaterialien durchsuchbar, automatische Aktualisierung, Versionierung.",
+      "hours_saved": 12,
+      "tool": "Notion AI oder SharePoint + Copilot",
+      "implementation": "Content migrieren, Struktur aufbauen, Team onboarden",
+      "difficulty": "mittel",
+      "investment": "50-150€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise LMS mit KI-Personalisierung",
+      "description": "Adaptive Learning Paths, automatische Content-Empfehlungen, Skill-Gap-Analyse.",
+      "hours_saved": 30,
+      "tool": "Docebo oder SAP Litmos",
+      "implementation": "LMS-Implementierung, Content-Migration, Rollout",
+      "difficulty": "hoch",
+      "investment": "500-2000€/Monat"
+    }
+  ],
+
+  "industry_specific_notes": {
+    "weiterbildung": "AZAV-Zertifizierung, Bildungsgutscheine, Förderung",
+    "sprachschulen": "Verschiedene Niveaus, Konversation, Zertifikate",
+    "coaching": "Individuelle Betreuung, längere Beziehungen",
+    "e_learning": "Skalierbarkeit, Self-Paced, technische Infrastruktur"
+  },
+
+  "success_metrics": [
+    "Auslastung: Teilnehmer pro Kurs",
+    "Abschlussquote: % Teilnehmer die bestehen",
+    "NPS: Net Promoter Score",
+    "Wiederbuchungsrate: Returning Customers",
+    "Umsatz pro Trainer-Tag"
+  ],
+
+  "typical_pricing_models": [
+    "Kursgebühren pro Teilnehmer",
+    "Tagessätze für Inhouse-Schulungen",
+    "Abo-Modelle für E-Learning",
+    "Fördermittel-finanziert (Bildungsgutschein)",
+    "Corporate Training (Pakete)"
+  ]
+}
