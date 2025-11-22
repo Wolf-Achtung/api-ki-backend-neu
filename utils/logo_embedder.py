@@ -21,6 +21,8 @@ DEFAULT_LOGOS = [
     "ki-sicherheit-logo.webp",
     "tuev-logo-transparent.webp",
     "ki-ready-2025.webp",
+    "dsgvo.svg",
+    "eu-ai.svg",
 ]
 
 def get_logo_base64_map(template_dir: str = "templates") -> Dict[str, str]:
