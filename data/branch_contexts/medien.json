@@ -1,0 +1,160 @@
+{
+  "branche": "medien",
+  "display_name": "Medien & Kreativwirtschaft",
+  "description": "Verlage, Film/TV-Produktion, Designagenturen, Musikproduktion, Gaming, Content Creator",
+
+  "typical_workflows": [
+    "Content-Erstellung: Texte, Grafiken, Videos, Audio, 3D",
+    "Projektmanagement: Briefing, Konzeption, Produktion, Delivery",
+    "Kreativprozess: Ideenfindung, Moodboards, Entwürfe, Feedback",
+    "Produktion: Shooting, Recording, Editing, Postproduction",
+    "Asset-Management: Medien organisieren, archivieren, wiederfinden",
+    "Distribution: Veröffentlichung, Kanäle bespielen",
+    "Rechteclearing: Lizenzen, Freigaben, Nutzungsrechte"
+  ],
+
+  "common_pain_points": [
+    "Kreative Blockaden: Ständig neue Ideen entwickeln müssen",
+    "Feedback-Schleifen: Viele Korrekturschleifen pro Projekt",
+    "Asset-Chaos: Dateien nicht wiederfinden",
+    "Tight Deadlines: Kurze Produktionszeiten",
+    "Viele Tools: Jedes Projekt andere Software",
+    "Rechteunsicherheit: Lizenzen und Nutzungsrechte unklar",
+    "Preisdruck: Kunden erwarten viel für wenig Budget"
+  ],
+
+  "ai_opportunities": [
+    "Ideengenerierung: Konzepte, Storylines, Moodboards per KI",
+    "Text-Generierung: Drehbücher, Artikel, Werbetexte",
+    "Bild-Generierung: Konzeptart, Stockfotos, Grafiken",
+    "Video-Editing: Automatischer Rohschnitt, Transkription",
+    "Audio-Bearbeitung: Noise Reduction, Mastering, Voice-Over",
+    "Übersetzung/Lokalisierung: Content in andere Sprachen",
+    "Tagging und Suche: Assets automatisch kategorisieren",
+    "Upscaling: Bilder/Videos in höhere Auflösung"
+  ],
+
+  "typical_tools": [
+    "Adobe Creative Suite: Photoshop, Premiere, After Effects",
+    "Figma für UI/UX Design",
+    "DaVinci Resolve für Video",
+    "Logic Pro / Ableton für Audio",
+    "Blender / Cinema 4D für 3D",
+    "Notion / Frame.io für Projektmanagement",
+    "Google Drive / Dropbox für Assets",
+    "Social Media Plattformen für Distribution"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Slack", "Teams", "Email", "Frame.io"],
+    "design": ["Adobe CC", "Figma", "Sketch", "Canva"],
+    "video": ["Premiere", "DaVinci Resolve", "Final Cut"],
+    "audio": ["Logic Pro", "Ableton", "Pro Tools"],
+    "3d": ["Blender", "Cinema 4D", "Maya"],
+    "storage": ["Google Drive", "Dropbox", "Frame.io"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "KI-gestützte Ideation",
+      "description": "Konzepte, Headlines, Storylines per GPT brainstormen. Kreativblockaden überwinden.",
+      "hours_saved": 6,
+      "tool": "GPT-4 oder Claude",
+      "implementation": "Prompts für verschiedene kreative Formate entwickeln",
+      "difficulty": "niedrig",
+      "investment": "20€/Monat"
+    },
+    {
+      "title": "KI-Bildgenerierung für Konzepte",
+      "description": "Moodboards, Konzeptart, Layouts schnell visualisieren.",
+      "hours_saved": 8,
+      "tool": "Midjourney oder DALL-E 3 (10-30€/Monat)",
+      "implementation": "Prompting lernen, Stile definieren, Workflow einrichten",
+      "difficulty": "niedrig",
+      "investment": "10-30€/Monat"
+    },
+    {
+      "title": "Automatische Video-Transkription",
+      "description": "Videos automatisch mit Untertiteln versehen, Transkripte für SEO.",
+      "hours_saved": 5,
+      "tool": "Descript oder Premiere AI",
+      "implementation": "Software einrichten, Export-Formate definieren",
+      "difficulty": "niedrig",
+      "investment": "15-30€/Monat"
+    },
+    {
+      "title": "Audio-Enhancement per KI",
+      "description": "Noise Reduction, Mastering, Voice Enhancement automatisiert.",
+      "hours_saved": 4,
+      "tool": "Adobe Podcast oder Descript",
+      "implementation": "Presets erstellen, in Workflow integrieren",
+      "difficulty": "niedrig",
+      "investment": "0-30€/Monat"
+    },
+    {
+      "title": "Texte für Content schnell erstellen",
+      "description": "Blogposts, Social Captions, Video-Skripte per GPT.",
+      "hours_saved": 6,
+      "tool": "GPT-4",
+      "implementation": "Templates für verschiedene Content-Typen",
+      "difficulty": "niedrig",
+      "investment": "20€/Monat"
+    },
+    {
+      "title": "Asset-Tagging automatisieren",
+      "description": "Bilder und Videos automatisch kategorisieren und durchsuchbar machen.",
+      "hours_saved": 4,
+      "tool": "Google Photos AI oder Eagle",
+      "implementation": "Bibliothek anlegen, Tagging-Regeln definieren",
+      "difficulty": "mittel",
+      "investment": "0-30€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Zentrale Asset-Library mit KI-Suche",
+      "description": "Alle Medien durchsuchbar per natürlicher Sprache. Schnelles Finden von Archiv-Material.",
+      "hours_saved": 15,
+      "tool": "Frame.io oder Brandfolder",
+      "implementation": "Assets migrieren, Metadaten pflegen, Team schulen",
+      "difficulty": "mittel",
+      "investment": "100-300€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise Creative Workflow Platform",
+      "description": "End-to-End: Briefing → Review → Approval → Distribution mit KI-Unterstützung.",
+      "hours_saved": 40,
+      "tool": "Adobe Workfront oder Monday.com Enterprise",
+      "implementation": "Prozesse definieren, Tools integrieren, Team onboarden",
+      "difficulty": "hoch",
+      "investment": "500-2000€/Monat"
+    }
+  ],
+
+  "industry_specific_notes": {
+    "verlag": "Redaktionsprozesse, Lektorat, Print vs. Digital",
+    "film_tv": "Produktionsphasen, Crew-Management, Postproduction",
+    "design": "Konzeption, Branding, Reinzeichnung",
+    "musik": "Komposition, Recording, Mixing, Mastering"
+  },
+
+  "success_metrics": [
+    "Projekt-Turnaround: Zeit von Briefing bis Delivery",
+    "Korrekturschleifen: Anzahl pro Projekt",
+    "Kreativer Output: Projekte pro Monat",
+    "Kundenzufriedenheit: Feedback-Scores",
+    "Asset-Nutzung: Wiederverwendung von Content"
+  ],
+
+  "typical_pricing_models": [
+    "Projektpauschalen",
+    "Tagessätze (500-2000€/Tag)",
+    "Stundensätze (60-150€/h)",
+    "Nutzungsrechte-basiert (Buyout vs. Lizenz)",
+    "Retainer für laufende Betreuung"
+  ]
+}

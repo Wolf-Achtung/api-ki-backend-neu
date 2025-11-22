@@ -1,0 +1,160 @@
+{
+  "branche": "it",
+  "display_name": "IT & Software",
+  "description": "Softwareentwicklung, IT-Dienstleistungen, Systemintegration, Web-Development, IT-Support",
+
+  "typical_workflows": [
+    "Requirements-Engineering: Kundenanforderungen aufnehmen und dokumentieren",
+    "Entwicklung: Coding, Code-Reviews, Testing",
+    "DevOps: CI/CD, Deployment, Monitoring, Wartung",
+    "Support: Ticket-Bearbeitung, Bug-Fixes, Updates",
+    "Dokumentation: Technische Docs, API-Docs, User-Guides",
+    "Projektmanagement: Sprints, Stand-ups, Retrospektiven",
+    "Kundenbetreuung: Status-Updates, Demos, Schulungen"
+  ],
+
+  "common_pain_points": [
+    "Dokumentation wird vernachlässigt: Zeitdruck → fehlende Docs",
+    "Code-Reviews dauern: Bottleneck bei Senior-Entwicklern",
+    "Testing aufwändig: Unit-Tests, Integration-Tests, E2E-Tests",
+    "Support frisst Entwicklungszeit: Tickets unterbrechen Flow",
+    "Knowledge-Silos: Wissen nur in einzelnen Köpfen",
+    "Technische Schulden: Kein Zeit für Refactoring",
+    "Recruiting schwierig: Fachkräftemangel in der IT"
+  ],
+
+  "ai_opportunities": [
+    "Code-Generierung: Boilerplate, Tests, Dokumentation per Copilot/GPT",
+    "Code-Review-Assistenz: Automatische Review-Vorschläge",
+    "Dokumentation generieren: Code → automatische API-Docs/README",
+    "Bug-Analyse: Logs analysieren, Ursachen vorschlagen",
+    "Test-Generierung: Unit-Tests automatisch aus Code erstellen",
+    "Ticket-Zusammenfassung: Support-Tickets kategorisieren und priorisieren",
+    "Meeting-Protokolle: Sprint-Reviews automatisch dokumentieren",
+    "Requirements-Extraktion: Kundenmail → strukturierte Anforderungen"
+  ],
+
+  "typical_tools": [
+    "VS Code / JetBrains IDEs für Entwicklung",
+    "Git/GitHub/GitLab für Versionskontrolle",
+    "Jira / Linear für Projektmanagement",
+    "Slack / Teams für Kommunikation",
+    "Docker / Kubernetes für Container",
+    "AWS / Azure / GCP für Cloud",
+    "Confluence / Notion für Dokumentation",
+    "Postman für API-Testing"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Slack", "Teams", "Discord"],
+    "development": ["VS Code", "JetBrains", "Vim"],
+    "vcs": ["GitHub", "GitLab", "Bitbucket"],
+    "ci_cd": ["GitHub Actions", "Jenkins", "GitLab CI"],
+    "cloud": ["AWS", "Azure", "GCP", "Vercel"],
+    "project": ["Jira", "Linear", "Notion"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "GitHub Copilot für Entwicklung",
+      "description": "Code-Completion, Test-Generierung, Dokumentation. Reduziert Boilerplate-Code um 50%.",
+      "hours_saved": 15,
+      "tool": "GitHub Copilot (19€/Monat)",
+      "implementation": "Installation in IDE, Shortcuts lernen, Prompting optimieren",
+      "difficulty": "niedrig",
+      "investment": "19€/Monat"
+    },
+    {
+      "title": "Automatische Code-Dokumentation",
+      "description": "Docstrings, README, API-Docs automatisch aus Code generieren.",
+      "hours_saved": 6,
+      "tool": "GPT-4 + Custom Scripts",
+      "implementation": "Prompts für verschiedene Doc-Typen erstellen",
+      "difficulty": "niedrig",
+      "investment": "20€/Monat"
+    },
+    {
+      "title": "Test-Generierung per KI",
+      "description": "Unit-Tests automatisch aus bestehendem Code generieren lassen.",
+      "hours_saved": 8,
+      "tool": "GitHub Copilot oder GPT-4",
+      "implementation": "Test-Prompts optimieren, in Workflow integrieren",
+      "difficulty": "niedrig",
+      "investment": "0€ (bei Copilot)"
+    },
+    {
+      "title": "Automatisierte Code-Reviews",
+      "description": "Erste Review-Runde per KI: Code-Qualität, Security, Best Practices.",
+      "hours_saved": 5,
+      "tool": "GitHub Copilot Chat oder CodeRabbit",
+      "implementation": "Als Pre-Review vor menschlichem Review einsetzen",
+      "difficulty": "niedrig",
+      "investment": "0-15€/Monat"
+    },
+    {
+      "title": "Bug-Analyse-Assistent",
+      "description": "Logs und Stack-Traces analysieren, Ursachen vorschlagen.",
+      "hours_saved": 4,
+      "tool": "GPT-4 mit Log-Context",
+      "implementation": "Prompts für verschiedene Error-Typen erstellen",
+      "difficulty": "niedrig",
+      "investment": "20€/Monat"
+    },
+    {
+      "title": "Meeting-Protokolle für Stand-ups",
+      "description": "Automatische Transkription und Zusammenfassung von Meetings.",
+      "hours_saved": 3,
+      "tool": "Fireflies.ai (19€/Monat)",
+      "implementation": "Integration mit Meet/Zoom/Teams",
+      "difficulty": "niedrig",
+      "investment": "19€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "RAG-basierte Dokumentations-Suche",
+      "description": "Alle Docs, Code, Wikis durchsuchbar per natürlicher Sprache. Team findet Infos in Sekunden.",
+      "hours_saved": 20,
+      "tool": "Notion AI oder eigenes RAG-System",
+      "implementation": "Docs zusammenführen, Embeddings erstellen, Chat-Interface",
+      "difficulty": "hoch",
+      "investment": "100-300€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise Development Platform",
+      "description": "Integrierte Plattform mit KI-Code-Review, Security-Scanning, Compliance.",
+      "hours_saved": 40,
+      "tool": "GitHub Enterprise oder GitLab Ultimate",
+      "implementation": "Migration, Security-Rules, Team-Onboarding",
+      "difficulty": "hoch",
+      "investment": "500-2000€/Monat"
+    }
+  ],
+
+  "industry_specific_notes": {
+    "web_development": "Schnelle Iteration, Frontend/Backend-Split, responsive Design",
+    "mobile_development": "iOS/Android-Unterschiede, App-Store-Guidelines",
+    "enterprise_software": "Lange Release-Zyklen, hohe Compliance-Anforderungen",
+    "saas": "Skalierbarkeit, Multi-Tenancy, Subscription-Billing"
+  },
+
+  "success_metrics": [
+    "Velocity: Story Points pro Sprint",
+    "Bug-Rate: Bugs pro Release",
+    "Deployment-Frequenz: Releases pro Woche/Monat",
+    "MTTR: Mean Time to Recovery",
+    "Code-Coverage: % getesteter Code"
+  ],
+
+  "typical_pricing_models": [
+    "Stundensätze (70-150€/h)",
+    "Festpreisprojekte mit Meilensteinen",
+    "Retainer für Wartung (monatlich)",
+    "Time & Material mit Cap",
+    "Dedicated Team (monatlich pro Entwickler)"
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "branche": "verwaltung",
+  "display_name": "Verwaltung",
+  "description": "Öffentliche Verwaltung, Behörden, Kommunen, Verbände, Kammern, öffentliche Einrichtungen",
+
+  "typical_workflows": [
+    "Antragsbearbeitung: Bürgeranträge, Genehmigungen, Bescheide",
+    "Bürgerservice: Anfragen beantworten, Auskünfte erteilen",
+    "Dokumentenmanagement: Aktenführung, Archivierung, Wiedervorlage",
+    "Bescheiderstellung: Formelle Dokumente mit rechtlicher Bindung",
+    "Gremienarbeit: Vorlagen, Protokolle, Beschlüsse",
+    "Statistik/Reporting: Auswertungen für Berichte und Entscheidungen",
+    "Vergabeverfahren: Ausschreibungen, Vergabedokumentation"
+  ],
+
+  "common_pain_points": [
+    "Hohe Bürokratie: Viele Formulare, strenge Vorschriften",
+    "Personalmangel: Zu wenig Mitarbeiter für steigende Anfragen",
+    "Veraltete IT: Legacy-Systeme, wenig Digitalisierung",
+    "Lange Bearbeitungszeiten: Bürger warten Wochen/Monate",
+    "Standardanfragen: 80% der Anfragen sind Routine",
+    "Protokolle und Vorlagen: Zeitaufwändige Dokumentation",
+    "Compliance: Strenge Datenschutz- und Verwaltungsvorschriften"
+  ],
+
+  "ai_opportunities": [
+    "Chatbot für Bürgerservice: Öffnungszeiten, Formulare, Status",
+    "Automatische Antragsvorprüfung: Vollständigkeitscheck",
+    "Bescheid-Vorlagen: Standardisierte Bescheide per KI-Template",
+    "Protokoll-Automatisierung: Sitzungen → Protokoll",
+    "Akten-Zusammenfassung: Lange Vorgänge schnell erfassen",
+    "Übersetzungen: Behördentexte in einfache Sprache",
+    "FAQ-Automation: Häufige Bürgeranfragen automatisiert",
+    "Statistik-Aufbereitung: Daten → verständliche Reports"
+  ],
+
+  "typical_tools": [
+    "Fachverfahren: Spezielle Verwaltungssoftware",
+    "DMS: Dokumentenmanagementsystem (d.velop, ELO)",
+    "Microsoft Office für Dokumente",
+    "Email als Hauptkommunikation",
+    "Telefon für Bürgeranfragen",
+    "Excel für Listen und Statistiken",
+    "SharePoint für interne Zusammenarbeit",
+    "Formularserver für Online-Anträge"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Email", "Telefon", "De-Mail", "beBPo"],
+    "dms": ["d.velop", "ELO", "nscale"],
+    "fachverfahren": ["Infoma", "OK.FIS", "Prosoz"],
+    "office": ["Microsoft 365", "LibreOffice"],
+    "collaboration": ["SharePoint", "MS Teams"],
+    "formular": ["FormSolutions", "cit intelliForm"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "Bürger-FAQ-Bot",
+      "description": "Automatische Beantwortung häufiger Fragen: Öffnungszeiten, Formulare, Zuständigkeiten.",
+      "hours_saved": 8,
+      "tool": "Kommunaler Chatbot (z.B. BOTfriends) oder Tidio",
+      "implementation": "FAQ-Katalog erstellen, Bot trainieren, Website einbinden",
+      "difficulty": "mittel",
+      "investment": "50-200€/Monat"
+    },
+    {
+      "title": "Protokoll-Automatisierung",
+      "description": "Sitzungen aufnehmen → Transkription → formatiertes Protokoll.",
+      "hours_saved": 6,
+      "tool": "Fireflies.ai oder otter.ai (19€/Monat)",
+      "implementation": "Aufnahme-Workflow, Template für Protokoll",
+      "difficulty": "niedrig",
+      "investment": "19-39€/Monat"
+    },
+    {
+      "title": "Bescheid-Vorlagen per KI",
+      "description": "Standardbescheide aus Falldaten generieren: Variablen + Template → Bescheid.",
+      "hours_saved": 5,
+      "tool": "GPT-4 + Word-Templates",
+      "implementation": "Templates definieren, Prompt für Textbausteine",
+      "difficulty": "mittel",
+      "investment": "20€/Monat"
+    },
+    {
+      "title": "Texte in Leichte Sprache übersetzen",
+      "description": "Behördentexte für alle verständlich machen, Barrierefreiheit verbessern.",
+      "hours_saved": 4,
+      "tool": "GPT-4",
+      "implementation": "Prompts für Leichte Sprache, Qualitätsprüfung",
+      "difficulty": "niedrig",
+      "investment": "20€/Monat"
+    },
+    {
+      "title": "Antrags-Vollständigkeitsprüfung",
+      "description": "Eingereichte Anträge automatisch auf fehlende Unterlagen prüfen.",
+      "hours_saved": 5,
+      "tool": "Make.com + GPT-4",
+      "implementation": "Checkliste pro Antragstyp, automatische Prüfung",
+      "difficulty": "mittel",
+      "investment": "30-50€/Monat"
+    },
+    {
+      "title": "Akten-Zusammenfassung",
+      "description": "Lange Vorgänge schnell erfassen: KI fasst Akteninhalt zusammen.",
+      "hours_saved": 4,
+      "tool": "GPT-4 mit PDF-Upload",
+      "implementation": "Upload-Workflow, Zusammenfassungs-Prompt",
+      "difficulty": "niedrig",
+      "investment": "20€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Wissensmanagement für Fachfragen",
+      "description": "Alle Vorschriften, Leitfäden, Urteile durchsuchbar. Mitarbeiter finden Infos in Sekunden.",
+      "hours_saved": 15,
+      "tool": "SharePoint + Copilot oder Notion AI",
+      "implementation": "Dokumente sammeln, strukturieren, Suche aufsetzen",
+      "difficulty": "hoch",
+      "investment": "100-300€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise-Verwaltungsplattform mit KI",
+      "description": "End-to-End-Digitalisierung: Online-Anträge, automatische Bearbeitung, digitale Akten.",
+      "hours_saved": 50,
+      "tool": "cit intelliForm oder Formcycle + KI-Module",
+      "implementation": "Prozessanalyse, System-Implementierung, Rollout",
+      "difficulty": "hoch",
+      "investment": "1000-5000€/Monat"
+    }
+  ],
+
+  "industry_specific_notes": {
+    "kommune": "Einwohnermeldeamt, Bauamt, Ordnungsamt, Jugendamt",
+    "landesbehoerde": "Größere Prozesse, mehr IT-Support",
+    "verband": "Mitgliederverwaltung, Lobbying, Veranstaltungen",
+    "kammer": "Zulassungen, Prüfungen, Fortbildung"
+  },
+
+  "success_metrics": [
+    "Bearbeitungszeit: Tage bis Bescheid",
+    "Bürger-Zufriedenheit: Umfragewerte",
+    "Digitalisierungsgrad: % Online-Anträge",
+    "First-Contact-Resolution: % sofort gelöster Anfragen",
+    "Fallzahlen pro Mitarbeiter"
+  ],
+
+  "typical_pricing_models": [
+    "Gebührenordnung (festgelegt)",
+    "Haushaltsfinanziert (keine direkten Kosten für Bürger)",
+    "Mischfinanzierung (Gebühren + Haushalt)",
+    "Projektförderung für Digitalisierung",
+    "EVB-IT Verträge für Software"
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "branche": "finanzen",
+  "display_name": "Finanzen & Versicherungen",
+  "description": "Finanzberatung, Versicherungsmakler, Steuerberatung, Buchhaltung, Vermögensverwaltung",
+
+  "typical_workflows": [
+    "Kundenberatung: Bedarfsanalyse, Produktempfehlung, Abschluss",
+    "Dokumentation: Beratungsprotokolle, Compliance-Dokumentation",
+    "Antragsbearbeitung: Versicherungsanträge, Kreditanträge",
+    "Bestandsmanagement: Vertragsübersicht, Wiedervorlagen, Kündigungen",
+    "Schadensabwicklung: Schadensmeldung, Kommunikation mit Versicherern",
+    "Reporting: Umsatzreports, Provisionsabrechnungen",
+    "Regulatorik: IDD-Schulungen, DSGVO, Compliance"
+  ],
+
+  "common_pain_points": [
+    "Hohe Dokumentationspflichten: BaFin, IDD, MiFID II",
+    "Komplexe Produkte: Ständig neue Tarife und Bedingungen",
+    "Zeitfresser Verwaltung: 40-50% der Zeit für Administration",
+    "Beratungsprotokolle: Jedes Gespräch muss dokumentiert werden",
+    "Vergleiche erstellen: Manuelle Tarifvergleiche zeitaufwändig",
+    "Kundenkommunikation: Viele Rückfragen zu Verträgen/Schäden",
+    "Provisionsabrechnung: Komplexe Berechnung, viele Schnittstellen"
+  ],
+
+  "ai_opportunities": [
+    "Beratungsprotokolle automatisieren: Meeting → Transkript → Protokoll",
+    "Tarifvergleiche per KI: Schnelle Analyse von Bedingungen",
+    "Kundenanfragen automatisiert beantworten: FAQ-Bot für Standardfragen",
+    "Schadensbearbeitung: Automatische Kategorisierung und Weiterleitung",
+    "Vertragsanalyse: PDFs analysieren, Deckungslücken finden",
+    "Lead-Qualifizierung: Automatische Bewertung von Anfragen",
+    "Newsletter-Generierung: Markt-Updates für Bestandskunden",
+    "Compliance-Prüfung: Automatische Prüfung von Dokumenten"
+  ],
+
+  "typical_tools": [
+    "Maklerverwaltungsprogramm (MVP): Ameise, Keasy, VEMA",
+    "Vergleichsrechner: Mr-Money, Nafi, Softfair",
+    "Email als Haupt-Kommunikationskanal",
+    "Excel für Listen und Auswertungen",
+    "PDF-Bearbeitung für Verträge und Dokumente",
+    "Telefon für Kundenberatung",
+    "DATEV für Steuer/Buchhaltung",
+    "Webinare für Produktschulungen"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Email", "Telefon", "Teams", "WhatsApp"],
+    "mvp": ["Ameise", "Keasy", "VEMA Online"],
+    "comparison": ["Mr-Money", "Nafi", "Softfair"],
+    "accounting": ["DATEV", "Lexoffice", "sevDesk"],
+    "crm": ["MVP-integriert", "HubSpot", "Salesforce FSC"],
+    "documentation": ["Word", "PDF-Tools", "DocuSign"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "Automatisierte Beratungsprotokolle",
+      "description": "Kundengespräch aufnehmen → Transkription → GPT erstellt IDD-konformes Protokoll.",
+      "hours_saved": 10,
+      "tool": "Fireflies.ai + GPT-4 (39€/Monat)",
+      "implementation": "Templates für verschiedene Beratungstypen erstellen",
+      "difficulty": "mittel",
+      "investment": "39-59€/Monat"
+    },
+    {
+      "title": "KI-gestützte Tarifanalyse",
+      "description": "Versicherungsbedingungen per GPT analysieren: Deckungsumfang, Ausschlüsse, Besonderheiten.",
+      "hours_saved": 6,
+      "tool": "GPT-4 mit PDF-Upload",
+      "implementation": "Prompts für Tarifanalyse erstellen, Checklisten definieren",
+      "difficulty": "niedrig",
+      "investment": "20€/Monat"
+    },
+    {
+      "title": "Automatische Kundenanfragen-Bearbeitung",
+      "description": "Standardanfragen (Bescheinigungen, Vertragsinfos) automatisch beantworten.",
+      "hours_saved": 5,
+      "tool": "Make.com + GPT-4 + Email",
+      "implementation": "Trigger für häufige Anfragen, Template-Antworten",
+      "difficulty": "mittel",
+      "investment": "29-49€/Monat"
+    },
+    {
+      "title": "Newsletter-Content per GPT",
+      "description": "Monatliche Markt-Updates und Tipps für Bestandskunden generieren.",
+      "hours_saved": 4,
+      "tool": "GPT-4 + Mailchimp",
+      "implementation": "Prompt-Templates, Themen-Kalender",
+      "difficulty": "niedrig",
+      "investment": "20€/Monat"
+    },
+    {
+      "title": "Schadensmeldungs-Assistent",
+      "description": "Kunde meldet Schaden → KI erfasst alle relevanten Infos → weiterleitung an Versicherer.",
+      "hours_saved": 4,
+      "tool": "Typeform + Make.com + GPT",
+      "implementation": "Formular erstellen, Automation für Weiterleitung",
+      "difficulty": "mittel",
+      "investment": "30-50€/Monat"
+    },
+    {
+      "title": "Wiedervorlage-Automation",
+      "description": "Automatische Erinnerungen: Vertragsverlängerung, Beitragsfälligkeit, Geburtstage.",
+      "hours_saved": 3,
+      "tool": "Make.com + MVP-Integration",
+      "implementation": "Trigger aus MVP, personalisierte Emails/SMS",
+      "difficulty": "mittel",
+      "investment": "9-29€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Zentrale Wissensdatenbank für Tarife",
+      "description": "Alle Produktinfos, Bedingungswerke, Schulungsunterlagen durchsuchbar per RAG.",
+      "hours_saved": 15,
+      "tool": "Notion AI oder Custom RAG",
+      "implementation": "Dokumente sammeln, strukturieren, System aufsetzen",
+      "difficulty": "hoch",
+      "investment": "100-200€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise-Bestandsmanagement mit KI",
+      "description": "Automatische Cross-/Up-Selling-Empfehlungen, Churn-Prediction, 360°-Kundenansicht.",
+      "hours_saved": 30,
+      "tool": "Salesforce Financial Services Cloud",
+      "implementation": "CRM-Migration, KI-Features aktivieren, Team schulen",
+      "difficulty": "hoch",
+      "investment": "1000-3000€/Monat"
+    }
+  ],
+
+  "industry_specific_notes": {
+    "versicherungsmakler": "IDD-Compliance, Produktvielfalt, Bestandspflege",
+    "finanzberater": "MiFID II, Anlageberatung, Dokumentationspflicht",
+    "steuerberater": "DATEV-Integration, Mandantenakte, Fristen",
+    "buchhaltung": "Belegerfassung, Kontenabstimmung, Monatsabschluss"
+  },
+
+  "success_metrics": [
+    "Abschlussquote: % Beratungen → Abschluss",
+    "Bestandsgröße: Verträge und Courtage",
+    "Stornoquote: % gekündigter Verträge",
+    "Beratungszeit: Ø Zeit pro Kunde",
+    "Cross-Selling-Rate: Verträge pro Kunde"
+  ],
+
+  "typical_pricing_models": [
+    "Provision vom Versicherer (Abschluss + Bestand)",
+    "Honorarberatung (150-300€/h)",
+    "Servicepauschalen (monatlich/jährlich)",
+    "Mischmodelle (Provision + Honorar)",
+    "Nettotarife + Servicegebühr"
+  ]
+}
