@@ -35,9 +35,20 @@ async def fetch_report(id: int) -> Dict[str, Any]:
 @router.post("/generate")
 async def generate(payload: Dict[str, Any]) -> Dict[str, Any]:
     """
+    Generate a report by triggering GPT analysis.
+
     Thin wrapper that defers heavy imports until the endpoint is called.
     Avoids router import failures when optional modules are temporarily broken.
-    Accepts a flexible payload (briefing_id, answers, lang, etc.).
+
+    Args:
+        payload: Flexible dict containing briefing_id and optional parameters
+                 (answers, lang, email, etc.)
+
+    Returns:
+        dict: {"ok": True} on successful queue
+
+    Raises:
+        HTTPException 503: Analyzer module unavailable
     """
     try:
         from gpt_analyze import run_async  # lazy import to prevent router mount failures

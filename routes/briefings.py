@@ -40,7 +40,25 @@ async def submit_briefing(
     payload: BriefingSubmitIn,
     request: Request,
     db: Session = Depends(get_db)
-):
+) -> dict:
+    """
+    Submit a briefing for KI-Readiness assessment.
+
+    Saves the briefing answers to the database and optionally triggers
+    GPT analysis. Authentication is optional but recommended.
+
+    Args:
+        payload: Briefing data with language, answers, and analysis flag
+        request: FastAPI request for auth token and rate limiting
+        db: Database session
+
+    Returns:
+        dict: Status with briefing_id and analysis_queued flag
+
+    Raises:
+        HTTPException 401: Invalid or expired token (if provided)
+        HTTPException 500: Database save failed
+    """
     s = get_settings()
 
     # Idempotency
