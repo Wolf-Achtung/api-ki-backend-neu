@@ -50,32 +50,31 @@ def fix_utf8_encoding(text: str) -> str:
         text = ftfy.fix_text(text)
         if original != text:
             logger.debug(f"[ENCODING-FIX-FTFY] Fixed: '{original[:50]}...' -> '{text[:50]}...'")
-        return text
+    else:
+        # Fallback: Direct replacements for common Mojibake patterns (when ftfy not installed)
+        replacements = {
+            'Ã¤': 'ä', 'Ã¶': 'ö', 'Ã¼': 'ü',
+            'Ã„': 'Ä', 'Ã–': 'Ö', 'Ãœ': 'Ü',
+            'ÃŸ': 'ß', 'Ã©': 'é', 'Ã¨': 'è',
+            'Ã ': 'à', 'Ã¡': 'á', 'Ãª': 'ê',
+            'Ã®': 'î', 'Ã¯': 'ï', 'Ã´': 'ô',
+            'Ã¹': 'ù', 'Ãº': 'ú', 'Ã±': 'ñ',
+            'â€™': "'", 'â€œ': '"', 'â€': '"',
+            'â€"': '–', 'â€"': '—', 'â€¢': '•',
+        }
 
-    # Fallback: Direct replacements for common Mojibake patterns
-    replacements = {
-        'Ã¤': 'ä', 'Ã¶': 'ö', 'Ã¼': 'ü',
-        'Ã„': 'Ä', 'Ã–': 'Ö', 'Ãœ': 'Ü',
-        'ÃŸ': 'ß', 'Ã©': 'é', 'Ã¨': 'è',
-        'Ã ': 'à', 'Ã¡': 'á', 'Ãª': 'ê',
-        'Ã®': 'î', 'Ã¯': 'ï', 'Ã´': 'ô',
-        'Ã¹': 'ù', 'Ãº': 'ú', 'Ã±': 'ñ',
-        'â€™': "'", 'â€œ': '"', 'â€': '"',
-        'â€"': '–', 'â€"': '—', 'â€¢': '•',
-    }
+        for wrong, correct in replacements.items():
+            text = text.replace(wrong, correct)
 
-    for wrong, correct in replacements.items():
-        text = text.replace(wrong, correct)
+        # Fallback: encode/decode trick for remaining issues
+        if 'Ã' in text:
+            try:
+                text = text.encode('latin-1', errors='ignore').decode('utf-8', errors='ignore')
+            except (UnicodeDecodeError, UnicodeEncodeError):
+                pass
 
-    # Fallback: encode/decode trick for remaining issues
-    if 'Ã' in text:
-        try:
-            text = text.encode('latin-1', errors='ignore').decode('utf-8', errors='ignore')
-        except (UnicodeDecodeError, UnicodeEncodeError):
-            pass
-
-    if original != text:
-        logger.debug(f"[ENCODING-FIX] Fixed: '{original[:50]}...' -> '{text[:50]}...'")
+        if original != text:
+            logger.debug(f"[ENCODING-FIX] Fixed: '{original[:50]}...' -> '{text[:50]}...'")
 
     return text
 
