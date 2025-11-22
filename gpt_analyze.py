@@ -64,12 +64,18 @@ try:
         build_benchmarks_section,
         build_starter_stacks,
         build_responsible_ai_section,
+        get_score_context,
+        get_research_provenance,
+        validate_business_case_plausibility,
     )
 except Exception:
     calc_business_case = None
     build_benchmarks_section = None
     build_starter_stacks = None
     build_responsible_ai_section = None
+    get_score_context = None
+    get_research_provenance = None
+    validate_business_case_plausibility = None
 
 # Initialize logger
 log = logging.getLogger(__name__)
@@ -247,6 +253,45 @@ def build_extra_sections(answers: dict, scores: dict) -> dict:
         })
     except Exception as exc:
         log.warning("Responsible AI section failed: %s", exc)
+
+    # === NEW: Score Context for size-relative benchmarking (Fix #6) ===
+    try:
+        if callable(get_score_context):
+            overall_score = scores.get("overall", 0)
+            size = answers.get("unternehmensgroesse", "klein")
+            score_context = get_score_context(overall_score, size)
+            extra["score_context"] = score_context
+            extra["score_rating"] = score_context.get("score_rating", "")
+            extra["size_label"] = score_context.get("size_label", "")
+            extra["avg_score_for_size"] = score_context.get("avg_score_for_size", 0)
+            extra["top10_score_for_size"] = score_context.get("top10_score_for_size", 0)
+            log.info("✅ Score context added: %s for %s (avg=%s, top10=%s)",
+                     score_context.get("score_rating"), size,
+                     score_context.get("avg_score_for_size"), score_context.get("top10_score_for_size"))
+    except Exception as exc:
+        log.warning("Score context failed: %s", exc)
+
+    # === NEW: Research Provenance for transparency (Fix #8) ===
+    try:
+        if callable(get_research_provenance):
+            provenance = get_research_provenance()
+            extra["research_sources"] = provenance.get("research_sources", [])
+            extra["report_date"] = provenance.get("report_date", "")
+            extra["RESEARCH_PROVENANCE_HTML"] = provenance.get("provenance_html", "")
+            log.info("✅ Research provenance added: %s", provenance.get("report_date"))
+    except Exception as exc:
+        log.warning("Research provenance failed: %s", exc)
+
+    # === NEW: Business Case Plausibility Check (Fix #3) ===
+    try:
+        if callable(validate_business_case_plausibility) and extra:
+            warnings = validate_business_case_plausibility(extra, answers)
+            if warnings:
+                log.warning("[BUSINESS-CASE] Plausibility warnings:\n%s", "\n".join(warnings))
+                extra["business_case_warnings"] = warnings
+    except Exception as exc:
+        log.warning("Business case plausibility check failed: %s", exc)
+
     return extra
 
 # Logger already initialized at top of file
@@ -2129,9 +2174,13 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     except Exception as _exc:
         log.warning("[%s] ⚠️ Placeholder fix failed: %s", run_id, _exc)
 
-    # === VALIDATION GATE - Wolf 2025-11-19 (moved after placeholder replacement) ===
-    from services.report_validator import validate_report
+    # === CONTENT FILTER - Apply size-appropriate replacements ===
+    from services.report_validator import validate_report, filter_all_sections
 
+    log.info(f"[{run_id}] 🔍 Applying size-inappropriate content filter...")
+    sections = filter_all_sections(sections, answers)
+
+    # === VALIDATION GATE - Wolf 2025-11-19 (moved after placeholder replacement) ===
     log.info(f"[{run_id}] 🔍 Running report validation...")
     is_valid = validate_report(sections, answers)
 
