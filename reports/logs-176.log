@@ -1,290 +1,144 @@
-2025-11-22T20:03:46.047017391Z [inf]  INFO:     100.64.0.4:16300 - "GET /api/healthz HTTP/1.1" 200 OK
-2025-11-22T20:03:46.047029439Z [inf]  INFO:     100.64.0.5:34670 - "GET /api/smoke HTTP/1.1" 200 OK
-2025-11-22T20:03:46.047041241Z [inf]  INFO:     100.64.0.6:38516 - "GET /api/report/ping HTTP/1.1" 200 OK
-2025-11-22T20:04:16.045930363Z [inf]  INFO:     100.64.0.7:42130 - "GET /api/healthz HTTP/1.1" 200 OK
-2025-11-22T20:04:16.045939821Z [inf]  INFO:     100.64.0.8:23438 - "GET /api/smoke HTTP/1.1" 200 OK
-2025-11-22T20:04:16.045946535Z [inf]  INFO:     100.64.0.8:23438 - "GET /api/report/ping HTTP/1.1" 200 OK
-2025-11-22T20:04:24.971600579Z [inf]  INFO:     100.64.0.9:55476 - "GET /api/healthz HTTP/1.1" 200 OK
-2025-11-22T20:04:25.151009402Z [inf]  INFO:     100.64.0.9:55476 - "GET /api/smoke HTTP/1.1" 200 OK
-2025-11-22T20:04:26.010152126Z [inf]  INFO:     100.64.0.10:57090 - "GET /api/report/ping HTTP/1.1" 200 OK
-2025-11-22T20:04:43.000000000Z [inf]  Starting Container
-2025-11-22T20:04:46.008607697Z [inf]  INFO:     100.64.0.11:30544 - "GET /api/healthz HTTP/1.1" 200 OK
-2025-11-22T20:04:46.008624955Z [inf]  INFO:     100.64.0.10:51942 - "GET /api/smoke HTTP/1.1" 200 OK
-2025-11-22T20:04:46.008632771Z [inf]  INFO:     100.64.0.9:42648 - "GET /api/report/ping HTTP/1.1" 200 OK
-2025-11-22T20:04:46.602051252Z [err]  2025-11-22 20:04:44 [INFO] ki-backend: ✓ CORS configured for: https://ki-sicherheit.jetzt, https://www.ki-sicherheit.jetzt, https://ki-foerderung.jetzt, https://make.ki-sicherheit.jetzt, https://www.make.ki-sicherheit.jetzt
-2025-11-22T20:04:46.602060929Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: ✓ Mounted: routes.analyze -> /api/analyze
-2025-11-22T20:04:46.602063961Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: ✓ Mounted: routes.auth -> /api/auth
-2025-11-22T20:04:46.602064538Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: Log Level: INFO
-2025-11-22T20:04:46.602072190Z [err]  2025-11-22 20:04:45 [INFO] utils.encoding_fixer: ✅ ftfy library available for enhanced UTF-8 fixing
-2025-11-22T20:04:46.602076588Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: ✓ All routers mounted successfully!
-2025-11-22T20:04:46.602078433Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: ✓ Mounted: routes.report -> /api/report
-2025-11-22T20:04:46.602084045Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: ✓ Mounted: routes.briefings -> /api/briefings
-2025-11-22T20:04:46.602084354Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: ============================================================
-2025-11-22T20:04:46.602089554Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: ------------------------------------------------------------
-2025-11-22T20:04:46.602090626Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: ✓ Mounted: routes.smoke -> /api/smoke
-2025-11-22T20:04:46.602096977Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: ============================================================
-2025-11-22T20:04:46.602103479Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: KI-Backend ready!
-2025-11-22T20:04:46.602109437Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: Environment: production
-2025-11-22T20:04:46.602408103Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: ------------------------------------------------------------
-2025-11-22T20:04:46.602415558Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: Router Summary: 5/5 mounted successfully
-2025-11-22T20:04:47.655096264Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: ✓ Test-Dashboard verfügbar unter: /test-dashboard.html und /test-dashboard-minimal.html
-2025-11-22T20:04:47.660105751Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: ✓ Endpoint present: /api/briefings/submit
-2025-11-22T20:04:47.660117556Z [err]  INFO:     Started server process [1]
-2025-11-22T20:04:47.660124792Z [err]  INFO:     Waiting for application startup.
-2025-11-22T20:04:47.660131594Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: ============================================================
-2025-11-22T20:04:47.660137420Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: Starting KI-Backend...
-2025-11-22T20:04:47.660143078Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: ============================================================
-2025-11-22T20:04:47.660148987Z [err]  2025-11-22 20:04:45 [INFO] ki-backend: ✓ Login-codes table ready
-2025-11-22T20:04:47.660154760Z [err]  INFO:     Application startup complete.
-2025-11-22T20:04:47.660159410Z [err]  INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
-2025-11-22T20:04:48.000000000Z [inf]  Stopping Container
-2025-11-22T20:04:48.041248889Z [err]  INFO:     Shutting down
-2025-11-22T20:04:48.041254357Z [err]  INFO:     Waiting for application shutdown.
-2025-11-22T20:04:48.041259249Z [err]  2025-11-22 20:04:47 [INFO] ki-backend: Shutting down KI-Backend...
-2025-11-22T20:04:48.041264791Z [err]  INFO:     Application shutdown complete.
-2025-11-22T20:04:48.041268569Z [err]  INFO:     Finished server process [1]
-2025-11-22T20:05:01.000000000Z [inf]  Starting Container
-2025-11-22T20:05:03.254733703Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: ✓ All routers mounted successfully!
-2025-11-22T20:05:03.254741314Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: ------------------------------------------------------------
-2025-11-22T20:05:03.254746692Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: ============================================================
-2025-11-22T20:05:03.254751104Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: KI-Backend ready!
-2025-11-22T20:05:03.254755460Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: Environment: production
-2025-11-22T20:05:03.254760225Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: Log Level: INFO
-2025-11-22T20:05:03.254764487Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: ============================================================
-2025-11-22T20:05:03.254774774Z [err]  2025-11-22 20:05:02 [INFO] ki-backend: ✓ CORS configured for: https://ki-sicherheit.jetzt, https://www.ki-sicherheit.jetzt, https://ki-foerderung.jetzt, https://make.ki-sicherheit.jetzt, https://www.make.ki-sicherheit.jetzt
-2025-11-22T20:05:03.254776710Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: ✓ Test-Dashboard verfügbar unter: /test-dashboard.html und /test-dashboard-minimal.html
-2025-11-22T20:05:03.254782190Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: ✓ Endpoint present: /api/briefings/submit
-2025-11-22T20:05:03.254785643Z [err]  2025-11-22 20:05:02 [INFO] ki-backend: ✓ Mounted: routes.auth -> /api/auth
-2025-11-22T20:05:03.254787573Z [err]  INFO:     Started server process [1]
-2025-11-22T20:05:03.254792687Z [err]  INFO:     Waiting for application startup.
-2025-11-22T20:05:03.254795064Z [err]  2025-11-22 20:05:03 [INFO] utils.encoding_fixer: ✅ ftfy library available for enhanced UTF-8 fixing
-2025-11-22T20:05:03.254798574Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: ============================================================
-2025-11-22T20:05:03.254804525Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: ✓ Mounted: routes.briefings -> /api/briefings
-2025-11-22T20:05:03.254804685Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: Starting KI-Backend...
-2025-11-22T20:05:03.254811155Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: ============================================================
-2025-11-22T20:05:03.254813455Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: ✓ Mounted: routes.analyze -> /api/analyze
-2025-11-22T20:05:03.254821527Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: ✓ Mounted: routes.report -> /api/report
-2025-11-22T20:05:03.254830563Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: ✓ Mounted: routes.smoke -> /api/smoke
-2025-11-22T20:05:03.254838123Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: ------------------------------------------------------------
-2025-11-22T20:05:03.254845673Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: Router Summary: 5/5 mounted successfully
-2025-11-22T20:05:03.524048353Z [err]  2025-11-22 20:05:03 [INFO] ki-backend: ✓ Login-codes table ready
-2025-11-22T20:05:03.524057215Z [err]  INFO:     Application startup complete.
-2025-11-22T20:05:03.524066187Z [err]  INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
-2025-11-22T20:05:06.000000000Z [inf]  Stopping Container
-2025-11-22T20:05:08.659486559Z [err]  INFO:     Shutting down
-2025-11-22T20:05:08.659492805Z [err]  INFO:     Waiting for application shutdown.
-2025-11-22T20:05:08.659498313Z [err]  2025-11-22 20:05:05 [INFO] ki-backend: Shutting down KI-Backend...
-2025-11-22T20:05:08.659503723Z [err]  INFO:     Application shutdown complete.
-2025-11-22T20:05:08.659508904Z [err]  INFO:     Finished server process [1]
-2025-11-22T20:05:45.000000000Z [inf]  Starting Container
-2025-11-22T20:05:47.068665380Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: ✓ CORS configured for: https://ki-sicherheit.jetzt, https://www.ki-sicherheit.jetzt, https://ki-foerderung.jetzt, https://make.ki-sicherheit.jetzt, https://www.make.ki-sicherheit.jetzt
-2025-11-22T20:05:47.068675317Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: ✓ Mounted: routes.auth -> /api/auth
-2025-11-22T20:05:47.068684470Z [err]  2025-11-22 20:05:46 [INFO] utils.encoding_fixer: ✅ ftfy library available for enhanced UTF-8 fixing
-2025-11-22T20:05:47.068693498Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: ✓ Mounted: routes.briefings -> /api/briefings
-2025-11-22T20:05:47.068702494Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: ✓ Mounted: routes.analyze -> /api/analyze
-2025-11-22T20:05:47.068712232Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: ✓ Mounted: routes.report -> /api/report
-2025-11-22T20:05:47.068721687Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: ✓ Mounted: routes.smoke -> /api/smoke
-2025-11-22T20:05:47.068729917Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: ------------------------------------------------------------
-2025-11-22T20:05:47.068739633Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: Router Summary: 5/5 mounted successfully
-2025-11-22T20:05:47.068748632Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: ✓ All routers mounted successfully!
-2025-11-22T20:05:47.068757872Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: ------------------------------------------------------------
-2025-11-22T20:05:47.068765471Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: ============================================================
-2025-11-22T20:05:47.068775198Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: KI-Backend ready!
-2025-11-22T20:05:47.068783003Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: Environment: production
-2025-11-22T20:05:47.068790357Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: Log Level: INFO
-2025-11-22T20:05:47.068799041Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: ============================================================
-2025-11-22T20:05:47.071412518Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: Starting KI-Backend...
-2025-11-22T20:05:47.071422488Z [err]  INFO:     Started server process [1]
-2025-11-22T20:05:47.071432159Z [err]  INFO:     Waiting for application startup.
-2025-11-22T20:05:47.071441201Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: ============================================================
-2025-11-22T20:05:47.071458175Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: ============================================================
-2025-11-22T20:05:47.071520616Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: ✓ Test-Dashboard verfügbar unter: /test-dashboard.html und /test-dashboard-minimal.html
-2025-11-22T20:05:47.071526791Z [err]  2025-11-22 20:05:46 [INFO] ki-backend: ✓ Endpoint present: /api/briefings/submit
-2025-11-22T20:05:47.101849378Z [err]  2025-11-22 20:05:47 [INFO] ki-backend: ✓ Login-codes table ready
-2025-11-22T20:05:47.101854144Z [err]  INFO:     Application startup complete.
-2025-11-22T20:05:47.104202446Z [err]  INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
-2025-11-22T20:05:50.000000000Z [inf]  Stopping Container
-2025-11-22T20:05:53.000000000Z [inf]  Starting Container
-2025-11-22T20:05:53.609981556Z [err]  INFO:     Finished server process [1]
-2025-11-22T20:05:53.610002553Z [err]  INFO:     Shutting down
-2025-11-22T20:05:53.610008144Z [err]  INFO:     Waiting for application shutdown.
-2025-11-22T20:05:53.610020787Z [err]  2025-11-22 20:05:50 [INFO] ki-backend: Shutting down KI-Backend...
-2025-11-22T20:05:53.610029045Z [err]  INFO:     Application shutdown complete.
-2025-11-22T20:05:54.963013080Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: Router Summary: 5/5 mounted successfully
-2025-11-22T20:05:54.963023463Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: ✓ All routers mounted successfully!
-2025-11-22T20:05:54.963031522Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: ------------------------------------------------------------
-2025-11-22T20:05:54.963039046Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: ============================================================
-2025-11-22T20:05:54.963045770Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: KI-Backend ready!
-2025-11-22T20:05:54.963053452Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: Environment: production
-2025-11-22T20:05:54.963059176Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: Log Level: INFO
-2025-11-22T20:05:54.963067220Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: ============================================================
-2025-11-22T20:05:54.963282684Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: ✓ CORS configured for: https://ki-sicherheit.jetzt, https://www.ki-sicherheit.jetzt, https://ki-foerderung.jetzt, https://make.ki-sicherheit.jetzt, https://www.make.ki-sicherheit.jetzt
-2025-11-22T20:05:54.963289422Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: ✓ Mounted: routes.auth -> /api/auth
-2025-11-22T20:05:54.963296990Z [err]  2025-11-22 20:05:54 [INFO] utils.encoding_fixer: ✅ ftfy library available for enhanced UTF-8 fixing
-2025-11-22T20:05:54.963303952Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: ✓ Mounted: routes.briefings -> /api/briefings
-2025-11-22T20:05:54.963312273Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: ✓ Mounted: routes.analyze -> /api/analyze
-2025-11-22T20:05:54.963320174Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: ✓ Mounted: routes.report -> /api/report
-2025-11-22T20:05:54.963327215Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: ✓ Mounted: routes.smoke -> /api/smoke
-2025-11-22T20:05:54.963339723Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: ------------------------------------------------------------
-2025-11-22T20:05:54.963886442Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: ✓ Test-Dashboard verfügbar unter: /test-dashboard.html und /test-dashboard-minimal.html
-2025-11-22T20:05:54.963893914Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: ✓ Endpoint present: /api/briefings/submit
-2025-11-22T20:05:54.963901869Z [err]  INFO:     Started server process [1]
-2025-11-22T20:05:54.963909184Z [err]  INFO:     Waiting for application startup.
-2025-11-22T20:05:54.963918447Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: ============================================================
-2025-11-22T20:05:54.963927169Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: Starting KI-Backend...
-2025-11-22T20:05:54.963935064Z [err]  2025-11-22 20:05:54 [INFO] ki-backend: ============================================================
-2025-11-22T20:05:55.114776790Z [err]  2025-11-22 20:05:55 [INFO] ki-backend: ✓ Login-codes table ready
-2025-11-22T20:05:55.114797937Z [err]  INFO:     Application startup complete.
-2025-11-22T20:05:55.114802648Z [err]  INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
-2025-11-22T20:05:55.239750963Z [err]  INFO:     Shutting down
-2025-11-22T20:05:55.341052853Z [err]  INFO:     Waiting for application shutdown.
-2025-11-22T20:05:55.341062917Z [err]  2025-11-22 20:05:55 [INFO] ki-backend: Shutting down KI-Backend...
-2025-11-22T20:05:55.341071021Z [err]  INFO:     Application shutdown complete.
-2025-11-22T20:05:55.341078510Z [err]  INFO:     Finished server process [1]
-2025-11-22T20:06:00.000000000Z [inf]  Stopping Container
-2025-11-22T20:09:57.550176894Z [inf]  INFO:     100.64.0.2:32128 - "GET /api/healthz HTTP/1.1" 200 OK
-2025-11-22T20:09:57.550184197Z [inf]  INFO:     100.64.0.3:61636 - "GET /api/smoke HTTP/1.1" 200 OK
-2025-11-22T20:09:57.550191452Z [inf]  INFO:     100.64.0.2:32128 - "GET /api/report/ping HTTP/1.1" 200 OK
-2025-11-22T20:14:27.699548557Z [inf]  INFO:     100.64.0.4:56704 - "GET /api/healthz HTTP/1.1" 200 OK
-2025-11-22T20:14:27.699553053Z [inf]  INFO:     100.64.0.5:16738 - "GET /api/smoke HTTP/1.1" 200 OK
-2025-11-22T20:14:27.982248846Z [inf]  INFO:     100.64.0.6:34056 - "GET /api/report/ping HTTP/1.1" 200 OK
-2025-11-22T20:14:50.000000000Z [inf]  Starting Container
-2025-11-22T20:14:51.719072140Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: ✓ CORS configured for: https://ki-sicherheit.jetzt, https://www.ki-sicherheit.jetzt, https://ki-foerderung.jetzt, https://make.ki-sicherheit.jetzt, https://www.make.ki-sicherheit.jetzt
-2025-11-22T20:14:51.719078490Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: ✓ Mounted: routes.auth -> /api/auth
-2025-11-22T20:14:51.819921536Z [err]  2025-11-22 20:14:51 [INFO] utils.encoding_fixer: ✅ ftfy library available for enhanced UTF-8 fixing
-2025-11-22T20:14:51.825479707Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: ✓ Mounted: routes.briefings -> /api/briefings
-2025-11-22T20:14:51.828543779Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: ✓ Mounted: routes.analyze -> /api/analyze
-2025-11-22T20:14:51.832422363Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: ✓ Mounted: routes.report -> /api/report
-2025-11-22T20:14:51.836054246Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: KI-Backend ready!
-2025-11-22T20:14:51.836056123Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: ============================================================
-2025-11-22T20:14:51.836062695Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: Environment: production
-2025-11-22T20:14:51.836070519Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: Log Level: INFO
-2025-11-22T20:14:51.836078496Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: ============================================================
-2025-11-22T20:14:51.836080719Z [err]  INFO:     Waiting for application startup.
-2025-11-22T20:14:51.836086840Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: ✓ Test-Dashboard verfügbar unter: /test-dashboard.html und /test-dashboard-minimal.html
-2025-11-22T20:14:51.836092567Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: ============================================================
-2025-11-22T20:14:51.836099231Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: ✓ Endpoint present: /api/briefings/submit
-2025-11-22T20:14:51.836103578Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: Starting KI-Backend...
-2025-11-22T20:14:51.836109601Z [err]  INFO:     Started server process [1]
-2025-11-22T20:14:51.836131023Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: ✓ Mounted: routes.smoke -> /api/smoke
-2025-11-22T20:14:51.836148169Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: ------------------------------------------------------------
-2025-11-22T20:14:51.836156348Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: Router Summary: 5/5 mounted successfully
-2025-11-22T20:14:51.836163463Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: ✓ All routers mounted successfully!
-2025-11-22T20:14:51.836171255Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: ------------------------------------------------------------
-2025-11-22T20:14:51.836177419Z [err]  2025-11-22 20:14:51 [INFO] ki-backend: ============================================================
-2025-11-22T20:14:52.069646742Z [err]  2025-11-22 20:14:52 [INFO] ki-backend: ✓ Login-codes table ready
-2025-11-22T20:14:52.069652639Z [err]  INFO:     Application startup complete.
-2025-11-22T20:14:52.069658571Z [err]  INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
-2025-11-22T20:14:53.000000000Z [inf]  Stopping Container
-2025-11-22T20:14:57.962869643Z [err]  INFO:     Shutting down
-2025-11-22T20:14:57.962877364Z [err]  INFO:     Waiting for application shutdown.
-2025-11-22T20:14:57.962883480Z [err]  2025-11-22 20:14:52 [INFO] ki-backend: Shutting down KI-Backend...
-2025-11-22T20:14:57.962888124Z [err]  INFO:     Application shutdown complete.
-2025-11-22T20:14:57.962892577Z [err]  INFO:     Finished server process [1]
-2025-11-22T20:24:23.176064561Z [inf]  INFO:     100.64.0.2:41552 - "OPTIONS /api/auth/request-code HTTP/1.1" 200 OK
-2025-11-22T20:24:23.176075330Z [err]  2025-11-22 20:24:20 [INFO] services.mailer: 📧 Resend: Sending email FROM=KI-Sicherheit.jetzt <noreply@ki-sicherheit.jetzt> TO=wolf.hohl@web.de SUBJECT=Ihr KI-Sicherheit Login-Code...
-2025-11-22T20:24:23.176083175Z [err]  2025-11-22 20:24:20 [INFO] httpx: HTTP Request: POST https://api.resend.com/emails "HTTP/1.1 200 OK"
-2025-11-22T20:24:23.176091029Z [err]  2025-11-22 20:24:20 [INFO] services.mailer: ✅ Resend Response [200]: {"id": "12c8aa6f-6c64-4380-a698-a93d7891a844"}
-2025-11-22T20:24:23.176098969Z [err]  2025-11-22 20:24:20 [INFO] services.mailer: 📬 Email ID: 12c8aa6f-6c64-4380-a698-a93d7891a844
-2025-11-22T20:24:23.176105251Z [inf]  INFO:     100.64.0.3:39932 - "POST /api/auth/request-code HTTP/1.1" 204 No Content
-2025-11-22T20:24:52.768655740Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: ✅ PromptEnhancer initialized with context system
-2025-11-22T20:24:52.768660626Z [err]  2025-11-22 20:24:47 [INFO] routes.briefings: 🚀 Triggering analysis for briefing_id=117
-2025-11-22T20:24:52.768664775Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: [run-ebd0d0cd] 🚀 Starting analysis v4.14.0-GOLD-PLUS for briefing_id=117
-2025-11-22T20:24:52.768682658Z [inf]  INFO:     100.64.0.2:12806 - "OPTIONS /api/auth/login HTTP/1.1" 200 OK
-2025-11-22T20:24:52.768684451Z [err]  2025-11-22 20:24:47 [INFO] routes.briefings: [ENCODING-FIX] Cleaning briefing data before save
-2025-11-22T20:24:52.768690090Z [err]  2025-11-22 20:24:44 [INFO] routes.auth: Creating access token for user: wolf.hohl@web.de
-2025-11-22T20:24:52.768694411Z [err]  2025-11-22 20:24:47 [INFO] routes.briefings: ✅ Briefing saved to database: ID=117, user_id=6, len=2150
-2025-11-22T20:24:52.768697362Z [err]  2025-11-22 20:24:44 [INFO] routes.auth: 🍪 Set httpOnly cookie for user: wolf.hohl@web.de
-2025-11-22T20:24:52.768702190Z [err]  2025-11-22 20:24:47 [INFO] services.prompt_loader: 🔍 Prompt loader initialized: BASE_DIR=/app/prompts (exists: True)
-2025-11-22T20:24:52.768703459Z [inf]  INFO:     100.64.0.3:42364 - "POST /api/auth/login HTTP/1.1" 200 OK
-2025-11-22T20:24:52.768708805Z [err]  2025-11-22 20:24:47 [INFO] services.prompt_builder: 📁 Using data_dir: /app/data
-2025-11-22T20:24:52.768709021Z [inf]  INFO:     100.64.0.2:12806 - "OPTIONS /api/briefings/submit HTTP/1.1" 200 OK
-2025-11-22T20:24:52.768715070Z [err]  2025-11-22 20:24:47 [INFO] routes.briefings: ✅ Token validated successfully for user: wolf.hohl@web.de
-2025-11-22T20:24:52.768716348Z [err]  2025-11-22 20:24:47 [INFO] services.prompt_enhancer: ✅ PromptEnhancer initialized (data_dir=data)
-2025-11-22T20:24:52.768720438Z [err]  2025-11-22 20:24:47 [INFO] routes.briefings: ✅ Found existing user: wolf.hohl@web.de (ID=6)
-2025-11-22T20:24:52.772911207Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: [run-ebd0d0cd] [ENCODING-FIX] Double-check on briefing 117
-2025-11-22T20:24:52.772918000Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: [run-ebd0d0cd] 📊 Calculating realistic scores (v4.14.0-GOLD-PLUS)...
-2025-11-22T20:24:52.772925933Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: 📊 REALISTIC SCORES v4.14.0-GOLD-PLUS: Gov=88 Sec=76 Val=100 Ena=100 Overall=91
-2025-11-22T20:24:52.772932249Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: [run-ebd0d0cd] 🎨 Generating content sections with PROMPT SYSTEM...
-2025-11-22T20:24:52.772937951Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: 🚀 Generating 22 sections in PARALLEL (max_workers=12)...
-2025-11-22T20:24:52.772943922Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: ✅ Using enhanced prompt for executive_summary (with context)
-2025-11-22T20:24:52.772950602Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: ✅ Using enhanced prompt for quick_wins (with context)
-2025-11-22T20:24:52.772956531Z [err]  2025-11-22 20:24:47 [INFO] services.prompt_enhancer: 🎯 Applying roadmap size constraints for 'roadmap_12m'
-2025-11-22T20:24:52.772963172Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: ✅ Using enhanced prompt for roadmap_12m (with context)
-2025-11-22T20:24:52.772969290Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: ✅ Using enhanced prompt for business_costs (with context)
-2025-11-22T20:24:52.772975036Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: ✅ Using enhanced prompt for business_roi (with context)
-2025-11-22T20:24:52.772981389Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: ✅ Using enhanced prompt for business_case (with context)
-2025-11-22T20:24:52.772987266Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: ✅ Using enhanced prompt for org_change (with context)
-2025-11-22T20:24:52.772995429Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: ✅ Using enhanced prompt for data_readiness (with context)
-2025-11-22T20:24:52.781280974Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: ✅ Using enhanced prompt for gamechanger (with context)
-2025-11-22T20:24:52.781286795Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: ✅ Using enhanced prompt for risks (with context)
-2025-11-22T20:24:52.781293556Z [err]  2025-11-22 20:24:47 [INFO] services.prompt_enhancer: 🎯 Applying roadmap size constraints for 'roadmap_90d'
-2025-11-22T20:24:52.781299792Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: ✅ Using enhanced prompt for roadmap (with context)
-2025-11-22T20:24:52.781306497Z [err]  2025-11-22 20:24:47 [INFO] gpt_analyze: ✅ Using enhanced prompt for recommendations (with context)
-2025-11-22T20:24:52.781315488Z [err]  2025-11-22 20:24:52 [INFO] gpt_analyze: ✅ Using enhanced prompt for reifegrad_sowhat (with context)
-2025-11-22T20:24:53.177125725Z [err]  2025-11-22 20:24:53 [INFO] gpt_analyze: ✅ Using enhanced prompt for ai_act_summary (with context)
-2025-11-22T20:24:53.672311283Z [err]  2025-11-22 20:24:53 [INFO] gpt_analyze: ✅ Using enhanced prompt for strategie_governance (with context)
-2025-11-22T20:24:55.272037094Z [err]  2025-11-22 20:24:55 [INFO] gpt_analyze: ✅ Using enhanced prompt for wettbewerb_benchmark (with context)
-2025-11-22T20:24:55.699102436Z [err]  2025-11-22 20:24:55 [INFO] gpt_analyze: ✅ Using enhanced prompt for technologie_prozesse (with context)
-2025-11-22T20:24:55.814398280Z [err]  2025-11-22 20:24:55 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo
-2025-11-22T20:24:55.814408629Z [err]  2025-11-22 20:24:55 [INFO] services.prompt_enhancer: ✅ Injected context block into prompt 'unternehmensprofil_markt'
-2025-11-22T20:24:55.814420625Z [err]  2025-11-22 20:24:55 [INFO] gpt_analyze: ✅ Using enhanced prompt for unternehmensprofil_markt (with context)
-2025-11-22T20:24:56.598264832Z [err]  2025-11-22 20:24:56 [INFO] gpt_analyze: ✅ Using enhanced prompt for tools_empfehlungen (with context)
-2025-11-22T20:24:57.399428183Z [err]  2025-11-22 20:24:57 [INFO] gpt_analyze: ✅ Using enhanced prompt for foerderpotenzial (with context)
-2025-11-22T20:24:58.225323004Z [err]  2025-11-22 20:24:58 [INFO] gpt_analyze: ✅ Using enhanced prompt for transparency_box (with context)
-2025-11-22T20:24:59.310535883Z [err]  2025-11-22 20:24:58 [INFO] gpt_analyze: ✅ Using enhanced prompt for ki_aktivitaeten_ziele (with context)
-2025-11-22T20:25:05.712809852Z [err]  2025-11-22 20:25:05 [INFO] gpt_analyze: ✅ Parallel generation completed in 17.8s (vs ~330s sequential)
-2025-11-22T20:25:35.709489427Z [err]  2025-11-22 20:25:33 [INFO] services.research_pipeline: 🔍 Perplexity market insights: KI Einsatz und Trends in der Branche Beratung & Dienstleistungen für Beratung von Unternehmen zur Integration von KI in ihre Unternehmen mittels eines Fragebogens und anschliessender GPT-Auswertung Deutschland
-2025-11-22T20:25:35.709499494Z [err]  2025-11-22 20:25:33 [INFO] services.research_pipeline: 🔍 Perplexity competitor analysis: Wettbewerber und Marktführer KI-Lösungen Beratung & Dienstleistungen Deutschland 2025
-2025-11-22T20:25:35.709519865Z [err]  2025-11-22 20:25:33 [INFO] gpt_analyze: [run-ebd0d0cd] ✅ Copied 12 label variables to sections
-2025-11-22T20:25:35.709540770Z [err]  2025-11-22 20:25:33 [INFO] gpt_analyze: [run-ebd0d0cd] 🔬 Running internal research...
-2025-11-22T20:25:35.709548355Z [err]  2025-11-22 20:25:33 [INFO] services.research_pipeline: 🔬 Running HYBRID research (Tavily + Perplexity + RSS)...
-2025-11-22T20:25:35.709554514Z [err]  2025-11-22 20:25:33 [INFO] services.research_pipeline: 🔍 Tavily tools search: KI Tools AI Software Beratung & Dienstleistungen content_generation datenanalyse 2025
-2025-11-22T20:25:35.709564426Z [err]  2025-11-22 20:25:33 [INFO] services.research_pipeline: 🔍 Tavily funding search: Förderprogramme KI Digitalisierung KMU Berlin Beratung & Dienstleistungen 2025
-2025-11-22T20:25:36.425778866Z [err]  2025-11-22 20:25:36 [INFO] services.research_pipeline: ✅ Tavily returned 8 tools results
-2025-11-22T20:25:36.567120588Z [err]  2025-11-22 20:25:36 [INFO] services.research_pipeline: ✅ Tavily returned 8 funding results
-2025-11-22T20:25:39.503029876Z [err]  2025-11-22 20:25:39 [INFO] services.research_pipeline: ✅ Perplexity returned 3 market insights
-2025-11-22T20:25:41.473884035Z [err]  2025-11-22 20:25:41 [INFO] services.research_pipeline: ✅ Perplexity returned 5 competitor insights
-2025-11-22T20:25:42.624009975Z [err]  2025-11-22 20:25:42 [INFO] services.research_pipeline: 📊 Research complete: 8 tools, 8 funding, 2 news, 8 market insights
-2025-11-22T20:25:42.627178671Z [err]  2025-11-22 20:25:42 [INFO] gpt_analyze: [run-ebd0d0cd] 📈 Coverage: 100% (present=25, missing=0)
-2025-11-22T20:25:42.627188830Z [err]  2025-11-22 20:25:42 [INFO] gpt_analyze: [run-ebd0d0cd] 🎨 Rendering final HTML...
-2025-11-22T20:25:42.645165998Z [err]  2025-11-22 20:25:42 [INFO] gpt_analyze: [run-ebd0d0cd] 🧼 HTML sanitized for 137 string sections
-2025-11-22T20:25:42.645184647Z [err]  2025-11-22 20:25:42 [INFO] services.extra_sections: [BUSINESS-CASE] Capped hours from 36.0 to 20 for size 'solo'
-2025-11-22T20:25:42.645202878Z [err]  2025-11-22 20:25:42 [INFO] gpt_analyze: [run-ebd0d0cd] 💰 Business Case calculated: CAPEX=5000, OPEX=120, Payback=4.4m, ROI=1.329192546583851%
-2025-11-22T20:25:42.645212597Z [err]  2025-11-22 20:25:42 [INFO] gpt_analyze: [run-ebd0d0cd] 🔧 Business Case variables replaced in 3 sections
-2025-11-22T20:25:42.645221279Z [err]  2025-11-22 20:25:42 [INFO] services.extra_sections: [BUSINESS-CASE] Capped hours from 36.0 to 20 for size 'solo'
-2025-11-22T20:25:42.645231175Z [err]  2025-11-22 20:25:42 [INFO] gpt_analyze: ✅ Score context added: exzellent - Sie gehören zu den Top 10% for solo (avg=65, top10=82)
-2025-11-22T20:25:42.645245327Z [err]  2025-11-22 20:25:42 [INFO] gpt_analyze: ✅ Research provenance added: 22.11.2025
-2025-11-22T20:25:42.651983191Z [err]  2025-11-22 20:25:42 [INFO] gpt_analyze: [run-ebd0d0cd] 🔍 Applying size-inappropriate content filter...
-2025-11-22T20:25:42.651993535Z [err]  2025-11-22 20:25:42 [INFO] services.report_validator: [CONTENT-FILTER] Filtering size-inappropriate content for solo
-2025-11-22T20:25:42.652000903Z [err]  2025-11-22 20:25:42 [INFO] services.report_validator: [CONTENT-FILTER] Replacing 'Mitarbeiter' with 'Freelancer oder Partner' for solo
-2025-11-22T20:25:42.652007640Z [err]  2025-11-22 20:25:42 [INFO] services.report_validator: [CONTENT-FILTER] Replacing 'Mitarbeiter' with 'Freelancer oder Partner' for solo
-2025-11-22T20:25:42.652015131Z [err]  2025-11-22 20:25:42 [INFO] gpt_analyze: [run-ebd0d0cd] 🔍 Running report validation...
-2025-11-22T20:25:42.668074356Z [inf]  
-2025-11-22T20:25:42.668088739Z [inf]  ================================================================================
-2025-11-22T20:25:42.668096214Z [inf]  📋 REPORT VALIDATION RESULTS
-2025-11-22T20:25:42.668103586Z [inf]  ================================================================================
-2025-11-22T20:25:42.668110091Z [inf]  ✅ ALLE CHECKS BESTANDEN! Report ist GOLD STANDARD+
-2025-11-22T20:25:42.668119846Z [err]  2025-11-22 20:25:42 [INFO] gpt_analyze: [run-ebd0d0cd] ✅ Report validation passed - GOLD STANDARD+
-2025-11-22T20:25:42.684562637Z [err]  2025-11-22 20:25:42 [INFO] services.report_renderer: ✔ Template validated: pdf_template.html
-2025-11-22T20:25:42.684575026Z [err]  2025-11-22 20:25:42 [INFO] services.report_renderer: 🎨 Rendering report run-ebd0d0cd with 179 sections
-2025-11-22T20:25:42.684582868Z [err]  2025-11-22 20:25:42 [INFO] services.report_renderer: [RENDER] Debug HTML saved: /tmp/report_debug_R-20251122-KND.html
-2025-11-22T20:25:42.684591880Z [err]  2025-11-22 20:25:42 [INFO] services.report_renderer: 🔧 Applied 28 expression replacements for report run-ebd0d0cd
-2025-11-22T20:25:42.689137173Z [err]  2025-11-22 20:25:42 [INFO] utils.logo_embedder: [LOGO-EMBED] Loaded 5 logos for embedding
-2025-11-22T20:25:42.696684897Z [err]  2025-11-22 20:25:42 [INFO] utils.logo_embedder: [LOGO-EMBED] Made 5 logo replacements in HTML
-2025-11-22T20:25:42.696693456Z [err]  2025-11-22 20:25:42 [INFO] services.report_renderer: [RENDER] Embedded logos in HTML for report run-ebd0d0cd
-2025-11-22T20:25:42.743368840Z [err]  2025-11-22 20:25:42 [INFO] gpt_analyze: [run-ebd0d0cd] ✅ Analysis created (v4.14.0-GOLD-PLUS): id=92
-2025-11-22T20:25:42.773651633Z [err]  2025-11-22 20:25:42 [INFO] services.pdf_client: services.pdf_client: Calling PDF service: https://make-ki-pdfservice-production.up.railway.app/generate-pdf (timeout=90.0s, rid=run-ebd0d0cd)
-2025-11-22T20:25:47.360876212Z [err]  2025-11-22 20:25:47 [INFO] services.pdf_client: services.pdf_client: PDF generated successfully: 2592601 bytes
-2025-11-22T20:25:47.383023044Z [err]  2025-11-22 20:25:47 [INFO] gpt_analyze: [run-ebd0d0cd] 📎 Added briefing JSON attachment for admin (2777 bytes)
-2025-11-22T20:25:48.434387748Z [err]  2025-11-22 20:25:48 [INFO] gpt_analyze: 📬 Resend Email ID: 08b61393-6ce6-4c67-9756-b2aa7698a8bb → wol***@web.de
-2025-11-22T20:25:48.437918577Z [err]  2025-11-22 20:25:48 [INFO] gpt_analyze: [run-ebd0d0cd] 📧 Mail sent to user wol***@web.de via Resend
-2025-11-22T20:25:48.437925732Z [err]  2025-11-22 20:25:48 [INFO] gpt_analyze: [run-ebd0d0cd] 📋 Generated briefing summary HTML for admin email
-2025-11-22T20:25:49.764085386Z [err]  2025-11-22 20:25:49 [INFO] gpt_analyze: 📬 Resend Email ID: a0ec10c1-1eb6-4e62-8043-d6d3e644e4b1 → bew***@ki-sicherheit.jetzt
-2025-11-22T20:25:49.764091216Z [err]  2025-11-22 20:25:49 [INFO] gpt_analyze: [run-ebd0d0cd] 📧 Admin notify sent to bew***@ki-sicherheit.jetzt via Resend
-2025-11-22T20:25:50.433180347Z [err]  2025-11-22 20:25:50 [INFO] gpt_analyze: 📬 Resend Email ID: 21344235-ceba-405a-af35-6b7b31cb41e6 → wol***@ki-sicherheit.jetzt
-2025-11-22T20:25:50.433190856Z [err]  2025-11-22 20:25:50 [INFO] gpt_analyze: [run-ebd0d0cd] 📧 Admin notify sent to wol***@ki-sicherheit.jetzt via Resend
-2025-11-22T20:25:50.434810034Z [err]  2025-11-22 20:25:50 [INFO] routes.briefings: ✅ Analysis queued for briefing_id=117
-2025-11-22T20:25:50.436738655Z [inf]  INFO:     100.64.0.3:42364 - "POST /api/briefings/submit HTTP/1.1" 202 Accepted
-2025-11-22T20:26:20.293200319Z [err]  2025-11-22 20:26:17.836 UTC [27] LOG:  checkpoint starting: time
-2025-11-22T20:26:26.392018327Z [err]  2025-11-22 20:26:26.192 UTC [27] LOG:  checkpoint complete: wrote 84 buffers (0.5%); 0 WAL file(s) added, 0 removed, 0 recycled; write=8.332 s, sync=0.005 s, total=8.356 s; sync files=24, longest=0.004 s, average=0.001 s; distance=539 kB, estimate=539 kB; lsn=0/29F65D0, redo lsn=0/29F6540
+2025-11-22T20:43:07.638657164Z [inf]  INFO:     100.64.0.2:10554 - "GET /api/healthz HTTP/1.1" 200 OK
+2025-11-22T20:43:07.638666121Z [inf]  INFO:     100.64.0.2:10554 - "GET /api/smoke HTTP/1.1" 200 OK
+2025-11-22T20:43:07.638675126Z [inf]  INFO:     100.64.0.3:44412 - "GET /api/report/ping HTTP/1.1" 200 OK
+2025-11-22T20:43:14.866794361Z [inf]  INFO:     100.64.0.4:46892 - "GET /api/healthz HTTP/1.1" 200 OK
+2025-11-22T20:43:14.866801021Z [inf]  INFO:     100.64.0.5:18972 - "GET /api/smoke HTTP/1.1" 200 OK
+2025-11-22T20:43:15.732627578Z [inf]  INFO:     100.64.0.4:46892 - "GET /api/report/ping HTTP/1.1" 200 OK
+2025-11-22T20:43:26.000000000Z [inf]  Starting Container
+2025-11-22T20:43:28.452491707Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: ✓ CORS configured for: https://ki-sicherheit.jetzt, https://www.ki-sicherheit.jetzt, https://ki-foerderung.jetzt, https://make.ki-sicherheit.jetzt, https://www.make.ki-sicherheit.jetzt
+2025-11-22T20:43:28.452499948Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: ✓ Mounted: routes.auth -> /api/auth
+2025-11-22T20:43:29.808895718Z [err]  2025-11-22 20:43:28 [INFO] utils.encoding_fixer: ✅ ftfy library available for enhanced UTF-8 fixing
+2025-11-22T20:43:29.808905789Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: ✓ Mounted: routes.briefings -> /api/briefings
+2025-11-22T20:43:29.808914594Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: ✓ Mounted: routes.analyze -> /api/analyze
+2025-11-22T20:43:29.808921688Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: ✓ Mounted: routes.report -> /api/report
+2025-11-22T20:43:29.808928670Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: ✓ Mounted: routes.smoke -> /api/smoke
+2025-11-22T20:43:29.808936620Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: ------------------------------------------------------------
+2025-11-22T20:43:29.808944259Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: Router Summary: 5/5 mounted successfully
+2025-11-22T20:43:29.808952878Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: ✓ All routers mounted successfully!
+2025-11-22T20:43:29.808959801Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: ------------------------------------------------------------
+2025-11-22T20:43:29.808967696Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: ============================================================
+2025-11-22T20:43:29.808975493Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: KI-Backend ready!
+2025-11-22T20:43:29.808982188Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: Environment: production
+2025-11-22T20:43:29.808988968Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: Log Level: INFO
+2025-11-22T20:43:29.808995426Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: ============================================================
+2025-11-22T20:43:29.809002148Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: ✓ Test-Dashboard verfügbar unter: /test-dashboard.html und /test-dashboard-minimal.html
+2025-11-22T20:43:29.809009071Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: ✓ Endpoint present: /api/briefings/submit
+2025-11-22T20:43:30.000000000Z [inf]  Stopping Container
+2025-11-22T20:43:31.125765961Z [err]  INFO:     Started server process [1]
+2025-11-22T20:43:31.125773180Z [err]  INFO:     Waiting for application startup.
+2025-11-22T20:43:31.125778938Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: ============================================================
+2025-11-22T20:43:31.125784550Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: Starting KI-Backend...
+2025-11-22T20:43:31.125790300Z [err]  2025-11-22 20:43:28 [INFO] ki-backend: ============================================================
+2025-11-22T20:43:31.125796099Z [err]  2025-11-22 20:43:29 [INFO] ki-backend: ✓ Login-codes table ready
+2025-11-22T20:43:31.125807229Z [err]  INFO:     Application startup complete.
+2025-11-22T20:43:31.125813091Z [err]  INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+2025-11-22T20:43:35.764360949Z [err]  INFO:     Shutting down
+2025-11-22T20:43:35.764368011Z [err]  INFO:     Waiting for application shutdown.
+2025-11-22T20:43:35.764375243Z [err]  2025-11-22 20:43:29 [INFO] ki-backend: Shutting down KI-Backend...
+2025-11-22T20:43:35.764382135Z [err]  INFO:     Application shutdown complete.
+2025-11-22T20:43:35.764389977Z [err]  INFO:     Finished server process [1]
+2025-11-22T20:44:11.000000000Z [inf]  Starting Container
+2025-11-22T20:44:12.673655222Z [err]  2025-11-22 20:44:11 [INFO] ki-backend: ✓ CORS configured for: https://ki-sicherheit.jetzt, https://www.ki-sicherheit.jetzt, https://ki-foerderung.jetzt, https://make.ki-sicherheit.jetzt, https://www.make.ki-sicherheit.jetzt
+2025-11-22T20:44:12.673668263Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: ✓ Mounted: routes.auth -> /api/auth
+2025-11-22T20:44:12.673675020Z [err]  2025-11-22 20:44:12 [INFO] utils.encoding_fixer: ✅ ftfy library available for enhanced UTF-8 fixing
+2025-11-22T20:44:12.673681280Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: ✓ Mounted: routes.briefings -> /api/briefings
+2025-11-22T20:44:12.673688076Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: ✓ Mounted: routes.analyze -> /api/analyze
+2025-11-22T20:44:12.673697331Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: ✓ Mounted: routes.report -> /api/report
+2025-11-22T20:44:12.673703305Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: ✓ Mounted: routes.smoke -> /api/smoke
+2025-11-22T20:44:12.673709685Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: ------------------------------------------------------------
+2025-11-22T20:44:12.673715527Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: Router Summary: 5/5 mounted successfully
+2025-11-22T20:44:12.673724567Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: ✓ All routers mounted successfully!
+2025-11-22T20:44:12.673731648Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: ------------------------------------------------------------
+2025-11-22T20:44:12.673737747Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: ============================================================
+2025-11-22T20:44:12.673742890Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: KI-Backend ready!
+2025-11-22T20:44:12.673748122Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: Environment: production
+2025-11-22T20:44:12.673753824Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: Log Level: INFO
+2025-11-22T20:44:12.673760670Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: ============================================================
+2025-11-22T20:44:12.676468737Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: ============================================================
+2025-11-22T20:44:12.676482437Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: ✓ Test-Dashboard verfügbar unter: /test-dashboard.html und /test-dashboard-minimal.html
+2025-11-22T20:44:12.676492325Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: ✓ Endpoint present: /api/briefings/submit
+2025-11-22T20:44:12.676497585Z [err]  INFO:     Started server process [1]
+2025-11-22T20:44:12.676502664Z [err]  INFO:     Waiting for application startup.
+2025-11-22T20:44:12.676507444Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: ============================================================
+2025-11-22T20:44:12.676514438Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: Starting KI-Backend...
+2025-11-22T20:44:12.715085499Z [err]  2025-11-22 20:44:12 [INFO] ki-backend: ✓ Login-codes table ready
+2025-11-22T20:44:12.715094911Z [err]  INFO:     Application startup complete.
+2025-11-22T20:44:12.715103582Z [err]  INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+2025-11-22T20:44:14.000000000Z [inf]  Stopping Container
+2025-11-22T20:44:21.754415728Z [err]  INFO:     Shutting down
+2025-11-22T20:44:21.754425071Z [err]  INFO:     Waiting for application shutdown.
+2025-11-22T20:44:21.754434014Z [err]  2025-11-22 20:44:13 [INFO] ki-backend: Shutting down KI-Backend...
+2025-11-22T20:44:21.754441044Z [err]  INFO:     Application shutdown complete.
+2025-11-22T20:44:21.754447452Z [err]  INFO:     Finished server process [1]
+2025-11-22T20:46:23.061080151Z [inf]  INFO:     100.64.0.2:24102 - "GET /api/healthz HTTP/1.1" 200 OK
+2025-11-22T20:46:23.061086479Z [inf]  INFO:     100.64.0.3:34880 - "GET /api/smoke HTTP/1.1" 200 OK
+2025-11-22T20:46:23.061093280Z [inf]  INFO:     100.64.0.4:36308 - "GET /api/report/ping HTTP/1.1" 200 OK
+2025-11-22T20:46:42.000000000Z [inf]  Starting Container
+2025-11-22T20:46:42.647399394Z [inf]  INFO:     100.64.0.5:15952 - "GET /api/healthz HTTP/1.1" 200 OK
+2025-11-22T20:46:42.647408385Z [inf]  INFO:     100.64.0.6:48354 - "GET /api/smoke HTTP/1.1" 200 OK
+2025-11-22T20:46:42.647415122Z [inf]  INFO:     100.64.0.7:62438 - "GET /api/report/ping HTTP/1.1" 200 OK
+2025-11-22T20:46:43.649184645Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: ✓ CORS configured for: https://ki-sicherheit.jetzt, https://www.ki-sicherheit.jetzt, https://ki-foerderung.jetzt, https://make.ki-sicherheit.jetzt, https://www.make.ki-sicherheit.jetzt
+2025-11-22T20:46:43.649190729Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: ✓ Mounted: routes.auth -> /api/auth
+2025-11-22T20:46:44.464577114Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: ✓ Test-Dashboard verfügbar unter: /test-dashboard.html und /test-dashboard-minimal.html
+2025-11-22T20:46:44.464591319Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: ✓ Endpoint present: /api/briefings/submit
+2025-11-22T20:46:44.464662539Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: ✓ Mounted: routes.analyze -> /api/analyze
+2025-11-22T20:46:44.464666950Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: Router Summary: 5/5 mounted successfully
+2025-11-22T20:46:44.464672139Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: ✓ Mounted: routes.report -> /api/report
+2025-11-22T20:46:44.464675795Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: ✓ All routers mounted successfully!
+2025-11-22T20:46:44.464679268Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: ✓ Mounted: routes.smoke -> /api/smoke
+2025-11-22T20:46:44.464684688Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: ------------------------------------------------------------
+2025-11-22T20:46:44.464686368Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: ------------------------------------------------------------
+2025-11-22T20:46:44.464696334Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: ============================================================
+2025-11-22T20:46:44.464703260Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: KI-Backend ready!
+2025-11-22T20:46:44.464709916Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: Environment: production
+2025-11-22T20:46:44.464715854Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: Log Level: INFO
+2025-11-22T20:46:44.464722875Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: ============================================================
+2025-11-22T20:46:44.464736070Z [err]  2025-11-22 20:46:43 [INFO] utils.encoding_fixer: ✅ ftfy library available for enhanced UTF-8 fixing
+2025-11-22T20:46:44.464741221Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: ✓ Mounted: routes.briefings -> /api/briefings
+2025-11-22T20:46:44.468339107Z [err]  INFO:     Started server process [1]
+2025-11-22T20:46:44.468344759Z [err]  INFO:     Waiting for application startup.
+2025-11-22T20:46:44.468350796Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: ============================================================
+2025-11-22T20:46:44.468357900Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: Starting KI-Backend...
+2025-11-22T20:46:44.468364674Z [err]  2025-11-22 20:46:43 [INFO] ki-backend: ============================================================
+2025-11-22T20:46:44.468371424Z [err]  2025-11-22 20:46:44 [INFO] ki-backend: ✓ Login-codes table ready
+2025-11-22T20:46:44.468377684Z [err]  INFO:     Application startup complete.
+2025-11-22T20:46:44.468384416Z [err]  INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+2025-11-22T20:46:45.312439570Z [err]  INFO:     Shutting down
+2025-11-22T20:46:45.312444765Z [err]  INFO:     Waiting for application shutdown.
+2025-11-22T20:46:45.312450208Z [err]  2025-11-22 20:46:45 [INFO] ki-backend: Shutting down KI-Backend...
+2025-11-22T20:46:45.312455495Z [err]  INFO:     Application shutdown complete.
+2025-11-22T20:46:45.312461741Z [err]  INFO:     Finished server process [1]
+2025-11-22T20:46:46.000000000Z [inf]  Stopping Container
+2025-11-22T20:47:34.000000000Z [inf]  Starting Container
+2025-11-22T20:47:36.368062687Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: KI-Backend ready!
+2025-11-22T20:47:36.368075422Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: Environment: production
+2025-11-22T20:47:36.368098454Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: ------------------------------------------------------------
+2025-11-22T20:47:36.368099943Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: Log Level: INFO
+2025-11-22T20:47:36.368112402Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: Router Summary: 5/5 mounted successfully
+2025-11-22T20:47:36.368114870Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: ============================================================
+2025-11-22T20:47:36.368116253Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: ✓ CORS configured for: https://ki-sicherheit.jetzt, https://www.ki-sicherheit.jetzt, https://ki-foerderung.jetzt, https://make.ki-sicherheit.jetzt, https://www.make.ki-sicherheit.jetzt
+2025-11-22T20:47:36.368121262Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: ✓ All routers mounted successfully!
+2025-11-22T20:47:36.368128391Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: ------------------------------------------------------------
+2025-11-22T20:47:36.368128443Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: ✓ Mounted: routes.auth -> /api/auth
+2025-11-22T20:47:36.368137678Z [err]  2025-11-22 20:47:35 [INFO] utils.encoding_fixer: ✅ ftfy library available for enhanced UTF-8 fixing
+2025-11-22T20:47:36.368140861Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: ============================================================
+2025-11-22T20:47:36.368146190Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: ✓ Mounted: routes.briefings -> /api/briefings
+2025-11-22T20:47:36.368156002Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: ✓ Mounted: routes.analyze -> /api/analyze
+2025-11-22T20:47:36.368163964Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: ✓ Mounted: routes.report -> /api/report
+2025-11-22T20:47:36.368169959Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: ✓ Mounted: routes.smoke -> /api/smoke
+2025-11-22T20:47:36.371610835Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: ✓ Test-Dashboard verfügbar unter: /test-dashboard.html und /test-dashboard-minimal.html
+2025-11-22T20:47:36.371615828Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: ✓ Endpoint present: /api/briefings/submit
+2025-11-22T20:47:36.371620674Z [err]  INFO:     Started server process [1]
+2025-11-22T20:47:36.371626103Z [err]  INFO:     Waiting for application startup.
+2025-11-22T20:47:36.371632400Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: ============================================================
+2025-11-22T20:47:36.371638107Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: Starting KI-Backend...
+2025-11-22T20:47:36.371646015Z [err]  2025-11-22 20:47:35 [INFO] ki-backend: ============================================================
+2025-11-22T20:47:36.371650537Z [err]  2025-11-22 20:47:36 [INFO] ki-backend: ✓ Login-codes table ready
+2025-11-22T20:47:36.371654471Z [err]  INFO:     Application startup complete.
+2025-11-22T20:47:36.371662527Z [err]  INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+2025-11-22T20:47:38.000000000Z [inf]  Stopping Container
+2025-11-22T20:47:43.978930573Z [err]  INFO:     Shutting down
+2025-11-22T20:47:43.978937610Z [err]  INFO:     Waiting for application shutdown.
+2025-11-22T20:47:43.978943406Z [err]  2025-11-22 20:47:37 [INFO] ki-backend: Shutting down KI-Backend...
+2025-11-22T20:47:43.978949289Z [err]  INFO:     Application shutdown complete.
+2025-11-22T20:47:43.978954481Z [err]  INFO:     Finished server process [1]
