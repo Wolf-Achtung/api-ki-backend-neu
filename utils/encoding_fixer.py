@@ -51,7 +51,7 @@ def fix_utf8_encoding(text: str) -> str:
         text = ftfy.fix_text(text)
         if original != text:
             logger.debug(f"[ENCODING-FIX-FTFY] Fixed: '{original[:50]}...' -> '{text[:50]}...'")
-    else:
+    else:  # type: ignore[unreachable]
         # Fallback: Direct replacements for common Mojibake patterns (when ftfy not installed)
         replacements = {
             'Ã¤': 'ä', 'Ã¶': 'ö', 'Ã¼': 'ü',
