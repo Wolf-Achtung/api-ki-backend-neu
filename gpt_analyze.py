@@ -2178,7 +2178,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     from services.report_validator import validate_report, filter_all_sections
 
     log.info(f"[{run_id}] 🔍 Applying size-inappropriate content filter...")
-    sections = filter_all_sections(sections, answers)
+    sections = filter_all_sections(sections, answers)  # type: ignore[assignment]
 
     # === VALIDATION GATE - Wolf 2025-11-19 (moved after placeholder replacement) ===
     log.info(f"[{run_id}] 🔍 Running report validation...")
