@@ -71,9 +71,10 @@ def enhance_roadmap_prompt(base_prompt: str, context: Dict[str, Any]) -> str:
         "50000_250000": 250000,
         "ueber_250000": 500000
     }
+    budget_from_map = investment_map.get(investment_budget, 10000)
     max_realistic_budget = min(
         constraints["max_budget_total"],
-        investment_map.get(investment_budget, 10000)
+        budget_from_map
     )
 
     size_context = f"""
