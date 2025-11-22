@@ -167,6 +167,8 @@ def ksj_fix_placeholders_in_sections(sections: dict, answers: dict, scores: dict
             sections["RESPONSIBLE_AI_HTML"] = build_responsible_ai_section({
                 "four_pillars": os.getenv("FOUR_PILLARS_PATH", "knowledge/four_pillars.html"),
                 "legal_pitfalls": os.getenv("LEGAL_PITFALLS_PATH", "knowledge/legal_pitfalls.html"),
+                "ten_20_70": os.getenv("TEN_20_70_PATH", "knowledge/ten_20_70.html"),
+                "kmu_keypoints": os.getenv("KMU_KEYPOINTS_PATH", "knowledge/kmu_keypoints.html"),
             })
         except Exception:
             pass
@@ -250,6 +252,8 @@ def build_extra_sections(answers: dict, scores: dict) -> dict:
         extra["RESPONSIBLE_AI_HTML"] = build_responsible_ai_section({
             "four_pillars": os.getenv("FOUR_PILLARS_PATH", "knowledge/four_pillars.html"),
             "legal_pitfalls": os.getenv("LEGAL_PITFALLS_PATH", "knowledge/legal_pitfalls.html"),
+            "ten_20_70": os.getenv("TEN_20_70_PATH", "knowledge/ten_20_70.html"),
+            "kmu_keypoints": os.getenv("KMU_KEYPOINTS_PATH", "knowledge/kmu_keypoints.html"),
         })
     except Exception as exc:
         log.warning("Responsible AI section failed: %s", exc)
@@ -2217,7 +2221,9 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     if build_responsible_ai_section:
         sections["responsible_ai_html"] = build_responsible_ai_section({
             "four_pillars": "knowledge/four_pillars.html",
-            "legal_pitfalls": "knowledge/legal_pitfalls.html"
+            "legal_pitfalls": "knowledge/legal_pitfalls.html",
+            "ten_20_70": "knowledge/ten_20_70.html",
+            "kmu_keypoints": "knowledge/kmu_keypoints.html"
         })
         sections["RESPONSIBLE_AI_HTML"] = sections["responsible_ai_html"]  # Uppercase alias für Kompatibilität
 

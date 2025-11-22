@@ -1,0 +1,160 @@
+{
+  "branche": "gesundheit",
+  "display_name": "Gesundheit & Pflege",
+  "description": "Arztpraxen, Therapiepraxen, Pflegedienste, Apotheken, Gesundheitsdienstleister",
+
+  "typical_workflows": [
+    "Patientenverwaltung: Terminplanung, Patientenakte, Stammdaten",
+    "Dokumentation: Behandlungsdokumentation, Arztbriefe, Befunde",
+    "Abrechnung: KV-Abrechnung, Privatrechnung, BG-Abrechnung",
+    "Rezept/Verordnung: Medikamente, Heilmittel, Hilfsmittel",
+    "Kommunikation: Patienten, Fachärzte, Krankenkassen",
+    "Qualitätsmanagement: QM-Dokumentation, Hygieneplan",
+    "Bestellwesen: Medikamente, Material, Praxisbedarf"
+  ],
+
+  "common_pain_points": [
+    "Dokumentationsaufwand: 2-3h täglich nur für Doku",
+    "Arztbriefe schreiben: Zeitaufwändig, oft Überstunden",
+    "Terminmanagement: No-Shows, kurzfristige Absagen",
+    "Patientenanfragen: Viele Routine-Fragen per Telefon",
+    "Datenschutz: Strenge DSGVO-Anforderungen im Gesundheitswesen",
+    "Fachkräftemangel: Schwer qualifiziertes Personal zu finden",
+    "Abrechnung komplex: Viele Ziffern, häufige Änderungen"
+  ],
+
+  "ai_opportunities": [
+    "Arztbriefe automatisieren: Befund → strukturierter Brief",
+    "Sprach-zu-Text für Dokumentation: Diktieren statt tippen",
+    "Terminerinnerungen: Automatische SMS/Email, No-Show-Reduktion",
+    "Patienten-Chatbot: FAQs, Terminbuchung, Rezeptanfrage",
+    "ICD-Kodierung: Diagnosen automatisch kodieren",
+    "Abrechnungsoptimierung: Fehlende Ziffern vorschlagen",
+    "QM-Dokumentation: Checklisten und Protokolle automatisieren",
+    "Medikamenten-Interaktion: Automatische Warnungen"
+  ],
+
+  "typical_tools": [
+    "Praxisverwaltungssystem (PVS): CGM, mediatixx, medatixx",
+    "Dokumentation: Word oder PVS-integriert",
+    "Telefon als Haupt-Kommunikation",
+    "Fax (immer noch verbreitet)",
+    "Email für Patienten-Kommunikation",
+    "KIM (Kommunikation im Medizinwesen)",
+    "Apotheken-Warenwirtschaft",
+    "Pflegedokumentation: DAN, Connext Vivendi"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Telefon", "Fax", "KIM", "Email"],
+    "pvs": ["CGM TURBOMED", "mediatixx", "medatixx", "Tomedo"],
+    "documentation": ["PVS-integriert", "Word", "Spracherkennung"],
+    "scheduling": ["PVS-integriert", "Doctolib", "Jameda"],
+    "billing": ["PVS-integriert", "KV-SafeNet"],
+    "pharmacy": ["WINAPO", "Lauer-Fischer", "ARZ Darmstadt"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "Spracherkennung für Dokumentation",
+      "description": "Befunde und Arztbriefe diktieren statt tippen. 3x schneller dokumentieren.",
+      "hours_saved": 12,
+      "tool": "Dragon Medical oder Nuance DAX (50€/Monat)",
+      "implementation": "Software installieren, Vokabular trainieren, Workflow anpassen",
+      "difficulty": "niedrig",
+      "investment": "50-100€/Monat"
+    },
+    {
+      "title": "Automatische Terminerinnerungen",
+      "description": "SMS/Email 24h vor Termin. Reduziert No-Shows um 30-50%.",
+      "hours_saved": 4,
+      "tool": "Doctolib oder PVS-Integration",
+      "implementation": "Einrichtung, Texte anpassen, Testphase",
+      "difficulty": "niedrig",
+      "investment": "30-80€/Monat"
+    },
+    {
+      "title": "Arztbrief-Vorlagen per KI",
+      "description": "Aus Stichpunkten strukturierte Arztbriefe generieren.",
+      "hours_saved": 8,
+      "tool": "GPT-4 (datenschutzkonform) oder spezialisierte Lösung",
+      "implementation": "Templates für verschiedene Fachrichtungen, lokale Verarbeitung",
+      "difficulty": "mittel",
+      "investment": "20-100€/Monat"
+    },
+    {
+      "title": "Online-Terminbuchung",
+      "description": "Patienten buchen selbst online. Weniger Telefonanrufe.",
+      "hours_saved": 5,
+      "tool": "Doctolib, Jameda oder samedi",
+      "implementation": "Account erstellen, Kalender einrichten, Patienten informieren",
+      "difficulty": "niedrig",
+      "investment": "80-150€/Monat"
+    },
+    {
+      "title": "FAQ-Automation auf Website",
+      "description": "Häufige Fragen automatisch beantworten: Öffnungszeiten, Anfahrt, Leistungen.",
+      "hours_saved": 3,
+      "tool": "Chatbot für Website",
+      "implementation": "FAQ sammeln, Bot einrichten, testen",
+      "difficulty": "mittel",
+      "investment": "30-50€/Monat"
+    },
+    {
+      "title": "Rezeptanfragen automatisieren",
+      "description": "Patient stellt Anfrage digital → Praxis prüft → Rezept bereit zur Abholung.",
+      "hours_saved": 4,
+      "tool": "Online-Formular + Make.com",
+      "implementation": "Formular erstellen, Workflow definieren",
+      "difficulty": "mittel",
+      "investment": "20-40€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Zentrales Wissensmanagement für Praxisteam",
+      "description": "Leitlinien, SOPs, Hygieneplan durchsuchbar für alle Mitarbeiter.",
+      "hours_saved": 8,
+      "tool": "Notion oder SharePoint",
+      "implementation": "Dokumente sammeln, strukturieren, Team schulen",
+      "difficulty": "mittel",
+      "investment": "50-100€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise-Praxismanagement mit KI",
+      "description": "Automatische Kodierung, Abrechnungsoptimierung, Ressourcenplanung.",
+      "hours_saved": 30,
+      "tool": "CGM Clinical oder Dedalus ORBIS",
+      "implementation": "System-Implementierung, Migration, Schulung",
+      "difficulty": "hoch",
+      "investment": "1000-5000€/Monat"
+    }
+  ],
+
+  "industry_specific_notes": {
+    "arztpraxis": "KV-Abrechnung, Überweisung, Arztbrief",
+    "zahnarztpraxis": "Heil- und Kostenplan, Laboraufträge",
+    "physiotherapie": "Verordnungen, Behandlungsserien, Terminblöcke",
+    "pflegedienst": "Tourenplanung, Pflegedokumentation, MDK"
+  },
+
+  "success_metrics": [
+    "Auslastung: Termine pro Tag",
+    "No-Show-Rate: % nicht erschienene Patienten",
+    "Dokumentationszeit: Minuten pro Patient",
+    "Patientenzufriedenheit: Bewertungen",
+    "Abrechnungsvolumen: Punkte/Euro pro Quartal"
+  ],
+
+  "typical_pricing_models": [
+    "GKV-Abrechnung (EBM/BEMA)",
+    "PKV-Abrechnung (GOÄ/GOZ)",
+    "IGeL-Leistungen (Selbstzahler)",
+    "BG-Abrechnung (Arbeitsunfälle)",
+    "Pauschalvergütung (Selektivverträge)"
+  ]
+}

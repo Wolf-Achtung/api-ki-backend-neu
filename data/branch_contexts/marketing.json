@@ -1,0 +1,160 @@
+{
+  "branche": "marketing",
+  "display_name": "Marketing & Werbung",
+  "description": "Marketing-Agenturen, Werbeagenturen, PR-Beratung, Social Media Management, Performance Marketing",
+
+  "typical_workflows": [
+    "Kampagnenplanung und Konzeption für Kunden",
+    "Content-Erstellung: Texte, Grafiken, Videos, Social Media Posts",
+    "Social Media Management: Posting, Community-Management, Monitoring",
+    "Performance-Tracking: Google Analytics, Meta Ads Manager, Reporting",
+    "Kundenabstimmung: Briefings, Feedback-Schleifen, Freigaben",
+    "Pitch-Präsentationen für Neukundenakquise",
+    "Budgetverwaltung und Media-Buying"
+  ],
+
+  "common_pain_points": [
+    "Content-Produktion ist zeitaufwändig: 5-10 Stunden pro Woche nur für Social Media",
+    "Kreative Blockaden: Ständig neue Ideen generieren müssen",
+    "Viele Feedback-Schleifen: 3-5 Korrekturschleifen pro Projekt",
+    "Reporting frisst Zeit: Monatliche Reports für jeden Kunden",
+    "Multi-Channel-Komplexität: Jeder Kanal hat eigene Formate/Anforderungen",
+    "Trend-Monitoring: Ständig auf dem neuesten Stand bleiben",
+    "Skalierung nur mit mehr Personal: Kapazitätsgrenzen bei kleinen Teams"
+  ],
+
+  "ai_opportunities": [
+    "Content-Generierung: Blog-Artikel, Social Posts, Ad-Copies per GPT",
+    "Bild-Generierung: Visuals für Social Media mit DALL-E/Midjourney",
+    "Video-Skripte: Storyboards und Sprechertexte automatisch erstellen",
+    "Automatische Reportings: Daten aus Analytics → formatierter Report",
+    "Trend-Research: Automatische Branchenanalysen und Wettbewerber-Monitoring",
+    "A/B-Test-Varianten: Schnell 10+ Varianten für Ads generieren",
+    "SEO-Optimierung: Keyword-Recherche und Content-Optimierung",
+    "Social Listening: Automatische Sentiment-Analyse"
+  ],
+
+  "typical_tools": [
+    "Adobe Creative Suite / Canva für Grafiken",
+    "Meta Business Suite für Facebook/Instagram",
+    "Google Ads / Google Analytics",
+    "Hootsuite / Buffer für Social Scheduling",
+    "Mailchimp / Brevo für Email-Marketing",
+    "Trello / Asana für Projektmanagement",
+    "Excel für Reporting und Budgets",
+    "Slack für Team-Kommunikation"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Slack", "Teams", "Email", "Zoom"],
+    "design": ["Canva", "Adobe CC", "Figma"],
+    "social": ["Meta Business Suite", "Hootsuite", "Buffer", "Later"],
+    "analytics": ["Google Analytics", "Meta Ads Manager", "Semrush"],
+    "email": ["Mailchimp", "Brevo", "ActiveCampaign"],
+    "project": ["Asana", "Trello", "Monday.com"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "GPT-gestützte Content-Pipeline",
+      "description": "Social Media Posts, Blog-Artikel, Newsletter-Texte per GPT erstellen. Von Briefing zu fertigem Text in 10 statt 60 Minuten.",
+      "hours_saved": 12,
+      "tool": "GPT-4 API oder ChatGPT Team (20€/Monat)",
+      "implementation": "Prompt-Templates für verschiedene Content-Formate anlegen, Brand Voice Guidelines definieren",
+      "difficulty": "niedrig",
+      "investment": "20-50€/Monat"
+    },
+    {
+      "title": "Automatisierte Visual-Erstellung",
+      "description": "Social Media Grafiken mit KI-Tools erstellen. Bild-Prompts → Canva/Midjourney → fertige Grafik.",
+      "hours_saved": 8,
+      "tool": "Canva Pro + Magic Studio (12€/Monat)",
+      "implementation": "Templates anlegen, Brand Kit einrichten, Workflow definieren",
+      "difficulty": "niedrig",
+      "investment": "12-30€/Monat"
+    },
+    {
+      "title": "Automatische Report-Generierung",
+      "description": "Google Analytics + Meta Ads Daten → automatischer monatlicher Report per Template.",
+      "hours_saved": 6,
+      "tool": "Google Looker Studio + GPT für Zusammenfassung",
+      "implementation": "Looker Studio Dashboard aufsetzen, GPT-Zusammenfassung der Insights",
+      "difficulty": "mittel",
+      "investment": "0-20€/Monat"
+    },
+    {
+      "title": "SEO-Content-Optimierung",
+      "description": "Bestehende Texte SEO-optimieren: Keyword-Recherche → GPT-Optimierung → bessere Rankings.",
+      "hours_saved": 5,
+      "tool": "Ubersuggest/Semrush + GPT",
+      "implementation": "Keyword-Recherche automatisieren, Optimierungs-Prompts erstellen",
+      "difficulty": "niedrig",
+      "investment": "29-99€/Monat"
+    },
+    {
+      "title": "Ad-Copy-Varianten-Generator",
+      "description": "Für jede Kampagne 10-20 Text-Varianten generieren für A/B-Tests.",
+      "hours_saved": 4,
+      "tool": "GPT-4 mit spezifischen Prompts",
+      "implementation": "Prompt-Template für Ads, Integration in Workflow",
+      "difficulty": "niedrig",
+      "investment": "20€/Monat"
+    },
+    {
+      "title": "Automatisierte Wettbewerber-Analyse",
+      "description": "Wöchentliches Monitoring der Konkurrenz: Social Media, Website-Änderungen, Kampagnen.",
+      "hours_saved": 5,
+      "tool": "Tavily API + GPT für Analyse",
+      "implementation": "Automatische Recherche-Scripts, wöchentlicher Report",
+      "difficulty": "mittel",
+      "investment": "0€ (bei vorhandener API)"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Zentrale Asset-Library mit KI-Tagging",
+      "description": "Alle Grafiken, Videos, Templates zentral durchsuchbar. Automatisches Tagging per KI.",
+      "hours_saved": 10,
+      "tool": "Notion + KI-Plugin oder Brandfolder",
+      "implementation": "Assets migrieren, Tagging-System aufsetzen",
+      "difficulty": "mittel",
+      "investment": "50-150€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise Marketing Automation",
+      "description": "Vollständige Marketing-Automation: Lead-Scoring, Nurturing, Attribution-Tracking.",
+      "hours_saved": 30,
+      "tool": "HubSpot Marketing Hub oder Marketo",
+      "implementation": "System-Setup, Integration, Team-Schulung",
+      "difficulty": "hoch",
+      "investment": "800-2500€/Monat"
+    }
+  ],
+
+  "industry_specific_notes": {
+    "performance_marketing": "Fokus auf ROAS, Conversion-Tracking, schnelle Iteration",
+    "content_marketing": "Qualität vor Quantität, SEO-Fokus, lange Vorlaufzeiten",
+    "social_media": "Hohe Frequenz, Trend-Reaktion, Community-Management",
+    "pr_beratung": "Medienbeziehungen, Krisenkommunikation, Storytelling"
+  },
+
+  "success_metrics": [
+    "Content-Output: Anzahl Posts/Artikel pro Woche",
+    "Engagement-Rate: Likes, Comments, Shares",
+    "Lead-Generierung: MQLs, SQLs pro Kampagne",
+    "ROAS: Return on Ad Spend",
+    "Client Retention: Kundenbindungsrate"
+  ],
+
+  "typical_pricing_models": [
+    "Retainer-Modelle (1500-10000€/Monat)",
+    "Projektpauschalen für Kampagnen",
+    "Stundensätze (80-180€/h)",
+    "Performance-basiert (% of Ad Spend)",
+    "Hybridmodelle (Retainer + Performance)"
+  ]
+}
