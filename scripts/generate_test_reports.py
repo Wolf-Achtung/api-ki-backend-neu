@@ -12,7 +12,7 @@ Ablauf:
 1. Login-Code per E-Mail an dich senden
 2. Du tippst den Code einmal ins Script
 3. Script feuert alle Testprofile nacheinander an /api/briefings/submit
-   → Reports laufen ganz normal durch den GOLD-PLUS-Pipeline
+   → Reports laufen ganz normal durch die GOLD-PLUS-Pipeline
 """
 
 import argparse
@@ -25,7 +25,7 @@ import requests
 
 
 def request_login_code(base_url: str, email: str) -> None:
-    """Fordert einen Login-Code an und wirft bei Fehlern eine Exception."""
+    """Fordert einen Login-Code an."""
     url = f"{base_url}/auth/request-code"
     print(f"[auth] Request-Code anfordern: {url} → {email}")
     resp = requests.post(
@@ -179,7 +179,6 @@ def main() -> None:
     for name, profile in profiles:
         print(f"\n=== Profil {name} senden ===")
         submit_profile(session, base_url, name, profile)
-        # kleine Pause, um das Backend nicht zuzuspammen
         time.sleep(args.sleep)
 
     print("\nFertig. Bitte E-Mails und Railway-Logs auf generierte Reports prüfen.")
