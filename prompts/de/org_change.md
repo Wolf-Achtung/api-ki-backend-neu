@@ -1,34 +1,42 @@
-<!-- org_change.md - v2.4 GOLD STANDARD+ FIXED -->
+
+---
+
+## 2. Neue `org_change.md` (Solo-fokussiert, trotzdem size-aware)
+
+Copy‑&‑Paste‑fertig, komplette Datei:
+
+```markdown
+<!-- org_change.md - v2.5 GOLD STANDARD+ -->
 <!-- Antworte ausschließlich mit **validem HTML**.
-     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
-     VERSION: 2.4 GOLD STANDARD+ (UTF-8 Fixed + Size-Check verschärft) -->
+     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im OUTPUT.
+     VERSION: 2.5 GOLD STANDARD+ (Size-Awareness + Solo-Fix) -->
 
 # PROMPT: Organizational Change - Change-Management
 
 ## ⚠️ SIZE-AWARENESS - ABSOLUT PFLICHT!
 
 **Mögliche Unternehmensgrößen (NUR diese 3!):**
-- `{{COMPANY_SIZE}}` = "solo" → Label: "1 (Solo-Selbstständig/Freiberuflich)"
-- `{{COMPANY_SIZE}}` = "team" → Label: "2-10 (Kleines Team)"  
-- `{{COMPANY_SIZE}}` = "kmu" → Label: "11-100 (KMU)"
+- `{{COMPANY_SIZE}}` = "solo" → "1 (Solo-Selbstständig/Freiberuflich)"
+- `{{COMPANY_SIZE}}` = "team" → "2-10 (Kleines Team)"
+- `{{COMPANY_SIZE}}` = "kmu"  → "11-100 (KMU)"
 
-### 📏 SIZE-APPROPRIATE CHANGE-ANSÄTZE
+### 📏 SIZE-APPROPRIATE LANGUAGE
 
 **{{COMPANY_SIZE}} = "solo":**
-- ✅ Fokus: **Eigene Workflows** anpassen
-- ✅ Dokumentation für spätere Skalierung (Freelancer, Partner)
-- ✅ Self-Learning: Tutorials, Checklisten
-- ❌ NIEMALS: "Change-Management-Prozess", "Stakeholder-Analyse", "Change-Agents", "Abteilung", "KMU mit 50 Freelancer oder Partnern"
+- ✅ Fokus: eigene Arbeitsweise & Routinen
+- ✅ Begriffe wie "Sie", "Ihre Arbeitsweise", "Ihre Kunden"
+- ✅ Optional: "Freelancer oder Partner" (für spätere Skalierung)
+- ❌ NIEMALS: "Team", "Abteilung", "Mitarbeiter", "Change-Agents", "Town Hall"
 
 **{{COMPANY_SIZE}} = "team" (2-10 MA):**
-- ✅ Fokus: **Team-Alignment**
-- ✅ Informelle Kommunikation: "Weekly Show & Tell"
-- ✅ Hands-on-Training: "Learning by Doing"
-- ❌ NIEMALS: "Change-Board", "Formelle Change-Rollen", "Umfassende Trainings-Programme", "Abteilung"
+- ✅ Fokus: kleines Kernteam
+- ✅ Begriffe wie "Team", "Teammitglieder", "Weekly-Meeting"
+- ✅ Informelle Formate (Show & Tell, Buddy-System)
+- ❌ NIEMALS: "Abteilung", "PMO-Team", "Steering Committee"
 
 **{{COMPANY_SIZE}} = "kmu" (11-100 MA):**
-- ✅ Fokus: **Strukturiertes Change**
-- ✅ Pilot-Teams, Change-Agents (1-2 Personen pro Bereich/Team)
+- ✅ Fokus: strukturiertes Change-Programm
+- ✅ Pilot-Teams, Change-Agents (1–2 Personen pro Bereich/Team)
 - ✅ Formelle Trainings, Change-Kommunikation
 - ✅ "Change Manager" oder "Projektleiter Change" (ab ~50 MA)
 
@@ -36,109 +44,111 @@
 
 ## 🎯 ZWECK
 
-Erstelle realistische Change-Management-Empfehlungen die:
-1. **Zur Unternehmensgröße passen** (Solo ≠ Klein ≠ KMU!)
+Erstelle realistische Change-Management-Empfehlungen, die:
+
+1. **Zur Unternehmensgröße passen** (Solo ≠ Team ≠ KMU)
 2. **Spezifisch für {{HAUPTLEISTUNG}}** sind
 3. **Konkrete Maßnahmen** statt Theorie nennen
 4. **Quick Wins als Change-Katalysatoren** nutzen
 
-**Zielgruppe:** HR, Geschäftsführung, Team-Leads  
+**Zielgruppe:** Geschäftsführung, HR, Team-Leads (bei Solo: du selbst)  
 **Stil:** Pragmatisch, menschenzentriert, realistisch, größen-angemessen
 
 ---
 
 ## ⛔ ABSOLUT VERBOTEN
 
-### ❌ Change-Theorie bei Solo/Klein:
+### ❌ Change-Theorie bei Solo/Team
 - ❌ "Change-Management-Prozess nach Kotter"
 - ❌ "Stakeholder-Analyse durchführen"
-- ❌ "Change-Agents ernennen" (bei Solo!)
 - ❌ "Change-Readiness-Assessment"
-- ❌ "Abteilung" oder "Abteilungsleiter" (bei Solo/Team!)
+- ❌ "Kulturelle Transformation" bei Solo
 
-### ❌ Generische Trainings:
+### ❌ Falsche Größen-Bilder
+- ❌ "Abteilungen", "Führungskräfte" oder "Steering Committee" bei Solo/Team
+- ❌ "Change-Agents ernennen" bei Solo
+- ❌ Formelle Großkonzernthemen (Transformation Office, HR-Programme etc.)
+
+### ❌ Generische Trainings
 - ❌ "KI-Grundlagen-Schulung für alle"
-- ❌ "Prompt-Engineering-Workshop"
-- ❌ "Change-Kommunikations-Strategie" (bei Solo!)
-
-### ❌ Überdramatisierung:
-- ❌ "Kulturelle Transformation notwendig"
-- ❌ "Radikaler Mindset-Shift erforderlich"
-- ❌ "Tiefgreifender Wandel steht bevor"
+- ❌ "Prompt-Engineering-Workshop" ohne Bezug zu {{HAUPTLEISTUNG}}
+- ❌ Reine Buzzwords ("Mindset-Shift", "Future of Work") ohne konkrete Maßnahmen
 
 ---
 
 ## ✅ STATTDESSEN: SIZE-APPROPRIATE!
 
-### ✅ Solo (1 MA):
-- "Eigene Workflows dokumentieren (1-Pager)"
-- "System-Tutorial durchgehen (1h)"
-- "Parallel-Betrieb: 2 Wochen alte + neue Methode"
-- "Lern-Kurve einplanen: Erste 5× langsamer, ab #10 schneller"
-- "Freelancer-Onboarding vorbereiten (für spätere Skalierung)"
+### ✅ Solo (1 MA)
+- Eigene Workflows als 1‑Pager dokumentieren
+- Parallelbetrieb: 1–2 Wochen alte vs. neue KI‑gestützte Methode
+- Wöchentlicher Self‑Review-Slot (30–60 Min): Was lief gut, was nicht?
+- Micro-Experimente: jede Woche 1 kleinen Prozess mit KI testen
+- Onboarding-Notizen für spätere Freelancer/Partner mitschreiben
 
-### ✅ Klein (2-10 MA):
-- "Weekly Show & Tell für Quick Wins (30 Min)"
-- "Hands-on-Training: Gemeinsam erstes Projekt umsetzen"
-- "Team-Retrospektive: Was funktioniert? Was nicht?"
-- "Informelle Kommunikation: Slack/Teams-Channel für Fragen"
-- "Buddy-System: Erfahrene helfen Neuen"
+### ✅ Team (2-10 MA)
+- Weekly Show & Tell für Quick Wins (30 Min)
+- Hands-on-Session: Gemeinsam 1 konkretes Projekt mit KI durchziehen
+- Team-Retrospektive nach 4–6 Wochen: Beibehalten / Anpassen / Stoppen
+- Informelle Kommunikation: Slack/Teams-Channel „#ki-tests“
+- Buddy-System: Erfahrene unterstützen 1–2 Kolleg:innen
 
-### ✅ KMU (11-100 MA):
-- "Pilot-Team bilden (5-8 Personen)"
-- "Change-Agents ernennen (1-2 pro Team/Bereich)"
-- "Formelle Trainings: 4h Workshop + 2h Hands-on"
-- "Change-Kommunikation: Newsletter, Town Hall"
-- "Feedback-Loops: Monatliche Reviews mit Pilot-Team"
+### ✅ KMU (11-100 MA)
+- Pilot-Team bilden (5–8 Personen aus relevanten Bereichen/Teams)
+- Change-Agents ernennen (1–2 pro Bereich/Team)
+- Formelle Trainings (4h Workshop + 2h Hands-on je Pilot-Team)
+- Change-Kommunikation: Newsletter, Town Hall, Intranet-Seite
+- Feedback-Loops: monatliche Reviews mit Pilot-Team und Geschäftsführung
 
 ---
 
-## 💡 BEISPIEL (Solo)
+## 💡 BEISPIEL (Solo – Org-Change auf 1‑Person‑Level)
+
+**Kontext:** Solo-Selbstständig, {{HAUPTLEISTUNG}}, Einführung von KI-gestützten Assessments
 
 ```html
 <section class="section org-change">
   <h2>Organizational Change</h2>
-  
-  <p><strong>Ausgangslage:</strong> Solo-Beratung ({{COMPANY_SIZE}}), keine Mitarbeiter. 
-     Change-Fokus liegt auf eigenen Workflow-Anpassungen und künftiger Skalierbarkeit 
-     (z.B. Freelancer, White-Label-Partner).</p>
 
-  <h3>1. Eigene Workflow-Anpassung (Wochen 1-4)</h3>
+  <p>Ausgangslage: Solo-Selbstständig mit Fokus auf "{{HAUPTLEISTUNG}}". Ziel ist es,
+     KI-gestützte Workflows stabil in Ihren Alltag zu integrieren, ohne unnötige
+     Komplexität oder Konzern-Strukturen.</p>
+
+  <h3>1. Eigene Arbeitsweise strukturieren (Monat 1)</h3>
   <ul>
-    <li><strong>Woche 1-2: Dokumentation & Learning</strong>
-      <ul>
-        <li>Alten Prozess dokumentieren: "Wie erstelle ich aktuell ein Assessment?" (1-Pager, 30 Min)</li>
-        <li>Batch-System Tutorial durcharbeiten (1h): API-Dokumentation, Test mit 5 Dummy-Assessments</li>
-        <li>Template-Bibliothek Einführung (30 Min): Wie nutze ich branchen-spezifische Templates?</li>
-      </ul>
-    </li>
-    <li><strong>Woche 3-4: Parallel-Betrieb & Migration</strong>
-      <ul>
-        <li>2 Wochen alte + neue Methode parallel nutzen (Safety-Net falls Probleme auftreten)</li>
-        <li>Lern-Kurve einplanen: Erste 5 Batch-Assessments dauern länger, ab #10 schneller als der alte Prozess</li>
-        <li>Fehler-Log führen (z.B. Excel): "Was funktioniert nicht? Was muss ich anders machen?"</li>
-      </ul>
-    </li>
+    <li><strong>Workflows dokumentieren:</strong> 3–5 Kernprozesse (z.B. Erstkontakt, Assessment,
+        Report-Erstellung) jeweils als 1‑Pager skizzieren.</li>
+    <li><strong>„KI-fähige“ Schritte markieren:</strong> Wo kann GPT-4 konkret unterstützen
+        (Fragebogen-Auswertung, Textbausteine, Report-Struktur)?</li>
+    <li><strong>Checkliste erstellen:</strong> 5–7 Punkte, die vor Versand eines Reports immer geprüft werden.</li>
   </ul>
 
-  <h3>2. Freelancer/Partner-Onboarding vorbereiten (Monate 3-6)</h3>
+  <h3>2. KI-Routine etablieren (Monate 1–2)</h3>
   <ul>
-    <li>Onboarding-Dokument erstellen: "Wie nutze ich das Assessment-System?" (1-Pager mit Screenshots)</li>
-    <li>Kurzes Video-Tutorial aufnehmen (z.B. 10 Min Loom-Video)</li>
-    <li>FAQ sammeln: "Welche Fragen kamen bei mir auf?" → in FAQ-Liste dokumentieren</li>
-    <li>Test-Zugang vorbereiten: Sandbox-Account für Freelancer-Testing</li>
+    <li><strong>Täglicher KI-Slot (30 Min):</strong> Fester Block im Kalender für Experimente,
+        Prompt-Optimierung und Template-Pflege.</li>
+    <li><strong>Parallelbetrieb:</strong> Für die ersten 5–10 Kunden sowohl alte als auch neue
+        KI-gestützte Methode nutzen und Ergebnisse vergleichen.</li>
+    <li><strong>Lern-Log:</strong> Kurzes Notiz-Dokument: „Was hat gut funktioniert? Welche Prompts
+        oder Abläufe übernehme ich fix?“</li>
   </ul>
 
-  <h3>3. Kunden-Kommunikation (ab Monat 4)</h3>
+  <h3>3. Qualitätssicherung & Feedback (Monate 2–3)</h3>
   <ul>
-    <li>Neue Delivery-Zeiten und ggf. Express-Option klar kommunizieren (Website + E-Mail an Bestandskunden)</li>
-    <li>Standard-Bausteine für Datenschutzhinweise und KI-Transparenz in Angebot & Report nutzen</li>
+    <li><strong>Quality-Gate vor Versand:</strong> Jeder Report wird einmal komplett quer gelesen
+        (Zahlen, Förderprogramme, Formulierungen, Tonalität).</li>
+    <li><strong>Kundenfeedback einholen:</strong> 3–5 Stammkunden gezielt nach Verständlichkeit
+        und Mehrwert fragen (z.B. kurzes Online-Formular).</li>
+    <li><strong>Iterationen planen:</strong> Alle 4 Wochen kleine Anpassungsschleife
+        (Templates, Fragebogen, Standard-Empfehlungen).</li>
   </ul>
 
-  <h3>4. Kontinuierliche Verbesserung (quartalsweise)</h3>
+  <h3>4. Vorbereitung auf Skalierung (ab Monat 3)</h3>
   <ul>
-    <li>Quartalsweise Retro (1h): "Was hat sich verbessert? Was bremst?"</li>
-    <li>Top 3 Probleme priorisieren und in den nächsten 4 Wochen angehen</li>
-    <li>Dokumentation (Checklisten, Templates) jährlich aktualisieren</li>
+    <li><strong>Onboarding-Notizen:</strong> Schritt-für-Schritt-Anleitung erstellen, wie ein
+        Freelancer oder Partner deine Assessments durchführen könnte.</li>
+    <li><strong>Rollen klar beschreiben:</strong> „Was darf ich selbst nie delegieren?“
+        (z.B. finale Qualitätsprüfung, heikle Kundengespräche).</li>
+    <li><strong>Technik stabilisieren:</strong> Standardisierte Prompts, Versionierung der
+        Templates, simpler Fallback-Plan bei KI-Ausfällen.</li>
   </ul>
 </section>
