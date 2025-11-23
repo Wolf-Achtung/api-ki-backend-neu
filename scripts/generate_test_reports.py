@@ -87,7 +87,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--base-url",
-        default="https://make.ki-sicherheit.jetzt/api",
+        default="https://api-ki-backend-neu-production.up.railway.app/api",
         help="Basis-URL deines Backends (ohne trailing Slash)",
     )
     parser.add_argument(
