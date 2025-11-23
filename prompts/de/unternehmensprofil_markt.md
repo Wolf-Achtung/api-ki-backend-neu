@@ -1,3 +1,9 @@
+
+---
+
+## 2️⃣ `unternehmensprofil_markt.md`
+
+```markdown
 <!-- unternehmensprofil_markt.md - v2.2 GOLD STANDARD+ -->
 <!-- Antworte ausschließlich mit **validem HTML**.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
@@ -129,60 +135,7 @@ Erstelle das "Unternehmensprofil & Marktkontext"-Section mit:
       <li><strong>KI-Hebel:</strong> [Wie KI die Nachteile ausgleichen kann - größen-spezifisch!
           Solo: Automatisierung für mehr Kapazität, KI als "virtueller Mitarbeiter"
           2-10: Effizienzsteigerung, Wissensmanagement, Prozess-Standardisierung
-          11-100: Skalierung ohne proportionalen Personalaufbau, Datengetriebene Entscheidungen]</li>
+          11-100: Skalierung ohne proportionalen Personalaufbau, datengetriebene Entscheidungen]</li>
     </ul>
   </div>
 </section>
-```
-
----
-
-## ✅ PRE-OUTPUT VALIDATION CHECKLIST
-
-**PRÜFE JEDEN DIESER PUNKTE - BEI NEIN → STOPP & FIX!**
-
-1. [ ] **Branche im Output = {{BRANCHE_LABEL}}?**
-   - Output zeigt EXAKT die gleiche Branche wie die Variable
-   - NICHT "E-Commerce" wenn User "Beratung & Dienstleistungen" hat!
-
-2. [ ] **Größe im Output = {{UNTERNEHMENSGROESSE_LABEL}}?**
-   - Output zeigt EXAKT die gleiche Größe wie die Variable
-   - NICHT "Mittelständisch" wenn User "Solo" hat!
-
-3. [ ] **Standort im Output = {{BUNDESLAND_LABEL}}?**
-   - Output zeigt EXAKT das gleiche Bundesland wie die Variable
-   - NICHT "München" wenn User "Berlin" hat!
-
-4. [ ] **Hauptleistung im Output = {{HAUPTLEISTUNG}}?**
-   - Output zeigt EXAKT die gleiche Hauptleistung wie die Variable
-   - NICHT erfunden!
-
-5. [ ] **KEINE erfundenen Beispiel-Daten?**
-   - Keine Platzhalter wie "[Beispiel]" oder "[...]" im Output
-   - Keine generischen Füll-Texte
-
-6. [ ] **Wettbewerbsposition passt zur Größe?**
-   - "Solo" → Vorteile: Flexibilität, Nachteile: Kapazität
-   - "2-10" → Vorteile: Agilität, Nachteile: Ressourcen
-   - "11-100" → Vorteile: Struktur, Nachteile: Overhead
-
-7. [ ] **Context wurde NUR für Branchen-Trends genutzt?**
-   - NICHT für User-Daten kopiert!
-
----
-
-## 🎯 ERFOLGS-KRITERIEN
-
-✅ **Wenn ALLE 7 Checkboxen ✅ sind → Output generieren!**
-❌ **Wenn EINE Checkbox ❌ ist → STOPP & FIX!**
-
-**Resultat:**
-- Professionelles Unternehmensprofil mit exakten Daten
-- Branchen-spezifischer Marktkontext
-- Größen-angepasste Wettbewerbsanalyse
-- Keine erfundenen Beispiele!
-
----
-
-**VERSION:** v2.2 GOLD STANDARD+ (E-Commerce Bug Fixed)  
-**AUSGABE:** Valides HTML (keine Markdown-Fences, kein ```html)
