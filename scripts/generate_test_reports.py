@@ -24,27 +24,34 @@ import time
 import requests
 
 
-def request_login_code(base_url: str, email: str):
+def request_login_code(base_url: str, email: str) -> None:
+    """Fordert einen Login-Code an und wirft bei Fehlern eine Exception."""
+    url = f"{base_url}/auth/request-code"
+    print(f"[auth] Request-Code anfordern: {url} → {email}")
     resp = requests.post(
-        f"{base_url}/auth/request-code",
+        url,
         json={"email": email},
         timeout=10,
     )
     resp.raise_for_status()
-    print(f"Login-Code an {email} gesendet.")
+    print(f"[auth] Login-Code an {email} gesendet.")
 
 
-def login(session: requests.Session, base_url: str, email: str, code: str):
+def login(session: requests.Session, base_url: str, email: str, code: str) -> None:
+    """Meldet sich mit Code an und speichert das Session-Cookie."""
+    url = f"{base_url}/auth/login"
+    print(f"[auth] Login: {url} → {email}")
     resp = session.post(
-        f"{base_url}/auth/login",
+        url,
         json={"email": email, "code": code},
         timeout=10,
     )
     resp.raise_for_status()
-    print("Login erfolgreich, Session-Cookie gespeichert.")
+    print("[auth] Login erfolgreich, Session-Cookie gespeichert.")
 
 
 def load_profiles(profiles_dir: pathlib.Path):
+    """Lädt alle JSON-Testprofile aus dem Ordner."""
     profiles = []
     for path in sorted(profiles_dir.glob("*.json")):
         with path.open("r", encoding="utf-8") as f:
@@ -60,35 +67,52 @@ def submit_profile(
     base_url: str,
     profile_id: str,
     profile: dict,
-):
+) -> None:
+    """Schickt ein Testprofil an /api/briefings/submit und loggt das Ergebnis."""
     payload = {
         "lang": profile.get("lang", "de"),
         "answers": profile["answers"],
     }
 
-    resp = session.post(
-        f"{base_url}/briefings/submit",
-        json=payload,
-        timeout=30,
-    )
+    url = f"{base_url}/briefings/submit"
+    print(f"[{profile_id}] Sende Briefing an {url} ...")
+
+    try:
+        resp = session.post(
+            url,
+            json=payload,
+            # Analyse + Research + PDF können dauern → großzügiges Timeout
+            timeout=180,
+        )
+        resp.raise_for_status()
+    except requests.exceptions.ReadTimeout:
+        print(
+            f"[{profile_id}] WARNUNG: ReadTimeout nach 180s – "
+            "das Backend arbeitet vermutlich weiter. "
+            "Bitte Railway-Logs und E-Mails prüfen."
+        )
+        return
+    except requests.RequestException as e:
+        print(f"[{profile_id}] FEHLER beim Submit: {e}")
+        return
+
     try:
         data = resp.json()
     except Exception:
         data = {"raw": resp.text}
 
-    if resp.status_code not in (200, 201, 202):
-        print(f"[{profile_id}] FEHLER {resp.status_code}: {data}")
-        return
-
     print(f"[{profile_id}] Briefing erfolgreich eingereicht: {data}")
 
 
-def main():
-    parser = argparse.ArgumentParser()
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Mehrere Test-Briefings gegen das KI-Backend feuern."
+    )
     parser.add_argument(
         "--base-url",
         default="https://api-ki-backend-neu-production.up.railway.app/api",
-        help="Basis-URL deines Backends (ohne trailing Slash)",
+        help="Basis-URL deines Backends (ohne trailing Slash), z.B. "
+             "https://api-ki-backend-neu-production.up.railway.app/api",
     )
     parser.add_argument(
         "--email",
@@ -98,12 +122,24 @@ def main():
     parser.add_argument(
         "--profiles-dir",
         default="data/test_profiles",
-        help="Ordner mit Testprofil-JSONs",
+        help="Ordner mit Testprofil-JSONs (Standard: data/test_profiles).",
+    )
+    parser.add_argument(
+        "--sleep",
+        type=float,
+        default=1.0,
+        help="Pause in Sekunden zwischen zwei Profilen (Standard: 1.0).",
     )
     args = parser.parse_args()
 
     base_url = args.base_url.rstrip("/")
     profiles_dir = pathlib.Path(args.profiles_dir)
+
+    print("=== KI-Backend Test-Report-Generator ===")
+    print(f"Base-URL:      {base_url}")
+    print(f"Login-E-Mail:  {args.email}")
+    print(f"Profil-Ordner: {profiles_dir}")
+    print()
 
     if not profiles_dir.is_dir():
         print(f"Profil-Ordner existiert nicht: {profiles_dir}", file=sys.stderr)
@@ -117,21 +153,36 @@ def main():
     print(f"{len(profiles)} Testprofile gefunden:")
     for name, _ in profiles:
         print(f"  - {name}")
+    print()
 
     # 1) Login-Code anfordern
-    request_login_code(base_url, args.email)
+    try:
+        request_login_code(base_url, args.email)
+    except requests.RequestException as e:
+        print(f"[auth] FEHLER beim Anfordern des Login-Codes: {e}", file=sys.stderr)
+        sys.exit(1)
+
     code = input("Bitte Login-Code aus der E-Mail eingeben: ").strip()
+    if not code:
+        print("[auth] Kein Code eingegeben, breche ab.", file=sys.stderr)
+        sys.exit(1)
 
     # 2) Login + Session aufbauen
     session = requests.Session()
-    login(session, base_url, args.email, code)
+    try:
+        login(session, base_url, args.email, code)
+    except requests.RequestException as e:
+        print(f"[auth] FEHLER beim Login: {e}", file=sys.stderr)
+        sys.exit(1)
 
     # 3) Alle Profile feuern
     for name, profile in profiles:
         print(f"\n=== Profil {name} senden ===")
         submit_profile(session, base_url, name, profile)
         # kleine Pause, um das Backend nicht zuzuspammen
-        time.sleep(1)
+        time.sleep(args.sleep)
+
+    print("\nFertig. Bitte E-Mails und Railway-Logs auf generierte Reports prüfen.")
 
 
 if __name__ == "__main__":
