@@ -1,137 +1,127 @@
 # PROMPT: Business Case - ROI & Wirtschaftlichkeit
 
 ## ZWECK
-Erstelle eine sachliche Business-Case-Analyse die:
-1. **Bereitgestellte Zahlen** korrekt interpretiert (KEINE Erfindungen!)
-2. **Sensitivitätsanalyse** für ±20% Abweichungen zeigt
-3. **Konkrete ROI-Hebelungs-Empfehlungen** gibt (spezifisch für {{HAUPTLEISTUNG}})
-4. **Realistische Erwartungen** setzt (keine Schönfärberei!)
+Erstelle eine sachliche Business-Case-Analyse, die:
+1. **bereitgestellte Zahlen** korrekt interpretiert (KEINE Erfindungen!)
+2. eine **einfache Sensitivitätsanalyse** für ±20 % Abweichungen beschreibt
+3. **konkrete ROI-Hebel-Empfehlungen** gibt (spezifisch für {{HAUPTLEISTUNG}})
+4. **realistische Erwartungen** setzt (keine Schönfärberei)
 
-**Zielgruppe:** CFO, Geschäftsführung, Investitions-Entscheider
-**Stil:** Sachlich, konservativ, transparent - KEINE Marketing-Sprache!
+**Zielgruppe:** CFO, Geschäftsführung, Investitions-Entscheider  
+**Stil:** Sachlich, konservativ, transparent – KEINE Marketing-Sprache!
 
 ---
 
 ## ⚠️ KRITISCHE REGELN
 
 ### ❌ VERBOTEN:
-1. **KEINE Zahlen erfinden oder "optimieren":**
-   - ❌ ROI schöner rechnen
+1. **KEINE Zahlen erfinden oder „optimieren“:**
+   - ❌ ROI „schöner“ rechnen als durch die Variablen vorgegeben
    - ❌ Einsparungen hochrechnen ohne Basis
-   - ❌ Zusätzliche Revenue-Annahmen einfügen
-   
+   - ❌ zusätzliche Umsatz-Annahmen einbauen, die nicht im Kontext stehen
+
 2. **KEINE vagen Hebelungs-Tipps:**
-   - ❌ "Prozesse optimieren"
-   - ❌ "Effizienz steigern"
-   - ❌ "Mehr Automatisierung"
+   - ❌ „Prozesse optimieren“
+   - ❌ „Effizienz steigern“
+   - ❌ „Mehr Automatisierung“
 
 3. **KEINE unrealistischen Versprechungen:**
-   - ❌ "Garantierte Amortisation in X Monaten"
-   - ❌ "ROI von 500% erreichbar"
+   - ❌ „Garantierte Amortisation in X Monaten“
+   - ❌ „ROI von 500 % erreichbar“
 
 ### ✅ STATTDESSEN:
-1. **Nur bereitgestellte Variablen:**
-   - ✅ {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}
-   - ✅ {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}}
 
-2. **Spezifische Hebel:**
-   - ✅ "Batch API statt Standard API (-50% Kosten)"
-   - ✅ "Vorhandene Lizenzen nutzen (Typeform Pro)"
-   - ✅ "Stundensatz von €80 auf €100 erhöhen"
+1. **Nur bereitgestellte Variablen verwenden:**
+   - ✅ {{CAPEX_REALISTISCH_EUR}} – einmalige Investition (CAPEX, in €)
+   - ✅ {{OPEX_REALISTISCH_EUR}} – laufende Kosten/Monat (OPEX, in €)
+   - ✅ {{EINSPARUNG_MONAT_EUR}} – Einsparungen/Monat (in €)
+   - ✅ {{PAYBACK_MONTHS}} – Amortisationszeit in Monaten
+   - ✅ {{ROI_12M}} – ROI nach 12 Monaten in Prozent (z. B. 85,0 = 85,0 %)
+
+2. **Spezifische Hebel aus dem Kontext:**
+   - ✅ konkrete Kostenhebel (z. B. „Batch API statt Standard API (-50 % OpenAI-Kosten)“)
+   - ✅ vorhandene Lizenzen sinnvoller nutzen (z. B. „Typeform Pro“, vorhandene Datenbanken)
+   - ✅ Preis-/Stundensatz-Anpassung **nur**, wenn das Geschäftsmodell auf Abrechnung nach Zeit basiert
+
+3. **Transparente Einordnung:**
+   - ✅ ausdrücklich erwähnen, dass die Berechnung auf den Quick-Win-Werten basiert
+   - ✅ offen mit Unsicherheiten umgehen (z. B. „konservative Annahme“, „ohne zusätzliche Umsatzpotenziale“)
 
 ---
 
-## 💡 BEISPIEL
+## 💡 BEISPIEL (STRUKTUR – KEINE FIXEN ZAHLEN ÜBERNEHMEN!)
 
-**Kontext:**
-- CAPEX: €5.000
-- OPEX: €500/Monat
-- Einsparung: €4.500/Monat
-- Payback: 8 Monate
-- ROI 12M: 85%
-
-#### ✅ GUT:
+> WICHTIG: Dieses Beispiel zeigt nur **Struktur und Ton**.  
+> Im echten Output dürfen **keine** Beispielzahlen aus diesem Prompt übernommen werden –  
+> verwende ausschließlich die Variablenwerte.
 
 ```html
 <section class="section business-case">
   <h3>Business-Case (Ergebnis)</h3>
 
-  <p><strong>Monatliche Einsparung:</strong> €4.500 (45h × €100/h Stundensatz)<br>
-     <strong>CAPEX:</strong> €5.000 (einmalig) · <strong>OPEX:</strong> €500/Monat<br>
-     <strong>Amortisation:</strong> 8 Monate · <strong>ROI (12 Monate):</strong> 85%</p>
+  <p>
+    <strong>Monatliche Einsparung:</strong> {{EINSPARUNG_MONAT_EUR}} €/Monat<br>
+    <strong>CAPEX:</strong> {{CAPEX_REALISTISCH_EUR}} € (einmalig) ·
+    <strong>OPEX:</strong> {{OPEX_REALISTISCH_EUR}} €/Monat<br>
+    <strong>Amortisation:</strong> {{PAYBACK_MONTHS}} Monate ·
+    <strong>ROI (12 Monate):</strong> {{ROI_12M}} %
+  </p>
 
   <h4>Interpretation</h4>
-  <p>Die Quick-Win-Einsparungen von €4.500/Monat decken die laufenden Kosten (OPEX: €500/Monat) 
-     mit Faktor 9× und amortisieren die einmalige Investition (CAPEX: €5.000) nach 8 Monaten. 
-     Der ROI nach 12 Monaten von 85% basiert ausschließlich auf den bereitgestellten Quick-Win-Zahlen 
-     - ohne zusätzliche Revenue-Annahmen (z.B. White-Label-Geschäft).</p>
+  <p>
+    Die Quick-Win-Einsparungen von {{EINSPARUNG_MONAT_EUR}} €/Monat decken die laufenden Kosten
+    (OPEX: {{OPEX_REALISTISCH_EUR}} €/Monat) deutlich ab und amortisieren die einmalige Investition
+    (CAPEX: {{CAPEX_REALISTISCH_EUR}} €) nach {{PAYBACK_MONTHS}} Monaten.
+    Der ROI nach 12&nbsp;Monaten von {{ROI_12M}} % basiert ausschließlich auf den bereitgestellten
+    Quick-Win-Zahlen – ohne zusätzliche Umsatz-Annahmen.
+  </p>
 
-  <h4>Sensitivität (±20%)</h4>
+  <h4>Sensitivität (±20 %)</h4>
   <ul>
-    <li><strong>Einsparung -20%:</strong> €3.600/Monat → Payback 10 Monate, ROI 12M: 64%. 
-        Aussage bleibt positiv.</li>
-    <li><strong>Einsparung +20%:</strong> €5.400/Monat → Payback 7 Monate, ROI 12M: 106%. 
-        Sehr starkes Ergebnis.</li>
-    <li><strong>Kosten +20%:</strong> OPEX €600/Monat → Payback 9 Monate, ROI verschlechtert sich 
-        um ~5 Prozentpunkte. Business Case bleibt robust.</li>
+    <li>
+      <strong>Einsparung −20 %:</strong>
+      beschreibe in Worten, wie sich Payback und ROI verschlechtern würden
+      (z. B. „Payback verlängert sich um einige Monate, ROI sinkt spürbar, bleibt aber positiv“).
+    </li>
+    <li>
+      <strong>Einsparung +20 %:</strong>
+      beschreibe, wie sich Payback und ROI verbessern (z. B. „Amortisation deutlich schneller,
+      ROI steigt um einen zweistelligen Prozentbereich“).
+    </li>
+    <li>
+      <strong>Kosten +20 %:</strong>
+      beschreibe, wie empfindlich der Case auf höhere OPEX reagiert
+      (z. B. „ROI sinkt moderat, Case bleibt aber tragfähig“).
+    </li>
   </ul>
 
   <h4>Empfehlungen zur ROI-Hebelung (konkret)</h4>
   <ol>
-    <li><strong>Batch API statt Standard API (-50% OpenAI-Kosten):</strong> Aktuell: €200/Monat, 
-        mit Batch: €100/Monat. Spart €1.200/Jahr ohne Qualitätsverlust.</li>
-    <li><strong>Stundensatz-Anpassung (€100 → €120):</strong> Bei gleicher Zeitersparnis (45h/Monat) 
-        steigt Einsparung auf €5.400/Monat (+20%), Payback 7 Monate, ROI 12M: 106%.</li>
-    <li><strong>Vorhandene Tools maximieren:</strong> Typeform Pro bereits vorhanden (€25/Monat), 
-        PostgreSQL Free Tier ausreichend (€0), FastAPI Open Source (€0). Keine zusätzlichen Tools kaufen!</li>
-    <li><strong>MVP-First statt Big-Bang:</strong> Start mit Batch-Processing (€2.000 CAPEX) statt 
-        vollem Gamechanger (€15.000). Nach 4 Monaten ROI-Review, dann Skalierungs-Entscheidung.</li>
+    <li>
+      <strong>Konkreter Kostenhebel im Kernprozess:</strong>
+      z. B. Batch-Verarbeitung, effizientere Prompt-Struktur, Reduktion doppelter Schritte.
+      Beschreibe den Effekt knapp (z. B. „ca. −X % Toolkosten“).
+    </li>
+    <li>
+      <strong>Besserer Einsatz bestehender Lizenzen:</strong>
+      z. B. vorhandene Formulare/Tools tiefer integrieren statt neue Software zu kaufen.
+    </li>
+    <li>
+      <strong>Preis-/Stundensatz-Hebel (falls passend):</strong>
+      Nur wenn {{HAUPTLEISTUNG}} typischerweise auf Stunden- oder Projekthonoraren basiert
+      (Beratung/Agentur). Keine solche Empfehlung für klassische Produkt-/SaaS-/Medien-Modelle.
+    </li>
+    <li>
+      <strong>MVP-First statt Big-Bang:</strong>
+      kurzfristig umsetzbarer Scope mit klarem ROI-Review nach wenigen Monaten,
+      bevor größere Invests ausgelöst werden.
+    </li>
   </ol>
 
-  <p><em>Hinweis für Solo-Beratung:</em> Berechnungen basieren auf konservativem €100/h Stundensatz. 
-     Bei Premium-Positionierung (€150/h) steigt Einsparung auf €6.750/Monat, Payback 5 Monate.</p>
+  <p>
+    <em>Optionaler Hinweis für Solo-Unternehmen:</em>
+    Nur wenn {{UNTERNEHMENSGROESSE_LABEL}} klar auf Solo-Selbstständigkeit hinweist:
+    ergänze einen kurzen Hinweis, dass die Berechnung auf einem konservativen
+    Stundensatz basiert und sich mit höherer Positionierung entsprechend verschieben kann.
+  </p>
 </section>
-```
-
----
-
-## 🎯 INSTRUKTIONEN
-
-### SCHRITT 1: Zahlen validieren
-
-**Prüfe bereitgestellte Variablen:**
-- Ist `{{EINSPARUNG_MONAT_EUR}}` > `{{OPEX_REALISTISCH_EUR}}`? → Positiv!
-- Ist `{{PAYBACK_MONTHS}}` < 24? → Akzeptabel!
-- Ist `{{ROI_12M}}` > 0? → Break-Even erreicht!
-
-### SCHRITT 2: Sensitivität berechnen
-
-**Formeln (für Interpretation, nicht Output!):**
-```
-Einsparung -20%: {{EINSPARUNG_MONAT_EUR}} × 0.8
-Einsparung +20%: {{EINSPARUNG_MONAT_EUR}} × 1.2
-Payback bei -20%: {{CAPEX}} / (Einsparung_neu - {{OPEX}})
-```
-
-### SCHRITT 3: Spezifische Hebel finden
-
-**Basierend auf {{HAUPTLEISTUNG}}:**
-- **Wenn GPT-Nutzung:** Batch API, Prompt-Optimierung
-- **Wenn manuelle Arbeit:** Automatisierung, Templates
-- **Wenn Stundensatz:** Premium-Positioning
-- **Wenn Tools:** Vorhandene maximieren, keine neuen
-
----
-
-## 🎯 ERFOLGS-KRITERIEN
-
-1. ✅ ALLE Zahlen aus bereitgestellten Variablen
-2. ✅ Sensitivität für ±20% berechnet
-3. ✅ 3-4 SPEZIFISCHE ROI-Hebel für {{HAUPTLEISTUNG}}
-4. ✅ Konservative, ehrliche Interpretation
-5. ✅ Format korrekt (deutsches Zahlenformat!)
-
----
-
-**VERSION:** v2.1 GOLD STANDARD+
-**OUTPUT:** Valides HTML (keine Markdown-Fences!)
