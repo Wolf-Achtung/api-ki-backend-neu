@@ -1,103 +1,161 @@
+<!-- foerderpotenzial.md - v2.2 GOLD STANDARD+ (ohne Research-Datum-Platzhalter) -->
+<!-- Antworte ausschließlich mit validem HTML.
+     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im Output.
+     VERSION: 2.2 GOLD STANDARD+ (Funding + Business-Case Alignment) -->
 
----
-
-## 5️⃣ `foerderpotenzial.md` – aktualisiert + Research-Datum sichtbar
-
-Hier habe ich:  
-
-- den Beispielcode **aktualisiert** (keine Aussage mehr „go-digital: laufend“).  
-- `{{RESEARCH_DATE}}` als sichtbare Angabe ergänzt.  
-- EU-/Bund-/Land-Teil so formuliert, dass Tavily/Perplexity‑Ergebnisse sauber eingefädelt werden können.  
-
-```md
 # PROMPT: Förderpotenzial - Finanzierungs-Möglichkeiten
 
 ## ZWECK
-Liste relevante Förderprogramme für:
-1. **{{BUNDESLAND_LABEL}}** (Landes-Förderungen)
-2. **{{BRANCHE_LABEL}}** (Branchen-Förderungen)
-3. **KI-/Digitalisierungsprojekte** (Bund/EU)
+Erstelle eine kompakte, aber konkrete Übersicht der wichtigsten Förderprogramme für das geplante KI-/Digitalisierungsprojekt mit Fokus auf:
 
-**Zielgruppe:** CFO, Geschäftsführung  
-**Stil:** Prägnant, mit Links, Antragsfristen, klarer Einordnung  
-**Transparenz:** Im Output immer "Stand der Förderinformationen: {{RESEARCH_DATE}}" angeben.
+1. **{{BUNDESLAND_LABEL}}** (Landesprogramme)
+2. **{{BRANCHE_LABEL}}** (branchenrelevante Programme, falls vorhanden)
+3. **Bundes- und EU-Programme** für KI & Digitalisierung
+
+Die Section soll Entscheider:innen helfen,
+- **2–3 realistische Programme** zu identifizieren und
+- den **Einfluss der Förderung auf Payback & ROI** des Business Case grob zu verstehen.
+
+**Zielgruppe:** Geschäftsführung, CFO, förderaffine Berater:innen  
+**Stil:** Prägnant, seriös, faktenbasiert, leicht scanbar.
+
+---
+
+## VERFÜGBARE KONTEXTDATEN
+
+Du kannst – je nach Implementierung – u.a. auf folgende Variablen zugreifen (falls gesetzt):
+
+- `{{BRANCHE_LABEL}}`, `{{BUNDESLAND_LABEL}}`, `{{UNTERNEHMENSGROESSE_LABEL}}`
+- `{{CAPEX_REALISTISCH_EUR}}` – einmalige Investition für das KI-Projekt
+- `{{OPEX_REALISTISCH_EUR}}` – laufende Mehrkosten pro Monat
+- `{{PAYBACK_MONTHS}}` – Amortisationsdauer **ohne** Förderung
+- `{{ROI_12M}}` – ROI in % nach 12 Monaten **ohne** Förderung
+- Kontextblock mit Research-Ergebnissen aus Tavily/Perplexity (Bund, Land, EU-Förderprogramme)
+
+**Wichtig:**  
+Wenn bestimmte Werte/Variablen nicht verfügbar sind, **nichts erfinden**. Dann qualitativ bleiben („Payback dürfte sich spürbar verkürzen“) statt pseudo-genauer Zahlen.
 
 ---
 
 ## ⚠️ KRITISCHE REGELN
 
-### ❌ VERBOTEN:
-1. **KEINE veralteten Programme mit abgelaufenen Fristen als "laufend" darstellen.**
-2. **KEINE generischen Listen ohne Relevanz-Check.**
-3. **KEINE Förderungen ohne Antrags- oder Infoseite (Link).**
-4. **KEINE reinen EU-Buzzwords ohne Bezug zum Projekt ({{HAUPTLEISTUNG}}).**
+1. **Aktualität & Relevanz**
+   - Nutze nur Programme, die im Research als aktuell/offen erkennbar sind.
+   - Programme, die klar ausgelaufen sind, maximal als Hinweis mit Kennzeichnung („nicht mehr für Neuanträge geöffnet“).
+   - Keine Beispiele aus weit zurückliegenden Jahren ohne aktuellen Call.
 
-### ✅ STATTDESSEN:
-1. **Aktuell & relevant (lt. Research):**
-   - Programme, die im Research als aktiv/offen oder laufend markiert sind.
-   - Historisch ausgelaufene Programme nur als Hinweis kennzeichnen (z.B. "nicht mehr für Neuanträge geöffnet").
+2. **Kein „Förderdschungel“-Listen-Spam**
+   - Maximal **4–6 Programme gesamt**, davon typischerweise:
+     - 2–3 auf Bundesebene
+     - 1–2 im Bundesland {{BUNDESLAND_LABEL}}
+     - optional 1 EU-Programm (wenn sinnvoll)
+   - Nur Programme, die realistisch zur **Unternehmensgröße**, **Branche** und zum **Projektumfang** passen.
 
-2. **Konkrete Zahlen & Einordnung, soweit im Research vorhanden:**
-   - Zuschussquoten (z.B. "bis 50% Zuschuss, max. €10k")
-   - typische Fördersummen / Darlehenshöhen
-   - Zielgruppe (KMU, Solo-Selbstständige, bestimmte Branchen)
+3. **Jedes Programm braucht:**
+   - 1–2 Sätze Beschreibung („wofür ist das Programm gedacht?“)
+   - Förderquote / Maximalbetrag, soweit im Research enthalten
+   - Zielgruppe (z.B. KMU, Solo-Selbstständige, Beratungen)
+   - Aussage, warum es **genau zu diesem Projekt** passt (nicht nur „für Digitalisierung allgemein“)
+   - Einen **klickbaren Link** zur offiziellen Programmseite
 
-3. **Immer mit Link:**
-   - Offizielle Programmseite (BMWK, KfW, IBB, EU-Funding-Portal etc.)
+4. **Keine Erfindungen**
+   - Wenn im Research etwas unklar bleibt, transparent formulieren („laut aktueller Recherche in Überarbeitung“).
+   - Keine fiktiven Programmnamen, Budgets oder Fristen.
 
 ---
 
-## 💡 BEISPIEL (kompakt)
+## OUTPUT-FORMAT
+
+Antworte ausschließlich mit **valide­m HTML** in folgender Struktur (Beispiele dienen nur der Orientierung – im echten Output mit aktuellen Daten aus dem Research füllen):
 
 ```html
 <section class="section foerderpotenzial">
-  <h2>Förderpotenzial & Finanzierung</h2>
-  
-  <p><strong>Relevante Programme für:</strong> {{BRANCHE_LABEL}}, {{BUNDESLAND_LABEL}}</p>
-  <p><em>Stand der Förderinformationen: {{RESEARCH_DATE}}</em></p>
+  <h2>Förderpotenzial &amp; Finanzierung</h2>
 
-  <h3>Bundes-Programme (Deutschland)</h3>
+  <p><strong>Fokus:</strong> Förderprogramme für {{BRANCHE_LABEL}} in {{BUNDESLAND_LABEL}} mit Bezug zu Ihrem geplanten KI-/Digitalisierungsprojekt.</p>
+
+  <h3>Bundesprogramme (Deutschland)</h3>
   <table class="table">
     <thead>
-      <tr><th>Programm</th><th>Förderung / Zweck</th><th>Status / Frist</th><th>Link</th></tr>
+      <tr>
+        <th>Programm</th>
+        <th>Förderung</th>
+        <th>Für wen geeignet?</th>
+        <th>Link</th>
+      </tr>
     </thead>
     <tbody>
+      <!-- 2–3 konkrete Programme, z.&nbsp;B. „Digital Jetzt“, „go-digital“ – nur wenn laut Research aktuell -->
+      <!-- Beispiel-Struktur: 
       <tr>
         <td>Digital Jetzt (BMWK)</td>
-        <td>Förderung von Digitalisierungsprojekten in KMU (z.B. Einführung von KI-gestützten Workflows, Software, Schulungen).</td>
-        <td>Aktuelle Konditionen & Fristen siehe Programmseite.</td>
-        <td><a href="https://www.innovation-beratung-foerderung.de/INNO/Navigation/DE/Digital-Jetzt/digital-jetzt.html">Programmseite</a></td>
+        <td>Zuschuss für Investitionen in digitale Technologien und Qualifizierung; Förderquote laut aktueller Programmbeschreibung angeben.</td>
+        <td>Für KMU und Solo-Selbstständige, die in digitale Prozesse und KI-Lösungen investieren.</td>
+        <td><a href="https://www.innovation-beratung-foerderung.de">Programmseite</a></td>
       </tr>
-      <tr>
-        <td>ERP-Digitalisierungs- und Innovationskredit (KfW)</td>
-        <td>Zinsgünstige Kredite für Digitalisierungs- und Innovationsvorhaben (Hardware, Software, Beratung, Entwicklung).</td>
-        <td>Laufend (über Hausbank beantragbar).</td>
-        <td><a href="https://www.kfw.de">KfW-Übersicht</a></td>
-      </tr>
-      <!-- Optional: Weitere durch Research gefundene Bundesprogramme dynamisch ergänzen -->
+      -->
     </tbody>
   </table>
 
-  <h3>Landes-Programme ({{BUNDESLAND_LABEL}})</h3>
+  <h3>Landesprogramme ({{BUNDESLAND_LABEL}})</h3>
   <ul>
-    <li><strong>Beispiel Berlin – Digitalprämie Berlin:</strong> Zuschüsse für Digitalisierungsprojekte (z.B. Einführung von KI-Lösungen, Automatisierung, Online-Services). <a href="https://www.ibb.de">Mehr Informationen</a></li>
-    <li><strong>IBB-Förderprogramme:</strong> z.B. Digitalisierungskredit oder Innovationskredite für Software-/Plattform-Entwicklung. <a href="https://www.ibb.de">Programmübersicht</a></li>
-    <li><strong>[Platzhalter für Research-Ergebnis]:</strong> Mindestens ein spezifisches Landesprogramm aus dem aktuellen Research (Name, kurzer Zweck, Link).</li>
+    <!-- 1–2 Programme aus dem Bundesland, z.&nbsp;B. IBB-Programme in Berlin – mit kurzer Beschreibung &amp; Link -->
+    <!-- Beispiel-Struktur:
+    <li>
+      <strong>IBB-Digitalisierungsförderung (Berlin):</strong>
+      Zuschuss oder zinsgünstiges Darlehen für Digitalisierungs- und KI-Projekte im Dienstleistungssektor.
+      <a href="https://www.ibb.de">Programmübersicht</a>
+    </li>
+    -->
   </ul>
 
-  <h3>EU-Programme (Horizon Europe / Digital Europe)</h3>
+  <h3>EU-Programme (optional)</h3>
   <ul>
-    <li><strong>Horizon Europe – KI / Digitalisierungs-Calls:</strong> Relevante Ausschreibungen, z.B. zu generativer KI, Datenplattformen oder KMU-Digitalisierung.  
-        Integration deines Vorhabens als Pilot-/Demonstratorprojekt möglich. 
-        <a href="https://ec.europa.eu/info/funding-tenders/opportunities/portal">EU Funding & Tenders Portal</a></li>
-    <li><strong>Digital Europe Programme:</strong> Förderlinien für den Aufbau und Einsatz digitaler Kapazitäten (Cloud, KI, Datenräume) – nur nennen, wenn der aktuelle Research einen passenden Call zeigt.</li>
+    <!-- Nur aufnehmen, wenn Research zeigt, dass ein Call realistisch ist (z.B. Horizon Europe / Digital Europe). -->
+    <!-- Beispiel:
+    <li>
+      <strong>Horizon Europe – KI &amp; Digitalisierung:</strong>
+      Förderaufrufe für Verbundprojekte zu generativer KI, Datenplattformen oder KMU-Digitalisierung.
+      <a href="https://ec.europa.eu/info/funding-tenders/opportunities/portal">EU Funding &amp; Tenders Portal</a>
+    </li>
+    -->
+  </ul>
+
+  <h3>Einfluss auf Business Case</h3>
+  <p>Auf Basis der Business-Case-Zahlen lässt sich der Effekt einer Förderung grob abschätzen:</p>
+  <ul>
+    <li><strong>Ausgangswert ohne Förderung:</strong> CAPEX ca. {{CAPEX_REALISTISCH_EUR}} €, Payback etwa {{PAYBACK_MONTHS}} Monate, ROI nach 12 Monaten rund {{ROI_12M}} %.</li>
+    <li><strong>Mit typischer Förderung (Beispiel 40–50&nbsp;% Zuschuss):</strong> Der Eigenanteil an den Investitionskosten sinkt deutlich; die Amortisationsdauer verkürzt sich je nach Förderquote typischerweise auf etwa 50–70&nbsp;% des ursprünglichen Wertes.</li>
+    <li><strong>Praxis-Einordnung:</strong> Hervorheben, welche 1–2 Programme den größten Hebel haben (z.&nbsp;B. Zuschuss für Beratung + Implementierung) und wie stark diese den Payback realistisch verkürzen können (qualitativ, ggf. mit grober Zahl, wenn Daten verfügbar sind).</li>
   </ul>
 
   <h3>Empfohlene nächste Schritte</h3>
   <ol>
-    <li>1–2 Bundesprogramme auswählen, die am besten zu deinem Projektumfang (CAPEX) und Unternehmensprofil passen.</li>
-    <li>Mindestens ein Landesprogramm ({{BUNDESLAND_LABEL}}) prüfen, das explizit Digitalisierungs-/KI-Projekte in {{BRANCHE_LABEL}} adressiert.</li>
-    <li>Kurze Projektbeschreibung (1–2 Seiten) erstellen, die für mehrere Programme wiederverwendet werden kann (Ziele, Kosten, Zeitplan, erwarteter Nutzen).</li>
-    <li>Optional: Gespräch mit Fördermittel-Expert:in (z.B. 1–2h) führen, um aus den recherchierten Programmen die 1–2 mit der höchsten Erfolgschance auszuwählen.</li>
+    <li>Aus den genannten Programmen 1–2 Favoriten auswählen, die am besten zu Unternehmensgröße, Branche und Projektumfang passen.</li>
+    <li>Kurzbeschreibung des Projekts (1–2 Seiten) erstellen, die für Förderanträge wiederverwendet werden kann (Ziele, Maßnahmen, Kosten, erwarteter Nutzen).</li>
+    <li>Prüfen, ob eine Kombination aus Bundes- und Landesprogramm möglich ist (Kumulierbarkeit laut Programmbedingungen beachten).</li>
+    <li>Optional: Gespräch mit einer Fördermittel-Expertin/einem Fördermittel-Experten führen, um Erfolgschancen zu erhöhen und Formfehler zu vermeiden.</li>
   </ol>
+
+  <p class="small">
+    <em>
+      Hinweis: Alle Angaben zu Förderquoten, Summen und Fristen basieren auf öffentlich zugänglichen Informationen zum Zeitpunkt der letzten Recherche 
+      und müssen vor Antragstellung auf den offiziellen Programmseiten geprüft werden.
+    </em>
+  </p>
 </section>
+```
+
+---
+
+## ERFOLGS-KRITERIEN
+
+Ein Förderabschnitt gilt als GOLD STANDARD+, wenn:
+
+1. ✅ Nur **aktuelle und zum Projekt passende Programme** genannt werden.  
+2. ✅ Jedes Programm einen klaren Bezug zur geplanten KI-/Digitalisierungsmaßnahme hat.  
+3. ✅ Alle Programme mit **kurzer Beschreibung, Zielgruppe, Förderlogik und Link** aufgeführt sind.  
+4. ✅ Der Zusammenhang zu **Payback & ROI** verständlich erläutert wird (mindestens qualitativ, besser mit grober Zahl).  
+5. ✅ Transparenz über Unsicherheiten gewahrt bleibt (keine ausgedachten Budgets, klare Hinweise auf Prüfpflicht).  
+
+**OUTPUT:** Valides HTML (keine Markdown-Fences, kein `<html>`/`<body>`).
