@@ -1,7 +1,7 @@
-<!-- strategie_governance.md - v2.4 GOLD STANDARD+ -->
+<!-- strategie_governance.md - v2.5 GOLD STANDARD+ -->
 <!-- Antworte ausschließlich mit **validem HTML**.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im OUTPUT.
-     VERSION: 2.4 GOLD STANDARD+ (Size-Awareness + Score-Sync Fix) -->
+     VERSION: 2.5 GOLD STANDARD+ (Size-Awareness verschärft, Solo-Hinweise sauber getrennt) -->
 
 # PROMPT: Strategie & Governance - KI-Governance-Strukturen
 
@@ -9,28 +9,42 @@
 
 **Mögliche Unternehmensgrößen (NUR diese 3!):**
 - `{{COMPANY_SIZE}}` = "solo" → Label: "1 (Solo-Selbstständig/Freiberuflich)"
-- `{{COMPANY_SIZE}}` = "team" → Label: "2-10 (Kleines Team)"  
+- `{{COMPANY_SIZE}}` = "team" → Label: "2-10 (Kleines Team)"
 - `{{COMPANY_SIZE}}` = "kmu"  → Label: "11-100 (KMU)"
 
-### 📏 SIZE-APPROPRIATE LANGUAGE - PFLICHT!
+### 📏 SIZE-APPROPRIATE LANGUAGE
 
 **{{COMPANY_SIZE}} = "solo":**
-- ✅ "Geschäftsführer" oder "Sie als Freiberufler"
-- ✅ "Externe Auditoren" (Anwalt, Berater)
-- ✅ "Checklisten" statt komplexe Prozess-Dokumente
-- ❌ NIEMALS: "Team", "PMO", "Abteilung", "Führungskräfte", "Steering Committee"
+- ✅ "Sie als Freiberufler", "Ihre Kund:innen", "Ihre Projekte"
+- ✅ Externe Rollen: Anwalt, Steuerberater, IT-Dienstleister
+- ✅ Einfache Checklisten statt komplexer Policies
+- ❌ NIEMALS: "Team", "Führungskräfte", "Abteilung", "Steering Committee", "PMO"
 
 **{{COMPANY_SIZE}} = "team" (2-10 MA):**
-- ✅ "Geschäftsführer + Team"
-- ✅ "Verantwortlicher Mitarbeiter für KI/Compliance"
-- ✅ "Externe Unterstützung für Audits"
-- ❌ NIEMALS: "PMO-Team", "Abteilungsleiter", "Change Manager"
+- ✅ "Geschäftsführung + Team", "eine verantwortliche Person für KI/Compliance"
+- ✅ Einfache, leicht verständliche Richtlinien (1–2 Seiten)
+- ✅ Pragmatistische Reviews (monatliches KI-Review-Meeting)
+- ❌ NIEMALS: "PMO-Team", "Abteilungsleiter", "Change Manager", "Konzern-Governance"
 
 **{{COMPANY_SIZE}} = "kmu" (11-100 MA):**
-- ✅ "Projektleiter", "Führungskraft", "Compliance-Verantwortlicher"
-- ✅ "Projektteam (3-5 Personen)"
-- ✅ "Abteilung", "Steering Committee"
-- ✅ "PMO-Team" oder "Abteilungsleiter" (ab ~50 MA)
+- ✅ "Projektleiter:in", "Führungskraft", "Compliance-Verantwortliche:r"
+- ✅ "Projektteam (3–5 Personen)", "Fachbereich", "Abteilung"
+- ✅ Optionale Gremien wie "Steering Committee", "PMO" (ab ~50 MA plausibel)
+
+---
+
+## 🔒 SIZE-CHECK & SOLO-HINWEISE
+
+1. Lies `{{COMPANY_SIZE}}` bewusst.
+2. Wenn `{{COMPANY_SIZE}} = "solo"`:
+   - Du-Ansprache und Solo-Bezug sind OK.
+   - Governance bleibt trotzdem schlank und pragmatisch.
+3. Wenn `{{COMPANY_SIZE}} = "team"` oder `"kmu"`:
+   - KEINE Formulierungen wie:
+     - "als Solo-Beratung"
+     - "wenn Sie später Mitarbeitende einstellen"
+     - "Sie arbeiten aktuell noch allein"
+   - Sprache immer auf Team/Unternehmen ausrichten.
 
 ---
 
@@ -38,105 +52,68 @@
 
 Erstelle konkrete Governance-Empfehlungen, die:
 
-1. **Score-Gaps adressieren** (z.B. Governance < 60 → DSGVO-Prozesse priorisieren)
-2. **Spezifisch für {{HAUPTLEISTUNG}}** sind (nicht generisch!)
-3. **Rollen & Verantwortlichkeiten SIZE-AWARE** definieren
-4. **Konkrete Prozesse** beschreiben (nicht nur: „etablieren Sie …“)
+1. Die Analyse-Scores sinnvoll interpretieren  
+   (z. B. `{{score_governance}}`, `{{score_sicherheit}}`, `{{score_nutzen}}`).
+2. Spezifisch für {{HAUPTLEISTUNG}} sind (keine generischen KI-Phrasen).
+3. Rollen & Verantwortlichkeiten SIZE-AWARE definieren.
+4. Konkrete Prozesse beschreiben (wer macht was, in welcher Frequenz?).
 
-**Zielgruppe:** Geschäftsführung, Compliance-Officer, Risk-Owner  
-**Stil:** Strukturiert, compliance-fokussiert, pragmatisch, größen-angemessen
+**Zielgruppe:** Geschäftsführung, Compliance-Verantwortliche, Risk-Owner.  
+**Stil:** Strukturiert, compliance-fokussiert, pragmatisch, verständlich.
 
 ---
 
 ## ⛔ ABSOLUT VERBOTEN
 
-### ❌ GENERISCHE Governance-Tipps
-- ❌ "KI-Beirat einrichten"
-- ❌ "Regelmäßige Reviews durchführen"
-- ❌ "Richtlinien erstellen"
-- ❌ "Governance-Strukturen aufbauen"
+### ❌ Generische Governance-Tipps ohne Kontext
+- "KI-Beirat einrichten"
+- "Regelmäßige Reviews durchführen"
+- "Richtlinien erstellen" ohne Zweck & Inhalt
+- "Governance-Strukturen aufbauen" als Leerformel
 
-### ❌ UNREALISTISCHE Rollen für die Größe
-- ❌ "Chief AI Officer" bei Solo/Klein
-- ❌ "PMO-Team" bei Solo oder Team (2-10 MA)
-- ❌ "KI-Steuerungsausschuss" bei Solo
-- ❌ "Change Manager" bei Team (2-10 MA)
+### ❌ Zahlen und Scores ignorieren
+- `{{score_governance}}` < 60 und keine Maßnahmen zu DSGVO/EU AI Act
+- `{{score_sicherheit}}` < 60 und keine Security/KI-Risiko-Maßnahmen
 
-### ❌ SCORE-CHAOS
-- ❌ Feste Beispielzahlen wie "Score Governance: 55/100" oder "58/100"
-- ❌ Abweichende Governance-Scores in Text vs. Scorecard
-- ❌ Eigene Scores erfinden
+### ❌ Unpassende Größenlogik
+- Konzernartige Strukturen bei Solo/Team
+- Solo-Wording in Team/KMU-Reports
+- Zusätzliche Vollzeitstellen empfehlen, wenn Business Case konservativ ist
 
 ---
 
-## ✅ STATTDESSEN: SIZE-APPROPRIATE!
+## 🔧 STRUKTUR DER ANTWORT
 
-### ✅ Solo (1 MA)
-- "Geschäftsführer (Sie)"
-- "Externe Auditoren: DSGVO-Anwalt, Security-Pentest nach Bedarf"
-- "Checklisten statt Prozess-Handbücher"
-- Review-Zyklus: "Jährlich" oder "Bei Bedarf"
-- Budget-Richtwert: max. €10.000 CAPEX, €500/Monat OPEX
+Erzeuge eine HTML-Section mit:
 
-### ✅ Klein (2-10 MA)
-- "Geschäftsführer + verantwortlicher Mitarbeiter"
-- "Externe Unterstützung für komplexe Themen (Anwalt, Auditor)"
-- "Einfache Prozess-Dokumente (1-2 Seiten)"
-- Review-Zyklus: "Halbjährlich"
-- Budget-Richtwert: max. €50.000 CAPEX, €2.000/Monat OPEX
+1. Kurzer Einleitung (1 Absatz):
+   - Einordnung der Governance- und Sicherheits-Scores.
+   - Bezug zu {{HAUPTLEISTUNG}} und Unternehmensgröße.
 
-### ✅ KMU (11-100 MA)
-- "Compliance-Verantwortlicher" oder "Projektleiter KI"
-- "Internes Audit-Team" (ab ~50 MA)
-- "Formelle Governance-Struktur / Steering Committee"
-- Review-Zyklus: "Quartalsweise"
-- Budget-Richtwert: max. €200.000 CAPEX, €10.000/Monat OPEX
+2. 3–5 Themenblöcke, z. B.:
+   - Rollen & Verantwortlichkeiten
+   - Richtlinien & Nutzungsregeln
+   - Risiko- und Compliance-Prozesse (DSGVO, EU AI Act)
+   - Dokumentation & Nachvollziehbarkeit
+   - Monitoring & kontinuierliche Verbesserung
+
+Jeder Block:
+
+- Überschrift `<h3>` oder `<h4>`.
+- 1–2 Absätze mit klaren, umsetzbaren Maßnahmen.
+- Nur dort Listen einsetzen, wo sie Struktur schaffen (max. 3–5 Punkte).
 
 ---
 
-## 💡 BEISPIEL (Solo – Score-Sync!)
+## 🧪 QUALITÄTS-CHECK
 
-**Kontext:** Score Governance {{score_governance}}, GPT-4-Nutzung, Solo-Selbstständig
+Vor Ausgabe prüfen:
 
-```html
-<section class="section strategie-governance">
-  <h2>Strategie &amp; Governance</h2>
-  
-  <p>Basierend auf Ihrem Governance-Score von {{score_governance}}/100 und der Hauptleistung
-     "{{HAUPTLEISTUNG}}" werden folgende Governance-Strukturen empfohlen:</p>
+1. **Size-Check:** Passt jede Rolle zur Unternehmensgröße?
+2. **Score-Check:** Werden schwache Bereiche (Score < 60) sichtbar adressiert?
+3. **Solo-Hinweise:** Keine Solo-Formulierungen bei `team`/`kmu`.
+4. **Kohärenz mit Business Case & Roadmap:**  
+   - Governance-Maßnahmen unterstützen die geplanten Projekte (z. B. Batch-Processing, Self-Service-Portal, White-Label).
+5. **Klarheit:** Entscheider:innen können aus dem Text direkt Aufgaben ableiten.
 
-  <h3>1. DSGVO-Compliance für GPT-4-Datenverarbeitung</h3>
-  <ul>
-    <li><strong>Verantwortlich:</strong> Geschäftsführer (Sie – Verantwortlicher i.S.d. DSGVO)</li>
-    <li><strong>Prozess:</strong>
-      <ul>
-        <li>AVV (Auftragsverarbeitungsvertrag) mit OpenAI im Dashboard prüfen/abschließen</li>
-        <li>DSFA (Datenschutz-Folgenabschätzung) für Assessment-Daten erstellen (Template anpassen)</li>
-        <li>Datenschutz-Hinweise im Fragebogen ergänzen (Checkbox: „Einwilligung Datenverarbeitung“)</li>
-        <li>Datenfluss dokumentieren: Typeform → Backend → OpenAI → Datenbank → PDF</li>
-      </ul>
-    </li>
-    <li><strong>Review-Zyklus:</strong> Jährlich oder bei OpenAI-AGB-Änderungen</li>
-    <li><strong>Externe Unterstützung:</strong> DSGVO-Anwalt mit KI-Expertise (Pauschalhonorar)</li>
-  </ul>
-
-  <h3>2. Quality-Gate für generierte Reports</h3>
-  <ul>
-    <li><strong>Verantwortlich:</strong> Geschäftsführer (manuelle Endabnahme)</li>
-    <li><strong>Prozess:</strong>
-      <ul>
-        <li>Jeder Report wird vor Versand kurz geprüft (ca. 20–30 Min/Report)</li>
-        <li>Checkliste: Zahlenkonsistenz, Halluzinationen, Förderprogramme, Compliance-Hinweise</li>
-        <li>Fehler-Log führen (z.B. Tabelle): Welche Fehler treten auf, wie oft, in welchem Abschnitt?</li>
-      </ul>
-    </li>
-    <li><strong>Ziel:</strong> 0 fehlerhafte Reports beim Kunden, &lt; 5&nbsp;% Nachbesserungsquote</li>
-  </ul>
-
-  <h3>3. Leichtgewichtige KI-Governance</h3>
-  <ul>
-    <li><strong>Policy:</strong> 1-seitige KI-Nutzungsrichtlinie (zulässige Tools, Datentypen, No-Gos)</li>
-    <li><strong>Dokumentation:</strong> Einfache Liste aller genutzten KI-Tools (Zweck, Daten, Risiken)</li>
-    <li><strong>Review:</strong> Halbjährliches Kurz-Review: Passen Tools, Kosten, Risiken noch?</li>
-  </ul>
-</section>
+**Output:** Valides HTML, keine Markdown-Fences, keine Platzhalter.

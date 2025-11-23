@@ -1,127 +1,181 @@
+<!-- business_case.md - v2.2 GOLD STANDARD+ -->
+<!-- Antworte ausschließlich mit **validem HTML**.
+     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im OUTPUT.
+     VERSION: 2.2 GOLD STANDARD+ (Size-Awareness, Budget-/Einspar-Skalierung, Solo-Hinweise gefixt) -->
+
 # PROMPT: Business Case - ROI & Wirtschaftlichkeit
 
+## ⚠️ SIZE-AWARENESS FÜR BUDGET & EINSPARUNGEN
+
+**Mögliche Unternehmensgrößen (NUR diese 3!):**
+- `{{COMPANY_SIZE}}` = "solo" → "1 (Solo-Selbstständig/Freiberuflich)"
+- `{{COMPANY_SIZE}}` = "team" → "2-10 (Kleines Team)"
+- `{{COMPANY_SIZE}}` = "kmu"  → "11-100 (KMU)"
+
+**Leitplanken für Interpretation (KEINE eigenen Rechnungen!):**
+
+- **Solo:**
+  - Typischer Fokus: Zeiteinsparung bei der eigenen Arbeit.
+  - CAPEX eher im Bereich bis ca. 10.000 € sinnvoll.
+  - Einsparungen von einigen Tagen/Monat (nicht "ganze Abteilungen").
+
+- **Team (2–10):**
+  - Fokus: Hebel über mehrere Personen (Teamprozesse).
+  - CAPEX typischerweise bis ca. 50.000 € sinnvoll.
+  - Einsparungen verteilt auf Team (z. B. 5–15 Tage/Monat).
+
+- **KMU (11–100):**
+  - Fokus: Teams/Funktionen, Skaleneffekte über viele Personen.
+  - CAPEX bis ca. 200.000 € denkbar, wenn Zahlen es hergeben.
+  - Einsparungen können deutlich höher liegen (z. B. ganze FTE-Bandbreiten).
+
+👉 WICHTIG: Du **interpretierst** nur die gelieferten Variablen – du erfindest keine Zahlen
+und überschreibst keine Berechnungen aus der Pipeline.
+
+---
+
 ## ZWECK
+
 Erstelle eine sachliche Business-Case-Analyse, die:
-1. **bereitgestellte Zahlen** korrekt interpretiert (KEINE Erfindungen!)
-2. eine **einfache Sensitivitätsanalyse** für ±20 % Abweichungen beschreibt
-3. **konkrete ROI-Hebel-Empfehlungen** gibt (spezifisch für {{HAUPTLEISTUNG}})
-4. **realistische Erwartungen** setzt (keine Schönfärberei)
 
-**Zielgruppe:** CFO, Geschäftsführung, Investitions-Entscheider  
-**Stil:** Sachlich, konservativ, transparent – KEINE Marketing-Sprache!
+1. Die bereitgestellten Zahlen korrekt interpretiert (KEINE Eigen-Erfindung).
+2. Eine einfache Sensitivitätsbetrachtung (±20 %) verbal beschreibt.
+3. 3–5 konkrete ROI-Hebel benennt, spezifisch für {{HAUPTLEISTUNG}}.
+4. Realistische Erwartungen setzt (konservativ, keine Übertreibungen).
 
----
-
-## ⚠️ KRITISCHE REGELN
-
-### ❌ VERBOTEN:
-1. **KEINE Zahlen erfinden oder „optimieren“:**
-   - ❌ ROI „schöner“ rechnen als durch die Variablen vorgegeben
-   - ❌ Einsparungen hochrechnen ohne Basis
-   - ❌ zusätzliche Umsatz-Annahmen einbauen, die nicht im Kontext stehen
-
-2. **KEINE vagen Hebelungs-Tipps:**
-   - ❌ „Prozesse optimieren“
-   - ❌ „Effizienz steigern“
-   - ❌ „Mehr Automatisierung“
-
-3. **KEINE unrealistischen Versprechungen:**
-   - ❌ „Garantierte Amortisation in X Monaten“
-   - ❌ „ROI von 500 % erreichbar“
-
-### ✅ STATTDESSEN:
-
-1. **Nur bereitgestellte Variablen verwenden:**
-   - ✅ {{CAPEX_REALISTISCH_EUR}} – einmalige Investition (CAPEX, in €)
-   - ✅ {{OPEX_REALISTISCH_EUR}} – laufende Kosten/Monat (OPEX, in €)
-   - ✅ {{EINSPARUNG_MONAT_EUR}} – Einsparungen/Monat (in €)
-   - ✅ {{PAYBACK_MONTHS}} – Amortisationszeit in Monaten
-   - ✅ {{ROI_12M}} – ROI nach 12 Monaten in Prozent (z. B. 85,0 = 85,0 %)
-
-2. **Spezifische Hebel aus dem Kontext:**
-   - ✅ konkrete Kostenhebel (z. B. „Batch API statt Standard API (-50 % OpenAI-Kosten)“)
-   - ✅ vorhandene Lizenzen sinnvoller nutzen (z. B. „Typeform Pro“, vorhandene Datenbanken)
-   - ✅ Preis-/Stundensatz-Anpassung **nur**, wenn das Geschäftsmodell auf Abrechnung nach Zeit basiert
-
-3. **Transparente Einordnung:**
-   - ✅ ausdrücklich erwähnen, dass die Berechnung auf den Quick-Win-Werten basiert
-   - ✅ offen mit Unsicherheiten umgehen (z. B. „konservative Annahme“, „ohne zusätzliche Umsatzpotenziale“)
+**Zielgruppe:** CFO, Geschäftsführung, Investitions-Entscheider:innen.  
+**Stil:** Sachlich, konservativ, transparent – kein Marketing-Sprech.
 
 ---
 
-## 💡 BEISPIEL (STRUKTUR – KEINE FIXEN ZAHLEN ÜBERNEHMEN!)
+## VERFÜGBARE VARIABLEN (NUR DIESE NUTZEN!)
 
-> WICHTIG: Dieses Beispiel zeigt nur **Struktur und Ton**.  
-> Im echten Output dürfen **keine** Beispielzahlen aus diesem Prompt übernommen werden –  
-> verwende ausschließlich die Variablenwerte.
+- Einmalige Investition (CAPEX): `{{CAPEX_REALISTISCH_EUR}}`
+- Laufende Kosten pro Monat (OPEX): `{{OPEX_REALISTISCH_EUR}}`
+- Monatliche Einsparung: `{{EINSPARUNG_MONAT_EUR}}`
+- Amortisationsdauer in Monaten: `{{PAYBACK_MONTHS}}`
+- ROI im ersten Jahr (in %): `{{ROI_12M}}`
 
-```html
-<section class="section business-case">
-  <h3>Business-Case (Ergebnis)</h3>
+Du darfst diese Zahlen sprachlich zusammenfassen, aber NICHT neu berechnen.
 
-  <p>
-    <strong>Monatliche Einsparung:</strong> {{EINSPARUNG_MONAT_EUR}} €/Monat<br>
-    <strong>CAPEX:</strong> {{CAPEX_REALISTISCH_EUR}} € (einmalig) ·
-    <strong>OPEX:</strong> {{OPEX_REALISTISCH_EUR}} €/Monat<br>
-    <strong>Amortisation:</strong> {{PAYBACK_MONTHS}} Monate ·
-    <strong>ROI (12 Monate):</strong> {{ROI_12M}} %
-  </p>
+---
 
-  <h4>Interpretation</h4>
-  <p>
-    Die Quick-Win-Einsparungen von {{EINSPARUNG_MONAT_EUR}} €/Monat decken die laufenden Kosten
-    (OPEX: {{OPEX_REALISTISCH_EUR}} €/Monat) deutlich ab und amortisieren die einmalige Investition
-    (CAPEX: {{CAPEX_REALISTISCH_EUR}} €) nach {{PAYBACK_MONTHS}} Monaten.
-    Der ROI nach 12&nbsp;Monaten von {{ROI_12M}} % basiert ausschließlich auf den bereitgestellten
-    Quick-Win-Zahlen – ohne zusätzliche Umsatz-Annahmen.
-  </p>
+## ⛔ KRITISCHE REGELN
 
-  <h4>Sensitivität (±20 %)</h4>
-  <ul>
-    <li>
-      <strong>Einsparung −20 %:</strong>
-      beschreibe in Worten, wie sich Payback und ROI verschlechtern würden
-      (z. B. „Payback verlängert sich um einige Monate, ROI sinkt spürbar, bleibt aber positiv“).
-    </li>
-    <li>
-      <strong>Einsparung +20 %:</strong>
-      beschreibe, wie sich Payback und ROI verbessern (z. B. „Amortisation deutlich schneller,
-      ROI steigt um einen zweistelligen Prozentbereich“).
-    </li>
-    <li>
-      <strong>Kosten +20 %:</strong>
-      beschreibe, wie empfindlich der Case auf höhere OPEX reagiert
-      (z. B. „ROI sinkt moderat, Case bleibt aber tragfähig“).
-    </li>
-  </ul>
+### ❌ VERBOTEN
 
-  <h4>Empfehlungen zur ROI-Hebelung (konkret)</h4>
-  <ol>
-    <li>
-      <strong>Konkreter Kostenhebel im Kernprozess:</strong>
-      z. B. Batch-Verarbeitung, effizientere Prompt-Struktur, Reduktion doppelter Schritte.
-      Beschreibe den Effekt knapp (z. B. „ca. −X % Toolkosten“).
-    </li>
-    <li>
-      <strong>Besserer Einsatz bestehender Lizenzen:</strong>
-      z. B. vorhandene Formulare/Tools tiefer integrieren statt neue Software zu kaufen.
-    </li>
-    <li>
-      <strong>Preis-/Stundensatz-Hebel (falls passend):</strong>
-      Nur wenn {{HAUPTLEISTUNG}} typischerweise auf Stunden- oder Projekthonoraren basiert
-      (Beratung/Agentur). Keine solche Empfehlung für klassische Produkt-/SaaS-/Medien-Modelle.
-    </li>
-    <li>
-      <strong>MVP-First statt Big-Bang:</strong>
-      kurzfristig umsetzbarer Scope mit klarem ROI-Review nach wenigen Monaten,
-      bevor größere Invests ausgelöst werden.
-    </li>
-  </ol>
+1. **Zahlen erfinden oder „schöner rechnen“**
+   - Kein Hochskalieren von Einsparungen ohne Basis.
+   - Keine zusätzlichen Umsatzannahmen erfinden.
 
-  <p>
-    <em>Optionaler Hinweis für Solo-Unternehmen:</em>
-    Nur wenn {{UNTERNEHMENSGROESSE_LABEL}} klar auf Solo-Selbstständigkeit hinweist:
-    ergänze einen kurzen Hinweis, dass die Berechnung auf einem konservativen
-    Stundensatz basiert und sich mit höherer Positionierung entsprechend verschieben kann.
-  </p>
-</section>
+2. **Unrealistische Versprechen**
+   - Keine „Garantie“-Formulierungen.
+   - Kein „extremer“ ROI ohne Bezug zu `{{ROI_12M}}`.
+
+3. **Falsche Größenlogik**
+   - Bei Solo: keine Einsparung „mehrerer Abteilungen“ o. Ä.
+   - Bei Team/KMU: nicht so tun, als gäbe es nur eine Einzelperson.
+
+4. **Solo-Hinweise in Nicht-Solo-Reports**
+   - Formulierungen wie „Hinweis für Solo-Beratung“ oder „als Solo-Unternehmer:in“
+     sind **nur** zulässig, wenn `{{COMPANY_SIZE}} = "solo"`.
+   - Bei `team`/`kmu` IMMER neutrale Formulierungen wie
+     „Hinweis: Bei höheren internen Stundensätzen …“.
+
+---
+
+## ✅ ERWÜNSCHT
+
+1. **Klare Zusammenfassung der Kennzahlen**
+   - Investition, laufende Kosten, Einsparung, Payback, ROI 12M.
+
+2. **Interpretation nach Größenklasse**
+   - Z. B. bei Solo: „konservativ, aber tragfähig“, bei KMU: „solider Business Case
+     auf Bereichsebene“.
+
+3. **Sensitivitätsbetrachtung**
+   - Verbale Beschreibung, was passiert, wenn Einsparung 20 % niedriger/höher ausfällt.
+
+4. **Konkrete Hebel zur Verbesserung von ROI**
+   - Z. B. höhere Auslastung der Lösung, mehr Nutzer im Unternehmen, leichte Preisanpassung.
+
+---
+
+## BEISPIEL-STRUKTUR (HTML)
+
+Nutze eine Section mit klaren Unterüberschriften, z. B.:
+
+- Ergebnis-Zusammenfassung
+- Interpretation nach Unternehmensgröße
+- Sensitivitätsbetrachtung
+- Hebel zur ROI-Verbesserung
+- Fazit
+
+Beispielhafte Struktur (nur als Muster, Inhalte an Variablen anpassen):
+
+    <section class="section business-case">
+      <h2>Business-Case – Wirtschaftlichkeit der KI-Lösung</h2>
+
+      <p><strong>Investition & Kosten:</strong> Einmalig rund {{CAPEX_REALISTISCH_EUR}} für
+         Implementierung, Setup und erste Anpassungen. Laufende Betriebskosten von
+         etwa {{OPEX_REALISTISCH_EUR}} pro Monat.</p>
+
+      <p><strong>Monatliche Einsparung:</strong> Basierend auf den Angaben ergibt sich
+         eine realistische Entlastung von ungefähr {{EINSPARUNG_MONAT_EUR}} pro Monat.
+         Daraus folgt eine Amortisation nach rund {{PAYBACK_MONTHS}} Monaten und ein
+         erwarteter ROI von etwa {{ROI_12M}} % im ersten Jahr.</p>
+
+      <h3>Einordnung nach Unternehmensgröße</h3>
+      <p>[Hier kurz erklären, warum diese Relation aus CAPEX, OPEX, Einsparung und ROI
+         für {{COMPANY_SIZE}} sinnvoll bzw. konservativ ist. Bei Solo Fokus auf
+         persönliche Arbeitszeit, bei Team/KMU Fokus auf mehrere Personen/Teams.]</p>
+
+      <h3>Sensitivität (+/– 20 %)</h3>
+      <p>Wenn die tatsächliche Einsparung etwa 20 % niedriger ausfällt, verlängert sich
+         die Amortisationsdauer entsprechend, bleibt mit {{PAYBACK_MONTHS}} Monaten
+         jedoch voraussichtlich im vertretbaren Rahmen. Bei 20 % höherer Einsparung
+         verbessert sich der ROI deutlich, sodass die Investition schneller wieder
+         eingespielt ist.</p>
+
+      <h3>Hebel zur Verbesserung des ROI</h3>
+      <ul>
+        <li>[Hebel 1: z. B. höhere Nutzung der automatisierten Prozesse
+            in {{HAUPTLEISTUNG}}]</li>
+        <li>[Hebel 2: z. B. zusätzliche Use Cases auf derselben Infrastruktur]</li>
+        <li>[Hebel 3: z. B. leichte Preisanpassung / Premium-Angebot,
+            falls zum Geschäftsmodell passend]</li>
+      </ul>
+
+      <h3>Fazit</h3>
+      <p>[Kurze, nüchterne Bewertung: „konservativer, aber tragfähiger Business Case“,
+         „lohnt sich vor allem bei konsequenter Nutzung“ etc. Keine Garantie,
+         keine Übertreibung.]</p>
+    </section>
+
+---
+
+## INSTRUKTIONEN FÜR DIE GENERIERUNG
+
+1. Nutze **ausschließlich** die gelieferten Variablen `{{CAPEX_REALISTISCH_EUR}}`,
+   `{{OPEX_REALISTISCH_EUR}}`, `{{EINSPARUNG_MONAT_EUR}}`,
+   `{{PAYBACK_MONTHS}}`, `{{ROI_12M}}` plus Kontext (Branche, Größe).
+2. Interpretiere die Zahlen konservativ, benenne auch Schwächen
+   (z. B. langer Payback) klar.
+3. Passe Sprache und Beispiele an `{{COMPANY_SIZE}}` an.
+4. Verwende deutsches Zahlenformat (4.500 € statt 4500 EUR).
+5. Keine Solo-Hinweise in Team/KMU-Reports (siehe Regeln oben).
+
+---
+
+## ERFOLGS-KRITERIEN (GOLD STANDARD+)
+
+Ein Business Case ist GOLD STANDARD+, wenn:
+
+1. Alle Zahlen korrekt aus den Variablen übernommen sind.
+2. Die Relation von CAPEX/OPEX/Einsparung/ROI verständlich erklärt ist.
+3. Die Interpretation zur Unternehmensgröße passt (Solo/Team/KMU).
+4. Eine klare ±20 %-Sensitivität beschrieben wird.
+5. Mindestens 3 konkrete ROI-Hebel genannt werden.
+6. Keine Solo-Hinweise in Nicht-Solo-Reports vorkommen.
+
+**Output:** Valides HTML, keine Markdown-Fences, keine verbleibenden Platzhalter.
