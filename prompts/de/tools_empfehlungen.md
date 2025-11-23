@@ -1,175 +1,196 @@
-# PROMPT: Tool-Empfehlungen - KI & Automatisierungs-Tools
+<!-- tools_empfehlungen.md – v3.0 GOLD STANDARD+ BRANCHENLOGIK -->
+<!-- Ausgabe: valides HTML, KEIN <html>, <head> oder <body>, KEINE Markdown-Fences. -->
+
+# PROMPT: Tool-Empfehlungen – KI- & Automatisierungs-Tools
 
 ## ZWECK
-Empfehle 8-12 konkrete Tools die die **Hauptleistung ERGÄNZEN und erweitern** - nicht Tools die bereits genutzt werden oder generische Produktivitäts-Tools. Jedes Tool MUSS einen klaren Use Case zur Skalierung der Hauptleistung haben.
+
+Erstelle eine **konkrete Tool-Empfehlungsliste (8–12 Tools)**, die:
+
+1. die **Hauptleistung {{HAUPTLEISTUNG}} direkt skaliert oder erweitert**,  
+2. zur **Branche {{BRANCHE_LABEL}}** passt (siehe Branchengruppen unten),  
+3. die **bestehende Tool-Landschaft {{TOOLS_AKTUELL}} sinnvoll ergänzt** (keine Duplikate),  
+4. pro Tool einen **klaren, messbaren Use Case** und einen **Impact-/ROI-Hinweis** liefert.
+
+Ausgabe als **HTML-Sektion mit Tabelle**.
 
 ---
 
-## ⚠️ KRITISCHE REGELN - ZWINGEND BEACHTEN!
+## VARIABLEN
 
-### ❌ VERBOTEN - Folgende Tools NIEMALS empfehlen:
+Du erhältst mindestens:
 
-1. **KEINE Tools die bereits in `{{TOOLS_AKTUELL}}` vorhanden sind:**
-   - ❌ GPT-4 API wenn Hauptleistung "GPT-basierte Analysen" enthält
-   - ❌ Typeform/Google Forms wenn digitaler Fragebogen schon existiert
-   - ❌ PostgreSQL/MySQL wenn Datenbank bereits im Einsatz
-   - ❌ Shopify wenn E-Commerce-Shop schon läuft
-   - ❌ Slack wenn Kunde bereits Slack erwähnt
-
-2. **KEINE generischen Produktivitäts-Tools (außer DIREKT für Hauptleistung):**
-   - ❌ Calendly (Terminbuchung ist Support-Prozess!)
-   - ❌ Grammarly (E-Mail-Korrektur ist Nebenaufgabe!)
-   - ❌ LastPass (Passwort-Management irrelevant für Hauptleistung!)
-   - ❌ Trello (Projekt-Management ist kein Tool für Hauptleistung!)
-
-3. **KEINE Tools ohne konkreten ROI-Bezug zur Hauptleistung:**
-   - ❌ Loom (Video-Nachrichten) wenn Hauptleistung nicht Video ist
-   - ❌ Miro (Whiteboard) wenn keine kollaborative Design-Arbeit
-   - ❌ Notion (Dokumentation) wenn nicht Kern-Geschäft
-   - ❌ Asana (Task-Management) wenn nicht direkt für Hauptleistung
-
-4. **KEINE Tools die "nice to have" sind statt "must have":**
-   - ❌ Tools ohne messbare Impact-Kennzahl
-   - ❌ Tools die nur "ein bisschen schneller" machen
-   - ❌ Tools für Prozesse die 1× pro Monat passieren
-
-### ✅ STATTDESSEN - Fokus auf:
-
-1. **Tools die die HAUPTLEISTUNG direkt skalieren:**
-   - ✅ Make.com/Zapier wenn Haupt-Workflow automatisiert werden kann
-   - ✅ APIs die Hauptleistung erweitern (z.B. Perplexity für Research)
-   - ✅ Batch-Processing Tools für parallelisierte Hauptaufgaben
-
-2. **Tools die vorhandene Daten/Assets repurposen:**
-   - ✅ Buffer/Hootsuite wenn Content aus Hauptleistung generiert werden kann
-   - ✅ Synthesia/Heygen wenn Kundenprojekte zu Video-Content werden
-   - ✅ Canva API wenn Design-Assets automatisch skaliert werden
-
-3. **Tools die Integration/Orchestrierung ermöglichen:**
-   - ✅ n8n wenn verschiedene bestehende Tools verbunden werden
-   - ✅ Retool wenn Admin-Interfaces für Hauptleistung fehlen
-   - ✅ Supabase wenn Backend für Hauptleistung fehlt (aber DB schon da!)
-
-4. **Tools mit klarem Use Case UND messbarem ROI:**
-   - ✅ Jedes Tool MUSS zeigen: "Erspart X Stunden/Woche bei [Hauptleistung]"
-   - ✅ Oder: "Ermöglicht +Y% Durchsatz bei [Hauptleistung]"
-   - ✅ Oder: "Generiert Z neue Leads für [Hauptleistung]"
+- `{{BRANCHE_LABEL}}` – z. B. „Marketing & Werbung“, „Beratung & Dienstleistungen“,  
+  „Finanzen & Versicherungen“, „Medien & Kreativwirtschaft“, „Bildung“, „Bauwesen & Architektur“ …
+- `{{BRANCHE}}` – interner Branchencode laut `mappings.json` (z. B. `marketing`, `medien`, `bau`, `finanzen`). :contentReference[oaicite:2]{index=2}  
+- `{{UNTERNEHMENSGROESSE_LABEL}}` – z. B. „Solo-Selbstständig“, „2–10 (Kleines Team)“, „11–100 (KMU)“
+- `{{COMPANY_SIZE}}` – `solo`, `team` oder `kmu`
+- `{{HAUPTLEISTUNG}}` – textuelle Beschreibung der Hauptleistung
+- `{{TOOLS_AKTUELL}}` – Liste vorhandener Tools (Text)
+- `{CONTEXT_QUICK_WINS}` – optional: Hinweise, welche Quick Wins welche Tools benötigen
 
 ---
 
-## 💡 BEISPIELE: GUT vs. SCHLECHT
+## ⚠️ GLOBALE VERBOTE
 
-### Beispiel-Unternehmen: "KI-Sicherheit.jetzt"
-**Hauptleistung:** GPT-4-basierte KI-Readiness-Assessments mit PDF-Report-Generierung  
-**Tools aktuell:** GPT-4 API, Typeform (Fragebogen), PostgreSQL, FastAPI, React
+### 1. Keine redundanten Tools
 
-#### ❌ SCHLECHT (v2.0 - redundant & generisch):
+**Niemals** ein Tool empfehlen, das in `{{TOOLS_AKTUELL}}` bereits vorkommt oder dieselbe Kernfunktion erfüllt.
 
-| Tool | Kategorie | Preis | Use Case | ROI |
-|------|-----------|-------|----------|-----|
-| **GPT-4 API** | KI-Analyse | $20/Mio Tokens | Für Assessment-Auswertung | Hocheffizient |
-| **Typeform** | Fragebögen | €25/Monat | Professionelle Kundenfragebögen | Conversion +30% |
-| **Calendly** | Terminbuchung | €10/Monat | Automatische Terminvereinbarung | -2h/Woche |
-| **Grammarly** | Schreibassistent | €12/Monat | Fehlerfreie E-Mails & Reports | Professionalität |
+- ❌ GPT‑4 / GPT‑4o API, wenn schon in `{{TOOLS_AKTUELL}}`  
+- ❌ Typeform/Google Forms/Tally, wenn bereits ein Online-Fragebogen genutzt wird  
+- ❌ Standarddatenbanken (PostgreSQL/MySQL/SQLite), wenn Datenbank schon im Stack  
+- ❌ Slack/Teams/Notion/Jira, wenn diese oder funktional identische Tools genannt sind
 
-→ **FEHLER 1:** GPT-4 + Typeform sind BEREITS im Einsatz! (Check `{{TOOLS_AKTUELL}}` ignoriert!)  
-→ **FEHLER 2:** Calendly + Grammarly verbessern nicht die Hauptleistung (Assessments)!  
-→ **FEHLER 3:** Generische Produktivitäts-Tools ohne direkten ROI-Bezug zu Kern-Geschäft!
+Wenn ein vorhandenes Tool relevant ist, **empfiehl bessere Nutzung**, kein alternatives Werkzeug.
 
-#### ✅ GUT (v2.1 GOLD - ergänzend & spezifisch für Hauptleistung):
+### 2. Keine generischen Produktivitäts-Tools als Kernempfehlung
 
-| Tool | Kategorie | Preis | Use Case für HAUPTLEISTUNG | ROI |
-|------|-----------|-------|----------------------------|-----|
-| **Make.com** | Workflow-Automation | €99/Monat | Automatisiert gesamten Assessment-Flow: Typeform → GPT-4 Batch → PDF → E-Mail. Skaliert von 5 auf 50 Reports/Tag | +900% Kapazität, -40% manuelle Arbeit |
-| **Perplexity API** | Research-Upgrade | $50/Monat | Erweitert Assessments um Live-Daten: Aktuelle Förderprogramme, neueste KI-Tools, Competitor-Analysis → Reports immer aktuell statt statisch | +50% Report-Qualität, Kunden zahlen 30% mehr für "Live Data"-Version |
-| **Docraptor API** | PDF-Generation | €30/Monat | Professionelle PDF-Layouts mit Custom-Branding für White-Label-Partner. Ersetzt einfache Text-PDFs durch Magazine-Qualität | +200% Conversion für White-Label-Angebote |
-| **Supabase** | Auth + Storage | Free→€25/Monat | Self-Service-Portal für Kunden: Login, Assessment-Status-Tracking, Report-Download → Reduziert Support-Anfragen | -70% "Wo ist mein Report?"-Anfragen, ermöglicht 10× mehr Kunden ohne mehr Support |
-| **Buffer** | Content-Automation | €15/Monat | Automatische LinkedIn-Posts aus Assessment-Insights: Jeder Report = 5 Posts mit anonymisierten Learnings → Marketing ohne Zusatzarbeit | 20× Content-Output, 0 Extra-Stunden |
-| **Stripe Billing** | Recurring Revenue | 0.5% + €0.25 | Subscription-Modell für monatliche Mini-Assessments (€99/Monat) statt einmalig €2.500 → Predictable Revenue | €10k MRR nach 6 Monaten (100 Subscribers) |
-| **Retool** | Admin-Interface | €50/Monat | Internes Dashboard: Batch-Status, Partner-Verwaltung, Report-Qualitäts-Checks → ersetzt manuelle PostgreSQL-Queries | -5h/Woche Admin-Arbeit |
-| **Zapier** | Integration-Fallback | €50/Monat | Backup wenn Make.com ausfällt + Integration mit Tools die Make nicht hat (z.B. spezielle CRMs) | Business Continuity |
+- ❌ Calendly, Meeting-Planer  
+- ❌ Grammarly, Rechtschreibhilfen  
+- ❌ reine To‑Do-/Task‑Manager  
+- ❌ „Allzweck“-Notiz-Apps  
 
-→ **RICHTIG:** ALLE Tools erweitern die Hauptleistung (Assessments)!  
-→ **RICHTIG:** KEINE redundanten Tools (alle ergänzen Bestehendes)!  
-→ **RICHTIG:** Klare ROI-Kennzahlen für jedes Tool bezogen auf Kern-Geschäft!
+Ausnahme: **nur**, wenn sie **direkt** den Kernprozess von {{HAUPTLEISTUNG}} verbessern.
 
-**Siehst du den Unterschied?**
-- ✅ **Ergänzend statt redundant:** Kein Tool ersetzt vorhandene Systeme  
-- ✅ **Hauptleistungs-Fokus:** Alle Tools skalieren Assessments, nicht Nebenaufgaben  
-- ✅ **Messbarer ROI:** "+900% Kapazität", "-70% Support", "20× Content"  
-- ✅ **Use Case konkret:** Nicht "Tool X ist gut", sondern "Tool X macht Y für Hauptleistung Z"
+### 3. Keine Tools ohne klaren Business Case
+
+- ❌ „Nice to have“ ohne messbaren Hebel  
+- ❌ reine „Experimentier-Tools“ ohne Integration in den Hauptprozess  
+- ❌ Tools, die nur allgemeine „Produktivität“ versprechen
 
 ---
 
-## 🎯 INSTRUKTIONEN FÜR GPT-4
+## ✅ GLOBALER FOKUS
 
-Du erhältst folgende Variablen:
-- `{{BRANCHE}}` - z.B. "Beratung", "Handel", "Produktion"
-- `{{MITARBEITER}}` - z.B. "Solo-Selbstständig", "Team (6-50 MA)"
-- `{{HAUPTLEISTUNG}}` - z.B. "KI-Readiness-Assessments", "Steuerberatung"
-- `{{TOOLS_AKTUELL}}` - **KRITISCH:** Diese Tools NIEMALS empfehlen!
-- `{{QUICK_WINS}}` - Welche Quick Wins brauchen welche Tools?
+1. **Kernprozess-Hebel:** Tools, die den **zentralen Wertschöpfungsprozess von {{HAUPTLEISTUNG}}** beschleunigen, stabilisieren oder skalieren.  
+2. **Daten/Assets mehrfach nutzen:** Tools, die vorhandene Daten, Reports, Medien oder Prozesse mehrfach verwertbar machen (z. B. Content-Pipeline, Self-Service-Portal).  
+3. **Integration & Orchestrierung:** Tools, die vorhandene Systeme verbinden oder einen stabilen Tech‑Stack bilden (siehe `starter_stacks.json`). :contentReference[oaicite:3]{index=3}  
+4. **Messbarer Impact:** Jedes Tool erhält eine Impact-Aussage: Zeitersparnis, Kapazitätshebel, Umsatzchance oder Risiko-/Compliance-Effekt.
 
-### SCHRITT 1: Tool-Kategorien basierend auf Hauptleistung definieren (3 Min Denken!)
+---
 
-**BEVOR du Tools empfiehlst, analysiere:**
+## 🌍 BRANCHENSPEZIFISCHE LEITPLANKEN
 
-1. **Welche Tool-Kategorien braucht diese Hauptleistung?**
-   - Assessment/Analyse-Business → Research-APIs, Automation, PDF-Tools
-   - E-Commerce → Personalisierung, Chatbots, Analytics
-   - Produktion → CAD-Integration, Qualitätskontrolle, Predictive Maintenance
-   - Beratung → CRM-Erweiterung, Proposal-Automation, Knowledge-Management
+Nutze diese Leitplanken, um Tools **branchenpassend** zu wählen. Branchencodes sind in `mappings.json` definiert. :contentReference[oaicite:4]{index=4}  
 
-2. **Welche Tools sind SCHON vorhanden und müssen vermieden werden?**
-   - Checke `{{TOOLS_AKTUELL}}` SEHR genau!
-   - Suche auch nach Synonymen (z.B. "Fragebögen" = Typeform wahrscheinlich da)
-   - NIEMALS redundante Tools empfehlen!
+### A) Beratung & Dienstleistungen / Agenturen / Marketing (`beratung`, `dienstleistungen`, `marketing`)
 
-3. **Welche Gaps gibt es bei der Hauptleistung?**
-   - Manuelle Prozesse die automatisiert werden können?
-   - Datenquellen die fehlen?
-   - Integration-Bedarf zwischen vorhandenen Tools?
-   - Self-Service-Optionen die fehlen?
+**Fokus-Tools:**
 
-### SCHRITT 2: 8-12 Tools mit spezifischen Use Cases
+- Angebots-/Proposal-Automation (z. B. aus Briefing → Angebot → Vertrag)  
+- Report-Generierung aus KI-Analysen (PDF/Slides)  
+- Wissensmanagement & Prompt-Bibliotheken für wiederkehrende Use Cases  
+- CRM-Erweiterungen für Lead-Qualifizierung, Forecasting, Upselling  
+- Self-Service-Assessments/Portale (z. B. mit Tally + Make + LLM) :contentReference[oaicite:5]{index=5}  
 
-**Typische Tool-Kategorien (je nach Hauptleistung):**
+**Nicht empfehlen:**
 
-**A) WORKFLOW-AUTOMATISIERUNG** (wenn manuelle Prozesse existieren)
-- Make.com, Zapier, n8n  
-- Use Case: End-to-End Automatisierung der Hauptleistung  
-- Nicht für: Generische "Effizienz", sondern konkret für Hauptprozess!
+- reine Social-Media-Planer ohne Bezug zu {{HAUPTLEISTUNG}}  
+- Tools, die nur interne Organisation verbessern (Kanban, Notizen), ohne direkten Kundennutzen.
 
-**B) DATEN & RESEARCH** (wenn Hauptleistung Analysen/Insights liefert)
-- Perplexity API, Tavily API, ScraperAPI  
-- Use Case: Live-Daten statt statische Info  
-- Nicht für: "Besseres Googeln", sondern Integration in Hauptprodukt!
+### B) Marketing & Werbung / Medien & Kreativwirtschaft (`marketing`, `medien`)
 
-**C) CONTENT-REPURPOSING** (wenn Hauptleistung Content generiert)
-- Buffer, Canva API, Synthesia  
-- Use Case: Kundenprojekte werden zu Marketing-Content  
-- Nicht für: "Social Media Management" generisch!
+**Fokus-Tools:**
 
-**D) KUNDENSCHNITTSTELLE** (wenn Self-Service möglich)
-- Supabase, Retool, Chatbase  
-- Use Case: Kunden-Portal, Chatbots für Hauptleistung  
-- Nicht für: FAQ-Bots die nur Support entlasten!
+- KI‑gestützte Content-Pipeline (Text/Bild/Video/Audio)  
+- Asset-Management / Digital Asset Management, ggf. mit RAG-Suche auf Assets :contentReference[oaicite:6]{index=6}  
+- Automatisierte Varianten-Erzeugung (Formate, Kanäle, Sprachen)  
+- Review-/Freigabe-Workflows mit Brand-Guidelines und Guardrails  
+- Analyse-Tools für Kampagnenperformance und A/B-Tests
 
-**E) MONETARISIERUNG** (wenn neue Revenue-Modelle möglich)
-- Stripe Billing, Lemonsqueezy, Chargebee  
-- Use Case: Von Projekt zu Subscription  
-- Nicht für: "Bessere Rechnungen" (Admin-Tool!)
+**Nicht empfehlen:**
 
-**F) SKALIERUNGS-ENABLER** (wenn Durchsatz-Problem existiert)
-- OpenAI Batch API, AWS Lambda, Cloudflare Workers  
-- Use Case: Parallelisierung der Hauptleistung  
-- Nicht für: Generische "Cloud-Migration"!
+- Fragebogen-/Assessment-Tools als Kernempfehlung, wenn {{HAUPTLEISTUNG}} primär Produktion ist.  
+- reine Standard-„KI-Chatbots“ ohne Bezug zu Content-Produktion.
 
-### SCHRITT 3: Jedes Tool im Detail beschreiben
+### C) Finanzen & Versicherungen (`finanzen`)
 
-**Für JEDES Tool:**
+**Fokus-Tools:**
 
-```markdown
-| Tool | Kategorie | Preis | Use Case für HAUPTLEISTUNG | ROI |
-|------|-----------|-------|----------------------------|-----|
-| **[Tool-Name]** | [Kategorie] | [€X/Monat] | [SPEZIFISCH: Was macht es für die Hauptleistung? Nicht generisch! 1-2 Sätze mit konkreten Details.] | [Messbare Verbesserung: +X% Durchsatz, -Y Stunden/Woche bei HAUPTLEISTUNG, €Z zusätzliche Revenue] |
+- Dokument-/Vertragsanalyse mit Logging & Audit-Trail  
+- Workflow-Engines mit Vier-Augen-Prinzip und Rollenrechten  
+- Risiko-Scoring, Fraud-Detection, KYC/AML-Lösungen  
+- RegTech-Tools für Reporting, Governance, Audit-Pfade  
+- PII-Masking, Data-Loss-Prevention, Modellfreigabe-Prozesse :contentReference[oaicite:7]{index=7}  
+
+**Nicht empfehlen:**
+
+- Tools ohne nachvollziehbare Sicherheits-/Compliance-Story  
+- Social-/Content-Tools als zentrale Empfehlung.
+
+### D) Bildung (`bildung`)
+
+**Fokus-Tools:**
+
+- Authoring-Tools für Lerninhalte und interaktive Übungen  
+- KI‑gestützte Feedback-/Korrektur-Systeme  
+- Lernanalyse, Kompetenzprofile und adaptive Aufgaben  
+- Integrationen in bestehende LMS (Moodle, ILIAS, itslearning etc.)
+
+**Nicht empfehlen:**
+
+- reine Sales-/Marketing-Tools als Hauptempfehlung.
+
+### E) Bauwesen & Architektur (`bau`)
+
+**Fokus-Tools:**
+
+- BIM-/Planungs-Erweiterungen, Modellprüfung, Kollisionschecks  
+- Baufortschritts- und Mängeldoku (mobile Apps + KI-Bildauswertung)  
+- Termin- & Kostenrisiko-Prognose  
+- Sprach-/Fotoerfassung auf der Baustelle mit automatischer Strukturierung
+
+**Nicht empfehlen:**
+
+- generische Büro-/Organisationstools ohne direkten Bezug zu Planung, Baustelle oder Dokumentation.
+
+### F) Sonstige Branchen (Industrie, Handel, Gesundheit, Logistik, Verwaltung)
+
+**Fokus-Tools:**
+
+- Automatisierung des jeweiligen Kernprozesses (Produktion, Fulfillment, Support etc.)  
+- Qualitäts- und Sicherheitskontrollen, Observability, Logging  
+- Supply-Chain-/Prozess-Analyse, RAG auf Fachdokumenten  
+- Compliance & Nachvollziehbarkeit (vor allem in Verwaltung/Gesundheit)
+
+---
+
+## 🎯 OUTPUT-FORMAT
+
+Antworte mit **einer HTML-Sektion**:
+
+```html
+<section class="section tools">
+  <h2>Tool-Empfehlungen für {{HAUPTLEISTUNG}}</h2>
+
+  <p>Kurze Einleitung (2–3 Sätze), warum die folgenden Tools
+     gut zu {{BRANCHE_LABEL}} und {{UNTERNEHMENSGROESSE_LABEL}} passen
+     und wie sie die Hauptleistung konkret skalieren.</p>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Tool</th>
+        <th>Kategorie</th>
+        <th>Einsatz im Kernprozess</th>
+        <th>Integrationen</th>
+        <th>Impact / ROI</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- 8–12 Zeilen -->
+      <tr>
+        <td><strong>[Tool-Name]</strong></td>
+        <td>[Kategorie]</td>
+        <td>[konkreter Use Case für {{HAUPTLEISTUNG}} in {{BRANCHE_LABEL}}]</td>
+        <td>[Anbindung an bestehende Tools aus {{TOOLS_AKTUELL}}]</td>
+        <td>[messbare Wirkung: Zeitersparnis, Durchsatz, Umsatz, Risikoreduktion]</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Hinweis:</strong> Preise/Pläne sind grobe Orientierungswerte und
+     dienen nur zur relativen Einordnung. Entscheidend ist der erwartete Hebel
+     auf Zeit, Qualität, Umsatz und Risiko in Ihrem konkreten Geschäftsmodell.</p>
+</section>

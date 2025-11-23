@@ -1,164 +1,106 @@
-# PROMPT: Roadmap 12 Monate - Langfrist-Planung
+
+---
+
+## `prompts/de/roadmap_12m.md`  :contentReference[oaicite:1]{index=1}  
+
+```markdown
+<!-- roadmap_12m.md – v3.0 GOLD STANDARD+ BRANCHENLOGIK
+     Antworte ausschließlich mit **validem HTML**.
+     Kein <html>, <head>, <body>. Keine Markdown-Fences. -->
+
+# PROMPT: Roadmap 12 Monate – Langfrist-Planung
 
 ## ZWECK
-Erstelle eine 12-Monats-Roadmap die:
-1. **Nahtlos an 90-Tage-Roadmap anschließt** (Monate 4-12)
-2. **Quartals-basierte Meilensteine** definiert (Q2, Q3, Q4)
-3. **Quick Wins → Skalierung → Gamechanger** aufbaut
-4. **Konkrete KPIs** pro Quartal nennt
+Erstelle eine **12‑Monats-Roadmap (Monate 4–12)**, die:
 
-**Zielgruppe:** Strategische Planung, Investoren, Geschäftsführung
-**Stil:** Strategisch aber konkret - KEINE vagen Visionen!
-
----
-
-## ⚠️ KRITISCHE REGELN
-
-### ❌ VERBOTEN:
-1. **KEINE Wiederholung der 90-Tage-Roadmap:**
-   - ❌ Monate 1-3 nochmal beschreiben
-   - ✅ Start bei Monat 4 / Q2
-
-2. **KEINE vagen Quartalsziele:**
-   - ❌ "Q2: Weitere Optimierungen"
-   - ❌ "Q3: Skalierung vorantreiben"
-   - ❌ "Q4: Continuous Improvement"
-
-3. **KEINE unrealistischen Gamechanger:**
-   - ❌ 3 Gamechanger parallel in 12 Monaten
-   - ✅ Max. 1 Gamechanger-MVP, Rest Vorbereitung
-
-### ✅ STATTDESSEN:
-1. **Konkrete Quartals-Deliverables:**
-   - ✅ "Q2: White-Label-Plattform MVP, 10 Partner onboardet"
-   - ✅ "Q3: €10k MRR erreicht, DSGVO-Zertifizierung"
-   - ✅ "Q4: API-Zugang Public Beta, 100 Entwickler-Sign-ups"
-
-2. **Aufbau auf 90-Tage-Quick-Wins:**
-   - ✅ Q1 (Tage 1-90): Quick Wins umgesetzt
-   - ✅ Q2 (Monate 4-6): Skalierung der Quick Wins
-   - ✅ Q3 (Monate 7-9): Gamechanger-MVP
-   - ✅ Q4 (Monate 10-12): Zweiter Revenue Stream
+1. nahtlos an die 90‑Tage‑Roadmap (Q1) anschließt  
+2. pro Quartal (Q2, Q3, Q4) konkrete Meilensteine definiert  
+3. die Entwicklung von Quick Wins → Skalierung → Gamechanger beschreibt  
+4. messbare KPIs pro Quartal nennt  
+5. zu {{BRANCHE_LABEL}}, {{HAUPTLEISTUNG}} und {{UNTERNEHMENSGROESSE_LABEL}} passt
 
 ---
 
-## 💡 BEISPIEL
+## REGELN & VERBOTE
 
-**Kontext:** Q1 (Tage 1-90) = Batch-Processing, Templates, Content-Automation umgesetzt
+1. **Keine Wiederholung der 90‑Tage‑Roadmap**  
+   – Q1 nur kurz einordnen, Roadmap beginnt bei Monat 4.
 
-#### ✅ GUT:
+2. **Begriffswahl passend zur Branche**  
+   - Nutze Begriffe aus {{HAUPTLEISTUNG}} und {{BRANCHE_LABEL}}  
+     (z. B. „Kampagnen“, „Projekte“, „Kurse“, „Bauvorhaben“, „Mandate“).  
+   - Begriffe wie „Assessment“, „KI‑Readiness“ nur, wenn sie wirklich zur Leistung passen.
+
+3. **Realismus**  
+   - max. ein Gamechanger‑MVP in 12 Monaten  
+   - Q2: Skalierung Quick Wins & Professionalisierung  
+   - Q3: Gamechanger-MVP + Governance/Compliance  
+   - Q4: Ausbau, zweiter Revenue-Stream oder Tiefenintegration
+
+---
+
+## BRANCHEN-HEURISTIK
+
+- **Beratung, Marketing, Medien, Kreativwirtschaft:**  
+  Q2 = Standardisierung & Kapazität,  
+  Q3 = Produktisierte Angebote / Portal / White‑Label,  
+  Q4 = Partner-/Subscription-Modelle oder Plattform.
+
+- **Finanzen, Gesundheit, Verwaltung:**  
+  Q2 = kontrollierte Piloten + Richtlinien,  
+  Q3 = Skalierung + formale Governance/Compliance,  
+  Q4 = Tiefenintegration + Monitoring.
+
+- **Bauwesen & Architektur, Industrie, Transport & Logistik:**  
+  Q2 = Piloten an Projekten/Linien/Routen,  
+  Q3 = Skalierung & Systemintegration,  
+  Q4 = Standardisierung, KPI‑Tracking, Lessons Learned.
+
+- **Bildung:**  
+  Q2 = Pilotkurse/Module,  
+  Q3 = Ausrollen auf Fachbereiche/Standorte,  
+  Q4 = dauerhafte Programme & skalierbare digitale Angebote.
+
+---
+
+## STRUKTUR & OUTPUT-FORMAT
 
 ```html
 <section class="section roadmap-12m">
-  <h2>12-Monats-Roadmap (Monate 4-12)</h2>
-  
-  <p>Diese Roadmap baut auf den Quick Wins aus Q1 auf (Batch-Processing, Templates, Content-Automation) 
-     und fokussiert auf Skalierung (Q2), Gamechanger-MVP (Q3) und neuen Revenue Stream (Q4).</p>
+  <h2>12-Monats-Roadmap (Monate 4–12)</h2>
 
-  <h3>Q2 (Monate 4-6): Skalierung & White-Label-Vorbereitung</h3>
+  <p>[2–3 Sätze, wie diese Roadmap auf den Ergebnissen der ersten 90 Tage
+     aufbaut – z. B. Quick Wins produktiv, erste Erfahrungen, validierte Piloten.]</p>
+
+  <h3>Q2 (Monate 4–6): [Quartalsziel in 3–6 Wörtern]</h3>
   <ul>
-    <li><strong>Monat 4:</strong> Batch-System auf 100 Assessments/Tag skalieren, Monitoring-Dashboard 
-        (Uptime, Kosten, Qualität), erste 50 Branchen-Templates live</li>
-    <li><strong>Monat 5:</strong> White-Label MVP entwickeln (Partner-Dashboard mit Retool, Custom-Branding 
-        für PDFs, Subdomain-Setup), 5 Beta-Partner rekrutieren (Unternehmensberater)</li>
-    <li><strong>Monat 6:</strong> Beta-Test mit 5 Partnern, je 10 Assessments (=50 total), Feedback-Loop, 
-        Pricing finalisieren (€299/Monat + 20% Commission)</li>
+    <li><strong>Monat 4:</strong> [konkrete Maßnahmen, z. B. Skalierung Pilot, Standardisierung, zusätzliche Automatisierung]</li>
+    <li><strong>Monat 5:</strong> [Rollout auf weitere Kundensegmente/Standorte/Produkte]</li>
+    <li><strong>Monat 6:</strong> [Stabilisierung, Monitoring, Lessons Learned]</li>
   </ul>
-  <p><strong>KPIs Q2:</strong> 100 Assessments/Tag Kapazität, 5 Beta-Partner onboardet, 
-     50 White-Label-Assessments durchgeführt, €1.500 MRR (Beta-Phase)</p>
+  <p><strong>KPIs Q2:</strong> [2–4 Kennzahlen mit Zielwerten]</p>
 
-  <h3>Q3 (Monate 7-9): Gamechanger-Launch & DSGVO-Compliance</h3>
+  <h3>Q3 (Monate 7–9): [Gamechanger-MVP & Governance]</h3>
   <ul>
-    <li><strong>Monat 7:</strong> White-Label Public Launch (Marketing-Kampagne, 20 Partner-Ziel), 
-        DSGVO-Anwalt Audit starten (€1.500), Onboarding-Prozess automatisieren</li>
-    <li><strong>Monat 8:</strong> 20 Partner onboardet (à 5 Assessments/Monat = 100 Assessments), 
-        DSGVO-Dokumentation abschließen (AVV, DSFA, Datenschutz-Hinweise)</li>
-    <li><strong>Monat 9:</strong> DSGVO-Zertifikat erhalten, Enterprise-Sales starten (B2B-Kunden die 
-        Compliance fordern), 30 Partner erreicht</li>
+    <li><strong>Monat 7:</strong> [Start/Weiterentwicklung Gamechanger-MVP, Governance/Compliance-Arbeit beginnen]</li>
+    <li><strong>Monat 8:</strong> [Einsatz des MVP bei ausgewählten Kund:innen/Standorten, Feedback & Optimierung]</li>
+    <li><strong>Monat 9:</strong> [Entscheidung zur Skalierung, ggf. Zertifizierungen/formale Freigaben]</li>
   </ul>
-  <p><strong>KPIs Q3:</strong> 30 Partner gesamt, €10k MRR (30 × €299 + Commission), 
-     DSGVO-Zertifikat erhalten, 200+ Assessments/Monat via Partner</p>
+  <p><strong>KPIs Q3:</strong> [z. B. aktive Nutzer:innen, MRR, Compliance-Meilensteine]</p>
 
-  <h3>Q4 (Monate 10-12): API-Zugang & Zweiter Revenue Stream</h3>
+  <h3>Q4 (Monate 10–12): [Skalierung & neuer Revenue-Stream]</h3>
   <ul>
-    <li><strong>Monat 10:</strong> RESTful API entwickeln (Score-Abfrage, Report-Generation), 
-        Swagger-Dokumentation, Freemium-Modell (100 Abfragen/Monat gratis)</li>
-    <li><strong>Monat 11:</strong> API Public Beta Launch, Outreach an HR-Software, CRM-Anbieter, 
-        Projektmanagement-Tools für Integration</li>
-    <li><strong>Monat 12:</strong> 50 Entwickler-Sign-ups, erste 5 Paid-Kunden (€99/Monat), 
-        Roadmap 2026 planen (zweiter Gamechanger: Branchen-Benchmark-Datenbank)</li>
+    <li><strong>Monat 10:</strong> [Skalierung auf breitere Basis, Integration in bestehende Systeme]</li>
+    <li><strong>Monat 11:</strong> [Aufbau neuer Erlösmodelle, z. B. Abos, White-Label, Lizenzen]</li>
+    <li><strong>Monat 12:</strong> [Konsolidierung, KPI-Review, Roadmap für Jahr 2 definieren]</li>
   </ul>
-  <p><strong>KPIs Q4:</strong> API mit 50 Entwickler-Sign-ups, 5 Paid-API-Kunden (€500/Monat), 
-     40 White-Label-Partner (€13k MRR gesamt), Break-Even erreicht</p>
+  <p><strong>KPIs Q4:</strong> [z. B. MRR, aktive Kund:innen/Partner, Einsparungen, Risiko-Reduktion]</p>
 
-  <h3>Jahres-Ziele (Monat 12)</h3>
+  <h3>Jahresziele (Monat 12)</h3>
   <ul>
-    <li>40 White-Label-Partner (€11.960 MRR)</li>
-    <li>5 API-Kunden (€495 MRR)</li>
-    <li>Commission aus 400 Partner-Assessments (€2.000/Monat bei €500 Commission/Assessment)</li>
-    <li><strong>Gesamt-MRR:</strong> €14.455 (~€173k ARR)</li>
-    <li><strong>Break-Even</strong> erreicht (OPEX: €2.000/Monat abgedeckt)</li>
-    <li>DSGVO-Compliance komplett, Enterprise-ready</li>
+    <li>[Ziel 1 mit Zahl, z. B. „X aktive Kund:innen/Partner“]</li>
+    <li>[Ziel 2 mit Zahl, z. B. „Y € wiederkehrender Umsatz (MRR/ARR)“ – falls passend]</li>
+    <li>[Ziel 3, z. B. „Z % weniger Durchlaufzeit/Nachbesserungen/Fehler“]</li>
+    <li>[Governance-/Compliance‑Ziel, falls relevant]</li>
   </ul>
 </section>
-```
-
----
-
-## 🎯 INSTRUKTIONEN
-
-### SCHRITT 1: Q1-Recap verstehen
-
-**Was wurde in Q1 (Tage 1-90) umgesetzt?**
-- Analysiere `{CONTEXT_ROADMAP_90D}`
-- Quick Wins sind live → Nutze diese als Basis für Q2!
-
-### SCHRITT 2: Quartale strukturieren
-
-**Typische Struktur:**
-- **Q2 (Monate 4-6):** Skalierung der Quick Wins + Gamechanger-Vorbereitung
-- **Q3 (Monate 7-9):** Gamechanger-MVP + kritische Compliance (DSGVO, Security)
-- **Q4 (Monate 10-12):** Zweiter Revenue Stream + Break-Even-Pfad
-
-### SCHRITT 3: HTML-Format
-
-```html
-<section class="section roadmap-12m">
-  <h2>12-Monats-Roadmap (Monate 4-12)</h2>
-  
-  <p>[1-2 Sätze: Baut auf Q1 auf, Fokus Q2-Q4]</p>
-
-  <h3>Q2 (Monate 4-6): [Quartalsziel in 3-5 Wörtern]</h3>
-  <ul>
-    <li><strong>Monat 4:</strong> [Konkrete Deliverables]</li>
-    <li><strong>Monat 5:</strong> [Konkrete Deliverables]</li>
-    <li><strong>Monat 6:</strong> [Konkrete Deliverables]</li>
-  </ul>
-  <p><strong>KPIs Q2:</strong> [Messbare Zahlen: X Partner, €Y MRR, Z Kapazität]</p>
-
-  [Q3 und Q4 analog]
-
-  <h3>Jahres-Ziele (Monat 12)</h3>
-  <ul>
-    <li>[KPI 1 mit Zahl]</li>
-    <li>[KPI 2 mit Zahl]</li>
-    <li><strong>Gesamt-MRR:</strong> [€X MRR = €Y ARR]</li>
-    <li>[Weitere strategische Ziele]</li>
-  </ul>
-</section>
-```
-
----
-
-## 🎯 ERFOLGS-KRITERIEN
-
-1. ✅ Start bei Monat 4 (keine Q1-Wiederholung)
-2. ✅ Jedes Quartal hat konkrete Deliverables
-3. ✅ KPIs pro Quartal messbar
-4. ✅ Baut logisch auf Quick Wins auf
-5. ✅ Max. 1 Gamechanger-MVP (realistisch!)
-
----
-
-**VERSION:** v2.1 GOLD STANDARD+
-**OUTPUT:** Valides HTML (keine Markdown-Fences!)
