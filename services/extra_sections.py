@@ -27,7 +27,7 @@ BENCHMARK_SCORES = {
     "solo": {"avg": 65, "top10": 82},
     "klein": {"avg": 72, "top10": 88},
     "mittel": {"avg": 78, "top10": 92},
-    "gross": {"avg": 82, "top10": 95}
+    "gross": {"avg": 82, "top10": 95},
 }
 
 
@@ -59,14 +59,14 @@ def get_score_context(overall_score: int, size: str) -> Dict[str, Any]:
         "solo": "Solo-Berater",
         "klein": "Kleinunternehmen",
         "mittel": "mittelständisches Unternehmen",
-        "gross": "Großunternehmen"
+        "gross": "Großunternehmen",
     }
 
     return {
         "score_rating": rating,
         "size_label": size_labels.get(size.lower(), "Unternehmen"),
         "avg_score_for_size": benchmark["avg"],
-        "top10_score_for_size": benchmark["top10"]
+        "top10_score_for_size": benchmark["top10"],
     }
 
 
@@ -85,19 +85,19 @@ def get_research_provenance() -> Dict[str, Any]:
         {
             "provider": "Tavily",
             "query_type": "Tools & Funding",
-            "date": report_date
+            "date": report_date,
         },
         {
             "provider": "Perplexity",
             "query_type": "Markt & Wettbewerb",
-            "date": report_date
-        }
+            "date": report_date,
+        },
     ]
 
     return {
         "research_sources": research_sources,
         "report_date": report_date,
-        "provenance_html": build_research_provenance_html(research_sources, report_date)
+        "provenance_html": build_research_provenance_html(research_sources, report_date),
     }
 
 
@@ -133,11 +133,11 @@ def build_research_provenance_html(sources: List[Dict[str, str]], report_date: s
         Diese Informationen wurden am {report_date} recherchiert und können sich ändern.
     </small>
 </div>"""
-
     return html.strip()
 
 
 # ----------------------------- Utilities ------------------------------------
+
 
 def _fmt_eur(value: Optional[float | int]) -> str:
     """Format € mit Tausenderpunkt, ohne Dezimalstellen."""
@@ -150,6 +150,7 @@ def _fmt_eur(value: Optional[float | int]) -> str:
     s = f"{v:,.0f}"
     return s.replace(",", "X").replace(".", ",").replace("X", ".")
 
+
 def _fmt_months(value: Optional[float | int]) -> str:
     if value is None:
         return "—"
@@ -157,6 +158,7 @@ def _fmt_months(value: Optional[float | int]) -> str:
         return f"{float(value):.1f}".replace(".", ",")
     except Exception:
         return str(value)
+
 
 def _safe_read_text(path: str) -> str:
     try:
@@ -166,9 +168,10 @@ def _safe_read_text(path: str) -> str:
         log.warning("Could not read file %s: %s", path, e)
         return ""
 
+
 def _small_bar_svg(pairs: List[tuple[str, float]], max_width: int = 260, height: int = 16) -> str:
     """Kleine horizontale Balken als Inline-SVG (bar chart, 0..100)."""
-    bars = []
+    bars: List[str] = []
     y = 0
     for label, val in pairs:
         try:
@@ -176,24 +179,32 @@ def _small_bar_svg(pairs: List[tuple[str, float]], max_width: int = 260, height:
         except Exception:
             pct = 0.0
         w = int(round(pct / 100.0 * max_width))
-        bars.append(f'<g transform="translate(0,{y})">'
-                    f'<rect x="0" y="0" width="{max_width}" height="{height}" fill="#F3F4F6"/>'
-                    f'<rect x="0" y="0" width="{w}" height="{height}" fill="#111827"/>'
-                    f'<text x="{max_width+6}" y="{height-4}" font-size="12" fill="#111827">{pct:.0f}</text>'
-                    f'</g>')
+        bars.append(
+            f'<g transform="translate(0,{y})">'
+            f'<rect x="0" y="0" width="{max_width}" height="{height}" fill="#F3F4F6"/>'
+            f'<rect x="0" y="0" width="{w}" height="{height}" fill="#111827"/>'
+            f'<text x="{max_width+6}" y="{height-4}" font-size="12" fill="#111827">{pct:.0f}</text>'
+            f"</g>"
+        )
         y += height + 6
     total_h = y if y else height
-    labels = "".join([f'<text x="0" y="{(i*(height+6))+height-4}" font-size="12" fill="#111827">{pairs[i][0]}</text>'
-                      for i in range(len(pairs))])
+    labels = "".join(
+        [
+            f'<text x="0" y="{(i*(height+6))+height-4}" font-size="12" fill="#111827">{pairs[i][0]}</text>'
+            for i in range(len(pairs))
+        ]
+    )
     chart = (
         f'<svg width="{max_width+46}" height="{total_h}" role="img" aria-label="Benchmark">'
         f'<g transform="translate(96,0)">{"".join(bars)}</g>'
         f'<g transform="translate(0,0)">{labels}</g>'
-        f'</svg>'
+        f"</svg>"
     )
     return chart
 
+
 # ------------------------ Business Case -------------------------------------
+
 
 def get_size_constraints(unternehmensgroesse: str, jahresumsatz_range: str, investitionsbudget: str) -> Dict[str, Any]:
     """
@@ -206,7 +217,7 @@ def get_size_constraints(unternehmensgroesse: str, jahresumsatz_range: str, inve
         "100k_500k": 250000,
         "500k_2m": 1000000,
         "2m_10m": 5000000,
-        "ueber_10m": 20000000
+        "ueber_10m": 20000000,
     }
     annual_revenue = revenue_mapping.get(jahresumsatz_range, 100000)
     monthly_revenue = annual_revenue / 12
@@ -217,12 +228,12 @@ def get_size_constraints(unternehmensgroesse: str, jahresumsatz_range: str, inve
         "2000_10000": 5000,
         "10000_50000": 25000,
         "50000_250000": 125000,
-        "ueber_250000": 500000
+        "ueber_250000": 500000,
     }
     max_investment = investment_mapping.get(investitionsbudget, 10000)
 
     # Size-specific constraints - CRITICAL for realistic reports
-    constraints = {
+    constraints: Dict[str, Dict[str, float]] = {
         "solo": {
             "max_monthly_savings": min(monthly_revenue * 0.3, 2000),
             "max_capex": min(max_investment, 10000),
@@ -250,10 +261,12 @@ def get_size_constraints(unternehmensgroesse: str, jahresumsatz_range: str, inve
             "max_opex_monthly": 20000,
             "hourly_rate": 150,
             "max_time_savings_hours": 500,
-        }
+        },
     }
 
-    size = unternehmensgroesse.lower() if unternehmensgroesse.lower() in constraints else "klein"
+    size = unternehmensgroesse.lower()
+    if size not in constraints:
+        size = "klein"
     return constraints[size]
 
 
@@ -261,14 +274,14 @@ def validate_business_case_plausibility(business_case: Dict[str, Any], answers: 
     """
     Plausibility checks - return warnings if unrealistic.
     """
-    warnings = []
+    warnings: List[str] = []
 
     revenue_map = {
         "unter_100k": 50000,
         "100k_500k": 250000,
         "500k_2m": 1000000,
         "2m_10m": 5000000,
-        "ueber_10m": 20000000
+        "ueber_10m": 20000000,
     }
     annual_revenue = revenue_map.get(str(answers.get("jahresumsatz", "")).lower(), 100000)
     monthly_revenue = annual_revenue / 12
@@ -282,11 +295,9 @@ def validate_business_case_plausibility(business_case: Dict[str, Any], answers: 
         )
 
     # Check: ROI too good to be true
-    roi = business_case.get("ROI_12M")
+    roi = business_case.get("ROI_12M")  # stored as rate (e.g. 7.8 for 780%)
     if roi is not None and roi > 5:  # > 500%
-        warnings.append(
-            f"⚠️ ROI von {roi*100:.0f}% unrealistisch hoch"
-        )
+        warnings.append(f"⚠️ ROI von {roi*100:.0f}% unrealistisch hoch")
 
     return warnings
 
@@ -301,7 +312,7 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
         dict mit Schlüsseln:
         - CAPEX_REALISTISCH_EUR, OPEX_REALISTISCH_EUR, EINSPARUNG_MONAT_EUR
         - PAYBACK_MONTHS (float|None)
-        - ROI_12M (rate 0..1, für Prozentdarstellung)
+        - ROI_12M (rate 0..1+, für Prozentdarstellung)
         - ROI_12M_EUR (absoluter Euro-Gewinn nach 12M)
         - BUSINESS_CASE_TABLE_HTML (HTML-Snippet)
     """
@@ -313,7 +324,7 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
     constraints = get_size_constraints(groesse, rev, budget)
 
     # Use size-appropriate hourly rate
-    stundensatz = constraints["hourly_rate"]
+    stundensatz = float(constraints["hourly_rate"])
 
     # Defaults aus ENV oder Fallbacks (for hours estimation)
     qw1 = int(os.getenv("DEFAULT_QW1_H", env.get("DEFAULT_QW1_H", 10)))
@@ -321,7 +332,7 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
     fallback = int(os.getenv("FALLBACK_QW_MONTHLY_H", env.get("FALLBACK_QW_MONTHLY_H", 18)))
 
     # Quick-Win Stunden
-    total_hours = None
+    total_hours: Optional[float] = None
     for k in ("sum_quickwin_hours", "quick_wins_total_hours", "qw_hours_total"):
         if isinstance(answers.get(k), (int, float)):
             total_hours = float(answers[k])
@@ -330,16 +341,16 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
         total_hours = float(qw1 + qw2 + fallback)
 
     # CRITICAL: Cap time savings to realistic maximum for company size
-    capped_hours = min(total_hours, constraints["max_time_savings_hours"])
+    capped_hours = min(total_hours, float(constraints["max_time_savings_hours"]))
     if capped_hours < total_hours:
-        log.info(f"[BUSINESS-CASE] Capped hours from {total_hours} to {capped_hours} for size '{groesse}'")
+        log.info("[BUSINESS-CASE] Capped hours from %s to %s for size '%s'", total_hours, capped_hours, groesse)
 
     # Calculate monthly savings with cap
     einsparung_monat_eur = int(round(capped_hours * stundensatz))
     einsparung_monat_eur = min(einsparung_monat_eur, int(constraints["max_monthly_savings"]))
 
     # CAPEX aus Budgetband - aber mit size-cap
-    band = str(answers.get("investitionsbudget", "")).lower()
+    band = budget
     if "unter_2000" in band:
         capex = 1500
     elif "2000_10000" in band or "2000-10000" in band:
@@ -360,11 +371,32 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
 
     # Wirtschaftssicht
     monatlicher_nutzen = einsparung_monat_eur - opex
-    payback = round(capex / monatlicher_nutzen, 1) if monatlicher_nutzen > 0 else None
+    if monatlicher_nutzen > 0:
+        payback: Optional[float] = round(capex / monatlicher_nutzen, 1)
+    else:
+        payback = None
 
-    roi_12m_eur = einsparung_monat_eur * 12 - (capex + opex * 12)
-    denom = (capex + opex * 12)
-    roi_12m_rate = (roi_12m_eur / denom) if denom > 0 else None
+    # ROI-Berechnung (12 Monate) – nach deiner Vorgabe
+    # savings_12_months = einsparung_monat_eur * 12
+    # total_investment  = capex  (Initialinvestition; OPEX nicht im ROI)
+    savings_12_months = einsparung_monat_eur * 12
+    total_investment = capex
+
+    roi_12m_eur = savings_12_months - total_investment
+    denom = float(total_investment)
+    if denom > 0:
+        # ROI_12M als Rate, z.B. 7.82 => 782 %
+        roi_12m_rate: Optional[float] = roi_12m_eur / denom
+    else:
+        roi_12m_rate = None
+
+    # HTML-Ausgabe für ROI-Prozent
+    if roi_12m_rate is None:
+        roi_percent_str = "—"
+    else:
+        roi_percent_str = (
+            f"{roi_12m_rate * 100:,.1f}".replace(",", "X").replace(".", ",").replace("X", ".")
+        )
 
     # HTML-Tabelle
     table = f"""
@@ -374,12 +406,14 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
     <thead><tr><th>Parameter</th><th>Wert</th><th>Erläuterung</th></tr></thead>
     <tbody>
       <tr><td>Gesamteinsparung</td><td>{_fmt_eur(total_hours)} h/Monat</td><td>Summe Quick‑Wins</td></tr>
-      <tr><td>Stundensatz</td><td>{_fmt_eur(stundensatz)} €</td><td>DEFAULT_STUNDENSATZ_EUR</td></tr>
-      <tr><td>Monetärer Nutzen</td><td>{_fmt_eur(einsparung_monat_eur)} €/Monat</td><td>Einsparung × Stundensatz</td></tr>
-      <tr><td>Einführungskosten (CAPEX)</td><td>{_fmt_eur(capex)} €</td><td>Mittel des Budgetbandes</td></tr>
-      <tr><td>Laufende Kosten (OPEX)</td><td>{_fmt_eur(opex)} €/Monat</td><td>Lizenzen & Betrieb</td></tr>
+      <tr><td>Stundensatz</td><td>{_fmt_eur(stundensatz)} €</td><td>DEFAULT_STUNDENSATZ_EUR (size-aware)</td></tr>
+      <tr><td>Monetärer Nutzen</td><td>{_fmt_eur(einsparung_monat_eur)} €/Monat</td><td>Einsparung × Stundensatz (gedeckelt)</td></tr>
+      <tr><td>Einführungskosten (CAPEX)</td><td>{_fmt_eur(capex)} €</td><td>Mittel des Budgetbandes, größenbereinigt</td></tr>
+      <tr><td>Laufende Kosten (OPEX)</td><td>{_fmt_eur(opex)} €/Monat</td><td>Lizenzen &amp; Betrieb (größenbereinigt)</td></tr>
       <tr><td>Amortisation</td><td>{'—' if payback is None else _fmt_months(payback) + ' Monate'}</td><td>CAPEX ÷ (Nutzen − OPEX)</td></tr>
-      <tr><td>ROI nach 12 Monaten</td><td>{_fmt_eur(roi_12m_eur)} € ({'—' if roi_12m_rate is None else f'{roi_12m_rate*100:,.1f}'.replace(',', 'X').replace('.', ',').replace('X', '.')} %)</td><td>Nutzen×12 − (CAPEX + OPEX×12)</td></tr>
+      <tr><td>ROI nach 12&nbsp;Monaten</td>
+          <td>{_fmt_eur(roi_12m_eur)} € ({roi_percent_str} %)</td>
+          <td>(Einsparung&nbsp;12M − CAPEX) ÷ CAPEX</td></tr>
     </tbody>
   </table>
 </section>""".strip()
@@ -394,7 +428,9 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
         "BUSINESS_CASE_TABLE_HTML": table,
     }
 
+
 # ------------------------ Benchmarks ----------------------------------------
+
 
 def build_benchmarks_section(scores: Dict[str, Any], path: str = "data/benchmarks.json") -> str:
     """
@@ -408,7 +444,7 @@ def build_benchmarks_section(scores: Dict[str, Any], path: str = "data/benchmark
         ("Befähigung", float(scores.get("enablement", 0) or 0)),
         ("Gesamt", float(scores.get("overall", 0) or 0)),
     ]
-    meta = {}
+    meta: Dict[str, Any] = {}
     try:
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as f:
@@ -438,7 +474,9 @@ def build_benchmarks_section(scores: Dict[str, Any], path: str = "data/benchmark
 </section>""".strip()
     return html
 
+
 # ------------------------ Starter‑Stacks ------------------------------------
+
 
 def build_starter_stacks(answers: Dict[str, Any], path: str = "data/starter_stacks.json") -> str:
     """
@@ -458,24 +496,28 @@ def build_starter_stacks(answers: Dict[str, Any], path: str = "data/starter_stac
     if not isinstance(cards, list):
         cards = []  # type: ignore[unreachable]
 
-    items_html = []
+    items_html: List[str] = []
     for c in cards[:8]:
         title = str(c.get("title") or "Starter‑Stack").strip()
         why = str(c.get("why") or "").strip()
         stack = c.get("stack") or []
         if isinstance(stack, list):
-            stack_html = ", ".join([str(x) for x in stack])
+            stack_html = ", ".join(str(x) for x in stack)
         else:
             stack_html = str(stack)
-        items_html.append(f"""
+        items_html.append(
+            f"""
   <div class="card" style="margin:8px 0">
     <h3 style="margin:0 0 6px 0">{title}</h3>
     <p style="margin:0 0 6px 0">{why}</p>
     <p style="margin:0"><strong>Werkbank:</strong> {stack_html}</p>
-  </div>""")
+  </div>"""
+        )
 
     if not items_html:
-        items_html.append("<p>Keine Starter‑Stacks konfiguriert. Bitte <code>data/starter_stacks.json</code> prüfen.</p>")
+        items_html.append(
+            "<p>Keine Starter‑Stacks konfiguriert. Bitte <code>data/starter_stacks.json</code> prüfen.</p>"
+        )
 
     html = f"""
 <section class="card">
@@ -484,7 +526,9 @@ def build_starter_stacks(answers: Dict[str, Any], path: str = "data/starter_stac
 </section>""".strip()
     return html
 
+
 # ---------------- Responsible AI & Compliance -------------------------------
+
 
 def build_responsible_ai_section(paths: Dict[str, str]) -> str:
     """
