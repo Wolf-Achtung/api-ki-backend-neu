@@ -1,7 +1,7 @@
-<!-- recommendations.md - v2.2 GOLD STANDARD+ (Score-Text Fix) -->
-<!-- Antworte ausschließlich mit validem HTML.
+<!-- recommendations.md - v2.2 GOLD STANDARD+ -->
+<!-- Antworte ausschließlich mit **validem HTML**.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
-     Nutze die Platzhalter ({{score_gesamt}}, {{score_governance}}, {{score_sicherheit}}, {{HAUPTLEISTUNG}} etc.). -->
+     VERSION: 2.2 GOLD STANDARD+ (Score-Text & Variablen-Fix) -->
 
 # PROMPT: Recommendations - Konkrete Handlungsempfehlungen
 
@@ -55,7 +55,7 @@ Erstelle 5-7 konkrete, priorisierte Handlungsempfehlungen die:
 
 2. **Klarer Nutzen & ROI:**
    - ✅ "10× Kapazität, -50% Kosten"
-   - ✅ "Compliance-Risiko reduziert"
+   - ✅ "Compliance-Risiko eliminiert"
    - ✅ "€10k MRR nach 6 Monaten"
    - ✅ "-70% Support-Anfragen"
 
@@ -76,12 +76,12 @@ Erstelle 5-7 konkrete, priorisierte Handlungsempfehlungen die:
 
 ### Beispiel-Unternehmen: "KI-Sicherheit.jetzt"
 
-**Kontext:**
-- Score Gesamt: 67/100  
-- Score Governance: 58/100 (Gap!)  
-- Score Sicherheit: 65/100  
-- Hauptleistung: GPT-4-basierte Assessments  
-- Quick Wins: Batch-Processing, Templates, Content-Automation  
+**Kontext (Beispiel, nicht 1:1 übernehmen!):**
+- Score Gesamt: 67/100
+- Score Governance: 58/100 (Gap!)
+- Score Sicherheit: 65/100
+- Hauptleistung: GPT-4-basierte Assessments
+- Quick Wins: Batch-Processing, Templates, Content-Automation
 
 #### ❌ SCHLECHT (v2.0 – generisch & vage):
 
