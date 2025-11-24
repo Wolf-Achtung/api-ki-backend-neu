@@ -23,9 +23,9 @@
     "innovationsprozess": "mitarbeitende",
     "interesse_foerderung": "ja",
     "interne_ki_kompetenzen": "ja",
-    "investitionsbudget": "10000_50000",
+    "investitionsbudget": "ueber_50000",
     "it_infrastruktur": "hybrid",
-    "jahresumsatz": "500k_2m",
+    "jahresumsatz": "2m_10m",
     "ki_einsatz": ["produktion", "marketing"],
     "ki_hemmnisse": ["budget"],
     "ki_kompetenz": "hoch",
@@ -49,15 +49,15 @@
     "risikofreude": "5",
     "roadmap_vorhanden": "ja",
     "selbststaendig": "freiberufler",
-    "strategische_ziele": "Umsatz steigern, zufriedene Kunden, höherer Gewinn",
+    "strategische_ziele": "Regulatorische Sicherheit gewährleisten, Beratungskapazität ohne zusätzliche Köpfe erhöhen und Abschlussquoten in Vertrieb und Beratung steigern.",
     "technische_massnahmen": "alle",
     "trainings_interessen": ["prompt_engineering", "llm_basics"],
     "unternehmensgroesse": "kmu",
-    "vision_3_jahre": "Bevorzugter Partner für KI-Readiness-Assessments im Finanzsektor",
-    "vision_prioritaet": "gpt_services",
+    "vision_3_jahre": "Etablierte Referenz für KI-gestützte Compliance- und Prozessberatung im Finanzsektor",
+    "vision_prioritaet": "datenprodukte",
     "vorhandene_tools": ["keine"],
-    "zeitbudget": "ueber_10",
-    "zeitersparnis_prioritaet": "Analyse regulatorischer Anforderungen und Dokumentation beschleunigen",
-    "zielgruppen": ["banken", "versicherungen"]
+    "zeitbudget": "5_10",
+    "zeitersparnis_prioritaet": "Aufbereitung von Unterlagen, Reporting und Risikoanalysen für Kundenprojekte automatisieren.",
+    "zielgruppen": ["banken", "versicherungen", "fintechs"]
   }
 }

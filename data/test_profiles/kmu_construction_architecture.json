@@ -23,9 +23,9 @@
     "innovationsprozess": "mitarbeitende",
     "interesse_foerderung": "ja",
     "interne_ki_kompetenzen": "ja",
-    "investitionsbudget": "2000_10000",
+    "investitionsbudget": "10000_50000",
     "it_infrastruktur": "hybrid",
-    "jahresumsatz": "unter_100k",
+    "jahresumsatz": "2m_10m",
     "ki_einsatz": ["produktion", "marketing"],
     "ki_hemmnisse": ["budget"],
     "ki_kompetenz": "hoch",
@@ -49,15 +49,15 @@
     "risikofreude": "5",
     "roadmap_vorhanden": "ja",
     "selbststaendig": "freiberufler",
-    "strategische_ziele": "Umsatz steigern, zufriedene Kunden, höherer Gewinn",
+    "strategische_ziele": "Angebots- und Planungsqualität erhöhen, Projektlaufzeiten stabilisieren und Nachträge sowie Budgetüberschreitungen deutlich reduzieren.",
     "technische_massnahmen": "alle",
     "trainings_interessen": ["prompt_engineering", "llm_basics"],
     "unternehmensgroesse": "kmu",
-    "vision_3_jahre": "Bekannter Spezialist für KI-Readiness im Bau- und Architektursektor",
-    "vision_prioritaet": "gpt_services",
+    "vision_3_jahre": "Etablierter Partner für KI-gestützte Bau- und Planungsprozesse mit wiederkehrenden Serviceverträgen",
+    "vision_prioritaet": "prozessautomation",
     "vorhandene_tools": ["keine"],
-    "zeitbudget": "ueber_10",
-    "zeitersparnis_prioritaet": "Abläufe in Angebotserstellung, Bauleitung und Dokumentation verschlanken",
-    "zielgruppen": ["bauunternehmen", "architekturbueros"]
+    "zeitbudget": "5_10",
+    "zeitersparnis_prioritaet": "Standardisierte Angebotskalkulation, Bauzeitenplanung und Nachtragsprüfung automatisieren.",
+    "zielgruppen": ["bauunternehmen", "architekturbueros", "projektentwickler"]
   }
 }

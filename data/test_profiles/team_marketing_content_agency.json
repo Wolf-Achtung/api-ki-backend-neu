@@ -23,7 +23,7 @@
     "innovationsprozess": "mitarbeitende",
     "interesse_foerderung": "ja",
     "interne_ki_kompetenzen": "ja",
-    "investitionsbudget": "2000_10000",
+    "investitionsbudget": "10000_50000",
     "it_infrastruktur": "hybrid",
     "jahresumsatz": "500k_2m",
     "ki_einsatz": ["marketing", "produktion"],
@@ -49,15 +49,15 @@
     "risikofreude": "5",
     "roadmap_vorhanden": "ja",
     "selbststaendig": "freiberufler",
-    "strategische_ziele": "Umsatz steigern, zufriedene Kunden, höherer Gewinn",
+    "strategische_ziele": "Retainer-Umsätze erhöhen, Kampagnenergebnisse messbar verbessern und wiederkehrende KI-Marketingservices etablieren.",
     "technische_massnahmen": "alle",
     "trainings_interessen": ["prompt_engineering", "llm_basics"],
     "unternehmensgroesse": "team",
-    "vision_3_jahre": "Die erste Adresse für automatisierte KI-Marketingaudits für KMU im deutschsprachigen Raum",
+    "vision_3_jahre": "Deutschsprachige Referenzagentur für KI-gestützte Content- und Kampagnenstrategien",
     "vision_prioritaet": "gpt_services",
     "vorhandene_tools": ["keine"],
-    "zeitbudget": "ueber_10",
-    "zeitersparnis_prioritaet": "Kampagnen- und Content-Entwicklung automatisieren",
-    "zielgruppen": ["kmu", "agenturen"]
+    "zeitbudget": "5_10",
+    "zeitersparnis_prioritaet": "Kampagnen- und Content-Entwicklung sowie Reporting weitgehend automatisieren.",
+    "zielgruppen": ["kmu", "agenturen", "startups"]
   }
 }
