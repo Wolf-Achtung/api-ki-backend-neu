@@ -1,76 +1,114 @@
-<!-- org_change.md – v2.7 GOLD STANDARD+ SIZE & BRANCHEN-LOGIK
+<!-- org_change.md – v2.8 GOLD STANDARD+ SIZE & BRANCHE
      Antworte ausschließlich mit **validem HTML**.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences. -->
 
-<!-- KONTEXT-VARIABLEN
-     {{BRANCHE}} / {{BRANCHE_LABEL}}
-     {{COMPANY_SIZE}} in {solo, team, kmu}
-     {{HAUPTLEISTUNG}}
-     {{BUNDESLAND_LABEL}}
-     {CONTEXT_QUICK_WINS}
-     {CONTEXT_ROADMAP_90D}
--->
+# PROMPT: Organizational Change – Menschen, Arbeitsweisen & Lernen
 
+## ⚠️ SIZE-AWARENESS – ABSOLUT PFLICHT!
+
+**Mögliche Unternehmensgrößen (NUR diese 3):**
+- `{{COMPANY_SIZE}} = "solo"`  → Label: "1 (Solo-Selbstständig/Freiberuflich)"
+- `{{COMPANY_SIZE}} = "team"`  → Label: "2-10 (Kleines Team)"
+- `{{COMPANY_SIZE}} = "kmu"`   → Label: "11-100 (KMU)"
+
+### Solo (`solo`)
+- Fokus: eigene Arbeitsweise & persönliche Routinen anpassen
+- KI als „virtueller Mitarbeiter“ für wiederkehrende Aufgaben
+- Lernformate: Self-Learning, kurze Micro-Trainings, Checklisten
+- Keine formalen Change-Strukturen, keine Abteilungen
+
+### Team (`team`)
+- Fokus: gemeinsamer Umgang mit KI im Kernprozess von {{HAUPTLEISTUNG}}
+- Regelmäßige kurze Formate („Show & Tell“, Weekly-Review)
+- Klar definierte Verantwortlichkeiten (1 Owner + 1–2 Mitwirkende)
+- Keine großen Change-Programme, kein PMO
+
+### KMU (`kmu`)
+- Fokus: strukturierter Wandel über mehrere Bereiche
+- Rollen wie Projektleitung, Change-Agents, Fachbereichs-Owner
+- Geplante Trainings und Kommunikationsmaßnahmen
+- Eskalations- und Entscheidungswege klar benennen
+
+---
+
+## 🎯 ZWECK & KONTEXT
+
+Erstelle eine **praxisnahe Organisations- und Change-Seite** für:
+
+- Branche: `{{BRANCHE_LABEL}}`
+- Unternehmensgröße: `{{UNTERNEHMENSGROESSE_LABEL}}` (`{{COMPANY_SIZE}}`)
+- Hauptleistung: `{{HAUPTLEISTUNG}}`
+- Bundesland (für Beispiele/Regulatorik, falls sinnvoll): `{{BUNDESLAND_LABEL}}`
+
+Nutze die bereits empfohlenen Quick Wins, Roadmap‑Schritte und Governance‑Empfehlungen im Hintergrund, aber **ohne** Platzhalter im Text zu nennen.
+
+---
+
+## ⛔ VERBOTEN
+
+- Theoretische Change-Modelle ohne Bezug zum konkreten Vorhaben
+- Vage Formulierungen wie „Mitarbeitende abholen“, „Kulturwandel starten“
+- Rollen, die nicht zur Größe passen (z. B. „Change Board“ bei Solo/Team)
+- Generische Schulungsfloskeln („Mitarbeitende schulen“) ohne Inhalte
+
+---
+
+## ✅ WAS ERWARTET WIRD
+
+1. Klarer Bezug auf {{HAUPTLEISTUNG}} und die dort betroffenen Rollen
+2. Konkrete Formulierungen pro Größenklasse (Solo/Team/KMU)
+3. Sichtbare Verbindung zu Quick Wins & Roadmap (ohne Platzhalter-Namen)
+4. Konkrete 30/60/90‑Tage-Schritte für Veränderung & Qualifizierung
+
+---
+
+## 📝 OUTPUT-FORMAT
+
+Antworte ausschließlich mit **validem HTML** in genau dieser Struktur
+(Beispieltexte in eckigen Klammern bitte branchenspezifisch ausformulieren):
+
+```html
 <section class="section org-change">
-  <h2>Organizational Change – Menschen & Routinen mitnehmen</h2>
+  <h2>Organisation &amp; Change-Management</h2>
 
   <p>
-    Damit {{HAUPTLEISTUNG}} in {{BRANCHE_LABEL}} nachhaltig von KI profitiert,
-    braucht es neben Technik auch passende Arbeitsweisen. Die folgenden
-    Empfehlungen zeigen, wie Sie als {{UNTERNEHMENSGROESSE_LABEL}} die
-    Veränderungen realistisch gestalten – abgestimmt auf die Quick Wins und die
-    90-Tage-Roadmap.
+    Die Einführung von KI in <strong>{{HAUPTLEISTUNG}}</strong> in der Branche
+    <strong>{{BRANCHE_LABEL}}</strong> verändert Arbeitsweisen, Rollen und
+    Verantwortlichkeiten. Die folgenden Empfehlungen sind auf
+    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> zugeschnitten.
   </p>
 
-  <h3>1. Mindset & Kommunikation</h3>
-  <p>
-    Erklären Sie klar, warum KI in {{HAUPTLEISTUNG}} eingesetzt wird:
-    weniger Routinearbeit, mehr Zeit für fachliche Qualität und Kund:innen.
-    Kommunizieren Sie konkret, welche Quick Wins zuerst umgesetzt werden
-    ({CONTEXT_QUICK_WINS}) und was das für den Arbeitsalltag bedeutet.
-  </p>
-
-  <h3>2. Skills & Training</h3>
-  <p>
-    Planen Sie gezielte kurze Trainings – nicht abstrakt „KI-Schulung“, sondern
-    direkt entlang der neuen Workflows. In {{BRANCHE_LABEL}} kann das z. B.
-    bedeuten:
-  </p>
+  <h3>1. Rollen &amp; Verantwortlichkeiten</h3>
   <ul>
-    <li>Walkthroughs der neuen Templates und Prompts für {{HAUPTLEISTUNG}}</li>
-    <li>gemeinsame Beispiele aus echten Fällen/Projekten/Kursen/Bauvorhaben</li>
-    <li>Mini-Guides („Do & Don’t“) für den Umgang mit KI-Ergebnissen</li>
+    <li><strong>Owner für KI im Kernprozess:</strong> [konkrete Rolle, z. B. Inhaber, Teamlead, Bereichsleiter]</li>
+    <li><strong>Fachliche Ansprechperson:</strong> [Person/Rolle, die Anforderungen sammelt und priorisiert]</li>
+    <li><strong>Technische Unterstützung:</strong> [Freelancer, interne IT oder externer Dienstleister – abhängig von {{COMPANY_SIZE}}]</li>
   </ul>
 
-  <h3>3. Prozesse & Routinen</h3>
-  <p>
-    Verankern Sie die KI-Nutzung in klaren Routinen:
-    Wer nutzt wann welches Tool, wie werden Ergebnisse geprüft und dokumentiert?
-    Halten Sie die Prozesse so schlank, dass sie zur Größe {{COMPANY_SIZE}} passen –
-    bei Solo eher Checklisten, bei Team/KMU einfache Prozessbeschreibungen.
-  </p>
+  <h3>2. Arbeitsweisen &amp; Prozesse</h3>
+  <ul>
+    <li>[Wie ändert sich der tägliche Ablauf im Kernprozess von {{HAUPTLEISTUNG}} konkret?]</li>
+    <li>[Welche manuellen Schritte entfallen, welche neuen Qualitätschecks kommen hinzu?]</li>
+    <li>[Wie wird dokumentiert, was mit KI gemacht wird (z. B. Prompts, Workflows, Freigaben)?]</li>
+  </ul>
 
-  <h3>4. Rollen & Verantwortlichkeiten</h3>
-  <p>
-    Legen Sie fest, wer für KI-Themen ansprechbar ist:
-    bei Solo die Inhaber:in selbst, bei Teams eine verantwortliche Person,
-    bei KMU ein kleines Projektteam oder eine Kombination aus Fachbereich und IT.
-    Diese Rolle koordiniert Feedback, sammelt Verbesserungsvorschläge und
-    achtet darauf, dass Governance-Vorgaben eingehalten werden.
-  </p>
+  <h3>3. Lernen &amp; Qualifizierung</h3>
+  <ul>
+    <li>[Konkrete Lernformate passend zu {{COMPANY_SIZE}} – z. B. 3x 60‑Minuten‑Sessions, Self-Learning, interne Mini‑Workshops]</li>
+    <li>[Welche Kompetenzen müssen aufgebaut werden (z. B. Prompting, Toolbedienung, Datenschutz)?]</li>
+    <li>[Wie wird sichergestellt, dass neue Mitarbeitende/Freelancer schnell startklar sind?]</li>
+  </ul>
 
-  <h3>5. Verstetigung & Feedback-Schleifen</h3>
-  <p>
-    Richten Sie regelmäßige kurze Reviews ein (z. B. monatlich), in denen
-    Erfahrungen mit den Quick Wins, neue Ideen und eventuelle Risiken
-    besprochen werden. Dokumentieren Sie Verbesserungen und entscheiden Sie,
-    welche Erkenntnisse in die 12-Monats-Roadmap übernommen werden.
-  </p>
+  <h3>4. Change-Fahrplan 30/60/90 Tage</h3>
+  <ol class="next-steps">
+    <li><strong>0–30 Tage:</strong> [Pilot-Team/Rollen festlegen, erste Abläufe mit KI testen, Feedbackschleife etablieren]</li>
+    <li><strong>31–60 Tage:</strong> [Pilot stabilisieren, Dokumentation &amp; Leitlinien ergänzen, Lernformate durchführen]</li>
+    <li><strong>61–90 Tage:</strong> [Funktionierende Ansätze auf weitere Aufgaben/Teams ausrollen, Verantwortlichkeiten verankern]</li>
+  </ol>
 
-  <p class="small">
-    <strong>Size- & Branchen-Check:</strong>
-    Alle Maßnahmen sind so formuliert, dass sie für {{UNTERNEHMENSGROESSE_LABEL}}
-    realistisch sind. Es werden keine Konzernstrukturen für Solo/Teams empfohlen
-    und keine reinen Theorie-Frameworks ohne Bezug zu {{HAUPTLEISTUNG}} verwendet.
+  <p class="small muted">
+    Hinweis: Passen Sie Intensität und Formalität des Change-Ansatzes immer an
+    Ihre tatsächliche Größe und Ressourcen an – lieber klein starten und
+    konsequent durchziehen als ein überdimensioniertes Programm aufsetzen.
   </p>
 </section>
