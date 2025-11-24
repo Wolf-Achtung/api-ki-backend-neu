@@ -2212,7 +2212,11 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         log.warning("[%s] ⚠️ Placeholder fix failed: %s", run_id, _exc)
 
     # === CONTENT FILTER - Apply size-appropriate replacements ===
-    from services.report_validator import validate_report, filter_all_sections
+    from services.report_validator import (
+        validate_report,
+        filter_all_sections,
+)  # type: ignore[attr-defined]
+
 
     log.info(f"[{run_id}] 🔍 Applying size-inappropriate content filter...")
     sections = filter_all_sections(sections, answers)
