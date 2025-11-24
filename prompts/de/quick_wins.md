@@ -1,225 +1,176 @@
-<!-- quick_wins.md – v2.4 GOLD STANDARD+ (placeholder‑sicher)
-     Antworte ausschließlich mit **validem HTML**.
-     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im OUTPUT.
-     VERSION: 2.4 GOLD STANDARD+ (Size-Awareness, Branchenlogik, keine Platzhalter im Output)
--->
+<!-- quick_wins.md – v4.0 GOLD STANDARD+ (size-aware, branchen-aware, placeholder-sicher)
+     Antworte ausschließlich mit validem HTML.
+     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences. -->
 
-# PROMPT: Quick Wins – 6 sofort umsetzbare Maßnahmen
-
-## ZWECK
-
-Erstelle 6 konkrete „Quick Wins“, die:
-
-1. direkt am Kernprozess **{{HAUPTLEISTUNG}}** ansetzen,
-2. zur Branche **{{BRANCHE_LABEL}}** und zur Unternehmensgröße **{{UNTERNEHMENSGROESSE_LABEL}}** passen,
-3. innerhalb von **1–14 Tagen** umsetzbar sind,
-4. klaren **wirtschaftlichen Impact** (Zeit, Kosten, Qualität, Umsatz) haben,
-5. gute Anschlussfähigkeit an **Business Case, Roadmap und Tool‑Empfehlungen** haben.
-
-Die Quick Wins sollen Entscheider:innen zeigen:
-- womit sie **sofort starten** können,
-- wie hoch Aufwand, Kosten und Impact ungefähr sind,
-- welche **neuen Tools / neue Nutzung vorhandener Tools** sinnvoll sind.
-
-**Zielgruppe:** Geschäftsführung, operative Entscheider:innen, Projektverantwortliche  
-**Stil:** Klar, konkret, pragmatisch, kein Marketing-Sprech.
-
----
-
-## WICHTIGE KONTEXTVARIABLEN
-
-Du kannst u. a. auf folgende Variablen zugreifen (falls gesetzt):
-
-- Branche: `{{BRANCHE_LABEL}}`
-- Unternehmensgröße: `{{COMPANY_SIZE}}` in {`solo`, `team`, `kmu`}
-- Unternehmensgrößen-Label: `{{UNTERNEHMENSGROESSE_LABEL}}`
-- Hauptleistung / Kernangebot: `{{HAUPTLEISTUNG}}`
-- Bundesland: `{{BUNDESLAND_LABEL}}` (nur indirekt relevant, z. B. Förderlogik)
-- Aktuell genutzte Tools und Plattformen: Text aus dem Fragebogen
-- Kontext aus anderen Sektionen (Roadmap, Business Case, Förderpotenzial, Tools)
-
-Nutze diese Informationen **inhaltlich**, aber füge selbst keine neuen Variablen oder Platzhalter hinzu.
-
----
-
-## ⚠️ KRITISCHE REGELN
-
-### 1. Platzhalter & verbotene Muster
-
-Im finalen HTML sind **streng verboten**:
-
-- Irgendwelche **Platzhalter**:
-  - keine eckigen Klammern: `[...]`
-  - keine geschweiften Platzhalter wie `{CONTEXT_QUICK_WINS}`, `{TOOLS_AKTUELL}` etc.
-  - keine Texte wie „[prägnanter Titel]“, „[Schritt 1]“, „[hier einfügen]“.
-- Keine Markdown-Elemente im Output:
-  - keine `## Überschrift`, keine `*Liste*`, keine ```code```‑Blöcke.
-- Keine Copy‑Paste‑Reste aus Beispielcode.
-
-Wenn Du im Prompt Beispiele oder Kommentare siehst, sind diese **nur zur Orientierung**.  
-Im Output darf **kein** Beispiel‑ oder Kommentartext wieder auftauchen.
-
-### 2. Size‑Awareness
-
-Passe Formulierungen und Umfang an `{{COMPANY_SIZE}}` an:
-
-- **solo**  
-  - Fokus: eigene Arbeitsweise, persönliche Routinen, wenige externe Partner.  
-  - Begriffe: „Sie“, „Ihre Arbeitsabläufe“, „Ihre Kunden“.  
-  - Keine „Teams“, „Abteilungen“, „Change‑Programme“.
-
-- **team (2–10)**  
-  - Fokus: kleines Kernteam, 2–10 Personen.  
-  - Begriffe: „Team“, „Teammitglieder“, „wöchentliches Check‑in“.  
-  - Keine „Abteilungen“, „PMO“, „Steering Committee“.
-
-- **kmu (11–100)**  
-  - Fokus: Teams/Funktionen, erste Skaleneffekte.  
-  - Begriffe: „Bereich“, „Projektteam“, „Change‑Agents“, „Pilot‑Team“.  
-
-**Solo‑Hinweise** (z. B. „als Solo‑Selbstständige:r“) dürfen **nicht** in Team‑/KMU‑Reports vorkommen.
-
-### 3. Realistische Quick Wins
-
-Jeder Quick Win muss:
-
-- in **1–14 Tagen** startbar und weitgehend umsetzbar sein,
-- realistischen Aufwand haben (z. B. „4–8 Stunden“, „1–2 Tage“),
-- in der **Hauptleistung {{HAUPTLEISTUNG}}** spürbar etwas verbessern,
-- klar beschreiben, was **konkret** getan wird (kein „Prozesse optimieren“),
-- einen plausiblen Impact haben (z. B. „ca. 20–40 % weniger manueller Aufwand“).
-
-### 4. Tools‑Logik
-
-- Nutze den Kontext zu aktuell verwendeten Tools **nur zur Einordnung**:
-  - Vermeide Dopplungen („empfiehl nicht einfach dieselben Tools noch einmal“).
-  - Erkläre kurze **neue Nutzung bestehender Tools** („bisher nur für X genutzt, künftig auch für Y“).
-- Tools sollen zu **Branche, Unternehmensgröße und Hauptleistung** passen.
-- Keine exotischen Tools, die offensichtlich nicht zur Situation passen.
-
-### 5. Verknüpfung mit Business Case & Roadmap
-
-- Wenn ein Quick Win in Roadmap 90d / 12m wieder auftaucht:
-  - Stelle kurz den Zusammenhang her („Teil von Phase 1 der Roadmap“).
-- Übertreibe nicht den monetären Impact; dieser wird im **Business Case** sauber gerechnet.
-
----
-
-## OUTPUT: NUR HTML (KEINE ERKLÄRUNG)
-
-Erzeuge **ausschließlich** folgendes HTML‑Snippet.  
-Fülle dabei **alle Inhalte** (Überschriften, Texte, Listenpunkte, Tabellenzellen) mit konkretem Text.
-
-```html
 <section class="section quick-wins">
   <h2>Quick Wins – Sofort umsetzbare Schritte für {{HAUPTLEISTUNG}}</h2>
 
   <p>
-    Formuliere ein kurzes Intro (2–3 Sätze), das erklärt,
-    warum diese Quick Wins für {{BRANCHE_LABEL}} und
-    {{UNTERNEHMENSGROESSE_LABEL}} jetzt besonders sinnvoll sind.
+    Die folgenden Quick Wins liefern schnelle, konkrete Fortschritte im Kernprozess 
+    <strong>{{HAUPTLEISTUNG}}</strong>. Sie wurden so gestaltet, dass sie innerhalb 
+    weniger Tage umgesetzt werden können, realistische Effekte erzielen und sich 
+    reibungslos in die 90-Tage-Strategie und die 12-Monats-Roadmap einfügen. 
+    Die Empfehlungen sind auf die Anforderungen von 
+    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> in der Branche 
+    <strong>{{BRANCHE_LABEL}}</strong> abgestimmt.
   </p>
 
-  <!-- 6 Quick-Win-Blöcke, jeweils mit Problem, Lösung, Umsetzung, Aufwand, Kosten, Impact, Tools -->
+  <!-- ===========================================================
+       QUICK WIN 1
+       =========================================================== -->
   <div class="quick-win">
-    <h3>Quick Win 1</h3>
-    <p><strong>Problem:</strong> </p>
-    <p><strong>Lösung:</strong> </p>
+    <h3>Quick Win&nbsp;1</h3>
+    <p><strong>Problem:</strong> Beschreibe ein konkretes, häufig auftretendes Hindernis im 
+       Ablauf von {{HAUPTLEISTUNG}} (z.&nbsp;B. manuelle Routinen, mangelnde Konsistenz, 
+       doppelte Arbeitsschritte).</p>
+
+    <p><strong>Lösung:</strong> Klare KI-gestützte Verbesserung, die sofort Wirkung zeigt 
+       (z.&nbsp;B. automatisierte Strukturvorschläge, schnellere Entwürfe, einheitliche 
+       Vorlagen).</p>
+
     <p><strong>Umsetzung:</strong></p>
     <ul>
-      <li></li>
-      <li></li>
-      <li></li>
+      <li>Schritt 1 – beschreibe den ersten konkreten Handgriff zur Aktivierung der KI-Funktion.</li>
+      <li>Schritt 2 – definiere ein kurzes Prüfverfahren für die Ergebnisse.</li>
+      <li>Schritt 3 – integriere die Methode in den bestehenden Alltag.</li>
     </ul>
-    <p><strong>Aufwand:</strong> </p>
-    <p><strong>Kosten:</strong> </p>
-    <p><strong>Impact:</strong> </p>
-    <p><strong>Tools:</strong> </p>
+
+    <p><strong>Aufwand:</strong> realistische Spanne (z.&nbsp;B. 2–6&nbsp;Stunden).</p>
+    <p><strong>Kosten:</strong> niedrig – Nutzung vorhandener Tools oder minimaler Zusatzaufwand.</p>
+    <p><strong>Impact:</strong> spürbare Zeitersparnis und höhere Qualität (z.&nbsp;B. weniger Korrekturschleifen).</p>
+    <p><strong>Tools:</strong> spezifische Tools, die zum Briefing passen 
+       (z.&nbsp;B. Text-KI, Analyse-Tool, Automatisierungswerkzeug).</p>
   </div>
 
+  <!-- ===========================================================
+       QUICK WIN 2
+       =========================================================== -->
   <div class="quick-win">
-    <h3>Quick Win 2</h3>
-    <p><strong>Problem:</strong> </p>
-    <p><strong>Lösung:</strong> </p>
+    <h3>Quick Win&nbsp;2</h3>
+    <p><strong>Problem:</strong> Definiere ein weiteres konkretes Problem im Prozess 
+       {{HAUPTLEISTUNG}}, das häufig Zeit kostet.</p>
+
+    <p><strong>Lösung:</strong> Beschreibe eine Maßnahme, die sofort entlastet 
+       (z.&nbsp;B. KI für Standardinhalte, Voranalysen, Auswertungen).</p>
+
     <p><strong>Umsetzung:</strong></p>
     <ul>
-      <li></li>
-      <li></li>
-      <li></li>
+      <li>Schritt 1 – Vorbereitung (Vorlage, Beispielmaterial, Daten).</li>
+      <li>Schritt 2 – Durchführung mit KI.</li>
+      <li>Schritt 3 – Qualitätscheck & Integration.</li>
     </ul>
-    <p><strong>Aufwand:</strong> </p>
-    <p><strong>Kosten:</strong> </p>
-    <p><strong>Impact:</strong> </p>
-    <p><strong>Tools:</strong> </p>
+
+    <p><strong>Aufwand:</strong> z.&nbsp;B. 4–8&nbsp;Stunden.</p>
+    <p><strong>Kosten:</strong> ggf.&nbsp;Lizenz oder 1–2 externe Stunden.</p>
+    <p><strong>Impact:</strong> klare Zeitersparnis, schnellere Lieferfähigkeit.</p>
+    <p><strong>Tools:</strong> 1–2 Tools, die den Workflow sinnvoll erweitern.</p>
   </div>
 
+  <!-- ===========================================================
+       QUICK WIN 3
+       =========================================================== -->
   <div class="quick-win">
-    <h3>Quick Win 3</h3>
-    <p><strong>Problem:</strong> </p>
-    <p><strong>Lösung:</strong> </p>
+    <h3>Quick Win&nbsp;3</h3>
+    <p><strong>Problem:</strong> Beschreibe einen häufig fehleranfälligen Schritt oder 
+       Medienbruch im Workflow.</p>
+
+    <p><strong>Lösung:</strong> KI-gestützte Automatisierung oder Strukturierung.</p>
+
     <p><strong>Umsetzung:</strong></p>
     <ul>
-      <li></li>
-      <li></li>
-      <li></li>
+      <li>Schritt 1 – Identifikation typischer Fehlerquellen.</li>
+      <li>Schritt 2 – KI-gestützte Analyse oder Vorstrukturierung.</li>
+      <li>Schritt 3 – Übernahme der finalen Version durch Verantwortliche.</li>
     </ul>
-    <p><strong>Aufwand:</strong> </p>
-    <p><strong>Kosten:</strong> </p>
-    <p><strong>Impact:</strong> </p>
-    <p><strong>Tools:</strong> </p>
+
+    <p><strong>Aufwand:</strong> 2–5&nbsp;Stunden.</p>
+    <p><strong>Kosten:</strong> gering.</p>
+    <p><strong>Impact:</strong> weniger Fehler, konsistentere Ergebnisse.</p>
+    <p><strong>Tools:</strong> Tools zur Qualitätsprüfung, Zusammenfassung oder Analyse.</p>
   </div>
 
+  <!-- ===========================================================
+       QUICK WIN 4
+       =========================================================== -->
   <div class="quick-win">
-    <h3>Quick Win 4</h3>
-    <p><strong>Problem:</strong> </p>
-    <p><strong>Lösung:</strong> </p>
+    <h3>Quick Win&nbsp;4</h3>
+    <p><strong>Problem:</strong> Beschreibe eine wiederkehrende Aufgabe, 
+       die in {{HAUPTLEISTUNG}} regelmäßig Zeit kostet.</p>
+
+    <p><strong>Lösung:</strong> KI-gestützte Vorlage, Automation oder 
+       Zusammenführung mehrerer Schritte.</p>
+
     <p><strong>Umsetzung:</strong></p>
     <ul>
-      <li></li>
-      <li></li>
-      <li></li>
+      <li>Schritt 1 – Auswahl der passenden Mustervorlagen.</li>
+      <li>Schritt 2 – Durchführung mit KI.</li>
+      <li>Schritt 3 – Qualitätskontrolle und Übernahme.</li>
     </ul>
-    <p><strong>Aufwand:</strong> </p>
-    <p><strong>Kosten:</strong> </p>
-    <p><strong>Impact:</strong> </p>
-    <p><strong>Tools:</strong> </p>
+
+    <p><strong>Aufwand:</strong> 4–8&nbsp;Stunden.</p>
+    <p><strong>Kosten:</strong> gering bis mittel.</p>
+    <p><strong>Impact:</strong> klare Entlastung, schnellere Umsetzung.</p>
+    <p><strong>Tools:</strong> Konkrete Tools für Erstellung, Vorbereitung, Analyse oder Automation.</p>
   </div>
 
+  <!-- ===========================================================
+       QUICK WIN 5
+       =========================================================== -->
   <div class="quick-win">
-    <h3>Quick Win 5</h3>
-    <p><strong>Problem:</strong> </p>
-    <p><strong>Lösung:</strong> </p>
+    <h3>Quick Win&nbsp;5</h3>
+    <p><strong>Problem:</strong> Beschreibe einen Arbeitsschritt, 
+       der von standardisierbaren Informationen abhängt.</p>
+
+    <p><strong>Lösung:</strong> KI-gestützte Aufbereitung, Strukturierung oder Priorisierung.</p>
+
     <p><strong>Umsetzung:</strong></p>
     <ul>
-      <li></li>
-      <li></li>
-      <li></li>
+      <li>Schritt 1 – Sammlung relevanter Informationen.</li>
+      <li>Schritt 2 – KI-Analyse oder KI-Vorbereitung.</li>
+      <li>Schritt 3 – Übernahme mit kurzen Prüfregeln.</li>
     </ul>
-    <p><strong>Aufwand:</strong> </p>
-    <p><strong>Kosten:</strong> </p>
-    <p><strong>Impact:</strong> </p>
-    <p><strong>Tools:</strong> </p>
+
+    <p><strong>Aufwand:</strong> 3–6&nbsp;Stunden.</p>
+    <p><strong>Kosten:</strong> gering.</p>
+    <p><strong>Impact:</strong> weniger manuelle Vorarbeit; mehr Fokus auf Wertschöpfung.</p>
+    <p><strong>Tools:</strong> Tools für Analyse, Sortierung oder Strukturierung.</p>
   </div>
 
+  <!-- ===========================================================
+       QUICK WIN 6
+       =========================================================== -->
   <div class="quick-win">
-    <h3>Quick Win 6</h3>
-    <p><strong>Problem:</strong> </p>
-    <p><strong>Lösung:</strong> </p>
+    <h3>Quick Win&nbsp;6</h3>
+    <p><strong>Problem:</strong> Beschreibe eine Aufgabe, die häufig 
+       unstrukturiert oder inkonsistent ausgeführt wird.</p>
+
+    <p><strong>Lösung:</strong> KI-gestützte Standardisierung und klare Vorlagen.</p>
+
     <p><strong>Umsetzung:</strong></p>
     <ul>
-      <li></li>
-      <li></li>
-      <li></li>
+      <li>Schritt 1 – Analyse der bisherigen Varianten.</li>
+      <li>Schritt 2 – KI-gestützte Generierung einer einheitlichen Struktur.</li>
+      <li>Schritt 3 – Integration in den Alltag und Feedbackschleife.</li>
     </ul>
-    <p><strong>Aufwand:</strong> </p>
-    <p><strong>Kosten:</strong> </p>
-    <p><strong>Impact:</strong> </p>
-    <p><strong>Tools:</strong> </p>
+
+    <p><strong>Aufwand:</strong> 2–4&nbsp;Stunden.</p>
+    <p><strong>Kosten:</strong> sehr gering.</p>
+    <p><strong>Impact:</strong> klare Qualitätssteigerung, bessere Konsistenz.</p>
+    <p><strong>Tools:</strong> Tools passend zum Workflow; existierende Tools bevorzugt nutzen.</p>
   </div>
 
+  <!-- ===========================================================
+       PRIORISIERUNG
+       =========================================================== -->
   <h3>Priorisierung der Quick Wins</h3>
-  <p>Erläutere in 3–5 Sätzen, in welcher Reihenfolge ein Start sinnvoll ist
-     (zuerst niedriges Risiko / hoher Impact, dann komplexere Maßnahmen).</p>
+  <p>
+    Für einen schnellen Einstieg empfiehlt es sich, mit Maßnahmen zu beginnen, 
+    die geringes Risiko und hohen Impact haben. Im Anschluss sollten Maßnahmen 
+    folgen, die entweder strategischen Wert besitzen oder eine hohe Hebelwirkung 
+    auf andere Prozessschritte haben. Die Reihenfolge hängt von der 
+    Unternehmensgröße {{UNTERNEHMENSGROESSE_LABEL}} und 
+    den branchentypischen Anforderungen ab.
+  </p>
 
   <table class="table quick-wins-overview">
     <thead>
@@ -232,48 +183,12 @@ Fülle dabei **alle Inhalte** (Überschriften, Texte, Listenpunkte, Tabellenzell
       </tr>
     </thead>
     <tbody>
-      <tr>
-        <td>1</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td>2</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td>3</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td>4</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td>5</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td>6</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
+      <tr><td>1</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>2</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>3</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>4</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>5</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>6</td><td></td><td></td><td></td><td></td></tr>
     </tbody>
   </table>
 </section>

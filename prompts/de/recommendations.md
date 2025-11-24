@@ -1,85 +1,165 @@
+<!-- recommendations.md – v4.0 GOLD STANDARD+ (size-aware, placeholder-sicher)
+     Antworte ausschließlich mit validem HTML.
+     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im Output. -->
 
-Wichtig: In dieser Version kommen **keine** `{CONTEXT_…}`‑Platzhalter mehr vor.
+# HANDLUNGSEMPFEHLUNGEN – STRATEGISCHE PRIORITÄTEN
+
+## ZWECK
+
+Erstelle eine präzise, umsetzbare **Empfehlungs-Section** für:
+
+- Branche: **{{BRANCHE_LABEL}}**
+- Unternehmensgröße: **{{UNTERNEHMENSGROESSE_LABEL}}**
+- Hauptleistung: **{{HAUPTLEISTUNG}}**
+- Bundesland: **{{BUNDESLAND_LABEL}}** (nur für Förderbezug)
+
+Die Empfehlungen müssen:
+
+1. **konkret, messbar und priorisiert** sein,  
+2. **direkt aus Scores, Quick Wins, Roadmap & Business Case** abgeleitet werden,  
+3. **size-aware** (Solo ≠ Team ≠ KMU) formuliert sein,  
+4. **ohne Platzhalter** ausgegeben werden,  
+5. **förderlogik** einbeziehen, falls im Report vorhanden  
+   (BUNDESLAND + Branchenprogramme),  
+6. **praxisnah** und ohne Konzern-Floskeln auskommen.
 
 ---
 
-## 3. `recommendations.md` – finale Version ohne `{CONTEXT_…}`
+## VERBOTEN (Hard Rules)
 
-Bitte `prompts/de/recommendations.md` komplett durch Folgendes ersetzen:
+- Keine Platzhalter wie `{…}`, `[ … ]`, `{{CONTEXT_…}}`.
+- Keine Framework-Phrasen („Change Board“, „Transformation Office“, „PMO“ bei kleinen Firmen).
+- Keine künstlichen Zahlen erfinden.
+- Keine generischen Textbausteine („Prozesse optimieren“, „Mitarbeiter abholen“).
 
-```markdown
-<!-- recommendations.md – v2.5 GOLD STANDARD+ BRANCHE, SIZE & FÖRDERUNG
-     Antworte ausschließlich mit **validem HTML**.
-     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences. -->
+---
 
-<!-- KONTEXT-VARIABLEN (werden im System befüllt, NICHT im Output erwähnen)
-     {{BRANCHE}} / {{BRANCHE_LABEL}}
-     {{COMPANY_SIZE}} in {solo, team, kmu}
-     {{UNTERNEHMENSGROESSE_LABEL}}
-     {{HAUPTLEISTUNG}}
-     {{BUNDESLAND_LABEL}}
-     Score-Kontext: score_gesamt, score_governance, score_sicherheit,
-                    score_befaehigung, score_nutzen
-     Zusätzlich stehen Auswertungen aus Quick Wins, 90‑Tage‑Roadmap,
-     Business Case und Förderpotenzial zur Verfügung. -->
+## OUTPUT-FORMAT  
+**Antwort ausschließlich als validen HTML-Block ausgeben:**
 
+```html
 <section class="section recommendations">
-  <h2>Empfehlungen</h2>
+  <h2>Handlungsempfehlungen</h2>
 
   <p>
-    Die folgenden Handlungsempfehlungen basieren auf den Analyse-Ergebnissen
-    dieses Reports: Scores, identifizierte Quick Wins, 90‑Tage‑Roadmap,
-    Business Case und – falls verfügbar – passenden Förderprogrammen
-    für <strong>{{BUNDESLAND_LABEL}}</strong>.
-    Sie sind speziell auf <strong>{{HAUPTLEISTUNG}}</strong> in der Branche
-    <strong>{{BRANCHE_LABEL}}</strong> und die Unternehmensgröße
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> zugeschnitten.
+    Diese Empfehlungen fassen die wichtigsten nächsten Schritte für 
+    <strong>{{HAUPTLEISTUNG}}</strong> in der Branche 
+    <strong>{{BRANCHE_LABEL}}</strong> zusammen – priorisiert nach 
+    Wirkung, Aufwand und Machbarkeit für die Größe 
+    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>.
   </p>
 
   <ol class="recommendations-list">
     <li>
-      <h3>Empfehlung 1: [prägnanter Titel – max. 10 Wörter]</h3>
-      <p>
-        <strong>Problem im Kernprozess:</strong>
-        [konkreter Engpass in {{HAUPTLEISTUNG}}, z. B. Medienbruch,
-        manuelle Doppelarbeit, lange Durchlaufzeiten.]
+      <h3>Empfehlung 1 – Titel in max. 10 Wörtern</h3>
+      <p><strong>Problem im Kernprozess:</strong> 
+        Beschreibe präzise den zentralen Engpass in {{HAUPTLEISTUNG}} 
+        (z.&nbsp;B. langsame Durchlaufzeiten, Medienbrüche, manuelle Routinearbeit).
       </p>
-      <p>
-        <strong>Empfohlene Maßnahme:</strong>
-        [Zentrale Lösung in 1–2 Sätzen, gerne an vorhandene Quick Wins
-        und Roadmap-Schritte anknüpfen.]
+      <p><strong>Empfohlene Maßnahme:</strong> 
+        Beschreibe die konkrete Lösung (z.&nbsp;B. Automatisierung eines 
+        Schritts, Standardisierung mit KI-Templates, neue Workflow-Variante).
       </p>
-      <p>
-        <strong>Nutzen &amp; ROI:</strong>
-        [messbare Wirkung: z. B. −X % Bearbeitungszeit, −Y % Fehler/
-        Nachbesserungen, +Z € Umsatz/Monat. Auf Größe {{UNTERNEHMENSGROESSE_LABEL}}
-        skaliert, keine Phantasiezahlen.]
+      <p><strong>Nutzen &amp; ROI:</strong> 
+        Messbarer Effekt (z.&nbsp;B. weniger Korrekturschleifen, 
+        Zeitersparnis, besserer Output). Keine Zahlen erfinden – nur 
+        qualitative Verbesserungen nennen.
       </p>
-      <p>
-        <strong>Aufwand &amp; Budget:</strong>
-        [realistische Größenordnung – z. B. 3–5 Tage interner Aufwand
-        + externes Budget in branchenüblichen Größen; bei Solo deutlich
-        kleiner, bei KMU größer.]
+      <p><strong>Aufwand &amp; Budget:</strong> 
+        Realistisch je nach Größe:  
+        • Solo: wenige Stunden – 1 Tag  
+        • Team: 1–3 Tage  
+        • KMU: kleines Projektteam für 2–5 Tage
       </p>
-      <p>
-        <strong>Verantwortlich:</strong>
-        [Rollen passend zu {{COMPANY_SIZE}} – z. B. „Sie selbst“ (solo),
-        „kleines Projektteam (2–3 Personen)“ oder „Fachbereich + IT“ (kmu).]
+      <p><strong>Verantwortlich:</strong> 
+        Rollen passend zu {{COMPANY_SIZE}} – z.&nbsp;B. „Sie selbst“, 
+        „Teamlead“, „KI-Owner“, „Fachbereich + IT“.
       </p>
-      <p>
-        <strong>Förderoption (falls sinnvoll):</strong>
-        [kurzer Hinweis, ob und wie Förderprogramme aus dem Report genutzt
-        werden können – z. B. Zuschuss für Beratung/Implementierung.]
+      <p><strong>Förderoption (falls sinnvoll):</strong> 
+        Falls im Report passende Programme genannt wurden 
+        (z.&nbsp;B. Digitalisierung / KI-Zuschüsse in {{BUNDESLAND_LABEL}}), 
+        kurze Empfehlung zur Prüfung aufnehmen – ohne neue Beträge zu erfinden.
       </p>
     </li>
 
-    <!-- 3–5 weitere Empfehlungen im selben Muster, priorisiert nach Wirkung & Umsetzbarkeit -->
+    <li>
+      <h3>Empfehlung 2 – Titel</h3>
+      <p><strong>Problem im Kernprozess:</strong> 
+        Beschreibe den zweiten relevanten Engpass, der besonders viel Zeit 
+        oder Qualität kostet.
+      </p>
+      <p><strong>Empfohlene Maßnahme:</strong> 
+        Konkrete, sofort machbare Maßnahme – evtl. auf Quick Wins oder 
+        Roadmap aufbauend.
+      </p>
+      <p><strong>Nutzen &amp; ROI:</strong> 
+        Beschreibe Nutzen in Zeit, Qualität oder Risikoreduktion.
+      </p>
+      <p><strong>Aufwand &amp; Budget:</strong> 
+        Realistische Spanne gemäß {{UNTERNEHMENSGROESSE_LABEL}}.
+      </p>
+      <p><strong>Verantwortlich:</strong> 
+        Nenne konkrete Rollen, keine abstrakten Titel.
+      </p>
+    </li>
+
+    <li>
+      <h3>Empfehlung 3 – Titel</h3>
+      <p><strong>Problem im Kernprozess:</strong> 
+        Beschreibe einen Engpass aus Governance, Sicherheit oder Datenqualität.
+      </p>
+      <p><strong>Empfohlene Maßnahme:</strong> 
+        Z.&nbsp;B. Einführung klarer QA-Regeln, Prompt-Dokumentation, 
+        einfache Freigabeprozesse.
+      </p>
+      <p><strong>Nutzen &amp; ROI:</strong> 
+        Reduktion von Fehlern, Nacharbeiten, Risiken.
+      </p>
+      <p><strong>Aufwand &amp; Budget:</strong> 
+        Zeitbedarf und ggf. externe Unterstützung.
+      </p>
+      <p><strong>Verantwortlich:</strong> 
+        Klar definierte Zuständigkeit.
+      </p>
+    </li>
   </ol>
 
+  <h3>Prioritäten-Überblick</h3>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Priorität</th>
+        <th>Empfehlung</th>
+        <th>Zeitrahmen</th>
+        <th>Hauptnutzen</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Hoch</td>
+        <td>Empfehlung 1</td>
+        <td>30–60 Tage</td>
+        <td>Klarer Mehrwert im Kernprozess</td>
+      </tr>
+      <tr>
+        <td>Mittel</td>
+        <td>Empfehlung 2</td>
+        <td>60–90 Tage</td>
+        <td>Effizienz und Qualität</td>
+      </tr>
+      <tr>
+        <td>Niedrig</td>
+        <td>Empfehlung 3</td>
+        <td>90+ Tage</td>
+        <td>Governance &amp; Stabilität</td>
+      </tr>
+    </tbody>
+  </table>
+
   <p class="small muted">
-    Hinweis: Die genannten Budgets dienen der Orientierung und ersetzen
-    keine individuelle Finanz- oder Rechtsberatung. Nutzen Sie die
-    detaillierten Angaben aus Business Case und Förderkapitel für die
-    konkrete Planung.
+    Diese Empfehlungen dienen als konkrete Entscheidungsgrundlage für 
+    Geschäftsführung und Projektverantwortliche.  
+    Nutzen Sie die Ergebnisse aus Quick Wins, Pilot-Phase und Business Case, 
+    um Prioritäten regelmäßig anzupassen.
   </p>
 </section>
