@@ -1,7 +1,7 @@
-<!-- foerderpotenzial.md - v2.2 GOLD STANDARD+ (ohne Research-Datum-Platzhalter) -->
+<!-- foerderpotenzial.md - v2.3 GOLD STANDARD+ (mit Fördermatrix-Integration 2025/2026) -->
 <!-- Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im Output.
-     VERSION: 2.2 GOLD STANDARD+ (Funding + Business-Case Alignment) -->
+     VERSION: 2.3 GOLD STANDARD+ (Funding + Business-Case Alignment + Fördermatrix) -->
 
 # PROMPT: Förderpotenzial - Finanzierungs-Möglichkeiten
 
@@ -23,7 +23,7 @@ Die Section soll Entscheider:innen helfen,
 
 ## VERFÜGBARE KONTEXTDATEN
 
-Du kannst – je nach Implementierung – u.a. auf folgende Variablen zugreifen (falls gesetzt):
+Du kannst – je nach Implementierung – u.a. auf folgende Variablen und Datenquellen zugreifen (falls gesetzt):
 
 - `{{BRANCHE_LABEL}}`, `{{BUNDESLAND_LABEL}}`, `{{UNTERNEHMENSGROESSE_LABEL}}`
 - `{{CAPEX_REALISTISCH_EUR}}` – einmalige Investition für das KI-Projekt
@@ -31,9 +31,19 @@ Du kannst – je nach Implementierung – u.a. auf folgende Variablen zugreifen 
 - `{{PAYBACK_MONTHS}}` – Amortisationsdauer **ohne** Förderung
 - `{{ROI_12M}}` – ROI in % nach 12 Monaten **ohne** Förderung
 - Kontextblock mit Research-Ergebnissen aus Tavily/Perplexity (Bund, Land, EU-Förderprogramme)
+- **Interne Förder-Matrix / Förder-Übersicht 2025/2026**, z. B. mit Spalten:
+  - Programm
+  - Änderungen 2025
+  - Ko-Finanzierungsquote 2025
+  - Fristen / Calls 2025
+  - Ausblick 2026 (z. B. erwartete Anpassungen, mögliche Verlängerungen, programmatische Trends)
 
-**Wichtig:**  
-Wenn bestimmte Werte/Variablen nicht verfügbar sind, **nichts erfinden**. Dann qualitativ bleiben („Payback dürfte sich spürbar verkürzen“) statt pseudo-genauer Zahlen.
+**Wichtig:**
+
+- Wenn bestimmte Werte/Variablen nicht verfügbar sind, **nichts erfinden**. Dann qualitativ bleiben („Payback dürfte sich spürbar verkürzen“) statt pseudo-genauer Zahlen.
+- Wenn es Abweichungen zwischen Research und interner Fördermatrix gibt:
+  - **Research-Stand hat Vorrang** für die Frage „aktuell offen / geschlossen?“.
+  - Die Matrix kann als **Trend-/Kontextquelle** für Änderungen 2025 und den Ausblick 2026 genutzt werden (z. B. Hinweis auf ausgelaufene Programme, Quotenverschiebungen, erwartete Reformen).
 
 ---
 
@@ -41,7 +51,7 @@ Wenn bestimmte Werte/Variablen nicht verfügbar sind, **nichts erfinden**. Dann 
 
 1. **Aktualität & Relevanz**
    - Nutze nur Programme, die im Research als aktuell/offen erkennbar sind.
-   - Programme, die klar ausgelaufen sind, maximal als Hinweis mit Kennzeichnung („nicht mehr für Neuanträge geöffnet“).
+   - Programme, die klar ausgelaufen sind (z. B. bestimmte Digitalisierungsprogramme), maximal als Hinweis mit Kennzeichnung („nicht mehr für Neuanträge geöffnet“) – insbesondere, wenn die Fördermatrix sie als „eingestellt“ oder „ausgelaufen“ markiert.
    - Keine Beispiele aus weit zurückliegenden Jahren ohne aktuellen Call.
 
 2. **Kein „Förderdschungel“-Listen-Spam**
@@ -53,20 +63,58 @@ Wenn bestimmte Werte/Variablen nicht verfügbar sind, **nichts erfinden**. Dann 
 
 3. **Jedes Programm braucht:**
    - 1–2 Sätze Beschreibung („wofür ist das Programm gedacht?“)
-   - Förderquote / Maximalbetrag, soweit im Research enthalten
-   - Zielgruppe (z.B. KMU, Solo-Selbstständige, Beratungen)
+   - Förderquote / Maximalbetrag, soweit im Research oder in der Fördermatrix enthalten
+   - Zielgruppe (z. B. KMU, Solo-Selbstständige, Beratungen)
    - Aussage, warum es **genau zu diesem Projekt** passt (nicht nur „für Digitalisierung allgemein“)
    - Einen **klickbaren Link** zur offiziellen Programmseite
 
 4. **Keine Erfindungen**
    - Wenn im Research etwas unklar bleibt, transparent formulieren („laut aktueller Recherche in Überarbeitung“).
    - Keine fiktiven Programmnamen, Budgets oder Fristen.
+   - Die Fördermatrix 2025/2026 darf nur genutzt werden, um **bestehende Programme besser einzuordnen** (z. B. Änderungen, Quoten, Ausblick) – nicht, um neue Programme „herbeizuerfinden“.
+
+5. **Integration der Fördermatrix 2025/2026 (falls vorhanden)**
+   - Nutze die Informationen aus der Fördermatrix zur **qualitativen Einordnung**:
+     - Welche Programme haben sich 2025 relevant verändert (z. B. Wegfall, neue Ausrichtung, geänderte Quoten)?
+     - Wo wurden Ko-Finanzierungsquoten angepasst (z. B. EFRE-Aufteilung national/EU, KMU-Bonus bei Innovationsprogrammen)?
+     - Welche Programme haben laut Ausblick 2026 voraussichtlich Bestand oder werden eher reformiert statt eingestellt?
+   - Übernimm Informationen aus der Matrix **nicht 1:1**, sondern übersetze sie in:
+     - kurze Einschätzungen („laut aktueller Fördermatrix wurde das Programm 2025 eingestellt und ist für Neuanträge nicht mehr relevant“)
+     - oder knappe Hinweise im Kontext („2025 wurden die Ko-Finanzierungsquoten zugunsten eines höheren Eigenanteils angepasst“).
+   - Wenn die Matrix auf ein ausgelaufenes Programm hinweist, kannst du es im Fließtext erwähnen, aber **nicht als aktives Programm in Tabellen/Listen** aufführen.
+
+---
+
+## ZUSÄTZLICHER SPEZIAL-KONTEXT: Fördermatrix 2025/2026 (Beispiele für Nutzung)
+
+Wenn eine strukturierte Fördermatrix mit den Spalten „Programm, Änderungen 2025, Quote, Fristen, Ausblick 2026“ bereitsteht, nutze sie wie folgt:
+
+- **Programme filtern und priorisieren:**
+  - Bevorzuge Programme, die:
+    - für {{UNTERNEHMENSGROESSE_LABEL}} und {{BRANCHE_LABEL}} geeignet sind und
+    - laut Matrix für 2025/2026 weiterhin relevant sind (z. B. keine klar dokumentierte Einstellung).
+- **Änderungen 2025 sichtbar machen:**
+  - Markiere wesentliche Veränderungen aus der Matrix, z. B.:
+    - „Programm X wurde 2025 eingestellt – für dieses Projekt daher nur noch historisch relevant.“
+    - „Programm Y hat 2025 seine Förderschwerpunkte deutlich stärker auf KI-Qualifizierung und digitale Souveränität ausgerichtet.“
+- **Ko-Finanzierungsquote & Fristen:**
+  - Nutze Quoten/Fristen aus der Matrix, sofern diese:
+    - zur aktuellen Research-Lage passen oder
+    - sich zumindest nicht widersprechen.
+  - Wenn du Quoten nur qualitativ nutzen kannst, formuliere entsprechend vorsichtig:
+    - „Typischerweise werden 30–50 % der förderfähigen Kosten bezuschusst (bitte aktuelle Programmbedingungen prüfen).“
+- **Ausblick 2026:**
+  - Nutze die Ausblick-Spalte, um **Trends und Planbarkeit** einzuordnen, z. B.:
+    - „Das Programm ist als Teil eines mehrjährigen EU-/Bundesrahmens angelegt und dürfte auch 2026 noch verfügbar sein.“
+    - „Laut derzeitiger Planung werden die Schwerpunkte in Richtung Green- und KI-Projekte verschoben – für Ihr Vorhaben eher vorteilhaft.“
+
+Wenn keine Fördermatrix vorliegt, ignoriere diesen Abschnitt und arbeite ausschließlich mit den Research-Ergebnissen.
 
 ---
 
 ## OUTPUT-FORMAT
 
-Antworte ausschließlich mit **valide­m HTML** in folgender Struktur (Beispiele dienen nur der Orientierung – im echten Output mit aktuellen Daten aus dem Research füllen):
+Antworte ausschließlich mit **valide­m HTML** in folgender Struktur (Beispiele dienen nur der Orientierung – im echten Output mit aktuellen Daten aus dem Research und, falls vorhanden, der Fördermatrix 2025/2026 füllen):
 
 ```html
 <section class="section foerderpotenzial">
@@ -85,7 +133,8 @@ Antworte ausschließlich mit **valide­m HTML** in folgender Struktur (Beispiele
       </tr>
     </thead>
     <tbody>
-      <!-- 2–3 konkrete Programme, z.&nbsp;B. „Digital Jetzt“, „go-digital“ – nur wenn laut Research aktuell -->
+      <!-- 2–3 konkrete Programme, z.&nbsp;B. „Digital Jetzt“, KMU-innovativ, GRW – nur wenn laut Research aktuell/offen -->
+      <!-- Nutze hier ggf. die Fördermatrix, um Änderungen 2025 (z.&nbsp;B. Quoten, Ausrichtung, Auslaufen) knapp zu spiegeln. -->
       <!-- Beispiel-Struktur: 
       <tr>
         <td>Digital Jetzt (BMWK)</td>
@@ -99,7 +148,8 @@ Antworte ausschließlich mit **valide­m HTML** in folgender Struktur (Beispiele
 
   <h3>Landesprogramme ({{BUNDESLAND_LABEL}})</h3>
   <ul>
-    <!-- 1–2 Programme aus dem Bundesland, z.&nbsp;B. IBB-Programme in Berlin – mit kurzer Beschreibung &amp; Link -->
+    <!-- 1–2 Programme aus dem Bundesland, z.&nbsp;B. spezifische Digitalisierungs- oder Innovationsprogramme – mit kurzer Beschreibung &amp; Link -->
+    <!-- Nutze die Fördermatrix, wenn sie landesspezifische EFRE-/Digitalprogramme und Quotenänderungen 2025/2026 enthält. -->
     <!-- Beispiel-Struktur:
     <li>
       <strong>IBB-Digitalisierungsförderung (Berlin):</strong>
@@ -112,6 +162,7 @@ Antworte ausschließlich mit **valide­m HTML** in folgender Struktur (Beispiele
   <h3>EU-Programme (optional)</h3>
   <ul>
     <!-- Nur aufnehmen, wenn Research zeigt, dass ein Call realistisch ist (z.B. Horizon Europe / Digital Europe). -->
+    <!-- Die Fördermatrix kann hier Trends liefern (z.B. geplante Calls 2026, Schwerpunkte auf KI &amp; Digitalisierung). -->
     <!-- Beispiel:
     <li>
       <strong>Horizon Europe – KI &amp; Digitalisierung:</strong>
@@ -125,7 +176,7 @@ Antworte ausschließlich mit **valide­m HTML** in folgender Struktur (Beispiele
   <p>Auf Basis der Business-Case-Zahlen lässt sich der Effekt einer Förderung grob abschätzen:</p>
   <ul>
     <li><strong>Ausgangswert ohne Förderung:</strong> CAPEX ca. {{CAPEX_REALISTISCH_EUR}} €, Payback etwa {{PAYBACK_MONTHS}} Monate, ROI nach 12 Monaten rund {{ROI_12M}} %.</li>
-    <li><strong>Mit typischer Förderung (Beispiel 40–50&nbsp;% Zuschuss):</strong> Der Eigenanteil an den Investitionskosten sinkt deutlich; die Amortisationsdauer verkürzt sich je nach Förderquote typischerweise auf etwa 50–70&nbsp;% des ursprünglichen Wertes.</li>
+    <li><strong>Mit typischer Förderung (Beispiel 30–50&nbsp;% Zuschuss):</strong> Der Eigenanteil an den Investitionskosten sinkt deutlich; die Amortisationsdauer verkürzt sich je nach Förderquote typischerweise auf etwa 50–70&nbsp;% des ursprünglichen Wertes.</li>
     <li><strong>Praxis-Einordnung:</strong> Hervorheben, welche 1–2 Programme den größten Hebel haben (z.&nbsp;B. Zuschuss für Beratung + Implementierung) und wie stark diese den Payback realistisch verkürzen können (qualitativ, ggf. mit grober Zahl, wenn Daten verfügbar sind).</li>
   </ul>
 
@@ -139,23 +190,8 @@ Antworte ausschließlich mit **valide­m HTML** in folgender Struktur (Beispiele
 
   <p class="small">
     <em>
-      Hinweis: Alle Angaben zu Förderquoten, Summen und Fristen basieren auf öffentlich zugänglichen Informationen zum Zeitpunkt der letzten Recherche 
+      Hinweis: Alle Angaben zu Förderquoten, Summen, Fristen und programmatischen Ausblicken basieren auf öffentlich zugänglichen Informationen sowie ggf. einer internen Fördermatrix 2025/2026 zum Zeitpunkt der letzten Recherche
       und müssen vor Antragstellung auf den offiziellen Programmseiten geprüft werden.
     </em>
   </p>
 </section>
-```
-
----
-
-## ERFOLGS-KRITERIEN
-
-Ein Förderabschnitt gilt als GOLD STANDARD+, wenn:
-
-1. ✅ Nur **aktuelle und zum Projekt passende Programme** genannt werden.  
-2. ✅ Jedes Programm einen klaren Bezug zur geplanten KI-/Digitalisierungsmaßnahme hat.  
-3. ✅ Alle Programme mit **kurzer Beschreibung, Zielgruppe, Förderlogik und Link** aufgeführt sind.  
-4. ✅ Der Zusammenhang zu **Payback & ROI** verständlich erläutert wird (mindestens qualitativ, besser mit grober Zahl).  
-5. ✅ Transparenz über Unsicherheiten gewahrt bleibt (keine ausgedachten Budgets, klare Hinweise auf Prüfpflicht).  
-
-**OUTPUT:** Valides HTML (keine Markdown-Fences, kein `<html>`/`<body>`).
