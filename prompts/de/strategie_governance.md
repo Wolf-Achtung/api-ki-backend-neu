@@ -1,82 +1,108 @@
-<!-- strategie_governance.md – v2.6 GOLD STANDARD+ SIZE & BRANCHEN-COMPLIANCE
-     Antworte ausschließlich mit **validem HTML**.
-     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences. -->
-
-<!-- KONTEXT-VARIABLEN
-     {{BRANCHE}} / {{BRANCHE_LABEL}}
-     {{COMPANY_SIZE}} in {solo, team, kmu}
-     {{HAUPTLEISTUNG}}
-     {{BUNDESLAND_LABEL}}
-     {{score_governance}}
-     {{score_sicherheit}}
-     {{score_nutzen}}
--->
+<!-- strategie_governance.md – v4.0 GOLD STANDARD+ (size-aware, branch-aware, placeholder-sicher)
+     Antworte ausschließlich mit validem HTML.
+     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im Output. -->
 
 <section class="section governance">
-  <h2>Strategie & Governance – Sicherer Rahmen für KI</h2>
+  <h2>Strategie &amp; Governance – Sicherer Rahmen für den KI-Einsatz</h2>
 
   <p>
-    Für den nachhaltigen Einsatz von KI in <strong>{{HAUPTLEISTUNG}}</strong>
-    braucht Ihr Unternehmen – als {{UNTERNEHMENSGROESSE_LABEL}} in der Branche
-    {{BRANCHE_LABEL}} – einen klaren, aber pragmatischen Governance-Rahmen.
-    Die folgenden Bausteine orientieren sich an den Governance- und
-    Sicherheits-Scores (Governance: {{score_governance}}/100,
-    Sicherheit: {{score_sicherheit}}/100) und berücksichtigen die Anforderungen
-    von DSGVO, EU AI Act sowie ggf. landesrechtliche Besonderheiten in
-    {{BUNDESLAND_LABEL}}.
+    Der verantwortungsvolle Einsatz von KI in <strong>{{HAUPTLEISTUNG}}</strong> 
+    erfordert einen klaren, aber pragmatischen Governance-Rahmen. Dieser Abschnitt 
+    zeigt die zentralen Bausteine, mit denen <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> 
+    in der Branche <strong>{{BRANCHE_LABEL}}</strong> KI wirksam, sicher und 
+    rechtskonform einführen kann – im Einklang mit DSGVO, dem EU AI Act und 
+    ggf. landesrechtlichen Besonderheiten in <strong>{{BUNDESLAND_LABEL}}</strong>.
   </p>
 
-  <h3>1. Rollen & Verantwortlichkeiten</h3>
   <p>
-    Definieren Sie eine klare Rolle für KI-Verantwortung:
-    bei Solo die Inhaber:in selbst, bei Team eine verantwortliche Person
-    (z. B. „KI-Owner“), bei KMU ein kleines Projekt- oder Governance-Team.
-    Diese Rolle entscheidet über neue Use Cases, prüft Risiken und koordiniert
-    die Abstimmung mit Datenschutz/IT.
+    Die Governance orientiert sich an den Analysewerten für Sicherheit, Qualität 
+    und Verantwortlichkeit. Maßnahmen wurden so formuliert, dass sie je nach 
+    Unternehmensgröße realistisch bleiben – für Solo ohne überbordenden Aufwand, 
+    für Teams klar strukturiert und für KMU skalierbar.
   </p>
 
-  <h3>2. Richtlinien & Nutzungsregeln</h3>
-  <p>
-    Erstellen Sie eine kurze, verständliche Richtlinie, die festlegt:
-  </p>
+  <h3>1. Rollen &amp; Verantwortlichkeiten</h3>
   <ul>
-    <li>wann KI-Systeme im Rahmen von {{HAUPTLEISTUNG}} genutzt werden dürfen,</li>
-    <li>wie Eingabedaten gewählt und anonymisiert werden,</li>
-    <li>wie Ergebnisse geprüft und dokumentiert werden,</li>
-    <li>welche Tools (inkl. Training mit Kundendaten) erlaubt sind.</li>
+    <li>
+      <strong>KI-Verantwortliche Person:</strong>  
+      Entscheidet über neue Use-Cases, koordiniert interne Abstimmungen und 
+      prüft Ergebnisse.  
+      <em>Solo:</em> Inhaber:in.  
+      <em>Team:</em> KI-Owner + fachliche Ansprechperson.  
+      <em>KMU:</em> kleines Projekt- oder Governance-Team.
+    </li>
+    <li>
+      <strong>Fachliche Qualitätssicherung:</strong>  
+      Prüft KI-Ergebnisse im Kontext der Branche {{BRANCHE_LABEL}}, 
+      achtet auf Richtigkeit, Klarheit und Konsistenz.
+    </li>
+    <li>
+      <strong>Technische Unterstützung:</strong>  
+      Einrichtung, Wartung und Optimierung der KI-Tools.  
+      <em>Solo:</em> Self-service oder externer Support.  
+      <em>Team/KMU:</em> interne IT oder externe Spezialist:innen.
+    </li>
   </ul>
 
-  <h3>3. Risiko- und Compliance-Prozesse</h3>
+  <h3>2. Richtlinien &amp; Nutzungsregeln</h3>
   <p>
-    Passen Sie die bestehenden Datenschutz- und Sicherheitsprozesse an:
-    Risikoanalyse für zentrale KI-Use-Cases, einfache Dokumentation der
-    Datenflüsse und klare Freigabeprozesse. In regulierten Branchen
-    (z. B. Finanzen, Gesundheit, Verwaltung, Bildung in {{BUNDESLAND_LABEL}})
-    sollte geprüft werden, ob zusätzlich branchenspezifische Vorgaben
-    (z. B. BaFin, Berufsordnungen, Schulgesetze) berührt sind.
+    Eine klare, leicht verständliche Richtlinie schafft Orientierung für alle 
+    Beteiligten. Sie sollte insbesondere festlegen:
   </p>
+  <ul>
+    <li>Welche Aufgabenbereiche durch KI unterstützt werden dürfen.</li>
+    <li>Wie Eingabedaten geschützt, reduziert oder anonymisiert werden.</li>
+    <li>Welche Arten von Kundendaten erlaubt oder untersagt sind.</li>
+    <li>Wie KI-Ergebnisse fachlich geprüft und freigegeben werden.</li>
+    <li>Welche Tools zum Einsatz kommen und wie mit Updates umzugehen ist.</li>
+  </ul>
 
-  <h3>4. Dokumentation & Nachvollziehbarkeit</h3>
+  <h3>3. Datenschutz, Risiko &amp; Compliance</h3>
   <p>
-    Halten Sie fest, welche KI-Modelle, Prompts und Datenquellen in
-    {{HAUPTLEISTUNG}} eingesetzt werden. Ziel ist, Entscheidungen später
-    nachvollziehen zu können – insbesondere bei Reklamationen,
-    Prüfungen oder Fördermittel-Nachweisen.
+    Alle KI-Use-Cases benötigen eine nachvollziehbare Risikoprüfung. 
+    Diese sollte sowohl technische als auch organisatorische Aspekte abdecken. 
+    In stärker regulierten Bereichen wie Finanzen, Gesundheit, Bildung oder 
+    öffentlichen Einrichtungen gelten zusätzliche Standards, die in 
+    {{BUNDESLAND_LABEL}} berücksichtigt werden müssen.
   </p>
+  <ul>
+    <li>Kurzbewertung der Risiken je Use-Case (Daten, Automatisierungstiefe, Fehlerfolgen).</li>
+    <li>Dokumentation der Datenflüsse, eingesetzten Modelle und Tools.</li>
+    <li>Freigabeprozess für neue Use-Cases (fachlich + organisatorisch).</li>
+    <li>Aufbewahrungs-, Lösch- und Transparenzregeln gemäß DSGVO.</li>
+  </ul>
 
-  <h3>5. Monitoring & kontinuierliche Verbesserung</h3>
+  <h3>4. Dokumentation &amp; Nachvollziehbarkeit</h3>
   <p>
-    Etablieren Sie ein leichtgewichtiges Monitoring:
-    einfache Kennzahlen zu Nutzungsgrad, Qualität und Fehlern,
-    regelmäßige Reviews (z. B. quartalsweise) und ein klarer Prozess,
-    wie Anpassungen an Prompts, Workflows oder Richtlinien umgesetzt werden.
+    Eine einfache, klare Dokumentation ist entscheidend, um KI-Nutzung später 
+    nachvollziehbar zu machen – im Tagesgeschäft, gegenüber Kunden, 
+    Auditor:innen oder Fördermittelgebern.
   </p>
+  <ul>
+    <li>Kurze Beschreibung jedes Use-Cases inkl. Zweck, Workflow, Datenbasis.</li>
+    <li>Versionierte Ablage von Prompts, Vorlagen und Prozessschritten.</li>
+    <li>Protokoll über Änderungen, Entscheidungen und Anpassungen.</li>
+    <li>Optional: kurze Ergebnisprotokolle für kritische Vorgänge.</li>
+  </ul>
 
-  <p class="small">
-    <strong>Check:</strong>
-    Alle Maßnahmen sind size-aware formuliert (Solo ≠ Team ≠ KMU),
-    adressieren Score-Schwächen (v. a. wenn Governance/Sicherheit &lt; 60)
-    und bleiben praxisnah – ohne unnötige Konzernstrukturen oder
-    leere Floskeln wie „Governance-Strukturen aufbauen“.
+  <h3>5. Monitoring &amp; kontinuierliche Verbesserung</h3>
+  <p>
+    KI ist kein einmaliges Projekt, sondern ein lernendes System. 
+    Regelmäßiges Monitoring sorgt dafür, dass Qualität, Risiken und 
+    Effizienz jederzeit im Blick bleiben.
+  </p>
+  <ul>
+    <li>Einfaches Wirkungsmonitoring (z.&nbsp;B. Zeit, Fehler, Konsistenz, Zufriedenheit).</li>
+    <li>Regelmäßige Reviews (monatlich oder quartalsweise, abhängig von {{COMPANY_SIZE}}).</li>
+    <li>Klarer Prozess zur Anpassung von Prompts, Templates und Workflows.</li>
+    <li>Dokumentierte Lessons Learned für weitere Use-Cases.</li>
+  </ul>
+
+  <p class="small muted">
+    Ein guter Governance-Rahmen ist nicht bürokratisch, sondern erleichtert 
+    den Alltag: weniger Risiko, bessere Qualität und höhere Verlässlichkeit – 
+    egal ob als Einzelunternehmer:in, kleines Team oder wachsendes KMU. 
+    Auf dieser Basis kann KI langfristig und verantwortungsbewusst im 
+    Unternehmen verankert werden.
   </p>
 </section>
