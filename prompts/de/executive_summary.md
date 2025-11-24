@@ -1,118 +1,109 @@
-<!-- executive_summary.md – v3.1 GOLD STANDARD+ BRANCHE, SIZE & KPIs
+<!-- executive_summary.md – v2.2 GOLD STANDARD+ (Summary + Context-Integration)
      Antworte ausschließlich mit **validem HTML**.
-     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences. -->
-
-<!-- KONTEXT-VARIABLEN
-     {{BRANCHE_LABEL}}
-     {{UNTERNEHMENSGROESSE_LABEL}}
-     {{BUNDESLAND_LABEL}}
-     {{HAUPTLEISTUNG}}
-     {{score_gesamt}}, {{score_befaehigung}}, {{score_governance}},
-     {{score_sicherheit}}, {{score_nutzen}}
-     {{qw_hours_total}}, {{EINSPARUNG_MONAT_EUR}}
-     {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}
-     {{PAYBACK_MONTHS}}, {{ROI_12M}}
-     {CONTEXT_QUICK_WINS}, {CONTEXT_ROADMAP_90D}
+     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im OUTPUT.
+     VERSION: 2.2 GOLD STANDARD+ (Bereinigung von Kontext-Platzhaltern)
 -->
 
+# PROMPT: Executive Summary
+
+## ZWECK
+
+Erstelle eine **eine Seite** Executive Summary, die:
+
+1. die aktuelle KI‑Position des Unternehmens prägnant zusammenfasst,
+2. die wichtigsten Ergebnisse aus Scores, Quick Wins, Roadmap, Business Case & Förderpotenzial verbindet,
+3. klare Botschaften für die Geschäftsführung liefert („Was heißt das jetzt konkret?“).
+
+**Zielgruppe:** Geschäftsführung, Eigentümer:innen, Aufsichtsrat  
+**Stil:** Klar, fokussiert, keine Buzzwords, maximal 3–5 kurze Abschnitte.
+
+---
+
+## KONTEKTE, DIE DU NUTZT
+
+- Reale Score‑Werte (Governance, Sicherheit, Wertschöpfung, Befähigung, Gesamt)
+- Kernaussagen aus:
+  - Quick Wins
+  - 90‑Tage‑Roadmap
+  - 12‑Monats‑Roadmap
+  - Business Case (CAPEX, OPEX, Payback, ROI 12M)
+  - Förderpotenzial (nur qualitativ, keine eigenen Zahlen)
+  - Tool‑Empfehlungen
+- Fragebogen‑Infos:
+  - {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{BUNDESLAND_LABEL}}
+
+Kontextblöcke werden dir als Text übergeben.  
+Im Output dürfen **keine technischen Bezeichner** aus der Pipeline auftauchen  
+(also keine Strings wie „CONTEXT_QUICK_WINS“, „CONTEXT_ROADMAP_90D“ etc.).
+
+---
+
+## KRITISCHE REGELN
+
+1. **Keine Platzhalter, keine technischen Namen**
+   - Keine `[...]`‑Platzhalter.
+   - Keine `{IRGENDETWAS}`‑Strings.
+   - Keine internen Bezeichner aus der Pipeline (CONTEXT\_…, SCORE\_…, TOOLS\_…).
+
+2. **Scores ehrlich einordnen**
+   - Nenne die Score‑Werte kurz, aber interpretiere sie verständlich
+     („Governance hoch, Security mittel, Wertschöpfung sehr stark“).
+   - Keine Übertreibungen oder falsche Sicherheit.
+
+3. **Solo vs. Team vs. KMU**
+   - Solo: Fokus auf eigene Arbeitszeit & Entscheidungsfreiheit.
+   - Team: Fokus auf Zusammenarbeit & interne Akzeptanz.
+   - KMU: Fokus auf Skalierbarkeit, Governance, Mitnahme mehrerer Bereiche.
+
+4. **Verdichtung statt Wiederholung**
+   - Du wiederholst nicht einfach den ganzen Report,
+     sondern destillierst die **wichtigsten 3–5 Botschaften**.
+
+---
+
+## OUTPUT: NUR HTML (eine kompakte Section)
+
+```html
 <section class="section executive-summary">
   <h2>Executive Summary</h2>
 
-  <!-- Freundlicher Einstieg -->
   <p>
-    Vielen Dank, dass Sie sich die Zeit für diese KI-Status-Analyse genommen haben.
-    Ihre Antworten zeigen, dass Sie Ihr Geschäft in {{BRANCHE_LABEL}} sehr gut kennen
-    und bereits wichtige Grundlagen für den Einsatz von KI in
-    <strong>{{HAUPTLEISTUNG}}</strong> geschaffen haben.
-    Dieser Report fasst die wichtigsten Ergebnisse zusammen und zeigt,
-    welche nächsten Schritte für {{UNTERNEHMENSGROESSE_LABEL}} besonders sinnvoll sind.
+    Formuliere ein kurzes Intro (2–3 Sätze), das Branche {{BRANCHE_LABEL}},
+    Unternehmensgröße {{UNTERNEHMENSGROESSE_LABEL}} und den Kernprozess
+    {{HAUPTLEISTUNG}} nennt. Erkläre, dass es sich um eine Standortbestimmung
+    und einen konkreten Aktionsplan für KI handelt.
   </p>
 
-  <!-- Profil -->
+  <h3>Ausgangslage & Scores</h3>
   <p>
-    <strong>Ihr Profil:</strong>
-    {{BRANCHE_LABEL}} – {{UNTERNEHMENSGROESSE_LABEL}} – {{BUNDESLAND_LABEL}}<br>
-    <strong>Kern-Leistung:</strong> {{HAUPTLEISTUNG}}
+    Fasse die wichtigsten Score‑Ergebnisse (Governance, Sicherheit,
+    Wertschöpfung, Befähigung, Gesamt) in verständlicher Sprache zusammen.
+    Betone Stärken und Entwicklungsfelder, ohne Zahlen zu erfinden.
   </p>
 
-  <!-- Kurz-Zusammenfassung -->
+  <h3>Wichtigste Quick Wins & kurzfristige Maßnahmen</h3>
   <p>
-    Die Analyse ergibt einen Gesamt-Score von {{score_gesamt}}/100 und zeigt,
-    dass insbesondere der Bereich Wertschöpfung ({{score_nutzen}}/100) und
-    Befähigung ({{score_befaehigung}}/100) gute Ansatzpunkte bieten.
-    Gleichzeitig gibt es bei Governance ({{score_governance}}/100) und
-    Sicherheit ({{score_sicherheit}}/100) klare, gut adressierbare
-    Entwicklungsfelder.
+    Hebe 2–3 Quick Wins hervor, die in den nächsten 90 Tagen den größten
+    Impact im Prozess {{HAUPTLEISTUNG}} haben. Verweise optional auf
+    die 90‑Tage‑Roadmap, ohne sie im Detail zu wiederholen.
   </p>
 
-  <!-- Key Facts -->
-  <div class="key-facts">
-    <h4>Auf einen Blick</h4>
-    <ul>
-      <li><strong>KI-Readiness gesamt:</strong> {{score_gesamt}}/100 – kurze verbale Einordnung (z. B. „stabile Ausgangsbasis“)</li>
-      <li><strong>Quick-Win-Potenzial:</strong> {{qw_hours_total}} h/Monat ≈ {{EINSPARUNG_MONAT_EUR}} €/Monat</li>
-      <li><strong>Investition:</strong> ca. {{CAPEX_REALISTISCH_EUR}} € einmalig + {{OPEX_REALISTISCH_EUR}} €/Monat laufend</li>
-      <li><strong>Amortisation:</strong> {{PAYBACK_MONTHS}} Monate · <strong>ROI (12 Monate):</strong> {{ROI_12M}} %</li>
-      <li><strong>Empfohlener Startpunkt:</strong> ein klar umrissener Pilot direkt im Kernprozess von {{HAUPTLEISTUNG}}</li>
-    </ul>
-  </div>
-
-  <!-- KPI-Kacheln -->
-  <div class="kpi-cards">
-    <div class="kpi"><div class="kpi-label">Gesamt</div><div class="kpi-value">{{score_gesamt}}</div></div>
-    <div class="kpi"><div class="kpi-label">Befähigung</div><div class="kpi-value">{{score_befaehigung}}</div></div>
-    <div class="kpi"><div class="kpi-label">Governance</div><div class="kpi-value">{{score_governance}}</div></div>
-    <div class="kpi"><div class="kpi-label">Sicherheit</div><div class="kpi-value">{{score_sicherheit}}</div></div>
-    <div class="kpi"><div class="kpi-label">Wertschöpfung</div><div class="kpi-value">{{score_nutzen}}</div></div>
-  </div>
-
-  <!-- Wirtschaftliche Eckdaten (interpretierend, nicht nur Wiederholung) -->
-  <h3>Wirtschaftliche Eckdaten</h3>
+  <h3>Business Case & Förderpotenzial</h3>
   <p>
-    Mit {{qw_hours_total}} eingesparten Stunden pro Monat
-    (≈ {{EINSPARUNG_MONAT_EUR}} €/Monat) und einer realistischen Investition von
-    {{CAPEX_REALISTISCH_EUR}} € plus {{OPEX_REALISTISCH_EUR}} €/Monat
-    ergibt sich eine Amortisation nach rund {{PAYBACK_MONTHS}} Monaten.
-    Ein ROI von {{ROI_12M}} % im ersten Jahr ist für ein
-    {{UNTERNEHMENSGROESSE_LABEL}} in {{BRANCHE_LABEL}} konservativ, aber attraktiv –
-    insbesondere, wenn die Quick Wins konsequent genutzt werden.
+    Fasse den Business Case in 3–4 Sätzen zusammen:
+    Größenordnung von Investition (CAPEX/OPEX), erwartete monatliche
+    Entlastung, ungefähre Amortisationsdauer und ROI‑Niveau.
+    Ergänze 1–2 qualitative Aussagen zum Förderpotenzial
+    (z.&nbsp;B. „Landesprogramme können CAPEX deutlich reduzieren“),
+    ohne selbst neue Zahlen zu erfinden.
   </p>
 
-  <!-- Top-3 Quick Wins (nur falls vorhanden) -->
-  {% if CONTEXT_QUICK_WINS %}
-  <h3>Top-3 Quick Wins (30–60 Tage)</h3>
+  <h3>Nächste Schritte für Geschäftsführung</h3>
   <p>
-    Aus den identifizierten Quick Wins stechen drei Maßnahmen besonders hervor,
-    weil sie direkt in {{HAUPTLEISTUNG}} eingreifen und schnell messbare
-    Effekte bringen. Sie bilden den Kern der 90-Tage-Roadmap und sind
-    in {{UNTERNEHMENSGROESSE_LABEL}} ohne große Zusatzressourcen umsetzbar.
+    Schließe mit 3–5 klaren Empfehlungen auf Management‑Ebene,
+    z.&nbsp;B. Start des Piloten, Priorisierung eines Bereichs,
+    Festlegung von Budgetrahmen oder Governance‑Entscheidungen.
+    Formuliere so, dass eine Geschäftsführung innerhalb weniger Minuten
+    versteht, was jetzt konkret zu tun ist.
   </p>
-  <ul>
-    <!-- Nutze CONTEXT_QUICK_WINS, um echte Quick Wins kurz zu beschreiben -->
-    <li>[Quick Win 1 – Titel + Kerneffekt in h/Monat oder %]</li>
-    <li>[Quick Win 2 – Titel + Kerneffekt]</li>
-    <li>[Quick Win 3 – Titel + Kerneffekt]</li>
-  </ul>
-  {% endif %}
-
-  <!-- Startpunkt/Pilot -->
-  <h3>Startpunkt (Pilot)</h3>
-  <p>
-    Als Pilot empfiehlt sich ein klar abgegrenzter Use Case im Kernprozess
-    von {{HAUPTLEISTUNG}}, der sich mit überschaubarem Aufwand testen lässt
-    (siehe 90-Tage-Roadmap). Ziel ist, die oben beschriebenen Einsparungen
-    möglichst schnell sichtbar zu machen und gleichzeitig Governance-
-    und Sicherheitsanforderungen zu berücksichtigen.
-  </p>
-
-  <!-- Nächste Schritte -->
-  <h3>Nächste Schritte (30/60/90 Tage)</h3>
-  <ol>
-    <li><strong>30 Tage:</strong> Pilot-Use-Case auswählen, Tools konfigurieren,
-        Verantwortliche benennen, erste Fälle durch den neuen Workflow laufen lassen.</li>
-    <li><strong>60 Tage:</strong> Pilot im Echtbetrieb, Effekte messen,
-        Feedback sammeln, Quick Wins stabilisieren.</li>
-    <li><strong>90 Tage:</strong> ROI-Review, Entscheidung über Skalierung
-        und – falls sinnvoll – Nutzung von Förderprogrammen in {{BUNDESLAND_LABEL}}.</li>
-  </ol>
 </section>
