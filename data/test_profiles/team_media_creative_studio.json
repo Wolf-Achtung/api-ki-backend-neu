@@ -25,7 +25,7 @@
     "interne_ki_kompetenzen": "ja",
     "investitionsbudget": "2000_10000",
     "it_infrastruktur": "hybrid",
-    "jahresumsatz": "unter_100k",
+    "jahresumsatz": "100k_500k",
     "ki_einsatz": ["marketing", "produktion"],
     "ki_hemmnisse": ["budget"],
     "ki_kompetenz": "hoch",
@@ -49,15 +49,15 @@
     "risikofreude": "5",
     "roadmap_vorhanden": "ja",
     "selbststaendig": "freiberufler",
-    "strategische_ziele": "Umsatz steigern, zufriedene Kunden, höherer Gewinn",
+    "strategische_ziele": "Auslastung des Studios sichern, planbare Produktions-Slots schaffen und wiederkehrende Format- und Abo-Modelle ausbauen.",
     "technische_massnahmen": "alle",
     "trainings_interessen": ["prompt_engineering", "llm_basics"],
     "unternehmensgroesse": "team",
-    "vision_3_jahre": "Führender Anbieter für KI-basierte Redaktions- und Contentstrategie-Assessments",
+    "vision_3_jahre": "Führendes Studio für KI-gestützte Content-Formate und digitale Serien in der DACH-Region",
     "vision_prioritaet": "gpt_services",
     "vorhandene_tools": ["keine"],
-    "zeitbudget": "ueber_10",
-    "zeitersparnis_prioritaet": "Content-Produktion und Redaktionsplanung beschleunigen",
-    "zielgruppen": ["medienhaeuser", "agenturen"]
+    "zeitbudget": "5_10",
+    "zeitersparnis_prioritaet": "Wiederkehrende Formatplanung, Rohschnitt und Adaptionen für Social Media automatisieren.",
+    "zielgruppen": ["verlage", "medienhaeuser", "content_plattformen"]
   }
 }
