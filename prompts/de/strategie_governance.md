@@ -1,119 +1,82 @@
-<!-- strategie_governance.md - v2.5 GOLD STANDARD+ -->
-<!-- Antworte ausschließlich mit **validem HTML**.
-     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im OUTPUT.
-     VERSION: 2.5 GOLD STANDARD+ (Size-Awareness verschärft, Solo-Hinweise sauber getrennt) -->
+<!-- strategie_governance.md – v2.6 GOLD STANDARD+ SIZE & BRANCHEN-COMPLIANCE
+     Antworte ausschließlich mit **validem HTML**.
+     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences. -->
 
-# PROMPT: Strategie & Governance - KI-Governance-Strukturen
+<!-- KONTEXT-VARIABLEN
+     {{BRANCHE}} / {{BRANCHE_LABEL}}
+     {{COMPANY_SIZE}} in {solo, team, kmu}
+     {{HAUPTLEISTUNG}}
+     {{BUNDESLAND_LABEL}}
+     {{score_governance}}
+     {{score_sicherheit}}
+     {{score_nutzen}}
+-->
 
-## ⚠️ SIZE-AWARENESS - ABSOLUT PFLICHT!
+<section class="section governance">
+  <h2>Strategie & Governance – Sicherer Rahmen für KI</h2>
 
-**Mögliche Unternehmensgrößen (NUR diese 3!):**
-- `{{COMPANY_SIZE}}` = "solo" → Label: "1 (Solo-Selbstständig/Freiberuflich)"
-- `{{COMPANY_SIZE}}` = "team" → Label: "2-10 (Kleines Team)"
-- `{{COMPANY_SIZE}}` = "kmu"  → Label: "11-100 (KMU)"
+  <p>
+    Für den nachhaltigen Einsatz von KI in <strong>{{HAUPTLEISTUNG}}</strong>
+    braucht Ihr Unternehmen – als {{UNTERNEHMENSGROESSE_LABEL}} in der Branche
+    {{BRANCHE_LABEL}} – einen klaren, aber pragmatischen Governance-Rahmen.
+    Die folgenden Bausteine orientieren sich an den Governance- und
+    Sicherheits-Scores (Governance: {{score_governance}}/100,
+    Sicherheit: {{score_sicherheit}}/100) und berücksichtigen die Anforderungen
+    von DSGVO, EU AI Act sowie ggf. landesrechtliche Besonderheiten in
+    {{BUNDESLAND_LABEL}}.
+  </p>
 
-### 📏 SIZE-APPROPRIATE LANGUAGE
+  <h3>1. Rollen & Verantwortlichkeiten</h3>
+  <p>
+    Definieren Sie eine klare Rolle für KI-Verantwortung:
+    bei Solo die Inhaber:in selbst, bei Team eine verantwortliche Person
+    (z. B. „KI-Owner“), bei KMU ein kleines Projekt- oder Governance-Team.
+    Diese Rolle entscheidet über neue Use Cases, prüft Risiken und koordiniert
+    die Abstimmung mit Datenschutz/IT.
+  </p>
 
-**{{COMPANY_SIZE}} = "solo":**
-- ✅ "Sie als Freiberufler", "Ihre Kund:innen", "Ihre Projekte"
-- ✅ Externe Rollen: Anwalt, Steuerberater, IT-Dienstleister
-- ✅ Einfache Checklisten statt komplexer Policies
-- ❌ NIEMALS: "Team", "Führungskräfte", "Abteilung", "Steering Committee", "PMO"
+  <h3>2. Richtlinien & Nutzungsregeln</h3>
+  <p>
+    Erstellen Sie eine kurze, verständliche Richtlinie, die festlegt:
+  </p>
+  <ul>
+    <li>wann KI-Systeme im Rahmen von {{HAUPTLEISTUNG}} genutzt werden dürfen,</li>
+    <li>wie Eingabedaten gewählt und anonymisiert werden,</li>
+    <li>wie Ergebnisse geprüft und dokumentiert werden,</li>
+    <li>welche Tools (inkl. Training mit Kundendaten) erlaubt sind.</li>
+  </ul>
 
-**{{COMPANY_SIZE}} = "team" (2-10 MA):**
-- ✅ "Geschäftsführung + Team", "eine verantwortliche Person für KI/Compliance"
-- ✅ Einfache, leicht verständliche Richtlinien (1–2 Seiten)
-- ✅ Pragmatistische Reviews (monatliches KI-Review-Meeting)
-- ❌ NIEMALS: "PMO-Team", "Abteilungsleiter", "Change Manager", "Konzern-Governance"
+  <h3>3. Risiko- und Compliance-Prozesse</h3>
+  <p>
+    Passen Sie die bestehenden Datenschutz- und Sicherheitsprozesse an:
+    Risikoanalyse für zentrale KI-Use-Cases, einfache Dokumentation der
+    Datenflüsse und klare Freigabeprozesse. In regulierten Branchen
+    (z. B. Finanzen, Gesundheit, Verwaltung, Bildung in {{BUNDESLAND_LABEL}})
+    sollte geprüft werden, ob zusätzlich branchenspezifische Vorgaben
+    (z. B. BaFin, Berufsordnungen, Schulgesetze) berührt sind.
+  </p>
 
-**{{COMPANY_SIZE}} = "kmu" (11-100 MA):**
-- ✅ "Projektleiter:in", "Führungskraft", "Compliance-Verantwortliche:r"
-- ✅ "Projektteam (3–5 Personen)", "Fachbereich", "Abteilung"
-- ✅ Optionale Gremien wie "Steering Committee", "PMO" (ab ~50 MA plausibel)
+  <h3>4. Dokumentation & Nachvollziehbarkeit</h3>
+  <p>
+    Halten Sie fest, welche KI-Modelle, Prompts und Datenquellen in
+    {{HAUPTLEISTUNG}} eingesetzt werden. Ziel ist, Entscheidungen später
+    nachvollziehen zu können – insbesondere bei Reklamationen,
+    Prüfungen oder Fördermittel-Nachweisen.
+  </p>
 
----
+  <h3>5. Monitoring & kontinuierliche Verbesserung</h3>
+  <p>
+    Etablieren Sie ein leichtgewichtiges Monitoring:
+    einfache Kennzahlen zu Nutzungsgrad, Qualität und Fehlern,
+    regelmäßige Reviews (z. B. quartalsweise) und ein klarer Prozess,
+    wie Anpassungen an Prompts, Workflows oder Richtlinien umgesetzt werden.
+  </p>
 
-## 🔒 SIZE-CHECK & SOLO-HINWEISE
-
-1. Lies `{{COMPANY_SIZE}}` bewusst.
-2. Wenn `{{COMPANY_SIZE}} = "solo"`:
-   - Du-Ansprache und Solo-Bezug sind OK.
-   - Governance bleibt trotzdem schlank und pragmatisch.
-3. Wenn `{{COMPANY_SIZE}} = "team"` oder `"kmu"`:
-   - KEINE Formulierungen wie:
-     - "als Solo-Beratung"
-     - "wenn Sie später Mitarbeitende einstellen"
-     - "Sie arbeiten aktuell noch allein"
-   - Sprache immer auf Team/Unternehmen ausrichten.
-
----
-
-## 🎯 ZWECK
-
-Erstelle konkrete Governance-Empfehlungen, die:
-
-1. Die Analyse-Scores sinnvoll interpretieren  
-   (z. B. `{{score_governance}}`, `{{score_sicherheit}}`, `{{score_nutzen}}`).
-2. Spezifisch für {{HAUPTLEISTUNG}} sind (keine generischen KI-Phrasen).
-3. Rollen & Verantwortlichkeiten SIZE-AWARE definieren.
-4. Konkrete Prozesse beschreiben (wer macht was, in welcher Frequenz?).
-
-**Zielgruppe:** Geschäftsführung, Compliance-Verantwortliche, Risk-Owner.  
-**Stil:** Strukturiert, compliance-fokussiert, pragmatisch, verständlich.
-
----
-
-## ⛔ ABSOLUT VERBOTEN
-
-### ❌ Generische Governance-Tipps ohne Kontext
-- "KI-Beirat einrichten"
-- "Regelmäßige Reviews durchführen"
-- "Richtlinien erstellen" ohne Zweck & Inhalt
-- "Governance-Strukturen aufbauen" als Leerformel
-
-### ❌ Zahlen und Scores ignorieren
-- `{{score_governance}}` < 60 und keine Maßnahmen zu DSGVO/EU AI Act
-- `{{score_sicherheit}}` < 60 und keine Security/KI-Risiko-Maßnahmen
-
-### ❌ Unpassende Größenlogik
-- Konzernartige Strukturen bei Solo/Team
-- Solo-Wording in Team/KMU-Reports
-- Zusätzliche Vollzeitstellen empfehlen, wenn Business Case konservativ ist
-
----
-
-## 🔧 STRUKTUR DER ANTWORT
-
-Erzeuge eine HTML-Section mit:
-
-1. Kurzer Einleitung (1 Absatz):
-   - Einordnung der Governance- und Sicherheits-Scores.
-   - Bezug zu {{HAUPTLEISTUNG}} und Unternehmensgröße.
-
-2. 3–5 Themenblöcke, z. B.:
-   - Rollen & Verantwortlichkeiten
-   - Richtlinien & Nutzungsregeln
-   - Risiko- und Compliance-Prozesse (DSGVO, EU AI Act)
-   - Dokumentation & Nachvollziehbarkeit
-   - Monitoring & kontinuierliche Verbesserung
-
-Jeder Block:
-
-- Überschrift `<h3>` oder `<h4>`.
-- 1–2 Absätze mit klaren, umsetzbaren Maßnahmen.
-- Nur dort Listen einsetzen, wo sie Struktur schaffen (max. 3–5 Punkte).
-
----
-
-## 🧪 QUALITÄTS-CHECK
-
-Vor Ausgabe prüfen:
-
-1. **Size-Check:** Passt jede Rolle zur Unternehmensgröße?
-2. **Score-Check:** Werden schwache Bereiche (Score < 60) sichtbar adressiert?
-3. **Solo-Hinweise:** Keine Solo-Formulierungen bei `team`/`kmu`.
-4. **Kohärenz mit Business Case & Roadmap:**  
-   - Governance-Maßnahmen unterstützen die geplanten Projekte (z. B. Batch-Processing, Self-Service-Portal, White-Label).
-5. **Klarheit:** Entscheider:innen können aus dem Text direkt Aufgaben ableiten.
-
-**Output:** Valides HTML, keine Markdown-Fences, keine Platzhalter.
+  <p class="small">
+    <strong>Check:</strong>
+    Alle Maßnahmen sind size-aware formuliert (Solo ≠ Team ≠ KMU),
+    adressieren Score-Schwächen (v. a. wenn Governance/Sicherheit &lt; 60)
+    und bleiben praxisnah – ohne unnötige Konzernstrukturen oder
+    leere Floskeln wie „Governance-Strukturen aufbauen“.
+  </p>
+</section>

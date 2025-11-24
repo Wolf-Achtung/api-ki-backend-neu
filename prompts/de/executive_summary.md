@@ -1,136 +1,63 @@
+<!-- executive_summary.md – v3.1 GOLD STANDARD+ BRANCHE, SIZE & KPIs
+     Antworte ausschließlich mit **validem HTML**.
+     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences. -->
 
----
+<!-- KONTEXT-VARIABLEN
+     {{BRANCHE_LABEL}}
+     {{UNTERNEHMENSGROESSE_LABEL}}
+     {{BUNDESLAND_LABEL}}
+     {{HAUPTLEISTUNG}}
+     {{score_gesamt}}, {{score_befaehigung}}, {{score_governance}},
+     {{score_sicherheit}}, {{score_nutzen}}
+     {{qw_hours_total}}, {{EINSPARUNG_MONAT_EUR}}
+     {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}
+     {{PAYBACK_MONTHS}}, {{ROI_12M}}
+     {CONTEXT_QUICK_WINS}, {CONTEXT_ROADMAP_90D}
+-->
 
-## `prompts/de/executive_summary.md` (neu)
-
-:contentReference[oaicite:1]{index=1}  
-
-```markdown
-# PROMPT: Executive Summary – Erste Seite des KI-Readiness-Reports
-
-## ZWECK
-Erstelle eine **einladende, freundliche** Executive Summary (max. 1 Seite), die:
-1. den Leser **positiv abholt** mit einem warmen Einstieg (2–3 Sätze Fließtext)
-2. die **wichtigsten Erkenntnisse** verständlich und ermutigend zusammenfasst
-3. **konkrete Zahlen** (Scores, ROI, Payback, Quick-Win-Einsparungen) in Kontext setzt
-4. einen **klaren Startpunkt** (Pilot) und nächste Schritte (30/60/90 Tage) definiert
-5. die **Top 3 Quick Wins** hervorhebt (falls vorhanden)
-
-**Zielgruppe:** Geschäftsführung, Entscheider:innen (≈ 5 Min Lesezeit)  
-**Stil:** freundlich-professionell, ermutigend, klar – keine Marketing-Sprache, aber auch kein trockener Prüfbericht.
-
----
-
-## 🎯 WICHTIG: Einstieg
-
-- Starte mit 2–3 Sätzen **warmem Fließtext**, der:
-  - die Situation des Unternehmens würdigt
-  - zeigt, dass die Analyse ernst genommen wurde
-  - Mut macht, die nächsten Schritte anzugehen
-- Erst danach kommen Zahlen/Fakten.
-- Kein „Sie wurden geprüft“-Ton, sondern ein hilfreiches Beratungsgespräch.
-
----
-
-## ⚠️ KRITISCHE REGELN
-
-### ❌ VERBOTEN – niemals in der Executive Summary:
-
-1. **Keine erfundenen Zahlen – nur bereitgestellte Variablen nutzen:**
-   - ❌ eigene ROI-/Payback-Berechnungen erfinden
-   - ❌ Einsparungen schätzen, die nicht aus den Quick Wins stammen
-   - ❌ Scores runden oder „schöner machen“
-   - ❌ Prozentverbesserungen ohne klare Quelle nennen
-
-2. **Keine vagen Aussagen:**
-   - ❌ „Großes Potenzial für KI-Einsatz“
-   - ❌ „deutliche Verbesserungsmöglichkeiten“
-   - ❌ „signifikante Effizienzsteigerung erwartet“
-
-3. **Keine generischen Ratschläge:**
-   - ❌ „KI-Strategie entwickeln“ ohne Konkretisierung
-   - ❌ „Change-Management initiieren“ ohne Bezug auf ein konkretes Projekt
-   - ❌ „Pilot-Projekte starten“ ohne Benennung des Piloten
-
-4. **Keine Marketing-Sprache/Übertreibungen:**
-   - ❌ „revolutionäre KI-Transformation“
-   - ❌ „game-changing opportunity“
-   - ❌ „einmalige Chance“
-
-5. **Keine Quick-Wins-Liste, wenn keine Quick Wins vorhanden sind:**
-   - ❌ Quick Wins erfinden
-   - ✅ Wenn `{CONTEXT_QUICK_WINS}` leer ist → gesamten Quick-Win-Block weglassen.
-
-### ✅ STATTDESSEN – Fokus auf:
-
-1. **Nur bereitgestellte Zahlen verwenden:**
-   - ✅ {{score_gesamt}}, {{score_befaehigung}}, {{score_governance}},
-      {{score_sicherheit}}, {{score_nutzen}}
-   - ✅ {{qw_hours_total}} – Zeitersparnis durch Quick Wins (h/Monat)
-   - ✅ {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}
-   - ✅ {{PAYBACK_MONTHS}}
-   - ✅ {{ROI_12M}} – ROI nach 12 Monaten in Prozent (z. B. 85,0 = 85,0 %)
-   - ✅ {{EINSPARUNG_MONAT_EUR}} – Einsparungen/Monat in €
-
-2. **Konkrete Aussagen mit Zahlen:**
-   - ✅ „Gesamt-Score: 67/100 – solide Grundlage“
-   - ✅ „Quick-Win-Einsparungen: 45 h/Monat = 4.500 €/Monat“
-   - ✅ „Amortisation nach 8 Monaten, ROI 12M: 85 %“
-
-3. **Spezifischer Bezug auf {{HAUPTLEISTUNG}}:**
-   - ✅ Pilot und Quick Wins immer an die Hauptleistung anbinden
-   - ✅ keine Beispiele verwenden, die nicht zum Geschäftsmodell passen
-
-4. **Sachlich-professioneller Ton:**
-   - ✅ positive, aber ehrliche Sprache („solide Basis“, „sehr gute Ausgangslage“)
-   - ✅ Scores kurz interpretieren (z. B. „exzellente KI-Readiness“)
-
----
-
-## 💡 BEISPIEL (Struktur, ohne feste Zahlen)
-
-> Dieses Beispiel zeigt Struktur und Ton.  
-> Verwende im echten Output **immer die Variablenwerte** – keine Zahlen aus dem Beispiel übernehmen.
-
-```html
 <section class="section executive-summary">
   <h2>Executive Summary</h2>
 
-  <!-- 1. Freundlicher Einstieg -->
+  <!-- Freundlicher Einstieg -->
   <p>
-    Vielen Dank, dass Sie sich die Zeit für diese Analyse genommen haben.
-    Ihre Antworten zeigen, dass Sie Ihr Geschäft sehr gut kennen und bereits wichtige
-    Grundlagen für den Einsatz von KI gelegt haben. Mit diesem Report erhalten Sie
-    einen klaren, umsetzbaren Fahrplan, der zu Ihrer aktuellen Situation passt.
+    Vielen Dank, dass Sie sich die Zeit für diese KI-Status-Analyse genommen haben.
+    Ihre Antworten zeigen, dass Sie Ihr Geschäft in {{BRANCHE_LABEL}} sehr gut kennen
+    und bereits wichtige Grundlagen für den Einsatz von KI in
+    <strong>{{HAUPTLEISTUNG}}</strong> geschaffen haben.
+    Dieser Report fasst die wichtigsten Ergebnisse zusammen und zeigt,
+    welche nächsten Schritte für {{UNTERNEHMENSGROESSE_LABEL}} besonders sinnvoll sind.
   </p>
 
-  <!-- 2. Unternehmensprofil -->
+  <!-- Profil -->
   <p>
-    <strong>Ihr Profil:</strong> {{BRANCHE_LABEL}} – {{UNTERNEHMENSGROESSE_LABEL}} – {{BUNDESLAND_LABEL}}<br>
-    <strong>Ihre Kern-Leistung:</strong> {{HAUPTLEISTUNG}}
+    <strong>Ihr Profil:</strong>
+    {{BRANCHE_LABEL}} – {{UNTERNEHMENSGROESSE_LABEL}} – {{BUNDESLAND_LABEL}}<br>
+    <strong>Kern-Leistung:</strong> {{HAUPTLEISTUNG}}
   </p>
 
-  <!-- 3. Kurze Zusammenfassung -->
+  <!-- Kurz-Zusammenfassung -->
   <p>
-    Die Analyse zeigt eine starke Ausgangsbasis (Score gesamt: {{score_gesamt}}/100).
-    Besonders wichtig: Wir konnten konkrete Quick Wins identifizieren, mit denen Sie
-    {{qw_hours_total}} Stunden pro Monat einsparen können. Damit haben Sie einen klaren
-    Startpunkt für die nächsten 90 Tage.
+    Die Analyse ergibt einen Gesamt-Score von {{score_gesamt}}/100 und zeigt,
+    dass insbesondere der Bereich Wertschöpfung ({{score_nutzen}}/100) und
+    Befähigung ({{score_befaehigung}}/100) gute Ansatzpunkte bieten.
+    Gleichzeitig gibt es bei Governance ({{score_governance}}/100) und
+    Sicherheit ({{score_sicherheit}}/100) klare, gut adressierbare
+    Entwicklungsfelder.
   </p>
 
-  <!-- 4. Key Facts -->
+  <!-- Key Facts -->
   <div class="key-facts">
-    <h4>Auf einen Blick:</h4>
+    <h4>Auf einen Blick</h4>
     <ul>
-      <li><strong>KI-Readiness:</strong> {{score_gesamt}}/100 – kurze verbale Einordnung (z. B. „sehr gute Ausgangslage“)</li>
-      <li><strong>Quick Wins:</strong> Anzahl &nbsp;– {{qw_hours_total}} h/Monat ≈ {{EINSPARUNG_MONAT_EUR}} €/Monat</li>
-      <li><strong>Payback:</strong> {{PAYBACK_MONTHS}} Monate bei {{CAPEX_REALISTISCH_EUR}} € Invest</li>
-      <li><strong>ROI (12 Monate):</strong> {{ROI_12M}} %</li>
-      <li><strong>Empfohlener Startpunkt:</strong> kurz beschriebener Pilot passend zu {{HAUPTLEISTUNG}}</li>
+      <li><strong>KI-Readiness gesamt:</strong> {{score_gesamt}}/100 – kurze verbale Einordnung (z. B. „stabile Ausgangsbasis“)</li>
+      <li><strong>Quick-Win-Potenzial:</strong> {{qw_hours_total}} h/Monat ≈ {{EINSPARUNG_MONAT_EUR}} €/Monat</li>
+      <li><strong>Investition:</strong> ca. {{CAPEX_REALISTISCH_EUR}} € einmalig + {{OPEX_REALISTISCH_EUR}} €/Monat laufend</li>
+      <li><strong>Amortisation:</strong> {{PAYBACK_MONTHS}} Monate · <strong>ROI (12 Monate):</strong> {{ROI_12M}} %</li>
+      <li><strong>Empfohlener Startpunkt:</strong> ein klar umrissener Pilot direkt im Kernprozess von {{HAUPTLEISTUNG}}</li>
     </ul>
   </div>
 
-  <!-- 5. KPI-Cards -->
+  <!-- KPI-Kacheln -->
   <div class="kpi-cards">
     <div class="kpi"><div class="kpi-label">Gesamt</div><div class="kpi-value">{{score_gesamt}}</div></div>
     <div class="kpi"><div class="kpi-label">Befähigung</div><div class="kpi-value">{{score_befaehigung}}</div></div>
@@ -139,47 +66,53 @@ Erstelle eine **einladende, freundliche** Executive Summary (max. 1 Seite), die:
     <div class="kpi"><div class="kpi-label">Wertschöpfung</div><div class="kpi-value">{{score_nutzen}}</div></div>
   </div>
 
-  <!-- 6. Wirtschaftliche Eckdaten -->
+  <!-- Wirtschaftliche Eckdaten (interpretierend, nicht nur Wiederholung) -->
   <h3>Wirtschaftliche Eckdaten</h3>
-  <ul>
-    <li><strong>Quick-Win-Einsparungen:</strong> {{qw_hours_total}} h/Monat = {{EINSPARUNG_MONAT_EUR}} €/Monat</li>
-    <li><strong>Invest (CAPEX):</strong> {{CAPEX_REALISTISCH_EUR}} € ·
-        <strong>laufende Kosten (OPEX):</strong> {{OPEX_REALISTISCH_EUR}} €/Monat</li>
-    <li><strong>Amortisation:</strong> {{PAYBACK_MONTHS}} Monate ·
-        <strong>ROI (12 Monate):</strong> {{ROI_12M}} %</li>
-  </ul>
+  <p>
+    Mit {{qw_hours_total}} eingesparten Stunden pro Monat
+    (≈ {{EINSPARUNG_MONAT_EUR}} €/Monat) und einer realistischen Investition von
+    {{CAPEX_REALISTISCH_EUR}} € plus {{OPEX_REALISTISCH_EUR}} €/Monat
+    ergibt sich eine Amortisation nach rund {{PAYBACK_MONTHS}} Monaten.
+    Ein ROI von {{ROI_12M}} % im ersten Jahr ist für ein
+    {{UNTERNEHMENSGROESSE_LABEL}} in {{BRANCHE_LABEL}} konservativ, aber attraktiv –
+    insbesondere, wenn die Quick Wins konsequent genutzt werden.
+  </p>
 
-  <!-- 7. Top-3 Quick Wins (nur falls vorhanden) -->
+  <!-- Top-3 Quick Wins (nur falls vorhanden) -->
   {% if CONTEXT_QUICK_WINS %}
   <h3>Top-3 Quick Wins (30–60 Tage)</h3>
+  <p>
+    Aus den identifizierten Quick Wins stechen drei Maßnahmen besonders hervor,
+    weil sie direkt in {{HAUPTLEISTUNG}} eingreifen und schnell messbare
+    Effekte bringen. Sie bilden den Kern der 90-Tage-Roadmap und sind
+    in {{UNTERNEHMENSGROESSE_LABEL}} ohne große Zusatzressourcen umsetzbar.
+  </p>
   <ul>
-    <li><strong>[Quick Win 1]</strong> – konkreter Nutzen & h/Monat-Ersparnis aus dem Quick-Win-Kontext</li>
-    <li><strong>[Quick Win 2]</strong> – konkreter Nutzen & h/Monat-Ersparnis</li>
-    <li><strong>[Quick Win 3]</strong> – konkreter Nutzen & h/Monat-Ersparnis</li>
+    <!-- Nutze CONTEXT_QUICK_WINS, um echte Quick Wins kurz zu beschreiben -->
+    <li>[Quick Win 1 – Titel + Kerneffekt in h/Monat oder %]</li>
+    <li>[Quick Win 2 – Titel + Kerneffekt]</li>
+    <li>[Quick Win 3 – Titel + Kerneffekt]</li>
   </ul>
   {% endif %}
 
-  <!-- 8. Startpunkt/Pilot -->
+  <!-- Startpunkt/Pilot -->
   <h3>Startpunkt (Pilot)</h3>
   <p>
-    <strong>Ziel:</strong> Beschreibe ein konkretes Pilotprojekt, das direkt auf {{HAUPTLEISTUNG}} einzahlt
-    (z. B. Automatisierung des Kern-Workflows).<br>
-    <strong>Verantwortlich:</strong> Konkrete Rolle(n) (z. B. Geschäftsführung, Fachbereich, externer Tech-Partner).<br>
-    <strong>MVP-Umfang:</strong> Kurz beschreiben, was in 30–60 Tagen realistisch implementiert werden kann.<br>
-    <strong>Erfolgskriterien:</strong> Messbare KPIs (z. B. X h/Monat weniger, Y % schnellere Durchlaufzeit,
-    Z € Kosteneinsparung).<br>
-    <strong>Investment:</strong> Bezug auf {{CAPEX_REALISTISCH_EUR}} € und {{OPEX_REALISTISCH_EUR}} €/Monat
-    und die Amortisation in {{PAYBACK_MONTHS}} Monaten.
+    Als Pilot empfiehlt sich ein klar abgegrenzter Use Case im Kernprozess
+    von {{HAUPTLEISTUNG}}, der sich mit überschaubarem Aufwand testen lässt
+    (siehe 90-Tage-Roadmap). Ziel ist, die oben beschriebenen Einsparungen
+    möglichst schnell sichtbar zu machen und gleichzeitig Governance-
+    und Sicherheitsanforderungen zu berücksichtigen.
   </p>
 
-  <!-- 9. Nächste Schritte 30/60/90 Tage -->
+  <!-- Nächste Schritte -->
   <h3>Nächste Schritte (30/60/90 Tage)</h3>
   <ol>
-    <li><strong>30 Tage:</strong> Sehr konkrete Aktivitäten (z. B. Tools konfigurieren, Pilot-Use-Case auswählen,
-        Verantwortliche benennen).</li>
-    <li><strong>60 Tage:</strong> Pilot umsetzen und erste Ergebnisse messen
-        (z. B. Anzahl durchgeführter Vorgänge, Zeit- und Kosteneffekte).</li>
-    <li><strong>90 Tage:</strong> ROI-Review mit Bezug auf {{ROI_12M}} %, Entscheidung über Skalierung
-        und ggf. Ausweitung auf weitere Bereiche.</li>
+    <li><strong>30 Tage:</strong> Pilot-Use-Case auswählen, Tools konfigurieren,
+        Verantwortliche benennen, erste Fälle durch den neuen Workflow laufen lassen.</li>
+    <li><strong>60 Tage:</strong> Pilot im Echtbetrieb, Effekte messen,
+        Feedback sammeln, Quick Wins stabilisieren.</li>
+    <li><strong>90 Tage:</strong> ROI-Review, Entscheidung über Skalierung
+        und – falls sinnvoll – Nutzung von Förderprogrammen in {{BUNDESLAND_LABEL}}.</li>
   </ol>
 </section>
