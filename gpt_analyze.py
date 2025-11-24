@@ -2215,7 +2215,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     from services.report_validator import (
         validate_report,
         filter_all_sections,
-)  # type: ignore[attr-defined]
+)
 
 
     log.info(f"[{run_id}] 🔍 Applying size-inappropriate content filter...")
