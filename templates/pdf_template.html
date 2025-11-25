@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>KI-Status-Report {{report_id}} - {{company_name}}</title>
+    <title>KI-Status-Report {{ report_id }} – {{ company_name or kundencode or 'Ihr Unternehmen' }}</title>
     
     <style id="gold-std-typo">
         /* ============================================
@@ -1203,6 +1203,208 @@
             margin-bottom: 4pt;
         }
         
+        /* Light-Mode Override für PDF */
+        html, body {
+            background-color: #F3F4F6;
+            color: #0F172A;
+        }
+
+        /* Text-Farben für Light-Mode */
+        h1, h2, h3, h4, strong {
+            color: #0F172A;
+        }
+
+        p, li {
+            color: #1E293B;
+        }
+
+        .muted, .text-muted {
+            color: #64748B;
+        }
+
+        .small {
+            color: #475569;
+        }
+
+        .page {
+            background: #F9FAFB;
+            box-shadow: 0 8px 30px rgba(15, 23, 42, 0.12);
+        }
+
+        .content {
+            background: #FFFFFF;
+            border-color: rgba(148, 163, 184, 0.45);
+        }
+
+        .content::before {
+            opacity: 0.3;
+        }
+
+        .section {
+            background:
+                radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.06), transparent 65%),
+                radial-gradient(circle at 100% 0, rgba(45, 212, 191, 0.05), transparent 65%),
+                #FFFFFF;
+        }
+
+        .header {
+            background:
+                radial-gradient(circle at -5% -15%, rgba(45, 212, 191, 0.12), transparent 62%),
+                radial-gradient(circle at 105% -10%, rgba(129, 140, 248, 0.18), transparent 58%),
+                linear-gradient(145deg, #FFFFFF, #F9FAFB);
+            border-color: rgba(148, 163, 184, 0.4);
+        }
+
+        .hero-metric-card {
+            background:
+                radial-gradient(circle at 0 0, rgba(16, 185, 129, 0.08), transparent 55%),
+                radial-gradient(circle at 100% 0, rgba(56, 189, 248, 0.06), transparent 55%),
+                #FFFFFF;
+            border-color: rgba(148, 163, 184, 0.35);
+        }
+
+        .card {
+            background:
+                radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.05), transparent 60%),
+                #FFFFFF;
+            border-color: rgba(148, 163, 184, 0.35);
+        }
+
+        .card-muted {
+            background: #F9FAFB;
+            border-color: rgba(148, 163, 184, 0.3);
+        }
+
+        .kpi-card {
+            background:
+                radial-gradient(circle at 0 0, rgba(59, 130, 246, 0.06), transparent 60%),
+                #FFFFFF;
+            border-color: rgba(148, 163, 184, 0.35);
+        }
+
+        .quick-win-card {
+            background:
+                radial-gradient(circle at 0 0, rgba(34, 197, 94, 0.06), transparent 60%),
+                #FFFFFF;
+            border-color: rgba(148, 163, 184, 0.35);
+        }
+
+        .timeline-item {
+            background:
+                radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.05), transparent 60%),
+                #FFFFFF;
+            border-color: rgba(148, 163, 184, 0.35);
+        }
+
+        .tag {
+            background: linear-gradient(135deg, rgba(148, 163, 184, 0.12), rgba(148, 163, 184, 0.08));
+            border-color: rgba(148, 163, 184, 0.4);
+            color: #334155;
+        }
+
+        .badge {
+            background-color: rgba(241, 245, 249, 0.95);
+            border-color: rgba(148, 163, 184, 0.5);
+            color: #334155;
+        }
+
+        .callout {
+            background: #F9FAFB;
+            border-color: rgba(148, 163, 184, 0.4);
+        }
+
+        .highlight-box {
+            background: #F9FAFB;
+            border-color: rgba(129, 140, 248, 0.4);
+        }
+
+        .feedback-section {
+            background:
+                radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.08), transparent 60%),
+                #FFFFFF;
+            border-color: rgba(129, 140, 248, 0.4);
+        }
+
+        .impressum {
+            background:
+                radial-gradient(circle at 0 0, rgba(148, 163, 184, 0.08), transparent 60%),
+                #FFFFFF;
+        }
+
+        .impressum-box {
+            background: #F9FAFB;
+        }
+
+        .compliance-strip {
+            background: #F9FAFB;
+            border-color: rgba(148, 163, 184, 0.4);
+        }
+
+        .annex-section {
+            background: #FFFFFF;
+        }
+
+        /* Score Badge im Light-Mode */
+        .score-badge {
+            border-color: rgba(34, 197, 94, 0.5);
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(22, 163, 74, 0.12));
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        }
+
+        .score-value, .hero-metric-value, .kpi-value {
+            color: #0F172A;
+        }
+
+        .score-label, .hero-metric-label, .kpi-label {
+            color: #475569;
+        }
+
+        .score-sub {
+            color: #64748B;
+        }
+
+        .meta-label {
+            color: #64748B;
+        }
+
+        .meta-value {
+            color: #0F172A;
+        }
+
+        /* Tabellen im Light-Mode */
+        .risk-matrix {
+            border-color: rgba(148, 163, 184, 0.4);
+        }
+
+        .risk-matrix th, .risk-matrix td {
+            border-color: rgba(148, 163, 184, 0.3);
+            color: #1E293B;
+        }
+
+        .risk-matrix thead th {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.12), rgba(30, 64, 175, 0.1));
+            color: #1E293B;
+        }
+
+        /* Section Pills & Kickers */
+        .section-pill {
+            background: rgba(241, 245, 249, 0.9);
+            color: #475569;
+        }
+
+        .section-kicker {
+            color: #3B82F6;
+        }
+
+        /* Feedback Button */
+        .feedback-button {
+            background:
+                radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.2), transparent 60%),
+                #FFFFFF;
+            border-color: rgba(129, 140, 248, 0.5);
+            color: #1E3A8A;
+        }
+        
         @media print {
             h1, h2, h3 {
                 page-break-after: avoid;
@@ -1223,86 +1425,93 @@
         <div class="content">
             <div class="content-inner">
                 <!-- HEADER -->
-                <header class="header">
-                    <div class="header-main">
-                        <div class="eyebrow">
-                            <div class="eyebrow-left">
-                                <span class="section-kicker">KI-Status-Report</span>
-                                <span class="eyebrow-divider"></span>
-                                <span class="small">Unternehmen: <strong>{{company_name}}</strong></span>
-                            </div>
-                            <span class="small">Report-ID: {{report_id}}</span>
-                        </div>
-                        
-                        <div class="title-row">
-                            <div>
-                                <h1>KI-Readiness {{readiness_level_label}}</h1>
-                                <p class="subtitle">
-                                    Individuelle Standortbestimmung für {{company_name}} – mit Fokus auf
-                                    Sicherheit, Effizienz und Förderpotenziale.
-                                </p>
-                            </div>
-                            <div class="score-badge">
-                                <span class="score-label">Gesamt-Score</span>
-                                <div class="score-main">
-                                    <span class="score-value">{{overall_score}}</span>
-                                    <span class="score-max">/ 100</span>
-                                </div>
-                                <span class="score-sub">{{readiness_level_label}}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="meta-grid">
-                            <div class="meta-item">
-                                <span class="meta-label">Branche:</span>
-                                <span class="meta-value">{{industry}}</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Unternehmensgröße:</span>
-                                <span class="meta-value">{{company_size}}</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Hauptziel mit KI:</span>
-                                <span class="meta-value">{{main_goal}}</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Reportdatum:</span>
-                                <span class="meta-value">{{report_date}}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="badge-row">
-                            <span class="badge badge-eu">
-                                <span class="badge-dot"></span>
-                                EU AI Act – Orientierung an Gold-Standard
-                            </span>
-                            <span class="badge badge-dsgvo">
-                                <span class="badge-dot"></span>
-                                DSGVO-konforme Empfehlung (ohne Rechtsberatung)
-                            </span>
-                            <span class="badge badge-risk">
-                                <span class="badge-dot"></span>
-                                Risiko- und Fördersicht für KMU/Freiberufler
-                            </span>
-                            <span class="badge badge-time">
-                                <span class="badge-dot"></span>
-                                Zeithorizont: Fokus auf 6–24 Monate
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <div class="logo-panel">
-                        <div class="logo-row-main">
-                            <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt Logo" class="logo-ki">
-                            <img src="tuev-logo-transparent.webp" alt="TÜV Austria – AI Manager zertifiziert" class="logo-tuev">
-                        </div>
-                        <div class="logo-row-badges">
-                            <img src="ki-ready-2025.webp" alt="KI-READY 2025 Badge" class="logo-ready">
-                            <img src="dsgvo.svg" alt="DSGVO konform" class="logo-dsgvo">
-                            <img src="eu-ai.svg" alt="EU AI Act ready" class="logo-eu">
-                        </div>
-                    </div>
-                </header>
+<header class="header">
+  <div class="header-main">
+    <div class="eyebrow">
+      <div class="eyebrow-left">
+        <span class="section-kicker">KI-Status-Report</span>
+        <span class="eyebrow-divider"></span>
+        <span class="small">
+          Unternehmen:
+          <strong>{{ company_name or kundencode or 'Ihr Unternehmen' }}</strong>
+        </span>
+      </div>
+      <span class="small">Report-ID: {{ report_id }}</span>
+    </div>
+
+    <div class="title-row">
+      <div>
+        <h1>KI-Readiness {{ score_rating }}</h1>
+        <p class="subtitle">
+          Individuelle Standortbestimmung für
+          {{ company_name or BRANCHE_LABEL or 'Ihr Unternehmen' }} – mit Fokus auf
+          Sicherheit, Effizienz und Förderpotenziale.
+        </p>
+      </div>
+      <div class="score-badge">
+        <span class="score-label">Gesamt-Score</span>
+        <div class="score-main">
+          <span class="score-value">{{ score_gesamt }}</span>
+          <span class="score-max">/ 100</span>
+        </div>
+        <span class="score-sub">{{ score_rating }}</span>
+      </div>
+    </div>
+
+    <div class="meta-grid">
+      <div class="meta-item">
+        <span class="meta-label">Branche:</span>
+        <span class="meta-value">{{ BRANCHE_LABEL }}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Unternehmensgröße:</span>
+        <span class="meta-value">{{ UNTERNEHMENSGROESSE_LABEL }}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Hauptziel mit KI:</span>
+        <span class="meta-value">
+          {{ STRATEGISCHE_ZIELE or KI_ZIELE_LABELS or 'nicht spezifiziert' }}
+        </span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Reportdatum:</span>
+        <span class="meta-value">{{ report_date }}</span>
+      </div>
+    </div>
+
+    <div class="badge-row">
+      <span class="badge badge-eu">
+        <span class="badge-dot"></span>
+        EU AI Act – Orientierung an Gold-Standard
+      </span>
+      <span class="badge badge-dsgvo">
+        <span class="badge-dot"></span>
+        DSGVO-konforme Empfehlung (ohne Rechtsberatung)
+      </span>
+      <span class="badge badge-risk">
+        <span class="badge-dot"></span>
+        Risiko- und Fördersicht für KMU/Freiberufler
+      </span>
+      <span class="badge badge-time">
+        <span class="badge-dot"></span>
+        Zeithorizont: Fokus auf 6–24 Monate
+      </span>
+    </div>
+  </div>
+
+  <div class="logo-panel">
+    <div class="logo-row-main">
+      <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt Logo" class="logo-ki">
+      <img src="tuev-logo-transparent.webp" alt="TÜV Austria – AI Manager zertifiziert" class="logo-tuev">
+    </div>
+    <div class="logo-row-badges">
+      <img src="ki-ready-2025.webp" alt="KI-READY 2025 Badge" class="logo-ready">
+      <img src="dsgvo.svg" alt="DSGVO konform" class="logo-dsgvo">
+      <img src="eu-ai.svg" alt="EU AI Act ready" class="logo-eu">
+    </div>
+  </div>
+</header>
+
                 <!-- HEADER:END -->
                 
                 <!-- HERO METRICS -->
@@ -1324,12 +1533,12 @@
                                 <div class="hero-metric-row">
                                     <div>
                                         <div class="hero-metric-label">Aktueller Reifegrad</div>
-                                        <div class="hero-metric-value">{{readiness_level_label}} ({{overall_score}} / 100)</div>
+                                        <div class="hero-metric-value">{{ score_rating }} ({{ score_gesamt }} / 100)</div>
                                         <div class="hero-metric-sub">Einschätzung basierend auf Fragebogenprofil</div>
                                     </div>
                                     <span class="tag">
                                         <span class="tag-dot"></span>
-                                        {{anchor_profile}}
+                                        {{ size_label }}
                                     </span>
                                 </div>
                                 
@@ -1337,7 +1546,11 @@
                                     <span class="sparkline-label">Potenzial bei Umsetzung der Empfehlungen</span>
                                     <div class="sparkline-bar"></div>
                                     <span class="sparkline-badge">
-                                        +{{potential_score_gain}} Punkte
+                                        +{{
+                                            ((top10_score_for_size or 0) - (score_gesamt or 0))
+                                            if (top10_score_for_size or 0) > (score_gesamt or 0)
+                                            else 0
+                                        }} Punkte
                                     </span>
                                 </div>
                             </div>
@@ -1346,15 +1559,15 @@
                                 <div class="hero-metric-row">
                                     <div>
                                         <div class="hero-metric-label">Zeitersparnis-Potenzial</div>
-                                        <div class="hero-metric-value">{{monthly_time_savings_hours}} Std./Monat</div>
+                                        <div class="hero-metric-value">{{ monatsersparnis_stunden or qw_hours_total }} Std./Monat</div>
                                         <div class="hero-metric-sub">Konservativ geschätzt bei pragmatischer Umsetzung</div>
                                     </div>
                                 </div>
                                 <div class="hero-metric-row" style="margin-top: 4px;">
                                     <div>
                                         <div class="hero-metric-label">Finanzieller Effekt</div>
-                                        <div class="hero-metric-value">{{monthly_savings_eur}} € / Monat</div>
-                                        <div class="hero-metric-sub">Basierend auf Ihren Angaben zu Stundensätzen & Teamgröße</div>
+                                        <div class="hero-metric-value">{{ monatsersparnis_eur or EINSPARUNG_MONAT_EUR }} € / Monat</div>
+                                        <div class="hero-metric-sub">Basierend auf Ihren Angaben zu Stundensätzen &amp; Teamgröße</div>
                                     </div>
                                 </div>
                             </div>
@@ -1365,21 +1578,21 @@
                                 <div class="kpi-row">
                                     <div>
                                         <div class="kpi-label">Investition (12 Monate)</div>
-                                        <div class="kpi-value">{{total_investment_eur}} €</div>
+                                        <div class="kpi-value">{{ ((CAPEX_REALISTISCH_EUR or 0) + (OPEX_REALISTISCH_EUR or 0) * 12) | int }} €</div>
                                     </div>
                                     <div>
                                         <div class="kpi-label">Erwartete Ersparnis</div>
-                                        <div class="kpi-value">{{savings_12_months_eur}} €</div>
+                                        <div class="kpi-value">{{ ((EINSPARUNG_MONAT_EUR or monatsersparnis_eur or 0) * 12) | int }} €</div>
                                     </div>
                                 </div>
                                 <div class="kpi-row" style="margin-top: 4px;">
                                     <div>
                                         <div class="kpi-label">Payback-Zeitraum</div>
-                                        <div class="kpi-value">{{payback_period_months}} Monate</div>
+                                        <div class="kpi-value">{{ PAYBACK_MONTHS or 'n/a' }} Monate</div>
                                     </div>
                                     <div>
                                         <div class="kpi-label">ROI (12 Monate)</div>
-                                        <div class="kpi-value">{{roi_12_months_percent}} %</div>
+                                        <div class="kpi-value">{{ ((ROI_12M or 0) * 100) | round(1) }} %</div>
                                     </div>
                                 </div>
                                 <p class="kpi-note">
@@ -1390,7 +1603,7 @@
                             
                             <div class="card card-muted">
                                 <h3>Ihr KI-Profil in einem Satz</h3>
-                                <p>{{one_sentence_summary}}</p>
+                                <p>{{ LEAD_EXEC }}</p>
                                 <p class="small muted">
                                     Die weiteren Seiten brechen diese Einschätzung auf Teilbereiche herunter und zeigen konkrete
                                     nächste Schritte (Quick Wins, Roadmap, Förderoptionen).
@@ -1596,7 +1809,7 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
                         
                         <div class="impressum-block">
                             <h4>Kontakt</h4>
-                            <p>E-Mail: <a href="mailto:info@ki-sicherheit.jetzt">info@ki-sicherheit.jetzt</a><br>
+                            <p>E-Mail: <a href="/cdn-cgi/l/email-protection#741d1a121b341f1d59071d171c11061c111d005a1e11000e00"><span class="__cf_email__" data-cfemail="573e393138173c3e7a243e343f32253f323e23793d32232d23">[email&#160;protected]</span></a><br>
                             Web: <a href="https://ki-sicherheit.jetzt" target="_blank">ki-sicherheit.jetzt</a></p>
                             <p>Report-Ansprechperson: {{user_email}}</p>
                         </div>
@@ -1652,7 +1865,7 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
                         </ul>
                         
                         <p>Wenn Sie von Ihren Rechten Gebrauch machen wollen, wenden Sie sich bitte an
-                            <a href="mailto:privacy@ki-sicherheit.jetzt">privacy@ki-sicherheit.jetzt</a>.
+                            <a href="/cdn-cgi/l/email-protection#f9898b908f989a80b99290d48a909a919c8b919c908dd7939c8d838d"><span class="__cf_email__" data-cfemail="9dedeff4ebfcfee4ddf6f4b0eef4fef5f8eff5f8f4e9b3f7f8e9e7e9">[email&#160;protected]</span></a>.
                         </p>
                         
                         <p class="small muted">
@@ -1668,15 +1881,4 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
                 <p class="small" style="text-align: center;">
                     © {{report_year}} KI-Sicherheit.jetzt — 
                     Report ID: {{report_id}} — 
-                    Erstellt: {{report_date}} — 
-                    Kontakt: {{user_email}}
-                </p>
-                <!-- BRAND:FOOTER:END -->
-            </div>
-        </div>
         
-        <!-- Watermark -->
-        <div class="watermark">VERTRAULICH</div>
-    </div>
-</body>
-</html>
