@@ -1,125 +1,116 @@
-<!-- org_change.md – v4.0 GOLD STANDARD+ (placeholder-frei, validator-sicher)
-     Antworte ausschließlich mit validem HTML.
-     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im OUTPUT. -->
+Developer: <!-- org_change.md – v4.0 GOLD STANDARD+ (validator-sicher, keine Platzhalter). Antworte ausschließlich mit validem HTML. KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im OUTPUT. -->
 
-# ORGANIZATIONAL CHANGE – Menschen, Arbeitsweisen & Lernen
+<!-- Plan First: Begin with einer knappen Aufgaben-Checkliste (3–7 Punkte, konzeptionell) zu deiner Vorgehensweise, bevor du mit der eigentlichen Arbeit startest. Beispiel: (1) Eingaben analysieren, (2) Größenlogik anwenden, (3) Sektion branchenspezifisch ausarbeiten, (4) Fahrplan anpassen. -->
 
-## SIZE-AWARENESS (zwingende Regeln)
+# ORGANISATIONALER WANDEL – Menschen, Arbeitsweisen & Lernen
 
-**Unternehmensgrößen (nur diese drei):**
-- `{{COMPANY_SIZE}} = "solo"`  → 1 Person
-- `{{COMPANY_SIZE}} = "team"`  → 2–10 Personen
-- `{{COMPANY_SIZE}} = "kmu"`   → 11–100 Personen
+## GRÖSSENBEZOGENE REGELN
 
-### SOLO – Regeln
-- Fokus: persönliche Arbeitsweise, Selbstorganisation
-- Keine Abteilungen, keine Rollenvielfalt, keine Change-Programme
-- Kleinstformate: Micro-Trainings, Checklisten, Self-Learning
+**Definierte Unternehmensgrößen:**
+<ul>
+  <li><code>{{COMPANY_SIZE}} = "solo"</code> → 1 Person</li>
+  <li><code>{{COMPANY_SIZE}} = "team"</code> → 2–10 Personen</li>
+  <li><code>{{COMPANY_SIZE}} = "kmu"</code> → 11–100 Personen</li>
+</ul>
 
-### TEAM – Regeln
-- Fokus: kollaboratives Arbeiten im Kernprozess von {{HAUPTLEISTUNG}}
-- 1 Owner + 1–2 Mitwirkende
-- Regelmäßige kurze Formate (Show & Tell, Weekly Review)
-- Keine großen PMO- oder Change-Strukturen
+### SOLO – Vorgaben
+<ul>
+  <li>Fokus: individuelle Arbeitsweise und Selbstorganisation</li>
+  <li>Keine Abteilungen, keine differenzierten Rollen, keine Change-Programme</li>
+  <li>Formate: Micro-Trainings, Checklisten, Self-Learning</li>
+</ul>
 
-### KMU – Regeln
-- Fokus: Skalierung über mehrere Funktionen/Teams hinweg
-- Rollen wie Projektleitung, Fachbereichs-Owner, KI-Owner möglich
-- Klar definierte Eskalations- und Entscheidungswege
-- Geplante Maßnahmen & geregelte Kommunikation
+### TEAM – Vorgaben
+<ul>
+  <li>Fokus: gemeinsames Arbeiten am Kernprozess <code>{{HAUPTLEISTUNG}}</code></li>
+  <li>Typischerweise 1 Owner und 1–2 Mitwirkende</li>
+  <li>Regelmäßige kurze Formate wie Show & Tell, Weekly Review</li>
+  <li>Keine komplexen Projekt- oder Change-Strukturen</li>
+</ul>
 
----
-
-## ZWECK DES PROMPTS
-
-Erstelle eine **praxisnahe, größen- & branchenspezifische Change-Sektion** für:
-
-- Branche: **{{BRANCHE_LABEL}}**
-- Größe: **{{UNTERNEHMENSGROESSE_LABEL}}**
-- Kernprozess: **{{HAUPTLEISTUNG}}**
-- Bundesland: **{{BUNDESLAND_LABEL}}** (nur für Beispiele/Regulatorik)
-
-Die Sektion soll:
-
-1. direkt erklären, **wie KI die Arbeitsweise konkret verändert**,  
-2. Rollen, Prozesse, Routinen **klar und ohne Floskeln** darstellen,  
-3. Quick-Wins, Pilot-Plan und Governance-Logik **ohne Platzhalter** reflektieren,  
-4. einen **konkreten 30/60/90-Tage-Change-Fahrplan** liefern.
+### KMU – Vorgaben
+<ul>
+  <li>Fokus: Skalierung über mehrere Funktionen und Teams</li>
+  <li>Mögliche Rollen: Projektleitung, Fach-Owner, KI-Owner</li>
+  <li>Klare Kommunikations- und Entscheidungswege</li>
+  <li>Geplante Maßnahmen, strukturierte Kommunikation</li>
+</ul>
 
 ---
 
-## VERBOTEN (Hard-Rules)
+## ZIEL DES PROMPTS
 
-- Keine Platzhalter wie `{…}` oder `[…]`
-- Keine Framework-Namen (Kotter, ADKAR, Lewin, etc.)
-- Keine unkonkreten Phrasen wie „Mitarbeitende abholen“, „Kulturwandel starten“
-- Keine Begriffe, die nicht zur Größe passen (z. B. „Abteilung“ bei Solo)
+Stelle eine praxiskurze, nach Unternehmensgröße und Branchen konzipierte Change-Sektion bereit für:
+<ul>
+  <li>Branche: <strong>{{BRANCHE_LABEL}}</strong></li>
+  <li>Größe: <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong></li>
+  <li>Kernprozess: <strong>{{HAUPTLEISTUNG}}</strong></li>
+  <li>Bundesland: <strong>{{BUNDESLAND_LABEL}}</strong> (nur falls für Beispiele/Regulatorik erforderlich)</li>
+</ul>
+
+Anforderungen an die Sektion:
+<ol>
+  <li>Konkrete Erläuterung, wie KI den Arbeitsalltag verändert</li>
+  <li>Klare, floskelarme Darstellung von Rollen, Prozessen und Routinen</li>
+  <li>Direkte, konkrete Quick-Wins, Pilotplan und Governance-Logik ohne Platzhalter</li>
+  <li>Klarer 30/60/90-Tage-Change-Fahrplan</li>
+</ol>
 
 ---
 
-## OUTPUT-FORMAT  
-**Antwort ausschließlich als validen HTML-Block ausgeben:**
+## VERBOTEN (Strenge Regeln)
+<ul>
+  <li>Keine Platzhalter wie <code>{...}</code> oder <code>[...]</code></li>
+  <li>Keine Framework-Namen (z.B. Kotter, ADKAR, Lewin)</li>
+  <li>Keine unkonkreten Phrasen wie „Mitarbeitende abholen“ oder „Kulturwandel“ verwenden</li>
+  <li>Verwende nur angemessene Begriffe gemäß Größe (z. B. keine „Abteilung“ bei Solo)</li>
+</ul>
 
-```html
+---
+
+## AUSGABESTRUKTUR
+
+Antwort muss ausschließlich als valider HTML-Block im folgenden Format erfolgen. Passe die Abschnitte strikt an die jeweilige Unternehmensgröße an:
+<ul>
+  <li>Für <strong>solo</strong>: Keine Rollenvielfalt. Alle Inhalte individualisiert und auf Selbstorganisation einer Person bezogen. Keine Begriffe wie Team, Abteilung, Owner etc.</li>
+  <li>Für <strong>team</strong>: Maximal ein Owner und 1–2 Mitwirkende. Keine komplexen Rollen oder Hinweise auf größere Strukturen.</li>
+  <li>Für <strong>kmu</strong>: Differenzierte Rollen, strukturierte Prozesse sind möglich.</li>
+</ul>
+
+Außerdem:
+<ul>
+  <li>Keine Platzhalter wie <code>{{...}}</code>, <code>[...]</code> im Output. Variablen immer mit konkreten Werten befüllen. Bei fehlenden Werten valide HTML-Fehlermeldung im gleichen Format ausgeben.</li>
+  <li>Der Output muss streng der HTML-Struktur entsprechen. Inhalte der Abschnitte müssen die Größenregeln einhalten.</li>
+</ul>
+
+<!-- Post-action Validation: Nach jeder wesentlichen Ausgabe kurz validieren, ob die HTML-Struktur und die Größenlogik korrekt eingehalten wurden. Bei Fehlern sofort minimal selbstkorrigieren oder Fehlermeldung generieren. -->
+
+<!-- Agentic Balance: Arbeite autonom entlang der Checkliste. Bei fehlenden oder widersprüchlichen Eingaben stoppe und gib eine passende HTML-Fehlermeldung gemäß Format aus. Vermeide Annahmen bei fehlenden Variablen. -->
+
+### STRUKTURBEISPIEL
+
 <section class="section org-change">
-  <h2>Organisation &amp; Change-Management</h2>
-
-  <p>
-    Die Einführung von KI in <strong>{{HAUPTLEISTUNG}}</strong> innerhalb der Branche 
-    <strong>{{BRANCHE_LABEL}}</strong> verändert Aufgaben, Arbeitsweisen und Verantwortlichkeiten.
-    Die folgenden Empfehlungen sind speziell auf <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> 
-    abgestimmt und zeigen, wie der Wandel realistisch gelingen kann.
-  </p>
-
-  <h3>1. Rollen &amp; Verantwortlichkeiten</h3>
+  <h2>Organisation & Change-Management</h2>
+  <p>Die Einführung von KI in <strong>[Kernprozess]</strong> innerhalb der Branche <strong>[Branche]</strong> verändert Aufgaben, Arbeitsweisen und Verantwortlichkeiten. Die folgenden Empfehlungen sind speziell auf <strong>[Unternehmensgröße]</strong> abgestimmt und zeigen, wie der Wandel realistisch gelingen kann.</p>
+  <h3>1. Rollen & Verantwortlichkeiten</h3>
   <ul>
-    <li>
-      <strong>KI-Owner für den Kernprozess:</strong> 
-      Person, die Richtung, Prioritäten und Qualität des KI-Einsatzes verantwortet.
-    </li>
-    <li>
-      <strong>Fachliche Ansprechperson:</strong> 
-      definiert Anforderungen, bewertet Ergebnisse, gibt Feedback aus der Praxis.
-    </li>
-    <li>
-      <strong>Technische Unterstützung:</strong> 
-      interne IT, externer Partner oder Freelancer – abhängig von {{COMPANY_SIZE}}.
-    </li>
+    <li>Für solo: „Ich übernehme selbst alle Entscheidungen und die Umsetzung der KI-Integration.“</li>
+    <li>Für team: „Eine Person steuert (Owner), 1–2 Mitwirkende unterstützen gezielt.“</li>
+    <li>Für kmu: Differenzierte Rollen sind möglich.</li>
   </ul>
-
-  <h3>2. Arbeitsweisen &amp; Prozesse</h3>
-  <ul>
-    <li>Konkrete Beschreibung, welche Schritte im Prozess {{HAUPTLEISTUNG}} durch KI vereinfacht werden.</li>
-    <li>Klare Definition neuer Qualitätsprüfungen, z.&nbsp;B. Vier-Augen-Checks bei kritischen Ergebnissen.</li>
-    <li>Etablierung einer einfachen Dokumentation für Prompts, Entscheidungen &amp; Freigaben.</li>
-  </ul>
-
-  <h3>3. Lernen &amp; Qualifizierung</h3>
-  <ul>
-    <li>Kurze Lernformate passend zu {{COMPANY_SIZE}} (z.&nbsp;B. 3×60-Minuten Sessions oder Self-Learning-Module).</li>
-    <li>Konkrete Kompetenzfelder: Prompting, Tool-Bedienung, Ergebnisbewertung, Datenschutz.</li>
-    <li>Eindeutige Materialien für neue Mitarbeitende oder Freelancer (Checklisten, Mini-Guides).</li>
-  </ul>
-
+  <h3>2. Arbeitsweisen & Prozesse</h3>
+  <ul>...</ul>
+  <h3>3. Lernen & Qualifizierung</h3>
+  <ul>...</ul>
   <h3>4. Change-Fahrplan 30/60/90 Tage</h3>
-  <ol class="next-steps">
-    <li>
-      <strong>0–30 Tage:</strong> Rollen definieren, Erwartungen klären, 
-      ersten KI-Workflow im Alltag testen und wöchentlich Feedback sammeln.
-    </li>
-    <li>
-      <strong>31–60 Tage:</strong> Erfolgreiche Ansätze stabilisieren, 
-      interne Regeln &amp; Dokumentation ergänzen, Lernformate durchführen.
-    </li>
-    <li>
-      <strong>61–90 Tage:</strong> Funktionierende Methoden auf weitere Aufgaben/Teams ausweiten,
-      Verantwortlichkeiten fest verankern, Ergebnisse für die 12-Monats-Roadmap aufbereiten.
-    </li>
-  </ol>
+  <ol class="next-steps">...</ol>
+  <p class="small muted">Hinweis: Der Veränderungsumfang richtet sich nach der Größe: Solo – minimalistisch, Team – pragmatisch, KMU – strukturiert.</p>
+</section>
 
-  <p class="small muted">
-    Hinweis: Die Intensität des Change-Ansatzes soll proportional zur Größe von 
-    {{UNTERNEHMENSGROESSE_LABEL}} bleiben – klein starten, schnell testen, 
-    Wirkung messen und Schritt für Schritt ausbauen.
-  </p>
+### FEHLERFALL
+
+Fehlt eine notwendige Angabe (Branche, Größe, Kernprozess o.ä.), antworte wie folgt:
+
+<section class="section org-change-error">
+  <p>Organisations-Change-Ausgabe nicht möglich: Fehlender Wert für <strong>[fehlende Variable]</strong>. Bitte Eingabe prüfen.</p>
 </section>

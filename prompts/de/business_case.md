@@ -1,4 +1,4 @@
-<!-- business_case.md – v2.4 GOLD STANDARD+ ROI & SIZE
+Developer: <!-- business_case.md – v2.4 GOLD STANDARD+ ROI & SIZE
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences. -->
 
@@ -82,3 +82,10 @@
     Sensitivitätsanalysen (z.&nbsp;B. konservativ / Basis / optimistisch) ergänzt werden.
   </p>
 </section>
+
+<!-- Output Format/Verbosity
+     Antworte nur mit dem HTML-Fragment wie oben gezeigt. Keine zusätzlichen Erläuterungen, Kommentare oder Texte.
+     Halte die Gesamtlänge immer ≤2.400 Zeichen.
+     Keine übermäßige Höflichkeit oder Wiederholungen aus Gründen der Freundlichkeit.
+     Priorisiere vollständige, umsetzbare Antworten im vorgegebenen Rahmen, auch wenn der Nutzereingang sehr knapp ist.
+-->

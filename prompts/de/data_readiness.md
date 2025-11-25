@@ -1,15 +1,16 @@
-
----
+Developer: ---
 
 ## 4️⃣ `data_readiness.md` – jetzt size- & tool-sensitiv
 
-Hier habe ich eine neue Section „SIZE- & TOOL-AWARENESS“ ergänzt, damit bei `solo` + „keine Tools“ nicht wieder CRM-Text entsteht.  
+Beginne mit einer kurzen, konzeptuellen Checkliste (3–7 Punkte) der geplanten Analyse auf Basis des Briefings (z. B. Inputs prüfen, Größen-/Tool-Einordnung, Daten-Bewertung, Gaps identifizieren, Quick Wins definieren, Output strukturieren).
+
+Beachte: Setze reasoning_effort = medium, um einen klaren, knappen Stil zu gewährleisten. Nach jedem relevanten Abschnitt (Analyse, Gaps, Quick Wins) validiere in 1-2 Sätzen, dass die Zielvorgaben erfüllt wurden und ob Zusatzschritte nötig sind.
 
 ```md
-# PROMPT: Data Readiness - Daten-Infrastruktur-Bewertung
+# PROMPT: Data Readiness – Daten-Infrastruktur-Bewertung
 
 ## ZWECK
-Erstelle eine Daten-Readiness-Analyse die:
+Erstelle eine Data-Readiness-Analyse, die:
 1. **Vorhandene Daten bewertet** (Qualität, Struktur, Zugänglichkeit)
 2. **Spezifisch für {{HAUPTLEISTUNG}}** ist
 3. **Konkrete Gaps** identifiziert
@@ -28,28 +29,28 @@ Erstelle eine Daten-Readiness-Analyse die:
 - 11–100 (KMU)
 
 **Tools (aus Briefing, z.B. `vorhandene_tools`):**
-- z.B. "keine", "Notion", "Excel", "Hubspot", "Pipedrive", …
+- z. B. „keine“, „Notion“, „Excel“, „Hubspot“, „Pipedrive“, …
 
 ### Regeln:
 
-- 🔹 **Solo + "keine" Tools**  
-  - ❌ KEIN CRM-System erfinden ("Salesforce", "Hubspot" etc.), wenn nichts dergleichen im Briefing steht.  
+- **Solo + „keine“ Tools**:
+  - ❌ KEIN CRM-System erfinden (z. B. „Salesforce“, „Hubspot“), wenn nichts dergleichen im Briefing steht.  
   - ❌ KEIN Data Lake / Data Warehouse vorschlagen.  
-  - ✅ Datenquellen sind typischerweise: E-Mails, einfache Listen (Excel/Sheets/Notion), Formular-Exports (z.B. Typeform), PDFs.  
-  - ✅ Quick Wins: einfache Strukturierung (Liste, Tags, ein Dashboard), kein großer Architektur-Wurf.
+  - ✅ Datenquellen sind typischerweise: E-Mails, einfache Listen (Excel/Sheets/Notion), Formular-Exports (z. B. Typeform), PDFs.  
+  - ✅ Quick Wins: einfache Strukturierung (Liste, Tags, ein Dashboard), keine komplexe Architektur.
 
-- 🔹 **Kleines Team (2–10) ohne explizites CRM**  
-  - ✅ Du darfst von geteilten Dateien/Ordnern, einfachen Tools (Notion, Trello, Google Drive) ausgehen.  
-  - ❌ Kein ausgewachsenes CRM behaupten, wenn im Briefing keins steht.  
-  - ✅ Wenn im Kontext ein Tool genannt ist (z.B. Hubspot), nutze GENAU dieses.
+- **Kleines Team (2–10) ohne explizites CRM**:
+  - ✅ Du darfst von geteilten Dateien/Ordnern, einfachen Tools (Notion, Trello, Google Drive) ausgehen.
+  - ❌ Kein ausgewachsenes CRM annehmen, wenn im Briefing keins steht.
+  - ✅ Wenn im Kontext ein Tool genannt ist (z. B. Hubspot), nutze GENAU dieses.
 
-- 🔹 **KMU (11–100) mit CRM im Briefing**  
-  - ✅ CRM-System (z.B. "Kundendaten (CRM-System)") ist OK, ABER immer am Briefing ausrichten.  
-  - ✅ Daten-Architektur darf etwas ambitionierter sein (Dashboards, BI-Tool).  
-  - ❌ Keine Enterprise-Übertreibung (kein "Data Lake" o.Ä.), wenn nicht explizit erwähnt.
+- **KMU (11–100) mit CRM im Briefing**:
+  - ✅ CRM-System (z. B. „Kundendaten (CRM-System)“) ist OK, aber immer am Briefing ausrichten.  
+  - ✅ Daten-Architektur darf ambitionierter sein (Dashboards, BI-Tool).  
+  - ❌ Keine Enterprise-Übertreibung (kein „Data Lake“ o. Ä.), wenn nicht explizit erwähnt.
 
-- 🔹 **Allgemein**  
-  - Schreibe IMMER so, dass es zur Kombination aus Unternehmensgröße und tatsächlichen Tools im Briefing passt.  
+- **Allgemein**:
+  - Schreibe IMMER so, dass es zur Kombination aus Unternehmensgröße und tatsächlichen Tools im Briefing passt.
   - Wenn du unsicher bist, wähle die **einfachere** Variante (Listen, Logs, einfache Dashboards) statt Enterprise-Stack.
 
 ---
@@ -58,28 +59,28 @@ Erstelle eine Daten-Readiness-Analyse die:
 
 ### ❌ VERBOTEN:
 1. **KEINE generische Daten-Theorie:**
-   - ❌ "Data Governance Framework etablieren"
-   - ❌ "Data Lake aufbauen"
-   - ❌ "Master Data Management implementieren"
+   - ❌ „Data Governance Framework etablieren“
+   - ❌ „Data Lake aufbauen“
+   - ❌ „Master Data Management implementieren“
 
 2. **KEINE Daten-Projekte ohne Nutzen:**
-   - ❌ "Alle Daten in Data Warehouse migrieren"
-   - ❌ "ETL-Pipelines für alle Systeme bauen"
+   - ❌ „Alle Daten in Data Warehouse migrieren“
+   - ❌ „ETL-Pipelines für alle Systeme bauen“
 
 3. **KEINE Überkomplexität:**
-   - ❌ "Enterprise Data Architecture" bei Solo/Klein
-   - ❌ "Data Scientists einstellen"
+   - ❌ „Enterprise Data Architecture“ bei Solo/Klein
+   - ❌ „Data Scientists einstellen“
 
-### ✅ STATTDESSEN:
+### ✅ STATT DESSEN:
 1. **Spezifisch für {{HAUPTLEISTUNG}}:**
-   - ✅ "Assessment-Daten: 30 Reports in PostgreSQL, strukturiert"
-   - ✅ "Kundenfeedback: Unstrukturiert in E-Mails, nicht nutzbar"
-   - ✅ "API-Logs: Nicht vorhanden, OpenAI-Kosten unklar"
+   - ✅ „Assessment-Daten: 30 Reports in PostgreSQL, strukturiert“
+   - ✅ „Kundenfeedback: Unstrukturiert in E-Mails, nicht nutzbar“
+   - ✅ „API-Logs: Nicht vorhanden, OpenAI-Kosten unklar“
 
 2. **Quick Wins für Daten:**
-   - ✅ "Logging für API-Costs implementieren (2h)"
-   - ✅ "Kundenfeedback in Typeform sammeln (strukturiert)"
-   - ✅ "Assessment-Daten für Branchen-Benchmark nutzen"
+   - ✅ „Logging für API-Costs implementieren (2h)“
+   - ✅ „Kundenfeedback in Typeform sammeln (strukturiert)“
+   - ✅ „Assessment-Daten für Branchen-Benchmark nutzen“
 
 ---
 
@@ -100,8 +101,8 @@ Erstelle eine Daten-Readiness-Analyse die:
     </thead>
     <tbody>
       <tr>
-        <td>Assessment-Daten (z.B. PostgreSQL / Tabellen / Exporte)</td>
-        <td>Strukturiert (z.B. Tabellen: users, assessments, reports)</td>
+        <td>Assessment-Daten (z. B. PostgreSQL / Tabellen / Exporte)</td>
+        <td>Strukturiert (z. B. Tabellen: users, assessments, reports)</td>
         <td>Hoch (validiert durch Formular-Logik)</td>
         <td>Genutzt für Report-Generierung, aber kaum für Analytics</td>
       </tr>
@@ -128,36 +129,22 @@ Erstelle eine Daten-Readiness-Analyse die:
 
   <h3>2. Daten-Gaps & Impact</h3>
   <ul>
-    <li><strong>Gap 1:</strong> Keine Analytics auf vorhandenen Assessment-Daten → 
-        Branchen-Trends bleiben unsichtbar, Potenzial für Benchmarks ungenutzt.</li>
+    <li><strong>Gap 1:</strong> Keine Analytics auf vorhandenen Assessment-Daten → Branchen-Trends bleiben unsichtbar, Potenzial für Benchmarks ungenutzt.</li>
     <li><strong>Gap 2:</strong> Kundenfeedback unstrukturiert → Qualität kann nicht systematisch verbessert werden.</li>
     <li><strong>Gap 3:</strong> API-Kosten nur grob sichtbar → Teure Prompts und Einsparpotenziale bleiben verborgen.</li>
   </ul>
 
-  <h3>3. Quick Wins für Daten-Qualität (30-60 Tage)</h3>
+  <h3>3. Quick Wins für Daten-Qualität (30–60 Tage)</h3>
   <ol>
-    <li><strong>API-Cost-Logging implementieren (4h, €0):</strong> Middleware oder Logging-Layer, der 
-        OpenAI-Requests (Prompt-Länge, Modell, Kosten, Response-Time) in einer Tabelle oder Datei erfasst. 
-        <strong>Nutzen:</strong> Transparenz über Kosten, Batch-Ersparnis messbar.</li>
-    
-    <li><strong>Feedback-Formular in jedem Report-PDF verlinken (2h, €0):</strong> QR-Code oder Link zu einem 
-        kurzen Formular mit 3 Fragen ("Wie hilfreich? (1-5)", "Was fehlt?", "Würden Sie weiterempfehlen?"). 
-        <strong>Nutzen:</strong> Strukturiertes Feedback, NPS und Zufriedenheit trackbar.</li>
-    
-    <li><strong>Einfaches Analytics-Dashboard (8h, €0 mit z.B. Metabase/Looker Studio):</strong> 
-        Verbindung auf bestehende Datenbank oder Exporte, Dashboards: Top-Branchen, Durchschnitts-Scores, Zeitverläufe. 
-        <strong>Nutzen:</strong> Sofortige Insights für Marketing und Produkt-Entscheidungen.</li>
-    
-    <li><strong>GPT-Response-Validator (12h):</strong> Zweiter GPT-Call, der Reports auf offensichtliche 
-        Widersprüche und Halluzinationen prüft. <strong>Nutzen:</strong> Qualitätssicherung vor manuellem Review, 
-        reduzierte Review-Zeit.</li>
+    <li><strong>API-Cost-Logging implementieren (4h, €0):</strong> Middleware oder Logging-Layer, der OpenAI-Requests (Prompt-Länge, Modell, Kosten, Response-Time) in einer Tabelle oder Datei erfasst. <strong>Nutzen:</strong> Transparenz über Kosten, Batch-Ersparnis messbar.</li>
+    <li><strong>Feedback-Formular in jedem Report-PDF verlinken (2h, €0):</strong> QR-Code oder Link zu einem kurzen Formular mit 3 Fragen („Wie hilfreich? (1–5)“, „Was fehlt?“, „Würden Sie weiterempfehlen?“). <strong>Nutzen:</strong> Strukturiertes Feedback, NPS und Zufriedenheit trackbar.</li>
+    <li><strong>Einfaches Analytics-Dashboard (8h, €0 mit z. B. Metabase/Looker Studio):</strong> Verbindung auf bestehende Datenbank oder Exporte, Dashboards: Top-Branchen, Durchschnitts-Scores, Zeitverläufe. <strong>Nutzen:</strong> Sofortige Insights für Marketing und Produkt-Entscheidungen.</li>
+    <li><strong>GPT-Response-Validator (12h):</strong> Zweiter GPT-Call, der Reports auf offensichtliche Widersprüche und Halluzinationen prüft. <strong>Nutzen:</strong> Qualitätssicherung vor dem manuellen Review, reduzierte Review-Zeit.</li>
   </ol>
 
-  <h3>4. Langfristige Daten-Strategie (Monate 6-12)</h3>
+  <h3>4. Langfristige Daten-Strategie (Monate 6–12)</h3>
   <ul>
-    <li><strong>Branchen-Benchmark-Datenbank:</strong> Anonymisierte Assessment-Daten aggregieren, 
-        "KI-Readiness-Index" pro Branche berechnen und als Produkt (z.B. für Partner, Medien, Investoren) anbieten.</li>
-    <li><strong>Predictive Analytics:</strong> Ab einer kritischen Masse (z.B. 200+ Assessments) 
-        ein Modell trainieren: "Welche Unternehmen haben den höchsten ROI mit KI?" → Bessere Quick-Win-Empfehlungen.</li>
+    <li><strong>Branchen-Benchmark-Datenbank:</strong> Anonymisierte Assessment-Daten aggregieren, „KI-Readiness-Index“ pro Branche berechnen und als Produkt (z. B. für Partner, Medien, Investoren) anbieten.</li>
+    <li><strong>Predictive Analytics:</strong> Ab einer kritischen Masse (z. B. 200+ Assessments) ein Modell trainieren: „Welche Unternehmen haben den höchsten ROI mit KI?“ → Bessere Quick-Win-Empfehlungen.</li>
   </ul>
 </section>

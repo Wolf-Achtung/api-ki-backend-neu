@@ -1,4 +1,4 @@
-# PROMPT: KI-Aktivitäten & Ziele
+Developer: # PROMPT: KI-Aktivitäten & Ziele
 
 ## ZWECK
 Dokumentiere:
@@ -6,8 +6,8 @@ Dokumentiere:
 2. **SOLL:** Ziele aus Quick Wins + Gamechanger
 3. **Timeline:** Wann wird was erreicht
 
-**Zielgruppe:** Strategie, Geschäftsführung
-**Stil:** Strukturiert, ambitioniert aber realistisch
+**Zielgruppe:** Strategie, Geschäftsführung  
+**Stil:** Strukturiert, ambitioniert, aber realistisch
 
 ---
 
@@ -23,17 +23,17 @@ Dokumentiere:
 2. **KEINE unrealistischen Ziele**
    - ❌ "100× Umsatzsteigerung in 6 Monaten"
    - ❌ "Marktführer werden in Q2"
-   - ❌ Ziele die nicht aus Quick Wins/Gamechanger ableitbar sind
+   - ❌ Ziele, die nicht aus Quick Wins/Gamechanger ableitbar sind
 
-3. **KEINE Tools in IST-Stand die nicht vorhanden sind**
+3. **KEINE Tools im IST-Stand, die nicht vorhanden sind**
    - ❌ "ChatGPT Pro" wenn nur Free Version genutzt wird
    - ❌ "Make.com" wenn nicht in `{{TOOLS_AKTUELL}}`
-   - ✅ Nur Tools die WIRKLICH im Einsatz sind!
+   - ✅ Nur Tools, die wirklich im Einsatz sind!
 
 ### ✅ STATTDESSEN:
-1. **IST:** Nur was in Briefing erwähnt ist
+1. **IST:** Nur was im Briefing erwähnt ist
    - Prüfe: `{{KI_PROJEKTE}}`, `{{HAUPTLEISTUNG}}`, `{{TOOLS_AKTUELL}}`
-   - Wenn leer: "Noch keine KI-Projekte im Einsatz" → Fokus auf Potenzial!
+   - Wenn leer: Textnote "Noch keine KI-Projekte im Einsatz." anzeigen und Fokus auf Potenzial setzen.
 
 2. **SOLL:** Direkt aus Quick Wins + Gamechanger ableiten
    - Q1: Quick Wins 1-3 umsetzen
@@ -43,7 +43,6 @@ Dokumentiere:
 3. **Keine generischen Füller-Projekte!**
    - ✅ "Batch-Processing für Assessment-Skalierung" (spezifisch!)
    - ❌ "Prozessoptimierung mit KI" (zu vage!)
-
 
 ---
 
@@ -99,5 +98,29 @@ Dokumentiere:
 
 ---
 
-**VERSION:** v2.1 GOLD STANDARD+
+**VERSION:** v2.1 GOLD STANDARD+  
 **OUTPUT:** Valides HTML
+
+## Output Format
+
+Der Output muss exakt aus einem gültigen HTML-`<section>`-Block bestehen, mit folgenden Unterabschnitten:
+
+- `<h2>KI-Aktivitäten & Ziele</h2>` als Abschnittsüberschrift.
+- `<h3>IST-Stand (Aktuelle KI-Nutzung)</h3>` gefolgt von einer `<table>` mit den Spalten "Bereich", "Tool/System", "Nutzung", "Status". Tabellenzellen enthalten nur Klartext. Wenn keine Einträge vorhanden sind (d.h. `{{KI_PROJEKTE}}`, `{{HAUPTLEISTUNG}}` und `{{TOOLS_AKTUELL}}` leer sind), entfällt der Tabellenkörper und stattdessen folgt direkt unter der Überschrift die Nachricht: "Noch keine KI-Projekte im Einsatz.".
+- `<h3>SOLL-Ziele (Nächste 12 Monate)</h3>` und eine unsortierte Liste der Ziele, sortiert chronologisch nach Quartal.
+- `<h3>Strategische KI-Vision (2-3 Jahre)</h3>` und eine unsortierte Liste von Vision Statements/Zielen, nach strategischer Priorität geordnet.
+
+Allgemeine Regeln:
+- Alle Werte und Tabellenzellen sind Klartext (keine verschachtelten HTML-Elemente).
+- HTML-Sonderzeichen wie <, >, &, " etc. in Textfeldern müssen korrekt escaped werden.
+- Gib alle Unterabschnitte auch bei fehlenden Daten aus; verwende dann eine passende Textnotiz wie im Beispiel für den IST-Stand. Lasse leere Tabellenkörper weg.
+- Fehlt eine erforderliche Template-Variable (`{{KI_PROJEKTE}}`, `{{HAUPTLEISTUNG}}`, `{{TOOLS_AKTUELL}}`) oder ist sie fehlerhaft, gib im zugehörigen Abschnitt einen Hinweis wie "Fehler: Datenquelle nicht verfügbar." aus.
+- Verwende ausschließlich das angegebene HTML-Ausgabeformat, keine weiteren Ausgabestrukturen.
+
+## Output Verbosity
+
+Achte darauf, dass die Antwort nicht unnötig ausführlich wird. Begrenze den Gesamtoutput:
+- Der generierte HTML-Abschnitt soll maximal 2–3 kurze Absätze Einleitung enthalten (falls erforderlich), ansonsten nur die geforderten Tabellen und Listen.
+- Listen im Output sollen maximal 6 Einträge pro Liste enthalten (1 Zeile pro Eintrag).
+- Priorisiere vollständige, umsetzbare Antworten innerhalb dieses Rahmens.
+- Falls Updates von Nutzern eingehen oder Korrekturen gefordert werden, fasse diese in maximal 1–2 Sätzen zusammen, außer der Nutzer bittet explizit um mehr Details.

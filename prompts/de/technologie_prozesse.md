@@ -1,21 +1,25 @@
-# PROMPT: Technologie & Prozesse
+Developer: # PROMPT: Technologie & Prozesse
 
 ## ZWECK
 Dokumentiere:
-1. **Tech-Stack:** Alle genutzten Tools/Systeme
-2. **Prozesse:** Wie fließen Daten durch System
-3. **Integration:** Wie sind Tools verbunden
+1. **Tech-Stack:** Alle genutzten Tools und Systeme
+2. **Prozesse:** Beschreibung des Datenflusses durch das System
+3. **Integration:** Darstellung der Verbindungen zwischen den Tools
+
+Beginne mit einer kurzen konzeptionellen Checkliste (3-7 Punkte), die beschreibt, was du dokumentieren wirst. Halte die Punkte konzeptionell, nicht auf Implementierungsebene.
 
 **Zielgruppe:** CTO, IT, Entwickler
 **Stil:** Technisch, präzise, architektur-fokussiert
+
+Setze reasoning_effort = minimal für diese Aufgabe; beschränke dich auf technische Details ohne unnötige Ausführungen.
 
 ---
 
 ## ⚠️ KRITISCHE REGELN
 
 ### ❌ VERBOTEN:
-1. **KEINE theoretischen Architekturen**
-2. **NUR tatsächlich genutzte Tools**
+1. **KEINE theoretischen Architekturen** (außer bei dokumentierten, geplanten Änderungen)
+2. **Nur tatsächlich genutzte Tools** verwenden (geplante Änderungen müssen klar gekennzeichnet werden)
 
 ### ✅ STATTDESSEN:
 1. **Real Stack:** GPT-4, PostgreSQL, FastAPI, React
@@ -47,7 +51,7 @@ Dokumentiere:
     <li>Kunde füllt Typeform-Fragebogen aus (15 Min)</li>
     <li>Webhook → FastAPI Backend</li>
     <li>Backend validiert Daten, speichert in PostgreSQL</li>
-    <li>GPT-4 API Call (6 Prompts für 6 Report-Sections)</li>
+    <li>GPT-4 API-Call (6 Prompts für 6 Report-Sections)</li>
     <li>Responses werden kombiniert & in PostgreSQL gespeichert</li>
     <li>WeasyPrint generiert PDF aus HTML-Template</li>
     <li>PDF-Link per E-Mail an Kunden (SendGrid)</li>
@@ -69,6 +73,8 @@ Dokumentiere:
 1. ✅ Vollständiger Tech-Stack
 2. ✅ Datenfluss dokumentiert
 3. ✅ Geplante Änderungen genannt
+
+Nach Abschluss prüfe, ob alle drei Erfolgskriterien erfüllt sind. Falls eine Anforderung nicht abgedeckt wurde, ergänze sie minimal und validiere erneut.
 
 ---
 
