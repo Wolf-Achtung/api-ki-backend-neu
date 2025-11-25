@@ -39,9 +39,11 @@ except ImportError:
     resend = None
 
 try:
-    import core.db
+    import core.db  # type: ignore[import]
 except Exception:  # pragma: no cover
-    core.db = None
+    class _CoreStub:
+        db = None
+    core = _CoreStub()
 
 from field_registry import fields  # added by Patch03
 from models import Analysis, Briefing, Report, User
@@ -124,14 +126,7 @@ def ksj_fix_placeholders_in_sections(sections: dict, answers: dict, scores: dict
         "FALLBACK_QW_MONTHLY_H": 18,
     }
     calc = None
-    if callable(calc_business_case):
-        try:
-            calc = calc_business_case(answers, env_defaults)
-            # ensure business case html in sections for template placeholders
-            if isinstance(calc, dict) and calc.get("BUSINESS_CASE_TABLE_HTML"):
-                sections.setdefault("BUSINESS_CASE_TABLE_HTML", calc["BUSINESS_CASE_TABLE_HTML"])
-        except Exception as e:
-            pass
+
     numeric = ksj_build_numeric_ctx(answers, env_defaults, calc or {})
     # Copy numeric values to sections for template access (use direct assignment, not setdefault)
     for key in ['qw_hours_total', 'CAPEX_REALISTISCH_EUR', 'OPEX_REALISTISCH_EUR',
@@ -235,11 +230,8 @@ def build_extra_sections(answers: dict, scores: dict) -> dict:
         "DEFAULT_QW2_H": int(os.getenv("DEFAULT_QW2_H", "8")),
         "FALLBACK_QW_MONTHLY_H": int(os.getenv("FALLBACK_QW_MONTHLY_H", "18")),
     }
-    extra = {}
-    try:
-        extra.update(calc_business_case(answers, env_defaults))
-    except Exception as exc:
-        log.warning("Business case calculation failed: %s", exc)
+    extra: dict = {}
+    
     try:
         extra["BENCHMARKS_SECTION_HTML"] = build_benchmarks_section(scores)
     except Exception as exc:
@@ -1076,7 +1068,7 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # ===== BLOCK 1: Time & Date =====
     # Used in next_actions_de.md for dynamic deadlines
     
-# --- Patch03: derive label fields from registry ---
+    # --- Patch03: derive label fields from registry ---
     try:
         # Use briefing parameter as source
         _src = briefing
@@ -1356,7 +1348,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
 
 # -------------------- 🎯 NEW: Use prompt system instead of hardcoded prompts ----------------
 def _generate_content_section(section_name: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
-    """🎯 UPDATED: Now uses prompt_loader system with variable interpolation!"""
+    """🎯 UPDATED: Uses prompt_loader system mit Variable-Interpolation und Förder-Kontext."""
     if not ENABLE_LLM_CONTENT:
         return f"<p><em>[{section_name} – LLM disabled]</em></p>"
     
@@ -1365,7 +1357,7 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
         # Core sections
         "executive_summary": "executive_summary",
         "quick_wins": "quick_wins",
-        "roadmap": "roadmap_90d",  # 90-day roadmap - FIXED: use enhanced prompt
+        "roadmap": "roadmap_90d",  # 90-Tage-Roadmap
         "roadmap_12m": "roadmap_12m",
         "business_roi": "costs_overview",
         "business_costs": "costs_overview",
@@ -1375,8 +1367,8 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
         "risks": "risks",
         "gamechanger": "gamechanger",
         "recommendations": "recommendations",
-        "reifegrad_sowhat": "executive_summary",  # fallback to exec summary prompt
-        # ✅ NEW: Previously unused prompts - now activated
+        "reifegrad_sowhat": "executive_summary",  # fallback auf Exec-Summary-Prompt
+        # Aktivierte Zusatz-Prompts
         "ai_act_summary": "ai_act_summary",
         "strategie_governance": "strategie_governance",
         "wettbewerb_benchmark": "wettbewerb_benchmark",
@@ -1390,53 +1382,84 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
     
     prompt_key = prompt_map.get(section_name)
     
-    # Try to use prompt system if enabled and prompt exists
+    # Prompt-System verwenden, wenn aktiv und Prompt vorhanden
     if USE_PROMPT_SYSTEM and prompt_key and _prompt_enhancer:
         try:
-            # 1. Enhance prompt with context (branch + size specific info)
+            # 1. Prompt mit Kontext (Branche/Größe) anreichern
             enhanced_prompt = _prompt_enhancer.enhance_prompt(prompt_key, briefing)
             
-            # 2. Build variables for final interpolation
+            # 2. Variablen für Interpolation bauen
             vars_dict = _build_prompt_vars(briefing, scores)
             
-            # 3. Interpolate variables into enhanced prompt
+            # 3. Interpolation
             from services.prompt_loader import _interpolate
             prompt_text = _interpolate(enhanced_prompt, vars_dict)
+
+            # 3b. Spezieller Förder-Kontext aus foerderprogramme.md
+            if section_name == "foerderpotenzial":
+                try:
+                    foerder_prog_text = load_prompt("foerderprogramme", lang="de", vars_dict=vars_dict)
+                except Exception:
+                    foerder_prog_text = None
+                if foerder_prog_text:
+                    prompt_text = (
+                        f"{prompt_text}\n\n"
+                        "-----\n\n"
+                        "Zusätzlicher Kontext aus der Förder-Übersicht (foerderprogramme.md):\n"
+                        "Nutze diese Informationen, um die Förderlogik für dieses Unternehmen "
+                        "(Bund/Land/KMU) plausibel und aktuell einzuordnen. Fasse und priorisiere – "
+                        "NICHT einfach 1:1 als Liste kopieren.\n\n"
+                        f"{foerder_prog_text}"
+                    )
             
             if not isinstance(prompt_text, str):
-                log.warning("⚠️ Enhanced prompt %s returned non-string: %s, falling back", 
-                           prompt_key, type(prompt_text))
+                log.warning(
+                    "⚠️ Enhanced prompt %s returned non-string: %s, falling back",
+                    prompt_key,
+                    type(prompt_text),
+                )
                 raise ValueError("Non-string prompt")
             
             log.info("✅ Using enhanced prompt for %s (with context)", section_name)
             
-            # 4. Call GPT with enhanced prompt
-            _temp = float(os.getenv("GAMECHANGER_TEMPERATURE", "0.4")) if section_name == "gamechanger" else 0.2
+            # 4. GPT-Aufruf mit angepasster Temperatur
+            _temp = (
+                float(os.getenv("GAMECHANGER_TEMPERATURE", "0.4"))
+                if section_name == "gamechanger"
+                else 0.2
+            )
             result = _call_openai(
                 prompt=prompt_text,
-                system_prompt="Du bist ein Senior‑KI‑Berater. Antworte nur mit validem HTML.",
+                system_prompt="Du bist ein Senior-KI-Berater. Antworte nur mit validem HTML.",
                 temperature=_temp,
-                max_tokens=OPENAI_MAX_TOKENS
+                max_tokens=OPENAI_MAX_TOKENS,
             ) or ""
             
             result = _clean_html(result)
             if _needs_repair(result):
                 result = _repair_html(section_name, result)
             
-            # Check if result is substantial enough
+            # Minimalumfang prüfen
             if not result or len(result.strip()) < 50:
-                log.warning("⚠️ GPT returned too little for %s (%d chars), using fallback", 
-                           section_name, len(result))
+                log.warning(
+                    "⚠️ GPT returned too little for %s (%d chars), using fallback",
+                    section_name,
+                    len(result),
+                )
                 return _get_fallback_content(section_name, briefing, scores)
             
             return result
             
         except FileNotFoundError as e:
-            log.warning("⚠️ Prompt file not found for %s: %s - using legacy", prompt_key, e)
+            log.warning(
+                "⚠️ Prompt file not found for %s: %s - using legacy", prompt_key, e
+            )
         except Exception as e:
-            log.error("❌ Error loading/using prompt for %s: %s - using legacy", section_name, e)
+            log.error(
+                "❌ Error loading/using prompt for %s: %s - using legacy", section_name, e
+            )
     
-    # Fallback to legacy hardcoded prompts
+    # ---------------- Fallback: Legacy-hardcoded Prompts ----------------
     branche = briefing.get("branche", "Unternehmen")
     hauptleistung = briefing.get("hauptleistung", "")
     unternehmensgroesse = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse") or ""
@@ -1450,53 +1473,63 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
     security = scores.get("security", 0)
     value = scores.get("value", 0)
     enablement = scores.get("enablement", 0)
-    context = f"Branche: {branche}; Größe: {unternehmensgroesse}; Bundesland: {bundesland}; Hauptleistung/-produkt: {hauptleistung}."
-    tone = "Sprache: neutral, dritte Person; keine Wir/Ich‑Formulierungen."
-    only_html = "Antworte ausschließlich mit validem HTML (ohne Markdown‑Fences)."
+    context = (
+        f"Branche: {branche}; Größe: {unternehmensgroesse}; Bundesland: {bundesland}; "
+        f"Hauptleistung/-produkt: {hauptleistung}."
+    )
+    tone = "Sprache: neutral, dritte Person; keine Wir/Ich-Formulierungen."
+    only_html = "Antworte ausschließlich mit validem HTML (ohne Markdown-Fences)."
     prompts = {
         "executive_summary": f"""Erstelle eine prägnante Executive Summary. {context}
-KI‑Ziele: {', '.join(ki_ziele) if ki_ziele else 'nicht definiert'} • Vision: {vision}
-KI‑Reifegrad: Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/100 • Nutzen {value}/100 • Befähigung {enablement}/100
+KI-Ziele: {', '.join(ki_ziele) if ki_ziele else 'nicht definiert'} • Vision: {vision}
+KI-Reifegrad: Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/100 • Nutzen {value}/100 • Befähigung {enablement}/100
 {tone} {only_html} Verwende nur <p>-Absätze.""",
         "quick_wins": f"""Liste 4–6 **konkrete Quick Wins** (0–90 Tage) für {context}
 Jeder Quick Win: Titel, 1–2 Sätze Nutzen, realistische **Ersparnis: … h/Monat**.
 Bezug: Hauptleistung {hauptleistung}; Projekte: {ki_projekte or 'keine'}; Trainingsinteressen: {', '.join(trainings_liste) if trainings_liste else '—'}.
 {tone} {only_html} Liefere exakt eine <ul>-Liste mit <li>-Einträgen im Format:
 <li><strong>Titel:</strong> Beschreibung. <em>Ersparnis: 5 h/Monat</em></li>""",
-        "roadmap": f"""Erstelle eine **90‑Tage‑Roadmap** (0–30 Test; 31–60 Pilot; 61–90 Rollout) mit Bezug auf {context}
+        "roadmap": f"""Erstelle eine **90-Tage-Roadmap** (0–30 Test; 31–60 Pilot; 61–90 Rollout) mit Bezug auf {context}
 {tone} {only_html} Pro Phase 3–5 Meilensteine. Format: <h4>Phase …</h4> + <ul>…</ul>.""",
-        "roadmap_12m": f"""Erstelle eine **12‑Monats‑Roadmap** in 3 Phasen (0–3/3–6/6–12) für {context}.
+        "roadmap_12m": f"""Erstelle eine **12-Monats-Roadmap** in 3 Phasen (0–3/3–6/6–12) für {context}.
 {tone} {only_html} Format: <div class="roadmap"><div class="roadmap-phase">…</div></div>. """,
-        "business_roi": f"""Erstelle eine **ROI & Payback**‑Tabelle (Jahr 1) für {context}. {tone} {only_html}
+        "business_roi": f"""Erstelle eine **ROI & Payback**-Tabelle (Jahr 1) für {context}. {tone} {only_html}
 Format: <table> mit 2 Spalten (Kennzahl, Wert).""",
         "business_costs": f"""Erstelle eine **Kostenübersicht Jahr 1** für {context}. {tone} {only_html}
 Format: <table> mit 2 Spalten (Position, Betrag).""",
         "recommendations": f"""Formuliere 5–7 **Handlungsempfehlungen** mit Priorität [H/M/N] und Zeitrahmen (30/60/90). Kontext: {context}
 {tone} {only_html} Format: <ol><li><strong>[H]</strong> Maßnahme — <em>60 Tage</em></li></ol>.""",
-        "risks": f"""Erstelle eine **Risikomatrix** (5–7 Risiken) für {context} + EU‑AI‑Act Pflichtenliste.
+        "risks": f"""Erstelle eine **Risikomatrix** (5–7 Risiken) für {context} + EU-AI-Act Pflichtenliste.
 {tone} {only_html} Format: <table> mit <thead>/<tbody>. """,
-        "gamechanger": f"""Skizziere einen **Gamechanger‑Use Case** für {context}. (Idee: 3–4 Sätze; 3 Vorteile; 3 Schritte)
+        "gamechanger": f"""Skizziere einen **Gamechanger-Use Case** für {context}. (Idee: 3–4 Sätze; 3 Vorteile; 3 Schritte)
 {tone} {only_html} Verwende <h4>, <p>, <ul>. """,
-        "data_readiness": f"""Erstelle eine kompakte **Dateninventar & ‑Qualität**‑Übersicht für {context}.
+        "data_readiness": f"""Erstelle eine kompakte **Dateninventar & -Qualität**-Übersicht für {context}.
 {tone} {only_html} Format: <div class="data-readiness"><h4>…</h4><ul>…</ul></div>. """,
-        "org_change": f"""Beschreibe **Organisation & Change** (Governance‑Rollen, Skill‑Programm, Kommunikation) für {context}.
+        "org_change": f"""Beschreibe **Organisation & Change** (Governance-Rollen, Skill-Programm, Kommunikation) für {context}.
 {tone} {only_html} Format: <div class="org-change">…</div>. """,
         "business_case": f"""Erstelle einen kompakten **Business Case (detailliert)** für {context} – Annahmen, Nutzen (J1), Kosten (CapEx/OpEx), Payback, ROI, Sensitivität.
 {tone} {only_html} Format: <div class="business-case"> … </div>. """,
         "reifegrad_sowhat": f"""Erkläre kurz: **Was heißt der Reifegrad konkret?** Kontext: {context}
 Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/100 • Nutzen {value}/100 • Befähigung {enablement}/100.
-{tone} {only_html} Gib 4–6 Bullet‑Points (<ul>) aus.""",
+{tone} {only_html} Gib 4–6 Bullet-Points (<ul>) aus.""",
     }
     
-    out = _call_openai(prompt=prompts.get(section_name, ""), system_prompt="Du bist ein Senior‑KI‑Berater. Antworte nur mit validem HTML.", temperature=_section_temperature(section_name), max_tokens=OPENAI_MAX_TOKENS) or ""
+    out = _call_openai(
+        prompt=prompts.get(section_name, ""),
+        system_prompt="Du bist ein Senior-KI-Berater. Antworte nur mit validem HTML.",
+        temperature=_section_temperature(section_name),
+        max_tokens=OPENAI_MAX_TOKENS,
+    ) or ""
     out = _clean_html(out)
-    if _needs_repair(out): out = _repair_html(section_name, out)
+    if _needs_repair(out):
+        out = _repair_html(section_name, out)
     
-    # If still empty or too short, use fallback
+    # Fallback wenn GPT wirklich gar nichts bringt
     if not out or len(out.strip()) < 50:
         return _get_fallback_content(section_name, briefing, scores)
     
     return out
+
 
 def _one_liner(title: str, section_html: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
     base = f'Erzeuge einen prägnanten One‑liner unter der H2‑Überschrift "{title}". Formel: "Kernaussage; Konsequenz → nächster Schritt". Nur 1 Zeile.'
@@ -1646,13 +1679,17 @@ def _build_freetext_snippets_html(ans: Dict[str, Any]) -> str:
     )
 # -------------------- 🎯 UPDATED: Main composer with prompt system ----------------
 def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict[str, Any]:
-    """Generate all content sections - now using PARALLEL execution for performance!"""
+    """Generate all content sections - using PARALLEL execution.
+    
+    Zusätzlich werden logische Section-Keys (executive_summary, quick_wins, roadmap_90d, ...)
+    für Validator & interne Checks gesetzt.
+    """
     sections: Dict[str, Any] = {}
 
-    # Define all sections to generate in parallel
+    # Alle GPT-Sektionen, die parallel erzeugt werden
     parallel_sections = [
         ("executive_summary", "EXECUTIVE_SUMMARY_HTML"),
-        ("quick_wins", "_QUICK_WINS_RAW"),  # Special handling after
+        ("quick_wins", "_QUICK_WINS_RAW"),  # wird später aufbereitet
         ("roadmap", "PILOT_PLAN_HTML"),
         ("roadmap_12m", "ROADMAP_12M_HTML"),
         ("business_roi", "ROI_HTML"),
@@ -1675,57 +1712,78 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         ("ki_aktivitaeten_ziele", "KI_AKTIVITAETEN_ZIELE_HTML"),
     ]
 
-    # Get max workers from env (default: 10 for good parallelization without overwhelming API)
     max_workers = int(os.getenv("GPT_PARALLEL_WORKERS", "10"))
 
-    log.info("🚀 Generating %d sections in PARALLEL (max_workers=%d)...", len(parallel_sections), max_workers)
+    log.info(
+        "🚀 Generating %d sections in PARALLEL (max_workers=%d)...",
+        len(parallel_sections),
+        max_workers,
+    )
     start_time = datetime.now()
 
-    # Execute all GPT calls in parallel
+    # GPT-Aufrufe parallel ausführen
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        # Submit all tasks
         future_to_section = {
-            executor.submit(_generate_content_section, section_name, briefing, scores): (section_name, key)
+            executor.submit(
+                _generate_content_section, section_name, briefing, scores
+            ): (section_name, key)
             for section_name, key in parallel_sections
         }
 
-        # Collect results as they complete
         for future in as_completed(future_to_section):
             section_name, key = future_to_section[future]
             try:
                 result = future.result()
+                # HTML-Variante für Renderer/Template
                 sections[key] = result
+                # Logischer Key für Validator / interne Checks
+                sections[section_name] = result
             except Exception as exc:
                 log.error("❌ Section %s failed: %s", section_name, exc)
-                sections[key] = f"<p><em>[{section_name} – Error: {exc}]</em></p>"
+                err_html = f"<p><em>[{section_name} – Error: {exc}]</em></p>"
+                sections[key] = err_html
+                sections[section_name] = err_html
 
     elapsed = (datetime.now() - start_time).total_seconds()
-    log.info("✅ Parallel generation completed in %.1fs (vs ~%ds sequential)", elapsed, len(parallel_sections) * 15)
-
-    # Post-processing: Executive Summary placeholder fix
-    sections["EXECUTIVE_SUMMARY_HTML"] = _fix_exec_placeholders(
-        sections["EXECUTIVE_SUMMARY_HTML"], scores, sections, sections.get("report_date", "")
+    log.info(
+        "✅ Parallel generation completed in %.1fs (vs ~%ds sequential)",
+        elapsed,
+        len(parallel_sections) * 15,
     )
 
-    # Post-processing: Quick Wins - repair and split into columns
+    # Executive Summary Placeholder-Fix
+    sections["EXECUTIVE_SUMMARY_HTML"] = _fix_exec_placeholders(
+        sections.get("EXECUTIVE_SUMMARY_HTML", ""),
+        scores,
+        sections,
+        sections.get("report_date", ""),
+    )
+    sections["executive_summary"] = sections["EXECUTIVE_SUMMARY_HTML"]
+
+    # Quick Wins: reparieren, splitten, Aliase setzen
     qw_html = sections.pop("_QUICK_WINS_RAW", "")
     if _needs_repair(qw_html):
         qw_html = _repair_html("quick_wins", qw_html)
 
-    # Split into columns
     left, right = _split_li_list_to_columns(qw_html)
     sections["QUICK_WINS_HTML_LEFT"] = left
     sections["QUICK_WINS_HTML_RIGHT"] = right
-    sections["QUICK_WINS_HTML"] = ("<div style='display:grid;grid-template-columns:1fr 1fr;gap:16px'>" + left + right + "</div>")
+    sections["QUICK_WINS_HTML"] = (
+        "<div style='display:grid;grid-template-columns:1fr 1fr;gap:16px'>"
+        + left
+        + right
+        + "</div>"
+    )
+    # logischer Inhalt (Validator)
+    sections["quick_wins"] = qw_html
 
-    # Calculate hours saved from Quick Wins
+    # Stunden aus Quick Wins extrahieren
     total_h = 0
     try:
         total_h = _sum_hours_from_quick_wins(qw_html)
     except Exception:
         total_h = 0
 
-    # Fallback if no hours detected
     if total_h <= 0:
         try:
             fb = int(os.getenv("FALLBACK_QW_MONTHLY_H", "0"))
@@ -1733,24 +1791,33 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             fb = 0
         if fb <= 0:
             try:
-                fb = int(os.getenv("DEFAULT_QW1_H", "20")) + int(os.getenv("DEFAULT_QW2_H", "15"))
+                fb = int(os.getenv("DEFAULT_QW1_H", "20")) + int(
+                    os.getenv("DEFAULT_QW2_H", "15")
+                )
             except Exception:
-                fb = 35  # conservative default
+                fb = 35
         total_h = max(0, fb)
 
-    # Calculate ROI metrics
-    rate = int(briefing.get("stundensatz_eur") or os.getenv("DEFAULT_STUNDENSATZ_EUR", "60") or 60)
+    rate = int(
+        briefing.get("stundensatz_eur") or os.getenv("DEFAULT_STUNDENSATZ_EUR", "60") or 60
+    )
     if total_h > 0:
-        sections.update({
-            "monatsersparnis_stunden": total_h,
-            "monatsersparnis_eur": total_h * rate,
-            "jahresersparnis_stunden": total_h * 12,
-            "jahresersparnis_eur": total_h * rate * 12,
-            "stundensatz_eur": rate,
-            "REALITY_NOTE_QW": f"Praxis‑Hinweis: Diese Quick‑Wins sparen ~{max(1, int(round(total_h*0.7)))}–{int(round(total_h*1.2))} h/Monat (konservativ geschätzt)."
-        })
+        sections.update(
+            {
+                "monatsersparnis_stunden": total_h,
+                "monatsersparnis_eur": total_h * rate,
+                "jahresersparnis_stunden": total_h * 12,
+                "jahresersparnis_eur": total_h * rate * 12,
+                "stundensatz_eur": rate,
+                "REALITY_NOTE_QW": (
+                    "Praxis-Hinweis: Diese Quick-Wins sparen ~"
+                    f"{max(1, int(round(total_h * 0.7)))}–{int(round(total_h * 1.2))} h/Monat "
+                    "(konservativ geschätzt)."
+                ),
+            }
+        )
 
-    # Static section
+    # Statische Sensitivitäts-Tabelle
     sections["BUSINESS_SENSITIVITY_HTML"] = (
         '<table class="table"><thead><tr><th>Adoption</th><th>Kommentar</th></tr></thead>'
         "<tbody><tr><td>100%</td><td>Planmäßige Wirkung der Maßnahmen.</td></tr>"
@@ -1758,59 +1825,134 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         "<tr><td>60%</td><td>Konservativ – nur Kernmaßnahmen; Payback länger.</td></tr></tbody></table>"
     )
 
-    # 🎯 NEW: Next Actions with DYNAMIC DATES via prompt system
+    # NEXT ACTIONS – Prompt-System oder Legacy
     if USE_PROMPT_SYSTEM:
         try:
             vars_dict = _build_prompt_vars(briefing, scores)
             prompt_text = load_prompt("next_actions", lang="de", vars_dict=vars_dict)
             nxt = _call_openai(
                 prompt=prompt_text,
-                system_prompt="Du bist PMO‑Lead. Antworte nur mit HTML.",
+                system_prompt="Du bist PMO-Lead. Antworte nur mit HTML.",
                 temperature=0.2,
-                max_tokens=600
+                max_tokens=600,
             ) or ""
-            sections["NEXT_ACTIONS_HTML"] = _clean_html(nxt) if nxt else _get_fallback_content("next_actions", briefing, scores)
+            sections["NEXT_ACTIONS_HTML"] = (
+                _clean_html(nxt)
+                if nxt
+                else _get_fallback_content("next_actions", briefing, scores)
+            )
         except Exception as e:
-            log.warning("⚠️ Next actions prompt system failed: %s, using fallback", e)
-            sections["NEXT_ACTIONS_HTML"] = _get_fallback_content("next_actions", briefing, scores)
+            log.warning(
+                "⚠️ Next actions prompt system failed: %s, using fallback", e
+            )
+            sections["NEXT_ACTIONS_HTML"] = _get_fallback_content(
+                "next_actions", briefing, scores
+            )
     else:
-        # Legacy fallback with dynamic dates
         now = datetime.now()
         nxt = _call_openai(
             f"""Erstelle 3–7 **Next Actions (30 Tage)** in <ol>. Jede Zeile: 👤 Rolle (kein Name), ⏱ Aufwand (z. B. ½ Tag), 
             🎯 Impact (hoch/mittel/niedrig), 📆 Deadline (zwischen {now.strftime('%d.%m.%Y')} und {(now + timedelta(days=30)).strftime('%d.%m.%Y')}) — Maßnahme. 
             Antwort NUR als <ol>…</ol>.""",
-            system_prompt="Du bist PMO‑Lead. Antworte nur mit HTML.",
+            system_prompt="Du bist PMO-Lead. Antworte nur mit HTML.",
             temperature=0.2,
-            max_tokens=600
+            max_tokens=600,
         ) or ""
-        sections["NEXT_ACTIONS_HTML"] = _clean_html(nxt) if nxt else _get_fallback_content("next_actions", briefing, scores)
-    
-    # Generate one-liners for all sections - PARALLELIZED for performance
+        sections["NEXT_ACTIONS_HTML"] = (
+            _clean_html(nxt)
+            if nxt
+            else _get_fallback_content("next_actions", briefing, scores)
+        )
+
+    # One-Liner-LEADs (parallel)
     one_liner_tasks = [
         ("LEAD_EXEC", "Executive Summary", sections["EXECUTIVE_SUMMARY_HTML"]),
-        ("LEAD_KPI", "KPI‑Dashboard & Monitoring", ""),
+        ("LEAD_KPI", "KPI-Dashboard & Monitoring", ""),
         ("LEAD_QW", "Quick Wins (0–90 Tage)", qw_html),
-        ("LEAD_ROADMAP_90", "Roadmap (90 Tage – Test → Pilot → Rollout)", sections["PILOT_PLAN_HTML"]),
-        ("LEAD_ROADMAP_12", "Roadmap (12 Monate)", sections["ROADMAP_12M_HTML"]),
-        ("LEAD_BUSINESS", "Business Case & Kostenübersicht", sections["ROI_HTML"]),
-        ("LEAD_BUSINESS_DETAIL", "Business Case (detailliert)", sections["BUSINESS_CASE_HTML"]),
-        ("LEAD_TOOLS", "Empfohlene Tools (Pro & Open‑Source)", sections.get("TOOLS_HTML", "")),
-        ("LEAD_DATA", "Dateninventar & ‑Qualität", sections["DATA_READINESS_HTML"]),
+        (
+            "LEAD_ROADMAP_90",
+            "Roadmap (90 Tage – Test → Pilot → Rollout)",
+            sections["PILOT_PLAN_HTML"],
+        ),
+        (
+            "LEAD_ROADMAP_12",
+            "Roadmap (12 Monate)",
+            sections["ROADMAP_12M_HTML"],
+        ),
+        (
+            "LEAD_BUSINESS",
+            "Business Case & Kostenübersicht",
+            sections["ROI_HTML"],
+        ),
+        (
+            "LEAD_BUSINESS_DETAIL",
+            "Business Case (detailliert)",
+            sections["BUSINESS_CASE_HTML"],
+        ),
+        (
+            "LEAD_TOOLS",
+            "Empfohlene Tools (Pro & Open-Source)",
+            sections.get("TOOLS_HTML", ""),
+        ),
+        (
+            "LEAD_DATA",
+            "Dateninventar & -Qualität",
+            sections["DATA_READINESS_HTML"],
+        ),
         ("LEAD_ORG", "Organisation & Change", sections["ORG_CHANGE_HTML"]),
-        ("LEAD_RISKS", "Risiko‑Assessment & Compliance", sections["RISKS_HTML"]),
-        ("LEAD_GC", "Gamechanger‑Use Case", sections["GAMECHANGER_HTML"]),
-        ("LEAD_FUNDING", "Aktuelle Förderprogramme & Quellen", sections.get("FOERDERPROGRAMME_HTML", "")),
-        ("LEAD_NEXT_ACTIONS", "Nächste Schritte (30 Tage)", sections["NEXT_ACTIONS_HTML"]),
-        ("LEAD_AI_ACT", "EU AI Act – Zusammenfassung & Compliance", sections["AI_ACT_SUMMARY_HTML"]),
-        ("LEAD_STRATEGIE", "Strategie & Governance", sections["STRATEGIE_GOVERNANCE_HTML"]),
-        ("LEAD_WETTBEWERB", "Wettbewerb & Benchmarking", sections["WETTBEWERB_BENCHMARK_HTML"]),
-        ("LEAD_TECH", "Technologie & Prozesse", sections["TECHNOLOGIE_PROZESSE_HTML"]),
-        ("LEAD_UNTERNEHMEN", "Unternehmensprofil & Markt", sections["UNTERNEHMENSPROFIL_MARKT_HTML"]),
-        ("LEAD_TOOLS_EMPF", "Tool‑Empfehlungen & Einführungsreihenfolge", sections["TOOLS_EMPFEHLUNGEN_HTML"]),
+        ("LEAD_RISKS", "Risiko-Assessment & Compliance", sections["RISKS_HTML"]),
+        ("LEAD_GC", "Gamechanger-Use Case", sections["GAMECHANGER_HTML"]),
+        (
+            "LEAD_FUNDING",
+            "Aktuelle Förderprogramme & Quellen",
+            sections.get("FOERDERPROGRAMME_HTML", ""),
+        ),
+        (
+            "LEAD_NEXT_ACTIONS",
+            "Nächste Schritte (30 Tage)",
+            sections["NEXT_ACTIONS_HTML"],
+        ),
+        (
+            "LEAD_AI_ACT",
+            "EU AI Act – Zusammenfassung & Compliance",
+            sections["AI_ACT_SUMMARY_HTML"],
+        ),
+        (
+            "LEAD_STRATEGIE",
+            "Strategie & Governance",
+            sections["STRATEGIE_GOVERNANCE_HTML"],
+        ),
+        (
+            "LEAD_WETTBEWERB",
+            "Wettbewerb & Benchmarking",
+            sections["WETTBEWERB_BENCHMARK_HTML"],
+        ),
+        (
+            "LEAD_TECH",
+            "Technologie & Prozesse",
+            sections["TECHNOLOGIE_PROZESSE_HTML"],
+        ),
+        (
+            "LEAD_UNTERNEHMEN",
+            "Unternehmensprofil & Markt",
+            sections["UNTERNEHMENSPROFIL_MARKT_HTML"],
+        ),
+        (
+            "LEAD_TOOLS_EMPF",
+            "Tool-Empfehlungen & Einführungsreihenfolge",
+            sections["TOOLS_EMPFEHLUNGEN_HTML"],
+        ),
         ("LEAD_FOERDER", "Förderpotenzial", sections["FOERDERPOTENZIAL_HTML"]),
-        ("LEAD_TRANSPARENCY", "Transparenz & Methodik", sections["TRANSPARENCY_BOX_HTML"]),
-        ("LEAD_KI_AKTIVITAETEN", "KI-Aktivitäten & Ziele", sections["KI_AKTIVITAETEN_ZIELE_HTML"]),
+        (
+            "LEAD_TRANSPARENCY",
+            "Transparenz & Methodik",
+            sections["TRANSPARENCY_BOX_HTML"],
+        ),
+        (
+            "LEAD_KI_AKTIVITAETEN",
+            "KI-Aktivitäten & Ziele",
+            sections["KI_AKTIVITAETEN_ZIELE_HTML"],
+        ),
     ]
 
     log.info("🚀 Generating %d one-liners in PARALLEL...", len(one_liner_tasks))
@@ -1830,33 +1972,31 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
                 sections[key] = ""
 
     oneliner_elapsed = (datetime.now() - oneliner_start).total_seconds()
-    log.info("✅ One-liners completed in %.1fs (vs ~%ds sequential)", oneliner_elapsed, len(one_liner_tasks) * 3)
-    
-    # Benchmark table
+    log.info(
+        "✅ One-liners completed in %.1fs (vs ~%ds sequential)",
+        oneliner_elapsed,
+        len(one_liner_tasks) * 3,
+    )
+
+    # Benchmark-HTML & KPI-Kontext
     sections["BENCHMARK_HTML"] = _build_benchmark_html(briefing)
-    
-    # ===== NEW: Additional sections required by PDF template =====
-    
-    # KPI Context - Interpretation of scores with benchmark comparison
+
     score_overall = scores.get("overall", 0)
     benchmark_avg = briefing.get("benchmark_avg", 35)
     benchmark_top = briefing.get("benchmark_top", 55)
-    
-    # Determine interpretation based on score
     if score_overall >= 70:
         interpretation = "Sehr gut – überdurchschnittlich"
     elif score_overall >= 50:
         interpretation = "Solide – im guten Mittelfeld"
     else:
         interpretation = "Ausbaufähig – erhebliches Potenzial vorhanden"
-    
+
     kpi_context = f"""<div class="kpi-context">
 <p><strong>Interpretation:</strong> {interpretation}</p>
 <p><strong>Benchmark:</strong> Durchschnitt {benchmark_avg}/100 · Top-Quartil {benchmark_top}/100</p>
 </div>"""
     sections["KPI_CONTEXT_HTML"] = kpi_context
 
-    # Build KPI table (Scores + Benchmark) for the PDF template
     try:
         _s = scores
         kpi_rows = (
@@ -1868,26 +2008,47 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         )
         sections["KPI_SCORES_HTML"] = (
             "<table class='table'><thead><tr><th>Dimension</th><th>Score (0–100)</th></tr></thead><tbody>"
-            + kpi_rows + "</tbody></table>" + sections.get("BENCHMARK_HTML","") + sections.get("KPI_CONTEXT_HTML","")
+            + kpi_rows
+            + "</tbody></table>"
+            + sections.get("BENCHMARK_HTML", "")
+            + sections.get("KPI_CONTEXT_HTML", "")
         )
     except Exception:
-        sections.setdefault("KPI_SCORES_HTML", sections.get("KPI_CONTEXT_HTML",""))
+        sections.setdefault("KPI_SCORES_HTML", sections.get("KPI_CONTEXT_HTML", ""))
 
-    # ZIM Förderung (optional, from environment)
-    # These are funding program specific sections that can be configured via ENV
+    # ZIM & Kreativ-Aliase
     sections["ZIM_ALERT_HTML"] = os.getenv("ZIM_ALERT_HTML", "")
     sections["ZIM_WORKFLOW_HTML"] = os.getenv("ZIM_WORKFLOW_HTML", "")
-
-    # Kreativ Tools (will be set later from file if available)
     sections.setdefault("KREATIV_TOOLS_HTML", "")
-
-    # LEADs for new sections
     sections["LEAD_ZIM_ALERT"] = "Wichtige Änderung ab 2025"
     sections["LEAD_ZIM_WORKFLOW"] = "Schritt-für-Schritt-Anleitung zur volldigitalen Antragstellung"
     sections["LEAD_CREATIV"] = "Kuratierte Tools für kreative Branchen"
-    sections.setdefault("LEAD_ROADMAP", _one_liner("Roadmap", sections.get("PILOT_PLAN_HTML", ""), briefing, scores))
+    sections.setdefault(
+        "LEAD_ROADMAP",
+        _one_liner("Roadmap", sections.get("PILOT_PLAN_HTML", ""), briefing, scores),
+    )
+
+    # 🎯 WICHTIG: Logische Aliase für Validator & Template
+
+    # 90-Tage-Roadmap (Validator + Template)
+    sections["roadmap_90d"] = sections.get("PILOT_PLAN_HTML", "")
+    sections.setdefault("ROADMAP_HTML", sections.get("PILOT_PLAN_HTML", ""))
+
+    # 12-Monats-Roadmap
+    sections["roadmap_12m"] = sections.get("ROADMAP_12M_HTML", "")
+
+    # Business Case / Governance / Org / Tools / Förderpotenzial
+    sections["business_case"] = sections.get("BUSINESS_CASE_HTML", "")
+    sections["strategie_governance"] = sections.get("STRATEGIE_GOVERNANCE_HTML", "")
+    sections["org_change"] = sections.get("ORG_CHANGE_HTML", "")
+    sections["tools_empfehlungen"] = sections.get("TOOLS_EMPFEHLUNGEN_HTML", "")
+    sections["foerderpotenzial"] = sections.get("FOERDERPOTENZIAL_HTML", "")
+    sections["risks"] = sections.get("RISKS_HTML", "")
+    sections["gamechanger"] = sections.get("GAMECHANGER_HTML", "")
+    sections["recommendations"] = sections.get("RECOMMENDATIONS_HTML", "")
 
     return sections
+
 
 # -------------------- pipeline (kept from original with minor logging updates) ----------------
 def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, str, Dict[str, Any]]:
@@ -2021,6 +2182,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     
     sections["research_last_updated"] = research_last_updated or sections["report_date"]
     
+    # Alias für Templates, die {{ LAST_UPDATED }} verwenden
+    sections.setdefault("LAST_UPDATED", sections["research_last_updated"])
     # Map research results
     if "TOOLS_TABLE_HTML" in sections: 
         sections["TOOLS_HTML"] = sections.pop("TOOLS_TABLE_HTML", "")
@@ -2195,7 +2358,13 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         if replaced_count > 0:
             log.info("[%s] 🔧 Business Case variables replaced in %s sections", run_id, replaced_count)
 
-    sections.update(build_extra_sections(answers, scores))
+        sections.update(build_extra_sections(answers, scores))
+
+    # Jinja‑ähnliche Platzhalter (z. B. {{ ROI_12M * 1.2 }}) in Sections auswerten
+    try:
+        sections = ksj_fix_placeholders_in_sections(sections, answers, scores)
+    except Exception as _exc:
+        log.warning("[%s] ⚠️ ksj_fix_placeholders_in_sections failed: %s", run_id, _exc)
 
     # === Placeholder-Fix (jetzt mit Business Case Variablen verfügbar!) ===
     try:
