@@ -229,7 +229,6 @@ def build_extra_sections(answers: dict, scores: dict) -> dict:
         "FALLBACK_QW_MONTHLY_H": int(os.getenv("FALLBACK_QW_MONTHLY_H", "18")),
     }
     extra: dict = {}
-    
     try:
         extra["BENCHMARKS_SECTION_HTML"] = build_benchmarks_section(scores)
     except Exception as exc:
