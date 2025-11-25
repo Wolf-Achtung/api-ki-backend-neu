@@ -33,6 +33,13 @@ import requests
 from sqlalchemy.orm import Session
 from jinja2 import Environment, BaseLoader
 
+try:
+    import resend as _resend  # echtes Modul, wenn vorhanden
+except ImportError:  # pragma: no cover
+    _resend = None
+
+resend: Any = _resend  # für mypy ist resend jetzt immer definiert (Typ Any)
+
 import core.db as core_db
 
 from field_registry import fields  # added by Patch03
@@ -350,7 +357,7 @@ def _send_email_via_resend(to_email: str, subject: str, html_body: str, attachme
         if resend_attachments:
             params["attachments"] = resend_attachments
 
-        response = resend.Emails.send(params)  # type: ignore[arg-type]
+        response = resend.Emails.send(params)
 
         # Log email ID for debugging in Resend dashboard
         email_id = response.get("id") if isinstance(response, dict) else None
