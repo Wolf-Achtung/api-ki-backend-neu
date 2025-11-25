@@ -33,15 +33,7 @@ import requests
 from sqlalchemy.orm import Session
 from jinja2 import Environment, BaseLoader
 
-try:
-    import resend
-except ImportError:
-    resend = None
-
-try:
-    import core.db as core_db
-except Exception:  # pragma: no cover
-    core_db: Any = None
+import core.db as core_db
 
 from field_registry import fields  # added by Patch03
 from models import Analysis, Briefing, Report, User
@@ -2631,8 +2623,7 @@ def run_analysis_for_briefing(briefing_id: int, email: Optional[str] = None) -> 
 
 def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     run_id = f"run-{uuid.uuid4().hex[:8]}"
-    if core_db is None or not hasattr(core_db, "SessionLocal"):
-        raise RuntimeError("database_unavailable")
+
     db = core_db.SessionLocal()
     rep: Optional[Report] = None
     try:
