@@ -207,16 +207,70 @@ EXEC_SUMMARY_MAX_TOKENS = _env_int("OPENAI_MAX_TOKENS_EXEC_SUMMARY", OPENAI_MAX_
 GAMECHANGER_MODEL = os.getenv("OPENAI_MODEL_GAMECHANGER", OPENAI_MODEL_DEFAULT)
 GAMECHANGER_TEMP = _env_float("OPENAI_TEMP_GAMECHANGER", _env_float("OPENAI_TEMPERATURE_GAMECHANGER", OPENAI_TEMP_DEFAULT))
 GAMECHANGER_MAX_TOKENS = _env_int("OPENAI_MAX_TOKENS_GAMECHANGER", OPENAI_MAX_TOKENS_DEFAULT)
-def _llm_params_for(section_key: str):
+def _llm_params_for(section_key: str) -> Dict[str, Any]:
+    """
+    Liefert Modell, Temperatur und Max-Tokens für einen logischen Abschnitt.
+
+    Env-Overrides (optional):
+    - OPENAI_MODEL_<SECTION>
+    - OPENAI_TEMP_<SECTION>
+    - OPENAI_MAX_TOKENS_<SECTION>
+
+    SECTION ist der section_key in UPPERCASE, z. B.:
+    - "executive_summary" -> OPENAI_MODEL_EXECUTIVE_SUMMARY
+    - "quick_wins"        -> OPENAI_MODEL_QUICK_WINS
+    """
     key = (section_key or "").lower()
-    if key in {"executive_summary", "exec_summary", "summary"}:
-        return {"model": EXEC_SUMMARY_MODEL, "temperature": EXEC_SUMMARY_TEMP,
-                "max_tokens": EXEC_SUMMARY_MAX_TOKENS, "timeout": OPENAI_TIMEOUT_SEC}
-    if key == "gamechanger":
-        return {"model": GAMECHANGER_MODEL, "temperature": GAMECHANGER_TEMP,
-                "max_tokens": GAMECHANGER_MAX_TOKENS, "timeout": OPENAI_TIMEOUT_SEC}
-    return {"model": OPENAI_MODEL_DEFAULT, "temperature": OPENAI_TEMP_DEFAULT,
-            "max_tokens": OPENAI_MAX_TOKENS_DEFAULT, "timeout": OPENAI_TIMEOUT_SEC}
+    suffix = key.upper()
+
+    # Explizite Env-Overrides pro Section
+    model_env = os.getenv(f"OPENAI_MODEL_{suffix}")
+    temp_env = os.getenv(f"OPENAI_TEMP_{suffix}")
+    max_tokens_env = os.getenv(f"OPENAI_MAX_TOKENS_{suffix}")
+
+    # Modell bestimmen
+    if model_env:
+        model = model_env
+    elif key in {"executive_summary", "exec_summary", "summary"}:
+        model = EXEC_SUMMARY_MODEL
+    elif key == "gamechanger":
+        model = GAMECHANGER_MODEL
+    else:
+        model = OPENAI_MODEL_DEFAULT
+
+    # Temperatur bestimmen
+    if temp_env is not None:
+        try:
+            temperature = float(temp_env)
+        except ValueError:
+            temperature = OPENAI_TEMP_DEFAULT
+    elif key in {"executive_summary", "exec_summary", "summary"}:
+        temperature = EXEC_SUMMARY_TEMP
+    elif key == "gamechanger":
+        temperature = GAMECHANGER_TEMP
+    else:
+        temperature = OPENAI_TEMP_DEFAULT
+
+    # Max-Tokens bestimmen
+    if max_tokens_env is not None:
+        try:
+            max_tokens = int(max_tokens_env)
+        except ValueError:
+            max_tokens = OPENAI_MAX_TOKENS_DEFAULT
+    elif key in {"executive_summary", "exec_summary", "summary"}:
+        max_tokens = EXEC_SUMMARY_MAX_TOKENS
+    elif key == "gamechanger":
+        max_tokens = GAMECHANGER_MAX_TOKENS
+    else:
+        max_tokens = OPENAI_MAX_TOKENS_DEFAULT
+
+    return {
+        "model": model,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+        "timeout": OPENAI_TIMEOUT_SEC,
+    }
+
 # ========================================================================
 
 def build_extra_sections(answers: dict, scores: dict) -> dict:
@@ -509,27 +563,54 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
     return {"scores": scores, "details": details, "total": scores["overall"]}
 
 # -------------------- OpenAI client ----------------
-def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
-                 temperature: Optional[float] = None, max_tokens: Optional[int] = None) -> Optional[str]:
+def _call_openai(
+    prompt: str,
+    system_prompt: str = "Du bist ein KI-Berater.",
+    temperature: Optional[float] = None,
+    max_tokens: Optional[int] = None,
+    model: Optional[str] = None,
+) -> Optional[str]:
     if not OPENAI_API_KEY:
-        log.error("❌ OPENAI_API_KEY not set"); return None
-    if temperature is None: temperature = OPENAI_TEMPERATURE
-    if max_tokens is None: max_tokens = OPENAI_MAX_TOKENS
+        log.error("❌ OPENAI_API_KEY not set")
+        return None
+
+    if temperature is None:
+        temperature = OPENAI_TEMPERATURE
+    if max_tokens is None:
+        max_tokens = OPENAI_MAX_TOKENS
+    if model is None:
+        model = OPENAI_MODEL  # globales Default-Modell
+
     api_base = (OPENAI_API_BASE or "https://api.openai.com").rstrip("/")
     url = f"{api_base}/v1/chat/completions"
     headers = {"Content-Type": "application/json"}
-    if "openai.azure.com" in api_base: headers["api-key"] = OPENAI_API_KEY
-    else: headers["Authorization"] = f"Bearer {OPENAI_API_KEY}"
+    if "openai.azure.com" in api_base:
+        headers["api-key"] = OPENAI_API_KEY
+    else:
+        headers["Authorization"] = f"Bearer {OPENAI_API_KEY}"
+
     try:
         # Sanitize headers for logging (remove API keys)
-        safe_headers = {k: '***' if k.lower() in ['authorization', 'api-key'] else v for k, v in headers.items()}
+        safe_headers = {
+            k: "***" if k.lower() in ["authorization", "api-key"] else v
+            for k, v in headers.items()
+        }
         log.debug("OpenAI request headers: %s", safe_headers)
 
-        r = requests.post(url, headers=headers, json={
-            "model": OPENAI_MODEL,
-            "messages": [{"role": "system","content": system_prompt},{"role": "user","content": prompt}],
-            "temperature": float(temperature), "max_tokens": int(max_tokens),
-        }, timeout=OPENAI_TIMEOUT)
+        r = requests.post(
+            url,
+            headers=headers,
+            json={
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                "temperature": float(temperature),
+                "max_tokens": int(max_tokens),
+            },
+            timeout=OPENAI_TIMEOUT,
+        )
         r.raise_for_status()
 
         # Validate response structure
@@ -538,7 +619,11 @@ def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
             content = data["choices"][0]["message"]["content"]
             return str(content)
         except (KeyError, IndexError, TypeError) as e:
-            log.error("Unexpected OpenAI response structure: %s. Response: %s", e, str(data)[:500])
+            log.error(
+                "Unexpected OpenAI response structure: %s. Response: %s",
+                e,
+                str(data)[:500],
+            )
             return None
 
     except requests.exceptions.RequestException as exc:
@@ -547,6 +632,7 @@ def _call_openai(prompt: str, system_prompt: str = "Du bist ein KI-Berater.",
     except Exception as exc:
         log.error("❌ OpenAI unexpected error: %s", str(exc)[:200])
         return None
+
 
 # -------------------- HTML repair ----------------
 def _clean_html(s: str) -> str:
@@ -1416,20 +1502,19 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 )
                 raise ValueError("Non-string prompt")
             
-            log.info("✅ Using enhanced prompt for %s (with context)", section_name)
-            
-            # 4. GPT-Aufruf mit angepasster Temperatur
-            _temp = (
-                float(os.getenv("GAMECHANGER_TEMPERATURE", "0.4"))
-                if section_name == "gamechanger"
-                else 0.2
-            )
+                        log.info("✅ Using enhanced prompt for %s (with context)", section_name)
+
+            # 4. LLM-Parameter pro Section bestimmen
+            llm = _llm_params_for(section_name)
+
             result = _call_openai(
                 prompt=prompt_text,
                 system_prompt="Du bist ein Senior-KI-Berater. Antworte nur mit validem HTML.",
-                temperature=_temp,
-                max_tokens=OPENAI_MAX_TOKENS,
+                temperature=llm["temperature"],
+                max_tokens=llm["max_tokens"],
+                model=llm["model"],
             ) or ""
+
             
             result = _clean_html(result)
             if _needs_repair(result):
@@ -1513,8 +1598,9 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
     out = _call_openai(
         prompt=prompts.get(section_name, ""),
         system_prompt="Du bist ein Senior-KI-Berater. Antworte nur mit validem HTML.",
-        temperature=_section_temperature(section_name),
-        max_tokens=OPENAI_MAX_TOKENS,
+        temperature=llm["temperature"],
+        max_tokens=llm["max_tokens"],
+        model=llm["model"],
     ) or ""
     out = _clean_html(out)
     if _needs_repair(out):
@@ -1826,11 +1912,13 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         try:
             vars_dict = _build_prompt_vars(briefing, scores)
             prompt_text = load_prompt("next_actions", lang="de", vars_dict=vars_dict)
+            params = _llm_params_for("next_actions")
             nxt = _call_openai(
                 prompt=prompt_text,
                 system_prompt="Du bist PMO-Lead. Antworte nur mit HTML.",
-                temperature=0.2,
-                max_tokens=600,
+                temperature=params["temperature"],
+                max_tokens=min(params["max_tokens"], 600),
+                model=params["model"],
             ) or ""
             sections["NEXT_ACTIONS_HTML"] = (
                 _clean_html(nxt)
@@ -1846,13 +1934,13 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             )
     else:
         now = datetime.now()
+        params = _llm_params_for("next_actions")
         nxt = _call_openai(
-            f"""Erstelle 3–7 **Next Actions (30 Tage)** in <ol>. Jede Zeile: 👤 Rolle (kein Name), ⏱ Aufwand (z. B. ½ Tag), 
-            🎯 Impact (hoch/mittel/niedrig), 📆 Deadline (zwischen {now.strftime('%d.%m.%Y')} und {(now + timedelta(days=30)).strftime('%d.%m.%Y')}) — Maßnahme. 
-            Antwort NUR als <ol>…</ol>.""",
+            f"""Erstelle 3–7 **Next Actions (30 Tage)** in <ol>. ...""",
             system_prompt="Du bist PMO-Lead. Antworte nur mit HTML.",
-            temperature=0.2,
-            max_tokens=600,
+            temperature=params["temperature"],
+            max_tokens=min(params["max_tokens"], 600),
+            model=params["model"],
         ) or ""
         sections["NEXT_ACTIONS_HTML"] = (
             _clean_html(nxt)
