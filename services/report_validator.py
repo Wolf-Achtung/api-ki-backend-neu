@@ -146,18 +146,37 @@ class ReportValidator:
         "foerderpotenzial": 600,
     }
 
-    # Mapping von logischen Namen auf die tatsächlichen HTML-Keys,
-    # wie sie von gpt_analyze / report_renderer verwendet werden.
+    # Mapping von logischen Namen auf die tatsächlichen Keys,
+    # wie sie von gpt_analyze v4.14.0-GOLD-PLUS erzeugt werden.
     SECTION_KEY_MAP: Dict[str, str] = {
-        "executive_summary": "EXEC_SUMMARY_HTML",
+        # Executive Summary: LLM-Text, den du parallel auch als "executive_summary" ablegst
+        "executive_summary": "EXECUTIVE_SUMMARY_HTML",
+
+        # Business Case (Detail-Kapitel)
         "business_case": "BUSINESS_CASE_HTML",
-        "quick_wins": "QUICK_WINS_HTML",
-        "roadmap_90d": "ROADMAP_90D_HTML",
-        "roadmap_12m": "ROADMAP_12M_HTML",
-        "strategie_governance": "STRATEGIE_GOVERNANCE_HTML",
-        "org_change": "ORG_CHANGE_HTML",
-        "tools_empfehlungen": "TOOLS_EMPFEHLUNGEN_HTML",
-        "foerderpotenzial": "FOERDERPOTENZIAL_HTML",
+
+        # Quick Wins – hier bewusst der Roh-Content ohne Grid-Wrapper,
+        # damit die Textlänge realistischer geprüft wird.
+        "quick_wins": "quick_wins",
+
+        # 90‑Tage‑Roadmap – in gpt_analyze als PILOT_PLAN_HTML erzeugt,
+        # mit Aliases roadmap_90d + ROADMAP_HTML
+        "roadmap_90d": "roadmap_90d",            # Alias auf PILOT_PLAN_HTML
+
+        # 12‑Monats‑Roadmap
+        "roadmap_12m": "roadmap_12m",            # Alias auf ROADMAP_12M_HTML
+
+        # Strategie & Governance
+        "strategie_governance": "strategie_governance",
+
+        # Organisation & Change
+        "org_change": "org_change",
+
+        # Tools-Empfehlungen
+        "tools_empfehlungen": "tools_empfehlungen",
+
+        # Förderpotenzial
+        "foerderpotenzial": "foerderpotenzial",
     }
     
     def __init__(self, sections: Dict[str, Any], meta: Dict[str, Any]) -> None:
@@ -283,16 +302,19 @@ class ReportValidator:
         """Prüft, ob wichtige Sections leer oder zu kurz sind."""
         for logical_name, min_length in self.MIN_SECTION_LENGTH.items():
             section_key = self.SECTION_KEY_MAP.get(logical_name, logical_name)
-            content = self.sections.get(section_key, "")
-            if not isinstance(content, str):
-                # Wenn die Section im Report gar nicht existiert, ignorieren wir sie
-                # statt ein CRITICAL zu erzeugen – der Renderer nutzt dann diese Section nicht.
+
+            # Section muss überhaupt existieren, sonst ignorieren wir sie
+            if section_key not in self.sections:
                 continue
-            
-            # HTML-Tags grob entfernen, um Textlänge zu prüfen
+
+            content = self.sections.get(section_key)
+            if not isinstance(content, str):
+                continue
+
+            # HTML grob entfernen
             text_only = re.sub(r"<[^>]+>", "", content)
             text_only = text_only.strip()
-            
+
             if not text_only:
                 self.errors.append(
                     ValidationError(
@@ -304,7 +326,7 @@ class ReportValidator:
                     )
                 )
                 continue
-            
+
             actual_length = len(text_only)
             if actual_length < min_length:
                 self.errors.append(
