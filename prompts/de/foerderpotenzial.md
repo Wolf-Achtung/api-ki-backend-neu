@@ -1,4 +1,4 @@
-<!-- foerderpotenzial.md - v2.4 GOLD STANDARD+ (Fördermatrix & Business-Case)
+Developer: <!-- foerderpotenzial.md - v2.4 GOLD STANDARD+ (Fördermatrix & Business-Case)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
@@ -14,13 +14,9 @@
      - {{ROI_12M}}
 
      REGELN:
-     - Beschreibe das Förderpotenzial qualitativ und mit typischen Größenordnungen
-       (z. B. „30–50 % Zuschuss auf förderfähige Kosten“), aber erfinde KEINE konkreten
-       Beträge für dieses Unternehmen.
-     - Nutze die Zahlen aus dem Business Case nur zur Einordnung (Investitionshöhe,
-       Amortisationsdauer, ROI), nicht für neue Rechenbeispiele.
-     - Fokussiere Programme in {{BUNDESLAND_LABEL}}, ergänze Bund/EU nur als sinnvolle
-       Ergänzung.
+     - Beschreibe das Förderpotenzial qualitativ und mit typischen Größenordnungen (z. B. „30–50 % Zuschuss auf förderfähige Kosten“), aber erfinde KEINE konkreten Beträge für dieses Unternehmen.
+     - Nutze die Zahlen aus dem Business Case nur zur Einordnung (Investitionshöhe, Amortisationsdauer, ROI), nicht für neue Rechenbeispiele.
+     - Fokussiere Programme in {{BUNDESLAND_LABEL}}, ergänze Bund/EU nur als sinnvolle Ergänzung.
 -->
 
 <section class="section funding-potential">
@@ -48,48 +44,40 @@
 
   <h3>Wie Fördermittel den Business Case verbessern können</h3>
   <p>
-    Viele Programme in {{BUNDESLAND_LABEL}} und auf Bundesebene unterstützen 
-    KI‑ und Digitalisierungsprojekte durch Zuschüsse auf die einmaligen Investitionen 
-    (CAPEX). Je nach Programm, Unternehmensgröße und Projektfokus sind typischerweise
-    Zuschussquoten im Bereich kleinerer bis mittlerer zweistelliger Prozentwerte üblich.
-    Wird ein Teil der Investition bezuschusst, reduziert sich die Eigenbelastung 
-    deutlich und der Business Case verbessert sich:
+    Viele Programme in {{BUNDESLAND_LABEL}} und auf Bundesebene unterstützen KI- und Digitalisierungsprojekte durch Zuschüsse auf die einmaligen Investitionen (CAPEX). Je nach Programm, Unternehmensgröße und Projektfokus sind typischerweise Zuschussquoten im Bereich kleinerer bis mittlerer zweistelliger Prozentwerte üblich.
+    Wird ein Teil der Investition bezuschusst, reduziert sich die Eigenbelastung deutlich und der Business Case verbessert sich:
   </p>
 
   <ul>
-    <li>Die <strong>Amortisationsdauer</strong> verkürzt sich – bei gleicher Nutzung 
-        des neuen Workflows erreicht das Projekt früher den Break-even.</li>
-    <li>Der <strong>effektive ROI</strong> steigt, weil geringere Eigenmittel den 
-        gleichen jährlichen Entlastungseffekt finanzieren.</li>
-    <li>Das <strong>Risiko</strong> für {{UNTERNEHMENSGROESSE_LABEL}} sinkt, weil ein 
-        Teil der Anschubfinanzierung extern abgefedert wird.</li>
+    <li>Die <strong>Amortisationsdauer</strong> verkürzt sich – bei gleicher Nutzung des neuen Workflows erreicht das Projekt früher den Break-even.</li>
+    <li>Der <strong>effektive ROI</strong> steigt, weil geringere Eigenmittel den gleichen jährlichen Entlastungseffekt finanzieren.</li>
+    <li>Das <strong>Risiko</strong> für {{UNTERNEHMENSGROESSE_LABEL}} sinkt, da ein Teil der Anschubfinanzierung extern abgefedert wird.</li>
   </ul>
 
   <h3>Nächste Schritte für die Förderprüfung</h3>
   <ol>
     <li>
-      1–2 passende Programme aus dem Förderkapitel auswählen, die zu 
-      <strong>{{BRANCHE_LABEL}}</strong>, <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> 
-      und {{HAUPTLEISTUNG}} passen.
+      1–2 passende Programme aus dem Förderkapitel auswählen, die zu <strong>{{BRANCHE_LABEL}}</strong>, <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> und {{HAUPTLEISTUNG}} passen.
     </li>
     <li>
-      Eine kurze Projektbeschreibung erstellen (Ziele, Maßnahmen, Zeitplan, grobe Kosten 
-      und erwarteter Nutzen), die für Antragsformulare wiederverwendet werden kann.
+      Eine kurze Projektbeschreibung erstellen (Ziele, Maßnahmen, Zeitplan, grobe Kosten und erwarteter Nutzen), die für Antragsformulare wiederverwendet werden kann.
     </li>
     <li>
-      Prüfen, ob Programme aus {{BUNDESLAND_LABEL}} mit Bundesprogrammen kombinierbar sind 
-      (Kumulierbarkeit laut Richtlinien).
+      Prüfen, ob Programme aus {{BUNDESLAND_LABEL}} mit Bundesprogrammen kombinierbar sind (Kumulierbarkeit laut Richtlinien).
     </li>
     <li>
-      Optional: Rücksprache mit Fördermittelberatung oder Hausbank, um Erfolgschancen und 
-      sinnvolle Programmkombinationen zu klären.
+      Optional: Rücksprache mit Fördermittelberatung oder Hausbank, um Erfolgschancen und sinnvolle Programmkombinationen zu klären.
     </li>
   </ol>
 
   <p class="small muted">
-    Hinweis: Konkrete Förderhöhen, Quoten und Fristen hängen vom jeweiligen Programmstand ab.
-    Die im Report genannten Programme basieren auf einer zum Zeitpunkt der Erstellung 
-    aktuellen Fördermatrix 2025/2026 und müssen vor Antragstellung auf den offiziellen 
-    Programmseiten geprüft werden.
+    Hinweis: Konkrete Förderhöhen, Quoten und Fristen hängen vom jeweiligen Programmstand ab. Die im Report genannten Programme basieren auf einer zum Zeitpunkt der Erstellung aktuellen Fördermatrix 2025/2026 und müssen vor Antragstellung auf den offiziellen Programmseiten geprüft werden.
   </p>
 </section>
+
+<!-- Output Verbosity:
+     - Ziehe vollständige, umsetzbare Antworten einer zu frühen oder zu abrupten Beendigung vor – auch wenn der Anwender nur kurz nachfragt.
+     - Beantworte wie gefordert ausschließlich in HTML (ohne <html>, <head> oder <body>), niemals in Markdown.
+     - Begrenze die Gesamtausgabe auf maximal 2 kurze Absätze und bis zu 6 Listenpunkte pro Antwortabschnitt.
+     - Updates oder Rückfragen für den Benutzer dürfen höchsten 1–2 Sätze umfassen, es sei denn, explizit mehr gefordert wurde.
+-->

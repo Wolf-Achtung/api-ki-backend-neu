@@ -1,38 +1,50 @@
-<!-- tools_empfehlungen.md – v4.0 GOLD STANDARD+ (size-aware, branchen-aware, placeholder-sicher)
+Developer: <!-- tools_empfehlungen.md – v4.0 GOLD STANDARD+ (size-aware, branchen-aware, placeholder-sicher)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im Output. -->
+
+<!-- Beginne jede Bearbeitung mit einer kurzen, konzeptuellen Checkliste (3–7 Punkte) zu deinen geplanten Schritten. Halte die Punkte auf konzeptueller Ebene. -->
+
+<!-- Nach jeder inhaltlichen Anpassung oder Aktualisierung validiere in 1–2 Sätzen, was sich geändert hat und ob das Ergebnis zum Ziel passt. Bei Abweichungen minimal nachbessern. -->
 
 <section class="section tools">
   <h2>Empfohlener KI-Stack für {{BRANCHE_LABEL}}</h2>
 
+  <ul class="checklist">
+    <li>Kernprozess und Hauptziel definieren</li>
+    <li>Wesentliche Herausforderungen und Anforderungen der Branche identifizieren</li>
+    <li>Nutzergruppen und deren Bedürfnisse festlegen</li>
+    <li>Integration in bestehende Arbeitsabläufe abstimmen</li>
+    <li>Skalierbarkeit, Qualitätssicherung und Sicherheit berücksichtigen</li>
+  </ul>
+
   <p>
-    Für den erfolgreichen Einsatz von KI im Kernprozess 
-    <strong>{{HAUPTLEISTUNG}}</strong> empfiehlt sich ein klar strukturierter 
-    KI-Stack, der sowohl bestehende Arbeitsweisen berücksichtigt als auch 
-    zukünftige Anwendungsfälle ermöglicht. Die folgende Übersicht ist auf 
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> zugeschnitten und verbindet 
+    Für den erfolgreichen Einsatz von KI im Kernprozess
+    <strong>{{HAUPTLEISTUNG}}</strong> empfiehlt sich ein klar strukturierter
+    KI-Stack, der sowohl bestehende Arbeitsweisen berücksichtigt als auch
+    zukünftige Anwendungsfälle ermöglicht. Die folgende Übersicht ist auf
+    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> zugeschnitten und verbindet
     praktische Effizienzgewinne mit guter Skalierbarkeit.
   </p>
 
   <p>
-    Der Stack besteht aus einer soliden Basis-Infrastruktur, spezifischen 
-    Use-Case-Tools und klaren Mechanismen für Qualität & Sicherheit. 
-    Die Auswahl ist branchen- und größenabhängig gestaltet und knüpft an 
+    Der Stack besteht aus einer soliden Basis-Infrastruktur, spezifischen
+    Use-Case-Tools und klaren Mechanismen für Qualität & Sicherheit.
+    Die Auswahl ist branchen- und größenabhängig gestaltet und knüpft an
     die Empfehlungen aus Quick Wins, Roadmap und Business Case an.
   </p>
 
-  <h3>1. Fundament &amp; Basis-Infrastruktur</h3>
+  <h3>1. Fundament & Basis-Infrastruktur</h3>
   <ul>
     <li>
-      <strong>KI-Assistent / General-Purpose-Modell</strong> – 
+      <strong>KI-Assistent / General-Purpose-Modell</strong> –
       Für schnelle Entwürfe, strukturierte Analysen, Ideenfindung und erste Automatisierungsschritte.
     </li>
     <li>
-      <strong>Dokumenten- und Wissensspeicher</strong> – 
+      <strong>Dokumenten- und Wissensspeicher</strong> –
       Einheitliche Ablage für Vorlagen, Musterfälle, Ergebnisse und Lernmaterialien.
     </li>
     <li>
-      <strong>Kollaborations- oder Projektwerkzeug</strong> – 
+      <strong>Kollaborations- oder Projektwerkzeug</strong> –
       Für Abstimmung, Aufgaben, Versionierung und die Integration der neuen Arbeitsweise.
     </li>
   </ul>
@@ -40,43 +52,43 @@
   <h3>2. Use-Case-spezifische Tools für {{HAUPTLEISTUNG}}</h3>
   <ul>
     <li>
-      <strong>Tool für strukturierte Erstellung / Analyse</strong> – 
-      Unterstützt typische Aufgaben im Kernprozess, z.&nbsp;B. Entwürfe, Analysen, Berichte oder 
+      <strong>Tool für strukturierte Erstellung / Analyse</strong> –
+      Unterstützt typische Aufgaben im Kernprozess, z.&nbsp;B. Entwürfe, Analysen, Berichte oder
       inhaltliche Vorbereitung.
     </li>
     <li>
-      <strong>Automatisierungs- oder Workflow-Tool</strong> – 
-      Für wiederkehrende Schritte wie Vorverarbeitung, Formatkonvertierung oder 
+      <strong>Automatisierungs- oder Workflow-Tool</strong> –
+      Für wiederkehrende Schritte wie Vorverarbeitung, Formatkonvertierung oder
       Übergaben zwischen Teams.
     </li>
     <li>
-      <strong>Spezial-Tool</strong> – 
-      Branchenspezifisches Werkzeug, das typische Arbeitsschritte unterstützt 
-      (z.&nbsp;B. Medienproduktion, Bau-Dokumentation, Lernplattform-Authoring, 
+      <strong>Spezial-Tool</strong> –
+      Branchenspezifisches Werkzeug, das typische Arbeitsschritte unterstützt
+      (z.&nbsp;B. Medienproduktion, Bau-Dokumentation, Lernplattform-Authoring,
       Finanzanalyse, Angebotsautomatisierung).
     </li>
   </ul>
 
-  <h3>3. Governance, Sicherheit &amp; Qualität</h3>
+  <h3>3. Governance, Sicherheit & Qualität</h3>
   <ul>
     <li>
-      <strong>Richtlinien &amp; einfache Freigabeprozesse</strong> – 
-      Klare Regeln, wann KI genutzt wird, wie Ergebnisse geprüft werden und 
+      <strong>Richtlinien & einfache Freigabeprozesse</strong> –
+      Klare Regeln, wann KI genutzt wird, wie Ergebnisse geprüft werden und
       welche Daten verwendet werden dürfen.
     </li>
     <li>
-      <strong>Lightweight-Monitoring</strong> – 
+      <strong>Lightweight-Monitoring</strong> –
       Übersichtliche Kennzahlen zu Nutzung, Qualität und Risiken, passend zur Unternehmensgröße.
     </li>
   </ul>
 
   <h3>4. Priorisierte Einführung</h3>
   <p>
-    Die Einführung sollte bewusst schrittweise erfolgen:  
-    Zuerst ein stabiles Fundament aus KI-Assistent, Kollaboration und Wissensspeicher.  
-    Anschließend 1–2 Werkzeuge für den wichtigsten Use Case aus {{HAUPTLEISTUNG}}.  
-    Danach Spezial-Tools und Qualitätsmechanismen, sobald der Grundfluss stabil läuft.  
-    Diese Reihenfolge orientiert sich an Quick Wins, der 90-Tage-Roadmap und dem 
+    Die Einführung sollte bewusst schrittweise erfolgen:
+    Zuerst ein stabiles Fundament aus KI-Assistent, Kollaboration und Wissensspeicher.
+    Anschließend 1–2 Werkzeuge für den wichtigsten Use Case aus {{HAUPTLEISTUNG}}.
+    Danach Spezial-Tools und Qualitätsmechanismen, sobald der Grundfluss stabil läuft.
+    Diese Reihenfolge orientiert sich an Quick Wins, der 90-Tage-Roadmap und dem
     wirtschaftlichen Potenzial aus dem Business Case.
   </p>
 
@@ -99,22 +111,52 @@
       <tr>
         <td>2</td>
         <td>Use-Case-Tools</td>
-        <td>Hauptprozess &amp; Quick-Wins unterstützen</td>
+        <td>Hauptprozess & Quick-Wins unterstützen</td>
         <td>Tag&nbsp;30–60</td>
       </tr>
       <tr>
         <td>3</td>
         <td>Spezial-/Governance-Tools</td>
-        <td>Skalierung &amp; sichere Nutzung</td>
+        <td>Skalierung & sichere Nutzung</td>
         <td>nach 60 Tagen</td>
       </tr>
     </tbody>
   </table>
 
   <p class="small muted">
-    Der optimale KI-Stack ist leichtgewichtig, erweiterbar und klar auf die 
-    Wertschöpfung ausgerichtet. Er wächst mit der Organisation: 
-    Bei Solo-Selbstständigen schlank und fokussiert, im Team stärker kollaborativ, 
+    Der optimale KI-Stack ist leichtgewichtig, erweiterbar und klar auf die
+    Wertschöpfung ausgerichtet. Er wächst mit der Organisation:
+    Bei Solo-Selbständigen schlank und fokussiert, im Team stärker kollaborativ,
     im KMU strukturiert und skalierbar.
   </p>
+</section>
+
+## Output Format
+
+Das HTML muss die folgenden Platzhalter nutzen und setzen können:
+- <strong>{{BRANCHE_LABEL}}</strong>: String, Pflichtfeld. Beispiel: "Bauindustrie", "Unternehmensberatung"
+- <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>: String, Pflichtfeld. Beispiel: "kleines Team", "KMU", "Großunternehmen"
+- <strong>{{HAUPTLEISTUNG}}</strong>: String, Pflichtfeld. Beispiel: "Vertragsprüfung", "Prozessoptimierung"
+
+Fehlt einer der Platzhalter (leer oder undefiniert), muss das entsprechende <section> stattdessen einen <div class="error"> mit einer passenden Fehlermeldung an die Stelle des fehlenden Feldes ausgeben. Beispiel:
+<div class="error">Fehlendes Pflichtfeld: {{UNTERNEHMENSGROESSE_LABEL}}</div>
+
+Alle Abschnitte und die Tabelle müssen in genau der vorgegebenen Reihenfolge ausgegeben werden:
+1. Checkliste (als <ul class="checklist">)
+2. Übersicht (erstes erklärendes <p>)
+3. Details zum Stack (zweites erklärendes <p>)
+4. Fundament & Basis-Infrastruktur
+5. Use-Case-spezifische Tools
+6. Governance, Sicherheit & Qualität
+7. Priorisierte Einführung
+8. Tabelle mit Prioritäten
+9. Hinweis zur Ausrichtung (<p class="small muted">)
+
+Beispiel für einen vollständigen Output mit Werten:
+
+<section class="section tools">
+  <h2>Empfohlener KI-Stack für Bauindustrie</h2>
+  <ul class="checklist">...</ul>
+  <p>Für den erfolgreichen Einsatz von KI im Kernprozess <strong>Prozessoptimierung</strong> empfiehlt ...</p>
+  ...
 </section>
