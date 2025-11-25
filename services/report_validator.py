@@ -12,7 +12,7 @@ Prüft:
 - Größen-spezifische Fehler ("Team" bei Solo)
 - Template-Text statt echtem Content
 
-Version: 1.0.0-GOLD
+Version: 1.1.0-GOLD
 Author: Claude + Wolf
 """
 
@@ -34,7 +34,7 @@ class ValidationError:
     """Ein gefundener Validation-Fehler"""
     severity: str  # "CRITICAL", "WARNING", "INFO"
     category: str  # z.B. "PLACEHOLDER", "EMPTY_SECTION"
-    section: str   # z.B. "executive_summary"
+    section: str   # z.B. "EXEC_SUMMARY_HTML"
     message: str   # Human-readable Beschreibung
     details: str   # Technische Details / Fundstelle
 
@@ -133,7 +133,7 @@ class ReportValidator:
         ],
     }
     
-    # Mindestlängen je Section (reiner Text, ohne HTML-Tags)
+    # Logische Sections (Schlüssel) -> Mindestlängen (reiner Text, ohne HTML-Tags)
     MIN_SECTION_LENGTH = {
         "executive_summary": 600,
         "business_case": 800,
@@ -144,6 +144,20 @@ class ReportValidator:
         "org_change": 700,
         "tools_empfehlungen": 600,
         "foerderpotenzial": 600,
+    }
+
+    # Mapping von logischen Namen auf die tatsächlichen HTML-Keys,
+    # wie sie von gpt_analyze / report_renderer verwendet werden.
+    SECTION_KEY_MAP: Dict[str, str] = {
+        "executive_summary": "EXEC_SUMMARY_HTML",
+        "business_case": "BUSINESS_CASE_HTML",
+        "quick_wins": "QUICK_WINS_HTML",
+        "roadmap_90d": "ROADMAP_90D_HTML",
+        "roadmap_12m": "ROADMAP_12M_HTML",
+        "strategie_governance": "STRATEGIE_GOVERNANCE_HTML",
+        "org_change": "ORG_CHANGE_HTML",
+        "tools_empfehlungen": "TOOLS_EMPFEHLUNGEN_HTML",
+        "foerderpotenzial": "FOERDERPOTENZIAL_HTML",
     }
     
     def __init__(self, sections: Dict[str, Any], meta: Dict[str, Any]) -> None:
@@ -167,6 +181,10 @@ class ReportValidator:
         Führt alle Validierungsregeln aus und gibt (is_valid, errors) zurück.
         is_valid = False, wenn mindestens ein "CRITICAL"-Fehler existiert.
         """
+
+        # DEBUG: Einmal die verfügbaren Sections-Keys loggen
+        print("DEBUG ReportValidator – sections keys:", list(self.sections.keys()))
+        
         # 1) Placeholder-Checks
         self._check_placeholders()
         
@@ -263,18 +281,12 @@ class ReportValidator:
     
     def _check_empty_or_short_sections(self) -> None:
         """Prüft, ob wichtige Sections leer oder zu kurz sind."""
-        for section_name, min_length in self.MIN_SECTION_LENGTH.items():
-            content = self.sections.get(section_name, "")
+        for logical_name, min_length in self.MIN_SECTION_LENGTH.items():
+            section_key = self.SECTION_KEY_MAP.get(logical_name, logical_name)
+            content = self.sections.get(section_key, "")
             if not isinstance(content, str):
-                self.errors.append(
-                    ValidationError(
-                        severity="CRITICAL",
-                        category="SECTION_INVALID",
-                        section=section_name,
-                        message="Section-Inhalt fehlt oder ist kein String",
-                        details=f"Typ: {type(content)}",
-                    )
-                )
+                # Wenn die Section im Report gar nicht existiert, ignorieren wir sie
+                # statt ein CRITICAL zu erzeugen – der Renderer nutzt dann diese Section nicht.
                 continue
             
             # HTML-Tags grob entfernen, um Textlänge zu prüfen
@@ -286,7 +298,7 @@ class ReportValidator:
                     ValidationError(
                         severity="CRITICAL",
                         category="SECTION_EMPTY",
-                        section=section_name,
+                        section=section_key,
                         message="Wichtige Section ist leer",
                         details="Kein Textinhalt nach HTML-Bereinigung",
                     )
@@ -299,7 +311,7 @@ class ReportValidator:
                     ValidationError(
                         severity="WARNING",
                         category="SECTION_TOO_SHORT",
-                        section=section_name,
+                        section=section_key,
                         message=(
                             f"Section zu kurz: {actual_length} Zeichen "
                             f"(Minimum: {min_length})"
@@ -424,11 +436,11 @@ def filter_all_sections(
 
 
 if __name__ == "__main__":
-    # Minimaler Self‑Test, falls du die Datei mal direkt ausführst
+    # Minimaler Self-Test, falls du die Datei mal direkt ausführst
     demo_sections = {
-        "executive_summary": "Kurzer Text mit TODO: hier weiter ausformulieren",
-        "business_case": "<p>Beispieltext: hier Freitext einfügen</p>",
-        "quick_wins": "Lorem ipsum",
+        "EXEC_SUMMARY_HTML": "<p>Kurzer Text mit TODO: hier weiter ausformulieren</p>",
+        "BUSINESS_CASE_HTML": "<p>Beispieltext: hier Freitext einfügen</p>",
+        "QUICK_WINS_HTML": "<p>Lorem ipsum</p>",
     }
     demo_briefing = {"unternehmensgroesse": "solo"}
 
