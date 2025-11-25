@@ -2042,7 +2042,11 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections["risks"] = sections.get("RISKS_HTML", "")
     sections["gamechanger"] = sections.get("GAMECHANGER_HTML", "")
     sections["recommendations"] = sections.get("RECOMMENDATIONS_HTML", "")
-
+    sections["EXEC_SUMMARY_HTML"] = sections.get("EXECUTIVE_SUMMARY_HTML", "")
+    sections["executive_summary"] = sections.get("EXECUTIVE_SUMMARY_HTML", "")
+    sections["roadmap_90d"] = sections.get("PILOT_PLAN_HTML", sections.get("ROADMAP_HTML", ""))
+    sections["ROADMAP_90D_HTML"] = sections.get("roadmap_90d", "")
+    sections["roadmap_12m"] = sections.get("ROADMAP_12M_HTML", sections.get("ROADMAP_HTML", ""))
     return sections
 
 
