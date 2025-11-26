@@ -21,7 +21,7 @@ from typing import Dict, Any, List, Optional
 
 log = logging.getLogger(__name__)
 
-# ----------------------------- Score Context (Fix #6) -----------------------
+# ----------------------------- Score Context -------------------------------
 
 BENCHMARK_SCORES = {
     "solo": {"avg": 65, "top10": 82},
@@ -32,16 +32,6 @@ BENCHMARK_SCORES = {
 
 
 def get_score_context(overall_score: int, size: str) -> Dict[str, Any]:
-    """
-    Generate contextual score interpretation for size-relative benchmarking.
-
-    Args:
-        overall_score: The calculated overall score (0-100)
-        size: Company size (solo, klein, mittel, gross)
-
-    Returns:
-        Dict with score_rating, size_label, benchmark values
-    """
     benchmark = BENCHMARK_SCORES.get(size.lower(), BENCHMARK_SCORES["klein"])
 
     if overall_score >= benchmark["top10"]:
@@ -71,12 +61,6 @@ def get_score_context(overall_score: int, size: str) -> Dict[str, Any]:
 
 
 def get_research_provenance() -> Dict[str, Any]:
-    """
-    Generate research data provenance information for transparency.
-
-    Returns:
-        Dict with research sources, report date, disclaimer
-    """
     from datetime import datetime
 
     report_date = datetime.now().strftime("%d.%m.%Y")
@@ -101,20 +85,14 @@ def get_research_provenance() -> Dict[str, Any]:
     }
 
 
-def build_research_provenance_html(sources: List[Dict[str, str]], report_date: str) -> str:
-    """
-    Build HTML snippet for research provenance display.
-
-    Args:
-        sources: List of research source dicts
-        report_date: Report generation date
-
-    Returns:
-        HTML string for embedding in report
-    """
+def build_research_provenance_html(
+    sources: List[Dict[str, str]], report_date: str
+) -> str:
     source_texts = []
     for source in sources:
-        source_texts.append(f"{source['provider']} ({source['query_type']}, {source['date']})")
+        source_texts.append(
+            f"{source['provider']} ({source['query_type']}, {source['date']})"
+        )
 
     sources_str = " • ".join(source_texts)
 
@@ -140,7 +118,6 @@ def build_research_provenance_html(sources: List[Dict[str, str]], report_date: s
 
 
 def _fmt_eur(value: Optional[float | int]) -> str:
-    """Format € mit Tausenderpunkt, ohne Dezimalstellen."""
     if value is None:
         return "—"
     try:
@@ -169,8 +146,9 @@ def _safe_read_text(path: str) -> str:
         return ""
 
 
-def _small_bar_svg(pairs: List[tuple[str, float]], max_width: int = 260, height: int = 16) -> str:
-    """Kleine horizontale Balken als Inline-SVG (bar chart, 0..100)."""
+def _small_bar_svg(
+    pairs: List[tuple[str, float]], max_width: int = 260, height: int = 16
+) -> str:
     bars: List[str] = []
     y = 0
     for label, val in pairs:
@@ -206,12 +184,9 @@ def _small_bar_svg(pairs: List[tuple[str, float]], max_width: int = 260, height:
 # ------------------------ Business Case -------------------------------------
 
 
-def get_size_constraints(unternehmensgroesse: str, jahresumsatz_range: str, investitionsbudget: str) -> Dict[str, Any]:
-    """
-    Define realistic constraints by company size.
-    CRITICAL: Prevents unrealistic numbers for small businesses.
-    """
-    # Parse revenue range
+def get_size_constraints(
+    unternehmensgroesse: str, jahresumsatz_range: str, investitionsbudget: str
+) -> Dict[str, Any]:
     revenue_mapping = {
         "unter_100k": 50000,
         "100k_500k": 250000,
@@ -222,7 +197,6 @@ def get_size_constraints(unternehmensgroesse: str, jahresumsatz_range: str, inve
     annual_revenue = revenue_mapping.get(jahresumsatz_range, 100000)
     monthly_revenue = annual_revenue / 12
 
-    # Parse investment budget
     investment_mapping = {
         "unter_2000": 1000,
         "2000_10000": 5000,
@@ -232,7 +206,6 @@ def get_size_constraints(unternehmensgroesse: str, jahresumsatz_range: str, inve
     }
     max_investment = investment_mapping.get(investitionsbudget, 10000)
 
-    # Size-specific constraints - CRITICAL for realistic reports
     constraints: Dict[str, Dict[str, float]] = {
         "solo": {
             "max_monthly_savings": min(monthly_revenue * 0.3, 2000),
@@ -270,10 +243,9 @@ def get_size_constraints(unternehmensgroesse: str, jahresumsatz_range: str, inve
     return constraints[size]
 
 
-def validate_business_case_plausibility(business_case: Dict[str, Any], answers: Dict[str, Any]) -> List[str]:
-    """
-    Plausibility checks - return warnings if unrealistic.
-    """
+def validate_business_case_plausibility(
+    business_case: Dict[str, Any], answers: Dict[str, Any]
+) -> List[str]:
     warnings: List[str] = []
 
     revenue_map = {
@@ -283,55 +255,39 @@ def validate_business_case_plausibility(business_case: Dict[str, Any], answers: 
         "2m_10m": 5000000,
         "ueber_10m": 20000000,
     }
-    annual_revenue = revenue_map.get(str(answers.get("jahresumsatz", "")).lower(), 100000)
+    annual_revenue = revenue_map.get(
+        str(answers.get("jahresumsatz", "")).lower(), 100000
+    )
     monthly_revenue = annual_revenue / 12
 
     einsparung = business_case.get("EINSPARUNG_MONAT_EUR", 0)
 
-    # Check: Savings vs Revenue
     if einsparung > monthly_revenue * 0.5:
         warnings.append(
             f"⚠️ Monatliche Einsparung ({einsparung}€) übersteigt 50% des Monatsumsatzes (~{monthly_revenue:.0f}€)"
         )
 
-    # Check: ROI too good to be true
-    roi = business_case.get("ROI_12M")  # stored as rate (e.g. 7.8 for 780%)
-    if roi is not None and roi > 5:  # > 500%
-        warnings.append(f"⚠️ ROI von {roi*100:.0f}% unrealistisch hoch")
+    roi = business_case.get("ROI_12M")
+    if roi is not None and roi > 500:
+        warnings.append(f"⚠️ ROI von {roi:.0f}% unrealistisch hoch")
 
     return warnings
 
 
 def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Liefert realistische Kennzahlen + HTML-Tabelle.
-
-    ENHANCED: Now applies size-aware constraints for realistic numbers.
-
-    Returns:
-        dict mit Schlüsseln:
-        - CAPEX_REALISTISCH_EUR, OPEX_REALISTISCH_EUR, EINSPARUNG_MONAT_EUR
-        - PAYBACK_MONTHS (float|None)
-        - ROI_12M (rate 0..1+, für Prozentdarstellung)
-        - ROI_12M_EUR (absoluter Euro-Gewinn nach 12M)
-        - BUSINESS_CASE_TABLE_HTML (HTML-Snippet)
-    """
-    # Get size constraints
     groesse = str(answers.get("unternehmensgroesse", "solo")).lower()
     rev = str(answers.get("jahresumsatz", "unter_100k")).lower()
     budget = str(answers.get("investitionsbudget", "2000_10000")).lower()
 
     constraints = get_size_constraints(groesse, rev, budget)
-
-    # Use size-appropriate hourly rate
     stundensatz = float(constraints["hourly_rate"])
 
-    # Defaults aus ENV oder Fallbacks (for hours estimation)
     qw1 = int(os.getenv("DEFAULT_QW1_H", env.get("DEFAULT_QW1_H", 10)))
     qw2 = int(os.getenv("DEFAULT_QW2_H", env.get("DEFAULT_QW2_H", 8)))
-    fallback = int(os.getenv("FALLBACK_QW_MONTHLY_H", env.get("FALLBACK_QW_MONTHLY_H", 18)))
+    fallback = int(
+        os.getenv("FALLBACK_QW_MONTHLY_H", env.get("FALLBACK_QW_MONTHLY_H", 18))
+    )
 
-    # Quick-Win Stunden
     total_hours: Optional[float] = None
     for k in ("sum_quickwin_hours", "quick_wins_total_hours", "qw_hours_total"):
         if isinstance(answers.get(k), (int, float)):
@@ -340,16 +296,20 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
     if total_hours is None:
         total_hours = float(qw1 + qw2 + fallback)
 
-    # CRITICAL: Cap time savings to realistic maximum for company size
     capped_hours = min(total_hours, float(constraints["max_time_savings_hours"]))
     if capped_hours < total_hours:
-        log.info("[BUSINESS-CASE] Capped hours from %s to %s for size '%s'", total_hours, capped_hours, groesse)
+        log.info(
+            "[BUSINESS-CASE] Capped hours from %s to %s for size '%s'",
+            total_hours,
+            capped_hours,
+            groesse,
+        )
 
-    # Calculate monthly savings with cap
     einsparung_monat_eur = int(round(capped_hours * stundensatz))
-    einsparung_monat_eur = min(einsparung_monat_eur, int(constraints["max_monthly_savings"]))
+    einsparung_monat_eur = min(
+        einsparung_monat_eur, int(constraints["max_monthly_savings"])
+    )
 
-    # CAPEX aus Budgetband - aber mit size-cap
     band = budget
     if "unter_2000" in band:
         capex = 1500
@@ -360,45 +320,41 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
     else:
         capex = 4000
 
-    # Cap CAPEX to size-appropriate maximum
     capex = min(capex, int(constraints["max_capex"]))
 
-    # OPEX - size-appropriate
     opex = 180 if "solo" in groesse else 350
     if "unter_100k" in rev:
         opex = max(120, opex - 60)
     opex = min(opex, int(constraints["max_opex_monthly"]))
 
-    # Wirtschaftssicht
     monatlicher_nutzen = einsparung_monat_eur - opex
     if monatlicher_nutzen > 0:
         payback: Optional[float] = round(capex / monatlicher_nutzen, 1)
     else:
         payback = None
 
-    # ROI-Berechnung (12 Monate) – nach deiner Vorgabe
-    # savings_12_months = einsparung_monat_eur * 12
-    # total_investment  = capex  (Initialinvestition; OPEX nicht im ROI)
     savings_12_months = einsparung_monat_eur * 12
     total_investment = capex
 
     roi_12m_eur = savings_12_months - total_investment
     denom = float(total_investment)
     if denom > 0:
-        # ROI_12M als Rate, z.B. 7.82 => 782 %
-        roi_12m_rate: Optional[float] = roi_12m_eur / denom
+        roi_12m_rate = roi_12m_eur / denom
+        roi_12m_percent = roi_12m_rate * 100.0
     else:
         roi_12m_rate = None
+        roi_12m_percent = None
 
-    # HTML-Ausgabe für ROI-Prozent
-    if roi_12m_rate is None:
+    if roi_12m_percent is None:
         roi_percent_str = "—"
     else:
         roi_percent_str = (
-            f"{roi_12m_rate * 100:,.1f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            f"{roi_12m_percent:,.1f}"
+            .replace(",", "X")
+            .replace(".", ",")
+            .replace("X", ".")
         )
 
-    # HTML-Tabelle
     table = f"""
 <section class="card">
   <h2>Business‑Case (realistische Annahmen)</h2>
@@ -423,7 +379,8 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
         "OPEX_REALISTISCH_EUR": opex,
         "EINSPARUNG_MONAT_EUR": einsparung_monat_eur,
         "PAYBACK_MONTHS": payback,
-        "ROI_12M": roi_12m_rate,
+        "ROI_12M_RATE": roi_12m_rate,
+        "ROI_12M": roi_12m_percent,
         "ROI_12M_EUR": roi_12m_eur,
         "BUSINESS_CASE_TABLE_HTML": table,
     }
@@ -432,11 +389,9 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
 # ------------------------ Benchmarks ----------------------------------------
 
 
-def build_benchmarks_section(scores: Dict[str, Any], path: str = "data/benchmarks.json") -> str:
-    """
-    Rendert Benchmark-Vergleich auf Basis der aktuellen Scores und (optional) einer JSON-Referenz.
-    JSON ist optional. Bei Fehlern wird eine reduzierte Ansicht mit nur den aktuellen Scores erzeugt.
-    """
+def build_benchmarks_section(
+    scores: Dict[str, Any], path: str = "data/benchmarks.json"
+) -> str:
     dims = [
         ("Governance", float(scores.get("governance", 0) or 0)),
         ("Sicherheit", float(scores.get("security", 0) or 0)),
@@ -444,67 +399,66 @@ def build_benchmarks_section(scores: Dict[str, Any], path: str = "data/benchmark
         ("Befähigung", float(scores.get("enablement", 0) or 0)),
         ("Gesamt", float(scores.get("overall", 0) or 0)),
     ]
-    meta: Dict[str, Any] = {}
+    ref = None
     try:
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as f:
-                meta = json.load(f)
+                ref = json.load(f)
     except Exception as e:
-        log.warning("Could not read %s: %s", path, e)
+        log.warning("Could not load benchmark reference %s: %s", path, e)
 
-    # Simple Inline-SVG Chart
     svg = _small_bar_svg(dims)
 
-    # Optional: Meta-Quelle/Stand
-    quelle = meta.get("source") or meta.get("quelle") or "Meta‑Benchmark (interne Synthese)"
-    stand = meta.get("as_of") or meta.get("stand") or ""
-
-    # Build table rows from dims
-    rows = "".join([f"<tr><td>{label}</td><td>{int(val)}</td></tr>" for label, val in dims])
-
-    html = f"""
-<section class="card">
-  <h2>Benchmark‑Vergleich</h2>
-  <div class="chart">{svg}</div>
-  <table class="table" style="margin-top:12px">
-    <thead><tr><th>Dimension</th><th>Ihr Score</th></tr></thead>
-    <tbody>{rows}</tbody>
-  </table>
-  <p style="font-size:0.9rem;color:#4B5563;margin-top:8px">Quelle: {quelle}{' · Stand: ' + stand if stand else ''}</p>
-</section>""".strip()
-    return html
+    html = [
+        "<section>",
+        "<h2>Benchmark: Ihr Score im Vergleich</h2>",
+        "<p>Die folgende Übersicht zeigt Ihre Bewertung je Dimension (0–100 Punkte).</p>",
+        svg,
+    ]
+    if ref and isinstance(ref, dict):
+        html.append(
+            "<p class='small muted'>Referenzwerte basieren auf aktuellen Benchmarks ähnlicher Unternehmen.</p>"
+        )
+    return "\n".join(html)
 
 
-# ------------------------ Starter‑Stacks ------------------------------------
+# ------------------------ Starter Stacks ------------------------------------
 
 
 def build_starter_stacks(answers: Dict[str, Any], path: str = "data/starter_stacks.json") -> str:
-    """
-    Rendert neutrale, für alle Branchen/Größen gültige Starter-Stacks.
-    Erwartet im JSON idealerweise einen Schlüssel 'all' oder 'global' als Liste von Karten.
-    Jedes Element: {"title": "...", "why": "...", "stack": ["Tool 1", "Tool 2", ...]}.
-    """
-    data: Dict[str, Any] = {}
     try:
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
+        else:
+            data = None
     except Exception as e:
-        log.warning("Could not read %s: %s", path, e)
+        log.warning("Could not load starter stacks %s: %s", path, e)
+        data = None
 
-    cards: List[Dict[str, Any]] = data.get("all") or data.get("global") or []
-    if not isinstance(cards, list):
-        cards = []  # type: ignore[unreachable]
+    if not data:
+        return "<p>Starter‑Stacks sind noch nicht konfiguriert.</p>"
+
+    branche = (answers.get("branche") or "").lower()
+    size = (answers.get("unternehmensgroesse") or "").lower()
 
     items_html: List[str] = []
-    for c in cards[:8]:
-        title = str(c.get("title") or "Starter‑Stack").strip()
-        why = str(c.get("why") or "").strip()
-        stack = c.get("stack") or []
-        if isinstance(stack, list):
-            stack_html = ", ".join(str(x) for x in stack)
-        else:
-            stack_html = str(stack)
+    for item in data:
+        try:
+            title = item.get("title", "Starter‑Stack")
+            why = item.get("why", "")
+            industries = [x.lower() for x in item.get("industries", [])]
+            sizes = [x.lower() for x in item.get("sizes", [])]
+            stack = item.get("stack_html") or item.get("stack") or ""
+        except Exception:
+            continue
+
+        if industries and branche and branche not in industries and "alle" not in industries:
+            continue
+        if sizes and size and size not in sizes and "alle" not in sizes:
+            continue
+
+        stack_html = stack if isinstance(stack, str) else str(stack)
         items_html.append(
             f"""
   <div class="card" style="margin:8px 0">
@@ -519,48 +473,47 @@ def build_starter_stacks(answers: Dict[str, Any], path: str = "data/starter_stac
             "<p>Keine Starter‑Stacks konfiguriert. Bitte <code>data/starter_stacks.json</code> prüfen.</p>"
         )
 
-    html = f"""
-<section class="card">
-  <h2>Werkbank & Starter‑Stacks</h2>
-  {''.join(items_html)}
-</section>""".strip()
-    return html
+    return "<section><h2>Starter‑Stacks &amp; Werkbank</h2>" + "\n".join(items_html) + "</section>"
 
 
-# ---------------- Responsible AI & Compliance -------------------------------
+# ------------------------ Responsible AI Section ----------------------------
 
 
-def build_responsible_ai_section(paths: Dict[str, str]) -> str:
-    """
-    Liest die HTML‑Partials (vier Säulen, rechtliche Fallstricke, 10-20-70, KMU-Keypoints)
-    und rendert sie als einen Abschnitt.
-    Erwartete Keys in 'paths': 'four_pillars', 'legal_pitfalls', 'ten_20_70', 'kmu_keypoints'.
-    """
-    four = _safe_read_text(paths.get("four_pillars", "knowledge/four_pillars.html"))
-    legal = _safe_read_text(paths.get("legal_pitfalls", "knowledge/legal_pitfalls.html"))
-    ten_20_70 = _safe_read_text(paths.get("ten_20_70", "knowledge/ten_20_70.html"))
-    kmu_keypoints = _safe_read_text(paths.get("kmu_keypoints", "knowledge/kmu_keypoints.html"))
+def build_responsible_ai_section(
+    paths: Dict[str, str] | None = None, base_dir: str = "data"
+) -> str:
+    paths = paths or {}
+    fallback = {
+        "principles": os.path.join(base_dir, "responsible_ai_principles.html"),
+        "risks": os.path.join(base_dir, "responsible_ai_risks.html"),
+        "playbook": os.path.join(base_dir, "responsible_ai_playbook.html"),
+    }
+    merged = {**fallback, **paths}
 
-    # Fallbacks
-    if not four:
-        four = "<p><em>(Hinweis)</em> Vier‑Säulen‑Dokument nicht gefunden.</p>"
-    if not legal:
-        legal = "<p><em>(Hinweis)</em> Rechtliche Fallstricke nicht gefunden.</p>"
+    principles = _safe_read_text(merged["principles"])
+    risks = _safe_read_text(merged["risks"])
+    playbook = _safe_read_text(merged["playbook"])
 
-    # Optional sections - only include if file exists
-    additional_sections = ""
-    if ten_20_70:
-        additional_sections += f"<div>{ten_20_70}</div>"
-    if kmu_keypoints:
-        additional_sections += f"<div>{kmu_keypoints}</div>"
+    if not (principles or risks or playbook):
+        return ""
 
-    html = f"""
-<section class="card">
-  <h2>Verantwortungsvolle KI & Compliance</h2>
-  <div class="grid" style="display:grid;grid-template-columns:1fr;gap:12px">
-    <div>{four}</div>
-    <div>{legal}</div>
-    {additional_sections}
+    return f"""
+<section>
+  <h2>Verantwortungsvolle KI (Responsible AI)</h2>
+  <p>Die folgenden Leitlinien helfen Ihnen, KI sicher, transparent und im Einklang mit Regulationen einzusetzen.</p>
+  <div class="grid columns-3">
+    <div>
+      <h3>Leitprinzipien</h3>
+      {principles}
+    </div>
+    <div>
+      <h3>Risiken &amp; Fallstricke</h3>
+      {risks}
+    </div>
+    <div>
+      <h3>Praktisches Vorgehen</h3>
+      {playbook}
+    </div>
   </div>
-</section>""".strip()
-    return html
+</section>
+""".strip()

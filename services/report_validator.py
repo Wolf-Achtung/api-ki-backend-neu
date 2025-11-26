@@ -11,8 +11,9 @@ Prüft:
 - Doppelte Context-Blöcke
 - Größen-spezifische Fehler ("Team" bei Solo)
 - Template-Text statt echtem Content
+- Prompt-Leaks in Quick-Wins
 
-Version: 1.1.0-GOLD
+Version: 1.2.0-GOLD
 Author: Claude + Wolf
 """
 
@@ -31,36 +32,33 @@ __all__ = [
 
 @dataclass
 class ValidationError:
-    """Ein gefundener Validation-Fehler"""
     severity: str  # "CRITICAL", "WARNING", "INFO"
     category: str  # z.B. "PLACEHOLDER", "EMPTY_SECTION"
     section: str   # z.B. "EXEC_SUMMARY_HTML"
-    message: str   # Human-readable Beschreibung
-    details: str   # Technische Details / Fundstelle
+    message: str
+    details: str
 
 
 class ReportValidator:
-    """Validiert Report-Sections vor PDF-Generierung"""
-    
-    # Bekannte Placeholder-Pattern
+    """Validiert Report-Sections vor PDF-Generierung."""
+
     PLACEHOLDER_PATTERNS = [
-        r"\{[A-Z_]+\}",                    # {SELBSTSTAENDIG_LABEL}
-        r"\{\{[a-z_]+\}\}",                # {{hauptleistung}}
-        r"\[Deliverable \d+\]",            # [Deliverable 1]
-        r"\[Name\]",                       # [Name]
-        r"\[Rollen\]",                     # [Rollen]
-        r"\[€\]",                          # [€]
-        r"\[Zahlen\]",                     # [Zahlen]
-        r"\[KPI \d+",                      # [KPI 1 mit Zahl...]
-        r"\[Feature/System \d+",           # [Feature/System 1...]
-        r"\[Kompletter Meilenstein",       # [Kompletter Meilenstein...]
-        r"\[Konkrete Zahlen\]",            # [Konkrete Zahlen]
-        r"\[X\]",                          # [X]
-        r"\[Y\]",                          # [Y]
-        r"\[Z\]",                          # [Z]
+        r"\{[A-Z_]+\}",
+        r"\{\{[a-z_]+\}\}",
+        r"\[Deliverable \d+\]",
+        r"\[Name\]",
+        r"\[Rollen\]",
+        r"\[€\]",
+        r"\[Zahlen\]",
+        r"\[KPI \d+",
+        r"\[Feature/System \d+",
+        r"\[Kompletter Meilenstein",
+        r"\[Konkrete Zahlen\]",
+        r"\[X\]",
+        r"\[Y\]",
+        r"\[Z\]",
     ]
-    
-    # Generische Template-Phrasen die NICHT im finalen Report sein dürfen
+
     TEMPLATE_PHRASES = [
         "Hier könnten Sie",
         "Platzhalter für",
@@ -110,9 +108,17 @@ class ReportValidator:
         "Konkrete Ergebnisse hier eintragen",
         "Konkretes Zielbild hier beschreiben",
         "Kompletter Meilenstein nach Schema",
+        "CAPEX ca. €",
+        "Payback etwa Monate",
+        "ROI nach 12 Monaten rund %",
     ]
-    
-    # Verbotene Begriffe für bestimmte Unternehmensgrößen
+
+    QUICK_WINS_PROMPT_PHRASES = [
+        "Schritt 1 – beschreibe den ersten konkreten Handgriff",
+        "Schritt 2 – definiere ein kurzes Prüfverfahren",
+        "Schritt 3 – integriere die Methode in den bestehenden Alltag",
+    ]
+
     SIZE_FORBIDDEN = {
         "solo": [
             "PMO-Team",
@@ -125,15 +131,10 @@ class ReportValidator:
             "Change-Team",
             "Projektmanagement-Office",
         ],
-        "team": [
-            # hier könnten später zusätzliche Regeln rein
-        ],
-        "kmu": [
-            # hier könnten später zusätzliche Regeln rein
-        ],
+        "team": [],
+        "kmu": [],
     }
-    
-    # Logische Sections (Schlüssel) -> Mindestlängen (reiner Text, ohne HTML-Tags)
+
     MIN_SECTION_LENGTH = {
         "executive_summary": 600,
         "business_case": 800,
@@ -146,81 +147,39 @@ class ReportValidator:
         "foerderpotenzial": 600,
     }
 
-    # Mapping von logischen Namen auf die tatsächlichen Keys,
-    # wie sie von gpt_analyze v4.14.0-GOLD-PLUS erzeugt werden.
     SECTION_KEY_MAP: Dict[str, str] = {
-        # Executive Summary: LLM-Text, den du parallel auch als "executive_summary" ablegst
         "executive_summary": "EXECUTIVE_SUMMARY_HTML",
-
-        # Business Case (Detail-Kapitel)
         "business_case": "BUSINESS_CASE_HTML",
-
-        # Quick Wins – hier bewusst der Roh-Content ohne Grid-Wrapper,
-        # damit die Textlänge realistischer geprüft wird.
         "quick_wins": "quick_wins",
-
-        # 90‑Tage‑Roadmap – in gpt_analyze als PILOT_PLAN_HTML erzeugt,
-        # mit Aliases roadmap_90d + ROADMAP_HTML
-        "roadmap_90d": "roadmap_90d",            # Alias auf PILOT_PLAN_HTML
-
-        # 12‑Monats‑Roadmap
-        "roadmap_12m": "roadmap_12m",            # Alias auf ROADMAP_12M_HTML
-
-        # Strategie & Governance
+        "roadmap_90d": "roadmap_90d",
+        "roadmap_12m": "roadmap_12m",
         "strategie_governance": "strategie_governance",
-
-        # Organisation & Change
         "org_change": "org_change",
-
-        # Tools-Empfehlungen
         "tools_empfehlungen": "tools_empfehlungen",
-
-        # Förderpotenzial
         "foerderpotenzial": "foerderpotenzial",
     }
-    
+
     def __init__(self, sections: Dict[str, Any], meta: Dict[str, Any]) -> None:
-        """
-        sections: Dict[section_name, content_string]
-        meta: Briefing-Daten (inkl. Unternehmensgröße etc.)
-        """
         self.sections = sections or {}
         self.meta = meta or {}
         self.errors: List[ValidationError] = []
-        
-        # Unternehmensgröße aus Briefing – Fallback auf 'unbekannt'
         self.company_size: str = self.meta.get("unternehmensgroesse", "unbekannt")
-    
-    # ------------------------------------------------------------------
-    # Öffentliche API
-    # ------------------------------------------------------------------
-    
-    def validate_all(self) -> Tuple[bool, List[ValidationError]]:
-        """
-        Führt alle Validierungsregeln aus und gibt (is_valid, errors) zurück.
-        is_valid = False, wenn mindestens ein "CRITICAL"-Fehler existiert.
-        """
 
-        # DEBUG: Einmal die verfügbaren Sections-Keys loggen
+    # ------------------------------------------------------------------
+
+    def validate_all(self) -> Tuple[bool, List[ValidationError]]:
         print("DEBUG ReportValidator – sections keys:", list(self.sections.keys()))
-        
-        # 1) Placeholder-Checks
+
         self._check_placeholders()
-        
-        # 2) Leere/zu kurze Sections
         self._check_empty_or_short_sections()
-        
-        # 3) Template-Phrasen
         self._check_template_phrases()
-        
-        # 4) Größen-spezifische Fehler
+        self._check_quick_wins_prompt_leaks()
         self._check_size_specific_issues()
-        
+
         is_valid = not any(e.severity == "CRITICAL" for e in self.errors)
         return is_valid, self.errors
-    
+
     def print_report(self) -> None:
-        """Formatiertes Log der Findings – analog zu deinem Log-Output."""
         if not self.errors:
             print("")
             print("=" * 78)
@@ -231,42 +190,42 @@ class ReportValidator:
             print("=" * 78)
             print("")
             return
-        
+
         critical_count = sum(1 for e in self.errors if e.severity == "CRITICAL")
         warning_count = sum(1 for e in self.errors if e.severity == "WARNING")
         info_count = sum(1 for e in self.errors if e.severity == "INFO")
-        
+
         print("")
         print("=" * 78)
         print("📋 REPORT VALIDATION RESULTS")
         print("=" * 78)
         print("")
-        
+
         if critical_count:
             print(f"🔴 CRITICAL ERRORS: {critical_count}")
         if warning_count:
             print(f"🟠 WARNINGS: {warning_count}")
         if info_count:
             print(f"🔵 INFO: {info_count}")
-        
+
         if critical_count:
             print("→ Report kann NICHT published werden!")
         print("-" * 80)
         print("")
-        
+
         for err in self.errors:
             prefix = {
                 "CRITICAL": "❌",
                 "WARNING": "⚠️",
                 "INFO": "ℹ️",
             }.get(err.severity, "•")
-            
+
             print(f"[{err.category}] {err.section}")
             print(f"   {prefix} {err.message}")
             if err.details:
                 print(f"   Details: {err.details}")
             print("")
-        
+
         print("=" * 78)
         print(
             f"TOTAL: {critical_count} Critical | "
@@ -274,17 +233,13 @@ class ReportValidator:
         )
         print("=" * 78)
         print("")
-    
+
     # ------------------------------------------------------------------
-    # Einzelne Checks
-    # ------------------------------------------------------------------
-    
+
     def _check_placeholders(self) -> None:
-        """Sucht nach den bekannten Placeholder-Patterns in allen Sections."""
         for section_name, content in self.sections.items():
             if not isinstance(content, str):
                 continue
-            
             for pattern in self.PLACEHOLDER_PATTERNS:
                 for match in re.finditer(pattern, content):
                     placeholder = match.group(0)
@@ -297,24 +252,16 @@ class ReportValidator:
                             details=f"Pattern: {pattern}, Fundstelle: {match.span()}",
                         )
                     )
-    
+
     def _check_empty_or_short_sections(self) -> None:
-        """Prüft, ob wichtige Sections leer oder zu kurz sind."""
         for logical_name, min_length in self.MIN_SECTION_LENGTH.items():
             section_key = self.SECTION_KEY_MAP.get(logical_name, logical_name)
-
-            # Section muss überhaupt existieren, sonst ignorieren wir sie
             if section_key not in self.sections:
                 continue
-
             content = self.sections.get(section_key)
             if not isinstance(content, str):
                 continue
-
-            # HTML grob entfernen
-            text_only = re.sub(r"<[^>]+>", "", content)
-            text_only = text_only.strip()
-
+            text_only = re.sub(r"<[^>]+>", "", content).strip()
             if not text_only:
                 self.errors.append(
                     ValidationError(
@@ -326,7 +273,6 @@ class ReportValidator:
                     )
                 )
                 continue
-
             actual_length = len(text_only)
             if actual_length < min_length:
                 self.errors.append(
@@ -341,13 +287,11 @@ class ReportValidator:
                         details=f"Content preview: {text_only[:100]}...",
                     )
                 )
-    
+
     def _check_template_phrases(self) -> None:
-        """Prüft ob noch Template-Instruktionen im Report sind"""
         for section_name, content in self.sections.items():
             if not isinstance(content, str):
                 continue
-                
             for phrase in self.TEMPLATE_PHRASES:
                 if phrase in content:
                     self.errors.append(
@@ -359,17 +303,43 @@ class ReportValidator:
                             details="Bitte durch individuellen Text ersetzen.",
                         )
                     )
-    
+
+    def _check_quick_wins_prompt_leaks(self) -> None:
+        """Sucht nach typischen Prompt-Anweisungen in der Quick-Wins-Section."""
+        candidates = []
+        key_raw = self.SECTION_KEY_MAP.get("quick_wins", "quick_wins")
+        if key_raw in self.sections:
+            candidates.append((key_raw, self.sections.get(key_raw)))
+        if "QUICK_WINS_HTML" in self.sections:
+            candidates.append(("QUICK_WINS_HTML", self.sections.get("QUICK_WINS_HTML")))
+
+        for section_name, content in candidates:
+            if not isinstance(content, str) or not content:
+                continue
+            lower = content.lower()
+            for phrase in self.QUICK_WINS_PROMPT_PHRASES:
+                if phrase.lower() in lower:
+                    self.errors.append(
+                        ValidationError(
+                            severity="WARNING",
+                            category="QUICK_WINS_PROMPT_LEAK",
+                            section=section_name,
+                            message=(
+                                "Quick-Wins enthalten noch Prompt-Anweisungen "
+                                "statt ausgefüllter Inhalte."
+                            ),
+                            details=f'Gefunden: "{phrase}"',
+                        )
+                    )
+                    break
+
     def _check_size_specific_issues(self) -> None:
-        """Prüft, ob Inhalte nicht zur Unternehmensgröße passen (Solo/Team/KMU)."""
         forbidden_terms = self.SIZE_FORBIDDEN.get(self.company_size, [])
         if not forbidden_terms:
             return
-        
         for section_name, content in self.sections.items():
             if not isinstance(content, str):
                 continue
-            
             lower = content.lower()
             for term in forbidden_terms:
                 if term.lower() in lower:
@@ -388,35 +358,13 @@ class ReportValidator:
 
 
 def validate_report(sections: Dict[str, Any], briefing: Dict[str, Any]) -> bool:
-    """
-    Main validation function - to be called from gpt_analyze.py
-
-    Args:
-        sections: Report sections dict
-        briefing: Original briefing data
-
-    Returns:
-        True if report passes validation, False if critical errors found
-    """
     validator = ReportValidator(sections, briefing)
     is_valid, errors = validator.validate_all()
     validator.print_report()
-
     return is_valid
 
 
-def filter_size_inappropriate_content(
-    content: str, unternehmensgroesse: str
-) -> str:
-    """
-    Filtert größen-inkompatible Formulierungen aus einem einzelnen Text.
-
-    Aktuell nur als Wrapper angelegt – die eigentliche Logik sitzt in
-    _check_size_specific_issues und arbeitet auf allen Sections. Diese Funktion
-    bleibt trotzdem als Public API bestehen, falls später mal einzelne Strings
-    gefiltert werden sollen.
-    """
-    # Derzeit keine aktive Mutation – einfach Content zurückgeben
+def filter_size_inappropriate_content(content: str, unternehmensgroesse: str) -> str:
     return content
 
 
@@ -424,20 +372,9 @@ def filter_all_sections(
     sections: Dict[str, Any],
     briefing: Dict[str, Any],
 ) -> Dict[str, Any]:
-    """
-    Apply size-inappropriate content filter to all sections.
-
-    Args:
-        sections: Report sections dict
-        briefing: Original briefing data
-
-    Returns:
-        Filtered sections dict
-    """
     import logging
 
     log = logging.getLogger(__name__)
-
     unternehmensgroesse = briefing.get("unternehmensgroesse", "klein")
     log.info(
         f"[CONTENT-FILTER] Filtering size-inappropriate content "
@@ -458,11 +395,10 @@ def filter_all_sections(
 
 
 if __name__ == "__main__":
-    # Minimaler Self-Test, falls du die Datei mal direkt ausführst
     demo_sections = {
         "EXEC_SUMMARY_HTML": "<p>Kurzer Text mit TODO: hier weiter ausformulieren</p>",
         "BUSINESS_CASE_HTML": "<p>Beispieltext: hier Freitext einfügen</p>",
-        "QUICK_WINS_HTML": "<p>Lorem ipsum</p>",
+        "QUICK_WINS_HTML": "<p>Schritt 1 – beschreibe den ersten konkreten Handgriff …</p>",
     }
     demo_briefing = {"unternehmensgroesse": "solo"}
 

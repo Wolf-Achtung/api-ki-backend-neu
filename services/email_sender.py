@@ -19,6 +19,7 @@ try:
 except Exception:  # pragma: no cover
     class _Dummy:
         pass
+
     settings = _Dummy()  # type: ignore
 
 log = logging.getLogger("services.email_sender")
@@ -98,7 +99,11 @@ def _send_via_resend(to_email: str, subject: str, text: str) -> bool:
             err = e.response.json()
         except Exception:
             err = {"error": str(e)}
-        log.error("Resend error: %s – response=%s", e, json.dumps(err, ensure_ascii=False))
+        log.error(
+            "Resend error: %s – response=%s",
+            e,
+            json.dumps(err, ensure_ascii=False),
+        )
         return False
     except Exception as e:
         log.error("Resend transport error: %s", e)
@@ -115,6 +120,7 @@ def _send_via_smtp(to_email: str, subject: str, text: str) -> bool:
     try:
         from email.message import EmailMessage
         import smtplib
+
         msg = EmailMessage()
         msg["From"] = sender
         msg["To"] = to_email
@@ -132,12 +138,18 @@ def _send_via_smtp(to_email: str, subject: str, text: str) -> bool:
                 try:
                     s.starttls()
                 except Exception as e:
-                    log.warning("SMTP: STARTTLS fehlgeschlagen (fahre fort): %s", e)
+                    log.warning(
+                        "SMTP: STARTTLS fehlgeschlagen (fahre fort): %s",
+                        e,
+                    )
             if user and pwd:
                 s.login(user, pwd)
                 log.info("SMTP: eingeloggt als %s", user)
             else:
-                log.info("SMTP ohne Login (user/pass fehlen) – Server könnte 530 verlangen.")
+                log.info(
+                    "SMTP ohne Login (user/pass fehlen) – "
+                    "Server könnte 530 verlangen."
+                )
             s.send_message(msg)
         log.info("SMTP: Mail verschickt an %s über %s:%s", to_email, host, port)
         return True
@@ -168,5 +180,10 @@ def send_code(to_email: str, code: str) -> bool:
             ok = _send_via_smtp(to_email, subject, text)
 
     if not ok:
-        log.warning("Kein Mail‑Provider erfolgreich (%s) – Code für %s lautet: %s", "→".join(tried), to_email, code)
+        log.warning(
+            "Kein Mail‑Provider erfolgreich (%s) – Code für %s lautet: %s",
+            "→".join(tried),
+            to_email,
+            code,
+        )
     return ok
