@@ -1,6 +1,5 @@
-
 """
-settings.py — zentrale Konfiguration (Pydantic v2)
+settings.py – zentrale Konfiguration (Pydantic v2)
 --------------------------------------------------
 Lädt alle relevanten Umgebungsvariablen und stellt get_settings()
 für den einfachen Import bereit.
@@ -65,9 +64,14 @@ class OpenAIConfig(BaseModel):
     api_key: Optional[str] = None
     model: str = "gpt-4o"
     temperature: float = 0.2
-    max_tokens: int = 3000
+    max_completion_tokens: int = 3000
     timeout: int = 120
     gamechanger_temperature: float = 0.4
+
+    @property
+    def max_tokens(self) -> int:
+        """Backwards-kompatibler Alias für max_completion_tokens"""
+        return self.max_completion_tokens
 
 
 class PerplexityConfig(BaseModel):
@@ -218,7 +222,7 @@ class AppSettings(BaseSettings):
                 api_key=os.getenv("OPENAI_API_KEY"),
                 model=os.getenv("OPENAI_MODEL", "gpt-4o"),
                 temperature=float(os.getenv("OPENAI_TEMPERATURE", "0.2")),
-                max_tokens=int(os.getenv("OPENAI_MAX_TOKENS", "3000")),
+                max_completion_tokens=int(os.getenv("OPENAI_MAX_TOKENS", "3000")),
                 timeout=int(os.getenv("OPENAI_TIMEOUT", "120")),
                 gamechanger_temperature=float(os.getenv("OPENAI_TEMP_GAMECHANGER", "0.4")),
             ),
