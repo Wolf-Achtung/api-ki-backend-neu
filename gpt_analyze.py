@@ -1502,7 +1502,7 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 )
                 raise ValueError("Non-string prompt")
             
-                        log.info("✅ Using enhanced prompt for %s (with context)", section_name)
+            log.info("✅ Using enhanced prompt for %s (with context)", section_name)
 
             # 4. LLM-Parameter pro Section bestimmen
             llm = _llm_params_for(section_name)
