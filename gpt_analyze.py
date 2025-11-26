@@ -348,7 +348,15 @@ OPENAI_MODEL = settings.openai.model or os.getenv("OPENAI_MODEL", "gpt-4o")
 OPENAI_API_BASE = os.getenv("OPENAI_API_BASE")  # Not in new settings structure
 OPENAI_TEMPERATURE = settings.openai.temperature
 OPENAI_TIMEOUT = settings.openai.timeout
-OPENAI_MAX_TOKENS = settings.openai.max_tokens
+# Robust: Unterstützt sowohl max_completion_tokens (neu) als auch max_tokens (alt)
+try:
+    OPENAI_MAX_TOKENS = getattr(settings.openai, "max_completion_tokens", None)
+    if OPENAI_MAX_TOKENS is None:
+        OPENAI_MAX_TOKENS = getattr(settings.openai, "max_tokens", None)
+    if OPENAI_MAX_TOKENS is None:
+        OPENAI_MAX_TOKENS = int(os.getenv("OPENAI_MAX_TOKENS", "3000"))
+except Exception:
+    OPENAI_MAX_TOKENS = int(os.getenv("OPENAI_MAX_TOKENS", "3000"))
 
 ENABLE_NSFW_FILTER = (os.getenv("ENABLE_NSFW_FILTER", "1") in ("1", "true", "TRUE", "yes", "YES"))
 ENABLE_REALISTIC_SCORES = (os.getenv("ENABLE_REALISTIC_SCORES", "1") in ("1", "true", "TRUE", "yes", "YES"))
@@ -598,18 +606,26 @@ def _call_openai(
         }
         log.debug("OpenAI request headers: %s", safe_headers)
 
+        # Payload base: model, messages, temperature
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": float(temperature),
+        }
+        
+        # GPT-5.x benötigt max_completion_tokens statt max_tokens
+        if model.startswith("gpt-5"):
+            payload["max_completion_tokens"] = int(max_tokens)
+        else:
+            payload["max_tokens"] = int(max_tokens)
+
         r = requests.post(
             url,
             headers=headers,
-            json={
-                "model": model,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt},
-                ],
-                "temperature": float(temperature),
-                "max_tokens": int(max_tokens),
-            },
+            json=payload,
             timeout=OPENAI_TIMEOUT,
         )
         r.raise_for_status()
@@ -628,7 +644,15 @@ def _call_openai(
             return None
 
     except requests.exceptions.RequestException as exc:
-        log.error("❌ OpenAI request error: %s", str(exc)[:200])
+        error_msg = f"❌ OpenAI request error: {str(exc)[:200]}"
+        # Bei HTTP-Fehlern: Response-Body loggen (gekürzt)
+        if hasattr(exc, 'response') and exc.response is not None:
+            try:
+                response_text = exc.response.text[:500]
+                error_msg += f" | Response: {response_text}"
+            except Exception:
+                pass
+        log.error(error_msg)
         return None
     except Exception as exc:
         log.error("❌ OpenAI unexpected error: %s", str(exc)[:200])
