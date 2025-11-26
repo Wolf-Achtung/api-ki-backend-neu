@@ -2450,17 +2450,19 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             capex = float(bc.get('CAPEX_REALISTISCH_EUR', 6000))
             opex = float(bc.get('OPEX_REALISTISCH_EUR', 120))
             einsparung = float(bc.get('EINSPARUNG_MONAT_EUR', 4500))
-            roi_12m = float(bc.get('ROI_12M', 0))
+            roi_12m = float(bc.get('ROI_12M', 0))  # ROI_12M ist bereits ein Prozentwert (z.B. 200.0 für 200%)
 
             # Ensure numeric values are available for Jinja2 calculations
             sections['CAPEX_REALISTISCH_EUR'] = capex
             sections['OPEX_REALISTISCH_EUR'] = opex
             sections['EINSPARUNG_MONAT_EUR'] = einsparung
-            sections['ROI_12M'] = roi_12m
+            sections['ROI_12M'] = roi_12m  # Prozentwert (z.B. 200.0)
+            sections['ROI_12M_RATE'] = roi_12m / 100.0  # Als Faktor (z.B. 2.0 für 200%)
 
             # Sensitivity calculations (pessimistic 80%, optimistic 120%)
-            sections['ROI_12M_LOW'] = round(roi_12m * 0.8 * 100, 1)  # in %
-            sections['ROI_12M_HIGH'] = round(roi_12m * 1.2 * 100, 1)  # in %
+            # ROI_12M ist bereits in %, daher KEINE zusätzliche *100 Multiplikation
+            sections['ROI_12M_LOW'] = round(roi_12m * 0.8, 1)  # in %
+            sections['ROI_12M_HIGH'] = round(roi_12m * 1.2, 1)  # in %
             sections['EINSPARUNG_MONAT_EUR_LOW'] = round(einsparung * 0.8)
             sections['EINSPARUNG_MONAT_EUR_HIGH'] = round(einsparung * 1.2)
             sections['OPEX_REALISTISCH_EUR_LOW'] = round(opex * 0.8)
@@ -2471,6 +2473,14 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             einsparung_high = einsparung * 1.2 - opex
             sections['PAYBACK_MONTHS_PESSIMISTIC'] = round(capex / einsparung_low, 1) if einsparung_low > 0 else 99
             sections['PAYBACK_MONTHS_OPTIMISTIC'] = round(capex / einsparung_high, 1) if einsparung_high > 0 else 0
+            
+            # Logging: Business-Case-Details mit ROI-Werten
+            log.info("[%s] 📊 ROI Details: ROI_12M=%.1f%% (Rate=%.2f, Low=%.1f%%, High=%.1f%%)",
+                     run_id, roi_12m, sections['ROI_12M_RATE'], 
+                     sections['ROI_12M_LOW'], sections['ROI_12M_HIGH'])
+            log.info("[%s] 📊 Payback: Realistisch=%.1f Monate, Pessimistisch=%.1f, Optimistisch=%.1f",
+                     run_id, bc.get('PAYBACK_MONTHS', 0),
+                     sections['PAYBACK_MONTHS_PESSIMISTIC'], sections['PAYBACK_MONTHS_OPTIMISTIC'])
         except (ValueError, ZeroDivisionError) as e:
             log.warning("[%s] ⚠️ Sensitivity calculation failed: %s", run_id, e)
 
@@ -2499,8 +2509,16 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             '{OPEX_REALISTISCH_EUR}': str(int(bc.get('OPEX_REALISTISCH_EUR', 120))),
             '{EINSPARUNG_MONAT_EUR}': str(int(bc.get('EINSPARUNG_MONAT_EUR', 4500))),
             '{PAYBACK_MONTHS}': str(round(bc.get('PAYBACK_MONTHS', 2.9), 1)),
-            '{ROI_12M}': f"{bc.get('ROI_12M', 0) * 100:.1f}" if bc.get('ROI_12M') else "0",
+            '{ROI_12M}': f"{bc.get('ROI_12M', 0):.1f}",  # ROI_12M ist bereits in % (z.B. 200.0)
             '{ROI_12M_EUR}': str(int(bc.get('ROI_12M_EUR', 0))),
+            '{ROI_12M_LOW}': f"{sections.get('ROI_12M_LOW', 0):.1f}",
+            '{ROI_12M_HIGH}': f"{sections.get('ROI_12M_HIGH', 0):.1f}",
+            '{EINSPARUNG_MONAT_EUR_LOW}': str(int(sections.get('EINSPARUNG_MONAT_EUR_LOW', 0))),
+            '{EINSPARUNG_MONAT_EUR_HIGH}': str(int(sections.get('EINSPARUNG_MONAT_EUR_HIGH', 0))),
+            '{OPEX_REALISTISCH_EUR_LOW}': str(int(sections.get('OPEX_REALISTISCH_EUR_LOW', 0))),
+            '{OPEX_REALISTISCH_EUR_HIGH}': str(int(sections.get('OPEX_REALISTISCH_EUR_HIGH', 0))),
+            '{PAYBACK_MONTHS_PESSIMISTIC}': str(round(sections.get('PAYBACK_MONTHS_PESSIMISTIC', 0), 1)),
+            '{PAYBACK_MONTHS_OPTIMISTIC}': str(round(sections.get('PAYBACK_MONTHS_OPTIMISTIC', 0), 1)),
             '{COMPANY_SIZE}': answers.get('unternehmensgroesse', 'solo'),
             '{qw_hours_total}': str(qw_hours),
             # Double-brace patterns (Jinja2-style that GPT may use)
@@ -2508,7 +2526,15 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             '{{OPEX_REALISTISCH_EUR}}': str(int(bc.get('OPEX_REALISTISCH_EUR', 120))),
             '{{EINSPARUNG_MONAT_EUR}}': str(int(bc.get('EINSPARUNG_MONAT_EUR', 4500))),
             '{{PAYBACK_MONTHS}}': str(round(bc.get('PAYBACK_MONTHS', 2.9), 1)),
-            '{{ROI_12M}}': f"{bc.get('ROI_12M', 0) * 100:.1f}" if bc.get('ROI_12M') else "0",
+            '{{ROI_12M}}': f"{bc.get('ROI_12M', 0):.1f}",  # ROI_12M ist bereits in % (z.B. 200.0)
+            '{{ROI_12M_LOW}}': f"{sections.get('ROI_12M_LOW', 0):.1f}",
+            '{{ROI_12M_HIGH}}': f"{sections.get('ROI_12M_HIGH', 0):.1f}",
+            '{{EINSPARUNG_MONAT_EUR_LOW}}': str(int(sections.get('EINSPARUNG_MONAT_EUR_LOW', 0))),
+            '{{EINSPARUNG_MONAT_EUR_HIGH}}': str(int(sections.get('EINSPARUNG_MONAT_EUR_HIGH', 0))),
+            '{{OPEX_REALISTISCH_EUR_LOW}}': str(int(sections.get('OPEX_REALISTISCH_EUR_LOW', 0))),
+            '{{OPEX_REALISTISCH_EUR_HIGH}}': str(int(sections.get('OPEX_REALISTISCH_EUR_HIGH', 0))),
+            '{{PAYBACK_MONTHS_PESSIMISTIC}}': str(round(sections.get('PAYBACK_MONTHS_PESSIMISTIC', 0), 1)),
+            '{{PAYBACK_MONTHS_OPTIMISTIC}}': str(round(sections.get('PAYBACK_MONTHS_OPTIMISTIC', 0), 1)),
             '{{qw_hours_total}}': str(qw_hours),
             '{{ qw_hours_total }}': str(qw_hours),
         }
@@ -2935,12 +2961,20 @@ def _fix_exec_placeholders(html_block: str, scores: Dict[str, Any], sections: Di
         "ROADMAP_VORHANDEN_LABEL": sections.get("ROADMAP_VORHANDEN_LABEL", ""),
         "GOVERNANCE_RICHTLINIEN_LABEL": sections.get("GOVERNANCE_RICHTLINIEN_LABEL", ""),
         "CHANGE_MANAGEMENT_LABEL": sections.get("CHANGE_MANAGEMENT_LABEL", ""),
-        # Business Case variables
+        # Business Case variables (ROI_12M ist bereits in %, KEINE zusätzliche *100 Multiplikation!)
         "CAPEX_REALISTISCH_EUR": str(int(sections.get("CAPEX_REALISTISCH_EUR", 6000) or 6000)),
         "OPEX_REALISTISCH_EUR": str(int(sections.get("OPEX_REALISTISCH_EUR", 120) or 120)),
         "EINSPARUNG_MONAT_EUR": str(int(sections.get("EINSPARUNG_MONAT_EUR", 4500) or 4500)),
         "PAYBACK_MONTHS": str(round(float(sections.get("PAYBACK_MONTHS", 2.9) or 2.9), 1)),
-        "ROI_12M": f"{float(sections.get('ROI_12M', 0) or 0) * 100:.1f}",
+        "ROI_12M": f"{float(sections.get('ROI_12M', 0) or 0):.1f}",  # Bereits in % (z.B. 200.0)
+        "ROI_12M_LOW": f"{float(sections.get('ROI_12M_LOW', 0) or 0):.1f}",
+        "ROI_12M_HIGH": f"{float(sections.get('ROI_12M_HIGH', 0) or 0):.1f}",
+        "EINSPARUNG_MONAT_EUR_LOW": str(int(sections.get("EINSPARUNG_MONAT_EUR_LOW", 0) or 0)),
+        "EINSPARUNG_MONAT_EUR_HIGH": str(int(sections.get("EINSPARUNG_MONAT_EUR_HIGH", 0) or 0)),
+        "OPEX_REALISTISCH_EUR_LOW": str(int(sections.get("OPEX_REALISTISCH_EUR_LOW", 0) or 0)),
+        "OPEX_REALISTISCH_EUR_HIGH": str(int(sections.get("OPEX_REALISTISCH_EUR_HIGH", 0) or 0)),
+        "PAYBACK_MONTHS_PESSIMISTIC": str(round(float(sections.get("PAYBACK_MONTHS_PESSIMISTIC", 0) or 0), 1)),
+        "PAYBACK_MONTHS_OPTIMISTIC": str(round(float(sections.get("PAYBACK_MONTHS_OPTIMISTIC", 0) or 0), 1)),
         "qw_hours_total": str(sections.get("qw_hours_total", 36)),
     }
 
