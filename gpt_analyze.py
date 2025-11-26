@@ -54,6 +54,7 @@ from services.prompt_enhancer import PromptEnhancer
 from services.html_sanitizer import sanitize_sections_dict
 from utils.hotfix_gold_standard import apply_hotfix, UTF8Handler
 from utils.encoding_fixer import clean_briefing_data
+from services.anthropic_client import call_anthropic, should_use_anthropic
 
 # Und direkt nach Zeile 61, vor try:
 UTF8Handler.setup_encoding()  # Global UTF-8 fix beim Start
@@ -634,6 +635,49 @@ def _call_openai(
         return None
 
 
+def _call_llm_for_section(
+    section_key: str,
+    prompt: str,
+    system_prompt: str = "Du bist ein KI-Berater.",
+    temperature: Optional[float] = None,
+    max_tokens: Optional[int] = None,
+    model: Optional[str] = None,
+) -> Optional[str]:
+    """
+    Zentrale Stelle, um je Abschnitt zu entscheiden,
+    ob OpenAI oder Anthropic benutzt wird.
+    
+    Args:
+        section_key: Der Schlüssel des Abschnitts (z.B. "executive_summary", "risks", etc.)
+        prompt: Der Prompt-Text
+        system_prompt: Der System-Prompt
+        temperature: Temperatur-Parameter
+        max_tokens: Maximum Tokens
+        model: Modell-Name
+        
+    Returns:
+        Der generierte Text oder None bei Fehler
+    """
+    if should_use_anthropic(section_key):
+        return call_anthropic(
+            prompt=prompt,
+            section=section_key,
+            system_prompt=system_prompt,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            model=model,
+        )
+
+    # Fallback: OpenAI wie bisher
+    return _call_openai(
+        prompt=prompt,
+        system_prompt=system_prompt,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        model=model,
+    )
+
+
 # -------------------- HTML repair ----------------
 def _clean_html(s: str) -> str:
     if not s: return s
@@ -646,8 +690,9 @@ def _needs_repair(s: str) -> bool:
 
 def _repair_html(section: str, s: str) -> str:
     if not ENABLE_REPAIR_HTML: return _clean_html(s)
-    fixed = _call_openai(
-        f"""Konvertiere folgenden Text in **valides HTML** ohne Markdown‑Fences.
+    fixed = _call_llm_for_section(
+        section_key="html_repair",
+        prompt=f"""Konvertiere folgenden Text in **valides HTML** ohne Markdown‑Fences.
 Erlaube nur: <p>, <ul>, <ol>, <li>, <table>, <thead>, <tbody>, <tr>, <th>, <td>, <div>, <h4>, <em>, <strong>, <br>.
 Abschnitt: {section}. Antworte ausschließlich mit HTML.
 ---
@@ -1507,7 +1552,8 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
             # 4. LLM-Parameter pro Section bestimmen
             llm = _llm_params_for(section_name)
 
-            result = _call_openai(
+            result = _call_llm_for_section(
+                section_key=section_name,
                 prompt=prompt_text,
                 system_prompt="Du bist ein Senior-KI-Berater. Antworte nur mit validem HTML.",
                 temperature=llm["temperature"],
@@ -1595,7 +1641,8 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
 {tone} {only_html} Gib 4–6 Bullet-Points (<ul>) aus.""",
     }
     
-    out = _call_openai(
+    out = _call_llm_for_section(
+        section_key=section_name,
         prompt=prompts.get(section_name, ""),
         system_prompt="Du bist ein Senior-KI-Berater. Antworte nur mit validem HTML.",
         temperature=llm["temperature"],
@@ -1615,7 +1662,13 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
 
 def _one_liner(title: str, section_html: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
     base = f'Erzeuge einen prägnanten One‑liner unter der H2‑Überschrift "{title}". Formel: "Kernaussage; Konsequenz → nächster Schritt". Nur 1 Zeile.'
-    text = _call_openai(base + "\n---\n" + re.sub(r"<[^>]+>", " ", section_html)[:1800], system_prompt="Du formulierst prägnante One‑liner auf Deutsch.", temperature=0.1, max_tokens=80)
+    text = _call_llm_for_section(
+        section_key="one_liner",
+        prompt=base + "\n---\n" + re.sub(r"<[^>]+>", " ", section_html)[:1800],
+        system_prompt="Du formulierst prägnante One‑liner auf Deutsch.",
+        temperature=0.1,
+        max_tokens=80
+    )
     return (text or "").strip()
 
 def _split_li_list_to_columns(html_list: str) -> Tuple[str, str]:
@@ -1913,7 +1966,8 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             vars_dict = _build_prompt_vars(briefing, scores)
             prompt_text = load_prompt("next_actions", lang="de", vars_dict=vars_dict)
             params = _llm_params_for("next_actions")
-            nxt = _call_openai(
+            nxt = _call_llm_for_section(
+                section_key="next_actions",
                 prompt=prompt_text,
                 system_prompt="Du bist PMO-Lead. Antworte nur mit HTML.",
                 temperature=params["temperature"],
@@ -1935,8 +1989,9 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     else:
         now = datetime.now()
         params = _llm_params_for("next_actions")
-        nxt = _call_openai(
-            f"""Erstelle 3–7 **Next Actions (30 Tage)** in <ol>. ...""",
+        nxt = _call_llm_for_section(
+            section_key="next_actions",
+            prompt=f"""Erstelle 3–7 **Next Actions (30 Tage)** in <ol>. ...""",
             system_prompt="Du bist PMO-Lead. Antworte nur mit HTML.",
             temperature=params["temperature"],
             max_tokens=min(params["max_tokens"], 600),
