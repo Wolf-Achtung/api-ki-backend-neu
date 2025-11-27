@@ -1,42 +1,66 @@
-Developer: <!-- recommendations.md – v4.0 GOLD STANDARD+ (size-aware, placeholder-sicher)
-  Antworte ausschließlich mit validem HTML.
-  KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im Output. -->
+Developer:
+# recommendations.md – v4.1 GOLD STANDARD+ (size-aware, validator-safe)
 
-<!--
-  Ziel: Eine präzise und umsetzbare Empfehlungen-Section generieren
-  Kontext-Parameter (alle Platzhalter müssen zum Zeitpunkt der Ausgabe durch konkrete Werte ersetzt werden):
-    - Branche: {{BRANCHE_LABEL}}
-    - Unternehmensgröße: {{UNTERNEHMENSGROESSE_LABEL}}
-    - Hauptleistung: {{HAUPTLEISTUNG}}
-    - Bundesland: {{BUNDESLAND_LABEL}} (nur wenn Förderbezug im Report relevant)
-    - Company Size: {{COMPANY_SIZE}}
--->
+ZIEL DES PROMPTS
+- Erzeuge eine klare, priorisierte Handlungsempfehlungs-Sektion für den KI-Status-Report.
+- Die Empfehlungen sollen direkt als Entscheidungs- und Umsetzungsgrundlage für Geschäftsführung / Inhaber dienen.
+- Alle Inhalte müssen konkret, geschäftsnah und auf das jeweilige Unternehmen zugeschnitten sein.
 
+EINGABE-VARIABLEN (werden im Kontext bereitgestellt)
+- {{BRANCHE_LABEL}} – Branche des Unternehmens (z. B. „Beratung & Dienstleistungen“)
+- {{UNTERNEHMENSGROESSE_LABEL}} – verbale Beschreibung der Größe (z. B. „1 (Solo-Selbstständig/Freiberuflich)“)
+- {{HAUPTLEISTUNG}} – wichtigste Leistung / Angebot
+- {{BUNDESLAND_LABEL}} – Bundesland (falls für Förderung und Kontext relevant)
+- {{COMPANY_SIZE}} – logische Größe: "solo", "small_team" oder "kmu"
+
+GRÖSSENLOGIK
+- Wenn {{COMPANY_SIZE}} = "solo":
+  - Direkte Ansprache der Inhaberin / des Inhabers („Sie“, „Ihr Unternehmen“).
+  - Keine Begriffe wie „Abteilung“, „Bereich“ oder „Team“ verwenden.
+  - Fokus auf Maßnahmen, die eine Person realistisch stemmen kann.
+- Wenn {{COMPANY_SIZE}} = "small_team":
+  - Bezug auf ein kleines Kernteam (2–10 Personen).
+  - Verantwortlichkeiten eher als „Rollen“ oder „Funktionen“ beschreiben, nicht als große Organisationseinheiten.
+- Wenn {{COMPANY_SIZE}} = "kmu":
+  - Bezug auf mehrere Funktionen/Teams möglich.
+  - Trotzdem praxisnah und ohne unnötigen Konzern-Jargon.
+
+VERBOTEN IM OUTPUT
+- Keine Wörter: „Platzhalter“, „Content wird erstellt“, „Freitextfeld“, „TODO“.
+- Keine Hinweise auf den Prompt oder Variablennamen (keine „{{…}}“ im Output).
+- Keine leeren oder inhaltsarmen Aussagen wie „weitere Maßnahmen können später ergänzt werden“.
+- Keine reinen Floskeln ohne konkreten geschäftlichen Bezug.
+
+STIL & UMFANG
+- Ton: praxisnah, konkret, optimistisch, aber ehrlich.
+- Umfang: 3–6 Empfehlungen, jede in 3–5 kurzen Sätzen beschrieben.
+- Decke möglichst unterschiedliche Hebel ab (Produktivität, Qualität, Risiko, neue Angebote, Lernen/Enablement).
+- Formuliere so, dass die Punkte 1:1 in eine Aufgaben- oder Projektliste übernommen werden können.
+
+HTML-STRUKTUR (Beispiel – in der Antwort vollständig befüllen)
+
+```html
 <section class="section recommendations">
-  <h2>Handlungsempfehlungen – Strategische Prioritäten</h2>
+  <h2>Handlungsempfehlungen – Ihre nächsten Schritte mit KI</h2>
 
   <p>
-    Generiere eine Empfehlungen-Sektion für:
-    <strong>Branche:</strong> {{BRANCHE_LABEL}},
-    <strong>Unternehmensgröße:</strong> {{UNTERNEHMENSGROESSE_LABEL}},
-    <strong>Leistungsschwerpunkt:</strong> {{HAUPTLEISTUNG}}<span style="display: {{BUNDESLAND_LABEL?'':'none'}};">, <strong>Bundesland:</strong> {{BUNDESLAND_LABEL}}</span>.
-    Empfehlungen müssen spezifisch, messbar und priorisiert sein sowie sämtlich Platzhalter durch konkrete Werte ersetzen. Falls Werte für einzelne Variablen fehlen, ist ein passender, inhaltlich stimmiger Alternativtext zu verwenden.
+    Einleitender Überblick in 2–3 Sätzen, wie ein Unternehmen aus der Branche {{BRANCHE_LABEL}}
+    mit der Größe {{UNTERNEHMENSGROESSE_LABEL}} KI sinnvoll einführen oder ausbauen kann.
+    Stelle kurz heraus, worauf die folgenden Empfehlungen den Schwerpunkt legen
+    (z. B. Entlastung im Tagesgeschäft, sichere Nutzung, neue Angebote).
   </p>
 
   <ol class="recommendations-list">
-    <!--
-      Für jede Empfehlung:
-        <li>
-          <h3>{{Empfehlungs-Titel}}</h3>
-          <p><strong>Problem im Kernprozess:</strong> {{Problem}}</p>
-          <p><strong>Empfohlene Maßnahme:</strong> {{Maßnahme}}</p>
-          <p><strong>Nutzen & ROI:</strong> {{Nutzen}}</p>
-          <p><strong>Aufwand & Budget:</strong> {{Aufwand}}</p>
-          <p><strong>Verantwortlich:</strong> {{Verantwortlicher}}</p>
-          <p><strong>Förderoption:</strong> {{Förderhinweis}}</p>
-        </li>
-    -->
-    <!-- Mindestens drei praxistaugliche, priorisierte Empfehlungen – keine Floskeln, keine Platzhalter. -->
+    <li>
+      <h3>Titel der Empfehlung&nbsp;1</h3>
+      <p><strong>Schwerpunkt:</strong> Kurzbeschreibung des betroffenen Prozesses oder Angebots.</p>
+      <p><strong>Maßnahme:</strong> Konkrete KI-gestützte Veränderung, die innerhalb von 3–6 Monaten realistisch umsetzbar ist.</p>
+      <p><strong>Nutzen &amp; Wirkung:</strong> Geschäftsnutzen in verständlicher Form (z. B. Zeitersparnis, bessere Qualität, geringeres Risiko).</p>
+      <p><strong>Aufwand &amp; Budget:</strong> Grobe Größenordnung des Aufwands (z. B. wenige Tage Konzeption, monatliche Lizenzkosten im niedrigen bis mittleren dreistelligen Bereich).</p>
+      <p><strong>Verantwortlich:</strong> Wer entscheidet und setzt um (bei Solo direkt die Inhaberin/der Inhaber; sonst eine klare Rolle).</p>
+      <p><strong>Förderchance:</strong> Kurzer Hinweis, ob eine Förderung typischerweise sinnvoll erscheint.</p>
+    </li>
+    <!-- 2–5 weitere Empfehlungen mit gleichem Aufbau und spezifischem, nicht wiederholtem Fokus -->
   </ol>
 
   <h3>Prioritäten-Überblick</h3>
@@ -50,21 +74,30 @@ Developer: <!-- recommendations.md – v4.0 GOLD STANDARD+ (size-aware, placehol
       </tr>
     </thead>
     <tbody>
-      <!-- Jede Empfehlung (aus <ol>) taucht konsistent in dieser Übersicht auf. -->
+      <tr>
+        <td>1</td>
+        <td>Kurzform der wichtigsten Empfehlung aus der obigen Liste</td>
+        <td>z. B. „0–3 Monate“</td>
+        <td>z. B. „spürbare Zeitersparnis im Tagesgeschäft“</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Zweite zentrale Empfehlung</td>
+        <td>z. B. „3–6 Monate“</td>
+        <td>z. B. „bessere Qualität und weniger Fehler“</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Dritte Empfehlung mit mittel- bis langfristigem Fokus</td>
+        <td>z. B. „6–12 Monate“</td>
+        <td>z. B. „neue Angebote oder Geschäftsmodelle“</td>
+      </tr>
+      <!-- Optional bis zu 3 weitere Prioritäten-Zeilen, passend zu den Empfehlungen -->
     </tbody>
   </table>
 
   <p class="small muted">
-    Diese Empfehlungen sind für Geschäftsführung und Projektverantwortliche als konkrete Entscheidungsgrundlage formuliert.
-    Ziehen Sie Quick Wins, Pilotprojekte und Business Cases zur Priorisierung regelmäßig hinzu.
+    Formuliere die Empfehlungen so, dass sie direkt in die Projektplanung übernommen werden können
+    und mit Quick Wins, Roadmap und Business Case des Reports konsistent sind.
   </p>
 </section>
-
-<!--
-Output Verbosity:
-- Erstelle ausschließlich validen HTML-Code gemäß dieser Struktur.
-- Die Empfehlungen-Liste muss aus mindestens 3, maximal 6 Einträgen bestehen.
-- Beschreibungen in den einzelnen Feldern (z.B. Problem, Maßnahme) dürfen maximal 2 kurze Sätze umfassen.
-- Antworte immer kompakt und direkt, vermeide ausschweifende Erklärungen oder Wiederholungen.
-- Priorisiere vollständige, umsetzbare Empfehlungen innerhalb dieser Längenvorgaben.
--->
