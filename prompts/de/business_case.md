@@ -1,91 +1,86 @@
-Developer: <!-- business_case.md – v2.4 GOLD STANDARD+ ROI & SIZE
+Developer:
+<!-- business_case.md – v3.0 GOLD STANDARD+ (ROI, CAPEX/OPEX, size-aware)
      Antworte ausschließlich mit validem HTML.
-     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences. -->
+     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
-<!-- KONTEXT-VARIABLEN
-     - {{BRANCHE_LABEL}}: Branche des Unternehmens.
-     - {{COMPANY_SIZE}}: solo | team | kmu.
-     - {{HAUPTLEISTUNG}}: zentrale Leistung / Wertschöpfungskern.
-     - {{BUNDESLAND_LABEL}}: Standort (für qualitative Förder-Hinweise, keine eigenen Zahlen).
-     - {{CAPEX_REALISTISCH_EUR}}: einmalige Investition in EUR.
-     - {{OPEX_REALISTISCH_EUR}}: laufende monatliche Kosten in EUR.
-     - {{EINSPARUNG_MONAT_EUR}}: realistische monatliche Einsparung in EUR.
-     - {{PAYBACK_MONTHS}}: Amortisationsdauer in Monaten.
-     - {{ROI_12M}}: erwarteter ROI nach 12 Monaten in Prozent.
+     VERFÜGBARE VARIABLEN:
+       {{BRANCHE_LABEL}}
+       {{COMPANY_SIZE}}            // solo | team | kmu
+       {{HAUPTLEISTUNG}}
+       {{BUNDESLAND_LABEL}}
+       {{CAPEX_REALISTISCH_EUR}}
+       {{OPEX_REALISTISCH_EUR}}
+       {{EINSPARUNG_MONAT_EUR}}
+       {{PAYBACK_MONTHS}}
+       {{ROI_12M}}
 
-     REGELN
-     - Verwende exakt die übergebenen Zahlen. Keine eigenen Berechnungen oder zusätzlichen Beträge erfinden.
-     - Verbal gern mit „rund / ca.“ arbeiten, aber die Werte nicht verändern.
-     - Keine Förderquoten oder Zuschusshöhen nennen – dafür gibt es die Förderkapitel.
+     REGELN:
+       - Keine eigenen Zahlen erfinden. Ausschließlich die Variablen nutzen.
+       - „rund / etwa / ca.“ zur sprachlichen Einordnung erlaubt.
+       - Keine Förderquoten nennen (dafür eigenes Kapitel).
+       - Output = valides HTML-Fragment.
+       - Größe (solo/team/kmu) beeinflusst NUR die narrative Einordnung, nicht die Zahlen.
 -->
 
 <section class="section business-case">
   <h2>Business Case – Investition und erwarteter Nutzen</h2>
 
   <p>
-    Für <strong>{{BRANCHE_LABEL}}</strong> in der Größe 
-    <strong>{{COMPANY_SIZE}}</strong> ist {{HAUPTLEISTUNG}} ein zentraler Hebel der
-    Wertschöpfung. Der folgende Business Case zeigt, wie sich eine systematische
-    Nutzung von KI in diesem Kernprozess finanziell auswirkt.
+    Für ein Unternehmen in der Branche <strong>{{BRANCHE_LABEL}}</strong> mit der Größe
+    <strong>{{COMPANY_SIZE}}</strong> ist der Prozess <strong>{{HAUPTLEISTUNG}}</strong>
+    ein zentraler Hebel der Wertschöpfung. Der folgende Business Case zeigt auf,
+    welche finanziellen Wirkungen eine systematische Nutzung von KI realistisch entfalten kann.
   </p>
 
   <h3>Investition und laufende Kosten</h3>
   <p>
-    Für Aufbau und Einführung der Lösung sind einmalige Investitionen von
-    rund <strong>{{CAPEX_REALISTISCH_EUR}}&nbsp;€</strong> vorgesehen. 
-    Hinzu kommen laufende Betriebskosten von etwa 
-    <strong>{{OPEX_REALISTISCH_EUR}}&nbsp;€ pro Monat</strong> 
-    (z.&nbsp;B. für KI‑Nutzung, Infrastruktur und ggf. Lizenzen).
+    Die einmaligen Aufwände für Aufbau und Einführung liegen bei rund
+    <strong>{{CAPEX_REALISTISCH_EUR}}&nbsp;€</strong>. Hinzu kommen monatliche Betriebskosten
+    von etwa <strong>{{OPEX_REALISTISCH_EUR}}&nbsp;€</strong> – hauptsächlich für den KI-Einsatz,
+    Infrastruktur, Tools und potenzielle Lizenzen.
   </p>
 
   <h3>Monatlicher Effekt im Kerngeschäft</h3>
   <p>
-    Durch den Einsatz von KI im Prozess <strong>{{HAUPTLEISTUNG}}</strong> ist eine 
-    realistische Entlastung von ungefähr 
-    <strong>{{EINSPARUNG_MONAT_EUR}}&nbsp;€ pro Monat</strong> erreichbar – 
-    kombiniert aus Zeitersparnis, weniger manuellen Schleifen und höherer Qualität.
-    Die genaue Ausprägung hängt davon ab, wie konsequent der neue Workflow im Alltag
-    genutzt wird.
+    Im täglichen Einsatz ist eine realistische Entlastung von rund
+    <strong>{{EINSPARUNG_MONAT_EUR}}&nbsp;€ pro Monat</strong> erreichbar. Sie entsteht aus
+    Zeitgewinn, geringeren manuellen Schleifen und einer konsistenteren Ergebnisqualität.
+    Voraussetzung ist, dass der neue Workflow im Alltag konsequent genutzt wird.
   </p>
 
   <h3>Amortisation und ROI</h3>
   <p>
-    Auf Basis dieser Relationen ergibt sich eine Amortisationsdauer von rund 
-    <strong>{{PAYBACK_MONTHS}} Monaten</strong>. Über einen Zeitraum von zwölf
-    Monaten liegt der erwartete Return on Investment bei etwa 
-    <strong>{{ROI_12M}}&nbsp;%</strong>. 
-    Dieser Wert beschreibt das Verhältnis zwischen Investition und erwarteter 
-    Entlastung und dient als praxisnahe Orientierung – nicht als Garantie.
+    Unter diesen Annahmen amortisiert sich die Investition nach etwa
+    <strong>{{PAYBACK_MONTHS}} Monaten</strong>. Auf zwölf Monate gerechnet ergibt sich ein
+    erwarteter Return on Investment von <strong>{{ROI_12M}}&nbsp;%</strong>.
+    Dieser Wert dient als realistische Orientierung und zeigt die wirtschaftliche Tragfähigkeit des Vorhabens.
   </p>
 
   <h3>Einordnung nach Unternehmensgröße</h3>
   <p>
-    Für <strong>{{COMPANY_SIZE}}</strong> gilt: Je stärker {{HAUPTLEISTUNG}} 
-    auf wiederkehrende, standardisierbare Abläufe setzt, desto schneller macht sich 
-    die Investition bemerkbar. Bei sehr geringer Auslastung des neuen Workflows
-    verlängert sich die Amortisation, bei hoher Nutzung kann sie sich deutlich verkürzen.
+    Für <strong>{{COMPANY_SIZE}}</strong> gilt: Je stärker der Prozess
+    <strong>{{HAUPTLEISTUNG}}</strong> auf wiederkehrenden, standardisierbaren Aufgaben beruht,
+    desto schneller wirkt sich die Investition aus. Bei konsequenter Nutzung verkürzt sich die
+    Amortisation spürbar; bei geringer Auslastung verlängert sie sich entsprechend.
   </p>
 
   <h3>Verbindung zu Fördermöglichkeiten (qualitativ)</h3>
   <p>
-    In {{BUNDESLAND_LABEL}} gibt es Programme, die KI‑ und 
-    Digitalisierungsprojekte unterstützen. Wird ein Teil der einmaligen Investition 
-    über passende Förderprogramme refinanziert, verbessert sich der Business Case
-    weiter – typischerweise durch eine kürzere Amortisationsdauer und einen höheren
-    effektiven ROI. Konkrete Programme und Konditionen werden im Förderkapitel erläutert;
-    hier werden bewusst keine zusätzlichen Zahlen erfunden.
+    In <strong>{{BUNDESLAND_LABEL}}</strong> existieren Programme, die KI- und
+    Digitalisierungsprojekte unterstützen können. Werden Teile der einmaligen Investition
+    gefördert, verbessert sich der Business Case durch eine verkürzte Amortisationsdauer
+    und einen höheren effektiven ROI. Konkrete Programme und Details werden im
+    Förderkapitel erläutert.
   </p>
 
   <p class="small muted">
-    Hinweis: Alle Zahlen dienen als realistische, aber vereinfachte Orientierung. 
-    Vor größeren Investitionsentscheidungen sollten Szenario‑Rechnungen und 
-    Sensitivitätsanalysen (z.&nbsp;B. konservativ / Basis / optimistisch) ergänzt werden.
+    Hinweis: Diese Darstellung dient als transparente Orientierung. Für Investitionsentscheidungen
+    empfiehlt sich die Ergänzung um konservative, Basis- und optimistische Szenarien.
   </p>
 </section>
 
-<!-- Output Format/Verbosity
-     Antworte nur mit dem HTML-Fragment wie oben gezeigt. Keine zusätzlichen Erläuterungen, Kommentare oder Texte.
-     Halte die Gesamtlänge immer ≤2.400 Zeichen.
-     Keine übermäßige Höflichkeit oder Wiederholungen aus Gründen der Freundlichkeit.
-     Priorisiere vollständige, umsetzbare Antworten im vorgegebenen Rahmen, auch wenn der Nutzereingang sehr knapp ist.
+<!-- OUTPUT-VORGABEN:
+     - Antworte nur mit dem HTML-Fragment oben.
+     - Keine zusätzlichen Kommentare oder Erklärungen.
+     - Gesamtlänge ≤ 2.400 Zeichen einhalten.
 -->

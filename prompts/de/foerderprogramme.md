@@ -1,77 +1,68 @@
+Developer:
+<!-- foerderprogramme.md – v3.0 GOLD STANDARD+ (förderlogik, size-aware, placeholder-safe)
+     Antworte ausschließlich mit validem HTML.
+     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
----
+     ZIEL:
+       - Erzeuge einen klaren Abschnitt über relevante Förderprogramme für KI-/Digitalisierungsprojekte.
+       - Nutze ausschließlich das aus der Research-Pipeline gelieferte {{FOERDERPROGRAMME_HTML}}.
+       - Keine eigenen Programme, Zahlen oder Fördersätze erfinden.
 
-## 3) `prompts/de/foerderprogramme.md` – Förderprogramme (empfohlene Programme aus Research-Engine)
+     PFLICHTVARIABLEN:
+       - {{FOERDERPROGRAMME_HTML}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}
+       - Falls eine dieser Variablen nicht existiert oder leer ist: 
+           Gib ausschließlich aus:
+           <p class="error">Fehlende oder leere Pflichtfelder: {{Namen_der_leeren_Variablen}}.</p>
+           und KEINEN weiteren Inhalt.
 
-```markdown
-Developer: <!-- foerderprogramme.md – v1.5 GOLD STANDARD+ – Förderprogramme
-Zweck: Erzeuge eine kompakte, realistische Übersicht der wichtigsten Förderprogramme aus {{FOERDERPROGRAMME_HTML}}.
-Wichtig:
-- Keine eigenen Programme erfinden, keine Zahlen ergänzen.
-- Größenbewusste Einordnung (Solo / Team / KMU).
-- Kein "Content wird erstellt", keine Platzhalter.
+     SIZE-AWARE-LOGIK (COMPANY_SIZE ∈ {"solo","team","kmu"}):
+       SOLO:
+         - Fokus: kleine Förderprogramme, Einstiegsberatung, Innovationsgutscheine.
+         - Sprache: klar, pragmatisch, niedriger bürokratischer Aufwand.
+       TEAM (2–10):
+         - Programme für Prozessdigitalisierung, Weiterbildung, Pilotprojekte.
+         - Sprache: Team-Rollen, einfache Abstimmungswege.
+       KMU (11–100):
+         - Zusätzlich Programme für Investitionen, Verbundprojekte, Kooperationen.
+         - Sprache: Fachbereiche, Verantwortliche, strukturierte Antragsschritte.
+
+     STIL:
+       - 3–4 strukturierte Abschnitte: Einleitung, Programme, Bedeutung für Business Case, Nächste Schritte.
+       - Kein Marketing-Ton, kein Pathos, keine übertriebenen Versprechen.
+       - Keine „Platzhalter“-Wörter, kein „Content wird erstellt“.
+
+     HTML-STRUKTUR (genau ein <section>-Block):
+       <section class="section funding"> … </section>
+
 -->
 
-# FOERDERPROGRAMME – Relevante Förderoptionen
-
-## Ziel des Abschnitts
-
-Erzeuge einen Abschnitt, der:
-
-1. die aus der Research-Pipeline gelieferten Förderprogramme (`{{FOERDERPROGRAMME_HTML}}`) kurz einordnet,
-2. erklärt, **warum** diese Programme zur Branche {{BRANCHE_LABEL}} und Größe {{UNTERNEHMENSGROESSE_LABEL}} passen,
-3. eine realistische Erwartungshaltung schafft (Aufwand, Förderquoten, Bearbeitungszeiten),
-4. konkrete **nächste Schritte** nennt, wie das Unternehmen starten kann.
-
-Ton: nüchtern, hilfreich, ohne Verkaufs-Pathos. Keine Rechts- oder Steuerberatung suggerieren.
-
----
-
-## Regeln zur Datenbasis
-
-- Nutze **ausschließlich** Inhalte aus `{{FOERDERPROGRAMME_HTML}}` als Quelle für Programme, Konditionen und Links.
-- Erfinde keine zusätzlichen Programme, Fördersätze oder Budgets.
-- Wenn keine oder nur sehr wenige Programme geliefert werden, erkläre dies transparent im Text („Aktuell wurden nur wenige passende Programme gefunden …“).
-
----
-
-## Größenlogik
-
-Passe Beispiele und Sprache an `{{UNTERNEHMENSGROESSE_LABEL}}` an:
-
-- **Solo:**  
-  Fokus auf niedrigschwellige, schlanke Programme (z. B. Einstiegsberatung, Innovationsgutscheine, Beratungsförderung).  
-  Betone einfachen Einstieg und begrenzten Aufwand.
-
-- **Kleines Team (2–10):**  
-  Erwähne Programme, die Prozessdigitalisierung, Weiterbildung und erste KI-Pilotprojekte unterstützen.
-
-- **KMU (11–100):**  
-  Ergänzend: Programme für größere Investitionen, Verbundprojekte, Kooperation mit Forschungseinrichtungen – aber nur, wenn im Research-HTML enthalten.
-
----
-
-## HTML-Struktur
-
-Erzeuge genau einen `<section>`-Block:
-
-```html
 <section class="section funding">
   <h2>Förderprogramme für Ihr KI-Vorhaben</h2>
 
-  <p>Einleitender Absatz (3–4 Sätze), der kurz erklärt, warum Förderprogramme für {{BRANCHE_LABEL}} und die Unternehmensgröße {{UNTERNEHMENSGROESSE_LABEL}} relevant sind und dass nur Programme berücksichtigt werden, die aktuell in {{FOEDER_REGION}} bzw. dem im Fragebogen angegebenen Bundesland verfügbar sind (falls im Datensatz enthalten).</p>
+  <p>
+    Für Unternehmen der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> in der Branche
+    <strong>{{BRANCHE_LABEL}}</strong> können Förderprogramme einen wichtigen Beitrag leisten,
+    um die Einführung und Weiterentwicklung von KI-Projekten effizienter und wirtschaftlich
+    zu gestalten. Die folgenden Programme stammen direkt aus der aktuellen Förderrecherche
+    und berücksichtigen regionale sowie thematische Förderprioritäten.
+  </p>
 
   <h3>Ausgewählte Programme im Überblick</h3>
-  <!-- Hier wird der von der Research-Engine vorbereitete HTML-Block eingebettet -->
   {{FOERDERPROGRAMME_HTML}}
 
   <h3>Was das für Ihren Business Case bedeutet</h3>
-  <p>2–4 Sätze dazu, wie eine mögliche Förderung (z. B. anteilige Förderung von Beratungsleistungen oder Investitionen) die Amortisationszeit und den ROI des unter Abschnitt "Business Case" beschriebenen Szenarios verbessern kann – bewusst ohne zusätzliche Zahlen zu erfinden.</p>
+  <p>
+    Eine passende Förderung kann die anfänglichen Investitionskosten reduzieren und den
+    in Ihrem Business Case beschriebenen Payback beschleunigen. Je nach Programm kann dies
+    beispielsweise Beratungsleistungen, Qualifizierungsprojekte oder technologiebezogene
+    Investitionen betreffen. Die genaue Förderquote hängt jedoch vom jeweiligen Programmstand
+    sowie individuellen Kriterien ab und muss vor Antragstellung geprüft werden.
+  </p>
 
   <h3>Nächste Schritte</h3>
   <ul>
-    <li>Kurzfristig: 1–2 konkrete Schritte (z. B. Fördercheck mit Ansprechpersonen, Unterlagen sichten, Fristen prüfen).</li>
-    <li>Mittelfristig: 1–2 Schritte zur Integration von Förderung in Ihre KI-Roadmap (z. B. Pilotprojekt als förderfähiges Vorhaben definieren).</li>
-    <li>Hinweis: Ein Satz, dass detaillierte Antragsberatung durch entsprechende Stellen/Expert:innen erfolgen sollte.</li>
+    <li>Kurzfristig: Fördercheck durchführen, bereitgestellte Unterlagen sichten und mögliche Fristen prüfen.</li>
+    <li>Mittelfristig: Ein potenziell förderfähiges Vorhaben definieren, etwa ein klar abgegrenzter KI-Pilot.</li>
+    <li>Optional: Austausch mit regionalen Beratungsstellen oder zuständigen Ansprechpersonen zur Finalisierung der Unterlagen.</li>
   </ul>
 </section>

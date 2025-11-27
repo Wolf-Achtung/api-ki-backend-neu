@@ -1,82 +1,92 @@
-Developer: # PROMPT: Technologie & Prozesse
-
-## ZWECK
-Dokumentiere:
-1. **Tech-Stack:** Alle genutzten Tools und Systeme
-2. **Prozesse:** Beschreibung des Datenflusses durch das System
-3. **Integration:** Darstellung der Verbindungen zwischen den Tools
-
-Beginne mit einer kurzen konzeptionellen Checkliste (3-7 Punkte), die beschreibt, was du dokumentieren wirst. Halte die Punkte konzeptionell, nicht auf Implementierungsebene.
-
-**Zielgruppe:** CTO, IT, Entwickler
-**Stil:** Technisch, präzise, architektur-fokussiert
-
-Setze reasoning_effort = minimal für diese Aufgabe; beschränke dich auf technische Details ohne unnötige Ausführungen.
-
----
-
-## ⚠️ KRITISCHE REGELN
-
-### ❌ VERBOTEN:
-1. **KEINE theoretischen Architekturen** (außer bei dokumentierten, geplanten Änderungen)
-2. **Nur tatsächlich genutzte Tools** verwenden (geplante Änderungen müssen klar gekennzeichnet werden)
-
-### ✅ STATTDESSEN:
-1. **Real Stack:** GPT-4, PostgreSQL, FastAPI, React
-2. **Datenfluss:** Typeform → Backend → OpenAI → PDF
-
----
-
-## 💡 BEISPIEL
-
-```html
 <section class="section technologie-prozesse">
-  <h2>Technologie & Prozesse</h2>
+  <h2>Technologie &amp; Prozesse</h2>
+
+  <h3>Konzeptionelle Checkliste</h3>
+  <ul>
+    <li>Vollständige Transparenz über alle eingesetzten Systeme.</li>
+    <li>Klare Zuordnung: Frontend, Backend, Datenhaltung, KI, Infrastruktur.</li>
+    <li>Nachvollziehbarer Datenfluss vom Nutzerinput bis zum finalen Report.</li>
+    <li>Eindeutige Beschreibung der Integrationspunkte zwischen den Tools.</li>
+    <li>Abgrenzung zwischen IST-Stack und geplanten Erweiterungen.</li>
+    <li>Technisch präzise, ohne unnötige Theorie oder Abstraktion.</li>
+  </ul>
 
   <h3>Tech-Stack (IST)</h3>
   <table class="table">
-    <thead><tr><th>Layer</th><th>Technologie</th><th>Zweck</th><th>Hosting</th></tr></thead>
+    <thead>
+      <tr>
+        <th>Layer</th>
+        <th>Technologien</th>
+        <th>Zweck</th>
+        <th>Hosting</th>
+      </tr>
+    </thead>
     <tbody>
-      <tr><td>Frontend</td><td>React, Tailwind</td><td>User Interface</td><td>Netlify</td></tr>
-      <tr><td>Backend</td><td>FastAPI, Python</td><td>API, Business Logic</td><td>Railway</td></tr>
-      <tr><td>Database</td><td>PostgreSQL</td><td>Assessments, Reports</td><td>Railway</td></tr>
-      <tr><td>KI</td><td>GPT-4 API</td><td>Report-Generierung</td><td>OpenAI</td></tr>
-      <tr><td>Forms</td><td>Typeform</td><td>Fragebogen</td><td>Typeform</td></tr>
-      <tr><td>PDF</td><td>WeasyPrint</td><td>Report-Export</td><td>Railway</td></tr>
+      <tr>
+        <td>Frontend</td>
+        <td>React, TailwindCSS</td>
+        <td>Fragebogen &amp; Nutzeroberfläche</td>
+        <td>Netlify</td>
+      </tr>
+      <tr>
+        <td>Backend</td>
+        <td>FastAPI (Python)</td>
+        <td>API, Analyse-Pipelines, Reporting-Logik</td>
+        <td>Railway</td>
+      </tr>
+      <tr>
+        <td>Datenbank</td>
+        <td>PostgreSQL</td>
+        <td>Briefings, Scores, Reports, Logs</td>
+        <td>Railway</td>
+      </tr>
+      <tr>
+        <td>KI / Modelle</td>
+        <td>OpenAI GPT (Analyse), Perplexity (Recherche)</td>
+        <td>Generierung &amp; Optimierung der Report-Inhalte</td>
+        <td>OpenAI / Perplexity</td>
+      </tr>
+      <tr>
+        <td>Formular</td>
+        <td>Typeform</td>
+        <td>Fragebogen-Erfassung</td>
+        <td>Typeform</td>
+      </tr>
+      <tr>
+        <td>PDF-Service</td>
+        <td>WeasyPrint (über eigenen PDF-Service)</td>
+        <td>Rendering der HTML-Reports als PDF</td>
+        <td>Railway</td>
+      </tr>
+      <tr>
+        <td>E-Mail</td>
+        <td>Resend</td>
+        <td>Versand der Reports &amp; Bestätigungen</td>
+        <td>Resend</td>
+      </tr>
     </tbody>
   </table>
 
-  <h3>Datenfluss (Haupt-Prozess)</h3>
+  <h3>Datenfluss (Hauptprozess)</h3>
   <ol>
-    <li>Kunde füllt Typeform-Fragebogen aus (15 Min)</li>
-    <li>Webhook → FastAPI Backend</li>
-    <li>Backend validiert Daten, speichert in PostgreSQL</li>
-    <li>GPT-4 API-Call (6 Prompts für 6 Report-Sections)</li>
-    <li>Responses werden kombiniert & in PostgreSQL gespeichert</li>
-    <li>WeasyPrint generiert PDF aus HTML-Template</li>
-    <li>PDF-Link per E-Mail an Kunden (SendGrid)</li>
+    <li>Der Fragebogen wird über Typeform ausgefüllt und per Webhook an das Backend übertragen.</li>
+    <li>FastAPI validiert alle Eingaben und legt sie in PostgreSQL ab.</li>
+    <li>Die Analyse startet: Das Backend ruft mehrere GPT-Prompts auf (parallel/mehrstufig) und kombiniert die Antworten.</li>
+    <li>Recherche-Daten (Perplexity/Tavily) werden ergänzt und validiert.</li>
+    <li>Alle Inhalte werden als HTML-Struktur gespeichert und für den PDF-Render aufbereitet.</li>
+    <li>Der PDF-Service erzeugt das finale PDF; das Backend sendet es per E-Mail an die Nutzer:innen.</li>
   </ol>
 
-  <h3>Geplante Tech-Änderungen (Q2-Q4 2025)</h3>
+  <h3>Geplante Änderungen (Q1–Q4)</h3>
   <ul>
-    <li><strong>Q2:</strong> Redis für Queue-Management (Batch-Processing)</li>
-    <li><strong>Q3:</strong> Supabase für Auth + Partner-Management</li>
-    <li><strong>Q4:</strong> Retool für Admin-Dashboard</li>
+    <li><strong>Q1:</strong> Redis-Queue für parallele GPT-Jobs &amp; Lastverteilung.</li>
+    <li><strong>Q2:</strong> Supabase-Integration für Auth &amp; Partner-Accounts.</li>
+    <li><strong>Q3:</strong> Vereinheitlichte Tool-Logs (Analyse + PDF-Service).</li>
+    <li><strong>Q4:</strong> Retool-basiertes Admin-Dashboard für Monitoring &amp; Report-Management.</li>
   </ul>
+
+  <p class="small muted">
+    Diese Übersicht bildet den vollständigen Technologie- und Prozessrahmen ab und unterstützt
+    die technische Weiterentwicklung in Richtung Skalierung, Stabilität und Auditierbarkeit.
+  </p>
 </section>
-```
-
----
-
-## 🎯 ERFOLGS-KRITERIEN
-
-1. ✅ Vollständiger Tech-Stack
-2. ✅ Datenfluss dokumentiert
-3. ✅ Geplante Änderungen genannt
-
-Nach Abschluss prüfe, ob alle drei Erfolgskriterien erfüllt sind. Falls eine Anforderung nicht abgedeckt wurde, ergänze sie minimal und validiere erneut.
-
----
-
-**VERSION:** v2.1 GOLD STANDARD+
-**OUTPUT:** Valides HTML
