@@ -2498,6 +2498,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             'RECOMMENDATIONS_HTML',
             'BUSINESS_ROI_HTML',
             'BUSINESS_COSTS_HTML',
+            'FOERDERPOTENZIAL_HTML',  # Business-Case-Variablen auch im Förderkapitel ersetzen
+            'RESPONSIBLE_AI_HTML',  # Falls Business-Case-Variablen vorhanden sind
         ]
 
         # Get qw_hours_total from sections or calculate fallback
