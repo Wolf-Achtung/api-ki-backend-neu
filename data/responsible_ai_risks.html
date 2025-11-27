@@ -1,10 +1,18 @@
+
+*(Falls du eine explizite Variable für die Region/Bundesland verwenden möchtest, kannst du in deinem Code `{{BUNDESLAND_LABEL}}` in den Einleitungsabsatz interpolieren – der Prompt ist darauf vorbereitet.)*
+
+---
+
+## 4) `data/responsible_ai_risks.html` – Responsible AI: typische Risiken
+
+```html
 <section class="rai-block rai-risks">
-  <h3>Typische KI-Risiken & Gegenmaßnahmen</h3>
-  
+  <h3>Typische KI-Risiken & pragmatische Gegenmaßnahmen</h3>
+
   <p>
-    Der Einsatz von Large Language Models (LLMs) wie GPT oder Claude birgt spezifische Risiken, die sich 
-    jedoch mit pragmatischen Maßnahmen gut beherrschen lassen. Die folgende Tabelle zeigt die häufigsten 
-    Fallstricke und konkrete Lösungsansätze für KMU und Solo-Selbstständige.
+    Der Einsatz von Large Language Models (LLMs) wie GPT oder Claude bringt Chancen – aber auch typische Risiken. 
+    Viele davon lassen sich mit klaren Spielregeln und schlanken Maßnahmen gut beherrschen, auch in kleinen Unternehmen 
+    und bei Solo-Selbstständigen. Die folgende Übersicht zeigt zentrale Risikobereiche und praxisnahe Gegenmaßnahmen.
   </p>
 
   <table class="table">
@@ -19,83 +27,86 @@
       <tr>
         <td><strong>Halluzinationen & Falschinformationen</strong></td>
         <td>
-          Ein LLM erfindet Gesetze, Produktdetails oder Kundennamen, die nicht existieren. 
-          Dies kann zu falschen Zusagen oder rechtlichen Problemen führen.
+          Ein LLM erfindet rechtliche Rahmenbedingungen, Marktzahlen oder Produktdetails. 
+          Auf dieser Basis werden Angebote oder Empfehlungen formuliert, die nicht korrekt sind.
         </td>
         <td>
-          <em>Vier-Augen-Prinzip:</em> Lassen Sie kritische Texte (Verträge, Angebote, technische Specs) 
-          immer von einem Menschen überprüfen. Nutzen Sie Web-Recherche-Features oder verifizieren Sie 
-          Fakten extern. Markieren Sie KI-generierte Inhalte intern zur Nachkontrolle.
+          <em>Vier-Augen-Prinzip & Faktencheck:</em> Kritische Texte (z.&nbsp;B. Verträge, Angebotstexte, 
+          Management-Empfehlungen) immer durch eine zweite Person oder eine unabhängige Quelle prüfen lassen. 
+          Fakten nach Möglichkeit mit Primärquellen oder spezialisierten Datenbanken verifizieren.
         </td>
       </tr>
+
       <tr>
-        <td><strong>Datenschutz­verletzungen</strong></td>
+        <td><strong>Datenschutz & Vertraulichkeit</strong></td>
         <td>
-          Mitarbeitende kopieren Kundendaten, Personaldaten oder vertrauliche Geschäftsgeheimnisse 
-          in öffentliche KI-Tools (z. B. kostenlose ChatGPT-Accounts), ohne AVV oder Verschlüsselung.
+          Kundendaten, interne Zahlen oder personenbezogene Informationen werden in frei zugängliche KI-Tools 
+          eingeben, ohne Auftragsverarbeitungsvertrag (AVV) oder klare Regeln zum Umgang mit sensiblen Daten.
         </td>
         <td>
-          <em>Richtlinie + Schulung:</em> Definieren Sie klar, welche Daten in KI-Tools dürfen und welche nicht. 
-          Setzen Sie auf Business-Accounts mit AVV (z. B. ChatGPT Enterprise, Claude for Work). 
-          Anonymisieren/Pseudonymisieren Sie Daten vor der Eingabe. Sensibilisieren Sie Ihr Team regelmäßig.
+          <em>Klare Richtlinien & passende Tools:</em> Festlegen, welche Daten in welche KI-Dienste eingegeben 
+          werden dürfen. Bevorzugt Business- oder Enterprise-Angebote mit AVV nutzen. Wo möglich Daten 
+          anonymisieren oder pseudonymisieren und kritische Informationen vorab entfernen.
         </td>
       </tr>
+
       <tr>
-        <td><strong>Anbieter­abhängigkeit (Vendor Lock-in)</strong></td>
+        <td><strong>Anbieterabhängigkeit (Vendor Lock-in)</strong></td>
         <td>
-          Ihr Unternehmen baut kritische Workflows vollständig auf einem einzigen LLM-Anbieter auf. 
-          Bei Preiserhöhungen, API-Änderungen oder Ausfall haben Sie keine Alternative.
+          Zentrale Workflows hängen vollständig an einem einzelnen KI-Anbieter. Bei Preiserhöhungen, 
+          geänderten Nutzungsbedingungen oder längeren Ausfällen steht der eigene Prozess still.
         </td>
         <td>
-          <em>Multi-Provider-Strategie:</em> Testen Sie mindestens zwei Anbieter (z. B. OpenAI + Anthropic) 
-          für Kern-Use-Cases. Nutzen Sie Abstraktionsschichten (z. B. LangChain) oder standardisierte Prompts, 
-          die portabel sind. Halten Sie lokale Fallback-Prozesse bereit.
+          <em>Multi-Provider-Ansatz:</em> Für wichtige Anwendungsfälle mindestens einen Alternativanbieter prüfen 
+          und die eigene Lösung so aufbauen, dass ein Wechsel mit vertretbarem Aufwand möglich ist. 
+          Wo sinnvoll einfache Fallback-Prozesse ohne KI vorbereiten.
         </td>
       </tr>
+
       <tr>
         <td><strong>Intransparente Entscheidungen</strong></td>
         <td>
-          Kunden oder Mitarbeitende verstehen nicht, warum eine KI eine bestimmte Empfehlung gegeben hat 
-          (z. B. Ablehnung eines Angebots, Priorisierung von Aufgaben). Das schadet Vertrauen und 
-          Akzeptanz.
+          Kund:innen oder Geschäftspartner verstehen nicht, warum eine KI eine bestimmte Empfehlung oder Bewertung 
+          abgegeben hat. Das erschwert Vertrauen und Nachvollziehbarkeit.
         </td>
         <td>
-          <em>Dokumentation + Erklärbarkeit:</em> Protokollieren Sie, welche Prompts und Daten verwendet wurden. 
-          Bieten Sie bei wichtigen Entscheidungen eine menschliche Ansprechperson an. Nutzen Sie Features wie 
-          „Chain of Thought" oder fordern Sie das LLM auf, seine Antwort zu begründen.
+          <em>Dokumentation & Erklärbarkeit:</em> Wichtige Prompts, Versionen und verwendete Daten dokumentieren. 
+          Das LLM regelmäßig um Begründungen bitten („erkläre deine Empfehlung in 3 Sätzen“) und diese 
+          in Entscheidungen einfließen lassen. Für kritische Entscheidungen immer eine menschliche Ansprechperson anbieten.
         </td>
       </tr>
+
       <tr>
-        <td><strong>Schatten-IT & ungenehmigter Tool-Einsatz</strong></td>
+        <td><strong>Schatten-IT & unkontrollierter Tool-Einsatz</strong></td>
         <td>
-          Teams nutzen nicht freigegebene KI-Tools (z. B. Browser-Extensions, kostenlose Apps) 
-          ohne Wissen der IT oder Geschäftsführung, was Sicherheits- und Compliance-Risiken birgt.
+          Mitarbeitende oder externe Partner nutzen eigene KI-Tools (Browser-Plugins, kostenlose Apps) ohne Abstimmung. 
+          Dadurch entstehen unklare Datenflüsse und schwer kontrollierbare Sicherheitsrisiken.
         </td>
         <td>
-          <em>Offene Kommunikation + genehmigter Tool-Stack:</em> Stellen Sie eine Liste freigegebener 
-          Tools bereit und erklären Sie, warum bestimmte Tools problematisch sind. Bieten Sie attraktive, 
-          genehmigte Alternativen an. Führen Sie regelmäßige Tool-Audits durch (z. B. Browser-Plugins, 
-          Cloud-Apps).
+          <em>Freigegebener Tool-Stack:</em> Eine kurze Liste erlaubter KI-Tools definieren und kommunizieren, 
+          inklusive Begründung. Problematische Tools erklären und Alternativen anbieten. 
+          In regelmäßigen Abständen prüfen, welche neuen Tools im Einsatz sind.
         </td>
       </tr>
+
       <tr>
         <td><strong>Bias & diskriminierende Outputs</strong></td>
         <td>
-          Ein KI-Tool generiert Texte oder Empfehlungen, die bestimmte Personengruppen benachteiligen 
-          (z. B. geschlechtsspezifische Formulierungen in Stellenanzeigen, stereotype Kundenansprache).
+          Texte oder Empfehlungen der KI benachteiligen bestimmte Gruppen, z.&nbsp;B. in der Ansprache von Kund:innen 
+          oder bei der Formulierung von Stellenanzeigen.
         </td>
         <td>
-          <em>Testing + Feedback-Loop:</em> Testen Sie Outputs regelmäßig auf Fairness und Diversität. 
-          Nutzen Sie diverse Test-Personas. Schulen Sie Ihr Team in Bias-Awareness. Etablieren Sie 
-          einen Feedback-Kanal für problematische Inhalte und reagieren Sie schnell auf Hinweise.
+          <em>Bewusster Review & Feedback-Kanal:</em> Typische Outputs stichprobenartig auf Stereotype und Einseitigkeiten 
+          prüfen. Divers formulierte Beispiele nutzen und das Team für Bias sensibilisieren. 
+          Einen klaren Weg definieren, wie auf problematische KI-Ausgaben hingewiesen und wie diese korrigiert werden.
         </td>
       </tr>
     </tbody>
   </table>
 
   <p class="small muted">
-    <strong>Fokus auf Pragmatismus:</strong> Die genannten Maßnahmen sind mit vertretbarem Aufwand umsetzbar 
-    und können schrittweise eingeführt werden. Beginnen Sie mit den Risiken, die Ihr Geschäftsmodell am 
-    stärksten betreffen.
+    <strong>Praxisorientierter Fokus:</strong> Die genannten Maßnahmen sind so gewählt, dass sie mit überschaubarem Aufwand 
+    umgesetzt werden können – auch von Solo-Selbstständigen und kleinen Teams. Starten Sie mit den zwei bis drei 
+    Risiken, die Ihr Geschäftsmodell am stärksten betreffen, und bauen Sie den Schutz schrittweise aus.
   </p>
 </section>
