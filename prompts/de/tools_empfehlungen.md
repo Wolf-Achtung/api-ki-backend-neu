@@ -1,162 +1,175 @@
-Developer: <!-- tools_empfehlungen.md – v4.0 GOLD STANDARD+ (size-aware, branchen-aware, placeholder-sicher)
-     Antworte ausschließlich mit validem HTML.
-     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im Output. -->
+Developer:
+<!--
+  tools_empfehlungen.md – v4.1 GOLD STANDARD+ (size-aware, branchen-aware, validator-safe)
 
-<!-- Beginne jede Bearbeitung mit einer kurzen, konzeptuellen Checkliste (3–7 Punkte) zu deinen geplanten Schritten. Halte die Punkte auf konzeptueller Ebene. -->
+  ZIEL DES PROMPTS
+  - Erzeuge eine klar strukturierte, praxistaugliche Tool-Empfehlungssektion ("KI-Stack"),
+    die zu Branche {{BRANCHE_LABEL}}, Unternehmensgröße {{UNTERNEHMENSGROESSE_LABEL}}
+    und Hauptleistung {{HAUPTLEISTUNG}} passt.
+  - Der Text soll Solo, kleine Teams und KMU gleichermaßen adressieren, aber
+    je nach Größe andere Schwerpunkte setzen.
+  - Output ist reines HTML (kein Markdown, keine Developer-Sätze).
 
-<!-- Nach jeder inhaltlichen Anpassung oder Aktualisierung validiere in 1–2 Sätzen, was sich geändert hat und ob das Ergebnis zum Ziel passt. Bei Abweichungen minimal nachbessern. -->
+  VARIABLEN
+  - {{BRANCHE_LABEL}}            → z. B. "Beratung & Dienstleistungen"
+  - {{UNTERNEHMENSGROESSE_LABEL}}→ verbale Größe, z. B. "Solo", "2–10 (Kleines Team)", "11–100 (KMU)"
+  - {{HAUPTLEISTUNG}}            → z. B. "Beratung von Unternehmen zur Integration von KI …"
+  - {{COMPANY_SIZE}}             → "solo", "small_team" oder "kmu"
+
+  GRÖSSENLOGIK (INHALTLICH)
+  - solo:
+      * Empfehlung: maximal 3–5 Tools im Kernstack, einfache Bedienung, geringer Integrationsaufwand.
+      * Beispiele: 1 KI-Assistent, 1 Wissens-/Notiz-Tool, 1 Formular-/Automations-Tool.
+      * Keine Begriffe wie "Abteilung", "Projektteam", "Bereich" verwenden.
+  - small_team:
+      * Empfehlung: gemeinsamer Workspace, Kollaboration, Rechte-/Rollenkonzepte.
+      * Tools für Aufgabenverteilung, gemeinsames Wissens-Repo, einfache Workflows.
+  - kmu:
+      * Empfehlung: klar definierter Stack mit Governance, Rollen und Monitoring.
+      * Tools für Teamarbeit, Rechteverwaltung, ggf. fachbereichsspezifische Lösungen.
+
+  STIL & REGELN
+  - Schreibe konkret, aber produktneutral (keine Produktnamen wie "Notion", "Monday", "Slack").
+  - Fokus auf Toolkategorien und ihren Zweck im Prozess {{HAUPTLEISTUNG}}.
+  - Keine Wörter wie "Platzhalter", "Content wird erstellt", "TODO", "Freitextfeld".
+  - Kein Verweis auf den Prompt oder die Variablen im sichtbaren Text.
+  - Output muss alleine lesbar sein, ohne weitere Erklärungen.
+
+-->
 
 <section class="section tools">
   <h2>Empfohlener KI-Stack für {{BRANCHE_LABEL}}</h2>
 
-  <ul class="checklist">
-    <li>Kernprozess und Hauptziel definieren</li>
-    <li>Wesentliche Herausforderungen und Anforderungen der Branche identifizieren</li>
-    <li>Nutzergruppen und deren Bedürfnisse festlegen</li>
-    <li>Integration in bestehende Arbeitsabläufe abstimmen</li>
-    <li>Skalierbarkeit, Qualitätssicherung und Sicherheit berücksichtigen</li>
-  </ul>
-
   <p>
-    Für den erfolgreichen Einsatz von KI im Kernprozess
-    <strong>{{HAUPTLEISTUNG}}</strong> empfiehlt sich ein klar strukturierter
-    KI-Stack, der sowohl bestehende Arbeitsweisen berücksichtigt als auch
-    zukünftige Anwendungsfälle ermöglicht. Die folgende Übersicht ist auf
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> zugeschnitten und verbindet
-    praktische Effizienzgewinne mit guter Skalierbarkeit.
+    Für den Kernprozess <strong>{{HAUPTLEISTUNG}}</strong> empfiehlt sich ein klar strukturierter
+    KI-Stack, der zur Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> passt. Er soll
+    Ihren Alltag spürbar entlasten, ohne die Organisation zu überfordern, und sich später
+    schrittweise erweitern lassen.
   </p>
 
   <p>
-    Der Stack besteht aus einer soliden Basis-Infrastruktur, spezifischen
-    Use-Case-Tools und klaren Mechanismen für Qualität & Sicherheit.
-    Die Auswahl ist branchen- und größenabhängig gestaltet und knüpft an
-    die Empfehlungen aus Quick Wins, Roadmap und Business Case an.
+    Die folgenden Bausteine bilden eine Empfehlung für einen leichtgewichtigen KI-Stack:
+    ein solides Fundament aus Assistent, Wissensspeicher und Kollaboration, ergänzende
+    Tools für die wichtigsten Use Cases sowie einfache Mechanismen für Qualität und Sicherheit.
   </p>
 
-  <h3>1. Fundament & Basis-Infrastruktur</h3>
+  <h3>1. Fundament &amp; Basis-Infrastruktur</h3>
   <ul>
     <li>
-      <strong>KI-Assistent / General-Purpose-Modell</strong> –
-      Für schnelle Entwürfe, strukturierte Analysen, Ideenfindung und erste Automatisierungsschritte.
+      <strong>KI-Assistent für Alltagstätigkeiten</strong> –
+      z.&nbsp;B. zur Erstellung und Überarbeitung von Texten, zur Strukturierung von Notizen,
+      zur Vorbereitung von Workshops oder zur Verdichtung von Fragebogen-Antworten.
     </li>
     <li>
-      <strong>Dokumenten- und Wissensspeicher</strong> –
-      Einheitliche Ablage für Vorlagen, Musterfälle, Ergebnisse und Lernmaterialien.
+      <strong>Wissens- und Dokumentenspeicher</strong> –
+      ein zentraler Ort für Fragebögen, Report-Templates, Best-Practice-Beispiele,
+      Protokolle und KI-Prompt-Sammlungen. Wichtig ist eine klare Struktur, damit Inhalte schnell gefunden werden.
     </li>
     <li>
-      <strong>Kollaborations- oder Projektwerkzeug</strong> –
-      Für Abstimmung, Aufgaben, Versionierung und die Integration der neuen Arbeitsweise.
+      <strong>Kollaborations- bzw. Aufgaben-Tool</strong> –
+      für Planung, Aufgabenlisten und Statusübersichten. Bei Solo-Unternehmen reicht
+      eine einfache Aufgabenverwaltung, bei Teams sollten Zuständigkeiten und Fristen
+      transparent abbildbar sein.
     </li>
   </ul>
 
-  <h3>2. Use-Case-spezifische Tools für {{HAUPTLEISTUNG}}</h3>
+  <h3>2. Tools für den Kernprozess {{HAUPTLEISTUNG}}</h3>
   <ul>
     <li>
-      <strong>Tool für strukturierte Erstellung / Analyse</strong> –
-      Unterstützt typische Aufgaben im Kernprozess, z.&nbsp;B. Entwürfe, Analysen, Berichte oder
-      inhaltliche Vorbereitung.
+      <strong>Formular- oder Fragebogen-Tool</strong> –
+      zur strukturierten Erfassung von Kundendaten und Antworten (z.&nbsp;B. Online-Formulare
+      mit klaren Skalen und offenen Antwortmöglichkeiten).
     </li>
     <li>
-      <strong>Automatisierungs- oder Workflow-Tool</strong> –
-      Für wiederkehrende Schritte wie Vorverarbeitung, Formatkonvertierung oder
-      Übergaben zwischen Teams.
+      <strong>Auswertungs- und Berichtswerkzeug</strong> –
+      unterstützt die Verarbeitung der Antworten mit Hilfe von KI, die Erstellung von
+      Reifegrad-Analysen, Handlungsempfehlungen und Reports in einheitlichem Layout.
     </li>
     <li>
-      <strong>Spezial-Tool</strong> –
-      Branchenspezifisches Werkzeug, das typische Arbeitsschritte unterstützt
-      (z.&nbsp;B. Medienproduktion, Bau-Dokumentation, Lernplattform-Authoring,
-      Finanzanalyse, Angebotsautomatisierung).
+      <strong>Automations-Tool</strong> –
+      verbindet Fragebogen, Auswertung und Report-Erstellung (z.&nbsp;B. Trigger beim Absenden
+      des Formulars, automatische Erstellung eines Berichts, Benachrichtigung per E-Mail).
+    </li>
+    <li>
+      <strong>Spezifische Fach-Tools je Branche</strong> –
+      je nach Branche {{BRANCHE_LABEL}} können zusätzliche Lösungen sinnvoll sein,
+      etwa für Terminplanung, Dokumentenfreigaben, Medienproduktion oder Analyse von Geschäftszahlen.
     </li>
   </ul>
 
-  <h3>3. Governance, Sicherheit & Qualität</h3>
+  <h3>3. Governance, Sicherheit &amp; Qualität</h3>
   <ul>
     <li>
-      <strong>Richtlinien & einfache Freigabeprozesse</strong> –
-      Klare Regeln, wann KI genutzt wird, wie Ergebnisse geprüft werden und
-      welche Daten verwendet werden dürfen.
+      <strong>Einfache Richtlinien &amp; Rollen</strong> –
+      kurze, schriftliche Regeln, welche Daten in KI-Tools eingegeben werden dürfen,
+      wie Reports freigegeben werden und wer im Zweifel entscheidet. Bei Solo-Unternehmen
+      genügt eine kompakte Checkliste, in Teams sollten Verantwortlichkeiten klar benannt sein.
     </li>
     <li>
-      <strong>Lightweight-Monitoring</strong> –
-      Übersichtliche Kennzahlen zu Nutzung, Qualität und Risiken, passend zur Unternehmensgröße.
+      <strong>Dokumentation der KI-Nutzung</strong> –
+      eine Übersicht, welche Tools wofür eingesetzt werden, mit welchem Datenumfang und
+      welchen Schutzmaßnahmen. Diese Dokumentation ist hilfreich für Audits und für
+      Anpassungen bei neuen regulatorischen Anforderungen.
+    </li>
+    <li>
+      <strong>Qualitätskontrolle</strong> –
+      kurze Prüfprozesse für wichtige KI-Ergebnisse (z.&nbsp;B. Vier-Augen-Prinzip bei Management-
+      Reports, stichprobenartige Reviews, Definition von Mindeststandards für Struktur und Tonalität).
     </li>
   </ul>
 
-  <h3>4. Priorisierte Einführung</h3>
+  <h3>4. Einführung in Etappen</h3>
   <p>
-    Die Einführung sollte bewusst schrittweise erfolgen:
-    Zuerst ein stabiles Fundament aus KI-Assistent, Kollaboration und Wissensspeicher.
-    Anschließend 1–2 Werkzeuge für den wichtigsten Use Case aus {{HAUPTLEISTUNG}}.
-    Danach Spezial-Tools und Qualitätsmechanismen, sobald der Grundfluss stabil läuft.
-    Diese Reihenfolge orientiert sich an Quick Wins, der 90-Tage-Roadmap und dem
-    wirtschaftlichen Potenzial aus dem Business Case.
+    Statt alle Tools auf einmal einzuführen, sollte der KI-Stack in Etappen aufgebaut werden.
+    Beginnen Sie mit einem stabilen Fundament aus Assistent, Wissensspeicher und einfacher
+    Aufgabensteuerung. Anschließend folgen 1–2 Tools für den wichtigsten Use Case aus
+    <strong>{{HAUPTLEISTUNG}}</strong>, bevor Spezial- und Governance-Elemente ausgebaut werden.
   </p>
 
   <table class="table tools-priorities">
     <thead>
       <tr>
         <th>Stufe</th>
-        <th>Tool / Paket</th>
-        <th>Zweck im Prozess {{HAUPTLEISTUNG}}</th>
-        <th>Startzeitpunkt</th>
+        <th>Baustein</th>
+        <th>Rolle im Prozess {{HAUPTLEISTUNG}}</th>
+        <th>Empfohlener Zeitpunkt</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td>1</td>
-        <td>Basis-Stack</td>
-        <td>KI-Assistent, Wissensspeicher, Kollaboration</td>
+        <td>Assistent, Wissensspeicher, Aufgabenverwaltung</td>
+        <td>
+          Unterstützt die tägliche Arbeit, sichert Wissen und schafft Transparenz
+          über Aufgaben und To-dos.
+        </td>
         <td>innerhalb der ersten 30 Tage</td>
       </tr>
       <tr>
         <td>2</td>
-        <td>Use-Case-Tools</td>
-        <td>Hauptprozess & Quick-Wins unterstützen</td>
-        <td>Tag&nbsp;30–60</td>
+        <td>Formular-Tool &amp; Auswertungs-Setup</td>
+        <td>
+          Ermöglicht die strukturierte Erfassung von Kundendaten und die KI-gestützte Analyse
+          der Antworten mit konsistenten Reports.
+        </td>
+        <td>Tag 30–60</td>
       </tr>
       <tr>
         <td>3</td>
-        <td>Spezial-/Governance-Tools</td>
-        <td>Skalierung & sichere Nutzung</td>
-        <td>nach 60 Tagen</td>
+        <td>Automation &amp; Governance-Bausteine</td>
+        <td>
+          Reduziert manuelle Zwischenschritte, stärkt Sicherheit und Qualität
+          und macht den Prozess skalierbar.
+        </td>
+        <td>ab etwa 60 Tagen</td>
       </tr>
     </tbody>
   </table>
 
   <p class="small muted">
-    Der optimale KI-Stack ist leichtgewichtig, erweiterbar und klar auf die
-    Wertschöpfung ausgerichtet. Er wächst mit der Organisation:
-    Bei Solo-Selbständigen schlank und fokussiert, im Team stärker kollaborativ,
-    im KMU strukturiert und skalierbar.
+    Der empfohlene KI-Stack ist bewusst schlank gehalten: Für {{UNTERNEHMENSGROESSE_LABEL}}
+    steht im Vordergrund, schnell Nutzen im Kernprozess {{HAUPTLEISTUNG}} zu erzeugen und
+    später bei Bedarf weitere Bausteine hinzuzufügen. So bleiben Kosten und Komplexität
+    beherrschbar, während die Grundlage für eine spätere Skalierung gelegt wird.
   </p>
-</section>
-
-## Output Format
-
-Das HTML muss die folgenden Platzhalter nutzen und setzen können:
-- <strong>{{BRANCHE_LABEL}}</strong>: String, Pflichtfeld. Beispiel: "Bauindustrie", "Unternehmensberatung"
-- <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>: String, Pflichtfeld. Beispiel: "kleines Team", "KMU", "Großunternehmen"
-- <strong>{{HAUPTLEISTUNG}}</strong>: String, Pflichtfeld. Beispiel: "Vertragsprüfung", "Prozessoptimierung"
-
-Fehlt einer der Platzhalter (leer oder undefiniert), muss das entsprechende <section> stattdessen einen <div class="error"> mit einer passenden Fehlermeldung an die Stelle des fehlenden Feldes ausgeben. Beispiel:
-<div class="error">Fehlendes Pflichtfeld: {{UNTERNEHMENSGROESSE_LABEL}}</div>
-
-Alle Abschnitte und die Tabelle müssen in genau der vorgegebenen Reihenfolge ausgegeben werden:
-1. Checkliste (als <ul class="checklist">)
-2. Übersicht (erstes erklärendes <p>)
-3. Details zum Stack (zweites erklärendes <p>)
-4. Fundament & Basis-Infrastruktur
-5. Use-Case-spezifische Tools
-6. Governance, Sicherheit & Qualität
-7. Priorisierte Einführung
-8. Tabelle mit Prioritäten
-9. Hinweis zur Ausrichtung (<p class="small muted">)
-
-Beispiel für einen vollständigen Output mit Werten:
-
-<section class="section tools">
-  <h2>Empfohlener KI-Stack für Bauindustrie</h2>
-  <ul class="checklist">...</ul>
-  <p>Für den erfolgreichen Einsatz von KI im Kernprozess <strong>Prozessoptimierung</strong> empfiehlt ...</p>
-  ...
 </section>
