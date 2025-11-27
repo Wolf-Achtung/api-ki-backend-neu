@@ -1,92 +1,117 @@
 Developer: <!--
-  risks.md – v2.5 GOLD STANDARD+
+  risks.md – v3.0 GOLD STANDARD+ (size-aware Risk Section)
+
   ZIEL:
   - Erzeuge eine präzise, praxisnahe Risikoanalyse für den KI-Einsatz im Bereich {{HAUPTLEISTUNG}}.
   - Decke geschäftliche, organisatorische, technische und rechtliche Risiken ab.
   - Liefere zu jedem Risiko klare, umsetzbare Gegenmaßnahmen.
+  - Berücksichtige explizit Branche {{BRANCHE_LABEL}} und Unternehmensgröße {{UNTERNEHMENSGROESSE_LABEL}}.
 
   VARIABLEN:
-  - {{HAUPTLEISTUNG}}           → Hauptanwendungsbereich im Unternehmen
-  - {{score_governance}}        → Governance-Score (0–100)
-  - {{score_sicherheit}}        → Sicherheits-Score (0–100)
+  - {{HAUPTLEISTUNG}}                → Hauptanwendungsbereich im Unternehmen
+  - {{BRANCHE_LABEL}}                → Branchenlabel (z. B. „Beratung & Dienstleistungen“)
+  - {{UNTERNEHMENSGROESSE_LABEL}}    → z. B. „1 (Solo)“, „2–10 (Kleines Team)“, „11–100 (KMU)“
+  - {{score_governance}}             → Governance-Score (0–100)
+  - {{score_sicherheit}}             → Sicherheits-Score (0–100)
 
   AUSGABEFORMAT:
   - Antworte AUSSCHLIESSLICH mit validem HTML.
   - KEINE <html>, <head> oder <body>-Tags.
   - KEINE Markdown-Fences, KEINE Kommentare im Output.
-  - Verwende <section>, <h2>, <h3>, <p>, <ul>, <li>, <table>, <thead>, <tbody>, <tr>, <th>, <td>, <strong>, <em>, <span>.
+  - Struktur:
+      <section class="section risks">
+        <h2>...</h2>
+        <p>Einleitung ...</p>
+        <h3>1. ...</h3>
+        <ul>...</ul>
+        <h3>2. ...</h3>
+        <ul>...</ul>
+        <h3>3. ...</h3>
+        <ul>...</ul>
+        <h3>4. ...</h3>
+        <ul>...</ul>
+        <h3>5. Risiko-Matrix</h3>
+        <table>...</table>
+        <p class="small muted">...</p>
+      </section>
 
-  STRUKTUR:
-  - <section class="section risks">
-    - H2: Gesamtüberblick zu Risiken beim Einsatz von KI in {{HAUPTLEISTUNG}}.
-    - Einleitender Absatz mit Einordnung der Scores {{score_governance}} und {{score_sicherheit}}.
-    - H3-Abschnitt 1: Strategische und organisatorische Risiken.
-    - H3-Abschnitt 2: Daten-, Sicherheits- und Compliance-Risiken.
-    - H3-Abschnitt 3: Operative Risiken im Tagesgeschäft.
-    - Optional eine kompakte Risiko-Matrix als Tabelle mit Spalten:
-      Risiko | Wahrscheinlichkeit | Auswirkung | Empfohlene Gegenmaßnahme.
-    - Abschließender Hinweis, wie das Unternehmen Risiken im nächsten Quartal konkret reduzieren kann.
+  SIZE-AWARE-LOGIK (verbindlich):
+  - SOLO („1 (Solo)” im Label):
+      - Fokus: persönliche Überlastung, Single-Point-of-Failure, fehlende Vertretung.
+      - Begrenzte Zeit und Ressourcen, wenig formale Prozesse.
+      - Risiken und Maßnahmen so formulieren, dass sie von einer Person realistisch umsetzbar sind.
 
-  INHALTLICHE REGELN:
+  - TEAM („2–10“):
+      - Fokus: Rollen, einfache Abstimmungen, informelle Strukturen.
+      - Risiken: fehlende Klarheit, wer was entscheidet; Wissensinseln; unterschiedliche Tool-Nutzung.
+      - Maßnahmen: klare Rollen, einfache Vereinbarungen, kurze Check-ins.
+
+  - KMU („11–100“):
+      - Fokus: Bereiche, Prozesse, Governance, Dokumentation.
+      - Risiken: unklare Verantwortlichkeiten, Schatten-IT, fehlende Richtlinien, Compliance-Anforderungen.
+      - Maßnahmen: Standards, Policies, Transparenz, regelmäßige Reviews.
+
+  REGELN:
   - Schreibe konkret, unternehmensnah und ohne Floskeln.
   - Jede genannte Gefahr muss nachvollziehbar mit {{HAUPTLEISTUNG}} zusammenhängen.
   - Leite aus {{score_governance}} und {{score_sicherheit}} ab,
-    ob Governance und Sicherheit eher gut, mittel oder schwach ausgeprägt sind und
-    formuliere dazu passende Schwerpunkte für Gegenmaßnahmen.
-  - Nenne pro Abschnitt mindestens 3–4 spezifische Risiken mit passenden, umsetzbaren Maßnahmen.
-  - Risiken und Maßnahmen sollen so formuliert sein, dass eine Geschäftsführung sie direkt für Entscheidungen nutzen kann.
-  - Vermeide jede Form von Platzhalter- oder Formulartext (z. B. Hinweise, dass hier später noch etwas ergänzt werden soll).
-  - Keine Hinweise darauf, dass Text „noch erstellt“, „später ergänzt“ oder „individuell auszufüllen“ sei.
-  - Keine Verweise auf interne Fragebögen oder Eingabefelder; beschreibe immer das konkrete Risiko und die Handlung.
+    ob Governance und Sicherheit eher gut, mittel oder schwach ausgeprägt sind,
+    und formuliere dazu passende Schwerpunkte für Gegenmaßnahmen.
+  - Nenne pro Abschnitt mindestens 3 spezifische Risiken mit passenden, umsetzbaren Maßnahmen.
+  - Keine Hinweise auf Fragebögen, interne Felder oder Systemlogik.
+  - Keine Platzhaltertexte oder Formulierungen wie „wird später ergänzt“.
 
   STIL & LÄNGE:
-  - Sachlich, klar, beratend, in gut lesbarem Deutsch.
-  - Zielumfang ca. 600–900 Wörter.
-  - Keine Ich-Form, keine direkte Anrede („du/ihr/Sie“) im Fließtext, sondern neutrale Formulierungen.
-
+  - Sachlich, klar, beratend.
+  - Neutrale Formulierungen (keine Ich-Form, keine direkte Anrede).
+  - Zielumfang: ca. 600–900 Wörter Gesamttext.
 -->
 
 <section class="section risks">
   <h2>Wesentliche Risiken beim Einsatz von KI in {{HAUPTLEISTUNG}}</h2>
 
   <p>
-    Der Einsatz von KI im Bereich <strong>{{HAUPTLEISTUNG}}</strong> bietet erhebliche Chancen, bringt jedoch
-    auch klar benennbare Risiken mit sich. Der aktuelle Governance-Score von
+    Der Einsatz von KI im Bereich <strong>{{HAUPTLEISTUNG}}</strong> in der Branche
+    <strong>{{BRANCHE_LABEL}}</strong> bietet erhebliche Chancen, bringt jedoch – je nach
+    Unternehmensgröße <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> – unterschiedliche
+    Risikoprofile mit sich. Der aktuelle Governance-Score von
     <strong>{{score_governance}}&#x2F;100</strong> und der Sicherheits-Score von
-    <strong>{{score_sicherheit}}&#x2F;100</strong> zeigen, dass bereits erste Strukturen vorhanden sind,
-    gleichzeitig aber noch deutliche Verbesserungspotenziale bestehen. Die folgenden Abschnitte bündeln
-    die wichtigsten Risikofelder und skizzieren konkrete Gegenmaßnahmen.
+    <strong>{{score_sicherheit}}&#x2F;100</strong> zeigen, wie weit Strukturen für Steuerung,
+    Dokumentation und Schutzmechanismen bereits entwickelt sind. Die folgenden Abschnitte
+    bündeln die wichtigsten Risikofelder und skizzieren konkrete Gegenmaßnahmen.
   </p>
 
   <h3>1. Strategische und organisatorische Risiken</h3>
   <ul>
     <li>
-      <strong>Unklare Verantwortung für KI-Entscheidungen.</strong>
-      Ohne eindeutig benannte Rollen für die Steuerung von KI-Initiativen besteht das Risiko,
-      dass Entscheidungen verstreut getroffen werden, Prioritäten kollidieren und wichtige
-      Folgenabschätzungen unterbleiben. Empfehlenswert ist die Einführung einer klar definierten
-      Governance-Struktur mit verantwortlicher Person für KI, dokumentierten Entscheidungswegen
-      und regelmäßigen Abstimmungsterminen.
+      <strong>Unklare Zielbilder und Prioritäten für KI.</strong>
+      Ohne klar definierte Ziele für {{HAUPTLEISTUNG}} besteht das Risiko, dass KI-Experimente
+      versanden, Insellösungen entstehen oder wichtige Chancen ungenutzt bleiben.
+      Gegenmaßnahmen sind ein knappes Zielbild mit 2–3 priorisierten Anwendungsfällen,
+      ein einfacher Umsetzungsplan sowie regelmäßige Überprüfung, ob Maßnahmen zum
+      übergeordneten Geschäftsmodell passen.
     </li>
     <li>
-      <strong>Fehlende Einbettung in die Unternehmensstrategie.</strong>
-      Wenn KI-Projekte isoliert neben dem Tagesgeschäft laufen, entstehen Insellösungen,
-      die wenig Mehrwert liefern oder später wieder eingestellt werden. Hilfreich ist ein
-      kurzer, schriftlich fixierter Zielrahmen, der beschreibt, wie {{HAUPTLEISTUNG}} durch KI
-      konkret unterstützt werden soll – inklusive Prioritäten, Zeithorizont und messbaren Ergebnissen.
+      <strong>Abhängigkeit von einzelnen Personen.</strong>
+      In sehr kleinen Setups bis hin zu Solo-Strukturen konzentriert sich Know-how häufig
+      auf eine Person. Fällt diese aus oder ist dauerhaft überlastet, kommen Experimente
+      und Umsetzung ins Stocken. Dem lässt sich durch kurze Dokumentation zentraler Workflows,
+      einfache Checklisten und die bewusste Verankerung von KI-Routinen im Alltag begegnen.
     </li>
     <li>
-      <strong>Überlastung der Schlüsselpersonen.</strong>
-      Häufig liegt das Know-how zu KI bei wenigen Personen. Fällt eine dieser Personen aus
-      oder ist dauerhaft überlastet, geraten Projekte ins Stocken. Gegenmaßnahmen sind klare
-      Vertretungsregelungen, Dokumentation der wichtigsten Workflows und schrittweiser Kompetenzaufbau
-      im Team, etwa durch kurze interne Schulungen.
+      <strong>Fehlende Rollen- und Verantwortlichkeitsklarheit.</strong>
+      In Teams und wachsenden Unternehmen ist oft unklar, wer KI-Vorhaben priorisiert,
+      wer für Qualität verantwortlich ist und wer Tools auswählt.
+      Sinnvolle Gegenmaßnahmen sind eine klar benannte Rolle für KI-Verantwortung,
+      ein schlanker Entscheidungsprozess für Tool-Einführung und transparente Kommunikation
+      von Zuständigkeiten.
     </li>
     <li>
-      <strong>Unrealistische Erwartungshaltung gegenüber KI.</strong>
-      Werden KI-Lösungen als „Wundermittel“ kommuniziert, wächst die Enttäuschung, sobald erste Grenzen
-      sichtbar werden. Ein pragmatisches Erwartungsmanagement – etwa durch realistische ROI-Szenarien,
-      Pilotphasen und transparente Kommunikation von Annahmen – reduziert dieses Risiko deutlich.
+      <strong>Überlastung durch zusätzliche Aufgaben.</strong>
+      Wenn KI-Einführung „on top“ zum Tagesgeschäft läuft, werden neue Workflows nicht
+      dauerhaft etabliert. Hilfreich sind kleine, gut planbare Piloten mit klar
+      begrenztem Umfang sowie die bewusste Entlastung an anderer Stelle, damit Zeit
+      für Experimente und Lernphasen entsteht.
     </li>
   </ul>
 
@@ -94,105 +119,146 @@ Developer: <!--
   <ul>
     <li>
       <strong>Unzureichende Kontrolle über ein- und ausgehende Daten.</strong>
-      Wenn nicht eindeutig geregelt ist, welche Informationen in KI-Systeme eingegeben werden dürfen,
-      besteht das Risiko, dass vertrauliche Kundendaten oder interne Dokumente unkontrolliert verarbeitet
-      werden. Erforderlich sind klare Richtlinien, Schulungen und technische Schutzmechanismen
-      (z.&nbsp;B. Rollen- und Rechtekonzepte).
+      Wenn nicht geregelt ist, welche Informationen in KI-Systeme eingegeben werden dürfen,
+      können vertrauliche Kundendaten, interne Dokumente oder sensible Inhalte unkontrolliert
+      verarbeitet werden. Gegenmaßnahmen sind klare Richtlinien für Datennutzung,
+      ein kurzer Leitfaden für alle Beteiligten sowie technische Schutzmechanismen,
+      etwa Zugriffsbeschränkungen oder getrennte Arbeitsbereiche.
     </li>
     <li>
-      <strong>Lücken in Datenschutz und Informationssicherheit.</strong>
-      Ein mittlerer oder niedriger Sicherheits-Score (z.&nbsp;B. {{score_sicherheit}}&#x2F;100) weist darauf hin,
-      dass Prozesse zu Zugriffskontrolle, Protokollierung und Notfallmanagement noch nicht vollständig etabliert sind.
-      Priorität haben hier ein kompaktes Sicherheitskonzept, klare Verantwortlichkeiten sowie regelmäßige
-      Überprüfung von Passwörtern, Zugriffsrechten und verwendeten Cloud-Diensten.
+      <strong>Lücken in Informationssicherheit und Zugriffsschutz.</strong>
+      Ein mittlerer oder niedriger Sicherheits-Score (z.&nbsp;B. {{score_sicherheit}}&#x2F;100)
+      deutet darauf hin, dass Passwörter, Zugriffsrechte oder Backup-Konzepte nicht
+      durchgehend geregelt sind. Erforderlich sind ein kompaktes Sicherheitskonzept,
+      regelmäßige Passwort- und Rechte-Reviews sowie eine klare Dokumentation der
+      eingesetzten Cloud- und KI-Dienste.
     </li>
     <li>
-      <strong>Rechtliche Risiken durch unsaubere Dokumentation.</strong>
-      Ohne nachvollziehbare Dokumentation, welche KI-Systeme wozu eingesetzt werden, ist es schwer,
-      regulatorische Anforderungen – etwa aus Datenschutzrecht oder dem AI Act – zu erfüllen.
-      Abhilfe schafft ein kurzes KI-Register, in dem für jedes System Zweck, Datenarten, betroffene
-      Prozesse, Verantwortliche und getroffene Schutzmaßnahmen festgehalten werden.
+      <strong>Unklare Verantwortlichkeit für rechtliche Anforderungen.</strong>
+      Ohne definierte Zuständigkeit besteht das Risiko, dass Vorgaben zu Datenschutz,
+      Urheberrecht oder branchenspezifischer Regulierung nur punktuell beachtet werden.
+      Sinnvoll ist eine benannte Stelle, die Mindestanforderungen bündelt, praxisnahe
+      Leitlinien formuliert und bei Unsicherheiten externe fachliche Beratung einholt.
     </li>
     <li>
-      <strong>Abhängigkeit von einzelnen externen Anbietern.</strong>
-      Stützt sich die Wertschöpfung in {{HAUPTLEISTUNG}} stark auf wenige KI-Services, können
-      Preisänderungen, Ausfälle oder geänderte Nutzungsbedingungen erheblichen Einfluss haben.
-      Eine bewusste Multi-Provider-Strategie, vertragliche Mindeststandards und regelmäßige
-      Überprüfung der Anbieter reduzieren dieses Risiko.
+      <strong>Fehlende Transparenz gegenüber Kund:innen und Partnern.</strong>
+      Wenn unklar bleibt, an welchen Stellen KI Beiträge leistet, kann dies zu
+      Vertrauensverlust führen. Gegenmaßnahmen sind kurze, verständliche Hinweise
+      zur Nutzung von KI sowie nachvollziehbare Dokumentation im Hintergrund.
     </li>
   </ul>
 
-  <h3>3. Operative Risiken im Tagesgeschäft</h3>
+  <h3>3. Qualitäts-, Transparenz- und Akzeptanzrisiken</h3>
   <ul>
     <li>
-      <strong>Fehlerhafte oder verzerrte Ergebnisse.</strong>
-      KI-Modelle können falsche oder verzerrte Antworten liefern, insbesondere wenn Trainingsdaten
-      nicht zur eigenen Zielgruppe passen. Dieses Risiko lässt sich verringern durch klar definierte
-      Prüfprozesse, stichprobenartige Kontrollen und eine saubere Trennung zwischen automatischer
-      Vorschlagsgenerierung und finaler menschlicher Entscheidung.
+      <strong>Inkonsistente Ergebnisse und Qualitätsstreuung.</strong>
+      Werden Prompts, Vorlagen und Workflows nicht dokumentiert, hängen Qualität und
+      Stil stark von der jeweiligen Person ab. Dies erschwert reproduzierbare Ergebnisse.
+      Abhilfe schaffen einheitliche Templates, kurze Leitfäden und regelmäßige Reviews
+      von Beispielausgaben.
     </li>
     <li>
-      <strong>Medienbrüche und ineffiziente Workflows.</strong>
-      Wenn KI-Lösungen nicht sauber in bestehende Prozesse integriert werden, entstehen doppelte Arbeit,
-      Kopierfehler und Intransparenz. Sinnvoll ist ein schlanker Zielprozess, in dem genau festgelegt wird,
-      welche Schritte automatisiert werden und wo menschliche Qualitätssicherung stattfindet.
+      <strong>Übervertrauen in KI-Ergebnisse.</strong>
+      Wenn Texte, Analysen oder Bewertungen ungeprüft übernommen werden, können
+      Fehler oder Halluzinationen direkt in Kundendokumente und Entscheidungen
+      einfließen. Notwendig sind klare Regeln für manuelle Prüfung, Vier-Augen-Prinzip
+      bei kritischen Inhalten sowie einfache Checklisten für Qualitätskontrolle.
     </li>
     <li>
-      <strong>Qualitätsverlust in der Kundenkommunikation.</strong>
-      Werden Texte oder Antworten ungeprüft übernommen, kann die Tonalität nicht mehr zur eigenen Marke passen.
-      Gegenmaßnahmen sind definierte Stilrichtlinien, Beispieltexte als Referenz sowie die Pflicht,
-      KI-Ergebnisse vor Versand kurz zu prüfen und bei Bedarf anzupassen.
+      <strong>Akzeptanzprobleme im Alltag.</strong>
+      In Teams und größeren Organisationen entsteht Widerstand, wenn der Nutzen von KI
+      nicht nachvollziehbar ist oder Workflows als zu komplex empfunden werden.
+      Gegenmaßnahmen sind verständliche Kommunikation der Ziele, kleine Pilotprojekte
+      mit sichtbarem Nutzen und das aktive Einholen von Feedback, um Routinen anzupassen.
     </li>
     <li>
-      <strong>Know-how-Verlust durch zu starke Automatisierung.</strong>
-      Wenn Mitarbeitende sich zu stark auf KI-Ergebnisse verlassen, kann fachliches Wissen erodieren.
-      Eine klare Regel, welche Entscheidungen zwingend von Fachpersonen getroffen werden müssen,
-      sowie regelmäßige Reflexionsrunden zu Erfahrungen mit KI helfen, dieses Risiko zu begrenzen.
+      <strong>Unklare Nachvollziehbarkeit von Entscheidungen.</strong>
+      Wenn nicht dokumentiert ist, welche Rolle KI in der Vorbereitung von Angeboten,
+      Reports oder Entscheidungen spielt, wird es im Streitfall schwierig, Entscheidungswege
+      zu rekonstruieren. Eine kurze interne Dokumentation zu „Wo unterstützt KI?“ senkt
+      dieses Risiko deutlich.
     </li>
   </ul>
 
-  <h3>Risiko-Matrix mit Sofortmaßnahmen</h3>
-  <table class="risk-matrix">
+  <h3>4. Abhängigkeiten, Betriebs- und Lieferantenrisiken</h3>
+  <ul>
+    <li>
+      <strong>Starke Abhängigkeit von einzelnen Tools oder Plattformen.</strong>
+      Wenn zentrale Workflows ausschließlich auf einem Dienst oder einem Modell basieren,
+      führen Preisänderungen, Ausfälle oder geänderte Nutzungsbedingungen schnell zu
+      Unterbrechungen. Gegenmaßnahmen sind einfache Fallback-Szenarien, Exportmöglichkeiten
+      für Daten sowie die Beobachtung von Alternativen.
+    </li>
+    <li>
+      <strong>Unklare Regelungen mit Dienstleistern.</strong>
+      Werden Auftragsverhältnisse, Datenverarbeitung oder Service-Level nicht explizit
+      vereinbart, können Lücken in Haftung und Verfügbarkeit entstehen.
+      Sinnvoll sind klare Verträge, vereinbarte Reaktionszeiten und transparente
+      Angaben zur Datenhaltung.
+    </li>
+    <li>
+      <strong>Fehlende Notfall- und Wiederanlaufplanung.</strong>
+      Wenn nicht vorab geklärt ist, wie im Fall von Systemausfällen, Datenverlust oder
+      Fehlkonfigurationen reagiert wird, verzögert sich der Wiederanlauf.
+      Empfohlen sind einfache Notfallpläne, regelmäßige Backups sowie definierte
+      Kontaktwege für kritische Vorfälle.
+    </li>
+    <li>
+      <strong>Überkomplexe Tool-Landschaft.</strong>
+      Werden zu viele spezialisierte KI-Tools parallel eingeführt, steigt der Aufwand
+      für Pflege, Schulung und Koordination. Gegenmaßnahmen sind Konsolidierung auf
+      wenige Kernlösungen und eine bewusst schlanke Tool-Strategie.
+    </li>
+  </ul>
+
+  <h3>5. Risiko-Matrix – Überblick über zentrale Risiken</h3>
+  <table class="table">
     <thead>
       <tr>
-        <th>Risiko</th>
-        <th>Wahrscheinlichkeit</th>
-        <th>Auswirkung</th>
-        <th>Empfohlene Gegenmaßnahme</th>
+        <th>Risikobereich</th>
+        <th>Typische Auswirkung</th>
+        <th>Eintrittswahrscheinlichkeit</th>
+        <th>Auswirkungsstärke</th>
+        <th>Empfohlene Schwerpunkt-Maßnahmen</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td>Unklare Verantwortung für KI-Einsatz</td>
+        <td>Strategie & Organisation</td>
+        <td>Verzettelung, ausbleibende Wirkung, Frust im Alltag</td>
         <td>mittel</td>
         <td>hoch</td>
-        <td>Rollenmodell und Entscheidungswege definieren, Verantwortliche benennen, regelmäßige Reviews einführen.</td>
+        <td>Klares Zielbild, priorisierte Use Cases, benannte Verantwortung für KI.</td>
       </tr>
       <tr>
-        <td>Unkontrollierte Nutzung sensibler Daten</td>
-        <td>mittel</td>
+        <td>Daten & Sicherheit</td>
+        <td>Fehlende Transparenz, potenzielle Datenschutz-Verstöße</td>
+        <td>mittel bis hoch</td>
         <td>hoch</td>
-        <td>Nutzungsrichtlinien, Schulungen, Zugriffsbeschränkungen und Logging für KI-Tools etablieren.</td>
+        <td>Kurzleitlinie für Datennutzung, Zugriffs- und Passwortkonzept, Dokumentation der Dienste.</td>
       </tr>
       <tr>
-        <td>Fehlerhafte oder verzerrte KI-Ergebnisse</td>
+        <td>Qualität & Akzeptanz</td>
+        <td>Uneinheitliche Ergebnisse, Misstrauen oder Blindvertrauen in KI</td>
         <td>mittel</td>
         <td>mittel bis hoch</td>
-        <td>Vier-Augen-Prinzip, Musterfälle testen, Feedback-Schleifen und Monitoring der Ergebnisse aufsetzen.</td>
+        <td>Standards für Templates, Review-Loops, verständliche Kommunikation von Nutzen und Grenzen.</td>
       </tr>
       <tr>
-        <td>Abhängigkeit von einzelnen KI-Anbietern</td>
+        <td>Abhängigkeiten & Betrieb</td>
+        <td>Unterbrechungen im Betrieb, Mehrkosten, Lock-in-Effekte</td>
         <td>niedrig bis mittel</td>
         <td>mittel</td>
-        <td>Alternativlösungen identifizieren, Vertragsbedingungen prüfen, schrittweise Multi-Provider-Ansatz planen.</td>
+        <td>Fallback-Szenarien, Konsolidierung der Tool-Landschaft, klare Vereinbarungen mit Dienstleistern.</td>
       </tr>
     </tbody>
   </table>
 
   <p class="small muted">
-    Die genannten Risiken und Maßnahmen bilden einen Startpunkt für ein kompaktes Risikomanagement
-    rund um KI in {{HAUPTLEISTUNG}}. Im nächsten Schritt sollten die Risiken nach Eintrittswahrscheinlichkeit
-    und Auswirkung priorisiert und in eine einfache Maßnahmenplanung für die kommenden 3–6 Monate
-    überführt werden.
+    Diese Risikoanalyse zeigt die wichtigsten Handlungsfelder für KI in
+    <strong>{{HAUPTLEISTUNG}}</strong> in einem Unternehmen der Größe
+    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>. Im nächsten Schritt sollten die Risiken
+    nach Eintrittswahrscheinlichkeit und Auswirkung priorisiert und in eine konkrete
+    Maßnahmenplanung für die kommenden 3–6&nbsp;Monate überführt werden.
   </p>
 </section>
