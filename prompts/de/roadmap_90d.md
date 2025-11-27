@@ -1,102 +1,177 @@
-Developer: <!-- roadmap_90d.md – v4.0 GOLD STANDARD+ (strategisch + size-aware + placeholder-sicher)
+Developer:
+<!-- roadmap_90d.md – v3.0 GOLD STANDARD+ (90-Tage-Strategie, size-aware, validator-sicher)
      Antworte ausschließlich mit validem HTML.
-     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences. -->
+     KEIN <html>, <head> oder <body>; KEINE Markdown-Fences.
+
+     ZIEL:
+     - Erzeuge eine strategische 90-Tage-Roadmap, die solide Grundlagen für KI legt:
+       Struktur, Datenqualität, Qualitätsstandards, erste Quick-Wins, frühe Wirkung.
+     - Roadmap ist bewusst strategisch, nicht operativ: Sie zeigt Richtung, Fokus,
+       Verantwortlichkeiten und Entscheidungsregeln.
+
+     VERFÜGBARE VARIABLEN:
+       {{BRANCHE_LABEL}}
+       {{UNTERNEHMENSGROESSE_LABEL}}
+       {{HAUPTLEISTUNG}}
+
+     INTERNER SIZE-MODE (aus PromptEnhancer):
+       COMPANY_SIZE ∈ {"solo","team","kmu"}
+
+       SOLO (1 Person):
+         - Sie-Ansprache.
+         - Keine „Teams“, „Bereiche“, „Abteilungen“.
+         - Fokus: persönliche Entlastung, klare Routinen, brauchbare Standards.
+
+       TEAM (2–10):
+         - „Team“, „Kolleg:innen“, Rollen wie Teamlead / KI-Owner.
+         - Fokus: Abstimmungen, arbeitsteilige Umsetzung, einfache Dokumentation.
+
+       KMU (11–100):
+         - „Fachbereiche“, „Teams“, „Verantwortliche“.
+         - Fokus: Governance, stabilere Strukturen, Pilotbereiche, Standards.
+
+     REGELN:
+       - Keine verbotenen Wörter: „Platzhalter“, „Freitextfeld“, TODO, etc.
+       - Max. 13 OL-Einträge (Woche 1–13).
+       - Pro Phase: Ziel + Deliverables + Rollen/Verantwortlichkeit + KPI.
+       - Output muss direkt verwendbares HTML sein.
+-->
 
 <section class="section roadmap-90d">
   <h2>Strategische 90-Tage-Roadmap</h2>
 
   <p>
-    Diese 90-Tage-Roadmap beschreibt die ersten Schritte, um KI strategisch und nachhaltig in <strong>{{HAUPTLEISTUNG}}</strong> zu verankern. Sie kombiniert Effizienzgewinne aus identifizierten Quick Wins mit den nötigen organisatorischen, technischen und qualitativen Grundlagen. Die Struktur ist für <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> ausgelegt und berücksichtigt branchentypische Besonderheiten <strong>{{BRANCHE_LABEL}}</strong>.
+    Diese 90-Tage-Roadmap beschreibt, wie ein Unternehmen der Größe
+    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> erste KI-gestützte Arbeitsweisen im
+    Bereich <strong>{{HAUPTLEISTUNG}}</strong> etabliert und schrittweise stabilisiert.
+    Sie kombiniert Quick Wins mit gezielten Struktur- und Qualitätsmaßnahmen und ist
+    auf die Besonderheiten der Branche <strong>{{BRANCHE_LABEL}}</strong> abgestimmt.
   </p>
 
   <p>
-    Die Roadmap ist bewusst strategisch formuliert: Sie legt die Basis, definiert Aufgabenfelder und schafft die Voraussetzungen für einen späteren operativen Piloteinsatz. Der operative Detailplan baut darauf auf, ist hier jedoch nicht enthalten.
+    Die Roadmap schafft Klarheit, definiert Prioritäten und legt die Basis für Piloten
+    und spätere Skalierung. Der operative Detailplan entsteht nach Abschluss dieser
+    Phase, sobald erste Ergebnisse und Lernerfahrungen vorliegen.
   </p>
 
   <ol>
     <!-- Woche 1–2 -->
     <li>
-      <h3>Woche 1–2: Strategisches Setup & Zielklarheit</h3>
-      <p><strong>Ziel:</strong> Klare Ausrichtung schaffen – worin KI in den nächsten 90 Tagen konkret unterstützen soll sowie realistische Erreichbarkeit im Kernprozess {{HAUPTLEISTUNG}}.</p>
+      <h3>Woche 1–2: Strategische Ausrichtung & Zielbild</h3>
+      <p><strong>Ziel:</strong> Klare Definition, wo und wie KI kurzfristig im Prozess
+         <strong>{{HAUPTLEISTUNG}}</strong> unterstützen soll.</p>
       <p><strong>Deliverables:</strong></p>
       <ul>
-        <li>Definition eines präzisen Anwendungsrahmens (Scope) für die ersten 90 Tage.</li>
-        <li>Auswahl geeigneter Workflows und Prozessabschnitte mit schnellem Optimierungspotenzial.</li>
-        <li>Sammlung relevanter Beispielmaterialien (Texte, Vorgänge, Dokumente, Fälle).</li>
+        <li>Präziser Scope für die 90-Tage-Phase.</li>
+        <li>Auswahl der ersten 1–2 Prozessbereiche mit messbarem Nutzenpotenzial.</li>
+        <li>Sammlung relevanter Beispiele (Fälle, Texte, Vorgänge).</li>
       </ul>
-      <p><strong>Rollen &amp; Verantwortlichkeiten:</strong><span> Solo: Persönliche Priorisierung.<br> Team: 1 KI-Owner + 1 fachliche Ansprechperson.<br> KMU: Kleines Kernteam mit klaren Rollen (fachlich / technisch / Qualität).</span></p>
-      <p><strong>KPI:</strong> Scope definiert, Zielsetzung abgestimmt, 1–2 priorisierte Prozessbereiche festgelegt.</p>
+      <p><strong>Rollen &amp; Verantwortlichkeiten:</strong><br>
+        Solo: persönliche Priorisierung.<br>
+        Team: Teamlead + KI-Owner.<br>
+        KMU: fachlicher Owner + Prozessverantwortliche.
+      </p>
+      <p><strong>KPI:</strong> Scope klar; 1–2 priorisierte Prozessbereiche definiert.</p>
     </li>
+
     <!-- Woche 3–4 -->
     <li>
-      <h3>Woche 3–4: Daten- und Workflow-Güte verbessern</h3>
-      <p><strong>Ziel:</strong> Grundlagen für verlässliche KI-Ergebnisse schaffen – strukturierte Daten, klare Beispiele, nachvollziehbare Arbeitsabläufe.</p>
+      <h3>Woche 3–4: Datenqualität & Workflow-Basis</h3>
+      <p><strong>Ziel:</strong> Aufbau strukturierter Grundlagen für stabile KI-Ergebnisse.</p>
       <p><strong>Deliverables:</strong></p>
       <ul>
-        <li>Aufbereitung von Beispielmaterial (Vorlagen, Musterfälle, häufige Anfragen).</li>
-        <li>Erste Version einheitlicher Workflows im Kernprozess (z.&nbsp;B. Bearbeitungsschema, Aufgabenstruktur, Qualitätscheck).</li>
-        <li>Dokumentierte Kriterien für „gute“ Ergebnisse (Qualitätsdefinition).</li>
+        <li>Aufbereitung typischer Fälle & Beispiele.</li>
+        <li>Erste einheitliche Workflows (Struktur, Schritte, Hinweise).</li>
+        <li>Definition einfacher Qualitätskriterien.</li>
       </ul>
-      <p><strong>Rollen &amp; Verantwortlichkeiten:</strong><span> Solo: Selbstorganisation mit Mini-Checkliste.<br> Team: Gemeinsame Abstimmung der Qualitätsmerkmale.<br> KMU: Fachbereich + Qualitätsverantwortliche.</span></p>
-      <p><strong>KPI:</strong> Einheitliche Grundlagen; mindestens 10 strukturierte Beispiele für typische Fälle erstellt.</p>
+      <p><strong>Rollen &amp; Verantwortlichkeiten:</strong><br>
+        Solo: eigene Dokumentation.<br>
+        Team: gemeinsame Qualitätsdefinition im Team.<br>
+        KMU: Fachbereich + Qualitätssicherung.
+      </p>
+      <p><strong>KPI:</strong> Dokumentierte Workflows; mindestens 10 strukturierte Beispiele.</p>
     </li>
+
     <!-- Woche 5–6 -->
     <li>
-      <h3>Woche 5–6: Quick-Win-Integration & Prozessentlastung</h3>
-      <p><strong>Ziel:</strong> Erste Effizienzgewinne realisieren, indem Quick Wins integriert werden – ohne vollständigen Pilotbetrieb.</p>
+      <h3>Woche 5–6: Quick-Wins & erste Wirkung</h3>
+      <p><strong>Ziel:</strong> Quick-Wins integrieren, um spürbare Zeitersparnis und
+         bessere Konsistenz zu erzielen.</p>
       <p><strong>Deliverables:</strong></p>
       <ul>
-        <li>Integration von 1–2 Quick-Win-Maßnahmen (Standardisierung, Automatisierung einzelner Teilschritte, KI-Vorlagen-Einsatz).</li>
-        <li>Kurztests realer Vorgänge zur Messung von Zeitersparnis und Ergebnisqualität.</li>
-        <li>Fehler-/Lernliste für Anpassungen der nächsten Wochen.</li>
+        <li>Implementierung von 1–2 Quick-Win-Maßnahmen.</li>
+        <li>Kurztests zur Messung von Zeitersparnis & Ergebnisqualität.</li>
+        <li>Erstellung einer Lern-/Fehlerliste.</li>
       </ul>
-      <p><strong>Rollen &amp; Verantwortlichkeiten:</strong><span> Solo: Umsetzung durch Inhaber:in.<br> Team: Owner + Anwender:innen der wichtigsten Schritte.<br> KMU: Fachbereich + Prozessverantwortliche.</span></p>
-      <p><strong>KPI:</strong> Erste messbare Entlastung (ca. 10–25 % Zeitersparnis), reduzierte manuelle Schritte, konsistentere Ergebnisse.</p>
+      <p><strong>Rollen &amp; Verantwortlichkeiten:</strong><br>
+        Solo: Umsetzung durch Inhaberin/Inhaber.<br>
+        Team: Owner + direkt beteiligte Kolleg:innen.<br>
+        KMU: Fachbereich + Prozessverantwortliche.
+      </p>
+      <p><strong>KPI:</strong> Erste messbare Wirkung (10–25&nbsp;% Zeitgewinn).</p>
     </li>
+
     <!-- Woche 7–8 -->
     <li>
-      <h3>Woche 7–8: Qualitätsstandards & interne Abstimmung</h3>
-      <p><strong>Ziel:</strong> Ergebnisse reproduzierbar und qualitätsgesichert gestalten – vor weiteren Automatisierungsschritten.</p>
+      <h3>Woche 7–8: Qualitätsstandards & Abstimmung</h3>
+      <p><strong>Ziel:</strong> Reproduzierbare, verlässliche Ergebnisse vor
+         weiteren Automatisierungen.</p>
       <p><strong>Deliverables:</strong></p>
       <ul>
-        <li>Mini-Styleguide für KI-Ergebnisse (Do/Don't, Qualitätsgrenzen, Risikofälle).</li>
-        <li>Dokumentation der neuen Arbeitsweise (kurz & verständlich).</li>
-        <li>Abstimmung mit internen Stakeholdern (Team / Führung / Fachbereiche).</li>
+        <li>Kurz-Styleguide für KI-Ergebnisse.</li>
+        <li>Knappe Dokumentation der neuen Arbeitsweise.</li>
+        <li>Interne Abstimmung zwischen relevanten Rollen.</li>
       </ul>
-      <p><strong>Rollen &amp; Verantwortlichkeiten:</strong><span> Solo: Self-Review-Prozesse.<br> Team: Gemeinsame Qualitätssicherung.<br> KMU: Fachbereich + Qualitätssicherung + ggf. Datenschutz.</span></p>
-      <p><strong>KPI:</strong> Verbesserte Ersttrefferquote, weniger Korrekturschleifen, klar definierte Qualitätsregeln.</p>
+      <p><strong>Rollen &amp; Verantwortlichkeiten:</strong><br>
+        Solo: Self-Review-Prozesse.<br>
+        Team: Teamreview + Qualitätssicherung.<br>
+        KMU: Fachbereich + Qualitätssicherung + Datenschutz/IT.
+      </p>
+      <p><strong>KPI:</strong> Weniger Korrekturschleifen, höhere Ersttrefferquote.</p>
     </li>
+
     <!-- Woche 9–10 -->
     <li>
-      <h3>Woche 9–10: Monitoring, Messbarkeit & strategische Anpassung</h3>
-      <p><strong>Ziel:</strong> Wirkung und Fortschritt sichtbar machen und Erkenntnisse ableiten.</p>
+      <h3>Woche 9–10: Monitoring & strategische Anpassung</h3>
+      <p><strong>Ziel:</strong> Wirkung sichtbar machen und Verbesserungen ableiten.</p>
       <p><strong>Deliverables:</strong></p>
       <ul>
-        <li>Einfaches Performance-Monitoring (Zeit, Qualität, Konsistenz).</li>
-        <li>Kurzbericht mit Fortschritt, Herausforderungen, priorisierten Verbesserungen.</li>
-        <li>Überarbeitung von Workflows & Vorlagen anhand der Erkenntnisse.</li>
+        <li>Einfaches Monitoring (Zeit, Qualität, Konsistenz).</li>
+        <li>Kurzbericht zu Fortschritt & Herausforderungen.</li>
+        <li>Optimierung der Vorlagen und Workflows.</li>
       </ul>
-      <p><strong>Rollen &amp; Verantwortlichkeiten:</strong><span> Solo: Selbstanalyse (kurze Notizen).<br> Team: Owner + Teamreview.<br> KMU: Fachbereich + ggf. Controlling/IT.</span></p>
-      <p><strong>KPI:</strong> Klare Trendlinien zu Effizienz & Ergebnisqualität, dokumentierte Schritte für die nächsten Maßnahmen.</p>
+      <p><strong>Rollen &amp; Verantwortlichkeiten:</strong><br>
+        Solo: persönliche Analyse.<br>
+        Team: Owner + Teamreview.<br>
+        KMU: Fachbereich + ggf. Controlling/IT.
+      </p>
+      <p><strong>KPI:</strong> Erste Trendlinien & dokumentierte Verbesserungen.</p>
     </li>
+
     <!-- Woche 11–13 -->
     <li>
       <h3>Woche 11–13: Entscheidung & Vorbereitung der Skalierung</h3>
-      <p><strong>Ziel:</strong> Auf Basis der Erfahrung entscheiden, ob und wie eine breitere KI-Einführung erfolgt.</p>
+      <p><strong>Ziel:</strong> Auf Basis der Erfahrungswerte entscheiden, ob
+         Stabilisierung, Ausbau oder Skalierung folgt.</p>
       <p><strong>Deliverables:</strong></p>
       <ul>
-        <li>Bewertung der strategischen Eignung von KI im Kernprozess {{HAUPTLEISTUNG}}.</li>
-        <li>Entscheidung: Stabilisieren, Ausbauen, gezielt vertiefen.</li>
-        <li>Skalierungs-Backlog mit den 3–5 sinnvollsten Folge-Use-Cases.</li>
+        <li>Bewertung der KI-Eignung für {{HAUPTLEISTUNG}}.</li>
+        <li>Strategischer Beschluss (Stabilisieren / Ausbauen / Vertiefen).</li>
+        <li>Skalierungs-Backlog für Jahr&nbsp;2.</li>
       </ul>
-      <p><strong>Rollen &amp; Verantwortlichkeiten:</strong><span> Solo: Geschäftsführung (selbst).<br> Team: Führung + Owner.<br> KMU: Management + Bereichsleitung + KI-Owner.</span></p>
-      <p><strong>KPI:</strong> Strategischer Beschluss gefasst, priorisiertes Backlog liegt vor.</p>
+      <p><strong>Rollen &amp; Verantwortlichkeiten:</strong><br>
+        Solo: Geschäftsführung.<br>
+        Team: Führung + KI-Owner.<br>
+        KMU: Management + Bereichsleitung.
+      </p>
+      <p><strong>KPI:</strong> Strategische Entscheidung & priorisiertes Backlog vorhanden.</p>
     </li>
   </ol>
 
   <p class="small muted">
-    Diese 90-Tage-Roadmap bildet das strategische Fundament für KI im Unternehmen. Sie schafft Klarheit, Qualität und Verlässlichkeit – damit spätere operative Piloten und Skalierungsprojekte auf einer stabilen Basis aufbauen können.
+    Diese 90-Tage-Roadmap legt die Basis für eine verlässliche Einführung von KI
+    in <strong>{{HAUPTLEISTUNG}}</strong>. Sie schafft Struktur, Qualität und
+    messbare Wirkung – und bildet damit das Fundament für Piloten und Skalierung
+    im weiteren Jahresverlauf.
   </p>
 </section>
-
-<!-- Output Verbosity: Die Antwort darf ausschließlich aus diesem HTML-Block bestehen. Halte die Roadmap-Kapsel so kurz und präzise wie möglich – keine zusätzlichen Erläuterungen, kein Fließtext außerhalb der Vorgaben. Der gesamte Output darf maximal 13 OL-Einträge enthalten; Unterlisten maximal 6 Punkte, jeweils so knapp wie praktikabel. Priorisiere vollständige, verwertbare Inhalte innerhalb dieser Längenvorgaben. Antworte stets vollständig und verwertbar, auch wenn der Nutzer knapp fragt. -->

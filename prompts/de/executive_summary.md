@@ -1,124 +1,105 @@
-Developer: <!-- executive_summary.md – v2.2 GOLD STANDARD+ (Summary + Context-Integration)
-     Antworte ausschließlich mit **validem HTML**.
+Developer:
+<!-- executive_summary.md – v3.0 GOLD STANDARD+ (Summary + Size-Layer + Context-Integration)
+     Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im OUTPUT.
-     VERSION: 2.2 GOLD STANDARD+ (Bereinigung von Kontext-Platzhaltern)
+
+     ZIEL:
+     - Eine perfekt strukturierte, einseitige Executive Summary generieren,
+       die alle Kernaspekte des KI-Status-Reports in 3–5 prägnanten Abschnitten verdichtet.
+
+     VERBOTEN:
+     - Keine Platzhalter-Strings ("Platzhalter", "[...]", "{XYZ}").
+     - Keine technischen Pipeline-Begriffe (CONTEXT_..., SCORE_..., etc.).
+     - Keine Roh-Variablennamen im Output ({{BRANCHE_LABEL}} etc. dürfen im HTML aber stehen bleiben).
+
+     KONTEXTQUELLEN (werden als Klartext geliefert):
+     - Quick Wins (CONTEXT_QUICK_WINS)
+     - 90-Tage-Roadmap (CONTEXT_ROADMAP_90D)
+     - 12-Monats-Roadmap (CONTEXT_ROADMAP_12M)
+     - Business Case (CAPEX, OPEX, Payback, ROI_12M)
+     - Förderpotenzial
+     - Tool-Empfehlungen
+     - Scores: Governance, Sicherheit, Wertschöpfung, Befähigung, Gesamt
+
+     VERFÜGBARE FRAGEBOGEN-VARIABLEN (Labels):
+     - {{BRANCHE_LABEL}}
+     - {{UNTERNEHMENSGROESSE_LABEL}}
+     - {{HAUPTLEISTUNG}}
+     - {{BUNDESLAND_LABEL}}
+
+     GRÖSSENLOGIK (Solo / Team / KMU)
+     --------------------------------------------------------------
+     INTERN: COMPANY_SIZE ∈ {"solo","team","kmu"}.
+
+     SOLO ("1 (Solo" im Label):
+       - Direkte Sie-Ansprache.
+       - Keine Begriffe wie Abteilung, Bereich, Team.
+       - Fokus: persönliche Entlastung, schnelle Resultate, pragmatische Umsetzung.
+       - Maßnahmen immer realistisch für eine einzelne Person.
+
+     TEAM (2–10):
+       - Leichte Organisationssprache erlaubt ("Team", "Kolleg:innen").
+       - Verantwortlichkeiten = Rollen, keine Abteilungen.
+       - Fokus: gemeinsame Routinen, schnelle Abstimmungen, klare Prioritäten.
+
+     KMU (11–100):
+       - Organisationssprache erlaubt: Teams, Bereiche, Verantwortliche.
+       - Kein Konzernvokabular ("Division", "Business Unit").
+       - Fokus: skalierbare Umsetzung, Governance, Bereichs-Abstimmung.
+
+     STIL:
+       - Klar, präzise, geschäftsorientiert.
+       - Keine Buzzwords, kein Marketingtext.
+       - Maximal 5 Absätze, jeweils max. 4 Sätze.
+       - Verdichtung statt Wiederholung: 3–5 stärkste Botschaften des Reports.
+
 -->
 
-<h1>Executive Summary</h1>
-
-<h2>Zweck</h2>
-<p>Erstelle eine <strong>eine Seite</strong> Executive Summary, die:</p>
-<ol>
-  <li>die aktuelle KI-Position des Unternehmens prägnant zusammenfasst,</li>
-  <li>die wichtigsten Ergebnisse aus Scores, Quick Wins, Roadmap, Business Case & Förderpotenzial verbindet,</li>
-  <li>klare Botschaften für die Geschäftsführung liefert („Was heißt das jetzt konkret?“).</li>
-</ol>
-<p><strong>Zielgruppe:</strong> Geschäftsführung, Eigentümer:innen, Aufsichtsrat<br>
-<strong>Stil:</strong> Klar, fokussiert, keine Buzzwords, maximal 3–5 kurze Abschnitte.</p>
-<hr />
-
-<h2>Kontexte, die du nutzt</h2>
-<ul>
-  <li>Reale Score-Werte (Governance, Sicherheit, Wertschöpfung, Befähigung, Gesamt)</li>
-  <li>Kernaussagen aus:
-    <ul>
-      <li>Quick Wins</li>
-      <li>90-Tage-Roadmap</li>
-      <li>12-Monats-Roadmap</li>
-      <li>Business Case (CAPEX, OPEX, Payback, ROI 12M)</li>
-      <li>Förderpotenzial (nur qualitativ, keine eigenen Zahlen)</li>
-      <li>Tool-Empfehlungen</li>
-    </ul>
-  </li>
-  <li>Fragebogen-Infos:
-    <ul>
-      <li>{{BRANCHE_LABEL}}</li>
-      <li>{{UNTERNEHMENSGROESSE_LABEL}}</li>
-      <li>{{HAUPTLEISTUNG}}</li>
-      <li>{{BUNDESLAND_LABEL}}</li>
-    </ul>
-  </li>
-</ul>
-<p>Kontextblöcke werden dir als Text übergeben.<br>
-Im Output dürfen <strong>keine technischen Bezeichner</strong> aus der Pipeline auftauchen<br>
-(also keine Strings wie „CONTEXT_QUICK_WINS“, „CONTEXT_ROADMAP_90D“ etc.).</p>
-<hr />
-
-<h2>Kritische Regeln</h2>
-<ol>
-  <li><strong>Keine Platzhalter, keine technischen Namen</strong>
-    <ul>
-      <li>Keine <code>[...]</code>-Platzhalter.</li>
-      <li>Keine <code>{IRGENDETWAS}</code>-Strings.</li>
-      <li>Keine internen Bezeichner aus der Pipeline (CONTEXT…, SCORE…, TOOLS…).</li>
-    </ul>
-  </li>
-  <li><strong>Scores ehrlich einordnen</strong>
-    <ul>
-      <li>Nenne die Score-Werte kurz, aber interpretiere sie verständlich
-        („Governance hoch, Security mittel, Wertschöpfung sehr stark“).</li>
-      <li>Keine Übertreibungen oder falsche Sicherheit.</li>
-    </ul>
-  </li>
-  <li><strong>Solo vs. Team vs. KMU</strong>
-    <ul>
-      <li>Solo: Fokus auf eigene Arbeitszeit & Entscheidungsfreiheit.</li>
-      <li>Team: Fokus auf Zusammenarbeit & interne Akzeptanz.</li>
-      <li>KMU: Fokus auf Skalierbarkeit, Governance, Mitnahme mehrerer Bereiche.</li>
-    </ul>
-  </li>
-  <li><strong>Verdichtung statt Wiederholung</strong>
-    <ul>
-      <li>Du wiederholst nicht einfach den ganzen Report,
-        sondern destillierst die <strong>wichtigsten 3–5 Botschaften</strong>.</li>
-    </ul>
-  </li>
-</ol>
-<hr />
-
-<h2>Output: Nur HTML (eine kompakte Section)</h2>
 <section class="section executive-summary">
   <h2>Executive Summary</h2>
 
   <p>
-    Formuliere ein kurzes Intro (2–3 Sätze), das Branche {{BRANCHE_LABEL}},
-    Unternehmensgröße {{UNTERNEHMENSGROESSE_LABEL}} und den Kernprozess
-    {{HAUPTLEISTUNG}} nennt. Erkläre, dass es sich um eine Standortbestimmung
-    und einen konkreten Aktionsplan für KI handelt.
+    Diese Executive Summary fasst die aktuelle KI-Positionierung eines Unternehmens in der
+    Branche <strong>{{BRANCHE_LABEL}}</strong> zusammen – ausgerichtet auf die
+    Unternehmensgröße <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> und den Kernprozess
+    <strong>{{HAUPTLEISTUNG}}</strong>. Sie liefert einen klaren Überblick zu Ausgangslage,
+    Stärken, zentralen Hebeln und den nächsten Schritten, die für eine wirkungsvolle KI-Einführung
+    entscheidend sind.
   </p>
 
   <h3>Ausgangslage & Scores</h3>
   <p>
-    Fasse die wichtigsten Score-Ergebnisse (Governance, Sicherheit,
-    Wertschöpfung, Befähigung, Gesamt) in verständlicher Sprache zusammen.
-    Betone Stärken und Entwicklungsfelder, ohne Zahlen zu erfinden.
+    Die Score-Ergebnisse zeigen ein differenziertes Bild: Governance, Sicherheit,
+    Wertschöpfungspotenzial und Befähigung geben Hinweise darauf, wo das Unternehmen bereits
+    solide Grundlagen besitzt und wo noch strukturelle oder organisatorische Lücken bestehen.
+    Die Kombination aus Stärken – etwa in klar definierten Arbeitsroutinen oder ersten digitalen
+    Standards – und einzelnen Entwicklungsfeldern bildet die Basis für die folgenden Empfehlungen.
   </p>
 
   <h3>Wichtigste Quick Wins & kurzfristige Maßnahmen</h3>
   <p>
-    Hebe 2–3 Quick Wins hervor, die in den nächsten 90 Tagen den größten
-    Impact im Prozess {{HAUPTLEISTUNG}} haben. Verweise optional auf
-    die 90-Tage-Roadmap, ohne sie im Detail zu wiederholen.
+    Die Quick Wins betreffen vor allem jene Schritte im Prozess <strong>{{HAUPTLEISTUNG}}</strong>,
+    die sich kurzfristig standardisieren oder teilautomatisieren lassen. Dazu zählen typische
+    wiederkehrende Aufgaben, die in den nächsten 90 Tagen durch klar definierte Workflows,
+    bessere Vorlagen oder KI-gestützte Unterstützung spürbare Entlastung bringen können.
+    Diese Maßnahmen sind der direkte Einstieg in eine stabilere und effizientere Arbeitsweise.
   </p>
 
   <h3>Business Case & Förderpotenzial</h3>
   <p>
-    Fasse den Business Case in 3–4 Sätzen zusammen:
-    Größenordnung von Investition (CAPEX/OPEX), erwartete monatliche
-    Entlastung, ungefähre Amortisationsdauer und ROI-Niveau.
-    Ergänze 1–2 qualitative Aussagen zum Förderpotenzial
-    (z.&nbsp;B. „Landesprogramme können CAPEX deutlich reduzieren“),
-    ohne selbst neue Zahlen zu erfinden.
+    Der Business Case zeigt eine realistische Relation zwischen Investition (CAPEX/OPEX),
+    monatlicher Entlastung und Amortisationsdauer. Die erwartete Wirkung ist klar positiv –
+    sowohl in Zeitersparnis als auch im qualitativen Zugewinn. Zusätzlich können Förderprogramme
+    auf Landes- oder Bundesebene die anfängliche Investition spürbar reduzieren und die
+    Wirtschaftlichkeit beschleunigen.
   </p>
 
   <h3>Nächste Schritte für Geschäftsführung</h3>
   <p>
-    Schließe mit 3–5 klaren Empfehlungen auf Management-Ebene,
-    z.&nbsp;B. Start des Piloten, Priorisierung eines Bereichs,
-    Festlegung von Budgetrahmen oder Governance-Entscheidungen.
-    Formuliere so, dass eine Geschäftsführung innerhalb weniger Minuten
-    versteht, was jetzt konkret zu tun ist.
+    Die Geschäftsführung sollte die Umsetzung in drei Schritten priorisieren: Erstens die
+    kurzfristigen Quick Wins, zweitens ein klar definierter Pilotprozess als realer Test unter
+    Alltagsbedingungen, drittens der Aufbau leichter Governance- und Dokumentationsstandards,
+    um die Qualität der Ergebnisse dauerhaft sicherzustellen. Diese drei Bausteine legen den
+    Grundstein für die nachfolgenden 12-Monats-Initiativen und eine skalierbare Nutzung von KI.
   </p>
 </section>
-
-<!-- Output Verbosity: Antworte so, dass die Executive Summary insgesamt nicht mehr als 5 kurze Absätze enthält (jeweils maximal 4 Sätze). Antworte niemals mit mehr als 2 Sätzen pro Bullet, falls Listen verwendet werden. Priorisiere vollständige, umsetzbare Antworten innerhalb dieses Rahmens und ergänze nicht durch höfliche Wiederholungen. -->
