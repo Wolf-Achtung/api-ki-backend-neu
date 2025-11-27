@@ -1,151 +1,167 @@
 Developer:
-<!-- roadmap_12m.md – v3.0 GOLD STANDARD+ (strategisch + size-aware + placeholder-sicher)
+<!-- roadmap_12m.md – v5.0 GOLD STANDARD+ (branch-aware, size-aware, strategic)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
      ZIEL:
-     - Erzeuge eine klare, realistische, umsetzbare 12-Monats-Roadmap für KI-Einführung
-       und -Skalierung – abgestimmt auf Branche, Größe und Hauptleistung.
-     - Der Output soll direkt in Reporting & Planung übernehmbar sein.
+       - Klare, strategische 12-Monats-Roadmap für KI in {{HAUPTLEISTUNG}}.
+       - Nutzt aktiv CONTEXT_BLOCK (Workflows, Pain Points, Daten, Tools).
+       - Size-aware Umsetzung für solo/team/kmu.
+       - Pro Abschnitt: Ziel + Deliverables + Rollen/Verantwortlichkeit + KPIs.
+       - Realistische, planbare Schritte für ein gesamtes Geschäftsjahr.
 
-     VERFÜGBARE LABEL-VARIABLEN:
-     - {{BRANCHE_LABEL}}
-     - {{UNTERNEHMENSGROESSE_LABEL}}
-     - {{HAUPTLEISTUNG}}
-     - {{BUNDESLAND_LABEL}}
+     VARIABLEN:
+       {{BRANCHE_LABEL}}
+       {{UNTERNEHMENSGROESSE_LABEL}}
+       {{HAUPTLEISTUNG}}
+       {{BUNDESLAND_LABEL}}
+       COMPANY_SIZE = "solo" | "team" | "kmu"
 
-     INTERNER SIZE-MODE:
-     COMPANY_SIZE ∈ {"solo","team","kmu"}
-       SOLO ("1 (Solo" im Label)
-         - Keine Abteilungen, keine Teams
-         - Fokus: persönliche Routinen, klare Standards, pragmische Wirkung
-       TEAM (2–10)
-         - „Team“, „Kolleg:innen“, Rollen (z. B. Teamlead, KI-Verantwortliche:r)
-         - Fokus: arbeitsteilige Umsetzung, kleine Pilotflächen, klarer Owner
-       KMU (11–100)
-         - „Bereiche“, „Teams“, „Verantwortliche“, „Management“
-         - Fokus: skalierte Umsetzung, Governance, abteilungsübergreifende Prozesse
+     SIZE-LOGIK:
+       SOLO:
+         - Keine Abteilungen/Teams; pragmatische persönliche Routinen; niedrige Komplexität.
+       TEAM:
+         - Rollen & Abstimmungen; Teamlead + KI-Owner; arbeitsteilige Umsetzung.
+       KMU:
+         - Bereiche, Governance, dokumentierte Prozesse, skalierbare Rollouts.
 
-     REGELN:
-     - Keine „Platzhalter“-Wörter, keine TODO-Hinweise, keine fragengestützten Metasätze.
-     - Maximal 3 Quartale + Jahresabschluss.
-     - Jeder Abschnitt: Ziel + Deliverables + Rollen/Verantwortlichkeiten + KPIs.
-     - Sprache: nüchtern, strukturiert, strategisch.
+     BRANCHEN-LOGIK:
+       - Nutze typische Workflows, Pain Points & Daten aus CONTEXT_BLOCK.
+       - Marketing/Kreativ = Content, Konsistenz, Freigabeprozesse.
+       - Beratung/Dienstleistung = Wissensarbeit, Analysen, Angebotsprozesse.
+       - Finanzen/Versicherung = Compliance, Datenqualität, Risikominderung.
+       - Gesundheit/Pflege = sensible Daten, Freigaben, Qualität.
+       - IT/Software = Automatisierung, Testing, Code-Prozesse.
+       - Industrie/Produktion = Sensor-/Prozessdaten, Qualität & harmonisierte Workflows.
+       - Handel/E-Commerce = Produktdaten, Textprozesse, Qualitätssicherung.
+
+     VERBOTEN:
+       - „Platzhalter“, „TODO“, „Freitext“, Beispieltexte.
+       - Rohvariablen im Output.
 -->
 
 <section class="section roadmap-12m">
   <h2>12-Monats-Roadmap (Strategische Weiterentwicklung)</h2>
 
   <p>
-    Die folgende Roadmap zeigt, wie der KI-Einsatz im Bereich
-    <strong>{{HAUPTLEISTUNG}}</strong> in der Branche
-    <strong>{{BRANCHE_LABEL}}</strong> über die nächsten zwölf Monate hinweg systematisch
-    ausgebaut werden kann. Sie berücksichtigt die organisatorischen Möglichkeiten eines
-    Unternehmens der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> und schließt direkt an die
-    90-Tage-Phase an.
+    Diese Roadmap zeigt, wie der KI-Einsatz im Bereich
+    <strong>{{HAUPTLEISTUNG}}</strong> innerhalb von zwölf Monaten strategisch,
+    stabil und nachhaltig ausgebaut werden kann – abgestimmt auf die Möglichkeiten
+    eines Unternehmens der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> und
+    die branchenspezifischen Workflows, Pain Points und Daten in
+    <strong>{{BRANCHE_LABEL}}</strong>.
   </p>
 
   <p>
-    Die Roadmap zielt darauf ab, Ergebnisse zu stabilisieren, neue Use-Cases in den Betrieb zu
-    übernehmen, Verantwortlichkeiten zu klären und eine nachhaltige Grundlage für KI-gestützte
-    Wertschöpfung aufzubauen.
+    Sie baut direkt auf die 90-Tage-Phase auf: Erst Stabilisierung, dann Ausweitung
+    und schließlich Skalierung und Governance – angepasst an Größe und Branche.
   </p>
 
   <!-- Q2 -->
   <h3>Q2 (Monate 4–6): Konsolidierung & Stabilisierung</h3>
-  <p><strong>Ziel:</strong> Die in den ersten 90 Tagen etablierten KI-gestützten Prozesse
-     stabilisieren und in den Regelbetrieb überführen.</p>
+  <p><strong>Ziel:</strong>
+    Die in den ersten 90 Tagen etablierten KI-Workflows stabilisieren und in den
+    Regelbetrieb überführen – inklusive Qualität, Datenbasis und Verlässlichkeit.
+  </p>
 
   <p><strong>Deliverables:</strong></p>
   <ul>
-    <li>Konsistente Workflows mit klar definierten Zuständigkeiten.</li>
-    <li>Qualitätskriterien für zentrale KI-Ergebnisse (z. B. Entwürfe, Analysen, Zusammenfassungen).</li>
-    <li>Strukturierte Best-Practice-Sammlung aus realen Projekten.</li>
-    <li>Erste, kurze interne Dokumentation zur Datenlage, Risiken und Freigaben.</li>
+    <li>Vollständig dokumentierte Workflows für {{HAUPTLEISTUNG}} (Input → KI → Review → Freigabe).</li>
+    <li>Branchenspezifische Qualitätskriterien (abhängig von {{BRANCHE_LABEL}}).</li>
+    <li>Best-Practice-Sammlung aus echten Fällen der ersten 90 Tage.</li>
+    <li>Kurze Dokumentation zu Datenlage, Risiken, Freigaberegeln.</li>
   </ul>
 
-  <p><strong>Rollen &amp; Verantwortlichkeiten:</strong>
-    <span>
-      <!-- size-aware wording -->
-      Solo: Fokus auf persönliche Routine &amp; klare Standards.
-      Team: Teamlead + KI-Owner + beteiligte Mitarbeitende.
-      KMU: Fachbereiche + Prozessverantwortliche + Qualitätssicherung.
-    </span>
+  <p><strong>Rollen &amp; Verantwortlichkeiten:</strong><br>
+    {% if COMPANY_SIZE == "solo" %}
+      Persönliche Standardisierung & Routine.
+    {% elif COMPANY_SIZE == "team" %}
+      Teamlead + KI-Owner + beteiligte Kolleg:innen.
+    {% else %}
+      Fachbereich + Prozessverantwortliche + Qualitätssicherung.
+    {% endif %}
   </p>
 
   <p><strong>KPIs Q2:</strong><br>
-    • höhere Konsistenz der Ergebnisse (20–40&nbsp;%)<br>
-    • geringere manuelle Zwischenschritte<br>
-    • definierter Prozess- und Qualitätsstandard
+    • Konsistenz +20–40&nbsp;%<br>
+    • weniger Korrekturschleifen<br>
+    • dokumentierter Regelprozess für {{HAUPTLEISTUNG}}
   </p>
 
   <!-- Q3 -->
   <h3>Q3 (Monate 7–9): Erweiterung auf neue Use-Cases</h3>
-  <p><strong>Ziel:</strong> Erfolgreiche Ansätze auf 1–2 angrenzende Prozesse oder Aufgabenblöcke
-     übertragen.</p>
+  <p><strong>Ziel:</strong>
+    Erfolgreiche Ansätze auf angrenzende Prozesse übertragen – auf Basis branchenspezifischer
+    Pain Points und typischer Datenströme.
+  </p>
 
   <p><strong>Deliverables:</strong></p>
   <ul>
-    <li>Auswahl und Definition neuer KI-Use-Cases mit klar messbaren Zielen.</li>
-    <li>Erweiterte Vorlagen, Workflows &amp; Guidelines für diese Use-Cases.</li>
-    <li>Aufbau eines kompakten, internen KI-Wissenspools.</li>
-    <li>Etablierung regelmäßiger Review- und Optimierungszyklen.</li>
+    <li>Auswahl der 1–2 wirkungsstärksten neuen Use-Cases innerhalb {{BRANCHE_LABEL}}.</li>
+    <li>Erweiterte Templates & Workflows (Qualität, Review, Freigabe).</li>
+    <li>Aufbau einer kleinen internen Wissensbibliothek (Do's & Don’ts, Beispiele, Checklisten).</li>
+    <li>Regelmäßige Review- und Optimierungszyklen.</li>
   </ul>
 
-  <p><strong>Rollen &amp; Verantwortlichkeiten:</strong>
-    <span>
-      Solo: Ausbau des eigenen Systems &amp; persönlicher Routinen.
-      Team: Teamlead + KI-Owner + Anwender:innen der neuen Use-Cases.
-      KMU: Fachbereich + IT + Verantwortliche des Erweiterungsbereichs.
-    </span>
+  <p><strong>Rollen &amp; Verantwortlichkeiten:</strong><br>
+    {% if COMPANY_SIZE == "solo" %}
+      Weiterentwicklung persönlicher Routinen & Tools.
+    {% elif COMPANY_SIZE == "team" %}
+      Teamlead + KI-Owner + Anwender:innen der neuen Use-Cases.
+    {% else %}
+      Fachbereich + IT + Verantwortliche des Erweiterungsbereichs.
+    {% endif %}
   </p>
 
   <p><strong>KPIs Q3:</strong><br>
-    • 1–2 neue KI-Use-Cases im produktiven Einsatz<br>
-    • verbesserte Durchlaufzeiten in angrenzenden Geschäftsbereichen<br>
-    • höhere Ersttrefferquote durch verfeinerte Vorlagen
+    • 1–2 neue Use-Cases produktiv im Einsatz<br>
+    • bessere Durchlaufzeiten in angrenzenden Prozessen<br>
+    • höhere Ersttrefferquote durch verfeinerte Templates
   </p>
 
   <!-- Q4 -->
   <h3>Q4 (Monate 10–12): Skalierung & Governance</h3>
-  <p><strong>Ziel:</strong> KI strukturell verankern, Verantwortlichkeiten erweitern
-     und erste datengetriebene Steuerungsmechanismen etablieren.</p>
+  <p><strong>Ziel:</strong>
+    KI auf struktureller Ebene verankern – mit klaren Verantwortlichkeiten,
+    Qualitätsregeln, Freigaben und datengetriebenem Reporting.
+  </p>
 
   <p><strong>Deliverables:</strong></p>
   <ul>
-    <li>Skalierungsstrategie für alle relevanten Teams/Prozesse.</li>
-    <li>Einführung leichter Governance-Regeln
-        (Freigaben, Datenschutz, Qualitätsmanagement).</li>
-    <li>Regelmäßiges Reporting über Wirkung, Effizienz &amp; Risiken.</li>
-    <li>Konkrete Entscheidungen für Investitionen im zweiten Jahr.</li>
+    <li>Skalierungsstrategie für weitere Teams/Prozesse (je nach Branche: z. B. weitere Content-Steps, Angebotsprozesse, Produktionsdaten, Compliance-Prüfungen).</li>
+    <li>Leichtgewichtige Governance-Regeln (Qualität, Datenschutz, Freigabeprozess).</li>
+    <li>Regelmäßiges, metrikenbasiertes Reporting (Zeit, Risiko, Qualität, Auslastung).</li>
+    <li>Budget- und Investitionsfahrplan für das zweite Jahr.</li>
   </ul>
 
-  <p><strong>Rollen &amp; Verantwortlichkeiten:</strong>
-    <span>
-      Solo: nachhaltige Routinen &amp; persönliches Qualitätsmanagement.
-      Team: Teamlead + KI-Owner + Verantwortliche der neuen Use-Cases.
-      KMU: Bereichsleitung + Management + Datenschutz/Sicherheit.
-    </span>
+  <p><strong>Rollen &amp; Verantwortlichkeiten:</strong><br>
+    {% if COMPANY_SIZE == "solo" %}
+      Persönliche Qualitätsroutinen & dokumentierte Learnings.
+    {% elif COMPANY_SIZE == "team" %}
+      Teamlead + KI-Owner + Prozessverantwortliche.
+    {% else %}
+      Bereichsleitung + Management + Datenschutz/IT.
+    {% endif %}
   </p>
 
   <p><strong>KPIs Q4:</strong><br>
-    • 2–3 stabil eingeführte KI-Use-Cases<br>
+    • 2–3 KI-Use-Cases stabil im Regelbetrieb<br>
     • dokumentierte Governance-Strukturen<br>
-    • quartalsweises Wirkungs-Reporting
+    • Reporting im Quartalsrhythmus
   </p>
 
   <h3>Jahresabschluss (Monat 12)</h3>
   <ul>
-    <li>Bewertung aller produktiven KI-Use-Cases (Qualität, Risiko, Zeitgewinn, Wirtschaftlichkeit).</li>
-    <li>Planung der Roadmap für Jahr&nbsp;2 (Stabilisieren, Ausbauen, Skalieren).</li>
-    <li>Abschlussdokumentation aller Workflows &amp; Learnings.</li>
-    <li>Optionale Vorbereitung auf Audits, Zertifizierungen oder Fördermittel-Reports.</li>
+    <li>Bewertung aller produktiven Use-Cases (Qualität, Risiko, Zeitgewinn, Wirtschaftlichkeit).</li>
+    <li>Planung der Roadmap für Jahr&nbsp;2 (Stabilisieren / Ausbauen / Skalieren).</li>
+    <li>Abschlussdokumentation aller Workflows & Learnings.</li>
+    <li>Prüfung von Fördermitteln in {{BUNDESLAND_LABEL}} (z. B. Modernisierung, Prozessdigitalisierung).</li>
   </ul>
 
   <p class="small muted">
-    Diese Jahres-Roadmap sorgt dafür, dass KI schrittweise zu einem stabilen,
-    skalierbaren Bestandteil der Wertschöpfung eines Unternehmens der Größe
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> wird – mit klaren Standards,
-    Verantwortlichkeiten und real messbarer Wirkung.
+    Diese 12-Monats-Roadmap macht KI zu einem stabilen, skalierbaren Bestandteil
+    der Wertschöpfung eines Unternehmens der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>.
+    Sie schafft Standards, Qualität und messbare Wirkung und bildet die Basis für
+    Piloten und Skalierung im Folgejahr.
   </p>
 </section>

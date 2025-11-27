@@ -1,3 +1,4 @@
+risks.md
 Developer: <!--
   risks.md – v3.0 GOLD STANDARD+ (size-aware Risk Section)
 
@@ -10,7 +11,7 @@ Developer: <!--
   VARIABLEN:
   - {{HAUPTLEISTUNG}}                → Hauptanwendungsbereich im Unternehmen
   - {{BRANCHE_LABEL}}                → Branchenlabel (z. B. „Beratung & Dienstleistungen“)
-  - {{UNTERNEHMENSGROESSE_LABEL}}    → z. B. „1 (Solo)“, „2–10 (Kleines Team)“, „11–100 (KMU)“
+  - {{UNTERNEHMENSIDROESSE_LABEL}}    → z. B. „1 (Solo)“, „2–10 (Kleines Team)“, „11–100 (KMU)“
   - {{score_governance}}             → Governance-Score (0–100)
   - {{score_sicherheit}}             → Sicherheits-Score (0–100)
 
@@ -52,6 +53,8 @@ Developer: <!--
       - Maßnahmen: Standards, Policies, Transparenz, regelmäßige Reviews.
 
   REGELN:
+  - Nutze den vorangestellten CONTEXT_BLOCK (Branchen- und Größen-Context) aktiv: greife typische Workflows, Pain Points, Datenarten und Tools aus diesem Block auf und verankere daran deine Beispiele.
+  - Wenn die Branche stark reguliert ist (z. B. Gesundheit, Finanzen, öffentliche Verwaltung, Recht), betone branchenspezifische Compliance- und Datenschutzrisiken.
   - Schreibe konkret, unternehmensnah und ohne Floskeln.
   - Jede genannte Gefahr muss nachvollziehbar mit {{HAUPTLEISTUNG}} zusammenhängen.
   - Leite aus {{score_governance}} und {{score_sicherheit}} ab,
@@ -72,8 +75,8 @@ Developer: <!--
 
   <p>
     Der Einsatz von KI im Bereich <strong>{{HAUPTLEISTUNG}}</strong> in der Branche
-    <strong>{{BRANCHE_LABEL}}</strong> bietet erhebliche Chancen, bringt jedoch – je nach
-    Unternehmensgröße <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> – unterschiedliche
+    <strong>{{BRANCHE_LABEL}}</strong> – mit ihren typischen Workflows, Datenarten und Pain Points – bietet erhebliche Chancen, bringt jedoch – je nach
+    Unternehmensgröße <strong>{{UNTERNEHMENSIDROESSE_LABEL}}</strong> – unterschiedliche
     Risikoprofile mit sich. Der aktuelle Governance-Score von
     <strong>{{score_governance}}&#x2F;100</strong> und der Sicherheits-Score von
     <strong>{{score_sicherheit}}&#x2F;100</strong> zeigen, wie weit Strukturen für Steuerung,
@@ -257,7 +260,7 @@ Developer: <!--
   <p class="small muted">
     Diese Risikoanalyse zeigt die wichtigsten Handlungsfelder für KI in
     <strong>{{HAUPTLEISTUNG}}</strong> in einem Unternehmen der Größe
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>. Im nächsten Schritt sollten die Risiken
+    <strong>{{UNTERNEHMENSIDROESSE_LABEL}}</strong>. Im nächsten Schritt sollten die Risiken
     nach Eintrittswahrscheinlichkeit und Auswirkung priorisiert und in eine konkrete
     Maßnahmenplanung für die kommenden 3–6&nbsp;Monate überführt werden.
   </p>

@@ -1,16 +1,18 @@
 Developer:
-<!-- ai_act_summary.md – v3.2 GOLD STANDARD+ (EU AI Act – rechtliche Zusammenfassung, size-aware)
+<!-- ai_act_summary.md – v4.0 GOLD STANDARD+ (EU AI Act – branch- & size-aware, context-integrated)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
      ZIEL:
-       - Präzise und sachliche Zusammenfassung des EU AI Act.
-       - Bewertung der Relevanz für {{HAUPTLEISTUNG}}.
+       - Präzise, seriöse, sachliche Zusammenfassung des EU AI Act.
+       - Bewertung der Relevanz für {{HAUPTLEISTUNG}} unter Berücksichtigung von
+         BRANCHE + UNTERNEHMENSGROESSE + CONTEXT_BLOCK.
        - Korrekte Fristen (02.08.2025 / 02.08.2026 / 02.08.2027).
-       - Darstellung relevanter Pflichten (insb. Art. 5, Art. 6, Art. 50).
-       - Klare Empfehlung zu Transparenzpflichten.
-       - Pflicht-Disclaimer: „Keine Rechtsberatung“.
-       - Kurzer Abschnitt: „Was bedeutet das für Unternehmen Ihrer Größe?“.
+       - Darstellung relevanter Pflichten (Art. 5, Art. 6, Art. 50) + horizontale Anforderungen.
+       - Transparenzpflichten klar benennen.
+       - Kurzteil: „Was bedeutet das für Unternehmen dieser Größe?“ (size-aware).
+       - Branchenspezifische Risiken / Regulatorik berücksichtigen (Finanzen, Gesundheit, öffentlicher Sektor).
+       - Pflicht-Disclaimer: keine Rechtsberatung.
 
      VERFÜGBARE VARIABLEN:
        {{HAUPTLEISTUNG}}
@@ -19,10 +21,49 @@ Developer:
        {{report_date}}
 
      REGELN:
-       - Keine Rechtsberatung, nur strukturierte Information.
-       - Sachlicher, präziser Ton, keine Panikmache.
-       - Keine Platzhalterwörter („Platzhalter“, „Freitextfeld“, „TODO“).
-       - Keine Hinweise auf Fragebögen oder interne Systemlogik.
+       - Keine Rechtsberatung, nur faktenbasierte, strukturierte Information.
+       - Sachlicher, neutraler Ton.
+       - Keine Platzhalter oder Regieanweisungen im Output.
+       - Keine Hinweise auf interne Logik, Fragebögen oder Prompt-Engine.
+       - Nutze CONTEXT_BLOCK aktiv: Branchen-Workflows, Pain Points, typische Datenarten,
+         regulatorische Anforderungen – aber ohne den Block direkt zu referenzieren.
+
+     SIZE-AWARE:
+       SOLO:
+         - Fokus auf wenige Einsatzstellen, einfache Kennzeichnung, geringe Komplexität.
+         - Minimale Dokumentation, klare, pragmatische Regeln.
+       TEAM (2–10):
+         - Verantwortlichkeiten klar benennen, einfache Prozesse definieren.
+         - Konsistente Kennzeichnung bei mehreren Personen sicherstellen.
+       KMU (11–100):
+         - Schriftliche Richtlinien, feste Rollen, interne Schulungslogik.
+         - Governance & Oversight-Strukturen notwendig.
+
+     BRANCHEN-AWARE:
+       - Finanzen, Gesundheit, öffentlicher Sektor, Recht:
+           → erhöhte Anforderungen, hohe Sensibilität, strengere Dokumentation.
+       - Marketing, Kreativwirtschaft:
+           → Fokus auf Kennzeichnung & Fairness, Vermeidung irreführender Inhalte.
+       - Industrie/Produktion:
+           → Dokumentation & Human Oversight bei automatisierten Workflows.
+       - E-Commerce/Handel:
+           → Transparenz gegenüber Endkunden, Qualität der KI-generierten Inhalte.
+       - IT/Software:
+           → Modell-/Datenkontrolle, protokollierte Entwicklungsschritte.
+
+     OUTPUT-STRUKTUR:
+       <section>
+         <h2>
+         Hinweis
+         Relevanz für Branche + Leistung
+         Pflichten (Art. 5, 6, 50)
+         Weitere Anforderungen (Dokumentation, Human Oversight)
+         Branchenspezifische Besonderheiten
+         Fristen (Tabelle)
+         Was bedeutet das für diese Größe?
+         Nächste Schritte
+         Risiken bei Non-Compliance
+         Schluss
 -->
 
 <section class="section ai-act">
@@ -30,35 +71,78 @@ Developer:
 
   <p>
     <strong>Hinweis:</strong> Dieser Abschnitt stellt eine allgemeine, nicht abschließende
-    Zusammenfassung des EU AI Act dar und ersetzt keine Rechtsberatung.
-    Für verbindliche Auskünfte sollten spezialisierte Rechtsberater:innen hinzugezogen werden.
+    Übersicht über zentrale Anforderungen des EU&nbsp;AI&nbsp;Act dar. Er ersetzt keine
+    Rechtsberatung. Bei komplexen oder sensiblen Anwendungsfällen sollten spezialisierte
+    Berater:innen hinzugezogen werden.
   </p>
 
   <h3>Relevanz für „{{HAUPTLEISTUNG}}“ in der Branche {{BRANCHE_LABEL}}</h3>
   <p>
-    Nach derzeitiger Einschätzung fällt der Einsatz von KI im Bereich
-    <strong>{{HAUPTLEISTUNG}}</strong> in der Branche <strong>{{BRANCHE_LABEL}}</strong>
-    typischerweise <strong>nicht in die Hochrisiko-Kategorie</strong> gemäß Art.&nbsp;6 EU AI Act.
-    Das gilt insbesondere, wenn KI vor allem für Textgenerierung, Analysen, interne
-    Unterstützung und Dokumentation genutzt wird und keine vollautomatisierten
-    Entscheidungen über Personen (z.&nbsp;B. Kreditvergabe, Beschäftigung, Strafverfolgung)
-    getroffen werden.
-  </p>
-  <p>
-    Dennoch greifen <strong>Transparenzpflichten</strong> und Anforderungen an eine
-    sorgfältige Nutzung. Sobald KI Ergebnisse erzeugt, die gegenüber Kund:innen,
-    Partnern oder Behörden verwendet werden, ist Transparenz darüber erforderlich,
-    dass KI im Prozess mitwirkt.
+    Der Einsatz von KI im Bereich <strong>{{HAUPTLEISTUNG}}</strong> innerhalb der Branche
+    <strong>{{BRANCHE_LABEL}}</strong> fällt in der Regel <strong>nicht in die Hochrisiko-Kategorie
+    gemäß Art.&nbsp;6</strong>. Dies gilt insbesondere, wenn KI zur Textgenerierung,
+    Analyse, Wissensaufbereitung oder internen Unterstützung eingesetzt wird und keine
+    automatisierten Einzelentscheidungen über Personen erfolgen (z.&nbsp;B. Kreditvergabe,
+    medizinische Diagnosen, Personalentscheidungen).
   </p>
 
-  <h3>Relevante Pflichten nach EU AI Act (Auszug)</h3>
+  <p>
+    Dennoch greifen <strong>Transparenzpflichten</strong> und Anforderungen an eine
+    <strong>sorgfältige, nachvollziehbare Nutzung</strong>. Sobald KI Inhalte erzeugt, die
+    gegenüber Kund:innen, Behörden oder Partnern verwendet werden, muss klar erkennbar
+    sein, dass KI beteiligt war.
+  </p>
+
+  <h3>Zentrale Pflichten nach EU AI Act (Auszug)</h3>
   <ul>
-    <li><strong>Transparenz (Art.&nbsp;50):</strong> KI-generierte Inhalte müssen erkennbar gemacht werden.</li>
-    <li><strong>Dokumentation:</strong> Kurzbeschreibung, an welchen Stellen KI im Prozess eingesetzt wird.</li>
-    <li><strong>Hinweise:</strong> Verständliche Kennzeichnung in Reports, Präsentationen oder Kundenkommunikation.</li>
-    <li><strong>Human Oversight:</strong> Ergebnisse müssen weiterhin menschlich geprüft werden.</li>
-    <li><strong>Hochrisiko-Systeme (falls später relevant):</strong> würden zusätzliche Pflichten nach Art.&nbsp;9–15 auslösen
-        (Risikomanagement, Datenqualität, Überwachung, Protokollierung).</li>
+    <li><strong>Art.&nbsp;5 – Verbotene Praktiken:</strong>
+      Manipulative Systeme, ausbeuterische Designs oder biometrische Kategorisierung
+      sind klar untersagt. (Relevanz: gering, außer in stark regulierten Branchen.)</li>
+
+    <li><strong>Art.&nbsp;6 – Hochrisiko-Systeme:</strong>
+      KI-Systeme, die wesentliche Grundrechte berühren, unterliegen strengen Pflichten
+      (Datenqualität, Protokollierung, Governance). Für {{HAUPTLEISTUNG}} typischerweise
+      nicht zutreffend – außer in Branchen wie Gesundheit, Finanzen, Verwaltung.</li>
+
+    <li><strong>Art.&nbsp;50 – Transparenzpflichten:</strong>
+      KI-generierte Inhalte und automatisierte Vorschläge müssen klar erkennbar sein,
+      insbesondere wenn sie Entscheidungsgrundlagen stützen.</li>
+
+    <li><strong>Dokumentation &amp; Nachvollziehbarkeit:</strong>
+      Unternehmen müssen festhalten, wo KI eingesetzt wird, wie Ergebnisse geprüft werden
+      und welche Daten genutzt wurden.</li>
+
+    <li><strong>Human Oversight:</strong>
+      Menschen müssen kritische Ergebnisse prüfen können. Dies gilt besonders für sensible
+      Workflows (z.&nbsp;B. Finanzen, Gesundheit, behördliches Handeln).</li>
+  </ul>
+
+  <h3>Branchenspezifische Besonderheiten</h3>
+  <ul>
+    <li>
+      <strong>Gesundheit &amp; Pflege, Finanzen, Recht, öffentliche Verwaltung:</strong>
+      erhöhte Transparenz-, Dokumentations- und Prüfpflichten; sorgfältige Datenverwendung,
+      klare interne Freigaben; potenziell Nähe zu Hochrisiko-Anwendungsfällen.
+    </li>
+    <li>
+      <strong>Marketing &amp; Kreativwirtschaft:</strong>
+      Fokus auf klare Kennzeichnung, Vermeidung irreführender Inhalte, Prüfung von Assets,
+      markenkonforme Nutzung generativer KI.
+    </li>
+    <li>
+      <strong>Industrie &amp; Produktion:</strong>
+      KI-gestützte Prozessoptimierung erfordert protokollierte Nutzung und klare
+      Eingriffsmöglichkeiten; Datenqualität ist essenziell.
+    </li>
+    <li>
+      <strong>E-Commerce &amp; Handel:</strong>
+      Transparenz gegenüber Endkunden, konsistente Produkt- und Content-Darstellung.
+    </li>
+    <li>
+      <strong>IT &amp; Software:</strong>
+      Modellkontrolle, Source-Tracking, sicherer Umgang mit Trainingsdaten, Logging und
+      klare Governance-Strukturen.
+    </li>
   </ul>
 
   <h3>Wichtige Fristen</h3>
@@ -74,7 +158,7 @@ Developer:
       <tr>
         <td>02.08.2025</td>
         <td>Verbotene KI-Praktiken (Art.&nbsp;5)</td>
-        <td>Ab diesem Datum sind bestimmte Praktiken (z.&nbsp;B. manipulative Systeme) untersagt.</td>
+        <td>Ab diesem Datum sind bestimmte manipulative oder ausbeuterische KI-Praktiken verboten.</td>
       </tr>
       <tr>
         <td>02.08.2026</td>
@@ -84,45 +168,55 @@ Developer:
       <tr>
         <td>02.08.2027</td>
         <td>Transparenzpflichten (Art.&nbsp;50)</td>
-        <td>Umsetzung von Kennzeichnungspflichten für KI-generierte Inhalte.</td>
+        <td>Klare Kennzeichnung KI-generierter Inhalte wird verbindlich.</td>
       </tr>
     </tbody>
   </table>
 
   <h3>Was bedeutet das für Unternehmen Ihrer Größe?</h3>
   <p>
-    Für ein Unternehmen mit der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> steht
-    im Vordergrund, die Anforderungen pragmatisch in den Alltag zu übersetzen:
-    wenige, klar dokumentierte Einsatzstellen für KI, verständliche Hinweise und eine
-    nachvollziehbare Prüfung der Ergebnisse.
+    Für ein Unternehmen der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> steht im
+    Mittelpunkt, die Anforderungen pragmatisch und konsistent umzusetzen. Die konkreten
+    Schwerpunkte unterscheiden sich je nach Struktur:
   </p>
+
   <ul>
-    <li><strong>Sehr kleine Setups / Solo:</strong> Fokus auf einfache, wiederkehrende Hinweise
-        (z.&nbsp;B. in Angeboten oder Reports) und eine kurze Liste, wo KI genutzt wird.</li>
-    <li><strong>Kleine Teams:</strong> zusätzlich kurze Abstimmung, wer für Dokumentation und
-        Kennzeichnung verantwortlich ist, und wie im Zweifel Entscheidungen nachvollzogen werden.</li>
-    <li><strong>KMU:</strong> Ergänzend klare interne Richtlinien, wer KI einsetzen darf, wie
-        Ergebnisse geprüft werden und wie Transparenz gegenüber Kund:innen gewährleistet wird.</li>
+    <li>
+      <strong>Solo:</strong>
+      wenige Einsatzstellen klar benennen, einfache Standardhinweise formulieren,
+      Ergebnisse kurz prüfen, keine komplexen Prozesse nötig.
+    </li>
+    <li>
+      <strong>Team (2–10):</strong>
+      Verantwortlichkeiten klären (Wer prüft? Wer kennzeichnet?),
+      einheitliche interne Regeln definieren, Abstimmungen kurz halten.
+    </li>
+    <li>
+      <strong>KMU (11–100):</strong>
+      schriftliche Richtlinien für KI-Einsatz, feste Freigabeprozesse, dokumentierte
+      Rollen und interne Trainings; Governance-Elemente früh verankern.
+    </li>
   </ul>
 
   <h3>Empfohlene nächste Schritte</h3>
   <ol>
-    <li>Überblick erstellen, an welchen Stellen KI im Prozess <strong>{{HAUPTLEISTUNG}}</strong> eingesetzt wird.</li>
-    <li>Standard-Hinweistext definieren, der auf KI-Unterstützung hinweist (z.&nbsp;B. in Reports oder Präsentationen).</li>
-    <li>Kurze interne Leitlinie zur Nutzung von KI formulieren (Daten, Freigaben, Prüfung).</li>
-    <li>Regelmäßig prüfen, ob geplante Anwendungen in den Bereich „Hochrisiko-Systeme“ fallen könnten.</li>
-    <li>Optional: spezialisierte rechtliche Beratung einholen, insbesondere bei neuen, komplexeren Anwendungen.</li>
+    <li>Überblick erstellen, an welchen Stellen KI in <strong>{{HAUPTLEISTUNG}}</strong> eingesetzt wird.</li>
+    <li>Standard-Hinweistext definieren (für Reports, Kundenkommunikation, Präsentationen).</li>
+    <li>Interne Mini-Leitlinie formulieren: Daten, Prüfung, Freigaben, Einsatzgrenzen.</li>
+    <li>Potenzielle Hochrisiko-Anwendungsfälle ausschließen oder gesondert prüfen.</li>
+    <li>Für sensible Branchen: regelmäßige Datenschutz- und Compliance-Checks etablieren.</li>
   </ol>
 
   <h3>Risiken bei Non-Compliance</h3>
   <ul>
-    <li>Bußgelder im Rahmen von Art.&nbsp;99 – abhängig von Art und Schwere eines Verstoßes.</li>
-    <li>Reputationsrisiken durch unklare oder fehlende Kennzeichnung von KI-Einsatz.</li>
-    <li>Vertrauensverlust bei Kund:innen, Partnern oder Mitarbeitenden.</li>
+    <li>Bußgelder gemäß Art.&nbsp;99 (abhängig von Art und Schwere eines Verstoßes).</li>
+    <li>Reputationsrisiken bei unklarer oder fehlender Kennzeichnung von KI-Einsatz.</li>
+    <li>Vertrauensverlust bei Kund:innen, Partnern und Mitarbeitenden.</li>
+    <li>Risiken bei Audits, Förderprogrammen oder in regulierten Branchen.</li>
   </ul>
 
   <p class="small muted">
-    Stand: {{report_date}}. Der EU AI Act befindet sich teilweise noch in der Ausgestaltung;
-    Details können sich durch Durchführungsverordnungen und Leitlinien weiter präzisieren.
+    Stand: {{report_date}}. Die Ausgestaltung einzelner Anforderungen kann sich
+    durch delegierte Rechtsakte und Leitlinien weiter präzisieren.
   </p>
 </section>
