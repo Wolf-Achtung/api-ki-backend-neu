@@ -762,17 +762,28 @@ def _load_branch_benchmarks() -> Dict[str, Any]:
     return data or {}
 
 def _estimate_size_benchmark(size_label: str) -> Dict[str, int]:
+    """Estimate benchmark scores based on company size.
+    
+    Actual size categories from questionnaire:
+    - solo: 1 (Solo-Selbstständig/Freiberuflich)
+    - klein: 2-10 (Kleines Team)
+    - kmu: 11-100 (KMU)
+    """
     sl = (size_label or "").lower()
-    if "solo" in sl or "freiberuf" in sl:
+    
+    # 1 Person (Solo)
+    if "solo" in sl or "freiberuf" in sl or "selbstständig" in sl:
         return {"avg": 15, "top25": 30}
-    if "kleinst" in sl or "2-9" in sl:
+    
+    # 2-10 Personen (Kleines Team)
+    if "2" in sl or "klein" in sl or "team" in sl:
         return {"avg": 25, "top25": 45}
-    if "klein" in sl or "10-49" in sl:
-        return {"avg": 35, "top25": 55}
-    if "mittel" in sl or "50-249" in sl:
-        return {"avg": 45, "top25": 65}
-    if "groß" in sl or "250" in sl:
-        return {"avg": 55, "top25": 75}
+    
+    # 11-100 Personen (KMU)
+    if "11" in sl or "kmu" in sl or "100" in sl:
+        return {"avg": 40, "top25": 60}
+    
+    # Fallback (should rarely happen)
     return {"avg": 30, "top25": 50}
 
 def _build_benchmark_html(briefing: Dict[str, Any]) -> str:
@@ -1273,14 +1284,17 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # Both uppercase and lowercase variants for compatibility
 
     # Map unternehmensgroesse to COMPANY_SIZE for roadmap/gamechanger prompts
+    # Actual sizes from questionnaire: solo (1), klein (2-10), kmu (11-100)
     size_raw = briefing.get("unternehmensgroesse", "solo")
     size_map = {
-        "solo": "solo",
-        "klein": "team",
-        "mittel": "kmu",
-        "gross": "kmu",  # Map gross to kmu (closest match)
+        "solo": "solo",   # 1 (Solo-Selbstständig/Freiberuflich)
+        "klein": "team",  # 2-10 (Kleines Team)
+        "kmu": "kmu",     # 11-100 (KMU)
     }
-    company_size = size_map.get(size_raw, "team")
+    company_size = size_map.get(size_raw, "team")  # Fallback to "team" if unknown
+    
+    # Derive size_label (human-readable label for size)
+    size_label = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
 
     base_vars.update({
         "BRANCHE": briefing.get("branche", ""),
@@ -1288,7 +1302,8 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "BRANCHE_LABEL": briefing.get("BRANCHE_LABEL") or briefing.get("branche", ""),
         "UNTERNEHMENSGROESSE": briefing.get("unternehmensgroesse", ""),
         "unternehmensgroesse": briefing.get("unternehmensgroesse", ""),
-        "UNTERNEHMENSGROESSE_LABEL": briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", ""),
+        "UNTERNEHMENSGROESSE_LABEL": size_label,
+        "size_label": size_label,  # Consistent key for size-sensitive prompts
         "COMPANY_SIZE": company_size,  # For roadmap_90d.md and gamechanger.md
         "BUNDESLAND_LABEL": briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", ""),
         "bundesland": briefing.get("bundesland", ""),
@@ -1418,6 +1433,14 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
             "opex": opex_realistisch
         }, ensure_ascii=False, indent=2),
     })
+    
+    # Log size context for verification
+    if not base_vars.get("size_label"):
+        log.warning("⚠️ size_label not recognized, using fallback. unternehmensgroesse=%s", 
+                   briefing.get("unternehmensgroesse", "N/A"))
+    else:
+        log.debug("📊 Size context: size_label=%s, COMPANY_SIZE=%s", 
+                 base_vars.get("size_label"), base_vars.get("COMPANY_SIZE"))
     
     return base_vars
 # -------------------- 🎯 NEW: Better fallbacks when GPT fails ----------------
@@ -2485,21 +2508,38 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             log.warning("[%s] ⚠️ Sensitivity calculation failed: %s", run_id, e)
 
         # FIX: Apply calculated values to HTML sections
+        # Include both UPPERCASE (template keys) and lowercase (logical keys)
         sections_to_fix = [
             'BUSINESS_CASE_HTML',
+            'business_case',
             'LEAD_BUSINESS_DETAIL',
             'EXECUTIVE_SUMMARY_HTML',
+            'executive_summary',
             'QUICK_WINS_HTML',
+            'quick_wins',
             'PILOT_PLAN_HTML',
             'ORG_CHANGE_HTML',
+            'org_change',
             'ROADMAP_12M_HTML',
+            'roadmap_12m',
             'GAMECHANGER_HTML',
+            'gamechanger',
             'REIFEGRAD_SOWHAT_HTML',
+            'reifegrad_sowhat',
             'RECOMMENDATIONS_HTML',
+            'recommendations',
             'BUSINESS_ROI_HTML',
+            'business_roi',
             'BUSINESS_COSTS_HTML',
-            'FOERDERPOTENZIAL_HTML',  # Business-Case-Variablen auch im Förderkapitel ersetzen
-            'RESPONSIBLE_AI_HTML',  # Falls Business-Case-Variablen vorhanden sind
+            'business_costs',
+            'FOERDERPOTENZIAL_HTML',  # Business-Case-Variablen im Förderkapitel
+            'foerderpotenzial',       # Kleingeschriebene Variante
+            'RESPONSIBLE_AI_HTML',     # Falls Business-Case-Variablen vorhanden
+            'responsible_ai',
+            'TOOLS_EMPFEHLUNGEN_HTML', # Tools-Empfehlungen können BC-Kosten referenzieren
+            'tools_empfehlungen',
+            'DATA_READINESS_HTML',     # Data Readiness kann BC-Investitionen referenzieren
+            'data_readiness',
         ]
 
         # Get qw_hours_total from sections or calculate fallback
@@ -2542,6 +2582,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         }
 
         replaced_count = 0
+        replaced_sections = []
         for section_key in sections_to_fix:
             if section_key in sections and isinstance(sections[section_key], str):
                 original = sections[section_key]
@@ -2549,9 +2590,13 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
                     sections[section_key] = sections[section_key].replace(old_val, new_val)
                 if original != sections[section_key]:
                     replaced_count += 1
+                    replaced_sections.append(section_key)
 
         if replaced_count > 0:
-            log.info("[%s] 🔧 Business Case variables replaced in %s sections", run_id, replaced_count)
+            log.info("[%s] 🔧 Business Case variables replaced in %s sections: %s", 
+                     run_id, replaced_count, ", ".join(replaced_sections[:8]))
+        else:
+            log.warning("[%s] ⚠️ No Business Case replacements made - check if sections contain placeholders", run_id)
 
         sections.update(build_extra_sections(answers, scores))
 
