@@ -1,5 +1,5 @@
 Developer:
-<!-- foerderpotenzial.md – v4.0 GOLD STANDARD+ (size-aware, business-case-aware, placeholder-safe)
+<!-- foerderpotenzial.md – v5.0 GOLD STANDARD+ (size-aware, business-case-aware, placeholder-safe)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
@@ -21,15 +21,15 @@ Developer:
 
      SIZE-AWARE LOGIK (COMPANY_SIZE ∈ {"solo","team","kmu"}):
        SOLO:
-         - Fokus: niedrige Einstiegshürden, kleine Fördersummen, einfache Programme.
+         - Fokus: niedrige Einstiegshürden, kleinere Projektvolumina, einfache Programme mit klarer Struktur.
        TEAM (2–10):
          - Fokus: Prozessdigitalisierung, Weiterbildungen, leichtgewichtige Innovationsförderung.
        KMU (11–100):
-         - Fokus: strukturelle Digitalisierungs-/Investitionsförderungen, Pilot- und Skalierungsprojekte.
+         - Fokus: strukturelle Digitalisierungs-/Investitionsförderungen, Pilot- und Skalierungsprojekte mit größerem Umfang.
 
      REGELN:
        - Keine Platzhalter, keine internen Funktionshinweise im HTML.
-       - Maximal 3 Abschnitte + Hinweisfeld.
+       - Maximal 3 inhaltliche Abschnitte + Hinweisfeld.
        - Förderquoten nur als Bereiche formulieren („typischerweise 30–50 %“).
        - Sprachlich neutral, geschäftlich, ohne Werbung.
 -->
@@ -43,18 +43,25 @@ Developer:
     <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> verfügen für Vorhaben im Bereich
     <strong>{{HAUPTLEISTUNG}}</strong> häufig über gute Voraussetzungen für eine Förderung.
     Die Kombination aus Digitalisierungsfokus, KI-Unterstützung und klarer Prozessverbesserung
-    entspricht den Schwerpunkten vieler Programme auf Landes- und Bundesebene.
+    entspricht den Schwerpunkten vieler Programme auf Landes- und Bundesebene – unabhängig davon,
+    ob es sich um ein Solo-Unternehmen, ein kleines Team oder ein wachsendes KMU handelt.
   </p>
 
   <h3>Einordnung des Business Case ohne Förderung</h3>
   <p>
     Der aktuelle Business Case zeigt einmalige Investitionen von etwa
     <strong>{{CAPEX_REALISTISCH_EUR}}&nbsp;€</strong> sowie laufende Kosten von
-    <strong>{{OPEX_REALISTISCH_EUR}}&nbsp;€ pro Monat</strong>. Die erwartete monatliche
-    Entlastung liegt bei rund <strong>{{EINSPARUNG_MONAT_EUR}}&nbsp;€</strong>, was zu einer
-    Amortisationsdauer von etwa <strong>{{PAYBACK_MONTHS}} Monaten</strong> und einem
-    realistischen ROI von rund <strong>{{ROI_12M}}&nbsp;%</strong> im ersten Jahr führt.
-    Diese positive Ausgangslage lässt sich durch Förderprogramme weiter verbessern.
+    rund <strong>{{OPEX_REALISTISCH_EUR}}&nbsp;€ pro Monat</strong>. Die erwartete
+    monatliche Entlastung liegt bei ungefähr
+    <strong>{{EINSPARUNG_MONAT_EUR}}&nbsp;€</strong>, was zu einer
+    Amortisationsdauer von etwa <strong>{{PAYBACK_MONTHS}} Monaten</strong> und
+    einem realistischen ROI von rund <strong>{{ROI_12M}}&nbsp;%</strong> im ersten Jahr führt.
+  </p>
+  <p>
+    Diese Ausgangslage ist für viele Förderstellen attraktiv: Das Projekt ist betriebswirtschaftlich
+    plausibel, der Nutzen klar erkennbar und der Eigenbeitrag – je nach Unternehmensgröße –
+    grundsätzlich tragfähig. Fördermittel können diese Situation zusätzlich verbessern, indem
+    sie einen Teil der Investitionsbelastung abfedern.
   </p>
 
   <h3>Wie Fördermittel den Business Case verbessern können</h3>
@@ -62,42 +69,61 @@ Developer:
     Viele Programme in {{BUNDESLAND_LABEL}} und auf Bundesebene unterstützen KI- und
     Digitalisierungsinitiativen, indem sie einen Teil der förderfähigen Investitionskosten
     bezuschussen. Je nach Programm, Unternehmensgröße und Projektschwerpunkt bewegen sich
-    die Zuschussquoten häufig im Bereich von etwa <strong>30–50&nbsp;%</strong>. Dadurch
-    verbessern sich folgende Aspekte:
+    die Zuschussquoten typischerweise im Bereich von etwa
+    <strong>30–50&nbsp;%</strong> der anerkannten Kosten.
   </p>
 
   <ul>
-    <li><strong>Kürzere Amortisationsdauer</strong>, da weniger Eigenmittel benötigt werden.</li>
-    <li><strong>Höherer effektiver ROI</strong> bei unverändertem Nutzen.</li>
-    <li><strong>Reduziertes finanzielles Risiko</strong> für {{UNTERNEHMENSGROESSE_LABEL}}.</li>
-    <li><strong>Mehr Spielraum</strong> für zusätzliche Qualität, Sicherheit oder Schulung.</li>
+    <li>
+      <strong>Kürzere Amortisationsdauer:</strong>
+      Durch eine Beteiligung an den Investitionskosten sinkt der Eigenanteil; die Amortisation
+      kann sich deutlich verkürzen, ohne dass der erwartete Nutzen verändert wird.
+    </li>
+    <li>
+      <strong>Höherer effektiver ROI:</strong>
+      Wenn ein Teil der Investitionen über Zuschüsse abgedeckt wird, steigt der Effektiv-Ertrag
+      je eingesetztem Euro – insbesondere bei Projekten mit klarer Zeit- und Kosteneinsparung.
+    </li>
+    <li>
+      <strong>Reduziertes finanzielles Risiko:</strong>
+      Für <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> kann ein Zuschuss den Schritt in ein
+      ambitionierteres Projekt erleichtern, ohne die Liquidität unnötig zu belasten.
+    </li>
+    <li>
+      <strong>Mehr Spielraum für Qualität und Schulung:</strong>
+      Einsparungen durch Förderung können genutzt werden, um zusätzliche Maßnahmen für
+      Qualität, Sicherheit oder Qualifizierung vorzusehen.
+    </li>
   </ul>
 
   <h3>Nächste Schritte für die Förderprüfung</h3>
   <ol>
     <li>
-      1–2 passende Programme aus dem Förderkapitel auswählen, die zu
+      1–2 Programme aus dem Förderkapitel auswählen, die zu
       <strong>{{BRANCHE_LABEL}}</strong>, <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>
-      und <strong>{{HAUPTLEISTUNG}}</strong> passen.
+      und <strong>{{HAUPTLEISTUNG}}</strong> passen (z.&nbsp;B. mit Fokus auf
+      Digitalisierungsprojekte, Prozessoptimierung oder Qualifizierung).
     </li>
     <li>
       Eine kompakte Projektbeschreibung erstellen (Ziele, Maßnahmen, Zeitplan,
-      erwarteter Nutzen, grobe Kosten), die für Antragsunterlagen wiederverwendet werden kann.
+      erwarteter Nutzen, grobe Kosten), die als Grundlage für Antragsunterlagen
+      und interne Entscheidungen genutzt werden kann.
     </li>
     <li>
       Prüfen, ob Programme aus {{BUNDESLAND_LABEL}} mit Bundes- oder EU-Programmen
-      kombiniert werden dürfen (Kumulierbarkeit laut Richtlinien).
+      kombiniert werden dürfen und welche Vorgaben für Kumulierung gelten.
     </li>
     <li>
-      Optional: Austausch mit Förderberatungen oder Finanzierungspartnern, um Chancen
-      und sinnvolle Programmkombinationen einzuschätzen.
+      Optional Rücksprache mit Förderberatungen, Kammern oder Finanzierungspartnern halten,
+      um Chancen, Aufwand und sinnvolle Programmkombinationen realistisch einzuschätzen.
     </li>
   </ol>
 
   <p class="small muted">
-    Hinweis: Förderquoten, Fristen und Anforderungen können sich ändern. Die im Report
-    berücksichtigten Programme stammen aus einer zum Zeitpunkt der Erstellung aktuellen 
-    Fördermatrix 2025/2026 und müssen vor Antragstellung auf den offiziellen Programmseiten 
-    validiert werden.
+    Hinweis: Förderquoten, Fristen und Anforderungen können sich ändern. Die hier
+    beschriebenen Einschätzungen beziehen sich auf Programme, die im Rahmen einer
+    aktuellen Fördermatrix (2025/2026) berücksichtigt wurden. Vor Antragstellung
+    sollten die offiziellen Richtlinien und Konditionen der jeweiligen Programme
+    im Detail geprüft werden.
   </p>
 </section>

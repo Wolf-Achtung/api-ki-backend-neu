@@ -1,40 +1,25 @@
-Developer: <!-- gamechanger.md – v3.0 GOLD STANDARD+ (multi-size, label-basiert)
-  Antworte ausschließlich mit validem HTML.
-  KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
+Developer:
+<!-- gamechanger.md – v5.0 GOLD STANDARD+ (branch-aware, size-aware, context-integrated)
+     Antworte ausschließlich mit validem HTML.
+     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
-  ZIEL:
-  - Eine klar strukturierte "Gamechanger"-Sektion erzeugen:
-    2–3 KI-Einsatzszenarien, die das Geschäftsmodell bzw. die Wertschöpfung des
-    Unternehmens spürbar verändern können – passend zu Branche, Größe und Reifegrad.
+     ZIEL:
+       - 2–3 realistische Gamechanger für {{HAUPTLEISTUNG}}.
+       - Basierend auf: Branche, Größe, strategische Ziele, Vision, Geschäftsmodellentwicklung.
+       - Jeder Gamechanger = klarer, konkreter Wertschöpfungshebel + erster Schritt.
 
-  VERFÜGBARE VARIABLEN (bereits aufbereitete Labels/Freitexte):
-  - {{BRANCHE_LABEL}}                → z. B. "Beratung & Dienstleistungen"
-  - {{UNTERNEHMENSGROESSE_LABEL}}    → z. B. "1 (Solo)", "2–10 (Kleines Team)", "11–100 (KMU)"
-  - {{HAUPTLEISTUNG}}                → Hauptleistung / Angebotsfokus in Klartext
-  - {{STRATEGISCHE_ZIELE}}           → Freitext: wichtigste KI-/Digitalziele
-  - {{GESCHAEFTSMODELL_EVOLUTION}}   → Freitext: Wie sich das Geschäftsmodell entwickeln soll
-  - {{VISION_3_JAHRE}}               → Freitext: Vision/Positionierung in 3 Jahren
-  - {{ZEITERSPARNIS_PRIORITAET}}     → Freitext: Relevanz von Zeit-/Aufwandseinsparung
+     SIZE-LOGIK (UNTERNEHMENSGROESSE_LABEL):
+       SOLO:
+         - Fokus: Automatisierung, persönliche Entlastung, skalierbare Vorlagen.
+         - Keine Teams, keine Abteilungen.
+       TEAM (2–10):
+         - Fokus: arbeitsteilige Workflows, Rollen, einfache Governance.
+       KMU (11–100):
+         - Fokus: skalierbare Prozesse, klare Verantwortlichkeiten, Pilotbereiche.
 
-  GRÖSSENLOGIK (UNTERNEHMENSGROESSE_LABEL):
-  - Enthält "1 (Solo":
-      * Fokus: Inhaber:in / Solo-Unternehmer:in.
-      * Sprache: "Ihr Unternehmen" / "Sie", keine "Abteilungen" oder "Teams".
-      * Gamechanger = hochautomatisierte Workflows, Entlastung, Standardisierung.
-  - Enthält "2–10":
-      * Fokus: kleines Kernteam, Rollen sind oft Mehrfachfunktionen.
-      * Sprache: "Ihr Team" / "Ihr Unternehmen", "klare Zuständigkeiten".
-      * Gamechanger = skalierbare Workflows, arbeitsteilige Prozesse, Basis-Governance.
-  - Enthält "11–100":
-      * Fokus: KMU mit mehreren Bereichen / Standorten.
-      * Sprache: "das Unternehmen", "Teams/Abteilungen", "Pilotbereiche" und "Rollout".
-      * Gamechanger = skalierte KI-Workflows, konsistente Governance, integrierte Datenbasis.
-
-  ALLGEMEINE REGELN:
-  - Keine Pseudo- oder Lückenfüllertexte wie "Text wird noch ergänzt" etc.
-  - Keine Hinweise auf Fragebögen, Freitextfelder oder interne Systemlogik.
-  - Formuliere so, als würdest du das Unternehmen direkt beraten – konkret, umsetzbar.
-  - Maximal 3 Gamechanger; jeder mit klar benanntem Nutzen und erstem Schritt.
+     BRANCHEN-LOGIK:
+       - Nutzt typische branchenspezifische Workflows, Pain Points, Daten & Tools aus CONTEXT_BLOCK.
+       - Keine erfundenen Daten; rein generische Trends & Muster.
 -->
 
 <section class="section gamechanger">
@@ -42,49 +27,103 @@ Developer: <!-- gamechanger.md – v3.0 GOLD STANDARD+ (multi-size, label-basier
 
   <p>
     Für ein Unternehmen in der Branche <strong>{{BRANCHE_LABEL}}</strong> mit der Größe
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> und dem Leistungsschwerpunkt
-    <strong>{{HAUPTLEISTUNG}}</strong> lassen sich mehrere KI-Einsatzszenarien identifizieren,
-    die das Geschäftsmodell in den nächsten Jahren spürbar verändern können.
-  </p>
-
-  <p>
-    Die folgenden Gamechanger-Vorschläge knüpfen an Ihre strategischen Ziele
-    (z.&nbsp;B. {{STRATEGISCHE_ZIELE}}) und Ihre mittelfristige Entwicklung
-    ({{GESCHAEFTSMODELL_EVOLUTION}} / {{VISION_3_JAHRE}}) an. Sie sind so formuliert,
-    dass sie zu den typischen Ressourcen und Entscheidungswegen eines
-    {{UNTERNEHMENSGROESSE_LABEL}}-Unternehmens passen.
+    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> und dem Schwerpunkt
+    <strong>{{HAUPTLEISTUNG}}</strong> ergeben sich mehrere KI-Szenarien, die die
+    Wertschöpfung in den kommenden Jahren spürbar verändern können. Die folgenden
+    Vorschläge knüpfen direkt an Ihre strategischen Ziele
+    ({{STRATEGISCHE_ZIELE}}) sowie die geplante Weiterentwicklung des Geschäftsmodells
+    ({{GESCHAEFTSMODELL_EVOLUTION}}) und Ihre Vision für die nächsten drei Jahre
+    ({{VISION_3_JAHRE}}) an.
   </p>
 
   <ol class="gamechanger-list">
-    <!-- Erzeuge 2–3 Listeneinträge nach folgendem Muster.
-         Passe Formulierungen an die Unternehmensgröße an (Solo / Team / KMU). -->
 
-    <!--
+    <!-- GAMECHANGER 1 -->
     <li>
-      <h3>{{Titel des Gamechangers}}</h3>
-      <p><strong>Kernidee:</strong> {{1–2 Sätze, wie KI das Geschäftsmodell verändert}}</p>
-      <p><strong>Betroffene Wertschöpfung:</strong> {{z. B. Angebotsentwicklung, Vertrieb, Delivery, Betreuung}}</p>
-      <p><strong>Nutzen:</strong> {{konkreter Geschäftsnutzen – z. B. mehr Kapazität, bessere Margen, neue Produkte}}</p>
-      <p><strong>Voraussetzungen:</strong> {{Daten, Tools, Kompetenzen – knapp und realistisch für die Unternehmensgröße}}</p>
-      <p><strong>Erster Schritt in den nächsten 90 Tagen:</strong> {{sehr konkreter Startpunkt, z. B. Pilot, Workflow, Experiment}}</p>
+      <h3>1. KI-gestützte Standardisierung & Automatisierung zentraler Kernprozesse</h3>
+      <p><strong>Kernidee:</strong>
+        Wiederkehrende Aufgaben in {{HAUPTLEISTUNG}} werden über KI-gestützte Vorlagen,
+        Automatisierungen und strukturierte Entscheidungswege so standardisiert, dass
+        Qualität und Geschwindigkeit deutlich steigen.
+      </p>
+      <p><strong>Betroffene Wertschöpfung:</strong>
+        Erstellung, Analyse, interne Abstimmungen, Kundendokumentation.
+      </p>
+      <p><strong>Nutzen:</strong>
+        Weniger manuelle Routinearbeit, stabilere Ergebnisse und eine konsistente
+        Kundenerfahrung – unabhängig von Tagesform oder Auslastung.
+      </p>
+      <p><strong>Voraussetzungen:</strong>
+        5–10 typische Beispiele, definierte Qualitätskriterien, klare Input-Regeln;
+        {% if UNTERNEHMENSGROESSE_LABEL.startswith("1") %}persönliche Routinen{% elif UNTERNEHMENSGROESSE_LABEL.startswith("2") %}Teamrollenzuordnung{% else %}beteiligte Fachbereiche{% endif %}.
+      </p>
+      <p><strong>Erster Schritt in den nächsten 90 Tagen:</strong>
+        Einen priorisierten Teilprozess auswählen und mit KI-Vorlagen + Review-Schritten
+        als Mini-Pilot stabilisieren.
+      </p>
     </li>
-    -->
+
+    <!-- GAMECHANGER 2 -->
+    <li>
+      <h3>2. Aufbau eines KI-gestützten Wissenspools für Entscheidungen & Angebotserstellung</h3>
+      <p><strong>Kernidee:</strong>
+        Zentrale Informationen, Beispiele, Best Practices und interne Expertise werden
+        KI-unterstützt gebündelt, sodass Recherchen, Angebotsprozesse oder Analysen
+        deutlich schneller und konsistenter erfolgen.
+      </p>
+      <p><strong>Betroffene Wertschöpfung:</strong>
+        Angebotsentwicklung, Planung, interne Abstimmungen, Wissenstransfer.
+      </p>
+      <p><strong>Nutzen:</strong>
+        Weniger Suchaufwand, deutliche Zeitersparnis, bessere Entscheidungsqualität und
+        höherer Wiedererkennungswert für Kund:innen.
+      </p>
+      <p><strong>Voraussetzungen:</strong>
+        Strukturierte Beispiele und interne Inhalte; kurze Regeln für Qualität und
+        Aktualisierung; {% if COMPANY_SIZE == "solo" %}persönliche Sortierung{% elif COMPANY_SIZE == "team" %}Teamabstimmung{% else %}bereichsübergreifende Koordination{% endif %}.
+      </p>
+      <p><strong>Erster Schritt in den nächsten 90 Tagen:</strong>
+        10–15 reale Inhalte bündeln, erste KI-gestützte Zusammenfassungen erzeugen und
+        diese als Wissensbasis in den Arbeitsalltag integrieren.
+      </p>
+    </li>
+
+    <!-- GAMECHANGER 3 -->
+    <li>
+      <h3>3. KI-basierte Qualitätssicherung & konsistente Kundenergebnisse</h3>
+      <p><strong>Kernidee:</strong>
+        Qualität, Präzision und Konsistenz werden über KI-gestützte Prüfmechanismen
+        verbessert, die branchenspezifische Anforderungen berücksichtigen
+        (z.&nbsp;B. Tonalität, Struktur, Vollständigkeit, Risiken, sensible Inhalte).
+      </p>
+      <p><strong>Betroffene Wertschöpfung:</strong>
+        Kundenkommunikation, inhaltliche Produktion, interne Reviews, finaler Output.
+      </p>
+      <p><strong>Nutzen:</strong>
+        Weniger Fehler, weniger Korrekturschleifen und eine deutlich höhere
+        Ersttrefferquote – besonders relevant bei Zeitdruck oder hoher Auslastung.
+      </p>
+      <p><strong>Voraussetzungen:</strong>
+        5–7 klare Prüfkriterien, einheitliche Vorlagen, definierte Eskalationslogik;
+        {% if COMPANY_SIZE == "solo" %}persönliche Routine{% elif COMPANY_SIZE == "team" %}Review-Rollen{% else %}Qualitätssicherung + Fachbereiche{% endif %}.
+      </p>
+      <p><strong>Erster Schritt in den nächsten 90 Tagen:</strong>
+        Eine KI-gestützte Mini-Checkliste einführen und bei jedem Output anwenden,
+        bevor Ergebnisse intern oder extern genutzt werden.
+      </p>
+    </li>
+
   </ol>
 
   <h3>Was diese Gamechanger gemeinsam haben</h3>
   <ul>
-    <li>Sie bauen auf bestehenden Stärken von {{HAUPTLEISTUNG}} auf, statt ein komplett neues Geschäft zu erfinden.</li>
-    <li>Sie berücksichtigen typische Ressourcen und Entscheidungswege eines {{UNTERNEHMENSGROESSE_LABEL}}-Unternehmens.</li>
-    <li>Sie lassen sich zunächst als Pilot mit überschaubarem Risiko testen und bei Erfolg ausbauen.</li>
+    <li>Sie bauen auf bestehenden Stärken von {{HAUPTLEISTUNG}} auf und verstärken diese mit KI.</li>
+    <li>Sie berücksichtigen die Ressourcen und Entscheidungswege eines {{UNTERNEHMENSGROESSE_LABEL}}-Unternehmens.</li>
+    <li>Sie lassen sich mit überschaubarem Risiko pilotieren und bei Erfolg schrittweise skalieren.</li>
   </ul>
 
   <p class="small muted">
-    Die Gamechanger sind als strategische Leitplanken gedacht. Nutzen Sie Quick Wins,
-    Pilotprojekte und Business Cases, um die wirkungsvollsten Ideen schrittweise umzusetzen.
+    Die Gamechanger dienen als strategische Leitplanken und unterstützen Ihr Unternehmen
+    dabei, von ersten KI-Schritten hin zu nachhaltiger, skalierbarer Wertschöpfung zu kommen.
   </p>
 </section>
-
-<!-- Output-Umfang:
-     - 2–3 Gamechanger-Einträge, jeweils max. 2 Sätze pro Absatzfeld.
-     - Kurze, klare Formulierungen ohne Fachjargon, der nicht erklärt wird.
-     - Schreibe direkt die fertigen Inhalte, keine Entwürfe oder Meta-Hinweise. -->

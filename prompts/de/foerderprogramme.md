@@ -1,16 +1,16 @@
 Developer:
-<!-- foerderprogramme.md – v3.0 GOLD STANDARD+ (förderlogik, size-aware, placeholder-safe)
+<!-- foerderprogramme.md – v5.0 GOLD STANDARD+ (förderlogik, size-aware, placeholder-safe)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
      ZIEL:
-       - Erzeuge einen klaren Abschnitt über relevante Förderprogramme für KI-/Digitalisierungsprojekte.
+       - Qualitative Einschätzung des Förderpotenzials für ein KI-/Digitalisierungsprojekt.
        - Nutze ausschließlich das aus der Research-Pipeline gelieferte {{FOERDERPROGRAMME_HTML}}.
        - Keine eigenen Programme, Zahlen oder Fördersätze erfinden.
 
      PFLICHTVARIABLEN:
        - {{FOERDERPROGRAMME_HTML}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}
-       - Falls eine dieser Variablen nicht existiert oder leer ist: 
+       - Falls eine dieser Variablen nicht existiert oder leer ist:
            Gib ausschließlich aus:
            <p class="error">Fehlende oder leere Pflichtfelder: {{Namen_der_leeren_Variablen}}.</p>
            und KEINEN weiteren Inhalt.
@@ -33,7 +33,6 @@ Developer:
 
      HTML-STRUKTUR (genau ein <section>-Block):
        <section class="section funding"> … </section>
-
 -->
 
 <section class="section funding">
@@ -42,27 +41,63 @@ Developer:
   <p>
     Für Unternehmen der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> in der Branche
     <strong>{{BRANCHE_LABEL}}</strong> können Förderprogramme einen wichtigen Beitrag leisten,
-    um die Einführung und Weiterentwicklung von KI-Projekten effizienter und wirtschaftlich
-    zu gestalten. Die folgenden Programme stammen direkt aus der aktuellen Förderrecherche
-    und berücksichtigen regionale sowie thematische Förderprioritäten.
+    um KI- und Digitalisierungsprojekte wirtschaftlich abzusichern. Je nach Unternehmensgröße
+    reichen die Möglichkeiten von Einstiegs- und Beratungsprogrammen über Zuschüsse für
+    Prozessdigitalisierung bis hin zu größeren Investitions- und Kooperationsvorhaben.
   </p>
 
   <h3>Ausgewählte Programme im Überblick</h3>
+  <p>
+    Die folgenden Programme stammen direkt aus der aktuellen Förderrecherche und berücksichtigen
+    regionale sowie thematische Förderprioritäten. Es werden ausschließlich Programme und Angaben
+    verwendet, die in der zugrunde liegenden Recherche erfasst sind:
+  </p>
   {{FOERDERPROGRAMME_HTML}}
 
   <h3>Was das für Ihren Business Case bedeutet</h3>
   <p>
-    Eine passende Förderung kann die anfänglichen Investitionskosten reduzieren und den
-    in Ihrem Business Case beschriebenen Payback beschleunigen. Je nach Programm kann dies
-    beispielsweise Beratungsleistungen, Qualifizierungsprojekte oder technologiebezogene
-    Investitionen betreffen. Die genaue Förderquote hängt jedoch vom jeweiligen Programmstand
-    sowie individuellen Kriterien ab und muss vor Antragstellung geprüft werden.
+    Eine passende Förderung kann die im Business Case dargestellten Investitionskosten reduzieren
+    und die Amortisation des Projekts beschleunigen. Für <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>
+    bedeutet dies konkret:
+  </p>
+  <ul>
+    <li>Solo-Unternehmen: geringere Einstiegshürden und Entlastung bei Beratungs- oder Setup-Kosten.</li>
+    <li>Kleine Teams: Unterstützung bei Prozessdigitalisierung, Schulungen und Pilotprojekten.</li>
+    <li>KMU: zusätzliche Spielräume für strukturelle Investitionen, Pilotflächen und Skalierungsprojekte.</li>
+  </ul>
+  <p>
+    Die tatsächliche Förderquote hängt vom jeweiligen Programm, den konkreten Projektinhalten
+    und den Antragsvoraussetzungen ab und muss vor Antragstellung im Detail geprüft werden.
+    Typische Zuschussbereiche liegen – je nach Programm – im Spektrum von etwa
+    <strong>30–50&nbsp;%</strong> der förderfähigen Ausgaben, ohne dass hier neue Zahlen
+    oder Programme ergänzt werden.
   </p>
 
   <h3>Nächste Schritte</h3>
   <ul>
-    <li>Kurzfristig: Fördercheck durchführen, bereitgestellte Unterlagen sichten und mögliche Fristen prüfen.</li>
-    <li>Mittelfristig: Ein potenziell förderfähiges Vorhaben definieren, etwa ein klar abgegrenzter KI-Pilot.</li>
-    <li>Optional: Austausch mit regionalen Beratungsstellen oder zuständigen Ansprechpersonen zur Finalisierung der Unterlagen.</li>
+    <li>
+      Einen strukturierten Fördercheck durchführen: Programme aus der Übersicht mit
+      <strong>{{BRANCHE_LABEL}}</strong> und <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>
+      abgleichen und Fristen sowie Fördergegenstände prüfen.
+    </li>
+    <li>
+      Ein förderfähiges Vorhaben definieren – idealerweise ein klar abgegrenzter KI-Pilot
+      oder ein Digitalisierungsprojekt im Kernprozess <strong>{{HAUPTLEISTUNG}}</strong>.
+    </li>
+    <li>
+      Eine kompakte Projektbeschreibung erstellen (Ziele, Maßnahmen, Zeitplan, erwarteter
+      Nutzen, grobe Kosten), die als Grundlage für Antragsunterlagen dienen kann.
+    </li>
+    <li>
+      Optional den Austausch mit regionalen Beratungsstellen oder zuständigen Ansprechpersonen suchen,
+      um Förderfähigkeit, Kombinationsmöglichkeiten und Aufwand realistisch einzuschätzen.
+    </li>
   </ul>
+
+  <p class="small muted">
+    Hinweis: Förderquoten, Fristen und inhaltliche Schwerpunkte der Programme können sich ändern.
+    Die hier dargestellte Übersicht basiert auf einer zum Zeitpunkt der Report-Erstellung
+    aktuellen Förderrecherche und sollte vor Antragstellung stets mit den offiziellen
+    Programmunterlagen abgeglichen werden.
+  </p>
 </section>

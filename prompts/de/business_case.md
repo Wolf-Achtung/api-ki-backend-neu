@@ -61,7 +61,7 @@ Developer:
     Für <strong>{{COMPANY_SIZE}}</strong> gilt: Je stärker der Prozess
     <strong>{{HAUPTLEISTUNG}}</strong> auf wiederkehrenden, standardisierbaren Aufgaben beruht,
     desto schneller wirkt sich die Investition aus. Bei konsequenter Nutzung verkürzt sich die
-    Amortisation spürbar; bei geringer Auslastung verlängert sie sich entsprechend.
+    Amortisation spürbar; bei geringerer Auslastung verlängert sie sich entsprechend.
   </p>
 
   <h3>Verbindung zu Fördermöglichkeiten (qualitativ)</h3>

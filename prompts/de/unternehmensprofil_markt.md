@@ -1,14 +1,14 @@
 Developer:
-<!-- unternehmensprofil_markt.md – v4.0 GOLD STANDARD+ (size-aware, branch-aware, validator-safe)
+<!-- unternehmensprofil_markt.md – v5.0 GOLD STANDARD+ (branch-aware, size-aware, context-integrated)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
      ZWECK:
-       - Präzises Unternehmensprofil
-       - Kompakter Marktkontext (nur aus CONTEXT_BLOCK generisch!)
-       - Branchenbezogene KI-Potenziale
-       - Wettbewerbsposition abhängig von Unternehmensgröße
-       - Keine erfundenen Daten; nichts konkretisieren, was nicht im Kontext steht
+       - Präzises Unternehmensprofil (Branche, Größe, Standort, Hauptleistung, Geschäftsmodell).
+       - Kompakter, generischer Marktkontext NUR aus CONTEXT_BLOCK (keine Halluzination).
+       - Branchenbezogene KI-Potenziale (2–4 typische Use-Cases).
+       - Wettbewerbsposition abhängig von Unternehmensgröße (solo/team/kmu).
+       - Keine erfundenen Zahlen, Namen, Marktanteile oder konkreten Wettbewerber.
 
      PFLICHTVARIABLEN:
        {{BRANCHE_LABEL}}
@@ -17,37 +17,49 @@ Developer:
        {{HAUPTLEISTUNG}}
        {{GESCHAEFTSMODELL_EVOLUTION}}
 
+     WENN EINE PFLICHTVARIABLE LEER ODER OFFENSICHTLICH FEHLERHAFT IST:
+       - GIB AUSSCHLIESSLICH FOLGENDES AUS:
+         <p class="error">Fehlende oder leere Pflichtfelder im Unternehmensprofil &amp; Marktkontext.</p>
+       - KEINE WEITEREN TEXTE ODER BLÖCKE AUSGEBEN.
+
      RESEARCH-CONTEXT (CONTEXT_BLOCK):
-       - NUR allowed: generische Branchentrends, typische Pain Points, typische Workflows, typische Tools
-       - Niemals user-spezifische Daten halluzinieren
-       - Wenn Context-Infos fehlen oder leer sind → „Nicht angegeben“
+       - GENERISCHE INFORMATIONEN ERLAUBT:
+         - Branchentrends
+         - Typische Pain Points
+         - Typische Workflows
+         - Typische Tools
+       - NICHT ERLAUBT:
+         - Konkrete Marktanteile, Umsätze, Namen von Wettbewerbern
+         - Exakte Wachstumsraten, exakte KI-Adoptionsquoten
+       - WENN keine ausreichenden Infos vorhanden sind:
+         - Schreibe „Nicht angegeben“ an der passenden Stelle.
 
-     SIZE-AWARE-LOGIK (über PromptEnhancer: COMPANY_SIZE ∈ {"solo","team","kmu"}):
+     SIZE-AWARE-LOGIK (COMPANY_SIZE ∈ {"solo","team","kmu"}):
        SOLO:
-         - Fokus: Schnelligkeit, Flexibilität, persönliche Entscheidung
-         - Herausforderungen: Kapazität, Priorisierung
-         - KI-Hebel: Automatisierung & Assistenzen
+         - Fokus: Schnelligkeit, Flexibilität, persönliche Entscheidung.
+         - Herausforderungen: Kapazität, Priorisierung, Abhängigkeit von einer Person.
+         - KI-Hebel: persönliche Automatisierung, Assistenzen, Vorlagen.
+
        TEAM (2–10):
-         - Fokus: kollaborative Arbeitsweise, geteiltes Wissen, klare Verantwortlichkeiten
-         - Herausforderungen: Ressourcenknappheit, Prioritätenabgleich
-         - KI-Hebel: Wissensmanagement, Templates, vereinheitlichte Workflows
+         - Fokus: kollaborative Arbeitsweise, geteiltes Wissen, klare Verantwortlichkeiten.
+         - Herausforderungen: Ressourcenknappheit, Prioritätenabgleich, Abstimmung.
+         - KI-Hebel: Wissensmanagement, Templates, vereinheitlichte Workflows, gemeinsame Standards.
+
        KMU (11–100):
-         - Fokus: skalierbare Prozesse, mehrere Bereiche, strukturierte Abläufe
-         - Herausforderungen: Koordination, Daten-Silos, interne Abstimmung
-         - KI-Hebel: datengetriebene Entscheidungen, Skalierung, Governance
+         - Fokus: skalierbare Prozesse, mehrere Bereiche, strukturierte Abläufe.
+         - Herausforderungen: Koordination, Daten-Silos, interne Abstimmung, Governance.
+         - KI-Hebel: datengetriebene Entscheidungen, Skalierung, Richtlinien & Governance.
 
-     REGELN:
-       - Keine Platzhalter im sichtbaren Output (keine [Beispiele], keine TODOs).
-       - Wenn eine Pflichtvariable leer ist: NUR <p class="error">Fehlende oder leere Pflichtfelder: …</p>
-       - Reihenfolge der Blöcke NICHT ändern.
-       - Exakt ein <section>-Block.
-       - Ausgabe ausschließlich als finaler Kundentext.
+     AUSGABEREGELN:
+       - Exakt ein <section>-Block mit folgenden Blöcken in dieser Reihenfolge:
+         1) Unternehmensprofil
+         2) Marktkontext & Trends
+         3) KI-Potenzial
+         4) Wettbewerbsposition
+       - KEINE Platzhaltertexte im sichtbaren Output (z. B. „Titel …“, „Beispiel …“).
+       - Kein Verweis auf CONTEXT_BLOCK oder interne Logik.
+       - Ton: nüchtern, sachlich, strategisch, gut lesbar für Geschäftsführung.
 
-     MODELL-ANWEISUNG FÜR DYNAMISCHE TEILE:
-       - Branchentrends: wähle 2–3 typische Trends aus CONTEXT_BLOCK → falls leer: „Nicht angegeben“.
-       - Marktkennzahlen (Wachstum, KI-Adoption etc.): ebenfalls aus CONTEXT_BLOCK → falls leer: „Nicht angegeben“.
-       - KI-Use-Cases: 2–3 typische Use Cases der Branche generieren (generisch!), basierend auf CONTEXT_BLOCK.
-       - Wettbewerbsvorteile/-nachteile/-Hebel gemäß SIZE-AWARE-LOGIK formulieren.
 -->
 
 <section class="section unternehmensprofil-markt">
@@ -62,8 +74,8 @@ Developer:
       <li><strong>Hauptleistung:</strong> {{HAUPTLEISTUNG}}</li>
       <li>
         <strong>Geschäftsmodell:</strong>
+        <!-- Geschäftsmodell-Evolution: falls leer oder „Nicht angegeben“ → neutral formulieren -->
         {{GESCHAEFTSMODELL_EVOLUTION}}
-        <em>(falls „Nicht angegeben“, bitte entsprechend ausgeben)</em>
       </li>
     </ul>
   </div>
@@ -72,28 +84,34 @@ Developer:
     <h3>Marktkontext &amp; Trends ({{BRANCHE_LABEL}})</h3>
 
     <p>
-      Die Branche <strong>{{BRANCHE_LABEL}}</strong> ist aktuell geprägt durch:
-      <span class="trends">{{TRENDS_AUS_CONTEXT}}</span>
+      Die Branche <strong>{{BRANCHE_LABEL}}</strong> ist derzeit geprägt von einigen
+      wiederkehrenden Entwicklungen, die auch den Einsatz von KI im Bereich
+      <strong>{{HAUPTLEISTUNG}}</strong> beeinflussen. Dazu zählen je nach Informationslage
+      verstärkte Digitalisierung, steigende Erwartungen an Qualität und Geschwindigkeit sowie
+      ein wachsender Druck, Prozesse effizienter und datenbasierter zu gestalten.
+      Wo keine zuverlässigen Angaben vorliegen, gelten Trends als <em>nicht angegeben</em>.
     </p>
 
     <ul>
-      <li><strong>Marktwachstum:</strong> <span class="marktwachstum">{{MARKTWACHSTUM_AUS_CONTEXT}}</span></li>
-      <li><strong>KI-Adoption:</strong> <span class="ki-adoption">{{KI_ADOPTION_AUS_CONTEXT}}</span></li>
-      <li><strong>Haupttreiber:</strong> <span class="haupttreiber">{{HAUPTTREIBER_AUS_CONTEXT}}</span></li>
-      <li><strong>Herausforderungen:</strong> <span class="herausforderungen">{{HERAUSFORDERUNGEN_AUS_CONTEXT}}</span></li>
+      <li><strong>Marktdynamik:</strong> Wenn Branchendaten im Kontext vorliegen, beschreibe kurz, ob der Markt eher stabil, wachsend oder im Umbruch ist; sonst: <em>Nicht angegeben</em>.</li>
+      <li><strong>KI-Adoption:</strong> Typischerweise steigt der Einsatz von KI in {{BRANCHE_LABEL}} in Bereichen wie Analyse, Textproduktion, Support oder Entscheidungsunterstützung – ohne konkrete Prozentangaben; falls keine Angaben vorliegen: <em>Nicht angegeben</em>.</li>
+      <li><strong>Haupttreiber:</strong> Branchentypische Treiber sind z.&nbsp;B. Kostendruck, Fachkräftemangel, steigende Qualitätsanforderungen oder regulatorische Vorgaben; falls keine Infos im Kontext: <em>Nicht angegeben</em>.</li>
+      <li><strong>Herausforderungen:</strong> Häufige Herausforderungen umfassen Datenqualität, Schnittstellen zwischen Systemen, begrenzte interne Ressourcen oder Unsicherheit bezüglich Regulierung; falls nicht belegt: <em>Nicht angegeben</em>.</li>
     </ul>
   </div>
 
   <div class="ki-potenzial">
     <h3>KI-Potenzial für {{BRANCHE_LABEL}}</h3>
     <p>
-      Typische KI-Anwendungsfälle ergeben sich aus branchenspezifischen Routinen und häufigen
-      Pain Points im Prozess <strong>{{HAUPTLEISTUNG}}</strong>. Dazu zählen:
+      Aus den typischen Workflows und Pain Points der Branche <strong>{{BRANCHE_LABEL}}</strong>
+      ergeben sich mehrere generische Anwendungsfelder für KI im Prozess
+      <strong>{{HAUPTLEISTUNG}}</strong>. Sie lassen sich ohne detailliertes Spezialwissen
+      ableiten und dienen als Orientierung für den weiteren Ausbau.
     </p>
     <ul>
-      <li>{{KI_USE_CASE_1}}</li>
-      <li>{{KI_USE_CASE_2}}</li>
-      <li>{{KI_USE_CASE_3}}</li>
+      <li>Unterstützung bei wiederkehrenden Aufgaben wie Entwürfen, Zusammenfassungen oder Standardanalysen, um Zeit zu sparen und Qualität zu stabilisieren.</li>
+      <li>Strukturierung und Verdichtung vorhandener Informationen, z.&nbsp;B. aus E-Mails, Dokumenten, Protokollen oder Fachsystemen, um Entscheidungen besser vorzubereiten.</li>
+      <li>Qualitäts- und Konsistenzprüfungen von Texten, Daten oder Berichten, orientiert an branchentypischen Anforderungen und internen Standards.</li>
     </ul>
   </div>
 
@@ -101,21 +119,41 @@ Developer:
     <h3>Wettbewerbsposition</h3>
     <p>
       Unternehmen der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> in der Branche
-      <strong>{{BRANCHE_LABEL}}</strong> weisen im Marktumfeld häufig folgende Merkmale auf:
+      <strong>{{BRANCHE_LABEL}}</strong> bewegen sich häufig zwischen spezialisierten
+      Nischenanbietern und größeren Marktteilnehmern. Die Rolle von KI hängt dabei stark
+      von der Organisationsstruktur und den verfügbaren Kapazitäten ab.
     </p>
 
     <ul>
       <li>
         <strong>Vorteil:</strong>
-        <span class="vorteil">{{WETTBEWERBSVORTEIL_SIZE_AWARE}}</span>
+        {% if COMPANY_SIZE == "solo" %}
+          Hohe Flexibilität und schnelle Entscheidungen; Anpassungen im KI-Einsatz können ohne lange Abstimmung direkt umgesetzt werden.
+        {% elif COMPANY_SIZE == "team" %}
+          Kurze Wege und gemeinsame Verantwortung; neue KI-Workflows können im Team erprobt und schrittweise verfeinert werden.
+        {% else %}
+          Größeres Skalierungspotenzial und mehr Ressourcen; KI-Lösungen können in mehreren Bereichen ausgerollt und systematisch verankert werden.
+        {% endif %}
       </li>
       <li>
         <strong>Nachteil:</strong>
-        <span class="nachteil">{{WETTBEWERBSNACHTEIL_SIZE_AWARE}}</span>
+        {% if COMPANY_SIZE == "solo" %}
+          Begrenzte Zeit und Kapazität; ohne klare Priorisierung bleibt das Potenzial von KI oft ungenutzt.
+        {% elif COMPANY_SIZE == "team" %}
+          Abstimmungsaufwand und Ressourcenknappheit; ohne klare Rollen kann KI im Tagesgeschäft untergehen.
+        {% else %}
+          Koordinationsaufwand zwischen Teams und Daten-Silos; ohne Governance drohen inkonsistente Lösungen und doppelte Strukturen.
+        {% endif %}
       </li>
       <li>
         <strong>KI-Hebel:</strong>
-        <span class="ki-hebel">{{KI_HEBEL_SIZE_AWARE}}</span>
+        {% if COMPANY_SIZE == "solo" %}
+          Fokussierte Automatisierung wiederkehrender Aufgaben und der Aufbau persönlicher, KI-gestützter Routinen, die schnell spürbare Entlastung bringen.
+        {% elif COMPANY_SIZE == "team" %}
+          Gemeinsame Templates, einheitliche Workflows und Wissensmanagement, damit alle Beteiligten KI ähnlich nutzen und voneinander lernen.
+        {% else %}
+          Etablierung standardisierter Prozesse, datengetriebener Entscheidungen und klarer Richtlinien, um KI in mehreren Bereichen konsistent zu skalieren.
+        {% endif %}
       </li>
     </ul>
   </div>

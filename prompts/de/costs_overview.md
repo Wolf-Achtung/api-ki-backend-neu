@@ -1,61 +1,84 @@
 Developer:
-<!-- costs_overview.md – v3.2 GOLD STANDARD+ (CFO-Level Cost Breakdown, size-aware)
+<!-- costs_overview.md – v4.0 GOLD STANDARD+ (CFO-Level Cost Breakdown, size- & branch-aware)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
      ZWECK:
        - Ergänzung zum Business Case, aber OHNE Wiederholung seiner Inhalte.
-       - Detaillierte, transparente Breakdown-Darstellung für CFO/Controlling/Procurement.
-       - Tool-by-Tool Liste, versteckte Kosten, Optimierungspotenziale – skaliert nach Unternehmensgröße.
+       - Branchen- und größenabhängige Kostendynamiken klar benennen.
+       - CFO- und kaufmännisch verwertbare Struktur liefern (Transparenz + Steuerungshebel).
+       - Nutzung der Daten aus dem CONTEXT_BLOCK (branch + size), den der PromptEnhancer injiziert.
 
-     VERFÜGBARE VARIABLEN:
+     VARIABLEN:
        - {{BRANCHE_LABEL}}
        - {{UNTERNEHMENSGROESSE_LABEL}}
+       - {{HAUPTLEISTUNG}}
 
      VERBOTEN:
-       - Wiederholung des Business Case (keine erneute ROI-Berechnung).
-       - Textfragmente wie „Platzhalter“, „Freitextfeld“, „TODO“.
-       - Unstrukturierte Ausgaben (alles muss in <section>, Tabellen oder Listen stehen).
+       - Wiederholung des Business Case (keine ROI-/Payback-Berechnung).
+       - Regieanweisungen, Platzhaltertexte, Beispieltexte wie „xxx“.
+       - Unstrukturierte Ausgaben – immer mit section / table / lists.
 
-     SIZE-AWARE-LOGIK:
+     SIZE-AWARE-LOGIK (verbindlich):
        - SOLO:
-           - Sehr schlanke Tool-Landschaft, Fokus auf wenige Kern-Dienste.
-           - Laufende Kosten klein halten, Free-/Low-Cost-Varianten berücksichtigen.
-       - TEAM:
-           - Mehrere Nutzer:innen, aber noch keine komplexen Strukturen.
-           - Risiken: Tool-Wildwuchs, doppelte Lizenzen, unklare Zuständigkeiten.
-       - KMU:
-           - Mehrere Bereiche, mehrere Rollen, ggf. Mischformen aus Self-Service und zentraler Beschaffung.
-           - Wichtig: Konsolidierung, Standards, klare Verantwortung für Budgets und Lizenzen.
+           - Sehr schlanke Tool-Landschaft.
+           - Fokus auf Basis-Modelle, 1–2 Kern-Tools, niedrige laufende Kosten.
+           - Schulung = minimal + Selbstlernanteil.
+       - TEAM (2–10):
+           - Mehrere Nutzer:innen → Lizenzmultiplikatoren.
+           - Typische Risiken: Tool-Wildwuchs, doppelte Lizenzen, fehlende Verantwortlichkeiten.
+           - Schulungsaufwand verteilt.
+       - KMU (11–100):
+           - Mehrbereichs-Strukturen, Procurement-relevant.
+           - Notwendigkeit: Tool-Konsolidierung, Standardisierung, Lizenz- & Rechteverwaltung.
+           - Schulung/Enablement als wiederkehrender Posten.
 
-     OUTPUT:
-       - Valides HTML-Fragment.
-       - Klare Untergliederung:
-         1) Kurz-Einordnung
-         2) Tool-by-Tool Breakdown
-         3) Versteckte Kosten
-         4) Optimierungspotenziale
+     BRANCHEN-AWARE (verbindlich):
+       - Nutze branchenspezifische Tools, Workflows, Pain Points und typische Datenherkünfte aus dem CONTEXT_BLOCK.
+       - Branchenabhängig variieren:
+           - fachliche Spezial-Tools (z. B. CAD/Architektur, E-Commerce, Gesundheits-IT, Marketing-Automation)
+           - Compliance-/Regulatorik-Aufwände (z. B. Finanzen, Gesundheit)
+           - Datenaufbereitungskosten (z. B. Produktion vs. Dienstleistung)
+           - Integrationskosten (ERP/CRM/Branchensysteme)
+
+     ZIEL:
+       - Am Ende soll ein CFO oder Geschäftsführender glasklar verstehen:
+           1) Welche Kostenblöcke in seiner Branche typischerweise auftreten.
+           2) Wie sich die Unternehmensgröße auf die Kostenstruktur auswirkt.
+           3) Wo realistische Einspar- und Konsolidierungspotenziale liegen.
+
+     OUTPUT-STRUKTUR:
+       - <section class="section costs-overview">
+           - h2
+           - Einleitung (branch + size)
+           - 1) Konzept-Checkliste
+           - 2) Tool-by-Tool Breakdown
+           - 3) Versteckte Kosten (branch- & size-aware)
+           - 4) Optimierungspotenziale (klarer CFO-Fokus)
+           - Schlussnotiz
 -->
 
 <section class="section costs-overview">
   <h2>Detaillierte Kostenübersicht</h2>
 
   <p>
-    Diese Kostenübersicht ergänzt den Business Case um eine transparente Darstellung der
-    laufenden und einmaligen Aufwände für den KI-Einsatz rund um
+    Diese Kostenübersicht ergänzt den Business Case um eine transparente,
+    branchen- und größenabhängige Darstellung der laufenden und einmaligen Aufwände
+    rund um <strong>{{HAUPTLEISTUNG}}</strong> in der Branche
     <strong>{{BRANCHE_LABEL}}</strong>. Die Struktur ist auf die Unternehmensgröße
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> zugeschnitten: Für sehr kleine Setups
-    geht es vor allem darum, wenige Kern-Tools wirtschaftlich zu nutzen; in größeren
-    Organisationen rücken Konsolidierung, Lizenzen und Governance stärker in den Fokus.
+    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> zugeschnitten:
+    In kleinen Setups stehen wenige, klar ausgewählte Kern-Tools im Mittelpunkt,
+    während in Teams und KMU Faktoren wie Lizenzmultiplikatoren, Compliance-Aufwände
+    und Tool-Konsolidierung stärker ins Gewicht fallen.
   </p>
 
   <!-- 1) KURZE KONZEPT-CHECKLISTE -->
   <ul class="concept-checklist">
-    <li>Eindeutige Trennung zwischen Investitionen, laufenden Kosten und Zusatzaufwänden.</li>
-    <li>Tool-by-Tool Breakdown mit klarer Zuordnung pro Position.</li>
-    <li>Versteckte bzw. indirekte Kosten vollständig offenlegen.</li>
-    <li>Optimierungspotenziale strukturiert aufführen – angepasst an {{UNTERNEHMENSGROESSE_LABEL}}.</li>
-    <li>Keine Wiederholung des Business Case, sondern vertiefende Detailansicht.</li>
+    <li>Trennung zwischen einmaligen Investitionen (Setup, Onboarding) und laufenden Kosten (Lizenzen, Infrastruktur).</li>
+    <li>Branchenspezifische Spezial-Tools berücksichtigen (laut CONTEXT_BLOCK).</li>
+    <li>Größenabhängige Kostentreiber identifizieren (Solo: Kern-Tools; KMU: Multi-User-Lizenzen, Compliance-Aufwände).</li>
+    <li>Versteckte Kosten (Zeit, Abstimmungen, Governance) systematisch einplanen.</li>
+    <li>Optimierungspotenziale klar zuordnen: Reduktion, Standardisierung, Automatisierung.</li>
   </ul>
 
   <!-- 2) TOOL-BY-TOOL BREAKDOWN -->
@@ -74,42 +97,72 @@ Developer:
       <tr>
         <td>Basis-KI-Plattform / Modellzugang</td>
         <td>Laufend</td>
-        <td>1&nbsp;Account (Solo) bis mehrere Nutzer:innen (Team/KMU)</td>
+        <td>
+          <!-- size-aware -->
+          {{UNTERNEHMENSGROESSE_LABEL}}:<br>
+          Solo: 1 Account<br>
+          Team: 2–5 Accounts<br>
+          KMU: 5–20 Accounts
+        </td>
         <td>€&nbsp;XX</td>
         <td>€&nbsp;XX</td>
       </tr>
+
       <tr>
         <td>Workflow-/Automatisierungstools</td>
         <td>Laufend</td>
-        <td>1–3 aktive Nutzende</td>
+        <td>
+          Branchentypisch (laut CONTEXT_BLOCK):<br>
+          z.&nbsp;B. Marketing: Content-Automation;<br>
+          IT/Tech: API-/Script-Automation;<br>
+          Gesundheit/Finanzen: Compliance-Workflow-Tools.
+        </td>
         <td>€&nbsp;XX</td>
         <td>€&nbsp;XX</td>
       </tr>
+
       <tr>
-        <td>Fachspezifische KI-Tools (z.&nbsp;B. Branchenlösungen)</td>
+        <td>Fachspezifische KI- oder Branchen-Tools</td>
         <td>Laufend</td>
-        <td>nach Bedarf</td>
+        <td>
+          Variiert nach Branche (z.&nbsp;B. ERP, CRM, CAD, Diagnostik, E-Commerce, Marketing Automation)
+        </td>
         <td>€&nbsp;XX</td>
         <td>€&nbsp;XX</td>
       </tr>
+
       <tr>
-        <td>Speicher- und Infrastrukturkosten</td>
+        <td>Speicher- & Infrastrukturkosten (Cloud/Hosting)</td>
         <td>Laufend</td>
-        <td>Projekt- oder Mandanten-basiert</td>
+        <td>Je nach Datenvolumen & Workflows ({{BRANCHE_LABEL}})</td>
         <td>€&nbsp;XX</td>
         <td>€&nbsp;XX</td>
       </tr>
+
       <tr>
-        <td>Onboarding, Schulung, Enablement</td>
+        <td>Datenaufbereitung & Integration (einmalig/periodisch)</td>
         <td>Einmalig / periodisch</td>
-        <td>abhängig von Anzahl der Beteiligten</td>
+        <td>Abhängig von Quellsystemen (CRM, ERP, Produktion, etc.)</td>
         <td>€&nbsp;XX</td>
         <td>€&nbsp;XX</td>
       </tr>
+
       <tr>
-        <td>Externe Beratung / Implementierungsunterstützung</td>
-        <td>Einmalig / projektbezogen</td>
-        <td>Projektumfang</td>
+        <td>Schulung & Enablement</td>
+        <td>Einmalig / wiederkehrend</td>
+        <td>
+          Solo: Selbstlern-Fokus<br>
+          Team: kurze Workshops<br>
+          KMU: Trainingsreihe + Richtlinien
+        </td>
+        <td>€&nbsp;XX</td>
+        <td>€&nbsp;XX</td>
+      </tr>
+
+      <tr>
+        <td>Externe Beratung / Implementierung</td>
+        <td>Einmalig</td>
+        <td>Projektumfang (Use-Case-Design, Integration, Dokumentation)</td>
         <td>€&nbsp;XX</td>
         <td>€&nbsp;XX</td>
       </tr>
@@ -119,29 +172,34 @@ Developer:
   <!-- 3) VERSTECKTE KOSTEN -->
   <h3>Versteckte und indirekte Kosten</h3>
   <ul class="hidden-costs">
-    <li>Interne Abstimmungszeiten für neue Workflows und Freigaben.</li>
-    <li>Aufwände für Pflege und Aktualisierung von Vorlagen, Prompts und Dokumentation.</li>
-    <li>Zusätzliche Zeit für Datenschutz-, Compliance- und Qualitätsprüfungen.</li>
-    <li>Kleinere Zusatzlizenzen (z.&nbsp;B. Speicher, optionale Add-ons, erweiterte Nutzung).</li>
-    <li>Kontextwechsel und Lernzeiten beim Einführen neuer Tools.</li>
+    <li>Interne Abstimmungszeiten: stärker ausgeprägt in Team/KMU-Strukturen.</li>
+    <li>Anpassung vorhandener Workflows an KI-gestützte Prozesse.</li>
+    <li>Aufwände für die Pflege und Aktualisierung von Vorlagen, Prompts und Dokumentation.</li>
+    <li>Branchenspezifische Zusatzaufwände:
+      <ul>
+        <li>Gesundheit/Finanzen: Datenschutz/Compliance-Reviews.</li>
+        <li>Produktion/Logistik: Datenbereinigung, Sensor-/Maschinendaten.</li>
+        <li>Marketing/Kreativwirtschaft: Asset-Management, Markenrichtlinien.</li>
+      </ul>
+    </li>
+    <li>Kleinere Zusatzlizenzen (z.&nbsp;B. Speicher, Plug-ins, optionale Add-ons).</li>
+    <li>Kontextwechsel und Lernzeiten bei neuen Tools.</li>
   </ul>
 
   <!-- 4) OPTIMIERUNGSPOTENZIALE -->
   <h3>Ansatzpunkte zur Optimierung der laufenden Kosten</h3>
   <ol class="optimization-list">
-    <li>Konsolidierung von Tools, um Mehrfachkosten zu reduzieren und Verwaltung zu vereinfachen.</li>
-    <li>Klar definierte Workflows zur Minimierung interner Abstimmungszeiten.</li>
-    <li>Regelmäßige Überprüfung der Lizenznutzung (aktive vs. bezahlte Zugänge).</li>
-    <li>Automatisierung wiederkehrender Schritte zur Senkung der laufenden Aufwände.</li>
-    <li>Gezielte Nutzung von Jahres- oder Paketpreisen, sofern wirtschaftlich sinnvoll.</li>
+    <li><strong>Tool-Konsolidierung:</strong> Reduktion parallel genutzter Systeme (besonders relevant für Teams und KMU).</li>
+    <li><strong>Lizenz-Review:</strong> aktive vs. bezahlte Nutzer:innen, jährliche statt monatliche Abrechnung.</li>
+    <li><strong>Standardisierung:</strong> feste Templates, klare Governance, minimiert Abstimmungszeiten.</li>
+    <li><strong>Automatisierung:</strong> wiederkehrende Tätigkeiten mit Low-Code-/KI-Workflows reduzieren Workload & Kosten.</li>
+    <li><strong>Daten-Optimierung:</strong> bessere Datenqualität senkt Integrations- und Fehlerkosten.</li>
   </ol>
 
   <p class="small muted">
-    Die dargestellten Positionen sollen nicht jede einzelne Rechnung abbilden, sondern
-    einen strukturierten Rahmen für die Kostenplanung bieten. Je nach
-    Unternehmensgröße <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> kann der Fokus
-    stärker auf der Begrenzung einzelner Kernkosten (Solo), der Vermeidung von
-    Doppelstrukturen (Team) oder der Standardisierung und Konsolidierung über mehrere
-    Bereiche hinweg (KMU) liegen.
+    Diese Kostenübersicht dient als strukturierter Rahmen für Planung, Controlling und
+    Priorisierung. Je nach Unternehmensgröße <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>
+    verschiebt sich der Fokus zwischen schlanken Kernkosten (Solo), Vermeidung von
+    Doppelstrukturen (Team) und Standardisierung über mehrere Bereiche hinweg (KMU).
   </p>
 </section>

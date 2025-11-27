@@ -1,15 +1,16 @@
 Developer:
-<!-- org_change.md – v3.0 GOLD STANDARD+ (Organisationaler Wandel & Lernen)
+<!-- org_change.md – v5.0 GOLD STANDARD+ (branch-aware, size-aware, strategic, context-integrated)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
      ZIEL:
-     - Einen starken, praxisnahen Abschnitt „Veränderungsfähigkeit & Lernen“ erzeugen,
-       der die Ausgangslage, Veränderungsfelder und einen 90-Tage-Change-Fahrplan beschreibt.
-     - Der Text muss strategisch, motivierend und realistisch sein – direkt nutzbar für
-       Geschäftsführung, Inhaber:innen oder Teamleitungen.
+       - Präziser, motivierender und gleichzeitig realistischer Abschnitt „Veränderungsfähigkeit & Lernen“.
+       - Nutzt ACTIV den CONTEXT_BLOCK: typische Workflows, Pain Points, Datenstellen der Branche.
+       - Size-aware Anpassung für solo/team/kmu – mit klaren Rollen & Routinen.
+       - 4 Blöcke: Einleitung → Ausgangslage → Veränderungsfelder → 90-Tage-Fahrplan → Umgang mit Widerständen.
+       - Keine generischen Aussagen; jeder Absatz muss klaren geschäftlichen Wert haben.
 
-     VERFÜGBARE LABEL-VARIABLEN:
+     VARIABLEN:
        {{BRANCHE_LABEL}}
        {{UNTERNEHMENSGROESSE_LABEL}}
        {{HAUPTLEISTUNG}}
@@ -18,29 +19,14 @@ Developer:
        {{ki_kompetenz}}
        {{score_governance}}, {{score_sicherheit}},
        {{score_nutzen}}, {{score_befaehigung}}
+       COMPANY_SIZE = "solo" | "team" | "kmu"
 
-     INTERNER SIZE-MODE (über PromptEnhancer):
-       COMPANY_SIZE ∈ {"solo","team","kmu"}
+     VERBOTEN:
+       - Platzhalterwörter („Platzhalter“, „Freitextfeld“, „TODO“, …)
+       - Konzernsprache (Division, Unit) bei KMU
+       - Teams/Abteilungen in SOLO
+       - generische Aussagen ohne klaren Nutzen
 
-       SOLO („1 (Solo“ im Label)
-         - Sie-Ansprache (Ein-Personen-Unternehmen).
-         - Keine Begriffe wie „Abteilung“, „Bereich“, „Teamleitung“.
-         - Fokus: persönliche Routinen, Selbstorganisation, kleine realistische Schritte.
-
-       TEAM (2–10)
-         - „Team“, „Kolleg:innen“, einfache Rollenverteilung.
-         - Fokus: kurze Abstimmungen, gemeinsame Regeln, arbeitsteilige Umsetzung.
-
-       KMU (11–100)
-         - „Teams“, „Fachbereiche“, „Verantwortliche“.
-         - Kein Konzernjargon (keine „Division“, „Business Unit“, „Konzernzentrale“).
-         - Fokus: koordinierter Wandel, Governance, strukturierte Kommunikation.
-
-     REGELN:
-       - Keine verbotenen Wörter: „Platzhalter“, „Freitextfeld“, „Content wird erstellt“, TODO etc.
-       - Abschnitte müssen klar, realistisch, flüssig geschrieben sein.
-       - 4 Hauptblöcke: Einleitung, Ausgangslage, Veränderungsfelder, 90-Tage-Fahrplan, Umgang mit Widerständen.
-       - Textstruktur und Reihenfolge der HTML-Abschnitte nicht verändern.
 -->
 
 <section class="section org-change">
@@ -48,82 +34,132 @@ Developer:
 
   <p>
     Unternehmen in der Branche <strong>{{BRANCHE_LABEL}}</strong>, die im Schwerpunkt
-    <strong>{{HAUPTLEISTUNG}}</strong> arbeiten, stehen bei der Einführung von KI häufig vor
-    einem doppelten Spannungsfeld: Einerseits zeigt die aktuelle Selbsteinschätzung
-    (z.&nbsp;B. {{ki_kompetenz}} sowie die Ziele {{KI_ZIELE_LABELS}}), dass Potenzial und
-    Motivation vorhanden sind. Andererseits verdeutlichen typische Hemmnisse wie
-    {{KI_HEMMNISSE_LABELS}}, dass Routinen, Prioritäten und Verantwortlichkeiten erst entstehen
-    müssen, bevor KI im Alltag verlässlich Wirkung entfalten kann – besonders in einem
-    Unternehmen der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>.
+    <strong>{{HAUPTLEISTUNG}}</strong> arbeiten, müssen bei der Einführung von KI sowohl
+    neue Arbeitsweisen etablieren als auch bestehende Routinen anpassen. Die aktuelle
+    Selbsteinschätzung – etwa die KI-Kompetenz (<strong>{{ki_kompetenz}}</strong>) und die Ziele
+    <strong>{{KI_ZIELE_LABELS}}</strong> – zeigt, dass Potenzial und Motivation klar vorhanden sind.
+    Gleichzeitig machen typische Hemmnisse wie <strong>{{KI_HEMMNISSE_LABELS}}</strong> deutlich,
+    dass Strukturen, Prioritäten und Verantwortlichkeiten weiter geschärft werden müssen.
+    Besonders in einem Unternehmen der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>
+    entscheidet ein bedachter Umgang mit Wandel darüber, wie schnell KI zuverlässig Wirkung zeigt.
   </p>
 
   <h3>1. Wo Sie heute stehen</h3>
   <p>
-    Die Analyse der Scores zeigt, dass Governance ({{score_governance}}), Sicherheit
-    ({{score_sicherheit}}), Nutzen ({{score_nutzen}}) und Befähigung ({{score_befaehigung}})
-    unterschiedlich ausgeprägt sind. Für den Einsatz von KI im Prozess
-    <strong>{{HAUPTLEISTUNG}}</strong> bedeutet dies: Es existieren bereits erste
-    funktionierende Routinen und ein grundsätzlich positives Mindset, jedoch sind
-    Entscheidungswege, Arbeitsstandards und Qualitätssicherung noch nicht überall klar definiert.
-    Abhängig von der Unternehmensgröße – ob Solo, kleines Team oder wachsendes KMU –
-    unterscheiden sich die notwendigen Schritte, um KI stabil und verlässlich in den Alltag zu integrieren.
+    Die Analyse der Scores zeigt ein differenziertes Bild:
+    Governance (<strong>{{score_governance}}</strong>), Sicherheit
+    (<strong>{{score_sicherheit}}</strong>), Nutzen (<strong>{{score_nutzen}}</strong>)
+    und Befähigung (<strong>{{score_befaehigung}}</strong>) sind unterschiedlich ausgeprägt.
+    Für den Einsatz von KI in <strong>{{HAUPTLEISTUNG}}</strong> bedeutet das:
+    Einige grundlegende Routinen funktionieren bereits, jedoch braucht es klarere
+    Entscheidungswege, einheitliche Qualitätsstandards und eine engere Verzahnung
+    zwischen menschlicher Expertise und KI-gestützten Workflows.
+  </p>
+
+  <p>
+    Die notwendigen Schritte unterscheiden sich je nach Unternehmensgröße:
+    {% if COMPANY_SIZE == "solo" %}
+      In Solo-Setups hängt alles an klaren persönlichen Routinen, einfachen Standards und
+      konsequenter Selbstorganisation.
+    {% elif COMPANY_SIZE == "team" %}
+      In kleinen Teams ist entscheidend, Rollen sauber zu definieren und kurze,
+      verlässliche Abstimmungen zu etablieren.
+    {% else %}
+      In KMU stehen koordinierte Prozesse, Verantwortlichkeiten pro Fachbereich
+      und eine konsistente Kommunikation im Vordergrund.
+    {% endif %}
   </p>
 
   <h3>2. Wichtigste Veränderungsfelder</h3>
   <ul>
     <li>
-      <strong>Arbeitsroutinen standardisieren:</strong>
-      Die KI-Nutzung muss planbarer werden – feste Einsatzpunkte im Workflow
-      <strong>{{HAUPTLEISTUNG}}</strong>, klare Vorlagen und regelmäßige Überprüfung
-      der Ergebnisse schaffen Verlässlichkeit und entlasten den Arbeitsalltag.
+      <strong>Arbeitsroutinen vereinheitlichen:</strong>
+      KI muss an klaren Stellen in den branchentypischen Workflows eingesetzt werden
+      – etwa bei wiederkehrenden Analysen, Dokumentationen, Qualitätskontrollen oder
+      inhaltlichen Entwürfen. Einheitliche Vorlagen und klare Input-Regeln senken
+      Fehlerquoten und steigern die Verlässlichkeit.
     </li>
     <li>
-      <strong>Rollen &amp; Verantwortung klären:</strong>
-      Solo-Unternehmen definieren für sich selbst klare Hüte (z.&nbsp;B. Entscheidung, Prompt-Design,
-      Qualitätssicherung). Teams verteilen Rollen (Teamlead, KI-Owner). KMU binden gezielt
-      Verantwortliche aus relevanten Bereichen ein.
+      <strong>Rollen &amp; Verantwortlichkeiten klären:</strong>
+      {% if COMPANY_SIZE == "solo" %}
+        Eine klare persönliche Aufteilung der „Hüte“ – z. B. Erstellung, Prüfung, Freigabe –
+        schafft Fokus und Kontrolle.
+      {% elif COMPANY_SIZE == "team" %}
+        Eine eindeutige Rollenverteilung (Teamlead, KI-Owner, Review-Rolle) vermeidet
+        Doppelarbeit und sorgt für transparente Abläufe.
+      {% else %}
+        Fachbereiche benötigen definierte Verantwortliche für KI-Einsatz,
+        Qualitätssicherung und Freigaben, damit die Skalierung gelingt.
+      {% endif %}
     </li>
     <li>
       <strong>Feedback &amp; Dokumentation stärken:</strong>
-      Kurze Feedback-Loops, strukturierte Notizen und einfache Standards ermöglichen es,
-      erfolgreiche KI-Experimente in stabile, wiederkehrende Abläufe zu überführen.
+      Kurze Feedback-Schleifen, strukturierte Notizen und ein kompakter Standard
+      helfen, erfolgreiche KI-Experimente in wiederkehrende, belastbare Abläufe
+      umzuwandeln. Dies gilt besonders in <strong>{{BRANCHE_LABEL}}</strong>,
+      wo typische Pain Points eng mit Datenqualität, Zeitdruck oder komplexen
+      Entscheidungswegen zusammenhängen.
     </li>
   </ul>
 
   <h3>3. Fahrplan für die nächsten 90 Tage</h3>
   <p>
-    Der Wandel gelingt am besten in kleinen, klar priorisierten Schritten. Die folgende
-    90-Tage-Struktur ist bewusst leichtgewichtig gehalten und lässt sich gut an die
-    Unternehmensgröße <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> anpassen.
+    Der Wandel gelingt am besten durch klar priorisierte Schritte. Die folgende
+    90-Tage-Struktur passt sich automatisch den Möglichkeiten eines Unternehmens der Größe
+    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> an.
   </p>
 
   <ul>
     <li>
       <strong>0–30 Tage – Orientierung &amp; Standards:</strong>
-      2–3 Pilot-Workflows festlegen, einfache Regeln für KI-Eingaben definieren,
-      erste Dokumentationsvorlage erstellen (Solo: persönliche Routinen; Team/KMU:
-      Abstimmung mit beteiligten Rollen).
+      2–3 zentrale KI-Einsatzstellen definieren, einfache Input-Regeln formulieren,
+      branchentypische Beispiele sammeln und eine erste, kurze Dokumentationsvorlage anlegen.
+      {% if COMPANY_SIZE == "solo" %}
+        Fokus auf persönliche Wiederholbarkeit und realistische Routinen.
+      {% elif COMPANY_SIZE == "team" %}
+        Abstimmung zwischen Teamlead und KI-Owner zur gemeinsamen Nutzung der neuen Standards.
+      {% else %}
+        Einbindung relevanter Fachbereiche zur Abstimmung von Qualitäts- und Freigaberegeln.
+      {% endif %}
     </li>
+
     <li>
       <strong>31–60 Tage – Qualität &amp; Kompetenz:</strong>
-      Review-Schleifen einführen, kurze Guidelines erstellen,
-      „Best-Prompt“- oder „Best-Practice“-Sammlung anlegen und erste kleine Schulungen durchführen.
+      Review-Schleifen etablieren, einfache Guidelines zu Stil, Vollständigkeit und
+      Prüfschritten definieren und eine kleine interne Best-Practice-Sammlung starten.
+      {% if COMPANY_SIZE == "solo" %}
+        Fokus auf schnelle Lernzyklen und konsequente Vereinfachung.
+      {% elif COMPANY_SIZE == "team" %}
+        Team-Reviews zur Harmonisierung der Ergebnisse.
+      {% else %}
+        Fachbereichsübergreifende kurze Formate (Quality-Runden, Mini-Workshops).
+      {% endif %}
     </li>
+
     <li>
-      <strong>61–90 Tage – Skalierung &amp; Verstetigung:</strong>
-      Regelmäßige Reflexion (Solo: wöchentlicher Check-In; Team/KMU: kurze Team-Reviews oder
-      Bereichs-Runden), messbare Kennzahlen definieren und entscheiden, welche Workflows stabil
-      weitergeführt oder ausgebaut werden sollen.
+      <strong>61–90 Tage – Stabilisierung &amp; erste Skalierung:</strong>
+      Regelmäßige Reflexion (Solo: kurzer Wochen-Check; Team: kurze Team-Reviews;
+      KMU: Bereichs- oder Prozessrunden), Kennzahlen für Zeitersparnis und Qualität
+      festlegen und entscheiden, welche Workflows in den Regelbetrieb überführt werden.
     </li>
   </ul>
 
   <h3>4. Umgang mit Widerständen</h3>
   <p>
-    Widerstände entstehen oft durch Unsicherheit über Qualität, Datenschutz oder veränderte
-    Arbeitsweisen. Solo-Unternehmen benötigen vor allem Sicherheit durch klare Routinen.
-    Kleine Teams profitieren von kurzen, offenen Abstimmungen. In KMU hilft eine transparente,
-    pragmatische Kommunikation zu Nutzen, Risiken und Verantwortlichkeiten. Entscheidend ist,
-    dass Rückmeldungen frühzeitig aufgenommen, verständlich adressiert und in konkrete
-    Verbesserungen für den Alltag umgesetzt werden.
+    Widerstände entstehen meist durch Unsicherheit über Qualität, Datenschutz oder
+    veränderte Arbeitsweisen. Entscheidend ist ein transparenter Umgang mit den neuen
+    KI-gestützten Routinen – und zwar size-aware:
+    {% if COMPANY_SIZE == "solo" %}
+      Solo-Unternehmen profitieren vor allem von klaren, leicht überprüfbaren persönlichen
+      Routinen, die Vertrauen schaffen.
+    {% elif COMPANY_SIZE == "team" %}
+      Kleine Teams benötigen offene, kurze Abstimmungen und klare Rollen, damit sich die
+      neuen Arbeitsweisen im Alltag stabilisieren.
+    {% else %}
+      In KMU sind verständliche Kommunikation, transparente Vorgaben und fachbereichsnahe
+      Verantwortlichkeiten entscheidend, um Vorbehalte zu reduzieren.
+    {% endif %}
+    Kontinuierliches Feedback – verbunden mit konkreten kleinen Verbesserungen –
+    sorgt dafür, dass KI als verlässlicher Bestandteil der Wertschöpfung akzeptiert wird.
   </p>
 </section>
