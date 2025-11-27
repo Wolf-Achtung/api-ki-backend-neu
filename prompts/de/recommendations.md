@@ -1,66 +1,94 @@
 Developer:
-# recommendations.md – v4.1 GOLD STANDARD+ (size-aware, validator-safe)
+<!-- recommendations.md – v3.0 GOLD STANDARD+ (size-aware, strategic, validator-safe)
+     Antworte ausschließlich mit validem HTML.
+     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im OUTPUT.
 
-ZIEL DES PROMPTS
-- Erzeuge eine klare, priorisierte Handlungsempfehlungs-Sektion für den KI-Status-Report.
-- Die Empfehlungen sollen direkt als Entscheidungs- und Umsetzungsgrundlage für Geschäftsführung / Inhaber dienen.
-- Alle Inhalte müssen konkret, geschäftsnah und auf das jeweilige Unternehmen zugeschnitten sein.
+     ZIEL:
+     - Erzeuge 3–6 klare, priorisierte Handlungsempfehlungen für KI-Einsatz im Unternehmen.
+     - Jede Empfehlung muss sofort nutzbar sein: Problem → Maßnahme → Nutzen → Aufwand → Verantwortlich → Förderoption.
+     - Zusätzlich eine kompakte Prioritäten-Tabelle mit 3–6 Einträgen.
+     - Alle Empfehlungen müssen zu Branche, Hauptleistung und Unternehmensgröße passen.
 
-EINGABE-VARIABLEN (werden im Kontext bereitgestellt)
-- {{BRANCHE_LABEL}} – Branche des Unternehmens (z. B. „Beratung & Dienstleistungen“)
-- {{UNTERNEHMENSGROESSE_LABEL}} – verbale Beschreibung der Größe (z. B. „1 (Solo-Selbstständig/Freiberuflich)“)
-- {{HAUPTLEISTUNG}} – wichtigste Leistung / Angebot
-- {{BUNDESLAND_LABEL}} – Bundesland (falls für Förderung und Kontext relevant)
-- {{COMPANY_SIZE}} – logische Größe: "solo", "small_team" oder "kmu"
+     VERFÜGBARE LABEL-VARIABLEN:
+       {{BRANCHE_LABEL}}
+       {{UNTERNEHMENSGROESSE_LABEL}}
+       {{HAUPTLEISTUNG}}
+       {{BUNDESLAND_LABEL}}
+       {{COMPANY_SIZE}}   // über PromptEnhancer: "solo", "team", "kmu"
 
-GRÖSSENLOGIK
-- Wenn {{COMPANY_SIZE}} = "solo":
-  - Direkte Ansprache der Inhaberin / des Inhabers („Sie“, „Ihr Unternehmen“).
-  - Keine Begriffe wie „Abteilung“, „Bereich“ oder „Team“ verwenden.
-  - Fokus auf Maßnahmen, die eine Person realistisch stemmen kann.
-- Wenn {{COMPANY_SIZE}} = "small_team":
-  - Bezug auf ein kleines Kernteam (2–10 Personen).
-  - Verantwortlichkeiten eher als „Rollen“ oder „Funktionen“ beschreiben, nicht als große Organisationseinheiten.
-- Wenn {{COMPANY_SIZE}} = "kmu":
-  - Bezug auf mehrere Funktionen/Teams möglich.
-  - Trotzdem praxisnah und ohne unnötigen Konzern-Jargon.
+     GRÖSSENLOGIK (einheitlich für alle Prompts):
+       SOLO ("solo"):
+         - Direkte Sie-Ansprache; Fokus: persönliche Entlastung & Effizienz.
+         - Keine "Abteilungen", "Teams", "Bereiche".
+         - Maßnahmen klein, realistisch, schnell umsetzbar.
 
-VERBOTEN IM OUTPUT
-- Keine Wörter: „Platzhalter“, „Content wird erstellt“, „Freitextfeld“, „TODO“.
-- Keine Hinweise auf den Prompt oder Variablennamen (keine „{{…}}“ im Output).
-- Keine leeren oder inhaltsarmen Aussagen wie „weitere Maßnahmen können später ergänzt werden“.
-- Keine reinen Floskeln ohne konkreten geschäftlichen Bezug.
+       TEAM ("team"):   // 2–10 Personen
+         - Leichte Organisationssprache erlaubt: "Team", "Kolleg:innen".
+         - Verantwortlichkeiten als Rollen, nicht Bereiche.
+         - Fokus: arbeitsteilige Umsetzung, klare Owner, gute Abstimmung.
 
-STIL & UMFANG
-- Ton: praxisnah, konkret, optimistisch, aber ehrlich.
-- Umfang: 3–6 Empfehlungen, jede in 3–5 kurzen Sätzen beschrieben.
-- Decke möglichst unterschiedliche Hebel ab (Produktivität, Qualität, Risiko, neue Angebote, Lernen/Enablement).
-- Formuliere so, dass die Punkte 1:1 in eine Aufgaben- oder Projektliste übernommen werden können.
+       KMU ("kmu"):     // 11–100 Personen
+         - Organisationssprache: "Teams", "Fachbereiche", "Verantwortliche".
+         - Kein Konzernjargon (keine "Division", "Business Unit").
+         - Fokus: koordinierte Umsetzung, Governance, skalierbare Prozesse.
 
-HTML-STRUKTUR (Beispiel – in der Antwort vollständig befüllen)
+     VERBOTEN:
+       - Keine Wörter wie "Platzhalter", "Freitextfeld", "TODO", "Content wird erstellt".
+       - Keine Beispielmarkierungen („Titel der Empfehlung …“).
+       - Keine Rohvariablen im sichtbaren Content.
 
-```html
+     STIL:
+       - Klar, geschäftsorientiert, umsetzbar.
+       - Jede Empfehlung: max. 3–5 kurze Sätze.
+       - Realistische Maßnahmen (keine Übertreibungen).
+       - Einfache, lesbare Struktur für PDF-Report.
+
+-->
+
 <section class="section recommendations">
   <h2>Handlungsempfehlungen – Ihre nächsten Schritte mit KI</h2>
 
   <p>
-    Einleitender Überblick in 2–3 Sätzen, wie ein Unternehmen aus der Branche {{BRANCHE_LABEL}}
-    mit der Größe {{UNTERNEHMENSGROESSE_LABEL}} KI sinnvoll einführen oder ausbauen kann.
-    Stelle kurz heraus, worauf die folgenden Empfehlungen den Schwerpunkt legen
-    (z. B. Entlastung im Tagesgeschäft, sichere Nutzung, neue Angebote).
+    Für ein Unternehmen in der Branche <strong>{{BRANCHE_LABEL}}</strong> mit der Größe
+    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> ergeben sich mehrere konkrete Hebel,
+    um KI im Prozess <strong>{{HAUPTLEISTUNG}}</strong> wirksam einzusetzen.
+    Die folgenden Empfehlungen fokussieren auf schnelle Wirkung, klare Verantwortlichkeiten
+    und eine stabile Einführung im Alltag.
   </p>
 
   <ol class="recommendations-list">
+    <!-- Mindestens 3, maximal 6 Empfehlungen – jeweils vollständig ausgeführt -->
     <li>
-      <h3>Titel der Empfehlung&nbsp;1</h3>
-      <p><strong>Schwerpunkt:</strong> Kurzbeschreibung des betroffenen Prozesses oder Angebots.</p>
-      <p><strong>Maßnahme:</strong> Konkrete KI-gestützte Veränderung, die innerhalb von 3–6 Monaten realistisch umsetzbar ist.</p>
-      <p><strong>Nutzen &amp; Wirkung:</strong> Geschäftsnutzen in verständlicher Form (z. B. Zeitersparnis, bessere Qualität, geringeres Risiko).</p>
-      <p><strong>Aufwand &amp; Budget:</strong> Grobe Größenordnung des Aufwands (z. B. wenige Tage Konzeption, monatliche Lizenzkosten im niedrigen bis mittleren dreistelligen Bereich).</p>
-      <p><strong>Verantwortlich:</strong> Wer entscheidet und setzt um (bei Solo direkt die Inhaberin/der Inhaber; sonst eine klare Rolle).</p>
-      <p><strong>Förderchance:</strong> Kurzer Hinweis, ob eine Förderung typischerweise sinnvoll erscheint.</p>
+      <h3>Empfehlung&nbsp;1</h3>
+      <p><strong>Schwerpunkt:</strong> Beschreibung des zu optimierenden Teilprozesses im Bereich {{HAUPTLEISTUNG}}.</p>
+      <p><strong>Maßnahme:</strong> Konkrete KI-gestützte Veränderung, die in 3–6 Monaten realisierbar ist.</p>
+      <p><strong>Nutzen &amp; Wirkung:</strong> Direkter geschäftlicher Effekt (Zeitersparnis, Qualitätssteigerung oder geringeres Risiko).</p>
+      <p><strong>Aufwand &amp; Budget:</strong> Realistische Größenordnung abgestimmt auf {{UNTERNEHMENSGROESSE_LABEL}}.</p>
+      <p><strong>Verantwortlich:</strong> Solo: Geschäftsführung; Team: Teamlead/KI-Owner; KMU: zuständiger Bereich + Verantwortliche.</p>
+      <p><strong>Förderchance:</strong> Kurzer Hinweis, ob Programme im Bundesland {{BUNDESLAND_LABEL}} typischerweise passen.</p>
     </li>
-    <!-- 2–5 weitere Empfehlungen mit gleichem Aufbau und spezifischem, nicht wiederholtem Fokus -->
+
+    <li>
+      <h3>Empfehlung&nbsp;2</h3>
+      <p><strong>Schwerpunkt:</strong> Prozess oder Bereich, in dem KI Datenaufbereitung, Analyse oder Textarbeit unterstützt.</p>
+      <p><strong>Maßnahme:</strong> Umsetzung eines klar definierten Workflows für wiederkehrende Aufgaben.</p>
+      <p><strong>Nutzen &amp; Wirkung:</strong> Höhere Konsistenz, weniger manuelle Schleifen, schnellere Ergebnisse.</p>
+      <p><strong>Aufwand &amp; Budget:</strong> Einführungsaufwand in Tagen; laufende Kosten im niedrigen zweistelligen bis mittleren dreistelligen Bereich.</p>
+      <p><strong>Verantwortlich:</strong> Verantwortlichkeit abhängig von {{UNTERNEHMENSGROESSE_LABEL}} (Solo/Team/KMU).</p>
+      <p><strong>Förderchance:</strong> Hinweis auf mögliche Zuschussprogramme, sofern relevant.</p>
+    </li>
+
+    <li>
+      <h3>Empfehlung&nbsp;3</h3>
+      <p><strong>Schwerpunkt:</strong> Verbesserung der Zusammenarbeit, Dokumentation oder Qualitätssicherung.</p>
+      <p><strong>Maßnahme:</strong> Einführung klarer Vorlagen, kurzer Review-Loops oder KI-gestützter Prüfmechanismen.</p>
+      <p><strong>Nutzen &amp; Wirkung:</strong> Höhere Ersttrefferquote, weniger Überarbeitungsschleifen, stabilere Ergebnisse.</p>
+      <p><strong>Aufwand &amp; Budget:</strong> Leichtgewichtige Umsetzung passend zu {{UNTERNEHMENSGROESSE_LABEL}}.</p>
+      <p><strong>Verantwortlich:</strong> Größe-spezifische Rolle (Solo: Inhaber; Team: Owner; KMU: Bereich + Quality).</p>
+      <p><strong>Förderchance:</strong> Optionaler kurzer Hinweis auf passende Programme.</p>
+    </li>
+
+    <!-- Optional 1–3 weitere Empfehlungen, gleiche Struktur -->
   </ol>
 
   <h3>Prioritäten-Überblick</h3>
@@ -76,28 +104,28 @@ HTML-STRUKTUR (Beispiel – in der Antwort vollständig befüllen)
     <tbody>
       <tr>
         <td>1</td>
-        <td>Kurzform der wichtigsten Empfehlung aus der obigen Liste</td>
-        <td>z. B. „0–3 Monate“</td>
-        <td>z. B. „spürbare Zeitersparnis im Tagesgeschäft“</td>
+        <td>Kurzform der wichtigsten Empfehlung</td>
+        <td>0–3 Monate</td>
+        <td>Schnelle Entlastung / Sofortwirkung</td>
       </tr>
       <tr>
         <td>2</td>
-        <td>Zweite zentrale Empfehlung</td>
-        <td>z. B. „3–6 Monate“</td>
-        <td>z. B. „bessere Qualität und weniger Fehler“</td>
+        <td>Zweitwichtigste Empfehlung</td>
+        <td>3–6 Monate</td>
+        <td>Bessere Qualität / geringeres Risiko</td>
       </tr>
       <tr>
         <td>3</td>
-        <td>Dritte Empfehlung mit mittel- bis langfristigem Fokus</td>
-        <td>z. B. „6–12 Monate“</td>
-        <td>z. B. „neue Angebote oder Geschäftsmodelle“</td>
+        <td>Drittwichtigste Empfehlung</td>
+        <td>6–12 Monate</td>
+        <td>Neue Angebote oder zusätzliche Wertschöpfung</td>
       </tr>
-      <!-- Optional bis zu 3 weitere Prioritäten-Zeilen, passend zu den Empfehlungen -->
+      <!-- Bis zu 3 weitere Zeilen möglich -->
     </tbody>
   </table>
 
   <p class="small muted">
-    Formuliere die Empfehlungen so, dass sie direkt in die Projektplanung übernommen werden können
-    und mit Quick Wins, Roadmap und Business Case des Reports konsistent sind.
+    Die Empfehlungen sind so formuliert, dass sie unmittelbar in die Projektplanung übernommen
+    werden können und konsistent mit Roadmap, Business Case und Quick Wins wirken.
   </p>
 </section>

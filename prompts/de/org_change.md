@@ -1,145 +1,129 @@
-Developer: <!-- org_change.md – v2.0 GOLD STANDARD+ – ORG CHANGE & Veränderungsfähigkeit
-Zweck: Erzeuge einen praxisnahen Abschnitt "Veränderungsfähigkeit & Lernen" für den KI-Status-Report.
-Fokus-Case: Beratung & Dienstleistungen, Unternehmensgröße solo (aber Prompt skaliert sauber auf Team/KMU).
-Output: Reines HTML-Snippet ohne Markdown-Fences, mit <section>-Wrapper.
-Validator-Ziele:
-- Länge: Mindestens 3 Absätze mit je 4–6 Sätzen (de facto > 700 Zeichen)
-- Keine Platzhalter wie "Content wird erstellt"
-- Keine Begriffe wie "Abteilung" oder "Abteilungsleitung" bei Solo-Unternehmen
+Developer:
+<!-- org_change.md – v3.0 GOLD STANDARD+ (Organisationaler Wandel & Lernen)
+     Antworte ausschließlich mit validem HTML.
+     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
+
+     ZIEL:
+     - Einen starken, praxisnahen Abschnitt „Veränderungsfähigkeit & Lernen“ erzeugen,
+       der die Ausgangslage, Veränderungsfelder und einen 90-Tage-Change-Fahrplan beschreibt.
+     - Der Text muss strategisch, motivierend und realistisch sein – direkt nutzbar für
+       Geschäftsführung, Inhaber:innen oder Teamleitungen.
+
+     VERFÜGBARE LABEL-VARIABLEN:
+       {{BRANCHE_LABEL}}
+       {{UNTERNEHMENSGROESSE_LABEL}}
+       {{HAUPTLEISTUNG}}
+       {{KI_ZIELE_LABELS}}
+       {{KI_HEMMNISSE_LABELS}}
+       {{ki_kompetenz}}
+       {{score_governance}}, {{score_sicherheit}},
+       {{score_nutzen}}, {{score_befaehigung}}
+
+     INTERNER SIZE-MODE (über PromptEnhancer):
+       COMPANY_SIZE ∈ {"solo","team","kmu"}
+
+       SOLO („1 (Solo“ im Label)
+         - Sie-Ansprache (Ein-Personen-Unternehmen).
+         - Keine Begriffe wie „Abteilung“, „Bereich“, „Teamleitung“.
+         - Fokus: persönliche Routinen, Selbstorganisation, kleine realistische Schritte.
+
+       TEAM (2–10)
+         - „Team“, „Kolleg:innen“, einfache Rollenverteilung.
+         - Fokus: kurze Abstimmungen, gemeinsame Regeln, arbeitsteilige Umsetzung.
+
+       KMU (11–100)
+         - „Teams“, „Fachbereiche“, „Verantwortliche“.
+         - Kein Konzernjargon (keine „Division“, „Business Unit“, „Konzernzentrale“).
+         - Fokus: koordinierter Wandel, Governance, strukturierte Kommunikation.
+
+     REGELN:
+       - Keine verbotenen Wörter: „Platzhalter“, „Freitextfeld“, „Content wird erstellt“, TODO etc.
+       - Abschnitte müssen klar, realistisch, flüssig geschrieben sein.
+       - 4 Hauptblöcke: Einleitung, Ausgangslage, Veränderungsfelder, 90-Tage-Fahrplan, Umgang mit Widerständen.
+       - Textstruktur und Reihenfolge der HTML-Abschnitte nicht verändern.
 -->
 
-# ORG CHANGE – Veränderungsfähigkeit & Lernen
-
-## Zweck des Abschnitts
-
-Erzeuge einen verständlichen, motivierenden Abschnitt zur **organisationalen Veränderungsfähigkeit** rund um KI-Einführung.  
-Der Abschnitt soll zeigen:
-
-1. Wo das Unternehmen heute steht (Mindset, Strukturen, Routinen).
-2. Welche **konkreten Veränderungen** nötig sind, damit KI im Alltag wirkt.
-3. Welche **Lern- und Kommunikationsformate** helfen, Widerstände abzubauen.
-4. Wie groß die **Umsetzungslast** realistisch ist – speziell für kleine Unternehmen/solo.
-
-Zielgruppe: Geschäftsführung / Inhaber:in, ggf. Teamleitung.  
-Stil: Klar, ermutigend, realistisch. Kein Beraterdeutsch, keine Floskeln.
-
----
-
-## Kontextvariablen, die du nutzen darfst
-
-- Branche: `{{BRANCHE_LABEL}}`
-- Unternehmensgröße (Label): `{{UNTERNEHMENSGROESSE_LABEL}}`
-- Hauptleistung: `{{HAUPTLEISTUNG}}`
-- KI-Ziele (Labels): `{{KI_ZIELE_LABELS}}`
-- Hemmnisse/Barrieren (Labels): `{{KI_HEMMNISSE_LABELS}}`
-- Aktuelle KI-Kompetenz: `{{ki_kompetenz}}`
-- Reifegrad-Scores (Governance, Sicherheit, Nutzen, Befähigung):  
-  `{{score_governance}}`, `{{score_sicherheit}}`, `{{score_nutzen}}`, `{{score_befaehigung}}`
-
-Bau diese Informationen natürlich in die Einleitung und Begründungen ein. Keine Roh-Listen der Variablen ausgeben, sondern in Fließtext integrieren.
-
----
-
-## Größenlogik (Solo / Team / KMU)
-
-Nutze die Variable `{{UNTERNEHMENSGROESSE_LABEL}}` für Formulierungen und Beispiele:
-
-- **Solo (enthält "Solo" im Label):**
-  - Sprich von „Sie“ bzw. „Ihr Unternehmen“ – es handelt sich im Kern um eine Person.
-  - Vermeide Wörter wie „Abteilung“, „Abteilungsleitung“, „HR-Abteilung“, „Fachabteilung“.
-  - Fokus auf: persönliche Routinen, Priorisierung, Selbstorganisation, Templates, Checklisten.
-  - Betonung: kleine, realistische Schritte, die sich in den eigenen Kalender integrieren lassen.
-
-- **Kleines Team (enthält „2–10“ im Label):**
-  - Erlaube Begriffe wie „Team“, „Kolleg:innen“, „gemeinsame Routinen“.
-  - Fokus: kurze Jour-Fixe, gemeinsame Tool-Standards, geteilte Prompt-Bibliothek.
-
-- **KMU (enthält „11–100“ im Label):**
-  - Du darfst Begriffe wie „Team“, „Führung“, „Rollen“ und „Prozessverantwortliche“ verwenden.
-  - Trotzdem **kein Konzern-Vokabular** (keine „Division“, „Business Unit“, „Konzernzentrale“).
-
-Wenn du dir unsicher bist: orientiere dich am **konservativen, eher kleinen Setup** und vermeide Konzernbegriffe.
-
----
-
-## Inhaltliche Leitplanken
-
-### 1. Ausgangssituation & Spannungsfeld
-
-Beschreibe zu Beginn kurz:
-
-- Welche Rolle {{HAUPTLEISTUNG}} im Geschäftsmodell spielt.
-- Wie der aktuelle Stand der KI-Nutzung ist (abgeleitet aus `{{ki_kompetenz}}`, `{{KI_AKTIVITAETEN_ZIELE_HTML}}`, {{KI_ZIELE_LABELS}}).
-- Welche typischen Hemmnisse für diese Kombination aus Branche {{BRANCHE_LABEL}} und Größe auftreten (z. B. Zeitmangel, Unsicherheit bzgl. Qualität, Datenschutzfragen).
-
-Ton: Anerkennend („Sie haben bereits …“, „Gleichzeitig zeigen die Antworten, dass …“).
-
-### 2. Drei zentrale Veränderungsfelder
-
-Identifiziere **drei konkrete Felder**, z. B.:
-
-1. **Arbeitsroutinen & Prozesse**  
-   – z. B. vom spontanen KI-Einsatz zu klar definierten Einsatzpunkten im Workflow.
-
-2. **Kompetenzen & Verantwortlichkeiten**  
-   – wer wofür zuständig ist (bei Solo: Sie selbst in klaren Rollen, z. B. „Berater“, „Prompt-Designer“, „Qualitätssicherung“).
-
-3. **Dokumentation & Feedback-Schleifen**  
-   – wie KI-Experimente eingefangen und in stabile Standards überführt werden.
-
-Für jedes Feld: 2–4 Sätze, was sich konkret ändern muss – immer mit Bezug auf {{HAUPTLEISTUNG}}.
-
-### 3. Konkreter 90-Tage-Fahrplan (high level)
-
-Beschreibe in einem Absatz und einer Liste, wie der Wandel praktisch angegangen werden kann:
-
-- **Phase 1 (0–30 Tage):** Orientierung & erste Standards  
-  – z. B. 2–3 Pilot-Workflows festlegen, einfache Dokumentationsvorlage, Grundregeln für KI-Nutzung.
-
-- **Phase 2 (31–60 Tage):** Vertiefung & Qualitätssicherung  
-  – z. B. Review-Schleifen, „Best Prompt“-Sammlung, erste interne Guidelines.
-
-- **Phase 3 (61–90 Tage):** Skalierung & Verstetigung  
-  – z. B. regelmäßige Retrospektive, Kennzahlen (z. B. gesparte Stunden, Fehlerquote).
-
-Bei **Solo**: machen klar, dass es eher um wiederkehrende Termine im eigenen Kalender (z. B. „Montag 30 Minuten KI-Werkbank“) geht – nicht um große Change-Projekte.
-
-### 4. Umgang mit Widerständen & Risiken
-
-- Nenne 2–3 typische Widerstände (angepasst an die Größe) und wie man ihnen pragmatisch begegnet.
-- Verweise auf Risikoteil, aber wiederhole keine komplette Risikoanalyse.
-- Keine abstrakten Formulierungen wie „Stakeholder-Management optimieren“ – immer ein konkretes Beispiel geben.
-
----
-
-## HTML-Ausgabeformat
-
-Erzeuge **ausschließlich** folgenden Aufbau (kein zusätzliches `<html>`, `<body>` etc.):
-
-```html
 <section class="section org-change">
-  <h2>Veränderungsfähigkeit & Lernen</h2>
+  <h2>Veränderungsfähigkeit &amp; Lernen</h2>
 
-  <p>Ein einleitender Absatz, der Ausgangslage, Unternehmensgröße und Spannungsfeld zwischen Tagesgeschäft und KI-Veränderung beschreibt (4–6 Sätze).</p>
+  <p>
+    Unternehmen in der Branche <strong>{{BRANCHE_LABEL}}</strong>, die im Schwerpunkt
+    <strong>{{HAUPTLEISTUNG}}</strong> arbeiten, stehen bei der Einführung von KI häufig vor
+    einem doppelten Spannungsfeld: Einerseits zeigt die aktuelle Selbsteinschätzung
+    (z.&nbsp;B. {{ki_kompetenz}} sowie die Ziele {{KI_ZIELE_LABELS}}), dass Potenzial und
+    Motivation vorhanden sind. Andererseits verdeutlichen typische Hemmnisse wie
+    {{KI_HEMMNISSE_LABELS}}, dass Routinen, Prioritäten und Verantwortlichkeiten erst entstehen
+    müssen, bevor KI im Alltag verlässlich Wirkung entfalten kann – besonders in einem
+    Unternehmen der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>.
+  </p>
 
   <h3>1. Wo Sie heute stehen</h3>
-  <p>Beschreibung der aktuellen Situation rund um Mindset, Routinen und KI-Kompetenz – konkret bezogen auf {{HAUPTLEISTUNG}} und die Branche {{BRANCHE_LABEL}} (4–6 Sätze).</p>
+  <p>
+    Die Analyse der Scores zeigt, dass Governance ({{score_governance}}), Sicherheit
+    ({{score_sicherheit}}), Nutzen ({{score_nutzen}}) und Befähigung ({{score_befaehigung}})
+    unterschiedlich ausgeprägt sind. Für den Einsatz von KI im Prozess
+    <strong>{{HAUPTLEISTUNG}}</strong> bedeutet dies: Es existieren bereits erste
+    funktionierende Routinen und ein grundsätzlich positives Mindset, jedoch sind
+    Entscheidungswege, Arbeitsstandards und Qualitätssicherung noch nicht überall klar definiert.
+    Abhängig von der Unternehmensgröße – ob Solo, kleines Team oder wachsendes KMU –
+    unterscheiden sich die notwendigen Schritte, um KI stabil und verlässlich in den Alltag zu integrieren.
+  </p>
 
   <h3>2. Wichtigste Veränderungsfelder</h3>
   <ul>
-    <li><strong>Veränderungsfeld A:</strong> 1–2 Sätze, was sich konkret ändern muss und warum das für das Geschäftsmodell relevant ist.</li>
-    <li><strong>Veränderungsfeld B:</strong> 1–2 Sätze mit Fokus auf Kompetenzen/Verantwortung.</li>
-    <li><strong>Veränderungsfeld C:</strong> 1–2 Sätze mit Fokus auf Feedback, Standards und Dokumentation.</li>
+    <li>
+      <strong>Arbeitsroutinen standardisieren:</strong>
+      Die KI-Nutzung muss planbarer werden – feste Einsatzpunkte im Workflow
+      <strong>{{HAUPTLEISTUNG}}</strong>, klare Vorlagen und regelmäßige Überprüfung
+      der Ergebnisse schaffen Verlässlichkeit und entlasten den Arbeitsalltag.
+    </li>
+    <li>
+      <strong>Rollen &amp; Verantwortung klären:</strong>
+      Solo-Unternehmen definieren für sich selbst klare Hüte (z.&nbsp;B. Entscheidung, Prompt-Design,
+      Qualitätssicherung). Teams verteilen Rollen (Teamlead, KI-Owner). KMU binden gezielt
+      Verantwortliche aus relevanten Bereichen ein.
+    </li>
+    <li>
+      <strong>Feedback &amp; Dokumentation stärken:</strong>
+      Kurze Feedback-Loops, strukturierte Notizen und einfache Standards ermöglichen es,
+      erfolgreiche KI-Experimente in stabile, wiederkehrende Abläufe zu überführen.
+    </li>
   </ul>
 
   <h3>3. Fahrplan für die nächsten 90 Tage</h3>
-  <p>Kurze Einordnung (2–3 Sätze), warum ein leichter Einstieg sinnvoll ist – speziell für {{UNTERNEHMENSGROESSE_LABEL}}.</p>
+  <p>
+    Der Wandel gelingt am besten in kleinen, klar priorisierten Schritten. Die folgende
+    90-Tage-Struktur ist bewusst leichtgewichtig gehalten und lässt sich gut an die
+    Unternehmensgröße <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> anpassen.
+  </p>
+
   <ul>
-    <li><strong>0–30 Tage:</strong> Konkrete erste Schritte, die ohne große Projektstruktur machbar sind.</li>
-    <li><strong>31–60 Tage:</strong> Maßnahmen zur Qualitätssicherung und zum Aufbau stabiler Routinen.</li>
-    <li><strong>61–90 Tage:</strong> Schritte zur Skalierung und Verstetigung (z. B. Kennzahlen, regelmäßige Reflexion).</li>
+    <li>
+      <strong>0–30 Tage – Orientierung &amp; Standards:</strong>
+      2–3 Pilot-Workflows festlegen, einfache Regeln für KI-Eingaben definieren,
+      erste Dokumentationsvorlage erstellen (Solo: persönliche Routinen; Team/KMU:
+      Abstimmung mit beteiligten Rollen).
+    </li>
+    <li>
+      <strong>31–60 Tage – Qualität &amp; Kompetenz:</strong>
+      Review-Schleifen einführen, kurze Guidelines erstellen,
+      „Best-Prompt“- oder „Best-Practice“-Sammlung anlegen und erste kleine Schulungen durchführen.
+    </li>
+    <li>
+      <strong>61–90 Tage – Skalierung &amp; Verstetigung:</strong>
+      Regelmäßige Reflexion (Solo: wöchentlicher Check-In; Team/KMU: kurze Team-Reviews oder
+      Bereichs-Runden), messbare Kennzahlen definieren und entscheiden, welche Workflows stabil
+      weitergeführt oder ausgebaut werden sollen.
+    </li>
   </ul>
 
   <h3>4. Umgang mit Widerständen</h3>
-  <p>2–4 Sätze zu typischen Bedenken und wie man sie pragmatisch adressiert – angepasst an {{UNTERNEHMENSGROESSE_LABEL}} und den Beratungsfokus.</p>
+  <p>
+    Widerstände entstehen oft durch Unsicherheit über Qualität, Datenschutz oder veränderte
+    Arbeitsweisen. Solo-Unternehmen benötigen vor allem Sicherheit durch klare Routinen.
+    Kleine Teams profitieren von kurzen, offenen Abstimmungen. In KMU hilft eine transparente,
+    pragmatische Kommunikation zu Nutzen, Risiken und Verantwortlichkeiten. Entscheidend ist,
+    dass Rückmeldungen frühzeitig aufgenommen, verständlich adressiert und in konkrete
+    Verbesserungen für den Alltag umgesetzt werden.
+  </p>
 </section>

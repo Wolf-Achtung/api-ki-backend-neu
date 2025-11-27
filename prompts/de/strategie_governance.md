@@ -1,97 +1,132 @@
-
----
-
-### `strategie_governance.md` – neue Version
-
-```markdown
 Developer:
-# strategie_governance.md – v4.1 GOLD STANDARD+ (size-aware, validator-safe)
+<!-- strategie_governance.md – v4.2 GOLD STANDARD+ (size-aware, strategic, validator-safe)
+     Antworte ausschließlich mit validem HTML.
+     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
-ZIEL DES PROMPTS
-- Erzeuge eine kompakte, strategische Einordnung von KI-Strategie & Governance für das Unternehmen.
-- Verbinde bestehende Rahmenbedingungen (Richtlinien, Datenschutz, Meldewege) mit klaren Leitlinien für die nächsten 12–24 Monate.
-- Der Abschnitt soll für Geschäftsführung / Inhaber als Grundlage für Entscheidungen dienen und zu Risiken, Roadmap und AI-Act-Teil passen.
+     ZIEL:
+     - Eine klare, strategische Einordnung zu KI-Strategie & Governance liefern.
+     - Verbindung aus: aktuellem Reifegrad, vorhandenen Richtlinien, Datenschutzstatus,
+       Verantwortlichkeiten, Risiken, organisatorischer Struktur.
+     - Anwendungen des AI-Act, Change-Management und Verantwortlichkeiten müssen realistisch
+       für Solo, kleine Teams oder KMU beschrieben sein.
+     - Ergebnis = 12–18 Sätze + 1–2 strukturierte Listen.
 
-EINGABE-VARIABLEN (werden im Kontext bereitgestellt)
-- {{BRANCHE_LABEL}}
-- {{UNTERNEHMENSGROESSE_LABEL}}
-- {{COMPANY_SIZE}} – "solo", "small_team", "kmu"
-- {{GOVERNANCE_RICHTLINIEN_LABEL}}
-- {{CHANGE_MANAGEMENT_LABEL}}
-- {{MELDEWEGE_LABEL}}
-- {{DATENSCHUTZ_LABEL}}
-- {{LOESCHREGELN_LABEL}}
-- {{DATENSCHUTZBEAUFTRAGTER_LABEL}}
-- {{FOLGENABSCHAETZUNG_LABEL}}
-- {{INTERNE_KI_KOMPETENZEN_LABEL}}
+     VERFÜGBARE LABEL-VARIABLEN:
+       {{BRANCHE_LABEL}}
+       {{UNTERNEHMENSGROESSE_LABEL}}
+       {{COMPANY_SIZE}}  // "solo", "team", "kmu"
+       {{GOVERNANCE_RICHTLINIEN_LABEL}}
+       {{CHANGE_MANAGEMENT_LABEL}}
+       {{MELDEWEGE_LABEL}}
+       {{DATENSCHUTZ_LABEL}}
+       {{LOESCHREGELN_LABEL}}
+       {{DATENSCHUTZBEAUFTRAGTER_LABEL}}
+       {{FOLGENABSCHAETZUNG_LABEL}}
+       {{INTERNE_KI_KOMPETENZEN_LABEL}}
 
-GRÖSSENLOGIK
-- Solo („{{COMPANY_SIZE}} = 'solo'“):
-  - Governance schlank und pragmatisch beschreiben (klare Regeln, Checklisten, feste Routinen).
-  - Direkte Verantwortung beim Inhaber; keine Begriffe wie „Abteilung“ oder „Bereich“ verwenden.
-- Kleines Team („small_team“):
-  - Fokus auf wenige Kernrollen (z. B. Geschäftsführung + eine verantwortliche Person).
-  - Governance als leichtgewichtige, gut kommunizierte Struktur.
-- KMU („kmu“):
-  - Mehrere Funktionen/Teams einbeziehen, aber trotzdem auf das Wesentliche fokussieren.
-  - Verantwortlichkeiten klar, ohne Konzernsprache.
+     OFFIZIELLE GRÖSSENLOGIK (einheitlich mit allen Prompts):
+       SOLO (COMPANY_SIZE="solo"):
+         - Keine Abteilungen/Teams. Eine Owner-Rolle, persönliche Routinen, einfache Standards.
+         - Governance = pragmatische, kleine Struktur.
 
-VERBOTEN IM OUTPUT
-- Keine Wörter: „Platzhalter“, „Content wird erstellt“, „Freitextfeld“, „TODO“.
-- Keine Hinweise auf Prompt, Variablen oder interne Bewertungslogik.
-- Keine leeren Floskeln wie „es sollten noch Richtlinien erstellt werden, wenn Zeit ist“.
+       TEAM (2–10, COMPANY_SIZE="team"):
+         - „Team“, „Kolleg:innen“, klare Rollen.
+         - Governance = leichtgewichtige Struktur: Teamlead + KI-Owner + Anwender:innen.
 
-STIL & UMFANG
-- Ton: klar, sachlich, vertrauensbildend.
-- Umfang: ca. 8–12 Sätze Gesamttext, ergänzt um 1–2 Listen mit je 3–6 Punkten.
-- Klare Verbindung zwischen aktuellem Status und konkreten nächsten Schritten herstellen.
+       KMU (11–100, COMPANY_SIZE="kmu"):
+         - „Teams“, „Fachbereiche“, „Verantwortliche“.
+         - Kein Konzernjargon („Business Unit“, „Division“).
+         - Governance = abgestimmte Struktur über mehrere Bereiche.
 
-HTML-STRUKTUR (Beispiel – in der Antwort vollständig befüllen)
+     VERBOTEN IM HTML-OUTPUT:
+       - "Platzhalter", "Freitextfeld", TODO, technische Systemhinweise.
+       - Kein Verweis auf Variablennamen oder Prompt-Anweisungen.
+-->
 
-```html
 <section class="section governance-strategy">
   <h2>KI-Strategie &amp; Governance</h2>
 
   <p>
-    Einleitender Überblick in 2–3 Sätzen, wie ein Unternehmen aus der Branche {{BRANCHE_LABEL}}
-    mit der Größe {{UNTERNEHMENSGROESSE_LABEL}} beim Thema KI-Strategie und Governance aktuell aufgestellt ist.
-    Hebe Stärken hervor und benenne klar 1–2 zentrale Lücken, ohne dramatisierend zu formulieren.
+    Für ein Unternehmen der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> in der Branche
+    <strong>{{BRANCHE_LABEL}}</strong> ist eine klare, pragmatische Governance für den KI-Einsatz
+    entscheidend, um Qualität, Sicherheit und Verantwortlichkeiten zu sichern. Die aktuelle Einschätzung
+    zeigt, wie weit Richtlinien, Meldewege, Datenschutzregeln und vorhandene Kompetenzen bereits greifen
+    und an welchen Stellen strukturelle Weiterentwicklungen nötig sind.
   </p>
 
-  <h3>Rahmenbedingungen &amp; Regelwerk</h3>
+  <h3>Rahmenbedingungen &amp; aktueller Status</h3>
   <ul>
-    <li><strong>Richtlinien &amp; Policy:</strong> Kurzbewertung basierend auf {{GOVERNANCE_RICHTLINIEN_LABEL}} (z. B. vorhandene Regeln, Entwürfe, noch offene Lücken).</li>
-    <li><strong>Change-Management &amp; Kommunikation:</strong> Einordnung auf Basis von {{CHANGE_MANAGEMENT_LABEL}} – wie gut Veränderungen erklärt und begleitet werden.</li>
-    <li><strong>Meldewege &amp; Vorfälle:</strong> Einschätzung anhand von {{MELDEWEGE_LABEL}} – gibt es klare Ansprechpersonen und Prozesse bei Problemen mit KI?</li>
-    <li><strong>Datenschutz &amp; Löschregeln:</strong> Bewertung von {{DATENSCHUTZ_LABEL}} und {{LOESCHREGELN_LABEL}} – wie gut sind personenbezogene Daten geschützt und Löschfristen geregelt?</li>
-    <li><strong>Verantwortlichkeiten &amp; Kompetenzen:</strong> Hinweis auf {{DATENSCHUTZBEAUFTRAGTER_LABEL}}, {{INTERNE_KI_KOMPETENZEN_LABEL}} und {{FOLGENABSCHAETZUNG_LABEL}} – wer trägt Verantwortung und wie gut ist das Know-how verteilt?</li>
+    <li>
+      <strong>Richtlinien &amp; Policy:</strong>
+      Die vorhandenen Regeln werden derzeit als {{GOVERNANCE_RICHTLINIEN_LABEL}} beschrieben.
+      Sie bilden einen ersten Rahmen, müssen aber – je nach Größe – weiter präzisiert,
+      vereinfacht oder erweitert werden.
+    </li>
+    <li>
+      <strong>Change-Management &amp; Kommunikation:</strong>
+      Der Umgang mit Veränderungen wird als {{CHANGE_MANAGEMENT_LABEL}} bewertet.
+      Bedeutung und Nutzen von KI sollten konsistent kommuniziert werden, um Akzeptanz zu steigern.
+    </li>
+    <li>
+      <strong>Meldewege &amp; Vorfälle:</strong>
+      Aktuelle Strukturen werden als {{MELDEWEGE_LABEL}} beschrieben.
+      Klare Ansprechpersonen und einfache Abläufe erhöhen Sicherheit und Transparenz.
+    </li>
+    <li>
+      <strong>Datenschutz &amp; Löschregeln:</strong>
+      Die Angaben zu Datenschutz ({{DATENSCHUTZ_LABEL}}) und Löschregeln
+      ({{LOESCHREGELN_LABEL}}) zeigen, dass Grundstrukturen vorhanden sind,
+      jedoch noch stärker formalisiert werden sollten.
+    </li>
+    <li>
+      <strong>Verantwortlichkeiten &amp; Kompetenzen:</strong>
+      Die Benennung eines/einer Datenschutzbeauftragten ({{DATENSCHUTZBEAUFTRAGTER_LABEL}}),
+      die vorhandene KI-Kompetenz ({{INTERNE_KI_KOMPETENZEN_LABEL}}) und der Status von
+      Folgenabschätzungen ({{FOLGENABSCHAETZUNG_LABEL}}) liefern Hinweise auf Rollen,
+      Zuständigkeiten und vorhandenes Know-how.
+    </li>
   </ul>
 
   <h3>Strategische Leitlinien für die nächsten 12–24 Monate</h3>
   <ol>
     <li>
-      <strong>Leitlinie&nbsp;1:</strong> Konkreter Schwerpunkt, der Governance und Geschäftsziel verbindet
-      (z. B. „klare Spielregeln für den Einsatz von KI in Kundenprojekten“).
+      <strong>Klare Einsatzregeln etablieren:</strong>
+      Festlegung verbindlicher Spielregeln für Eingaben, Datenarten und Qualitätsstandards
+      – bei Solo kompakt in Form persönlicher Routinen, bei Teams als gemeinsame Leitlinie,
+      im KMU als abgestimmtes Regelwerk mit Verantwortlichkeiten.
     </li>
     <li>
-      <strong>Leitlinie&nbsp;2:</strong> Maßnahme zur systematischen Einführung oder Überarbeitung von Richtlinien und Prozessen.
+      <strong>Verantwortlichkeiten definieren:</strong>
+      Solo: eine Owner-Rolle für Nutzung & Qualität.<br>
+      Team: Teamlead + KI-Owner + Anwender:innen.<br>
+      KMU: Prozessverantwortliche in Fachbereichen + Datenschutz/IT.
     </li>
     <li>
-      <strong>Leitlinie&nbsp;3:</strong> Vorgehen zur Qualifizierung der beteiligten Personen (z. B. Schulungen, Leitfäden, Sprechstunden).
+      <strong>Transparenz &amp; Risikoabsicherung erhöhen:</strong>
+      Kurze Dokumentation, einfache Meldewege und einheitliche Freigabepunkte sorgen dafür,
+      dass Ergebnisse nachvollziehbar und sicher genutzt werden können.
     </li>
-    <!-- Optional 1–2 weitere Leitlinien mit klarer Verbindung zu Risiko, Compliance oder Wertschöpfung -->
+    <li>
+      <strong>Kompetenzen gezielt aufbauen:</strong>
+      Mini-Trainings, Leitfäden und kurze Reviews schaffen Sicherheit im Umgang mit KI.
+      In KMU zusätzlich rollenspezifische Schulungen.
+    </li>
   </ol>
 
   <h3>Verantwortung &amp; Steuerung</h3>
   <p>
-    Erläutere in 2–3 Sätzen, wie die Steuerung von KI-Strategie und Governance in einem Unternehmen der Größe
-    {{UNTERNEHMENSGROESSE_LABEL}} pragmatisch organisiert werden kann:
-    bei Solo mit einer klar definierten Owner-Rolle, bei kleinen Teams mit einem kompakten Steuerungskreis,
-    bei KMU mit klar benannten Verantwortlichen in mehreren Funktionen.
+    Die Steuerung des KI-Einsatzes sollte zur Organisationsstruktur passen:
+    Solo-Unternehmen arbeiten mit einer klar definierten Owner-Rolle und
+    festen Routinen; kleine Teams nutzen einen kompakten Steuerungskreis aus
+    Teamlead und Anwender:innen; KMU setzen auf abgestimmte Verantwortlichkeiten
+    zwischen Fachbereichen, Management und Datenschutz/IT.
+    Transparenz, kurze Entscheidungswege und regelmäßige Reviews sind für alle
+    Größen zentral, um Qualität und Sicherheit zu gewährleisten.
   </p>
 
   <p class="small muted">
-    Formuliere die Aussagen so, dass sie anschlussfähig an die Roadmap, den AI-Act-Status
-    und die Risikobetrachtung im Report sind und unmittelbar als Grundlage für nächste Entscheidungen dienen können.
+    Eine realistische, gut kommunizierte Governance sichert nachhaltige Wirkung,
+    unterstützt die Roadmap-Umsetzung und schafft Vertrauen bei Mitarbeitenden und
+    Kund:innen gleichermaßen.
   </p>
 </section>
