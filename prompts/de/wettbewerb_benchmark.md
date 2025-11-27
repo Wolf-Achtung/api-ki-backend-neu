@@ -1,45 +1,72 @@
-Developer: # PROMPT: Wettbewerb & Benchmarking
+Developer:
+<!-- wettbewerb_benchmark.md – v4.0 GOLD STANDARD+ (Benchmarking, size-aware, validator-safe)
+     Antworte ausschließlich mit validem HTML.
+     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
-## ZWECK
-Präsentiere:
-1. **Score-Vergleich:** Gegenüberstellung Unternehmen vs. Branche
-2. **Best Practices:** Vorgehen und Methoden der Spitzenreiter
-3. **Gaps:** Rückstände des Unternehmens im Vergleich
-4. **Opportunities:** Potenziale für Vorsprung und Verbesserung
+     ZWECK:
+       - Vergleich des Unternehmens mit dem Branchendurchschnitt und den Top 10%.
+       - Ableitung der Position je Kategorie, 2+ Gaps, 2+ Stärken.
+       - Erstellung einer size-aware Überholungsstrategie (Q2/Q3/Q4).
 
-**Zielgruppe:** Geschäftsführung, Strategie
-**Stil:** Ehrlich, motivierend, konkret
+     PFLICHTVARIABLEN:
+       {{BRANCHE_LABEL}}
+       {{report_date}}
+       {{score_gesamt}}
+       {{score_befaehigung}}
+       {{score_governance}}
+       {{score_sicherheit}}
+       {{score_nutzen}}
 
----
+     BENCHMARK-ZAHLEN (NICHT ÄNDERN!):
+       Gesamt: Ø 65, Top 10% = 82
+       Befähigung: Ø 68, Top 10% = 85
+       Governance: Ø 58, Top 10% = 78
+       Sicherheit: Ø 62, Top 10% = 80
+       Wertschöpfung: Ø 70, Top 10% = 88
 
-### Beginne mit einer knappen Checklist (3-7 Punkte), die deine geplanten Schritte bei der Erstellung des Outputs aufzeigt. Halte die Punkte konzeptionell, nicht auf Implementierungsdetail-Ebene.
+     SIZE-AWARE STRATEGIELOGIK:
+       COMPANY_SIZE ∈ {"solo","team","kmu"}
 
----
+       SOLO:
+         - Fokus auf persönliche Routinen, einfache Standards, direkter ROI.
+         - Gaps: Kapazität, Priorisierung, Dokumentation.
+         - Stärken: Flexibilität, schnelle Iteration.
+         - Maßnahmen Q2–Q4: kleine, realistische Schritte; keine „Bereiche“, keine „Teams“.
 
-## ⚠️ KRITISCHE REGELN
+       TEAM (2–10):
+         - Fokus auf kollaborative Abstimmung, vereinheitlichte Workflows, Rollen.
+         - Gaps: inkonsistente Prozesse, fehlende Verantwortlichkeiten.
+         - Stärken: geteiltes Wissen, Team-Leverage.
+         - Maßnahmen: klare Rollen (Teamlead, KI-Owner), kurze Review-Loops.
 
-### ❌ VERBOTEN:
-1. **Keine erfundenen Benchmark-Zahlen verwenden**
-2. **Niemals namenlose Wettbewerber aufführen**
+       KMU (11–100):
+         - Fokus auf skalierbare Prozesse, Bereichskoordinierung, Governance.
+         - Gaps: Silos, Datenqualität, fehlende Standards.
+         - Stärken: Ressourcen, Skalierungspotenzial, Spezialisierung.
+         - Maßnahmen: fachbereichsspezifische Pilotflächen, strukturierte Prozessharmonisierung.
 
-### ✅ STATT-DESSEN:
-1. **Aggregierte Daten angeben:** z. B. "Durchschnitt: 65/100 (30 Assessments)"
-2. **Best Practices benennen:** z. B. "Top 10%: Batch-Processing, Templates, DSGVO-Zertifikat"
+     REGELN:
+       - KEINE erfundenen Wettbewerber, KEINE erfundenen Zahlen.
+       - Positionierungen & Gaps werden ausschließlich aus Scores abgeleitet.
+       - <section>…</section> als einziger sichtbarer HTML-Block.
+       - Keine Platzhaltertexte im Output (keine „Gap 1“, keine Eckklammern).
+-->
 
----
-
-## 💡 BEISPIEL
-
-```html
 <section class="section wettbewerb-benchmark">
-  <h2>Wettbewerb & Benchmarking</h2>
+  <h2>Wettbewerb &amp; Benchmarking</h2>
 
-  <p><strong>Datenbasis:</strong> 30 Assessments in {{BRANCHE_LABEL}}, Stand {{report_date}}</p>
+  <p><strong>Datenbasis:</strong> Benchmark aus 30 Assessments in <strong>{{BRANCHE_LABEL}}</strong>, Stand <strong>{{report_date}}</strong>.</p>
 
-  <h3>Score-Vergleich (Sie vs. Branche)</h3>
+  <h3>Score-Vergleich (Unternehmen vs. Branche)</h3>
   <table class="table">
     <thead>
-      <tr><th>Kategorie</th><th>Ihr Score</th><th>Ø Branche</th><th>Top 10%</th><th>Position</th></tr>
+      <tr>
+        <th>Kategorie</th>
+        <th>Ihr Score</th>
+        <th>Ø Branche</th>
+        <th>Top&nbsp;10%</th>
+        <th>Position</th>
+      </tr>
     </thead>
     <tbody>
       <tr>
@@ -47,106 +74,71 @@ Präsentiere:
         <td>{{score_gesamt}}</td>
         <td>65</td>
         <td>82</td>
-        <td>[Überdurchschnitt/Durchschnitt/Unterdurchschnitt]</td>
+        <td><!-- Position Gesamt wird aus Score abgeleitet --></td>
       </tr>
       <tr>
         <td>Befähigung</td>
         <td>{{score_befaehigung}}</td>
         <td>68</td>
         <td>85</td>
-        <td>[Position]</td>
+        <td><!-- Position Befähigung --></td>
       </tr>
       <tr>
         <td>Governance</td>
         <td>{{score_governance}}</td>
         <td>58</td>
         <td>78</td>
-        <td>[Position]</td>
+        <td><!-- Position Governance --></td>
       </tr>
       <tr>
         <td>Sicherheit</td>
         <td>{{score_sicherheit}}</td>
         <td>62</td>
         <td>80</td>
-        <td>[Position]</td>
+        <td><!-- Position Sicherheit --></td>
       </tr>
       <tr>
         <td>Wertschöpfung</td>
         <td>{{score_nutzen}}</td>
         <td>70</td>
         <td>88</td>
-        <td>[Position]</td>
+        <td><!-- Position Wertschöpfung --></td>
       </tr>
     </tbody>
   </table>
 
-  <h3>Best Practices der Top 10%</h3>
+  <h3>Best Practices der Top&nbsp;10%</h3>
   <ul>
-    <li><strong>Technologie:</strong> Batch-Processing für Skalierung (anstelle von Einzelverarbeitung)</li>
-    <li><strong>Governance:</strong> DSGVO-Zertifikat und jährliches Audit</li>
-    <li><strong>Qualität:</strong> Human-in-the-Loop kombiniert mit automatisierten Fakten-Checks</li>
-    <li><strong>Geschäftsmodell:</strong> SaaS/White-Label statt ausschließlich Projektgeschäft</li>
+    <li><strong>Technologie:</strong> Automatisiertes Batch-Processing statt Einzelfallbearbeitung.</li>
+    <li><strong>Governance:</strong> Klare Richtlinien, definierte Freigaben, regelmäßige Audits.</li>
+    <li><strong>Qualität:</strong> Human-in-the-Loop mit faktenbasierten Prüfmechanismen.</li>
+    <li><strong>Wertschöpfung:</strong> Wiederverwendbare Templates und standardisierte Workflows.</li>
   </ul>
 
   <h3>Ihre Gaps (Aufholbedarf)</h3>
   <ul>
-    <li>[Gap 1 basierend auf Score-Vergleich]</li>
-    <li>[Gap 2 basierend auf Score-Vergleich]</li>
-    <li>[Gap 3 basierend auf Score-Vergleich]</li>
+    <li><!-- Gap 1: Score < Branchen-Ø → z. B. Governance/Sicherheit --></li>
+    <li><!-- Gap 2: weiteres relevantes Gap → z. B. Wertschöpfung/Befähigung --></li>
   </ul>
 
   <h3>Ihre Stärken (Vorsprung nutzen)</h3>
   <ul>
-    <li>[Stärke 1: Score > Durchschnitt]</li>
-    <li>[Stärke 2: Score > Durchschnitt]</li>
+    <li><!-- Stärke 1: Score > Branchen-Ø → z. B. Befähigung/Wertschöpfung --></li>
+    <li><!-- Stärke 2: zusätzliche Stärke → z. B. Sicherheit/Qualität --></li>
   </ul>
 
-  <h3>Überholungs-Strategie (Nächste 12 Monate)</h3>
+  <h3>Überholungs-Strategie (nächste 12 Monate – size-aware)</h3>
   <ol>
-    <li><strong>Q2:</strong> [Gap 1 schließen – Quick Win X]</li>
-    <li><strong>Q3:</strong> [Gap 2 schließen – Maßnahme Y]</li>
-    <li><strong>Q4:</strong> [Top 10% erreichen in Kategorie Z]</li>
+    <li><strong>Q2:</strong> <!-- Solo: persönliche Standardisierung; Team: Rollen & Review-Loops; KMU: Pilotfläche definieren --></li>
+    <li><strong>Q3:</strong> <!-- Solo: Workflow-Optimierung; Team: Team-Dokumentation; KMU: Bereichsübergreifende Harmonisierung --></li>
+    <li><strong>Q4:</strong> <!-- Solo: Routine-Festigung; Team: Skalierung im Team; KMU: Governance + Skalierungsprogramm --></li>
   </ol>
 
-  <p><strong>Ziel:</strong> Gesamt-Score {{score_gesamt}} → {% if score_gesamt >= 80 %}90+ (Top 5%){% elif score_gesamt >= 60 %}80+ (Top 10%){% else %}70+ (Top 25%){% endif %} bis Ende 2025</p>
+  <p><strong>Strategischer Zielkorridor:</strong>
+    <!-- Zielbereich abhängig vom Score:
+         ≥ 80 → Top 5%
+         ≥ 60 → Richtung Top 10%
+         < 60 → Richtung Top 25%
+    -->
+  </p>
 </section>
-```
-
----
-
-## 🎯 ERFOLGS-KRITERIEN
-
-1. ✅ Score-Vergleich mit Branche vorhanden
-2. ✅ Konkrete Best Practices aufgeführt
-3. ✅ Gaps und Stärken klar benannt
-4. ✅ Überholungsstrategie enthalten
-
----
-
-**VERSION:** v2.1 GOLD STANDARD+
-**OUTPUT:** Valides HTML
-
----
-
-## Output Format
-
-Erstelle exakt einen validen HTML-Abschnitt gemäß obiger Vorlage. Setze folgende Variablen ein:
-- `{{BRANCHE_LABEL}}`: String, erforderlich. Name der Branche/des Industriezweigs.
-- `{{report_date}}`: Datum (YYYY-MM-DD), erforderlich. Datum des Benchmarks.
-- Score-Variablen:
-  - `{{score_gesamt}}`, `{{score_befaehigung}}`, `{{score_governance}}`, `{{score_sicherheit}}`, `{{score_nutzen}}`: Integer von 0–100, erforderlich. Gibt den Score des Unternehmens pro Kategorie an.
-
-Die Tabelle muss mindestens die fünf aufgeführten Kategorien enthalten. Ist ein Score-Wert ungültig oder fehlt er (kein Wert zwischen 0–100), muss ein expliziter HTML-Kommentar im Output die fehlenden oder ungültigen Felder kennzeichnen.
-
-Für Gaps und Stärken sind jeweils mindestens zwei Listeneinträge zu generieren, die anhand des Score-Vergleichs (über oder unter Branchendurchschnitt) bestimmt werden. Falls weniger als zwei möglich, setze einen Kommentar zur unzureichenden Datenlage in die Liste.
-
-Die Überholungsstrategie-Liste muss exakt drei Punkte umfassen (Q2, Q3, Q4). Werden mehr/weniger Quartale benötigt, vermerke dies mit einem HTML-Kommentar und führe die jeweiligen Strategie-Schritte der Reihe nach auf.
-
-Bei zusätzlichen oder kundenindividuellen Kategorien erweitere die Tabelle bzw. Listen entsprechend und erläutere dies mit einem Kommentar im HTML.
-
-Jede fehlerhafte, unerwartete oder fehlende Eingabedaten sind mit klaren, markierten HTML-Kommentaren im jeweiligen Abschnitt zu thematisieren.
-
----
-
-Nach dem Erstellen des Outputs:
-- Bestätige in 1-2 Sätzen, dass der HTML-Abschnitt erzeugt wurde und ob alle Vorgaben eingehalten wurden. Falls nicht, nenne die fehlenden/abweichenden Punkte und führe eine minimale Korrektur durch, wenn möglich.

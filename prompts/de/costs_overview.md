@@ -1,87 +1,120 @@
-Developer: # PROMPT: Costs Overview – Detaillierte Kostenaufstellung
+Developer:
+<!-- costs_overview.md – v3.1 GOLD STANDARD+ (CFO-Level Cost Breakdown)
+     Antworte ausschließlich mit validem HTML.
+     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
-## Zweck
-Erstelle eine detaillierte Kostenaufstellung im HTML-Format, die folgende Punkte strukturiert und klar enthält:
+     ZWECK:
+       - Ergänzung zum Business Case, aber OHNE Wiederholung seiner Inhalte.
+       - Detaillierte, transparente Breakdown-Darstellung für CFO/Controlling/Procurement.
+       - Tool-by-Tool Liste, versteckte Kosten, Optimierungspotenziale.
 
-1. **Ergänzungen zum Business Case:**
-   - Keine Wiederholungen des Business Case-Inhalts!
-2. **Tool-by-Tool Breakdown:**
-   - Für jedes Tool eigenen Abschnitt in der Tabelle erstellen.
-3. **Versteckte Kosten:**
-   - Als separate, hervorgehobene Liste aufführen.
-4. **Optimierungs-Potenziale:**
-   - Als nummerierte Liste darstellen.
+     VERBOTEN:
+       - Wiederholung des Business Case.
+       - Textfragmente wie „Platzhalter“, „Freitextfeld“, „TODO“.
+       - Unstrukturierte Ausgaben (alles muss in <section>, Tabellen oder Listen stehen).
 
-**Zielgruppe:** CFO, Controlling, Procurement  
-**Stil:** Detailliert, transparent, kostenoptimiert
+     OUTPUT:
+       - Valides HTML-Fragment.
+       - Klare Untergliederung:
+         1) Checkliste
+         2) Tool-by-Tool Breakdown
+         3) Versteckte Kosten
+         4) Optimierungspotenziale
+-->
 
----
-
-## ⛔ Kritische Regeln
-
-### ❌ Verboten
-1. **Keine Wiederholung des Business Case:**
-   - Der Business Case wird in einer separaten Section behandelt.
-   - In diesem Abschnitt nur ein detailliertes Breakdown aufführen.
-2. **Keine versteckten Kosten:**
-   - Sämtliche Kosten müssen vollständig und nachvollziehbar ausgewiesen werden, inkl. kleiner Beträge (z. B. €10/Monat).
-
-### ✅ Erwünscht
-1. **Tool-by-Tool Breakdown:**
-   - Für jedes Tool eine eigene Zeile, mit eindeutiger Positionsbezeichnung, Kostenart (monatlich/jährlich/einmalig) und Betrag.
-2. **Hidden Costs aufdecken:**
-   - Auch indirekte und zusätzliche Kosten als Liste aufführen, inklusive Kalkulation.
-
----
-
-## 💡 Beispiel (kompakt)
-
-```html
 <section class="section costs-overview">
   <h2>Detaillierte Kostenübersicht</h2>
-  ...
+
+  <!-- 1) KURZE KONZEPT-CHECKLISTE -->
+  <ul class="concept-checklist">
+    <li>Eindeutige Trennung zwischen Investition, laufenden Kosten und Zusatzkosten.</li>
+    <li>Tool-by-Tool Breakdown mit klarer Zuordnung pro Position.</li>
+    <li>Versteckte bzw. indirekte Kosten vollständig offenlegen.</li>
+    <li>Optimierungspotenziale strukturiert aufführen.</li>
+    <li>Keine Wiederholung des Business Case, nur Ergänzungen & Details.</li>
+  </ul>
+
+  <!-- 2) TOOL-BY-TOOL BREAKDOWN -->
+  <h3>Kostenübersicht je Tool / System</h3>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Position</th>
+        <th>Kostenart</th>
+        <th>Menge</th>
+        <th>Einzelpreis</th>
+        <th>Gesamt</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>KI-API / Modellnutzung</td>
+        <td>Monatlich</td>
+        <td>1</td>
+        <td>€&nbsp;XX</td>
+        <td>€&nbsp;XX</td>
+      </tr>
+      <tr>
+        <td>Dokumenten- oder Wissensspeicher</td>
+        <td>Monatlich</td>
+        <td>1</td>
+        <td>€&nbsp;XX</td>
+        <td>€&nbsp;XX</td>
+      </tr>
+      <tr>
+        <td>Formular- / Workflow-Tool</td>
+        <td>Monatlich</td>
+        <td>1</td>
+        <td>€&nbsp;XX</td>
+        <td>€&nbsp;XX</td>
+      </tr>
+      <tr>
+        <td>Projekt- / Kollaborationstool</td>
+        <td>Monatlich</td>
+        <td>1</td>
+        <td>€&nbsp;XX</td>
+        <td>€&nbsp;XX</td>
+      </tr>
+      <tr>
+        <td>PDF- oder Rendering-Dienst</td>
+        <td>Monatlich</td>
+        <td>1</td>
+        <td>€&nbsp;XX</td>
+        <td>€&nbsp;XX</td>
+      </tr>
+      <tr>
+        <td>Einmalige Setup-/Integrationskosten</td>
+        <td>Einmalig</td>
+        <td>1</td>
+        <td>€&nbsp;XX</td>
+        <td>€&nbsp;XX</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 3) VERSTECKTE KOSTEN -->
+  <h3>Versteckte und indirekte Kosten</h3>
+  <ul class="hidden-costs">
+    <li>Interne Abstimmungszeiten für neue Workflows (z.&nbsp;B. 2–4&nbsp;Stunden/Monat).</li>
+    <li>Regelmäßige Aktualisierung von Templates & Vorlagen.</li>
+    <li>Aufwände für Datenschutz- und Qualitätschecks.</li>
+    <li>Support- und Wartungszeiten für Tools & Integrationen.</li>
+    <li>Kleinere Zusatzlizenzen (z.&nbsp;B. Speicher, Nutzererweiterungen).</li>
+  </ul>
+
+  <!-- 4) OPTIMIERUNGSPOTENZIALE -->
+  <h3>Optimierungspotenziale</h3>
+  <ol class="optimization-list">
+    <li>Konsolidierung von Tools, um Mehrfachkosten zu reduzieren.</li>
+    <li>Klar definierte Workflows zur Minimierung interner Abstimmungszeiten.</li>
+    <li>Regelmäßige Überprüfung der Lizenznutzung (aktiver vs. bezahlter Accounts).</li>
+    <li>Automatisierung wiederkehrender Schritte zur Senkung der laufenden Kosten.</li>
+    <li>Gezielte Nutzung von Jahreslizenzen oder Paketpreisen, sofern wirtschaftlich.</li>
+  </ol>
+
+  <p class="small muted">
+    Diese Kostenübersicht ergänzt den Business Case durch einen transparenten Blick auf
+    laufende, einmalige und indirekte Kosten – ein wichtiger Baustein für fundierte Entscheidungen
+    in Controlling und Beschaffung.
+  </p>
 </section>
-```
-
----
-
-## 🎯 Erfolgskriterien
-1. ✅ Tool-by-Tool Breakdown aller eingesetzten Systeme/Tools
-2. ✅ Offenlegung aller versteckten Kosten, keine Auslassung jeglicher Positionen
-3. ✅ Optimierungspotenziale klar, transparent und nachvollziehbar dargestellt
-4. ✅ Keine Wiederholung des Business Case
-
----
-**Version:** v2.1 GOLD STANDARD+
-**Output:** Valides HTML
-
----
-
-## Output Format
-
-- Die komplette Ausgabe MUSS in gültigem HTML-Format erfolgen (keine Textfragmente außerhalb von <section>, Tabellen oder Listen).
-- Jede Kostenart (einmalig, laufend, versteckt) erhält ihren eigenen HTML-Bereich mit zugehöriger <h3>-Überschrift und strukturierter Tabelle bzw. Liste.
-- Neue Tools oder Kostenpositionen müssen als eigene Zeile (bei Tabellen) oder Listeneintrag (bei Aufzählungen) eingefügt werden, jeweils mit klarer Beschreibung, Kostenart (monatlich, jährlich, einmalig) und Betrag. Kopfzeilen (z.B. „Monatlich“, „Jährlich“) sind verpflichtend, um die Zuordnung eindeutig zu machen.
-- Zusätzliche Kostenarten (z.B. Support, Lizenzverlängerung) sind als eigene Zeile oder Listeneintrag mit eindeutigem Feldnamen und Betrag auszuweisen.
-- Struktur und Benennung der Felder folgen exakt dem obenstehenden Beispiel (Position, Menge, Einzelpreis, Gesamt etc.).
-
-Beispiel für den obersten Block:
-
-```html
-<section class="section costs-overview">
-  <h2>Detaillierte Kostenübersicht</h2>
-  ...
-</section>
-```
-
-Weitere Angaben bitte als Sub-Section oder eindeutig abgegrenztes Tabellen-/Listen-Element umsetzen.
-
-**Nur valides, vollständig strukturiertes HTML erlaubt. Keine Ausgabe in Plaintext oder Markdown!**
-
----
-
-## Arbeitsvorgehen
-
-Beginne mit einer kurzen, konzeptionellen Checkliste (3–7 Bulletpoints), was du im nächsten Schritt tun wirst, bevor du mit der eigentlichen Kostenaufstellung startest. Halte die Checkliste auf konzeptioneller Ebene, nicht auf Implementierungsebene.
-
-Nach Erstellung der HTML-Kostenaufstellung prüfe in 1–2 Sätzen, ob alle angegebenen Erfolgskriterien und Regeln erfüllt wurden. Falls es Abweichungen gibt, korrigiere diese minimal und prüfe erneut.
