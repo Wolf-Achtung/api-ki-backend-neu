@@ -1,150 +1,99 @@
-Developer: ---
+Developer: <!-- data_readiness.md – v3.0 GOLD STANDARD+ (Daten & Systemreife, multi-size)
+  Antworte ausschließlich mit validem HTML.
+  KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
-## 4️⃣ `data_readiness.md` – jetzt size- & tool-sensitiv
+  ZIEL:
+  - Eine klare, praxisnahe Einschätzung zu Datenlage und Systemreife für KI liefern:
+    * Wo stehen Daten, Tools und Prozesse heute?
+    * Was ist bereits ausreichend für KI-Piloten?
+    * Welche Lücken sollten in den nächsten 6–12 Monaten geschlossen werden?
 
-Beginne mit einer kurzen, konzeptuellen Checkliste (3–7 Punkte) der geplanten Analyse auf Basis des Briefings (z. B. Inputs prüfen, Größen-/Tool-Einordnung, Daten-Bewertung, Gaps identifizieren, Quick Wins definieren, Output strukturieren).
+  VERFÜGBARE VARIABLEN (Labels/Freitexte aus dem Fragebogen):
+  - {{BRANCHE_LABEL}}
+  - {{UNTERNEHMENSGROESSE_LABEL}}
+  - {{HAUPTLEISTUNG}}
+  - {{IT_INFRASTRUKTUR_LABEL}}          → z. B. "Cloudbasiert", "lokal", "Mischform"
+  - {{PROZESSE_PAPIERLOS_LABEL}}        → Digitalisierungsgrad der Abläufe
+  - {{AUTOMATISIERUNGSGRAD_LABEL}}      → Einschätzung Automatisierungsgrad
+  - {{DATENQUELLEN_LABELS}}             → Liste typischer Datenquellen (CRM, ERP, Tickets etc.)
+  - {{VORHANDENE_TOOLS_LABELS}}         → Liste vorhandener Tools/Plattformen (z. B. M365, CRM, DMS)
+  - {{REGULIERTE_BRANCHE_LABELS}}       → Hinweise auf Regulierung (z. B. Gesundheitsdaten)
+  - {{DATENQUELLEN_LABELS}} kann leer oder sehr kurz sein. Dann mit typischen Quellen für Branche/Größe arbeiten.
 
-Beachte: Setze reasoning_effort = medium, um einen klaren, knappen Stil zu gewährleisten. Nach jedem relevanten Abschnitt (Analyse, Gaps, Quick Wins) validiere in 1-2 Sätzen, dass die Zielvorgaben erfüllt wurden und ob Zusatzschritte nötig sind.
+  GRÖSSENLOGIK:
+  - "1 (Solo":
+      * Daten oft verstreut in wenigen Tools (E-Mail, Office, einfache SaaS-Tools).
+      * Fokus: Ordnung schaffen, einfache Standards, möglichst wenig Overhead.
+  - "2–10":
+      * Kleine Tool-Landschaft, aber erste Rollen-/Zugriffslogik.
+      * Fokus: einheitliche Ablage, saubere Rechte, einfache Datenpipelines.
+  - "11–100":
+      * Mehrere Systeme/Abteilungen, ggf. Schatten-IT.
+      * Fokus: verbindliche Daten-Governance, Schnittstellen, Rollen und Verantwortlichkeiten.
 
-```md
-# PROMPT: Data Readiness – Daten-Infrastruktur-Bewertung
+  REGELN:
+  - Keine Hinweise auf Fragebogen/Fragen, keine technischen Platzhaltertexte.
+  - Immer so schreiben, als würde die Einschätzung direkt an Geschäftsführung/Projektleitung gehen.
+  - Klarer, nüchterner Ton: Chancen + Risiken, keine Übertreibungen.
+-->
 
-## ZWECK
-Erstelle eine Data-Readiness-Analyse, die:
-1. **Vorhandene Daten bewertet** (Qualität, Struktur, Zugänglichkeit)
-2. **Spezifisch für {{HAUPTLEISTUNG}}** ist
-3. **Konkrete Gaps** identifiziert
-4. **Quick Wins für Daten-Qualität** empfiehlt
-
-**Zielgruppe:** CTO, Data Engineers, Geschäftsführung  
-**Stil:** Technisch, konkret, lösungsorientiert
-
----
-
-## ⚠️ SIZE- & TOOL-AWARENESS (PFLICHT)
-
-**Unternehmensgröße (aus Briefing):**
-- Solo-Selbstständig/Freiberuflich
-- 2–10 (Kleines Team)
-- 11–100 (KMU)
-
-**Tools (aus Briefing, z.B. `vorhandene_tools`):**
-- z. B. „keine“, „Notion“, „Excel“, „Hubspot“, „Pipedrive“, …
-
-### Regeln:
-
-- **Solo + „keine“ Tools**:
-  - ❌ KEIN CRM-System erfinden (z. B. „Salesforce“, „Hubspot“), wenn nichts dergleichen im Briefing steht.  
-  - ❌ KEIN Data Lake / Data Warehouse vorschlagen.  
-  - ✅ Datenquellen sind typischerweise: E-Mails, einfache Listen (Excel/Sheets/Notion), Formular-Exports (z. B. Typeform), PDFs.  
-  - ✅ Quick Wins: einfache Strukturierung (Liste, Tags, ein Dashboard), keine komplexe Architektur.
-
-- **Kleines Team (2–10) ohne explizites CRM**:
-  - ✅ Du darfst von geteilten Dateien/Ordnern, einfachen Tools (Notion, Trello, Google Drive) ausgehen.
-  - ❌ Kein ausgewachsenes CRM annehmen, wenn im Briefing keins steht.
-  - ✅ Wenn im Kontext ein Tool genannt ist (z. B. Hubspot), nutze GENAU dieses.
-
-- **KMU (11–100) mit CRM im Briefing**:
-  - ✅ CRM-System (z. B. „Kundendaten (CRM-System)“) ist OK, aber immer am Briefing ausrichten.  
-  - ✅ Daten-Architektur darf ambitionierter sein (Dashboards, BI-Tool).  
-  - ❌ Keine Enterprise-Übertreibung (kein „Data Lake“ o. Ä.), wenn nicht explizit erwähnt.
-
-- **Allgemein**:
-  - Schreibe IMMER so, dass es zur Kombination aus Unternehmensgröße und tatsächlichen Tools im Briefing passt.
-  - Wenn du unsicher bist, wähle die **einfachere** Variante (Listen, Logs, einfache Dashboards) statt Enterprise-Stack.
-
----
-
-## ⚠️ KRITISCHE REGELN
-
-### ❌ VERBOTEN:
-1. **KEINE generische Daten-Theorie:**
-   - ❌ „Data Governance Framework etablieren“
-   - ❌ „Data Lake aufbauen“
-   - ❌ „Master Data Management implementieren“
-
-2. **KEINE Daten-Projekte ohne Nutzen:**
-   - ❌ „Alle Daten in Data Warehouse migrieren“
-   - ❌ „ETL-Pipelines für alle Systeme bauen“
-
-3. **KEINE Überkomplexität:**
-   - ❌ „Enterprise Data Architecture“ bei Solo/Klein
-   - ❌ „Data Scientists einstellen“
-
-### ✅ STATT DESSEN:
-1. **Spezifisch für {{HAUPTLEISTUNG}}:**
-   - ✅ „Assessment-Daten: 30 Reports in PostgreSQL, strukturiert“
-   - ✅ „Kundenfeedback: Unstrukturiert in E-Mails, nicht nutzbar“
-   - ✅ „API-Logs: Nicht vorhanden, OpenAI-Kosten unklar“
-
-2. **Quick Wins für Daten:**
-   - ✅ „Logging für API-Costs implementieren (2h)“
-   - ✅ „Kundenfeedback in Typeform sammeln (strukturiert)“
-   - ✅ „Assessment-Daten für Branchen-Benchmark nutzen“
-
----
-
-## 💡 BEISPIEL
-
-**Kontext:** GPT-4-Assessments, einfache DB/Logs, Solo oder kleines Team
-
-```html
 <section class="section data-readiness">
-  <h2>Data Readiness</h2>
-  
-  <p>Bewertung der Daten-Infrastruktur für die Hauptleistung "{{HAUPTLEISTUNG}}":</p>
+  <h2>Datenlage & Systemreife für KI</h2>
 
-  <h3>1. Vorhandene Daten (IST-Stand)</h3>
-  <table class="table">
-    <thead>
-      <tr><th>Datenquelle</th><th>Struktur</th><th>Qualität</th><th>Nutzung</th></tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Assessment-Daten (z. B. PostgreSQL / Tabellen / Exporte)</td>
-        <td>Strukturiert (z. B. Tabellen: users, assessments, reports)</td>
-        <td>Hoch (validiert durch Formular-Logik)</td>
-        <td>Genutzt für Report-Generierung, aber kaum für Analytics</td>
-      </tr>
-      <tr>
-        <td>GPT-4 Responses</td>
-        <td>Semi-strukturiert (JSON/Textfelder)</td>
-        <td>Mittel (enthält auch Halluzinationen)</td>
-        <td>Gespeichert, aber nicht systematisch ausgewertet</td>
-      </tr>
-      <tr>
-        <td>Kundenfeedback</td>
-        <td>Unstrukturiert (E-Mails, Telefonnotizen)</td>
-        <td>Niedrig (nicht systematisch erfasst)</td>
-        <td>Nur ad hoc für Verbesserungen genutzt</td>
-      </tr>
-      <tr>
-        <td>API-Kosten (OpenAI)</td>
-        <td>Externe Plattform (Dashboard), einfache Logs</td>
-        <td>Mittel (Gesamtwerte, wenig Detail)</td>
-        <td>Manuell geprüft, kein automatisches Monitoring</td>
-      </tr>
-    </tbody>
-  </table>
+  <p>
+    Für ein Unternehmen in der Branche <strong>{{BRANCHE_LABEL}}</strong> mit der Größe
+    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> und dem Schwerpunkt
+    <strong>{{HAUPTLEISTUNG}}</strong> zeigt sich eine typische Ausgangslage:
+    Die vorhandenen Datenquellen, Tools und Prozesse bieten bereits Ansätze für KI,
+    müssen aber gezielt weiterentwickelt werden, um stabile Ergebnisse zu liefern.
+  </p>
 
-  <h3>2. Daten-Gaps & Impact</h3>
+  <h3>Wo heute Daten und Systeme liegen</h3>
+  <p>
+    Aktuell werden Informationen überwiegend in folgenden Systemen verarbeitet:
+    <strong>{{DATENQUELLEN_LABELS}}</strong> sowie in den eingesetzten Tools
+    <strong>{{VORHANDENE_TOOLS_LABELS}}</strong>.
+    Die IT-Infrastruktur ist <strong>{{IT_INFRASTRUKTUR_LABEL}}</strong>, der
+    Digitalisierungsgrad der Abläufe wird als <strong>{{PROZESSE_PAPIERLOS_LABEL}}</strong>
+    mit einem Automatisierungsgrad von <strong>{{AUTOMATISIERUNGSGRAD_LABEL}}</strong> beschrieben.
+  </p>
+
   <ul>
-    <li><strong>Gap 1:</strong> Keine Analytics auf vorhandenen Assessment-Daten → Branchen-Trends bleiben unsichtbar, Potenzial für Benchmarks ungenutzt.</li>
-    <li><strong>Gap 2:</strong> Kundenfeedback unstrukturiert → Qualität kann nicht systematisch verbessert werden.</li>
-    <li><strong>Gap 3:</strong> API-Kosten nur grob sichtbar → Teure Prompts und Einsparpotenziale bleiben verborgen.</li>
+    <li>Für ein {{UNTERNEHMENSGROESSE_LABEL}}-Unternehmen sind die genutzten Systeme typisch und ausreichend, um erste KI-Pilotprojekte zu starten.</li>
+    <li>Gleichzeitig fehlen teilweise durchgängige Datenketten – z.&nbsp;B. zwischen Lead-Gewinnung, Angebotserstellung und Leistungserbringung.</li>
+    <li>In regulierten Bereichen ({{REGULIERTE_BRANCHE_LABELS}}) müssen Datenschutz, Aufbewahrung und Zugriffsrechte gezielt mitgedacht werden.</li>
   </ul>
 
-  <h3>3. Quick Wins für Daten-Qualität (30–60 Tage)</h3>
+  <h3>Stärken der aktuellen Datenbasis</h3>
+  <ul>
+    <li>Relevante Informationen liegen bereits digital vor (z.&nbsp;B. in {{VORHANDENE_TOOLS_LABELS}}), was KI-Prototypen mit realen Daten ermöglicht.</li>
+    <li>Viele Prozesse folgen wiederkehrenden Mustern, die sich gut für KI-gestützte Automatisierung eignen.</li>
+    <li>Die bestehende Infrastruktur {{IT_INFRASTRUKTUR_LABEL}} erlaubt es, neue KI-Tools ohne große Vorlaufzeit zu testen.</li>
+  </ul>
+
+  <h3>Typische Lücken & Risiken</h3>
+  <ul>
+    <li>Daten sind häufig auf mehrere Systeme verteilt, ohne einheitliche Struktur oder zentrale „Single Source of Truth“.</li>
+    <li>Prozessschritte werden nicht immer konsequent dokumentiert, was die Nachvollziehbarkeit für KI-Modelle einschränkt.</li>
+    <li>Regeln für Datenzugriff, Löschung und Aufbewahrung sind teilweise unklar oder nur mündlich vereinbart.</li>
+  </ul>
+
+  <h3>Empfohlene Schritte in den nächsten 6–12 Monaten</h3>
   <ol>
-    <li><strong>API-Cost-Logging implementieren (4h, €0):</strong> Middleware oder Logging-Layer, der OpenAI-Requests (Prompt-Länge, Modell, Kosten, Response-Time) in einer Tabelle oder Datei erfasst. <strong>Nutzen:</strong> Transparenz über Kosten, Batch-Ersparnis messbar.</li>
-    <li><strong>Feedback-Formular in jedem Report-PDF verlinken (2h, €0):</strong> QR-Code oder Link zu einem kurzen Formular mit 3 Fragen („Wie hilfreich? (1–5)“, „Was fehlt?“, „Würden Sie weiterempfehlen?“). <strong>Nutzen:</strong> Strukturiertes Feedback, NPS und Zufriedenheit trackbar.</li>
-    <li><strong>Einfaches Analytics-Dashboard (8h, €0 mit z. B. Metabase/Looker Studio):</strong> Verbindung auf bestehende Datenbank oder Exporte, Dashboards: Top-Branchen, Durchschnitts-Scores, Zeitverläufe. <strong>Nutzen:</strong> Sofortige Insights für Marketing und Produkt-Entscheidungen.</li>
-    <li><strong>GPT-Response-Validator (12h):</strong> Zweiter GPT-Call, der Reports auf offensichtliche Widersprüche und Halluzinationen prüft. <strong>Nutzen:</strong> Qualitätssicherung vor dem manuellen Review, reduzierte Review-Zeit.</li>
+    <li><strong>Datenlandkarte erstellen:</strong> Übersicht über alle relevanten Datenquellen und Systeme, inkl. Verantwortlichen und Datenqualität.</li>
+    <li><strong>Standard für Ablage & Benennung definieren:</strong> Einfache, aber verbindliche Regeln, die zu {{UNTERNEHMENSGROESSE_LABEL}} passen.</li>
+    <li><strong>Datenschutz & Zugriffsrechte klären:</strong> Zuständigkeiten, Rollen und Freigaben für KI-Nutzung festlegen – besonders in regulierten Bereichen.</li>
+    <li><strong>KI-Pilotprojekt mit „sauberem“ Datenschnitt starten:</strong> Einen Prozess wählen, bei dem Daten relativ vollständig und strukturiert vorliegen.</li>
   </ol>
 
-  <h3>4. Langfristige Daten-Strategie (Monate 6–12)</h3>
-  <ul>
-    <li><strong>Branchen-Benchmark-Datenbank:</strong> Anonymisierte Assessment-Daten aggregieren, „KI-Readiness-Index“ pro Branche berechnen und als Produkt (z. B. für Partner, Medien, Investoren) anbieten.</li>
-    <li><strong>Predictive Analytics:</strong> Ab einer kritischen Masse (z. B. 200+ Assessments) ein Modell trainieren: „Welche Unternehmen haben den höchsten ROI mit KI?“ → Bessere Quick-Win-Empfehlungen.</li>
-  </ul>
+  <p class="small muted">
+    Die Datenlage ist damit ausreichend, um gezielte KI-Piloten zu starten.
+    Für eine nachhaltige Skalierung sollten Struktur, Verantwortlichkeiten und Datenqualität
+    jedoch Schritt für Schritt verbessert werden.
+  </p>
 </section>
+
+<!-- Output-Umfang:
+     - 1 Einleitung, 4 Unterabschnitte (Status, Stärken, Lücken, nächste Schritte).
+     - Pro Listenpunkt maximal 2 kurze Sätze.
+     - Schreibe direkt finalen, kundentauglichen Inhalt. -->

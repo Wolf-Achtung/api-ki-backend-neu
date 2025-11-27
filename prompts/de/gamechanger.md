@@ -1,70 +1,90 @@
-Developer: <!-- gamechanger.md – v3.0 GOLD STANDARD+ (realistische Wachstumsoptionen)
-  
+Developer: <!-- gamechanger.md – v3.0 GOLD STANDARD+ (multi-size, label-basiert)
   Antworte ausschließlich mit validem HTML.
-  Kein <html>, <head> oder <body>. Keine Markdown-Fences.
-
-  VARIABLEN:
-  - {{BRANCHE}}: Branche (Kurzform, z.B. "Beratung & Dienstleistungen").
-  - {{UNTERNEHMENSGROESSE}}: solo | kleines Team | KMU (oder ähnlich).
-  - {{MITARBEITER}}: grobe Mitarbeiterzahl (falls vorhanden).
-  - {{HAUPTLEISTUNG}}: heutiger Kern der Wertschöpfung.
-  - {{AKTUELLES_MODELL}}: Beschreibung des aktuellen Geschäftsmodells.
-  - {{INVESTITIONSBUDGET}}: realistischer Investitionsrahmen.
+  KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
   ZIEL:
-  - 2–3 strategische Gamechanger-Szenarien skizzieren, wie das heutige Modell
-    auf Basis von KI und Automatisierung weiterentwickelt werden kann.
-  - Fokus auf neuen oder deutlich skalierbaren Erlösquellen, nicht auf reine Effizienz.
+  - Eine klar strukturierte "Gamechanger"-Sektion erzeugen:
+    2–3 KI-Einsatzszenarien, die das Geschäftsmodell bzw. die Wertschöpfung des
+    Unternehmens spürbar verändern können – passend zu Branche, Größe und Reifegrad.
 
-  REGELN:
-  - Vorschläge müssen zu {{UNTERNEHMENSGROESSE}}, {{INVESTITIONSBUDGET}} und {{BRANCHE}} passen.
-    Für Solo / kleines Team eher schlanke, iterativ ausbaubare Modelle vorschlagen.
-  - Nur qualitative Aussagen zu Umsatzpotenzialen (z.B. „niedriger fünfstelliger Bereich p.a.“).
-    Keine präzisen Euro-Beträge oder unrealistischen sechsstelligen Umsätze aus dem Nichts.
-  - Alle Gamechanger klar aus {{HAUPTLEISTUNG}} und {{AKTUELLES_MODELL}} herleiten.
+  VERFÜGBARE VARIABLEN (bereits aufbereitete Labels/Freitexte):
+  - {{BRANCHE_LABEL}}                → z. B. "Beratung & Dienstleistungen"
+  - {{UNTERNEHMENSGROESSE_LABEL}}    → z. B. "1 (Solo)", "2–10 (Kleines Team)", "11–100 (KMU)"
+  - {{HAUPTLEISTUNG}}                → Hauptleistung / Angebotsfokus in Klartext
+  - {{STRATEGISCHE_ZIELE}}           → Freitext: wichtigste KI-/Digitalziele
+  - {{GESCHAEFTSMODELL_EVOLUTION}}   → Freitext: Wie sich das Geschäftsmodell entwickeln soll
+  - {{VISION_3_JAHRE}}               → Freitext: Vision/Positionierung in 3 Jahren
+  - {{ZEITERSPARNIS_PRIORITAET}}     → Freitext: Relevanz von Zeit-/Aufwandseinsparung
 
-  OUTPUT VERBOSITY:
-  - Skizziere maximal 3 Szenarien als eigenständige <article>-Elemente.
-  - Jede Szenarienbeschreibung darf höchstens 5 kurze Absätze (<p>) enthalten, maximal 2 Sätze pro Absatz.
-  - Halte die Beschreibungen kompakt und übersichtlich; vermeide Details, die nicht gefordert sind.
-  - Priorisiere vollständige, umsetzbare Antworten innerhalb dieses Längenrahmens.
-  - Falls Updates oder Rückfragen angesprochen werden, antworte mit maximal 2 Sätzen, außer der/die Nutzer:in verlangt explizit ausführlichere Betreuung.
+  GRÖSSENLOGIK (UNTERNEHMENSGROESSE_LABEL):
+  - Enthält "1 (Solo":
+      * Fokus: Inhaber:in / Solo-Unternehmer:in.
+      * Sprache: "Ihr Unternehmen" / "Sie", keine "Abteilungen" oder "Teams".
+      * Gamechanger = hochautomatisierte Workflows, Entlastung, Standardisierung.
+  - Enthält "2–10":
+      * Fokus: kleines Kernteam, Rollen sind oft Mehrfachfunktionen.
+      * Sprache: "Ihr Team" / "Ihr Unternehmen", "klare Zuständigkeiten".
+      * Gamechanger = skalierbare Workflows, arbeitsteilige Prozesse, Basis-Governance.
+  - Enthält "11–100":
+      * Fokus: KMU mit mehreren Bereichen / Standorten.
+      * Sprache: "das Unternehmen", "Teams/Abteilungen", "Pilotbereiche" und "Rollout".
+      * Gamechanger = skalierte KI-Workflows, konsistente Governance, integrierte Datenbasis.
 
+  ALLGEMEINE REGELN:
+  - Keine Pseudo- oder Lückenfüllertexte wie "Text wird noch ergänzt" etc.
+  - Keine Hinweise auf Fragebögen, Freitextfelder oder interne Systemlogik.
+  - Formuliere so, als würdest du das Unternehmen direkt beraten – konkret, umsetzbar.
+  - Maximal 3 Gamechanger; jeder mit klar benanntem Nutzen und erstem Schritt.
 -->
 
 <section class="section gamechanger">
-  <h2>Gamechanger – Wie sich das Geschäftsmodell mit KI weiterentwickeln kann</h2>
+  <h2>KI als Gamechanger für Ihr Geschäftsmodell</h2>
 
   <p>
-    Auf Basis von {{AKTUELLES_MODELL}} in der Branche <strong>{{BRANCHE}}</strong> können
-    mit KI verschiedene strategische Optionen entwickelt werden, die über reine
-    Effizienzgewinne hinausgehen. Für {{UNTERNEHMENSGROESSE}} bedeutet ein „Gamechanger“
-    insbesondere Angebote, die sich digital skalieren lassen, ohne dass der persönliche Einsatz in gleichem Maße mitwachsen muss.
+    Für ein Unternehmen in der Branche <strong>{{BRANCHE_LABEL}}</strong> mit der Größe
+    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> und dem Leistungsschwerpunkt
+    <strong>{{HAUPTLEISTUNG}}</strong> lassen sich mehrere KI-Einsatzszenarien identifizieren,
+    die das Geschäftsmodell in den nächsten Jahren spürbar verändern können.
   </p>
 
-  <div class="gamechanger-grid">
-    <!-- ERWARTETE STRUKTUR (Inhalte müssen vom Modell individuell formuliert werden):
-         Für jeden Gamechanger:
+  <p>
+    Die folgenden Gamechanger-Vorschläge knüpfen an Ihre strategischen Ziele
+    (z.&nbsp;B. {{STRATEGISCHE_ZIELE}}) und Ihre mittelfristige Entwicklung
+    ({{GESCHAEFTSMODELL_EVOLUTION}} / {{VISION_3_JAHRE}}) an. Sie sind so formuliert,
+    dass sie zu den typischen Ressourcen und Entscheidungswegen eines
+    {{UNTERNEHMENSGROESSE_LABEL}}-Unternehmens passen.
+  </p>
 
-         <article class="gamechanger">
-           <h3>Gamechanger X – Titel</h3>
-           <p><strong>Idee:</strong> Wie wird {{HAUPTLEISTUNG}} in ein skalierbareres
-              Angebot übersetzt (z.B. Produktisierung, Plattform, Lizenzmodell)?</p>
-           <p><strong>Was ändert sich gegenüber heute?</strong> Kurzer Vergleich zu {{AKTUELLES_MODELL}}.</p>
-           <p><strong>Zielgruppe & Nutzen:</strong> Für wen ist das Angebot gedacht und welchen Mehrwert bietet es?</p>
-           <p><strong>Skalierungspotenzial:</strong> Qualitative Einschätzung 
-              (z.B. „bei guter Positionierung Potenzial für wiederkehrende Erlöse
-              im niedrigen oder mittleren fünfstelligen Bereich pro Jahr“).</p>
-           <p><strong>Erster Umsetzungsschritt in 6–12 Monaten:</strong>
-              Ein konkreter, kleiner Startpunkt, der zu {{INVESTITIONSBUDGET}}
-              und {{UNTERNEHMENSGROESSE}} passt (z.B. MVP, Pilot mit wenigen Kunden).
-           </p>
-         </article>
+  <ol class="gamechanger-list">
+    <!-- Erzeuge 2–3 Listeneinträge nach folgendem Muster.
+         Passe Formulierungen an die Unternehmensgröße an (Solo / Team / KMU). -->
+
+    <!--
+    <li>
+      <h3>{{Titel des Gamechangers}}</h3>
+      <p><strong>Kernidee:</strong> {{1–2 Sätze, wie KI das Geschäftsmodell verändert}}</p>
+      <p><strong>Betroffene Wertschöpfung:</strong> {{z. B. Angebotsentwicklung, Vertrieb, Delivery, Betreuung}}</p>
+      <p><strong>Nutzen:</strong> {{konkreter Geschäftsnutzen – z. B. mehr Kapazität, bessere Margen, neue Produkte}}</p>
+      <p><strong>Voraussetzungen:</strong> {{Daten, Tools, Kompetenzen – knapp und realistisch für die Unternehmensgröße}}</p>
+      <p><strong>Erster Schritt in den nächsten 90 Tagen:</strong> {{sehr konkreter Startpunkt, z. B. Pilot, Workflow, Experiment}}</p>
+    </li>
     -->
-  </div>
+  </ol>
+
+  <h3>Was diese Gamechanger gemeinsam haben</h3>
+  <ul>
+    <li>Sie bauen auf bestehenden Stärken von {{HAUPTLEISTUNG}} auf, statt ein komplett neues Geschäft zu erfinden.</li>
+    <li>Sie berücksichtigen typische Ressourcen und Entscheidungswege eines {{UNTERNEHMENSGROESSE_LABEL}}-Unternehmens.</li>
+    <li>Sie lassen sich zunächst als Pilot mit überschaubarem Risiko testen und bei Erfolg ausbauen.</li>
+  </ul>
 
   <p class="small muted">
-    Hinweis: Die beschriebenen Szenarien sind strategische Optionen, keine Planung im engen betriebswirtschaftlichen Sinne.
-    Für eine Umsetzung sollten sie durch konkrete Markt-Tests, Preismodelle und Business-Case-Rechnungen ergänzt werden.
+    Die Gamechanger sind als strategische Leitplanken gedacht. Nutzen Sie Quick Wins,
+    Pilotprojekte und Business Cases, um die wirkungsvollsten Ideen schrittweise umzusetzen.
   </p>
 </section>
+
+<!-- Output-Umfang:
+     - 2–3 Gamechanger-Einträge, jeweils max. 2 Sätze pro Absatzfeld.
+     - Kurze, klare Formulierungen ohne Fachjargon, der nicht erklärt wird.
+     - Schreibe direkt die fertigen Inhalte, keine Entwürfe oder Meta-Hinweise. -->
