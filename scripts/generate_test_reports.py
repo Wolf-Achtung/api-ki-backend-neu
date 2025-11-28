@@ -171,8 +171,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--profiles-dir",
-        default="data/test_profiles",
-        help="Ordner mit Testprofil-JSONs (Standard: data/test_profiles).",
+        default="data/test_profiles_gold",
+        help="Ordner mit Testprofil-JSONs (Standard: data/test_profiles_gold – Gold-Standard 6 Profile).",
     )
     parser.add_argument(
         "--sleep",
@@ -196,7 +196,17 @@ def main() -> None:
         sys.exit(1)
 
     # 🔍 Zusatz-Check: Welche Profile liegen wirklich auf der Platte?
-    debug_profiles_dir(profiles_dir, EXPECTED_PROFILE_STEMS)
+    found = debug_profiles_dir(profiles_dir, EXPECTED_PROFILE_STEMS)
+
+    # Hard-Fail: Alle erwarteten Gold-Standard-Profile müssen vorhanden sein
+    missing = EXPECTED_PROFILE_STEMS.difference(found)
+    if missing:
+        print(
+            f"[error] Nicht alle erwarteten Gold-Standard-Profile gefunden: {sorted(missing)}",
+            file=sys.stderr
+        )
+        print("[error] Test-Lauf wird abgebrochen.", file=sys.stderr)
+        sys.exit(1)
 
     profiles = load_profiles(profiles_dir)
     if not profiles:
