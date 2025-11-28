@@ -1031,7 +1031,7 @@ def _parse_kreativ_tools(raw: str) -> List[Tuple[str, str]]:
         if m:
             out.append((m.group(1).strip(), m.group(2).strip()))
             continue
-        m = re.match(r"^\[(.+?)\]\((https?://[^)]+)\)$", ln)  # type: ignore[unreachable]
+        m = re.match(r"^\[(.+?)\]\((https?://[^)]+)\)$", ln)
         if m:
             out.append((m.group(1).strip(), m.group(2).strip()))
             continue
@@ -2026,7 +2026,7 @@ def _md_to_simple_html(md: str) -> str:
             continue
         if re.match(r"^\[\d+\]:\s*https?://", line):
             continue
-        if line.startswith("#### "):  # type: ignore[unreachable]
+        if line.startswith("#### "):
             if in_ul: out.append("</ul>"); in_ul = False
             out.append(f"<h4>{html.escape(line[5:].strip())}</h4>")
             continue
