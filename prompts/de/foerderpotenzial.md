@@ -1,12 +1,13 @@
 Developer:
-<!-- foerderpotenzial.md – v5.0 GOLD STANDARD+ (size-aware, business-case-aware, placeholder-safe)
+<!-- foerderpotenzial.md – v5.1 GOLD STANDARD+ (Kern-Matrix, business-case-aware, size-aware)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
      ZWECK:
-       - Qualitative Einschätzung des Förderpotenzials für ein KI-/Digitalisierungsprojekt.
+       - Qualitative Einschätzung des Förderpotenzials basierend auf Kern-Fördermatrix (12 Programme).
        - Business-Case-Variablen nur einordnen, NICHT neu berechnen.
-       - Typische Zuschussbereiche nennen (z. B. „30–50 %“), aber KEINE neuen Eurobeträge erfinden.
+       - Typische Zuschussbereiche nennen (z. B. „30–50 %"), KEINE neuen Eurobeträge erfinden.
+       - Kern-Matrix liefert realistische, geprüfte Programme (DE/AT/EU, 2025/26-aktuell).
 
      VERFÜGBARE VARIABLEN:
        {{BUNDESLAND_LABEL}}

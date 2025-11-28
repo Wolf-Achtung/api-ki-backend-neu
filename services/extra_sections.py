@@ -389,6 +389,108 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
 # ------------------------ Benchmarks ----------------------------------------
 
 
+
+
+# ----------------------------- Fördermatrix 2025/2026 -------------------------------
+
+def build_core_funding_table_html(briefing: Dict[str, Any]) -> str:
+    """
+    Baut eine HTML-Tabelle mit Kern-Förderprogrammen 2025/2026.
+    Size-aware Filterung und Priorisierung.
+
+    Args:
+        briefing: Enthält BRANCHE_LABEL, BUNDESLAND_LABEL, UNTERNEHMENSGROESSE_LABEL
+
+    Returns:
+        HTML-Tabelle mit gefilterten/priorisierten Förderprogrammen
+    """
+    import json
+    import os
+
+    # Förderdaten laden
+    funding_file = os.path.join(os.path.dirname(__file__), "..", "data", "funding_programmes_core_2025.json")
+
+    try:
+        with open(funding_file, 'r', encoding='utf-8') as f:
+            all_programmes = json.load(f)
+    except Exception as e:
+        log.warning(f"⚠️ Förderdaten konnten nicht geladen werden: {e}")
+        return "<p class='muted small'>Förderdaten werden aktualisiert.</p>"
+
+    # Briefing-Parameter extrahieren
+    branche = briefing.get("BRANCHE_LABEL", "")
+    bundesland = briefing.get("BUNDESLAND_LABEL", "")
+    size_label = (briefing.get("UNTERNEHMENSGROESSE_LABEL") or "").lower()
+
+    # Size-Erkennung
+    if "solo" in size_label or "freiberuf" in size_label or "1" in size_label:
+        size_group = "solo"
+    elif "2" in size_label or "team" in size_label or "klein" in size_label:
+        size_group = "team"
+    else:
+        size_group = "kmu"
+
+    # Filter: Nur Programme, die zur Größe passen
+    filtered = [p for p in all_programmes if size_group in p.get("suitable_for", [])]
+
+    # Regionaler Filter (optional - zeige alle, aber markiere passende)
+    if "berlin" in bundesland.lower():
+        # ProFIT höher priorisieren
+        for p in filtered:
+            if p["id"] == "profit_berlin":
+                p["priority"] = 0  # höchste Prio
+    elif "baden" in bundesland.lower() or "württemberg" in bundesland.lower():
+        # Invest BW höher priorisieren
+        for p in filtered:
+            if p["id"] == "invest_bw_digital_ki":
+                p["priority"] = 0
+
+    # Sortieren nach Priorität (niedrigere Zahl = höher)
+    filtered.sort(key=lambda x: x.get("priority", 99))
+
+    # Top 6-8 Programme nehmen (nicht alle 12, zu viel)
+    top_programmes = filtered[:8]
+
+    # HTML-Tabelle bauen
+    html_parts = []
+    html_parts.append('<div class="funding-matrix">')
+    html_parts.append('  <table class="funding-table">')
+    html_parts.append('    <thead>')
+    html_parts.append('      <tr>')
+    html_parts.append('        <th>Programm</th>')
+    html_parts.append('        <th>Region</th>')
+    html_parts.append('        <th>Förderquote</th>')
+    html_parts.append('        <th>Max. Volumen</th>')
+    html_parts.append('        <th>KI-Relevanz</th>')
+    html_parts.append('      </tr>')
+    html_parts.append('    </thead>')
+    html_parts.append('    <tbody>')
+
+    for prog in top_programmes:
+        relevance_class = prog.get("relevance_ki", "Mittel").split()[0].lower()
+        html_parts.append('      <tr>')
+        html_parts.append(f'        <td><strong>{prog["title"]}</strong><br>')
+        html_parts.append(f'          <span class="small muted">{prog["focus"]}</span>')
+        html_parts.append('        </td>')
+        html_parts.append(f'        <td>{prog["region"]}</td>')
+        html_parts.append(f'        <td>{prog["funding_rate"]}</td>')
+        html_parts.append(f'        <td>{prog["max_amount"]}</td>')
+        html_parts.append(f'        <td><span class="relevance-badge relevance-{relevance_class}">{prog.get("relevance_ki", "Mittel")}</span></td>')
+        html_parts.append('      </tr>')
+
+    html_parts.append('    </tbody>')
+    html_parts.append('  </table>')
+    html_parts.append('  ')
+    html_parts.append('  <p class="small muted" style="margin-top: 6pt;">')
+    html_parts.append('    <strong>Hinweis:</strong> Diese Programme sind speziell für Ihr Unternehmensprofil ')
+    html_parts.append(f'    ({size_label}) vorausgewählt. Weitere regionale und branchenspezifische Programme ')
+    html_parts.append('    können verfügbar sein. Stand: Q1 2025.')
+    html_parts.append('  </p>')
+    html_parts.append('</div>')
+
+    return '\n'.join(html_parts)
+
+
 def build_benchmarks_section(
     scores: Dict[str, Any], path: str = "data/benchmarks.json"
 ) -> str:
