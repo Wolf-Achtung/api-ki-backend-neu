@@ -59,8 +59,8 @@ Developer:
            KMU: 0–6 / 6–9 / 9–12 Monate
 
      VERBOTEN:
-       - Wörter wie „Platzhalter“, „Freitextfeld“, „TODO“.
-       - „Titel der Empfehlung …“ oder generische Mustertexte.
+       - Wörter wie „Platzhalter", „Freitextfeld", „TODO".
+       - „Titel der Empfehlung …" oder andere generische Formulierungen ohne konkreten Inhalt.
        - Rohvariablen im sichtbaren Output.
        - Mehrdeutige Aussagen ohne konkrete Handlungsanleitung.
 -->

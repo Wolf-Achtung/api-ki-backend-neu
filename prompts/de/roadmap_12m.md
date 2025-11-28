@@ -36,7 +36,7 @@ Developer:
        - E-Commerce/Handel: Produktdaten, Feed-Management, Textautomatisierung.
 
      VERBOTEN:
-       - "TODO", "Freitextfeld", generische Mustertexte.
+       - "TODO", "Freitextfeld", generische Formulierungen ohne Substanz.
        - Rohvariablen im sichtbaren Output.
        - Bei SOLO: keine "Abteilungen", "Teams", "Bereiche" (nur persönliche Formulierungen).
 -->
