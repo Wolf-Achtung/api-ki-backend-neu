@@ -19,7 +19,10 @@ Developer:
 
      SIZE-AWARE REGELWERK:
        SOLO:
-         - Keine Abteilungen/Teams/Bereiche.
+         - Keine Abteilungen/Teams/Bereiche beim Berichtsempfänger selbst.
+         - Falls Organisationsstrukturen erwähnt werden (z.B. bei Kunden-Zielgruppen),
+           IMMER klar als "auf Kundenseite" markieren (z.B. "Management vs. operative
+           Ansprechpersonen auf Kundenseite" statt "Management vs. Fachabteilung").
          - Empfehlungen = realistische, kleine Schritte.
          - Verantwortlich = Inhaber:in / Geschäftsführung.
          - Budget klein halten.
