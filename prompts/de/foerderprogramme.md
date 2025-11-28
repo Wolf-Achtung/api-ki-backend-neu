@@ -1,12 +1,13 @@
 Developer:
-<!-- foerderprogramme.md – v5.0 GOLD STANDARD+ (förderlogik, size-aware, placeholder-safe)
+<!-- foerderprogramme.md – v5.1 GOLD STANDARD+ (Kern-Matrix + Research, size-aware)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
      ZIEL:
        - Qualitative Einschätzung des Förderpotenzials für ein KI-/Digitalisierungsprojekt.
-       - Nutze ausschließlich das aus der Research-Pipeline gelieferte {{FOERDERPROGRAMME_HTML}}.
-       - Keine eigenen Programme, Zahlen oder Fördersätze erfinden.
+       - {{FOERDERPROGRAMME_HTML}} enthält jetzt IMMER eine statische Kern-Fördermatrix (12 Programme)
+         + optional Research-Ergebnisse (Tavily/Perplexity).
+       - Nutze diese Kombinationfür den Überblick, ergänze KEINE eigenen Programme.
 
      VERFÜGBARE VARIABLEN:
        - {{FOERDERPROGRAMME_HTML}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}

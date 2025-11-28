@@ -240,6 +240,21 @@
             font-size: 8.5pt;
         }
         
+        /* ============================================
+           KAPITEL-SEITENUMBRÜCHE für strukturierte PDF
+           ============================================ */
+        .chapter {
+            page-break-before: always;
+            break-before: page;
+        }
+        
+        .chapter:first-of-type {
+            page-break-before: auto;
+            break-before: auto;
+        }
+            font-size: 8.5pt;
+        }
+        
         .tag {
             display: inline-flex;
             align-items: center;
@@ -1614,7 +1629,7 @@
                 </section>
                 
                 <!-- QUICK WINS -->
-                <section class="section">
+                <section class="section chapter">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Schnelle Effekte</span>
@@ -1631,7 +1646,7 @@
                 </section>
                 
                 <!-- ROADMAP -->
-                <section class="section">
+                <section class="section chapter">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Orientierung</span>
@@ -1648,7 +1663,7 @@
                 </section>
                 
                 <!-- BUSINESS CASE DETAIL -->
-                <section class="section">
+                <section class="section chapter">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Wirtschaftlichkeit</span>
