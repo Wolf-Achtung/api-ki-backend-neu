@@ -36,7 +36,7 @@ Developer:
        - E-Commerce/Handel: Produktdaten, Feeds, Textprozesse.
 
      VERBOTEN:
-       - „Platzhalter“, „TODO“, „Freitextfeld“, generische Mustertexte.
+       - „Platzhalter", „TODO", „Freitextfeld", generische Formulierungen ohne Substanz.
        - Rohvariablen im sichtbaren Output.
 -->
 
