@@ -142,24 +142,43 @@ Developer:
   </table>
 
   <h3>Ihre größten Gaps</h3>
+  <p>
+    Die folgenden Bereiche zeigen den größten Abstand zum Branchendurchschnitt und bieten
+    entsprechend hohes Verbesserungspotenzial:
+  </p>
   <ul>
-    {% set gaps = [
-      ('Befähigung', score_befaehigung, 68),
-      ('Governance', score_governance, 58),
-      ('Sicherheit', score_sicherheit, 62),
-      ('Wertschöpfung', score_nutzen, 70)
-    ] %}
-    {% set sorted_gaps = gaps | selectattr(1, '<', 2) | map(attribute=0) %}
-    {% for cat, s, avg in gaps|sort(attribute=lambda x: avg - s, reverse=True) if s < avg %}
-      <li><strong>{{cat}}:</strong> deutlicher Rückstand gegenüber dem Branchen-Ø ({{s}} vs. {{avg}}).</li>
-    {% endfor %}
+    {% if score_befaehigung < 68 %}
+      <li><strong>Befähigung:</strong> deutlicher Rückstand gegenüber dem Branchen-Ø ({{score_befaehigung}} vs. 68).</li>
+    {% endif %}
+    {% if score_governance < 58 %}
+      <li><strong>Governance:</strong> deutlicher Rückstand gegenüber dem Branchen-Ø ({{score_governance}} vs. 58).</li>
+    {% endif %}
+    {% if score_sicherheit < 62 %}
+      <li><strong>Sicherheit:</strong> deutlicher Rückstand gegenüber dem Branchen-Ø ({{score_sicherheit}} vs. 62).</li>
+    {% endif %}
+    {% if score_nutzen < 70 %}
+      <li><strong>Wertschöpfung:</strong> deutlicher Rückstand gegenüber dem Branchen-Ø ({{score_nutzen}} vs. 70).</li>
+    {% endif %}
   </ul>
 
   <h3>Ihre stärksten Stärken</h3>
+  <p>
+    Diese Bereiche liegen erkennbar über dem Branchendurchschnitt und können als
+    Fundament für weitere Entwicklung dienen:
+  </p>
   <ul>
-    {% for cat, s, avg in gaps|sort(attribute=lambda x: s - avg, reverse=True) if s > avg %}
-      <li><strong>{{cat}}:</strong> erkennbarer Vorsprung vor dem Branchendurchschnitt ({{s}} vs. {{avg}}).</li>
-    {% endfor %}
+    {% if score_befaehigung > 68 %}
+      <li><strong>Befähigung:</strong> erkennbarer Vorsprung vor dem Branchendurchschnitt ({{score_befaehigung}} vs. 68).</li>
+    {% endif %}
+    {% if score_governance > 58 %}
+      <li><strong>Governance:</strong> erkennbarer Vorsprung vor dem Branchendurchschnitt ({{score_governance}} vs. 58).</li>
+    {% endif %}
+    {% if score_sicherheit > 62 %}
+      <li><strong>Sicherheit:</strong> erkennbarer Vorsprung vor dem Branchendurchschnitt ({{score_sicherheit}} vs. 62).</li>
+    {% endif %}
+    {% if score_nutzen > 70 %}
+      <li><strong>Wertschöpfung:</strong> erkennbarer Vorsprung vor dem Branchendurchschnitt ({{score_nutzen}} vs. 70).</li>
+    {% endif %}
   </ul>
 
   <h3>Überholungs-Strategie (nächste 12 Monate – size-aware)</h3>
