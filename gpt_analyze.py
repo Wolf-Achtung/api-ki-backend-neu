@@ -1547,7 +1547,162 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     </ul>
   </div>
 </div>"""
-    
+
+    # 🎯 SIZE-AWARE ORG_CHANGE FALLBACK
+    if section_key == "org_change":
+        # Vollwertiger, size-aware Fallback für Org Change (900+ Zeichen)
+        if size_group == "solo":
+            return f"""<div class="org-change-content">
+  <p><strong>Veränderungsfähigkeit &amp; Lernen als Solo-Berater:in in der KI-Beratung</strong></p>
+
+  <p>
+    Als Solo-Berater:in in <strong>{branche}</strong> ist Ihre Fähigkeit, Veränderungen bei Kund:innen
+    zu begleiten und gleichzeitig selbst kontinuierlich zu lernen, ein entscheidender Erfolgsfaktor.
+    Der Einsatz von KI-Tools verändert nicht nur Ihre eigenen Arbeitsprozesse, sondern auch die
+    Erwartungen und Anforderungen Ihrer Kund:innen. Eine strukturierte Herangehensweise hilft,
+    diese Transformation erfolgreich zu gestalten.
+  </p>
+
+  <h4>Kommunikation &amp; Erwartungsmanagement</h4>
+  <p>
+    Klare Kommunikation ist die Basis jeder erfolgreichen Veränderung. Bereits im Kick-off-Gespräch
+    sollten Sie ein realistisches Zielbild entwickeln: Was kann KI in Ihrem Beratungskontext leisten,
+    wo liegen die Grenzen? Sprechen Sie offen über mögliche Risiken – von Datenschutz bis zu
+    Qualitätssicherung – und definieren Sie gemeinsam mit Ihren Kund:innen messbare Erfolgskriterien.
+    Diese Transparenz schafft Vertrauen und verhindert unrealistische Erwartungen.
+  </p>
+
+  <h4>Pilotprojekte &amp; Feedback-Schleifen</h4>
+  <p>
+    Starten Sie mit einem kleinen, klar abgegrenzten Vorhaben – etwa der KI-gestützten Erstellung
+    von Konzeptentwürfen oder der Automatisierung von Recherche-Prozessen. Dokumentieren Sie
+    systematisch, was funktioniert und was nicht. Planen Sie wöchentliche oder zweiwöchentliche
+    Mini-Reviews ein, um Learnings zeitnah zu erfassen und den Ansatz kontinuierlich anzupassen.
+    Diese iterative Vorgehensweise ermöglicht schnelle Korrekturen ohne großen Aufwand.
+  </p>
+
+  <h4>Dokumentation &amp; Routinen etablieren</h4>
+  <p>
+    Halten Sie erfolgreiche Workflows in Form von Checklisten, Prompt-Vorlagen und einfachen
+    Regeln fest. Diese Dokumentation ist Ihr persönliches Wissensmanagement-System und hilft,
+    bewährte Praktiken zu verstetigen. Definieren Sie klare, einfache Routinen für wiederkehrende
+    Aufgaben – ohne unnötige Bürokratie. Das spart Zeit und erhöht die Konsistenz Ihrer Beratungsleistung.
+  </p>
+
+  <h4>Umgang mit Widerständen &amp; Ängsten</h4>
+  <p>
+    Veränderung erzeugt oft Unsicherheit – bei Ihnen selbst und bei Ihren Kund:innen. Nehmen Sie
+    Ängste ernst: Bedenken bezüglich Datenschutz, Angst vor Überlastung oder Skepsis gegenüber
+    neuen Technologien sind legitim. Bieten Sie praktische Hilfen an: klare Leitlinien, einfache
+    Einstiegsszenarien und konkrete Erfolgsbeispiele. Zeigen Sie, dass KI Sie unterstützt und
+    nicht ersetzt – und dass der Lernprozess schrittweise und beherrschbar ist.
+  </p>
+
+  <p class="small muted">
+    Der Fokus liegt auf einer schlanken, realistischen Umsetzung, die zu einem Solo-Unternehmen
+    passt: kurze Wege, klare persönliche Routinen und möglichst wenig organisatorischer Overhead.
+    Ihre Agilität als Solo-Selbstständige:r ist dabei ein Vorteil – nutzen Sie ihn bewusst.
+  </p>
+</div>"""
+        elif size_group == "team":
+            return f"""<div class="org-change-content">
+  <p><strong>Veränderungsfähigkeit &amp; Lernen im Team-Kontext</strong></p>
+
+  <p>
+    In einem kleinen Team (2–10 Personen) in <strong>{branche}</strong> ist es entscheidend,
+    Veränderungen gemeinsam zu gestalten und dabei alle Teammitglieder mitzunehmen. Der Einsatz
+    von KI-Tools bietet Chancen für effizientere Workflows, erfordert aber auch klare Abstimmung
+    und gemeinsame Lernprozesse.
+  </p>
+
+  <h4>Kommunikation &amp; Erwartungsmanagement im Team</h4>
+  <p>
+    Organisieren Sie einen gemeinsamen Kick-off, bei dem alle Beteiligten ein realistisches
+    Zielbild entwickeln. Klären Sie Rollen (z.B. KI-Owner, Teamlead) und definieren Sie
+    messbare Ziele. Sprechen Sie offen über Risiken und Bedenken – nur so entsteht Vertrauen
+    und Akzeptanz für neue Arbeitsweisen.
+  </p>
+
+  <h4>Pilotprojekte &amp; Team-Feedback</h4>
+  <p>
+    Starten Sie mit einem überschaubaren Pilotvorhaben, bei dem 2–3 Teammitglieder eng zusammenarbeiten.
+    Richten Sie regelmäßige Feedback-Runden ein (z.B. wöchentliche Retrospektiven), um Learnings
+    schnell zu teilen und Anpassungen vorzunehmen. Dokumentieren Sie Erfolge und Herausforderungen
+    gemeinsam, sodass alle vom Wissen der anderen profitieren.
+  </p>
+
+  <h4>Gemeinsame Standards &amp; Workflows</h4>
+  <p>
+    Entwickeln Sie zusammen Checklisten, Prompt-Vorlagen und Qualitätskriterien, die für alle
+    im Team gelten. Klare, abgestimmte Prozesse vermeiden Missverständnisse und sorgen für
+    konsistente Ergebnisse. Halten Sie diese Standards schlank und praxisnah – Überregulierung
+    bremst den Fortschritt.
+  </p>
+
+  <h4>Umgang mit unterschiedlichen Lerntempi</h4>
+  <p>
+    Nicht alle Teammitglieder haben denselben Zugang zu neuen Technologien. Bieten Sie
+    niedrigschwellige Einstiegshilfen an, teilen Sie Erfolgsbeispiele und schaffen Sie Raum
+    für Fragen. Peer-Learning und gegenseitige Unterstützung sind in kleinen Teams besonders
+    wertvoll – nutzen Sie diese Dynamik aktiv.
+  </p>
+
+  <p class="small muted">
+    Der Fokus liegt auf gemeinsamer Verantwortung, klarer Rollenverteilung und agilen Lernzyklen.
+    Ihre Größe ist ein Vorteil: kurze Abstimmungswege, schnelle Entscheidungen und direkter Austausch.
+  </p>
+</div>"""
+        else:  # kmu
+            return f"""<div class="org-change-content">
+  <p><strong>Veränderungsfähigkeit &amp; Lernen in KMU-Strukturen</strong></p>
+
+  <p>
+    In einem KMU (11–100 Mitarbeitende) in <strong>{branche}</strong> erfordert die Einführung
+    von KI-Tools eine strukturierte Change-Management-Strategie. Verschiedene Fachbereiche,
+    unterschiedliche Interessen und formale Governance-Anforderungen müssen koordiniert werden,
+    um nachhaltige Veränderungen zu erreichen.
+  </p>
+
+  <h4>Stakeholder-Kommunikation &amp; Erwartungsmanagement</h4>
+  <p>
+    Binden Sie von Anfang an relevante Stakeholder ein: Management, Fachbereichsleitung,
+    IT und Datenschutz. Entwickeln Sie ein gemeinsames Zielbild, klären Sie Verantwortlichkeiten
+    und definieren Sie messbare KPIs. Transparente Kommunikation über Chancen, Risiken und
+    Ressourcenbedarf schafft Akzeptanz und verhindert spätere Konflikte.
+  </p>
+
+  <h4>Pilotprojekte mit Fachbereichseinbindung</h4>
+  <p>
+    Starten Sie mit einem klar abgegrenzten Pilotprojekt in einem oder zwei Fachbereichen.
+    Definieren Sie Pilotflächen, benennen Sie verantwortliche Personen und etablieren Sie
+    regelmäßige Review-Formate (z.B. monatliche Steering-Meetings). Dokumentieren Sie Erfolge
+    und Learnings systematisch, um daraus skalierbare Best Practices abzuleiten.
+  </p>
+
+  <h4>Bereichsübergreifende Standards &amp; Governance</h4>
+  <p>
+    Entwickeln Sie einheitliche Leitlinien für Datenhandling, Qualitätssicherung und Freigabeprozesse.
+    Klären Sie, wer für welche Entscheidungen verantwortlich ist (z.B. Datenschutzbeauftragte,
+    IT-Leitung, Prozessverantwortliche in Fachbereichen). Dokumentieren Sie diese Standards klar
+    und kommunizieren Sie sie aktiv – nur so entsteht organisationsweite Verbindlichkeit.
+  </p>
+
+  <h4>Change-Kommunikation &amp; Widerstandsmanagement</h4>
+  <p>
+    Veränderungen stoßen oft auf Skepsis oder Widerstand. Kommunizieren Sie frühzeitig und
+    regelmäßig über Fortschritte, Erfolge und Herausforderungen. Bieten Sie Schulungen und
+    niedrigschwellige Einstiegsformate an (z.B. Lunch &amp; Learn, Mini-Workshops). Nehmen
+    Sie Bedenken ernst und zeigen Sie konkrete Nutzenbeispiele aus der eigenen Organisation –
+    das erhöht Akzeptanz und Motivation nachhaltig.
+  </p>
+
+  <p class="small muted">
+    Der Fokus liegt auf strukturierter Koordination, klaren Verantwortlichkeiten und skalierbaren
+    Prozessen. Ihre Organisationsgröße erfordert formale Governance, bietet aber auch die
+    Möglichkeit, bereichsübergreifende Synergien systematisch zu nutzen.
+  </p>
+</div>"""
+
     # 🎯 SIZE-AWARE NEXT ACTIONS
     if section_key == "next_actions":
         if size_group == "solo":
