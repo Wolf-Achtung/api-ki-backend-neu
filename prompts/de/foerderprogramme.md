@@ -47,30 +47,23 @@ Developer:
   </p>
 
   <h3>Ausgewählte Programme im Überblick</h3>
-  {% if FOERDERPROGRAMME_HTML and FOERDERPROGRAMME_HTML|length > 10 %}
   <p>
     Die folgenden Programme stammen direkt aus der aktuellen Förderrecherche und berücksichtigen
-    regionale sowie thematische Förderprioritäten. Es werden ausschließlich Programme und Angaben
-    verwendet, die in der zugrunde liegenden Recherche erfasst sind:
+    regionale sowie thematische Förderprioritäten:
   </p>
+
+  <!-- ANWEISUNG: Falls {{FOERDERPROGRAMME_HTML}} leer ist oder weniger als 50 Zeichen enthält, -->
+  <!-- ersetze den folgenden Block durch einen generischen Fallback-Text mit typischen Förderbereichen. -->
+  <!-- Ansonsten: gib {{FOERDERPROGRAMME_HTML}} direkt aus. -->
+
   {{FOERDERPROGRAMME_HTML}}
-  {% else %}
-  <p>
-    Die Förderrecherche für <strong>{{BRANCHE_LABEL}}</strong> und <strong>{{BUNDESLAND_LABEL}}</strong>
-    ist derzeit noch in Bearbeitung. Typische Förderbereiche für <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>
-    umfassen:
-  </p>
-  <ul>
-    <li>Digitalisierungsförderung (z.&nbsp;B. Digital Jetzt, Investitionsförderung)</li>
-    <li>Innovationsgutscheine und Beratungsförderung</li>
-    <li>KI-spezifische Förderungen auf Landes- und Bundesebene</li>
-    <li>Weiterbildungs- und Qualifizierungsprogramme</li>
-  </ul>
-  <p class="small muted">
-    Für eine detaillierte Programmübersicht empfehlen wir eine gezielte Förderberatung oder
-    den Kontakt zu regionalen Förderstellen.
-  </p>
-  {% endif %}
+
+  <!-- FALLBACK-ANWEISUNG (nur verwenden wenn {{FOERDERPROGRAMME_HTML}} fehlt): -->
+  <!-- Die Förderrecherche für {{BRANCHE_LABEL}} und {{BUNDESLAND_LABEL}} ist derzeit noch in Bearbeitung. -->
+  <!-- Typische Förderbereiche für {{UNTERNEHMENSGROESSE_LABEL}}: -->
+  <!-- - Digitalisierungsförderung (z.B. Digital Jetzt, Investitionsförderung) -->
+  <!-- - Innovationsgutscheine und Beratungsförderung -->
+  <!-- - KI-spezifische Förderungen auf Landes- und Bundesebene -->
 
   <h3>Was das für Ihren Business Case bedeutet</h3>
   <p>

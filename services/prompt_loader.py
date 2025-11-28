@@ -48,7 +48,18 @@ _SUPPORTED_EXT = (".md", ".txt", ".json", ".yaml", ".yml")
 def _interpolate_text(s: str, vars_dict: Optional[Dict[str, Any]]) -> str:
     if not isinstance(s, str) or not vars_dict:
         return s
-    # {{ key }} style
+
+    # 🎯 JINJA2-RENDERING: Wenn Jinja2-Tags vorhanden sind, rendere mit Jinja2
+    if "{% " in s or "{%" in s:
+        try:
+            from jinja2 import Environment, BaseLoader
+            env = Environment(loader=BaseLoader(), autoescape=False)
+            template = env.from_string(s)
+            s = template.render(**vars_dict)
+        except Exception as e:
+            log.warning(f"⚠️ Jinja2 rendering failed, falling back to simple substitution: {e}")
+
+    # {{ key }} style (simple substitution for non-Jinja2 cases or after Jinja2 rendering)
     def _repl_curly(m: re.Match) -> str:
         key = m.group(1).strip()
         return str(vars_dict.get(key, m.group(0)))

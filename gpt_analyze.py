@@ -1728,12 +1728,20 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 for word in developer_words:
                     result = result.replace(word, "")
             
-            # Minimalumfang prüfen
-            if not result or len(result.strip()) < 50:
+            # Minimalumfang prüfen (dynamisch nach Section-Typ)
+            # Für kritische Sections höhere Schwelle, damit size-aware Fallbacks greifen
+            critical_sections = {
+                "roadmap", "roadmap_90d", "roadmap_12m",
+                "foerderpotenzial", "org_change", "strategie_governance"
+            }
+            min_len = 300 if section_name in critical_sections else 50
+
+            if not result or len(result.strip()) < min_len:
                 log.warning(
-                    "⚠️ GPT returned too little for %s (%d chars), using fallback",
+                    "⚠️ GPT returned too little for %s (%d chars < %d min), using fallback",
                     section_name,
-                    len(result),
+                    len(result.strip()) if result else 0,
+                    min_len,
                 )
                 return _get_fallback_content(section_name, briefing, scores)
             
