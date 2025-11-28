@@ -1,6 +1,6 @@
 Developer:
 <!--
-  tools_empfehlungen.md – v5.0 GOLD STANDARD+ (size-aware, branch-aware, validator-safe)
+  tools_empfehlungen.md – v5.1 GOLD STANDARD+ (size-aware, branch-aware, validator-safe)
 
   ZIEL DES PROMPTS
   - Erzeuge eine klar strukturierte, praxistaugliche Tool-Empfehlungssektion ("KI-Stack"),
@@ -14,14 +14,14 @@ Developer:
   - {{BRANCHE_LABEL}}             → z. B. "Beratung & Dienstleistungen"
   - {{UNTERNEHMENSGROESSE_LABEL}} → verbale Größe, z. B. "1 (Solo)", "2–10 (Kleines Team)", "11–100 (KMU)"
   - {{HAUPTLEISTUNG}}             → z. B. "Beratung von Unternehmen zur Integration von KI …"
-  - {{COMPANY_SIZE}}              → "solo", "small_team" oder "kmu"
+  - {{COMPANY_SIZE}}              → "solo", "team" oder "kmu"
 
   GRÖSSENLOGIK (INHALTLICH)
   - COMPANY_SIZE = "solo":
       * Empfehlung: maximal 3–5 Tools im Kernstack, einfache Bedienung, geringer Integrationsaufwand.
       * Beispiele: ein KI-Assistent, ein Wissens-/Notiz-Tool, ein Formular-/Automations-Tool.
       * Keine Begriffe wie "Abteilung", "Projektteam" oder "Bereich" verwenden.
-  - COMPANY_SIZE = "small_team":
+  - COMPANY_SIZE = "team":
       * Empfehlung: gemeinsamer Workspace, Kollaboration, Rechte-/Rollenkonzepte.
       * Tools für Aufgabenverteilung, gemeinsames Wissens-Repo, einfache Workflows.
   - COMPANY_SIZE = "kmu":
