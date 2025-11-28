@@ -8,12 +8,12 @@ Developer:
        - Nutze ausschließlich das aus der Research-Pipeline gelieferte {{FOERDERPROGRAMME_HTML}}.
        - Keine eigenen Programme, Zahlen oder Fördersätze erfinden.
 
-     PFLICHTVARIABLEN:
+     VERFÜGBARE VARIABLEN:
        - {{FOERDERPROGRAMME_HTML}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}
-       - Falls eine dieser Variablen nicht existiert oder leer ist:
-           Gib ausschließlich aus:
-           <p class="error">Fehlende oder leere Pflichtfelder: {{Namen_der_leeren_Variablen}}.</p>
-           und KEINEN weiteren Inhalt.
+       - Falls {{FOERDERPROGRAMME_HTML}} leer ist:
+           Gib einen neutralen, generischen Hinweis aus (z.B. "Die Förderrecherche wird noch durchgeführt.").
+           NIEMALS <p class="error">...</p> im finalen Bericht ausgeben.
+       - Stelle sicher, dass der Abschnitt trotzdem sinnvoll und vollständig bleibt.
 
      SIZE-AWARE-LOGIK (COMPANY_SIZE ∈ {"solo","team","kmu"}):
        SOLO:
@@ -47,12 +47,30 @@ Developer:
   </p>
 
   <h3>Ausgewählte Programme im Überblick</h3>
+  {% if FOERDERPROGRAMME_HTML and FOERDERPROGRAMME_HTML|length > 10 %}
   <p>
     Die folgenden Programme stammen direkt aus der aktuellen Förderrecherche und berücksichtigen
     regionale sowie thematische Förderprioritäten. Es werden ausschließlich Programme und Angaben
     verwendet, die in der zugrunde liegenden Recherche erfasst sind:
   </p>
   {{FOERDERPROGRAMME_HTML}}
+  {% else %}
+  <p>
+    Die Förderrecherche für <strong>{{BRANCHE_LABEL}}</strong> und <strong>{{BUNDESLAND_LABEL}}</strong>
+    ist derzeit noch in Bearbeitung. Typische Förderbereiche für <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>
+    umfassen:
+  </p>
+  <ul>
+    <li>Digitalisierungsförderung (z.&nbsp;B. Digital Jetzt, Investitionsförderung)</li>
+    <li>Innovationsgutscheine und Beratungsförderung</li>
+    <li>KI-spezifische Förderungen auf Landes- und Bundesebene</li>
+    <li>Weiterbildungs- und Qualifizierungsprogramme</li>
+  </ul>
+  <p class="small muted">
+    Für eine detaillierte Programmübersicht empfehlen wir eine gezielte Förderberatung oder
+    den Kontakt zu regionalen Förderstellen.
+  </p>
+  {% endif %}
 
   <h3>Was das für Ihren Business Case bedeutet</h3>
   <p>

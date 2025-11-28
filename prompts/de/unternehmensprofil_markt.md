@@ -10,17 +10,17 @@ Developer:
        - Wettbewerbsposition abhängig von Unternehmensgröße (solo/team/kmu).
        - Keine erfundenen Zahlen, Namen, Marktanteile oder konkreten Wettbewerber.
 
-     PFLICHTVARIABLEN:
+     VERFÜGBARE VARIABLEN:
        {{BRANCHE_LABEL}}
        {{UNTERNEHMENSGROESSE_LABEL}}
        {{BUNDESLAND_LABEL}}
        {{HAUPTLEISTUNG}}
        {{GESCHAEFTSMODELL_EVOLUTION}}
 
-     WENN EINE PFLICHTVARIABLE LEER ODER OFFENSICHTLICH FEHLERHAFT IST:
-       - GIB AUSSCHLIESSLICH FOLGENDES AUS:
-         <p class="error">Fehlende oder leere Pflichtfelder im Unternehmensprofil &amp; Marktkontext.</p>
-       - KEINE WEITEREN TEXTE ODER BLÖCKE AUSGEBEN.
+     WENN EINE VARIABLE LEER ODER FEHLERHAFT IST:
+       - Verwende „Nicht angegeben" oder einen neutralen generischen Ersatz.
+       - NIEMALS <p class="error">...</p> im finalen Bericht ausgeben.
+       - Stelle sicher, dass der Abschnitt trotzdem sinnvoll und vollständig bleibt.
 
      RESEARCH-CONTEXT (CONTEXT_BLOCK):
        - GENERISCHE INFORMATIONEN ERLAUBT:

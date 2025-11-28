@@ -1619,7 +1619,15 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
 <p class="small muted">Angepasst an {branche} · {size_label}</p>""",
     }
     
-    return fallbacks.get(section_key, f"<p><em>[{section_key} – Content wird erstellt]</em></p>")
+    # Default-Fallback für unbekannte Sections (OHNE Template-Phrasen)
+    return fallbacks.get(
+        section_key,
+        f"""<div class="section-placeholder">
+  <p>Dieser Abschnitt wird auf Basis der konkreten Angaben zu <strong>{branche}</strong> und
+  <strong>{size_label}</strong> generiert und ergänzt.</p>
+  <p class="small muted">Hinweis: Für eine vollständige Darstellung sind detaillierte Eingaben erforderlich.</p>
+</div>"""
+    )
 
 # -------------------- 🎯 NEW: Use prompt system instead of hardcoded prompts ----------------
 def _generate_content_section(section_name: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
