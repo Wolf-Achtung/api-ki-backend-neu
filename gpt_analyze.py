@@ -1453,7 +1453,13 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     return base_vars
 # -------------------- 🎯 NEW: Better fallbacks when GPT fails ----------------
 def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
-    """🎯 UPDATED: Size-aware inline fallback content (700-900 Zeichen) – GOLD-STANDARD+"""
+    """🎯 UPDATED v4.14.3: Size-aware inline fallback content (1000-1500 Zeichen) – GOLD-STANDARD+
+    
+    Änderungen v4.14.3:
+    - roadmap_90d: Erweitert auf 1000+ Zeichen (vorher 834)
+    - roadmap_12m: Erweitert auf 1400+ Zeichen (vorher 1367)
+    - next_actions: Jetzt size-aware (Solo: persönliche Tasks, keine Rollen)
+    """
     branche = briefing.get("BRANCHE_LABEL") or briefing.get("branche", "Ihr Unternehmen")
     size_label = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
     hauptleistung = briefing.get("hauptleistung", briefing.get("HAUPTLEISTUNG", ""))
@@ -1468,7 +1474,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     else:
         size_group = "kmu"
     
-    # 🎯 SIZE-AWARE ROADMAP FALLBACKS (inline HTML, 700-900 Zeichen)
+    # 🎯 SIZE-AWARE ROADMAP FALLBACKS (inline HTML, 1000+ Zeichen)
     if section_key in ("roadmap", "roadmap_90d"):
         # Bedingter Text für Phase 3 basierend auf size_group
         phase3_text = ""
@@ -1480,70 +1486,114 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         return f"""<div class="roadmap">
   <h4>Phase 1: Test &amp; Vorbereitung (0–30 Tage)</h4>
   <ul>
-    <li>2–3 wichtigste KI-Einsatzstellen im Prozess {hauptleistung or "Kerngeschäft"} festlegen.</li>
-    <li>Werkzeug-Set auswählen und erste Tests durchführen.</li>
-    <li>Kurzleitfaden für Eingaben, Qualität und sichere Workflows erstellen.</li>
+    <li>2–3 wichtigste KI-Einsatzstellen im Prozess {hauptleistung or "Kerngeschäft"} festlegen und dokumentieren.</li>
+    <li>Werkzeug-Set auswählen, erste Tests durchführen und Erfahrungen protokollieren.</li>
+    <li>Kurzleitfaden für Eingaben, Qualitätskriterien und sichere Workflows erstellen und kommunizieren.</li>
+    <li>Erste Beispiele sammeln und in strukturierter Form ablegen (Prompt-Bibliothek starten).</li>
   </ul>
 
   <h4>Phase 2: Pilotierung (31–60 Tage)</h4>
   <ul>
-    <li>Einen Pilotworkflow im Alltag testen und Feedback einholen.</li>
-    <li>Wöchentliche Mini-Reviews einplanen.</li>
-    <li>Vorlagen, Beispiele und Best Practices dokumentieren.</li>
+    <li>Einen Pilotworkflow im Alltag testen, Feedback systematisch einholen und Learnings dokumentieren.</li>
+    <li>Wöchentliche Mini-Reviews einplanen, um Anpassungsbedarf frühzeitig zu erkennen.</li>
+    <li>Vorlagen, Beispiele und Best Practices dokumentieren und für wiederholte Nutzung aufbereiten.</li>
+    <li>Qualitätsmetriken definieren (Zeit, Fehlerquote, Konsistenz) und erste Messungen durchführen.</li>
   </ul>
 
   <h4>Phase 3: Verstetigung (61–90 Tage)</h4>
   <ul>
-    <li>Bewährte Abläufe verstetigen{phase3_text}.</li>
-    <li>Einfache KI-Leitlinien definieren (Daten, Freigaben, Qualität).</li>
-    <li>Nächste Use Cases priorisieren und Roadmap 2.0 vorbereiten.</li>
+    <li>Bewährte Abläufe verstetigen{phase3_text} und in den regulären Arbeitsalltag integrieren.</li>
+    <li>Einfache KI-Leitlinien definieren (Datenhandling, Freigabeprozesse, Qualitätssicherung).</li>
+    <li>Nächste Use Cases priorisieren, Roadmap 2.0 vorbereiten und Ressourcen planen.</li>
+    <li>Erste Wirkungsmessung durchführen: Zeitersparnis, Qualitätsverbesserung, Risikominderung dokumentieren.</li>
   </ul>
 </div>"""
     
     if section_key == "roadmap_12m":
         # Bedingter Text für Monate 7-12 basierend auf size_group
         ausbau_text = ""
-        if size_group == "team":
-            ausbau_text = " und Zuständigkeiten im Team klären"
+        zusatz_q2 = ""
+        if size_group == "solo":
+            ausbau_text = " – erfolgreich erprobte Workflows auf weitere eigene Aufgabenbereiche übertragen"
+            zusatz_q2 = "<li>Persönliche Workflow-Optimierung vorantreiben und Automatisierungspotenziale identifizieren.</li>"
+        elif size_group == "team":
+            ausbau_text = " und Zuständigkeiten im Team klären – Wissenstransfer sicherstellen"
+            zusatz_q2 = "<li>Team-Koordination stärken, gemeinsame Reviews etablieren und Skill-Entwicklung fördern.</li>"
         elif size_group == "kmu":
-            ausbau_text = " und Fachbereiche einbinden"
+            ausbau_text = " und Fachbereiche einbinden – Pilotflächen definieren"
+            zusatz_q2 = "<li>Bereichsübergreifende Abstimmung und erste Governance-Strukturen etablieren.</li>"
         
         return f"""<div class="roadmap">
   <div class="roadmap-phase">
-    <h3>Monate 1–6: Fundament</h3>
+    <h3>Monate 1–6: Fundament legen</h3>
     <ul>
       <li>KI-Ziele schärfen und Kernprozesse stabil aufsetzen – realistische Erwartungen definieren und Quick-Win-Potenziale identifizieren.</li>
-      <li>Wissen, Beispiele und Standards dokumentieren – Prompt-Bibliothek anlegen, Best Practices sammeln und Qualitätskriterien festlegen.</li>
-      <li>Regelmäßige Qualitätskontrollen etablieren – Output-Reviews durchführen, Feedback-Schleifen implementieren und Erfolgsmetriken definieren.</li>
-      <li>Schulungs- und Onboarding-Prozesse aufsetzen – kontinuierliches Lernen ermöglichen und Skill-Entwicklung fördern.</li>
+      <li>Wissen, Beispiele und Standards strukturiert dokumentieren – Prompt-Bibliothek aufbauen, Best Practices sammeln und Qualitätskriterien klar festlegen.</li>
+      <li>Regelmäßige Qualitätskontrollen etablieren – Output-Reviews durchführen, Feedback-Schleifen implementieren und Erfolgsmetriken kontinuierlich messen.</li>
+      <li>Schulungs- und Onboarding-Prozesse systematisch aufsetzen – kontinuierliches Lernen ermöglichen, Skill-Entwicklung fördern und Wissenstransfer sicherstellen.</li>
+      {zusatz_q2}
+      <li>Erste Wirkungsmessung durchführen: Zeitersparnis, Qualitätsverbesserung und Risikominderung dokumentieren und kommunizieren.</li>
     </ul>
   </div>
 
   <div class="roadmap-phase">
-    <h3>Monate 7–12: Ausbau &amp; Optimierung</h3>
+    <h3>Monate 7–12: Ausbau &amp; strategische Optimierung</h3>
     <ul>
-      <li>Weitere Aufgabenbereiche einbeziehen{ausbau_text} – erfolgreich erprobte Workflows multiplizieren und Synergien nutzen.</li>
-      <li>Ergebnisse systematisch messen (Zeitersparnis, Qualitätsverbesserung, Risikominimierung) und kontinuierlich nachschärfen.</li>
-      <li>Roadmap 2.0 definieren und weitere Ausbaustufen planen – nächste Use Cases priorisieren, Budget sichern und strategische Weichen stellen.</li>
-      <li>Governance und Compliance-Rahmen finalisieren – Leitlinien kommunizieren, Verantwortlichkeiten klären und Audit-Prozesse etablieren.</li>
+      <li>Weitere Aufgabenbereiche systematisch einbeziehen{ausbau_text} und Synergien aktiv nutzen.</li>
+      <li>Ergebnisse kontinuierlich und systematisch messen (Zeitersparnis, Qualitätsverbesserung, Risikominimierung) und iterativ nachschärfen.</li>
+      <li>Roadmap 2.0 strategisch definieren und weitere Ausbaustufen konkret planen – nächste Use Cases priorisieren, Budget sichern und strategische Weichen für Jahr 2 stellen.</li>
+      <li>Governance und Compliance-Rahmen finalisieren – Leitlinien klar kommunizieren, Verantwortlichkeiten definieren und Audit-Prozesse etablieren.</li>
+      <li>Change-Management-Ansatz aufbauen: Kontinuierliche Verbesserung fördern, Learnings systematisch konsolidieren und strategische Weiterentwicklung vorbereiten.</li>
     </ul>
   </div>
 </div>"""
     
-    # Statische Fallbacks (Quick Wins & Next Actions UNVERÄNDERT)
-    fallbacks = {
-        "quick_wins": f"""<ul>
-<li><strong>E-Mail-Entwürfe automatisieren:</strong> Automatische Vorschläge für Standard-Antworten und Textbausteine. <em>Ersparnis: 20 h/Monat</em></li>
-<li><strong>Meeting-Protokolle mit KI:</strong> Automatische Transkription und Zusammenfassung von Besprechungen. <em>Ersparnis: 15 h/Monat</em></li>
-<li><strong>Dokumenten-Recherche beschleunigen:</strong> Semantische Suche in Ihrer Wissensdatenbank statt manuelles Durchsuchen. <em>Ersparnis: 12 h/Monat</em></li>
-<li><strong>Social Media Posts generieren:</strong> KI-gestützte Content-Vorschläge für LinkedIn, Instagram und andere Kanäle. <em>Ersparnis: 8 h/Monat</em></li>
-</ul>
-<p class="small muted">Angepasst an {branche} · {size_label}</p>""",
-        
-        "next_actions": f"""<ol>
-<li><strong>Verantwortliche:r</strong> — Stakeholder-Kick-off organisieren und Top-3 Use Cases priorisieren<br>
+    # 🎯 SIZE-AWARE NEXT ACTIONS
+    if section_key == "next_actions":
+        if size_group == "solo":
+            # Solo: Persönliche Tasks ohne Rollen
+            return f"""<ol>
+<li><strong>Persönliche Priorisierung</strong> — Top-3 KI-Einsatzbereiche für {hauptleistung or "Ihr Kerngeschäft"} definieren<br>
+⏱ 1 Tag · 🎯 hoch · 📆 {(datetime.now() + timedelta(days=7)).strftime('%d.%m.%Y')}<br>
+<em>KPI:</em> 3 priorisierte Use Cases dokumentiert und bewertet</li>
+
+<li><strong>Tool-Evaluation</strong> — 2–3 KI-Tools testen (inkl. DSGVO-Check)<br>
 ⏱ 2 Tage · 🎯 hoch · 📆 {(datetime.now() + timedelta(days=14)).strftime('%d.%m.%Y')}<br>
-<em>KPI:</em> 3-5 priorisierte Use Cases dokumentiert und abgestimmt</li>
+<em>KPI:</em> 1 Tool ausgewählt mit klarer Begründung</li>
+
+<li><strong>Erste Workflows aufsetzen</strong> — Kurzleitfaden für Eingaben und Qualitätskriterien erstellen<br>
+⏱ 1 Tag · 🎯 mittel · 📆 {(datetime.now() + timedelta(days=21)).strftime('%d.%m.%Y')}<br>
+<em>KPI:</em> Leitfaden dokumentiert, erste Tests durchgeführt</li>
+
+<li><strong>Quick Win pilotieren</strong> — Ersten Use Case im Alltag testen und Wirkung messen<br>
+⏱ 3 Tage · 🎯 hoch · 📆 {(datetime.now() + timedelta(days=28)).strftime('%d.%m.%Y')}<br>
+<em>KPI:</em> Erstes messbares Ergebnis (Zeitersparnis, Qualität) dokumentiert</li>
+</ol>"""
+        elif size_group == "team":
+            # Team: Team-bezogene Tasks
+            return f"""<ol>
+<li><strong>KI-Owner / Teamlead</strong> — Team-Kick-off organisieren und Top-3 Use Cases priorisieren<br>
+⏱ 2 Tage · 🎯 hoch · 📆 {(datetime.now() + timedelta(days=14)).strftime('%d.%m.%Y')}<br>
+<em>KPI:</em> 3–5 priorisierte Use Cases dokumentiert und im Team abgestimmt</li>
+
+<li><strong>IT-Verantwortliche:r</strong> — Tool-Evaluierung durchführen (inkl. DSGVO-Check und Security-Review)<br>
+⏱ 3 Tage · 🎯 hoch · 📆 {(datetime.now() + timedelta(days=21)).strftime('%d.%m.%Y')}<br>
+<em>KPI:</em> 3 Tools evaluiert, 1 konkrete Empfehlung mit Begründung</li>
+
+<li><strong>Team-Koordinator:in</strong> — Qualitätskriterien definieren und erste Workflows dokumentieren<br>
+⏱ 2 Tage · 🎯 mittel · 📆 {(datetime.now() + timedelta(days=21)).strftime('%d.%m.%Y')}<br>
+<em>KPI:</em> Workflow-Dokumentation erstellt, im Team geteilt</li>
+
+<li><strong>Projektleitung</strong> — Pilot-Phase planen und Erwartungen definieren<br>
+⏱ 1 Tag · 🎯 mittel · 📆 {(datetime.now() + timedelta(days=28)).strftime('%d.%m.%Y')}<br>
+<em>KPI:</em> 3–5 konkrete Testszenarien dokumentiert</li>
+</ol>"""
+        else:  # kmu
+            # KMU: Erweiterte Rollenstruktur
+            return f"""<ol>
+<li><strong>Bereichsleitung / Prozessverantwortliche:r</strong> — Stakeholder-Kick-off organisieren und Top-3 Use Cases priorisieren<br>
+⏱ 2 Tage · 🎯 hoch · 📆 {(datetime.now() + timedelta(days=14)).strftime('%d.%m.%Y')}<br>
+<em>KPI:</em> 3–5 priorisierte Use Cases dokumentiert und abgestimmt</li>
 
 <li><strong>IT-Verantwortliche:r</strong> — Tool-Evaluierung durchführen (inkl. DSGVO-Check und Security-Review)<br>
 ⏱ 3 Tage · 🎯 hoch · 📆 {(datetime.now() + timedelta(days=21)).strftime('%d.%m.%Y')}<br>
@@ -1555,8 +1605,18 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
 
 <li><strong>Projektleitung</strong> — Pilot-Phase planen und Erwartungen definieren<br>
 ⏱ 1 Tag · 🎯 mittel · 📆 {(datetime.now() + timedelta(days=28)).strftime('%d.%m.%Y')}<br>
-<em>KPI:</em> 3-5 konkrete Testszenarien dokumentiert</li>
-</ol>""",
+<em>KPI:</em> 3–5 konkrete Testszenarien dokumentiert</li>
+</ol>"""
+    
+    # Statische Fallbacks (Quick Wins UNVERÄNDERT)
+    fallbacks = {
+        "quick_wins": f"""<ul>
+<li><strong>E-Mail-Entwürfe automatisieren:</strong> Automatische Vorschläge für Standard-Antworten und Textbausteine. <em>Ersparnis: 20 h/Monat</em></li>
+<li><strong>Meeting-Protokolle mit KI:</strong> Automatische Transkription und Zusammenfassung von Besprechungen. <em>Ersparnis: 15 h/Monat</em></li>
+<li><strong>Dokumenten-Recherche beschleunigen:</strong> Semantische Suche in Ihrer Wissensdatenbank statt manuelles Durchsuchen. <em>Ersparnis: 12 h/Monat</em></li>
+<li><strong>Social Media Posts generieren:</strong> KI-gestützte Content-Vorschläge für LinkedIn, Instagram und andere Kanäle. <em>Ersparnis: 8 h/Monat</em></li>
+</ul>
+<p class="small muted">Angepasst an {branche} · {size_label}</p>""",
     }
     
     return fallbacks.get(section_key, f"<p><em>[{section_key} – Content wird erstellt]</em></p>")
