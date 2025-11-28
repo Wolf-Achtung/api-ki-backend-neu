@@ -2749,7 +2749,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
 
     # 🎯 KERN-FÖRDERMATRIX 2025/2026: Statischer, size-aware Kern immer einfügen
     from services.extra_sections import build_core_funding_table_html
-    core_funding_html = build_core_funding_table_html(briefing)
+    core_funding_html = build_core_funding_table_html(sections)
 
     if sections.get("FOERDERPROGRAMME_HTML"):
         # Kern-Matrix + Research-Ergebnisse kombinieren
