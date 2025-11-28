@@ -1763,6 +1763,71 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
 <em>KPI:</em> 3–5 konkrete Testszenarien dokumentiert</li>
 </ol>"""
     
+    # 🎯 STATIC SECTIONS: Business ROI / Costs (verwenden Business-Case-Daten aus briefing)
+    if section_key in ("business_roi", "business_costs"):
+        capex = briefing.get("CAPEX_REALISTISCH_EUR", "—")
+        opex = briefing.get("OPEX_REALISTISCH_EUR", "—")
+        einsparung = briefing.get("EINSPARUNG_MONAT_EUR", "—")
+        payback = briefing.get("PAYBACK_MONTHS", "—")
+        roi_12m = briefing.get("ROI_12M", "—")
+
+        return f"""<div class="business-case-summary">
+  <h3>Business Case Übersicht</h3>
+  <table class="table">
+    <tr>
+      <td><strong>Einführungskosten (CAPEX)</strong></td>
+      <td class="text-right">{capex} €</td>
+    </tr>
+    <tr>
+      <td><strong>Laufende Kosten (OPEX)</strong></td>
+      <td class="text-right">{opex} €/Monat</td>
+    </tr>
+    <tr>
+      <td><strong>Erwartete Einsparung</strong></td>
+      <td class="text-right">{einsparung} €/Monat</td>
+    </tr>
+    <tr>
+      <td><strong>Amortisation</strong></td>
+      <td class="text-right">{payback} Monate</td>
+    </tr>
+    <tr>
+      <td><strong>ROI nach 12 Monaten</strong></td>
+      <td class="text-right">{roi_12m} %</td>
+    </tr>
+  </table>
+  <p class="small muted">Detaillierte Berechnungen finden Sie im Business-Case-Abschnitt.</p>
+</div>"""
+
+    # 🎯 AI ACT SUMMARY: Statische Zusammenfassung (keine LLM-Variabilität)
+    if section_key == "ai_act_summary":
+        return f"""<div class="ai-act-summary">
+  <h3>EU AI Act – Kernpunkte für {size_label}</h3>
+  <p>
+    Der EU AI Act klassifiziert KI-Systeme nach Risikostufen und legt entsprechende
+    Anforderungen fest. Für die meisten betrieblichen KI-Anwendungen ({branche}) gelten
+    moderate Transparenz- und Dokumentationspflichten.
+  </p>
+  <h4>Risikoeinstufung</h4>
+  <ul>
+    <li><strong>Minimales Risiko:</strong> Standardanwendungen wie Textgenerierung, Übersetzung,
+        Datenanalyse – geringe Regulierung, Transparenzhinweise empfohlen.</li>
+    <li><strong>Begrenztes Risiko:</strong> Chatbots, personalisierte Empfehlungen –
+        Informationspflicht gegenüber Nutzern erforderlich.</li>
+    <li><strong>Hohes Risiko:</strong> Recruiting, Kreditvergabe, kritische Infrastruktur –
+        umfassende Dokumentation, Risikoanalyse, menschliche Aufsicht verpflichtend.</li>
+  </ul>
+  <h4>Praktische Implikationen</h4>
+  <p>
+    Für {size_label} bedeutet dies: Bei Standardanwendungen (Content, Analyse, Automatisierung)
+    sind primär transparente Nutzungshinweise und DSGVO-konforme Datenverarbeitung relevant.
+    Hochrisiko-Anwendungen erfordern zusätzliche Governance-Prozesse.
+  </p>
+  <p class="small muted">
+    Stand: Q1 2025. Detaillierte Anforderungen entwickeln sich weiter – bei kritischen
+    Anwendungen rechtliche Beratung empfohlen.
+  </p>
+</div>"""
+
     # Statische Fallbacks (Quick Wins UNVERÄNDERT)
     fallbacks = {
         "quick_wins": f"""<ul>
@@ -1773,7 +1838,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
 </ul>
 <p class="small muted">Angepasst an {branche} · {size_label}</p>""",
     }
-    
+
     # Default-Fallback für unbekannte Sections (OHNE Template-Phrasen)
     return fallbacks.get(
         section_key,
@@ -1785,11 +1850,24 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     )
 
 # -------------------- 🎯 NEW: Use prompt system instead of hardcoded prompts ----------------
+# 🎯 STATIC SECTIONS – diese nutzen IMMER Fallback, kein GPT-Call
+# Grund: Hohe Konsistenz, keine LLM-Variabilität, schneller
+STATIC_SECTIONS = {
+    "business_roi",
+    "business_costs",
+    "ai_act_summary",
+}
+
 def _generate_content_section(section_name: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
     """🎯 UPDATED: Uses prompt_loader system mit Variable-Interpolation und Förder-Kontext."""
     if not ENABLE_LLM_CONTENT:
         return f"<p><em>[{section_name} – LLM disabled]</em></p>"
     
+    # 🎯 STATIC SECTIONS: Direkt Fallback nutzen, kein GPT-Call
+    if section_name in STATIC_SECTIONS:
+        log.info("📌 Using static fallback for %s (no GPT call)", section_name)
+        return _get_fallback_content(section_name, briefing, scores)
+
     # Map section names to prompt files (without _de suffix for load_prompt)
     prompt_map = {
         # Core sections
@@ -2666,9 +2744,25 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     # Rewrite table link labels
     if sections.get("TOOLS_HTML"): 
         sections["TOOLS_HTML"] = _rewrite_table_links_with_labels(sections["TOOLS_HTML"])
-    if sections.get("FOERDERPROGRAMME_HTML"): 
+    if sections.get("FOERDERPROGRAMME_HTML"):
         sections["FOERDERPROGRAMME_HTML"] = _rewrite_table_links_with_labels(sections["FOERDERPROGRAMME_HTML"])
-    
+
+    # 🎯 KERN-FÖRDERMATRIX 2025/2026: Statischer, size-aware Kern immer einfügen
+    from services.extra_sections import build_core_funding_table_html
+    core_funding_html = build_core_funding_table_html(sections)
+
+    if sections.get("FOERDERPROGRAMME_HTML"):
+        # Kern-Matrix + Research-Ergebnisse kombinieren
+        sections["FOERDERPROGRAMME_HTML"] = (
+            f"<h3>Kernprogramme für Ihr Profil (2025/2026)</h3>\n"
+            f"{core_funding_html}\n\n"
+            f"<h3 style='margin-top: 16pt;'>Aktuell recherchierte Programme</h3>\n"
+            f"{sections['FOERDERPROGRAMME_HTML']}"
+        )
+    else:
+        # Nur Kern-Matrix (kein Research)
+        sections["FOERDERPROGRAMME_HTML"] = core_funding_html
+
     sections["SOURCES_BOX_HTML"] = _build_sources_box_html(sections, sections["research_last_updated"])
 
     # Freitext snippets
