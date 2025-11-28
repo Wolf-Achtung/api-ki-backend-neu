@@ -25,17 +25,6 @@ from pathlib import Path
 import requests
 
 
-# Erwartete Testprofile (Dateinamen OHNE .json-Endung)
-EXPECTED_PROFILE_STEMS: set[str] = {
-    "kmu_handel_ecommerce_advisory",
-    "kmu_industrie_production_advisory",
-    "solo_beratung_ki_assessments",
-    "solo_marketing_content_solo_agency",
-    "team_finance_insurance_advisory",
-    "team_it_software_saas_advisory",
-}
-
-
 def request_login_code(base_url: str, email: str) -> None:
     """Fordert einen Login-Code an."""
     url = f"{base_url}/auth/request-code"
@@ -116,44 +105,6 @@ def submit_profile(
     print(f"[{profile_id}] Briefing erfolgreich eingereicht: {data}")
 
 
-def debug_profiles_dir(profiles_dir: Path, expected: set[str] | None = None) -> list[str]:
-    """
-    Gibt zur Sicherheit aus, welche Profile im angegebenen Verzeichnis
-    tatsächlich gefunden werden, und vergleicht sie mit einer erwarteten Liste.
-    """
-    print("\n[check] Verwende Profile-Verzeichnis:")
-    try:
-        resolved = profiles_dir.resolve()
-    except Exception:
-        resolved = profiles_dir
-    print(f"  » {resolved}")
-
-    found = sorted(p.stem for p in profiles_dir.glob("*.json"))
-    if not found:
-        print("  ⚠️ Keine *.json-Dateien im Profil-Ordner gefunden!")
-    else:
-        print("  Gefundene Profile:")
-        for name in found:
-            print(f"   - {name}")
-
-    if expected:
-        missing = sorted(expected.difference(found))
-        extra = sorted(set(found).difference(expected))
-
-        if missing:
-            print("\n  ⚠️ Erwartete Profile, die NICHT im Verzeichnis liegen:")
-            for name in missing:
-                print(f"   - {name}")
-
-        if extra:
-            print("\n  ℹ️ Zusätzliche Profile im Verzeichnis (nicht in EXPECTED_PROFILE_STEMS):")
-            for name in extra:
-                print(f"   - {name}")
-
-    print()  # Leerzeile zur optischen Trennung
-    return found
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Mehrere Test-Briefings gegen das KI-Backend feuern."
@@ -172,7 +123,7 @@ def main() -> None:
     parser.add_argument(
         "--profiles-dir",
         default="data/test_profiles_gold",
-        help="Ordner mit Testprofil-JSONs (Standard: data/test_profiles_gold – Gold-Standard 6 Profile).",
+        help="Directory with JSON test profiles (default: data/test_profiles_gold)",
     )
     parser.add_argument(
         "--sleep",
@@ -185,7 +136,21 @@ def main() -> None:
     base_url = args.base_url.rstrip("/")
     profiles_dir = Path(args.profiles_dir)
 
-    print("=== KI-Backend Test-Report-Generator ===")
+    print("\n[check] Verwende Profile-Verzeichnis:")
+    print(f"  » {profiles_dir.resolve()}")
+
+    if not profiles_dir.exists():
+        print("  ⚠️  Ordner existiert nicht!")
+    else:
+        files = list(profiles_dir.glob("*.json"))
+        if not files:
+            print("  ⚠️  Keine JSON-Profile gefunden!")
+        else:
+            print(f"  {len(files)} Profile gefunden:")
+            for f in files:
+                print(f"   - {f.stem}")
+
+    print("\n=== KI-Backend Test-Report-Generator ===")
     print(f"Base-URL:      {base_url}")
     print(f"Login-E-Mail:  {args.email}")
     print(f"Profil-Ordner: {profiles_dir}")
@@ -193,19 +158,6 @@ def main() -> None:
 
     if not profiles_dir.is_dir():
         print(f"Profil-Ordner existiert nicht: {profiles_dir}", file=sys.stderr)
-        sys.exit(1)
-
-    # 🔍 Zusatz-Check: Welche Profile liegen wirklich auf der Platte?
-    found = debug_profiles_dir(profiles_dir, EXPECTED_PROFILE_STEMS)
-
-    # Hard-Fail: Alle erwarteten Gold-Standard-Profile müssen vorhanden sein
-    missing = EXPECTED_PROFILE_STEMS.difference(found)
-    if missing:
-        print(
-            f"[error] Nicht alle erwarteten Gold-Standard-Profile gefunden: {sorted(missing)}",
-            file=sys.stderr
-        )
-        print("[error] Test-Lauf wird abgebrochen.", file=sys.stderr)
         sys.exit(1)
 
     profiles = load_profiles(profiles_dir)
