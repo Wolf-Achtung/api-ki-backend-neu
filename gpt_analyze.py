@@ -1,18 +1,26 @@
 # -*- coding: utf-8 -*-
 """
-gpt_analyze.py – v4.14.0-GOLD-PLUS
+gpt_analyze.py – v4.14.2-GOLD-PLUS
 ---------------------------------------------------------------------
-🎯 GOLD STANDARD+ OPTIMIERUNGEN (Phase 2):
+🎯 GOLD STANDARD+ OPTIMIERUNGEN (Phase 2.2):
 - ✅ Nutzt prompt_loader.py System (statt hardcoded prompts)
 - ✅ Dynamische Dates in Next Actions ({{TODAY}} Variablen)
 - ✅ Bessere Fallbacks wenn GPT wenig liefert
 - ✅ Quick Wins mit strukturierten Prompts aus /prompts/de/
 - ✅ Roadmap mit Variablen-Interpolation
 - ✅ ROI Calculator Integration vorbereitet
+- ✅ Size-aware Roadmap Fallbacks (keine "Abteilungen" für Solo)
+- ✅ Platzhalter-Texte werden nach Repair entfernt
+- ✅ Konsistentes Aliasing für roadmap_90d/ROADMAP_HTML/ROADMAP_90D_HTML
+- ✅ Vereinheitlichtes Size-Mapping (klein/small_team/small → team)
+- ✅ NEUE Roadmap-Fallbacks inline (700-900 Zeichen, keine externen Dateien)
+- ✅ Vollständig size-aware: solo/team/kmu mit bedingten Texten
 
 Version History:
 - 4.13.5-gs: Original mit Research-Integration
 - 4.14.0-GOLD-PLUS: Prompt-System aktiviert, dynamische Daten
+- 4.14.1-GOLD-PLUS: Size-aware Fallbacks, Platzhalter-Fix, Aliasing-Korrektur
+- 4.14.2-GOLD-PLUS: Roadmap-Fallbacks inline, HAUPTLEISTUNG-Integration
 ---------------------------------------------------------------------
 """
 from __future__ import annotations
@@ -1445,10 +1453,84 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     return base_vars
 # -------------------- 🎯 NEW: Better fallbacks when GPT fails ----------------
 def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
-    """Provide meaningful fallback content if GPT fails or returns too little"""
+    """🎯 UPDATED: Size-aware inline fallback content (700-900 Zeichen) – GOLD-STANDARD+"""
     branche = briefing.get("BRANCHE_LABEL") or briefing.get("branche", "Ihr Unternehmen")
-    size = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
+    size_label = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
+    hauptleistung = briefing.get("hauptleistung", briefing.get("HAUPTLEISTUNG", ""))
     
+    # 🎯 Size-Erkennung (solo/team/kmu) wie im Briefing spezifiziert
+    size_raw = (briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse") or "").lower()
+    
+    if "solo" in size_raw or "freiberuf" in size_raw or "1" in size_raw:
+        size_group = "solo"
+    elif "2" in size_raw or "team" in size_raw or "kleines" in size_raw:
+        size_group = "team"
+    else:
+        size_group = "kmu"
+    
+    # 🎯 SIZE-AWARE ROADMAP FALLBACKS (inline HTML, 700-900 Zeichen)
+    if section_key in ("roadmap", "roadmap_90d"):
+        # Bedingter Text für Phase 3 basierend auf size_group
+        phase3_text = ""
+        if size_group == "team":
+            phase3_text = " und an 1–2 Kolleg:innen weitergeben"
+        elif size_group == "kmu":
+            phase3_text = " und abgestimmt mit Fachbereichen ausrollen"
+        
+        return f"""<div class="roadmap">
+  <h4>Phase 1: Test &amp; Vorbereitung (0–30 Tage)</h4>
+  <ul>
+    <li>2–3 wichtigste KI-Einsatzstellen im Prozess {hauptleistung or "Kerngeschäft"} festlegen.</li>
+    <li>Werkzeug-Set auswählen und erste Tests durchführen.</li>
+    <li>Kurzleitfaden für Eingaben, Qualität und sichere Workflows erstellen.</li>
+  </ul>
+
+  <h4>Phase 2: Pilotierung (31–60 Tage)</h4>
+  <ul>
+    <li>Einen Pilotworkflow im Alltag testen und Feedback einholen.</li>
+    <li>Wöchentliche Mini-Reviews einplanen.</li>
+    <li>Vorlagen, Beispiele und Best Practices dokumentieren.</li>
+  </ul>
+
+  <h4>Phase 3: Verstetigung (61–90 Tage)</h4>
+  <ul>
+    <li>Bewährte Abläufe verstetigen{phase3_text}.</li>
+    <li>Einfache KI-Leitlinien definieren (Daten, Freigaben, Qualität).</li>
+    <li>Nächste Use Cases priorisieren und Roadmap 2.0 vorbereiten.</li>
+  </ul>
+</div>"""
+    
+    if section_key == "roadmap_12m":
+        # Bedingter Text für Monate 7-12 basierend auf size_group
+        ausbau_text = ""
+        if size_group == "team":
+            ausbau_text = " und Zuständigkeiten im Team klären"
+        elif size_group == "kmu":
+            ausbau_text = " und Fachbereiche einbinden"
+        
+        return f"""<div class="roadmap">
+  <div class="roadmap-phase">
+    <h3>Monate 1–6: Fundament</h3>
+    <ul>
+      <li>KI-Ziele schärfen und Kernprozesse stabil aufsetzen – realistische Erwartungen definieren und Quick-Win-Potenziale identifizieren.</li>
+      <li>Wissen, Beispiele und Standards dokumentieren – Prompt-Bibliothek anlegen, Best Practices sammeln und Qualitätskriterien festlegen.</li>
+      <li>Regelmäßige Qualitätskontrollen etablieren – Output-Reviews durchführen, Feedback-Schleifen implementieren und Erfolgsmetriken definieren.</li>
+      <li>Schulungs- und Onboarding-Prozesse aufsetzen – kontinuierliches Lernen ermöglichen und Skill-Entwicklung fördern.</li>
+    </ul>
+  </div>
+
+  <div class="roadmap-phase">
+    <h3>Monate 7–12: Ausbau &amp; Optimierung</h3>
+    <ul>
+      <li>Weitere Aufgabenbereiche einbeziehen{ausbau_text} – erfolgreich erprobte Workflows multiplizieren und Synergien nutzen.</li>
+      <li>Ergebnisse systematisch messen (Zeitersparnis, Qualitätsverbesserung, Risikominimierung) und kontinuierlich nachschärfen.</li>
+      <li>Roadmap 2.0 definieren und weitere Ausbaustufen planen – nächste Use Cases priorisieren, Budget sichern und strategische Weichen stellen.</li>
+      <li>Governance und Compliance-Rahmen finalisieren – Leitlinien kommunizieren, Verantwortlichkeiten klären und Audit-Prozesse etablieren.</li>
+    </ul>
+  </div>
+</div>"""
+    
+    # Statische Fallbacks (Quick Wins & Next Actions UNVERÄNDERT)
     fallbacks = {
         "quick_wins": f"""<ul>
 <li><strong>E-Mail-Entwürfe automatisieren:</strong> Automatische Vorschläge für Standard-Antworten und Textbausteine. <em>Ersparnis: 20 h/Monat</em></li>
@@ -1456,65 +1538,24 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
 <li><strong>Dokumenten-Recherche beschleunigen:</strong> Semantische Suche in Ihrer Wissensdatenbank statt manuelles Durchsuchen. <em>Ersparnis: 12 h/Monat</em></li>
 <li><strong>Social Media Posts generieren:</strong> KI-gestützte Content-Vorschläge für LinkedIn, Instagram und andere Kanäle. <em>Ersparnis: 8 h/Monat</em></li>
 </ul>
-<p class="small muted">Angepasst an {branche} · {size}</p>""",
-        
-        "roadmap": f"""<div class="roadmap">
-<h4>Phase 1: Test & Schulung (0-30 Tage)</h4>
-<ul>
-<li>Stakeholder-Kick-off und Use-Case-Priorisierung durchführen</li>
-<li>Tool-Evaluierung (3-5 Kandidaten) inklusive Datenschutz-Check</li>
-<li>Team-Training durchführen: Prompt Engineering Basics (1-2 Tage Workshop)</li>
-</ul>
-
-<h4>Phase 2: Pilotierung (31-60 Tage)</h4>
-<ul>
-<li>Pilot-Projekt mit 3-5 Power-Anwendern starten</li>
-<li>Wöchentliche Review-Meetings etablieren und Feedback-Loop aufbauen</li>
-<li>Erste ROI-Messung durchführen und Lessons Learned dokumentieren</li>
-</ul>
-
-<h4>Phase 3: Rollout (61-90 Tage)</h4>
-<ul>
-<li>Schrittweise Erweiterung auf weitere Teams und Abteilungen</li>
-<li>Governance-Framework und Nutzungsrichtlinien etablieren</li>
-<li>90-Tage-Review durchführen und nächste Use Cases planen</li>
-</ul>
-</div>""",
-        
-        "roadmap_12m": f"""<div class="roadmap">
-<div class="roadmap-phase">
-<h3>Quartale 1-2 (Monate 0-6): Foundation Building</h3>
-<ul>
-<li><strong>Q1:</strong> KI-Strategie entwickeln, Tool-Auswahl treffen, erste Pilots starten</li>
-<li><strong>Q2:</strong> Skalierung auf 2-3 Abteilungen, strukturiertes Training-Programm aufsetzen</li>
-</ul>
-</div>
-
-<div class="roadmap-phase">
-<h3>Quartale 3-4 (Monate 7-12): Scale & Optimize</h3>
-<ul>
-<li><strong>Q3:</strong> Organisations-weiter Rollout, Governance-Strukturen etablieren</li>
-<li><strong>Q4:</strong> Advanced Use Cases implementieren, ROI-Optimierung, Roadmap 2.0 planen</li>
-</ul>
-</div>
-</div>""",
+<p class="small muted">Angepasst an {branche} · {size_label}</p>""",
         
         "next_actions": f"""<ol>
-<li><strong>KI-Manager:in</strong> — Stakeholder-Kick-off organisieren und Top-3 Use Cases priorisieren<br>
+<li><strong>Verantwortliche:r</strong> — Stakeholder-Kick-off organisieren und Top-3 Use Cases priorisieren<br>
 ⏱ 2 Tage · 🎯 hoch · 📆 {(datetime.now() + timedelta(days=14)).strftime('%d.%m.%Y')}<br>
 <em>KPI:</em> 3-5 priorisierte Use Cases dokumentiert und abgestimmt</li>
 
-<li><strong>IT-Leitung</strong> — Tool-Evaluierung durchführen (inkl. DSGVO-Check und Security-Review)<br>
+<li><strong>IT-Verantwortliche:r</strong> — Tool-Evaluierung durchführen (inkl. DSGVO-Check und Security-Review)<br>
 ⏱ 3 Tage · 🎯 hoch · 📆 {(datetime.now() + timedelta(days=21)).strftime('%d.%m.%Y')}<br>
 <em>KPI:</em> 3 Tools evaluiert, 1 konkrete Empfehlung mit Begründung</li>
 
-<li><strong>Datenschutzbeauftragte:r</strong> — Datenschutz-Konzept für KI-Einsatz erstellen<br>
+<li><strong>Datenschutz-Verantwortliche:r</strong> — Datenschutz-Konzept für KI-Einsatz erstellen<br>
 ⏱ 2 Tage · 🎯 hoch · 📆 {(datetime.now() + timedelta(days=21)).strftime('%d.%m.%Y')}<br>
 <em>KPI:</em> DSGVO-Checkliste vollständig abgearbeitet</li>
 
-<li><strong>Team-Lead</strong> — Pilot-Team auswählen und Erwartungen klären<br>
+<li><strong>Projektleitung</strong> — Pilot-Phase planen und Erwartungen definieren<br>
 ⏱ 1 Tag · 🎯 mittel · 📆 {(datetime.now() + timedelta(days=28)).strftime('%d.%m.%Y')}<br>
-<em>KPI:</em> 3-5 motivierte Pilot-User identifiziert</li>
+<em>KPI:</em> 3-5 konkrete Testszenarien dokumentiert</li>
 </ol>""",
     }
     
@@ -1613,6 +1654,12 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
             if _needs_repair(result):
                 result = _repair_html(section_name, result)
             
+            # 🎯 PLATZHALTER-FIX: Entferne Developer-Wörter die GPT manchmal ausgibt
+            if result:
+                developer_words = ["Platzhalter", "TODO", "Beispieltext", "Content wird erstellt", "XXX"]
+                for word in developer_words:
+                    result = result.replace(word, "")
+            
             # Minimalumfang prüfen
             if not result or len(result.strip()) < 50:
                 log.warning(
@@ -1699,6 +1746,12 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
     out = _clean_html(out)
     if _needs_repair(out):
         out = _repair_html(section_name, out)
+    
+    # 🎯 PLATZHALTER-FIX: Entferne Developer-Wörter die GPT manchmal ausgibt
+    if out:
+        developer_words = ["Platzhalter", "TODO", "Beispieltext", "Content wird erstellt", "XXX"]
+        for word in developer_words:
+            out = out.replace(word, "")
     
     # Fallback wenn GPT wirklich gar nichts bringt
     if not out or len(out.strip()) < 50:
@@ -2216,9 +2269,10 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 
     # 🎯 WICHTIG: Logische Aliase für Validator & Template
 
-    # 90-Tage-Roadmap (Validator + Template)
+    # 90-Tage-Roadmap (Validator + Template) - KONSISTENTES MAPPING
     sections["roadmap_90d"] = sections.get("PILOT_PLAN_HTML", "")
-    sections.setdefault("ROADMAP_HTML", sections.get("PILOT_PLAN_HTML", ""))
+    sections["ROADMAP_HTML"] = sections.get("PILOT_PLAN_HTML", "")
+    sections["ROADMAP_90D_HTML"] = sections.get("PILOT_PLAN_HTML", "")
 
     # 12-Monats-Roadmap
     sections["roadmap_12m"] = sections.get("ROADMAP_12M_HTML", "")
@@ -2234,9 +2288,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections["recommendations"] = sections.get("RECOMMENDATIONS_HTML", "")
     sections["EXEC_SUMMARY_HTML"] = sections.get("EXECUTIVE_SUMMARY_HTML", "")
     sections["executive_summary"] = sections.get("EXECUTIVE_SUMMARY_HTML", "")
-    sections["roadmap_90d"] = sections.get("PILOT_PLAN_HTML", sections.get("ROADMAP_HTML", ""))
-    sections["ROADMAP_90D_HTML"] = sections.get("roadmap_90d", "")
-    sections["roadmap_12m"] = sections.get("ROADMAP_12M_HTML", sections.get("ROADMAP_HTML", ""))
+    
     return sections
 
 
@@ -2878,7 +2930,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     db = core_db.SessionLocal()
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v4.14.0-GOLD-PLUS for briefing_id=%s", run_id, briefing_id)
+        log.info("[%s] 🚀 Starting analysis v4.14.2-GOLD-PLUS for briefing_id=%s", run_id, briefing_id)
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
         rep = Report(
