@@ -137,18 +137,24 @@ def main() -> None:
     profiles_dir = Path(args.profiles_dir)
 
     print("\n[check] Verwende Profile-Verzeichnis:")
-    print(f"  » {profiles_dir.resolve()}")
+    try:
+        resolved = profiles_dir.resolve()
+    except Exception:
+        resolved = profiles_dir
+    print(f"  » {resolved}")
 
     if not profiles_dir.exists():
-        print("  ⚠️  Ordner existiert nicht!")
-    else:
-        files = list(profiles_dir.glob("*.json"))
-        if not files:
-            print("  ⚠️  Keine JSON-Profile gefunden!")
-        else:
-            print(f"  {len(files)} Profile gefunden:")
-            for f in files:
-                print(f"   - {f.stem}")
+        print("  ❌ Profil-Ordner existiert nicht. Bitte prüfen:", resolved, file=sys.stderr)
+        sys.exit(1)
+
+    files = sorted(profiles_dir.glob("*.json"))
+    if not files:
+        print("  ❌ Keine JSON-Profile im Ordner gefunden.", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"  {len(files)} Profile gefunden:")
+    for f in files:
+        print(f"   - {f.stem}")
 
     print("\n=== KI-Backend Test-Report-Generator ===")
     print(f"Base-URL:      {base_url}")
