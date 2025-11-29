@@ -116,9 +116,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--base-url",
-        default="https://api-ki-backend-neu-production.up.railway.app/api",
-        help="Basis-URL deines Backends (ohne trailing Slash), z.B. "
-             "https://api-ki-backend-neu-production.up.railway.app/api",
+        default="https://make.ki-sicherheit.jetzt/api",
+        help="Basis-URL deines Backends (ohne trailing Slash)",
     )
     parser.add_argument(
         "--email",
@@ -127,50 +126,13 @@ def main() -> None:
     )
     parser.add_argument(
         "--profiles-dir",
-        default="data/test_profiles_gold",
-        help="Directory with JSON test profiles (default: data/test_profiles_gold)",
-    )
-    parser.add_argument(
-        "--sleep",
-        type=float,
-        default=1.0,
-        help="Pause in Sekunden zwischen zwei Profilen (Standard: 1.0).",
+        default="data/test_profiles",
+        help="Ordner mit Testprofil-JSONs",
     )
     args = parser.parse_args()
 
     base_url = args.base_url.rstrip("/")
-
-    # Pfadauflösung: absolut oder relativ zu REPO_ROOT
-    profiles_path = Path(args.profiles_dir)
-    if profiles_path.is_absolute():
-        profiles_dir = profiles_path
-    else:
-        # Relativer Pfad → relativ zu REPO_ROOT auflösen
-        profiles_dir = (REPO_ROOT / profiles_path).resolve()
-
-    print("\n[check] Verwende Profile-Verzeichnis:")
-    print(f"  Repo-Root: {REPO_ROOT}")
-    print(f"  Relativer Pfad (Argument): {args.profiles_dir}")
-    print(f"  Absoluter Pfad (aufgelöst): {profiles_dir}")
-
-    if not profiles_dir.exists():
-        print(f"  ❌ Profil-Ordner existiert nicht: {profiles_dir}", file=sys.stderr)
-        sys.exit(1)
-
-    files = sorted(profiles_dir.glob("*.json"))
-    if not files:
-        print("  ❌ Keine JSON-Profile im Ordner gefunden.", file=sys.stderr)
-        sys.exit(1)
-
-    print(f"  {len(files)} Profile gefunden:")
-    for f in files:
-        print(f"   - {f.stem}")
-
-    print("\n=== KI-Backend Test-Report-Generator ===")
-    print(f"Base-URL:      {base_url}")
-    print(f"Login-E-Mail:  {args.email}")
-    print(f"Profil-Ordner: {profiles_dir}")
-    print()
+    profiles_dir = pathlib.Path(args.profiles_dir)
 
     if not profiles_dir.is_dir():
         print(f"Profil-Ordner existiert nicht: {profiles_dir}", file=sys.stderr)
@@ -217,3 +179,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
