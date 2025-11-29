@@ -129,6 +129,12 @@ def main() -> None:
         default="data/test_profiles_gold",
         help="Directory with JSON test profiles (default: data/test_profiles_gold)",
     )
+    parser.add_argument(
+        "--sleep",
+        type=float,
+        default=20.0,
+        help="Sekunden Pause zwischen den Profilen (default: 20.0)",
+    )
     args = parser.parse_args()
 
     base_url = args.base_url.rstrip("/")
