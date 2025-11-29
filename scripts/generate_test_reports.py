@@ -17,12 +17,17 @@ Ablauf:
 
 import argparse
 import json
+import os
 import pathlib
 import sys
 import time
 from pathlib import Path
 
 import requests
+
+# Repo-Root berechnen (scripts/ -> repo root)
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPT_DIR.parent
 
 
 def request_login_code(base_url: str, email: str) -> None:
@@ -134,17 +139,22 @@ def main() -> None:
     args = parser.parse_args()
 
     base_url = args.base_url.rstrip("/")
-    profiles_dir = Path(args.profiles_dir)
+
+    # Pfadauflösung: absolut oder relativ zu REPO_ROOT
+    profiles_path = Path(args.profiles_dir)
+    if profiles_path.is_absolute():
+        profiles_dir = profiles_path
+    else:
+        # Relativer Pfad → relativ zu REPO_ROOT auflösen
+        profiles_dir = (REPO_ROOT / profiles_path).resolve()
 
     print("\n[check] Verwende Profile-Verzeichnis:")
-    try:
-        resolved = profiles_dir.resolve()
-    except Exception:
-        resolved = profiles_dir
-    print(f"  » {resolved}")
+    print(f"  Repo-Root: {REPO_ROOT}")
+    print(f"  Relativer Pfad (Argument): {args.profiles_dir}")
+    print(f"  Absoluter Pfad (aufgelöst): {profiles_dir}")
 
     if not profiles_dir.exists():
-        print("  ❌ Profil-Ordner existiert nicht. Bitte prüfen:", resolved, file=sys.stderr)
+        print(f"  ❌ Profil-Ordner existiert nicht: {profiles_dir}", file=sys.stderr)
         sys.exit(1)
 
     files = sorted(profiles_dir.glob("*.json"))
