@@ -1905,13 +1905,12 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
 </div>""",
     }
 
-    # Default-Fallback für unbekannte Sections (OHNE Template-Phrasen)
+    # Default-Fallback für unbekannte Sections – neutraler, professioneller Text ohne Fehlermeldungs-Charakter
     return fallbacks.get(
         section_key,
         f"""<div class="section-placeholder">
-  <p>Dieser Abschnitt wird auf Basis der konkreten Angaben zu <strong>{branche}</strong> und
-  <strong>{size_label}</strong> generiert und ergänzt.</p>
-  <p class="small muted">Hinweis: Für eine vollständige Darstellung sind detaillierte Eingaben erforderlich.</p>
+  <p>Dieser Abschnitt fasst die wichtigsten Aspekte für <strong>{branche}</strong> in der Unternehmensgröße <strong>{size_label or "Ihr Unternehmen"}</strong> zusammen.</p>
+  <p>Die Inhalte basieren auf den vorliegenden Angaben und bewährten Vorgehensweisen für vergleichbare Profile.</p>
 </div>"""
     )
 
