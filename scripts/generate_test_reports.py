@@ -133,8 +133,8 @@ def main() -> None:
     parser.add_argument(
         "--sleep",
         type=float,
-        default=1.0,
-        help="Pause in Sekunden zwischen zwei Profilen (Standard: 1.0).",
+        default=20.0,
+        help="Sekunden Pause zwischen den Profilen (default: 20.0)",
     )
     args = parser.parse_args()
 
