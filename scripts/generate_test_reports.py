@@ -126,8 +126,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--profiles-dir",
-        default="data/test_profiles",
-        help="Ordner mit Testprofil-JSONs",
+        default="data/test_profiles_gold",
+        help="Directory with JSON test profiles (default: data/test_profiles_gold)",
     )
     args = parser.parse_args()
 
