@@ -1837,6 +1837,72 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
 <li><strong>Social Media Posts generieren:</strong> KI-gestützte Content-Vorschläge für LinkedIn, Instagram und andere Kanäle. <em>Ersparnis: 8 h/Monat</em></li>
 </ul>
 <p class="small muted">Angepasst an {branche} · {size_label}</p>""",
+        "business_case": f"""<div class="business-case-fallback">
+  <h3>Investition und erwarteter Nutzen</h3>
+  <p>
+    Der Einsatz von KI in der Branche <strong>{branche}</strong> erfordert eine realistische
+    Einschätzung der Aufwände und des erwarteten Nutzens. Die Investition umfasst sowohl
+    einmalige Einführungskosten (CAPEX) als auch laufende Betriebskosten (OPEX).
+  </p>
+  <table class="table">
+    <tr>
+      <td><strong>Einführungskosten (CAPEX)</strong></td>
+      <td class="text-right">{briefing.get("CAPEX_REALISTISCH_EUR", "—")} €</td>
+    </tr>
+    <tr>
+      <td><strong>Laufende Kosten (OPEX)</strong></td>
+      <td class="text-right">{briefing.get("OPEX_REALISTISCH_EUR", "—")} €/Monat</td>
+    </tr>
+    <tr>
+      <td><strong>Erwartete Einsparung</strong></td>
+      <td class="text-right">{briefing.get("EINSPARUNG_MONAT_EUR", "—")} €/Monat</td>
+    </tr>
+    <tr>
+      <td><strong>Amortisation</strong></td>
+      <td class="text-right">{briefing.get("PAYBACK_MONTHS", "—")} Monate</td>
+    </tr>
+    <tr>
+      <td><strong>ROI nach 12 Monaten</strong></td>
+      <td class="text-right">{briefing.get("ROI_12M", "—")} %</td>
+    </tr>
+  </table>
+  <p>
+    Die Amortisationszeit gibt an, nach wie vielen Monaten sich die Anfangsinvestition
+    durch die laufenden Einsparungen rechnet. Der Return on Investment (ROI) zeigt die
+    Gesamtrendite nach einem Jahr in Relation zur Investition.
+  </p>
+</div>""",
+        "gamechanger": f"""<div class="gamechanger-fallback">
+  <h3>KI als strategischer Hebel</h3>
+  <p>
+    Für ein Unternehmen in der Branche <strong>{branche}</strong> ({size_label})
+    eröffnet der Einsatz von KI mehrere strategische Handlungsfelder, die die
+    Wettbewerbsfähigkeit nachhaltig stärken können:
+  </p>
+  <ol>
+    <li>
+      <strong>Prozessautomatisierung und Effizienzsteigerung:</strong>
+      Wiederholbare Aufgaben können durch KI-gestützte Workflows beschleunigt werden.
+      Dies reduziert manuelle Arbeitszeit und ermöglicht den Fokus auf wertschöpfende Tätigkeiten.
+    </li>
+    <li>
+      <strong>Datengetriebene Entscheidungsfindung:</strong>
+      KI-Analysewerkzeuge helfen dabei, Muster in Geschäftsdaten zu erkennen und
+      fundierte strategische Entscheidungen zu treffen. Dies umfasst Kundensegmentierung,
+      Nachfrageprognosen und Marktanalysen.
+    </li>
+    <li>
+      <strong>Qualitätssteigerung und Personalisierung:</strong>
+      Durch den Einsatz von KI können Produkte und Dienstleistungen besser auf individuelle
+      Kundenbedürfnisse zugeschnitten werden. Dies erhöht die Kundenzufriedenheit und
+      langfristige Kundenbindung.
+    </li>
+  </ol>
+  <p class="small muted">
+    Die konkreten Umsetzungsschritte hängen von den spezifischen Geschäftsprozessen,
+    vorhandenen Daten und strategischen Prioritäten ab.
+  </p>
+</div>""",
     }
 
     # Default-Fallback für unbekannte Sections (OHNE Template-Phrasen)
