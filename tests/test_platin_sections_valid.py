@@ -221,6 +221,7 @@ class TestFallbackContentUsage:
         "recommendations",
         "roadmap_12m",
         "unternehmensprofil_markt",
+        "gamechanger",
     ]
 
     @pytest.mark.parametrize("section", PLATIN_SECTIONS)
@@ -324,6 +325,7 @@ class TestShortLLMOutputSimulation:
             "recommendations",
             "roadmap_12m",
             "unternehmensprofil_markt",
+            "gamechanger",
         ]
 
         briefing = {
