@@ -1483,11 +1483,12 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
 
     # Business Case Variablen
     bundesland = briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", "Ihrem Bundesland")
-    capex = briefing.get("CAPEX_REALISTISCH_EUR", "—")
-    opex = briefing.get("OPEX_REALISTISCH_EUR", "—")
-    einsparung = briefing.get("EINSPARUNG_MONAT_EUR", "—")
-    payback = briefing.get("PAYBACK_MONTHS", "—")
-    roi_12m = briefing.get("ROI_12M", "—")
+    # BC-Werte mit sinnvollen Defaults (werden von calc_business_case vorher gesetzt)
+    capex = briefing.get("CAPEX_REALISTISCH_EUR") or 5000
+    opex = briefing.get("OPEX_REALISTISCH_EUR") or 150
+    einsparung = briefing.get("EINSPARUNG_MONAT_EUR") or 500
+    payback = briefing.get("PAYBACK_MONTHS") or 10
+    roi_12m = briefing.get("ROI_12M") or 60
 
     # ════════════════════════════════════════════════════════════════════════════
     # 🎯 PLATIN+ FALLBACK: FOERDERPOTENZIAL (900+ Wörter)
@@ -2746,8 +2747,8 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
             word_count = len(text_only.split()) if text_only else 0
 
             if not result or word_count < min_words:
-                log.warning(
-                    "⚠️ GPT returned too little for %s (%d words < %d min), using fallback",
+                log.info(
+                    "ℹ️ LLM content for %s too short (%d words < %d min) – using PLATIN fallback.",
                     section_name,
                     word_count,
                     min_words,
@@ -3404,7 +3405,25 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     log.info("[%s] 📊 Calculating realistic scores (v4.14.0-GOLD-PLUS)...", run_id)
     score_wrap = _calculate_realistic_score(answers)
     scores = score_wrap["scores"]
-    
+
+    # === Business Case FRÜHZEITIG berechnen (vor Content-Generierung!) ===
+    # Damit sind BC-Werte (CAPEX, OPEX, ROI, etc.) für alle Fallbacks verfügbar
+    if calc_business_case:
+        bc = calc_business_case(answers, dict(os.environ))
+        # BC-Werte zu answers hinzufügen, damit Fallbacks sie nutzen können
+        answers["CAPEX_REALISTISCH_EUR"] = bc.get("CAPEX_REALISTISCH_EUR", 0)
+        answers["OPEX_REALISTISCH_EUR"] = bc.get("OPEX_REALISTISCH_EUR", 0)
+        answers["EINSPARUNG_MONAT_EUR"] = bc.get("EINSPARUNG_MONAT_EUR", 0)
+        answers["PAYBACK_MONTHS"] = bc.get("PAYBACK_MONTHS", 0)
+        answers["ROI_12M"] = bc.get("ROI_12M", 0)
+        answers["BUSINESS_CASE_TABLE_HTML"] = bc.get("BUSINESS_CASE_TABLE_HTML", "")
+        log.info("[%s] 💰 Business Case pre-calculated: CAPEX=%s, OPEX=%s, Payback=%sm, ROI=%s%%",
+                 run_id,
+                 bc.get("CAPEX_REALISTISCH_EUR", "N/A"),
+                 bc.get("OPEX_REALISTISCH_EUR", "N/A"),
+                 bc.get("PAYBACK_MONTHS", "N/A"),
+                 bc.get("ROI_12M", "N/A"))
+
     log.info("[%s] 🎨 Generating content sections with %s...", run_id, "PROMPT SYSTEM" if USE_PROMPT_SYSTEM else "legacy prompts")
     sections = _generate_content_sections(briefing=answers, scores=scores)
     
@@ -3608,25 +3627,21 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     except Exception as _exc:
         log.warning("[%s] ⚠️ Sanitizer skipped: %s", run_id, _exc)
 
-    # === Business Case ZUERST berechnen (muss vor Placeholder-Fix!) ===
-    if calc_business_case:
-        bc = calc_business_case(answers, dict(os.environ))
-        sections["business_case_table_html"] = bc.get("BUSINESS_CASE_TABLE_HTML", "")
-        sections.update(bc)  # CAPEX_REALISTISCH_EUR, OPEX_REALISTISCH_EUR, PAYBACK_MONTHS, ROI_12M, etc.
-        log.info("[%s] 💰 Business Case calculated: CAPEX=%s, OPEX=%s, Payback=%sm, ROI=%s%%",
-                 run_id,
-                 bc.get("CAPEX_REALISTISCH_EUR", "N/A"),
-                 bc.get("OPEX_REALISTISCH_EUR", "N/A"),
-                 bc.get("PAYBACK_MONTHS", "N/A"),
-                 bc.get("ROI_12M", "N/A"))
+    # === Business Case Sensitivity-Werte berechnen (BC wurde bereits oben berechnet) ===
+    # BC-Werte wurden früher in answers eingefügt (vor _generate_content_sections)
+    if answers.get("CAPEX_REALISTISCH_EUR") is not None:
+        sections["business_case_table_html"] = answers.get("BUSINESS_CASE_TABLE_HTML", "")
+        # BC-Werte von answers nach sections kopieren
+        for bc_key in ["CAPEX_REALISTISCH_EUR", "OPEX_REALISTISCH_EUR", "EINSPARUNG_MONAT_EUR", "PAYBACK_MONTHS", "ROI_12M"]:
+            sections[bc_key] = answers.get(bc_key, 0)
 
         # Pre-calculate sensitivity values for Jinja2 template
         # These are used in template expressions like {{ ROI_12M * 0.8 }}
         try:
-            capex = float(bc.get('CAPEX_REALISTISCH_EUR', 6000))
-            opex = float(bc.get('OPEX_REALISTISCH_EUR', 120))
-            einsparung = float(bc.get('EINSPARUNG_MONAT_EUR', 4500))
-            roi_12m = float(bc.get('ROI_12M', 0))  # ROI_12M ist bereits ein Prozentwert (z.B. 200.0 für 200%)
+            capex = float(answers.get('CAPEX_REALISTISCH_EUR', 6000))
+            opex = float(answers.get('OPEX_REALISTISCH_EUR', 120))
+            einsparung = float(answers.get('EINSPARUNG_MONAT_EUR', 4500))
+            roi_12m = float(answers.get('ROI_12M', 0))  # ROI_12M ist bereits ein Prozentwert (z.B. 200.0 für 200%)
 
             # Ensure numeric values are available for Jinja2 calculations
             sections['CAPEX_REALISTISCH_EUR'] = capex
@@ -3655,7 +3670,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
                      run_id, roi_12m, sections['ROI_12M_RATE'], 
                      sections['ROI_12M_LOW'], sections['ROI_12M_HIGH'])
             log.info("[%s] 📊 Payback: Realistisch=%.1f Monate, Pessimistisch=%.1f, Optimistisch=%.1f",
-                     run_id, bc.get('PAYBACK_MONTHS', 0),
+                     run_id, float(answers.get('PAYBACK_MONTHS', 0)),
                      sections['PAYBACK_MONTHS_PESSIMISTIC'], sections['PAYBACK_MONTHS_OPTIMISTIC'])
         except (ValueError, ZeroDivisionError) as e:
             log.warning("[%s] ⚠️ Sensitivity calculation failed: %s", run_id, e)
