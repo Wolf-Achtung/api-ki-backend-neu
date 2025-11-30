@@ -58,7 +58,7 @@ from services.email_templates import render_report_ready_email
 from settings import settings
 from services.coverage_guard import analyze_coverage, build_html_report
 from services.prompt_loader import load_prompt
-from services.prompt_enhancer import PromptEnhancer
+from services.prompt_enhancer import PromptEnhancer, get_platin_config
 from services.html_sanitizer import sanitize_sections_dict
 from utils.hotfix_gold_standard import apply_hotfix, UTF8Handler
 from utils.encoding_fixer import clean_briefing_data
@@ -220,7 +220,11 @@ def _llm_params_for(section_key: str) -> Dict[str, Any]:
     """
     Liefert Modell, Temperatur und Max-Tokens für einen logischen Abschnitt.
 
-    Env-Overrides (optional):
+    PLATIN+ STABILIZATION:
+    - Für kritische Sections (foerderpotenzial, risks, recommendations, roadmap_12m, gamechanger)
+      werden max_tokens auf 4096 erhöht und optimierte Temperature/Penalties verwendet.
+
+    Env-Overrides (optional, überschreiben PLATIN-Defaults):
     - OPENAI_MODEL_<SECTION>
     - OPENAI_TEMP_<SECTION>
     - OPENAI_MAX_TOKENS_<SECTION>
@@ -232,7 +236,10 @@ def _llm_params_for(section_key: str) -> Dict[str, Any]:
     key = (section_key or "").lower()
     suffix = key.upper()
 
-    # Explizite Env-Overrides pro Section
+    # PLATIN+ Konfiguration prüfen (foerderpotenzial, risks, recommendations, etc.)
+    platin_config = get_platin_config(key)
+
+    # Explizite Env-Overrides pro Section (höchste Priorität)
     model_env = os.getenv(f"OPENAI_MODEL_{suffix}")
     temp_env = os.getenv(f"OPENAI_TEMP_{suffix}")
     max_tokens_env = os.getenv(f"OPENAI_MAX_TOKENS_{suffix}")
@@ -247,12 +254,14 @@ def _llm_params_for(section_key: str) -> Dict[str, Any]:
     else:
         model = OPENAI_MODEL_DEFAULT
 
-    # Temperatur bestimmen
+    # Temperatur bestimmen (PLATIN-Config hat Vorrang vor Default)
     if temp_env is not None:
         try:
             temperature = float(temp_env)
         except ValueError:
             temperature = OPENAI_TEMP_DEFAULT
+    elif platin_config:
+        temperature = platin_config.get("temperature", OPENAI_TEMP_DEFAULT)
     elif key in {"executive_summary", "exec_summary", "summary"}:
         temperature = EXEC_SUMMARY_TEMP
     elif key == "gamechanger":
@@ -260,12 +269,16 @@ def _llm_params_for(section_key: str) -> Dict[str, Any]:
     else:
         temperature = OPENAI_TEMP_DEFAULT
 
-    # Max-Tokens bestimmen
+    # Max-Tokens bestimmen (PLATIN-Config: None → 4096 für längere Outputs)
     if max_tokens_env is not None:
         try:
             max_tokens = int(max_tokens_env)
         except ValueError:
             max_tokens = OPENAI_MAX_TOKENS_DEFAULT
+    elif platin_config:
+        # PLATIN+ kritische Sections: max_tokens=None → 4096 für 800-900 Wörter
+        platin_max = platin_config.get("max_tokens")
+        max_tokens = 4096 if platin_max is None else platin_max
     elif key in {"executive_summary", "exec_summary", "summary"}:
         max_tokens = EXEC_SUMMARY_MAX_TOKENS
     elif key == "gamechanger":
@@ -638,10 +651,26 @@ def _call_openai(
         )
         r.raise_for_status()
 
-        # Validate response structure
+        # Validate response structure and log finish_reason for diagnostics
         try:
             data = r.json()
             content = data["choices"][0]["message"]["content"]
+            finish_reason = data["choices"][0].get("finish_reason", "unknown")
+
+            # PLATIN+ Diagnostik: Log finish_reason für Debugging
+            if finish_reason == "length":
+                log.warning(
+                    "⚠️ OpenAI response truncated (finish_reason=length) – "
+                    "max_tokens=%d may be too low for this section",
+                    max_tokens or OPENAI_MAX_TOKENS,
+                )
+            else:
+                log.debug(
+                    "✅ OpenAI response complete (finish_reason=%s, tokens=%d)",
+                    finish_reason,
+                    data.get("usage", {}).get("completion_tokens", 0),
+                )
+
             return str(content)
         except (KeyError, IndexError, TypeError) as e:
             log.error(
@@ -2524,6 +2553,97 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     Anwendungen rechtliche Beratung empfohlen.
   </p>
 </div>"""
+
+    # ════════════════════════════════════════════════════════════════════════════
+    # 🎯 PLATIN+ FALLBACK: UNTERNEHMENSPROFIL_MARKT (500+ Wörter)
+    # ════════════════════════════════════════════════════════════════════════════
+    if section_key == "unternehmensprofil_markt":
+        if size_group == "solo":
+            markt_position = "Als Solo-Selbstständige:r agieren Sie flexibel und können schnell auf Marktveränderungen reagieren"
+            wettbewerb = "Ihre Wettbewerber sind oft größere Agenturen oder spezialisierte Einzelberater:innen"
+            ki_chance = "KI kann Ihnen helfen, Leistungen anzubieten, die sonst nur größeren Anbietern möglich wären"
+            differenzierung = "Ihre persönliche Expertise kombiniert mit KI-Unterstützung schafft ein einzigartiges Leistungsprofil"
+        elif size_group == "team":
+            markt_position = "Als kleines Team vereinen Sie Agilität mit gebündelter Fachkompetenz"
+            wettbewerb = "Ihre Wettbewerber reichen von Solo-Selbstständigen bis zu etablierten Mittelständlern"
+            ki_chance = "KI ermöglicht Ihrem Team, effizienter zu arbeiten und gleichzeitig die Qualität zu steigern"
+            differenzierung = "Die Kombination aus Teamkompetenz und KI-gestützten Prozessen hebt Sie von Wettbewerbern ab"
+        else:  # kmu
+            markt_position = "Als KMU verfügen Sie über etablierte Strukturen und können systematisch skalieren"
+            wettbewerb = "Ihre Wettbewerber sind sowohl agile kleinere Anbieter als auch große Konzerne"
+            ki_chance = "KI unterstützt Sie dabei, Prozesse zu standardisieren und gleichzeitig individuell auf Kundenbedürfnisse einzugehen"
+            differenzierung = "Die strukturierte Integration von KI in Ihre Fachbereiche schafft nachhaltige Wettbewerbsvorteile"
+
+        return f"""<section class="section unternehmensprofil-markt">
+  <h2>Unternehmensprofil und Marktumfeld</h2>
+
+  <h3>Ihr Unternehmen im Überblick</h3>
+  <p>
+    Als Unternehmen der Größe <strong>{size_label}</strong> in der Branche <strong>{branche}</strong>
+    haben Sie sich auf <strong>{hauptleistung or "spezialisierte Dienstleistungen"}</strong> fokussiert.
+    Diese Positionierung bringt spezifische Chancen und Herausforderungen mit sich, die bei der
+    Einführung von KI-Technologien berücksichtigt werden sollten. {markt_position}. Ihre Kernkompetenz
+    liegt in der Verbindung von Branchenwissen mit praxisnaher Umsetzungsstärke.
+  </p>
+
+  <h3>Marktumfeld und Wettbewerbssituation</h3>
+  <p>
+    Die Branche <strong>{branche}</strong> durchläuft aktuell einen tiefgreifenden digitalen Wandel.
+    Kund:innen erwarten zunehmend schnellere Reaktionszeiten, höhere Qualität und individuellere
+    Lösungen. {wettbewerb}. Der Markt zeigt einen klaren Trend zur Integration von KI-Technologien
+    in Kernprozesse – Unternehmen, die diesen Wandel aktiv gestalten, können sich entscheidende
+    Vorteile sichern.
+  </p>
+  <p>
+    Die Digitalisierung hat die Markteintrittsbarrieren in vielen Bereichen gesenkt, gleichzeitig
+    aber auch die Anforderungen an Qualität und Geschwindigkeit erhöht. In diesem dynamischen
+    Umfeld ist die strategische Nutzung von KI ein wesentlicher Hebel für nachhaltigen Erfolg.
+    Unternehmen, die KI frühzeitig und durchdacht einsetzen, können Effizienzgewinne realisieren
+    und gleichzeitig ihre Dienstleistungsqualität verbessern.
+  </p>
+
+  <h3>KI-Chancen für Ihr Geschäftsmodell</h3>
+  <p>
+    {ki_chance}. Im Bereich <strong>{hauptleistung or "Ihrer Kernleistung"}</strong> ergeben sich
+    konkrete Einsatzmöglichkeiten: von der Automatisierung wiederkehrender Aufgaben über die
+    Verbesserung der Qualitätssicherung bis hin zur Entwicklung neuer Angebote. Die wichtigsten
+    Potenziale liegen typischerweise in drei Bereichen:
+  </p>
+  <ul>
+    <li><strong>Effizienzsteigerung:</strong> Automatisierung von Routineaufgaben, schnellere
+        Recherche und Dokumentation, optimierte Workflows in Kernprozessen.</li>
+    <li><strong>Qualitätsverbesserung:</strong> Konsistenzprüfung, systematische Reviews,
+        datengestützte Entscheidungsvorbereitung und standardisierte Qualitätskontrollen.</li>
+    <li><strong>Innovationspotenzial:</strong> Neue Dienstleistungsangebote, erweiterte
+        Beratungskapazitäten und verbesserte Kundenerlebnisse durch KI-gestützte Services.</li>
+  </ul>
+
+  <h3>Differenzierungsstrategie</h3>
+  <p>
+    {differenzierung}. Die Branche {branche} bietet spezifische Ansatzpunkte: branchentypische
+    Pain Points können durch gezielte KI-Lösungen adressiert werden, typische Workflows lassen
+    sich optimieren und die Erwartungen Ihrer Zielgruppe können besser erfüllt werden.
+  </p>
+  <p>
+    Ein strukturierter Ansatz zur KI-Einführung – beginnend mit Quick Wins und aufbauend zu
+    komplexeren Anwendungen – ermöglicht es Ihnen, Risiken zu minimieren und gleichzeitig
+    kontinuierlich Mehrwert zu schaffen. Die 90-Tage-Roadmap und die 12-Monats-Strategie in
+    diesem Bericht zeigen konkrete Schritte für diese Entwicklung auf.
+  </p>
+
+  <h3>Standortfaktoren und regionale Chancen</h3>
+  <p>
+    Als Unternehmen mit Sitz in <strong>{bundesland}</strong> können Sie von regionalen
+    Förderprogrammen und Netzwerken profitieren. Viele Bundesländer bieten spezifische
+    Digitalisierungs- und Innovationsförderungen, die für KI-Projekte nutzbar sind.
+    Der Föderkapitel in diesem Bericht enthält detaillierte Hinweise zu passenden Programmen.
+  </p>
+
+  <p class="small muted">
+    Diese Analyse basiert auf den Angaben aus Ihrem Briefing und allgemeinen Branchentrends.
+    Für eine vertiefte Markt- und Wettbewerbsanalyse empfiehlt sich eine spezialisierte Beratung.
+  </p>
+</section>"""
 
     # Statische Fallbacks (Quick Wins UNVERÄNDERT)
     fallbacks = {

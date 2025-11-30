@@ -222,3 +222,8 @@ Developer:
     werden können und konsistent mit Roadmap, Business Case, Benchmarking und Quick Wins wirken.
   </p>
 </section>
+
+<!-- PLATIN+ REINFORCEMENT: Dieser Abschnitt MUSS mindestens 800 Wörter enthalten.
+     Prüfe deine Ausgabe: Zähle die Wörter und erweitere jede Empfehlung mit zusätzlichen
+     Details zu Maßnahmen, Nutzen und Aufwand, falls die Mindestlänge nicht erreicht wird.
+     Kürze NIEMALS – liefere immer vollständige, ausführliche Inhalte. -->
