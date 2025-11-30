@@ -425,26 +425,25 @@ def call_anthropic(
                 parts.append(getattr(block, "text", "") or "")
         text = "".join(parts).strip()
 
-        # PLATIN+ Diagnostik: Log stop_reason für Debugging
+        # PLATIN+ Diagnostik: Einheitliches Log-Format (wie OpenAI) für Railway
         stop_reason = getattr(message, "stop_reason", "unknown")
         usage = getattr(message, "usage", None)
         output_tokens = getattr(usage, "output_tokens", 0) if usage else 0
+        section_label = section or "unknown"
 
         if stop_reason == "max_tokens":
             log.warning(
-                "⚠️ Anthropic response truncated (stop_reason=max_tokens) – "
-                "max_tokens=%d may be too low for section '%s'",
+                "⚠️ LLM section=%s finished with reason=max_tokens (hit token limit %d) – risk of truncation",
+                section_label,
                 max_tok,
-                section,
             )
         else:
-            log.debug(
-                "✅ Anthropic-Antwort für Abschnitt %s (%s Zeichen, %d tokens, stop_reason=%s, Modell %s)",
-                section,
-                len(text),
-                output_tokens,
+            log.info(
+                "✅ LLM section=%s finished with reason=%s (tokens=%d, max=%d)",
+                section_label,
                 stop_reason,
-                model_name,
+                output_tokens,
+                max_tok,
             )
 
         return text or None
