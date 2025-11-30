@@ -1,66 +1,140 @@
 {
-  "profile_id": "team_it_software_saas_advisory",
-  "description": "Kleines Team (2–10), Berlin, Branche IT & Software, KI-gestützte SaaS-/Prozessberatung",
-  "lang": "de",
-  "BRANCHE_LABEL": "IT & Software",
-  "UNTERNEHMENSGROESSE_LABEL": "2–10 (Kleines Team)",
-  "HAUPTLEISTUNG": "Beratung von IT-Unternehmen und SaaS-Anbietern zur Integration von KI in Produkt- und Backend-Prozesse auf Basis von Diagnose-Fragebögen und anschließender GPT-Auswertung",
-  "answers": {
-    "ai_act_kenntnis": "sehr_gut",
-    "anwendungsfaelle": ["datenanalyse", "prozess_automation", "content_generation"],
-    "automatisierungsgrad": "eher_hoch",
-    "benchmark_wettbewerb": "selten",
-    "bisherige_foerdermittel": "nein",
-    "branche": "it",
-    "bundesland": "be",
-    "change_management": "hoch",
-    "datenquellen": ["sonstige"],
-    "datenschutz": true,
-    "datenschutzbeauftragter": "ja",
-    "digitalisierungsgrad": "10",
-    "erfahrung_beratung": "unklar",
-    "folgenabschaetzung": "teilweise",
-    "geschaeftsmodell_evolution": "Skalierbare KI-gestützte SaaS-Readiness-Assessments für Software- und Plattformanbieter mit automatisierten Handlungsempfehlungen",
-    "governance_richtlinien": "ja",
-    "hauptleistung": "Beratung von IT-Unternehmen und SaaS-Anbietern zur Integration von KI in Produkt- und Backend-Prozesse auf Basis von Diagnose-Fragebögen und anschließender GPT-Auswertung",
-    "innovationsprozess": "mitarbeitende",
-    "interesse_foerderung": "ja",
-    "interne_ki_kompetenzen": "ja",
-    "investitionsbudget": "2000_10000",
-    "it_infrastruktur": "hybrid",
-    "jahresumsatz": "100k_500k",
-    "ki_einsatz": ["produktion", "marketing"],
-    "ki_hemmnisse": ["budget"],
-    "ki_kompetenz": "hoch",
-    "ki_projekte": "Pilotprojekte für KI-gestützte Code-Review-Prozesse, Ticket-Priorisierung und Produktusage-Analysen mit standardisierten Fragebögen und GPT-Auswertung.",
-    "ki_ziele": [
-      "effizienz",
-      "automatisierung",
-      "datenauswertung",
-      "neue_produkte",
-      "kundenservice",
-      "kosten_senken",
-      "wettbewerbsfaehigkeit"
-    ],
-    "loeschregeln": "teilweise",
-    "marktposition": "oberes_drittel",
-    "massnahmen_komplexitaet": "hoch",
-    "meldewege": "teilweise",
-    "pilot_bereich": "produktion",
-    "prozesse_papierlos": "81-100",
-    "regulierte_branche": ["keine"],
-    "risikofreude": "5",
-    "roadmap_vorhanden": "ja",
-    "selbststaendig": "freiberufler",
-    "strategische_ziele": "Time-to-Market verkürzen, Support-Last senken und neue KI-Features als wiederkehrende Services monetarisieren.",
-    "technische_massnahmen": "alle",
-    "trainings_interessen": ["prompt_engineering", "llm_basics"],
-    "unternehmensgroesse": "team",
-    "vision_3_jahre": "Führendes Beratungsangebot für KI-gestützte SaaS- und IT-Prozesse im DACH-Raum",
-    "vision_prioritaet": "gpt_services",
-    "vorhandene_tools": ["keine"],
-    "zeitbudget": "5_10",
-    "zeitersparnis_prioritaet": "Standardisierte Code-Reviews, Ticket-Priorisierung und Change-Log-Dokumentation automatisieren.",
-    "zielgruppen": ["softwareunternehmen", "plattformanbieter", "it-abteilungen"]
-  }
+  "branche": "it_software",
+  "unternehmensgroesse": "team",
+  "bundesland": "Berlin",
+
+  "hauptleistung": "Beratung für IT-Unternehmen, SaaS-Anbieter sowie digitale Produktteams mit Fokus auf Systemarchitektur, KI-gestützte Produktentwicklung, API-Integration, Datenqualität, DevOps-Optimierung, technische Audits, Dokumentationsstandards, Sicherheitsprozesse, Workflow-Automatisierung und strategische Skalierung von Software-Produkten. Dazu gehören Architektur-Reviews, Code-Audits, KI-Feature-Implementierung, Migrationsplanung, Trainings und der Aufbau operativer KI-Workflows in Entwicklung und Betrieb.",
+
+  "zielgruppen": [
+    "it_software",
+    "saas",
+    "startups",
+    "scaleups",
+    "b2b",
+    "produktteams"
+  ],
+
+  "jahresumsatz": "bis_1m",
+
+  "it_infrastruktur": "cloudbasiert",
+
+  "interne_ki_kompetenzen": "mittel",
+
+  "datenquellen": [
+    "crm",
+    "webtracking",
+    "analytics",
+    "logdaten",
+    "microsoft365",
+    "entwicklertools"
+  ],
+
+  "digitalisierungsgrad": "hoch",
+  "prozesse_papierlos": "ja",
+  "automatisierungsgrad": "mittel",
+
+  "ki_einsatz": [
+    "research",
+    "automatisierung",
+    "contentkreation",
+    "dokumentenzusammenfassung",
+    "code_assistenz",
+    "workflowoptimierung",
+    "kundenkommunikation"
+  ],
+
+  "ki_kompetenz": "mittel",
+
+  "ki_ziele": [
+    "beschleunigung",
+    "skalierung",
+    "standardisierung",
+    "effizienz",
+    "qualitaet",
+    "stabilitaet"
+  ],
+
+  "ki_projekte": "Umgesetzt wurden bereits KI-basierte Recherche-Automationen, automatisierte Dokumentationsbausteine, KI-Assistenzfunktionen zur Code-Analyse, interne ChatOps-Automationen, erste Prototypen für KI-gestützte Testfallgenerierung sowie Workflow-Bots für Support und Monitoring. Geplant sind semantische Suchsysteme, KI-Feature-Kits für SaaS-Produkte, standardisierte Trainingsflows, API-basierte Integrationen und End-to-End-Assistenten für Produktteams.",
+
+  "anwendungsfaelle": [
+    "workflowoptimierung",
+    "code_assistenz",
+    "dokumentenpruefung",
+    "supportautomatisierung",
+    "recherche",
+    "content_generation",
+    "prozessanalyse"
+  ],
+
+  "zeitersparnis_prioritaet": "Hohe Zeitverluste entstehen vor allem in technischem Research, wiederkehrenden Architektur-Abstimmungen, Dokumentation, Code-Reviews, Bereitstellung von DevOps-Artefakten, Support-Tickets, Monitoring-Analysen, Priorisierungen und Übergaben. KI-gestützte Automationen bieten Potenzial für Review-Beschleunigung, Qualitätsverbesserung, Testfallgenerierung, Regelsysteme und assistierte Architekturentscheidungen.",
+
+  "pilot_bereich": "workflowoptimierung",
+
+  "geschaeftsmodell_evolution": "Das Unternehmen plant die Entwicklung von KI-gestützten Toolkits, API-Services, Audit-Frameworks, technischen Beratungspaketen und standardisierten Entwicklungsflows, die als modulare Produkte vertrieben werden können. Ziel ist der Aufbau wiederkehrender Umsätze durch KI-basierte SaaS-Add-ons, Automationspakete und technische Assistenten für Entwicklungsteams.",
+
+  "vision_3_jahre": "Eine hochskalierbare technische Beratungseinheit mit tief integrierten KI-Prozessen, automatisierten Analyse-Pipelines, wiederholbaren Architektur-Reviews, KI-gestützten Qualitätschecks und modularen Produkten für DevOps, Entwicklung, Testing und Systemarchitektur. Die Firma möchte als führender Partner für KI-gestützte Produktentwicklung wahrgenommen werden.",
+
+  "strategische_ziele": "Verbesserung der Entwicklungsqualität, Verkürzung von Release-Zyklen, Aufbau eines KI-Assistenzsystems, Standardisierung aller technischen Abläufe, Ausbau wiederkehrender Umsätze, Reduktion manueller Arbeit, mehr Automatisierung in Research, Testing und Dokumentation.",
+
+  "massnahmen_komplexitaet": "mittel",
+
+  "roadmap_vorhanden": "teilweise",
+  "governance_richtlinien": "entwurf",
+  "change_management": "teilweise",
+  "zeitbudget": "15h_woche",
+
+  "vorhandene_tools": [
+    "microsoft365",
+    "notion",
+    "jira",
+    "github",
+    "bitbucket",
+    "vscode",
+    "teams",
+    "browserplugins",
+    "chatgpt"
+  ],
+
+  "regulierte_branche": [
+    "it"
+  ],
+
+  "trainings_interessen": [
+    "prompting_expert",
+    "automatisierung",
+    "code_assistenz",
+    "devops",
+    "datenqualitaet",
+    "kundenkommunikation"
+  ],
+
+  "vision_prioritaet": "hoch",
+
+  "datenschutzbeauftragter": "extern",
+  "technische_massnahmen": "erweitert",
+  "folgenabschaetzung": "nein",
+  "meldewege": "teilweise",
+  "loeschregeln": "teilweise",
+
+  "ai_act_kenntnis": "mittel",
+
+  "ki_hemmnisse": [
+    "standardisierung",
+    "datenschutz",
+    "kompetenz",
+    "integration",
+    "ressourcen"
+  ],
+
+  "bisherige_foerdermittel": "keine",
+  "interesse_foerderung": "ja",
+  "erfahrung_beratung": "fortgeschritten",
+  "investitionsbudget": "bis_200k",
+
+  "marktposition": "etabliert",
+  "benchmark_wettbewerb": "ueberdurchschnittlich",
+  "innovationsprozess": "strukturiert",
+  "risikofreude": "70",
+
+  "datenschutz": true
 }
