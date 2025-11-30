@@ -1,6 +1,12 @@
 risks.md
 Developer: <!--
-  risks.md – v4.0 PLATIN+ (size-aware Risk Section, min 800 chars)
+  risks.md – v5.0 PLATIN+ STABILIZED (size-aware Risk Section, min 800 WÖRTER)
+
+  ╔══════════════════════════════════════════════════════════════════════════════╗
+  ║  KRITISCH: MINDESTLÄNGE = 800 WÖRTER (nicht Zeichen!)                        ║
+  ║  Antworte IMMER mit einem VOLLSTÄNDIGEN, AUSFÜHRLICHEN Text.                 ║
+  ║  Kurze Antworten sind INAKZEPTABEL und führen zu Validierungsfehlern.        ║
+  ╚══════════════════════════════════════════════════════════════════════════════╝
 
   ZIEL:
   - Erzeuge eine präzise, praxisnahe Risikoanalyse für den KI-Einsatz im Bereich {{HAUPTLEISTUNG}}.
@@ -9,21 +15,61 @@ Developer: <!--
   - Berücksichtige explizit Branche {{BRANCHE_LABEL}} und Unternehmensgröße {{UNTERNEHMENSGROESSE_LABEL}}.
   - Scores AKTIV interpretieren und bei Priorisierung berücksichtigen.
 
-  VARIABLEN (MÜSSEN alle genutzt werden!):
+  VARIABLEN (MÜSSEN ALLE im Text verwendet werden!):
   - {{HAUPTLEISTUNG}}                → Hauptanwendungsbereich im Unternehmen
   - {{BRANCHE_LABEL}}                → Branchenlabel (z. B. „Beratung & Dienstleistungen")
   - {{UNTERNEHMENSGROESSE_LABEL}}    → z. B. „1 (Solo)", „2–10 (Kleines Team)", „11–100 (KMU)"
   - {{score_governance}}             → Governance-Score (0–100) – interpretieren!
   - {{score_sicherheit}}             → Sicherheits-Score (0–100) – interpretieren!
 
-  PFLICHTSTRUKTUR (ALLE 5 Abschnitte erforderlich):
-    1. Strategische und organisatorische Risiken (min. 3 Risiken + Maßnahmen)
-    2. Daten-, Sicherheits- und Compliance-Risiken (min. 3 Risiken + Maßnahmen)
-    3. Qualitäts-, Transparenz- und Akzeptanzrisiken (min. 3 Risiken + Maßnahmen)
-    4. Abhängigkeiten, Betriebs- und Lieferantenrisiken (min. 3 Risiken + Maßnahmen)
-    5. Risiko-Matrix (Tabelle mit min. 4 Zeilen)
+  ╔══════════════════════════════════════════════════════════════════════════════╗
+  ║  PFLICHTSTRUKTUR – ALLE 5 ABSCHNITTE MÜSSEN VOLLSTÄNDIG AUSGEFÜHRT WERDEN!   ║
+  ╚══════════════════════════════════════════════════════════════════════════════╝
 
-  MINDESTLÄNGE: 800 Zeichen (ohne HTML-Tags) – unterschreite diese NIEMALS!
+  ABSCHNITT 1: "Strategische und organisatorische Risiken" (mind. 150-180 Wörter)
+    PFLICHTINHALTE (mind. 4 Risiken mit je 2-3 Sätzen + Maßnahme):
+    - Unklare Zielbilder und Prioritäten für KI
+    - Abhängigkeit von einzelnen Personen (Single-Point-of-Failure)
+    - Fehlende Rollen- und Verantwortlichkeitsklarheit
+    - Überlastung durch zusätzliche Aufgaben
+    - Jedes Risiko mit konkreter, umsetzbarer Gegenmaßnahme
+
+  ABSCHNITT 2: "Daten-, Sicherheits- und Compliance-Risiken" (mind. 150-180 Wörter)
+    PFLICHTINHALTE (mind. 4 Risiken mit je 2-3 Sätzen + Maßnahme):
+    - Unzureichende Kontrolle über ein- und ausgehende Daten
+    - Lücken in Informationssicherheit und Zugriffsschutz (Bezug auf {{score_sicherheit}})
+    - Unklare Verantwortlichkeit für rechtliche Anforderungen
+    - Fehlende Transparenz gegenüber Kund:innen und Partnern
+    - Branchenspezifische Compliance-Risiken für {{BRANCHE_LABEL}}
+
+  ABSCHNITT 3: "Qualitäts-, Transparenz- und Akzeptanzrisiken" (mind. 150-180 Wörter)
+    PFLICHTINHALTE (mind. 4 Risiken mit je 2-3 Sätzen + Maßnahme):
+    - Inkonsistente Ergebnisse und Qualitätsstreuung
+    - Übervertrauen in KI-Ergebnisse (Halluzinationen)
+    - Akzeptanzprobleme im Alltag
+    - Unklare Nachvollziehbarkeit von Entscheidungen
+    - Maßnahmen size-aware formulieren
+
+  ABSCHNITT 4: "Abhängigkeiten, Betriebs- und Lieferantenrisiken" (mind. 150-180 Wörter)
+    PFLICHTINHALTE (mind. 4 Risiken mit je 2-3 Sätzen + Maßnahme):
+    - Starke Abhängigkeit von einzelnen Tools oder Plattformen
+    - Unklare Regelungen mit Dienstleistern
+    - Fehlende Notfall- und Wiederanlaufplanung
+    - Überkomplexe Tool-Landschaft
+    - Konkrete Fallback-Szenarien beschreiben
+
+  ABSCHNITT 5: "Risiko-Matrix – Überblick über zentrale Risiken" (mind. 100-150 Wörter)
+    PFLICHTINHALTE:
+    - Tabelle mit MINDESTENS 5 Zeilen
+    - Spalten: Risikobereich, Typische Auswirkung, Eintrittswahrscheinlichkeit, Auswirkungsstärke, Empfohlene Schwerpunkt-Maßnahmen
+    - Für jeden der 4 Risikoabschnitte eine Zeile + 1 KI-spezifisches Risiko
+    - Einleitender Absatz zur Priorisierung
+
+  ╔══════════════════════════════════════════════════════════════════════════════╗
+  ║  ABSOLUTE MINDESTLÄNGE: 800 WÖRTER Gesamttext (ohne HTML-Tags)               ║
+  ║  Ziel: 800-1000 Wörter für vollständige, professionelle Risikoanalyse        ║
+  ║  NIEMALS kürzer als 800 Wörter antworten!                                    ║
+  ╚══════════════════════════════════════════════════════════════════════════════╝
 
   AUSGABEFORMAT:
   - Antworte AUSSCHLIESSLICH mit validem HTML.
@@ -47,37 +93,34 @@ Developer: <!--
       </section>
 
   SIZE-AWARE-LOGIK (verbindlich):
-  - SOLO („1 (Solo)” im Label):
+  - SOLO („1 (Solo)" im Label):
       - Fokus: persönliche Überlastung, Single-Point-of-Failure, fehlende Vertretung.
       - Begrenzte Zeit und Ressourcen, wenig formale Prozesse.
       - Risiken und Maßnahmen so formulieren, dass sie von einer Person realistisch umsetzbar sind.
 
-  - TEAM („2–10“):
+  - TEAM („2–10"):
       - Fokus: Rollen, einfache Abstimmungen, informelle Strukturen.
       - Risiken: fehlende Klarheit, wer was entscheidet; Wissensinseln; unterschiedliche Tool-Nutzung.
       - Maßnahmen: klare Rollen, einfache Vereinbarungen, kurze Check-ins.
 
-  - KMU („11–100“):
+  - KMU („11–100"):
       - Fokus: Bereiche, Prozesse, Governance, Dokumentation.
       - Risiken: unklare Verantwortlichkeiten, Schatten-IT, fehlende Richtlinien, Compliance-Anforderungen.
       - Maßnahmen: Standards, Policies, Transparenz, regelmäßige Reviews.
 
   REGELN:
-  - Nutze den vorangestellten CONTEXT_BLOCK (Branchen- und Größen-Context) aktiv: greife typische Workflows, Pain Points, Datenarten und Tools aus diesem Block auf und verankere daran deine Beispiele.
+  - Nutze den vorangestellten CONTEXT_BLOCK (Branchen- und Größen-Context) aktiv.
   - Wenn die Branche stark reguliert ist (z. B. Gesundheit, Finanzen, öffentliche Verwaltung, Recht), betone branchenspezifische Compliance- und Datenschutzrisiken.
   - Schreibe konkret, unternehmensnah und ohne Floskeln.
   - Jede genannte Gefahr muss nachvollziehbar mit {{HAUPTLEISTUNG}} zusammenhängen.
-  - Leite aus {{score_governance}} und {{score_sicherheit}} ab,
-    ob Governance und Sicherheit eher gut, mittel oder schwach ausgeprägt sind,
-    und formuliere dazu passende Schwerpunkte für Gegenmaßnahmen.
-  - Nenne pro Abschnitt mindestens 3 spezifische Risiken mit passenden, umsetzbaren Maßnahmen.
+  - Leite aus {{score_governance}} und {{score_sicherheit}} ab, ob Governance und Sicherheit eher gut, mittel oder schwach ausgeprägt sind.
+  - JEDES Risiko muss 2-3 Sätze Beschreibung + konkrete Maßnahme haben.
   - Keine Hinweise auf Fragebögen, interne Felder oder Systemlogik.
-  - Keine Platzhaltertexte oder Formulierungen wie „wird später ergänzt“.
+  - Keine Platzhaltertexte oder Formulierungen wie „wird später ergänzt".
 
-  STIL & LÄNGE:
+  STIL:
   - Sachlich, klar, beratend.
   - Neutrale Formulierungen (keine Ich-Form, keine direkte Anrede).
-  - Zielumfang: ca. 600–900 Wörter Gesamttext.
 -->
 
 <section class="section risks">
