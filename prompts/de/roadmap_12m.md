@@ -1,5 +1,5 @@
 Developer:
-<!-- roadmap_12m.md – v5.0 GOLD STANDARD+ (branch-aware, size-aware, context-integrated)
+<!-- roadmap_12m.md – v6.0 PLATIN+ (branch-aware, size-aware, governance-integrated, min 900 chars)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>; KEINE Markdown-Fences im OUTPUT.
 
@@ -7,8 +7,8 @@ Developer:
        - Erzeuge eine strategische, branchenspezifische 12-Monats-Roadmap für {{HAUPTLEISTUNG}}.
        - Nutze aktiv den CONTEXT_BLOCK (Workflows, Pain Points, Tools, Daten).
        - Size-aware Umsetzung für solo/team/kmu.
-       - Jede Phase (Quartal) enthält: Ziel, Deliverables, Rollen, KPI.
-       - 4 Quartale (Q1–Q4).
+       - Jede Phase (Quartal) enthält: Ziel, Deliverables, Rollen, KPI, Governance/Sicherheit.
+       - 4 Quartale (Q1–Q4) mit klarer Progression.
 
      VARIABLEN:
        {{BRANCHE_LABEL}}
@@ -20,10 +20,13 @@ Developer:
        SOLO:
          - Fokus: persönliche Entwicklung, Angebotsausbau, eigene Automatisierung.
          - Keine Teams, keine Abteilungen, keine "Bereiche".
+         - Governance = persönliche Routinen, Selbst-Checks, Dokumentation.
        TEAM:
          - Fokus: Rollen, Team-Koordination, gemeinsame Prozesse, Wissenstransfer.
+         - Governance = Team-Reviews, gemeinsame Standards, KI-Owner.
        KMU:
          - Fokus: Fachbereiche, Governance, Skalierung, Pilotflächen.
+         - Governance = Richtlinien, Audit-Prozesse, Compliance-Framework.
 
      BRANCHEN-AWARE (verbindlich):
        - Verwende typische Workflows, Datenarten, Tools & Pain Points aus CONTEXT_BLOCK.
@@ -31,14 +34,25 @@ Developer:
        - Beratung/Dienstleistung: Wissensmanagement, Angebotserstellung, Dokumentation.
        - Finanzen/Versicherung: Compliance, Datenvalidierung, Risikoanalyse.
        - Gesundheit/Pflege: sensible Daten, Qualitätssicherung, Freigabeprozesse.
-       - IT/Software: Code-Assistenz, Automatisierung, Testing & Deployment.
+       - IT/Software: Code-Assistenz, Automatisierung, Testing & Deployment, CI/CD-Integration.
        - Industrie/Produktion: Sensor-/Prozessdaten, Qualitätskontrollen, Wartung.
        - E-Commerce/Handel: Produktdaten, Feed-Management, Textautomatisierung.
+
+     PFLICHTSTRUKTUR (ALLE 4 Quartale, JEDES mit allen Elementen):
+       Pro Quartal MUSS enthalten sein:
+       1. Ziel (1-2 Sätze)
+       2. Deliverables (mindestens 4 Bulletpoints)
+       3. Rollen & Verantwortlichkeiten (size-aware)
+       4. KPI (2-3 messbare Kennzahlen)
+       5. Governance/Sicherheit (mindestens 1 Bullet zu Qualität/Compliance)
+
+     MINDESTLÄNGE: 900 Zeichen (ohne HTML-Tags) – unterschreite diese NIEMALS!
 
      VERBOTEN:
        - "TODO", "Freitextfeld", generische Formulierungen ohne Substanz.
        - Rohvariablen im sichtbaren Output.
        - Bei SOLO: keine "Abteilungen", "Teams", "Bereiche" (nur persönliche Formulierungen).
+       - Phasen ohne konkrete, branchenspezifische Deliverables.
 -->
 
 <section class="section roadmap-12m">
@@ -71,7 +85,16 @@ Developer:
         Fachbereich + Prozessverantwortliche + IT/Datenschutz, bereichsübergreifende Abstimmung.
       {% endif %}
     </p>
-    <p><strong>KPI:</strong> 2–3 Quick Wins produktiv, erste Zeitersparnis messbar, Qualitätskriterien definiert.</p>
+    <p><strong>KPI:</strong> 2–3 Quick Wins produktiv, erste Zeitersparnis messbar (min. 10%), Qualitätskriterien definiert.</p>
+    <p><strong>Governance &amp; Sicherheit:</strong>
+      {% if COMPANY_SIZE == "solo" %}
+        Persönliche Checkliste für KI-Output-Prüfung erstellen, Datenschutz-Basics dokumentieren.
+      {% elif COMPANY_SIZE == "team" %}
+        Team-Regeln für KI-Nutzung vereinbaren, Review-Prozess für kritische Outputs definieren.
+      {% else %}
+        KI-Richtlinie (Draft) erstellen, Datenschutz-Folgenabschätzung für Pilotprojekte durchführen.
+      {% endif %}
+    </p>
   </div>
 
   <div class="roadmap-phase">
@@ -93,7 +116,16 @@ Developer:
         Fachbereiche + QS-Verantwortliche, Prozessharmonisierung, erste Governance-Strukturen.
       {% endif %}
     </p>
-    <p><strong>KPI:</strong> Stabile Workflows produktiv, Monitoring etabliert, messbare Qualitätsverbesserung.</p>
+    <p><strong>KPI:</strong> Stabile Workflows produktiv, Monitoring etabliert, messbare Qualitätsverbesserung (min. 20% Zeitersparnis).</p>
+    <p><strong>Governance &amp; Sicherheit:</strong>
+      {% if COMPANY_SIZE == "solo" %}
+        Regelmäßiger Selbst-Audit (monatlich), Dokumentation aller KI-gestützten Prozesse.
+      {% elif COMPANY_SIZE == "team" %}
+        Quartals-Review mit Team, Incident-Prozess für KI-Fehler definieren, Schulungsmaterial erstellen.
+      {% else %}
+        Governance-Board einrichten, Audit-Trail für kritische Entscheidungen, Compliance-Checks formalisieren.
+      {% endif %}
+    </p>
   </div>
 
   <div class="roadmap-phase">
@@ -123,7 +155,16 @@ Developer:
         Bereichsleitung + Governance-Verantwortliche + Controlling, strategische Steuerung.
       {% endif %}
     </p>
-    <p><strong>KPI:</strong> 5–8 Use Cases produktiv, ROI nachweisbar, Governance-Strukturen etabliert.</p>
+    <p><strong>KPI:</strong> 5–8 Use Cases produktiv, ROI nachweisbar (min. 30% des Business Case), Governance-Strukturen etabliert.</p>
+    <p><strong>Governance &amp; Sicherheit:</strong>
+      {% if COMPANY_SIZE == "solo" %}
+        Jährlicher Sicherheits-Check, Backup-Strategie für KI-generierte Inhalte, Notfallplan bei Tool-Ausfällen.
+      {% elif COMPANY_SIZE == "team" %}
+        Halbjährliches Governance-Review, Risiko-Register aktualisieren, Schulungs-Refresher für alle.
+      {% else %}
+        KI-Richtlinie finalisieren und kommunizieren, externes Audit vorbereiten, Risiko-Management formalisieren.
+      {% endif %}
+    </p>
   </div>
 
   <div class="roadmap-phase">
@@ -152,7 +193,16 @@ Developer:
         Management + Bereichsleitungen + Controlling, Budget-Freigabe, strategische Weichenstellung.
       {% endif %}
     </p>
-    <p><strong>KPI:</strong> Vollständiger Jahresreview dokumentiert, Roadmap 2.0 priorisiert, Budget für Jahr 2 gesichert.</p>
+    <p><strong>KPI:</strong> Vollständiger Jahresreview dokumentiert, Roadmap 2.0 priorisiert, Budget für Jahr 2 gesichert, ROI erreicht.</p>
+    <p><strong>Governance &amp; Sicherheit:</strong>
+      {% if COMPANY_SIZE == "solo" %}
+        Jahres-Audit durchführen, Compliance-Status dokumentieren, Learnings für Roadmap 2.0 aufbereiten.
+      {% elif COMPANY_SIZE == "team" %}
+        Team-Retrospektive zu Governance, Richtlinien-Update, Lessons Learned dokumentieren und teilen.
+      {% else %}
+        Management-Report zu KI-Governance, Compliance-Zertifizierung evaluieren, strategische Risiko-Bewertung für Jahr 2.
+      {% endif %}
+    </p>
   </div>
 
   <p class="small muted">

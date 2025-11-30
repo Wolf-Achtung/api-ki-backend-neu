@@ -1,19 +1,29 @@
 risks.md
 Developer: <!--
-  risks.md – v3.0 GOLD STANDARD+ (size-aware Risk Section)
+  risks.md – v4.0 PLATIN+ (size-aware Risk Section, min 800 chars)
 
   ZIEL:
   - Erzeuge eine präzise, praxisnahe Risikoanalyse für den KI-Einsatz im Bereich {{HAUPTLEISTUNG}}.
   - Decke geschäftliche, organisatorische, technische und rechtliche Risiken ab.
   - Liefere zu jedem Risiko klare, umsetzbare Gegenmaßnahmen.
   - Berücksichtige explizit Branche {{BRANCHE_LABEL}} und Unternehmensgröße {{UNTERNEHMENSGROESSE_LABEL}}.
+  - Scores AKTIV interpretieren und bei Priorisierung berücksichtigen.
 
-  VARIABLEN:
+  VARIABLEN (MÜSSEN alle genutzt werden!):
   - {{HAUPTLEISTUNG}}                → Hauptanwendungsbereich im Unternehmen
-  - {{BRANCHE_LABEL}}                → Branchenlabel (z. B. „Beratung & Dienstleistungen“)
-  - {{UNTERNEHMENSIDROESSE_LABEL}}    → z. B. „1 (Solo)“, „2–10 (Kleines Team)“, „11–100 (KMU)“
-  - {{score_governance}}             → Governance-Score (0–100)
-  - {{score_sicherheit}}             → Sicherheits-Score (0–100)
+  - {{BRANCHE_LABEL}}                → Branchenlabel (z. B. „Beratung & Dienstleistungen")
+  - {{UNTERNEHMENSGROESSE_LABEL}}    → z. B. „1 (Solo)", „2–10 (Kleines Team)", „11–100 (KMU)"
+  - {{score_governance}}             → Governance-Score (0–100) – interpretieren!
+  - {{score_sicherheit}}             → Sicherheits-Score (0–100) – interpretieren!
+
+  PFLICHTSTRUKTUR (ALLE 5 Abschnitte erforderlich):
+    1. Strategische und organisatorische Risiken (min. 3 Risiken + Maßnahmen)
+    2. Daten-, Sicherheits- und Compliance-Risiken (min. 3 Risiken + Maßnahmen)
+    3. Qualitäts-, Transparenz- und Akzeptanzrisiken (min. 3 Risiken + Maßnahmen)
+    4. Abhängigkeiten, Betriebs- und Lieferantenrisiken (min. 3 Risiken + Maßnahmen)
+    5. Risiko-Matrix (Tabelle mit min. 4 Zeilen)
+
+  MINDESTLÄNGE: 800 Zeichen (ohne HTML-Tags) – unterschreite diese NIEMALS!
 
   AUSGABEFORMAT:
   - Antworte AUSSCHLIESSLICH mit validem HTML.
@@ -76,7 +86,7 @@ Developer: <!--
   <p>
     Der Einsatz von KI im Bereich <strong>{{HAUPTLEISTUNG}}</strong> in der Branche
     <strong>{{BRANCHE_LABEL}}</strong> – mit ihren typischen Workflows, Datenarten und Pain Points – bietet erhebliche Chancen, bringt jedoch – je nach
-    Unternehmensgröße <strong>{{UNTERNEHMENSIDROESSE_LABEL}}</strong> – unterschiedliche
+    Unternehmensgröße <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> – unterschiedliche
     Risikoprofile mit sich. Der aktuelle Governance-Score von
     <strong>{{score_governance}}&#x2F;100</strong> und der Sicherheits-Score von
     <strong>{{score_sicherheit}}&#x2F;100</strong> zeigen, wie weit Strukturen für Steuerung,
@@ -260,7 +270,7 @@ Developer: <!--
   <p class="small muted">
     Diese Risikoanalyse zeigt die wichtigsten Handlungsfelder für KI in
     <strong>{{HAUPTLEISTUNG}}</strong> in einem Unternehmen der Größe
-    <strong>{{UNTERNEHMENSIDROESSE_LABEL}}</strong>. Im nächsten Schritt sollten die Risiken
+    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>. Im nächsten Schritt sollten die Risiken
     nach Eintrittswahrscheinlichkeit und Auswirkung priorisiert und in eine konkrete
     Maßnahmenplanung für die kommenden 3–6&nbsp;Monate überführt werden.
   </p>
