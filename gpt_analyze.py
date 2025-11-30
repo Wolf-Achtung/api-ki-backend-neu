@@ -1511,7 +1511,9 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     Unternehmen in der Branche <strong>{branche}</strong> im Bundesland <strong>{bundesland}</strong> und der Größe
     <strong>{size_label}</strong> verfügen für Vorhaben im Bereich <strong>{hauptleistung or "KI-gestützte Prozessoptimierung"}</strong>
     häufig über gute Voraussetzungen für eine Förderung. Die Kombination aus Digitalisierungsfokus, KI-Unterstützung und
-    klarer Prozessverbesserung entspricht den Schwerpunkten vieler Programme auf Landes- und Bundesebene.
+    klarer Prozessverbesserung entspricht den Schwerpunkten vieler Programme auf Landes- und Bundesebene. Gerade in Zeiten
+    des digitalen Wandels setzen Bund, Länder und EU verstärkt auf die Förderung von KI-Projekten, die nachweislich zur
+    Effizienzsteigerung und Wettbewerbsfähigkeit beitragen.
   </p>
 
   <h3>1. Einordnung des Business Case ohne Förderung</h3>
@@ -1519,7 +1521,8 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     Der aktuelle Business Case zeigt einmalige Investitionen von etwa <strong>{capex}&nbsp;€</strong> sowie laufende Kosten von
     rund <strong>{opex}&nbsp;€ pro Monat</strong>. Die erwartete monatliche Entlastung liegt bei ungefähr
     <strong>{einsparung}&nbsp;€</strong>, was zu einer Amortisationsdauer von etwa <strong>{payback} Monaten</strong> und
-    einem realistischen ROI von rund <strong>{roi_12m}&nbsp;%</strong> im ersten Jahr führt.
+    einem realistischen ROI von rund <strong>{roi_12m}&nbsp;%</strong> im ersten Jahr führt. Diese Kennzahlen bilden eine
+    solide Grundlage für die Bewertung der Förderwürdigkeit durch öffentliche Stellen.
   </p>
   <p>
     Diese Ausgangslage ist für viele Förderstellen attraktiv: Das Projekt ist betriebswirtschaftlich plausibel, der Nutzen
@@ -1528,7 +1531,8 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     Business Case und klarem Digitalisierungsfokus macht Ihr Vorhaben zu einem starken Kandidaten für öffentliche Förderung.
     Die Investition von {capex}&nbsp;€ amortisiert sich bei einer monatlichen Einsparung von {einsparung}&nbsp;€ nach etwa
     {payback} Monaten. Der ROI von {roi_12m}&nbsp;% zeigt, dass sich das Projekt auch ohne externe Unterstützung wirtschaftlich
-    rechnet – mit Förderung wird die Rentabilität noch deutlich attraktiver.
+    rechnet – mit Förderung wird die Rentabilität noch deutlich attraktiver. Fördergeber bewerten positiv, wenn Unternehmen
+    einen substanziellen Eigenanteil einbringen und das Projekt auch ohne Förderung wirtschaftlich tragfähig erscheint.
   </p>
 
   <h3>2. Wie Fördermittel den Business Case verbessern können</h3>
@@ -1575,7 +1579,17 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     <li><strong>Beratungsförderung:</strong> Unterstützung für externe Expertise bei der KI-Strategieentwicklung und
       Umsetzung kann den Projekterfolg erheblich steigern. Programme wie go-digital oder regionale Beratungsförderung
       decken oft einen Großteil der Beratungskosten ab.</li>
+    <li><strong>Nachhaltigkeits- und Klimaförderung:</strong> KI-Projekte, die zur Ressourceneffizienz, Energieeinsparung
+      oder Reduzierung des ökologischen Fußabdrucks beitragen, können zusätzlich von spezialisierten Förderprogrammen
+      profitieren. Diese Kombination aus Digitalisierung und Nachhaltigkeit wird von vielen Fördergebern besonders
+      positiv bewertet und kann höhere Förderquoten ermöglichen.</li>
   </ul>
+  <p>
+    Die Kombination verschiedener Förderschwerpunkte kann besonders vorteilhaft sein. Prüfen Sie, ob Ihr Vorhaben
+    mehrere der genannten Kategorien abdeckt, da dies die Antragserfolgschancen erhöhen kann. Fördergeber sehen gerne
+    Projekte, die sowohl wirtschaftlichen Nutzen als auch gesellschaftlichen Mehrwert – etwa durch Digitalkompetenzaufbau
+    oder nachhaltige Geschäftsmodelle – nachweisen können.
+  </p>
 
   <h3>4. Nächste Schritte für die Förderprüfung</h3>
   <ol>
@@ -1591,6 +1605,9 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
       Finanzierungspartnern. Viele Beratungsstellen bieten kostenlose Erstgespräche zur Fördermittelprüfung an.</li>
     <li><strong>Zeitplanung:</strong> Förderanträge benötigen typischerweise 4–8 Wochen Vorlauf – berücksichtigen Sie
       dies bei der Projektplanung. Beachten Sie auch eventuelle Antragsfristen und Stichtage.</li>
+    <li><strong>Dokumentation vorbereiten:</strong> Sammeln Sie vorab wichtige Unterlagen wie Handelsregisterauszug,
+      aktuelle Jahresabschlüsse und eine De-minimis-Erklärung. Eine vollständige Dokumentation beschleunigt die
+      Antragsbearbeitung erheblich und erhöht die Erfolgsaussichten.</li>
   </ol>
 
   <p class="small muted">
@@ -1846,6 +1863,13 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     wirksam einzusetzen. Die folgenden Empfehlungen sind priorisiert, praxisnah und auf realistische Ressourcen abgestimmt.
     Jede Empfehlung enthält konkrete Maßnahmen, erwarteten Nutzen, Aufwandsschätzung und Förderhinweise.
   </p>
+  <p>
+    Die Empfehlungen bauen aufeinander auf und sind so strukturiert, dass Sie mit einem Quick Win starten können und
+    sukzessive komplexere Anwendungen erschließen. Beginnen Sie mit Empfehlung 1, um schnelle Erfolgserlebnisse zu
+    generieren, und arbeiten Sie sich dann durch die weiteren Stufen. Parallelisieren Sie, wo Ressourcen es erlauben,
+    aber verlieren Sie nicht den Fokus auf messbare Ergebnisse bei jedem Schritt. So schaffen Sie eine solide Basis
+    für nachhaltigen Erfolg mit KI-gestützten Prozessen.
+  </p>
 
   <ol class="recommendations-list">
     <li>
@@ -1906,7 +1930,8 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         3-10 Tage für einen fokussierten Pilot.</p>
       <p><strong>Verantwortlich:</strong> {verantwortlich_1}</p>
       <p><strong>Förderchance:</strong> Pilot-Use-Cases mit klarer Zielsetzung werden von vielen
-        Förderprogrammen priorisiert.</p>
+        Förderprogrammen priorisiert. Dokumentieren Sie den Pilot sorgfältig, um die Ergebnisse für
+        weitere Förderanträge und interne Entscheidungsvorlagen nutzen zu können.</p>
     </li>
 
     <li>
@@ -1967,6 +1992,25 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
       </tr>
     </tbody>
   </table>
+
+  <h3>Zusammenfassung und Erfolgsfaktoren</h3>
+  <p>
+    Die erfolgreiche Umsetzung dieser Empfehlungen hängt von mehreren kritischen Erfolgsfaktoren ab. Erstens ist
+    konsequentes Dranbleiben wichtiger als perfekte Planung – starten Sie lieber mit einem fokussierten Pilot und
+    lernen Sie im Prozess. Zweitens sollten Sie von Anfang an Erfolgskennzahlen definieren, um den Fortschritt
+    messbar zu machen. Drittens empfiehlt es sich, regelmäßige Retrospektiven einzuplanen, um Learnings festzuhalten
+    und Kurskorrekturen vorzunehmen.
+  </p>
+  <p>
+    Achten Sie darauf, nicht zu viele Initiativen gleichzeitig zu starten. Besser ein Use Case sauber umgesetzt als
+    drei halbfertige Experimente. Die Kombination aus schnellen Erfolgen (Empfehlung 1-2) und strukturierter
+    Absicherung (Empfehlung 5) schafft sowohl Momentum als auch Stabilität für Ihre KI-Transformation.
+  </p>
+  <p>
+    Dokumentieren Sie Ihre Erfahrungen von Anfang an: Welche Prompts funktionieren? Wo entstehen Fehler?
+    Welche Qualitätsprüfungen haben sich bewährt? Diese Erkenntnisse sind wertvoll für die Skalierung auf weitere
+    Anwendungsfälle und für das Onboarding zukünftiger Nutzer:innen der KI-Werkzeuge.
+  </p>
 
   <p class="small muted">
     Die Empfehlungen sind so formuliert, dass sie unmittelbar in die Projektplanung übernommen werden können
