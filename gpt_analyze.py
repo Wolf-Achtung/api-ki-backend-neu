@@ -2027,26 +2027,32 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                     result = result.replace(word, "")
             
             # PLATIN+ Minimalumfang prüfen (dynamisch nach Section-Typ)
+            # WICHTIG: Werte sind jetzt in WÖRTERN, nicht Zeichen!
             # Für kritische Sections höhere Schwelle, damit size-aware Fallbacks greifen
-            platin_min_lengths = {
-                "roadmap": 600,
-                "roadmap_90d": 600,
-                "roadmap_12m": 800,           # PLATIN+: erhöht für 4-Phasen-Struktur
-                "foerderpotenzial": 800,      # PLATIN+: erhöht für Business-Case-Integration
-                "org_change": 600,
-                "strategie_governance": 700,
-                "risks": 700,                 # PLATIN+: hinzugefügt
-                "recommendations": 700,       # PLATIN+: hinzugefügt
-                "gamechanger": 700,           # PLATIN+: hinzugefügt
+            platin_min_words = {
+                "roadmap": 100,               # ~600 Zeichen
+                "roadmap_90d": 100,           # ~600 Zeichen
+                "roadmap_12m": 900,           # PLATIN+: 900 Wörter
+                "foerderpotenzial": 900,      # PLATIN+: 900 Wörter
+                "org_change": 100,            # ~600 Zeichen
+                "strategie_governance": 120,  # ~700 Zeichen
+                "risks": 800,                 # PLATIN+: 800 Wörter
+                "recommendations": 800,       # PLATIN+: 800 Wörter
+                "gamechanger": 700,           # PLATIN+: 700 Wörter
             }
-            min_len = platin_min_lengths.get(section_name, 50)
+            min_words = platin_min_words.get(section_name, 10)
 
-            if not result or len(result.strip()) < min_len:
+            # Wörter zählen statt Zeichen (PLATIN+ Standard)
+            import re as _re
+            text_only = _re.sub(r"<[^>]+>", "", result or "").strip()
+            word_count = len(text_only.split()) if text_only else 0
+
+            if not result or word_count < min_words:
                 log.warning(
-                    "⚠️ GPT returned too little for %s (%d chars < %d min), using fallback",
+                    "⚠️ GPT returned too little for %s (%d words < %d min), using fallback",
                     section_name,
-                    len(result.strip()) if result else 0,
-                    min_len,
+                    word_count,
+                    min_words,
                 )
                 return _get_fallback_content(section_name, briefing, scores)
             
