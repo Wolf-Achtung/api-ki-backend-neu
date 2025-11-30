@@ -10,6 +10,7 @@ PLATIN+ Mindestlängen (WÖRTER):
 - risks: 800 Wörter
 - recommendations: 800 Wörter
 - roadmap_12m: 900 Wörter
+- unternehmensprofil_markt: 500 Wörter
 """
 from __future__ import annotations
 
@@ -36,6 +37,7 @@ class TestPlatinMinWordLengths:
         "risks": 800,
         "recommendations": 800,
         "roadmap_12m": 800,  # Validator prüft auf 800 (Sicherheitsmarge)
+        "unternehmensprofil_markt": 500,
     }
 
     def count_words(self, html_content: str) -> int:
