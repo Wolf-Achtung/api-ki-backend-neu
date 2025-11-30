@@ -1,63 +1,89 @@
 {
   "branche": "it",
   "display_name": "IT & Software",
-  "description": "Softwareentwicklung, IT-Dienstleistungen, Systemintegration, Web-Development, IT-Support",
+  "description": "Softwareentwicklung, IT-Dienstleistungen, Systemintegration, Web-Development, IT-Support, SaaS, Cloud-Services",
 
   "typical_workflows": [
     "Requirements-Engineering: Kundenanforderungen aufnehmen und dokumentieren",
-    "Entwicklung: Coding, Code-Reviews, Testing",
-    "DevOps: CI/CD, Deployment, Monitoring, Wartung",
-    "Support: Ticket-Bearbeitung, Bug-Fixes, Updates",
-    "Dokumentation: Technische Docs, API-Docs, User-Guides",
-    "Projektmanagement: Sprints, Stand-ups, Retrospektiven",
-    "Kundenbetreuung: Status-Updates, Demos, Schulungen"
+    "Entwicklung: Coding, Code-Reviews, Testing, Refactoring",
+    "DevOps: CI/CD, Deployment, Monitoring, Wartung, Infrastructure-as-Code",
+    "Support: Ticket-Bearbeitung, Bug-Fixes, Updates, Incident Management",
+    "Dokumentation: Technische Docs, API-Docs, User-Guides, Architektur-Diagramme",
+    "Projektmanagement: Sprints, Stand-ups, Retrospektiven, Backlog-Grooming",
+    "Kundenbetreuung: Status-Updates, Demos, Schulungen, Onboarding",
+    "Security: Vulnerability-Scans, Penetration-Tests, Security-Reviews, Compliance-Audits"
   ],
 
   "common_pain_points": [
-    "Dokumentation wird vernachlässigt: Zeitdruck → fehlende Docs",
-    "Code-Reviews dauern: Bottleneck bei Senior-Entwicklern",
-    "Testing aufwändig: Unit-Tests, Integration-Tests, E2E-Tests",
-    "Support frisst Entwicklungszeit: Tickets unterbrechen Flow",
-    "Knowledge-Silos: Wissen nur in einzelnen Köpfen",
-    "Technische Schulden: Kein Zeit für Refactoring",
-    "Recruiting schwierig: Fachkräftemangel in der IT"
+    "Dokumentation wird vernachlässigt: Zeitdruck → fehlende Docs, technische Schulden",
+    "Code-Reviews dauern: Bottleneck bei Senior-Entwicklern, verzögerte Releases",
+    "Testing aufwändig: Unit-Tests, Integration-Tests, E2E-Tests, Regressionen",
+    "Support frisst Entwicklungszeit: Tickets unterbrechen Flow, Context-Switching",
+    "Knowledge-Silos: Wissen nur in einzelnen Köpfen, Bus-Factor-Risiko",
+    "Technische Schulden: Kein Zeit für Refactoring, Legacy-Code-Probleme",
+    "Recruiting schwierig: Fachkräftemangel in der IT, lange Einarbeitungszeiten",
+    "Security-Compliance: DSGVO, ISO 27001, SOC2-Anforderungen, AI Act"
   ],
 
   "ai_opportunities": [
     "Code-Generierung: Boilerplate, Tests, Dokumentation per Copilot/GPT",
-    "Code-Review-Assistenz: Automatische Review-Vorschläge",
-    "Dokumentation generieren: Code → automatische API-Docs/README",
-    "Bug-Analyse: Logs analysieren, Ursachen vorschlagen",
-    "Test-Generierung: Unit-Tests automatisch aus Code erstellen",
-    "Ticket-Zusammenfassung: Support-Tickets kategorisieren und priorisieren",
-    "Meeting-Protokolle: Sprint-Reviews automatisch dokumentieren",
-    "Requirements-Extraktion: Kundenmail → strukturierte Anforderungen"
+    "Code-Review-Assistenz: Automatische Review-Vorschläge, Security-Checks",
+    "Dokumentation generieren: Code → automatische API-Docs/README/Changelogs",
+    "Bug-Analyse: Logs analysieren, Root-Cause-Analyse, Ursachen vorschlagen",
+    "Test-Generierung: Unit-Tests automatisch aus Code erstellen, Edge-Cases",
+    "Ticket-Zusammenfassung: Support-Tickets kategorisieren, priorisieren, routen",
+    "Meeting-Protokolle: Sprint-Reviews automatisch dokumentieren, Action Items",
+    "Requirements-Extraktion: Kundenmail → strukturierte User Stories",
+    "Architektur-Analyse: Code-Abhängigkeiten visualisieren, Refactoring-Vorschläge",
+    "DevOps-Automation: Infrastructure-as-Code generieren, Deployment-Skripte"
   ],
 
   "typical_tools": [
     "VS Code / JetBrains IDEs für Entwicklung",
-    "Git/GitHub/GitLab für Versionskontrolle",
-    "Jira / Linear für Projektmanagement",
-    "Slack / Teams für Kommunikation",
-    "Docker / Kubernetes für Container",
-    "AWS / Azure / GCP für Cloud",
-    "Confluence / Notion für Dokumentation",
-    "Postman für API-Testing"
+    "Git/GitHub/GitLab für Versionskontrolle und CI/CD",
+    "Jira / Linear / Asana für Projektmanagement",
+    "Slack / Teams / Discord für Kommunikation",
+    "Docker / Kubernetes für Container und Orchestrierung",
+    "AWS / Azure / GCP / Vercel für Cloud-Hosting",
+    "Confluence / Notion / GitBook für Dokumentation",
+    "Postman / Insomnia für API-Testing",
+    "Sentry / Datadog für Monitoring und Error-Tracking"
   ],
 
   "tool_ecosystem": {
-    "communication": ["Slack", "Teams", "Discord"],
-    "development": ["VS Code", "JetBrains", "Vim"],
-    "vcs": ["GitHub", "GitLab", "Bitbucket"],
-    "ci_cd": ["GitHub Actions", "Jenkins", "GitLab CI"],
-    "cloud": ["AWS", "Azure", "GCP", "Vercel"],
-    "project": ["Jira", "Linear", "Notion"]
+    "communication": ["Slack", "Teams", "Discord", "Zoom"],
+    "development": ["VS Code", "JetBrains", "Vim", "Neovim"],
+    "vcs": ["GitHub", "GitLab", "Bitbucket", "Azure DevOps"],
+    "ci_cd": ["GitHub Actions", "Jenkins", "GitLab CI", "CircleCI"],
+    "cloud": ["AWS", "Azure", "GCP", "Vercel", "DigitalOcean"],
+    "project": ["Jira", "Linear", "Notion", "Asana", "ClickUp"],
+    "monitoring": ["Sentry", "Datadog", "New Relic", "Grafana"],
+    "ai_tools": ["GitHub Copilot", "Cursor", "Codeium", "Tabnine"]
   },
+
+  "typical_data_sources": [
+    "Git-Repositories: Code, Commits, Pull Requests, Issues",
+    "Projekt-Management: Tickets, Sprints, Burndowns, Velocity",
+    "Monitoring-Logs: Error-Logs, Performance-Metriken, Uptime",
+    "CI/CD-Pipelines: Build-Zeiten, Test-Ergebnisse, Deployment-Frequenz",
+    "Support-Tickets: Kundenanfragen, Bug-Reports, Feature-Requests",
+    "Dokumentation: Wikis, Confluence, Notion-Datenbanken",
+    "API-Metriken: Response-Zeiten, Error-Rates, Usage-Statistiken"
+  ],
+
+  "compliance_topics": [
+    "DSGVO: Datenschutz bei Kundendaten, Logging, Analytics",
+    "ISO 27001: Informationssicherheits-Management",
+    "SOC 2: Sicherheit, Verfügbarkeit, Vertraulichkeit",
+    "AI Act: Transparenzpflichten bei KI-Systemen, Risikoklassifizierung",
+    "Lizenz-Compliance: Open-Source-Lizenzen, Third-Party-Dependencies",
+    "NDA/IP: Schutz von Kundencode und proprietären Algorithmen"
+  ],
 
   "realistic_quick_wins_solo": [
     {
       "title": "GitHub Copilot für Entwicklung",
-      "description": "Code-Completion, Test-Generierung, Dokumentation. Reduziert Boilerplate-Code um 50%.",
+      "description": "Code-Completion, Test-Generierung, Dokumentation. Reduziert Boilerplate-Code um 40-60%.",
       "hours_saved": 15,
       "tool": "GitHub Copilot (19€/Monat)",
       "implementation": "Installation in IDE, Shortcuts lernen, Prompting optimieren",
@@ -68,44 +94,44 @@
       "title": "Automatische Code-Dokumentation",
       "description": "Docstrings, README, API-Docs automatisch aus Code generieren.",
       "hours_saved": 6,
-      "tool": "GPT-4 + Custom Scripts",
-      "implementation": "Prompts für verschiedene Doc-Typen erstellen",
+      "tool": "GPT-4 + Custom Scripts oder Mintlify",
+      "implementation": "Prompts für verschiedene Doc-Typen erstellen, in CI integrieren",
       "difficulty": "niedrig",
       "investment": "20€/Monat"
     },
     {
       "title": "Test-Generierung per KI",
-      "description": "Unit-Tests automatisch aus bestehendem Code generieren lassen.",
+      "description": "Unit-Tests automatisch aus bestehendem Code generieren, Edge-Cases abdecken.",
       "hours_saved": 8,
       "tool": "GitHub Copilot oder GPT-4",
-      "implementation": "Test-Prompts optimieren, in Workflow integrieren",
+      "implementation": "Test-Prompts optimieren, Coverage-Ziele definieren",
       "difficulty": "niedrig",
       "investment": "0€ (bei Copilot)"
     },
     {
       "title": "Automatisierte Code-Reviews",
-      "description": "Erste Review-Runde per KI: Code-Qualität, Security, Best Practices.",
+      "description": "Erste Review-Runde per KI: Code-Qualität, Security, Best Practices prüfen.",
       "hours_saved": 5,
-      "tool": "GitHub Copilot Chat oder CodeRabbit",
-      "implementation": "Als Pre-Review vor menschlichem Review einsetzen",
+      "tool": "GitHub Copilot Chat, CodeRabbit oder Sourcery",
+      "implementation": "Als Pre-Review vor menschlichem Review in PR-Workflow einsetzen",
       "difficulty": "niedrig",
       "investment": "0-15€/Monat"
     },
     {
       "title": "Bug-Analyse-Assistent",
-      "description": "Logs und Stack-Traces analysieren, Ursachen vorschlagen.",
+      "description": "Logs und Stack-Traces analysieren, Root-Causes identifizieren, Fixes vorschlagen.",
       "hours_saved": 4,
-      "tool": "GPT-4 mit Log-Context",
+      "tool": "GPT-4 mit Log-Context oder Sentry AI",
       "implementation": "Prompts für verschiedene Error-Typen erstellen",
       "difficulty": "niedrig",
       "investment": "20€/Monat"
     },
     {
       "title": "Meeting-Protokolle für Stand-ups",
-      "description": "Automatische Transkription und Zusammenfassung von Meetings.",
+      "description": "Automatische Transkription und Zusammenfassung von Meetings mit Action Items.",
       "hours_saved": 3,
-      "tool": "Fireflies.ai (19€/Monat)",
-      "implementation": "Integration mit Meet/Zoom/Teams",
+      "tool": "Fireflies.ai oder Otter.ai (19€/Monat)",
+      "implementation": "Integration mit Meet/Zoom/Teams, Template für Dev-Meetings",
       "difficulty": "niedrig",
       "investment": "19€/Monat"
     }
@@ -116,45 +142,99 @@
       "title": "RAG-basierte Dokumentations-Suche",
       "description": "Alle Docs, Code, Wikis durchsuchbar per natürlicher Sprache. Team findet Infos in Sekunden.",
       "hours_saved": 20,
-      "tool": "Notion AI oder eigenes RAG-System",
-      "implementation": "Docs zusammenführen, Embeddings erstellen, Chat-Interface",
-      "difficulty": "hoch",
+      "tool": "Notion AI, Guru oder eigenes RAG-System",
+      "implementation": "Docs zusammenführen, Embeddings erstellen, Chat-Interface bereitstellen",
+      "difficulty": "mittel",
       "investment": "100-300€/Monat"
+    },
+    {
+      "title": "Automatisierte PR-Review-Pipeline",
+      "description": "KI-gestützte Code-Reviews für alle PRs mit Security-Checks und Style-Guides.",
+      "hours_saved": 15,
+      "tool": "CodeRabbit, Sourcery oder GitHub Copilot Enterprise",
+      "implementation": "GitHub Actions Workflow, Review-Rules definieren, Team-Training",
+      "difficulty": "mittel",
+      "investment": "50-200€/Monat"
+    },
+    {
+      "title": "Sprint-Planungs-Assistent",
+      "description": "KI analysiert Backlog, schätzt Story Points, schlägt Sprint-Scope vor.",
+      "hours_saved": 8,
+      "tool": "GPT-4 + Jira-Integration oder Linear AI",
+      "implementation": "Historical Data nutzen, Velocity-Modell trainieren",
+      "difficulty": "mittel",
+      "investment": "50-100€/Monat"
     }
   ],
 
   "realistic_quick_wins_kmu": [
     {
       "title": "Enterprise Development Platform",
-      "description": "Integrierte Plattform mit KI-Code-Review, Security-Scanning, Compliance.",
+      "description": "Integrierte Plattform mit KI-Code-Review, Security-Scanning, Compliance-Dashboard.",
       "hours_saved": 40,
       "tool": "GitHub Enterprise oder GitLab Ultimate",
-      "implementation": "Migration, Security-Rules, Team-Onboarding",
+      "implementation": "Migration, Security-Rules, Team-Onboarding, Governance-Setup",
       "difficulty": "hoch",
       "investment": "500-2000€/Monat"
+    },
+    {
+      "title": "KI-gestütztes Incident-Management",
+      "description": "Automatische Incident-Klassifizierung, Root-Cause-Analyse, Runbook-Vorschläge.",
+      "hours_saved": 30,
+      "tool": "PagerDuty AIOps oder Datadog AI",
+      "implementation": "Integration mit Monitoring-Stack, Historische Incidents analysieren",
+      "difficulty": "hoch",
+      "investment": "300-800€/Monat"
+    },
+    {
+      "title": "Zentrale KI-Governance-Plattform",
+      "description": "Einheitliche Richtlinien für KI-Nutzung, Audit-Trail, Compliance-Reporting.",
+      "hours_saved": 25,
+      "tool": "Eigene Lösung oder Enterprise-Tools",
+      "implementation": "Richtlinien definieren, Tool-Whitelist, Schulungskonzept",
+      "difficulty": "hoch",
+      "investment": "200-500€/Monat"
     }
   ],
 
   "industry_specific_notes": {
-    "web_development": "Schnelle Iteration, Frontend/Backend-Split, responsive Design",
-    "mobile_development": "iOS/Android-Unterschiede, App-Store-Guidelines",
-    "enterprise_software": "Lange Release-Zyklen, hohe Compliance-Anforderungen",
-    "saas": "Skalierbarkeit, Multi-Tenancy, Subscription-Billing"
+    "web_development": "Schnelle Iteration, Frontend/Backend-Split, responsive Design, SEO-Optimierung",
+    "mobile_development": "iOS/Android-Unterschiede, App-Store-Guidelines, Cross-Platform-Frameworks",
+    "enterprise_software": "Lange Release-Zyklen, hohe Compliance-Anforderungen, Legacy-Integration",
+    "saas": "Skalierbarkeit, Multi-Tenancy, Subscription-Billing, Customer Success",
+    "devops_services": "Infrastructure-as-Code, Cloud-Migration, Kubernetes-Management",
+    "security_services": "Penetration Testing, Security Audits, Compliance-Beratung"
   },
 
   "success_metrics": [
-    "Velocity: Story Points pro Sprint",
-    "Bug-Rate: Bugs pro Release",
-    "Deployment-Frequenz: Releases pro Woche/Monat",
-    "MTTR: Mean Time to Recovery",
-    "Code-Coverage: % getesteter Code"
+    "Velocity: Story Points pro Sprint, Trend über Zeit",
+    "Bug-Rate: Bugs pro Release, Critical Bugs in Production",
+    "Deployment-Frequenz: Releases pro Woche/Monat, Lead Time",
+    "MTTR: Mean Time to Recovery bei Incidents",
+    "Code-Coverage: % getesteter Code, Coverage-Trend",
+    "PR-Cycle-Time: Zeit von PR-Erstellung bis Merge",
+    "Customer Satisfaction: NPS, Support-Ticket-Resolution-Time"
   ],
 
   "typical_pricing_models": [
-    "Stundensätze (70-150€/h)",
+    "Stundensätze (70-150€/h je nach Seniority)",
     "Festpreisprojekte mit Meilensteinen",
     "Retainer für Wartung (monatlich)",
     "Time & Material mit Cap",
-    "Dedicated Team (monatlich pro Entwickler)"
-  ]
+    "Dedicated Team (monatlich pro Entwickler)",
+    "SaaS-Pricing (pro User/Monat oder Usage-basiert)"
+  ],
+
+  "roadmap_focus_areas": {
+    "solo": ["Persönliche Produktivität", "Automatisierung wiederkehrender Tasks", "Qualitätssicherung des eigenen Codes", "Dokumentation für Kunden"],
+    "team": ["Team-Collaboration", "Code-Review-Prozesse", "Wissensmanagement", "Sprint-Effizienz", "Onboarding neuer Teammitglieder"],
+    "kmu": ["Governance & Compliance", "Skalierbare Prozesse", "Security-Standards", "Cross-Team-Koordination", "Enterprise-Integration"]
+  },
+
+  "foerder_relevanz": {
+    "digitalisierung": "KI-gestützte Entwicklungswerkzeuge, Automatisierung, DevOps-Modernisierung",
+    "innovation": "Neue KI-basierte Produkte und Services, R&D-Projekte",
+    "qualifizierung": "KI-Schulungen für Entwickler, Prompt-Engineering-Training",
+    "security": "KI-gestützte Security-Tools, Compliance-Automation"
+  }
 }
