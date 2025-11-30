@@ -2,6 +2,9 @@
   "profile_id": "team_it_software_saas_advisory",
   "description": "Kleines Team (2–10), Berlin, Branche IT & Software, KI-gestützte SaaS-/Prozessberatung",
   "lang": "de",
+  "BRANCHE_LABEL": "IT & Software",
+  "UNTERNEHMENSGROESSE_LABEL": "2–10 (Kleines Team)",
+  "HAUPTLEISTUNG": "Beratung von IT-Unternehmen und SaaS-Anbietern zur Integration von KI in Produkt- und Backend-Prozesse auf Basis von Diagnose-Fragebögen und anschließender GPT-Auswertung",
   "answers": {
     "ai_act_kenntnis": "sehr_gut",
     "anwendungsfaelle": ["datenanalyse", "prozess_automation", "content_generation"],

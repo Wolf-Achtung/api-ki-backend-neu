@@ -1,12 +1,15 @@
 {
-  "profile_id": "solo_marketing_content_solo_agency",
-  "description": "Solo, Berlin, Branche Marketing & Werbung, KI-gestützte Content- und Kampagnenberatung",
+  "profile_id": "solo_beratung_ki_assessments",
+  "description": "Solo, Berlin, Branche Beratung & Dienstleistungen, KI-gestützte Assessments",
   "lang": "de",
+  "BRANCHE_LABEL": "Beratung & Dienstleistungen",
+  "UNTERNEHMENSGROESSE_LABEL": "1 (Solo)",
+  "HAUPTLEISTUNG": "Entwicklung und Durchführung von KI-Readiness-Assessments für Unternehmen mit strukturierten Fragebögen und GPT-Auswertung",
   "answers": {
-    "branche": "marketing",
+    "branche": "beratung",
     "unternehmensgroesse": "solo",
     "bundesland": "be",
-    "hauptleistung": "Entwicklung und Optimierung von Content- und Kampagnenstrategien für KMU mit KI-gestützten Fragebögen und anschließender GPT-Auswertung",
+    "hauptleistung": "Entwicklung und Durchführung von KI-Readiness-Assessments für Unternehmen mit strukturierten Fragebögen und GPT-Auswertung",
     "ki_ziele": [
       "effizienz",
       "automatisierung",
@@ -17,10 +20,10 @@
       "wettbewerbsfaehigkeit"
     ],
     "meldewege": "teilweise",
-    "ki_einsatz": ["marketing", "produktion"],
+    "ki_einsatz": ["beratung", "produktion"],
     "zeitbudget": "ueber_10",
     "datenschutz": true,
-    "ki_projekte": "Standardisierter KI-Marketing-Check für Kund:innen mit Online-Fragebogen und GPT-Auswertung für Content-Ideen, Zielgruppen-Insights und Kampagnenvorschläge.",
+    "ki_projekte": "Standardisierte KI-Readiness-Assessments mit Online-Fragebogen und GPT-Auswertung für Handlungsempfehlungen und Roadmaps.",
     "zielgruppen": ["kmu", "startups", "selbststaendige"],
     "datenquellen": ["sonstige"],
     "jahresumsatz": "unter_100k",
@@ -31,7 +34,7 @@
     "marktposition": "oberes_drittel",
     "pilot_bereich": "produktion",
     "selbststaendig": "freiberufler",
-    "vision_3_jahre": "Etablierte Solo-Agentur für KI-gestützte Content- und Kampagnenberatung mit wiederkehrenden Retainer-Modellen",
+    "vision_3_jahre": "Etablierte Solo-Beratung für KI-gestützte Unternehmensassessments mit wiederkehrenden Audit-Modellen",
     "ai_act_kenntnis": "sehr_gut",
     "anwendungsfaelle": [
       "content_generation",
@@ -49,7 +52,7 @@
     "investitionsbudget": "2000_10000",
     "prozesse_papierlos": "81-100",
     "regulierte_branche": ["keine"],
-    "strategische_ziele": "Planbare Retainer-Umsätze aufbauen und Kampagnenergebnisse für Kund:innen messbar verbessern.",
+    "strategische_ziele": "Planbare Beratungsumsätze aufbauen und KI-Readiness bei Kund:innen messbar verbessern.",
     "automatisierungsgrad": "eher_hoch",
     "digitalisierungsgrad": "10",
     "interesse_foerderung": "ja",
@@ -60,7 +63,7 @@
     "bisherige_foerdermittel": "nein",
     "datenschutzbeauftragter": "ja",
     "massnahmen_komplexitaet": "hoch",
-    "zeitersparnis_prioritaet": "Kampagnen- und Content-Entwicklung sowie Reporting weitgehend automatisieren.",
-    "geschaeftsmodell_evolution": "Produktisierte KI-Marketing-Checks und wiederkehrende Content-Services auf Basis von Fragebögen und GPT-Auswertungen."
+    "zeitersparnis_prioritaet": "Assessment-Durchführung und Berichterstellung weitgehend automatisieren.",
+    "geschaeftsmodell_evolution": "Produktisierte KI-Assessments und wiederkehrende Beratungsservices auf Basis von Fragebögen und GPT-Auswertungen."
   }
 }

@@ -2,6 +2,9 @@
   "profile_id": "team_finance_insurance_advisory",
   "description": "Kleines Team (2–10), Berlin, Branche Finanzen & Versicherungen, Beratungshaus für digitale Finanzprozesse",
   "lang": "de",
+  "BRANCHE_LABEL": "Finanzen & Versicherungen",
+  "UNTERNEHMENSGROESSE_LABEL": "2–10 (Kleines Team)",
+  "HAUPTLEISTUNG": "Beratung von Banken, Versicherern und FinTechs zur risikobewussten Integration von KI in Kredit-, Risiko- und Kundenprozesse mittels standardisierter Fragebögen und GPT-Auswertung",
   "answers": {
     "ai_act_kenntnis": "sehr_gut",
     "anwendungsfaelle": ["datenanalyse", "prozess_automation", "content_generation"],
