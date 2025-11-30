@@ -23,6 +23,13 @@ log = logging.getLogger(__name__)
 # =============================================================================
 # Diese Sektionen benötigen längere Outputs und dürfen NICHT durch
 # Token-Limits oder aggressive Penalties beschränkt werden.
+#
+# Für kritische Sektionen gilt: max_tokens = None (kein Limit)
+# =============================================================================
+
+# PLATIN+ Token-Limit-Deaktivierung für kritische Sektionen
+PLATIN_MAX_TOKENS = None  # max_tokens = None für alle kritischen Sektionen
+
 
 class PlatinSectionConfig(TypedDict):
     """Configuration for PLATIN+ critical sections."""

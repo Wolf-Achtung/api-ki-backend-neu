@@ -2,6 +2,9 @@
   "profile_id": "kmu_handel_ecommerce_advisory",
   "description": "KMU (11–100), Berlin, Branche Handel & E-Commerce, digitales Beratungs- und Serviceangebot",
   "lang": "de",
+  "BRANCHE_LABEL": "Handel & E-Commerce",
+  "UNTERNEHMENSGROESSE_LABEL": "11–100 (KMU)",
+  "HAUPTLEISTUNG": "Beratung von Online-Händlern und Omnichannel-Unternehmen zur Nutzung von KI für Produktdaten, Kampagnen und Onsite-Personalisierung auf Basis strukturierter Fragebögen und GPT-Auswertung",
   "answers": {
     "ai_act_kenntnis": "sehr_gut",
     "anwendungsfaelle": ["content_generation", "datenanalyse", "prozess_automation"],
