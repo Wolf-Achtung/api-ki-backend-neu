@@ -1,129 +1,58 @@
 {
-  "branche": "industrie_production",
-  "unternehmensgroesse": "kmu",
-  "bundesland": "Baden-Württemberg",
+  "profile_id": "kmu_industrie_production_advisory",
+  "description": "KMU in der Industrie/Produktion mit Fokus auf Qualitätskontrolle und Fertigungsoptimierung",
+  "lang": "de",
+  "BRANCHE_LABEL": "Industrie & Produktion",
+  "UNTERNEHMENSGROESSE_LABEL": "11-50 (KMU)",
+  "HAUPTLEISTUNG": "Beratung und operative Begleitung von kleinen und mittelständischen Produktionsunternehmen bei der Digitalisierung, der Prozessanalyse, der Optimierung von Fertigungsabläufen, der Einführung KI-gestützter Qualitätskontrolle sowie beim Aufbau datengestützter Entscheidungsprozesse in Planung, Logistik und Fertigungssteuerung.",
 
-  "hauptleistung": "Beratung und operative Begleitung von kleinen und mittelständischen Produktionsunternehmen bei der Digitalisierung, der Prozessanalyse, der Optimierung von Fertigungsabläufen, der Einführung KI-gestützter Qualitätskontrolle sowie beim Aufbau datengestützter Entscheidungsprozesse in Planung, Logistik und Fertigungssteuerung.",
-
-  "zielgruppen": [
-    "B2B",
-    "KMU_Fertigung",
-    "Zulieferindustrie",
-    "Maschinenbau"
-  ],
-
-  "jahresumsatz": "1-5m",
-
-  "it_infrastruktur": "onprem_cloudmix",
-
-  "interne_ki_kompetenzen": "grundkenntnisse",
-
-  "datenquellen": [
-    "ERP",
-    "MES",
-    "Qualitätsdaten",
-    "Maschinendaten",
-    "Sensorik",
-    "Excel_Reports"
-  ],
-
-  "digitalisierungsgrad": "mittel",
-  "prozesse_papierlos": "teilweise",
-  "automatisierungsgrad": "mittel",
-
-  "ki_einsatz": [
-    "datenanalyse",
-    "qualitaetskontrolle",
-    "prozessoptimierung",
-    "predictive_maintenance"
-  ],
-
-  "ki_kompetenz": "mittel",
-
-  "ki_ziele": [
-    "effizienz",
-    "fehlerreduktion",
-    "standardisierung",
-    "optimierung",
-    "transparenz"
-  ],
-
-  "ki_projekte": "Aktuell werden erste PoCs zu KI-gestützter Anomalieerkennung in Qualitätsdaten, automatisierter Prüfbericht-Generierung, Produktionsprognosen für Engpassstationen und der Einsatz eines KI-gestützten Wissenssystems für Störungsmeldungen vorbereitet. Weitere Projekte betreffen die automatische Auswertung von Maschinenzustandsdaten zur Reduzierung ungeplanter Stillstände.",
-
-  "anwendungsfaelle": [
-    "qualitaetskontrolle",
-    "automatische_dokumentation",
-    "prozessanalyse",
-    "schichtplanung",
-    "engpassprognosen",
-    "maschine_sensordaten_analyse"
-  ],
-
-  "zeitersparnis_prioritaet": "Großer Bedarf besteht bei der Pflege technischer Dokumentationen, der manuellen Analyse von Qualitätsdaten, der Erstellung von Produktionsreportings sowie bei der Koordination zwischen Fertigungssteuerung, Logistik und QS. Besonders aufwendig sind wiederkehrende Auswertungen, Schichtabgleiche und manuelle Prüfprozesse.",
-
-  "pilot_bereich": "produktion",
-
-  "geschaeftsmodell_evolution": "Ausbau von wiederkehrenden Beratungsmodulen, Entwicklung eines KI-basierten Fertigungs-Dashboards für KMU, Aufbau eines Standard-Analyse-Kits für Maschinen- und Qualitätsdaten sowie Erweiterung um Schulungs- und Befähigungsprogramme für Produktionsmitarbeitende.",
-
-  "vision_3_jahre": "Das Unternehmen möchte als führender KI-Enablement-Partner für industrielle KMU in der DACH-Region etabliert sein und modulare Lösungen für Qualitätskontrolle, Fertigungsoptimierung und datenbasierte Planung anbieten. Ziel ist es, Predictive-Intelligence-Ansätze so zu operationalisieren, dass KMU sie ohne eigene Data-Science-Teams nutzen können.",
-
-  "strategische_ziele": "Steigerung der Beratungsproduktivität durch KI, Ausbau der Dienstleistungspakete, stärkere Standardisierung der Analyseprozesse, Aufbau industrieller Best-Practice-Bibliotheken, Positionierung als Innovationspartner für Maschinenbau und Zulieferer.",
-
-  "massnahmen_komplexitaet": "mittel",
-
-  "roadmap_vorhanden": "nein",
-  "governance_richtlinien": "in_planung",
-  "change_management": "punktuell",
-  "zeitbudget": "10h_woche",
-
-  "vorhandene_tools": [
-    "microsoft365",
-    "teams",
-    "sap_business_one",
-    "mes_systeme",
-    "powerbi",
-    "confluence",
-    "jira"
-  ],
-
-  "regulierte_branche": [
-    "keine_regulierung"
-  ],
-
-  "trainings_interessen": [
-    "automatisierung",
-    "datenkompetenz",
-    "ki_in_produktion",
-    "prozessdigitalisierung",
-    "prompting_expert"
-  ],
-
-  "vision_prioritaet": "hoch",
-
-  "datenschutzbeauftragter": "extern",
-  "technische_massnahmen": "standardisiert",
-  "folgenabschaetzung": "nicht_erforderlich",
-  "meldewege": "teilweise_definiert",
-  "loeschregeln": "teilweise_implementiert",
-
-  "ai_act_kenntnis": "grundkenntnisse",
-
-  "ki_hemmnisse": [
-    "datenqualitaet",
-    "veraltete_systeme",
-    "silos",
-    "ressourcenknappheit"
-  ],
-
-  "bisherige_foerdermittel": "keine",
-  "interesse_foerderung": "ja",
-  "erfahrung_beratung": "moderat",
-  "investitionsbudget": "20-50k",
-
-  "marktposition": "etabliert",
-  "benchmark_wettbewerb": "durchschnittlich",
-  "innovationsprozess": "punktuell",
-  "risikofreude": "60",
-
-  "datenschutz": true
+  "answers": {
+    "branche": "industrie_production",
+    "unternehmensgroesse": "kmu",
+    "bundesland": "Baden-Württemberg",
+    "hauptleistung": "Beratung und operative Begleitung von kleinen und mittelständischen Produktionsunternehmen bei der Digitalisierung, der Prozessanalyse, der Optimierung von Fertigungsabläufen, der Einführung KI-gestützter Qualitätskontrolle sowie beim Aufbau datengestützter Entscheidungsprozesse in Planung, Logistik und Fertigungssteuerung.",
+    "zielgruppen": ["B2B", "KMU_Fertigung", "Zulieferindustrie", "Maschinenbau"],
+    "jahresumsatz": "1-5m",
+    "it_infrastruktur": "onprem_cloudmix",
+    "interne_ki_kompetenzen": "grundkenntnisse",
+    "datenquellen": ["ERP", "MES", "Qualitätsdaten", "Maschinendaten", "Sensorik", "Excel_Reports"],
+    "digitalisierungsgrad": "mittel",
+    "prozesse_papierlos": "teilweise",
+    "automatisierungsgrad": "mittel",
+    "ki_einsatz": ["datenanalyse", "qualitaetskontrolle", "prozessoptimierung", "predictive_maintenance"],
+    "ki_kompetenz": "mittel",
+    "ki_ziele": ["effizienz", "fehlerreduktion", "standardisierung", "optimierung", "transparenz"],
+    "ki_projekte": "Aktuell werden erste PoCs zu KI-gestützter Anomalieerkennung in Qualitätsdaten, automatisierter Prüfbericht-Generierung, Produktionsprognosen für Engpassstationen und der Einsatz eines KI-gestützten Wissenssystems für Störungsmeldungen vorbereitet. Weitere Projekte betreffen die automatische Auswertung von Maschinenzustandsdaten zur Reduzierung ungeplanter Stillstände.",
+    "anwendungsfaelle": ["qualitaetskontrolle", "automatische_dokumentation", "prozessanalyse", "schichtplanung", "engpassprognosen", "maschine_sensordaten_analyse"],
+    "zeitersparnis_prioritaet": "Großer Bedarf besteht bei der Pflege technischer Dokumentationen, der manuellen Analyse von Qualitätsdaten, der Erstellung von Produktionsreportings sowie bei der Koordination zwischen Fertigungssteuerung, Logistik und QS. Besonders aufwendig sind wiederkehrende Auswertungen, Schichtabgleiche und manuelle Prüfprozesse.",
+    "pilot_bereich": "produktion",
+    "geschaeftsmodell_evolution": "Ausbau von wiederkehrenden Beratungsmodulen, Entwicklung eines KI-basierten Fertigungs-Dashboards für KMU, Aufbau eines Standard-Analyse-Kits für Maschinen- und Qualitätsdaten sowie Erweiterung um Schulungs- und Befähigungsprogramme für Produktionsmitarbeitende.",
+    "vision_3_jahre": "Das Unternehmen möchte als führender KI-Enablement-Partner für industrielle KMU in der DACH-Region etabliert sein und modulare Lösungen für Qualitätskontrolle, Fertigungsoptimierung und datenbasierte Planung anbieten. Ziel ist es, Predictive-Intelligence-Ansätze so zu operationalisieren, dass KMU sie ohne eigene Data-Science-Teams nutzen können.",
+    "strategische_ziele": "Steigerung der Beratungsproduktivität durch KI, Ausbau der Dienstleistungspakete, stärkere Standardisierung der Analyseprozesse, Aufbau industrieller Best-Practice-Bibliotheken, Positionierung als Innovationspartner für Maschinenbau und Zulieferer.",
+    "massnahmen_komplexitaet": "mittel",
+    "roadmap_vorhanden": "nein",
+    "governance_richtlinien": "in_planung",
+    "change_management": "punktuell",
+    "zeitbudget": "10h_woche",
+    "vorhandene_tools": ["microsoft365", "teams", "sap_business_one", "mes_systeme", "powerbi", "confluence", "jira"],
+    "regulierte_branche": ["keine_regulierung"],
+    "trainings_interessen": ["automatisierung", "datenkompetenz", "ki_in_produktion", "prozessdigitalisierung", "prompting_expert"],
+    "vision_prioritaet": "hoch",
+    "datenschutzbeauftragter": "extern",
+    "technische_massnahmen": "standardisiert",
+    "folgenabschaetzung": "nicht_erforderlich",
+    "meldewege": "teilweise_definiert",
+    "loeschregeln": "teilweise_implementiert",
+    "ai_act_kenntnis": "grundkenntnisse",
+    "ki_hemmnisse": ["datenqualitaet", "veraltete_systeme", "silos", "ressourcenknappheit"],
+    "bisherige_foerdermittel": "keine",
+    "interesse_foerderung": "ja",
+    "erfahrung_beratung": "moderat",
+    "investitionsbudget": "20-50k",
+    "marktposition": "etabliert",
+    "benchmark_wettbewerb": "durchschnittlich",
+    "innovationsprozess": "punktuell",
+    "risikofreude": "60",
+    "datenschutz": true
+  }
 }
