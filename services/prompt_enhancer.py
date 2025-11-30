@@ -27,13 +27,14 @@ log = logging.getLogger(__name__)
 # Für kritische Sektionen gilt: max_tokens = None (kein Limit)
 # =============================================================================
 
-# PLATIN+ Token-Limit-Deaktivierung für kritische Sektionen
-PLATIN_MAX_TOKENS = None  # max_tokens = None für alle kritischen Sektionen
+# PLATIN+ Token-Limit für kritische Sektionen
+# 4096 Tokens ≈ 3000 Wörter – genug Spielraum für 800-900 Wörter Output
+PLATIN_MAX_TOKENS = 4096
 
 
 class PlatinSectionConfig(TypedDict):
     """Configuration for PLATIN+ critical sections."""
-    max_tokens: Optional[int]  # None = no limit (use model default)
+    max_tokens: int  # Token-Limit für LLM-Output (4096 für lange Sections)
     temperature: float
     presence_penalty: float
     frequency_penalty: float
@@ -42,39 +43,46 @@ class PlatinSectionConfig(TypedDict):
 
 PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
     "foerderpotenzial": {
-        "max_tokens": None,  # Kein Limit - volle Länge erlauben
-        "temperature": 0.4,  # Etwas kreativ aber konsistent
+        "max_tokens": 4096,  # Explizit 4096 für 900+ Wörter
+        "temperature": 0.4,  # Konsistent aber nicht zu trocken
         "presence_penalty": 0.0,  # Keine Bestrafung für Wiederholungen
         "frequency_penalty": 0.0,  # Keine Bestrafung für häufige Wörter
         "min_words": 900,
     },
     "risks": {
-        "max_tokens": None,
+        "max_tokens": 4096,
         "temperature": 0.4,
         "presence_penalty": 0.0,
         "frequency_penalty": 0.0,
         "min_words": 800,
     },
     "recommendations": {
-        "max_tokens": None,
+        "max_tokens": 4096,
         "temperature": 0.4,
         "presence_penalty": 0.0,
         "frequency_penalty": 0.0,
         "min_words": 800,
     },
     "roadmap_12m": {
-        "max_tokens": None,
+        "max_tokens": 4096,
         "temperature": 0.4,
         "presence_penalty": 0.0,
         "frequency_penalty": 0.0,
         "min_words": 900,
     },
     "gamechanger": {
-        "max_tokens": None,
+        "max_tokens": 4096,
         "temperature": 0.5,  # Etwas kreativer für Gamechanger
         "presence_penalty": 0.0,
         "frequency_penalty": 0.0,
         "min_words": 700,
+    },
+    "unternehmensprofil_markt": {
+        "max_tokens": 4096,
+        "temperature": 0.4,
+        "presence_penalty": 0.0,
+        "frequency_penalty": 0.0,
+        "min_words": 500,
     },
 }
 

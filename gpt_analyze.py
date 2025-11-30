@@ -269,16 +269,15 @@ def _llm_params_for(section_key: str) -> Dict[str, Any]:
     else:
         temperature = OPENAI_TEMP_DEFAULT
 
-    # Max-Tokens bestimmen (PLATIN-Config: None → 4096 für längere Outputs)
+    # Max-Tokens bestimmen (PLATIN-Config hat explizite Werte für kritische Sections)
     if max_tokens_env is not None:
         try:
             max_tokens = int(max_tokens_env)
         except ValueError:
             max_tokens = OPENAI_MAX_TOKENS_DEFAULT
     elif platin_config:
-        # PLATIN+ kritische Sections: max_tokens=None → 4096 für 800-900 Wörter
-        platin_max = platin_config.get("max_tokens")
-        max_tokens = 4096 if platin_max is None else platin_max
+        # PLATIN+ kritische Sections: Verwende konfigurierte max_tokens (4096)
+        max_tokens = platin_config.get("max_tokens", 4096)
     elif key in {"executive_summary", "exec_summary", "summary"}:
         max_tokens = EXEC_SUMMARY_MAX_TOKENS
     elif key == "gamechanger":
@@ -599,6 +598,7 @@ def _call_openai(
     temperature: Optional[float] = None,
     max_tokens: Optional[int] = None,
     model: Optional[str] = None,
+    section: Optional[str] = None,  # PLATIN+ Logging: Section-Key für Diagnostik
 ) -> Optional[str]:
     if not OPENAI_API_KEY:
         log.error("❌ OPENAI_API_KEY not set")
@@ -656,19 +656,23 @@ def _call_openai(
             data = r.json()
             content = data["choices"][0]["message"]["content"]
             finish_reason = data["choices"][0].get("finish_reason", "unknown")
+            completion_tokens = data.get("usage", {}).get("completion_tokens", 0)
+            section_label = section or "unknown"
 
-            # PLATIN+ Diagnostik: Log finish_reason für Debugging
+            # PLATIN+ Diagnostik: Einheitliches Log-Format für Railway
             if finish_reason == "length":
                 log.warning(
-                    "⚠️ OpenAI response truncated (finish_reason=length) – "
-                    "max_tokens=%d may be too low for this section",
+                    "⚠️ LLM section=%s finished with reason=length (hit token limit %d) – risk of truncation",
+                    section_label,
                     max_tokens or OPENAI_MAX_TOKENS,
                 )
             else:
-                log.debug(
-                    "✅ OpenAI response complete (finish_reason=%s, tokens=%d)",
+                log.info(
+                    "✅ LLM section=%s finished with reason=%s (tokens=%d, max=%d)",
+                    section_label,
                     finish_reason,
-                    data.get("usage", {}).get("completion_tokens", 0),
+                    completion_tokens,
+                    max_tokens or OPENAI_MAX_TOKENS,
                 )
 
             return str(content)
@@ -729,13 +733,14 @@ def _call_llm_for_section(
             model=model,
         )
 
-    # Fallback: OpenAI wie bisher
+    # Fallback: OpenAI wie bisher (mit section für besseres Logging)
     return _call_openai(
         prompt=prompt,
         system_prompt=system_prompt,
         temperature=temperature,
         max_tokens=max_tokens,
         model=model,
+        section=section_key,
     )
 
 
