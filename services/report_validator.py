@@ -147,6 +147,7 @@ class ReportValidator:
         "kmu": [],
     }
 
+    # PLATIN+ Standard: Erhöhte Mindestlängen für kritische Sections
     MIN_SECTION_LENGTH = {
         "executive_summary": 600,
         "business_case": 800,
@@ -156,7 +157,10 @@ class ReportValidator:
         "strategie_governance": 800,
         "org_change": 700,
         "tools_empfehlungen": 600,
-        "foerderpotenzial": 600,
+        "foerderpotenzial": 900,  # PLATIN+: erhöht von 600 auf 900
+        "risks": 800,             # PLATIN+: hinzugefügt
+        "recommendations": 800,   # PLATIN+: hinzugefügt
+        "gamechanger": 800,       # PLATIN+: hinzugefügt
     }
 
     SECTION_KEY_MAP: Dict[str, str] = {
@@ -169,6 +173,9 @@ class ReportValidator:
         "org_change": "org_change",
         "tools_empfehlungen": "tools_empfehlungen",
         "foerderpotenzial": "foerderpotenzial",
+        "risks": "risks",                 # PLATIN+: hinzugefügt
+        "recommendations": "recommendations",  # PLATIN+: hinzugefügt
+        "gamechanger": "gamechanger",     # PLATIN+: hinzugefügt
     }
 
     def __init__(self, sections: Dict[str, Any], meta: Dict[str, Any]) -> None:

@@ -1,21 +1,30 @@
 Developer:
-<!-- recommendations.md – v5.0 GOLD STANDARD+ (branch-aware, size-aware, actionable)
+<!-- recommendations.md – v6.0 PLATIN+ (branch-aware, size-aware, actionable, min 800 chars)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im OUTPUT.
 
      ZIEL:
-       - Erzeuge 3–6 präzise, sofort nutzbare Handlungsempfehlungen.
+       - Erzeuge 4–6 präzise, sofort nutzbare Handlungsempfehlungen.
        - Jede Empfehlung muss vollständig ausformuliert sein:
          Problem → Maßnahme → Nutzen → Aufwand → Verantwortlich → Förderchance.
        - Abhängig von Branche, Hauptleistung, Unternehmensgröße und Bundesland.
-       - Erstelle zusätzlich eine klare Prioritäten-Tabelle (3–6 Einträge).
+       - Erstelle zusätzlich eine klare Prioritäten-Tabelle (4–6 Einträge).
+       - Verknüpfung mit Roadmap und Business Case.
 
-     INPUT-VARIABLEN:
+     INPUT-VARIABLEN (MÜSSEN alle genutzt werden!):
        {{BRANCHE_LABEL}}
        {{UNTERNEHMENSGROESSE_LABEL}}
        {{HAUPTLEISTUNG}}
        {{BUNDESLAND_LABEL}}
        {{COMPANY_SIZE}}   // "solo", "team", "kmu", durch PromptEnhancer gesetzt
+
+     PFLICHTSTRUKTUR:
+       - Mindestens 4 Empfehlungen (besser 5-6)
+       - Jede Empfehlung mit allen 6 Elementen: Schwerpunkt, Maßnahme, Nutzen, Aufwand, Verantwortlich, Förderchance
+       - Prioritäten-Tabelle mit 4-6 Zeilen
+       - Jede Empfehlung 3-5 Sätze
+
+     MINDESTLÄNGE: 800 Zeichen (ohne HTML-Tags) – unterschreite diese NIEMALS!
 
      SIZE-AWARE REGELWERK:
        SOLO:

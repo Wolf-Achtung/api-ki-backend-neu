@@ -2026,13 +2026,20 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 for word in developer_words:
                     result = result.replace(word, "")
             
-            # Minimalumfang prüfen (dynamisch nach Section-Typ)
+            # PLATIN+ Minimalumfang prüfen (dynamisch nach Section-Typ)
             # Für kritische Sections höhere Schwelle, damit size-aware Fallbacks greifen
-            critical_sections = {
-                "roadmap", "roadmap_90d", "roadmap_12m",
-                "foerderpotenzial", "org_change", "strategie_governance"
+            platin_min_lengths = {
+                "roadmap": 600,
+                "roadmap_90d": 600,
+                "roadmap_12m": 800,           # PLATIN+: erhöht für 4-Phasen-Struktur
+                "foerderpotenzial": 800,      # PLATIN+: erhöht für Business-Case-Integration
+                "org_change": 600,
+                "strategie_governance": 700,
+                "risks": 700,                 # PLATIN+: hinzugefügt
+                "recommendations": 700,       # PLATIN+: hinzugefügt
+                "gamechanger": 700,           # PLATIN+: hinzugefügt
             }
-            min_len = 300 if section_name in critical_sections else 50
+            min_len = platin_min_lengths.get(section_name, 50)
 
             if not result or len(result.strip()) < min_len:
                 log.warning(
