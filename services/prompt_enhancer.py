@@ -6,16 +6,110 @@ Optimized for ki-sicherheit.jetzt backend
 This service works WITH the existing prompt_loader.py system.
 It loads prompts via prompt_loader, injects context, and returns enhanced prompts.
 
-Version: 2.3.2-Size-Mapping-TypedDict
+Version: 2.4.0-PLATIN-STABILIZED
 """
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, TypedDict
+from typing import Any, Dict, TypedDict, Optional
 
 from services.prompt_builder import PromptBuilder
 
 log = logging.getLogger(__name__)
+
+
+# =============================================================================
+# PLATIN+ STABILIZATION: Konfiguration für kritische Sektionen
+# =============================================================================
+# Diese Sektionen benötigen längere Outputs und dürfen NICHT durch
+# Token-Limits oder aggressive Penalties beschränkt werden.
+
+class PlatinSectionConfig(TypedDict):
+    """Configuration for PLATIN+ critical sections."""
+    max_tokens: Optional[int]  # None = no limit (use model default)
+    temperature: float
+    presence_penalty: float
+    frequency_penalty: float
+    min_words: int  # Minimum word count expected
+
+
+PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
+    "foerderpotenzial": {
+        "max_tokens": None,  # Kein Limit - volle Länge erlauben
+        "temperature": 0.4,  # Etwas kreativ aber konsistent
+        "presence_penalty": 0.0,  # Keine Bestrafung für Wiederholungen
+        "frequency_penalty": 0.0,  # Keine Bestrafung für häufige Wörter
+        "min_words": 900,
+    },
+    "risks": {
+        "max_tokens": None,
+        "temperature": 0.4,
+        "presence_penalty": 0.0,
+        "frequency_penalty": 0.0,
+        "min_words": 800,
+    },
+    "recommendations": {
+        "max_tokens": None,
+        "temperature": 0.4,
+        "presence_penalty": 0.0,
+        "frequency_penalty": 0.0,
+        "min_words": 800,
+    },
+    "roadmap_12m": {
+        "max_tokens": None,
+        "temperature": 0.4,
+        "presence_penalty": 0.0,
+        "frequency_penalty": 0.0,
+        "min_words": 900,
+    },
+    "gamechanger": {
+        "max_tokens": None,
+        "temperature": 0.5,  # Etwas kreativer für Gamechanger
+        "presence_penalty": 0.0,
+        "frequency_penalty": 0.0,
+        "min_words": 700,
+    },
+}
+
+
+def get_platin_config(section_name: str) -> Optional[PlatinSectionConfig]:
+    """
+    Get PLATIN+ configuration for a section if it's a critical section.
+
+    Args:
+        section_name: Name of the section (e.g., 'foerderpotenzial')
+
+    Returns:
+        PlatinSectionConfig if section is critical, None otherwise
+    """
+    return PLATIN_CRITICAL_SECTIONS.get(section_name.lower())
+
+
+def is_platin_critical_section(section_name: str) -> bool:
+    """
+    Check if a section is a PLATIN+ critical section that needs special handling.
+
+    Args:
+        section_name: Name of the section
+
+    Returns:
+        True if section needs PLATIN+ handling
+    """
+    return section_name.lower() in PLATIN_CRITICAL_SECTIONS
+
+
+def get_platin_min_words(section_name: str) -> int:
+    """
+    Get minimum word count for a section.
+
+    Args:
+        section_name: Name of the section
+
+    Returns:
+        Minimum word count, or 0 if not a critical section
+    """
+    config = get_platin_config(section_name)
+    return config["min_words"] if config else 0
 
 
 class RoadmapConstraints(TypedDict):
