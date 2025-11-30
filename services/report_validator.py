@@ -399,6 +399,34 @@ def validate_report(sections: Dict[str, Any], briefing: Dict[str, Any]) -> bool:
 
 
 def filter_size_inappropriate_content(content: str, unternehmensgroesse: str) -> str:
+    """
+    PLATIN+ Post-Filter: Ersetzt size-inappropriate Begriffe im Content.
+
+    Für Solo-Profile werden Begriffe wie "Abteilung" durch "Bereich" ersetzt,
+    sofern sie sich nicht auf Kunden-Strukturen beziehen.
+    """
+    if not content or not isinstance(content, str):
+        return content
+
+    size_raw = unternehmensgroesse.lower() if unternehmensgroesse else ""
+
+    # Solo-spezifische Ersetzungen
+    if "solo" in size_raw or "1" in size_raw or "freiberuf" in size_raw:
+        # Ersetze "Abteilung" durch "Bereich" (nur wenn nicht im Kunden-Kontext)
+        # Vorsicht: Nicht ersetzen bei "Kundenabteilung", "auf Kundenseite"
+        import re
+
+        # Patterns für solo-unpassende Begriffe (nur wenn nicht Kunden-bezogen)
+        replacements = [
+            # "Abteilung" → "Aufgabenbereich" (wenn nicht Kunden-bezogen)
+            (r'(?<![Kk]unden)([Aa])bteilung(?!en\s+(?:auf|bei|der|des)\s+[Kk]unden)', r'\1ufgabenbereich'),
+            # "Abteilungen" → "Aufgabenbereiche" (wenn nicht Kunden-bezogen)
+            (r'(?<![Kk]unden)([Aa])bteilungen(?!\s+(?:auf|bei|der|des)\s+[Kk]unden)', r'\1ufgabenbereiche'),
+        ]
+
+        for pattern, replacement in replacements:
+            content = re.sub(pattern, replacement, content)
+
     return content
 
 

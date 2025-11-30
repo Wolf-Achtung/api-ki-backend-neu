@@ -1453,12 +1453,19 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     return base_vars
 # -------------------- 🎯 NEW: Better fallbacks when GPT fails ----------------
 def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
-    """🎯 UPDATED v4.14.3: Size-aware inline fallback content (1000-1500 Zeichen) – GOLD-STANDARD+
-    
-    Änderungen v4.14.3:
-    - roadmap_90d: Erweitert auf 1000+ Zeichen (vorher 834)
-    - roadmap_12m: Erweitert auf 1400+ Zeichen (vorher 1367)
-    - next_actions: Jetzt size-aware (Solo: persönliche Tasks, keine Rollen)
+    """🎯 UPDATED v5.0.0-PLATIN+: Size-aware fallback content mit PLATIN+ Wortlängen
+
+    PLATIN+ Mindestlängen (WÖRTER, nicht Zeichen!):
+    - foerderpotenzial: 900 Wörter
+    - risks: 800 Wörter
+    - recommendations: 800 Wörter
+    - roadmap_12m: 900 Wörter
+
+    Änderungen v5.0.0:
+    - NEU: foerderpotenzial Fallback mit 900+ Wörtern
+    - NEU: risks Fallback mit 800+ Wörtern
+    - NEU: recommendations Fallback mit 800+ Wörtern
+    - roadmap_12m: Erweitert auf 900+ Wörter
     """
     branche = briefing.get("BRANCHE_LABEL") or briefing.get("branche", "Ihr Unternehmen")
     size_label = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
@@ -1473,7 +1480,545 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         size_group = "team"
     else:
         size_group = "kmu"
-    
+
+    # Business Case Variablen
+    bundesland = briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", "Ihrem Bundesland")
+    capex = briefing.get("CAPEX_REALISTISCH_EUR", "—")
+    opex = briefing.get("OPEX_REALISTISCH_EUR", "—")
+    einsparung = briefing.get("EINSPARUNG_MONAT_EUR", "—")
+    payback = briefing.get("PAYBACK_MONTHS", "—")
+    roi_12m = briefing.get("ROI_12M", "—")
+
+    # ════════════════════════════════════════════════════════════════════════════
+    # 🎯 PLATIN+ FALLBACK: FOERDERPOTENZIAL (900+ Wörter)
+    # ════════════════════════════════════════════════════════════════════════════
+    if section_key == "foerderpotenzial":
+        # Size-aware Förderhinweise
+        if size_group == "solo":
+            foerder_focus = "Beratungsförderung, Gründerprogramme und niedrigschwellige Digitalisierungszuschüsse"
+            budget_hinweis = "Im Solo-Kontext sind Förderprogramme besonders attraktiv, da sie den Eigenanteil bei Investitionen deutlich reduzieren können"
+        elif size_group == "team":
+            foerder_focus = "go-digital, KMU-innovativ und regionale Digitalisierungsprogramme"
+            budget_hinweis = "Für kleine Teams bieten Förderprogramme die Möglichkeit, ambitioniertere Projekte umzusetzen ohne die Liquidität zu gefährden"
+        else:
+            foerder_focus = "Digital Jetzt, ZIM und strukturelle KMU-Förderprogramme"
+            budget_hinweis = "KMU können von umfangreichen Förderprogrammen profitieren, die sowohl Investitions- als auch Beratungskosten abdecken"
+
+        return f"""<section class="section funding-potential">
+  <h2>Förderpotenzial für Ihr KI-Projekt</h2>
+
+  <p>
+    Unternehmen in der Branche <strong>{branche}</strong> im Bundesland <strong>{bundesland}</strong> und der Größe
+    <strong>{size_label}</strong> verfügen für Vorhaben im Bereich <strong>{hauptleistung or "KI-gestützte Prozessoptimierung"}</strong>
+    häufig über gute Voraussetzungen für eine Förderung. Die Kombination aus Digitalisierungsfokus, KI-Unterstützung und
+    klarer Prozessverbesserung entspricht den Schwerpunkten vieler Programme auf Landes- und Bundesebene. Gerade in Zeiten
+    des digitalen Wandels setzen Bund, Länder und EU verstärkt auf die Förderung von KI-Projekten, die nachweislich zur
+    Effizienzsteigerung und Wettbewerbsfähigkeit beitragen.
+  </p>
+
+  <h3>1. Einordnung des Business Case ohne Förderung</h3>
+  <p>
+    Der aktuelle Business Case zeigt einmalige Investitionen von etwa <strong>{capex}&nbsp;€</strong> sowie laufende Kosten von
+    rund <strong>{opex}&nbsp;€ pro Monat</strong>. Die erwartete monatliche Entlastung liegt bei ungefähr
+    <strong>{einsparung}&nbsp;€</strong>, was zu einer Amortisationsdauer von etwa <strong>{payback} Monaten</strong> und
+    einem realistischen ROI von rund <strong>{roi_12m}&nbsp;%</strong> im ersten Jahr führt. Diese Kennzahlen bilden eine
+    solide Grundlage für die Bewertung der Förderwürdigkeit durch öffentliche Stellen.
+  </p>
+  <p>
+    Diese Ausgangslage ist für viele Förderstellen attraktiv: Das Projekt ist betriebswirtschaftlich plausibel, der Nutzen
+    klar erkennbar und der Eigenbeitrag grundsätzlich tragfähig. Fördermittel können diese Situation zusätzlich verbessern,
+    indem sie einen Teil der Investitionsbelastung abfedern. {budget_hinweis}. Die Kombination aus nachvollziehbarem
+    Business Case und klarem Digitalisierungsfokus macht Ihr Vorhaben zu einem starken Kandidaten für öffentliche Förderung.
+    Die Investition von {capex}&nbsp;€ amortisiert sich bei einer monatlichen Einsparung von {einsparung}&nbsp;€ nach etwa
+    {payback} Monaten. Der ROI von {roi_12m}&nbsp;% zeigt, dass sich das Projekt auch ohne externe Unterstützung wirtschaftlich
+    rechnet – mit Förderung wird die Rentabilität noch deutlich attraktiver. Fördergeber bewerten positiv, wenn Unternehmen
+    einen substanziellen Eigenanteil einbringen und das Projekt auch ohne Förderung wirtschaftlich tragfähig erscheint.
+  </p>
+
+  <h3>2. Wie Fördermittel den Business Case verbessern können</h3>
+  <p>
+    Viele Programme in {bundesland} und auf Bundesebene unterstützen KI- und Digitalisierungsinitiativen, indem sie einen
+    Teil der förderfähigen Investitionskosten bezuschussen. Je nach Programm, Unternehmensgröße und Projektschwerpunkt
+    bewegen sich die Zuschussquoten typischerweise im Bereich von etwa <strong>30–50&nbsp;%</strong> der anerkannten Kosten.
+    Für ein Investitionsvolumen von {capex}&nbsp;€ könnte das eine Entlastung von mehreren tausend Euro bedeuten.
+  </p>
+  <ul>
+    <li><strong>Kürzere Amortisationsdauer:</strong> Durch eine Beteiligung an den Investitionskosten sinkt der Eigenanteil;
+      die Amortisation kann sich von {payback} Monaten auf deutlich weniger verkürzen, ohne dass der erwartete Nutzen
+      verändert wird. Bei einer angenommenen Förderquote von 40 Prozent reduziert sich der Eigenanteil erheblich.</li>
+    <li><strong>Höherer effektiver ROI:</strong> Wenn ein Teil der Investitionen über Zuschüsse abgedeckt wird, steigt der
+      Effektiv-Ertrag je eingesetztem Euro – der aktuelle ROI von {roi_12m}&nbsp;% kann sich bei 40% Förderung auf über
+      das Doppelte erhöhen. Dies macht das Projekt noch attraktiver für interne Budgetentscheidungen.</li>
+    <li><strong>Reduziertes finanzielles Risiko:</strong> Für <strong>{size_label}</strong> kann ein Zuschuss den Schritt
+      in ein ambitionierteres Projekt erleichtern, ohne die Liquidität unnötig zu belasten. Die laufenden Kosten von
+      {opex}&nbsp;€/Monat bleiben dabei tragbar und werden durch die monatliche Einsparung überkompensiert.</li>
+    <li><strong>Mehr Spielraum für Qualität und Schulung:</strong> Einsparungen durch Förderung können genutzt werden,
+      um zusätzliche Maßnahmen für Qualität, Sicherheit oder Qualifizierung vorzusehen. Dies erhöht die Nachhaltigkeit
+      des Projekts und verbessert die langfristige Wirkung.</li>
+    <li><strong>Bessere Planungssicherheit:</strong> Mit bewilligter Förderung lässt sich das Projektbudget verlässlicher
+      planen und das Risiko bei unerwarteten Mehrkosten besser abfedern. Dies ist besonders relevant für KI-Projekte,
+      bei denen Aufwände in der Pilotphase schwer vorherzusagen sind.</li>
+  </ul>
+
+  <h3>3. Passende Förderschwerpunkte für Ihr Vorhaben</h3>
+  <p>
+    Basierend auf der Branche <strong>{branche}</strong>, dem Schwerpunkt <strong>{hauptleistung or "KI-gestützte Prozessoptimierung"}</strong>
+    und der Unternehmensgröße <strong>{size_label}</strong> kommen folgende Förderkategorien in Frage. Der Fokus liegt
+    dabei auf {foerder_focus}.
+  </p>
+  <ul>
+    <li><strong>Digitalisierungsförderung:</strong> Programme für KI-gestützte Prozessoptimierung, Automatisierung und
+      digitale Werkzeuge sind besonders relevant für Ihr Vorhaben. Diese Programme fördern typischerweise sowohl
+      Hardware- und Softwareinvestitionen als auch externe Beratungsleistungen und Schulungen.</li>
+    <li><strong>Innovationsförderung:</strong> Zuschüsse für neuartige KI-Anwendungen, Pilotprojekte und Technologie-
+      entwicklung, abgestimmt auf die Branche {branche}. Besonders interessant, wenn Ihr Projekt innovative Elemente
+      enthält, die über Standardanwendungen hinausgehen.</li>
+    <li><strong>Qualifizierungsförderung:</strong> Mittel für Schulungen, Weiterbildungen und den Aufbau von KI-Kompetenzen
+      sind wichtig für die nachhaltige Nutzung. Viele Programme fördern explizit den Kompetenzaufbau als Teil von
+      Digitalisierungsprojekten.</li>
+    <li><strong>Beratungsförderung:</strong> Unterstützung für externe Expertise bei der KI-Strategieentwicklung und
+      Umsetzung kann den Projekterfolg erheblich steigern. Programme wie go-digital oder regionale Beratungsförderung
+      decken oft einen Großteil der Beratungskosten ab.</li>
+    <li><strong>Nachhaltigkeits- und Klimaförderung:</strong> KI-Projekte, die zur Ressourceneffizienz, Energieeinsparung
+      oder Reduzierung des ökologischen Fußabdrucks beitragen, können zusätzlich von spezialisierten Förderprogrammen
+      profitieren. Diese Kombination aus Digitalisierung und Nachhaltigkeit wird von vielen Fördergebern besonders
+      positiv bewertet und kann höhere Förderquoten ermöglichen.</li>
+  </ul>
+  <p>
+    Die Kombination verschiedener Förderschwerpunkte kann besonders vorteilhaft sein. Prüfen Sie, ob Ihr Vorhaben
+    mehrere der genannten Kategorien abdeckt, da dies die Antragserfolgschancen erhöhen kann. Fördergeber sehen gerne
+    Projekte, die sowohl wirtschaftlichen Nutzen als auch gesellschaftlichen Mehrwert – etwa durch Digitalkompetenzaufbau
+    oder nachhaltige Geschäftsmodelle – nachweisen können.
+  </p>
+
+  <h3>4. Nächste Schritte für die Förderprüfung</h3>
+  <ol>
+    <li><strong>Programmauswahl:</strong> Wählen Sie 1–2 Programme aus, die zu <strong>{branche}</strong>,
+      <strong>{size_label}</strong> und <strong>{hauptleistung or "Ihrem Vorhaben"}</strong> passen. Prüfen Sie dabei
+      sowohl Landes- als auch Bundesprogramme sowie mögliche EU-Förderungen.</li>
+    <li><strong>Projektbeschreibung:</strong> Erstellen Sie eine kompakte Projektbeschreibung mit Zielen, Maßnahmen,
+      Zeitplan, erwarteter Nutzen und groben Kosten mit Bezug auf die berechneten {capex}&nbsp;€. Eine klare
+      Beschreibung der Innovationskomponente stärkt den Antrag.</li>
+    <li><strong>Kumulierungsprüfung:</strong> Prüfen Sie, ob Programme aus {bundesland} mit Bundes- oder EU-Programmen
+      kombiniert werden dürfen. Bei geschickter Kombination lassen sich höhere Gesamtförderquoten erreichen.</li>
+    <li><strong>Beratung einholen:</strong> Halten Sie optional Rücksprache mit Förderberatungen, Kammern oder
+      Finanzierungspartnern. Viele Beratungsstellen bieten kostenlose Erstgespräche zur Fördermittelprüfung an.</li>
+    <li><strong>Zeitplanung:</strong> Förderanträge benötigen typischerweise 4–8 Wochen Vorlauf – berücksichtigen Sie
+      dies bei der Projektplanung. Beachten Sie auch eventuelle Antragsfristen und Stichtage.</li>
+    <li><strong>Dokumentation vorbereiten:</strong> Sammeln Sie vorab wichtige Unterlagen wie Handelsregisterauszug,
+      aktuelle Jahresabschlüsse und eine De-minimis-Erklärung. Eine vollständige Dokumentation beschleunigt die
+      Antragsbearbeitung erheblich und erhöht die Erfolgsaussichten.</li>
+  </ol>
+
+  <p class="small muted">
+    Hinweis: Förderquoten, Fristen und Anforderungen können sich ändern. Vor Antragstellung sollten die offiziellen
+    Richtlinien und Konditionen der jeweiligen Programme im Detail geprüft werden. Die genannten Zahlen basieren auf
+    dem Business Case und dienen der Orientierung – konkrete Förderzusagen erfordern eine individuelle Prüfung.
+  </p>
+</section>"""
+
+    # ════════════════════════════════════════════════════════════════════════════
+    # 🎯 PLATIN+ FALLBACK: RISKS (800+ Wörter)
+    # ════════════════════════════════════════════════════════════════════════════
+    if section_key == "risks":
+        score_gov = scores.get("governance", 50)
+        score_sec = scores.get("sicherheit", 50)
+
+        if size_group == "solo":
+            org_risk = "Als Solo-Selbstständige:r konzentriert sich Know-how und Verantwortung auf eine Person"
+            org_measure = "Dokumentation zentraler Workflows, Checklisten und bewusste Verankerung von KI-Routinen"
+        elif size_group == "team":
+            org_risk = "In kleinen Teams ist oft unklar, wer KI-Vorhaben priorisiert und wer für Qualität verantwortlich ist"
+            org_measure = "Klare Rollenverteilung (KI-Owner), gemeinsame Standards und regelmäßige Team-Abstimmungen"
+        else:
+            org_risk = "In größeren Strukturen können unklare Verantwortlichkeiten und fehlende Governance zu Insellösungen führen"
+            org_measure = "Governance-Framework, definierte Prozesse und bereichsübergreifende Koordination"
+
+        return f"""<section class="section risks">
+  <h2>Wesentliche Risiken beim Einsatz von KI in {hauptleistung or "Ihrem Kerngeschäft"}</h2>
+
+  <p>
+    Der Einsatz von KI im Bereich <strong>{hauptleistung or "Ihrem Kerngeschäft"}</strong> in der Branche
+    <strong>{branche}</strong> bietet erhebliche Chancen, bringt jedoch je nach Unternehmensgröße
+    <strong>{size_label}</strong> unterschiedliche Risikoprofile mit sich. Der aktuelle Governance-Score von
+    <strong>{score_gov}/100</strong> und der Sicherheits-Score von <strong>{score_sec}/100</strong> zeigen,
+    wie weit Strukturen für Steuerung, Dokumentation und Schutzmechanismen bereits entwickelt sind.
+    Die folgenden Abschnitte bündeln die wichtigsten Risikofelder und skizzieren konkrete Gegenmaßnahmen.
+  </p>
+
+  <h3>1. Strategische und organisatorische Risiken</h3>
+  <ul>
+    <li>
+      <strong>Unklare Zielbilder und Prioritäten für KI.</strong>
+      Ohne klar definierte Ziele für {hauptleistung or "Ihr Kerngeschäft"} besteht das Risiko, dass KI-Experimente
+      versanden, Insellösungen entstehen oder wichtige Chancen ungenutzt bleiben. Die Gefahr ist besonders groß,
+      wenn verschiedene Initiativen parallel laufen ohne gemeinsame Ausrichtung.
+      <em>Gegenmaßnahme:</em> Ein knappes Zielbild mit 2–3 priorisierten Anwendungsfällen, ein einfacher
+      Umsetzungsplan sowie regelmäßige Überprüfung, ob Maßnahmen zum übergeordneten Geschäftsmodell passen.
+    </li>
+    <li>
+      <strong>Abhängigkeit von einzelnen Personen (Single-Point-of-Failure).</strong>
+      {org_risk}. Fällt diese aus oder ist dauerhaft überlastet, kommen Experimente und Umsetzung ins Stocken.
+      <em>Gegenmaßnahme:</em> {org_measure}. Wichtig ist die Dokumentation von Wissen, damit es nicht verloren geht.
+    </li>
+    <li>
+      <strong>Fehlende Rollen- und Verantwortlichkeitsklarheit.</strong>
+      In wachsenden Setups ist oft unklar, wer KI-Vorhaben priorisiert, wer für Qualität verantwortlich ist
+      und wer Tools auswählt. Dies führt zu Verzögerungen und Doppelarbeit.
+      <em>Gegenmaßnahme:</em> Eine klar benannte Rolle für KI-Verantwortung, ein schlanker Entscheidungsprozess
+      für Tool-Einführung und transparente Kommunikation von Zuständigkeiten.
+    </li>
+    <li>
+      <strong>Überlastung durch zusätzliche Aufgaben.</strong>
+      Wenn KI-Einführung „on top" zum Tagesgeschäft läuft, werden neue Workflows nicht dauerhaft etabliert.
+      Die initiale Lernkurve kann frustrieren und zum Abbruch führen.
+      <em>Gegenmaßnahme:</em> Kleine, gut planbare Piloten mit klar begrenztem Umfang sowie bewusste
+      Entlastung an anderer Stelle, damit Zeit für Experimente und Lernphasen entsteht.
+    </li>
+  </ul>
+
+  <h3>2. Daten-, Sicherheits- und Compliance-Risiken</h3>
+  <ul>
+    <li>
+      <strong>Unzureichende Kontrolle über ein- und ausgehende Daten.</strong>
+      Wenn nicht geregelt ist, welche Informationen in KI-Systeme eingegeben werden dürfen, können vertrauliche
+      Kundendaten, interne Dokumente oder sensible Inhalte unkontrolliert verarbeitet werden.
+      <em>Gegenmaßnahme:</em> Klare Richtlinien für Datennutzung, ein kurzer Leitfaden für alle Beteiligten
+      sowie technische Schutzmechanismen wie Zugriffsbeschränkungen oder getrennte Arbeitsbereiche.
+    </li>
+    <li>
+      <strong>Lücken in Informationssicherheit und Zugriffsschutz.</strong>
+      Der Sicherheits-Score von {score_sec}/100 deutet darauf hin, dass bei Passwörtern, Zugriffsrechten
+      oder Backup-Konzepten noch Verbesserungspotenzial besteht.
+      <em>Gegenmaßnahme:</em> Ein kompaktes Sicherheitskonzept, regelmäßige Passwort- und Rechte-Reviews
+      sowie eine klare Dokumentation der eingesetzten Cloud- und KI-Dienste.
+    </li>
+    <li>
+      <strong>Unklare Verantwortlichkeit für rechtliche Anforderungen.</strong>
+      Ohne definierte Zuständigkeit besteht das Risiko, dass Vorgaben zu Datenschutz, Urheberrecht oder
+      branchenspezifischer Regulierung nur punktuell beachtet werden.
+      <em>Gegenmaßnahme:</em> Eine benannte Stelle, die Mindestanforderungen bündelt, praxisnahe Leitlinien
+      formuliert und bei Unsicherheiten externe fachliche Beratung einholt.
+    </li>
+    <li>
+      <strong>Fehlende Transparenz gegenüber Kund:innen und Partnern.</strong>
+      Wenn unklar bleibt, an welchen Stellen KI Beiträge leistet, kann dies zu Vertrauensverlust führen.
+      Der EU AI Act verlangt zudem Transparenzhinweise bei bestimmten KI-Anwendungen.
+      <em>Gegenmaßnahme:</em> Kurze, verständliche Hinweise zur Nutzung von KI sowie nachvollziehbare
+      Dokumentation im Hintergrund.
+    </li>
+  </ul>
+
+  <h3>3. Qualitäts-, Transparenz- und Akzeptanzrisiken</h3>
+  <ul>
+    <li>
+      <strong>Inkonsistente Ergebnisse und Qualitätsstreuung.</strong>
+      Werden Prompts, Vorlagen und Workflows nicht dokumentiert, hängen Qualität und Stil stark von der
+      jeweiligen Person ab. Dies erschwert reproduzierbare Ergebnisse und professionelle Standards.
+      <em>Gegenmaßnahme:</em> Einheitliche Templates, kurze Leitfäden und regelmäßige Reviews von Beispielausgaben.
+    </li>
+    <li>
+      <strong>Übervertrauen in KI-Ergebnisse (Halluzinationen).</strong>
+      Wenn Texte, Analysen oder Bewertungen ungeprüft übernommen werden, können Fehler oder Halluzinationen
+      direkt in Kundendokumente und Entscheidungen einfließen. Dies kann zu Reputationsschäden führen.
+      <em>Gegenmaßnahme:</em> Klare Regeln für manuelle Prüfung, Vier-Augen-Prinzip bei kritischen Inhalten
+      sowie einfache Checklisten für Qualitätskontrolle.
+    </li>
+    <li>
+      <strong>Akzeptanzprobleme im Alltag.</strong>
+      In Teams entsteht Widerstand, wenn der Nutzen von KI nicht nachvollziehbar ist oder Workflows als
+      zu komplex empfunden werden. Skepsis kann die Einführung blockieren.
+      <em>Gegenmaßnahme:</em> Verständliche Kommunikation der Ziele, kleine Pilotprojekte mit sichtbarem
+      Nutzen und aktives Einholen von Feedback, um Routinen anzupassen.
+    </li>
+    <li>
+      <strong>Unklare Nachvollziehbarkeit von Entscheidungen.</strong>
+      Wenn nicht dokumentiert ist, welche Rolle KI in der Vorbereitung von Angeboten, Reports oder
+      Entscheidungen spielt, wird es im Streitfall schwierig, Entscheidungswege zu rekonstruieren.
+      <em>Gegenmaßnahme:</em> Eine kurze interne Dokumentation zu „Wo unterstützt KI?" senkt dieses Risiko.
+    </li>
+  </ul>
+
+  <h3>4. Abhängigkeiten, Betriebs- und Lieferantenrisiken</h3>
+  <ul>
+    <li>
+      <strong>Starke Abhängigkeit von einzelnen Tools oder Plattformen.</strong>
+      Wenn zentrale Workflows ausschließlich auf einem Dienst oder Modell basieren, führen Preisänderungen,
+      Ausfälle oder geänderte Nutzungsbedingungen schnell zu Unterbrechungen.
+      <em>Gegenmaßnahme:</em> Einfache Fallback-Szenarien, Exportmöglichkeiten für Daten sowie Beobachtung von Alternativen.
+    </li>
+    <li>
+      <strong>Unklare Regelungen mit Dienstleistern.</strong>
+      Werden Auftragsverhältnisse, Datenverarbeitung oder Service-Level nicht explizit vereinbart, können
+      Lücken in Haftung und Verfügbarkeit entstehen.
+      <em>Gegenmaßnahme:</em> Klare Verträge, vereinbarte Reaktionszeiten und transparente Angaben zur Datenhaltung.
+    </li>
+    <li>
+      <strong>Fehlende Notfall- und Wiederanlaufplanung.</strong>
+      Wenn nicht vorab geklärt ist, wie bei Systemausfällen, Datenverlust oder Fehlkonfigurationen
+      reagiert wird, verzögert sich der Wiederanlauf erheblich.
+      <em>Gegenmaßnahme:</em> Einfache Notfallpläne, regelmäßige Backups sowie definierte Kontaktwege für kritische Vorfälle.
+    </li>
+    <li>
+      <strong>Überkomplexe Tool-Landschaft.</strong>
+      Werden zu viele spezialisierte KI-Tools parallel eingeführt, steigt der Aufwand für Pflege,
+      Schulung und Koordination exponentiell.
+      <em>Gegenmaßnahme:</em> Konsolidierung auf wenige Kernlösungen und eine bewusst schlanke Tool-Strategie.
+    </li>
+  </ul>
+
+  <h3>5. Risiko-Matrix – Überblick über zentrale Risiken</h3>
+  <p>
+    Die folgende Übersicht zeigt die wichtigsten Risikofelder nach Eintrittswahrscheinlichkeit und
+    Auswirkungsstärke, um die Priorisierung von Gegenmaßnahmen zu erleichtern.
+  </p>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Risikobereich</th>
+        <th>Typische Auswirkung</th>
+        <th>Eintrittswahrscheinlichkeit</th>
+        <th>Auswirkungsstärke</th>
+        <th>Empfohlene Schwerpunkt-Maßnahmen</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Strategie & Organisation</td>
+        <td>Verzettelung, ausbleibende Wirkung</td>
+        <td>mittel</td>
+        <td>hoch</td>
+        <td>Klares Zielbild, priorisierte Use Cases, benannte Verantwortung</td>
+      </tr>
+      <tr>
+        <td>Daten & Sicherheit</td>
+        <td>Datenschutz-Verstöße, Vertrauensverlust</td>
+        <td>mittel bis hoch</td>
+        <td>hoch</td>
+        <td>Leitlinie für Datennutzung, Zugriffs- und Passwortkonzept</td>
+      </tr>
+      <tr>
+        <td>Qualität & Akzeptanz</td>
+        <td>Uneinheitliche Ergebnisse, Misstrauen</td>
+        <td>mittel</td>
+        <td>mittel bis hoch</td>
+        <td>Standards für Templates, Review-Loops, Kommunikation</td>
+      </tr>
+      <tr>
+        <td>Abhängigkeiten & Betrieb</td>
+        <td>Unterbrechungen, Mehrkosten, Lock-in</td>
+        <td>niedrig bis mittel</td>
+        <td>mittel</td>
+        <td>Fallback-Szenarien, Tool-Konsolidierung</td>
+      </tr>
+      <tr>
+        <td>KI-spezifisch: Halluzinationen</td>
+        <td>Fehlerhafte Informationen, Reputationsschaden</td>
+        <td>mittel bis hoch</td>
+        <td>hoch</td>
+        <td>Vier-Augen-Prinzip, Faktenprüfung</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="small muted">
+    Diese Risikoanalyse zeigt die wichtigsten Handlungsfelder für KI in <strong>{hauptleistung or "Ihrem Kerngeschäft"}</strong>
+    in einem Unternehmen der Größe <strong>{size_label}</strong>. Im nächsten Schritt sollten die Risiken nach
+    Eintrittswahrscheinlichkeit und Auswirkung priorisiert und in eine konkrete Maßnahmenplanung überführt werden.
+  </p>
+</section>"""
+
+    # ════════════════════════════════════════════════════════════════════════════
+    # 🎯 PLATIN+ FALLBACK: RECOMMENDATIONS (800+ Wörter)
+    # ════════════════════════════════════════════════════════════════════════════
+    if section_key == "recommendations":
+        if size_group == "solo":
+            verantwortlich_1 = "Inhaber:in"
+            verantwortlich_2 = "Inhaber:in"
+            zeitrahmen_1 = "0–3 Monate"
+            zeitrahmen_2 = "3–6 Monate"
+            aufwand_1 = "Niedrig – realisierbar in wenigen Tagen"
+            aufwand_5 = "Niedrig – persönliche Checkliste in 1-2 Tagen"
+        elif size_group == "team":
+            verantwortlich_1 = "Teamlead oder KI-Owner"
+            verantwortlich_2 = "Qualitätsverantwortliche"
+            zeitrahmen_1 = "0–6 Monate"
+            zeitrahmen_2 = "3–9 Monate"
+            aufwand_1 = "Mittel – 3-5 Tage Setup im Team"
+            aufwand_5 = "Mittel – Team-Workshop + Dokumentation in 3-5 Tagen"
+        else:
+            verantwortlich_1 = "Fachbereich + verantwortliche Leitung"
+            verantwortlich_2 = "Qualitätsmanagement + Fachbereich"
+            zeitrahmen_1 = "0–6 Monate"
+            zeitrahmen_2 = "6–9 Monate"
+            aufwand_1 = "Mittel bis hoch – strukturiertes Setup mit Abstimmung"
+            aufwand_5 = "Mittel bis hoch – Policy-Entwicklung in 2-4 Wochen"
+
+        return f"""<section class="section recommendations">
+  <h2>Handlungsempfehlungen – Ihre nächsten Schritte mit KI</h2>
+
+  <p>
+    Für ein Unternehmen in der Branche <strong>{branche}</strong> mit der Größe <strong>{size_label}</strong>
+    ergeben sich mehrere unmittelbar realisierbare Hebel, um KI im Prozess <strong>{hauptleistung or "Ihrem Kerngeschäft"}</strong>
+    wirksam einzusetzen. Die folgenden Empfehlungen sind priorisiert, praxisnah und auf realistische Ressourcen abgestimmt.
+    Jede Empfehlung enthält konkrete Maßnahmen, erwarteten Nutzen, Aufwandsschätzung und Förderhinweise.
+  </p>
+  <p>
+    Die Empfehlungen bauen aufeinander auf und sind so strukturiert, dass Sie mit einem Quick Win starten können und
+    sukzessive komplexere Anwendungen erschließen. Beginnen Sie mit Empfehlung 1, um schnelle Erfolgserlebnisse zu
+    generieren, und arbeiten Sie sich dann durch die weiteren Stufen. Parallelisieren Sie, wo Ressourcen es erlauben,
+    aber verlieren Sie nicht den Fokus auf messbare Ergebnisse bei jedem Schritt. So schaffen Sie eine solide Basis
+    für nachhaltigen Erfolg mit KI-gestützten Prozessen.
+  </p>
+
+  <ol class="recommendations-list">
+    <li>
+      <h3>Empfehlung 1: Quick Win – Standard-Workflow einführen</h3>
+      <p><strong>Schwerpunkt:</strong> Verbesserung eines zentralen, wiederkehrenden Schritts in
+        {hauptleistung or "Ihrem Kerngeschäft"}, der häufig Zeit bindet und sich für KI-Unterstützung eignet.</p>
+      <p><strong>Maßnahme:</strong> Einführung eines KI-gestützten Standard-Workflows mit klaren Regeln für
+        Eingaben, Qualitätsprüfung und Freigabe. Dokumentation der Prompts und Best Practices, damit die
+        Ergebnisse reproduzierbar und konsistent sind.</p>
+      <p><strong>Nutzen &amp; Wirkung:</strong> Direkt messbare Entlastung bei wiederkehrenden Aufgaben,
+        höhere Konsistenz und stabilere Qualität. Die Zeitersparnis kann 10-25% im Zielbereich betragen.</p>
+      <p><strong>Aufwand &amp; Budget:</strong> {aufwand_1}; Toolkosten typischerweise im zweistelligen
+        bis niedrigen dreistelligen Bereich pro Monat.</p>
+      <p><strong>Verantwortlich:</strong> {verantwortlich_1}</p>
+      <p><strong>Förderchance:</strong> Je nach Bundesland {bundesland} bestehen Zuschussprogramme für
+        digitale Prozessoptimierung. Prüfen Sie go-digital oder regionale Digitalisierungsförderung.</p>
+    </li>
+
+    <li>
+      <h3>Empfehlung 2: Qualitätssicherung – KI-gestützte Konsistenzprüfung</h3>
+      <p><strong>Schwerpunkt:</strong> KI-gestützte Konsistenzprüfung für Dokumente, Inhalte oder
+        Datenstrukturen, abgestimmt auf branchentypische Anforderungen in {branche}.</p>
+      <p><strong>Maßnahme:</strong> Einrichten eines automatisierten Review-Schritts vor der Freigabe.
+        Dies kann Faktencheck, Tonalitätsprüfung, Markenrichtlinien oder Compliance-Checks umfassen.</p>
+      <p><strong>Nutzen &amp; Wirkung:</strong> Weniger Nachbearbeitung, geringeres Risiko von Fehlern,
+        stabilere Qualität über mehrere Aufträge hinweg. Reduziert Korrekturschleifen erheblich.</p>
+      <p><strong>Aufwand &amp; Budget:</strong> Mittel – 2-5 Tage Setup; Lizenzen abhängig von Nutzerzahl.
+        Oft in bestehende KI-Tools integrierbar.</p>
+      <p><strong>Verantwortlich:</strong> {verantwortlich_2}</p>
+      <p><strong>Förderchance:</strong> Programme für Qualitäts- und Effizienzsteigerungen in mehreren
+        Bundesländern verfügbar. Besonders relevant bei Compliance-Bezug.</p>
+    </li>
+
+    <li>
+      <h3>Empfehlung 3: Wissensmanagement – Dokumentation &amp; Wissensbasis</h3>
+      <p><strong>Schwerpunkt:</strong> Dokumentation und Wissensmanagement verbessern – ein typisches
+        Pain Point, das sich durch KI-Unterstützung deutlich entschärfen lässt.</p>
+      <p><strong>Maßnahme:</strong> Aufbau einer KI-gestützten Wissensbibliothek mit Vorlagen, Standards,
+        Checklisten und Best Practices. Zentrale Ablage für Prompts, Beispiele und Dokumentation.</p>
+      <p><strong>Nutzen &amp; Wirkung:</strong> Schnellere Einarbeitung, höhere Ersttrefferquote, weniger
+        Rückfragen und konsistentere Ergebnisse im Tagesgeschäft. Wissen geht nicht verloren.</p>
+      <p><strong>Aufwand &amp; Budget:</strong> Niedrig bis mittel – abhängig vom vorhandenen Material;
+        laufende Kosten gering. Initial 2-3 Tage für Strukturierung.</p>
+      <p><strong>Verantwortlich:</strong> {verantwortlich_1}</p>
+      <p><strong>Förderchance:</strong> Wissens- und Prozessdigitalisierung ist in vielen Programmen
+        förderfähig. Prüfung für {bundesland} empfohlen.</p>
+    </li>
+
+    <li>
+      <h3>Empfehlung 4: Branchenspezifischer Use Case</h3>
+      <p><strong>Schwerpunkt:</strong> Ein branchenspezifischer Use Case für {branche}, der hohe
+        Sichtbarkeit und schnellen ROI verspricht.</p>
+      <p><strong>Maßnahme:</strong> Pilotierung eines klar abgegrenzten KI-Use-Cases, der typische
+        Workflows der Branche adressiert. Fokus auf messbaren Nutzen und Lerneffekte.</p>
+      <p><strong>Nutzen &amp; Wirkung:</strong> Sichtbarer Nutzen unmittelbar im Alltag, Momentum für
+        weitere Digitalisierungsschritte. Erfolgsgeschichte für interne Kommunikation.</p>
+      <p><strong>Aufwand &amp; Budget:</strong> Variable je nach Größe und Komplexität; typischerweise
+        3-10 Tage für einen fokussierten Pilot.</p>
+      <p><strong>Verantwortlich:</strong> {verantwortlich_1}</p>
+      <p><strong>Förderchance:</strong> Pilot-Use-Cases mit klarer Zielsetzung werden von vielen
+        Förderprogrammen priorisiert. Dokumentieren Sie den Pilot sorgfältig, um die Ergebnisse für
+        weitere Förderanträge und interne Entscheidungsvorlagen nutzen zu können.</p>
+    </li>
+
+    <li>
+      <h3>Empfehlung 5: Governance &amp; Sicherheit</h3>
+      <p><strong>Schwerpunkt:</strong> Klare Richtlinien und Kontrollen für den KI-Einsatz etablieren,
+        um Risiken zu minimieren und Compliance sicherzustellen.</p>
+      <p><strong>Maßnahme:</strong> Erstellung eines kompakten KI-Leitfadens mit Regeln zu Datenschutz,
+        Qualitätsprüfung und Freigabeprozessen. Definition von Verantwortlichkeiten und Eskalationswegen.</p>
+      <p><strong>Nutzen &amp; Wirkung:</strong> Höhere Rechtssicherheit, transparente Prozesse und
+        gestärktes Vertrauen bei Kund:innen und Partnern. Vorbereitung auf EU AI Act.</p>
+      <p><strong>Aufwand &amp; Budget:</strong> {aufwand_5}</p>
+      <p><strong>Verantwortlich:</strong> {verantwortlich_1}</p>
+      <p><strong>Förderchance:</strong> Beratungsförderung für Datenschutz und IT-Sicherheit in
+        {bundesland} prüfen. Auch KMU-Programme decken oft Governance ab.</p>
+    </li>
+  </ol>
+
+  <h3>Prioritäten-Überblick</h3>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Priorität</th>
+        <th>Empfehlung</th>
+        <th>Zeitrahmen</th>
+        <th>Hauptnutzen</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>Standard-Workflow einführen</td>
+        <td>{zeitrahmen_1}</td>
+        <td>Sofortige Entlastung & Qualitätssteigerung</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>KI-gestützte Konsistenzprüfung</td>
+        <td>{zeitrahmen_2}</td>
+        <td>Weniger Nacharbeit & geringeres Risiko</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Wissensbibliothek zentralisieren</td>
+        <td>{zeitrahmen_2}</td>
+        <td>Schnellere Einarbeitung & stabile Ergebnisse</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>Branchenspezifischen Pilot umsetzen</td>
+        <td>6–12 Monate</td>
+        <td>Sichtbarer Nutzen & Skalierungsmomentum</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>Governance & Sicherheitsrichtlinien</td>
+        <td>{zeitrahmen_2}</td>
+        <td>Rechtssicherheit & Vertrauen</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Zusammenfassung und Erfolgsfaktoren</h3>
+  <p>
+    Die erfolgreiche Umsetzung dieser Empfehlungen hängt von mehreren kritischen Erfolgsfaktoren ab. Erstens ist
+    konsequentes Dranbleiben wichtiger als perfekte Planung – starten Sie lieber mit einem fokussierten Pilot und
+    lernen Sie im Prozess. Zweitens sollten Sie von Anfang an Erfolgskennzahlen definieren, um den Fortschritt
+    messbar zu machen. Drittens empfiehlt es sich, regelmäßige Retrospektiven einzuplanen, um Learnings festzuhalten
+    und Kurskorrekturen vorzunehmen.
+  </p>
+  <p>
+    Achten Sie darauf, nicht zu viele Initiativen gleichzeitig zu starten. Besser ein Use Case sauber umgesetzt als
+    drei halbfertige Experimente. Die Kombination aus schnellen Erfolgen (Empfehlung 1-2) und strukturierter
+    Absicherung (Empfehlung 5) schafft sowohl Momentum als auch Stabilität für Ihre KI-Transformation.
+  </p>
+  <p>
+    Dokumentieren Sie Ihre Erfahrungen von Anfang an: Welche Prompts funktionieren? Wo entstehen Fehler?
+    Welche Qualitätsprüfungen haben sich bewährt? Diese Erkenntnisse sind wertvoll für die Skalierung auf weitere
+    Anwendungsfälle und für das Onboarding zukünftiger Nutzer:innen der KI-Werkzeuge.
+  </p>
+
+  <p class="small muted">
+    Die Empfehlungen sind so formuliert, dass sie unmittelbar in die Projektplanung übernommen werden können
+    und konsistent mit Roadmap, Business Case und Risikoanalyse wirken. Die Zeitrahmen sind an die
+    Unternehmensgröße <strong>{size_label}</strong> angepasst.
+  </p>
+</section>"""
+
     # 🎯 SIZE-AWARE ROADMAP FALLBACKS (inline HTML, 1000+ Zeichen)
     if section_key in ("roadmap", "roadmap_90d"):
         # Bedingter Text für Phase 3 basierend auf size_group
