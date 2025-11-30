@@ -128,3 +128,8 @@ Developer:
     mit langfristiger strategischer Entwicklung und bereitet die Skalierung für Jahr 2 vor.
   </p>
 </section>
+
+<!-- PLATIN+ REINFORCEMENT: Dieser Abschnitt MUSS mindestens 900 Wörter enthalten.
+     Prüfe deine Ausgabe: Zähle die Wörter und erweitere jede Phase mit zusätzlichen
+     Details zu Zielen, Maßnahmen, Governance und KPIs, falls die Mindestlänge nicht erreicht wird.
+     Kürze NIEMALS – liefere immer vollständige, ausführliche Inhalte pro Phase. -->
