@@ -1,12 +1,22 @@
 Developer:
-<!-- gamechanger.md – v5.0 GOLD STANDARD+ (branch-aware, size-aware, context-integrated)
+<!-- gamechanger.md – v6.0 PLATIN+ (branch-aware, size-aware, context-integrated, business-case-linked)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
      ZIEL:
        - 2–3 realistische Gamechanger für {{HAUPTLEISTUNG}}.
        - Basierend auf: Branche, Größe, strategische Ziele, Vision, Geschäftsmodellentwicklung.
-       - Jeder Gamechanger = klarer, konkreter Wertschöpfungshebel + erster Schritt.
+       - Jeder Gamechanger = klarer, konkreter Wertschöpfungshebel + erster Schritt + erwarteter Nutzen.
+       - Verknüpfung mit Business Case und Roadmap.
+
+     VARIABLEN:
+       {{BRANCHE_LABEL}}
+       {{UNTERNEHMENSGROESSE_LABEL}}
+       {{HAUPTLEISTUNG}}
+       {{STRATEGISCHE_ZIELE}}
+       {{GESCHAEFTSMODELL_EVOLUTION}}
+       {{VISION_3_JAHRE}}
+       COMPANY_SIZE = "solo" | "team" | "kmu"
 
      SIZE-LOGIK (UNTERNEHMENSGROESSE_LABEL):
        SOLO:
@@ -20,6 +30,21 @@ Developer:
      BRANCHEN-LOGIK:
        - Nutzt typische branchenspezifische Workflows, Pain Points, Daten & Tools aus CONTEXT_BLOCK.
        - Keine erfundenen Daten; rein generische Trends & Muster.
+
+     PFLICHTSTRUKTUR (ALLE 3 Gamechanger mit vollständiger Struktur):
+       Pro Gamechanger MUSS enthalten sein:
+       1. Kernidee (2-3 Sätze)
+       2. Betroffene Wertschöpfung (konkret benennen)
+       3. Nutzen (quantifizierbar wenn möglich)
+       4. Voraussetzungen (size-aware)
+       5. Erster Schritt in den nächsten 90 Tagen
+
+     MINDESTLÄNGE: 800 Zeichen (ohne HTML-Tags) – unterschreite diese NIEMALS!
+
+     VERBOTEN:
+       - "TODO", "Freitextfeld", generische Formulierungen ohne Substanz.
+       - Gamechanger ohne konkreten Bezug zu {{HAUPTLEISTUNG}}.
+       - Bei SOLO: keine "Abteilungen", "Teams", "Bereiche".
 -->
 
 <section class="section gamechanger">

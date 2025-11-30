@@ -1,16 +1,17 @@
 Developer:
-<!-- org_change.md – v5.0 GOLD STANDARD+ (branch-aware, size-aware, strategic, context-integrated)
+<!-- org_change.md – v6.0 PLATIN+ (branch-aware, size-aware, strategic, context-integrated, min 700 chars)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
      ZIEL:
-       - Präziser, motivierender und gleichzeitig realistischer Abschnitt „Veränderungsfähigkeit & Lernen“.
+       - Präziser, motivierender und gleichzeitig realistischer Abschnitt „Veränderungsfähigkeit & Lernen".
        - Nutzt ACTIV den CONTEXT_BLOCK: typische Workflows, Pain Points, Datenstellen der Branche.
        - Size-aware Anpassung für solo/team/kmu – mit klaren Rollen & Routinen.
        - 4 Blöcke: Einleitung → Ausgangslage → Veränderungsfelder → 90-Tage-Fahrplan → Umgang mit Widerständen.
        - Keine generischen Aussagen; jeder Absatz muss klaren geschäftlichen Wert haben.
+       - Score-Werte AKTIV nutzen und interpretieren.
 
-     VARIABLEN:
+     VARIABLEN (MÜSSEN alle genutzt werden!):
        {{BRANCHE_LABEL}}
        {{UNTERNEHMENSGROESSE_LABEL}}
        {{HAUPTLEISTUNG}}
@@ -21,11 +22,20 @@ Developer:
        {{score_nutzen}}, {{score_befaehigung}}
        COMPANY_SIZE = "solo" | "team" | "kmu"
 
+     PFLICHTSTRUKTUR (ALLE 4 Abschnitte erforderlich):
+       1. "Wo Sie heute stehen" (Score-Interpretation, 2-3 Absätze)
+       2. "Wichtigste Veränderungsfelder" (mindestens 3 Bulletpoints mit konkreten Maßnahmen)
+       3. "Fahrplan für die nächsten 90 Tage" (3 Phasen: 0-30, 31-60, 61-90 Tage)
+       4. "Umgang mit Widerständen" (size-aware, mindestens 1 Absatz)
+
+     MINDESTLÄNGE: 700 Zeichen (ohne HTML-Tags) – unterschreite diese NIEMALS!
+
      VERBOTEN:
-       - Platzhalterwörter („Platzhalter“, „Freitextfeld“, „TODO“, …)
+       - Platzhalterwörter („Platzhalter", „Freitextfeld", „TODO", …)
        - Konzernsprache (Division, Unit) bei KMU
        - Teams/Abteilungen in SOLO
        - generische Aussagen ohne klaren Nutzen
+       - Scores nicht interpretieren
 
 -->
 
