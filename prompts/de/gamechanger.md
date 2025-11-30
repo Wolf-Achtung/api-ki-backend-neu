@@ -152,3 +152,8 @@ Developer:
     dabei, von ersten KI-Schritten hin zu nachhaltiger, skalierbarer Wertschöpfung zu kommen.
   </p>
 </section>
+
+<!-- PLATIN+ REINFORCEMENT: Dieser Abschnitt MUSS mindestens 700 Wörter enthalten.
+     Prüfe deine Ausgabe: Zähle die Wörter und erweitere jeden Abschnitt mit zusätzlichen
+     Details, Beispielen und Erläuterungen, falls die Mindestlänge nicht erreicht wird.
+     Kürze NIEMALS – liefere immer vollständige, ausführliche Inhalte. -->
