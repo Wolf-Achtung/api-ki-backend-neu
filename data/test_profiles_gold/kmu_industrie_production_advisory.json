@@ -2,6 +2,9 @@
   "profile_id": "kmu_industrie_production_advisory",
   "description": "KMU (11–100), Berlin, Branche Industrie & Produktion, Beratungs- und Planungsunternehmen",
   "lang": "de",
+  "BRANCHE_LABEL": "Industrie & Produktion",
+  "UNTERNEHMENSGROESSE_LABEL": "11–100 (KMU)",
+  "HAUPTLEISTUNG": "Beratung von Produktionsbetrieben zur Einführung von KI in Planung, Fertigungssteuerung und Qualitätsdokumentation durch strukturierte Fragebögen und anschließende GPT-Auswertung",
   "answers": {
     "ai_act_kenntnis": "sehr_gut",
     "anwendungsfaelle": ["prozess_automation", "datenanalyse", "content_generation"],
