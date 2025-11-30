@@ -29,12 +29,13 @@ os.environ.setdefault("OPENAI_API_KEY", "test-api-key")
 class TestPlatinMinWordLengths:
     """Tests für PLATIN+ Mindest-Wortlängen."""
 
-    # PLATIN+ Mindestlängen in WÖRTERN
+    # PLATIN+ Mindestlängen in WÖRTERN (Validator-Schwellen)
+    # HINWEIS: Prompt fordert 900+ für roadmap_12m, Validator prüft 800 (Sicherheitsmarge)
     PLATIN_MIN_WORDS = {
         "foerderpotenzial": 900,
         "risks": 800,
         "recommendations": 800,
-        "roadmap_12m": 900,
+        "roadmap_12m": 800,  # Validator prüft auf 800 (Sicherheitsmarge)
     }
 
     def count_words(self, html_content: str) -> int:
@@ -118,6 +119,51 @@ class TestPlatinMinWordLengths:
             f"Recommendations Fallback hat nur {word_count} Wörter, "
             f"erwartet mindestens 800"
         )
+
+    def test_fallback_roadmap_12m_word_count(self):
+        """Prüft, dass der Roadmap-12m-Fallback mindestens 900 Wörter hat."""
+        from gpt_analyze import _get_fallback_content
+
+        briefing = {
+            "BRANCHE_LABEL": "Beratung & Dienstleistungen",
+            "UNTERNEHMENSGROESSE_LABEL": "1 (Solo)",
+            "HAUPTLEISTUNG": "KI-gestützte Assessments",
+            "BUNDESLAND_LABEL": "Berlin",
+        }
+        scores = {"governance": 70, "sicherheit": 65}
+
+        content = _get_fallback_content("roadmap_12m", briefing, scores)
+        word_count = self.count_words(content)
+
+        assert word_count >= 900, (
+            f"Roadmap-12m Fallback hat nur {word_count} Wörter, "
+            f"erwartet mindestens 900"
+        )
+
+    def test_fallback_roadmap_12m_size_variants(self):
+        """Prüft, dass alle Size-Varianten des Roadmap-12m-Fallbacks funktionieren."""
+        from gpt_analyze import _get_fallback_content
+
+        sizes = [
+            ("1 (Solo)", "solo"),
+            ("2-10 (Team)", "team"),
+            ("11-50 (KMU)", "kmu"),
+        ]
+        scores = {"governance": 70, "sicherheit": 65}
+
+        for size_label, expected_variant in sizes:
+            briefing = {
+                "BRANCHE_LABEL": "Beratung",
+                "UNTERNEHMENSGROESSE_LABEL": size_label,
+                "HAUPTLEISTUNG": "KI-Beratung",
+            }
+            content = _get_fallback_content("roadmap_12m", briefing, scores)
+            word_count = self.count_words(content)
+
+            assert word_count >= 800, (
+                f"Roadmap-12m Fallback für {expected_variant} hat nur "
+                f"{word_count} Wörter, erwartet mindestens 800"
+            )
 
     def test_fallback_size_aware_solo(self):
         """Prüft, dass Solo-Fallbacks keine Team/Abteilungs-Begriffe enthalten."""
