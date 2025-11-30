@@ -2677,6 +2677,197 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   </p>
 </section>"""
 
+    # ════════════════════════════════════════════════════════════════════════════
+    # 🎯 PLATIN+ FALLBACK: GAMECHANGER (700+ Wörter)
+    # ════════════════════════════════════════════════════════════════════════════
+    if section_key == "gamechanger":
+        if size_group == "solo":
+            gc_voraussetzung_1 = "Als Solo-Selbstständige:r können Sie diese Standardisierung eigenverantwortlich umsetzen"
+            gc_voraussetzung_2 = "Die persönliche Sortierung und Pflege Ihrer Wissensbasis liegt in Ihrer Hand"
+            gc_voraussetzung_3 = "Entwickeln Sie persönliche Routinen für die Qualitätsprüfung vor jeder Kundenabgabe"
+            gc_team_aspekt = "Ihre Agilität als Einzelperson ermöglicht schnelle Experimente und direkte Umsetzung"
+        elif size_group == "team":
+            gc_voraussetzung_1 = "Im Team definieren Sie klare Rollen für die Pflege von Vorlagen und Automatisierungen"
+            gc_voraussetzung_2 = "Die gemeinsame Abstimmung im Team sichert konsistente Qualität und Wissenstransfer"
+            gc_voraussetzung_3 = "Etablieren Sie Review-Rollen innerhalb des Teams für gegenseitige Qualitätssicherung"
+            gc_team_aspekt = "Ihr Team kann Aufgaben aufteilen und voneinander lernen – nutzen Sie diese Dynamik"
+        else:  # kmu
+            gc_voraussetzung_1 = "In Ihrer Organisation koordinieren Sie die Standardisierung über Fachbereiche hinweg"
+            gc_voraussetzung_2 = "Die bereichsübergreifende Koordination erfordert klare Verantwortlichkeiten und Governance"
+            gc_voraussetzung_3 = "Binden Sie Qualitätssicherung und Fachbereiche in die KI-gestützte Prüfung ein"
+            gc_team_aspekt = "Ihre Organisationsstruktur ermöglicht systematische Skalierung erfolgreicher Piloten"
+
+        return f"""<section class="section gamechanger">
+  <h2>KI als Gamechanger für Ihr Geschäftsmodell</h2>
+
+  <p>
+    Für ein Unternehmen in der Branche <strong>{branche}</strong> mit der Größe
+    <strong>{size_label}</strong> und dem Schwerpunkt <strong>{hauptleistung or "KI-gestützte Prozessoptimierung"}</strong>
+    ergeben sich mehrere KI-Szenarien, die die Wertschöpfung in den kommenden Jahren spürbar verändern können.
+    Die folgenden Vorschläge zeigen konkrete Ansatzpunkte, wie KI nicht nur einzelne Aufgaben beschleunigt,
+    sondern grundlegende Veränderungen im Geschäftsmodell ermöglicht. {gc_team_aspekt}.
+  </p>
+  <p>
+    Ein Gamechanger unterscheidet sich von einfachen Optimierungen dadurch, dass er das Potenzial hat,
+    die Art und Weise, wie Sie arbeiten und Wert für Ihre Kund:innen schaffen, grundlegend zu verändern.
+    Die folgenden drei Szenarien sind so gewählt, dass sie aufeinander aufbauen und schrittweise
+    realisiert werden können – beginnend mit schnellen Erfolgen bis hin zu strategischen Transformationen.
+  </p>
+
+  <h3>Gamechanger 1: KI-gestützte Standardisierung und Automatisierung zentraler Kernprozesse</h3>
+
+  <h4>Kernidee</h4>
+  <p>
+    Wiederkehrende Aufgaben in <strong>{hauptleistung or "Ihrem Kerngeschäft"}</strong> werden über
+    KI-gestützte Vorlagen, Automatisierungen und strukturierte Entscheidungswege so standardisiert,
+    dass Qualität und Geschwindigkeit deutlich steigen. Statt jede Aufgabe von Grund auf neu zu bearbeiten,
+    nutzen Sie intelligente Vorlagen, die sich an den jeweiligen Kontext anpassen. Dies reduziert nicht nur
+    den Zeitaufwand, sondern erhöht auch die Konsistenz Ihrer Ergebnisse erheblich.
+  </p>
+
+  <h4>Betroffene Wertschöpfung</h4>
+  <p>
+    Die Standardisierung wirkt sich auf mehrere Bereiche Ihrer Wertschöpfungskette aus: Erstellung von
+    Dokumenten und Analysen, interne Abstimmungsprozesse, Kundendokumentation und Qualitätssicherung.
+    In der Branche <strong>{branche}</strong> sind besonders Angebotserstellung, Projektdokumentation
+    und wiederkehrende Berichte von dieser Automatisierung betroffen.
+  </p>
+
+  <h4>Erwarteter Nutzen</h4>
+  <p>
+    Weniger manuelle Routinearbeit, stabilere Ergebnisse und eine konsistente Kundenerfahrung – unabhängig
+    von Tagesform oder Auslastung. Die Zeitersparnis kann je nach Prozess 20-40% betragen. Gleichzeitig
+    sinkt die Fehlerquote, da standardisierte Abläufe weniger Raum für Flüchtigkeitsfehler lassen.
+    Die gewonnene Zeit kann für wertschöpfende Tätigkeiten genutzt werden.
+  </p>
+
+  <h4>Voraussetzungen</h4>
+  <p>
+    Für die erfolgreiche Umsetzung benötigen Sie 5-10 typische Beispiele aus Ihrem Arbeitsalltag,
+    definierte Qualitätskriterien und klare Regeln für Eingaben und Ausgaben. {gc_voraussetzung_1}.
+    Beginnen Sie mit einem klar abgegrenzten Prozess, bevor Sie die Standardisierung ausweiten.
+  </p>
+
+  <h4>Erster Schritt in den nächsten 90 Tagen</h4>
+  <p>
+    Wählen Sie einen priorisierten Teilprozess aus und stabilisieren Sie ihn mit KI-Vorlagen und
+    Review-Schritten als Mini-Pilot. Dokumentieren Sie die Ergebnisse und sammeln Sie Feedback,
+    um den Prozess kontinuierlich zu verbessern.
+  </p>
+
+  <h3>Gamechanger 2: Aufbau eines KI-gestützten Wissenspools für Entscheidungen und Angebotserstellung</h3>
+
+  <h4>Kernidee</h4>
+  <p>
+    Zentrale Informationen, Beispiele, Best Practices und interne Expertise werden KI-unterstützt
+    gebündelt, sodass Recherchen, Angebotsprozesse oder Analysen deutlich schneller und konsistenter
+    erfolgen. Statt Wissen in verschiedenen Dokumenten, E-Mails und Köpfen verstreut zu haben,
+    schaffen Sie eine intelligente Wissensbasis, die auf Anfrage relevante Informationen liefert.
+  </p>
+
+  <h4>Betroffene Wertschöpfung</h4>
+  <p>
+    Dieser Gamechanger wirkt sich auf Angebotsentwicklung, strategische Planung, interne Abstimmungen
+    und den Wissenstransfer aus. In der Branche <strong>{branche}</strong> profitieren besonders
+    Kundenberatung, Projektakquise und die Entwicklung neuer Dienstleistungsangebote von einer
+    strukturierten Wissensbasis.
+  </p>
+
+  <h4>Erwarteter Nutzen</h4>
+  <p>
+    Weniger Suchaufwand, deutliche Zeitersparnis bei der Angebotserstellung, bessere Entscheidungsqualität
+    durch schnellen Zugriff auf relevante Erfahrungen und ein höherer Wiedererkennungswert für Kund:innen.
+    Die Qualität Ihrer Arbeit steigt, weil Sie systematisch auf bewährte Ansätze zurückgreifen können,
+    statt jedes Mal bei Null zu beginnen.
+  </p>
+
+  <h4>Voraussetzungen</h4>
+  <p>
+    Sie benötigen strukturierte Beispiele und interne Inhalte als Ausgangsbasis sowie kurze Regeln
+    für Qualität und regelmäßige Aktualisierung. {gc_voraussetzung_2}. Die Wissensbasis sollte
+    einfach zu pflegen sein, damit sie langfristig aktuell bleibt.
+  </p>
+
+  <h4>Erster Schritt in den nächsten 90 Tagen</h4>
+  <p>
+    Bündeln Sie 10-15 reale Inhalte (Angebote, Konzepte, Best Practices), erzeugen Sie erste
+    KI-gestützte Zusammenfassungen und integrieren Sie diese als Wissensbasis in den Arbeitsalltag.
+    Testen Sie die Nutzung bei konkreten Anfragen und optimieren Sie die Struktur basierend auf
+    dem praktischen Nutzen.
+  </p>
+
+  <h3>Gamechanger 3: KI-basierte Qualitätssicherung und konsistente Kundenergebnisse</h3>
+
+  <h4>Kernidee</h4>
+  <p>
+    Qualität, Präzision und Konsistenz werden über KI-gestützte Prüfmechanismen verbessert, die
+    branchenspezifische Anforderungen berücksichtigen – etwa Tonalität, Struktur, Vollständigkeit,
+    Risiken und sensible Inhalte. Die KI fungiert als zweite Prüfinstanz, die systematisch nach
+    typischen Fehlern und Verbesserungsmöglichkeiten sucht.
+  </p>
+
+  <h4>Betroffene Wertschöpfung</h4>
+  <p>
+    Dieser Gamechanger wirkt sich auf Kundenkommunikation, inhaltliche Produktion, interne Reviews
+    und den finalen Output aus. In der Branche <strong>{branche}</strong> ist konsistente Qualität
+    besonders wichtig für Kundenvertrauen, Reputation und langfristige Geschäftsbeziehungen.
+  </p>
+
+  <h4>Erwarteter Nutzen</h4>
+  <p>
+    Weniger Fehler, weniger Korrekturschleifen und eine deutlich höhere Ersttrefferquote – besonders
+    relevant bei Zeitdruck oder hoher Auslastung. Die Qualitätssicherung wird systematisiert und
+    skaliert mit dem Arbeitsvolumen, ohne dass der Aufwand proportional steigt. Kundenreklamationen
+    sinken und die Kundenzufriedenheit steigt messbar.
+  </p>
+
+  <h4>Voraussetzungen</h4>
+  <p>
+    Definieren Sie 5-7 klare Prüfkriterien, entwickeln Sie einheitliche Vorlagen und legen Sie eine
+    Eskalationslogik für kritische Fälle fest. {gc_voraussetzung_3}. Die Prüfkriterien sollten
+    branchenspezifisch und auf Ihre typischen Kundenanforderungen abgestimmt sein.
+  </p>
+
+  <h4>Erster Schritt in den nächsten 90 Tagen</h4>
+  <p>
+    Führen Sie eine KI-gestützte Mini-Checkliste ein und wenden Sie diese bei jedem Output an,
+    bevor Ergebnisse intern oder extern genutzt werden. Sammeln Sie systematisch Feedback zu
+    den gefundenen Verbesserungen und passen Sie die Checkliste kontinuierlich an.
+  </p>
+
+  <h3>Was diese Gamechanger gemeinsam haben</h3>
+  <ul>
+    <li>Sie bauen auf bestehenden Stärken von <strong>{hauptleistung or "Ihrem Kerngeschäft"}</strong>
+        auf und verstärken diese gezielt mit KI-Unterstützung.</li>
+    <li>Sie berücksichtigen die Ressourcen und Entscheidungswege eines <strong>{size_label}</strong>-Unternehmens
+        und sind realistisch umsetzbar.</li>
+    <li>Sie lassen sich mit überschaubarem Risiko pilotieren und bei Erfolg schrittweise skalieren.</li>
+    <li>Sie erzeugen messbare Ergebnisse, die den ROI der KI-Investition nachweisbar machen.</li>
+    <li>Sie sind miteinander verzahnt und verstärken sich gegenseitig bei paralleler Umsetzung.</li>
+  </ul>
+
+  <h3>Strategische Einordnung</h3>
+  <p>
+    Die drei Gamechanger bilden zusammen eine Transformationsstrategie: Gamechanger 1 schafft die
+    operative Grundlage durch Standardisierung, Gamechanger 2 baut das Wissenskapital auf und
+    Gamechanger 3 sichert die Qualität ab. Diese Kombination ermöglicht es Ihrem Unternehmen,
+    von ersten KI-Schritten hin zu nachhaltiger, skalierbarer Wertschöpfung zu kommen.
+  </p>
+  <p>
+    Die Umsetzung sollte priorisiert erfolgen: Beginnen Sie mit dem Gamechanger, der den größten
+    unmittelbaren Nutzen für Ihr Tagesgeschäft verspricht. Typischerweise ist dies Gamechanger 1
+    oder 3, da beide schnelle Ergebnisse liefern. Gamechanger 2 entfaltet seinen vollen Nutzen
+    oft erst nach einigen Monaten, legt aber das Fundament für langfristige Wettbewerbsvorteile.
+  </p>
+
+  <p class="small muted">
+    Die Gamechanger dienen als strategische Leitplanken und unterstützen Ihr Unternehmen dabei,
+    von ersten KI-Schritten hin zu nachhaltiger, skalierbarer Wertschöpfung zu kommen. Die
+    konkreten Maßnahmen sollten auf Basis der 90-Tage-Roadmap und der 12-Monats-Strategie
+    weiter detailliert werden.
+  </p>
+</section>"""
+
     # Statische Fallbacks (Quick Wins UNVERÄNDERT)
     fallbacks = {
         "quick_wins": f"""<ul>
