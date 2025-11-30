@@ -1,43 +1,34 @@
 Developer:
-<!-- roadmap_90d.md – v5.0 GOLD STANDARD+ (branch-aware, size-aware, context-integrated)
-     Antworte ausschließlich mit validem HTML.
-     KEIN <html>, <head> oder <body>; KEINE Markdown-Fences im OUTPUT.
+<!-- roadmap_90d.md – v6.0 PLATIN+ STREAMLINED
+     Ziel: 6 Phasen mit je 80-100 Wörtern (= 500-700 Wörter gesamt).
+     Antworte ausschließlich mit validem HTML. Keine Markdown-Fences.
 
-     ZIEL:
-       - Erzeuge eine strategische, branchenspezifische 90-Tage-Roadmap für {{HAUPTLEISTUNG}}.
-       - Nutze aktiv den CONTEXT_BLOCK (Workflows, Pain Points, Tools, Daten).
-       - Size-aware Umsetzung für solo/team/kmu.
-       - Jede Phase enthält: Ziel, Deliverables, Rollen, KPI.
-       - Maximal 13 Wochen (6 Phasen).
+     STRUKTUR (6 Phasen):
+       Phase 1: Woche 1-2 – Zielbild & Prioritäten
+       Phase 2: Woche 3-4 – Datenqualität & Workflow-Grundlagen
+       Phase 3: Woche 5-6 – Quick-Wins & erste Wirkung
+       Phase 4: Woche 7-8 – Qualitätsstandards
+       Phase 5: Woche 9-10 – Monitoring & Iteration
+       Phase 6: Woche 11-13 – Konsolidierung & Skalierungsvorbereitung
+
+     Pro Phase PFLICHT:
+       - Ziel (1-2 Sätze)
+       - Deliverables (3-4 Bullets)
+       - Rollen (size-aware)
+       - KPI (1-2 messbare Kennzahlen)
 
      VARIABLEN:
-       {{BRANCHE_LABEL}}
-       {{UNTERNEHMENSGROESSE_LABEL}}
-       {{HAUPTLEISTUNG}}
-       COMPANY_SIZE ∈ {"solo","team","kmu"}
+       {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, COMPANY_SIZE
 
-     SIZE-AWARE:
-       SOLO:
-         - Fokus: persönliche Routinen, einfache Templates, klare Regeln, schnelle Wirkung.
-         - Keine Teams, keine Abteilungen.
-       TEAM:
-         - Fokus: Rollen, Abstimmung, gemeinsame Standards, dokumentierte Workflows.
-       KMU:
-         - Fokus: Fachbereiche, Governance, Prozessharmonisierung, Pilotflächen.
+     SIZE-AWARE (COMPANY_SIZE):
+       solo: persönliche Routinen, eigene Dokumentation, keine Teams
+       team: Rollen, gemeinsame Standards, Abstimmung
+       kmu: Fachbereiche, Governance, Pilotflächen
 
-     BRANCHEN-AWARE (verbindlich):
-       - Verwende typische Workflows, Datenarten, Tools & Pain Points aus CONTEXT_BLOCK.
-       - Marketing/Kreativ: Content, Kampagnen, Asset-Qualität.
-       - Beratung/Dienstleistung: Wissensarbeit, Angebotsprozesse, Dokumentation.
-       - Finanzen/Versicherung: Compliance, Datengenauigkeit, Risikoprüfung.
-       - Gesundheit/Pflege: sensible Daten, Qualität & Freigabeprozesse.
-       - IT/Software: Automatisierung, Code-Assistenz, Testing.
-       - Industrie/Produktion: Sensor-/Prozessdaten, Qualitätskontrollen.
-       - E-Commerce/Handel: Produktdaten, Feeds, Textprozesse.
-
-     VERBOTEN:
-       - „Platzhalter", „TODO", „Freitextfeld", generische Formulierungen ohne Substanz.
-       - Rohvariablen im sichtbaren Output.
+     REGELN:
+       - Branchenspezifische Workflows aus CONTEXT_BLOCK nutzen
+       - Sachlich, konkret, keine Floskeln
+       - Keine Platzhalter, keine Developer-Sprache
 -->
 
 <section class="section roadmap-90d">

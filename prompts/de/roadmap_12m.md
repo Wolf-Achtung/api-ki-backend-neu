@@ -1,58 +1,34 @@
 Developer:
-<!-- roadmap_12m.md – v6.0 PLATIN+ (branch-aware, size-aware, governance-integrated, min 900 chars)
-     Antworte ausschließlich mit validem HTML.
-     KEIN <html>, <head> oder <body>; KEINE Markdown-Fences im OUTPUT.
+<!-- roadmap_12m.md – v7.0 PLATIN+ STREAMLINED
+     Ziel: 4 Quartale mit je 200-250 Wörtern (= 900-1100 Wörter gesamt).
+     Antworte ausschließlich mit validem HTML. Keine Markdown-Fences.
 
-     ZIEL:
-       - Erzeuge eine strategische, branchenspezifische 12-Monats-Roadmap für {{HAUPTLEISTUNG}}.
-       - Nutze aktiv den CONTEXT_BLOCK (Workflows, Pain Points, Tools, Daten).
-       - Size-aware Umsetzung für solo/team/kmu.
-       - Jede Phase (Quartal) enthält: Ziel, Deliverables, Rollen, KPI, Governance/Sicherheit.
-       - 4 Quartale (Q1–Q4) mit klarer Progression.
+     STRUKTUR (4 Quartale):
+       Q1 (Monate 1-3): Grundlagen & Quick Wins
+       Q2 (Monate 4-6): Pilotierung & Integration
+       Q3 (Monate 7-9): Ausbau & Skalierung
+       Q4 (Monate 10-12): Optimierung & Strategie 2.0
+
+     Pro Quartal PFLICHT:
+       - Ziel (1-2 Sätze)
+       - Deliverables (4+ Bullets)
+       - Rollen (size-aware)
+       - KPI (2-3 messbare Kennzahlen)
+       - Governance/Sicherheit (1-2 Bullets)
 
      VARIABLEN:
-       {{BRANCHE_LABEL}}
-       {{UNTERNEHMENSGROESSE_LABEL}}
-       {{HAUPTLEISTUNG}}
-       COMPANY_SIZE ∈ {"solo","team","kmu"}
+       {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, COMPANY_SIZE
 
-     SIZE-AWARE:
-       SOLO:
-         - Fokus: persönliche Entwicklung, Angebotsausbau, eigene Automatisierung.
-         - Keine Teams, keine Abteilungen, keine "Bereiche".
-         - Governance = persönliche Routinen, Selbst-Checks, Dokumentation.
-       TEAM:
-         - Fokus: Rollen, Team-Koordination, gemeinsame Prozesse, Wissenstransfer.
-         - Governance = Team-Reviews, gemeinsame Standards, KI-Owner.
-       KMU:
-         - Fokus: Fachbereiche, Governance, Skalierung, Pilotflächen.
-         - Governance = Richtlinien, Audit-Prozesse, Compliance-Framework.
+     SIZE-AWARE (COMPANY_SIZE):
+       solo: persönliche Entwicklung, eigene Automatisierung, keine Teams/Bereiche
+       team: Rollen, Team-Koordination, gemeinsame Prozesse
+       kmu: Fachbereiche, Governance, Skalierung, Pilotflächen
 
-     BRANCHEN-AWARE (verbindlich):
-       - Verwende typische Workflows, Datenarten, Tools & Pain Points aus CONTEXT_BLOCK.
-       - Marketing/Kreativ: Content-Pipelines, Kampagnenmanagement, Asset-Verwaltung.
-       - Beratung/Dienstleistung: Wissensmanagement, Angebotserstellung, Dokumentation.
-       - Finanzen/Versicherung: Compliance, Datenvalidierung, Risikoanalyse.
-       - Gesundheit/Pflege: sensible Daten, Qualitätssicherung, Freigabeprozesse.
-       - IT/Software: Code-Assistenz, Automatisierung, Testing & Deployment, CI/CD-Integration.
-       - Industrie/Produktion: Sensor-/Prozessdaten, Qualitätskontrollen, Wartung.
-       - E-Commerce/Handel: Produktdaten, Feed-Management, Textautomatisierung.
-
-     PFLICHTSTRUKTUR (ALLE 4 Quartale, JEDES mit allen Elementen):
-       Pro Quartal MUSS enthalten sein:
-       1. Ziel (1-2 Sätze)
-       2. Deliverables (mindestens 4 Bulletpoints)
-       3. Rollen & Verantwortlichkeiten (size-aware)
-       4. KPI (2-3 messbare Kennzahlen)
-       5. Governance/Sicherheit (mindestens 1 Bullet zu Qualität/Compliance)
-
-     MINDESTLÄNGE: 900 Zeichen (ohne HTML-Tags) – unterschreite diese NIEMALS!
-
-     VERBOTEN:
-       - "TODO", "Freitextfeld", generische Formulierungen ohne Substanz.
-       - Rohvariablen im sichtbaren Output.
-       - Bei SOLO: keine "Abteilungen", "Teams", "Bereiche" (nur persönliche Formulierungen).
-       - Phasen ohne konkrete, branchenspezifische Deliverables.
+     REGELN:
+       - Branchenspezifische Workflows aus CONTEXT_BLOCK nutzen
+       - Governance-Elemente in jedem Quartal
+       - Sachlich, konkret, keine Floskeln
+       - Keine Platzhalter, keine Developer-Sprache
 -->
 
 <section class="section roadmap-12m">
