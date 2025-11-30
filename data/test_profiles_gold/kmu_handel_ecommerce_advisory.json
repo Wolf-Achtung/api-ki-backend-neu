@@ -1,125 +1,58 @@
 {
-  "branche": "handel_ecommerce",
-  "unternehmensgroesse": "kmu",
-  "bundesland": "Berlin",
+  "profile_id": "kmu_handel_ecommerce_advisory",
+  "description": "KMU im Handel/E-Commerce Bereich mit Fokus auf Produktdatenqualität und Conversion-Optimierung",
+  "lang": "de",
+  "BRANCHE_LABEL": "Handel & E-Commerce",
+  "UNTERNEHMENSGROESSE_LABEL": "11-50 (KMU)",
+  "HAUPTLEISTUNG": "Beratung für mittelständische Online-Händler und Omnichannel-Einzelhändler zu Produktdatenqualität, Conversion-Optimierung, KI-gestützten Kampagnenstrategien, Automatisierung von Produkttexten sowie Analyse und Optimierung digitaler Vertriebskanäle.",
 
-  "hauptleistung": "Beratung für mittelständische Online-Händler und Omnichannel-Einzelhändler zu Produktdatenqualität, Conversion-Optimierung, KI-gestützten Kampagnenstrategien, Automatisierung von Produkttexten sowie Analyse und Optimierung digitaler Vertriebskanäle.",
-
-  "zielgruppen": [
-    "B2B",
-    "B2C",
-    "E-Commerce-Unternehmen",
-    "Omnichannel-Einzelhandel"
-  ],
-
-  "jahresumsatz": "1-5m",
-  "it_infrastruktur": "cloud_hybrid",
-  "interne_ki_kompetenzen": "grundkenntnisse",
-
-  "datenquellen": [
-    "CRM",
-    "Shop-System",
-    "Web-Analytics",
-    "Produktdaten",
-    "Social Media Insights"
-  ],
-
-  "digitalisierungsgrad": "hoch",
-  "prozesse_papierlos": "teilweise",
-  "automatisierungsgrad": "mittel",
-
-  "ki_einsatz": [
-    "marketing_automation",
-    "content_generation",
-    "datenanalyse",
-    "customer_journey_optimierung"
-  ],
-
-  "ki_kompetenz": "fortgeschritten",
-
-  "ki_ziele": [
-    "effizienz",
-    "skalierung",
-    "conversion_optimierung",
-    "datenqualitaet"
-  ],
-
-  "ki_projekte": "Geplant sind automatisierte Produkttextgenerierung, KI-gestützte Kampagnenoptimierung (Meta/Google Ads), Predictive Analytics für Nachfrageprognosen sowie ein Recommendation-System für personalisierte Shop-Erlebnisse. Weitere interne Projekte betreffen automatisierte Reportings und semantische Analysen großer Produktkataloge.",
-
-  "anwendungsfaelle": [
-    "produkttexte",
-    "kampagnenoptimierung",
-    "recommendation_engine",
-    "preisoptimierung",
-    "chatbots_kundenservice",
-    "fraud_detection_light"
-  ],
-
-  "zeitersparnis_prioritaet": "Besonders priorisiert ist die Reduzierung manueller Produktdatenpflege, die Automatisierung der Content-Erstellung und die Beschleunigung datengetriebener Entscheidungen. Teams verbringen aktuell zu viel Zeit mit redundanten Aufgaben wie Kategorisierung, Keyword-Mapping und QA-Schleifen für Produktkarten.",
-
-  "pilot_bereich": "marketing",
-
-  "geschaeftsmodell_evolution": "Das Geschäftsmodell soll stärker auf wiederkehrende Beratungsprodukte, automatisierte Audits und KI-basierte Toolkits erweitert werden – insbesondere White-Label-Analytics-Dashboards und automatisierte Optimierungsroutinen für Händler.",
-
-  "vision_3_jahre": "Das Unternehmen möchte sich zu einem führenden KI-Enablement-Partner im deutschsprachigen E-Commerce entwickeln und skalierbare Lösungen anbieten, die Händlern schnelle Produktivitätsgewinne ermöglichen. Ziel ist ein modularer KI-Baukasten für Produktdaten, Conversion-Optimierung und Omni-Retail-Intelligence.",
-
-  "strategische_ziele": "Marktdurchdringung im E-Commerce-Segment erhöhen, Beratungsprodukte industrialisieren, KI-Enablement als Kernleistung skalieren, datengetriebene Entscheidungsmodelle für Händler entwickeln und Qualitätsstandards für Produktdaten definieren.",
-
-  "massnahmen_komplexitaet": "mittel",
-
-  "roadmap_vorhanden": "nein",
-  "governance_richtlinien": "in_planung",
-  "change_management": "punktuell",
-  "zeitbudget": "10h_woche",
-
-  "vorhandene_tools": [
-    "google_workspace",
-    "shopware",
-    "hubspot",
-    "zapier",
-    "semrush",
-    "meta_ads_tools"
-  ],
-
-  "regulierte_branche": [
-    "keine_regulierung"
-  ],
-
-  "trainings_interessen": [
-    "prompting_expert",
-    "automatisierung",
-    "ki_in_marketing",
-    "datenqualitaet",
-    "strategische_ki_nutzung"
-  ],
-
-  "vision_prioritaet": "hoch",
-
-  "datenschutzbeauftragter": "extern",
-  "technische_massnahmen": "standardisiert",
-  "folgenabschaetzung": "nicht_erforderlich",
-  "meldewege": "teilweise_definiert",
-  "loeschregeln": "teilweise_implementiert",
-
-  "ai_act_kenntnis": "grundkenntnisse",
-
-  "ki_hemmnisse": [
-    "datenqualitaet",
-    "ressourcen",
-    "tool_ueberangebot",
-    "fehlende_zeit",
-    "unklare_verantwortlichkeiten"
-  ],
-
-  "bisherige_foerdermittel": "keine",
-  "interesse_foerderung": "ja",
-  "erfahrung_beratung": "viel",
-  "investitionsbudget": "20-50k",
-
-  "marktposition": "etabliert",
-  "benchmark_wettbewerb": "ueberdurchschnittlich",
-  "innovationsprozess": "regelmaessig",
-  "risikofreude": "75",
-
-  "datenschutz": true
+  "answers": {
+    "branche": "handel_ecommerce",
+    "unternehmensgroesse": "kmu",
+    "bundesland": "Berlin",
+    "hauptleistung": "Beratung für mittelständische Online-Händler und Omnichannel-Einzelhändler zu Produktdatenqualität, Conversion-Optimierung, KI-gestützten Kampagnenstrategien, Automatisierung von Produkttexten sowie Analyse und Optimierung digitaler Vertriebskanäle.",
+    "zielgruppen": ["B2B", "B2C", "E-Commerce-Unternehmen", "Omnichannel-Einzelhandel"],
+    "jahresumsatz": "1-5m",
+    "it_infrastruktur": "cloud_hybrid",
+    "interne_ki_kompetenzen": "grundkenntnisse",
+    "datenquellen": ["CRM", "Shop-System", "Web-Analytics", "Produktdaten", "Social Media Insights"],
+    "digitalisierungsgrad": "hoch",
+    "prozesse_papierlos": "teilweise",
+    "automatisierungsgrad": "mittel",
+    "ki_einsatz": ["marketing_automation", "content_generation", "datenanalyse", "customer_journey_optimierung"],
+    "ki_kompetenz": "fortgeschritten",
+    "ki_ziele": ["effizienz", "skalierung", "conversion_optimierung", "datenqualitaet"],
+    "ki_projekte": "Geplant sind automatisierte Produkttextgenerierung, KI-gestützte Kampagnenoptimierung (Meta/Google Ads), Predictive Analytics für Nachfrageprognosen sowie ein Recommendation-System für personalisierte Shop-Erlebnisse. Weitere interne Projekte betreffen automatisierte Reportings und semantische Analysen großer Produktkataloge.",
+    "anwendungsfaelle": ["produkttexte", "kampagnenoptimierung", "recommendation_engine", "preisoptimierung", "chatbots_kundenservice", "fraud_detection_light"],
+    "zeitersparnis_prioritaet": "Besonders priorisiert ist die Reduzierung manueller Produktdatenpflege, die Automatisierung der Content-Erstellung und die Beschleunigung datengetriebener Entscheidungen. Teams verbringen aktuell zu viel Zeit mit redundanten Aufgaben wie Kategorisierung, Keyword-Mapping und QA-Schleifen für Produktkarten.",
+    "pilot_bereich": "marketing",
+    "geschaeftsmodell_evolution": "Das Geschäftsmodell soll stärker auf wiederkehrende Beratungsprodukte, automatisierte Audits und KI-basierte Toolkits erweitert werden – insbesondere White-Label-Analytics-Dashboards und automatisierte Optimierungsroutinen für Händler.",
+    "vision_3_jahre": "Das Unternehmen möchte sich zu einem führenden KI-Enablement-Partner im deutschsprachigen E-Commerce entwickeln und skalierbare Lösungen anbieten, die Händlern schnelle Produktivitätsgewinne ermöglichen. Ziel ist ein modularer KI-Baukasten für Produktdaten, Conversion-Optimierung und Omni-Retail-Intelligence.",
+    "strategische_ziele": "Marktdurchdringung im E-Commerce-Segment erhöhen, Beratungsprodukte industrialisieren, KI-Enablement als Kernleistung skalieren, datengetriebene Entscheidungsmodelle für Händler entwickeln und Qualitätsstandards für Produktdaten definieren.",
+    "massnahmen_komplexitaet": "mittel",
+    "roadmap_vorhanden": "nein",
+    "governance_richtlinien": "in_planung",
+    "change_management": "punktuell",
+    "zeitbudget": "10h_woche",
+    "vorhandene_tools": ["google_workspace", "shopware", "hubspot", "zapier", "semrush", "meta_ads_tools"],
+    "regulierte_branche": ["keine_regulierung"],
+    "trainings_interessen": ["prompting_expert", "automatisierung", "ki_in_marketing", "datenqualitaet", "strategische_ki_nutzung"],
+    "vision_prioritaet": "hoch",
+    "datenschutzbeauftragter": "extern",
+    "technische_massnahmen": "standardisiert",
+    "folgenabschaetzung": "nicht_erforderlich",
+    "meldewege": "teilweise_definiert",
+    "loeschregeln": "teilweise_implementiert",
+    "ai_act_kenntnis": "grundkenntnisse",
+    "ki_hemmnisse": ["datenqualitaet", "ressourcen", "tool_ueberangebot", "fehlende_zeit", "unklare_verantwortlichkeiten"],
+    "bisherige_foerdermittel": "keine",
+    "interesse_foerderung": "ja",
+    "erfahrung_beratung": "viel",
+    "investitionsbudget": "20-50k",
+    "marktposition": "etabliert",
+    "benchmark_wettbewerb": "ueberdurchschnittlich",
+    "innovationsprozess": "regelmaessig",
+    "risikofreude": "75",
+    "datenschutz": true
+  }
 }
