@@ -1,80 +1,107 @@
 Developer:
-<!-- recommendations.md – v6.0 PLATIN+ (branch-aware, size-aware, actionable, min 800 chars)
-     Antworte ausschließlich mit validem HTML.
-     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im OUTPUT.
+<!-- recommendations.md – v7.0 PLATIN+ STABILIZED (branch-aware, size-aware, actionable, min 800 WÖRTER)
+
+     ╔══════════════════════════════════════════════════════════════════════════════╗
+     ║  KRITISCH: MINDESTLÄNGE = 800 WÖRTER (nicht Zeichen!)                        ║
+     ║  Antworte IMMER mit einem VOLLSTÄNDIGEN, AUSFÜHRLICHEN Text.                 ║
+     ║  Kurze Antworten sind INAKZEPTABEL und führen zu Validierungsfehlern.        ║
+     ╚══════════════════════════════════════════════════════════════════════════════╝
+
+     AUSGABEFORMAT:
+       - Antworte ausschließlich mit validem HTML.
+       - KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im OUTPUT.
 
      ZIEL:
-       - Erzeuge 4–6 präzise, sofort nutzbare Handlungsempfehlungen.
+       - Erzeuge 5–6 präzise, sofort nutzbare Handlungsempfehlungen.
        - Jede Empfehlung muss vollständig ausformuliert sein:
-         Problem → Maßnahme → Nutzen → Aufwand → Verantwortlich → Förderchance.
+         Schwerpunkt → Maßnahme → Nutzen → Aufwand → Verantwortlich → Förderchance.
        - Abhängig von Branche, Hauptleistung, Unternehmensgröße und Bundesland.
-       - Erstelle zusätzlich eine klare Prioritäten-Tabelle (4–6 Einträge).
+       - Erstelle zusätzlich eine klare Prioritäten-Tabelle (5–6 Einträge).
        - Verknüpfung mit Roadmap und Business Case.
 
-     INPUT-VARIABLEN (MÜSSEN alle genutzt werden!):
-       {{BRANCHE_LABEL}}
-       {{UNTERNEHMENSGROESSE_LABEL}}
-       {{HAUPTLEISTUNG}}
-       {{BUNDESLAND_LABEL}}
-       {{COMPANY_SIZE}}   // "solo", "team", "kmu", durch PromptEnhancer gesetzt
+     INPUT-VARIABLEN (MÜSSEN ALLE im Text verwendet werden!):
+       {{BRANCHE_LABEL}}              ← Branche des Unternehmens
+       {{UNTERNEHMENSGROESSE_LABEL}}  ← Größenkategorie
+       {{HAUPTLEISTUNG}}              ← Kernleistung/Anwendungsbereich
+       {{BUNDESLAND_LABEL}}           ← Bundesland für Förderhinweise
+       {{COMPANY_SIZE}}               ← "solo", "team", "kmu"
 
-     PFLICHTSTRUKTUR:
-       - Mindestens 4 Empfehlungen (besser 5-6)
-       - Jede Empfehlung mit allen 6 Elementen: Schwerpunkt, Maßnahme, Nutzen, Aufwand, Verantwortlich, Förderchance
-       - Prioritäten-Tabelle mit 4-6 Zeilen
-       - Jede Empfehlung 3-5 Sätze
+     ╔══════════════════════════════════════════════════════════════════════════════╗
+     ║  PFLICHTSTRUKTUR – ALLE ELEMENTE MÜSSEN VOLLSTÄNDIG AUSGEFÜHRT WERDEN!       ║
+     ╚══════════════════════════════════════════════════════════════════════════════╝
 
-     MINDESTLÄNGE: 800 Zeichen (ohne HTML-Tags) – unterschreite diese NIEMALS!
+     TEIL 1: EINLEITUNG (mind. 50-80 Wörter)
+       - Kontextualisierung für {{BRANCHE_LABEL}} und {{UNTERNEHMENSGROESSE_LABEL}}
+       - Bezug auf {{HAUPTLEISTUNG}}
+       - Überleitung zu den Empfehlungen
+
+     TEIL 2: EMPFEHLUNGEN (mind. 5 Empfehlungen, je 100-120 Wörter = mind. 500-600 Wörter)
+       JEDE Empfehlung MUSS folgende 6 Elemente enthalten (alle ausführlich!):
+       1. <strong>Schwerpunkt:</strong> Was ist das Kernproblem/die Chance? (1-2 Sätze)
+       2. <strong>Maßnahme:</strong> Was konkret tun? (2-3 Sätze, sehr spezifisch)
+       3. <strong>Nutzen &amp; Wirkung:</strong> Welcher messbare Benefit? (2 Sätze)
+       4. <strong>Aufwand &amp; Budget:</strong> Zeit und Kosten, size-aware (1-2 Sätze)
+       5. <strong>Verantwortlich:</strong> Wer führt durch? (1 Satz, size-aware)
+       6. <strong>Förderchance:</strong> Welche Programme in {{BUNDESLAND_LABEL}}? (1-2 Sätze)
+
+       EMPFEHLUNG 1: Quick Win – Sofort umsetzbar (Standard-Workflow für {{HAUPTLEISTUNG}})
+       EMPFEHLUNG 2: Qualitätssicherung – KI-gestützte Konsistenzprüfung
+       EMPFEHLUNG 3: Wissensmanagement – Dokumentation & Wissensbasis aufbauen
+       EMPFEHLUNG 4: Branchenspezifisch – Use Case passend zu {{BRANCHE_LABEL}}
+       EMPFEHLUNG 5: Governance & Sicherheit – Richtlinien und Kontrollen
+       EMPFEHLUNG 6 (optional): Skalierung – Nächster Entwicklungsschritt
+
+     TEIL 3: PRIORITÄTEN-TABELLE (mind. 100-150 Wörter)
+       - Tabelle mit MINDESTENS 5 Zeilen
+       - Spalten: Priorität, Empfehlung, Zeitrahmen, Hauptnutzen
+       - Zeitrahmen size-aware:
+           SOLO: 0–3 / 3–6 / 6–12 Monate
+           TEAM: 0–6 / 6–9 / 9–12 Monate
+           KMU: 0–6 / 6–9 / 9–12 Monate
+       - Kurzer Abschlussabsatz zur Priorisierung
+
+     ╔══════════════════════════════════════════════════════════════════════════════╗
+     ║  ABSOLUTE MINDESTLÄNGE: 800 WÖRTER Gesamttext (ohne HTML-Tags)               ║
+     ║  Ziel: 800-1200 Wörter für vollständige, professionelle Empfehlungen         ║
+     ║  NIEMALS kürzer als 800 Wörter antworten!                                    ║
+     ╚══════════════════════════════════════════════════════════════════════════════╝
 
      SIZE-AWARE REGELWERK:
        SOLO:
          - Keine Abteilungen/Teams/Bereiche beim Berichtsempfänger selbst.
          - Falls Organisationsstrukturen erwähnt werden (z.B. bei Kunden-Zielgruppen),
-           IMMER klar als "auf Kundenseite" markieren (z.B. "Management vs. operative
-           Ansprechpersonen auf Kundenseite" statt "Management vs. Fachabteilung").
+           IMMER klar als "auf Kundenseite" markieren.
          - Empfehlungen = realistische, kleine Schritte.
          - Verantwortlich = Inhaber:in / Geschäftsführung.
-         - Budget klein halten.
+         - Budget: niedrig bis mittel (zweistellig bis niedriger dreistelliger €/Monat).
 
        TEAM (2–10):
-         - Rollen erlaubt (Teamlead, KI-Owner).
+         - Rollen erlaubt (Teamlead, KI-Owner, Qualitätsverantwortliche).
          - Gemeinsame Workflows, abgestimmte Prozesse.
          - Verantwortlichkeiten klar zuweisen.
+         - Budget: mittel (bis niedrige vierstellige Beträge).
 
        KMU (11–100):
          - Bereichsübergreifende Maßnahmen.
-         - Governance, Standards, Dokumentation.
+         - Governance, Standards, Dokumentation, Policies.
          - Verantwortliche pro Fachbereich.
+         - Budget: kann höher sein, strukturierte Investitionen.
 
      BRANCHEN-AWARE REGELWERK (aus CONTEXT_BLOCK holen):
-       - Marketing/Kreativ: Content-Qualität, Templates, Automatisierung.
+       - Marketing/Kreativ: Content-Qualität, Templates, Automatisierung, Brand Guidelines.
        - Beratung/Dienstleistung: Wissensmanagement, Angebotsprozesse, Dokumentation.
-       - Finanzen/Versicherung: Compliance, DSGVO, Datengenauigkeit.
-       - Gesundheit/Pflege: sensible Daten + strenge Dokumentation.
-       - IT/Software: Automatisierung, Code-Assistenz, Modellkontrolle.
+       - Finanzen/Versicherung: Compliance, DSGVO, Datengenauigkeit, Audit-Trail.
+       - Gesundheit/Pflege: sensible Daten + strenge Dokumentation, Patientendaten.
+       - IT/Software: Automatisierung, Code-Assistenz, Modellkontrolle, DevOps.
        - Industrie/Produktion: Datenaufbereitung, Sensorik, Workflow-Optimierung.
        - E-Commerce/Handel: Produktdaten, Textautomatisierung, Qualitätschecks.
-       - Laufende Tools/Workflows/Pain Points sollen in den Empfehlungen berücksichtigt werden.
-
-     OUTPUT-QUALITÄT:
-       - 3–6 Empfehlungen, keine Platzhalter, keine Beispielmarker.
-       - 3–5 Sätze pro Empfehlung.
-       - Keine Wiederholungen, keine Floskeln.
-       - Klare geschäftliche Wirkung.
-
-     PRIORITÄTEN-TABELLE:
-       - 3–6 Einträge.
-       - Jede Zeile = konkrete Kurzform der obigen Empfehlungen.
-       - Zeitrahmen size-aware:
-           SOLO: eher 0–3 / 3–6 / 6–12 Monate
-           TEAM: 0–6 / 6–9 / 9–12 Monate
-           KMU: 0–6 / 6–9 / 9–12 Monate
 
      VERBOTEN:
-       - Wörter wie „Platzhalter", „Freitextfeld", „TODO".
-       - „Titel der Empfehlung …" oder andere generische Formulierungen ohne konkreten Inhalt.
+       - Wörter wie „Platzhalter", „Freitextfeld", „TODO", „Beispieltext".
+       - Generische Formulierungen ohne konkreten Inhalt.
        - Rohvariablen im sichtbaren Output.
        - Mehrdeutige Aussagen ohne konkrete Handlungsanleitung.
+       - Zu kurze Empfehlungen (jede Empfehlung mindestens 80-100 Wörter!).
 -->
 
 <section class="section recommendations">

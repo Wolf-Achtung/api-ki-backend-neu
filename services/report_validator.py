@@ -13,8 +13,10 @@ Prüft:
 - Template-Text statt echtem Content
 - Prompt-Leaks in Quick-Wins
 
-Version: 1.2.0-GOLD
+Version: 1.3.0-PLATIN-WORDS
 Author: Claude + Wolf
+
+PLATIN+ ÄNDERUNG: Validierung basiert jetzt auf WÖRTERN statt Zeichen!
 """
 
 import re
@@ -147,21 +149,25 @@ class ReportValidator:
         "kmu": [],
     }
 
-    # PLATIN+ Standard: Erhöhte Mindestlängen für kritische Sections
-    MIN_SECTION_LENGTH = {
-        "executive_summary": 600,
-        "business_case": 800,
-        "quick_wins": 500,
-        "roadmap_90d": 700,
-        "roadmap_12m": 900,
-        "strategie_governance": 800,
-        "org_change": 700,
-        "tools_empfehlungen": 600,
-        "foerderpotenzial": 900,  # PLATIN+: erhöht von 600 auf 900
-        "risks": 800,             # PLATIN+: hinzugefügt
-        "recommendations": 800,   # PLATIN+: hinzugefügt
-        "gamechanger": 800,       # PLATIN+: hinzugefügt
+    # PLATIN+ Standard: Mindestlängen in WÖRTERN (nicht Zeichen!)
+    # Umrechnung: ca. 5-6 Zeichen pro Wort im Deutschen
+    MIN_SECTION_LENGTH_WORDS = {
+        "executive_summary": 100,      # ~600 Zeichen
+        "business_case": 130,          # ~800 Zeichen
+        "quick_wins": 80,              # ~500 Zeichen
+        "roadmap_90d": 120,            # ~700 Zeichen
+        "roadmap_12m": 900,            # PLATIN+: 900 Wörter
+        "strategie_governance": 130,   # ~800 Zeichen
+        "org_change": 120,             # ~700 Zeichen
+        "tools_empfehlungen": 100,     # ~600 Zeichen
+        "foerderpotenzial": 900,       # PLATIN+: 900 Wörter
+        "risks": 800,                  # PLATIN+: 800 Wörter
+        "recommendations": 800,        # PLATIN+: 800 Wörter
+        "gamechanger": 700,            # PLATIN+: 700 Wörter
     }
+
+    # Legacy-Alias für Abwärtskompatibilität
+    MIN_SECTION_LENGTH = MIN_SECTION_LENGTH_WORDS
 
     SECTION_KEY_MAP: Dict[str, str] = {
         "executive_summary": "EXECUTIVE_SUMMARY_HTML",
@@ -273,13 +279,17 @@ class ReportValidator:
                     )
 
     def _check_empty_or_short_sections(self) -> None:
-        for logical_name, min_length in self.MIN_SECTION_LENGTH.items():
+        """
+        PLATIN+ Validierung: Prüft Sections auf Mindest-WORTZAHL (nicht Zeichen!).
+        """
+        for logical_name, min_words in self.MIN_SECTION_LENGTH_WORDS.items():
             section_key = self.SECTION_KEY_MAP.get(logical_name, logical_name)
             if section_key not in self.sections:
                 continue
             content = self.sections.get(section_key)
             if not isinstance(content, str):
                 continue
+            # HTML-Tags entfernen
             text_only = re.sub(r"<[^>]+>", "", content).strip()
             if not text_only:
                 self.errors.append(
@@ -292,18 +302,23 @@ class ReportValidator:
                     )
                 )
                 continue
-            actual_length = len(text_only)
-            if actual_length < min_length:
+
+            # PLATIN+: Wörter zählen statt Zeichen
+            # Wörter sind durch Whitespace getrennte Sequenzen
+            words = text_only.split()
+            actual_word_count = len(words)
+
+            if actual_word_count < min_words:
                 self.errors.append(
                     ValidationError(
                         severity="WARNING",
                         category="SECTION_TOO_SHORT",
                         section=section_key,
                         message=(
-                            f"Section zu kurz: {actual_length} Zeichen "
-                            f"(Minimum: {min_length})"
+                            f"Section zu kurz: {actual_word_count} Wörter "
+                            f"(Minimum: {min_words} Wörter)"
                         ),
-                        details=f"Content preview: {text_only[:100]}...",
+                        details=f"Content preview: {text_only[:150]}...",
                     )
                 )
 
