@@ -162,10 +162,11 @@ class ReportValidator:
         "strategie_governance": 130,   # ~800 Zeichen
         "org_change": 120,             # ~700 Zeichen
         "tools_empfehlungen": 100,     # ~600 Zeichen
-        "foerderpotenzial": 900,       # PLATIN+: 900 Wörter
-        "risks": 800,                  # PLATIN+: 800 Wörter
-        "recommendations": 800,        # PLATIN+: 800 Wörter
+        "foerderpotenzial": 900,       # PLATIN+: 900 Wörter (Fallback: 917)
+        "risks": 800,                  # PLATIN+: 800 Wörter (Fallback: 875)
+        "recommendations": 800,        # PLATIN+: 800 Wörter (Fallback: 809)
         "gamechanger": 700,            # PLATIN+: 700 Wörter
+        "unternehmensprofil_markt": 500,  # PLATIN+: 500 Wörter (Fallback: 579)
     }
 
     # Legacy-Alias für Abwärtskompatibilität
@@ -184,6 +185,7 @@ class ReportValidator:
         "risks": "risks",                 # PLATIN+: hinzugefügt
         "recommendations": "recommendations",  # PLATIN+: hinzugefügt
         "gamechanger": "gamechanger",     # PLATIN+: hinzugefügt
+        "unternehmensprofil_markt": "unternehmensprofil_markt",  # PLATIN+: hinzugefügt
     }
 
     def __init__(self, sections: Dict[str, Any], meta: Dict[str, Any]) -> None:
