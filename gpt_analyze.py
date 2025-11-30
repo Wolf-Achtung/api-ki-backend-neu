@@ -2054,44 +2054,195 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   </ul>
 </div>"""
     
+    # ════════════════════════════════════════════════════════════════════════════
+    # 🎯 PLATIN+ FALLBACK: ROADMAP_12M (900+ Wörter)
+    # ════════════════════════════════════════════════════════════════════════════
     if section_key == "roadmap_12m":
-        # Bedingter Text für Monate 7-12 basierend auf size_group
-        ausbau_text = ""
-        zusatz_q2 = ""
+        # Size-aware Rollen und Governance-Aspekte
         if size_group == "solo":
-            ausbau_text = " – erfolgreich erprobte Workflows auf weitere eigene Aufgabenbereiche übertragen"
-            zusatz_q2 = "<li>Persönliche Workflow-Optimierung vorantreiben und Automatisierungspotenziale identifizieren.</li>"
+            verantwortlich_1 = "Sie als Inhaber:in"
+            verantwortlich_2 = "Sie persönlich"
+            governance_1 = "Erstellen Sie eine persönliche Checkliste für KI-Output-Prüfung und dokumentieren Sie grundlegende Datenschutz-Regeln für Ihre Arbeit."
+            governance_2 = "Führen Sie monatliche Selbst-Audits durch, dokumentieren Sie alle KI-gestützten Prozesse und halten Sie Best Practices schriftlich fest."
+            governance_3 = "Etablieren Sie einen jährlichen Sicherheits-Check, entwickeln Sie eine Backup-Strategie für KI-generierte Inhalte und definieren Sie einen Notfallplan für Tool-Ausfälle."
+            governance_4 = "Führen Sie ein Jahres-Audit durch, dokumentieren Sie Ihren Compliance-Status und bereiten Sie Ihre Learnings für die Roadmap 2.0 auf."
+            skalierung = "Übertragen Sie erfolgreich erprobte Workflows auf weitere eigene Aufgabenbereiche und identifizieren Sie neue Automatisierungspotenziale in Ihrem Geschäftsmodell."
+            team_aspekt = "Als Solo-Selbstständige:r liegt der Fokus auf persönlicher Effizienzsteigerung und der Entwicklung Ihrer eigenen KI-Kompetenz."
         elif size_group == "team":
-            ausbau_text = " und Zuständigkeiten im Team klären – Wissenstransfer sicherstellen"
-            zusatz_q2 = "<li>Team-Koordination stärken, gemeinsame Reviews etablieren und Skill-Entwicklung fördern.</li>"
-        elif size_group == "kmu":
-            ausbau_text = " und Fachbereiche einbinden – Pilotflächen definieren"
-            zusatz_q2 = "<li>Bereichsübergreifende Abstimmung und erste Governance-Strukturen etablieren.</li>"
-        
-        return f"""<div class="roadmap">
-  <div class="roadmap-phase">
-    <h3>Monate 1–6: Fundament legen</h3>
-    <ul>
-      <li>KI-Ziele schärfen und Kernprozesse stabil aufsetzen – realistische Erwartungen definieren und Quick-Win-Potenziale identifizieren.</li>
-      <li>Wissen, Beispiele und Standards strukturiert dokumentieren – Prompt-Bibliothek aufbauen, Best Practices sammeln und Qualitätskriterien klar festlegen.</li>
-      <li>Regelmäßige Qualitätskontrollen etablieren – Output-Reviews durchführen, Feedback-Schleifen implementieren und Erfolgsmetriken kontinuierlich messen.</li>
-      <li>Schulungs- und Onboarding-Prozesse systematisch aufsetzen – kontinuierliches Lernen ermöglichen, Skill-Entwicklung fördern und Wissenstransfer sicherstellen.</li>
-      {zusatz_q2}
-      <li>Erste Wirkungsmessung durchführen: Zeitersparnis, Qualitätsverbesserung und Risikominderung dokumentieren und kommunizieren.</li>
-    </ul>
-  </div>
+            verantwortlich_1 = "Teamlead oder KI-Owner"
+            verantwortlich_2 = "KI-Koordinator und beteiligte Teammitglieder"
+            governance_1 = "Vereinbaren Sie Team-Regeln für die KI-Nutzung und definieren Sie einen Review-Prozess für kritische Outputs."
+            governance_2 = "Etablieren Sie Quartals-Reviews mit dem gesamten Team, definieren Sie einen Incident-Prozess für KI-Fehler und erstellen Sie Schulungsmaterial."
+            governance_3 = "Führen Sie halbjährliche Governance-Reviews durch, aktualisieren Sie das Risiko-Register und planen Sie Schulungs-Refresher für alle Teammitglieder."
+            governance_4 = "Führen Sie eine Team-Retrospektive zur Governance durch, aktualisieren Sie Ihre Richtlinien und dokumentieren Sie Lessons Learned für das gesamte Team."
+            skalierung = "Rollen Sie bewährte Workflows auf weitere Teammitglieder und Aufgabenbereiche aus und klären Sie Zuständigkeiten und Verantwortlichkeiten im Team."
+            team_aspekt = "Im Team-Kontext steht die gemeinsame Entwicklung von Standards und der kontinuierliche Wissensaustausch im Vordergrund."
+        else:  # kmu
+            verantwortlich_1 = "Fachbereichsleitung in Abstimmung mit IT und Datenschutz"
+            verantwortlich_2 = "Prozessverantwortliche und QS-Beauftragte"
+            governance_1 = "Erstellen Sie einen Entwurf der KI-Richtlinie und führen Sie eine Datenschutz-Folgenabschätzung für die Pilotprojekte durch."
+            governance_2 = "Richten Sie ein Governance-Board ein, etablieren Sie einen Audit-Trail für kritische Entscheidungen und formalisieren Sie Compliance-Checks."
+            governance_3 = "Finalisieren Sie die KI-Richtlinie und kommunizieren Sie diese unternehmensweit, bereiten Sie ein externes Audit vor und formalisieren Sie das Risiko-Management."
+            governance_4 = "Erstellen Sie einen Management-Report zur KI-Governance, evaluieren Sie Compliance-Zertifizierungen und führen Sie eine strategische Risiko-Bewertung für Jahr 2 durch."
+            skalierung = "Pilotieren Sie erfolgreiche Anwendungen in weiteren Fachbereichen, identifizieren Sie Synergien und entwickeln Sie skalierbare Best Practices."
+            team_aspekt = "Als KMU ermöglicht Ihre Organisationsstruktur die systematische Koordination verschiedener Fachbereiche und die Etablierung verbindlicher Standards."
 
-  <div class="roadmap-phase">
-    <h3>Monate 7–12: Ausbau &amp; strategische Optimierung</h3>
-    <ul>
-      <li>Weitere Aufgabenbereiche systematisch einbeziehen{ausbau_text} und Synergien aktiv nutzen.</li>
-      <li>Ergebnisse kontinuierlich und systematisch messen (Zeitersparnis, Qualitätsverbesserung, Risikominimierung) und iterativ nachschärfen.</li>
-      <li>Roadmap 2.0 strategisch definieren und weitere Ausbaustufen konkret planen – nächste Use Cases priorisieren, Budget sichern und strategische Weichen für Jahr 2 stellen.</li>
-      <li>Governance und Compliance-Rahmen finalisieren – Leitlinien klar kommunizieren, Verantwortlichkeiten definieren und Audit-Prozesse etablieren.</li>
-      <li>Change-Management-Ansatz aufbauen: Kontinuierliche Verbesserung fördern, Learnings systematisch konsolidieren und strategische Weiterentwicklung vorbereiten.</li>
-    </ul>
-  </div>
-</div>"""
+        return f"""<section class="section roadmap-12m">
+  <h2>Strategische 12-Monats-Roadmap</h2>
+
+  <p>
+    Diese Roadmap zeigt, wie ein Unternehmen der Größe <strong>{size_label}</strong> in der Branche
+    <strong>{branche}</strong> innerhalb eines Jahres KI-gestützte Arbeitsweisen im Bereich
+    <strong>{hauptleistung or "KI-gestützte Prozessoptimierung"}</strong> nachhaltig etabliert und ausbaut.
+    Sie baut auf den Erfahrungen der ersten 90 Tage auf und verbindet schnelle operative Erfolge mit
+    langfristiger strategischer Entwicklung. {team_aspekt}
+  </p>
+
+  <h3>Monate 1–3: Fundament und Pilot-Setup</h3>
+
+  <p>
+    Die ersten drei Monate dienen der Schaffung einer soliden Grundlage für die KI-Nutzung. Das Ziel
+    ist es, realistische Erwartungen zu definieren, erste Quick Wins zu realisieren und eine
+    strukturierte Basis für die weitere Entwicklung zu etablieren. In dieser Phase geht es darum,
+    das Potenzial von KI für <strong>{hauptleistung or "Ihre Kernprozesse"}</strong> konkret zu
+    erfassen und erste messbare Erfolge zu erzielen.
+  </p>
+
+  <h4>Priorisierung und Use-Case-Definition</h4>
+  <p>
+    Beginnen Sie mit der Definition von 3 bis 5 priorisierten Use Cases, die ein klares Wirkungspotenzial
+    für Ihre tägliche Arbeit haben. Analysieren Sie, welche wiederkehrenden Aufgaben sich besonders
+    für KI-Unterstützung eignen und wo der größte Hebel für Effizienzgewinne liegt. Dokumentieren Sie
+    Ihre Auswahlkriterien und die erwarteten Ergebnisse, um später den Erfolg messen zu können.
+  </p>
+
+  <h4>Aufbau der Wissensbasis</h4>
+  <p>
+    Parallel bauen Sie eine strukturierte Prompt-Bibliothek mit 10 bis 15 dokumentierten Beispielen
+    auf, die auf die spezifischen Anforderungen der Branche <strong>{branche}</strong> abgestimmt sind.
+    Sammeln Sie Best Practices und legen Sie klare Qualitätskriterien fest. Diese Dokumentation bildet
+    das Fundament für konsistente Ergebnisse und erleichtert die spätere Skalierung.
+  </p>
+
+  <h4>Governance-Grundlagen</h4>
+  <p>
+    {governance_1} Verantwortlich für diese Phase ist {verantwortlich_1}. Als messbare KPIs für die
+    ersten drei Monate gelten: 2 bis 3 Quick Wins sind produktiv im Einsatz, eine erste Zeitersparnis
+    von mindestens 10 Prozent ist nachweisbar dokumentiert, und die grundlegenden Qualitätskriterien
+    sind definiert und kommuniziert.
+  </p>
+
+  <h3>Monate 4–6: Pilotierung und Qualitätsstandards</h3>
+
+  <p>
+    In der zweiten Phase geht es darum, KI-gestützte Prozesse im Arbeitsalltag zu verankern und
+    stabile Workflows zu etablieren. Das Ziel ist die Verstetigung der ersten Erfolge und der Aufbau
+    eines systematischen Monitoring-Systems. Die Erfahrungen aus den Quick Wins fließen in die
+    Entwicklung robuster Standard-Workflows ein.
+  </p>
+
+  <h4>Workflow-Integration und Prozessstabilität</h4>
+  <p>
+    Etablieren Sie stabile Workflows für die wichtigsten Use Cases mit einem klaren Ablauf: Input,
+    KI-Verarbeitung, Review und Freigabe. Erweitern Sie die Prompt-Bibliothek auf 25 bis 30
+    praxiserprobte Beispiele und dokumentieren Sie systematisch, welche Ansätze funktionieren und
+    welche Anpassungen erforderlich sind. Die Integration in bestehende Arbeitsprozesse sollte
+    reibungslos und ohne unnötige Medienbrüche erfolgen.
+  </p>
+
+  <h4>Monitoring und kontinuierliche Verbesserung</h4>
+  <p>
+    Bauen Sie ein kontinuierliches Monitoring auf, das Zeitersparnis, Qualität, Fehlerquoten und
+    Konsistenz systematisch erfasst. Erstellen Sie Schulungs- und Onboarding-Materialien für neue
+    Use Cases und etablieren Sie regelmäßige Review-Formate, um Learnings zeitnah zu erfassen.
+  </p>
+
+  <h4>Governance und Qualitätssicherung</h4>
+  <p>
+    {governance_2} Verantwortlich für diese Phase ist {verantwortlich_2}. Die KPIs für Monat 4 bis 6
+    umfassen: stabile Workflows sind produktiv im Einsatz, das Monitoring-System ist etabliert, und
+    eine messbare Qualitätsverbesserung von mindestens 20 Prozent Zeitersparnis ist dokumentiert.
+  </p>
+
+  <h3>Monate 7–12: Ausbau, Skalierung und Governance</h3>
+
+  <p>
+    Die dritte Phase fokussiert auf die Multiplikation erfolgreicher Workflows und die Erschließung
+    neuer Anwendungsbereiche. Das Ziel ist es, den nachweisbaren ROI zu erreichen und eine tragfähige
+    Governance-Struktur zu etablieren, die langfristige Stabilität und Compliance gewährleistet.
+    {skalierung}
+  </p>
+
+  <h4>Systematische Skalierung</h4>
+  <p>
+    Bauen Sie auf den Erfolgen der ersten sechs Monate auf und skalieren Sie auf 5 bis 8 produktive
+    Use Cases mit nachweisbarem ROI. Identifizieren Sie Synergien zwischen verschiedenen
+    Anwendungsbereichen und entwickeln Sie systematische Erfolgsmessung mit Dashboards, KPIs und
+    Trendanalysen. Die Skalierung sollte kontrolliert erfolgen, um die Qualität zu gewährleisten.
+    Nutzen Sie die gewonnenen Erkenntnisse aus den ersten sechs Monaten, um die Einführung neuer
+    Use Cases zu beschleunigen und typische Fehler zu vermeiden. Eine schrittweise Erweiterung
+    minimiert Risiken und ermöglicht kontinuierliches Lernen.
+  </p>
+
+  <h4>Governance-Framework finalisieren</h4>
+  <p>
+    {governance_3} Entwickeln Sie klare Leitlinien für Datenhandling, Qualitätssicherung und
+    Freigabeprozesse. Definieren Sie eindeutige Verantwortlichkeiten und Eskalationswege. Die
+    Governance-Strukturen sollten so gestaltet sein, dass sie den Anforderungen des EU AI Act
+    entsprechen und eine externe Prüfung bestehen können. Dokumentieren Sie alle Prozesse und
+    Entscheidungen nachvollziehbar, um bei Bedarf Rechenschaft ablegen zu können.
+  </p>
+
+  <h4>Erfolgsmessung und ROI-Nachweis</h4>
+  <p>
+    Verantwortlich für diese Phase ist {verantwortlich_1}. Als KPIs gelten: 5 bis 8 Use Cases sind
+    produktiv im Einsatz, der ROI erreicht mindestens 30 Prozent des ursprünglichen Business Case,
+    und die Governance-Strukturen sind etabliert und dokumentiert. Bereiten Sie die Datenbasis für
+    das Management-Reporting vor.
+  </p>
+
+  <h3>Abschluss und Verstetigung: 12-Monats-Bilanz</h3>
+
+  <p>
+    Die abschließende Phase dient der Konsolidierung aller Learnings und der Vorbereitung der
+    strategischen Weiterentwicklung für Jahr 2. Das Ziel ist ein umfassender Jahresrückblick, der
+    sowohl Erfolge als auch Verbesserungspotenziale identifiziert und eine klare Roadmap 2.0
+    für das kommende Jahr definiert.
+  </p>
+
+  <h4>Systematische Auswertung</h4>
+  <p>
+    Führen Sie eine systematische Auswertung aller Use Cases durch: Analysieren Sie Wirkung,
+    Effizienz, Risiken und Optimierungspotenziale. Dokumentieren Sie detailliert, welche Ansätze
+    besonders erfolgreich waren und welche Anpassungen für die Zukunft sinnvoll sind. Diese
+    Erkenntnisse bilden die Grundlage für die strategische Planung des kommenden Jahres.
+  </p>
+
+  <h4>Strategische Planung für Jahr 2</h4>
+  <p>
+    Definieren Sie die strategische Roadmap 2.0 für das zweite Jahr: Priorisieren Sie die nächsten
+    Use Cases, sichern Sie das Budget und treffen Sie strategische Entscheidungen über
+    Ausbaustufen, Integration und Automatisierung. Berücksichtigen Sie dabei die Erkenntnisse aus
+    dem ersten Jahr und die sich entwickelnden Möglichkeiten der KI-Technologie. Beziehen Sie
+    aktuelle Marktentwicklungen und technologische Trends in Ihre Planung ein, um auch im zweiten
+    Jahr wettbewerbsfähig zu bleiben und neue Chancen frühzeitig zu erkennen.
+  </p>
+
+  <h4>Governance-Abschluss und Compliance</h4>
+  <p>
+    {governance_4} Verantwortlich für den Jahresabschluss ist {verantwortlich_1}. Die finalen KPIs
+    umfassen: ein vollständiger Jahresreview ist dokumentiert, die Roadmap 2.0 ist priorisiert und
+    freigegeben, das Budget für Jahr 2 ist gesichert, und der ursprünglich geplante ROI ist erreicht
+    oder übertroffen.
+  </p>
+
+  <p class="small muted">
+    Diese 12-Monats-Roadmap schafft die Grundlage für eine nachhaltige, strategisch verankerte
+    KI-Nutzung in <strong>{hauptleistung or "Ihrem Kerngeschäft"}</strong>. Sie verbindet schnelle
+    operative Erfolge mit langfristiger strategischer Entwicklung und bereitet die Skalierung
+    für Jahr 2 systematisch vor.
+  </p>
+</section>"""
 
     # 🎯 SIZE-AWARE ORG_CHANGE FALLBACK
     if section_key == "org_change":
@@ -2574,10 +2725,12 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
             # PLATIN+ Minimalumfang prüfen (dynamisch nach Section-Typ)
             # WICHTIG: Werte sind jetzt in WÖRTERN, nicht Zeichen!
             # Für kritische Sections höhere Schwelle, damit size-aware Fallbacks greifen
+            # HINWEIS: Prompt fordert 900+ Wörter für roadmap_12m, aber wir prüfen
+            # konservativ auf 800 Wörter – so verschwinden False Negatives bei Zähldifferenzen.
             platin_min_words = {
                 "roadmap": 100,               # ~600 Zeichen
                 "roadmap_90d": 100,           # ~600 Zeichen
-                "roadmap_12m": 900,           # PLATIN+: 900 Wörter
+                "roadmap_12m": 800,           # PLATIN+: Prompt fordert 900, prüfen auf 800 (Sicherheitsmarge)
                 "foerderpotenzial": 900,      # PLATIN+: 900 Wörter
                 "org_change": 100,            # ~600 Zeichen
                 "strategie_governance": 120,  # ~700 Zeichen

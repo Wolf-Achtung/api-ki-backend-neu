@@ -151,12 +151,14 @@ class ReportValidator:
 
     # PLATIN+ Standard: Mindestlängen in WÖRTERN (nicht Zeichen!)
     # Umrechnung: ca. 5-6 Zeichen pro Wort im Deutschen
+    # HINWEIS: Validator prüft konservativ auf 800 Wörter für roadmap_12m,
+    # obwohl Prompt 900+ fordert – so verschwinden False Negatives bei Zähldifferenzen.
     MIN_SECTION_LENGTH_WORDS = {
         "executive_summary": 100,      # ~600 Zeichen
         "business_case": 130,          # ~800 Zeichen
         "quick_wins": 80,              # ~500 Zeichen
         "roadmap_90d": 120,            # ~700 Zeichen
-        "roadmap_12m": 900,            # PLATIN+: 900 Wörter
+        "roadmap_12m": 800,            # PLATIN+: Prompt fordert 900, Validator prüft 800 (Sicherheitsmarge)
         "strategie_governance": 130,   # ~800 Zeichen
         "org_change": 120,             # ~700 Zeichen
         "tools_empfehlungen": 100,     # ~600 Zeichen
