@@ -417,19 +417,36 @@ def call_anthropic(
         log.exception("❌ Fehler beim Aufruf der Anthropic API (Abschnitt '%s'): %s", section, exc)
         return None
 
-    # Response auslesen
+    # Response auslesen mit PLATIN+ Diagnostik
     try:
         parts = []
         for block in getattr(message, "content", []) or []:
             if getattr(block, "type", None) == "text":
                 parts.append(getattr(block, "text", "") or "")
         text = "".join(parts).strip()
-        log.debug(
-            "✅ Anthropic-Antwort für Abschnitt %s (%s Zeichen, Modell %s)",
-            section,
-            len(text),
-            model_name,
-        )
+
+        # PLATIN+ Diagnostik: Log stop_reason für Debugging
+        stop_reason = getattr(message, "stop_reason", "unknown")
+        usage = getattr(message, "usage", None)
+        output_tokens = getattr(usage, "output_tokens", 0) if usage else 0
+
+        if stop_reason == "max_tokens":
+            log.warning(
+                "⚠️ Anthropic response truncated (stop_reason=max_tokens) – "
+                "max_tokens=%d may be too low for section '%s'",
+                max_tok,
+                section,
+            )
+        else:
+            log.debug(
+                "✅ Anthropic-Antwort für Abschnitt %s (%s Zeichen, %d tokens, stop_reason=%s, Modell %s)",
+                section,
+                len(text),
+                output_tokens,
+                stop_reason,
+                model_name,
+            )
+
         return text or None
     except Exception as exc:  # pragma: no cover
         log.exception(

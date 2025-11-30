@@ -234,3 +234,8 @@ Developer: <!--
     Maßnahmenplanung für die kommenden 3–6&nbsp;Monate überführt werden.
   </p>
 </section>
+
+<!-- PLATIN+ REINFORCEMENT: Dieser Abschnitt MUSS mindestens 800 Wörter enthalten.
+     Prüfe deine Ausgabe: Zähle die Wörter und erweitere jeden Risikobereich mit zusätzlichen
+     Details, Beispielen und konkreten Maßnahmen, falls die Mindestlänge nicht erreicht wird.
+     Kürze NIEMALS – liefere immer vollständige, ausführliche Inhalte. -->
