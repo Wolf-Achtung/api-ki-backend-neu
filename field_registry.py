@@ -881,5 +881,11 @@ fields = {
   },
   "selbststaendig": {
     "label": "selbststaendig"
+  },
+  "vision_3_jahre": {
+    "label": "vision_3_jahre"
+  },
+  "ki_guardrails": {
+    "label": "ki_guardrails"
   }
 }
