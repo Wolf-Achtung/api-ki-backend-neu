@@ -448,6 +448,113 @@ Nutze den Strategischen Kontext wie folgt:
         # No specific instructions for other prompts
         return ""
 
+    def _build_guardrails_instructions(
+        self, prompt_name: str, strategic_context_block: str
+    ) -> str:
+        """
+        Build prompt-specific guardrails/no-gos instructions.
+
+        These instructions ensure that LLM outputs respect any no-gos or
+        guardrails specified by the user in their strategic context.
+
+        Args:
+            prompt_name: Name of the prompt (e.g., 'risks', 'org_change')
+            strategic_context_block: The strategic context string
+
+        Returns:
+            Formatted guardrails instruction string, or empty string if not applicable
+        """
+        # Return empty if no strategic context or no guardrails mentioned
+        if not strategic_context_block or strategic_context_block.strip() == "":
+            return ""
+
+        # Check if guardrails/no-gos are mentioned in the strategic context
+        guardrails_keywords = [
+            "no-gos",
+            "leitplanken",
+            "no gos",
+            "rote linien",
+            "sensible themen",
+            "tabu",
+            "ausgeschlossen",
+            "nicht erlaubt",
+        ]
+        context_lower = strategic_context_block.lower()
+        has_guardrails = any(kw in context_lower for kw in guardrails_keywords)
+
+        if not has_guardrails:
+            return ""
+
+        prompt_lower = prompt_name.lower()
+
+        # a) Risk/Compliance prompts
+        RISK_COMPLIANCE_KEYWORDS = [
+            "compliance",
+            "risikoanalyse",
+            "risiko",
+            "risk",
+            "risks",
+            "ai_act",
+            "dsgvo",
+            "datenschutz",
+        ]
+        if any(kw in prompt_lower for kw in RISK_COMPLIANCE_KEYWORDS):
+            return """
+## Leitplanken & No-Gos (verbindlich zu beachten)
+
+- **Keine Empfehlung darf** irgendeinem der genannten No-Gos widersprechen.
+- **Wenn eine gute Praxis im Konflikt mit einer Leitplanke steht:** benenne den Konflikt und schlage eine sichere Alternative vor.
+- **Erkläre Risiken immer im Kontext** der angegebenen Leitplanken.
+- **Erwähne die Leitplanken ausdrücklich,** wenn du Risiko-Minderungsmaßnahmen beschreibst.
+
+---
+
+"""
+
+        # b) Change/Culture prompts
+        CHANGE_CULTURE_KEYWORDS = [
+            "change",
+            "kultur",
+            "akzeptanz",
+            "team",
+            "org_change",
+            "organisation",
+            "mitarbeiter",
+        ]
+        if any(kw in prompt_lower for kw in CHANGE_CULTURE_KEYWORDS):
+            return """
+## Hinweise zur Kommunikation im Rahmen der Leitplanken
+
+- **Passe alle Change- und Kommunikationsbeispiele** an die angegebenen Leitplanken an.
+- **Vermeide Aussagen,** die sensibel oder kritisch im Kontext der No-Gos wären.
+- **Wenn Leitplanken Team- oder Betriebsrat-Sensitivität betreffen:** nutze besonders vorsichtige, neutrale Formulierungen.
+
+---
+
+"""
+
+        # c) Executive Summary prompts
+        EXECUTIVE_SUMMARY_KEYWORDS = [
+            "summary",
+            "executive",
+            "management_summary",
+            "zusammenfassung",
+            "überblick",
+        ]
+        if any(kw in prompt_lower for kw in EXECUTIVE_SUMMARY_KEYWORDS):
+            return """
+## Leitplanken-Hinweis für Executive Summary
+
+- **Falls Leitplanken angegeben sind:** formuliere einen knappen Hinweis darauf („Das Unternehmen legt besonderen Wert auf …").
+- **Keine Details, keine Risiken** – nur eine sehr kurze Erwähnung als Rahmenbedingung.
+
+---
+
+"""
+
+        # d) All other prompts - no specific guardrails instructions
+        return ""
+
     def enhance_prompt(self, prompt_name: str, briefing_data: Dict[str, Any]) -> str:
         """
         Load a prompt and inject context.
@@ -488,6 +595,7 @@ Nutze den Strategischen Kontext wie folgt:
             # === STEP 1: Inject strategic context block into ALL prompts ===
             # This is the user's own strategic input - always include it
             strategic_block = self._build_strategic_context_prompt_block(briefing_data)
+            strategic_context_raw = briefing_data.get("strategic_context_block", "")
 
             # === STEP 1b: Add prompt-specific alignment instructions ===
             # For Quick Wins and Roadmaps, add specific instructions on HOW to use the context
@@ -495,8 +603,16 @@ Nutze den Strategischen Kontext wie folgt:
                 prompt_name, briefing_data
             )
 
-            # Combine strategic block + alignment instructions
-            full_context_injection = strategic_block + alignment_instructions
+            # === STEP 1c: Add guardrails/no-gos instructions ===
+            # For Risk, Change, Executive prompts, add specific guardrails handling
+            guardrails_instructions = self._build_guardrails_instructions(
+                prompt_name, strategic_context_raw
+            )
+
+            # Combine: strategic block + alignment instructions + guardrails instructions
+            full_context_injection = (
+                strategic_block + alignment_instructions + guardrails_instructions
+            )
 
             # Find the best injection point: after Developer comment, before HTML
             # Look for the end of the Developer comment block
@@ -520,6 +636,11 @@ Nutze den Strategischen Kontext wie folgt:
                 if alignment_instructions:
                     log.debug(
                         "✅ Added strategic alignment instructions for '%s'",
+                        prompt_name,
+                    )
+                if guardrails_instructions:
+                    log.debug(
+                        "✅ Added guardrails/no-gos instructions for '%s'",
                         prompt_name,
                     )
             else:
