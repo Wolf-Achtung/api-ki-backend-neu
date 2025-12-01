@@ -1427,6 +1427,77 @@
                         </div>
                     </div>
                 </section>
+                <!-- STRATEGIC CONTEXT -->
+                {% if STRATEGISCHE_ZIELE or ZEITERSPARNIS_PRIORITAET or HAUPTLEISTUNG or KI_PROJEKTE or GESCHAEFTSMODELL_EVOLUTION or VISION_3_JAHRE or KI_GUARDRAILS %}
+                {% set has_strategic_content = (STRATEGISCHE_ZIELE and STRATEGISCHE_ZIELE != '—') or (ZEITERSPARNIS_PRIORITAET and ZEITERSPARNIS_PRIORITAET != '—') or (HAUPTLEISTUNG and HAUPTLEISTUNG != '—') or (KI_PROJEKTE and KI_PROJEKTE != '—') or (GESCHAEFTSMODELL_EVOLUTION and GESCHAEFTSMODELL_EVOLUTION != '—') or (VISION_3_JAHRE and VISION_3_JAHRE != '—') or (KI_GUARDRAILS and KI_GUARDRAILS != '—') %}
+                {% if has_strategic_content %}
+                <section class="section report-strategic-context chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Ihre Angaben</span>
+                            <h2>Strategischer Kontext & Leitplanken</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Originalangaben aus dem Fragebogen
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {% if STRATEGISCHE_ZIELE and STRATEGISCHE_ZIELE != '—' %}
+                        <div class="card" style="margin-bottom: 8px;">
+                            <h3>Strategische Prioritäten</h3>
+                            <p>{{ STRATEGISCHE_ZIELE }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if ZEITERSPARNIS_PRIORITAET and ZEITERSPARNIS_PRIORITAET != '—' %}
+                        <div class="card" style="margin-bottom: 8px;">
+                            <h3>Zeitfresser & Prozess-Pain-Points</h3>
+                            <p>{{ ZEITERSPARNIS_PRIORITAET }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if HAUPTLEISTUNG and HAUPTLEISTUNG != '—' %}
+                        <div class="card" style="margin-bottom: 8px;">
+                            <h3>Wichtigste Leistung / Hauptprodukt</h3>
+                            <p>{{ HAUPTLEISTUNG }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if KI_PROJEKTE and KI_PROJEKTE != '—' %}
+                        <div class="card" style="margin-bottom: 8px;">
+                            <h3>Laufende oder geplante KI-Projekte</h3>
+                            <p>{{ KI_PROJEKTE }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if GESCHAEFTSMODELL_EVOLUTION and GESCHAEFTSMODELL_EVOLUTION != '—' %}
+                        <div class="card" style="margin-bottom: 8px;">
+                            <h3>Ideen zur Geschäftsmodell-Entwicklung mit KI</h3>
+                            <p>{{ GESCHAEFTSMODELL_EVOLUTION }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if VISION_3_JAHRE and VISION_3_JAHRE != '—' %}
+                        <div class="card" style="margin-bottom: 8px;">
+                            <h3>Vision in 2–3 Jahren</h3>
+                            <p>{{ VISION_3_JAHRE }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if KI_GUARDRAILS and KI_GUARDRAILS != '—' %}
+                        <div class="card" style="margin-bottom: 8px; border-color: rgba(251, 191, 36, 0.7);">
+                            <h3>⚠️ No-Gos & Leitplanken</h3>
+                            <p>{{ KI_GUARDRAILS }}</p>
+                            <p class="small muted" style="margin-top: 6px;">
+                                Diese Angaben wurden bei allen Empfehlungen in diesem Report berücksichtigt.
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </section>
+                {% endif %}
+                {% endif %}
                 <!-- QUICK WINS -->
                 <section class="section chapter">
                     <div class="section-header">
