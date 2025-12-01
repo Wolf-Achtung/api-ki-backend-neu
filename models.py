@@ -159,3 +159,25 @@ class LoginCode(Base):
     def __repr__(self) -> str:  # pragma: no cover
         state = "consumed" if self.consumed_at else "active"
         return f"<LoginCode email={self.email!r} state={state} purpose={self.purpose!r}>"
+
+
+class Feedback(Base):
+    """
+    Feedback submissions from users.
+
+    Stores user feedback about reports, UX, and general comments.
+    The payload field contains the full JSON submission.
+    """
+    __tablename__ = "feedbacks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    payload: Mapped[dict] = mapped_column(JSONType, default=dict, nullable=False)
+    source: Mapped[str] = mapped_column(String(64), default="feedback_form_v1", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"<Feedback id={self.id} source={self.source!r}>"
