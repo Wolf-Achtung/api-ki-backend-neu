@@ -225,7 +225,7 @@ async def process_feedback(
 
     Returns a result dict with status and optional details.
     """
-    result = {
+    result: Dict[str, Any] = {
         "logged": False,
         "saved_to_db": False,
         "forwarded_to_webhook": False,
