@@ -193,6 +193,60 @@ def _labels_for_list(field_key, values):
         out.append(_label_for(field_key, v))
     return ", ".join([x for x in out if x])
 
+
+# === STRATEGIC CONTEXT BLOCK =============================================
+def build_strategic_context_block(answers: dict) -> str:
+    """
+    Kombiniert alle strategischen Freitext-Felder zu einem strukturierten Kontextblock.
+    Wird für spätere Prompt-Anreicherung verwendet.
+
+    Args:
+        answers: Dict mit den normalisierten Fragebogen-Antworten
+
+    Returns:
+        Formatierter String mit allen strategischen Kontextinformationen
+    """
+    lines = []
+
+    if answers.get("strategische_ziele"):
+        val = answers["strategische_ziele"]
+        if val and val != "—":
+            lines.append(f"Strategische Prioritäten:\n{val}")
+
+    if answers.get("zeitersparnis_prioritaet"):
+        val = answers["zeitersparnis_prioritaet"]
+        if val and val != "—":
+            lines.append(f"Zeitfresser & Prozess-Pain-Points:\n{val}")
+
+    if answers.get("hauptleistung"):
+        val = answers["hauptleistung"]
+        if val and val != "—":
+            lines.append(f"Wichtigste Leistung / Hauptprodukt:\n{val}")
+
+    if answers.get("ki_projekte"):
+        val = answers["ki_projekte"]
+        if val and val != "—":
+            lines.append(f"Laufende oder geplante KI-Projekte:\n{val}")
+
+    if answers.get("geschaeftsmodell_evolution"):
+        val = answers["geschaeftsmodell_evolution"]
+        if val and val != "—":
+            lines.append(f"Idee für Geschäftsmodell-Entwicklung:\n{val}")
+
+    if answers.get("vision_3_jahre"):
+        val = answers["vision_3_jahre"]
+        if val and val != "—":
+            lines.append(f"Vision für die nächsten 2–3 Jahre:\n{val}")
+
+    if answers.get("ki_guardrails"):
+        val = answers["ki_guardrails"]
+        if val and val != "—":
+            lines.append(f"No-Gos & Leitplanken:\n{val}")
+
+    return "\n\n".join(lines)
+# =========================================================================
+
+
 # === KSJ EXEC-SUMMARY OVERRIDES (auto-insert) ============================
 # (Imports already at top of file)
 
@@ -3744,7 +3798,15 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         answers = normalize_answers(raw_answers)
     except Exception:
         pass
-    
+
+    # === STRATEGIC CONTEXT BLOCK erzeugen (für spätere Prompt-Anreicherung) ===
+    strategic_context = build_strategic_context_block(answers)
+    answers["strategic_context_block"] = strategic_context
+    if strategic_context:
+        log.info("[%s] 📋 Strategic context block generated (%d chars)", run_id, len(strategic_context))
+    else:
+        log.info("[%s] 📋 Strategic context block is empty (no strategic fields provided)", run_id)
+
     log.info("[%s] 📊 Calculating realistic scores (v4.14.0-GOLD-PLUS)...", run_id)
     score_wrap = _calculate_realistic_score(answers)
     scores = score_wrap["scores"]
@@ -3804,7 +3866,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         "CHANGE_MANAGEMENT_LABEL", "MELDEWEGE_LABEL", "DATENSCHUTZ_LABEL",
         "LOESCHREGELN_LABEL", "DATENSCHUTZBEAUFTRAGTER_LABEL", "FOLGENABSCHAETZUNG_LABEL",
         "INTERNE_KI_KOMPETENZEN_LABEL", "STRATEGISCHE_ZIELE", "GESCHAEFTSMODELL_EVOLUTION",
-        "ZEITERSPARNIS_PRIORITAET", "KI_PROJEKTE", "VISION_3_JAHRE",
+        "ZEITERSPARNIS_PRIORITAET", "KI_PROJEKTE", "VISION_3_JAHRE", "KI_GUARDRAILS",
         "MITARBEITER_LABEL", "UMSATZ_LABEL", "SELBSTSTAENDIG_LABEL",
         "ZIELGRUPPEN_LABELS", "MARKTPOSITION_LABEL", "BENCHMARK_WETTBEWERB_LABEL",
         "INTERESSE_FOERDERUNG_LABEL",
@@ -3812,6 +3874,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         "KI_ZIELE_LABELS", "KI_HEMMNISSE_LABELS", "ANWENDUNGSFAELLE_LABELS",
         "DATENQUELLEN_LABELS", "VORHANDENE_TOOLS_LABELS", "REGULIERTE_BRANCHE_LABELS",
         "TRAININGS_INTERESSEN_LABELS",
+        # Strategic context block
+        "strategic_context_block",
     ]
     for key in direct_copy_keys:
         sections[key] = answers.get(key, "")

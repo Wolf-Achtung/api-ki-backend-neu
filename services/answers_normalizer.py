@@ -318,6 +318,7 @@ def normalize_answers(answers: Dict[str, Any]) -> Dict[str, Any]:
     )
     out["KI_PROJEKTE"] = out.get("ki_projekte", "") or "—"
     out["VISION_3_JAHRE"] = out.get("vision_3_jahre", "") or "—"
+    out["KI_GUARDRAILS"] = out.get("ki_guardrails", "") or "—"
     out["MITARBEITER_LABEL"] = out.get("unternehmensgroesse", "") or "—"
     out["UMSATZ_LABEL"] = out.get("JAHRESUMSATZ_LABEL", "—")
 
