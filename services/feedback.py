@@ -3,7 +3,7 @@
 services/feedback.py — Feedback-Service
 
 Handles feedback submission: logging, optional DB persistence,
-and optional forwarding to external webhook (Make/n8n).
+optional forwarding to external webhook (Make/n8n), and email notification.
 """
 from __future__ import annotations
 
@@ -18,6 +18,14 @@ from typing import Any, Dict, Optional
 import httpx
 
 log = logging.getLogger("services.feedback")
+
+# Default admin email for feedback notifications
+FEEDBACK_ADMIN_EMAIL_DEFAULT = "bewertung@ki-sicherheit.jetzt"
+
+
+def _get_feedback_admin_email() -> str:
+    """Returns FEEDBACK_ADMIN_EMAIL or default."""
+    return (os.getenv("FEEDBACK_ADMIN_EMAIL") or "").strip() or FEEDBACK_ADMIN_EMAIL_DEFAULT
 
 
 def _get_feedback_url() -> Optional[str]:
@@ -88,6 +96,74 @@ async def forward_to_webhook(payload: Dict[str, Any]) -> bool:
         return False
 
 
+async def send_feedback_notification_email(payload: Dict[str, Any]) -> bool:
+    """
+    Send feedback notification email to admin.
+
+    Uses the existing Mailer service (Resend/SMTP).
+    Returns True if successful, False otherwise (never raises).
+    """
+    admin_email = _get_feedback_admin_email()
+
+    # Build email content from payload
+    lines = [
+        "Neues Feedback eingegangen:",
+        "",
+        f"Unternehmensgröße: {payload.get('company_size_feedback', '-')}",
+        f"Branche: {payload.get('branch_feedback', '-')}",
+        f"Test-Referenz: {payload.get('test_reference', '-')}",
+        "",
+        "=== UX-Bewertung ===",
+        f"Klarheit (1-5): {payload.get('ux_clarity_rating', '-')}",
+        f"Aufwand (1-5): {payload.get('ux_effort_rating', '-')}",
+        f"Pflichtfelder: {payload.get('ux_required_fields', '-')}",
+        f"UX Kommentar: {payload.get('ux_comment') or '-'}",
+        "",
+        "=== Report-Bewertung ===",
+        f"Relevanz (1-5): {payload.get('report_relevance_rating', '-')}",
+        f"Ziele sichtbar: {payload.get('report_goals_visible', '-')}",
+        f"Guardrails berücksichtigt: {payload.get('report_guardrails_used', '-')}",
+        f"Report Kommentar: {payload.get('report_comment') or '-'}",
+        "",
+        "=== Gesamtbewertung ===",
+        f"Gesamtnutzen (1-10): {payload.get('overall_helpfulness_score', '-')}",
+        f"Zahlungsbereitschaft: {payload.get('payment_willingness', '-')}",
+        f"Finaler Kommentar: {payload.get('final_comment') or '-'}",
+        "",
+        "---",
+        f"Zeitstempel: {datetime.now(timezone.utc).isoformat()}",
+    ]
+
+    # Add metadata if present
+    meta = payload.get("_meta", {})
+    if meta:
+        lines.append(f"Client IP: {meta.get('client_ip', '-')}")
+
+    body_text = "\n".join(lines)
+    subject = "Neues KI-Readiness Feedback"
+
+    try:
+        from services.mailer import Mailer
+
+        mailer = Mailer.from_settings()
+        await mailer.send(
+            to=admin_email,
+            subject=subject,
+            text=body_text
+        )
+        log.info("✓ Feedback notification email sent to %s", admin_email)
+        return True
+
+    except Exception as exc:
+        log.exception(
+            "✗ Failed to send feedback notification email to %s: %s - %s",
+            admin_email,
+            type(exc).__name__,
+            str(exc)
+        )
+        return False
+
+
 def log_feedback(payload: Dict[str, Any], source: str = "feedback_form_v1") -> None:
     """
     Log feedback payload in structured format.
@@ -143,7 +219,7 @@ async def process_feedback(
     source: str = "feedback_form_v1"
 ) -> Dict[str, Any]:
     """
-    Process incoming feedback: log, save to DB, forward to webhook.
+    Process incoming feedback: log, save to DB, forward to webhook, send email.
 
     This is the main entry point for the feedback service.
 
@@ -153,6 +229,7 @@ async def process_feedback(
         "logged": False,
         "saved_to_db": False,
         "forwarded_to_webhook": False,
+        "email_sent": False,
         "feedback_id": None,
     }
 
@@ -170,5 +247,9 @@ async def process_feedback(
     # 3. Forward to webhook if configured
     webhook_success = await forward_to_webhook(payload)
     result["forwarded_to_webhook"] = webhook_success
+
+    # 4. Send email notification to admin
+    email_success = await send_feedback_notification_email(payload)
+    result["email_sent"] = email_success
 
     return result
