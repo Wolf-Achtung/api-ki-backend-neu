@@ -3880,6 +3880,26 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     for key in direct_copy_keys:
         sections[key] = answers.get(key, "")
 
+    # === STRATEGIC CONTEXT FIELDS (lowercase for template compatibility) ===
+    # These are the user's freetext strategic inputs, mapped to lowercase template keys
+    strategic_field_mappings = [
+        ("strategische_ziele", "strategische_ziele"),
+        ("zeitersparnis_prioritaet", "zeitersparnis_prioritaet"),
+        ("hauptleistung", "hauptleistung"),
+        ("ki_projekte", "ki_projekte"),
+        ("geschaeftsmodell_evolution", "geschaeftsmodell_evolution"),
+        ("vision_3_jahre", "vision_3_jahre"),
+        ("ki_guardrails", "ki_guardrails"),
+        ("strategic_context_block", "strategic_context_block"),
+    ]
+    for answer_key, template_key in strategic_field_mappings:
+        val = answers.get(answer_key, "")
+        # Skip placeholder values
+        if val and val != "—":
+            sections[template_key] = val
+        else:
+            sections[template_key] = ""
+
     log.info("[%s] Copied %d label variables to sections", run_id, len(direct_copy_keys) + len(label_with_fallback))
 # === END LABELS FIX ===
 
