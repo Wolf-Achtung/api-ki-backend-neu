@@ -1419,6 +1419,15 @@
                             <div class="card card-muted">
                                 <h3>Ihr KI-Profil in einem Satz</h3>
                                 <p>{{ LEAD_EXEC }}</p>
+                                {% if strategische_ziele %}
+                                <p><strong>Fokus:</strong> {{ strategische_ziele }}</p>
+                                {% endif %}
+                                {% if zeitersparnis_prioritaet %}
+                                <p><strong>Wesentliche Belastungen:</strong> {{ zeitersparnis_prioritaet }}</p>
+                                {% endif %}
+                                {% if ki_guardrails %}
+                                <p><strong>Leitplanken:</strong> {{ ki_guardrails }}</p>
+                                {% endif %}
                                 <p class="small muted">
                                     Die weiteren Seiten brechen diese Einschätzung auf Teilbereiche herunter und zeigen konkrete
                                     nächste Schritte (Quick Wins, Roadmap, Förderoptionen).
