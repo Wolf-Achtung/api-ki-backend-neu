@@ -268,14 +268,27 @@
         /* ============================================
            KAPITEL-SEITENUMBRÜCHE für strukturierte PDF
            ============================================ */
+        /* ============================================
+           SEITENUMBRÜCHE – Kapitel und Boxen
+           ============================================ */
         .chapter {
             page-break-before: always;
             break-before: page;
         }
-        
+
         .chapter:first-of-type {
             page-break-before: auto;
             break-before: auto;
+        }
+
+        .chapter-start {
+            page-break-before: always;
+            break-before: page;
+        }
+
+        .no-page-break-inside {
+            page-break-inside: avoid;
+            break-inside: avoid-page;
         }
         
         .tag {
@@ -405,9 +418,9 @@
             align-self: flex-start;
             padding: 8px 10px;
             border-radius: 999px;
-            border: 1px solid rgba(34, 197, 94, 0.9);
-            background: radial-gradient(circle at 20% 0, rgba(34, 197, 94, 0.48), rgba(6, 78, 59, 0.98));
-            box-shadow: 0 12px 35px rgba(16, 185, 129, 0.7);
+            border: 1px solid rgba(59, 130, 246, 0.9);
+            background: radial-gradient(circle at 20% 0, rgba(59, 130, 246, 0.48), rgba(30, 64, 175, 0.98));
+            box-shadow: 0 12px 35px rgba(59, 130, 246, 0.7);
             display: flex;
             flex-direction: column;
             gap: 1px;
@@ -469,53 +482,54 @@
             background: radial-gradient(circle at 30% 30%, #A855F7, #4C1D95 60%, #020617 100%);
         }
         
+        /* Alle Badges in einheitlichen Blautönen */
         .badge-eu {
             border-color: rgba(59, 130, 246, 0.9);
             background:
-                radial-gradient(circle at 0 0, rgba(59, 130, 246, 0.8), transparent 60%),
-                radial-gradient(circle at 100% 0, rgba(56, 189, 248, 0.5), transparent 60%),
+                radial-gradient(circle at 0 0, rgba(59, 130, 246, 0.6), transparent 60%),
+                radial-gradient(circle at 100% 0, rgba(96, 165, 250, 0.4), transparent 60%),
                 rgba(15, 23, 42, 0.92);
         }
-        
+
         .badge-eu .badge-dot {
-            background: radial-gradient(circle at 30% 30%, #FACC15, #FBBF24 60%, #78350F 100%);
-            box-shadow: 0 0 9px rgba(250, 204, 21, 0.95);
+            background: radial-gradient(circle at 30% 30%, #93C5FD, #3B82F6 60%, #1E3A8A 100%);
+            box-shadow: 0 0 9px rgba(59, 130, 246, 0.95);
         }
-        
+
         .badge-dsgvo {
-            border-color: rgba(56, 189, 248, 0.95);
+            border-color: rgba(96, 165, 250, 0.95);
             background:
-                radial-gradient(circle at 0 0, rgba(6, 182, 212, 0.8), transparent 60%),
+                radial-gradient(circle at 0 0, rgba(96, 165, 250, 0.6), transparent 60%),
                 rgba(15, 23, 42, 0.96);
         }
-        
+
         .badge-dsgvo .badge-dot {
-            background: radial-gradient(circle at 30% 30%, #22D3EE, #0891B2 60%, #0F172A 100%);
-            box-shadow: 0 0 9px rgba(45, 212, 191, 0.95);
+            background: radial-gradient(circle at 30% 30%, #BFDBFE, #60A5FA 60%, #1E40AF 100%);
+            box-shadow: 0 0 9px rgba(96, 165, 250, 0.95);
         }
-        
+
         .badge-risk {
-            border-color: rgba(249, 115, 22, 0.95);
+            border-color: rgba(37, 99, 235, 0.95);
             background:
-                radial-gradient(circle at 0 0, rgba(249, 115, 22, 0.7), transparent 60%),
+                radial-gradient(circle at 0 0, rgba(37, 99, 235, 0.6), transparent 60%),
                 rgba(15, 23, 42, 0.97);
         }
-        
+
         .badge-risk .badge-dot {
-            background: radial-gradient(circle at 30% 30%, #FDBA74, #EA580C 60%, #431407 100%);
-            box-shadow: 0 0 9px rgba(251, 146, 60, 0.95);
+            background: radial-gradient(circle at 30% 30%, #93C5FD, #2563EB 60%, #1E3A8A 100%);
+            box-shadow: 0 0 9px rgba(37, 99, 235, 0.95);
         }
-        
+
         .badge-time {
-            border-color: rgba(129, 140, 248, 0.9);
+            border-color: rgba(29, 78, 216, 0.9);
             background:
-                radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.8), transparent 60%),
+                radial-gradient(circle at 0 0, rgba(29, 78, 216, 0.6), transparent 60%),
                 rgba(15, 23, 42, 0.96);
         }
-        
+
         .badge-time .badge-dot {
-            background: radial-gradient(circle at 30% 30%, #A5B4FC, #4F46E5 60%, #1E1B4B 100%);
-            box-shadow: 0 0 9px rgba(129, 140, 248, 0.95);
+            background: radial-gradient(circle at 30% 30%, #DBEAFE, #1D4ED8 60%, #1E3A8A 100%);
+            box-shadow: 0 0 9px rgba(29, 78, 216, 0.95);
         }
         
         .hero-grid {
@@ -1382,11 +1396,11 @@
             background: #FFFFFF;
         }
 
-        /* Score Badge im Light-Mode */
+        /* Score Badge im Light-Mode – einheitlich Blau */
         .score-badge {
-            border-color: rgba(34, 197, 94, 0.5);
-            background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(22, 163, 74, 0.12));
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+            border-color: rgba(59, 130, 246, 0.5);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.12));
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
         }
 
         .score-value, .hero-metric-value, .kpi-value {
@@ -1703,19 +1717,19 @@
                 </section>
                 
                 <!-- RISKS, GAMECHANGER, RECOMMENDATIONS, FUNDING -->
-                <section>
+                <section class="chapter">
                     {{RISKS_HTML}}
                 </section>
-                
-                <section>
+
+                <section class="chapter">
                     {{GAMECHANGER_HTML}}
                 </section>
-                
-                <section>
+
+                <section class="chapter">
                     {{RECOMMENDATIONS_HTML}}
                 </section>
-                
-                <section>
+
+                <section class="chapter">
                     {{FOERDERPOTENZIAL_HTML}}
                 </section>
                 
@@ -1737,7 +1751,7 @@
                 </div>
                 
         <!-- Annex: Kreativ-Tools & Glossar -->
-<section class="annex-section annex-kreativtools">
+<section class="annex-section annex-kreativtools chapter">
   <h2>Kreativ-Tools 2025 – modulare Alternativen</h2>
   <p>Viele Kreativaufgaben lassen sich heute mit einem modularen Toolset effizient erledigen – oft günstiger als im
 monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
@@ -1751,7 +1765,7 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
 <p><em>Fazit:</em> Adobe bleibt in Spezialfällen relevant. Für viele KMU decken die obigen Tools den Kreativ-Alltag vollständig ab.</p>
 </section>
 
-<section class="annex-section annex-glossar">
+<section class="annex-section annex-glossar chapter">
   <h2>Glossar – zentrale KI-Begriffe</h2>
   <p class="section-intro">Kurzüberblick über wichtige Begriffe aus diesem Report. Dient als Nachschlagewerk für Geschäftsführung, Fachabteilungen und IT.</p>
   <dl class="glossary-list">
@@ -1832,88 +1846,56 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
 </section>
 
                 <!-- Impressum -->
-                <div class="impressum">
+                <div class="impressum chapter">
                     <h3>Rechtliches & Transparenz</h3>
-                    
+
                     <div class="impressum-grid">
                         <div class="impressum-block">
-                            <h4>Herausgeber</h4>
-                            <p><strong>KI-Sicherheit.jetzt / Trailerhaus GmbH</strong><br>
-                            Candidplatz 9<br>
-                            81543 München<br>
-                            Deutschland</p>
-                            <p>Vertreten durch: Wolf Hohl</p>
+                            <h4>Impressum</h4>
+                            <p><strong>Verantwortlich für den Inhalt:</strong><br>
+                            KI-Sicherheit.jetzt – Wolf Hohl<br>
+                            Greifswalder Str. 224a<br>
+                            10405 Berlin</p>
+                            <p>E-Mail: <a href="mailto:wolf@ki-sicherheit.jetzt">wolf@ki-sicherheit.jetzt</a></p>
                         </div>
-                        
+
                         <div class="impressum-block">
-                            <h4>Kontakt</h4>
-                            <p>E-Mail: <a href="/cdn-cgi/l/email-protection#741d1a121b341f1d59071d171c11061c111d005a1e11000e00"><span class="__cf_email__" data-cfemail="573e393138173c3e7a243e343f32253f323e23793d32232d23">[email&#160;protected]</span></a><br>
-                            Web: <a href="https://ki-sicherheit.jetzt" target="_blank">ki-sicherheit.jetzt</a></p>
-                            <p>Report-Ansprechperson: {{user_email}}</p>
+                            <h4>Haftungsausschluss</h4>
+                            <p>Dieses Projekt dient ausschließlich der Information. Trotz sorgfältiger Prüfung übernehme ich keine Haftung für Inhalte externer Links.</p>
+                            <h4>Urheberrecht</h4>
+                            <p>Alle Inhalte dieser Website unterliegen dem deutschen Urheberrecht, alle Bilder wurden mit Hilfe von KI erzeugt.</p>
                         </div>
-                        
+
                         <div class="impressum-block">
-                            <h4>Technische Umsetzung</h4>
-                            <p>Dieser Report wird automatisiert erzeugt auf Basis Ihrer Angaben im Fragebogen.</p>
-                            <ul>
-                                <li>Auswertung: KI-gestützte Analyse (LLM)</li>
-                                <li>Datenhaltung: verschlüsselt, EU-Hosting</li>
-                                <li>Generierung: serverseitig, ohne Tracking-Pixel</li>
-                            </ul>
+                            <h4>Hinweis zum EU AI Act</h4>
+                            <p>Diese Website informiert über Pflichten, Risiken und Fördermöglichkeiten beim Einsatz von KI nach EU AI Act und DSGVO. Sie ersetzt keine Rechtsberatung.</p>
                         </div>
                     </div>
-                    
+
                     <div class="impressum-divider"></div>
-                    
-                    <div class="compliance-strip">
-                        <div class="compliance-item">
-                            <span class="compliance-dot"></span>
-                            Empfehlungen orientieren sich an EU AI Act, DSGVO und gängigen Best Practices für KMU.
-                        </div>
-                        <div class="compliance-item">
-                            <span class="compliance-dot"></span>
-                            Keine individuelle Rechts- oder Steuerberatung – sprechen Sie bei Unsicherheiten mit Fachanwält:innen / Steuerberater:innen.
-                        </div>
-                        <div class="compliance-item">
-                            <span class="compliance-dot"></span>
-                            Technische Angaben (z. B. Tools, Förderprogramme) können sich ändern; bitte prüfen Sie vor Umsetzung den aktuellen Stand.
-                        </div>
-                    </div>
-                    
-                    <p class="legal-note">
-                        Dieser Report ersetzt keine persönliche Beratung, sondern dient als strukturierte Entscheidungshilfe. Er basiert auf Ihren Eingaben und dem Stand der öffentlichen
-                        Informationen zum Zeitpunkt der Erstellung. Trotz sorgfältiger Konzeption kann keine Gewähr für Vollständigkeit, Richtigkeit und Aktualität übernommen werden.
-                    </p>
-                    
-                    <div class="impressum-divider"></div>
-                    
+
                     <div class="impressum-block impressum-box">
-                        <h3>Datenschutzhinweis</h3>
-                        
-                        <h4>Verarbeitung Ihrer Daten</h4>
-                        <p>Die von Ihnen im Fragebogen angegebenen Daten werden ausschließlich zur Erstellung dieses Reports und zur anonymisierten Verbesserung des Angebots verwendet und werden nach 6 Monaten automatisch gelöscht.</p>
-                        
-                        <h4>Ihre Rechte nach DSGVO</h4>
+                        <h3>Datenschutzerklärung</h3>
+                        <p>Der Schutz Ihrer persönlichen Daten ist mir ein besonderes Anliegen.</p>
+
+                        <h4>Kontakt mit mir</h4>
+                        <p>Wenn Sie per Formular oder E-Mail Kontakt aufnehmen, werden Ihre Angaben zur Bearbeitung sechs Monate gespeichert.</p>
+
+                        <h4>Cookies</h4>
+                        <p>Diese Website verwendet keine Cookies zur Nutzerverfolgung oder Analyse.</p>
+
+                        <h4>Ihre Rechte laut DSGVO</h4>
                         <ul>
-                            <li>Auskunft über gespeicherte Daten</li>
-                            <li>Berichtigung unrichtiger Daten</li>
-                            <li>Löschung Ihrer Daten</li>
-                            <li>Einschränkung der Verarbeitung</li>
+                            <li>Auskunft, Berichtigung oder Löschung Ihrer Daten</li>
                             <li>Datenübertragbarkeit</li>
+                            <li>Widerruf erteilter Einwilligungen</li>
+                            <li>Beschwerde bei der Datenschutzbehörde</li>
                         </ul>
-                        
+
                         <p>Wenn Sie von Ihren Rechten Gebrauch machen wollen, wenden Sie sich bitte an
-                            <a href="/cdn-cgi/l/email-protection#f9898b908f989a80b99290d48a909a919c8b919c908dd7939c8d838d"><span class="__cf_email__" data-cfemail="9dedeff4ebfcfee4ddf6f4b0eef4fef5f8eff5f8f4e9b3f7f8e9e7e9">[email&#160;protected]</span></a>.
-                        </p>
-                        
-                        <p class="small muted">
-                            Hinweis: Für die Nutzung externer KI-Tools (z. B. OpenAI, Anthropic, Microsoft, Google) gelten zusätzlich deren eigene Datenschutzbestimmungen
-                            und Auftragsverarbeitungsverträge. Wir empfehlen, diese gemeinsam mit Ihrer IT / Ihrem Datenschutz zu prüfen.
+                            <a href="mailto:wolf@ki-sicherheit.jetzt">wolf@ki-sicherheit.jetzt</a>.
                         </p>
                     </div>
-                    
-                    <p class="small" style="margin-top: 6px;">
-                        Die KI-Nutzung erfolgt DSGVO-konform mit Auftragsverarbeitungsvertrag.</p>
                 </div>
                 
                 <p class="small" style="text-align: center;">
