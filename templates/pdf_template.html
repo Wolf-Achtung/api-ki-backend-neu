@@ -4,7 +4,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>KI-Status-Report {{ report_id }} – {{ company_name or kundencode or 'Ihr Unternehmen' }}</title>
-    
     <style id="gold-std-typo">
         /* ============================================
            GOLD STANDARD+ PDF TEMPLATE v3.1
@@ -14,12 +13,10 @@
            - Hängende Interpunktion
            - Links unterstrichen (Barrierefreiheit)
            ============================================ */
-        
         @page {
             size: A4;
             margin: 20mm 15mm;
         }
-        
         :root {
             /* ================================================
                TYPOGRAFIE-SKALA (harmonisch, 1.25er-Faktor)
@@ -31,27 +28,21 @@
             --step-lg: 18pt;     /* H3 */
             --step-xl: 24pt;     /* H2 */
             --step-2xl: 32pt;    /* H1 */
-            
             /* Typografie-Optimierungen */
             hanging-punctuation: first last;
-            
             /* Farb-Token – Basis */
             --bg-page: #0B1120;
             --bg-body: #020617;
             --bg-content: #0F172A;
-            
             --surface-elevated: #020617;
             --surface-soft: #020617;
             --surface-card: #020617;
-            
             --text-strong: #E5E7EB;
             --text-normal: #E5E7EB;
             --text-muted: #9CA3AF;
             --text-soft: #6B7280;
-            
             --border-subtle: rgba(148, 163, 184, 0.55);
             --border-strong: rgba(248, 250, 252, 0.45);
-            
             --primary-50: #EFF6FF;
             --primary-100: #DBEAFE;
             --primary-200: #BFDBFE;
@@ -62,7 +53,6 @@
             --primary-700: #1D4ED8;
             --primary-800: #1E40AF;
             --primary-900: #1E3A8A;
-            
             --success-50: #F0FDF4;
             --success-100: #DCFCE7;
             --success-200: #BBF7D0;
@@ -73,7 +63,6 @@
             --success-700: #15803D;
             --success-800: #166534;
             --success-900: #14532D;
-            
             --teal-50: #F0FDFA;
             --teal-100: #CCFBF1;
             --teal-200: #99F6E4;
@@ -84,7 +73,6 @@
             --teal-700: #0F766E;
             --teal-800: #115E59;
             --teal-900: #134E4A;
-            
             --amber-50: #FFFBEB;
             --amber-100: #FEF3C7;
             --amber-200: #FDE68A;
@@ -95,7 +83,6 @@
             --amber-700: #B45309;
             --amber-800: #92400E;
             --amber-900: #78350F;
-            
             --red-50: #FEF2F2;
             --red-100: #FEE2E2;
             --red-200: #FECACA;
@@ -106,7 +93,6 @@
             --red-700: #B91C1C;
             --red-800: #991B1B;
             --red-900: #7F1D1D;
-            
             --slate-50: #F8FAFC;
             --slate-100: #F1F5F9;
             --slate-200: #E2E8F0;
@@ -117,7 +103,6 @@
             --slate-700: #334155;
             --slate-800: #1E293B;
             --slate-900: #0F172A;
-            
             --muted-50: #020617;
             --muted-100: #020617;
             --muted-200: #1E293B;
@@ -126,25 +111,19 @@
             --muted-500: #6B7280;
             --muted-600: #4B5563;
             --muted-700: #374151;
-            
             --accent-iris: #6366F1;
             --accent-cyan: #06B6D4;
             --accent-pink: #EC4899;
             --accent-lime: #84CC16;
-            
             --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.85);
             --shadow-card: 0 18px 45px rgba(15, 23, 42, 0.95);
-            
             --radius-card: 18px;
             --radius-pill: 999px;
-            
             --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", sans-serif;
         }
-        
         * {
             box-sizing: border-box;
         }
-        
         html, body {
             margin: 0;
             padding: 0;
@@ -157,12 +136,10 @@
             font-feature-settings: "tnum" 1, "liga" 1;
             font-variant-numeric: tabular-nums;
         }
-        
         body {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-        
         .page {
             width: 100%;
             max-width: 780px;
@@ -171,7 +148,6 @@
             background: radial-gradient(circle at top, #172554 0, #020617 45%, #000 100%);
             box-shadow: var(--shadow-soft);
         }
-        
         .content {
             background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.06), transparent 55%),
                         radial-gradient(circle at top right, rgba(129, 140, 248, 0.09), transparent 52%),
@@ -183,7 +159,6 @@
             position: relative;
             overflow: hidden;
         }
-        
         .content::before {
             content: "";
             position: absolute;
@@ -194,57 +169,46 @@
             opacity: 0.9;
             pointer-events: none;
         }
-        
         .content-inner {
             position: relative;
             z-index: 1;
         }
-        
         h1, h2, h3, h4 {
             color: var(--text-strong);
             margin-top: 0;
             line-height: 1.3;
         }
-        
         h1 {
             font-size: var(--step-2xl);
             letter-spacing: 0.02em;
             margin-bottom: 8pt;
         }
-        
         h2 {
             font-size: var(--step-xl);
             margin: 24pt 0 8pt;
         }
-        
         h3 {
             font-size: var(--step-lg);
             margin: 16pt 0 6pt;
         }
-        
         h4 {
             font-size: var(--step-md);
             margin: 12pt 0 4pt;
         }
-        
         p {
             margin: 4pt 0 3pt;
         }
-        
         ul, ol {
             margin: 4pt 0 4pt;
             padding-left: 12pt;
         }
-        
         li {
             margin-bottom: 2pt;
         }
-        
         strong {
             color: var(--text-strong);
             font-weight: 600;
         }
-        
         a {
             color: var(--primary-300);
             text-decoration: underline;
@@ -252,19 +216,15 @@
             text-underline-offset: 2px;
             transition: text-decoration-color 0.2s;
         }
-        
         a:hover {
             text-decoration-color: var(--primary-300);
         }
-        
         .muted {
             color: var(--text-muted);
         }
-        
         .small {
             font-size: var(--step-xs);
         }
-        
         /* ============================================
            KAPITEL-SEITENUMBRÜCHE für strukturierte PDF
            ============================================ */
@@ -275,22 +235,18 @@
             page-break-before: always;
             break-before: page;
         }
-
         .chapter:first-of-type {
             page-break-before: auto;
             break-before: auto;
         }
-
         .chapter-start {
             page-break-before: always;
             break-before: page;
         }
-
         .no-page-break-inside {
             page-break-inside: avoid;
             break-inside: avoid-page;
         }
-        
         .tag {
             display: inline-flex;
             align-items: center;
@@ -302,7 +258,6 @@
             background: radial-gradient(circle at top, rgba(148, 163, 184, 0.22), rgba(15, 23, 42, 0.95));
             color: var(--slate-100);
         }
-        
         .tag-dot {
             width: 7px;
             height: 7px;
@@ -310,37 +265,30 @@
             background: radial-gradient(circle at 30% 30%, #22C55E, #16A34A 60%, #052E16 100%);
             box-shadow: 0 0 8px rgba(34, 197, 94, 0.9);
         }
-        
         .tag-warning {
             border-color: rgba(251, 191, 36, 0.75);
             background: radial-gradient(circle at top, rgba(251, 191, 36, 0.22), rgba(15, 23, 42, 0.96));
         }
-        
         .tag-warning .tag-dot {
             background: radial-gradient(circle at 30% 30%, #F97316, #EA580C 60%, #431407 100%);
             box-shadow: 0 0 8px rgba(249, 115, 22, 0.9);
         }
-        
         .tag-critical {
             border-color: rgba(248, 113, 113, 0.85);
             background: radial-gradient(circle at top, rgba(248, 113, 113, 0.24), rgba(15, 23, 42, 0.98));
         }
-        
         .tag-critical .tag-dot {
             background: radial-gradient(circle at 30% 30%, #F97373, #DC2626 60%, #450A0A 100%);
             box-shadow: 0 0 8px rgba(248, 113, 113, 0.95);
         }
-        
         .tag-safe {
             border-color: rgba(34, 197, 94, 0.85);
             background: radial-gradient(circle at top, rgba(34, 197, 94, 0.26), rgba(15, 23, 42, 0.98));
         }
-        
         .tag-safe .tag-dot {
             background: radial-gradient(circle at 30% 30%, #4ADE80, #16A34A 60%, #052E16 100%);
             box-shadow: 0 0 8px rgba(52, 211, 153, 0.96);
         }
-        
         .header {
             display: grid;
             grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
@@ -353,13 +301,11 @@
                 radial-gradient(circle at 105% -10%, rgba(129, 140, 248, 0.44), transparent 58%),
                 linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.98));
         }
-        
         .header-main {
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
-        
         .eyebrow {
             display: flex;
             align-items: center;
@@ -368,52 +314,43 @@
             font-size: 8.5pt;
             color: var(--text-muted);
         }
-        
         .eyebrow-left {
             display: flex;
             align-items: center;
             gap: 6px;
         }
-        
         .eyebrow-divider {
             width: 1px;
             height: 9px;
             background: linear-gradient(to bottom, transparent, rgba(148, 163, 184, 0.9), transparent);
         }
-        
         .title-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 6px;
         }
-        
         .subtitle {
             font-size: 9pt;
             color: var(--text-muted);
             max-width: 340px;
         }
-        
         .meta-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 4px 10px;
             margin-top: 4px;
         }
-        
         .meta-item {
             font-size: 8.25pt;
             color: var(--text-muted);
         }
-        
         .meta-label {
             color: var(--text-soft);
         }
-        
         .meta-value {
             color: var(--text-strong);
         }
-        
         .score-badge {
             align-self: flex-start;
             padding: 8px 10px;
@@ -426,43 +363,36 @@
             gap: 1px;
             min-width: 108px;
         }
-        
         .score-label {
             font-size: 7.5pt;
             text-transform: uppercase;
             letter-spacing: 0.04em;
             color: rgba(226, 232, 240, 0.82);
         }
-        
         .score-main {
             display: flex;
             align-items: baseline;
             gap: 4px;
         }
-        
         .score-value {
             font-size: 18pt;
             font-weight: 700;
             color: #F9FAFB;
         }
-        
         .score-max {
             font-size: 8pt;
             color: rgba(226, 232, 240, 0.85);
         }
-        
         .score-sub {
             font-size: 7.5pt;
             color: rgba(226, 232, 240, 0.88);
         }
-        
         .badge-row {
             display: flex;
             flex-wrap: wrap;
             gap: 5px;
             margin-top: 6px;
         }
-        
         .badge {
             display: inline-flex;
             align-items: center;
@@ -474,14 +404,12 @@
             background-color: rgba(15, 23, 42, 0.85);
             color: #E5E7EB;
         }
-        
         .badge-dot {
             width: 6px;
             height: 6px;
             border-radius: 999px;
             background: radial-gradient(circle at 30% 30%, #A855F7, #4C1D95 60%, #020617 100%);
         }
-        
         /* Alle Badges in einheitlichen Blautönen */
         .badge-eu {
             border-color: rgba(59, 130, 246, 0.9);
@@ -490,55 +418,46 @@
                 radial-gradient(circle at 100% 0, rgba(96, 165, 250, 0.4), transparent 60%),
                 rgba(15, 23, 42, 0.92);
         }
-
         .badge-eu .badge-dot {
             background: radial-gradient(circle at 30% 30%, #93C5FD, #3B82F6 60%, #1E3A8A 100%);
             box-shadow: 0 0 9px rgba(59, 130, 246, 0.95);
         }
-
         .badge-dsgvo {
             border-color: rgba(96, 165, 250, 0.95);
             background:
                 radial-gradient(circle at 0 0, rgba(96, 165, 250, 0.6), transparent 60%),
                 rgba(15, 23, 42, 0.96);
         }
-
         .badge-dsgvo .badge-dot {
             background: radial-gradient(circle at 30% 30%, #BFDBFE, #60A5FA 60%, #1E40AF 100%);
             box-shadow: 0 0 9px rgba(96, 165, 250, 0.95);
         }
-
         .badge-risk {
             border-color: rgba(37, 99, 235, 0.95);
             background:
                 radial-gradient(circle at 0 0, rgba(37, 99, 235, 0.6), transparent 60%),
                 rgba(15, 23, 42, 0.97);
         }
-
         .badge-risk .badge-dot {
             background: radial-gradient(circle at 30% 30%, #93C5FD, #2563EB 60%, #1E3A8A 100%);
             box-shadow: 0 0 9px rgba(37, 99, 235, 0.95);
         }
-
         .badge-time {
             border-color: rgba(29, 78, 216, 0.9);
             background:
                 radial-gradient(circle at 0 0, rgba(29, 78, 216, 0.6), transparent 60%),
                 rgba(15, 23, 42, 0.96);
         }
-
         .badge-time .badge-dot {
             background: radial-gradient(circle at 30% 30%, #DBEAFE, #1D4ED8 60%, #1E3A8A 100%);
             box-shadow: 0 0 9px rgba(29, 78, 216, 0.95);
         }
-        
         .hero-grid {
             margin-top: 8px;
             display: grid;
             grid-template-columns: 1.2fr 1fr;
             gap: 10px;
         }
-        
         .hero-metric-card {
             padding: 8px 10px;
             border-radius: 14px;
@@ -548,30 +467,25 @@
                 rgba(15, 23, 42, 0.96);
             border: 1px solid rgba(148, 163, 184, 0.75);
         }
-        
         .hero-metric-row {
             display: flex;
             justify-content: space-between;
             gap: 6px;
             margin-bottom: 3px;
         }
-        
         .hero-metric-label {
             font-size: 8pt;
             color: var(--text-muted);
         }
-        
         .hero-metric-value {
             font-size: 11pt;
             font-weight: 600;
             color: var(--text-strong);
         }
-        
         .hero-metric-sub {
             font-size: 7.5pt;
             color: var(--text-soft);
         }
-        
         .sparkline {
             margin-top: 5px;
             height: 26px;
@@ -586,12 +500,10 @@
             justify-content: space-between;
             gap: 4px;
         }
-        
         .sparkline-label {
             font-size: 7pt;
             color: var(--text-soft);
         }
-        
         .sparkline-bar {
             flex: 1;
             height: 10px;
@@ -599,7 +511,6 @@
             background: linear-gradient(90deg, rgba(129, 140, 248, 0.8), rgba(45, 212, 191, 0.9));
             box-shadow: 0 0 10px rgba(45, 212, 191, 0.85);
         }
-        
         .sparkline-badge {
             font-size: 7pt;
             padding: 2px 7px;
@@ -609,7 +520,6 @@
             background: radial-gradient(circle at 0 0, rgba(22, 163, 74, 0.65), transparent 60%),
                         rgba(5, 46, 22, 0.9);
         }
-        
         .logo-panel {
             display: flex;
             flex-direction: column;
@@ -617,44 +527,36 @@
             justify-content: space-between;
             gap: 6px;
         }
-        
         .logo-row-main {
             display: flex;
             align-items: center;
             gap: 6px;
         }
-        
         .logo-row-main img {
             display: block;
         }
-        
         .logo-ki {
             height: 28px;
             filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.85));
         }
-        
         .logo-tuev {
             height: 28px;
             filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.85));
         }
-        
         .logo-row-badges {
             display: flex;
             align-items: center;
             gap: 5px;
         }
-        
         .logo-ready {
             height: 20px;
             filter: drop-shadow(0 0 8px rgba(129, 140, 248, 0.9));
         }
-        
         .logo-eu, .logo-dsgvo {
             height: 18px;
             opacity: 0.95;
             filter: drop-shadow(0 0 8px rgba(148, 163, 184, 0.9));
         }
-        
         .section {
             margin-top: 14pt;
             padding: 10pt 11pt;
@@ -665,7 +567,6 @@
                 rgba(15, 23, 42, 0.98);
             border: 1px solid rgba(148, 163, 184, 0.7);
         }
-        
         .section-header {
             display: flex;
             justify-content: space-between;
@@ -673,20 +574,17 @@
             gap: 6px;
             margin-bottom: 4pt;
         }
-        
         .section-title {
             display: flex;
             align-items: center;
             gap: 6px;
         }
-        
         .section-kicker {
             font-size: 7.5pt;
             letter-spacing: 0.08em;
             text-transform: uppercase;
             color: var(--text-soft);
         }
-        
         .section-pill {
             display: inline-flex;
             align-items: center;
@@ -698,31 +596,26 @@
             color: var(--text-soft);
             background: radial-gradient(circle at 0 0, rgba(148, 163, 184, 0.16), transparent 65%);
         }
-        
         .section-body {
             font-size: 9pt;
             color: var(--text-normal);
         }
-        
         .pill-dot {
             width: 6px;
             height: 6px;
             border-radius: 999px;
             background: radial-gradient(circle at 30% 30%, #38BDF8, #1D4ED8 60%, #020617 100%);
         }
-        
         .grid-2 {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 8px;
         }
-        
         .grid-3 {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 8px;
         }
-        
         .card {
             padding: 7px 8px;
             border-radius: 12px;
@@ -732,45 +625,37 @@
             border: 1px solid rgba(148, 163, 184, 0.8);
             font-size: 8.75pt;
         }
-        
         .card-muted {
             background:
                 radial-gradient(circle at 0 0, rgba(148, 163, 184, 0.15), transparent 55%),
                 rgba(15, 23, 42, 0.98);
         }
-        
         .card h3 {
             margin-top: 0;
             margin-bottom: 3px;
         }
-        
         .card p {
             margin-bottom: 2px;
         }
-        
         .metric {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
             gap: 4px;
         }
-        
         .metric-label {
             font-size: 8pt;
             color: var(--text-soft);
         }
-        
         .metric-value {
             font-size: 10pt;
             font-weight: 600;
             color: var(--text-strong);
         }
-        
         .metric-sub {
             font-size: 7.5pt;
             color: var(--text-muted);
         }
-        
         .risk-badge {
             display: inline-flex;
             align-items: center;
@@ -784,7 +669,6 @@
                 radial-gradient(circle at 0 0, rgba(248, 113, 113, 0.7), transparent 60%),
                 rgba(15, 23, 42, 0.98);
         }
-        
         .risk-dot {
             width: 6px;
             height: 6px;
@@ -792,14 +676,12 @@
             background: radial-gradient(circle at 30% 30%, #FCA5A5, #DC2626 60%, #450A0A 100%);
             box-shadow: 0 0 8px rgba(248, 113, 113, 0.95);
         }
-        
         .quick-wins-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 8px;
             margin-top: 6px;
         }
-        
         .quick-win-card {
             padding: 7px 8px;
             border-radius: 12px;
@@ -809,7 +691,6 @@
             border: 1px solid rgba(34, 197, 94, 0.9);
             font-size: 8.5pt;
         }
-        
         .quick-win-badge {
             display: inline-flex;
             align-items: center;
@@ -821,21 +702,18 @@
             color: #BBF7D0;
             border: 1px solid rgba(34, 197, 94, 0.9);
         }
-        
         .quick-win-dot {
             width: 6px;
             height: 6px;
             border-radius: 999px;
             background: radial-gradient(circle at 30% 30%, #4ADE80, #16A34A 60%, #052E16 100%);
         }
-        
         .roadmap-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 8px;
             margin-top: 6px;
         }
-        
         .roadmap-phase {
             padding: 7px 8px;
             border-radius: 12px;
@@ -845,24 +723,20 @@
             border: 1px solid rgba(59, 130, 246, 0.9);
             font-size: 8.5pt;
         }
-        
         .roadmap-phase-header {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
             gap: 4px;
         }
-        
         .phase-label {
             font-size: 8pt;
             color: #BFDBFE;
         }
-        
         .phase-duration {
             font-size: 7.5pt;
             color: var(--text-soft);
         }
-        
         .pill-number {
             display: inline-flex;
             align-items: center;
@@ -875,23 +749,19 @@
             border: 1px solid rgba(191, 219, 254, 0.95);
             color: #E5E7EB;
         }
-        
         .roadmap-items {
             margin-top: 4px;
             padding-left: 11px;
         }
-        
         .roadmap-items li {
             margin-bottom: 2px;
         }
-        
         .business-case-grid {
             display: grid;
             grid-template-columns: 1.1fr 0.9fr;
             gap: 8px;
             margin-top: 5px;
         }
-        
         .kpi-card {
             padding: 7px 8px;
             border-radius: 12px;
@@ -901,30 +771,25 @@
             border: 1px solid rgba(34, 197, 94, 0.95);
             font-size: 8.5pt;
         }
-        
         .kpi-row {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
             gap: 4px;
         }
-        
         .kpi-label {
             font-size: 8pt;
             color: var(--text-soft);
         }
-        
         .kpi-value {
             font-size: 11pt;
             font-weight: 600;
             color: var(--text-strong);
         }
-        
         .kpi-sub {
             font-size: 7.5pt;
             color: var(--text-muted);
         }
-        
         .kpi-highlight {
             font-size: 8pt;
             padding: 2px 6px;
@@ -933,20 +798,17 @@
             color: #BBF7D0;
             background: rgba(5, 46, 22, 0.9);
         }
-        
         .kpi-note {
             font-size: 7.5pt;
             color: var(--text-muted);
             margin-top: 4px;
         }
-        
         .risk-matrix {
             width: 100%;
             border-collapse: collapse;
             margin-top: 6px;
             font-size: 8pt;
         }
-        
         .risk-matrix th,
         .risk-matrix td {
             padding: 4px 5px;
@@ -954,47 +816,37 @@
             text-align: left;
             vertical-align: top;
         }
-        
         .risk-matrix thead th {
             background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(30, 64, 175, 0.95));
             color: #E5E7EB;
             font-weight: 600;
         }
-        
         .risk-very-low {
             background: rgba(22, 163, 74, 0.18);
         }
-        
         .risk-low {
             background: rgba(132, 204, 22, 0.16);
         }
-        
         .risk-medium {
             background: rgba(234, 179, 8, 0.18);
         }
-        
         .risk-high {
             background: rgba(249, 115, 22, 0.22);
         }
-        
         .risk-critical {
             background: rgba(239, 68, 68, 0.26);
         }
-        
         .risk-label {
             font-weight: 600;
             color: #F9FAFB;
         }
-        
         .list-compact {
             margin: 2px 0;
             padding-left: 11px;
         }
-        
         .list-compact li {
             margin-bottom: 1px;
         }
-        
         .callout {
             margin-top: 5px;
             padding: 6px 7px;
@@ -1004,18 +856,15 @@
             font-size: 8pt;
             color: var(--text-soft);
         }
-        
         .callout strong {
             color: #E5E7EB;
         }
-        
         .legend {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
             margin-top: 4px;
         }
-        
         .legend-item {
             display: inline-flex;
             align-items: center;
@@ -1023,30 +872,24 @@
             font-size: 7.5pt;
             color: var(--text-soft);
         }
-        
         .legend-swatch {
             width: 11px;
             height: 7px;
             border-radius: 999px;
             border: 1px solid rgba(148, 163, 184, 0.8);
         }
-        
         .swatch-low {
             background: linear-gradient(90deg, #22C55E, #16A34A);
         }
-        
         .swatch-medium {
             background: linear-gradient(90deg, #FACC15, #D97706);
         }
-        
         .swatch-high {
             background: linear-gradient(90deg, #FB923C, #C2410C);
         }
-        
         .swatch-critical {
             background: linear-gradient(90deg, #F97373, #B91C1C);
         }
-        
         .feedback-section {
             margin-top: 16pt;
             padding: 10pt 11pt;
@@ -1056,15 +899,12 @@
                 rgba(15, 23, 42, 0.98);
             border: 1px solid rgba(129, 140, 248, 0.9);
         }
-        
         .feedback-section h2 {
             margin-top: 0;
         }
-        
         .feedback-section p {
             font-size: 9pt;
         }
-        
         .feedback-button {
             display: inline-flex;
             align-items: center;
@@ -1080,11 +920,9 @@
             color: #EEF2FF;
             text-decoration: none;
         }
-        
         .feedback-button:hover {
             filter: brightness(1.1);
         }
-        
         .highlight-box {
             margin-top: 4px;
             padding: 6px 7px;
@@ -1093,7 +931,6 @@
             border: 1px dashed rgba(129, 140, 248, 0.9);
             font-size: 8.5pt;
         }
-        
         .impressum {
             margin-top: 18pt;
             padding: 9pt 10pt;
@@ -1104,32 +941,26 @@
             border: 1px solid rgba(148, 163, 184, 0.85);
             font-size: 8.25pt;
         }
-        
         .impressum h3 {
             margin-top: 0;
             margin-bottom: 4px;
         }
-        
         .impressum-grid {
             display: grid;
             grid-template-columns: 1.1fr 1.1fr 0.8fr;
             gap: 6px;
             margin-bottom: 4px;
         }
-        
         .impressum-block h4 {
             margin-bottom: 2px;
         }
-        
         .impressum-block p,
         .impressum-block ul {
             margin: 2px 0;
         }
-        
         .impressum-block ul {
             padding-left: 11px;
         }
-        
         .compliance-strip {
             margin-top: 4px;
             padding: 5px 7px;
@@ -1141,7 +972,6 @@
             align-items: center;
             gap: 5px 10px;
         }
-        
         .compliance-item {
             display: inline-flex;
             align-items: center;
@@ -1149,7 +979,6 @@
             font-size: 7.5pt;
             color: var(--text-soft);
         }
-        
         .compliance-dot {
             width: 6px;
             height: 6px;
@@ -1157,19 +986,16 @@
             background: radial-gradient(circle at 30% 30%, #4ADE80, #16A34A 60%, #052E16 100%);
             box-shadow: 0 0 7px rgba(34, 197, 94, 0.9);
         }
-        
         .legal-note {
             font-size: 7.5pt;
             color: var(--text-muted);
             margin-top: 4px;
         }
-        
         .impressum-divider {
             height: 1px;
             margin: 6px 0;
             background: linear-gradient(to right, transparent, rgba(148, 163, 184, 0.7), transparent);
         }
-        
         .impressum-meta {
             display: flex;
             flex-wrap: wrap;
@@ -1177,19 +1003,16 @@
             font-size: 7.5pt;
             color: var(--text-soft);
         }
-        
         .impressum-meta span {
             display: inline-flex;
             align-items: center;
             gap: 4px;
         }
-        
         .meta-separator {
             width: 1px;
             height: 8px;
             background: rgba(148, 163, 184, 0.7);
         }
-        
         .watermark {
             position: fixed;
             bottom: 10mm;
@@ -1200,7 +1023,6 @@
             color: var(--primary-300);
             transform: rotate(-45deg);
         }
-
         /* Annex Sections: Glossar & Kreativ-Tools */
         .annex-section {
             margin-top: 32pt;
@@ -1209,23 +1031,19 @@
             background: var(--surface-elevated);
             border: 1px solid var(--border-subtle);
         }
-
         .annex-section + .annex-section {
             margin-top: 20pt;
         }
-
         .annex-section h2 {
             font-size: var(--step-lg);
             margin-bottom: 8pt;
             color: var(--primary-300);
         }
-
         .annex-section .section-intro {
             font-size: 9pt;
             color: var(--text-muted);
             margin-bottom: 10pt;
         }
-
         .glossary-list {
             display: grid;
             grid-template-columns: minmax(0, 1.2fr) minmax(0, 3fr);
@@ -1234,71 +1052,57 @@
             margin: 12pt 0 10pt;
             font-size: 9pt;
         }
-
         .glossary-list dt {
             font-weight: 600;
             color: var(--text-strong);
         }
-
         .glossary-list dd {
             margin: 0;
             color: var(--text-muted);
         }
-
         .annex-kreativtools ul {
             margin: 10pt 0;
             padding-left: 14pt;
             font-size: 9pt;
         }
-
         .annex-kreativtools li {
             margin-bottom: 4pt;
         }
-        
         /* Light-Mode Override für PDF */
         html, body {
             background-color: #F3F4F6;
             color: #0F172A;
         }
-
         /* Text-Farben für Light-Mode */
         h1, h2, h3, h4, strong {
             color: #0F172A;
         }
-
         p, li {
             color: #1E293B;
         }
-
         .muted, .text-muted {
             color: #64748B;
         }
-
         .small {
             color: #475569;
         }
-
         .page {
             background: #F9FAFB;
             box-shadow: 0 8px 30px rgba(15, 23, 42, 0.12);
         }
-
         .content {
             background: #FFFFFF;
             border-color: rgba(148, 163, 184, 0.45);
         }
-
         .content::before {
             opacity: 0.3;
         }
-
         .section {
             background:
                 radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.06), transparent 65%),
                 radial-gradient(circle at 100% 0, rgba(45, 212, 191, 0.05), transparent 65%),
                 #FFFFFF;
         }
-
         .header {
             background:
                 radial-gradient(circle at -5% -15%, rgba(45, 212, 191, 0.12), transparent 62%),
@@ -1306,7 +1110,6 @@
                 linear-gradient(145deg, #FFFFFF, #F9FAFB);
             border-color: rgba(148, 163, 184, 0.4);
         }
-
         .hero-metric-card {
             background:
                 radial-gradient(circle at 0 0, rgba(16, 185, 129, 0.08), transparent 55%),
@@ -1314,140 +1117,114 @@
                 #FFFFFF;
             border-color: rgba(148, 163, 184, 0.35);
         }
-
         .card {
             background:
                 radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.05), transparent 60%),
                 #FFFFFF;
             border-color: rgba(148, 163, 184, 0.35);
         }
-
         .card-muted {
             background: #F9FAFB;
             border-color: rgba(148, 163, 184, 0.3);
         }
-
         .kpi-card {
             background:
                 radial-gradient(circle at 0 0, rgba(59, 130, 246, 0.06), transparent 60%),
                 #FFFFFF;
             border-color: rgba(148, 163, 184, 0.35);
         }
-
         .quick-win-card {
             background:
                 radial-gradient(circle at 0 0, rgba(34, 197, 94, 0.06), transparent 60%),
                 #FFFFFF;
             border-color: rgba(148, 163, 184, 0.35);
         }
-
         .timeline-item {
             background:
                 radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.05), transparent 60%),
                 #FFFFFF;
             border-color: rgba(148, 163, 184, 0.35);
         }
-
         .tag {
             background: linear-gradient(135deg, rgba(148, 163, 184, 0.12), rgba(148, 163, 184, 0.08));
             border-color: rgba(148, 163, 184, 0.4);
             color: #334155;
         }
-
         .badge {
             background-color: rgba(241, 245, 249, 0.95);
             border-color: rgba(148, 163, 184, 0.5);
             color: #334155;
         }
-
         .callout {
             background: #F9FAFB;
             border-color: rgba(148, 163, 184, 0.4);
         }
-
         .highlight-box {
             background: #F9FAFB;
             border-color: rgba(129, 140, 248, 0.4);
         }
-
         .feedback-section {
             background:
                 radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.08), transparent 60%),
                 #FFFFFF;
             border-color: rgba(129, 140, 248, 0.4);
         }
-
         .impressum {
             background:
                 radial-gradient(circle at 0 0, rgba(148, 163, 184, 0.08), transparent 60%),
                 #FFFFFF;
         }
-
         .impressum-box {
             background: #F9FAFB;
         }
-
         .compliance-strip {
             background: #F9FAFB;
             border-color: rgba(148, 163, 184, 0.4);
         }
-
         .annex-section {
             background: #FFFFFF;
         }
-
         /* Score Badge im Light-Mode – einheitlich Blau */
         .score-badge {
             border-color: rgba(59, 130, 246, 0.5);
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.12));
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
         }
-
         .score-value, .hero-metric-value, .kpi-value {
             color: #0F172A;
         }
-
         .score-label, .hero-metric-label, .kpi-label {
             color: #475569;
         }
-
         .score-sub {
             color: #64748B;
         }
-
         .meta-label {
             color: #64748B;
         }
-
         .meta-value {
             color: #0F172A;
         }
-
         /* Tabellen im Light-Mode */
         .risk-matrix {
             border-color: rgba(148, 163, 184, 0.4);
         }
-
         .risk-matrix th, .risk-matrix td {
             border-color: rgba(148, 163, 184, 0.3);
             color: #1E293B;
         }
-
         .risk-matrix thead th {
             background: linear-gradient(90deg, rgba(59, 130, 246, 0.12), rgba(30, 64, 175, 0.1));
             color: #1E293B;
         }
-
         /* Section Pills & Kickers */
         .section-pill {
             background: rgba(241, 245, 249, 0.9);
             color: #475569;
         }
-
         .section-kicker {
             color: #3B82F6;
         }
-
         /* Feedback Button */
         .feedback-button {
             background:
@@ -1456,16 +1233,13 @@
             border-color: rgba(129, 140, 248, 0.5);
             color: #1E3A8A;
         }
-        
         @media print {
             h1, h2, h3 {
                 page-break-after: avoid;
             }
-            
             .card, .quick-win-card, .timeline-item {
                 page-break-inside: avoid;
             }
-            
             a[href]:after {
                 content: "";
             }
@@ -1490,7 +1264,6 @@
       </div>
       <span class="small">Report-ID: {{ report_id }}</span>
     </div>
-
     <div class="title-row">
       <div>
         <h1>KI-Readiness {{ score_rating }}</h1>
@@ -1509,7 +1282,6 @@
         <span class="score-sub">{{ score_rating }}</span>
       </div>
     </div>
-
     <div class="meta-grid">
       <div class="meta-item">
         <span class="meta-label">Branche:</span>
@@ -1530,7 +1302,6 @@
         <span class="meta-value">{{ report_date }}</span>
       </div>
     </div>
-
     <div class="badge-row">
       <span class="badge badge-eu">
         <span class="badge-dot"></span>
@@ -1550,7 +1321,6 @@
       </span>
     </div>
   </div>
-
   <div class="logo-panel">
     <div class="logo-row-main">
       <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt Logo" class="logo-ki">
@@ -1563,9 +1333,7 @@
     </div>
   </div>
 </header>
-
                 <!-- HEADER:END -->
-                
                 <!-- HERO METRICS -->
                 <section class="section">
                     <div class="section-header">
@@ -1578,7 +1346,6 @@
                             Erste Orientierung in 60 Sekunden
                         </span>
                     </div>
-                    
                     <div class="section-body">
                         <div class="hero-grid">
                             <div class="hero-metric-card">
@@ -1593,7 +1360,6 @@
                                         {{ size_label }}
                                     </span>
                                 </div>
-                                
                                 <div class="sparkline">
                                     <span class="sparkline-label">Potenzial bei Umsetzung der Empfehlungen</span>
                                     <div class="sparkline-bar"></div>
@@ -1606,7 +1372,6 @@
                                     </span>
                                 </div>
                             </div>
-                            
                             <div class="hero-metric-card">
                                 <div class="hero-metric-row">
                                     <div>
@@ -1624,7 +1389,6 @@
                                 </div>
                             </div>
                         </div>
-                        
                         <div class="business-case-grid" style="margin-top: 8px;">
                             <div class="kpi-card">
                                 <div class="kpi-row">
@@ -1652,7 +1416,6 @@
                                     detaillierte Einordnung im Kontext Ihrer Branche und Unternehmensgröße.
                                 </p>
                             </div>
-                            
                             <div class="card card-muted">
                                 <h3>Ihr KI-Profil in einem Satz</h3>
                                 <p>{{ LEAD_EXEC }}</p>
@@ -1664,7 +1427,6 @@
                         </div>
                     </div>
                 </section>
-                
                 <!-- QUICK WINS -->
                 <section class="section chapter">
                     <div class="section-header">
@@ -1681,7 +1443,6 @@
                         {{QUICK_WINS_HTML}}
                     </div>
                 </section>
-                
                 <!-- ROADMAP -->
                 <section class="section chapter">
                     <div class="section-header">
@@ -1698,7 +1459,6 @@
                         {{ROADMAP_HTML}}
                     </div>
                 </section>
-                
                 <!-- BUSINESS CASE DETAIL -->
                 <section class="section chapter">
                     <div class="section-header">
@@ -1715,41 +1475,32 @@
                         {{BUSINESS_CASE_HTML}}
                     </div>
                 </section>
-                
                 <!-- RISKS, GAMECHANGER, RECOMMENDATIONS, FUNDING -->
                 <section class="chapter">
                     {{RISKS_HTML}}
                 </section>
-
                 <section class="chapter">
                     {{GAMECHANGER_HTML}}
                 </section>
-
                 <section class="chapter">
                     {{RECOMMENDATIONS_HTML}}
                 </section>
-
                 <section class="chapter">
                     {{FOERDERPOTENZIAL_HTML}}
                 </section>
-                
                 <!-- FEEDBACK SECTION -->
                 <div class="feedback-section">
                     <h2>Ihr Feedback ist uns wichtig!</h2>
                     <p>Helfen Sie uns, diesen Report noch besser zu machen. Ihre Rückmeldung hilft anderen Unternehmen.</p>
-                    
                     <div class="highlight-box">
                         <p><strong>Was hat Ihnen gefallen?</strong> Was können wir verbessern?</p>
                         <p>Nehmen Sie sich 2 Minuten Zeit für unser Feedback-Formular:</p>
                     </div>
-                    
                     <a href="https://make.ki-sicherheit.jetzt/feedback/feedback.html" class="feedback-button" target="_blank">
                         📝 Feedback geben
                     </a>
-                    
                     <p class="small">Ihre Angaben werden anonym ausgewertet und helfen uns bei der Weiterentwicklung.</p>
                 </div>
-                
         <!-- Annex: Kreativ-Tools & Glossar -->
 <section class="annex-section annex-kreativtools chapter">
   <h2>Kreativ-Tools 2025 – modulare Alternativen</h2>
@@ -1764,7 +1515,6 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
 </ul>
 <p><em>Fazit:</em> Adobe bleibt in Spezialfällen relevant. Für viele KMU decken die obigen Tools den Kreativ-Alltag vollständig ab.</p>
 </section>
-
 <section class="annex-section annex-glossar chapter">
   <h2>Glossar – zentrale KI-Begriffe</h2>
   <p class="section-intro">Kurzüberblick über wichtige Begriffe aus diesem Report. Dient als Nachschlagewerk für Geschäftsführung, Fachabteilungen und IT.</p>
@@ -1844,11 +1594,9 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
   </dl>
   <p class="small muted">Quelle: kuratiert, Stand {{LAST_UPDATED}}.</p>
 </section>
-
                 <!-- Impressum -->
                 <div class="impressum chapter">
                     <h3>Rechtliches & Transparenz</h3>
-
                     <div class="impressum-grid">
                         <div class="impressum-block">
                             <h4>Impressum</h4>
@@ -1858,32 +1606,25 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
                             10405 Berlin</p>
                             <p>E-Mail: <a href="mailto:wolf@ki-sicherheit.jetzt">wolf@ki-sicherheit.jetzt</a></p>
                         </div>
-
                         <div class="impressum-block">
                             <h4>Haftungsausschluss</h4>
                             <p>Dieses Projekt dient ausschließlich der Information. Trotz sorgfältiger Prüfung übernehme ich keine Haftung für Inhalte externer Links.</p>
                             <h4>Urheberrecht</h4>
                             <p>Alle Inhalte dieser Website unterliegen dem deutschen Urheberrecht, alle Bilder wurden mit Hilfe von KI erzeugt.</p>
                         </div>
-
                         <div class="impressum-block">
                             <h4>Hinweis zum EU AI Act</h4>
                             <p>Diese Website informiert über Pflichten, Risiken und Fördermöglichkeiten beim Einsatz von KI nach EU AI Act und DSGVO. Sie ersetzt keine Rechtsberatung.</p>
                         </div>
                     </div>
-
                     <div class="impressum-divider"></div>
-
                     <div class="impressum-block impressum-box">
                         <h3>Datenschutzerklärung</h3>
                         <p>Der Schutz Ihrer persönlichen Daten ist mir ein besonderes Anliegen.</p>
-
                         <h4>Kontakt mit mir</h4>
                         <p>Wenn Sie per Formular oder E-Mail Kontakt aufnehmen, werden Ihre Angaben zur Bearbeitung sechs Monate gespeichert.</p>
-
                         <h4>Cookies</h4>
                         <p>Diese Website verwendet keine Cookies zur Nutzerverfolgung oder Analyse.</p>
-
                         <h4>Ihre Rechte laut DSGVO</h4>
                         <ul>
                             <li>Auskunft, Berichtigung oder Löschung Ihrer Daten</li>
@@ -1891,14 +1632,18 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
                             <li>Widerruf erteilter Einwilligungen</li>
                             <li>Beschwerde bei der Datenschutzbehörde</li>
                         </ul>
-
                         <p>Wenn Sie von Ihren Rechten Gebrauch machen wollen, wenden Sie sich bitte an
                             <a href="mailto:wolf@ki-sicherheit.jetzt">wolf@ki-sicherheit.jetzt</a>.
                         </p>
                     </div>
                 </div>
-                
                 <p class="small" style="text-align: center;">
-                    © {{report_year}} KI-Sicherheit.jetzt — 
-                    Report ID: {{report_id}} — 
-        
+                    © {{report_year}} KI-Sicherheit.jetzt —
+                    Report ID: {{report_id}} —
+                    Erstellt am: {{LAST_UPDATED}}
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
