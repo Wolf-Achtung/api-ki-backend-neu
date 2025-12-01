@@ -351,25 +351,64 @@ class PromptEnhancer:
 
         return branch_html + size_html
 
+    def _build_strategic_context_prompt_block(self, briefing_data: Dict[str, Any]) -> str:
+        """
+        Build the strategic context block for prompt injection.
+
+        This block is injected into ALL prompts to provide strategic context
+        from the user's freetext answers.
+
+        Args:
+            briefing_data: Complete briefing data including strategic_context_block
+
+        Returns:
+            Formatted string for prompt injection
+        """
+        strategic_context = briefing_data.get("strategic_context_block", "")
+
+        if not strategic_context or strategic_context.strip() == "":
+            # Fallback for empty context
+            return """
+## Strategischer Kontext (Originalangaben des Unternehmens)
+
+Es liegen keine zusätzlichen strategischen Freitext-Angaben vor; orientiere dich an den übrigen Antworten.
+
+---
+
+"""
+
+        # Build the full strategic context block
+        return f"""
+## Strategischer Kontext (Originalangaben des Unternehmens)
+
+{strategic_context}
+
+**WICHTIG:** Wenn der Block Angaben zu No-Gos, roten Linien oder sensiblen Themen enthält (z.B. unter "No-Gos & Leitplanken"), sind diese strikt zu respektieren. Triff keine Empfehlungen, die diesen Leitplanken widersprechen.
+
+---
+
+"""
+
     def enhance_prompt(self, prompt_name: str, briefing_data: Dict[str, Any]) -> str:
         """
         Load a prompt and inject context.
 
         This method:
         1. Loads the base prompt from /prompts/de/ via prompt_loader
-        2. Builds a context block from branch/size contexts
-        3. Injects the context block into the prompt (ONLY for whitelisted prompts!)
-        4. Returns the enhanced prompt
+        2. Injects strategic context block into ALL prompts (from user freetext answers)
+        3. Builds additional context block from branch/size contexts (for whitelisted prompts)
+        4. Applies roadmap constraints for roadmap prompts
+        5. Returns the enhanced prompt
 
         Args:
             prompt_name: Name of the prompt (e.g., 'quick_wins')
-            briefing_data: Complete briefing data
+            briefing_data: Complete briefing data including strategic_context_block
 
         Returns:
-            Enhanced prompt with injected context (or plain prompt if not whitelisted)
+            Enhanced prompt with injected context
         """
-        # Only these prompts get context block
-        PROMPTS_WITH_CONTEXT = {
+        # Only these prompts get ADDITIONAL branch/size context block
+        PROMPTS_WITH_BRANCH_SIZE_CONTEXT = {
             "unternehmensprofil_markt",  # Main profile page - needs context
             # Weitere Prompts bei Bedarf ergänzen
         }
@@ -387,51 +426,84 @@ class PromptEnhancer:
                 )
                 return str(base_prompt)
 
-            # Kein Kontext für nicht gelistete Prompts
-            if prompt_name not in PROMPTS_WITH_CONTEXT:
+            # === STEP 1: Inject strategic context block into ALL prompts ===
+            # This is the user's own strategic input - always include it
+            strategic_block = self._build_strategic_context_prompt_block(briefing_data)
+
+            # Find the best injection point: after Developer comment, before HTML
+            # Look for the end of the Developer comment block
+            import re
+
+            # Try to find the end of the Developer comment (-->)
+            comment_end_match = re.search(r"-->\s*\n", base_prompt)
+            if comment_end_match:
+                # Inject after the Developer comment
+                inject_pos = comment_end_match.end()
+                enhanced = (
+                    base_prompt[:inject_pos]
+                    + "\n"
+                    + strategic_block
+                    + base_prompt[inject_pos:]
+                )
                 log.debug(
-                    "⏭️  Skipping context for '%s' (not in whitelist)", prompt_name
+                    "✅ Injected strategic context after Developer comment in '%s'",
+                    prompt_name,
                 )
-
-                # Roadmap-Constraints anwenden, falls Roadmap-Prompt
-                ROADMAP_PROMPTS = {"roadmap", "roadmap_12m", "pilot_plan", "roadmap_90d"}
-                if prompt_name in ROADMAP_PROMPTS:
-                    log.info("🎯 Applying roadmap size constraints for '%s'", prompt_name)
-                    base_prompt = enhance_roadmap_prompt(base_prompt, briefing_data)
-
-                return base_prompt
-
-            # Kontextblock aufbauen
-            context_block = self.build_context_block(briefing_data)
-
-            # Kontext injizieren
-            if "{CONTEXT_BLOCK}" in base_prompt:
-                enhanced = base_prompt.replace("{CONTEXT_BLOCK}", context_block)
-                log.info("✅ Injected context block into prompt '%s'", prompt_name)
             else:
-                import re
-
-                match = re.search(
-                    r"(<(?:section|div)[^>]*>)", base_prompt, re.IGNORECASE
+                # No Developer comment found - prepend to the prompt
+                enhanced = strategic_block + base_prompt
+                log.debug(
+                    "⚠️ No Developer comment found, prepended strategic context to '%s'",
+                    prompt_name,
                 )
-                if match is not None:
-                    pos = match.end()
-                    enhanced = (
-                        base_prompt[:pos]
-                        + "\n"
-                        + context_block
-                        + "\n"
-                        + base_prompt[pos:]
-                    )
-                    log.debug(
-                        "✅ Prepended context block to prompt '%s'", prompt_name
-                    )
+
+            # === STEP 2: Apply roadmap constraints if applicable ===
+            ROADMAP_PROMPTS = {"roadmap", "roadmap_12m", "pilot_plan", "roadmap_90d"}
+            if prompt_name in ROADMAP_PROMPTS:
+                log.info("🎯 Applying roadmap size constraints for '%s'", prompt_name)
+                enhanced = enhance_roadmap_prompt(enhanced, briefing_data)
+
+            # === STEP 3: Add branch/size context for whitelisted prompts ===
+            if prompt_name in PROMPTS_WITH_BRANCH_SIZE_CONTEXT:
+                context_block = self.build_context_block(briefing_data)
+
+                # Kontext injizieren
+                if "{CONTEXT_BLOCK}" in enhanced:
+                    enhanced = enhanced.replace("{CONTEXT_BLOCK}", context_block)
+                    log.info("✅ Injected branch/size context block into prompt '%s'", prompt_name)
                 else:
-                    enhanced = context_block + "\n\n" + base_prompt
-                    log.debug(
-                        "⚠️ No suitable injection point found, prepended context to '%s'",
-                        prompt_name,
+                    match = re.search(
+                        r"(<(?:section|div)[^>]*>)", enhanced, re.IGNORECASE
                     )
+                    if match is not None:
+                        pos = match.end()
+                        enhanced = (
+                            enhanced[:pos]
+                            + "\n"
+                            + context_block
+                            + "\n"
+                            + enhanced[pos:]
+                        )
+                        log.debug(
+                            "✅ Prepended branch/size context block to prompt '%s'",
+                            prompt_name,
+                        )
+                    else:
+                        # Add at end before </section> or at absolute end
+                        section_end_match = re.search(r"</section>\s*$", enhanced, re.IGNORECASE)
+                        if section_end_match:
+                            pos = section_end_match.start()
+                            enhanced = enhanced[:pos] + context_block + "\n" + enhanced[pos:]
+                        else:
+                            enhanced = enhanced + "\n" + context_block
+                        log.debug(
+                            "⚠️ No suitable injection point found, appended branch/size context to '%s'",
+                            prompt_name,
+                        )
+            else:
+                log.debug(
+                    "⏭️  Skipping branch/size context for '%s' (not in whitelist)", prompt_name
+                )
 
             return enhanced
 
