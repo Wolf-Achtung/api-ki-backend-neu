@@ -1427,6 +1427,75 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- STRATEGISCHER KONTEXT & LEITPLANKEN -->
+                {% if strategische_ziele or zeitersparnis_prioritaet or hauptleistung or ki_projekte or geschaeftsmodell_evolution or vision_3_jahre or ki_guardrails %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Kontext</span>
+                            <h2>Strategischer Kontext &amp; Leitplanken</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Ihre strategischen Vorgaben
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        <div class="grid-2">
+                            {% if strategische_ziele %}
+                            <div class="card">
+                                <h4>Strategische Prioritäten</h4>
+                                <p>{{ strategische_ziele }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if zeitersparnis_prioritaet %}
+                            <div class="card">
+                                <h4>Zeitersparnis-Priorität</h4>
+                                <p>{{ zeitersparnis_prioritaet }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if hauptleistung %}
+                            <div class="card">
+                                <h4>Hauptleistung</h4>
+                                <p>{{ hauptleistung }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if ki_projekte %}
+                            <div class="card">
+                                <h4>Laufende/geplante KI-Projekte</h4>
+                                <p>{{ ki_projekte }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if geschaeftsmodell_evolution %}
+                            <div class="card">
+                                <h4>Geschäftsmodell-Evolution</h4>
+                                <p>{{ geschaeftsmodell_evolution }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if vision_3_jahre %}
+                            <div class="card">
+                                <h4>3-Jahres-Vision</h4>
+                                <p>{{ vision_3_jahre }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {% if ki_guardrails %}
+                        <div class="callout" style="margin-top: 10px; border-color: rgba(248, 113, 113, 0.7);">
+                            <h4 style="margin-top: 0; color: #FCA5A5;">⚠️ Guardrails / No-Gos</h4>
+                            <p>{{ ki_guardrails }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </section>
+                {% endif %}
+
                 <!-- QUICK WINS -->
                 <section class="section chapter">
                     <div class="section-header">
