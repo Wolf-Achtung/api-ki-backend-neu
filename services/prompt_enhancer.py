@@ -389,6 +389,65 @@ Es liegen keine zusätzlichen strategischen Freitext-Angaben vor; orientiere dic
 
 """
 
+    def _build_strategic_alignment_instructions(
+        self, prompt_name: str, briefing_data: Dict[str, Any]
+    ) -> str:
+        """
+        Build prompt-specific instructions for strategic alignment.
+
+        These instructions tell the LLM HOW to use the strategic context
+        for specific prompt types (Quick Wins, Roadmaps).
+
+        Args:
+            prompt_name: Name of the prompt (e.g., 'quick_wins', 'roadmap_90d')
+            briefing_data: Complete briefing data
+
+        Returns:
+            Formatted instruction string, or empty string if not applicable
+        """
+        strategic_context = briefing_data.get("strategic_context_block", "")
+
+        # Only add alignment instructions if strategic context exists
+        if not strategic_context or strategic_context.strip() == "":
+            return ""
+
+        # Quick Wins alignment instructions
+        QUICK_WIN_PROMPTS = {"quick_wins"}
+        if prompt_name in QUICK_WIN_PROMPTS:
+            return """
+## Anleitung zur Nutzung des Strategischen Kontexts
+
+Nutze den Strategischen Kontext wie folgt:
+
+- **Priorisiere alle Empfehlungen** entlang der "Strategischen Prioritäten".
+- **Tackle die genannten "Zeitfresser & Prozess-Pain-Points" zuerst** – diese haben höchste Dringlichkeit.
+- **Richte die Beispiele, Formulierungen und Use-Cases** an der "Wichtigsten Leistung / Hauptprodukt" aus.
+- **Berücksichtige laufende KI-Projekte nur ergänzend** (keine Doppelarbeit, keine Redundanz).
+- **Wenn es Ideen zur Geschäftsmodell-Entwicklung gibt:** erwähne 1–2 schnelle Validierungsschritte als Quick Win.
+
+---
+
+"""
+
+        # Roadmap alignment instructions (90d, 12m, etc.)
+        ROADMAP_PROMPTS = {"roadmap", "roadmap_12m", "roadmap_90d", "pilot_plan"}
+        if prompt_name in ROADMAP_PROMPTS:
+            return """
+## Roadmap-Regeln basierend auf Strategischem Kontext
+
+- **In den ersten 90 Tagen:** Fokus auf Quick Wins und operative Entlastung basierend auf den genannten "Zeitfressern & Prozess-Pain-Points".
+- **Im 6–12 Monatszeitraum:** Maßnahmen wählen, die das Zielbild ("Vision 2–3 Jahre") und die "Strategischen Prioritäten" systematisch vorbereiten.
+- **Falls Geschäftsmodell-Ideen angegeben wurden:** zeige konkret, wie sie getestet und validiert werden können (MVP, Pilotkunden, Experimente).
+- **Laufende oder geplante KI-Projekte:** integriere sie sinnvoll in die Roadmap, vermeide Doppelarbeit.
+- **Wichtigste Leistung / Hauptprodukt:** alle Roadmap-Maßnahmen sollten letztlich diesen Kernprozess stärken oder effizienter machen.
+
+---
+
+"""
+
+        # No specific instructions for other prompts
+        return ""
+
     def enhance_prompt(self, prompt_name: str, briefing_data: Dict[str, Any]) -> str:
         """
         Load a prompt and inject context.
@@ -430,6 +489,15 @@ Es liegen keine zusätzlichen strategischen Freitext-Angaben vor; orientiere dic
             # This is the user's own strategic input - always include it
             strategic_block = self._build_strategic_context_prompt_block(briefing_data)
 
+            # === STEP 1b: Add prompt-specific alignment instructions ===
+            # For Quick Wins and Roadmaps, add specific instructions on HOW to use the context
+            alignment_instructions = self._build_strategic_alignment_instructions(
+                prompt_name, briefing_data
+            )
+
+            # Combine strategic block + alignment instructions
+            full_context_injection = strategic_block + alignment_instructions
+
             # Find the best injection point: after Developer comment, before HTML
             # Look for the end of the Developer comment block
             import re
@@ -442,16 +510,21 @@ Es liegen keine zusätzlichen strategischen Freitext-Angaben vor; orientiere dic
                 enhanced = (
                     base_prompt[:inject_pos]
                     + "\n"
-                    + strategic_block
+                    + full_context_injection
                     + base_prompt[inject_pos:]
                 )
                 log.debug(
                     "✅ Injected strategic context after Developer comment in '%s'",
                     prompt_name,
                 )
+                if alignment_instructions:
+                    log.debug(
+                        "✅ Added strategic alignment instructions for '%s'",
+                        prompt_name,
+                    )
             else:
                 # No Developer comment found - prepend to the prompt
-                enhanced = strategic_block + base_prompt
+                enhanced = full_context_injection + base_prompt
                 log.debug(
                     "⚠️ No Developer comment found, prepended strategic context to '%s'",
                     prompt_name,
