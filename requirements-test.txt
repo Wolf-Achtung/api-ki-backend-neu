@@ -5,6 +5,12 @@ respx==0.22.0
 anyio==4.11.0
 httpx==0.27.2
 
+# Core dependencies (required for gpt_analyze imports in tests)
+SQLAlchemy>=2.0,<2.1
+pydantic[email]>=2.9,<3.0
+pydantic-settings>=2.4,<3.0
+jinja2>=3.1,<4.0
+
 # Type checking stubs for mypy
 types-requests>=2.32.0
 types-PyYAML>=6.0.0
