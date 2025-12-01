@@ -158,6 +158,7 @@ def _build_router_config() -> List[Tuple[str, str, str]]:
         ("routes.briefings", "/api", "briefings"),
         ("routes.analyze", "/api", "analyze"),
         ("routes.report", "/api", "report"),
+        ("routes.feedback", "/api", "feedback"),
         # Smoke‑Test Router: bietet /api/smoke zur Überprüfung des Systems
         ("routes.smoke", "/api", "smoke"),
     ]
@@ -213,6 +214,7 @@ def _status_snapshot() -> Dict[str, Any]:
             "briefings": any(p.startswith("/api/briefings") for p in ps),
             "analyze": any(p.startswith("/api/analyze") for p in ps),
             "report": any(p.startswith("/api/report") for p in ps),
+            "feedback": any(p.startswith("/api/feedback") for p in ps),
             "smoke": any(p.startswith("/api/smoke") for p in ps),
         },
         "paths": sorted([p for p in ps if p.startswith("/api/")]),
@@ -254,6 +256,7 @@ def root() -> Dict[str, Any]:
         "health": "/api/healthz",
         "auth": "/api/auth/request-code (POST), /api/auth/login (POST)",
         "briefings": "/api/briefings/submit (POST)",
+        "feedback": "/api/feedback (POST)",
         "report": "/api/report (POST)",
         "router_status": "/api/router-status",
         "smoke": "/api/smoke",
