@@ -1,0 +1,136 @@
+{
+  "branche": "energy_utility",
+  "display_name": "Energy & Utilities",
+  "description": "Energy providers, utility companies, renewable energy, grid operators, energy consultants",
+
+  "typical_workflows": [
+    "Customer management: Contracts, billing, meter readings",
+    "Grid operations: Monitoring, maintenance, outage management",
+    "Energy trading: Procurement, portfolio management, forecasting",
+    "Project development: Renewable installations, grid expansion",
+    "Regulatory compliance: Reporting, certifications, audits",
+    "Customer service: Inquiries, complaints, service requests",
+    "Field service: Installations, inspections, repairs"
+  ],
+
+  "common_pain_points": [
+    "Complex billing: Multiple tariffs, regulatory requirements",
+    "Customer inquiries: High volume of routine questions",
+    "Demand forecasting: Balancing supply and demand",
+    "Regulatory reporting: Time-consuming compliance documentation",
+    "Asset management: Tracking aging infrastructure",
+    "Field coordination: Scheduling technicians, route optimization",
+    "Data silos: Information scattered across systems"
+  ],
+
+  "ai_opportunities": [
+    "Demand forecasting: Predict energy consumption patterns",
+    "Customer chatbot: Billing inquiries, outage updates, service requests",
+    "Predictive maintenance: Anticipate equipment failures",
+    "Automated billing: Smart meter data → Invoice",
+    "Document automation: Compliance reports, regulatory filings",
+    "Route optimization: Field technician scheduling",
+    "Energy analytics: Consumption analysis, efficiency recommendations",
+    "Anomaly detection: Identify grid issues, fraud detection"
+  ],
+
+  "typical_tools": [
+    "ERP systems: SAP, Oracle Utilities",
+    "SCADA systems: Grid monitoring and control",
+    "Meter data management systems",
+    "CRM for customer management",
+    "GIS for asset mapping",
+    "Field service management tools",
+    "Analytics platforms",
+    "Regulatory reporting tools"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Phone", "Email", "Customer portal", "Mobile apps"],
+    "erp": ["SAP", "Oracle Utilities", "Industry platforms"],
+    "operations": ["SCADA", "OMS", "DMS"],
+    "customer": ["CRM systems", "Billing platforms"],
+    "field": ["FSM tools", "Mobile workforce apps"],
+    "analytics": ["PI System", "Power BI", "Tableau"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "Customer inquiry chatbot",
+      "description": "Answer common questions: Bills, outages, tariffs, meter readings.",
+      "hours_saved": 8,
+      "tool": "Chatbot platform + Knowledge base",
+      "implementation": "Create FAQ catalog, train bot, embed on website",
+      "difficulty": "medium",
+      "investment": "$50-150/month"
+    },
+    {
+      "title": "Automated billing explanations",
+      "description": "Generate personalized bill explanations for customer inquiries.",
+      "hours_saved": 5,
+      "tool": "GPT-4 + Billing data",
+      "implementation": "Templates for different tariffs, consumption patterns",
+      "difficulty": "medium",
+      "investment": "$20-50/month"
+    },
+    {
+      "title": "Regulatory report drafting",
+      "description": "Draft compliance reports and regulatory filings from data.",
+      "hours_saved": 6,
+      "tool": "GPT-4 + Report templates",
+      "implementation": "Templates for report types, data integration",
+      "difficulty": "medium",
+      "investment": "$20-40/month"
+    },
+    {
+      "title": "Energy consumption analysis",
+      "description": "Analyze customer consumption data and provide efficiency recommendations.",
+      "hours_saved": 4,
+      "tool": "GPT-4 + Excel/Analytics",
+      "implementation": "Analysis prompts, recommendation templates",
+      "difficulty": "low",
+      "investment": "$20/month"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Central knowledge base for customer service",
+      "description": "All tariffs, FAQs, procedures searchable for agents.",
+      "hours_saved": 12,
+      "tool": "Notion or SharePoint + AI search",
+      "implementation": "Document policies, structure content, train team",
+      "difficulty": "medium",
+      "investment": "$50-150/month"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise analytics with AI forecasting",
+      "description": "Demand forecasting, predictive maintenance, grid optimization.",
+      "hours_saved": 40,
+      "tool": "SAP Analytics or specialized utility AI platforms",
+      "implementation": "Platform integration, model training, rollout",
+      "difficulty": "high",
+      "investment": "$2000-10000/month"
+    }
+  ],
+
+  "success_metrics": [
+    "Customer satisfaction: NPS, CSAT scores",
+    "First contact resolution: % inquiries resolved immediately",
+    "System availability: % uptime",
+    "Energy losses: % transmission/distribution losses",
+    "Regulatory compliance: Audit scores"
+  ],
+
+  "typical_pricing_models": [
+    "Usage-based billing (per kWh/unit)",
+    "Fixed service charges",
+    "Time-of-use rates",
+    "Demand charges",
+    "Feed-in tariffs (renewable)",
+    "Subscription/flat-rate plans"
+  ]
+}

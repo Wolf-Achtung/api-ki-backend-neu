@@ -1,0 +1,149 @@
+{
+  "branche": "creative_media",
+  "display_name": "Creative & Media",
+  "description": "Marketing agencies, design agencies, publishers, film/TV production, content creators, PR consultants",
+
+  "typical_workflows": [
+    "Content creation: Texts, graphics, videos, audio, social media posts",
+    "Campaign planning: Conception and execution for clients",
+    "Project management: Briefing, conception, production, delivery",
+    "Creative process: Ideation, moodboards, drafts, feedback",
+    "Production: Shooting, recording, editing, post-production",
+    "Asset management: Organize media, archive, retrieve",
+    "Distribution: Publishing, channel management",
+    "Performance tracking: Analytics, reporting, optimization"
+  ],
+
+  "common_pain_points": [
+    "Content production is time-consuming: 5-10 hours per week just for social media",
+    "Creative blocks: Constantly needing to generate new ideas",
+    "Many feedback loops: 3-5 revision rounds per project",
+    "Reporting takes time: Monthly reports for each client",
+    "Multi-channel complexity: Each channel has different formats/requirements",
+    "Trend monitoring: Constantly staying up to date",
+    "Asset chaos: Can't find files",
+    "Tight deadlines: Short production times"
+  ],
+
+  "ai_opportunities": [
+    "Content generation: Blog articles, social posts, ad copies via GPT",
+    "Image generation: Visuals for social media with DALL-E/Midjourney",
+    "Video scripts: Automatically create storyboards and voiceover texts",
+    "Automatic reporting: Data from analytics → Formatted report",
+    "Trend research: Automatic industry analyses and competitor monitoring",
+    "A/B test variants: Quickly generate 10+ variants for ads",
+    "SEO optimization: Keyword research and content optimization",
+    "Idea generation: Concepts, headlines, storylines via AI",
+    "Video editing: Automatic rough cuts, transcription"
+  ],
+
+  "typical_tools": [
+    "Adobe Creative Suite / Canva for graphics",
+    "Social media management platforms",
+    "Google/Meta Ads for advertising",
+    "Project management: Asana, Trello, Monday.com",
+    "Email marketing: Mailchimp, Klaviyo",
+    "Video editing: Premiere, DaVinci Resolve, Final Cut",
+    "Audio: Logic Pro, Audition, Descript",
+    "Slack for team communication"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Slack", "Teams", "Email", "Zoom"],
+    "design": ["Canva", "Adobe CC", "Figma"],
+    "social": ["Meta Business Suite", "Hootsuite", "Buffer", "Later"],
+    "analytics": ["Google Analytics", "Meta Ads Manager", "Semrush"],
+    "video": ["Premiere", "DaVinci Resolve", "Final Cut"],
+    "project": ["Asana", "Trello", "Monday.com"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "GPT-powered content pipeline",
+      "description": "Social media posts, blog articles, newsletter texts via GPT. From briefing to finished text in 10 instead of 60 minutes.",
+      "hours_saved": 12,
+      "tool": "GPT-4 API or ChatGPT Team ($20/month)",
+      "implementation": "Create prompt templates for different content formats, define brand voice guidelines",
+      "difficulty": "low",
+      "investment": "$20-50/month"
+    },
+    {
+      "title": "Automated visual creation",
+      "description": "Create social media graphics with AI tools. Image prompts → Canva/Midjourney → Finished graphic.",
+      "hours_saved": 8,
+      "tool": "Canva Pro + Magic Studio ($12/month)",
+      "implementation": "Create templates, set up brand kit, define workflow",
+      "difficulty": "low",
+      "investment": "$12-30/month"
+    },
+    {
+      "title": "Automatic report generation",
+      "description": "Google Analytics + Meta Ads data → Automatic monthly report via template.",
+      "hours_saved": 6,
+      "tool": "Google Looker Studio + GPT for summary",
+      "implementation": "Set up Looker Studio dashboard, GPT summary of insights",
+      "difficulty": "medium",
+      "investment": "$0-20/month"
+    },
+    {
+      "title": "AI image generation for concepts",
+      "description": "Quickly visualize moodboards, concept art, layouts.",
+      "hours_saved": 8,
+      "tool": "Midjourney or DALL-E 3 ($10-30/month)",
+      "implementation": "Learn prompting, define styles, set up workflow",
+      "difficulty": "low",
+      "investment": "$10-30/month"
+    },
+    {
+      "title": "Ad copy variant generator",
+      "description": "Generate 10-20 text variants for each campaign for A/B testing.",
+      "hours_saved": 4,
+      "tool": "GPT-4 with specific prompts",
+      "implementation": "Prompt template for ads, workflow integration",
+      "difficulty": "low",
+      "investment": "$20/month"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Central asset library with AI tagging",
+      "description": "All graphics, videos, templates centrally searchable. Automatic tagging via AI.",
+      "hours_saved": 15,
+      "tool": "Notion + AI plugin or Brandfolder",
+      "implementation": "Migrate assets, set up tagging system",
+      "difficulty": "medium",
+      "investment": "$50-150/month"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise marketing automation",
+      "description": "Complete marketing automation: Lead scoring, nurturing, attribution tracking.",
+      "hours_saved": 40,
+      "tool": "HubSpot Marketing Hub or Marketo",
+      "implementation": "System setup, integration, team training",
+      "difficulty": "high",
+      "investment": "$800-2500/month"
+    }
+  ],
+
+  "success_metrics": [
+    "Content output: Number of posts/articles per week",
+    "Engagement rate: Likes, comments, shares",
+    "Lead generation: MQLs, SQLs per campaign",
+    "ROAS: Return on Ad Spend",
+    "Project turnaround: Time from briefing to delivery",
+    "Client retention: Customer retention rate"
+  ],
+
+  "typical_pricing_models": [
+    "Retainer models ($1500-10000/month)",
+    "Project fees for campaigns",
+    "Hourly rates ($80-180/h)",
+    "Performance-based (% of ad spend)",
+    "Hybrid models (retainer + performance)",
+    "Day rates ($500-2000/day)"
+  ]
+}

@@ -1,0 +1,134 @@
+{
+  "branche": "finance_insurance",
+  "display_name": "Finance & Insurance",
+  "description": "Financial advisors, insurance brokers, tax consultants, accounting, wealth management",
+
+  "typical_workflows": [
+    "Client advisory: Needs analysis, product recommendation, closing",
+    "Documentation: Advisory protocols, compliance documentation",
+    "Application processing: Insurance applications, loan applications",
+    "Portfolio management: Contract overview, follow-ups, cancellations",
+    "Claims processing: Claims reporting, communication with insurers",
+    "Reporting: Revenue reports, commission statements",
+    "Regulatory compliance: Training, GDPR, compliance requirements"
+  ],
+
+  "common_pain_points": [
+    "High documentation requirements: Regulatory bodies, compliance",
+    "Complex products: Constantly new rates and conditions",
+    "Time-consuming administration: 40-50% of time on admin tasks",
+    "Advisory protocols: Every conversation must be documented",
+    "Creating comparisons: Manual rate comparisons are time-intensive",
+    "Client communication: Many inquiries about contracts/claims",
+    "Commission calculation: Complex calculations, many interfaces"
+  ],
+
+  "ai_opportunities": [
+    "Automate advisory protocols: Meeting → Transcript → Protocol",
+    "AI-powered rate analysis: Quick analysis of conditions",
+    "Automated customer inquiry responses: FAQ bot for standard questions",
+    "Claims processing: Automatic categorization and routing",
+    "Contract analysis: Analyze PDFs, find coverage gaps",
+    "Lead qualification: Automatic evaluation of inquiries",
+    "Newsletter generation: Market updates for existing clients",
+    "Compliance review: Automatic document verification"
+  ],
+
+  "typical_tools": [
+    "CRM systems: Salesforce, HubSpot, industry-specific platforms",
+    "Comparison calculators: Industry comparison tools",
+    "Email as main communication channel",
+    "Excel for lists and evaluations",
+    "PDF processing for contracts and documents",
+    "Phone for client advisory",
+    "Accounting software: QuickBooks, Xero, cloud solutions",
+    "Webinars for product training"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Email", "Phone", "Teams", "Video calls"],
+    "crm": ["Salesforce FSC", "HubSpot", "Industry platforms"],
+    "comparison": ["Industry comparison tools", "Quote systems"],
+    "accounting": ["QuickBooks", "Xero", "FreshBooks"],
+    "documentation": ["Word", "PDF tools", "DocuSign"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "Automated advisory protocols",
+      "description": "Record client meeting → Transcription → GPT creates compliant protocol.",
+      "hours_saved": 10,
+      "tool": "Fireflies.ai + GPT-4 ($39/month)",
+      "implementation": "Create templates for different advisory types",
+      "difficulty": "medium",
+      "investment": "$39-59/month"
+    },
+    {
+      "title": "AI-powered rate analysis",
+      "description": "Analyze insurance/financial product conditions via GPT: coverage scope, exclusions, special features.",
+      "hours_saved": 6,
+      "tool": "GPT-4 with PDF upload",
+      "implementation": "Create prompts for rate analysis, define checklists",
+      "difficulty": "low",
+      "investment": "$20/month"
+    },
+    {
+      "title": "Automatic customer inquiry handling",
+      "description": "Automatically answer standard inquiries (certificates, contract info).",
+      "hours_saved": 5,
+      "tool": "Make.com + GPT-4 + Email",
+      "implementation": "Trigger for frequent inquiries, template responses",
+      "difficulty": "medium",
+      "investment": "$29-49/month"
+    },
+    {
+      "title": "Newsletter content via GPT",
+      "description": "Generate monthly market updates and tips for existing clients.",
+      "hours_saved": 4,
+      "tool": "GPT-4 + Mailchimp",
+      "implementation": "Prompt templates, topic calendar",
+      "difficulty": "low",
+      "investment": "$20/month"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Central knowledge database for products",
+      "description": "All product info, conditions, training materials searchable via RAG.",
+      "hours_saved": 15,
+      "tool": "Notion AI or Custom RAG",
+      "implementation": "Collect documents, structure, set up system",
+      "difficulty": "high",
+      "investment": "$100-200/month"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise portfolio management with AI",
+      "description": "Automatic cross-/up-selling recommendations, churn prediction, 360° client view.",
+      "hours_saved": 30,
+      "tool": "Salesforce Financial Services Cloud",
+      "implementation": "CRM migration, activate AI features, train team",
+      "difficulty": "high",
+      "investment": "$1000-3000/month"
+    }
+  ],
+
+  "success_metrics": [
+    "Closing rate: % advisory sessions → closings",
+    "Portfolio size: Contracts and commission",
+    "Cancellation rate: % cancelled contracts",
+    "Advisory time: Average time per client",
+    "Cross-selling rate: Contracts per client"
+  ],
+
+  "typical_pricing_models": [
+    "Commission from provider (closing + portfolio)",
+    "Fee-based advisory ($150-300/h)",
+    "Service packages (monthly/annually)",
+    "Hybrid models (commission + fee)",
+    "Net rates + service fee"
+  ]
+}

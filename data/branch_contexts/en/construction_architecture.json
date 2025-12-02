@@ -1,0 +1,144 @@
+{
+  "branche": "construction_architecture",
+  "display_name": "Construction & Architecture",
+  "description": "Architecture firms, engineering offices, construction companies, trade contractors, project developers",
+
+  "typical_workflows": [
+    "Project acquisition: Tenders, competitions, direct contracts",
+    "Planning: Design, permit planning, execution planning",
+    "Cost estimation: Quantity takeoff, cost calculation, quotes",
+    "Tendering: Specifications, award procedures",
+    "Construction management: Coordination, supervision, documentation",
+    "Billing: Measurements, invoice verification, change order management",
+    "Documentation: Site diary, protocols, acceptances"
+  ],
+
+  "common_pain_points": [
+    "Creating tender texts: Specification items time-consuming to write",
+    "Quantity takeoff: Manual counting from drawings",
+    "Site documentation: Daily logs, defect photos",
+    "Change orders: Difficult justification and enforcement",
+    "Cost controlling: Actual vs. planned comparison is complex",
+    "BIM implementation: Complexity, training needs",
+    "Skilled labor shortage: Qualified planners and site managers lacking"
+  ],
+
+  "ai_opportunities": [
+    "Generate specification texts: Descriptions for tenders",
+    "Automatic quantity takeoff: AI reads drawings",
+    "Voice-based site diary: Dictate instead of type on site",
+    "Defect documentation: Photo → Automatic description and category",
+    "Bid analysis: Compare received bids",
+    "Code/Standards research: Quickly find relevant building codes",
+    "Schedule optimization: Analyze resources and dependencies",
+    "Change order drafting: Write legally sound justifications"
+  ],
+
+  "typical_tools": [
+    "CAD: AutoCAD, ArchiCAD, Revit",
+    "Estimating: Various cost estimation software",
+    "Project management: MS Project, Primavera",
+    "Office: Word, Excel for documentation",
+    "BIM software: Revit, Allplan, Vectorworks",
+    "Construction documentation: PlanRadar, Procore",
+    "Accounting software",
+    "Communication: Email, Teams, WhatsApp"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Email", "Teams", "WhatsApp", "On-site meetings"],
+    "cad_bim": ["AutoCAD", "Revit", "ArchiCAD", "Allplan"],
+    "estimating": ["Various estimating platforms"],
+    "documentation": ["PlanRadar", "Procore", "Fieldwire"],
+    "scheduling": ["MS Project", "Primavera", "Monday.com"],
+    "accounting": ["Accounting software", "Industry solutions"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "Specification texts via AI",
+      "description": "Automatically create service descriptions for tenders.",
+      "hours_saved": 10,
+      "tool": "GPT-4 with construction expertise",
+      "implementation": "Prompts with trade specifics and standards, templates for spec format",
+      "difficulty": "medium",
+      "investment": "$20-50/month"
+    },
+    {
+      "title": "Voice site diary",
+      "description": "Dictate site diary on location instead of typing in the evening.",
+      "hours_saved": 6,
+      "tool": "Otter.ai or Dragon + Word",
+      "implementation": "Set up voice recognition, template for site diary",
+      "difficulty": "low",
+      "investment": "$19-50/month"
+    },
+    {
+      "title": "Defect photo documentation",
+      "description": "Take photo → AI describes defect → Transfer to system.",
+      "hours_saved": 4,
+      "tool": "PlanRadar or custom GPT-4 Vision solution",
+      "implementation": "Set up app, define categories",
+      "difficulty": "low",
+      "investment": "$29-79/month"
+    },
+    {
+      "title": "Code/Standards quick search",
+      "description": "Quickly find and summarize relevant building codes and standards.",
+      "hours_saved": 3,
+      "tool": "GPT-4 + Standards access",
+      "implementation": "Prompts for code research, summary templates",
+      "difficulty": "low",
+      "investment": "$20/month"
+    },
+    {
+      "title": "Automate bid comparison",
+      "description": "Automatically transfer received bids into comparison matrix.",
+      "hours_saved": 4,
+      "tool": "GPT-4 + Excel",
+      "implementation": "Read PDFs, extract data, populate Excel",
+      "difficulty": "medium",
+      "investment": "$20-40/month"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Central project database",
+      "description": "All projects, specs, references searchable for new proposals.",
+      "hours_saved": 12,
+      "tool": "Notion or SharePoint + AI search",
+      "implementation": "Capture projects, assign tags, train team",
+      "difficulty": "medium",
+      "investment": "$50-150/month"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise BIM with AI analysis",
+      "description": "Automatic quantity takeoff, clash detection, 4D/5D integration.",
+      "hours_saved": 40,
+      "tool": "Autodesk Construction Cloud or similar",
+      "implementation": "BIM implementation, team training, process adjustment",
+      "difficulty": "high",
+      "investment": "$1000-3000/month"
+    }
+  ],
+
+  "success_metrics": [
+    "Win rate: % won proposals",
+    "Project margin: Profit per project",
+    "Schedule adherence: % projects completed on time",
+    "Change order success: % approved change orders",
+    "Site productivity: Output per labor hour"
+  ],
+
+  "typical_pricing_models": [
+    "Professional fees (architects/engineers)",
+    "Unit prices (construction execution)",
+    "Lump sum for defined scope",
+    "Time and materials",
+    "GMP (Guaranteed Maximum Price)"
+  ]
+}
