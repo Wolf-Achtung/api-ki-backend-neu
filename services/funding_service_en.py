@@ -1,8 +1,9 @@
 """
-Funding Service EN - English funding recommendations for Germany-based companies.
+Funding Service EN - English funding recommendations for EN reports.
 
-This module provides English-language funding program recommendations
-for users with companies based in Germany (lang="en", country="DE").
+This module provides English-language funding program recommendations:
+- Phase 1: German programmes for users with companies based in Germany (lang="en", country="DE")
+- Phase 2: EU core programmes for users in other EU countries (lang="en", country != "DE")
 """
 
 import json
@@ -16,10 +17,30 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class FundingResult:
-    """Result of funding program matching for EN reports."""
+    """Result of funding program matching for EN reports (Germany)."""
 
     programmes: List[Dict[str, Any]] = field(default_factory=list)
     country: str = "DE"
+    language: str = "en"
+    error: Optional[str] = None
+
+    @property
+    def has_programmes(self) -> bool:
+        """Check if any programmes were found."""
+        return len(self.programmes) > 0
+
+    @property
+    def programme_count(self) -> int:
+        """Return number of matched programmes."""
+        return len(self.programmes)
+
+
+@dataclass
+class FundingResultEUCore:
+    """Result of EU core funding program matching for EN reports (non-German countries)."""
+
+    programmes: List[Dict[str, Any]] = field(default_factory=list)
+    country: str = "EU"
     language: str = "en"
     error: Optional[str] = None
 
@@ -266,5 +287,257 @@ def render_funding_html_en(result: FundingResult, limit: int = 5) -> str:
         html_parts.append("</div>")
 
     html_parts.append("</div>")
+
+    return "\n".join(html_parts)
+
+
+# =============================================================================
+# Phase 2: EU Core Funding (for non-German EN reports)
+# =============================================================================
+
+
+def _load_eu_core_funding_data() -> Dict[str, Any]:
+    """Load funding_eu_core_en.json data file."""
+    funding_file = Path(__file__).parent.parent / "data" / "funding" / "funding_eu_core_en.json"
+
+    if not funding_file.exists():
+        logger.warning(f"EU core funding data file not found: {funding_file}")
+        return {"programmes": []}
+
+    try:
+        with open(funding_file, "r", encoding="utf-8") as f:
+            data: Dict[str, Any] = json.load(f)
+            return data
+    except json.JSONDecodeError as e:
+        logger.error(f"Error parsing EU core funding data: {e}")
+        return {"programmes": []}
+    except Exception as e:
+        logger.error(f"Error loading EU core funding data: {e}")
+        return {"programmes": []}
+
+
+def _normalize_target_group(answers: Dict[str, Any]) -> str:
+    """
+    Normalize company profile to EU target group category.
+
+    Returns: 'startup', 'sme', 'large', 'research', or 'public'
+    """
+    company_size = _normalize_company_size(answers)
+
+    # Check for research/academic indicators
+    branche = str(answers.get("branche", answers.get("industry", ""))).lower()
+    if any(kw in branche for kw in ("research", "university", "forschung", "hochschule", "academic")):
+        return "research"
+
+    # Check for public sector
+    if any(kw in branche for kw in ("public", "government", "öffentlich", "behörde", "verwaltung")):
+        return "public"
+
+    # Map company size to EU target groups
+    if company_size == "solo":
+        return "startup"
+    elif company_size == "team":
+        return "sme"  # Small teams typically qualify as SME
+    else:
+        # Check employee count for large enterprise threshold
+        employees = answers.get("mitarbeiter", answers.get("employees", 0))
+        try:
+            emp_count = int(employees) if employees else 0
+        except (ValueError, TypeError):
+            emp_count = 0
+
+        if emp_count > 250:
+            return "large"
+        return "sme"
+
+
+def _match_eu_core_programmes(
+    programmes: List[Dict[str, Any]],
+    target_group: str,
+    ai_focus: bool = True,
+) -> List[Dict[str, Any]]:
+    """
+    Filter and sort EU core programmes based on profile.
+
+    Args:
+        programmes: List of EU funding programmes from JSON
+        target_group: Normalized target group ('startup', 'sme', 'large', 'research', 'public')
+        ai_focus: Whether to prioritize AI-relevant programmes
+
+    Returns:
+        Sorted list of matching programmes
+    """
+    matched: List[Dict[str, Any]] = []
+
+    # Map our target groups to JSON target_groups_en values
+    target_map = {
+        "startup": ["Startups", "Deep-tech startups", "Scale-ups", "High-growth SMEs", "SMEs", "Innovative SMEs"],
+        "sme": ["SMEs", "Innovative SMEs", "Startups", "Scale-ups", "High-growth SMEs", "Mid-caps"],
+        "large": ["Large enterprises", "Mid-caps", "SMEs"],
+        "research": ["Research organisations", "Universities", "Research partners"],
+        "public": ["Public sector", "Public authorities"],
+    }
+
+    allowed_targets = target_map.get(target_group, ["SMEs"])
+
+    for prog in programmes:
+        prog_targets = prog.get("target_groups_en", [])
+
+        # Check if any of our allowed targets match the programme's target groups
+        if not any(t in prog_targets for t in allowed_targets):
+            continue
+
+        matched.append(prog)
+
+    # Sort by priority and AI relevance
+    def sort_key(p: Dict[str, Any]) -> tuple:
+        priority = p.get("priority", 99)
+        relevance_order = {"Very high": 0, "High": 1, "Medium-High": 2, "Medium": 3, "Low": 4}
+        relevance = relevance_order.get(p.get("ai_relevance_en", "Medium"), 3)
+
+        # Boost AI-relevant programmes if ai_focus is True
+        if ai_focus and relevance <= 1:
+            priority -= 1
+
+        return (priority, relevance)
+
+    matched.sort(key=sort_key)
+
+    return matched
+
+
+def get_funding_eu_core_en(answers: Dict[str, Any]) -> FundingResultEUCore:
+    """
+    Get EU core funding recommendations for non-German EN reports.
+
+    This function:
+    1. Loads funding_eu_core_en.json
+    2. Matches programmes based on company type and AI relevance
+    3. Returns FundingResultEUCore with EN-language strings
+
+    Args:
+        answers: Dictionary containing user answers with keys like:
+            - unternehmensgroesse / company_size
+            - branche / industry
+            - mitarbeiter / employees
+            - country
+
+    Returns:
+        FundingResultEUCore with matched programmes and metadata
+    """
+    try:
+        # Get country from answers
+        country = str(answers.get("country", "EU")).upper()
+
+        # Load EU core funding data
+        data = _load_eu_core_funding_data()
+        programmes = data.get("programmes", [])
+
+        if not programmes:
+            logger.warning("No EU core funding programmes found in data file")
+            return FundingResultEUCore(
+                programmes=[],
+                country=country,
+                language="en",
+                error="No EU funding programmes available",
+            )
+
+        # Determine target group
+        target_group = _normalize_target_group(answers)
+
+        # Check if project has AI focus (default True for this service)
+        ai_focus = True
+
+        # Match programmes
+        matched = _match_eu_core_programmes(
+            programmes=programmes,
+            target_group=target_group,
+            ai_focus=ai_focus,
+        )
+
+        logger.info(
+            f"EU Core funding match: target={target_group}, country={country}, "
+            f"found={len(matched)} programmes"
+        )
+
+        return FundingResultEUCore(
+            programmes=matched,
+            country=country,
+            language="en",
+            error=None,
+        )
+
+    except Exception as e:
+        logger.error(f"Error in get_funding_eu_core_en: {e}")
+        return FundingResultEUCore(
+            programmes=[],
+            country=str(answers.get("country", "EU")).upper(),
+            language="en",
+            error=str(e),
+        )
+
+
+def render_funding_eu_core_html_en(result: FundingResultEUCore, limit: int = 4) -> str:
+    """
+    Render EU core funding programmes as HTML for EN reports.
+
+    Args:
+        result: FundingResultEUCore from get_funding_eu_core_en()
+        limit: Maximum number of programmes to render (default 4)
+
+    Returns:
+        HTML string for embedding in report
+    """
+    if not result.has_programmes:
+        return ""
+
+    programmes = result.programmes[:limit]
+    html_parts: List[str] = ['<div class="funding-programmes eu-core">']
+
+    for prog in programmes:
+        name = prog.get("name_en", "Unknown Programme")
+        summary = prog.get("summary_en", "")
+        funding_type = prog.get("funding_type_en", "")
+        funding_rate = prog.get("funding_rate_en", "")
+        max_amount = prog.get("max_amount_en", "")
+        target_groups = prog.get("target_groups_en", [])
+        ai_relevance = prog.get("ai_relevance_en", "")
+        notes = prog.get("notes_en", "")
+
+        html_parts.append('<div class="funding-programme">')
+        html_parts.append(f'  <h4>{name}</h4>')
+
+        if summary:
+            html_parts.append(f'  <p class="summary">{summary}</p>')
+
+        html_parts.append('  <ul class="details">')
+        if funding_type:
+            html_parts.append(f"    <li><strong>Funding type:</strong> {funding_type}</li>")
+        if funding_rate:
+            html_parts.append(f"    <li><strong>Typical co-funding rate:</strong> {funding_rate}</li>")
+        if max_amount:
+            html_parts.append(f"    <li><strong>Typical amount:</strong> {max_amount}</li>")
+        if target_groups:
+            targets_str = ", ".join(target_groups)
+            html_parts.append(f"    <li><strong>Target groups:</strong> {targets_str}</li>")
+        if ai_relevance:
+            html_parts.append(f"    <li><strong>AI relevance:</strong> {ai_relevance}</li>")
+        html_parts.append("  </ul>")
+
+        if notes:
+            html_parts.append(f'  <p class="notes"><em>{notes}</em></p>')
+
+        html_parts.append("</div>")
+
+    html_parts.append("</div>")
+
+    # Add disclaimer
+    html_parts.append('<p class="funding-disclaimer small muted">')
+    html_parts.append(
+        "Note: EU funding programmes have varying deadlines, eligibility criteria, and call-specific "
+        "requirements. The information above provides general guidance. Please consult official "
+        "programme documentation and national contact points for current opportunities."
+    )
+    html_parts.append("</p>")
 
     return "\n".join(html_parts)
