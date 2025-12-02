@@ -233,6 +233,45 @@ SENSITIVE_AREAS = [
     "vertrauliche", "geheimhaltung", "datenschutz-kritisch",
 ]
 
+# === ENGLISH GUARDRAIL DETECTION (v4.1) ===================================
+
+# Guardrail Detection Keywords for English (v4.1)
+GUARDRAIL_DETECTION_KEYWORDS_EN = [
+    # Core guardrail terms
+    "no-gos", "guardrails", "red lines", "sensitive topics",
+    "taboo", "excluded", "not allowed", "off limits",
+    # Extended keywords
+    "delicate", "sensitive", "critical", "please avoid",
+    "do not automate", "do not delegate", "do not communicate",
+    "do not outsource to ai", "under no circumstances",
+    "human decision only", "sensitive issues",
+    # Negative verbs + objects
+    "do not use", "do not share", "do not release",
+    "do not publish", "not without approval", "not without consultation",
+    "do not share with customers", "do not store externally",
+    # Restriction / caution phrases
+    "manual decision only", "internal use only", "be careful with",
+    "critical topics", "sensitive data", "not without agreement",
+]
+
+# Negation words for intelligent detection - English (v4.1)
+NEGATION_WORDS_EN = ["no", "not", "never", "without", "none", "don't", "cannot", "must not"]
+
+# Action words that combined with negation indicate guardrails - English (v4.1)
+ACTION_WORDS_EN = [
+    "automate", "delegate", "release", "store", "share",
+    "use", "forward", "publish", "communicate",
+    "outsource", "utilize", "deploy", "transfer",
+]
+
+# Sensitive areas that imply guardrails without negation - English (v4.1)
+SENSITIVE_AREAS_EN = [
+    "personnel decisions", "applicant data", "health data",
+    "team communication", "legal matters", "customer complaints",
+    "compliance-relevant", "personal data", "employee data",
+    "confidential", "secrecy", "privacy-critical",
+]
+
 
 def _split_into_sentences(text: str) -> list[str]:
     """Split text into sentences using common delimiters."""
@@ -243,19 +282,26 @@ def _split_into_sentences(text: str) -> list[str]:
     return [s.strip() for s in sentences if s.strip()]
 
 
-def _check_negation_action(sentence_lower: str) -> bool:
+def _check_negation_action(sentence_lower: str, lang: str = "de") -> bool:
     """Check if sentence contains negation + action word combination."""
-    has_negation = any(neg in sentence_lower for neg in NEGATION_WORDS)
-    has_action = any(act in sentence_lower for act in ACTION_WORDS)
+    if lang == "en":
+        has_negation = any(neg in sentence_lower for neg in NEGATION_WORDS_EN)
+        has_action = any(act in sentence_lower for act in ACTION_WORDS_EN)
+    else:
+        has_negation = any(neg in sentence_lower for neg in NEGATION_WORDS)
+        has_action = any(act in sentence_lower for act in ACTION_WORDS)
     return has_negation and has_action
 
 
-def _check_sensitive_area(sentence_lower: str) -> bool:
+def _check_sensitive_area(sentence_lower: str, lang: str = "de") -> bool:
     """Check if sentence mentions sensitive areas."""
-    return any(area in sentence_lower for area in SENSITIVE_AREAS)
+    if lang == "en":
+        return any(area in sentence_lower for area in SENSITIVE_AREAS_EN)
+    else:
+        return any(area in sentence_lower for area in SENSITIVE_AREAS)
 
 
-def detect_guardrails_in_freetext(answers: dict) -> tuple[bool, list[str]]:
+def detect_guardrails_in_freetext(answers: dict, lang: str = "de") -> tuple[bool, list[str]]:
     """
     Scannt alle Freitext-Felder nach Guardrails mit intelligenter Erkennung.
 
@@ -264,8 +310,11 @@ def detect_guardrails_in_freetext(answers: dict) -> tuple[bool, list[str]]:
     2. Negation + Aktion Kombinationen
     3. Kritische Bereiche ohne Negation
 
+    v4.1: Language-aware detection (DE/EN)
+
     Args:
         answers: Dict mit den Fragebogen-Antworten
+        lang: Language code ("de" or "en")
 
     Returns:
         Tuple (guardrails_detected: bool, detected_snippets: list[str])
@@ -279,6 +328,12 @@ def detect_guardrails_in_freetext(answers: dict) -> tuple[bool, list[str]]:
         "geschaeftsmodell_evolution",
         "vision_3_jahre",
     ]
+
+    # Select keywords based on language
+    if lang == "en":
+        guardrail_keywords = GUARDRAIL_DETECTION_KEYWORDS_EN
+    else:
+        guardrail_keywords = GUARDRAIL_DETECTION_KEYWORDS
 
     detected_snippets = []
 
@@ -296,14 +351,14 @@ def detect_guardrails_in_freetext(answers: dict) -> tuple[bool, list[str]]:
 
             sentence_lower = sentence.lower()
 
-            # Check 1: Explicit guardrail keywords
-            has_explicit_keyword = any(kw in sentence_lower for kw in GUARDRAIL_DETECTION_KEYWORDS)
+            # Check 1: Explicit guardrail keywords (language-aware)
+            has_explicit_keyword = any(kw in sentence_lower for kw in guardrail_keywords)
 
-            # Check 2: Negation + Action combination
-            has_negation_action = _check_negation_action(sentence_lower)
+            # Check 2: Negation + Action combination (language-aware)
+            has_negation_action = _check_negation_action(sentence_lower, lang)
 
-            # Check 3: Sensitive area mention
-            has_sensitive_area = _check_sensitive_area(sentence_lower)
+            # Check 3: Sensitive area mention (language-aware)
+            has_sensitive_area = _check_sensitive_area(sentence_lower, lang)
 
             # If any check passes, add to detected snippets
             if has_explicit_keyword or has_negation_action or has_sensitive_area:
