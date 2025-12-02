@@ -22,6 +22,7 @@
     "ki_einsatz": ["datenanalyse", "qualitaetskontrolle", "prozessoptimierung", "predictive_maintenance"],
     "ki_kompetenz": "mittel",
     "ki_ziele": ["effizienz", "fehlerreduktion", "standardisierung", "optimierung", "transparenz"],
+    "ki_guardrails": "Keine automatisierten Maschinensteuerungen ohne Freigabe. Qualitätsdaten nicht ohne Review in externe KI-Modelle. Sicherheitskritische Prozesse erfordern menschliche Kontrolle.",
     "ki_projekte": "Aktuell werden erste PoCs zu KI-gestützter Anomalieerkennung in Qualitätsdaten, automatisierter Prüfbericht-Generierung, Produktionsprognosen für Engpassstationen und der Einsatz eines KI-gestützten Wissenssystems für Störungsmeldungen vorbereitet. Weitere Projekte betreffen die automatische Auswertung von Maschinenzustandsdaten zur Reduzierung ungeplanter Stillstände.",
     "anwendungsfaelle": ["qualitaetskontrolle", "automatische_dokumentation", "prozessanalyse", "schichtplanung", "engpassprognosen", "maschine_sensordaten_analyse"],
     "zeitersparnis_prioritaet": "Großer Bedarf besteht bei der Pflege technischer Dokumentationen, der manuellen Analyse von Qualitätsdaten, der Erstellung von Produktionsreportings sowie bei der Koordination zwischen Fertigungssteuerung, Logistik und QS. Besonders aufwendig sind wiederkehrende Auswertungen, Schichtabgleiche und manuelle Prüfprozesse.",

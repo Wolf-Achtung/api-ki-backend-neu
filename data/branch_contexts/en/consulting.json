@@ -1,0 +1,127 @@
+{
+  "branche": "beratung",
+  "display_name": "Consulting & Professional Services",
+  "description": "Professional services: Management consulting, business consulting, expert consulting, coaching",
+
+  "typical_workflows": [
+    "Customer acquisition via network, referrals, and LinkedIn",
+    "Initial meetings and needs analysis (often 1-2h per client)",
+    "Proposal creation (individual, time-consuming: 2-4h per proposal)",
+    "Project delivery: Workshops, analyses, coaching sessions",
+    "Documentation: Minutes, reports, presentations",
+    "Follow-up: Proposal follow-ups, client relationship management",
+    "Administration: Invoices, time tracking, accounting"
+  ],
+
+  "common_pain_points": [
+    "Acquisition consumes productive time: 30-40% for marketing instead of delivery",
+    "Proposals take too long: Each one needs individual customization",
+    "Standardization difficult: Every client wants an individual solution",
+    "Scaling only with more time: Capacity limit for solo/small teams",
+    "Marketing often neglected: No time for regular content",
+    "Administration underestimated: Invoices, contracts, documentation",
+    "Knowledge management lacking: Starting each project from scratch",
+    "Pricing uncertainty: Hourly rates vs. value-based pricing"
+  ],
+
+  "ai_opportunities": [
+    "Automate proposal creation: Templates + GPT = 5 instead of 120 minutes",
+    "Content marketing: LinkedIn posts, blog articles, newsletters via GPT",
+    "Report generation: Automatically create analyses and presentations",
+    "Meeting documentation: Transcription + summary + action items",
+    "Research assistants: Client analysis, market research, competitor analysis",
+    "Email automation: Follow-ups, nurturing sequences, appointment confirmations",
+    "CRM automation: Lead scoring, activity tracking, pipeline management",
+    "Knowledge management: RAG systems for company know-how"
+  ],
+
+  "typical_tools": [
+    "Microsoft Office / Google Workspace for documents",
+    "Excel / Google Sheets for calculations and lists",
+    "Email as main communication channel",
+    "Zoom / Microsoft Teams for online meetings",
+    "LinkedIn for networking and marketing",
+    "No or very simple CRM (often Excel lists)",
+    "Manual accounting or cloud accounting software",
+    "WhatsApp for quick client communication"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Email", "Zoom", "Teams", "WhatsApp"],
+    "documentation": ["Word", "Google Docs", "PowerPoint", "Notion"],
+    "calculation": ["Excel", "Google Sheets"],
+    "crm": ["No CRM", "Excel", "HubSpot Free", "Pipedrive"],
+    "accounting": ["QuickBooks", "Xero", "FreshBooks"],
+    "marketing": ["LinkedIn", "Mailchimp", "Website"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "GPT-powered proposal creation",
+      "description": "Create proposals from templates in 5 instead of 30 minutes. Client data + briefing → GPT generates customized proposal with pricing, services, timeline.",
+      "hours_saved": 8,
+      "tool": "GPT-4 API or ChatGPT Team ($20/month)",
+      "implementation": "Create templates as prompts, workflow: Client data → GPT → Word export",
+      "difficulty": "low",
+      "investment": "$20-50/month"
+    },
+    {
+      "title": "Automated LinkedIn content pipeline",
+      "description": "Generate, adapt, and schedule weekly expert posts via GPT. Topic list → GPT → 3-5 posts per week.",
+      "hours_saved": 6,
+      "tool": "GPT-4 + Buffer or Hootsuite",
+      "implementation": "Build topic backlog, prompt templates, posting schedule",
+      "difficulty": "low",
+      "investment": "$15-30/month"
+    },
+    {
+      "title": "Automated meeting minutes",
+      "description": "Zoom/Teams recordings → automatic transcription → summary → action items → minutes via email.",
+      "hours_saved": 5,
+      "tool": "Fireflies.ai ($19/month) or Otter.ai",
+      "implementation": "Integration with Zoom/Teams, automatic dispatch after meeting",
+      "difficulty": "low",
+      "investment": "$19/month"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Central knowledge management with RAG",
+      "description": "All project documents, best practices, templates in a searchable knowledge base. Team finds info in seconds instead of hours.",
+      "hours_saved": 15,
+      "tool": "Notion AI or Custom RAG with Pinecone",
+      "implementation": "Collect documents, structure, set up RAG",
+      "difficulty": "high",
+      "investment": "$50-200/month"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise CRM with AI pipeline management",
+      "description": "Automatic lead scoring, pipeline forecasts, next-best-actions for sales.",
+      "hours_saved": 25,
+      "tool": "HubSpot Enterprise + AI features",
+      "implementation": "CRM migration, define processes, train team",
+      "difficulty": "high",
+      "investment": "$800-2000/month"
+    }
+  ],
+
+  "success_metrics": [
+    "Proposal hit rate: % of won projects",
+    "Time-to-offer: Hours from inquiry to proposal",
+    "Utilization rate: % productive vs. administrative time",
+    "Client lifetime value: Value per client over time",
+    "Referral rate: % of clients who refer others"
+  ],
+
+  "typical_pricing_models": [
+    "Hourly rates ($60-250/h depending on expertise)",
+    "Day rates ($500-2500/day)",
+    "Project flat fees",
+    "Retainer models (monthly)",
+    "Value-based pricing (rare for SMEs)"
+  ]
+}

@@ -3211,7 +3211,9 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
             prompt_text = _interpolate(enhanced_prompt, vars_dict)
 
             # 3b. Spezieller Förder-Kontext aus foerderprogramme.md
-            if section_name == "foerderpotenzial":
+            # v4.15.0: Skip for English reports (Germany-specific funding)
+            briefing_lang = briefing.get("lang", "de") if isinstance(briefing, dict) else "de"
+            if section_name == "foerderpotenzial" and briefing_lang != "en":
                 try:
                     foerder_prog_text = load_prompt("foerderprogramme", lang="de", vars_dict=vars_dict)
                 except Exception:
@@ -3973,7 +3975,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections = _generate_content_sections(briefing=answers, scores=scores)
     
     now = datetime.now()
-    # Core metadata
+    # Core metadata + Language
+    sections["LANG"] = getattr(br, "lang", "de")
     sections["report_date"] = now.strftime("%d.%m.%Y")
     sections["report_year"] = now.strftime("%Y")
     sections["transparency_text"] = os.getenv("TRANSPARENCY_TEXT", "")
@@ -4110,20 +4113,28 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         sections["FOERDERPROGRAMME_HTML"] = _rewrite_table_links_with_labels(sections["FOERDERPROGRAMME_HTML"])
 
     # 🎯 KERN-FÖRDERMATRIX 2025/2026: Statischer, size-aware Kern immer einfügen
-    from services.extra_sections import build_core_funding_table_html
-    core_funding_html = build_core_funding_table_html(sections)
-
-    if sections.get("FOERDERPROGRAMME_HTML"):
-        # Kern-Matrix + Research-Ergebnisse kombinieren
-        sections["FOERDERPROGRAMME_HTML"] = (
-            f"<h3>Kernprogramme für Ihr Profil (2025/2026)</h3>\n"
-            f"{core_funding_html}\n\n"
-            f"<h3 style='margin-top: 16pt;'>Aktuell recherchierte Programme</h3>\n"
-            f"{sections['FOERDERPROGRAMME_HTML']}"
-        )
+    # v4.15.0: Skip funding for English reports (Germany-specific programs)
+    report_lang = sections.get("LANG", "de")
+    if report_lang == "en":
+        log.info("[%s] 🌐 Skipping funding section for English report", run_id)
+        sections["FOERDERPROGRAMME_HTML"] = ""
+        sections["FOERDERPOTENZIAL_HTML"] = ""
+        sections["FUNDING_HTML"] = ""
     else:
-        # Nur Kern-Matrix (kein Research)
-        sections["FOERDERPROGRAMME_HTML"] = core_funding_html
+        from services.extra_sections import build_core_funding_table_html
+        core_funding_html = build_core_funding_table_html(sections)
+
+        if sections.get("FOERDERPROGRAMME_HTML"):
+            # Kern-Matrix + Research-Ergebnisse kombinieren
+            sections["FOERDERPROGRAMME_HTML"] = (
+                f"<h3>Kernprogramme für Ihr Profil (2025/2026)</h3>\n"
+                f"{core_funding_html}\n\n"
+                f"<h3 style='margin-top: 16pt;'>Aktuell recherchierte Programme</h3>\n"
+                f"{sections['FOERDERPROGRAMME_HTML']}"
+            )
+        else:
+            # Nur Kern-Matrix (kein Research)
+            sections["FOERDERPROGRAMME_HTML"] = core_funding_html
 
     sections["SOURCES_BOX_HTML"] = _build_sources_box_html(sections, sections["research_last_updated"])
 

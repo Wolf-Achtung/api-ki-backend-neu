@@ -22,6 +22,7 @@
     "ki_einsatz": ["contentkreation", "short_copy", "research", "kampagnenkonzepte", "analyse", "optimierung", "workflowautomatisierung"],
     "ki_kompetenz": "hoch",
     "ki_ziele": ["effizienz", "skalierung", "qualitaet", "beschleunigung", "konsistenz", "standardisierung"],
+    "ki_guardrails": "",
     "ki_projekte": "Bereits umgesetzt sind automatisierte Research-Briefings, Prompt-Bibliotheken für verschiedene Markenstile, KI-basierte Kampagnenideen, Social-Media-Redaktionspläne, Content-Repurposing-Pipelines, automatisierte Newsletter-Varianten sowie Video- und Script-Personalisierungen. Weitere Vorhaben betreffen datenbasierte Content-Heatmaps und automatisierte Kundenbriefings.",
     "anwendungsfaelle": ["contentproduktion", "textautomatisierung", "research", "socialmedia", "kampagnenoptimierung", "blogartikel", "landingpages", "newsletter"],
     "zeitersparnis_prioritaet": "Besonders zeitintensiv sind Konzeptarbeit, manuelles A/B-Testing, Formatvarianten für verschiedene Kanäle, wiederkehrende Kundenbriefings, Keyword-Recherche, Newsletter-Erstellung und das Anpassen von Content an unterschiedliche Markenstimmen. Besonders wertvoll wären automatisierte Vorlagen, vorkonfigurierte Rahmen für Storylines, KI-gestützte Qualitätschecks und Redaktionssysteme, die Rohmaterial in markenkonsistente Formate transformieren.",
