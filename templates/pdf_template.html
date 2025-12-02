@@ -637,6 +637,14 @@
         .card p {
             margin-bottom: 2px;
         }
+        /* Text-Overflow Prevention für Cards */
+        .card p,
+        .card li,
+        .card div {
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            hyphens: auto;
+        }
         .metric {
             display: flex;
             justify-content: space-between;
@@ -858,6 +866,19 @@
         }
         .callout strong {
             color: #E5E7EB;
+        }
+        /* Guardrails-spezifischer Callout-Stil */
+        .callout-guardrails {
+            margin-top: 12px;
+            padding: 14px 18px;
+            border: 2px solid rgba(248, 113, 113, 0.7);
+            background: rgba(248, 113, 113, 0.05);
+            border-radius: 8px;
+        }
+        .callout-guardrails h4 {
+            margin-top: 0;
+            color: #DC8383;
+            font-weight: 700;
         }
         .legend {
             display: flex;
@@ -1496,8 +1517,8 @@
                         </div>
 
                         {% if ki_guardrails %}
-                        <div class="callout" style="margin-top: 10px; border-color: rgba(248, 113, 113, 0.7);">
-                            <h4 style="margin-top: 0; color: #FCA5A5;">⚠️ Guardrails / No-Gos</h4>
+                        <div class="callout callout-guardrails">
+                            <h4>⚠️ Guardrails / No-Gos</h4>
                             <p>{{ ki_guardrails }}</p>
                         </div>
                         {% endif %}
