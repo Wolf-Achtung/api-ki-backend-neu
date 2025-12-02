@@ -1,0 +1,90 @@
+{
+  "version": "1.0.0",
+  "description": "Funding configuration for multi-country/EU support",
+  "default_country": "DE",
+  "fallback_country": "EU",
+  "supported_countries": {
+    "DE": {
+      "name_de": "Deutschland",
+      "name_en": "Germany",
+      "funding_file": "funding_de.json",
+      "has_regional_programs": true,
+      "regional_field": "bundesland",
+      "currency": "EUR",
+      "active": true
+    },
+    "AT": {
+      "name_de": "Österreich",
+      "name_en": "Austria",
+      "funding_file": "funding_at.json",
+      "has_regional_programs": true,
+      "regional_field": "bundesland",
+      "currency": "EUR",
+      "active": true
+    },
+    "EU": {
+      "name_de": "Europäische Union",
+      "name_en": "European Union",
+      "funding_file": "funding_eu_core.json",
+      "has_regional_programs": false,
+      "currency": "EUR",
+      "active": true,
+      "is_fallback": true
+    },
+    "CH": {
+      "name_de": "Schweiz",
+      "name_en": "Switzerland",
+      "funding_file": "funding_ch.json",
+      "has_regional_programs": true,
+      "regional_field": "kanton",
+      "currency": "CHF",
+      "active": false,
+      "placeholder": true
+    },
+    "FR": {
+      "name_de": "Frankreich",
+      "name_en": "France",
+      "funding_file": "funding_fr.json",
+      "has_regional_programs": true,
+      "currency": "EUR",
+      "active": false,
+      "placeholder": true
+    },
+    "NL": {
+      "name_de": "Niederlande",
+      "name_en": "Netherlands",
+      "funding_file": "funding_nl.json",
+      "has_regional_programs": false,
+      "currency": "EUR",
+      "active": false,
+      "placeholder": true
+    }
+  },
+  "size_mapping": {
+    "solo": ["solo", "freelancer", "self-employed", "freiberufler", "selbststaendig", "1"],
+    "team": ["team", "small", "klein", "2-10", "small_team"],
+    "kmu": ["kmu", "sme", "mittel", "medium", "11-100", "mittelstand"]
+  },
+  "funding_types": {
+    "grant": {
+      "de": "Zuschuss",
+      "en": "Grant"
+    },
+    "loan": {
+      "de": "Förderkredit",
+      "en": "Subsidized Loan"
+    },
+    "tax_credit": {
+      "de": "Steuergutschrift",
+      "en": "Tax Credit"
+    },
+    "equity": {
+      "de": "Beteiligung",
+      "en": "Equity Investment"
+    },
+    "voucher": {
+      "de": "Gutschein",
+      "en": "Voucher"
+    }
+  }
+}

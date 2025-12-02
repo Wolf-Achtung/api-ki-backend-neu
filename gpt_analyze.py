@@ -58,6 +58,7 @@ from services.email_templates import render_report_ready_email
 from settings import settings
 from services.coverage_guard import analyze_coverage, build_html_report
 from services.prompt_loader import load_prompt
+from services.funding_service import get_funding_recommendations, derive_country_from_answers
 from services.prompt_enhancer import PromptEnhancer, get_platin_config
 from services.html_sanitizer import sanitize_sections_dict
 from utils.hotfix_gold_standard import apply_hotfix, UTF8Handler
@@ -4167,28 +4168,66 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     if sections.get("FOERDERPROGRAMME_HTML"):
         sections["FOERDERPROGRAMME_HTML"] = _rewrite_table_links_with_labels(sections["FOERDERPROGRAMME_HTML"])
 
-    # 🎯 KERN-FÖRDERMATRIX 2025/2026: Statischer, size-aware Kern immer einfügen
-    # v4.15.0: Skip funding for English reports (Germany-specific programs)
+    # 🎯 EU FUNDING MODULE v1.0: Multi-country funding with DE/EU support
+    # Replaces v4.15.0 skip logic with proper EU/country-based funding
     report_lang = sections.get("LANG", "de")
-    if report_lang == "en":
-        log.info("[%s] 🌐 Skipping funding section for English report", run_id)
-        sections["FOERDERPROGRAMME_HTML"] = ""
-        sections["FOERDERPOTENZIAL_HTML"] = ""
-        sections["FUNDING_HTML"] = ""
-    else:
-        from services.extra_sections import build_core_funding_table_html
-        core_funding_html = build_core_funding_table_html(sections)
 
-        if sections.get("FOERDERPROGRAMME_HTML"):
-            # Kern-Matrix + Research-Ergebnisse kombinieren
-            sections["FOERDERPROGRAMME_HTML"] = (
-                f"<h3>Kernprogramme für Ihr Profil (2025/2026)</h3>\n"
-                f"{core_funding_html}\n\n"
-                f"<h3 style='margin-top: 16pt;'>Aktuell recherchierte Programme</h3>\n"
-                f"{sections['FOERDERPROGRAMME_HTML']}"
-            )
+    try:
+        # Derive country from answers
+        country_code = derive_country_from_answers(answers, report_lang)
+        log.info("[%s] 🌍 Funding: country=%s, lang=%s", run_id, country_code, report_lang)
+
+        # Get funding recommendations from new service
+        funding_result = get_funding_recommendations(country_code, answers, lang=report_lang)
+
+        if funding_result.has_programmes:
+            # Use new FundingService output
+            sections["FOERDERPROGRAMME_HTML"] = funding_result.programmes_html
+
+            # Keep existing FOERDERPOTENZIAL_HTML if GPT generated it, otherwise use service fallback
+            if not sections.get("FOERDERPOTENZIAL_HTML") or len(sections.get("FOERDERPOTENZIAL_HTML", "")) < 200:
+                sections["FOERDERPOTENZIAL_HTML"] = funding_result.potential_html
+
+            # Alias for EN template compatibility
+            sections["FUNDING_HTML"] = funding_result.programmes_html
+
+            log.info("[%s] ✅ Funding loaded: %d programmes for %s",
+                     run_id, len(funding_result.programmes), funding_result.country_name)
+
+            # For DE: Also include legacy core funding for backwards compatibility
+            if country_code == "DE" and report_lang == "de":
+                from services.extra_sections import build_core_funding_table_html
+                core_funding_html = build_core_funding_table_html(sections)
+
+                # Combine new service output with legacy research results if present
+                if sections.get("FOERDERPROGRAMME_HTML"):
+                    sections["FOERDERPROGRAMME_HTML"] = (
+                        f"<h3>Kernprogramme für Ihr Profil (2025/2026)</h3>\n"
+                        f"{funding_result.programmes_html}\n\n"
+                    )
         else:
-            # Nur Kern-Matrix (kein Research)
+            # No programmes available - provide empty but valid sections
+            if report_lang == "en":
+                sections["FOERDERPROGRAMME_HTML"] = "<p class='muted'>No specific funding programs available for your profile at this time. Consider checking EU-wide programs or contacting local business support organizations.</p>"
+                sections["FOERDERPOTENZIAL_HTML"] = funding_result.potential_html or ""
+                sections["FUNDING_HTML"] = sections["FOERDERPROGRAMME_HTML"]
+            else:
+                sections["FOERDERPROGRAMME_HTML"] = "<p class='muted'>Keine spezifischen Förderprogramme für Ihr Profil verfügbar. Prüfen Sie EU-weite Programme oder kontaktieren Sie lokale Wirtschaftsförderungen.</p>"
+                sections["FOERDERPOTENZIAL_HTML"] = funding_result.potential_html or ""
+                sections["FUNDING_HTML"] = sections["FOERDERPROGRAMME_HTML"]
+
+            log.info("[%s] ⚠️ No funding programmes found for %s", run_id, country_code)
+
+    except Exception as e:
+        log.warning("[%s] ⚠️ FundingService error, falling back to legacy: %s", run_id, e)
+        # Fallback to legacy behavior
+        if report_lang == "en":
+            sections["FOERDERPROGRAMME_HTML"] = ""
+            sections["FOERDERPOTENZIAL_HTML"] = ""
+            sections["FUNDING_HTML"] = ""
+        else:
+            from services.extra_sections import build_core_funding_table_html
+            core_funding_html = build_core_funding_table_html(sections)
             sections["FOERDERPROGRAMME_HTML"] = core_funding_html
 
     sections["SOURCES_BOX_HTML"] = _build_sources_box_html(sections, sections["research_last_updated"])

@@ -1,0 +1,140 @@
+{
+  "country_code": "AT",
+  "country_name": {
+    "de": "Österreich",
+    "en": "Austria"
+  },
+  "last_updated": "2025-01",
+  "currency": "EUR",
+  "levels": ["federal", "regional"],
+  "description": {
+    "de": "Österreichische Förderprogramme für KI und Digitalisierung",
+    "en": "Austrian funding programs for AI and digitalization"
+  },
+  "programmes": [
+    {
+      "id": "aws_digi_invest",
+      "title": {
+        "de": "aws digi Invest",
+        "en": "aws digi Invest"
+      },
+      "region": "AT",
+      "region_label": {
+        "de": "Österreich (bundesweit)",
+        "en": "Austria (nationwide)"
+      },
+      "funding_type": "grant",
+      "funding_rate": "30-50%",
+      "max_amount": 100000,
+      "max_amount_display": {
+        "de": "variabel",
+        "en": "variable"
+      },
+      "focus": {
+        "de": "KI, Cloud, Automation, digitale Geschäftsmodelle",
+        "en": "AI, cloud, automation, digital business models"
+      },
+      "suitable_for": ["solo", "team", "kmu"],
+      "notes": {
+        "de": "Österreichische Wirtschaftsservice (aws), Schwerpunkt auf KMU-Digitalisierung",
+        "en": "Austrian Economic Service (aws), focus on SME digitalization"
+      },
+      "relevance_ki": "high",
+      "priority": 1,
+      "url": "https://www.aws.at/"
+    },
+    {
+      "id": "forschungspraemie_at",
+      "title": {
+        "de": "Forschungsprämie Österreich",
+        "en": "Research Premium Austria"
+      },
+      "region": "AT",
+      "region_label": {
+        "de": "Österreich (bundesweit)",
+        "en": "Austria (nationwide)"
+      },
+      "funding_type": "tax_credit",
+      "funding_rate": "14%",
+      "max_amount": 0,
+      "max_amount_display": {
+        "de": "14% der F&E-Kosten (unbegrenzt)",
+        "en": "14% of R&D costs (unlimited)"
+      },
+      "focus": {
+        "de": "Forschung & Entwicklung, auch KI-Projekte",
+        "en": "Research & development, including AI projects"
+      },
+      "suitable_for": ["solo", "team", "kmu"],
+      "notes": {
+        "de": "Keine Vorabgenehmigung nötig, nachträgliche Geltendmachung bei Steuererklärung",
+        "en": "No prior approval needed, claim retroactively in tax return"
+      },
+      "relevance_ki": "medium",
+      "priority": 2,
+      "url": "https://www.bmf.gv.at/"
+    },
+    {
+      "id": "digi4kmu_at",
+      "title": {
+        "de": "digi4KMU",
+        "en": "digi4SME"
+      },
+      "region": "AT",
+      "region_label": {
+        "de": "Österreich (regionale Programme)",
+        "en": "Austria (regional programs)"
+      },
+      "funding_type": "grant",
+      "funding_rate": "30-50%",
+      "max_amount": 50000,
+      "max_amount_display": {
+        "de": "variabel, regional unterschiedlich",
+        "en": "variable, varies by region"
+      },
+      "focus": {
+        "de": "KMU-Digitalisierung, Prozessoptimierung, KI-Tools",
+        "en": "SME digitalization, process optimization, AI tools"
+      },
+      "suitable_for": ["solo", "team", "kmu"],
+      "notes": {
+        "de": "Regional unterschiedliche Schwerpunkte (Wien, Niederösterreich, Steiermark etc.)",
+        "en": "Regional focus varies (Vienna, Lower Austria, Styria etc.)"
+      },
+      "relevance_ki": "high",
+      "priority": 1,
+      "url": "https://www.wko.at/"
+    },
+    {
+      "id": "ffg_basisprogramm",
+      "title": {
+        "de": "FFG Basisprogramm",
+        "en": "FFG Basic Program"
+      },
+      "region": "AT",
+      "region_label": {
+        "de": "Österreich (bundesweit)",
+        "en": "Austria (nationwide)"
+      },
+      "funding_type": "grant",
+      "funding_rate": "35-50%",
+      "max_amount": 500000,
+      "max_amount_display": {
+        "de": "variabel",
+        "en": "variable"
+      },
+      "focus": {
+        "de": "Forschung, Entwicklung, experimentelle Entwicklung",
+        "en": "Research, development, experimental development"
+      },
+      "suitable_for": ["team", "kmu"],
+      "notes": {
+        "de": "Forschungsförderungsgesellschaft (FFG), laufende Einreichung möglich",
+        "en": "Austrian Research Promotion Agency (FFG), continuous submission possible"
+      },
+      "relevance_ki": "high",
+      "priority": 1,
+      "url": "https://www.ffg.at/"
+    }
+  ]
+}

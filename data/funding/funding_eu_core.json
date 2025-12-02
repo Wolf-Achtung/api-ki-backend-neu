@@ -1,0 +1,202 @@
+{
+  "country_code": "EU",
+  "country_name": {
+    "de": "Europäische Union",
+    "en": "European Union"
+  },
+  "last_updated": "2025-01",
+  "currency": "EUR",
+  "levels": ["eu"],
+  "description": {
+    "de": "EU-weite Förderprogramme für KI und Digitalisierung",
+    "en": "EU-wide funding programs for AI and digitalization"
+  },
+  "programmes": [
+    {
+      "id": "eic_accelerator",
+      "title": {
+        "de": "EIC Accelerator",
+        "en": "EIC Accelerator"
+      },
+      "region": "EU",
+      "region_label": {
+        "de": "Europäische Union",
+        "en": "European Union"
+      },
+      "funding_type": "grant",
+      "funding_rate": "70-100%",
+      "max_amount": 2500000,
+      "max_amount_display": {
+        "de": "bis 2,5 Mio € (Zuschuss)",
+        "en": "up to €2.5M (grant)"
+      },
+      "focus": {
+        "de": "Deep Tech, KI-Innovation, disruptive Technologien",
+        "en": "Deep Tech, AI innovation, disruptive technologies"
+      },
+      "suitable_for": ["kmu"],
+      "notes": {
+        "de": "Hochkompetitiv, für innovative Scale-ups mit internationalem Potenzial",
+        "en": "Highly competitive, for innovative scale-ups with international potential"
+      },
+      "relevance_ki": "high",
+      "priority": 1,
+      "url": "https://eic.ec.europa.eu/eic-funding-opportunities/eic-accelerator_en"
+    },
+    {
+      "id": "digital_europe",
+      "title": {
+        "de": "DIGITAL Europe Programme",
+        "en": "DIGITAL Europe Programme"
+      },
+      "region": "EU",
+      "region_label": {
+        "de": "Europäische Union",
+        "en": "European Union"
+      },
+      "funding_type": "grant",
+      "funding_rate": "50-100%",
+      "max_amount": 0,
+      "max_amount_display": {
+        "de": "variabel, projektabhängig",
+        "en": "variable, project-dependent"
+      },
+      "focus": {
+        "de": "Digitale Transformation, KI-Kapazitäten, Cybersecurity",
+        "en": "Digital transformation, AI capabilities, cybersecurity"
+      },
+      "suitable_for": ["kmu"],
+      "notes": {
+        "de": "Konsortial-Projekte, erfordert Partner aus mehreren EU-Ländern",
+        "en": "Consortium projects, requires partners from multiple EU countries"
+      },
+      "relevance_ki": "high",
+      "priority": 1,
+      "url": "https://digital-strategy.ec.europa.eu/en/activities/digital-programme"
+    },
+    {
+      "id": "horizon_europe_cluster4",
+      "title": {
+        "de": "Horizon Europe – Cluster 4 'Digital, Industry & Space'",
+        "en": "Horizon Europe – Cluster 4 'Digital, Industry & Space'"
+      },
+      "region": "EU",
+      "region_label": {
+        "de": "Europäische Union",
+        "en": "European Union"
+      },
+      "funding_type": "grant",
+      "funding_rate": "70-100%",
+      "max_amount": 0,
+      "max_amount_display": {
+        "de": "variabel, oft > 1 Mio €",
+        "en": "variable, often > €1M"
+      },
+      "focus": {
+        "de": "KI, Robotik, Industrie 4.0, digitale Technologien",
+        "en": "AI, robotics, Industry 4.0, digital technologies"
+      },
+      "suitable_for": ["kmu"],
+      "notes": {
+        "de": "Forschungs- und Innovationsprojekte, oft Konsortien erforderlich",
+        "en": "Research and innovation projects, often require consortia"
+      },
+      "relevance_ki": "high",
+      "priority": 2,
+      "url": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/programmes/horizon"
+    },
+    {
+      "id": "eu_sme_fund_ip",
+      "title": {
+        "de": "EU-KMU-Fonds – IP-/Markenschutz",
+        "en": "EU SME Fund – IP/Trademark Protection"
+      },
+      "region": "EU",
+      "region_label": {
+        "de": "Europäische Union",
+        "en": "European Union"
+      },
+      "funding_type": "voucher",
+      "funding_rate": "75%",
+      "max_amount": 2625,
+      "max_amount_display": {
+        "de": "bis 2.625 € (Marke + Design)",
+        "en": "up to €2,625 (trademark + design)"
+      },
+      "focus": {
+        "de": "Markenschutz, IP-Rechte (EUIPO)",
+        "en": "Trademark protection, IP rights (EUIPO)"
+      },
+      "suitable_for": ["solo", "team", "kmu"],
+      "notes": {
+        "de": "Für EU-Markenanmeldungen über EUIPO, einfach zu beantragen",
+        "en": "For EU trademark applications via EUIPO, easy to apply"
+      },
+      "relevance_ki": "low",
+      "priority": 3,
+      "url": "https://euipo.europa.eu/ohimportal/en/online-services/sme-fund"
+    },
+    {
+      "id": "invest_eu",
+      "title": {
+        "de": "InvestEU",
+        "en": "InvestEU"
+      },
+      "region": "EU",
+      "region_label": {
+        "de": "Europäische Union",
+        "en": "European Union"
+      },
+      "funding_type": "loan",
+      "funding_rate": "variable",
+      "max_amount": 0,
+      "max_amount_display": {
+        "de": "variabel",
+        "en": "variable"
+      },
+      "focus": {
+        "de": "Nachhaltige Infrastruktur, Innovation, Digitalisierung",
+        "en": "Sustainable infrastructure, innovation, digitalization"
+      },
+      "suitable_for": ["team", "kmu"],
+      "notes": {
+        "de": "Garantien und Finanzierungsinstrumente über lokale Banken",
+        "en": "Guarantees and financing instruments via local banks"
+      },
+      "relevance_ki": "medium",
+      "priority": 2,
+      "url": "https://investeu.europa.eu/"
+    },
+    {
+      "id": "cosme_sme_guarantee",
+      "title": {
+        "de": "COSME / KMU-Bürgschaftsprogramm",
+        "en": "COSME / SME Guarantee Facility"
+      },
+      "region": "EU",
+      "region_label": {
+        "de": "Europäische Union",
+        "en": "European Union"
+      },
+      "funding_type": "loan",
+      "funding_rate": "variable",
+      "max_amount": 150000,
+      "max_amount_display": {
+        "de": "bis 150.000 €",
+        "en": "up to €150,000"
+      },
+      "focus": {
+        "de": "KMU-Wachstum, Digitalisierung, Internationalisierung",
+        "en": "SME growth, digitalization, internationalization"
+      },
+      "suitable_for": ["solo", "team", "kmu"],
+      "notes": {
+        "de": "Erleichtert Kreditzugang für KMU über lokale Finanzinstitute",
+        "en": "Facilitates credit access for SMEs through local financial institutions"
+      },
+      "relevance_ki": "medium",
+      "priority": 3,
+      "url": "https://ec.europa.eu/growth/access-finance-smes_en"
+    }
+  ]
+}

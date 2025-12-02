@@ -1649,13 +1649,21 @@
                 <section class="chapter">
                     {{RECOMMENDATIONS_HTML}}
                 </section>
-                <!-- FUNDING SECTION - DISABLED FOR EN VERSION
-                     German funding programs are not applicable for international users.
-                     Re-enable if international funding data becomes available.
-                <section class="chapter">
+                <!-- FUNDING SECTION - EU Funding Module v1.0
+                     Now enabled with EU-wide and country-specific funding programs.
+                     Section is conditionally displayed based on available programs. -->
+                {% if FOERDERPOTENZIAL_HTML and FOERDERPOTENZIAL_HTML|length > 50 %}
+                <section class="chapter funding-section">
+                    <h2>Funding Opportunities</h2>
                     {{FOERDERPOTENZIAL_HTML}}
+                    {% if FOERDERPROGRAMME_HTML and FOERDERPROGRAMME_HTML|length > 50 %}
+                    <div class="funding-programmes">
+                        <h3>Available Programs</h3>
+                        {{FOERDERPROGRAMME_HTML}}
+                    </div>
+                    {% endif %}
                 </section>
-                -->
+                {% endif %}
 <!-- FEEDBACK SECTION -->
                 <div class="feedback-section">
                     <h2>Your Feedback Matters!</h2>

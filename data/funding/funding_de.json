@@ -1,0 +1,291 @@
+{
+  "country_code": "DE",
+  "country_name": {
+    "de": "Deutschland",
+    "en": "Germany"
+  },
+  "last_updated": "2025-01",
+  "currency": "EUR",
+  "levels": ["federal", "state"],
+  "programmes": [
+    {
+      "id": "go_digital",
+      "title": {
+        "de": "go-digital",
+        "en": "go-digital"
+      },
+      "region": "DE",
+      "region_label": {
+        "de": "Deutschland (bundesweit)",
+        "en": "Germany (nationwide)"
+      },
+      "funding_type": "grant",
+      "funding_rate": "50%",
+      "max_amount": 16500,
+      "max_amount_display": {
+        "de": "16.500 €",
+        "en": "€16,500"
+      },
+      "focus": {
+        "de": "Digitalisierung, IT-Sicherheit, KI-Einführung",
+        "en": "Digitalization, IT security, AI implementation"
+      },
+      "suitable_for": ["solo", "team", "kmu"],
+      "notes": {
+        "de": "Besonders relevant für kleine Unternehmen <100 MA, autorisierte Beratungsunternehmen erforderlich",
+        "en": "Particularly relevant for small businesses <100 employees, authorized consulting companies required"
+      },
+      "relevance_ki": "high",
+      "priority": 1,
+      "url": "https://www.bmwk.de/Redaktion/DE/Dossier/go-digital.html"
+    },
+    {
+      "id": "digital_jetzt",
+      "title": {
+        "de": "Digital Jetzt",
+        "en": "Digital Now"
+      },
+      "region": "DE",
+      "region_label": {
+        "de": "Deutschland (bundesweit)",
+        "en": "Germany (nationwide)"
+      },
+      "funding_type": "grant",
+      "funding_rate": "50%",
+      "max_amount": 50000,
+      "max_amount_display": {
+        "de": "50.000 €",
+        "en": "€50,000"
+      },
+      "focus": {
+        "de": "Investitionen in digitale Technologien & Qualifizierung",
+        "en": "Investments in digital technologies & qualification"
+      },
+      "suitable_for": ["team", "kmu"],
+      "notes": {
+        "de": "KMU bis 499 Mitarbeiter, Frist: 31.03.2026",
+        "en": "SMEs up to 499 employees, deadline: March 31, 2026"
+      },
+      "relevance_ki": "high",
+      "priority": 1,
+      "url": "https://www.bmwk.de"
+    },
+    {
+      "id": "kfw_digital_innovation",
+      "title": {
+        "de": "KfW-Förderkredite Digitalisierung & Innovation",
+        "en": "KfW Subsidized Loans for Digitalization & Innovation"
+      },
+      "region": "DE",
+      "region_label": {
+        "de": "Deutschland (bundesweit)",
+        "en": "Germany (nationwide)"
+      },
+      "funding_type": "loan",
+      "funding_rate": "variable",
+      "max_amount": 25000000,
+      "max_amount_display": {
+        "de": "bis 25 Mio €",
+        "en": "up to €25M"
+      },
+      "focus": {
+        "de": "Digitalisierung, Innovation, Wachstumsfinanzierung",
+        "en": "Digitalization, innovation, growth financing"
+      },
+      "suitable_for": ["team", "kmu"],
+      "notes": {
+        "de": "Über Hausbank, langfristige Finanzierung für Digitalisierungsprojekte",
+        "en": "Via house bank, long-term financing for digitalization projects"
+      },
+      "relevance_ki": "medium",
+      "priority": 2,
+      "url": "https://www.kfw.de"
+    },
+    {
+      "id": "digitalbonus_bayern",
+      "title": {
+        "de": "Digitalbonus Bayern",
+        "en": "Digital Bonus Bavaria"
+      },
+      "region": "BY",
+      "region_label": {
+        "de": "Bayern",
+        "en": "Bavaria"
+      },
+      "funding_type": "grant",
+      "funding_rate": "50%",
+      "max_amount": 50000,
+      "max_amount_display": {
+        "de": "10.000–50.000 €",
+        "en": "€10,000–50,000"
+      },
+      "focus": {
+        "de": "Digitalisierung & IT-Sicherheit",
+        "en": "Digitalization & IT security"
+      },
+      "suitable_for": ["solo", "team", "kmu"],
+      "notes": {
+        "de": "Standard: bis 10.000 €, Plus: bis 50.000 €",
+        "en": "Standard: up to €10,000, Plus: up to €50,000"
+      },
+      "relevance_ki": "high",
+      "priority": 1,
+      "url": "https://www.digitalbonus.bayern"
+    },
+    {
+      "id": "invest_bw_digital_ki",
+      "title": {
+        "de": "Invest BW – Digitalisierung & KI",
+        "en": "Invest BW – Digitalization & AI"
+      },
+      "region": "BW",
+      "region_label": {
+        "de": "Baden-Württemberg",
+        "en": "Baden-Württemberg"
+      },
+      "funding_type": "grant",
+      "funding_rate": "30-50%",
+      "max_amount": 200000,
+      "max_amount_display": {
+        "de": "bis 200.000 €",
+        "en": "up to €200,000"
+      },
+      "focus": {
+        "de": "Digitalisierung, KI-Einführung, Prozessoptimierung",
+        "en": "Digitalization, AI implementation, process optimization"
+      },
+      "suitable_for": ["team", "kmu"],
+      "notes": {
+        "de": "Für Unternehmen mit Standort in Baden-Württemberg",
+        "en": "For companies located in Baden-Württemberg"
+      },
+      "relevance_ki": "high",
+      "priority": 1,
+      "url": "https://www.invest-bw.de"
+    },
+    {
+      "id": "profit_berlin",
+      "title": {
+        "de": "ProFIT Berlin",
+        "en": "ProFIT Berlin"
+      },
+      "region": "BE",
+      "region_label": {
+        "de": "Berlin",
+        "en": "Berlin"
+      },
+      "funding_type": "grant",
+      "funding_rate": "80%",
+      "max_amount": 500000,
+      "max_amount_display": {
+        "de": "variabel",
+        "en": "variable"
+      },
+      "focus": {
+        "de": "F&E, Innovation, Digitalisierung, KI-Projekte",
+        "en": "R&D, innovation, digitalization, AI projects"
+      },
+      "suitable_for": ["team", "kmu"],
+      "notes": {
+        "de": "Für innovative F&E-Projekte mit Technologie-Schwerpunkt",
+        "en": "For innovative R&D projects with technology focus"
+      },
+      "relevance_ki": "high",
+      "priority": 1,
+      "url": "https://www.ibb.de"
+    },
+    {
+      "id": "coaching_bonus_berlin",
+      "title": {
+        "de": "Coaching BONUS Berlin",
+        "en": "Coaching BONUS Berlin"
+      },
+      "region": "BE",
+      "region_label": {
+        "de": "Berlin",
+        "en": "Berlin"
+      },
+      "funding_type": "grant",
+      "funding_rate": "50%",
+      "max_amount": 4000,
+      "max_amount_display": {
+        "de": "bis 4.000 €",
+        "en": "up to €4,000"
+      },
+      "focus": {
+        "de": "Beratung/Coaching für KMU & Solo-Selbständige",
+        "en": "Consulting/coaching for SMEs & freelancers"
+      },
+      "suitable_for": ["solo", "team", "kmu"],
+      "notes": {
+        "de": "Fördert externes Coaching zu Strategie, Digitalisierung, Markteintritt",
+        "en": "Supports external coaching on strategy, digitalization, market entry"
+      },
+      "relevance_ki": "medium",
+      "priority": 2,
+      "url": "https://www.ibb-business-team.de/coaching-bonus"
+    },
+    {
+      "id": "transfer_bonus_berlin",
+      "title": {
+        "de": "Transfer BONUS Berlin",
+        "en": "Transfer BONUS Berlin"
+      },
+      "region": "BE",
+      "region_label": {
+        "de": "Berlin",
+        "en": "Berlin"
+      },
+      "funding_type": "grant",
+      "funding_rate": "variable",
+      "max_amount": 45000,
+      "max_amount_display": {
+        "de": "bis 45.000 €",
+        "en": "up to €45,000"
+      },
+      "focus": {
+        "de": "Kooperation mit Forschungseinrichtungen, Technologietransfer",
+        "en": "Cooperation with research institutions, technology transfer"
+      },
+      "suitable_for": ["team", "kmu"],
+      "notes": {
+        "de": "Fördert Technologietransfer; auch KI-Vorhaben mit Forschungspartnern",
+        "en": "Supports technology transfer; also AI projects with research partners"
+      },
+      "relevance_ki": "high",
+      "priority": 2,
+      "url": "https://www.berlin.de/sen/wirtschaft/wirtschaft/foerderprogramme/transfer-bonus/"
+    },
+    {
+      "id": "innovationsgutschein_bayern",
+      "title": {
+        "de": "Innovationsgutschein Bayern",
+        "en": "Innovation Voucher Bavaria"
+      },
+      "region": "BY",
+      "region_label": {
+        "de": "Bayern",
+        "en": "Bavaria"
+      },
+      "funding_type": "voucher",
+      "funding_rate": "50%",
+      "max_amount": 30000,
+      "max_amount_display": {
+        "de": "bis 30.000 €",
+        "en": "up to €30,000"
+      },
+      "focus": {
+        "de": "Externe Entwicklungs-/Dienstleistungen (Prototyping, Studien)",
+        "en": "External development/services (prototyping, studies)"
+      },
+      "suitable_for": ["team", "kmu"],
+      "notes": {
+        "de": "Fördert externe F&E-Leistungen; geeignet für KMU und Handwerk",
+        "en": "Supports external R&D services; suitable for SMEs and craft businesses"
+      },
+      "relevance_ki": "medium",
+      "priority": 2,
+      "url": "https://www.bayern-innovativ.de/innovationsgutschein"
+    }
+  ]
+}
