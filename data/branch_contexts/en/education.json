@@ -1,0 +1,144 @@
+{
+  "branche": "education",
+  "display_name": "Education & Training",
+  "description": "Training providers, language schools, coaching institutes, e-learning providers, tutoring",
+
+  "typical_workflows": [
+    "Course planning: Curriculum development, scheduling, instructor coordination",
+    "Participant management: Registration, invoicing, certificates",
+    "Content creation: Training materials, presentations, e-learning modules",
+    "Delivery: In-person or online training sessions",
+    "Evaluation: Feedback, tests, success measurement",
+    "Marketing: Course marketing, social media, email campaigns",
+    "Administration: Funding, certifications, quality management"
+  ],
+
+  "common_pain_points": [
+    "Content creation time-consuming: 10-20h per training day",
+    "Individualization difficult: Different participant skill levels",
+    "Manual feedback evaluation: Many forms to analyze manually",
+    "Creating certificates: Fill out and send each individually",
+    "Marketing content: Regularly new course descriptions needed",
+    "Participant support: Many individual inquiries",
+    "Quality assurance: Documentation for certifications"
+  ],
+
+  "ai_opportunities": [
+    "Generate training materials: Topic → Presentation + Handout",
+    "Quiz/Test creation: Automatic exam questions from content",
+    "Personalized learning: Individual learning paths based on level",
+    "Feedback analysis: Automatically analyze evaluation forms",
+    "Course descriptions: Marketing texts for new courses",
+    "Chatbot for participants: FAQs, course info, registration help",
+    "Translations: Course material into multiple languages",
+    "Automate certificates: Mass generation of personalized PDFs"
+  ],
+
+  "typical_tools": [
+    "PowerPoint / Google Slides for presentations",
+    "LMS platforms for e-learning",
+    "Zoom / Teams for online training",
+    "Excel for participant lists and planning",
+    "Word for handouts and materials",
+    "Email marketing tools",
+    "Website with course calendar",
+    "Accounting software"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Email", "Zoom", "Teams", "WhatsApp groups"],
+    "lms": ["Moodle", "Teachable", "LearnDash", "Thinkific"],
+    "content": ["PowerPoint", "Canva", "Articulate", "Camtasia"],
+    "crm": ["Excel", "HubSpot", "ActiveCampaign"],
+    "video": ["Zoom", "Teams", "Vimeo", "YouTube"],
+    "admin": ["Excel", "Eventbrite", "Accounting software"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "AI-powered course materials",
+      "description": "Generate complete training presentations and handouts from bullet points.",
+      "hours_saved": 15,
+      "tool": "GPT-4 + PowerPoint/Canva",
+      "implementation": "Prompt templates for different course types, brand templates",
+      "difficulty": "low",
+      "investment": "$20-50/month"
+    },
+    {
+      "title": "Automatic quiz generation",
+      "description": "Create multiple-choice questions from training content for tests.",
+      "hours_saved": 6,
+      "tool": "GPT-4",
+      "implementation": "Content → GPT → Quiz format, export to LMS",
+      "difficulty": "low",
+      "investment": "$20/month"
+    },
+    {
+      "title": "Feedback analysis via AI",
+      "description": "Automatically analyze evaluation forms: Strengths, improvements, trends.",
+      "hours_saved": 4,
+      "tool": "GPT-4 + Typeform/Google Forms",
+      "implementation": "Digitize forms, export, analysis prompt",
+      "difficulty": "low",
+      "investment": "$20-50/month"
+    },
+    {
+      "title": "Automate course descriptions",
+      "description": "Quickly describe new courses with marketing text, learning objectives, target audience.",
+      "hours_saved": 3,
+      "tool": "GPT-4",
+      "implementation": "Template with placeholders, SEO-optimized prompts",
+      "difficulty": "low",
+      "investment": "$20/month"
+    },
+    {
+      "title": "Automatically create certificates",
+      "description": "Participant data → Personalized certificates as PDF → Automatic email delivery.",
+      "hours_saved": 5,
+      "tool": "Make.com + Canva/PDF generator",
+      "implementation": "Template in Canva, automation with Make.com",
+      "difficulty": "medium",
+      "investment": "$20-40/month"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Central content library with AI",
+      "description": "All training materials searchable, automatic updates, versioning.",
+      "hours_saved": 12,
+      "tool": "Notion AI or SharePoint + Copilot",
+      "implementation": "Migrate content, build structure, onboard team",
+      "difficulty": "medium",
+      "investment": "$50-150/month"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise LMS with AI personalization",
+      "description": "Adaptive learning paths, automatic content recommendations, skill gap analysis.",
+      "hours_saved": 30,
+      "tool": "Docebo or SAP Litmos",
+      "implementation": "LMS implementation, content migration, rollout",
+      "difficulty": "high",
+      "investment": "$500-2000/month"
+    }
+  ],
+
+  "success_metrics": [
+    "Utilization: Participants per course",
+    "Completion rate: % participants who pass",
+    "NPS: Net Promoter Score",
+    "Repeat booking rate: Returning customers",
+    "Revenue per trainer day"
+  ],
+
+  "typical_pricing_models": [
+    "Course fees per participant",
+    "Day rates for in-house training",
+    "Subscription models for e-learning",
+    "Government-funded (vouchers)",
+    "Corporate training (packages)"
+  ]
+}
