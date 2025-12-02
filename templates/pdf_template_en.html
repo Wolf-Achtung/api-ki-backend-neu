@@ -1697,13 +1697,29 @@
                 <section class="chapter">
                     {{RECOMMENDATIONS_HTML}}
                 </section>
-                <!-- FUNDING SECTION - DISABLED FOR EN VERSION
-                     German funding programs are not applicable for international users.
-                     Re-enable if international funding data becomes available.
-                <section class="chapter">
-                    {{FOERDERPOTENZIAL_HTML}}
+                <!-- FUNDING SECTION - Enabled for EN reports with country=Germany -->
+                {% if FOERDERPOTENZIAL_HTML or FUNDING_HTML %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Financial Support</span>
+                            <h2>Funding Opportunities (Germany)</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            German grant programs for your profile
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {% if FUNDING_HTML %}
+                        {{FUNDING_HTML}}
+                        {% endif %}
+                        {% if FOERDERPOTENZIAL_HTML %}
+                        {{FOERDERPOTENZIAL_HTML}}
+                        {% endif %}
+                    </div>
                 </section>
-                -->
+                {% endif %}
 <!-- FEEDBACK SECTION -->
                 <div class="feedback-section">
                     <h2>Your Feedback Matters!</h2>
