@@ -1,5 +1,5 @@
 Developer:
-<!-- funding_potential.md – v1.0 EN Funding Potential for Germany
+<!-- funding_potential.md – v1.1 EN Funding Potential for Germany
      Target: English-speaking users with companies based in Germany.
      Output: Valid HTML only. No Markdown fences.
 
@@ -13,6 +13,7 @@ Developer:
        {{BUNDESLAND_LABEL}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}},
        {{HAUPTLEISTUNG}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}},
        {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}}
+       FUNDING_PROGRAMMES: List of matched programmes (optional, for reference)
 
      SIZE-AWARE (COMPANY_SIZE):
        solo: low barriers, <10,000€, consulting/starter grants
