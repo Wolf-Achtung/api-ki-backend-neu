@@ -22,6 +22,7 @@
     "ki_einsatz": ["marketing_automation", "content_generation", "datenanalyse", "customer_journey_optimierung"],
     "ki_kompetenz": "fortgeschritten",
     "ki_ziele": ["effizienz", "skalierung", "conversion_optimierung", "datenqualitaet"],
+    "ki_guardrails": "",
     "ki_projekte": "Geplant sind automatisierte Produkttextgenerierung, KI-gestützte Kampagnenoptimierung (Meta/Google Ads), Predictive Analytics für Nachfrageprognosen sowie ein Recommendation-System für personalisierte Shop-Erlebnisse. Weitere interne Projekte betreffen automatisierte Reportings und semantische Analysen großer Produktkataloge.",
     "anwendungsfaelle": ["produkttexte", "kampagnenoptimierung", "recommendation_engine", "preisoptimierung", "chatbots_kundenservice", "fraud_detection_light"],
     "zeitersparnis_prioritaet": "Besonders priorisiert ist die Reduzierung manueller Produktdatenpflege, die Automatisierung der Content-Erstellung und die Beschleunigung datengetriebener Entscheidungen. Teams verbringen aktuell zu viel Zeit mit redundanten Aufgaben wie Kategorisierung, Keyword-Mapping und QA-Schleifen für Produktkarten.",

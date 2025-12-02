@@ -11,6 +11,8 @@
     "unternehmensgroesse": "kmu",
     "bundesland": "be",
     "hauptleistung": "Organisationsberatung für mittelständische Betriebe",
+    "zielgruppen": ["B2B", "kmu", "mittelstand"],
+    "digitalisierungsgrad": "mittel",
     "strategische_ziele": "Prozesse verschlanken und Teams entlasten",
     "zeitersparnis_prioritaet": "Kommunikation, Dokumentation, Meeting-Notes",
     "geschaeftsmodell_evolution": "Beratungsprodukte als KI-gestützte Membership",
@@ -18,6 +20,12 @@
     "ki_guardrails": "Keine automatisierten Entscheidungen bei Personalthemen. Kritisch: interne Kommunikation nicht ohne Freigabe. Daten nicht an Dritte weitergeben.",
     "ki_kompetenz": "mittel",
     "ki_ziele": ["effizienz", "standardisierung", "qualitaet"],
+    "ki_projekte": "Erste Pilotprojekte zur automatisierten Meeting-Zusammenfassung, KI-gestützten Dokumentenanalyse und internen Wissensmanagement-Workflows. Geplant ist der Aufbau eines digitalen Beratungs-Toolkits.",
+    "anwendungsfaelle": ["dokumentation", "meeting_notes", "prozessanalyse", "kundenkommunikation"],
+    "massnahmen_komplexitaet": "niedrig",
+    "roadmap_vorhanden": "nein",
+    "governance_richtlinien": "in_planung",
+    "change_management": "punktuell",
     "datenschutz": true
   }
 }
