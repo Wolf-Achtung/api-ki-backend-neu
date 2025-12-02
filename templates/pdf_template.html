@@ -880,6 +880,32 @@
             color: #DC8383;
             font-weight: 700;
         }
+        /* 2.2 Strategic Context Card Variants */
+        .card-goal {
+            background: rgba(59, 130, 246, 0.04);
+        }
+        .card-process {
+            background: rgba(30, 58, 138, 0.03);
+        }
+        .card-model {
+            background: rgba(147, 197, 253, 0.05);
+        }
+        .card-vision {
+            background: rgba(29, 78, 216, 0.03);
+        }
+        /* Context Card Title mit Micro-Icon */
+        .context-card-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+            margin-top: 0;
+        }
+        .context-card-title svg {
+            flex-shrink: 0;
+            width: 14px;
+            height: 14px;
+        }
         .legend {
             display: flex;
             flex-wrap: wrap;
@@ -1046,6 +1072,8 @@
         }
         /* Annex Sections: Glossar & Kreativ-Tools */
         .annex-section {
+            page-break-before: always;
+            break-before: page;
             margin-top: 32pt;
             padding: 16pt 18pt;
             border-radius: 10pt;
@@ -1474,43 +1502,84 @@
                     <div class="section-body">
                         <div class="grid-2">
                             {% if strategische_ziele %}
-                            <div class="card">
-                                <h4>Strategische Prioritäten</h4>
+                            <div class="card card-goal">
+                                <h4 class="context-card-title">
+                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="8" cy="8" r="6" stroke="#3B82F6" stroke-width="1.5" fill="rgba(59,130,246,0.1)"/>
+                                        <circle cx="8" cy="8" r="2.5" fill="#1E3A8A"/>
+                                    </svg>
+                                    Strategische Prioritäten
+                                </h4>
                                 <p>{{ strategische_ziele }}</p>
                             </div>
                             {% endif %}
 
                             {% if zeitersparnis_prioritaet %}
-                            <div class="card">
-                                <h4>Zeitersparnis-Priorität</h4>
+                            <div class="card card-process">
+                                <h4 class="context-card-title">
+                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M8 2L14 13H2L8 2Z" stroke="#3B82F6" stroke-width="1.5" fill="rgba(30,58,138,0.1)"/>
+                                    </svg>
+                                    Zeitersparnis-Priorität
+                                </h4>
                                 <p>{{ zeitersparnis_prioritaet }}</p>
                             </div>
                             {% endif %}
 
                             {% if hauptleistung %}
-                            <div class="card">
-                                <h4>Hauptleistung</h4>
+                            <div class="card card-process">
+                                <h4 class="context-card-title">
+                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M8 1L14.5 4.75V11.25L8 15L1.5 11.25V4.75L8 1Z" stroke="#3B82F6" stroke-width="1.5" fill="rgba(30,58,138,0.1)"/>
+                                    </svg>
+                                    Hauptleistung
+                                </h4>
                                 <p>{{ hauptleistung }}</p>
                             </div>
                             {% endif %}
 
                             {% if ki_projekte %}
-                            <div class="card">
-                                <h4>Laufende/geplante KI-Projekte</h4>
+                            <div class="card card-model">
+                                <h4 class="context-card-title">
+                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="8" cy="8" r="2" fill="#1E3A8A"/>
+                                        <circle cx="3" cy="4" r="1.5" fill="#93C5FD"/>
+                                        <circle cx="13" cy="4" r="1.5" fill="#93C5FD"/>
+                                        <circle cx="3" cy="12" r="1.5" fill="#93C5FD"/>
+                                        <circle cx="13" cy="12" r="1.5" fill="#93C5FD"/>
+                                        <line x1="8" y1="8" x2="3" y2="4" stroke="#3B82F6" stroke-width="1"/>
+                                        <line x1="8" y1="8" x2="13" y2="4" stroke="#3B82F6" stroke-width="1"/>
+                                        <line x1="8" y1="8" x2="3" y2="12" stroke="#3B82F6" stroke-width="1"/>
+                                        <line x1="8" y1="8" x2="13" y2="12" stroke="#3B82F6" stroke-width="1"/>
+                                    </svg>
+                                    Laufende/geplante KI-Projekte
+                                </h4>
                                 <p>{{ ki_projekte }}</p>
                             </div>
                             {% endif %}
 
                             {% if geschaeftsmodell_evolution %}
-                            <div class="card">
-                                <h4>Geschäftsmodell-Evolution</h4>
+                            <div class="card card-model">
+                                <h4 class="context-card-title">
+                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="3" y="3" width="10" height="10" rx="1" stroke="#3B82F6" stroke-width="1.5" fill="rgba(147,197,253,0.15)" transform="rotate(0 8 8)"/>
+                                        <rect x="5.5" y="5.5" width="5" height="5" rx="0.5" fill="#1E3A8A"/>
+                                    </svg>
+                                    Geschäftsmodell-Evolution
+                                </h4>
                                 <p>{{ geschaeftsmodell_evolution }}</p>
                             </div>
                             {% endif %}
 
                             {% if vision_3_jahre %}
-                            <div class="card">
-                                <h4>3-Jahres-Vision</h4>
+                            <div class="card card-vision">
+                                <h4 class="context-card-title">
+                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M1 10C3 6 5 12 8 8C11 4 13 10 15 6" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                                        <circle cx="15" cy="6" r="1.5" fill="#1E3A8A"/>
+                                    </svg>
+                                    3-Jahres-Vision
+                                </h4>
                                 <p>{{ vision_3_jahre }}</p>
                             </div>
                             {% endif %}
