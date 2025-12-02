@@ -1697,23 +1697,33 @@
                 <section class="chapter">
                     {{RECOMMENDATIONS_HTML}}
                 </section>
-                <!-- FUNDING SECTION - Enabled for EN reports with country=Germany -->
-                {% if FOERDERPOTENZIAL_HTML or FUNDING_HTML %}
+                <!-- FUNDING SECTION - Enabled for EN reports (DE funding or EU core funding) -->
+                {% if FUNDING_HTML %}
                 <section class="section chapter">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Financial Support</span>
+                            {% if FUNDING_SCOPE == "DE" %}
                             <h2>Funding Opportunities (Germany)</h2>
+                            {% elif FUNDING_SCOPE == "EU_CORE" %}
+                            <h2>EU Funding Opportunities</h2>
+                            {% else %}
+                            <h2>Funding Opportunities</h2>
+                            {% endif %}
                         </div>
                         <span class="section-pill">
                             <span class="pill-dot"></span>
+                            {% if FUNDING_SCOPE == "DE" %}
                             German grant programs for your profile
+                            {% elif FUNDING_SCOPE == "EU_CORE" %}
+                            EU-wide programmes for AI &amp; digitalisation
+                            {% else %}
+                            Relevant funding programmes
+                            {% endif %}
                         </span>
                     </div>
                     <div class="section-body">
-                        {% if FUNDING_HTML %}
                         {{FUNDING_HTML}}
-                        {% endif %}
                         {% if FOERDERPOTENZIAL_HTML %}
                         {{FOERDERPOTENZIAL_HTML}}
                         {% endif %}
