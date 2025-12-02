@@ -4168,13 +4168,46 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         sections["FOERDERPROGRAMME_HTML"] = _rewrite_table_links_with_labels(sections["FOERDERPROGRAMME_HTML"])
 
     # 🎯 KERN-FÖRDERMATRIX 2025/2026: Statischer, size-aware Kern immer einfügen
-    # v4.15.0: Skip funding for English reports (Germany-specific programs)
+    # v4.16.0: Enable funding for EN reports when country is DE/Germany
     report_lang = sections.get("LANG", "de")
-    if report_lang == "en":
-        log.info("[%s] 🌐 Skipping funding section for English report", run_id)
+    report_country = (answers.get("country") or "").upper()
+
+    # Check if this is an EN report for Germany (enable funding)
+    is_en_germany = (
+        report_lang == "en" and
+        report_country in ("DE", "GERMANY", "DEUTSCHLAND", "")  # Empty = default to DE
+    )
+
+    if report_lang == "en" and not is_en_germany:
+        # EN report for non-German country: Skip funding
+        log.info("[%s] 🌐 Skipping funding section for English report (country=%s)", run_id, report_country)
         sections["FOERDERPROGRAMME_HTML"] = ""
         sections["FOERDERPOTENZIAL_HTML"] = ""
         sections["FUNDING_HTML"] = ""
+    elif report_lang == "en" and is_en_germany:
+        # EN report for Germany: Enable funding with EN translations
+        log.info("[%s] 🌐 Enabling German funding for English report", run_id)
+        from services.funding_service import get_funding_recommendations
+        try:
+            funding_result = get_funding_recommendations("DE", answers, lang="en")
+            if funding_result.has_programmes:
+                sections["FOERDERPROGRAMME_HTML"] = (
+                    f"<h3>German Funding Programs for Your Profile (2025/2026)</h3>\n"
+                    f"{funding_result.programmes_html}"
+                )
+                sections["FOERDERPOTENZIAL_HTML"] = funding_result.potential_html
+                sections["FUNDING_HTML"] = funding_result.programmes_html
+                log.info("[%s] ✅ EN funding: %d programmes loaded", run_id, len(funding_result.programmes))
+            else:
+                log.info("[%s] ⚠️ EN funding: No matching programmes found", run_id)
+                sections["FOERDERPROGRAMME_HTML"] = ""
+                sections["FOERDERPOTENZIAL_HTML"] = ""
+                sections["FUNDING_HTML"] = ""
+        except Exception as e:
+            log.warning("[%s] ⚠️ EN funding service error: %s", run_id, e)
+            sections["FOERDERPROGRAMME_HTML"] = ""
+            sections["FOERDERPOTENZIAL_HTML"] = ""
+            sections["FUNDING_HTML"] = ""
     else:
         from services.extra_sections import build_core_funding_table_html
         core_funding_html = build_core_funding_table_html(sections)
