@@ -22,6 +22,7 @@
     "ki_einsatz": ["risikoanalyse", "reporting", "contentkreation", "research", "dokumentenzusammenfassung", "prozessevaluierung", "regelwerksanalyse"],
     "ki_kompetenz": "mittel",
     "ki_ziele": ["qualitaet", "effizienz", "standardisierung", "risikominimierung", "beschleunigung", "compliance"],
+    "ki_guardrails": "Keine automatisierten Entscheidungen bei Kreditbewertung oder Risiko-Scoring. Kundendaten nur in DSGVO- und BaFin-konformen Tools. Regulatorische Dokumente erfordern menschliche Freigabe.",
     "ki_projekte": "Bereits umgesetzt sind KI-basierte First-Level-Analysen für MaRisk/BAIT-Fragen, automatisierte Berichtsbausteine für Versicherungen, Pilotprozesse für Dokumentenklassifikation, generative Textbausteine für Kundenkommunikation sowie KI-gestützte Research-Hilfen. Geplant sind regelwerksbasierte Assistenzsysteme, automatisierte Checklisten, Risiko-Szenarien und KI-Dashboards für interne Qualitätssicherung.",
     "anwendungsfaelle": ["berichtswesen", "risikoanalyse", "dokumentenpruefung", "regelwerksauswertung", "workflowoptimierung", "research", "kundenkommunikation"],
     "zeitersparnis_prioritaet": "Besonders zeitintensiv sind regulatorische Recherchen, strukturierte Risikoanalysen, komplexe Dokumentenprüfungen, Reporting-Anforderungen, Abstimmungsprozesse, manuelle Excel-Auswertungen sowie priorisierte Handlungsempfehlungen. Hoher Nutzen besteht in KI-unterstützten Assistenzsystemen (Regelwerk-Analyse), automatisierten Reports, Standardisierung von Beraterkits und der Beschleunigung von Review-Schleifen.",

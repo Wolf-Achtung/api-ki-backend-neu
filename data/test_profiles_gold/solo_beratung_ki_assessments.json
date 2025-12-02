@@ -22,6 +22,7 @@
     "ki_einsatz": ["dokumentenerstellung", "textautomatisierung", "wissenstransfer", "prozessoptimierung", "kundenkommunikation"],
     "ki_kompetenz": "hoch",
     "ki_ziele": ["effizienz", "beschleunigung", "standardisierung", "qualität", "skalierung"],
+    "ki_guardrails": "",
     "ki_projekte": "Bisher wurden KI-gestützte Fragebogen-Analysen, automatisierte Beratungsvorlagen, Chat-basierte Auswertungssysteme, ein Wissens-Hub für Kundengespräche sowie Makro-Workflows für Dokumentation, Reporting und Content-Erstellung aufgebaut. Weitere Projekte betreffen KI-gestützte Kundensegmentierung und eine modulare Analysebibliothek für Assessments.",
     "anwendungsfaelle": ["automatische_dokumentation", "analyseautomation", "kundenkommunikation", "prozessanalyse", "textautomatisierung", "contentproduktion"],
     "zeitersparnis_prioritaet": "Der größte manuelle Aufwand liegt in der individuellen Auswertung von Kundendaten, der Erstellung maßgeschneiderter Empfehlungen, der Recherche zu Compliance-Themen sowie in der Dokumentation von Workshops, Onboardings und Analyseergebnissen. Zusätzlich binden wiederkehrende Text- und Content-Aufgaben unverhältnismäßig viel Zeit.",
