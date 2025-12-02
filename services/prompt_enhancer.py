@@ -469,32 +469,48 @@ Nutze den Strategischen Kontext wie folgt:
             return ""
 
         # Check if guardrails/no-gos are mentioned in the strategic context
-        # Extended keyword list for better detection (v3.1)
+        # Extended keyword list for intelligent detection (v4.0)
         guardrails_keywords = [
             # Original keywords
-            "no-gos",
-            "leitplanken",
-            "no gos",
-            "rote linien",
-            "sensible themen",
-            "tabu",
-            "ausgeschlossen",
-            "nicht erlaubt",
-            # Extended keywords (3.1)
-            "heikel",
-            "empfindlich",
-            "kritisch",
-            "bitte vermeiden",
-            "nicht automatisieren",
-            "nicht delegieren",
-            "nicht kommunizieren",
-            "nicht an ki auslagern",
-            "unter keinen umständen",
-            "nur menschlich entscheiden",
-            "heikle themen",
+            "no-gos", "leitplanken", "no gos", "rote linien", "sensible themen",
+            "tabu", "ausgeschlossen", "nicht erlaubt",
+            # Extended keywords (v3.1)
+            "heikel", "empfindlich", "kritisch", "bitte vermeiden",
+            "nicht automatisieren", "nicht delegieren", "nicht kommunizieren",
+            "nicht an ki auslagern", "unter keinen umständen",
+            "nur menschlich entscheiden", "heikle themen",
+            # A) Negative Verben + Objekte (v4.0)
+            "nicht nutzen", "nicht verwenden", "nicht freigeben",
+            "nicht veröffentlichen", "nicht ohne freigabe", "nicht ohne rücksprache",
+            "nicht mit kunden teilen", "nicht extern speichern",
+            # B) Phrasen zur Einschränkung / Vorsicht (v4.0)
+            "nur manuell entscheiden", "nur intern verwenden", "vorsicht bei",
+            "kritische themen", "empfindliche daten", "nicht ohne absprache",
+            # C) Sensitive areas (v4.0)
+            "personalentscheidungen", "bewerberdaten", "gesundheitsdaten",
+            "teamkommunikation", "rechtsfragen", "kundenbeschwerden",
+            "compliance-relevante", "personaldaten", "mitarbeiterdaten",
+            "vertrauliche", "geheimhaltung", "datenschutz-kritisch",
         ]
+
+        # Negation + Action detection (v4.0)
+        negation_words = ["nicht", "kein", "keine", "ohne", "niemals", "nie"]
+        action_words = [
+            "automatisieren", "delegieren", "freigabe", "speichern", "teilen",
+            "verwenden", "weitergeben", "veröffentlichen", "kommunizieren",
+        ]
+
         context_lower = strategic_context_block.lower()
-        has_guardrails = any(kw in context_lower for kw in guardrails_keywords)
+
+        # Check 1: Explicit keywords
+        has_explicit_keyword = any(kw in context_lower for kw in guardrails_keywords)
+
+        # Check 2: Negation + Action combination
+        has_negation = any(neg in context_lower for neg in negation_words)
+        has_action = any(act in context_lower for act in action_words)
+        has_negation_action = has_negation and has_action
+
+        has_guardrails = has_explicit_keyword or has_negation_action
 
         if not has_guardrails:
             return ""
@@ -587,10 +603,19 @@ Nutze den Strategischen Kontext wie folgt:
         Returns:
             Enhanced prompt with injected context
         """
-        # Only these prompts get ADDITIONAL branch/size context block
+        # Only these prompts get ADDITIONAL branch/size context block (v4.0 extended)
         PROMPTS_WITH_BRANCH_SIZE_CONTEXT = {
             "unternehmensprofil_markt",  # Main profile page - needs context
-            # Weitere Prompts bei Bedarf ergänzen
+            # Extended whitelist (v4.0)
+            "quick_wins",               # Quick Wins benefit from branch-specific context
+            "roadmap",                  # Roadmap needs size constraints
+            "roadmap_90d",              # 90-day roadmap
+            "roadmap_12m",              # 12-month roadmap
+            "risk",                     # Risk analysis benefits from industry context
+            "risks",                    # Alternative name
+            "compliance",               # Compliance needs branch-specific regulations
+            "change_management",        # Change management varies by size
+            "executive_summary",        # Summary should reflect branch/size
         }
 
         try:
