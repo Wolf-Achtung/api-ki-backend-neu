@@ -1,0 +1,135 @@
+{
+  "branche": "public_sector",
+  "display_name": "Public Sector",
+  "description": "Public administration, government agencies, municipalities, associations, chambers, public institutions",
+
+  "typical_workflows": [
+    "Application processing: Citizen applications, permits, decisions",
+    "Citizen services: Answering inquiries, providing information",
+    "Document management: Record keeping, archiving, follow-ups",
+    "Decision drafting: Formal documents with legal binding",
+    "Committee work: Proposals, minutes, resolutions",
+    "Statistics/Reporting: Evaluations for reports and decisions",
+    "Procurement: Tenders, procurement documentation"
+  ],
+
+  "common_pain_points": [
+    "High bureaucracy: Many forms, strict regulations",
+    "Staff shortage: Too few employees for rising inquiries",
+    "Outdated IT: Legacy systems, low digitalization",
+    "Long processing times: Citizens wait weeks/months",
+    "Standard inquiries: 80% of inquiries are routine",
+    "Minutes and proposals: Time-consuming documentation",
+    "Compliance: Strict data protection and administrative regulations"
+  ],
+
+  "ai_opportunities": [
+    "Chatbot for citizen services: Hours, forms, status",
+    "Automatic application pre-screening: Completeness check",
+    "Decision templates: Standardized decisions via AI template",
+    "Minutes automation: Meetings → Minutes",
+    "Case file summaries: Quickly capture long cases",
+    "Translations: Administrative texts to plain language",
+    "FAQ automation: Frequent citizen inquiries automated",
+    "Statistics preparation: Data → understandable reports"
+  ],
+
+  "typical_tools": [
+    "Specialized procedures: Specialized administrative software",
+    "DMS: Document management system",
+    "Microsoft Office for documents",
+    "Email as main communication",
+    "Phone for citizen inquiries",
+    "Excel for lists and statistics",
+    "SharePoint for internal collaboration",
+    "Form server for online applications"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Email", "Phone", "Secure messaging"],
+    "dms": ["Various DMS solutions", "SharePoint"],
+    "specialized": ["Government-specific applications"],
+    "office": ["Microsoft 365", "LibreOffice"],
+    "collaboration": ["SharePoint", "MS Teams"],
+    "forms": ["Online form solutions"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "Citizen FAQ bot",
+      "description": "Automatically answer frequent questions: Hours, forms, responsibilities.",
+      "hours_saved": 8,
+      "tool": "Municipal chatbot or Tidio",
+      "implementation": "Create FAQ catalog, train bot, embed on website",
+      "difficulty": "medium",
+      "investment": "$50-200/month"
+    },
+    {
+      "title": "Minutes automation",
+      "description": "Record meetings → Transcription → Formatted minutes.",
+      "hours_saved": 6,
+      "tool": "Fireflies.ai or otter.ai ($19/month)",
+      "implementation": "Recording workflow, template for minutes",
+      "difficulty": "low",
+      "investment": "$19-39/month"
+    },
+    {
+      "title": "Decision templates via AI",
+      "description": "Generate standard decisions from case data: Variables + Template → Decision.",
+      "hours_saved": 5,
+      "tool": "GPT-4 + Word templates",
+      "implementation": "Define templates, prompt for text modules",
+      "difficulty": "medium",
+      "investment": "$20/month"
+    },
+    {
+      "title": "Translate texts to plain language",
+      "description": "Make administrative texts understandable for all, improve accessibility.",
+      "hours_saved": 4,
+      "tool": "GPT-4",
+      "implementation": "Prompts for plain language, quality review",
+      "difficulty": "low",
+      "investment": "$20/month"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Knowledge management for technical questions",
+      "description": "All regulations, guidelines, rulings searchable. Employees find info in seconds.",
+      "hours_saved": 15,
+      "tool": "SharePoint + Copilot or Notion AI",
+      "implementation": "Collect documents, structure, set up search",
+      "difficulty": "high",
+      "investment": "$100-300/month"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise administration platform with AI",
+      "description": "End-to-end digitalization: Online applications, automatic processing, digital records.",
+      "hours_saved": 50,
+      "tool": "Government platforms with AI modules",
+      "implementation": "Process analysis, system implementation, rollout",
+      "difficulty": "high",
+      "investment": "$1000-5000/month"
+    }
+  ],
+
+  "success_metrics": [
+    "Processing time: Days until decision",
+    "Citizen satisfaction: Survey scores",
+    "Digitalization rate: % online applications",
+    "First-contact resolution: % immediately resolved inquiries",
+    "Case numbers per employee"
+  ],
+
+  "typical_pricing_models": [
+    "Fee schedule (fixed rates)",
+    "Budget-financed (no direct citizen costs)",
+    "Mixed financing (fees + budget)",
+    "Project funding for digitalization",
+    "Government IT contracts for software"
+  ]
+}

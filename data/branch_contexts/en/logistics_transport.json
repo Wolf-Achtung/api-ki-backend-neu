@@ -1,0 +1,144 @@
+{
+  "branche": "logistics_transport",
+  "display_name": "Logistics & Transport",
+  "description": "Freight forwarders, courier services, warehousing, fulfillment, supply chain management",
+
+  "typical_workflows": [
+    "Order intake: Customer inquiries, quotes, order entry",
+    "Dispatch: Route planning, vehicle/driver assignment",
+    "Transport: Execution, tracking, status updates",
+    "Warehouse: Receiving, picking, shipping",
+    "Documentation: Bills of lading, customs documents, delivery notes",
+    "Billing: Freight cost calculation, invoicing",
+    "Customer service: Shipment tracking, complaints"
+  ],
+
+  "common_pain_points": [
+    "Complex route planning: Many variables, frequent changes",
+    "Empty runs: Return trips without cargo",
+    "Customer inquiries: Many calls about shipment status",
+    "Documentation: Bills of lading, customs, hazmat are complex",
+    "Pricing: Calculate freight rates quickly",
+    "Driver shortage: Hard to find qualified drivers",
+    "Claims processing: Time-consuming complaint processes"
+  ],
+
+  "ai_opportunities": [
+    "Route optimization: Optimize routes, sequence, time windows",
+    "Automatic status updates: Send tracking info to customers via bot",
+    "Freight rate calculation: Quick quotes from inquiry",
+    "Demand forecasting: Predict capacity needs",
+    "Document automation: Automatically create bills of lading, CMR",
+    "Customer chatbot: Shipment status, FAQs, bookings",
+    "Warehouse optimization: Storage locations, picking routes",
+    "Damage detection: Automatically analyze photos"
+  ],
+
+  "typical_tools": [
+    "TMS: Transport Management System",
+    "WMS: Warehouse Management System",
+    "Telematics: GPS tracking, vehicle data",
+    "Office: Excel for planning, Word for documents",
+    "Phone for dispatch and customer service",
+    "Scanners for goods in/out",
+    "Accounting software",
+    "Email for order confirmations"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Phone", "Email", "WhatsApp", "Mobile apps"],
+    "tms": ["Various TMS platforms", "Freight exchanges"],
+    "wms": ["SAP EWM", "Manhattan", "Various WMS"],
+    "telematics": ["Webfleet", "Samsara", "Verizon Connect"],
+    "documentation": ["Excel", "PDF", "EDI"],
+    "accounting": ["Accounting software", "Billing systems"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "Automatic shipment status inquiry",
+      "description": "Customers ask chatbot instead of calling. Relieves dispatch.",
+      "hours_saved": 8,
+      "tool": "Chatbot + TMS connection",
+      "implementation": "Set up bot, connect tracking API",
+      "difficulty": "medium",
+      "investment": "$50-100/month"
+    },
+    {
+      "title": "Freight quotes via AI",
+      "description": "Automatically calculate freight rate and create quote from customer inquiry.",
+      "hours_saved": 6,
+      "tool": "GPT-4 + Rate tables",
+      "implementation": "Map pricing logic, quote template",
+      "difficulty": "medium",
+      "investment": "$20-50/month"
+    },
+    {
+      "title": "Document automation",
+      "description": "Automatically create bills of lading, CMR, delivery notes from order data.",
+      "hours_saved": 5,
+      "tool": "Make.com + PDF generator",
+      "implementation": "Create templates, set up automation",
+      "difficulty": "medium",
+      "investment": "$30-60/month"
+    },
+    {
+      "title": "Basic route optimization",
+      "description": "Simple route optimization for daily routes.",
+      "hours_saved": 4,
+      "tool": "Google Maps API or RouteXL",
+      "implementation": "Import addresses, calculate route",
+      "difficulty": "low",
+      "investment": "$0-50/month"
+    },
+    {
+      "title": "Email automation for order confirmation",
+      "description": "Automatic confirmation with tracking link after order entry.",
+      "hours_saved": 3,
+      "tool": "Make.com + Email",
+      "implementation": "Define trigger, email template",
+      "difficulty": "low",
+      "investment": "$9-29/month"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Central order dashboard",
+      "description": "All orders, status, problems at a glance. Fewer inquiries.",
+      "hours_saved": 10,
+      "tool": "TMS or Custom dashboard",
+      "implementation": "Consolidate data, build visualization",
+      "difficulty": "medium",
+      "investment": "$100-300/month"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise TMS with AI optimization",
+      "description": "Complete route optimization, empty run minimization, carrier matching.",
+      "hours_saved": 50,
+      "tool": "Transporeon or project44",
+      "implementation": "TMS implementation, integration, rollout",
+      "difficulty": "high",
+      "investment": "$2000-5000/month"
+    }
+  ],
+
+  "success_metrics": [
+    "Utilization: % load capacity used",
+    "On-time delivery: % deliveries on schedule",
+    "Cost per shipment: $/shipment",
+    "Empty miles: % empty runs",
+    "Customer satisfaction: Reviews, NPS"
+  ],
+
+  "typical_pricing_models": [
+    "Freight rates per kg/pallet/cbm",
+    "Flat rates for routes",
+    "Storage fees per pallet/day",
+    "Pick & pack fees",
+    "Surcharges (fuel, tolls, express)"
+  ]
+}
