@@ -195,10 +195,69 @@ def _labels_for_list(field_key, values):
 
 
 # === STRATEGIC CONTEXT BLOCK =============================================
+
+# Guardrail Detection Keywords (v3.1) - Extended list for auto-detection
+GUARDRAIL_DETECTION_KEYWORDS = [
+    # Original keywords
+    "no-gos", "leitplanken", "no gos", "rote linien", "sensible themen",
+    "tabu", "ausgeschlossen", "nicht erlaubt",
+    # Extended keywords (v3.1)
+    "heikel", "empfindlich", "kritisch", "bitte vermeiden",
+    "nicht automatisieren", "nicht delegieren", "nicht kommunizieren",
+    "nicht an ki auslagern", "unter keinen umständen",
+    "nur menschlich entscheiden", "heikle themen",
+]
+
+
+def detect_guardrails_in_freetext(answers: dict) -> tuple[bool, list[str]]:
+    """
+    Scannt alle Freitext-Felder nach Guardrail-Keywords.
+
+    Args:
+        answers: Dict mit den Fragebogen-Antworten
+
+    Returns:
+        Tuple (guardrails_detected: bool, detected_snippets: list[str])
+    """
+    # Felder, die nach Guardrails durchsucht werden sollen
+    freetext_fields = [
+        "strategische_ziele",
+        "zeitersparnis_prioritaet",
+        "hauptleistung",
+        "ki_projekte",
+        "geschaeftsmodell_evolution",
+        "vision_3_jahre",
+    ]
+
+    detected_snippets = []
+
+    for field in freetext_fields:
+        val = answers.get(field, "")
+        if not val or val == "—":
+            continue
+
+        val_lower = val.lower()
+
+        for keyword in GUARDRAIL_DETECTION_KEYWORDS:
+            if keyword in val_lower:
+                # Extrahiere relevanten Kontext (Satz mit Keyword)
+                sentences = val.replace("\n", " ").split(".")
+                for sentence in sentences:
+                    if keyword in sentence.lower():
+                        snippet = sentence.strip()
+                        if snippet and snippet not in detected_snippets:
+                            detected_snippets.append(snippet)
+                break  # Ein Keyword pro Feld reicht
+
+    return (len(detected_snippets) > 0, detected_snippets)
+
+
 def build_strategic_context_block(answers: dict) -> str:
     """
     Kombiniert alle strategischen Freitext-Felder zu einem strukturierten Kontextblock.
     Wird für spätere Prompt-Anreicherung verwendet.
+
+    v3.1: Erweitert um automatische Guardrail-Erkennung in Freitextfeldern.
 
     Args:
         answers: Dict mit den normalisierten Fragebogen-Antworten
@@ -238,10 +297,30 @@ def build_strategic_context_block(answers: dict) -> str:
         if val and val != "—":
             lines.append(f"Vision für die nächsten 2–3 Jahre:\n{val}")
 
-    if answers.get("ki_guardrails"):
-        val = answers["ki_guardrails"]
-        if val and val != "—":
-            lines.append(f"No-Gos & Leitplanken:\n{val}")
+    # === Guardrails: Explizit angegeben + Auto-Detection (v3.1) ===
+    explicit_guardrails = answers.get("ki_guardrails", "")
+    has_explicit = explicit_guardrails and explicit_guardrails != "—"
+
+    # Auto-Detection in anderen Freitextfeldern
+    guardrails_detected, detected_snippets = detect_guardrails_in_freetext(answers)
+
+    if has_explicit and guardrails_detected:
+        # Beide vorhanden: Explizite zuerst, dann Auto-Detected
+        combined = f"No-Gos & Leitplanken:\n{explicit_guardrails}"
+        combined += f"\n\nNo-Gos & Leitplanken (automatisch erkannt):\n"
+        combined += "• " + "\n• ".join(detected_snippets[:3])  # Max 3 Snippets
+        lines.append(combined)
+        log.info("🛡️ Guardrails: Explicit + %d auto-detected", len(detected_snippets))
+    elif has_explicit:
+        # Nur explizite Guardrails
+        lines.append(f"No-Gos & Leitplanken:\n{explicit_guardrails}")
+    elif guardrails_detected:
+        # Nur auto-detected
+        auto_section = "No-Gos & Leitplanken (automatisch erkannt):\n"
+        auto_section += "Es wurden sensible Prioritäten erkannt:\n"
+        auto_section += "• " + "\n• ".join(detected_snippets[:3])  # Max 3 Snippets
+        lines.append(auto_section)
+        log.info("🛡️ Guardrails: %d auto-detected (no explicit)", len(detected_snippets))
 
     return "\n\n".join(lines)
 # =========================================================================

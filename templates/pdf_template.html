@@ -1081,6 +1081,8 @@
             border: 1px solid var(--border-subtle);
         }
         .annex-section + .annex-section {
+            page-break-before: auto;
+            break-before: auto;
             margin-top: 20pt;
         }
         .annex-section h2 {
@@ -1187,6 +1189,19 @@
                 radial-gradient(circle at 0 0, rgba(34, 197, 94, 0.06), transparent 60%),
                 #FFFFFF;
             border-color: rgba(148, 163, 184, 0.35);
+        }
+        /* Light-Mode Card-Varianten für Strategic Context */
+        .card-goal {
+            background: rgba(59, 130, 246, 0.06);
+        }
+        .card-process {
+            background: rgba(30, 58, 138, 0.05);
+        }
+        .card-model {
+            background: rgba(147, 197, 253, 0.07);
+        }
+        .card-vision {
+            background: rgba(29, 78, 216, 0.05);
         }
         .timeline-item {
             background:
