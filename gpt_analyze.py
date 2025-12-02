@@ -196,7 +196,7 @@ def _labels_for_list(field_key, values):
 
 # === STRATEGIC CONTEXT BLOCK =============================================
 
-# Guardrail Detection Keywords (v3.1) - Extended list for auto-detection
+# Guardrail Detection Keywords (v4.0) - Extended list for intelligent detection
 GUARDRAIL_DETECTION_KEYWORDS = [
     # Original keywords
     "no-gos", "leitplanken", "no gos", "rote linien", "sensible themen",
@@ -206,12 +206,63 @@ GUARDRAIL_DETECTION_KEYWORDS = [
     "nicht automatisieren", "nicht delegieren", "nicht kommunizieren",
     "nicht an ki auslagern", "unter keinen umständen",
     "nur menschlich entscheiden", "heikle themen",
+    # A) Negative Verben + Objekte (v4.0)
+    "nicht nutzen", "nicht verwenden", "nicht freigeben",
+    "nicht veröffentlichen", "nicht ohne freigabe", "nicht ohne rücksprache",
+    "nicht mit kunden teilen", "nicht extern speichern",
+    # B) Phrasen zur Einschränkung / Vorsicht (v4.0)
+    "nur manuell entscheiden", "nur intern verwenden", "vorsicht bei",
+    "kritische themen", "empfindliche daten", "nicht ohne absprache",
 ]
+
+# Negation words for intelligent detection (v4.0)
+NEGATION_WORDS = ["nicht", "kein", "keine", "ohne", "niemals", "nie"]
+
+# Action words that combined with negation indicate guardrails (v4.0)
+ACTION_WORDS = [
+    "automatisieren", "delegieren", "freigabe", "speichern", "teilen",
+    "verwenden", "weitergeben", "veröffentlichen", "kommunizieren",
+    "auslagern", "nutzen", "einsetzen", "übertragen",
+]
+
+# Sensitive areas that imply guardrails without negation (v4.0)
+SENSITIVE_AREAS = [
+    "personalentscheidungen", "bewerberdaten", "gesundheitsdaten",
+    "teamkommunikation", "rechtsfragen", "kundenbeschwerden",
+    "compliance-relevante", "personaldaten", "mitarbeiterdaten",
+    "vertrauliche", "geheimhaltung", "datenschutz-kritisch",
+]
+
+
+def _split_into_sentences(text: str) -> list[str]:
+    """Split text into sentences using common delimiters."""
+    import re
+    # Replace newlines with spaces, then split on . ! ?
+    text = text.replace("\n", " ")
+    sentences = re.split(r'[.!?]+', text)
+    return [s.strip() for s in sentences if s.strip()]
+
+
+def _check_negation_action(sentence_lower: str) -> bool:
+    """Check if sentence contains negation + action word combination."""
+    has_negation = any(neg in sentence_lower for neg in NEGATION_WORDS)
+    has_action = any(act in sentence_lower for act in ACTION_WORDS)
+    return has_negation and has_action
+
+
+def _check_sensitive_area(sentence_lower: str) -> bool:
+    """Check if sentence mentions sensitive areas."""
+    return any(area in sentence_lower for area in SENSITIVE_AREAS)
 
 
 def detect_guardrails_in_freetext(answers: dict) -> tuple[bool, list[str]]:
     """
-    Scannt alle Freitext-Felder nach Guardrail-Keywords.
+    Scannt alle Freitext-Felder nach Guardrails mit intelligenter Erkennung.
+
+    v4.0: Erweitert um 3-stufige Erkennung:
+    1. Explizite Guardrail-Keywords
+    2. Negation + Aktion Kombinationen
+    3. Kritische Bereiche ohne Negation
 
     Args:
         answers: Dict mit den Fragebogen-Antworten
@@ -236,18 +287,28 @@ def detect_guardrails_in_freetext(answers: dict) -> tuple[bool, list[str]]:
         if not val or val == "—":
             continue
 
-        val_lower = val.lower()
+        # Split into sentences for granular analysis
+        sentences = _split_into_sentences(val)
 
-        for keyword in GUARDRAIL_DETECTION_KEYWORDS:
-            if keyword in val_lower:
-                # Extrahiere relevanten Kontext (Satz mit Keyword)
-                sentences = val.replace("\n", " ").split(".")
-                for sentence in sentences:
-                    if keyword in sentence.lower():
-                        snippet = sentence.strip()
-                        if snippet and snippet not in detected_snippets:
-                            detected_snippets.append(snippet)
-                break  # Ein Keyword pro Feld reicht
+        for sentence in sentences:
+            if not sentence or len(sentence) < 10:  # Skip very short fragments
+                continue
+
+            sentence_lower = sentence.lower()
+
+            # Check 1: Explicit guardrail keywords
+            has_explicit_keyword = any(kw in sentence_lower for kw in GUARDRAIL_DETECTION_KEYWORDS)
+
+            # Check 2: Negation + Action combination
+            has_negation_action = _check_negation_action(sentence_lower)
+
+            # Check 3: Sensitive area mention
+            has_sensitive_area = _check_sensitive_area(sentence_lower)
+
+            # If any check passes, add to detected snippets
+            if has_explicit_keyword or has_negation_action or has_sensitive_area:
+                if sentence not in detected_snippets:
+                    detected_snippets.append(sentence)
 
     return (len(detected_snippets) > 0, detected_snippets)
 
