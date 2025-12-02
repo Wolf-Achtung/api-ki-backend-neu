@@ -1,0 +1,133 @@
+{
+  "branche": "healthcare",
+  "display_name": "Healthcare & Care",
+  "description": "Medical practices, therapy practices, care services, pharmacies, health service providers",
+
+  "typical_workflows": [
+    "Patient management: Scheduling, patient records, master data",
+    "Documentation: Treatment documentation, medical letters, findings",
+    "Billing: Insurance billing, private billing",
+    "Prescriptions/Orders: Medications, treatments, medical devices",
+    "Communication: Patients, specialists, insurance companies",
+    "Quality management: QM documentation, hygiene plans",
+    "Ordering: Medications, materials, practice supplies"
+  ],
+
+  "common_pain_points": [
+    "Documentation burden: 2-3h daily just for documentation",
+    "Writing medical letters: Time-consuming, often overtime",
+    "Appointment management: No-shows, short-notice cancellations",
+    "Patient inquiries: Many routine questions via phone",
+    "Data protection: Strict GDPR/HIPAA requirements in healthcare",
+    "Staff shortage: Hard to find qualified personnel",
+    "Complex billing: Many codes, frequent changes"
+  ],
+
+  "ai_opportunities": [
+    "Automate medical letters: Finding → Structured letter",
+    "Voice-to-text for documentation: Dictate instead of type",
+    "Appointment reminders: Automatic SMS/Email, reduce no-shows",
+    "Patient chatbot: FAQs, appointment booking, prescription requests",
+    "Diagnosis coding: Automatically code diagnoses",
+    "Billing optimization: Suggest missing codes",
+    "QM documentation: Automate checklists and protocols",
+    "Medication interactions: Automatic warnings"
+  ],
+
+  "typical_tools": [
+    "Practice management system (PMS): Various healthcare platforms",
+    "Documentation: Word or PMS-integrated",
+    "Phone as main communication",
+    "Email for patient communication",
+    "Secure healthcare messaging",
+    "Pharmacy management systems",
+    "Care documentation systems"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Phone", "Secure messaging", "Email"],
+    "pms": ["Healthcare-specific platforms", "EHR systems"],
+    "documentation": ["PMS-integrated", "Word", "Voice recognition"],
+    "scheduling": ["PMS-integrated", "Online booking platforms"],
+    "billing": ["PMS-integrated", "Insurance connectors"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "Voice recognition for documentation",
+      "description": "Dictate findings and letters instead of typing. 3x faster documentation.",
+      "hours_saved": 12,
+      "tool": "Dragon Medical or similar ($50/month)",
+      "implementation": "Install software, train vocabulary, adjust workflow",
+      "difficulty": "low",
+      "investment": "$50-100/month"
+    },
+    {
+      "title": "Automatic appointment reminders",
+      "description": "SMS/Email 24h before appointment. Reduces no-shows by 30-50%.",
+      "hours_saved": 4,
+      "tool": "Booking platform or PMS integration",
+      "implementation": "Setup, customize texts, test phase",
+      "difficulty": "low",
+      "investment": "$30-80/month"
+    },
+    {
+      "title": "Medical letter templates via AI",
+      "description": "Generate structured medical letters from bullet points.",
+      "hours_saved": 8,
+      "tool": "GPT-4 (HIPAA/GDPR compliant) or specialized solution",
+      "implementation": "Templates for different specialties, local processing",
+      "difficulty": "medium",
+      "investment": "$20-100/month"
+    },
+    {
+      "title": "Online appointment booking",
+      "description": "Patients book online themselves. Fewer phone calls.",
+      "hours_saved": 5,
+      "tool": "Online booking platform",
+      "implementation": "Create account, set up calendar, inform patients",
+      "difficulty": "low",
+      "investment": "$80-150/month"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Central knowledge management for practice team",
+      "description": "Guidelines, SOPs, hygiene plans searchable for all employees.",
+      "hours_saved": 8,
+      "tool": "Notion or SharePoint",
+      "implementation": "Collect documents, structure, train team",
+      "difficulty": "medium",
+      "investment": "$50-100/month"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise practice management with AI",
+      "description": "Automatic coding, billing optimization, resource planning.",
+      "hours_saved": 30,
+      "tool": "Enterprise healthcare platforms",
+      "implementation": "System implementation, migration, training",
+      "difficulty": "high",
+      "investment": "$1000-5000/month"
+    }
+  ],
+
+  "success_metrics": [
+    "Utilization: Appointments per day",
+    "No-show rate: % non-appearing patients",
+    "Documentation time: Minutes per patient",
+    "Patient satisfaction: Reviews",
+    "Billing volume: Revenue per quarter"
+  ],
+
+  "typical_pricing_models": [
+    "Insurance billing (public/private)",
+    "Private patient billing",
+    "Cash-pay services",
+    "Workers compensation billing",
+    "Selective contracts (bundled payments)"
+  ]
+}
