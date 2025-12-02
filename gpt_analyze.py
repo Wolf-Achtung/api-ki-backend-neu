@@ -4169,23 +4169,18 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
 
     # 🎯 KERN-FÖRDERMATRIX 2025/2026: Statischer, size-aware Kern immer einfügen
     # v4.16.0: Enable funding for EN reports when country is DE/Germany
+    # v4.17.0: Phase 2 - Enable EU core funding for EN reports with non-German countries
     report_lang = sections.get("LANG", "de")
     report_country = (answers.get("country") or "").upper()
 
-    # Check if this is an EN report for Germany (enable funding)
+    # Check if this is an EN report for Germany (enable DE funding)
     is_en_germany = (
         report_lang == "en" and
         report_country in ("DE", "GERMANY", "DEUTSCHLAND", "")  # Empty = default to DE
     )
 
-    if report_lang == "en" and not is_en_germany:
-        # EN report for non-German country: Skip funding
-        log.info("[%s] 🌐 Skipping funding section for English report (country=%s)", run_id, report_country)
-        sections["FOERDERPROGRAMME_HTML"] = ""
-        sections["FOERDERPOTENZIAL_HTML"] = ""
-        sections["FUNDING_HTML"] = ""
-    elif report_lang == "en" and is_en_germany:
-        # EN report for Germany: Enable funding with dedicated EN service
+    if report_lang == "en" and is_en_germany:
+        # Phase 1: EN report for Germany - Enable German funding with dedicated EN service
         log.info("[%s] 🌐 Enabling German funding for English report", run_id)
         from services.funding_service_en import get_funding_for_germany_en, render_funding_html_en
         try:
@@ -4199,19 +4194,50 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
                 sections["FOERDERPOTENZIAL_HTML"] = ""  # Potential section handled by prompt
                 sections["FUNDING_HTML"] = funding_html
                 sections["FUNDING_PROGRAMMES"] = funding_result.programmes  # For Jinja2 template
-                log.info("[%s] ✅ EN funding: %d programmes loaded", run_id, funding_result.programme_count)
+                sections["FUNDING_SCOPE"] = "DE"  # For template title logic
+                log.info("[%s] ✅ EN funding (DE): %d programmes loaded", run_id, funding_result.programme_count)
             else:
-                log.info("[%s] ⚠️ EN funding: No matching programmes found", run_id)
+                log.info("[%s] ⚠️ EN funding (DE): No matching programmes found", run_id)
                 sections["FOERDERPROGRAMME_HTML"] = ""
                 sections["FOERDERPOTENZIAL_HTML"] = ""
                 sections["FUNDING_HTML"] = ""
                 sections["FUNDING_PROGRAMMES"] = []
+                sections["FUNDING_SCOPE"] = ""
         except Exception as e:
             log.warning("[%s] ⚠️ EN funding service error: %s", run_id, e)
             sections["FOERDERPROGRAMME_HTML"] = ""
             sections["FOERDERPOTENZIAL_HTML"] = ""
             sections["FUNDING_HTML"] = ""
             sections["FUNDING_PROGRAMMES"] = []
+            sections["FUNDING_SCOPE"] = ""
+    elif report_lang == "en":
+        # Phase 2: EN report for non-German country - Enable EU core funding
+        log.info("[%s] 🌐 Enabling EU core funding for English report (country=%s)", run_id, report_country)
+        from services.funding_service_en import get_funding_eu_core_en, render_funding_eu_core_html_en
+        try:
+            eu_result = get_funding_eu_core_en(answers)
+            if eu_result.has_programmes:
+                funding_html = render_funding_eu_core_html_en(eu_result, limit=4)
+                sections["FOERDERPROGRAMME_HTML"] = funding_html
+                sections["FOERDERPOTENZIAL_HTML"] = ""
+                sections["FUNDING_HTML"] = funding_html
+                sections["FUNDING_PROGRAMMES_EU_CORE"] = eu_result.programmes  # For Jinja2 template
+                sections["FUNDING_SCOPE"] = "EU_CORE"  # For template title logic
+                log.info("[%s] ✅ EN funding (EU): %d programmes loaded", run_id, eu_result.programme_count)
+            else:
+                log.info("[%s] ⚠️ EN funding (EU): No matching programmes found", run_id)
+                sections["FOERDERPROGRAMME_HTML"] = ""
+                sections["FOERDERPOTENZIAL_HTML"] = ""
+                sections["FUNDING_HTML"] = ""
+                sections["FUNDING_PROGRAMMES_EU_CORE"] = []
+                sections["FUNDING_SCOPE"] = ""
+        except Exception as e:
+            log.warning("[%s] ⚠️ EU core funding service error: %s", run_id, e)
+            sections["FOERDERPROGRAMME_HTML"] = ""
+            sections["FOERDERPOTENZIAL_HTML"] = ""
+            sections["FUNDING_HTML"] = ""
+            sections["FUNDING_PROGRAMMES_EU_CORE"] = []
+            sections["FUNDING_SCOPE"] = ""
     else:
         from services.extra_sections import build_core_funding_table_html
         core_funding_html = build_core_funding_table_html(sections)
