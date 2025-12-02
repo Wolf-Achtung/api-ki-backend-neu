@@ -21,17 +21,18 @@ class PromptBuilder:
     Loads branch and size context files and combines them into prompts.
     Works with Wolf's existing backend structure.
     """
-    
-    def __init__(self, data_dir: str = "data"):
+
+    def __init__(self, data_dir: str = "data", lang: str = "de"):
         """
         Initialize PromptBuilder.
-        
+
         Args:
             data_dir: Path to data directory (relative or absolute)
+            lang: Language code ("de" or "en")
         """
         # Support both relative and absolute paths
         self.data_dir = Path(data_dir).resolve()
-        
+
         if not self.data_dir.exists():
             # Fallback: Try from /app/ root (Railway deployment)
             alt_path = Path("/app") / data_dir
@@ -42,8 +43,13 @@ class PromptBuilder:
                 log.warning(f"⚠️ data_dir not found: {self.data_dir}")
         else:
             log.info(f"📁 Using data_dir: {self.data_dir}")
-        
-        self.branch_dir = self.data_dir / "branch_contexts"
+
+        # Language-aware branch context path
+        self.lang = lang
+        if lang == "en":
+            self.branch_dir = self.data_dir / "branch_contexts" / "en"
+        else:
+            self.branch_dir = self.data_dir / "branch_contexts"
         self.size_dir = self.data_dir / "size_contexts"
         self.mappings_file = self.data_dir / "mappings.json"
         
