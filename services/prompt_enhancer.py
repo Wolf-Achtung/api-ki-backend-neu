@@ -469,7 +469,9 @@ Nutze den Strategischen Kontext wie folgt:
             return ""
 
         # Check if guardrails/no-gos are mentioned in the strategic context
+        # Extended keyword list for better detection (v3.1)
         guardrails_keywords = [
+            # Original keywords
             "no-gos",
             "leitplanken",
             "no gos",
@@ -478,6 +480,18 @@ Nutze den Strategischen Kontext wie folgt:
             "tabu",
             "ausgeschlossen",
             "nicht erlaubt",
+            # Extended keywords (3.1)
+            "heikel",
+            "empfindlich",
+            "kritisch",
+            "bitte vermeiden",
+            "nicht automatisieren",
+            "nicht delegieren",
+            "nicht kommunizieren",
+            "nicht an ki auslagern",
+            "unter keinen umständen",
+            "nur menschlich entscheiden",
+            "heikle themen",
         ]
         context_lower = strategic_context_block.lower()
         has_guardrails = any(kw in context_lower for kw in guardrails_keywords)
