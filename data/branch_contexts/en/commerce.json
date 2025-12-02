@@ -1,0 +1,135 @@
+{
+  "branche": "handel",
+  "display_name": "Retail & E-Commerce",
+  "description": "Retail, wholesale, online shops, multi-channel commerce, marketplace sellers",
+
+  "typical_workflows": [
+    "Product management: Purchasing, pricing, assortment planning",
+    "Inventory management: Warehouse, reordering, inventory",
+    "Order processing: Order intake, picking, shipping",
+    "Customer service: Inquiries, complaints, returns",
+    "Marketing: Newsletter, social media, campaigns",
+    "Product data maintenance: Descriptions, images, categorization",
+    "Reporting: Revenue, margins, bestsellers, inventory turnover"
+  ],
+
+  "common_pain_points": [
+    "Creating product descriptions: Writing hundreds of items",
+    "Multi-channel complexity: Keeping shop, Amazon, eBay in sync",
+    "Customer service volume: Many standard inquiries",
+    "Pricing: Monitor market prices, optimize margins",
+    "Returns management: Time-consuming processing",
+    "SEO for products: Optimize each product",
+    "Inventory planning: Avoid over-/understocking"
+  ],
+
+  "ai_opportunities": [
+    "Automate product descriptions: Master data → SEO text",
+    "Customer service bot: Automatically answer standard questions",
+    "Dynamic pricing: Analyze market prices, recommendations",
+    "Returns analysis: Analyze reasons, product improvements",
+    "Personalization: Product recommendations for customers",
+    "Demand forecasting: Predict order quantities",
+    "Review analysis: Evaluate customer feedback",
+    "Social media content: Automatically create product posts"
+  ],
+
+  "typical_tools": [
+    "Shop system: Shopify, WooCommerce, Magento",
+    "ERP/Inventory: Various commerce platforms",
+    "Marketplace tools: Amazon Seller Central, eBay",
+    "Email marketing: Klaviyo, Mailchimp",
+    "Customer service: Zendesk, Freshdesk, Email",
+    "Excel for analysis and lists",
+    "Shipping carriers: Various logistics providers",
+    "Accounting: QuickBooks, Xero, cloud accounting"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Email", "WhatsApp Business", "Live chat"],
+    "shop": ["Shopify", "WooCommerce", "Magento"],
+    "erp": ["Various ERP systems", "Commerce platforms"],
+    "marketplace": ["Amazon", "eBay", "Walmart", "Etsy"],
+    "marketing": ["Klaviyo", "Mailchimp", "Google Ads"],
+    "shipping": ["Various carriers", "Shipping platforms"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "AI-generated product descriptions",
+      "description": "Generate SEO-optimized descriptions from master data. 100 products in 2 hours instead of 2 days.",
+      "hours_saved": 20,
+      "tool": "GPT-4 API or ChatGPT Team",
+      "implementation": "CSV import → GPT → Export, prompt templates for different categories",
+      "difficulty": "low",
+      "investment": "$20-50/month"
+    },
+    {
+      "title": "Automated customer inquiries",
+      "description": "Answer standard questions (delivery time, returns, status) via AI bot.",
+      "hours_saved": 10,
+      "tool": "Tidio or Intercom ($29/month)",
+      "implementation": "Capture FAQ, train bot, escalation rules",
+      "difficulty": "medium",
+      "investment": "$29-79/month"
+    },
+    {
+      "title": "Social media product posts",
+      "description": "Automatically prepare products as Instagram/Facebook posts.",
+      "hours_saved": 6,
+      "tool": "Canva + GPT for captions",
+      "implementation": "Templates, prompt for captions, posting schedule",
+      "difficulty": "low",
+      "investment": "$12-30/month"
+    },
+    {
+      "title": "Newsletter automation",
+      "description": "Product recommendations based on purchase history, automatic flows (welcome, abandoned cart).",
+      "hours_saved": 5,
+      "tool": "Klaviyo or Mailchimp",
+      "implementation": "Set up flows, define segments, templates",
+      "difficulty": "medium",
+      "investment": "$0-60/month"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Central PIM with AI enrichment",
+      "description": "Product Information Management: Central product data, automatic translation and channel optimization.",
+      "hours_saved": 25,
+      "tool": "Akeneo or Pimcore",
+      "implementation": "Migrate data, define workflows, train team",
+      "difficulty": "high",
+      "investment": "$200-500/month"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise commerce platform with AI",
+      "description": "Personalization, demand forecasting, automatic merchandising.",
+      "hours_saved": 50,
+      "tool": "Shopify Plus or commercetools",
+      "implementation": "Platform migration, AI features, team training",
+      "difficulty": "high",
+      "investment": "$2000-5000/month"
+    }
+  ],
+
+  "success_metrics": [
+    "Conversion rate: % visitors → buyers",
+    "Average order value: Average cart value",
+    "Return rate: % returns",
+    "Customer lifetime value: Value per customer",
+    "Inventory turnover: Stock turnover rate"
+  ],
+
+  "typical_pricing_models": [
+    "Retail prices with fixed margins",
+    "Dynamic pricing by demand",
+    "Volume prices for B2B",
+    "Sale prices and promotions",
+    "Subscription/membership models"
+  ]
+}
