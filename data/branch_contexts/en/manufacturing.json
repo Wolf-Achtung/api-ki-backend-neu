@@ -1,0 +1,126 @@
+{
+  "branche": "industrie",
+  "display_name": "Manufacturing & Production",
+  "description": "Manufacturing companies, mechanical engineering, automotive suppliers, electronics, process industry",
+
+  "typical_workflows": [
+    "Production planning: Order control, capacity planning, sequencing",
+    "Manufacturing control: Coordinate machines, personnel, materials",
+    "Quality assurance: Inspections, documentation, complaints",
+    "Maintenance: Servicing, repairs, spare parts",
+    "Supplier management: Ordering, goods receipt, evaluation",
+    "Work preparation: Bills of materials, work plans, NC programs",
+    "Documentation: Production reports, CE, standards"
+  ],
+
+  "common_pain_points": [
+    "Production planning complex: Many dependencies, frequent replanning",
+    "Machine failures: Unplanned downtime is costly",
+    "Quality problems: Scrap, rework, complaints",
+    "Documentation overhead: Standards, audits, customer requirements",
+    "Supply bottlenecks: Material availability uncertain",
+    "Knowledge loss: Knowledge only in few heads",
+    "Skills shortage: Qualified personnel hard to find"
+  ],
+
+  "ai_opportunities": [
+    "Predictive maintenance: Predict machine failures",
+    "Quality prediction: Detect scrap before production",
+    "Production optimization: Optimize sequencing, batch sizes",
+    "Automatic documentation: Generate reports, protocols",
+    "Visual quality inspection: AI image analysis for defects",
+    "Supplier risk: Early detection of bottlenecks",
+    "Process monitoring: Detect anomalies in real-time",
+    "Knowledge management: Make technical know-how searchable"
+  ],
+
+  "typical_tools": [
+    "ERP: SAP, Microsoft Dynamics, Epicor",
+    "MES: Manufacturing Execution System",
+    "CAD/CAM: SolidWorks, CATIA, Siemens NX",
+    "Excel for planning and lists",
+    "PLC for machine control",
+    "QM software: Various quality management systems",
+    "Maintenance software: SAP PM, IBM Maximo",
+    "Office for documentation"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Email", "Teams", "Shop floor terminals"],
+    "erp": ["SAP S/4HANA", "Microsoft Dynamics", "Epicor"],
+    "mes": ["Various MES providers", "SCADA systems"],
+    "cad_cam": ["SolidWorks", "CATIA", "Siemens NX"],
+    "qm": ["Various QMS platforms", "SAP QM"],
+    "maintenance": ["SAP PM", "IBM Maximo", "Infor"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "Automatic production reports",
+      "description": "Production data → formatted daily/weekly report.",
+      "hours_saved": 5,
+      "tool": "GPT-4 + Excel/ERP export",
+      "implementation": "Automate data export, report template, GPT summary",
+      "difficulty": "medium",
+      "investment": "$20-50/month"
+    },
+    {
+      "title": "Technical documentation via AI",
+      "description": "Create work instructions, SOPs, inspection plans faster.",
+      "hours_saved": 6,
+      "tool": "GPT-4",
+      "implementation": "Templates for different doc types, define technical terms",
+      "difficulty": "low",
+      "investment": "$20/month"
+    },
+    {
+      "title": "Standards quick search",
+      "description": "Quickly find and summarize relevant ISO/DIN standards.",
+      "hours_saved": 3,
+      "tool": "GPT-4 + standards access",
+      "implementation": "Prompts for standards research",
+      "difficulty": "low",
+      "investment": "$20/month"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Knowledge management for production",
+      "description": "Technical know-how, settings, troubleshooting searchable.",
+      "hours_saved": 15,
+      "tool": "Notion AI or SharePoint + Copilot",
+      "implementation": "Collect knowledge, structure, train team",
+      "difficulty": "high",
+      "investment": "$100-200/month"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Predictive maintenance with AI",
+      "description": "Analyze machine data, predict failures, optimize maintenance.",
+      "hours_saved": 50,
+      "tool": "Siemens MindSphere or Azure IoT",
+      "implementation": "Connect sensors, collect data, train ML models",
+      "difficulty": "high",
+      "investment": "$2000-10000/month"
+    }
+  ],
+
+  "success_metrics": [
+    "OEE: Overall Equipment Effectiveness",
+    "First pass yield: % without rework",
+    "Lead time: Time from order receipt to shipment",
+    "On-time delivery: % punctual deliveries",
+    "Scrap rate: % scrap"
+  ],
+
+  "typical_pricing_models": [
+    "Unit prices with volume discounts",
+    "Framework agreements with call-off orders",
+    "Project prices for custom machinery",
+    "Tooling costs + unit prices",
+    "Cost-plus for prototypes"
+  ]
+}

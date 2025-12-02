@@ -43,13 +43,27 @@ def render(briefing_obj: Any,
            meta: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
     Render report HTML from sections.
-    
+
     GOLD STANDARD+ v4.14.1:
     - Fixed UTF-8 encoding issues
     - Clean variable replacement
     - Consistent score handling
+
+    v4.15.0: Language-aware template selection (EN/DE)
     """
-    tpl_path = os.getenv("REPORT_TEMPLATE_PATH", "templates/pdf_template.html")
+    # Language-aware template selection
+    lang = (generated_sections or {}).get("LANG", "de")
+    if lang == "en":
+        default_tpl = "templates/pdf_template_en.html"
+        log.info(f"🌐 Using English template for report {run_id}")
+    else:
+        default_tpl = "templates/pdf_template.html"
+
+    tpl_path = os.getenv("REPORT_TEMPLATE_PATH", default_tpl)
+    # Allow language-specific override via env
+    if lang == "en" and os.getenv("REPORT_TEMPLATE_PATH_EN"):
+        tpl_path = os.getenv("REPORT_TEMPLATE_PATH_EN")
+
     tpl_dir = Path(tpl_path).parent
     tpl_name = Path(tpl_path).name
 

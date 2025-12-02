@@ -1,0 +1,156 @@
+{
+  "branche": "it_software",
+  "display_name": "IT & Software",
+  "description": "Software development, IT services, system integration, web development, IT support, SaaS, cloud services, mobile apps, DevOps",
+
+  "typical_workflows": [
+    "Requirements engineering: Capture and document customer requirements",
+    "Development: Coding, code reviews, testing, refactoring, pair programming",
+    "DevOps: CI/CD, deployment, monitoring, maintenance, infrastructure-as-code",
+    "Support: Ticket handling, bug fixes, updates, incident management",
+    "Documentation: Technical docs, API docs, user guides, architecture diagrams",
+    "Project management: Sprints, stand-ups, retrospectives, backlog grooming",
+    "Customer support: Status updates, demos, training, onboarding",
+    "Security: Vulnerability scans, penetration tests, security reviews, compliance audits",
+    "Code quality: Linting, static analysis, code coverage, technical debt management"
+  ],
+
+  "common_pain_points": [
+    "Documentation neglected: Time pressure leads to missing docs and technical debt",
+    "Code reviews slow: Bottleneck at senior developers, delayed releases",
+    "Testing time-consuming: Unit tests, integration tests, E2E tests, regressions",
+    "Support consumes development time: Tickets interrupt flow, context switching",
+    "Knowledge silos: Knowledge only in individual heads, bus-factor risk",
+    "Technical debt: No time for refactoring, legacy code problems",
+    "Recruiting difficult: Skills shortage in IT, long onboarding times",
+    "Security compliance: GDPR, ISO 27001, SOC2 requirements, AI Act"
+  ],
+
+  "ai_opportunities": [
+    "Code generation: Boilerplate, tests, documentation via Copilot/GPT",
+    "Code review assistance: Automatic review suggestions, security checks",
+    "Documentation generation: Code to automatic API docs/README/changelogs",
+    "Bug analysis: Log analysis, root cause analysis, suggest causes",
+    "Test generation: Automatically create unit tests from code, edge cases",
+    "Ticket summarization: Categorize, prioritize, route support tickets",
+    "Meeting minutes: Automatically document sprint reviews, action items",
+    "Requirements extraction: Customer email to structured user stories",
+    "Architecture analysis: Visualize code dependencies, refactoring suggestions",
+    "DevOps automation: Generate infrastructure-as-code, deployment scripts"
+  ],
+
+  "typical_tools": [
+    "VS Code / JetBrains IDEs for development",
+    "Git/GitHub/GitLab for version control and CI/CD",
+    "Jira / Linear / Asana for project management",
+    "Slack / Teams / Discord for communication",
+    "Docker / Kubernetes for containers and orchestration",
+    "AWS / Azure / GCP / Vercel for cloud hosting",
+    "Confluence / Notion / GitBook for documentation",
+    "Postman / Insomnia for API testing",
+    "Sentry / Datadog for monitoring and error tracking"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Slack", "Teams", "Discord", "Zoom"],
+    "development": ["VS Code", "JetBrains", "Vim", "Neovim", "Cursor"],
+    "vcs": ["GitHub", "GitLab", "Bitbucket", "Azure DevOps"],
+    "ci_cd": ["GitHub Actions", "Jenkins", "GitLab CI", "CircleCI"],
+    "cloud": ["AWS", "Azure", "GCP", "Vercel", "DigitalOcean"],
+    "project": ["Jira", "Linear", "Notion", "Asana", "ClickUp"],
+    "monitoring": ["Sentry", "Datadog", "New Relic", "Grafana"],
+    "ai_tools": ["GitHub Copilot", "Cursor", "Codeium", "Tabnine", "Claude"]
+  },
+
+  "typical_data_sources": [
+    "Git repositories: Code, commits, pull requests, issues",
+    "Project management: Tickets, sprints, burndowns, velocity",
+    "Monitoring logs: Error logs, performance metrics, uptime",
+    "CI/CD pipelines: Build times, test results, deployment frequency",
+    "Support tickets: Customer inquiries, bug reports, feature requests",
+    "Documentation: Wikis, Confluence, Notion databases",
+    "API metrics: Response times, error rates, usage statistics"
+  ],
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "GitHub Copilot for development",
+      "description": "Code completion, test generation, documentation. Reduces boilerplate code by 40-60%.",
+      "hours_saved": 15,
+      "tool": "GitHub Copilot ($19/month)",
+      "implementation": "Install in IDE, learn shortcuts, optimize prompting",
+      "difficulty": "low",
+      "investment": "$19/month"
+    },
+    {
+      "title": "Automatic code documentation",
+      "description": "Docstrings, README, API docs automatically generated from code.",
+      "hours_saved": 6,
+      "tool": "GPT-4 + custom scripts or Mintlify",
+      "implementation": "Create prompts for different doc types, integrate into CI",
+      "difficulty": "low",
+      "investment": "$20/month"
+    },
+    {
+      "title": "Test generation via AI",
+      "description": "Automatically generate unit tests from existing code, cover edge cases.",
+      "hours_saved": 8,
+      "tool": "GitHub Copilot or GPT-4",
+      "implementation": "Optimize test prompts, define coverage goals",
+      "difficulty": "low",
+      "investment": "$0 (with Copilot)"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "RAG-based documentation search",
+      "description": "All docs, code, wikis searchable via natural language. Team finds info in seconds.",
+      "hours_saved": 20,
+      "tool": "Notion AI, Guru, or custom RAG system",
+      "implementation": "Consolidate docs, create embeddings, provide chat interface",
+      "difficulty": "medium",
+      "investment": "$100-300/month"
+    },
+    {
+      "title": "Automated PR review pipeline",
+      "description": "AI-powered code reviews for all PRs with security checks and style guides.",
+      "hours_saved": 15,
+      "tool": "CodeRabbit, Sourcery, or GitHub Copilot Enterprise",
+      "implementation": "GitHub Actions workflow, define review rules, team training",
+      "difficulty": "medium",
+      "investment": "$50-200/month"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise development platform",
+      "description": "Integrated platform with AI code review, security scanning, compliance dashboard.",
+      "hours_saved": 40,
+      "tool": "GitHub Enterprise or GitLab Ultimate",
+      "implementation": "Migration, security rules, team onboarding, governance setup",
+      "difficulty": "high",
+      "investment": "$500-2000/month"
+    }
+  ],
+
+  "success_metrics": [
+    "Velocity: Story points per sprint, trend over time",
+    "Bug rate: Bugs per release, critical bugs in production",
+    "Deployment frequency: Releases per week/month, lead time",
+    "MTTR: Mean time to recovery for incidents",
+    "Code coverage: Percent tested code, coverage trend",
+    "PR cycle time: Time from PR creation to merge",
+    "Customer satisfaction: NPS, support ticket resolution time"
+  ],
+
+  "typical_pricing_models": [
+    "Hourly rates ($70-150/h depending on seniority)",
+    "Fixed-price projects with milestones",
+    "Retainer for maintenance (monthly)",
+    "Time & material with cap",
+    "Dedicated team (monthly per developer)",
+    "SaaS pricing (per user/month or usage-based)"
+  ]
+}
