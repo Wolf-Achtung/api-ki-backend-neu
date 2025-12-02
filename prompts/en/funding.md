@@ -1,16 +1,17 @@
 Developer:
-<!-- funding.md – v1.0 EN Funding for Germany
+<!-- funding.md – v1.1 EN Funding for Germany
      Target: English-speaking users with companies based in Germany.
      Output: Valid HTML only. No Markdown fences.
 
      STRUCTURE (3-4 sections):
-       H3 1. Available Programs Overview
+       H3 1. Available Programs Overview (Jinja2 loop)
        H3 2. What This Means for Your Business Case
        H3 3. Next Steps for Funding
 
      VARIABLES:
-       - {{FOERDERPROGRAMME_HTML}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}
-       - If {{FOERDERPROGRAMME_HTML}} is empty: provide generic guidance.
+       - FUNDING_PROGRAMMES: List of programme dicts from funding_service_en.py
+       - {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}
+       - If FUNDING_PROGRAMMES is empty: provide generic guidance.
 
      SIZE-AWARE LOGIC (COMPANY_SIZE):
        SOLO: Focus on low-barrier programs, consulting grants, starter vouchers.
@@ -39,7 +40,33 @@ Developer:
     to businesses operating in Germany:
   </p>
 
-  {{FOERDERPROGRAMME_HTML}}
+  {% if FUNDING_PROGRAMMES %}
+  <div class="funding-programmes">
+    {% for p in FUNDING_PROGRAMMES %}
+    <div class="funding-programme">
+      <h4>{{ p.name_en }}</h4>
+      {% if p.summary_en %}
+      <p class="summary">{{ p.summary_en }}</p>
+      {% endif %}
+      <ul class="details">
+        {% if p.funding_type_en %}<li><strong>Type:</strong> {{ p.funding_type_en }}</li>{% endif %}
+        {% if p.funding_rate_en %}<li><strong>Funding Rate:</strong> {{ p.funding_rate_en }}</li>{% endif %}
+        {% if p.max_amount_en %}<li><strong>Maximum Amount:</strong> {{ p.max_amount_en }}</li>{% endif %}
+        {% if p.region_en %}<li><strong>Region:</strong> {{ p.region_en }}</li>{% endif %}
+      </ul>
+      {% if p.url %}
+      <p class="url"><a href="{{ p.url }}" target="_blank">More information</a></p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p>
+    Based on your profile, we recommend exploring federal programs such as
+    <strong>go-digital</strong> (digitalization consulting) or <strong>Digital Jetzt</strong>
+    (investment grants). Contact your regional business development agency for personalized guidance.
+  </p>
+  {% endif %}
 
   <h3>What This Means for Your Business Case</h3>
   <p>
