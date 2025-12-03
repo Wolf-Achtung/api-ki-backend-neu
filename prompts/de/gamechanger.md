@@ -137,7 +137,4 @@ REGELN:
   </p>
 </section>
 
-<!-- PLATIN+ REINFORCEMENT: Dieser Abschnitt MUSS mindestens 700 Wörter enthalten.
-     Prüfe deine Ausgabe: Zähle die Wörter und erweitere jeden Abschnitt mit zusätzlichen
-     Details, Beispielen und Erläuterungen, falls die Mindestlänge nicht erreicht wird.
-     Kürze NIEMALS – liefere immer vollständige, ausführliche Inhalte. -->
+<!-- DEV: PDF-SLIMDOWN v2.0 - Ziel: 500-700 Wörter, kompakt aber vollständig -->

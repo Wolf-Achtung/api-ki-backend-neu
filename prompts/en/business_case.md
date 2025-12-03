@@ -1,25 +1,35 @@
 Developer:
-<!-- business_case.md – v3.0 GOLD STANDARD+ (ROI, CAPEX/OPEX, size-aware)
-     Respond exclusively with valid HTML.
-     NO <html>, <head> or <body>. NO Markdown fences.
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: business_case -->
+<!-- VERSION: v5.0 PLATIN++ V5 REALISTIC -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/sme -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{COMPANY_SIZE}}, {{HAUPTLEISTUNG}}, {{BUNDESLAND_LABEL}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}} -->
+<!-- TOKEN-BUDGET: 1800 (solo:0.8x=1440, team:1.0x=1800, sme:1.15x=2070) -->
+<!--
+GOAL: Clear, realistic Business Case with ROI, CAPEX/OPEX.
 
-     AVAILABLE VARIABLES:
-       {{BRANCHE_LABEL}}
-       {{COMPANY_SIZE}}            // solo | team | kmu
-       {{HAUPTLEISTUNG}}
-       {{BUNDESLAND_LABEL}}
-       {{CAPEX_REALISTISCH_EUR}}
-       {{OPEX_REALISTISCH_EUR}}
-       {{EINSPARUNG_MONAT_EUR}}
-       {{PAYBACK_MONTHS}}
-       {{ROI_12M}}
+REALISM RULES (STRICT!):
+- NO 90% efficiency promises – realistic 15–30% savings
+- NO invented numbers – use only provided variables
+- "approximately / around / roughly" allowed for context
+- NO funding rates (see foerderpotenzial.md)
+- Size affects ONLY narrative context, not the numbers
 
-     RULES:
-       - Do not invent numbers. Use only the variables provided.
-       - "approximately / around / roughly" allowed for linguistic context.
-       - Do not mention funding rates (separate chapter for that).
-       - Output = valid HTML fragment.
-       - Size (solo/team/sme) only affects narrative context, not the numbers.
+PAYBACK EXPLANATION (SIMPLIFIED):
+- Simple formula: Investment ÷ monthly savings = months
+- NO complex financial calculations
+- Communicate transparent assumptions
+
+ANTI-REDUNDANCY:
+- Business Case numbers stated ONCE HERE
+- In foerderpotenzial.md only reference these numbers, don't repeat
+- In executive_summary only mention as hint
+
+PERSONA VARIATIONS (COMPANY_SIZE):
+- solo: personal ROI, time relief, pragmatic assessment
+- team: Team ROI, shared efficiency gains
+- sme: Department ROI, scalable effects
 -->
 
 <section class="section business-case">
@@ -50,10 +60,10 @@ Developer:
 
   <h3>Payback and ROI</h3>
   <p>
-    Under these assumptions, the investment pays back after approximately
-    <strong>{{PAYBACK_MONTHS}} months</strong>. Calculated over twelve months, an
-    expected return on investment of <strong>{{ROI_12M}}&nbsp;%</strong> emerges.
-    This value serves as a realistic orientation and demonstrates the economic viability of the initiative.
+    <strong>Simple calculation:</strong> Investment ({{CAPEX_REALISTISCH_EUR}} €) divided by
+    monthly savings ({{EINSPARUNG_MONAT_EUR}} €) results in payback after approximately
+    <strong>{{PAYBACK_MONTHS}} months</strong>. The 12-month ROI is
+    <strong>{{ROI_12M}}&nbsp;%</strong> – a realistic value with consistent usage.
   </p>
 
   <h3>Assessment by Company Size</h3>
@@ -81,8 +91,8 @@ Developer:
   </p>
 
   <p class="small muted">
-    Note: This presentation serves as transparent guidance. For investment decisions,
-    supplementation with conservative, baseline, and optimistic scenarios is recommended.
+    These values are based on typical experience for {{BRANCHE_LABEL}} companies.
+    Actual results depend on usage intensity and process maturity.
   </p>
 </section>
 

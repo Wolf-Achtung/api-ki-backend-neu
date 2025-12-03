@@ -1,19 +1,25 @@
 Developer:
 <!-- PLATIN++ PROMPT -->
 <!-- SECTION: business_case -->
-<!-- VERSION: v4.0 PLATIN++ V5 -->
+<!-- VERSION: v5.0 PLATIN++ V5 REALISTIC -->
 <!-- OUTPUT: HTML -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCHE_LABEL}}, {{COMPANY_SIZE}}, {{HAUPTLEISTUNG}}, {{BUNDESLAND_LABEL}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}} -->
 <!-- TOKEN-BUDGET: 1800 (solo:0.8x=1440, team:1.0x=1800, kmu:1.15x=2070) -->
 <!--
-ZIEL: Klarer Business Case mit ROI, CAPEX/OPEX.
+ZIEL: Klarer, realistischer Business Case mit ROI, CAPEX/OPEX.
 
-REGELN:
-- KEINE eigenen Zahlen erfinden – nur Variablen nutzen
+REALISMUS-REGELN (STRIKT!):
+- KEINE 90%-Effizienzversprechen – realistische 15–30% Einsparungen
+- KEINE erfundenen Zahlen – nur übergebene Variablen nutzen
 - "rund / etwa / ca." zur Einordnung erlaubt
 - KEINE Förderquoten (siehe foerderpotenzial.md)
 - Größe beeinflusst NUR narrative Einordnung, nicht die Zahlen
+
+PAYBACK-ERKLÄRUNG (VEREINFACHT):
+- Einfache Formel: Investition ÷ monatliche Einsparung = Monate
+- KEINE komplexen Finanzberechnungen
+- Transparente Annahmen kommunizieren
 
 ANTI-REDUNDANZ:
 - Business-Case-Zahlen EINMAL HIER nennen
@@ -54,10 +60,10 @@ PERSONA-VARIATIONEN (COMPANY_SIZE):
 
   <h3>Amortisation und ROI</h3>
   <p>
-    Unter diesen Annahmen amortisiert sich die Investition nach etwa
-    <strong>{{PAYBACK_MONTHS}} Monaten</strong>. Auf zwölf Monate gerechnet ergibt sich ein
-    erwarteter Return on Investment von <strong>{{ROI_12M}}&nbsp;%</strong>.
-    Dieser Wert dient als realistische Orientierung und zeigt die wirtschaftliche Tragfähigkeit des Vorhabens.
+    <strong>Einfache Rechnung:</strong> Investition ({{CAPEX_REALISTISCH_EUR}} €) geteilt durch
+    monatliche Einsparung ({{EINSPARUNG_MONAT_EUR}} €) ergibt eine Amortisation nach etwa
+    <strong>{{PAYBACK_MONTHS}} Monaten</strong>. Der ROI nach 12 Monaten liegt bei
+    <strong>{{ROI_12M}}&nbsp;%</strong> – ein realistischer Wert bei konsequenter Nutzung.
   </p>
 
   <h3>Einordnung nach Unternehmensgröße</h3>
@@ -86,8 +92,8 @@ PERSONA-VARIATIONEN (COMPANY_SIZE):
   </p>
 
   <p class="small muted">
-    Hinweis: Diese Darstellung dient als transparente Orientierung. Für Investitionsentscheidungen
-    empfiehlt sich die Ergänzung um konservative, Basis- und optimistische Szenarien.
+    Diese Werte basieren auf typischen Erfahrungswerten für {{BRANCHE_LABEL}}-Unternehmen.
+    Tatsächliche Ergebnisse hängen von Nutzungsintensität und Prozessreife ab.
   </p>
 </section>
 
