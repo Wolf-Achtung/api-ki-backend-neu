@@ -6,16 +6,212 @@ Optimized for ki-sicherheit.jetzt backend
 This service works WITH the existing prompt_loader.py system.
 It loads prompts via prompt_loader, injects context, and returns enhanced prompts.
 
-Version: 2.4.0-PLATIN-STABILIZED
+Version: 2.5.0-PLATIN++ (Anti-Redundanz)
 """
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, TypedDict, Optional
+import re
+from typing import Any, Dict, List, Set, TypedDict, Optional
 
 from services.prompt_builder import PromptBuilder
 
 log = logging.getLogger(__name__)
+
+
+# =============================================================================
+# ANTI-REDUNDANZ: Pain-Point und Tool Deduplizierung
+# =============================================================================
+
+class DeduplicationCache:
+    """
+    Cache für bereits verwendete Pain Points und Tools.
+    Verhindert Wiederholungen über Sektionen hinweg.
+    """
+
+    def __init__(self) -> None:
+        self.used_pain_points: Set[str] = set()
+        self.used_tools: Set[str] = set()
+        self.section_order: List[str] = []
+
+    def reset(self) -> None:
+        """Reset cache for new report generation."""
+        self.used_pain_points.clear()
+        self.used_tools.clear()
+        self.section_order.clear()
+
+    def mark_pain_point_used(self, pain_point: str) -> None:
+        """Mark a pain point as used."""
+        normalized = pain_point.strip().lower()
+        if normalized:
+            self.used_pain_points.add(normalized)
+
+    def mark_tool_used(self, tool: str) -> None:
+        """Mark a tool as used."""
+        normalized = tool.strip().lower()
+        if normalized:
+            self.used_tools.add(normalized)
+
+    def is_pain_point_used(self, pain_point: str) -> bool:
+        """Check if pain point was already used."""
+        return pain_point.strip().lower() in self.used_pain_points
+
+    def is_tool_used(self, tool: str) -> bool:
+        """Check if tool was already used."""
+        return tool.strip().lower() in self.used_tools
+
+
+# Global deduplication cache (reset per report generation)
+_dedupe_cache = DeduplicationCache()
+
+
+def get_dedupe_cache() -> DeduplicationCache:
+    """Get the global deduplication cache."""
+    return _dedupe_cache
+
+
+def reset_dedupe_cache() -> None:
+    """Reset deduplication cache for new report."""
+    _dedupe_cache.reset()
+    log.debug("🔄 Deduplication cache reset")
+
+
+def dedupe_pain_points(text: str, section_name: str) -> str:
+    """
+    Entfernt oder kürzt Pain Points, die bereits in früheren Sektionen verarbeitet wurden.
+
+    Logik:
+    - Quick Wins: Verarbeitet alle Pain Points vollständig (markiert als used)
+    - Roadmap 90d: Darf Pain Points nur ergänzend erwähnen
+    - Roadmap 12m: Darf Pain Points nicht wiederholen, nur "darauf aufbauen"
+
+    Args:
+        text: Der Text mit potenziellen Pain-Point-Wiederholungen
+        section_name: Name der aktuellen Sektion
+
+    Returns:
+        Text mit deduplizierten Pain Points
+    """
+    cache = get_dedupe_cache()
+
+    # Quick Wins ist die primäre Sektion für Pain Points
+    if section_name == "quick_wins":
+        # Markiere Pain Points als verwendet, aber ändere nichts
+        _extract_and_mark_pain_points(text, cache)
+        return text
+
+    # Für Roadmaps: füge Deduplizierungs-Hinweis hinzu
+    if section_name in ("roadmap_90d", "roadmap_12m") and cache.used_pain_points:
+        dedupe_hint = _build_pain_point_dedupe_hint(section_name, cache)
+        return dedupe_hint + text
+
+    return text
+
+
+def dedupe_tools(text: str, section_name: str) -> str:
+    """
+    Kürzt Tool-Empfehlungen, die bereits in früheren Sektionen erschienen sind.
+
+    Logik:
+    - Quick Wins: Kurz-Empfehlungen (markiert als used)
+    - Tools-Empfehlungen: Volltext mit Details
+    - Roadmap 90d & 12m: Nur "Tool X nutzen (bereits oben erwähnt)"
+
+    Args:
+        text: Der Text mit potenziellen Tool-Wiederholungen
+        section_name: Name der aktuellen Sektion
+
+    Returns:
+        Text mit deduplizierten Tools
+    """
+    cache = get_dedupe_cache()
+
+    # Quick Wins und Tools-Empfehlungen markieren Tools als verwendet
+    if section_name in ("quick_wins", "tools_empfehlungen"):
+        _extract_and_mark_tools(text, cache)
+        return text
+
+    # Für Roadmaps: füge Deduplizierungs-Hinweis hinzu
+    if section_name in ("roadmap_90d", "roadmap_12m") and cache.used_tools:
+        dedupe_hint = _build_tool_dedupe_hint(section_name, cache)
+        return dedupe_hint + text
+
+    return text
+
+
+def _extract_and_mark_pain_points(text: str, cache: DeduplicationCache) -> None:
+    """Extract pain points from text and mark them as used."""
+    # Common pain point patterns
+    pain_patterns = [
+        r"(?:zeitfresser|pain.?point|schmerzpunkt|problem|herausforderung)[:\s]+([^.!?\n]+)",
+        r"(?:manuell|aufwändig|zeitintensiv)[^.!?\n]*(?:prozess|arbeit|aufgabe)[^.!?\n]*",
+    ]
+
+    text_lower = text.lower()
+    for pattern in pain_patterns:
+        matches = re.findall(pattern, text_lower, re.IGNORECASE)
+        for match in matches:
+            if isinstance(match, str) and len(match) > 10:
+                cache.mark_pain_point_used(match[:50])  # First 50 chars as key
+
+
+def _extract_and_mark_tools(text: str, cache: DeduplicationCache) -> None:
+    """Extract tool names from text and mark them as used."""
+    # Common tool name patterns
+    tool_patterns = [
+        r"(?:tool|software|lösung|plattform|system)[:\s]+([A-Z][a-zA-Z0-9\s]+)",
+        r"(?:ChatGPT|GPT-4|Claude|Copilot|Notion|Slack|Teams|Asana|Monday|Trello)",
+        r"(?:Microsoft\s+\w+|Google\s+\w+|SAP\s+\w+)",
+    ]
+
+    for pattern in tool_patterns:
+        matches = re.findall(pattern, text, re.IGNORECASE)
+        for match in matches:
+            if isinstance(match, str) and len(match) > 2:
+                cache.mark_tool_used(match.strip())
+
+
+def _build_pain_point_dedupe_hint(section_name: str, cache: DeduplicationCache) -> str:
+    """Build instruction hint for pain point deduplication."""
+    if section_name == "roadmap_90d":
+        return """
+## Anti-Redundanz Hinweis (Pain Points)
+
+Die folgenden Pain Points wurden bereits in den Quick Wins adressiert – erwähne sie hier nur ergänzend oder verweise auf die Quick-Wins-Sektion:
+- Fokussiere auf NEUE Aspekte oder Vertiefungen
+- Vermeide wörtliche Wiederholungen
+
+---
+
+"""
+    elif section_name == "roadmap_12m":
+        return """
+## Anti-Redundanz Hinweis (Pain Points)
+
+Die folgenden Pain Points wurden bereits in Quick Wins und 90-Tage-Roadmap behandelt:
+- Wiederhole sie NICHT
+- Baue logisch darauf auf
+- Zeige die WEITERENTWICKLUNG, nicht die Grundlagen
+
+---
+
+"""
+    return ""
+
+
+def _build_tool_dedupe_hint(section_name: str, cache: DeduplicationCache) -> str:
+    """Build instruction hint for tool deduplication."""
+    if section_name in ("roadmap_90d", "roadmap_12m"):
+        return """
+## Anti-Redundanz Hinweis (Tools)
+
+Bereits empfohlene Tools nicht erneut ausführlich beschreiben.
+Bei Erwähnung: "Tool X nutzen (siehe Quick Wins / Tools-Empfehlungen)"
+
+---
+
+"""
+    return ""
 
 
 # =============================================================================

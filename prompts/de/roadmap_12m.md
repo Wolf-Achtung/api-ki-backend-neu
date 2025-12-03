@@ -1,16 +1,22 @@
 Developer:
-<!-- roadmap_12m.md – v8.0 SIZE-AWARE MARKDOWN
+<!-- roadmap_12m.md – v9.0 PLATIN++ ANTI-REDUNDANZ
      Output: Markdown (wird serverseitig zu HTML konvertiert)
      Keine HTML-Tags, keine Code-Fences
 -->
 
 > **Abschnitt „12-Monats-Roadmap"**
-> **Ziellänge nach Größe:**
-> - Solo: ~450 Wörter (akzeptabel: 380–520)
-> - Team: ~550 Wörter (akzeptabel: 480–620)
-> - KMU: ~650 Wörter (akzeptabel: 580–720)
+> **Ziellänge nach Größe (REDUZIERT für Anti-Redundanz):**
+> - Solo: ~350 Wörter (akzeptabel: 300–400)
+> - Team: ~450 Wörter (akzeptabel: 380–500)
+> - KMU: ~550 Wörter (akzeptabel: 480–600)
 >
-> Struktur: 4 Abschnitte (Monate 1–3, 4–6, 7–12, Abschluss & Verstetigung) mit klaren Verantwortlichkeiten auf Kundenseite.
+> Struktur: 4 Abschnitte (Monate 1–3, 4–6, 7–12, Abschluss & Verstetigung).
+>
+> **ANTI-REDUNDANZ-REGELN:**
+> - KEINE Wiederholung von Pain Points (wurden in Quick Wins behandelt)
+> - KEINE erneute Tool-Beschreibung (siehe Tools-Empfehlungen)
+> - Baue logisch auf 90-Tage-Quick-Wins auf – nicht wiederholen!
+> - Fokus auf WEITERENTWICKLUNG, nicht Grundlagen
 >
 > Schreibe **Markdown** (Überschriften mit ##, Listen mit -).
 > <!-- DEV: no_placeholders, no_meta_comments -->
