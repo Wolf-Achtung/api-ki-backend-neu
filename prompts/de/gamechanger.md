@@ -64,7 +64,7 @@ REGELN:
       </p>
       <p><strong>Voraussetzungen:</strong>
         5–10 typische Beispiele, definierte Qualitätskriterien, klare Input-Regeln;
-        {% if UNTERNEHMENSGROESSE_LABEL.startswith("1") %}persönliche Routinen{% elif UNTERNEHMENSGROESSE_LABEL.startswith("2") %}Teamrollenzuordnung{% else %}beteiligte Fachbereiche{% endif %}.
+        {% if COMPANY_SIZE == "solo" %}persönliche Routinen{% elif COMPANY_SIZE == "team" %}Teamrollenzuordnung{% else %}beteiligte Fachbereiche{% endif %}.
       </p>
       <p><strong>Erster Schritt in den nächsten 90 Tagen:</strong>
         Einen priorisierten Teilprozess auswählen und mit KI-Vorlagen + Review-Schritten
