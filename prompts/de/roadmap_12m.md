@@ -1,21 +1,23 @@
 Developer:
-<!-- roadmap_12m.md – v9.0 PLATIN++ ANTI-REDUNDANZ
+<!-- roadmap_12m.md – v10.0 PDF-SLIMDOWN (-20% Wörter)
      Output: Markdown (wird serverseitig zu HTML konvertiert)
      Keine HTML-Tags, keine Code-Fences
 -->
 
 > **Abschnitt „12-Monats-Roadmap"**
-> **Ziellänge nach Größe (REDUZIERT für Anti-Redundanz):**
-> - Solo: ~350 Wörter (akzeptabel: 300–400)
-> - Team: ~450 Wörter (akzeptabel: 380–500)
-> - KMU: ~550 Wörter (akzeptabel: 480–600)
+> **Ziellänge nach Größe (REDUZIERT -20% für PDF-SLIMDOWN):**
+> - Solo: ~280 Wörter (akzeptabel: 240–320)
+> - Team: ~360 Wörter (akzeptabel: 300–400)
+> - KMU: ~440 Wörter (akzeptabel: 380–480)
 >
 > Struktur: 4 Abschnitte (Monate 1–3, 4–6, 7–12, Abschluss & Verstetigung).
+> MAX 5 BULLETS PRO PHASE!
 >
-> **ANTI-REDUNDANZ-REGELN:**
+> **ANTI-REDUNDANZ-REGELN (STRIKT!):**
 > - KEINE Wiederholung von Pain Points (wurden in Quick Wins behandelt)
 > - KEINE erneute Tool-Beschreibung (siehe Tools-Empfehlungen)
 > - Baue logisch auf 90-Tage-Quick-Wins auf – nicht wiederholen!
+> - KEINE zweistufigen Erklärungen (Begründung entfällt)
 > - Fokus auf WEITERENTWICKLUNG, nicht Grundlagen
 >
 > Schreibe **Markdown** (Überschriften mit ##, Listen mit -).
@@ -50,38 +52,30 @@ Developer:
 
 ---
 
-### PFLICHTSTRUKTUR (streng einhalten)
+### PFLICHTSTRUKTUR (PDF-SLIMDOWN: -20% Wörter)
 
 1. **Monate 1–3 – Fundament & Pilot-Setup**
-   - ~100–120 Wörter (Solo: ~80)
-   - Ziel: Grundlagen für KI-Nutzung schaffen, erste Quick Wins realisieren
-   - Beschreibe: Use-Case-Priorisierung, Prompt-Bibliothek aufbauen, erste Qualitätsstandards
-   - Governance-Aspekt: Erste Regeln für KI-Output, Datenschutz-Basics
-   - Verantwortlich: {size-aware Rollenbezeichnung}
-   - KPIs: 2-3 messbare Erfolgskriterien
+   - ~70–90 Wörter (Solo: ~55)
+   - Ziel: Grundlagen schaffen, erste Quick Wins realisieren
+   - Max 5 Bullets: Use-Case-Priorisierung, Prompt-Bibliothek, Qualitätsstandards
+   - KPIs: 2 messbare Erfolgskriterien
 
 2. **Monate 4–6 – Pilotierung & Qualitätsstandards**
-   - ~100–120 Wörter (Solo: ~80)
-   - Ziel: KI-Prozesse im Alltag verankern, stabile Workflows etablieren
-   - Beschreibe: Workflow-Integration, Prompt-Bibliothek erweitern, Monitoring aufbauen
-   - Governance-Aspekt: Review-Prozesse, Incident-Handling, Schulungsmaterial
-   - Verantwortlich: {size-aware Rollenbezeichnung}
-   - KPIs: Zeitersparnis, Qualitätskennzahlen, Nutzungsgrad
+   - ~70–90 Wörter (Solo: ~55)
+   - Ziel: KI im Alltag verankern, stabile Workflows
+   - Max 5 Bullets: Workflow-Integration, Monitoring, Review-Prozesse
+   - KPIs: Zeitersparnis, Qualitätskennzahlen
 
 3. **Monate 7–12 – Ausbau, Skalierung & Governance**
-   - ~150–180 Wörter (Solo: ~120)
-   - Ziel: Erfolgreiche Workflows multiplizieren, neue Bereiche erschließen
-   - Beschreibe: Skalierung auf weitere Use Cases, systematische Erfolgsmessung
-   - Governance-Aspekt: Governance-Framework finalisieren, Audit-Vorbereitung, Compliance
-   - Verantwortlich: {size-aware Rollenbezeichnung}
-   - KPIs: ROI nachweisbar, Use-Case-Anzahl, Governance-Reifegrad
+   - ~100–120 Wörter (Solo: ~80)
+   - Ziel: Workflows multiplizieren, neue Bereiche erschließen
+   - Max 5 Bullets: Skalierung, Erfolgsmessung, Governance-Finalisierung
+   - KPIs: ROI nachweisbar, Use-Case-Anzahl
 
 4. **Abschluss & Verstetigung (12-Monats-Bilanz)**
-   - ~100–120 Wörter (Solo: ~80)
+   - ~70–90 Wörter (Solo: ~55)
    - Ziel: Learnings konsolidieren, Roadmap 2.0 vorbereiten
-   - Beschreibe: Jahresreview, strategische Weiterentwicklung, Budget für Jahr 2
-   - Governance-Aspekt: Compliance-Status, Lessons Learned, Roadmap 2.0
-   - Verantwortlich: {size-aware Rollenbezeichnung}
+   - Max 5 Bullets: Jahresreview, Budget Jahr 2, Compliance-Status
    - Ausblick auf Jahr 2
 
 ---
