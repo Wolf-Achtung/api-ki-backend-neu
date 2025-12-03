@@ -1,79 +1,140 @@
 Developer:
 <!-- PLATIN++ PROMPT -->
 <!-- SECTION: roadmap_90d -->
-<!-- VERSION: v10.0 PLATIN++ V5 -->
+<!-- VERSION: v11.0 PLATIN++ V5 STORYTELLING -->
 <!-- OUTPUT: Markdown -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 2200 (solo:0.8x=1760, team:1.0x=2200, kmu:1.15x=2530) -->
 <!--
-ZIEL: 90-Tage-Roadmap mit 3 Phasen, kompakt und umsetzbar.
+ZIEL: 90-Tage-Roadmap mit 4 klaren Phasen + Meilensteinen.
 
-ZIELLÄNGE nach Größe (PDF-SLIMDOWN):
-- solo: ~180 Wörter (150–200)
-- team: ~220 Wörter (200–250)
-- kmu: ~280 Wörter (260–320)
+PHASEN-STRUKTUR (STRIKT EINHALTEN):
+- Phase 0 (Woche 1–2): Setup – Grundlagen schaffen
+- Phase 1 (Woche 3–5): Entlastung – Quick Wins umsetzen
+- Phase 2 (Woche 6–10): Produktiver Einsatz – Workflows stabilisieren
+- Phase 3 (Woche 11–13): Konsolidierung – Ergebnisse messen, Entscheidung treffen
 
-STRUKTUR: NUR 3 Phasen
-1. Woche 1–4: Setup & erste Erfolge
-2. Woche 5–8: Qualität & Workflows
-3. Woche 9–13: Konsolidierung
+FORMAT:
+- Jede Phase: Ziel (1 Satz) + 2-3 Bullets + Meilenstein
+- Meilenstein = konkret, messbar, erreichbar
+- KEINE langen Texte – nur Kernpunkte
 
 ANTI-REDUNDANZ (STRIKT!):
-- Quick Wins wurden bereits in quick_wins.md behandelt – NICHT wiederholen
-- Pain Points wurden dort adressiert – hier nur AUFBAUEN
-- Tools wurden in tools_empfehlungen.md beschrieben – nur referenzieren
+- Quick Wins wurden in quick_wins.md beschrieben → NICHT wiederholen
+- Tools wurden in tools_empfehlungen.md beschrieben → nur referenzieren
+- Hier: WIE und WANN, nicht WAS (das steht in Quick Wins)
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
-- solo: persönliche Routinen, eigene Dokumentation, Self-Review
-- team: Rollen (KI-Owner, Reviewer), gemeinsame Standards
-- kmu: Fachbereiche, Governance, Pilotflächen
+- solo: persönliche Routinen, Self-Review, eigene Dokumentation
+        VERBOTEN: Team, Abteilung, Mitarbeiter
+- team: KI-Owner, gemeinsame Standards, Review-Runden
+- kmu: Fachbereiche, Pilotbereiche, Governance, Rollout
 
 GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
-
-FORMAT: Markdown (## für Phasen, - für Bullets), KEIN HTML
 -->
 
-## Strategische 90-Tage-Roadmap
+## 90-Tage-Roadmap für {{HAUPTLEISTUNG}}
 
-Strukturierter Fahrplan für **{{HAUPTLEISTUNG}}** in der Branche **{{BRANCHE_LABEL}}** ({{UNTERNEHMENSGROESSE_LABEL}}).
+{% if COMPANY_SIZE == "solo" %}
+### Phase 0: Setup (Woche 1–2)
+**Ziel:** Arbeitsfähigkeit mit KI herstellen.
+- Zugang zu KI-Werkzeug einrichten
+- Erste Prompt-Vorlage für Kernaufgabe erstellen
+- Eigene Qualitätskriterien definieren (Was ist "gut genug"?)
 
-## Woche 1–4: Setup & erste Erfolge
+**🎯 Meilenstein:** KI-Zugang funktioniert, erste Vorlage einsatzbereit.
 
-**Ziel:** KI-Nutzung starten, erste Quick Wins realisieren.
+### Phase 1: Entlastung (Woche 3–5)
+**Ziel:** Spürbare Zeitersparnis bei Routineaufgaben.
+- Quick Wins aus Abschnitt "Sofortmaßnahmen" umsetzen
+- Zeiteinsparung pro Aufgabe notieren
+- Prompt-Bibliothek mit 5–10 funktionierenden Vorlagen aufbauen
 
-- 1–2 priorisierte Use Cases aus {{BRANCHE_LABEL}} definieren
-- Erste Prompts/Workflows für {{HAUPTLEISTUNG}} testen
-- Qualitätskriterien festlegen (Fakten, Ton, Freigabe)
+**🎯 Meilenstein:** 3–5 h/Monat nachweisbar eingespart.
 
-**Verantwortlich:** {% if COMPANY_SIZE == "solo" %}Inhaber:in{% elif COMPANY_SIZE == "team" %}Teamlead + KI-Owner{% else %}Fachbereich + Prozessverantwortliche{% endif %}
+### Phase 2: Produktiver Einsatz (Woche 6–10)
+**Ziel:** Stabile Workflows für Alltag.
+- Routine: Input → KI-Entwurf → Eigene Prüfung → Freigabe
+- Qualitäts-Checkliste für KI-Outputs erstellen
+- Self-Review zur Gewohnheit machen
 
-**KPI:** 2 Use Cases getestet, erste Zeitersparnis messbar.
+**🎯 Meilenstein:** 70%+ der KI-Entwürfe direkt nutzbar.
 
-## Woche 5–8: Qualität & stabile Workflows
+### Phase 3: Konsolidierung (Woche 11–13)
+**Ziel:** Ergebnisse bewerten, nächste Schritte planen.
+- Tatsächliche Zeitersparnis messen
+- Entscheidung: Ausweiten, Vertiefen oder Stabilisieren?
+- Nächste Use Cases für 12-Monats-Roadmap priorisieren
 
-**Ziel:** Reproduzierbare Ergebnisse sicherstellen.
+**🎯 Meilenstein:** Klare Entscheidung und priorisierte Liste für nächstes Quartal.
 
-- Standard-Workflows dokumentieren (Input → KI → Review → Freigabe)
-- Kurz-Styleguide für KI-Ergebnisse erstellen
-- {% if COMPANY_SIZE == "solo" %}Self-Review-Routine{% elif COMPANY_SIZE == "team" %}Team-Review etablieren{% else %}QS-Prozesse abstimmen{% endif %}
+{% elif COMPANY_SIZE == "team" %}
+### Phase 0: Setup (Woche 1–2)
+**Ziel:** Teamweite Arbeitsfähigkeit mit KI herstellen.
+- KI-Owner benennen (verantwortlich für Standards)
+- Gemeinsamen Zugang einrichten
+- Erste Vorlagen für 2 priorisierte Anwendungsfälle erstellen
 
-**Verantwortlich:** {% if COMPANY_SIZE == "solo" %}Eigene Dokumentation{% elif COMPANY_SIZE == "team" %}Qualitätsverantwortliche{% else %}Fachbereich + QS{% endif %}
+**🎯 Meilenstein:** Team hat Zugang, erste Vorlagen verteilt.
 
-**KPI:** Dokumentierte Workflows, Ersttrefferquote > 70%.
+### Phase 1: Entlastung (Woche 3–5)
+**Ziel:** Quick Wins im Team umsetzen.
+- Maßnahmen aus "Sofortmaßnahmen" teamweit ausrollen
+- Jede:r testet mindestens 2 Workflows
+- Erfahrungen in kurzem Weekly-Check teilen
 
-## Woche 9–13: Konsolidierung & Entscheidung
+**🎯 Meilenstein:** Alle Teammitglieder nutzen KI aktiv, erste Zeitersparnis dokumentiert.
 
-**Ziel:** Ergebnisse bewerten, Skalierung vorbereiten.
+### Phase 2: Produktiver Einsatz (Woche 6–10)
+**Ziel:** Einheitliche Qualitätsstandards etablieren.
+- Standard-Workflow dokumentieren: Input → KI → Peer-Review → Freigabe
+- Team-Styleguide für KI-Outputs erstellen
+- Review-Runden (30 Min./Woche) für Best Practices
 
-- Wirkungsmessung (Zeit, Qualität, Fehlerquote)
+**🎯 Meilenstein:** Dokumentierter Workflow, Erstqualität > 70%.
+
+### Phase 3: Konsolidierung (Woche 11–13)
+**Ziel:** Ergebnisse messen, Skalierung vorbereiten.
+- Wirkungsmessung: Zeit, Qualität, Fehlerquote
 - Entscheidung: Stabilisieren / Ausweiten / Vertiefen
-- {% if COMPANY_SIZE == "kmu" %}Skalierungs-Backlog{% else %}Nächste Use Cases{% endif %} priorisieren
+- Backlog für nächste Use Cases erstellen
 
-**Verantwortlich:** {% if COMPANY_SIZE == "solo" %}Geschäftsführung{% elif COMPANY_SIZE == "team" %}Führung + KI-Owner{% else %}Management + Bereichsleitung{% endif %}
+**🎯 Meilenstein:** Klare Entscheidung, priorisiertes Backlog für 12-Monats-Roadmap.
 
-**KPI:** Klare Entscheidung für die nächsten 6–12 Monate, priorisiertes Backlog.
+{% else %}
+### Phase 0: Setup (Woche 1–2)
+**Ziel:** Pilotbereich definieren und Grundlagen schaffen.
+- Pilotbereich auswählen (z.B. ein Fachbereich)
+- KI-Verantwortliche:n benennen
+- Governance-Grundregeln festlegen (Was darf, was nicht?)
+
+**🎯 Meilenstein:** Pilotbereich startklar, Governance-Rahmen definiert.
+
+### Phase 1: Entlastung (Woche 3–5)
+**Ziel:** Quick Wins im Pilotbereich umsetzen.
+- Maßnahmen aus "Sofortmaßnahmen" gezielt einsetzen
+- Pilotteam schult sich gegenseitig
+- Erste Zeiteinsparungen dokumentieren
+
+**🎯 Meilenstein:** Pilotbereich nutzt KI aktiv, messbare Entlastung.
+
+### Phase 2: Produktiver Einsatz (Woche 6–10)
+**Ziel:** Skalierbare Prozesse etablieren.
+- Standard Operating Procedures (SOPs) für KI-Workflows
+- QS-Prozess: Input → KI → Fachliche Prüfung → Freigabe
+- Schulungskonzept für Rollout auf weitere Bereiche
+
+**🎯 Meilenstein:** SOPs dokumentiert, Schulungskonzept fertig.
+
+### Phase 3: Konsolidierung (Woche 11–13)
+**Ziel:** Rollout-Entscheidung und Skalierungsplan.
+- Business-Case-Validierung anhand Pilotdaten
+- Entscheidung: Rollout auf weitere Bereiche?
+- Priorisiertes Backlog für 12-Monats-Rollout
+
+**🎯 Meilenstein:** Management-Entscheidung getroffen, Rollout-Plan steht.
+{% endif %}
 
 ---
-
-Diese 90-Tage-Roadmap schafft die Basis für stabile KI-Nutzung in **{{HAUPTLEISTUNG}}** und bereitet die Skalierung vor.
+*Diese Roadmap verweist auf Quick Wins und Tools aus den entsprechenden Abschnitten.*
