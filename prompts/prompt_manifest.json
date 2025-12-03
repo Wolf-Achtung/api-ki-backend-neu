@@ -59,6 +59,24 @@
       "path": "prompt_framework.md",
       "purpose": "5-Schritte-Anleitung",
       "required": false
+    },
+    "monetarisierung": {
+      "title": "Monetarisierung",
+      "path": "monetarisierung.md",
+      "purpose": "KI-basierte Geschäftsmodelle",
+      "required": false
+    },
+    "ki_skillplan": {
+      "title": "KI Skill-Plan",
+      "path": "ki_skillplan.md",
+      "purpose": "Team-Weiterentwicklung",
+      "required": false
+    },
+    "templates_start": {
+      "title": "Templates Start",
+      "path": "templates_start.md",
+      "purpose": "Prompt-Vorlagen Schnellstart",
+      "required": false
     }
   },
   "en": {
@@ -114,6 +132,24 @@
       "title": "Prompt Framework",
       "path": "prompt_framework_en.md",
       "purpose": "5-step guide",
+      "required": false
+    },
+    "monetization": {
+      "title": "Monetization",
+      "path": "monetization.md",
+      "purpose": "AI-based business models",
+      "required": false
+    },
+    "ki_skillplan": {
+      "title": "AI Skill Plan",
+      "path": "ki_skillplan.md",
+      "purpose": "Team development",
+      "required": false
+    },
+    "templates_start": {
+      "title": "Templates Start",
+      "path": "templates_start.md",
+      "purpose": "Prompt templates quick start",
       "required": false
     }
   }
