@@ -1,45 +1,97 @@
 Developer:
 <!-- PLATIN++ PROMPT -->
 <!-- SECTION: quick_wins -->
-<!-- VERSION: v7.0 PLATIN++ V5 -->
+<!-- VERSION: v8.0 PLATIN++ V5 STORYTELLING -->
 <!-- OUTPUT: Markdown -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{HAUPTLEISTUNG}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{BRANCHE_LABEL}} -->
+<!-- INPUT: {{HAUPTLEISTUNG}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{BRANCHE_LABEL}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 1800 (solo:0.8x=1440, team:1.0x=1800, kmu:1.15x=2070) -->
 <!--
-ZIEL: 4 Quick Wins, kompakt und sofort umsetzbar.
+ZIEL: Präzise Quick Wins in korrekter Reihenfolge.
 
-ZIELLÄNGE nach Größe (PDF-SLIMDOWN):
-- solo: ~60 Wörter (50–75), Fokus: persönliche Entlastung
-- team: ~80 Wörter (70–95), Fokus: gemeinsame Routinen
-- kmu: ~100 Wörter (90–115), Fokus: skalierbare Maßnahmen
+ANZAHL NACH GRÖSSE (STRIKT!):
+- solo: 3–4 Quick Wins
+- team: 4–5 Quick Wins
+- kmu: 5–7 Quick Wins
 
-PFLICHT-ANFORDERUNGEN:
-- MAXIMAL 4 Quick Wins
-- Jeder Quick Win: 1 kurzer Satz + Zeiteinsparung
-- KEINE ausführlichen Beschreibungen
-- FORMAT: Markdown (Listen mit -), KEIN HTML
+REIHENFOLGE DER KATEGORIEN (IMMER EINHALTEN!):
+1. ZEITERSPARNIS: Routineaufgaben, die Zeit fressen
+2. PRODUKTIVITÄTSSPRÜNGE: Arbeitsabläufe, die sich beschleunigen
+3. QUALITÄTSVERBESSERUNG: Outputs, die besser werden
+4. KOSTENSENKUNG: Direkte oder indirekte Einsparungen (nur bei team/kmu)
+
+FORMAT PRO QUICK WIN:
+- **[Konkrete Maßnahme]:** [1 Satz Beschreibung]. *Effekt: [X h/Monat oder %]*
+
+STIL:
+- Präzise, keine Floskeln
+- Konkret anwendbar (nicht "optimieren Sie", sondern "nutzen Sie KI für...")
+- Realistische Zeiteinsparungen (2-8 h/Monat pro Maßnahme)
+- Keine Übertreibungen
 
 ANTI-REDUNDANZ:
-- Quick Wins adressieren Pain Points HIER (nicht in Roadmap wiederholen)
-- Roadmap baut auf Quick Wins auf, wiederholt sie aber NICHT
+- Quick Wins = EINZIGE Stelle für diese Maßnahmen
+- Roadmap verweist auf Quick Wins, listet sie NICHT erneut
+- Business Case referenziert Einsparungen, rechnet sie aber separat
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
-- solo: "Sie sparen", persönliche Routine, eigene Workflows
-- team: "Team spart", gemeinsame Standards, Kollaboration
-- kmu: "Fachbereich profitiert", skalierbare Prozesse
+- solo: "Sie sparen", persönliche Routinen, eigene Workflows
+        KEINE Team-Begriffe
+- team: "Das Team spart", gemeinsame Standards, Kollaboration
+- kmu: "Der Fachbereich profitiert", skalierbare Prozesse, Governance
+
+BRANCHENSPEZIFIK:
+- Nutze typische Aufgaben aus {{BRANCHE_LABEL}}
+- Beziehe dich auf {{HAUPTLEISTUNG}}
 -->
 
-## Quick Wins – Sofort wirksame Maßnahmen (0–90 Tage)
+## Quick Wins – Sofort wirksame Maßnahmen
 
-Im Prozess **{{HAUPTLEISTUNG}}** ergeben sich mehrere kurzfristige Hebel, die sich innerhalb weniger Wochen umsetzen lassen und eine unmittelbare Entlastung bringen. Die folgenden Quick Wins sind auf **{{UNTERNEHMENSGROESSE_LABEL}}** zugeschnitten und adressieren typische Routinen in der Branche **{{BRANCHE_LABEL}}**.
+{% if COMPANY_SIZE == "solo" %}
+Die folgenden 3–4 Maßnahmen bringen Ihnen als Einzelunternehmer:in im Bereich **{{HAUPTLEISTUNG}}** sofortige Entlastung:
 
-- **Standardtexte & E-Mail-Entwürfe automatisieren:** KI erzeugt Erstentwürfe für wiederkehrende Nachrichten, Protokolle oder kurze Berichte. *Einsparung: 5–8 h/Monat*
+### Zeitersparnis
+- **Wiederkehrende Texte automatisieren:** Nutzen Sie KI für Erst-Entwürfe von E-Mails, Angeboten und Protokollen. *Effekt: 4–6 h/Monat*
 
-- **Wissensorganisation vereinfachen:** Zentrale Dokumente werden automatisch zusammengefasst und strukturiert. *Einsparung: 3–6 h/Monat*
+### Produktivitätssprung
+- **Recherche beschleunigen:** KI-gestützte Zusammenfassungen von Dokumenten, Marktinfos und Briefings. *Effekt: 3–5 h/Monat*
 
-- **Recherche & Vorbereitung beschleunigen:** KI liefert schnelle Übersichten, Marktvergleiche und Meeting-Vorbereitungen. *Einsparung: 4–7 h/Monat*
+### Qualitätsverbesserung
+- **Eigene Texte gegenlesen lassen:** KI als Lektorat für Konsistenz, Tonalität und Fehlerfreiheit. *Effekt: Weniger Nachbesserungen, professionellerer Auftritt*
 
-- **Content-Varianten generieren:** Für kurze Posts, Angebotsnachträge oder Mikro-Content liefert KI sofort nutzbare Varianten. *Einsparung: 3–5 h/Monat*
+{% elif COMPANY_SIZE == "team" %}
+Die folgenden 4–5 Maßnahmen entlasten Ihr Team im Bereich **{{HAUPTLEISTUNG}}** sofort:
 
-Die Einsparungswerte sind erfahrungsbasierte Orientierungen und werden im Business Case modelliert. Sie variieren je nach Arbeitsstil und Auslastung.
+### Zeitersparnis
+- **Standardtexte & Vorlagen automatisieren:** KI erzeugt Erstentwürfe für E-Mails, Protokolle und Reports. *Effekt: 5–8 h/Monat pro Person*
+- **Meeting-Protokolle automatisieren:** Automatische Zusammenfassungen und Action Items. *Effekt: 2–3 h/Monat*
+
+### Produktivitätssprung
+- **Wissensorganisation vereinfachen:** Zentrale Dokumente werden automatisch zusammengefasst und durchsuchbar. *Effekt: 3–5 h/Monat*
+
+### Qualitätsverbesserung
+- **Einheitliche Qualitätsstandards:** KI-gestützte Checklisten für konsistente Outputs. *Effekt: Weniger Feedback-Schleifen*
+
+### Kostensenkung
+- **Externe Lektoratskosten reduzieren:** Interne KI-Prüfung vor Freigabe. *Effekt: 15–25% weniger externe Kosten*
+
+{% else %}
+Die folgenden 5–7 Maßnahmen schaffen in Ihrem Unternehmen ({{UNTERNEHMENSGROESSE_LABEL}}) im Bereich **{{HAUPTLEISTUNG}}** sofort Mehrwert:
+
+### Zeitersparnis
+- **Wiederkehrende Reports automatisieren:** KI generiert Basis-Reports aus Datenquellen. *Effekt: 6–10 h/Monat pro Bereich*
+- **E-Mail-Triage beschleunigen:** Automatische Priorisierung und Entwürfe für Standardanfragen. *Effekt: 3–5 h/Monat*
+
+### Produktivitätssprung
+- **Wissensmanagement professionalisieren:** Zentrale, KI-durchsuchbare Dokumentenbasis. *Effekt: 4–6 h/Monat*
+- **Onboarding beschleunigen:** KI-gestützte Einarbeitung mit automatischen Q&A. *Effekt: 20% schnellere Einarbeitung*
+
+### Qualitätsverbesserung
+- **Konsistente Outputs sicherstellen:** KI-Qualitätschecks vor Kundenversand. *Effekt: Weniger Reklamationen*
+- **Dokumentation standardisieren:** Automatische Template-Befüllung aus Projekt-Daten. *Effekt: Einheitliche Qualität*
+
+### Kostensenkung
+- **Externe Dienstleister reduzieren:** Interne KI-Unterstützung für Lektorat, Übersetzung, Recherche. *Effekt: 20–30% weniger externe Kosten*
+{% endif %}
+
+*Die Effekte sind erfahrungsbasierte Orientierungswerte und variieren je nach Ausgangslage.*

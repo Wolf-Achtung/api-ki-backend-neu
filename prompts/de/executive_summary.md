@@ -1,63 +1,59 @@
 Developer:
 <!-- PLATIN++ PROMPT -->
 <!-- SECTION: executive_summary -->
-<!-- VERSION: v5.0 PLATIN++ V5 -->
+<!-- VERSION: v6.0 PLATIN++ V5 CEO-EDITION -->
 <!-- OUTPUT: HTML -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}} -->
-<!-- TOKEN-BUDGET: 800 (solo:0.8x, team:1.0x, kmu:1.15x) -->
+<!-- TOKEN-BUDGET: 600 (solo:0.8x=480, team:1.0x=600, kmu:1.15x=690) -->
 <!--
-ZIEL:
-- KOMPAKTE Executive Summary in genau 6 Sätzen.
-- Keine Wiederholung von Details – nur die Essenz.
+ZIEL: CEO-taugliche Executive Summary in 2-4 Sätzen.
 
-PFLICHTSTRUKTUR (6 Sätze – STRIKT EINHALTEN!):
-1. Ausgangslage (1 Satz): Branche + Größe + aktueller KI-Status
-2. Strategische Ziele (1 Satz): Was will das Unternehmen mit KI erreichen?
-3. Größter Pain Point (1 Satz): Der wichtigste Zeitfresser/Schmerzpunkt
-4. Quick Wins Ausblick (1 Satz): 2-3 konkrete Sofortmaßnahmen
-5. Roadmap Hinweis (1 Satz): 90-Tage und 12-Monats-Perspektive
-6. Guardrails/Risiken (1 Satz): Falls vorhanden, sonst Business-Case-Hinweis
+PLOT-STRUKTUR (STRIKT – ein Absatz):
+1. Ausgangslage: Wo steht das Unternehmen heute? (Branche, Größe, KI-Reife)
+2. Fokus & Ziele: Was ist das zentrale Ziel mit KI?
+3. Wichtigste Hebel: Welcher eine Ansatzpunkt bringt den größten Effekt?
+4. Sofortige Chance: Was ist der konkrete nächste Schritt?
 
-VERBOTEN:
-- Mehr als 6 Sätze
-- Platzhalter-Strings, technische Pipeline-Begriffe
-- Wiederholungen aus anderen Sektionen
+STIL (CEO-TAUGLICH):
+- Prägnant, keine Buzzwords ("Synergien", "Transformation", "Next-Level")
+- Faktenbasiert, nüchtern, ergebnisorientiert
+- KEINE Wiederholung von Roadmap-Details oder Quick-Win-Listen
+- KEINE Aufzählungen – nur Fließtext
+- Maximal 80 Wörter
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
-- solo: Sie-Ansprache, keine Abteilungen, persönliche Entlastung
-- team: "Team", "Kolleg:innen", gemeinsame Routinen
-- kmu: Teams, Bereiche, skalierbare Umsetzung
+- solo: "Sie", persönliche Perspektive, Entlastung als Ziel
+- team: "Ihr Team", gemeinsame Effizienz
+- kmu: "Ihr Unternehmen", strukturelle Hebel
 
-GUARDRAILS: Berücksichtige angegebene Leitplanken/No-Gos aus dem strategischen Kontext.
+ANTI-REDUNDANZ:
+- Details zu Quick Wins → siehe quick_wins.md
+- Details zu Roadmap → siehe roadmap_90d.md / roadmap_12m.md
+- Hier NUR die Essenz, KEINE Vorwegnahme
+
+GUARDRAILS: Respektiere angegebene Leitplanken aus strategischem Kontext.
 -->
 
 <section class="section executive-summary">
   <h2>Executive Summary</h2>
 
   <p>
-    <!-- SATZ 1: Ausgangslage -->
-    Das Unternehmen in der Branche <strong>{{BRANCHE_LABEL}}</strong> (Größe: <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>)
-    zeigt im Kernprozess <strong>{{HAUPTLEISTUNG}}</strong> ein solides Fundament für den KI-Einsatz,
-    mit klaren Stärken und einzelnen Entwicklungsfeldern.
-
-    <!-- SATZ 2: Strategische Ziele -->
-    Strategisch steht die Entlastung bei wiederkehrenden Aufgaben und die Qualitätssteigerung
-    durch standardisierte KI-Workflows im Mittelpunkt.
-
-    <!-- SATZ 3: Größter Pain Point -->
-    Der größte Hebel liegt bei zeitintensiven, manuellen Prozessen, die sich durch klare Vorlagen
-    und KI-Unterstützung deutlich beschleunigen lassen.
-
-    <!-- SATZ 4: Quick Wins -->
-    Die Quick Wins umfassen konkrete Sofortmaßnahmen wie Vorlagen-Automatisierung,
-    strukturierte Dokumentation und erste KI-gestützte Qualitätsprüfungen.
-
-    <!-- SATZ 5: Roadmap -->
-    Die 90-Tage-Roadmap setzt diese Maßnahmen um, während die 12-Monats-Perspektive
-    Governance und Skalierung adressiert.
-
-    <!-- SATZ 6: Risiken/Business Case -->
-    Der Business Case ist positiv; Förderprogramme können die Anfangsinvestition zusätzlich reduzieren.
+    {% if COMPANY_SIZE == "solo" %}
+    Als Einzelunternehmer:in in der Branche <strong>{{BRANCHE_LABEL}}</strong> mit dem Schwerpunkt
+    <strong>{{HAUPTLEISTUNG}}</strong> liegt Ihr größter Hebel in der Automatisierung
+    wiederkehrender Aufgaben – hier lassen sich pro Woche mehrere Stunden zurückgewinnen.
+    Der erste Schritt: ein strukturierter KI-Workflow für Ihre zeitintensivste Routineaufgabe.
+    {% elif COMPANY_SIZE == "team" %}
+    Ihr Team in der Branche <strong>{{BRANCHE_LABEL}}</strong> ({{UNTERNEHMENSGROESSE_LABEL}})
+    kann durch gezielte KI-Unterstützung im Bereich <strong>{{HAUPTLEISTUNG}}</strong>
+    signifikante Effizienzgewinne erzielen. Der zentrale Ansatzpunkt: gemeinsame Standards
+    für KI-gestützte Routinen, die sofort Entlastung bringen und Qualität sichern.
+    {% else %}
+    Für ein Unternehmen Ihrer Größe ({{UNTERNEHMENSGROESSE_LABEL}}) in der Branche
+    <strong>{{BRANCHE_LABEL}}</strong> bietet der Bereich <strong>{{HAUPTLEISTUNG}}</strong>
+    den größten Hebel für KI-gestützte Produktivitätsgewinne. Der strategische Fokus liegt
+    auf skalierbaren Prozessen, die in Pilotbereichen erprobt und dann ausgerollt werden.
+    {% endif %}
   </p>
 </section>
