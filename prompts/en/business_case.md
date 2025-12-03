@@ -64,6 +64,22 @@ Developer:
     payback period shortens noticeably; with lower utilization, it extends accordingly.
   </p>
 
+  <h3>Connection to Funding Opportunities</h3>
+  <p>
+    In <strong>{{BUNDESLAND_LABEL}}</strong>, programs exist that can support AI and
+    digitalization projects. If parts of the one-time investment are funded,
+    the business case improves through shortened payback periods and higher effective ROI.
+    Specific programs and details are explained in the Funding chapter.
+  </p>
+
+  <h3>Additional Revenue Potential (Monetization)</h3>
+  <p>
+    Beyond efficiency gains, AI-powered processes also offer revenue potential:
+    Digital products (e.g., automated analyses, reports), new service formats
+    (workshops, consulting), or scalable offerings can further improve ROI.
+    Details on pricing models can be found in the "Monetization" chapter.
+  </p>
+
   <p class="small muted">
     Note: This presentation serves as transparent guidance. For investment decisions,
     supplementation with conservative, baseline, and optimistic scenarios is recommended.

@@ -58,7 +58,7 @@ from services.email_templates import render_report_ready_email
 from settings import settings
 from services.coverage_guard import analyze_coverage, build_html_report
 from services.prompt_loader import load_prompt
-from services.prompt_enhancer import PromptEnhancer, get_platin_config
+from services.prompt_enhancer import PromptEnhancer, get_platin_config, PLATIN_STOP_SEQUENCES
 from services.html_sanitizer import sanitize_sections_dict
 from utils.hotfix_gold_standard import apply_hotfix, UTF8Handler
 from utils.encoding_fixer import clean_briefing_data
@@ -902,6 +902,13 @@ def _call_openai(
             payload["max_completion_tokens"] = int(max_tokens)
         else:
             payload["max_tokens"] = int(max_tokens)
+
+        # PDF-SLIMDOWN: Stop-Sequences für kritische Sections hinzufügen
+        # Verhindert zu lange Outputs und Token-Abbrüche
+        if section and get_platin_config(section):
+            # Nur für PLATIN-kritische Sections Stop-Sequences verwenden
+            payload["stop"] = PLATIN_STOP_SEQUENCES
+            log.debug("🛑 Added stop sequences for section=%s", section)
 
         r = requests.post(
             url,

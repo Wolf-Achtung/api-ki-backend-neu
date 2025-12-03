@@ -18,11 +18,13 @@ DATA_DIR = REPO_ROOT / "data"
 BRANCH_DIR = DATA_DIR / "branch_contexts"
 TEST_PROFILES_DIR = DATA_DIR / "test_profiles_gold"
 
+# PDF-SLIMDOWN v2.0: LLM target min_words from prompt_enhancer.py PLATIN_CRITICAL_SECTIONS
+# Used for word count validation in sample reports and get_platin_min_words() tests
 CRITICAL_SECTIONS = {
-    "foerderpotenzial": 900,
-    "recommendations": 800,
-    "risks": 800,
-    "roadmap_12m": 900,
+    "foerderpotenzial": 700,
+    "recommendations": 400,
+    "risks": 600,
+    "roadmap_12m": 350,
 }
 
 def count_words(html: str) -> int:
@@ -52,15 +54,22 @@ def test_testprofiles_have_required_fields():
         assert required.issubset(set(data)), f"{profile.name} fehlt mindestens eines der Pflichtfelder."
 
 
-def test_prompt_enhancer_has_no_token_limits():
-    """Überprüft, dass für PLATIN-kritische Sektionen keine max_tokens gesetzt sind."""
+def test_prompt_enhancer_has_token_limits():
+    """Überprüft, dass für PLATIN-kritische Sektionen explicit max_tokens gesetzt sind (PDF-SLIMDOWN v2.0).
+
+    PDF-SLIMDOWN v2.0: Token limits are now explicitly set (1500-3200) for compact outputs.
+    This replaces the previous "max_tokens = None" approach.
+    """
     target_file = REPO_ROOT / "services" / "prompt_enhancer.py"
     code = target_file.read_text()
     for sec in CRITICAL_SECTIONS:
         assert f'"{sec}"' in code or f"'{sec}'" in code, \
             f"Sektion {sec} fehlt in prompt_enhancer."
-    assert "max_tokens = None" in code, \
-        "max_tokens = None fehlt für kritische Sektionen!"
+    # PDF-SLIMDOWN v2.0: Now we check for explicit token limits
+    assert "PLATIN_CRITICAL_SECTIONS" in code, \
+        "PLATIN_CRITICAL_SECTIONS fehlt in prompt_enhancer!"
+    assert '"max_tokens":' in code or "'max_tokens':" in code, \
+        "max_tokens fehlt in PLATIN_CRITICAL_SECTIONS!"
 
 
 def test_validator_uses_word_based_validation():
@@ -72,14 +81,18 @@ def test_validator_uses_word_based_validation():
         "Validator zählt keine Wörter!"
 
 
-def test_platin_min_word_lengths_in_gpt_analyze():
-    """Stellt sicher, dass gpt_analyze.py die PLATIN+ Wort-Mindestlängen korrekt nutzt."""
-    file = REPO_ROOT / "gpt_analyze.py"
-    code = open(file, "r", encoding="utf-8").read()
+def test_platin_min_word_lengths_configured():
+    """Stellt sicher, dass PLATIN+ Wort-Mindestlängen in prompt_enhancer konfiguriert sind (PDF-SLIMDOWN v2.0).
 
-    for section, min_words in CRITICAL_SECTIONS.items():
-        assert str(min_words) in code, \
-            f"Mindestwortzahl für {section} ({min_words}) fehlt in gpt_analyze.py!"
+    PDF-SLIMDOWN v2.0: min_words are now configured in PLATIN_CRITICAL_SECTIONS
+    in prompt_enhancer.py, not hardcoded in gpt_analyze.py.
+    """
+    from services.prompt_enhancer import get_platin_min_words
+
+    for section, expected_min_words in CRITICAL_SECTIONS.items():
+        actual = get_platin_min_words(section)
+        assert actual == expected_min_words, \
+            f"Mindestwortzahl für {section}: erwartet {expected_min_words}, gefunden {actual}"
 
 
 def test_output_word_counts_and_no_fallbacks(tmp_path):

@@ -304,68 +304,118 @@ Für Einzelunternehmer/Freiberufler bitte EINFACHE Sprache verwenden:
 # =============================================================================
 # PLATIN+ STABILIZATION: Konfiguration für kritische Sektionen
 # =============================================================================
-# Diese Sektionen benötigen längere Outputs und dürfen NICHT durch
-# Token-Limits oder aggressive Penalties beschränkt werden.
+# PDF-SLIMDOWN v2.0: Token-Limits um 20-30% reduziert für kürzere Outputs
+# ohne Qualitätseinbußen. Stop-Sequences erweitert.
 #
-# Für kritische Sektionen gilt: max_tokens = None (kein Limit)
+# Ziel: PDF < 10-12 MB, weniger LLM-Abbrüche
 # =============================================================================
 
-# PLATIN+ Token-Limit für kritische Sektionen
-# 4096 Tokens ≈ 3000 Wörter – genug Spielraum für 800-900 Wörter Output
-PLATIN_MAX_TOKENS = 4096
+# PLATIN+ Token-Limits (REDUZIERT für PDF-SLIMDOWN)
+# Alte Werte: 4096 → Neue Werte: 2500-3200 je nach Sektion
+PLATIN_MAX_TOKENS_DEFAULT = 3000  # Default für kritische Sections
+PLATIN_MAX_TOKENS_COMPACT = 2500  # Für reduzierte Sections (roadmap, recommendations)
 
 
 class PlatinSectionConfig(TypedDict):
     """Configuration for PLATIN+ critical sections."""
-    max_tokens: int  # Token-Limit für LLM-Output (4096 für lange Sections)
+    max_tokens: int  # Token-Limit für LLM-Output (REDUZIERT für PDF-SLIMDOWN)
     temperature: float
     presence_penalty: float
     frequency_penalty: float
     min_words: int  # Minimum word count expected
 
 
+# STOP-SEQUENCES für frühzeitiges Beenden (verhindert Überlänge)
+PLATIN_STOP_SEQUENCES = [
+    "\n\n---\n",           # Markdown-Abschnitt-Ende
+    "</section>",          # HTML-Section-Ende
+    "## Abschluss",        # Roadmap-Endsignal DE
+    "## Conclusion",       # Roadmap-Endsignal EN
+    "## Ausblick",         # Alternatives Endsignal DE
+    "## Outlook",          # Alternatives Endsignal EN
+]
+
+
 PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
+    # Foerderpotenzial: bleibt hoch (braucht detaillierte Förderinfos)
     "foerderpotenzial": {
-        "max_tokens": 4096,  # Explizit 4096 für 900+ Wörter
-        "temperature": 0.4,  # Konsistent aber nicht zu trocken
-        "presence_penalty": 0.0,  # Keine Bestrafung für Wiederholungen
-        "frequency_penalty": 0.0,  # Keine Bestrafung für häufige Wörter
-        "min_words": 900,
+        "max_tokens": 3200,  # Reduziert von 4096 (-22%)
+        "temperature": 0.4,
+        "presence_penalty": 0.0,
+        "frequency_penalty": 0.0,
+        "min_words": 700,  # Reduziert von 900
     },
+    # Risks: bleibt relativ hoch (wichtige Compliance-Infos)
     "risks": {
-        "max_tokens": 4096,
+        "max_tokens": 3000,  # Reduziert von 4096 (-27%)
         "temperature": 0.4,
         "presence_penalty": 0.0,
         "frequency_penalty": 0.0,
-        "min_words": 800,
+        "min_words": 600,  # Reduziert von 800
     },
+    # Recommendations: deutlich reduziert (5 Empfehlungen, je 80-100 Wörter)
     "recommendations": {
-        "max_tokens": 4096,
+        "max_tokens": 2500,  # Reduziert von 4096 (-39%)
         "temperature": 0.4,
-        "presence_penalty": 0.0,
-        "frequency_penalty": 0.0,
-        "min_words": 800,
+        "presence_penalty": 0.1,  # Leichte Penalty gegen Wiederholungen
+        "frequency_penalty": 0.1,
+        "min_words": 400,  # Reduziert von 800
     },
+    # Roadmap 12m: deutlich reduziert (4 Phasen, je 4 Bullets)
     "roadmap_12m": {
-        "max_tokens": 4096,
+        "max_tokens": 2800,  # Reduziert von 4096 (-32%)
         "temperature": 0.4,
-        "presence_penalty": 0.0,
-        "frequency_penalty": 0.0,
-        "min_words": 900,
+        "presence_penalty": 0.1,  # Leichte Penalty gegen Wiederholungen
+        "frequency_penalty": 0.1,
+        "min_words": 350,  # Reduziert von 900 (stark!)
     },
+    # Roadmap 90d: NEU - deutlich reduziert (3 Phasen)
+    "roadmap_90d": {
+        "max_tokens": 2200,  # Kompakt: 350-450 Wörter
+        "temperature": 0.4,
+        "presence_penalty": 0.1,
+        "frequency_penalty": 0.1,
+        "min_words": 250,
+    },
+    # Quick Wins: NEU - kompakt (4 Quick Wins)
+    "quick_wins": {
+        "max_tokens": 1800,  # Kompakt: ~100 Wörter je nach Größe
+        "temperature": 0.3,  # Konsistent
+        "presence_penalty": 0.1,
+        "frequency_penalty": 0.1,
+        "min_words": 150,
+    },
+    # Gamechanger: leicht reduziert (strategisch wichtig)
     "gamechanger": {
-        "max_tokens": 4096,
-        "temperature": 0.5,  # Etwas kreativer für Gamechanger
+        "max_tokens": 3000,  # Reduziert von 4096 (-27%)
+        "temperature": 0.5,  # Etwas kreativer
         "presence_penalty": 0.0,
         "frequency_penalty": 0.0,
-        "min_words": 700,
+        "min_words": 500,  # Reduziert von 700
     },
+    # Unternehmensprofil: bleibt relativ hoch (wichtige Kontextinfos)
     "unternehmensprofil_markt": {
-        "max_tokens": 4096,
+        "max_tokens": 3000,  # Reduziert von 4096 (-27%)
         "temperature": 0.4,
         "presence_penalty": 0.0,
         "frequency_penalty": 0.0,
-        "min_words": 500,
+        "min_words": 400,  # Reduziert von 500
+    },
+    # Transparency Box: NEU - kompakt (180-250 Wörter)
+    "transparency_box": {
+        "max_tokens": 1500,
+        "temperature": 0.3,
+        "presence_penalty": 0.0,
+        "frequency_penalty": 0.0,
+        "min_words": 150,
+    },
+    # Technologie & Prozesse: NEU - kompakt (300-400 Wörter)
+    "technologie_prozesse": {
+        "max_tokens": 2000,
+        "temperature": 0.3,
+        "presence_penalty": 0.0,
+        "frequency_penalty": 0.0,
+        "min_words": 200,
     },
 }
 
