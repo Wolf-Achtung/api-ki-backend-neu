@@ -141,7 +141,7 @@ class TestSizeMismatchDetection:
         "Mitarbeiter einstellen",
         "HR-Abteilung",
         "IT-Abteilung",
-        "Organisationsberater",
+        # "Organisationsberater" removed - valid for solo organizational consultants
         "Change-Team",
     ]
 
