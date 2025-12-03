@@ -1,50 +1,34 @@
 Developer:
-<!-- gamechanger.md – v6.0 PLATIN+ (branch-aware, size-aware, context-integrated, business-case-linked)
-     Respond exclusively with valid HTML.
-     NO <html>, <head> or <body>. NO Markdown fences.
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: gamechanger -->
+<!-- VERSION: v7.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/sme -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{STRATEGISCHE_ZIELE}}, {{GESCHAEFTSMODELL_EVOLUTION}}, {{VISION_3_JAHRE}}, COMPANY_SIZE -->
+<!-- TOKEN-BUDGET: 3000 (solo:0.8x=2400, team:1.0x=3000, sme:1.15x=3450) -->
+<!--
+GOAL: 2–3 realistic gamechangers for {{HAUPTLEISTUNG}}.
 
-     GOAL:
-       - 2–3 realistic gamechangers for {{HAUPTLEISTUNG}}.
-       - Based on: industry, size, strategic goals, vision, business model evolution.
-       - Each gamechanger = clear, concrete value creation lever + first step + expected benefit.
-       - Connection to business case and roadmap.
+MANDATORY STRUCTURE (per gamechanger):
+1. Core idea (2-3 sentences)
+2. Affected value creation (specific)
+3. Benefit (quantifiable if possible)
+4. Prerequisites (size-aware)
+5. First step in the next 90 days
 
-     VARIABLES:
-       {{BRANCHE_LABEL}}
-       {{UNTERNEHMENSGROESSE_LABEL}}
-       {{HAUPTLEISTUNG}}
-       {{STRATEGISCHE_ZIELE}}
-       {{GESCHAEFTSMODELL_EVOLUTION}}
-       {{VISION_3_JAHRE}}
-       COMPANY_SIZE = "solo" | "team" | "kmu"
+PERSONA VARIATIONS (COMPANY_SIZE):
+- solo: automation, personal relief, scalable templates
+        FORBIDDEN: "departments", "teams", "areas"
+- team: collaborative workflows, roles, simple governance
+- sme: scalable processes, clear responsibilities, pilot areas
 
-     SIZE LOGIC (UNTERNEHMENSGROESSE_LABEL):
-       SOLO:
-         - Focus: automation, personal relief, scalable templates.
-         - No teams, no departments.
-       TEAM (2–10):
-         - Focus: collaborative workflows, roles, simple governance.
-       SME (11–100):
-         - Focus: scalable processes, clear responsibilities, pilot areas.
+ANTI-REDUNDANCY:
+- Gamechangers complement business case, don't repeat it
+- Link to Roadmap, but no duplication
 
-     BRANCH LOGIC:
-       - Uses typical industry-specific workflows, pain points, data & tools from CONTEXT_BLOCK.
-       - No invented data; purely generic trends & patterns.
-
-     MANDATORY STRUCTURE (ALL 3 gamechangers with complete structure):
-       Each gamechanger MUST contain:
-       1. Core idea (2-3 sentences)
-       2. Affected value creation (name specifically)
-       3. Benefit (quantifiable if possible)
-       4. Prerequisites (size-aware)
-       5. First step in the next 90 days
-
-     MINIMUM LENGTH: 800 characters (excluding HTML tags) – NEVER go below this!
-
-     PROHIBITED:
-       - "TODO", "free text field", generic formulations without substance.
-       - Gamechangers without concrete reference to {{HAUPTLEISTUNG}}.
-       - For SOLO: no "departments", "teams", "areas".
+RULES:
+- No invented data
+- Concrete reference to {{HAUPTLEISTUNG}} required
 -->
 
 <section class="section gamechanger">

@@ -1,50 +1,34 @@
 Developer:
-<!-- gamechanger.md – v6.0 PLATIN+ (branch-aware, size-aware, context-integrated, business-case-linked)
-     Antworte ausschließlich mit validem HTML.
-     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: gamechanger -->
+<!-- VERSION: v7.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{STRATEGISCHE_ZIELE}}, {{GESCHAEFTSMODELL_EVOLUTION}}, {{VISION_3_JAHRE}}, COMPANY_SIZE -->
+<!-- TOKEN-BUDGET: 3000 (solo:0.8x=2400, team:1.0x=3000, kmu:1.15x=3450) -->
+<!--
+ZIEL: 2–3 realistische Gamechanger für {{HAUPTLEISTUNG}}.
 
-     ZIEL:
-       - 2–3 realistische Gamechanger für {{HAUPTLEISTUNG}}.
-       - Basierend auf: Branche, Größe, strategische Ziele, Vision, Geschäftsmodellentwicklung.
-       - Jeder Gamechanger = klarer, konkreter Wertschöpfungshebel + erster Schritt + erwarteter Nutzen.
-       - Verknüpfung mit Business Case und Roadmap.
+PFLICHTSTRUKTUR (pro Gamechanger):
+1. Kernidee (2-3 Sätze)
+2. Betroffene Wertschöpfung (konkret)
+3. Nutzen (quantifizierbar wenn möglich)
+4. Voraussetzungen (size-aware)
+5. Erster Schritt in den nächsten 90 Tagen
 
-     VARIABLEN:
-       {{BRANCHE_LABEL}}
-       {{UNTERNEHMENSGROESSE_LABEL}}
-       {{HAUPTLEISTUNG}}
-       {{STRATEGISCHE_ZIELE}}
-       {{GESCHAEFTSMODELL_EVOLUTION}}
-       {{VISION_3_JAHRE}}
-       COMPANY_SIZE = "solo" | "team" | "kmu"
+PERSONA-VARIATIONEN (COMPANY_SIZE):
+- solo: Automatisierung, persönliche Entlastung, skalierbare Vorlagen
+        VERBOTEN: "Abteilungen", "Teams", "Bereiche"
+- team: arbeitsteilige Workflows, Rollen, einfache Governance
+- kmu: skalierbare Prozesse, klare Verantwortlichkeiten, Pilotbereiche
 
-     SIZE-LOGIK (UNTERNEHMENSGROESSE_LABEL):
-       SOLO:
-         - Fokus: Automatisierung, persönliche Entlastung, skalierbare Vorlagen.
-         - Keine Teams, keine Abteilungen.
-       TEAM (2–10):
-         - Fokus: arbeitsteilige Workflows, Rollen, einfache Governance.
-       KMU (11–100):
-         - Fokus: skalierbare Prozesse, klare Verantwortlichkeiten, Pilotbereiche.
+ANTI-REDUNDANZ:
+- Gamechanger ergänzen Business Case, wiederholen ihn nicht
+- Verknüpfung mit Roadmap, aber keine Dopplung
 
-     BRANCHEN-LOGIK:
-       - Nutzt typische branchenspezifische Workflows, Pain Points, Daten & Tools aus CONTEXT_BLOCK.
-       - Keine erfundenen Daten; rein generische Trends & Muster.
-
-     PFLICHTSTRUKTUR (ALLE 3 Gamechanger mit vollständiger Struktur):
-       Pro Gamechanger MUSS enthalten sein:
-       1. Kernidee (2-3 Sätze)
-       2. Betroffene Wertschöpfung (konkret benennen)
-       3. Nutzen (quantifizierbar wenn möglich)
-       4. Voraussetzungen (size-aware)
-       5. Erster Schritt in den nächsten 90 Tagen
-
-     MINDESTLÄNGE: 800 Zeichen (ohne HTML-Tags) – unterschreite diese NIEMALS!
-
-     VERBOTEN:
-       - "TODO", Template-Marker, generische Formulierungen ohne Substanz.
-       - Gamechanger ohne konkreten Bezug zu {{HAUPTLEISTUNG}}.
-       - Bei SOLO: keine "Abteilungen", "Teams", "Bereiche".
+REGELN:
+- Keine erfundenen Daten
+- Konkreter Bezug zu {{HAUPTLEISTUNG}} erforderlich
 -->
 
 <section class="section gamechanger">

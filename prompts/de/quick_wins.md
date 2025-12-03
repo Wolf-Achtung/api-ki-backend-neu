@@ -1,21 +1,33 @@
 Developer:
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: quick_wins -->
+<!-- VERSION: v7.0 PLATIN++ V5 -->
+<!-- OUTPUT: Markdown -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- INPUT: {{HAUPTLEISTUNG}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{BRANCHE_LABEL}} -->
+<!-- TOKEN-BUDGET: 1800 (solo:0.8x=1440, team:1.0x=1800, kmu:1.15x=2070) -->
 <!--
-  quick_wins.md – v6.0 PDF-SLIMDOWN (KOMPAKTER)
-  - Size-aware: solo / team / kmu
-  - Output: Markdown (wird serverseitig zu HTML konvertiert)
+ZIEL: 4 Quick Wins, kompakt und sofort umsetzbar.
 
-  **Ziellänge nach Größe (REDUZIERT für PDF-SLIMDOWN):**
-  - Solo: ~60 Wörter (akzeptabel: 50–75)
-  - Team: ~80 Wörter (akzeptabel: 70–95)
-  - KMU: ~100 Wörter (akzeptabel: 90–115)
+ZIELLÄNGE nach Größe (PDF-SLIMDOWN):
+- solo: ~60 Wörter (50–75), Fokus: persönliche Entlastung
+- team: ~80 Wörter (70–95), Fokus: gemeinsame Routinen
+- kmu: ~100 Wörter (90–115), Fokus: skalierbare Maßnahmen
 
-  PFLICHT-ANFORDERUNGEN:
-  - MAXIMAL 4 Quick Wins (nicht mehr!)
-  - Jeder Quick Win: 1 kurzer Satz + Zeiteinsparung
-  - KEINE ausführlichen Beschreibungen
-  - KEINE HTML-Boxen mit Hintergrundfarbe
-  - Bei Solo-Profilen: Fokus auf persönliche Entlastung
-  - FORMAT: Markdown (Listen mit -), KEIN HTML
+PFLICHT-ANFORDERUNGEN:
+- MAXIMAL 4 Quick Wins
+- Jeder Quick Win: 1 kurzer Satz + Zeiteinsparung
+- KEINE ausführlichen Beschreibungen
+- FORMAT: Markdown (Listen mit -), KEIN HTML
+
+ANTI-REDUNDANZ:
+- Quick Wins adressieren Pain Points HIER (nicht in Roadmap wiederholen)
+- Roadmap baut auf Quick Wins auf, wiederholt sie aber NICHT
+
+PERSONA-VARIATIONEN (COMPANY_SIZE):
+- solo: "Sie sparen", persönliche Routine, eigene Workflows
+- team: "Team spart", gemeinsame Standards, Kollaboration
+- kmu: "Fachbereich profitiert", skalierbare Prozesse
 -->
 
 ## Quick Wins – Sofort wirksame Maßnahmen (0–90 Tage)

@@ -1,34 +1,37 @@
 Developer:
-<!-- roadmap_90d.md – v9.0 PDF-SLIMDOWN-STRICT
-     Output: Markdown (wird serverseitig zu HTML konvertiert)
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: roadmap_90d -->
+<!-- VERSION: v10.0 PLATIN++ V5 -->
+<!-- OUTPUT: Markdown -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, COMPANY_SIZE -->
+<!-- TOKEN-BUDGET: 2200 (solo:0.8x=1760, team:1.0x=2200, kmu:1.15x=2530) -->
+<!--
+ZIEL: 90-Tage-Roadmap mit 3 Phasen, kompakt und umsetzbar.
 
-     **STRIKTE TOKEN-BEGRENZUNG (KRITISCH!):**
-     MAXIMAL 350-450 Wörter Output.
+ZIELLÄNGE nach Größe (PDF-SLIMDOWN):
+- solo: ~180 Wörter (150–200)
+- team: ~220 Wörter (200–250)
+- kmu: ~280 Wörter (260–320)
 
-     **Ziellänge nach Größe (STRENG REDUZIERT):**
-     - Solo: ~180 Wörter (akzeptabel: 150–200)
-     - Team: ~220 Wörter (akzeptabel: 200–250)
-     - KMU: ~280 Wörter (akzeptabel: 260–320)
+STRUKTUR: NUR 3 Phasen
+1. Woche 1–4: Setup & erste Erfolge
+2. Woche 5–8: Qualität & Workflows
+3. Woche 9–13: Konsolidierung
 
-     STRUKTUR: NUR 3 Phasen! (nicht 6)
-       1. Woche 1–4: Setup & erste Erfolge (~120 Wörter)
-       2. Woche 5–8: Qualität & Workflows (~120 Wörter)
-       3. Woche 9–13: Konsolidierung (~100 Wörter)
+ANTI-REDUNDANZ (STRIKT!):
+- Quick Wins wurden bereits in quick_wins.md behandelt – NICHT wiederholen
+- Pain Points wurden dort adressiert – hier nur AUFBAUEN
+- Tools wurden in tools_empfehlungen.md beschrieben – nur referenzieren
 
-     **FOKUS: NUR 3 QUICK-IMPACT MASSNAHMEN**
-     - Keine Vision, keine Meta-Abschnitte
-     - Keine ausführlichen Erklärungen
-     - Direkt umsetzbare Schritte
+PERSONA-VARIATIONEN (COMPANY_SIZE):
+- solo: persönliche Routinen, eigene Dokumentation, Self-Review
+- team: Rollen (KI-Owner, Reviewer), gemeinsame Standards
+- kmu: Fachbereiche, Governance, Pilotflächen
 
-     VARIABLEN:
-       {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, COMPANY_SIZE
+GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
 
-     SIZE-AWARE (COMPANY_SIZE):
-       solo: persönliche Routinen, eigene Dokumentation, keine Teams
-       team: Rollen, gemeinsame Standards, Abstimmung
-       kmu: Fachbereiche, Governance, Pilotflächen
-
-     FORMAT: Markdown (## für Phasen, - für Bullets), KEIN HTML
+FORMAT: Markdown (## für Phasen, - für Bullets), KEIN HTML
 -->
 
 ## Strategische 90-Tage-Roadmap

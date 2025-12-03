@@ -1,30 +1,34 @@
 Developer:
-<!-- funding_potential.md – v1.1 EN Funding Potential for Germany
-     Target: English-speaking users with companies based in Germany.
-     Output: Valid HTML only. No Markdown fences.
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: funding_potential -->
+<!-- VERSION: v2.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/sme -->
+<!-- INPUT: {{BUNDESLAND_LABEL}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}} -->
+<!-- TOKEN-BUDGET: 3200 (solo:0.8x, team:1.0x, sme:1.15x) -->
+<!-- FUNDING: EN-Germany (Phase 1) - German federal + state programs in English -->
+<!--
+TARGET: English-speaking users with companies based in Germany.
 
-     STRUCTURE (4 sections):
-       H3 1. Business Case Without Funding
-       H3 2. How Funding Can Improve Your Business Case
-       H3 3. Relevant Funding Focus Areas
-       H3 4. Next Steps for Funding Assessment
+STRUCTURE (4 sections):
+  H3 1. Business Case Without Funding
+  H3 2. How Funding Can Improve Your Business Case
+  H3 3. Relevant Funding Focus Areas
+  H3 4. Next Steps for Funding Assessment
 
-     VARIABLES:
-       {{BUNDESLAND_LABEL}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}},
-       {{HAUPTLEISTUNG}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}},
-       {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}}
-       FUNDING_PROGRAMMES: List of matched programmes (optional, for reference)
+PERSONA VARIATIONS (COMPANY_SIZE):
+- solo: low barriers, <10,000€, consulting/starter grants
+- team: process digitalization, SME-innovativ, go-digital
+- sme: Digital Jetzt, ZIM, structural funding
 
-     SIZE-AWARE (COMPANY_SIZE):
-       solo: low barriers, <10,000€, consulting/starter grants
-       team: process digitalization, SME-innovativ, go-digital
-       sme: Digital Jetzt, ZIM, structural funding
+ANTI-REDUNDANCY:
+- Business case numbers ONCE here, reference in other sections
+- NO repetition from business_case.md
 
-     RULES:
-       - Funding rates only as ranges (e.g., "30-50%")
-       - Explicitly reference business case numbers
-       - Factual, neutral tone, no marketing
-       - No placeholders, no developer language
+RULES:
+- Funding rates only as ranges (e.g., "30-50%")
+- Factual, neutral tone, no marketing
+- NO EU-Core hints here (see funding_eu_core.md for EU)
 -->
 
 <section class="section funding-potential">

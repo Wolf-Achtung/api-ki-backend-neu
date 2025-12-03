@@ -1,57 +1,34 @@
 Developer:
-<!-- executive_summary.md – v3.0 GOLD STANDARD+ (Summary + Size-Layer + Context-Integration)
-     Respond exclusively with valid HTML.
-     NO <html>, <head> or <body>. NO Markdown fences in OUTPUT.
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: executive_summary -->
+<!-- VERSION: v5.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/sme -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{BUNDESLAND_LABEL}} -->
+<!-- TOKEN-BUDGET: 800 (solo:0.8x, team:1.0x, sme:1.15x) -->
+<!-- FUNDING: EN-Germany (Phase 1) or EN-EU (Phase 2) -->
+<!--
+GOAL:
+- Perfectly structured Executive Summary in 3-5 concise sections.
+- Maximum 5 paragraphs, each max. 4 sentences.
 
-     GOAL:
-     - Generate a perfectly structured, one-page Executive Summary
-       that condenses all core aspects of the AI Status Report into 3-5 concise sections.
+FORBIDDEN:
+- Placeholder strings, technical pipeline terms
+- DE-specific examples (use EN-appropriate examples)
 
-     FORBIDDEN:
-     - No placeholder strings ("Placeholder", "[...]", "{XYZ}").
-     - No technical pipeline terms (CONTEXT_..., SCORE_..., etc.).
-     - No raw variable names in output ({{BRANCHE_LABEL}} etc. may remain in HTML).
+PERSONA VARIATIONS (COMPANY_SIZE):
+- solo: Direct "you" address, personal relief, quick results
+        FORBIDDEN: department, division, team
+- team: Light org language ("team", "colleagues"), shared routines
+- sme: Teams, departments, responsible parties allowed
+        FORBIDDEN: corporate jargon ("division", "business unit")
 
-     CONTEXT SOURCES (provided as plain text):
-     - Quick Wins (CONTEXT_QUICK_WINS)
-     - 90-Day Roadmap (CONTEXT_ROADMAP_90D)
-     - 12-Month Roadmap (CONTEXT_ROADMAP_12M)
-     - Business Case (CAPEX, OPEX, Payback, ROI_12M)
-     - Tool Recommendations
-     - Scores: Governance, Security, Value Creation, Enablement, Overall
+GUARDRAILS: Respect any no-gos/guardrails from strategic context.
 
-     AVAILABLE QUESTIONNAIRE VARIABLES (Labels):
-     - {{BRANCHE_LABEL}}
-     - {{UNTERNEHMENSGROESSE_LABEL}}
-     - {{HAUPTLEISTUNG}}
-     - {{BUNDESLAND_LABEL}}
-
-     SIZE LOGIC (Solo / Team / SME)
-     --------------------------------------------------------------
-     INTERNAL: COMPANY_SIZE ∈ {"solo","team","kmu"}.
-
-     SOLO ("1 (Solo" in label):
-       - Direct "you" address.
-       - No terms like department, division, team.
-       - Focus: personal relief, quick results, pragmatic implementation.
-       - Measures always realistic for a single person.
-
-     TEAM (2-10):
-       - Light organizational language allowed ("team", "colleagues").
-       - Responsibilities = roles, not departments.
-       - Focus: shared routines, quick coordination, clear priorities.
-
-     SME (11-100):
-       - Organizational language allowed: teams, departments, responsible parties.
-       - No corporate vocabulary ("division", "business unit").
-       - Focus: scalable implementation, governance, cross-functional coordination.
-
-     STYLE:
-       - Clear, precise, business-oriented.
-       - No buzzwords, no marketing text.
-       - Maximum 5 paragraphs, each max. 4 sentences.
-       - Condensation over repetition: 3-5 strongest messages of the report.
-
+STYLE:
+- Clear, precise, business-oriented
+- No buzzwords, no marketing text
+- Condensation over repetition
 -->
 
 <section class="section executive-summary">

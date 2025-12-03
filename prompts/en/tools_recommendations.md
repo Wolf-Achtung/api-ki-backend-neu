@@ -1,39 +1,29 @@
 Developer:
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: tools_recommendations -->
+<!-- VERSION: v6.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/sme -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{COMPANY_SIZE}} -->
+<!-- TOKEN-BUDGET: 2500 (solo:0.8x=2000, team:1.0x=2500, sme:1.15x=2875) -->
+<!-- RESEARCH: Tools can be referenced from {{RESEARCH_PROVENANCE_HTML}} -->
 <!--
-  tools_recommendations.md – v5.1 GOLD STANDARD+ (size-aware, branch-aware, validator-safe)
+GOAL: Clearly structured tool recommendation section ("AI Stack") for {{BRANCHE_LABEL}}.
 
-  GOAL OF THE PROMPT
-  - Generate a clearly structured, practical tool recommendation section ("AI Stack"),
-    matching industry {{BRANCHE_LABEL}}, company size {{UNTERNEHMENSGROESSE_LABEL}}
-    and main service {{HAUPTLEISTUNG}}.
-  - The text should address solo, small teams, and SMEs equally, but
-    name different priorities depending on size.
-  - Output is pure HTML (no Markdown, no developer sentences).
+PERSONA VARIATIONS (COMPANY_SIZE):
+- solo: 3–5 tools, simple operation, low integration effort
+        FORBIDDEN: "department", "project team", "area"
+- team: shared workspace, collaboration, rights/roles concepts
+- sme: defined stack with governance, roles, monitoring, area-specific
 
-  VARIABLES
-  - {{BRANCHE_LABEL}}             → e.g., "Consulting & Services"
-  - {{UNTERNEHMENSGROESSE_LABEL}} → verbal size, e.g., "1 (Solo)", "2–10 (Small Team)", "11–100 (SME)"
-  - {{HAUPTLEISTUNG}}             → e.g., "Advising companies on AI integration …"
-  - {{COMPANY_SIZE}}              → "solo", "team" or "kmu"
+ANTI-REDUNDANCY:
+- Tool details explained fully HERE
+- In Roadmaps only reference: "Tools (see AI Stack)"
 
-  SIZE LOGIC (CONTENT)
-  - COMPANY_SIZE = "solo":
-      * Recommendation: maximum 3–5 tools in core stack, simple operation, low integration effort.
-      * Examples: one AI assistant, one knowledge/notes tool, one form/automation tool.
-      * Do not use terms like "department", "project team" or "area".
-  - COMPANY_SIZE = "team":
-      * Recommendation: shared workspace, collaboration, rights/roles concepts.
-      * Tools for task distribution, shared knowledge repo, simple workflows.
-  - COMPANY_SIZE = "kmu":
-      * Recommendation: clearly defined stack with governance, roles, and monitoring.
-      * Tools for teamwork, rights management, possibly area-specific solutions.
-
-  STYLE & RULES
-  - Write concretely, but product-neutral (no product names).
-  - Focus on tool categories and their purpose in the process {{HAUPTLEISTUNG}}.
-  - No words like "placeholder", "content will be created", "TODO", "free text field".
-  - No reference to the prompt or variables in visible text.
-  - Output must be readable standalone, without further explanations.
+STYLE & RULES:
+- Product-neutral (no brand names)
+- Focus on tool categories and purpose
+- No placeholders or developer language
 -->
 
 <section class="section tools">
