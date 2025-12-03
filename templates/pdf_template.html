@@ -1364,20 +1364,33 @@
                 content: "";
             }
         }
-        /* Enhanced Table Styles for Print */
+        /* PDF-SLIMDOWN: Enhanced Table Styles for Print */
         table {
             border-collapse: collapse;
             width: 100%;
             break-inside: avoid;
         }
         th, td {
-            padding: 8px 10px;
-            border-bottom: 1px solid var(--rule);
+            padding: 6px 8px;
+            border: 1px solid var(--rule);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         th {
-            font-weight: 700;
+            font-weight: 600;
             text-align: left;
+            padding: 6px 8px;
         }
+        /* Zebra stripes - very weak (3% opacity) */
+        tr:nth-child(even) td {
+            background: rgba(148, 163, 184, 0.03);
+        }
+        /* PDF-SLIMDOWN: Consolidated Font Sizes (only 14/16/18/24px) */
+        .section-body { font-size: 14px; }
+        .card { font-size: 14px; }
+        .kpi-card { font-size: 14px; }
+        .quick-win-card { font-size: 14px; }
+        .roadmap-phase { font-size: 14px; }
     </style>
 </head>
 <body>
@@ -1771,82 +1784,34 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
 </section>
 <section class="annex-section annex-glossar chapter">
   <h2>Glossar – zentrale KI-Begriffe</h2>
-  <p class="section-intro">Kurzüberblick über wichtige Begriffe aus diesem Report. Dient als Nachschlagewerk für Geschäftsführung, Fachabteilungen und IT.</p>
+  <p class="section-intro">Die wichtigsten Begriffe aus diesem Report (max. 12 Einträge, kompakt).</p>
   <dl class="glossary-list">
     <dt>AI Act (EU)</dt>
-    <dd>Europäische Verordnung zu KI-Systemen mit Pflichten je nach Risikoklasse (Transparenz, Datenqualität, Aufsicht, Dokumentation).</dd>
-    <dt>Alignment</dt>
-    <dd>Ausrichtung eines Modells auf gewünschte Ziele/Verhalten (Sicherheit, Ethik, Stil).</dd>
+    <dd>Europäische KI-Verordnung mit Pflichten je nach Risikoklasse.</dd>
     <dt>API</dt>
-    <dd>Programmierschnittstelle zur Anbindung oder Automatisierung von Software.</dd>
-    <dt>Assistive AI</dt>
-    <dd>KI als Unterstützung in Workflows (nicht vollautonom).</dd>
-    <dt>Benchmark</dt>
-    <dd>Vergleichsmaßstab zur Einordnung der eigenen Performance.</dd>
-    <dt>Chatbot</dt>
-    <dd>Dialogsystem auf Basis eines LLMs, z. B. für Support oder interne Auskünfte.</dd>
-    <dt>Context Window</dt>
-    <dd>Menge an Tokens, die ein Modell pro Anfrage verarbeiten kann.</dd>
-    <dt>Copilot</dt>
-    <dd>Assistent, der in bestehende Tools integriert (z. B. M365 Copilot).</dd>
-    <dt>Data Leakage</dt>
-    <dd>Unbeabsichtigte Preisgabe sensibler Daten durch Logs, Trainingsdaten oder Prompting.</dd>
-    <dt>Data Loss Prevention (DLP)</dt>
-    <dd>Techniken/Regeln, die Datenabflüsse verhindern.</dd>
-    <dt>Dataset Governance</dt>
-    <dd>Richtlinien für Herkunft, Qualität und Nutzung von Trainings-/Kontextdaten.</dd>
-    <dt>Embeddings</dt>
-    <dd>Vektordarstellung von Text/Bildern für Suche, RAG u. ä.</dd>
-    <dt>Enterprise Readiness</dt>
-    <dd>Erfüllung von Anforderungen an Sicherheit, Compliance, Betrieb & Support.</dd>
-    <dt>Few-shot Prompting</dt>
-    <dd>Beispiele im Prompt, um das Modell zu steuern.</dd>
+    <dd>Programmierschnittstelle zur Software-Anbindung.</dd>
+    <dt>DSGVO</dt>
+    <dd>Datenschutz-Grundverordnung für personenbezogene Daten.</dd>
     <dt>Fine-Tuning</dt>
     <dd>Nachtrainieren eines Modells auf eigene Daten.</dd>
     <dt>Guardrails</dt>
-    <dd>Prüfschritte (Policies, Tools), die Ausgaben validieren/filtern.</dd>
+    <dd>Prüfschritte, die KI-Ausgaben validieren/filtern.</dd>
     <dt>Halluzination</dt>
-    <dd>Plausibel klingende, aber faktisch falsche Ausgabe eines Modells.</dd>
-    <dt>Inference</dt>
-    <dd>Ausführung eines Modells zur Beantwortung einer Anfrage.</dd>
-    <dt>KB / Wissensbasis</dt>
-    <dd>Kuratierte, versionierte Sammlung relevanter Dokumente.</dd>
-    <dt>Latency</dt>
-    <dd>Antwortzeit eines Systems.</dd>
+    <dd>Plausibel klingende, aber faktisch falsche Modellausgabe.</dd>
     <dt>LLM</dt>
-    <dd>Large Language Model (z. B. GPT-4.1, Claude 3.5, Llama 3.1).</dd>
-    <dt>Maturity Index</dt>
-    <dd>Indikator für den KI-Reifegrad eines Unternehmens.</dd>
-    <dt>Open-Source Modelle</dt>
-    <dd>Frei verfügbare Modelle (z. B. Llama, Mistral) – oft lokal einsetzbar.</dd>
+    <dd>Large Language Model (GPT-4, Claude, Llama).</dd>
     <dt>Prompt</dt>
-    <dd>Eingabeinstruktion an ein LLM.</dd>
-    <dt>Prompt Leakage</dt>
-    <dd>Preisgabe sensibler Systeminstruktionen (z. B. durch Rückfragen).</dd>
+    <dd>Eingabeinstruktion an ein KI-Modell.</dd>
     <dt>RAG</dt>
-    <dd>Retrieval-Augmented Generation: Modell nutzt eigene Wissensbasis.</dd>
-    <dt>Red Teaming</dt>
-    <dd>Systematische Tests gegen Missbrauch/Fehler (Sicherheit).</dd>
+    <dd>Retrieval-Augmented Generation – KI mit eigener Wissensbasis.</dd>
     <dt>Responsible AI</dt>
-    <dd>Verantwortungsvolle Entwicklung/Nutzung mit Ethik & Compliance.</dd>
-    <dt>Runtime Cost</dt>
-    <dd>Laufzeit-/Token-Kosten pro Anfrage.</dd>
-    <dt>Service Levels (SLA)</dt>
-    <dd>Vereinbarte Verfügbarkeits-/Performance-Grenzen.</dd>
-    <dt>Shadow-IT</dt>
-    <dd>Nicht genehmigte Tools/Automationen, die Risiken bergen.</dd>
-    <dt>SLA Drift</dt>
-    <dd>Schleichende Verschlechterung gegenüber vereinbarten Werten.</dd>
-    <dt>Tavily / Perplexity</dt>
-    <dd>Recherche-APIs, die Web-Quellen strukturiert aufbereiten.</dd>
+    <dd>Verantwortungsvolle KI-Nutzung mit Ethik & Compliance.</dd>
     <dt>Token</dt>
     <dd>Grundeinheit der Modellverarbeitung (~3-4 Zeichen).</dd>
-    <dt>Toolformer</dt>
-    <dd>Modell nutzt externe Tools/Plugins zur Problemlösung.</dd>
-    <dt>Vector Store</dt>
-    <dd>Datenbank für Embeddings (z. B. FAISS, pgvector).</dd>
+    <dt>Human-in-the-Loop</dt>
+    <dd>Menschliche Kontrolle bei KI-Entscheidungsprozessen.</dd>
   </dl>
-  <p class="small muted">Quelle: kuratiert, Stand {{LAST_UPDATED}}.</p>
+  <p class="small muted">Stand {{LAST_UPDATED}}.</p>
 </section>
                 <!-- Impressum -->
                 <div class="impressum chapter">

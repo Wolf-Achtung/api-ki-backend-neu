@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+Report Renderer for PDF Generation.
+
+Version: 4.16.0 PDF-SLIMDOWN
+- HTML compression and minification
+- Unused section stripping
+- CSS optimization
+"""
 from __future__ import annotations
 import os, logging, re
 from pathlib import Path
@@ -7,6 +15,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape, Undefined
 from markupsafe import Markup
 
 from utils.logo_embedder import embed_logos_in_html
+from services.html_minifier import optimize_html_for_pdf, strip_unused_sections
 
 log = logging.getLogger(__name__)
 
@@ -200,5 +209,16 @@ def render(briefing_obj: Any,
     tpl_dir_str = str(Path(tpl_path).parent)
     html = embed_logos_in_html(html, tpl_dir_str)
     log.info(f"[RENDER] Embedded logos in HTML for report {run_id}")
+
+    # PDF-SLIMDOWN: Optimize HTML for smaller PDF file size
+    # 1. Strip unused sections (empty divs, debug elements)
+    # 2. Compress HTML (whitespace collapse, comment removal)
+    # 3. Minify inline CSS
+    original_size = len(html)
+    html = optimize_html_for_pdf(html)
+    new_size = len(html)
+    if original_size > 0:
+        savings_pct = (1 - new_size / original_size) * 100
+        log.info(f"[RENDER] PDF-SLIMDOWN: {original_size}→{new_size} bytes ({savings_pct:.1f}% saved)")
 
     return {"html": html, "meta": meta or {}}

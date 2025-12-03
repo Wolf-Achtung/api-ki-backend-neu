@@ -1,13 +1,13 @@
 Developer:
-<!-- roadmap_90d.md – v7.0 SIZE-AWARE MARKDOWN
+<!-- roadmap_90d.md – v8.0 PDF-SLIMDOWN (-15% Wörter)
      Output: Markdown (wird serverseitig zu HTML konvertiert)
 
-     **Ziellänge nach Größe:**
-     - Solo: ~280 Wörter (akzeptabel: 250–320)
-     - Team: ~330 Wörter (akzeptabel: 300–370)
-     - KMU: ~380 Wörter (akzeptabel: 350–420)
+     **Ziellänge nach Größe (REDUZIERT -15%):**
+     - Solo: ~240 Wörter (akzeptabel: 210–270)
+     - Team: ~280 Wörter (akzeptabel: 250–310)
+     - KMU: ~320 Wörter (akzeptabel: 290–350)
 
-     STRUKTUR (6 Phasen):
+     STRUKTUR (6 Phasen, KOMPAKT):
        Phase 1: Woche 1-2 – Zielbild & Prioritäten
        Phase 2: Woche 3-4 – Datenqualität & Workflow-Grundlagen
        Phase 3: Woche 5-6 – Quick-Wins & erste Wirkung
@@ -15,7 +15,13 @@ Developer:
        Phase 5: Woche 9-10 – Monitoring & Iteration
        Phase 6: Woche 11-13 – Konsolidierung & Skalierungsvorbereitung
 
-     Pro Phase: ~40-60 Wörter (Solo: ~35-45)
+     Pro Phase: ~30-45 Wörter (Solo: ~25-35)
+     MAX 5 BULLETS PRO PHASE!
+
+     ANTI-REDUNDANZ:
+     - KEINE Wiederholung von Quick Wins (wurden bereits genannt)
+     - KEINE erneute Pain-Point-Beschreibung
+     - KEINE zweistufigen Erklärungen (Begründung entfällt)
 
      VARIABLEN:
        {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, COMPANY_SIZE
