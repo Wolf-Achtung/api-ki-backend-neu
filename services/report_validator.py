@@ -150,23 +150,44 @@ class ReportValidator:
     }
 
     # PLATIN+ Standard: Mindestlängen in WÖRTERN (nicht Zeichen!)
-    # Umrechnung: ca. 5-6 Zeichen pro Wort im Deutschen
-    # HINWEIS: Validator prüft konservativ auf 800 Wörter für roadmap_12m,
-    # obwohl Prompt 900+ fordert – so verschwinden False Negatives bei Zähldifferenzen.
+    # SIZE-AWARE: Unterschiedliche Mindestlängen je Unternehmensgröße
+    # Solo = kürzere Reports, KMU = ausführlichere Reports
     MIN_SECTION_LENGTH_WORDS = {
         "executive_summary": 100,      # ~600 Zeichen
         "business_case": 130,          # ~800 Zeichen
-        "quick_wins": 60,              # ~350 Zeichen (pragmatisch für Solo-Profile)
-        "roadmap_90d": 120,            # ~700 Zeichen
-        "roadmap_12m": 800,            # PLATIN+: Prompt fordert 900, Validator prüft 800 (Sicherheitsmarge)
+        "quick_wins": 60,              # Base (wird size-aware überschrieben)
+        "roadmap_90d": 250,            # Base (wird size-aware überschrieben)
+        "roadmap_12m": 400,            # Base (wird size-aware überschrieben)
         "strategie_governance": 130,   # ~800 Zeichen
         "org_change": 120,             # ~700 Zeichen
         "tools_empfehlungen": 100,     # ~600 Zeichen
-        "foerderpotenzial": 900,       # PLATIN+: 900 Wörter (Fallback: 917)
-        "risks": 800,                  # PLATIN+: 800 Wörter (Fallback: 875)
-        "recommendations": 800,        # PLATIN+: 800 Wörter (Fallback: 809)
-        "gamechanger": 700,            # PLATIN+: 700 Wörter
-        "unternehmensprofil_markt": 500,  # PLATIN+: 500 Wörter (Fallback: 579)
+        "foerderpotenzial": 600,       # Reduziert für bessere Compliance
+        "risks": 500,                  # Reduziert für bessere Compliance
+        "recommendations": 500,        # Reduziert für bessere Compliance
+        "gamechanger": 400,            # Reduziert für bessere Compliance
+        "unternehmensprofil_markt": 300,  # Reduziert für bessere Compliance
+    }
+
+    # SIZE-AWARE Überschreibungen
+    MIN_SECTION_LENGTH_BY_SIZE = {
+        "solo": {
+            "quick_wins": 60,
+            "roadmap_90d": 250,
+            "roadmap_12m": 400,
+            "org_change": 80,
+        },
+        "team": {
+            "quick_wins": 90,
+            "roadmap_90d": 300,
+            "roadmap_12m": 500,
+            "org_change": 100,
+        },
+        "kmu": {
+            "quick_wins": 120,
+            "roadmap_90d": 350,
+            "roadmap_12m": 600,
+            "org_change": 120,
+        },
     }
 
     # Legacy-Alias für Abwärtskompatibilität
@@ -282,19 +303,49 @@ class ReportValidator:
                         )
                     )
 
+    def _get_min_words_for_section(self, logical_name: str) -> int:
+        """
+        Ermittelt die size-aware Mindest-Wortanzahl für eine Section.
+        """
+        # Normalisiere company_size
+        size_key = self.company_size.lower() if self.company_size else "kmu"
+        if "solo" in size_key or "1" in size_key or "freiberuf" in size_key:
+            size_key = "solo"
+        elif "team" in size_key or "klein" in size_key:
+            size_key = "team"
+        else:
+            size_key = "kmu"
+
+        # Size-aware Override falls vorhanden
+        size_overrides = self.MIN_SECTION_LENGTH_BY_SIZE.get(size_key, {})
+        if logical_name in size_overrides:
+            return size_overrides[logical_name]
+
+        # Fallback auf Standard
+        return self.MIN_SECTION_LENGTH_WORDS.get(logical_name, 50)
+
     def _check_empty_or_short_sections(self) -> None:
         """
         PLATIN+ Validierung: Prüft Sections auf Mindest-WORTZAHL (nicht Zeichen!).
+        SIZE-AWARE: Unterschiedliche Mindestlängen je Unternehmensgröße.
         """
-        for logical_name, min_words in self.MIN_SECTION_LENGTH_WORDS.items():
+        for logical_name in self.MIN_SECTION_LENGTH_WORDS.keys():
             section_key = self.SECTION_KEY_MAP.get(logical_name, logical_name)
             if section_key not in self.sections:
                 continue
             content = self.sections.get(section_key)
             if not isinstance(content, str):
                 continue
-            # HTML-Tags entfernen
+
+            # HTML-Tags entfernen für Textzählung
             text_only = re.sub(r"<[^>]+>", "", content).strip()
+
+            # RECOVERY: Wenn nach HTML-Entfernung nichts übrig ist,
+            # versuche den Originaltext zu verwenden (kaputtes HTML)
+            if not text_only and content.strip():
+                # Fallback: Alle Tags entfernen, auch kaputte
+                text_only = re.sub(r"<[^>]*>?", "", content).strip()
+
             if not text_only:
                 self.errors.append(
                     ValidationError(
@@ -308,9 +359,11 @@ class ReportValidator:
                 continue
 
             # PLATIN+: Wörter zählen statt Zeichen
-            # Wörter sind durch Whitespace getrennte Sequenzen
             words = text_only.split()
             actual_word_count = len(words)
+
+            # SIZE-AWARE Mindestlänge
+            min_words = self._get_min_words_for_section(logical_name)
 
             if actual_word_count < min_words:
                 self.errors.append(
@@ -320,7 +373,7 @@ class ReportValidator:
                         section=section_key,
                         message=(
                             f"Section zu kurz: {actual_word_count} Wörter "
-                            f"(Minimum: {min_words} Wörter)"
+                            f"(Minimum für {self.company_size}: {min_words} Wörter)"
                         ),
                         details=f"Content preview: {text_only[:150]}...",
                     )

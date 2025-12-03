@@ -10,13 +10,26 @@ Ziele:
 - Behebt UTF-8 Mojibake (Ã¶ → ö)
 - Optional: komprimiert Whitespace
 - Erhält valide Teil‑HTML (Listen, Tabellen, Divs, etc.) unverändert
+- NEU: Markdown → HTML Konvertierung (render_markdown_safe)
+- NEU: Broken HTML Recovery (recover_text_from_broken_html)
 
 Hinweis: bewusst konservativ, um Layout nicht zu zerstören.
 """
 from __future__ import annotations
 import re
 import html
+import logging
 from typing import Optional
+
+log = logging.getLogger(__name__)
+
+# Versuche markdown-it-py oder mistune zu importieren
+try:
+    import mistune
+    MISTUNE_AVAILABLE = True
+except ImportError:
+    MISTUNE_AVAILABLE = False
+    log.debug("[HTML-SANITIZER] mistune not available, markdown rendering disabled")
 
 _TRUTHY = {"1","true","TRUE","yes","YES","on","y"}
 
@@ -145,6 +158,247 @@ def minify_html(html_content: str) -> str:
     s = re.sub(r">\s*\n\s*\n+\s*<", ">\n<", s)
 
     return s
+
+
+# --- Markdown → HTML Konvertierung ---
+
+def render_markdown_safe(md_text: str) -> str:
+    """
+    Konvertiert Markdown sicher zu HTML.
+
+    - Erlaubte Tags: p, h2-h4, ul, ol, li, strong, em, br
+    - Keine Raw-HTML Injection
+    - Auto-Closing erzwungen
+    - Deterministisches Output
+
+    Args:
+        md_text: Markdown-Text
+
+    Returns:
+        Sicheres HTML
+    """
+    if not md_text:
+        return ""
+
+    if MISTUNE_AVAILABLE:
+        try:
+            # Mistune 3.x mit sicheren Einstellungen
+            renderer = mistune.create_markdown(
+                escape=True,  # HTML escapen
+                plugins=['strikethrough', 'table']
+            )
+            html_output = renderer(md_text)
+            # Nachbearbeitung: Nur erlaubte Tags behalten
+            return _filter_allowed_tags(html_output)
+        except Exception as e:
+            log.warning("[MD-RENDER] mistune failed: %s, using fallback", e)
+
+    # Fallback: Einfache Regex-basierte Konvertierung
+    return _markdown_fallback(md_text)
+
+
+def _filter_allowed_tags(html_text: str) -> str:
+    """Filtert HTML auf erlaubte Tags."""
+    ALLOWED_TAGS = {
+        'p', 'h2', 'h3', 'h4', 'ul', 'ol', 'li',
+        'strong', 'em', 'b', 'i', 'br', 'section'
+    }
+
+    def tag_replacer(match):
+        tag = match.group(1).lower().split()[0]  # Erstes Wort ist Tag-Name
+        if tag.lstrip('/') in ALLOWED_TAGS:
+            return match.group(0)
+        return ''  # Tag entfernen
+
+    # Entferne nicht-erlaubte Tags
+    result = re.sub(r'<(/?\w+)[^>]*>', tag_replacer, html_text)
+    return result
+
+
+def _markdown_fallback(md_text: str) -> str:
+    """
+    Einfache Markdown → HTML Konvertierung ohne externe Abhängigkeiten.
+    """
+    lines = md_text.strip().split('\n')
+    html_parts = []
+    in_list = False
+    list_type = None
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Überschriften
+        if stripped.startswith('## '):
+            if in_list:
+                html_parts.append(f'</{list_type}>')
+                in_list = False
+            html_parts.append(f'<h2>{html.escape(stripped[3:])}</h2>')
+        elif stripped.startswith('### '):
+            if in_list:
+                html_parts.append(f'</{list_type}>')
+                in_list = False
+            html_parts.append(f'<h3>{html.escape(stripped[4:])}</h3>')
+        elif stripped.startswith('#### '):
+            if in_list:
+                html_parts.append(f'</{list_type}>')
+                in_list = False
+            html_parts.append(f'<h4>{html.escape(stripped[5:])}</h4>')
+
+        # Listen
+        elif stripped.startswith('- ') or stripped.startswith('* '):
+            if not in_list:
+                html_parts.append('<ul>')
+                in_list = True
+                list_type = 'ul'
+            content = _convert_inline_markdown(stripped[2:])
+            html_parts.append(f'<li>{content}</li>')
+
+        elif re.match(r'^\d+\.\s', stripped):
+            if not in_list:
+                html_parts.append('<ol>')
+                in_list = True
+                list_type = 'ol'
+            content = _convert_inline_markdown(re.sub(r'^\d+\.\s', '', stripped))
+            html_parts.append(f'<li>{content}</li>')
+
+        # Leerzeile
+        elif not stripped:
+            if in_list:
+                html_parts.append(f'</{list_type}>')
+                in_list = False
+
+        # Normaler Text
+        else:
+            if in_list:
+                html_parts.append(f'</{list_type}>')
+                in_list = False
+            content = _convert_inline_markdown(stripped)
+            html_parts.append(f'<p>{content}</p>')
+
+    # Liste am Ende schließen
+    if in_list:
+        html_parts.append(f'</{list_type}>')
+
+    return '\n'.join(html_parts)
+
+
+def _convert_inline_markdown(text: str) -> str:
+    """Konvertiert Inline-Markdown (bold, italic)."""
+    # Escape HTML zuerst
+    text = html.escape(text)
+    # **bold** → <strong>
+    text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
+    # *italic* → <em>
+    text = re.sub(r'\*(.+?)\*', r'<em>\1</em>', text)
+    return text
+
+
+# --- HTML Recovery für kaputtes HTML ---
+
+def recover_text_from_broken_html(html_text: str, min_words: int = 50) -> str:
+    """
+    Extrahiert Text aus potenziell kaputtem HTML.
+
+    Priorität:
+    1. Versuche HTML normal zu parsen
+    2. Wenn Fehler → strip_tags()
+    3. Mindest-Text behalten
+
+    Args:
+        html_text: Potenziell kaputtes HTML
+        min_words: Mindestanzahl Wörter für Recovery
+
+    Returns:
+        Bereinigter Text oder ursprünglicher Inhalt als Fallback
+    """
+    if not html_text:
+        return ""
+
+    original_text = html_text.strip()
+
+    # Schritt 1: Versuche normale Tag-Entfernung
+    try:
+        clean_text = re.sub(r'<[^>]+>', '', html_text)
+        clean_text = clean_text.strip()
+
+        if clean_text:
+            words = clean_text.split()
+            if len(words) >= min_words:
+                log.debug("[HTML-RECOVERY] Normal extraction: %d words", len(words))
+                return clean_text
+    except Exception as e:
+        log.warning("[HTML-RECOVERY] Normal extraction failed: %s", e)
+
+    # Schritt 2: Aggressivere Tag-Entfernung (auch kaputte Tags)
+    try:
+        # Entferne alles was wie ein Tag aussieht, auch unvollständige
+        aggressive_clean = re.sub(r'<[^>]*>?', '', html_text)
+        aggressive_clean = re.sub(r'<[^>]*$', '', aggressive_clean)  # Unvollständige Tags am Ende
+        aggressive_clean = aggressive_clean.strip()
+
+        if aggressive_clean:
+            words = aggressive_clean.split()
+            if len(words) >= min_words:
+                log.debug("[HTML-RECOVERY] Aggressive extraction: %d words", len(words))
+                return aggressive_clean
+    except Exception as e:
+        log.warning("[HTML-RECOVERY] Aggressive extraction failed: %s", e)
+
+    # Schritt 3: Nur alphanumerische Zeichen behalten
+    try:
+        text_only = re.sub(r'[<>]', ' ', html_text)
+        text_only = re.sub(r'\s+', ' ', text_only).strip()
+
+        if text_only:
+            words = text_only.split()
+            if len(words) >= 10:  # Mindestens 10 Wörter
+                log.debug("[HTML-RECOVERY] Text-only extraction: %d words", len(words))
+                return text_only
+    except Exception as e:
+        log.warning("[HTML-RECOVERY] Text-only extraction failed: %s", e)
+
+    # Letzter Fallback: Original zurückgeben
+    log.warning("[HTML-RECOVERY] All extractions failed, returning original")
+    return original_text
+
+
+def sanitize_or_recover(html_content: str, min_words: int = 50) -> str:
+    """
+    Kombiniert Sanitization mit Recovery für kaputtes HTML.
+
+    Args:
+        html_content: HTML-String
+        min_words: Mindestanzahl Wörter für erfolgreiche Verarbeitung
+
+    Returns:
+        Sanitisiertes HTML oder recovered Text
+    """
+    if not html_content:
+        return ""
+
+    # Zuerst normale Sanitization versuchen
+    sanitized = sanitize_section_html(html_content)
+
+    # Prüfe ob genug Text übrig ist
+    text_only = re.sub(r'<[^>]+>', '', sanitized).strip()
+    words = text_only.split()
+
+    if len(words) >= min_words:
+        return sanitized
+
+    # Falls zu wenig: Recovery versuchen
+    log.warning("[SANITIZE-RECOVER] Only %d words after sanitization, trying recovery", len(words))
+    recovered = recover_text_from_broken_html(html_content, min_words)
+
+    # Recovered Text als Paragraphen wrappen
+    if recovered and not recovered.startswith('<'):
+        # Teile in Absätze
+        paragraphs = recovered.split('\n\n')
+        if len(paragraphs) > 1:
+            return '\n'.join(f'<p>{p.strip()}</p>' for p in paragraphs if p.strip())
+        return f'<p>{recovered}</p>'
+
+    return recovered or sanitized
 
 
 def sanitize_section_html(
