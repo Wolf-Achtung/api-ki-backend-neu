@@ -55,13 +55,9 @@ RULES:
   <p>
     This baseline is attractive for many funding agencies: the project is economically
     plausible, the benefits are clearly identifiable, and the self-contribution is
-    fundamentally sustainable. Funding can further improve this situation by reducing
-    part of the investment burden. Specifically, for a company of size
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> in the <strong>{{BRANCHE_LABEL}}</strong>
-    sector: the investment of {{CAPEX_REALISTISCH_EUR}} € with monthly savings of
-    {{EINSPARUNG_MONAT_EUR}} € pays back in approximately {{PAYBACK_MONTHS}} months.
-    The ROI of {{ROI_12M}}% shows the project is economically viable even without
-    external support – with funding, profitability becomes significantly more attractive.
+    fundamentally sustainable. Funding can improve this situation by reducing
+    part of the investment burden – the project is already viable without external
+    support; with funding, profitability becomes even more attractive.
   </p>
 
   <h3>2. How Funding Can Improve Your Business Case</h3>
