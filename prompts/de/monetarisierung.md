@@ -1,33 +1,32 @@
 Developer:
-<!-- monetarisierung.md – v1.0 PLATIN++ (Pricing-Modelle für KI-Services)
-     Antworte ausschließlich mit validem HTML.
-     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: monetarisierung -->
+<!-- VERSION: v2.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}} -->
+<!-- TOKEN-BUDGET: 800 (solo:0.8x=640, team:1.0x=800, kmu:1.15x=920) -->
+<!--
+ZIEL: Kompakte Übersicht zu 3 Pricing-Modellen für KI-Services.
 
-     ZIEL:
-     - Kompakte Übersicht zu 3 Pricing-Modellen für KI-gestützte Services.
-     - Praxisnah, konkret, direkt umsetzbar.
-     - Textumfang: 120–180 Wörter (STRIKT EINHALTEN!)
+PFLICHTSTRUKTUR (3 Modelle):
+1. Productized Service Light (Fixpreis) – Zielgruppe, Zeit, Preisband, Ergebnis
+2. Retainer-Modell (monatlich) – Zielgruppe, Zeit, Preisband, Ergebnis
+3. Workshop + Setup (Einmal + Follow-Up) – Zielgruppe, Zeit, Preisband, Ergebnis
 
-     VERFÜGBARE VARIABLEN:
-       {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}
+PERSONA-VARIATIONEN (COMPANY_SIZE):
+- solo: Fokus auf Productized Services und Workshops (einfach skalierbar)
+- team: Retainer + Workshops
+- kmu: Alle drei Modelle gleichwertig
 
-     SIZE-AWARE:
-       SOLO: Fokus auf Productized Services und Workshops (einfach skalierbar)
-       TEAM: Retainer + Workshops
-       KMU: Alle drei Modelle gleichwertig
+ANTI-REDUNDANZ:
+- Monetarisierung ergänzt Business Case, wiederholt ihn nicht
+- Pricing-Logik HIER, nicht in anderen Sektionen
 
-     PFLICHTSTRUKTUR (3 Modelle):
-     1. Productized Service Light (Fixpreis)
-        - Zielgruppe, Zeitaufwand, Preisband, Ergebnis
-     2. Retainer-Modell (monatlich)
-        - Zielgruppe, Zeitaufwand, Preisband, Ergebnis
-     3. Workshop + Setups (Einmalpreis + Follow-Up)
-        - Zielgruppe, Zeitaufwand, Preisband, Ergebnis
-
-     VERBOTEN:
-       - Keine konkreten €-Beträge nennen (nur Spannen wie "niedrig/mittel/hoch")
-       - Keine Platzhalter
-       - Keine Marketing-Floskeln
+STIL:
+- Textumfang: 120–180 Wörter
+- Keine konkreten €-Beträge (nur Spannen)
+- Keine Marketing-Floskeln
 -->
 
 <section class="section monetization">

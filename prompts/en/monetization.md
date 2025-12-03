@@ -1,33 +1,32 @@
 Developer:
-<!-- monetization.md – v1.0 PLATIN++ (Pricing Models for AI Services)
-     Output valid HTML only.
-     NO <html>, <head> or <body>. NO Markdown fences.
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: monetization -->
+<!-- VERSION: v2.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/sme -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}} -->
+<!-- TOKEN-BUDGET: 800 (solo:0.8x=640, team:1.0x=800, sme:1.15x=920) -->
+<!--
+GOAL: Compact overview of 3 pricing models for AI services.
 
-     GOAL:
-     - Compact overview of 3 pricing models for AI-powered services.
-     - Practical, specific, immediately actionable.
-     - Text length: 120–180 words (STRICTLY FOLLOW!)
+REQUIRED STRUCTURE (3 models):
+1. Productized Service Light (Fixed Price) – Target, Time, Price Range, Deliverable
+2. Retainer Model (Monthly) – Target, Time, Price Range, Deliverable
+3. Workshop + Setup (One-time + Follow-Up) – Target, Time, Price Range, Deliverable
 
-     AVAILABLE VARIABLES:
-       {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}
+PERSONA VARIATIONS (COMPANY_SIZE):
+- solo: Focus on Productized Services and Workshops (easily scalable)
+- team: Retainer + Workshops
+- sme: All three models equally weighted
 
-     SIZE-AWARE:
-       SOLO: Focus on Productized Services and Workshops (easily scalable)
-       TEAM: Retainer + Workshops
-       SME: All three models equally weighted
+ANTI-REDUNDANCY:
+- Monetization complements Business Case, doesn't repeat it
+- Pricing logic HERE, not in other sections
 
-     REQUIRED STRUCTURE (3 models):
-     1. Productized Service Light (Fixed Price)
-        - Target audience, Time investment, Price range, Deliverable
-     2. Retainer Model (Monthly)
-        - Target audience, Time investment, Price range, Deliverable
-     3. Workshop + Setup (One-time + Follow-Up)
-        - Target audience, Time investment, Price range, Deliverable
-
-     FORBIDDEN:
-       - No specific € amounts (only ranges like "low/medium/high")
-       - No placeholders
-       - No marketing fluff
+STYLE:
+- Text length: 120–180 words
+- No specific € amounts (only ranges)
+- No marketing fluff
 -->
 
 <section class="section monetization">
