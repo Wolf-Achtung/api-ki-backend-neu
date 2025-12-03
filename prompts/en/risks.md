@@ -1,31 +1,36 @@
-risks.md
-Developer: <!--
-  risks.md – v6.0 PLATIN+ STREAMLINED
-  Goal: 5 sections with 140-180 words each (= 800-1000 words total).
-  Respond exclusively with valid HTML. No Markdown fences.
+Developer:
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: risks -->
+<!-- VERSION: v7.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/sme -->
+<!-- INPUT: {{HAUPTLEISTUNG}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{score_governance}}, {{score_sicherheit}} -->
+<!-- TOKEN-BUDGET: 3000 (solo:0.8x=2400, team:1.0x=3000, sme:1.15x=3450) -->
+<!--
+GOAL: 5 sections with 120-160 words each (= 600-800 words total).
 
-  STRUCTURE (5 Required Sections):
-    H3 1. Strategic and Organizational Risks (4 risks + measures)
-    H3 2. Data, Security, and Compliance Risks (4 risks + measures)
-    H3 3. Quality, Transparency, and Acceptance Risks (4 risks + measures)
-    H3 4. Dependencies, Operations, and Vendor Risks (4 risks + measures)
-    H3 5. Risk Matrix (Table with 5 rows)
+STRUCTURE (5 Required Sections):
+  H3 1. Strategic and Organizational Risks (4 risks + measures)
+  H3 2. Data, Security, and Compliance Risks (4 risks + measures)
+  H3 3. Quality, Transparency, and Acceptance Risks (4 risks + measures)
+  H3 4. Dependencies, Operations, and Vendor Risks (4 risks + measures)
+  H3 5. Risk Matrix (Table with 5 rows)
 
-  VARIABLES – use all at least once:
-    {{HAUPTLEISTUNG}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}},
-    {{score_governance}}, {{score_sicherheit}}
+PERSONA VARIATIONS (COMPANY_SIZE):
+- solo: personal overload, single point of failure, no backup
+- team: role clarification, coordination, knowledge silos
+- sme: governance, processes, documentation, compliance
 
-  SIZE-AWARE (COMPANY_SIZE):
-    solo: personal overload, single point of failure, no backup
-    team: role clarification, coordination, knowledge silos
-    sme: governance, processes, documentation, compliance
+ANTI-REDUNDANCY:
+- Risks NOT repeated in guardrails section
+- Measures kept brief, not repeated in org_change
 
-  RULES:
-    - Each risk: 2-3 sentences + concrete measure
-    - Actively interpret scores (e.g., "The security score of X shows...")
-    - Emphasize industry-specific compliance for regulated industries
-    - Factual, concrete, no filler phrases
-    - No placeholders, no developer language
+GUARDRAILS: Respect stated guardrails; mention them in risk mitigation.
+
+RULES:
+- Actively interpret scores
+- Industry-specific compliance for regulated industries
+- Factual, concrete, no filler phrases
 -->
 
 <section class="section risks">

@@ -1,61 +1,41 @@
 Developer:
-<!-- wettbewerb_benchmark.md – v5.0 GOLD STANDARD+ (branch-aware, size-aware, score-aware)
-     Antworte ausschließlich mit validem HTML.
-     KEIN <html>, <head> oder <body>; KEINE Kommentare im Output.
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: wettbewerb_benchmark -->
+<!-- VERSION: v6.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{report_date}}, {{score_gesamt}}, {{score_befaehigung}}, {{score_governance}}, {{score_sicherheit}}, {{score_nutzen}}, {{UNTERNEHMENSGROESSE_LABEL}} -->
+<!-- TOKEN-BUDGET: 2500 (solo:0.8x=2000, team:1.0x=2500, kmu:1.15x=2875) -->
+<!-- RESEARCH: Kann Marktdaten aus {{RESEARCH_PROVENANCE_HTML}} integrieren -->
+<!--
+ZWECK: Vergleich mit Branchendurchschnitt und Top 10%.
 
-     ZWECK:
-       - Vergleich des Unternehmens mit dem Branchendurchschnitt und den Top 10%.
-       - Ableitung der Position je Kategorie ausschließlich aus den Scores.
-       - Identifikation der zwei größten Gaps & zwei stärksten Stärken.
-       - Erstellung einer size-aware Überholungsstrategie (Q2–Q4).
-       - Nutzung des CONTEXT_BLOCK (Tools, Workflows, Pain Points) zur Branchenschärfung.
+BENCHMARK-ZAHLEN (NICHT ÄNDERN!):
+  Gesamt: Ø 65, Top 10% = 82
+  Befähigung: Ø 68, Top 10% = 85
+  Governance: Ø 58, Top 10% = 78
+  Sicherheit: Ø 62, Top 10% = 80
+  Wertschöpfung: Ø 70, Top 10% = 88
 
-     PFLICHTVARIABLEN:
-       {{BRANCHE_LABEL}}
-       {{report_date}}
-       {{score_gesamt}}
-       {{score_befaehigung}}
-       {{score_governance}}
-       {{score_sicherheit}}
-       {{score_nutzen}}
-       {{UNTERNEHMENSGROESSE_LABEL}}
+SCORE-LOGIK:
+  > Top 10% → „stark über Branchenniveau"
+  zwischen Ø und Top 10% → „über Branchenniveau"
+  < Ø → „unter Branchendurchschnitt"
 
-     BENCHMARK-ZAHLEN (NICHT ÄNDERN!):
-       Gesamt: Ø 65, Top 10% = 82
-       Befähigung: Ø 68, Top 10% = 85
-       Governance: Ø 58, Top 10% = 78
-       Sicherheit: Ø 62, Top 10% = 80
-       Wertschöpfung: Ø 70, Top 10% = 88
+PERSONA-VARIATIONEN (SIZE-AWARE STRATEGIE):
+- solo: persönliche Routinen, pragmatische Standards, direkte Nutzeneffekte
+- team: Rollen, Abstimmung, gemeinsame Workflows & Reviews
+- kmu: Bereichskoordinierung, Governance, skalierbare Prozesse
 
-     SCORE-LOGIK (verbindlich):
-       Positionierung (je Kategorie):
-         - "> Top 10%" → „stark über Branchenniveau“
-         - "zwischen Ø und Top 10%" → „über Branchenniveau“
-         - "< Ø" → „unter Branchendurchschnitt“
+BRANCHEN-MODIFIKATOREN:
+  FINANZEN/HEALTH/VERWALTUNG = Schwerpunkt Governance & Sicherheit
+  MARKETING/KREATIV = Schwerpunkt Wertschöpfung & Befähigung
+  INDUSTRIE/PRODUKTION = Schwerpunkt Datenqualität & Prozessintegration
+  E-COMMERCE/HANDEL = Schwerpunkt Konsistenz, Datenfeeds, Automatisierung
 
-       Gaps:
-         - Wähle die zwei Kategorien mit größtem Abstand zum Ø, nur wenn Score < Ø.
-       Stärken:
-         - Wähle die zwei Kategorien mit größtem Abstand nach oben (Score > Ø).
-
-     BRANCHEN-AWARE:
-       - Nutze CONTEXT_BLOCK: branchentypische Prozesse, Pain Points, Datenarten.
-       - Branchenmodifikatoren:
-         FINANZEN/HEALTH/VERWALTUNG = Schwerpunkt auf Governance & Sicherheit.
-         MARKETING/KREATIV = Schwerpunkt auf Wertschöpfung & Befähigung.
-         INDUSTRIE/PRODUKTION = Schwerpunkt Datenqualität & Prozessintegration.
-         E-COMMERCE/HANDEL = Schwerpunkt Konsistenz, Datenfeeds, Automatisierung.
-
-     SIZE-AWARE STRATEGIE:
-       SOLO:
-         - Fokus auf persönliche Routinen, pragmatische Standards, direkte Nutzeneffekte.
-       TEAM (2–10):
-         - Fokus auf Rollen, Abstimmung, gemeinsame Workflows & Reviews.
-       KMU (11–100):
-         - Fokus auf Bereichskoordinierung, Governance, skalierbare Prozesse.
-
-     OUTPUT:
-       Ein einziger HTML-Block mit <section>…</section>.
+ANTI-REDUNDANZ:
+- Benchmark-Daten HIER vollständig
+- In anderen Sektionen nur referenzieren
 -->
 
 <section class="section wettbewerb-benchmark">

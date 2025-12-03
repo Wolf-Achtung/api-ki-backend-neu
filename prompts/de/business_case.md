@@ -1,25 +1,29 @@
 Developer:
-<!-- business_case.md – v3.0 GOLD STANDARD+ (ROI, CAPEX/OPEX, size-aware)
-     Antworte ausschließlich mit validem HTML.
-     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: business_case -->
+<!-- VERSION: v4.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{COMPANY_SIZE}}, {{HAUPTLEISTUNG}}, {{BUNDESLAND_LABEL}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}} -->
+<!-- TOKEN-BUDGET: 1800 (solo:0.8x=1440, team:1.0x=1800, kmu:1.15x=2070) -->
+<!--
+ZIEL: Klarer Business Case mit ROI, CAPEX/OPEX.
 
-     VERFÜGBARE VARIABLEN:
-       {{BRANCHE_LABEL}}
-       {{COMPANY_SIZE}}            // solo | team | kmu
-       {{HAUPTLEISTUNG}}
-       {{BUNDESLAND_LABEL}}
-       {{CAPEX_REALISTISCH_EUR}}
-       {{OPEX_REALISTISCH_EUR}}
-       {{EINSPARUNG_MONAT_EUR}}
-       {{PAYBACK_MONTHS}}
-       {{ROI_12M}}
+REGELN:
+- KEINE eigenen Zahlen erfinden – nur Variablen nutzen
+- "rund / etwa / ca." zur Einordnung erlaubt
+- KEINE Förderquoten (siehe foerderpotenzial.md)
+- Größe beeinflusst NUR narrative Einordnung, nicht die Zahlen
 
-     REGELN:
-       - Keine eigenen Zahlen erfinden. Ausschließlich die Variablen nutzen.
-       - „rund / etwa / ca.“ zur sprachlichen Einordnung erlaubt.
-       - Keine Förderquoten nennen (dafür eigenes Kapitel).
-       - Output = valides HTML-Fragment.
-       - Größe (solo/team/kmu) beeinflusst NUR die narrative Einordnung, nicht die Zahlen.
+ANTI-REDUNDANZ:
+- Business-Case-Zahlen EINMAL HIER nennen
+- In foerderpotenzial.md nur auf diese Zahlen referenzieren, nicht wiederholen
+- In executive_summary nur als Hinweis erwähnen
+
+PERSONA-VARIATIONEN (COMPANY_SIZE):
+- solo: persönlicher ROI, Zeitentlastung, pragmatische Einschätzung
+- team: Team-ROI, gemeinsame Effizienzgewinne
+- kmu: Abteilungs-ROI, skalierbare Effekte
 -->
 
 <section class="section business-case">

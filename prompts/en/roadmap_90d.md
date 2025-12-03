@@ -1,34 +1,37 @@
 Developer:
-<!-- roadmap_90d.md – v9.0 PDF-SLIMDOWN-STRICT
-     Output: Markdown (converted to HTML server-side)
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: roadmap_90d -->
+<!-- VERSION: v10.0 PLATIN++ V5 -->
+<!-- OUTPUT: Markdown -->
+<!-- SIZE-AWARE: solo/team/sme -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, COMPANY_SIZE -->
+<!-- TOKEN-BUDGET: 2200 (solo:0.8x=1760, team:1.0x=2200, sme:1.15x=2530) -->
+<!--
+GOAL: 90-Day Roadmap with 3 phases, compact and actionable.
 
-     **STRICT TOKEN LIMIT (CRITICAL!):**
-     MAXIMUM 350-450 words output.
+WORD LIMITS (PDF-SLIMDOWN):
+- solo: ~180 words (150–200)
+- team: ~220 words (200–250)
+- sme: ~280 words (260–320)
 
-     **Word Limits (STRICTLY REDUCED):**
-     - Solo: ~180 words (acceptable: 150–200)
-     - Team: ~220 words (acceptable: 200–250)
-     - SME: ~280 words (acceptable: 260–320)
+STRUCTURE: ONLY 3 phases
+1. Week 1–4: Setup & first wins
+2. Week 5–8: Quality & workflows
+3. Week 9–13: Consolidation
 
-     STRUCTURE: ONLY 3 phases! (not 6)
-       1. Week 1–4: Setup & first wins (~120 words)
-       2. Week 5–8: Quality & workflows (~120 words)
-       3. Week 9–13: Consolidation (~100 words)
+ANTI-REDUNDANCY (STRICT!):
+- Quick Wins already covered in quick_wins.md – DO NOT repeat
+- Pain Points addressed there – only BUILD on them here
+- Tools described in tools_recommendations.md – only reference
 
-     **FOCUS: ONLY 3 QUICK-IMPACT MEASURES**
-     - No vision, no meta sections
-     - No detailed explanations
-     - Directly actionable steps
+PERSONA VARIATIONS (COMPANY_SIZE):
+- solo: personal routines, own documentation, self-review
+- team: roles (AI Owner, Reviewer), shared standards
+- sme: departments, governance, pilot areas
 
-     VARIABLES:
-       {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, COMPANY_SIZE
+GUARDRAILS: Consider guardrails from strategic context.
 
-     SIZE-AWARE (COMPANY_SIZE):
-       solo: personal routines, own documentation, no teams
-       team: roles, shared standards, coordination
-       sme: departments, governance, pilot areas
-
-     FORMAT: Markdown (## for phases, - for bullets), NO HTML
+FORMAT: Markdown (## for phases, - for bullets), NO HTML
 -->
 
 ## Strategic 90-Day Roadmap

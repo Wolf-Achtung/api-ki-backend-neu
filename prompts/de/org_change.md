@@ -1,42 +1,36 @@
 Developer:
-<!-- org_change.md – v6.0 PLATIN+ (branch-aware, size-aware, strategic, context-integrated, min 700 chars)
-     Antworte ausschließlich mit validem HTML.
-     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: org_change -->
+<!-- VERSION: v7.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{KI_ZIELE_LABELS}}, {{KI_HEMMNISSE_LABELS}}, {{ki_kompetenz}}, {{score_governance}}, {{score_sicherheit}}, {{score_nutzen}}, {{score_befaehigung}}, COMPANY_SIZE -->
+<!-- TOKEN-BUDGET: 2200 (solo:0.8x=1760, team:1.0x=2200, kmu:1.15x=2530) -->
+<!--
+ZIEL: Präziser Abschnitt „Veränderungsfähigkeit & Lernen".
 
-     ZIEL:
-       - Präziser, motivierender und gleichzeitig realistischer Abschnitt „Veränderungsfähigkeit & Lernen".
-       - Nutzt ACTIV den CONTEXT_BLOCK: typische Workflows, Pain Points, Datenstellen der Branche.
-       - Size-aware Anpassung für solo/team/kmu – mit klaren Rollen & Routinen.
-       - 4 Blöcke: Einleitung → Ausgangslage → Veränderungsfelder → 90-Tage-Fahrplan → Umgang mit Widerständen.
-       - Keine generischen Aussagen; jeder Absatz muss klaren geschäftlichen Wert haben.
-       - Score-Werte AKTIV nutzen und interpretieren.
+PFLICHTSTRUKTUR (4 Abschnitte):
+1. "Wo Sie heute stehen" (Score-Interpretation, 2-3 Absätze)
+2. "Wichtigste Veränderungsfelder" (min. 3 Bulletpoints)
+3. "Fahrplan für die nächsten 90 Tage" (3 Phasen: 0-30, 31-60, 61-90)
+4. "Umgang mit Widerständen" (size-aware)
 
-     VARIABLEN (MÜSSEN alle genutzt werden!):
-       {{BRANCHE_LABEL}}
-       {{UNTERNEHMENSGROESSE_LABEL}}
-       {{HAUPTLEISTUNG}}
-       {{KI_ZIELE_LABELS}}
-       {{KI_HEMMNISSE_LABELS}}
-       {{ki_kompetenz}}
-       {{score_governance}}, {{score_sicherheit}},
-       {{score_nutzen}}, {{score_befaehigung}}
-       COMPANY_SIZE = "solo" | "team" | "kmu"
+ANTI-REDUNDANZ:
+- Change-Aspekte HIER behandeln
+- NICHT in strategie_governance wiederholen
+- 90-Tage-Fahrplan ergänzt roadmap_90d, wiederholt nicht
 
-     PFLICHTSTRUKTUR (ALLE 4 Abschnitte erforderlich):
-       1. "Wo Sie heute stehen" (Score-Interpretation, 2-3 Absätze)
-       2. "Wichtigste Veränderungsfelder" (mindestens 3 Bulletpoints mit konkreten Maßnahmen)
-       3. "Fahrplan für die nächsten 90 Tage" (3 Phasen: 0-30, 31-60, 61-90 Tage)
-       4. "Umgang mit Widerständen" (size-aware, mindestens 1 Absatz)
+PERSONA-VARIATIONEN (COMPANY_SIZE):
+- solo: persönliche Routinen, Self-Review, eigene Prüfpunkte
+        VERBOTEN: Teams, Abteilungen, Mitarbeiter
+- team: Teamabsprachen, KI-Koordinator, gemeinsame Review-Runden
+        VERBOTEN: Division, Unit
+- kmu: Fachbereichs-Koordination, bereichsübergreifende Standards
+        VERBOTEN: Konzernjargon
 
-     MINDESTLÄNGE: 700 Zeichen (ohne HTML-Tags) – unterschreite diese NIEMALS!
-
-     VERBOTEN:
-       - Platzhalterwörter („Platzhalter", „TODO", Template-Marker, …)
-       - Konzernsprache (Division, Unit) bei KMU
-       - Teams/Abteilungen in SOLO
-       - generische Aussagen ohne klaren Nutzen
-       - Scores nicht interpretieren
-
+REGELN:
+- Scores AKTIV interpretieren
+- Keine generischen Aussagen ohne klaren Nutzen
 -->
 
 <section class="section org-change">
