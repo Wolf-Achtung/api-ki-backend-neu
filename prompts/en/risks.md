@@ -240,7 +240,4 @@ RULES:
   </p>
 </section>
 
-<!-- PLATIN+ REINFORCEMENT: This section MUST contain at least 800 words.
-     Check your output: Count the words and expand each risk area with additional
-     details, examples, and concrete measures if the minimum length is not reached.
-     NEVER shorten – always deliver complete, detailed content. -->
+<!-- DEV: PDF-SLIMDOWN v2.0 - Target: 600-800 words, compact but complete -->
