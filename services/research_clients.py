@@ -25,8 +25,15 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 import requests
-import feedparser
 from bs4 import BeautifulSoup
+
+# Optional feedparser import (for RSS functionality)
+FEEDPARSER_AVAILABLE = False
+try:
+    import feedparser
+    FEEDPARSER_AVAILABLE = True
+except ImportError:
+    pass
 
 log = logging.getLogger(__name__)
 
@@ -117,6 +124,11 @@ def http_get_json(url: str, timeout: Optional[tuple] = None) -> dict[Any, Any] |
 # --- RSS parsing ---
 
 def parse_rss(url: str, limit: int = 12) -> List[Dict[str, Any]]:
+    """Parse RSS feed and return list of items. Returns empty list if feedparser unavailable."""
+    if not FEEDPARSER_AVAILABLE:
+        log.debug("feedparser not installed – skipping RSS parse for %s", url)
+        return []
+
     key = _cache_key("RSS", url)
     cached = _cache_get(key, 300)  # 5 min
     if cached and isinstance(cached, list):
