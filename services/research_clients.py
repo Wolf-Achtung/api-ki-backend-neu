@@ -28,12 +28,12 @@ import requests
 from bs4 import BeautifulSoup
 
 # Optional feedparser import (for RSS functionality)
+FEEDPARSER_AVAILABLE = False
 try:
     import feedparser
     FEEDPARSER_AVAILABLE = True
 except ImportError:
-    feedparser = None  # type: ignore
-    FEEDPARSER_AVAILABLE = False
+    pass
 
 log = logging.getLogger(__name__)
 
