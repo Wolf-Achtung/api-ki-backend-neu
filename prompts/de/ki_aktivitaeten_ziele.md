@@ -18,7 +18,7 @@ Developer:
        - Keine generischen, nicht belegten IST-Aussagen.
        - Keine unrealistischen Ziele.
        - Keine Projekte nennen, die nicht in {{KI_PROJEKTE}} oder {{TOOLS_AKTUELL}} stehen.
-       - Keine Platzhaltertexte („Platzhalter“, „Freitextfeld“, „TODO“).
+       - Keine Platzhaltertexte („Platzhalter", „TODO" oder andere Template-Marker).
 
      IST-REGEL:
        - Wenn ALLE drei Variablen leer sind → statt Tabelle: Text "Noch keine KI-Projekte im Einsatz."

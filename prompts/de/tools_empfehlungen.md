@@ -31,7 +31,7 @@ Developer:
   STIL & REGELN
   - Schreibe konkret, aber produktneutral (keine Produktnamen).
   - Fokus auf Toolkategorien und ihren Zweck im Prozess {{HAUPTLEISTUNG}}.
-  - Keine Wörter wie "Platzhalter", "Content wird erstellt", "TODO", "Freitextfeld".
+  - Keine Wörter wie "Platzhalter", "Content wird erstellt", "TODO" oder andere Template-Marker.
   - Kein Verweis auf den Prompt oder die Variablen im sichtbaren Text.
   - Output muss alleine lesbar sein, ohne weitere Erklärungen.
 -->
