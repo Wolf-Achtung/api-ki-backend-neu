@@ -59,6 +59,20 @@ RE_ON_EVENT_ATTR = re.compile(r"(?i)\s+on[a-z]+\s*=\s*(\"[^\"]*\"|'[^']*')")
 # Daten‑/Sicherheitsfilter: Entferne javascript: URIs in href/src
 RE_JS_PROTOCOL = re.compile(r"(?is)(\s(?:href|src)\s*=\s*['\"])\s*javascript:[^'\"]*(['\"])")
 
+# --- HTML Minification Patterns ---
+# Empty tags that can be safely removed
+RE_EMPTY_P = re.compile(r"<p[^>]*>\s*</p>", re.IGNORECASE)
+RE_EMPTY_SPAN = re.compile(r"<span[^>]*>\s*</span>", re.IGNORECASE)
+RE_EMPTY_DIV = re.compile(r"<div[^>]*>\s*</div>", re.IGNORECASE)
+RE_EMPTY_LI = re.compile(r"<li[^>]*>\s*</li>", re.IGNORECASE)
+RE_LONE_BR = re.compile(r"(?:<br\s*/?>){2,}", re.IGNORECASE)  # Multiple consecutive <br>
+
+# Empty class attributes
+RE_EMPTY_CLASS = re.compile(r'\s+class\s*=\s*["\'][\s]*["\']', re.IGNORECASE)
+
+# Redundant whitespace in style attributes
+RE_STYLE_WHITESPACE = re.compile(r'style\s*=\s*["\']([^"\']*)["\']', re.IGNORECASE)
+
 def _cleanup_template_phrases(text: str) -> str:
     """Entfernt versehentlich eingebettete Template-Phrasen aus dem Output.
 
@@ -75,7 +89,80 @@ def _cleanup_template_phrases(text: str) -> str:
     return text
 
 
-def sanitize_section_html(html_content: Optional[str], compress_ws: bool = True) -> str:
+def _minify_inline_style(match: re.Match) -> str:
+    """Minifiziert ein style-Attribut (Whitespace entfernen)."""
+    style_content = match.group(1)
+    # Entferne überflüssige Whitespace
+    style_content = re.sub(r"\s*:\s*", ":", style_content)
+    style_content = re.sub(r"\s*;\s*", ";", style_content)
+    style_content = style_content.strip().rstrip(";")
+    if not style_content:
+        return ""  # Leeres style-Attribut ganz entfernen
+    return f'style="{style_content}"'
+
+
+def minify_html(html_content: str) -> str:
+    """
+    Minifiziert HTML durch Entfernen leerer Tags und überflüssiger Attribute.
+
+    - Entfernt leere <p>, <span>, <div>, <li> Tags
+    - Reduziert mehrfache <br> auf einzelne
+    - Entfernt leere class="" Attribute
+    - Komprimiert Whitespace in style-Attributen
+    - Entfernt Leerzeilen zwischen Tags
+
+    Args:
+        html_content: HTML-String
+
+    Returns:
+        Minifiziertes HTML
+    """
+    if not html_content:
+        return ""
+
+    s = html_content
+
+    # Entferne leere Tags (mehrfach, da verschachtelt sein können)
+    for _ in range(3):
+        s = RE_EMPTY_P.sub("", s)
+        s = RE_EMPTY_SPAN.sub("", s)
+        s = RE_EMPTY_DIV.sub("", s)
+        s = RE_EMPTY_LI.sub("", s)
+
+    # Reduziere mehrfache <br> auf einzelne
+    s = RE_LONE_BR.sub("<br>", s)
+
+    # Entferne leere class-Attribute
+    s = RE_EMPTY_CLASS.sub("", s)
+
+    # Minifiziere style-Attribute
+    s = RE_STYLE_WHITESPACE.sub(_minify_inline_style, s)
+
+    # Entferne leere style-Attribute die übrig geblieben sind
+    s = re.sub(r'\s+style\s*=\s*["\'][\s]*["\']', "", s, flags=re.IGNORECASE)
+
+    # Entferne Leerzeilen zwischen Tags (aber behalte single newlines)
+    s = re.sub(r">\s*\n\s*\n+\s*<", ">\n<", s)
+
+    return s
+
+
+def sanitize_section_html(
+    html_content: Optional[str],
+    compress_ws: bool = True,
+    minify: bool = True
+) -> str:
+    """
+    Sanitisiert und minifiziert HTML für Report-Sektionen.
+
+    Args:
+        html_content: HTML-String
+        compress_ws: Whitespace normalisieren
+        minify: HTML minifizieren (leere Tags, Attribute entfernen)
+
+    Returns:
+        Bereinigtes HTML
+    """
     if not html_content:
         return ""
     s = html_content
@@ -109,6 +196,10 @@ def sanitize_section_html(html_content: Optional[str], compress_ws: bool = True)
         s = re.sub(r"[ \t]+\n", "\n", s)
         s = re.sub(r"\n{3,}", "\n\n", s)
         s = re.sub(r"[ \t]{2,}", " ", s)
+
+    # HTML minifizieren (leere Tags, Attribute entfernen)
+    if minify:
+        s = minify_html(s)
 
     return s
 
