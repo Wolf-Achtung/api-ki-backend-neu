@@ -8,7 +8,7 @@ Developer: <!-- data_readiness.md – v3.0 GOLD STANDARD+ (Daten & Systemreife, 
     * Was ist bereits ausreichend für KI-Piloten?
     * Welche Lücken sollten in den nächsten 6–12 Monaten geschlossen werden?
 
-  VERFÜGBARE VARIABLEN (Labels/Freitexte aus dem Fragebogen):
+  VERFÜGBARE VARIABLEN (Labels/Nutzereingaben aus dem Fragebogen):
   - {{BRANCHE_LABEL}}
   - {{UNTERNEHMENSGROESSE_LABEL}}
   - {{HAUPTLEISTUNG}}

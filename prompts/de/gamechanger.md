@@ -42,7 +42,7 @@ Developer:
      MINDESTLÄNGE: 800 Zeichen (ohne HTML-Tags) – unterschreite diese NIEMALS!
 
      VERBOTEN:
-       - "TODO", "Freitextfeld", generische Formulierungen ohne Substanz.
+       - "TODO", Template-Marker, generische Formulierungen ohne Substanz.
        - Gamechanger ohne konkreten Bezug zu {{HAUPTLEISTUNG}}.
        - Bei SOLO: keine "Abteilungen", "Teams", "Bereiche".
 -->

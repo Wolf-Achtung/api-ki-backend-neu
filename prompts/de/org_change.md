@@ -31,7 +31,7 @@ Developer:
      MINDESTLÄNGE: 700 Zeichen (ohne HTML-Tags) – unterschreite diese NIEMALS!
 
      VERBOTEN:
-       - Platzhalterwörter („Platzhalter", „Freitextfeld", „TODO", …)
+       - Platzhalterwörter („Platzhalter", „TODO", Template-Marker, …)
        - Konzernsprache (Division, Unit) bei KMU
        - Teams/Abteilungen in SOLO
        - generische Aussagen ohne klaren Nutzen

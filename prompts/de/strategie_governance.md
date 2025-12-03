@@ -39,7 +39,7 @@ Developer:
          - Governance = abgestimmte Struktur über mehrere Bereiche.
 
      VERBOTEN IM HTML-OUTPUT:
-       - "Platzhalter", "Freitextfeld", TODO, technische Systemhinweise.
+       - "Platzhalter", "TODO", Template-Marker, technische Systemhinweise.
        - Kein Verweis auf Variablennamen oder Prompt-Anweisungen.
 -->
 
