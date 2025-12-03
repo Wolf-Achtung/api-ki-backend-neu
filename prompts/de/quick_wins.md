@@ -1,17 +1,19 @@
 Developer:
 <!--
-  quick_wins.md – v5.0 SIZE-AWARE MARKDOWN
+  quick_wins.md – v6.0 PDF-SLIMDOWN (KOMPAKTER)
   - Size-aware: solo / team / kmu
   - Output: Markdown (wird serverseitig zu HTML konvertiert)
 
-  **Ziellänge nach Größe:**
-  - Solo: ~70 Wörter (akzeptabel: 60–90)
-  - Team: ~100 Wörter (akzeptabel: 90–120)
-  - KMU: ~130 Wörter (akzeptabel: 120–150)
+  **Ziellänge nach Größe (REDUZIERT für PDF-SLIMDOWN):**
+  - Solo: ~60 Wörter (akzeptabel: 50–75)
+  - Team: ~80 Wörter (akzeptabel: 70–95)
+  - KMU: ~100 Wörter (akzeptabel: 90–115)
 
   PFLICHT-ANFORDERUNGEN:
-  - Formuliere mindestens 4 konkrete Quick Wins
-  - Jeder Quick Win: 1–2 Sätze + geschätzte Zeiteinsparung
+  - MAXIMAL 4 Quick Wins (nicht mehr!)
+  - Jeder Quick Win: 1 kurzer Satz + Zeiteinsparung
+  - KEINE ausführlichen Beschreibungen
+  - KEINE HTML-Boxen mit Hintergrundfarbe
   - Bei Solo-Profilen: Fokus auf persönliche Entlastung
   - FORMAT: Markdown (Listen mit -), KEIN HTML
 -->

@@ -1,13 +1,24 @@
 Developer:
-<!-- roadmap_12m.md – v7.0 PLATIN+ STABILIZED
+<!-- roadmap_12m.md – v8.0 PDF-SLIMDOWN (-20% Words)
      Respond exclusively with valid HTML. No Markdown fences.
 -->
 
-> **PLATIN+ – Section "12-Month Roadmap"**
-> Minimum length: **at least 900 words**
-> Structure: 4 sections (Months 1-3, 4-6, 7-12, Conclusion & Sustainability) with clear customer-side responsibilities.
+> **PDF-SLIMDOWN – Section "12-Month Roadmap"**
+> **Word Limits (REDUCED -20%):**
+> - Solo: ~280 words (acceptable: 240-320)
+> - Team: ~360 words (acceptable: 300-400)
+> - SME: ~440 words (acceptable: 380-480)
 >
-> Write directly PDF-ready prose (only HTML paragraphs and subheadings), **no placeholders, no meta-comments, no references to word count or "this section..."**.
+> Structure: 4 sections (Months 1-3, 4-6, 7-12, Conclusion & Sustainability).
+> MAX 5 BULLETS PER PHASE!
+>
+> **ANTI-REDUNDANCY (STRICT!):**
+> - NO repetition of Pain Points (covered in Quick Wins)
+> - NO re-describing tools (see Tools Recommendations)
+> - NO two-step explanations (skip justifications)
+> - Focus on PROGRESSION, not basics
+>
+> Write directly PDF-ready prose (only HTML paragraphs and subheadings), **no placeholders, no meta-comments, no references to word count**.
 
 ---
 
