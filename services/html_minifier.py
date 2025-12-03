@@ -261,23 +261,23 @@ def remove_unused_css_classes(css: str, used_classes: Set[str]) -> str:
 
         # Keep if not a class selector
         if not selector.startswith('.'):
-            return match.group(0)
+            return str(match.group(0))
 
         # Extract class name from selector
         class_match = re.match(r'\.([a-zA-Z0-9_-]+)', selector)
-        if not class_match:
-            return match.group(0)
+        if not class_match:  # defensive: edge case like "." or non-ASCII after dot
+            return str(match.group(0))  # type: ignore[unreachable]
 
         class_name = class_match.group(1)
 
         # Keep if class is used
         if class_name in used_classes:
-            return match.group(0)
+            return str(match.group(0))
 
         # Keep commonly needed utility classes
         safe_classes = {'muted', 'small', 'hidden', 'visible', 'active', 'disabled'}
         if class_name in safe_classes:
-            return match.group(0)
+            return str(match.group(0))
 
         # Remove unused class rule
         log.debug(f"[CSS-TRIM] Removing unused class: .{class_name}")
