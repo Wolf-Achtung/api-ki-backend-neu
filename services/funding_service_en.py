@@ -4,6 +4,8 @@ Funding Service EN - English funding recommendations for EN reports.
 This module provides English-language funding program recommendations:
 - Phase 1: German programmes for users with companies based in Germany (lang="en", country="DE")
 - Phase 2: EU core programmes for users in other EU countries (lang="en", country != "DE")
+
+Version: 2.0.0 - Refactored to use unified types and renderer
 """
 
 import json
@@ -11,6 +13,14 @@ import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+# Import unified types and renderer
+from services.funding_types import (
+    FundingProgramView,
+    FundingRenderContext,
+    FundingScope,
+)
+from services.funding_renderer import render_funding_html
 
 logger = logging.getLogger(__name__)
 
@@ -240,6 +250,8 @@ def render_funding_html_en(result: FundingResult, limit: int = 5) -> str:
     """
     Render funding programmes as HTML for EN reports.
 
+    Uses the unified funding renderer for consistent output.
+
     Args:
         result: FundingResult from get_funding_for_germany_en()
         limit: Maximum number of programmes to render
@@ -250,45 +262,33 @@ def render_funding_html_en(result: FundingResult, limit: int = 5) -> str:
     if not result.has_programmes:
         return ""
 
+    # Convert programme dicts to FundingProgramView objects
     programmes = result.programmes[:limit]
-    html_parts: List[str] = ['<div class="funding-programmes">']
+    views: List[FundingProgramView] = [
+        FundingProgramView(
+            id=prog.get("id", "unknown"),
+            name=prog.get("name_en", prog.get("name_de", "Unknown Programme")),
+            summary=prog.get("summary_en", prog.get("focus_en", "")),
+            funding_type=prog.get("funding_type_en", "Grant"),
+            funding_rate=prog.get("funding_rate_en", ""),
+            max_amount=prog.get("max_amount_en", ""),
+            scope_label=prog.get("region_en", "Germany"),
+            region=prog.get("region_en"),
+            url=prog.get("url", ""),
+        )
+        for prog in programmes
+    ]
 
-    for prog in programmes:
-        name = prog.get("name_en", prog.get("name_de", "Unknown Programme"))
-        summary = prog.get("summary_en", prog.get("focus_en", ""))
-        funding_type = prog.get("funding_type_en", "Grant")
-        funding_rate = prog.get("funding_rate_en", "")
-        max_amount = prog.get("max_amount_en", "")
-        region = prog.get("region_en", "Germany")
-        url = prog.get("url", "")
+    # Create render context and use unified renderer
+    context = FundingRenderContext(
+        scope="DE_EN",
+        programmes=views,
+        lang="en",
+        country="DE",
+        show_disclaimer=False,
+    )
 
-        html_parts.append('<div class="funding-programme">')
-        html_parts.append(f'  <h4>{name}</h4>')
-
-        if summary:
-            html_parts.append(f'  <p class="summary">{summary}</p>')
-
-        html_parts.append('  <ul class="details">')
-        if funding_type:
-            html_parts.append(f"    <li><strong>Type:</strong> {funding_type}</li>")
-        if funding_rate:
-            html_parts.append(f"    <li><strong>Funding Rate:</strong> {funding_rate}</li>")
-        if max_amount:
-            html_parts.append(f"    <li><strong>Maximum Amount:</strong> {max_amount}</li>")
-        if region:
-            html_parts.append(f"    <li><strong>Region:</strong> {region}</li>")
-        html_parts.append("  </ul>")
-
-        if url:
-            html_parts.append(
-                f'  <p class="url"><a href="{url}" target="_blank">More information</a></p>'
-            )
-
-        html_parts.append("</div>")
-
-    html_parts.append("</div>")
-
-    return "\n".join(html_parts)
+    return render_funding_html(context)
 
 
 # =============================================================================
@@ -481,6 +481,8 @@ def render_funding_eu_core_html_en(result: FundingResultEUCore, limit: int = 4) 
     """
     Render EU core funding programmes as HTML for EN reports.
 
+    Uses the unified funding renderer for consistent output.
+
     Args:
         result: FundingResultEUCore from get_funding_eu_core_en()
         limit: Maximum number of programmes to render (default 4)
@@ -491,53 +493,31 @@ def render_funding_eu_core_html_en(result: FundingResultEUCore, limit: int = 4) 
     if not result.has_programmes:
         return ""
 
+    # Convert programme dicts to FundingProgramView objects
     programmes = result.programmes[:limit]
-    html_parts: List[str] = ['<div class="funding-programmes eu-core">']
+    views: List[FundingProgramView] = [
+        FundingProgramView(
+            id=prog.get("id", "unknown"),
+            name=prog.get("name_en", "Unknown Programme"),
+            summary=prog.get("summary_en", ""),
+            funding_type=prog.get("funding_type_en", ""),
+            funding_rate=prog.get("funding_rate_en", ""),
+            max_amount=prog.get("max_amount_en", ""),
+            scope_label="EU-wide",
+            target_groups=prog.get("target_groups_en", []),
+            ai_relevance=prog.get("ai_relevance_en", ""),
+            notes=prog.get("notes_en", ""),
+        )
+        for prog in programmes
+    ]
 
-    for prog in programmes:
-        name = prog.get("name_en", "Unknown Programme")
-        summary = prog.get("summary_en", "")
-        funding_type = prog.get("funding_type_en", "")
-        funding_rate = prog.get("funding_rate_en", "")
-        max_amount = prog.get("max_amount_en", "")
-        target_groups = prog.get("target_groups_en", [])
-        ai_relevance = prog.get("ai_relevance_en", "")
-        notes = prog.get("notes_en", "")
-
-        html_parts.append('<div class="funding-programme">')
-        html_parts.append(f'  <h4>{name}</h4>')
-
-        if summary:
-            html_parts.append(f'  <p class="summary">{summary}</p>')
-
-        html_parts.append('  <ul class="details">')
-        if funding_type:
-            html_parts.append(f"    <li><strong>Funding type:</strong> {funding_type}</li>")
-        if funding_rate:
-            html_parts.append(f"    <li><strong>Typical co-funding rate:</strong> {funding_rate}</li>")
-        if max_amount:
-            html_parts.append(f"    <li><strong>Typical amount:</strong> {max_amount}</li>")
-        if target_groups:
-            targets_str = ", ".join(target_groups)
-            html_parts.append(f"    <li><strong>Target groups:</strong> {targets_str}</li>")
-        if ai_relevance:
-            html_parts.append(f"    <li><strong>AI relevance:</strong> {ai_relevance}</li>")
-        html_parts.append("  </ul>")
-
-        if notes:
-            html_parts.append(f'  <p class="notes"><em>{notes}</em></p>')
-
-        html_parts.append("</div>")
-
-    html_parts.append("</div>")
-
-    # Add disclaimer
-    html_parts.append('<p class="funding-disclaimer small muted">')
-    html_parts.append(
-        "Note: EU funding programmes have varying deadlines, eligibility criteria, and call-specific "
-        "requirements. The information above provides general guidance. Please consult official "
-        "programme documentation and national contact points for current opportunities."
+    # Create render context and use unified renderer
+    context = FundingRenderContext(
+        scope="EU_CORE",
+        programmes=views,
+        lang="en",
+        country=result.country,
+        show_disclaimer=True,  # EU-Core always shows disclaimer
     )
-    html_parts.append("</p>")
 
-    return "\n".join(html_parts)
+    return render_funding_html(context)
