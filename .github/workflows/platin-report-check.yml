@@ -256,19 +256,20 @@ jobs:
                   if field not in config:
                       errors.append(f'{section}: Missing field {field}')
 
-              # Validate max_tokens
-              if config.get('max_tokens') != 4096:
-                  errors.append(f"{section}: max_tokens should be 4096, got {config.get('max_tokens')}")
+              # Validate max_tokens (PDF-SLIMDOWN v2.0: varied limits 1500-3200)
+              max_tokens = config.get('max_tokens', 0)
+              if not 1500 <= max_tokens <= 3500:
+                  errors.append(f"{section}: max_tokens {max_tokens} not in range [1500, 3500]")
 
               # Validate temperature range
               temp = config.get('temperature', 0)
               if not 0.3 <= temp <= 0.5:
                   errors.append(f'{section}: temperature {temp} not in range [0.3, 0.5]')
 
-              # Validate min_words
+              # Validate min_words (PDF-SLIMDOWN v2.0: reduced limits 150-700)
               min_words = config.get('min_words', 0)
-              if min_words < 500:
-                  errors.append(f'{section}: min_words {min_words} too low (min 500)')
+              if min_words < 100:
+                  errors.append(f'{section}: min_words {min_words} too low (min 100)')
 
           if errors:
               print('❌ Configuration errors found:')
@@ -300,13 +301,15 @@ jobs:
               print(f'⚠️ Import error (may be expected in CI): {e}')
               sys.exit(0)
 
+          # PDF-SLIMDOWN v2.0: Validator thresholds (lower than LLM targets to allow variance)
+          # These match report_validator.py MIN_SECTION_LENGTH_WORDS
           EXPECTED_MIN_WORDS = {
-              'foerderpotenzial': 900,
-              'risks': 800,
-              'recommendations': 800,
-              'roadmap_12m': 800,
-              'gamechanger': 700,
-              'unternehmensprofil_markt': 500,
+              'foerderpotenzial': 600,
+              'risks': 500,
+              'recommendations': 500,
+              'roadmap_12m': 400,
+              'gamechanger': 400,
+              'unternehmensprofil_markt': 300,
           }
 
           errors = []

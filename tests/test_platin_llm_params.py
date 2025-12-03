@@ -20,13 +20,18 @@ class TestPlatinCriticalSections:
         """Verify PLATIN_CRITICAL_SECTIONS contains all expected sections."""
         from services.prompt_enhancer import PLATIN_CRITICAL_SECTIONS
 
+        # PDF-SLIMDOWN v2.0: Extended list includes new compact sections
         expected_sections = [
             "foerderpotenzial",
             "risks",
             "recommendations",
             "roadmap_12m",
+            "roadmap_90d",      # NEW: PDF-SLIMDOWN
+            "quick_wins",       # NEW: PDF-SLIMDOWN
             "gamechanger",
             "unternehmensprofil_markt",
+            "transparency_box",      # NEW: PDF-SLIMDOWN
+            "technologie_prozesse",  # NEW: PDF-SLIMDOWN
         ]
 
         for section in expected_sections:
@@ -42,14 +47,39 @@ class TestPlatinCriticalSections:
             for field in required_fields:
                 assert field in config, f"Section {section} missing field: {field}"
 
-    def test_platin_max_tokens_is_4096(self):
-        """Verify all PLATIN sections have explicit max_tokens=4096."""
+    def test_platin_max_tokens_in_valid_range(self):
+        """Verify all PLATIN sections have max_tokens in valid range (PDF-SLIMDOWN v2.0).
+
+        PDF-SLIMDOWN reduced token limits by 20-30% for shorter outputs.
+        Valid range: 1500-3200 depending on section complexity.
+        """
         from services.prompt_enhancer import PLATIN_CRITICAL_SECTIONS
 
+        # PDF-SLIMDOWN v2.0: Expected token limits per section
+        expected_tokens = {
+            "foerderpotenzial": 3200,
+            "risks": 3000,
+            "recommendations": 2500,
+            "roadmap_12m": 2800,
+            "roadmap_90d": 2200,
+            "quick_wins": 1800,
+            "gamechanger": 3000,
+            "unternehmensprofil_markt": 3000,
+            "transparency_box": 1500,
+            "technologie_prozesse": 2000,
+        }
+
         for section, config in PLATIN_CRITICAL_SECTIONS.items():
-            assert config["max_tokens"] == 4096, (
-                f"Section {section} should have max_tokens=4096, got {config['max_tokens']}"
-            )
+            expected = expected_tokens.get(section)
+            if expected:
+                assert config["max_tokens"] == expected, (
+                    f"Section {section} should have max_tokens={expected}, got {config['max_tokens']}"
+                )
+            else:
+                # Any section not in expected_tokens should still be in valid range
+                assert 1500 <= config["max_tokens"] <= 3500, (
+                    f"Section {section} max_tokens={config['max_tokens']} not in valid range [1500, 3500]"
+                )
 
     def test_platin_temperature_is_reasonable(self):
         """Verify temperature is in valid range (0.3-0.5)."""
@@ -62,16 +92,25 @@ class TestPlatinCriticalSections:
             )
 
     def test_platin_min_words_thresholds(self):
-        """Verify min_words thresholds are set correctly."""
+        """Verify min_words thresholds are set correctly (PDF-SLIMDOWN v2.0).
+
+        PDF-SLIMDOWN reduced min_words to allow for more compact outputs
+        while maintaining quality.
+        """
         from services.prompt_enhancer import PLATIN_CRITICAL_SECTIONS
 
+        # PDF-SLIMDOWN v2.0: Reduced min_words for compact outputs
         expected_min_words = {
-            "foerderpotenzial": 900,
-            "risks": 800,
-            "recommendations": 800,
-            "roadmap_12m": 900,
-            "gamechanger": 700,
-            "unternehmensprofil_markt": 500,
+            "foerderpotenzial": 700,      # Reduced from 900
+            "risks": 600,                  # Reduced from 800
+            "recommendations": 400,        # Reduced from 800
+            "roadmap_12m": 350,           # Reduced from 900
+            "roadmap_90d": 250,           # NEW
+            "quick_wins": 150,            # NEW
+            "gamechanger": 500,           # Reduced from 700
+            "unternehmensprofil_markt": 400,  # Reduced from 500
+            "transparency_box": 150,      # NEW
+            "technologie_prozesse": 200,  # NEW
         }
 
         for section, expected in expected_min_words.items():
@@ -86,14 +125,14 @@ class TestGetPlatinConfig:
     """Test get_platin_config() helper function."""
 
     def test_get_platin_config_returns_config_for_critical_section(self):
-        """Verify get_platin_config returns config for critical sections."""
+        """Verify get_platin_config returns config for critical sections (PDF-SLIMDOWN v2.0)."""
         from services.prompt_enhancer import get_platin_config
 
         config = get_platin_config("foerderpotenzial")
         assert config is not None
-        assert config["max_tokens"] == 4096
+        assert config["max_tokens"] == 3200  # PDF-SLIMDOWN: reduced from 4096
         assert config["temperature"] == 0.4
-        assert config["min_words"] == 900
+        assert config["min_words"] == 700    # PDF-SLIMDOWN: reduced from 900
 
     def test_get_platin_config_returns_none_for_non_critical_section(self):
         """Verify get_platin_config returns None for non-critical sections."""
@@ -102,7 +141,8 @@ class TestGetPlatinConfig:
         config = get_platin_config("executive_summary")
         assert config is None
 
-        config = get_platin_config("quick_wins")
+        # PDF-SLIMDOWN v2.0: quick_wins is now a critical section
+        config = get_platin_config("business_case")
         assert config is None
 
     def test_get_platin_config_is_case_insensitive(self):
@@ -138,7 +178,8 @@ class TestIsPlatinCriticalSection:
         """Verify is_platin_critical_section returns False for non-critical sections."""
         from services.prompt_enhancer import is_platin_critical_section
 
-        non_critical = ["executive_summary", "quick_wins", "business_case", "data_readiness"]
+        # PDF-SLIMDOWN v2.0: quick_wins is now critical, removed from this list
+        non_critical = ["executive_summary", "business_case", "data_readiness"]
 
         for section in non_critical:
             assert not is_platin_critical_section(section), f"Should not be critical: {section}"
@@ -148,20 +189,23 @@ class TestGetPlatinMinWords:
     """Test get_platin_min_words() helper function."""
 
     def test_get_platin_min_words_returns_correct_value(self):
-        """Verify get_platin_min_words returns correct min_words."""
+        """Verify get_platin_min_words returns correct min_words (PDF-SLIMDOWN v2.0)."""
         from services.prompt_enhancer import get_platin_min_words
 
-        assert get_platin_min_words("foerderpotenzial") == 900
-        assert get_platin_min_words("risks") == 800
-        assert get_platin_min_words("recommendations") == 800
-        assert get_platin_min_words("roadmap_12m") == 900
+        # PDF-SLIMDOWN v2.0: Reduced min_words
+        assert get_platin_min_words("foerderpotenzial") == 700
+        assert get_platin_min_words("risks") == 600
+        assert get_platin_min_words("recommendations") == 400
+        assert get_platin_min_words("roadmap_12m") == 350
+        assert get_platin_min_words("quick_wins") == 150  # Now critical
 
     def test_get_platin_min_words_returns_zero_for_non_critical(self):
         """Verify get_platin_min_words returns 0 for non-critical sections."""
         from services.prompt_enhancer import get_platin_min_words
 
         assert get_platin_min_words("executive_summary") == 0
-        assert get_platin_min_words("quick_wins") == 0
+        # PDF-SLIMDOWN v2.0: quick_wins is now critical, use business_case instead
+        assert get_platin_min_words("business_case") == 0
 
 
 if __name__ == "__main__":
