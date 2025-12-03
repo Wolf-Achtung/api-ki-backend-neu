@@ -137,7 +137,4 @@ RULES:
   </p>
 </section>
 
-<!-- PLATIN+ REINFORCEMENT: This section MUST contain at least 700 words.
-     Check your output: Count the words and expand each section with additional
-     details, examples, and explanations if the minimum length is not reached.
-     NEVER shorten – always deliver complete, detailed content. -->
+<!-- DEV: PDF-SLIMDOWN v2.0 - Target: 500-700 words, compact but complete -->
