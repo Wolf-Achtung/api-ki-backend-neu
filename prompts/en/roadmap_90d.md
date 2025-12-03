@@ -1,9 +1,14 @@
 Developer:
-<!-- roadmap_90d.md – v6.0 PLATIN+ STREAMLINED
-     Goal: 6 phases with 80-100 words each (= 500-700 words total).
+<!-- roadmap_90d.md – v7.0 PDF-SLIMDOWN (-15% Words)
+     Goal: 6 phases with 60-80 words each (= 400-550 words total).
      Respond exclusively with valid HTML. No Markdown fences.
 
-     STRUCTURE (6 Phases):
+     **Word Limits (REDUCED -15%):**
+     - Solo: ~240 words (acceptable: 210-270)
+     - Team: ~280 words (acceptable: 250-310)
+     - SME: ~320 words (acceptable: 290-350)
+
+     STRUCTURE (6 Phases, COMPACT):
        Phase 1: Week 1-2 – Vision & Priorities
        Phase 2: Week 3-4 – Data Quality & Workflow Foundations
        Phase 3: Week 5-6 – Quick Wins & Initial Impact
@@ -11,11 +16,13 @@ Developer:
        Phase 5: Week 9-10 – Monitoring & Iteration
        Phase 6: Week 11-13 – Consolidation & Scaling Preparation
 
-     Per Phase REQUIRED:
-       - Goal (1-2 sentences)
-       - Deliverables (3-4 bullets)
-       - Roles (size-aware)
-       - KPI (1-2 measurable metrics)
+     Per Phase: ~30-45 words (Solo: ~25-35)
+     MAX 5 BULLETS PER PHASE!
+
+     ANTI-REDUNDANCY:
+     - NO repetition of Quick Wins (already mentioned)
+     - NO re-describing pain points
+     - NO two-step explanations (skip justifications)
 
      VARIABLES:
        {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, COMPANY_SIZE

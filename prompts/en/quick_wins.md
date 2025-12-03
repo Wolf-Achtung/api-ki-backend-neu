@@ -1,10 +1,20 @@
 Developer:
 <!--
-  quick_wins.md – v4.0 GOLD STANDARD+
+  quick_wins.md – v5.0 PDF-SLIMDOWN (COMPACT)
   - Size-aware: solo / team / sme
-  - No standard phrases, no example texts
-  - No internal notes in visible output
   - Output exclusively valid HTML
+
+  **Word Limits (REDUCED for PDF-SLIMDOWN):**
+  - Solo: ~60 words (acceptable: 50-75)
+  - Team: ~80 words (acceptable: 70-95)
+  - SME: ~100 words (acceptable: 90-115)
+
+  REQUIREMENTS:
+  - MAXIMUM 4 Quick Wins (not more!)
+  - Each Quick Win: 1 short sentence + time savings
+  - NO detailed descriptions
+  - NO HTML boxes with background color (text only)
+  - For solo profiles: Focus on personal relief
 -->
 
 <section class="section quick-wins">

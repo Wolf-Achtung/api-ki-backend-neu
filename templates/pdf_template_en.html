@@ -1364,20 +1364,33 @@
                 content: "";
             }
         }
-        /* Enhanced Table Styles for Print */
+        /* PDF-SLIMDOWN: Enhanced Table Styles for Print */
         table {
             border-collapse: collapse;
             width: 100%;
             break-inside: avoid;
         }
         th, td {
-            padding: 8px 10px;
-            border-bottom: 1px solid var(--rule);
+            padding: 6px 8px;
+            border: 1px solid var(--rule);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         th {
-            font-weight: 700;
+            font-weight: 600;
             text-align: left;
+            padding: 6px 8px;
         }
+        /* Zebra stripes - very weak (3% opacity) */
+        tr:nth-child(even) td {
+            background: rgba(148, 163, 184, 0.03);
+        }
+        /* PDF-SLIMDOWN: Consolidated Font Sizes (only 14/16/18/24px) */
+        .section-body { font-size: 14px; }
+        .card { font-size: 14px; }
+        .kpi-card { font-size: 14px; }
+        .quick-win-card { font-size: 14px; }
+        .roadmap-phase { font-size: 14px; }
     </style>
 </head>
 <body>
