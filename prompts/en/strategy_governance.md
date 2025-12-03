@@ -111,6 +111,12 @@ Developer:
       Mini-trainings, guidelines, and brief reviews create confidence in handling AI.
       In SMEs additionally role-specific training.
     </li>
+    <li>
+      <strong>Evaluate monetization potential (optional):</strong>
+      AI-powered processes can unlock new revenue streams – through digital products,
+      scalable service formats, or automated analyses. Strategic evaluation is
+      particularly worthwhile with stable core workflows.
+    </li>
   </ol>
 
   <h3>Responsibility &amp; Steering</h3>

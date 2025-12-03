@@ -122,6 +122,12 @@ Developer:
       Mini-Trainings, Leitfäden und kurze Reviews schaffen Sicherheit im Umgang mit KI.
       In KMU zusätzlich rollenspezifische Schulungen.
     </li>
+    <li>
+      <strong>Monetarisierungspotenziale evaluieren (optional):</strong>
+      KI-gestützte Prozesse können neue Erlösquellen erschließen – etwa durch
+      digitale Produkte, skalierbare Service-Formate oder automatisierte Analysen.
+      Eine strategische Bewertung lohnt sich insbesondere bei stabilen Kern-Workflows.
+    </li>
   </ol>
 
   <h3>Verantwortung &amp; Steuerung</h3>

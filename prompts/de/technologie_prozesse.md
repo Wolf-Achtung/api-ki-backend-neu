@@ -1,122 +1,63 @@
+<!-- technologie_prozesse.md – v2.0 PDF-SLIMDOWN-STRICT
+     Antworte ausschließlich mit validem HTML.
+
+     **STRIKTE TOKEN-BEGRENZUNG:**
+     MAXIMAL 300-400 Wörter Output.
+
+     **STRUKTUR (kompakt):**
+     1. Kurze Einleitung (2 Sätze)
+     2. Prozessketten-Fokus (Haupt-Datenfluss)
+     3. Kurze Tabelle: 4-5 Layer mit Zweck
+     4. Geplante Änderungen (3-4 Punkte kurz)
+
+     **VERBOTEN:**
+     - KEINE Tool-Liste (kommt in tools_empfehlungen)
+     - Fokus auf PROZESSKETTEN, nicht auf konkrete Tools
+     - Keine redundanten Tech-Details
+-->
+
 <section class="section technologie-prozesse">
-  <h2>Technologie &amp; Prozesse</h2>
+  <h2>Technologie & Prozesse</h2>
 
-  <h3>Konzeptionelle Checkliste</h3>
-  <ul>
-    <li>Vollständige Transparenz über alle eingesetzten Systeme – Frontend, Backend, KI, Datenhaltung.</li>
-    <li>Klare Zuordnung der Verantwortlichkeiten je Layer.</li>
-    <li>Nachvollziehbarer Datenfluss vom Nutzerinput bis zum finalen PDF-Report.</li>
-    <li>Eindeutige technische Integrationspunkte zwischen Frontend, Backend, KI und PDF-Service.</li>
-    <li>Abgrenzung zwischen IST-Stack und geplanten Erweiterungen.</li>
-    <li>Technisch präzise, auditfähig und ohne unnötige Abstraktion.</li>
-  </ul>
+  <p>
+    Diese Übersicht zeigt den Datenfluss vom Fragebogen bis zum fertigen PDF-Report.
+    Der Fokus liegt auf den Prozessketten, nicht auf einzelnen Tools.
+  </p>
 
-  <h3>Tech-Stack (IST)</h3>
+  <h3>Systemarchitektur</h3>
   <table class="table">
     <thead>
-      <tr>
-        <th>Layer</th>
-        <th>Technologien</th>
-        <th>Zweck</th>
-        <th>Hosting</th>
-      </tr>
+      <tr><th>Layer</th><th>Funktion</th></tr>
     </thead>
     <tbody>
-      <tr>
-        <td>Frontend</td>
-        <td>React, TailwindCSS</td>
-        <td>Interaktiver KI-Readiness-Fragebogen, UI-Logik, Autosave, Submit-Flow</td>
-        <td>Netlify</td>
-      </tr>
-      <tr>
-        <td>Backend</td>
-        <td>FastAPI (Python)</td>
-        <td>
-          Annahme & Validierung der Formulardaten, Prompt-Orchestrierung (mehrschichtig),
-          Report-Builder, Business-Case-Berechnungen, Research-Einbindung, Validator & Replacer.
-        </td>
-        <td>Railway</td>
-      </tr>
-      <tr>
-        <td>Datenbank</td>
-        <td>PostgreSQL</td>
-        <td>Briefings, Nutzerprofile, Scores, Reports, Systemlogs</td>
-        <td>Railway</td>
-      </tr>
-      <tr>
-        <td>KI / Modelle</td>
-        <td>OpenAI GPT-4.1 / GPT-5.x, Perplexity, Tavily</td>
-        <td>
-          Mehrstufige Prompt-Analyse, Research-Snippets, Branchenkontext,
-          Size-Aware-Logik, Validierung der Inhalte.
-        </td>
-        <td>OpenAI / Perplexity / Tavily API</td>
-      </tr>
-      <tr>
-        <td>Formular</td>
-        <td>Eigener React-Formbuilder (Frontend + Backend-Submit)</td>
-        <td>
-          Erfassung aller Eingaben; dynamische Validierung; Multi-Page-Wizard;
-          Webhook-freie, direkte API-Kommunikation.
-        </td>
-        <td>Netlify / Railway</td>
-      </tr>
-      <tr>
-        <td>PDF-Service</td>
-        <td>WeasyPrint (dedizierter Render-Worker)</td>
-        <td>Rendering der HTML-Reports als PDF (A4, Corporate Layout)</td>
-        <td>Railway</td>
-      </tr>
-      <tr>
-        <td>E-Mail</td>
-        <td>Resend API</td>
-        <td>Versand der fertigen Reports, Login-Codes, interne Systemmeldungen</td>
-        <td>Resend</td>
-      </tr>
+      <tr><td>Frontend</td><td>Fragebogen-Erfassung, Validierung, Submit</td></tr>
+      <tr><td>Backend</td><td>Prompt-Orchestrierung, Report-Builder, Business-Case-Berechnung</td></tr>
+      <tr><td>KI/Analyse</td><td>Mehrschichtige Prompt-Analyse, Research-Integration</td></tr>
+      <tr><td>PDF-Service</td><td>HTML→PDF Rendering, Layout-Optimierung</td></tr>
+      <tr><td>Delivery</td><td>E-Mail-Versand des fertigen Reports</td></tr>
     </tbody>
   </table>
 
   <h3>Datenfluss (Hauptprozess)</h3>
   <ol>
-    <li>Nutzer:innen füllen den webbasierten Formbuilder aus (React-Frontend mit Autosave).</li>
-    <li>Der Submit sendet die Daten per HTTPS an FastAPI; Validierung & Speicherung in PostgreSQL.</li>
-    <li>
-      FastAPI startet die Analyse:
-      <ul>
-        <li>PromptEnhancer injiziert Branchen- und Size-Kontext (CONTEXT_BLOCK).</li>
-        <li>Mehrschichtige GPT-Prompts erzeugen Executive Summary, Roadmaps, Risiken, Empfehlungen usw.</li>
-        <li>Research-Pipeline ruft Perplexity/Tavily ab und integriert die Snippets kontrolliert.</li>
-      </ul>
-    </li>
-    <li>Business-Case-Logik berechnet CAPEX/OPEX/ROI basierend auf Eingaben.</li>
-    <li>Report-Validator prüft HTML-Qualität, Size-Mismatch, verbotene Tokens & Konsistenz.</li>
-    <li>Der finale HTML-Report wird an den dedizierten PDF-Service übergeben.</li>
-    <li>WeasyPrint rendert das PDF; FastAPI sendet es via Resend per E-Mail an die Nutzer:innen.</li>
+    <li>Nutzer:in füllt Fragebogen aus (Autosave aktiv)</li>
+    <li>Submit → Validierung → Speicherung</li>
+    <li>Prompt-Engine injiziert Branchen- und Größen-Kontext</li>
+    <li>KI generiert Sektionen (Executive Summary, Roadmaps, Risiken, etc.)</li>
+    <li>Business-Case-Logik berechnet CAPEX/OPEX/ROI</li>
+    <li>Validator prüft HTML-Qualität und Konsistenz</li>
+    <li>PDF-Service rendert finalen Report</li>
+    <li>Versand per E-Mail</li>
   </ol>
 
-  <h3>Geplante Änderungen (Q1–Q4)</h3>
+  <h3>Qualitätssicherung</h3>
   <ul>
-    <li>
-      <strong>Q1:</strong> Einführung einer Redis-Queue für parallele GPT-Jobs,
-      Stabilisierung von Bulk-Generierungen und Timeouts.
-    </li>
-    <li>
-      <strong>Q2:</strong> Integration einer Supabase-basierten Auth für Partnerzugänge
-      (z. B. Berater:innen, Reseller, White-Label-Instanzen).
-    </li>
-    <li>
-      <strong>Q3:</strong> Vereinheitlichte Systemlogs (Analyse, PDF-Service, Research)
-      zur besseren Auditierbarkeit und Fehlersuche.
-    </li>
-    <li>
-      <strong>Q4:</strong> Retool-basiertes Admin-Dashboard für Monitoring,
-      Report-Management, Rechnungsläufe und Audit-Exports.
-    </li>
+    <li>Automatische Konsistenzprüfung aller Sektionen</li>
+    <li>Size-Mismatch-Detection (Solo/Team/KMU)</li>
+    <li>Plausibilitätsprüfung der Business-Case-Zahlen</li>
   </ul>
 
   <p class="small muted">
-    Diese Übersicht bildet den vollständigen Technologie- und Prozessrahmen ab und
-    unterstützt die technische Weiterentwicklung in Richtung Skalierbarkeit,
-    Stabilität und Auditierbarkeit.
+    Diese Architektur gewährleistet nachvollziehbare, qualitätsgesicherte Reports.
   </p>
 </section>
