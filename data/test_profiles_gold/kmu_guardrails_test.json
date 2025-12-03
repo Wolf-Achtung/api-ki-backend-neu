@@ -2,6 +2,7 @@
   "profile_id": "kmu_guardrails_test",
   "description": "KMU Testprofil mit expliziten Guardrails zur QA-Validierung",
   "lang": "de",
+  "country": "Germany",
   "BRANCHE_LABEL": "Beratung & Dienstleistungen",
   "UNTERNEHMENSGROESSE_LABEL": "11-50 (KMU)",
   "HAUPTLEISTUNG": "Organisationsberatung für mittelständische Betriebe",

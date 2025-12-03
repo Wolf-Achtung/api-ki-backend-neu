@@ -63,6 +63,11 @@ from services.html_sanitizer import sanitize_sections_dict
 from utils.hotfix_gold_standard import apply_hotfix, UTF8Handler
 from utils.encoding_fixer import clean_briefing_data
 from services.anthropic_client import call_anthropic, should_use_anthropic
+from services.guardrails import (
+    detect_guardrails_v5,
+    format_guardrail_hits_for_context,
+    GuardrailHit,
+)
 
 # Und direkt nach Zeile 61, vor try:
 UTF8Handler.setup_encoding()  # Global UTF-8 fix beim Start
@@ -368,15 +373,17 @@ def detect_guardrails_in_freetext(answers: dict, lang: str = "de") -> tuple[bool
     return (len(detected_snippets) > 0, detected_snippets)
 
 
-def build_strategic_context_block(answers: dict) -> str:
+def build_strategic_context_block(answers: dict, lang: str = "de") -> str:
     """
     Kombiniert alle strategischen Freitext-Felder zu einem strukturierten Kontextblock.
     Wird für spätere Prompt-Anreicherung verwendet.
 
     v3.1: Erweitert um automatische Guardrail-Erkennung in Freitextfeldern.
+    v5.0: Nutzt services/guardrails.py mit Confidence-Scoring.
 
     Args:
         answers: Dict mit den normalisierten Fragebogen-Antworten
+        lang: Language code ("de" or "en")
 
     Returns:
         Formatierter String mit allen strategischen Kontextinformationen
@@ -413,20 +420,23 @@ def build_strategic_context_block(answers: dict) -> str:
         if val and val != "—":
             lines.append(f"Vision für die nächsten 2–3 Jahre:\n{val}")
 
-    # === Guardrails: Explizit angegeben + Auto-Detection (v3.1) ===
+    # === Guardrails: Explizit angegeben + Auto-Detection v5 ===
     explicit_guardrails = answers.get("ki_guardrails", "")
     has_explicit = explicit_guardrails and explicit_guardrails != "—"
 
-    # Auto-Detection in anderen Freitextfeldern
-    guardrails_detected, detected_snippets = detect_guardrails_in_freetext(answers)
+    # Auto-Detection using guardrails v5 with confidence scoring
+    guardrails_detected, hits = detect_guardrails_v5(answers, lang)
+    # Extract sentences for backwards-compatible output (top 3 by confidence)
+    detected_snippets = [hit.sentence for hit in hits[:3]]
 
     if has_explicit and guardrails_detected:
         # Beide vorhanden: Explizite zuerst, dann Auto-Detected
         combined = f"No-Gos & Leitplanken:\n{explicit_guardrails}"
         combined += f"\n\nNo-Gos & Leitplanken (automatisch erkannt):\n"
-        combined += "• " + "\n• ".join(detected_snippets[:3])  # Max 3 Snippets
+        combined += "• " + "\n• ".join(detected_snippets)
         lines.append(combined)
-        log.info("🛡️ Guardrails: Explicit + %d auto-detected", len(detected_snippets))
+        high_conf_count = sum(1 for h in hits if h.is_high_confidence)
+        log.info("🛡️ Guardrails v5: Explicit + %d auto-detected (high_conf=%d)", len(hits), high_conf_count)
     elif has_explicit:
         # Nur explizite Guardrails
         lines.append(f"No-Gos & Leitplanken:\n{explicit_guardrails}")
@@ -434,9 +444,10 @@ def build_strategic_context_block(answers: dict) -> str:
         # Nur auto-detected
         auto_section = "No-Gos & Leitplanken (automatisch erkannt):\n"
         auto_section += "Es wurden sensible Prioritäten erkannt:\n"
-        auto_section += "• " + "\n• ".join(detected_snippets[:3])  # Max 3 Snippets
+        auto_section += "• " + "\n• ".join(detected_snippets)
         lines.append(auto_section)
-        log.info("🛡️ Guardrails: %d auto-detected (no explicit)", len(detected_snippets))
+        high_conf_count = sum(1 for h in hits if h.is_high_confidence)
+        log.info("🛡️ Guardrails v5: %d auto-detected (high_conf=%d, no explicit)", len(hits), high_conf_count)
 
     return "\n\n".join(lines)
 # =========================================================================
@@ -3997,12 +4008,18 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         pass
 
     # === STRATEGIC CONTEXT BLOCK erzeugen (für spätere Prompt-Anreicherung) ===
-    strategic_context = build_strategic_context_block(answers)
+    report_lang = getattr(br, "lang", "de")
+    strategic_context = build_strategic_context_block(answers, lang=report_lang)
     answers["strategic_context_block"] = strategic_context
     if strategic_context:
         log.info("[%s] 📋 Strategic context block generated (%d chars)", run_id, len(strategic_context))
     else:
         log.info("[%s] 📋 Strategic context block is empty (no strategic fields provided)", run_id)
+
+    # === GUARDRAILS v5: Store hits for future prompt access (Phase 2) ===
+    # Risiko/Compliance-Prompts können GUARDRAILS_HITS nutzen (vorbereitet)
+    _, guardrail_hits = detect_guardrails_v5(answers, report_lang)
+    answers["_guardrail_hits"] = guardrail_hits  # Store for later access
 
     log.info("[%s] 📊 Calculating realistic scores (v4.14.0-GOLD-PLUS)...", run_id)
     score_wrap = _calculate_realistic_score(answers)
@@ -4097,6 +4114,9 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             sections[template_key] = val
         else:
             sections[template_key] = ""
+
+    # === GUARDRAILS_HITS for future Risk/Compliance prompts (v5.0 preparation) ===
+    sections["GUARDRAILS_HITS"] = answers.get("_guardrail_hits", [])
 
     log.info("[%s] Copied %d label variables to sections", run_id, len(direct_copy_keys) + len(label_with_fallback))
 # === END LABELS FIX ===
