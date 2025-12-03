@@ -4,17 +4,139 @@ Logo Embedder for PDF Generation.
 
 Embeds logo images as base64 data URIs in HTML to ensure they render
 correctly when the HTML is sent to an external PDF service.
+
+Includes optimize_base64_image() for:
+- PNG→WebP conversion (quality 70-80, typically 50-70% size reduction)
+- SVG minification (whitespace removal, attribute compaction)
 """
 from __future__ import annotations
 
 import base64
+import io
 import logging
 import os
 import re
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional, Tuple
 
 log = logging.getLogger(__name__)
+
+# --- Image Optimization ---
+
+# Try to import Pillow for PNG→WebP conversion
+try:
+    from PIL import Image
+    PILLOW_AVAILABLE = True
+except ImportError:
+    PILLOW_AVAILABLE = False
+    log.debug("[LOGO-OPTIMIZE] Pillow not available, PNG→WebP disabled")
+
+
+def optimize_base64_image(
+    data: bytes,
+    mime_type: str,
+    webp_quality: int = 75,
+    max_dimension: Optional[int] = 400
+) -> Tuple[bytes, str]:
+    """
+    Optimize image data for smaller base64 embedding.
+
+    PNG/JPEG → WebP conversion (50-70% size reduction)
+    SVG → Minification (whitespace removal)
+
+    Args:
+        data: Raw image bytes
+        mime_type: Original MIME type (image/png, image/svg+xml, etc.)
+        webp_quality: WebP quality 0-100 (default 75)
+        max_dimension: Max width/height in pixels (None = no resize)
+
+    Returns:
+        Tuple of (optimized_bytes, new_mime_type)
+    """
+    original_size = len(data)
+
+    # --- SVG Minification ---
+    if mime_type == "image/svg+xml":
+        try:
+            svg_text = data.decode("utf-8")
+            optimized = _minify_svg(svg_text)
+            optimized_bytes = optimized.encode("utf-8")
+            new_size = len(optimized_bytes)
+            if new_size < original_size:
+                log.debug("[LOGO-OPTIMIZE] SVG minified: %d → %d bytes (%.0f%%)",
+                         original_size, new_size, (1 - new_size/original_size) * 100)
+                return optimized_bytes, mime_type
+            return data, mime_type
+        except Exception as e:
+            log.warning("[LOGO-OPTIMIZE] SVG minification failed: %s", e)
+            return data, mime_type
+
+    # --- PNG/JPEG → WebP ---
+    if PILLOW_AVAILABLE and mime_type in ("image/png", "image/jpeg", "image/jpg"):
+        try:
+            img = Image.open(io.BytesIO(data))
+
+            # Resize if too large
+            if max_dimension and (img.width > max_dimension or img.height > max_dimension):
+                img.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
+                log.debug("[LOGO-OPTIMIZE] Resized to %dx%d", img.width, img.height)
+
+            # Convert to WebP
+            output = io.BytesIO()
+            # Handle transparency for PNG
+            if img.mode in ("RGBA", "LA", "P"):
+                img.save(output, format="WEBP", quality=webp_quality, lossless=False)
+            else:
+                img.save(output, format="WEBP", quality=webp_quality)
+
+            optimized_bytes = output.getvalue()
+            new_size = len(optimized_bytes)
+
+            # Only use WebP if actually smaller
+            if new_size < original_size:
+                log.debug("[LOGO-OPTIMIZE] %s → WebP: %d → %d bytes (%.0f%%)",
+                         mime_type, original_size, new_size, (1 - new_size/original_size) * 100)
+                return optimized_bytes, "image/webp"
+            else:
+                log.debug("[LOGO-OPTIMIZE] WebP not smaller, keeping original")
+                return data, mime_type
+
+        except Exception as e:
+            log.warning("[LOGO-OPTIMIZE] PNG/JPEG→WebP failed: %s", e)
+            return data, mime_type
+
+    # No optimization possible
+    return data, mime_type
+
+
+def _minify_svg(svg: str) -> str:
+    """
+    Minify SVG by removing unnecessary whitespace and comments.
+
+    - Remove XML comments
+    - Collapse whitespace between tags
+    - Remove whitespace inside tags
+    - Strip leading/trailing whitespace
+    """
+    # Remove XML comments
+    svg = re.sub(r"<!--.*?-->", "", svg, flags=re.DOTALL)
+
+    # Remove newlines and excess whitespace between tags
+    svg = re.sub(r">\s+<", "><", svg)
+
+    # Collapse multiple spaces to single space
+    svg = re.sub(r"\s{2,}", " ", svg)
+
+    # Remove whitespace before closing tags
+    svg = re.sub(r"\s+/>", "/>", svg)
+
+    # Remove whitespace after opening tag bracket
+    svg = re.sub(r"<\s+", "<", svg)
+
+    # Remove whitespace before closing tag bracket
+    svg = re.sub(r"\s+>", ">", svg)
+
+    return svg.strip()
 
 # Default logo files to embed
 DEFAULT_LOGOS = [
@@ -25,18 +147,26 @@ DEFAULT_LOGOS = [
     "eu-ai.svg",
 ]
 
-def get_logo_base64_map(template_dir: str = "templates") -> Dict[str, str]:
+def get_logo_base64_map(
+    template_dir: str = "templates",
+    optimize: bool = True,
+    webp_quality: int = 75
+) -> Dict[str, str]:
     """
     Load logo files and convert to base64 data URIs.
 
     Args:
         template_dir: Directory containing logo files
+        optimize: Whether to optimize images (PNG→WebP, SVG minify)
+        webp_quality: WebP quality for PNG/JPEG conversion (0-100)
 
     Returns:
         Dictionary mapping filename to base64 data URI
     """
     logo_map: Dict[str, str] = {}
     template_path = Path(template_dir)
+    total_original = 0
+    total_optimized = 0
 
     for logo_name in DEFAULT_LOGOS:
         logo_path = template_path / logo_name
@@ -48,7 +178,6 @@ def get_logo_base64_map(template_dir: str = "templates") -> Dict[str, str]:
             try:
                 with open(logo_path, "rb") as f:
                     data = f.read()
-                    b64 = base64.b64encode(data).decode("utf-8")
 
                     # Determine MIME type
                     ext = logo_path.suffix.lower()
@@ -60,6 +189,18 @@ def get_logo_base64_map(template_dir: str = "templates") -> Dict[str, str]:
                         ".svg": "image/svg+xml",
                     }.get(ext, "image/webp")
 
+                    original_size = len(data)
+                    total_original += original_size
+
+                    # Optimize if enabled
+                    if optimize:
+                        data, mime_type = optimize_base64_image(
+                            data, mime_type, webp_quality=webp_quality
+                        )
+
+                    total_optimized += len(data)
+                    b64 = base64.b64encode(data).decode("utf-8")
+
                     data_uri = f"data:{mime_type};base64,{b64}"
                     logo_map[logo_name] = data_uri
                     log.debug(f"[LOGO-EMBED] Loaded {logo_name}: {len(b64)} chars base64")
@@ -68,7 +209,12 @@ def get_logo_base64_map(template_dir: str = "templates") -> Dict[str, str]:
         else:
             log.warning(f"[LOGO-EMBED] Logo not found: {logo_name}")
 
-    log.info(f"[LOGO-EMBED] Loaded {len(logo_map)} logos for embedding")
+    if optimize and total_original > 0:
+        savings = (1 - total_optimized / total_original) * 100
+        log.info(f"[LOGO-EMBED] Loaded {len(logo_map)} logos, optimized {total_original}→{total_optimized} bytes ({savings:.0f}% saved)")
+    else:
+        log.info(f"[LOGO-EMBED] Loaded {len(logo_map)} logos for embedding")
+
     return logo_map
 
 

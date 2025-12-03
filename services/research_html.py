@@ -16,53 +16,80 @@ import html as html_lib
 
 
 def items_to_html(
-    items: List[Dict[str, Any]], 
+    items: List[Dict[str, Any]],
     title: Optional[str] = None,
-    max_snippet_length: int = 200
+    max_snippet_length: int = 200,
+    max_visible: int = 6,
+    collapse_label: str = "Weitere Ergebnisse"
 ) -> str:
     """
-    Konvertiert Result-Items zu HTML-Liste.
-    
+    Konvertiert Result-Items zu HTML-Liste mit optionalem Collapse.
+
     Args:
         items: Liste von Dicts mit keys: title, url, snippet
         title: Optionaler Titel über der Liste
         max_snippet_length: Max. Länge des Snippets
-        
+        max_visible: Max. Anzahl sichtbarer Items (Rest in <details>)
+        collapse_label: Label für den Collapse-Button
+
     Returns:
-        HTML-String mit <ul>-Liste
+        HTML-String mit <ul>-Liste, optional mit <details> für Overflow
     """
     if not items:
         return "<p class='text-muted'>Keine aktuellen Einträge gefunden.</p>"
-    
+
     html_parts = []
-    
+
     if title:
         html_parts.append(f"<h4>{html_lib.escape(title)}</h4>")
-    
+
+    # Teile Items in sichtbar und versteckt
+    visible_items = items[:max_visible]
+    hidden_items = items[max_visible:]
+
     html_parts.append("<ul>")
-    
-    for item in items:
+
+    for item in visible_items:
         title_text = html_lib.escape(item.get("title") or item.get("url") or "Ohne Titel")
         url = html_lib.escape(item.get("url") or "")
         snippet = html_lib.escape((item.get("snippet") or "")[:max_snippet_length])
-        
+
         if snippet and len(item.get("snippet", "")) > max_snippet_length:
             snippet += "..."
-        
+
         html_parts.append(
             f'<li>'
             f'<a href="{url}" rel="noopener noreferrer" target="_blank">{title_text}</a>'
         )
-        
+
         if snippet:
             html_parts.append(
                 f'<br><span class="small text-muted">{snippet}</span>'
             )
-        
+
         html_parts.append('</li>')
-    
+
     html_parts.append("</ul>")
-    
+
+    # Versteckte Items in <details> Block
+    if hidden_items:
+        html_parts.append(f'<details class="research-overflow">')
+        html_parts.append(f'<summary class="small">{collapse_label} ({len(hidden_items)})</summary>')
+        html_parts.append("<ul>")
+
+        for item in hidden_items:
+            title_text = html_lib.escape(item.get("title") or item.get("url") or "Ohne Titel")
+            url = html_lib.escape(item.get("url") or "")
+
+            html_parts.append(
+                f'<li>'
+                f'<a href="{url}" rel="noopener noreferrer" target="_blank">{title_text}</a>'
+                f'</li>'
+            )
+
+        html_parts.append("</ul>")
+        html_parts.append("</details>")
+
     return "\n".join(html_parts)
 
 
