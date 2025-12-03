@@ -1,24 +1,32 @@
 Developer:
-<!-- roadmap_12m.md – v8.0 PDF-SLIMDOWN (-20% Words)
-     Respond exclusively with valid HTML. No Markdown fences.
--->
+<!-- roadmap_12m.md – v11.0 PDF-SLIMDOWN-STRICT
+     Output: Markdown (converted to HTML server-side)
+     No HTML tags, no code fences
 
-> **PDF-SLIMDOWN – Section "12-Month Roadmap"**
-> **Word Limits (REDUCED -20%):**
-> - Solo: ~280 words (acceptable: 240-320)
-> - Team: ~360 words (acceptable: 300-400)
-> - SME: ~440 words (acceptable: 380-480)
->
-> Structure: 4 sections (Months 1-3, 4-6, 7-12, Conclusion & Sustainability).
-> MAX 5 BULLETS PER PHASE!
->
-> **ANTI-REDUNDANCY (STRICT!):**
-> - NO repetition of Pain Points (covered in Quick Wins)
-> - NO re-describing tools (see Tools Recommendations)
-> - NO two-step explanations (skip justifications)
-> - Focus on PROGRESSION, not basics
->
-> Write directly PDF-ready prose (only HTML paragraphs and subheadings), **no placeholders, no meta-comments, no references to word count**.
+     **STRICT TOKEN LIMIT (CRITICAL!):**
+     This section MUST produce MAXIMUM 700-900 words output.
+     The LLM MUST stop after ~900 words.
+
+     **Word Limits (STRICTLY REDUCED):**
+     - Solo: ~200 words (acceptable: 180–240)
+     - Team: ~280 words (acceptable: 250–320)
+     - SME: ~360 words (acceptable: 320–400)
+
+     STRUCTURE: 4 phases with MAX 4 BULLETS each!
+       1. Months 1–3: Foundation (~150 words)
+       2. Months 4–6: Piloting (~150 words)
+       3. Months 7–12: Scaling (~200 words)
+       4. Conclusion: Sustainability (~100 words)
+
+     **ANTI-REDUNDANCY (ABSOLUTELY STRICT!):**
+     - NO repetition from roadmap_90d (90 days covered there)
+     - NO pain point repetition (addressed in Quick Wins)
+     - NO tool descriptions (see Tools Recommendations)
+     - Focus: WHAT COMES AFTER the first 90 days?
+     - NO justifications, only measures
+
+     STOP SIGNALS: End at "Conclusion & Sustainability" section.
+-->
 
 ---
 
@@ -28,119 +36,86 @@ Developer:
 - **{{UNTERNEHMENSGROESSE_LABEL}}** – Company size
 - **{{HAUPTLEISTUNG}}** – Core service/main process
 - **COMPANY_SIZE** – `solo` | `team` | `kmu`
-- Business Case variables: CAPEX, OPEX, Payback, ROI_12M
 
 ---
 
 ### SIZE-AWARE LOGIC (STRICTLY FOLLOW!)
 
 **COMPANY_SIZE == "solo":**
-- NEVER: "department", "build team", "hire staff", "HR", "project team"
-- INSTEAD: "own work methods", "personal workflows", "self-review", "own competence"
-- Roles: "owner", "yourself", "sole proprietor"
+- NEVER: "department", "build team", "employees", "HR", "project team"
+- INSTEAD: "own workflows", "personal routine", "self-review"
+- Max 4 bullets per phase, ~50 words per phase
 
 **COMPANY_SIZE == "team":**
-- Small groups (2-10 people), informal structures
+- Small groups (2-10), informal structures
 - "Team members", "AI coordinator", "shared standards"
+- Max 4 bullets per phase, ~70 words per phase
 
 **COMPANY_SIZE == "kmu":**
 - Formal structures, departments, governance
 - "Department heads", "governance board", "cross-functional"
+- Max 4 bullets per phase, ~90 words per phase
 
 ---
 
-### REQUIRED STRUCTURE (strictly follow)
+### REQUIRED STRUCTURE (STRICTLY COMPACT)
 
-1. **Months 1-3 – Foundation & Pilot Setup**
-   - At least 200 words prose
-   - Goal: Create foundations for AI usage, realize first Quick Wins
-   - Describe: Use-case prioritization, build prompt library, initial quality standards
-   - Governance aspect: First rules for AI output, data protection basics
-   - Responsible: {size-aware role designation}
-   - KPIs: 2-3 measurable success criteria
+## Strategic 12-Month Roadmap
 
-2. **Months 4-6 – Piloting & Quality Standards**
-   - At least 200 words prose
-   - Goal: Anchor AI processes in daily operations, establish stable workflows
-   - Describe: Workflow integration, expand prompt library, build monitoring
-   - Governance aspect: Review processes, incident handling, training material
-   - Responsible: {size-aware role designation}
-   - KPIs: Time savings, quality metrics, usage rate
+This roadmap shows the progression after the first 90 days for **{{HAUPTLEISTUNG}}** in the **{{BRANCHE_LABEL}}** industry with size **{{UNTERNEHMENSGROESSE_LABEL}}**.
 
-3. **Months 7-12 – Expansion, Scaling & Governance**
-   - At least 250 words prose
-   - Goal: Multiply successful workflows, open new areas
-   - Describe: Scaling to additional use cases, systematic success measurement
-   - Governance aspect: Finalize governance framework, audit preparation, compliance
-   - Responsible: {size-aware role designation}
-   - KPIs: ROI demonstrable, use case count, governance maturity level
+## Months 1–3: Foundation & First Use Cases
 
-4. **Conclusion & Sustainability (12-Month Review)**
-   - At least 200 words prose
-   - Goal: Consolidate learnings, prepare Roadmap 2.0
-   - Describe: Annual review, strategic development, budget for year 2
-   - Governance aspect: Compliance status, lessons learned, Roadmap 2.0
-   - Responsible: {size-aware role designation}
-   - Outlook on year 2
+- Establish priority workflow (building on 90-day successes)
+- Sharpen quality criteria
+- Initial success measurement (time, quality)
+- {% if COMPANY_SIZE == "solo" %}Solidify personal AI routine{% elif COMPANY_SIZE == "team" %}Document team standards{% else %}Evaluate pilot area{% endif %}
+
+**KPI:** At least 2 stable use cases in production.
+
+## Months 4–6: Piloting & Quality Assurance
+
+- Workflow optimization based on learnings
+- Introduce consistent review processes
+- Set up monitoring dashboard
+- {% if COMPANY_SIZE == "solo" %}Create quality checklist{% elif COMPANY_SIZE == "team" %}Assign quality responsible{% else %}Formalize QA process{% endif %}
+
+**KPI:** Measurable time savings, error rate < 10%.
+
+## Months 7–12: Expansion & Scaling
+
+- Explore new use cases from adjacent areas
+- {% if COMPANY_SIZE == "kmu" %}Finalize governance framework{% else %}Document guidelines{% endif %}
+- Expand success measurement (ROI proof)
+- Secure knowledge transfer and best practices
+
+**KPI:** ROI demonstrable, at least 3 productive use cases.
+
+## Conclusion & Sustainability
+
+- Conduct annual review
+- Plan budget for year 2
+- Create Roadmap 2.0 with new priorities
+- {% if COMPANY_SIZE == "kmu" %}Document compliance status{% else %}Record learnings{% endif %}
+
+**Outlook:** Foundation for continuous development established.
 
 ---
 
 ### FORMAT RULES
 
-- **HTML only:** `<h3>`, `<h4>`, `<p>` – no lists, no bullets
-- Each section begins with `<h3>` for the phase
-- Structure sub-aspects with `<h4>`
-- Prose in `<p>` tags
-- At end: Brief closing paragraph on overall assessment
+- **Markdown only:** `## ` for phase titles
+- Bullet lists with `- ` (MAX 4 per phase!)
+- Short KPI paragraph per phase
+- **No HTML**, no code fences
+- **MAX 900 words total!**
 
 ---
 
 ### STYLE GUIDELINES
 
 - Factual, concrete, no filler phrases
-- Clear reference to {{BRANCHE_LABEL}}, {{HAUPTLEISTUNG}} and business case
-- Realistic time estimates and resource estimates
-- Clearly name customer-side responsibilities
-- No developer language, no placeholders, no meta-comments
-- No mention of word count in output
-
----
-
-<section class="section roadmap-12m">
-  <h2>Strategic 12-Month Roadmap</h2>
-
-  <p>
-    This roadmap shows how a company of size <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>
-    can sustainably establish and expand AI-powered work methods in
-    <strong>{{HAUPTLEISTUNG}}</strong> within one year. It builds on the
-    experiences of the first 90 days, leverages industry-typical workflows from
-    <strong>{{BRANCHE_LABEL}}</strong>, and combines quick wins with strategic depth.
-  </p>
-
-  <!-- Phase 1: Months 1-3 -->
-  <h3>Months 1-3: Foundation & Pilot Setup</h3>
-  <!-- At least 200 words prose with goal, measures, governance, KPIs -->
-
-  <!-- Phase 2: Months 4-6 -->
-  <h3>Months 4-6: Piloting & Quality Standards</h3>
-  <!-- At least 200 words prose with goal, measures, governance, KPIs -->
-
-  <!-- Phase 3: Months 7-12 -->
-  <h3>Months 7-12: Expansion, Scaling & Governance</h3>
-  <!-- At least 250 words prose with goal, measures, governance, KPIs -->
-
-  <!-- Phase 4: Conclusion -->
-  <h3>Conclusion & Sustainability (12-Month Review)</h3>
-  <!-- At least 200 words prose with annual review, learnings, Roadmap 2.0 -->
-
-  <p class="small muted">
-    This 12-month roadmap creates the foundation for sustainable, strategically anchored
-    AI usage in <strong>{{HAUPTLEISTUNG}}</strong>. It combines quick operational wins
-    with long-term strategic development and prepares scaling for year 2.
-  </p>
-</section>
-
-<!-- PLATIN+ REINFORCEMENT: This section MUST contain at least 900 words.
-     Check your output: Count the words and expand each phase with additional
-     details on goals, measures, governance, and KPIs if the minimum length is not reached.
-     NEVER shorten – always deliver complete, detailed content per phase. -->
+- Strategically focused, not narrative
+- No repetitions from 90-day roadmap
+- No developer language, no placeholders
+- End after "Conclusion & Sustainability"

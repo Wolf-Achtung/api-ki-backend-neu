@@ -1,27 +1,32 @@
 Developer:
-<!-- roadmap_12m.md – v10.0 PDF-SLIMDOWN (-20% Wörter)
+<!-- roadmap_12m.md – v11.0 PDF-SLIMDOWN-STRICT
      Output: Markdown (wird serverseitig zu HTML konvertiert)
      Keine HTML-Tags, keine Code-Fences
--->
 
-> **Abschnitt „12-Monats-Roadmap"**
-> **Ziellänge nach Größe (REDUZIERT -20% für PDF-SLIMDOWN):**
-> - Solo: ~280 Wörter (akzeptabel: 240–320)
-> - Team: ~360 Wörter (akzeptabel: 300–400)
-> - KMU: ~440 Wörter (akzeptabel: 380–480)
->
-> Struktur: 4 Abschnitte (Monate 1–3, 4–6, 7–12, Abschluss & Verstetigung).
-> MAX 5 BULLETS PRO PHASE!
->
-> **ANTI-REDUNDANZ-REGELN (STRIKT!):**
-> - KEINE Wiederholung von Pain Points (wurden in Quick Wins behandelt)
-> - KEINE erneute Tool-Beschreibung (siehe Tools-Empfehlungen)
-> - Baue logisch auf 90-Tage-Quick-Wins auf – nicht wiederholen!
-> - KEINE zweistufigen Erklärungen (Begründung entfällt)
-> - Fokus auf WEITERENTWICKLUNG, nicht Grundlagen
->
-> Schreibe **Markdown** (Überschriften mit ##, Listen mit -).
-> <!-- DEV: no_placeholders, no_meta_comments -->
+     **STRIKTE TOKEN-BEGRENZUNG (KRITISCH!):**
+     Diese Sektion darf MAXIMAL 700-900 Wörter Output produzieren.
+     Das LLM MUSS nach ~900 Wörtern stoppen.
+
+     **Ziellänge nach Größe (STRENG REDUZIERT):**
+     - Solo: ~200 Wörter (akzeptabel: 180–240)
+     - Team: ~280 Wörter (akzeptabel: 250–320)
+     - KMU: ~360 Wörter (akzeptabel: 320–400)
+
+     STRUKTUR: 4 Phasen mit je MAX 4 BULLETS!
+       1. Monate 1–3: Fundament (~150 Wörter)
+       2. Monate 4–6: Pilotierung (~150 Wörter)
+       3. Monate 7–12: Skalierung (~200 Wörter)
+       4. Abschluss: Verstetigung (~100 Wörter)
+
+     **ANTI-REDUNDANZ (ABSOLUT STRIKT!):**
+     - KEINE Wiederholung aus roadmap_90d (die 90-Tage wurden dort behandelt)
+     - KEINE Pain-Point-Wiederholung (wurden in Quick Wins adressiert)
+     - KEINE Tool-Beschreibungen (siehe Tools-Empfehlungen)
+     - Fokus: WAS KOMMT NACH den ersten 90 Tagen?
+     - KEINE Begründungen, nur Maßnahmen
+
+     STOP-SIGNALE: Beende bei "Abschluss & Verstetigung" Sektion.
+-->
 
 ---
 
@@ -31,95 +36,86 @@ Developer:
 - **{{UNTERNEHMENSGROESSE_LABEL}}** – Unternehmensgröße
 - **{{HAUPTLEISTUNG}}** – Kernleistung/Hauptprozess
 - **COMPANY_SIZE** – `solo` | `team` | `kmu`
-- Business-Case-Variablen: CAPEX, OPEX, Payback, ROI_12M
 
 ---
 
 ### SIZE-AWARE LOGIK (STRENG EINHALTEN!)
 
 **COMPANY_SIZE == "solo":**
-- NIEMALS: "Abteilung", "Team aufbauen", "Mitarbeiter einstellen", "HR", "Projektteam"
-- STATTDESSEN: "eigene Arbeitsweise", "persönliche Workflows", "Self-Review", "eigene Kompetenz"
-- Rollen: "Inhaber:in", "Sie selbst", "Solo-Selbstständige:r"
+- NIEMALS: "Abteilung", "Team aufbauen", "Mitarbeiter", "HR", "Projektteam"
+- STATTDESSEN: "eigene Workflows", "persönliche Routine", "Self-Review"
+- Max 4 Bullets pro Phase, ~50 Wörter pro Phase
 
 **COMPANY_SIZE == "team":**
-- Kleine Gruppen (2-10 Personen), informelle Strukturen
+- Kleine Gruppen (2-10), informelle Strukturen
 - "Teammitglieder", "KI-Koordinator", "gemeinsame Standards"
+- Max 4 Bullets pro Phase, ~70 Wörter pro Phase
 
 **COMPANY_SIZE == "kmu":**
 - Formale Strukturen, Fachbereiche, Governance
 - "Fachbereichsleitung", "Governance-Board", "bereichsübergreifend"
+- Max 4 Bullets pro Phase, ~90 Wörter pro Phase
 
 ---
 
-### PFLICHTSTRUKTUR (PDF-SLIMDOWN: -20% Wörter)
+### PFLICHTSTRUKTUR (STRENG KOMPAKT)
 
-1. **Monate 1–3 – Fundament & Pilot-Setup**
-   - ~70–90 Wörter (Solo: ~55)
-   - Ziel: Grundlagen schaffen, erste Quick Wins realisieren
-   - Max 5 Bullets: Use-Case-Priorisierung, Prompt-Bibliothek, Qualitätsstandards
-   - KPIs: 2 messbare Erfolgskriterien
+## Strategische 12-Monats-Roadmap
 
-2. **Monate 4–6 – Pilotierung & Qualitätsstandards**
-   - ~70–90 Wörter (Solo: ~55)
-   - Ziel: KI im Alltag verankern, stabile Workflows
-   - Max 5 Bullets: Workflow-Integration, Monitoring, Review-Prozesse
-   - KPIs: Zeitersparnis, Qualitätskennzahlen
+Diese Roadmap zeigt die Weiterentwicklung nach den ersten 90 Tagen für **{{HAUPTLEISTUNG}}** in der Branche **{{BRANCHE_LABEL}}** mit Größe **{{UNTERNEHMENSGROESSE_LABEL}}**.
 
-3. **Monate 7–12 – Ausbau, Skalierung & Governance**
-   - ~100–120 Wörter (Solo: ~80)
-   - Ziel: Workflows multiplizieren, neue Bereiche erschließen
-   - Max 5 Bullets: Skalierung, Erfolgsmessung, Governance-Finalisierung
-   - KPIs: ROI nachweisbar, Use-Case-Anzahl
+## Monate 1–3: Fundament & erste Use Cases
 
-4. **Abschluss & Verstetigung (12-Monats-Bilanz)**
-   - ~70–90 Wörter (Solo: ~55)
-   - Ziel: Learnings konsolidieren, Roadmap 2.0 vorbereiten
-   - Max 5 Bullets: Jahresreview, Budget Jahr 2, Compliance-Status
-   - Ausblick auf Jahr 2
+- Prioritäts-Workflow etablieren (aufbauend auf 90-Tage-Erfolgen)
+- Qualitätskriterien schärfen
+- Erste Erfolgsmessung (Zeit, Qualität)
+- {% if COMPANY_SIZE == "solo" %}Persönliche KI-Routine festigen{% elif COMPANY_SIZE == "team" %}Team-Standards dokumentieren{% else %}Pilotbereich evaluieren{% endif %}
+
+**KPI:** Mindestens 2 stabile Use Cases produktiv.
+
+## Monate 4–6: Pilotierung & Qualitätssicherung
+
+- Workflow-Optimierung basierend auf Learnings
+- Konsistente Review-Prozesse einführen
+- Monitoring-Dashboard aufsetzen
+- {% if COMPANY_SIZE == "solo" %}Qualitäts-Checkliste erstellen{% elif COMPANY_SIZE == "team" %}Qualitätsverantwortliche benennen{% else %}QS-Prozess formalisieren{% endif %}
+
+**KPI:** Messbare Zeitersparnis, Fehlerquote < 10%.
+
+## Monate 7–12: Ausbau & Skalierung
+
+- Neue Use Cases aus Nachbarbereichen erschließen
+- {% if COMPANY_SIZE == "kmu" %}Governance-Framework finalisieren{% else %}Leitplanken dokumentieren{% endif %}
+- Erfolgsmessung ausweiten (ROI-Nachweis)
+- Wissenstransfer und Best Practices sichern
+
+**KPI:** ROI nachweisbar, mindestens 3 produktive Use Cases.
+
+## Abschluss & Verstetigung
+
+- Jahresreview durchführen
+- Budget für Jahr 2 planen
+- Roadmap 2.0 mit neuen Prioritäten erstellen
+- {% if COMPANY_SIZE == "kmu" %}Compliance-Status dokumentieren{% else %}Learnings festhalten{% endif %}
+
+**Ausblick:** Basis für kontinuierliche Weiterentwicklung geschaffen.
 
 ---
 
-### FORMAT-REGELN (MARKDOWN)
+### FORMAT-REGELN
 
-- **Nur Markdown:** `## ` für Phasen-Titel, `### ` für Unteraspekte
-- Fließtext als normale Absätze (Leerzeile dazwischen)
-- Listen mit `- ` für Bullets
+- **Nur Markdown:** `## ` für Phasen-Titel
+- Bullet-Listen mit `- ` (MAX 4 pro Phase!)
+- Kurzer KPI-Absatz pro Phase
 - **Kein HTML**, keine Code-Fences
-- Am Ende: Kurzer Abschluss-Paragraph zur Gesamtbilanz
+- **MAX 900 Wörter gesamt!**
 
 ---
 
 ### STIL-VORGABEN
 
 - Sachlich, konkret, keine Floskeln
-- Klarer Bezug auf {{BRANCHE_LABEL}}, {{HAUPTLEISTUNG}} und Business Case
-- Realistische Zeitangaben und Ressourcenschätzungen
-- Verantwortlichkeiten auf Kundenseite klar benennen
-- Keine Developer-Sprache, keine Meta-Kommentare
-<!-- DEV: no_placeholder_tokens -->
-- Keine Erwähnung von Wortanzahl im Output
-
----
-
-## Strategische 12-Monats-Roadmap
-
-Diese Roadmap zeigt, wie ein Unternehmen der Größe **{{UNTERNEHMENSGROESSE_LABEL}}** innerhalb eines Jahres KI-gestützte Arbeitsweisen im Bereich **{{HAUPTLEISTUNG}}** nachhaltig etabliert und ausbaut. Sie baut auf den Erfahrungen der ersten 90 Tage auf, nutzt branchentypische Workflows der Branche **{{BRANCHE_LABEL}}** und verbindet schnelle Erfolge mit strategischer Tiefe.
-
-## Monate 1–3: Fundament & Pilot-Setup
-
-[Hier: ~100 Wörter Fließtext mit Ziel, Maßnahmen, Governance, KPIs – size-aware formulieren]
-
-## Monate 4–6: Pilotierung & Qualitätsstandards
-
-[Hier: ~100 Wörter Fließtext mit Ziel, Maßnahmen, Governance, KPIs – size-aware formulieren]
-
-## Monate 7–12: Ausbau, Skalierung & Governance
-
-[Hier: ~150 Wörter Fließtext mit Ziel, Maßnahmen, Governance, KPIs – size-aware formulieren]
-
-## Abschluss & Verstetigung (12-Monats-Bilanz)
-
-[Hier: ~100 Wörter Fließtext mit Jahresreview, Learnings, Roadmap 2.0 – size-aware formulieren]
-
-Diese 12-Monats-Roadmap schafft die Grundlage für eine nachhaltige, strategisch verankerte KI-Nutzung in **{{HAUPTLEISTUNG}}**. Sie verbindet schnelle operative Erfolge mit langfristiger strategischer Entwicklung und bereitet die Skalierung für Jahr 2 vor.
+- Strategisch fokussiert, nicht erzählerisch
+- Keine Wiederholungen aus 90-Tage-Roadmap
+- Keine Entwickler-Sprache, keine Platzhalter
+- Beende nach "Abschluss & Verstetigung"

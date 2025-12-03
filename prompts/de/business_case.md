@@ -73,6 +73,14 @@ Developer:
     Förderkapitel erläutert.
   </p>
 
+  <h3>Zusätzliche Erlöspotenziale (Monetarisierung)</h3>
+  <p>
+    Neben der Effizienzsteigerung bieten KI-gestützte Prozesse auch Erlöspotenziale:
+    Digitale Produkte (z.B. automatisierte Analysen, Reports), neue Serviceformate
+    (Workshops, Beratung) oder skalierbare Angebote können den ROI zusätzlich verbessern.
+    Details zu Pricing-Modellen finden sich im Kapitel "Monetarisierung".
+  </p>
+
   <p class="small muted">
     Hinweis: Diese Darstellung dient als transparente Orientierung. Für Investitionsentscheidungen
     empfiehlt sich die Ergänzung um konservative, Basis- und optimistische Szenarien.

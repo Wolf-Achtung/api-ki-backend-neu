@@ -1,55 +1,53 @@
+<!-- transparency_box.md – v2.0 PDF-SLIMDOWN-STRICT
+     Respond with valid HTML only.
+
+     **STRICT TOKEN LIMIT:**
+     MAXIMUM 180-250 words output.
+
+     **STRUCTURE (compact):**
+     1. Report creation (2-3 sentences)
+     2. Data basis (4-5 points as list)
+     3. Limitations (3-4 points)
+     4. Contact (1 sentence)
+
+     **FORBIDDEN:**
+     - NO repetition of change management content
+     - NO detailed guardrails explanations (covered elsewhere)
+     - Guardrails notes: short & precise
+
+     VARIABLES:
+       {{report_date}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}
+-->
+
 <section class="section transparency-box">
-  <h2>Transparency Notes on Report Creation</h2>
+  <h2>Transparency Notes</h2>
 
   <div class="transparency-panel">
-    <h3>How was this report created?</h3>
+    <h3>Report Creation</h3>
     <p>
       This report was generated <strong>AI-assisted</strong> from your questionnaire responses
-      dated <strong>{{report_date}}</strong>. The content is based on a
-      multi-stage analysis consisting of structured prompts, industry-specific
-      context information, and internal quality checks. The industry context for this
-      report is: <strong>{{BRANCHE_LABEL}}</strong>.
+      (as of: <strong>{{report_date}}</strong>). Industry context: <strong>{{BRANCHE_LABEL}}</strong>.
     </p>
 
-    <h3>What data is incorporated?</h3>
+    <h3>Data Basis</h3>
     <ul>
-      <li>Responses from your digitally completed questionnaire (as of: {{report_date}}).</li>
-      <li>Research snippets on market, trends, and landscape (e.g., Perplexity/Tavily).</li>
-      <li>Relevant legal framework conditions, including EU AI Act (as of August 1, 2024).</li>
-      <li>Internal benchmarks from comparable company profiles.</li>
+      <li>Your questionnaire responses</li>
+      <li>Market and trend research (Perplexity/Tavily)</li>
+      <li>Legal framework (EU AI Act, GDPR)</li>
+      <li>Benchmarks from comparable companies</li>
     </ul>
 
-    <h3>Limitations & Notes</h3>
+    <h3>Limitations</h3>
     <ul>
-      <li><strong>No legal advice:</strong> The legal assessments (GDPR, AI Act) serve as orientation and do not replace legal review.</li>
-      <li><strong>No guarantee:</strong> Economic figures (ROI, payback) are realistic estimates based on your inputs, but not binding forecasts.</li>
-      <li><strong>Information as of date:</strong> Tools and regulatory requirements may have changed after {{report_date}}.</li>
-      <li><strong>Professional review recommended:</strong> AI results should always be manually reviewed before implementation.</li>
+      <li><strong>No legal advice:</strong> Legal assessments serve as guidance.</li>
+      <li><strong>No guarantee:</strong> ROI/payback are estimates, not forecasts.</li>
+      <li><strong>Currency:</strong> Tools and regulations may change.</li>
+      <li><strong>Review recommended:</strong> Validate AI results before implementation.</li>
     </ul>
 
-    <h3>Quality Assurance</h3>
-    <p>This report undergoes multi-stage assurance:</p>
-    <ol>
-      <li>Automatic consistency and plausibility check.</li>
-      <li>Manual validation of key statements by a qualified person.</li>
-      <li>Alignment of recommendations with company size <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>.</li>
-      <li>Review of key regulatory notes (e.g., data protection, EU AI Act).</li>
-    </ol>
-
-    <h3>Contact & Questions</h3>
+    <h3>Contact</h3>
     <p>
-      For questions or feedback, you can reach us anytime at:<br>
-      <strong>contact@ai-security.now</strong><br>
-      Optionally, we offer a brief follow-up call within the first 30 days after report receipt.
+      Questions? <strong>contact@ai-security.now</strong>
     </p>
   </div>
-
-  <style>
-    .transparency-panel {
-      background: #f6fafe;
-      padding: 18px 24px;
-      border-left: 4px solid #0284c7;
-      margin: 24px 0;
-    }
-  </style>
 </section>

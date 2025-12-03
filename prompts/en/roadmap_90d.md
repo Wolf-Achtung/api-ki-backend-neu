@@ -1,28 +1,24 @@
 Developer:
-<!-- roadmap_90d.md – v7.0 PDF-SLIMDOWN (-15% Words)
-     Goal: 6 phases with 60-80 words each (= 400-550 words total).
-     Respond exclusively with valid HTML. No Markdown fences.
+<!-- roadmap_90d.md – v9.0 PDF-SLIMDOWN-STRICT
+     Output: Markdown (converted to HTML server-side)
 
-     **Word Limits (REDUCED -15%):**
-     - Solo: ~240 words (acceptable: 210-270)
-     - Team: ~280 words (acceptable: 250-310)
-     - SME: ~320 words (acceptable: 290-350)
+     **STRICT TOKEN LIMIT (CRITICAL!):**
+     MAXIMUM 350-450 words output.
 
-     STRUCTURE (6 Phases, COMPACT):
-       Phase 1: Week 1-2 – Vision & Priorities
-       Phase 2: Week 3-4 – Data Quality & Workflow Foundations
-       Phase 3: Week 5-6 – Quick Wins & Initial Impact
-       Phase 4: Week 7-8 – Quality Standards
-       Phase 5: Week 9-10 – Monitoring & Iteration
-       Phase 6: Week 11-13 – Consolidation & Scaling Preparation
+     **Word Limits (STRICTLY REDUCED):**
+     - Solo: ~180 words (acceptable: 150–200)
+     - Team: ~220 words (acceptable: 200–250)
+     - SME: ~280 words (acceptable: 260–320)
 
-     Per Phase: ~30-45 words (Solo: ~25-35)
-     MAX 5 BULLETS PER PHASE!
+     STRUCTURE: ONLY 3 phases! (not 6)
+       1. Week 1–4: Setup & first wins (~120 words)
+       2. Week 5–8: Quality & workflows (~120 words)
+       3. Week 9–13: Consolidation (~100 words)
 
-     ANTI-REDUNDANCY:
-     - NO repetition of Quick Wins (already mentioned)
-     - NO re-describing pain points
-     - NO two-step explanations (skip justifications)
+     **FOCUS: ONLY 3 QUICK-IMPACT MEASURES**
+     - No vision, no meta sections
+     - No detailed explanations
+     - Directly actionable steps
 
      VARIABLES:
        {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, COMPANY_SIZE
@@ -32,168 +28,49 @@ Developer:
        team: roles, shared standards, coordination
        sme: departments, governance, pilot areas
 
-     RULES:
-       - Use industry-specific workflows from CONTEXT_BLOCK
-       - Factual, concrete, no filler phrases
-       - No placeholders, no developer language
+     FORMAT: Markdown (## for phases, - for bullets), NO HTML
 -->
 
-<section class="section roadmap-90d">
-  <h2>Strategic 90-Day Roadmap</h2>
+## Strategic 90-Day Roadmap
 
-  <p>
-    This roadmap shows how a company of size <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>
-    can establish AI-powered work methods in <strong>{{HAUPTLEISTUNG}}</strong>
-    in a structured way within 90 days. It leverages typical
-    workflows, data types, and pain points of the <strong>{{BRANCHE_LABEL}}</strong> industry
-    and combines quick impact with solid foundations.
-  </p>
+Structured plan for **{{HAUPTLEISTUNG}}** in the **{{BRANCHE_LABEL}}** industry ({{UNTERNEHMENSGROESSE_LABEL}}).
 
-  <p>
-    The following phases create clarity, reduce friction points, and ensure
-    that AI delivers lasting, stable, and measurable value after 90 days.
-  </p>
+## Week 1–4: Setup & First Wins
 
-  <ol>
+**Goal:** Start AI usage, realize first Quick Wins.
 
-    <!-- PHASE 1 – Week 1-2 -->
-    <li>
-      <h3>Week 1-2: Vision, Use-Case Framework & Priorities</h3>
-      <p><strong>Goal:</strong> Clearly define where AI in {{HAUPTLEISTUNG}} delivers the strongest benefit – based on industry-typical workflows and pain points.</p>
-      <p><strong>Deliverables:</strong></p>
-      <ul>
-        <li>Focus definition: 1-2 prioritized tasks from {{BRANCHE_LABEL}} with high impact potential.</li>
-        <li>Overview of industry-typical examples (5-10 cases).</li>
-        <li>Mini checklist for quality, facts, tone, and approval.</li>
-      </ul>
-      <p><strong>Roles & Responsibilities:</strong><br>
-        {% if COMPANY_SIZE == "solo" %}
-          Personal prioritization & documentation.
-        {% elif COMPANY_SIZE == "team" %}
-          Team lead + AI owner.
-        {% else %}
-          Department + process owners.
-        {% endif %}
-      </p>
-      <p><strong>KPI:</strong> Prioritized use cases + initial quality criteria defined.</p>
-    </li>
+- Define 1–2 prioritized use cases from {{BRANCHE_LABEL}}
+- Test first prompts/workflows for {{HAUPTLEISTUNG}}
+- Establish quality criteria (facts, tone, approval)
 
-    <!-- PHASE 2 – Week 3-4 -->
-    <li>
-      <h3>Week 3-4: Data Quality, Examples & Workflow Foundations</h3>
-      <p><strong>Goal:</strong> Create a clean foundation so AI delivers stable, reliable results.</p>
-      <p><strong>Deliverables:</strong></p>
-      <ul>
-        <li>Collection of typical cases (min. 10) from {{BRANCHE_LABEL}} – real, complete, structured.</li>
-        <li>First stable workflow steps (Input → AI → Review → Approval).</li>
-        <li>Definition of measurable criteria: completeness, accuracy, style.</li>
-      </ul>
-      <p><strong>Roles & Responsibilities:</strong><br>
-        {% if COMPANY_SIZE == "solo" %}
-          Own documentation.
-        {% elif COMPANY_SIZE == "team" %}
-          Joint quality definition in team.
-        {% else %}
-          Department + quality assurance.
-        {% endif %}
-      </p>
-      <p><strong>KPI:</strong> Documented workflows + structured examples available.</p>
-    </li>
+**Responsible:** {% if COMPANY_SIZE == "solo" %}Owner{% elif COMPANY_SIZE == "team" %}Team lead + AI Owner{% else %}Department + process owners{% endif %}
 
-    <!-- PHASE 3 – Week 5-6 -->
-    <li>
-      <h3>Week 5-6: Quick Wins & First Measurable Impact</h3>
-      <p><strong>Goal:</strong> Noticeable relief through the first 1-2 AI-powered Quick Wins.</p>
-      <p><strong>Deliverables:</strong></p>
-      <ul>
-        <li>Implementation of 1-2 highest-impact Quick Wins (industry-dependent: e.g., proposal draft, content draft, data review).</li>
-        <li>Short tests: time savings, consistency, risk reduction.</li>
-        <li>Learning/error list for later standards.</li>
-      </ul>
-      <p><strong>Roles & Responsibilities:</strong><br>
-        {% if COMPANY_SIZE == "solo" %}
-          Implementation by owner.
-        {% elif COMPANY_SIZE == "team" %}
-          AI owner + directly involved parties.
-        {% else %}
-          Department + process owners.
-        {% endif %}
-      </p>
-      <p><strong>KPI:</strong> First impact (10-25% time savings).</p>
-    </li>
+**KPI:** 2 use cases tested, first time savings measurable.
 
-    <!-- PHASE 4 – Week 7-8 -->
-    <li>
-      <h3>Week 7-8: Quality Standards & Consistent Work Methods</h3>
-      <p><strong>Goal:</strong> Ensure reproducible results before processes are automated.</p>
-      <p><strong>Deliverables:</strong></p>
-      <ul>
-        <li>Brief style guide for AI outputs (style, facts, expertise).</li>
-        <li>Documentation of new work methods (input rules, review steps, approvals).</li>
-        <li>Alignment between involved roles/departments.</li>
-      </ul>
-      <p><strong>Roles & Responsibilities:</strong><br>
-        {% if COMPANY_SIZE == "solo" %}
-          Self-review processes.
-        {% elif COMPANY_SIZE == "team" %}
-          Team review + quality responsible.
-        {% else %}
-          Department + quality assurance + data protection/IT.
-        {% endif %}
-      </p>
-      <p><strong>KPI:</strong> Higher first-pass rate, fewer corrections.</p>
-    </li>
+## Week 5–8: Quality & Stable Workflows
 
-    <!-- PHASE 5 – Week 9-10 -->
-    <li>
-      <h3>Week 9-10: Monitoring, Reporting & Iterative Improvement</h3>
-      <p><strong>Goal:</strong> Make impact visible and derive optimizations.</p>
-      <p><strong>Deliverables:</strong></p>
-      <ul>
-        <li>Simple monitoring (time, quality, errors, consistency).</li>
-        <li>Brief report on progress and open challenges.</li>
-        <li>Optimized templates and workflows.</li>
-      </ul>
-      <p><strong>Roles & Responsibilities:</strong><br>
-        {% if COMPANY_SIZE == "solo" %}
-          Personal analysis & adjustment.
-        {% elif COMPANY_SIZE == "team" %}
-          Owner + team review.
-        {% else %}
-          Department + controlling/IT if applicable.
-        {% endif %}
-      </p>
-      <p><strong>KPI:</strong> Documented improvements + trend lines.</p>
-    </li>
+**Goal:** Ensure reproducible results.
 
-    <!-- PHASE 6 – Week 11-13 -->
-    <li>
-      <h3>Week 11-13: Decision, Consolidation & Scaling Preparation</h3>
-      <p><strong>Goal:</strong> Decide on AI expansion based on real results.</p>
-      <p><strong>Deliverables:</strong></p>
-      <ul>
-        <li>Assessment of AI suitability and impact for {{HAUPTLEISTUNG}}.</li>
-        <li>Strategic decision: Stabilize / Expand / Deepen.</li>
-        <li>Scaling backlog (use cases, automations, integrations).</li>
-      </ul>
-      <p><strong>Roles & Responsibilities:</strong><br>
-        {% if COMPANY_SIZE == "solo" %}
-          Management.
-        {% elif COMPANY_SIZE == "team" %}
-          Leadership + AI owner.
-        {% else %}
-          Management + department heads.
-        {% endif %}
-      </p>
-      <p><strong>KPI:</strong> Prioritized backlog + clear decision for the next 6-12 months.</p>
-    </li>
+- Document standard workflows (Input → AI → Review → Approval)
+- Create brief style guide for AI outputs
+- {% if COMPANY_SIZE == "solo" %}Self-review routine{% elif COMPANY_SIZE == "team" %}Establish team review{% else %}Coordinate QA processes{% endif %}
 
-  </ol>
+**Responsible:** {% if COMPANY_SIZE == "solo" %}Own documentation{% elif COMPANY_SIZE == "team" %}Quality responsible{% else %}Department + QA{% endif %}
 
-  <p class="small muted">
-    This 90-day roadmap lays the structural foundation for a stable, secure,
-    and impact-oriented introduction of AI in <strong>{{HAUPTLEISTUNG}}</strong>.
-    It creates clear work methods, quick benefits, and a reliable basis for
-    pilot projects and scaling in the following year.
-  </p>
-</section>
+**KPI:** Documented workflows, first-pass rate > 70%.
+
+## Week 9–13: Consolidation & Decision
+
+**Goal:** Evaluate results, prepare scaling.
+
+- Impact measurement (time, quality, error rate)
+- Decision: Stabilize / Expand / Deepen
+- Prioritize {% if COMPANY_SIZE == "kmu" %}scaling backlog{% else %}next use cases{% endif %}
+
+**Responsible:** {% if COMPANY_SIZE == "solo" %}Management{% elif COMPANY_SIZE == "team" %}Leadership + AI Owner{% else %}Management + department heads{% endif %}
+
+**KPI:** Clear decision for next 6–12 months, prioritized backlog.
+
+---
+
+This 90-day roadmap creates the foundation for stable AI usage in **{{HAUPTLEISTUNG}}** and prepares scaling.
