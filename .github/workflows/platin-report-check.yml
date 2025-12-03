@@ -130,72 +130,72 @@ jobs:
           OPENAI_API_KEY: "test-api-key"
         run: |
           echo "🔍 Validating Fallback Word Counts..."
-          python -c "
-import re
-import sys
+          python << 'PYEOF'
+          import re
+          import sys
 
-# Set environment before imports
-import os
-os.environ.setdefault('DATABASE_URL', 'sqlite:///:memory:')
-os.environ.setdefault('JWT_SECRET', 'test-secret-for-ci')
-os.environ.setdefault('OPENAI_API_KEY', 'test-api-key')
+          # Set environment before imports
+          import os
+          os.environ.setdefault('DATABASE_URL', 'sqlite:///:memory:')
+          os.environ.setdefault('JWT_SECRET', 'test-secret-for-ci')
+          os.environ.setdefault('OPENAI_API_KEY', 'test-api-key')
 
-try:
-    from gpt_analyze import _get_fallback_content
-    from services.prompt_enhancer import get_platin_min_words
-except ImportError as e:
-    print(f'⚠️ Import error (may be expected in CI): {e}')
-    sys.exit(0)
+          try:
+              from gpt_analyze import _get_fallback_content
+              from services.prompt_enhancer import get_platin_min_words
+          except ImportError as e:
+              print(f'⚠️ Import error (may be expected in CI): {e}')
+              sys.exit(0)
 
-def count_words(html_content):
-    text_only = re.sub(r'<[^>]+>', '', html_content).strip()
-    return len(text_only.split())
+          def count_words(html_content):
+              text_only = re.sub(r'<[^>]+>', '', html_content).strip()
+              return len(text_only.split())
 
-PLATIN_SECTIONS = [
-    'foerderpotenzial',
-    'risks',
-    'recommendations',
-    'roadmap_12m',
-    'unternehmensprofil_markt',
-]
+          PLATIN_SECTIONS = [
+              'foerderpotenzial',
+              'risks',
+              'recommendations',
+              'roadmap_12m',
+              'unternehmensprofil_markt',
+          ]
 
-briefing = {
-    'BRANCHE_LABEL': 'Beratung',
-    'UNTERNEHMENSGROESSE_LABEL': '1 (Solo)',
-    'HAUPTLEISTUNG': 'KI-Beratung',
-    'BUNDESLAND_LABEL': 'Berlin',
-    'CAPEX_REALISTISCH_EUR': '5000',
-    'OPEX_REALISTISCH_EUR': '200',
-    'EINSPARUNG_MONAT_EUR': '500',
-    'PAYBACK_MONTHS': '10',
-    'ROI_12M': '60',
-}
-scores = {'governance': 70, 'sicherheit': 65}
+          briefing = {
+              'BRANCHE_LABEL': 'Beratung',
+              'UNTERNEHMENSGROESSE_LABEL': '1 (Solo)',
+              'HAUPTLEISTUNG': 'KI-Beratung',
+              'BUNDESLAND_LABEL': 'Berlin',
+              'CAPEX_REALISTISCH_EUR': '5000',
+              'OPEX_REALISTISCH_EUR': '200',
+              'EINSPARUNG_MONAT_EUR': '500',
+              'PAYBACK_MONTHS': '10',
+              'ROI_12M': '60',
+          }
+          scores = {'governance': 70, 'sicherheit': 65}
 
-errors = []
-for section in PLATIN_SECTIONS:
-    content = _get_fallback_content(section, briefing, scores)
-    if not content:
-        errors.append(f'{section}: No fallback content')
-        continue
+          errors = []
+          for section in PLATIN_SECTIONS:
+              content = _get_fallback_content(section, briefing, scores)
+              if not content:
+                  errors.append(f'{section}: No fallback content')
+                  continue
 
-    word_count = count_words(content)
-    min_words = get_platin_min_words(section)
+              word_count = count_words(content)
+              min_words = get_platin_min_words(section)
 
-    if word_count < min_words:
-        errors.append(f'{section}: {word_count} words < {min_words} required')
-    else:
-        print(f'✅ {section}: {word_count} words (min: {min_words})')
+              if word_count < min_words:
+                  errors.append(f'{section}: {word_count} words < {min_words} required')
+              else:
+                  print(f'✅ {section}: {word_count} words (min: {min_words})')
 
-if errors:
-    print('')
-    for e in errors:
-        print(f'❌ {e}')
-    sys.exit(1)
-else:
-    print('')
-    print('✅ All fallback contents meet PLATIN+ word requirements')
-"
+          if errors:
+              print('')
+              for e in errors:
+                  print(f'❌ {e}')
+              sys.exit(1)
+          else:
+              print('')
+              print('✅ All fallback contents meet PLATIN+ word requirements')
+          PYEOF
 
   config-validation:
     name: PLATIN+ Config Validation
@@ -220,65 +220,65 @@ else:
           OPENAI_API_KEY: "test-api-key"
         run: |
           echo "🔍 Validating PLATIN_CRITICAL_SECTIONS configuration..."
-          python -c "
-import sys
-import os
-os.environ.setdefault('DATABASE_URL', 'sqlite:///:memory:')
-os.environ.setdefault('JWT_SECRET', 'test-secret-for-ci')
-os.environ.setdefault('OPENAI_API_KEY', 'test-api-key')
+          python << 'PYEOF'
+          import sys
+          import os
+          os.environ.setdefault('DATABASE_URL', 'sqlite:///:memory:')
+          os.environ.setdefault('JWT_SECRET', 'test-secret-for-ci')
+          os.environ.setdefault('OPENAI_API_KEY', 'test-api-key')
 
-try:
-    from services.prompt_enhancer import PLATIN_CRITICAL_SECTIONS
-except ImportError as e:
-    print(f'⚠️ Import error (may be expected in CI): {e}')
-    sys.exit(0)
+          try:
+              from services.prompt_enhancer import PLATIN_CRITICAL_SECTIONS
+          except ImportError as e:
+              print(f'⚠️ Import error (may be expected in CI): {e}')
+              sys.exit(0)
 
-REQUIRED_SECTIONS = [
-    'foerderpotenzial',
-    'risks',
-    'recommendations',
-    'roadmap_12m',
-    'gamechanger',
-    'unternehmensprofil_markt',
-]
+          REQUIRED_SECTIONS = [
+              'foerderpotenzial',
+              'risks',
+              'recommendations',
+              'roadmap_12m',
+              'gamechanger',
+              'unternehmensprofil_markt',
+          ]
 
-REQUIRED_FIELDS = ['max_tokens', 'temperature', 'min_words']
-errors = []
+          REQUIRED_FIELDS = ['max_tokens', 'temperature', 'min_words']
+          errors = []
 
-# Check all required sections exist
-for section in REQUIRED_SECTIONS:
-    if section not in PLATIN_CRITICAL_SECTIONS:
-        errors.append(f'Missing section: {section}')
+          # Check all required sections exist
+          for section in REQUIRED_SECTIONS:
+              if section not in PLATIN_CRITICAL_SECTIONS:
+                  errors.append(f'Missing section: {section}')
 
-# Check all configs have required fields
-for section, config in PLATIN_CRITICAL_SECTIONS.items():
-    for field in REQUIRED_FIELDS:
-        if field not in config:
-            errors.append(f'{section}: Missing field {field}')
+          # Check all configs have required fields
+          for section, config in PLATIN_CRITICAL_SECTIONS.items():
+              for field in REQUIRED_FIELDS:
+                  if field not in config:
+                      errors.append(f'{section}: Missing field {field}')
 
-    # Validate max_tokens
-    if config.get('max_tokens') != 4096:
-        errors.append(f'{section}: max_tokens should be 4096, got {config.get(\"max_tokens\")}')
+              # Validate max_tokens
+              if config.get('max_tokens') != 4096:
+                  errors.append(f"{section}: max_tokens should be 4096, got {config.get('max_tokens')}")
 
-    # Validate temperature range
-    temp = config.get('temperature', 0)
-    if not 0.3 <= temp <= 0.5:
-        errors.append(f'{section}: temperature {temp} not in range [0.3, 0.5]')
+              # Validate temperature range
+              temp = config.get('temperature', 0)
+              if not 0.3 <= temp <= 0.5:
+                  errors.append(f'{section}: temperature {temp} not in range [0.3, 0.5]')
 
-    # Validate min_words
-    min_words = config.get('min_words', 0)
-    if min_words < 500:
-        errors.append(f'{section}: min_words {min_words} too low (min 500)')
+              # Validate min_words
+              min_words = config.get('min_words', 0)
+              if min_words < 500:
+                  errors.append(f'{section}: min_words {min_words} too low (min 500)')
 
-if errors:
-    print('❌ Configuration errors found:')
-    for e in errors:
-        print(f'  - {e}')
-    sys.exit(1)
-else:
-    print('✅ PLATIN_CRITICAL_SECTIONS configuration valid')
-    print(f'   Sections: {list(PLATIN_CRITICAL_SECTIONS.keys())}')
-"
+          if errors:
+              print('❌ Configuration errors found:')
+              for e in errors:
+                  print(f'  - {e}')
+              sys.exit(1)
+          else:
+              print('✅ PLATIN_CRITICAL_SECTIONS configuration valid')
+              print(f'   Sections: {list(PLATIN_CRITICAL_SECTIONS.keys())}')
+          PYEOF
 
       - name: Validate Validator MIN_SECTION_LENGTH_WORDS
         env:
@@ -287,46 +287,46 @@ else:
           OPENAI_API_KEY: "test-api-key"
         run: |
           echo "🔍 Validating ReportValidator MIN_SECTION_LENGTH_WORDS..."
-          python -c "
-import sys
-import os
-os.environ.setdefault('DATABASE_URL', 'sqlite:///:memory:')
-os.environ.setdefault('JWT_SECRET', 'test-secret-for-ci')
-os.environ.setdefault('OPENAI_API_KEY', 'test-api-key')
+          python << 'PYEOF'
+          import sys
+          import os
+          os.environ.setdefault('DATABASE_URL', 'sqlite:///:memory:')
+          os.environ.setdefault('JWT_SECRET', 'test-secret-for-ci')
+          os.environ.setdefault('OPENAI_API_KEY', 'test-api-key')
 
-try:
-    from services.report_validator import ReportValidator
-except ImportError as e:
-    print(f'⚠️ Import error (may be expected in CI): {e}')
-    sys.exit(0)
+          try:
+              from services.report_validator import ReportValidator
+          except ImportError as e:
+              print(f'⚠️ Import error (may be expected in CI): {e}')
+              sys.exit(0)
 
-EXPECTED_MIN_WORDS = {
-    'foerderpotenzial': 900,
-    'risks': 800,
-    'recommendations': 800,
-    'roadmap_12m': 800,
-    'gamechanger': 700,
-    'unternehmensprofil_markt': 500,
-}
+          EXPECTED_MIN_WORDS = {
+              'foerderpotenzial': 900,
+              'risks': 800,
+              'recommendations': 800,
+              'roadmap_12m': 800,
+              'gamechanger': 700,
+              'unternehmensprofil_markt': 500,
+          }
 
-errors = []
-for section, expected in EXPECTED_MIN_WORDS.items():
-    actual = ReportValidator.MIN_SECTION_LENGTH_WORDS.get(section, 0)
-    if actual < expected:
-        errors.append(f'{section}: {actual} < {expected} required')
-    else:
-        print(f'✅ {section}: {actual} words (expected: {expected})')
+          errors = []
+          for section, expected in EXPECTED_MIN_WORDS.items():
+              actual = ReportValidator.MIN_SECTION_LENGTH_WORDS.get(section, 0)
+              if actual < expected:
+                  errors.append(f'{section}: {actual} < {expected} required')
+              else:
+                  print(f'✅ {section}: {actual} words (expected: {expected})')
 
-if errors:
-    print('')
-    print('❌ MIN_SECTION_LENGTH_WORDS errors:')
-    for e in errors:
-        print(f'  - {e}')
-    sys.exit(1)
-else:
-    print('')
-    print('✅ All MIN_SECTION_LENGTH_WORDS thresholds valid')
-"
+          if errors:
+              print('')
+              print('❌ MIN_SECTION_LENGTH_WORDS errors:')
+              for e in errors:
+                  print(f'  - {e}')
+              sys.exit(1)
+          else:
+              print('')
+              print('✅ All MIN_SECTION_LENGTH_WORDS thresholds valid')
+          PYEOF
 
   summary:
     name: Quality Gate Summary
