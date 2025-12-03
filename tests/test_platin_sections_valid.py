@@ -293,7 +293,8 @@ class TestShortLLMOutputSimulation:
         min_words = get_platin_min_words("foerderpotenzial")
 
         assert word_count < min_words, "Test content should be shorter than min_words"
-        assert min_words == 900, "foerderpotenzial should require 900 words"
+        # PDF-SLIMDOWN v2.0: reduced from 900 to 700
+        assert min_words == 700, "foerderpotenzial should require 700 words (PDF-SLIMDOWN v2.0)"
 
     def test_short_output_triggers_fallback_risks(self):
         """Simulate short LLM output for risks triggering fallback."""
@@ -304,7 +305,8 @@ class TestShortLLMOutputSimulation:
         min_words = get_platin_min_words("risks")
 
         assert word_count < min_words, "Test content should be shorter than min_words"
-        assert min_words == 800, "risks should require 800 words"
+        # PDF-SLIMDOWN v2.0: reduced from 800 to 600
+        assert min_words == 600, "risks should require 600 words (PDF-SLIMDOWN v2.0)"
 
     def test_fallback_content_exceeds_min_words(self):
         """Verify all fallbacks exceed their respective min_words thresholds."""
@@ -352,24 +354,34 @@ class TestShortLLMOutputSimulation:
 
 
 class TestPromptEnhancerConfig:
-    """Tests for PLATIN_CRITICAL_SECTIONS configuration."""
+    """Tests for PLATIN_CRITICAL_SECTIONS configuration (PDF-SLIMDOWN v2.0)."""
 
-    def test_all_platin_sections_have_max_tokens_4096(self):
-        """Verify all PLATIN sections have explicit max_tokens=4096."""
+    def test_all_platin_sections_have_max_tokens_in_range(self):
+        """Verify all PLATIN sections have max_tokens in valid range (PDF-SLIMDOWN v2.0).
+
+        PDF-SLIMDOWN v2.0: Token limits reduced by 20-30% for shorter outputs.
+        Valid range: 1500-3500 depending on section complexity.
+        """
         from services.prompt_enhancer import PLATIN_CRITICAL_SECTIONS
 
         for section, config in PLATIN_CRITICAL_SECTIONS.items():
-            assert config.get("max_tokens") == 4096, (
-                f"Section {section} should have max_tokens=4096"
+            max_tokens = config.get("max_tokens", 0)
+            assert 1500 <= max_tokens <= 3500, (
+                f"Section {section} max_tokens={max_tokens} not in range [1500, 3500]"
             )
 
     def test_all_platin_sections_have_min_words(self):
-        """Verify all PLATIN sections define min_words."""
+        """Verify all PLATIN sections define min_words (PDF-SLIMDOWN v2.0).
+
+        PDF-SLIMDOWN v2.0: Reduced min_words to allow for compact outputs.
+        Valid range: 100+ depending on section.
+        """
         from services.prompt_enhancer import PLATIN_CRITICAL_SECTIONS
 
         for section, config in PLATIN_CRITICAL_SECTIONS.items():
             assert "min_words" in config, f"Section {section} should define min_words"
-            assert config["min_words"] >= 500, f"Section {section} min_words too low"
+            # PDF-SLIMDOWN v2.0: min_words can be as low as 150 for compact sections
+            assert config["min_words"] >= 100, f"Section {section} min_words too low (min 100)"
 
     def test_get_platin_config_returns_config(self):
         """Verify get_platin_config returns config for critical sections."""
@@ -382,18 +394,24 @@ class TestPromptEnhancerConfig:
         assert "min_words" in config
 
     def test_is_platin_critical_section(self):
-        """Verify is_platin_critical_section correctly identifies sections."""
+        """Verify is_platin_critical_section correctly identifies sections (PDF-SLIMDOWN v2.0)."""
         from services.prompt_enhancer import is_platin_critical_section
 
-        # Critical sections
+        # Critical sections (original)
         assert is_platin_critical_section("foerderpotenzial")
         assert is_platin_critical_section("risks")
         assert is_platin_critical_section("recommendations")
         assert is_platin_critical_section("roadmap_12m")
 
+        # PDF-SLIMDOWN v2.0: quick_wins is now a critical section
+        assert is_platin_critical_section("quick_wins")
+        assert is_platin_critical_section("roadmap_90d")
+        assert is_platin_critical_section("transparency_box")
+        assert is_platin_critical_section("technologie_prozesse")
+
         # Non-critical sections
         assert not is_platin_critical_section("executive_summary")
-        assert not is_platin_critical_section("quick_wins")
+        assert not is_platin_critical_section("business_case")
 
 
 class TestQuickWinsPromptLeakDetection:
