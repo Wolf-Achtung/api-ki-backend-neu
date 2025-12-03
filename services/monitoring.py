@@ -93,7 +93,7 @@ class MetricsStore:
             values = [v for ts, v in self._timed_metrics.get(metric, []) if ts > cutoff]
             if not values:
                 return None
-            return sum(values) / len(values)
+            return float(sum(values) / len(values))
 
     def get_max(self, metric: str, window_minutes: int = 60) -> Optional[float]:
         """Get max of timed metric over window."""
@@ -102,7 +102,7 @@ class MetricsStore:
             values = [v for ts, v in self._timed_metrics.get(metric, []) if ts > cutoff]
             if not values:
                 return None
-            return max(values)
+            return float(max(values))
 
     def get_count(self, metric: str, window_minutes: int = 60) -> int:
         """Get count of timed metric entries over window."""
@@ -375,6 +375,7 @@ def get_system_health() -> Dict[str, Any]:
 
 def get_service_status() -> Dict[str, Any]:
     """Get status of all monitored services."""
+    from sqlalchemy import text
     from core.db import SessionLocal
 
     services = {}
@@ -382,7 +383,7 @@ def get_service_status() -> Dict[str, Any]:
     # Database connectivity
     try:
         db = SessionLocal()
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db.close()
         services["database"] = {"status": "ok", "latency_ms": 0}
     except Exception as e:

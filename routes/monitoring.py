@@ -18,7 +18,7 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 
 from services.monitoring import (
     get_extended_health,
@@ -309,15 +309,15 @@ async def get_metrics() -> JSONResponse:
 # Prometheus Text Format (optional)
 # =============================================================================
 
-@router.get("/monitoring/metrics/prometheus")
-async def get_prometheus_metrics() -> str:
+@router.get("/monitoring/metrics/prometheus", response_class=PlainTextResponse)
+async def get_prometheus_metrics() -> PlainTextResponse:
     """
     Get metrics in Prometheus text exposition format.
     """
     try:
         from services.monitoring import _metrics
 
-        lines = []
+        lines: list[str] = []
         counters = _metrics.get_all_counters()
         gauges = _metrics.get_all_gauges()
 
@@ -338,7 +338,6 @@ async def get_prometheus_metrics() -> str:
         lines.append("# TYPE kibackend_uptime_seconds gauge")
         lines.append(f"kibackend_uptime_seconds {_metrics.get_uptime_seconds():.0f}")
 
-        from fastapi.responses import PlainTextResponse
         return PlainTextResponse(
             content="\n".join(lines),
             media_type="text/plain; version=0.0.4; charset=utf-8",
