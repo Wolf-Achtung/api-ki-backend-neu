@@ -969,6 +969,7 @@ Nutze den Strategischen Kontext wie folgt:
             Enhanced prompt with injected context
         """
         # Only these prompts get ADDITIONAL branch/size context block (v4.0 extended)
+        # PLATIN++ V5: All SIZE-AWARE prompts should be in this list
         PROMPTS_WITH_BRANCH_SIZE_CONTEXT = {
             "unternehmensprofil_markt",  # Main profile page - needs context
             # Extended whitelist (v4.0)
@@ -990,6 +991,20 @@ Nutze den Strategischen Kontext wie folgt:
             "ai_policy_mini",           # Policy-Regeln nach Komplexität
             "kickoff_vorlage",          # Kickoff-Agenda nach Team-Größe
             "prompt_framework",         # Prompt-Anleitung nach Erfahrungslevel
+            # PLATIN++ V5 Integration Check - Missing SIZE-AWARE prompts added
+            "business_case",            # ROI/Payback nach Unternehmensgröße
+            "gamechanger",              # Transformation nach Solo/Team/KMU
+            "foerderpotenzial",         # Förderprogramme nach Größe
+            "tools_empfehlungen",       # Tool-Empfehlungen nach Komplexität
+            "strategie_governance",     # Governance nach Organisationsgröße
+            "strategy_governance",      # EN alternative name
+            "wettbewerb_benchmark",     # Wettbewerbsanalyse nach Marktposition
+            "competition_benchmark",    # EN alternative name
+            "org_change",               # Change Management nach Teamgröße
+            "next_actions",             # Nächste Schritte nach Priorität
+            "costs_overview",           # Kostenübersicht nach Budget
+            "ai_act_summary",           # AI Act nach Risikoklasse
+            "recommendations",          # Empfehlungen nach Kontext
         }
 
         try:
