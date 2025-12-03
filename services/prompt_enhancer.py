@@ -420,17 +420,46 @@ PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
 }
 
 
-def get_platin_config(section_name: str) -> Optional[PlatinSectionConfig]:
+# PE-3 FIX: Size-aware token multipliers
+# Solo = shorter reports (0.8x), Team = standard (1.0x), KMU = longer (1.15x)
+SIZE_TOKEN_MULTIPLIERS: Dict[str, float] = {
+    "solo": 0.8,   # 20% reduction for solopreneurs (shorter, focused)
+    "team": 1.0,   # Standard baseline
+    "kmu": 1.15,   # 15% increase for larger companies (more detail)
+}
+
+
+def get_platin_config(section_name: str, size: Optional[str] = None) -> Optional[PlatinSectionConfig]:
     """
     Get PLATIN+ configuration for a section if it's a critical section.
 
+    PE-3 FIX: Now supports size-aware max_tokens scaling.
+
     Args:
         section_name: Name of the section (e.g., 'foerderpotenzial')
+        size: Company size ('solo', 'team', 'kmu') for token adjustment
 
     Returns:
-        PlatinSectionConfig if section is critical, None otherwise
+        PlatinSectionConfig if section is critical, None otherwise.
+        If size is provided, max_tokens will be adjusted accordingly.
     """
-    return PLATIN_CRITICAL_SECTIONS.get(section_name.lower())
+    base_config = PLATIN_CRITICAL_SECTIONS.get(section_name.lower())
+    if not base_config:
+        return None
+
+    # If no size specified, return base config unchanged
+    if not size:
+        return base_config
+
+    # Get size multiplier (default to team/1.0 if unknown)
+    multiplier = SIZE_TOKEN_MULTIPLIERS.get(size.lower(), 1.0)
+
+    # Create adjusted config (copy to avoid modifying original)
+    adjusted_config: PlatinSectionConfig = {
+        **base_config,
+        "max_tokens": int(base_config["max_tokens"] * multiplier),
+    }
+    return adjusted_config
 
 
 def is_platin_critical_section(section_name: str) -> bool:
@@ -505,9 +534,12 @@ def _normalize_size(raw_size: str | None) -> str:
 
     Supports legacy values ("klein", "mittel", "small", "small_team") for
     backwards compatibility, mappt aber intern immer auf 'solo' | 'team' | 'kmu'.
+
+    PE-2 FIX: Default changed from 'team' to 'solo' for safer assumptions
+    (Solo-Freelancer reports are more common and team terminology would be inappropriate)
     """
     if not raw_size:
-        return "team"
+        return "solo"  # PE-2 FIX: Default to solo (was: team)
 
     raw = raw_size.strip().lower()
     alias_map: Dict[str, str] = {
@@ -519,7 +551,7 @@ def _normalize_size(raw_size: str | None) -> str:
     }
     size = alias_map.get(raw, raw)
     if size not in ROADMAP_CONSTRAINTS:
-        return "team"
+        return "solo"  # PE-2 FIX: Default to solo (was: team)
     return size
 
 

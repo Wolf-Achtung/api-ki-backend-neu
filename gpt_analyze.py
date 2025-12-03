@@ -67,6 +67,15 @@ from services.guardrails import (
     detect_guardrails_v5,
     format_guardrail_hits_for_context,
     GuardrailHit,
+    # G-2 FIX: Import centralized keywords from guardrails.py (v5.0)
+    GUARDRAIL_KEYWORDS_DE,
+    GUARDRAIL_KEYWORDS_EN,
+    NEGATION_WORDS_DE,
+    NEGATION_WORDS_EN,
+    ACTION_WORDS_DE,
+    ACTION_WORDS_EN,
+    SENSITIVE_AREAS_DE,
+    SENSITIVE_AREAS_EN,
 )
 
 # Und direkt nach Zeile 61, vor try:
@@ -201,81 +210,16 @@ def _labels_for_list(field_key, values):
 
 # === STRATEGIC CONTEXT BLOCK =============================================
 
-# Guardrail Detection Keywords (v4.0) - Extended list for intelligent detection
-GUARDRAIL_DETECTION_KEYWORDS = [
-    # Original keywords
-    "no-gos", "leitplanken", "no gos", "rote linien", "sensible themen",
-    "tabu", "ausgeschlossen", "nicht erlaubt",
-    # Extended keywords (v3.1)
-    "heikel", "empfindlich", "kritisch", "bitte vermeiden",
-    "nicht automatisieren", "nicht delegieren", "nicht kommunizieren",
-    "nicht an ki auslagern", "unter keinen umständen",
-    "nur menschlich entscheiden", "heikle themen",
-    # A) Negative Verben + Objekte (v4.0)
-    "nicht nutzen", "nicht verwenden", "nicht freigeben",
-    "nicht veröffentlichen", "nicht ohne freigabe", "nicht ohne rücksprache",
-    "nicht mit kunden teilen", "nicht extern speichern",
-    # B) Phrasen zur Einschränkung / Vorsicht (v4.0)
-    "nur manuell entscheiden", "nur intern verwenden", "vorsicht bei",
-    "kritische themen", "empfindliche daten", "nicht ohne absprache",
-]
+# G-2 FIX: v4.0 duplicates removed - using centralized keywords from services/guardrails.py
+# Aliases for backward compatibility (all definitions now in services/guardrails.py v5.0)
+GUARDRAIL_DETECTION_KEYWORDS = GUARDRAIL_KEYWORDS_DE  # DE keywords from guardrails.py
+NEGATION_WORDS = NEGATION_WORDS_DE  # DE negation words from guardrails.py
+ACTION_WORDS = ACTION_WORDS_DE  # DE action words from guardrails.py
+SENSITIVE_AREAS = SENSITIVE_AREAS_DE  # DE sensitive areas from guardrails.py
 
-# Negation words for intelligent detection (v4.0)
-NEGATION_WORDS = ["nicht", "kein", "keine", "ohne", "niemals", "nie"]
-
-# Action words that combined with negation indicate guardrails (v4.0)
-ACTION_WORDS = [
-    "automatisieren", "delegieren", "freigabe", "speichern", "teilen",
-    "verwenden", "weitergeben", "veröffentlichen", "kommunizieren",
-    "auslagern", "nutzen", "einsetzen", "übertragen",
-]
-
-# Sensitive areas that imply guardrails without negation (v4.0)
-SENSITIVE_AREAS = [
-    "personalentscheidungen", "bewerberdaten", "gesundheitsdaten",
-    "teamkommunikation", "rechtsfragen", "kundenbeschwerden",
-    "compliance-relevante", "personaldaten", "mitarbeiterdaten",
-    "vertrauliche", "geheimhaltung", "datenschutz-kritisch",
-]
-
-# === ENGLISH GUARDRAIL DETECTION (v4.1) ===================================
-
-# Guardrail Detection Keywords for English (v4.1)
-GUARDRAIL_DETECTION_KEYWORDS_EN = [
-    # Core guardrail terms
-    "no-gos", "guardrails", "red lines", "sensitive topics",
-    "taboo", "excluded", "not allowed", "off limits",
-    # Extended keywords
-    "delicate", "sensitive", "critical", "please avoid",
-    "do not automate", "do not delegate", "do not communicate",
-    "do not outsource to ai", "under no circumstances",
-    "human decision only", "sensitive issues",
-    # Negative verbs + objects
-    "do not use", "do not share", "do not release",
-    "do not publish", "not without approval", "not without consultation",
-    "do not share with customers", "do not store externally",
-    # Restriction / caution phrases
-    "manual decision only", "internal use only", "be careful with",
-    "critical topics", "sensitive data", "not without agreement",
-]
-
-# Negation words for intelligent detection - English (v4.1)
-NEGATION_WORDS_EN = ["no", "not", "never", "without", "none", "don't", "cannot", "must not"]
-
-# Action words that combined with negation indicate guardrails - English (v4.1)
-ACTION_WORDS_EN = [
-    "automate", "delegate", "release", "store", "share",
-    "use", "forward", "publish", "communicate",
-    "outsource", "utilize", "deploy", "transfer",
-]
-
-# Sensitive areas that imply guardrails without negation - English (v4.1)
-SENSITIVE_AREAS_EN = [
-    "personnel decisions", "applicant data", "health data",
-    "team communication", "legal matters", "customer complaints",
-    "compliance-relevant", "personal data", "employee data",
-    "confidential", "secrecy", "privacy-critical",
-]
+# English aliases
+GUARDRAIL_DETECTION_KEYWORDS_EN = GUARDRAIL_KEYWORDS_EN  # EN keywords from guardrails.py
+# Note: NEGATION_WORDS_EN, ACTION_WORDS_EN, SENSITIVE_AREAS_EN already imported directly
 
 
 def _split_into_sentences(text: str) -> list[str]:
@@ -3213,13 +3157,18 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     }
 
     # Default-Fallback für unbekannte Sections – neutraler, professioneller Text ohne Fehlermeldungs-Charakter
-    return fallbacks.get(
+    result = fallbacks.get(
         section_key,
         f"""<div class="section-placeholder">
   <p>Dieser Abschnitt fasst die wichtigsten Aspekte für <strong>{branche}</strong> in der Unternehmensgröße <strong>{size_label or "Ihr Unternehmen"}</strong> zusammen.</p>
   <p>Die Inhalte basieren auf den vorliegenden Angaben und bewährten Vorgehensweisen für vergleichbare Profile.</p>
 </div>"""
     )
+
+    # PE-4 FIX: Apply governance simplification to fallback content
+    # Solo users should not see team/department terminology
+    from services.report_validator import filter_size_inappropriate_content
+    return filter_size_inappropriate_content(result, size_label)
 
 # -------------------- 🎯 NEW: Use prompt system instead of hardcoded prompts ----------------
 # 🎯 STATIC SECTIONS – diese nutzen IMMER Fallback, kein GPT-Call
