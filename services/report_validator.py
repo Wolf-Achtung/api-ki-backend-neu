@@ -166,6 +166,9 @@ class ReportValidator:
         "recommendations": 500,        # Reduziert für bessere Compliance
         "gamechanger": 400,            # Reduziert für bessere Compliance
         "unternehmensprofil_markt": 300,  # Reduziert für bessere Compliance
+        # PE-1 FIX: Fehlende kritische Sektionen hinzugefügt
+        "transparency_box": 150,       # Base (wird size-aware überschrieben)
+        "technologie_prozesse": 200,   # Base (wird size-aware überschrieben)
     }
 
     # SIZE-AWARE Überschreibungen
@@ -175,18 +178,27 @@ class ReportValidator:
             "roadmap_90d": 250,
             "roadmap_12m": 400,
             "org_change": 80,
+            # PE-1 FIX: Fehlende Sektionen
+            "transparency_box": 100,
+            "technologie_prozesse": 150,
         },
         "team": {
             "quick_wins": 90,
             "roadmap_90d": 300,
             "roadmap_12m": 500,
             "org_change": 100,
+            # PE-1 FIX: Fehlende Sektionen
+            "transparency_box": 150,
+            "technologie_prozesse": 200,
         },
         "kmu": {
             "quick_wins": 120,
             "roadmap_90d": 350,
             "roadmap_12m": 600,
             "org_change": 120,
+            # PE-1 FIX: Fehlende Sektionen
+            "transparency_box": 200,
+            "technologie_prozesse": 250,
         },
     }
 
@@ -207,6 +219,9 @@ class ReportValidator:
         "recommendations": "recommendations",  # PLATIN+: hinzugefügt
         "gamechanger": "gamechanger",     # PLATIN+: hinzugefügt
         "unternehmensprofil_markt": "unternehmensprofil_markt",  # PLATIN+: hinzugefügt
+        # PE-1 FIX: Fehlende kritische Sektionen
+        "transparency_box": "transparency_box",
+        "technologie_prozesse": "technologie_prozesse",
     }
 
     def __init__(self, sections: Dict[str, Any], meta: Dict[str, Any]) -> None:

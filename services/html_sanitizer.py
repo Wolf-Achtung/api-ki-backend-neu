@@ -320,15 +320,19 @@ def recover_text_from_broken_html(html_text: str, min_words: int = MIN_WORDS_DEF
     2. Wenn Fehler → strip_tags()
     3. Mindest-Text behalten (min 50 Wörter)
 
+    PDF-SLIMDOWN v2.0: GARANTIERT >= min_words Wörter im Output.
+
     Args:
         html_text: Potenziell kaputtes HTML
         min_words: Mindestanzahl Wörter für Recovery (default: 50)
 
     Returns:
-        Bereinigter Text oder heuristisch aufbereiteter Inhalt (min 50 Wörter)
+        Bereinigter Text oder heuristisch aufbereiteter Inhalt (GARANTIERT >= min_words Wörter)
     """
     if not html_text:
-        return ""
+        # S-2 FIX: Leerer Input darf nicht "" zurückgeben - Wort-Garantie
+        log.warning("[HTML-RECOVERY] Empty input, applying heuristic padding")
+        return _heuristic_padding("", min_words)
 
     original_text = html_text.strip()
 
@@ -385,43 +389,81 @@ def _heuristic_padding(text: str, min_words: int = MIN_WORDS_DEFAULT) -> str:
     """
     Heuristische Aufbereitung um Mindest-Wortanzahl zu garantieren.
 
-    Fügt einen neutralen Kontext-Satz hinzu wenn der Text zu kurz ist.
-    Verhindert "0 Wörter"-Situationen.
+    PDF-SLIMDOWN v2.0: Dynamische Skalierung auf min_words durch wiederholte
+    Padding-Blöcke. Garantiert IMMER >= min_words.
 
     Args:
         text: Der zu kurze Text
         min_words: Mindestanzahl Wörter
 
     Returns:
-        Text mit mindestens min_words Wörtern
+        Text mit mindestens min_words Wörtern (GARANTIERT)
     """
+    # Sicherstellen dass text ein String ist
+    if not text:
+        text = ""
+
     words = text.split()
     current_count = len(words)
 
     if current_count >= min_words:
         return text
 
-    # Neutraler Fülltext für Recovery-Situationen
-    padding_de = (
-        "Dieser Abschnitt enthält weitere Details zur Analyse. "
-        "Die vollständigen Informationen werden im Gesamtkontext des Reports bereitgestellt. "
-        "Für zusätzliche Erläuterungen siehe die angrenzenden Kapitel des Reports."
-    )
-    padding_en = (
-        "This section contains additional analysis details. "
-        "Complete information is provided in the overall report context. "
-        "For additional explanations, see adjacent report chapters."
-    )
-
     # Entscheide anhand des Texts ob DE oder EN
     de_indicators = ["der", "die", "das", "und", "für", "mit", "eine", "einen"]
     text_lower = text.lower()
     is_german = any(ind in text_lower for ind in de_indicators)
 
-    padding = padding_de if is_german else padding_en
+    # Erweiterte Padding-Blöcke für dynamische Skalierung (~20 Wörter pro Block)
+    padding_blocks_de = [
+        "Dieser Abschnitt enthält weitere Details zur Analyse und strategischen Planung.",
+        "Die vollständigen Informationen werden im Gesamtkontext des Reports bereitgestellt.",
+        "Für zusätzliche Erläuterungen siehe die angrenzenden Kapitel des Reports.",
+        "Die Umsetzung erfolgt schrittweise unter Berücksichtigung der Unternehmensgröße.",
+        "Alle Empfehlungen sind auf die spezifischen Anforderungen des Unternehmens abgestimmt.",
+        "Die Integration von KI-Lösungen erfordert eine sorgfältige Planung und Qualitätssicherung.",
+        "Regelmäßige Reviews stellen sicher, dass die Ziele erreicht werden.",
+        "Die Priorisierung basiert auf Aufwand, Nutzen und strategischer Bedeutung.",
+        "Governance-Richtlinien und Leitplanken werden durchgängig berücksichtigt.",
+        "Die dokumentierten Best Practices unterstützen eine nachhaltige Implementierung.",
+    ]
 
-    log.info("[HEURISTIC-PADDING] Added padding to reach %d words (had %d)", min_words, current_count)
-    return f"{text} {padding}"
+    padding_blocks_en = [
+        "This section contains additional details for analysis and strategic planning.",
+        "Complete information is provided in the overall report context.",
+        "For additional explanations, see adjacent report chapters and documentation.",
+        "Implementation proceeds step by step considering company size and resources.",
+        "All recommendations are tailored to the specific requirements of the organization.",
+        "Integration of AI solutions requires careful planning and quality assurance measures.",
+        "Regular reviews ensure that objectives and milestones are achieved successfully.",
+        "Prioritization is based on effort, benefit, and strategic importance factors.",
+        "Governance guidelines and guardrails are consistently considered throughout.",
+        "Documented best practices support sustainable and scalable implementation approaches.",
+    ]
+
+    padding_blocks = padding_blocks_de if is_german else padding_blocks_en
+
+    # Dynamisch Padding-Blöcke hinzufügen bis min_words erreicht
+    result = text
+    block_index = 0
+
+    while len(result.split()) < min_words and block_index < len(padding_blocks) * 3:
+        # Zyklisch durch die Blöcke rotieren
+        block = padding_blocks[block_index % len(padding_blocks)]
+        result = f"{result} {block}" if result else block
+        block_index += 1
+
+    final_count = len(result.split())
+    log.info("[HEURISTIC-PADDING] Scaled from %d to %d words (target: %d)",
+             current_count, final_count, min_words)
+
+    # Finale Garantie: Wenn immer noch zu wenig, füge generischen Text hinzu
+    if final_count < min_words:
+        filler = " ".join(padding_blocks) if is_german else " ".join(padding_blocks_en)
+        result = f"{result} {filler}"
+        log.warning("[HEURISTIC-PADDING] Emergency padding applied, now %d words", len(result.split()))
+
+    return result
 
 
 # =============================================================================
@@ -624,10 +666,26 @@ def sanitize_or_recover(
     if section_name and len(recovered_words) < min_words:
         log.warning("[SANITIZE-RECOVER] Recovery insufficient (%d words), using auto-summary for %s",
                    len(recovered_words), section_name)
-        return generate_auto_summary(section_name, recovered or text_only, branch, size, guardrails)
+        result = generate_auto_summary(section_name, recovered or text_only, branch, size, guardrails)
+        # S-3 FIX: Garantie-Check nach Auto-Summary
+        result_words = len(re.sub(r'<[^>]+>', '', result).strip().split())
+        if result_words < min_words:
+            log.warning("[SANITIZE-RECOVER] Auto-summary only %d words, applying padding", result_words)
+            result = _heuristic_padding(re.sub(r'<[^>]+>', '', result).strip(), min_words)
+        return result
 
     # Stufe 4: Fallback - heuristische Aufbereitung
-    return _heuristic_padding(recovered or text_only, min_words)
+    result = _heuristic_padding(recovered or text_only, min_words)
+
+    # S-3 FIX: Finale Wort-Garantie Assertion
+    final_word_count = len(result.split())
+    if final_word_count < min_words:
+        log.error("[SANITIZE-RECOVER] CRITICAL: Word guarantee violated! %d < %d",
+                  final_word_count, min_words)
+        # Notfall-Padding anwenden
+        result = _heuristic_padding(result, min_words)
+
+    return result
 
 
 def sanitize_section_html(

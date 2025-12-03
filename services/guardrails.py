@@ -184,6 +184,9 @@ FREETEXT_FIELDS = [
     "zeitersparnis_prioritaet",
     "vision_3_jahre",
     "ki_projekte",
+    # G-1 FIX: Additional business context fields
+    "hauptleistung",
+    "geschaeftsmodell_evolution",
 ]
 
 
