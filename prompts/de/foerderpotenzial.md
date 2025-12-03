@@ -1,29 +1,34 @@
 Developer:
-<!-- foerderpotenzial.md – v8.0 PLATIN+ STREAMLINED
-     Ziel: 4 Abschnitte mit je 200-250 Wörtern (= 800-1000 Wörter gesamt).
-     Antworte ausschließlich mit validem HTML. Keine Markdown-Fences.
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: foerderpotenzial -->
+<!-- VERSION: v9.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- INPUT: {{BUNDESLAND_LABEL}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}} -->
+<!-- TOKEN-BUDGET: 3200 (solo:0.8x, team:1.0x, kmu:1.15x) -->
+<!-- FOERDERLOGIK: DE-Bundesprogramme + Landesprogramme (KEINE EU-Core-Hinweise) -->
+<!--
+ZIEL: 4 Abschnitte mit je 180-220 Wörtern (= 720-880 Wörter gesamt).
 
-     STRUKTUR (4 Pflicht-Abschnitte):
-       H3 1. Einordnung des Business Case ohne Förderung
-       H3 2. Wie Fördermittel den Business Case verbessern
-       H3 3. Passende Förderschwerpunkte für Ihr Vorhaben
-       H3 4. Nächste Schritte für die Förderprüfung
+STRUKTUR (4 Pflicht-Abschnitte):
+  H3 1. Einordnung des Business Case ohne Förderung
+  H3 2. Wie Fördermittel den Business Case verbessern
+  H3 3. Passende Förderschwerpunkte für Ihr Vorhaben
+  H3 4. Nächste Schritte für die Förderprüfung
 
-     VARIABLEN – nutze alle mindestens einmal:
-       {{BUNDESLAND_LABEL}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}},
-       {{HAUPTLEISTUNG}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}},
-       {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}}
+PERSONA-VARIATIONEN (COMPANY_SIZE):
+- solo: niedrige Hürden, <10.000€, Beratungs-/Gründerförderung, BAFA, ERP-Gründerkredit
+- team: Prozessdigitalisierung, KMU-innovativ, go-digital
+- kmu: Digital Jetzt, ZIM, strukturelle Förderung
 
-     SIZE-AWARE (COMPANY_SIZE):
-       solo: niedrige Hürden, <10.000€, Beratungs-/Gründerförderung
-       team: Prozessdigitalisierung, KMU-innovativ, go-digital
-       kmu: Digital Jetzt, ZIM, strukturelle Förderung
+ANTI-REDUNDANZ:
+- Business-Case-Zahlen EINMAL nennen, nicht wiederholen
+- KEINE Wiederholung der Zahlen aus business_case.md – nur Förder-Kontext
 
-     REGELN:
-       - Förderquoten nur als Bereiche (z.B. "30-50%")
-       - Business-Case-Zahlen explizit nennen und einordnen
-       - Sachlich, neutral, keine Werbung
-       - Keine Platzhalter, keine Developer-Sprache
+REGELN:
+- Förderquoten nur als Bereiche (z.B. "30-50%")
+- Sachlich, neutral, keine Werbung
+- Keine Platzhalter, keine Developer-Sprache
 -->
 
 <section class="section funding-potential">
@@ -123,7 +128,4 @@ Developer:
   </p>
 </section>
 
-<!-- PLATIN+ REINFORCEMENT: Dieser Abschnitt MUSS mindestens 900 Wörter enthalten.
-     Prüfe deine Ausgabe: Zähle die Wörter und erweitere jeden Abschnitt mit zusätzlichen
-     Details, Beispielen und Erläuterungen, falls die Mindestlänge nicht erreicht wird.
-     Kürze NIEMALS – liefere immer vollständige, ausführliche Inhalte. -->
+<!-- DEV: PDF-SLIMDOWN v2.0 - Ziel: 720-880 Wörter, kompakt aber vollständig -->

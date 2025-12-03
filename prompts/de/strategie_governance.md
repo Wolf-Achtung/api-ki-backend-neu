@@ -1,57 +1,40 @@
 Developer:
-<!-- strategie_governance.md – v5.0 PLATIN++ (size-aware, anti-redundanz, solo-optimiert)
-     Antworte ausschließlich mit validem HTML.
-     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: strategie_governance -->
+<!-- VERSION: v6.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{COMPANY_SIZE}}, {{GOVERNANCE_RICHTLINIEN_LABEL}}, {{CHANGE_MANAGEMENT_LABEL}}, {{MELDEWEGE_LABEL}}, {{DATENSCHUTZ_LABEL}}, {{LOESCHREGELN_LABEL}}, {{DATENSCHUTZBEAUFTRAGTER_LABEL}}, {{FOLGENABSCHAETZUNG_LABEL}}, {{INTERNE_KI_KOMPETENZEN_LABEL}} -->
+<!-- TOKEN-BUDGET: 2000 (solo:0.8x=1600, team:1.0x=2000, kmu:1.15x=2300) -->
+<!--
+ZIEL: Strategische Einordnung zu KI-Strategie & Governance.
+Ergebnis = 10–14 Sätze + 1 strukturierte Liste.
 
-     ZIEL:
-     - Eine klare, strategische Einordnung zu KI-Strategie & Governance liefern.
-     - Verbindung aus: aktuellem Reifegrad, vorhandenen Richtlinien, Datenschutzstatus,
-       Verantwortlichkeiten, Risiken, organisatorischer Struktur.
-     - Anwendungen des AI-Act, Change-Management und Verantwortlichkeiten müssen realistisch
-       für Solo, kleine Teams oder KMU beschrieben sein.
-     - Ergebnis = 10–14 Sätze + 1 strukturierte Liste (kompakter als vorher).
+PERSONA-VARIATIONEN (COMPANY_SIZE) – STRIKT EINHALTEN:
 
-     VERFÜGBARE LABEL-VARIABLEN:
-       {{BRANCHE_LABEL}}
-       {{UNTERNEHMENSGROESSE_LABEL}}
-       {{COMPANY_SIZE}}  // "solo", "team", "kmu"
-       {{GOVERNANCE_RICHTLINIEN_LABEL}}
-       {{CHANGE_MANAGEMENT_LABEL}}
-       {{MELDEWEGE_LABEL}}
-       {{DATENSCHUTZ_LABEL}}
-       {{LOESCHREGELN_LABEL}}
-       {{DATENSCHUTZBEAUFTRAGTER_LABEL}}
-       {{FOLGENABSCHAETZUNG_LABEL}}
-       {{INTERNE_KI_KOMPETENZEN_LABEL}}
+SOLO:
+  ✅ ERLAUBT: "Checkliste", "Minimale Regeln", "Ein-Personen-Standard",
+              "Dokumentation light", "persönliche Routine", "eigene Prüfpunkte"
+  ❌ VERBOTEN: "Organisationsentwicklung", "Verantwortlichkeitsmatrix",
+              "Governance Framework", "Rollenmodell", "Gremium", "Board",
+              "Steuerungskreis", "Abteilung", "Team aufbauen", "Mitarbeiter"
 
-     === SOLO-SPEZIFISCHE GOVERNANCE (STRIKT EINHALTEN!) ===
+TEAM:
+  ✅ ERLAUBT: "Teamabsprache", "gemeinsame Regeln", "KI-Koordinator",
+              "kurze Review-Runde", "geteilte Verantwortung"
+  ❌ VERBOTEN: "Governance Board", "Matrix-Organisation", "Division"
 
-     Für COMPANY_SIZE="solo" NUR diese Begriffe verwenden:
-       ✅ ERLAUBT: "Checkliste", "Minimale Regeln", "Ein-Personen-Standard",
-                   "Dokumentation light", "persönliche Routine", "eigene Prüfpunkte",
-                   "kurze Selbstkontrolle", "einfache Notiz", "pragmatischer Standard"
+KMU:
+  ✅ ERLAUBT: "Fachbereichsverantwortliche", "abgestimmte Prozesse",
+              "bereichsübergreifende Standards", "Governance-Regeln"
+  ❌ VERBOTEN: Konzernjargon ("Business Unit", "Division", "C-Level")
 
-       ❌ VERBOTEN: "Organisationsentwicklung", "Verantwortlichkeitsmatrix",
-                    "Governance Framework", "Rollenmodell", "Gremium", "Board",
-                    "Steuerungskreis", "Abteilung", "Team aufbauen", "Mitarbeiter"
+ANTI-REDUNDANZ:
+- Governance HIER vollständig behandeln
+- NICHT in org_change wiederholen
+- NICHT in risks duplizieren
 
-     === TEAM-SPEZIFISCHE GOVERNANCE ===
-
-       ✅ ERLAUBT: "Teamabsprache", "gemeinsame Regeln", "KI-Koordinator",
-                   "kurze Review-Runde", "geteilte Verantwortung"
-
-       ❌ VERBOTEN: "Governance Board", "Matrix-Organisation", "Division"
-
-     === KMU-SPEZIFISCHE GOVERNANCE ===
-
-       ✅ ERLAUBT: "Fachbereichsverantwortliche", "abgestimmte Prozesse",
-                   "bereichsübergreifende Standards", "Governance-Regeln"
-
-       ❌ VERBOTEN: Konzernjargon ("Business Unit", "Division", "C-Level")
-
-     VERBOTEN IM HTML-OUTPUT:
-       - "Platzhalter", "TODO", Template-Marker, technische Systemhinweise.
-       - Kein Verweis auf Variablennamen oder Prompt-Anweisungen.
+GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
 -->
 
 <section class="section governance-strategy">

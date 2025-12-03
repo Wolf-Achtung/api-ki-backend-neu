@@ -1,20 +1,32 @@
 Developer:
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: quick_wins -->
+<!-- VERSION: v6.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/sme -->
+<!-- INPUT: {{HAUPTLEISTUNG}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{BRANCHE_LABEL}} -->
+<!-- TOKEN-BUDGET: 1800 (solo:0.8x=1440, team:1.0x=1800, sme:1.15x=2070) -->
 <!--
-  quick_wins.md – v5.0 PDF-SLIMDOWN (COMPACT)
-  - Size-aware: solo / team / sme
-  - Output exclusively valid HTML
+GOAL: 4 Quick Wins, compact and immediately actionable.
 
-  **Word Limits (REDUCED for PDF-SLIMDOWN):**
-  - Solo: ~60 words (acceptable: 50-75)
-  - Team: ~80 words (acceptable: 70-95)
-  - SME: ~100 words (acceptable: 90-115)
+WORD LIMITS (PDF-SLIMDOWN):
+- solo: ~60 words (50-75), focus: personal relief
+- team: ~80 words (70-95), focus: shared routines
+- sme: ~100 words (90-115), focus: scalable measures
 
-  REQUIREMENTS:
-  - MAXIMUM 4 Quick Wins (not more!)
-  - Each Quick Win: 1 short sentence + time savings
-  - NO detailed descriptions
-  - NO HTML boxes with background color (text only)
-  - For solo profiles: Focus on personal relief
+REQUIREMENTS:
+- MAXIMUM 4 Quick Wins
+- Each Quick Win: 1 short sentence + time savings
+- NO detailed descriptions
+
+ANTI-REDUNDANCY:
+- Quick Wins address pain points HERE (not repeated in Roadmap)
+- Roadmap builds on Quick Wins, does NOT repeat them
+
+PERSONA VARIATIONS (COMPANY_SIZE):
+- solo: "You save", personal routine, own workflows
+- team: "Team saves", shared standards, collaboration
+- sme: "Department benefits", scalable processes
 -->
 
 <section class="section quick-wins">

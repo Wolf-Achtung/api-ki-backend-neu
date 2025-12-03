@@ -1,30 +1,35 @@
 Developer:
-<!-- funding_eu_core.md – v1.0 EU Core Funding for non-German EN reports
-     Target: English-speaking users with companies in EU countries (excluding Germany).
-     Output: Valid HTML only. No Markdown fences.
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: funding_eu_core -->
+<!-- VERSION: v2.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/sme -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, FUNDING_PROGRAMMES_EU_CORE -->
+<!-- TOKEN-BUDGET: 2500 (solo:0.8x, team:1.0x, sme:1.15x) -->
+<!-- FUNDING: EN-EU (Phase 2) - EU-wide programs for non-German companies -->
+<!--
+TARGET: English-speaking users with companies in EU countries (excluding Germany).
 
-     STRUCTURE (3 sections):
-       H3 1. EU Core Programmes Overview (Jinja2 loop)
-       H3 2. What This Means for Your Business
-       H3 3. Next Steps
+STRUCTURE (3 sections):
+  H3 1. EU Core Programmes Overview (Jinja2 loop)
+  H3 2. What This Means for Your Business
+  H3 3. Next Steps
 
-     VARIABLES:
-       - FUNDING_PROGRAMMES_EU_CORE: List of EU programme dicts from funding_service_en.py
-       - {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}
-       - If FUNDING_PROGRAMMES_EU_CORE is empty: provide generic guidance.
+TARGET GROUP LOGIC:
+  startup: EIC Accelerator, EIC Pathfinder, Horizon Europe
+  sme: Digital Europe, Horizon Europe, Eurostars
+  large: Horizon Europe, Digital Europe, InnovFin
+  research: Horizon Europe, EIC Pathfinder
+  public: Digital Europe, ESF+, Interreg
 
-     TARGET GROUP LOGIC:
-       startup: EIC Accelerator, EIC Pathfinder, Horizon Europe
-       sme: Digital Europe, Horizon Europe, Eurostars
-       large: Horizon Europe, Digital Europe, InnovFin
-       research: Horizon Europe, EIC Pathfinder
-       public: Digital Europe, ESF+, Interreg
+ANTI-REDUNDANCY:
+- EU funding details HERE only
+- NO German federal/state programs (see funding_potential.md)
 
-     STYLE:
-       - Professional, factual, cautious language
-       - No guaranteed amounts or rates ("typically", "up to", "varies")
-       - Clear that details vary by call/year
-       - No placeholder text, no "content being created"
+STYLE:
+- Professional, factual, cautious language
+- No guaranteed amounts ("typically", "up to", "varies")
+- Clear that details vary by call/year
 -->
 
 <section class="section funding eu-core">
