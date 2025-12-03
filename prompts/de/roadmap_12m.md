@@ -1,31 +1,38 @@
 Developer:
-<!-- roadmap_12m.md – v11.0 PDF-SLIMDOWN-STRICT
-     Output: Markdown (wird serverseitig zu HTML konvertiert)
-     Keine HTML-Tags, keine Code-Fences
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: roadmap_12m -->
+<!-- VERSION: v12.0 PLATIN++ V5 -->
+<!-- OUTPUT: Markdown -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, COMPANY_SIZE -->
+<!-- TOKEN-BUDGET: 2800 (solo:0.8x=2240, team:1.0x=2800, kmu:1.15x=3220) -->
+<!--
+ZIEL: 12-Monats-Roadmap mit 4 Phasen, max 4 Bullets pro Phase.
 
-     **STRIKTE TOKEN-BEGRENZUNG (KRITISCH!):**
-     Diese Sektion darf MAXIMAL 700-900 Wörter Output produzieren.
-     Das LLM MUSS nach ~900 Wörtern stoppen.
+ZIELLÄNGE nach Größe (PDF-SLIMDOWN):
+- solo: ~200 Wörter (180–240)
+- team: ~280 Wörter (250–320)
+- kmu: ~360 Wörter (320–400)
 
-     **Ziellänge nach Größe (STRENG REDUZIERT):**
-     - Solo: ~200 Wörter (akzeptabel: 180–240)
-     - Team: ~280 Wörter (akzeptabel: 250–320)
-     - KMU: ~360 Wörter (akzeptabel: 320–400)
+STRUKTUR: 4 Phasen
+1. Monate 1–3: Fundament
+2. Monate 4–6: Pilotierung
+3. Monate 7–12: Skalierung
+4. Abschluss: Verstetigung
 
-     STRUKTUR: 4 Phasen mit je MAX 4 BULLETS!
-       1. Monate 1–3: Fundament (~150 Wörter)
-       2. Monate 4–6: Pilotierung (~150 Wörter)
-       3. Monate 7–12: Skalierung (~200 Wörter)
-       4. Abschluss: Verstetigung (~100 Wörter)
+ANTI-REDUNDANZ (STRIKT!):
+- KEINE Wiederholung aus roadmap_90d
+- KEINE Pain-Point-Wiederholung (siehe Quick Wins)
+- KEINE Tool-Beschreibungen (siehe tools_empfehlungen)
+- Fokus: WAS KOMMT NACH den ersten 90 Tagen?
 
-     **ANTI-REDUNDANZ (ABSOLUT STRIKT!):**
-     - KEINE Wiederholung aus roadmap_90d (die 90-Tage wurden dort behandelt)
-     - KEINE Pain-Point-Wiederholung (wurden in Quick Wins adressiert)
-     - KEINE Tool-Beschreibungen (siehe Tools-Empfehlungen)
-     - Fokus: WAS KOMMT NACH den ersten 90 Tagen?
-     - KEINE Begründungen, nur Maßnahmen
+PERSONA-VARIATIONEN (COMPANY_SIZE):
+- solo: "eigene Workflows", "persönliche Routine", "Self-Review"
+        VERBOTEN: "Abteilung", "Team aufbauen", "Mitarbeiter", "HR"
+- team: "Teammitglieder", "KI-Koordinator", "gemeinsame Standards"
+- kmu: "Fachbereichsleitung", "Governance-Board", "bereichsübergreifend"
 
-     STOP-SIGNALE: Beende bei "Abschluss & Verstetigung" Sektion.
+FORMAT: Markdown, KEIN HTML
 -->
 
 ---

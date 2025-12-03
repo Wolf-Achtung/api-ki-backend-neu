@@ -1,31 +1,38 @@
 Developer:
-<!-- roadmap_12m.md – v11.0 PDF-SLIMDOWN-STRICT
-     Output: Markdown (converted to HTML server-side)
-     No HTML tags, no code fences
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: roadmap_12m -->
+<!-- VERSION: v12.0 PLATIN++ V5 -->
+<!-- OUTPUT: Markdown -->
+<!-- SIZE-AWARE: solo/team/sme -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, COMPANY_SIZE -->
+<!-- TOKEN-BUDGET: 2800 (solo:0.8x=2240, team:1.0x=2800, sme:1.15x=3220) -->
+<!--
+GOAL: 12-Month Roadmap with 4 phases, max 4 bullets per phase.
 
-     **STRICT TOKEN LIMIT (CRITICAL!):**
-     This section MUST produce MAXIMUM 700-900 words output.
-     The LLM MUST stop after ~900 words.
+WORD LIMITS (PDF-SLIMDOWN):
+- solo: ~200 words (180–240)
+- team: ~280 words (250–320)
+- sme: ~360 words (320–400)
 
-     **Word Limits (STRICTLY REDUCED):**
-     - Solo: ~200 words (acceptable: 180–240)
-     - Team: ~280 words (acceptable: 250–320)
-     - SME: ~360 words (acceptable: 320–400)
+STRUCTURE: 4 phases
+1. Months 1–3: Foundation
+2. Months 4–6: Piloting
+3. Months 7–12: Scaling
+4. Conclusion: Sustainability
 
-     STRUCTURE: 4 phases with MAX 4 BULLETS each!
-       1. Months 1–3: Foundation (~150 words)
-       2. Months 4–6: Piloting (~150 words)
-       3. Months 7–12: Scaling (~200 words)
-       4. Conclusion: Sustainability (~100 words)
+ANTI-REDUNDANCY (STRICT!):
+- NO repetition from roadmap_90d
+- NO pain point repetition (see Quick Wins)
+- NO tool descriptions (see tools_recommendations)
+- Focus: WHAT COMES AFTER the first 90 days?
 
-     **ANTI-REDUNDANCY (ABSOLUTELY STRICT!):**
-     - NO repetition from roadmap_90d (90 days covered there)
-     - NO pain point repetition (addressed in Quick Wins)
-     - NO tool descriptions (see Tools Recommendations)
-     - Focus: WHAT COMES AFTER the first 90 days?
-     - NO justifications, only measures
+PERSONA VARIATIONS (COMPANY_SIZE):
+- solo: "own workflows", "personal routine", "self-review"
+        FORBIDDEN: "department", "build team", "employees", "HR"
+- team: "team members", "AI coordinator", "shared standards"
+- sme: "department lead", "governance board", "cross-functional"
 
-     STOP SIGNALS: End at "Conclusion & Sustainability" section.
+FORMAT: Markdown, NO HTML
 -->
 
 ---

@@ -1,31 +1,36 @@
-risks.md
-Developer: <!--
-  risks.md – v6.0 PLATIN+ STREAMLINED
-  Ziel: 5 Abschnitte mit je 140-180 Wörtern (= 800-1000 Wörter gesamt).
-  Antworte ausschließlich mit validem HTML. Keine Markdown-Fences.
+Developer:
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: risks -->
+<!-- VERSION: v7.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- INPUT: {{HAUPTLEISTUNG}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{score_governance}}, {{score_sicherheit}} -->
+<!-- TOKEN-BUDGET: 3000 (solo:0.8x=2400, team:1.0x=3000, kmu:1.15x=3450) -->
+<!--
+ZIEL: 5 Abschnitte mit je 120-160 Wörtern (= 600-800 Wörter gesamt).
 
-  STRUKTUR (5 Pflicht-Abschnitte):
-    H3 1. Strategische und organisatorische Risiken (4 Risiken + Maßnahmen)
-    H3 2. Daten-, Sicherheits- und Compliance-Risiken (4 Risiken + Maßnahmen)
-    H3 3. Qualitäts-, Transparenz- und Akzeptanzrisiken (4 Risiken + Maßnahmen)
-    H3 4. Abhängigkeiten, Betriebs- und Lieferantenrisiken (4 Risiken + Maßnahmen)
-    H3 5. Risiko-Matrix (Tabelle mit 5 Zeilen)
+STRUKTUR (5 Pflicht-Abschnitte):
+  H3 1. Strategische und organisatorische Risiken (4 Risiken + Maßnahmen)
+  H3 2. Daten-, Sicherheits- und Compliance-Risiken (4 Risiken + Maßnahmen)
+  H3 3. Qualitäts-, Transparenz- und Akzeptanzrisiken (4 Risiken + Maßnahmen)
+  H3 4. Abhängigkeiten, Betriebs- und Lieferantenrisiken (4 Risiken + Maßnahmen)
+  H3 5. Risiko-Matrix (Tabelle mit 5 Zeilen)
 
-  VARIABLEN – nutze alle mindestens einmal:
-    {{HAUPTLEISTUNG}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}},
-    {{score_governance}}, {{score_sicherheit}}
+PERSONA-VARIATIONEN (COMPANY_SIZE):
+- solo: persönliche Überlastung, Single-Point-of-Failure, keine Vertretung
+- team: Rollenklärung, Abstimmung, Wissensinseln
+- kmu: Governance, Prozesse, Dokumentation, Compliance
 
-  SIZE-AWARE (COMPANY_SIZE):
-    solo: persönliche Überlastung, Single-Point-of-Failure, keine Vertretung
-    team: Rollenklärung, Abstimmung, Wissensinseln
-    kmu: Governance, Prozesse, Dokumentation, Compliance
+ANTI-REDUNDANZ:
+- Risiken NICHT in Guardrails-Sektion wiederholen
+- Maßnahmen kurz, nicht in org_change wiederholen
 
-  REGELN:
-    - Jedes Risiko: 2-3 Sätze + konkrete Maßnahme
-    - Scores aktiv interpretieren (z.B. "Der Sicherheits-Score von X zeigt...")
-    - Branchenspezifische Compliance betonen bei regulierten Branchen
-    - Sachlich, konkret, keine Floskeln
-    - Keine Platzhalter, keine Developer-Sprache
+GUARDRAILS: Respektiere angegebene Leitplanken; erwähne sie bei Risiko-Minderung.
+
+REGELN:
+- Scores aktiv interpretieren
+- Branchenspezifische Compliance bei regulierten Branchen
+- Sachlich, konkret, keine Floskeln
 -->
 
 <section class="section risks">
@@ -235,7 +240,4 @@ Developer: <!--
   </p>
 </section>
 
-<!-- PLATIN+ REINFORCEMENT: Dieser Abschnitt MUSS mindestens 800 Wörter enthalten.
-     Prüfe deine Ausgabe: Zähle die Wörter und erweitere jeden Risikobereich mit zusätzlichen
-     Details, Beispielen und konkreten Maßnahmen, falls die Mindestlänge nicht erreicht wird.
-     Kürze NIEMALS – liefere immer vollständige, ausführliche Inhalte. -->
+<!-- DEV: PDF-SLIMDOWN v2.0 - Ziel: 600-800 Wörter, kompakt aber vollständig -->

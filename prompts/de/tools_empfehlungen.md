@@ -1,39 +1,29 @@
 Developer:
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: tools_empfehlungen -->
+<!-- VERSION: v6.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{COMPANY_SIZE}} -->
+<!-- TOKEN-BUDGET: 2500 (solo:0.8x=2000, team:1.0x=2500, kmu:1.15x=2875) -->
+<!-- RESEARCH: Tools können aus {{RESEARCH_PROVENANCE_HTML}} referenziert werden -->
 <!--
-  tools_empfehlungen.md – v5.1 GOLD STANDARD+ (size-aware, branch-aware, validator-safe)
+ZIEL: Klar strukturierte Tool-Empfehlungssektion ("KI-Stack") für {{BRANCHE_LABEL}}.
 
-  ZIEL DES PROMPTS
-  - Erzeuge eine klar strukturierte, praxistaugliche Tool-Empfehlungssektion ("KI-Stack"),
-    die zu Branche {{BRANCHE_LABEL}}, Unternehmensgröße {{UNTERNEHMENSGROESSE_LABEL}}
-    und Hauptleistung {{HAUPTLEISTUNG}} passt.
-  - Der Text soll Solo, kleine Teams und KMU gleichermaßen adressieren, aber
-    je nach Größe unterschiedliche Schwerpunkte benennen.
-  - Output ist reines HTML (kein Markdown, keine Developer-Sätze).
+PERSONA-VARIATIONEN (COMPANY_SIZE):
+- solo: 3–5 Tools, einfache Bedienung, geringer Integrationsaufwand
+        VERBOTEN: "Abteilung", "Projektteam", "Bereich"
+- team: gemeinsamer Workspace, Kollaboration, Rechte-/Rollenkonzepte
+- kmu: definierter Stack mit Governance, Rollen, Monitoring, fachbereichsspezifisch
 
-  VARIABLEN
-  - {{BRANCHE_LABEL}}             → z. B. "Beratung & Dienstleistungen"
-  - {{UNTERNEHMENSGROESSE_LABEL}} → verbale Größe, z. B. "1 (Solo)", "2–10 (Kleines Team)", "11–100 (KMU)"
-  - {{HAUPTLEISTUNG}}             → z. B. "Beratung von Unternehmen zur Integration von KI …"
-  - {{COMPANY_SIZE}}              → "solo", "team" oder "kmu"
+ANTI-REDUNDANZ:
+- Tool-Details HIER vollständig erklären
+- In Roadmaps nur referenzieren: "Tools (siehe KI-Stack)"
 
-  GRÖSSENLOGIK (INHALTLICH)
-  - COMPANY_SIZE = "solo":
-      * Empfehlung: maximal 3–5 Tools im Kernstack, einfache Bedienung, geringer Integrationsaufwand.
-      * Beispiele: ein KI-Assistent, ein Wissens-/Notiz-Tool, ein Formular-/Automations-Tool.
-      * Keine Begriffe wie "Abteilung", "Projektteam" oder "Bereich" verwenden.
-  - COMPANY_SIZE = "team":
-      * Empfehlung: gemeinsamer Workspace, Kollaboration, Rechte-/Rollenkonzepte.
-      * Tools für Aufgabenverteilung, gemeinsames Wissens-Repo, einfache Workflows.
-  - COMPANY_SIZE = "kmu":
-      * Empfehlung: klar definierter Stack mit Governance, Rollen und Monitoring.
-      * Tools für Teamarbeit, Rechteverwaltung, ggf. fachbereichsspezifische Lösungen.
-
-  STIL & REGELN
-  - Schreibe konkret, aber produktneutral (keine Produktnamen).
-  - Fokus auf Toolkategorien und ihren Zweck im Prozess {{HAUPTLEISTUNG}}.
-  - Keine Wörter wie "Platzhalter", "Content wird erstellt", "TODO" oder andere Template-Marker.
-  - Kein Verweis auf den Prompt oder die Variablen im sichtbaren Text.
-  - Output muss alleine lesbar sein, ohne weitere Erklärungen.
+STIL & REGELN:
+- Produktneutral (keine Markennamen)
+- Fokus auf Toolkategorien und Zweck
+- Keine Platzhalter oder Developer-Sprache
 -->
 
 <section class="section tools">

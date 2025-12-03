@@ -1,46 +1,40 @@
 Developer:
-<!-- strategy_governance.md – v4.2 GOLD STANDARD+ (size-aware, strategic, validator-safe)
-     Respond exclusively with valid HTML.
-     NO <html>, <head> or <body>. NO Markdown fences.
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: strategy_governance -->
+<!-- VERSION: v6.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/sme -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{COMPANY_SIZE}}, {{GOVERNANCE_RICHTLINIEN_LABEL}}, {{CHANGE_MANAGEMENT_LABEL}}, {{MELDEWEGE_LABEL}}, {{DATENSCHUTZ_LABEL}}, {{LOESCHREGELN_LABEL}}, {{DATENSCHUTZBEAUFTRAGTER_LABEL}}, {{FOLGENABSCHAETZUNG_LABEL}}, {{INTERNE_KI_KOMPETENZEN_LABEL}} -->
+<!-- TOKEN-BUDGET: 2000 (solo:0.8x=1600, team:1.0x=2000, sme:1.15x=2300) -->
+<!--
+GOAL: Strategic assessment of AI strategy & governance.
+Result = 10–14 sentences + 1 structured list.
 
-     GOAL:
-     - Provide a clear, strategic assessment of AI strategy & governance.
-     - Connection of: current maturity level, existing guidelines, data protection status,
-       responsibilities, risks, organizational structure.
-     - Applications of the AI Act, change management, and responsibilities must be realistically
-       described for solo, small teams, or SMEs.
-     - Result = 12–18 sentences + 1–2 structured lists.
+PERSONA VARIATIONS (COMPANY_SIZE) – STRICTLY FOLLOW:
 
-     AVAILABLE LABEL VARIABLES:
-       {{BRANCHE_LABEL}}
-       {{UNTERNEHMENSGROESSE_LABEL}}
-       {{COMPANY_SIZE}}  // "solo", "team", "kmu"
-       {{GOVERNANCE_RICHTLINIEN_LABEL}}
-       {{CHANGE_MANAGEMENT_LABEL}}
-       {{MELDEWEGE_LABEL}}
-       {{DATENSCHUTZ_LABEL}}
-       {{LOESCHREGELN_LABEL}}
-       {{DATENSCHUTZBEAUFTRAGTER_LABEL}}
-       {{FOLGENABSCHAETZUNG_LABEL}}
-       {{INTERNE_KI_KOMPETENZEN_LABEL}}
+SOLO:
+  ✅ ALLOWED: "checklist", "minimal rules", "one-person standard",
+              "documentation light", "personal routine", "own checkpoints"
+  ❌ FORBIDDEN: "organizational development", "responsibility matrix",
+              "governance framework", "role model", "committee", "board",
+              "steering committee", "department", "build team", "employees"
 
-     OFFICIAL SIZE LOGIC (uniform with all prompts):
-       SOLO (COMPANY_SIZE="solo"):
-         - No departments/teams. One owner role, personal routines, simple standards.
-         - Governance = pragmatic, small structure.
+TEAM:
+  ✅ ALLOWED: "team agreement", "shared rules", "AI coordinator",
+              "short review round", "shared responsibility"
+  ❌ FORBIDDEN: "governance board", "matrix organization", "division"
 
-       TEAM (2–10, COMPANY_SIZE="team"):
-         - "Team", "colleagues", clear roles.
-         - Governance = lightweight structure: team lead + AI owner + users.
+SME:
+  ✅ ALLOWED: "department leads", "coordinated processes",
+              "cross-functional standards", "governance rules"
+  ❌ FORBIDDEN: Corporate jargon ("business unit", "division", "C-level")
 
-       SME (11–100, COMPANY_SIZE="kmu"):
-         - "Teams", "functional areas", "responsible parties".
-         - No corporate jargon ("Business Unit", "Division").
-         - Governance = coordinated structure across multiple areas.
+ANTI-REDUNDANCY:
+- Governance fully covered HERE
+- NOT repeated in org_change
+- NOT duplicated in risks
 
-     PROHIBITED IN HTML OUTPUT:
-       - "Placeholder", "free text field", TODO, technical system hints.
-       - No reference to variable names or prompt instructions.
+GUARDRAILS: Respect guardrails from strategic context.
 -->
 
 <section class="section governance-strategy">
