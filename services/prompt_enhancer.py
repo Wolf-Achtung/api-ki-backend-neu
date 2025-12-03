@@ -903,6 +903,11 @@ Nutze den Strategischen Kontext wie folgt:
             "monetarisierung",          # Pricing-Modelle anpassbar an Solo/Team/KMU
             "ki_skillplan",             # Skill-Entwicklung nach Unternehmensgröße
             "templates_start",          # Templates für Solo/Team/KMU unterschiedlich
+            # Neue Sektionen (Sprint 2025 - Phase 2) - persona-aware
+            "roi_tracking",             # Erfolgs-Tracking nach Unternehmensgröße
+            "ai_policy_mini",           # Policy-Regeln nach Komplexität
+            "kickoff_vorlage",          # Kickoff-Agenda nach Team-Größe
+            "prompt_framework",         # Prompt-Anleitung nach Erfahrungslevel
         }
 
         try:
