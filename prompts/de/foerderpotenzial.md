@@ -56,12 +56,9 @@ REGELN:
   <p>
     Diese Ausgangslage ist für viele Förderstellen attraktiv: Das Projekt ist betriebswirtschaftlich
     plausibel, der Nutzen klar erkennbar und der Eigenbeitrag grundsätzlich tragfähig. Fördermittel
-    können diese Situation zusätzlich verbessern, indem sie einen Teil der Investitionsbelastung abfedern.
-    Konkret bedeutet das für ein Unternehmen der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>
-    in der Branche <strong>{{BRANCHE_LABEL}}</strong>: Die Investition von {{CAPEX_REALISTISCH_EUR}}&nbsp;€
-    amortisiert sich bei einer monatlichen Einsparung von {{EINSPARUNG_MONAT_EUR}}&nbsp;€ nach etwa
-    {{PAYBACK_MONTHS}} Monaten. Der ROI von {{ROI_12M}}&nbsp;% zeigt, dass sich das Projekt auch ohne
-    externe Unterstützung wirtschaftlich rechnet – mit Förderung wird die Rentabilität noch deutlich attraktiver.
+    können diese Situation verbessern, indem sie einen Teil der Investitionsbelastung abfedern –
+    das Projekt rechnet sich bereits ohne externe Unterstützung; mit Förderung wird die Rentabilität
+    noch attraktiver.
   </p>
 
   <h3>2. Wie Fördermittel den Business Case verbessern können</h3>

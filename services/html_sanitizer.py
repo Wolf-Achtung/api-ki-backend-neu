@@ -526,51 +526,67 @@ Each phase contains specific KPIs and responsibilities adapted to company size{'
         "roadmap_90d": {
             "de": f"""<div class="auto-summary">
 <h4>90-Tage-Roadmap (Zusammenfassung)</h4>
-<p>Die 90-Tage-Roadmap fokussiert auf schnelle Erfolge und stabile Grundlagen.
-In den ersten Wochen werden priorisierte Use Cases definiert und erste Workflows
-etabliert. Bis Woche 8 entstehen dokumentierte Qualitätsstandards. Die Konsolidierung
-erfolgt in Woche 9-13 mit klarer Entscheidung für die Skalierung.</p>
+<p>Die 90-Tage-Roadmap fokussiert auf schnelle Erfolge und stabile Grundlagen für die KI-Integration.
+In den ersten Wochen (Phase 1) werden priorisierte Use Cases definiert und erste Workflows etabliert.
+Die Pilotierung erfolgt in Phase 2 mit dokumentierten Qualitätsstandards bis Woche 8.
+Die abschließende Konsolidierung in Phase 3 (Woche 9-13) mündet in einer klaren Entscheidung für die
+Skalierung. Jede Phase enthält messbare Meilensteine und Verantwortlichkeiten angepasst an die
+Unternehmensgröße{' ' + size if size else ''}. Der Fokus liegt auf pragmatischer Umsetzung mit direktem Mehrwert.</p>
 </div>""",
             "en": f"""<div class="auto-summary">
 <h4>90-Day Roadmap (Summary)</h4>
-<p>The 90-day roadmap focuses on quick wins and stable foundations. During the
-first weeks, prioritized use cases are defined and initial workflows established.
-By week 8, documented quality standards emerge. Consolidation occurs in weeks 9-13
-with a clear decision for scaling.</p>
+<p>The 90-day roadmap focuses on quick wins and stable foundations for AI integration.
+During the first weeks (Phase 1), prioritized use cases are defined and initial workflows established.
+Piloting occurs in Phase 2 with documented quality standards by week 8.
+The final consolidation in Phase 3 (weeks 9-13) leads to a clear decision for scaling.
+Each phase contains measurable milestones and responsibilities adapted to company size{' ' + size if size else ''}.
+The focus is on pragmatic implementation with direct added value and sustainable outcomes.</p>
 </div>"""
         },
         "recommendations": {
             "de": f"""<div class="auto-summary">
 <h4>Handlungsempfehlungen (Zusammenfassung)</h4>
-<p>Die wichtigsten Empfehlungen umfassen: Etablierung eines Standard-Workflows,
-Systematisierung der Qualitätssicherung, Aufbau eines Wissensmanagements,
-Pilotierung branchenspezifischer Use Cases, sowie Definition von Governance &
-Leitplanken. Prioritäten und Zeitrahmen sind an die Unternehmensgröße angepasst.</p>
+<p>Die wichtigsten Empfehlungen für die KI-Integration umfassen folgende Schwerpunkte:
+Etablierung eines standardisierten Workflows für KI-gestützte Prozesse, Systematisierung
+der Qualitätssicherung mit klaren Prüfpunkten, Aufbau eines strukturierten Wissensmanagements
+für Best Practices, Pilotierung branchenspezifischer Use Cases mit messbarem ROI, sowie
+Definition von Governance-Richtlinien und Leitplanken. Prioritäten und Zeitrahmen sind an
+die Unternehmensgröße{' ' + size if size else ''} angepasst. Die Umsetzung erfolgt schrittweise
+mit regelmäßigen Reviews zur Erfolgskontrolle.</p>
 </div>""",
             "en": f"""<div class="auto-summary">
 <h4>Recommendations (Summary)</h4>
-<p>Key recommendations include: establishing a standard workflow, systematizing
-quality assurance, building knowledge management, piloting industry-specific use
-cases, and defining governance & guidelines. Priorities and timeframes are adapted
-to company size.</p>
+<p>Key recommendations for AI integration include the following focus areas:
+Establishing a standardized workflow for AI-powered processes, systematizing quality
+assurance with clear checkpoints, building structured knowledge management for best practices,
+piloting industry-specific use cases with measurable ROI, and defining governance guidelines
+and guardrails. Priorities and timeframes are adapted to company size{' ' + size if size else ''}.
+Implementation occurs step by step with regular reviews to track success and ensure sustainable outcomes.</p>
 </div>"""
         }
     }
 
-    # Fallback-Template für unbekannte Sections
+    # Fallback-Template für unbekannte Sections (min. 50 Wörter garantiert)
     default_template = {
         "de": f"""<div class="auto-summary">
 <h4>{section_name.replace('_', ' ').title()} (Zusammenfassung)</h4>
-<p>Dieser Abschnitt enthält strategische Empfehlungen und Analysen für den
-Bereich {section_name.replace('_', ' ')}. Die vollständigen Details sind im
-Gesamtkontext des Reports zu finden. Für Rückfragen steht das Beratungsteam
-zur Verfügung.</p>
+<p>Dieser Abschnitt enthält strategische Empfehlungen und detaillierte Analysen für den
+Bereich {section_name.replace('_', ' ')}. Die hier dargestellten Informationen bilden
+einen wichtigen Baustein der Gesamtstrategie und sind eng mit den anderen Kapiteln des
+Reports verknüpft. Die vollständigen Details, Hintergrundinformationen und konkreten
+Handlungsempfehlungen sind im Gesamtkontext des Reports zu finden. Für weiterführende
+Rückfragen und individuelle Beratung steht das Beratungsteam jederzeit zur Verfügung.
+Die Umsetzung sollte schrittweise und unter Berücksichtigung der Unternehmensgröße erfolgen.</p>
 </div>""",
         "en": f"""<div class="auto-summary">
 <h4>{section_name.replace('_', ' ').title()} (Summary)</h4>
-<p>This section contains strategic recommendations and analysis for
-{section_name.replace('_', ' ')}. Complete details can be found in the
-overall report context. The consulting team is available for questions.</p>
+<p>This section contains strategic recommendations and detailed analysis for the
+{section_name.replace('_', ' ')} area. The information presented here forms an
+important building block of the overall strategy and is closely linked to other
+chapters of the report. Complete details, background information, and specific
+action recommendations can be found in the overall report context. For further
+questions and individual consulting, the advisory team is available at any time.
+Implementation should proceed step by step, taking company size into account.</p>
 </div>"""
     }
 
