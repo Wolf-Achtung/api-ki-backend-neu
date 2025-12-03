@@ -1795,6 +1795,75 @@
                     </div>
                 </section>
                 {% endif %}
+                <!-- NEW SECTIONS: ROI Tracking, AI Mini Policy, Kickoff Template, Prompt Framework -->
+                {% if ROI_TRACKING_HTML %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Measurement</span>
+                            <h2>ROI Tracking</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Monthly KPIs & Success Metrics
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ ROI_TRACKING_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                {% if AI_POLICY_MINI_HTML %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Governance</span>
+                            <h2>AI Mini Policy</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            7 Rules for Daily AI Use
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ AI_POLICY_MINI_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                {% if KICKOFF_VORLAGE_HTML %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Project Start</span>
+                            <h2>Kickoff Template</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Agenda & Checklist
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ KICKOFF_VORLAGE_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                {% if PROMPT_FRAMEWORK_HTML %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">AI Communication</span>
+                            <h2>Prompt Framework</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            5-Step Prompting Guide
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ PROMPT_FRAMEWORK_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
 <!-- FEEDBACK SECTION -->
                 <div class="feedback-section">
                     <h2>Your Feedback Matters!</h2>
