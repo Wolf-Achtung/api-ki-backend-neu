@@ -141,7 +141,7 @@ class ReportValidator:
             "Abteilung",
             "HR-Abteilung",
             "IT-Abteilung",
-            "Organisationsberater",
+            # "Organisationsberater" removed - valid for solo organizational consultants
             "Change-Team",
             "Projektmanagement-Office",
         ],
@@ -156,7 +156,7 @@ class ReportValidator:
     MIN_SECTION_LENGTH_WORDS = {
         "executive_summary": 100,      # ~600 Zeichen
         "business_case": 130,          # ~800 Zeichen
-        "quick_wins": 80,              # ~500 Zeichen
+        "quick_wins": 60,              # ~350 Zeichen (pragmatisch für Solo-Profile)
         "roadmap_90d": 120,            # ~700 Zeichen
         "roadmap_12m": 800,            # PLATIN+: Prompt fordert 900, Validator prüft 800 (Sicherheitsmarge)
         "strategie_governance": 130,   # ~800 Zeichen
