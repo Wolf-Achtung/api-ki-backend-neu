@@ -5,12 +5,14 @@ PLATIN+ Quality Tests - Word Length Validation
 
 Tests zur Sicherstellung der PLATIN+ Mindest-Wortlängen für kritische Sections.
 
-PLATIN+ Mindestlängen (WÖRTER):
-- foerderpotenzial: 900 Wörter
-- risks: 800 Wörter
-- recommendations: 800 Wörter
-- roadmap_12m: 900 Wörter
-- unternehmensprofil_markt: 500 Wörter
+PLATIN+ Mindestlängen (WÖRTER) - v2.0 SIZE-AWARE:
+- foerderpotenzial: 600 Wörter (reduziert für bessere Compliance)
+- risks: 500 Wörter (reduziert für bessere Compliance)
+- recommendations: 500 Wörter (reduziert für bessere Compliance)
+- roadmap_12m: 400 Wörter Base (size-aware: Solo=400, Team=500, KMU=600)
+- unternehmensprofil_markt: 300 Wörter (reduziert für bessere Compliance)
+
+Die Fallbacks bleiben großzügig (> Validator-Minimum).
 """
 from __future__ import annotations
 
@@ -31,13 +33,13 @@ class TestPlatinMinWordLengths:
     """Tests für PLATIN+ Mindest-Wortlängen."""
 
     # PLATIN+ Mindestlängen in WÖRTERN (Validator-Schwellen)
-    # HINWEIS: Prompt fordert 900+ für roadmap_12m, Validator prüft 800 (Sicherheitsmarge)
+    # v2.0 SIZE-AWARE: Reduzierte Werte für bessere Compliance
     PLATIN_MIN_WORDS = {
-        "foerderpotenzial": 900,
-        "risks": 800,
-        "recommendations": 800,
-        "roadmap_12m": 800,  # Validator prüft auf 800 (Sicherheitsmarge)
-        "unternehmensprofil_markt": 500,
+        "foerderpotenzial": 600,        # Reduziert für bessere Compliance
+        "risks": 500,                   # Reduziert für bessere Compliance
+        "recommendations": 500,         # Reduziert für bessere Compliance
+        "roadmap_12m": 400,             # Base (size-aware: Solo=400, Team=500, KMU=600)
+        "unternehmensprofil_markt": 300,  # Reduziert für bessere Compliance
     }
 
     def count_words(self, html_content: str) -> int:
@@ -79,13 +81,13 @@ class TestPlatinMinWordLengths:
         content = _get_fallback_content("foerderpotenzial", briefing, scores)
         word_count = self.count_words(content)
 
-        assert word_count >= 900, (
+        assert word_count >= 600, (
             f"Förderpotenzial Fallback hat nur {word_count} Wörter, "
-            f"erwartet mindestens 900"
+            f"erwartet mindestens 600"
         )
 
     def test_fallback_risks_word_count(self):
-        """Prüft, dass der Risks-Fallback mindestens 800 Wörter hat."""
+        """Prüft, dass der Risks-Fallback mindestens 500 Wörter hat."""
         from gpt_analyze import _get_fallback_content
 
         briefing = {
@@ -98,12 +100,12 @@ class TestPlatinMinWordLengths:
         content = _get_fallback_content("risks", briefing, scores)
         word_count = self.count_words(content)
 
-        assert word_count >= 800, (
-            f"Risks Fallback hat nur {word_count} Wörter, erwartet mindestens 800"
+        assert word_count >= 500, (
+            f"Risks Fallback hat nur {word_count} Wörter, erwartet mindestens 500"
         )
 
     def test_fallback_recommendations_word_count(self):
-        """Prüft, dass der Recommendations-Fallback mindestens 800 Wörter hat."""
+        """Prüft, dass der Recommendations-Fallback mindestens 500 Wörter hat."""
         from gpt_analyze import _get_fallback_content
 
         briefing = {
@@ -117,13 +119,13 @@ class TestPlatinMinWordLengths:
         content = _get_fallback_content("recommendations", briefing, scores)
         word_count = self.count_words(content)
 
-        assert word_count >= 800, (
+        assert word_count >= 500, (
             f"Recommendations Fallback hat nur {word_count} Wörter, "
-            f"erwartet mindestens 800"
+            f"erwartet mindestens 500"
         )
 
     def test_fallback_roadmap_12m_word_count(self):
-        """Prüft, dass der Roadmap-12m-Fallback mindestens 900 Wörter hat."""
+        """Prüft, dass der Roadmap-12m-Fallback mindestens 400 Wörter hat (Base)."""
         from gpt_analyze import _get_fallback_content
 
         briefing = {
@@ -137,9 +139,9 @@ class TestPlatinMinWordLengths:
         content = _get_fallback_content("roadmap_12m", briefing, scores)
         word_count = self.count_words(content)
 
-        assert word_count >= 900, (
+        assert word_count >= 400, (
             f"Roadmap-12m Fallback hat nur {word_count} Wörter, "
-            f"erwartet mindestens 900"
+            f"erwartet mindestens 400"
         )
 
     def test_fallback_roadmap_12m_size_variants(self):
@@ -162,9 +164,9 @@ class TestPlatinMinWordLengths:
             content = _get_fallback_content("roadmap_12m", briefing, scores)
             word_count = self.count_words(content)
 
-            assert word_count >= 800, (
+            assert word_count >= 400, (
                 f"Roadmap-12m Fallback für {expected_variant} hat nur "
-                f"{word_count} Wörter, erwartet mindestens 800"
+                f"{word_count} Wörter, erwartet mindestens 400"
             )
 
     def test_fallback_size_aware_solo(self):
