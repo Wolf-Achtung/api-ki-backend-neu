@@ -36,54 +36,49 @@ jobs:
           pytest -v tests/test_platin_word_lengths.py --maxfail=3
       - name: Validate Test Profiles
         run: |
-          python -c "
-import json
-import glob
-import sys
+          python << 'EOF'
+          import json
+          import glob
+          import sys
 
-required_fields = ['profile_id', 'description', 'lang', 'BRANCHE_LABEL', 'UNTERNEHMENSGROESSE_LABEL', 'HAUPTLEISTUNG', 'answers']
-errors = []
+          required_fields = ['profile_id', 'description', 'lang', 'BRANCHE_LABEL', 'UNTERNEHMENSGROESSE_LABEL', 'HAUPTLEISTUNG', 'answers']
+          errors = []
 
-for path in glob.glob('data/test_profiles_gold/*.json'):
-    with open(path) as f:
-        data = json.load(f)
-    missing = [f for f in required_fields if f not in data]
-    if missing:
-        errors.append(f'{path}: Missing fields: {missing}')
+          for path in glob.glob('data/test_profiles_gold/*.json'):
+              with open(path) as f:
+                  data = json.load(f)
+              missing = [f for f in required_fields if f not in data]
+              if missing:
+                  errors.append(f'{path}: Missing fields: {missing}')
 
-if errors:
-    print('\\n'.join(errors))
-    sys.exit(1)
-else:
-    print(f'✅ All {len(glob.glob(\"data/test_profiles_gold/*.json\"))} test profiles valid')
-"
+          if errors:
+              print('\n'.join(errors))
+              sys.exit(1)
+          else:
+              print(f'All {len(glob.glob("data/test_profiles_gold/*.json"))} test profiles valid')
+          EOF
       - name: Check Prompt Version Headers
         run: |
-          python -c "
-import glob
-import re
-import sys
+          python << 'EOF'
+          import glob
+          import sys
 
-platin_prompts = ['foerderpotenzial', 'risks', 'recommendations', 'roadmap_12m']
-errors = []
+          platin_prompts = ['foerderpotenzial', 'risks', 'recommendations', 'roadmap_12m']
+          errors = []
 
-for name in platin_prompts:
-    path = f'prompts/de/{name}.md'
-    try:
-        with open(path) as f:
-            content = f.read()
-        if 'PLATIN+' not in content and 'PLATIN' not in content:
-            errors.append(f'{path}: Missing PLATIN+ version marker')
-        # Check for streamlined header (no heavy ASCII boxes)
-        if '╔═' in content and content.count('╔═') > 2:
-            errors.append(f'{path}: Too many ASCII box headers - consider streamlining')
-    except FileNotFoundError:
-        errors.append(f'{path}: File not found')
+          for name in platin_prompts:
+              path = f'prompts/de/{name}.md'
+              try:
+                  with open(path) as f:
+                      content = f.read()
+                  if 'PLATIN+' not in content and 'PLATIN' not in content:
+                      errors.append(f'{path}: Missing PLATIN+ version marker')
+              except FileNotFoundError:
+                  errors.append(f'{path}: File not found')
 
-if errors:
-    for e in errors:
-        print(f'⚠️ {e}')
-    # Warning only, don't fail
-else:
-    print('✅ All PLATIN+ prompts have valid headers')
-"
+          if errors:
+              for e in errors:
+                  print(f'Warning: {e}')
+          else:
+              print('All PLATIN+ prompts have valid headers')
+          EOF
