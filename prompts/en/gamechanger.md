@@ -64,7 +64,7 @@ RULES:
       </p>
       <p><strong>Prerequisites:</strong>
         5–10 typical examples, defined quality criteria, clear input rules;
-        {% if UNTERNEHMENSGROESSE_LABEL.startswith("1") %}personal routines{% elif UNTERNEHMENSGROESSE_LABEL.startswith("2") %}team role assignment{% else %}involved functional areas{% endif %}.
+        {% if COMPANY_SIZE == "solo" %}personal routines{% elif COMPANY_SIZE == "team" %}team role assignment{% else %}involved functional areas{% endif %}.
       </p>
       <p><strong>First Step in the Next 90 Days:</strong>
         Select a prioritized sub-process and stabilize it with AI templates + review steps
