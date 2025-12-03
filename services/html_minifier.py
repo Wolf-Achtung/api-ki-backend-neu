@@ -265,8 +265,8 @@ def remove_unused_css_classes(css: str, used_classes: Set[str]) -> str:
 
         # Extract class name from selector
         class_match = re.match(r'\.([a-zA-Z0-9_-]+)', selector)
-        if not class_match:  # defensive: edge case like "." or non-ASCII after dot
-            return str(match.group(0))  # type: ignore[unreachable]
+        if not class_match:
+            return str(match.group(0))
 
         class_name = class_match.group(1)
 
