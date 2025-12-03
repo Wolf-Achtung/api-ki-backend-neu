@@ -899,6 +899,10 @@ Nutze den Strategischen Kontext wie folgt:
             "compliance",               # Compliance needs branch-specific regulations
             "change_management",        # Change management varies by size
             "executive_summary",        # Summary should reflect branch/size
+            # Neue Sektionen (Sprint 2025) - persona-aware
+            "monetarisierung",          # Pricing-Modelle anpassbar an Solo/Team/KMU
+            "ki_skillplan",             # Skill-Entwicklung nach Unternehmensgröße
+            "templates_start",          # Templates für Solo/Team/KMU unterschiedlich
         }
 
         try:
