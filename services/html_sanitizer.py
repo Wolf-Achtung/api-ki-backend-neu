@@ -59,6 +59,22 @@ RE_ON_EVENT_ATTR = re.compile(r"(?i)\s+on[a-z]+\s*=\s*(\"[^\"]*\"|'[^']*')")
 # Daten‑/Sicherheitsfilter: Entferne javascript: URIs in href/src
 RE_JS_PROTOCOL = re.compile(r"(?is)(\s(?:href|src)\s*=\s*['\"])\s*javascript:[^'\"]*(['\"])")
 
+def _cleanup_template_phrases(text: str) -> str:
+    """Entfernt versehentlich eingebettete Template-Phrasen aus dem Output.
+
+    Diese können von GPT trotz Anweisungen übernommen werden.
+    """
+    replacements = [
+        ("Freitextfeld", "Textabschnitt"),
+        ("Freitext-Feld", "Textabschnitt"),
+        ("Freitext-Felder", "Textabschnitte"),
+        ("freitextfeld", "Textabschnitt"),
+    ]
+    for old, new in replacements:
+        text = text.replace(old, new)
+    return text
+
+
 def sanitize_section_html(html_content: Optional[str], compress_ws: bool = True) -> str:
     if not html_content:
         return ""
@@ -66,6 +82,9 @@ def sanitize_section_html(html_content: Optional[str], compress_ws: bool = True)
 
     # ZUERST: Behebe UTF-8 Mojibake (Ã¶ → ö)
     s = _fix_utf8_mojibake(s)
+
+    # Post-Processing: Entferne versehentliche Template-Phrasen
+    s = _cleanup_template_phrases(s)
 
     # Entferne Dokument‑Wrapper & kritische Blöcke
     s = RE_DOCTYPES.sub("", s)

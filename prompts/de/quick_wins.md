@@ -1,10 +1,16 @@
 Developer:
 <!--
-  quick_wins.md – v4.0 GOLD STANDARD+
+  quick_wins.md – v4.1 GOLD STANDARD+
   - Size-aware: solo / team / kmu
   - Keine Standardfloskeln, keine Beispieltexte
   - Keine internen Hinweise im sichtbaren Output
   - Output ausschließlich valides HTML
+
+  PFLICHT-ANFORDERUNGEN:
+  - Formuliere mindestens 4 konkrete Quick Wins
+  - Jeder Quick Win: 2–3 Sätze Beschreibung + geschätzte Zeiteinsparung
+  - MINDESTLÄNGE: 300 Zeichen (ohne HTML-Tags)
+  - Bei Solo-Profilen: Fokus auf persönliche Entlastung, keine Teams/Abteilungen
 -->
 
 <section class="section quick-wins">
