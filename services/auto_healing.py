@@ -305,25 +305,28 @@ def recover_research_from_cache(
 
     try:
         with open(cache_path, "r", encoding="utf-8") as f:
-            cache = json.load(f)
+            cache: Dict[str, Any] = json.load(f)
 
         # Try exact match first
         if query_hash in cache:
             log.info("Research recovered from cache (exact match): %s", query_hash)
-            return cache[query_hash]
+            result: Dict[str, Any] = cache[query_hash]
+            return result
 
         # Try branch-based fallback
         if branch:
             branch_key = f"branch_{branch}_{lang}"
             if branch_key in cache:
                 log.info("Research recovered from cache (branch fallback): %s", branch_key)
-                return cache[branch_key]
+                result = cache[branch_key]
+                return result
 
         # Try generic fallback
         generic_key = f"generic_{lang}"
         if generic_key in cache:
             log.info("Research recovered from cache (generic fallback): %s", generic_key)
-            return cache[generic_key]
+            result = cache[generic_key]
+            return result
 
         log.warning("No suitable research cache entry found")
         return None
@@ -393,9 +396,9 @@ def save_research_to_cache(
 class SectionRecoveryManager:
     """Manages section generation with automatic recovery."""
 
-    def __init__(self):
-        self._fallback_count = 0
-        self._sections_processed = []
+    def __init__(self) -> None:
+        self._fallback_count: int = 0
+        self._sections_processed: List[str] = []
 
     def process_section(
         self,
