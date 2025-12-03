@@ -1,57 +1,33 @@
 Developer:
-<!-- executive_summary.md – v3.0 GOLD STANDARD+ (Summary + Size-Layer + Context-Integration)
+<!-- executive_summary.md – v4.0 PLATIN++ KOMPAKT (max 6 Sätze Struktur)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences im OUTPUT.
 
      ZIEL:
-     - Eine perfekt strukturierte, einseitige Executive Summary generieren,
-       die alle Kernaspekte des KI-Status-Reports in 3–5 prägnanten Abschnitten verdichtet.
+     - Eine KOMPAKTE Executive Summary in genau 6 Sätzen.
+     - Keine Wiederholung von Details – nur die Essenz.
+
+     PFLICHTSTRUKTUR (6 Sätze – STRIKT EINHALTEN!):
+     1. Ausgangslage (1 Satz): Branche + Größe + aktueller KI-Status
+     2. Strategische Ziele (1 Satz): Was will das Unternehmen mit KI erreichen?
+     3. Größter Pain Point (1 Satz): Der wichtigste Zeitfresser/Schmerzpunkt
+     4. Quick Wins Ausblick (1 Satz): 2-3 konkrete Sofortmaßnahmen
+     5. Roadmap Hinweis (1 Satz): 90-Tage und 12-Monats-Perspektive
+     6. Guardrails/Risiken (1 Satz): Falls vorhanden, sonst Business-Case-Hinweis
 
      VERBOTEN:
-     - Keine Platzhalter-Strings ("Platzhalter", "[...]", "{XYZ}").
-     - Keine technischen Pipeline-Begriffe (CONTEXT_..., SCORE_..., etc.).
-     - Keine Roh-Variablennamen im Output ({{BRANCHE_LABEL}} etc. dürfen im HTML aber stehen bleiben).
+     - Mehr als 6 Sätze
+     - Keine Platzhalter-Strings
+     - Keine technischen Pipeline-Begriffe
+     - Keine Wiederholungen aus anderen Sektionen
 
-     KONTEXTQUELLEN (werden als Klartext geliefert):
-     - Quick Wins (CONTEXT_QUICK_WINS)
-     - 90-Tage-Roadmap (CONTEXT_ROADMAP_90D)
-     - 12-Monats-Roadmap (CONTEXT_ROADMAP_12M)
-     - Business Case (CAPEX, OPEX, Payback, ROI_12M)
-     - Förderpotenzial
-     - Tool-Empfehlungen
-     - Scores: Governance, Sicherheit, Wertschöpfung, Befähigung, Gesamt
+     VERFÜGBARE VARIABLEN:
+     - {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}
 
-     VERFÜGBARE FRAGEBOGEN-VARIABLEN (Labels):
-     - {{BRANCHE_LABEL}}
-     - {{UNTERNEHMENSGROESSE_LABEL}}
-     - {{HAUPTLEISTUNG}}
-     - {{BUNDESLAND_LABEL}}
-
-     GRÖSSENLOGIK (Solo / Team / KMU)
-     --------------------------------------------------------------
-     INTERN: COMPANY_SIZE ∈ {"solo","team","kmu"}.
-
-     SOLO ("1 (Solo" im Label):
-       - Direkte Sie-Ansprache.
-       - Keine Begriffe wie Abteilung, Bereich, Team.
-       - Fokus: persönliche Entlastung, schnelle Resultate, pragmatische Umsetzung.
-       - Maßnahmen immer realistisch für eine einzelne Person.
-
-     TEAM (2–10):
-       - Leichte Organisationssprache erlaubt ("Team", "Kolleg:innen").
-       - Verantwortlichkeiten = Rollen, keine Abteilungen.
-       - Fokus: gemeinsame Routinen, schnelle Abstimmungen, klare Prioritäten.
-
-     KMU (11–100):
-       - Organisationssprache erlaubt: Teams, Bereiche, Verantwortliche.
-       - Kein Konzernvokabular ("Division", "Business Unit").
-       - Fokus: skalierbare Umsetzung, Governance, Bereichs-Abstimmung.
-
-     STIL:
-       - Klar, präzise, geschäftsorientiert.
-       - Keine Buzzwords, kein Marketingtext.
-       - Maximal 5 Absätze, jeweils max. 4 Sätze.
-       - Verdichtung statt Wiederholung: 3–5 stärkste Botschaften des Reports.
+     GRÖSSENLOGIK:
+     SOLO: Sie-Ansprache, keine Abteilungen, persönliche Entlastung
+     TEAM: "Team", "Kolleg:innen", gemeinsame Routinen
+     KMU: Teams, Bereiche, skalierbare Umsetzung
 
 -->
 
@@ -59,47 +35,28 @@ Developer:
   <h2>Executive Summary</h2>
 
   <p>
-    Diese Executive Summary fasst die aktuelle KI-Positionierung eines Unternehmens in der
-    Branche <strong>{{BRANCHE_LABEL}}</strong> zusammen – ausgerichtet auf die
-    Unternehmensgröße <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> und den Kernprozess
-    <strong>{{HAUPTLEISTUNG}}</strong>. Sie liefert einen klaren Überblick zu Ausgangslage,
-    Stärken, zentralen Hebeln und den nächsten Schritten, die für eine wirkungsvolle KI-Einführung
-    entscheidend sind.
-  </p>
+    <!-- SATZ 1: Ausgangslage -->
+    Das Unternehmen in der Branche <strong>{{BRANCHE_LABEL}}</strong> (Größe: <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>)
+    zeigt im Kernprozess <strong>{{HAUPTLEISTUNG}}</strong> ein solides Fundament für den KI-Einsatz,
+    mit klaren Stärken und einzelnen Entwicklungsfeldern.
 
-  <h3>Ausgangslage & Scores</h3>
-  <p>
-    Die Score-Ergebnisse zeigen ein differenziertes Bild: Governance, Sicherheit,
-    Wertschöpfungspotenzial und Befähigung geben Hinweise darauf, wo das Unternehmen bereits
-    solide Grundlagen besitzt und wo noch strukturelle oder organisatorische Lücken bestehen.
-    Die Kombination aus Stärken – etwa in klar definierten Arbeitsroutinen oder ersten digitalen
-    Standards – und einzelnen Entwicklungsfeldern bildet die Basis für die folgenden Empfehlungen.
-  </p>
+    <!-- SATZ 2: Strategische Ziele -->
+    Strategisch steht die Entlastung bei wiederkehrenden Aufgaben und die Qualitätssteigerung
+    durch standardisierte KI-Workflows im Mittelpunkt.
 
-  <h3>Wichtigste Quick Wins & kurzfristige Maßnahmen</h3>
-  <p>
-    Die Quick Wins betreffen vor allem jene Schritte im Prozess <strong>{{HAUPTLEISTUNG}}</strong>,
-    die sich kurzfristig standardisieren oder teilautomatisieren lassen. Dazu zählen typische
-    wiederkehrende Aufgaben, die in den nächsten 90 Tagen durch klar definierte Workflows,
-    bessere Vorlagen oder KI-gestützte Unterstützung spürbare Entlastung bringen können.
-    Diese Maßnahmen sind der direkte Einstieg in eine stabilere und effizientere Arbeitsweise.
-  </p>
+    <!-- SATZ 3: Größter Pain Point -->
+    Der größte Hebel liegt bei zeitintensiven, manuellen Prozessen, die sich durch klare Vorlagen
+    und KI-Unterstützung deutlich beschleunigen lassen.
 
-  <h3>Business Case & Förderpotenzial</h3>
-  <p>
-    Der Business Case zeigt eine realistische Relation zwischen Investition (CAPEX/OPEX),
-    monatlicher Entlastung und Amortisationsdauer. Die erwartete Wirkung ist klar positiv –
-    sowohl in Zeitersparnis als auch im qualitativen Zugewinn. Zusätzlich können Förderprogramme
-    auf Landes- oder Bundesebene die anfängliche Investition spürbar reduzieren und die
-    Wirtschaftlichkeit beschleunigen.
-  </p>
+    <!-- SATZ 4: Quick Wins -->
+    Die Quick Wins umfassen konkrete Sofortmaßnahmen wie Vorlagen-Automatisierung,
+    strukturierte Dokumentation und erste KI-gestützte Qualitätsprüfungen.
 
-  <h3>Nächste Schritte für Geschäftsführung</h3>
-  <p>
-    Die Geschäftsführung sollte die Umsetzung in drei Schritten priorisieren: Erstens die
-    kurzfristigen Quick Wins, zweitens ein klar definierter Pilotprozess als realer Test unter
-    Alltagsbedingungen, drittens der Aufbau leichter Governance- und Dokumentationsstandards,
-    um die Qualität der Ergebnisse dauerhaft sicherzustellen. Diese drei Bausteine legen den
-    Grundstein für die nachfolgenden 12-Monats-Initiativen und eine skalierbare Nutzung von KI.
+    <!-- SATZ 5: Roadmap -->
+    Die 90-Tage-Roadmap setzt diese Maßnahmen um, während die 12-Monats-Perspektive
+    Governance und Skalierung adressiert.
+
+    <!-- SATZ 6: Risiken/Business Case -->
+    Der Business Case ist positiv; Förderprogramme können die Anfangsinvestition zusätzlich reduzieren.
   </p>
 </section>

@@ -1,5 +1,5 @@
 Developer:
-<!-- strategie_governance.md – v4.2 GOLD STANDARD+ (size-aware, strategic, validator-safe)
+<!-- strategie_governance.md – v5.0 PLATIN++ (size-aware, anti-redundanz, solo-optimiert)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
@@ -9,7 +9,7 @@ Developer:
        Verantwortlichkeiten, Risiken, organisatorischer Struktur.
      - Anwendungen des AI-Act, Change-Management und Verantwortlichkeiten müssen realistisch
        für Solo, kleine Teams oder KMU beschrieben sein.
-     - Ergebnis = 12–18 Sätze + 1–2 strukturierte Listen.
+     - Ergebnis = 10–14 Sätze + 1 strukturierte Liste (kompakter als vorher).
 
      VERFÜGBARE LABEL-VARIABLEN:
        {{BRANCHE_LABEL}}
@@ -24,19 +24,30 @@ Developer:
        {{FOLGENABSCHAETZUNG_LABEL}}
        {{INTERNE_KI_KOMPETENZEN_LABEL}}
 
-     OFFIZIELLE GRÖSSENLOGIK (einheitlich mit allen Prompts):
-       SOLO (COMPANY_SIZE="solo"):
-         - Keine Abteilungen/Teams. Eine Owner-Rolle, persönliche Routinen, einfache Standards.
-         - Governance = pragmatische, kleine Struktur.
+     === SOLO-SPEZIFISCHE GOVERNANCE (STRIKT EINHALTEN!) ===
 
-       TEAM (2–10, COMPANY_SIZE="team"):
-         - „Team“, „Kolleg:innen“, klare Rollen.
-         - Governance = leichtgewichtige Struktur: Teamlead + KI-Owner + Anwender:innen.
+     Für COMPANY_SIZE="solo" NUR diese Begriffe verwenden:
+       ✅ ERLAUBT: "Checkliste", "Minimale Regeln", "Ein-Personen-Standard",
+                   "Dokumentation light", "persönliche Routine", "eigene Prüfpunkte",
+                   "kurze Selbstkontrolle", "einfache Notiz", "pragmatischer Standard"
 
-       KMU (11–100, COMPANY_SIZE="kmu"):
-         - „Teams“, „Fachbereiche“, „Verantwortliche“.
-         - Kein Konzernjargon („Business Unit“, „Division“).
-         - Governance = abgestimmte Struktur über mehrere Bereiche.
+       ❌ VERBOTEN: "Organisationsentwicklung", "Verantwortlichkeitsmatrix",
+                    "Governance Framework", "Rollenmodell", "Gremium", "Board",
+                    "Steuerungskreis", "Abteilung", "Team aufbauen", "Mitarbeiter"
+
+     === TEAM-SPEZIFISCHE GOVERNANCE ===
+
+       ✅ ERLAUBT: "Teamabsprache", "gemeinsame Regeln", "KI-Koordinator",
+                   "kurze Review-Runde", "geteilte Verantwortung"
+
+       ❌ VERBOTEN: "Governance Board", "Matrix-Organisation", "Division"
+
+     === KMU-SPEZIFISCHE GOVERNANCE ===
+
+       ✅ ERLAUBT: "Fachbereichsverantwortliche", "abgestimmte Prozesse",
+                   "bereichsübergreifende Standards", "Governance-Regeln"
+
+       ❌ VERBOTEN: Konzernjargon ("Business Unit", "Division", "C-Level")
 
      VERBOTEN IM HTML-OUTPUT:
        - "Platzhalter", "TODO", Template-Marker, technische Systemhinweise.
