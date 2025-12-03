@@ -83,55 +83,139 @@ def _match_any(text: str, keywords: List[str]) -> bool:
     t = text.lower()
     return any(k.lower() in t for k in keywords)
 
+# Max sichtbare Items pro Kategorie (Rest in <details> collapse)
+MAX_VISIBLE_ITEMS = 6
+
+
+def _build_rows_with_collapse(
+    items: List[Dict[str, str]],
+    row_builder,
+    max_visible: int = MAX_VISIBLE_ITEMS
+) -> Tuple[str, str]:
+    """
+    Teilt Items in sichtbare Rows und versteckte Rows.
+
+    Returns:
+        Tuple of (visible_rows_html, hidden_rows_html)
+    """
+    visible = items[:max_visible]
+    hidden = items[max_visible:]
+
+    visible_rows = "".join(row_builder(it) for it in visible)
+    hidden_rows = "".join(row_builder(it) for it in hidden) if hidden else ""
+
+    return visible_rows, hidden_rows
+
+
 def _tools_table(items: List[Dict[str, str]]) -> str:
     if not items:
         return ""
-    rows = []
-    for it in items:
-        # Support both "title" and "name" fields for robustness
+
+    def build_row(it):
         title = html.escape(it.get("title") or it.get("name") or it.get("source") or "Tool")
-        url = html.escape(it.get("url",""))
-        src = html.escape(it.get("source",""))
-        rows.append(f"<tr><td>{title}</td><td><a href='{url}'>{src or url}</a></td></tr>")
-    return "<table class='table'><thead><tr><th>Tool</th><th>Quelle</th></tr></thead><tbody>" + "".join(rows) + "</tbody></table>"
+        url = html.escape(it.get("url", ""))
+        src = html.escape(it.get("source", ""))
+        return f"<tr><td>{title}</td><td><a href='{url}'>{src or url}</a></td></tr>"
+
+    visible_rows, hidden_rows = _build_rows_with_collapse(items, build_row)
+
+    table_html = "<table class='table'><thead><tr><th>Tool</th><th>Quelle</th></tr></thead><tbody>"
+    table_html += visible_rows
+    table_html += "</tbody></table>"
+
+    if hidden_rows:
+        hidden_count = len(items) - MAX_VISIBLE_ITEMS
+        table_html += f"<details class='research-overflow'><summary class='small'>Weitere Tools ({hidden_count})</summary>"
+        table_html += "<table class='table'><tbody>" + hidden_rows + "</tbody></table></details>"
+
+    return table_html
+
 
 def _funding_table(items: List[Dict[str, str]]) -> str:
     if not items:
         return ""
-    rows = []
-    for it in items:
-        # Support both "title" and "name" fields for robustness
+
+    def build_row(it):
         title = html.escape(it.get("title") or it.get("name") or "Programm")
-        url = html.escape(it.get("url",""))
-        src = html.escape(it.get("source",""))
-        rows.append(f"<tr><td>{title}</td><td><a href='{url}'>{src or url}</a></td></tr>")
-    return "<table class='table'><thead><tr><th>Programm</th><th>Quelle</th></tr></thead><tbody>" + "".join(rows) + "</tbody></table>"
+        url = html.escape(it.get("url", ""))
+        src = html.escape(it.get("source", ""))
+        return f"<tr><td>{title}</td><td><a href='{url}'>{src or url}</a></td></tr>"
+
+    visible_rows, hidden_rows = _build_rows_with_collapse(items, build_row)
+
+    table_html = "<table class='table'><thead><tr><th>Programm</th><th>Quelle</th></tr></thead><tbody>"
+    table_html += visible_rows
+    table_html += "</tbody></table>"
+
+    if hidden_rows:
+        hidden_count = len(items) - MAX_VISIBLE_ITEMS
+        table_html += f"<details class='research-overflow'><summary class='small'>Weitere Programme ({hidden_count})</summary>"
+        table_html += "<table class='table'><tbody>" + hidden_rows + "</tbody></table></details>"
+
+    return table_html
+
 
 def _news_box(items: List[Dict[str, str]]) -> str:
     if not items:
         return ""
+
+    visible = items[:MAX_VISIBLE_ITEMS]
+    hidden = items[MAX_VISIBLE_ITEMS:]
+
     lis = []
-    for it in items[:10]:
-        title = html.escape(it.get("title",""))
-        url = html.escape(it.get("url",""))
-        src = html.escape(it.get("source",""))
+    for it in visible:
+        title = html.escape(it.get("title", ""))
+        url = html.escape(it.get("url", ""))
+        src = html.escape(it.get("source", ""))
         lis.append(f"<li><a href='{url}'>{title}</a> <span class='small muted'>({src})</span></li>")
-    return "<div class='fb-section'><div class='fb-head'><span class='fb-step'>News</span><h3 class='fb-title'>Aktuelle Meldungen (kuratiert)</h3></div><ul>" + "".join(lis) + "</ul></div>"
+
+    html_out = "<div class='fb-section'><div class='fb-head'><span class='fb-step'>News</span><h3 class='fb-title'>Aktuelle Meldungen (kuratiert)</h3></div><ul>" + "".join(lis) + "</ul>"
+
+    if hidden:
+        hidden_lis = []
+        for it in hidden:
+            title = html.escape(it.get("title", ""))
+            url = html.escape(it.get("url", ""))
+            hidden_lis.append(f"<li><a href='{url}'>{title}</a></li>")
+        html_out += f"<details class='research-overflow'><summary class='small'>Weitere News ({len(hidden)})</summary><ul>" + "".join(hidden_lis) + "</ul></details>"
+
+    html_out += "</div>"
+    return html_out
+
 
 def _market_insights_box(items: List[Dict[str, str]]) -> str:
-    """Format Perplexity market insights as HTML."""
+    """Format Perplexity market insights as HTML with collapse for overflow."""
     if not items:
         return ""
+
+    visible = items[:MAX_VISIBLE_ITEMS]
+    hidden = items[MAX_VISIBLE_ITEMS:]
+
     lis = []
-    for it in items[:8]:
-        title = html.escape(it.get("title",""))
-        url = html.escape(it.get("url",""))
-        content = html.escape(it.get("content","")[:200] + "..." if len(it.get("content","")) > 200 else it.get("content",""))
+    for it in visible:
+        title = html.escape(it.get("title", ""))
+        url = html.escape(it.get("url", ""))
+        content = html.escape(it.get("content", "")[:200] + "..." if len(it.get("content", "")) > 200 else it.get("content", ""))
         if url:
             lis.append(f"<li><strong><a href='{url}'>{title}</a></strong><br/><span class='small'>{content}</span></li>")
         else:
             lis.append(f"<li><strong>{title}</strong><br/><span class='small'>{content}</span></li>")
-    return "<div class='fb-section'><div class='fb-head'><span class='fb-step'>📊</span><h3 class='fb-title'>Markt & Wettbewerb (KI-Recherche)</h3></div><ul>" + "".join(lis) + "</ul></div>"
+
+    html_out = "<div class='fb-section'><div class='fb-head'><span class='fb-step'>📊</span><h3 class='fb-title'>Markt & Wettbewerb (KI-Recherche)</h3></div><ul>" + "".join(lis) + "</ul>"
+
+    if hidden:
+        hidden_lis = []
+        for it in hidden:
+            title = html.escape(it.get("title", ""))
+            url = html.escape(it.get("url", ""))
+            if url:
+                hidden_lis.append(f"<li><a href='{url}'>{title}</a></li>")
+            else:
+                hidden_lis.append(f"<li>{title}</li>")
+        html_out += f"<details class='research-overflow'><summary class='small'>Weitere Insights ({len(hidden)})</summary><ul>" + "".join(hidden_lis) + "</ul></details>"
+
+    html_out += "</div>"
+    return html_out
 
 # --- TAVILY INTEGRATION ---
 
