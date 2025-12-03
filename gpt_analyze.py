@@ -3259,6 +3259,10 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
         "foerderpotenzial": "foerderpotenzial",
         "transparency_box": "transparency_box",
         "ki_aktivitaeten_ziele": "ki_aktivitaeten_ziele",
+        # Neue Sektionen (Sprint 2025)
+        "monetarisierung": "monetarisierung",
+        "ki_skillplan": "ki_skillplan",
+        "templates_start": "templates_start",
     }
     
     prompt_key = prompt_map.get(section_name)
@@ -3636,6 +3640,10 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         ("foerderpotenzial", "FOERDERPOTENZIAL_HTML"),
         ("transparency_box", "TRANSPARENCY_BOX_HTML"),
         ("ki_aktivitaeten_ziele", "KI_AKTIVITAETEN_ZIELE_HTML"),
+        # Neue Sektionen (Sprint 2025)
+        ("monetarisierung", "MONETARISIERUNG_HTML"),
+        ("ki_skillplan", "KI_SKILLPLAN_HTML"),
+        ("templates_start", "TEMPLATES_START_HTML"),
     ]
 
     max_workers = int(os.getenv("GPT_PARALLEL_WORKERS", "10"))
