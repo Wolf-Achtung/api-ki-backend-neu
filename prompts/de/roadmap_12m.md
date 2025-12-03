@@ -12,7 +12,8 @@ Developer:
 >
 > Struktur: 4 Abschnitte (Monate 1–3, 4–6, 7–12, Abschluss & Verstetigung) mit klaren Verantwortlichkeiten auf Kundenseite.
 >
-> Schreibe **Markdown** (Überschriften mit ##, Listen mit -), **ohne Platzhalter, ohne Meta-Kommentare**.
+> Schreibe **Markdown** (Überschriften mit ##, Listen mit -).
+> <!-- DEV: no_placeholders, no_meta_comments -->
 
 ---
 
@@ -95,7 +96,8 @@ Developer:
 - Klarer Bezug auf {{BRANCHE_LABEL}}, {{HAUPTLEISTUNG}} und Business Case
 - Realistische Zeitangaben und Ressourcenschätzungen
 - Verantwortlichkeiten auf Kundenseite klar benennen
-- Keine Developer-Sprache, keine Platzhalter, keine Meta-Kommentare
+- Keine Developer-Sprache, keine Meta-Kommentare
+<!-- DEV: no_placeholder_tokens -->
 - Keine Erwähnung von Wortanzahl im Output
 
 ---
