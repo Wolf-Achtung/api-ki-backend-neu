@@ -17,6 +17,7 @@ import json
 import argparse
 import requests
 from pathlib import Path
+from typing import Any, Dict, List
 
 TEST_PROFILES = [
     # DE Solo
@@ -49,36 +50,39 @@ TEST_PROFILES = [
     },
 ]
 
-def load_profile(path: str) -> dict:
+def load_profile(path: str) -> Dict[str, Any]:
     with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data: Dict[str, Any] = json.load(f)
+        return data
 
 def submit_briefing(api_base: str, profile: dict) -> str:
     url = f"{api_base}/briefings/submit"
     r = requests.post(url, json=profile)
     r.raise_for_status()
     data = r.json()
-    briefing_id = data.get("briefing_id")
+    briefing_id: str = data.get("briefing_id", "")
     return briefing_id
 
-def run_analysis(api_base: str, briefing_id: str) -> dict:
+def run_analysis(api_base: str, briefing_id: str) -> Dict[str, Any]:
     url = f"{api_base}/analyze/run"
     r = requests.post(url, json={"briefing_id": briefing_id})
     r.raise_for_status()
-    return r.json()
+    result: Dict[str, Any] = r.json()
+    return result
 
-def persona_checks(sections: dict, expected_size: str, lang: str) -> dict:
+def persona_checks(sections: dict, expected_size: str, lang: str) -> Dict[str, Any]:
     """
     Sehr einfache Heuristiken für QA:
     - Solo: keine schweren Governance-Wörter, Monetarisierungsblock vorhanden, Skillplan vorhanden
     - KMU: Governance-Wörter erlaubt, Texte etwas länger
     """
-    results = {
+    warnings: List[str] = []
+    results: Dict[str, Any] = {
         "monetarisierung_present": bool(sections.get("MONETARISIERUNG_HTML")),
         "skillplan_present": bool(sections.get("KI_SKILLPLAN_HTML")),
         "starter_templates_present": bool(sections.get("STARTER_TEMPLATES_HTML")),
         "ai_policy_present": bool(sections.get("AI_POLICY_MINI_HTML")),
-        "warnings": [],
+        "warnings": warnings,
     }
 
     text_governance = sections.get("STRATEGIE_GOVERNANCE_HTML", "") or ""
@@ -90,14 +94,14 @@ def persona_checks(sections: dict, expected_size: str, lang: str) -> dict:
     # Solo: darf keine schweren Begriffe enthalten
     if expected_size == "solo":
         if any(term.lower() in (text_governance + text_org).lower() for term in heavy_terms):
-            results["warnings"].append("Solo: too heavy governance wording detected.")
+            warnings.append("Solo: too heavy governance wording detected.")
         if not any(term.lower() in (text_governance + text_org).lower() for term in lite_terms):
-            results["warnings"].append("Solo: no light governance keywords found.")
+            warnings.append("Solo: no light governance keywords found.")
 
     # KMU: sollte eher schwerere Begriffe enthalten
     if expected_size == "kmu":
         if not any(term.lower() in (text_governance + text_org).lower() for term in heavy_terms):
-            results["warnings"].append("KMU: governance text might be too light (no heavy terms).")
+            warnings.append("KMU: governance text might be too light (no heavy terms).")
 
     return results
 
