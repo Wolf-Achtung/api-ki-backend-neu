@@ -6,7 +6,7 @@ Optimized for ki-sicherheit.jetzt backend
 This service works WITH the existing prompt_loader.py system.
 It loads prompts via prompt_loader, injects context, and returns enhanced prompts.
 
-Version: 2.5.0-PLATIN++ (Anti-Redundanz)
+Version: 2.6.0-PLATIN++ (Anti-Redundanz + Solo-Persona)
 """
 from __future__ import annotations
 
@@ -212,6 +212,93 @@ Bei Erwähnung: "Tool X nutzen (siehe Quick Wins / Tools-Empfehlungen)"
 
 """
     return ""
+
+
+# =============================================================================
+# SOLO-PERSONA MODULATION: Vereinfachte Governance-Sprache
+# =============================================================================
+
+# Corporate terms → Solo-appropriate replacements
+SOLO_GOVERNANCE_REPLACEMENTS: Dict[str, str] = {
+    # Governance terms (case-insensitive replacements)
+    "governance framework": "einfache Regeln",
+    "governance-framework": "einfache Regeln",
+    "rollenmodell": "persönliche Verantwortung",
+    "verantwortlichkeitsmatrix": "klare Zuständigkeit",
+    "steuerungskreis": "regelmäßige Selbstkontrolle",
+    "steering committee": "regelmäßige Selbstkontrolle",
+    "gremium": "Prüfroutine",
+    "board": "Prüfroutine",
+    "abteilung": "Arbeitsbereich",
+    "abteilungen": "Arbeitsbereiche",
+    "organisationsentwicklung": "Arbeitsweise verbessern",
+    "change management": "Veränderung umsetzen",
+    "change-management": "Veränderung umsetzen",
+    # Team references inappropriate for solo
+    "team aufbauen": "Arbeitsweise strukturieren",
+    "mitarbeiter schulen": "sich weiterbilden",
+    "mitarbeiterschulung": "Weiterbildung",
+}
+
+
+def simplify_solo_governance(text: str, company_size: str) -> str:
+    """
+    Vereinfacht Governance-Sprache für Solo-Unternehmer.
+
+    Ersetzt komplexe Corporate-Begriffe durch einfache, passende Ausdrücke.
+    Nur aktiv wenn company_size == 'solo'.
+
+    Args:
+        text: Der zu vereinfachende Text
+        company_size: Unternehmensgröße ('solo', 'team', 'kmu')
+
+    Returns:
+        Vereinfachter Text für Solo, unverändert für andere Größen
+    """
+    if company_size != "solo":
+        return text
+
+    result = text
+    replacements_made = []
+
+    for corporate_term, simple_term in SOLO_GOVERNANCE_REPLACEMENTS.items():
+        # Case-insensitive replacement
+        pattern = re.compile(re.escape(corporate_term), re.IGNORECASE)
+        if pattern.search(result):
+            result = pattern.sub(simple_term, result)
+            replacements_made.append(f"{corporate_term} → {simple_term}")
+
+    if replacements_made:
+        log.debug(f"🔧 Solo-Governance vereinfacht: {len(replacements_made)} Ersetzungen")
+
+    return result
+
+
+def get_solo_governance_hint(company_size: str) -> str:
+    """
+    Gibt einen Hinweis-Block für Solo-spezifische Governance zurück.
+
+    Args:
+        company_size: Unternehmensgröße ('solo', 'team', 'kmu')
+
+    Returns:
+        Hinweis-String für Solo, leerer String für andere Größen
+    """
+    if company_size != "solo":
+        return ""
+
+    return """
+## Solo-Persona Hinweis
+
+Für Einzelunternehmer/Freiberufler bitte EINFACHE Sprache verwenden:
+- ✅ "Checkliste", "persönliche Routine", "eigene Prüfpunkte"
+- ✅ "Dokumentation light", "einfache Notiz", "pragmatischer Standard"
+- ❌ KEINE: "Governance Framework", "Rollenmodell", "Gremium", "Board"
+- ❌ KEINE: Team-Begriffe wie "Mitarbeiter", "Abteilung", "Schulung"
+
+---
+
+"""
 
 
 # =============================================================================

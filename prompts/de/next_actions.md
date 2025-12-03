@@ -1,7 +1,7 @@
-Developer: <!-- next_actions.md - v2.2 GOLD STANDARD+ -->
+Developer: <!-- next_actions.md - v2.3 PLATIN++ (ROI Tracking) -->
 <!-- Antworte ausschließlich mit **valide HTML**.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
-     VERSION: 2.2 GOLD STANDARD+ (Size-Awareness Fix) -->
+     VERSION: 2.3 PLATIN++ (ROI Tracking + Size-Awareness) -->
 
 <h1>PROMPT: Nächste Aktionen (30 Tage)</h1>
 
@@ -237,10 +237,47 @@ Developer: <!-- next_actions.md - v2.2 GOLD STANDARD+ -->
   <li>✅ Kurzer Business-Nutzen (1 Satz)</li>
   <li>✅ In 30 Tagen umsetzbar</li>
 </ol>
-<p><strong>Wenn ALLE ✅ → GOLD STANDARD+ erreicht!</strong></p>
+<p><strong>Wenn ALLE ✅ → PLATIN++ erreicht!</strong></p>
 <hr />
 
-<p><strong>VERSION:</strong> v2.2 GOLD STANDARD+ (Size-Awareness Fixed)<br />
+<h2>📊 ROI TRACKING BOX</h2>
+<p><strong>Am Ende jeder Next-Actions-Sektion eine kompakte ROI-Box einfügen:</strong></p>
+
+<h3>Struktur (SIZE-AWARE):</h3>
+<ul>
+  <li><strong>Solo:</strong> 2-3 Kennzahlen (Zeitersparnis, Kostenersparnis)</li>
+  <li><strong>Team:</strong> 3-4 Kennzahlen (+ Qualitätsverbesserung)</li>
+  <li><strong>KMU:</strong> 4-5 Kennzahlen (+ Skalierungspotenzial)</li>
+</ul>
+
+<h3>Beispiel ROI-Box (Solo):</h3>
+<pre><code>&lt;div class="roi-tracking"&gt;
+  &lt;h4&gt;ROI-Tracking (30 Tage)&lt;/h4&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;strong&gt;Zeitersparnis:&lt;/strong&gt; ~8-12h/Monat (durch Automatisierung)&lt;/li&gt;
+    &lt;li&gt;&lt;strong&gt;Kostenersparnis:&lt;/strong&gt; ~200-400€/Monat (weniger manuelle Arbeit)&lt;/li&gt;
+    &lt;li&gt;&lt;strong&gt;Messmethode:&lt;/strong&gt; Wöchentlicher Zeiteintrag in Erfolgs-Log&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+</code></pre>
+
+<h3>Beispiel ROI-Box (KMU):</h3>
+<pre><code>&lt;div class="roi-tracking"&gt;
+  &lt;h4&gt;ROI-Tracking (30 Tage)&lt;/h4&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;strong&gt;Zeitersparnis:&lt;/strong&gt; ~40-60h/Monat (Team gesamt)&lt;/li&gt;
+    &lt;li&gt;&lt;strong&gt;Kostenersparnis:&lt;/strong&gt; ~2.000-4.000€/Monat&lt;/li&gt;
+    &lt;li&gt;&lt;strong&gt;Qualitätsverbesserung:&lt;/strong&gt; -30% Fehlerquote (durch Prüfroutinen)&lt;/li&gt;
+    &lt;li&gt;&lt;strong&gt;Skalierungspotenzial:&lt;/strong&gt; 3× mehr Kapazität ohne Mehrpersonal&lt;/li&gt;
+    &lt;li&gt;&lt;strong&gt;Messmethode:&lt;/strong&gt; Monatliches KPI-Review mit Projektleiter&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+</code></pre>
+
+<p><strong>ROI-Box ist PFLICHT am Ende jeder Next-Actions-Ausgabe!</strong></p>
+<hr />
+
+<p><strong>VERSION:</strong> v2.3 PLATIN++ (ROI Tracking + Size-Awareness)<br />
 <strong>AUSGABE:</strong> Valides HTML (keine Markdown-Fences!)</p>
 
 <h2>📝 Output Format & Verbosity</h2>
