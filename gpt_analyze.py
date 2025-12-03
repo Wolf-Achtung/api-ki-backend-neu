@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-gpt_analyze.py – v4.14.2-GOLD-PLUS
+gpt_analyze.py – v4.14.2-PLATIN++
 ---------------------------------------------------------------------
-🎯 GOLD STANDARD+ OPTIMIERUNGEN (Phase 2.2):
+🎯 PLATIN++ OPTIMIERUNGEN (Phase 2.2):
 - ✅ Nutzt prompt_loader.py System (statt hardcoded prompts)
 - ✅ Dynamische Dates in Next Actions ({{TODAY}} Variablen)
 - ✅ Bessere Fallbacks wenn GPT wenig liefert
@@ -18,9 +18,9 @@ gpt_analyze.py – v4.14.2-GOLD-PLUS
 
 Version History:
 - 4.13.5-gs: Original mit Research-Integration
-- 4.14.0-GOLD-PLUS: Prompt-System aktiviert, dynamische Daten
-- 4.14.1-GOLD-PLUS: Size-aware Fallbacks, Platzhalter-Fix, Aliasing-Korrektur
-- 4.14.2-GOLD-PLUS: Roadmap-Fallbacks inline, HAUPTLEISTUNG-Integration
+- 4.14.0-PLATIN++: Prompt-System aktiviert, dynamische Daten
+- 4.14.1-PLATIN++: Size-aware Fallbacks, Platzhalter-Fix, Aliasing-Korrektur
+- 4.14.2-PLATIN++: Roadmap-Fallbacks inline, HAUPTLEISTUNG-Integration
 ---------------------------------------------------------------------
 """
 from __future__ import annotations
@@ -847,7 +847,7 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
         "enablement": min(ena, 25) * 4,
         "overall": round((min(gov, 25) + min(sec, 25) + min(val, 25) + min(ena, 25)) * 4 / 4),
     }
-    log.info("📊 REALISTIC SCORES v4.14.0-GOLD-PLUS: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
+    log.info("📊 REALISTIC SCORES v4.14.0-PLATIN++: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
              scores["governance"], scores["security"], scores["value"], scores["enablement"], scores["overall"])
     return {"scores": scores, "details": details, "total": scores["overall"]}
 
@@ -4021,7 +4021,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     _, guardrail_hits = detect_guardrails_v5(answers, report_lang)
     answers["_guardrail_hits"] = guardrail_hits  # Store for later access
 
-    log.info("[%s] 📊 Calculating realistic scores (v4.14.0-GOLD-PLUS)...", run_id)
+    log.info("[%s] 📊 Calculating realistic scores (v4.14.0-PLATIN++)...", run_id)
     score_wrap = _calculate_realistic_score(answers)
     scores = score_wrap["scores"]
 
@@ -4523,7 +4523,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         # TODO: Later enable Quality Gate:
         # raise ValueError("Report validation failed - fix errors first!")
     else:
-        log.info(f"[{run_id}] ✅ Report validation passed - GOLD STANDARD+")
+        log.info(f"[{run_id}] ✅ Report validation passed - PLATIN++")
     # === END VALIDATION ===
 
     # Benchmarks / Starter-Stacks / Responsible AI
@@ -4568,7 +4568,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     db.commit()
     db.refresh(an)
     
-    log.info("[%s] ✅ Analysis created (v4.14.0-GOLD-PLUS): id=%s", run_id, an.id)
+    log.info("[%s] ✅ Analysis created (v4.14.0-PLATIN++): id=%s", run_id, an.id)
     return an.id, result["html"], result.get("meta", {})
 
 # -------------------- briefing summary for admin ----------------
@@ -4762,7 +4762,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     db = core_db.SessionLocal()
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v4.14.2-GOLD-PLUS for briefing_id=%s", run_id, briefing_id)
+        log.info("[%s] 🚀 Starting analysis v4.14.2-PLATIN++ for briefing_id=%s", run_id, briefing_id)
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
         rep = Report(
