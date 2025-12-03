@@ -35,6 +35,30 @@
       "path": "report.md",
       "purpose": "Strukturierte Ausgabe",
       "required": true
+    },
+    "roi_tracking": {
+      "title": "ROI Tracking",
+      "path": "roi_tracking.md",
+      "purpose": "Monatliche Erfolgskontrolle",
+      "required": false
+    },
+    "ai_policy_mini": {
+      "title": "AI Mini-Policy",
+      "path": "ai_policy_mini.md",
+      "purpose": "Kompakte KI-Regeln",
+      "required": false
+    },
+    "kickoff_vorlage": {
+      "title": "Kickoff-Vorlage",
+      "path": "kickoff_vorlage.md",
+      "purpose": "Projektstart-Template",
+      "required": false
+    },
+    "prompt_framework": {
+      "title": "Prompt-Framework",
+      "path": "prompt_framework.md",
+      "purpose": "5-Schritte-Anleitung",
+      "required": false
     }
   },
   "en": {
@@ -67,6 +91,30 @@
       "path": "report.md",
       "purpose": "Structured output",
       "required": true
+    },
+    "roi_tracking": {
+      "title": "ROI Tracking",
+      "path": "roi_tracking_en.md",
+      "purpose": "Monthly success tracking",
+      "required": false
+    },
+    "ai_policy_mini": {
+      "title": "AI Mini Policy",
+      "path": "ai_policy_mini_en.md",
+      "purpose": "Compact AI rules",
+      "required": false
+    },
+    "kickoff_vorlage": {
+      "title": "Kickoff Template",
+      "path": "kickoff_template.md",
+      "purpose": "Project start template",
+      "required": false
+    },
+    "prompt_framework": {
+      "title": "Prompt Framework",
+      "path": "prompt_framework_en.md",
+      "purpose": "5-step guide",
+      "required": false
     }
   }
 }
