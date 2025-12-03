@@ -170,12 +170,18 @@ SENSITIVE_AREAS_EN = [
 
 # Fields to scan for guardrails
 FREETEXT_FIELDS = [
+    # Explicit guardrail fields (highest priority)
+    "ki_guardrails",
     "bedenken",
     "no_go",
+    # Compliance/requirements fields
     "besondere_anforderungen",
     "compliance_anforderungen",
     "datenschutz_bedenken",
     "ethische_grundsaetze",
+    # Strategic freetext fields (may contain implicit guardrails)
+    "strategische_ziele",
+    "zeitersparnis_prioritaet",
     "vision_3_jahre",
     "ki_projekte",
 ]
