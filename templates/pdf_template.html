@@ -1755,6 +1755,58 @@
                 <section class="chapter">
                     {{FOERDERPOTENZIAL_HTML}}
                 </section>
+                <!-- NEUE SEKTIONEN: Monetarisierung, Skill-Plan, Templates -->
+                {% if MONETARISIERUNG_HTML %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Wertschöpfung</span>
+                            <h2>Monetarisierung & Angebotslogik</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Pricing-Modelle für KI-Services
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ MONETARISIERUNG_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                {% if KI_SKILLPLAN_HTML %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Kompetenzaufbau</span>
+                            <h2>KI-Skill-Fahrplan 2025</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Vom Einsteiger zum Experten
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ KI_SKILLPLAN_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                {% if TEMPLATES_START_HTML %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Sofort loslegen</span>
+                            <h2>Starter-Templates</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Copy-Paste-Vorlagen für den Start
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ TEMPLATES_START_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
                 <!-- FEEDBACK SECTION -->
                 <div class="feedback-section">
                     <h2>Ihr Feedback ist uns wichtig!</h2>
