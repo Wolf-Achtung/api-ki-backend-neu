@@ -90,8 +90,23 @@ class TavilyConfig(BaseModel):
 
 class PDFConfig(BaseModel):
     service_url: str = ""
-    timeout_ms: int = 90000
+    timeout_ms: int = 120000  # optimiert: 120s statt 90s
     template_path: str = "templates/pdf_template.html"
+    max_html_kb: int = 350
+    max_pdf_mb: int = 20
+    warn_size_mb: float = 10.0
+    alert_size_mb: float = 18.0
+
+
+class MonitoringConfig(BaseModel):
+    """Monitoring & Alerting Configuration."""
+    admin_notify_email: Optional[str] = None
+    admin_feedback_email: Optional[str] = None
+    min_section_words: int = 50
+    max_fallbacks_per_report: int = 3
+    guardrail_high_conf: float = 0.9
+    token_budget_threshold_pct: float = 95.0
+    pdf_timeout_sec: float = 20.0
 
 
 class AppSettings(BaseSettings):
@@ -141,6 +156,9 @@ class AppSettings(BaseSettings):
 
     # PDF
     pdf: PDFConfig = PDFConfig()
+
+    # Monitoring
+    monitoring: MonitoringConfig = MonitoringConfig()
 
     # Report-/Content-Pfade
     benchmarks_path: str = "data/benchmarks.json"
@@ -258,8 +276,21 @@ class AppSettings(BaseSettings):
             ),
             pdf=PDFConfig(
                 service_url=os.getenv("PDF_SERVICE_URL", ""),
-                timeout_ms=int(os.getenv("PDF_TIMEOUT_MS", "90000")),
+                timeout_ms=int(os.getenv("PDF_TIMEOUT_MS", "120000")),
                 template_path=os.getenv("REPORT_TEMPLATE_PATH", "templates/pdf_template.html"),
+                max_html_kb=int(os.getenv("MAX_HTML_PAYLOAD_KB", "350")),
+                max_pdf_mb=int(os.getenv("MAX_PDF_SIZE_MB", "20")),
+                warn_size_mb=float(os.getenv("PDF_WARN_SIZE_MB", "10")),
+                alert_size_mb=float(os.getenv("PDF_ALERT_SIZE_MB", "18")),
+            ),
+            monitoring=MonitoringConfig(
+                admin_notify_email=os.getenv("ADMIN_NOTIFY_EMAIL"),
+                admin_feedback_email=os.getenv("ADMIN_FEEDBACK_EMAIL"),
+                min_section_words=int(os.getenv("MIN_SECTION_WORDS", "50")),
+                max_fallbacks_per_report=int(os.getenv("MAX_FALLBACKS_PER_REPORT", "3")),
+                guardrail_high_conf=float(os.getenv("GUARDRAIL_HIGH_CONF", "0.9")),
+                token_budget_threshold_pct=float(os.getenv("TOKEN_BUDGET_THRESHOLD_PCT", "95")),
+                pdf_timeout_sec=float(os.getenv("PDF_TIMEOUT_SEC", "20")),
             ),
             benchmarks_path=os.getenv("BENCHMARKS_PATH", "data/benchmarks.json"),
             starter_stacks_path=os.getenv("STARTER_STACKS_PATH", "data/starter_stacks.json"),

@@ -73,6 +73,14 @@ async def lifespan(app: FastAPI):
         log.error("✗ Auth setup failed: %s", exc)
         log.error("⚠️  LOGIN WILL NOT WORK - Check database connection")
 
+    # Setup alert email notifications
+    try:
+        from services.alerts import setup_email_notifications
+        setup_email_notifications()
+        log.info("✓ Alert email notifications configured")
+    except Exception as alert_exc:
+        log.warning("⚠️  Alert notifications setup failed: %s", alert_exc)
+
     yield
 
     log.info("Shutting down KI-Backend...")
@@ -161,6 +169,8 @@ def _build_router_config() -> List[Tuple[str, str, str]]:
         ("routes.feedback", "/api", "feedback"),
         # Smoke‑Test Router: bietet /api/smoke zur Überprüfung des Systems
         ("routes.smoke", "/api", "smoke"),
+        # Monitoring Router: Health-Checks, Diagnostics, Alerts
+        ("routes.monitoring", "/api", "monitoring"),
     ]
     # optionale Admin‑Routen
     if _bool_env("ENABLE_ADMIN_ROUTES", "0"):
@@ -216,6 +226,7 @@ def _status_snapshot() -> Dict[str, Any]:
             "report": any(p.startswith("/api/report") for p in ps),
             "feedback": any(p.startswith("/api/feedback") for p in ps),
             "smoke": any(p.startswith("/api/smoke") for p in ps),
+            "monitoring": any(p.startswith("/api/monitoring") for p in ps),
         },
         "paths": sorted([p for p in ps if p.startswith("/api/")]),
         "analyzer_import_ok": analyzer_ok,
@@ -254,12 +265,15 @@ def root() -> Dict[str, Any]:
     """Root‑Endpoint mit API‑Info."""
     endpoints: Dict[str, str] = {
         "health": "/api/healthz",
+        "health_extended": "/api/healthz/extended",
         "auth": "/api/auth/request-code (POST), /api/auth/login (POST)",
         "briefings": "/api/briefings/submit (POST)",
         "feedback": "/api/feedback (POST)",
         "report": "/api/report (POST)",
         "router_status": "/api/router-status",
         "smoke": "/api/smoke",
+        "monitoring": "/api/monitoring/status, /api/monitoring/alerts, /api/monitoring/metrics",
+        "diagnostics": "/api/report/diagnostics",
     }
     if _bool_env("ENABLE_ADMIN_ROUTES", "0"):
         endpoints["admin"] = "/api/admin/* (GET/POST)"
