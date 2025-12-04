@@ -10,9 +10,9 @@
      3. Limitationen (3-4 Punkte)
      4. Kontakt (1 Satz)
 
-     **VERBOTEN:**
-     - KEINE Wiederholung von Change-Management-Inhalten
-     - KEINE ausführlichen Guardrails-Erklärungen (wurden anderswo behandelt)
+     **Nicht verwenden:**
+     - Keine Wiederholung von Change-Management-Inhalten
+     - Keine ausführlichen Guardrails-Erklärungen (wurden anderswo behandelt)
      - Guardrails-Hinweise: kurz & präzise
 
      VARIABLEN:

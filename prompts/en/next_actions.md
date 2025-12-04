@@ -53,15 +53,15 @@ Developer: <!-- next_actions.md - v2.2 GOLD STANDARD+ -->
 <strong>Style:</strong> Precise, professional, motivating, size-appropriate</p>
 <hr />
 
-<h2>⛔ ABSOLUTELY PROHIBITED</h2>
-<h3>❌ Unrealistic responsibilities:</h3>
+<h2>⚠️ Avoid</h2>
+<h3>Unrealistic responsibilities:</h3>
 <ul>
   <li>❌ "PMO Team" for Solo or Small (2-10 employees)!</li>
   <li>❌ "Department Head" for Solo!</li>
   <li>❌ "Change Manager" for Small!</li>
   <li>❌ "Steering Committee" for Solo/Small!</li>
 </ul>
-<h3>❌ Vague actions:</h3>
+<h3>Vague actions:</h3>
 <ul>
   <li>❌ "Develop AI strategy"</li>
   <li>❌ "Create guidelines"</li>

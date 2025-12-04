@@ -53,15 +53,15 @@ Developer: <!-- next_actions.md - v2.3 PLATIN++ (ROI Tracking) -->
 <strong>Stil:</strong> Präzise, fachlich, motivierend, größen-angemessen</p>
 <hr />
 
-<h2>⛔ ABSOLUT VERBOTEN</h2>
-<h3>❌ Unrealistische Verantwortlichkeiten:</h3>
+<h2>⚠️ Vermeiden</h2>
+<h3>Unrealistische Verantwortlichkeiten:</h3>
 <ul>
   <li>❌ "PMO-Team" bei Solo oder Klein (2-10 MA)!</li>
   <li>❌ "Abteilungsleiter" bei Solo!</li>
   <li>❌ "Change Manager" bei Klein!</li>
   <li>❌ "Steering Committee" bei Solo/Klein!</li>
 </ul>
-<h3>❌ Vage Aktionen:</h3>
+<h3>Vage Aktionen:</h3>
 <ul>
   <li>❌ "KI-Strategie entwickeln"</li>
   <li>❌ "Richtlinien erstellen"</li>

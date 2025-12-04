@@ -86,6 +86,48 @@ RE_EMPTY_CLASS = re.compile(r'\s+class\s*=\s*["\'][\s]*["\']', re.IGNORECASE)
 # Redundant whitespace in style attributes
 RE_STYLE_WHITESPACE = re.compile(r'style\s*=\s*["\']([^"\']*)["\']', re.IGNORECASE)
 
+def _normalize_special_chars(text: str) -> str:
+    """Entfernt oder ersetzt problematische Sonderzeichen.
+
+    - U+FFFE (￾) - nicht druckbares Zeichen
+    - Andere problematische Unicode-Zeichen
+    """
+    if not text:
+        return text
+
+    # Entferne U+FFFE und andere problematische Zeichen
+    replacements = [
+        ("\ufffe", ""),  # U+FFFE - nicht druckbar
+        ("\uffff", ""),  # U+FFFF - nicht druckbar
+        ("\x00", ""),    # Null byte
+        ("\x0b", ""),    # Vertical tab
+        ("\x0c", ""),    # Form feed
+    ]
+    for old, new in replacements:
+        text = text.replace(old, new)
+
+    return text
+
+
+def _convert_markdown_headings(text: str) -> str:
+    """Konvertiert Markdown-Überschriften zu HTML.
+
+    - ## Heading → <h2>Heading</h2>
+    - ### Heading → <h3>Heading</h3>
+    - #### Heading → <h4>Heading</h4>
+    """
+    if not text or "##" not in text:
+        return text
+
+    # Konvertiere Markdown-Überschriften zu HTML
+    # Reihenfolge wichtig: längere Präfixe zuerst!
+    text = re.sub(r"^####\s*(.+?)$", r"<h4>\1</h4>", text, flags=re.MULTILINE)
+    text = re.sub(r"^###\s*(.+?)$", r"<h3>\1</h3>", text, flags=re.MULTILINE)
+    text = re.sub(r"^##\s*(.+?)$", r"<h2>\1</h2>", text, flags=re.MULTILINE)
+
+    return text
+
+
 def _cleanup_template_phrases(text: str) -> str:
     """Entfernt versehentlich eingebettete Template-Phrasen aus dem Output.
 
@@ -96,6 +138,9 @@ def _cleanup_template_phrases(text: str) -> str:
         ("Freitext-Feld", "Textabschnitt"),
         ("Freitext-Felder", "Textabschnitte"),
         ("freitextfeld", "Textabschnitt"),
+        ("Template-Marker", ""),
+        ("[Name]", ""),
+        ("[Placeholder]", ""),
     ]
     for old, new in replacements:
         text = text.replace(old, new)
@@ -726,6 +771,12 @@ def sanitize_section_html(
 
     # ZUERST: Behebe UTF-8 Mojibake (Ã¶ → ö)
     s = _fix_utf8_mojibake(s)
+
+    # Entferne problematische Sonderzeichen (U+FFFE, etc.)
+    s = _normalize_special_chars(s)
+
+    # Konvertiere Markdown-Überschriften zu HTML (## → h2)
+    s = _convert_markdown_headings(s)
 
     # Post-Processing: Entferne versehentliche Template-Phrasen
     s = _cleanup_template_phrases(s)

@@ -36,7 +36,7 @@ Developer:
        - Konkrete Beispiele statt Theorie
        - Motivierend, aber realistisch
 
-     VERBOTEN:
+     Nicht verwenden:
        - Keine Platzhalter oder Template-Marker
        - Keine technischen Pipeline-Begriffe
        - Keine übertriebenen Versprechen
