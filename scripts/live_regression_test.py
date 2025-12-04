@@ -206,7 +206,7 @@ class APIClient:
                 data = resp.json()
                 briefing_id = data.get("briefing_id")
                 print(f"[SUBMIT] Success: briefing_id={briefing_id}")
-                return briefing_id
+                return int(briefing_id) if briefing_id is not None else None
             else:
                 print(f"[SUBMIT] Failed: HTTP {resp.status_code}")
                 print(f"[SUBMIT] Response: {resp.text[:500]}")
@@ -221,7 +221,7 @@ class APIClient:
     def run_analysis(self, briefing_id: int, email: Optional[str] = None) -> bool:
         """Trigger analysis for a briefing."""
         url = f"{self.base_url}/analyze/run"
-        payload = {"briefing_id": briefing_id}
+        payload: Dict[str, Any] = {"briefing_id": briefing_id}
         if email:
             payload["email_override"] = email
         print(f"[ANALYZE] Running analysis for briefing_id={briefing_id}...")
@@ -249,7 +249,8 @@ class APIClient:
         try:
             resp = self.session.get(url, headers=self._headers(), timeout=30)
             if resp.status_code == 200:
-                return resp.json()
+                result: Dict[str, Any] = resp.json()
+                return result
             else:
                 print(f"[DIAGNOSTICS] Failed: HTTP {resp.status_code}")
                 return None
@@ -264,7 +265,8 @@ class APIClient:
         try:
             resp = self.session.get(url, headers=self._headers(), timeout=30)
             if resp.status_code == 200:
-                return resp.json()
+                result: Dict[str, Any] = resp.json()
+                return result
             else:
                 print(f"[MONITORING] Failed: HTTP {resp.status_code}")
                 return None
@@ -279,7 +281,8 @@ class APIClient:
         try:
             resp = self.session.get(url, headers=self._headers(), timeout=30)
             if resp.status_code == 200:
-                return resp.json()
+                result: Dict[str, Any] = resp.json()
+                return result
             else:
                 print(f"[ALERTS] Failed: HTTP {resp.status_code}")
                 return None
@@ -292,7 +295,7 @@ class APIClient:
         url = f"{self.base_url}/healthz"
         try:
             resp = self.session.get(url, timeout=10)
-            return resp.status_code == 200
+            return bool(resp.status_code == 200)
         except Exception:
             return False
 
@@ -309,7 +312,8 @@ def load_profile(profile_config: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
     try:
         with open(file_path) as f:
-            return json.load(f)
+            result: Dict[str, Any] = json.load(f)
+            return result
     except Exception as e:
         print(f"[ERROR] Failed to load profile: {e}")
         return None
