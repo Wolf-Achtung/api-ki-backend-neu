@@ -17,7 +17,15 @@ import argparse
 import os
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, TypedDict
+
+
+class NormalizeResult(TypedDict):
+    """Result of normalizing a single file."""
+    file: str
+    changes: List[str]
+    warnings: List[str]
+    success: bool
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PROMPTS_DIR = REPO_ROOT / "prompts"
@@ -155,14 +163,17 @@ def check_forbidden_terms(content: str, filename: str) -> List[str]:
     return found
 
 
-def normalize_file(filepath: Path, dry_run: bool = False, verbose: bool = False) -> Dict:
+def normalize_file(filepath: Path, dry_run: bool = False, verbose: bool = False) -> NormalizeResult:
     """Normalize a single prompt file."""
     filename = filepath.name
 
-    result = {
+    changes: List[str] = []
+    warnings: List[str] = []
+
+    result: NormalizeResult = {
         "file": str(filepath.relative_to(REPO_ROOT)),
-        "changes": [],
-        "warnings": [],
+        "changes": changes,
+        "warnings": warnings,
         "success": True,
     }
 
@@ -172,23 +183,23 @@ def normalize_file(filepath: Path, dry_run: bool = False, verbose: bool = False)
 
         # Normalize header
         content, header_changes = normalize_header(content, filename)
-        result["changes"].extend(header_changes)
+        changes.extend(header_changes)
 
         # Check for forbidden terms
         forbidden = check_forbidden_terms(content, filename)
-        result["warnings"].extend(forbidden)
+        warnings.extend(forbidden)
 
         # Write if changed and not dry run
         if content != original_content:
             if not dry_run:
                 filepath.write_text(content, encoding="utf-8")
-                result["changes"].append("File updated")
+                changes.append("File updated")
             else:
-                result["changes"].append("Would update file (dry-run)")
+                changes.append("Would update file (dry-run)")
 
     except Exception as e:
         result["success"] = False
-        result["warnings"].append(f"Error processing file: {e}")
+        warnings.append(f"Error processing file: {e}")
 
     return result
 
