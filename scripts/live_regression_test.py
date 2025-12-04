@@ -34,7 +34,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 try:
-    import requests  # type: ignore[import-untyped]
+    import requests
 except ImportError:
     print("ERROR: requests module required. Install with: pip install requests")
     sys.exit(1)
