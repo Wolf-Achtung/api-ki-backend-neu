@@ -30,6 +30,7 @@ import json
 import logging
 import os
 import re
+import threading
 import uuid
 import html
 from datetime import datetime, timezone, timedelta
@@ -77,6 +78,13 @@ from services.guardrails import (
     SENSITIVE_AREAS_DE,
     SENSITIVE_AREAS_EN,
 )
+from services.alerts import (
+    get_alert_manager,
+    AlertType,
+    AlertSeverity,
+    MAX_FALLBACKS_PER_REPORT,
+)
+from services.monitoring import _metrics
 
 # Und direkt nach Zeile 61, vor try:
 UTF8Handler.setup_encoding()  # Global UTF-8 fix beim Start
@@ -101,6 +109,293 @@ except Exception:
 
 # Initialize logger
 log = logging.getLogger(__name__)
+
+# =============================================================================
+# HARD STOP & ERROR-GATE ARCHITECTURE (Sprint A)
+# =============================================================================
+
+# Environment-controlled hard stop settings
+HARD_STOP_ON_SIZE_MISMATCH = os.getenv("HARD_STOP_ON_SIZE_MISMATCH", "0") in ("1", "true", "True")
+HARD_STOP_MAX_FALLBACKS = int(os.getenv("HARD_STOP_MAX_FALLBACKS", str(MAX_FALLBACKS_PER_REPORT)))
+
+# Placeholder detection pattern - blocks report if found
+PLACEHOLDER_PATTERN = re.compile(
+    r"\[(Name|Placeholder|Beispiel.*?)\]|"
+    r"Freitextfeld|"
+    r"Template-Marker|"
+    r"\{\{PLACEHOLDER\}\}|"
+    r"\{\{[A-Z_]+\}\}",  # Any unresolved Jinja variable
+    re.IGNORECASE
+)
+
+# Size-specific forbidden terms (solo should not have team/department terms)
+SOLO_FORBIDDEN_TERMS = [
+    "Team aufbauen", "Mitarbeiter einstellen", "Abteilung", "Abteilungen",
+    "Fachbereich", "Fachbereiche", "Projektteam", "Teams"
+]
+
+
+class ReportErrorGate:
+    """
+    Standardized error container for report generation.
+    Tracks all errors, warnings, and failures during report generation.
+    """
+
+    def __init__(self, run_id: str = ""):
+        self.run_id = run_id
+        self.critical_errors: List[str] = []
+        self.warnings: List[str] = []
+        self.sections_failed: List[str] = []
+        self.fallback_count: int = 0
+        self.prompt_failures: List[str] = []
+        self.guardrail_leaks: List[str] = []
+        self.placeholder_violations: List[str] = []
+        self.size_mismatches: List[str] = []
+
+    def add_critical(self, error: str) -> None:
+        """Add a critical error that will block report generation."""
+        self.critical_errors.append(error)
+        log.error("[%s] CRITICAL: %s", self.run_id, error)
+
+    def add_warning(self, warning: str) -> None:
+        """Add a warning (logged but may not block)."""
+        self.warnings.append(warning)
+        log.warning("[%s] WARNING: %s", self.run_id, warning)
+
+    def add_section_failure(self, section: str, reason: str) -> None:
+        """Track a failed section."""
+        self.sections_failed.append(f"{section}: {reason}")
+        log.error("[%s] SECTION FAILED: %s - %s", self.run_id, section, reason)
+
+    def add_prompt_failure(self, prompt_name: str, reason: str) -> None:
+        """Track a prompt loading failure."""
+        self.prompt_failures.append(f"{prompt_name}: {reason}")
+        log.error("[%s] PROMPT FAILED: %s - %s", self.run_id, prompt_name, reason)
+
+    def add_guardrail_leak(self, section: str) -> None:
+        """Track a GuardrailHit object that leaked into sections."""
+        self.guardrail_leaks.append(section)
+        log.error("[%s] GUARDRAIL LEAK: GuardrailHit object in section %s", self.run_id, section)
+
+    def add_placeholder_violation(self, section: str, placeholder: str) -> None:
+        """Track an unresolved placeholder."""
+        self.placeholder_violations.append(f"{section}: {placeholder}")
+        log.error("[%s] PLACEHOLDER: Unresolved '%s' in section %s", self.run_id, placeholder, section)
+
+    def add_size_mismatch(self, section: str, term: str, persona: str) -> None:
+        """Track a size/persona term mismatch."""
+        self.size_mismatches.append(f"{section}: '{term}' invalid for {persona}")
+        log.warning("[%s] SIZE MISMATCH: '%s' in %s (persona=%s)", self.run_id, term, section, persona)
+
+    def increment_fallback(self) -> None:
+        """Increment fallback counter."""
+        self.fallback_count += 1
+
+    def has_blockers(self) -> bool:
+        """Check if there are any blocking errors."""
+        return bool(
+            self.critical_errors or
+            self.sections_failed or
+            self.prompt_failures or
+            self.guardrail_leaks or
+            self.placeholder_violations or
+            self.fallback_count > HARD_STOP_MAX_FALLBACKS or
+            (HARD_STOP_ON_SIZE_MISMATCH and self.size_mismatches)
+        )
+
+    def get_block_reason(self) -> str:
+        """Get the primary reason for blocking."""
+        if self.critical_errors:
+            return f"Critical errors: {self.critical_errors[0]}"
+        if self.sections_failed:
+            return f"Section failed: {self.sections_failed[0]}"
+        if self.prompt_failures:
+            return f"Prompt failure: {self.prompt_failures[0]}"
+        if self.guardrail_leaks:
+            return f"GuardrailHit leak in: {self.guardrail_leaks[0]}"
+        if self.placeholder_violations:
+            return f"Placeholder violation: {self.placeholder_violations[0]}"
+        if self.fallback_count > HARD_STOP_MAX_FALLBACKS:
+            return f"Too many fallbacks: {self.fallback_count} > {HARD_STOP_MAX_FALLBACKS}"
+        if HARD_STOP_ON_SIZE_MISMATCH and self.size_mismatches:
+            return f"Size mismatch: {self.size_mismatches[0]}"
+        return "Unknown"
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for logging/alerts."""
+        return {
+            "run_id": self.run_id,
+            "critical_errors": self.critical_errors,
+            "warnings": self.warnings,
+            "sections_failed": self.sections_failed,
+            "fallback_count": self.fallback_count,
+            "prompt_failures": self.prompt_failures,
+            "guardrail_leaks": self.guardrail_leaks,
+            "placeholder_violations": self.placeholder_violations,
+            "size_mismatches": self.size_mismatches,
+            "has_blockers": self.has_blockers(),
+        }
+
+
+# Thread-local storage for error gate (accessible during parallel execution)
+_error_gate_local = threading.local()
+
+
+def get_error_gate() -> Optional[ReportErrorGate]:
+    """Get the current error gate from thread-local storage."""
+    gate: Any = getattr(_error_gate_local, "gate", None)
+    if isinstance(gate, ReportErrorGate):
+        return gate
+    return None
+
+
+def set_error_gate(gate: ReportErrorGate) -> None:
+    """Set the error gate in thread-local storage."""
+    _error_gate_local.gate = gate
+
+
+def guardrails_to_text(hits: List[GuardrailHit]) -> str:
+    """
+    Serialize GuardrailHit objects to plain text for safe inclusion in sections.
+    This prevents 'Object of type GuardrailHit is not JSON serializable' errors.
+    """
+    if not hits:
+        return ""
+
+    lines = []
+    for hit in hits:
+        conf_pct = int(hit.confidence * 100)
+        lines.append(f"• {hit.sentence} (Confidence: {conf_pct}%, Reason: {hit.reason})")
+
+    return "\n".join(lines)
+
+
+def check_section_for_placeholders(section_name: str, content: str, gate: ReportErrorGate) -> bool:
+    """
+    Check section content for unresolved placeholders.
+    Returns True if placeholders found (blocking), False if clean.
+    """
+    if not content or not isinstance(content, str):
+        return False
+
+    matches = PLACEHOLDER_PATTERN.findall(content)
+    if matches:
+        for match in matches[:3]:  # Log first 3 matches
+            gate.add_placeholder_violation(section_name, str(match))
+        return True
+    return False
+
+
+def check_section_for_size_mismatch(
+    section_name: str,
+    content: str,
+    persona: str,
+    gate: ReportErrorGate
+) -> bool:
+    """
+    Check section content for persona/size term mismatches.
+    Returns True if mismatch found, False if clean.
+    """
+    if not content or not isinstance(content, str):
+        return False
+
+    if persona != "solo":
+        return False
+
+    content_lower = content.lower()
+    for term in SOLO_FORBIDDEN_TERMS:
+        if term.lower() in content_lower:
+            gate.add_size_mismatch(section_name, term, persona)
+            return True
+    return False
+
+
+def hard_stop_if_invalid(
+    sections: Dict[str, Any],
+    gate: ReportErrorGate,
+    persona: str = "team",
+    run_id: str = ""
+) -> None:
+    """
+    Central gate function - raises RuntimeError if report is invalid.
+    Called BEFORE rendering to prevent bad reports from being generated.
+
+    Checks:
+    1. Critical errors in error gate
+    2. GuardrailHit objects leaked into sections
+    3. Null/empty/error sections
+    4. Unresolved placeholders
+    5. Size mismatches (if enabled)
+    6. Excessive fallbacks
+    """
+    alert_mgr = get_alert_manager()
+
+    # 1. Check error gate for pre-existing critical errors
+    if gate.critical_errors:
+        _trigger_hard_stop_alert(gate, run_id, alert_mgr)
+        raise RuntimeError(f"HARD STOP: Critical errors detected - {gate.critical_errors[0]}")
+
+    # 2. Check for GuardrailHit object leaks
+    for key, value in sections.items():
+        if isinstance(value, GuardrailHit):
+            gate.add_guardrail_leak(key)
+        elif isinstance(value, list):
+            for item in value:
+                if isinstance(item, GuardrailHit):
+                    gate.add_guardrail_leak(f"{key}[list]")
+                    break
+
+    # 3. Check for null/empty/error sections
+    critical_sections = [
+        "EXECUTIVE_SUMMARY_HTML", "executive_summary",
+        "ROADMAP_12M_HTML", "roadmap_12m",
+        "RECOMMENDATIONS_HTML", "recommendations",
+    ]
+    for key in critical_sections:
+        value = sections.get(key)
+        if value is None or value == "":
+            gate.add_section_failure(key, "Empty or null content")
+        elif isinstance(value, str) and "[Error:" in value:
+            gate.add_section_failure(key, "Contains error marker")
+
+    # 4. Check all string sections for placeholders
+    for key, value in sections.items():
+        if isinstance(value, str) and len(value) > 10:
+            check_section_for_placeholders(key, value, gate)
+
+    # 5. Check for size mismatches (if persona is solo)
+    if persona == "solo":
+        for key, value in sections.items():
+            if isinstance(value, str) and len(value) > 50:
+                check_section_for_size_mismatch(key, value, persona, gate)
+
+    # 6. Check fallback count
+    if gate.fallback_count > HARD_STOP_MAX_FALLBACKS:
+        gate.add_critical(f"Excessive fallbacks: {gate.fallback_count} > {HARD_STOP_MAX_FALLBACKS}")
+
+    # Final check - raise if blockers found
+    if gate.has_blockers():
+        _trigger_hard_stop_alert(gate, run_id, alert_mgr)
+        reason = gate.get_block_reason()
+        raise RuntimeError(f"HARD STOP: {reason}")
+
+    log.info("[%s] ✅ Error gate passed - report is valid for rendering", run_id)
+
+
+def _trigger_hard_stop_alert(gate: ReportErrorGate, run_id: str, alert_mgr: Any) -> None:
+    """Trigger monitoring alert and increment metrics for hard stop."""
+    try:
+        alert_mgr.create_alert(
+            AlertType.MULTIPLE_FALLBACKS,  # Reusing closest alert type
+            AlertSeverity.CRITICAL,
+            f"HARD STOP triggered: {gate.get_block_reason()}",
+            gate.to_dict(),
+        )
+        _metrics.increment("hard_stop.count")
+        _metrics.record("hard_stop.fallbacks", gate.fallback_count)
+    except Exception as e:
+        log.warning("[%s] Failed to send hard stop alert: %s", run_id, e)
+
 
 # --- Patch03: field label helper ---
 
@@ -3178,9 +3473,12 @@ STATIC_SECTIONS = {
 
 def _generate_content_section(section_name: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
     """🎯 UPDATED: Uses prompt_loader system mit Variable-Interpolation und Förder-Kontext."""
+    # Get error gate from thread-local storage (set by parent analyze_briefing)
+    error_gate = get_error_gate()
+
     if not ENABLE_LLM_CONTENT:
         return f"<p><em>[{section_name} – LLM disabled]</em></p>"
-    
+
     # 🎯 STATIC SECTIONS: Direkt Fallback nutzen, kein GPT-Call
     if section_name in STATIC_SECTIONS:
         log.info("📌 Using static fallback for %s (no GPT call)", section_name)
@@ -3320,18 +3618,27 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                     word_count,
                     min_words,
                 )
+                # Track fallback usage in error gate
+                if error_gate:
+                    error_gate.increment_fallback()
                 return _get_fallback_content(section_name, briefing, scores)
-            
+
             return result
-            
+
         except FileNotFoundError as e:
             log.warning(
                 "⚠️ Prompt file not found for %s: %s - using legacy", prompt_key, e
             )
+            # Track prompt failure in error gate
+            if error_gate:
+                error_gate.add_prompt_failure(str(prompt_key), f"File not found: {e}")
         except Exception as e:
             log.error(
                 "❌ Error loading/using prompt for %s: %s - using legacy", section_name, e
             )
+            # Track general prompt failure
+            if error_gate:
+                error_gate.add_prompt_failure(section_name, str(e))
     
     # ---------------- Fallback: Legacy-hardcoded Prompts ----------------
     branche = briefing.get("branche", "Unternehmen")
@@ -3408,8 +3715,11 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
     
     # Fallback wenn GPT wirklich gar nichts bringt
     if not out or len(out.strip()) < 50:
+        # Track fallback usage in error gate
+        if error_gate:
+            error_gate.increment_fallback()
         return _get_fallback_content(section_name, briefing, scores)
-    
+
     return out
 
 
@@ -3957,6 +4267,10 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 # -------------------- pipeline (kept from original with minor logging updates) ----------------
 def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, str, Dict[str, Any]]:
     """Analyze briefing and generate AI report."""
+    # === HARD STOP ARCHITECTURE: Initialize error gate ===
+    error_gate = ReportErrorGate(run_id=run_id)
+    set_error_gate(error_gate)  # Make available to worker threads
+
     # Validate briefing_id
     if not isinstance(briefing_id, int):
         raise ValueError(f"briefing_id must be an integer, got {type(briefing_id)}")
@@ -4087,7 +4401,9 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             sections[template_key] = ""
 
     # === GUARDRAILS_HITS for future Risk/Compliance prompts (v5.0 preparation) ===
-    sections["GUARDRAILS_HITS"] = answers.get("_guardrail_hits", [])
+    # FIX: Serialize GuardrailHit objects to text to prevent JSON serialization errors
+    guardrail_hits_raw = answers.get("_guardrail_hits", [])
+    sections["GUARDRAILS_HITS"] = guardrails_to_text(guardrail_hits_raw)
 
     log.info("[%s] Copied %d label variables to sections", run_id, len(direct_copy_keys) + len(label_with_fallback))
 # === END LABELS FIX ===
@@ -4514,6 +4830,19 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             "kmu_keypoints": "knowledge/kmu_keypoints.html"
         })
         sections["RESPONSIBLE_AI_HTML"] = sections["responsible_ai_html"]  # Uppercase alias für Kompatibilität
+
+    # === HARD STOP GATE: Validate report BEFORE rendering ===
+    # Derive persona from unternehmensgroesse
+    size_raw = (answers.get("unternehmensgroesse", "") or "").lower()
+    if "solo" in size_raw or "freiberuf" in size_raw or "einzelunt" in size_raw:
+        persona = "solo"
+    elif "kmu" in size_raw or "11" in size_raw:
+        persona = "kmu"
+    else:
+        persona = "team"
+
+    # Execute hard stop validation
+    hard_stop_if_invalid(sections, error_gate, persona=persona, run_id=run_id)
 
     result = render(
         br,
