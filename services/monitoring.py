@@ -222,12 +222,19 @@ def record_pdf_generation(
 
         size_mb = size_bytes / (1024 * 1024)
         _metrics.set_gauge("pdf_last_size_mb", size_mb)
+        _metrics.record("pdf_size_mb", size_mb)  # Sprint F: Histogram metric
 
-        # Track size distribution
-        if size_mb > 18:
-            _metrics.increment("pdf_size_critical")  # > 18MB
+        # Track size distribution (Sprint F thresholds)
+        if size_mb > 20:
+            _metrics.increment("pdf_size_blocked")   # > 20MB - BLOCK
+            _metrics.increment("pdf_size_critical")  # Also count as critical
+            log.error("PDF size BLOCKED: %.2f MB exceeds 20MB limit", size_mb)
+        elif size_mb > 18:
+            _metrics.increment("pdf_size_critical")  # > 18MB - CI Error
+            log.warning("PDF size CRITICAL: %.2f MB exceeds 18MB threshold", size_mb)
         elif size_mb > 10:
-            _metrics.increment("pdf_size_warning")   # > 10MB
+            _metrics.increment("pdf_size_warning")   # > 10MB - Warning
+            log.info("PDF size WARNING: %.2f MB exceeds 10MB threshold", size_mb)
     else:
         _metrics.increment("pdf_errors")
         if error_type:
@@ -335,10 +342,149 @@ def record_section_generation(
             _metrics.record(f"section_{section}_words", word_count)
     else:
         _metrics.increment(f"section_{section}_error")
+        _metrics.increment("prompt_section_failures_total")  # Sprint F metric
 
     if is_fallback:
         _metrics.increment(f"section_{section}_fallback")
         _metrics.increment("section_fallbacks_total")
+        _metrics.increment("prompt_fallbacks_total")  # Sprint F alias
+
+
+# =============================================================================
+# Sprint F - Extended Metrics Recording Functions
+# =============================================================================
+
+def record_persona_violation(
+    expected: str,
+    actual: str,
+    section: str = "",
+    violation_type: str = "term_mismatch",
+) -> None:
+    """
+    Record a persona compliance violation.
+
+    Args:
+        expected: Expected persona (solo/team/kmu)
+        actual: Actual detected persona or term
+        section: Section where violation occurred
+        violation_type: Type of violation (term_mismatch, size_mismatch, forbidden_term)
+    """
+    _metrics.increment("persona_violation_total")
+    _metrics.increment(f"persona_violation_{violation_type}")
+    _metrics.increment(f"persona_violation_{expected}")
+
+    if section:
+        _metrics.increment(f"persona_violation_section_{section}")
+
+    log.warning(
+        "Persona violation: expected=%s, actual=%s, type=%s, section=%s",
+        expected, actual, violation_type, section
+    )
+
+
+def record_funding_route_mismatch(
+    expected_route: str,
+    actual_route: str,
+    country: str,
+    lang: str,
+) -> None:
+    """
+    Record a funding routing mismatch.
+
+    Args:
+        expected_route: Expected funding route (DE/EN-DE/EN-EU-Core)
+        actual_route: Actual funding route determined
+        country: Country code
+        lang: Language code
+    """
+    _metrics.increment("funding_route_mismatch_total")
+    _metrics.increment(f"funding_route_mismatch_{country}")
+    _metrics.increment(f"funding_route_mismatch_{lang}")
+
+    log.warning(
+        "Funding route mismatch: expected=%s, actual=%s, country=%s, lang=%s",
+        expected_route, actual_route, country, lang
+    )
+
+
+def record_prompt_size_mismatch(
+    section: str,
+    expected_size: str,
+    actual_size: str,
+    expected_tokens: int = 0,
+    actual_tokens: int = 0,
+) -> None:
+    """
+    Record a prompt size mismatch (SIZE-AWARE violation).
+
+    Args:
+        section: Section name
+        expected_size: Expected company size (solo/team/kmu)
+        actual_size: Actual detected size
+        expected_tokens: Expected token budget
+        actual_tokens: Actual token count
+    """
+    _metrics.increment("prompt_size_mismatch_total")
+    _metrics.increment(f"prompt_size_mismatch_{section}")
+
+    if expected_tokens > 0 and actual_tokens > 0:
+        _metrics.record("prompt_size_variance_pct",
+                       abs(actual_tokens - expected_tokens) / expected_tokens * 100)
+
+    log.warning(
+        "Prompt size mismatch: section=%s, expected=%s, actual=%s, tokens=%d/%d",
+        section, expected_size, actual_size, actual_tokens, expected_tokens
+    )
+
+
+def record_html_payload(
+    size_bytes: int,
+    section: str = "full_report",
+) -> None:
+    """
+    Record HTML payload size for CI validation.
+
+    Args:
+        size_bytes: HTML payload size in bytes
+        section: Section name or 'full_report'
+
+    Sprint F Thresholds:
+        - Warning: > 300KB
+        - Error: > 350KB
+    """
+    size_kb = size_bytes / 1024
+    _metrics.record("html_payload_kb", size_kb)
+    _metrics.set_gauge("html_last_payload_kb", size_kb)
+
+    if size_kb > 350:
+        _metrics.increment("html_payload_error")
+        log.error("HTML payload ERROR: %.2f KB exceeds 350KB limit", size_kb)
+    elif size_kb > 300:
+        _metrics.increment("html_payload_warning")
+        log.warning("HTML payload WARNING: %.2f KB exceeds 300KB threshold", size_kb)
+
+
+def record_guardrail_high_confidence_hit(
+    rule_id: str,
+    confidence: float,
+    context: str = "",
+) -> None:
+    """
+    Record a high-confidence guardrail hit.
+
+    Args:
+        rule_id: Guardrail rule identifier
+        confidence: Confidence score (0-1)
+        context: Context where hit occurred
+    """
+    _metrics.increment("guardrail_high_confidence_hits")
+    _metrics.increment(f"guardrail_rule_{rule_id}")
+    _metrics.record("guardrail_confidence", confidence)
+
+    log.info(
+        "High-confidence guardrail hit: rule=%s, confidence=%.2f, context=%s",
+        rule_id, confidence, context[:50] if context else "N/A"
+    )
 
 
 # =============================================================================
@@ -510,11 +656,36 @@ def get_diagnostics() -> Dict[str, Any]:
             "max_size_mb": (_metrics.get_max("pdf_size_bytes", 60) or 0) / (1024 * 1024),
             "size_warnings": _metrics.get_counter("pdf_size_warning"),
             "size_critical": _metrics.get_counter("pdf_size_critical"),
+            "size_blocked": _metrics.get_counter("pdf_size_blocked"),  # Sprint F
+        },
+        "html_payload": {  # Sprint F
+            "avg_kb": _metrics.get_avg("html_payload_kb", 60),
+            "warnings": _metrics.get_counter("html_payload_warning"),
+            "errors": _metrics.get_counter("html_payload_error"),
         },
         "guardrails": {
             "detections": _metrics.get_counter("guardrail_detections"),
             "total_hits": _metrics.get_counter("guardrail_hits_total"),
             "high_confidence": _metrics.get_counter("guardrail_high_confidence"),
+            "high_confidence_hits": _metrics.get_counter("guardrail_high_confidence_hits"),  # Sprint F
+        },
+        "persona": {  # Sprint F
+            "violations_total": _metrics.get_counter("persona_violation_total"),
+            "by_type": {
+                "term_mismatch": _metrics.get_counter("persona_violation_term_mismatch"),
+                "size_mismatch": _metrics.get_counter("persona_violation_size_mismatch"),
+                "forbidden_term": _metrics.get_counter("persona_violation_forbidden_term"),
+            },
+        },
+        "funding": {  # Sprint F
+            "queries": _metrics.get_counter("funding_queries"),
+            "route_mismatches": _metrics.get_counter("funding_route_mismatch_total"),
+        },
+        "prompt_engine": {  # Sprint F
+            "fallbacks_total": _metrics.get_counter("prompt_fallbacks_total"),
+            "section_failures_total": _metrics.get_counter("prompt_section_failures_total"),
+            "size_mismatch_total": _metrics.get_counter("prompt_size_mismatch_total"),
+            "token_budget_exceeded": _metrics.get_counter("token_budget_exceeded"),
         },
         "sections": {
             "fallbacks_total": _metrics.get_counter("section_fallbacks_total"),
@@ -712,23 +883,39 @@ def format_daily_report_html(report: Dict[str, Any]) -> str:
 # =============================================================================
 
 __all__ = [
+    # Core
     "AlertSeverity",
     "MetricsStore",
+    # Analysis Recording
     "record_analysis_start",
     "record_analysis_complete",
     "record_analysis_error",
+    # PDF Recording
     "record_pdf_generation",
+    # Guardrails Recording
     "record_guardrail_detection",
+    "record_guardrail_high_confidence_hit",  # Sprint F
+    # Persona Recording
     "record_persona_assignment",
+    "record_persona_violation",  # Sprint F
+    # Funding Recording
     "record_funding_routing",
+    "record_funding_route_mismatch",  # Sprint F
+    # Research/LLM Recording
     "record_research_query",
     "record_llm_call",
+    # Section Recording
     "record_section_generation",
+    # Sprint F - Extended Metrics
+    "record_prompt_size_mismatch",
+    "record_html_payload",
+    # Health & Diagnostics
     "get_system_health",
     "get_service_status",
     "get_extended_health",
     "get_monitoring_status",
     "get_diagnostics",
+    # Reporting
     "generate_daily_report",
     "format_daily_report_html",
 ]

@@ -1,13 +1,21 @@
-name: PLATIN+ Quality Gate
+name: PLATIN++ Quality Gate
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop, 'feature/**' ]
   pull_request:
     branches: [ main ]
 
+env:
+  PYTHON_VERSION: "3.11"
+  ENABLE_LLM_CONTENT: "0"
+
 jobs:
-  platin-quality:
+  # =============================================================================
+  # Sprint F: Prompt Linter
+  # =============================================================================
+  prompt-linter:
+    name: Prompt Linter (PLATIN++ V5)
     runs-on: ubuntu-latest
 
     steps:
@@ -17,7 +25,58 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Run Prompt Linter
+        run: |
+          python scripts/prompt_linter.py --format github
+        continue-on-error: false
+
+  # =============================================================================
+  # Sprint F: Auto QA Regression Tests
+  # =============================================================================
+  auto-qa:
+    name: Auto QA Regression
+    runs-on: ubuntu-latest
+    needs: prompt-linter
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Run Auto QA Tests
+        run: |
+          python scripts/auto_qa.py --format github --fail-on-warning
+        continue-on-error: false
+
+  # =============================================================================
+  # Core Quality Tests
+  # =============================================================================
+  platin-quality:
+    name: PLATIN++ Quality Suite
+    runs-on: ubuntu-latest
+    needs: [prompt-linter, auto-qa]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
         run: |
@@ -28,12 +87,194 @@ jobs:
           if [ -f requirements-test.txt ]; then
             pip install -r requirements-test.txt
           fi
-          # Fallback: pytest installieren, falls nicht in den Requirements
-          pip install pytest
+          pip install pytest pytest-cov
 
-      - name: Run PLATIN+ test suite
+      - name: Run PLATIN++ test suite
         env:
-          # Falls nötig, kannst du hier ENV-Flags setzen (z. B. LLM deaktivieren)
           ENABLE_LLM_CONTENT: "0"
         run: |
-          pytest -q tests/test_platin_quality.py
+          pytest -q tests/test_platin_quality.py -v --tb=short
+
+      - name: Run unit tests
+        run: |
+          pytest tests/ -v --ignore=tests/test_platin_quality.py --tb=short -q || true
+
+  # =============================================================================
+  # Sprint F: HTML Payload Size Check
+  # =============================================================================
+  html-payload-check:
+    name: HTML Payload Size Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check HTML payload sizes
+        run: |
+          echo "Checking HTML template sizes..."
+          MAX_KB=350
+          WARN_KB=300
+
+          # Find all HTML templates
+          for file in $(find templates -name "*.html" -o -name "*.jinja2" 2>/dev/null || echo ""); do
+            if [ -f "$file" ]; then
+              SIZE_KB=$(du -k "$file" | cut -f1)
+              if [ "$SIZE_KB" -gt "$MAX_KB" ]; then
+                echo "::error file=$file::HTML payload exceeds ${MAX_KB}KB limit: ${SIZE_KB}KB"
+                exit 1
+              elif [ "$SIZE_KB" -gt "$WARN_KB" ]; then
+                echo "::warning file=$file::HTML payload approaching limit: ${SIZE_KB}KB (limit: ${MAX_KB}KB)"
+              fi
+            fi
+          done
+
+          echo "All HTML payloads within size limits"
+
+  # =============================================================================
+  # Sprint F: Prompt File Validation
+  # =============================================================================
+  prompt-validation:
+    name: Prompt File Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate prompt file structure
+        run: |
+          echo "Validating prompt file structure..."
+
+          # Check all prompt files have required headers
+          MISSING_HEADERS=0
+          for file in $(find prompts -name "*.md" 2>/dev/null || echo ""); do
+            if [ -f "$file" ]; then
+              # Check for PLATIN++ header
+              if ! grep -q "PLATIN++ PROMPT" "$file"; then
+                echo "::warning file=$file::Missing PLATIN++ PROMPT header"
+                MISSING_HEADERS=$((MISSING_HEADERS + 1))
+              fi
+
+              # Check for SECTION header
+              if ! grep -q "SECTION:" "$file"; then
+                echo "::warning file=$file::Missing SECTION header"
+              fi
+
+              # Check for OUTPUT header
+              if ! grep -q "OUTPUT:" "$file"; then
+                echo "::warning file=$file::Missing OUTPUT header"
+              fi
+            fi
+          done
+
+          if [ "$MISSING_HEADERS" -gt 5 ]; then
+            echo "::error::Too many prompt files missing PLATIN++ headers: $MISSING_HEADERS"
+            exit 1
+          fi
+
+          echo "Prompt file validation complete"
+
+  # =============================================================================
+  # Sprint F: Test Profile Validation
+  # =============================================================================
+  test-profile-validation:
+    name: Test Profile Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Validate test profiles
+        run: |
+          python -c "
+          import json
+          import sys
+          from pathlib import Path
+
+          REQUIRED_FIELDS = ['profile_id', 'lang', 'answers']
+          GOLD_REQUIRED = ['expected_validation']
+
+          errors = []
+          warnings = []
+
+          # Check regular test profiles
+          for profile_dir in ['data/test_profiles', 'data/test_profiles_en']:
+              profile_path = Path(profile_dir)
+              if profile_path.exists():
+                  for f in profile_path.glob('*.json'):
+                      try:
+                          with open(f, 'r') as fp:
+                              data = json.load(fp)
+                          for field in REQUIRED_FIELDS:
+                              if field not in data:
+                                  errors.append(f'{f}: Missing required field: {field}')
+                      except json.JSONDecodeError as e:
+                          errors.append(f'{f}: Invalid JSON: {e}')
+
+          # Check gold standard profiles
+          gold_path = Path('data/test_profiles_gold')
+          if gold_path.exists():
+              for f in gold_path.glob('*.json'):
+                  try:
+                      with open(f, 'r') as fp:
+                          data = json.load(fp)
+                      for field in REQUIRED_FIELDS + GOLD_REQUIRED:
+                          if field not in data:
+                              errors.append(f'{f}: Missing required field for gold standard: {field}')
+                  except json.JSONDecodeError as e:
+                      errors.append(f'{f}: Invalid JSON: {e}')
+
+          if errors:
+              for e in errors:
+                  print(f'::error::{e}')
+              sys.exit(1)
+
+          for w in warnings:
+              print(f'::warning::{w}')
+
+          print('Test profile validation complete')
+          "
+
+  # =============================================================================
+  # Summary Job
+  # =============================================================================
+  quality-summary:
+    name: Quality Gate Summary
+    runs-on: ubuntu-latest
+    needs: [prompt-linter, auto-qa, platin-quality, html-payload-check, prompt-validation, test-profile-validation]
+    if: always()
+
+    steps:
+      - name: Check job results
+        run: |
+          echo "## PLATIN++ V5 Quality Gate Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Check each job status
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Prompt Linter | ${{ needs.prompt-linter.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Auto QA | ${{ needs.auto-qa.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| PLATIN++ Suite | ${{ needs.platin-quality.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| HTML Payload | ${{ needs.html-payload-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Prompt Validation | ${{ needs.prompt-validation.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Profiles | ${{ needs.test-profile-validation.result }} |" >> $GITHUB_STEP_SUMMARY
+
+          # Determine overall status
+          if [ "${{ needs.prompt-linter.result }}" == "failure" ] || \
+             [ "${{ needs.auto-qa.result }}" == "failure" ] || \
+             [ "${{ needs.platin-quality.result }}" == "failure" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Overall: FAILED** - Critical checks did not pass" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Overall: PASSED** - All critical checks passed" >> $GITHUB_STEP_SUMMARY
