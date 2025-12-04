@@ -1,9 +1,8 @@
 Developer:
-<!-- PLATIN++ PROMPT -->
+<!-- PLATIN++ PROMPT v5.2 -->
 <!-- SECTION: executive_summary -->
-<!-- VERSION: v6.0 PLATIN++ V5 CEO-EDITION -->
-<!-- OUTPUT: HTML -->
-<!-- SIZE-AWARE: solo/team/sme -->
+<!-- OUTPUT: HTML ONLY -->
+<!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}} -->
 <!-- TOKEN-BUDGET: 600 (solo:0.8x=480, team:1.0x=600, sme:1.15x=690) -->
 <!--

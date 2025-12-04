@@ -1,9 +1,8 @@
 Developer:
-<!-- PLATIN++ PROMPT -->
+<!-- PLATIN++ PROMPT v5.2 -->
 <!-- SECTION: quick_wins -->
-<!-- VERSION: v8.0 PLATIN++ V5 STORYTELLING -->
-<!-- OUTPUT: Markdown -->
-<!-- SIZE-AWARE: solo/team/sme -->
+<!-- OUTPUT: HTML ONLY -->
+<!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{HAUPTLEISTUNG}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{BRANCHE_LABEL}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 1800 (solo:0.8x=1440, team:1.0x=1800, sme:1.15x=2070) -->
 <!--

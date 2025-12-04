@@ -1,9 +1,8 @@
 Developer:
-<!-- PLATIN++ PROMPT -->
+<!-- PLATIN++ PROMPT v5.2 -->
 <!-- SECTION: roadmap_90d -->
-<!-- VERSION: v11.0 PLATIN++ V5 STORYTELLING -->
-<!-- OUTPUT: Markdown -->
-<!-- SIZE-AWARE: solo/team/sme -->
+<!-- OUTPUT: HTML ONLY -->
+<!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 2200 (solo:0.8x=1760, team:1.0x=2200, sme:1.15x=2530) -->
 <!--

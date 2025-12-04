@@ -1,8 +1,7 @@
 Developer:
-<!-- PLATIN++ PROMPT -->
+<!-- PLATIN++ PROMPT v5.2 -->
 <!-- SECTION: ai_policy_mini -->
-<!-- VERSION: v1.0 PLATIN++ V5 -->
-<!-- OUTPUT: HTML -->
+<!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}} -->
 <!-- TOKEN-BUDGET: 700 (solo:0.8x=560, team:1.0x=700, kmu:1.15x=805) -->

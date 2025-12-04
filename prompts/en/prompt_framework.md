@@ -1,11 +1,10 @@
 Developer:
-<!-- PLATIN++ PROMPT -->
+<!-- PLATIN++ PROMPT v5.2 -->
 <!-- SECTION: prompt_framework -->
-<!-- VERSION: v1.0 PLATIN++ V5 -->
-<!-- OUTPUT: HTML -->
-<!-- SIZE-AWARE: solo/team/sme -->
+<!-- OUTPUT: HTML ONLY -->
+<!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}} -->
-<!-- TOKEN-BUDGET: 700 (solo:0.8x=560, team:1.0x=700, sme:1.15x=805) -->
+<!-- TOKEN-BUDGET: 700 (solo:0.8x=560, team:1.0x=700, kmu:1.15x=805) -->
 <!--
 GOAL: Compact 5-step framework for effective AI prompts.
 
