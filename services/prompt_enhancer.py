@@ -599,10 +599,10 @@ Team-Struktur (REALISTISCH!):
 - Beispiel: {constraints['example_team']}
 - Kapazität: {constraints['realistic_capacity']}
 
-VERBOTEN für {size}:
-- KEINE Projektteams, die offensichtlich nicht zu dieser Unternehmensgröße passen
-- KEINE Budgets > €{max_realistic_budget:,}
-- KEINE unrealistischen Teamgrößen
+Für {size} nicht empfohlen:
+- Keine Projektteams, die nicht zur Unternehmensgröße passen
+- Budget-Obergrenze beachten: max. €{max_realistic_budget:,}
+- Realistische Team-Kapazitäten berücksichtigen
 
 Die Roadmap MUSS mit dem realen Budget und der Unternehmensgröße umsetzbar sein!
 
@@ -708,8 +708,8 @@ class PromptEnhancer:
     {format_items(size_ctx.get('focus_priorities', []), max_items=3)}
   </ul>
   
-  <p style="margin:6px 0;"><strong>❌ VERBOTEN für diese Größe:</strong></p>
-  <ul style="margin:4px 0;padding-left:20px;color:#dc2626;">
+  <p style="margin:6px 0;"><strong>In Ihrer aktuellen Größe nicht sinnvoll:</strong></p>
+  <ul style="margin:4px 0;padding-left:20px;color:#64748b;">
     {format_items(size_ctx.get('forbidden_recommendations', []), max_items=5)}
   </ul>
 </div>"""
