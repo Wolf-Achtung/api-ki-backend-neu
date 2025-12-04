@@ -108,18 +108,25 @@ def run_prompt_engine_load_test(num_runs: int = 1000) -> LoadTestSummary:
     logger.info(f"J-1: Prompt-Engine Load Test ({num_runs} runs)")
     logger.info(f"=" * 60)
 
+    # Define fallback functions with proper signatures
+    def _fallback_load_prompt(section: str, lang: str = "de") -> str:
+        prompt_path = REPO_ROOT / "prompts" / lang / f"{section}.md"
+        if prompt_path.exists():
+            return prompt_path.read_text(encoding="utf-8")
+        return ""
+
+    def _fallback_clear_cache() -> None:
+        pass
+
     try:
-        from services.prompt_loader import load_prompt, clear_cache
-    except ImportError:
+        from services.prompt_loader import load_prompt as _load_prompt, lru_cache  # type: ignore[attr-defined]
+        load_prompt = _load_prompt
+        clear_cache = lambda: lru_cache.cache_clear() if hasattr(lru_cache, 'cache_clear') else None  # type: ignore[misc]
+    except (ImportError, AttributeError):
         # Fallback: direct file loading
         logger.warning("prompt_loader not available, using direct file loading")
-        clear_cache = lambda: None
-
-        def load_prompt(section: str, lang: str = "de") -> str:
-            prompt_path = REPO_ROOT / "prompts" / lang / f"{section}.md"
-            if prompt_path.exists():
-                return prompt_path.read_text(encoding="utf-8")
-            return ""
+        load_prompt = _fallback_load_prompt
+        clear_cache = _fallback_clear_cache
 
     # Prompt sections to test
     sections = [
@@ -807,18 +814,25 @@ def run_funding_stress_routing(num_variants: int = 5000) -> LoadTestSummary:
     logger.info(f"J-5: Funding Engine Stress-Routing ({num_variants} variants)")
     logger.info(f"=" * 60)
 
+    # Define mock functions with proper signatures
+    def _mock_get_funding_programmes(*args: Any, **kwargs: Any) -> Dict[str, Any]:
+        return {"programmes": [], "scope": "DE"}
+
+    def _mock_get_funding_programmes_en(*args: Any, **kwargs: Any) -> Dict[str, Any]:
+        return {"programmes": [], "scope": "DE_EN"}
+
+    def _mock_get_funding_eu_core(*args: Any, **kwargs: Any) -> Dict[str, Any]:
+        return {"programmes": [], "scope": "EU_CORE"}
+
     try:
-        from services.funding_service import get_funding_programmes
-        from services.funding_service_en import get_funding_programmes_en, get_funding_eu_core
-    except ImportError as e:
+        from services.funding_service import get_funding_recommendations as get_funding_programmes  # type: ignore[attr-defined]
+        from services.funding_service_en import get_funding_recommendations_en as get_funding_programmes_en  # type: ignore[attr-defined]
+        from services.funding_service_en import get_funding_eu_core_en as get_funding_eu_core  # type: ignore[attr-defined]
+    except (ImportError, AttributeError) as e:
         logger.warning(f"Import warning: {e}, using mock routing")
-        # Mock routing logic
-        def get_funding_programmes(*args, **kwargs):
-            return {"programmes": [], "scope": "DE"}
-        def get_funding_programmes_en(*args, **kwargs):
-            return {"programmes": [], "scope": "DE_EN"}
-        def get_funding_eu_core(*args, **kwargs):
-            return {"programmes": [], "scope": "EU_CORE"}
+        get_funding_programmes = _mock_get_funding_programmes
+        get_funding_programmes_en = _mock_get_funding_programmes_en
+        get_funding_eu_core = _mock_get_funding_eu_core
 
     # Test parameters
     languages = ["de", "en"]
@@ -1033,8 +1047,9 @@ def run_error_gate_qa() -> LoadTestSummary:
 
         try:
             # Create validator with sections and meta
-            meta = {"unternehmensgroesse": case.get("size", "team")}
-            validator = ReportValidator(case["sections"], meta)
+            sections_dict: Dict[str, Any] = case["sections"]  # type: ignore[assignment]
+            meta: Dict[str, Any] = {"unternehmensgroesse": case.get("size", "team")}
+            validator = ReportValidator(sections_dict, meta)
             is_valid, errors = validator.validate_all()
 
             duration_ms = (time.time() - iter_start) * 1000
@@ -1158,27 +1173,37 @@ def run_monitoring_alert_simulation() -> LoadTestSummary:
     logger.info(f"J-9: Monitoring QA & Alert Simulation")
     logger.info(f"=" * 60)
 
+    # Define mock functions with proper signatures
+    def _mock_record_pdf_size(size_mb: float) -> None:
+        pass
+
+    def _mock_record_fallback(section: str, reason: str) -> None:
+        pass
+
+    def _mock_get_monitoring_status() -> Dict[str, Any]:
+        return {}
+
+    def _mock_check_pdf_size_alert(size_mb: float) -> str:
+        if size_mb > 20:
+            return "BLOCK"
+        if size_mb > 18:
+            return "ALERT"
+        if size_mb > 10:
+            return "WARNING"
+        return "OK"
+
+    HIGH_CONFIDENCE_THRESHOLD: float = 0.9
+
     try:
-        from services.monitoring import (
-            record_pdf_size,
-            record_fallback,
-            get_monitoring_status,
-        )
-        from services.alerts import (
-            check_pdf_size_alert,
-            HIGH_CONFIDENCE_THRESHOLD,
-        )
-    except ImportError as e:
+        from services.monitoring import get_monitoring_status as _get_status  # type: ignore[attr-defined]
+        from services.alerts import check_pdf_size as _check_pdf, HIGH_CONFIDENCE_THRESHOLD as _threshold  # type: ignore[attr-defined]
+        get_monitoring_status = _get_status
+        check_pdf_size_alert = _check_pdf
+        HIGH_CONFIDENCE_THRESHOLD = _threshold
+    except (ImportError, AttributeError) as e:
         logger.warning(f"Import warning: {e}, using mock functions")
-        def record_pdf_size(size_mb): pass
-        def record_fallback(section, reason): pass
-        def get_monitoring_status(): return {}
-        def check_pdf_size_alert(size_mb):
-            if size_mb > 20: return "BLOCK"
-            if size_mb > 18: return "ALERT"
-            if size_mb > 10: return "WARNING"
-            return "OK"
-        HIGH_CONFIDENCE_THRESHOLD = 0.9
+        get_monitoring_status = _mock_get_monitoring_status
+        check_pdf_size_alert = _mock_check_pdf_size_alert
 
     # Test scenarios
     scenarios = [
@@ -1199,10 +1224,12 @@ def run_monitoring_alert_simulation() -> LoadTestSummary:
 
         try:
             if "pdf_mb" in scenario:
-                alert_level = check_pdf_size_alert(scenario["pdf_mb"])
+                pdf_mb = float(scenario["pdf_mb"])  # type: ignore[arg-type]
+                alert_level = check_pdf_size_alert(pdf_mb)
                 actual = alert_level
             elif "guardrail_conf" in scenario:
-                actual = "INFO" if scenario["guardrail_conf"] > HIGH_CONFIDENCE_THRESHOLD else "OK"
+                conf = float(scenario["guardrail_conf"])  # type: ignore[arg-type]
+                actual = "INFO" if conf > HIGH_CONFIDENCE_THRESHOLD else "OK"
             else:
                 actual = "UNKNOWN"
 
