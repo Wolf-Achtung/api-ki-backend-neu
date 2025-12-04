@@ -6,26 +6,69 @@
   "BRANCHE_LABEL": "Finanzen & Versicherungen",
   "UNTERNEHMENSGROESSE_LABEL": "2-10 (Team)",
   "HAUPTLEISTUNG": "Beratung für Banken, Versicherer, Finanzdienstleister und FinTechs mit Schwerpunkt auf Prozessoptimierung, regulatorischer Compliance (BAIT, VAIT, MaRisk, DSGVO), Datenqualität, Risikoanalyse, Reporting-Automatisierung und Einführung von KI-gestützten Entscheidungs- und Analyseverfahren. Zusätzlich werden Workshops, Audits, Gap-Analysen, Risiko-Scorings sowie Einführung digitaler Beratungsprozesse angeboten.",
-
+  "expected_validation": {
+    "funding_flow": "DE",
+    "persona": "team",
+    "guardrails": true,
+    "word_guarantee": 50,
+    "pdf_size_limit_mb": 10
+  },
   "answers": {
     "branche": "finanzen",
     "unternehmensgroesse": "team",
     "bundesland": "Hessen",
     "hauptleistung": "Beratung für Banken, Versicherer, Finanzdienstleister und FinTechs mit Schwerpunkt auf Prozessoptimierung, regulatorischer Compliance (BAIT, VAIT, MaRisk, DSGVO), Datenqualität, Risikoanalyse, Reporting-Automatisierung und Einführung von KI-gestützten Entscheidungs- und Analyseverfahren. Zusätzlich werden Workshops, Audits, Gap-Analysen, Risiko-Scorings sowie Einführung digitaler Beratungsprozesse angeboten.",
-    "zielgruppen": ["banken", "versicherungen", "fintech", "vermögensverwalter", "kmu", "b2b"],
+    "zielgruppen": [
+      "banken",
+      "versicherungen",
+      "fintech",
+      "vermögensverwalter",
+      "kmu",
+      "b2b"
+    ],
     "jahresumsatz": "bis_500k",
     "it_infrastruktur": "cloudbasiert",
     "interne_ki_kompetenzen": "mittel",
-    "datenquellen": ["crm", "excel", "webtracking", "kundenfeedback", "microsoft365", "analytics"],
+    "datenquellen": [
+      "crm",
+      "excel",
+      "webtracking",
+      "kundenfeedback",
+      "microsoft365",
+      "analytics"
+    ],
     "digitalisierungsgrad": "mittel",
     "prozesse_papierlos": "ja",
     "automatisierungsgrad": "gering",
-    "ki_einsatz": ["risikoanalyse", "reporting", "contentkreation", "research", "dokumentenzusammenfassung", "prozessevaluierung", "regelwerksanalyse"],
+    "ki_einsatz": [
+      "risikoanalyse",
+      "reporting",
+      "contentkreation",
+      "research",
+      "dokumentenzusammenfassung",
+      "prozessevaluierung",
+      "regelwerksanalyse"
+    ],
     "ki_kompetenz": "mittel",
-    "ki_ziele": ["qualitaet", "effizienz", "standardisierung", "risikominimierung", "beschleunigung", "compliance"],
+    "ki_ziele": [
+      "qualitaet",
+      "effizienz",
+      "standardisierung",
+      "risikominimierung",
+      "beschleunigung",
+      "compliance"
+    ],
     "ki_guardrails": "Keine automatisierten Entscheidungen bei Kreditbewertung oder Risiko-Scoring. Kundendaten nur in DSGVO- und BaFin-konformen Tools. Regulatorische Dokumente erfordern menschliche Freigabe.",
     "ki_projekte": "Bereits umgesetzt sind KI-basierte First-Level-Analysen für MaRisk/BAIT-Fragen, automatisierte Berichtsbausteine für Versicherungen, Pilotprozesse für Dokumentenklassifikation, generative Textbausteine für Kundenkommunikation sowie KI-gestützte Research-Hilfen. Geplant sind regelwerksbasierte Assistenzsysteme, automatisierte Checklisten, Risiko-Szenarien und KI-Dashboards für interne Qualitätssicherung.",
-    "anwendungsfaelle": ["berichtswesen", "risikoanalyse", "dokumentenpruefung", "regelwerksauswertung", "workflowoptimierung", "research", "kundenkommunikation"],
+    "anwendungsfaelle": [
+      "berichtswesen",
+      "risikoanalyse",
+      "dokumentenpruefung",
+      "regelwerksauswertung",
+      "workflowoptimierung",
+      "research",
+      "kundenkommunikation"
+    ],
     "zeitersparnis_prioritaet": "Besonders zeitintensiv sind regulatorische Recherchen, strukturierte Risikoanalysen, komplexe Dokumentenprüfungen, Reporting-Anforderungen, Abstimmungsprozesse, manuelle Excel-Auswertungen sowie priorisierte Handlungsempfehlungen. Hoher Nutzen besteht in KI-unterstützten Assistenzsystemen (Regelwerk-Analyse), automatisierten Reports, Standardisierung von Beraterkits und der Beschleunigung von Review-Schleifen.",
     "pilot_bereich": "risikoanalyse",
     "geschaeftsmodell_evolution": "Aufbau skalierbarer digitaler Beratungsprodukte wie Self-Assessment-Tools, Audit-Kits, Automationspakete, Compliance-Monitoring, Risiko-Szenario-Module sowie White-Label-Lösungen für Finanzdienstleister. Langfristig soll der Anteil wiederkehrender Umsätze erhöht und die Beratungsleistung stärker mit KI-gestützten Modellen verbunden werden.",
@@ -36,9 +79,27 @@
     "governance_richtlinien": "keine",
     "change_management": "teilweise",
     "zeitbudget": "15h_woche",
-    "vorhandene_tools": ["microsoft365", "notion", "excel", "bitrix", "teams", "chatgpt", "browserplugins"],
-    "regulierte_branche": ["finanzen", "versicherung"],
-    "trainings_interessen": ["risikoanalyse", "prompting_expert", "compliance", "automatisierung", "datenqualitaet", "kundenkommunikation"],
+    "vorhandene_tools": [
+      "microsoft365",
+      "notion",
+      "excel",
+      "bitrix",
+      "teams",
+      "chatgpt",
+      "browserplugins"
+    ],
+    "regulierte_branche": [
+      "finanzen",
+      "versicherung"
+    ],
+    "trainings_interessen": [
+      "risikoanalyse",
+      "prompting_expert",
+      "compliance",
+      "automatisierung",
+      "datenqualitaet",
+      "kundenkommunikation"
+    ],
     "vision_prioritaet": "hoch",
     "datenschutzbeauftragter": "intern",
     "technische_massnahmen": "erweitert",
@@ -46,7 +107,13 @@
     "meldewege": "teilweise",
     "loeschregeln": "ausfuehrlich",
     "ai_act_kenntnis": "fortgeschritten",
-    "ki_hemmnisse": ["datenschutz", "regulierung", "kompetenz", "standardisierung", "zeit"],
+    "ki_hemmnisse": [
+      "datenschutz",
+      "regulierung",
+      "kompetenz",
+      "standardisierung",
+      "zeit"
+    ],
     "bisherige_foerdermittel": "keine",
     "interesse_foerderung": "ja",
     "erfahrung_beratung": "fortgeschritten",
