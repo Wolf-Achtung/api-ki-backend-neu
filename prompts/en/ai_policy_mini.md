@@ -1,55 +1,106 @@
-# AI Mini Policy – Compact Rules for Daily AI Operations
+Developer:
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: ai_policy_mini -->
+<!-- VERSION: v1.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/sme -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}} -->
+<!-- TOKEN-BUDGET: 700 (solo:0.8x=560, team:1.0x=700, sme:1.15x=805) -->
+<!--
+GOAL: Compact, immediately applicable AI usage rules without bureaucratic overhead.
 
-<!-- persona:solo -->
-<!-- Solo: 5 simple rules, immediately applicable, no bureaucracy -->
-<!-- persona:team -->
-<!-- Team: Clear roles (creator, reviewer), handover rules -->
-<!-- persona:kmu -->
-<!-- SME: Structured policy, responsibilities, documentation requirements -->
+REQUIRED STRUCTURE (7 core rules):
+1. Data usage (what AI can/cannot do)
+2. Review requirement (human verification)
+3. Transparency (labeling)
+4. No automated decisions
+5. Tool approval
+6. Learning culture
+7. Updates
 
-## Core Principle
+PERSONA VARIATIONS (COMPANY_SIZE):
+- solo: 5 simple rules, immediately applicable, no bureaucracy
+- team: Clear roles (creator, reviewer), handover rules
+- sme: Structured policy, responsibilities, documentation requirements
 
-This mini policy defines clear ground rules for daily AI usage – without bureaucratic overhead.
+SIZE-AWARE RESPONSIBILITIES:
+- solo: Self-check, simple checklist
+- team: Team lead reviews, peer review established
+- sme: Compliance officer, documented approval processes
 
----
+ANTI-REDUNDANCY:
+- Governance rules HERE, not in Strategy/Governance section
+- No overlap with AI Act Summary (legal details there)
+- Complements Risks section (risks there, rules here)
 
-## The 7 Core Rules
+STYLE:
+- Text length: 120-180 words
+- Practical, immediately actionable
+- No legal advice, pragmatic guardrails instead
 
-### 1. Data Usage
-**What AI may do:** Process internal, non-personal data.
-**What AI may not do:** Use customer data, HR data, or confidential documents without approval.
+Do not use:
+- No placeholders or template markers
+- No legal jargon
+- No repetition of guardrails from Risks section
+-->
 
-### 2. Review Requirement
-**Rule:** Every AI output is reviewed by a human before sharing externally.
-**Exception:** Purely internal drafts for personal refinement.
+<section class="section ai-policy-mini">
+  <h2>AI Mini-Policy: 7 Core Rules</h2>
 
-### 3. Transparency
-**Rule:** For customer-facing content, disclose AI assistance.
-**Example:** "Created with AI support, reviewed by [Name]."
+  <p>
+    Compact guidelines for daily AI usage at
+    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> in <strong>{{BRANCHE_LABEL}}</strong>.
+  </p>
 
-### 4. No Automated Decisions
-**Rule:** AI provides suggestions – humans decide.
-**Applies to:** HR matters, contracts, finances, customer commitments.
+  <div class="policy-rules">
+    <div class="rule">
+      <h4>1. Data Usage</h4>
+      <p><strong>Allowed:</strong> Internal, non-personal data.</p>
+      <p><strong>Not allowed:</strong> Customer data, employee data, or confidential documents without approval.</p>
+    </div>
 
-### 5. Tool Approval
-**Rule:** Only use approved AI tools (e.g., ChatGPT Enterprise, Claude, internal systems).
-**Prohibited:** Feeding company data into unknown tools.
+    <div class="rule">
+      <h4>2. Review Requirement</h4>
+      <p>Every AI output is reviewed by a human before sharing with third parties.</p>
+    </div>
 
-### 6. Learning Culture
-**Rule:** Document errors, learn from them, adjust processes.
-**No blame games** – AI usage is a learning journey.
+    <div class="rule">
+      <h4>3. Transparency</h4>
+      <p>Label customer-facing content when AI assisted in creation.</p>
+    </div>
 
-### 7. Updates
-**Rule:** This policy is reviewed quarterly and adjusted as needed.
+    <div class="rule">
+      <h4>4. No Automated Decisions</h4>
+      <p>AI provides suggestions – humans decide. Applies to: HR matters, contracts, finances.</p>
+    </div>
 
----
+    <div class="rule">
+      <h4>5. Tool Approval</h4>
+      <p>Only use approved AI tools. Don't feed unknown tools with company data.</p>
+    </div>
 
-## Quick Check Before Every AI Use
+    <div class="rule">
+      <h4>6. Learning Culture</h4>
+      <p>Document mistakes, learn from them, adjust processes. No blame.</p>
+    </div>
 
-- [ ] Data suitable? (no sensitive personal data)
-- [ ] Tool approved?
-- [ ] Output reviewed?
-- [ ] Transparency ensured?
+    <div class="rule">
+      <h4>7. Updates</h4>
+      <p>This policy is reviewed quarterly and adjusted as needed.</p>
+    </div>
+  </div>
 
----
-*This mini policy does not replace legal advice. When in doubt: consult.*
+  <div class="quick-check">
+    <h4>Quick Check Before Every AI Use</h4>
+    <ul>
+      <li>Data suitable? (no sensitive personal data)</li>
+      <li>Tool approved?</li>
+      <li>Output reviewed?</li>
+      <li>Transparency ensured?</li>
+    </ul>
+  </div>
+
+  <p class="small muted">
+    This mini-policy does not replace legal advice. When uncertain: consult experts.
+  </p>
+</section>

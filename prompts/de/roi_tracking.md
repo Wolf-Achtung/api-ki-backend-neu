@@ -1,39 +1,109 @@
-# ROI Tracking – Monatliche Erfolgskontrolle
+Developer:
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: roi_tracking -->
+<!-- VERSION: v1.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}} -->
+<!-- TOKEN-BUDGET: 600 (solo:0.8x=480, team:1.0x=600, kmu:1.15x=690) -->
+<!--
+ZIEL: Kompaktes ROI-Tracking-Framework für monatliche Erfolgsmessung von KI-Projekten.
 
-<!-- persona:solo -->
-<!-- Solo: Kompakte Selbstkontrolle, 3-4 KPIs, keine komplexen Dashboards -->
-<!-- persona:team -->
-<!-- Team: Gemeinsame Fortschrittsmessung, Rollen-basierte Verantwortung -->
-<!-- persona:kmu -->
-<!-- KMU: Strukturiertes Reporting, Abteilungs-übergreifende KPIs, Management-tauglich -->
+PFLICHTSTRUKTUR (3 Bereiche):
+1. KPIs definieren (3-5 messbare Kennzahlen)
+2. Tracking-Methode (wie messen, wer misst, wie oft)
+3. Review-Zyklus (wann auswerten, wie anpassen)
 
-## Zweck
+PERSONA-VARIATIONEN (COMPANY_SIZE):
+- solo: 2-3 einfache KPIs (Zeitersparnis, Kostenersparnis), Self-Tracking, keine Dashboards
+- team: 3-4 KPIs inkl. Qualitätsverbesserung, Team-Review monatlich
+- kmu: 4-5 KPIs inkl. Skalierungspotenzial, strukturiertes KPI-Review mit Projektleiter
 
-Dieses Tracking hilft Ihnen, den messbaren Nutzen Ihrer KI-Maßnahmen monatlich zu erfassen. Fokus: Zeitersparnis, Kostenreduktion, Qualitätsverbesserung.
+SIZE-AWARE VERANTWORTLICHKEITEN:
+- solo: "Sie selbst", "Geschäftsführer (Sie)"
+- team: "Projektverantwortlicher", "Team-Lead"
+- kmu: "Projektleiter", "Controlling", "KPI-Verantwortlicher"
 
-## Empfohlene KPIs
+ANTI-REDUNDANZ:
+- ROI Tracking ergänzt Business Case, wiederholt keine CAPEX/OPEX/Payback-Zahlen
+- Fokus auf LAUFENDE Messung, nicht auf initiale Kalkulation
+- Keine Überschneidung mit Next Actions (dort konkrete 30-Tage-Aktionen)
 
-| KPI | Beschreibung | Messmethode | Zielwert |
-|-----|--------------|-------------|----------|
-| **Zeitersparnis (h/Monat)** | Eingesparte Arbeitsstunden durch KI-Automatisierung | Vorher-Nachher-Vergleich | +10-20% |
-| **Fehlerquote** | Reduzierung manueller Fehler | Stichproben-Kontrolle | -30% |
-| **Output-Steigerung** | Mehr Ergebnisse bei gleichem Aufwand | Mengenmessung | +15-25% |
-| **Kostenersparnis (€)** | Direkte Einsparungen durch Automatisierung | Kostenvergleich | Individuell |
+STIL:
+- Textumfang: 100-150 Wörter
+- Konkret und umsetzbar
+- Keine abstrakten Management-Floskeln
 
-## Tracking-Vorlage
+Nicht verwenden:
+- Keine Platzhalter oder Template-Marker
+- Keine Wiederholung von Business-Case-Zahlen
+- Keine unrealistischen KPIs für die Unternehmensgröße
+-->
 
-| Monat | Zeitersparnis | Fehlerquote | Output | Kosten | Trend | Kommentar |
-|-------|---------------|-------------|--------|--------|-------|-----------|
-| M1 | ___ h | ___% | ___ | ___€ | ↑↓→ | |
-| M2 | ___ h | ___% | ___ | ___€ | ↑↓→ | |
-| M3 | ___ h | ___% | ___ | ___€ | ↑↓→ | |
+<section class="section roi-tracking">
+  <h2>ROI Tracking: Monatliche Erfolgsmessung</h2>
 
-## Auswertungshinweise
+  <p>
+    Ein strukturiertes Tracking sichert den Projekterfolg für
+    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> in <strong>{{BRANCHE_LABEL}}</strong>.
+  </p>
 
-- **Monatlich ausfüllen** – Konsistenz wichtiger als Perfektion
-- **Trends beobachten** – Einzelwerte schwanken, Trends zählen
-- **Learnings dokumentieren** – Was funktioniert? Was nicht?
-- **Anpassungen ableiten** – KI-Einsatz iterativ optimieren
+  <div class="tracking-framework">
+    <h4>1. Kern-KPIs definieren</h4>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>KPI</th>
+          <th>Beschreibung</th>
+          <th>Messmethode</th>
+          <th>Zielwert</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Zeitersparnis</strong></td>
+          <td>Stunden pro Monat durch KI-Automatisierung</td>
+          <td>Vorher-Nachher-Vergleich</td>
+          <td>+10-20%</td>
+        </tr>
+        <tr>
+          <td><strong>Fehlerquote</strong></td>
+          <td>Reduzierung manueller Fehler</td>
+          <td>Stichproben-Kontrolle</td>
+          <td>-30%</td>
+        </tr>
+        <tr>
+          <td><strong>Output-Steigerung</strong></td>
+          <td>Mehr Ergebnisse bei gleichem Aufwand</td>
+          <td>Mengenmessung</td>
+          <td>+15-25%</td>
+        </tr>
+        <tr>
+          <td><strong>Kostenersparnis</strong></td>
+          <td>Direkte Einsparungen durch Automatisierung</td>
+          <td>Kostenvergleich</td>
+          <td>Individuell</td>
+        </tr>
+      </tbody>
+    </table>
 
----
-*Tipp: Starten Sie mit 2-3 KPIs und erweitern Sie schrittweise.*
+    <h4>2. Tracking-Methode</h4>
+    <ul>
+      <li><strong>Tool:</strong> Einfaches Excel/Google Sheet oder Projektmanagement-Tool</li>
+      <li><strong>Frequenz:</strong> Wöchentlicher Kurzeintrag, monatliche Auswertung</li>
+      <li><strong>Verantwortlich:</strong> Projektverantwortlicher oder Geschäftsführung</li>
+    </ul>
+
+    <h4>3. Review-Zyklus</h4>
+    <ul>
+      <li><strong>Monatlich:</strong> KPI-Auswertung, Trend-Analyse</li>
+      <li><strong>Quartalsweise:</strong> Anpassung der Ziele, Lessons Learned</li>
+      <li><strong>Entscheidung:</strong> Skalieren, optimieren oder pivotieren</li>
+    </ul>
+  </div>
+
+  <p class="small muted">
+    Tipp: Beginnen Sie mit 2-3 KPIs und erweitern Sie schrittweise.
+    Konsistenz ist wichtiger als Perfektion.
+  </p>
+</section>
