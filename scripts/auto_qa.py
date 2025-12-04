@@ -527,15 +527,11 @@ def run_profile_tests(profile_config: Dict[str, Any], verbose: bool = False) -> 
 def run_all_tests(verbose: bool = False) -> Tuple[List[ProfileTestResult], Dict[str, Any]]:
     """Run tests for all profiles."""
     results = []
-    summary = {
-        "total_profiles": len(TEST_PROFILES),
-        "passed": 0,
-        "failed": 0,
-        "critical_failures": 0,
-        "total_errors": 0,
-        "total_warnings": 0,
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-    }
+    passed_count = 0
+    failed_count = 0
+    critical_count = 0
+    error_count = 0
+    warning_count = 0
 
     for profile_config in TEST_PROFILES:
         if verbose:
@@ -545,31 +541,38 @@ def run_all_tests(verbose: bool = False) -> Tuple[List[ProfileTestResult], Dict[
         results.append(result)
 
         if result.passed:
-            summary["passed"] += 1
+            passed_count += 1
         else:
-            summary["failed"] += 1
+            failed_count += 1
 
-        summary["critical_failures"] += result.critical_failures
-        summary["total_errors"] += result.error_count
-        summary["total_warnings"] += result.warning_count
+        critical_count += result.critical_failures
+        error_count += result.error_count
+        warning_count += result.warning_count
 
         if verbose:
             for test in result.tests:
                 icon = "✅" if test.passed else ("❌" if test.severity in ("error", "critical") else "⚠️")
                 print(f"  {icon} {test.name}: {test.message}")
 
+    summary: Dict[str, Any] = {
+        "total_profiles": len(TEST_PROFILES),
+        "passed": passed_count,
+        "failed": failed_count,
+        "critical_failures": critical_count,
+        "total_errors": error_count,
+        "total_warnings": warning_count,
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+    }
+
     return results, summary
 
 
-def generate_report(results: List[ProfileTestResult], summary: Dict[str, Any], output_path: Optional[str] = None) -> Dict:
+def generate_report(results: List[ProfileTestResult], summary: Dict[str, Any], output_path: Optional[str] = None) -> Dict[str, Any]:
     """Generate QA report."""
-    report = {
-        "summary": summary,
-        "profiles": [],
-    }
+    profiles_list: List[Dict[str, Any]] = []
 
     for result in results:
-        report["profiles"].append({
+        profiles_list.append({
             "name": result.profile_name,
             "file": result.profile_file,
             "passed": result.passed,
@@ -589,10 +592,24 @@ def generate_report(results: List[ProfileTestResult], summary: Dict[str, Any], o
             ],
         })
 
+    report: Dict[str, Any] = {
+        "summary": summary,
+        "profiles": profiles_list,
+    }
+
     if output_path:
         Path(output_path).write_text(json.dumps(report, indent=2))
 
     return report
+
+
+def output_github_format(results: List[ProfileTestResult]) -> None:
+    """Output issues in GitHub Actions format."""
+    for result in results:
+        for test in result.tests:
+            if not test.passed:
+                level = "error" if test.severity in ("error", "critical") else "warning"
+                print(f"::{level} file={result.profile_file}::[{test.name}] {test.message}")
 
 
 # =============================================================================
@@ -604,49 +621,71 @@ def main():
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
     parser.add_argument("--profile", "-p", help="Test specific profile only")
     parser.add_argument("--output", "-o", help="Output JSON report path")
+    parser.add_argument("--format", "-f", choices=["text", "github", "json"], default="text",
+                       help="Output format (default: text)")
+    parser.add_argument("--fail-on-warning", action="store_true", help="Exit with error on warnings")
     args = parser.parse_args()
 
-    print("=" * 60)
-    print("PLATIN++ V5 Automated Regression QA")
-    print("=" * 60)
+    is_github_format = args.format == "github"
+
+    if not is_github_format:
+        print("=" * 60)
+        print("PLATIN++ V5 Automated Regression QA")
+        print("=" * 60)
 
     # Filter profiles if specified
     profiles_to_test = TEST_PROFILES
     if args.profile:
         profiles_to_test = [p for p in TEST_PROFILES if args.profile.lower() in p["name"].lower()]
         if not profiles_to_test:
-            print(f"❌ No profile matching '{args.profile}' found")
+            if not is_github_format:
+                print(f"❌ No profile matching '{args.profile}' found")
             sys.exit(1)
 
     # Run tests
-    results, summary = run_all_tests(verbose=args.verbose)
+    results, summary = run_all_tests(verbose=args.verbose and not is_github_format)
+
+    # Output in GitHub format if requested
+    if is_github_format:
+        output_github_format(results)
 
     # Generate report
     report = generate_report(results, summary, args.output)
 
-    # Print summary
-    print("\n" + "=" * 60)
-    print("SUMMARY")
-    print("=" * 60)
-    print(f"Total profiles tested: {summary['total_profiles']}")
-    print(f"Passed:                {summary['passed']}")
-    print(f"Failed:                {summary['failed']}")
-    print(f"Critical failures:     {summary['critical_failures']}")
-    print(f"Total errors:          {summary['total_errors']}")
-    print(f"Total warnings:        {summary['total_warnings']}")
+    if args.format == "json":
+        print(json.dumps(report, indent=2))
+    elif not is_github_format:
+        # Print summary for text format
+        print("\n" + "=" * 60)
+        print("SUMMARY")
+        print("=" * 60)
+        print(f"Total profiles tested: {summary['total_profiles']}")
+        print(f"Passed:                {summary['passed']}")
+        print(f"Failed:                {summary['failed']}")
+        print(f"Critical failures:     {summary['critical_failures']}")
+        print(f"Total errors:          {summary['total_errors']}")
+        print(f"Total warnings:        {summary['total_warnings']}")
 
     # Determine exit code
     if summary["critical_failures"] > 0:
-        print("\n❌ FAILED: Critical failures found")
+        if not is_github_format:
+            print("\n❌ FAILED: Critical failures found")
         sys.exit(1)
     elif summary["total_errors"] > 0:
-        print("\n❌ FAILED: Errors found")
+        if not is_github_format:
+            print("\n❌ FAILED: Errors found")
+        sys.exit(1)
+    elif summary["total_warnings"] > 0 and args.fail_on_warning:
+        if not is_github_format:
+            print("\n❌ FAILED: Warnings found (--fail-on-warning enabled)")
         sys.exit(1)
     elif summary["total_warnings"] > 0:
-        print("\n⚠️ PASSED with warnings")
-        sys.exit(2)
+        if not is_github_format:
+            print("\n⚠️ PASSED with warnings")
+        sys.exit(0)  # Changed: warnings should not fail CI by default
     else:
-        print("\n✅ PASSED: All tests successful")
+        if not is_github_format:
+            print("\n✅ PASSED: All tests successful")
         sys.exit(0)
 
 

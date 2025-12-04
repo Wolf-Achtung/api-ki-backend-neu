@@ -7,25 +7,61 @@
   "BRANCHE_LABEL": "Consulting & Services",
   "UNTERNEHMENSGROESSE_LABEL": "1 (Solo)",
   "HAUPTLEISTUNG": "AI readiness consulting, process diagnostics, and implementation support for small businesses and teams. Focus on workflow automation, documentation optimization, knowledge management, and practical AI integration strategies.",
-
+  "expected_validation": {
+    "funding_flow": "EN-DE",
+    "persona": "solo",
+    "guardrails": false,
+    "word_guarantee": 50,
+    "pdf_size_limit_mb": 10
+  },
   "answers": {
     "branche": "consulting",
     "unternehmensgroesse": "solo",
     "hauptleistung": "AI readiness consulting, process diagnostics, and implementation support for small businesses and teams. Focus on workflow automation, documentation optimization, knowledge management, and practical AI integration strategies.",
-    "zielgruppen": ["B2B", "consultants", "small_businesses", "startups"],
+    "zielgruppen": [
+      "B2B",
+      "consultants",
+      "small_businesses",
+      "startups"
+    ],
     "jahresumsatz": "up_to_500k",
     "it_infrastruktur": "cloud_based",
     "interne_ki_kompetenzen": "advanced",
-    "datenquellen": ["crm", "microsoft365", "notes", "customer_feedback", "online_forms"],
+    "datenquellen": [
+      "crm",
+      "microsoft365",
+      "notes",
+      "customer_feedback",
+      "online_forms"
+    ],
     "digitalisierungsgrad": "high",
     "prozesse_papierlos": "yes",
     "automatisierungsgrad": "medium",
-    "ki_einsatz": ["document_creation", "text_automation", "knowledge_transfer", "process_optimization", "customer_communication"],
+    "ki_einsatz": [
+      "document_creation",
+      "text_automation",
+      "knowledge_transfer",
+      "process_optimization",
+      "customer_communication"
+    ],
     "ki_kompetenz": "high",
-    "ki_ziele": ["efficiency", "acceleration", "standardization", "quality", "scaling"],
+    "ki_ziele": [
+      "efficiency",
+      "acceleration",
+      "standardization",
+      "quality",
+      "scaling"
+    ],
     "ki_guardrails": "",
     "ki_projekte": "Developed AI-powered questionnaire analysis systems, automated consulting templates, chat-based evaluation tools, and a knowledge hub for client meetings. Additional projects include AI-assisted client segmentation and a modular assessment library.",
-    "anwendungsfaelle": ["automatic_documentation", "analysis_automation", "customer_communication", "process_analysis", "text_automation", "content_production"],
+    "anwendungsfaelle": [
+      "automatic_documentation",
+      "analysis_automation",
+      "customer_communication",
+      "process_analysis",
+      "text_automation",
+      "content_production"
+    ],
     "zeitersparnis_prioritaet": "The biggest manual effort lies in individual client data evaluation, creating customized recommendations, compliance research, and documenting workshops, onboarding sessions, and analysis results. Repetitive text and content tasks also consume disproportionate time.",
     "pilot_bereich": "consulting",
     "geschaeftsmodell_evolution": "Building a scalable AI-powered analysis and consulting system with modular service packages, automation of production steps, introduction of self-service assessment tools, and expansion into AI microservices for SMEs.",
@@ -36,9 +72,25 @@
     "governance_richtlinien": "none",
     "change_management": "no",
     "zeitbudget": "10h_week",
-    "vorhandene_tools": ["microsoft365", "notion", "chatgpt", "browser_plugins", "loom", "canva", "calendly"],
-    "regulierte_branche": ["no_regulation"],
-    "trainings_interessen": ["prompting_expert", "efficiency", "content_production", "compliance", "automation"],
+    "vorhandene_tools": [
+      "microsoft365",
+      "notion",
+      "chatgpt",
+      "browser_plugins",
+      "loom",
+      "canva",
+      "calendly"
+    ],
+    "regulierte_branche": [
+      "no_regulation"
+    ],
+    "trainings_interessen": [
+      "prompting_expert",
+      "efficiency",
+      "content_production",
+      "compliance",
+      "automation"
+    ],
     "vision_prioritaet": "high",
     "datenschutzbeauftragter": "not_required",
     "technische_massnahmen": "standardized",
@@ -46,7 +98,12 @@
     "meldewege": "none",
     "loeschregeln": "simple",
     "ai_act_kenntnis": "advanced",
-    "ki_hemmnisse": ["client_knowledge", "time", "standardization", "documentation"],
+    "ki_hemmnisse": [
+      "client_knowledge",
+      "time",
+      "standardization",
+      "documentation"
+    ],
     "erfahrung_beratung": "high",
     "investitionsbudget": "up_to_20k",
     "marktposition": "specialized",
