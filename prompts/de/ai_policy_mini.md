@@ -1,55 +1,106 @@
-# AI Mini-Policy – Kompakte Regeln für den KI-Alltag
+Developer:
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: ai_policy_mini -->
+<!-- VERSION: v1.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}} -->
+<!-- TOKEN-BUDGET: 700 (solo:0.8x=560, team:1.0x=700, kmu:1.15x=805) -->
+<!--
+ZIEL: Kompakte, sofort anwendbare KI-Nutzungsregeln ohne bürokratischen Overhead.
 
-<!-- persona:solo -->
-<!-- Solo: 5 einfache Regeln, sofort anwendbar, keine Bürokratie -->
-<!-- persona:team -->
-<!-- Team: Klare Rollen (Ersteller, Prüfer), Übergabe-Regeln -->
-<!-- persona:kmu -->
-<!-- KMU: Strukturierte Policy, Verantwortlichkeiten, Dokumentationspflichten -->
+PFLICHTSTRUKTUR (7 Grundregeln):
+1. Datennutzung (was darf KI, was nicht)
+2. Review-Pflicht (menschliche Prüfung)
+3. Transparenz (Kennzeichnung)
+4. Keine automatisierten Entscheidungen
+5. Tool-Freigabe
+6. Lernkultur
+7. Aktualisierung
 
-## Grundprinzip
+PERSONA-VARIATIONEN (COMPANY_SIZE):
+- solo: 5 einfache Regeln, sofort anwendbar, keine Bürokratie
+- team: Klare Rollen (Ersteller, Prüfer), Übergabe-Regeln
+- kmu: Strukturierte Policy, Verantwortlichkeiten, Dokumentationspflichten
 
-Diese Mini-Policy definiert klare Spielregeln für den täglichen KI-Einsatz – ohne bürokratischen Overhead.
+SIZE-AWARE VERANTWORTLICHKEITEN:
+- solo: Selbstkontrolle, einfache Checkliste
+- team: Team-Lead prüft, Peer-Review etabliert
+- kmu: Compliance-Verantwortlicher, dokumentierte Freigabeprozesse
 
----
+ANTI-REDUNDANZ:
+- Governance-Grundregeln HIER, nicht in Strategie/Governance Sektion
+- Keine Überschneidung mit AI Act Summary (dort rechtliche Details)
+- Ergänzt Risks-Sektion (dort Risiken, hier Regeln)
 
-## Die 7 Grundregeln
+STIL:
+- Textumfang: 120-180 Wörter
+- Praxisnah, sofort umsetzbar
+- Keine Rechtsberatung, sondern pragmatische Leitplanken
 
-### 1. Datennutzung
-**Was darf KI?** Interne, nicht-personenbezogene Daten verarbeiten.
-**Was darf KI nicht?** Kundendaten, Personaldaten oder vertrauliche Dokumente ohne Freigabe nutzen.
+Nicht verwenden:
+- Keine Platzhalter oder Template-Marker
+- Keine juristischen Formulierungen
+- Keine Wiederholung von Guardrails aus der Risks-Sektion
+-->
 
-### 2. Review-Pflicht
-**Regel:** Jede KI-Ausgabe wird vor Weitergabe an Dritte von einem Menschen geprüft.
-**Ausnahme:** Rein interne Entwürfe zur eigenen Weiterbearbeitung.
+<section class="section ai-policy-mini">
+  <h2>AI Mini-Policy: 7 Grundregeln</h2>
 
-### 3. Transparenz
-**Regel:** Bei kundenrelevanten Inhalten kennzeichnen, wenn KI unterstützt hat.
-**Beispiel:** „Erstellt mit KI-Unterstützung, geprüft von [Name]."
+  <p>
+    Kompakte Spielregeln für den täglichen KI-Einsatz bei
+    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> in <strong>{{BRANCHE_LABEL}}</strong>.
+  </p>
 
-### 4. Keine automatisierten Entscheidungen
-**Regel:** KI liefert Vorschläge – Menschen entscheiden.
-**Gilt für:** Personalthemen, Verträge, Finanzen, Kundenzusagen.
+  <div class="policy-rules">
+    <div class="rule">
+      <h4>1. Datennutzung</h4>
+      <p><strong>Erlaubt:</strong> Interne, nicht-personenbezogene Daten.</p>
+      <p><strong>Nicht erlaubt:</strong> Kundendaten, Personaldaten oder vertrauliche Dokumente ohne Freigabe.</p>
+    </div>
 
-### 5. Tool-Freigabe
-**Regel:** Nur freigegebene KI-Tools nutzen (z.B. ChatGPT Enterprise, Claude, interne Systeme).
-**Verboten:** Unbekannte Tools mit Firmendaten füttern.
+    <div class="rule">
+      <h4>2. Review-Pflicht</h4>
+      <p>Jede KI-Ausgabe wird vor Weitergabe an Dritte von einem Menschen geprüft.</p>
+    </div>
 
-### 6. Lernkultur
-**Regel:** Fehler dokumentieren, daraus lernen, Prozesse anpassen.
-**Keine Schuldzuweisungen** – KI-Nutzung ist Lernprozess.
+    <div class="rule">
+      <h4>3. Transparenz</h4>
+      <p>Bei kundenrelevanten Inhalten kennzeichnen, wenn KI unterstützt hat.</p>
+    </div>
 
-### 7. Aktualisierung
-**Regel:** Diese Policy wird quartalsweise überprüft und bei Bedarf angepasst.
+    <div class="rule">
+      <h4>4. Keine automatisierten Entscheidungen</h4>
+      <p>KI liefert Vorschläge – Menschen entscheiden. Gilt für: Personalthemen, Verträge, Finanzen.</p>
+    </div>
 
----
+    <div class="rule">
+      <h4>5. Tool-Freigabe</h4>
+      <p>Nur freigegebene KI-Tools nutzen. Keine unbekannten Tools mit Firmendaten füttern.</p>
+    </div>
 
-## Schnell-Check vor jedem KI-Einsatz
+    <div class="rule">
+      <h4>6. Lernkultur</h4>
+      <p>Fehler dokumentieren, daraus lernen, Prozesse anpassen. Keine Schuldzuweisungen.</p>
+    </div>
 
-- [ ] Daten geeignet? (keine sensiblen Personendaten)
-- [ ] Tool freigegeben?
-- [ ] Ergebnis geprüft?
-- [ ] Transparenz gewährleistet?
+    <div class="rule">
+      <h4>7. Aktualisierung</h4>
+      <p>Diese Policy wird quartalsweise überprüft und bei Bedarf angepasst.</p>
+    </div>
+  </div>
 
----
-*Diese Mini-Policy ersetzt keine Rechtsberatung. Bei Unsicherheiten: Rücksprache halten.*
+  <div class="quick-check">
+    <h4>Schnell-Check vor jedem KI-Einsatz</h4>
+    <ul>
+      <li>Daten geeignet? (keine sensiblen Personendaten)</li>
+      <li>Tool freigegeben?</li>
+      <li>Ergebnis geprüft?</li>
+      <li>Transparenz gewährleistet?</li>
+    </ul>
+  </div>
+
+  <p class="small muted">
+    Diese Mini-Policy ersetzt keine Rechtsberatung. Bei Unsicherheiten: Rücksprache halten.
+  </p>
+</section>

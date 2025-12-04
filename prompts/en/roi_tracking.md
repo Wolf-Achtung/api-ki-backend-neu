@@ -1,39 +1,109 @@
-# ROI Tracking – Monthly AI Impact Measurement
+Developer:
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: roi_tracking -->
+<!-- VERSION: v1.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/sme -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}} -->
+<!-- TOKEN-BUDGET: 600 (solo:0.8x=480, team:1.0x=600, sme:1.15x=690) -->
+<!--
+GOAL: Compact ROI tracking framework for monthly AI project success measurement.
 
-<!-- persona:solo -->
-<!-- Solo: Compact self-monitoring, 3-4 KPIs, no complex dashboards -->
-<!-- persona:team -->
-<!-- Team: Collaborative progress tracking, role-based accountability -->
-<!-- persona:kmu -->
-<!-- SME: Structured reporting, cross-departmental KPIs, management-ready -->
+REQUIRED STRUCTURE (3 areas):
+1. Define KPIs (3-5 measurable indicators)
+2. Tracking method (how to measure, who measures, how often)
+3. Review cycle (when to evaluate, how to adjust)
 
-## Purpose
+PERSONA VARIATIONS (COMPANY_SIZE):
+- solo: 2-3 simple KPIs (time savings, cost savings), self-tracking, no dashboards
+- team: 3-4 KPIs including quality improvement, monthly team review
+- sme: 4-5 KPIs including scaling potential, structured KPI review with project lead
 
-This tracking helps you measure the tangible benefits of your AI initiatives on a monthly basis. Focus: Time savings, cost reduction, quality improvement.
+SIZE-AWARE RESPONSIBILITIES:
+- solo: "yourself", "owner (you)"
+- team: "project lead", "team lead"
+- sme: "project manager", "controlling", "KPI owner"
 
-## Recommended KPIs
+ANTI-REDUNDANCY:
+- ROI Tracking complements Business Case, doesn't repeat CAPEX/OPEX/Payback numbers
+- Focus on ONGOING measurement, not initial calculation
+- No overlap with Next Actions (concrete 30-day actions there)
 
-| KPI | Description | Measurement Method | Target |
-|-----|-------------|-------------------|--------|
-| **Time Saved (h/month)** | Work hours saved through AI automation | Before-after comparison | +10-20% |
-| **Error Rate** | Reduction in manual errors | Sample checks | -30% |
-| **Output Increase** | More results with same effort | Quantity measurement | +15-25% |
-| **Cost Savings (€/$)** | Direct savings from automation | Cost comparison | Individual |
+STYLE:
+- Text length: 100-150 words
+- Concrete and actionable
+- No abstract management jargon
 
-## Tracking Template
+Do not use:
+- No placeholders or template markers
+- No repetition of Business Case numbers
+- No unrealistic KPIs for company size
+-->
 
-| Month | Time Saved | Error Rate | Output | Costs | Trend | Comments |
-|-------|------------|------------|--------|-------|-------|----------|
-| M1 | ___ h | ___% | ___ | ___€ | ↑↓→ | |
-| M2 | ___ h | ___% | ___ | ___€ | ↑↓→ | |
-| M3 | ___ h | ___% | ___ | ___€ | ↑↓→ | |
+<section class="section roi-tracking">
+  <h2>ROI Tracking: Monthly Success Measurement</h2>
 
-## Evaluation Guidelines
+  <p>
+    Structured tracking ensures project success for
+    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> in <strong>{{BRANCHE_LABEL}}</strong>.
+  </p>
 
-- **Fill in monthly** – Consistency matters more than perfection
-- **Watch trends** – Individual values fluctuate, trends count
-- **Document learnings** – What works? What doesn't?
-- **Derive adjustments** – Optimize AI usage iteratively
+  <div class="tracking-framework">
+    <h4>1. Define Core KPIs</h4>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>KPI</th>
+          <th>Description</th>
+          <th>Measurement</th>
+          <th>Target</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Time Saved</strong></td>
+          <td>Hours per month through AI automation</td>
+          <td>Before-after comparison</td>
+          <td>+10-20%</td>
+        </tr>
+        <tr>
+          <td><strong>Error Rate</strong></td>
+          <td>Reduction in manual errors</td>
+          <td>Sample checks</td>
+          <td>-30%</td>
+        </tr>
+        <tr>
+          <td><strong>Output Increase</strong></td>
+          <td>More results with same effort</td>
+          <td>Quantity measurement</td>
+          <td>+15-25%</td>
+        </tr>
+        <tr>
+          <td><strong>Cost Savings</strong></td>
+          <td>Direct savings from automation</td>
+          <td>Cost comparison</td>
+          <td>Individual</td>
+        </tr>
+      </tbody>
+    </table>
 
----
-*Tip: Start with 2-3 KPIs and expand gradually.*
+    <h4>2. Tracking Method</h4>
+    <ul>
+      <li><strong>Tool:</strong> Simple Excel/Google Sheet or project management tool</li>
+      <li><strong>Frequency:</strong> Weekly brief entry, monthly evaluation</li>
+      <li><strong>Responsible:</strong> Project lead or management</li>
+    </ul>
+
+    <h4>3. Review Cycle</h4>
+    <ul>
+      <li><strong>Monthly:</strong> KPI evaluation, trend analysis</li>
+      <li><strong>Quarterly:</strong> Goal adjustment, lessons learned</li>
+      <li><strong>Decision:</strong> Scale, optimize, or pivot</li>
+    </ul>
+  </div>
+
+  <p class="small muted">
+    Tip: Start with 2-3 KPIs and expand gradually.
+    Consistency matters more than perfection.
+  </p>
+</section>

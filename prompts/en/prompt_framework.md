@@ -1,82 +1,129 @@
-# Prompt Framework – 5 Steps to the Perfect Prompt
+Developer:
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: prompt_framework -->
+<!-- VERSION: v1.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/sme -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}} -->
+<!-- TOKEN-BUDGET: 700 (solo:0.8x=560, team:1.0x=700, sme:1.15x=805) -->
+<!--
+GOAL: Compact 5-step framework for effective AI prompts.
 
-<!-- persona:solo -->
-<!-- Solo: Quickly applicable, 1 example is enough, no theory -->
-<!-- persona:team -->
-<!-- Team: Build shared prompt library, share best practices -->
-<!-- persona:kmu -->
-<!-- SME: Standardized prompts for recurring tasks, quality assurance -->
+REQUIRED STRUCTURE:
+1. The 5 steps (Context, Role, Goal, Constraints, Format)
+2. Complete example
+3. Troubleshooting table
+4. Variable usage
 
-## The 5-Step Framework
+PERSONA VARIATIONS (COMPANY_SIZE):
+- solo: Quickly applicable, 1 example is enough, no theory
+- team: Build shared prompt library, share best practices
+- sme: Standardized prompts for recurring tasks, quality assurance
 
-Every good prompt contains these five elements:
+SIZE-AWARE RESPONSIBILITIES:
+- solo: Own prompts, learning-by-doing
+- team: Prompt sharing in team, peer review
+- sme: Central prompt library, quality control
 
-### 1. Context
-*Background information for the AI*
+ANTI-REDUNDANCY:
+- Prompt technique HERE, not in Skillplan (general skill building there)
+- Focus on STRUCTURE, not specific use cases
+- No overlap with Tools (tool selection there, prompt technique here)
 
-> "You work for a mid-sized consulting company in the DACH region."
+STYLE:
+- Text length: 150-200 words
+- Practical, with concrete example
+- No theoretical discussions
 
-### 2. Role
-*What expertise should the AI assume?*
+Do not use:
+- No placeholders or template markers
+- No repetition of Skillplan content
+- No tool-specific instructions
+-->
 
-> "Act as an experienced business consultant focused on process optimization."
+<section class="section prompt-framework">
+  <h2>Prompt Framework: 5 Steps to the Perfect Prompt</h2>
 
-### 3. Goal
-*What should be achieved?*
+  <p>
+    Effective prompts for <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>
+    in <strong>{{BRANCHE_LABEL}}</strong>.
+  </p>
 
-> "Create a summary of the key insights from the meeting notes."
+  <div class="framework-steps">
+    <h4>The 5 Elements of a Good Prompt</h4>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Element</th>
+          <th>Function</th>
+          <th>Example</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><strong>Context</strong></td>
+          <td>Background for the AI</td>
+          <td>"You work for a consulting company."</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><strong>Role</strong></td>
+          <td>AI expertise</td>
+          <td>"Act as an experienced process consultant."</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><strong>Goal</strong></td>
+          <td>What to achieve</td>
+          <td>"Create a summary of the meeting results."</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><strong>Constraints</strong></td>
+          <td>Limitations</td>
+          <td>"Max. 5 points, no jargon."</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><strong>Format</strong></td>
+          <td>Output form</td>
+          <td>"Numbered list with priority."</td>
+        </tr>
+      </tbody>
+    </table>
 
-### 4. Constraints
-*Limitations and quality criteria*
+    <h4>Troubleshooting</h4>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Problem</th>
+          <th>Solution</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Result too vague</td>
+          <td>More context + specific constraints</td>
+        </tr>
+        <tr>
+          <td>Result too long</td>
+          <td>Format specification (e.g., "max. 200 words")</td>
+        </tr>
+        <tr>
+          <td>Wrong tone</td>
+          <td>Define role (e.g., "formal", "casual")</td>
+        </tr>
+        <tr>
+          <td>Unsuitable examples</td>
+          <td>Explicitly mention industry/context</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
-> "Maximum 5 bullet points. No jargon without explanation. Focus on actionable items."
-
-### 5. Format
-*How should the output look?*
-
-> "Output as a numbered list with priority indication (high/medium/low)."
-
----
-
-## Complete Example Prompt
-
-```
-Context: You support a 20-person team in implementing AI tools.
-
-Role: You are an AI trainer with experience in change management.
-
-Goal: Create a training plan for the first 4 weeks.
-
-Constraints:
-- Max. 2 hours of training per week
-- Focus on practical exercises
-- No prior knowledge required
-
-Format: Table with Week, Topic, Duration, Learning Objective
-```
-
----
-
-## Tips for Better Prompts
-
-| Problem | Solution |
-|---------|----------|
-| Result too vague | More context + specific constraints |
-| Result too long | Format specification (e.g., "max. 200 words") |
-| Wrong tone | Define role (e.g., "formal", "casual") |
-| Unsuitable examples | Explicitly mention industry/context |
-
----
-
-## Using Variables
-
-For recurring prompts: Build in placeholders.
-
-```
-Create a [DOCUMENT_TYPE] for [TARGET_AUDIENCE]
-on the topic [TOPIC].
-Length: [LENGTH]. Tone: [TONE].
-```
-
----
-*Tip: Improve prompts iteratively. First version → Review result → Adjust prompt.*
+  <p class="small muted">
+    Tip: Improve prompts iteratively. First version → Review result → Adjust prompt.
+  </p>
+</section>
