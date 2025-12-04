@@ -18,7 +18,7 @@ PFLICHTSTRUKTUR (pro Gamechanger):
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: Automatisierung, persönliche Entlastung, skalierbare Vorlagen
-        VERBOTEN: "Abteilungen", "Teams", "Bereiche"
+        Nicht verwenden: "Abteilungen", "Teams", "Bereiche"
 - team: arbeitsteilige Workflows, Rollen, einfache Governance
 - kmu: skalierbare Prozesse, klare Verantwortlichkeiten, Pilotbereiche
 

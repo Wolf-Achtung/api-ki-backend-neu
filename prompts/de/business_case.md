@@ -37,7 +37,7 @@ PERSONA-VARIATIONEN (COMPANY_SIZE):
 
   <p>
     Für ein Unternehmen in der Branche <strong>{{BRANCHE_LABEL}}</strong> mit der Größe
-    <strong>{{COMPANY_SIZE}}</strong> ist der Prozess <strong>{{HAUPTLEISTUNG}}</strong>
+    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> ist der Prozess <strong>{{HAUPTLEISTUNG}}</strong>
     ein zentraler Hebel der Wertschöpfung. Der folgende Business Case zeigt auf,
     welche finanziellen Wirkungen eine systematische Nutzung von KI realistisch entfalten kann.
   </p>
@@ -68,7 +68,7 @@ PERSONA-VARIATIONEN (COMPANY_SIZE):
 
   <h3>Einordnung nach Unternehmensgröße</h3>
   <p>
-    Für <strong>{{COMPANY_SIZE}}</strong> gilt: Je stärker der Prozess
+    Für Unternehmen der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> gilt: Je stärker der Prozess
     <strong>{{HAUPTLEISTUNG}}</strong> auf wiederkehrenden, standardisierbaren Aufgaben beruht,
     desto schneller wirkt sich die Investition aus. Bei konsequenter Nutzung verkürzt sich die
     Amortisation spürbar; bei geringerer Auslastung verlängert sie sich entsprechend.

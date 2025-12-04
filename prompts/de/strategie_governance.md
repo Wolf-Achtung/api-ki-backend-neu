@@ -13,21 +13,21 @@ Ergebnis = 10–14 Sätze + 1 strukturierte Liste.
 PERSONA-VARIATIONEN (COMPANY_SIZE) – STRIKT EINHALTEN:
 
 SOLO:
-  ✅ ERLAUBT: "Checkliste", "Minimale Regeln", "Ein-Personen-Standard",
-              "Dokumentation light", "persönliche Routine", "eigene Prüfpunkte"
-  ❌ VERBOTEN: "Organisationsentwicklung", "Verantwortlichkeitsmatrix",
-              "Governance Framework", "Rollenmodell", "Gremium", "Board",
-              "Steuerungskreis", "Abteilung", "Team aufbauen", "Mitarbeiter"
+  Empfohlen: "Checkliste", "Minimale Regeln", "Ein-Personen-Standard",
+             "Dokumentation light", "persönliche Routine", "eigene Prüfpunkte"
+  Nicht verwenden: "Organisationsentwicklung", "Verantwortlichkeitsmatrix",
+                   "Governance Framework", "Rollenmodell", "Gremium", "Board",
+                   "Steuerungskreis", "Abteilung", "Team aufbauen", "Mitarbeiter"
 
 TEAM:
-  ✅ ERLAUBT: "Teamabsprache", "gemeinsame Regeln", "KI-Koordinator",
-              "kurze Review-Runde", "geteilte Verantwortung"
-  ❌ VERBOTEN: "Governance Board", "Matrix-Organisation", "Division"
+  Empfohlen: "Teamabsprache", "gemeinsame Regeln", "KI-Koordinator",
+             "kurze Review-Runde", "geteilte Verantwortung"
+  Nicht verwenden: "Governance Board", "Matrix-Organisation", "Division"
 
 KMU:
-  ✅ ERLAUBT: "Fachbereichsverantwortliche", "abgestimmte Prozesse",
-              "bereichsübergreifende Standards", "Governance-Regeln"
-  ❌ VERBOTEN: Konzernjargon ("Business Unit", "Division", "C-Level")
+  Empfohlen: "Fachbereichsverantwortliche", "abgestimmte Prozesse",
+             "bereichsübergreifende Standards", "Governance-Regeln"
+  Nicht verwenden: Konzernjargon ("Business Unit", "Division", "C-Level")
 
 ANTI-REDUNDANZ:
 - Governance HIER vollständig behandeln
