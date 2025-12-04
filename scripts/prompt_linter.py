@@ -236,7 +236,7 @@ def check_forbidden_terms(content: str, file_path: str) -> List[LintIssue]:
 
 def check_format_compliance(content: str, file_path: str) -> List[LintIssue]:
     """Check for format issues (Markdown remnants in HTML prompts)."""
-    issues = []
+    issues: List[LintIssue] = []
     lines = content.split("\n")
 
     # Check if this is an HTML-output prompt
@@ -394,7 +394,7 @@ def lint_all_prompts(verbose: bool = False) -> Tuple[List[LintResult], int, int]
 
 def generate_report(results: List[LintResult], output_path: Optional[str] = None) -> Dict:
     """Generate a JSON report of lint results."""
-    report = {
+    report: Dict[str, object] = {
         "summary": {
             "total_files": len(results),
             "files_with_errors": sum(1 for r in results if r.has_errors),
@@ -419,9 +419,10 @@ def generate_report(results: List[LintResult], output_path: Optional[str] = None
     report["by_category"] = categories
 
     # File details
+    files_list: List[Dict] = []
     for result in results:
         if result.issues:
-            report["files"].append({
+            files_list.append({
                 "file": result.file,
                 "errors": result.error_count,
                 "warnings": result.warning_count,
@@ -436,11 +437,21 @@ def generate_report(results: List[LintResult], output_path: Optional[str] = None
                     for i in result.issues
                 ],
             })
+    report["files"] = files_list
 
     if output_path:
         Path(output_path).write_text(json.dumps(report, indent=2))
 
     return report
+
+
+def output_github_format(results: List[LintResult]) -> None:
+    """Output issues in GitHub Actions format."""
+    for result in results:
+        for issue in result.issues:
+            level = "error" if issue.severity == "error" else "warning"
+            # GitHub Actions annotation format
+            print(f"::{level} file={result.file},line={issue.line}::[{issue.category}] {issue.message}")
 
 
 # =============================================================================
@@ -453,44 +464,64 @@ def main():
     parser.add_argument("--fix", action="store_true", help="Attempt to fix issues (not implemented)")
     parser.add_argument("--output", "-o", help="Output JSON report path")
     parser.add_argument("--warnings-as-errors", "-W", action="store_true", help="Treat warnings as errors")
+    parser.add_argument("--format", "-f", choices=["text", "github", "json"], default="text",
+                       help="Output format (default: text)")
     args = parser.parse_args()
 
-    print("=" * 60)
-    print("PLATIN++ V5 Prompt Linter")
-    print("=" * 60)
+    is_github_format = args.format == "github"
 
-    results, total_errors, total_warnings = lint_all_prompts(verbose=args.verbose)
+    if not is_github_format:
+        print("=" * 60)
+        print("PLATIN++ V5 Prompt Linter")
+        print("=" * 60)
+
+    results, total_errors, total_warnings = lint_all_prompts(verbose=args.verbose and not is_github_format)
+
+    # Output in GitHub Actions format if requested
+    if is_github_format:
+        output_github_format(results)
 
     # Generate report
     report = generate_report(results, args.output)
 
-    # Print summary
-    print("\n" + "=" * 60)
-    print("SUMMARY")
-    print("=" * 60)
-    print(f"Total files scanned: {report['summary']['total_files']}")
-    print(f"Files with errors:   {report['summary']['files_with_errors']}")
-    print(f"Files with warnings: {report['summary']['files_with_warnings']}")
-    print(f"Total errors:        {report['summary']['total_errors']}")
-    print(f"Total warnings:      {report['summary']['total_warnings']}")
+    if args.format == "json":
+        print(json.dumps(report, indent=2))
+    elif not is_github_format:
+        # Print summary for text format
+        print("\n" + "=" * 60)
+        print("SUMMARY")
+        print("=" * 60)
+        summary = report['summary']
+        if isinstance(summary, dict):
+            print(f"Total files scanned: {summary.get('total_files', 0)}")
+            print(f"Files with errors:   {summary.get('files_with_errors', 0)}")
+            print(f"Files with warnings: {summary.get('files_with_warnings', 0)}")
+            print(f"Total errors:        {summary.get('total_errors', 0)}")
+            print(f"Total warnings:      {summary.get('total_warnings', 0)}")
 
-    if report["by_category"]:
-        print("\nBy Category:")
-        for cat, counts in sorted(report["by_category"].items()):
-            print(f"  {cat}: {counts['errors']} errors, {counts['warnings']} warnings")
+        by_category = report.get("by_category")
+        if by_category and isinstance(by_category, dict):
+            print("\nBy Category:")
+            for cat, counts in sorted(by_category.items()):
+                if isinstance(counts, dict):
+                    print(f"  {cat}: {counts.get('errors', 0)} errors, {counts.get('warnings', 0)} warnings")
 
     # Determine exit code
     if total_errors > 0:
-        print("\n❌ FAILED: Errors found")
+        if not is_github_format:
+            print("\n❌ FAILED: Errors found")
         sys.exit(1)
     elif args.warnings_as_errors and total_warnings > 0:
-        print("\n❌ FAILED: Warnings treated as errors")
+        if not is_github_format:
+            print("\n❌ FAILED: Warnings treated as errors")
         sys.exit(1)
     elif total_warnings > 0:
-        print("\n⚠️ PASSED with warnings")
-        sys.exit(2)
+        if not is_github_format:
+            print("\n⚠️ PASSED with warnings")
+        sys.exit(0)  # Changed: warnings should not fail CI by default
     else:
-        print("\n✅ PASSED: All prompts compliant")
+        if not is_github_format:
+            print("\n✅ PASSED: All prompts compliant")
         sys.exit(0)
 
 
