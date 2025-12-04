@@ -12,7 +12,7 @@ ZIEL: Klar strukturierte Tool-Empfehlungssektion ("KI-Stack") für {{BRANCHE_LAB
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: 3–5 Tools, einfache Bedienung, geringer Integrationsaufwand
-        VERBOTEN: "Abteilung", "Projektteam", "Bereich"
+        Nicht verwenden: "Abteilung", "Projektteam", "Bereich"
 - team: gemeinsamer Workspace, Kollaboration, Rechte-/Rollenkonzepte
 - kmu: definierter Stack mit Governance, Rollen, Monitoring, fachbereichsspezifisch
 

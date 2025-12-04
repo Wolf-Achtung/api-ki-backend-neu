@@ -27,7 +27,7 @@ ANTI-REDUNDANZ (STRIKT!):
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: persönliche Routinen, Self-Review, eigene Dokumentation
-        VERBOTEN: Team, Abteilung, Mitarbeiter
+        Nicht verwenden: Team, Abteilung, Mitarbeiter
 - team: KI-Owner, gemeinsame Standards, Review-Runden
 - kmu: Fachbereiche, Pilotbereiche, Governance, Rollout
 

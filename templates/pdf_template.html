@@ -34,26 +34,28 @@
             --step-2: 20px;
             --lh-body: 1.5;
             --measure: 66ch;
-            /* Print Color System (Light Mode) */
+            /* ================================================
+               PLATIN++ Light Mode Color System (Boardroom-ready)
+               ================================================ */
             --ink: #111111;
             --paper: #ffffff;
             --muted: #555555;
             --rule: #dddddd;
             /* Typografie-Optimierungen */
             hanging-punctuation: first last;
-            /* Farb-Token – Basis */
-            --bg-page: #0B1120;
-            --bg-body: #020617;
-            --bg-content: #0F172A;
-            --surface-elevated: #020617;
-            --surface-soft: #020617;
-            --surface-card: #020617;
-            --text-strong: #E5E7EB;
-            --text-normal: #E5E7EB;
-            --text-muted: #9CA3AF;
-            --text-soft: #6B7280;
-            --border-subtle: rgba(148, 163, 184, 0.55);
-            --border-strong: rgba(248, 250, 252, 0.45);
+            /* Farb-Token – Light Mode Basis */
+            --bg-page: #ffffff;
+            --bg-body: #ffffff;
+            --bg-content: #f8fafc;
+            --surface-elevated: #ffffff;
+            --surface-soft: #f1f5f9;
+            --surface-card: #ffffff;
+            --text-strong: #0f172a;
+            --text-normal: #1e293b;
+            --text-muted: #64748b;
+            --text-soft: #94a3b8;
+            --border-subtle: rgba(100, 116, 139, 0.2);
+            --border-strong: rgba(15, 23, 42, 0.15);
             --primary-50: #EFF6FF;
             --primary-100: #DBEAFE;
             --primary-200: #BFDBFE;
@@ -114,14 +116,15 @@
             --slate-700: #334155;
             --slate-800: #1E293B;
             --slate-900: #0F172A;
-            --muted-50: #020617;
-            --muted-100: #020617;
-            --muted-200: #1E293B;
-            --muted-300: #4B5563;
-            --muted-400: #6B7280;
-            --muted-500: #6B7280;
-            --muted-600: #4B5563;
-            --muted-700: #374151;
+            /* Light mode muted scale */
+            --muted-50: #f8fafc;
+            --muted-100: #f1f5f9;
+            --muted-200: #e2e8f0;
+            --muted-300: #cbd5e1;
+            --muted-400: #94a3b8;
+            --muted-500: #64748b;
+            --muted-600: #475569;
+            --muted-700: #334155;
             --accent-iris: #6366F1;
             --accent-cyan: #06B6D4;
             --accent-pink: #EC4899;
@@ -142,7 +145,8 @@
             font-size: var(--step-base);
             line-height: 1.5;
             color: var(--text-normal);
-            background-color: #020617;
+            background: #ffffff !important;
+            background-color: #ffffff !important;
             /* Tabellarische Ziffern für saubere Zahlenkolonnen */
             font-feature-settings: "tnum" 1, "liga" 1;
             font-variant-numeric: tabular-nums;
@@ -156,17 +160,15 @@
             max-width: 780px;
             margin: 0 auto;
             padding: 20px 0 32px;
-            background: radial-gradient(circle at top, #172554 0, #020617 45%, #000 100%);
-            box-shadow: var(--shadow-soft);
+            background: #ffffff;
+            box-shadow: none;
         }
         .content {
-            background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.06), transparent 55%),
-                        radial-gradient(circle at top right, rgba(129, 140, 248, 0.09), transparent 52%),
-                        linear-gradient(165deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.99));
-            border-radius: 22px;
+            background: #ffffff;
+            border-radius: 12px;
             padding: 24px 26px 26px;
-            border: 1px solid rgba(148, 163, 184, 0.5);
-            box-shadow: var(--shadow-card);
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
             position: relative;
             overflow: hidden;
         }
@@ -174,10 +176,8 @@
             content: "";
             position: absolute;
             inset: -120px;
-            background:
-              radial-gradient(circle at 7% 0%, rgba(56, 189, 248, 0.10) 0, transparent 48%),
-              radial-gradient(circle at 95% 0%, rgba(129, 140, 248, 0.18) 0, transparent 52%);
-            opacity: 0.9;
+            background: transparent;
+            opacity: 0;
             pointer-events: none;
         }
         .content-inner {
@@ -185,7 +185,7 @@
             z-index: 1;
         }
         h1, h2, h3, h4 {
-            color: var(--text-strong);
+            color: #0f172a;
             margin-top: 0;
             line-height: 1.2;
             break-after: avoid;
@@ -272,40 +272,43 @@
             padding: 3px 8px;
             border-radius: 999px;
             font-size: 8pt;
-            border: 1px solid rgba(148, 163, 184, 0.7);
-            background: radial-gradient(circle at top, rgba(148, 163, 184, 0.22), rgba(15, 23, 42, 0.95));
-            color: var(--slate-100);
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #334155;
         }
         .tag-dot {
             width: 7px;
             height: 7px;
             border-radius: 999px;
-            background: radial-gradient(circle at 30% 30%, #22C55E, #16A34A 60%, #052E16 100%);
-            box-shadow: 0 0 8px rgba(34, 197, 94, 0.9);
+            background: #22C55E;
+            box-shadow: 0 0 4px rgba(34, 197, 94, 0.4);
         }
         .tag-warning {
-            border-color: rgba(251, 191, 36, 0.75);
-            background: radial-gradient(circle at top, rgba(251, 191, 36, 0.22), rgba(15, 23, 42, 0.96));
+            border-color: #fcd34d;
+            background: #fef9c3;
+            color: #854d0e;
         }
         .tag-warning .tag-dot {
-            background: radial-gradient(circle at 30% 30%, #F97316, #EA580C 60%, #431407 100%);
-            box-shadow: 0 0 8px rgba(249, 115, 22, 0.9);
+            background: #F97316;
+            box-shadow: 0 0 4px rgba(249, 115, 22, 0.5);
         }
         .tag-critical {
-            border-color: rgba(248, 113, 113, 0.85);
-            background: radial-gradient(circle at top, rgba(248, 113, 113, 0.24), rgba(15, 23, 42, 0.98));
+            border-color: #fca5a5;
+            background: #fef2f2;
+            color: #991b1b;
         }
         .tag-critical .tag-dot {
-            background: radial-gradient(circle at 30% 30%, #F97373, #DC2626 60%, #450A0A 100%);
-            box-shadow: 0 0 8px rgba(248, 113, 113, 0.95);
+            background: #DC2626;
+            box-shadow: 0 0 4px rgba(248, 113, 113, 0.5);
         }
         .tag-safe {
-            border-color: rgba(34, 197, 94, 0.85);
-            background: radial-gradient(circle at top, rgba(34, 197, 94, 0.26), rgba(15, 23, 42, 0.98));
+            border-color: #86efac;
+            background: #f0fdf4;
+            color: #166534;
         }
         .tag-safe .tag-dot {
-            background: radial-gradient(circle at 30% 30%, #4ADE80, #16A34A 60%, #052E16 100%);
-            box-shadow: 0 0 8px rgba(52, 211, 153, 0.96);
+            background: #16A34A;
+            box-shadow: 0 0 4px rgba(52, 211, 153, 0.5);
         }
         .header {
             display: grid;
@@ -313,11 +316,8 @@
             gap: 12px;
             padding: 10px 12px 12px;
             border-radius: 16px;
-            border: 1px solid rgba(148, 163, 184, 0.7);
-            background:
-                radial-gradient(circle at -5% -15%, rgba(45, 212, 191, 0.32), transparent 62%),
-                radial-gradient(circle at 105% -10%, rgba(129, 140, 248, 0.44), transparent 58%),
-                linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.98));
+            border: 1px solid #e2e8f0;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
         }
         .header-main {
             display: flex;
@@ -1452,7 +1452,7 @@
     <div class="badge-row">
       <span class="badge badge-eu">
         <span class="badge-dot"></span>
-        EU AI Act – Orientierung an Gold-Standard
+        EU AI Act – PLATIN++ Branchenbest Practices
       </span>
       <span class="badge badge-dsgvo">
         <span class="badge-dot"></span>

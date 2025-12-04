@@ -45,13 +45,9 @@ REGELN:
 
   <h3>1. Einordnung des Business Case ohne Förderung</h3>
   <p>
-    Der aktuelle Business Case zeigt einmalige Investitionen von etwa
-    <strong>{{CAPEX_REALISTISCH_EUR}}&nbsp;€</strong> sowie laufende Kosten von
-    rund <strong>{{OPEX_REALISTISCH_EUR}}&nbsp;€ pro Monat</strong>. Die erwartete
-    monatliche Entlastung liegt bei ungefähr
-    <strong>{{EINSPARUNG_MONAT_EUR}}&nbsp;€</strong>, was zu einer
-    Amortisationsdauer von etwa <strong>{{PAYBACK_MONTHS}} Monaten</strong> und
-    einem realistischen ROI von rund <strong>{{ROI_12M}}&nbsp;%</strong> im ersten Jahr führt.
+    Wie im vorherigen Kapitel "Business Case" dargestellt, weist das KI-Projekt eine
+    solide wirtschaftliche Grundlage auf: Die Investition amortisiert sich innerhalb eines
+    überschaubaren Zeitraums und erzielt einen positiven ROI im ersten Jahr.
   </p>
   <p>
     Diese Ausgangslage ist für viele Förderstellen attraktiv: Das Projekt ist betriebswirtschaftlich
@@ -67,19 +63,18 @@ REGELN:
     Digitalisierungsinitiativen, indem sie einen Teil der förderfähigen Investitionskosten
     bezuschussen. Je nach Programm, Unternehmensgröße und Projektschwerpunkt bewegen sich
     die Zuschussquoten typischerweise im Bereich von etwa <strong>30–50&nbsp;%</strong>
-    der anerkannten Kosten. Für ein Investitionsvolumen von {{CAPEX_REALISTISCH_EUR}}&nbsp;€
-    könnte das eine Entlastung von mehreren tausend Euro bedeuten.
+    der anerkannten Kosten.
   </p>
   <ul>
     <li><strong>Kürzere Amortisationsdauer:</strong> Durch eine Beteiligung an den Investitionskosten
-      sinkt der Eigenanteil; die Amortisation kann sich von {{PAYBACK_MONTHS}} Monaten auf
-      deutlich weniger verkürzen, ohne dass der erwartete Nutzen verändert wird.</li>
+      sinkt der Eigenanteil; die im Business Case berechnete Amortisation kann sich
+      deutlich verkürzen, ohne dass der erwartete Nutzen verändert wird.</li>
     <li><strong>Höherer effektiver ROI:</strong> Wenn ein Teil der Investitionen über Zuschüsse
-      abgedeckt wird, steigt der Effektiv-Ertrag je eingesetztem Euro – der aktuelle ROI von
-      {{ROI_12M}}&nbsp;% kann sich bei 40% Förderung auf über das Doppelte erhöhen.</li>
+      abgedeckt wird, steigt der Effektiv-Ertrag je eingesetztem Euro – bei 40% Förderung kann
+      sich der ROI auf über das Doppelte des Basiswertes erhöhen.</li>
     <li><strong>Reduziertes finanzielles Risiko:</strong> Für <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>
       kann ein Zuschuss den Schritt in ein ambitionierteres Projekt erleichtern, ohne die Liquidität
-      unnötig zu belasten. Die laufenden Kosten von {{OPEX_REALISTISCH_EUR}}&nbsp;€/Monat bleiben dabei tragbar.</li>
+      unnötig zu belasten.</li>
     <li><strong>Mehr Spielraum für Qualität und Schulung:</strong> Einsparungen durch Förderung können
       genutzt werden, um zusätzliche Maßnahmen für Qualität, Sicherheit oder Qualifizierung vorzusehen.</li>
     <li><strong>Bessere Planungssicherheit:</strong> Mit bewilligter Förderung lässt sich das Projektbudget
@@ -109,8 +104,7 @@ REGELN:
       <strong>{{BRANCHE_LABEL}}</strong>, <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>
       und <strong>{{HAUPTLEISTUNG}}</strong> passen.</li>
     <li><strong>Projektbeschreibung:</strong> Eine kompakte Projektbeschreibung erstellen
-      (Ziele, Maßnahmen, Zeitplan, erwarteter Nutzen, grobe Kosten mit Bezug auf die
-      berechneten {{CAPEX_REALISTISCH_EUR}}&nbsp;€).</li>
+      (Ziele, Maßnahmen, Zeitplan, erwarteter Nutzen, grobe Kosten gemäß Business Case).</li>
     <li><strong>Kumulierungsprüfung:</strong> Prüfen, ob Programme aus {{BUNDESLAND_LABEL}}
       mit Bundes- oder EU-Programmen kombiniert werden dürfen.</li>
     <li><strong>Beratung einholen:</strong> Optional Rücksprache mit Förderberatungen, Kammern

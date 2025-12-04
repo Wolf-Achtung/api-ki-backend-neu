@@ -14,9 +14,9 @@ Developer:
        - {{UNTERNEHMENSGROESSE_LABEL}}
        - {{HAUPTLEISTUNG}}
 
-     VERBOTEN:
+     Nicht verwenden:
        - Wiederholung des Business Case (keine ROI-/Payback-Berechnung).
-       - Regieanweisungen, Platzhaltertexte, Beispieltexte wie „xxx“.
+       - Regieanweisungen, Platzhaltertexte, Beispieltexte wie „xxx".
        - Unstrukturierte Ausgaben – immer mit section / table / lists.
 
      SIZE-AWARE-LOGIK (verbindlich):
