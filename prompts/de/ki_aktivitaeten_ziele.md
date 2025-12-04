@@ -13,7 +13,7 @@ Developer:
        {{HAUPTLEISTUNG}}       // Text oder leer
        {{TOOLS_AKTUELL}}       // Liste oder leer
 
-     VERBOTEN:
+     Nicht verwenden:
        - Keine erfundenen KI-Projekte, keine Fantasie-Tools.
        - Keine generischen, nicht belegten IST-Aussagen.
        - Keine unrealistischen Ziele.

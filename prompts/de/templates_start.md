@@ -26,7 +26,7 @@ Developer:
        - Code-Blöcke für Copy-Paste
        - Keine Erklärungen, nur Vorlagen
 
-     VERBOTEN:
+     Nicht verwenden:
        - Keine Platzhalter ohne klare Anweisung
        - Keine Marketing-Sprache
        - Keine Theorie

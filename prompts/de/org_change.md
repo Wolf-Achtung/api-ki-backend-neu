@@ -22,11 +22,11 @@ ANTI-REDUNDANZ:
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: persönliche Routinen, Self-Review, eigene Prüfpunkte
-        VERBOTEN: Teams, Abteilungen, Mitarbeiter
+        Nicht verwenden: Teams, Abteilungen, Mitarbeiter
 - team: Teamabsprachen, KI-Koordinator, gemeinsame Review-Runden
-        VERBOTEN: Division, Unit
+        Nicht verwenden: Division, Unit
 - kmu: Fachbereichs-Koordination, bereichsübergreifende Standards
-        VERBOTEN: Konzernjargon
+        Nicht verwenden: Konzernjargon
 
 REGELN:
 - Scores AKTIV interpretieren

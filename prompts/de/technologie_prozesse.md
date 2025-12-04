@@ -10,9 +10,9 @@
      3. Kurze Tabelle: 4-5 Layer mit Zweck
      4. Geplante Änderungen (3-4 Punkte kurz)
 
-     **VERBOTEN:**
-     - KEINE Tool-Liste (kommt in tools_empfehlungen)
-     - Fokus auf PROZESSKETTEN, nicht auf konkrete Tools
+     **Nicht verwenden:**
+     - Keine Tool-Liste (kommt in tools_empfehlungen)
+     - Fokus auf Prozessketten, nicht auf konkrete Tools
      - Keine redundanten Tech-Details
 -->
 
