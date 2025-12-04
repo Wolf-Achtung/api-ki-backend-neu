@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import os
 from functools import lru_cache
-from typing import Optional
+from typing import List, Optional
 
 try:
     import anthropic
@@ -13,6 +13,14 @@ except ImportError:  # pragma: no cover
     anthropic = None  # Wir loggen das später sauber weg
 
 log = logging.getLogger(__name__)
+
+# Import PLATIN_STOP_SEQUENCES for Anthropic-specific stop sequence handling
+# OpenAI no longer supports stop parameter for new models, but Anthropic still does
+try:
+    from services.prompt_enhancer import PLATIN_STOP_SEQUENCES, get_platin_config
+except ImportError:  # pragma: no cover
+    PLATIN_STOP_SEQUENCES: List[str] = []
+    get_platin_config = lambda x: None  # noqa: E731
 
 # --- ENV Defaults ----------------------------------------------------------
 
@@ -350,25 +358,37 @@ def call_anthropic(
     max_tok = max_tokens if max_tokens is not None else _get_max_tokens_for_section(section)
     sys = system_prompt or "Du bist ein hilfreicher, präziser KI-Berater."
 
+    # Stop-Sequences für PLATIN-kritische Sections (Anthropic still supports this)
+    # OpenAI no longer supports stop parameter for new models (gpt-4o-mini, gpt-4.1, etc.)
+    stop_seqs = None
+    if section and get_platin_config(section) and PLATIN_STOP_SEQUENCES:
+        stop_seqs = PLATIN_STOP_SEQUENCES
+        log.debug("🛑 Added stop sequences for Anthropic section=%s", section)
+
+    # Build API call kwargs
+    api_kwargs = {
+        "model": model_name,
+        "max_tokens": max_tok,
+        "temperature": temp,
+        "system": sys,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": prompt,
+                    }
+                ],
+            }
+        ],
+    }
+    if stop_seqs:
+        api_kwargs["stop_sequences"] = stop_seqs
+
     # Versuch 1: Mit aufgelöstem Modell
     try:
-        message = client.messages.create(
-            model=model_name,
-            max_tokens=max_tok,
-            temperature=temp,
-            system=sys,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": prompt,
-                        }
-                    ],
-                }
-            ],
-        )
+        message = client.messages.create(**api_kwargs)
     except anthropic.NotFoundError as exc:
         # Modell nicht gefunden -> Fallback-Versuch
         fallback_model = os.getenv("ANTHROPIC_MODEL_FALLBACK", "claude-3-5-sonnet-latest")
@@ -380,26 +400,11 @@ def call_anthropic(
             str(exc),
             fallback_model
         )
-        
-        # Retry mit Fallback
+
+        # Retry mit Fallback - use same kwargs but with fallback model
+        api_kwargs["model"] = fallback_model
         try:
-            message = client.messages.create(
-                model=fallback_model,
-                max_tokens=max_tok,
-                temperature=temp,
-                system=sys,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": prompt,
-                            }
-                        ],
-                    }
-                ],
-            )
+            message = client.messages.create(**api_kwargs)
             log.info(
                 "✅ Fallback auf Modell '%s' erfolgreich (Abschnitt '%s')",
                 fallback_model,
