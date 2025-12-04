@@ -1,82 +1,129 @@
-# Prompt-Framework – 5 Schritte zum perfekten Prompt
+Developer:
+<!-- PLATIN++ PROMPT -->
+<!-- SECTION: prompt_framework -->
+<!-- VERSION: v1.0 PLATIN++ V5 -->
+<!-- OUTPUT: HTML -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}} -->
+<!-- TOKEN-BUDGET: 700 (solo:0.8x=560, team:1.0x=700, kmu:1.15x=805) -->
+<!--
+ZIEL: Kompaktes 5-Schritte-Framework für effektive KI-Prompts.
 
-<!-- persona:solo -->
-<!-- Solo: Schnell anwendbar, 1 Beispiel reicht, keine Theorie -->
-<!-- persona:team -->
-<!-- Team: Gemeinsame Prompt-Bibliothek aufbauen, Best Practices teilen -->
-<!-- persona:kmu -->
-<!-- KMU: Standardisierte Prompts für wiederkehrende Aufgaben, Qualitätssicherung -->
+PFLICHTSTRUKTUR:
+1. Die 5 Schritte (Kontext, Rolle, Ziel, Constraints, Format)
+2. Vollständiges Beispiel
+3. Troubleshooting-Tabelle
+4. Variablen-Nutzung
 
-## Das 5-Schritte-Framework
+PERSONA-VARIATIONEN (COMPANY_SIZE):
+- solo: Schnell anwendbar, 1 Beispiel reicht, keine Theorie
+- team: Gemeinsame Prompt-Bibliothek aufbauen, Best Practices teilen
+- kmu: Standardisierte Prompts für wiederkehrende Aufgaben, Qualitätssicherung
 
-Jeder gute Prompt enthält diese fünf Elemente:
+SIZE-AWARE VERANTWORTLICHKEITEN:
+- solo: Eigene Prompts, learning-by-doing
+- team: Prompt-Sharing im Team, Peer-Review
+- kmu: Zentrale Prompt-Bibliothek, Qualitätskontrolle
 
-### 1. Kontext
-*Hintergrundinformationen für die KI*
+ANTI-REDUNDANZ:
+- Prompt-Technik HIER, nicht in Skillplan (dort allgemeiner Kompetenzaufbau)
+- Fokus auf STRUKTUR, nicht auf spezifische Anwendungsfälle
+- Keine Überschneidung mit Tools (dort Tool-Auswahl, hier Prompt-Technik)
 
-> „Du arbeitest für ein mittelständisches Beratungsunternehmen im DACH-Raum."
+STIL:
+- Textumfang: 150-200 Wörter
+- Praktisch, mit konkretem Beispiel
+- Keine theoretischen Abhandlungen
 
-### 2. Rolle
-*Welche Expertise soll die KI annehmen?*
+Nicht verwenden:
+- Keine Platzhalter oder Template-Marker
+- Keine Wiederholung von Skillplan-Inhalten
+- Keine Tool-spezifischen Anleitungen
+-->
 
-> „Agiere als erfahrener Unternehmensberater mit Fokus auf Prozessoptimierung."
+<section class="section prompt-framework">
+  <h2>Prompt-Framework: 5 Schritte zum perfekten Prompt</h2>
 
-### 3. Ziel
-*Was soll erreicht werden?*
+  <p>
+    Effektive Prompts für <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>
+    in <strong>{{BRANCHE_LABEL}}</strong>.
+  </p>
 
-> „Erstelle eine Zusammenfassung der wichtigsten Erkenntnisse aus dem Meeting-Protokoll."
+  <div class="framework-steps">
+    <h4>Die 5 Elemente eines guten Prompts</h4>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Element</th>
+          <th>Funktion</th>
+          <th>Beispiel</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><strong>Kontext</strong></td>
+          <td>Hintergrund für die KI</td>
+          <td>"Du arbeitest für ein Beratungsunternehmen."</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><strong>Rolle</strong></td>
+          <td>Expertise der KI</td>
+          <td>"Agiere als erfahrener Prozessberater."</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><strong>Ziel</strong></td>
+          <td>Was erreicht werden soll</td>
+          <td>"Erstelle eine Zusammenfassung der Meeting-Ergebnisse."</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><strong>Constraints</strong></td>
+          <td>Einschränkungen</td>
+          <td>"Max. 5 Punkte, keine Fachbegriffe."</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><strong>Format</strong></td>
+          <td>Ausgabeform</td>
+          <td>"Nummerierte Liste mit Priorität."</td>
+        </tr>
+      </tbody>
+    </table>
 
-### 4. Constraints
-*Einschränkungen und Qualitätskriterien*
+    <h4>Troubleshooting</h4>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Problem</th>
+          <th>Lösung</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Ergebnis zu vage</td>
+          <td>Mehr Kontext + konkretere Constraints</td>
+        </tr>
+        <tr>
+          <td>Ergebnis zu lang</td>
+          <td>Format-Vorgabe (z.B. "max. 200 Wörter")</td>
+        </tr>
+        <tr>
+          <td>Falscher Tonfall</td>
+          <td>Rolle definieren (z.B. "formell", "locker")</td>
+        </tr>
+        <tr>
+          <td>Unpassende Beispiele</td>
+          <td>Branche/Kontext explizit nennen</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
-> „Maximal 5 Bullet Points. Keine Fachbegriffe ohne Erklärung. Fokus auf umsetzbare Maßnahmen."
-
-### 5. Format
-*Wie soll das Ergebnis aussehen?*
-
-> „Ausgabe als nummerierte Liste mit Prioritätsangabe (hoch/mittel/niedrig)."
-
----
-
-## Beispiel-Prompt (komplett)
-
-```
-Kontext: Du unterstützt ein 20-köpfiges Team bei der Einführung von KI-Tools.
-
-Rolle: Du bist ein KI-Trainer mit Erfahrung in Change Management.
-
-Ziel: Erstelle einen Schulungsplan für die ersten 4 Wochen.
-
-Constraints:
-- Max. 2 Stunden Schulung pro Woche
-- Fokus auf praktische Übungen
-- Keine Vorkenntnisse voraussetzen
-
-Format: Tabelle mit Woche, Thema, Dauer, Lernziel
-```
-
----
-
-## Tipps für bessere Prompts
-
-| Problem | Lösung |
-|---------|--------|
-| Ergebnis zu vage | Mehr Kontext + konkretere Constraints |
-| Ergebnis zu lang | Format-Vorgabe (z.B. „max. 200 Wörter") |
-| Falscher Tonfall | Rolle definieren (z.B. „formell", „locker") |
-| Unpassende Beispiele | Branche/Kontext explizit nennen |
-
----
-
-## Variablen nutzen
-
-Für wiederkehrende Prompts: Platzhalter einbauen.
-
-```
-Erstelle einen [DOKUMENTTYP] für [ZIELGRUPPE]
-zum Thema [THEMA].
-Länge: [LÄNGE]. Tonalität: [TONALITÄT].
-```
-
----
-*Tipp: Prompts iterativ verbessern. Erste Version → Ergebnis prüfen → Prompt anpassen.*
+  <p class="small muted">
+    Tipp: Prompts iterativ verbessern. Erste Version → Ergebnis prüfen → Prompt anpassen.
+  </p>
+</section>
