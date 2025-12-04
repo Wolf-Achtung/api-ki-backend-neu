@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import os
 from functools import lru_cache
-from typing import Optional
+from typing import Any, Callable, List, Optional
 
 try:
     import anthropic
@@ -13,6 +13,19 @@ except ImportError:  # pragma: no cover
     anthropic = None  # Wir loggen das später sauber weg
 
 log = logging.getLogger(__name__)
+
+# Import PLATIN_STOP_SEQUENCES for Anthropic-specific stop sequence handling
+# OpenAI no longer supports stop parameter for new models, but Anthropic still does
+_PLATIN_STOP_SEQUENCES: List[str] = []
+_get_platin_config: Callable[[str], Any] = lambda x: None
+
+try:
+    from services.prompt_enhancer import PLATIN_STOP_SEQUENCES as _imported_seqs
+    from services.prompt_enhancer import get_platin_config as _imported_config
+    _PLATIN_STOP_SEQUENCES = _imported_seqs
+    _get_platin_config = _imported_config
+except ImportError:  # pragma: no cover
+    pass  # Use defaults defined above
 
 # --- ENV Defaults ----------------------------------------------------------
 
@@ -350,25 +363,45 @@ def call_anthropic(
     max_tok = max_tokens if max_tokens is not None else _get_max_tokens_for_section(section)
     sys = system_prompt or "Du bist ein hilfreicher, präziser KI-Berater."
 
-    # Versuch 1: Mit aufgelöstem Modell
-    try:
-        message = client.messages.create(
-            model=model_name,
-            max_tokens=max_tok,
-            temperature=temp,
-            system=sys,
-            messages=[
+    # Stop-Sequences für PLATIN-kritische Sections (Anthropic still supports this)
+    # OpenAI no longer supports stop parameter for new models (gpt-4o-mini, gpt-4.1, etc.)
+    stop_seqs: Optional[List[str]] = None
+    if section and _get_platin_config(section) and _PLATIN_STOP_SEQUENCES:
+        stop_seqs = _PLATIN_STOP_SEQUENCES
+        log.debug("🛑 Added stop sequences for Anthropic section=%s", section)
+
+    # Build messages list
+    messages: List[Any] = [
+        {
+            "role": "user",
+            "content": [
                 {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": prompt,
-                        }
-                    ],
+                    "type": "text",
+                    "text": prompt,
                 }
             ],
-        )
+        }
+    ]
+
+    # Versuch 1: Mit aufgelöstem Modell
+    try:
+        if stop_seqs:
+            message = client.messages.create(
+                model=model_name,
+                max_tokens=max_tok,
+                temperature=temp,
+                system=sys,
+                messages=messages,
+                stop_sequences=stop_seqs,
+            )
+        else:
+            message = client.messages.create(
+                model=model_name,
+                max_tokens=max_tok,
+                temperature=temp,
+                system=sys,
+                messages=messages,
+            )
     except anthropic.NotFoundError as exc:
         # Modell nicht gefunden -> Fallback-Versuch
         fallback_model = os.getenv("ANTHROPIC_MODEL_FALLBACK", "claude-3-5-sonnet-latest")
@@ -380,26 +413,26 @@ def call_anthropic(
             str(exc),
             fallback_model
         )
-        
+
         # Retry mit Fallback
         try:
-            message = client.messages.create(
-                model=fallback_model,
-                max_tokens=max_tok,
-                temperature=temp,
-                system=sys,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": prompt,
-                            }
-                        ],
-                    }
-                ],
-            )
+            if stop_seqs:
+                message = client.messages.create(
+                    model=fallback_model,
+                    max_tokens=max_tok,
+                    temperature=temp,
+                    system=sys,
+                    messages=messages,
+                    stop_sequences=stop_seqs,
+                )
+            else:
+                message = client.messages.create(
+                    model=fallback_model,
+                    max_tokens=max_tok,
+                    temperature=temp,
+                    system=sys,
+                    messages=messages,
+                )
             log.info(
                 "✅ Fallback auf Modell '%s' erfolgreich (Abschnitt '%s')",
                 fallback_model,
