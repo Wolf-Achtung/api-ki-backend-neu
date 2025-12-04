@@ -456,14 +456,409 @@ def get_recovery_manager() -> SectionRecoveryManager:
 
 
 # =============================================================================
+# Sprint F - Token-Overflow Auto-Fix
+# =============================================================================
+
+# SIZE_TOKEN_MULTIPLIERS from PLATIN++ V5 spec
+SIZE_TOKEN_MULTIPLIERS = {
+    "solo": 0.8,
+    "team": 1.0,
+    "kmu": 1.15,
+}
+
+
+def auto_fix_token_overflow(
+    content: str,
+    section_name: str,
+    max_tokens: int,
+    current_tokens: int,
+    size: str = "solo",
+) -> Tuple[str, bool, int]:
+    """
+    Auto-fix token overflow by progressively shortening content.
+
+    Sprint F Feature: Token-Overflow Auto-Fix
+    Strategy:
+    1. Remove examples (z.B., e.g., etc.)
+    2. Truncate long bullet points
+    3. Remove redundant paragraphs
+    4. Apply aggressive shortening if needed
+
+    Args:
+        content: Current content
+        section_name: Section name for logging
+        max_tokens: Maximum allowed tokens
+        current_tokens: Current token count
+        size: Company size for multiplier
+
+    Returns:
+        Tuple of (fixed_content, was_fixed, new_token_estimate)
+    """
+    if current_tokens <= max_tokens:
+        return content, False, current_tokens
+
+    log.warning(
+        "Token overflow detected in %s: %d/%d tokens, applying auto-fix",
+        section_name, current_tokens, max_tokens
+    )
+
+    # Calculate target with buffer
+    target_tokens = int(max_tokens * 0.90)  # 10% buffer
+
+    # Apply progressive fixes
+    fixed = content
+
+    # Stage 1: Remove examples
+    example_patterns = [
+        r"\(z\.B\.[^)]+\)",  # (z.B. ...)
+        r"\(e\.g\.[^)]+\)",  # (e.g. ...)
+        r"\(beispielsweise[^)]+\)",
+        r"\(for example[^)]+\)",
+    ]
+    import re
+    for pattern in example_patterns:
+        fixed = re.sub(pattern, "", fixed, flags=re.IGNORECASE)
+
+    # Estimate new token count (rough: 4 chars per token)
+    new_tokens = len(fixed) // 4
+    if new_tokens <= target_tokens:
+        log.info("Token overflow fixed in %s after example removal: %d tokens", section_name, new_tokens)
+        from services.monitoring import _metrics
+        _metrics.increment("auto_heal_token_overflow_fixed")
+        return fixed, True, new_tokens
+
+    # Stage 2: Truncate long list items
+    lines = fixed.split("\n")
+    shortened_lines = []
+    for line in lines:
+        if line.strip().startswith(("-", "*", "•", "–")) and len(line) > 120:
+            # Keep first 80 chars + "..."
+            truncated = line[:80].rsplit(" ", 1)[0] + "..."
+            shortened_lines.append(truncated)
+        else:
+            shortened_lines.append(line)
+    fixed = "\n".join(shortened_lines)
+
+    new_tokens = len(fixed) // 4
+    if new_tokens <= target_tokens:
+        log.info("Token overflow fixed in %s after truncation: %d tokens", section_name, new_tokens)
+        from services.monitoring import _metrics
+        _metrics.increment("auto_heal_token_overflow_fixed")
+        return fixed, True, new_tokens
+
+    # Stage 3: Remove redundant paragraphs (keep first and last)
+    paragraphs = [p.strip() for p in fixed.split("\n\n") if p.strip()]
+    if len(paragraphs) > 3:
+        # Keep first, last, and a selection of middle ones
+        keep_count = max(2, len(paragraphs) // 2)
+        fixed = "\n\n".join(paragraphs[:keep_count] + paragraphs[-1:])
+
+    new_tokens = len(fixed) // 4
+    log.info("Token overflow fixed in %s: %d tokens (target: %d)", section_name, new_tokens, target_tokens)
+    from services.monitoring import _metrics
+    _metrics.increment("auto_heal_token_overflow_fixed")
+
+    return fixed, True, new_tokens
+
+
+# =============================================================================
+# Sprint F - Fallback-Degradation Mode
+# =============================================================================
+
+class FallbackDegradationManager:
+    """
+    Manages fallback degradation levels for progressive quality reduction.
+
+    Sprint F Feature: Fallback-Degradation Mode
+    Levels:
+    - Level 0: Full quality (no degradation)
+    - Level 1: Reduced examples, simplified tables
+    - Level 2: Minimal content, essential bullet points only
+    - Level 3: Emergency fallback (hardcoded minimal content)
+    """
+
+    MAX_DEGRADATION_LEVEL = 3
+
+    def __init__(self) -> None:
+        self._current_level: int = 0
+        self._section_levels: Dict[str, int] = {}
+
+    def get_level(self, section_name: str = "") -> int:
+        """Get current degradation level for a section."""
+        if section_name and section_name in self._section_levels:
+            return self._section_levels[section_name]
+        return self._current_level
+
+    def increase_level(self, section_name: str = "") -> int:
+        """
+        Increase degradation level after a failure.
+
+        Returns:
+            New degradation level
+        """
+        if section_name:
+            current = self._section_levels.get(section_name, 0)
+            new_level = min(current + 1, self.MAX_DEGRADATION_LEVEL)
+            self._section_levels[section_name] = new_level
+            log.warning(
+                "Degradation level increased for %s: %d -> %d",
+                section_name, current, new_level
+            )
+            return new_level
+        else:
+            self._current_level = min(self._current_level + 1, self.MAX_DEGRADATION_LEVEL)
+            log.warning("Global degradation level increased to %d", self._current_level)
+            return self._current_level
+
+    def reset(self, section_name: str = "") -> None:
+        """Reset degradation level."""
+        if section_name:
+            self._section_levels.pop(section_name, None)
+        else:
+            self._current_level = 0
+            self._section_levels.clear()
+
+    def get_content_modifier(self, level: int) -> Dict[str, Any]:
+        """
+        Get content modification parameters for a degradation level.
+
+        Returns:
+            Dict with modification parameters
+        """
+        modifiers = {
+            0: {  # Full quality
+                "max_examples": 3,
+                "max_bullet_points": 10,
+                "include_tables": True,
+                "include_details": True,
+                "token_multiplier": 1.0,
+            },
+            1: {  # Reduced quality
+                "max_examples": 1,
+                "max_bullet_points": 7,
+                "include_tables": True,
+                "include_details": True,
+                "token_multiplier": 0.85,
+            },
+            2: {  # Minimal quality
+                "max_examples": 0,
+                "max_bullet_points": 5,
+                "include_tables": False,
+                "include_details": False,
+                "token_multiplier": 0.7,
+            },
+            3: {  # Emergency fallback
+                "max_examples": 0,
+                "max_bullet_points": 3,
+                "include_tables": False,
+                "include_details": False,
+                "token_multiplier": 0.5,
+            },
+        }
+        return modifiers.get(level, modifiers[3])
+
+
+# Global fallback degradation manager
+_degradation_manager = FallbackDegradationManager()
+
+
+def get_degradation_manager() -> FallbackDegradationManager:
+    """Get the global fallback degradation manager."""
+    return _degradation_manager
+
+
+# =============================================================================
+# Sprint F - Persona-Rewrite Filter
+# =============================================================================
+
+# Forbidden terms by persona (from PLATIN++ V5 spec)
+PERSONA_FORBIDDEN_TERMS = {
+    "solo": {
+        "de": [
+            "Abteilungen", "abteilungsübergreifend", "cross-funktional", "Teamleiter",
+            "Team-Meeting", "Abstimmungsrunden", "Governance-Board", "Stakeholder-Management",
+            "Change-Management-Prozess", "Skalierung auf Unternehmensebene",
+        ],
+        "en": [
+            "departments", "cross-departmental", "cross-functional", "team leader",
+            "team meeting", "coordination rounds", "governance board", "stakeholder management",
+            "change management process", "enterprise-wide scaling",
+        ],
+    },
+    "team": {
+        "de": [
+            "Sie allein", "Ein-Personen-Betrieb", "Solo-Unternehmer", "ohne Mitarbeiter",
+            "Enterprise-Architektur", "konzernweite Standards", "Holdingstruktur",
+        ],
+        "en": [
+            "you alone", "one-person operation", "solo entrepreneur", "without employees",
+            "enterprise architecture", "corporate-wide standards", "holding structure",
+        ],
+    },
+    "kmu": {
+        "de": [
+            "Sie allein", "Ein-Personen-Betrieb", "Solo-Unternehmer", "ohne Mitarbeiter",
+            "ohne Team", "Einzelkämpfer",
+        ],
+        "en": [
+            "you alone", "one-person operation", "solo entrepreneur", "without employees",
+            "without team", "lone wolf",
+        ],
+    },
+}
+
+# Replacement terms by persona
+PERSONA_REPLACEMENT_TERMS = {
+    "solo": {
+        "de": {
+            "Team": "Sie",
+            "Abteilung": "Ihr Arbeitsbereich",
+            "Mitarbeiter": "Aufgabenbereich",
+            "Kollegen": "Geschäftspartner",
+            "Meeting": "Arbeitssitzung",
+        },
+        "en": {
+            "team": "you",
+            "department": "your work area",
+            "employees": "task area",
+            "colleagues": "business partners",
+            "meeting": "work session",
+        },
+    },
+    "team": {
+        "de": {
+            "Sie allein": "Ihr Team",
+            "Einzelunternehmer": "Ihr Team",
+        },
+        "en": {
+            "you alone": "your team",
+            "solo entrepreneur": "your team",
+        },
+    },
+    "kmu": {
+        "de": {
+            "Sie allein": "Ihr Unternehmen",
+            "Einzelunternehmer": "Ihr Unternehmen",
+        },
+        "en": {
+            "you alone": "your company",
+            "solo entrepreneur": "your company",
+        },
+    },
+}
+
+
+def apply_persona_rewrite_filter(
+    content: str,
+    target_persona: str,
+    lang: str = "de",
+) -> Tuple[str, List[str], bool]:
+    """
+    Apply persona-specific content filtering and rewriting.
+
+    Sprint F Feature: Persona-Rewrite Filter
+    - Detects forbidden terms for the target persona
+    - Replaces inappropriate terms with persona-appropriate alternatives
+    - Records violations for monitoring
+
+    Args:
+        content: Content to filter
+        target_persona: Target persona (solo/team/kmu)
+        lang: Language (de/en)
+
+    Returns:
+        Tuple of (filtered_content, violations_found, was_modified)
+    """
+    if target_persona not in PERSONA_FORBIDDEN_TERMS:
+        return content, [], False
+
+    forbidden = PERSONA_FORBIDDEN_TERMS[target_persona].get(lang, [])
+    replacements = PERSONA_REPLACEMENT_TERMS.get(target_persona, {}).get(lang, {})
+
+    violations: List[str] = []
+    filtered = content
+    was_modified = False
+
+    # Check for forbidden terms
+    for term in forbidden:
+        if term.lower() in content.lower():
+            violations.append(term)
+
+    # Apply replacements
+    for old_term, new_term in replacements.items():
+        if old_term.lower() in filtered.lower():
+            import re
+            pattern = re.compile(re.escape(old_term), re.IGNORECASE)
+            filtered = pattern.sub(new_term, filtered)
+            was_modified = True
+
+    # Record violations
+    if violations:
+        from services.monitoring import record_persona_violation
+        for violation in violations:
+            record_persona_violation(
+                expected=target_persona,
+                actual=violation,
+                violation_type="forbidden_term",
+            )
+        log.warning(
+            "Persona filter found %d violations for %s: %s",
+            len(violations), target_persona, violations[:5]
+        )
+
+    return filtered, violations, was_modified
+
+
+def validate_persona_compliance(
+    content: str,
+    target_persona: str,
+    lang: str = "de",
+) -> Tuple[bool, List[str]]:
+    """
+    Validate content for persona compliance without modifying.
+
+    Args:
+        content: Content to validate
+        target_persona: Target persona (solo/team/kmu)
+        lang: Language (de/en)
+
+    Returns:
+        Tuple of (is_compliant, violations_list)
+    """
+    if target_persona not in PERSONA_FORBIDDEN_TERMS:
+        return True, []
+
+    forbidden = PERSONA_FORBIDDEN_TERMS[target_persona].get(lang, [])
+    violations = []
+
+    for term in forbidden:
+        if term.lower() in content.lower():
+            violations.append(term)
+
+    return len(violations) == 0, violations
+
+
+# =============================================================================
 # Exports
 # =============================================================================
 
 __all__ = [
+    # Core Recovery
     "auto_recover_section",
     "check_and_adjust_token_budget",
     "recover_research_from_cache",
     "save_research_to_cache",
     "SectionRecoveryManager",
     "get_recovery_manager",
+    # Sprint F - Token Overflow
+    "auto_fix_token_overflow",
+    "SIZE_TOKEN_MULTIPLIERS",
+    # Sprint F - Fallback Degradation
+    "FallbackDegradationManager",
+    "get_degradation_manager",
+    # Sprint F - Persona Filter
+    "apply_persona_rewrite_filter",
+    "validate_persona_compliance",
+    "PERSONA_FORBIDDEN_TERMS",
+    "PERSONA_REPLACEMENT_TERMS",
 ]
