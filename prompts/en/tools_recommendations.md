@@ -1,9 +1,8 @@
 Developer:
-<!-- PLATIN++ PROMPT -->
+<!-- PLATIN++ PROMPT v5.2 -->
 <!-- SECTION: tools_recommendations -->
-<!-- VERSION: v6.0 PLATIN++ V5 -->
-<!-- OUTPUT: HTML -->
-<!-- SIZE-AWARE: solo/team/sme -->
+<!-- OUTPUT: HTML ONLY -->
+<!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{COMPANY_SIZE}} -->
 <!-- TOKEN-BUDGET: 2500 (solo:0.8x=2000, team:1.0x=2500, sme:1.15x=2875) -->
 <!-- RESEARCH: Tools can be referenced from {{RESEARCH_PROVENANCE_HTML}} -->

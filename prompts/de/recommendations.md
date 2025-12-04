@@ -1,31 +1,30 @@
 Developer:
-<!-- recommendations.md – v9.0 PDF-SLIMDOWN-STRICT
-     Antworte ausschließlich mit validem HTML. Keine Markdown-Fences.
+<!-- PLATIN++ PROMPT v5.2 -->
+<!-- SECTION: recommendations -->
+<!-- OUTPUT: HTML ONLY -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- TOKEN-BUDGET: 600 (solo:0.8x=480, team:1.0x=600, kmu:1.15x=690) -->
+<!--
+ZIEL: 5 strategische Handlungsempfehlungen für {{HAUPTLEISTUNG}}.
 
-     **STRIKTE TOKEN-BEGRENZUNG (KRITISCH!):**
-     MAXIMAL 500-600 Wörter Output (5 Empfehlungen × 80-100 Wörter + Tabelle).
+STRUKTUR (Pflicht-Elemente):
+1. Kurze Einleitung (30-40 Wörter)
+2. GENAU 5 Empfehlungen, je mit:
+   - Schwerpunkt (1 Satz)
+   - Maßnahme (1-2 Sätze)
+   - Nutzen (1 Satz)
+   - Aufwand (1 Satz, size-aware)
+3. Kompakte Prioritäten-Tabelle (5 Zeilen)
 
-     STRUKTUR (Pflicht-Elemente):
-       1. Kurze Einleitung (30-40 Wörter)
-       2. GENAU 5 Empfehlungen, je mit:
-          - Schwerpunkt (1 Satz)
-          - Maßnahme (1-2 Sätze)
-          - Nutzen (1 Satz)
-          - Aufwand (1 Satz, size-aware)
-       3. Kompakte Prioritäten-Tabelle (5 Zeilen)
+ANTI-REDUNDANZ (STRIKT!):
+- KEINE Wiederholung von Quick Wins (wurden dort genannt)
+- KEINE Wiederholung von Roadmap-Inhalten
+- Fokus auf ERGÄNZENDE strategische Empfehlungen
 
-     **ANTI-REDUNDANZ (STRIKT!):**
-     - KEINE Wiederholung von Quick Wins (wurden dort genannt)
-     - KEINE Wiederholung von Roadmap-Inhalten
-     - Fokus auf ERGÄNZENDE strategische Empfehlungen
-
-     VARIABLEN:
-       {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{COMPANY_SIZE}}
-
-     SIZE-AWARE (COMPANY_SIZE):
-       solo: Inhaber:in, persönliche Schritte, niedriges Budget
-       team: Teamlead/KI-Owner, gemeinsame Workflows, mittleres Budget
-       kmu: Fachbereiche, Governance, strukturierte Investitionen
+PERSONA-VARIATIONEN (COMPANY_SIZE):
+- solo: Inhaber:in, persönliche Schritte, niedriges Budget
+- team: Teamlead/KI-Owner, gemeinsame Workflows, mittleres Budget
+- kmu: Fachbereiche, Governance, strukturierte Investitionen
 -->
 
 <section class="section recommendations">

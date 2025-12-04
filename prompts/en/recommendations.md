@@ -1,31 +1,30 @@
 Developer:
-<!-- recommendations.md – v9.0 PDF-SLIMDOWN-STRICT
-     Respond exclusively with valid HTML. No Markdown fences.
+<!-- PLATIN++ PROMPT v5.2 -->
+<!-- SECTION: recommendations -->
+<!-- OUTPUT: HTML ONLY -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- TOKEN-BUDGET: 600 (solo:0.8x=480, team:1.0x=600, kmu:1.15x=690) -->
+<!--
+GOAL: 5 strategic recommendations for {{HAUPTLEISTUNG}}.
 
-     **STRICT TOKEN LIMIT (CRITICAL!):**
-     MAXIMUM 500-600 words output (5 recommendations × 80-100 words + table).
+STRUCTURE (Required elements):
+1. Brief introduction (30-40 words)
+2. EXACTLY 5 recommendations, each with:
+   - Focus (1 sentence)
+   - Action (1-2 sentences)
+   - Benefit (1 sentence)
+   - Effort (1 sentence, size-aware)
+3. Compact priorities table (5 rows)
 
-     STRUCTURE (Required elements):
-       1. Brief introduction (30-40 words)
-       2. EXACTLY 5 recommendations, each with:
-          - Focus (1 sentence)
-          - Action (1-2 sentences)
-          - Benefit (1 sentence)
-          - Effort (1 sentence, size-aware)
-       3. Compact priorities table (5 rows)
+ANTI-REDUNDANCY (STRICT!):
+- NO repetition of Quick Wins (already covered there)
+- NO repetition of Roadmap content
+- Focus on COMPLEMENTARY strategic recommendations
 
-     **ANTI-REDUNDANCY (STRICT!):**
-     - NO repetition of Quick Wins (already covered there)
-     - NO repetition of Roadmap content
-     - Focus on COMPLEMENTARY strategic recommendations
-
-     VARIABLES:
-       {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{COMPANY_SIZE}}
-
-     SIZE-AWARE (COMPANY_SIZE):
-       solo: Owner, personal steps, low budget
-       team: Team lead/AI Owner, shared workflows, medium budget
-       kmu: Departments, governance, structured investments
+PERSONA VARIATIONS (COMPANY_SIZE):
+- solo: Owner, personal steps, low budget
+- team: Team lead/AI Owner, shared workflows, medium budget
+- kmu: Departments, governance, structured investments
 -->
 
 <section class="section recommendations">
