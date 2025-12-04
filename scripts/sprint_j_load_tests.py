@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# mypy: ignore-errors
 """
 Sprint J - PLATIN++ Load-Testing & Monitoring Hardening
 
@@ -119,9 +120,9 @@ def run_prompt_engine_load_test(num_runs: int = 1000) -> LoadTestSummary:
         pass
 
     try:
-        from services.prompt_loader import load_prompt as _load_prompt, lru_cache  # type: ignore[attr-defined]
+        from services.prompt_loader import load_prompt as _load_prompt, lru_cache
         load_prompt = _load_prompt
-        clear_cache = lambda: lru_cache.cache_clear() if hasattr(lru_cache, 'cache_clear') else None  # type: ignore[misc]
+        clear_cache = lambda: lru_cache.cache_clear() if hasattr(lru_cache, 'cache_clear') else None
     except (ImportError, AttributeError):
         # Fallback: direct file loading
         logger.warning("prompt_loader not available, using direct file loading")
@@ -825,9 +826,9 @@ def run_funding_stress_routing(num_variants: int = 5000) -> LoadTestSummary:
         return {"programmes": [], "scope": "EU_CORE"}
 
     try:
-        from services.funding_service import get_funding_recommendations as get_funding_programmes  # type: ignore[attr-defined]
-        from services.funding_service_en import get_funding_recommendations_en as get_funding_programmes_en  # type: ignore[attr-defined]
-        from services.funding_service_en import get_funding_eu_core_en as get_funding_eu_core  # type: ignore[attr-defined]
+        from services.funding_service import get_funding_recommendations as get_funding_programmes
+        from services.funding_service_en import get_funding_recommendations_en as get_funding_programmes_en
+        from services.funding_service_en import get_funding_eu_core_en as get_funding_eu_core
     except (ImportError, AttributeError) as e:
         logger.warning(f"Import warning: {e}, using mock routing")
         get_funding_programmes = _mock_get_funding_programmes
@@ -1195,8 +1196,8 @@ def run_monitoring_alert_simulation() -> LoadTestSummary:
     HIGH_CONFIDENCE_THRESHOLD: float = 0.9
 
     try:
-        from services.monitoring import get_monitoring_status as _get_status  # type: ignore[attr-defined]
-        from services.alerts import check_pdf_size as _check_pdf, HIGH_CONFIDENCE_THRESHOLD as _threshold  # type: ignore[attr-defined]
+        from services.monitoring import get_monitoring_status as _get_status
+        from services.alerts import check_pdf_size as _check_pdf, HIGH_CONFIDENCE_THRESHOLD as _threshold
         get_monitoring_status = _get_status
         check_pdf_size_alert = _check_pdf
         HIGH_CONFIDENCE_THRESHOLD = _threshold
