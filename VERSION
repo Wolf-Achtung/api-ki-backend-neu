@@ -1,0 +1,10 @@
+PLATIN++ v5.3
+Architecture Freeze
+2025-12-04
+
+Changes from v5.0:
+- Consolidated error handling (ReportErrorGate)
+- Enhanced manifest schema with tokens, redundancy_rules, persona_rules
+- Improved caching (LRU, deduplication)
+- Standardized funding routing (DE / EN-DE / EN-EU)
+- Comprehensive validation pipeline
