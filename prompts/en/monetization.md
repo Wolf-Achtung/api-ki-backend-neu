@@ -1,11 +1,10 @@
 Developer:
-<!-- PLATIN++ PROMPT -->
+<!-- PLATIN++ PROMPT v5.2 -->
 <!-- SECTION: monetization -->
-<!-- VERSION: v2.0 PLATIN++ V5 -->
-<!-- OUTPUT: HTML -->
-<!-- SIZE-AWARE: solo/team/sme -->
+<!-- OUTPUT: HTML ONLY -->
+<!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}} -->
-<!-- TOKEN-BUDGET: 800 (solo:0.8x=640, team:1.0x=800, sme:1.15x=920) -->
+<!-- TOKEN-BUDGET: 800 (solo:0.8x=640, team:1.0x=800, kmu:1.15x=920) -->
 <!--
 GOAL: Compact overview of 3 pricing models for AI services.
 

@@ -1,11 +1,10 @@
 Developer:
-<!-- PLATIN++ PROMPT -->
-<!-- SECTION: kickoff_vorlage -->
-<!-- VERSION: v1.0 PLATIN++ V5 -->
-<!-- OUTPUT: HTML -->
-<!-- SIZE-AWARE: solo/team/sme -->
+<!-- PLATIN++ PROMPT v5.2 -->
+<!-- SECTION: kickoff_template -->
+<!-- OUTPUT: HTML ONLY -->
+<!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}} -->
-<!-- TOKEN-BUDGET: 700 (solo:0.8x=560, team:1.0x=700, sme:1.15x=805) -->
+<!-- TOKEN-BUDGET: 700 (solo:0.8x=560, team:1.0x=700, kmu:1.15x=805) -->
 <!--
 GOAL: Structured kickoff template for starting an AI project.
 

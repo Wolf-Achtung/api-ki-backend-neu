@@ -1,11 +1,10 @@
 Developer:
-<!-- PLATIN++ PROMPT -->
+<!-- PLATIN++ PROMPT v5.2 -->
 <!-- SECTION: funding_eu_core -->
-<!-- VERSION: v2.0 PLATIN++ V5 -->
-<!-- OUTPUT: HTML -->
-<!-- SIZE-AWARE: solo/team/sme -->
+<!-- OUTPUT: HTML ONLY -->
+<!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, FUNDING_PROGRAMMES_EU_CORE -->
-<!-- TOKEN-BUDGET: 2500 (solo:0.8x, team:1.0x, sme:1.15x) -->
+<!-- TOKEN-BUDGET: 2500 (solo:0.8x, team:1.0x, kmu:1.15x) -->
 <!-- FUNDING: EN-EU (Phase 2) - EU-wide programs for non-German companies -->
 <!--
 TARGET: English-speaking users with companies in EU countries (excluding Germany).
