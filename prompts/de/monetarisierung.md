@@ -1,9 +1,9 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.2 -->
+<!-- PLATIN++ PROMPT v5.3 - SPRINT N -->
 <!-- SECTION: monetarisierung -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}} -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{COMPANY_SIZE}} -->
 <!-- TOKEN-BUDGET: 800 (solo:0.8x=640, team:1.0x=800, kmu:1.15x=920) -->
 <!--
 ZIEL: Kompakte Übersicht zu 3 Pricing-Modellen für KI-Services.
@@ -26,6 +26,17 @@ STIL:
 - Textumfang: 120–180 Wörter
 - Keine konkreten €-Beträge (nur Spannen)
 - Keine Marketing-Floskeln
+
+SPRINT N - SOLO PERSONA REGELN (STRIKT!):
+{% if COMPANY_SIZE == "solo" %}
+NICHT VERWENDEN für Solo:
+- "Team aufbauen" → stattdessen: "Kapazität erweitern"
+- "Mitarbeiter" → stattdessen: "Ressourcen"
+- "Teams" → stattdessen: "Kapazitäten"
+- "Fachbereich" → stattdessen: "Arbeitsfeld"
+- "Abteilung" → stattdessen: "Arbeitsbereich"
+Formulierungen ohne Team-/Abteilungsbegriff verwenden!
+{% endif %}
 -->
 
 <section class="section monetization">

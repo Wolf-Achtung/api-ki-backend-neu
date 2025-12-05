@@ -6,7 +6,12 @@ Optimized for ki-sicherheit.jetzt backend
 This service works WITH the existing prompt_loader.py system.
 It loads prompts via prompt_loader, injects context, and returns enhanced prompts.
 
-Version: 2.6.0-PLATIN++ (Anti-Redundanz + Solo-Persona)
+Version: 2.7.0-PLATIN++ (Sprint N - Persona Leak Elimination + Length Stabilization)
+
+SPRINT N CHANGES:
+- Extended SOLO_FORBIDDEN_TERMS list to prevent team/KMU terminology leaks
+- Added SOLO_REPLACEMENTS for automatic term substitution
+- Updated token budgets for length stabilization
 """
 from __future__ import annotations
 
@@ -240,6 +245,80 @@ SOLO_GOVERNANCE_REPLACEMENTS: Dict[str, str] = {
     "mitarbeiterschulung": "Weiterbildung",
 }
 
+# =============================================================================
+# SPRINT N: SOLO PERSONA LEAK ELIMINATION
+# =============================================================================
+# These terms MUST NEVER appear in Solo reports - they indicate team/KMU context
+
+SOLO_FORBIDDEN_TERMS: List[str] = [
+    # Team-specific terms (German)
+    "team",
+    "teams",
+    "teamstruktur",
+    "teamwork",
+    "team aufbauen",
+    "teamrollen",
+    "teammitglieder",
+    # Employee/HR terms (German)
+    "mitarbeiter",
+    "mitarbeitende",
+    "mitarbeiter einstellen",
+    "mitarbeiterschulung",
+    "personalstrategien",
+    "personal",
+    "belegschaft",
+    # Department/Organization terms (German)
+    "fachbereich",
+    "fachbereiche",
+    "abteilung",
+    "abteilungen",
+    "bereichsleiter",
+    "bereichsübergreifend",
+    # English equivalents
+    "team building",
+    "team members",
+    "hire employees",
+    "staff",
+    "department",
+    "departments",
+]
+
+# Replacement mapping for Solo context (extends SOLO_GOVERNANCE_REPLACEMENTS)
+SOLO_PERSONA_REPLACEMENTS: Dict[str, str] = {
+    # Team → Capacity/Structure
+    "team aufbauen": "Kapazität erweitern",
+    "team": "Kapazität",
+    "teams": "Ressourcen",
+    "teamstruktur": "Arbeitsstruktur",
+    "teamwork": "Zusammenarbeit mit Externen",
+    "teammitglieder": "Projektbeteiligte",
+    "teamrollen": "Aufgabenverteilung",
+    # Employees → Resources
+    "mitarbeiter": "Ressourcen",
+    "mitarbeitende": "Beteiligte",
+    "mitarbeiter einstellen": "Ressourcen smart bündeln",
+    "mitarbeiterschulung": "Weiterbildung",
+    "personalstrategien": "Kapazitätsplanung",
+    "personal": "Kapazität",
+    "belegschaft": "Arbeitskapazität",
+    # Department → Work area
+    "fachbereich": "Arbeitsfeld",
+    "fachbereiche": "Arbeitsbereiche",
+    "abteilung": "Arbeitsfeld",
+    "abteilungen": "Arbeitsbereiche",
+    "bereichsleiter": "Verantwortliche:r",
+    "bereichsübergreifend": "übergreifend",
+    # English
+    "team building": "capacity building",
+    "team members": "collaborators",
+    "hire employees": "bundle resources smartly",
+    "staff": "capacity",
+    "department": "work area",
+    "departments": "work areas",
+    # Benchmark/Comparison context
+    "ihre vergleichsgruppe": "Ihre Vergleichsgruppe",  # Keep as-is for solo
+}
+
 
 def simplify_solo_governance(text: str, company_size: str) -> str:
     """
@@ -272,6 +351,81 @@ def simplify_solo_governance(text: str, company_size: str) -> str:
         log.debug(f"🔧 Solo-Governance vereinfacht: {len(replacements_made)} Ersetzungen")
 
     return result
+
+
+def apply_solo_persona_filter(text: str, company_size: str) -> str:
+    """
+    SPRINT N: Eliminiert Team/KMU-Begriffe aus Solo-Reports.
+
+    Wendet SOLO_PERSONA_REPLACEMENTS an, um unangemessene Begriffe
+    durch Solo-passende Alternativen zu ersetzen.
+
+    Args:
+        text: Der zu filternde Text
+        company_size: Unternehmensgröße ('solo', 'team', 'kmu')
+
+    Returns:
+        Gefilterter Text für Solo, unverändert für andere Größen
+    """
+    if company_size != "solo":
+        return text
+
+    result = text
+    replacements_made = []
+
+    # Sort by length (longest first) to avoid partial replacements
+    sorted_terms = sorted(
+        SOLO_PERSONA_REPLACEMENTS.items(),
+        key=lambda x: len(x[0]),
+        reverse=True
+    )
+
+    for forbidden_term, replacement in sorted_terms:
+        # Case-insensitive replacement with word boundaries
+        # Use word boundary for short terms to avoid false positives
+        if len(forbidden_term) <= 6:
+            pattern = re.compile(r'\b' + re.escape(forbidden_term) + r'\b', re.IGNORECASE)
+        else:
+            pattern = re.compile(re.escape(forbidden_term), re.IGNORECASE)
+
+        if pattern.search(result):
+            result = pattern.sub(replacement, result)
+            replacements_made.append(f"{forbidden_term} → {replacement}")
+
+    if replacements_made:
+        log.info(f"🔧 Solo-Persona-Filter: {len(replacements_made)} Ersetzungen angewendet")
+        log.debug(f"   Details: {replacements_made[:5]}...")
+
+    return result
+
+
+def check_solo_persona_leaks(text: str, company_size: str) -> List[str]:
+    """
+    SPRINT N: Prüft auf verbleibende Team/KMU-Begriffe in Solo-Reports.
+
+    Returns:
+        Liste der gefundenen verbotenen Begriffe (leer wenn keine Leaks)
+    """
+    if company_size != "solo":
+        return []
+
+    leaks_found = []
+    text_lower = text.lower()
+
+    for term in SOLO_FORBIDDEN_TERMS:
+        if term.lower() in text_lower:
+            # Double-check with word boundary for short terms
+            if len(term) <= 6:
+                pattern = re.compile(r'\b' + re.escape(term) + r'\b', re.IGNORECASE)
+                if pattern.search(text):
+                    leaks_found.append(term)
+            else:
+                leaks_found.append(term)
+
+    if leaks_found:
+        log.warning(f"⚠️ Solo-Persona-Leaks gefunden: {leaks_found}")
+
+    return leaks_found
 
 
 def get_solo_governance_hint(company_size: str) -> str:
@@ -310,10 +464,11 @@ Für Einzelunternehmer/Freiberufler bitte EINFACHE Sprache verwenden:
 # Ziel: PDF < 10-12 MB, weniger LLM-Abbrüche
 # =============================================================================
 
-# PLATIN+ Token-Limits (REDUZIERT für PDF-SLIMDOWN)
-# Alte Werte: 4096 → Neue Werte: 2500-3200 je nach Sektion
+# PLATIN+ Token-Limits (SPRINT N: Length Stabilization)
+# Updated values for minimum word count compliance
 PLATIN_MAX_TOKENS_DEFAULT = 3000  # Default für kritische Sections
 PLATIN_MAX_TOKENS_COMPACT = 2500  # Für reduzierte Sections (roadmap, recommendations)
+PLATIN_MAX_TOKENS_EXTENDED = 4200  # Für längere Sections (roadmap_12m, gamechanger)
 
 
 class PlatinSectionConfig(TypedDict):
@@ -337,6 +492,14 @@ PLATIN_STOP_SEQUENCES = [
 
 
 PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
+    # SPRINT N: Executive Summary - updated token budget
+    "executive_summary": {
+        "max_tokens": 1200,  # SPRINT N: erhöht von 800 für Mindestlänge
+        "temperature": 0.3,
+        "presence_penalty": 0.0,
+        "frequency_penalty": 0.0,
+        "min_words": 150,  # SPRINT N: solo≥150, team≥180, kmu≥200
+    },
     # Foerderpotenzial: bleibt hoch (braucht detaillierte Förderinfos)
     "foerderpotenzial": {
         "max_tokens": 3200,  # Reduziert von 4096 (-22%)
@@ -361,15 +524,15 @@ PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
         "frequency_penalty": 0.1,
         "min_words": 400,  # Reduziert von 800
     },
-    # Roadmap 12m: deutlich reduziert (4 Phasen, je 4 Bullets)
+    # SPRINT N: Roadmap 12m - erhöhtes Token-Budget für Mindestlänge
     "roadmap_12m": {
-        "max_tokens": 2800,  # Reduziert von 4096 (-32%)
+        "max_tokens": 4200,  # SPRINT N: erhöht von 2800 für Mindestlänge 500-700
         "temperature": 0.4,
-        "presence_penalty": 0.1,  # Leichte Penalty gegen Wiederholungen
+        "presence_penalty": 0.1,
         "frequency_penalty": 0.1,
-        "min_words": 350,  # Reduziert von 900 (stark!)
+        "min_words": 500,  # SPRINT N: solo≥500, team≥600, kmu≥700
     },
-    # Roadmap 90d: NEU - deutlich reduziert (3 Phasen)
+    # Roadmap 90d: kompakt (3 Phasen)
     "roadmap_90d": {
         "max_tokens": 2200,  # Kompakt: 350-450 Wörter
         "temperature": 0.4,
@@ -377,21 +540,29 @@ PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
         "frequency_penalty": 0.1,
         "min_words": 250,
     },
-    # Quick Wins: NEU - kompakt (4 Quick Wins)
+    # Quick Wins: kompakt (4 Quick Wins)
     "quick_wins": {
         "max_tokens": 1800,  # Kompakt: ~100 Wörter je nach Größe
-        "temperature": 0.3,  # Konsistent
+        "temperature": 0.3,
         "presence_penalty": 0.1,
         "frequency_penalty": 0.1,
         "min_words": 150,
     },
-    # Gamechanger: leicht reduziert (strategisch wichtig)
+    # SPRINT N: Gamechanger - erhöhtes Token-Budget für Mindestlänge ≥750 Wörter
     "gamechanger": {
-        "max_tokens": 3000,  # Reduziert von 4096 (-27%)
+        "max_tokens": 3500,  # SPRINT N: erhöht von 3000 für Mindestlänge ≥750
         "temperature": 0.5,  # Etwas kreativer
         "presence_penalty": 0.0,
         "frequency_penalty": 0.0,
-        "min_words": 500,  # Reduziert von 700
+        "min_words": 750,  # SPRINT N: Mindestlänge fix ≥750 Wörter
+    },
+    # SPRINT N: Tools Empfehlungen - erhöhtes Token-Budget
+    "tools_empfehlungen": {
+        "max_tokens": 2500,  # SPRINT N: erhöht von 1800 für Mindestlänge
+        "temperature": 0.4,
+        "presence_penalty": 0.0,
+        "frequency_penalty": 0.0,
+        "min_words": 120,  # SPRINT N: solo≥120, team≥160, kmu≥200
     },
     # Unternehmensprofil: bleibt relativ hoch (wichtige Kontextinfos)
     "unternehmensprofil_markt": {
@@ -401,7 +572,7 @@ PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
         "frequency_penalty": 0.0,
         "min_words": 400,  # Reduziert von 500
     },
-    # Transparency Box: NEU - kompakt (180-250 Wörter)
+    # Transparency Box: kompakt (180-250 Wörter)
     "transparency_box": {
         "max_tokens": 1500,
         "temperature": 0.3,
@@ -409,7 +580,7 @@ PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
         "frequency_penalty": 0.0,
         "min_words": 150,
     },
-    # Technologie & Prozesse: NEU - kompakt (300-400 Wörter)
+    # Technologie & Prozesse: kompakt (300-400 Wörter)
     "technologie_prozesse": {
         "max_tokens": 2000,
         "temperature": 0.3,

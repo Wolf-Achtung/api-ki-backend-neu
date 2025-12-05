@@ -1,12 +1,16 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.2 -->
+<!-- PLATIN++ PROMPT v5.3 - SPRINT N -->
 <!-- SECTION: roadmap_12m -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, COMPANY_SIZE -->
-<!-- TOKEN-BUDGET: 2800 (solo:0.8x=2240, team:1.0x=2800, kmu:1.15x=3220) -->
+<!-- TOKEN-BUDGET: 4200 (solo:0.8x=3360, team:1.0x=4200, kmu:1.15x=4830) -->
+<!-- WORD_MINIMUM_SOLO: 500 -->
+<!-- WORD_MINIMUM_TEAM: 600 -->
+<!-- WORD_MINIMUM_KMU: 700 -->
 <!--
 ZIEL: 12-Monats-Roadmap mit Meilensteinen, aufbauend auf 90-Tage-Ergebnissen.
+MINDESTLÄNGE: solo≥500, team≥600, kmu≥700 Wörter (STRIKT EINHALTEN!)
 
 STRUKTUR NACH GRÖSSE:
 - Solo: Zeitbasierte Phasen (Q1, Q2, Q3-4)
@@ -26,9 +30,21 @@ ANTI-REDUNDANZ (STRIKT!):
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: eigene Workflows, Self-Review, persönliche Routine
-        Nicht verwenden: Team, Abteilung, Mitarbeiter, HR
 - team: KI-Koordinator, gemeinsame Standards, Review-Runden
 - kmu: Fachbereiche, Governance-Board, Rollout-Plan, Compliance
+
+SPRINT N - SOLO PERSONA REGELN (STRIKT!):
+{% if COMPANY_SIZE == "solo" %}
+NICHT VERWENDEN für Solo:
+- "Team" → stattdessen: "Kapazität" oder "Ressourcen"
+- "Abteilung" → stattdessen: "Arbeitsbereich"
+- "Mitarbeiter" → stattdessen: "externe Unterstützung"
+- "HR" → nicht verwenden
+- "Fachbereich" → stattdessen: "Arbeitsfeld"
+- "Team aufbauen" → stattdessen: "Kapazität erweitern"
+- "Teams" → stattdessen: "Kapazitäten"
+Formulierungen ohne Team-/Abteilungsbegriff verwenden!
+{% endif %}
 -->
 
 ## 12-Monats-Roadmap für {{HAUPTLEISTUNG}}

@@ -1,9 +1,9 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.2 -->
+<!-- PLATIN++ PROMPT v5.3 - SPRINT N -->
 <!-- SECTION: foerderpotenzial -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BUNDESLAND_LABEL}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}} -->
+<!-- INPUT: {{BUNDESLAND_LABEL}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}}, {{COMPANY_SIZE}} -->
 <!-- TOKEN-BUDGET: 3200 (solo:0.8x, team:1.0x, kmu:1.15x) -->
 <!-- FOERDERLOGIK: DE-Bundesprogramme + Landesprogramme (KEINE EU-Core-Hinweise) -->
 <!--
@@ -28,6 +28,17 @@ REGELN:
 - Förderquoten nur als Bereiche (z.B. "30-50%")
 - Sachlich, neutral, keine Werbung
 - Keine Platzhalter, keine Developer-Sprache
+
+SPRINT N - SOLO PERSONA REGELN (STRIKT!):
+{% if COMPANY_SIZE == "solo" %}
+NICHT VERWENDEN für Solo:
+- "Team aufbauen" → stattdessen: "Kapazität erweitern"
+- "Mitarbeiter" → stattdessen: "Ressourcen"
+- "Teams" → stattdessen: "Kapazitäten"
+- "Fachbereich" → stattdessen: "Arbeitsfeld"
+- "Abteilung" → stattdessen: "Arbeitsbereich"
+Formulierungen ohne Team-/Abteilungsbegriff verwenden!
+{% endif %}
 -->
 
 <section class="section funding-potential">
