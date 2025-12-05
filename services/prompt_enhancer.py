@@ -492,14 +492,9 @@ PLATIN_STOP_SEQUENCES = [
 
 
 PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
-    # SPRINT N: Executive Summary - updated token budget
-    "executive_summary": {
-        "max_tokens": 1200,  # SPRINT N: erhöht von 800 für Mindestlänge
-        "temperature": 0.3,
-        "presence_penalty": 0.0,
-        "frequency_penalty": 0.0,
-        "min_words": 150,  # SPRINT N: solo≥150, team≥180, kmu≥200
-    },
+    # NOTE: executive_summary and tools_empfehlungen are NOT in this list
+    # They are handled by report_validator.py MIN_SECTION_LENGTH_BY_SIZE for Sprint N
+
     # Foerderpotenzial: bleibt hoch (braucht detaillierte Förderinfos)
     "foerderpotenzial": {
         "max_tokens": 3200,  # Reduziert von 4096 (-22%)
@@ -524,13 +519,14 @@ PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
         "frequency_penalty": 0.1,
         "min_words": 400,  # Reduziert von 800
     },
-    # SPRINT N: Roadmap 12m - erhöhtes Token-Budget für Mindestlänge
+    # Roadmap 12m: PDF-SLIMDOWN v2.0 token budget
+    # Sprint N min_words enforced via report_validator.py (size-aware: 500/600/700)
     "roadmap_12m": {
-        "max_tokens": 4200,  # SPRINT N: erhöht von 2800 für Mindestlänge 500-700
+        "max_tokens": 2800,  # PDF-SLIMDOWN v2.0 value
         "temperature": 0.4,
         "presence_penalty": 0.1,
         "frequency_penalty": 0.1,
-        "min_words": 500,  # SPRINT N: solo≥500, team≥600, kmu≥700
+        "min_words": 350,  # PDF-SLIMDOWN v2.0 base (size-aware in validator)
     },
     # Roadmap 90d: kompakt (3 Phasen)
     "roadmap_90d": {
@@ -548,21 +544,14 @@ PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
         "frequency_penalty": 0.1,
         "min_words": 150,
     },
-    # SPRINT N: Gamechanger - erhöhtes Token-Budget für Mindestlänge ≥750 Wörter
+    # Gamechanger: PDF-SLIMDOWN v2.0 token budget
+    # Sprint N min_words enforced via report_validator.py (750 for all sizes)
     "gamechanger": {
-        "max_tokens": 3500,  # SPRINT N: erhöht von 3000 für Mindestlänge ≥750
+        "max_tokens": 3000,  # PDF-SLIMDOWN v2.0 value
         "temperature": 0.5,  # Etwas kreativer
         "presence_penalty": 0.0,
         "frequency_penalty": 0.0,
-        "min_words": 750,  # SPRINT N: Mindestlänge fix ≥750 Wörter
-    },
-    # SPRINT N: Tools Empfehlungen - erhöhtes Token-Budget
-    "tools_empfehlungen": {
-        "max_tokens": 2500,  # SPRINT N: erhöht von 1800 für Mindestlänge
-        "temperature": 0.4,
-        "presence_penalty": 0.0,
-        "frequency_penalty": 0.0,
-        "min_words": 120,  # SPRINT N: solo≥120, team≥160, kmu≥200
+        "min_words": 500,  # PDF-SLIMDOWN v2.0 base (750 enforced in validator)
     },
     # Unternehmensprofil: bleibt relativ hoch (wichtige Kontextinfos)
     "unternehmensprofil_markt": {
