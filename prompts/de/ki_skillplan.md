@@ -1,5 +1,5 @@
 Developer:
-<!-- ki_skillplan.md – v1.0 PLATIN++ (KI-Kompetenz-Fahrplan)
+<!-- ki_skillplan.md – v1.1 PLATIN++ SPRINT N (KI-Kompetenz-Fahrplan)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
@@ -10,7 +10,7 @@ Developer:
      - Textlänge: 100–150 Wörter (STRIKT EINHALTEN!)
 
      VERFÜGBARE VARIABLEN:
-       {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}
+       {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{COMPANY_SIZE}}
 
      SIZE-AWARE-LOGIK:
        SOLO: Fokus auf Selbstlernen, Online-Ressourcen, learning-by-doing
@@ -40,6 +40,17 @@ Developer:
        - Keine Platzhalter oder Template-Marker
        - Keine technischen Pipeline-Begriffe
        - Keine übertriebenen Versprechen
+
+     SPRINT N - SOLO PERSONA REGELN (STRIKT!):
+     {% if COMPANY_SIZE == "solo" %}
+     NICHT VERWENDEN für Solo:
+     - "Team aufbauen" → stattdessen: "Kapazität erweitern"
+     - "Mitarbeiter schulen" → stattdessen: "sich weiterbilden"
+     - "Teams" → stattdessen: "Kapazitäten"
+     - "Fachbereich" → stattdessen: "Arbeitsfeld"
+     - "Abteilung" → stattdessen: "Arbeitsbereich"
+     Formulierungen ohne Team-/Abteilungsbegriff verwenden!
+     {% endif %}
 -->
 
 <section class="section skill-plan">
