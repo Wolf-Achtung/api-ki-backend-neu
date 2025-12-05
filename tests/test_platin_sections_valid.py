@@ -595,8 +595,25 @@ class TestSprint2025SectionsIntegration:
 class TestManifestCompleteness:
     """Tests for prompt_manifest.json completeness."""
 
+    # Minimum required manifest version (PLATIN++ v5.3)
+    # Update this when releasing new manifest versions
+    MIN_MANIFEST_VERSION = "5.3"
+
+    @staticmethod
+    def _parse_version(version_str: str) -> tuple:
+        """Parse semantic version string to tuple for comparison.
+
+        Args:
+            version_str: Version string like "5.3" or "5.3.1"
+
+        Returns:
+            Tuple of integers for comparison (5, 3) or (5, 3, 1)
+        """
+        parts = version_str.split(".")
+        return tuple(int(p) for p in parts)
+
     def test_manifest_has_meta_version(self):
-        """Verify manifest has meta version info."""
+        """Verify manifest has meta version info and meets minimum version."""
         import json
         from pathlib import Path
 
@@ -605,7 +622,59 @@ class TestManifestCompleteness:
             manifest = json.load(f)
 
         assert "_meta" in manifest, "Manifest should have _meta section"
-        assert manifest["_meta"]["version"] == "5.0", "Manifest version should be 5.0"
+        assert "version" in manifest["_meta"], "Manifest _meta should have version field"
+
+        current_version = manifest["_meta"]["version"]
+        min_version = self.MIN_MANIFEST_VERSION
+
+        # Semantic version comparison: current >= minimum
+        current_tuple = self._parse_version(current_version)
+        min_tuple = self._parse_version(min_version)
+
+        assert current_tuple >= min_tuple, (
+            f"Manifest version {current_version} is older than minimum required {min_version}"
+        )
+
+    def test_manifest_version_exact_for_release(self):
+        """Verify manifest version matches expected release version (5.3)."""
+        import json
+        from pathlib import Path
+
+        manifest_path = Path(__file__).parent.parent / "prompts" / "prompt_manifest.json"
+        with open(manifest_path) as f:
+            manifest = json.load(f)
+
+        assert manifest["_meta"]["version"] == "5.3", (
+            f"Manifest version should be 5.3 for PLATIN++ RC, got: {manifest['_meta']['version']}"
+        )
+
+    def test_manifest_has_valid_meta_fields(self):
+        """Verify manifest _meta has all expected fields including optional release_date."""
+        import json
+        from pathlib import Path
+        import re
+
+        manifest_path = Path(__file__).parent.parent / "prompts" / "prompt_manifest.json"
+        with open(manifest_path) as f:
+            manifest = json.load(f)
+
+        meta = manifest["_meta"]
+
+        # Required fields
+        assert "version" in meta, "_meta should have version"
+        assert "description" in meta, "_meta should have description"
+
+        # Optional: validate release_date format if present (YYYY-MM or YYYY-MM-DD)
+        if "updated" in meta:
+            date_pattern = r"^\d{4}-\d{2}(-\d{2})?$"
+            assert re.match(date_pattern, meta["updated"]), (
+                f"_meta.updated should be YYYY-MM or YYYY-MM-DD format, got: {meta['updated']}"
+            )
+
+        # Optional: validate sprint field if present
+        if "sprint" in meta:
+            assert isinstance(meta["sprint"], str), "_meta.sprint should be a string"
+            assert len(meta["sprint"]) > 0, "_meta.sprint should not be empty"
 
     def test_manifest_has_de_and_en_sections(self):
         """Verify manifest has both DE and EN sections."""
