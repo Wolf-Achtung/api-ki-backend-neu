@@ -1,5 +1,5 @@
 Developer:
-<!-- ai_act_summary.md – v4.0 GOLD STANDARD+ (EU AI Act – branch- & size-aware, context-integrated)
+<!-- ai_act_summary.md – v4.1 GOLD STANDARD+ SPRINT N (EU AI Act – branch- & size-aware, context-integrated)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
@@ -10,7 +10,7 @@ Developer:
        - Korrekte Fristen (02.08.2025 / 02.08.2026 / 02.08.2027).
        - Darstellung relevanter Pflichten (Art. 5, Art. 6, Art. 50) + horizontale Anforderungen.
        - Transparenzpflichten klar benennen.
-       - Kurzteil: „Was bedeutet das für Unternehmen dieser Größe?“ (size-aware).
+       - Kurzteil: „Was bedeutet das für Unternehmen dieser Größe?" (size-aware).
        - Branchenspezifische Risiken / Regulatorik berücksichtigen (Finanzen, Gesundheit, öffentlicher Sektor).
        - Pflicht-Disclaimer: keine Rechtsberatung.
 
@@ -19,6 +19,7 @@ Developer:
        {{BRANCHE_LABEL}}
        {{UNTERNEHMENSGROESSE_LABEL}}
        {{report_date}}
+       {{COMPANY_SIZE}}
 
      REGELN:
        - Keine Rechtsberatung, nur faktenbasierte, strukturierte Information.
@@ -50,6 +51,17 @@ Developer:
            → Transparenz gegenüber Endkunden, Qualität der KI-generierten Inhalte.
        - IT/Software:
            → Modell-/Datenkontrolle, protokollierte Entwicklungsschritte.
+
+     SPRINT N - SOLO PERSONA REGELN (STRIKT!):
+     {% if COMPANY_SIZE == "solo" %}
+     NICHT VERWENDEN für Solo:
+     - "Team aufbauen" → stattdessen: "Kapazität erweitern"
+     - "Mitarbeiter" → stattdessen: "Ressourcen"
+     - "Teams" → stattdessen: "Kapazitäten"
+     - "Fachbereich" → stattdessen: "Arbeitsfeld"
+     - "Abteilung" → stattdessen: "Arbeitsbereich"
+     Formulierungen ohne Team-/Abteilungsbegriff verwenden!
+     {% endif %}
 
      OUTPUT-STRUKTUR:
        <section>
