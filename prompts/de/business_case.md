@@ -1,10 +1,13 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.2 -->
+<!-- PLATIN++ PROMPT v5.3 - SPRINT N -->
 <!-- SECTION: business_case -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCHE_LABEL}}, {{COMPANY_SIZE}}, {{HAUPTLEISTUNG}}, {{BUNDESLAND_LABEL}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}} -->
 <!-- TOKEN-BUDGET: 1800 (solo:0.8x=1440, team:1.0x=1800, kmu:1.15x=2070) -->
+<!-- WORD_MINIMUM_SOLO: 130 -->
+<!-- WORD_MINIMUM_TEAM: 150 -->
+<!-- WORD_MINIMUM_KMU: 180 -->
 <!--
 ZIEL: Klarer, realistischer Business Case mit ROI, CAPEX/OPEX.
 
@@ -29,6 +32,17 @@ PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: persönlicher ROI, Zeitentlastung, pragmatische Einschätzung
 - team: Team-ROI, gemeinsame Effizienzgewinne
 - kmu: Abteilungs-ROI, skalierbare Effekte
+
+SPRINT N - SOLO PERSONA REGELN (STRIKT!):
+{% if COMPANY_SIZE == "solo" %}
+NICHT VERWENDEN für Solo:
+- "Team aufbauen" → stattdessen: "Kapazität erweitern"
+- "Mitarbeiter" → stattdessen: "Ressourcen" oder "externe Unterstützung"
+- "Teams" → stattdessen: "Kapazitäten"
+- "Fachbereich" → stattdessen: "Arbeitsfeld"
+- "Abteilung" → stattdessen: "Arbeitsbereich"
+Formulierungen ohne Team-/Abteilungsbegriff verwenden!
+{% endif %}
 -->
 
 <section class="section business-case">
