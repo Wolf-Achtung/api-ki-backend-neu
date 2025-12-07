@@ -51,10 +51,10 @@ except ImportError:
         REDUNDANCY_WORD_THRESHOLD = 20
         AI_ACT_MIN_REASONING_WORDS = 60
 
-    def get_min_words(size: str, section_key: str) -> int:  # type: ignore[no-redef]
+    def get_min_words(size: str, section_key: str) -> int:
         return 100
 
-    SECTION_MIN_WORDS = None  # type: ignore[no-redef]
+    SECTION_MIN_WORDS = None
 
 log = logging.getLogger(__name__)
 
