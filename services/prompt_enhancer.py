@@ -234,10 +234,21 @@ SOLO_GOVERNANCE_REPLACEMENTS: Dict[str, str] = {
     "organisationsentwicklung": "Arbeitsweise verbessern",
     "change management": "Veränderung umsetzen",
     "change-management": "Veränderung umsetzen",
-    # Team references inappropriate for solo
+    # Team references inappropriate for solo (Sprint N2)
     "team aufbauen": "Arbeitsweise strukturieren",
     "mitarbeiter schulen": "sich weiterbilden",
     "mitarbeiterschulung": "Weiterbildung",
+    "teams": "Kapazitäten",
+    "team": "Kapazität",
+    "fachbereiche": "Arbeitsbereiche",
+    "fachbereich": "Arbeitsfeld",
+    "projektteam": "Projektstruktur",
+    "mitarbeiter einstellen": "externe Unterstützung hinzuziehen",
+    "mitarbeiter": "Ressourcen",
+    # EN equivalents for Solo
+    "department": "work area",
+    "departments": "work areas",
+    "staff": "resources",
 }
 
 
@@ -417,6 +428,14 @@ PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
         "frequency_penalty": 0.0,
         "min_words": 200,
     },
+    # Sprint N2: Org Change - niedrige min_words für Solo
+    "org_change": {
+        "max_tokens": 2000,
+        "temperature": 0.4,
+        "presence_penalty": 0.0,
+        "frequency_penalty": 0.0,
+        "min_words": 100,  # Niedrig für Solo (wird zu 80 mit 0.8x Multiplikator)
+    },
 }
 
 
@@ -475,18 +494,31 @@ def is_platin_critical_section(section_name: str) -> bool:
     return section_name.lower() in PLATIN_CRITICAL_SECTIONS
 
 
-def get_platin_min_words(section_name: str) -> int:
+def get_platin_min_words(section_name: str, size: Optional[str] = None) -> int:
     """
-    Get minimum word count for a section.
+    Get minimum word count for a section, adjusted for company size.
+
+    Sprint N2: Solo profiles get reduced min_words to avoid excessive fallbacks.
 
     Args:
         section_name: Name of the section
+        size: Company size ('solo', 'team', 'kmu') for min_words adjustment
 
     Returns:
-        Minimum word count, or 0 if not a critical section
+        Minimum word count (size-adjusted), or 0 if not a critical section
     """
     config = get_platin_config(section_name)
-    return config["min_words"] if config else 0
+    if not config:
+        return 0
+
+    base_min_words = config["min_words"]
+
+    # Sprint N2: Reduce min_words for Solo to prevent fallback flooding
+    if size and size.lower() == "solo":
+        # Apply 0.8x multiplier for Solo (same as token multiplier)
+        return max(50, int(base_min_words * 0.8))
+
+    return base_min_words
 
 
 class RoadmapConstraints(TypedDict):
