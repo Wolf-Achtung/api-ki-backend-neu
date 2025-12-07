@@ -168,6 +168,7 @@ try:
         get_score_context,
         get_research_provenance,
         validate_business_case_plausibility,
+        apply_ai_act_modifiers_to_business_case,  # G8.1
     )
 except Exception:
     calc_business_case = None
@@ -177,6 +178,19 @@ except Exception:
     get_score_context = None
     get_research_provenance = None
     validate_business_case_plausibility = None
+    apply_ai_act_modifiers_to_business_case = None  # G8.1
+
+# G8.2: Import centralized validation config
+try:
+    from services.config_validation import (
+        ValidationConfig,
+        get_min_words,
+        validate_business_case_with_ai_act,
+    )
+except ImportError:
+    ValidationConfig = None
+    get_min_words = None
+    validate_business_case_with_ai_act = None
 
 # Initialize logger
 log = logging.getLogger(__name__)
@@ -4462,6 +4476,53 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 
         # G8.2: Harmonize AI Act content across all sections
         sections = ai_act_harmonize(sections, briefing)
+
+        # =======================================================================
+        # G8.1: Apply AI Act Business Case Modifiers
+        # =======================================================================
+        risk_level = sections.get("AI_ACT_RISK_LEVEL", "minimal")
+        ai_act_bc_modifiers = {
+            "CAPEX_MODIFIER": sections.get("CAPEX_MODIFIER", 1.0),
+            "OPEX_MODIFIER": sections.get("OPEX_MODIFIER", 1.0),
+        }
+
+        # Only apply if modifiers exist and are non-default
+        if (callable(apply_ai_act_modifiers_to_business_case) and
+            (ai_act_bc_modifiers["CAPEX_MODIFIER"] != 1.0 or
+             ai_act_bc_modifiers["OPEX_MODIFIER"] != 1.0)):
+
+            # Build current business case dict from sections
+            current_bc = {
+                "CAPEX_REALISTISCH_EUR": sections.get("CAPEX_REALISTISCH_EUR", 0),
+                "OPEX_REALISTISCH_EUR": sections.get("OPEX_REALISTISCH_EUR", 0),
+                "EINSPARUNG_MONAT_EUR": sections.get("EINSPARUNG_MONAT_EUR", 0),
+                "PAYBACK_MONTHS": sections.get("PAYBACK_MONTHS", 0),
+                "ROI_12M": sections.get("ROI_12M", 0),
+                "BUSINESS_CASE_TABLE_HTML": sections.get("BUSINESS_CASE_TABLE_HTML", ""),
+            }
+
+            # Apply AI Act modifiers
+            adjusted_bc = apply_ai_act_modifiers_to_business_case(
+                current_bc,
+                ai_act_bc_modifiers,
+                risk_level
+            )
+
+            # Update sections with adjusted values
+            sections.update(adjusted_bc)
+
+            # Validate the adjusted business case
+            if callable(validate_business_case_with_ai_act):
+                bc_warnings = validate_business_case_with_ai_act(adjusted_bc, risk_level)
+                if bc_warnings:
+                    log.warning("⚠️ AI Act BC validation: %s", bc_warnings)
+
+            log.info("✅ AI Act BC modifiers applied: CAPEX ×%.2f, OPEX ×%.2f for %s",
+                     ai_act_bc_modifiers["CAPEX_MODIFIER"],
+                     ai_act_bc_modifiers["OPEX_MODIFIER"],
+                     risk_level)
+        else:
+            log.debug("ℹ️ AI Act BC modifiers not applied (defaults or function unavailable)")
 
         # G8.3: Validate persona compliance
         size = briefing.get("unternehmensgroesse", "")
