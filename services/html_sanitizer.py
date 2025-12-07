@@ -696,8 +696,9 @@ def sanitize_or_recover(
             return generate_auto_summary(section_name, "", branch, size, guardrails)
         return ""
 
-    # Sprint N2: Entferne redundante h1/h2 aus Executive Summary (Template stellt Überschrift bereit)
+    # Sprint N2 + N3: Entferne redundante h1/h2 UND Klartext "Executive Summary" (Template stellt Überschrift bereit)
     if section_name and "executive_summary" in section_name.lower():
+        # N2: Entferne HTML-Heading-Tags
         html_content = re.sub(
             r'<h[12][^>]*>.*?</h[12]>',
             '',
@@ -705,6 +706,9 @@ def sanitize_or_recover(
             count=1,
             flags=re.IGNORECASE | re.DOTALL
         )
+        # N3: Entferne verbleibenden Klartext "Executive Summary" (inkl. deutscher Variante)
+        html_content = html_content.replace("Executive Summary", "")
+        html_content = html_content.replace("Zusammenfassung", "")
 
     # Stufe 1: Normale Sanitization versuchen
     sanitized = sanitize_section_html(html_content)
