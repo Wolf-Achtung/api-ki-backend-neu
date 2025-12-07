@@ -223,7 +223,29 @@ Bei Erwähnung: "Tool X nutzen (siehe Quick Wins / Tools-Empfehlungen)"
 # SOLO-PERSONA MODULATION: Vereinfachte Governance-Sprache
 # =============================================================================
 
-# Corporate terms → Solo-appropriate replacements
+# Sprint N3: Phrase-based filtering (applied FIRST, before word-based)
+# These are multi-word phrases that must be replaced as units
+SOLO_FORBIDDEN_PHRASES: List[str] = [
+    "team aufbauen",
+    "teams aufbauen",
+    "mitarbeiter einstellen",
+    "mitarbeitende einstellen",
+    "personal einstellen",
+    "fachbereiche einbinden",
+    "fachbereich einbinden",
+]
+
+SOLO_PHRASE_REPLACEMENTS: Dict[str, str] = {
+    "team aufbauen": "Kapazität aufbauen",
+    "teams aufbauen": "Kapazitäten erweitern",
+    "mitarbeiter einstellen": "Ressourcen erweitern",
+    "mitarbeitende einstellen": "Ressourcen erweitern",
+    "personal einstellen": "externe Unterstützung hinzuziehen",
+    "fachbereiche einbinden": "Arbeitsbereiche strukturieren",
+    "fachbereich einbinden": "Arbeitsfeld strukturieren",
+}
+
+# Corporate terms → Solo-appropriate replacements (word-based)
 SOLO_GOVERNANCE_REPLACEMENTS: Dict[str, str] = {
     # Governance terms (case-insensitive replacements)
     "governance framework": "einfache Regeln",
@@ -331,12 +353,50 @@ SOLO_PERSONA_REPLACEMENTS: Dict[str, str] = {
 }
 
 
+def apply_solo_persona_filter(text: str) -> str:
+    """
+    Sprint N3: Applies comprehensive Solo persona filtering.
+
+    Replaces phrases and terms inappropriate for Solo professionals.
+    This is the main entry point for Solo text filtering.
+
+    Args:
+        text: Text to filter
+
+    Returns:
+        Filtered text with Solo-appropriate language
+    """
+    if not text:
+        return text
+
+    result = text
+    replacements_made = []
+
+    # 1) Apply phrase replacements FIRST (multi-word patterns)
+    for phrase, replacement in SOLO_PHRASE_REPLACEMENTS.items():
+        pattern = re.compile(re.escape(phrase), re.IGNORECASE)
+        if pattern.search(result):
+            result = pattern.sub(replacement, result)
+            replacements_made.append(f"[phrase] {phrase} → {replacement}")
+
+    # 2) Apply word-based replacements (single words/short terms)
+    for term, replacement in SOLO_GOVERNANCE_REPLACEMENTS.items():
+        pattern = re.compile(re.escape(term), re.IGNORECASE)
+        if pattern.search(result):
+            result = pattern.sub(replacement, result)
+            replacements_made.append(f"[word] {term} → {replacement}")
+
+    if replacements_made:
+        log.debug(f"🔧 Solo-Persona-Filter: {len(replacements_made)} Ersetzungen")
+
+    return result
+
+
 def simplify_solo_governance(text: str, company_size: str) -> str:
     """
     Vereinfacht Governance-Sprache für Solo-Unternehmer.
 
-    Ersetzt komplexe Corporate-Begriffe durch einfache, passende Ausdrücke.
-    Nur aktiv wenn company_size == 'solo'.
+    Sprint N3: Now uses apply_solo_persona_filter for comprehensive filtering.
 
     Args:
         text: Der zu vereinfachende Text
@@ -348,20 +408,7 @@ def simplify_solo_governance(text: str, company_size: str) -> str:
     if company_size != "solo":
         return text
 
-    result = text
-    replacements_made = []
-
-    for corporate_term, simple_term in SOLO_GOVERNANCE_REPLACEMENTS.items():
-        # Case-insensitive replacement
-        pattern = re.compile(re.escape(corporate_term), re.IGNORECASE)
-        if pattern.search(result):
-            result = pattern.sub(simple_term, result)
-            replacements_made.append(f"{corporate_term} → {simple_term}")
-
-    if replacements_made:
-        log.debug(f"🔧 Solo-Governance vereinfacht: {len(replacements_made)} Ersetzungen")
-
-    return result
+    return apply_solo_persona_filter(text)
 
 
 def apply_solo_persona_filter(text: str, company_size: str) -> str:

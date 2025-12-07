@@ -175,9 +175,9 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
   <ol>
     <li>
       <strong>Q2:</strong>
-      {% if UNTERNEHMENSGROESSE_LABEL.startswith('1') %}
-        Fokus auf persönliche Standardisierung: 2–3 Kernprozesse dokumentieren, einfache KI-Checklisten nutzen.
-      {% elif UNTERNEHMENSGROESSE_LABEL.startswith('2') %}
+      {% if COMPANY_SIZE == "solo" %}
+        Fokus auf Ihre persönliche Standardisierung: 2–3 Kernprozesse dokumentieren, einfache KI-Checklisten für sich selbst nutzen.
+      {% elif COMPANY_SIZE == "team" %}
         Rollen klären (KI-Owner, Reviewer), einheitliche Templates und kurze Review-Loops.
       {% else %}
         Bereichsübergreifende Pilotfläche definieren (z. B. Marketing, Produktion, Backoffice); erste Governance-Standards verankern.
@@ -186,9 +186,9 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
 
     <li>
       <strong>Q3:</strong>
-      {% if UNTERNEHMENSGROESSE_LABEL.startswith('1') %}
-        Workflow-Optimierung: KI-gestützte Routinen festigen, Integration der wichtigsten Branchentools.
-      {% elif UNTERNEHMENSGROESSE_LABEL.startswith('2') %}
+      {% if COMPANY_SIZE == "solo" %}
+        Workflow-Optimierung: Ihre KI-gestützten Routinen festigen, Integration Ihrer wichtigsten Branchentools.
+      {% elif COMPANY_SIZE == "team" %}
         Gemeinsame Dokumentation + regelmäßige Team-Reviews; Tool-Reduktion bei Doppelstrukturen.
       {% else %}
         Harmonisierung bereichsspezifischer Prozesse, klare Datenschnittstellen, einheitliche Freigaben.
@@ -197,9 +197,9 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
 
     <li>
       <strong>Q4:</strong>
-      {% if UNTERNEHMENSGROESSE_LABEL.startswith('1') %}
-        Routine-Festigung: wiederkehrende Nutzung + Jahresplanung.
-      {% elif UNTERNEHMENSGROESSE_LABEL.startswith('2') %}
+      {% if COMPANY_SIZE == "solo" %}
+        Routine-Festigung: Ihre wiederkehrende Nutzung + Jahresplanung für das kommende Jahr.
+      {% elif COMPANY_SIZE == "team" %}
         Skalierung im Team: automatisierte Qualitätskontrolle + einheitliche KI-Kommunikation.
       {% else %}
         Skalierungsprogramm: Governance erweitern, Auditroutinen, bereichsübergreifende Standards.
