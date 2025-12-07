@@ -140,17 +140,62 @@ REGULATORY_LABELS_EN: Dict[str, str] = {
     "recht": "Your compliance framework (BRAO, GDPR, professional confidentiality)",
 }
 
+# SPRINT G4.2: BRANCH_CONTEXT_LABEL (4-6 words, pure categorization)
+BRANCH_CONTEXT_LABELS_DE: Dict[str, str] = {
+    "beratung": "KI-Consulting",
+    "consulting": "KI-Consulting",
+    "it_software": "IT & Software",
+    "finanzen": "Finance Advisory",
+    "versicherung": "Versicherungsberatung",
+    "handel": "Handel & E-Commerce",
+    "industrie": "Industrie & Fertigung",
+    "gesundheit": "Healthcare Services",
+    "marketing": "Marketing & Creative",
+    "recht": "Legal Services",
+    "bildung": "Education & Training",
+    "immobilien": "Real Estate",
+    "logistik": "Logistics & Supply Chain",
+    "energie": "Energy & Utilities",
+    "medien": "Media & Publishing",
+    "tourismus": "Tourism & Hospitality",
+    "handwerk": "Handwerk & Services",
+    "gastronomie": "Gastro & Food",
+    "landwirtschaft": "AgriTech",
+}
+
+BRANCH_CONTEXT_LABELS_EN: Dict[str, str] = {
+    "beratung": "AI Consulting",
+    "consulting": "AI Consulting",
+    "it_software": "IT & Software",
+    "finanzen": "Finance Advisory",
+    "versicherung": "Insurance Services",
+    "handel": "Retail & E-Commerce",
+    "industrie": "Manufacturing",
+    "gesundheit": "Healthcare",
+    "marketing": "Marketing & Creative",
+    "recht": "Legal Services",
+    "bildung": "Education",
+    "immobilien": "Real Estate",
+    "logistik": "Logistics",
+    "energie": "Energy & Utilities",
+    "medien": "Media & Publishing",
+    "tourismus": "Tourism & Hospitality",
+    "handwerk": "Skilled Trades",
+    "gastronomie": "Food & Beverage",
+    "landwirtschaft": "AgriTech",
+}
+
 
 def generate_short_labels(briefing_data: Dict[str, Any], lang: str = "de") -> Dict[str, str]:
     """
-    Sprint G2.4: Generate short labels for a profile.
+    Sprint G2.4/G4.2: Generate short labels for a profile.
 
     Args:
         briefing_data: Briefing data with branche, hauptleistung, etc.
         lang: Language code ('de' or 'en')
 
     Returns:
-        Dict with BRANCH_CORE_LABEL, OFFERING_LABEL, REGULATORY_LABEL
+        Dict with BRANCH_CORE_LABEL, OFFERING_LABEL, REGULATORY_LABEL, BRANCH_CONTEXT_LABEL
     """
     branche = briefing_data.get("branche", "").lower().strip()
 
@@ -159,14 +204,18 @@ def generate_short_labels(briefing_data: Dict[str, Any], lang: str = "de") -> Di
         branch_labels = BRANCH_CORE_LABELS_EN
         offering_labels = OFFERING_LABELS_EN
         regulatory_labels = REGULATORY_LABELS_EN
+        context_labels = BRANCH_CONTEXT_LABELS_EN
     else:
         branch_labels = BRANCH_CORE_LABELS_DE
         offering_labels = OFFERING_LABELS_DE
         regulatory_labels = REGULATORY_LABELS_DE
+        context_labels = BRANCH_CONTEXT_LABELS_DE
 
     # Get labels with fallbacks
     branch_core = branch_labels.get(branche, branch_labels.get("beratung", "KI-Beratung"))
     offering = offering_labels.get(branche, offering_labels.get("beratung", "KI-Lösungen"))
+    # SPRINT G4.2: Short context label (4-6 words)
+    branch_context = context_labels.get(branche, context_labels.get("beratung", "Consulting"))
 
     # Regulatory label only for regulated industries
     regulatory = ""
@@ -177,6 +226,7 @@ def generate_short_labels(briefing_data: Dict[str, Any], lang: str = "de") -> Di
         "BRANCH_CORE_LABEL": branch_core,
         "OFFERING_LABEL": offering,
         "REGULATORY_LABEL": regulatory,
+        "BRANCH_CONTEXT_LABEL": branch_context,  # SPRINT G4.2
     }
 
 
@@ -1450,30 +1500,90 @@ Nutze den Strategischen Kontext wie folgt:
 
     def _build_short_label_instructions(self, briefing_data: Dict[str, Any]) -> str:
         """
-        Sprint G2.4: Build short-label instructions for redundancy reduction.
+        Sprint G2.4/G4.1: Build short-label instructions for redundancy reduction.
 
         Returns instruction block telling LLM to use short labels instead of
         repeating long-form branch/offering descriptions.
+
+        Sprint G4.1: Now size-aware - uses Team/KMU perspective for non-Solo profiles.
         """
-        short_labels = generate_short_labels(briefing_data, lang="de")
+        # Determine language from briefing
+        lang = "en" if briefing_data.get("sprache", "de").lower() == "en" else "de"
+        short_labels = generate_short_labels(briefing_data, lang=lang)
+
         branch_label = short_labels.get("BRANCH_CORE_LABEL", "")
         offering_label = short_labels.get("OFFERING_LABEL", "")
         regulatory_label = short_labels.get("REGULATORY_LABEL", "")
+        context_label = short_labels.get("BRANCH_CONTEXT_LABEL", "")  # G4.2
 
         if not branch_label:
             return ""
 
-        instructions = f"""
-## Anti-Redundanz: Kurzlabels verwenden (Sprint G2.4)
+        # SPRINT G4.1: Determine size category for perspective
+        size_raw = (briefing_data.get("unternehmensgroesse") or "").lower()
+        if "solo" in size_raw or "1" in size_raw or "freiberuf" in size_raw:
+            size_key = "solo"
+            size_perspective_de = "als Einzelperson/Freiberufler"
+            size_perspective_en = "as a solo professional"
+        elif "team" in size_raw or "klein" in size_raw or "2" in size_raw:
+            size_key = "team"
+            size_perspective_de = "als kleines Team (2-10 Personen)"
+            size_perspective_en = "as a small team (2-10 people)"
+        else:
+            size_key = "kmu"
+            size_perspective_de = "als KMU/Unternehmen"
+            size_perspective_en = "as an SME/company"
+
+        if lang == "en":
+            instructions = f"""
+## Anti-Redundancy: Use Short Labels (Sprint G4)
+
+**Use ONLY these short labels for context references:**
+- **Branch Focus:** {branch_label}
+- **Core Offering:** {offering_label}
+- **Context Tag:** {context_label}
+"""
+            if regulatory_label:
+                instructions += f"- **Compliance:** {regulatory_label}\n"
+
+            instructions += f"""
+**SIZE PERSPECTIVE:** Write from the perspective of {size_perspective_en}.
+"""
+            if size_key != "solo":
+                instructions += """
+- Use collective language: "Your team...", "Your organization...", "Your company..."
+- NEVER use solo-specific terms like "as an individual", "solo entrepreneur", "freelancer"
+"""
+            instructions += """
+**IMPORTANT:**
+- Never repeat full branch/offering descriptions (>12 words)
+- Use short labels above instead
+- The strategic context block already contains the full description
+
+---
+
+"""
+        else:
+            instructions = f"""
+## Anti-Redundanz: Kurzlabels verwenden (Sprint G4)
 
 **Verwende ausschließlich diese Kurzlabels für Kontextbezüge:**
 - **Branchen-Fokus:** {branch_label}
 - **Hauptleistung:** {offering_label}
+- **Kontext-Tag:** {context_label}
 """
-        if regulatory_label:
-            instructions += f"- **Compliance:** {regulatory_label}\n"
+            if regulatory_label:
+                instructions += f"- **Compliance:** {regulatory_label}\n"
 
-        instructions += """
+            instructions += f"""
+**GRÖSSENPERSPEKTIVE:** Schreibe aus der Perspektive {size_perspective_de}.
+"""
+            if size_key != "solo":
+                instructions += """
+- Verwende kollektive Sprache: "Ihr Team...", "Ihre Organisation...", "Ihr Unternehmen..."
+- NIEMALS Solo-spezifische Begriffe wie "als Einzelperson", "Solo-Selbstständige", "Freiberufler"
+"""
+            instructions += """
 **WICHTIG:**
 - Wiederhole niemals vollständige Branchen- oder Leistungsbeschreibungen (>12 Wörter)
 - Nutze stattdessen die Kurzlabels oben
