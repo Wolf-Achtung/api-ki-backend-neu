@@ -188,9 +188,9 @@ try:
         validate_business_case_with_ai_act,
     )
 except ImportError:
-    ValidationConfig = None  # type: ignore[assignment,misc]
-    get_min_words = None  # type: ignore[assignment]
-    validate_business_case_with_ai_act = None  # type: ignore[assignment]
+    ValidationConfig = None
+    get_min_words = None
+    validate_business_case_with_ai_act = None
 
 # G9.1: Import AI Act BC monitoring
 try:

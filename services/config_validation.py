@@ -175,11 +175,11 @@ def get_min_words(size: str, section_key: str) -> int:
     """
     size_lower = size.lower()
 
-    # Normalize size
-    if "solo" in size_lower or "freiberuf" in size_lower or "1" in size_lower:
-        size_key = "solo"
-    elif "team" in size_lower or "klein" in size_lower or "2" in size_lower:
+    # Normalize size - check team first to avoid "10" matching "1" for solo
+    if "team" in size_lower or "klein" in size_lower or size_lower.startswith("2"):
         size_key = "team"
+    elif "solo" in size_lower or "freiberuf" in size_lower or size_lower.startswith("1") or "(1" in size_lower:
+        size_key = "solo"
     else:
         size_key = "kmu"
 
