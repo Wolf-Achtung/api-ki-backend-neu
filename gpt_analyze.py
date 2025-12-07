@@ -4376,7 +4376,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 
     # Business Case / Governance / Org / Tools / Förderpotenzial
     # Sprint G6.4: Inject pre-calculated Business Case Table into BUSINESS_CASE_HTML
-    bc_table = answers.get("BUSINESS_CASE_TABLE_HTML", "")
+    bc_table = briefing.get("BUSINESS_CASE_TABLE_HTML", "")
     bc_html = sections.get("BUSINESS_CASE_HTML", "")
     if bc_table and bc_html:
         # Append the calculated table to the business case section
@@ -4386,7 +4386,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         else:
             bc_html = f"{bc_html}\n{bc_table}"
         sections["BUSINESS_CASE_HTML"] = bc_html
-        log.info("[%s] 💰 Business Case Table injected into BUSINESS_CASE_HTML", run_id)
+        log.debug("💰 Business Case Table injected into BUSINESS_CASE_HTML")
     # Also store table separately for direct template access
     sections["BUSINESS_CASE_TABLE_HTML"] = bc_table
     sections["business_case"] = sections.get("BUSINESS_CASE_HTML", "")
