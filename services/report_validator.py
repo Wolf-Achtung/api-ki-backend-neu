@@ -40,9 +40,9 @@ try:
     _HAS_CONFIG_VALIDATION = True
 except ImportError:
     _HAS_CONFIG_VALIDATION = False
-    ValidationConfig = None
-    get_min_words = None
-    SECTION_MIN_WORDS = None
+    ValidationConfig = None  # type: ignore[assignment,misc]
+    get_min_words = None  # type: ignore[assignment]
+    SECTION_MIN_WORDS = None  # type: ignore[assignment]
 
 log = logging.getLogger(__name__)
 

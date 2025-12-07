@@ -290,7 +290,10 @@ def get_bc_metrics_summary(sections: Dict[str, Any]) -> Optional[Dict[str, Any]]
 
     Returns None if no metrics were stored.
     """
-    return sections.get("_ai_act_bc_metrics")
+    result = sections.get("_ai_act_bc_metrics")
+    if result is None:
+        return None
+    return dict(result) if isinstance(result, dict) else None
 
 
 def format_metrics_for_log(metrics: Dict[str, Any]) -> str:
