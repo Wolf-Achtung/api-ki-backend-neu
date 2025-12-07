@@ -292,7 +292,7 @@ SOLO_PHRASE_REPLACEMENTS: Dict[str, str] = {
 }
 
 # Corporate terms → Solo-appropriate replacements (word-based)
-# NOTE: "abteilung" uses "Aufgabenbereich" to match test expectations
+# Sprint N3.2: "abteilung" uses "Arbeitsbereich" as per user requirement
 SOLO_GOVERNANCE_REPLACEMENTS: Dict[str, str] = {
     # Governance terms (case-insensitive replacements)
     "governance framework": "einfache Regeln",
@@ -303,8 +303,8 @@ SOLO_GOVERNANCE_REPLACEMENTS: Dict[str, str] = {
     "steering committee": "regelmäßige Selbstkontrolle",
     "gremium": "Prüfroutine",
     "board": "Prüfroutine",
-    "abteilung": "Aufgabenbereich",
-    "abteilungen": "Aufgabenbereiche",
+    "abteilung": "Arbeitsbereich",
+    "abteilungen": "Arbeitsbereiche",
     "organisationsentwicklung": "Arbeitsweise verbessern",
     "change management": "Veränderung umsetzen",
     "change-management": "Veränderung umsetzen",
@@ -400,23 +400,26 @@ def apply_solo_persona_filter(text: str) -> str:
             result = pattern.sub(replacement, result)
             replacements_made.append(f"[phrase] {phrase} → {replacement}")
 
-    # 2) Apply word-based replacements with word boundary protection
-    # Sprint N3.1: Protect customer-related compound words (Kundenabteilung, etc.)
-    for term, replacement in SOLO_GOVERNANCE_REPLACEMENTS.items():
-        # Use negative lookbehind to avoid replacing within compound words
-        # e.g., don't replace "abteilung" in "Kundenabteilung"
+    # 2) Apply word-based replacements
+    # Sprint N3.2: Sort by length (longest first) to avoid partial matches
+    # e.g., "abteilungen" must be processed before "abteilung"
+    sorted_replacements = sorted(
+        SOLO_GOVERNANCE_REPLACEMENTS.items(),
+        key=lambda x: len(x[0]),
+        reverse=True
+    )
+
+    for term, replacement in sorted_replacements:
         if term.lower() in ("abteilung", "abteilungen"):
-            # Special handling: preserve customer-related compound words
+            # Special handling for Abteilung: protect customer-related compound words
+            # but catch all other cases including "IT-Abteilung", "HR-Abteilung", etc.
             pattern = re.compile(
-                r'(?<![Kk]unden)(?<!\w)' + re.escape(term) + r'(?!\w)',
+                r'(?<![Kk]unden)(' + re.escape(term) + r')',
                 re.IGNORECASE
             )
         else:
-            # Standard word boundary matching
-            pattern = re.compile(
-                r'(?<!\w)' + re.escape(term) + r'(?!\w)',
-                re.IGNORECASE
-            )
+            # Standard case-insensitive replacement
+            pattern = re.compile(re.escape(term), re.IGNORECASE)
 
         if pattern.search(result):
             result = pattern.sub(replacement, result)
