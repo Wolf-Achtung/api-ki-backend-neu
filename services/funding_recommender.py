@@ -62,7 +62,7 @@ class FundingRecommendation:
 # =============================================================================
 
 # Embedded core funding programs for fallback
-CORE_FUNDING_PROGRAMS = [
+CORE_FUNDING_PROGRAMS: List[Dict[str, Any]] = [
     {
         "id": "go_digital",
         "name": "go-digital",
@@ -220,16 +220,17 @@ CORE_FUNDING_PROGRAMS = [
 # RECOMMENDATION ENGINE
 # =============================================================================
 
-def load_funding_programs() -> List[Dict]:
+def load_funding_programs() -> List[Dict[str, Any]]:
     """Load funding programs from file or use embedded data."""
     try:
         if os.path.exists(FUNDING_DATA_PATH):
             with open(FUNDING_DATA_PATH, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                data: List[Dict[str, Any]] = json.load(f)
+                return data
     except Exception as e:
         log.warning("[G11-Funding] Could not load funding data: %s", e)
 
-    return CORE_FUNDING_PROGRAMS
+    return list(CORE_FUNDING_PROGRAMS)
 
 
 def calculate_relevance_score(

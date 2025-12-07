@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 log = logging.getLogger(__name__)
 
@@ -222,7 +222,7 @@ def generate_payback_chart(
 
     # Calculate cumulative values for 18 months
     months = min(int(payback_months * 1.5), 18)
-    points = []
+    points: List[Tuple[float, float]] = []
 
     x_scale = 240 / max(months, 12)
     y_max = capex * 1.2
@@ -391,7 +391,7 @@ def generate_bc_visuals_html(
 # API RESPONSE GENERATOR
 # =============================================================================
 
-def get_bc_visuals_for_api(bc_data: Dict[str, Any], lang: str = "de") -> Dict[str, str]:
+def get_bc_visuals_for_api(bc_data: Dict[str, Any], lang: str = "de") -> Dict[str, Any]:
     """
     Generate visualizations for API response.
 
