@@ -1,17 +1,20 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.2 -->
+<!-- PLATIN++ PROMPT v5.3 - SPRINT N -->
 <!-- SECTION: tools_empfehlungen -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{COMPANY_SIZE}} -->
 <!-- TOKEN-BUDGET: 2500 (solo:0.8x=2000, team:1.0x=2500, kmu:1.15x=2875) -->
+<!-- WORD_MINIMUM_SOLO: 120 -->
+<!-- WORD_MINIMUM_TEAM: 160 -->
+<!-- WORD_MINIMUM_KMU: 200 -->
 <!-- RESEARCH: Tools können aus {{RESEARCH_PROVENANCE_HTML}} referenziert werden -->
 <!--
 ZIEL: Klar strukturierte Tool-Empfehlungssektion ("KI-Stack") für {{BRANCHE_LABEL}}.
+MINDESTLÄNGE: solo≥120, team≥160, kmu≥200 Wörter (STRIKT EINHALTEN!)
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: 3–5 Tools, einfache Bedienung, geringer Integrationsaufwand
-        Nicht verwenden: "Abteilung", "Projektteam", "Bereich"
 - team: gemeinsamer Workspace, Kollaboration, Rechte-/Rollenkonzepte
 - kmu: definierter Stack mit Governance, Rollen, Monitoring, fachbereichsspezifisch
 
@@ -23,6 +26,19 @@ STIL & REGELN:
 - Produktneutral (keine Markennamen)
 - Fokus auf Toolkategorien und Zweck
 - Keine Platzhalter oder Developer-Sprache
+
+SPRINT N - SOLO PERSONA REGELN (STRIKT!):
+{% if COMPANY_SIZE == "solo" %}
+NICHT VERWENDEN für Solo:
+- "Abteilung" → stattdessen: "Arbeitsbereich"
+- "Projektteam" → stattdessen: "Projektkapazität"
+- "Bereich" ist OK, aber nicht "Fachbereich"
+- "Team aufbauen" → stattdessen: "Kapazität erweitern"
+- "Mitarbeiter" → stattdessen: "externe Unterstützung" oder "Freelancer"
+- "Teams" → stattdessen: "Ressourcen" oder "Kapazitäten"
+- "Fachbereich" → stattdessen: "Arbeitsfeld"
+Formulierungen ohne Team-/Abteilungsbegriff verwenden!
+{% endif %}
 -->
 
 <section class="section tools">

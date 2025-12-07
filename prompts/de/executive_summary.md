@@ -1,14 +1,18 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.2 -->
+<!-- PLATIN++ PROMPT v5.3 - SPRINT N -->
 <!-- SECTION: executive_summary -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}} -->
-<!-- TOKEN-BUDGET: 600 (solo:0.8x=480, team:1.0x=600, kmu:1.15x=690) -->
+<!-- TOKEN-BUDGET: 1200 (solo:0.8x=960, team:1.0x=1200, kmu:1.15x=1380) -->
+<!-- WORD_MINIMUM_SOLO: 150 -->
+<!-- WORD_MINIMUM_TEAM: 180 -->
+<!-- WORD_MINIMUM_KMU: 200 -->
 <!--
-ZIEL: CEO-taugliche Executive Summary in 2-4 Sätzen.
+ZIEL: CEO-taugliche Executive Summary.
+MINDESTLÄNGE: solo≥150, team≥180, kmu≥200 Wörter (STRIKT EINHALTEN!)
 
-PLOT-STRUKTUR (STRIKT – ein Absatz):
+PLOT-STRUKTUR (STRIKT – min. 3-4 Absätze):
 1. Ausgangslage: Wo steht das Unternehmen heute? (Branche, Größe, KI-Reife)
 2. Fokus & Ziele: Was ist das zentrale Ziel mit KI?
 3. Wichtigste Hebel: Welcher eine Ansatzpunkt bringt den größten Effekt?
@@ -18,8 +22,7 @@ STIL (CEO-TAUGLICH):
 - Prägnant, keine Buzzwords ("Synergien", "Transformation", "Next-Level")
 - Faktenbasiert, nüchtern, ergebnisorientiert
 - KEINE Wiederholung von Roadmap-Details oder Quick-Win-Listen
-- KEINE Aufzählungen – nur Fließtext
-- Maximal 80 Wörter
+- Fließtext bevorzugt, kurze Aufzählungen OK
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: "Sie", persönliche Perspektive, Entlastung als Ziel
@@ -33,10 +36,16 @@ ANTI-REDUNDANZ:
 
 GUARDRAILS: Respektiere angegebene Leitplanken aus strategischem Kontext.
 
-WICHTIG:
-- Gib KEINE eigenen h1/h2/h3-Überschriften aus.
-- Der Template-Rahmen stellt bereits die Überschriften.
-- Erzeuge NUR <p>-Elemente, ohne "Executive Summary"-Headline.
+SPRINT N - SOLO PERSONA REGELN (STRIKT!):
+{% if COMPANY_SIZE == "solo" %}
+NICHT VERWENDEN für Solo:
+- "Team aufbauen" → stattdessen: "Kapazität erweitern"
+- "Mitarbeiter" → stattdessen: "Ressourcen"
+- "Teams" → stattdessen: "Kapazitäten"
+- "Fachbereich" → stattdessen: "Arbeitsfeld"
+- "Abteilung" → stattdessen: "Arbeitsbereich"
+Formulierungen ohne Team-/Abteilungsbegriff verwenden!
+{% endif %}
 -->
 
 <section class="section executive-summary">

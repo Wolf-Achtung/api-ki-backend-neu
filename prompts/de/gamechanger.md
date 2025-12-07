@@ -1,12 +1,14 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.2 -->
+<!-- PLATIN++ PROMPT v5.3 - SPRINT N -->
 <!-- SECTION: gamechanger -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{STRATEGISCHE_ZIELE}}, {{GESCHAEFTSMODELL_EVOLUTION}}, {{VISION_3_JAHRE}}, COMPANY_SIZE -->
-<!-- TOKEN-BUDGET: 3000 (solo:0.8x=2400, team:1.0x=3000, kmu:1.15x=3450) -->
+<!-- TOKEN-BUDGET: 3500 (solo:0.8x=2800, team:1.0x=3500, kmu:1.15x=4025) -->
+<!-- WORD_MINIMUM: 750 (ALLE GRÖSSEN - STRIKT!) -->
 <!--
-ZIEL: 2–3 realistische Gamechanger für {{HAUPTLEISTUNG}}.
+ZIEL: MINDESTENS 3 realistische Gamechanger für {{HAUPTLEISTUNG}}.
+MINDESTLÄNGE: ≥750 Wörter (STRIKT EINHALTEN! NICHT nach 1-2 Ideen abbrechen!)
 
 PFLICHTSTRUKTUR (pro Gamechanger):
 1. Kernidee (2-3 Sätze)
@@ -17,7 +19,6 @@ PFLICHTSTRUKTUR (pro Gamechanger):
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: Automatisierung, persönliche Entlastung, skalierbare Vorlagen
-        Nicht verwenden: "Abteilungen", "Teams", "Bereiche"
 - team: arbeitsteilige Workflows, Rollen, einfache Governance
 - kmu: skalierbare Prozesse, klare Verantwortlichkeiten, Pilotbereiche
 
@@ -28,6 +29,19 @@ ANTI-REDUNDANZ:
 REGELN:
 - Keine erfundenen Daten
 - Konkreter Bezug zu {{HAUPTLEISTUNG}} erforderlich
+- MINDESTENS 3 vollständige Szenarien beschreiben!
+
+SPRINT N - SOLO PERSONA REGELN (STRIKT!):
+{% if COMPANY_SIZE == "solo" %}
+NICHT VERWENDEN für Solo:
+- "Abteilungen" → stattdessen: "Arbeitsbereiche"
+- "Teams" → stattdessen: "Kapazitäten" oder "Ressourcen"
+- "Bereiche" ist OK, aber nicht "Fachbereiche"
+- "Team aufbauen" → stattdessen: "Kapazität erweitern"
+- "Mitarbeiter" → stattdessen: "externe Unterstützung"
+- "Fachbereich" → stattdessen: "Arbeitsfeld"
+Formulierungen ohne Team-/Abteilungsbegriff verwenden!
+{% endif %}
 -->
 
 <section class="section gamechanger">
@@ -136,4 +150,4 @@ REGELN:
   </p>
 </section>
 
-<!-- DEV: PDF-SLIMDOWN v2.0 - Ziel: 500-700 Wörter, kompakt aber vollständig -->
+<!-- DEV: SPRINT N - Ziel: ≥750 Wörter, mindestens 3 vollständige Szenarien -->
