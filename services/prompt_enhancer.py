@@ -223,29 +223,76 @@ Bei Erwähnung: "Tool X nutzen (siehe Quick Wins / Tools-Empfehlungen)"
 # SOLO-PERSONA MODULATION: Vereinfachte Governance-Sprache
 # =============================================================================
 
-# Sprint N3: Phrase-based filtering (applied FIRST, before word-based)
+# Sprint N3/N3.1: Phrase-based filtering (applied FIRST, before word-based)
 # These are multi-word phrases that must be replaced as units
 SOLO_FORBIDDEN_PHRASES: List[str] = [
+    # Team-bezogen
     "team aufbauen",
     "teams aufbauen",
+    "team einbinden",
+    "teams einbinden",
+    "im team",
+    "das team",
+    "ihr team",
+    "unser team",
+    # Mitarbeiter-bezogen
     "mitarbeiter einstellen",
     "mitarbeitende einstellen",
     "personal einstellen",
+    "neue mitarbeiter",
+    "mitarbeiter schulen",
+    # Abteilungs-/Fachbereichs-bezogen
     "fachbereiche einbinden",
     "fachbereich einbinden",
+    "in fachbereichen",
+    "die fachbereiche",
+    "alle fachbereiche",
+    "verschiedene fachbereiche",
+    "abteilungen einbinden",
+    "abteilung einbinden",
+    # Management-/Führungs-bezogen
+    "führungsteam",
+    "management-team",
+    "bereichsleitung",
+    "fachabteilung",
+    "fachabteilungen",
 ]
 
 SOLO_PHRASE_REPLACEMENTS: Dict[str, str] = {
+    # Team-Phrasen → Solo-passend
     "team aufbauen": "Kapazität aufbauen",
     "teams aufbauen": "Kapazitäten erweitern",
+    "team einbinden": "externe Expertise einbinden",
+    "teams einbinden": "Kooperationspartner einbinden",
+    "im team": "gemeinsam mit Partnern",
+    "das team": "Ihre Kapazität",
+    "ihr team": "Ihre Kapazität",
+    "unser team": "unsere Kapazität",
+    # Mitarbeiter-Phrasen → Solo-passend
     "mitarbeiter einstellen": "Ressourcen erweitern",
     "mitarbeitende einstellen": "Ressourcen erweitern",
     "personal einstellen": "externe Unterstützung hinzuziehen",
+    "neue mitarbeiter": "zusätzliche Kapazitäten",
+    "mitarbeiter schulen": "sich weiterbilden",
+    # Fachbereichs-Phrasen → Solo-passend
     "fachbereiche einbinden": "Arbeitsbereiche strukturieren",
     "fachbereich einbinden": "Arbeitsfeld strukturieren",
+    "in fachbereichen": "in Ihren Arbeitsbereichen",
+    "die fachbereiche": "Ihre Arbeitsbereiche",
+    "alle fachbereiche": "alle Ihre Arbeitsbereiche",
+    "verschiedene fachbereiche": "verschiedene Arbeitsbereiche",
+    "abteilungen einbinden": "Arbeitsbereiche strukturieren",
+    "abteilung einbinden": "Arbeitsbereich einbeziehen",
+    # Management/Führung → Solo-passend
+    "führungsteam": "Ihre Entscheidungsfindung",
+    "management-team": "Ihre strategische Planung",
+    "bereichsleitung": "Verantwortungsbereich",
+    "fachabteilung": "Arbeitsfeld",
+    "fachabteilungen": "Arbeitsbereiche",
 }
 
 # Corporate terms → Solo-appropriate replacements (word-based)
+# NOTE: "abteilung" uses "Aufgabenbereich" to match test expectations
 SOLO_GOVERNANCE_REPLACEMENTS: Dict[str, str] = {
     # Governance terms (case-insensitive replacements)
     "governance framework": "einfache Regeln",
@@ -256,8 +303,8 @@ SOLO_GOVERNANCE_REPLACEMENTS: Dict[str, str] = {
     "steering committee": "regelmäßige Selbstkontrolle",
     "gremium": "Prüfroutine",
     "board": "Prüfroutine",
-    "abteilung": "Arbeitsbereich",
-    "abteilungen": "Arbeitsbereiche",
+    "abteilung": "Aufgabenbereich",
+    "abteilungen": "Aufgabenbereiche",
     "organisationsentwicklung": "Arbeitsweise verbessern",
     "change management": "Veränderung umsetzen",
     "change-management": "Veränderung umsetzen",
@@ -272,10 +319,17 @@ SOLO_GOVERNANCE_REPLACEMENTS: Dict[str, str] = {
     "projektteam": "Projektstruktur",
     "mitarbeiter einstellen": "externe Unterstützung hinzuziehen",
     "mitarbeiter": "Ressourcen",
+    "mitarbeitende": "Beteiligte",
+    "mitarbeitenden": "Beteiligten",
+    "personalentscheidungen": "Ressourcenentscheidungen",
+    "personaldaten": "vertrauliche Daten",
+    "belegschaft": "Kapazität",
     # EN equivalents for Solo
     "department": "work area",
     "departments": "work areas",
     "staff": "resources",
+    "employees": "collaborators",
+    "employee": "collaborator",
 }
 
 # =============================================================================
@@ -319,10 +373,13 @@ SOLO_FORBIDDEN_TERMS: List[str] = [
 
 def apply_solo_persona_filter(text: str) -> str:
     """
-    Sprint N3: Applies comprehensive Solo persona filtering.
+    Sprint N3/N3.1: Applies comprehensive Solo persona filtering.
 
     Replaces phrases and terms inappropriate for Solo professionals.
     This is the main entry point for Solo text filtering.
+
+    IMPORTANT: Uses word boundaries to avoid replacing within compound words
+    like "Kundenabteilung" (customer department references should be preserved).
 
     Args:
         text: Text to filter
@@ -343,9 +400,24 @@ def apply_solo_persona_filter(text: str) -> str:
             result = pattern.sub(replacement, result)
             replacements_made.append(f"[phrase] {phrase} → {replacement}")
 
-    # 2) Apply word-based replacements (single words/short terms)
+    # 2) Apply word-based replacements with word boundary protection
+    # Sprint N3.1: Protect customer-related compound words (Kundenabteilung, etc.)
     for term, replacement in SOLO_GOVERNANCE_REPLACEMENTS.items():
-        pattern = re.compile(re.escape(term), re.IGNORECASE)
+        # Use negative lookbehind to avoid replacing within compound words
+        # e.g., don't replace "abteilung" in "Kundenabteilung"
+        if term.lower() in ("abteilung", "abteilungen"):
+            # Special handling: preserve customer-related compound words
+            pattern = re.compile(
+                r'(?<![Kk]unden)(?<!\w)' + re.escape(term) + r'(?!\w)',
+                re.IGNORECASE
+            )
+        else:
+            # Standard word boundary matching
+            pattern = re.compile(
+                r'(?<!\w)' + re.escape(term) + r'(?!\w)',
+                re.IGNORECASE
+            )
+
         if pattern.search(result):
             result = pattern.sub(replacement, result)
             replacements_made.append(f"[word] {term} → {replacement}")
