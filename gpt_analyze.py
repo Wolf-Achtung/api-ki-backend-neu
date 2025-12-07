@@ -21,6 +21,70 @@ Version History:
 - 4.14.0-PLATIN++: Prompt-System aktiviert, dynamische Daten
 - 4.14.1-PLATIN++: Size-aware Fallbacks, Platzhalter-Fix, Aliasing-Korrektur
 - 4.14.2-PLATIN++: Roadmap-Fallbacks inline, HAUPTLEISTUNG-Integration
+
+=============================================================================
+Sprint N4.2: LLM SECTION FALLBACK DOCUMENTATION
+=============================================================================
+
+ARCHITEKTUR: Primäre Prompts + Fallback-System
+
+1. PRIMÄRE PROMPTS (LLM-generiert via GPT/Anthropic):
+   Location: prompts/de/*.md, prompts/en/*.md
+   Loader: services/prompt_loader.py (load_prompt function)
+
+   Key Sections mit Mindestlängen (PLATIN++ v5.3):
+   ┌──────────────────────┬─────────────┬────────────────────────────────┐
+   │ Section              │ Word Min    │ Prompt File                    │
+   ├──────────────────────┼─────────────┼────────────────────────────────┤
+   │ roadmap_12m          │ solo:500    │ prompts/de/roadmap_12m.md      │
+   │                      │ team:600    │                                │
+   │                      │ kmu:700     │                                │
+   ├──────────────────────┼─────────────┼────────────────────────────────┤
+   │ gamechanger          │ 750 (all)   │ prompts/de/gamechanger.md      │
+   ├──────────────────────┼─────────────┼────────────────────────────────┤
+   │ foerderpotenzial     │ 720-880     │ prompts/de/foerderpotenzial.md │
+   ├──────────────────────┼─────────────┼────────────────────────────────┤
+   │ recommendations      │ 800+        │ prompts/de/recommendations.md  │
+   ├──────────────────────┼─────────────┼────────────────────────────────┤
+   │ risks                │ 800+        │ prompts/de/risks.md            │
+   ├──────────────────────┼─────────────┼────────────────────────────────┤
+   │ unternehmensprofil   │ 500+        │ prompts/de/unternehmensprofil  │
+   │   _markt             │             │   _markt.md                    │
+   └──────────────────────┴─────────────┴────────────────────────────────┘
+
+2. FALLBACK-SYSTEM (Hardcoded Templates):
+   Function: _get_fallback_content(section_key, briefing, scores)
+   Location: This file (gpt_analyze.py)
+
+   Trigger-Bedingungen für Fallback:
+   a) LLM API Fehler (Timeout, Rate Limit, etc.)
+   b) Output unter Word-Minimum (nach Parsing)
+   c) Static Sections (direkt Fallback ohne LLM-Call)
+   d) max_fallbacks überschritten → Hard-Stop
+
+   Fallback Word Targets (PLATIN+):
+   - foerderpotenzial: 900+ Wörter (size-aware)
+   - risks: 800+ Wörter (size-aware)
+   - recommendations: 800+ Wörter (size-aware)
+   - roadmap_12m: 900+ Wörter (size-aware)
+   - roadmap/roadmap_90d: 1000+ Zeichen (size-aware)
+   - gamechanger: 700+ Wörter
+
+3. PERSONA-VARIATIONS (COMPANY_SIZE):
+   - solo: Persönliche Formulierungen, keine Teams/Abteilungen
+   - team: KI-Koordinator, gemeinsame Standards
+   - kmu: Fachbereiche, Governance-Board, Rollout-Plan
+
+4. SIZE-FILTERING (Sprint N):
+   Zusätzlicher Solo-Filter in services/prompt_enhancer.py:
+   apply_solo_persona_filter() entfernt unpassende Begriffe für Solo.
+
+5. QUALITY GATES:
+   - Word-Count Validierung nach LLM-Response
+   - ErrorGate tracking für Fallback-Count
+   - HARD_STOP_MAX_FALLBACKS = 5 (configurable)
+
+=============================================================================
 ---------------------------------------------------------------------
 """
 from __future__ import annotations
@@ -4258,8 +4322,12 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections["risks"] = sections.get("RISKS_HTML", "")
     sections["gamechanger"] = sections.get("GAMECHANGER_HTML", "")
     sections["recommendations"] = sections.get("RECOMMENDATIONS_HTML", "")
-    sections["EXEC_SUMMARY_HTML"] = sections.get("EXECUTIVE_SUMMARY_HTML", "")
-    sections["executive_summary"] = sections.get("EXECUTIVE_SUMMARY_HTML", "")
+    # Sprint N3.3: Apply Exec Summary Hard-Clean to remove H1/H2 and label text
+    from services.html_sanitizer import clean_exec_summary_html
+    exec_summary_cleaned = clean_exec_summary_html(sections.get("EXECUTIVE_SUMMARY_HTML", ""))
+    sections["EXECUTIVE_SUMMARY_HTML"] = exec_summary_cleaned
+    sections["EXEC_SUMMARY_HTML"] = exec_summary_cleaned
+    sections["executive_summary"] = exec_summary_cleaned
     
     return sections
 
