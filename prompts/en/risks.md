@@ -1,12 +1,17 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.2 -->
+<!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
 <!-- SECTION: risks -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{HAUPTLEISTUNG}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{score_governance}}, {{score_sicherheit}} -->
-<!-- TOKEN-BUDGET: 3000 (solo:0.8x=2400, team:1.0x=3000, kmu:1.15x=3450) -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{score_governance}}, {{score_sicherheit}}, COMPANY_SIZE -->
+<!-- TOKEN-BUDGET: 3000 (solo:0.8x=2400, team:1.0x=3000, sme:1.15x=3450) -->
 <!--
 GOAL: 5 sections with 120-160 words each (= 600-800 words total).
+
+SHORT LABELS (MANDATORY!):
+- {{BRANCH_CORE_LABEL}} = Industry in 8-12 words
+- {{BRANCH_CONTEXT_LABEL}} = Industry in 4-6 words
+- {{OFFERING_LABEL}} = Main service in 6-10 words
 
 STRUCTURE (5 Required Sections):
   H3 1. Strategic and Organizational Risks (4 risks + measures)
@@ -20,11 +25,26 @@ PERSONA VARIATIONS (COMPANY_SIZE):
 - team: role clarification, coordination, knowledge silos
 - sme: governance, processes, documentation, compliance
 
-ANTI-REDUNDANCY:
-- Risks NOT repeated in guardrails section
-- Measures kept brief, not repeated in org_change
+ANTI-REDUNDANCY (STRICT!):
+- Risks NOT repeated in guardrails section (→ cross-reference)
+- Measures kept brief, not repeated in org_change (→ cross-reference)
+- On overlap: use cross-reference
 
-GUARDRAILS: Respect stated guardrails; mention them in risk mitigation.
+SPRINT G5 - PERSONA HARD-GUARDS (STRICT!):
+{% if COMPANY_SIZE == "solo" %}
+SOLO MODE - FORBIDDEN:
+- "Team/Teams/Department/Employees" → do not use
+- "Division" → "Work area"
+{% elif COMPANY_SIZE == "team" %}
+TEAM MODE - FORBIDDEN:
+- "Division/Unit/Corporation" → do not use
+- "Department" → "Area"
+- Solo terms: "individual", "alone"
+{% else %}
+SME MODE - FORBIDDEN:
+- "Corporation/Division/Unit" → do not use
+- Solo terms: "individual", "alone"
+{% endif %}
 
 RULES:
 - Actively interpret scores
@@ -33,24 +53,21 @@ RULES:
 -->
 
 <section class="section risks">
-  <h2>Key Risks in AI Deployment for {{HAUPTLEISTUNG}}</h2>
+  <h2>Key Risks in AI Deployment for {{OFFERING_LABEL}}</h2>
 
   <p>
-    Deploying AI in <strong>{{HAUPTLEISTUNG}}</strong> in the <strong>{{BRANCHE_LABEL}}</strong>
-    industry – with its typical workflows, data types, and pain points – offers significant opportunities
-    but also brings different risk profiles depending on company size
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>. The current governance score of
+    Deploying AI for {{BRANCH_CONTEXT_LABEL}} offers significant opportunities
+    but also brings different risk profiles. The current governance score of
     <strong>{{score_governance}}/100</strong> and security score of
-    <strong>{{score_sicherheit}}/100</strong> show how far structures for control,
-    documentation, and protection mechanisms have already been developed. The following sections
-    consolidate the most important risk areas and outline concrete countermeasures.
+    <strong>{{score_sicherheit}}/100</strong> show the maturity level of structures.
+    The following sections consolidate the most important risk areas.
   </p>
 
   <h3>1. Strategic and Organizational Risks</h3>
   <ul>
     <li>
       <strong>Unclear goals and priorities for AI.</strong>
-      Without clearly defined goals for {{HAUPTLEISTUNG}}, there is a risk that AI experiments
+      Without clearly defined goals for {{OFFERING_LABEL}}, there is a risk that AI experiments
       fizzle out, isolated solutions emerge, or important opportunities remain unused.
       Countermeasures include a concise vision with 2-3 prioritized use cases,
       a simple implementation plan, and regular review of whether measures align with
@@ -232,10 +249,9 @@ RULES:
 
   <p class="small muted">
     This risk analysis shows the most important action areas for AI in
-    <strong>{{HAUPTLEISTUNG}}</strong> in a company of size
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>. In the next step, risks should be
-    prioritized by probability and impact and transferred into concrete
-    action planning for the next 3-6 months.
+    {{OFFERING_LABEL}}. In the next step, risks should be
+    prioritized by probability and impact.
+    Implementation details → see Roadmap and Governance section.
   </p>
 </section>
 

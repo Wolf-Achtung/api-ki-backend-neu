@@ -1,9 +1,9 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.3 - SPRINT N -->
+<!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
 <!-- SECTION: roadmap_12m -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, COMPANY_SIZE -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 4200 (solo:0.8x=3360, team:1.0x=4200, kmu:1.15x=4830) -->
 <!-- WORD_MINIMUM_SOLO: 500 -->
 <!-- WORD_MINIMUM_TEAM: 600 -->
@@ -12,7 +12,13 @@ Developer:
 ZIEL: 12-Monats-Roadmap mit Meilensteinen, aufbauend auf 90-Tage-Ergebnissen.
 MINDESTLÄNGE: solo≥500, team≥600, kmu≥700 Wörter (STRIKT EINHALTEN!)
 
-STRUKTUR NACH GRÖSSE:
+KURZLABELS (VERPFLICHTEND!):
+- {{BRANCH_CORE_LABEL}} = Branche in 8-12 Wörtern
+- {{BRANCH_CONTEXT_LABEL}} = Branche in 4-6 Wörtern
+- {{OFFERING_LABEL}} = Hauptleistung in 6-10 Wörtern
+- KEINE langen Branchentexte im Output verwenden!
+
+STRUKTUR NACH GRÖSSE (max 3 Hauptabschnitte):
 - Solo: Zeitbasierte Phasen (Q1, Q2, Q3-4)
 - Team: Zeitbasierte Phasen mit Rollen
 - KMU: Block-Struktur (Tech, Data, Org, Product, Compliance) + Rollout
@@ -27,34 +33,44 @@ ANTI-REDUNDANZ (STRIKT!):
 - Quick Wins → NICHT wiederholen
 - Tools → NICHT wiederholen
 - Fokus: WAS KOMMT NACH den ersten 90 Tagen?
+- Bei Wiederholung: Querverweis nutzen (→ siehe Abschnitt X)
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: eigene Workflows, Self-Review, persönliche Routine
 - team: KI-Koordinator, gemeinsame Standards, Review-Runden
 - kmu: Fachbereiche, Governance-Board, Rollout-Plan, Compliance
 
-SPRINT N - SOLO PERSONA REGELN (STRIKT!):
+SPRINT G5 - PERSONA HARD-GUARDS (STRIKT!):
 {% if COMPANY_SIZE == "solo" %}
-NICHT VERWENDEN für Solo:
-- "Team" → stattdessen: "Kapazität" oder "Ressourcen"
-- "Abteilung" → stattdessen: "Arbeitsbereich"
-- "Mitarbeiter" → stattdessen: "externe Unterstützung"
-- "HR" → nicht verwenden
-- "Fachbereich" → stattdessen: "Arbeitsfeld"
-- "Team aufbauen" → stattdessen: "Kapazität erweitern"
-- "Teams" → stattdessen: "Kapazitäten"
-Formulierungen ohne Team-/Abteilungsbegriff verwenden!
+SOLO-MODUS - VERBOTEN:
+- "Team/Teams" → "Kapazität/Kapazitäten"
+- "Abteilung" → "Arbeitsbereich"
+- "Mitarbeiter" → "externe Unterstützung"
+- "HR/Fachbereich" → nicht verwenden
+- "Team aufbauen" → "Kapazität erweitern"
+{% elif COMPANY_SIZE == "team" %}
+TEAM-MODUS - VERBOTEN:
+- "Abteilung/Fachbereich" → "Bereich"
+- "Division/Unit" → nicht verwenden
+- "Governance-Board" → "Team-Lead"
+- "Konzern" → nicht verwenden
+- Solo-Begriffe: "Einzelperson", "allein"
+{% else %}
+KMU-MODUS - VERBOTEN:
+- "Konzern/Division/Unit" → nicht verwenden
+- Solo-Begriffe: "Einzelperson", "allein", "persönlich"
+- Überfrachtung mit Governance-Jargon vermeiden
 {% endif %}
 -->
 
-## 12-Monats-Roadmap für {{HAUPTLEISTUNG}}
+## 12-Monats-Roadmap für {{OFFERING_LABEL}}
 
 {% if COMPANY_SIZE == "solo" %}
 Aufbauend auf den ersten 90 Tagen – Fokus auf nachhaltige Integration und Erweiterung.
 
 ### Q1 (Monate 1–3): Fundament festigen
 - Erfolgreiche Workflows aus 90-Tage-Phase zur Routine machen
-- 2–3 weitere Use Cases aus {{BRANCHE_LABEL}} testen
+- 2–3 weitere Use Cases aus {{BRANCH_CONTEXT_LABEL}} testen
 - Persönliche Prompt-Bibliothek auf 20+ Vorlagen erweitern
 
 **🎯 Meilenstein Q1:** 10+ h/Monat stabile Zeitersparnis.
