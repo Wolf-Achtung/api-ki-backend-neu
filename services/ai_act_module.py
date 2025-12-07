@@ -1845,7 +1845,9 @@ def build_ai_act_sections_optimized(
 
     # Apply persona filter to text sections
     for key in ["AI_ACT_RISK_REASONING"]:
-        sections[key] = apply_ai_act_persona_filter(sections[key], size)
+        value = sections[key]
+        if isinstance(value, str):
+            sections[key] = apply_ai_act_persona_filter(value, size)
 
     log.info("🏛️ AI Act sections (optimized): risk_level=%s", risk_level)
 
