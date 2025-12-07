@@ -193,10 +193,10 @@ except ImportError:
         """Fallback stub when config_validation not available."""
         AI_ACT_APPLY_BC_MODIFIERS = False
 
-    def get_min_words(size: str, section_key: str) -> int:  # type: ignore[no-redef]
+    def get_min_words(size: str, section_key: str) -> int:
         return 100
 
-    def validate_business_case_with_ai_act(  # type: ignore[no-redef]
+    def validate_business_case_with_ai_act(
         business_case: Dict[str, Any], risk_level: str = "minimal"
     ) -> list:
         return []
