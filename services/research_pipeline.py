@@ -16,6 +16,48 @@ HYBRID APPROACH (2025-11-20):
 - RSS für News (kostenlos, schnell)
 - Tavily für Förder-/Tool-Recherche (aktuelle Web-Ergebnisse)
 - Perplexity für Markt-/Wettbewerbs-Insights (strukturierte Analyse)
+
+=============================================================================
+Sprint N4.3: RESEARCH INTEGRATION MAPPING
+=============================================================================
+
+RESEARCH → REPORT INTEGRATION MAP:
+
+  ┌─────────────────────────┬─────────────────────────┬──────────────────────┐
+  │ Research Output         │ Section Alias           │ Template Variable    │
+  ├─────────────────────────┼─────────────────────────┼──────────────────────┤
+  │ TOOLS_TABLE_HTML        │ → TOOLS_HTML            │ {{ TOOLS_HTML }}     │
+  ├─────────────────────────┼─────────────────────────┼──────────────────────┤
+  │ FUNDING_TABLE_HTML      │ → FOERDERPROGRAMME_HTML │ {{ FOERDER... }}     │
+  ├─────────────────────────┼─────────────────────────┼──────────────────────┤
+  │ MARKET_INSIGHTS_HTML    │ (direct)                │ {{ MARKET_... }}     │
+  ├─────────────────────────┼─────────────────────────┼──────────────────────┤
+  │ NEWS_BOX_HTML           │ (direct)                │ {{ NEWS_BOX_HTML }}  │
+  ├─────────────────────────┼─────────────────────────┼──────────────────────┤
+  │ last_updated            │ → research_last_updated │ {{ LAST_UPDATED }}   │
+  ├─────────────────────────┼─────────────────────────┼──────────────────────┤
+  │ research_status (new)   │ (internal tracking)     │ N/A                  │
+  └─────────────────────────┴─────────────────────────┴──────────────────────┘
+
+STATUS TRACKING (Sprint N4.1):
+  research_status = {
+    "tools": success | partial | fallback | error,
+    "funding": success | partial | fallback | error,
+    "market": success | partial | fallback | error,
+    "news": success | partial | fallback | error,
+  }
+
+FALLBACK CHAIN (Sprint N4.1):
+  1. Tavily/Perplexity API call
+  2. Web scraping fallback (if API empty)
+  3. Static fallback HTML (if scraping empty)
+  4. Fallback generators: _tools_fallback_html(), _funding_fallback_html(), etc.
+
+INTEGRATION POINT: gpt_analyze.py (line ~4520)
+  research_blocks = run_research(answers)
+  sections.update(research_blocks)
+
+=============================================================================
 """
 from __future__ import annotations
 
@@ -313,18 +355,30 @@ def run_research(answers: Dict[str, Any]) -> Dict[str, Any]:
     """
     HYBRID APPROACH: Combines RSS, Tavily, and Perplexity for optimal results.
 
+    Sprint N4.1: Enhanced with status tracking and robust error handling.
+    Each research component has status: success | partial | error | fallback
+
     Returns:
       {
         "TOOLS_TABLE_HTML": "...",
         "FUNDING_TABLE_HTML": "...",
-        "MARKET_INSIGHTS_HTML": "...",  # NEW
+        "MARKET_INSIGHTS_HTML": "...",
         "NEWS_BOX_HTML": "...",
-        "last_updated": "YYYY-MM-DD"
+        "last_updated": "YYYY-MM-DD",
+        "research_status": {...}  # NEW: status per component
       }
     """
     provider = os.getenv("RESEARCH_PROVIDER", "hybrid").strip().lower()
     # offline-only short-circuit
     offline_only = provider == "offline"
+
+    # Sprint N4.1: Status tracking per component
+    research_status = {
+        "tools": "pending",
+        "funding": "pending",
+        "market": "pending",
+        "news": "pending",
+    }
 
     # Extract context from answers
     branche = answers.get("BRANCHE_LABEL") or answers.get("branche") or ""
@@ -458,15 +512,98 @@ def run_research(answers: Dict[str, Any]) -> Dict[str, Any]:
     news = _uniq(news)[:12]
     market_insights = _uniq(market_insights)[:10]
 
-    # Log summary
+    # Sprint N4.1: Update status based on results
+    research_status["tools"] = "success" if len(tools) >= 3 else ("partial" if tools else "fallback")
+    research_status["funding"] = "success" if len(funding) >= 3 else ("partial" if funding else "fallback")
+    research_status["market"] = "success" if len(market_insights) >= 2 else ("partial" if market_insights else "fallback")
+    research_status["news"] = "success" if len(news) >= 2 else ("partial" if news else "fallback")
+
+    # Sprint N4.1: Compact status log
+    log.info("[RESEARCH] tools=%s, funding=%s, market=%s, news=%s",
+             research_status["tools"], research_status["funding"],
+             research_status["market"], research_status["news"])
     log.info("📊 Research complete: %d tools, %d funding, %d news, %d market insights",
              len(tools), len(funding), len(news), len(market_insights))
 
+    # Sprint N4.1: Generate fallback texts for empty results
+    tools_html = _tools_table(tools) if tools else _tools_fallback_html(branche)
+    funding_html = _funding_table(funding) if funding else _funding_fallback_html(bundesland)
+    market_html = _market_insights_box(market_insights) if market_insights else _market_fallback_html()
+    news_html = _news_box(news) if news else _news_fallback_html()
+
     data: Dict[str, Any] = {
-        "TOOLS_TABLE_HTML": _tools_table(tools),
-        "FUNDING_TABLE_HTML": _funding_table(funding),
-        "MARKET_INSIGHTS_HTML": _market_insights_box(market_insights),  # NEW
-        "NEWS_BOX_HTML": _news_box(news),
+        "TOOLS_TABLE_HTML": tools_html,
+        "FUNDING_TABLE_HTML": funding_html,
+        "MARKET_INSIGHTS_HTML": market_html,
+        "NEWS_BOX_HTML": news_html,
         "last_updated": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "research_status": research_status,  # NEW: status per component
     }
     return data
+
+
+# =============================================================================
+# Sprint N4.1: Fallback HTML generators for empty research results
+# =============================================================================
+
+def _tools_fallback_html(branche: str) -> str:
+    """Generates fallback HTML when no tools research is available."""
+    branche_text = f" für {branche}" if branche else ""
+    return f'''
+<div class="research-fallback tools-fallback">
+  <p><strong>Empfohlene KI-Werkzeuge{branche_text}:</strong></p>
+  <ul>
+    <li><a href="https://openai.com/" target="_blank">OpenAI GPT-4o</a> – Leistungsfähiges Sprachmodell für Textgenerierung</li>
+    <li><a href="https://claude.ai/" target="_blank">Anthropic Claude</a> – Zuverlässiger KI-Assistent für komplexe Aufgaben</li>
+    <li><a href="https://huggingface.co/models" target="_blank">Hugging Face</a> – Open-Source-Modelle und ML-Plattform</li>
+  </ul>
+  <p class="small muted">Tipp: Prüfen Sie aktuelle Anbietervergleiche für branchenspezifische Tools.</p>
+</div>
+'''.strip()
+
+
+def _funding_fallback_html(bundesland: str) -> str:
+    """Generates fallback HTML when no funding research is available."""
+    region_text = f" in {bundesland}" if bundesland else ""
+    return f'''
+<div class="research-fallback funding-fallback">
+  <p><strong>Förderprogramme für KI und Digitalisierung{region_text}:</strong></p>
+  <p>Aktuell wurden keine spezifischen Förderprogramme für Ihr Profil gefunden.
+     Prüfen Sie regelmäßig folgende Quellen:</p>
+  <ul>
+    <li><a href="https://www.foerderdatenbank.de/" target="_blank">Förderdatenbank des Bundes</a></li>
+    <li><a href="https://www.bmwk.de/" target="_blank">Bundesministerium für Wirtschaft</a></li>
+    <li><a href="https://digital-strategy.ec.europa.eu/en/activities/digital-programme" target="_blank">EU Digital Programme</a></li>
+  </ul>
+  <p class="small muted">Hinweis: Förderlandschaft ändert sich regelmäßig – quartalsweise prüfen empfohlen.</p>
+</div>
+'''.strip()
+
+
+def _market_fallback_html() -> str:
+    """Generates fallback HTML when no market insights are available."""
+    return '''
+<div class="research-fallback market-fallback">
+  <p><strong>Markt-Insights:</strong></p>
+  <p>Aktuell keine spezifischen Markt-Insights verfügbar. Der KI-Markt entwickelt sich
+     dynamisch – relevante Trends und Wettbewerbsinformationen sollten regelmäßig
+     über Branchenpublikationen und Fachmedien verfolgt werden.</p>
+  <p class="small muted">Empfehlung: Newsletter von Heise, t3n oder Branchenpublikationen abonnieren.</p>
+</div>
+'''.strip()
+
+
+def _news_fallback_html() -> str:
+    """Generates fallback HTML when no news are available."""
+    return '''
+<div class="research-fallback news-fallback">
+  <p><strong>Aktuelle KI-News:</strong></p>
+  <p>Aktuell keine relevanten News-Artikel gefunden. Für aktuelle Entwicklungen
+     empfehlen wir die regelmäßige Lektüre von:</p>
+  <ul>
+    <li>Heise Online – KI & Machine Learning</li>
+    <li>t3n – Digitalisierung & Tech</li>
+    <li>EU Digital Strategy News</li>
+  </ul>
+</div>
+'''.strip()
