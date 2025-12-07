@@ -673,28 +673,59 @@ class ReportValidator:
                         )
                     )
 
-    # SPRINT G3.3: Whitelist for standard phrases that may repeat intentionally
+    # SPRINT G3.3/G4.4: Extended whitelist for standard phrases that may repeat intentionally
     REDUNDANCY_WHITELIST = [
-        # ROI/Business disclaimers
+        # ROI/Business disclaimers (DE)
         "return on investment",
         "roi nach 12 monaten",
         "amortisation",
         "payback",
-        # AI Act standard references
+        "investitionsrechnung",
+        "kostenersparnis",
+        # ROI/Business disclaimers (EN)
+        "cost savings",
+        "time savings",
+        "efficiency gains",
+        # AI Act standard references (DE)
         "ai act",
         "hochrisiko",
-        "high-risk",
         "konformität",
+        "risikoklasse",
+        "eu-verordnung",
+        # AI Act standard references (EN)
+        "high-risk",
         "compliance",
-        # Standard KI references
+        "risk classification",
+        "eu regulation",
+        # Standard KI references (DE)
         "künstliche intelligenz",
+        "maschinelles lernen",
+        "automatisierung",
+        "digitale transformation",
+        # Standard KI references (EN)
         "artificial intelligence",
         "machine learning",
-        "maschinelles lernen",
-        # Short standard phrases
+        "automation",
+        "digital transformation",
+        # Data protection (DE/EN)
         "datenschutz",
         "dsgvo",
         "gdpr",
+        "data protection",
+        "privacy",
+        # Governance standard phrases (DE)
+        "verantwortungsvoller einsatz",
+        "menschliche kontrolle",
+        "qualitätssicherung",
+        # Governance standard phrases (EN)
+        "responsible use",
+        "human oversight",
+        "quality assurance",
+        # Section cross-references (allowed to repeat)
+        "details finden sie",
+        "siehe abschnitt",
+        "for more details",
+        "see section",
     ]
 
     def _check_redundancy(self) -> None:
