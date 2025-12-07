@@ -386,6 +386,155 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
     }
 
 
+# ------------------------ AI Act Business Case Modifiers (G8.1) -------------
+
+
+def apply_ai_act_modifiers_to_business_case(
+    business_case: Dict[str, Any],
+    ai_act_modifiers: Dict[str, Any],
+    risk_level: str = "minimal"
+) -> Dict[str, Any]:
+    """
+    Sprint G8.1: Apply AI Act compliance cost modifiers to business case.
+
+    Adjusts CAPEX, OPEX, and recalculates PAYBACK/ROI based on AI Act risk level.
+
+    Args:
+        business_case: Original business case dict from calc_business_case()
+        ai_act_modifiers: Dict with CAPEX_MODIFIER, OPEX_MODIFIER from AI Act module
+        risk_level: AI Act risk level (none/minimal/limited/high-risk)
+
+    Returns:
+        Updated business case dict with adjusted values and AI_ACT_BC_* tracking keys
+    """
+    # Extract original values
+    base_capex = business_case.get("CAPEX_REALISTISCH_EUR", 0)
+    base_opex = business_case.get("OPEX_REALISTISCH_EUR", 0)
+    base_einsparung = business_case.get("EINSPARUNG_MONAT_EUR", 0)
+
+    # Get modifiers (default to 1.0 = no change)
+    capex_factor = float(ai_act_modifiers.get("CAPEX_MODIFIER", 1.0))
+    opex_factor = float(ai_act_modifiers.get("OPEX_MODIFIER", 1.0))
+
+    # Calculate payback adjustment based on risk level
+    payback_delta = 0.0
+    if risk_level == "high-risk":
+        payback_delta = 2.0  # +2 months for compliance setup
+    elif risk_level == "limited":
+        payback_delta = 0.5  # +0.5 months for documentation
+
+    # Apply modifiers
+    capex_adjusted = int(round(base_capex * capex_factor))
+    opex_adjusted = int(round(base_opex * opex_factor))
+
+    # Recalculate financial metrics
+    monatlicher_nutzen = base_einsparung - opex_adjusted
+    if monatlicher_nutzen > 0:
+        payback_adjusted = round(capex_adjusted / monatlicher_nutzen + payback_delta, 1)
+    else:
+        payback_adjusted = None
+
+    # ROI recalculation
+    savings_12_months = base_einsparung * 12
+    total_investment = capex_adjusted
+    roi_12m_eur = savings_12_months - total_investment - (opex_adjusted * 12)
+
+    if total_investment > 0:
+        roi_12m_percent = (roi_12m_eur / total_investment) * 100.0
+    else:
+        roi_12m_percent = None
+
+    # Log the adjustment
+    log.info(
+        "[AI-ACT-BC] Applied modifiers: risk_level=%s, CAPEX %d→%d (×%.2f), "
+        "OPEX %d→%d (×%.2f), PAYBACK %.1f→%s (+%.1f)",
+        risk_level,
+        base_capex, capex_adjusted, capex_factor,
+        base_opex, opex_adjusted, opex_factor,
+        business_case.get("PAYBACK_MONTHS", 0) or 0,
+        payback_adjusted,
+        payback_delta
+    )
+
+    # Build updated business case
+    updated = dict(business_case)
+    updated.update({
+        "CAPEX_REALISTISCH_EUR": capex_adjusted,
+        "OPEX_REALISTISCH_EUR": opex_adjusted,
+        "PAYBACK_MONTHS": payback_adjusted,
+        "ROI_12M": roi_12m_percent,
+        "ROI_12M_EUR": roi_12m_eur,
+        # Tracking keys for transparency
+        "AI_ACT_BC_APPLIED": True,
+        "AI_ACT_BC_CAPEX_FACTOR": capex_factor,
+        "AI_ACT_BC_OPEX_FACTOR": opex_factor,
+        "AI_ACT_BC_PAYBACK_DELTA": payback_delta,
+        "AI_ACT_BC_ORIGINAL_CAPEX": base_capex,
+        "AI_ACT_BC_ORIGINAL_OPEX": base_opex,
+    })
+
+    # Regenerate table HTML with adjusted values
+    updated["BUSINESS_CASE_TABLE_HTML"] = _generate_ai_act_adjusted_table(
+        updated, risk_level, capex_factor, opex_factor
+    )
+
+    return updated
+
+
+def _generate_ai_act_adjusted_table(
+    bc: Dict[str, Any],
+    risk_level: str,
+    capex_factor: float,
+    opex_factor: float
+) -> str:
+    """Generate Business Case table HTML with AI Act compliance note."""
+
+    capex = bc.get("CAPEX_REALISTISCH_EUR", 0)
+    opex = bc.get("OPEX_REALISTISCH_EUR", 0)
+    einsparung = bc.get("EINSPARUNG_MONAT_EUR", 0)
+    payback = bc.get("PAYBACK_MONTHS")
+    roi_12m_eur = bc.get("ROI_12M_EUR", 0)
+    roi_12m_pct = bc.get("ROI_12M")
+
+    # Format values
+    roi_percent_str = "—" if roi_12m_pct is None else f"{roi_12m_pct:,.1f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    payback_str = "—" if payback is None else f"{payback:.1f}".replace(".", ",") + " Monate"
+
+    # Compliance note based on risk level
+    if capex_factor > 1.0 or opex_factor > 1.0:
+        # G9 fix: Use round() to avoid floating point truncation (1.15-1)*100 = 14.999...
+        capex_pct = round((capex_factor - 1) * 100)
+        opex_pct = round((opex_factor - 1) * 100)
+        compliance_note = f"""
+      <tr class="ai-act-note" style="background:#fff7ed;">
+        <td colspan="3" style="font-size:0.9em;color:#9a3412;">
+          <strong>📋 AI Act Compliance:</strong> CAPEX +{capex_pct}%, OPEX +{opex_pct}%
+          für {risk_level.replace('-', '‑')}-Einstufung (Dokumentation, Monitoring, QMS)
+        </td>
+      </tr>"""
+    else:
+        compliance_note = ""
+
+    table = f"""
+<section class="card">
+  <h2>Business‑Case (inkl. AI Act Compliance)</h2>
+  <table class="table">
+    <thead><tr><th>Parameter</th><th>Wert</th><th>Erläuterung</th></tr></thead>
+    <tbody>
+      <tr><td>Monetärer Nutzen</td><td>{_fmt_eur(einsparung)} €/Monat</td><td>Einsparung durch KI-Automatisierung</td></tr>
+      <tr><td>Einführungskosten (CAPEX)</td><td>{_fmt_eur(capex)} €</td><td>Inkl. Compliance-Infrastruktur</td></tr>
+      <tr><td>Laufende Kosten (OPEX)</td><td>{_fmt_eur(opex)} €/Monat</td><td>Inkl. Governance & Monitoring</td></tr>
+      <tr><td>Amortisation</td><td>{payback_str}</td><td>CAPEX ÷ (Nutzen − OPEX)</td></tr>
+      <tr><td>ROI nach 12&nbsp;Monaten</td>
+          <td>{_fmt_eur(roi_12m_eur)} € ({roi_percent_str} %)</td>
+          <td>Nettonutzen nach Abzug aller Kosten</td></tr>{compliance_note}
+    </tbody>
+  </table>
+</section>""".strip()
+
+    return table
+
+
 # ------------------------ Benchmarks ----------------------------------------
 
 
