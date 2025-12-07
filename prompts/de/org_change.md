@@ -1,12 +1,17 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.2 -->
+<!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
 <!-- SECTION: org_change -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{KI_ZIELE_LABELS}}, {{KI_HEMMNISSE_LABELS}}, {{ki_kompetenz}}, {{score_governance}}, {{score_sicherheit}}, {{score_nutzen}}, {{score_befaehigung}}, COMPANY_SIZE -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{KI_ZIELE_LABELS}}, {{KI_HEMMNISSE_LABELS}}, {{ki_kompetenz}}, {{score_governance}}, {{score_sicherheit}}, {{score_nutzen}}, {{score_befaehigung}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 2200 (solo:0.8x=1760, team:1.0x=2200, kmu:1.15x=2530) -->
 <!--
 ZIEL: Präziser Abschnitt „Veränderungsfähigkeit & Lernen".
+
+KURZLABELS (VERPFLICHTEND!):
+- {{BRANCH_CORE_LABEL}} = Branche in 8-12 Wörtern
+- {{BRANCH_CONTEXT_LABEL}} = Branche in 4-6 Wörtern
+- {{OFFERING_LABEL}} = Hauptleistung in 6-10 Wörtern
 
 PFLICHTSTRUKTUR (4 Abschnitte):
 1. "Wo Sie heute stehen" (Score-Interpretation, 2-3 Absätze)
@@ -14,18 +19,33 @@ PFLICHTSTRUKTUR (4 Abschnitte):
 3. "Fahrplan für die nächsten 90 Tage" (3 Phasen: 0-30, 31-60, 61-90)
 4. "Umgang mit Widerständen" (size-aware)
 
-ANTI-REDUNDANZ:
+ANTI-REDUNDANZ (STRIKT!):
 - Change-Aspekte HIER behandeln
-- NICHT in strategie_governance wiederholen
+- NICHT in strategie_governance wiederholen (→ Querverweis)
 - 90-Tage-Fahrplan ergänzt roadmap_90d, wiederholt nicht
+- Bei Überschneidung: Querverweis nutzen
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: persönliche Routinen, Self-Review, eigene Prüfpunkte
-        Nicht verwenden: Teams, Abteilungen, Mitarbeiter
 - team: Teamabsprachen, KI-Koordinator, gemeinsame Review-Runden
-        Nicht verwenden: Division, Unit
 - kmu: Fachbereichs-Koordination, bereichsübergreifende Standards
-        Nicht verwenden: Konzernjargon
+
+SPRINT G5 - PERSONA HARD-GUARDS (STRIKT!):
+{% if COMPANY_SIZE == "solo" %}
+SOLO-MODUS - VERBOTEN:
+- "Team/Teams/Abteilung/Mitarbeiter" → nicht verwenden
+- "Fachbereich" → "Arbeitsfeld"
+- "HR" → nicht verwenden
+{% elif COMPANY_SIZE == "team" %}
+TEAM-MODUS - VERBOTEN:
+- "Division/Unit/Konzern" → nicht verwenden
+- "Abteilung" → "Bereich"
+- Solo-Begriffe: "Einzelperson", "allein"
+{% else %}
+KMU-MODUS - VERBOTEN:
+- "Konzern/Division/Unit" → nicht verwenden
+- Solo-Begriffe: "Einzelperson", "allein"
+{% endif %}
 
 REGELN:
 - Scores AKTIV interpretieren
@@ -36,15 +56,12 @@ REGELN:
   <h2>Veränderungsfähigkeit &amp; Lernen</h2>
 
   <p>
-    Unternehmen in der Branche <strong>{{BRANCHE_LABEL}}</strong>, die im Schwerpunkt
-    <strong>{{HAUPTLEISTUNG}}</strong> arbeiten, müssen bei der Einführung von KI sowohl
-    neue Arbeitsweisen etablieren als auch bestehende Routinen anpassen. Die aktuelle
-    Selbsteinschätzung – etwa die KI-Kompetenz (<strong>{{ki_kompetenz}}</strong>) und die Ziele
-    <strong>{{KI_ZIELE_LABELS}}</strong> – zeigt, dass Potenzial und Motivation klar vorhanden sind.
-    Gleichzeitig machen typische Hemmnisse wie <strong>{{KI_HEMMNISSE_LABELS}}</strong> deutlich,
-    dass Strukturen, Prioritäten und Verantwortlichkeiten weiter geschärft werden müssen.
-    Besonders in einem Unternehmen der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>
-    entscheidet ein bedachter Umgang mit Wandel darüber, wie schnell KI zuverlässig Wirkung zeigt.
+    Für {{BRANCH_CONTEXT_LABEL}} mit Schwerpunkt <strong>{{OFFERING_LABEL}}</strong>
+    erfordert die KI-Einführung neue Arbeitsweisen und Routinenanpassung. Die aktuelle
+    Selbsteinschätzung – KI-Kompetenz (<strong>{{ki_kompetenz}}</strong>) und Ziele
+    <strong>{{KI_ZIELE_LABELS}}</strong> – zeigt vorhandenes Potenzial.
+    Hemmnisse wie <strong>{{KI_HEMMNISSE_LABELS}}</strong> erfordern geschärfte
+    Strukturen, Prioritäten und Verantwortlichkeiten.
   </p>
 
   <h3>1. Wo Sie heute stehen</h3>
@@ -53,10 +70,8 @@ REGELN:
     Governance (<strong>{{score_governance}}</strong>), Sicherheit
     (<strong>{{score_sicherheit}}</strong>), Nutzen (<strong>{{score_nutzen}}</strong>)
     und Befähigung (<strong>{{score_befaehigung}}</strong>) sind unterschiedlich ausgeprägt.
-    Für den Einsatz von KI in <strong>{{HAUPTLEISTUNG}}</strong> bedeutet das:
-    Einige grundlegende Routinen funktionieren bereits, jedoch braucht es klarere
-    Entscheidungswege, einheitliche Qualitätsstandards und eine engere Verzahnung
-    zwischen menschlicher Expertise und KI-gestützten Workflows.
+    Für {{OFFERING_LABEL}} bedeutet das: Einige Routinen funktionieren,
+    jedoch braucht es klarere Entscheidungswege und einheitliche Qualitätsstandards.
   </p>
 
   <p>
@@ -99,7 +114,7 @@ REGELN:
       <strong>Feedback &amp; Dokumentation stärken:</strong>
       Kurze Feedback-Schleifen, strukturierte Notizen und ein kompakter Standard
       helfen, erfolgreiche KI-Experimente in wiederkehrende, belastbare Abläufe
-      umzuwandeln. Dies gilt besonders in <strong>{{BRANCHE_LABEL}}</strong>,
+      umzuwandeln. Dies gilt besonders in {{BRANCH_CONTEXT_LABEL}},
       wo typische Pain Points eng mit Datenqualität, Zeitdruck oder komplexen
       Entscheidungswegen zusammenhängen.
     </li>
@@ -108,8 +123,7 @@ REGELN:
   <h3>3. Fahrplan für die nächsten 90 Tage</h3>
   <p>
     Der Wandel gelingt am besten durch klar priorisierte Schritte. Die folgende
-    90-Tage-Struktur passt sich automatisch den Möglichkeiten eines Unternehmens der Größe
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> an.
+    90-Tage-Struktur ergänzt die Roadmap (→ siehe Roadmap-Abschnitt).
   </p>
 
   <ul>

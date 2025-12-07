@@ -1,12 +1,19 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.2 -->
+<!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
 <!-- SECTION: gamechanger -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{STRATEGISCHE_ZIELE}}, {{GESCHAEFTSMODELL_EVOLUTION}}, {{VISION_3_JAHRE}}, COMPANY_SIZE -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{STRATEGISCHE_ZIELE}}, {{GESCHAEFTSMODELL_EVOLUTION}}, {{VISION_3_JAHRE}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 3000 (solo:0.8x=2400, team:1.0x=3000, sme:1.15x=3450) -->
+<!-- WORD_MINIMUM: 750 (ALL SIZES - STRICT!) -->
 <!--
-GOAL: 2–3 realistic gamechangers for {{HAUPTLEISTUNG}}.
+GOAL: AT LEAST 3 realistic gamechangers for {{OFFERING_LABEL}}.
+MINIMUM LENGTH: ≥750 words (STRICTLY ENFORCE!)
+
+SHORT LABELS (MANDATORY!):
+- {{BRANCH_CORE_LABEL}} = Industry in 8-12 words
+- {{BRANCH_CONTEXT_LABEL}} = Industry in 4-6 words
+- {{OFFERING_LABEL}} = Main service in 6-10 words
 
 MANDATORY STRUCTURE (per gamechanger):
 1. Core idea (2-3 sentences)
@@ -17,30 +24,46 @@ MANDATORY STRUCTURE (per gamechanger):
 
 PERSONA VARIATIONS (COMPANY_SIZE):
 - solo: automation, personal relief, scalable templates
-        FORBIDDEN: "departments", "teams", "areas"
 - team: collaborative workflows, roles, simple governance
 - sme: scalable processes, clear responsibilities, pilot areas
 
-ANTI-REDUNDANCY:
-- Gamechangers complement business case, don't repeat it
-- Link to Roadmap, but no duplication
+ANTI-REDUNDANCY (STRICT!):
+- Gamechangers complement business case (→ see Business Case)
+- Link to Roadmap, but no duplication (→ see Roadmap)
+- On overlap: use cross-reference
+
+SPRINT G5 - PERSONA HARD-GUARDS (STRICT!):
+{% if COMPANY_SIZE == "solo" %}
+SOLO MODE - FORBIDDEN:
+- "Departments" → "Work areas"
+- "Teams" → "Capacities/Resources"
+- "Division" → "Work area"
+- "Employees" → "external support"
+{% elif COMPANY_SIZE == "team" %}
+TEAM MODE - FORBIDDEN:
+- "Division/Unit/Corporation" → do not use
+- "Department" → "Area"
+- Solo terms: "individual", "alone"
+{% else %}
+SME MODE - FORBIDDEN:
+- "Corporation/Division/Unit" → do not use
+- Solo terms: "individual", "alone"
+{% endif %}
 
 RULES:
 - No invented data
-- Concrete reference to {{HAUPTLEISTUNG}} required
+- Concrete reference to {{OFFERING_LABEL}} required
+- AT LEAST 3 complete scenarios!
 -->
 
 <section class="section gamechanger">
   <h2>AI as a Gamechanger for Your Business Model</h2>
 
   <p>
-    For a company in the <strong>{{BRANCHE_LABEL}}</strong> industry with size
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> and focus on
-    <strong>{{HAUPTLEISTUNG}}</strong>, several AI scenarios emerge that can
-    noticeably transform value creation in the coming years. The following
-    proposals directly connect to your strategic goals
-    ({{STRATEGISCHE_ZIELE}}) as well as the planned evolution of your business model
-    ({{GESCHAEFTSMODELL_EVOLUTION}}) and your vision for the next three years
+    For {{BRANCH_CONTEXT_LABEL}} with focus on <strong>{{OFFERING_LABEL}}</strong>,
+    several AI scenarios emerge that can noticeably transform value creation.
+    The following proposals connect to your strategic goals ({{STRATEGISCHE_ZIELE}}),
+    business model evolution ({{GESCHAEFTSMODELL_EVOLUTION}}) and your 3-year vision
     ({{VISION_3_JAHRE}}).
   </p>
 
@@ -50,7 +73,7 @@ RULES:
     <li>
       <h3>1. AI-Powered Standardization & Automation of Core Processes</h3>
       <p><strong>Core Idea:</strong>
-        Recurring tasks in {{HAUPTLEISTUNG}} are standardized through AI-powered templates,
+        Recurring tasks in {{OFFERING_LABEL}} are standardized through AI-powered templates,
         automations, and structured decision pathways so that quality and speed
         significantly increase.
       </p>
@@ -125,9 +148,9 @@ RULES:
 
   <h3>What These Gamechangers Have in Common</h3>
   <ul>
-    <li>They build on existing strengths of {{HAUPTLEISTUNG}} and amplify them with AI.</li>
-    <li>They consider the resources and decision pathways of a {{UNTERNEHMENSGROESSE_LABEL}} company.</li>
+    <li>They build on existing strengths of {{OFFERING_LABEL}} and amplify them with AI.</li>
     <li>They can be piloted with manageable risk and scaled step by step upon success.</li>
+    <li>Implementation details → see Roadmap and Business Case.</li>
   </ul>
 
   <p class="small muted">

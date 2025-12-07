@@ -1,11 +1,17 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.2 -->
+<!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
 <!-- SECTION: recommendations -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 600 (solo:0.8x=480, team:1.0x=600, kmu:1.15x=690) -->
 <!--
-ZIEL: 5 strategische Handlungsempfehlungen für {{HAUPTLEISTUNG}}.
+ZIEL: 5 strategische Handlungsempfehlungen für {{OFFERING_LABEL}}.
+
+KURZLABELS (VERPFLICHTEND!):
+- {{BRANCH_CORE_LABEL}} = Branche in 8-12 Wörtern
+- {{BRANCH_CONTEXT_LABEL}} = Branche in 4-6 Wörtern
+- {{OFFERING_LABEL}} = Hauptleistung in 6-10 Wörtern
 
 STRUKTUR (Pflicht-Elemente):
 1. Kurze Einleitung (30-40 Wörter)
@@ -17,29 +23,47 @@ STRUKTUR (Pflicht-Elemente):
 3. Kompakte Prioritäten-Tabelle (5 Zeilen)
 
 ANTI-REDUNDANZ (STRIKT!):
-- KEINE Wiederholung von Quick Wins (wurden dort genannt)
-- KEINE Wiederholung von Roadmap-Inhalten
+- KEINE Wiederholung von Quick Wins (→ siehe Abschnitt Quick Wins)
+- KEINE Wiederholung von Roadmap-Inhalten (→ siehe Roadmap)
 - Fokus auf ERGÄNZENDE strategische Empfehlungen
+- Bei Überschneidung: Querverweis nutzen
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: Inhaber:in, persönliche Schritte, niedriges Budget
 - team: Teamlead/KI-Owner, gemeinsame Workflows, mittleres Budget
 - kmu: Fachbereiche, Governance, strukturierte Investitionen
+
+SPRINT G5 - PERSONA HARD-GUARDS (STRIKT!):
+{% if COMPANY_SIZE == "solo" %}
+SOLO-MODUS - VERBOTEN:
+- "Team/Teams" → "Kapazität/Kapazitäten"
+- "Abteilung/Fachbereich" → nicht verwenden
+- "Mitarbeiter" → "externe Unterstützung"
+{% elif COMPANY_SIZE == "team" %}
+TEAM-MODUS - VERBOTEN:
+- "Abteilung/Fachbereich" → "Bereich"
+- "Division/Unit/Konzern" → nicht verwenden
+- Solo-Begriffe: "Einzelperson", "allein"
+{% else %}
+KMU-MODUS - VERBOTEN:
+- "Konzern/Division/Unit" → nicht verwenden
+- Solo-Begriffe: "Einzelperson", "allein"
+{% endif %}
 -->
 
 <section class="section recommendations">
   <h2>Handlungsempfehlungen</h2>
 
   <p>
-    Für <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> in der Branche <strong>{{BRANCHE_LABEL}}</strong>
-    ergeben sich folgende strategische Empfehlungen für <strong>{{HAUPTLEISTUNG}}</strong>.
+    Für {{BRANCH_CONTEXT_LABEL}} ergeben sich folgende strategische Empfehlungen
+    für <strong>{{OFFERING_LABEL}}</strong>.
   </p>
 
   <ol class="recommendations-list">
 
     <li>
       <h3>Empfehlung 1: Standard-Workflow etablieren</h3>
-      <p><strong>Schwerpunkt:</strong> Einen zentralen KI-gestützten Workflow für {{HAUPTLEISTUNG}} aufbauen.</p>
+      <p><strong>Schwerpunkt:</strong> Einen zentralen KI-gestützten Workflow für {{OFFERING_LABEL}} aufbauen.</p>
       <p><strong>Maßnahme:</strong> Klare Input-/Output-Regeln definieren, Qualitätsprüfung integrieren.</p>
       <p><strong>Nutzen:</strong> Direkte Entlastung, konsistente Ergebnisse.</p>
       <p><strong>Aufwand:</strong> {% if COMPANY_SIZE == "solo" %}1-2 Tage{% elif COMPANY_SIZE == "team" %}3-5 Tage{% else %}1-2 Wochen{% endif %}.</p>
@@ -63,7 +87,7 @@ PERSONA-VARIATIONEN (COMPANY_SIZE):
 
     <li>
       <h3>Empfehlung 4: Branchenspezifischen Use Case pilotieren</h3>
-      <p><strong>Schwerpunkt:</strong> Ein klar abgegrenzter Pilot-Use-Case aus {{BRANCHE_LABEL}}.</p>
+      <p><strong>Schwerpunkt:</strong> Ein klar abgegrenzter Pilot-Use-Case aus {{BRANCH_CONTEXT_LABEL}}.</p>
       <p><strong>Maßnahme:</strong> Einen Use Case mit hoher Sichtbarkeit und schnellem ROI umsetzen.</p>
       <p><strong>Nutzen:</strong> Sichtbarer Erfolg, Momentum für weitere Schritte.</p>
       <p><strong>Aufwand:</strong> {% if COMPANY_SIZE == "solo" %}1-3 Tage{% elif COMPANY_SIZE == "team" %}3-7 Tage{% else %}1-3 Wochen{% endif %}.</p>

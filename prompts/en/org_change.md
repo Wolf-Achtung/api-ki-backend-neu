@@ -1,57 +1,67 @@
 Developer:
-<!-- org_change.md – v6.0 PLATIN+ (branch-aware, size-aware, strategic, context-integrated, min 700 chars)
-     Respond exclusively with valid HTML.
-     NO <html>, <head> or <body>. NO Markdown fences.
+<!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
+<!-- SECTION: org_change -->
+<!-- OUTPUT: HTML ONLY -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{KI_ZIELE_LABELS}}, {{KI_HEMMNISSE_LABELS}}, {{ki_kompetenz}}, {{score_governance}}, {{score_sicherheit}}, {{score_nutzen}}, {{score_befaehigung}}, COMPANY_SIZE -->
+<!-- TOKEN-BUDGET: 2200 (solo:0.8x=1760, team:1.0x=2200, sme:1.15x=2530) -->
+<!--
+GOAL: Precise section "Change Capability & Learning".
 
-     GOAL:
-       - Precise, motivating yet realistic section "Change Capability & Learning".
-       - ACTIVELY uses CONTEXT_BLOCK: typical workflows, pain points, data points of the industry.
-       - Size-aware adaptation for solo/team/sme – with clear roles & routines.
-       - 4 blocks: Introduction → Current State → Change Areas → 90-Day Plan → Handling Resistance.
-       - No generic statements; every paragraph must have clear business value.
-       - ACTIVELY use and interpret score values.
+SHORT LABELS (MANDATORY!):
+- {{BRANCH_CORE_LABEL}} = Industry in 8-12 words
+- {{BRANCH_CONTEXT_LABEL}} = Industry in 4-6 words
+- {{OFFERING_LABEL}} = Main service in 6-10 words
 
-     VARIABLES (MUST all be used!):
-       {{BRANCHE_LABEL}}
-       {{UNTERNEHMENSGROESSE_LABEL}}
-       {{HAUPTLEISTUNG}}
-       {{KI_ZIELE_LABELS}}
-       {{KI_HEMMNISSE_LABELS}}
-       {{ki_kompetenz}}
-       {{score_governance}}, {{score_sicherheit}},
-       {{score_nutzen}}, {{score_befaehigung}}
-       COMPANY_SIZE = "solo" | "team" | "kmu"
+REQUIRED STRUCTURE (ALL 4 sections required):
+1. "Where You Stand Today" (Score interpretation, 2-3 paragraphs)
+2. "Key Areas of Change" (at least 3 bullet points with concrete measures)
+3. "Plan for the Next 90 Days" (3 phases: 0-30, 31-60, 61-90 days)
+4. "Handling Resistance" (size-aware, at least 1 paragraph)
 
-     REQUIRED STRUCTURE (ALL 4 sections required):
-       1. "Where You Stand Today" (Score interpretation, 2-3 paragraphs)
-       2. "Key Areas of Change" (at least 3 bullet points with concrete measures)
-       3. "Plan for the Next 90 Days" (3 phases: 0-30, 31-60, 61-90 days)
-       4. "Handling Resistance" (size-aware, at least 1 paragraph)
+ANTI-REDUNDANCY (STRICT!):
+- Change aspects HERE only
+- DO NOT repeat in strategy_governance (→ cross-reference)
+- 90-day plan complements roadmap_90d, does not repeat
+- On overlap: use cross-reference
 
-     MINIMUM LENGTH: 700 characters (excluding HTML tags) – NEVER go below this!
+PERSONA VARIATIONS (COMPANY_SIZE):
+- solo: personal routines, self-review, own checkpoints
+- team: team agreements, AI coordinator, shared review rounds
+- sme: department coordination, cross-functional standards
 
-     FORBIDDEN:
-       - Placeholder words ("placeholder", "free text field", "TODO", ...)
-       - Corporate language (division, unit) for SME
-       - Teams/departments in SOLO
-       - Generic statements without clear benefit
-       - Not interpreting scores
+SPRINT G5 - PERSONA HARD-GUARDS (STRICT!):
+{% if COMPANY_SIZE == "solo" %}
+SOLO MODE - FORBIDDEN:
+- "Team/Teams/Department/Employees" → do not use
+- "Division" → "Work area"
+- "HR" → do not use
+{% elif COMPANY_SIZE == "team" %}
+TEAM MODE - FORBIDDEN:
+- "Division/Unit/Corporation" → do not use
+- "Department" → "Area"
+- Solo terms: "individual", "alone"
+{% else %}
+SME MODE - FORBIDDEN:
+- "Corporation/Division/Unit" → do not use
+- Solo terms: "individual", "alone"
+{% endif %}
 
+RULES:
+- ACTIVELY interpret scores
+- No generic statements without clear benefit
 -->
 
 <section class="section org-change">
   <h2>Change Capability & Learning</h2>
 
   <p>
-    Companies in the <strong>{{BRANCHE_LABEL}}</strong> industry that focus on
-    <strong>{{HAUPTLEISTUNG}}</strong> must both establish new work methods and adapt
-    existing routines when introducing AI. The current self-assessment – such as AI competence
-    (<strong>{{ki_kompetenz}}</strong>) and goals <strong>{{KI_ZIELE_LABELS}}</strong> –
-    shows that potential and motivation are clearly present.
-    At the same time, typical barriers like <strong>{{KI_HEMMNISSE_LABELS}}</strong> make clear
-    that structures, priorities, and responsibilities need further sharpening.
-    Especially in a company of size <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>,
-    a thoughtful approach to change determines how quickly AI reliably delivers impact.
+    For {{BRANCH_CONTEXT_LABEL}} with focus on <strong>{{OFFERING_LABEL}}</strong>,
+    AI introduction requires new work methods and routine adaptation. The current
+    self-assessment – AI competence (<strong>{{ki_kompetenz}}</strong>) and goals
+    <strong>{{KI_ZIELE_LABELS}}</strong> – shows existing potential.
+    Barriers like <strong>{{KI_HEMMNISSE_LABELS}}</strong> require sharpened
+    structures, priorities, and responsibilities.
   </p>
 
   <h3>1. Where You Stand Today</h3>
@@ -60,9 +70,8 @@ Developer:
     Governance (<strong>{{score_governance}}</strong>), Security
     (<strong>{{score_sicherheit}}</strong>), Value (<strong>{{score_nutzen}}</strong>)
     and Enablement (<strong>{{score_befaehigung}}</strong>) are developed to varying degrees.
-    For AI deployment in <strong>{{HAUPTLEISTUNG}}</strong> this means:
-    Some basic routines already work, but clearer decision paths, uniform quality standards,
-    and tighter integration between human expertise and AI-powered workflows are needed.
+    For {{OFFERING_LABEL}} this means: Some routines work,
+    but clearer decision paths and uniform quality standards are needed.
   </p>
 
   <p>
@@ -105,7 +114,7 @@ Developer:
       <strong>Strengthen feedback & documentation:</strong>
       Short feedback loops, structured notes, and a compact standard
       help transform successful AI experiments into recurring, reliable processes.
-      This applies especially in <strong>{{BRANCHE_LABEL}}</strong>,
+      This applies especially in {{BRANCH_CONTEXT_LABEL}},
       where typical pain points are closely tied to data quality, time pressure, or complex
       decision paths.
     </li>
@@ -114,8 +123,7 @@ Developer:
   <h3>3. Plan for the Next 90 Days</h3>
   <p>
     Change succeeds best through clearly prioritized steps. The following
-    90-day structure automatically adapts to the capabilities of a company of size
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>.
+    90-day structure complements the Roadmap (→ see Roadmap section).
   </p>
 
   <ul>
