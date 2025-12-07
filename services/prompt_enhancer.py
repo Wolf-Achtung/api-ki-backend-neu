@@ -26,6 +26,12 @@ from typing import Any, Dict, List, Set, TypedDict, Optional
 
 from services.prompt_builder import PromptBuilder
 
+# G9.4: Import centralized min-length configuration
+try:
+    from services.config_validation import get_min_words as get_central_min_words
+except ImportError:
+    get_central_min_words = None
+
 log = logging.getLogger(__name__)
 
 
@@ -1014,7 +1020,8 @@ def get_platin_min_words(section_name: str, size: Optional[str] = None) -> int:
     """
     Get minimum word count for a section, adjusted for company size.
 
-    Sprint N2: Solo profiles get reduced min_words to avoid excessive fallbacks.
+    Sprint G9.4: Uses centralized config_validation.py as primary source.
+    Falls back to PLATIN_SECTION_SPECS if central config unavailable.
 
     Args:
         section_name: Name of the section
@@ -1023,6 +1030,17 @@ def get_platin_min_words(section_name: str, size: Optional[str] = None) -> int:
     Returns:
         Minimum word count (size-adjusted), or 0 if not a critical section
     """
+    # G9.4: Try centralized config first (single source of truth)
+    if callable(get_central_min_words) and size:
+        central_min = get_central_min_words(size, section_name)
+        if central_min > 0:
+            log.debug(
+                "[G9.4] Using centralized min_words: section=%s, size=%s, min=%d",
+                section_name, size, central_min
+            )
+            return central_min
+
+    # Fallback to PLATIN_SECTION_SPECS (for sections not in central config)
     config = get_platin_config(section_name)
     if not config:
         return 0
