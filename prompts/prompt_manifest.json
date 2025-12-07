@@ -23,56 +23,244 @@
       "path": "executive_summary.md",
       "purpose": "CEO-taugliche Zusammenfassung",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "quick_wins": {
       "title": "Quick Wins",
       "path": "quick_wins.md",
       "purpose": "Sofortmaßnahmen nach Kategorie",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 1800,
+        "solo": 1440,
+        "team": 1800,
+        "kmu": 2070
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "roadmap_90d": {
       "title": "90-Tage-Roadmap",
       "path": "roadmap_90d.md",
       "purpose": "4-Phasen-Plan mit Meilensteinen",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2200,
+        "solo": 1760,
+        "team": 2200,
+        "kmu": 2530
+      },
+      "redundancy_rules": [
+        "no_repeat_quick_wins",
+        "unique_milestones"
+      ],
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "roadmap_12m": {
       "title": "12-Monats-Roadmap",
       "path": "roadmap_12m.md",
       "purpose": "Langfrist-Planung (Q-Phasen/5-Dimensionen)",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2800,
+        "solo": 2240,
+        "team": 2800,
+        "kmu": 3220
+      },
+      "redundancy_rules": [
+        "no_repeat_roadmap_90d",
+        "quarterly_progression"
+      ],
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "business_case": {
       "title": "Business Case",
       "path": "business_case.md",
       "purpose": "ROI, CAPEX/OPEX, Payback",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2500,
+        "solo": 2000,
+        "team": 2500,
+        "kmu": 2875
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "gamechanger": {
       "title": "Gamechanger",
       "path": "gamechanger.md",
       "purpose": "Strategische KI-Transformation",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2200,
+        "solo": 1760,
+        "team": 2200,
+        "kmu": 2530
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "risks": {
       "title": "Risiken",
       "path": "risks.md",
       "purpose": "Risiko-Matrix und Mitigationen",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 3000,
+        "solo": 2400,
+        "team": 3000,
+        "kmu": 3450
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "recommendations": {
       "title": "Empfehlungen",
       "path": "recommendations.md",
       "purpose": "Handlungsempfehlungen",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2500,
+        "solo": 2000,
+        "team": 2500,
+        "kmu": 2875
+      },
+      "redundancy_rules": [
+        "no_repeat_quick_wins",
+        "strategic_focus"
+      ],
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "foerderpotenzial": {
       "title": "Förderpotenzial",
@@ -80,147 +268,525 @@
       "purpose": "Bundesprogramme DE",
       "size_aware": true,
       "funding_scope": "DE",
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 3200,
+        "solo": 2560,
+        "team": 3200,
+        "kmu": 3680
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "foerderprogramme": {
       "title": "Förderprogramme (Referenz)",
       "path": "foerderprogramme.md",
       "purpose": "Programm-Übersicht",
       "size_aware": true,
-      "required": false
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "tools_empfehlungen": {
       "title": "Tool-Empfehlungen",
       "path": "tools_empfehlungen.md",
       "purpose": "KI-Werkzeuge nach Kategorie",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "strategie_governance": {
       "title": "Strategie & Governance",
       "path": "strategie_governance.md",
       "purpose": "KI-Governance-Framework",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "unternehmensprofil_markt": {
       "title": "Unternehmensprofil & Markt",
       "path": "unternehmensprofil_markt.md",
       "purpose": "Profil und Marktkontext",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "wettbewerb_benchmark": {
       "title": "Wettbewerb & Benchmark",
       "path": "wettbewerb_benchmark.md",
       "purpose": "Wettbewerbsanalyse",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "technologie_prozesse": {
       "title": "Technologie & Prozesse",
       "path": "technologie_prozesse.md",
       "purpose": "Tech-Stack und Prozessanalyse",
       "size_aware": false,
-      "required": true
+      "required": true,
+      "output": "html"
     },
     "data_readiness": {
       "title": "Daten-Readiness",
       "path": "data_readiness.md",
       "purpose": "Datenverfügbarkeit und -qualität",
       "size_aware": false,
-      "required": true
+      "required": true,
+      "output": "html"
     },
     "org_change": {
       "title": "Organisatorischer Wandel",
       "path": "org_change.md",
       "purpose": "Change Management",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "costs_overview": {
       "title": "Kostenübersicht",
       "path": "costs_overview.md",
       "purpose": "Detaillierte Kostenaufstellung",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "ai_act_summary": {
       "title": "AI Act Summary",
       "path": "ai_act_summary.md",
       "purpose": "EU AI Act Relevanz",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "transparency_box": {
       "title": "Transparenz-Box",
       "path": "transparency_box.md",
       "purpose": "KI-Transparenzhinweise",
       "size_aware": false,
-      "required": true
+      "required": true,
+      "output": "html"
     },
     "ki_aktivitaeten_ziele": {
       "title": "KI-Aktivitäten & Ziele",
       "path": "ki_aktivitaeten_ziele.md",
       "purpose": "Aktuelle KI-Nutzung und Ziele",
       "size_aware": false,
-      "required": true
+      "required": true,
+      "output": "html"
     },
     "next_actions": {
       "title": "Nächste Schritte",
       "path": "next_actions.md",
       "purpose": "Priorisierte Aktionsliste",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "monetarisierung": {
       "title": "Monetarisierung",
       "path": "monetarisierung.md",
       "purpose": "KI-basierte Geschäftsmodelle",
       "size_aware": true,
-      "required": false
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "ki_skillplan": {
       "title": "KI Skill-Plan",
       "path": "ki_skillplan.md",
       "purpose": "Team-Weiterentwicklung",
       "size_aware": true,
-      "required": false
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "templates_start": {
       "title": "Templates Start",
       "path": "templates_start.md",
       "purpose": "Prompt-Vorlagen Schnellstart",
       "size_aware": true,
-      "required": false
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "roi_tracking": {
       "title": "ROI Tracking",
       "path": "roi_tracking.md",
       "purpose": "Monatliche Erfolgskontrolle",
       "size_aware": true,
-      "required": false
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "ai_policy_mini": {
       "title": "AI Mini-Policy",
       "path": "ai_policy_mini.md",
       "purpose": "Kompakte KI-Regeln",
       "size_aware": true,
-      "required": false
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "kickoff_vorlage": {
       "title": "Kickoff-Vorlage",
       "path": "kickoff_vorlage.md",
       "purpose": "Projektstart-Template",
       "size_aware": true,
-      "required": false
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "prompt_framework": {
       "title": "Prompt-Framework",
       "path": "prompt_framework.md",
       "purpose": "5-Schritte-Anleitung",
       "size_aware": true,
-      "required": false
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     }
   },
   "en": {
@@ -229,56 +795,244 @@
       "path": "executive_summary.md",
       "purpose": "CEO-friendly summary",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "quick_wins": {
       "title": "Quick Wins",
       "path": "quick_wins.md",
       "purpose": "Immediate measures by category",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 1800,
+        "solo": 1440,
+        "team": 1800,
+        "kmu": 2070
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "roadmap_90d": {
       "title": "90-Day Roadmap",
       "path": "roadmap_90d.md",
       "purpose": "4-phase plan with milestones",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2200,
+        "solo": 1760,
+        "team": 2200,
+        "kmu": 2530
+      },
+      "redundancy_rules": [
+        "no_repeat_quick_wins",
+        "unique_milestones"
+      ],
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "roadmap_12m": {
       "title": "12-Month Roadmap",
       "path": "roadmap_12m.md",
       "purpose": "Long-term planning (Q-phases/5-dimensions)",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2800,
+        "solo": 2240,
+        "team": 2800,
+        "kmu": 3220
+      },
+      "redundancy_rules": [
+        "no_repeat_roadmap_90d",
+        "quarterly_progression"
+      ],
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "business_case": {
       "title": "Business Case",
       "path": "business_case.md",
       "purpose": "ROI, CAPEX/OPEX, Payback",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2500,
+        "solo": 2000,
+        "team": 2500,
+        "kmu": 2875
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "gamechanger": {
       "title": "Gamechanger",
       "path": "gamechanger.md",
       "purpose": "Strategic AI transformation",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2200,
+        "solo": 1760,
+        "team": 2200,
+        "kmu": 2530
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "risks": {
       "title": "Risks",
       "path": "risks.md",
       "purpose": "Risk matrix and mitigations",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 3000,
+        "solo": 2400,
+        "team": 3000,
+        "kmu": 3450
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "recommendations": {
       "title": "Recommendations",
       "path": "recommendations.md",
       "purpose": "Action recommendations",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2500,
+        "solo": 2000,
+        "team": 2500,
+        "kmu": 2875
+      },
+      "redundancy_rules": [
+        "no_repeat_quick_wins",
+        "strategic_focus"
+      ],
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "funding_potential": {
       "title": "Funding Potential (DE)",
@@ -286,7 +1040,29 @@
       "purpose": "German federal programs in EN",
       "size_aware": true,
       "funding_scope": "EN-DE",
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 3200,
+        "solo": 2560,
+        "team": 3200,
+        "kmu": 3680
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "funding_eu_core": {
       "title": "EU Funding",
@@ -294,147 +1070,525 @@
       "purpose": "EU-wide programs",
       "size_aware": true,
       "funding_scope": "EN-EU",
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 3200,
+        "solo": 2560,
+        "team": 3200,
+        "kmu": 3680
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "funding": {
       "title": "Funding (Legacy)",
       "path": "funding.md",
       "purpose": "Generic funding reference",
       "size_aware": true,
-      "required": false
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "tools_recommendations": {
       "title": "Tool Recommendations",
       "path": "tools_recommendations.md",
       "purpose": "AI tools by category",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "strategy_governance": {
       "title": "Strategy & Governance",
       "path": "strategy_governance.md",
       "purpose": "AI governance framework",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "unternehmensprofil_markt": {
       "title": "Company Profile & Market",
       "path": "unternehmensprofil_markt.md",
       "purpose": "Profile and market context",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "competition_benchmark": {
       "title": "Competition & Benchmark",
       "path": "competition_benchmark.md",
       "purpose": "Competitive analysis",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "technology_processes": {
       "title": "Technology & Processes",
       "path": "technology_processes.md",
       "purpose": "Tech stack and process analysis",
       "size_aware": false,
-      "required": true
+      "required": true,
+      "output": "html"
     },
     "data_readiness": {
       "title": "Data Readiness",
       "path": "data_readiness.md",
       "purpose": "Data availability and quality",
       "size_aware": false,
-      "required": true
+      "required": true,
+      "output": "html"
     },
     "org_change": {
       "title": "Organizational Change",
       "path": "org_change.md",
       "purpose": "Change management",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "costs_overview": {
       "title": "Costs Overview",
       "path": "costs_overview.md",
       "purpose": "Detailed cost breakdown",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "ai_act_summary": {
       "title": "AI Act Summary",
       "path": "ai_act_summary.md",
       "purpose": "EU AI Act relevance",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "transparency_box": {
       "title": "Transparency Box",
       "path": "transparency_box.md",
       "purpose": "AI transparency notes",
       "size_aware": false,
-      "required": true
+      "required": true,
+      "output": "html"
     },
     "ai_activities_goals": {
       "title": "AI Activities & Goals",
       "path": "ai_activities_goals.md",
       "purpose": "Current AI usage and goals",
       "size_aware": false,
-      "required": true
+      "required": true,
+      "output": "html"
     },
     "next_actions": {
       "title": "Next Actions",
       "path": "next_actions.md",
       "purpose": "Prioritized action list",
       "size_aware": true,
-      "required": true
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "monetization": {
       "title": "Monetization",
       "path": "monetization.md",
       "purpose": "AI-based business models",
       "size_aware": true,
-      "required": false
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "ki_skillplan": {
       "title": "AI Skill Plan",
       "path": "ki_skillplan.md",
       "purpose": "Team development",
       "size_aware": true,
-      "required": false
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "templates_start": {
       "title": "Templates Start",
       "path": "templates_start.md",
       "purpose": "Prompt templates quick start",
       "size_aware": true,
-      "required": false
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "roi_tracking": {
       "title": "ROI Tracking",
       "path": "roi_tracking.md",
       "purpose": "Monthly success tracking",
       "size_aware": true,
-      "required": false
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "ai_policy_mini": {
       "title": "AI Mini Policy",
       "path": "ai_policy_mini.md",
       "purpose": "Compact AI rules",
       "size_aware": true,
-      "required": false
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "kickoff_template": {
       "title": "Kickoff Template",
       "path": "kickoff_template.md",
       "purpose": "Project start template",
       "size_aware": true,
-      "required": false
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     },
     "prompt_framework": {
       "title": "Prompt Framework",
       "path": "prompt_framework.md",
       "purpose": "5-step guide",
       "size_aware": true,
-      "required": false
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     }
   }
 }

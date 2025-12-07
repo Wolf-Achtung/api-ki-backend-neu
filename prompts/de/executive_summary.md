@@ -49,7 +49,7 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
 -->
 
 <section class="section executive-summary">
-  <h2>Executive Summary</h2>
+  <!-- KEINE h2 hier - Template stellt Überschrift bereit -->
 
   <p>
     {% if COMPANY_SIZE == "solo" %}
