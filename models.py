@@ -181,3 +181,86 @@ class Feedback(Base):
 
     def __repr__(self) -> str:  # pragma: no cover
         return f"<Feedback id={self.id} source={self.source!r}>"
+
+
+# =============================================================================
+# SPRINT G11: REPORT HISTORY & VERSIONING
+# =============================================================================
+
+class ReportHistory(Base):
+    """
+    Sprint G11: Report versioning and history tracking.
+
+    Stores complete snapshots of reports for version comparison,
+    delta analysis, and historical tracking.
+    """
+    __tablename__ = "reports_history"
+    __table_args__ = (
+        Index("ix_reports_history_user_report", "user_id", "report_id"),
+        Index("ix_reports_history_created_at", "created_at"),
+        UniqueConstraint("report_id", "version", name="uq_report_version"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    report_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("reports.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+
+    # Core scores (Governance, Security, Benefit, etc.)
+    scores_json: Mapped[dict] = mapped_column(JSONType, default=dict, nullable=False)
+
+    # Business Case data (CAPEX, OPEX, ROI, Payback)
+    bc_json: Mapped[dict] = mapped_column(JSONType, default=dict, nullable=False)
+
+    # AI Act compliance data (Risk Level, Modifiers, Metrics)
+    ai_act_json: Mapped[dict] = mapped_column(JSONType, default=dict, nullable=False)
+
+    # Labels (BRANCH_*, OFFERING_*, CR_LABELS)
+    labels_json: Mapped[dict] = mapped_column(JSONType, default=dict, nullable=False)
+
+    # Section word counts for delta comparison
+    section_stats_json: Mapped[dict] = mapped_column(JSONType, default=dict, nullable=False)
+
+    # File paths
+    html_path: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+    pdf_path: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+
+    # Metadata
+    lang: Mapped[str] = mapped_column(String(5), default="de", nullable=False)
+    size_category: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
+
+    # Relationships
+    user = relationship("User", lazy="joined")
+    report = relationship("Report", lazy="joined")
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"<ReportHistory report_id={self.report_id} version={self.version}>"
+
+    def to_dict(self) -> dict:
+        """Convert to dictionary for API responses."""
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "report_id": self.report_id,
+            "version": self.version,
+            "scores": self.scores_json,
+            "business_case": self.bc_json,
+            "ai_act": self.ai_act_json,
+            "labels": self.labels_json,
+            "section_stats": self.section_stats_json,
+            "html_path": self.html_path,
+            "pdf_path": self.pdf_path,
+            "lang": self.lang,
+            "size_category": self.size_category,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
