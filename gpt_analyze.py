@@ -4375,6 +4375,20 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections["roadmap_12m"] = sections.get("ROADMAP_12M_HTML", "")
 
     # Business Case / Governance / Org / Tools / Förderpotenzial
+    # Sprint G6.4: Inject pre-calculated Business Case Table into BUSINESS_CASE_HTML
+    bc_table = answers.get("BUSINESS_CASE_TABLE_HTML", "")
+    bc_html = sections.get("BUSINESS_CASE_HTML", "")
+    if bc_table and bc_html:
+        # Append the calculated table to the business case section
+        # Insert before closing </section> tag if present, otherwise append
+        if "</section>" in bc_html:
+            bc_html = bc_html.replace("</section>", f"\n{bc_table}\n</section>", 1)
+        else:
+            bc_html = f"{bc_html}\n{bc_table}"
+        sections["BUSINESS_CASE_HTML"] = bc_html
+        log.info("[%s] 💰 Business Case Table injected into BUSINESS_CASE_HTML", run_id)
+    # Also store table separately for direct template access
+    sections["BUSINESS_CASE_TABLE_HTML"] = bc_table
     sections["business_case"] = sections.get("BUSINESS_CASE_HTML", "")
     sections["strategie_governance"] = sections.get("STRATEGIE_GOVERNANCE_HTML", "")
     sections["org_change"] = sections.get("ORG_CHANGE_HTML", "")

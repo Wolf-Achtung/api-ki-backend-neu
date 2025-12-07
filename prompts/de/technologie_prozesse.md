@@ -1,27 +1,39 @@
-<!-- technologie_prozesse.md – v2.0 PDF-SLIMDOWN-STRICT
-     Antworte ausschließlich mit validem HTML.
+<!-- PLATIN++ PROMPT v5.4 - SPRINT G6 -->
+<!-- SECTION: technologie_prozesse -->
+<!-- OUTPUT: HTML ONLY -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!--
+ZIEL: Präzise Technologie & Prozesse Übersicht.
 
-     **STRIKTE TOKEN-BEGRENZUNG:**
-     MAXIMAL 300-400 Wörter Output.
+MINDESTLÄNGE (STRIKT!):
+- Solo: ≥180 Wörter
+- Team: ≥210 Wörter
+- KMU: ≥240 Wörter
 
-     **STRUKTUR (kompakt):**
-     1. Kurze Einleitung (2 Sätze)
-     2. Prozessketten-Fokus (Haupt-Datenfluss)
-     3. Kurze Tabelle: 4-5 Layer mit Zweck
-     4. Geplante Änderungen (3-4 Punkte kurz)
+STRUKTUR (4 Abschnitte):
+1. Kurze Einleitung (2 Sätze, kein generischer Meta-Text!)
+2. Systemarchitektur (Tabelle: 5 Layer mit Funktion)
+3. Datenflüsse & Integrationen (Hauptprozess + size-aware Details)
+4. Qualitätssicherung (3-4 Punkte)
 
-     **Nicht verwenden:**
-     - Keine Tool-Liste (kommt in tools_empfehlungen)
-     - Fokus auf Prozessketten, nicht auf konkrete Tools
-     - Keine redundanten Tech-Details
+{% if COMPANY_SIZE == "team" or COMPANY_SIZE == "kmu" %}
+Für Team/KMU zusätzlich:
+- Betriebsmodell/Support (1 Absatz)
+- Ausblick: Cloud, EU-Hosting, Observability (kurz)
+{% endif %}
+
+ANTI-REDUNDANZ:
+- Keine Tool-Liste (→ siehe KI-Stack)
+- Fokus auf Prozessketten, nicht konkrete Tools
+- Keine generischen Definitionen ("Eine Roadmap ist...")
 -->
 
 <section class="section technologie-prozesse">
   <h2>Technologie & Prozesse</h2>
 
   <p>
-    Diese Übersicht zeigt den Datenfluss vom Fragebogen bis zum fertigen PDF-Report.
-    Der Fokus liegt auf den Prozessketten, nicht auf einzelnen Tools.
+    Der Datenfluss vom Fragebogen bis zum fertigen PDF-Report basiert auf einer
+    mehrschichtigen Architektur mit integrierter Qualitätssicherung.
   </p>
 
   <h3>Systemarchitektur</h3>
@@ -30,34 +42,42 @@
       <tr><th>Layer</th><th>Funktion</th></tr>
     </thead>
     <tbody>
-      <tr><td>Frontend</td><td>Fragebogen-Erfassung, Validierung, Submit</td></tr>
+      <tr><td>Frontend</td><td>Fragebogen-Erfassung, Validierung, Submit mit Autosave</td></tr>
       <tr><td>Backend</td><td>Prompt-Orchestrierung, Report-Builder, Business-Case-Berechnung</td></tr>
-      <tr><td>KI/Analyse</td><td>Mehrschichtige Prompt-Analyse, Research-Integration</td></tr>
-      <tr><td>PDF-Service</td><td>HTML→PDF Rendering, Layout-Optimierung</td></tr>
-      <tr><td>Delivery</td><td>E-Mail-Versand des fertigen Reports</td></tr>
+      <tr><td>KI/Analyse</td><td>Mehrschichtige Prompt-Analyse, Research-Integration, Branchen-Kontext</td></tr>
+      <tr><td>PDF-Service</td><td>HTML→PDF Rendering, Layout-Optimierung, Branding</td></tr>
+      <tr><td>Delivery</td><td>E-Mail-Versand, Archivierung, Nachverfolgung</td></tr>
     </tbody>
   </table>
 
-  <h3>Datenfluss (Hauptprozess)</h3>
+  <h3>Datenfluss & Integrationen</h3>
   <ol>
-    <li>Nutzer:in füllt Fragebogen aus (Autosave aktiv)</li>
-    <li>Submit → Validierung → Speicherung</li>
-    <li>Prompt-Engine injiziert Branchen- und Größen-Kontext</li>
-    <li>KI generiert Sektionen (Executive Summary, Roadmaps, Risiken, etc.)</li>
-    <li>Business-Case-Logik berechnet CAPEX/OPEX/ROI</li>
-    <li>Validator prüft HTML-Qualität und Konsistenz</li>
-    <li>PDF-Service rendert finalen Report</li>
-    <li>Versand per E-Mail</li>
+    <li>Nutzer:in füllt Fragebogen aus (Autosave aktiv, Zwischenspeicherung)</li>
+    <li>Submit → Validierung → Speicherung in sicherer Datenbank</li>
+    <li>Prompt-Engine injiziert Branchen- und Größen-Kontext (size-aware)</li>
+    <li>KI generiert Sektionen (Executive Summary, Roadmaps, Risiken, Business Case)</li>
+    <li>Business-Case-Logik berechnet CAPEX/OPEX/ROI basierend auf Eingaben</li>
+    <li>Validator prüft HTML-Qualität, Konsistenz und Persona-Compliance</li>
+    <li>PDF-Service rendert finalen Report mit Corporate-Layout</li>
+    <li>Versand per E-Mail mit Zustellbestätigung</li>
   </ol>
 
   <h3>Qualitätssicherung</h3>
   <ul>
-    <li>Automatische Konsistenzprüfung aller Sektionen</li>
-    <li>Size-Mismatch-Detection (Solo/Team/KMU)</li>
-    <li>Plausibilitätsprüfung der Business-Case-Zahlen</li>
+    <li>Automatische Konsistenzprüfung aller Sektionen vor PDF-Erstellung</li>
+    <li>Size-Mismatch-Detection: Solo/Team/KMU-spezifische Inhalte werden validiert</li>
+    <li>Plausibilitätsprüfung der Business-Case-Zahlen (ROI, Payback, CAPEX)</li>
+    <li>Template-Text-Erkennung: Keine Platzhalter im finalen Report</li>
   </ul>
 
+  <h3>Betrieb & Skalierung</h3>
+  <p>
+    Die Architektur ist für parallele Reportgenerierung ausgelegt. EU-Hosting gewährleistet
+    DSGVO-Konformität. Monitoring überwacht Latenz und Fehlerquoten kontinuierlich.
+  </p>
+
   <p class="small muted">
-    Diese Architektur gewährleistet nachvollziehbare, qualitätsgesicherte Reports.
+    Diese Architektur gewährleistet nachvollziehbare, qualitätsgesicherte Reports
+    mit konsistenten Ergebnissen unabhängig von der Unternehmensgröße.
   </p>
 </section>

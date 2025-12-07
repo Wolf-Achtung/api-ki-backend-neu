@@ -1,61 +1,88 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.3 - SPRINT N -->
+<!-- PLATIN++ PROMPT v5.4 - SPRINT G6 -->
 <!-- SECTION: tools_empfehlungen -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{COMPANY_SIZE}} -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{COMPANY_SIZE}} -->
 <!-- TOKEN-BUDGET: 2500 (solo:0.8x=2000, team:1.0x=2500, kmu:1.15x=2875) -->
-<!-- WORD_MINIMUM_SOLO: 120 -->
-<!-- WORD_MINIMUM_TEAM: 160 -->
-<!-- WORD_MINIMUM_KMU: 200 -->
-<!-- RESEARCH: Tools können aus {{RESEARCH_PROVENANCE_HTML}} referenziert werden -->
+<!-- WORD_MINIMUM_SOLO: 130 -->
+<!-- WORD_MINIMUM_TEAM: 190 -->
+<!-- WORD_MINIMUM_KMU: 220 -->
 <!--
-ZIEL: Klar strukturierte Tool-Empfehlungssektion ("KI-Stack") für {{BRANCHE_LABEL}}.
-MINDESTLÄNGE: solo≥120, team≥160, kmu≥200 Wörter (STRIKT EINHALTEN!)
+ZIEL: Klar strukturierte Tool-Empfehlungssektion ("KI-Stack") für {{BRANCH_CONTEXT_LABEL}}.
 
-PERSONA-VARIATIONEN (COMPANY_SIZE):
-- solo: 3–5 Tools, einfache Bedienung, geringer Integrationsaufwand
-- team: gemeinsamer Workspace, Kollaboration, Rechte-/Rollenkonzepte
-- kmu: definierter Stack mit Governance, Rollen, Monitoring, fachbereichsspezifisch
+KURZLABELS (VERPFLICHTEND!):
+- {{BRANCH_CORE_LABEL}} = Branche in 8-12 Wörtern
+- {{BRANCH_CONTEXT_LABEL}} = Branche in 4-6 Wörtern
+- {{OFFERING_LABEL}} = Hauptleistung in 6-10 Wörtern
+
+MINDESTLÄNGE (STRIKT!):
+- Solo: ≥130 Wörter
+- Team: ≥190 Wörter (besonders für regulierte Branchen!)
+- KMU: ≥220 Wörter
+
+STRUKTUR NACH GRÖSSE:
+{% if COMPANY_SIZE == "solo" %}
+SOLO: 3–5 Tool-Cluster mit je 2-3 Beispielen:
+1. KI-Assistent & Basis (2-3 Beispiele)
+2. Kernprozess-Tools für {{OFFERING_LABEL}} (2-3 Beispiele)
+3. Qualität & Dokumentation (1-2 Beispiele)
+
+{% elif COMPANY_SIZE == "team" %}
+TEAM: 4 Tool-Cluster mit je 2-3 Beispielen (min. 190 Wörter!):
+1. Kollaboration & Gemeinsamer Workspace (2-3 Beispiele)
+2. Kernprozess-Tools für {{OFFERING_LABEL}} (2-3 Beispiele)
+3. Reporting & Auswertung (2-3 Beispiele)
+4. Governance & Qualität (2 Beispiele)
+
+Für regulierte Branchen (Finanzen, Gesundheit, Recht) zusätzlich:
+- Compliance/RegTech-Tools
+- Audit-Trail-Funktionen
+- Zugriffssteuerung & Protokollierung
+
+{% else %}
+KMU: 5 Tool-Cluster mit je 2-3 Beispielen (min. 220 Wörter!):
+1. Enterprise-Basis (KI-Plattform, Wissensspeicher)
+2. Fachbereichsspezifische Tools für {{OFFERING_LABEL}}
+3. Reporting/BI-Integration
+4. Compliance & Governance
+5. Rollout & Schulung
+{% endif %}
 
 ANTI-REDUNDANZ:
 - Tool-Details HIER vollständig erklären
-- In Roadmaps nur referenzieren: "Tools (siehe KI-Stack)"
+- In Roadmaps nur referenzieren: "Tools (→ siehe KI-Stack)"
+- Keine generischen Meta-Sätze ("Dieser Abschnitt fasst...")
 
 STIL & REGELN:
 - Produktneutral (keine Markennamen)
 - Fokus auf Toolkategorien und Zweck
+- Konkrete Einsatzfelder pro Tool-Typ nennen
 - Keine Platzhalter oder Developer-Sprache
 
-SPRINT N - SOLO PERSONA REGELN (STRIKT!):
+SPRINT G6 - PERSONA HARD-GUARDS (STRIKT!):
 {% if COMPANY_SIZE == "solo" %}
-NICHT VERWENDEN für Solo:
-- "Abteilung" → stattdessen: "Arbeitsbereich"
-- "Projektteam" → stattdessen: "Projektkapazität"
-- "Bereich" ist OK, aber nicht "Fachbereich"
-- "Team aufbauen" → stattdessen: "Kapazität erweitern"
-- "Mitarbeiter" → stattdessen: "externe Unterstützung" oder "Freelancer"
-- "Teams" → stattdessen: "Ressourcen" oder "Kapazitäten"
-- "Fachbereich" → stattdessen: "Arbeitsfeld"
-Formulierungen ohne Team-/Abteilungsbegriff verwenden!
+SOLO-MODUS - VERBOTEN:
+- "Abteilung" → "Arbeitsbereich"
+- "Projektteam" → "Projektkapazität"
+- "Teams" → "Ressourcen"
+{% elif COMPANY_SIZE == "team" %}
+TEAM-MODUS - VERBOTEN:
+- "Division/Unit/Konzern" → nicht verwenden
+- Solo-Begriffe: "Einzelperson", "allein"
+{% else %}
+KMU-MODUS - VERBOTEN:
+- "Konzern/Division/Unit" → nicht verwenden
+- Solo-Begriffe: "Einzelperson", "allein"
 {% endif %}
 -->
 
 <section class="section tools">
-  <h2>Empfohlener KI-Stack für {{BRANCHE_LABEL}}</h2>
+  <h2>Empfohlener KI-Stack für {{BRANCH_CONTEXT_LABEL}}</h2>
 
   <p>
-    Für den Kernprozess <strong>{{HAUPTLEISTUNG}}</strong> empfiehlt sich ein klar strukturierter
-    KI-Stack, der zur Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> passt. Er soll
-    den Alltag spürbar entlasten, ohne die Organisation zu überfordern, und sich bei Bedarf
-    schrittweise erweitern lassen.
-  </p>
-
-  <p>
-    In der Praxis hat sich ein mehrstufiger Ansatz bewährt: Zunächst ein leichtgewichtiges
-    Fundament, das Solo-Unternehmen, kleine Teams und KMU gleichermaßen nutzen können, dann
-    gezielte Bausteine für den Kernprozess und schließlich ergänzende Elemente für Governance
-    und Qualität.
+    Für {{OFFERING_LABEL}} empfiehlt sich ein klar strukturierter KI-Stack,
+    der den Alltag spürbar entlastet und sich bei Bedarf schrittweise erweitern lässt.
   </p>
 
   <h3>Ausrichtung nach Unternehmensgröße</h3>
@@ -84,26 +111,23 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
   <ul>
     <li>
       <strong>KI-Assistent für Alltagstätigkeiten</strong> –
-      für Entwürfe, Überarbeitung von Texten, Strukturierung von Notizen, Vorbereitung von
-      Workshops oder die Verdichtung von Fragebogen-Antworten im Rahmen von {{HAUPTLEISTUNG}}.
-      Bei Solo-Unternehmen genügt ein zentraler Assistent; in Teams und KMU sollte er so
-      eingebunden sein, dass mehrere Personen ihn konsistent nutzen können.
+      für Entwürfe, Textüberarbeitung, Strukturierung von Notizen und die Verdichtung
+      von Eingaben. Bei Solo-Setups genügt ein zentraler Assistent; in Teams und KMU
+      sollte er so eingebunden sein, dass mehrere Personen ihn konsistent nutzen.
     </li>
     <li>
       <strong>Wissens- und Dokumentenspeicher</strong> –
-      ein zentraler Ort für Fragebögen, Report-Templates, Best-Practice-Beispiele,
-      Protokolle und KI-Prompt-Sammlungen. Wichtig ist eine klare Struktur, damit Inhalte
-      schnell gefunden und von allen Beteiligten verstanden werden.
+      ein zentraler Ort für Templates, Best-Practice-Beispiele und Prompt-Sammlungen.
+      Klare Struktur ermöglicht schnelles Finden und gemeinsames Verständnis.
     </li>
     <li>
       <strong>Kollaborations- bzw. Aufgaben-Tool</strong> –
-      zur Planung von Aufgaben, Deadlines und Zuständigkeiten im Prozess {{HAUPTLEISTUNG}}.
-      Solo-Unternehmen nutzen einfache Aufgabenlisten; kleine Teams und KMU sollten zusätzlich
-      Verantwortlichkeiten, Status und Abhängigkeiten transparent abbilden können.
+      zur Planung von Aufgaben, Deadlines und Zuständigkeiten.
+      Solo: einfache Aufgabenlisten; Teams/KMU: Verantwortlichkeiten und Abhängigkeiten.
     </li>
   </ul>
 
-  <h3>2. Tools für den Kernprozess {{HAUPTLEISTUNG}}</h3>
+  <h3>2. Tools für den Kernprozess {{OFFERING_LABEL}}</h3>
   <ul>
     <li>
       <strong>Formular- oder Fragebogen-Tool</strong> –
@@ -113,23 +137,20 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
     </li>
     <li>
       <strong>Auswertungs- und Berichtswerkzeug</strong> –
-      unterstützt die Verarbeitung der Antworten mit Hilfe von KI, die Erstellung von
-      Reifegrad-Analysen, Handlungsempfehlungen und Reports in einheitlichem Layout.
-      Ein klarer Template-Ansatz sorgt dafür, dass alle Berichte in {{BRANCHE_LABEL}}
-      professionell und konsistent wirken.
+      unterstützt die Verarbeitung mit Hilfe von KI und die Erstellung von
+      Analysen und Reports. Template-Ansatz für professionelle, konsistente Ergebnisse.
     </li>
     <li>
       <strong>Automations-Tool</strong> –
-      verknüpft Fragebogen, Auswertung und Report-Erstellung. Typische Abläufe sind:
-      Formularabsendung, automatische Erstellung eines Berichts, Versand per E-Mail
-      oder Ablage im Wissensspeicher. Solo-Unternehmen nutzen einfache Automationen,
-      KMU integrieren sie in bestehende Abläufe.
+      verknüpft Eingabe, Auswertung und Ergebnis-Erstellung. Typische Abläufe:
+      Formular → Analyse → Report → Versand. Solo: einfache Automationen;
+      KMU: Integration in bestehende Abläufe.
     </li>
     <li>
-      <strong>Spezifische Fach-Tools je Branche</strong> –
-      je nach {{BRANCHE_LABEL}} können zusätzliche Lösungen sinnvoll sein, etwa für
-      Terminplanung, Dokumentenfreigaben, Medienproduktion oder Analyse von Geschäftszahlen.
-      Diese Tools sollten den KI-Stack ergänzen, nicht unnötig verkomplizieren.
+      <strong>Branchenspezifische Fach-Tools</strong> –
+      je nach {{BRANCH_CONTEXT_LABEL}} können zusätzliche Lösungen sinnvoll sein,
+      z.B. für Terminplanung, Dokumentenfreigaben oder Fachanalysen.
+      Diese sollten den Stack ergänzen, nicht verkomplizieren.
     </li>
   </ul>
 
@@ -163,7 +184,7 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
     Statt alle Tools gleichzeitig einzuführen, sollte der KI-Stack in überschaubaren
     Etappen aufgebaut werden. Zunächst ein stabiles Fundament aus Assistent,
     Wissensspeicher und Aufgabensteuerung, anschließend ein Formular- und
-    Auswertungs-Setup für {{HAUPTLEISTUNG}} und schließlich gezielte Automationen
+    Auswertungs-Setup und schließlich gezielte Automationen
     und Governance-Bausteine.
   </p>
 
@@ -172,7 +193,7 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
       <tr>
         <th>Stufe</th>
         <th>Baustein</th>
-        <th>Rolle im Prozess {{HAUPTLEISTUNG}}</th>
+        <th>Rolle im Prozess</th>
         <th>Empfohlener Zeitpunkt</th>
       </tr>
     </thead>
@@ -181,8 +202,7 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
         <td>1</td>
         <td>Assistent, Wissensspeicher, Aufgabenverwaltung</td>
         <td>
-          Unterstützt die tägliche Arbeit, sichert Wissen und schafft Transparenz
-          über Aufgaben und Prioritäten.
+          Unterstützt die tägliche Arbeit, sichert Wissen und schafft Transparenz.
         </td>
         <td>innerhalb der ersten 30 Tage</td>
       </tr>
@@ -190,8 +210,8 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
         <td>2</td>
         <td>Formular-Tool &amp; Auswertungs-Setup</td>
         <td>
-          Macht Kundendaten im Rahmen von {{HAUPTLEISTUNG}} strukturiert nutzbar und
-          ermöglicht KI-gestützte Auswertungen und Reports.
+          Macht Daten für {{OFFERING_LABEL}} strukturiert nutzbar und
+          ermöglicht KI-gestützte Auswertungen.
         </td>
         <td>Tag 30–60</td>
       </tr>
@@ -208,9 +228,8 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
   </table>
 
   <p class="small muted">
-    Der empfohlene KI-Stack ist bewusst schlank gehalten: Für {{UNTERNEHMENSGROESSE_LABEL}}
-    steht im Vordergrund, schnell Nutzen im Kernprozess {{HAUPTLEISTUNG}} zu erzeugen und
-    bei Bedarf schrittweise weitere Bausteine hinzuzufügen. So bleiben Kosten und
-    Komplexität beherrschbar, während die Grundlage für eine spätere Skalierung gelegt wird.
+    Der empfohlene KI-Stack ist bewusst schlank gehalten: Schnell Nutzen für
+    {{OFFERING_LABEL}} erzeugen und bei Bedarf schrittweise weitere Bausteine hinzufügen.
+    Details zur Einführung → siehe Roadmap.
   </p>
 </section>
