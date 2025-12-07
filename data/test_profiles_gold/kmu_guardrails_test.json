@@ -1,0 +1,51 @@
+{
+  "profile_id": "kmu_guardrails_test",
+  "description": "KMU Testprofil mit expliziten Guardrails zur QA-Validierung",
+  "lang": "de",
+  "country": "Germany",
+  "BRANCHE_LABEL": "Beratung & Dienstleistungen",
+  "UNTERNEHMENSGROESSE_LABEL": "11-50 (KMU)",
+  "HAUPTLEISTUNG": "Organisationsberatung für mittelständische Betriebe",
+  "expected_validation": {
+    "funding_flow": "DE",
+    "persona": "kmu",
+    "guardrails": true,
+    "word_guarantee": 50,
+    "pdf_size_limit_mb": 10
+  },
+  "answers": {
+    "branche": "beratung",
+    "unternehmensgroesse": "kmu",
+    "bundesland": "be",
+    "hauptleistung": "Organisationsberatung für mittelständische Betriebe",
+    "zielgruppen": [
+      "B2B",
+      "kmu",
+      "mittelstand"
+    ],
+    "digitalisierungsgrad": "mittel",
+    "strategische_ziele": "Prozesse verschlanken und Teams entlasten",
+    "zeitersparnis_prioritaet": "Kommunikation, Dokumentation, Meeting-Notes",
+    "geschaeftsmodell_evolution": "Beratungsprodukte als KI-gestützte Membership",
+    "vision_3_jahre": "Teilautomatisierte Analyse-Unit und digitale Trainingsprodukte",
+    "ki_guardrails": "Keine automatisierten Entscheidungen bei Personalthemen. Kritisch: interne Kommunikation nicht ohne Freigabe. Daten nicht an Dritte weitergeben.",
+    "ki_kompetenz": "mittel",
+    "ki_ziele": [
+      "effizienz",
+      "standardisierung",
+      "qualitaet"
+    ],
+    "ki_projekte": "Erste Pilotprojekte zur automatisierten Meeting-Zusammenfassung, KI-gestützten Dokumentenanalyse und internen Wissensmanagement-Workflows. Geplant ist der Aufbau eines digitalen Beratungs-Toolkits.",
+    "anwendungsfaelle": [
+      "dokumentation",
+      "meeting_notes",
+      "prozessanalyse",
+      "kundenkommunikation"
+    ],
+    "massnahmen_komplexitaet": "niedrig",
+    "roadmap_vorhanden": "nein",
+    "governance_richtlinien": "in_planung",
+    "change_management": "punktuell",
+    "datenschutz": true
+  }
+}
