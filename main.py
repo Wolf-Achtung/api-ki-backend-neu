@@ -177,6 +177,15 @@ def _build_router_config() -> List[Tuple[str, str, str]]:
         cfg.append(("routes.admin", "/api", "admin"))
     if _bool_env("ADMIN_ALLOW_RAW_SQL", "0"):
         cfg.append(("routes.admin_sql", "", "admin-sql"))
+
+    # Sprint G11: Product Mode Routes
+    if _bool_env("REPORT_VERSIONING_ENABLED", "1"):
+        cfg.append(("routes.reports_registry", "/api", "reports"))
+    if _bool_env("ENABLE_DASHBOARD_API", "1"):
+        cfg.append(("routes.dashboard", "/api", "dashboard"))
+    if _bool_env("ENABLE_PREMIUM_FUNDING", "0"):
+        cfg.append(("routes.funding", "/api", "funding"))
+
     return cfg
 
 
@@ -227,6 +236,10 @@ def _status_snapshot() -> Dict[str, Any]:
             "feedback": any(p.startswith("/api/feedback") for p in ps),
             "smoke": any(p.startswith("/api/smoke") for p in ps),
             "monitoring": any(p.startswith("/api/monitoring") for p in ps),
+            # Sprint G11: Product Mode
+            "reports_registry": any(p.startswith("/api/reports") for p in ps),
+            "dashboard": any(p.startswith("/api/dashboard") for p in ps),
+            "funding": any(p.startswith("/api/funding") for p in ps),
         },
         "paths": sorted([p for p in ps if p.startswith("/api/")]),
         "analyzer_import_ok": analyzer_ok,
@@ -281,6 +294,13 @@ def root() -> Dict[str, Any]:
         endpoints["hotfix"] = "/admin-sql/hotfix.html"
     if os.path.exists("public"):
         endpoints["test_dashboard"] = "/test-dashboard.html (Interactive Test UI)"
+    # Sprint G11: Product Mode endpoints
+    if _bool_env("REPORT_VERSIONING_ENABLED", "1"):
+        endpoints["reports"] = "/api/reports/list, /api/reports/{id}/versions, /api/reports/compare"
+    if _bool_env("ENABLE_DASHBOARD_API", "1"):
+        endpoints["dashboard"] = "/api/dashboard/overview, /api/dashboard/trends, /api/dashboard/ai-act-summary"
+    if _bool_env("ENABLE_PREMIUM_FUNDING", "0"):
+        endpoints["funding"] = "/api/funding/recommend, /api/funding/programs"
     return {
         "name": os.getenv("APP_NAME", "KI-Status-Report API"),
         "version": APP_VERSION,
