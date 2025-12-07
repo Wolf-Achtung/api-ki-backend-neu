@@ -26,8 +26,25 @@ SPRINT N CHANGES:
 """
 
 import re
+import logging
 from typing import Dict, List, Tuple, Any
 from dataclasses import dataclass
+
+# G8.2: Import centralized validation config
+try:
+    from services.config_validation import (
+        ValidationConfig,
+        get_min_words,
+        SECTION_MIN_WORDS,
+    )
+    _HAS_CONFIG_VALIDATION = True
+except ImportError:
+    _HAS_CONFIG_VALIDATION = False
+    ValidationConfig = None
+    get_min_words = None
+    SECTION_MIN_WORDS = None
+
+log = logging.getLogger(__name__)
 
 __all__ = [
     "ValidationError",
@@ -307,8 +324,13 @@ class ReportValidator:
         },
     }
 
-    # SPRINT N: Hard-Stop Configuration
-    HARD_STOP_ON_SIZE_MISMATCH = True  # Block report if size-inappropriate content found
+    # SPRINT N / G8.2: Hard-Stop Configuration (now ENV-controlled via ValidationConfig)
+    # Can be overridden via HARD_STOP_ON_SIZE_MISMATCH env var
+    HARD_STOP_ON_SIZE_MISMATCH = (
+        ValidationConfig.HARD_STOP_ON_SIZE_MISMATCH
+        if _HAS_CONFIG_VALIDATION and ValidationConfig
+        else True
+    )
 
     # PLATIN+ Standard: Mindestlängen in WÖRTERN (nicht Zeichen!)
     # SIZE-AWARE: Unterschiedliche Mindestlängen je Unternehmensgröße
@@ -419,13 +441,22 @@ class ReportValidator:
     # SPRINT G7: Valid AI Act risk levels
     VALID_AI_ACT_RISK_LEVELS = {"none", "minimal", "limited", "high-risk"}
 
-    # SPRINT G7: AI Act section minimum lengths (words)
-    MIN_AI_ACT_SECTION_LENGTH = {
-        "AI_ACT_RISK_REASONING": 60,      # 80-120 words expected
-        "AI_ACT_DUTY_MATRIX_HTML": 30,    # Table content
-        "AI_ACT_RECOMMENDED_NEXT_STEPS_HTML": 30,  # List content
-        "AI_ACT_RELATED_USECASES_HTML": 15,       # List content
-    }
+    # SPRINT G7 / G8.2: AI Act section minimum lengths (words)
+    # AI_ACT_MIN_REASONING_WORDS now configurable via ENV
+    @property
+    def MIN_AI_ACT_SECTION_LENGTH(self) -> Dict[str, int]:
+        """Get AI Act min lengths with ENV-configurable reasoning minimum."""
+        reasoning_min = (
+            ValidationConfig.AI_ACT_MIN_REASONING_WORDS
+            if _HAS_CONFIG_VALIDATION and ValidationConfig
+            else 60
+        )
+        return {
+            "AI_ACT_RISK_REASONING": reasoning_min,  # 80-120 words expected
+            "AI_ACT_DUTY_MATRIX_HTML": 30,           # Table content
+            "AI_ACT_RECOMMENDED_NEXT_STEPS_HTML": 30,  # List content
+            "AI_ACT_RELATED_USECASES_HTML": 15,      # List content
+        }
 
     def __init__(self, sections: Dict[str, Any], meta: Dict[str, Any]) -> None:
         self.sections = sections or {}
@@ -917,9 +948,14 @@ class ReportValidator:
             sentences = re.split(r'[.!?]\s+', content)
 
             for sentence in sentences:
-                # SPRINT G3.3: Increased threshold from 15 to 20 words
+                # G8.2: Use centralized config for redundancy threshold (default 20 words)
+                redundancy_threshold = (
+                    ValidationConfig.REDUNDANCY_WORD_THRESHOLD
+                    if _HAS_CONFIG_VALIDATION and ValidationConfig
+                    else 20
+                )
                 words = sentence.split()
-                if len(words) < 20:
+                if len(words) < redundancy_threshold:
                     continue
 
                 # Normalize for comparison
@@ -939,7 +975,12 @@ class ReportValidator:
 
         # Report redundancies (appearing in ≥2 sections)
         redundancy_count = 0
-        max_redundancy_warnings = 5  # SPRINT G3.3: Limit warnings to avoid flooding
+        # G8.2: Use centralized config for max warnings
+        max_redundancy_warnings = (
+            ValidationConfig.MAX_REDUNDANCY_WARNINGS
+            if _HAS_CONFIG_VALIDATION and ValidationConfig
+            else 5
+        )
 
         for normalized, sections_list in sentence_occurrences.items():
             if len(sections_list) >= 2 and redundancy_count < max_redundancy_warnings:
