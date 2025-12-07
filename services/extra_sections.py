@@ -502,10 +502,13 @@ def _generate_ai_act_adjusted_table(
 
     # Compliance note based on risk level
     if capex_factor > 1.0 or opex_factor > 1.0:
+        # G9 fix: Use round() to avoid floating point truncation (1.15-1)*100 = 14.999...
+        capex_pct = round((capex_factor - 1) * 100)
+        opex_pct = round((opex_factor - 1) * 100)
         compliance_note = f"""
       <tr class="ai-act-note" style="background:#fff7ed;">
         <td colspan="3" style="font-size:0.9em;color:#9a3412;">
-          <strong>📋 AI Act Compliance:</strong> CAPEX +{int((capex_factor-1)*100)}%, OPEX +{int((opex_factor-1)*100)}%
+          <strong>📋 AI Act Compliance:</strong> CAPEX +{capex_pct}%, OPEX +{opex_pct}%
           für {risk_level.replace('-', '‑')}-Einstufung (Dokumentation, Monitoring, QMS)
         </td>
       </tr>"""
