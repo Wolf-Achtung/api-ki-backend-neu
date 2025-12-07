@@ -1,9 +1,9 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.2 -->
+<!-- PLATIN++ PROMPT v5.3 - SPRINT N -->
 <!-- SECTION: wettbewerb_benchmark -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCHE_LABEL}}, {{report_date}}, {{score_gesamt}}, {{score_befaehigung}}, {{score_governance}}, {{score_sicherheit}}, {{score_nutzen}}, {{UNTERNEHMENSGROESSE_LABEL}} -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{report_date}}, {{score_gesamt}}, {{score_befaehigung}}, {{score_governance}}, {{score_sicherheit}}, {{score_nutzen}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{COMPANY_SIZE}} -->
 <!-- TOKEN-BUDGET: 2500 (solo:0.8x=2000, team:1.0x=2500, kmu:1.15x=2875) -->
 <!-- RESEARCH: Kann Marktdaten aus {{RESEARCH_PROVENANCE_HTML}} integrieren -->
 <!--
@@ -35,6 +35,17 @@ BRANCHEN-MODIFIKATOREN:
 ANTI-REDUNDANZ:
 - Benchmark-Daten HIER vollständig
 - In anderen Sektionen nur referenzieren
+
+SPRINT N - SOLO PERSONA REGELN (STRIKT!):
+{% if COMPANY_SIZE == "solo" %}
+NICHT VERWENDEN für Solo:
+- "Team aufbauen" → stattdessen: "Kapazität erweitern"
+- "Mitarbeiter" → stattdessen: "Ressourcen"
+- "Teams" → stattdessen: "Ihre Vergleichsgruppe"
+- "Fachbereich" → stattdessen: "Arbeitsfeld"
+- "Abteilung" → stattdessen: "Arbeitsbereich"
+Formulierungen ohne Team-/Abteilungsbegriff verwenden!
+{% endif %}
 -->
 
 <section class="section wettbewerb-benchmark">

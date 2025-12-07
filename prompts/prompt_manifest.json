@@ -1,24 +1,21 @@
 {
   "_meta": {
     "version": "5.3",
-    "description": "PLATIN++ V5.3 Prompt Manifest - Architecture Freeze",
-    "updated": "2025-12",
-    "schema": {
-      "required": [
-        "title",
-        "path",
-        "purpose"
-      ],
-      "optional": [
-        "output",
-        "size_aware",
-        "required",
-        "funding_scope",
-        "tokens",
-        "redundancy_rules",
-        "persona_rules"
-      ]
-    }
+    "description": "PLATIN++ V5.3 Prompt Manifest - Sprint N (Persona Leak Elimination + Length Stabilization)",
+    "updated": "2024-12",
+    "sprint": "N",
+    "changes": [
+      "Updated token budgets for length stabilization",
+      "Added min_words requirements per size",
+      "Enhanced size-aware configuration"
+    ]
+  },
+  "_token_budgets": {
+    "_note": "LLM token budgets (base) use PDF-SLIMDOWN v2.0 values; min_words enforced by report_validator.py",
+    "executive_summary": {"base": 800, "min_words": {"solo": 150, "team": 180, "kmu": 200}, "validator_only": true},
+    "tools_empfehlungen": {"base": 1800, "min_words": {"solo": 120, "team": 160, "kmu": 200}, "validator_only": true},
+    "gamechanger": {"base": 3000, "min_words": {"solo": 750, "team": 750, "kmu": 750}},
+    "roadmap_12m": {"base": 2800, "min_words": {"solo": 500, "team": 600, "kmu": 700}}
   },
   "de": {
     "executive_summary": {

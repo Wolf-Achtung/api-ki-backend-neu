@@ -13,10 +13,16 @@ Prüft:
 - Template-Text statt echtem Content
 - Prompt-Leaks in Quick-Wins
 
-Version: 1.3.0-PLATIN-WORDS
+Version: 1.4.0-SPRINT-N (Persona Leak Elimination + Length Stabilization)
 Author: Claude + Wolf
 
 PLATIN+ ÄNDERUNG: Validierung basiert jetzt auf WÖRTERN statt Zeichen!
+
+SPRINT N CHANGES:
+- Extended SIZE_FORBIDDEN list for Solo personas
+- Updated MIN_SECTION_LENGTH_BY_SIZE with new minimums
+- Added HARD_STOP_ON_SIZE_MISMATCH option
+- Critical sections now enforce minimum word counts strictly
 """
 
 import re
@@ -133,74 +139,122 @@ class ReportValidator:
         "Schritt 3 – integriere die Methode in den bestehenden Alltag",
     ]
 
+    # SPRINT N: Extended SIZE_FORBIDDEN for Solo personas
+    # These terms MUST NEVER appear in Solo reports
     SIZE_FORBIDDEN = {
         "solo": [
+            # Team-specific terms
             "PMO-Team",
             "Team aufbauen",
-            "Mitarbeiter einstellen",
-            "Abteilung",
-            "HR-Abteilung",
-            "IT-Abteilung",
-            # "Organisationsberater" removed - valid for solo organizational consultants
+            "Team-Struktur",
+            "Teamstruktur",
+            "Teamwork",
+            "Teamrollen",
+            "Teammitglieder",
             "Change-Team",
             "Projektmanagement-Office",
+            # Employee/HR terms
+            "Mitarbeiter einstellen",
+            "Mitarbeiterschulung",
+            "Personalstrategien",
+            "Belegschaft",
+            # Department/Organization terms
+            "Abteilung",
+            "Abteilungen",
+            "HR-Abteilung",
+            "IT-Abteilung",
+            "Fachbereich",
+            "Fachbereiche",
+            "Bereichsleiter",
+            "bereichsübergreifend",
+            # English equivalents
+            "team building",
+            "team members",
+            "hire employees",
+            "department",
+            "departments",
         ],
-        "team": [],
+        "team": [
+            # KMU-specific terms not appropriate for small teams
+            "Governance-Board",
+            "Enterprise-Architektur",
+            "Konzernstruktur",
+        ],
         "kmu": [],
     }
+
+    # SPRINT N: Hard-Stop Configuration
+    HARD_STOP_ON_SIZE_MISMATCH = True  # Block report if size-inappropriate content found
 
     # PLATIN+ Standard: Mindestlängen in WÖRTERN (nicht Zeichen!)
     # SIZE-AWARE: Unterschiedliche Mindestlängen je Unternehmensgröße
     # Solo = kürzere Reports, KMU = ausführlichere Reports
+    # SPRINT N: Updated minimums for length stabilization
     MIN_SECTION_LENGTH_WORDS = {
-        "executive_summary": 100,      # ~600 Zeichen
+        "executive_summary": 150,      # SPRINT N: erhöht von 100
         "business_case": 130,          # ~800 Zeichen
         "quick_wins": 60,              # Base (wird size-aware überschrieben)
         "roadmap_90d": 250,            # Base (wird size-aware überschrieben)
-        "roadmap_12m": 400,            # Base (wird size-aware überschrieben)
+        "roadmap_12m": 500,            # SPRINT N: erhöht von 400
         "strategie_governance": 130,   # ~800 Zeichen
         "org_change": 120,             # ~700 Zeichen
-        "tools_empfehlungen": 100,     # ~600 Zeichen
+        "tools_empfehlungen": 120,     # SPRINT N: erhöht von 100
         "foerderpotenzial": 600,       # Reduziert für bessere Compliance
         "risks": 500,                  # Reduziert für bessere Compliance
         "recommendations": 500,        # Reduziert für bessere Compliance
-        "gamechanger": 400,            # Reduziert für bessere Compliance
+        "gamechanger": 750,            # SPRINT N: erhöht von 400 (Mindestlänge fix)
         "unternehmensprofil_markt": 300,  # Reduziert für bessere Compliance
-        # PE-1 FIX: Fehlende kritische Sektionen hinzugefügt
         "transparency_box": 150,       # Base (wird size-aware überschrieben)
         "technologie_prozesse": 200,   # Base (wird size-aware überschrieben)
     }
 
-    # SIZE-AWARE Überschreibungen
+    # SPRINT N: SIZE-AWARE Überschreibungen - Updated minimums
     MIN_SECTION_LENGTH_BY_SIZE = {
         "solo": {
+            # SPRINT N: Updated minimums
+            "executive_summary": 150,   # SPRINT N requirement
             "quick_wins": 60,
             "roadmap_90d": 250,
-            "roadmap_12m": 400,
+            "roadmap_12m": 500,         # SPRINT N: erhöht von 400
             "org_change": 80,
-            # PE-1 FIX: Fehlende Sektionen
+            "tools_empfehlungen": 120,  # SPRINT N requirement
+            "gamechanger": 750,         # SPRINT N: Mindestlänge fix
             "transparency_box": 100,
             "technologie_prozesse": 150,
         },
         "team": {
+            # SPRINT N: Updated minimums
+            "executive_summary": 180,   # SPRINT N requirement
             "quick_wins": 90,
             "roadmap_90d": 300,
-            "roadmap_12m": 500,
+            "roadmap_12m": 600,         # SPRINT N: erhöht von 500
             "org_change": 100,
-            # PE-1 FIX: Fehlende Sektionen
+            "tools_empfehlungen": 160,  # SPRINT N requirement
+            "gamechanger": 750,         # SPRINT N: Mindestlänge fix
             "transparency_box": 150,
             "technologie_prozesse": 200,
         },
         "kmu": {
+            # SPRINT N: Updated minimums
+            "executive_summary": 200,   # SPRINT N requirement
             "quick_wins": 120,
             "roadmap_90d": 350,
-            "roadmap_12m": 600,
+            "roadmap_12m": 700,         # SPRINT N: erhöht von 600
             "org_change": 120,
-            # PE-1 FIX: Fehlende Sektionen
+            "tools_empfehlungen": 200,  # SPRINT N requirement
+            "gamechanger": 750,         # SPRINT N: Mindestlänge fix
             "transparency_box": 200,
             "technologie_prozesse": 250,
         },
     }
+
+    # SPRINT N: Critical sections that MUST meet minimum length (no fallback padding)
+    CRITICAL_LENGTH_SECTIONS = [
+        "executive_summary",
+        "tools_empfehlungen",
+        "gamechanger",
+        "roadmap_12m",
+    ]
 
     # Legacy-Alias für Abwärtskompatibilität
     MIN_SECTION_LENGTH = MIN_SECTION_LENGTH_WORDS
@@ -215,13 +269,17 @@ class ReportValidator:
         "org_change": "org_change",
         "tools_empfehlungen": "tools_empfehlungen",
         "foerderpotenzial": "foerderpotenzial",
-        "risks": "risks",                 # PLATIN+: hinzugefügt
-        "recommendations": "recommendations",  # PLATIN+: hinzugefügt
-        "gamechanger": "gamechanger",     # PLATIN+: hinzugefügt
-        "unternehmensprofil_markt": "unternehmensprofil_markt",  # PLATIN+: hinzugefügt
-        # PE-1 FIX: Fehlende kritische Sektionen
+        "risks": "risks",
+        "recommendations": "recommendations",
+        "gamechanger": "gamechanger",
+        "unternehmensprofil_markt": "unternehmensprofil_markt",
         "transparency_box": "transparency_box",
         "technologie_prozesse": "technologie_prozesse",
+        # SPRINT N: Additional section mappings
+        "wettbewerb_benchmark": "wettbewerb_benchmark",
+        "monetarisierung": "monetarisierung",
+        "ki_skillplan": "ki_skillplan",
+        "ai_act_summary": "ai_act_summary",
     }
 
     def __init__(self, sections: Dict[str, Any], meta: Dict[str, Any]) -> None:
@@ -343,6 +401,7 @@ class ReportValidator:
         """
         PLATIN+ Validierung: Prüft Sections auf Mindest-WORTZAHL (nicht Zeichen!).
         SIZE-AWARE: Unterschiedliche Mindestlängen je Unternehmensgröße.
+        SPRINT N: Critical sections trigger CRITICAL errors, not just warnings.
         """
         for logical_name in self.MIN_SECTION_LENGTH_WORDS.keys():
             section_key = self.SECTION_KEY_MAP.get(logical_name, logical_name)
@@ -381,16 +440,23 @@ class ReportValidator:
             min_words = self._get_min_words_for_section(logical_name)
 
             if actual_word_count < min_words:
+                # SPRINT N: Use CRITICAL severity for critical length sections
+                is_critical_section = logical_name in self.CRITICAL_LENGTH_SECTIONS
+                severity = "CRITICAL" if is_critical_section else "WARNING"
+
                 self.errors.append(
                     ValidationError(
-                        severity="WARNING",
+                        severity=severity,
                         category="SECTION_TOO_SHORT",
                         section=section_key,
                         message=(
                             f"Section zu kurz: {actual_word_count} Wörter "
                             f"(Minimum für {self.company_size}: {min_words} Wörter)"
                         ),
-                        details=f"Content preview: {text_only[:150]}...",
+                        details=(
+                            f"Content preview: {text_only[:150]}... "
+                            f"{'[CRITICAL SECTION]' if is_critical_section else ''}"
+                        ),
                     )
                 )
 
@@ -440,25 +506,44 @@ class ReportValidator:
                     break
 
     def _check_size_specific_issues(self) -> None:
-        forbidden_terms = self.SIZE_FORBIDDEN.get(self.company_size, [])
+        """
+        SPRINT N: Enhanced size-specific validation with HARD_STOP support.
+        Checks for forbidden terms and triggers CRITICAL errors when configured.
+        """
+        # Normalize company_size
+        size_key = self.company_size.lower() if self.company_size else "kmu"
+        if "solo" in size_key or "1" in size_key or "freiberuf" in size_key:
+            size_key = "solo"
+        elif "team" in size_key or "klein" in size_key:
+            size_key = "team"
+        else:
+            size_key = "kmu"
+
+        forbidden_terms = self.SIZE_FORBIDDEN.get(size_key, [])
         if not forbidden_terms:
             return
+
         for section_name, content in self.sections.items():
             if not isinstance(content, str):
                 continue
             lower = content.lower()
             for term in forbidden_terms:
                 if term.lower() in lower:
+                    # SPRINT N: Use CRITICAL severity if HARD_STOP is enabled
+                    severity = "CRITICAL" if self.HARD_STOP_ON_SIZE_MISMATCH else "WARNING"
                     self.errors.append(
                         ValidationError(
-                            severity="WARNING",
+                            severity=severity,
                             category="SIZE_MISMATCH",
                             section=section_name,
                             message=(
-                                f"Inhalt wirkt nicht passend für Unternehmensgröße "
-                                f"'{self.company_size}': Begriff '{term}' gefunden."
+                                f"Persona-Leak: Begriff '{term}' unpassend für "
+                                f"'{self.company_size}' gefunden."
                             ),
-                            details="Bitte prüfen, ob Formulierung zur Größe passt.",
+                            details=(
+                                f"SPRINT N: Term '{term}' muss ersetzt werden. "
+                                f"HARD_STOP={self.HARD_STOP_ON_SIZE_MISMATCH}"
+                            ),
                         )
                     )
 
