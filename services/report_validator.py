@@ -68,6 +68,7 @@ class ReportValidator:
     ]
 
     # Phrasen, die klar auf Template- oder Platzhaltertexte hindeuten
+    # SPRINT G2.2: Extended with meta-text patterns
     TEMPLATE_PHRASES = [
         "Hier könnten Sie",
         "Platzhalter für",
@@ -131,6 +132,23 @@ class ReportValidator:
         "Freitext-Feldern",
         "hier Freitext einfügen",
         "hier Freitext eingeben",
+        # SPRINT G2.2: Meta-text patterns (no actual content, just descriptions)
+        "Dieser Abschnitt fasst die wichtigsten Aspekte",
+        "Dieser Abschnitt fasst",
+        "Die Inhalte basieren auf den",
+        "Im Folgenden werden",
+        "Im Folgenden finden Sie",
+        "Die oben beschriebene Leistung",
+        "Wie bereits erwähnt",
+        "wie oben beschrieben",
+        "This section summarizes",
+        "The following section",
+        "As mentioned above",
+        "based on the information provided",
+        # Meta-stub patterns
+        "fasst die wichtigsten",
+        "basiert auf Ihren Angaben",
+        "Basierend auf Ihren Eingaben",
     ]
 
     QUICK_WINS_PROMPT_PHRASES = [
@@ -141,6 +159,7 @@ class ReportValidator:
 
     # SPRINT N: Extended SIZE_FORBIDDEN for Solo personas
     # These terms MUST NEVER appear in Solo reports
+    # SPRINT G2.1: Extended for Team and KMU persona leak detection
     SIZE_FORBIDDEN = {
         "solo": [
             # Team-specific terms
@@ -179,8 +198,34 @@ class ReportValidator:
             "Governance-Board",
             "Enterprise-Architektur",
             "Konzernstruktur",
+            # Solo-specific terms (SPRINT G2.1: PERSONA_LEAK prevention)
+            "Ihre Agilität als Einzelperson",
+            "Agilität als Einzelperson",
+            "Solo-Selbstständige",
+            "Solo-Berater",
+            "Einzelunternehmer",
+            "als Einzelperson",
+            "Your agility as a solo",
+            "as a solo professional",
         ],
-        "kmu": [],
+        "kmu": [
+            # SPRINT G2.1: Solo-specific terms that MUST NOT appear in KMU reports
+            "Ihre Agilität als Einzelperson",
+            "Agilität als Einzelperson",
+            "Solo-Selbstständige",
+            "Solo-Berater",
+            "Einzelunternehmer",
+            "als Einzelperson",
+            "Ihre persönliche Kapazität",
+            "Your agility as a solo",
+            "as a solo professional",
+            "solo entrepreneur",
+            "as an individual",
+            # Freelancer-specific terms inappropriate for 11-100 companies
+            "Freiberufler",
+            "freiberuflich",
+            "Selbstständiger",
+        ],
     }
 
     # SPRINT N: Hard-Stop Configuration
@@ -236,6 +281,7 @@ class ReportValidator:
         },
         "kmu": {
             # SPRINT N: Updated minimums
+            # SPRINT G2.6: transparency_box + technologie_prozesse reduziert
             "executive_summary": 200,   # SPRINT N requirement
             "quick_wins": 120,
             "roadmap_90d": 350,
@@ -243,8 +289,8 @@ class ReportValidator:
             "org_change": 120,
             "tools_empfehlungen": 200,  # SPRINT N requirement
             "gamechanger": 750,         # SPRINT N: Mindestlänge fix
-            "transparency_box": 200,
-            "technologie_prozesse": 250,
+            "transparency_box": 150,    # SPRINT G2.6: von 200 → 150
+            "technologie_prozesse": 200,  # SPRINT G2.6: von 250 → 200
         },
     }
 
