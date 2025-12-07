@@ -3534,18 +3534,35 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   </p>
 </div>""",
         # SPRINT G2.3/G2.4: Fallback für tools_empfehlungen (size-aware + short labels)
+        # SPRINT G6: Erweitert auf ~150+ Wörter, size-aware Struktur
         "tools_empfehlungen": f"""<div class="tools-empfehlungen-fallback">
-  <h3>Empfohlene KI-Tools</h3>
+  <h3>Empfohlener KI-Stack für {branch_context_label}</h3>
   <p class="context-label"><em>{branch_core_label}</em></p>
+
+  <h4>1. Fundament & Basis</h4>
   <ul>
-    <li><strong>ChatGPT / Claude:</strong> Texterstellung, E-Mail-Entwürfe, Content-Generierung. Einstieg ab 20 €/Monat.</li>
-    <li><strong>Fireflies.ai / Otter.ai:</strong> Meeting-Transkription und automatische Protokolle. Ab 19 €/Monat.</li>
-    <li><strong>Make.com / Zapier:</strong> Workflow-Automatisierung ohne Programmierung. Ab 9 €/Monat.</li>
-    <li><strong>Notion AI:</strong> Wissensmanagement und Dokumentation mit KI-Unterstützung. Ab 10 €/Monat.</li>
+    <li><strong>KI-Assistent:</strong> Texterstellung, E-Mail-Entwürfe, Content-Generierung – Einstieg ab 20 €/Monat.</li>
+    <li><strong>Wissensspeicher:</strong> Zentrale Ablage für Templates, Prompts und Best Practices.</li>
+    <li><strong>Aufgabenverwaltung:</strong> Planung und Koordination von KI-gestützten Workflows.</li>
   </ul>
+
+  <h4>2. Kernprozess-Tools für {offering_label}</h4>
+  <ul>
+    <li><strong>Formular-Tool:</strong> Strukturierte Erfassung von Kundendaten und Feedback.</li>
+    <li><strong>Auswertungs-Tool:</strong> KI-gestützte Analyse und Report-Erstellung.</li>
+    <li><strong>Automatisierung:</strong> Make.com oder Zapier für wiederkehrende Abläufe (ab 9 €/Monat).</li>
+  </ul>
+
+  {"" if size_key == "solo" else '''<h4>3. Governance & Qualität</h4>
+  <ul>
+    <li><strong>Richtlinien:</strong> Kurze, schriftliche Regeln für den KI-Einsatz.</li>
+    <li><strong>Dokumentation:</strong> Übersicht welche Tools wofür eingesetzt werden.</li>
+    <li><strong>Qualitätskontrolle:</strong> Review-Prozesse für wichtige KI-Ergebnisse.</li>
+  </ul>'''}
+
   <p>
-    Der Einstieg erfolgt am besten mit einem Tool, das sofort Zeitersparnis bringt.
-    Für <strong>{size_label}</strong> empfiehlt sich ein schrittweiser Ausbau nach messbarem Erfolg.
+    Für <strong>{size_label}</strong> empfiehlt sich ein schrittweiser Ausbau: Erst Fundament,
+    dann Kernprozess-Tools, schließlich Governance. Details zur Einführung → siehe Roadmap.
   </p>
 </div>""",
         # SPRINT G2.3/G2.4: Fallback für strategie_governance (size-aware + short labels)
