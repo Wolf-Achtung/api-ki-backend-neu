@@ -192,23 +192,26 @@ Developer:
     Schwerpunkte unterscheiden sich je nach Struktur:
   </p>
 
-  <ul>
-    <li>
-      <strong>Solo:</strong>
-      wenige Einsatzstellen klar benennen, einfache Standardhinweise formulieren,
-      Ergebnisse kurz prüfen, keine komplexen Prozesse nötig.
-    </li>
-    <li>
-      <strong>Team (2–10):</strong>
-      Verantwortlichkeiten klären (Wer prüft? Wer kennzeichnet?),
-      einheitliche interne Regeln definieren, Abstimmungen kurz halten.
-    </li>
-    <li>
-      <strong>KMU (11–100):</strong>
-      schriftliche Richtlinien für KI-Einsatz, feste Freigabeprozesse, dokumentierte
-      Rollen und interne Trainings; Governance-Elemente früh verankern.
-    </li>
-  </ul>
+  {% if COMPANY_SIZE == "solo" %}
+  <p>
+    Als Einzelunternehmer:in genügt es, Ihre wenigen KI-Einsatzstellen klar zu benennen,
+    einfache Standardhinweise zu formulieren und Ergebnisse kurz zu prüfen. Komplexe
+    Prozesse oder aufwendige Dokumentation sind für Sie nicht erforderlich – ein
+    pragmatischer, persönlicher Ansatz reicht aus.
+  </p>
+  {% elif COMPANY_SIZE == "team" %}
+  <p>
+    Für ein Team von 2–10 Personen gilt: Verantwortlichkeiten klären (Wer prüft?
+    Wer kennzeichnet?), einheitliche interne Regeln definieren, Abstimmungen kurz halten.
+    Konsistenz im Team ist wichtiger als umfangreiche Dokumentation.
+  </p>
+  {% else %}
+  <p>
+    Für ein KMU (11–100 Mitarbeitende) empfehlen sich schriftliche Richtlinien für den
+    KI-Einsatz, feste Freigabeprozesse, dokumentierte Rollen und interne Trainings.
+    Governance-Elemente sollten früh verankert werden.
+  </p>
+  {% endif %}
 
   <h3>Empfohlene nächste Schritte</h3>
   <ol>

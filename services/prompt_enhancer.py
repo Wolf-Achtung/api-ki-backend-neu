@@ -223,7 +223,29 @@ Bei Erwähnung: "Tool X nutzen (siehe Quick Wins / Tools-Empfehlungen)"
 # SOLO-PERSONA MODULATION: Vereinfachte Governance-Sprache
 # =============================================================================
 
-# Corporate terms → Solo-appropriate replacements
+# Sprint N3: Phrase-based filtering (applied FIRST, before word-based)
+# These are multi-word phrases that must be replaced as units
+SOLO_FORBIDDEN_PHRASES: List[str] = [
+    "team aufbauen",
+    "teams aufbauen",
+    "mitarbeiter einstellen",
+    "mitarbeitende einstellen",
+    "personal einstellen",
+    "fachbereiche einbinden",
+    "fachbereich einbinden",
+]
+
+SOLO_PHRASE_REPLACEMENTS: Dict[str, str] = {
+    "team aufbauen": "Kapazität aufbauen",
+    "teams aufbauen": "Kapazitäten erweitern",
+    "mitarbeiter einstellen": "Ressourcen erweitern",
+    "mitarbeitende einstellen": "Ressourcen erweitern",
+    "personal einstellen": "externe Unterstützung hinzuziehen",
+    "fachbereiche einbinden": "Arbeitsbereiche strukturieren",
+    "fachbereich einbinden": "Arbeitsfeld strukturieren",
+}
+
+# Corporate terms → Solo-appropriate replacements (word-based)
 SOLO_GOVERNANCE_REPLACEMENTS: Dict[str, str] = {
     # Governance terms (case-insensitive replacements)
     "governance framework": "einfache Regeln",
@@ -294,49 +316,51 @@ SOLO_FORBIDDEN_TERMS: List[str] = [
     "departments",
 ]
 
-# Replacement mapping for Solo context (extends SOLO_GOVERNANCE_REPLACEMENTS)
-SOLO_PERSONA_REPLACEMENTS: Dict[str, str] = {
-    # Team → Capacity/Structure
-    "team aufbauen": "Kapazität erweitern",
-    "team": "Kapazität",
-    "teams": "Ressourcen",
-    "teamstruktur": "Arbeitsstruktur",
-    "teamwork": "Zusammenarbeit mit Externen",
-    "teammitglieder": "Projektbeteiligte",
-    "teamrollen": "Aufgabenverteilung",
-    # Employees → Resources
-    "mitarbeiter": "Ressourcen",
-    "mitarbeitende": "Beteiligte",
-    "mitarbeiter einstellen": "Ressourcen smart bündeln",
-    "mitarbeiterschulung": "Weiterbildung",
-    "personalstrategien": "Kapazitätsplanung",
-    "personal": "Kapazität",
-    "belegschaft": "Arbeitskapazität",
-    # Department → Work area
-    "fachbereich": "Arbeitsfeld",
-    "fachbereiche": "Arbeitsbereiche",
-    "abteilung": "Arbeitsfeld",
-    "abteilungen": "Arbeitsbereiche",
-    "bereichsleiter": "Verantwortliche:r",
-    "bereichsübergreifend": "übergreifend",
-    # English
-    "team building": "capacity building",
-    "team members": "collaborators",
-    "hire employees": "bundle resources smartly",
-    "staff": "capacity",
-    "department": "work area",
-    "departments": "work areas",
-    # Benchmark/Comparison context
-    "ihre vergleichsgruppe": "Ihre Vergleichsgruppe",  # Keep as-is for solo
-}
+
+def apply_solo_persona_filter(text: str) -> str:
+    """
+    Sprint N3: Applies comprehensive Solo persona filtering.
+
+    Replaces phrases and terms inappropriate for Solo professionals.
+    This is the main entry point for Solo text filtering.
+
+    Args:
+        text: Text to filter
+
+    Returns:
+        Filtered text with Solo-appropriate language
+    """
+    if not text:
+        return text
+
+    result = text
+    replacements_made = []
+
+    # 1) Apply phrase replacements FIRST (multi-word patterns)
+    for phrase, replacement in SOLO_PHRASE_REPLACEMENTS.items():
+        pattern = re.compile(re.escape(phrase), re.IGNORECASE)
+        if pattern.search(result):
+            result = pattern.sub(replacement, result)
+            replacements_made.append(f"[phrase] {phrase} → {replacement}")
+
+    # 2) Apply word-based replacements (single words/short terms)
+    for term, replacement in SOLO_GOVERNANCE_REPLACEMENTS.items():
+        pattern = re.compile(re.escape(term), re.IGNORECASE)
+        if pattern.search(result):
+            result = pattern.sub(replacement, result)
+            replacements_made.append(f"[word] {term} → {replacement}")
+
+    if replacements_made:
+        log.debug(f"🔧 Solo-Persona-Filter: {len(replacements_made)} Ersetzungen")
+
+    return result
 
 
 def simplify_solo_governance(text: str, company_size: str) -> str:
     """
     Vereinfacht Governance-Sprache für Solo-Unternehmer.
 
-    Ersetzt komplexe Corporate-Begriffe durch einfache, passende Ausdrücke.
-    Nur aktiv wenn company_size == 'solo'.
+    Sprint N3: Now uses apply_solo_persona_filter for comprehensive filtering.
 
     Args:
         text: Der zu vereinfachende Text
@@ -348,66 +372,7 @@ def simplify_solo_governance(text: str, company_size: str) -> str:
     if company_size != "solo":
         return text
 
-    result = text
-    replacements_made = []
-
-    for corporate_term, simple_term in SOLO_GOVERNANCE_REPLACEMENTS.items():
-        # Case-insensitive replacement
-        pattern = re.compile(re.escape(corporate_term), re.IGNORECASE)
-        if pattern.search(result):
-            result = pattern.sub(simple_term, result)
-            replacements_made.append(f"{corporate_term} → {simple_term}")
-
-    if replacements_made:
-        log.debug(f"🔧 Solo-Governance vereinfacht: {len(replacements_made)} Ersetzungen")
-
-    return result
-
-
-def apply_solo_persona_filter(text: str, company_size: str) -> str:
-    """
-    SPRINT N: Eliminiert Team/KMU-Begriffe aus Solo-Reports.
-
-    Wendet SOLO_PERSONA_REPLACEMENTS an, um unangemessene Begriffe
-    durch Solo-passende Alternativen zu ersetzen.
-
-    Args:
-        text: Der zu filternde Text
-        company_size: Unternehmensgröße ('solo', 'team', 'kmu')
-
-    Returns:
-        Gefilterter Text für Solo, unverändert für andere Größen
-    """
-    if company_size != "solo":
-        return text
-
-    result = text
-    replacements_made = []
-
-    # Sort by length (longest first) to avoid partial replacements
-    sorted_terms = sorted(
-        SOLO_PERSONA_REPLACEMENTS.items(),
-        key=lambda x: len(x[0]),
-        reverse=True
-    )
-
-    for forbidden_term, replacement in sorted_terms:
-        # Case-insensitive replacement with word boundaries
-        # Use word boundary for short terms to avoid false positives
-        if len(forbidden_term) <= 6:
-            pattern = re.compile(r'\b' + re.escape(forbidden_term) + r'\b', re.IGNORECASE)
-        else:
-            pattern = re.compile(re.escape(forbidden_term), re.IGNORECASE)
-
-        if pattern.search(result):
-            result = pattern.sub(replacement, result)
-            replacements_made.append(f"{forbidden_term} → {replacement}")
-
-    if replacements_made:
-        log.info(f"🔧 Solo-Persona-Filter: {len(replacements_made)} Ersetzungen angewendet")
-        log.debug(f"   Details: {replacements_made[:5]}...")
-
-    return result
+    return apply_solo_persona_filter(text)
 
 
 def check_solo_persona_leaks(text: str, company_size: str) -> List[str]:

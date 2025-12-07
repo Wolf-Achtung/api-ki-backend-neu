@@ -80,12 +80,27 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
   </p>
 
   <h3>Einordnung nach Unternehmensgröße</h3>
+  {% if COMPANY_SIZE == "solo" %}
   <p>
-    Für Unternehmen der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> gilt: Je stärker der Prozess
+    Für Sie als Einzelunternehmer:in gilt: Je stärker Ihr Prozess
+    <strong>{{HAUPTLEISTUNG}}</strong> auf wiederkehrenden, standardisierbaren Aufgaben beruht,
+    desto schneller wirkt sich Ihre Investition aus. Bei konsequenter Nutzung verkürzt sich Ihre
+    Amortisation spürbar – Sie gewinnen Zeit zurück, die Sie direkt in Ihr Kerngeschäft investieren können.
+  </p>
+  {% elif COMPANY_SIZE == "team" %}
+  <p>
+    Für Ihr Team gilt: Je stärker der Prozess <strong>{{HAUPTLEISTUNG}}</strong> auf
+    wiederkehrenden, standardisierbaren Aufgaben beruht, desto schneller wirkt sich die
+    Investition aus. Bei konsequenter gemeinsamer Nutzung verkürzt sich die Amortisation spürbar.
+  </p>
+  {% else %}
+  <p>
+    Für ein Unternehmen der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> gilt: Je stärker der Prozess
     <strong>{{HAUPTLEISTUNG}}</strong> auf wiederkehrenden, standardisierbaren Aufgaben beruht,
     desto schneller wirkt sich die Investition aus. Bei konsequenter Nutzung verkürzt sich die
     Amortisation spürbar; bei geringerer Auslastung verlängert sie sich entsprechend.
   </p>
+  {% endif %}
 
   <h3>Verbindung zu Fördermöglichkeiten (qualitativ)</h3>
   <p>
