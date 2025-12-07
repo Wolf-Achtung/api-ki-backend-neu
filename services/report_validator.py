@@ -13,7 +13,7 @@ Prüft:
 - Template-Text statt echtem Content
 - Prompt-Leaks in Quick-Wins
 
-Version: 1.4.0-SPRINT-N (Persona Leak Elimination + Length Stabilization)
+Version: 1.5.0-SPRINT-G7 (AI Act Compliance Validation + Persona Leak Elimination)
 Author: Claude + Wolf
 
 PLATIN+ ÄNDERUNG: Validierung basiert jetzt auf WÖRTERN statt Zeichen!
@@ -409,6 +409,22 @@ class ReportValidator:
         "monetarisierung": "monetarisierung",
         "ki_skillplan": "ki_skillplan",
         "ai_act_summary": "ai_act_summary",
+        # SPRINT G7: AI Act Compliance Sections
+        "ai_act_risk_reasoning": "AI_ACT_RISK_REASONING",
+        "ai_act_duty_matrix": "AI_ACT_DUTY_MATRIX_HTML",
+        "ai_act_next_steps": "AI_ACT_RECOMMENDED_NEXT_STEPS_HTML",
+        "ai_act_usecases": "AI_ACT_RELATED_USECASES_HTML",
+    }
+
+    # SPRINT G7: Valid AI Act risk levels
+    VALID_AI_ACT_RISK_LEVELS = {"none", "minimal", "limited", "high-risk"}
+
+    # SPRINT G7: AI Act section minimum lengths (words)
+    MIN_AI_ACT_SECTION_LENGTH = {
+        "AI_ACT_RISK_REASONING": 60,      # 80-120 words expected
+        "AI_ACT_DUTY_MATRIX_HTML": 30,    # Table content
+        "AI_ACT_RECOMMENDED_NEXT_STEPS_HTML": 30,  # List content
+        "AI_ACT_RELATED_USECASES_HTML": 15,       # List content
     }
 
     def __init__(self, sections: Dict[str, Any], meta: Dict[str, Any]) -> None:
@@ -428,6 +444,7 @@ class ReportValidator:
         self._check_quick_wins_prompt_leaks()
         self._check_size_specific_issues()
         self._check_redundancy()  # Sprint G2.4
+        self._check_ai_act_sections()  # Sprint G7
 
         is_valid = not any(e.severity == "CRITICAL" for e in self.errors)
         return is_valid, self.errors
@@ -674,6 +691,149 @@ class ReportValidator:
                                 f"SPRINT N: Term '{term}' muss ersetzt werden. "
                                 f"HARD_STOP={self.HARD_STOP_ON_SIZE_MISMATCH}"
                             ),
+                        )
+                    )
+
+    def _check_ai_act_sections(self) -> None:
+        """
+        SPRINT G7: Validate AI Act compliance sections.
+
+        Checks:
+        - AI_ACT_RISK_LEVEL is valid (none/minimal/limited/high-risk)
+        - AI_ACT_RISK_REASONING meets minimum word count
+        - AI_ACT_DUTY_MATRIX_HTML contains table structure
+        - AI_ACT_NONCOMPLIANCE_ALERTS has items
+        - AI_ACT_DATA_GAPS has items
+        - Persona leaks in AI Act text
+        """
+        # Check risk level validity
+        risk_level = self.sections.get("AI_ACT_RISK_LEVEL", "")
+        if risk_level and risk_level not in self.VALID_AI_ACT_RISK_LEVELS:
+            self.errors.append(
+                ValidationError(
+                    severity="CRITICAL",
+                    category="AI_ACT_INVALID_RISK",
+                    section="AI_ACT_RISK_LEVEL",
+                    message=f"Ungültiges AI Act Risk Level: '{risk_level}'",
+                    details=f"Erlaubte Werte: {self.VALID_AI_ACT_RISK_LEVELS}",
+                )
+            )
+
+        # Check risk reasoning length
+        reasoning = self.sections.get("AI_ACT_RISK_REASONING", "")
+        if reasoning and isinstance(reasoning, str):
+            text_only = re.sub(r"<[^>]+>", "", reasoning).strip()
+            word_count = len(text_only.split())
+            min_words = self.MIN_AI_ACT_SECTION_LENGTH.get("AI_ACT_RISK_REASONING", 60)
+
+            if word_count < min_words:
+                self.errors.append(
+                    ValidationError(
+                        severity="WARNING",
+                        category="AI_ACT_SHORT_REASONING",
+                        section="AI_ACT_RISK_REASONING",
+                        message=f"AI Act Begründung zu kurz: {word_count} Wörter (min {min_words})",
+                        details=f"Content: {text_only[:100]}...",
+                    )
+                )
+
+        # Check duty matrix structure
+        duty_matrix = self.sections.get("AI_ACT_DUTY_MATRIX_HTML", "")
+        if duty_matrix and isinstance(duty_matrix, str):
+            if "<table" not in duty_matrix.lower() or "</table>" not in duty_matrix.lower():
+                self.errors.append(
+                    ValidationError(
+                        severity="WARNING",
+                        category="AI_ACT_MALFORMED_MATRIX",
+                        section="AI_ACT_DUTY_MATRIX_HTML",
+                        message="AI Act Pflichten-Matrix enthält keine gültige Tabellenstruktur",
+                        details="Erwartet: <table>...</table>",
+                    )
+                )
+            else:
+                # Check minimum row count
+                row_count = duty_matrix.lower().count("<tr>") - 1  # Subtract header
+                if row_count < 3:
+                    self.errors.append(
+                        ValidationError(
+                            severity="WARNING",
+                            category="AI_ACT_SHORT_MATRIX",
+                            section="AI_ACT_DUTY_MATRIX_HTML",
+                            message=f"AI Act Pflichten-Matrix hat nur {row_count} Zeilen (min 3)",
+                            details="Matrix sollte mindestens 3 Pflichten/Best Practices enthalten",
+                        )
+                    )
+
+        # Check alerts list
+        alerts = self.sections.get("AI_ACT_NONCOMPLIANCE_ALERTS", [])
+        if isinstance(alerts, list) and len(alerts) < 2:
+            self.errors.append(
+                ValidationError(
+                    severity="WARNING",
+                    category="AI_ACT_FEW_ALERTS",
+                    section="AI_ACT_NONCOMPLIANCE_ALERTS",
+                    message=f"Nur {len(alerts)} Non-Compliance Alerts (min 2 empfohlen)",
+                    details="Mehr spezifische Hinweise für das Unternehmen generieren",
+                )
+            )
+
+        # Check data gaps list
+        gaps = self.sections.get("AI_ACT_DATA_GAPS", [])
+        if isinstance(gaps, list) and len(gaps) < 2:
+            self.errors.append(
+                ValidationError(
+                    severity="WARNING",
+                    category="AI_ACT_FEW_GAPS",
+                    section="AI_ACT_DATA_GAPS",
+                    message=f"Nur {len(gaps)} Data Gaps (min 2 empfohlen)",
+                    details="Mehr Datenlücken identifizieren",
+                )
+            )
+
+        # Check persona leaks in AI Act content
+        self._check_ai_act_persona_leaks()
+
+    def _check_ai_act_persona_leaks(self) -> None:
+        """
+        SPRINT G7: Check for persona leaks in AI Act sections.
+        """
+        # Normalize company_size
+        size_key = self.company_size.lower() if self.company_size else "kmu"
+        if "solo" in size_key or "1" in size_key or "freiberuf" in size_key:
+            size_key = "solo"
+        elif "team" in size_key or "klein" in size_key:
+            size_key = "team"
+        else:
+            size_key = "kmu"
+
+        # AI Act sections to check
+        ai_act_sections = [
+            "AI_ACT_RISK_REASONING",
+            "AI_ACT_DUTY_MATRIX_HTML",
+            "AI_ACT_NONCOMPLIANCE_ALERTS_HTML",
+            "AI_ACT_DATA_GAPS_HTML",
+            "AI_ACT_RECOMMENDED_NEXT_STEPS_HTML",
+        ]
+
+        forbidden_terms = self.SIZE_FORBIDDEN.get(size_key, [])
+        if not forbidden_terms:
+            return
+
+        for section_name in ai_act_sections:
+            content = self.sections.get(section_name, "")
+            if not isinstance(content, str):
+                continue
+
+            lower = content.lower()
+            for term in forbidden_terms:
+                if term.lower() in lower:
+                    self.errors.append(
+                        ValidationError(
+                            severity="WARNING",
+                            category="AI_ACT_PERSONA_LEAK",
+                            section=section_name,
+                            message=f"Persona-Leak in AI Act Section: '{term}'",
+                            details=f"Term '{term}' unpassend für '{self.company_size}'",
                         )
                     )
 

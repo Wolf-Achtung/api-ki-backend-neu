@@ -149,6 +149,7 @@ from services.alerts import (
     MAX_FALLBACKS_PER_REPORT,
 )
 from services.monitoring import _metrics
+from services.ai_act_module import build_ai_act_sections, validate_ai_act_sections
 
 # Und direkt nach Zeile 61, vor try:
 UTF8Handler.setup_encoding()  # Global UTF-8 fix beim Start
@@ -4420,7 +4421,62 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections["EXECUTIVE_SUMMARY_HTML"] = exec_summary_cleaned
     sections["EXEC_SUMMARY_HTML"] = exec_summary_cleaned
     sections["executive_summary"] = exec_summary_cleaned
-    
+
+    # ==========================================================================
+    # Sprint G7: AI Act Compliance Sections
+    # ==========================================================================
+    try:
+        # Determine report language from briefing
+        report_lang = briefing.get("lang", "de")
+        if report_lang not in ["de", "en"]:
+            report_lang = "de"
+
+        # Generate all AI Act sections
+        ai_act_data = build_ai_act_sections(briefing, lang=report_lang)
+
+        # Add AI Act variables to sections
+        sections.update(ai_act_data)
+
+        # Generate HTML for alerts and gaps (convert lists to HTML)
+        alerts_list = ai_act_data.get("AI_ACT_NONCOMPLIANCE_ALERTS", [])
+        if alerts_list:
+            alerts_html = "<ul class='alert-list'>\n"
+            for alert in alerts_list:
+                alerts_html += f"  <li class='alert-item'>{alert}</li>\n"
+            alerts_html += "</ul>"
+            sections["AI_ACT_NONCOMPLIANCE_ALERTS_HTML"] = alerts_html
+
+        gaps_list = ai_act_data.get("AI_ACT_DATA_GAPS", [])
+        if gaps_list:
+            gaps_html = "<ul class='gaps-list'>\n"
+            for gap in gaps_list:
+                gaps_html += f"  <li class='gap-item'>{gap}</li>\n"
+            gaps_html += "</ul>"
+            sections["AI_ACT_DATA_GAPS_HTML"] = gaps_html
+
+        # Validate AI Act sections
+        validation_errors = validate_ai_act_sections(ai_act_data)
+        if validation_errors:
+            log.warning("⚠️ AI Act validation issues: %s", validation_errors)
+        else:
+            log.info("✅ AI Act sections validated successfully")
+
+    except Exception as e:
+        log.error("❌ AI Act section generation failed: %s", e)
+        # Set fallback values
+        sections["AI_ACT_RISK_LEVEL"] = "limited"
+        sections["AI_ACT_RISK_REASONING"] = (
+            "Die Risikoeinstufung konnte nicht automatisch ermittelt werden. "
+            "Bitte prüfen Sie die AI Act Anforderungen manuell basierend auf Ihrer Branche und Ihren Anwendungsfällen."
+        )
+        sections["AI_ACT_DUTY_MATRIX_HTML"] = ""
+        sections["AI_ACT_NONCOMPLIANCE_ALERTS"] = []
+        sections["AI_ACT_NONCOMPLIANCE_ALERTS_HTML"] = ""
+        sections["AI_ACT_DATA_GAPS"] = []
+        sections["AI_ACT_DATA_GAPS_HTML"] = ""
+        sections["AI_ACT_RECOMMENDED_NEXT_STEPS_HTML"] = ""
+        sections["AI_ACT_RELATED_USECASES_HTML"] = ""
+
     return sections
 
 
