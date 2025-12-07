@@ -1599,81 +1599,87 @@
                     </div>
                 </section>
                 {% endif %}
-                <!-- SPRINT G7: AI Act Compliance Section -->
+                <!-- SPRINT G7/G8: AI Act Compliance Section -->
                 {% if AI_ACT_RISK_LEVEL %}
-                <section class="section chapter ai-act-compliance">
+                <section class="section chapter ai-act-compliance" style="page-break-inside: avoid;">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">EU AI Act</span>
-                            <h2>Compliance-Einstufung</h2>
+                            <h2>AI-Act Compliance & Pflichten</h2>
                         </div>
                         <span class="section-pill">
-                            <span class="pill-dot {% if AI_ACT_RISK_LEVEL == 'high-risk' %}pill-danger{% elif AI_ACT_RISK_LEVEL == 'limited' %}pill-warning{% else %}pill-success{% endif %}"></span>
+                            <span class="pill-dot {% if AI_ACT_RISK_LEVEL == 'high-risk' %}pill-danger{% elif AI_ACT_RISK_LEVEL == 'limited' %}pill-warning{% else %}pill-success{% endif %}" style="{% if AI_ACT_RISK_LEVEL == 'high-risk' %}background:#dc3545{% elif AI_ACT_RISK_LEVEL == 'limited' %}background:#ffc107{% else %}background:#28a745{% endif %}"></span>
                             Risikoklasse: {{ AI_ACT_RISK_LEVEL }}
                         </span>
                     </div>
                     <div class="section-body">
                         <!-- Risk Level Badge -->
-                        <div class="risk-level-banner risk-{{ AI_ACT_RISK_LEVEL }}">
+                        <div class="risk-level-banner" style="padding:12px 16px;border-radius:8px;margin-bottom:16px;{% if AI_ACT_RISK_LEVEL == 'high-risk' %}background:#fff5f5;border-left:4px solid #dc3545{% elif AI_ACT_RISK_LEVEL == 'limited' %}background:#fffbeb;border-left:4px solid #ffc107{% else %}background:#f0fff4;border-left:4px solid #28a745{% endif %}">
                             {% if AI_ACT_RISK_LEVEL == 'high-risk' %}
-                            <span class="risk-icon">⚠️</span>
-                            <strong>Hochrisiko-Einstufung</strong> – Umfassende Compliance-Pflichten gemäß EU AI Act
+                            <strong style="color:#dc3545">⚠️ Hochrisiko-Einstufung</strong> – Umfassende Compliance-Pflichten gemäß EU AI Act
                             {% elif AI_ACT_RISK_LEVEL == 'limited' %}
-                            <span class="risk-icon">📋</span>
-                            <strong>Begrenztes Risiko</strong> – Transparenzpflichten beachten
+                            <strong style="color:#856404">📋 Begrenztes Risiko</strong> – Transparenzpflichten beachten
                             {% else %}
-                            <span class="risk-icon">✅</span>
-                            <strong>Minimales Risiko</strong> – Best Practices empfohlen
+                            <strong style="color:#28a745">✅ Minimales Risiko</strong> – Best Practices empfohlen
                             {% endif %}
                         </div>
 
                         <!-- Risk Reasoning -->
                         {% if AI_ACT_RISK_REASONING %}
-                        <div class="risk-reasoning">
-                            <h3>Begründung der Einstufung</h3>
-                            <p>{{ AI_ACT_RISK_REASONING }}</p>
+                        <div class="risk-reasoning" style="margin-bottom:16px;">
+                            <h3 style="font-size:14px;margin-bottom:8px;">Begründung der Einstufung</h3>
+                            <p style="line-height:1.5;">{{ AI_ACT_RISK_REASONING }}</p>
                         </div>
                         {% endif %}
 
                         <!-- Duty Matrix -->
                         {% if AI_ACT_DUTY_MATRIX_HTML %}
-                        <div class="duty-matrix-section">
-                            <h3>Pflichten-Matrix</h3>
+                        <div class="duty-matrix-section" style="margin-bottom:16px;">
+                            <h3 style="font-size:14px;margin-bottom:8px;">Pflichten-Matrix</h3>
+                            <div style="overflow-x:auto;width:100%;">
                             {{ AI_ACT_DUTY_MATRIX_HTML|safe }}
+                            </div>
                         </div>
                         {% endif %}
 
                         <!-- Use Cases with Risk Tags -->
                         {% if AI_ACT_RELATED_USECASES_HTML %}
-                        <div class="usecases-risk-section">
-                            <h3>Anwendungsfälle mit Risikoeinstufung</h3>
+                        <div class="usecases-risk-section" style="margin-bottom:16px;">
+                            <h3 style="font-size:14px;margin-bottom:8px;">Anwendungsfälle mit Risikoeinstufung</h3>
                             {{ AI_ACT_RELATED_USECASES_HTML|safe }}
                         </div>
                         {% endif %}
 
                         <!-- Non-Compliance Alerts -->
                         {% if AI_ACT_NONCOMPLIANCE_ALERTS_HTML %}
-                        <div class="alerts-section">
-                            <h3>Compliance-Lücken</h3>
-                            <p class="section-intro">Folgende Punkte sollten Sie prioritär adressieren:</p>
+                        <div class="alerts-section" style="margin-bottom:16px;padding:12px;background:#fff5f5;border-radius:6px;">
+                            <h3 style="font-size:14px;margin-bottom:8px;color:#dc3545;">Compliance-Lücken</h3>
+                            <p class="section-intro" style="font-size:12px;color:#666;margin-bottom:8px;">Folgende Punkte sollten Sie prioritär adressieren:</p>
                             {{ AI_ACT_NONCOMPLIANCE_ALERTS_HTML|safe }}
                         </div>
                         {% endif %}
 
                         <!-- Data Gaps -->
                         {% if AI_ACT_DATA_GAPS_HTML %}
-                        <div class="gaps-section">
-                            <h3>Datenlücken</h3>
-                            <p class="section-intro">Diese Informationen fehlen für eine vollständige Compliance-Bewertung:</p>
+                        <div class="gaps-section" style="margin-bottom:16px;padding:12px;background:#fffbeb;border-radius:6px;">
+                            <h3 style="font-size:14px;margin-bottom:8px;color:#856404;">Datenlücken</h3>
+                            <p class="section-intro" style="font-size:12px;color:#666;margin-bottom:8px;">Diese Informationen fehlen für eine vollständige Compliance-Bewertung:</p>
                             {{ AI_ACT_DATA_GAPS_HTML|safe }}
                         </div>
                         {% endif %}
 
                         <!-- Next Steps -->
                         {% if AI_ACT_RECOMMENDED_NEXT_STEPS_HTML %}
-                        <div class="next-steps-section">
-                            <h3>Empfohlene Nächste Schritte</h3>
+                        <div class="next-steps-section" style="margin-bottom:16px;">
+                            <h3 style="font-size:14px;margin-bottom:8px;">Empfohlene Nächste Schritte</h3>
                             {{ AI_ACT_RECOMMENDED_NEXT_STEPS_HTML|safe }}
+                        </div>
+                        {% endif %}
+
+                        <!-- G8: Tools Injection -->
+                        {% if AI_ACT_TOOLS_INJECTION %}
+                        <div class="ai-act-tools-section" style="margin-bottom:16px;">
+                            {{ AI_ACT_TOOLS_INJECTION|safe }}
                         </div>
                         {% endif %}
                     </div>

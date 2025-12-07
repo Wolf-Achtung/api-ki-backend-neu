@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-AI Act Compliance Module - Sprint G7
+AI Act Compliance Module - Sprint G7/G8
 
 Size-aware, branch-aware, language-aware AI Act risk assessment and compliance generation.
 
-Version: 1.0.0 (Sprint G7)
+Version: 1.1.0 (Sprint G8 - Cross-Integration & Harmonization)
 
 This module provides:
 - Risk level determination (none/minimal/limited/high-risk)
@@ -13,6 +13,9 @@ This module provides:
 - Data gaps identification
 - Recommended next steps
 - Use case risk tagging
+- Cross-section injection (G8.1)
+- Harmonization engine (G8.2)
+- Extended persona guards (G8.3)
 """
 from __future__ import annotations
 
@@ -1085,3 +1088,765 @@ def check_persona_leaks(text: str, size: str) -> List[str]:
                 leaks.append(term)
 
     return leaks
+
+
+# =============================================================================
+# SPRINT G8.1: CROSS-SECTION INJECTION
+# =============================================================================
+
+# G8.3: Extended Persona Hard-Guards
+EXTENDED_SOLO_FORBIDDEN = [
+    # Team/Organization terms
+    "ihr team", "your team", "das team", "the team",
+    "mitarbeiter", "employees", "mitarbeitende",
+    "abteilung", "abteilungen", "department", "departments",
+    "fachbereiche", "fachbereich", "divisions",
+    "organisation", "organization",
+    "unternehmen mit 11", "company with 11",
+    "governance board", "compliance-officer", "compliance officer",
+    "projektleiter", "project manager", "abteilungsleiter",
+    "teamleiter", "team lead", "team leader",
+]
+
+EXTENDED_TEAM_FORBIDDEN = [
+    # Solo-specific terms
+    "als einzelperson", "as an individual", "as a solo",
+    "solo-selbstständig", "solo-selbstständige", "solo-selbstständigen",
+    "individuelle kapazität", "individual capacity",
+    "ihre persönliche kapazität", "your personal capacity",
+    "freiberufler", "freiberuflerin", "freelancer",
+    "einzelunternehmer", "einzelunternehmerin", "sole proprietor",
+    "allein arbeitend", "working alone",
+]
+
+EXTENDED_KMU_FORBIDDEN = [
+    # Solo-specific terms (same as Team + some extras)
+    "als einzelperson", "as an individual", "as a solo",
+    "solo-selbstständig", "solo-selbstständige", "solo-selbstständigen",
+    "individuelle kapazität", "individual capacity",
+    "ihre persönliche kapazität", "your personal capacity",
+    "freiberufler", "freiberuflerin", "freelancer",
+    "einzelunternehmer", "einzelunternehmerin", "sole proprietor",
+    "allein arbeitend", "working alone",
+    # Team-specific mini-structures (optional for large KMU)
+    "2–10 personen", "2-10 persons", "kleines team von",
+]
+
+
+def get_ai_act_exec_summary_injection(
+    risk_level: str,
+    size: str,
+    branche: str,
+    lang: str = "de"
+) -> str:
+    """
+    G8.1: Generate 1-2 sentence AI Act injection for Executive Summary.
+    Size-aware, no tables, no legal jargon.
+    """
+    size_lower = size.lower()
+    is_solo = "solo" in size_lower or "freiberuf" in size_lower
+    is_team = "team" in size_lower or "klein" in size_lower
+
+    if lang == "en":
+        if risk_level == "high-risk":
+            if is_solo:
+                return (
+                    "EU AI Act classification: High-risk. Your AI applications require "
+                    "documented risk management, quality controls, and human oversight. "
+                    "Early compliance preparation is essential."
+                )
+            elif is_team:
+                return (
+                    "EU AI Act classification: High-risk. Your organization needs structured "
+                    "compliance measures including risk documentation, oversight processes, "
+                    "and designated responsibilities. Proactive preparation is recommended."
+                )
+            else:
+                return (
+                    "EU AI Act classification: High-risk. Your company requires comprehensive "
+                    "compliance infrastructure including quality management, risk analysis, "
+                    "human oversight, and post-market monitoring. Immediate action recommended."
+                )
+        elif risk_level == "limited":
+            if is_solo:
+                return (
+                    "EU AI Act classification: Limited risk. Focus on transparency: "
+                    "document AI usage and label AI-generated content clearly."
+                )
+            elif is_team:
+                return (
+                    "EU AI Act classification: Limited risk. Establish transparency measures, "
+                    "basic documentation, and shared guidelines for AI usage."
+                )
+            else:
+                return (
+                    "EU AI Act classification: Limited risk. Implement transparency obligations, "
+                    "structured documentation, and defined responsibilities for AI governance."
+                )
+        else:  # minimal/none
+            if is_solo:
+                return (
+                    "EU AI Act classification: Minimal risk. No mandatory requirements apply. "
+                    "Voluntary best practices like documentation and quality checks are recommended."
+                )
+            else:
+                return (
+                    "EU AI Act classification: Minimal risk. No specific obligations apply. "
+                    "Establish basic guidelines and documentation as voluntary best practices."
+                )
+    else:  # German
+        if risk_level == "high-risk":
+            if is_solo:
+                return (
+                    "EU AI Act Einstufung: Hochrisiko. Ihre KI-Anwendungen erfordern "
+                    "dokumentiertes Risikomanagement, Qualitätskontrollen und menschliche "
+                    "Aufsicht. Frühzeitige Compliance-Vorbereitung ist essenziell."
+                )
+            elif is_team:
+                return (
+                    "EU AI Act Einstufung: Hochrisiko. Ihr Unternehmen benötigt strukturierte "
+                    "Compliance-Maßnahmen mit Risikodokumentation, Aufsichtsprozessen und "
+                    "klaren Verantwortlichkeiten. Proaktive Vorbereitung wird empfohlen."
+                )
+            else:
+                return (
+                    "EU AI Act Einstufung: Hochrisiko. Ihr Unternehmen erfordert umfassende "
+                    "Compliance-Strukturen mit Qualitätsmanagement, Risikoanalyse, menschlicher "
+                    "Aufsicht und Post-Market-Monitoring. Sofortige Maßnahmen empfohlen."
+                )
+        elif risk_level == "limited":
+            if is_solo:
+                return (
+                    "EU AI Act Einstufung: Begrenztes Risiko. Fokus auf Transparenz: "
+                    "KI-Nutzung dokumentieren und KI-generierte Inhalte klar kennzeichnen."
+                )
+            elif is_team:
+                return (
+                    "EU AI Act Einstufung: Begrenztes Risiko. Transparenzmaßnahmen etablieren, "
+                    "Basisdokumentation führen und gemeinsame Richtlinien für KI-Nutzung definieren."
+                )
+            else:
+                return (
+                    "EU AI Act Einstufung: Begrenztes Risiko. Transparenzpflichten umsetzen, "
+                    "strukturierte Dokumentation etablieren und Verantwortlichkeiten für "
+                    "KI-Governance definieren."
+                )
+        else:  # minimal/none
+            if is_solo:
+                return (
+                    "EU AI Act Einstufung: Minimales Risiko. Keine Pflichten. "
+                    "Freiwillige Best Practices wie Dokumentation und Qualitätsprüfung empfohlen."
+                )
+            else:
+                return (
+                    "EU AI Act Einstufung: Minimales Risiko. Keine spezifischen Pflichten. "
+                    "Grundlegende Richtlinien und Dokumentation als freiwillige Best Practices."
+                )
+
+
+def get_ai_act_business_case_injection(
+    risk_level: str,
+    size: str,
+    lang: str = "de"
+) -> Dict[str, Any]:
+    """
+    G8.1: Generate Business Case cost adjustments based on risk level.
+    Returns dict with CAPEX/OPEX modifiers and text injection.
+    """
+    size_lower = size.lower()
+    is_solo = "solo" in size_lower or "freiberuf" in size_lower
+
+    if risk_level == "high-risk":
+        capex_modifier = 1.25  # +25% for compliance infrastructure
+        opex_modifier = 1.15   # +15% for ongoing compliance
+        if lang == "en":
+            text = (
+                "Compliance costs: High-risk classification requires additional investment "
+                "in documentation, monitoring, and quality management systems."
+            )
+        else:
+            text = (
+                "Compliance-Kosten: Hochrisiko-Einstufung erfordert zusätzliche Investitionen "
+                "in Dokumentation, Monitoring und Qualitätsmanagementsysteme."
+            )
+    elif risk_level == "limited":
+        capex_modifier = 1.10  # +10% for transparency tools
+        opex_modifier = 1.05   # +5% for documentation
+        if lang == "en":
+            text = (
+                "Transparency costs: Limited risk requires investment in documentation "
+                "and labeling infrastructure."
+            )
+        else:
+            text = (
+                "Transparenz-Kosten: Begrenztes Risiko erfordert Investitionen in "
+                "Dokumentations- und Kennzeichnungsinfrastruktur."
+            )
+    else:  # minimal/none
+        capex_modifier = 1.0
+        opex_modifier = 1.0
+        if lang == "en":
+            text = "Minimal compliance overhead – focus on efficiency gains."
+        else:
+            text = "Minimaler Compliance-Aufwand – Fokus auf Effizienzgewinne."
+
+    return {
+        "CAPEX_MODIFIER": capex_modifier,
+        "OPEX_MODIFIER": opex_modifier,
+        "AI_ACT_BUSINESS_CASE_TEXT": text,
+    }
+
+
+def get_ai_act_roadmap_injection(
+    risk_level: str,
+    size: str,
+    lang: str = "de"
+) -> Dict[str, str]:
+    """
+    G8.1: Generate roadmap milestones based on risk level.
+    Returns dict with 90d and 12m roadmap additions.
+    """
+    size_lower = size.lower()
+    is_solo = "solo" in size_lower or "freiberuf" in size_lower
+
+    if lang == "en":
+        if risk_level == "high-risk":
+            roadmap_90d = (
+                "<li><strong>Week 1-4:</strong> Risk analysis & documentation framework</li>"
+                "<li><strong>Week 5-8:</strong> Human oversight processes & QMS setup</li>"
+                "<li><strong>Week 9-12:</strong> Conformity assessment preparation</li>"
+            )
+            roadmap_12m = (
+                "<li><strong>Q1:</strong> Complete risk documentation & QMS implementation</li>"
+                "<li><strong>Q2:</strong> Human oversight training & process rollout</li>"
+                "<li><strong>Q3:</strong> Post-market monitoring setup & incident procedures</li>"
+                "<li><strong>Q4:</strong> Audit preparation & conformity declaration</li>"
+            )
+        elif risk_level == "limited":
+            roadmap_90d = (
+                "<li><strong>Week 1-4:</strong> AI inventory & documentation setup</li>"
+                "<li><strong>Week 5-8:</strong> Transparency labeling implementation</li>"
+                "<li><strong>Week 9-12:</strong> Monitoring & logging setup</li>"
+            )
+            roadmap_12m = (
+                "<li><strong>Q1:</strong> Complete AI documentation</li>"
+                "<li><strong>Q2:</strong> Transparency measures & oversight processes</li>"
+                "<li><strong>Q3:</strong> Regular review cycles</li>"
+                "<li><strong>Q4:</strong> Compliance assessment & optimization</li>"
+            )
+        else:  # minimal
+            roadmap_90d = (
+                "<li><strong>Week 1-4:</strong> AI awareness & basic documentation</li>"
+                "<li><strong>Week 5-8:</strong> Quality review guidelines</li>"
+                "<li><strong>Week 9-12:</strong> Simple logging implementation</li>"
+            )
+            roadmap_12m = (
+                "<li><strong>Q1-Q2:</strong> Best practices implementation</li>"
+                "<li><strong>Q3-Q4:</strong> Review & optimization</li>"
+            )
+    else:  # German
+        if risk_level == "high-risk":
+            roadmap_90d = (
+                "<li><strong>Woche 1-4:</strong> Risikoanalyse & Dokumentationsrahmen</li>"
+                "<li><strong>Woche 5-8:</strong> Human Oversight Prozesse & QMS-Aufbau</li>"
+                "<li><strong>Woche 9-12:</strong> Konformitätsbewertung vorbereiten</li>"
+            )
+            roadmap_12m = (
+                "<li><strong>Q1:</strong> Risikodokumentation & QMS-Implementierung</li>"
+                "<li><strong>Q2:</strong> Human Oversight Schulung & Prozess-Rollout</li>"
+                "<li><strong>Q3:</strong> Post-Market-Monitoring & Incident-Prozesse</li>"
+                "<li><strong>Q4:</strong> Audit-Vorbereitung & Konformitätserklärung</li>"
+            )
+        elif risk_level == "limited":
+            roadmap_90d = (
+                "<li><strong>Woche 1-4:</strong> KI-Inventar & Dokumentation aufsetzen</li>"
+                "<li><strong>Woche 5-8:</strong> Transparenz-Kennzeichnung implementieren</li>"
+                "<li><strong>Woche 9-12:</strong> Monitoring & Logging einrichten</li>"
+            )
+            roadmap_12m = (
+                "<li><strong>Q1:</strong> KI-Dokumentation vervollständigen</li>"
+                "<li><strong>Q2:</strong> Transparenzmaßnahmen & Aufsichtsprozesse</li>"
+                "<li><strong>Q3:</strong> Regelmäßige Review-Zyklen</li>"
+                "<li><strong>Q4:</strong> Compliance-Bewertung & Optimierung</li>"
+            )
+        else:  # minimal
+            roadmap_90d = (
+                "<li><strong>Woche 1-4:</strong> KI-Awareness & Basis-Dokumentation</li>"
+                "<li><strong>Woche 5-8:</strong> Qualitätsprüfungs-Richtlinien</li>"
+                "<li><strong>Woche 9-12:</strong> Einfaches Logging implementieren</li>"
+            )
+            roadmap_12m = (
+                "<li><strong>Q1-Q2:</strong> Best Practices implementieren</li>"
+                "<li><strong>Q3-Q4:</strong> Review & Optimierung</li>"
+            )
+
+    return {
+        "AI_ACT_ROADMAP_90D_INJECTION": roadmap_90d,
+        "AI_ACT_ROADMAP_12M_INJECTION": roadmap_12m,
+    }
+
+
+def get_ai_act_governance_injection(
+    risk_level: str,
+    size: str,
+    alerts: List[str],
+    gaps: List[str],
+    lang: str = "de"
+) -> str:
+    """
+    G8.1: Generate governance section injection with duty matrix integration.
+    """
+    size_lower = size.lower()
+    is_solo = "solo" in size_lower or "freiberuf" in size_lower
+
+    # Build action items from alerts (max 3)
+    action_items = alerts[:3] if alerts else []
+
+    if lang == "en":
+        if risk_level == "high-risk":
+            if is_solo:
+                intro = "AI Act governance focus: Risk management, documentation, and oversight."
+            else:
+                intro = "AI Act governance requirements: Structured compliance with defined roles and processes."
+            level_text = "High-risk systems require comprehensive governance including QMS, risk documentation, and human oversight."
+        elif risk_level == "limited":
+            intro = "AI Act governance focus: Transparency and documentation."
+            level_text = "Limited risk requires transparency measures and basic documentation."
+        else:
+            intro = "AI Act governance: Voluntary best practices."
+            level_text = "Minimal risk – no mandatory governance requirements."
+
+        if action_items:
+            actions_html = "<ul class='governance-actions'>"
+            for item in action_items:
+                actions_html += f"<li>{item}</li>"
+            actions_html += "</ul>"
+        else:
+            actions_html = ""
+
+        return f"<div class='ai-act-governance'><p><strong>{intro}</strong></p><p>{level_text}</p>{actions_html}</div>"
+
+    else:  # German
+        if risk_level == "high-risk":
+            if is_solo:
+                intro = "AI Act Governance-Fokus: Risikomanagement, Dokumentation und Aufsicht."
+            else:
+                intro = "AI Act Governance-Anforderungen: Strukturierte Compliance mit definierten Rollen und Prozessen."
+            level_text = "Hochrisiko-Systeme erfordern umfassende Governance mit QMS, Risikodokumentation und Human Oversight."
+        elif risk_level == "limited":
+            intro = "AI Act Governance-Fokus: Transparenz und Dokumentation."
+            level_text = "Begrenztes Risiko erfordert Transparenzmaßnahmen und Basisdokumentation."
+        else:
+            intro = "AI Act Governance: Freiwillige Best Practices."
+            level_text = "Minimales Risiko – keine Pflicht-Governance-Anforderungen."
+
+        if action_items:
+            actions_html = "<ul class='governance-actions'>"
+            for item in action_items:
+                actions_html += f"<li>{item}</li>"
+            actions_html += "</ul>"
+        else:
+            actions_html = ""
+
+        return f"<div class='ai-act-governance'><p><strong>{intro}</strong></p><p>{level_text}</p>{actions_html}</div>"
+
+
+def get_ai_act_risks_injection(
+    risk_level: str,
+    branche: str,
+    size: str,
+    lang: str = "de"
+) -> str:
+    """
+    G8.1: Generate risk section injection with branch-specific context.
+    """
+    branche_lower = branche.lower()
+    is_finance = any(b in branche_lower for b in ["finanz", "finance", "bank", "versicher", "insurance"])
+    is_hr = any(b in branche_lower for b in ["hr", "personal", "human resources", "recruiting"])
+
+    if lang == "en":
+        if risk_level == "high-risk":
+            base_risk = "AI Act non-compliance risk: High. Potential penalties up to €35M or 7% of global turnover."
+            if is_finance:
+                sector_risk = " Additional sector regulations (BAIT/MaRisk) apply to AI systems in financial services."
+            elif is_hr:
+                sector_risk = " Employment law considerations for automated decision-making in HR processes."
+            else:
+                sector_risk = ""
+        elif risk_level == "limited":
+            base_risk = "AI Act non-compliance risk: Moderate. Transparency violations may result in regulatory action."
+            sector_risk = ""
+        else:
+            base_risk = "AI Act risk exposure: Low. Focus on voluntary compliance measures."
+            sector_risk = ""
+
+        return f"<p class='ai-act-risk'>{base_risk}{sector_risk}</p>"
+
+    else:  # German
+        if risk_level == "high-risk":
+            base_risk = "AI Act Non-Compliance-Risiko: Hoch. Mögliche Strafen bis €35 Mio. oder 7% des globalen Umsatzes."
+            if is_finance:
+                sector_risk = " Zusätzliche Branchenregulierung (BAIT/MaRisk/VAIT) für KI-Systeme im Finanzsektor."
+            elif is_hr:
+                sector_risk = " Arbeitsrechtliche Aspekte bei automatisierten Entscheidungen in HR-Prozessen."
+            else:
+                sector_risk = ""
+        elif risk_level == "limited":
+            base_risk = "AI Act Non-Compliance-Risiko: Moderat. Transparenzverstöße können zu Aufsichtsmaßnahmen führen."
+            sector_risk = ""
+        else:
+            base_risk = "AI Act Risikoexposition: Gering. Fokus auf freiwillige Compliance-Maßnahmen."
+            sector_risk = ""
+
+        return f"<p class='ai-act-risk'>{base_risk}{sector_risk}</p>"
+
+
+def get_ai_act_tools_injection(
+    risk_level: str,
+    size: str,
+    lang: str = "de"
+) -> str:
+    """
+    G8.1: Generate tools recommendation injection based on risk level.
+    """
+    size_lower = size.lower()
+    is_solo = "solo" in size_lower or "freiberuf" in size_lower
+
+    if lang == "en":
+        if risk_level == "high-risk":
+            tools = [
+                "Audit trail & logging tools (e.g., MLflow, Weights & Biases)",
+                "Explainability frameworks (e.g., SHAP, LIME)",
+                "Model monitoring solutions (e.g., Evidently, Arize)",
+                "Documentation platforms (e.g., Notion, Confluence)",
+            ]
+        elif risk_level == "limited":
+            tools = [
+                "Version control & documentation (e.g., Git, Notion)",
+                "Simple logging solutions",
+                "Content labeling tools",
+            ]
+        else:
+            tools = [
+                "Basic documentation tools",
+                "Simple quality review checklists",
+            ]
+
+        intro = "Recommended compliance tools based on your AI Act risk classification:"
+    else:
+        if risk_level == "high-risk":
+            tools = [
+                "Audit-Trail & Logging-Tools (z.B. MLflow, Weights & Biases)",
+                "Explainability-Frameworks (z.B. SHAP, LIME)",
+                "Model-Monitoring-Lösungen (z.B. Evidently, Arize)",
+                "Dokumentationsplattformen (z.B. Notion, Confluence)",
+            ]
+        elif risk_level == "limited":
+            tools = [
+                "Versionskontrolle & Dokumentation (z.B. Git, Notion)",
+                "Einfache Logging-Lösungen",
+                "Content-Kennzeichnungs-Tools",
+            ]
+        else:
+            tools = [
+                "Basis-Dokumentations-Tools",
+                "Einfache Qualitätsprüfungs-Checklisten",
+            ]
+
+        intro = "Empfohlene Compliance-Tools basierend auf Ihrer AI Act Risikoeinstufung:"
+
+    tools_html = f"<p class='ai-act-tools-intro'>{intro}</p><ul class='ai-act-tools'>"
+    for tool in tools:
+        tools_html += f"<li>{tool}</li>"
+    tools_html += "</ul>"
+
+    return tools_html
+
+
+# =============================================================================
+# SPRINT G8.2: HARMONIZATION & CONSISTENCY ENGINE
+# =============================================================================
+
+def ai_act_harmonize(sections: Dict[str, Any], briefing: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    G8.2: Harmonize AI Act content across sections for consistency.
+
+    Checks:
+    - Executive Summary ↔ Risk Level consistency
+    - Roadmap ↔ Duty Matrix alignment
+    - Governance ↔ Alerts/Gaps integration
+    - Business Case ↔ Risk Level cost adjustment
+
+    Returns:
+    - Harmonized sections dict
+    - AI_ACT_CONSISTENCY_WARNINGS list (max 3)
+    """
+    warnings: List[str] = []
+
+    risk_level = sections.get("AI_ACT_RISK_LEVEL", "minimal")
+    size = briefing.get("unternehmensgroesse", "")
+    branche = briefing.get("branche", "")
+    lang = briefing.get("lang", "de")
+    alerts = sections.get("AI_ACT_NONCOMPLIANCE_ALERTS", [])
+    gaps = sections.get("AI_ACT_DATA_GAPS", [])
+
+    # --- Consistency Check 1: Executive Summary ---
+    exec_summary = sections.get("EXECUTIVE_SUMMARY_HTML", "")
+    if exec_summary:
+        exec_lower = exec_summary.lower()
+        if risk_level == "high-risk" and "hochrisiko" not in exec_lower and "high-risk" not in exec_lower:
+            warnings.append("Executive Summary erwähnt Hochrisiko-Einstufung nicht")
+        elif risk_level == "limited" and "begrenzt" not in exec_lower and "limited" not in exec_lower and "transparenz" not in exec_lower:
+            warnings.append("Executive Summary erwähnt Transparenzpflichten nicht")
+
+    # --- Consistency Check 2: Business Case CAPEX/OPEX ---
+    if risk_level == "high-risk":
+        capex = sections.get("CAPEX_REALISTISCH_EUR", 0)
+        if isinstance(capex, (int, float)) and capex > 0:
+            # Check if compliance costs are factored in
+            bc_html = sections.get("BUSINESS_CASE_HTML", "")
+            if bc_html and "compliance" not in bc_html.lower() and "konformität" not in bc_html.lower():
+                warnings.append("Business Case enthält keine Compliance-Kosten für Hochrisiko")
+
+    # --- Consistency Check 3: Roadmap coverage ---
+    roadmap_90d = sections.get("PILOT_PLAN_HTML", "") or sections.get("ROADMAP_90D_HTML", "")
+    if roadmap_90d and risk_level == "high-risk":
+        roadmap_lower = roadmap_90d.lower()
+        if "qms" not in roadmap_lower and "qualitätsmanagement" not in roadmap_lower and "quality management" not in roadmap_lower:
+            warnings.append("90-Tage-Roadmap enthält keine QMS-Planung für Hochrisiko")
+
+    # --- Inject cross-section content ---
+    harmonized = dict(sections)
+
+    # Add AI Act injection for Executive Summary (if not already present)
+    if "AI_ACT_EXEC_INJECTION" not in harmonized:
+        harmonized["AI_ACT_EXEC_INJECTION"] = get_ai_act_exec_summary_injection(
+            risk_level, size, branche, lang
+        )
+
+    # Add Business Case injection
+    bc_injection = get_ai_act_business_case_injection(risk_level, size, lang)
+    harmonized.update(bc_injection)
+
+    # Add Roadmap injection
+    roadmap_injection = get_ai_act_roadmap_injection(risk_level, size, lang)
+    harmonized.update(roadmap_injection)
+
+    # Add Governance injection
+    harmonized["AI_ACT_GOVERNANCE_INJECTION"] = get_ai_act_governance_injection(
+        risk_level, size, alerts, gaps, lang
+    )
+
+    # Add Risks injection
+    harmonized["AI_ACT_RISKS_INJECTION"] = get_ai_act_risks_injection(
+        risk_level, branche, size, lang
+    )
+
+    # Add Tools injection
+    harmonized["AI_ACT_TOOLS_INJECTION"] = get_ai_act_tools_injection(
+        risk_level, size, lang
+    )
+
+    # Store warnings (max 3)
+    harmonized["AI_ACT_CONSISTENCY_WARNINGS"] = warnings[:3]
+
+    log.info("🔄 AI Act harmonization complete: %d warnings", len(warnings))
+
+    return harmonized
+
+
+# =============================================================================
+# SPRINT G8.3: EXTENDED PERSONA HARD-GUARDS
+# =============================================================================
+
+def apply_ai_act_persona_filter(text: str, size: str) -> str:
+    """
+    G8.3: Apply persona-specific filtering to AI Act content.
+    Removes or replaces size-inappropriate terms.
+    """
+    if not text or not isinstance(text, str):
+        return text
+
+    size_lower = size.lower()
+
+    # Determine size category
+    if "solo" in size_lower or "freiberuf" in size_lower or "1" in size_lower:
+        size_key = "solo"
+        forbidden = EXTENDED_SOLO_FORBIDDEN
+        replacements = {
+            "ihr team": "Sie",
+            "your team": "you",
+            "das team": "Sie",
+            "the team": "you",
+            "mitarbeiter": "Sie",
+            "employees": "you",
+            "abteilung": "Ihren Arbeitsbereich",
+            "department": "your work area",
+        }
+    elif "team" in size_lower or "klein" in size_lower:
+        size_key = "team"
+        forbidden = EXTENDED_TEAM_FORBIDDEN
+        replacements = {
+            "als einzelperson": "als kleines Team",
+            "as an individual": "as a small team",
+            "solo-selbstständige": "kleine Teams",
+            "freelancer": "Ihr Team",
+        }
+    else:  # KMU
+        size_key = "kmu"
+        forbidden = EXTENDED_KMU_FORBIDDEN
+        replacements = {
+            "als einzelperson": "als Unternehmen",
+            "as an individual": "as a company",
+            "solo-selbstständige": "KMU",
+            "freelancer": "Ihr Unternehmen",
+        }
+
+    # Apply replacements
+    import re
+    result = text
+    for term, replacement in replacements.items():
+        pattern = re.compile(re.escape(term), re.IGNORECASE)
+        result = pattern.sub(replacement, result)
+
+    return result
+
+
+def validate_ai_act_persona_compliance(sections: Dict[str, Any], size: str) -> List[str]:
+    """
+    G8.3: Validate that AI Act sections contain no persona leaks.
+    Returns list of violations found.
+    """
+    violations = []
+    size_lower = size.lower()
+
+    # Determine forbidden terms based on size
+    if "solo" in size_lower or "freiberuf" in size_lower:
+        forbidden = EXTENDED_SOLO_FORBIDDEN
+        size_key = "solo"
+    elif "team" in size_lower or "klein" in size_lower:
+        forbidden = EXTENDED_TEAM_FORBIDDEN
+        size_key = "team"
+    else:
+        forbidden = EXTENDED_KMU_FORBIDDEN
+        size_key = "kmu"
+
+    # AI Act sections to validate
+    ai_act_keys = [
+        "AI_ACT_RISK_REASONING",
+        "AI_ACT_DUTY_MATRIX_HTML",
+        "AI_ACT_NONCOMPLIANCE_ALERTS_HTML",
+        "AI_ACT_DATA_GAPS_HTML",
+        "AI_ACT_RECOMMENDED_NEXT_STEPS_HTML",
+        "AI_ACT_RELATED_USECASES_HTML",
+        "AI_ACT_EXEC_INJECTION",
+        "AI_ACT_GOVERNANCE_INJECTION",
+        "AI_ACT_RISKS_INJECTION",
+        "AI_ACT_TOOLS_INJECTION",
+    ]
+
+    for key in ai_act_keys:
+        content = sections.get(key, "")
+        if not isinstance(content, str):
+            continue
+
+        content_lower = content.lower()
+        for term in forbidden:
+            if term.lower() in content_lower:
+                violations.append(f"[{key}] Persona leak: '{term}' (size={size_key})")
+
+    return violations
+
+
+# =============================================================================
+# SPRINT G8.6: PERFORMANCE OPTIMIZATION (Caching)
+# =============================================================================
+
+# Simple cache for duty matrix (per risk_level + size + lang)
+_duty_matrix_cache: Dict[str, str] = {}
+
+
+def get_cached_duty_matrix(risk_level: str, branche: str, size: str, lang: str) -> str:
+    """
+    G8.6: Get duty matrix with caching for performance.
+    """
+    cache_key = f"{risk_level}:{size}:{lang}"
+
+    if cache_key not in _duty_matrix_cache:
+        _duty_matrix_cache[cache_key] = generate_duty_matrix_html(
+            risk_level, branche, size, lang
+        )
+
+    return _duty_matrix_cache[cache_key]
+
+
+def clear_duty_matrix_cache() -> None:
+    """Clear the duty matrix cache."""
+    global _duty_matrix_cache
+    _duty_matrix_cache = {}
+
+
+def build_ai_act_sections_optimized(
+    briefing: Dict[str, Any],
+    lang: str = "de"
+) -> Dict[str, Any]:
+    """
+    G8.6: Optimized version of build_ai_act_sections with caching.
+    Generates all AI Act sections with performance optimizations.
+    """
+    # Extract relevant data
+    branche = briefing.get("BRANCHE_LABEL") or briefing.get("branche", "Allgemein")
+    size = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
+
+    # Extract use cases
+    usecases = []
+    if briefing.get("ki_einsatzbereiche"):
+        if isinstance(briefing["ki_einsatzbereiche"], list):
+            usecases = briefing["ki_einsatzbereiche"]
+        elif isinstance(briefing["ki_einsatzbereiche"], str):
+            usecases = [x.strip() for x in briefing["ki_einsatzbereiche"].split(",")]
+
+    if not usecases and briefing.get("hauptleistung"):
+        usecases = [briefing["hauptleistung"]]
+
+    # Get automation percentage
+    automatisierung = briefing.get("automatisierungsgrad", 0)
+    if isinstance(automatisierung, str):
+        try:
+            automatisierung = int(automatisierung.replace("%", ""))
+        except ValueError:
+            automatisierung = 0
+
+    # Determine risk level (single pass)
+    risk_level = determine_risk_level(branche, size, usecases, automatisierung)
+
+    # Generate all sections in one pass
+    sections = {
+        "AI_ACT_RISK_LEVEL": risk_level,
+        "AI_ACT_RISK_REASONING": generate_risk_reasoning(
+            risk_level, branche, size, usecases, lang
+        ),
+        "AI_ACT_DUTY_MATRIX_HTML": get_cached_duty_matrix(
+            risk_level, branche, size, lang
+        ),
+        "AI_ACT_NONCOMPLIANCE_ALERTS": generate_noncompliance_alerts(
+            risk_level, branche, size, lang
+        ),
+        "AI_ACT_DATA_GAPS": generate_data_gaps(
+            risk_level, branche, size, lang
+        ),
+        "AI_ACT_RECOMMENDED_NEXT_STEPS_HTML": generate_next_steps_html(
+            risk_level, branche, size, lang
+        ),
+        "AI_ACT_RELATED_USECASES_HTML": generate_usecase_risk_html(
+            usecases, branche, size, lang
+        ),
+    }
+
+    # Apply persona filter to text sections
+    for key in ["AI_ACT_RISK_REASONING"]:
+        sections[key] = apply_ai_act_persona_filter(sections[key], size)
+
+    log.info("🏛️ AI Act sections (optimized): risk_level=%s", risk_level)
+
+    return sections
