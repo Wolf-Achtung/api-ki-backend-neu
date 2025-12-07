@@ -1599,6 +1599,86 @@
                     </div>
                 </section>
                 {% endif %}
+                <!-- SPRINT G7: AI Act Compliance Section -->
+                {% if AI_ACT_RISK_LEVEL %}
+                <section class="section chapter ai-act-compliance">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">EU AI Act</span>
+                            <h2>Compliance-Einstufung</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot {% if AI_ACT_RISK_LEVEL == 'high-risk' %}pill-danger{% elif AI_ACT_RISK_LEVEL == 'limited' %}pill-warning{% else %}pill-success{% endif %}"></span>
+                            Risikoklasse: {{ AI_ACT_RISK_LEVEL }}
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        <!-- Risk Level Badge -->
+                        <div class="risk-level-banner risk-{{ AI_ACT_RISK_LEVEL }}">
+                            {% if AI_ACT_RISK_LEVEL == 'high-risk' %}
+                            <span class="risk-icon">⚠️</span>
+                            <strong>Hochrisiko-Einstufung</strong> – Umfassende Compliance-Pflichten gemäß EU AI Act
+                            {% elif AI_ACT_RISK_LEVEL == 'limited' %}
+                            <span class="risk-icon">📋</span>
+                            <strong>Begrenztes Risiko</strong> – Transparenzpflichten beachten
+                            {% else %}
+                            <span class="risk-icon">✅</span>
+                            <strong>Minimales Risiko</strong> – Best Practices empfohlen
+                            {% endif %}
+                        </div>
+
+                        <!-- Risk Reasoning -->
+                        {% if AI_ACT_RISK_REASONING %}
+                        <div class="risk-reasoning">
+                            <h3>Begründung der Einstufung</h3>
+                            <p>{{ AI_ACT_RISK_REASONING }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Duty Matrix -->
+                        {% if AI_ACT_DUTY_MATRIX_HTML %}
+                        <div class="duty-matrix-section">
+                            <h3>Pflichten-Matrix</h3>
+                            {{ AI_ACT_DUTY_MATRIX_HTML|safe }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Use Cases with Risk Tags -->
+                        {% if AI_ACT_RELATED_USECASES_HTML %}
+                        <div class="usecases-risk-section">
+                            <h3>Anwendungsfälle mit Risikoeinstufung</h3>
+                            {{ AI_ACT_RELATED_USECASES_HTML|safe }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Non-Compliance Alerts -->
+                        {% if AI_ACT_NONCOMPLIANCE_ALERTS_HTML %}
+                        <div class="alerts-section">
+                            <h3>Compliance-Lücken</h3>
+                            <p class="section-intro">Folgende Punkte sollten Sie prioritär adressieren:</p>
+                            {{ AI_ACT_NONCOMPLIANCE_ALERTS_HTML|safe }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Data Gaps -->
+                        {% if AI_ACT_DATA_GAPS_HTML %}
+                        <div class="gaps-section">
+                            <h3>Datenlücken</h3>
+                            <p class="section-intro">Diese Informationen fehlen für eine vollständige Compliance-Bewertung:</p>
+                            {{ AI_ACT_DATA_GAPS_HTML|safe }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Next Steps -->
+                        {% if AI_ACT_RECOMMENDED_NEXT_STEPS_HTML %}
+                        <div class="next-steps-section">
+                            <h3>Empfohlene Nächste Schritte</h3>
+                            {{ AI_ACT_RECOMMENDED_NEXT_STEPS_HTML|safe }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </section>
+                {% endif %}
                 {% if KICKOFF_VORLAGE_HTML %}
                 <section class="section chapter">
                     <div class="section-header">
