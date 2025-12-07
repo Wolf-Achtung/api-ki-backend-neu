@@ -3536,7 +3536,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         # SPRINT G2.3/G2.4: Fallback für tools_empfehlungen (size-aware + short labels)
         # SPRINT G6: Erweitert auf ~150+ Wörter, size-aware Struktur
         "tools_empfehlungen": f"""<div class="tools-empfehlungen-fallback">
-  <h3>Empfohlener KI-Stack für {branch_context_label}</h3>
+  <h3>Empfohlener KI-Stack für {branche}</h3>
   <p class="context-label"><em>{branch_core_label}</em></p>
 
   <h4>1. Fundament & Basis</h4>
@@ -3546,14 +3546,14 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     <li><strong>Aufgabenverwaltung:</strong> Planung und Koordination von KI-gestützten Workflows.</li>
   </ul>
 
-  <h4>2. Kernprozess-Tools für {offering_label}</h4>
+  <h4>2. Kernprozess-Tools für {offering_label or hauptleistung or branche}</h4>
   <ul>
     <li><strong>Formular-Tool:</strong> Strukturierte Erfassung von Kundendaten und Feedback.</li>
     <li><strong>Auswertungs-Tool:</strong> KI-gestützte Analyse und Report-Erstellung.</li>
     <li><strong>Automatisierung:</strong> Make.com oder Zapier für wiederkehrende Abläufe (ab 9 €/Monat).</li>
   </ul>
 
-  {"" if size_key == "solo" else '''<h4>3. Governance & Qualität</h4>
+  {"" if size_group == "solo" else '''<h4>3. Governance & Qualität</h4>
   <ul>
     <li><strong>Richtlinien:</strong> Kurze, schriftliche Regeln für den KI-Einsatz.</li>
     <li><strong>Dokumentation:</strong> Übersicht welche Tools wofür eingesetzt werden.</li>
