@@ -6,7 +6,7 @@ Optimized for ki-sicherheit.jetzt backend
 This service works WITH the existing prompt_loader.py system.
 It loads prompts via prompt_loader, injects context, and returns enhanced prompts.
 
-Version: 2.8.0-PLATIN++ (Sprint G2.4 - Redundanzabbau & Kurzlabel-System)
+Version: 2.9.0-PLATIN++ (Sprint G6 - Final Polish & Cross-Section Redundancy)
 
 SPRINT N CHANGES:
 - Extended SOLO_FORBIDDEN_TERMS list to prevent team/KMU terminology leaks
@@ -1555,10 +1555,16 @@ Nutze den Strategischen Kontext wie folgt:
 - NEVER use solo-specific terms like "as an individual", "solo entrepreneur", "freelancer"
 """
             instructions += """
-**IMPORTANT:**
+**IMPORTANT - Anti-Redundancy Rules:**
 - Never repeat full branch/offering descriptions (>12 words)
 - Use short labels above instead
 - The strategic context block already contains the full description
+
+**CROSS-SECTION REDUNDANCY (Sprint G6):**
+- **Executive Summary:** Max 1 sentence per topic. Details in subsequent chapters.
+- **Never copy entire paragraphs** from other sections.
+- **Subsequent chapters:** Do NOT repeat opening sentences from Executive Summary.
+- **Use cross-references:** "→ see [Section]" instead of repeating content.
 
 ---
 
@@ -1584,10 +1590,16 @@ Nutze den Strategischen Kontext wie folgt:
 - NIEMALS Solo-spezifische Begriffe wie "als Einzelperson", "Solo-Selbstständige", "Freiberufler"
 """
             instructions += """
-**WICHTIG:**
+**WICHTIG - Anti-Redundanz-Regeln:**
 - Wiederhole niemals vollständige Branchen- oder Leistungsbeschreibungen (>12 Wörter)
 - Nutze stattdessen die Kurzlabels oben
 - Der strategische Kontextblock enthält bereits die ausführliche Beschreibung
+
+**KAPITELÜBERGREIFENDE REDUNDANZ (Sprint G6):**
+- **Executive Summary:** Maximal 1 Satz pro Thema. Detailtiefe in Folgekapiteln.
+- **Niemals ganze Absätze** aus anderen Kapiteln kopieren.
+- **Folgekapitel:** NICHT mit Satz-Wiederholung aus Exec-Summary beginnen.
+- **Querverweise nutzen:** „→ siehe [Abschnitt]" statt Inhalte zu wiederholen.
 
 ---
 
