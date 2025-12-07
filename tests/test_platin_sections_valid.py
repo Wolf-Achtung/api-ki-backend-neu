@@ -198,8 +198,8 @@ class TestSizeMismatchDetection:
         content = "Die HR-Abteilung sollte koordinieren."
         filtered = filter_size_inappropriate_content(content, "solo")
 
-        # "Abteilung" should be replaced with "Aufgabenbereich" for solo
-        assert "Aufgabenbereich" in filtered
+        # "Abteilung" should be replaced with "Arbeitsbereich" for solo (Sprint N3.2)
+        assert "Arbeitsbereich" in filtered
         assert "Abteilung" not in filtered
 
     def test_filter_preserves_customer_references(self):
