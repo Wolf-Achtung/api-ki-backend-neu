@@ -149,7 +149,13 @@ from services.alerts import (
     MAX_FALLBACKS_PER_REPORT,
 )
 from services.monitoring import _metrics
-from services.ai_act_module import build_ai_act_sections, validate_ai_act_sections
+from services.ai_act_module import (
+    build_ai_act_sections,
+    build_ai_act_sections_optimized,
+    validate_ai_act_sections,
+    ai_act_harmonize,
+    validate_ai_act_persona_compliance,
+)
 
 # Und direkt nach Zeile 61, vor try:
 UTF8Handler.setup_encoding()  # Global UTF-8 fix beim Start
@@ -4423,7 +4429,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections["executive_summary"] = exec_summary_cleaned
 
     # ==========================================================================
-    # Sprint G7: AI Act Compliance Sections
+    # Sprint G7/G8: AI Act Compliance Sections with Cross-Integration
     # ==========================================================================
     try:
         # Determine report language from briefing
@@ -4431,8 +4437,8 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         if report_lang not in ["de", "en"]:
             report_lang = "de"
 
-        # Generate all AI Act sections
-        ai_act_data = build_ai_act_sections(briefing, lang=report_lang)
+        # G8.6: Use optimized version with caching
+        ai_act_data = build_ai_act_sections_optimized(briefing, lang=report_lang)
 
         # Add AI Act variables to sections
         sections.update(ai_act_data)
@@ -4454,12 +4460,21 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             gaps_html += "</ul>"
             sections["AI_ACT_DATA_GAPS_HTML"] = gaps_html
 
+        # G8.2: Harmonize AI Act content across all sections
+        sections = ai_act_harmonize(sections, briefing)
+
+        # G8.3: Validate persona compliance
+        size = briefing.get("unternehmensgroesse", "")
+        persona_violations = validate_ai_act_persona_compliance(sections, size)
+        if persona_violations:
+            log.warning("⚠️ AI Act persona violations: %s", persona_violations[:3])
+
         # Validate AI Act sections
         validation_errors = validate_ai_act_sections(ai_act_data)
         if validation_errors:
             log.warning("⚠️ AI Act validation issues: %s", validation_errors)
         else:
-            log.info("✅ AI Act sections validated successfully")
+            log.info("✅ AI Act sections validated & harmonized successfully")
 
     except Exception as e:
         log.error("❌ AI Act section generation failed: %s", e)
@@ -4476,6 +4491,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         sections["AI_ACT_DATA_GAPS_HTML"] = ""
         sections["AI_ACT_RECOMMENDED_NEXT_STEPS_HTML"] = ""
         sections["AI_ACT_RELATED_USECASES_HTML"] = ""
+        sections["AI_ACT_CONSISTENCY_WARNINGS"] = []
 
     return sections
 
