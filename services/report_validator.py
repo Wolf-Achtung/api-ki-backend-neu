@@ -348,12 +348,14 @@ class ReportValidator:
         },
         "team": {
             # SPRINT N: Updated minimums
+            # SPRINT G6: tools_empfehlungen erhöht, strategie_governance hinzugefügt
             "executive_summary": 180,   # SPRINT N requirement
             "quick_wins": 90,
             "roadmap_90d": 300,
             "roadmap_12m": 600,         # SPRINT N: erhöht von 500
             "org_change": 100,
-            "tools_empfehlungen": 160,  # SPRINT N requirement
+            "tools_empfehlungen": 190,  # SPRINT G6: erhöht von 160
+            "strategie_governance": 200,  # SPRINT G6: konsistent mit anderen
             "gamechanger": 750,         # SPRINT N: Mindestlänge fix
             "transparency_box": 150,
             "technologie_prozesse": 200,
@@ -361,12 +363,14 @@ class ReportValidator:
         "kmu": {
             # SPRINT N: Updated minimums
             # SPRINT G2.6: transparency_box + technologie_prozesse reduziert
+            # SPRINT G6: tools_empfehlungen + strategie_governance erhöht
             "executive_summary": 200,   # SPRINT N requirement
             "quick_wins": 120,
             "roadmap_90d": 350,
             "roadmap_12m": 700,         # SPRINT N: erhöht von 600
             "org_change": 120,
-            "tools_empfehlungen": 200,  # SPRINT N requirement
+            "tools_empfehlungen": 220,  # SPRINT G6: erhöht von 200
+            "strategie_governance": 220,  # SPRINT G6: konsistent mit anderen
             "gamechanger": 750,         # SPRINT N: Mindestlänge fix
             "transparency_box": 150,    # SPRINT G2.6: von 200 → 150
             "technologie_prozesse": 200,  # SPRINT G2.6: von 250 → 200
