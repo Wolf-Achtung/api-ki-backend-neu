@@ -2071,7 +2071,13 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     branche = briefing.get("BRANCHE_LABEL") or briefing.get("branche", "Ihr Unternehmen")
     size_label = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
     hauptleistung = briefing.get("hauptleistung", briefing.get("HAUPTLEISTUNG", ""))
-    
+
+    # SPRINT G2.4: Generate short labels for redundancy reduction
+    from services.prompt_enhancer import generate_short_labels
+    short_labels = generate_short_labels(briefing, lang="de")
+    branch_core_label = short_labels.get("BRANCH_CORE_LABEL", branche)
+    offering_label = short_labels.get("OFFERING_LABEL", "")
+
     # 🎯 Size-Erkennung (solo/team/kmu) wie im Briefing spezifiziert
     size_raw = (briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse") or "").lower()
     
@@ -2088,8 +2094,11 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     capex = briefing.get("CAPEX_REALISTISCH_EUR") or 5000
     opex = briefing.get("OPEX_REALISTISCH_EUR") or 150
     einsparung = briefing.get("EINSPARUNG_MONAT_EUR") or 500
-    payback = briefing.get("PAYBACK_MONTHS") or 10
-    roi_12m = briefing.get("ROI_12M") or 60
+    # SPRINT G2.5: Format payback and ROI with 1 decimal place to avoid floating point issues
+    payback_raw = briefing.get("PAYBACK_MONTHS") or 10
+    payback = f"{float(payback_raw):.1f}" if isinstance(payback_raw, (int, float)) else payback_raw
+    roi_raw = briefing.get("ROI_12M") or 60
+    roi_12m = f"{float(roi_raw):.0f}" if isinstance(roi_raw, (int, float)) else roi_raw
 
     # ════════════════════════════════════════════════════════════════════════════
     # 🎯 PLATIN+ FALLBACK: FOERDERPOTENZIAL (900+ Wörter)
@@ -3067,7 +3076,9 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         opex = briefing.get("OPEX_REALISTISCH_EUR", "—")
         einsparung = briefing.get("EINSPARUNG_MONAT_EUR", "—")
         payback = briefing.get("PAYBACK_MONTHS", "—")
-        roi_12m = briefing.get("ROI_12M", "—")
+        # SPRINT G2.5: Format ROI with 1 decimal place to avoid floating point issues
+        roi_raw = briefing.get("ROI_12M", "—")
+        roi_12m = f"{float(roi_raw):.1f}" if isinstance(roi_raw, (int, float)) else roi_raw
 
         return f"""<div class="business-case-summary">
   <h3>Business Case Übersicht</h3>
@@ -3435,6 +3446,18 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   </p>
 </section>"""
 
+    # SPRINT G2.5: Helper for formatting ROI/Payback values
+    def _fmt_num(val, decimals=1):
+        if val is None or val == "—":
+            return "—"
+        try:
+            return f"{float(val):.{decimals}f}"
+        except (ValueError, TypeError):
+            return str(val)
+
+    _payback_fmt = _fmt_num(briefing.get("PAYBACK_MONTHS"), 1)
+    _roi_fmt = _fmt_num(briefing.get("ROI_12M"), 0)
+
     # Statische Fallbacks (Quick Wins UNVERÄNDERT)
     fallbacks = {
         "quick_wins": f"""<ul>
@@ -3466,11 +3489,11 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     </tr>
     <tr>
       <td><strong>Amortisation</strong></td>
-      <td class="text-right">{briefing.get("PAYBACK_MONTHS", "—")} Monate</td>
+      <td class="text-right">{_payback_fmt} Monate</td>
     </tr>
     <tr>
       <td><strong>ROI nach 12 Monaten</strong></td>
-      <td class="text-right">{briefing.get("ROI_12M", "—")} %</td>
+      <td class="text-right">{_roi_fmt} %</td>
     </tr>
   </table>
   <p>
@@ -3510,14 +3533,48 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     vorhandenen Daten und strategischen Prioritäten ab.
   </p>
 </div>""",
+        # SPRINT G2.3/G2.4: Fallback für tools_empfehlungen (size-aware + short labels)
+        "tools_empfehlungen": f"""<div class="tools-empfehlungen-fallback">
+  <h3>Empfohlene KI-Tools</h3>
+  <p class="context-label"><em>{branch_core_label}</em></p>
+  <ul>
+    <li><strong>ChatGPT / Claude:</strong> Texterstellung, E-Mail-Entwürfe, Content-Generierung. Einstieg ab 20 €/Monat.</li>
+    <li><strong>Fireflies.ai / Otter.ai:</strong> Meeting-Transkription und automatische Protokolle. Ab 19 €/Monat.</li>
+    <li><strong>Make.com / Zapier:</strong> Workflow-Automatisierung ohne Programmierung. Ab 9 €/Monat.</li>
+    <li><strong>Notion AI:</strong> Wissensmanagement und Dokumentation mit KI-Unterstützung. Ab 10 €/Monat.</li>
+  </ul>
+  <p>
+    Der Einstieg erfolgt am besten mit einem Tool, das sofort Zeitersparnis bringt.
+    Für <strong>{size_label}</strong> empfiehlt sich ein schrittweiser Ausbau nach messbarem Erfolg.
+  </p>
+</div>""",
+        # SPRINT G2.3/G2.4: Fallback für strategie_governance (size-aware + short labels)
+        "strategie_governance": f"""<div class="strategie-governance-fallback">
+  <h3>KI-Strategie und Governance</h3>
+  <p class="context-label"><em>{branch_core_label}</em></p>
+  <p>
+    Eine erfolgreiche KI-Einführung erfordert klare Verantwortlichkeiten und Richtlinien:
+  </p>
+  <ul>
+    <li><strong>Datenschutz:</strong> Keine sensiblen Kundendaten in öffentliche KI-Tools eingeben.</li>
+    <li><strong>Qualitätskontrolle:</strong> KI-generierte Inhalte vor Veröffentlichung prüfen.</li>
+    <li><strong>Dokumentation:</strong> Welche Tools werden wofür eingesetzt? Wer ist verantwortlich?</li>
+    <li><strong>Schulung:</strong> Grundlegendes KI-Wissen für alle Beteiligten sicherstellen.</li>
+  </ul>
+  <p>
+    Für <strong>{size_label}</strong> gilt: Starten Sie pragmatisch mit einem Pilotprojekt
+    und dokumentieren Sie Erfolge und Learnings.
+  </p>
+</div>""",
     }
 
-    # Default-Fallback für unbekannte Sections – neutraler, professioneller Text ohne Fehlermeldungs-Charakter
+    # SPRINT G2.3/G2.4: Default-Fallback – Meta-Text-frei, mit Kurzlabels
     result = fallbacks.get(
         section_key,
-        f"""<div class="section-placeholder">
-  <p>Dieser Abschnitt fasst die wichtigsten Aspekte für <strong>{branche}</strong> in der Unternehmensgröße <strong>{size_label or "Ihr Unternehmen"}</strong> zusammen.</p>
-  <p>Die Inhalte basieren auf den vorliegenden Angaben und bewährten Vorgehensweisen für vergleichbare Profile.</p>
+        f"""<div class="section-content">
+  <p class="context-label"><em>{branch_core_label}</em></p>
+  <p>KI-Einsatz für <strong>{size_label or "Ihr Unternehmen"}</strong> bietet Potenziale in Prozessautomatisierung, Dokumentenverarbeitung und Entscheidungsunterstützung.</p>
+  <p>Konkrete Empfehlungen richten sich nach Ihren individuellen Prioritäten und vorhandenen Ressourcen.</p>
 </div>"""
     )
 

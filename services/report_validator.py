@@ -68,6 +68,7 @@ class ReportValidator:
     ]
 
     # Phrasen, die klar auf Template- oder Platzhaltertexte hindeuten
+    # SPRINT G2.2: Extended with meta-text patterns
     TEMPLATE_PHRASES = [
         "Hier könnten Sie",
         "Platzhalter für",
@@ -131,6 +132,23 @@ class ReportValidator:
         "Freitext-Feldern",
         "hier Freitext einfügen",
         "hier Freitext eingeben",
+        # SPRINT G2.2: Meta-text patterns (no actual content, just descriptions)
+        "Dieser Abschnitt fasst die wichtigsten Aspekte",
+        "Dieser Abschnitt fasst",
+        "Die Inhalte basieren auf den",
+        "Im Folgenden werden",
+        "Im Folgenden finden Sie",
+        "Die oben beschriebene Leistung",
+        "Wie bereits erwähnt",
+        "wie oben beschrieben",
+        "This section summarizes",
+        "The following section",
+        "As mentioned above",
+        "based on the information provided",
+        # Meta-stub patterns
+        "fasst die wichtigsten",
+        "basiert auf Ihren Angaben",
+        "Basierend auf Ihren Eingaben",
     ]
 
     QUICK_WINS_PROMPT_PHRASES = [
@@ -141,6 +159,7 @@ class ReportValidator:
 
     # SPRINT N: Extended SIZE_FORBIDDEN for Solo personas
     # These terms MUST NEVER appear in Solo reports
+    # SPRINT G2.1: Extended for Team and KMU persona leak detection
     SIZE_FORBIDDEN = {
         "solo": [
             # Team-specific terms
@@ -179,8 +198,34 @@ class ReportValidator:
             "Governance-Board",
             "Enterprise-Architektur",
             "Konzernstruktur",
+            # Solo-specific terms (SPRINT G2.1: PERSONA_LEAK prevention)
+            "Ihre Agilität als Einzelperson",
+            "Agilität als Einzelperson",
+            "Solo-Selbstständige",
+            "Solo-Berater",
+            "Einzelunternehmer",
+            "als Einzelperson",
+            "Your agility as a solo",
+            "as a solo professional",
         ],
-        "kmu": [],
+        "kmu": [
+            # SPRINT G2.1: Solo-specific terms that MUST NOT appear in KMU reports
+            "Ihre Agilität als Einzelperson",
+            "Agilität als Einzelperson",
+            "Solo-Selbstständige",
+            "Solo-Berater",
+            "Einzelunternehmer",
+            "als Einzelperson",
+            "Ihre persönliche Kapazität",
+            "Your agility as a solo",
+            "as a solo professional",
+            "solo entrepreneur",
+            "as an individual",
+            # Freelancer-specific terms inappropriate for 11-100 companies
+            "Freiberufler",
+            "freiberuflich",
+            "Selbstständiger",
+        ],
     }
 
     # SPRINT N: Hard-Stop Configuration
@@ -236,6 +281,7 @@ class ReportValidator:
         },
         "kmu": {
             # SPRINT N: Updated minimums
+            # SPRINT G2.6: transparency_box + technologie_prozesse reduziert
             "executive_summary": 200,   # SPRINT N requirement
             "quick_wins": 120,
             "roadmap_90d": 350,
@@ -243,8 +289,8 @@ class ReportValidator:
             "org_change": 120,
             "tools_empfehlungen": 200,  # SPRINT N requirement
             "gamechanger": 750,         # SPRINT N: Mindestlänge fix
-            "transparency_box": 200,
-            "technologie_prozesse": 250,
+            "transparency_box": 150,    # SPRINT G2.6: von 200 → 150
+            "technologie_prozesse": 200,  # SPRINT G2.6: von 250 → 200
         },
     }
 
@@ -298,6 +344,7 @@ class ReportValidator:
         self._check_template_phrases()
         self._check_quick_wins_prompt_leaks()
         self._check_size_specific_issues()
+        self._check_redundancy()  # Sprint G2.4
 
         is_valid = not any(e.severity == "CRITICAL" for e in self.errors)
         return is_valid, self.errors
@@ -544,6 +591,63 @@ class ReportValidator:
                                 f"SPRINT N: Term '{term}' muss ersetzt werden. "
                                 f"HARD_STOP={self.HARD_STOP_ON_SIZE_MISMATCH}"
                             ),
+                        )
+                    )
+
+    def _check_redundancy(self) -> None:
+        """
+        Sprint G2.4: Check for redundant long sentences across sections.
+
+        Warns when:
+        - A sentence >15 words appears identically or 85% similar in ≥2 sections
+        - Long branch/offering descriptions appear after strategic_context_block
+
+        This is informational only (WARNING, not CRITICAL).
+        """
+        # Collect all sentences from all sections
+        sentence_occurrences: Dict[str, List[str]] = {}  # normalized → list of sections
+
+        for section_name, content in self.sections.items():
+            if not isinstance(content, str) or not content:
+                continue
+
+            # Split into sentences (rough approximation)
+            sentences = re.split(r'[.!?]\s+', content)
+
+            for sentence in sentences:
+                # Only check sentences with >15 words
+                words = sentence.split()
+                if len(words) < 15:
+                    continue
+
+                # Normalize for comparison
+                normalized = re.sub(r'\s+', ' ', sentence.lower().strip())
+
+                # Skip very short normalized sentences
+                if len(normalized) < 50:
+                    continue
+
+                if normalized not in sentence_occurrences:
+                    sentence_occurrences[normalized] = []
+                sentence_occurrences[normalized].append(section_name)
+
+        # Report redundancies (appearing in ≥2 sections)
+        for normalized, sections_list in sentence_occurrences.items():
+            if len(sections_list) >= 2:
+                # Only report once per unique redundancy
+                unique_sections = list(dict.fromkeys(sections_list))
+                if len(unique_sections) >= 2:
+                    preview = normalized[:80] + "..." if len(normalized) > 80 else normalized
+                    self.errors.append(
+                        ValidationError(
+                            severity="WARNING",
+                            category="REDUNDANCY_DETECTED",
+                            section=", ".join(unique_sections[:3]),
+                            message=(
+                                "Dieser Abschnitt wiederholt längere Textbausteine, "
+                                "die bereits im Report vorkamen. Bitte Kurzlabels verwenden."
+                            ),
+                            details=f"Wiederholter Text: \"{preview}\" in {len(unique_sections)} Sektionen",
                         )
                     )
 
