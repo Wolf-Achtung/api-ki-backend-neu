@@ -192,6 +192,12 @@ except ImportError:
     get_min_words = None
     validate_business_case_with_ai_act = None
 
+# G9.1: Import AI Act BC monitoring
+try:
+    from services.monitoring_ai_act import track_bc_modification
+except ImportError:
+    track_bc_modification = None
+
 # Initialize logger
 log = logging.getLogger(__name__)
 
@@ -4510,6 +4516,16 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 
             # Update sections with adjusted values
             sections.update(adjusted_bc)
+
+            # G9.1: Track BC modification metrics
+            if callable(track_bc_modification):
+                track_bc_modification(
+                    sections=sections,
+                    original_bc=current_bc,
+                    adjusted_bc=adjusted_bc,
+                    risk_level=risk_level,
+                    modifiers=ai_act_bc_modifiers
+                )
 
             # Validate the adjusted business case
             if callable(validate_business_case_with_ai_act):

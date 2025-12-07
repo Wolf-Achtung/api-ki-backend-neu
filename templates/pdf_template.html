@@ -1676,6 +1676,58 @@
                         </div>
                         {% endif %}
 
+                        <!-- G9.3: AI-Act Compliance Summary Card (Business Case Impact) -->
+                        {% if AI_ACT_BC_APPLIED %}
+                        <div class="ai-act-bc-summary-card" style="margin-bottom:16px;padding:16px;background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);border-radius:8px;border:1px solid #dee2e6;">
+                            <h3 style="font-size:14px;margin-bottom:12px;color:#212529;display:flex;align-items:center;gap:8px;">
+                                <span style="font-size:18px;">📊</span> Business-Case Compliance-Auswirkungen
+                            </h3>
+                            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+                                <!-- CAPEX Card -->
+                                <div style="background:#fff;padding:12px;border-radius:6px;border:1px solid #e9ecef;">
+                                    <div style="font-size:11px;color:#6c757d;text-transform:uppercase;letter-spacing:0.5px;">CAPEX-Anpassung</div>
+                                    <div style="font-size:18px;font-weight:600;color:{% if AI_ACT_BC_CAPEX_FACTOR > 1.0 %}#dc3545{% else %}#28a745{% endif %};">
+                                        {% if AI_ACT_BC_CAPEX_FACTOR > 1.0 %}+{{ ((AI_ACT_BC_CAPEX_FACTOR - 1) * 100)|round|int }}%{% else %}±0%{% endif %}
+                                    </div>
+                                    {% if AI_ACT_BC_ORIGINAL_CAPEX %}
+                                    <div style="font-size:11px;color:#868e96;margin-top:4px;">
+                                        €{{ "{:,.0f}".format(AI_ACT_BC_ORIGINAL_CAPEX) }} → €{{ "{:,.0f}".format(CAPEX_REALISTISCH_EUR) }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <!-- OPEX Card -->
+                                <div style="background:#fff;padding:12px;border-radius:6px;border:1px solid #e9ecef;">
+                                    <div style="font-size:11px;color:#6c757d;text-transform:uppercase;letter-spacing:0.5px;">OPEX-Anpassung</div>
+                                    <div style="font-size:18px;font-weight:600;color:{% if AI_ACT_BC_OPEX_FACTOR > 1.0 %}#dc3545{% else %}#28a745{% endif %};">
+                                        {% if AI_ACT_BC_OPEX_FACTOR > 1.0 %}+{{ ((AI_ACT_BC_OPEX_FACTOR - 1) * 100)|round|int }}%{% else %}±0%{% endif %}
+                                    </div>
+                                    {% if AI_ACT_BC_ORIGINAL_OPEX %}
+                                    <div style="font-size:11px;color:#868e96;margin-top:4px;">
+                                        €{{ "{:,.0f}".format(AI_ACT_BC_ORIGINAL_OPEX) }}/Monat → €{{ "{:,.0f}".format(OPEX_REALISTISCH_EUR) }}/Monat
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <!-- Payback Impact Row -->
+                            {% if AI_ACT_BC_PAYBACK_DELTA > 0 %}
+                            <div style="margin-top:12px;padding:10px;background:#fffbeb;border-radius:6px;border:1px solid #ffc107;">
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <span style="font-size:16px;">⏱️</span>
+                                    <div>
+                                        <div style="font-size:12px;color:#856404;font-weight:500;">Payback-Verlängerung durch Compliance</div>
+                                        <div style="font-size:14px;color:#212529;">+{{ AI_ACT_BC_PAYBACK_DELTA }} Monate für Dokumentation & Audits</div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <!-- Risk Level Footer -->
+                            <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e9ecef;font-size:11px;color:#6c757d;display:flex;justify-content:space-between;align-items:center;">
+                                <span>Basierend auf Risikoklasse: <strong style="color:{% if AI_ACT_RISK_LEVEL == 'high-risk' %}#dc3545{% elif AI_ACT_RISK_LEVEL == 'limited' %}#856404{% else %}#28a745{% endif %}">{{ AI_ACT_RISK_LEVEL }}</strong></span>
+                                <span style="font-style:italic;">EU AI Act Art. 6, 52</span>
+                            </div>
+                        </div>
+                        {% endif %}
+
                         <!-- G8: Tools Injection -->
                         {% if AI_ACT_TOOLS_INJECTION %}
                         <div class="ai-act-tools-section" style="margin-bottom:16px;">
