@@ -661,6 +661,76 @@ def _guardrails_hint_en() -> str:
     return '<p class="small muted">Note: Company guidelines and restrictions have been considered.</p>'
 
 
+# =============================================================================
+# Sprint N3.3: Executive Summary Hard-Clean
+# =============================================================================
+
+def clean_exec_summary_html(html: str) -> str:
+    """
+    Sprint N3.3: Entfernt alle H1/H2-Tags und führende Label-Überschriften
+    aus dem Executive Summary Inhalt.
+
+    Ziel: Exec Summary soll nur Fließtext enthalten, keine redundanten
+    Überschriften wie "Executive Summary", "Zusammenfassung", "Kurzfassung".
+
+    Args:
+        html: Der HTML-Inhalt der Executive Summary
+
+    Returns:
+        Bereinigter HTML-Inhalt ohne H1/H2 und Label-Überschriften
+    """
+    if not html:
+        return html
+
+    # 1) Entferne ALLE h1/h2-Tags (nicht nur den ersten)
+    html = re.sub(
+        r'<h[12][^>]*>.*?</h[12]>',
+        '',
+        html,
+        flags=re.IGNORECASE | re.DOTALL
+    )
+
+    # 2) Entferne führende Label-Überschriften (auch als Klartext)
+    labels_to_remove = [
+        "Executive Summary",
+        "Zusammenfassung",
+        "Kurzfassung",
+        "Summary",
+        "Überblick",
+    ]
+
+    for label in labels_to_remove:
+        # Entferne Label am Anfang (mit optionalem Whitespace/Newlines)
+        html = re.sub(
+            r'^\s*' + re.escape(label) + r'\s*[:.]?\s*',
+            '',
+            html,
+            flags=re.IGNORECASE
+        )
+        # Entferne Label auch innerhalb des Textes (ohne Doppelpunkt)
+        html = html.replace(label, "")
+
+    # 3) Bereinige leere Paragraphen die übrig geblieben sein könnten
+    html = re.sub(r'<p[^>]*>\s*</p>', '', html, flags=re.IGNORECASE)
+
+    # 4) Trim whitespace
+    html = html.strip()
+
+    return html
+
+
+def is_exec_summary_section(section_name: str) -> bool:
+    """Prüft ob ein Sektionsname zur Executive Summary gehört."""
+    if not section_name:
+        return False
+    name_lower = section_name.lower()
+    return any(pattern in name_lower for pattern in [
+        "exec_summary",
+        "executive_summary",
+        "execsummary",
+    ])
+
+
 def sanitize_or_recover(
     html_content: str,
     min_words: int = MIN_WORDS_DEFAULT,
@@ -696,19 +766,9 @@ def sanitize_or_recover(
             return generate_auto_summary(section_name, "", branch, size, guardrails)
         return ""
 
-    # Sprint N2 + N3: Entferne redundante h1/h2 UND Klartext "Executive Summary" (Template stellt Überschrift bereit)
-    if section_name and "executive_summary" in section_name.lower():
-        # N2: Entferne HTML-Heading-Tags
-        html_content = re.sub(
-            r'<h[12][^>]*>.*?</h[12]>',
-            '',
-            html_content,
-            count=1,
-            flags=re.IGNORECASE | re.DOTALL
-        )
-        # N3: Entferne verbleibenden Klartext "Executive Summary" (inkl. deutscher Variante)
-        html_content = html_content.replace("Executive Summary", "")
-        html_content = html_content.replace("Zusammenfassung", "")
+    # Sprint N3.3: Exec Summary Hard-Clean - verwende dedizierte Funktion
+    if is_exec_summary_section(section_name):
+        html_content = clean_exec_summary_html(html_content)
 
     # Stufe 1: Normale Sanitization versuchen
     sanitized = sanitize_section_html(html_content)
