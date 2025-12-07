@@ -1,12 +1,17 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.2 -->
+<!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
 <!-- SECTION: risks -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{HAUPTLEISTUNG}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{score_governance}}, {{score_sicherheit}} -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{score_governance}}, {{score_sicherheit}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 3000 (solo:0.8x=2400, team:1.0x=3000, kmu:1.15x=3450) -->
 <!--
 ZIEL: 5 Abschnitte mit je 120-160 Wörtern (= 600-800 Wörter gesamt).
+
+KURZLABELS (VERPFLICHTEND!):
+- {{BRANCH_CORE_LABEL}} = Branche in 8-12 Wörtern
+- {{BRANCH_CONTEXT_LABEL}} = Branche in 4-6 Wörtern
+- {{OFFERING_LABEL}} = Hauptleistung in 6-10 Wörtern
 
 STRUKTUR (5 Pflicht-Abschnitte):
   H3 1. Strategische und organisatorische Risiken (4 Risiken + Maßnahmen)
@@ -20,11 +25,26 @@ PERSONA-VARIATIONEN (COMPANY_SIZE):
 - team: Rollenklärung, Abstimmung, Wissensinseln
 - kmu: Governance, Prozesse, Dokumentation, Compliance
 
-ANTI-REDUNDANZ:
-- Risiken NICHT in Guardrails-Sektion wiederholen
-- Maßnahmen kurz, nicht in org_change wiederholen
+ANTI-REDUNDANZ (STRIKT!):
+- Risiken NICHT in Guardrails-Sektion wiederholen (→ Querverweis)
+- Maßnahmen kurz, nicht in org_change wiederholen (→ Querverweis)
+- Bei Überschneidung: Querverweis nutzen
 
-GUARDRAILS: Respektiere angegebene Leitplanken; erwähne sie bei Risiko-Minderung.
+SPRINT G5 - PERSONA HARD-GUARDS (STRIKT!):
+{% if COMPANY_SIZE == "solo" %}
+SOLO-MODUS - VERBOTEN:
+- "Team/Teams/Abteilung/Mitarbeiter" → nicht verwenden
+- "Fachbereich" → "Arbeitsfeld"
+{% elif COMPANY_SIZE == "team" %}
+TEAM-MODUS - VERBOTEN:
+- "Division/Unit/Konzern" → nicht verwenden
+- "Abteilung" → "Bereich"
+- Solo-Begriffe: "Einzelperson", "allein"
+{% else %}
+KMU-MODUS - VERBOTEN:
+- "Konzern/Division/Unit" → nicht verwenden
+- Solo-Begriffe: "Einzelperson", "allein"
+{% endif %}
 
 REGELN:
 - Scores aktiv interpretieren
@@ -33,24 +53,21 @@ REGELN:
 -->
 
 <section class="section risks">
-  <h2>Wesentliche Risiken beim Einsatz von KI in {{HAUPTLEISTUNG}}</h2>
+  <h2>Wesentliche Risiken beim Einsatz von KI in {{OFFERING_LABEL}}</h2>
 
   <p>
-    Der Einsatz von KI im Bereich <strong>{{HAUPTLEISTUNG}}</strong> in der Branche
-    <strong>{{BRANCHE_LABEL}}</strong> – mit ihren typischen Workflows, Datenarten und Pain Points – bietet erhebliche Chancen, bringt jedoch – je nach
-    Unternehmensgröße <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> – unterschiedliche
-    Risikoprofile mit sich. Der aktuelle Governance-Score von
-    <strong>{{score_governance}}&#x2F;100</strong> und der Sicherheits-Score von
-    <strong>{{score_sicherheit}}&#x2F;100</strong> zeigen, wie weit Strukturen für Steuerung,
-    Dokumentation und Schutzmechanismen bereits entwickelt sind. Die folgenden Abschnitte
-    bündeln die wichtigsten Risikofelder und skizzieren konkrete Gegenmaßnahmen.
+    Der Einsatz von KI für {{BRANCH_CONTEXT_LABEL}} bietet erhebliche Chancen,
+    bringt jedoch unterschiedliche Risikoprofile mit sich. Der aktuelle Governance-Score von
+    <strong>{{score_governance}}/100</strong> und der Sicherheits-Score von
+    <strong>{{score_sicherheit}}/100</strong> zeigen den Reifegrad der Strukturen.
+    Die folgenden Abschnitte bündeln die wichtigsten Risikofelder.
   </p>
 
   <h3>1. Strategische und organisatorische Risiken</h3>
   <ul>
     <li>
       <strong>Unklare Zielbilder und Prioritäten für KI.</strong>
-      Ohne klar definierte Ziele für {{HAUPTLEISTUNG}} besteht das Risiko, dass KI-Experimente
+      Ohne klar definierte Ziele für {{OFFERING_LABEL}} besteht das Risiko, dass KI-Experimente
       versanden, Insellösungen entstehen oder wichtige Chancen ungenutzt bleiben.
       Gegenmaßnahmen sind ein knappes Zielbild mit 2–3 priorisierten Anwendungsfällen,
       ein einfacher Umsetzungsplan sowie regelmäßige Überprüfung, ob Maßnahmen zum
@@ -232,10 +249,9 @@ REGELN:
 
   <p class="small muted">
     Diese Risikoanalyse zeigt die wichtigsten Handlungsfelder für KI in
-    <strong>{{HAUPTLEISTUNG}}</strong> in einem Unternehmen der Größe
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong>. Im nächsten Schritt sollten die Risiken
-    nach Eintrittswahrscheinlichkeit und Auswirkung priorisiert und in eine konkrete
-    Maßnahmenplanung für die kommenden 3–6&nbsp;Monate überführt werden.
+    {{OFFERING_LABEL}}. Im nächsten Schritt sollten die Risiken
+    nach Eintrittswahrscheinlichkeit und Auswirkung priorisiert werden.
+    Details zur Maßnahmenplanung → siehe Roadmap und Governance-Abschnitt.
   </p>
 </section>
 

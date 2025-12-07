@@ -1,11 +1,17 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.2 -->
+<!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
 <!-- SECTION: recommendations -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 600 (solo:0.8x=480, team:1.0x=600, kmu:1.15x=690) -->
 <!--
-GOAL: 5 strategic recommendations for {{HAUPTLEISTUNG}}.
+GOAL: 5 strategic recommendations for {{OFFERING_LABEL}}.
+
+SHORT LABELS (MANDATORY!):
+- {{BRANCH_CORE_LABEL}} = Industry in 8-12 words
+- {{BRANCH_CONTEXT_LABEL}} = Industry in 4-6 words
+- {{OFFERING_LABEL}} = Main service in 6-10 words
 
 STRUCTURE (Required elements):
 1. Brief introduction (30-40 words)
@@ -17,29 +23,47 @@ STRUCTURE (Required elements):
 3. Compact priorities table (5 rows)
 
 ANTI-REDUNDANCY (STRICT!):
-- NO repetition of Quick Wins (already covered there)
-- NO repetition of Roadmap content
+- NO repetition of Quick Wins (→ see Quick Wins section)
+- NO repetition of Roadmap content (→ see Roadmap)
 - Focus on COMPLEMENTARY strategic recommendations
+- On overlap: use cross-reference
 
 PERSONA VARIATIONS (COMPANY_SIZE):
 - solo: Owner, personal steps, low budget
 - team: Team lead/AI Owner, shared workflows, medium budget
 - kmu: Departments, governance, structured investments
+
+SPRINT G5 - PERSONA HARD-GUARDS (STRICT!):
+{% if COMPANY_SIZE == "solo" %}
+SOLO MODE - FORBIDDEN:
+- "Team/Teams" → "Capacity/Resources"
+- "Department/Division" → do not use
+- "Employees" → "external support"
+{% elif COMPANY_SIZE == "team" %}
+TEAM MODE - FORBIDDEN:
+- "Department/Division" → "Area"
+- "Unit/Corporation" → do not use
+- Solo terms: "individual", "alone"
+{% else %}
+SME MODE - FORBIDDEN:
+- "Corporation/Division/Unit" → do not use
+- Solo terms: "individual", "alone"
+{% endif %}
 -->
 
 <section class="section recommendations">
   <h2>Recommendations</h2>
 
   <p>
-    For <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> in the <strong>{{BRANCHE_LABEL}}</strong> industry,
-    the following strategic recommendations apply for <strong>{{HAUPTLEISTUNG}}</strong>.
+    For {{BRANCH_CONTEXT_LABEL}}, the following strategic recommendations apply
+    for <strong>{{OFFERING_LABEL}}</strong>.
   </p>
 
   <ol class="recommendations-list">
 
     <li>
       <h3>Recommendation 1: Establish Standard Workflow</h3>
-      <p><strong>Focus:</strong> Build a central AI-powered workflow for {{HAUPTLEISTUNG}}.</p>
+      <p><strong>Focus:</strong> Build a central AI-powered workflow for {{OFFERING_LABEL}}.</p>
       <p><strong>Action:</strong> Define clear input/output rules, integrate quality check.</p>
       <p><strong>Benefit:</strong> Direct relief, consistent results.</p>
       <p><strong>Effort:</strong> {% if COMPANY_SIZE == "solo" %}1-2 days{% elif COMPANY_SIZE == "team" %}3-5 days{% else %}1-2 weeks{% endif %}.</p>
@@ -63,7 +87,7 @@ PERSONA VARIATIONS (COMPANY_SIZE):
 
     <li>
       <h3>Recommendation 4: Pilot Industry-Specific Use Case</h3>
-      <p><strong>Focus:</strong> One clearly defined pilot use case from {{BRANCHE_LABEL}}.</p>
+      <p><strong>Focus:</strong> One clearly defined pilot use case from {{BRANCH_CONTEXT_LABEL}}.</p>
       <p><strong>Action:</strong> Implement a use case with high visibility and quick ROI.</p>
       <p><strong>Benefit:</strong> Visible success, momentum for further steps.</p>
       <p><strong>Effort:</strong> {% if COMPANY_SIZE == "solo" %}1-3 days{% elif COMPANY_SIZE == "team" %}3-7 days{% else %}1-3 weeks{% endif %}.</p>

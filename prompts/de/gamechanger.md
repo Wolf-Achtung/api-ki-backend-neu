@@ -1,14 +1,19 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.3 - SPRINT N -->
+<!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
 <!-- SECTION: gamechanger -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{STRATEGISCHE_ZIELE}}, {{GESCHAEFTSMODELL_EVOLUTION}}, {{VISION_3_JAHRE}}, COMPANY_SIZE -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{STRATEGISCHE_ZIELE}}, {{GESCHAEFTSMODELL_EVOLUTION}}, {{VISION_3_JAHRE}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 3500 (solo:0.8x=2800, team:1.0x=3500, kmu:1.15x=4025) -->
 <!-- WORD_MINIMUM: 750 (ALLE GRÖSSEN - STRIKT!) -->
 <!--
-ZIEL: MINDESTENS 3 realistische Gamechanger für {{HAUPTLEISTUNG}}.
+ZIEL: MINDESTENS 3 realistische Gamechanger für {{OFFERING_LABEL}}.
 MINDESTLÄNGE: ≥750 Wörter (STRIKT EINHALTEN! NICHT nach 1-2 Ideen abbrechen!)
+
+KURZLABELS (VERPFLICHTEND!):
+- {{BRANCH_CORE_LABEL}} = Branche in 8-12 Wörtern
+- {{BRANCH_CONTEXT_LABEL}} = Branche in 4-6 Wörtern
+- {{OFFERING_LABEL}} = Hauptleistung in 6-10 Wörtern
 
 PFLICHTSTRUKTUR (pro Gamechanger):
 1. Kernidee (2-3 Sätze)
@@ -22,25 +27,33 @@ PERSONA-VARIATIONEN (COMPANY_SIZE):
 - team: arbeitsteilige Workflows, Rollen, einfache Governance
 - kmu: skalierbare Prozesse, klare Verantwortlichkeiten, Pilotbereiche
 
-ANTI-REDUNDANZ:
-- Gamechanger ergänzen Business Case, wiederholen ihn nicht
-- Verknüpfung mit Roadmap, aber keine Dopplung
+ANTI-REDUNDANZ (STRIKT!):
+- Gamechanger ergänzen Business Case (→ siehe Business Case)
+- Verknüpfung mit Roadmap, aber keine Dopplung (→ siehe Roadmap)
+- Bei Überschneidung: Querverweis nutzen
 
 REGELN:
 - Keine erfundenen Daten
-- Konkreter Bezug zu {{HAUPTLEISTUNG}} erforderlich
+- Konkreter Bezug zu {{OFFERING_LABEL}} erforderlich
 - MINDESTENS 3 vollständige Szenarien beschreiben!
 
-SPRINT N - SOLO PERSONA REGELN (STRIKT!):
+SPRINT G5 - PERSONA HARD-GUARDS (STRIKT!):
 {% if COMPANY_SIZE == "solo" %}
-NICHT VERWENDEN für Solo:
-- "Abteilungen" → stattdessen: "Arbeitsbereiche"
-- "Teams" → stattdessen: "Kapazitäten" oder "Ressourcen"
-- "Bereiche" ist OK, aber nicht "Fachbereiche"
-- "Team aufbauen" → stattdessen: "Kapazität erweitern"
-- "Mitarbeiter" → stattdessen: "externe Unterstützung"
-- "Fachbereich" → stattdessen: "Arbeitsfeld"
-Formulierungen ohne Team-/Abteilungsbegriff verwenden!
+SOLO-MODUS - VERBOTEN:
+- "Abteilungen" → "Arbeitsbereiche"
+- "Teams" → "Kapazitäten/Ressourcen"
+- "Fachbereich" → "Arbeitsfeld"
+- "Team aufbauen" → "Kapazität erweitern"
+- "Mitarbeiter" → "externe Unterstützung"
+{% elif COMPANY_SIZE == "team" %}
+TEAM-MODUS - VERBOTEN:
+- "Division/Unit/Konzern" → nicht verwenden
+- "Abteilung" → "Bereich"
+- Solo-Begriffe: "Einzelperson", "allein"
+{% else %}
+KMU-MODUS - VERBOTEN:
+- "Konzern/Division/Unit" → nicht verwenden
+- Solo-Begriffe: "Einzelperson", "allein"
 {% endif %}
 -->
 
@@ -48,13 +61,10 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
   <h2>KI als Gamechanger für Ihr Geschäftsmodell</h2>
 
   <p>
-    Für ein Unternehmen in der Branche <strong>{{BRANCHE_LABEL}}</strong> mit der Größe
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> und dem Schwerpunkt
-    <strong>{{HAUPTLEISTUNG}}</strong> ergeben sich mehrere KI-Szenarien, die die
-    Wertschöpfung in den kommenden Jahren spürbar verändern können. Die folgenden
-    Vorschläge knüpfen direkt an Ihre strategischen Ziele
-    ({{STRATEGISCHE_ZIELE}}) sowie die geplante Weiterentwicklung des Geschäftsmodells
-    ({{GESCHAEFTSMODELL_EVOLUTION}}) und Ihre Vision für die nächsten drei Jahre
+    Für {{BRANCH_CONTEXT_LABEL}} mit Schwerpunkt <strong>{{OFFERING_LABEL}}</strong>
+    ergeben sich mehrere KI-Szenarien, die die Wertschöpfung spürbar verändern können.
+    Die folgenden Vorschläge knüpfen an Ihre strategischen Ziele ({{STRATEGISCHE_ZIELE}}),
+    die Geschäftsmodell-Evolution ({{GESCHAEFTSMODELL_EVOLUTION}}) und Ihre 3-Jahres-Vision
     ({{VISION_3_JAHRE}}) an.
   </p>
 
@@ -64,7 +74,7 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
     <li>
       <h3>1. KI-gestützte Standardisierung & Automatisierung zentraler Kernprozesse</h3>
       <p><strong>Kernidee:</strong>
-        Wiederkehrende Aufgaben in {{HAUPTLEISTUNG}} werden über KI-gestützte Vorlagen,
+        Wiederkehrende Aufgaben in {{OFFERING_LABEL}} werden über KI-gestützte Vorlagen,
         Automatisierungen und strukturierte Entscheidungswege so standardisiert, dass
         Qualität und Geschwindigkeit deutlich steigen.
       </p>
@@ -139,9 +149,9 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
 
   <h3>Was diese Gamechanger gemeinsam haben</h3>
   <ul>
-    <li>Sie bauen auf bestehenden Stärken von {{HAUPTLEISTUNG}} auf und verstärken diese mit KI.</li>
-    <li>Sie berücksichtigen die Ressourcen und Entscheidungswege eines {{UNTERNEHMENSGROESSE_LABEL}}-Unternehmens.</li>
+    <li>Sie bauen auf bestehenden Stärken von {{OFFERING_LABEL}} auf und verstärken diese mit KI.</li>
     <li>Sie lassen sich mit überschaubarem Risiko pilotieren und bei Erfolg schrittweise skalieren.</li>
+    <li>Details zur Umsetzung → siehe Roadmap und Business Case.</li>
   </ul>
 
   <p class="small muted">
