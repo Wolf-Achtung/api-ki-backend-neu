@@ -160,6 +160,7 @@ class ReportValidator:
     # SPRINT N: Extended SIZE_FORBIDDEN for Solo personas
     # These terms MUST NEVER appear in Solo reports
     # SPRINT G2.1: Extended for Team and KMU persona leak detection
+    # SPRINT G3.1: Extended Team/KMU lists for comprehensive Solo-leak prevention
     SIZE_FORBIDDEN = {
         "solo": [
             # Team-specific terms
@@ -198,34 +199,112 @@ class ReportValidator:
             "Governance-Board",
             "Enterprise-Architektur",
             "Konzernstruktur",
-            # Solo-specific terms (SPRINT G2.1: PERSONA_LEAK prevention)
+            # SPRINT G3.1: Solo-specific terms - COMPREHENSIVE list
             "Ihre Agilität als Einzelperson",
             "Agilität als Einzelperson",
-            "Solo-Selbstständige",
-            "Solo-Berater",
-            "Einzelunternehmer",
             "als Einzelperson",
-            "Your agility as a solo",
-            "as a solo professional",
-        ],
-        "kmu": [
-            # SPRINT G2.1: Solo-specific terms that MUST NOT appear in KMU reports
-            "Ihre Agilität als Einzelperson",
-            "Agilität als Einzelperson",
             "Solo-Selbstständige",
+            "Solo-Selbstständigen",
+            "Solo-Selbstständiger",
             "Solo-Berater",
+            "Solo-Beraterin",
             "Einzelunternehmer",
-            "als Einzelperson",
+            "Einzelunternehmerin",
+            "Freiberufler",
+            "Freiberuflerin",
+            "freiberuflich",
+            "Selbstständiger",
+            "Selbstständige",
             "Ihre persönliche Kapazität",
+            "persönliche Kapazität",
+            # English Solo terms
             "Your agility as a solo",
             "as a solo professional",
             "solo entrepreneur",
             "as an individual",
+            "individual capacity",
+            "solo practitioner",
+            "freelancer",
+            "freelance",
+        ],
+        "kmu": [
+            # SPRINT G3.1: Solo-specific terms - COMPREHENSIVE list for KMU
+            "Ihre Agilität als Einzelperson",
+            "Agilität als Einzelperson",
+            "als Einzelperson",
+            "Solo-Selbstständige",
+            "Solo-Selbstständigen",
+            "Solo-Selbstständiger",
+            "Solo-Berater",
+            "Solo-Beraterin",
+            "Einzelunternehmer",
+            "Einzelunternehmerin",
+            "Ihre persönliche Kapazität",
+            "persönliche Kapazität",
+            # English Solo terms
+            "Your agility as a solo",
+            "as a solo professional",
+            "solo entrepreneur",
+            "as an individual",
+            "individual capacity",
+            "solo practitioner",
             # Freelancer-specific terms inappropriate for 11-100 companies
             "Freiberufler",
+            "Freiberuflerin",
             "freiberuflich",
             "Selbstständiger",
+            "Selbstständige",
+            "freelancer",
+            "freelance",
         ],
+    }
+
+    # SPRINT G3.1: Replacement mappings for size-inappropriate terms
+    SIZE_REPLACEMENTS = {
+        "team": {
+            "als Einzelperson": "als kleines Team",
+            "Ihre Agilität als Einzelperson": "Ihre Agilität als kleines Team",
+            "Agilität als Einzelperson": "Agilität als kleines Team",
+            "Solo-Selbstständige": "kleine Teams",
+            "Solo-Selbstständigen": "kleinen Teams",
+            "Solo-Selbstständiger": "kleines Team",
+            "Solo-Berater": "Beratungsteam",
+            "Einzelunternehmer": "kleines Unternehmen",
+            "Freiberufler": "Beratungsteam",
+            "freiberuflich": "als Team",
+            "Selbstständiger": "kleines Team",
+            "Selbstständige": "kleine Teams",
+            "Ihre persönliche Kapazität": "Ihre Teamkapazität",
+            # English
+            "as a solo professional": "as a small team",
+            "solo entrepreneur": "small business",
+            "as an individual": "as a team",
+            "Your agility as a solo": "Your agility as a small team",
+            "freelancer": "consulting team",
+            "freelance": "team-based",
+        },
+        "kmu": {
+            "als Einzelperson": "als Unternehmen",
+            "Ihre Agilität als Einzelperson": "Ihre Agilität als KMU",
+            "Agilität als Einzelperson": "Agilität als KMU",
+            "Solo-Selbstständige": "KMU",
+            "Solo-Selbstständigen": "KMU",
+            "Solo-Selbstständiger": "KMU",
+            "Solo-Berater": "Beratungsunternehmen",
+            "Einzelunternehmer": "Unternehmen",
+            "Freiberufler": "Fachteam",
+            "freiberuflich": "unternehmensintern",
+            "Selbstständiger": "Unternehmen",
+            "Selbstständige": "Unternehmen",
+            "Ihre persönliche Kapazität": "Ihre Unternehmenskapazität",
+            # English
+            "as a solo professional": "as a company",
+            "solo entrepreneur": "SME",
+            "as an individual": "as a company",
+            "Your agility as a solo": "Your agility as an SME",
+            "freelancer": "professional team",
+            "freelance": "company-based",
+        },
     }
 
     # SPRINT N: Hard-Stop Configuration
@@ -594,13 +673,41 @@ class ReportValidator:
                         )
                     )
 
+    # SPRINT G3.3: Whitelist for standard phrases that may repeat intentionally
+    REDUNDANCY_WHITELIST = [
+        # ROI/Business disclaimers
+        "return on investment",
+        "roi nach 12 monaten",
+        "amortisation",
+        "payback",
+        # AI Act standard references
+        "ai act",
+        "hochrisiko",
+        "high-risk",
+        "konformität",
+        "compliance",
+        # Standard KI references
+        "künstliche intelligenz",
+        "artificial intelligence",
+        "machine learning",
+        "maschinelles lernen",
+        # Short standard phrases
+        "datenschutz",
+        "dsgvo",
+        "gdpr",
+    ]
+
     def _check_redundancy(self) -> None:
         """
-        Sprint G2.4: Check for redundant long sentences across sections.
+        Sprint G2.4/G3.3: Check for redundant long sentences across sections.
 
         Warns when:
-        - A sentence >15 words appears identically or 85% similar in ≥2 sections
+        - A sentence >20 words appears identically or 85% similar in ≥2 sections
         - Long branch/offering descriptions appear after strategic_context_block
+
+        Sprint G3.3 tuning:
+        - Increased threshold from 15 to 20 words
+        - Added whitelist for standard phrases (ROI, AI Act, etc.)
 
         This is informational only (WARNING, not CRITICAL).
         """
@@ -615,16 +722,20 @@ class ReportValidator:
             sentences = re.split(r'[.!?]\s+', content)
 
             for sentence in sentences:
-                # Only check sentences with >15 words
+                # SPRINT G3.3: Increased threshold from 15 to 20 words
                 words = sentence.split()
-                if len(words) < 15:
+                if len(words) < 20:
                     continue
 
                 # Normalize for comparison
                 normalized = re.sub(r'\s+', ' ', sentence.lower().strip())
 
                 # Skip very short normalized sentences
-                if len(normalized) < 50:
+                if len(normalized) < 60:
+                    continue
+
+                # SPRINT G3.3: Skip if contains whitelisted standard phrases
+                if any(phrase in normalized for phrase in self.REDUNDANCY_WHITELIST):
                     continue
 
                 if normalized not in sentence_occurrences:
@@ -632,8 +743,11 @@ class ReportValidator:
                 sentence_occurrences[normalized].append(section_name)
 
         # Report redundancies (appearing in ≥2 sections)
+        redundancy_count = 0
+        max_redundancy_warnings = 5  # SPRINT G3.3: Limit warnings to avoid flooding
+
         for normalized, sections_list in sentence_occurrences.items():
-            if len(sections_list) >= 2:
+            if len(sections_list) >= 2 and redundancy_count < max_redundancy_warnings:
                 # Only report once per unique redundancy
                 unique_sections = list(dict.fromkeys(sections_list))
                 if len(unique_sections) >= 2:
@@ -650,6 +764,7 @@ class ReportValidator:
                             details=f"Wiederholter Text: \"{preview}\" in {len(unique_sections)} Sektionen",
                         )
                     )
+                    redundancy_count += 1
 
 
 def validate_report(sections: Dict[str, Any], briefing: Dict[str, Any]) -> bool:
@@ -663,19 +778,53 @@ def filter_size_inappropriate_content(content: str, unternehmensgroesse: str) ->
     """
     PLATIN+ Post-Filter: Ersetzt size-inappropriate Begriffe im Content.
 
-    Sprint N3.1: Für Solo-Profile wird apply_solo_persona_filter() aufgerufen,
-    das Phrasen wie "Team aufbauen", "Mitarbeiter einstellen", "Fachbereich"
-    durch Solo-passende Alternativen ersetzt.
+    Sprint N3.1: Für Solo-Profile wird apply_solo_persona_filter() aufgerufen.
+    Sprint G3.1: Für Team/KMU wird apply_size_persona_filter() aufgerufen,
+    das Solo-spezifische Phrasen durch Team/KMU-passende Alternativen ersetzt.
     """
+    import logging
+    import re
+
+    log = logging.getLogger(__name__)
+
     if not content or not isinstance(content, str):
         return content
 
     size_raw = unternehmensgroesse.lower() if unternehmensgroesse else ""
 
-    # Solo-spezifische Ersetzungen via apply_solo_persona_filter
+    # Determine size category
     if "solo" in size_raw or "1" in size_raw or "freiberuf" in size_raw:
+        size_key = "solo"
+    elif "team" in size_raw or "klein" in size_raw or "2" in size_raw:
+        size_key = "team"
+    else:
+        size_key = "kmu"
+
+    # Solo-spezifische Ersetzungen via apply_solo_persona_filter
+    if size_key == "solo":
         from services.prompt_enhancer import apply_solo_persona_filter
         content = apply_solo_persona_filter(content)
+    else:
+        # SPRINT G3.1: Team/KMU-spezifische Ersetzungen
+        replacements = ReportValidator.SIZE_REPLACEMENTS.get(size_key, {})
+        if replacements:
+            replacements_made = []
+            # Sort by length (longest first) to avoid partial matches
+            sorted_replacements = sorted(
+                replacements.items(),
+                key=lambda x: len(x[0]),
+                reverse=True
+            )
+            for term, replacement in sorted_replacements:
+                if term.lower() in content.lower():
+                    # Case-insensitive replacement
+                    pattern = re.compile(re.escape(term), re.IGNORECASE)
+                    if pattern.search(content):
+                        content = pattern.sub(replacement, content)
+                        replacements_made.append(f"{term} → {replacement}")
+
+            if replacements_made:
+                log.debug(f"🔧 Size-Persona-Filter ({size_key}): {len(replacements_made)} Ersetzungen")
 
     return content
 
