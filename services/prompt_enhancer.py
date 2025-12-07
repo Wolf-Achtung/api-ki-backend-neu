@@ -316,42 +316,6 @@ SOLO_FORBIDDEN_TERMS: List[str] = [
     "departments",
 ]
 
-# Replacement mapping for Solo context (extends SOLO_GOVERNANCE_REPLACEMENTS)
-SOLO_PERSONA_REPLACEMENTS: Dict[str, str] = {
-    # Team → Capacity/Structure
-    "team aufbauen": "Kapazität erweitern",
-    "team": "Kapazität",
-    "teams": "Ressourcen",
-    "teamstruktur": "Arbeitsstruktur",
-    "teamwork": "Zusammenarbeit mit Externen",
-    "teammitglieder": "Projektbeteiligte",
-    "teamrollen": "Aufgabenverteilung",
-    # Employees → Resources
-    "mitarbeiter": "Ressourcen",
-    "mitarbeitende": "Beteiligte",
-    "mitarbeiter einstellen": "Ressourcen smart bündeln",
-    "mitarbeiterschulung": "Weiterbildung",
-    "personalstrategien": "Kapazitätsplanung",
-    "personal": "Kapazität",
-    "belegschaft": "Arbeitskapazität",
-    # Department → Work area
-    "fachbereich": "Arbeitsfeld",
-    "fachbereiche": "Arbeitsbereiche",
-    "abteilung": "Arbeitsfeld",
-    "abteilungen": "Arbeitsbereiche",
-    "bereichsleiter": "Verantwortliche:r",
-    "bereichsübergreifend": "übergreifend",
-    # English
-    "team building": "capacity building",
-    "team members": "collaborators",
-    "hire employees": "bundle resources smartly",
-    "staff": "capacity",
-    "department": "work area",
-    "departments": "work areas",
-    # Benchmark/Comparison context
-    "ihre vergleichsgruppe": "Ihre Vergleichsgruppe",  # Keep as-is for solo
-}
-
 
 def apply_solo_persona_filter(text: str) -> str:
     """
@@ -409,52 +373,6 @@ def simplify_solo_governance(text: str, company_size: str) -> str:
         return text
 
     return apply_solo_persona_filter(text)
-
-
-def apply_solo_persona_filter(text: str, company_size: str) -> str:
-    """
-    SPRINT N: Eliminiert Team/KMU-Begriffe aus Solo-Reports.
-
-    Wendet SOLO_PERSONA_REPLACEMENTS an, um unangemessene Begriffe
-    durch Solo-passende Alternativen zu ersetzen.
-
-    Args:
-        text: Der zu filternde Text
-        company_size: Unternehmensgröße ('solo', 'team', 'kmu')
-
-    Returns:
-        Gefilterter Text für Solo, unverändert für andere Größen
-    """
-    if company_size != "solo":
-        return text
-
-    result = text
-    replacements_made = []
-
-    # Sort by length (longest first) to avoid partial replacements
-    sorted_terms = sorted(
-        SOLO_PERSONA_REPLACEMENTS.items(),
-        key=lambda x: len(x[0]),
-        reverse=True
-    )
-
-    for forbidden_term, replacement in sorted_terms:
-        # Case-insensitive replacement with word boundaries
-        # Use word boundary for short terms to avoid false positives
-        if len(forbidden_term) <= 6:
-            pattern = re.compile(r'\b' + re.escape(forbidden_term) + r'\b', re.IGNORECASE)
-        else:
-            pattern = re.compile(re.escape(forbidden_term), re.IGNORECASE)
-
-        if pattern.search(result):
-            result = pattern.sub(replacement, result)
-            replacements_made.append(f"{forbidden_term} → {replacement}")
-
-    if replacements_made:
-        log.info(f"🔧 Solo-Persona-Filter: {len(replacements_made)} Ersetzungen angewendet")
-        log.debug(f"   Details: {replacements_made[:5]}...")
-
-    return result
 
 
 def check_solo_persona_leaks(text: str, company_size: str) -> List[str]:
