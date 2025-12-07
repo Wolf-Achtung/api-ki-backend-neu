@@ -6,12 +6,17 @@ Optimized for ki-sicherheit.jetzt backend
 This service works WITH the existing prompt_loader.py system.
 It loads prompts via prompt_loader, injects context, and returns enhanced prompts.
 
-Version: 2.7.0-PLATIN++ (Sprint N - Persona Leak Elimination + Length Stabilization)
+Version: 2.8.0-PLATIN++ (Sprint G2.4 - Redundanzabbau & Kurzlabel-System)
 
 SPRINT N CHANGES:
 - Extended SOLO_FORBIDDEN_TERMS list to prevent team/KMU terminology leaks
 - Added SOLO_REPLACEMENTS for automatic term substitution
 - Updated token budgets for length stabilization
+
+SPRINT G2.4 CHANGES:
+- Added BRANCH_CORE_LABEL, OFFERING_LABEL, REGULATORY_LABEL generation
+- Implemented redundancy detection and replacement system
+- Short labels replace long-form descriptions after first occurrence
 """
 from __future__ import annotations
 
@@ -22,6 +27,267 @@ from typing import Any, Dict, List, Set, TypedDict, Optional
 from services.prompt_builder import PromptBuilder
 
 log = logging.getLogger(__name__)
+
+
+# =============================================================================
+# SPRINT G2.4: KURZLABEL-SYSTEM für Redundanzabbau
+# =============================================================================
+
+# Branch → short label mappings (max 8-12 words, no subclauses)
+BRANCH_CORE_LABELS_DE: Dict[str, str] = {
+    "beratung": "KI-gestützte Prozess- & Strategieberatung",
+    "consulting": "KI-gestützte Prozess- & Strategieberatung",
+    "it_software": "KI-gestützte Softwareentwicklung & IT-Dienstleistungen",
+    "finanzen": "KI-gestützte Analyse & Reporting für Finanzdienstleister",
+    "versicherung": "KI-gestützte Risikoanalyse & Schadenbearbeitung",
+    "handel": "KI-gestützter E-Commerce & Handelsoptimierung",
+    "industrie": "KI-gestützte Fertigung & Prozessautomatisierung",
+    "gesundheit": "KI-gestützte Diagnostik & Patientenversorgung",
+    "marketing": "KI-gestützte Content-Erstellung & Kampagnenoptimierung",
+    "recht": "KI-gestützte Dokumentenanalyse & Rechtsrecherche",
+    "bildung": "KI-gestützte Lernplattformen & Bildungsservices",
+    "immobilien": "KI-gestützte Immobilienbewertung & -verwaltung",
+    "logistik": "KI-gestützte Lieferketten- & Routenoptimierung",
+    "energie": "KI-gestütztes Energiemanagement & Netzoptimierung",
+    "medien": "KI-gestützte Content-Produktion & Medienanalyse",
+    "tourismus": "KI-gestützte Buchungssysteme & Reiseplanung",
+    "handwerk": "KI-gestützte Auftragsplanung & Ressourcensteuerung",
+    "gastronomie": "KI-gestützte Bestellsysteme & Küchenoptimierung",
+    "landwirtschaft": "KI-gestützte Ertragsoptimierung & Precision Farming",
+}
+
+BRANCH_CORE_LABELS_EN: Dict[str, str] = {
+    "beratung": "AI-driven business & process consulting",
+    "consulting": "AI-driven business & process consulting",
+    "it_software": "AI-powered software development & IT services",
+    "finanzen": "AI-driven analytics & reporting for financial services",
+    "versicherung": "AI-powered risk analysis & claims processing",
+    "handel": "AI-driven e-commerce & retail optimization",
+    "industrie": "AI-powered manufacturing & process automation",
+    "gesundheit": "AI-driven diagnostics & patient care",
+    "marketing": "AI-powered content creation & campaign optimization",
+    "recht": "AI-driven document analysis & legal research",
+    "bildung": "AI-powered learning platforms & education services",
+    "immobilien": "AI-driven property valuation & management",
+    "logistik": "AI-powered supply chain & route optimization",
+    "energie": "AI-driven energy management & grid optimization",
+    "medien": "AI-powered content production & media analytics",
+    "tourismus": "AI-driven booking systems & travel planning",
+    "handwerk": "AI-powered scheduling & resource management",
+    "gastronomie": "AI-driven ordering systems & kitchen optimization",
+    "landwirtschaft": "AI-powered yield optimization & precision farming",
+}
+
+# Offering labels (max 6-10 words)
+OFFERING_LABELS_DE: Dict[str, str] = {
+    "beratung": "KI-Readiness-Analysen & Workflow-Automatisierung",
+    "consulting": "KI-Readiness-Analysen & Workflow-Automatisierung",
+    "it_software": "Softwareentwicklung & KI-Integration",
+    "finanzen": "Finanzanalyse & automatisiertes Reporting",
+    "versicherung": "Schadenbearbeitung & Risikobewertung",
+    "handel": "E-Commerce-Optimierung & Bestandsmanagement",
+    "industrie": "Produktionssteuerung & Qualitätssicherung",
+    "gesundheit": "Diagnostik-Unterstützung & Patientendokumentation",
+    "marketing": "Content-Generierung & Performance-Analyse",
+    "recht": "Vertragsanalyse & Due-Diligence-Automatisierung",
+    "bildung": "Lernmanagement & personalisierte Bildung",
+    "immobilien": "Objektbewertung & Mieterverwaltung",
+    "logistik": "Routenplanung & Lageroptimierung",
+    "energie": "Verbrauchsanalyse & Lastprognose",
+    "medien": "Content-Produktion & Reichweitenanalyse",
+    "tourismus": "Buchungsmanagement & Kundenerlebnis",
+    "handwerk": "Auftragsplanung & Materialwirtschaft",
+    "gastronomie": "Bestellmanagement & Küchenplanung",
+    "landwirtschaft": "Ertragsplanung & Ressourcenmanagement",
+}
+
+OFFERING_LABELS_EN: Dict[str, str] = {
+    "beratung": "AI readiness & workflow automation",
+    "consulting": "AI readiness & workflow automation",
+    "it_software": "Software development & AI integration",
+    "finanzen": "Financial analysis & automated reporting",
+    "versicherung": "Claims processing & risk assessment",
+    "handel": "E-commerce optimization & inventory management",
+    "industrie": "Production control & quality assurance",
+    "gesundheit": "Diagnostic support & patient documentation",
+    "marketing": "Content generation & performance analytics",
+    "recht": "Contract analysis & due diligence automation",
+    "bildung": "Learning management & personalized education",
+    "immobilien": "Property valuation & tenant management",
+    "logistik": "Route planning & warehouse optimization",
+    "energie": "Consumption analysis & load forecasting",
+    "medien": "Content production & reach analytics",
+    "tourismus": "Booking management & customer experience",
+    "handwerk": "Job scheduling & material management",
+    "gastronomie": "Order management & kitchen planning",
+    "landwirtschaft": "Yield planning & resource management",
+}
+
+# Regulatory labels (only for regulated industries)
+REGULATED_BRANCHES = {"finanzen", "versicherung", "gesundheit", "recht"}
+
+REGULATORY_LABELS_DE: Dict[str, str] = {
+    "finanzen": "Ihr Compliance-Rahmen (BAIT, VAIT, MaRisk, DSGVO)",
+    "versicherung": "Ihr Compliance-Rahmen (VAIT, Solvency II, DSGVO)",
+    "gesundheit": "Ihr Compliance-Rahmen (MDR, DSGVO, Patientendatenschutz)",
+    "recht": "Ihr Compliance-Rahmen (BRAO, DSGVO, Berufsgeheimnis)",
+}
+
+REGULATORY_LABELS_EN: Dict[str, str] = {
+    "finanzen": "Your compliance framework (BAIT, VAIT, MaRisk, GDPR)",
+    "versicherung": "Your compliance framework (VAIT, Solvency II, GDPR)",
+    "gesundheit": "Your compliance framework (MDR, GDPR, patient data protection)",
+    "recht": "Your compliance framework (BRAO, GDPR, professional confidentiality)",
+}
+
+
+def generate_short_labels(briefing_data: Dict[str, Any], lang: str = "de") -> Dict[str, str]:
+    """
+    Sprint G2.4: Generate short labels for a profile.
+
+    Args:
+        briefing_data: Briefing data with branche, hauptleistung, etc.
+        lang: Language code ('de' or 'en')
+
+    Returns:
+        Dict with BRANCH_CORE_LABEL, OFFERING_LABEL, REGULATORY_LABEL
+    """
+    branche = briefing_data.get("branche", "").lower().strip()
+
+    # Select language-specific mappings
+    if lang == "en":
+        branch_labels = BRANCH_CORE_LABELS_EN
+        offering_labels = OFFERING_LABELS_EN
+        regulatory_labels = REGULATORY_LABELS_EN
+    else:
+        branch_labels = BRANCH_CORE_LABELS_DE
+        offering_labels = OFFERING_LABELS_DE
+        regulatory_labels = REGULATORY_LABELS_DE
+
+    # Get labels with fallbacks
+    branch_core = branch_labels.get(branche, branch_labels.get("beratung", "KI-Beratung"))
+    offering = offering_labels.get(branche, offering_labels.get("beratung", "KI-Lösungen"))
+
+    # Regulatory label only for regulated industries
+    regulatory = ""
+    if branche in REGULATED_BRANCHES:
+        regulatory = regulatory_labels.get(branche, "")
+
+    return {
+        "BRANCH_CORE_LABEL": branch_core,
+        "OFFERING_LABEL": offering,
+        "REGULATORY_LABEL": regulatory,
+    }
+
+
+# =============================================================================
+# SPRINT G2.4: REDUNDANZ-ERKENNUNG & ERSETZUNG
+# =============================================================================
+
+class RedundancyTracker:
+    """
+    Tracks long sentences that have already appeared in the report.
+    Used to replace repeated descriptions with short labels.
+    """
+
+    def __init__(self) -> None:
+        self.seen_long_sentences: Set[str] = set()
+        self.first_occurrence_section: Dict[str, str] = {}
+
+    def reset(self) -> None:
+        """Reset tracker for new report generation."""
+        self.seen_long_sentences.clear()
+        self.first_occurrence_section.clear()
+
+    def normalize_sentence(self, sentence: str) -> str:
+        """Normalize a sentence for comparison."""
+        return re.sub(r'\s+', ' ', sentence.lower().strip())
+
+    def is_redundant(self, sentence: str, min_words: int = 12) -> bool:
+        """Check if a sentence is redundant (already seen)."""
+        words = sentence.split()
+        if len(words) < min_words:
+            return False
+        normalized = self.normalize_sentence(sentence)
+        return normalized in self.seen_long_sentences
+
+    def mark_seen(self, sentence: str, section_name: str, min_words: int = 12) -> None:
+        """Mark a sentence as seen."""
+        words = sentence.split()
+        if len(words) >= min_words:
+            normalized = self.normalize_sentence(sentence)
+            if normalized not in self.seen_long_sentences:
+                self.seen_long_sentences.add(normalized)
+                self.first_occurrence_section[normalized] = section_name
+
+
+# Global redundancy tracker (reset per report generation)
+_redundancy_tracker = RedundancyTracker()
+
+
+def get_redundancy_tracker() -> RedundancyTracker:
+    """Get the global redundancy tracker."""
+    return _redundancy_tracker
+
+
+def reset_redundancy_tracker() -> None:
+    """Reset redundancy tracker for new report."""
+    _redundancy_tracker.reset()
+    log.debug("🔄 Redundancy tracker reset")
+
+
+def apply_redundancy_filter(text: str, section_name: str, short_labels: Dict[str, str]) -> str:
+    """
+    Sprint G2.4: Replace redundant long sentences with short labels.
+
+    Args:
+        text: Text to filter
+        section_name: Current section name
+        short_labels: Dict with BRANCH_CORE_LABEL, OFFERING_LABEL, etc.
+
+    Returns:
+        Filtered text with redundancies replaced
+    """
+    if not text or not short_labels:
+        return text
+
+    tracker = get_redundancy_tracker()
+    result = text
+    replacements_made = 0
+
+    # Patterns for long branch/offering descriptions (40-400 chars)
+    # These patterns match typical long-form descriptions
+    long_desc_patterns = [
+        # German patterns
+        r'((?:Beratung|Consulting|Dienstleistung)[^.,]{40,300}(?:Prozess|Strategie|KI|AI|Compliance|Transformation))',
+        r'((?:Business|Digital)[^.,]{40,300}(?:consulting|transformation|services))',
+        # English patterns
+        r'((?:consulting|advisory)[^.,]{40,300}(?:process|strategy|AI|compliance|transformation))',
+    ]
+
+    branch_label = short_labels.get("BRANCH_CORE_LABEL", "")
+    offering_label = short_labels.get("OFFERING_LABEL", "")
+    replacement = f"({branch_label})"
+    if offering_label:
+        replacement = f"({branch_label}, {offering_label})"
+
+    for pattern in long_desc_patterns:
+        matches = re.finditer(pattern, result, re.IGNORECASE)
+        for match in matches:
+            sentence = match.group(1)
+            if tracker.is_redundant(sentence):
+                # Replace with short label
+                result = result.replace(sentence, replacement, 1)
+                replacements_made += 1
+                log.debug(f"🔄 Replaced redundant description in {section_name}")
+            else:
+                # First occurrence - mark as seen
+                tracker.mark_seen(sentence, section_name)
+
+    if replacements_made > 0:
+        log.info(f"📝 Sprint G2.4: {replacements_made} redundancies replaced in {section_name}")
+
+    return result
 
 
 # =============================================================================
@@ -1182,6 +1448,42 @@ Nutze den Strategischen Kontext wie folgt:
         # d) All other prompts - no specific guardrails instructions
         return ""
 
+    def _build_short_label_instructions(self, briefing_data: Dict[str, Any]) -> str:
+        """
+        Sprint G2.4: Build short-label instructions for redundancy reduction.
+
+        Returns instruction block telling LLM to use short labels instead of
+        repeating long-form branch/offering descriptions.
+        """
+        short_labels = generate_short_labels(briefing_data, lang="de")
+        branch_label = short_labels.get("BRANCH_CORE_LABEL", "")
+        offering_label = short_labels.get("OFFERING_LABEL", "")
+        regulatory_label = short_labels.get("REGULATORY_LABEL", "")
+
+        if not branch_label:
+            return ""
+
+        instructions = f"""
+## Anti-Redundanz: Kurzlabels verwenden (Sprint G2.4)
+
+**Verwende ausschließlich diese Kurzlabels für Kontextbezüge:**
+- **Branchen-Fokus:** {branch_label}
+- **Hauptleistung:** {offering_label}
+"""
+        if regulatory_label:
+            instructions += f"- **Compliance:** {regulatory_label}\n"
+
+        instructions += """
+**WICHTIG:**
+- Wiederhole niemals vollständige Branchen- oder Leistungsbeschreibungen (>12 Wörter)
+- Nutze stattdessen die Kurzlabels oben
+- Der strategische Kontextblock enthält bereits die ausführliche Beschreibung
+
+---
+
+"""
+        return instructions
+
     def enhance_prompt(self, prompt_name: str, briefing_data: Dict[str, Any]) -> str:
         """
         Load a prompt and inject context.
@@ -1269,9 +1571,13 @@ Nutze den Strategischen Kontext wie folgt:
                 prompt_name, strategic_context_raw
             )
 
-            # Combine: strategic block + alignment instructions + guardrails instructions
+            # === STEP 1d: Add short-label instructions (Sprint G2.4) ===
+            # Reduces redundancy by telling LLM to use compact labels
+            short_label_instructions = self._build_short_label_instructions(briefing_data)
+
+            # Combine: strategic block + alignment + guardrails + short-labels
             full_context_injection = (
-                strategic_block + alignment_instructions + guardrails_instructions
+                strategic_block + alignment_instructions + guardrails_instructions + short_label_instructions
             )
 
             # Find the best injection point: after Developer comment, before HTML
