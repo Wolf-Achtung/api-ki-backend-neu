@@ -1,14 +1,20 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.2 -->
+<!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
 <!-- SECTION: roadmap_12m -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, COMPANY_SIZE -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 2800 (solo:0.8x=2240, team:1.0x=2800, sme:1.15x=3220) -->
 <!--
 GOAL: 12-Month Roadmap with milestones, building on 90-day results.
 
-STRUCTURE BY SIZE:
+SHORT LABELS (MANDATORY!):
+- {{BRANCH_CORE_LABEL}} = Industry in 8-12 words
+- {{BRANCH_CONTEXT_LABEL}} = Industry in 4-6 words
+- {{OFFERING_LABEL}} = Main service in 6-10 words
+- NO long industry texts in output!
+
+STRUCTURE BY SIZE (max 3 main sections):
 - Solo: Time-based phases (Q1, Q2, Q3-4)
 - Team: Time-based phases with roles
 - SME: Block structure (Tech, Data, Org, Product, Compliance) + Rollout
@@ -23,22 +29,42 @@ ANTI-REDUNDANCY (STRICT!):
 - Quick Wins → DO NOT repeat
 - Tools → DO NOT repeat
 - Focus: WHAT COMES AFTER the first 90 days?
+- On overlap: use cross-reference (→ see Section X)
 
 PERSONA VARIATIONS (COMPANY_SIZE):
 - solo: own workflows, self-review, personal routine
-        FORBIDDEN: team, department, employees, HR
 - team: AI coordinator, shared standards, review rounds
 - sme: departments, governance board, rollout plan, compliance
+
+SPRINT G5 - PERSONA HARD-GUARDS (STRICT!):
+{% if COMPANY_SIZE == "solo" %}
+SOLO MODE - FORBIDDEN:
+- "Team/Teams" → "Capacity/Resources"
+- "Department" → "Work area"
+- "Employees" → "external support"
+- "HR/Division" → do not use
+{% elif COMPANY_SIZE == "team" %}
+TEAM MODE - FORBIDDEN:
+- "Department/Division" → "Area"
+- "Unit/Corporation" → do not use
+- "Governance Board" → "Team Lead"
+- Solo terms: "individual", "alone"
+{% else %}
+SME MODE - FORBIDDEN:
+- "Corporation/Division/Unit" → do not use
+- Solo terms: "individual", "alone", "personal"
+- Avoid governance jargon overload
+{% endif %}
 -->
 
-## 12-Month Roadmap for {{HAUPTLEISTUNG}}
+## 12-Month Roadmap for {{OFFERING_LABEL}}
 
 {% if COMPANY_SIZE == "solo" %}
 Building on the first 90 days – focus on sustainable integration and expansion.
 
 ### Q1 (Months 1–3): Solidify Foundation
 - Turn successful workflows from 90-day phase into routine
-- Test 2–3 additional use cases from {{BRANCHE_LABEL}}
+- Test 2–3 additional use cases from {{BRANCH_CONTEXT_LABEL}}
 - Expand personal prompt library to 20+ templates
 
 **🎯 Milestone Q1:** 10+ h/month stable time savings.
