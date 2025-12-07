@@ -32,10 +32,15 @@ ANTI-REDUNDANCY:
 - Here ONLY the essence, NO anticipation
 
 GUARDRAILS: Respect stated guardrails from strategic context.
+
+IMPORTANT:
+- Do NOT output any h1/h2/h3 headings.
+- The template frame provides all headings.
+- Output ONLY <p> elements, without "Executive Summary" headline.
 -->
 
 <section class="section executive-summary">
-  <h2>Executive Summary</h2>
+  <!-- NO h2 here - template provides heading -->
 
   <p>
     {% if COMPANY_SIZE == "solo" %}

@@ -32,10 +32,15 @@ ANTI-REDUNDANZ:
 - Hier NUR die Essenz, KEINE Vorwegnahme
 
 GUARDRAILS: Respektiere angegebene Leitplanken aus strategischem Kontext.
+
+WICHTIG:
+- Gib KEINE eigenen h1/h2/h3-Überschriften aus.
+- Der Template-Rahmen stellt bereits die Überschriften.
+- Erzeuge NUR <p>-Elemente, ohne "Executive Summary"-Headline.
 -->
 
 <section class="section executive-summary">
-  <h2>Executive Summary</h2>
+  <!-- KEINE h2 hier - Template stellt Überschrift bereit -->
 
   <p>
     {% if COMPANY_SIZE == "solo" %}
