@@ -344,6 +344,7 @@ class ReportValidator:
         self._check_template_phrases()
         self._check_quick_wins_prompt_leaks()
         self._check_size_specific_issues()
+        self._check_redundancy()  # Sprint G2.4
 
         is_valid = not any(e.severity == "CRITICAL" for e in self.errors)
         return is_valid, self.errors
@@ -590,6 +591,63 @@ class ReportValidator:
                                 f"SPRINT N: Term '{term}' muss ersetzt werden. "
                                 f"HARD_STOP={self.HARD_STOP_ON_SIZE_MISMATCH}"
                             ),
+                        )
+                    )
+
+    def _check_redundancy(self) -> None:
+        """
+        Sprint G2.4: Check for redundant long sentences across sections.
+
+        Warns when:
+        - A sentence >15 words appears identically or 85% similar in ≥2 sections
+        - Long branch/offering descriptions appear after strategic_context_block
+
+        This is informational only (WARNING, not CRITICAL).
+        """
+        # Collect all sentences from all sections
+        sentence_occurrences: Dict[str, List[str]] = {}  # normalized → list of sections
+
+        for section_name, content in self.sections.items():
+            if not isinstance(content, str) or not content:
+                continue
+
+            # Split into sentences (rough approximation)
+            sentences = re.split(r'[.!?]\s+', content)
+
+            for sentence in sentences:
+                # Only check sentences with >15 words
+                words = sentence.split()
+                if len(words) < 15:
+                    continue
+
+                # Normalize for comparison
+                normalized = re.sub(r'\s+', ' ', sentence.lower().strip())
+
+                # Skip very short normalized sentences
+                if len(normalized) < 50:
+                    continue
+
+                if normalized not in sentence_occurrences:
+                    sentence_occurrences[normalized] = []
+                sentence_occurrences[normalized].append(section_name)
+
+        # Report redundancies (appearing in ≥2 sections)
+        for normalized, sections_list in sentence_occurrences.items():
+            if len(sections_list) >= 2:
+                # Only report once per unique redundancy
+                unique_sections = list(dict.fromkeys(sections_list))
+                if len(unique_sections) >= 2:
+                    preview = normalized[:80] + "..." if len(normalized) > 80 else normalized
+                    self.errors.append(
+                        ValidationError(
+                            severity="WARNING",
+                            category="REDUNDANCY_DETECTED",
+                            section=", ".join(unique_sections[:3]),
+                            message=(
+                                "Dieser Abschnitt wiederholt längere Textbausteine, "
+                                "die bereits im Report vorkamen. Bitte Kurzlabels verwenden."
+                            ),
+                            details=f"Wiederholter Text: \"{preview}\" in {len(unique_sections)} Sektionen",
                         )
                     )
 

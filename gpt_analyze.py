@@ -2071,7 +2071,13 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     branche = briefing.get("BRANCHE_LABEL") or briefing.get("branche", "Ihr Unternehmen")
     size_label = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
     hauptleistung = briefing.get("hauptleistung", briefing.get("HAUPTLEISTUNG", ""))
-    
+
+    # SPRINT G2.4: Generate short labels for redundancy reduction
+    from services.prompt_enhancer import generate_short_labels
+    short_labels = generate_short_labels(briefing, lang="de")
+    branch_core_label = short_labels.get("BRANCH_CORE_LABEL", branche)
+    offering_label = short_labels.get("OFFERING_LABEL", "")
+
     # 🎯 Size-Erkennung (solo/team/kmu) wie im Briefing spezifiziert
     size_raw = (briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse") or "").lower()
     
@@ -3527,9 +3533,10 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     vorhandenen Daten und strategischen Prioritäten ab.
   </p>
 </div>""",
-        # SPRINT G2.3: Fallback für tools_empfehlungen (size-aware)
+        # SPRINT G2.3/G2.4: Fallback für tools_empfehlungen (size-aware + short labels)
         "tools_empfehlungen": f"""<div class="tools-empfehlungen-fallback">
-  <h3>Empfohlene KI-Tools für {branche}</h3>
+  <h3>Empfohlene KI-Tools</h3>
+  <p class="context-label"><em>{branch_core_label}</em></p>
   <ul>
     <li><strong>ChatGPT / Claude:</strong> Texterstellung, E-Mail-Entwürfe, Content-Generierung. Einstieg ab 20 €/Monat.</li>
     <li><strong>Fireflies.ai / Otter.ai:</strong> Meeting-Transkription und automatische Protokolle. Ab 19 €/Monat.</li>
@@ -3541,9 +3548,10 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     Für <strong>{size_label}</strong> empfiehlt sich ein schrittweiser Ausbau nach messbarem Erfolg.
   </p>
 </div>""",
-        # SPRINT G2.3: Fallback für strategie_governance (size-aware)
+        # SPRINT G2.3/G2.4: Fallback für strategie_governance (size-aware + short labels)
         "strategie_governance": f"""<div class="strategie-governance-fallback">
   <h3>KI-Strategie und Governance</h3>
+  <p class="context-label"><em>{branch_core_label}</em></p>
   <p>
     Eine erfolgreiche KI-Einführung erfordert klare Verantwortlichkeiten und Richtlinien:
   </p>
@@ -3554,17 +3562,18 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     <li><strong>Schulung:</strong> Grundlegendes KI-Wissen für alle Beteiligten sicherstellen.</li>
   </ul>
   <p>
-    Für <strong>{size_label}</strong> in der Branche <strong>{branche}</strong> gilt:
-    Starten Sie pragmatisch mit einem Pilotprojekt und dokumentieren Sie Erfolge und Learnings.
+    Für <strong>{size_label}</strong> gilt: Starten Sie pragmatisch mit einem Pilotprojekt
+    und dokumentieren Sie Erfolge und Learnings.
   </p>
 </div>""",
     }
 
-    # SPRINT G2.3: Default-Fallback – Meta-Text-frei formuliert
+    # SPRINT G2.3/G2.4: Default-Fallback – Meta-Text-frei, mit Kurzlabels
     result = fallbacks.get(
         section_key,
         f"""<div class="section-content">
-  <p>KI-Einsatz für <strong>{branche}</strong> ({size_label or "Ihr Unternehmen"}) bietet Potenziale in Prozessautomatisierung, Dokumentenverarbeitung und Entscheidungsunterstützung.</p>
+  <p class="context-label"><em>{branch_core_label}</em></p>
+  <p>KI-Einsatz für <strong>{size_label or "Ihr Unternehmen"}</strong> bietet Potenziale in Prozessautomatisierung, Dokumentenverarbeitung und Entscheidungsunterstützung.</p>
   <p>Konkrete Empfehlungen richten sich nach Ihren individuellen Prioritäten und vorhandenen Ressourcen.</p>
 </div>"""
     )
