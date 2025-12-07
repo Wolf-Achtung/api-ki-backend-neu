@@ -11,14 +11,14 @@ Sie prüfen nur die Dateistruktur und Konfiguration.
 
 from pathlib import Path
 
-# Die 6 erwarteten Gold-Profile
+# Die 5 offiziellen Gold-Standard Profile (synchron mit PLATIN_TEST_PROFILES in generate_test_reports.py)
+# Sprint Fix: TEST_PROFILE_SOURCE - Diese Liste MUSS mit PLATIN_TEST_PROFILES übereinstimmen!
 EXPECTED_PROFILE_STEMS = {
-    "kmu_handel_ecommerce_advisory",
-    "kmu_industrie_production_advisory",
-    "solo_beratung_ki_assessments",
-    "solo_marketing_content_solo_agency",
-    "team_finance_insurance_advisory",
-    "team_it_software_saas_advisory",
+    "solo_beratung_ki_assessments",       # Solo, Beratung, DE - Basis-Testprofil
+    "team_it_software_saas_advisory",     # Team, IT/Software, DE - Tech-fokussiert
+    "team_finance_insurance_advisory",    # Team, Finanzen/Versicherungen, DE
+    "kmu_france_eu_core_en_gold",         # KMU, France, EU Core, EN - Internationaler Test
+    "kmu_extreme_freetext_stress",        # KMU, Stress-Test, Extreme Freetext - Edge Case
 }
 
 
