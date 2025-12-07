@@ -3586,7 +3586,13 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
     }
     
     prompt_key = prompt_map.get(section_name)
-    
+
+    # =========================================================================
+    # Sprint G1.2 FIX: LLM-Parameter IMMER VOR dem try-Block definieren
+    # Verhindert "cannot access local variable 'llm'" Fehler im Legacy-Fallback
+    # =========================================================================
+    llm = _llm_params_for(section_name)
+
     # Prompt-System verwenden, wenn aktiv und Prompt vorhanden
     if USE_PROMPT_SYSTEM and prompt_key and _prompt_enhancer:
         try:
@@ -3629,9 +3635,7 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
             
             log.info("✅ Using enhanced prompt for %s (with context)", section_name)
 
-            # 4. LLM-Parameter pro Section bestimmen
-            llm = _llm_params_for(section_name)
-
+            # 4. LLM-Aufruf mit bereits definierten Parametern (llm defined before try block)
             result = _call_llm_for_section(
                 section_key=section_name,
                 prompt=prompt_text,
@@ -4372,7 +4376,14 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     # === GUARDRAILS v5: Store hits for future prompt access (Phase 2) ===
     # Risiko/Compliance-Prompts können GUARDRAILS_HITS nutzen (vorbereitet)
     _, guardrail_hits = detect_guardrails_v5(answers, report_lang)
-    answers["_guardrail_hits"] = guardrail_hits  # Store for later access
+    # =========================================================================
+    # Sprint G1.1 FIX: Speichere SERIALISIERTE Version der GuardrailHits
+    # Verhindert "Object of type GuardrailHit is not JSON serializable" Fehler
+    # bei json.dumps(briefing) in _build_prompt_vars()
+    # =========================================================================
+    answers["_guardrail_hits_text"] = guardrails_to_text(guardrail_hits)  # Text für Prompts
+    answers["_guardrail_hits_count"] = len(guardrail_hits)  # Anzahl für Logik
+    answers["_has_guardrails"] = len(guardrail_hits) > 0  # Boolean Flag
 
     log.info("[%s] 📊 Calculating realistic scores (v4.14.0-PLATIN++)...", run_id)
     score_wrap = _calculate_realistic_score(answers)
@@ -4469,9 +4480,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             sections[template_key] = ""
 
     # === GUARDRAILS_HITS for future Risk/Compliance prompts (v5.0 preparation) ===
-    # FIX: Serialize GuardrailHit objects to text to prevent JSON serialization errors
-    guardrail_hits_raw = answers.get("_guardrail_hits", [])
-    sections["GUARDRAILS_HITS"] = guardrails_to_text(guardrail_hits_raw)
+    # Sprint G1.1: Nutze bereits serialisierte Version (kein guardrails_to_text mehr nötig)
+    sections["GUARDRAILS_HITS"] = answers.get("_guardrail_hits_text", "")
 
     log.info("[%s] Copied %d label variables to sections", run_id, len(direct_copy_keys) + len(label_with_fallback))
 # === END LABELS FIX ===

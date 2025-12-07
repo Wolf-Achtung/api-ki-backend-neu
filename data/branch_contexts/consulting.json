@@ -1,0 +1,162 @@
+{
+  "branche": "consulting",
+  "display_name": "Consulting & Professional Services",
+  "description": "Professional services: Management Consulting, Strategy Advisory, Digital Transformation, AI Strategy, Cross-Border Consulting",
+
+  "typical_workflows": [
+    "Client acquisition via network, referrals and LinkedIn",
+    "Discovery calls and needs assessment (1-2h per client)",
+    "Proposal creation (customized, time-intensive: 2-4h per proposal)",
+    "Project delivery: workshops, analysis, coaching sessions",
+    "Documentation: meeting notes, reports, presentations",
+    "Follow-up: proposal tracking, client relationship management",
+    "Administration: invoicing, time tracking, accounting"
+  ],
+
+  "common_pain_points": [
+    "Business development consumes productive time: 30-40% for marketing",
+    "Proposals take too long: each needs individual customization",
+    "Standardization difficult: each client expects tailored solutions",
+    "Scaling only with more time: capacity ceiling for solo/small teams",
+    "Marketing often neglected: no time for regular content",
+    "Administration underestimated: invoices, contracts, documentation",
+    "Knowledge management missing: building each project from scratch",
+    "Pricing uncertainty: hourly rates vs. value-based pricing"
+  ],
+
+  "ai_opportunities": [
+    "Proposal automation: templates + GPT = 5 instead of 120 minutes",
+    "Content marketing: LinkedIn posts, blog articles, newsletters via GPT",
+    "Report generation: automated analyses and presentations",
+    "Meeting documentation: transcription + summary + action items",
+    "Research assistants: client analysis, market research, competitor analysis",
+    "Email automation: follow-ups, nurturing sequences, appointment confirmations",
+    "CRM automation: lead scoring, activity tracking, pipeline management",
+    "Knowledge management: RAG systems for company know-how"
+  ],
+
+  "typical_tools": [
+    "Microsoft Office / Google Workspace for documents",
+    "Excel / Google Sheets for calculations and lists",
+    "Email as primary communication channel",
+    "Zoom / Microsoft Teams for online meetings",
+    "LinkedIn for networking and marketing",
+    "Simple or no CRM (often Excel-based)",
+    "Cloud accounting software",
+    "Slack/WhatsApp for quick client communication"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Email", "Zoom", "Teams", "Slack"],
+    "documentation": ["Word", "Google Docs", "PowerPoint", "Notion"],
+    "calculation": ["Excel", "Google Sheets"],
+    "crm": ["No CRM", "Excel", "HubSpot Free", "Pipedrive", "Salesforce"],
+    "accounting": ["QuickBooks", "Xero", "FreshBooks"],
+    "marketing": ["LinkedIn", "Mailchimp", "Website"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "GPT-powered Proposal Generation",
+      "description": "Create proposals from templates in 5 instead of 30 minutes. Client data + briefing = GPT generates customized proposal with pricing, deliverables, timeline.",
+      "hours_saved": 8,
+      "tool": "GPT-4 API or ChatGPT Team",
+      "implementation": "Set up templates as prompts, workflow: client data -> GPT -> export",
+      "difficulty": "low",
+      "investment": "20-50 EUR/month"
+    },
+    {
+      "title": "Automated LinkedIn Content Pipeline",
+      "description": "Generate weekly expert content via GPT, customize, schedule. Topic list -> GPT -> 3-5 posts per week.",
+      "hours_saved": 6,
+      "tool": "GPT-4 + Buffer or Hootsuite",
+      "implementation": "Build topic backlog, prompt templates, posting schedule",
+      "difficulty": "low",
+      "investment": "15-30 EUR/month"
+    },
+    {
+      "title": "Automated Meeting Protocols",
+      "description": "Zoom/Teams recordings -> automatic transcription -> summary -> action items -> protocol via email.",
+      "hours_saved": 5,
+      "tool": "Fireflies.ai or Otter.ai",
+      "implementation": "Integration with Zoom/Teams, automatic send after meeting",
+      "difficulty": "low",
+      "investment": "19 EUR/month"
+    },
+    {
+      "title": "Email Follow-up Sequences",
+      "description": "Automatic follow-up emails after initial call, proposal, project completion. Trigger-based, personalized.",
+      "hours_saved": 4,
+      "tool": "Make.com or Zapier + Gmail",
+      "implementation": "Define triggers (e.g., 3 days after proposal), email templates, automation",
+      "difficulty": "medium",
+      "investment": "9-29 EUR/month"
+    },
+    {
+      "title": "Research Assistant for Client Analysis",
+      "description": "Automatic research on potential clients: LinkedIn profile, company website, recent news -> summary for discovery call.",
+      "hours_saved": 7,
+      "tool": "GPT-4 + Tavily API",
+      "implementation": "Script for automatic research, template for briefing",
+      "difficulty": "medium",
+      "investment": "0 EUR (with existing API)"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Central Knowledge Management with RAG",
+      "description": "All project documents, best practices, templates in a searchable knowledge base. Team finds information in seconds instead of hours.",
+      "hours_saved": 15,
+      "tool": "Notion AI or Custom RAG with Pinecone",
+      "implementation": "Collect documents, structure, set up RAG",
+      "difficulty": "high",
+      "investment": "50-200 EUR/month"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Enterprise CRM with AI Pipeline Management",
+      "description": "Automatic lead scoring, pipeline forecasts, next-best-actions for sales.",
+      "hours_saved": 25,
+      "tool": "HubSpot Enterprise + AI features",
+      "implementation": "CRM migration, define processes, train team",
+      "difficulty": "high",
+      "investment": "800-2000 EUR/month"
+    }
+  ],
+
+  "industry_specific_notes": {
+    "management_consulting": "Focus on strategic analysis, workshops, change management",
+    "it_consulting": "Technical expertise, system selection, implementation support",
+    "marketing_consulting": "Content strategy, campaign management, analytics",
+    "hr_consulting": "Recruiting, organizational development, talent management",
+    "financial_consulting": "Compliance-driven, high documentation requirements",
+    "digital_transformation": "AI strategy, process automation, technology adoption",
+    "cross_border": "International projects, EU regulations, multi-language support"
+  },
+
+  "success_metrics": [
+    "Proposal win rate: % of won projects",
+    "Time-to-proposal: hours from inquiry to proposal",
+    "Utilization rate: % productive vs. administrative time",
+    "Client lifetime value: value per client over time",
+    "Referral rate: % clients who recommend"
+  ],
+
+  "typical_pricing_models": [
+    "Hourly rates (60-250 EUR/h depending on expertise)",
+    "Daily rates (500-2500 EUR/day)",
+    "Project-based fixed fees",
+    "Retainer models (monthly)",
+    "Value-based pricing (rare for SMEs)"
+  ],
+
+  "eu_funding_relevance": {
+    "horizon_europe": "Relevant for innovation and R&D consulting projects",
+    "digital_europe": "Relevant for digital transformation consulting",
+    "interreg": "Relevant for cross-border consulting projects",
+    "erasmus_plus": "Relevant for training and capacity building consulting"
+  }
+}
