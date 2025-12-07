@@ -1,0 +1,117 @@
+{
+  "profile_id": "solo_beratung_ki_assessments",
+  "description": "Solo-Selbstständiger im Beratungsbereich mit Fokus auf KI-Readiness-Analysen",
+  "lang": "de",
+  "country": "Germany",
+  "BRANCHE_LABEL": "Beratung & Dienstleistungen",
+  "UNTERNEHMENSGROESSE_LABEL": "1 (Solo)",
+  "HAUPTLEISTUNG": "Beratung, Durchführung und Operationalisierung von KI-Readiness-Analysen für Solo-Selbstständige, kleine Unternehmen und Teams. Fokus auf Prozessdiagnose, Potenzialanalysen, KI-gestützte Dokumentations- und Textautomatisierung, Governance-Setup und der Entwicklung von pragmatischen, schnell umsetzbaren KI-Workflows.",
+  "expected_validation": {
+    "funding_flow": "DE",
+    "persona": "solo",
+    "guardrails": false,
+    "word_guarantee": 50,
+    "pdf_size_limit_mb": 10
+  },
+  "answers": {
+    "branche": "beratung",
+    "unternehmensgroesse": "solo",
+    "bundesland": "Berlin",
+    "hauptleistung": "Beratung, Durchführung und Operationalisierung von KI-Readiness-Analysen für Solo-Selbstständige, kleine Unternehmen und Teams. Fokus auf Prozessdiagnose, Potenzialanalysen, KI-gestützte Dokumentations- und Textautomatisierung, Governance-Setup und der Entwicklung von pragmatischen, schnell umsetzbaren KI-Workflows.",
+    "zielgruppen": [
+      "B2B",
+      "beratungen",
+      "soloselbststaendige",
+      "kmu"
+    ],
+    "jahresumsatz": "bis_500k",
+    "it_infrastruktur": "cloudbasiert",
+    "interne_ki_kompetenzen": "fortgeschritten",
+    "datenquellen": [
+      "crm",
+      "microsoft365",
+      "notizen",
+      "kundenfeedback",
+      "onlineformulare"
+    ],
+    "digitalisierungsgrad": "hoch",
+    "prozesse_papierlos": "ja",
+    "automatisierungsgrad": "mittel",
+    "ki_einsatz": [
+      "dokumentenerstellung",
+      "textautomatisierung",
+      "wissenstransfer",
+      "prozessoptimierung",
+      "kundenkommunikation"
+    ],
+    "ki_kompetenz": "hoch",
+    "ki_ziele": [
+      "effizienz",
+      "beschleunigung",
+      "standardisierung",
+      "qualität",
+      "skalierung"
+    ],
+    "ki_guardrails": "",
+    "ki_projekte": "Bisher wurden KI-gestützte Fragebogen-Analysen, automatisierte Beratungsvorlagen, Chat-basierte Auswertungssysteme, ein Wissens-Hub für Kundengespräche sowie Makro-Workflows für Dokumentation, Reporting und Content-Erstellung aufgebaut. Weitere Projekte betreffen KI-gestützte Kundensegmentierung und eine modulare Analysebibliothek für Assessments.",
+    "anwendungsfaelle": [
+      "automatische_dokumentation",
+      "analyseautomation",
+      "kundenkommunikation",
+      "prozessanalyse",
+      "textautomatisierung",
+      "contentproduktion"
+    ],
+    "zeitersparnis_prioritaet": "Der größte manuelle Aufwand liegt in der individuellen Auswertung von Kundendaten, der Erstellung maßgeschneiderter Empfehlungen, der Recherche zu Compliance-Themen sowie in der Dokumentation von Workshops, Onboardings und Analyseergebnissen. Zusätzlich binden wiederkehrende Text- und Content-Aufgaben unverhältnismäßig viel Zeit.",
+    "pilot_bereich": "beratung",
+    "geschaeftsmodell_evolution": "Aufbau eines skalierbaren, KI-gestützten Analyse- und Beratungssystems mit modular buchbaren Leistungspaketen, Automatisierung von Produktionsschritten, Einführung eines Self-Service-Assessment-Tools und Ausbau des Angebots um KI-Microservices für KMU.",
+    "vision_3_jahre": "Der Aufbau einer voll skalierbaren KI-Beratung, die jederzeit standardisierte, tiefgreifende Analysen liefern kann – ergänzt durch automatisierte Folgeprozesse, individuelle Handlungsempfehlungen und eine Wissensbasis, die Kundenergebnisse übergreifend optimiert. Ziel ist es, Beratungsqualität unabhängig von der eigenen Kapazität abzusichern und planbar zu skalieren.",
+    "strategische_ziele": "Stärkere Produktisierung der Leistungen, klare Positionierung im KI-Readiness-Segment, Ausbau automatisierter Analyseketten, Schaffung datenbasierter Upsell-Pfade, Verbesserung der eigenen Content-Velocity und systematische Strukturierung interner Wissensprozesse.",
+    "massnahmen_komplexitaet": "niedrig",
+    "roadmap_vorhanden": "nein",
+    "governance_richtlinien": "keine",
+    "change_management": "nein",
+    "zeitbudget": "10h_woche",
+    "vorhandene_tools": [
+      "microsoft365",
+      "notion",
+      "chatgpt",
+      "browserplugins",
+      "loom",
+      "canva",
+      "calendly"
+    ],
+    "regulierte_branche": [
+      "keine_regulierung"
+    ],
+    "trainings_interessen": [
+      "prompting_expert",
+      "effizienz",
+      "contentproduktion",
+      "compliance",
+      "automatisierung"
+    ],
+    "vision_prioritaet": "hoch",
+    "datenschutzbeauftragter": "nicht_erforderlich",
+    "technische_massnahmen": "standardisiert",
+    "folgenabschaetzung": "nicht_erforderlich",
+    "meldewege": "keine",
+    "loeschregeln": "einfach",
+    "ai_act_kenntnis": "fortgeschritten",
+    "ki_hemmnisse": [
+      "kundenwissen",
+      "zeit",
+      "standardisierung",
+      "dokumentation"
+    ],
+    "bisherige_foerdermittel": "keine",
+    "interesse_foerderung": "ja",
+    "erfahrung_beratung": "hoch",
+    "investitionsbudget": "bis_20k",
+    "marktposition": "spezialisiert",
+    "benchmark_wettbewerb": "ueberdurchschnittlich",
+    "innovationsprozess": "kontinuierlich",
+    "risikofreude": "80",
+    "datenschutz": true
+  }
+}
