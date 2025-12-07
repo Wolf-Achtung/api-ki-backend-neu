@@ -103,13 +103,13 @@ async def get_overview(
                 func.max(ReportHistory.version).label("max_version")
             ).group_by(ReportHistory.report_id).subquery()
 
-            latest = db.query(ReportHistory).join(
+            latest_versions = db.query(ReportHistory).join(
                 subq,
                 (ReportHistory.report_id == subq.c.report_id) &
                 (ReportHistory.version == subq.c.max_version)
             ).order_by(desc(ReportHistory.created_at)).limit(10).all()
 
-            reports = [v.to_dict() for v in latest]
+            reports = [v.to_dict() for v in latest_versions]
 
         if not reports:
             return {
@@ -118,10 +118,10 @@ async def get_overview(
             }
 
         # Latest report data
-        latest = reports[0]
-        latest_scores = latest.get("scores", {})
-        latest_bc = latest.get("business_case", {})
-        latest_ai_act = latest.get("ai_act", {})
+        latest_report = reports[0]
+        latest_scores = latest_report.get("scores", {})
+        latest_bc = latest_report.get("business_case", {})
+        latest_ai_act = latest_report.get("ai_act", {})
 
         # Score trend (last 3 versions)
         score_trend = _get_score_trend(reports[:3])
@@ -160,11 +160,11 @@ async def get_overview(
             "has_data": True,
             "active_reports": len(reports),
             "latest_report": {
-                "report_id": latest.get("report_id"),
-                "version": latest.get("version"),
-                "created_at": latest.get("created_at"),
-                "lang": latest.get("lang"),
-                "size_category": latest.get("size_category"),
+                "report_id": latest_report.get("report_id"),
+                "version": latest_report.get("version"),
+                "created_at": latest_report.get("created_at"),
+                "lang": latest_report.get("lang"),
+                "size_category": latest_report.get("size_category"),
             },
             "scores": latest_scores,
             "score_trend": score_trend,
@@ -257,7 +257,7 @@ async def get_trends(
                 size_distribution[h.size_category] = size_distribution.get(h.size_category, 0) + 1
 
         # Risk distribution
-        risk_distribution = {}
+        risk_distribution: Dict[str, int] = {}
         for r in risk_levels:
             risk_distribution[r] = risk_distribution.get(r, 0) + 1
 
@@ -368,7 +368,7 @@ async def get_ai_act_summary(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-def _get_obligations_for_risk(risk_level: str) -> List[Dict[str, str]]:
+def _get_obligations_for_risk(risk_level: str) -> List[Dict[str, Any]]:
     """Get list of obligations based on risk level."""
     if risk_level == "high-risk":
         return [
