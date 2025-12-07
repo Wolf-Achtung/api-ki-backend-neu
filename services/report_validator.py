@@ -27,10 +27,13 @@ SPRINT N CHANGES:
 
 import re
 import logging
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple, Any, Optional, TYPE_CHECKING
 from dataclasses import dataclass
 
 # G8.2: Import centralized validation config
+if TYPE_CHECKING:
+    from services.config_validation import ValidationConfig as _ValidationConfigType
+
 try:
     from services.config_validation import (
         ValidationConfig,
@@ -40,9 +43,18 @@ try:
     _HAS_CONFIG_VALIDATION = True
 except ImportError:
     _HAS_CONFIG_VALIDATION = False
-    ValidationConfig = None
-    get_min_words = None
-    SECTION_MIN_WORDS = None
+
+    class ValidationConfig:  # type: ignore[no-redef]
+        """Fallback stub when config_validation not available."""
+        HARD_STOP_ON_SIZE_MISMATCH = True
+        MAX_REDUNDANCY_WARNINGS = 5
+        REDUNDANCY_WORD_THRESHOLD = 20
+        AI_ACT_MIN_REASONING_WORDS = 60
+
+    def get_min_words(size: str, section: str) -> int:
+        return 100
+
+    SECTION_MIN_WORDS: Optional[Dict[Tuple[str, str], int]] = None
 
 log = logging.getLogger(__name__)
 

@@ -188,9 +188,16 @@ try:
         validate_business_case_with_ai_act,
     )
 except ImportError:
-    ValidationConfig = None
-    get_min_words = None
-    validate_business_case_with_ai_act = None
+
+    class ValidationConfig:  # type: ignore[no-redef]
+        """Fallback stub when config_validation not available."""
+        AI_ACT_APPLY_BC_MODIFIERS = False
+
+    def get_min_words(size: str, section: str) -> int:
+        return 100
+
+    def validate_business_case_with_ai_act(bc: dict, risk: str) -> list:
+        return []
 
 # G9.1: Import AI Act BC monitoring
 try:
