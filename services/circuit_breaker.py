@@ -168,11 +168,9 @@ class CircuitBreaker:
                     retry_after = self.reset_timeout - time_since_open
                     raise CircuitBreakerError(provider_name, retry_after)
 
-            elif provider.state == CircuitState.HALF_OPEN:
+            else:  # CircuitState.HALF_OPEN
                 # Allow single probe request
                 return True
-
-        return True
 
     def record_failure(self, provider_name: str, error: Optional[Exception] = None) -> None:
         """Record a failure for the provider."""
