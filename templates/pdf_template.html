@@ -1241,7 +1241,9 @@
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Überblick</span>
+                            {% if size_label != 'Solo-Berater' and size_label != 'Solo-Unternehmer' and size_label != 'Freiberufler' %}
                             <h2>Executive Summary</h2>
+                            {% endif %}
                         </div>
                         <span class="section-pill">
                             <span class="pill-dot"></span>

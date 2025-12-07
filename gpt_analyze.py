@@ -4831,6 +4831,10 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         })
         sections["RESPONSIBLE_AI_HTML"] = sections["responsible_ai_html"]  # Uppercase alias für Kompatibilität
 
+    # Sprint N3.1: Apply content filter AGAIN to catch RESPONSIBLE_AI_HTML and other late additions
+    log.info(f"[{run_id}] 🔍 Re-applying size-inappropriate content filter for late sections...")
+    sections = filter_all_sections(sections, answers)
+
     # === HARD STOP GATE: Validate report BEFORE rendering ===
     # Derive persona from unternehmensgroesse
     size_raw = (answers.get("unternehmensgroesse", "") or "").lower()

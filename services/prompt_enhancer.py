@@ -223,26 +223,72 @@ Bei Erwähnung: "Tool X nutzen (siehe Quick Wins / Tools-Empfehlungen)"
 # SOLO-PERSONA MODULATION: Vereinfachte Governance-Sprache
 # =============================================================================
 
-# Sprint N3: Phrase-based filtering (applied FIRST, before word-based)
+# Sprint N3/N3.1: Phrase-based filtering (applied FIRST, before word-based)
 # These are multi-word phrases that must be replaced as units
 SOLO_FORBIDDEN_PHRASES: List[str] = [
+    # Team-bezogen
     "team aufbauen",
     "teams aufbauen",
+    "team einbinden",
+    "teams einbinden",
+    "im team",
+    "das team",
+    "ihr team",
+    "unser team",
+    # Mitarbeiter-bezogen
     "mitarbeiter einstellen",
     "mitarbeitende einstellen",
     "personal einstellen",
+    "neue mitarbeiter",
+    "mitarbeiter schulen",
+    # Abteilungs-/Fachbereichs-bezogen
     "fachbereiche einbinden",
     "fachbereich einbinden",
+    "in fachbereichen",
+    "die fachbereiche",
+    "alle fachbereiche",
+    "verschiedene fachbereiche",
+    "abteilungen einbinden",
+    "abteilung einbinden",
+    # Management-/Führungs-bezogen
+    "führungsteam",
+    "management-team",
+    "bereichsleitung",
+    "fachabteilung",
+    "fachabteilungen",
 ]
 
 SOLO_PHRASE_REPLACEMENTS: Dict[str, str] = {
+    # Team-Phrasen → Solo-passend
     "team aufbauen": "Kapazität aufbauen",
     "teams aufbauen": "Kapazitäten erweitern",
+    "team einbinden": "externe Expertise einbinden",
+    "teams einbinden": "Kooperationspartner einbinden",
+    "im team": "gemeinsam mit Partnern",
+    "das team": "Ihre Kapazität",
+    "ihr team": "Ihre Kapazität",
+    "unser team": "unsere Kapazität",
+    # Mitarbeiter-Phrasen → Solo-passend
     "mitarbeiter einstellen": "Ressourcen erweitern",
     "mitarbeitende einstellen": "Ressourcen erweitern",
     "personal einstellen": "externe Unterstützung hinzuziehen",
+    "neue mitarbeiter": "zusätzliche Kapazitäten",
+    "mitarbeiter schulen": "sich weiterbilden",
+    # Fachbereichs-Phrasen → Solo-passend
     "fachbereiche einbinden": "Arbeitsbereiche strukturieren",
     "fachbereich einbinden": "Arbeitsfeld strukturieren",
+    "in fachbereichen": "in Ihren Arbeitsbereichen",
+    "die fachbereiche": "Ihre Arbeitsbereiche",
+    "alle fachbereiche": "alle Ihre Arbeitsbereiche",
+    "verschiedene fachbereiche": "verschiedene Arbeitsbereiche",
+    "abteilungen einbinden": "Arbeitsbereiche strukturieren",
+    "abteilung einbinden": "Arbeitsbereich einbeziehen",
+    # Management/Führung → Solo-passend
+    "führungsteam": "Ihre Entscheidungsfindung",
+    "management-team": "Ihre strategische Planung",
+    "bereichsleitung": "Verantwortungsbereich",
+    "fachabteilung": "Arbeitsfeld",
+    "fachabteilungen": "Arbeitsbereiche",
 }
 
 # Corporate terms → Solo-appropriate replacements (word-based)
@@ -272,10 +318,17 @@ SOLO_GOVERNANCE_REPLACEMENTS: Dict[str, str] = {
     "projektteam": "Projektstruktur",
     "mitarbeiter einstellen": "externe Unterstützung hinzuziehen",
     "mitarbeiter": "Ressourcen",
+    "mitarbeitende": "Beteiligte",
+    "mitarbeitenden": "Beteiligten",
+    "personalentscheidungen": "Ressourcenentscheidungen",
+    "personaldaten": "vertrauliche Daten",
+    "belegschaft": "Kapazität",
     # EN equivalents for Solo
     "department": "work area",
     "departments": "work areas",
     "staff": "resources",
+    "employees": "collaborators",
+    "employee": "collaborator",
 }
 
 # =============================================================================
