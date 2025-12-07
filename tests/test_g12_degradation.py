@@ -82,10 +82,15 @@ class TestDegradationMonitor:
         assert self.monitor.get_status() == self.HealthStatus.HEALTHY
 
         # Add events to reach degraded
-        for i in range(10):
+        # Fallbacks: -5 each (max -30), timeouts: -15 each (max -45)
+        # Need to exceed 40 points to go below 60 (WARN threshold)
+        for i in range(6):
             self.monitor.record_fallback(f"SECTION_{i}")
+        for i in range(2):
+            self.monitor.record_timeout(f"TIMEOUT_{i}")
 
         status = self.monitor.get_status()
+        # Score: 100 - 30 (fallbacks capped) - 30 (2 timeouts) = 40 < 60 = DEGRADED
         assert status in (self.HealthStatus.DEGRADED, self.HealthStatus.CRITICAL)
 
     def test_is_critical_detection(self) -> None:
