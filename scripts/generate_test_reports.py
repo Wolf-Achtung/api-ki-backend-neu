@@ -19,7 +19,36 @@ PLATIN+ Validierung:
 - Prüft Mindestlängen für kritische Sections
 - Protokolliert Fallback-Nutzung
 
-Version: 2.0.0-PLATIN+
+=============================================================================
+Sprint Fix: TEST_PROFILE_SOURCE
+=============================================================================
+
+PROFILE LOADING:
+  - Default directory: data/test_profiles_gold/
+  - CLI override: --profiles-dir <path>
+  - KEINE rekursive Suche in anderen Verzeichnissen
+  - KEINE automatischen Fallbacks zu anderen Ordnern
+
+GOLD STANDARD PROFILES (--platin-only):
+  1. solo_beratung_ki_assessments      - Solo, Beratung, DE
+  2. team_it_software_saas_advisory    - Team, IT/Software, DE
+  3. team_finance_insurance_advisory   - Team, Finanzen, DE
+  4. kmu_france_eu_core_en_gold        - KMU, France, EU Core, EN
+  5. kmu_extreme_freetext_stress       - KMU, Stress-Test, Extreme Freetext
+
+USAGE EXAMPLES:
+  # Alle Profile aus Gold-Ordner:
+  python scripts/generate_test_reports.py --base-url <URL> --email <EMAIL>
+
+  # Nur die 5 Gold-Standard-Profile:
+  python scripts/generate_test_reports.py --base-url <URL> --email <EMAIL> --platin-only
+
+  # Alternativer Profilordner:
+  python scripts/generate_test_reports.py --profiles-dir data/test_profiles_en
+
+=============================================================================
+
+Version: 2.1.0-PLATIN+ (Sprint Fix: TEST_PROFILE_SOURCE)
 """
 
 import argparse
@@ -47,13 +76,19 @@ PLATIN_MIN_LENGTHS = {
     "gamechanger": 800,
 }
 
-# PLATIN+ Test-Profile Definitionen
+# =============================================================================
+# PLATIN+ GOLD STANDARD TEST-PROFILE (Sprint Fix: TEST_PROFILE_SOURCE)
+# =============================================================================
+# Diese 5 Profile sind die offiziellen Gold-Standard-Testprofile.
+# NUR diese werden bei --platin-only verwendet.
+# Alle anderen Profile im Ordner werden bei --platin-only IGNORIERT.
+#
 PLATIN_TEST_PROFILES = [
-    "kmu_handel_ecommerce_advisory",      # Handel & E‑Commerce, KMU
-    "kmu_industrie_production_advisory",  # Industrie & Produktion, KMU
-    "solo_marketing_content_solo_agency", # Marketing & Werbung, Solo
-    "team_finance_insurance_advisory",    # Finanzen & Versicherungen, Team
-    "team_it_software_saas_advisory",     # IT & Software, Team
+    "solo_beratung_ki_assessments",       # Solo, Beratung, DE - Basis-Testprofil
+    "team_it_software_saas_advisory",     # Team, IT/Software, DE - Tech-fokussiert
+    "team_finance_insurance_advisory",    # Team, Finanzen/Versicherungen, DE
+    "kmu_france_eu_core_en_gold",         # KMU, France, EU Core, EN - Internationaler Test
+    "kmu_extreme_freetext_stress",        # KMU, Stress-Test, Extreme Freetext - Edge Case
 ]
 
 
@@ -84,14 +119,27 @@ def login(session: requests.Session, base_url: str, email: str, code: str) -> No
 
 
 def load_profiles(profiles_dir: pathlib.Path):
-    """Lädt alle JSON-Testprofile aus dem Ordner."""
+    """
+    Lädt alle JSON-Testprofile aus dem angegebenen Ordner.
+
+    Sprint Fix: TEST_PROFILE_SOURCE
+    - Lädt NUR aus dem explizit angegebenen Ordner
+    - KEINE rekursive Suche
+    - KEINE Fallbacks zu anderen Ordnern
+    """
     profiles = []
+    # NUR *.json Dateien direkt im angegebenen Ordner (nicht rekursiv!)
     for path in sorted(profiles_dir.glob("*.json")):
-        with path.open("r", encoding="utf-8") as f:
-            data = json.load(f)
-        if "answers" not in data:
-            raise ValueError(f"{path} enthält kein Feld 'answers'.")
-        profiles.append((path.stem, data))
+        try:
+            with path.open("r", encoding="utf-8") as f:
+                data = json.load(f)
+            if "answers" not in data:
+                print(f"  ⚠️  SKIP: {path.name} - enthält kein 'answers' Feld")
+                continue
+            profiles.append((path.stem, data))
+        except json.JSONDecodeError as e:
+            print(f"  ⚠️  SKIP: {path.name} - JSON Parse Error: {e}")
+            continue
     return profiles
 
 
@@ -236,28 +284,53 @@ def main() -> None:
     base_url = args.base_url.rstrip("/")
     profiles_dir = pathlib.Path(args.profiles_dir)
 
+    # Sprint Fix: TEST_PROFILE_SOURCE - Klare Ausgabe welcher Ordner verwendet wird
+    print("=" * 78)
+    print("📁 PROFIL-QUELLE")
+    print("=" * 78)
+    print(f"  Using profiles from: {profiles_dir.resolve()}")
+
     if not profiles_dir.is_dir():
-        print(f"Profil-Ordner existiert nicht: {profiles_dir}", file=sys.stderr)
+        print(f"\n❌ ERROR: Profil-Ordner existiert nicht: {profiles_dir}", file=sys.stderr)
         sys.exit(1)
 
     profiles = load_profiles(profiles_dir)
     if not profiles:
-        print("Keine Testprofile gefunden.", file=sys.stderr)
+        print("\n❌ ERROR: Keine Testprofile gefunden.", file=sys.stderr)
         sys.exit(1)
+
+    print(f"  Found {len(profiles)} profiles in directory")
 
     # Filter für PLATIN+ Profile wenn gewünscht
     if args.platin_only:
+        print(f"\n  --platin-only: Filtering to Gold Standard profiles...")
+        original_count = len(profiles)
         profiles = [(name, data) for name, data in profiles if name in PLATIN_TEST_PROFILES]
+
         if not profiles:
-            print("Keine PLATIN+ Testprofile gefunden.", file=sys.stderr)
-            print(f"Erwartete Profile: {PLATIN_TEST_PROFILES}", file=sys.stderr)
+            print("\n❌ ERROR: Keine PLATIN+ Gold Standard Profile gefunden!", file=sys.stderr)
+            print(f"  Erwartete Profile:", file=sys.stderr)
+            for p in PLATIN_TEST_PROFILES:
+                print(f"    - {p}", file=sys.stderr)
             sys.exit(1)
 
-    print(f"{len(profiles)} Testprofile gefunden:")
+        # Warnung falls nicht alle Gold-Profile gefunden wurden
+        missing = [p for p in PLATIN_TEST_PROFILES if p not in [name for name, _ in profiles]]
+        if missing:
+            print(f"\n  ⚠️  WARNING: {len(missing)} Gold Standard Profile fehlen:")
+            for m in missing:
+                print(f"      - {m}")
+
+        print(f"  Filtered: {original_count} → {len(profiles)} profiles")
+
+    # Klare Ausgabe der geladenen Profile
+    print("\n" + "-" * 78)
+    print(f"✅ {len(profiles)} Testprofile werden verwendet:")
+    print("-" * 78)
     for name, _ in profiles:
-        platin_marker = " [PLATIN+]" if name in PLATIN_TEST_PROFILES else ""
-        print(f"  - {name}{platin_marker}")
-    print()
+        gold_marker = " [GOLD]" if name in PLATIN_TEST_PROFILES else ""
+        print(f"  - {name}{gold_marker}")
+    print("=" * 78 + "\n")
 
     # 1) Login-Code anfordern
     try:
