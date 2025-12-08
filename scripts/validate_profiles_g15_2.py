@@ -19,7 +19,7 @@ import os
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -462,7 +462,7 @@ def print_validation_table(results: List[ProfileValidationResult]) -> None:
 
 def generate_optimized_profile(profile: Dict[str, Any], validation: ProfileValidationResult) -> Dict[str, Any]:
     """Generate optimized profile with fixes applied."""
-    optimized = json.loads(json.dumps(profile))  # Deep copy
+    optimized: Dict[str, Any] = cast(Dict[str, Any], json.loads(json.dumps(profile)))  # Deep copy
 
     # Add AI-Act override
     optimized["ai_act_override_risk_level"] = validation.ai_act.effective_risk_level
