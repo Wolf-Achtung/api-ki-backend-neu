@@ -109,7 +109,9 @@ class DegradationMonitor:
             return
 
         self._events: List[DegradationEvent] = []
-        self._events_lock = threading.Lock()
+        # Use RLock (reentrant lock) to allow nested locking from same thread
+        # Required because get_full_status() calls get_current_score() while holding lock
+        self._events_lock = threading.RLock()
         self._current_request_id: Optional[str] = None
         self._request_metrics: Dict[str, DegradationMetrics] = {}
         self._initialized = True
