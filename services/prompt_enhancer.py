@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import logging
 import re
+from dataclasses import dataclass
 from typing import Any, Dict, List, Set, TypedDict, Optional
 
 from services.prompt_builder import PromptBuilder
@@ -1838,6 +1839,420 @@ Nutze den Strategischen Kontext wie folgt:
             Plain text summary
         """
         return self.builder.build_context_summary(briefing_data)
+
+
+# =============================================================================
+# SPRINT G17.2-B: SMART DEFAULTS FOR PROMPT ENGINE
+# =============================================================================
+#
+# Automatically adjusts prompting based on what has worked for real reports.
+# Analyzes segment feedback to optimize:
+# - Roadmap lengths (based on "too short" warning frequency)
+# - Branch-specific phrases (based on warning patterns)
+# - Cost ranges for business case (based on CAPEX/OPEX trends)
+# =============================================================================
+
+import os
+from datetime import datetime
+from typing import Tuple
+
+# Smart Defaults Configuration
+PROMPT_SMART_DEFAULTS_ENABLED = os.environ.get("PROMPT_SMART_DEFAULTS_ENABLED", "1") == "1"
+PROMPT_DEFAULT_WORD_INCREASE_FACTOR = float(os.environ.get("PROMPT_DEFAULT_WORD_INCREASE_FACTOR", "1.12"))
+
+# Cache for smart defaults analysis
+_smart_defaults_cache: Dict[str, Any] = {
+    "last_refresh": None,
+    "adjustments": {},
+    "analysis_results": {},
+}
+
+SMART_DEFAULTS_CACHE_TTL_SECONDS = 3600  # 1 hour
+
+
+@dataclass
+class SmartDefaultAdjustment:
+    """A single smart default adjustment."""
+    adjustment_type: str  # word_count, phrase, cost_range
+    target_section: str  # roadmap_90d, business_case, etc.
+    original_value: Any
+    adjusted_value: Any
+    reason: str
+    segment_key: Optional[str] = None
+    confidence: float = 0.5
+
+
+class SmartDefaultsEngine:
+    """
+    Engine for applying smart defaults to prompts based on segment feedback.
+
+    G17.2-B: Automatically optimizes prompts based on real-world performance.
+    """
+
+    def __init__(self) -> None:
+        self.adjustments: List[SmartDefaultAdjustment] = []
+        self._load_segment_analysis()
+
+    def _load_segment_analysis(self) -> None:
+        """Load segment analysis data for smart defaults."""
+        if not PROMPT_SMART_DEFAULTS_ENABLED:
+            return
+
+        global _smart_defaults_cache
+
+        # Check cache freshness
+        if _smart_defaults_cache["last_refresh"]:
+            age = (datetime.now() - _smart_defaults_cache["last_refresh"]).total_seconds()
+            if age < SMART_DEFAULTS_CACHE_TTL_SECONDS:
+                return
+
+        try:
+            from services.feedback_analyzer import build_segments_snapshot
+
+            snapshot = build_segments_snapshot(days=30, force=False)
+            _smart_defaults_cache["analysis_results"] = self._analyze_segments(snapshot)
+            _smart_defaults_cache["last_refresh"] = datetime.now()
+            log.debug("Smart defaults cache refreshed")
+
+        except Exception as e:
+            log.warning(f"Failed to load segment analysis for smart defaults: {e}")
+
+    def _analyze_segments(self, snapshot: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze segments to determine optimal defaults."""
+        analysis: Dict[str, Any] = {
+            "word_count_adjustments": {},
+            "phrase_preferences": {},
+            "cost_range_adjustments": {},
+            "total_segments_analyzed": len(snapshot),
+        }
+
+        for segment_key, stats in snapshot.items():
+            # Analyze warning patterns
+            top_warnings = getattr(stats, "top_warning_types", [])
+
+            # Check for "too short" warnings
+            for warning_type, count in top_warnings:
+                if "min-word" in warning_type or "short" in warning_type.lower():
+                    if count > 3:
+                        # This segment frequently has too-short content
+                        size_label = getattr(stats, "segment_key", ("", "", "", ""))[0]
+                        if size_label not in analysis["word_count_adjustments"]:
+                            analysis["word_count_adjustments"][size_label] = {
+                                "factor": PROMPT_DEFAULT_WORD_INCREASE_FACTOR,
+                                "affected_sections": ["roadmap_90d", "roadmap_12m", "quick_wins"],
+                                "warning_count": count,
+                            }
+
+            # Check for persona mismatch warnings
+            for warning_type, count in top_warnings:
+                if "persona" in warning_type.lower() and count > 2:
+                    size_label = getattr(stats, "segment_key", ("", "", "", ""))[0]
+                    analysis["phrase_preferences"][size_label] = {
+                        "avoid_patterns": self._get_problematic_phrases(warning_type),
+                        "warning_count": count,
+                    }
+
+            # Analyze cost trends from segment
+            avg_roi = getattr(stats, "avg_roi_percent", 0)
+            if avg_roi > 0:
+                size_label = getattr(stats, "segment_key", ("", "", "", ""))[0]
+                analysis["cost_range_adjustments"][size_label] = {
+                    "avg_roi": avg_roi,
+                    "suggested_multiplier": 1.0 + (avg_roi / 1000),  # Subtle adjustment
+                }
+
+        return analysis
+
+    def _get_problematic_phrases(self, warning_type: str) -> List[str]:
+        """Get list of phrases that may cause issues for a warning type."""
+        # Default problematic phrases for persona mismatches
+        if "solo" in warning_type.lower():
+            return ["team", "mitarbeiter", "abteilung"]
+        if "team" in warning_type.lower():
+            return ["solo", "einzelperson"]
+        return []
+
+    def get_word_count_adjustment(
+        self,
+        section_name: str,
+        size: str,
+        base_min_words: int,
+    ) -> Tuple[int, Optional[SmartDefaultAdjustment]]:
+        """
+        Get adjusted word count for a section based on segment analysis.
+
+        Args:
+            section_name: Name of the section
+            size: Company size (solo/team/kmu)
+            base_min_words: Base minimum word count
+
+        Returns:
+            Tuple of (adjusted_min_words, adjustment_record or None)
+        """
+        if not PROMPT_SMART_DEFAULTS_ENABLED:
+            return base_min_words, None
+
+        analysis = _smart_defaults_cache.get("analysis_results", {})
+        word_adjustments = analysis.get("word_count_adjustments", {})
+
+        size_lower = size.lower() if size else "team"
+        adjustment_data = word_adjustments.get(size_lower)
+
+        if not adjustment_data:
+            return base_min_words, None
+
+        # Check if this section is affected
+        affected_sections = adjustment_data.get("affected_sections", [])
+        if section_name not in affected_sections:
+            return base_min_words, None
+
+        # Apply adjustment
+        factor = adjustment_data.get("factor", PROMPT_DEFAULT_WORD_INCREASE_FACTOR)
+        adjusted = int(base_min_words * factor)
+
+        adjustment = SmartDefaultAdjustment(
+            adjustment_type="word_count",
+            target_section=section_name,
+            original_value=base_min_words,
+            adjusted_value=adjusted,
+            reason=f"Segment '{size_lower}' hatte {adjustment_data.get('warning_count', 0)}x 'too short' Warnings",
+            segment_key=size_lower,
+            confidence=min(0.8, 0.5 + adjustment_data.get("warning_count", 0) / 20),
+        )
+
+        self.adjustments.append(adjustment)
+        log.debug(f"Smart default: Increased min_words for {section_name} from {base_min_words} to {adjusted}")
+
+        return adjusted, adjustment
+
+    def get_phrase_preferences(
+        self,
+        size: str,
+        branch: str,
+    ) -> Dict[str, Any]:
+        """
+        Get phrase preferences based on segment analysis.
+
+        Args:
+            size: Company size
+            branch: Industry branch
+
+        Returns:
+            Dict with phrase preferences (avoid_patterns, preferred_patterns)
+        """
+        if not PROMPT_SMART_DEFAULTS_ENABLED:
+            return {}
+
+        analysis = _smart_defaults_cache.get("analysis_results", {})
+        phrase_prefs = analysis.get("phrase_preferences", {})
+
+        size_lower = size.lower() if size else "team"
+        prefs: Dict[str, Any] = phrase_prefs.get(size_lower, {})
+
+        if prefs:
+            log.debug(f"Smart default: Applied phrase preferences for size={size_lower}")
+
+        return prefs
+
+    def get_cost_range_adjustment(
+        self,
+        size: str,
+        base_capex_max: int,
+        base_opex_max: int,
+    ) -> Tuple[int, int, Optional[SmartDefaultAdjustment]]:
+        """
+        Get adjusted cost ranges based on segment trends.
+
+        Args:
+            size: Company size
+            base_capex_max: Base CAPEX maximum
+            base_opex_max: Base OPEX maximum
+
+        Returns:
+            Tuple of (adjusted_capex, adjusted_opex, adjustment_record or None)
+        """
+        if not PROMPT_SMART_DEFAULTS_ENABLED:
+            return base_capex_max, base_opex_max, None
+
+        analysis = _smart_defaults_cache.get("analysis_results", {})
+        cost_adjustments = analysis.get("cost_range_adjustments", {})
+
+        size_lower = size.lower() if size else "team"
+        adjustment_data = cost_adjustments.get(size_lower)
+
+        if not adjustment_data:
+            return base_capex_max, base_opex_max, None
+
+        multiplier = adjustment_data.get("suggested_multiplier", 1.0)
+
+        # Apply subtle adjustments
+        adjusted_capex = int(base_capex_max * multiplier)
+        adjusted_opex = int(base_opex_max * multiplier)
+
+        if multiplier != 1.0:
+            adjustment = SmartDefaultAdjustment(
+                adjustment_type="cost_range",
+                target_section="business_case",
+                original_value={"capex": base_capex_max, "opex": base_opex_max},
+                adjusted_value={"capex": adjusted_capex, "opex": adjusted_opex},
+                reason=f"Segment zeigt durchschnittlichen ROI von {adjustment_data.get('avg_roi', 0):.0f}%",
+                segment_key=size_lower,
+                confidence=0.6,
+            )
+            self.adjustments.append(adjustment)
+            log.debug(f"Smart default: Adjusted cost ranges by {multiplier:.2f}x for size={size_lower}")
+            return adjusted_capex, adjusted_opex, adjustment
+
+        return base_capex_max, base_opex_max, None
+
+    def get_all_adjustments(self) -> List[Dict[str, Any]]:
+        """Get all adjustments made in this session."""
+        return [
+            {
+                "adjustment_type": a.adjustment_type,
+                "target_section": a.target_section,
+                "original_value": a.original_value,
+                "adjusted_value": a.adjusted_value,
+                "reason": a.reason,
+                "segment_key": a.segment_key,
+                "confidence": a.confidence,
+            }
+            for a in self.adjustments
+        ]
+
+    def reset_adjustments(self) -> None:
+        """Reset adjustment tracking for new report."""
+        self.adjustments = []
+
+
+# Global smart defaults engine instance
+_smart_defaults_engine: Optional[SmartDefaultsEngine] = None
+
+
+def get_smart_defaults_engine() -> SmartDefaultsEngine:
+    """Get the global smart defaults engine instance."""
+    global _smart_defaults_engine
+    if _smart_defaults_engine is None:
+        _smart_defaults_engine = SmartDefaultsEngine()
+    return _smart_defaults_engine
+
+
+def apply_smart_defaults_to_prompt(
+    prompt_text: str,
+    section_name: str,
+    briefing_data: Dict[str, Any],
+) -> str:
+    """
+    Apply smart defaults to a prompt based on segment analysis.
+
+    G17.2-B: Main entry point for smart defaults application.
+
+    Args:
+        prompt_text: Original prompt text
+        section_name: Name of the section
+        briefing_data: Briefing data with size, branch, etc.
+
+    Returns:
+        Enhanced prompt with smart defaults applied
+    """
+    if not PROMPT_SMART_DEFAULTS_ENABLED:
+        return prompt_text
+
+    engine = get_smart_defaults_engine()
+
+    size = briefing_data.get("unternehmensgroesse", "team")
+    branch = briefing_data.get("branche", "")
+
+    enhanced = prompt_text
+    modifications = []
+
+    # 1. Apply word count adjustments
+    base_min_words = get_platin_min_words(section_name, size)
+    if base_min_words > 0:
+        adjusted_words, adjustment = engine.get_word_count_adjustment(
+            section_name, size, base_min_words
+        )
+        if adjustment and adjusted_words != base_min_words:
+            # Inject word count hint into prompt
+            word_hint = f"\n\n[SMART DEFAULT: Mindestens {adjusted_words} Wörter für diese Sektion (angepasst basierend auf Segment-Performance)]\n"
+            enhanced = word_hint + enhanced
+            modifications.append("word_count")
+
+    # 2. Apply phrase preferences
+    phrase_prefs = engine.get_phrase_preferences(size, branch)
+    if phrase_prefs.get("avoid_patterns"):
+        avoid_list = ", ".join(phrase_prefs["avoid_patterns"])
+        phrase_hint = f"\n\n[SMART DEFAULT: Vermeide folgende Begriffe basierend auf Segment-Feedback: {avoid_list}]\n"
+        enhanced = phrase_hint + enhanced
+        modifications.append("phrase_preferences")
+
+    if modifications:
+        log.info(f"Smart defaults applied to {section_name}: {modifications}")
+
+    return enhanced
+
+
+def get_smart_defaults_analysis() -> Dict[str, Any]:
+    """
+    Get current smart defaults analysis for dashboard.
+
+    Returns:
+        Dict with analysis results and statistics
+    """
+    if not PROMPT_SMART_DEFAULTS_ENABLED:
+        return {"enabled": False}
+
+    engine = get_smart_defaults_engine()
+    analysis = _smart_defaults_cache.get("analysis_results", {})
+
+    return {
+        "enabled": True,
+        "last_refresh": _smart_defaults_cache.get("last_refresh", "").isoformat() if _smart_defaults_cache.get("last_refresh") else None,
+        "total_segments_analyzed": analysis.get("total_segments_analyzed", 0),
+        "word_count_adjustments": analysis.get("word_count_adjustments", {}),
+        "phrase_preferences": analysis.get("phrase_preferences", {}),
+        "cost_range_adjustments": analysis.get("cost_range_adjustments", {}),
+        "recent_adjustments": engine.get_all_adjustments()[-20:],  # Last 20 adjustments
+    }
+
+
+def get_smart_defaults_statistics() -> Dict[str, Any]:
+    """
+    Get statistics about smart defaults usage.
+
+    Returns:
+        Dict with usage statistics
+    """
+    engine = get_smart_defaults_engine()
+    adjustments = engine.get_all_adjustments()
+
+    by_type: Dict[str, int] = {}
+    by_section: Dict[str, int] = {}
+
+    for adj in adjustments:
+        adj_type = adj["adjustment_type"]
+        section = adj["target_section"]
+
+        by_type[adj_type] = by_type.get(adj_type, 0) + 1
+        by_section[section] = by_section.get(section, 0) + 1
+
+    return {
+        "total_adjustments": len(adjustments),
+        "by_type": by_type,
+        "by_section": by_section,
+        "enabled": PROMPT_SMART_DEFAULTS_ENABLED,
+    }
+
+
+# =============================================================================
+# MODULE INITIALIZATION
+# =============================================================================
+
+log.info(
+    "[G17.2-B] Smart Defaults loaded - enabled=%s, word_increase_factor=%s",
+    PROMPT_SMART_DEFAULTS_ENABLED,
+    PROMPT_DEFAULT_WORD_INCREASE_FACTOR,
+)
 
 
 if __name__ == "__main__":  # pragma: no cover - manual test harness

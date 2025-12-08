@@ -893,7 +893,428 @@ def inject_funding_insights_into_sections(
 
 
 # =============================================================================
+# G17.2-C: FUNDING PREDICTIVE MATCHING 2.0
+# =============================================================================
+#
+# Personalized funding recommendations with:
+# - Segment success probabilities
+# - Weighted funding programs
+# - Predictive opportunity scores
+# =============================================================================
+
+FUNDING_PREDICTIVE_ENABLED = os.getenv("FUNDING_PREDICTIVE_ENABLED", "1").lower() in ("1", "true", "yes")
+FUNDING_TREND_WEIGHT = float(os.getenv("FUNDING_TREND_WEIGHT", "0.3"))
+FUNDING_MIN_CONFIDENCE_FOR_DISPLAY = float(os.getenv("FUNDING_MIN_CONFIDENCE_FOR_DISPLAY", "0.5"))
+
+
+@dataclass
+class PredictiveFundingOpportunity:
+    """A predictive funding opportunity with scoring."""
+    program_id: str
+    program_name: str
+    provider: str
+    opportunity_score: float  # 0.0 - 1.0 (combined score)
+    base_eligibility: float  # 0.0 - 1.0
+    segment_success_rate: float  # 0.0 - 1.0
+    confidence_level: float  # 0.0 - 1.0
+    trend: str  # rising, stable, declining
+    recommendation_level: str  # high, medium, low
+    max_funding: str = ""
+    funding_rate: str = ""
+    insight_text: str = ""
+
+
+def predict_funding_opportunity_score(
+    program: Dict[str, Any],
+    segment_stats: Optional[Any] = None,
+    report_sections: Optional[Dict[str, Any]] = None,
+) -> PredictiveFundingOpportunity:
+    """
+    Calculate predictive funding opportunity score.
+
+    G17.2-C: Score = Base Eligibility × Segment Success × Confidence × Trend
+
+    Args:
+        program: Funding program data
+        segment_stats: Segment statistics (optional)
+        report_sections: Current report sections (optional)
+
+    Returns:
+        PredictiveFundingOpportunity with combined scoring
+    """
+    program_id = program.get("id", "unknown")
+    program_name = program.get("name", program_id)
+    provider = program.get("provider", "")
+
+    # 1. Calculate base eligibility (from existing recommend_funding logic)
+    base_eligibility = _calculate_base_eligibility(program, report_sections)
+
+    # 2. Calculate segment success rate
+    segment_success = _calculate_segment_success_rate(program_id, segment_stats)
+
+    # 3. Calculate confidence based on data quality
+    confidence = _calculate_funding_confidence_level(segment_stats, program_id)
+
+    # 4. Determine trend
+    trend = _determine_funding_trend(program_id, segment_stats)
+    trend_multiplier = {"rising": 1.1, "stable": 1.0, "declining": 0.9}.get(trend, 1.0)
+
+    # 5. Calculate combined opportunity score
+    # Score = Base × Segment Success × Confidence × Trend Weight
+    if segment_success > 0:
+        combined_score = (
+            base_eligibility *
+            (1 - FUNDING_TREND_WEIGHT) +
+            segment_success * FUNDING_TREND_WEIGHT
+        ) * trend_multiplier
+    else:
+        combined_score = base_eligibility * trend_multiplier
+
+    combined_score = max(0.0, min(1.0, combined_score * confidence))
+
+    # Determine recommendation level
+    if combined_score >= 0.7:
+        recommendation = "high"
+    elif combined_score >= 0.5:
+        recommendation = "medium"
+    else:
+        recommendation = "low"
+
+    # Generate insight text
+    insight_text = _generate_funding_opportunity_insight(
+        program_name, segment_success, trend, recommendation
+    )
+
+    return PredictiveFundingOpportunity(
+        program_id=program_id,
+        program_name=program_name,
+        provider=provider,
+        opportunity_score=round(combined_score, 2),
+        base_eligibility=round(base_eligibility, 2),
+        segment_success_rate=round(segment_success, 2),
+        confidence_level=round(confidence, 2),
+        trend=trend,
+        recommendation_level=recommendation,
+        max_funding=program.get("max_funding", ""),
+        funding_rate=program.get("funding_rate", ""),
+        insight_text=insight_text,
+    )
+
+
+def _calculate_base_eligibility(
+    program: Dict[str, Any],
+    report_sections: Optional[Dict[str, Any]],
+) -> float:
+    """Calculate base eligibility score for a program."""
+    score = 0.5  # Base score
+
+    if not report_sections:
+        return score
+
+    # Size matching
+    size = report_sections.get("SIZE_LABEL", "team")
+    size_match = program.get("size_match", [])
+    if "all" in size_match or size.lower() in [s.lower() for s in size_match]:
+        score += 0.2
+
+    # KI relevance
+    ki_relevance = program.get("ki_relevance", "medium")
+    if ki_relevance == "high":
+        score += 0.15
+    elif ki_relevance == "medium":
+        score += 0.1
+
+    # Branch matching
+    branch = report_sections.get("BRANCH_LABEL", "").lower()
+    branches = program.get("branches", ["all"])
+    if "all" in branches or any(b.lower() in branch for b in branches):
+        score += 0.15
+
+    return min(1.0, score)
+
+
+def _calculate_segment_success_rate(
+    program_id: str,
+    segment_stats: Optional[Any],
+) -> float:
+    """Calculate segment success rate for a program."""
+    if not segment_stats:
+        return 0.0
+
+    top_programs = getattr(segment_stats, "top_funding_programs", [])
+    report_count = getattr(segment_stats, "report_count", 0)
+
+    if not top_programs or report_count < 3:
+        return 0.0
+
+    for pid, count in top_programs:
+        if pid == program_id:
+            return count / report_count if report_count > 0 else 0.0
+
+    return 0.0
+
+
+def _calculate_funding_confidence_level(
+    segment_stats: Optional[Any],
+    program_id: str,
+) -> float:
+    """Calculate confidence level for funding prediction."""
+    if not segment_stats:
+        return 0.5  # Base confidence
+
+    # Factor 1: Segment stability
+    stability = getattr(segment_stats, "segment_stability", "medium")
+    stability_scores = {"strong": 0.9, "medium": 0.7, "weak": 0.4}
+    stability_confidence = stability_scores.get(stability, 0.5)
+
+    # Factor 2: Sample size
+    sample_size = getattr(segment_stats, "sample_size", 0)
+    if sample_size >= 20:
+        sample_confidence = 0.9
+    elif sample_size >= 10:
+        sample_confidence = 0.7
+    elif sample_size >= 5:
+        sample_confidence = 0.5
+    else:
+        sample_confidence = 0.3
+
+    # Factor 3: Program frequency in segment
+    program_frequency = 0.5
+    top_programs = getattr(segment_stats, "top_funding_programs", [])
+    for pid, count in top_programs:
+        if pid == program_id:
+            program_frequency = min(1.0, count / 10)  # Normalize
+            break
+
+    # Combined confidence
+    confidence = (
+        stability_confidence * 0.4 +
+        sample_confidence * 0.4 +
+        program_frequency * 0.2
+    )
+
+    return round(confidence, 2)
+
+
+def _determine_funding_trend(
+    program_id: str,
+    segment_stats: Optional[Any],
+) -> str:
+    """Determine funding program trend in segment."""
+    if not segment_stats:
+        return "stable"
+
+    # Simple trend determination based on segment characteristics
+    # In a real implementation, this would compare historical data
+    funding_success = getattr(segment_stats, "funding_success_rate", 0)
+
+    if funding_success > 0.4:
+        return "rising"
+    elif funding_success < 0.2:
+        return "declining"
+    return "stable"
+
+
+def _generate_funding_opportunity_insight(
+    program_name: str,
+    segment_success: float,
+    trend: str,
+    recommendation: str,
+) -> str:
+    """Generate insight text for funding opportunity."""
+    trend_text = {
+        "rising": "steigend",
+        "stable": "stabil",
+        "declining": "rückläufig",
+    }.get(trend, "stabil")
+
+    if segment_success > 0:
+        success_pct = int(segment_success * 100)
+        return (
+            f"{success_pct}% ähnlicher Unternehmen haben {program_name} erfolgreich genutzt. "
+            f"Trend: {trend_text}"
+        )
+
+    return f"Trend im Segment: {trend_text}"
+
+
+def get_predictive_funding_opportunities(
+    report_sections: Dict[str, Any],
+    profile: Optional[Dict[str, Any]] = None,
+    limit: int = 5,
+) -> List[PredictiveFundingOpportunity]:
+    """
+    Get predictive funding opportunities sorted by opportunity score.
+
+    Args:
+        report_sections: Report sections dictionary
+        profile: Profile data (optional)
+        limit: Maximum opportunities to return
+
+    Returns:
+        List of PredictiveFundingOpportunity sorted by score
+    """
+    if not FUNDING_PREDICTIVE_ENABLED:
+        return []
+
+    from services.feedback_analyzer import get_segment_for_report
+
+    segment_stats = get_segment_for_report(report_sections, profile)
+    programs = load_funding_programs()
+
+    opportunities = []
+
+    for program in programs:
+        opportunity = predict_funding_opportunity_score(
+            program, segment_stats, report_sections
+        )
+
+        # Filter by minimum confidence
+        if opportunity.confidence_level >= FUNDING_MIN_CONFIDENCE_FOR_DISPLAY:
+            opportunities.append(opportunity)
+
+    # Sort by opportunity score
+    opportunities.sort(key=lambda o: o.opportunity_score, reverse=True)
+
+    return opportunities[:limit]
+
+
+def generate_funding_predicted_opportunities_html(
+    report_sections: Dict[str, Any],
+    profile: Optional[Dict[str, Any]] = None,
+    lang: str = "de",
+) -> str:
+    """
+    Generate FUNDING_PREDICTED_OPPORTUNITIES_HTML section.
+
+    G17.2-C: Ranking table with predictive scores.
+
+    Args:
+        report_sections: Report sections dictionary
+        profile: Profile data (optional)
+        lang: Language code
+
+    Returns:
+        HTML string for predicted funding opportunities
+    """
+    if not FUNDING_PREDICTIVE_ENABLED:
+        return ""
+
+    opportunities = get_predictive_funding_opportunities(report_sections, profile)
+
+    if not opportunities:
+        return ""
+
+    # Build HTML
+    if lang == "en":
+        title = "Predictive Funding Opportunities"
+        headers = ["Program", "Score", "Segment Success", "Trend", "Recommendation"]
+        disclaimer = "* Predictions based on segment data. Verify current eligibility with provider."
+    else:
+        title = "Prädiktive Förder-Chancen"
+        headers = ["Programm", "Score", "Segment-Erfolg", "Trend", "Empfehlung"]
+        disclaimer = "* Prognosen basieren auf Segmentdaten. Aktuelle Förderfähigkeit beim Anbieter prüfen."
+
+    html_parts = [f"""
+    <div class="funding-predicted" style="margin-top:20px;padding:16px;background:#f0f7ff;border-radius:8px;border:1px solid #007bff;">
+        <h4 style="margin:0 0 12px 0;font-size:14px;color:#007bff;display:flex;align-items:center;gap:8px;">
+            <span>🎯</span> {title}
+            <span style="font-size:9px;padding:2px 6px;background:#007bff;color:#fff;border-radius:4px;">PREDICTIVE</span>
+        </h4>
+        <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:4px;overflow:hidden;">
+            <thead>
+                <tr style="background:#e9ecef;">
+                    <th style="padding:8px;font-size:10px;text-align:left;">{headers[0]}</th>
+                    <th style="padding:8px;font-size:10px;text-align:center;">{headers[1]}</th>
+                    <th style="padding:8px;font-size:10px;text-align:center;">{headers[2]}</th>
+                    <th style="padding:8px;font-size:10px;text-align:center;">{headers[3]}</th>
+                    <th style="padding:8px;font-size:10px;text-align:center;">{headers[4]}</th>
+                </tr>
+            </thead>
+            <tbody>
+    """]
+
+    trend_icons = {"rising": "📈", "stable": "➡️", "declining": "📉"}
+    rec_colors = {"high": "#28a745", "medium": "#ffc107", "low": "#6c757d"}
+    rec_labels_de = {"high": "Hoch", "medium": "Mittel", "low": "Gering"}
+    rec_labels_en = {"high": "High", "medium": "Medium", "low": "Low"}
+    rec_labels = rec_labels_en if lang == "en" else rec_labels_de
+
+    for opp in opportunities[:5]:
+        score_pct = int(opp.opportunity_score * 100)
+        success_pct = int(opp.segment_success_rate * 100) if opp.segment_success_rate > 0 else "-"
+        trend_icon = trend_icons.get(opp.trend, "➡️")
+        rec_color = rec_colors.get(opp.recommendation_level, "#6c757d")
+        rec_label = rec_labels.get(opp.recommendation_level, opp.recommendation_level)
+
+        html_parts.append(f"""
+                <tr style="border-bottom:1px solid #dee2e6;">
+                    <td style="padding:8px;font-size:11px;">
+                        <strong>{opp.program_name}</strong>
+                        <br><span style="font-size:9px;color:#6c757d;">{opp.provider}</span>
+                    </td>
+                    <td style="padding:8px;font-size:11px;text-align:center;font-weight:600;">{score_pct}%</td>
+                    <td style="padding:8px;font-size:11px;text-align:center;">{success_pct}%</td>
+                    <td style="padding:8px;font-size:11px;text-align:center;">{trend_icon}</td>
+                    <td style="padding:8px;font-size:10px;text-align:center;">
+                        <span style="padding:2px 8px;background:{rec_color};color:#fff;border-radius:4px;">{rec_label}</span>
+                    </td>
+                </tr>
+        """)
+
+    html_parts.append(f"""
+            </tbody>
+        </table>
+        <p style="margin:12px 0 0 0;font-size:9px;color:#6c757d;font-style:italic;">{disclaimer}</p>
+    </div>
+    """)
+
+    return "\n".join(html_parts)
+
+
+def inject_predictive_funding_into_sections(
+    sections: Dict[str, Any],
+    profile: Optional[Dict[str, Any]] = None,
+    lang: str = "de",
+) -> Dict[str, Any]:
+    """
+    Inject predictive funding section into report sections.
+
+    Args:
+        sections: Report sections dictionary
+        profile: Profile data (optional)
+        lang: Language code
+
+    Returns:
+        Updated sections with FUNDING_PREDICTED_OPPORTUNITIES_HTML
+    """
+    if not FUNDING_PREDICTIVE_ENABLED:
+        sections["FUNDING_PREDICTED_OPPORTUNITIES_HTML"] = ""
+        return sections
+
+    try:
+        html = generate_funding_predicted_opportunities_html(sections, profile, lang)
+        sections["FUNDING_PREDICTED_OPPORTUNITIES_HTML"] = html
+
+        if html:
+            log.info("✅ Injected predictive funding opportunities into report")
+        else:
+            log.debug("No predictive funding opportunities generated")
+
+    except Exception as e:
+        log.error(f"Failed to generate predictive funding: {e}")
+        sections["FUNDING_PREDICTED_OPPORTUNITIES_HTML"] = ""
+
+    return sections
+
+
+# =============================================================================
 # MODULE INITIALIZATION
 # =============================================================================
 
-log.info("[G11] Funding Recommender loaded - premium=%s, insights=%s", ENABLE_PREMIUM_FUNDING, FUNDING_INSIGHTS_ENABLED)
+log.info(
+    "[G11/G17.2-C] Funding Recommender loaded - premium=%s, insights=%s, predictive=%s",
+    ENABLE_PREMIUM_FUNDING,
+    FUNDING_INSIGHTS_ENABLED,
+    FUNDING_PREDICTIVE_ENABLED,
+)
