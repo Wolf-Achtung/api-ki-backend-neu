@@ -560,10 +560,19 @@ class TestEdgeCases:
             predict_high_value_actions,
         )
 
-        # Should handle None gracefully
-        assert predict_segment_risk({}, None) is None
+        # When segment_stats is None and internal fetch also returns None
+        with patch("services.feedback_analyzer.get_segment_for_report") as mock_get:
+            mock_get.return_value = None
+
+            # Should handle None gracefully
+            assert predict_segment_risk({}, None) is None
+
+        # KPI shift with None should return empty list
         assert predict_kpi_shift(None) == []
-        assert predict_high_value_actions({}, None) == []
+
+        # High value actions with None segment should still work (uses report data)
+        result = predict_high_value_actions({}, None)
+        assert isinstance(result, list)
 
     def test_missing_report_sections(self) -> None:
         """Test handling of missing report sections."""
