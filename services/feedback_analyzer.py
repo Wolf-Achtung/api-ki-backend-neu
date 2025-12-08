@@ -281,7 +281,7 @@ def _extract_leaked_term(message: str) -> Optional[str]:
     if match:
         return match.group(1).lower()
 
-    return None  # type: ignore[unreachable]  # mypy false positive: re.search can return None
+    return None
 
 
 def identify_research_degradation(
