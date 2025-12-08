@@ -698,13 +698,15 @@ class TestDatasetBuilder:
             assert not result.success
             assert "disabled" in result.errors[0].lower()
 
-    def test_get_dataset_analytics(self) -> None:
+    def test_get_dataset_analytics(self, tmp_path) -> None:
         """Test getting dataset analytics."""
         from services.ft_dataset_builder import get_dataset_analytics, clear_buffer
 
         clear_buffer()
 
-        analytics = get_dataset_analytics()
+        # Mock storage path to use temp directory
+        with patch("services.ft_dataset_builder.get_storage_path", return_value=tmp_path):
+            analytics = get_dataset_analytics()
 
         assert "total_signals" in analytics
         assert "total_datasets" in analytics
@@ -772,11 +774,13 @@ class TestDatasetBuilder:
             entry = json.loads(line)
             assert "messages" in entry
 
-    def test_get_signal_quality_histogram(self) -> None:
+    def test_get_signal_quality_histogram(self, tmp_path) -> None:
         """Test quality histogram generation."""
         from services.ft_dataset_builder import get_signal_quality_histogram
 
-        histogram = get_signal_quality_histogram(bins=10)
+        # Mock storage path to use temp directory
+        with patch("services.ft_dataset_builder.get_storage_path", return_value=tmp_path):
+            histogram = get_signal_quality_histogram(bins=10)
 
         assert "bins" in histogram
         assert "counts" in histogram
@@ -831,14 +835,16 @@ except ImportError:
 class TestFTDashboardEndpoints:
     """Tests for FT analytics dashboard endpoints."""
 
-    def test_ft_signals_overview_endpoint(self) -> None:
+    def test_ft_signals_overview_endpoint(self, tmp_path) -> None:
         """Test FT signals overview endpoint."""
         from routes.feedback_dashboard import get_ft_signals_overview
 
-        # Run async function synchronously
-        result = asyncio.get_event_loop().run_until_complete(
-            get_ft_signals_overview()
-        )
+        # Mock storage path to use temp directory
+        with patch("services.ft_dataset_builder.get_storage_path", return_value=tmp_path):
+            # Run async function synchronously
+            result = asyncio.get_event_loop().run_until_complete(
+                get_ft_signals_overview()
+            )
 
         assert hasattr(result, "enabled")
         assert hasattr(result, "total_signals")
