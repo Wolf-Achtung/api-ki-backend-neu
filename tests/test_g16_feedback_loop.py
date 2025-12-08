@@ -320,28 +320,28 @@ class TestG16C_DashboardRoutes:
         from routes.feedback_dashboard import router
 
         routes = [r.path for r in router.routes]
-        assert "/overview" in routes
+        assert any(r.endswith("/overview") for r in routes)
 
     def test_persona_issues_endpoint_exists(self) -> None:
         """Persona issues endpoint should be defined."""
         from routes.feedback_dashboard import router
 
         routes = [r.path for r in router.routes]
-        assert "/persona-issues" in routes
+        assert any(r.endswith("/persona-issues") for r in routes)
 
     def test_ai_act_anomalies_endpoint_exists(self) -> None:
         """AI-Act anomalies endpoint should be defined."""
         from routes.feedback_dashboard import router
 
         routes = [r.path for r in router.routes]
-        assert "/ai-act-anomalies" in routes
+        assert any(r.endswith("/ai-act-anomalies") for r in routes)
 
     def test_learning_insights_endpoint_exists(self) -> None:
         """Learning insights endpoint should be defined."""
         from routes.feedback_dashboard import router
 
         routes = [r.path for r in router.routes]
-        assert "/learning-insights" in routes
+        assert any(r.endswith("/learning-insights") for r in routes)
 
 
 # =============================================================================

@@ -439,7 +439,13 @@ def get_learning_summary(days: int = 7) -> Dict[str, Any]:
     """
     action_items = generate_action_items(days=days)
 
-    summary = {
+    # Count by category
+    by_category: Dict[str, int] = {}
+    for item in action_items:
+        cat = item.category
+        by_category[cat] = by_category.get(cat, 0) + 1
+
+    summary: Dict[str, Any] = {
         "period_days": days,
         "total_action_items": len(action_items),
         "by_priority": {
@@ -447,14 +453,9 @@ def get_learning_summary(days: int = 7) -> Dict[str, Any]:
             "medium": len([a for a in action_items if a.priority == "medium"]),
             "low": len([a for a in action_items if a.priority == "low"]),
         },
-        "by_category": {},
+        "by_category": by_category,
         "top_issues": [],
     }
-
-    # Count by category
-    for item in action_items:
-        cat = item.category
-        summary["by_category"][cat] = summary["by_category"].get(cat, 0) + 1
 
     # Get top 3 issues
     summary["top_issues"] = [
