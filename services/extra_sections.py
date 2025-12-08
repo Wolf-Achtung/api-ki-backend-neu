@@ -768,3 +768,180 @@ def build_responsible_ai_section(
   </div>
 </section>
 """.strip()
+
+
+# ----------------------------- G13-E: Cross-Injection Functions -------------------------------
+
+def build_ai_act_funding_cross_injection(
+    sections: Dict[str, Any],
+    risk_level: str,
+    lang: str = "de"
+) -> Dict[str, str]:
+    """
+    Sprint G13-E: Generate cross-injection content between AI Act and Funding sections.
+
+    When AI Act risk level is 'limited' or 'high-risk', adds a hint to the funding section
+    about compliance costs. When funding potential is identified, adds a hint to AI Act
+    section about financing compliance efforts.
+
+    Args:
+        sections: Report sections dict containing funding and AI Act data
+        risk_level: AI Act risk level (none/minimal/limited/high-risk)
+        lang: Language code (de/en)
+
+    Returns:
+        Dict with cross-injection HTML snippets:
+        - FUNDING_AI_ACT_HINT_HTML: Hint for funding section about compliance costs
+        - AI_ACT_FUNDING_HINT_HTML: Hint for AI Act section about financing options
+    """
+    result = {
+        "FUNDING_AI_ACT_HINT_HTML": "",
+        "AI_ACT_FUNDING_HINT_HTML": "",
+    }
+
+    # Only generate cross-injection for limited or high-risk
+    if risk_level not in ("limited", "high-risk"):
+        return result
+
+    # Get CAPEX/OPEX modifiers if applied
+    capex_factor = sections.get("AI_ACT_BC_CAPEX_FACTOR", 1.0)
+    opex_factor = sections.get("AI_ACT_BC_OPEX_FACTOR", 1.0)
+
+    if lang == "de":
+        # German cross-injection hints
+        if risk_level == "high-risk":
+            result["FUNDING_AI_ACT_HINT_HTML"] = f"""
+<div class="cross-hint ai-act-hint" style="background:#fff7ed;border-left:3px solid #f59e0b;padding:12px 16px;margin:16px 0;border-radius:4px;">
+  <strong>📋 AI Act Compliance-Kosten berücksichtigen:</strong>
+  Ihr KI-Vorhaben ist als <em>Hochrisiko</em> eingestuft. Die Compliance-Anforderungen erhöhen
+  CAPEX um ca. +{round((capex_factor-1)*100)}% und OPEX um ca. +{round((opex_factor-1)*100)}%.
+  Viele Förderprogramme erkennen Compliance-Dokumentation und QMS-Aufbau als förderfähige Kosten an.
+  <br><em>→ Siehe AI Act Compliance-Sektion für Details zu den Anforderungen.</em>
+</div>"""
+            result["AI_ACT_FUNDING_HINT_HTML"] = """
+<div class="cross-hint funding-hint" style="background:#f0fdf4;border-left:3px solid #22c55e;padding:12px 16px;margin:16px 0;border-radius:4px;">
+  <strong>💡 Förderhinweis:</strong>
+  Compliance-Maßnahmen für Hochrisiko-KI-Systeme können durch Digitalisierungs- und
+  Innovationsförderprogramme unterstützt werden. Dokumentations- und QMS-Aufbaukosten
+  sind häufig förderfähig.
+  <br><em>→ Siehe Förderpotenzial-Sektion für passende Programme.</em>
+</div>"""
+        else:  # limited
+            result["FUNDING_AI_ACT_HINT_HTML"] = f"""
+<div class="cross-hint ai-act-hint" style="background:#eff6ff;border-left:3px solid #3b82f6;padding:12px 16px;margin:16px 0;border-radius:4px;">
+  <strong>📋 AI Act Hinweis:</strong>
+  Ihr KI-Vorhaben ist als <em>begrenztes Risiko</em> eingestuft.
+  Die Transparenzpflichten erfordern moderate Zusatzaufwände (CAPEX +{round((capex_factor-1)*100)}%).
+  Diese können in Förderanträgen als Qualitätssicherungsmaßnahmen berücksichtigt werden.
+</div>"""
+    else:
+        # English cross-injection hints
+        if risk_level == "high-risk":
+            result["FUNDING_AI_ACT_HINT_HTML"] = f"""
+<div class="cross-hint ai-act-hint" style="background:#fff7ed;border-left:3px solid #f59e0b;padding:12px 16px;margin:16px 0;border-radius:4px;">
+  <strong>📋 AI Act Compliance Costs:</strong>
+  Your AI project is classified as <em>high-risk</em>. Compliance requirements increase
+  CAPEX by approx. +{round((capex_factor-1)*100)}% and OPEX by approx. +{round((opex_factor-1)*100)}%.
+  Many funding programs recognize compliance documentation and QMS setup as eligible costs.
+  <br><em>→ See AI Act Compliance section for requirement details.</em>
+</div>"""
+            result["AI_ACT_FUNDING_HINT_HTML"] = """
+<div class="cross-hint funding-hint" style="background:#f0fdf4;border-left:3px solid #22c55e;padding:12px 16px;margin:16px 0;border-radius:4px;">
+  <strong>💡 Funding Note:</strong>
+  Compliance measures for high-risk AI systems can be supported through digitalization
+  and innovation funding programs. Documentation and QMS setup costs are often eligible.
+  <br><em>→ See Funding Potential section for suitable programs.</em>
+</div>"""
+        else:  # limited
+            result["FUNDING_AI_ACT_HINT_HTML"] = f"""
+<div class="cross-hint ai-act-hint" style="background:#eff6ff;border-left:3px solid #3b82f6;padding:12px 16px;margin:16px 0;border-radius:4px;">
+  <strong>📋 AI Act Note:</strong>
+  Your AI project is classified as <em>limited risk</em>.
+  Transparency obligations require moderate additional effort (CAPEX +{round((capex_factor-1)*100)}%).
+  These can be included in funding applications as quality assurance measures.
+</div>"""
+
+    return result
+
+
+def build_pdf_sidebar_summary(
+    sections: Dict[str, Any],
+    scores: Dict[str, Any],
+    lang: str = "de"
+) -> str:
+    """
+    Sprint G13-E: Generate PDF sidebar summary with quick navigation and key metrics.
+
+    Args:
+        sections: Report sections dict
+        scores: Score dict with overall and dimension scores
+        lang: Language code (de/en)
+
+    Returns:
+        HTML for PDF sidebar element
+    """
+    overall_score = scores.get("overall", 0)
+    risk_level = sections.get("AI_ACT_RISK_LEVEL", "minimal")
+    capex = sections.get("CAPEX_REALISTISCH_EUR", 0)
+    roi = sections.get("ROI_12M", 0)
+    payback = sections.get("PAYBACK_MONTHS", 0)
+
+    # Risk level badge color
+    risk_colors = {
+        "none": "#22c55e",
+        "minimal": "#22c55e",
+        "limited": "#f59e0b",
+        "high-risk": "#dc2626",
+    }
+    risk_color = risk_colors.get(risk_level, "#64748b")
+
+    if lang == "de":
+        risk_labels = {"none": "Kein Risiko", "minimal": "Minimal", "limited": "Begrenzt", "high-risk": "Hochrisiko"}
+        return f"""
+<aside class="pdf-sidebar" style="position:fixed;right:0;top:100px;width:180px;padding:16px;background:#f8fafc;border-left:2px solid #e2e8f0;font-size:9pt;">
+  <div class="sidebar-section">
+    <h4 style="margin:0 0 8px 0;font-size:10pt;color:#0f172a;">Schnellübersicht</h4>
+    <div style="margin-bottom:12px;">
+      <span style="font-weight:600;">KI-Score:</span>
+      <span style="color:#3b82f6;font-weight:700;">{overall_score}/100</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <span style="font-weight:600;">AI Act:</span>
+      <span style="background:{risk_color};color:white;padding:2px 6px;border-radius:3px;font-size:8pt;">{risk_labels.get(risk_level, risk_level)}</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <span style="font-weight:600;">Invest:</span> {_fmt_eur(capex)} €
+    </div>
+    <div style="margin-bottom:12px;">
+      <span style="font-weight:600;">ROI 12M:</span> {roi:.0f}%
+    </div>
+    <div>
+      <span style="font-weight:600;">Payback:</span> {payback:.1f} Mon.
+    </div>
+  </div>
+</aside>"""
+    else:
+        risk_labels = {"none": "None", "minimal": "Minimal", "limited": "Limited", "high-risk": "High-Risk"}
+        return f"""
+<aside class="pdf-sidebar" style="position:fixed;right:0;top:100px;width:180px;padding:16px;background:#f8fafc;border-left:2px solid #e2e8f0;font-size:9pt;">
+  <div class="sidebar-section">
+    <h4 style="margin:0 0 8px 0;font-size:10pt;color:#0f172a;">Quick Summary</h4>
+    <div style="margin-bottom:12px;">
+      <span style="font-weight:600;">AI Score:</span>
+      <span style="color:#3b82f6;font-weight:700;">{overall_score}/100</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <span style="font-weight:600;">AI Act:</span>
+      <span style="background:{risk_color};color:white;padding:2px 6px;border-radius:3px;font-size:8pt;">{risk_labels.get(risk_level, risk_level)}</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <span style="font-weight:600;">Invest:</span> {_fmt_eur(capex)} €
+    </div>
+    <div style="margin-bottom:12px;">
+      <span style="font-weight:600;">ROI 12M:</span> {roi:.0f}%
+    </div>
+    <div>
+      <span style="font-weight:600;">Payback:</span> {payback:.1f} mo.
+    </div>
+  </div>
+</aside>"""

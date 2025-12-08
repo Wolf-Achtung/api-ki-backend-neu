@@ -65,7 +65,7 @@ class OpenAIConfig(BaseModel):
     model: str = "gpt-4o"
     temperature: float = 0.2
     max_completion_tokens: int = 3000
-    timeout: int = 120
+    timeout: int = 90  # SPRINT G13-D: reduced from 120s for faster fallback triggering
     gamechanger_temperature: float = 0.4
 
     @property
@@ -107,6 +107,9 @@ class MonitoringConfig(BaseModel):
     guardrail_high_conf: float = 0.9
     token_budget_threshold_pct: float = 95.0
     pdf_timeout_sec: float = 20.0
+    # SPRINT G13-D: Fallback optimization settings
+    fallback_token_budget: int = 2500  # max tokens for fallback content generation
+    aggressive_timeout_sec: int = 60  # timeout for non-critical sections
 
 
 class AppSettings(BaseSettings):

@@ -880,7 +880,7 @@ class ReportValidator:
                         )
                     )
 
-    # SPRINT G3.3/G4.4: Extended whitelist for standard phrases that may repeat intentionally
+    # SPRINT G3.3/G4.4/G13: Extended whitelist for standard phrases that may repeat intentionally
     REDUNDANCY_WHITELIST = [
         # ROI/Business disclaimers (DE)
         "return on investment",
@@ -933,11 +933,63 @@ class ReportValidator:
         "siehe abschnitt",
         "for more details",
         "see section",
+        # SPRINT G13-B: Additional standard phrases
+        # German connector phrases
+        "im rahmen von",
+        "basierend auf",
+        "auf basis von",
+        "in bezug auf",
+        "mit blick auf",
+        "im hinblick auf",
+        "im kontext von",
+        "unter berücksichtigung",
+        "in verbindung mit",
+        "im zusammenhang mit",
+        "auf grundlage",
+        "gemäß den",
+        "entsprechend den",
+        # English connector phrases
+        "based on",
+        "in the context of",
+        "with regard to",
+        "in connection with",
+        "in relation to",
+        "taking into account",
+        "in accordance with",
+        # Industry standard phrases (DE)
+        "best practices",
+        "use cases",
+        "quick wins",
+        "zeitersparnis",
+        "effizienzsteigerung",
+        "prozessoptimierung",
+        "workflow-automatisierung",
+        # Industry standard phrases (EN)
+        "workflow optimization",
+        "process improvement",
+        "productivity gains",
+        # Funding/Förderung standard phrases
+        "förderprogramm",
+        "zuschuss",
+        "förderung",
+        "funding program",
+        "grant",
+        "subsidy",
+    ]
+
+    # SPRINT G13-B: Sections excluded from redundancy SOURCE detection
+    # These sections are meant to summarize or repeat key information
+    REDUNDANCY_EXCLUDED_SECTIONS = [
+        "EXECUTIVE_SUMMARY_HTML",
+        "executive_summary",
+        "EXEC_SUMMARY_HTML",
+        "transparency_box",
+        "TRANSPARENCY_BOX_HTML",
     ]
 
     def _check_redundancy(self) -> None:
         """
-        Sprint G2.4/G3.3: Check for redundant long sentences across sections.
+        Sprint G2.4/G3.3/G13: Check for redundant long sentences across sections.
 
         Warns when:
         - A sentence >20 words appears identically or 85% similar in ≥2 sections
@@ -947,6 +999,11 @@ class ReportValidator:
         - Increased threshold from 15 to 20 words
         - Added whitelist for standard phrases (ROI, AI Act, etc.)
 
+        Sprint G13-B tuning:
+        - Executive summary and transparency box excluded from SOURCE detection
+        - These sections are MEANT to summarize/repeat key information
+        - Expanded whitelist with connector phrases
+
         This is informational only (WARNING, not CRITICAL).
         """
         # Collect all sentences from all sections
@@ -954,6 +1011,10 @@ class ReportValidator:
 
         for section_name, content in self.sections.items():
             if not isinstance(content, str) or not content:
+                continue
+
+            # SPRINT G13-B: Skip excluded sections (they're meant to summarize)
+            if section_name in self.REDUNDANCY_EXCLUDED_SECTIONS:
                 continue
 
             # Split into sentences (rough approximation)
