@@ -291,11 +291,11 @@ def _store_to_database(entry: FeedbackEntry) -> bool:
     """Store feedback entry to database (if available)."""
     try:
         # Try to import database session
-        from core.db import get_session_local
+        from core.db import get_session
         from sqlalchemy import text
         import json
 
-        session = get_session_local()
+        session = get_session()
         if session is None:
             return False
 
