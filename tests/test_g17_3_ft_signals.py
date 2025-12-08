@@ -851,28 +851,32 @@ class TestFTDashboardEndpoints:
         assert hasattr(result, "signal_type_distribution")
         assert hasattr(result, "recent_datasets")
 
-    def test_ft_build_dataset_endpoint(self) -> None:
+    def test_ft_build_dataset_endpoint(self, tmp_path) -> None:
         """Test FT build dataset endpoint."""
         from routes.feedback_dashboard import build_ft_dataset
 
-        # Run async function synchronously - pass all params explicitly
-        # (Query defaults aren't resolved when calling directly)
-        result = asyncio.get_event_loop().run_until_complete(
-            build_ft_dataset(min_quality=0.5, signal_types=None, include_metadata=True)
-        )
+        # Mock storage path to use temp directory
+        with patch("services.ft_dataset_builder.get_storage_path", return_value=tmp_path):
+            # Run async function synchronously - pass all params explicitly
+            # (Query defaults aren't resolved when calling directly)
+            result = asyncio.get_event_loop().run_until_complete(
+                build_ft_dataset(min_quality=0.5, signal_types=None, include_metadata=True)
+            )
 
         assert hasattr(result, "success")
         assert hasattr(result, "dataset_id")
         assert hasattr(result, "errors")
 
-    def test_ft_quality_histogram_endpoint(self) -> None:
+    def test_ft_quality_histogram_endpoint(self, tmp_path) -> None:
         """Test FT quality histogram endpoint."""
         from routes.feedback_dashboard import get_ft_quality_histogram
 
-        # Run async function synchronously
-        result = asyncio.get_event_loop().run_until_complete(
-            get_ft_quality_histogram(bins=10)
-        )
+        # Mock storage path to use temp directory
+        with patch("services.ft_dataset_builder.get_storage_path", return_value=tmp_path):
+            # Run async function synchronously
+            result = asyncio.get_event_loop().run_until_complete(
+                get_ft_quality_histogram(bins=10)
+            )
 
         assert hasattr(result, "bins")
         assert hasattr(result, "counts")
