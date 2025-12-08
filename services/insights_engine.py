@@ -24,6 +24,10 @@ log = logging.getLogger(__name__)
 INSIGHTS_ENGINE_ENABLED = os.environ.get("INSIGHTS_ENGINE_ENABLED", "1") == "1"
 INSIGHTS_TOP_CARDS_PER_REPORT = int(os.environ.get("INSIGHTS_TOP_CARDS_PER_REPORT", "5"))
 
+# G17.1-B: Reliability Filter Configuration
+INSIGHTS_REQUIRE_RELIABLE_SEGMENT = os.environ.get("INSIGHTS_REQUIRE_RELIABLE_SEGMENT", "1") == "1"
+INSIGHTS_FALLBACK_TO_GENERIC = os.environ.get("INSIGHTS_FALLBACK_TO_GENERIC", "1") == "1"
+
 
 # =============================================================================
 # DATA STRUCTURES
@@ -56,6 +60,11 @@ class InsightResult:
     cards_html: str = ""
     segment_label: str = ""
     has_sufficient_data: bool = False
+    # G17.1-B: Reliability metadata
+    is_reliable: bool = False
+    is_generic_fallback: bool = False
+    segment_stability: str = "unknown"  # strong, medium, weak, unknown
+    reliability_note: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
@@ -65,6 +74,11 @@ class InsightResult:
             "cards_html": self.cards_html,
             "segment_label": self.segment_label,
             "has_sufficient_data": self.has_sufficient_data,
+            # G17.1-B fields
+            "is_reliable": self.is_reliable,
+            "is_generic_fallback": self.is_generic_fallback,
+            "segment_stability": self.segment_stability,
+            "reliability_note": self.reliability_note,
         }
 
 
@@ -93,6 +107,7 @@ def build_report_insights(
     from services.feedback_analyzer import (
         get_segment_for_report,
         get_segment_comparison,
+        is_segment_reliable,
         SegmentStats,
     )
 
@@ -105,9 +120,33 @@ def build_report_insights(
         return InsightResult(
             summary_html="<p>Für Ihr Segment liegen noch nicht genügend Vergleichsdaten vor.</p>",
             has_sufficient_data=False,
+            segment_stability="unknown",
         )
 
-    # Build cards
+    # G17.1-B: Check segment reliability
+    segment_is_reliable = is_segment_reliable(segment_stats)
+    segment_stability = getattr(segment_stats, "segment_stability", "unknown")
+
+    # If reliability filter is enabled and segment is unreliable, use fallback
+    if INSIGHTS_REQUIRE_RELIABLE_SEGMENT and not segment_is_reliable:
+        log.info(f"Segment unstable (stability={segment_stability}), using fallback cards")
+
+        if INSIGHTS_FALLBACK_TO_GENERIC:
+            # Build generic fallback cards based on size/branch
+            return _build_generic_fallback_insights(
+                report_sections, profile, segment_stats, segment_stability
+            )
+        else:
+            # Return empty result with reliability note
+            return InsightResult(
+                summary_html="<p>Die Datenbasis für Ihr Segment ist noch nicht ausreichend für detaillierte Insights.</p>",
+                has_sufficient_data=False,
+                is_reliable=False,
+                segment_stability=segment_stability,
+                reliability_note="Segment hat zu wenige Datenpunkte oder zu hohe Varianz",
+            )
+
+    # Build cards (reliable segment path)
     cards: List[InsightCard] = []
 
     # 1. Position card
@@ -143,17 +182,246 @@ def build_report_insights(
     summary_html = _build_summary_html(cards, segment_label)
     cards_html = _build_cards_html(cards)
 
+    # G17.1-B: Add reliability indicator for medium stability
+    reliability_note = ""
+    if segment_stability == "medium":
+        reliability_note = "Segment-Daten basieren auf begrenzter Stichprobe"
+        # Add subtle note to summary
+        summary_html = _add_reliability_note_to_summary(summary_html, segment_stability)
+
     result = InsightResult(
         cards=cards,
         summary_html=summary_html,
         cards_html=cards_html,
         segment_label=segment_label,
         has_sufficient_data=True,
+        is_reliable=segment_is_reliable,
+        is_generic_fallback=False,
+        segment_stability=segment_stability,
+        reliability_note=reliability_note,
     )
 
-    log.info(f"Generated {len(cards)} insight cards for segment: {segment_label}")
+    log.info(f"Generated {len(cards)} insight cards for segment: {segment_label} (stability={segment_stability})")
 
     return result
+
+
+def _build_generic_fallback_insights(
+    report_sections: Dict[str, Any],
+    profile: Optional[Dict[str, Any]],
+    segment_stats: Any,
+    segment_stability: str,
+) -> InsightResult:
+    """
+    Build generic fallback insight cards when segment is unreliable.
+
+    G17.1-B: Provides general insights based on size + branch without
+    relying on potentially skewed segment statistics.
+
+    Args:
+        report_sections: Report sections dictionary
+        profile: Profile data
+        segment_stats: Segment stats (may be unreliable)
+        segment_stability: Current stability level
+
+    Returns:
+        InsightResult with generic cards
+    """
+    cards: List[InsightCard] = []
+
+    # Extract size and branch for generic insights
+    size_label = "solo"
+    branch = "other"
+
+    if profile:
+        size_label = profile.get("size_label", "solo")
+        branch = profile.get("branch", "") or "other"
+
+    # 1. General size-based insight card
+    size_card = _build_generic_size_card(size_label)
+    if size_card:
+        cards.append(size_card)
+
+    # 2. General maturity insight (if we can determine from report)
+    maturity_card = _build_generic_maturity_card(report_sections)
+    if maturity_card:
+        cards.append(maturity_card)
+
+    # 3. General AI readiness tip
+    ai_readiness_card = _build_generic_ai_readiness_card(report_sections, size_label)
+    if ai_readiness_card:
+        cards.append(ai_readiness_card)
+
+    # Sort and limit
+    cards.sort(key=lambda c: c.priority)
+    cards = cards[:INSIGHTS_TOP_CARDS_PER_REPORT]
+
+    # Build HTML outputs
+    segment_label = f"{_size_label_de(size_label)} · Allgemein"
+    summary_html = _build_generic_summary_html(cards, segment_label)
+    cards_html = _build_cards_html(cards)
+
+    return InsightResult(
+        cards=cards,
+        summary_html=summary_html,
+        cards_html=cards_html,
+        segment_label=segment_label,
+        has_sufficient_data=True,
+        is_reliable=False,
+        is_generic_fallback=True,
+        segment_stability=segment_stability,
+        reliability_note="Allgemeine Insights - spezifische Segment-Daten noch nicht ausreichend",
+    )
+
+
+def _build_generic_size_card(size_label: str) -> Optional[InsightCard]:
+    """Build generic insight card based on company size."""
+    size_insights = {
+        "solo": {
+            "title": "Typische Herausforderungen für Solo-Unternehmer",
+            "body": """<p>📊 Als Solo-Unternehmer stehen Sie vor einzigartigen Herausforderungen bei der KI-Einführung:</p>
+            <ul style="margin:8px 0;padding-left:20px;">
+                <li>Begrenzte Zeit für Experimentieren mit neuen Tools</li>
+                <li>Fokus auf schnelle ROI-Realisierung</li>
+                <li>Niedrigschwellige, sofort einsetzbare Lösungen bevorzugt</li>
+            </ul>
+            <p class="insight-detail">Empfehlung: Starten Sie mit einem fokussierten Use Case.</p>""",
+        },
+        "team": {
+            "title": "KI-Potenzial für kleine Teams",
+            "body": """<p>📊 Kleine Teams (2-10 Personen) profitieren besonders von:</p>
+            <ul style="margin:8px 0;padding-left:20px;">
+                <li>Automatisierung wiederkehrender Aufgaben</li>
+                <li>Kollaborativen KI-Tools für Wissensaustausch</li>
+                <li>Skalierbare Lösungen, die mit dem Team wachsen</li>
+            </ul>
+            <p class="insight-detail">Empfehlung: Definieren Sie gemeinsame KI-Richtlinien.</p>""",
+        },
+        "kmu": {
+            "title": "KI-Strategie für KMU",
+            "body": """<p>📊 Als KMU haben Sie die Ressourcen für strategische KI-Implementierung:</p>
+            <ul style="margin:8px 0;padding-left:20px;">
+                <li>Abteilungsübergreifende KI-Governance erforderlich</li>
+                <li>Integration mit bestehenden Systemen priorisieren</li>
+                <li>Mitarbeiter-Enablement als Erfolgsfaktor</li>
+            </ul>
+            <p class="insight-detail">Empfehlung: Etablieren Sie ein KI-Kompetenzzentrum.</p>""",
+        },
+    }
+
+    insight = size_insights.get(size_label, size_insights["team"])
+
+    return InsightCard(
+        title=insight["title"],
+        severity="info",
+        body_html=insight["body"],
+        category="general",
+        priority=1,
+    )
+
+
+def _build_generic_maturity_card(report_sections: Dict[str, Any]) -> Optional[InsightCard]:
+    """Build generic maturity insight card."""
+    overall_score = 0.0
+    try:
+        overall_score = float(report_sections.get("REIFEGRAD_GESAMT", 0))
+    except (ValueError, TypeError):
+        return None
+
+    if overall_score <= 0:
+        return None
+
+    if overall_score >= 70:
+        title = "Fortgeschrittene KI-Reife"
+        body = """<p>✅ Ihr Gesamt-Score deutet auf eine <strong>fortgeschrittene KI-Reife</strong> hin.</p>
+        <p class="insight-detail">Fokussieren Sie sich auf Optimierung und Skalierung bestehender KI-Initiativen.</p>"""
+        severity = "highlight"
+    elif overall_score >= 50:
+        title = "Solide KI-Grundlage"
+        body = """<p>📊 Sie haben eine <strong>solide Grundlage</strong> für KI-Initiativen geschaffen.</p>
+        <p class="insight-detail">Nächste Schritte: Vertiefen Sie Governance und erweitern Sie Use Cases systematisch.</p>"""
+        severity = "info"
+    else:
+        title = "KI-Einstiegsphase"
+        body = """<p>📈 Sie befinden sich in der <strong>Einstiegsphase</strong> Ihrer KI-Journey.</p>
+        <p class="insight-detail">Empfehlung: Beginnen Sie mit Quick Wins und bauen Sie schrittweise Kompetenz auf.</p>"""
+        severity = "opportunity"
+
+    return InsightCard(
+        title=title,
+        severity=severity,
+        body_html=body,
+        category="maturity",
+        priority=2,
+    )
+
+
+def _build_generic_ai_readiness_card(
+    report_sections: Dict[str, Any],
+    size_label: str,
+) -> Optional[InsightCard]:
+    """Build generic AI readiness tip card."""
+    # Check governance score if available
+    gov_score = 0.0
+    try:
+        gov_score = float(report_sections.get("REIFEGRAD_GOVERNANCE", 0))
+    except (ValueError, TypeError):
+        pass
+
+    if gov_score > 0 and gov_score < 50:
+        return InsightCard(
+            title="Governance als Schlüssel zum KI-Erfolg",
+            severity="opportunity",
+            body_html="""<p>🔐 <strong>KI-Governance</strong> ist ein häufiger Engpass bei der KI-Einführung.</p>
+            <p class="insight-detail">Definieren Sie klare Richtlinien für Datenschutz, Qualitätssicherung
+            und Verantwortlichkeiten, bevor Sie skalieren.</p>""",
+            category="governance",
+            priority=3,
+        )
+
+    return InsightCard(
+        title="Kontinuierliches Lernen",
+        severity="info",
+        body_html="""<p>📚 <strong>KI-Kompetenz</strong> entwickelt sich kontinuierlich weiter.</p>
+        <p class="insight-detail">Planen Sie regelmäßige Reviews Ihrer KI-Strategie ein,
+        um mit den technologischen Entwicklungen Schritt zu halten.</p>""",
+        category="general",
+        priority=4,
+    )
+
+
+def _size_label_de(size_label: str) -> str:
+    """Get German label for size."""
+    labels = {
+        "solo": "Solo-Unternehmer",
+        "team": "Kleines Team",
+        "kmu": "KMU",
+    }
+    return labels.get(size_label, size_label)
+
+
+def _build_generic_summary_html(cards: List[InsightCard], segment_label: str) -> str:
+    """Build summary HTML for generic fallback cards."""
+    if not cards:
+        return "<p>Allgemeine Empfehlungen für Ihre KI-Strategie.</p>"
+
+    return f"""<p>Basierend auf Ihrem Profil (<strong>{segment_label}</strong>) haben wir
+    {len(cards)} allgemeine Empfehlungen für Ihre KI-Strategie zusammengestellt.</p>
+    <p class="insight-note" style="font-size:11px;color:#6c757d;margin-top:8px;">
+    <em>Hinweis: Für detailliertere, segmentspezifische Insights werden mehr Vergleichsdaten benötigt.</em>
+    </p>"""
+
+
+def _add_reliability_note_to_summary(summary_html: str, stability: str) -> str:
+    """Add subtle reliability note to summary HTML for medium stability segments."""
+    if stability != "medium":
+        return summary_html
+
+    note = """<p class="reliability-note" style="font-size:10px;color:#6c757d;margin-top:8px;font-style:italic;">
+    * Basierend auf einer begrenzten Stichprobe. Werte können bei mehr Daten präziser werden.
+    </p>"""
+
+    return summary_html + note
 
 
 def _build_position_card(
