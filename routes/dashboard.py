@@ -403,7 +403,238 @@ def _get_risk_label(risk_level: str) -> Dict[str, str]:
 
 
 # =============================================================================
+# SPRINT G15-C: RELEASE HEALTH ENDPOINT
+# =============================================================================
+
+@router.get("/release-health")
+async def get_release_health(
+    db: Session = Depends(get_session)
+) -> Dict[str, Any]:
+    """
+    G15-C: Get release health status for operator monitoring.
+
+    Returns:
+    - reports_last_24h: Number of reports generated in last 24 hours
+    - avg_generation_time_sec: Average report generation time
+    - fallback_rate_pct: Percentage of sections using fallback
+    - ai_act_high_risk_share_pct: Percentage of high-risk reports
+    - pdf_error_rate_pct: Percentage of PDF generation failures
+    - circuit_breaker_status: Status of circuit breakers (G14)
+    - overall_status: green/yellow/red based on thresholds
+    """
+    _check_enabled()
+
+    try:
+        from datetime import datetime, timedelta
+        from models import ReportHistory
+
+        # Import G14 metrics if available
+        try:
+            from services.provider_perplexity import get_circuit_status as get_pplx_circuit
+            pplx_circuit = get_pplx_circuit()
+        except ImportError:
+            pplx_circuit = None
+
+        try:
+            from services.html_minifier import get_regex_cache_stats
+            regex_cache = get_regex_cache_stats()
+        except ImportError:
+            regex_cache = None
+
+        # Import release config thresholds
+        try:
+            from services.config_release import RELEASE_HEALTH_THRESHOLDS
+            thresholds = RELEASE_HEALTH_THRESHOLDS
+        except ImportError:
+            thresholds = {
+                "fallback_rate_pct": {"warn": 10.0, "critical": 25.0},
+                "pdf_error_rate_pct": {"warn": 5.0, "critical": 15.0},
+                "ai_act_high_risk_share_pct": {"warn": 50.0, "critical": 80.0},
+            }
+
+        # Get reports from last 24 hours
+        cutoff = datetime.utcnow() - timedelta(hours=24)
+        recent_reports = db.query(ReportHistory).filter(
+            ReportHistory.created_at >= cutoff
+        ).all()
+
+        reports_last_24h = len(recent_reports)
+
+        # Calculate metrics from recent reports
+        total_generation_time = 0.0
+        fallback_count = 0
+        high_risk_count = 0
+        pdf_error_count = 0
+        total_sections = 0
+
+        for report in recent_reports:
+            # Generation time (if available in metadata)
+            # Note: meta_json may not exist on all report models
+            meta = getattr(report, "meta_json", None) or {}
+            gen_time = meta.get("generation_time_sec", 0)
+            total_generation_time += gen_time
+
+            # AI Act risk level
+            ai_act = report.ai_act_json or {}
+            risk_level = ai_act.get("AI_ACT_RISK_LEVEL", "minimal")
+            if risk_level == "high-risk":
+                high_risk_count += 1
+
+            # Fallback tracking (if available)
+            fallbacks = meta.get("fallback_sections", [])
+            sections_count = meta.get("sections_generated", 10)  # default estimate
+            fallback_count += len(fallbacks)
+            total_sections += sections_count
+
+            # PDF errors (if tracked)
+            if meta.get("pdf_error"):
+                pdf_error_count += 1
+
+        # Calculate rates
+        avg_generation_time_sec = (
+            total_generation_time / reports_last_24h
+            if reports_last_24h > 0 else 0.0
+        )
+
+        fallback_rate_pct = (
+            (fallback_count / total_sections * 100)
+            if total_sections > 0 else 0.0
+        )
+
+        ai_act_high_risk_share_pct = (
+            (high_risk_count / reports_last_24h * 100)
+            if reports_last_24h > 0 else 0.0
+        )
+
+        pdf_error_rate_pct = (
+            (pdf_error_count / reports_last_24h * 100)
+            if reports_last_24h > 0 else 0.0
+        )
+
+        # Determine overall status
+        alerts = []
+        overall_status = "green"
+
+        # Check fallback rate
+        if fallback_rate_pct >= thresholds["fallback_rate_pct"]["critical"]:
+            overall_status = "red"
+            alerts.append({
+                "level": "critical",
+                "metric": "fallback_rate_pct",
+                "message": f"Fallback rate {fallback_rate_pct:.1f}% exceeds critical threshold",
+            })
+        elif fallback_rate_pct >= thresholds["fallback_rate_pct"]["warn"]:
+            if overall_status != "red":
+                overall_status = "yellow"
+            alerts.append({
+                "level": "warning",
+                "metric": "fallback_rate_pct",
+                "message": f"Fallback rate {fallback_rate_pct:.1f}% exceeds warning threshold",
+            })
+
+        # Check PDF error rate
+        if pdf_error_rate_pct >= thresholds["pdf_error_rate_pct"]["critical"]:
+            overall_status = "red"
+            alerts.append({
+                "level": "critical",
+                "metric": "pdf_error_rate_pct",
+                "message": f"PDF error rate {pdf_error_rate_pct:.1f}% exceeds critical threshold",
+            })
+        elif pdf_error_rate_pct >= thresholds["pdf_error_rate_pct"]["warn"]:
+            if overall_status != "red":
+                overall_status = "yellow"
+            alerts.append({
+                "level": "warning",
+                "metric": "pdf_error_rate_pct",
+                "message": f"PDF error rate {pdf_error_rate_pct:.1f}% exceeds warning threshold",
+            })
+
+        # Check high-risk share
+        if ai_act_high_risk_share_pct >= thresholds["ai_act_high_risk_share_pct"]["critical"]:
+            if overall_status != "red":
+                overall_status = "yellow"  # Not critical, just informational
+            alerts.append({
+                "level": "info",
+                "metric": "ai_act_high_risk_share_pct",
+                "message": f"High-risk reports at {ai_act_high_risk_share_pct:.1f}%",
+            })
+
+        # Check circuit breaker status
+        circuit_breaker_status = {}
+        circuit_breaker_open_count = 0
+
+        if pplx_circuit:
+            circuit_breaker_status["perplexity"] = pplx_circuit
+            if pplx_circuit.get("is_open"):
+                circuit_breaker_open_count += 1
+                alerts.append({
+                    "level": "warning",
+                    "metric": "circuit_breaker",
+                    "message": "Perplexity circuit breaker is OPEN",
+                })
+
+        if circuit_breaker_open_count > 0 and overall_status != "red":
+            overall_status = "yellow"
+
+        return {
+            "status": overall_status,
+            "timestamp": datetime.utcnow().isoformat(),
+            "metrics": {
+                "reports_last_24h": reports_last_24h,
+                "avg_generation_time_sec": round(avg_generation_time_sec, 1),
+                "fallback_rate_pct": round(fallback_rate_pct, 1),
+                "ai_act_high_risk_share_pct": round(ai_act_high_risk_share_pct, 1),
+                "pdf_error_rate_pct": round(pdf_error_rate_pct, 1),
+                "circuit_breaker_open_count": circuit_breaker_open_count,
+            },
+            "thresholds": thresholds,
+            "alerts": alerts,
+            "circuit_breakers": circuit_breaker_status,
+            "cache_stats": {
+                "regex_cache": regex_cache,
+            },
+            "release": {
+                "version": "R1",
+                "sprint": "G15",
+            },
+        }
+
+    except Exception as e:
+        log.error("[G15-C] Release health check failed: %s", e)
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat() if "datetime" in dir() else None,
+        }
+
+
+@router.get("/config-validation")
+async def get_config_validation() -> Dict[str, Any]:
+    """
+    G15-A: Get configuration validation results.
+
+    Returns release configuration validation status.
+    """
+    _check_enabled()
+
+    try:
+        from services.config_validation import validate_release_config
+
+        result = validate_release_config()
+        return result.to_dict()
+
+    except Exception as e:
+        log.error("[G15-A] Config validation failed: %s", e)
+        return {
+            "is_valid": False,
+            "errors": [str(e)],
+            "warnings": [],
+            "info": [],
+        }
+
+
+# =============================================================================
 # MODULE INITIALIZATION
 # =============================================================================
 
-log.info("[G11] Dashboard API routes loaded - enabled=%s", ENABLE_DASHBOARD_API)
+log.info("[G11/G15] Dashboard API routes loaded - enabled=%s", ENABLE_DASHBOARD_API)

@@ -1,21 +1,23 @@
 # -*- coding: utf-8 -*-
 """
 Sprint G8.2 & G8.3: Centralized Validation Configuration
+Sprint G15-A: Release validation functions
 
 This module provides a single source of truth for:
 - Section minimum word lengths (by size and section)
 - Validation flags and thresholds
 - AI Act validation parameters
+- Release configuration validation (G15)
 
 All values are configurable via ENV variables with sensible defaults.
 
-Version: 1.0.0 (Sprint G8)
+Version: 1.1.0 (Sprint G15)
 """
 from __future__ import annotations
 
 import os
 import logging
-from typing import Dict, Tuple, Any
+from typing import Dict, Tuple, Any, List
 
 log = logging.getLogger(__name__)
 
@@ -279,6 +281,171 @@ def validate_business_case_with_ai_act(
         warnings.append(f"[AI-ACT-BC] Very short payback ({payback:.1f} months) for high-risk classification")
 
     return warnings
+
+
+# =============================================================================
+# SPRINT G15-A: RELEASE CONFIGURATION VALIDATION
+# =============================================================================
+
+class ReleaseValidationResult:
+    """Result of release configuration validation."""
+
+    def __init__(self):
+        self.is_valid: bool = True
+        self.errors: List[str] = []
+        self.warnings: List[str] = []
+        self.info: List[str] = []
+
+    def add_error(self, msg: str) -> None:
+        self.errors.append(msg)
+        self.is_valid = False
+
+    def add_warning(self, msg: str) -> None:
+        self.warnings.append(msg)
+
+    def add_info(self, msg: str) -> None:
+        self.info.append(msg)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "is_valid": self.is_valid,
+            "errors": self.errors,
+            "warnings": self.warnings,
+            "info": self.info,
+            "error_count": len(self.errors),
+            "warning_count": len(self.warnings),
+        }
+
+
+def validate_release_config() -> ReleaseValidationResult:
+    """
+    SPRINT G15-A: Validate release configuration for production readiness.
+
+    Checks:
+    - Required ENV variables are set
+    - API keys are present
+    - Feature flags are consistent
+    - Value ranges are valid
+
+    Returns:
+        ReleaseValidationResult with is_valid, errors, warnings, info
+    """
+    result = ReleaseValidationResult()
+
+    # Import release config
+    try:
+        from services.config_release import (
+            REQUIRED_ENV_VARS,
+            RECOMMENDED_ENV_VARS,
+            VALIDATED_ENV_VARS,
+            get_env_validation_summary,
+        )
+    except ImportError:
+        result.add_error("Cannot import config_release module")
+        return result
+
+    # Get validation summary
+    summary = get_env_validation_summary()
+
+    # Check required variables
+    for var in summary["missing_required"]:
+        result.add_error(f"Required ENV variable not set: {var}")
+
+    # Check recommended variables
+    for var in summary["missing_recommended"]:
+        result.add_warning(f"Recommended ENV variable not set: {var}")
+
+    # Check invalid values
+    for msg in summary["invalid_values"]:
+        result.add_error(f"Invalid ENV value: {msg}")
+
+    # Check critical production settings
+    env = os.getenv("ENVIRONMENT", "").lower()
+    if env == "production":
+        # In production, certain features should be enabled
+        if not get_bool_env("AI_ACT_ENABLED", True):
+            result.add_warning("AI_ACT_ENABLED is off in production")
+
+        if not get_bool_env("RATE_LIMIT_ENABLED", True):
+            result.add_warning("RATE_LIMIT_ENABLED is off in production")
+
+        if not get_bool_env("LLM_CIRCUIT_BREAKER_ENABLED", True):
+            result.add_warning("LLM_CIRCUIT_BREAKER_ENABLED is off in production")
+
+        # Check JWT_SECRET is not default
+        jwt_secret = os.getenv("JWT_SECRET", "")
+        if jwt_secret in ("", "change-me", "secret", "jwt-secret"):
+            result.add_error("JWT_SECRET must be changed from default in production")
+
+        result.add_info(f"Environment: {env}")
+
+    # Check LLM configuration
+    openai_key = os.getenv("OPENAI_API_KEY", "")
+    if openai_key and not openai_key.startswith("sk-"):
+        result.add_warning("OPENAI_API_KEY doesn't look like a valid key")
+
+    # Check timeout values are reasonable
+    pdf_timeout = get_int_env("PDF_TIMEOUT_MS", 90000)
+    if pdf_timeout > 300000:  # 5 minutes
+        result.add_warning(f"PDF_TIMEOUT_MS={pdf_timeout}ms is very high")
+
+    openai_timeout = get_int_env("OPENAI_TIMEOUT", 90)
+    if openai_timeout > 300:
+        result.add_warning(f"OPENAI_TIMEOUT={openai_timeout}s is very high")
+
+    # Check rate limits are reasonable
+    rate_limit = get_int_env("REPORT_RATE_LIMIT_PER_MINUTE", 5)
+    if rate_limit > 60:
+        result.add_warning(f"REPORT_RATE_LIMIT_PER_MINUTE={rate_limit} is very high")
+
+    # Summary info
+    if result.is_valid:
+        result.add_info("Release configuration validation passed")
+    else:
+        result.add_info(f"Release configuration has {len(result.errors)} error(s)")
+
+    return result
+
+
+def print_release_validation() -> bool:
+    """
+    Print release validation results to console.
+
+    Returns:
+        True if validation passed, False otherwise
+    """
+    result = validate_release_config()
+
+    print("")
+    print("=" * 78)
+    print("G15-A RELEASE CONFIGURATION VALIDATION")
+    print("=" * 78)
+    print("")
+
+    if result.errors:
+        print(f"ERRORS ({len(result.errors)}):")
+        for err in result.errors:
+            print(f"   {err}")
+        print("")
+
+    if result.warnings:
+        print(f"WARNINGS ({len(result.warnings)}):")
+        for warn in result.warnings:
+            print(f"   {warn}")
+        print("")
+
+    if result.info:
+        print("INFO:")
+        for info in result.info:
+            print(f"   {info}")
+        print("")
+
+    status = "PASS" if result.is_valid else "FAIL"
+    print(f"STATUS: {status}")
+    print("=" * 78)
+    print("")
+
+    return result.is_valid
 
 
 # =============================================================================
