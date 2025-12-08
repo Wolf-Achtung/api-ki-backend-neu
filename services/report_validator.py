@@ -470,11 +470,168 @@ class ReportValidator:
             "AI_ACT_RELATED_USECASES_HTML": 15,      # List content
         }
 
+    # SPRINT G14-C: Smart mode configuration
+    SMART_MODE_ENABLED = True  # Enable warning de-duplication and bundling
+    MAX_WARNINGS_PER_CATEGORY = 3  # Max warnings shown per category before bundling
+
     def __init__(self, sections: Dict[str, Any], meta: Dict[str, Any]) -> None:
         self.sections = sections or {}
         self.meta = meta or {}
         self.errors: List[ValidationError] = []
         self.company_size: str = self.meta.get("unternehmensgroesse", "unbekannt")
+
+    # ------------------------------------------------------------------
+    # SPRINT G14-C: Smart Mode - Warning De-Duplication & Bundling
+    # ------------------------------------------------------------------
+
+    def _dedupe_warnings(self) -> List[ValidationError]:
+        """
+        SPRINT G14-C: Remove duplicate warnings and bundle similar ones.
+
+        De-duplication rules:
+        - Same category + same section + same message = duplicate
+        - Multiple SECTION_TOO_SHORT warnings = bundle into one
+        - Multiple SIZE_MISMATCH for same term = bundle
+        """
+        if not self.SMART_MODE_ENABLED:
+            return self.errors
+
+        seen_keys: set = set()
+        deduped: List[ValidationError] = []
+
+        for err in self.errors:
+            # Create unique key for deduplication
+            key = (err.severity, err.category, err.section, err.message)
+
+            if key not in seen_keys:
+                seen_keys.add(key)
+                deduped.append(err)
+
+        return deduped
+
+    def _bundle_min_word_warnings(
+        self, errors: List[ValidationError]
+    ) -> List[ValidationError]:
+        """
+        SPRINT G14-C: Bundle multiple SECTION_TOO_SHORT warnings into summary.
+
+        Instead of:
+          - Section X too short: 45 words (min 100)
+          - Section Y too short: 32 words (min 80)
+          - Section Z too short: 55 words (min 120)
+
+        Output:
+          - 3 sections below minimum word count: X (45/100), Y (32/80), Z (55/120)
+        """
+        if not self.SMART_MODE_ENABLED:
+            return errors
+
+        # Separate min-word warnings from others
+        min_word_warnings: List[ValidationError] = []
+        other_errors: List[ValidationError] = []
+
+        for err in errors:
+            if err.category == "SECTION_TOO_SHORT" and err.severity == "WARNING":
+                min_word_warnings.append(err)
+            else:
+                other_errors.append(err)
+
+        # If few warnings, don't bundle
+        if len(min_word_warnings) <= self.MAX_WARNINGS_PER_CATEGORY:
+            return errors
+
+        # Bundle min-word warnings
+        section_summaries = []
+        for err in min_word_warnings:
+            # Extract word counts from message
+            import re
+            match = re.search(r"(\d+)\s*Wörter.*?(\d+)\s*Wörter", err.message)
+            if match:
+                actual, minimum = match.groups()
+                section_summaries.append(f"{err.section} ({actual}/{minimum})")
+            else:
+                section_summaries.append(err.section)
+
+        bundled = ValidationError(
+            severity="WARNING",
+            category="SECTION_TOO_SHORT_BUNDLE",
+            section="[multiple]",
+            message=f"{len(min_word_warnings)} Sektionen unter Mindest-Wortanzahl",
+            details=", ".join(section_summaries[:6]) + (
+                f" (+{len(section_summaries) - 6} weitere)"
+                if len(section_summaries) > 6 else ""
+            ),
+        )
+
+        return other_errors + [bundled]
+
+    def _bundle_size_mismatch_warnings(
+        self, errors: List[ValidationError]
+    ) -> List[ValidationError]:
+        """
+        SPRINT G14-C: Bundle multiple SIZE_MISMATCH warnings by term.
+
+        Instead of multiple warnings for same term in different sections,
+        bundle into one warning listing affected sections.
+        """
+        if not self.SMART_MODE_ENABLED:
+            return errors
+
+        # Group SIZE_MISMATCH warnings by term
+        term_warnings: Dict[str, List[ValidationError]] = {}
+        other_errors: List[ValidationError] = []
+
+        for err in errors:
+            if err.category == "SIZE_MISMATCH":
+                # Extract term from message
+                import re
+                match = re.search(r"Begriff '([^']+)'", err.message)
+                if match:
+                    term = match.group(1)
+                    if term not in term_warnings:
+                        term_warnings[term] = []
+                    term_warnings[term].append(err)
+                else:
+                    other_errors.append(err)
+            else:
+                other_errors.append(err)
+
+        # Bundle warnings for terms appearing in multiple sections
+        bundled_errors = []
+        for term, warnings in term_warnings.items():
+            if len(warnings) == 1:
+                # Keep single warning as-is
+                bundled_errors.append(warnings[0])
+            else:
+                # Bundle multiple occurrences
+                sections = list(set(w.section for w in warnings))
+                severity = warnings[0].severity  # Keep original severity
+                bundled = ValidationError(
+                    severity=severity,
+                    category="SIZE_MISMATCH",
+                    section=", ".join(sections[:3]) + (
+                        f" (+{len(sections) - 3})" if len(sections) > 3 else ""
+                    ),
+                    message=f"Persona-Leak: '{term}' in {len(warnings)} Sektionen gefunden",
+                    details=f"Term '{term}' muss ersetzt werden für '{self.company_size}'",
+                )
+                bundled_errors.append(bundled)
+
+        return other_errors + bundled_errors
+
+    def get_smart_errors(self) -> List[ValidationError]:
+        """
+        SPRINT G14-C: Get errors with smart mode processing applied.
+
+        Applies:
+        1. De-duplication of identical warnings
+        2. Bundling of min-word warnings
+        3. Bundling of size-mismatch warnings
+        """
+        errors = self._dedupe_warnings()
+        errors = self._bundle_min_word_warnings(errors)
+        errors = self._bundle_size_mismatch_warnings(errors)
+        return errors
 
     # ------------------------------------------------------------------
 
@@ -493,6 +650,12 @@ class ReportValidator:
         return is_valid, self.errors
 
     def print_report(self) -> None:
+        """
+        Print validation report to console.
+
+        SPRINT G14-C: Uses smart mode to de-duplicate and bundle warnings
+        for cleaner, more actionable output.
+        """
         if not self.errors:
             print("")
             print("=" * 78)
@@ -504,13 +667,23 @@ class ReportValidator:
             print("")
             return
 
+        # SPRINT G14-C: Use smart mode for display
+        display_errors = self.get_smart_errors() if self.SMART_MODE_ENABLED else self.errors
+
+        # Count from original errors (for accurate stats)
         critical_count = sum(1 for e in self.errors if e.severity == "CRITICAL")
         warning_count = sum(1 for e in self.errors if e.severity == "WARNING")
         info_count = sum(1 for e in self.errors if e.severity == "INFO")
 
+        # Count displayed (after bundling)
+        displayed_count = len(display_errors)
+        original_count = len(self.errors)
+
         print("")
         print("=" * 78)
         print("📋 REPORT VALIDATION RESULTS")
+        if self.SMART_MODE_ENABLED and displayed_count < original_count:
+            print(f"   [Smart Mode: {original_count} → {displayed_count} consolidated]")
         print("=" * 78)
         print("")
 
@@ -526,7 +699,7 @@ class ReportValidator:
         print("-" * 80)
         print("")
 
-        for err in self.errors:
+        for err in display_errors:
             prefix = {
                 "CRITICAL": "❌",
                 "WARNING": "⚠️",
@@ -544,6 +717,8 @@ class ReportValidator:
             f"TOTAL: {critical_count} Critical | "
             f"{warning_count} Warnings | {info_count} Info"
         )
+        if self.SMART_MODE_ENABLED and displayed_count < original_count:
+            print(f"(Displayed: {displayed_count} bundled items)")
         print("=" * 78)
         print("")
 
