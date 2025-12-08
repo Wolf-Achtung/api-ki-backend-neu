@@ -26,7 +26,7 @@ import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -269,7 +269,7 @@ def submit_profile_to_api(profile_data: Dict, base_url: str) -> Dict[str, Any]:
             timeout=180,  # 3 minutes for report generation
         )
         response.raise_for_status()
-        return response.json()
+        return cast(Dict[str, Any], response.json())
     except requests.exceptions.RequestException as e:
         log.error(f"API request failed: {e}")
         return {"error": str(e)}
@@ -413,8 +413,8 @@ def run_e2e_tests(
     log.info("")
 
     for profile_config in GOLD_PROFILES:
-        profile_id = profile_config["id"]
-        profile_path = PROJECT_ROOT / profile_config["path"]
+        profile_id = str(profile_config["id"])
+        profile_path = PROJECT_ROOT / str(profile_config["path"])
 
         log.info(f"Testing: {profile_id}")
         log.info("-" * 40)

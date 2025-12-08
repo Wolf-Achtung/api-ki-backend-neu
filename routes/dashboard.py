@@ -469,7 +469,8 @@ async def get_release_health(
 
         for report in recent_reports:
             # Generation time (if available in metadata)
-            meta = report.meta_json or {}
+            # Note: meta_json may not exist on all report models
+            meta = getattr(report, "meta_json", None) or {}
             gen_time = meta.get("generation_time_sec", 0)
             total_generation_time += gen_time
 
