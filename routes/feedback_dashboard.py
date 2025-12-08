@@ -1368,3 +1368,182 @@ async def get_ft_sample_signals(
     except Exception as e:
         log.error(f"Failed to get sample signals: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get samples: {str(e)}")
+
+
+# =============================================================================
+# G17.4: AUTO-PROMPT-REWRITE ENGINE ENDPOINTS
+# =============================================================================
+
+class PromptIssueResponse(BaseModel):
+    """A detected prompt issue."""
+    issue_type: str
+    severity: str
+    signal_ref: Optional[str] = None
+    example_input: str = ""
+    example_output: str = ""
+    ideal_behavior: str = ""
+    detected_pattern: str = ""
+    prompt_file: Optional[str] = None
+    section_name: Optional[str] = None
+
+
+class PromptAnalysisResponse(BaseModel):
+    """Aggregated prompt analysis response."""
+    total_suggestions: int
+    by_priority: Dict[str, int]
+    by_file: Dict[str, int]
+    by_issue_type: Dict[str, int]
+    enabled: bool
+
+
+class RewriteSuggestionResponse(BaseModel):
+    """A rewrite suggestion for a prompt."""
+    suggestion_id: str
+    prompt_file: str
+    priority: str
+    confidence: float
+    change_type: str
+    current_section_excerpt: str
+    proposed_rewrite: str
+    justification: str
+    created_at: str
+    issue_refs: List[str] = []
+    segment_stability: str = "medium"
+    applied: bool = False
+
+
+class RewriteSuggestionsListResponse(BaseModel):
+    """List of rewrite suggestions."""
+    suggestions: List[RewriteSuggestionResponse]
+    count: int
+
+
+class PatchResponse(BaseModel):
+    """A diff-style patch for a prompt file."""
+    prompt_file: str
+    patch_content: str
+    suggestion_id: str
+    created_at: str
+
+
+class PatchListResponse(BaseModel):
+    """List of patches ready for commit."""
+    patches: List[PatchResponse]
+    count: int
+
+
+@router.get(
+    "/prompts/analysis",
+    response_model=PromptAnalysisResponse,
+    summary="Get prompt weakness analysis",
+    description="Returns aggregated analysis of detected prompt weaknesses (G17.4-D).",
+)
+async def get_prompt_analysis() -> PromptAnalysisResponse:
+    """Get aggregated prompt analysis for dashboard."""
+    try:
+        from services.prompt_rewrite_engine import get_prompt_analysis as _get_analysis
+
+        analysis = _get_analysis()
+
+        return PromptAnalysisResponse(
+            total_suggestions=analysis.get("total_suggestions", 0),
+            by_priority=analysis.get("by_priority", {}),
+            by_file=analysis.get("by_file", {}),
+            by_issue_type=analysis.get("by_issue_type", {}),
+            enabled=analysis.get("enabled", False),
+        )
+
+    except ImportError:
+        return PromptAnalysisResponse(
+            total_suggestions=0,
+            by_priority={},
+            by_file={},
+            by_issue_type={},
+            enabled=False,
+        )
+    except Exception as e:
+        log.error(f"Failed to get prompt analysis: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get analysis: {str(e)}")
+
+
+@router.get(
+    "/prompts/rewrite-suggestions",
+    response_model=RewriteSuggestionsListResponse,
+    summary="Get prompt rewrite suggestions",
+    description="Returns all rewrite suggestions with priorities (G17.4-D).",
+)
+async def get_prompt_rewrite_suggestions(
+    priority: Optional[str] = Query(None, description="Filter by priority (P1, P2, P3)"),
+    limit: int = Query(20, ge=1, le=100, description="Max suggestions to return"),
+) -> RewriteSuggestionsListResponse:
+    """Get prompt rewrite suggestions for dashboard."""
+    try:
+        from services.prompt_rewrite_engine import get_rewrite_suggestions
+
+        suggestions = get_rewrite_suggestions(priority=priority, limit=limit)
+
+        suggestion_responses = [
+            RewriteSuggestionResponse(
+                suggestion_id=s.get("suggestion_id", ""),
+                prompt_file=s.get("prompt_file", ""),
+                priority=s.get("priority", "P3"),
+                confidence=s.get("confidence", 0.0),
+                change_type=s.get("change_type", ""),
+                current_section_excerpt=s.get("current_section_excerpt", ""),
+                proposed_rewrite=s.get("proposed_rewrite", ""),
+                justification=s.get("justification", ""),
+                created_at=s.get("created_at", ""),
+                issue_refs=s.get("issue_refs", []),
+                segment_stability=s.get("segment_stability", "medium"),
+                applied=s.get("applied", False),
+            )
+            for s in suggestions
+        ]
+
+        return RewriteSuggestionsListResponse(
+            suggestions=suggestion_responses,
+            count=len(suggestion_responses),
+        )
+
+    except ImportError:
+        return RewriteSuggestionsListResponse(suggestions=[], count=0)
+    except Exception as e:
+        log.error(f"Failed to get rewrite suggestions: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get suggestions: {str(e)}")
+
+
+@router.get(
+    "/prompts/next-patches",
+    response_model=PatchListResponse,
+    summary="Get next patches for commit",
+    description="Returns diff-based patch set ready for commit (G17.4-D).",
+)
+async def get_prompt_next_patches(
+    limit: int = Query(5, ge=1, le=20, description="Max patches to return"),
+) -> PatchListResponse:
+    """Get next patches ready for commit."""
+    try:
+        from services.prompt_rewrite_engine import get_next_patches
+
+        patches = get_next_patches(limit=limit)
+
+        patch_responses = [
+            PatchResponse(
+                prompt_file=p.get("prompt_file", ""),
+                patch_content=p.get("patch_content", ""),
+                suggestion_id=p.get("suggestion_id", ""),
+                created_at=p.get("created_at", ""),
+            )
+            for p in patches
+        ]
+
+        return PatchListResponse(
+            patches=patch_responses,
+            count=len(patch_responses),
+        )
+
+    except ImportError:
+        return PatchListResponse(patches=[], count=0)
+    except Exception as e:
+        log.error(f"Failed to get patches: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get patches: {str(e)}")
