@@ -223,6 +223,17 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
   </ul>
   {% endif %}
 
+  <h3>Risikominimierung während der Einführung</h3>
+  <p>
+    {% if COMPANY_SIZE == "solo" %}
+    Beginnen Sie mit Aufgaben niedriger Kritikalität, um Erfahrung zu sammeln. Halten Sie bei wichtigen Outputs stets einen manuellen Prüfschritt ein. Dokumentieren Sie früh auftretende Fehlerquellen, um Ihre Prompts iterativ zu verbessern.
+    {% elif COMPANY_SIZE == "team" %}
+    Starten Sie mit klar abgegrenzten Pilotaufgaben im Bereich. Etablieren Sie Peer-Reviews als festen Bestandteil des Workflows. Sammeln Sie Feedback systematisch und passen Sie Vorlagen basierend auf konkreten Erfahrungen an.
+    {% else %}
+    Begrenzen Sie den initialen Pilotbereich auf unkritische Prozesse. Definieren Sie klare Eskalationswege bei unerwarteten Ergebnissen. Führen Sie regelmäßige Retrospektiven durch und skalieren Sie erst nach validierter Qualität in weitere Bereiche.
+    {% endif %}
+  </p>
+
   <p class="small muted">
     Diese Roadmap verweist auf Quick Wins (→ siehe Sofortmaßnahmen) und
     Tools (→ siehe KI-Stack). Details zum Change-Management → siehe Veränderungsfähigkeit.

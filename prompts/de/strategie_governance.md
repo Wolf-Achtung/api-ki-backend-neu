@@ -123,6 +123,17 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     Größen zentral, um Qualität und Sicherheit zu gewährleisten.
   </p>
 
+  <h3>KI-Kultur &amp; Akzeptanz</h3>
+  <p>
+    {% if COMPANY_SIZE == "solo" %}
+    Betrachten Sie KI als Werkzeug zur Entlastung, nicht als Ersatz eigener Expertise. Regelmäßige Selbstreflexion über Qualität und Grenzen der KI-Outputs stärkt die eigene Urteilsfähigkeit und verhindert übermäßige Abhängigkeit.
+    {% elif COMPANY_SIZE == "team" %}
+    Fördern Sie offenen Austausch über erfolgreiche und gescheiterte KI-Anwendungen. Kurze Erfahrungsberichte in bestehenden Meetings schaffen gemeinsames Lernen und bauen Vorbehalte ab, ohne zusätzlichen Aufwand zu erzeugen.
+    {% else %}
+    Etablieren Sie eine positive Fehlerkultur bei der KI-Nutzung: Offenes Teilen von Learnings beschleunigt den organisationsweiten Lernprozess. Champions in Fachbereichen können als Multiplikatoren wirken und Akzeptanz nachhaltig steigern.
+    {% endif %}
+  </p>
+
   <p class="small muted">
     Eine realistische, gut kommunizierte Governance sichert nachhaltige Wirkung,
     unterstützt die Roadmap-Umsetzung und schafft Vertrauen bei Mitarbeitenden und

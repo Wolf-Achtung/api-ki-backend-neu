@@ -76,6 +76,17 @@ ANTI-REDUNDANZ:
     DSGVO-Konformität. Monitoring überwacht Latenz und Fehlerquoten kontinuierlich.
   </p>
 
+  <h3>Datensicherheit &amp; Compliance</h3>
+  <p>
+    {% if COMPANY_SIZE == "solo" %}
+    Nutzen Sie ausschließlich DSGVO-konforme Tools mit EU-Datenverarbeitung. Vermeiden Sie die Eingabe sensibler Kundendaten in KI-Systeme ohne vorherige Anonymisierung oder explizite Einwilligung.
+    {% elif COMPANY_SIZE == "team" %}
+    Definieren Sie klare Regeln, welche Datentypen in KI-Tools verwendet werden dürfen. Ein zentraler Leitfaden für alle Beteiligten verhindert unbeabsichtigte Datenschutzverletzungen und schafft Rechtssicherheit.
+    {% else %}
+    Integrieren Sie KI-Nutzungsrichtlinien in bestehende Datenschutzprozesse. Regelmäßige Audits der verwendeten Tools und Datenflüsse sichern Compliance. Dokumentieren Sie Verarbeitungstätigkeiten gemäß Art. 30 DSGVO.
+    {% endif %}
+  </p>
+
   <p class="small muted">
     Diese Architektur gewährleistet nachvollziehbare, qualitätsgesicherte Reports
     mit konsistenten Ergebnissen unabhängig von der Unternehmensgröße.
