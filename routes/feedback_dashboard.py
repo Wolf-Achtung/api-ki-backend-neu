@@ -1210,3 +1210,161 @@ async def get_ft_quality_histogram(
     except Exception as e:
         log.error(f"Failed to get quality histogram: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get histogram: {str(e)}")
+
+
+# =============================================================================
+# G17.3-E: FINE-TUNING SIGNAL STATS ENDPOINTS (per briefing spec)
+# =============================================================================
+
+class FTSignalStatsResponse(BaseModel):
+    """Response for FT signal statistics."""
+    signals_by_day: Dict[str, int]
+    signals_by_segment: Dict[str, int]
+    signals_by_type: Dict[str, int]
+    total_signals: int
+    conflict_rate: float
+
+
+class FTDatasetQualityResponse(BaseModel):
+    """Response for FT dataset quality score."""
+    completeness: float
+    diversity: float
+    conflict_score: float
+    predictive_alignment_score: float
+    persona_precision: float
+    ai_act_reasoning_strength: float
+    overall_score: float
+    rating: str  # green|yellow|red
+
+
+class FTSampleSignalResponse(BaseModel):
+    """Individual sample signal."""
+    signal_type: str
+    source_section: str
+    quality_score: float
+    confidence: float
+    segment_key: str
+    lang: str
+    input_preview: str
+    output_preview: str
+
+
+class FTSampleListResponse(BaseModel):
+    """Response for FT sample signals."""
+    samples: List[FTSampleSignalResponse]
+    count: int
+
+
+@router.get(
+    "/ft-signal-stats",
+    response_model=FTSignalStatsResponse,
+    summary="Get FT signal statistics",
+    description="Returns signal counts by day, segment, type, and conflict rate (G17.3-E).",
+)
+async def get_ft_signal_stats_endpoint() -> FTSignalStatsResponse:
+    """Get FT signal statistics for dashboard."""
+    try:
+        from services.ft_dataset_builder import get_ft_signal_stats
+
+        stats = get_ft_signal_stats()
+
+        return FTSignalStatsResponse(
+            signals_by_day=stats.get("signals_by_day", {}),
+            signals_by_segment=stats.get("signals_by_segment", {}),
+            signals_by_type=stats.get("signals_by_type", {}),
+            total_signals=stats.get("total_signals", 0),
+            conflict_rate=stats.get("conflict_rate", 0.0),
+        )
+
+    except ImportError:
+        return FTSignalStatsResponse(
+            signals_by_day={},
+            signals_by_segment={},
+            signals_by_type={},
+            total_signals=0,
+            conflict_rate=0.0,
+        )
+    except Exception as e:
+        log.error(f"Failed to get FT signal stats: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
+
+
+@router.get(
+    "/ft-dataset-quality",
+    response_model=FTDatasetQualityResponse,
+    summary="Get FT dataset quality score",
+    description="Returns comprehensive dataset quality metrics with green/yellow/red rating (G17.3-E).",
+)
+async def get_ft_dataset_quality() -> FTDatasetQualityResponse:
+    """Get FT dataset quality score for dashboard."""
+    try:
+        from services.ft_dataset_builder import score_dataset_quality
+
+        quality = score_dataset_quality()
+
+        return FTDatasetQualityResponse(
+            completeness=quality.completeness,
+            diversity=quality.diversity,
+            conflict_score=quality.conflict_score,
+            predictive_alignment_score=quality.predictive_alignment_score,
+            persona_precision=quality.persona_precision,
+            ai_act_reasoning_strength=quality.ai_act_reasoning_strength,
+            overall_score=quality.overall_score,
+            rating=quality.rating,
+        )
+
+    except ImportError:
+        return FTDatasetQualityResponse(
+            completeness=0.0,
+            diversity=0.0,
+            conflict_score=0.0,
+            predictive_alignment_score=0.0,
+            persona_precision=0.0,
+            ai_act_reasoning_strength=0.0,
+            overall_score=0.0,
+            rating="red",
+        )
+    except Exception as e:
+        log.error(f"Failed to get dataset quality: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get quality: {str(e)}")
+
+
+@router.get(
+    "/ft-sample",
+    response_model=FTSampleListResponse,
+    summary="Get anonymized sample signals",
+    description="Returns anonymized sample signals from last 24h without PII (G17.3-E).",
+)
+async def get_ft_sample_signals(
+    limit: int = Query(10, ge=1, le=50, description="Max signals to return"),
+) -> FTSampleListResponse:
+    """Get anonymized FT sample signals for dashboard."""
+    try:
+        from services.ft_dataset_builder import get_ft_sample_signals
+
+        samples = get_ft_sample_signals(limit=limit)
+
+        sample_responses = [
+            FTSampleSignalResponse(
+                signal_type=s.get("signal_type", "unknown"),
+                source_section=s.get("source_section", "unknown"),
+                quality_score=s.get("quality_score", 0),
+                confidence=s.get("confidence", 0),
+                segment_key=s.get("segment_key", "unknown"),
+                lang=s.get("lang", "de"),
+                input_preview=s.get("input_preview", "[ANONYMIZED]"),
+                output_preview=s.get("output_preview", "[ANONYMIZED]"),
+            )
+            for s in samples
+        ]
+
+        return FTSampleListResponse(
+            samples=sample_responses,
+            count=len(sample_responses),
+        )
+
+    except ImportError:
+        return FTSampleListResponse(samples=[], count=0)
+    except Exception as e:
+        log.error(f"Failed to get sample signals: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get samples: {str(e)}")

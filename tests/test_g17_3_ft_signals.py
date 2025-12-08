@@ -1007,8 +1007,8 @@ class TestConfiguration:
         """Test default values for environment variables."""
         from services.ft_signal_extractor import (
             FT_SIGNAL_EXTRACTION_ENABLED,
-            FT_SIGNAL_MIN_QUALITY_SCORE,
-            FT_SIGNAL_MAX_AGE_DAYS,
+            FT_MIN_CONFIDENCE_THRESHOLD,
+            FT_DATASET_DAYS,
         )
         from services.ft_dataset_builder import (
             FT_DATASET_ENABLED,
@@ -1018,8 +1018,8 @@ class TestConfiguration:
 
         # These should have sensible defaults
         assert isinstance(FT_SIGNAL_EXTRACTION_ENABLED, bool)
-        assert 0 <= FT_SIGNAL_MIN_QUALITY_SCORE <= 1
-        assert FT_SIGNAL_MAX_AGE_DAYS > 0
+        assert 0 <= FT_MIN_CONFIDENCE_THRESHOLD <= 1
+        assert FT_DATASET_DAYS > 0
         assert isinstance(FT_DATASET_ENABLED, bool)
         assert FT_DATASET_MIN_SIGNALS > 0
         assert FT_DATASET_MAX_SIGNALS > FT_DATASET_MIN_SIGNALS

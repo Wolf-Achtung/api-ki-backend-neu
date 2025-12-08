@@ -27,13 +27,20 @@ log = logging.getLogger(__name__)
 # =============================================================================
 
 FT_SIGNAL_EXTRACTION_ENABLED = os.environ.get("FT_SIGNAL_EXTRACTION_ENABLED", "1") == "1"
-FT_SIGNAL_MIN_QUALITY_SCORE = float(os.environ.get("FT_SIGNAL_MIN_QUALITY_SCORE", "0.6"))
-FT_SIGNAL_MAX_AGE_DAYS = int(os.environ.get("FT_SIGNAL_MAX_AGE_DAYS", "90"))
-FT_SIGNAL_ANONYMIZE_EMAILS = os.environ.get("FT_SIGNAL_ANONYMIZE_EMAILS", "1") == "1"
-FT_SIGNAL_ANONYMIZE_NAMES = os.environ.get("FT_SIGNAL_ANONYMIZE_NAMES", "1") == "1"
-FT_SIGNAL_ANONYMIZE_COMPANIES = os.environ.get("FT_SIGNAL_ANONYMIZE_COMPANIES", "1") == "1"
-FT_SIGNAL_STORAGE_PATH = os.environ.get("FT_SIGNAL_STORAGE_PATH", "data/ft_signals")
-FT_SIGNAL_AUTO_EXPORT = os.environ.get("FT_SIGNAL_AUTO_EXPORT", "0") == "1"
+FT_BUILD_DATASET_ON_REPORT = os.environ.get("FT_BUILD_DATASET_ON_REPORT", "0") == "1"
+FT_DATASET_DAYS = int(os.environ.get("FT_DATASET_DAYS", "30"))
+FT_MIN_CONFIDENCE_THRESHOLD = float(os.environ.get("FT_MIN_CONFIDENCE_THRESHOLD", "0.35"))
+FT_MAX_SIGNALS_PER_REPORT = int(os.environ.get("FT_MAX_SIGNALS_PER_REPORT", "12"))
+FT_PRIVACY_STRICT_MODE = os.environ.get("FT_PRIVACY_STRICT_MODE", "1") == "1"
+FT_SIGNAL_DEBUG_LOGGING = os.environ.get("FT_SIGNAL_DEBUG_LOGGING", "0") == "1"
+FT_ALLOW_WEAK_SEGMENTS = os.environ.get("FT_ALLOW_WEAK_SEGMENTS", "0") == "1"
+FT_SIGNAL_STORAGE_PATH = os.environ.get("FT_SIGNAL_STORAGE_PATH", "/app/ft_signals")
+
+# Derived from FT_PRIVACY_STRICT_MODE for backward compatibility
+FT_SIGNAL_ANONYMIZE_EMAILS = FT_PRIVACY_STRICT_MODE
+FT_SIGNAL_ANONYMIZE_NAMES = FT_PRIVACY_STRICT_MODE
+FT_SIGNAL_ANONYMIZE_COMPANIES = FT_PRIVACY_STRICT_MODE
+FT_SIGNAL_MAX_AGE_DAYS = FT_DATASET_DAYS  # Alias for dataset days
 
 # Signal type weights for quality aggregation
 SIGNAL_WEIGHT_MAP: Dict[str, float] = {
@@ -53,6 +60,16 @@ SIGNAL_WEIGHT_MAP: Dict[str, float] = {
 # =============================================================================
 # DATA STRUCTURES
 # =============================================================================
+
+@dataclass
+class SegmentInfo:
+    """Segment metadata for normalized signals."""
+    size: str = "team"  # solo|team|kmu
+    branch: str = "other"  # consulting|finance|industry|health|education|...
+    risk: str = "minimal"  # minimal|limited|high-risk
+    funding_scope: str = "NONE"  # DE|EU_CORE|NONE
+    stability: str = "medium"  # strong|medium|weak
+
 
 @dataclass
 class FTSignal:
@@ -77,6 +94,9 @@ class FTSignal:
     company_size: Optional[str] = None
     industry: Optional[str] = None
     lang: str = "de"
+    risk_level: str = "minimal"
+    funding_scope: str = "NONE"
+    stability: str = "medium"
 
     # Signal-specific metadata
     metadata: Dict[str, Any] = field(default_factory=dict)
@@ -84,6 +104,17 @@ class FTSignal:
     # Normalization status
     is_normalized: bool = False
     is_anonymized: bool = False
+
+
+@dataclass
+class NormalizedSignal:
+    """Normalized signal structure for dataset building (G17.3-B)."""
+    signal_type: str  # persona|logic|html|business_case|ai_act|insight|predictive|funding
+    language: str  # de|en
+    input_pattern: str
+    output_target: str
+    confidence: float
+    segment: SegmentInfo = field(default_factory=SegmentInfo)
 
 
 @dataclass
@@ -370,7 +401,7 @@ def _extract_persona_fix_signals(
             {"segment_sample_size": correction.get("frequency", 1)}
         )
 
-        if quality_score < FT_SIGNAL_MIN_QUALITY_SCORE:
+        if quality_score < FT_MIN_CONFIDENCE_THRESHOLD:
             continue
 
         signal = FTSignal(
@@ -425,7 +456,7 @@ def _extract_size_aware_length_signals(
             original, adjusted, "size_aware_length"
         )
 
-        if quality_score < FT_SIGNAL_MIN_QUALITY_SCORE:
+        if quality_score < FT_MIN_CONFIDENCE_THRESHOLD:
             continue
 
         signal = FTSignal(
@@ -868,28 +899,60 @@ def _extract_funding_misclassification_signals(
 # =============================================================================
 
 def extract_llm_signals(
-    report_data: Dict[str, Any],
+    report_sections: Dict[str, Any],
+    validation_result: Optional[Dict[str, Any]] = None,
+    predictive_output: Optional[Dict[str, Any]] = None,
+    segment_stats: Optional[Any] = None,
     include_types: Optional[List[str]] = None,
 ) -> List[FTSignal]:
     """
-    Extract fine-tuning signals from a generated report.
+    Extract fine-tuning signals from a generated report (G17.3-A).
 
     Processes report data to extract training signals for LLM fine-tuning.
     Signals are normalized and anonymized before return.
 
     Args:
-        report_data: Complete report data dictionary including corrections metadata
+        report_sections: Complete report sections dictionary
+        validation_result: Validation results with warnings/errors
+        predictive_output: Predictive engine output (G17.2)
+        segment_stats: Segment statistics from feedback analyzer
         include_types: Optional list of signal types to extract (None = all)
 
     Returns:
         List of FTSignal objects ready for dataset building
     """
     if not FT_SIGNAL_EXTRACTION_ENABLED:
-        log.debug("FT Signal extraction disabled")
+        if FT_SIGNAL_DEBUG_LOGGING:
+            log.debug("FT Signal extraction disabled")
         return []
 
-    if not report_data:
-        log.warning("Empty report_data provided for signal extraction")
+    if not report_sections:
+        log.warning("Empty report_sections provided for signal extraction")
+        return []
+
+    # Merge all data sources into report_data
+    report_data = dict(report_sections)
+    if validation_result:
+        report_data["_validation_result"] = validation_result
+    if predictive_output:
+        report_data["_predictive_output"] = predictive_output
+
+    # Extract segment info
+    stability = "medium"
+    risk_level = "minimal"
+    funding_scope = "NONE"
+    if segment_stats:
+        stability = getattr(segment_stats, "stability", None) or "medium"
+        risk_level = getattr(segment_stats, "risk_level", None) or "minimal"
+        funding_scope = getattr(segment_stats, "funding_scope", None) or "NONE"
+        report_data["_segment_stability"] = stability
+        report_data["_risk_level"] = risk_level
+        report_data["_funding_scope"] = funding_scope
+
+    # Skip weak segments unless allowed
+    if stability == "weak" and not FT_ALLOW_WEAK_SEGMENTS:
+        if FT_SIGNAL_DEBUG_LOGGING:
+            log.debug("Skipping signal extraction for weak segment")
         return []
 
     lang = report_data.get("LANG", report_data.get("lang", "de"))
@@ -917,25 +980,105 @@ def extract_llm_signals(
     for signal_type, extractor in extractors.items():
         try:
             signals = extractor(report_data, lang)
-            log.debug(f"Extracted {len(signals)} signals of type {signal_type}")
+            # Enrich signals with segment info
+            for signal in signals:
+                signal.stability = stability
+                signal.risk_level = risk_level
+                signal.funding_scope = funding_scope
+            if FT_SIGNAL_DEBUG_LOGGING:
+                log.debug(f"Extracted {len(signals)} signals of type {signal_type}")
             all_signals.extend(signals)
         except Exception as e:
             log.error(f"Error extracting {signal_type} signals: {e}")
             continue
 
-    # Apply normalization and anonymization
+    # Filter by confidence threshold
+    all_signals = [s for s in all_signals if s.confidence >= FT_MIN_CONFIDENCE_THRESHOLD]
+
+    # Apply normalization and anonymization via add_safety_filters
     processed_signals: List[FTSignal] = []
     for signal in all_signals:
         try:
-            signal = normalize_signal(signal)
-            signal = anonymize_signal(signal)
-            processed_signals.append(signal)
+            normalized = normalize_signal(signal)
+            safe_signal = add_safety_filters(normalized)
+            if safe_signal:  # May be None if filtered out
+                processed_signals.append(safe_signal)
         except Exception as e:
             log.error(f"Error processing signal {signal.signal_id}: {e}")
             continue
 
+    # Limit signals per report
+    if len(processed_signals) > FT_MAX_SIGNALS_PER_REPORT:
+        # Sort by quality score and take top signals
+        processed_signals = sorted(
+            processed_signals, key=lambda s: s.quality_score, reverse=True
+        )[:FT_MAX_SIGNALS_PER_REPORT]
+
     log.info(f"Extracted {len(processed_signals)} FT signals from report")
     return processed_signals
+
+
+def add_safety_filters(signal: FTSignal) -> Optional[FTSignal]:
+    """
+    Apply safety filters to a signal (G17.3-B).
+
+    - Removes PII
+    - Removes freetext references
+    - Suppresses signals from weak segments in strict mode
+    """
+    if not signal:
+        return None
+
+    # Check privacy strict mode for weak segments
+    if FT_PRIVACY_STRICT_MODE and signal.stability == "weak":
+        if FT_SIGNAL_DEBUG_LOGGING:
+            log.debug(f"Signal {signal.signal_id} suppressed due to weak segment in strict mode")
+        return None
+
+    # Apply PII anonymization
+    signal = anonymize_signal(signal)
+
+    return signal
+
+
+def to_normalized_signal(signal: FTSignal) -> NormalizedSignal:
+    """
+    Convert FTSignal to NormalizedSignal format for dataset building.
+
+    Returns the standardized JSON structure per G17.3-B spec.
+    """
+    # Map signal types to normalized categories
+    type_map = {
+        "persona_fix": "persona",
+        "size_aware_length": "logic",
+        "redundancy_compression": "logic",
+        "html_repair": "html",
+        "business_case_align": "business_case",
+        "ai_act_reasoning": "ai_act",
+        "insight_quality": "insight",
+        "predictive_drift": "predictive",
+        "smart_default_corrections": "logic",
+        "funding_misclassifications": "funding",
+    }
+
+    normalized_type = type_map.get(signal.signal_type, signal.signal_type)
+
+    segment = SegmentInfo(
+        size=_normalize_company_size(signal.company_size or "team"),
+        branch=signal.industry or "other",
+        risk=signal.risk_level,
+        funding_scope=signal.funding_scope,
+        stability=signal.stability,
+    )
+
+    return NormalizedSignal(
+        signal_type=normalized_type,
+        language=signal.lang,
+        input_pattern=signal.prompt_input,
+        output_target=signal.ideal_output,
+        confidence=signal.confidence,
+        segment=segment,
+    )
 
 
 def create_signal_batch(
