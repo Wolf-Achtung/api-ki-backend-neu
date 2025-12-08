@@ -207,6 +207,24 @@ try:
 except ImportError:
     track_bc_modification = None
 
+# G17.3: Import FT Signal Extractor
+try:
+    from services.ft_signal_extractor import (
+        extract_llm_signals,
+        FT_SIGNAL_EXTRACTION_ENABLED,
+        FT_BUILD_DATASET_ON_REPORT,
+    )
+    from services.ft_dataset_builder import (
+        accumulate_signals,
+        build_training_dataset,
+    )
+except ImportError:
+    extract_llm_signals = None
+    FT_SIGNAL_EXTRACTION_ENABLED = False
+    FT_BUILD_DATASET_ON_REPORT = False
+    accumulate_signals = None
+    build_training_dataset = None
+
 # Initialize logger
 log = logging.getLogger(__name__)
 
@@ -5184,7 +5202,59 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             "research_last_updated": sections["research_last_updated"]
         }
     )
-    
+
+    # === G17.3: Extract Fine-Tuning Signals ===
+    if FT_SIGNAL_EXTRACTION_ENABLED and extract_llm_signals and accumulate_signals:
+        try:
+            # Prepare report sections for signal extraction
+            ft_report_sections = {
+                **sections,
+                **answers,
+                "LANG": getattr(br, "lang", "de"),
+                "_segment_key": f"{persona}_{answers.get('branche', 'other')}".lower(),
+                "unternehmensgroesse": answers.get("unternehmensgroesse", ""),
+                "branche": answers.get("branche", ""),
+            }
+
+            # Get validation result if available
+            validation_result = None
+            if error_gate:
+                validation_result = {
+                    "warnings": error_gate.warnings,
+                    "fallback_count": error_gate.fallback_count,
+                    "sections_failed": error_gate.sections_failed,
+                }
+
+            # Get predictive output if available
+            predictive_output = sections.get("_predictive_output")
+
+            # Get segment stats if available
+            segment_stats = None
+            try:
+                from services.feedback_analyzer import get_segment_for_report
+                segment_stats = get_segment_for_report(ft_report_sections)
+            except Exception:
+                pass
+
+            # Extract signals with full context
+            ft_signals = extract_llm_signals(
+                report_sections=ft_report_sections,
+                validation_result=validation_result,
+                predictive_output=predictive_output,
+                segment_stats=segment_stats,
+            )
+
+            if ft_signals:
+                # Accumulate to daily queue file
+                accumulated_count = accumulate_signals(ft_signals)
+                log.info("[%s] 📊 Extracted %d FT signals, accumulated %d", run_id, len(ft_signals), accumulated_count)
+
+                # Optionally build dataset on each report
+                if FT_BUILD_DATASET_ON_REPORT and build_training_dataset:
+                    build_training_dataset()
+        except Exception as ft_exc:
+            log.warning("[%s] ⚠️ FT signal extraction failed: %s", run_id, ft_exc)
+
     an = Analysis(
         user_id=br.user_id, 
         briefing_id=briefing_id, 
