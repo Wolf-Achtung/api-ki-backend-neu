@@ -628,7 +628,7 @@ def _build_funding_insights(
     lang: str,
 ) -> List[FundingInsight]:
     """Build funding insights from segment data."""
-    insights = []
+    insights: List[FundingInsight] = []
 
     # Get top funding programs from segment
     top_programs = segment.top_funding_programs
@@ -685,7 +685,7 @@ def _get_program_name(program_id: str) -> str:
 
     for program in programs:
         if program.get("id") == program_id:
-            return program.get("name", program_id)
+            return str(program.get("name", program_id))
 
     return program_id
 
