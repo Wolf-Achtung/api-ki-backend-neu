@@ -207,6 +207,18 @@ try:
 except ImportError:
     track_bc_modification = None
 
+# G17.3: Import FT Signal Extractor
+try:
+    from services.ft_signal_extractor import (
+        extract_llm_signals,
+        FT_SIGNAL_EXTRACTION_ENABLED,
+    )
+    from services.ft_dataset_builder import add_signals_to_buffer
+except ImportError:
+    extract_llm_signals = None  # type: ignore[assignment,misc]
+    FT_SIGNAL_EXTRACTION_ENABLED = False
+    add_signals_to_buffer = None  # type: ignore[assignment,misc]
+
 # Initialize logger
 log = logging.getLogger(__name__)
 
@@ -5184,7 +5196,26 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             "research_last_updated": sections["research_last_updated"]
         }
     )
-    
+
+    # === G17.3: Extract Fine-Tuning Signals ===
+    if FT_SIGNAL_EXTRACTION_ENABLED and extract_llm_signals and add_signals_to_buffer:
+        try:
+            # Prepare report data for signal extraction
+            ft_report_data = {
+                **sections,
+                **answers,
+                "LANG": getattr(br, "lang", "de"),
+                "_segment_key": f"{persona}_{answers.get('branche', 'other')}".lower(),
+                "unternehmensgroesse": answers.get("unternehmensgroesse", ""),
+                "branche": answers.get("branche", ""),
+            }
+            ft_signals = extract_llm_signals(ft_report_data)
+            if ft_signals:
+                added_count = add_signals_to_buffer(ft_signals)
+                log.info("[%s] 📊 Extracted %d FT signals, added %d to buffer", run_id, len(ft_signals), added_count)
+        except Exception as ft_exc:
+            log.warning("[%s] ⚠️ FT signal extraction failed: %s", run_id, ft_exc)
+
     an = Analysis(
         user_id=br.user_id, 
         briefing_id=briefing_id, 
