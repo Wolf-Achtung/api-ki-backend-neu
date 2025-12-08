@@ -526,3 +526,453 @@ def run_full_analysis(
     )
 
     return result
+
+
+# =============================================================================
+# G17-A: SEGMENTATION & BENCHMARK ENGINE
+# =============================================================================
+
+# Configuration
+INSIGHTS_MIN_REPORTS_PER_SEGMENT = int(os.environ.get("INSIGHTS_MIN_REPORTS_PER_SEGMENT", "10"))
+INSIGHTS_REFRESH_INTERVAL_MIN = int(os.environ.get("INSIGHTS_REFRESH_INTERVAL_MIN", "30"))
+
+# Segment snapshot cache
+_segment_snapshot: Optional[Dict[str, "SegmentStats"]] = None
+_segment_snapshot_timestamp: Optional[datetime] = None
+
+# Branch grouping
+BRANCH_GROUPS = {
+    "beratung": "consulting",
+    "consulting": "consulting",
+    "unternehmensberatung": "consulting",
+    "finanzen": "finance",
+    "finance": "finance",
+    "versicherung": "finance",
+    "insurance": "finance",
+    "banking": "finance",
+    "industrie": "industry",
+    "industry": "industry",
+    "manufacturing": "industry",
+    "produktion": "industry",
+    "gesundheit": "health",
+    "health": "health",
+    "healthcare": "health",
+    "medical": "health",
+    "pharma": "health",
+    "bildung": "education",
+    "education": "education",
+    "training": "education",
+    "media": "media",
+    "marketing": "media",
+    "agentur": "media",
+    "agency": "media",
+}
+
+
+@dataclass
+class SegmentStats:
+    """Statistics for a segment."""
+    segment_key: Tuple[str, str, str, str]  # (size_label, branch_group, ai_act_risk, funding_scope)
+    report_count: int = 0
+
+    # Average scores (0-100)
+    avg_score_governance: float = 0.0
+    avg_score_security: float = 0.0
+    avg_score_value: float = 0.0
+    avg_score_enablement: float = 0.0
+    avg_score_overall: float = 0.0
+
+    # Business metrics
+    avg_roi_percent: float = 0.0
+    avg_payback_months: float = 0.0
+
+    # Quality metrics
+    avg_warnings: float = 0.0
+    avg_fallback_rate: float = 0.0
+
+    # Top warnings
+    top_warning_types: List[Tuple[str, int]] = field(default_factory=list)
+
+    # Funding success (for premium reports)
+    funding_success_rate: float = 0.0
+    top_funding_programs: List[Tuple[str, int]] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "segment_key": {
+                "size_label": self.segment_key[0],
+                "branch_group": self.segment_key[1],
+                "ai_act_risk": self.segment_key[2],
+                "funding_scope": self.segment_key[3],
+            },
+            "report_count": self.report_count,
+            "avg_scores": {
+                "governance": round(self.avg_score_governance, 1),
+                "security": round(self.avg_score_security, 1),
+                "value": round(self.avg_score_value, 1),
+                "enablement": round(self.avg_score_enablement, 1),
+                "overall": round(self.avg_score_overall, 1),
+            },
+            "avg_roi_percent": round(self.avg_roi_percent, 1),
+            "avg_payback_months": round(self.avg_payback_months, 1),
+            "avg_warnings": round(self.avg_warnings, 2),
+            "avg_fallback_rate": round(self.avg_fallback_rate, 3),
+            "top_warning_types": self.top_warning_types[:5],
+            "funding_success_rate": round(self.funding_success_rate, 2),
+            "top_funding_programs": self.top_funding_programs[:5],
+        }
+
+
+def _normalize_branch(branch: str) -> str:
+    """Normalize branch to group."""
+    branch_lower = branch.lower().strip()
+
+    for key, group in BRANCH_GROUPS.items():
+        if key in branch_lower:
+            return group
+
+    return "other"
+
+
+def _normalize_funding_scope(funding_source: str) -> str:
+    """Normalize funding source to scope."""
+    source_upper = funding_source.upper().strip() if funding_source else ""
+
+    if "EU" in source_upper or "CORE" in source_upper:
+        return "EU_CORE"
+    elif source_upper in ("DE", "GERMANY", "DEUTSCHLAND"):
+        return "DE"
+    elif source_upper:
+        return "DE"  # Default to DE if any source specified
+
+    return "NONE"
+
+
+def build_segments_snapshot(days: int = 90, force: bool = False) -> Dict[str, SegmentStats]:
+    """
+    Build or return cached segment snapshot.
+
+    Aggregates real reports into segments:
+    segment_key = (size_label, branch_group, ai_act_risk_level, funding_scope)
+
+    Args:
+        days: Analysis period in days
+        force: Force rebuild even if cache is fresh
+
+    Returns:
+        Dictionary of segment_key -> SegmentStats
+    """
+    global _segment_snapshot, _segment_snapshot_timestamp
+
+    now = datetime.now(timezone.utc)
+
+    # Check cache validity
+    if not force and _segment_snapshot is not None and _segment_snapshot_timestamp is not None:
+        age_minutes = (now - _segment_snapshot_timestamp).total_seconds() / 60
+        if age_minutes < INSIGHTS_REFRESH_INTERVAL_MIN:
+            log.debug(f"Using cached segment snapshot (age: {age_minutes:.1f} min)")
+            return _segment_snapshot
+
+    log.info(f"Building segment snapshot for last {days} days...")
+
+    from services.feedback_loop import get_recent_feedback
+
+    entries = get_recent_feedback(days=days)
+
+    if not entries:
+        log.warning("No feedback entries found for segment analysis")
+        return {}
+
+    # Aggregate by segment
+    segments: Dict[Tuple[str, str, str, str], Dict[str, Any]] = defaultdict(lambda: {
+        "reports": [],
+        "scores_gov": [],
+        "scores_sec": [],
+        "scores_val": [],
+        "scores_ena": [],
+        "scores_overall": [],
+        "roi_values": [],
+        "payback_values": [],
+        "warnings_count": [],
+        "fallback_rates": [],
+        "warning_types": defaultdict(int),
+        "funding_programs": defaultdict(int),
+        "funding_successes": 0,
+    })
+
+    for entry in entries:
+        # Build segment key
+        size_label = entry.size_label or "solo"
+        branch_group = _normalize_branch(getattr(entry, "branch", "") or "other")
+        ai_act_risk = entry.ai_act_risk_level or "minimal"
+        funding_scope = _normalize_funding_scope(entry.funding_source or "")
+
+        key = (size_label, branch_group, ai_act_risk, funding_scope)
+        seg = segments[key]
+
+        seg["reports"].append(entry.report_id)
+
+        # Collect scores if available
+        if hasattr(entry, "scores") and entry.scores:
+            scores = entry.scores
+            if "governance" in scores:
+                seg["scores_gov"].append(scores["governance"])
+            if "security" in scores:
+                seg["scores_sec"].append(scores["security"])
+            if "value" in scores:
+                seg["scores_val"].append(scores["value"])
+            if "enablement" in scores:
+                seg["scores_ena"].append(scores["enablement"])
+            if "overall" in scores:
+                seg["scores_overall"].append(scores["overall"])
+
+        # Collect business metrics
+        if hasattr(entry, "roi_percent") and entry.roi_percent:
+            seg["roi_values"].append(entry.roi_percent)
+        if hasattr(entry, "payback_months") and entry.payback_months:
+            seg["payback_values"].append(entry.payback_months)
+
+        # Collect quality metrics
+        seg["warnings_count"].append(entry.total_warnings)
+        seg["fallback_rates"].append(entry.fallback_rate)
+
+        # Aggregate warning types
+        for w_type, count in entry.warning_types.items():
+            seg["warning_types"][w_type] += count
+
+        # Track funding success
+        if hasattr(entry, "funding_programs_matched") and entry.funding_programs_matched:
+            for program in entry.funding_programs_matched:
+                seg["funding_programs"][program] += 1
+                seg["funding_successes"] += 1
+
+    # Build SegmentStats objects
+    result: Dict[str, SegmentStats] = {}
+
+    for key, data in segments.items():
+        report_count = len(data["reports"])
+
+        # Skip segments with too few reports
+        if report_count < INSIGHTS_MIN_REPORTS_PER_SEGMENT:
+            continue
+
+        stats = SegmentStats(
+            segment_key=key,
+            report_count=report_count,
+            avg_score_governance=_safe_avg(data["scores_gov"]),
+            avg_score_security=_safe_avg(data["scores_sec"]),
+            avg_score_value=_safe_avg(data["scores_val"]),
+            avg_score_enablement=_safe_avg(data["scores_ena"]),
+            avg_score_overall=_safe_avg(data["scores_overall"]),
+            avg_roi_percent=_safe_avg(data["roi_values"]),
+            avg_payback_months=_safe_avg(data["payback_values"]),
+            avg_warnings=_safe_avg(data["warnings_count"]),
+            avg_fallback_rate=_safe_avg(data["fallback_rates"]),
+            top_warning_types=sorted(
+                data["warning_types"].items(),
+                key=lambda x: x[1],
+                reverse=True,
+            )[:5],
+            funding_success_rate=(
+                data["funding_successes"] / report_count if report_count > 0 else 0.0
+            ),
+            top_funding_programs=sorted(
+                data["funding_programs"].items(),
+                key=lambda x: x[1],
+                reverse=True,
+            )[:5],
+        )
+
+        # Use string key for caching
+        key_str = f"{key[0]}|{key[1]}|{key[2]}|{key[3]}"
+        result[key_str] = stats
+
+    # Update cache
+    _segment_snapshot = result
+    _segment_snapshot_timestamp = now
+
+    log.info(f"✅ Segment snapshot built: {len(result)} segments from {len(entries)} reports")
+
+    return result
+
+
+def _safe_avg(values: List[float]) -> float:
+    """Calculate average safely."""
+    if not values:
+        return 0.0
+    return sum(values) / len(values)
+
+
+def get_segment_for_report(
+    report_sections: Dict[str, Any],
+    profile: Optional[Dict[str, Any]] = None,
+) -> Optional[SegmentStats]:
+    """
+    Get segment stats for a specific report.
+
+    Args:
+        report_sections: Report sections dictionary
+        profile: Profile data (optional)
+
+    Returns:
+        SegmentStats for the report's segment, or None if not found
+    """
+    # Build segment key from report/profile
+    size_label = "solo"
+    branch_group = "other"
+    ai_act_risk = "minimal"
+    funding_scope = "NONE"
+
+    if profile:
+        size_label = profile.get("size_label", "solo")
+        branch_group = _normalize_branch(profile.get("branch", "") or "")
+        ai_act_risk = profile.get("ai_act_override_risk_level", "") or profile.get("ai_act_risk_level", "minimal")
+        funding_scope = _normalize_funding_scope(profile.get("funding_source", "") or "")
+    elif report_sections:
+        # Try to infer from sections
+        meta = report_sections.get("META", {})
+        if isinstance(meta, dict):
+            size_label = meta.get("size_label", "solo")
+            branch_group = _normalize_branch(meta.get("branch", "") or "other")
+
+    key_str = f"{size_label}|{branch_group}|{ai_act_risk}|{funding_scope}"
+
+    # Get from snapshot (build if needed)
+    snapshot = build_segments_snapshot()
+
+    if key_str in snapshot:
+        return snapshot[key_str]
+
+    # Try with relaxed matching (drop funding scope)
+    for seg_key, stats in snapshot.items():
+        parts = seg_key.split("|")
+        if len(parts) >= 3 and parts[0] == size_label and parts[2] == ai_act_risk:
+            return stats
+
+    # Try with just size_label
+    for seg_key, stats in snapshot.items():
+        parts = seg_key.split("|")
+        if len(parts) >= 1 and parts[0] == size_label:
+            return stats
+
+    return None
+
+
+def get_segment_comparison(
+    report_sections: Dict[str, Any],
+    profile: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """
+    Get comparison data for a report vs its segment.
+
+    Args:
+        report_sections: Report sections dictionary
+        profile: Profile data (optional)
+
+    Returns:
+        Comparison dictionary with percentile positions
+    """
+    segment = get_segment_for_report(report_sections, profile)
+
+    if not segment:
+        return {
+            "segment_found": False,
+            "message": "Nicht genügend Vergleichsdaten verfügbar",
+        }
+
+    # Calculate current report's position
+    current_overall = 0.0
+    if "REIFEGRAD_GESAMT" in report_sections:
+        try:
+            current_overall = float(report_sections["REIFEGRAD_GESAMT"])
+        except (ValueError, TypeError):
+            pass
+
+    # Calculate percentile position
+    if segment.avg_score_overall > 0:
+        if current_overall >= segment.avg_score_overall * 1.2:
+            position = "oberes_drittel"
+            position_text = "im oberen Drittel"
+        elif current_overall >= segment.avg_score_overall * 0.8:
+            position = "durchschnitt"
+            position_text = "im Durchschnitt"
+        else:
+            position = "unteres_drittel"
+            position_text = "unter dem Durchschnitt"
+    else:
+        position = "unknown"
+        position_text = "nicht ermittelbar"
+
+    return {
+        "segment_found": True,
+        "segment_key": segment.segment_key,
+        "segment_label": _format_segment_label(segment.segment_key),
+        "report_count": segment.report_count,
+        "current_score": current_overall,
+        "segment_avg_score": segment.avg_score_overall,
+        "position": position,
+        "position_text": position_text,
+        "avg_scores": {
+            "governance": segment.avg_score_governance,
+            "security": segment.avg_score_security,
+            "value": segment.avg_score_value,
+            "enablement": segment.avg_score_enablement,
+            "overall": segment.avg_score_overall,
+        },
+        "avg_roi_percent": segment.avg_roi_percent,
+        "avg_payback_months": segment.avg_payback_months,
+        "top_warnings": segment.top_warning_types,
+    }
+
+
+def _format_segment_label(segment_key: Tuple[str, str, str, str]) -> str:
+    """Format segment key as human-readable label."""
+    size_labels = {
+        "solo": "Solo-Unternehmer",
+        "team": "Team",
+        "kmu": "KMU",
+    }
+    branch_labels = {
+        "consulting": "Beratung",
+        "finance": "Finanzen/Versicherung",
+        "industry": "Industrie",
+        "health": "Gesundheit",
+        "education": "Bildung",
+        "media": "Media/Marketing",
+        "other": "Sonstige",
+    }
+    risk_labels = {
+        "none": "ohne AI-Act-Relevanz",
+        "minimal": "minimales AI-Act-Risiko",
+        "limited": "limitiertes AI-Act-Risiko",
+        "high-risk": "hohes AI-Act-Risiko",
+    }
+
+    size = size_labels.get(segment_key[0], segment_key[0])
+    branch = branch_labels.get(segment_key[1], segment_key[1])
+    risk = risk_labels.get(segment_key[2], segment_key[2])
+
+    return f"{size} · {branch} · {risk}"
+
+
+def get_top_segments(limit: int = 5) -> List[Dict[str, Any]]:
+    """
+    Get top segments by report count.
+
+    Args:
+        limit: Maximum segments to return
+
+    Returns:
+        List of segment stats dictionaries
+    """
+    snapshot = build_segments_snapshot()
+
+    sorted_segments = sorted(
+        snapshot.values(),
+        key=lambda x: x.report_count,
+        reverse=True,
+    )[:limit]
+
+    return [seg.to_dict() for seg in sorted_segments]
+

@@ -356,3 +356,184 @@ def _risk_level_value(level: str) -> int:
     """Convert risk level to numeric value for comparison."""
     levels = {"none": 0, "minimal": 1, "limited": 2, "high-risk": 3}
     return levels.get(level, 1)
+
+
+# =============================================================================
+# G17-D: INSIGHTS & LEARNING PANEL
+# =============================================================================
+
+class SegmentKeyResponse(BaseModel):
+    """Segment key response."""
+    size_label: str
+    branch_group: str
+    ai_act_risk: str
+    funding_scope: str
+
+
+class AvgScoresResponse(BaseModel):
+    """Average scores response."""
+    governance: float
+    security: float
+    value: float
+    enablement: float
+    overall: float
+
+
+class SegmentStatsResponse(BaseModel):
+    """Segment statistics response."""
+    segment_key: SegmentKeyResponse
+    report_count: int
+    avg_scores: AvgScoresResponse
+    avg_roi_percent: float
+    avg_payback_months: float
+    avg_warnings: float
+    avg_fallback_rate: float
+    top_warning_types: List[tuple]
+    funding_success_rate: float
+    top_funding_programs: List[tuple]
+
+
+class InsightsOverviewResponse(BaseModel):
+    """Insights overview response."""
+    total_segments: int
+    total_reports_in_segments: int
+    top_segments: List[SegmentStatsResponse]
+    segment_coverage_pct: float
+
+
+class PrioritizedActionItemResponse(BaseModel):
+    """Prioritized action item for action-items endpoint."""
+    priority_level: str  # P1, P2, P3
+    priority: str
+    category: str
+    title: str
+    description: str
+    affected_count: int
+    suggested_fix: Optional[str] = None
+    related_files: List[str] = []
+
+
+class ActionItemsResponse(BaseModel):
+    """Action items response."""
+    period_days: int
+    total_items: int
+    p1_count: int
+    p2_count: int
+    p3_count: int
+    items: List[PrioritizedActionItemResponse]
+
+
+@router.get(
+    "/insights-overview",
+    response_model=InsightsOverviewResponse,
+    summary="Get insights overview with top segments",
+    description="Returns top 5 segments by report count with their statistics.",
+)
+async def get_insights_overview(
+    days: int = Query(default=90, ge=1, le=365, description="Analysis period in days"),
+) -> InsightsOverviewResponse:
+    """Get insights overview with segment data."""
+    try:
+        from services.feedback_analyzer import build_segments_snapshot, get_top_segments
+        from services.feedback_loop import get_recent_feedback
+
+        # Build segment snapshot
+        snapshot = build_segments_snapshot(days=days, force=False)
+
+        # Get top segments
+        top_segments_data = get_top_segments(limit=5)
+
+        # Calculate totals
+        total_reports_in_segments = sum(
+            seg["report_count"] for seg in top_segments_data
+        )
+
+        # Get total feedback entries for coverage calculation
+        all_entries = get_recent_feedback(days=days)
+        total_entries = len(all_entries)
+
+        coverage_pct = (
+            (total_reports_in_segments / total_entries * 100)
+            if total_entries > 0
+            else 0.0
+        )
+
+        return InsightsOverviewResponse(
+            total_segments=len(snapshot),
+            total_reports_in_segments=total_reports_in_segments,
+            top_segments=[
+                SegmentStatsResponse(
+                    segment_key=SegmentKeyResponse(**seg["segment_key"]),
+                    report_count=seg["report_count"],
+                    avg_scores=AvgScoresResponse(**seg["avg_scores"]),
+                    avg_roi_percent=seg["avg_roi_percent"],
+                    avg_payback_months=seg["avg_payback_months"],
+                    avg_warnings=seg["avg_warnings"],
+                    avg_fallback_rate=seg["avg_fallback_rate"],
+                    top_warning_types=seg["top_warning_types"],
+                    funding_success_rate=seg["funding_success_rate"],
+                    top_funding_programs=seg["top_funding_programs"],
+                )
+                for seg in top_segments_data
+            ],
+            segment_coverage_pct=round(coverage_pct, 1),
+        )
+
+    except Exception as e:
+        log.error(f"Failed to get insights overview: {e}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+@router.get(
+    "/action-items",
+    response_model=ActionItemsResponse,
+    summary="Get prioritized action items",
+    description="Returns action items from learning engine with priority levels (P1-P3).",
+)
+async def get_action_items(
+    days: int = Query(default=7, ge=1, le=90, description="Analysis period in days"),
+) -> ActionItemsResponse:
+    """Get prioritized action items."""
+    try:
+        from services.learning_engine import generate_action_items
+
+        action_items = generate_action_items(days=days)
+
+        # Map priority to P1/P2/P3
+        def get_priority_level(priority: str) -> str:
+            if priority == "high":
+                return "P1"
+            elif priority == "medium":
+                return "P2"
+            return "P3"
+
+        items = [
+            PrioritizedActionItemResponse(
+                priority_level=get_priority_level(a.priority),
+                priority=a.priority,
+                category=a.category,
+                title=a.title,
+                description=a.description,
+                affected_count=a.affected_count,
+                suggested_fix=a.suggested_fix,
+                related_files=a.related_files,
+            )
+            for a in action_items
+        ]
+
+        p1_count = sum(1 for a in action_items if a.priority == "high")
+        p2_count = sum(1 for a in action_items if a.priority == "medium")
+        p3_count = sum(1 for a in action_items if a.priority == "low")
+
+        return ActionItemsResponse(
+            period_days=days,
+            total_items=len(items),
+            p1_count=p1_count,
+            p2_count=p2_count,
+            p3_count=p3_count,
+            items=items,
+        )
+
+    except Exception as e:
+        log.error(f"Failed to get action items: {e}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
