@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+"""
+provider_tavily.py
+------------------
+Tavily API client for web search.
+
+SPRINT G14-B: Reduced timeout from 20s to 8s for faster fallback.
+"""
 from __future__ import annotations
 import os, json, logging, requests
 from typing import List, Dict, Any
@@ -7,7 +14,11 @@ LOGGER = logging.getLogger(__name__)
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 TAVILY_ENDPOINT = os.getenv("TAVILY_ENDPOINT", "https://api.tavily.com/search")
 
-def _post_json(url: str, payload: dict, timeout: int = 20) -> dict[Any, Any]:
+# SPRINT G14-B: Aggressive timeout for faster fallback (was 20s)
+TAVILY_TIMEOUT = int(os.getenv("TAVILY_TIMEOUT", "8"))
+
+
+def _post_json(url: str, payload: dict, timeout: int = TAVILY_TIMEOUT) -> dict[Any, Any]:
     headers = {"Content-Type":"application/json","Accept":"application/json"}
     resp = requests.post(url, headers=headers, data=json.dumps(payload), timeout=timeout)
     resp.raise_for_status()

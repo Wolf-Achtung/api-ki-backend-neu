@@ -581,13 +581,27 @@ def _funding_fallback_html(bundesland: str) -> str:
 
 
 def _market_fallback_html() -> str:
-    """Generates fallback HTML when no market insights are available."""
+    """
+    Generates fallback HTML when no market insights are available.
+
+    SPRINT G14-B: Expanded to 3 substantive paragraphs for better content quality.
+    """
     return '''
 <div class="research-fallback market-fallback">
   <p><strong>Markt-Insights:</strong></p>
   <p>Aktuell keine spezifischen Markt-Insights verfügbar. Der KI-Markt entwickelt sich
      dynamisch – relevante Trends und Wettbewerbsinformationen sollten regelmäßig
      über Branchenpublikationen und Fachmedien verfolgt werden.</p>
+  <p><strong>Aktuelle Markttrends 2025:</strong> Generative KI wird zunehmend in
+     Geschäftsprozessen eingesetzt. Besonders gefragt sind Lösungen für
+     Dokumentenverarbeitung, Kundenkommunikation und Prozessautomatisierung.
+     KMU profitieren von sinkenden Einstiegskosten und benutzerfreundlichen
+     SaaS-Angeboten der führenden Anbieter.</p>
+  <p><strong>Wettbewerbslandschaft:</strong> Neben den großen Anbietern (OpenAI,
+     Microsoft, Google, Anthropic) etablieren sich spezialisierte europäische
+     Lösungen mit Fokus auf DSGVO-Konformität und lokaler Datenhaltung.
+     Branchenspezifische Anbieter gewinnen an Bedeutung, da sie maßgeschneiderte
+     Lösungen für regulierte Branchen wie Gesundheit, Finanzen und Recht bieten.</p>
   <p class="small muted">Empfehlung: Newsletter von Heise, t3n oder Branchenpublikationen abonnieren.</p>
 </div>
 '''.strip()
