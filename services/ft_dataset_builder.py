@@ -26,10 +26,15 @@ import statistics
 from services.ft_signal_extractor import (
     FTSignal,
     FTSignalBatch,
+    NormalizedSignal,
+    SegmentInfo,
     signal_to_training_format,
     get_signal_statistics,
+    to_normalized_signal,
     FT_SIGNAL_STORAGE_PATH,
-    FT_SIGNAL_MIN_QUALITY_SCORE,
+    FT_MIN_CONFIDENCE_THRESHOLD,
+    FT_DATASET_DAYS,
+    FT_BUILD_DATASET_ON_REPORT,
     FT_SIGNAL_MAX_AGE_DAYS,
 )
 
@@ -270,7 +275,7 @@ def filter_signals_by_quality(
         Tuple of (filtered signals, count removed)
     """
     if min_quality is None:
-        min_quality = FT_SIGNAL_MIN_QUALITY_SCORE
+        min_quality = FT_MIN_CONFIDENCE_THRESHOLD
 
     filtered = [s for s in signals if s.quality_score >= min_quality]
     removed = len(signals) - len(filtered)
@@ -782,3 +787,359 @@ def get_signal_quality_histogram(bins: int = 10) -> Dict[str, Any]:
         "median": statistics.median(scores),
         "std_dev": statistics.stdev(scores) if len(scores) > 1 else 0.0,
     }
+
+
+# =============================================================================
+# G17.3-C: DATASET QUALITY SCORING
+# =============================================================================
+
+@dataclass
+class DatasetQualityScore:
+    """Quality score for a dataset (G17.3-C)."""
+    completeness: float  # % filled fields
+    diversity: float  # Signal type distribution
+    conflict_score: float  # Conflicts per 100 signals
+    predictive_alignment_score: float
+    persona_precision: float
+    ai_act_reasoning_strength: float
+    overall_score: float
+    rating: str  # green|yellow|red
+
+
+def score_dataset_quality(
+    signals: Optional[List[FTSignal]] = None,
+) -> DatasetQualityScore:
+    """
+    Calculate comprehensive quality score for a dataset (G17.3-C).
+
+    Returns:
+        DatasetQualityScore with metrics per spec
+    """
+    if signals is None:
+        signals = load_signals_from_storage()
+
+    if not signals:
+        return DatasetQualityScore(
+            completeness=0.0,
+            diversity=0.0,
+            conflict_score=0.0,
+            predictive_alignment_score=0.0,
+            persona_precision=0.0,
+            ai_act_reasoning_strength=0.0,
+            overall_score=0.0,
+            rating="red",
+        )
+
+    # 1. Completeness: % of signals with all required fields
+    complete_count = 0
+    for sig in signals:
+        has_required = all([
+            sig.signal_id,
+            sig.signal_type,
+            sig.prompt_input,
+            sig.ideal_output,
+            sig.confidence > 0,
+        ])
+        if has_required:
+            complete_count += 1
+    completeness = complete_count / len(signals) if signals else 0.0
+
+    # 2. Diversity: Distribution across signal types (Shannon entropy normalized)
+    type_counts: Dict[str, int] = {}
+    for sig in signals:
+        type_counts[sig.signal_type] = type_counts.get(sig.signal_type, 0) + 1
+
+    # Calculate normalized entropy
+    total = len(signals)
+    num_types = len(type_counts)
+    if num_types > 1:
+        import math
+        entropy = 0.0
+        for count in type_counts.values():
+            p = count / total
+            if p > 0:
+                entropy -= p * math.log2(p)
+        max_entropy = math.log2(num_types)
+        diversity = entropy / max_entropy if max_entropy > 0 else 0.0
+    else:
+        diversity = 0.0
+
+    # 3. Conflict score (conflicts per 100 signals)
+    conflicts = identify_conflicts(signals)
+    conflict_score = (len(conflicts) / len(signals)) * 100 if signals else 0.0
+
+    # 4. Predictive alignment: signals from predictive drift type with high quality
+    predictive_signals = [s for s in signals if s.signal_type == "predictive_drift"]
+    if predictive_signals:
+        predictive_alignment = statistics.mean([s.quality_score for s in predictive_signals])
+    else:
+        predictive_alignment = 0.5  # Neutral if no predictive signals
+
+    # 5. Persona precision: quality of persona_fix signals
+    persona_signals = [s for s in signals if s.signal_type == "persona_fix"]
+    if persona_signals:
+        persona_precision = statistics.mean([s.quality_score for s in persona_signals])
+    else:
+        persona_precision = 0.5  # Neutral if no persona signals
+
+    # 6. AI Act reasoning strength: quality of ai_act_reasoning signals
+    ai_act_signals = [s for s in signals if s.signal_type == "ai_act_reasoning"]
+    if ai_act_signals:
+        ai_act_strength = statistics.mean([s.quality_score for s in ai_act_signals])
+    else:
+        ai_act_strength = 0.5  # Neutral if no AI Act signals
+
+    # Calculate overall score (weighted average)
+    overall = (
+        completeness * 0.20 +
+        diversity * 0.15 +
+        (1.0 - min(conflict_score / 10, 1.0)) * 0.15 +  # Lower conflicts = higher score
+        predictive_alignment * 0.15 +
+        persona_precision * 0.20 +
+        ai_act_strength * 0.15
+    )
+
+    # Determine rating
+    if overall >= 0.7:
+        rating = "green"
+    elif overall >= 0.4:
+        rating = "yellow"
+    else:
+        rating = "red"
+
+    return DatasetQualityScore(
+        completeness=round(completeness, 3),
+        diversity=round(diversity, 3),
+        conflict_score=round(conflict_score, 3),
+        predictive_alignment_score=round(predictive_alignment, 3),
+        persona_precision=round(persona_precision, 3),
+        ai_act_reasoning_strength=round(ai_act_strength, 3),
+        overall_score=round(overall, 3),
+        rating=rating,
+    )
+
+
+def accumulate_signals(signals: List[FTSignal]) -> int:
+    """
+    Accumulate signals to daily queue file (G17.3-C).
+
+    Saves signals to /app/ft_signals/queue/YYYY-MM-DD.jsonl
+
+    Returns:
+        Number of signals accumulated
+    """
+    if not signals:
+        return 0
+
+    storage_path = get_storage_path()
+    queue_path = storage_path / "queue"
+    queue_path.mkdir(parents=True, exist_ok=True)
+
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    daily_file = queue_path / f"{today}.jsonl"
+
+    with _storage_lock:
+        with open(daily_file, "a", encoding="utf-8") as f:
+            for signal in signals:
+                entry = signal_to_training_format(signal)
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+    log.info(f"Accumulated {len(signals)} signals to {daily_file}")
+    return len(signals)
+
+
+def build_training_dataset(
+    days: Optional[int] = None,
+    output_version: Optional[str] = None,
+) -> DatasetBuildResult:
+    """
+    Build training dataset from accumulated signals (G17.3-C).
+
+    Aggregates signals from last X days and applies:
+    - Duplicate removal
+    - Conflict resolution
+    - Winsorizing
+    - Segment stability filtering
+    - Confidence scoring
+    - Type balancing
+
+    Returns:
+        DatasetBuildResult with build statistics
+    """
+    if days is None:
+        days = FT_DATASET_DAYS
+
+    storage_path = get_storage_path()
+    queue_path = storage_path / "queue"
+    dataset_path = storage_path / "dataset"
+    dataset_path.mkdir(parents=True, exist_ok=True)
+
+    # Load signals from queue files
+    cutoff_date = datetime.utcnow() - timedelta(days=days)
+    all_signals: List[FTSignal] = []
+
+    if queue_path.exists():
+        for daily_file in queue_path.glob("*.jsonl"):
+            try:
+                # Parse date from filename
+                date_str = daily_file.stem
+                file_date = datetime.strptime(date_str, "%Y-%m-%d")
+                if file_date < cutoff_date:
+                    continue
+
+                with open(daily_file, "r", encoding="utf-8") as f:
+                    for line in f:
+                        if not line.strip():
+                            continue
+                        entry = json.loads(line)
+                        metadata = entry.get("metadata", {})
+                        messages = entry.get("messages", [])
+
+                        signal = FTSignal(
+                            signal_id=metadata.get("signal_id", ""),
+                            signal_type=metadata.get("signal_type", ""),
+                            source_section=metadata.get("source_section", ""),
+                            timestamp=metadata.get("timestamp", ""),
+                            prompt_input=messages[1].get("content", "") if len(messages) > 1 else "",
+                            ideal_output=messages[2].get("content", "") if len(messages) > 2 else "",
+                            original_output="",
+                            quality_score=metadata.get("quality_score", 0.5),
+                            confidence=metadata.get("confidence", 0.5),
+                            segment_key=metadata.get("segment_key"),
+                            company_size=metadata.get("company_size"),
+                            industry=metadata.get("industry"),
+                            lang=metadata.get("lang", "de"),
+                            stability=metadata.get("stability", "medium"),
+                            risk_level=metadata.get("risk_level", "minimal"),
+                            funding_scope=metadata.get("funding_scope", "NONE"),
+                        )
+                        all_signals.append(signal)
+            except Exception as e:
+                log.error(f"Error loading signals from {daily_file}: {e}")
+                continue
+
+    # Also include buffered signals
+    all_signals.extend(get_buffered_signals())
+
+    # Build dataset using existing function
+    version = output_version or f"v{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+    return build_dataset(
+        signals=all_signals,
+        output_filename=f"ft_dataset_{version}.jsonl",
+    )
+
+
+def get_ft_signal_stats() -> Dict[str, Any]:
+    """
+    Get signal statistics for dashboard (G17.3-E).
+
+    Returns:
+        Statistics by day, segment, signal type, and conflict rate
+    """
+    storage_path = get_storage_path()
+    queue_path = storage_path / "queue"
+
+    stats_by_day: Dict[str, int] = {}
+    stats_by_segment: Dict[str, int] = {}
+    stats_by_type: Dict[str, int] = {}
+    total_signals = 0
+    total_conflicts = 0
+
+    # Load from queue files
+    if queue_path.exists():
+        for daily_file in queue_path.glob("*.jsonl"):
+            date_str = daily_file.stem
+            day_count = 0
+
+            try:
+                with open(daily_file, "r", encoding="utf-8") as f:
+                    day_signals: List[FTSignal] = []
+                    for line in f:
+                        if not line.strip():
+                            continue
+                        entry = json.loads(line)
+                        metadata = entry.get("metadata", {})
+
+                        signal_type = metadata.get("signal_type", "unknown")
+                        segment_key = metadata.get("segment_key", "unknown")
+
+                        stats_by_type[signal_type] = stats_by_type.get(signal_type, 0) + 1
+                        stats_by_segment[segment_key] = stats_by_segment.get(segment_key, 0) + 1
+                        day_count += 1
+                        total_signals += 1
+
+                        # Create signal for conflict detection
+                        messages = entry.get("messages", [])
+                        day_signals.append(FTSignal(
+                            signal_id=metadata.get("signal_id", ""),
+                            signal_type=signal_type,
+                            source_section=metadata.get("source_section", ""),
+                            timestamp="",
+                            prompt_input=messages[1].get("content", "") if len(messages) > 1 else "",
+                            ideal_output=messages[2].get("content", "") if len(messages) > 2 else "",
+                            original_output="",
+                            quality_score=0.5,
+                            confidence=0.5,
+                        ))
+
+                    # Count conflicts for this day
+                    conflicts = identify_conflicts(day_signals)
+                    total_conflicts += len(conflicts)
+
+                stats_by_day[date_str] = day_count
+            except Exception as e:
+                log.error(f"Error processing {daily_file}: {e}")
+                continue
+
+    conflict_rate = (total_conflicts / total_signals * 100) if total_signals > 0 else 0.0
+
+    return {
+        "signals_by_day": stats_by_day,
+        "signals_by_segment": stats_by_segment,
+        "signals_by_type": stats_by_type,
+        "total_signals": total_signals,
+        "conflict_rate": round(conflict_rate, 2),
+    }
+
+
+def get_ft_sample_signals(limit: int = 10) -> List[Dict[str, Any]]:
+    """
+    Get anonymized sample signals for dashboard (G17.3-E).
+
+    Returns signals from last 24h without PII or freetext.
+    """
+    storage_path = get_storage_path()
+    queue_path = storage_path / "queue"
+
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    daily_file = queue_path / f"{today}.jsonl"
+
+    samples: List[Dict[str, Any]] = []
+
+    if daily_file.exists():
+        try:
+            with open(daily_file, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+                # Get last 'limit' signals
+                for line in lines[-limit:]:
+                    if not line.strip():
+                        continue
+                    entry = json.loads(line)
+                    metadata = entry.get("metadata", {})
+
+                    # Create anonymized sample (no freetext content)
+                    samples.append({
+                        "signal_type": metadata.get("signal_type", "unknown"),
+                        "source_section": metadata.get("source_section", "unknown"),
+                        "quality_score": metadata.get("quality_score", 0),
+                        "confidence": metadata.get("confidence", 0),
+                        "segment_key": metadata.get("segment_key", "unknown"),
+                        "lang": metadata.get("lang", "de"),
+                        # Truncate and anonymize input/output
+                        "input_preview": "[ANONYMIZED]",
+                        "output_preview": "[ANONYMIZED]",
+                    })
+        except Exception as e:
+            log.error(f"Error loading samples: {e}")
+
+    return samples
