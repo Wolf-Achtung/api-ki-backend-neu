@@ -114,5 +114,17 @@
     "innovationsprozess": "kontinuierlich",
     "risikofreude": "80",
     "datenschutz": true
+  },
+  "g15_2_validation": {
+    "ai_act_effective_risk_level": "minimal",
+    "ai_act_risk_consistency_score": 1.0,
+    "ai_act_modifier_trace": {
+      "CAPEX_MODIFIER": 1.0,
+      "OPEX_MODIFIER": 1.0,
+      "PAYBACK_DELTA_MONTHS": 0.0
+    },
+    "persona_status": "consistent",
+    "funding_flow": "DE",
+    "warnings": []
   }
 }

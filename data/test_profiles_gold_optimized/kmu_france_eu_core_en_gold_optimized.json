@@ -7,7 +7,6 @@
   "BRANCHE_LABEL": "Consulting & Services",
   "UNTERNEHMENSGROESSE_LABEL": "11-50 (SME)",
   "HAUPTLEISTUNG": "Business and digital transformation consulting for European enterprises, specializing in AI adoption strategies, process optimization, and cross-border digital service delivery.",
-
   "expected_validation": {
     "funding_flow": "EN-EU-Core",
     "funding_source": "funding_eu_core_en.json",
@@ -24,26 +23,53 @@
     "word_guarantee": 50,
     "pdf_size_limit_mb": 10
   },
-
   "answers": {
     "branche": "consulting",
     "unternehmensgroesse": "kmu",
     "country": "France",
     "hauptleistung": "Business and digital transformation consulting for European enterprises, specializing in AI adoption strategies, process optimization, and cross-border digital service delivery.",
-    "zielgruppen": ["B2B", "enterprises", "sme", "public_sector"],
+    "zielgruppen": [
+      "B2B",
+      "enterprises",
+      "sme",
+      "public_sector"
+    ],
     "jahresumsatz": "1m_to_2m",
     "it_infrastruktur": "hybrid",
     "interne_ki_kompetenzen": "intermediate",
-    "datenquellen": ["crm", "microsoft365", "analytics", "customer_feedback", "project_management"],
+    "datenquellen": [
+      "crm",
+      "microsoft365",
+      "analytics",
+      "customer_feedback",
+      "project_management"
+    ],
     "digitalisierungsgrad": "high",
     "prozesse_papierlos": "yes",
     "automatisierungsgrad": "medium",
-    "ki_einsatz": ["document_creation", "analysis_automation", "customer_communication", "research"],
+    "ki_einsatz": [
+      "document_creation",
+      "analysis_automation",
+      "customer_communication",
+      "research"
+    ],
     "ki_kompetenz": "intermediate",
-    "ki_ziele": ["efficiency", "scaling", "quality", "innovation", "market_expansion"],
+    "ki_ziele": [
+      "efficiency",
+      "scaling",
+      "quality",
+      "innovation",
+      "market_expansion"
+    ],
     "ki_guardrails": "",
     "ki_projekte": "Document automation for client proposals, AI-assisted market research, email drafting systems, automated reporting dashboards, and knowledge management platform for consultants.",
-    "anwendungsfaelle": ["automation", "knowledge", "customer_communication", "analysis_automation", "content_production"],
+    "anwendungsfaelle": [
+      "automation",
+      "knowledge",
+      "customer_communication",
+      "analysis_automation",
+      "content_production"
+    ],
     "zeitersparnis_prioritaet": "Reporting, documentation, proposal creation, market research, and client communication consume the most time. Cross-language content adaptation is also resource-intensive.",
     "pilot_bereich": "consulting",
     "geschaeftsmodell_evolution": "Expand AI-powered consulting services across EU markets, develop multilingual service delivery capabilities, and create scalable digital products for SME transformation.",
@@ -54,9 +80,25 @@
     "governance_richtlinien": "established",
     "change_management": "yes",
     "zeitbudget": "20h_week",
-    "vorhandene_tools": ["microsoft365", "salesforce", "notion", "slack", "chatgpt", "hubspot", "asana"],
-    "regulierte_branche": ["no_regulation"],
-    "trainings_interessen": ["ai_strategy", "automation", "data_analytics", "compliance", "leadership"],
+    "vorhandene_tools": [
+      "microsoft365",
+      "salesforce",
+      "notion",
+      "slack",
+      "chatgpt",
+      "hubspot",
+      "asana"
+    ],
+    "regulierte_branche": [
+      "no_regulation"
+    ],
+    "trainings_interessen": [
+      "ai_strategy",
+      "automation",
+      "data_analytics",
+      "compliance",
+      "leadership"
+    ],
     "vision_prioritaet": "high",
     "datenschutzbeauftragter": "appointed",
     "technische_massnahmen": "advanced",
@@ -64,7 +106,12 @@
     "meldewege": "established",
     "loeschregeln": "gdpr_compliant",
     "ai_act_kenntnis": "intermediate",
-    "ki_hemmnisse": ["talent", "integration", "cost", "change_resistance"],
+    "ki_hemmnisse": [
+      "talent",
+      "integration",
+      "cost",
+      "change_resistance"
+    ],
     "bisherige_foerdermittel": "national_grants",
     "interesse_foerderung": "yes",
     "erfahrung_beratung": "high",
@@ -74,5 +121,17 @@
     "innovationsprozess": "structured",
     "risikofreude": "60",
     "datenschutz": true
+  },
+  "g15_2_validation": {
+    "ai_act_effective_risk_level": "limited",
+    "ai_act_risk_consistency_score": 0.8,
+    "ai_act_modifier_trace": {
+      "CAPEX_MODIFIER": 1.1,
+      "OPEX_MODIFIER": 1.05,
+      "PAYBACK_DELTA_MONTHS": 0.5
+    },
+    "persona_status": "consistent",
+    "funding_flow": "EN-EU-Core",
+    "warnings": []
   }
 }
