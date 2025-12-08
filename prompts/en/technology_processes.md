@@ -57,6 +57,17 @@
     <li>Plausibility check of business case figures</li>
   </ul>
 
+  <h3>Data Security &amp; Compliance</h3>
+  <p>
+    {% if COMPANY_SIZE == "solo" %}
+    Use only GDPR-compliant tools with EU data processing. Avoid entering sensitive customer data into AI systems without prior anonymization or explicit consent.
+    {% elif COMPANY_SIZE == "team" %}
+    Define clear rules about which data types may be used in AI tools. A central guideline for all team members prevents unintentional data protection violations and creates legal certainty.
+    {% else %}
+    Integrate AI usage guidelines into existing data protection processes. Regular audits of tools and data flows ensure compliance. Document processing activities according to Art. 30 GDPR.
+    {% endif %}
+  </p>
+
   <p class="small muted">
     This architecture ensures traceable, quality-assured reports.
   </p>

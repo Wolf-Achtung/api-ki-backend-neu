@@ -64,6 +64,13 @@ ANTI-REDUNDANZ:
       <li><strong>Prüfung empfohlen:</strong> Validieren Sie KI-Ergebnisse vor strategischen Entscheidungen.</li>
     </ul>
 
+    <h3>Versionierung &amp; Updates</h3>
+    <p>
+      Dieser Report reflektiert den Stand zum Erstellungsdatum. Bei wesentlichen Änderungen
+      Ihrer Situation (neue Tools, geänderte Teamgröße, regulatorische Updates) empfehlen wir
+      eine Aktualisierung. Frühere Versionen bleiben auf Anfrage verfügbar.
+    </p>
+
     <h3>Kontakt</h3>
     <p>
       Fragen oder Feedback? <strong>kontakt@ki-sicherheit.jetzt</strong>

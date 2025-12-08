@@ -123,6 +123,17 @@ GUARDRAILS: Respect guardrails from strategic context.
     sizes to ensure quality and security.
   </p>
 
+  <h3>AI Culture &amp; Adoption</h3>
+  <p>
+    {% if COMPANY_SIZE == "solo" %}
+    View AI as a tool for relief, not a replacement for your expertise. Regular self-reflection on quality and limitations of AI outputs strengthens your judgment and prevents over-reliance on automated results.
+    {% elif COMPANY_SIZE == "team" %}
+    Encourage open exchange about successful and failed AI applications. Brief experience reports in existing meetings create shared learning and reduce reservations without generating additional overhead.
+    {% else %}
+    Establish a positive error culture around AI usage: Open sharing of learnings accelerates organization-wide learning. Champions in functional areas can act as multipliers and sustainably increase adoption.
+    {% endif %}
+  </p>
+
   <p class="small muted">
     Realistic, well-communicated governance ensures sustainable impact,
     supports roadmap implementation, and builds trust with employees and
