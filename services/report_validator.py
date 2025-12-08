@@ -336,6 +336,16 @@ class ReportValidator:
         },
     }
 
+    # SPRINT G15.1-A: Global Artifact Replacements
+    # These artifacts appear due to prompt leakage and must be cleaned globally
+    # Longest-first matching to avoid partial replacements
+    ARTIFACT_REPLACEMENTS = {
+        "OnPrüfroutineing-Mails": "Onboarding-E-Mails",
+        "OnPrüfroutineing-Mail": "Onboarding-E-Mail",
+        "OnPrüfroutineing zukünftiger": "Onboarding zukünftiger",
+        "OnPrüfroutineing": "Onboarding",
+    }
+
     # SPRINT N / G8.2: Hard-Stop Configuration (now ENV-controlled via ValidationConfig)
     # Can be overridden via HARD_STOP_ON_SIZE_MISMATCH env var
     HARD_STOP_ON_SIZE_MISMATCH = (
@@ -1265,6 +1275,7 @@ def filter_size_inappropriate_content(content: str, unternehmensgroesse: str) ->
     Sprint N3.1: Für Solo-Profile wird apply_solo_persona_filter() aufgerufen.
     Sprint G3.1: Für Team/KMU wird apply_size_persona_filter() aufgerufen,
     das Solo-spezifische Phrasen durch Team/KMU-passende Alternativen ersetzt.
+    Sprint G15.1-A: Global artifact cleaning (OnPrüfroutineing etc.) for all sizes.
     """
     import logging
     import re
@@ -1273,6 +1284,22 @@ def filter_size_inappropriate_content(content: str, unternehmensgroesse: str) ->
 
     if not content or not isinstance(content, str):
         return content
+
+    # SPRINT G15.1-A: Global artifact removal (applies to ALL sizes)
+    artifact_replacements_made = []
+    # Sort by length (longest first) to avoid partial matches
+    sorted_artifacts = sorted(
+        ReportValidator.ARTIFACT_REPLACEMENTS.items(),
+        key=lambda x: len(x[0]),
+        reverse=True
+    )
+    for artifact, replacement in sorted_artifacts:
+        if artifact in content:
+            content = content.replace(artifact, replacement)
+            artifact_replacements_made.append(f"{artifact} → {replacement}")
+
+    if artifact_replacements_made:
+        log.info(f"🧹 Artifact-Cleanup: {len(artifact_replacements_made)} Ersetzungen")
 
     size_raw = unternehmensgroesse.lower() if unternehmensgroesse else ""
 
