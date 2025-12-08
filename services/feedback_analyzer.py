@@ -281,7 +281,7 @@ def _extract_leaked_term(message: str) -> Optional[str]:
     if match:
         return match.group(1).lower()
 
-    return None
+    return None  # type: ignore[unreachable]  # mypy false positive: re.search can return None
 
 
 def identify_research_degradation(
@@ -1226,7 +1226,10 @@ def get_segment_stability_report() -> List[Dict[str, Any]]:
     # Sort by stability (weak first, then by sample size)
     stability_order: Dict[str, int] = {"weak": 0, "medium": 1, "strong": 2}
     stability_report.sort(
-        key=lambda x: (stability_order.get(str(x["stability"]), 0), -int(x["sample_size"]))
+        key=lambda x: (
+            stability_order.get(str(x["stability"]), 0),
+            -int(str(x["sample_size"]))
+        )
     )
 
     return stability_report
