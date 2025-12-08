@@ -1064,8 +1064,8 @@ def _calculate_std(values: List[float]) -> float:
     if len(values) < 2:
         return 0.0
     mean = sum(values) / len(values)
-    variance = sum((x - mean) ** 2 for x in values) / (len(values) - 1)
-    return variance ** 0.5
+    variance: float = sum((x - mean) ** 2 for x in values) / (len(values) - 1)
+    return float(variance ** 0.5)
 
 
 def _winsorize_values(values: List[float], std_threshold: float = 2.5) -> Tuple[List[float], bool]:
@@ -1224,9 +1224,9 @@ def get_segment_stability_report() -> List[Dict[str, Any]]:
         })
 
     # Sort by stability (weak first, then by sample size)
-    stability_order = {"weak": 0, "medium": 1, "strong": 2}
+    stability_order: Dict[str, int] = {"weak": 0, "medium": 1, "strong": 2}
     stability_report.sort(
-        key=lambda x: (stability_order.get(x["stability"], 0), -x["sample_size"])
+        key=lambda x: (stability_order.get(str(x["stability"]), 0), -int(x["sample_size"]))
     )
 
     return stability_report
