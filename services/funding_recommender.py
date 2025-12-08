@@ -545,6 +545,10 @@ def get_recommendations_for_report(
 FUNDING_INSIGHTS_ENABLED = os.getenv("FUNDING_INSIGHTS_ENABLED", "1").lower() in ("1", "true", "yes")
 FUNDING_MIN_CASES_PER_PROGRAM = int(os.getenv("FUNDING_MIN_CASES_PER_PROGRAM", "5"))
 
+# G17.1-C: Funding Insight Stability Configuration
+FUNDING_REQUIRE_STABLE_SEGMENT = os.getenv("FUNDING_REQUIRE_STABLE_SEGMENT", "1") == "1"
+FUNDING_SHOW_CONFIDENCE_INDICATOR = os.getenv("FUNDING_SHOW_CONFIDENCE_INDICATOR", "1") == "1"
+
 
 @dataclass
 class FundingInsight:
@@ -556,6 +560,8 @@ class FundingInsight:
     avg_relevance_score: float
     insight_text: str
     severity: str = "info"  # info, highlight, opportunity
+    # G17.1-C: Confidence level
+    confidence_level: str = "medium"  # high, medium, low
 
 
 def enrich_funding_recommendations_with_feedback(
@@ -584,7 +590,7 @@ def enrich_funding_recommendations_with_feedback(
     if not FUNDING_INSIGHTS_ENABLED:
         return {"html": "", "insights": []}
 
-    from services.feedback_analyzer import get_segment_for_report, SegmentStats
+    from services.feedback_analyzer import get_segment_for_report, is_segment_reliable, SegmentStats
 
     segment = get_segment_for_report(report_sections, profile)
 
@@ -593,6 +599,23 @@ def enrich_funding_recommendations_with_feedback(
             "html": "",
             "insights": [],
             "message": "Nicht genügend Segmentdaten für Funding-Insights",
+            "is_reliable": False,
+            "segment_stability": "unknown",
+        }
+
+    # G17.1-C: Check segment reliability
+    segment_is_reliable = is_segment_reliable(segment)
+    segment_stability = getattr(segment, "segment_stability", "unknown")
+
+    # If reliability filter is enabled and segment is unreliable
+    if FUNDING_REQUIRE_STABLE_SEGMENT and not segment_is_reliable:
+        log.info(f"Segment unstable (stability={segment_stability}) for funding insights")
+        return {
+            "html": "",
+            "insights": [],
+            "message": "Segment-Daten noch nicht stabil genug für Funding-Insights",
+            "is_reliable": False,
+            "segment_stability": segment_stability,
         }
 
     insights = _build_funding_insights(segment, recommendations, lang)
@@ -602,6 +625,8 @@ def enrich_funding_recommendations_with_feedback(
             "html": "",
             "insights": [],
             "message": "Keine Funding-Insights für dieses Segment verfügbar",
+            "is_reliable": segment_is_reliable,
+            "segment_stability": segment_stability,
         }
 
     html = _generate_funding_insights_html(insights, segment, lang)
@@ -616,9 +641,12 @@ def enrich_funding_recommendations_with_feedback(
                 "similar_profiles_count": i.similar_profiles_count,
                 "insight_text": i.insight_text,
                 "severity": i.severity,
+                "confidence_level": i.confidence_level,
             }
             for i in insights
         ],
+        "is_reliable": segment_is_reliable,
+        "segment_stability": segment_stability,
     }
 
 
@@ -637,6 +665,9 @@ def _build_funding_insights(
     if not top_programs or report_count < FUNDING_MIN_CASES_PER_PROGRAM:
         return insights
 
+    # G17.1-C: Get segment stability for confidence calculation
+    segment_stability = getattr(segment, "segment_stability", "medium")
+
     for program_id, count in top_programs[:3]:
         if count < FUNDING_MIN_CASES_PER_PROGRAM:
             continue
@@ -650,6 +681,13 @@ def _build_funding_insights(
             severity = "opportunity"
         else:
             severity = "info"
+
+        # G17.1-C: Calculate confidence level based on sample size and stability
+        confidence_level = _calculate_insight_confidence(
+            program_count=count,
+            total_count=report_count,
+            segment_stability=segment_stability,
+        )
 
         # Find program name from recommendations or database
         program_name = _get_program_name(program_id)
@@ -674,9 +712,47 @@ def _build_funding_insights(
             avg_relevance_score=0.0,  # Would need more data
             insight_text=insight_text,
             severity=severity,
+            confidence_level=confidence_level,
         ))
 
     return insights
+
+
+def _calculate_insight_confidence(
+    program_count: int,
+    total_count: int,
+    segment_stability: str,
+) -> str:
+    """
+    Calculate confidence level for a funding insight.
+
+    G17.1-C: Based on sample size, segment stability, and program frequency.
+
+    Args:
+        program_count: Number of reports with this program
+        total_count: Total reports in segment
+        segment_stability: Segment stability level
+
+    Returns:
+        Confidence level: "high", "medium", or "low"
+    """
+    # Base confidence from segment stability
+    if segment_stability == "weak":
+        return "low"
+
+    # High confidence requires: strong stability + sufficient sample
+    if segment_stability == "strong" and program_count >= 10 and total_count >= 20:
+        return "high"
+
+    # Medium stability with good sample
+    if program_count >= 7 and total_count >= 15:
+        return "high" if segment_stability == "strong" else "medium"
+
+    # Minimum viable sample
+    if program_count >= FUNDING_MIN_CASES_PER_PROGRAM:
+        return "medium" if segment_stability in ("strong", "medium") else "low"
+
+    return "low"
 
 
 def _get_program_name(program_id: str) -> str:
@@ -699,19 +775,34 @@ def _generate_funding_insights_html(
     if not insights:
         return ""
 
+    # G17.1-C: Get segment stability for header indicator
+    segment_stability = getattr(segment, "segment_stability", "medium")
+
     if lang == "de":
         title = "Real-World Funding-Insights"
         subtitle = f"Basierend auf {segment.report_count} vergleichbaren Unternehmen"
         disclaimer = "Diese Insights basieren auf aggregierten, anonymisierten Daten."
+        confidence_labels = {"high": "Hohe Konfidenz", "medium": "Mittlere Konfidenz", "low": "Begrenzte Datenbasis"}
     else:
         title = "Real-World Funding Insights"
         subtitle = f"Based on {segment.report_count} similar companies"
         disclaimer = "These insights are based on aggregated, anonymized data."
+        confidence_labels = {"high": "High confidence", "medium": "Medium confidence", "low": "Limited data"}
+
+    # G17.1-C: Add stability indicator to header if enabled
+    stability_badge = ""
+    if FUNDING_SHOW_CONFIDENCE_INDICATOR and segment_stability != "strong":
+        badge_colors = {"medium": "#ffc107", "weak": "#dc3545"}
+        badge_color = badge_colors.get(segment_stability, "#6c757d")
+        stability_text = "Eingeschränkt" if lang == "de" else "Limited"
+        if segment_stability == "medium":
+            stability_text = "Beta" if lang == "de" else "Beta"
+        stability_badge = f'<span style="font-size:9px;padding:2px 6px;background:{badge_color};color:#fff;border-radius:4px;margin-left:8px;">{stability_text}</span>'
 
     html = f"""
     <div class="funding-insights" style="margin-top:16px;padding:16px;background:#f8f9fa;border-radius:8px;border:1px solid #dee2e6;">
         <h4 style="margin:0 0 8px 0;font-size:14px;color:#495057;display:flex;align-items:center;gap:8px;">
-            <span>📊</span> {title}
+            <span>📊</span> {title}{stability_badge}
         </h4>
         <p style="margin:0 0 12px 0;font-size:11px;color:#6c757d;">{subtitle}</p>
         <div style="display:flex;flex-direction:column;gap:8px;">
@@ -732,10 +823,19 @@ def _generate_funding_insights_html(
             border_color = "#6c757d"
             icon = "ℹ️"
 
+        # G17.1-C: Add confidence badge if enabled
+        confidence_badge = ""
+        if FUNDING_SHOW_CONFIDENCE_INDICATOR:
+            conf_level = insight.confidence_level
+            conf_colors = {"high": "#28a745", "medium": "#ffc107", "low": "#6c757d"}
+            conf_color = conf_colors.get(conf_level, "#6c757d")
+            conf_text = confidence_labels.get(conf_level, conf_level)
+            confidence_badge = f'<span style="font-size:9px;padding:1px 4px;background:{conf_color};color:#fff;border-radius:3px;margin-left:6px;">{conf_text}</span>'
+
         html += f"""
             <div style="background:{bg_color};padding:10px;border-radius:4px;border-left:3px solid {border_color};">
                 <div style="font-size:12px;color:#212529;">
-                    {icon} <strong>{insight.program_name}</strong>
+                    {icon} <strong>{insight.program_name}</strong>{confidence_badge}
                 </div>
                 <p style="margin:4px 0 0 0;font-size:11px;color:#495057;">
                     {insight.insight_text}
