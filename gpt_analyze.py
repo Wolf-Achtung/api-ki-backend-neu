@@ -5267,11 +5267,13 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
                         prompt_context = ft_report_sections.get("_prompt_context", "")
 
                         # Detect weaknesses based on signals
+                        validation_warnings_raw = validation_result.get("warnings", []) if validation_result else []
+                        validation_warnings_list: List[Dict[str, Any]] = validation_warnings_raw if isinstance(validation_warnings_raw, list) else []
                         issues = detect_prompt_weaknesses(
                             prompt_text=prompt_context,
                             aggregated_signals=ft_signals,
                             segment_stats=segment_stats,
-                            validation_warnings=validation_result.get("warnings", []) if validation_result else [],
+                            validation_warnings=validation_warnings_list,
                         )
 
                         # Generate rewrite suggestions
