@@ -537,3 +537,117 @@ async def get_action_items(
     except Exception as e:
         log.error(f"Failed to get action items: {e}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+# =============================================================================
+# G17.1-D: SEGMENT STABILITY & INSIGHTS RELIABILITY ENDPOINTS
+# =============================================================================
+
+class SegmentStabilityItemResponse(BaseModel):
+    """Single segment stability item."""
+    segment_key: SegmentKeyResponse
+    segment_label: str
+    sample_size: int
+    stability: str  # strong, medium, weak
+    outliers_trimmed: bool
+    std_score_overall: float
+    max_influence_weight: float
+    is_reliable: bool
+    funding_confidence: str
+
+
+class SegmentStabilityResponse(BaseModel):
+    """Segment stability report response."""
+    total_segments: int
+    strong_segments: int
+    medium_segments: int
+    weak_segments: int
+    segments: List[SegmentStabilityItemResponse]
+
+
+class InsightsReliabilityResponse(BaseModel):
+    """Insights reliability metrics response."""
+    total_segments: int
+    reliable_segments: int
+    weak_segments: int
+    reliability_score: float
+    coverage_by_stability: Dict[str, int]
+    avg_sample_size: float
+    segments_with_outliers: int
+
+
+@router.get(
+    "/segment-stability",
+    response_model=SegmentStabilityResponse,
+    summary="Get segment stability report",
+    description="Returns stability analysis for all segments (G17.1-D).",
+)
+async def get_segment_stability() -> SegmentStabilityResponse:
+    """Get segment stability report."""
+    try:
+        from services.feedback_analyzer import get_segment_stability_report
+
+        stability_report = get_segment_stability_report()
+
+        # Count by stability level
+        strong_count = sum(1 for s in stability_report if s["stability"] == "strong")
+        medium_count = sum(1 for s in stability_report if s["stability"] == "medium")
+        weak_count = sum(1 for s in stability_report if s["stability"] == "weak")
+
+        return SegmentStabilityResponse(
+            total_segments=len(stability_report),
+            strong_segments=strong_count,
+            medium_segments=medium_count,
+            weak_segments=weak_count,
+            segments=[
+                SegmentStabilityItemResponse(
+                    segment_key=SegmentKeyResponse(
+                        size_label=s["segment_key"][0],
+                        branch_group=s["segment_key"][1],
+                        ai_act_risk=s["segment_key"][2],
+                        funding_scope=s["segment_key"][3],
+                    ),
+                    segment_label=s["segment_label"],
+                    sample_size=s["sample_size"],
+                    stability=s["stability"],
+                    outliers_trimmed=s["outliers_trimmed"],
+                    std_score_overall=s["std_score_overall"],
+                    max_influence_weight=s["max_influence_weight"],
+                    is_reliable=s["is_reliable"],
+                    funding_confidence=s["funding_confidence"],
+                )
+                for s in stability_report
+            ],
+        )
+
+    except Exception as e:
+        log.error(f"Failed to get segment stability: {e}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+@router.get(
+    "/insights-reliability",
+    response_model=InsightsReliabilityResponse,
+    summary="Get insights reliability metrics",
+    description="Returns overall reliability metrics for insights engine (G17.1-D).",
+)
+async def get_insights_reliability() -> InsightsReliabilityResponse:
+    """Get insights reliability metrics."""
+    try:
+        from services.feedback_analyzer import get_insights_reliability_metrics
+
+        metrics = get_insights_reliability_metrics()
+
+        return InsightsReliabilityResponse(
+            total_segments=metrics["total_segments"],
+            reliable_segments=metrics["reliable_segments"],
+            weak_segments=metrics["weak_segments"],
+            reliability_score=metrics["reliability_score"],
+            coverage_by_stability=metrics["coverage_by_stability"],
+            avg_sample_size=metrics["avg_sample_size"],
+            segments_with_outliers=metrics["segments_with_outliers"],
+        )
+
+    except Exception as e:
+        log.error(f"Failed to get insights reliability: {e}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")

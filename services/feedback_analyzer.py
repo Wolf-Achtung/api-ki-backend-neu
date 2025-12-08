@@ -536,6 +536,12 @@ def run_full_analysis(
 INSIGHTS_MIN_REPORTS_PER_SEGMENT = int(os.environ.get("INSIGHTS_MIN_REPORTS_PER_SEGMENT", "10"))
 INSIGHTS_REFRESH_INTERVAL_MIN = int(os.environ.get("INSIGHTS_REFRESH_INTERVAL_MIN", "30"))
 
+# G17.1-A: Calibration Configuration
+INSIGHTS_SEGMENT_OUTLIER_STD = float(os.environ.get("INSIGHTS_SEGMENT_OUTLIER_STD", "2.5"))
+INSIGHTS_SEGMENT_SAMPLE_WARNING = int(os.environ.get("INSIGHTS_SEGMENT_SAMPLE_WARNING", "5"))
+INSIGHTS_MIN_STD_CONFIDENCE = float(os.environ.get("INSIGHTS_MIN_STD_CONFIDENCE", "0.15"))
+INSIGHTS_CONFIDENCE_LEVELS_ENABLED = os.environ.get("INSIGHTS_CONFIDENCE_LEVELS_ENABLED", "1") == "1"
+
 # Segment snapshot cache
 _segment_snapshot: Optional[Dict[str, "SegmentStats"]] = None
 _segment_snapshot_timestamp: Optional[datetime] = None
@@ -597,6 +603,14 @@ class SegmentStats:
     funding_success_rate: float = 0.0
     top_funding_programs: List[Tuple[str, int]] = field(default_factory=list)
 
+    # G17.1-A: Stability & Calibration fields
+    segment_stability: str = "strong"  # strong, medium, weak
+    sample_size: int = 0
+    outliers_trimmed: bool = False
+    std_score_overall: float = 0.0  # Standard deviation for confidence
+    std_roi: float = 0.0
+    max_influence_weight: float = 0.0  # Highest single report influence (0-1)
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -621,6 +635,12 @@ class SegmentStats:
             "top_warning_types": self.top_warning_types[:5],
             "funding_success_rate": round(self.funding_success_rate, 2),
             "top_funding_programs": self.top_funding_programs[:5],
+            # G17.1-A: Stability fields
+            "segment_stability": self.segment_stability,
+            "sample_size": self.sample_size,
+            "outliers_trimmed": self.outliers_trimmed,
+            "std_score_overall": round(self.std_score_overall, 2),
+            "max_influence_weight": round(self.max_influence_weight, 3),
         }
 
 
@@ -753,8 +773,11 @@ def build_segments_snapshot(days: int = 90, force: bool = False) -> Dict[str, Se
     for key, data in segments.items():
         report_count = len(data["reports"])
 
-        # Skip segments with too few reports
-        if report_count < INSIGHTS_MIN_REPORTS_PER_SEGMENT:
+        # G17.1-A: Apply calibration (winsorizing, stability)
+        calibrated = _calibrate_segment_data(data, report_count)
+
+        # Skip segments with too few reports (but still allow weak segments for tracking)
+        if report_count < INSIGHTS_SEGMENT_SAMPLE_WARNING:
             continue
 
         stats = SegmentStats(
@@ -764,8 +787,8 @@ def build_segments_snapshot(days: int = 90, force: bool = False) -> Dict[str, Se
             avg_score_security=_safe_avg(data["scores_sec"]),
             avg_score_value=_safe_avg(data["scores_val"]),
             avg_score_enablement=_safe_avg(data["scores_ena"]),
-            avg_score_overall=_safe_avg(data["scores_overall"]),
-            avg_roi_percent=_safe_avg(data["roi_values"]),
+            avg_score_overall=_safe_avg(calibrated["scores_overall"]),  # Use calibrated
+            avg_roi_percent=_safe_avg(calibrated["roi_values"]),  # Use calibrated
             avg_payback_months=_safe_avg(data["payback_values"]),
             avg_warnings=_safe_avg(data["warnings_count"]),
             avg_fallback_rate=_safe_avg(data["fallback_rates"]),
@@ -782,6 +805,13 @@ def build_segments_snapshot(days: int = 90, force: bool = False) -> Dict[str, Se
                 key=lambda x: x[1],
                 reverse=True,
             )[:5],
+            # G17.1-A: Stability fields
+            segment_stability=calibrated["segment_stability"],
+            sample_size=calibrated["sample_size"],
+            outliers_trimmed=calibrated["outliers_trimmed"],
+            std_score_overall=calibrated["std_score_overall"],
+            std_roi=calibrated["std_roi"],
+            max_influence_weight=calibrated["max_influence_weight"],
         )
 
         # Use string key for caching
@@ -802,6 +832,54 @@ def _safe_avg(values: List[float]) -> float:
     if not values:
         return 0.0
     return sum(values) / len(values)
+
+
+def _calibrate_segment_data(data: Dict[str, Any], report_count: int) -> Dict[str, Any]:
+    """
+    Apply G17.1-A calibration to segment data.
+
+    Args:
+        data: Raw segment aggregation data
+        report_count: Number of reports
+
+    Returns:
+        Calibrated data with stability metrics
+    """
+    # Apply winsorizing to score and ROI lists
+    scores_overall = data.get("scores_overall", [])
+    roi_values = data.get("roi_values", [])
+
+    scores_winsorized, scores_trimmed = _winsorize_values(
+        scores_overall, INSIGHTS_SEGMENT_OUTLIER_STD
+    )
+    roi_winsorized, roi_trimmed = _winsorize_values(
+        roi_values, INSIGHTS_SEGMENT_OUTLIER_STD
+    )
+
+    # Calculate standard deviations
+    std_score = _calculate_std(scores_winsorized)
+    std_roi = _calculate_std(roi_winsorized)
+
+    # Calculate max influence weight
+    max_influence = 1.0 / report_count if report_count > 0 else 1.0
+
+    # Determine stability
+    stability = _determine_segment_stability(
+        sample_size=report_count,
+        std_overall=std_score,
+        max_influence=max_influence,
+    )
+
+    return {
+        "scores_overall": scores_winsorized,
+        "roi_values": roi_winsorized,
+        "outliers_trimmed": scores_trimmed or roi_trimmed,
+        "std_score_overall": std_score,
+        "std_roi": std_roi,
+        "max_influence_weight": max_influence,
+        "segment_stability": stability,
+        "sample_size": report_count,
+    }
 
 
 def get_segment_for_report(
@@ -975,4 +1053,274 @@ def get_top_segments(limit: int = 5) -> List[Dict[str, Any]]:
     )[:limit]
 
     return [seg.to_dict() for seg in sorted_segments]
+
+
+# =============================================================================
+# G17.1-A: SEGMENT CALIBRATION & STABILITY
+# =============================================================================
+
+def _calculate_std(values: List[float]) -> float:
+    """Calculate standard deviation safely."""
+    if len(values) < 2:
+        return 0.0
+    mean = sum(values) / len(values)
+    variance: float = sum((x - mean) ** 2 for x in values) / (len(values) - 1)
+    return float(variance ** 0.5)
+
+
+def _winsorize_values(values: List[float], std_threshold: float = 2.5) -> Tuple[List[float], bool]:
+    """
+    Apply winsorizing to dampen outliers beyond std_threshold standard deviations.
+
+    Args:
+        values: List of values to winsorize
+        std_threshold: Number of SDs beyond which to clip
+
+    Returns:
+        Tuple of (winsorized values, whether any outliers were trimmed)
+    """
+    if len(values) < 3:
+        return values, False
+
+    mean = sum(values) / len(values)
+    std = _calculate_std(values)
+
+    if std == 0:
+        return values, False
+
+    lower_bound = mean - (std_threshold * std)
+    upper_bound = mean + (std_threshold * std)
+
+    winsorized = []
+    outliers_found = False
+
+    for v in values:
+        if v < lower_bound:
+            winsorized.append(lower_bound)
+            outliers_found = True
+        elif v > upper_bound:
+            winsorized.append(upper_bound)
+            outliers_found = True
+        else:
+            winsorized.append(v)
+
+    return winsorized, outliers_found
+
+
+def _determine_segment_stability(
+    sample_size: int,
+    std_overall: float,
+    max_influence: float,
+) -> str:
+    """
+    Determine segment stability level.
+
+    Args:
+        sample_size: Number of reports in segment
+        std_overall: Standard deviation of overall scores
+        max_influence: Maximum influence weight of single report
+
+    Returns:
+        Stability level: "strong", "medium", or "weak"
+    """
+    # Weak if sample too small
+    if sample_size < INSIGHTS_SEGMENT_SAMPLE_WARNING:
+        return "weak"
+
+    # Weak if below minimum threshold
+    if sample_size < INSIGHTS_MIN_REPORTS_PER_SEGMENT:
+        return "weak"
+
+    # Weak if single report has too much influence (>50%)
+    if max_influence > 0.5:
+        return "weak"
+
+    # Medium if std is high relative to confidence threshold
+    if std_overall > INSIGHTS_MIN_STD_CONFIDENCE * 100:  # Scale for 0-100 scores
+        return "medium"
+
+    # Medium if sample is borderline
+    if sample_size < INSIGHTS_MIN_REPORTS_PER_SEGMENT * 1.5:
+        return "medium"
+
+    return "strong"
+
+
+def calibrate_segment_minimums(
+    segment_data: Dict[str, Any],
+    report_count: int,
+) -> Dict[str, Any]:
+    """
+    Calibrate segment data by applying outlier trimming and stability assessment.
+
+    Args:
+        segment_data: Raw segment aggregation data
+        report_count: Number of reports in segment
+
+    Returns:
+        Calibrated data with stability metrics
+    """
+    calibrated = dict(segment_data)
+
+    # Apply winsorizing to score lists
+    scores_overall = segment_data.get("scores_overall", [])
+    roi_values = segment_data.get("roi_values", [])
+
+    scores_winsorized, scores_trimmed = _winsorize_values(
+        scores_overall, INSIGHTS_SEGMENT_OUTLIER_STD
+    )
+    roi_winsorized, roi_trimmed = _winsorize_values(
+        roi_values, INSIGHTS_SEGMENT_OUTLIER_STD
+    )
+
+    calibrated["scores_overall"] = scores_winsorized
+    calibrated["roi_values"] = roi_winsorized
+    calibrated["outliers_trimmed"] = scores_trimmed or roi_trimmed
+
+    # Calculate standard deviations
+    calibrated["std_score_overall"] = _calculate_std(scores_winsorized)
+    calibrated["std_roi"] = _calculate_std(roi_winsorized)
+
+    # Calculate max influence weight
+    if report_count > 0:
+        calibrated["max_influence_weight"] = 1.0 / report_count
+    else:
+        calibrated["max_influence_weight"] = 1.0
+
+    # Determine stability
+    calibrated["segment_stability"] = _determine_segment_stability(
+        sample_size=report_count,
+        std_overall=calibrated["std_score_overall"],
+        max_influence=calibrated["max_influence_weight"],
+    )
+
+    calibrated["sample_size"] = report_count
+
+    return calibrated
+
+
+def get_segment_stability_report() -> List[Dict[str, Any]]:
+    """
+    Get stability report for all segments.
+
+    Returns:
+        List of segment stability information
+    """
+    snapshot = build_segments_snapshot()
+
+    stability_report = []
+
+    for key_str, stats in snapshot.items():
+        stability_report.append({
+            "segment_key": stats.segment_key,
+            "segment_label": _format_segment_label(stats.segment_key),
+            "sample_size": stats.sample_size,
+            "stability": stats.segment_stability,
+            "outliers_trimmed": stats.outliers_trimmed,
+            "std_score_overall": stats.std_score_overall,
+            "max_influence_weight": stats.max_influence_weight,
+            "is_reliable": stats.segment_stability in ("strong", "medium"),
+            "funding_confidence": _calculate_funding_confidence(stats),
+        })
+
+    # Sort by stability (weak first, then by sample size)
+    stability_order: Dict[str, int] = {"weak": 0, "medium": 1, "strong": 2}
+    stability_report.sort(
+        key=lambda x: (
+            stability_order.get(str(x["stability"]), 0),
+            -int(str(x["sample_size"]))
+        )
+    )
+
+    return stability_report
+
+
+def _calculate_funding_confidence(stats: SegmentStats) -> str:
+    """Calculate funding confidence level for a segment."""
+    if not stats.top_funding_programs:
+        return "none"
+
+    # Get highest program count
+    max_count = max(count for _, count in stats.top_funding_programs) if stats.top_funding_programs else 0
+
+    if max_count < 3:
+        return "low"
+    elif max_count < 7:
+        return "medium"
+    else:
+        return "high"
+
+
+def is_segment_reliable(segment: Optional[SegmentStats]) -> bool:
+    """
+    Check if a segment is reliable enough for insights.
+
+    Args:
+        segment: Segment stats object
+
+    Returns:
+        True if segment is reliable for generating insights
+    """
+    if segment is None:
+        return False
+
+    # Must have minimum sample size
+    if segment.sample_size < INSIGHTS_MIN_REPORTS_PER_SEGMENT:
+        return False
+
+    # Must not be weak stability
+    if segment.segment_stability == "weak":
+        return False
+
+    # Single report shouldn't have >50% influence
+    if segment.max_influence_weight > 0.5:
+        return False
+
+    return True
+
+
+def get_insights_reliability_metrics() -> Dict[str, Any]:
+    """
+    Get overall insights reliability metrics.
+
+    Returns:
+        Dictionary with reliability metrics
+    """
+    snapshot = build_segments_snapshot()
+
+    if not snapshot:
+        return {
+            "total_segments": 0,
+            "reliable_segments": 0,
+            "weak_segments": 0,
+            "reliability_score": 0.0,
+            "coverage_by_stability": {"strong": 0, "medium": 0, "weak": 0},
+            "avg_sample_size": 0.0,
+            "segments_with_outliers": 0,
+        }
+
+    stability_counts = {"strong": 0, "medium": 0, "weak": 0}
+    total_sample = 0
+    outlier_count = 0
+
+    for stats in snapshot.values():
+        stability_counts[stats.segment_stability] = (
+            stability_counts.get(stats.segment_stability, 0) + 1
+        )
+        total_sample += stats.sample_size
+        if stats.outliers_trimmed:
+            outlier_count += 1
+
+    total_segments = len(snapshot)
+    reliable = stability_counts["strong"] + stability_counts["medium"]
+
+    return {
+        "total_segments": total_segments,
+        "reliable_segments": reliable,
+        "weak_segments": stability_counts["weak"],
+        "reliability_score": round(reliable / total_segments * 100, 1) if total_segments > 0 else 0.0,
+        "coverage_by_stability": stability_counts,
+        "avg_sample_size": round(total_sample / total_segments, 1) if total_segments > 0 else 0.0,
+        "segments_with_outliers": outlier_count,
+    }
 
