@@ -84,6 +84,11 @@ class ValidationConfig:
     # Fallback limits
     MAX_FALLBACKS_PER_REPORT: int = get_int_env("HARD_STOP_MAX_FALLBACKS", 5)
 
+    # SPRINT G13-D: Fallback optimization settings
+    FALLBACK_TIMEOUT_SEC: int = get_int_env("FALLBACK_TIMEOUT_SEC", 60)  # aggressive timeout
+    FALLBACK_TOKEN_BUDGET: int = get_int_env("FALLBACK_TOKEN_BUDGET", 2500)  # max tokens
+    FALLBACK_MIN_WORD_RATIO: float = get_float_env("FALLBACK_MIN_WORD_RATIO", 0.85)  # 85% of min
+
     @classmethod
     def reload(cls) -> None:
         """Reload all config values from ENV (useful for testing)."""
@@ -100,6 +105,10 @@ class ValidationConfig:
         cls.AI_ACT_VERBOSE = get_bool_env("AI_ACT_SECTION_VERBOSE", False)
         cls.AI_ACT_APPLY_BC_MODIFIERS = get_bool_env("AI_ACT_APPLY_BC_MODIFIERS", True)
         cls.MAX_FALLBACKS_PER_REPORT = get_int_env("HARD_STOP_MAX_FALLBACKS", 5)
+        # SPRINT G13-D: Fallback optimization
+        cls.FALLBACK_TIMEOUT_SEC = get_int_env("FALLBACK_TIMEOUT_SEC", 60)
+        cls.FALLBACK_TOKEN_BUDGET = get_int_env("FALLBACK_TOKEN_BUDGET", 2500)
+        cls.FALLBACK_MIN_WORD_RATIO = get_float_env("FALLBACK_MIN_WORD_RATIO", 0.85)
         log.info("[CONFIG] ValidationConfig reloaded from ENV")
 
 

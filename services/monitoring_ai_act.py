@@ -124,10 +124,29 @@ def calculate_bc_metrics(
 
     Returns:
         AIActBCMetrics with all tracking fields populated
+
+    Sprint G13-C: Improved "before" value extraction:
+    - Prioritize AI_ACT_BC_ORIGINAL_* keys from adjusted_bc (authoritative source)
+    - Fall back to original_bc values only if those aren't available
+    - This fixes the "0→0" display bug when original_bc is same object as adjusted_bc
     """
-    # Extract before values
-    capex_before = float(original_bc.get("CAPEX_REALISTISCH_EUR", 0))
-    opex_before = float(original_bc.get("OPEX_REALISTISCH_EUR", 0))
+    # SPRINT G13-C: Extract "before" values with priority to AI_ACT_BC_ORIGINAL_* keys
+    # These are set by apply_ai_act_modifiers_to_business_case and are authoritative
+    capex_before_from_tracking = adjusted_bc.get("AI_ACT_BC_ORIGINAL_CAPEX")
+    opex_before_from_tracking = adjusted_bc.get("AI_ACT_BC_ORIGINAL_OPEX")
+
+    # Use tracking keys if available, otherwise fall back to original_bc
+    capex_before = (
+        float(capex_before_from_tracking)
+        if capex_before_from_tracking is not None
+        else float(original_bc.get("CAPEX_REALISTISCH_EUR", 0))
+    )
+    opex_before = (
+        float(opex_before_from_tracking)
+        if opex_before_from_tracking is not None
+        else float(original_bc.get("OPEX_REALISTISCH_EUR", 0))
+    )
+
     payback_before = original_bc.get("PAYBACK_MONTHS")
     roi_before = original_bc.get("ROI_12M")
 

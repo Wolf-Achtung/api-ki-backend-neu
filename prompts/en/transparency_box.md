@@ -45,6 +45,13 @@
       <li><strong>Review recommended:</strong> Validate AI results before implementation.</li>
     </ul>
 
+    <h3>Versioning &amp; Updates</h3>
+    <p>
+      This report reflects the status at the creation date. For significant changes
+      to your situation (new tools, changed team size, regulatory updates), we recommend
+      an update. Previous versions remain available upon request.
+    </p>
+
     <h3>Contact</h3>
     <p>
       Questions? <strong>contact@ai-security.now</strong>
