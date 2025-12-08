@@ -121,8 +121,12 @@ def auth_headers(client):
 class TestReportWorkflow:
     """Test-Suite für den kompletten Report-Workflow"""
 
-    def test_01_briefing_submission(self, client, auth_headers):
+    @patch("gpt_analyze.run_async")
+    def test_01_briefing_submission(self, mock_run_async, client, auth_headers):
         """Test 1: Briefing erfolgreich einreichen"""
+        # Mock run_async to prevent actual API calls
+        mock_run_async.return_value = None
+
         payload = {
             "lang": "de",
             "answers": {
@@ -196,8 +200,12 @@ class TestReportWorkflow:
         finally:
             db.close()
 
-    def test_04_rate_limiting(self, client, auth_headers):
+    @patch("gpt_analyze.run_async")
+    def test_04_rate_limiting(self, mock_run_async, client, auth_headers):
         """Test 4: Rate-Limiting funktioniert"""
+        # Mock run_async to prevent actual API calls
+        mock_run_async.return_value = None
+
         # Send multiple requests quickly
         for i in range(11):  # Limit ist 10 in 300 Sekunden
             response = client.post(
@@ -223,8 +231,12 @@ class TestReportWorkflow:
                 # 11. Request sollte geblockt werden
                 assert response.status_code == 429
 
-    def test_05_idempotency(self, client, auth_headers):
+    @patch("gpt_analyze.run_async")
+    def test_05_idempotency(self, mock_run_async, client, auth_headers):
         """Test 5: Idempotenz verhindert doppelte Requests"""
+        # Mock run_async to prevent actual API calls
+        mock_run_async.return_value = None
+
         payload = {
             "lang": "de",
             "answers": {

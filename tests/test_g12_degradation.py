@@ -6,13 +6,17 @@ Tests health scoring, event tracking, and status calculation.
 """
 import os
 import time
+from unittest import mock
 import pytest
 
-# Set test environment
+# Set test environment BEFORE importing degradation_monitor
 os.environ["DEGRADATION_MONITORING_ENABLED"] = "1"
 os.environ["DEGRADATION_HARD_STOP_THRESHOLD"] = "30"
 os.environ["DEGRADATION_WARN_THRESHOLD"] = "60"
 os.environ["DEGRADATION_WINDOW_SECONDS"] = "10"
+
+# Global test timeout to prevent hangs in CI
+pytestmark = pytest.mark.timeout(30)
 
 
 class TestDegradationMonitor:
@@ -154,25 +158,25 @@ class TestDegradationMonitor:
 
     def test_old_events_expire(self) -> None:
         """Events outside window should expire."""
+        import services.degradation_monitor as dm
         from services.degradation_monitor import DegradationMonitor
+
+        # Clear singleton
         DegradationMonitor._instance = None
 
-        # Create monitor with very short window
-        os.environ["DEGRADATION_WINDOW_SECONDS"] = "1"
-        monitor = DegradationMonitor()
-        monitor.reset()
+        # Patch the module constant to use 1 second window
+        with mock.patch.object(dm, "DEGRADATION_WINDOW_SECONDS", 1):
+            monitor = DegradationMonitor()
+            monitor.reset()
 
-        monitor.record_fallback("TEST")
-        assert monitor.get_current_score() < 100
+            monitor.record_fallback("TEST")
+            assert monitor.get_current_score() < 100
 
-        # Wait for expiry
-        time.sleep(1.5)
+            # Wait for expiry (events older than 1 second should be removed)
+            time.sleep(1.5)
 
-        # Score should be back to 100
-        assert monitor.get_current_score() == 100
-
-        # Reset env
-        os.environ["DEGRADATION_WINDOW_SECONDS"] = "10"
+            # Score should be back to 100 after events expire
+            assert monitor.get_current_score() == 100
 
     def test_reset_clears_all(self) -> None:
         """Reset should clear all events."""
