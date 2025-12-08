@@ -186,6 +186,10 @@ def _build_router_config() -> List[Tuple[str, str, str]]:
     if _bool_env("ENABLE_PREMIUM_FUNDING", "0"):
         cfg.append(("routes.funding", "/api", "funding"))
 
+    # Sprint G16: Feedback Loop Dashboard
+    if _bool_env("FEEDBACK_LOOP_ENABLED", "1"):
+        cfg.append(("routes.feedback_dashboard", "", "feedback-dashboard"))
+
     return cfg
 
 
