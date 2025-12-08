@@ -215,9 +215,9 @@ try:
     )
     from services.ft_dataset_builder import add_signals_to_buffer
 except ImportError:
-    extract_llm_signals = None  # type: ignore[assignment,misc]
+    extract_llm_signals = None
     FT_SIGNAL_EXTRACTION_ENABLED = False
-    add_signals_to_buffer = None  # type: ignore[assignment,misc]
+    add_signals_to_buffer = None
 
 # Initialize logger
 log = logging.getLogger(__name__)
