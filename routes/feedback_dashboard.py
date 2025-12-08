@@ -651,3 +651,326 @@ async def get_insights_reliability() -> InsightsReliabilityResponse:
     except Exception as e:
         log.error(f"Failed to get insights reliability: {e}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+# =============================================================================
+# G17.2-D: PREDICTIVE HEALTH & SMART DEFAULTS ENDPOINTS
+# =============================================================================
+
+class RiskTrendResponse(BaseModel):
+    """Risk trend prediction response."""
+    segment_key: str
+    current_risk_level: str
+    trend_direction: str  # up, stable, down
+    trend_confidence: float
+    risk_score_current: float
+    risk_score_predicted: float
+    driving_factors: List[str]
+    recommendation: str
+
+
+class KPIShiftResponse(BaseModel):
+    """KPI shift prediction response."""
+    kpi_name: str
+    current_value: float
+    predicted_value: float
+    shift_direction: str  # improving, stable, declining
+    shift_magnitude: float
+    confidence: float
+    time_horizon_days: int
+    insight_text: str
+
+
+class HighValueActionResponse(BaseModel):
+    """High-value action recommendation response."""
+    action_id: str
+    title: str
+    description: str
+    expected_impact_score: float
+    effort_level: str  # low, medium, high
+    priority_rank: int
+    category: str
+    related_kpis: List[str]
+
+
+class PredictiveFundingResponse(BaseModel):
+    """Predictive funding opportunity response."""
+    program_id: str
+    program_name: str
+    provider: str
+    opportunity_score: float
+    segment_success_rate: float
+    trend: str
+    recommendation_level: str
+
+
+class PredictiveHealthResponse(BaseModel):
+    """Predictive health dashboard response."""
+    analysis_timestamp: str
+    total_segments_analyzed: int
+
+    # Report Predictions
+    report_success_probability: float
+    avg_predicted_score: float
+    risk_trends_count: int
+    risk_trends: List[RiskTrendResponse]
+
+    # Funding Success Trends
+    funding_opportunities_count: int
+    top_funding_opportunities: List[PredictiveFundingResponse]
+    avg_funding_success_rate: float
+
+    # Segment Risk Trends
+    segments_with_rising_risk: int
+    segments_with_declining_risk: int
+    segments_stable: int
+
+    # KPI Predictions
+    kpi_predictions_available: bool
+    kpi_shifts: List[KPIShiftResponse]
+
+
+class SmartDefaultAdjustmentResponse(BaseModel):
+    """Smart default adjustment response."""
+    adjustment_type: str
+    target_section: str
+    original_value: Any
+    adjusted_value: Any
+    reason: str
+    segment_key: Optional[str]
+    confidence: float
+
+
+class SmartDefaultsAnalysisResponse(BaseModel):
+    """Smart defaults analysis response."""
+    enabled: bool
+    last_refresh: Optional[str]
+    total_segments_analyzed: int
+
+    # Adjustment Summary
+    total_adjustments: int
+    adjustments_by_type: Dict[str, int]
+    adjustments_by_section: Dict[str, int]
+
+    # Detailed Adjustments
+    word_count_adjustments: Dict[str, Any]
+    phrase_preferences: Dict[str, Any]
+    cost_range_adjustments: Dict[str, Any]
+
+    # Effect on Warnings
+    estimated_warning_reduction: float
+    recent_adjustments: List[SmartDefaultAdjustmentResponse]
+
+
+@router.get(
+    "/predictive-health",
+    response_model=PredictiveHealthResponse,
+    summary="Get predictive health dashboard",
+    description="Returns predictive insights including report probabilities, funding trends, and segment risks (G17.2-D).",
+)
+async def get_predictive_health() -> PredictiveHealthResponse:
+    """Get predictive health dashboard data."""
+    try:
+        from datetime import datetime
+        from services.predictive_engine import (
+            PREDICTIVE_ENGINE_ENABLED,
+            predict_segment_risk,
+            predict_kpi_shift,
+        )
+        from services.funding_recommender import (
+            FUNDING_PREDICTIVE_ENABLED,
+            get_predictive_funding_opportunities,
+        )
+        from services.feedback_analyzer import build_segments_snapshot
+
+        if not PREDICTIVE_ENGINE_ENABLED:
+            raise HTTPException(
+                status_code=503,
+                detail="Predictive engine is disabled"
+            )
+
+        # Get segment snapshot
+        snapshot = build_segments_snapshot(days=30, force=False)
+
+        # Analyze risk trends across segments
+        risk_trends: List[RiskTrendResponse] = []
+        rising_risk = 0
+        declining_risk = 0
+        stable_risk = 0
+
+        for segment_key, stats in list(snapshot.items())[:10]:  # Limit to top 10
+            # Mock report sections for risk prediction
+            mock_sections = {
+                "AI_ACT_RISK_LEVEL": getattr(stats, "segment_key", ("", "", "minimal", ""))[2],
+                "REIFEGRAD_GOVERNANCE": getattr(stats, "avg_score_governance", 50),
+                "REIFEGRAD_SECURITY": getattr(stats, "avg_score_security", 50),
+            }
+
+            risk_trend = predict_segment_risk(mock_sections, stats)
+
+            if risk_trend:
+                risk_trends.append(RiskTrendResponse(
+                    segment_key=risk_trend.segment_key,
+                    current_risk_level=risk_trend.current_risk_level,
+                    trend_direction=risk_trend.trend_direction,
+                    trend_confidence=risk_trend.trend_confidence,
+                    risk_score_current=risk_trend.risk_score_current,
+                    risk_score_predicted=risk_trend.risk_score_predicted,
+                    driving_factors=risk_trend.driving_factors,
+                    recommendation=risk_trend.recommendation,
+                ))
+
+                if risk_trend.trend_direction == "up":
+                    rising_risk += 1
+                elif risk_trend.trend_direction == "down":
+                    declining_risk += 1
+                else:
+                    stable_risk += 1
+
+        # Get funding opportunities
+        top_funding: List[PredictiveFundingResponse] = []
+        avg_funding_success = 0.0
+
+        if FUNDING_PREDICTIVE_ENABLED:
+            # Get opportunities for a generic profile
+            opportunities = get_predictive_funding_opportunities(
+                report_sections={"SIZE_LABEL": "team", "BRANCH_LABEL": "general"},
+                profile=None,
+                limit=5,
+            )
+
+            for opp in opportunities:
+                top_funding.append(PredictiveFundingResponse(
+                    program_id=opp.program_id,
+                    program_name=opp.program_name,
+                    provider=opp.provider,
+                    opportunity_score=opp.opportunity_score,
+                    segment_success_rate=opp.segment_success_rate,
+                    trend=opp.trend,
+                    recommendation_level=opp.recommendation_level,
+                ))
+
+            if opportunities:
+                avg_funding_success = sum(o.segment_success_rate for o in opportunities) / len(opportunities)
+
+        # Calculate report success probability
+        total_reports = sum(getattr(s, "report_count", 0) for s in snapshot.values())
+        report_success_prob = 0.75  # Base probability
+        if stable_risk > 0:
+            report_success_prob = min(0.95, 0.75 + (stable_risk / len(snapshot)) * 0.2)
+
+        # Get KPI predictions from first valid segment
+        kpi_shifts: List[KPIShiftResponse] = []
+        if snapshot:
+            first_stats = list(snapshot.values())[0]
+            shifts = predict_kpi_shift(first_stats)
+            for shift in shifts[:5]:
+                kpi_shifts.append(KPIShiftResponse(
+                    kpi_name=shift.kpi_name,
+                    current_value=shift.current_value,
+                    predicted_value=shift.predicted_value,
+                    shift_direction=shift.shift_direction,
+                    shift_magnitude=shift.shift_magnitude,
+                    confidence=shift.confidence,
+                    time_horizon_days=shift.time_horizon_days,
+                    insight_text=shift.insight_text,
+                ))
+
+        return PredictiveHealthResponse(
+            analysis_timestamp=datetime.now().isoformat(),
+            total_segments_analyzed=len(snapshot),
+            report_success_probability=round(report_success_prob, 2),
+            avg_predicted_score=65.0,  # Placeholder
+            risk_trends_count=len(risk_trends),
+            risk_trends=risk_trends[:5],
+            funding_opportunities_count=len(top_funding),
+            top_funding_opportunities=top_funding,
+            avg_funding_success_rate=round(avg_funding_success, 2),
+            segments_with_rising_risk=rising_risk,
+            segments_with_declining_risk=declining_risk,
+            segments_stable=stable_risk,
+            kpi_predictions_available=len(kpi_shifts) > 0,
+            kpi_shifts=kpi_shifts,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.error(f"Failed to get predictive health: {e}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+@router.get(
+    "/smart-defaults-analysis",
+    response_model=SmartDefaultsAnalysisResponse,
+    summary="Get smart defaults analysis",
+    description="Returns analysis of smart defaults adjustments and their effects (G17.2-D).",
+)
+async def get_smart_defaults_analysis() -> SmartDefaultsAnalysisResponse:
+    """Get smart defaults analysis data."""
+    try:
+        from services.prompt_enhancer import (
+            PROMPT_SMART_DEFAULTS_ENABLED,
+            get_smart_defaults_analysis,
+            get_smart_defaults_statistics,
+        )
+
+        if not PROMPT_SMART_DEFAULTS_ENABLED:
+            return SmartDefaultsAnalysisResponse(
+                enabled=False,
+                last_refresh=None,
+                total_segments_analyzed=0,
+                total_adjustments=0,
+                adjustments_by_type={},
+                adjustments_by_section={},
+                word_count_adjustments={},
+                phrase_preferences={},
+                cost_range_adjustments={},
+                estimated_warning_reduction=0.0,
+                recent_adjustments=[],
+            )
+
+        # Get analysis data
+        analysis = get_smart_defaults_analysis()
+        statistics = get_smart_defaults_statistics()
+
+        # Build recent adjustments response
+        recent_adjustments: List[SmartDefaultAdjustmentResponse] = []
+        for adj in analysis.get("recent_adjustments", [])[:10]:
+            recent_adjustments.append(SmartDefaultAdjustmentResponse(
+                adjustment_type=adj.get("adjustment_type", "unknown"),
+                target_section=adj.get("target_section", "unknown"),
+                original_value=adj.get("original_value"),
+                adjusted_value=adj.get("adjusted_value"),
+                reason=adj.get("reason", ""),
+                segment_key=adj.get("segment_key"),
+                confidence=adj.get("confidence", 0.5),
+            ))
+
+        # Estimate warning reduction
+        word_adjustments = analysis.get("word_count_adjustments", {})
+        phrase_prefs = analysis.get("phrase_preferences", {})
+
+        estimated_reduction = 0.0
+        if word_adjustments:
+            estimated_reduction += 0.15  # 15% reduction from word count adjustments
+        if phrase_prefs:
+            estimated_reduction += 0.10  # 10% reduction from phrase preferences
+
+        return SmartDefaultsAnalysisResponse(
+            enabled=True,
+            last_refresh=analysis.get("last_refresh"),
+            total_segments_analyzed=analysis.get("total_segments_analyzed", 0),
+            total_adjustments=statistics.get("total_adjustments", 0),
+            adjustments_by_type=statistics.get("by_type", {}),
+            adjustments_by_section=statistics.get("by_section", {}),
+            word_count_adjustments=word_adjustments,
+            phrase_preferences=phrase_prefs,
+            cost_range_adjustments=analysis.get("cost_range_adjustments", {}),
+            estimated_warning_reduction=round(estimated_reduction, 2),
+            recent_adjustments=recent_adjustments,
+        )
+
+    except Exception as e:
+        log.error(f"Failed to get smart defaults analysis: {e}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
