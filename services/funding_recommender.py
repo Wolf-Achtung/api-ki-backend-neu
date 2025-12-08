@@ -539,7 +539,261 @@ def get_recommendations_for_report(
 
 
 # =============================================================================
+# G17-C: FUNDING INSIGHTS FROM REAL-WORLD DATA
+# =============================================================================
+
+FUNDING_INSIGHTS_ENABLED = os.getenv("FUNDING_INSIGHTS_ENABLED", "1").lower() in ("1", "true", "yes")
+FUNDING_MIN_CASES_PER_PROGRAM = int(os.getenv("FUNDING_MIN_CASES_PER_PROGRAM", "5"))
+
+
+@dataclass
+class FundingInsight:
+    """Real-world funding insight."""
+    program_id: str
+    program_name: str
+    success_rate: float  # e.g., 0.3 = 30% of similar profiles qualified
+    similar_profiles_count: int
+    avg_relevance_score: float
+    insight_text: str
+    severity: str = "info"  # info, highlight, opportunity
+
+
+def enrich_funding_recommendations_with_feedback(
+    report_sections: Dict[str, Any],
+    profile: Optional[Dict[str, Any]] = None,
+    recommendations: Optional[List[FundingRecommendation]] = None,
+    lang: str = "de",
+) -> Dict[str, Any]:
+    """
+    Enrich funding recommendations with real-world feedback data.
+
+    Adds insights based on:
+    - Programs that similar profiles frequently qualified for
+    - Success rates for programs in the segment
+    - No personal data, only aggregated statistics
+
+    Args:
+        report_sections: Report sections dictionary
+        profile: Profile data (optional)
+        recommendations: Existing recommendations (optional)
+        lang: Language code
+
+    Returns:
+        Dictionary with html and insights list
+    """
+    if not FUNDING_INSIGHTS_ENABLED:
+        return {"html": "", "insights": []}
+
+    from services.feedback_analyzer import get_segment_for_report, SegmentStats
+
+    segment = get_segment_for_report(report_sections, profile)
+
+    if not segment:
+        return {
+            "html": "",
+            "insights": [],
+            "message": "Nicht genügend Segmentdaten für Funding-Insights",
+        }
+
+    insights = _build_funding_insights(segment, recommendations, lang)
+
+    if not insights:
+        return {
+            "html": "",
+            "insights": [],
+            "message": "Keine Funding-Insights für dieses Segment verfügbar",
+        }
+
+    html = _generate_funding_insights_html(insights, segment, lang)
+
+    return {
+        "html": html,
+        "insights": [
+            {
+                "program_id": i.program_id,
+                "program_name": i.program_name,
+                "success_rate": i.success_rate,
+                "similar_profiles_count": i.similar_profiles_count,
+                "insight_text": i.insight_text,
+                "severity": i.severity,
+            }
+            for i in insights
+        ],
+    }
+
+
+def _build_funding_insights(
+    segment: Any,
+    recommendations: Optional[List[FundingRecommendation]],
+    lang: str,
+) -> List[FundingInsight]:
+    """Build funding insights from segment data."""
+    insights = []
+
+    # Get top funding programs from segment
+    top_programs = segment.top_funding_programs
+    report_count = segment.report_count
+
+    if not top_programs or report_count < FUNDING_MIN_CASES_PER_PROGRAM:
+        return insights
+
+    for program_id, count in top_programs[:3]:
+        if count < FUNDING_MIN_CASES_PER_PROGRAM:
+            continue
+
+        success_rate = count / report_count
+
+        # Determine severity based on success rate
+        if success_rate >= 0.4:
+            severity = "highlight"
+        elif success_rate >= 0.2:
+            severity = "opportunity"
+        else:
+            severity = "info"
+
+        # Find program name from recommendations or database
+        program_name = _get_program_name(program_id)
+
+        # Generate insight text
+        if lang == "de":
+            insight_text = (
+                f"{int(success_rate * 100)}% der vergleichbaren Unternehmen "
+                f"in Ihrem Segment haben sich für {program_name} qualifiziert."
+            )
+        else:
+            insight_text = (
+                f"{int(success_rate * 100)}% of similar companies "
+                f"in your segment qualified for {program_name}."
+            )
+
+        insights.append(FundingInsight(
+            program_id=program_id,
+            program_name=program_name,
+            success_rate=success_rate,
+            similar_profiles_count=report_count,
+            avg_relevance_score=0.0,  # Would need more data
+            insight_text=insight_text,
+            severity=severity,
+        ))
+
+    return insights
+
+
+def _get_program_name(program_id: str) -> str:
+    """Get program name from ID."""
+    programs = load_funding_programs()
+
+    for program in programs:
+        if program.get("id") == program_id:
+            return program.get("name", program_id)
+
+    return program_id
+
+
+def _generate_funding_insights_html(
+    insights: List[FundingInsight],
+    segment: Any,
+    lang: str,
+) -> str:
+    """Generate HTML for funding insights."""
+    if not insights:
+        return ""
+
+    if lang == "de":
+        title = "Real-World Funding-Insights"
+        subtitle = f"Basierend auf {segment.report_count} vergleichbaren Unternehmen"
+        disclaimer = "Diese Insights basieren auf aggregierten, anonymisierten Daten."
+    else:
+        title = "Real-World Funding Insights"
+        subtitle = f"Based on {segment.report_count} similar companies"
+        disclaimer = "These insights are based on aggregated, anonymized data."
+
+    html = f"""
+    <div class="funding-insights" style="margin-top:16px;padding:16px;background:#f8f9fa;border-radius:8px;border:1px solid #dee2e6;">
+        <h4 style="margin:0 0 8px 0;font-size:14px;color:#495057;display:flex;align-items:center;gap:8px;">
+            <span>📊</span> {title}
+        </h4>
+        <p style="margin:0 0 12px 0;font-size:11px;color:#6c757d;">{subtitle}</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+    """
+
+    for insight in insights:
+        # Color based on severity
+        if insight.severity == "highlight":
+            bg_color = "#d4edda"
+            border_color = "#28a745"
+            icon = "✅"
+        elif insight.severity == "opportunity":
+            bg_color = "#fff3cd"
+            border_color = "#ffc107"
+            icon = "💡"
+        else:
+            bg_color = "#e9ecef"
+            border_color = "#6c757d"
+            icon = "ℹ️"
+
+        html += f"""
+            <div style="background:{bg_color};padding:10px;border-radius:4px;border-left:3px solid {border_color};">
+                <div style="font-size:12px;color:#212529;">
+                    {icon} <strong>{insight.program_name}</strong>
+                </div>
+                <p style="margin:4px 0 0 0;font-size:11px;color:#495057;">
+                    {insight.insight_text}
+                </p>
+            </div>
+        """
+
+    html += f"""
+        </div>
+        <p style="margin:12px 0 0 0;font-size:9px;color:#6c757d;font-style:italic;">{disclaimer}</p>
+    </div>
+    """
+
+    return html
+
+
+def inject_funding_insights_into_sections(
+    sections: Dict[str, Any],
+    profile: Optional[Dict[str, Any]] = None,
+    lang: str = "de",
+) -> Dict[str, Any]:
+    """
+    Inject funding insights section into report sections.
+
+    Args:
+        sections: Report sections dictionary
+        profile: Profile data (optional)
+        lang: Language code
+
+    Returns:
+        Updated sections with FUNDING_INSIGHTS_HTML
+    """
+    if not FUNDING_INSIGHTS_ENABLED:
+        return sections
+
+    try:
+        result = enrich_funding_recommendations_with_feedback(
+            report_sections=sections,
+            profile=profile,
+            lang=lang,
+        )
+
+        sections["FUNDING_INSIGHTS_HTML"] = result.get("html", "")
+
+        if result.get("insights"):
+            log.info(f"✅ Injected {len(result['insights'])} funding insights")
+        else:
+            log.debug("No funding insights available for segment")
+
+    except Exception as e:
+        log.error(f"Failed to build funding insights: {e}")
+        sections["FUNDING_INSIGHTS_HTML"] = ""
+
+    return sections
+
+
+# =============================================================================
 # MODULE INITIALIZATION
 # =============================================================================
 
-log.info("[G11] Funding Recommender loaded - premium=%s", ENABLE_PREMIUM_FUNDING)
+log.info("[G11] Funding Recommender loaded - premium=%s, insights=%s", ENABLE_PREMIUM_FUNDING, FUNDING_INSIGHTS_ENABLED)
