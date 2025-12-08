@@ -611,6 +611,9 @@ SOLO_PHRASE_REPLACEMENTS: Dict[str, str] = {
     "bereichsleitung": "Verantwortungsbereich",
     "fachabteilung": "Arbeitsfeld",
     "fachabteilungen": "Arbeitsbereiche",
+    # SPRINT G15.1-B: Bereichsleiter persona leak fix for Solo
+    "bereichsleiter:innen": "verantwortliche Ansprechpersonen im Unternehmen",
+    "bereichsleiter": "verantwortliche Ansprechpartner:innen im Unternehmen",
 }
 
 # Corporate terms → Solo-appropriate replacements (word-based)
@@ -646,6 +649,9 @@ SOLO_GOVERNANCE_REPLACEMENTS: Dict[str, str] = {
     "personalentscheidungen": "Ressourcenentscheidungen",
     "personaldaten": "vertrauliche Daten",
     "belegschaft": "Kapazität",
+    # SPRINT G15.1-B: Bereichsleiter persona leak fix
+    "bereichsleiter:innen": "verantwortliche Ansprechpersonen",
+    "bereichsleiter": "Ansprechpartner:innen",
     # EN equivalents for Solo
     "department": "work area",
     "departments": "work areas",
@@ -737,6 +743,13 @@ def apply_solo_persona_filter(text: str) -> str:
             # but catch all other cases including "IT-Abteilung", "HR-Abteilung", etc.
             pattern = re.compile(
                 r'(?<![Kk]unden)(' + re.escape(term) + r')',
+                re.IGNORECASE
+            )
+        elif term.lower() in ("board", "gremium"):
+            # SPRINT G15.1-A: Use word boundaries for short terms that could match
+            # inside other words (e.g., "board" in "Onboarding")
+            pattern = re.compile(
+                r'\b' + re.escape(term) + r'\b',
                 re.IGNORECASE
             )
         else:
