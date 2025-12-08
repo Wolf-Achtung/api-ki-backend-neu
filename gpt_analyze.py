@@ -5252,6 +5252,47 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
                 # Optionally build dataset on each report
                 if FT_BUILD_DATASET_ON_REPORT and build_training_dataset:
                     build_training_dataset()
+
+                # === G17.4: Auto-Prompt-Rewrite Engine ===
+                try:
+                    from services.prompt_rewrite_engine import (
+                        PROMPT_REWRITE_ENGINE_ENABLED,
+                        detect_prompt_weaknesses,
+                        generate_prompt_rewrite_suggestions,
+                        store_suggestions,
+                    )
+
+                    if PROMPT_REWRITE_ENGINE_ENABLED:
+                        # Get prompt text for the current section (simplified - uses section data)
+                        prompt_context = ft_report_sections.get("_prompt_context", "")
+
+                        # Detect weaknesses based on signals
+                        validation_warnings_raw = validation_result.get("warnings", []) if validation_result else []
+                        validation_warnings_list: List[Dict[str, Any]] = validation_warnings_raw if isinstance(validation_warnings_raw, list) else []
+                        issues = detect_prompt_weaknesses(
+                            prompt_text=prompt_context,
+                            aggregated_signals=ft_signals,
+                            segment_stats=segment_stats,
+                            validation_warnings=validation_warnings_list,
+                        )
+
+                        # Generate rewrite suggestions
+                        if issues.get("issues"):
+                            suggestions = generate_prompt_rewrite_suggestions(
+                                issues=issues.get("issues", []),
+                                aggregated_signals=ft_signals,
+                                segment_stats=segment_stats,
+                                predictive_output=predictive_output,
+                            )
+
+                            if suggestions:
+                                store_suggestions(suggestions)
+                                log.info("[%s] 📝 Generated %d prompt rewrite suggestions", run_id, len(suggestions))
+                except ImportError:
+                    pass  # G17.4 not available
+                except Exception as rewrite_exc:
+                    log.warning("[%s] ⚠️ Prompt rewrite engine failed: %s", run_id, rewrite_exc)
+
         except Exception as ft_exc:
             log.warning("[%s] ⚠️ FT signal extraction failed: %s", run_id, ft_exc)
 
