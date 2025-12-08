@@ -849,9 +849,10 @@ class TestFTDashboardEndpoints:
         """Test FT build dataset endpoint."""
         from routes.feedback_dashboard import build_ft_dataset
 
-        # Run async function synchronously
+        # Run async function synchronously - pass all params explicitly
+        # (Query defaults aren't resolved when calling directly)
         result = asyncio.get_event_loop().run_until_complete(
-            build_ft_dataset(min_quality=0.5)
+            build_ft_dataset(min_quality=0.5, signal_types=None, include_metadata=True)
         )
 
         assert hasattr(result, "success")
