@@ -114,6 +114,24 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     <li><strong>Klarheit:</strong> Fundierte Basis für Entscheidung über weitere Investitionen</li>
   </ul>
 
+  <h3>KPI-Tracking & Review für Ihren Alltag</h3>
+  <p>
+    Planen Sie wöchentlich einen festen 30-Minuten-Slot für Ihr persönliches KI-Review ein.
+    Führen Sie ein einfaches KPI-Board (z. B. Notion, Excel oder handschriftlich): Notieren Sie
+    pro Woche die Anzahl KI-gestützter Aufgaben, geschätzte Zeitersparnis und Qualitätsbewertung
+    (1–5 Sterne). Nach 90 Tagen haben Sie belastbare Daten für Ihre eigene Investitionsentscheidung.
+    Nutzen Sie die generierten Reports als Referenz, um Fortschritte sichtbar zu machen.
+  </p>
+
+  <h3>Content & Marketing-Systematik</h3>
+  <p>
+    Konzentrieren Sie sich auf 1–2 Kanäle, die zu {{OFFERING_LABEL}} passen (z. B. LinkedIn, Newsletter).
+    Etablieren Sie eine feste Content-Routine: Einmal pro Woche einen kurzen Beitrag mit KI-Unterstützung
+    erstellen. Nutzen Sie Ihre eigenen KI-Readiness-Reports als Marketing-Asset – sie zeigen Kompetenz
+    und bieten echten Mehrwert für potenzielle Kunden. So verbinden Sie Ihre KI-Einführung direkt
+    mit Ihrer Sichtbarkeit als Expert:in in {{BRANCH_CONTEXT_LABEL}}.
+  </p>
+
   {% elif COMPANY_SIZE == "team" %}
   <h3>Phase 0: Setup (Woche 1–2)</h3>
   <p><strong>Ziel:</strong> Teamweite Arbeitsfähigkeit mit KI herstellen.</p>
