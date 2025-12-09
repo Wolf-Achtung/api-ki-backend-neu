@@ -1854,6 +1854,24 @@
                     </div>
                 </section>
                 {% endif %}
+                <!-- G24: Branch Deep-Dive Addon -->
+                {% if BRANCH_DEEP_DIVE_HTML %}
+                <section class="section chapter" id="branch-deep-dive">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Branch Deep Dive</span>
+                            <h2>Branchenanalyse & Trends 2025/26</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Tiefenanalyse für {{BRANCH_SHORT_LABEL|default('Ihre Branche')}}
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ BRANCH_DEEP_DIVE_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
                 <!-- ROADMAP -->
                 <section class="section chapter">
                     <div class="section-header">

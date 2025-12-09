@@ -139,6 +139,7 @@ SECTION_MIN_WORDS: Dict[Tuple[str, str], int] = {
     ("solo", "tools_empfehlungen"): 100,
     ("solo", "org_change"): 300,
     ("solo", "unternehmensprofil_markt"): 350,
+    ("solo", "branch_deep_dive"): 250,  # G24: Branch Deep-Dive Addon
 
     # ----- TEAM -----
     ("team", "executive_summary"): 180,
@@ -156,6 +157,7 @@ SECTION_MIN_WORDS: Dict[Tuple[str, str], int] = {
     ("team", "tools_empfehlungen"): 130,
     ("team", "org_change"): 400,
     ("team", "unternehmensprofil_markt"): 400,
+    ("team", "branch_deep_dive"): 300,  # G24: Branch Deep-Dive Addon
 
     # ----- KMU -----
     ("kmu", "executive_summary"): 200,
@@ -173,6 +175,7 @@ SECTION_MIN_WORDS: Dict[Tuple[str, str], int] = {
     ("kmu", "tools_empfehlungen"): 160,
     ("kmu", "org_change"): 500,
     ("kmu", "unternehmensprofil_markt"): 500,
+    ("kmu", "branch_deep_dive"): 350,  # G24: Branch Deep-Dive Addon
 }
 
 # Default min words for unknown sections
