@@ -1714,3 +1714,387 @@ async def reset_prompt_tuner_profiles(
     except Exception as e:
         log.error(f"Failed to reset tuner profiles: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to reset profiles: {str(e)}")
+
+
+# =============================================================================
+# SPRINT G17.6: PROMPT GOVERNANCE & DRIFT CONTROL ENDPOINTS
+# =============================================================================
+
+class GovernanceOverviewResponse(BaseModel):
+    """Response model for governance overview."""
+    enabled: bool
+    total_prompts_tracked: int
+    drift_summary: Dict[str, int]  # category -> count
+    pending_patches: int
+    blocked_patches: int
+    last_simulation: Optional[str]
+
+
+class DriftReportResponse(BaseModel):
+    """Response model for drift report."""
+    prompt_file: str
+    drift_score: int
+    drift_category: str
+    structural_changes: List[str]
+    instruction_changes: List[str]
+    semantic_changes: List[str]
+    fallback_risks: List[str]
+    requires_review: bool
+    timestamp: Optional[str]
+
+
+class SimulationResultResponse(BaseModel):
+    """Response model for simulation result."""
+    simulation_id: str
+    patch_id: str
+    prompt_file: str
+    total_profiles: int
+    profiles_passed: int
+    profiles_failed: int
+    total_regressions: int
+    total_improvements: int
+    category_deltas: Dict[str, float]
+    passed: bool
+    blocked: bool
+    block_reason: Optional[str]
+    timestamp: str
+
+
+class PatchDecisionResponse(BaseModel):
+    """Response model for patch approval/block."""
+    patch_id: str
+    decision: str
+    message: str
+
+
+class PendingPatchResponse(BaseModel):
+    """Response model for pending patch."""
+    patch_id: str
+    prompt_file: str
+    created_at: str
+    source: str
+    status: str
+    drift_score: Optional[int]
+    decision: Optional[str]
+
+
+class BlockedPatchResponse(BaseModel):
+    """Response model for blocked patch."""
+    patch_id: str
+    prompt_file: str
+    created_at: str
+    source: str
+    drift_score: Optional[int]
+    decision_reason: Optional[str]
+
+
+@router.get(
+    "/prompts/governance/overview",
+    response_model=GovernanceOverviewResponse,
+    summary="Get governance overview",
+    description="Returns overall prompt governance status (G17.6-E).",
+)
+async def get_governance_overview() -> GovernanceOverviewResponse:
+    """Get governance overview for dashboard."""
+    try:
+        from services.prompt_checkpoint import (
+            PROMPT_GOVERNANCE_ENABLED,
+            get_all_drift_results,
+        )
+        from services.prompt_patch_gate import (
+            get_pending_patches,
+            get_blocked_patches,
+        )
+
+        drift_results = get_all_drift_results()
+
+        # Count by category
+        drift_summary: Dict[str, int] = {
+            "MINIMAL": 0, "LOW": 0, "MEDIUM": 0, "HIGH": 0, "CRITICAL": 0
+        }
+        for result in drift_results:
+            cat = result.drift_category
+            drift_summary[cat] = drift_summary.get(cat, 0) + 1
+
+        pending = get_pending_patches()
+        blocked = get_blocked_patches()
+
+        return GovernanceOverviewResponse(
+            enabled=PROMPT_GOVERNANCE_ENABLED,
+            total_prompts_tracked=len(drift_results),
+            drift_summary=drift_summary,
+            pending_patches=len(pending),
+            blocked_patches=len(blocked),
+            last_simulation=None,  # Would be populated from simulation storage
+        )
+
+    except ImportError:
+        return GovernanceOverviewResponse(
+            enabled=False,
+            total_prompts_tracked=0,
+            drift_summary={},
+            pending_patches=0,
+            blocked_patches=0,
+            last_simulation=None,
+        )
+    except Exception as e:
+        log.error(f"Failed to get governance overview: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get overview: {str(e)}")
+
+
+@router.get(
+    "/prompts/governance/drift-report",
+    response_model=DriftReportResponse,
+    summary="Get drift report for a prompt",
+    description="Returns detailed drift analysis for a prompt file (G17.6-E).",
+)
+async def get_drift_report(
+    prompt_file: str = Query(..., description="Prompt file path"),
+) -> DriftReportResponse:
+    """Get drift report for a specific prompt file."""
+    try:
+        from services.prompt_checkpoint import get_latest_drift_result
+
+        result = get_latest_drift_result(prompt_file)
+
+        if not result:
+            return DriftReportResponse(
+                prompt_file=prompt_file,
+                drift_score=0,
+                drift_category="MINIMAL",
+                structural_changes=[],
+                instruction_changes=[],
+                semantic_changes=[],
+                fallback_risks=[],
+                requires_review=False,
+                timestamp=None,
+            )
+
+        return DriftReportResponse(
+            prompt_file=result.prompt_file,
+            drift_score=result.drift_score,
+            drift_category=result.drift_category,
+            structural_changes=result.diff_summary.get("structural_changes", []),
+            instruction_changes=result.diff_summary.get("instruction_changes", []),
+            semantic_changes=result.diff_summary.get("semantic_changes", []),
+            fallback_risks=result.diff_summary.get("fallback_risks", []),
+            requires_review=result.drift_category in ["HIGH", "CRITICAL"],
+            timestamp=result.timestamp.isoformat(),
+        )
+
+    except ImportError:
+        return DriftReportResponse(
+            prompt_file=prompt_file,
+            drift_score=0,
+            drift_category="MINIMAL",
+            structural_changes=[],
+            instruction_changes=[],
+            semantic_changes=[],
+            fallback_risks=[],
+            requires_review=False,
+            timestamp=None,
+        )
+    except Exception as e:
+        log.error(f"Failed to get drift report: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get drift report: {str(e)}")
+
+
+@router.get(
+    "/prompts/governance/simulator",
+    response_model=SimulationResultResponse,
+    summary="Get simulation result",
+    description="Returns simulation result for a patch (G17.6-E).",
+)
+async def get_simulation_result_endpoint(
+    patch_id: str = Query(..., description="Patch ID to get simulation for"),
+) -> SimulationResultResponse:
+    """Get simulation result for a patch."""
+    try:
+        from services.prompt_rollout_simulator import get_simulation_result
+
+        # Try to find simulation by patch_id
+        result = get_simulation_result(f"sim_{patch_id}")
+
+        if not result:
+            raise HTTPException(status_code=404, detail=f"Simulation not found for patch {patch_id}")
+
+        return SimulationResultResponse(
+            simulation_id=result.get("simulation_id", ""),
+            patch_id=result.get("patch_id", patch_id),
+            prompt_file=result.get("prompt_file", ""),
+            total_profiles=result.get("total_profiles", 0),
+            profiles_passed=result.get("profiles_passed", 0),
+            profiles_failed=result.get("profiles_failed", 0),
+            total_regressions=result.get("total_regressions", 0),
+            total_improvements=result.get("total_improvements", 0),
+            category_deltas={
+                "warnings": result.get("warning_delta_avg", 0),
+                "fallbacks": result.get("fallback_delta_avg", 0),
+                "persona_leak": result.get("persona_leak_delta_avg", 0),
+                "ai_act": result.get("ai_act_delta_avg", 0),
+                "tokens": result.get("token_delta_avg", 0),
+            },
+            passed=result.get("passed", True),
+            blocked=result.get("blocked", False),
+            block_reason=result.get("block_reason"),
+            timestamp=result.get("timestamp", ""),
+        )
+
+    except HTTPException:
+        raise
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Simulator not available")
+    except Exception as e:
+        log.error(f"Failed to get simulation result: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get simulation: {str(e)}")
+
+
+@router.get(
+    "/prompts/governance/pending",
+    response_model=List[PendingPatchResponse],
+    summary="Get pending patches",
+    description="Returns list of patches pending approval (G17.6-E).",
+)
+async def get_pending_patches_endpoint() -> List[PendingPatchResponse]:
+    """Get all pending patches."""
+    try:
+        from services.prompt_patch_gate import get_pending_patches
+
+        patches = get_pending_patches()
+
+        return [
+            PendingPatchResponse(
+                patch_id=p.get("patch_id", ""),
+                prompt_file=p.get("prompt_file", ""),
+                created_at=p.get("created_at", ""),
+                source=p.get("source", ""),
+                status=p.get("status", ""),
+                drift_score=p.get("drift_score"),
+                decision=p.get("decision"),
+            )
+            for p in patches
+        ]
+
+    except ImportError:
+        return []
+    except Exception as e:
+        log.error(f"Failed to get pending patches: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get pending patches: {str(e)}")
+
+
+@router.get(
+    "/prompts/governance/blocked",
+    response_model=List[BlockedPatchResponse],
+    summary="Get blocked patches",
+    description="Returns list of blocked patches with reasons (G17.6-E).",
+)
+async def get_blocked_patches_endpoint() -> List[BlockedPatchResponse]:
+    """Get all blocked patches."""
+    try:
+        from services.prompt_patch_gate import get_blocked_patches
+
+        patches = get_blocked_patches()
+
+        return [
+            BlockedPatchResponse(
+                patch_id=p.get("patch_id", ""),
+                prompt_file=p.get("prompt_file", ""),
+                created_at=p.get("created_at", ""),
+                source=p.get("source", ""),
+                drift_score=p.get("drift_score"),
+                decision_reason=p.get("decision_reason"),
+            )
+            for p in patches
+        ]
+
+    except ImportError:
+        return []
+    except Exception as e:
+        log.error(f"Failed to get blocked patches: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get blocked patches: {str(e)}")
+
+
+@router.post(
+    "/prompts/governance/approve",
+    response_model=PatchDecisionResponse,
+    summary="Approve a patch (Admin only)",
+    description="Manually approve a blocked or pending patch (G17.6-E).",
+)
+async def approve_patch_endpoint(
+    patch_id: str = Query(..., description="Patch ID to approve"),
+    prompt_file: str = Query(..., description="Prompt file"),
+    approved_by: Optional[str] = Query(None, description="Approver name"),
+    notes: Optional[str] = Query(None, description="Approval notes"),
+) -> PatchDecisionResponse:
+    """Approve a patch (Admin only)."""
+    try:
+        from services.prompt_patch_gate import approve_patch
+
+        success = approve_patch(
+            prompt_file=prompt_file,
+            patch_id=patch_id,
+            approved_by=approved_by,
+            notes=notes,
+        )
+
+        if success:
+            return PatchDecisionResponse(
+                patch_id=patch_id,
+                decision="APPROVED",
+                message=f"Patch {patch_id} approved successfully",
+            )
+        else:
+            return PatchDecisionResponse(
+                patch_id=patch_id,
+                decision="ERROR",
+                message=f"Failed to approve patch {patch_id}",
+            )
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Patch gate not available")
+    except Exception as e:
+        log.error(f"Failed to approve patch: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to approve patch: {str(e)}")
+
+
+@router.post(
+    "/prompts/governance/block",
+    response_model=PatchDecisionResponse,
+    summary="Block a patch (Admin only)",
+    description="Manually block a pending patch (G17.6-E).",
+)
+async def block_patch_endpoint(
+    patch_id: str = Query(..., description="Patch ID to block"),
+    prompt_file: str = Query(..., description="Prompt file"),
+    reason: str = Query(..., description="Reason for blocking"),
+    blocked_by: Optional[str] = Query(None, description="Blocker name"),
+) -> PatchDecisionResponse:
+    """Block a patch (Admin only)."""
+    try:
+        from services.prompt_patch_gate import block_patch
+
+        success = block_patch(
+            prompt_file=prompt_file,
+            patch_id=patch_id,
+            reason=reason,
+            blocked_by=blocked_by,
+        )
+
+        if success:
+            return PatchDecisionResponse(
+                patch_id=patch_id,
+                decision="BLOCKED",
+                message=f"Patch {patch_id} blocked: {reason}",
+            )
+        else:
+            return PatchDecisionResponse(
+                patch_id=patch_id,
+                decision="ERROR",
+                message=f"Failed to block patch {patch_id}",
+            )
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Patch gate not available")
+    except Exception as e:
+        log.error(f"Failed to block patch: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to block patch: {str(e)}")
