@@ -1,4 +1,4 @@
-Developer: <!-- data_readiness.md – v3.0 GOLD STANDARD+ (Daten & Systemreife, multi-size)
+Developer: <!-- data_readiness.md – v3.1 GOLD STANDARD+ (Daten & Systemreife, multi-size) – SPRINT G17.P
   Antworte ausschließlich mit validem HTML.
   KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
@@ -40,12 +40,12 @@ Developer: <!-- data_readiness.md – v3.0 GOLD STANDARD+ (Daten & Systemreife, 
 <section class="section data-readiness">
   <h2>Datenlage & Systemreife für KI</h2>
 
+  <!-- G17.P: Neue Einleitung ohne Redundanz, mit Cross-References -->
   <p>
-    Für ein Unternehmen in der Branche <strong>{{BRANCHE_LABEL}}</strong> mit der Größe
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> und dem Schwerpunkt
-    <strong>{{HAUPTLEISTUNG}}</strong> zeigt sich eine typische Ausgangslage:
-    Die vorhandenen Datenquellen, Tools und Prozesse bieten bereits Ansätze für KI,
-    müssen aber gezielt weiterentwickelt werden, um stabile Ergebnisse zu liefern.
+    Die Bewertung Ihrer Datenlage ist eng mit der Prozessanalyse und den Quick Wins verknüpft
+    (→ siehe Roadmap 90d, → Quick Wins). Dieser Abschnitt fasst kompakt zusammen, welche
+    vorhandenen Datenquellen, Strukturen und Schnittstellen in <strong>{{BRANCH_CONTEXT_LABEL}}</strong>
+    unmittelbar für erste KI-Workflows nutzbar sind – und wo gezielt nachgebessert werden sollte.
   </p>
 
   <h3>Wo heute Daten und Systeme liegen</h3>
