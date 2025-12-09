@@ -44,6 +44,20 @@ try:
 except ImportError:
     _HAS_CONFIG_VALIDATION = False
 
+# B2-C: Import Tools Analytics for validation
+try:
+    from services.tools_analytics import (
+        TOOLS_ENGINE_ENABLED,
+        TOOLS_CONFIDENCE_MIN,
+        get_tool_stats,
+        get_segment_analysis,
+    )
+    _HAS_TOOLS_ANALYTICS = True
+except ImportError:
+    _HAS_TOOLS_ANALYTICS = False
+    TOOLS_ENGINE_ENABLED = False
+    TOOLS_CONFIDENCE_MIN = 0.35
+
     class ValidationConfig:  # type: ignore[no-redef]
         """Fallback stub when config_validation not available."""
         HARD_STOP_ON_SIZE_MISMATCH = True
@@ -655,6 +669,7 @@ class ReportValidator:
         self._check_size_specific_issues()
         self._check_redundancy()  # Sprint G2.4
         self._check_ai_act_sections()  # Sprint G7
+        self._check_tools_section()  # Sprint B2-C
 
         is_valid = not any(e.severity == "CRITICAL" for e in self.errors)
         return is_valid, self.errors
@@ -1064,6 +1079,178 @@ class ReportValidator:
                             details=f"Term '{term}' unpassend für '{self.company_size}'",
                         )
                     )
+
+    # =========================================================================
+    # SPRINT B2-C: Tools Engine Validation
+    # =========================================================================
+
+    # B2-C: Tools validation configuration
+    TOOLS_VALIDATION_ENABLED = True
+    TOOLS_LOW_CONFIDENCE_THRESHOLD = 0.30
+    TOOLS_OVERPOPULATION_LIMIT = 14
+    TOOLS_MIN_FOR_SEGMENT = 3
+
+    def _check_tools_section(self) -> None:
+        """
+        SPRINT B2-C: Validate tools recommendations section.
+
+        Checks:
+        - Missing confidence info
+        - Low-confidence tools (<0.3)
+        - Segment weakness (fallback to generic)
+        - AI-Act misalignment
+        - Tools overpopulation (>14)
+        """
+        if not self.TOOLS_VALIDATION_ENABLED:
+            return
+
+        # Get tools data from sections
+        tools_html = self.sections.get("tools_empfehlungen", "")
+        tools_data = self.sections.get("_tools_data", [])  # Internal data if available
+
+        if not tools_html and not tools_data:
+            return  # No tools section to validate
+
+        # Check for missing confidence info
+        self._check_tools_missing_confidence(tools_data)
+
+        # Check for low-confidence tools
+        self._check_tools_low_confidence(tools_data)
+
+        # Check segment weakness
+        self._check_tools_segment_weakness()
+
+        # Check AI-Act alignment
+        self._check_tools_ai_act_alignment(tools_data)
+
+        # Check tools overpopulation
+        self._check_tools_overpopulation(tools_data, tools_html)
+
+    def _check_tools_missing_confidence(self, tools_data: list) -> None:
+        """B2-C: Check for tools missing confidence information."""
+        if not tools_data:
+            return
+
+        missing_conf_count = 0
+        for tool in tools_data:
+            if isinstance(tool, dict):
+                if "_confidence" not in tool and "confidence" not in tool:
+                    missing_conf_count += 1
+
+        if missing_conf_count > 0:
+            self.errors.append(
+                ValidationError(
+                    severity="WARNING",
+                    category="TOOLS_MISSING_CONFIDENCE",
+                    section="tools_empfehlungen",
+                    message=f"{missing_conf_count} Tools ohne Konfidenz-Information",
+                    details="Tools sollten Konfidenz-Metadaten enthalten für Transparenz",
+                )
+            )
+
+    def _check_tools_low_confidence(self, tools_data: list) -> None:
+        """B2-C: Check for low-confidence tools (<0.3)."""
+        if not tools_data:
+            return
+
+        low_conf_tools = []
+        for tool in tools_data:
+            if isinstance(tool, dict):
+                conf = tool.get("_confidence") or tool.get("confidence", 1.0)
+                if conf < self.TOOLS_LOW_CONFIDENCE_THRESHOLD:
+                    low_conf_tools.append(tool.get("name", "Unknown"))
+
+        if low_conf_tools:
+            # Suggest bundling in Smart Mode
+            self.errors.append(
+                ValidationError(
+                    severity="WARNING",
+                    category="TOOLS_LOW_CONFIDENCE",
+                    section="tools_empfehlungen",
+                    message=f"{len(low_conf_tools)} Tools mit niedriger Konfidenz (<{self.TOOLS_LOW_CONFIDENCE_THRESHOLD})",
+                    details=f"Tools: {', '.join(low_conf_tools[:5])}... Empfehlung: Smart-Mode Bundling aktivieren",
+                )
+            )
+
+    def _check_tools_segment_weakness(self) -> None:
+        """B2-C: Check if segment data is weak, suggesting fallback to generic list."""
+        if not _HAS_TOOLS_ANALYTICS:
+            return
+
+        # Normalize company_size
+        size_key = self.company_size.lower() if self.company_size else "kmu"
+        if "solo" in size_key or "1" in size_key or "freiberuf" in size_key:
+            size_key = "solo"
+        elif "team" in size_key or "klein" in size_key:
+            size_key = "team"
+        else:
+            size_key = "kmu"
+
+        try:
+            segment = get_segment_analysis("size_label", size_key)
+            if segment and segment.stability == "weak":
+                self.errors.append(
+                    ValidationError(
+                        severity="INFO",
+                        category="TOOLS_SEGMENT_WEAKNESS",
+                        section="tools_empfehlungen",
+                        message=f"Segment '{size_key}' hat schwache Datenbasis",
+                        details="Generische Fallback-Liste kann enthalten sein. Sample-Size erweitern empfohlen.",
+                    )
+                )
+        except Exception:
+            pass  # Analytics not available or segment not found
+
+    def _check_tools_ai_act_alignment(self, tools_data: list) -> None:
+        """B2-C: Check for AI-Act misalignment in tool recommendations."""
+        if not tools_data:
+            return
+
+        # Get AI Act risk level from meta
+        ai_act_risk = self.meta.get("ai_act_risk_level", "minimal").lower()
+        if ai_act_risk not in ("high-risk", "high", "limited"):
+            return  # Only check for higher risk levels
+
+        misaligned_tools = []
+        for tool in tools_data:
+            if isinstance(tool, dict):
+                ai_align = tool.get("_ai_act_alignment") or tool.get("ai_act_alignment", 0.5)
+                if ai_align < 0.4:  # Low alignment with high-risk context
+                    misaligned_tools.append(tool.get("name", "Unknown"))
+
+        if misaligned_tools:
+            self.errors.append(
+                ValidationError(
+                    severity="WARNING",
+                    category="TOOLS_AI_ACT_MISALIGNMENT",
+                    section="tools_empfehlungen",
+                    message=f"{len(misaligned_tools)} Tools mit unzureichender AI-Act Ausrichtung",
+                    details=f"Bei Risk-Level '{ai_act_risk}' sollten Governance-Tools priorisiert werden. "
+                           f"Betroffene Tools: {', '.join(misaligned_tools[:3])}",
+                )
+            )
+
+    def _check_tools_overpopulation(self, tools_data: list, tools_html: str) -> None:
+        """B2-C: Check for tools overpopulation (>14 tools)."""
+        tool_count = 0
+
+        if tools_data:
+            tool_count = len(tools_data)
+        elif tools_html:
+            # Estimate from HTML by counting table rows
+            import re
+            tool_count = len(re.findall(r"<tr>", tools_html)) - 1  # Subtract header
+
+        if tool_count > self.TOOLS_OVERPOPULATION_LIMIT:
+            self.errors.append(
+                ValidationError(
+                    severity="WARNING",
+                    category="TOOLS_OVERPOPULATION",
+                    section="tools_empfehlungen",
+                    message=f"Zu viele Tools empfohlen: {tool_count} (Limit: {self.TOOLS_OVERPOPULATION_LIMIT})",
+                    details="Empfehlung: Tools nach Priorität filtern oder Smart-Defaults verwenden",
+                )
+            )
 
     # SPRINT G3.3/G4.4/G13: Extended whitelist for standard phrases that may repeat intentionally
     REDUNDANCY_WHITELIST = [
