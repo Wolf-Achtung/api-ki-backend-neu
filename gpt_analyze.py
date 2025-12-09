@@ -4772,7 +4772,31 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
 
     sections["CHANGELOG_SHORT"] = os.getenv("CHANGELOG_SHORT", "—")
     sections["AUDITOR_INITIALS"] = os.getenv("AUDITOR_INITIALS", "KSJ")
-    sections.setdefault("KPI_HTML","")
+
+    # G23: KPI Visualisation Layer
+    try:
+        from utils.kpi_visuals import generate_kpi_visuals
+        kpi_data = {
+            "roi": answers.get("ROI_12M") or sections.get("ROI_12M") or 0,
+            "payback_months": answers.get("PAYBACK_MONTHS") or sections.get("PAYBACK_MONTHS") or 0,
+            "time_savings_eur": answers.get("EINSPARUNG_MONAT_EUR") or sections.get("EINSPARUNG_MONAT_EUR") or 0,
+        }
+        # Add industry benchmark if available from branch profile
+        if answers.get("branch_avg_roi"):
+            kpi_data["industry_roi"] = answers.get("branch_avg_roi")
+        kpi_visuals = generate_kpi_visuals(kpi_data, lang=sections.get("LANG", "de"))
+        sections["KPI_VISUALS_HTML"] = kpi_visuals.get("html", "")
+        sections["KPI_HTML"] = kpi_visuals.get("bar_html", "")
+        log.debug("[%s] 📊 G23 KPI visuals generated", run_id)
+    except ImportError:
+        log.debug("[%s] G23 kpi_visuals not available - skipping", run_id)
+        sections.setdefault("KPI_HTML", "")
+        sections.setdefault("KPI_VISUALS_HTML", "")
+    except Exception as exc:
+        log.warning("[%s] ⚠️ G23 KPI visuals generation failed: %s", run_id, exc)
+        sections.setdefault("KPI_HTML", "")
+        sections.setdefault("KPI_VISUALS_HTML", "")
+
     sections.setdefault("FEEDBACK_BOX_HTML","Feedback willkommen – was war hilfreich, was fehlt?")
     sections.setdefault("DATA_COVERAGE_HTML","")
     sections.setdefault("FREITEXT_SNIPPETS_HTML","")

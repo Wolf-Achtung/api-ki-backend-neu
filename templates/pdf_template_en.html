@@ -755,6 +755,43 @@
             color: var(--color-text-muted);
             margin-top: var(--space-xs);
         }
+
+        /* G23: KPI Visuals CSS */
+        .kpi-visuals {
+            margin: 16pt 0;
+            break-inside: avoid;
+        }
+        .kpi-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 10pt;
+        }
+        .kpi-bar {
+            display: block;
+            max-width: 100%;
+        }
+        .kpi-sparkline-container {
+            margin-top: 12pt;
+            padding: 10pt;
+            background: var(--color-bg-surface);
+            border-radius: var(--radius-card);
+        }
+        .kpi-benchmark-container {
+            margin-top: 12pt;
+            padding: 10pt;
+            background: var(--color-bg-surface);
+            border-radius: var(--radius-card);
+        }
+        @media print {
+            .kpi-visuals {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .kpi-bar, .kpi-sparkline, .kpi-benchmark {
+                max-width: 100%;
+            }
+        }
+
         /* ================================================
            TABLES (PLATIN++ V5.2 Light Mode)
            ================================================ */
@@ -1629,6 +1666,12 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- G23: KPI Visuals -->
+                            {% if KPI_VISUALS_HTML %}
+                            <div class="kpi-visuals">
+                                {{ KPI_VISUALS_HTML|safe }}
+                            </div>
+                            {% endif %}
                         </div>
                         <div class="exec-summary">
                             <div class="exec-highlight">
