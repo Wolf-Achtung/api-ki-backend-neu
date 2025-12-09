@@ -28,6 +28,17 @@ ANTI-REDUNDANZ:
 - In foerderpotenzial.md nur auf diese Zahlen referenzieren, nicht wiederholen
 - In executive_summary nur als Hinweis erwähnen
 
+SPRINT G18 - ANTI-REDUNDANZ (STRIKT!):
+- Datenlage/Data Readiness NICHT erneut beschreiben – gehört in data_readiness.md
+- Maximal EIN kurzer Verweis auf Data Readiness ist erlaubt (z.B. "→ siehe Datenlage")
+- CAPEX/OPEX-Blöcke nur HIER – nicht in anderen Sections wiederholen
+- Fokus: ROI, Payback, Investition – KEINE Datenlage-Analyse
+
+SPRINT G18 - NARRATIVE VERBINDUNGEN:
+- Starter Kit referenzieren: "Die Starter Kits ermöglichen eine kosteneffiziente Umsetzung der Quick Wins..."
+- Bezug zu Roadmap: "Amortisation erfolgt bereits in Phase 2 der 90-Tage-Roadmap..."
+- Förderpotenzial ankündigen: "Details zur möglichen Förderung → siehe Förderpotenzial"
+
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: persönlicher ROI, Zeitentlastung, pragmatische Einschätzung
 - team: Team-ROI, gemeinsame Effizienzgewinne

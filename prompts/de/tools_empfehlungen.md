@@ -69,6 +69,11 @@ ANTI-REDUNDANZ (G17.S VERSCHÄRFT):
 - KEINE Dopplung von Tools-Engine-Ausgabe (TOOLS_HTML aus B2-Engine)
 - Beschreibe Einsatzlogik, NICHT nochmal die Tools selbst
 
+SPRINT G18 - NARRATIVE VERBINDUNGEN:
+- Einleitend erwähnen: "Diese Tool-Klassen unterstützen die Phasen der Roadmap 90d/12m..."
+- Starter Kit referenzieren: "Im Starter Kit finden Sie eine kuratierte Auswahl..."
+- Bezug zu Förderprogrammen herstellen wo relevant
+
 STIL & REGELN:
 - Produktneutral (keine Markennamen)
 - Fokus auf Toolkategorien und Zweck

@@ -35,6 +35,12 @@ Developer: <!-- data_readiness.md – v3.1 GOLD STANDARD+ (Data & System Readine
   - No references to questionnaire/questions, no technical placeholder texts.
   - Always write as if the assessment goes directly to management/project leadership.
   - Clear, sober tone: Opportunities + risks, no exaggerations.
+
+  SPRINT G18 - ANTI-REDUNDANCY (STRICT!):
+  - DO NOT mention ROI/Investments/Business Case again – these topics belong in business_case.md
+  - Maximum ONE brief reference to Business Case is allowed (e.g., "→ see Business Case")
+  - CAPEX/OPEX blocks do NOT belong here
+  - Focus: Data quality, system readiness, data sources – NO financial perspective
 -->
 
 <section class="section data-readiness">
