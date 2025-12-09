@@ -307,7 +307,7 @@ def remove_unused_css_classes(css: str, used_classes: Set[str]) -> str:
         # Extract class name from selector using pre-compiled pattern
         class_match = _RE_CLASS_SELECTOR.match(selector)
         if not class_match:
-            return str(match.group(0))
+            return str(match.group(0))  # type: ignore[unreachable]
 
         class_name = class_match.group(1)
 

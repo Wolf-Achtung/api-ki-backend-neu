@@ -319,7 +319,7 @@ def _markdown_fallback(md_text: str) -> str:
             html_parts.append(f'<li>{content}</li>')
 
         # Leerzeile
-        elif not stripped:
+        elif not stripped:  # type: ignore[unreachable]
             if in_list:
                 html_parts.append(f'</{list_type}>')
                 in_list = False

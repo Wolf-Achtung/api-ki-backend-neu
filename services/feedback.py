@@ -198,8 +198,9 @@ def save_feedback_to_db(
         db.commit()
         db.refresh(feedback)
 
-        log.info("✓ Feedback saved to DB: id=%d, source=%s", feedback.id, source)
-        return feedback.id
+        feedback_id: int = feedback.id
+        log.info("✓ Feedback saved to DB: id=%d, source=%s", feedback_id, source)
+        return feedback_id
 
     except ImportError:
         log.debug("Feedback model not available - skipping DB save")
