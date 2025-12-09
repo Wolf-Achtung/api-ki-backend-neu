@@ -61,3 +61,10 @@ data/research_cache.json
 
 # Generated Reports
 reports/
+data/stability_scores/
+
+# G17.7 Runtime Data
+data/prompt_stability/
+data/prompt_freeze/
+data/prompt_recovery/
+data/prompt_lifecycle/
