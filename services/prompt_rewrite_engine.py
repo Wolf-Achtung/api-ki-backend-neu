@@ -67,6 +67,7 @@ ISSUE_TYPES = {
 }
 
 # G17.P: Template phrases to detect and avoid (P1 priority)
+# SPRINT G18: Extended with new redundancy patterns
 TEMPLATE_PHRASES = {
     "data_readiness_intro_standard": [
         r"Datenlage\s+bildet\s+.*Grundlage",
@@ -94,7 +95,7 @@ TEMPLATE_PHRASES = {
         r"für\s+ein\s+Unternehmen\s+(in|der)\s+\w+\s+(Branche|Größe)",
         r"for\s+a\s+company\s+in\s+the\s+\w+\s+(industry|sector)",
     ],
-    # SPRINT G17.S: CAPEX/OPEX standard blocks (P2 priority)
+    # SPRINT G17.S + G18: CAPEX/OPEX standard blocks (P1 priority - elevated from P2)
     "cost_block_redundancy": [
         r"CAPEX\s+(und|&)\s+OPEX\s+(bilden|sind)\s+(die\s+)?(Grundlage|Basis)",
         r"einmalige\s+(Aufwände|Kosten)\s+für\s+Aufbau\s+und\s+Einführung",
@@ -102,6 +103,27 @@ TEMPLATE_PHRASES = {
         r"one-time\s+(setup|implementation)\s+costs",
         r"monthly\s+operating\s+costs\s+of\s+(about|approximately)",
         r"(CAPEX|OPEX)\s+breakdown\s+for\s+AI\s+implementation",
+        # G18: More specific CAPEX/OPEX blocks
+        r"initiales\s+Setup\s+und\s+Einführung",
+        r"initial\s+setup\s+of\s+(AI|your)",
+    ],
+    # SPRINT G18: Data-Readiness in wrong sections (P2 priority)
+    "data_readiness_in_business_case": [
+        r"Datenlage\s+&\s+Systemreife",
+        r"Data\s+(Situation|Maturity)\s+&\s+System",
+        r"vorhandene\s+Datenquellen\s+ermöglichen",
+        r"existing\s+data\s+sources\s+enable",
+        r"Datenqualität\s+(ermöglicht|bildet)",
+        r"data\s+quality\s+(enables|forms)",
+    ],
+    # SPRINT G18: Business Case content in wrong sections (P2 priority)
+    "business_case_in_data_readiness": [
+        r"ROI\s+(nach|von|bei)\s+\d+",
+        r"Amortisation\s+(nach|in)\s+\d+",
+        r"CAPEX.*€.*OPEX",
+        r"Payback.*Monate",
+        r"payback.*months",
+        r"investment.*amortize",
     ],
 }
 

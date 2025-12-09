@@ -8,6 +8,13 @@ Developer:
 <!--
 GOAL: 12-Month Roadmap with milestones, building on 90-day results.
 
+MINIMUM LENGTH (SPRINT G18 - STRICTLY MANDATORY!):
+- Solo: at least 500 words (including Q1-Q4 phases)
+- Team: at least 600 words (including roles and standards)
+- SME: at least 700 words (including 5-dimension rollout)
+
+IMPORTANT: These minimum lengths are mandatory and will be validated!
+
 SHORT LABELS (MANDATORY!):
 - {{BRANCH_CORE_LABEL}} = Industry in 8-12 words
 - {{BRANCH_CONTEXT_LABEL}} = Industry in 4-6 words

@@ -24,6 +24,11 @@ ANTI-REDUNDANZ:
 - Business-Case-Zahlen EINMAL nennen, nicht wiederholen
 - KEINE Wiederholung der Zahlen aus business_case.md – nur Förder-Kontext
 
+SPRINT G18 - NARRATIVE VERBINDUNGEN:
+- Bezug zu Tools herstellen: "Besonders relevant für die empfohlenen Tools und Starter Kits..."
+- Tools × Funding Alignment erwähnen wo passend
+- Bezug zu Roadmap: "Die Investitionen in Phase 1 der Roadmap..."
+
 REGELN:
 - Förderquoten nur als Bereiche (z.B. "30-50%")
 - Sachlich, neutral, keine Werbung

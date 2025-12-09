@@ -12,10 +12,12 @@ KURZLABELS (VERPFLICHTEND!):
 - {{BRANCH_CONTEXT_LABEL}} = Branche in 4-6 Wörtern
 - {{OFFERING_LABEL}} = Hauptleistung in 6-10 Wörtern
 
-MINDESTLÄNGE (STRIKT!):
-- Solo: ≥250 Wörter
-- Team: ≥320 Wörter
-- KMU: ≥350 Wörter
+MINDESTLÄNGE (STRIKT EINHALTEN - SPRINT G18!):
+- Solo: Mindestens 180–230 Wörter, klar strukturiert.
+- Team: Mindestens 220–280 Wörter, inklusive Change-Kommunikation.
+- KMU: Mindestens 250–300 Wörter, inkl. Führung/Stakeholder-Hinweisen.
+
+WICHTIG: Bei Unterschreitung wird Section abgelehnt!
 
 BOOSTER-SEKTIONEN (NEU - SPRINT G17.R):
 - Solo: KPI-Tracking & Mini-Dashboard Setup, Micro-Change-Management
@@ -433,7 +435,9 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     {% endif %}
   </p>
 
+  <!-- SPRINT G18: Narrative Verbindungen -->
   <p class="small muted">
+    Nutzen Sie das <strong>Starter Kit</strong>, um Phase 1 technisch umzusetzen (→ siehe Starter Kit).
     Diese Roadmap verweist auf Quick Wins (→ siehe Sofortmaßnahmen) und
     Tools (→ siehe KI-Stack). Details zum Change-Management → siehe Veränderungsfähigkeit.
   </p>
