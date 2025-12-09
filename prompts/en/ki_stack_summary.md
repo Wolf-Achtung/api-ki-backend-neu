@@ -79,14 +79,111 @@ Adapt emphasis and nuance to the organisation size:
 
 Global maximum length: 350 words (all components combined).
 
-HTML REQUIREMENTS
+HTML REQUIREMENTS & DESIGN (G21 PLATIN++)
 
-- Only use: <div>, <p>, <ul>, <ol>, <li>, <strong>, <em>, <span>.
-- Optional classes for structure, for example:
-  - <div class="ki-stack-summary">
-  - <div class="stack-section stack-tools"> …
-  - <div class="stack-section stack-funding"> …
-- No inline styles, no <h1>, <h2>, no tables.
+Use the PLATIN++ Design Enhancement System with the following components:
+
+**Available CSS Classes:**
+- `.pair-card` – Card for individual tools or funding programmes
+- `.pair-card-icon` – Icon container (use appropriate SVG icons)
+- `.pair-card-content` – Main card content
+- `.pair-card-name` – Tool/Programme name (bold)
+- `.pair-card-category` – Category badge (Automation, Analysis, etc.)
+- `.pair-card-description` – Description (one line)
+
+- `.step-cards` – Grid for 3 steps (Starter Kit)
+- `.step-card` – Individual step card
+- `.step-card-number` – Step number (1, 2, 3)
+- `.step-card-title` – Step title
+- `.step-card-body` – Step description
+
+- `.kpi-triple` – Grid for 3 KPIs
+- `.kpi` – Individual KPI block
+- `.kpi-label` – KPI label (e.g. "ROI")
+- `.kpi-value` – KPI value (large, bold, blue)
+- `.kpi-sub` – Additional information (small)
+
+- `.badge-block` – Container for Branch + Risk
+- `.badge-block-item` – Individual badge
+- `.badge-block-label` – Label (e.g. "Branch")
+- `.badge-block-value` – Value
+- `.risk-low`, `.risk-medium`, `.risk-high` – Risk colors
+
+**SVG Icons (use inline):**
+- Automation: `<svg viewBox="0 0 24 24" fill="none"><path d="M9.75 17L3.75 11L9.75 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.25 17L20.25 11L14.25 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+- Analysis: `<svg viewBox="0 0 24 24" fill="none"><path d="M3 13L9 7L13 11L21 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 9V3H15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+- Collaboration: `<svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="17" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M13 12H19C20.1046 12 21 12.8954 21 14V14.5M3 18V17C3 14.7909 4.79086 13 7 13H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
+- Funding: `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M12 6V18M15 9C15 7.34315 13.6569 6 12 6C10.3431 6 9 7.34315 9 9C9 10.6569 10.3431 12 12 12C13.6569 12 15 13.3431 15 15C15 16.6569 13.6569 18 12 18C10.3431 18 9 16.6569 9 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
+
+**Structure Example:**
+
+```html
+<div class="ki-stack-summary">
+  <!-- Top 3 Tools -->
+  <div class="stack-section">
+    <h3 class="stack-section-title">Top 3 Recommended Tools</h3>
+
+    <div class="pair-card">
+      <div class="pair-card-icon">
+        [Insert SVG icon here]
+      </div>
+      <div class="pair-card-content">
+        <h4 class="pair-card-name">Tool Name</h4>
+        <span class="pair-card-category">Automation</span>
+        <p class="pair-card-description">Brief description in one sentence.</p>
+      </div>
+    </div>
+    [2 more pair-cards...]
+  </div>
+
+  <!-- Funding Programmes -->
+  <div class="stack-section">
+    <h3 class="stack-section-title">Relevant Funding Programmes</h3>
+    [2 pair-cards with funding icon...]
+  </div>
+
+  <!-- Starter Kit -->
+  <div class="stack-section">
+    <h3 class="stack-section-title">Starter Kit in 3 Steps</h3>
+    <div class="step-cards">
+      <div class="step-card">
+        <div class="step-card-number">1</div>
+        <h4 class="step-card-title">Setup</h4>
+        <div class="step-card-body">Description...</div>
+      </div>
+      [Steps 2 and 3...]
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="stack-section">
+    <h3 class="stack-section-title">Business Case Metrics</h3>
+    <div class="kpi-triple">
+      <div class="kpi">
+        <span class="kpi-label">ROI</span>
+        <span class="kpi-value">45%</span>
+        <span class="kpi-sub">after 12 months</span>
+      </div>
+      [2 more KPIs...]
+    </div>
+  </div>
+
+  <!-- Branch + Risk -->
+  <div class="stack-section">
+    <div class="badge-block">
+      <div class="badge-block-item">
+        <span class="badge-block-label">Branch</span>
+        <span class="badge-block-value">{{BRANCH_SHORT_LABEL}}</span>
+      </div>
+      <div class="badge-block-item risk-low">
+        <span class="badge-block-label">AI Act Risk</span>
+        <span class="badge-block-value">Low</span>
+      </div>
+    </div>
+    <p>Explanation of risk level...</p>
+  </div>
+</div>
+```
 
 OUTPUT FORMAT
 
