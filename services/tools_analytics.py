@@ -1087,6 +1087,73 @@ BRANCH_TOOL_BOOSTS: Dict[str, Dict[str, Tuple[List[str], float]]] = {
             1.3
         ),
     },
+    # G19.1: New branch tool boosts
+    "bauwesen_architektur": {
+        "documentation": (
+            ["ChatGPT", "Claude", "Notion", "Google Docs", "Fireflies.ai"],
+            1.4
+        ),
+        "planning": (
+            ["Revit", "AutoCAD", "ArchiCAD", "SketchUp", "Blender"],
+            1.35
+        ),
+        "bim_tools": (
+            ["BIM 360", "Navisworks", "Solibri", "Trimble Connect", "PlanGrid"],
+            1.4
+        ),
+        "project_management": (
+            ["Procore", "Buildertrend", "Monday.com", "Asana", "ClickUp"],
+            1.3
+        ),
+        "defect_management": (
+            ["PlanRadar", "Fieldwire", "Bluebeam", "BauDoc", "Dalux"],
+            1.35
+        ),
+    },
+    "verwaltung": {
+        "citizen_services": (
+            ["ChatGPT", "Claude", "Intercom", "Zendesk", "Freshdesk"],
+            1.4
+        ),
+        "document_processing": (
+            ["ABBYY", "DocuSign", "Adobe Sign", "ChatGPT", "Claude"],
+            1.4
+        ),
+        "form_automation": (
+            ["Typeform", "Google Forms", "JotForm", "Microsoft Forms", "Cognito Forms"],
+            1.35
+        ),
+        "process_automation": (
+            ["Make (Integromat)", "Zapier", "n8n", "Power Automate", "UiPath"],
+            1.35
+        ),
+        "compliance": (
+            ["Great Expectations", "MLflow", "Weights & Biases", "Evidently AI"],
+            1.4
+        ),
+    },
+    "transport_logistik": {
+        "route_optimization": (
+            ["Route4Me", "OptimoRoute", "Routific", "Circuit", "WorkWave"],
+            1.45
+        ),
+        "fleet_management": (
+            ["Samsara", "Verizon Connect", "Geotab", "Fleet Complete", "Teletrac"],
+            1.4
+        ),
+        "warehouse": (
+            ["SAP EWM", "Manhattan WMS", "Oracle WMS", "Fishbowl", "Cin7"],
+            1.35
+        ),
+        "tracking": (
+            ["Project44", "FourKites", "Transporeon", "Shippeo", "Descartes"],
+            1.4
+        ),
+        "demand_forecasting": (
+            ["SAP IBP", "Blue Yonder", "o9 Solutions", "RELEX", "ToolsGroup"],
+            1.35
+        ),
+    },
 }
 
 # Default tool boosts for unknown branches
@@ -1322,6 +1389,18 @@ def generate_tools_branch_alignment_html(
             "video": "Video",
             "productivity": "Produktivität",
             "general": "Allgemein",
+            # G19.1: New branch categories
+            "bim_tools": "BIM-Tools",
+            "defect_management": "Mängelmanagement",
+            "citizen_services": "Bürgerdienste",
+            "document_processing": "Dokumentenverarbeitung",
+            "form_automation": "Formularautomatisierung",
+            "process_automation": "Prozessautomatisierung",
+            "route_optimization": "Routenoptimierung",
+            "fleet_management": "Flottenmanagement",
+            "warehouse": "Lagerverwaltung",
+            "tracking": "Tracking & Visibility",
+            "demand_forecasting": "Bedarfsprognose",
         },
         "en": {
             "text_automation": "Text Automation",
@@ -1356,6 +1435,18 @@ def generate_tools_branch_alignment_html(
             "video": "Video",
             "productivity": "Productivity",
             "general": "General",
+            # G19.1: New branch categories
+            "bim_tools": "BIM Tools",
+            "defect_management": "Defect Management",
+            "citizen_services": "Citizen Services",
+            "document_processing": "Document Processing",
+            "form_automation": "Form Automation",
+            "process_automation": "Process Automation",
+            "route_optimization": "Route Optimization",
+            "fleet_management": "Fleet Management",
+            "warehouse": "Warehouse Management",
+            "tracking": "Tracking & Visibility",
+            "demand_forecasting": "Demand Forecasting",
         },
     }
 

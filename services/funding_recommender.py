@@ -1700,6 +1700,28 @@ BRANCH_FUNDING_PRIORITIES: Dict[str, List[Tuple[str, float, str]]] = {
         ("digital_jetzt", 1.3, "KI für Content und Analytics"),
         ("nrw_digital", 1.2, "Regionale Agenturförderung"),
     ],
+    # G19.1: New branch funding priorities
+    "bauwesen_architektur": [
+        ("digital_jetzt", 1.4, "BIM-Digitalisierung und Planungstools"),
+        ("zim", 1.35, "F&E für Smart Building und Digital Twins"),
+        ("kfw_energieeffizienz", 1.3, "Energieeffiziente Gebäudetechnik mit KI"),
+        ("go_digital", 1.25, "Digitalisierung von Bauprozessen"),
+        ("bafa_energieberatung", 1.2, "Energieberatung und Sanierung"),
+    ],
+    "verwaltung": [
+        ("ozg_digitalisierung", 1.45, "Onlinezugangsgesetz - Pflicht zur Digitalisierung"),
+        ("digital_jetzt", 1.35, "E-Government und Bürgerservices"),
+        ("foerderprogramm_bund_laender", 1.3, "Bund-Länder-Digitalisierungsinitiative"),
+        ("ai_act_compliance", 1.35, "Compliance für behördliche High-Risk-KI"),
+        ("open_data", 1.2, "Open Data und GovTech-Initiativen"),
+    ],
+    "transport_logistik": [
+        ("cef_transport", 1.4, "EU CEF Transport - Infrastrukturdigitalisierung"),
+        ("digital_jetzt", 1.35, "Flottenmanagement und Supply-Chain-KI"),
+        ("zim", 1.3, "F&E für Predictive Logistics und Routenoptimierung"),
+        ("kfw_klimaschutz", 1.25, "E-Logistik und nachhaltige Mobilität"),
+        ("go_digital", 1.2, "Digitalisierung von Logistikprozessen"),
+    ],
 }
 
 # Default priorities for unknown branches
