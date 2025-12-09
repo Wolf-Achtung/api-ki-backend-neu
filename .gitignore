@@ -68,3 +68,9 @@ data/prompt_stability/
 data/prompt_freeze/
 data/prompt_recovery/
 data/prompt_lifecycle/
+
+# G17.8 Runtime Data
+data/funding_distribution/
+data/funding_rebalancing/
+data/funding_optimizer/
+data/funding_patches/
