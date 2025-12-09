@@ -888,7 +888,7 @@ def sanitize_section_html(
 def sanitize_sections_dict(sections: dict, truthy_env: Optional[bool] = True) -> dict:
     """Sanitisiert alle string‑Werte in einem Sections‑Dict."""
     if not isinstance(sections, dict):
-        return sections  # type: ignore[unreachable]
+        return sections
     out = {}
     for k, v in sections.items():
         if isinstance(v, str):

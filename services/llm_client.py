@@ -108,7 +108,7 @@ def is_retryable_error(error: Exception) -> bool:
         return True
     if isinstance(error, requests.exceptions.HTTPError):
         if hasattr(error, 'response') and error.response is not None:
-            status = error.response.status_code
+            status: int = error.response.status_code
             # Retry on 429 and 5xx errors
             return status == 429 or status >= 500
     return False

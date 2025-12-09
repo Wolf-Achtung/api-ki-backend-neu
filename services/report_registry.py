@@ -265,7 +265,10 @@ def get_report_version(
         ReportHistory.version == version
     ).first()
 
-    return history.to_dict() if history else None
+    if history:
+        result: Dict[str, Any] = history.to_dict()
+        return result
+    return None
 
 
 def get_user_reports(
