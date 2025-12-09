@@ -1499,6 +1499,42 @@
                     </div>
                 </section>
                 {% endif %}
+                <!-- SPRINT B2.2: Tools × Funding Alignment -->
+                {% if TOOLS_FUNDING_ALIGNMENT_HTML %}
+                <section class="section chapter" id="tools-funding-alignment">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Premium Insights</span>
+                            <h2>Tools × Funding Alignment</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Recommended tools matched with relevant funding programmes
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ TOOLS_FUNDING_ALIGNMENT_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                <!-- SPRINT B2.2: Starter Kit -->
+                {% if STARTER_KIT_HTML %}
+                <section class="section chapter" id="starter-kit">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Your Starting Point</span>
+                            <h2>Starter Kit: Tools & Funding Path</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            A curated combination of tools, funding options and a pragmatic first implementation path
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ STARTER_KIT_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
                 <!-- NEW SECTIONS: Monetization, Skill Plan, Templates -->
                 {% if MONETARISIERUNG_HTML %}
                 <section class="section chapter">
