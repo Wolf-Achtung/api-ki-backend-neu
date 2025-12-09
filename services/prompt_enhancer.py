@@ -192,19 +192,162 @@ BRANCH_CONTEXT_LABELS_EN: Dict[str, str] = {
     "landwirtschaft": "AgriTech",
 }
 
+# =============================================================================
+# SPRINT G17.S: BRANCH_SHORT_LABEL (3-5 words, minimal redundancy)
+# =============================================================================
+# Used to replace overly long branch descriptions after first occurrence
+
+BRANCH_SHORT_LABELS_DE: Dict[str, str] = {
+    # Format: size_branch -> "Ihr [kurze Beschreibung]"
+    "solo_beratung": "Ihr KI-Readiness-Beratungsangebot",
+    "solo_consulting": "Ihr KI-Readiness-Beratungsangebot",
+    "solo_it_software": "Ihre IT-Dienstleistung",
+    "solo_finanzen": "Ihre Finanzberatung",
+    "solo_versicherung": "Ihre Versicherungsberatung",
+    "solo_handel": "Ihr Handelsgeschäft",
+    "solo_industrie": "Ihre Fertigungsdienstleistung",
+    "solo_gesundheit": "Ihre Gesundheitsdienstleistung",
+    "solo_marketing": "Ihre Marketing-Dienstleistung",
+    "solo_recht": "Ihre Rechtsberatung",
+    "solo_bildung": "Ihre Bildungsdienstleistung",
+    "solo_immobilien": "Ihre Immobiliendienstleistung",
+    "solo_logistik": "Ihre Logistikdienstleistung",
+    "solo_energie": "Ihre Energiedienstleistung",
+    "solo_medien": "Ihre Mediendienstleistung",
+    "solo_tourismus": "Ihre Tourismusdienstleistung",
+    "solo_handwerk": "Ihr Handwerksbetrieb",
+    "solo_gastronomie": "Ihr Gastronomiebetrieb",
+    "solo_landwirtschaft": "Ihr Agrarbetrieb",
+    # Team variants
+    "team_beratung": "Ihr KI-Beratungsteam",
+    "team_consulting": "Ihr KI-Beratungsteam",
+    "team_it_software": "Ihr IT-Team",
+    "team_finanzen": "Ihr daten- & risikoorientiertes Finanzteam",
+    "team_versicherung": "Ihr Versicherungsteam",
+    "team_handel": "Ihr Handelsteam",
+    "team_industrie": "Ihr Produktionsteam",
+    "team_gesundheit": "Ihr Gesundheitsteam",
+    "team_marketing": "Ihr Marketingteam",
+    "team_recht": "Ihr Rechtsteam",
+    "team_bildung": "Ihr Bildungsteam",
+    "team_immobilien": "Ihr Immobilienteam",
+    "team_logistik": "Ihr Logistikteam",
+    "team_energie": "Ihr Energieteam",
+    "team_medien": "Ihr Medienteam",
+    "team_tourismus": "Ihr Tourismusteam",
+    "team_handwerk": "Ihr Handwerksteam",
+    "team_gastronomie": "Ihr Gastro-Team",
+    "team_landwirtschaft": "Ihr Agrarteam",
+    # KMU variants
+    "kmu_beratung": "Ihr europäisches Business Consulting-Profil",
+    "kmu_consulting": "Ihr europäisches Business Consulting-Profil",
+    "kmu_it_software": "Ihre IT-Organisation",
+    "kmu_finanzen": "Ihre Finanzorganisation",
+    "kmu_versicherung": "Ihre Versicherungsorganisation",
+    "kmu_handel": "Ihre Handelsorganisation",
+    "kmu_industrie": "Ihr Produktionsunternehmen",
+    "kmu_gesundheit": "Ihre Gesundheitsorganisation",
+    "kmu_marketing": "Ihre Marketingorganisation",
+    "kmu_recht": "Ihre Rechtsorganisation",
+    "kmu_bildung": "Ihre Bildungsorganisation",
+    "kmu_immobilien": "Ihre Immobilienorganisation",
+    "kmu_logistik": "Ihre Logistikorganisation",
+    "kmu_energie": "Ihre Energieorganisation",
+    "kmu_medien": "Ihre Medienorganisation",
+    "kmu_tourismus": "Ihre Tourismusorganisation",
+    "kmu_handwerk": "Ihr Handwerksunternehmen",
+    "kmu_gastronomie": "Ihr Gastrounternehmen",
+    "kmu_landwirtschaft": "Ihr Agrarunternehmen",
+}
+
+BRANCH_SHORT_LABELS_EN: Dict[str, str] = {
+    # Solo variants
+    "solo_beratung": "your AI readiness consulting",
+    "solo_consulting": "your AI readiness consulting",
+    "solo_it_software": "your IT services",
+    "solo_finanzen": "your financial advisory",
+    "solo_versicherung": "your insurance advisory",
+    "solo_handel": "your retail business",
+    "solo_industrie": "your manufacturing services",
+    "solo_gesundheit": "your healthcare services",
+    "solo_marketing": "your marketing services",
+    "solo_recht": "your legal services",
+    "solo_bildung": "your education services",
+    "solo_immobilien": "your real estate services",
+    "solo_logistik": "your logistics services",
+    "solo_energie": "your energy services",
+    "solo_medien": "your media services",
+    "solo_tourismus": "your tourism services",
+    "solo_handwerk": "your skilled trade",
+    "solo_gastronomie": "your food service",
+    "solo_landwirtschaft": "your agricultural business",
+    # Team variants
+    "team_beratung": "your AI consulting team",
+    "team_consulting": "your AI consulting team",
+    "team_it_software": "your IT team",
+    "team_finanzen": "your data-driven finance team",
+    "team_versicherung": "your insurance team",
+    "team_handel": "your retail team",
+    "team_industrie": "your production team",
+    "team_gesundheit": "your healthcare team",
+    "team_marketing": "your marketing team",
+    "team_recht": "your legal team",
+    "team_bildung": "your education team",
+    "team_immobilien": "your real estate team",
+    "team_logistik": "your logistics team",
+    "team_energie": "your energy team",
+    "team_medien": "your media team",
+    "team_tourismus": "your tourism team",
+    "team_handwerk": "your skilled trades team",
+    "team_gastronomie": "your food & beverage team",
+    "team_landwirtschaft": "your agricultural team",
+    # KMU variants
+    "kmu_beratung": "your European business consulting profile",
+    "kmu_consulting": "your European business consulting profile",
+    "kmu_it_software": "your IT organization",
+    "kmu_finanzen": "your financial organization",
+    "kmu_versicherung": "your insurance organization",
+    "kmu_handel": "your retail organization",
+    "kmu_industrie": "your manufacturing company",
+    "kmu_gesundheit": "your healthcare organization",
+    "kmu_marketing": "your marketing organization",
+    "kmu_recht": "your legal organization",
+    "kmu_bildung": "your education organization",
+    "kmu_immobilien": "your real estate organization",
+    "kmu_logistik": "your logistics organization",
+    "kmu_energie": "your energy organization",
+    "kmu_medien": "your media organization",
+    "kmu_tourismus": "your tourism organization",
+    "kmu_handwerk": "your skilled trades company",
+    "kmu_gastronomie": "your food & beverage company",
+    "kmu_landwirtschaft": "your agricultural company",
+}
+
 
 def generate_short_labels(briefing_data: Dict[str, Any], lang: str = "de") -> Dict[str, str]:
     """
-    Sprint G2.4/G4.2: Generate short labels for a profile.
+    Sprint G2.4/G4.2/G17.S: Generate short labels for a profile.
 
     Args:
-        briefing_data: Briefing data with branche, hauptleistung, etc.
+        briefing_data: Briefing data with branche, hauptleistung, company_size, etc.
         lang: Language code ('de' or 'en')
 
     Returns:
-        Dict with BRANCH_CORE_LABEL, OFFERING_LABEL, REGULATORY_LABEL, BRANCH_CONTEXT_LABEL
+        Dict with BRANCH_CORE_LABEL, OFFERING_LABEL, REGULATORY_LABEL, BRANCH_CONTEXT_LABEL, BRANCH_SHORT_LABEL
     """
     branche = briefing_data.get("branche", "").lower().strip()
+
+    # SPRINT G17.S: Get company size for BRANCH_SHORT_LABEL
+    company_size = briefing_data.get("company_size", "").lower().strip()
+    if not company_size:
+        # Try to infer from unternehmensgroesse
+        ug = briefing_data.get("unternehmensgroesse", "").lower()
+        if "solo" in ug or "1 " in ug or "freiberuf" in ug:
+            company_size = "solo"
+        elif "2-10" in ug or "klein" in ug or "team" in ug:
+            company_size = "team"
+        else:
+            company_size = "kmu"
 
     # Select language-specific mappings
     if lang == "en":
@@ -212,17 +355,23 @@ def generate_short_labels(briefing_data: Dict[str, Any], lang: str = "de") -> Di
         offering_labels = OFFERING_LABELS_EN
         regulatory_labels = REGULATORY_LABELS_EN
         context_labels = BRANCH_CONTEXT_LABELS_EN
+        short_labels = BRANCH_SHORT_LABELS_EN
     else:
         branch_labels = BRANCH_CORE_LABELS_DE
         offering_labels = OFFERING_LABELS_DE
         regulatory_labels = REGULATORY_LABELS_DE
         context_labels = BRANCH_CONTEXT_LABELS_DE
+        short_labels = BRANCH_SHORT_LABELS_DE
 
     # Get labels with fallbacks
     branch_core = branch_labels.get(branche, branch_labels.get("beratung", "KI-Beratung"))
     offering = offering_labels.get(branche, offering_labels.get("beratung", "KI-Lösungen"))
     # SPRINT G4.2: Short context label (4-6 words)
     branch_context = context_labels.get(branche, context_labels.get("beratung", "Consulting"))
+
+    # SPRINT G17.S: Size-aware short label (3-5 words)
+    short_key = f"{company_size}_{branche}"
+    branch_short = short_labels.get(short_key, short_labels.get(f"{company_size}_beratung", "Ihr Unternehmen"))
 
     # Regulatory label only for regulated industries
     regulatory = ""
@@ -234,6 +383,7 @@ def generate_short_labels(briefing_data: Dict[str, Any], lang: str = "de") -> Di
         "OFFERING_LABEL": offering,
         "REGULATORY_LABEL": regulatory,
         "BRANCH_CONTEXT_LABEL": branch_context,  # SPRINT G4.2
+        "BRANCH_SHORT_LABEL": branch_short,  # SPRINT G17.S
     }
 
 

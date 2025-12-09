@@ -1,4 +1,4 @@
-Developer: <!-- data_readiness.md – v3.0 GOLD STANDARD+ (Data & System Readiness, multi-size)
+Developer: <!-- data_readiness.md – v3.1 GOLD STANDARD+ (Data & System Readiness, multi-size) – SPRINT G17.P
   Respond exclusively with valid HTML.
   NO <html>, <head> or <body>. NO Markdown fences.
 
@@ -40,12 +40,12 @@ Developer: <!-- data_readiness.md – v3.0 GOLD STANDARD+ (Data & System Readine
 <section class="section data-readiness">
   <h2>Data Situation & System Readiness for AI</h2>
 
+  <!-- G17.P: New intro without redundancy, with cross-references -->
   <p>
-    For a company in the <strong>{{BRANCHE_LABEL}}</strong> industry with size
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> and focus on
-    <strong>{{HAUPTLEISTUNG}}</strong>, a typical starting situation emerges:
-    Existing data sources, tools, and processes already offer approaches for AI,
-    but need targeted development to deliver stable results.
+    Your data readiness assessment directly aligns with the process analysis and early Quick Wins
+    (→ see 90-Day Roadmap, → Quick Wins). This section summarizes which existing data sources,
+    structures, and integrations in <strong>{{BRANCH_CONTEXT_LABEL}}</strong> can be used
+    immediately for AI workflows — and where targeted improvements are required.
   </p>
 
   <h3>Where Data and Systems Stand Today</h3>
