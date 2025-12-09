@@ -2098,3 +2098,536 @@ async def block_patch_endpoint(
     except Exception as e:
         log.error(f"Failed to block patch: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to block patch: {str(e)}")
+
+
+# =============================================================================
+# SPRINT G17.7: PROMPT STABILITY SCORING & AUTO-FREEZE ENDPOINTS
+# =============================================================================
+
+class StabilityMetricsResponse(BaseModel):
+    """Response model for stability metrics."""
+    drift_history_score: float
+    rewrite_acceptance_rate: float
+    fallback_regression_rate: float
+    persona_leak_score: float
+    ai_act_conflict_score: float
+    redundancy_trend_score: float
+    tuning_stability_score: float
+
+
+class StabilityScoreResponse(BaseModel):
+    """Response model for stability score."""
+    prompt_file: str
+    stability_score: int
+    stability_label: str
+    metrics: StabilityMetricsResponse
+    requires_attention: bool
+    last_updated: Optional[str]
+    history_length: int
+
+
+class StabilityOverviewResponse(BaseModel):
+    """Response model for stability overview."""
+    enabled: bool
+    total_prompts_tracked: int
+    avg_stability_score: float
+    by_label: Dict[str, int]
+    frozen_count: int
+    recovering_count: int
+    attention_required: List[str]
+
+
+class FreezeRecordResponse(BaseModel):
+    """Response model for freeze record."""
+    prompt_file: str
+    frozen: bool
+    freeze_reasons: List[Dict[str, Any]]
+    frozen_at: Optional[str]
+    frozen_by: str
+    freeze_count: int
+
+
+class FreezeActionResponse(BaseModel):
+    """Response model for freeze/unfreeze action."""
+    success: bool
+    prompt_file: str
+    action: str
+    message: str
+
+
+class RecoveryAttemptResponse(BaseModel):
+    """Response model for recovery attempt."""
+    attempt_id: str
+    prompt_file: str
+    from_version: str
+    to_version: str
+    status: str
+    triggered_at: str
+    completed_at: Optional[str]
+    error_message: Optional[str]
+
+
+class RecoveryHistoryResponse(BaseModel):
+    """Response model for recovery history."""
+    prompt_file: str
+    total_recoveries: int
+    total_failures: int
+    success_rate: float
+    last_successful_recovery: Optional[str]
+    recent_attempts: List[RecoveryAttemptResponse]
+
+
+class LifecycleStateResponse(BaseModel):
+    """Response model for lifecycle state."""
+    prompt_file: str
+    current_state: str
+    previous_state: Optional[str]
+    state_since: str
+    valid_transitions: List[str]
+    total_transitions: int
+
+
+class LifecycleTransitionResponse(BaseModel):
+    """Response model for lifecycle transition."""
+    success: bool
+    prompt_file: str
+    from_state: Optional[str]
+    to_state: Optional[str]
+    message: str
+
+
+class LifecycleDashboardResponse(BaseModel):
+    """Response model for lifecycle dashboard."""
+    statistics: Dict[str, Any]
+    attention_required: Dict[str, Any]
+    state_transitions: Dict[str, List[str]]
+    enabled: bool
+
+
+@router.get(
+    "/prompts/stability/overview",
+    response_model=StabilityOverviewResponse,
+    summary="Get stability overview",
+    description="Returns overall prompt stability status (G17.7-E).",
+)
+async def get_stability_overview() -> StabilityOverviewResponse:
+    """Get stability overview for dashboard."""
+    try:
+        from services.prompt_stability import (
+            STABILITY_SCORING_ENABLED,
+            get_global_prompt_stability_dashboard,
+        )
+        from services.prompt_auto_freeze import get_all_frozen_prompts
+        from services.prompt_lifecycle import get_prompts_by_state
+
+        if not STABILITY_SCORING_ENABLED:
+            return StabilityOverviewResponse(
+                enabled=False,
+                total_prompts_tracked=0,
+                avg_stability_score=0.0,
+                by_label={},
+                frozen_count=0,
+                recovering_count=0,
+                attention_required=[],
+            )
+
+        dashboard = get_global_prompt_stability_dashboard()
+        frozen_prompts = get_all_frozen_prompts()
+        recovering_prompts = get_prompts_by_state("RECOVERING")
+
+        return StabilityOverviewResponse(
+            enabled=True,
+            total_prompts_tracked=dashboard.get("total_prompts_tracked", 0),
+            avg_stability_score=dashboard.get("avg_stability_score", 0.0),
+            by_label=dashboard.get("by_label", {}),
+            frozen_count=len(frozen_prompts),
+            recovering_count=len(recovering_prompts),
+            attention_required=dashboard.get("attention_required", [])[:10],
+        )
+
+    except ImportError:
+        return StabilityOverviewResponse(
+            enabled=False,
+            total_prompts_tracked=0,
+            avg_stability_score=0.0,
+            by_label={},
+            frozen_count=0,
+            recovering_count=0,
+            attention_required=[],
+        )
+    except Exception as e:
+        log.error(f"Failed to get stability overview: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get overview: {str(e)}")
+
+
+@router.get(
+    "/prompts/stability/score",
+    response_model=StabilityScoreResponse,
+    summary="Get stability score for a prompt",
+    description="Returns stability score and metrics for a prompt file (G17.7-E).",
+)
+async def get_stability_score_endpoint(
+    prompt_file: str = Query(..., description="Prompt file path"),
+) -> StabilityScoreResponse:
+    """Get stability score for a specific prompt."""
+    try:
+        from services.prompt_stability import get_prompt_stability, calculate_prompt_stability
+
+        result = get_prompt_stability(prompt_file)
+
+        if not result:
+            # Calculate fresh
+            result = calculate_prompt_stability(prompt_file)
+
+        return StabilityScoreResponse(
+            prompt_file=result.prompt_file,
+            stability_score=result.stability_score,
+            stability_label=result.stability_label,
+            metrics=StabilityMetricsResponse(
+                drift_history_score=result.metrics.drift_history_score,
+                rewrite_acceptance_rate=result.metrics.rewrite_acceptance_rate,
+                fallback_regression_rate=result.metrics.fallback_regression_rate,
+                persona_leak_score=result.metrics.persona_leak_score,
+                ai_act_conflict_score=result.metrics.ai_act_conflict_score,
+                redundancy_trend_score=result.metrics.redundancy_trend_score,
+                tuning_stability_score=result.metrics.tuning_stability_score,
+            ),
+            requires_attention=result.requires_attention,
+            last_updated=result.calculated_at,
+            history_length=len(result.history),
+        )
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Stability scoring not available")
+    except Exception as e:
+        log.error(f"Failed to get stability score: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get score: {str(e)}")
+
+
+@router.get(
+    "/prompts/freeze/list",
+    response_model=List[FreezeRecordResponse],
+    summary="Get all frozen prompts",
+    description="Returns list of all frozen prompts with reasons (G17.7-E).",
+)
+async def get_frozen_prompts_endpoint() -> List[FreezeRecordResponse]:
+    """Get all frozen prompts."""
+    try:
+        from services.prompt_auto_freeze import get_all_frozen_prompts
+
+        frozen = get_all_frozen_prompts()
+
+        return [
+            FreezeRecordResponse(
+                prompt_file=f.get("prompt_file", ""),
+                frozen=f.get("frozen", True),
+                freeze_reasons=f.get("freeze_reasons", []),
+                frozen_at=f.get("frozen_at"),
+                frozen_by=f.get("frozen_by", "auto"),
+                freeze_count=f.get("freeze_count", 1),
+            )
+            for f in frozen
+        ]
+
+    except ImportError:
+        return []
+    except Exception as e:
+        log.error(f"Failed to get frozen prompts: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get frozen prompts: {str(e)}")
+
+
+@router.post(
+    "/prompts/freeze",
+    response_model=FreezeActionResponse,
+    summary="Freeze a prompt (Admin only)",
+    description="Manually freeze a prompt with a reason (G17.7-E).",
+)
+async def freeze_prompt_endpoint(
+    prompt_file: str = Query(..., description="Prompt file to freeze"),
+    reason: str = Query(..., description="Reason for freezing"),
+    frozen_by: str = Query("admin", description="Who is freezing the prompt"),
+) -> FreezeActionResponse:
+    """Freeze a prompt manually."""
+    try:
+        from services.prompt_auto_freeze import freeze_prompt
+        from services.prompt_lifecycle import mark_frozen
+
+        result = freeze_prompt(
+            prompt_file=prompt_file,
+            reason=reason,
+            frozen_by=frozen_by,
+        )
+
+        if result.get("success"):
+            # Update lifecycle state
+            mark_frozen(prompt_file, reason)
+
+            return FreezeActionResponse(
+                success=True,
+                prompt_file=prompt_file,
+                action="FREEZE",
+                message=f"Prompt frozen successfully: {reason}",
+            )
+        else:
+            return FreezeActionResponse(
+                success=False,
+                prompt_file=prompt_file,
+                action="FREEZE",
+                message=result.get("error", "Failed to freeze prompt"),
+            )
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Auto-freeze not available")
+    except Exception as e:
+        log.error(f"Failed to freeze prompt: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to freeze: {str(e)}")
+
+
+@router.post(
+    "/prompts/unfreeze",
+    response_model=FreezeActionResponse,
+    summary="Unfreeze a prompt (Admin only)",
+    description="Manually unfreeze a frozen prompt (G17.7-E).",
+)
+async def unfreeze_prompt_endpoint(
+    prompt_file: str = Query(..., description="Prompt file to unfreeze"),
+    unfrozen_by: str = Query("admin", description="Who is unfreezing the prompt"),
+    reason: Optional[str] = Query(None, description="Reason for unfreezing"),
+) -> FreezeActionResponse:
+    """Unfreeze a prompt manually."""
+    try:
+        from services.prompt_auto_freeze import unfreeze_prompt
+        from services.prompt_lifecycle import mark_active
+
+        result = unfreeze_prompt(
+            prompt_file=prompt_file,
+            unfrozen_by=unfrozen_by,
+            reason=reason,
+        )
+
+        if result.get("success"):
+            # Update lifecycle state
+            mark_active(prompt_file, reason=reason or "Manual unfreeze", triggered_by=unfrozen_by)
+
+            return FreezeActionResponse(
+                success=True,
+                prompt_file=prompt_file,
+                action="UNFREEZE",
+                message=f"Prompt unfrozen successfully",
+            )
+        else:
+            return FreezeActionResponse(
+                success=False,
+                prompt_file=prompt_file,
+                action="UNFREEZE",
+                message=result.get("error", "Prompt is not frozen"),
+            )
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Auto-freeze not available")
+    except Exception as e:
+        log.error(f"Failed to unfreeze prompt: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to unfreeze: {str(e)}")
+
+
+@router.get(
+    "/prompts/recovery/history",
+    response_model=RecoveryHistoryResponse,
+    summary="Get recovery history for a prompt",
+    description="Returns recovery history for a prompt file (G17.7-E).",
+)
+async def get_recovery_history_endpoint(
+    prompt_file: str = Query(..., description="Prompt file path"),
+) -> RecoveryHistoryResponse:
+    """Get recovery history for a prompt."""
+    try:
+        from services.prompt_recovery import get_recovery_history
+
+        history = get_recovery_history(prompt_file)
+
+        return RecoveryHistoryResponse(
+            prompt_file=history.get("prompt_file", prompt_file),
+            total_recoveries=history.get("total_recoveries", 0),
+            total_failures=history.get("total_failures", 0),
+            success_rate=history.get("success_rate", 1.0),
+            last_successful_recovery=history.get("last_successful_recovery"),
+            recent_attempts=[
+                RecoveryAttemptResponse(
+                    attempt_id=a.get("attempt_id", ""),
+                    prompt_file=a.get("prompt_file", prompt_file),
+                    from_version=a.get("from_version", ""),
+                    to_version=a.get("to_version", ""),
+                    status=a.get("status", ""),
+                    triggered_at=a.get("triggered_at", ""),
+                    completed_at=a.get("completed_at"),
+                    error_message=a.get("error_message"),
+                )
+                for a in history.get("attempts", [])
+            ],
+        )
+
+    except ImportError:
+        return RecoveryHistoryResponse(
+            prompt_file=prompt_file,
+            total_recoveries=0,
+            total_failures=0,
+            success_rate=1.0,
+            last_successful_recovery=None,
+            recent_attempts=[],
+        )
+    except Exception as e:
+        log.error(f"Failed to get recovery history: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get history: {str(e)}")
+
+
+@router.post(
+    "/prompts/recovery/trigger",
+    response_model=Dict[str, Any],
+    summary="Trigger recovery for a prompt (Admin only)",
+    description="Triggers auto-recovery to last stable version (G17.7-E).",
+)
+async def trigger_recovery_endpoint(
+    prompt_file: str = Query(..., description="Prompt file to recover"),
+    triggered_by: str = Query("admin", description="Who is triggering recovery"),
+    force: bool = Query(False, description="Force recovery even if approval required"),
+) -> Dict[str, Any]:
+    """Trigger recovery for a prompt."""
+    try:
+        from services.prompt_recovery import trigger_auto_recovery
+        from services.prompt_lifecycle import mark_recovering
+
+        # Update lifecycle state
+        mark_recovering(prompt_file)
+
+        result = trigger_auto_recovery(
+            prompt_file=prompt_file,
+            triggered_by=triggered_by,
+            force=force,
+        )
+
+        return result
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Recovery system not available")
+    except Exception as e:
+        log.error(f"Failed to trigger recovery: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to trigger recovery: {str(e)}")
+
+
+@router.get(
+    "/prompts/lifecycle/state",
+    response_model=LifecycleStateResponse,
+    summary="Get lifecycle state for a prompt",
+    description="Returns current lifecycle state and valid transitions (G17.7-E).",
+)
+async def get_lifecycle_state_endpoint(
+    prompt_file: str = Query(..., description="Prompt file path"),
+) -> LifecycleStateResponse:
+    """Get lifecycle state for a prompt."""
+    try:
+        from services.prompt_lifecycle import get_lifecycle_state
+
+        state = get_lifecycle_state(prompt_file)
+
+        return LifecycleStateResponse(
+            prompt_file=state.get("prompt_file", prompt_file),
+            current_state=state.get("current_state", "ACTIVE"),
+            previous_state=state.get("previous_state"),
+            state_since=state.get("state_since", ""),
+            valid_transitions=state.get("valid_transitions", []),
+            total_transitions=state.get("total_transitions", 0),
+        )
+
+    except ImportError:
+        return LifecycleStateResponse(
+            prompt_file=prompt_file,
+            current_state="ACTIVE",
+            previous_state=None,
+            state_since="",
+            valid_transitions=[],
+            total_transitions=0,
+        )
+    except Exception as e:
+        log.error(f"Failed to get lifecycle state: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get state: {str(e)}")
+
+
+@router.post(
+    "/prompts/lifecycle/transition",
+    response_model=LifecycleTransitionResponse,
+    summary="Transition lifecycle state (Admin only)",
+    description="Manually transition a prompt to a new lifecycle state (G17.7-E).",
+)
+async def transition_lifecycle_state_endpoint(
+    prompt_file: str = Query(..., description="Prompt file path"),
+    new_state: str = Query(..., description="Target state"),
+    reason: str = Query(..., description="Reason for transition"),
+    triggered_by: str = Query("admin", description="Who is triggering transition"),
+    force: bool = Query(False, description="Force invalid transitions"),
+) -> LifecycleTransitionResponse:
+    """Transition lifecycle state for a prompt."""
+    try:
+        from services.prompt_lifecycle import transition_state
+
+        result = transition_state(
+            prompt_file=prompt_file,
+            new_state=new_state,
+            reason=reason,
+            triggered_by=triggered_by,
+            force=force,
+        )
+
+        if result.get("success"):
+            return LifecycleTransitionResponse(
+                success=True,
+                prompt_file=prompt_file,
+                from_state=result.get("from_state"),
+                to_state=result.get("to_state"),
+                message=f"Transitioned to {result.get('to_state')}",
+            )
+        else:
+            return LifecycleTransitionResponse(
+                success=False,
+                prompt_file=prompt_file,
+                from_state=None,
+                to_state=None,
+                message=result.get("error", "Transition failed"),
+            )
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Lifecycle management not available")
+    except Exception as e:
+        log.error(f"Failed to transition state: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to transition: {str(e)}")
+
+
+@router.get(
+    "/prompts/lifecycle/dashboard",
+    response_model=LifecycleDashboardResponse,
+    summary="Get lifecycle dashboard",
+    description="Returns comprehensive lifecycle dashboard data (G17.7-E).",
+)
+async def get_lifecycle_dashboard_endpoint() -> LifecycleDashboardResponse:
+    """Get lifecycle dashboard data."""
+    try:
+        from services.prompt_lifecycle import get_lifecycle_dashboard
+
+        dashboard = get_lifecycle_dashboard()
+
+        return LifecycleDashboardResponse(
+            statistics=dashboard.get("statistics", {}),
+            attention_required=dashboard.get("attention_required", {}),
+            state_transitions=dashboard.get("state_transitions", {}),
+            enabled=dashboard.get("enabled", False),
+        )
+
+    except ImportError:
+        return LifecycleDashboardResponse(
+            statistics={},
+            attention_required={},
+            state_transitions={},
+            enabled=False,
+        )
+    except Exception as e:
+        log.error(f"Failed to get lifecycle dashboard: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get dashboard: {str(e)}")
