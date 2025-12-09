@@ -27,6 +27,14 @@ from typing import Any, Dict, List, Set, TypedDict, Optional
 
 from services.prompt_builder import PromptBuilder
 
+# G19.1-MAP: Import branch mapping
+try:
+    from services.branch_mapping import map_frontend_branch_to_engine
+except ImportError:
+    def map_frontend_branch_to_engine(raw_value: str) -> str:
+        """Fallback if branch_mapping not available."""
+        return raw_value.lower().strip() if raw_value else "beratung"
+
 # G9.4: Import centralized min-length configuration
 try:
     from services.config_validation import get_min_words as get_central_min_words
@@ -335,7 +343,9 @@ def generate_short_labels(briefing_data: Dict[str, Any], lang: str = "de") -> Di
     Returns:
         Dict with BRANCH_CORE_LABEL, OFFERING_LABEL, REGULATORY_LABEL, BRANCH_CONTEXT_LABEL, BRANCH_SHORT_LABEL
     """
-    branche = briefing_data.get("branche", "").lower().strip()
+    # G19.1-MAP: Map frontend branch to engine key
+    raw_branch = briefing_data.get("branche", "") or briefing_data.get("branch", "") or ""
+    branche = map_frontend_branch_to_engine(raw_branch)
 
     # SPRINT G17.S: Get company size for BRANCH_SHORT_LABEL
     company_size = briefing_data.get("company_size", "").lower().strip()
@@ -1370,7 +1380,10 @@ class PromptEnhancer:
         Returns:
             HTML string with context information
         """
-        branche = briefing_data.get("branche", "")
+        # G19.1-MAP: Map frontend branch to engine key
+        raw_branch = briefing_data.get("branche", "") or briefing_data.get("branch", "") or ""
+        branche = map_frontend_branch_to_engine(raw_branch)
+
         groesse = briefing_data.get("unternehmensgroesse", "")
 
         if not branche or not groesse:
