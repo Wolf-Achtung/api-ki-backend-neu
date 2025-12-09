@@ -31,7 +31,7 @@ from services.prompt_builder import PromptBuilder
 try:
     from services.branch_mapping import map_frontend_branch_to_engine
 except ImportError:
-    def map_frontend_branch_to_engine(raw_value: str) -> str:  # type: ignore[misc]
+    def map_frontend_branch_to_engine(raw_value: str) -> str:
         """Fallback if branch_mapping not available."""
         return raw_value.lower().strip() if raw_value else "beratung"
 
