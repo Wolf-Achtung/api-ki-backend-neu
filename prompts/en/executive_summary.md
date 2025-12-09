@@ -31,6 +31,12 @@ ANTI-REDUNDANCY:
 - Roadmap details → see roadmap_90d.md / roadmap_12m.md
 - Here ONLY the essence, NO anticipation
 
+SPRINT G18 - BRANCH SENTENCE HARMONIZATION (STRICT!):
+- {{BRANCH_CORE_LABEL}} only 1× in entire report (Executive Summary)
+- After that ONLY use {{BRANCH_SHORT_LABEL}} or {{BRANCH_CONTEXT_LABEL}}
+- NO long industry descriptions like "consulting, implementation and operationalization..."
+- Prefer short, crisp industry references
+
 GUARDRAILS: Respect stated guardrails from strategic context.
 
 IMPORTANT:

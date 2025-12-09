@@ -138,15 +138,18 @@ def _get_fallback_content(section_name: str, size: str, lang: str) -> str:
     """Get fallback content for a section."""
     fallbacks = {
         "de": {
+            # SPRINT G18: Fallbacks um +15% verlängert für stabile Mindestlängen
             "roadmap_90d": f"""
                 <div class="auto-fallback">
                 <h4>90-Tage-Roadmap (Zusammenfassung)</h4>
                 <p>Die 90-Tage-Roadmap fokussiert auf schnelle Erfolge und stabile Grundlagen für die KI-Integration.
-                In den ersten Wochen (Phase 1) werden priorisierte Use Cases definiert und erste Workflows etabliert.
+                In den ersten Wochen (Phase 0-1) werden priorisierte Use Cases definiert und erste Workflows etabliert.
                 Die Pilotierung erfolgt in Phase 2 mit dokumentierten Qualitätsstandards bis Woche 8.
                 Die abschließende Konsolidierung in Phase 3 (Woche 9-13) mündet in einer klaren Entscheidung für die
                 Skalierung. Jede Phase enthält messbare Meilensteine und Verantwortlichkeiten angepasst an die
-                Unternehmensgröße {size}. Der Fokus liegt auf pragmatischer Umsetzung mit direktem Mehrwert.</p>
+                Unternehmensgröße {size}. Der Fokus liegt auf pragmatischer Umsetzung mit direktem Mehrwert.
+                Nutzen Sie das Starter Kit, um Phase 1 technisch umzusetzen. Die empfohlenen Tools unterstützen
+                die Phasen der Roadmap optimal. Erste Erfolge werden bereits nach 30 Tagen sichtbar.</p>
                 </div>
             """,
             "roadmap_12m": f"""
@@ -158,7 +161,9 @@ def _get_fallback_content(section_name: str, size: str, lang: str) -> str:
                 Q3 erweitert die Integration auf weitere Bereiche mit klaren Governance-Strukturen.
                 Q4 etabliert dauerhafte Prozesse, Monitoring und kontinuierliche Verbesserung.
                 Die Roadmap berücksichtigt die spezifischen Anforderungen für {size}-Unternehmen
-                und enthält quartalsweise Meilensteine sowie Erfolgskriterien.</p>
+                und enthält quartalsweise Meilensteine sowie Erfolgskriterien.
+                Nutzen Sie Förderprogramme, um die Investitionen in Q1-Q2 abzufedern.
+                Das Starter Kit ermöglicht einen kosteneffizienten Einstieg in die KI-Nutzung.</p>
                 </div>
             """,
             "recommendations": f"""
@@ -174,15 +179,18 @@ def _get_fallback_content(section_name: str, size: str, lang: str) -> str:
             """,
         },
         "en": {
+            # SPRINT G18: Fallbacks extended by +15% for stable minimum lengths
             "roadmap_90d": f"""
                 <div class="auto-fallback">
                 <h4>90-Day Roadmap (Summary)</h4>
                 <p>The 90-day roadmap focuses on quick wins and stable foundations for AI integration.
-                In the first weeks (Phase 1), prioritized use cases are defined and initial workflows established.
+                In the first weeks (Phase 0-1), prioritized use cases are defined and initial workflows established.
                 Piloting occurs in Phase 2 with documented quality standards through week 8.
                 The final consolidation in Phase 3 (weeks 9-13) leads to a clear decision for scaling.
                 Each phase contains measurable milestones and responsibilities adapted to the company size {size}.
-                The focus is on pragmatic implementation with direct value creation.</p>
+                The focus is on pragmatic implementation with direct value creation.
+                Use the Starter Kit to technically implement Phase 1. The recommended tools optimally
+                support the roadmap phases. Initial successes become visible after just 30 days.</p>
                 </div>
             """,
             "roadmap_12m": f"""
@@ -194,7 +202,9 @@ def _get_fallback_content(section_name: str, size: str, lang: str) -> str:
                 Q3 expands integration to additional areas with clear governance structures.
                 Q4 establishes permanent processes, monitoring, and continuous improvement.
                 The roadmap considers specific requirements for {size} companies
-                and includes quarterly milestones and success criteria.</p>
+                and includes quarterly milestones and success criteria.
+                Use funding programmes to cushion the investments in Q1-Q2.
+                The Starter Kit enables a cost-effective entry into AI usage.</p>
                 </div>
             """,
             "recommendations": f"""

@@ -34,6 +34,12 @@ ANTI-REDUNDANZ:
 - Details zu Roadmap → siehe roadmap_90d.md / roadmap_12m.md
 - Hier NUR die Essenz, KEINE Vorwegnahme
 
+SPRINT G18 - BRANCHENSÄTZE HARMONISIEREN (STRIKT!):
+- {{BRANCH_CORE_LABEL}} nur 1× im gesamten Report (Executive Summary)
+- Danach NUR {{BRANCH_SHORT_LABEL}} oder {{BRANCH_CONTEXT_LABEL}} verwenden
+- KEINE langen Branchenbeschreibungen wie "Beratung, Durchführung und Operationalisierung..."
+- Kurze, prägnante Branchenreferenzen bevorzugen
+
 GUARDRAILS: Respektiere angegebene Leitplanken aus strategischem Kontext.
 
 SPRINT N - SOLO PERSONA REGELN (STRIKT!):
