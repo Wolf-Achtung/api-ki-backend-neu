@@ -1,0 +1,113 @@
+{
+  "briefing_id": 243,
+  "analysis_id": 216,
+  "user_email": "wolf.hohl@web.de",
+  "created_at": "2025-12-09 12:40:30.194103+00:00",
+  "lang": "en",
+  "scores": {
+    "overall": 0,
+    "governance": 0,
+    "security": 0,
+    "value": 0,
+    "enablement": 0
+  },
+  "answers": {
+    "branche": "consulting",
+    "country": "France",
+    "ki_ziele": [
+      "efficiency",
+      "scaling",
+      "quality",
+      "innovation",
+      "market_expansion"
+    ],
+    "meldewege": "established",
+    "ki_einsatz": [
+      "document_creation",
+      "analysis_automation",
+      "customer_communication",
+      "research"
+    ],
+    "zeitbudget": "20h_week",
+    "datenschutz": true,
+    "ki_projekte": "Document automation for client proposals, AI-assisted market research, email drafting systems, automated reporting dashboards, and knowledge management platform for consultants.",
+    "zielgruppen": [
+      "B2B",
+      "enterprises",
+      "sme",
+      "public_sector"
+    ],
+    "datenquellen": [
+      "crm",
+      "microsoft365",
+      "analytics",
+      "customer_feedback",
+      "project_management"
+    ],
+    "jahresumsatz": "1m_to_2m",
+    "ki_hemmnisse": [
+      "talent",
+      "integration",
+      "cost",
+      "change_resistance"
+    ],
+    "ki_kompetenz": "intermediate",
+    "loeschregeln": "gdpr_compliant",
+    "risikofreude": "60",
+    "hauptleistung": "Business and digital transformation consulting for European enterprises, specializing in AI adoption strategies, process optimization, and cross-border digital service delivery.",
+    "ki_guardrails": "",
+    "marktposition": "established",
+    "pilot_bereich": "consulting",
+    "vision_3_jahre": "Become a leading EU consulting firm for AI-driven business transformation, serving clients across multiple European countries with standardized yet localized methodologies.",
+    "ai_act_kenntnis": "intermediate",
+    "anwendungsfaelle": [
+      "automation",
+      "knowledge",
+      "customer_communication",
+      "analysis_automation",
+      "content_production"
+    ],
+    "it_infrastruktur": "hybrid",
+    "vorhandene_tools": [
+      "microsoft365",
+      "salesforce",
+      "notion",
+      "slack",
+      "chatgpt",
+      "hubspot",
+      "asana"
+    ],
+    "change_management": "yes",
+    "roadmap_vorhanden": "yes",
+    "vision_prioritaet": "high",
+    "erfahrung_beratung": "high",
+    "folgenabschaetzung": "conducted",
+    "innovationsprozess": "structured",
+    "investitionsbudget": "50k_to_100k",
+    "prozesse_papierlos": "yes",
+    "regulierte_branche": [
+      "no_regulation"
+    ],
+    "strategische_ziele": "Scale digital service delivery, establish presence in 5+ EU countries, develop AI-first consulting products, achieve 50% automation of routine deliverables, and build strategic partnerships with technology providers.",
+    "unternehmensgroesse": "kmu",
+    "automatisierungsgrad": "medium",
+    "benchmark_wettbewerb": "above_average",
+    "digitalisierungsgrad": "high",
+    "interesse_foerderung": "yes",
+    "trainings_interessen": [
+      "ai_strategy",
+      "automation",
+      "data_analytics",
+      "compliance",
+      "leadership"
+    ],
+    "technische_massnahmen": "advanced",
+    "governance_richtlinien": "established",
+    "interne_ki_kompetenzen": "intermediate",
+    "bisherige_foerdermittel": "national_grants",
+    "datenschutzbeauftragter": "appointed",
+    "massnahmen_komplexitaet": "medium",
+    "zeitersparnis_prioritaet": "Reporting, documentation, proposal creation, market research, and client communication consume the most time. Cross-language content adaptation is also resource-intensive.",
+    "geschaeftsmodell_evolution": "Expand AI-powered consulting services across EU markets, develop multilingual service delivery capabilities, and create scalable digital products for SME transformation."
+  }
+}
