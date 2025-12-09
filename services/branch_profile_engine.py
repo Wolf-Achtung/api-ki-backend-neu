@@ -1466,7 +1466,7 @@ def generate_branch_risks_html(
 def get_branch_profile_html_sections(
     briefing: Dict[str, Any],
     lang: str = "de"
-) -> Dict[str, str]:
+) -> Dict[str, Any]:
     """
     Generate all branch profile HTML sections for report.
 
