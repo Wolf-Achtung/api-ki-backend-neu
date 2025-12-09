@@ -1309,12 +1309,347 @@ def inject_predictive_funding_into_sections(
 
 
 # =============================================================================
+# G17.8-C: ROI IMPACT ANALYZER
+# =============================================================================
+#
+# Track and analyze ROI performance for funding programmes to enable
+# predictive boosting and intelligent rebalancing.
+# =============================================================================
+
+from datetime import datetime, timezone, timedelta
+from collections import defaultdict
+
+ROI_TRACKING_ENABLED = os.getenv("ROI_TRACKING_ENABLED", "true").lower() == "true"
+ROI_ROLLING_WINDOW_30D = 30
+ROI_ROLLING_WINDOW_90D = 90
+ROI_PREDICTIVE_BOOST_MAX = float(os.getenv("ROI_PREDICTIVE_BOOST_MAX", "1.3"))
+ROI_PREDICTIVE_BOOST_MIN = float(os.getenv("ROI_PREDICTIVE_BOOST_MIN", "0.7"))
+ROI_MIN_SAMPLES_FOR_BOOST = int(os.getenv("ROI_MIN_SAMPLES_FOR_BOOST", "5"))
+
+
+@dataclass
+class ROIRecord:
+    """A single ROI tracking record."""
+    programme_id: str
+    roi_value: float
+    timestamp: str
+    segment_id: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+
+@dataclass
+class ProgrammeROIStats:
+    """ROI statistics for a programme."""
+    programme_id: str
+    roi_30d: float  # 30-day rolling average ROI
+    roi_90d: float  # 90-day rolling average ROI
+    sample_count_30d: int
+    sample_count_90d: int
+    predictive_boost: float  # Calculated boost factor
+    trend: str  # "rising", "stable", "declining"
+    last_updated: str
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "program": self.programme_id,
+            "roi_30d": round(self.roi_30d, 2),
+            "roi_90d": round(self.roi_90d, 2),
+            "sample_count_30d": self.sample_count_30d,
+            "sample_count_90d": self.sample_count_90d,
+            "predictive_boost": round(self.predictive_boost, 2),
+            "trend": self.trend,
+            "last_updated": self.last_updated
+        }
+
+
+# In-memory ROI storage
+_roi_records: List[ROIRecord] = []
+_roi_cache: Dict[str, ProgrammeROIStats] = {}
+
+
+def track_roi_for_programme(
+    programme_id: str,
+    roi_value: float,
+    segment_id: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None
+) -> ROIRecord:
+    """
+    Track ROI performance for a funding programme.
+
+    Args:
+        programme_id: The programme identifier
+        roi_value: ROI value (e.g., 1.5 = 50% return, 0.8 = 20% loss)
+        segment_id: Optional segment identifier
+        metadata: Optional additional metadata
+
+    Returns:
+        Created ROI record
+    """
+    if not ROI_TRACKING_ENABLED:
+        return ROIRecord(
+            programme_id=programme_id,
+            roi_value=roi_value,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            segment_id=segment_id,
+            metadata=metadata
+        )
+
+    record = ROIRecord(
+        programme_id=programme_id,
+        roi_value=roi_value,
+        timestamp=datetime.now(timezone.utc).isoformat(),
+        segment_id=segment_id,
+        metadata=metadata or {}
+    )
+    _roi_records.append(record)
+
+    # Invalidate cache for this programme
+    if programme_id in _roi_cache:
+        del _roi_cache[programme_id]
+
+    log.debug(f"Tracked ROI for {programme_id}: {roi_value}")
+    return record
+
+
+def get_programme_roi_average(
+    programme_id: str,
+    window_days: int = 30
+) -> float:
+    """
+    Get rolling average ROI for a programme.
+
+    Args:
+        programme_id: The programme identifier
+        window_days: Number of days to include in rolling average
+
+    Returns:
+        Average ROI value (1.0 = break-even)
+    """
+    if not ROI_TRACKING_ENABLED or not _roi_records:
+        return 1.0
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=window_days)
+    cutoff_str = cutoff.isoformat()
+
+    relevant_records = [
+        r for r in _roi_records
+        if r.programme_id == programme_id and r.timestamp >= cutoff_str
+    ]
+
+    if not relevant_records:
+        return 1.0
+
+    total_roi = sum(r.roi_value for r in relevant_records)
+    return total_roi / len(relevant_records)
+
+
+def get_programme_roi_stats(programme_id: str) -> ProgrammeROIStats:
+    """
+    Get comprehensive ROI statistics for a programme.
+
+    Args:
+        programme_id: The programme identifier
+
+    Returns:
+        ProgrammeROIStats with all ROI metrics
+    """
+    # Check cache first
+    if programme_id in _roi_cache:
+        cached = _roi_cache[programme_id]
+        # Cache valid for 1 hour
+        cache_time = datetime.fromisoformat(cached.last_updated.replace("Z", "+00:00"))
+        if datetime.now(timezone.utc) - cache_time < timedelta(hours=1):
+            return cached
+
+    now = datetime.now(timezone.utc)
+    cutoff_30d = (now - timedelta(days=30)).isoformat()
+    cutoff_90d = (now - timedelta(days=90)).isoformat()
+
+    records_30d = [
+        r for r in _roi_records
+        if r.programme_id == programme_id and r.timestamp >= cutoff_30d
+    ]
+    records_90d = [
+        r for r in _roi_records
+        if r.programme_id == programme_id and r.timestamp >= cutoff_90d
+    ]
+
+    roi_30d = (
+        sum(r.roi_value for r in records_30d) / len(records_30d)
+        if records_30d else 1.0
+    )
+    roi_90d = (
+        sum(r.roi_value for r in records_90d) / len(records_90d)
+        if records_90d else 1.0
+    )
+
+    # Calculate predictive boost
+    predictive_boost = apply_roi_predictive_boost(
+        roi_30d, roi_90d, len(records_30d), len(records_90d)
+    )
+
+    # Determine trend
+    if len(records_30d) >= 3 and len(records_90d) >= 5:
+        if roi_30d > roi_90d * 1.1:
+            trend = "rising"
+        elif roi_30d < roi_90d * 0.9:
+            trend = "declining"
+        else:
+            trend = "stable"
+    else:
+        trend = "stable"
+
+    stats = ProgrammeROIStats(
+        programme_id=programme_id,
+        roi_30d=roi_30d,
+        roi_90d=roi_90d,
+        sample_count_30d=len(records_30d),
+        sample_count_90d=len(records_90d),
+        predictive_boost=predictive_boost,
+        trend=trend,
+        last_updated=now.isoformat()
+    )
+
+    _roi_cache[programme_id] = stats
+    return stats
+
+
+def apply_roi_predictive_boost(
+    roi_30d: float,
+    roi_90d: float,
+    sample_count_30d: int,
+    sample_count_90d: int
+) -> float:
+    """
+    Calculate predictive boost factor based on ROI performance.
+
+    Uses rolling average ROI to predict future performance and applies
+    a boost factor for recommendations.
+
+    Args:
+        roi_30d: 30-day rolling average ROI
+        roi_90d: 90-day rolling average ROI
+        sample_count_30d: Number of samples in 30-day window
+        sample_count_90d: Number of samples in 90-day window
+
+    Returns:
+        Boost factor (e.g., 1.12 = 12% boost, 0.88 = 12% reduction)
+    """
+    # Need minimum samples for reliable boost
+    if sample_count_30d < ROI_MIN_SAMPLES_FOR_BOOST:
+        return 1.0
+
+    # Base boost on 30-day ROI
+    # ROI of 1.5 (50% return) -> boost of 1.15
+    # ROI of 0.8 (20% loss) -> boost of 0.85
+    base_boost = 1.0 + ((roi_30d - 1.0) * 0.3)
+
+    # Trend adjustment: if 30d ROI > 90d ROI, extra boost
+    if sample_count_90d >= ROI_MIN_SAMPLES_FOR_BOOST:
+        trend_factor = 1.0 + ((roi_30d - roi_90d) * 0.1)
+        base_boost *= trend_factor
+
+    # Confidence adjustment based on sample size
+    confidence = min(1.0, sample_count_30d / 10)
+    adjusted_boost = 1.0 + ((base_boost - 1.0) * confidence)
+
+    # Clamp to allowed range
+    return max(ROI_PREDICTIVE_BOOST_MIN, min(ROI_PREDICTIVE_BOOST_MAX, adjusted_boost))
+
+
+def get_all_programme_roi_stats() -> Dict[str, ProgrammeROIStats]:
+    """Get ROI stats for all tracked programmes."""
+    programme_ids = set(r.programme_id for r in _roi_records)
+    return {pid: get_programme_roi_stats(pid) for pid in programme_ids}
+
+
+def apply_roi_boost_to_recommendations(
+    recommendations: List[FundingRecommendation]
+) -> List[FundingRecommendation]:
+    """
+    Apply ROI-based boost to funding recommendations.
+
+    Modifies relevance scores based on historical ROI performance.
+
+    Args:
+        recommendations: List of funding recommendations
+
+    Returns:
+        Updated recommendations with ROI boost applied
+    """
+    if not ROI_TRACKING_ENABLED:
+        return recommendations
+
+    for rec in recommendations:
+        stats = get_programme_roi_stats(rec.program_id)
+        if stats.sample_count_30d >= ROI_MIN_SAMPLES_FOR_BOOST:
+            original_score = rec.relevance_score
+            boosted_score = min(1.0, original_score * stats.predictive_boost)
+            rec.relevance_score = round(boosted_score, 2)
+            log.debug(
+                f"Applied ROI boost to {rec.program_id}: "
+                f"{original_score} -> {boosted_score} (boost={stats.predictive_boost})"
+            )
+
+    # Re-sort by boosted scores
+    recommendations.sort(key=lambda x: x.relevance_score, reverse=True)
+    return recommendations
+
+
+def get_roi_impact_summary() -> Dict[str, Any]:
+    """Get summary of ROI impact across all programmes."""
+    if not _roi_records:
+        return {
+            "enabled": ROI_TRACKING_ENABLED,
+            "total_records": 0,
+            "programmes_tracked": 0,
+            "average_roi": 1.0,
+            "programmes_with_boost": 0
+        }
+
+    all_stats = get_all_programme_roi_stats()
+
+    programmes_with_boost = sum(
+        1 for s in all_stats.values()
+        if s.sample_count_30d >= ROI_MIN_SAMPLES_FOR_BOOST
+    )
+
+    all_roi_values = [r.roi_value for r in _roi_records]
+
+    return {
+        "enabled": ROI_TRACKING_ENABLED,
+        "total_records": len(_roi_records),
+        "programmes_tracked": len(all_stats),
+        "average_roi": round(sum(all_roi_values) / len(all_roi_values), 2),
+        "programmes_with_boost": programmes_with_boost,
+        "top_performers": [
+            s.to_dict() for s in sorted(
+                all_stats.values(),
+                key=lambda x: x.roi_30d,
+                reverse=True
+            )[:5]
+        ]
+    }
+
+
+def clear_roi_records() -> int:
+    """Clear all ROI records. Returns count of cleared records."""
+    global _roi_records, _roi_cache
+    count = len(_roi_records)
+    _roi_records = []
+    _roi_cache = {}
+    log.info(f"Cleared {count} ROI records")
+    return count
+
+
+# =============================================================================
 # MODULE INITIALIZATION
 # =============================================================================
 
 log.info(
-    "[G11/G17.2-C] Funding Recommender loaded - premium=%s, insights=%s, predictive=%s",
+    "[G11/G17.2-C/G17.8-C] Funding Recommender loaded - premium=%s, insights=%s, predictive=%s, roi_tracking=%s",
     ENABLE_PREMIUM_FUNDING,
     FUNDING_INSIGHTS_ENABLED,
     FUNDING_PREDICTIVE_ENABLED,
+    ROI_TRACKING_ENABLED,
 )
