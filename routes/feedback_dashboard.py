@@ -2631,3 +2631,536 @@ async def get_lifecycle_dashboard_endpoint() -> LifecycleDashboardResponse:
     except Exception as e:
         log.error(f"Failed to get lifecycle dashboard: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get dashboard: {str(e)}")
+
+
+# =============================================================================
+# G17.8: FUNDING AUTO-OPTIMIZER DASHBOARD ENDPOINTS
+# =============================================================================
+
+class DistributionProgrammeResponse(BaseModel):
+    """Distribution data for a single programme."""
+    programme_id: str
+    programme_name: str
+    expected_pct: float
+    actual_pct: float
+    delta_pct: float
+    recommendation_count: int
+    rebalancing_required: bool
+    representation_status: str
+
+
+class DistributionAnalysisResponse(BaseModel):
+    """Distribution analysis response."""
+    analysis_id: str
+    timestamp: str
+    enabled: bool
+    total_recommendations: int
+    overrepresented: List[DistributionProgrammeResponse]
+    underrepresented: List[DistributionProgrammeResponse]
+    balanced: List[DistributionProgrammeResponse]
+    delta_score: float
+    rebalancing_required: bool
+
+
+class ConfidenceStateResponse(BaseModel):
+    """Confidence state for a programme."""
+    programme_id: str
+    base_confidence: float
+    current_adjustment: float
+    effective_confidence: float
+    roi_score: float
+    distribution_penalty: float
+
+
+class ConfidenceSummaryResponse(BaseModel):
+    """Summary of confidence states."""
+    enabled: bool
+    total_programmes: int
+    boosted_count: int
+    penalized_count: int
+    neutral_count: int
+    average_adjustment: float
+    max_boost: float
+    max_penalty: float
+
+
+class ROIStatsResponse(BaseModel):
+    """ROI statistics for a programme."""
+    programme_id: str
+    roi_30d: float
+    roi_90d: float
+    sample_count_30d: int
+    sample_count_90d: int
+    predictive_boost: float
+    trend: str
+
+
+class ROISummaryResponse(BaseModel):
+    """Summary of ROI tracking."""
+    enabled: bool
+    total_records: int
+    programmes_tracked: int
+    average_roi: float
+    programmes_with_boost: int
+    top_performers: List[Dict[str, Any]]
+
+
+class OptimizationProposalResponse(BaseModel):
+    """Optimization proposal response."""
+    proposal_id: str
+    programme_id: str
+    programme_name: str
+    action: str
+    current_value: float
+    proposed_value: float
+    change_pct: float
+    reason: str
+    confidence: float
+    data_points: int
+
+
+class OptimizationRunResponse(BaseModel):
+    """Optimization run response."""
+    run_id: str
+    timestamp: str
+    status: str
+    proposals_count: int
+    applied_count: int
+    skipped_count: int
+    distribution_delta_before: float
+    distribution_delta_after: float
+    dry_run: bool
+    duration_ms: int
+
+
+class OptimizerStateResponse(BaseModel):
+    """Optimizer state response."""
+    enabled: bool
+    last_run_id: Optional[str]
+    last_run_timestamp: Optional[str]
+    last_run_status: Optional[str]
+    next_scheduled_run: Optional[str]
+    total_runs: int
+    total_proposals_applied: int
+    current_distribution_delta: float
+    auto_apply_enabled: bool
+    dry_run_mode: bool
+
+
+class PatchSafetyCheckResponse(BaseModel):
+    """Safety check response."""
+    check_name: str
+    result: str
+    message: str
+
+
+class FundingPatchResponse(BaseModel):
+    """Funding patch response."""
+    patch_id: str
+    created_at: str
+    patch_type: str
+    status: str
+    programme_ids: List[str]
+    total_change_impact: float
+    confidence: float
+    safety_checks: List[PatchSafetyCheckResponse]
+    reviewed_by: Optional[str]
+    applied_at: Optional[str]
+
+
+class PatchGateStatusResponse(BaseModel):
+    """Patch gate status response."""
+    enabled: bool
+    auto_approve: bool
+    require_review: bool
+    total_patches: int
+    pending_count: int
+    blocked_count: int
+    rollback_window_hours: int
+
+
+@router.get(
+    "/funding/distribution",
+    response_model=DistributionAnalysisResponse,
+    summary="Get funding distribution analysis",
+    description="Returns analysis of funding programme distribution (G17.8-A).",
+)
+async def get_funding_distribution_endpoint() -> DistributionAnalysisResponse:
+    """Get funding distribution analysis."""
+    try:
+        from services.funding_distribution import analyze_distribution, FUNDING_DISTRIBUTION_ENABLED
+
+        if not FUNDING_DISTRIBUTION_ENABLED:
+            return DistributionAnalysisResponse(
+                analysis_id="",
+                timestamp="",
+                enabled=False,
+                total_recommendations=0,
+                overrepresented=[],
+                underrepresented=[],
+                balanced=[],
+                delta_score=0.0,
+                rebalancing_required=False,
+            )
+
+        result = analyze_distribution()
+
+        return DistributionAnalysisResponse(
+            analysis_id=result.analysis_id,
+            timestamp=result.timestamp,
+            enabled=result.enabled,
+            total_recommendations=result.total_recommendations,
+            overrepresented=[
+                DistributionProgrammeResponse(**p.to_dict()) for p in result.overrepresented
+            ],
+            underrepresented=[
+                DistributionProgrammeResponse(**p.to_dict()) for p in result.underrepresented
+            ],
+            balanced=[
+                DistributionProgrammeResponse(**p.to_dict()) for p in result.balanced
+            ],
+            delta_score=result.delta_score,
+            rebalancing_required=result.rebalancing_required,
+        )
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Distribution analyzer not available")
+    except Exception as e:
+        log.error(f"Failed to get distribution: {e}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+@router.get(
+    "/funding/confidence",
+    response_model=ConfidenceSummaryResponse,
+    summary="Get confidence summary",
+    description="Returns summary of funding confidence adjustments (G17.8-B).",
+)
+async def get_funding_confidence_endpoint() -> ConfidenceSummaryResponse:
+    """Get funding confidence summary."""
+    try:
+        from services.funding_confidence_rebalancer import get_adjustment_summary
+
+        summary = get_adjustment_summary()
+
+        return ConfidenceSummaryResponse(**summary)
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Confidence rebalancer not available")
+    except Exception as e:
+        log.error(f"Failed to get confidence: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get confidence: {str(e)}")
+
+
+@router.post(
+    "/funding/rebalance",
+    summary="Trigger funding rebalance",
+    description="Manually trigger a funding rebalance based on current distribution (G17.8-B).",
+)
+async def trigger_funding_rebalance_endpoint() -> Dict[str, Any]:
+    """Trigger funding rebalance."""
+    try:
+        from services.funding_distribution import analyze_distribution
+        from services.funding_confidence_rebalancer import rebalance_from_distribution
+
+        distribution = analyze_distribution()
+        result = rebalance_from_distribution(distribution.to_dict())
+
+        return result.to_dict()
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Rebalancer not available")
+    except Exception as e:
+        log.error(f"Failed to rebalance: {e}")
+        raise HTTPException(status_code=500, detail=f"Rebalance failed: {str(e)}")
+
+
+@router.get(
+    "/funding/roi",
+    response_model=ROISummaryResponse,
+    summary="Get ROI tracking summary",
+    description="Returns summary of ROI tracking and predictive boost data (G17.8-C).",
+)
+async def get_funding_roi_endpoint() -> ROISummaryResponse:
+    """Get ROI tracking summary."""
+    try:
+        from services.funding_recommender import get_roi_impact_summary
+
+        summary = get_roi_impact_summary()
+
+        return ROISummaryResponse(**summary)
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="ROI tracking not available")
+    except Exception as e:
+        log.error(f"Failed to get ROI summary: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get ROI: {str(e)}")
+
+
+@router.get(
+    "/funding/optimizer/state",
+    response_model=OptimizerStateResponse,
+    summary="Get optimizer state",
+    description="Returns current state of the funding auto-optimizer (G17.8-D).",
+)
+async def get_optimizer_state_endpoint() -> OptimizerStateResponse:
+    """Get optimizer state."""
+    try:
+        from services.funding_auto_optimizer import get_optimizer_state
+
+        state = get_optimizer_state()
+
+        return OptimizerStateResponse(**state.to_dict())
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Optimizer not available")
+    except Exception as e:
+        log.error(f"Failed to get optimizer state: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get state: {str(e)}")
+
+
+@router.post(
+    "/funding/optimizer/run",
+    summary="Run optimization cycle",
+    description="Manually trigger an optimization cycle (G17.8-D).",
+)
+async def run_optimization_cycle_endpoint(
+    dry_run: bool = Query(True, description="Run in dry-run mode"),
+    force: bool = Query(False, description="Force run regardless of interval"),
+) -> Dict[str, Any]:
+    """Run optimization cycle."""
+    try:
+        from services.funding_auto_optimizer import run_optimization_cycle
+
+        result = run_optimization_cycle(dry_run=dry_run, force=force)
+
+        return {
+            "run_id": result.run_id,
+            "status": result.status.value,
+            "proposals_count": len(result.proposals),
+            "applied_count": result.applied_count,
+            "distribution_delta_before": result.distribution_delta_before,
+            "distribution_delta_after": result.distribution_delta_after,
+            "dry_run": result.dry_run,
+        }
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Optimizer not available")
+    except Exception as e:
+        log.error(f"Failed to run optimization: {e}")
+        raise HTTPException(status_code=500, detail=f"Optimization failed: {str(e)}")
+
+
+@router.get(
+    "/funding/optimizer/history",
+    summary="Get optimization history",
+    description="Returns history of optimization runs (G17.8-D).",
+)
+async def get_optimization_history_endpoint(
+    limit: int = Query(10, ge=1, le=50, description="Max runs to return"),
+) -> List[Dict[str, Any]]:
+    """Get optimization history."""
+    try:
+        from services.funding_auto_optimizer import get_optimization_history
+
+        return get_optimization_history(limit=limit)
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Optimizer not available")
+    except Exception as e:
+        log.error(f"Failed to get history: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get history: {str(e)}")
+
+
+@router.get(
+    "/funding/optimizer/proposals",
+    summary="Get pending proposals",
+    description="Returns pending optimization proposals from the last dry run (G17.8-D).",
+)
+async def get_pending_proposals_endpoint() -> List[Dict[str, Any]]:
+    """Get pending proposals."""
+    try:
+        from services.funding_auto_optimizer import get_pending_proposals
+
+        return get_pending_proposals()
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Optimizer not available")
+    except Exception as e:
+        log.error(f"Failed to get proposals: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get proposals: {str(e)}")
+
+
+@router.post(
+    "/funding/optimizer/proposals/{proposal_id}/approve",
+    summary="Approve proposal",
+    description="Approve and apply a specific proposal (G17.8-D).",
+)
+async def approve_proposal_endpoint(proposal_id: str) -> Dict[str, Any]:
+    """Approve a proposal."""
+    try:
+        from services.funding_auto_optimizer import approve_proposal
+
+        return approve_proposal(proposal_id)
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Optimizer not available")
+    except Exception as e:
+        log.error(f"Failed to approve proposal: {e}")
+        raise HTTPException(status_code=500, detail=f"Approval failed: {str(e)}")
+
+
+@router.get(
+    "/funding/patches",
+    summary="Get funding patches",
+    description="Returns list of funding patches (G17.8-E).",
+)
+async def get_patches_endpoint(
+    status: Optional[str] = Query(None, description="Filter by status"),
+    limit: int = Query(20, ge=1, le=100, description="Max patches to return"),
+) -> List[Dict[str, Any]]:
+    """Get funding patches."""
+    try:
+        from services.funding_patch_gate import get_patch_history, get_pending_patches
+
+        if status == "pending":
+            return get_pending_patches()
+
+        return get_patch_history(limit=limit)
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Patch gate not available")
+    except Exception as e:
+        log.error(f"Failed to get patches: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get patches: {str(e)}")
+
+
+@router.get(
+    "/funding/patches/status",
+    response_model=PatchGateStatusResponse,
+    summary="Get patch gate status",
+    description="Returns current status of the patch gate (G17.8-E).",
+)
+async def get_patch_gate_status_endpoint() -> PatchGateStatusResponse:
+    """Get patch gate status."""
+    try:
+        from services.funding_patch_gate import get_patch_gate_status
+
+        status = get_patch_gate_status()
+
+        return PatchGateStatusResponse(**status)
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Patch gate not available")
+    except Exception as e:
+        log.error(f"Failed to get patch status: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get status: {str(e)}")
+
+
+@router.post(
+    "/funding/patches/{patch_id}/approve",
+    summary="Approve funding patch",
+    description="Approve a pending funding patch (G17.8-E).",
+)
+async def approve_funding_patch_endpoint(
+    patch_id: str,
+    reviewer: str = Query("admin", description="Reviewer ID"),
+    notes: str = Query("", description="Approval notes"),
+) -> Dict[str, Any]:
+    """Approve a funding patch."""
+    try:
+        from services.funding_patch_gate import approve_patch
+
+        return approve_patch(patch_id, reviewer, notes)
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Patch gate not available")
+    except Exception as e:
+        log.error(f"Failed to approve patch: {e}")
+        raise HTTPException(status_code=500, detail=f"Approval failed: {str(e)}")
+
+
+@router.post(
+    "/funding/patches/{patch_id}/reject",
+    summary="Reject patch",
+    description="Reject a pending funding patch (G17.8-E).",
+)
+async def reject_patch_endpoint(
+    patch_id: str,
+    reviewer: str = Query("admin", description="Reviewer ID"),
+    reason: str = Query("", description="Rejection reason"),
+) -> Dict[str, Any]:
+    """Reject a patch."""
+    try:
+        from services.funding_patch_gate import reject_patch
+
+        return reject_patch(patch_id, reviewer, reason)
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Patch gate not available")
+    except Exception as e:
+        log.error(f"Failed to reject patch: {e}")
+        raise HTTPException(status_code=500, detail=f"Rejection failed: {str(e)}")
+
+
+@router.post(
+    "/funding/patches/{patch_id}/apply",
+    summary="Apply patch",
+    description="Apply an approved funding patch (G17.8-E).",
+)
+async def apply_patch_endpoint(patch_id: str) -> Dict[str, Any]:
+    """Apply a patch."""
+    try:
+        from services.funding_patch_gate import apply_patch
+
+        return apply_patch(patch_id)
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Patch gate not available")
+    except Exception as e:
+        log.error(f"Failed to apply patch: {e}")
+        raise HTTPException(status_code=500, detail=f"Apply failed: {str(e)}")
+
+
+@router.post(
+    "/funding/patches/{patch_id}/rollback",
+    summary="Rollback patch",
+    description="Rollback an applied funding patch (G17.8-E).",
+)
+async def rollback_patch_endpoint(
+    patch_id: str,
+    reason: str = Query("", description="Rollback reason"),
+) -> Dict[str, Any]:
+    """Rollback a patch."""
+    try:
+        from services.funding_patch_gate import rollback_patch
+
+        return rollback_patch(patch_id, reason)
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Patch gate not available")
+    except Exception as e:
+        log.error(f"Failed to rollback patch: {e}")
+        raise HTTPException(status_code=500, detail=f"Rollback failed: {str(e)}")
+
+
+@router.get(
+    "/funding/patches/audit",
+    summary="Get patch audit log",
+    description="Returns audit log for funding patches (G17.8-E).",
+)
+async def get_patch_audit_endpoint(
+    patch_id: Optional[str] = Query(None, description="Filter by patch ID"),
+    limit: int = Query(50, ge=1, le=200, description="Max entries to return"),
+) -> List[Dict[str, Any]]:
+    """Get patch audit log."""
+    try:
+        from services.funding_patch_gate import get_audit_log
+
+        return get_audit_log(patch_id=patch_id, limit=limit)
+
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Patch gate not available")
+    except Exception as e:
+        log.error(f"Failed to get audit log: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get audit: {str(e)}")
