@@ -908,3 +908,548 @@ def generate_sample_data(num_reports: int = 100) -> None:
             )
 
     log.info(f"Generated {num_reports} sample reports with tool data")
+
+
+# =============================================================================
+# G19: TOOLS × BRANCH INTELLIGENCE LINKING
+# =============================================================================
+#
+# Segment-specific tool boosts and branch relevance scoring.
+# Produces TOOLS_BRANCH_ALIGNMENT_HTML for PDF templates.
+# =============================================================================
+
+TOOLS_BRANCH_ALIGNMENT_ENABLED = os.environ.get("TOOLS_BRANCH_ALIGNMENT_ENABLED", "1") == "1"
+
+# Branch-specific tool categories and boosts
+# Maps branch to tool categories with boost factors
+BRANCH_TOOL_BOOSTS: Dict[str, Dict[str, Tuple[List[str], float]]] = {
+    "beratung": {
+        "text_automation": (
+            ["ChatGPT", "Claude", "Jasper", "Copy.ai", "Writesonic", "Notion AI"],
+            1.4
+        ),
+        "research": (
+            ["Perplexity", "Tavily", "Exa", "You.com", "Phind"],
+            1.35
+        ),
+        "analysis": (
+            ["Excel", "Google Sheets", "Airtable", "Notion", "Coda"],
+            1.3
+        ),
+        "documentation": (
+            ["Notion", "Confluence", "Google Docs", "Word", "Obsidian"],
+            1.25
+        ),
+        "meeting": (
+            ["Fireflies.ai", "Otter.ai", "tl;dv", "Fathom", "Grain"],
+            1.3
+        ),
+    },
+    "finanzen": {
+        "reporting": (
+            ["Power BI", "Tableau", "Looker", "Metabase", "Superset", "Excel"],
+            1.4
+        ),
+        "risk_analytics": (
+            ["DataDog", "Splunk", "Grafana", "Prometheus", "Evidently AI"],
+            1.35
+        ),
+        "governance": (
+            ["MLflow", "Weights & Biases", "Neptune.ai", "Comet", "ClearML"],
+            1.3
+        ),
+        "compliance": (
+            ["Great Expectations", "dbt", "OpenMetadata", "DataHub", "Collibra"],
+            1.4
+        ),
+        "automation": (
+            ["Make (Integromat)", "Zapier", "n8n", "Pipedream", "Apache Airflow"],
+            1.25
+        ),
+    },
+    "handel": {
+        "conversions": (
+            ["Hotjar", "Google Analytics", "Mixpanel", "Amplitude", "Heap"],
+            1.4
+        ),
+        "product_tagging": (
+            ["ChatGPT", "Claude", "Copy.ai", "Jasper", "DALL-E"],
+            1.35
+        ),
+        "customer_service": (
+            ["Intercom", "Zendesk", "Freshdesk", "Tidio", "Drift"],
+            1.4
+        ),
+        "inventory": (
+            ["Airtable", "Notion", "Monday.com", "Excel", "Google Sheets"],
+            1.25
+        ),
+        "marketing": (
+            ["Canva", "Figma", "Adobe Express", "Midjourney", "DALL-E"],
+            1.3
+        ),
+    },
+    "gesundheit": {
+        "compliance": (
+            ["Great Expectations", "dbt", "MLflow", "Evidently AI", "Weights & Biases"],
+            1.4
+        ),
+        "documentation": (
+            ["ChatGPT", "Claude", "Notion", "Google Docs", "Fireflies.ai"],
+            1.4
+        ),
+        "process_automation": (
+            ["Make (Integromat)", "Zapier", "n8n", "Pipedream", "Power Automate"],
+            1.35
+        ),
+        "scheduling": (
+            ["Calendly", "Cal.com", "Acuity", "SimplyBook", "Setmore"],
+            1.3
+        ),
+    },
+    "it": {
+        "code_generation": (
+            ["GitHub Copilot", "ChatGPT", "Claude", "Cursor", "Codeium", "Tabnine"],
+            1.4
+        ),
+        "devops": (
+            ["DataDog", "Grafana", "Prometheus", "Splunk", "New Relic"],
+            1.35
+        ),
+        "documentation": (
+            ["Notion", "Confluence", "GitBook", "Docusaurus", "ReadMe"],
+            1.3
+        ),
+        "project_management": (
+            ["Jira", "Linear", "GitHub Issues", "ClickUp", "Asana"],
+            1.25
+        ),
+        "security": (
+            ["Snyk", "SonarQube", "Dependabot", "GitHub Security", "Checkmarx"],
+            1.3
+        ),
+    },
+    "marketing": {
+        "content": (
+            ["ChatGPT", "Claude", "Jasper", "Copy.ai", "Writesonic", "Notion AI"],
+            1.45
+        ),
+        "design": (
+            ["Canva", "Figma", "Midjourney", "DALL-E", "Adobe Express", "Looka"],
+            1.4
+        ),
+        "social_media": (
+            ["Buffer", "Hootsuite", "Sprout Social", "Later", "Planoly"],
+            1.35
+        ),
+        "analytics": (
+            ["Google Analytics", "Mixpanel", "Hotjar", "SEMrush", "Ahrefs"],
+            1.3
+        ),
+        "email": (
+            ["Mailchimp", "ConvertKit", "Klaviyo", "ActiveCampaign", "HubSpot"],
+            1.25
+        ),
+    },
+    "industrie": {
+        "predictive": (
+            ["DataDog", "Grafana", "Prometheus", "InfluxDB", "TimescaleDB"],
+            1.4
+        ),
+        "quality": (
+            ["Great Expectations", "Evidently AI", "MLflow", "Weights & Biases"],
+            1.35
+        ),
+        "planning": (
+            ["Excel", "Power BI", "Tableau", "Airtable", "Monday.com"],
+            1.3
+        ),
+        "automation": (
+            ["Make (Integromat)", "Zapier", "n8n", "Apache Airflow", "Kubeflow"],
+            1.25
+        ),
+    },
+    "bildung": {
+        "content": (
+            ["ChatGPT", "Claude", "Notion AI", "Canva", "Loom"],
+            1.4
+        ),
+        "assessment": (
+            ["Google Forms", "Typeform", "Mentimeter", "Kahoot", "Quizlet"],
+            1.35
+        ),
+        "collaboration": (
+            ["Miro", "FigJam", "Lucidchart", "Google Jamboard", "Microsoft Whiteboard"],
+            1.3
+        ),
+        "video": (
+            ["Loom", "Synthesia", "Descript", "Canva", "CapCut"],
+            1.3
+        ),
+    },
+}
+
+# Default tool boosts for unknown branches
+DEFAULT_TOOL_BOOSTS: Dict[str, Tuple[List[str], float]] = {
+    "productivity": (
+        ["ChatGPT", "Claude", "Notion", "Slack", "Asana"],
+        1.2
+    ),
+    "automation": (
+        ["Make (Integromat)", "Zapier", "n8n"],
+        1.15
+    ),
+    "documentation": (
+        ["Notion", "Google Docs", "Confluence"],
+        1.1
+    ),
+}
+
+
+@dataclass
+class ToolBranchRelevance:
+    """Tool relevance score for a specific branch."""
+    tool_name: str
+    branch: str
+    category: str
+    branch_relevance_score: float  # 0.0 - 1.0
+    boost_factor: float
+    is_top_match: bool = False
+    reason: str = ""
+
+
+def calculate_branch_relevance_score(
+    tool_name: str,
+    branch: str,
+) -> Tuple[float, str, float]:
+    """
+    Calculate branch relevance score for a tool.
+
+    Args:
+        tool_name: Name of the tool
+        branch: Industry/branch name
+
+    Returns:
+        Tuple of (relevance_score, category, boost_factor)
+    """
+    if not branch:
+        return 0.5, "general", 1.0
+
+    branch_lower = branch.lower().strip()
+
+    # Normalize branch names
+    branch_mapping = {
+        "consulting": "beratung",
+        "unternehmensberatung": "beratung",
+        "dienstleistungen": "beratung",
+        "it_software": "it",
+        "software": "it",
+        "tech": "it",
+        "ecommerce": "handel",
+        "e-commerce": "handel",
+        "retail": "handel",
+        "finance": "finanzen",
+        "banking": "finanzen",
+        "health": "gesundheit",
+        "healthcare": "gesundheit",
+        "manufacturing": "industrie",
+        "produktion": "industrie",
+        "education": "bildung",
+        "medien": "marketing",
+        "agentur": "marketing",
+    }
+
+    normalized = branch_mapping.get(branch_lower, branch_lower)
+    boosts = BRANCH_TOOL_BOOSTS.get(normalized, DEFAULT_TOOL_BOOSTS)
+
+    tool_lower = tool_name.lower()
+
+    # Check each category for matches
+    for category, (tools, boost) in boosts.items():
+        for t in tools:
+            if t.lower() in tool_lower or tool_lower in t.lower():
+                # Found match - calculate relevance score
+                # Base score = 0.6, boosted by the boost factor
+                relevance = min(1.0, 0.6 * boost)
+                return relevance, category, boost
+
+    # No specific match - return neutral score
+    return 0.5, "general", 1.0
+
+
+def get_branch_tool_recommendations(
+    branch: str,
+    size: str = "team",
+    limit: int = 10,
+) -> List[ToolBranchRelevance]:
+    """
+    Get top tool recommendations for a branch.
+
+    Args:
+        branch: Industry/branch name
+        size: Company size
+        limit: Maximum recommendations
+
+    Returns:
+        List of ToolBranchRelevance sorted by score
+    """
+    if not TOOLS_BRANCH_ALIGNMENT_ENABLED:
+        return []
+
+    branch_lower = branch.lower().strip() if branch else "beratung"
+
+    # Normalize branch
+    branch_mapping = {
+        "consulting": "beratung",
+        "unternehmensberatung": "beratung",
+        "dienstleistungen": "beratung",
+        "it_software": "it",
+        "software": "it",
+        "ecommerce": "handel",
+        "finance": "finanzen",
+        "health": "gesundheit",
+        "manufacturing": "industrie",
+        "education": "bildung",
+        "medien": "marketing",
+    }
+
+    normalized = branch_mapping.get(branch_lower, branch_lower)
+    boosts = BRANCH_TOOL_BOOSTS.get(normalized, DEFAULT_TOOL_BOOSTS)
+
+    recommendations: List[ToolBranchRelevance] = []
+
+    for category, (tools, boost) in boosts.items():
+        for tool in tools[:3]:  # Top 3 per category
+            relevance_score = min(1.0, 0.6 * boost)
+
+            # Size adjustment
+            if size == "solo" and boost > 1.3:
+                relevance_score *= 0.9  # Slight reduction for complex tools
+            elif size == "kmu" and boost < 1.2:
+                relevance_score *= 0.95  # Slight reduction for basic tools
+
+            recommendations.append(ToolBranchRelevance(
+                tool_name=tool,
+                branch=normalized,
+                category=category,
+                branch_relevance_score=round(relevance_score, 2),
+                boost_factor=boost,
+                is_top_match=boost >= 1.35,
+                reason=f"Optimal für {category.replace('_', ' ').title()} in {branch}",
+            ))
+
+    # Sort by relevance score
+    recommendations.sort(key=lambda r: r.branch_relevance_score, reverse=True)
+
+    # Mark top matches
+    for r in recommendations[:3]:
+        r.is_top_match = True
+
+    return recommendations[:limit]
+
+
+def generate_tools_branch_alignment_html(
+    briefing: Dict[str, Any],
+    lang: str = "de",
+) -> str:
+    """
+    Generate TOOLS_BRANCH_ALIGNMENT_HTML section.
+
+    Args:
+        briefing: Briefing dictionary with branch info
+        lang: Language code
+
+    Returns:
+        HTML string for PDF template
+    """
+    if not TOOLS_BRANCH_ALIGNMENT_ENABLED:
+        return ""
+
+    branch = briefing.get("branche") or briefing.get("BRANCH_LABEL") or "beratung"
+    size = briefing.get("unternehmensgroesse") or briefing.get("SIZE_LABEL") or "team"
+
+    recommendations = get_branch_tool_recommendations(branch, size)
+
+    if not recommendations:
+        return ""
+
+    # Build HTML
+    if lang == "en":
+        title = "Industry-Optimized AI Tools"
+        subtitle = f"Top tools for your industry: {branch}"
+        top_match_label = "TOP MATCH"
+        headers = ["Tool", "Category", "Industry Fit"]
+        disclaimer = "* Tools ranked by industry-specific relevance. Verify fit for your use case."
+    else:
+        title = "Branchenoptimierte KI-Tools"
+        subtitle = f"Top-Tools für Ihre Branche: {branch}"
+        top_match_label = "TOP-MATCH"
+        headers = ["Tool", "Kategorie", "Branchen-Fit"]
+        disclaimer = "* Tools nach branchenspezifischer Relevanz gerankt. Eignung für Ihren Use Case prüfen."
+
+    # Category translations
+    category_labels = {
+        "de": {
+            "text_automation": "Textautomatisierung",
+            "research": "Recherche",
+            "analysis": "Analyse",
+            "documentation": "Dokumentation",
+            "meeting": "Meeting-Tools",
+            "reporting": "Reporting",
+            "risk_analytics": "Risk Analytics",
+            "governance": "Governance",
+            "compliance": "Compliance",
+            "automation": "Automatisierung",
+            "conversions": "Conversion",
+            "product_tagging": "Produkt-Tagging",
+            "customer_service": "Kundenservice",
+            "inventory": "Inventar",
+            "marketing": "Marketing",
+            "code_generation": "Code-Generierung",
+            "devops": "DevOps",
+            "project_management": "Projektmanagement",
+            "security": "Security",
+            "content": "Content",
+            "design": "Design",
+            "social_media": "Social Media",
+            "analytics": "Analytics",
+            "email": "E-Mail",
+            "predictive": "Predictive",
+            "quality": "Qualität",
+            "planning": "Planung",
+            "assessment": "Assessment",
+            "collaboration": "Kollaboration",
+            "video": "Video",
+            "productivity": "Produktivität",
+            "general": "Allgemein",
+        },
+        "en": {
+            "text_automation": "Text Automation",
+            "research": "Research",
+            "analysis": "Analysis",
+            "documentation": "Documentation",
+            "meeting": "Meeting Tools",
+            "reporting": "Reporting",
+            "risk_analytics": "Risk Analytics",
+            "governance": "Governance",
+            "compliance": "Compliance",
+            "automation": "Automation",
+            "conversions": "Conversion",
+            "product_tagging": "Product Tagging",
+            "customer_service": "Customer Service",
+            "inventory": "Inventory",
+            "marketing": "Marketing",
+            "code_generation": "Code Generation",
+            "devops": "DevOps",
+            "project_management": "Project Management",
+            "security": "Security",
+            "content": "Content",
+            "design": "Design",
+            "social_media": "Social Media",
+            "analytics": "Analytics",
+            "email": "Email",
+            "predictive": "Predictive",
+            "quality": "Quality",
+            "planning": "Planning",
+            "assessment": "Assessment",
+            "collaboration": "Collaboration",
+            "video": "Video",
+            "productivity": "Productivity",
+            "general": "General",
+        },
+    }
+
+    cat_labels = category_labels.get(lang, category_labels["de"])
+
+    html_parts = [f"""
+    <div class="tools-branch-alignment" style="margin-top:20px;padding:16px;background:linear-gradient(135deg, #8b5cf610, #8b5cf605);border:1px solid #8b5cf630;border-radius:10px;">
+        <h3 style="margin:0 0 8px 0;font-size:15px;color:#6d28d9;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:20px;">🛠️</span> {title}
+            <span style="font-size:9px;padding:2px 8px;background:#8b5cf6;color:#fff;border-radius:4px;">G19</span>
+        </h3>
+        <p style="margin:0 0 14px 0;font-size:11px;color:#64748b;">{subtitle}</p>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:10px;">
+    """]
+
+    for rec in recommendations[:8]:
+        fit_pct = int(rec.branch_relevance_score * 100)
+        fit_color = "#22c55e" if fit_pct >= 80 else "#8b5cf6" if fit_pct >= 65 else "#64748b"
+
+        top_badge = ""
+        if rec.is_top_match:
+            top_badge = f'<span style="font-size:7px;padding:1px 4px;background:#22c55e;color:#fff;border-radius:3px;margin-left:4px;">{top_match_label}</span>'
+
+        category_label = cat_labels.get(rec.category, rec.category.replace("_", " ").title())
+
+        html_parts.append(f"""
+            <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                    <div>
+                        <div style="font-weight:600;font-size:12px;color:#1e293b;">{rec.tool_name}{top_badge}</div>
+                        <div style="font-size:10px;color:#8b5cf6;margin-top:2px;">{category_label}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:16px;font-weight:700;color:{fit_color};">{fit_pct}%</div>
+                    </div>
+                </div>
+                <div style="height:4px;background:#e2e8f0;border-radius:2px;margin-top:8px;overflow:hidden;">
+                    <div style="width:{fit_pct}%;height:100%;background:{fit_color};"></div>
+                </div>
+            </div>
+        """)
+
+    html_parts.append(f"""
+        </div>
+        <p style="margin:12px 0 0 0;font-size:9px;color:#94a3b8;font-style:italic;">{disclaimer}</p>
+    </div>
+    """)
+
+    return "\n".join(html_parts)
+
+
+def inject_tools_branch_alignment_into_sections(
+    sections: Dict[str, Any],
+    briefing: Dict[str, Any],
+    lang: str = "de",
+) -> Dict[str, Any]:
+    """
+    Inject tools branch alignment section into report sections.
+
+    Args:
+        sections: Report sections dictionary
+        briefing: Briefing dictionary
+        lang: Language code
+
+    Returns:
+        Updated sections with TOOLS_BRANCH_ALIGNMENT_HTML
+    """
+    if not TOOLS_BRANCH_ALIGNMENT_ENABLED:
+        sections["TOOLS_BRANCH_ALIGNMENT_HTML"] = ""
+        return sections
+
+    try:
+        html = generate_tools_branch_alignment_html(briefing, lang)
+        sections["TOOLS_BRANCH_ALIGNMENT_HTML"] = html
+
+        if html:
+            log.info("✅ Injected tools branch alignment into report")
+        else:
+            log.debug("No tools branch alignment generated")
+
+    except Exception as e:
+        log.error(f"Failed to generate tools branch alignment: {e}")
+        sections["TOOLS_BRANCH_ALIGNMENT_HTML"] = ""
+
+    return sections
+
+
+# =============================================================================
+# MODULE INITIALIZATION
+# =============================================================================
+
+log.info(
+    "[B2-A/G19] Tools Analytics loaded - enabled=%s, branch_alignment=%s",
+    TOOLS_ENGINE_ENABLED,
+    TOOLS_BRANCH_ALIGNMENT_ENABLED,
+)
