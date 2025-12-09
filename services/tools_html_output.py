@@ -397,29 +397,26 @@ def validate_gold_profiles() -> List[Dict[str, Any]]:
         tool_cats = [t.get("category", "") for t in tools]
 
         # Validate
-        validation = {
-            "profile_name": profile["name"],
-            "passed": True,
-            "checks": []
-        }
+        checks: List[Dict[str, Any]] = []
+        passed = True
 
         # Check tool count
         if len(tools) < expected["min_tools"]:
-            validation["passed"] = False
-            validation["checks"].append({
+            passed = False
+            checks.append({
                 "check": "min_tools",
                 "passed": False,
                 "message": f"Too few tools: {len(tools)} < {expected['min_tools']}"
             })
         elif len(tools) > expected["max_tools"]:
-            validation["passed"] = False
-            validation["checks"].append({
+            passed = False
+            checks.append({
                 "check": "max_tools",
                 "passed": False,
                 "message": f"Too many tools: {len(tools)} > {expected['max_tools']}"
             })
         else:
-            validation["checks"].append({
+            checks.append({
                 "check": "tool_count",
                 "passed": True,
                 "message": f"Tool count OK: {len(tools)}"
@@ -429,8 +426,8 @@ def validate_gold_profiles() -> List[Dict[str, Any]]:
         for req_cat in expected["required_categories"]:
             found = any(req_cat.lower() in cat.lower() for cat in tool_cats)
             if not found:
-                validation["passed"] = False
-                validation["checks"].append({
+                passed = False
+                checks.append({
                     "check": "required_category",
                     "passed": False,
                     "message": f"Missing required category: {req_cat}"
@@ -439,13 +436,18 @@ def validate_gold_profiles() -> List[Dict[str, Any]]:
         # Check forbidden tools
         for forbidden in expected["forbidden_tools"]:
             if any(forbidden.lower() in name.lower() for name in tool_names):
-                validation["passed"] = False
-                validation["checks"].append({
+                passed = False
+                checks.append({
                     "check": "forbidden_tool",
                     "passed": False,
                     "message": f"Found forbidden tool: {forbidden}"
                 })
 
+        validation: Dict[str, Any] = {
+            "profile_name": profile["name"],
+            "passed": passed,
+            "checks": checks
+        }
         results.append(validation)
 
     return results

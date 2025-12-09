@@ -113,7 +113,7 @@ class ToolsCheckpoint:
 # =============================================================================
 
 # Tools expected for different risk levels
-EXPECTED_TOOLS_BY_RISK = {
+EXPECTED_TOOLS_BY_RISK: Dict[str, Dict[str, List[str]]] = {
     "high-risk": {
         "required_categories": ["Monitoring", "Governance", "Data Quality", "ML Lifecycle"],
         "required_tools": ["MLflow", "DataDog", "Great Expectations", "Grafana"],

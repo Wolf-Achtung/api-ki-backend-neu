@@ -577,7 +577,7 @@ def aggregate_tools_statistics(
             for occ in size_filtered:
                 tools_per_report[occ.report_id] = tools_per_report.get(occ.report_id, 0) + 1
 
-            values = list(tools_per_report.values())
+            values = [float(v) for v in tools_per_report.values()]
             stability, _ = calculate_segment_stability(values)
 
             top_tools_in_segment = sorted(
