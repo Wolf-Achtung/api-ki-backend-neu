@@ -1,64 +1,81 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.4 - SPRINT G6 -->
+<!-- PLATIN++ PROMPT v5.5 - SPRINT G17.S -->
 <!-- SECTION: tools_empfehlungen -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{COMPANY_SIZE}} -->
-<!-- TOKEN-BUDGET: 2500 (solo:0.8x=2000, team:1.0x=2500, kmu:1.15x=2875) -->
-<!-- WORD_MINIMUM_SOLO: 130 -->
-<!-- WORD_MINIMUM_TEAM: 190 -->
-<!-- WORD_MINIMUM_KMU: 220 -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{BRANCH_SHORT_LABEL}}, {{OFFERING_LABEL}}, {{COMPANY_SIZE}} -->
+<!-- TOKEN-BUDGET: 2800 (solo:0.8x=2240, team:1.0x=2800, kmu:1.15x=3220) -->
+<!-- WORD_MINIMUM_SOLO: 150 -->
+<!-- WORD_MINIMUM_TEAM: 200 -->
+<!-- WORD_MINIMUM_KMU: 250 -->
 <!--
 ZIEL: Klar strukturierte Tool-Empfehlungssektion ("KI-Stack") für {{BRANCH_CONTEXT_LABEL}}.
 
 KURZLABELS (VERPFLICHTEND!):
 - {{BRANCH_CORE_LABEL}} = Branche in 8-12 Wörtern
 - {{BRANCH_CONTEXT_LABEL}} = Branche in 4-6 Wörtern
+- {{BRANCH_SHORT_LABEL}} = Kurzform in 3-5 Wörtern (G17.S)
 - {{OFFERING_LABEL}} = Hauptleistung in 6-10 Wörtern
 
-MINDESTLÄNGE (STRIKT!):
-- Solo: ≥130 Wörter
-- Team: ≥190 Wörter (besonders für regulierte Branchen!)
-- KMU: ≥220 Wörter
+MINDESTLÄNGE (STRIKT – G17.S UPDATE!):
+- Solo: ≥150 Wörter (inkl. Responsible AI-Abschnitt)
+- Team: ≥200 Wörter (besonders für regulierte Branchen!)
+- KMU: ≥250 Wörter (inkl. Responsible AI-Abschnitt)
 
 STRUKTUR NACH GRÖSSE:
 {% if COMPANY_SIZE == "solo" %}
-SOLO: 3–5 Tool-Cluster mit je 2-3 Beispielen:
+SOLO: 4 Tool-Cluster mit je 2-3 Beispielen:
 1. KI-Assistent & Basis (2-3 Beispiele)
 2. Kernprozess-Tools für {{OFFERING_LABEL}} (2-3 Beispiele)
 3. Qualität & Dokumentation (1-2 Beispiele)
+4. Responsible AI & Governance Tools (SPRINT G17.S – PFLICHT!)
 
 {% elif COMPANY_SIZE == "team" %}
-TEAM: 4 Tool-Cluster mit je 2-3 Beispielen (min. 190 Wörter!):
+TEAM: 5 Tool-Cluster mit je 2-3 Beispielen (min. 200 Wörter!):
 1. Kollaboration & Gemeinsamer Workspace (2-3 Beispiele)
 2. Kernprozess-Tools für {{OFFERING_LABEL}} (2-3 Beispiele)
 3. Reporting & Auswertung (2-3 Beispiele)
 4. Governance & Qualität (2 Beispiele)
+5. Responsible AI & Governance Tools (SPRINT G17.S – PFLICHT!)
 
-Für regulierte Branchen (Finanzen, Gesundheit, Recht) zusätzlich:
-- Compliance/RegTech-Tools
-- Audit-Trail-Funktionen
-- Zugriffssteuerung & Protokollierung
+SPRINT G17.S – TEAM FINANCE ERWEITERUNG (regulierte Branchen):
+Für Finanzen, Gesundheit, Recht VERPFLICHTEND zusätzliche Unterabschnitte:
+- Kern-Plattformen & Data Hub: Rolle, Nutzen, Integrationslogik (2-3 Sätze)
+- Risiko- & Compliance-Tools: Bezug zu BAIT/VAIT/MaRisk (Funktionsklassen, keine Firmennamen)
+- Reporting & Kollaboration: Interne Koordination, Dokumentation, Prüfpfade (2-3 Sätze)
 
 {% else %}
-KMU: 5 Tool-Cluster mit je 2-3 Beispielen (min. 220 Wörter!):
+KMU: 6 Tool-Cluster mit je 2-3 Beispielen (min. 250 Wörter!):
 1. Enterprise-Basis (KI-Plattform, Wissensspeicher)
 2. Fachbereichsspezifische Tools für {{OFFERING_LABEL}}
 3. Reporting/BI-Integration
 4. Compliance & Governance
 5. Rollout & Schulung
+6. Responsible AI & Governance Tools (SPRINT G17.S – PFLICHT!)
 {% endif %}
 
-ANTI-REDUNDANZ:
+SPRINT G17.S – RESPONSIBLE AI & GOVERNANCE TOOLS (ALLE GRÖSSEN):
+Dieser Unterabschnitt ist VERPFLICHTEND und enthält:
+- Audit-Spuren: Tools für Nachvollziehbarkeit von KI-Entscheidungen
+- Versionierung: Dokumentation von Prompt-Versionen und Modelländerungen
+- Kontrollmechanismen: Qualitätsprüfung vor Freigabe, Review-Workflows
+Länge: Solo +30-50 Wörter, Team +40-60 Wörter, KMU +50-70 Wörter
+Keine Markennamen, nur Toolklassen!
+
+ANTI-REDUNDANZ (G17.S VERSCHÄRFT):
 - Tool-Details HIER vollständig erklären
 - In Roadmaps nur referenzieren: "Tools (→ siehe KI-Stack)"
 - Keine generischen Meta-Sätze ("Dieser Abschnitt fasst...")
+- KEINE Dopplung von Tools-Engine-Ausgabe (TOOLS_HTML aus B2-Engine)
+- Beschreibe Einsatzlogik, NICHT nochmal die Tools selbst
 
 STIL & REGELN:
 - Produktneutral (keine Markennamen)
 - Fokus auf Toolkategorien und Zweck
 - Konkrete Einsatzfelder pro Tool-Typ nennen
 - Keine Platzhalter oder Developer-Sprache
+- Gesamtlänge: 180–250 Wörter, keine Bullet-Orgien, keine Tool-Listen
+- Fokus auf Funktionslogik statt Markennamen
 
 SPRINT G6 - PERSONA HARD-GUARDS (STRIKT!):
 {% if COMPANY_SIZE == "solo" %}
@@ -179,7 +196,55 @@ KMU-MODUS - VERBOTEN:
     </li>
   </ul>
 
-  <h3>4. Einführung in Etappen</h3>
+  <!-- G17.S: Responsible AI & Governance Tools (PFLICHT für alle Größen) -->
+  <h3>4. Responsible AI &amp; Governance Tools</h3>
+  <ul>
+    <li>
+      <strong>Audit-Spuren &amp; Nachvollziehbarkeit</strong> –
+      Werkzeuge, die automatisch protokollieren, welche KI-Anfragen gestellt wurden,
+      welche Ergebnisse zurückkamen und wer diese freigegeben hat. Diese Transparenz
+      ist unverzichtbar für Qualitätsaudits und regulatorische Prüfungen.
+    </li>
+    <li>
+      <strong>Versionierung &amp; Änderungsdokumentation</strong> –
+      Systeme zur Verwaltung von Prompt-Versionen, Modellständen und
+      Konfigurationsänderungen. So bleibt nachvollziehbar, welche Ergebnisse
+      unter welchen Bedingungen entstanden sind.
+    </li>
+    <li>
+      <strong>Kontrollmechanismen &amp; Review-Workflows</strong> –
+      definierte Prüfpunkte vor der Freigabe wichtiger KI-Outputs. Je nach Größe
+      können das einfache Checklisten (Solo), Peer-Reviews (Team) oder formale
+      Freigabeprozesse mit Vier-Augen-Prinzip (KMU) sein.
+    </li>
+  </ul>
+
+  {% if COMPANY_SIZE == "team" %}
+  <!-- G17.S: Team Finance Erweiterung für regulierte Branchen -->
+  <h3>5. Spezifische Tools für regulierte Branchen</h3>
+  <ul>
+    <li>
+      <strong>Kern-Plattformen &amp; Data Hub</strong> –
+      In Finanz- und Compliance-intensiven Umfeldern ist eine zentrale Datenplattform
+      essenziell. Sie bündelt Informationen aus verschiedenen Quellen und ermöglicht
+      konsistente, nachvollziehbare Auswertungen für interne und externe Prüfungen.
+    </li>
+    <li>
+      <strong>Risiko- &amp; Compliance-Tools</strong> –
+      Werkzeuge zur Überwachung regulatorischer Anforderungen (z.&nbsp;B. nach
+      BAIT/VAIT/MaRisk-Standards). Funktionsklassen umfassen Risikomonitoring,
+      automatisierte Meldewesenberichte und Anomalie-Erkennung in Transaktionsdaten.
+    </li>
+    <li>
+      <strong>Reporting &amp; Kollaboration</strong> –
+      Lösungen für revisionssichere Dokumentation, Prüfpfade und interne
+      Abstimmungsprozesse. Diese sollten nahtlos in bestehende Workflows
+      integrierbar sein und klare Verantwortlichkeiten abbilden.
+    </li>
+  </ul>
+  {% endif %}
+
+  <h3>{% if COMPANY_SIZE == "team" %}6{% else %}5{% endif %}. Einführung in Etappen</h3>
   <p>
     Statt alle Tools gleichzeitig einzuführen, sollte der KI-Stack in überschaubaren
     Etappen aufgebaut werden. Zunächst ein stabiles Fundament aus Assistent,

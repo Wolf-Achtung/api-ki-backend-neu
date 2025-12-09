@@ -1,13 +1,15 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.2 -->
+<!-- PLATIN++ PROMPT v5.3 - SPRINT G17.S -->
 <!-- SECTION: strategie_governance -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{COMPANY_SIZE}}, {{GOVERNANCE_RICHTLINIEN_LABEL}}, {{CHANGE_MANAGEMENT_LABEL}}, {{MELDEWEGE_LABEL}}, {{DATENSCHUTZ_LABEL}}, {{LOESCHREGELN_LABEL}}, {{DATENSCHUTZBEAUFTRAGTER_LABEL}}, {{FOLGENABSCHAETZUNG_LABEL}}, {{INTERNE_KI_KOMPETENZEN_LABEL}} -->
-<!-- TOKEN-BUDGET: 2000 (solo:0.8x=1600, team:1.0x=2000, kmu:1.15x=2300) -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{COMPANY_SIZE}}, {{BRANCH_SHORT_LABEL}}, {{GOVERNANCE_RICHTLINIEN_LABEL}}, {{CHANGE_MANAGEMENT_LABEL}}, {{MELDEWEGE_LABEL}}, {{DATENSCHUTZ_LABEL}}, {{LOESCHREGELN_LABEL}}, {{DATENSCHUTZBEAUFTRAGTER_LABEL}}, {{FOLGENABSCHAETZUNG_LABEL}}, {{INTERNE_KI_KOMPETENZEN_LABEL}} -->
+<!-- TOKEN-BUDGET: 2200 (solo:0.8x=1760, team:1.0x=2200, kmu:1.15x=2530) -->
+<!-- WORD_MINIMUM_SOLO: 150 (G17.S: erhöht von 130 wg. Mini-Governance-Booster) -->
 <!--
 ZIEL: Strategische Einordnung zu KI-Strategie & Governance.
 Ergebnis = 10–14 Sätze + 1 strukturierte Liste.
+SPRINT G17.S: Solo erhält zusätzlichen "Mini-Governance für Solo"-Unterabschnitt
 
 PERSONA-VARIATIONEN (COMPANY_SIZE) – STRIKT EINHALTEN:
 
@@ -27,6 +29,19 @@ KMU:
   Empfohlen: "Fachbereichsverantwortliche", "abgestimmte Prozesse",
              "bereichsübergreifende Standards", "Governance-Regeln"
   Nicht verwenden: Konzernjargon ("Business Unit", "Division", "C-Level")
+
+SPRINT G17.S – MINI-GOVERNANCE FÜR SOLO (PFLICHT bei solo!):
+Zusätzlicher Unterabschnitt für Solo (~60-80 Wörter):
+1. 2-3 leicht umsetzbare KI-Regeln:
+   - Versionsführung: Prompts/Outputs mit Datum speichern
+   - Transparenz: Kennzeichnung KI-generierter Inhalte vor Versand
+   - Abnahme vor Auslieferung: Eigene Prüfung vor Kundenübergabe
+2. Kurze Dokumentationsroutine (wöchentlich/monatlich)
+3. Hinweis auf Skalierbarkeit für zukünftige Teamkontexte
+
+WICHTIG:
+- Keine Team-Vokabeln bei Solo
+- Keine Overlaps mit AI_POLICY_MINI
 
 ANTI-REDUNDANZ:
 - Governance HIER vollständig behandeln
@@ -133,6 +148,37 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     Etablieren Sie eine positive Fehlerkultur bei der KI-Nutzung: Offenes Teilen von Learnings beschleunigt den organisationsweiten Lernprozess. Champions in Fachbereichen können als Multiplikatoren wirken und Akzeptanz nachhaltig steigern.
     {% endif %}
   </p>
+
+  {% if COMPANY_SIZE == "solo" %}
+  <!-- G17.S: Mini-Governance für Solo (Booster-Abschnitt) -->
+  <h3>Mini-Governance für Solo</h3>
+  <p>
+    Auch ohne formale Governance-Strukturen profitieren Sie von einfachen Regeln,
+    die Qualität sichern und sich bei Bedarf auf zukünftige Teamkontexte skalieren lassen:
+  </p>
+  <ul>
+    <li>
+      <strong>Versionsführung:</strong>
+      Speichern Sie wichtige Prompts und Outputs mit Datum und Kontext – so bleibt
+      nachvollziehbar, welche Ergebnisse unter welchen Bedingungen entstanden.
+    </li>
+    <li>
+      <strong>Transparenz nach außen:</strong>
+      Kennzeichnen Sie KI-generierte Inhalte vor dem Versand an Kunden oder Partner,
+      zumindest intern für sich selbst, um den Überblick zu behalten.
+    </li>
+    <li>
+      <strong>Abnahme vor Auslieferung:</strong>
+      Führen Sie bei wichtigen Outputs einen kurzen Eigencheck durch – eine
+      persönliche Prüfroutine vor jeder Kundenübergabe sichert Qualität.
+    </li>
+  </ul>
+  <p>
+    Eine kurze wöchentliche oder monatliche Dokumentation (z.&nbsp;B. "KI-Logbuch")
+    hilft, Muster zu erkennen und die eigene Nutzung schrittweise zu verbessern.
+    Diese Grundlagen lassen sich bei Wachstum leicht auf ein kleines Team übertragen.
+  </p>
+  {% endif %}
 
   <p class="small muted">
     Eine realistische, gut kommunizierte Governance sichert nachhaltige Wirkung,
