@@ -5215,6 +5215,32 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         log.info(f"[{run_id}] ✅ Report validation passed - PLATIN++")
     # === END VALIDATION ===
 
+    # === G22: CROSS-SECTION CONSISTENCY CHECK ===
+    try:
+        from services.consistency_engine import check_consistency, ConsistencyReport
+        log.info(f"[{run_id}] 🔗 Running G22 cross-section consistency check...")
+        consistency_report = check_consistency(sections, answers, language=sections.get("LANG", "de"))
+
+        # Store report in sections for debugging/transparency
+        sections["_CONSISTENCY_REPORT"] = consistency_report.to_dict()
+        sections["_CONSISTENCY_GRADE"] = consistency_report.grade
+        sections["_CONSISTENCY_SCORE"] = consistency_report.score
+
+        if consistency_report.status == "FAIL":
+            log.warning(f"[{run_id}] ⚠️ G22 Consistency: FAIL (Grade {consistency_report.grade}, Score {consistency_report.score:.1f})")
+            for issue in consistency_report.issues:
+                if issue.severity == "ERROR":
+                    log.warning(f"[{run_id}]   [{issue.rule_id}] {issue.message}")
+        elif consistency_report.status == "WARN":
+            log.info(f"[{run_id}] ⚡ G22 Consistency: WARN (Grade {consistency_report.grade}, Score {consistency_report.score:.1f})")
+        else:
+            log.info(f"[{run_id}] ✅ G22 Consistency: PASS (Grade {consistency_report.grade}, Score {consistency_report.score:.1f})")
+    except ImportError:
+        log.debug(f"[{run_id}] G22 consistency_engine not available - skipping")
+    except Exception as exc:
+        log.warning(f"[{run_id}] ⚠️ G22 consistency check failed: {exc}")
+    # === END G22 CONSISTENCY CHECK ===
+
     # Benchmarks / Starter-Stacks / Responsible AI
     if build_benchmarks_section:
         sections["benchmarks_html"] = build_benchmarks_section(scores)
