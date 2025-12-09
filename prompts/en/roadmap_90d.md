@@ -8,10 +8,12 @@ Developer:
 <!--
 GOAL: 90-Day Roadmap with 4 clear phases + milestones + effect section + booster sections.
 
-MINIMUM LENGTH (STRICT!):
-- Solo: ≥250 words
-- Team: ≥320 words
-- SME: ≥350 words
+MINIMUM LENGTH (STRICT - SPRINT G18!):
+- Solo: At least 180–230 words, clearly structured.
+- Team: At least 220–280 words, including change communication.
+- SME: At least 250–300 words, including leadership/stakeholder guidance.
+
+IMPORTANT: Section will be rejected if below minimum!
 
 PHASE STRUCTURE (STRICTLY FOLLOW!):
 - Phase 0 (Week 1–2): Setup – establish foundations
@@ -412,7 +414,9 @@ GUARDRAILS: Consider guardrails from strategic context.
     {% endif %}
   </p>
 
+  <!-- SPRINT G18: Narrative Connections -->
   <p class="small muted">
+    Use the <strong>Starter Kit</strong> to technically implement Phase 1 (→ see Starter Kit).
     This roadmap references Quick Wins (→ see Immediate Measures) and
     Tools (→ see AI Stack). Details on Change Management → see Organizational Change.
   </p>

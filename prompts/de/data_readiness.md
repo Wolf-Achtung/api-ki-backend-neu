@@ -35,6 +35,12 @@ Developer: <!-- data_readiness.md – v3.1 GOLD STANDARD+ (Daten & Systemreife, 
   - Keine Hinweise auf Fragebogen/Fragen, keine technischen Platzhaltertexte.
   - Immer so schreiben, als würde die Einschätzung direkt an Geschäftsführung/Projektleitung gehen.
   - Klarer, nüchterner Ton: Chancen + Risiken, keine Übertreibungen.
+
+  SPRINT G18 - ANTI-REDUNDANZ (STRIKT!):
+  - ROI/Investitionen/Business Case NICHT erneut erwähnen – diese Themen gehören in business_case.md
+  - Maximal EIN kurzer Verweis auf den Business Case ist erlaubt (z.B. "→ siehe Business Case")
+  - CAPEX/OPEX-Blöcke gehören NICHT hierher
+  - Fokus: Datenqualität, Systemreife, Datenquellen – KEINE Finanzperspektive
 -->
 
 <section class="section data-readiness">

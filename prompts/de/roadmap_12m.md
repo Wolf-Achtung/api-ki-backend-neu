@@ -10,7 +10,13 @@ Developer:
 <!-- WORD_MINIMUM_KMU: 700 -->
 <!--
 ZIEL: 12-Monats-Roadmap mit Meilensteinen, aufbauend auf 90-Tage-Ergebnissen.
-MINDESTLÄNGE: solo≥500, team≥600, kmu≥700 Wörter (STRIKT EINHALTEN!)
+
+MINDESTLÄNGE (SPRINT G18 - STRIKT VERPFLICHTEND!):
+- Solo: mind. 500 Wörter (inkl. Q1-Q4 Phasen)
+- Team: mind. 600 Wörter (inkl. Rollen und Standards)
+- KMU: mind. 700 Wörter (inkl. 5-Dimensionen-Rollout)
+
+WICHTIG: Diese Mindestlängen sind verpflichtend und werden validiert!
 
 KURZLABELS (VERPFLICHTEND!):
 - {{BRANCH_CORE_LABEL}} = Branche in 8-12 Wörtern

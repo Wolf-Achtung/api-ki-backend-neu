@@ -25,6 +25,12 @@ ANTI-REDUNDANCY:
 - In foerderpotenzial.md only reference these numbers, don't repeat
 - In executive_summary only mention as hint
 
+SPRINT G18 - ANTI-REDUNDANCY (STRICT!):
+- DO NOT describe data situation/Data Readiness again – belongs in data_readiness.md
+- Maximum ONE brief reference to Data Readiness is allowed (e.g., "→ see Data Readiness")
+- CAPEX/OPEX blocks ONLY HERE – do not repeat in other sections
+- Focus: ROI, Payback, Investment – NO data situation analysis
+
 PERSONA VARIATIONS (COMPANY_SIZE):
 - solo: personal ROI, time relief, pragmatic assessment
 - team: Team ROI, shared efficiency gains

@@ -228,7 +228,8 @@ class ReportValidator:
             "IT-Abteilung",
             "Fachbereich",
             "Fachbereiche",
-            "Bereichsleiter",
+            # SPRINT G18: "Bereichsleiter" entfernt - erlaubt wenn Kontext: Zielgruppe/Kund:Innen
+            # "Bereichsleiter",
             "bereichsübergreifend",
             # English equivalents
             "team building",
@@ -397,12 +398,15 @@ class ReportValidator:
         "solo": {
             # SPRINT N: Updated minimums
             # SPRINT G17.S: roadmap_90d reduced from 250 to 150
+            # SPRINT G18: strategie_governance + tools_empfehlungen gelockert
             "executive_summary": 150,   # SPRINT N requirement
             "quick_wins": 60,
             "roadmap_90d": 150,         # SPRINT G17.S: reduced from 250
             "roadmap_12m": 500,         # SPRINT N: erhöht von 400
             "org_change": 80,
-            "tools_empfehlungen": 120,  # SPRINT N requirement
+            "strategie_governance": 110,  # SPRINT G18: gelockert von 130
+            "tools_empfehlungen": 110,  # SPRINT G18: gelockert von 120
+            "foerderpotenzial": 800,    # SPRINT G18: erhöht für Substanz
             "gamechanger": 750,         # SPRINT N: Mindestlänge fix
             "transparency_box": 100,
             "technologie_prozesse": 150,
@@ -427,6 +431,7 @@ class ReportValidator:
             # SPRINT G2.6: transparency_box + technologie_prozesse reduziert
             # SPRINT G6: tools_empfehlungen + strategie_governance erhöht
             # SPRINT G17.S: roadmap_90d reduced from 350 to 220
+            # SPRINT G18: foerderpotenzial erhöht für Substanz
             "executive_summary": 200,   # SPRINT N requirement
             "quick_wins": 120,
             "roadmap_90d": 220,         # SPRINT G17.S: reduced from 350
@@ -434,6 +439,7 @@ class ReportValidator:
             "org_change": 120,
             "tools_empfehlungen": 220,  # SPRINT G6: erhöht von 200
             "strategie_governance": 220,  # SPRINT G6: konsistent mit anderen
+            "foerderpotenzial": 800,    # SPRINT G18: erhöht für Substanz
             "gamechanger": 750,         # SPRINT N: Mindestlänge fix
             "transparency_box": 150,    # SPRINT G2.6: von 200 → 150
             "technologie_prozesse": 200,  # SPRINT G2.6: von 250 → 200
@@ -1352,6 +1358,23 @@ class ReportValidator:
         "funding program",
         "grant",
         "subsidy",
+        # SPRINT G18: Additional standard phrases
+        "ki-readiness",
+        "ai readiness",
+        "starter-kit",
+        "starter kit",
+        "roadmap 90d",
+        "90-day roadmap",
+        "90-tage-roadmap",
+        "roadmap 12m",
+        "12-month roadmap",
+        "12-monats-roadmap",
+        "data maturity",
+        "datenreife",
+        "governance-hinweise",
+        "governance guidance",
+        "tools × funding",
+        "tools × förderprogramme",
     ]
 
     # SPRINT G13-B: Sections excluded from redundancy SOURCE detection
