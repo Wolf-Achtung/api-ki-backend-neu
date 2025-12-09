@@ -915,13 +915,14 @@ PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
         "frequency_penalty": 0.1,
         "min_words": 350,  # PDF-SLIMDOWN v2.0 base (size-aware in validator)
     },
-    # Roadmap 90d: kompakt (3 Phasen)
+    # Roadmap 90d: Sprint G17.R - Roadmap-Booster (extended with KPI + Change sections)
+    # Size-aware min_words: Solo 250, Team 320, KMU 350 (after multipliers)
     "roadmap_90d": {
-        "max_tokens": 2200,  # Kompakt: 350-450 Wörter
+        "max_tokens": 2800,  # G17.R: Increased for booster sections
         "temperature": 0.4,
         "presence_penalty": 0.1,
         "frequency_penalty": 0.1,
-        "min_words": 250,
+        "min_words": 320,  # G17.R: Base 320 → Solo 256 (0.8x), Team 320 (1.0x), KMU 368 (1.15x)
     },
     # Quick Wins: kompakt (4 Quick Wins)
     "quick_wins": {

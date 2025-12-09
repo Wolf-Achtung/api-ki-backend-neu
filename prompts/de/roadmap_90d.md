@@ -1,11 +1,11 @@
-<!-- PLATIN++ PROMPT v5.4 - SPRINT G6 -->
+<!-- PLATIN++ PROMPT v5.5 - SPRINT G17.R (Roadmap-Booster) -->
 <!-- SECTION: roadmap_90d -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE -->
-<!-- TOKEN-BUDGET: 2200 (solo:0.8x=1760, team:1.0x=2200, kmu:1.15x=2530) -->
+<!-- TOKEN-BUDGET: 2800 (solo:0.8x=2240, team:1.0x=2800, kmu:1.15x=3220) -->
 <!--
-ZIEL: 90-Tage-Roadmap mit 4 klaren Phasen + Meilensteinen + Effekte-Abschnitt.
+ZIEL: 90-Tage-Roadmap mit 4 klaren Phasen + Meilensteinen + Effekte-Abschnitt + Booster-Sektionen.
 
 KURZLABELS (VERPFLICHTEND!):
 - {{BRANCH_CORE_LABEL}} = Branche in 8-12 Wörtern
@@ -15,7 +15,12 @@ KURZLABELS (VERPFLICHTEND!):
 MINDESTLÄNGE (STRIKT!):
 - Solo: ≥250 Wörter
 - Team: ≥320 Wörter
-- KMU: ≥340 Wörter
+- KMU: ≥350 Wörter
+
+BOOSTER-SEKTIONEN (NEU - SPRINT G17.R):
+- Solo: KPI-Tracking & Mini-Dashboard Setup, Micro-Change-Management
+- Team: Team-Kommunikation & Rollout-Rituale, Dokumentation & Wissensspeicher
+- KMU: Change-Kommunikation auf Führungsebene, KPI-Framework für Arbeitsbereiche
 
 PHASEN-STRUKTUR (STRIKT EINHALTEN):
 - Phase 0 (Woche 1–2): Setup – Grundlagen schaffen
@@ -114,13 +119,55 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     <li><strong>Klarheit:</strong> Fundierte Basis für Entscheidung über weitere Investitionen</li>
   </ul>
 
-  <h3>KPI-Tracking & Review für Ihren Alltag</h3>
+  <h3>KPI-Tracking & Mini-Dashboard Setup</h3>
   <p>
-    Planen Sie wöchentlich einen festen 30-Minuten-Slot für Ihr persönliches KI-Review ein.
-    Führen Sie ein einfaches KPI-Board (z. B. Notion, Excel oder handschriftlich): Notieren Sie
-    pro Woche die Anzahl KI-gestützter Aufgaben, geschätzte Zeitersparnis und Qualitätsbewertung
-    (1–5 Sterne). Nach 90 Tagen haben Sie belastbare Daten für Ihre eigene Investitionsentscheidung.
-    Nutzen Sie die generierten Reports als Referenz, um Fortschritte sichtbar zu machen.
+    Als Einzelunternehmer:in benötigen Sie ein pragmatisches, zeitsparendes Reporting-System.
+    Fokussieren Sie sich auf diese drei Kern-KPIs für Ihren KI-Einsatz:
+  </p>
+  <ul>
+    <li><strong>Zeitersparnis pro Woche:</strong> Notieren Sie für jede KI-gestützte Aufgabe die
+    eingesparte Zeit im Vergleich zur manuellen Bearbeitung. Eine einfache Strichliste oder
+    Tabelle genügt – Ziel: 3–5 Stunden Ersparnis pro Monat.</li>
+    <li><strong>Output-Menge:</strong> Wie viele Texte, E-Mails, Konzepte oder andere Deliverables
+    haben Sie mit KI-Unterstützung erstellt? Tracken Sie die Produktivitätssteigerung
+    quantitativ (z. B. „12 LinkedIn-Posts statt 4 ohne KI").</li>
+    <li><strong>Qualitätsbewertung:</strong> Bewerten Sie Ihre KI-Outputs auf einer Skala von
+    1–5 Sternen. Wie oft konnten Sie einen Entwurf direkt verwenden? Ziel: 70%+ Erstqualität.</li>
+  </ul>
+  <p>
+    <strong>Mini-Dashboard einrichten:</strong> Nutzen Sie ein einfaches Tool wie Notion, Excel
+    oder sogar ein Notizbuch. Legen Sie eine wöchentliche Tabelle an mit Spalten für Aufgabentyp,
+    Zeitaufwand (mit/ohne KI), Qualitätssterne und kurze Learnings. Reservieren Sie jeden Freitag
+    15–20 Minuten für die Dokumentation. Nach 90 Tagen haben Sie belastbare Daten für Ihre
+    Investitionsentscheidung und können ROI konkret nachweisen.
+  </p>
+
+  <h3>Micro-Change-Management (1-Person-Betrieb)</h3>
+  <p>
+    Die Einführung neuer KI-Workflows erfordert bewusste Integration in Ihren Arbeitsalltag –
+    auch wenn Sie allein arbeiten. Ohne strukturiertes Vorgehen besteht das Risiko, dass
+    neue Tools nach anfänglicher Begeisterung wieder in Vergessenheit geraten.
+  </p>
+  <ul>
+    <li><strong>Routine-Anker setzen:</strong> Verknüpfen Sie KI-Nutzung mit bestehenden
+    Gewohnheiten. Beispiel: „Nach dem Morgenkaffee starte ich mit dem KI-gestützten
+    E-Mail-Entwurf" oder „Vor jedem Kundengespräch lasse ich mir eine Gesprächsvorbereitung
+    generieren". Feste Trigger erhöhen die Umsetzungswahrscheinlichkeit deutlich.</li>
+    <li><strong>Selbstkontrolle ohne Druck:</strong> Führen Sie eine „Erfolgs-Checkliste" mit
+    3–5 KI-Aufgaben pro Woche. Haken Sie ab, was Sie geschafft haben – ohne sich bei
+    Auslassungen zu kritisieren. Der visuelle Fortschritt motiviert zur Kontinuität.</li>
+    <li><strong>Wöchentliches Self-Review (30 Min.):</strong> Jeden Freitagmorgen oder
+    Sonntagabend: Was hat gut funktioniert? Wo gab es Hürden? Welche Prompts brauchen
+    Verfeinerung? Notieren Sie 2–3 konkrete Verbesserungsideen für die Folgewoche.</li>
+    <li><strong>Iterative Anpassung:</strong> Ihr KI-Workflow ist ein lebendes System.
+    Passen Sie Vorlagen und Routinen monatlich an veränderte Anforderungen in
+    {{OFFERING_LABEL}} an. Was im ersten Monat funktioniert hat, muss im dritten
+    Monat nicht mehr optimal sein.</li>
+  </ul>
+  <p>
+    <strong>Erfolgsfaktor:</strong> Setzen Sie sich realistische Zwischenziele. Starten Sie
+    mit einer KI-Aufgabe täglich, steigern Sie nach 2 Wochen auf 2–3. So vermeiden Sie
+    Überforderung und bauen nachhaltige Kompetenz auf.
   </p>
 
   <h3>Content & Marketing-Systematik</h3>
@@ -185,6 +232,59 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     <li><strong>Entscheidungsgrundlage:</strong> Belastbare Daten für Investitionsentscheidungen</li>
   </ul>
 
+  <h3>Team-Kommunikation & Rollout-Rituale</h3>
+  <p>
+    Die erfolgreiche KI-Einführung im Bereich erfordert strukturierte Kommunikation und
+    wiederkehrende Formate, die Akzeptanz und Kompetenzaufbau fördern. Etablieren Sie
+    folgende Rituale:
+  </p>
+  <ul>
+    <li><strong>KI-Standup (15 Min./Woche):</strong> Kurzer Austausch zu Beginn jeder
+    Woche: Was habe ich mit KI ausprobiert? Was hat funktioniert? Welche Hürden gab es?
+    Der KI-Owner moderiert und sammelt Themen für Vertiefung.</li>
+    <li><strong>Feedback-Loop etablieren:</strong> Richten Sie einen dedizierten Kanal ein
+    (Slack-Channel, Teams-Gruppe oder geteiltes Dokument), in dem Beteiligte Erfahrungen,
+    Prompts und Tipps teilen. Niedrigschwelliger Austausch beschleunigt den Lernprozess.</li>
+    <li><strong>Mini-Demos (30 Min. alle 2 Wochen):</strong> Ein Beteiligter zeigt einen
+    erfolgreichen KI-Workflow live. Konkrete Anwendungsfälle motivieren mehr als
+    theoretische Schulungen. Rotieren Sie die Präsentierenden.</li>
+    <li><strong>Akzeptanz-Maßnahmen:</strong> Holen Sie Skeptiker:innen gezielt ab.
+    Lassen Sie sie bei der Auswahl von Use Cases mitbestimmen. Zeigen Sie frühe Erfolge
+    transparent – nichts überzeugt mehr als messbare Zeitersparnis bei Kolleg:innen.</li>
+    <li><strong>Tool-Onboarding strukturieren:</strong> Erstellen Sie eine 1-Seiten-Anleitung
+    für neue Beteiligte: Zugang, erste Schritte, wichtigste Prompts, Ansprechpartner.
+    So wird niemand abgehängt, wenn er oder sie später einsteigt.</li>
+  </ul>
+
+  <h3>Dokumentation & Wissensspeicher</h3>
+  <p>
+    Wissen, das nur in einzelnen Köpfen existiert, geht verloren. Bauen Sie von Beginn an
+    einen strukturierten KI-Wissensspeicher für Ihren Bereich auf:
+  </p>
+  <ul>
+    <li><strong>KI-Handbuch anlegen:</strong> Ein lebendes Dokument mit Best Practices,
+    bewährten Prompts, Qualitätskriterien und typischen Fehlern. Aktualisierung monatlich
+    durch den KI-Owner, Input von allen Beteiligten.</li>
+    <li><strong>Prompt-Bibliothek:</strong> Sammeln Sie alle funktionierenden Prompt-Vorlagen
+    in einer gemeinsamen Ablage (Notion, Confluence, SharePoint). Kategorisieren Sie nach
+    Anwendungsfall: Texterstellung, Recherche, Analyse, E-Mail etc.</li>
+    <li><strong>Rollen & Verantwortlichkeiten klären:</strong>
+      <ul>
+        <li><em>KI-Owner:</em> Koordiniert Standards, pflegt Wissensspeicher, ist erster
+        Ansprechpartner bei Fragen.</li>
+        <li><em>Beteiligte:</em> Testen Workflows, geben Feedback, teilen Learnings.</li>
+        <li><em>Qualitäts-Reviewer:</em> Prüft kritische KI-Outputs vor Freigabe.</li>
+      </ul>
+    </li>
+    <li><strong>Lessons Learned dokumentieren:</strong> Nach jeder Phase (Setup, Entlastung,
+    Produktiver Einsatz) kurz festhalten: Was haben wir gelernt? Was würden wir anders
+    machen? Diese Erkenntnisse sind Gold wert für die Skalierung.</li>
+  </ul>
+  <p>
+    <strong>Tipp:</strong> Halten Sie die Dokumentation schlank. Lieber 10 funktionierende
+    Prompts gut beschrieben als 50 ungeprüfte Vorlagen ohne Kontext.
+  </p>
+
   {% else %}
   <h3>Phase 0: Setup (Woche 1–2)</h3>
   <p><strong>Ziel:</strong> Pilotbereich definieren und Grundlagen schaffen.</p>
@@ -239,6 +339,87 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     <li><strong>Business Case:</strong> Validierte ROI-Annahmen auf Basis echter Pilotdaten</li>
     <li><strong>Entscheidungsgrundlage:</strong> Fundierte Basis für Management-Entscheidung</li>
   </ul>
+
+  <h3>Change-Kommunikation auf Führungsebene</h3>
+  <p>
+    Die KI-Einführung in einem mittelständischen Unternehmen erfordert strategische
+    Kommunikation auf Führungsebene. Ohne aktive Einbindung der Entscheidungsträger
+    scheitern selbst erfolgreiche Pilotprojekte an fehlender Unterstützung für die Skalierung.
+  </p>
+  <ul>
+    <li><strong>Stakeholder-Mapping durchführen:</strong> Identifizieren Sie alle relevanten
+    Entscheidungsträger und Einflusspersonen: Geschäftsführung, Bereichsleitungen,
+    Betriebsrat (falls vorhanden), IT-Leitung. Verstehen Sie deren Perspektive: Wer sieht
+    Chancen, wer hat Bedenken? Passen Sie Ihre Kommunikation entsprechend an.</li>
+    <li><strong>Chancen & Risiken transparent kommunizieren:</strong> Präsentieren Sie
+    eine ausgewogene Analyse: Welche konkreten Effizienzgewinne sind realistisch?
+    Welche Risiken (Datenschutz, Qualität, Abhängigkeiten) bestehen und wie werden sie
+    adressiert? Ehrliche Kommunikation schafft Vertrauen und vermeidet spätere Enttäuschungen.</li>
+    <li><strong>Mitbestimmung einbinden:</strong> Falls ein Betriebsrat existiert, holen
+    Sie ihn frühzeitig ins Boot. Klären Sie gemeinsam: Welche Daten werden verarbeitet?
+    Gibt es Auswirkungen auf Arbeitsplätze oder -inhalte? Proaktive Einbindung verhindert
+    Widerstände und Verzögerungen.</li>
+    <li><strong>Regelmäßige Status-Updates:</strong> Etablieren Sie einen monatlichen
+    Kurzbericht an die Geschäftsführung: Pilotfortschritt, erreichte Meilensteine,
+    gemessene Effekte, nächste Schritte. Keine Überraschungen – kontinuierliche
+    Transparenz ist der Schlüssel zu nachhaltigem Management-Support.</li>
+    <li><strong>Erfolgsgeschichten nutzen:</strong> Dokumentieren Sie konkrete Erfolge
+    aus dem Pilotbereich mit messbaren Zahlen. Diese „Proof Points" sind Ihre beste
+    Argumentationsgrundlage für die Rollout-Entscheidung.</li>
+  </ul>
+
+  <h3>KPI-Framework für Arbeitsbereiche</h3>
+  <p>
+    Ein strukturiertes KPI-Framework ermöglicht die objektive Bewertung des KI-Einsatzes
+    über verschiedene Arbeitsbereiche hinweg. Definieren Sie Messgrößen, die ohne
+    Interpretationsspielraum erfasst werden können:
+  </p>
+  <ul>
+    <li><strong>Effizienz-KPIs:</strong>
+      <ul>
+        <li><em>Zeitersparnis pro Vorgang:</em> Vergleich der Bearbeitungszeit mit und ohne
+        KI-Unterstützung (Ziel: 20–35% Reduktion)</li>
+        <li><em>Durchsatz:</em> Anzahl bearbeiteter Vorgänge pro Zeiteinheit (Steigerung
+        messbar machen)</li>
+        <li><em>Automatisierungsgrad:</em> Anteil der Aufgaben, die vollständig oder
+        teilautomatisiert ablaufen</li>
+      </ul>
+    </li>
+    <li><strong>Qualitäts-KPIs:</strong>
+      <ul>
+        <li><em>Erstqualitätsrate:</em> Anteil der KI-Outputs, die ohne Nacharbeit
+        verwendbar sind (Ziel: >70%)</li>
+        <li><em>Fehlerquote:</em> Anzahl der Korrekturen oder Reklamationen pro 100
+        KI-gestützte Vorgänge</li>
+        <li><em>Kundenzufriedenheit:</em> Bewertung der Ergebnisqualität durch interne
+        oder externe Empfänger</li>
+      </ul>
+    </li>
+    <li><strong>Compliance-KPIs:</strong>
+      <ul>
+        <li><em>Governance-Einhaltung:</em> Anteil der Vorgänge, die nach definierten
+        Standards geprüft wurden</li>
+        <li><em>Datenschutz-Konformität:</em> Null-Toleranz bei Verstößen, regelmäßige
+        Audits dokumentieren</li>
+        <li><em>Dokumentationsgrad:</em> Vollständigkeit der Prozessdokumentation für
+        regulatorische Anforderungen</li>
+      </ul>
+    </li>
+    <li><strong>Akzeptanz-KPIs:</strong>
+      <ul>
+        <li><em>Nutzungsquote:</em> Anteil der Mitarbeitenden, die KI-Tools aktiv nutzen</li>
+        <li><em>Schulungsabdeckung:</em> Prozent der geschulten Mitarbeitenden im Pilotbereich</li>
+        <li><em>Feedback-Score:</em> Regelmäßige Zufriedenheitsbefragung (NPS oder 1–5 Skala)</li>
+      </ul>
+    </li>
+  </ul>
+  <p>
+    <strong>Umsetzungshinweis:</strong> Starten Sie mit 3–5 Kern-KPIs, die Sie zuverlässig
+    messen können. Erweitern Sie das Framework erst, wenn die Basismessung funktioniert.
+    Vermeiden Sie KPI-Überflutung – weniger, aber aussagekräftige Kennzahlen sind wertvoller
+    als umfangreiche Dashboards ohne Konsequenzen.
+  </p>
+
   {% endif %}
 
   <h3>Risikominimierung während der Einführung</h3>
