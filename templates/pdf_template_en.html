@@ -1300,6 +1300,26 @@
                     </div>
                     <div class="exec-divider"></div>
                 </section>
+
+                <!-- G20: AI STACK SUMMARY CARD -->
+                {% if KI_STACK_SUMMARY_HTML %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Executive AI Stack</span>
+                            <h2>Your AI Stack at a Glance</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Recommended tools, funding and next steps
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ KI_STACK_SUMMARY_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+
 <!-- STRATEGIC CONTEXT & GUARDRAILS -->
                 {% if strategische_ziele or zeitersparnis_prioritaet or hauptleistung or ki_projekte or geschaeftsmodell_evolution or vision_3_jahre or ki_guardrails %}
                 <section class="section chapter">

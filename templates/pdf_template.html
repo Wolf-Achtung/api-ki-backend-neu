@@ -1342,6 +1342,25 @@
                     <div class="exec-divider"></div>
                 </section>
 
+                <!-- G20: KI-STACK SUMMARY CARD -->
+                {% if KI_STACK_SUMMARY_HTML %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Executive KI-Stack</span>
+                            <h2>Ihr KI-Stack auf einen Blick</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Empfohlene Tools, Förderung und nächste Schritte
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ KI_STACK_SUMMARY_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+
                 <!-- STRATEGISCHER KONTEXT & LEITPLANKEN -->
                 {% if strategische_ziele or zeitersparnis_prioritaet or hauptleistung or ki_projekte or geschaeftsmodell_evolution or vision_3_jahre or ki_guardrails %}
                 <section class="section chapter">

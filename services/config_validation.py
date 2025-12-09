@@ -125,6 +125,7 @@ class ValidationConfig:
 SECTION_MIN_WORDS: Dict[Tuple[str, str], int] = {
     # ----- SOLO -----
     ("solo", "executive_summary"): 150,
+    ("solo", "ki_stack_summary"): 150,  # G20: KI-Stack Summary Card
     ("solo", "quick_wins"): 60,
     ("solo", "roadmap_90d"): 150,       # SPRINT G17.S: Added (reduced from 250)
     ("solo", "roadmap_12m"): 500,
@@ -141,6 +142,7 @@ SECTION_MIN_WORDS: Dict[Tuple[str, str], int] = {
 
     # ----- TEAM -----
     ("team", "executive_summary"): 180,
+    ("team", "ki_stack_summary"): 180,  # G20: KI-Stack Summary Card
     ("team", "quick_wins"): 90,
     ("team", "roadmap_90d"): 200,       # SPRINT G17.S: Added (reduced from 300)
     ("team", "roadmap_12m"): 600,
@@ -157,6 +159,7 @@ SECTION_MIN_WORDS: Dict[Tuple[str, str], int] = {
 
     # ----- KMU -----
     ("kmu", "executive_summary"): 200,
+    ("kmu", "ki_stack_summary"): 200,  # G20: KI-Stack Summary Card
     ("kmu", "quick_wins"): 120,
     ("kmu", "roadmap_90d"): 220,        # SPRINT G17.S: Added (reduced from 350)
     ("kmu", "roadmap_12m"): 700,
