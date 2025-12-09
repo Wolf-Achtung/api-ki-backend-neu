@@ -77,9 +77,9 @@ def generate_kpi_bar(
     """
     # Calculate fill percentage (capped at 100%)
     if max_value <= 0:
-        fill_pct = 0
+        fill_pct = 0.0
     else:
-        fill_pct = min(100, (value / max_value) * 100)
+        fill_pct = min(100.0, (value / max_value) * 100)
 
     # Bar dimensions
     bar_height = 12
