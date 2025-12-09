@@ -2754,8 +2754,8 @@ class PatchSafetyCheckResponse(BaseModel):
     message: str
 
 
-class PatchResponse(BaseModel):
-    """Patch response."""
+class FundingPatchResponse(BaseModel):
+    """Funding patch response."""
     patch_id: str
     created_at: str
     patch_type: str
@@ -3059,15 +3059,15 @@ async def get_patch_gate_status_endpoint() -> PatchGateStatusResponse:
 
 @router.post(
     "/funding/patches/{patch_id}/approve",
-    summary="Approve patch",
+    summary="Approve funding patch",
     description="Approve a pending funding patch (G17.8-E).",
 )
-async def approve_patch_endpoint(
+async def approve_funding_patch_endpoint(
     patch_id: str,
     reviewer: str = Query("admin", description="Reviewer ID"),
     notes: str = Query("", description="Approval notes"),
 ) -> Dict[str, Any]:
-    """Approve a patch."""
+    """Approve a funding patch."""
     try:
         from services.funding_patch_gate import approve_patch
 
