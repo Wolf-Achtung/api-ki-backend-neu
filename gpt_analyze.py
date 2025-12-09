@@ -5021,6 +5021,32 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         log.warning("[%s] ⚠️ G19 Tools Branch Alignment failed: %s", run_id, e)
         sections.setdefault("TOOLS_BRANCH_ALIGNMENT_HTML", "")
 
+    # =========================================================================
+    # SPRINT B3: Tools Engine 3.0 - Adaptive Stacks, Workflows, Governance
+    # =========================================================================
+    try:
+        from services.tools_html_output_v3 import get_all_tools_html_sections
+        briefing = {
+            "branche": answers.get("branche", "beratung"),
+            "unternehmensgroesse": answers.get("unternehmensgroesse", "team"),
+            "usecases": answers.get("usecases", []),
+        }
+        b3_sections = get_all_tools_html_sections(briefing, language=report_lang)
+        for key, value in b3_sections.items():
+            sections.setdefault(key, value)
+        log.info("[%s] ✅ B3 Tools Engine 3.0 sections injected", run_id)
+    except ImportError:
+        log.debug("[%s] B3 tools_html_output_v3 not available", run_id)
+    except Exception as e:
+        log.warning("[%s] ⚠️ B3 Tools Engine 3.0 injection failed: %s", run_id, e)
+        # Set defaults for all B3 sections
+        for b3_key in [
+            "TOOLS_STACK_HTML", "TOOLS_WORKFLOW_HTML", "TOOLS_GOVERNANCE_HTML",
+            "TOOLS_QUICK_WINS_HTML", "TOOLS_CARDS_HTML", "TOOLS_SUMMARY_HTML",
+            "TOOLS_ROADMAP_HTML",
+        ]:
+            sections.setdefault(b3_key, "")
+
     log.info("[%s] 🎨 Rendering final HTML...", run_id)
     # --- Sanitize dynamic sections to prevent HTML leaks (z. B. eingebettetes <html> im Pilot-Plan) ---
     try:
