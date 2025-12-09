@@ -4114,6 +4114,8 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         ("ai_policy_mini", "AI_POLICY_MINI_HTML"),
         ("kickoff_vorlage", "KICKOFF_VORLAGE_HTML"),
         ("prompt_framework", "PROMPT_FRAMEWORK_HTML"),
+        # G24: Branch Deep-Dive Addon
+        ("branch_deep_dive", "BRANCH_DEEP_DIVE_HTML"),
     ]
 
     max_workers = int(os.getenv("GPT_PARALLEL_WORKERS", "10"))
