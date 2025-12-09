@@ -4083,6 +4083,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     # Alle GPT-Sektionen, die parallel erzeugt werden
     parallel_sections = [
         ("executive_summary", "EXECUTIVE_SUMMARY_HTML"),
+        ("ki_stack_summary", "KI_STACK_SUMMARY_HTML"),  # G20: KI-Stack Summary Card
         ("quick_wins", "_QUICK_WINS_RAW"),  # wird später aufbereitet
         ("roadmap", "PILOT_PLAN_HTML"),
         ("roadmap_12m", "ROADMAP_12M_HTML"),
