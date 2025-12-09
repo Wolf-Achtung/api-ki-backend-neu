@@ -252,11 +252,28 @@ def _extract_risk_level(html: str) -> Optional[str]:
     if "risk-low" in text or "low-risk" in text or "niedriges risiko" in text:
         return "low"
 
-    # Check for text patterns
+    # Check for text patterns (expanded to handle more German phrasings)
     risk_patterns = {
-        "high": [r"risiko[:\s]*hoch", r"high[\s\-]?risk", r"hohes\s+risiko"],
-        "medium": [r"risiko[:\s]*mittel", r"medium[\s\-]?risk", r"mittleres\s+risiko"],
-        "low": [r"risiko[:\s]*niedrig", r"low[\s\-]?risk", r"niedriges\s+risiko", r"geringes\s+risiko"],
+        "high": [
+            r"risiko[:\s]*hoch",
+            r"high[\s\-]?risk",
+            r"hohes\s+risiko",
+            r"risiko\s+(?:ist\s+)?hoch",
+        ],
+        "medium": [
+            r"risiko[:\s]*mittel",
+            r"medium[\s\-]?risk",
+            r"mittleres\s+risiko",
+            r"risiko\s+(?:ist\s+)?mittel",
+        ],
+        "low": [
+            r"risiko[:\s]*niedrig",
+            r"low[\s\-]?risk",
+            r"niedriges\s+risiko",
+            r"geringes\s+risiko",
+            r"risiko\s+(?:ist\s+)?niedrig",
+            r"risiko\s+(?:ist\s+)?gering",
+        ],
     }
 
     for level, patterns in risk_patterns.items():
@@ -285,11 +302,13 @@ def _extract_kpis(html: str) -> Dict[str, Optional[float]]:
 
     text = _strip_html(html)
 
-    # ROI patterns: "ROI 150%", "ROI: 150%", "150% ROI"
+    # ROI patterns: "ROI 150%", "ROI: 150%", "150% ROI", "ROI beträgt 150%"
     roi_patterns = [
         r"ROI[:\s]*(\d+(?:[.,]\d+)?)\s*%",
+        r"ROI\s+(?:beträgt|von|ist|liegt\s+bei)\s+(\d+(?:[.,]\d+)?)\s*%",
         r"(\d+(?:[.,]\d+)?)\s*%\s*ROI",
         r"Return on Investment[:\s]*(\d+(?:[.,]\d+)?)\s*%",
+        r"(\d+(?:[.,]\d+)?)\s*%\s*(?:Return|ROI)",
     ]
     for pattern in roi_patterns:
         match = re.search(pattern, text, re.IGNORECASE)
@@ -343,11 +362,18 @@ def _extract_step_count(html: str) -> int:
         return 0
 
     # Count step-card elements (G21 design)
-    card_count = len(re.findall(r'class="[^"]*step-card[^"]*"', html, re.IGNORECASE))
+    # Match class="step-card" exactly (not step-cards or step-card-number)
+    # Pattern: step-card followed by space or end of class attribute
+    card_count = len(re.findall(r'class="[^"]*\bstep-card\b(?!-)[^"]*"', html, re.IGNORECASE))
     if card_count > 0:
         return card_count
 
-    # Count numbered steps
+    # Alternative: count step-card-number elements (each step has one number)
+    number_count = len(re.findall(r'class="[^"]*step-card-number[^"]*"', html, re.IGNORECASE))
+    if number_count > 0:
+        return number_count
+
+    # Count numbered steps in text
     step_patterns = [
         r'Schritt\s*(\d+)',
         r'Step\s*(\d+)',
