@@ -553,11 +553,280 @@ async def tools_dashboard_health():
     analytics = _get_analytics_module()
     recommender = _get_recommender_module()
     drift = _get_drift_module()
+    alignment = _get_alignment_module()
+    starter_kits = _get_starter_kits_module()
 
     return {
         "dashboard_enabled": DASHBOARD_TOOLS_ENABLED,
         "analytics_available": analytics is not None,
         "recommender_available": recommender is not None,
         "drift_detector_available": drift is not None,
+        "alignment_available": alignment is not None,
+        "starter_kits_available": starter_kits is not None,
         "status": "healthy" if all([analytics, recommender]) else "degraded"
     }
+
+
+# =============================================================================
+# SPRINT B2.2: TOOLS × FUNDING ALIGNMENT ENDPOINTS
+# =============================================================================
+
+def _get_alignment_module():
+    """Get tools_funding_alignment module with fallback."""
+    try:
+        from services import tools_funding_alignment
+        return tools_funding_alignment
+    except ImportError:
+        return None
+
+
+def _get_starter_kits_module():
+    """Get tools_starter_kits module with fallback."""
+    try:
+        from services import tools_starter_kits
+        return tools_starter_kits
+    except ImportError:
+        return None
+
+
+class AlignmentMatchResponse(BaseModel):
+    """Tool-funding match in response."""
+    tool_name: str
+    tool_category: str
+    funding_program_id: str
+    funding_program_name: str
+    alignment_score: float
+    match_reasons: List[str]
+    alignment_type: str
+
+
+class AlignmentResponse(BaseModel):
+    """Complete alignment response."""
+    enabled: bool
+    matches: List[AlignmentMatchResponse]
+    segment_context: Dict[str, str]
+    recommended_starter_tools: List[str]
+    recommended_funding_programs: List[str]
+    total_potential_funding: str
+    alignment_summary: str
+    html: str = ""
+    compact_html: str = ""
+
+
+class StarterKitToolResponse(BaseModel):
+    """Tool in starter kit response."""
+    name: str
+    category: str
+    purpose: str
+    priority: int
+    estimated_setup_days: int
+    funding_eligible: bool
+
+
+class StarterKitFundingResponse(BaseModel):
+    """Funding program in starter kit response."""
+    program_id: str
+    name: str
+    provider: str
+    max_amount: str
+    fit_reason: str
+    application_complexity: str
+
+
+class StarterKitChecklistResponse(BaseModel):
+    """Checklist item in starter kit response."""
+    step: int
+    title: str
+    description: str
+    category: str
+    estimated_hours: float
+
+
+class StarterKitResponse(BaseModel):
+    """Complete starter kit response."""
+    enabled: bool
+    kit_id: str
+    kit_name: str
+    segment_label: str
+    tools: List[StarterKitToolResponse]
+    funding: List[StarterKitFundingResponse]
+    checklist: List[StarterKitChecklistResponse]
+    estimated_total_days: int
+    estimated_investment: str
+    potential_funding: str
+    quick_win_count: int
+    description: str
+    html: str = ""
+    compact_html: str = ""
+
+
+@router.get("/alignment", response_model=AlignmentResponse)
+async def get_tools_funding_alignment(
+    size_label: str = Query("kmu", description="Company size (solo, team, kmu)"),
+    branch_group: str = Query("", description="Industry branch group"),
+    region: str = Query("DE", description="Region code"),
+    lang: str = Query("de", description="Language (de, en)")
+):
+    """
+    Get tool-funding alignment for a profile.
+
+    Sprint B2.2: Returns matches between tools and funding programs
+    with alignment scores and recommendations.
+
+    Args:
+        size_label: Company size
+        branch_group: Industry branch
+        region: Region code
+        lang: Language code
+
+    Returns:
+        AlignmentResponse with matches and recommendations
+    """
+    _check_dashboard_enabled()
+
+    alignment_mod = _get_alignment_module()
+    if not alignment_mod:
+        return AlignmentResponse(
+            enabled=False,
+            matches=[],
+            segment_context={},
+            recommended_starter_tools=[],
+            recommended_funding_programs=[],
+            total_potential_funding="",
+            alignment_summary="Alignment module not available"
+        )
+
+    briefing = {
+        "unternehmensgroesse": size_label,
+        "branche": branch_group,
+        "region": region,
+    }
+
+    result = alignment_mod.calculate_alignment_for_profile(briefing)
+
+    matches = [
+        AlignmentMatchResponse(
+            tool_name=m.tool_name,
+            tool_category=m.tool_category,
+            funding_program_id=m.funding_program_id,
+            funding_program_name=m.funding_program_name,
+            alignment_score=m.alignment_score,
+            match_reasons=m.match_reasons,
+            alignment_type=m.alignment_type
+        )
+        for m in result.matches
+    ]
+
+    return AlignmentResponse(
+        enabled=True,
+        matches=matches,
+        segment_context=result.segment_context,
+        recommended_starter_tools=result.recommended_starter_tools,
+        recommended_funding_programs=result.recommended_funding_programs,
+        total_potential_funding=result.total_potential_funding,
+        alignment_summary=result.alignment_summary,
+        html=alignment_mod.generate_alignment_html(result, lang),
+        compact_html=alignment_mod.generate_alignment_compact_html(result, lang)
+    )
+
+
+@router.get("/starter-kit", response_model=StarterKitResponse)
+async def get_starter_kit(
+    size_label: str = Query("kmu", description="Company size (solo, team, kmu)"),
+    branch_group: str = Query("", description="Industry branch group"),
+    maturity_level: int = Query(2, ge=1, le=5, description="Maturity level 1-5"),
+    lang: str = Query("de", description="Language (de, en)")
+):
+    """
+    Get starter kit for a profile.
+
+    Sprint B2.2: Returns curated starter kit with tools, funding,
+    and checklist for the segment.
+
+    Args:
+        size_label: Company size
+        branch_group: Industry branch
+        maturity_level: Maturity level
+        lang: Language code
+
+    Returns:
+        StarterKitResponse with complete starter kit
+    """
+    _check_dashboard_enabled()
+
+    starter_mod = _get_starter_kits_module()
+    if not starter_mod:
+        return StarterKitResponse(
+            enabled=False,
+            kit_id="disabled",
+            kit_name="Starter kits not available",
+            segment_label="N/A",
+            tools=[],
+            funding=[],
+            checklist=[],
+            estimated_total_days=0,
+            estimated_investment="",
+            potential_funding="",
+            quick_win_count=0,
+            description=""
+        )
+
+    briefing = {
+        "unternehmensgroesse": size_label,
+        "branche": branch_group,
+        "maturity_level": maturity_level,
+    }
+
+    kit = starter_mod.generate_starter_kit(briefing, lang)
+
+    tools = [
+        StarterKitToolResponse(
+            name=t.name,
+            category=t.category,
+            purpose=t.purpose,
+            priority=t.priority,
+            estimated_setup_days=t.estimated_setup_days,
+            funding_eligible=t.funding_eligible
+        )
+        for t in kit.tools
+    ]
+
+    funding = [
+        StarterKitFundingResponse(
+            program_id=f.program_id,
+            name=f.name,
+            provider=f.provider,
+            max_amount=f.max_amount,
+            fit_reason=f.fit_reason,
+            application_complexity=f.application_complexity
+        )
+        for f in kit.funding
+    ]
+
+    checklist = [
+        StarterKitChecklistResponse(
+            step=c.step,
+            title=c.title,
+            description=c.description,
+            category=c.category,
+            estimated_hours=c.estimated_hours
+        )
+        for c in kit.checklist
+    ]
+
+    return StarterKitResponse(
+        enabled=True,
+        kit_id=kit.kit_id,
+        kit_name=kit.kit_name,
+        segment_label=kit.segment_label,
+        tools=tools,
+        funding=funding,
+        checklist=checklist,
+        estimated_total_days=kit.estimated_total_days,
+        estimated_investment=kit.estimated_investment,
+        potential_funding=kit.potential_funding,
+        quick_win_count=kit.quick_win_count,
+        description=kit.description,
+        html=starter_mod.generate_starter_kit_html(kit, lang),
+        compact_html=starter_mod.generate_starter_kit_compact_html(kit, lang)
+    )
