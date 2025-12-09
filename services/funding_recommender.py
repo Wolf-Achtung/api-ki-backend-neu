@@ -1643,13 +1643,349 @@ def clear_roi_records() -> int:
 
 
 # =============================================================================
+# G19: FUNDING × BRANCH INTELLIGENCE LINKING
+# =============================================================================
+#
+# Branch-specific funding priorities and "Funding Hits" generator.
+# Produces FUNDING_BRANCH_ALIGNMENT_HTML for PDF templates.
+# =============================================================================
+
+FUNDING_BRANCH_ALIGNMENT_ENABLED = os.getenv("FUNDING_BRANCH_ALIGNMENT_ENABLED", "1").lower() in ("1", "true", "yes")
+
+# Branch-specific funding program priorities
+# Maps branch to list of (program_id, priority_boost, reason)
+BRANCH_FUNDING_PRIORITIES: Dict[str, List[Tuple[str, float, str]]] = {
+    "beratung": [
+        ("go_digital", 1.3, "Ideal für Digitalisierung der Beratungsprozesse"),
+        ("digital_jetzt", 1.25, "Passt zu KI-Tools für Beratungsunternehmen"),
+        ("kfw_digitalisierung", 1.2, "Flexibler Kredit für Tool-Investitionen"),
+    ],
+    "it": [
+        ("zim", 1.4, "F&E-Projekte für innovative Softwarelösungen"),
+        ("exist", 1.35, "Spin-offs und Tech-Startups"),
+        ("horizon_europe", 1.3, "EU-Förderung für disruptive Tech"),
+        ("digital_jetzt", 1.2, "KI-Qualifizierung für IT-Teams"),
+    ],
+    "handel": [
+        ("go_digital", 1.35, "E-Commerce-Digitalisierung"),
+        ("digital_jetzt", 1.3, "KI für Kundenservice und Personalisierung"),
+        ("nrw_digital", 1.25, "Regionale Förderung für Handelsunternehmen"),
+        ("kfw_digitalisierung", 1.2, "Finanzierung von Shop-Systemen"),
+    ],
+    "finanzen": [
+        ("ai_act_compliance", 1.4, "Compliance-Unterstützung für regulierte KI"),
+        ("zim", 1.3, "RegTech-Entwicklung"),
+        ("digital_jetzt", 1.25, "KI-Qualifizierung für Finanzteams"),
+        ("bavarian_ai", 1.2, "KI-Förderung für bayerische Finanzdienstleister"),
+    ],
+    "gesundheit": [
+        ("zim", 1.4, "F&E für Medizin-KI"),
+        ("horizon_europe", 1.35, "EU-Förderung für Health-Tech"),
+        ("ai_act_compliance", 1.3, "Compliance für High-Risk-KI im Gesundheitswesen"),
+        ("digital_jetzt", 1.2, "Digitalisierung von Praxen und Kliniken"),
+    ],
+    "industrie": [
+        ("zim", 1.4, "Industrie-4.0-Projekte"),
+        ("invest_bw", 1.3, "Innovationsförderung für Industriebetriebe"),
+        ("digital_jetzt", 1.25, "KI für Predictive Maintenance"),
+        ("kfw_digitalisierung", 1.2, "IoT-Infrastruktur-Finanzierung"),
+    ],
+    "bildung": [
+        ("digital_jetzt", 1.35, "EdTech und Lernplattformen"),
+        ("go_digital", 1.3, "Digitalisierung von Bildungseinrichtungen"),
+        ("horizon_europe", 1.2, "EU-Bildungsprojekte"),
+    ],
+    "marketing": [
+        ("go_digital", 1.35, "Digitale Marketing-Tools"),
+        ("digital_jetzt", 1.3, "KI für Content und Analytics"),
+        ("nrw_digital", 1.2, "Regionale Agenturförderung"),
+    ],
+}
+
+# Default priorities for unknown branches
+DEFAULT_FUNDING_PRIORITIES: List[Tuple[str, float, str]] = [
+    ("go_digital", 1.2, "Universelles Digitalisierungsprogramm"),
+    ("digital_jetzt", 1.15, "KI-Investitionszuschuss für alle Branchen"),
+    ("kfw_digitalisierung", 1.1, "Flexibler Digitalisierungskredit"),
+]
+
+
+@dataclass
+class BranchFundingHit:
+    """A high-priority funding program for a specific branch."""
+    program_id: str
+    program_name: str
+    provider: str
+    max_funding: str
+    funding_rate: str
+    branch_boost: float  # Branch-specific boost factor
+    match_reason: str
+    relevance_score: float
+    ki_relevance: str
+    is_top_hit: bool = False
+
+
+def get_branch_funding_priorities(branch: str) -> List[Tuple[str, float, str]]:
+    """
+    Get funding program priorities for a specific branch.
+
+    Args:
+        branch: Industry/branch name
+
+    Returns:
+        List of (program_id, priority_boost, reason) tuples
+    """
+    if not branch:
+        return DEFAULT_FUNDING_PRIORITIES
+
+    branch_lower = branch.lower().strip()
+
+    # Normalize common branch names
+    branch_mapping = {
+        "consulting": "beratung",
+        "unternehmensberatung": "beratung",
+        "dienstleistungen": "beratung",
+        "it_software": "it",
+        "software": "it",
+        "tech": "it",
+        "ecommerce": "handel",
+        "e-commerce": "handel",
+        "retail": "handel",
+        "finance": "finanzen",
+        "banking": "finanzen",
+        "health": "gesundheit",
+        "healthcare": "gesundheit",
+        "manufacturing": "industrie",
+        "produktion": "industrie",
+        "education": "bildung",
+        "medien": "marketing",
+        "agentur": "marketing",
+    }
+
+    normalized = branch_mapping.get(branch_lower, branch_lower)
+    return BRANCH_FUNDING_PRIORITIES.get(normalized, DEFAULT_FUNDING_PRIORITIES)
+
+
+def get_branch_funding_hits(
+    branch: str,
+    size: str = "team",
+    region: str = "DE",
+    lang: str = "de",
+    limit: int = 5,
+) -> List[BranchFundingHit]:
+    """
+    Get "Funding Hits" - programs with high hit rates for the branch.
+
+    Args:
+        branch: Industry/branch name
+        size: Company size (solo, team, kmu)
+        region: Region code
+        lang: Language code
+        limit: Maximum hits to return
+
+    Returns:
+        List of BranchFundingHit sorted by relevance
+    """
+    if not FUNDING_BRANCH_ALIGNMENT_ENABLED:
+        return []
+
+    programs = load_funding_programs()
+    priorities = get_branch_funding_priorities(branch)
+    priority_map = {p[0]: (p[1], p[2]) for p in priorities}
+
+    hits: List[BranchFundingHit] = []
+
+    for program in programs:
+        program_id = program.get("id", "")
+
+        # Calculate base relevance
+        base_score = calculate_relevance_score(
+            program=program,
+            branch=branch,
+            region=region,
+            size=size,
+            maturity=3,
+            ai_act_risk="minimal",
+            roi=0.0,
+        )
+
+        # Apply branch-specific boost
+        branch_boost, match_reason = priority_map.get(program_id, (1.0, ""))
+
+        if branch_boost > 1.0 or base_score >= 0.5:
+            boosted_score = min(1.0, base_score * branch_boost)
+
+            # Generate match reason if not specified
+            if not match_reason:
+                reasons = get_match_reasons(program, branch, region, size, "minimal", lang)
+                match_reason = reasons[0] if reasons else ""
+
+            hits.append(BranchFundingHit(
+                program_id=program_id,
+                program_name=program.get("name") or program.get("title", ""),
+                provider=program.get("provider") or program.get("region", ""),
+                max_funding=program.get("max_funding") or program.get("max_amount", ""),
+                funding_rate=program.get("funding_rate", ""),
+                branch_boost=branch_boost,
+                match_reason=match_reason,
+                relevance_score=round(boosted_score, 2),
+                ki_relevance=program.get("ki_relevance") or program.get("relevance_ki", "medium"),
+                is_top_hit=branch_boost >= 1.25,
+            ))
+
+    # Sort by relevance score
+    hits.sort(key=lambda h: h.relevance_score, reverse=True)
+
+    # Mark top hits
+    for i, hit in enumerate(hits[:3]):
+        hit.is_top_hit = True
+
+    return hits[:limit]
+
+
+def generate_funding_branch_alignment_html(
+    briefing: Dict[str, Any],
+    lang: str = "de",
+) -> str:
+    """
+    Generate FUNDING_BRANCH_ALIGNMENT_HTML section.
+
+    Args:
+        briefing: Briefing dictionary with branch info
+        lang: Language code
+
+    Returns:
+        HTML string for PDF template
+    """
+    if not FUNDING_BRANCH_ALIGNMENT_ENABLED:
+        return ""
+
+    branch = briefing.get("branche") or briefing.get("BRANCH_LABEL") or ""
+    size = briefing.get("unternehmensgroesse") or briefing.get("SIZE_LABEL") or "team"
+    region = briefing.get("bundesland") or "DE"
+
+    hits = get_branch_funding_hits(branch, size, region, lang)
+
+    if not hits:
+        return ""
+
+    # Build HTML
+    if lang == "en":
+        title = "Industry-Specific Funding Opportunities"
+        subtitle = f"Optimized for your industry: {branch}"
+        top_hit_label = "TOP HIT"
+        headers = ["Program", "Max. Funding", "Rate", "Industry Match"]
+        disclaimer = "* Programs prioritized based on industry alignment. Verify current eligibility."
+    else:
+        title = "Branchenspezifische Förderchancen"
+        subtitle = f"Optimiert für Ihre Branche: {branch}"
+        top_hit_label = "TOP-TREFFER"
+        headers = ["Programm", "Max. Förderung", "Quote", "Branchen-Match"]
+        disclaimer = "* Programme nach Brancheneignung priorisiert. Aktuelle Förderfähigkeit prüfen."
+
+    html_parts = [f"""
+    <div class="funding-branch-alignment" style="margin-top:20px;padding:16px;background:linear-gradient(135deg, #3b82f610, #3b82f605);border:1px solid #3b82f630;border-radius:10px;">
+        <h3 style="margin:0 0 8px 0;font-size:15px;color:#1e40af;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:20px;">🎯</span> {title}
+            <span style="font-size:9px;padding:2px 8px;background:#3b82f6;color:#fff;border-radius:4px;">G19</span>
+        </h3>
+        <p style="margin:0 0 14px 0;font-size:11px;color:#64748b;">{subtitle}</p>
+
+        <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:6px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+            <thead>
+                <tr style="background:#f1f5f9;">
+                    <th style="padding:10px;font-size:10px;text-align:left;font-weight:600;color:#475569;">{headers[0]}</th>
+                    <th style="padding:10px;font-size:10px;text-align:center;font-weight:600;color:#475569;">{headers[1]}</th>
+                    <th style="padding:10px;font-size:10px;text-align:center;font-weight:600;color:#475569;">{headers[2]}</th>
+                    <th style="padding:10px;font-size:10px;text-align:center;font-weight:600;color:#475569;">{headers[3]}</th>
+                </tr>
+            </thead>
+            <tbody>
+    """]
+
+    for hit in hits[:5]:
+        match_pct = int(hit.relevance_score * 100)
+        match_color = "#22c55e" if match_pct >= 75 else "#f59e0b" if match_pct >= 55 else "#6b7280"
+
+        top_badge = ""
+        if hit.is_top_hit:
+            top_badge = f'<span style="font-size:8px;padding:1px 4px;background:#22c55e;color:#fff;border-radius:3px;margin-left:6px;">{top_hit_label}</span>'
+
+        ki_badge_color = "#8b5cf6" if hit.ki_relevance == "high" else "#94a3b8"
+
+        html_parts.append(f"""
+            <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:10px;">
+                    <div style="font-weight:600;font-size:12px;color:#1e293b;">{hit.program_name}{top_badge}</div>
+                    <div style="font-size:10px;color:#64748b;">{hit.provider}</div>
+                    <div style="font-size:9px;color:#3b82f6;margin-top:2px;">{hit.match_reason}</div>
+                </td>
+                <td style="padding:10px;text-align:center;font-size:11px;font-weight:600;color:#1e293b;">{hit.max_funding}</td>
+                <td style="padding:10px;text-align:center;font-size:11px;color:#64748b;">{hit.funding_rate}</td>
+                <td style="padding:10px;text-align:center;">
+                    <div style="font-size:14px;font-weight:700;color:{match_color};">{match_pct}%</div>
+                    <div style="height:4px;width:50px;background:#e2e8f0;border-radius:2px;margin:4px auto 0;overflow:hidden;">
+                        <div style="width:{match_pct}%;height:100%;background:{match_color};"></div>
+                    </div>
+                </td>
+            </tr>
+        """)
+
+    html_parts.append(f"""
+            </tbody>
+        </table>
+        <p style="margin:12px 0 0 0;font-size:9px;color:#94a3b8;font-style:italic;">{disclaimer}</p>
+    </div>
+    """)
+
+    return "\n".join(html_parts)
+
+
+def inject_funding_branch_alignment_into_sections(
+    sections: Dict[str, Any],
+    briefing: Dict[str, Any],
+    lang: str = "de",
+) -> Dict[str, Any]:
+    """
+    Inject funding branch alignment section into report sections.
+
+    Args:
+        sections: Report sections dictionary
+        briefing: Briefing dictionary
+        lang: Language code
+
+    Returns:
+        Updated sections with FUNDING_BRANCH_ALIGNMENT_HTML
+    """
+    if not FUNDING_BRANCH_ALIGNMENT_ENABLED:
+        sections["FUNDING_BRANCH_ALIGNMENT_HTML"] = ""
+        return sections
+
+    try:
+        html = generate_funding_branch_alignment_html(briefing, lang)
+        sections["FUNDING_BRANCH_ALIGNMENT_HTML"] = html
+
+        if html:
+            log.info("✅ Injected funding branch alignment into report")
+        else:
+            log.debug("No funding branch alignment generated")
+
+    except Exception as e:
+        log.error(f"Failed to generate funding branch alignment: {e}")
+        sections["FUNDING_BRANCH_ALIGNMENT_HTML"] = ""
+
+    return sections
+
+
+# =============================================================================
 # MODULE INITIALIZATION
 # =============================================================================
 
 log.info(
-    "[G11/G17.2-C/G17.8-C] Funding Recommender loaded - premium=%s, insights=%s, predictive=%s, roi_tracking=%s",
+    "[G11/G17.2-C/G17.8-C/G19] Funding Recommender loaded - premium=%s, insights=%s, predictive=%s, roi_tracking=%s, branch_alignment=%s",
     ENABLE_PREMIUM_FUNDING,
     FUNDING_INSIGHTS_ENABLED,
     FUNDING_PREDICTIVE_ENABLED,
     ROI_TRACKING_ENABLED,
+    FUNDING_BRANCH_ALIGNMENT_ENABLED,
 )
