@@ -58,6 +58,29 @@ ISSUE_TYPES = {
     "ai_act_weakness": "Prompt produces weak/unreliable AI Act reasoning",
     "branch_context_misuse": "Prompt uses wrong labels or generic formulations",
     "insight_collision": "Prompt generates content conflicting with Insight Engine",
+    # G17.P: New intro redundancy patterns
+    "data_readiness_intro_redundancy": "DATA_READINESS intro uses standard redundant phrases",
+    "business_case_intro_redundancy": "BUSINESS_CASE intro uses standard redundant phrases",
+}
+
+# G17.P: Template phrases to detect and avoid (P1 priority)
+TEMPLATE_PHRASES = {
+    "data_readiness_intro_standard": [
+        r"Datenlage\s+bildet\s+.*Grundlage",
+        r"Datenqualität\s+ist\s+(zentral|entscheidend)",
+        r"entscheidend\s+für\s+.*KI-Strategie",
+        r"Grundlage\s+jeder\s+KI-Implementierung",
+        r"data\s+(quality|situation)\s+is\s+(central|crucial|essential)",
+        r"foundation\s+of\s+(any|every)\s+AI",
+    ],
+    "business_case_intro_standard": [
+        r"wesentlicher\s+Bestandteil",
+        r"zentrale\s+Grundlage",
+        r"zentraler\s+Hebel\s+der\s+Wertschöpfung",
+        r"entscheidend\s+für\s+.*KI-Strategie",
+        r"central\s+lever\s+for\s+value",
+        r"essential\s+(part|component)\s+of",
+    ],
 }
 
 # Storage lock for thread safety
@@ -183,6 +206,10 @@ def detect_prompt_weaknesses(
     # 8. Detect insight engine collisions
     insight_issues = _detect_insight_collisions(prompt_text, signals, prompt_file)
     issues.extend(insight_issues)
+
+    # 9. G17.P: Detect intro redundancy patterns
+    g17p_issues = _detect_g17p_intro_redundancy(prompt_text, signals, prompt_file)
+    issues.extend(g17p_issues)
 
     if PROMPT_REWRITE_DEBUG:
         log.debug(f"Detected {len(issues)} prompt issues")
@@ -517,6 +544,119 @@ def _detect_insight_collisions(
     return issues
 
 
+def _detect_g17p_intro_redundancy(
+    prompt_text: str,
+    signals: List[Any],
+    prompt_file: Optional[str],
+) -> List[PromptIssue]:
+    """
+    G17.P: Detect redundant intro patterns in DATA_READINESS and BUSINESS_CASE.
+
+    These patterns cause overlap with other sections (Roadmap, Executive Summary,
+    Org Change) and should be replaced with the G17.P-compliant intros.
+    """
+    issues = []
+
+    # Check DATA_READINESS intro patterns
+    if prompt_file and "data_readiness" in prompt_file.lower():
+        for pattern in TEMPLATE_PHRASES.get("data_readiness_intro_standard", []):
+            matches = re.findall(pattern, prompt_text, re.IGNORECASE)
+            if matches:
+                issues.append(PromptIssue(
+                    issue_type="data_readiness_intro_redundancy",
+                    severity="high",  # P1 priority
+                    example_input=f"Found pattern: '{matches[0]}'",
+                    example_output="Intro overlaps with Org Change, Tech/Prozesse, Roadmap",
+                    ideal_behavior="Use G17.P intro: 'Die Bewertung Ihrer Datenlage ist eng mit der Prozessanalyse und den Quick Wins verknüpft...'",
+                    detected_pattern=f"Redundant DATA_READINESS intro: {matches[0]}",
+                    prompt_file=prompt_file,
+                ))
+                break  # One issue per file is enough
+
+    # Check BUSINESS_CASE intro patterns
+    if prompt_file and "business_case" in prompt_file.lower():
+        for pattern in TEMPLATE_PHRASES.get("business_case_intro_standard", []):
+            matches = re.findall(pattern, prompt_text, re.IGNORECASE)
+            if matches:
+                issues.append(PromptIssue(
+                    issue_type="business_case_intro_redundancy",
+                    severity="high",  # P1 priority
+                    example_input=f"Found pattern: '{matches[0]}'",
+                    example_output="Intro overlaps with Executive Summary, Quick Wins, ROI Tracking",
+                    ideal_behavior="Use G17.P intro: 'Der Business Case verbindet Ihre Quick Wins mit der realistischen ROI-Prognose...'",
+                    detected_pattern=f"Redundant BUSINESS_CASE intro: {matches[0]}",
+                    prompt_file=prompt_file,
+                ))
+                break  # One issue per file is enough
+
+    return issues
+
+
+def detect_template_phrase_in_output(
+    output_text: str,
+    section_type: str,
+) -> List[Dict[str, Any]]:
+    """
+    G17.P: Detect template phrases in generated output (for validation).
+
+    Args:
+        output_text: The generated HTML output
+        section_type: One of 'data_readiness' or 'business_case'
+
+    Returns:
+        List of detected template phrase matches
+    """
+    matches = []
+    phrases = TEMPLATE_PHRASES.get(f"{section_type}_intro_standard", [])
+
+    for pattern in phrases:
+        found = re.findall(pattern, output_text, re.IGNORECASE)
+        if found:
+            matches.append({
+                "pattern": pattern,
+                "match": found[0] if found else "",
+                "section_type": section_type,
+                "severity": "high",
+            })
+
+    return matches
+
+
+def has_cross_reference(output_text: str, section_type: str) -> bool:
+    """
+    G17.P: Check if output contains required cross-references.
+
+    Args:
+        output_text: The generated HTML output
+        section_type: One of 'data_readiness' or 'business_case'
+
+    Returns:
+        True if cross-references are present
+    """
+    if section_type == "data_readiness":
+        # Should reference Roadmap 90d and Quick Wins
+        patterns = [
+            r"→\s*(siehe|see)\s*(Roadmap|Quick\s*Wins)",
+            r"vgl\.\s*(Roadmap|Quick\s*Wins)",
+            r"\(→\s*(Roadmap|Quick\s*Wins)\)",
+        ]
+    elif section_type == "business_case":
+        # Should reference Quick Wins and/or ROI Tracking
+        patterns = [
+            r"→\s*(siehe|see)\s*(Quick\s*Wins|Sofortmaßnahmen|ROI)",
+            r"vgl\.\s*(Quick\s*Wins|ROI)",
+            r"\(→\s*(Quick\s*Wins|Sofortmaßnahmen)\)",
+        ]
+    else:
+        return True  # No requirement for other sections
+
+    for pattern in patterns:
+        if re.search(pattern, output_text, re.IGNORECASE):
+            return True
+
+    return False
+
+
 # =============================================================================
 # REWRITE SUGGESTION GENERATION (G17.4-B)
 # =============================================================================
@@ -724,6 +864,17 @@ def _generate_suggestion_for_issue(
             "proposed_rewrite": _generate_insight_rewrite(detected_pattern),
             "justification": f"Output conflicts with Insight Engine. Align with real-world data.",
         },
+        # G17.P: Intro redundancy rewrites
+        "data_readiness_intro_redundancy": {
+            "change_type": "rewrite",
+            "proposed_rewrite": _generate_data_readiness_intro_rewrite(),
+            "justification": "G17.P: DATA_READINESS intro causes redundancy with Roadmap, Tech/Prozesse. Replace with cross-reference intro.",
+        },
+        "business_case_intro_redundancy": {
+            "change_type": "rewrite",
+            "proposed_rewrite": _generate_business_case_intro_rewrite(),
+            "justification": "G17.P: BUSINESS_CASE intro causes redundancy with Executive Summary, Quick Wins. Replace with cross-reference intro.",
+        },
     }
 
     template = suggestion_templates.get(issue_type)
@@ -846,6 +997,63 @@ def _generate_insight_rewrite(pattern: str) -> str:
 - Verwenden Sie {{{{segment_insights}}}} für segment-basierte Empfehlungen
 - Beziehen Sie {{{{trend_data}}}} für aktuelle Entwicklungen ein
 - Vermeiden Sie Widersprüche zu aggregierten Feedback-Daten
+"""
+
+
+def _generate_data_readiness_intro_rewrite() -> str:
+    """G17.P: Generate rewrite for DATA_READINESS intro."""
+    return """G17.P-konforme Einleitung für DATA_READINESS:
+
+DE:
+<p>
+  Die Bewertung Ihrer Datenlage ist eng mit der Prozessanalyse und den Quick Wins verknüpft
+  (→ siehe Roadmap 90d, → Quick Wins). Dieser Abschnitt fasst kompakt zusammen, welche
+  vorhandenen Datenquellen, Strukturen und Schnittstellen in <strong>{{BRANCH_CONTEXT_LABEL}}</strong>
+  unmittelbar für erste KI-Workflows nutzbar sind – und wo gezielt nachgebessert werden sollte.
+</p>
+
+EN:
+<p>
+  Your data readiness assessment directly aligns with the process analysis and early Quick Wins
+  (→ see 90-Day Roadmap, → Quick Wins). This section summarizes which existing data sources,
+  structures, and integrations in <strong>{{BRANCH_CONTEXT_LABEL}}</strong> can be used
+  immediately for AI workflows — and where targeted improvements are required.
+</p>
+
+Regeln:
+- Max. 40–55 Wörter
+- Keine "Grundlage jeder KI", "entscheidend für Erfolg" etc.
+- Cross-References zu Roadmap_90d und Quick Wins PFLICHT
+- Kurzlabels (BRANCH_CONTEXT_LABEL) sparsam verwenden
+"""
+
+
+def _generate_business_case_intro_rewrite() -> str:
+    """G17.P: Generate rewrite for BUSINESS_CASE intro."""
+    return """G17.P-konforme Einleitung für BUSINESS_CASE:
+
+DE:
+<p>
+  Der Business Case verbindet Ihre Quick Wins (→ siehe Sofortmaßnahmen) mit der realistischen
+  ROI-Prognose und zeigt, welche Investitionen sich in welchem Zeitraum amortisieren. Im Fokus
+  stehen Zeitersparnis, Qualitätsgewinne und die Auswirkungen der KI-Readiness-Roadmap auf
+  CAPEX, OPEX und Payback für <strong>{{OFFERING_LABEL}}</strong>.
+</p>
+
+EN:
+<p>
+  The Business Case connects your Quick Wins (→ see Quick Wins section) with the realistic
+  ROI forecast and shows how investments amortize over time. The focus lies on time savings,
+  quality gains, and the impact of your AI-Readiness roadmap on CAPEX, OPEX, and payback
+  for <strong>{{OFFERING_LABEL}}</strong>.
+</p>
+
+Regeln:
+- Max. 50–65 Wörter
+- Keine "wesentlicher Bestandteil", "zentrale Grundlage" etc.
+- Cross-Reference zu Quick Wins PFLICHT
+- AI-Act-Kostenfaktoren optional erwähnbar
+- Kein Overlap mit Executive Summary
 """
 
 

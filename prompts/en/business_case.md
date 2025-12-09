@@ -1,5 +1,5 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.2 -->
+<!-- PLATIN++ PROMPT v5.4 - SPRINT G17.P -->
 <!-- SECTION: business_case -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
@@ -34,11 +34,12 @@ PERSONA VARIATIONS (COMPANY_SIZE):
 <section class="section business-case">
   <h2>Business Case – Investment and Expected Return</h2>
 
+  <!-- G17.P: New intro without redundancy, with cross-references -->
   <p>
-    For a company in the <strong>{{BRANCHE_LABEL}}</strong> industry with size
-    <strong>{{COMPANY_SIZE}}</strong>, the process <strong>{{HAUPTLEISTUNG}}</strong>
-    is a central lever for value creation. The following business case shows
-    what financial impact a systematic use of AI can realistically achieve.
+    The Business Case connects your Quick Wins (→ see Quick Wins section) with the realistic
+    ROI forecast and shows how investments amortize over time. The focus lies on time savings,
+    quality gains, and the impact of your AI-Readiness roadmap on CAPEX, OPEX, and payback
+    for <strong>{{OFFERING_LABEL}}</strong>.
   </p>
 
   <h3>Investment and Operating Costs</h3>

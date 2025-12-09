@@ -1,5 +1,5 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.3 - SPRINT N -->
+<!-- PLATIN++ PROMPT v5.4 - SPRINT G17.P -->
 <!-- SECTION: business_case -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
@@ -48,11 +48,12 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
 <section class="section business-case">
   <h2>Business Case – Investition und erwarteter Nutzen</h2>
 
+  <!-- G17.P: Neue Einleitung ohne Redundanz, mit Cross-References -->
   <p>
-    Für ein Unternehmen in der Branche <strong>{{BRANCHE_LABEL}}</strong> mit der Größe
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> ist der Prozess <strong>{{HAUPTLEISTUNG}}</strong>
-    ein zentraler Hebel der Wertschöpfung. Der folgende Business Case zeigt auf,
-    welche finanziellen Wirkungen eine systematische Nutzung von KI realistisch entfalten kann.
+    Der Business Case verbindet Ihre Quick Wins (→ siehe Sofortmaßnahmen) mit der realistischen
+    ROI-Prognose und zeigt, welche Investitionen sich in welchem Zeitraum amortisieren. Im Fokus
+    stehen Zeitersparnis, Qualitätsgewinne und die Auswirkungen der KI-Readiness-Roadmap auf
+    CAPEX, OPEX und Payback für <strong>{{OFFERING_LABEL}}</strong>.
   </p>
 
   <h3>Investition und laufende Kosten</h3>
