@@ -70,7 +70,7 @@ async def generate(payload: Dict[str, Any]) -> Dict[str, Any]:
             await loop.run_in_executor(None, lambda: run_async(briefing_id))
     except (TypeError, KeyError):
         # Fall back - try with payload directly if it's already an int
-        fallback_id = payload if isinstance(payload, int) else 0  # type: ignore[unreachable]
+        fallback_id = payload if isinstance(payload, int) else 0
         if asyncio.iscoroutinefunction(run_async):
             await run_async(fallback_id)  # type: ignore[func-returns-value]
         else:
