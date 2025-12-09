@@ -931,12 +931,15 @@ def _normalize_size(size: str) -> str:
         return "team"
 
     size_lower = size.lower()
-    if "solo" in size_lower or "1" in size_lower or "selbst" in size_lower:
-        return "solo"
-    elif "team" in size_lower or "2-10" in size_lower or "klein" in size_lower:
+    # Check team first to avoid "2-10" matching "1" in solo check
+    if "team" in size_lower or "2-10" in size_lower or "klein" in size_lower:
         return "team"
-    else:
+    elif "solo" in size_lower or "(1)" in size_lower or "selbst" in size_lower:
+        return "solo"
+    elif "kmu" in size_lower or "11-" in size_lower or "250" in size_lower:
         return "kmu"
+    else:
+        return "team"  # Default
 
 
 def _get_branch_data(branch: str) -> Dict[str, Any]:
