@@ -266,7 +266,7 @@ class ToolsRecommendationResult:
 # SMART DEFAULTS
 # =============================================================================
 
-SMART_DEFAULTS = {
+SMART_DEFAULTS: Dict[str, Dict[str, Any]] = {
     "solo": {
         "focus": "automation",
         "priorities": ["workflow_automation", "ai_assistants", "productivity"],
@@ -542,8 +542,9 @@ def get_segment_weight(
 
     # Smart defaults match
     if TOOLS_SMART_DEFAULTS_ENABLED:
-        smart_config = SMART_DEFAULTS.get(size_label.lower(), {})
-        recommended_cats = [c.lower() for c in smart_config.get("recommended_categories", [])]
+        smart_config: Dict[str, Any] = SMART_DEFAULTS.get(size_label.lower(), {})
+        rec_cats: List[str] = smart_config.get("recommended_categories", [])
+        recommended_cats = [c.lower() for c in rec_cats]
         tool_cat = (tool.get("category", "") or "").lower()
 
         if any(cat in tool_cat for cat in recommended_cats):
@@ -599,7 +600,7 @@ def recommend_tools(
 
     # Get smart defaults
     smart_config = SMART_DEFAULTS.get(size_label, SMART_DEFAULTS["kmu"])
-    tools_limit = max_tools or smart_config.get("max_tools", TOOLS_MAX_RECOMMENDATIONS)
+    tools_limit: int = max_tools or int(smart_config.get("max_tools", TOOLS_MAX_RECOMMENDATIONS))
 
     ranked: List[Dict[str, Any]] = []
 
@@ -840,12 +841,13 @@ def generate_insights(
             })
 
     # Persona fit insight
-    smart_config = SMART_DEFAULTS.get(size_label, {})
+    smart_config: Dict[str, Any] = SMART_DEFAULTS.get(size_label, {})
     if smart_config:
+        rec_cats_list: List[str] = smart_config.get("recommended_categories", [])
         insights.append({
             "type": "persona_fit",
-            "title": smart_config.get("description", "Passende Tools"),
-            "description": f"Empfohlene Kategorien: {', '.join(smart_config.get('recommended_categories', [])[:3])}",
+            "title": str(smart_config.get("description", "Passende Tools")),
+            "description": f"Empfohlene Kategorien: {', '.join(rec_cats_list[:3])}",
             "tools": [],
             "icon": "user-check"
         })
