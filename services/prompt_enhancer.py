@@ -1860,6 +1860,18 @@ from typing import Tuple
 PROMPT_SMART_DEFAULTS_ENABLED = os.environ.get("PROMPT_SMART_DEFAULTS_ENABLED", "1") == "1"
 PROMPT_DEFAULT_WORD_INCREASE_FACTOR = float(os.environ.get("PROMPT_DEFAULT_WORD_INCREASE_FACTOR", "1.12"))
 
+# G17.5: Prompt Tuner Integration
+try:
+    from services.prompt_tuner import (
+        PROMPT_TUNER_ENABLED,
+        get_tuning_profile as _get_tuning_profile,
+        TuningProfile,
+    )
+    _TUNER_AVAILABLE = True
+except ImportError:
+    _TUNER_AVAILABLE = False
+    PROMPT_TUNER_ENABLED = False
+
 # Cache for smart defaults analysis
 _smart_defaults_cache: Dict[str, Any] = {
     "last_refresh": None,
@@ -2123,6 +2135,100 @@ class SmartDefaultsEngine:
     def reset_adjustments(self) -> None:
         """Reset adjustment tracking for new report."""
         self.adjustments = []
+
+    # =========================================================================
+    # G17.5: PROMPT TUNER INTEGRATION
+    # =========================================================================
+
+    def get_tuning_adjusted_values(
+        self,
+        prompt_file: str,
+        section_id: str,
+        segment_key: str,
+        base_min_words: int,
+        base_persona_strictness: float = 1.0,
+    ) -> Dict[str, Any]:
+        """
+        Get tuning-adjusted values from the Prompt Tuner (G17.5).
+
+        Args:
+            prompt_file: Path to the prompt file
+            section_id: Section identifier
+            segment_key: Full segment key (e.g., "solo|beratung|minimal|DE")
+            base_min_words: Base minimum word count
+            base_persona_strictness: Base persona strictness
+
+        Returns:
+            Dict with adjusted values:
+            - min_words: Adjusted minimum word count
+            - emphasis_weights: Dict of emphasis weights
+            - redundancy_sensitivity: Adjusted redundancy sensitivity
+            - persona_strictness: Adjusted persona guard strength
+            - tuning_applied: Boolean indicating if tuning was applied
+        """
+        result = {
+            "min_words": base_min_words,
+            "emphasis_weights": {},
+            "redundancy_sensitivity": 1.0,
+            "persona_strictness": base_persona_strictness,
+            "tuning_applied": False,
+        }
+
+        if not _TUNER_AVAILABLE or not PROMPT_TUNER_ENABLED:
+            return result
+
+        try:
+            profile = _get_tuning_profile(prompt_file, section_id, segment_key)
+
+            # Apply target_word_factor
+            result["min_words"] = int(base_min_words * profile.target_word_factor)
+
+            # Apply emphasis_weights
+            result["emphasis_weights"] = profile.emphasis_weights.copy()
+
+            # Apply redundancy_sensitivity
+            result["redundancy_sensitivity"] = profile.redundancy_sensitivity
+
+            # Apply persona_strictness (combined with base)
+            result["persona_strictness"] = base_persona_strictness * profile.persona_strictness
+
+            # Mark that tuning was applied if any value differs from default
+            if (
+                profile.target_word_factor != 1.0 or
+                profile.emphasis_weights or
+                profile.redundancy_sensitivity != 1.0 or
+                profile.persona_strictness != 1.0
+            ):
+                result["tuning_applied"] = True
+
+                # Record adjustment
+                self.adjustments.append(SmartDefaultAdjustment(
+                    adjustment_type="tuner_profile",
+                    target_section=section_id,
+                    original_value={
+                        "min_words": base_min_words,
+                        "persona_strictness": base_persona_strictness,
+                    },
+                    adjusted_value={
+                        "min_words": result["min_words"],
+                        "persona_strictness": result["persona_strictness"],
+                        "redundancy_sensitivity": result["redundancy_sensitivity"],
+                    },
+                    reason=f"G17.5 Tuner profile applied (source: {profile.source})",
+                    segment_key=segment_key,
+                    confidence=0.7 if profile.source == "auto" else 0.9,
+                ))
+
+                log.debug(
+                    f"[G17.5] Applied tuning for {section_id}: "
+                    f"word_factor={profile.target_word_factor:.2f}, "
+                    f"redundancy={profile.redundancy_sensitivity:.2f}"
+                )
+
+        except Exception as e:
+            log.warning(f"[G17.5] Failed to get tuning profile: {e}")
+
+        return result
 
 
 # Global smart defaults engine instance

@@ -1547,3 +1547,170 @@ async def get_prompt_next_patches(
     except Exception as e:
         log.error(f"Failed to get patches: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get patches: {str(e)}")
+
+
+# =============================================================================
+# SPRINT G17.5: AUTO-LEARNING PROMPT TUNER ENDPOINTS
+# =============================================================================
+
+class TunerStatusResponse(BaseModel):
+    """Response model for tuner status."""
+    enabled: bool
+    dry_run: bool
+    profiles_total: int
+    by_segment_stability: Dict[str, int]
+    last_update: Optional[str]
+    config: Dict[str, Any]
+
+
+class TuningProfileResponse(BaseModel):
+    """Response model for a tuning profile."""
+    prompt_file: str
+    section_id: str
+    segment_key: str
+    target_word_factor: float
+    emphasis_weights: Dict[str, float]
+    redundancy_sensitivity: float
+    persona_strictness: float
+    last_updated: str
+    source: str
+    sample_count: int
+    segment_stability: str
+    diff_from_default: Dict[str, Any]
+
+
+class TuningProfilesListResponse(BaseModel):
+    """Response model for tuning profiles list."""
+    profiles: List[TuningProfileResponse]
+    count: int
+
+
+class TunerResetResponse(BaseModel):
+    """Response model for tuner reset operation."""
+    reset_count: int
+    message: str
+
+
+@router.get(
+    "/prompts/tuner-status",
+    response_model=TunerStatusResponse,
+    summary="Get prompt tuner status",
+    description="Returns overall status of the Auto-Learning Prompt Tuner (G17.5-D).",
+)
+async def get_prompt_tuner_status() -> TunerStatusResponse:
+    """Get prompt tuner status for dashboard."""
+    try:
+        from services.prompt_tuner import get_tuner_status
+
+        status = get_tuner_status()
+
+        return TunerStatusResponse(
+            enabled=status.get("enabled", False),
+            dry_run=status.get("dry_run", False),
+            profiles_total=status.get("profiles_total", 0),
+            by_segment_stability=status.get("by_segment_stability", {}),
+            last_update=status.get("last_update"),
+            config=status.get("config", {}),
+        )
+
+    except ImportError:
+        return TunerStatusResponse(
+            enabled=False,
+            dry_run=False,
+            profiles_total=0,
+            by_segment_stability={},
+            last_update=None,
+            config={},
+        )
+    except Exception as e:
+        log.error(f"Failed to get tuner status: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get tuner status: {str(e)}")
+
+
+@router.get(
+    "/prompts/tuner-profiles",
+    response_model=TuningProfilesListResponse,
+    summary="Get tuning profiles",
+    description="Returns list of tuning profiles, optionally filtered by segment (G17.5-D).",
+)
+async def get_prompt_tuner_profiles(
+    segment: Optional[str] = Query(None, description="Segment filter (e.g., 'solo|beratung|minimal|DE')"),
+    limit: int = Query(50, ge=1, le=200, description="Max profiles to return"),
+) -> TuningProfilesListResponse:
+    """Get tuning profiles for dashboard."""
+    try:
+        from services.prompt_tuner import get_all_profiles
+
+        profiles = get_all_profiles(segment_filter=segment)
+
+        # Apply limit
+        profiles = profiles[:limit]
+
+        profile_responses = [
+            TuningProfileResponse(
+                prompt_file=p.get("prompt_file", ""),
+                section_id=p.get("section_id", ""),
+                segment_key=p.get("segment_key", ""),
+                target_word_factor=p.get("target_word_factor", 1.0),
+                emphasis_weights=p.get("emphasis_weights", {}),
+                redundancy_sensitivity=p.get("redundancy_sensitivity", 1.0),
+                persona_strictness=p.get("persona_strictness", 1.0),
+                last_updated=p.get("last_updated", ""),
+                source=p.get("source", "default"),
+                sample_count=p.get("sample_count", 0),
+                segment_stability=p.get("segment_stability", "medium"),
+                diff_from_default=p.get("_diff", {}),
+            )
+            for p in profiles
+        ]
+
+        return TuningProfilesListResponse(
+            profiles=profile_responses,
+            count=len(profile_responses),
+        )
+
+    except ImportError:
+        return TuningProfilesListResponse(profiles=[], count=0)
+    except Exception as e:
+        log.error(f"Failed to get tuner profiles: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get profiles: {str(e)}")
+
+
+@router.post(
+    "/prompts/tuner/reset",
+    response_model=TunerResetResponse,
+    summary="Reset tuning profiles",
+    description="Resets tuning profiles to defaults (Admin/Operator only, G17.5-D).",
+)
+async def reset_prompt_tuner_profiles(
+    segment: Optional[str] = Query(None, description="Reset only profiles matching this segment filter"),
+    dry_run: bool = Query(True, description="If true, only simulate reset without applying"),
+) -> TunerResetResponse:
+    """Reset tuning profiles to defaults."""
+    try:
+        from services.prompt_tuner import (
+            reset_tuning_profiles,
+            get_all_profiles,
+            PROMPT_TUNER_DRY_RUN,
+        )
+
+        if dry_run or PROMPT_TUNER_DRY_RUN:
+            # Just count how many would be reset
+            profiles = get_all_profiles(segment_filter=segment)
+            return TunerResetResponse(
+                reset_count=len(profiles),
+                message=f"Dry-run: Would reset {len(profiles)} profiles. Set dry_run=false to apply.",
+            )
+
+        reset_count = reset_tuning_profiles(segment_filter=segment)
+
+        return TunerResetResponse(
+            reset_count=reset_count,
+            message=f"Reset {reset_count} tuning profiles to defaults.",
+        )
+
+    except ImportError:
+        return TunerResetResponse(reset_count=0, message="Prompt tuner not available")
+    except Exception as e:
+        log.error(f"Failed to reset tuner profiles: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to reset profiles: {str(e)}")
