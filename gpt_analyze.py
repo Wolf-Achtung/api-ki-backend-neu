@@ -4962,6 +4962,29 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     if sections.get("FOERDERPROGRAMME_HTML"):
         sections["FUNDING_HTML"] = sections["FOERDERPROGRAMME_HTML"]
 
+    # =========================================================================
+    # SPRINT B2.2: Tools × Funding Alignment & Starter Kits
+    # =========================================================================
+    try:
+        from services.tools_funding_alignment import inject_alignment_into_sections
+        sections = inject_alignment_into_sections(sections, answers, lang=report_lang)
+    except ImportError:
+        log.debug("[%s] B2.2 tools_funding_alignment not available", run_id)
+    except Exception as e:
+        log.warning("[%s] ⚠️ Tools-Funding alignment failed: %s", run_id, e)
+        sections.setdefault("TOOLS_FUNDING_ALIGNMENT_HTML", "")
+        sections.setdefault("TOOLS_FUNDING_ALIGNMENT_COMPACT_HTML", "")
+
+    try:
+        from services.tools_starter_kits import inject_starter_kit_into_sections
+        sections = inject_starter_kit_into_sections(sections, answers, lang=report_lang)
+    except ImportError:
+        log.debug("[%s] B2.2 tools_starter_kits not available", run_id)
+    except Exception as e:
+        log.warning("[%s] ⚠️ Starter-Kit generation failed: %s", run_id, e)
+        sections.setdefault("STARTER_KIT_HTML", "")
+        sections.setdefault("STARTER_KIT_COMPACT_HTML", "")
+
     log.info("[%s] 🎨 Rendering final HTML...", run_id)
     # --- Sanitize dynamic sections to prevent HTML leaks (z. B. eingebettetes <html> im Pilot-Plan) ---
     try:
