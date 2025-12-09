@@ -74,3 +74,4 @@ data/funding_distribution/
 data/funding_rebalancing/
 data/funding_optimizer/
 data/funding_patches/
+data/embeddings_cache/
