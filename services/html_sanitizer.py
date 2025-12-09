@@ -319,7 +319,7 @@ def _markdown_fallback(md_text: str) -> str:
             html_parts.append(f'<li>{content}</li>')
 
         # Leerzeile
-        elif not stripped:  # type: ignore[unreachable]
+        elif not stripped:
             if in_list:
                 html_parts.append(f'</{list_type}>')
                 in_list = False
@@ -888,7 +888,7 @@ def sanitize_section_html(
 def sanitize_sections_dict(sections: dict, truthy_env: Optional[bool] = True) -> dict:
     """Sanitisiert alle string‑Werte in einem Sections‑Dict."""
     if not isinstance(sections, dict):
-        return sections  # type: ignore[unreachable]
+        return sections
     out = {}
     for k, v in sections.items():
         if isinstance(v, str):

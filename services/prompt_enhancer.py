@@ -1929,7 +1929,7 @@ Nutze den Strategischen Kontext wie folgt:
                     )
             else:
                 # No Developer comment found - prepend to the prompt
-                enhanced = full_context_injection + base_prompt  # type: ignore[unreachable]
+                enhanced = full_context_injection + base_prompt
                 log.debug(
                     "⚠️ No Developer comment found, prepended strategic context to '%s'",
                     prompt_name,
@@ -1973,7 +1973,7 @@ Nutze den Strategischen Kontext wie folgt:
                             pos = section_end_match.start()
                             enhanced = enhanced[:pos] + context_block + "\n" + enhanced[pos:]
                         else:
-                            enhanced = enhanced + "\n" + context_block  # type: ignore[unreachable]
+                            enhanced = enhanced + "\n" + context_block
                         log.debug(
                             "⚠️ No suitable injection point found, appended branch/size context to '%s'",
                             prompt_name,

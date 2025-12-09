@@ -579,7 +579,7 @@ class ReportValidator:
                 actual, minimum = match.groups()
                 section_summaries.append(f"{err.section} ({actual}/{minimum})")
             else:
-                section_summaries.append(err.section)  # type: ignore[unreachable]
+                section_summaries.append(err.section)
 
         bundled = ValidationError(
             severity="WARNING",
@@ -621,7 +621,7 @@ class ReportValidator:
                         term_warnings[term] = []
                     term_warnings[term].append(err)
                 else:
-                    other_errors.append(err)  # type: ignore[unreachable]
+                    other_errors.append(err)
             else:
                 other_errors.append(err)
 
