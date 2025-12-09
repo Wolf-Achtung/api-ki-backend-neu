@@ -56,12 +56,13 @@ class TestPlatinCriticalSections:
         from services.prompt_enhancer import PLATIN_CRITICAL_SECTIONS
 
         # PDF-SLIMDOWN v2.0: Expected token limits per section
+        # G17.R: roadmap_90d increased for Roadmap-Booster sections
         expected_tokens = {
             "foerderpotenzial": 3200,
             "risks": 3000,
             "recommendations": 2500,
             "roadmap_12m": 2800,
-            "roadmap_90d": 2200,
+            "roadmap_90d": 2800,  # G17.R: Increased from 2200 for Booster sections
             "quick_wins": 1800,
             "gamechanger": 3000,
             "unternehmensprofil_markt": 3000,
@@ -105,7 +106,7 @@ class TestPlatinCriticalSections:
             "risks": 600,                  # Reduced from 800
             "recommendations": 400,        # Reduced from 800
             "roadmap_12m": 350,           # Reduced from 900
-            "roadmap_90d": 250,           # NEW
+            "roadmap_90d": 320,           # G17.R: Increased from 250 for Booster sections
             "quick_wins": 150,            # NEW
             "gamechanger": 500,           # Reduced from 700
             "unternehmensprofil_markt": 400,  # Reduced from 500
