@@ -190,6 +190,10 @@ def _build_router_config() -> List[Tuple[str, str, str]]:
     if _bool_env("FEEDBACK_LOOP_ENABLED", "1"):
         cfg.append(("routes.feedback_dashboard", "", "feedback-dashboard"))
 
+    # Sprint B2: Tools Engine 2.0 Dashboard
+    if _bool_env("DASHBOARD_TOOLS_ENABLED", "1"):
+        cfg.append(("routes.tools_dashboard", "", "tools-dashboard"))
+
     return cfg
 
 
