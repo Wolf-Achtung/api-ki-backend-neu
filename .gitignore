@@ -74,3 +74,6 @@ data/funding_distribution/
 data/funding_rebalancing/
 data/funding_optimizer/
 data/funding_patches/
+
+# Runtime Storage
+storage/
