@@ -4985,6 +4985,42 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         sections.setdefault("STARTER_KIT_HTML", "")
         sections.setdefault("STARTER_KIT_COMPACT_HTML", "")
 
+    # =========================================================================
+    # SPRINT G19: Branchenintelligenz & Marktlogik 2.0
+    # =========================================================================
+    try:
+        from services.branch_profile_engine import get_branch_profile_html_sections
+        branch_sections = get_branch_profile_html_sections(answers, lang=report_lang)
+        sections.update(branch_sections)
+        log.info("[%s] ✅ G19 Branch Profile injected", run_id)
+    except ImportError:
+        log.debug("[%s] G19 branch_profile_engine not available", run_id)
+    except Exception as e:
+        log.warning("[%s] ⚠️ G19 Branch Profile generation failed: %s", run_id, e)
+        sections.setdefault("BRANCH_PROFILE_HTML", "")
+        sections.setdefault("BRANCH_OPPORTUNITIES_HTML", "")
+        sections.setdefault("BRANCH_RISKS_HTML", "")
+
+    try:
+        from services.funding_recommender import inject_funding_branch_alignment_into_sections
+        sections = inject_funding_branch_alignment_into_sections(sections, answers, lang=report_lang)
+        log.info("[%s] ✅ G19 Funding Branch Alignment injected", run_id)
+    except ImportError:
+        log.debug("[%s] G19 funding_branch_alignment not available", run_id)
+    except Exception as e:
+        log.warning("[%s] ⚠️ G19 Funding Branch Alignment failed: %s", run_id, e)
+        sections.setdefault("FUNDING_BRANCH_ALIGNMENT_HTML", "")
+
+    try:
+        from services.tools_analytics import inject_tools_branch_alignment_into_sections
+        sections = inject_tools_branch_alignment_into_sections(sections, answers, lang=report_lang)
+        log.info("[%s] ✅ G19 Tools Branch Alignment injected", run_id)
+    except ImportError:
+        log.debug("[%s] G19 tools_branch_alignment not available", run_id)
+    except Exception as e:
+        log.warning("[%s] ⚠️ G19 Tools Branch Alignment failed: %s", run_id, e)
+        sections.setdefault("TOOLS_BRANCH_ALIGNMENT_HTML", "")
+
     log.info("[%s] 🎨 Rendering final HTML...", run_id)
     # --- Sanitize dynamic sections to prevent HTML leaks (z. B. eingebettetes <html> im Pilot-Plan) ---
     try:

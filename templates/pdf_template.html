@@ -1467,6 +1467,28 @@
                         {{QUICK_WINS_HTML}}
                     </div>
                 </section>
+                <!-- SPRINT G19: Branch Profile & Market Intelligence -->
+                {% if BRANCH_PROFILE_HTML %}
+                <section class="section chapter" id="branch-profile">
+                    <div class="section-body">
+                        {{ BRANCH_PROFILE_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                {% if BRANCH_OPPORTUNITIES_HTML %}
+                <section class="section" id="branch-opportunities">
+                    <div class="section-body">
+                        {{ BRANCH_OPPORTUNITIES_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                {% if BRANCH_RISKS_HTML %}
+                <section class="section" id="branch-risks">
+                    <div class="section-body">
+                        {{ BRANCH_RISKS_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
                 <!-- ROADMAP -->
                 <section class="section chapter">
                     <div class="section-header">
@@ -1512,6 +1534,24 @@
                 <section class="chapter">
                     {{FOERDERPOTENZIAL_HTML}}
                 </section>
+                <!-- SPRINT G19: Funding × Branch Alignment -->
+                {% if FUNDING_BRANCH_ALIGNMENT_HTML %}
+                <section class="section chapter" id="funding-branch-alignment">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Branchenspezifisch</span>
+                            <h2>Branchen-Förderpotenzial</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Förderprogramme optimiert für Ihre Branche
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ FUNDING_BRANCH_ALIGNMENT_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
                 <!-- SPRINT B2.2: Tools × Funding Alignment -->
                 {% if TOOLS_FUNDING_ALIGNMENT_HTML %}
                 <section class="section chapter" id="tools-funding-alignment">
@@ -1545,6 +1585,24 @@
                     </div>
                     <div class="section-body">
                         {{ STARTER_KIT_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                <!-- SPRINT G19: Tools × Branch Alignment -->
+                {% if TOOLS_BRANCH_ALIGNMENT_HTML %}
+                <section class="section chapter" id="tools-branch-alignment">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Branchenoptimiert</span>
+                            <h2>Branchen-Tool-Alignment</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            KI-Tools mit höchster Branchenrelevanz
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ TOOLS_BRANCH_ALIGNMENT_HTML|safe }}
                     </div>
                 </section>
                 {% endif %}
