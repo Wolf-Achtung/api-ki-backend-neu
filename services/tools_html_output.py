@@ -327,7 +327,7 @@ def get_sample_validation_analysis() -> Dict[str, Any]:
 # GOLD PROFILE VALIDATION
 # =============================================================================
 
-GOLD_PROFILES = [
+GOLD_PROFILES: List[Dict[str, Any]] = [
     {
         "name": "Solo Consultant - IT Beratung",
         "briefing": {
@@ -388,8 +388,14 @@ def validate_gold_profiles() -> List[Dict[str, Any]]:
         return [{"error": "tools_recommender not available"}]
 
     for profile in GOLD_PROFILES:
-        briefing = profile["briefing"]
-        expected = profile["expected"]
+        briefing: Dict[str, Any] = profile["briefing"]
+        expected: Dict[str, Any] = profile["expected"]
+
+        # Extract expected values with proper typing
+        min_tools: int = int(expected.get("min_tools", 5))
+        max_tools: int = int(expected.get("max_tools", 12))
+        required_categories: List[str] = expected.get("required_categories", [])
+        forbidden_tools: List[str] = expected.get("forbidden_tools", [])
 
         # Get recommendations
         tools = recommend_tools(briefing)
@@ -401,19 +407,19 @@ def validate_gold_profiles() -> List[Dict[str, Any]]:
         passed = True
 
         # Check tool count
-        if len(tools) < expected["min_tools"]:
+        if len(tools) < min_tools:
             passed = False
             checks.append({
                 "check": "min_tools",
                 "passed": False,
-                "message": f"Too few tools: {len(tools)} < {expected['min_tools']}"
+                "message": f"Too few tools: {len(tools)} < {min_tools}"
             })
-        elif len(tools) > expected["max_tools"]:
+        elif len(tools) > max_tools:
             passed = False
             checks.append({
                 "check": "max_tools",
                 "passed": False,
-                "message": f"Too many tools: {len(tools)} > {expected['max_tools']}"
+                "message": f"Too many tools: {len(tools)} > {max_tools}"
             })
         else:
             checks.append({
@@ -423,7 +429,7 @@ def validate_gold_profiles() -> List[Dict[str, Any]]:
             })
 
         # Check required categories
-        for req_cat in expected["required_categories"]:
+        for req_cat in required_categories:
             found = any(req_cat.lower() in cat.lower() for cat in tool_cats)
             if not found:
                 passed = False
@@ -434,7 +440,7 @@ def validate_gold_profiles() -> List[Dict[str, Any]]:
                 })
 
         # Check forbidden tools
-        for forbidden in expected["forbidden_tools"]:
+        for forbidden in forbidden_tools:
             if any(forbidden.lower() in name.lower() for name in tool_names):
                 passed = False
                 checks.append({
