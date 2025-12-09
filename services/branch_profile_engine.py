@@ -1145,6 +1145,14 @@ DEFAULT_BRANCH_DATA = {
 
 # Branch name normalization mapping
 BRANCH_ALIASES: Dict[str, str] = {
+    # G19.1-MAP: Frontend dropdown value keys (primary mappings)
+    "marketing_werbung": "marketing",
+    "beratung_dienstleistungen": "beratung",
+    "finanzen_versicherungen": "finanzen",
+    "handel_ecommerce": "handel",
+    "gesundheit_pflege": "gesundheit",
+    "medien_kreativwirtschaft": "marketing",  # maps to marketing profile
+    "industrie_produktion": "industrie",
     # German variations
     "beratung": "beratung",
     "consulting": "beratung",
@@ -1171,6 +1179,7 @@ BRANCH_ALIASES: Dict[str, str] = {
     "healthcare": "gesundheit",
     "medizin": "gesundheit",
     "pharma": "gesundheit",
+    "pflege": "gesundheit",
     "industrie": "industrie",
     "manufacturing": "industrie",
     "produktion": "industrie",
@@ -1184,6 +1193,8 @@ BRANCH_ALIASES: Dict[str, str] = {
     "werbung": "marketing",
     "medien": "marketing",
     "agentur": "marketing",
+    "kreativ": "marketing",
+    "kreativwirtschaft": "marketing",
     # G19.1: New branch aliases
     "bauwesen_architektur": "bauwesen_architektur",
     "bauwesen": "bauwesen_architektur",
