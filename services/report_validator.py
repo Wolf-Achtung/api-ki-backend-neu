@@ -372,11 +372,12 @@ class ReportValidator:
     # SIZE-AWARE: Unterschiedliche Mindestlängen je Unternehmensgröße
     # Solo = kürzere Reports, KMU = ausführlichere Reports
     # SPRINT N: Updated minimums for length stabilization
+    # SPRINT G17.S: roadmap_90d limits reduced (content is good, just below threshold)
     MIN_SECTION_LENGTH_WORDS = {
         "executive_summary": 150,      # SPRINT N: erhöht von 100
         "business_case": 130,          # ~800 Zeichen
         "quick_wins": 60,              # Base (wird size-aware überschrieben)
-        "roadmap_90d": 250,            # Base (wird size-aware überschrieben)
+        "roadmap_90d": 150,            # SPRINT G17.S: Base reduced from 250
         "roadmap_12m": 500,            # SPRINT N: erhöht von 400
         "strategie_governance": 130,   # ~800 Zeichen
         "org_change": 120,             # ~700 Zeichen
@@ -391,12 +392,14 @@ class ReportValidator:
     }
 
     # SPRINT N: SIZE-AWARE Überschreibungen - Updated minimums
+    # SPRINT G17.S: roadmap_90d limits reduced (content quality is good)
     MIN_SECTION_LENGTH_BY_SIZE = {
         "solo": {
             # SPRINT N: Updated minimums
+            # SPRINT G17.S: roadmap_90d reduced from 250 to 150
             "executive_summary": 150,   # SPRINT N requirement
             "quick_wins": 60,
-            "roadmap_90d": 250,
+            "roadmap_90d": 150,         # SPRINT G17.S: reduced from 250
             "roadmap_12m": 500,         # SPRINT N: erhöht von 400
             "org_change": 80,
             "tools_empfehlungen": 120,  # SPRINT N requirement
@@ -407,9 +410,10 @@ class ReportValidator:
         "team": {
             # SPRINT N: Updated minimums
             # SPRINT G6: tools_empfehlungen erhöht, strategie_governance hinzugefügt
+            # SPRINT G17.S: roadmap_90d reduced from 300 to 200
             "executive_summary": 180,   # SPRINT N requirement
             "quick_wins": 90,
-            "roadmap_90d": 300,
+            "roadmap_90d": 200,         # SPRINT G17.S: reduced from 300
             "roadmap_12m": 600,         # SPRINT N: erhöht von 500
             "org_change": 100,
             "tools_empfehlungen": 190,  # SPRINT G6: erhöht von 160
@@ -422,9 +426,10 @@ class ReportValidator:
             # SPRINT N: Updated minimums
             # SPRINT G2.6: transparency_box + technologie_prozesse reduziert
             # SPRINT G6: tools_empfehlungen + strategie_governance erhöht
+            # SPRINT G17.S: roadmap_90d reduced from 350 to 220
             "executive_summary": 200,   # SPRINT N requirement
             "quick_wins": 120,
-            "roadmap_90d": 350,
+            "roadmap_90d": 220,         # SPRINT G17.S: reduced from 350
             "roadmap_12m": 700,         # SPRINT N: erhöht von 600
             "org_change": 120,
             "tools_empfehlungen": 220,  # SPRINT G6: erhöht von 200

@@ -61,6 +61,9 @@ ISSUE_TYPES = {
     # G17.P: New intro redundancy patterns
     "data_readiness_intro_redundancy": "DATA_READINESS intro uses standard redundant phrases",
     "business_case_intro_redundancy": "BUSINESS_CASE intro uses standard redundant phrases",
+    # G17.S: Branch context and cost block redundancy
+    "branch_context_redundancy": "Long branch descriptions cause redundancy (use BRANCH_SHORT_LABEL)",
+    "cost_block_redundancy": "CAPEX/OPEX blocks repeated across sections",
 }
 
 # G17.P: Template phrases to detect and avoid (P1 priority)
@@ -80,6 +83,25 @@ TEMPLATE_PHRASES = {
         r"entscheidend\s+für\s+.*KI-Strategie",
         r"central\s+lever\s+for\s+value",
         r"essential\s+(part|component)\s+of",
+    ],
+    # SPRINT G17.S: Long branch context patterns (P1 priority)
+    "branch_context_redundancy": [
+        # Overly long branch descriptions (40+ chars typically)
+        r"Beratung,\s+Durchführung\s+und\s+Operationalisierung\s+von\s+KI-Readiness",
+        r"(consulting|advisory|implementation)\s+and\s+operationalization\s+of\s+AI",
+        r"Unternehmen\s+in\s+der\s+Branche\s+\w+\s+mit\s+der\s+Größe\s+\w+",
+        r"company\s+in\s+the\s+\w+\s+industry\s+with\s+size",
+        r"für\s+ein\s+Unternehmen\s+(in|der)\s+\w+\s+(Branche|Größe)",
+        r"for\s+a\s+company\s+in\s+the\s+\w+\s+(industry|sector)",
+    ],
+    # SPRINT G17.S: CAPEX/OPEX standard blocks (P2 priority)
+    "cost_block_redundancy": [
+        r"CAPEX\s+(und|&)\s+OPEX\s+(bilden|sind)\s+(die\s+)?(Grundlage|Basis)",
+        r"einmalige\s+(Aufwände|Kosten)\s+für\s+Aufbau\s+und\s+Einführung",
+        r"monatliche\s+Betriebskosten\s+von\s+(etwa|rund|ca\.?)",
+        r"one-time\s+(setup|implementation)\s+costs",
+        r"monthly\s+operating\s+costs\s+of\s+(about|approximately)",
+        r"(CAPEX|OPEX)\s+breakdown\s+for\s+AI\s+implementation",
     ],
 }
 
