@@ -448,6 +448,7 @@ class ConsistencyEngine:
         self._check_roadmap_alignment()
         self._check_narrative_coherence()
         self._check_exec_snapshot_consistency()  # G27
+        self._check_risk_engine_consistency()  # G29
 
         # Calculate domain scores
         self._calculate_domain_scores()
@@ -1248,12 +1249,308 @@ class ConsistencyEngine:
             ))
 
     # -------------------------------------------------------------------------
+    # DOMAIN 8: Risk Engine V2 Consistency (G29)
+    # -------------------------------------------------------------------------
+
+    def _check_risk_engine_consistency(self) -> None:
+        """
+        G29: Check Risk Engine V2 consistency with other sections and engines.
+
+        Rules:
+        - RISK_001: AI Act class must be consistent with existing risk labels
+        - RISK_002: Vendor risk score must not be lower than Tools Engine vendor_risk
+        - RISK_003: High compliance score tools must be mentioned as risk
+        - RISK_004: High DSGVO risk → Strategy must have mitigation plans
+        - RISK_005: High-Risk AI Act → Strategy must reflect required controls
+        - RISK_006: Consolidated score must be consistent with Strategy Plan
+        """
+        risk_engine_html = self.sections.get("RISK_ENGINE_HTML", "")
+
+        if not risk_engine_html:
+            log.debug("[G29] Risk Engine consistency: Skipping (no risk engine section)")
+            return
+
+        self.report.checked_rules += 6
+
+        # Extract data from Risk Engine HTML
+        risk_html_lower = risk_engine_html.lower()
+
+        # Rule RISK_001: AI Act class consistency
+        # Check if AI Act class in Risk Engine matches existing labels
+        existing_ai_act = _extract_risk_level(self.sections.get("AI_ACT_SUMMARY_HTML", ""))
+        ki_stack_risk = _extract_risk_level(self.sections.get("KI_STACK_SUMMARY_HTML", ""))
+
+        # Extract AI Act class from Risk Engine HTML
+        risk_engine_ai_act = None
+        if "hochrisiko" in risk_html_lower or "high_risk" in risk_html_lower or "high-risk" in risk_html_lower:
+            risk_engine_ai_act = "high"
+        elif "limited" in risk_html_lower or "begrenzt" in risk_html_lower:
+            risk_engine_ai_act = "medium"
+        elif "minimal" in risk_html_lower and "risiko" in risk_html_lower:
+            risk_engine_ai_act = "low"
+
+        # Compare with existing classifications
+        if risk_engine_ai_act and existing_ai_act:
+            if risk_engine_ai_act != existing_ai_act:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="RISK_001",
+                    severity="ERROR",
+                    domain="risk_engine",
+                    source_section="risk_engine",
+                    target_section="ai_act_summary",
+                    message="AI Act Klassifizierung im Risk Report inkonsistent mit AI Act Summary",
+                    expected=f"AI Act Level: {existing_ai_act}",
+                    actual=f"Risk Engine zeigt: {risk_engine_ai_act}",
+                    suggestion="Synchronisiere AI Act Klassifizierung zwischen Sections",
+                ))
+
+        # Rule RISK_002: Vendor Risk Score consistency
+        # Extract vendor risk from Tools Engine
+        tools_html = self.sections.get("KI_STACK_SUMMARY_HTML", "") or self.sections.get("TOOLS_HTML", "")
+        tools_vendor_risk = self._extract_tools_vendor_risk(tools_html)
+
+        # Extract vendor risk from Risk Engine
+        risk_vendor_score = self._extract_vendor_score_from_risk_engine(risk_engine_html)
+
+        if tools_vendor_risk and risk_vendor_score:
+            if risk_vendor_score < tools_vendor_risk:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="RISK_002",
+                    severity="ERROR",
+                    domain="risk_engine",
+                    source_section="risk_engine",
+                    target_section="tools_engine",
+                    message="Vendor Risk Score im Risk Report niedriger als in Tools Engine",
+                    expected=f"Vendor Risk >= {tools_vendor_risk}",
+                    actual=f"Risk Engine zeigt: {risk_vendor_score}",
+                    suggestion="Vendor Risk Score muss mindestens dem Tools Engine Wert entsprechen",
+                ))
+
+        # Rule RISK_003: High compliance tools must be in risk report
+        high_compliance_tools = self._extract_high_compliance_tools(tools_html)
+
+        if high_compliance_tools:
+            missing_tools = []
+            for tool_name in high_compliance_tools:
+                if tool_name.lower() not in risk_html_lower:
+                    missing_tools.append(tool_name)
+
+            if missing_tools:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="RISK_003",
+                    severity="WARNING",
+                    domain="risk_engine",
+                    source_section="tools_engine",
+                    target_section="risk_engine",
+                    message="Tools mit hohem Compliance-Score fehlen im Risk Report",
+                    expected="Compliance-kritische Tools als Risiko erwähnt",
+                    actual=f"Fehlend: {', '.join(missing_tools[:3])}",
+                    suggestion="Erwähne Tools mit Compliance-Score >= 4 im Risk Report",
+                ))
+
+        # Rule RISK_004: High DSGVO risk → Strategy needs mitigation
+        dsgvo_high = "hoch" in risk_html_lower and ("dsgvo" in risk_html_lower or "datenschutz" in risk_html_lower)
+
+        strategy_html = self.sections.get("STRATEGY_PLAN_HTML", "") or self.sections.get("ROADMAP_12M_HTML", "")
+
+        if dsgvo_high and strategy_html:
+            strategy_lower = strategy_html.lower()
+            has_mitigation = any(term in strategy_lower for term in [
+                "datenschutz", "dsgvo", "privacy", "mitigation", "schutzmaßnahme",
+                "einwilligung", "consent", "anonymisierung", "pseudonymisierung"
+            ])
+
+            if not has_mitigation:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="RISK_004",
+                    severity="WARNING",
+                    domain="risk_engine",
+                    source_section="risk_engine",
+                    target_section="strategy_plan",
+                    message="Hohes DSGVO-Risiko ohne Mitigation-Plan im Strategy",
+                    expected="Datenschutz-Maßnahmen im Strategy Plan",
+                    actual="Keine DSGVO-Mitigation-Maßnahmen gefunden",
+                    suggestion="Ergänze konkrete Datenschutz-Maßnahmen im Strategy Plan",
+                ))
+
+        # Rule RISK_005: High-Risk AI Act → Strategy reflects controls
+        ai_act_high = ("high_risk" in risk_html_lower or "hochrisiko" in risk_html_lower or
+                       "high-risk" in risk_html_lower)
+
+        if ai_act_high and strategy_html:
+            strategy_lower = strategy_html.lower()
+            has_controls = any(term in strategy_lower for term in [
+                "risikomanagement", "risk management", "dokumentation", "logging",
+                "human oversight", "human-in-the-loop", "qualitätssicherung",
+                "audit", "kontrolle", "monitoring", "ai act"
+            ])
+
+            if not has_controls:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="RISK_005",
+                    severity="ERROR",
+                    domain="risk_engine",
+                    source_section="risk_engine",
+                    target_section="strategy_plan",
+                    message="High-Risk AI Act ohne erforderliche Controls im Strategy",
+                    expected="AI Act Required Controls im Strategy Plan",
+                    actual="Keine AI Act Control-Maßnahmen gefunden",
+                    suggestion="Integriere AI Act Required Controls in den Strategy Plan",
+                ))
+
+        # Rule RISK_006: Consolidated Score consistency with Strategy
+        consolidated_score = self._extract_consolidated_score(risk_engine_html)
+
+        if consolidated_score is not None and strategy_html:
+            strategy_lower = strategy_html.lower()
+
+            # High risk score (low safety) shouldn't have "low risk" narrative
+            if consolidated_score <= 40:  # Grade F or D
+                low_risk_claims = any(term in strategy_lower for term in [
+                    "niedriges risiko", "low risk", "minimales risiko", "minimal risk",
+                    "geringes risiko", "unkritisch", "unbedenklich"
+                ])
+
+                if low_risk_claims:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="RISK_006",
+                        severity="ERROR",
+                        domain="risk_engine",
+                        source_section="risk_engine",
+                        target_section="strategy_plan",
+                        message="Strategy behauptet niedriges Risiko bei hohem Risk Score",
+                        expected=f"Risiko-Narrative konsistent mit Score {consolidated_score:.0f}",
+                        actual="Strategy suggeriert niedrigeres Risiko als berechnet",
+                        suggestion="Passe Risk-Narrative im Strategy Plan an den Score an",
+                    ))
+
+            # Low risk score (high safety) shouldn't have "high risk" warnings without context
+            elif consolidated_score >= 85:  # Grade A
+                high_risk_claims = any(term in strategy_lower for term in [
+                    "hohes risiko", "high risk", "kritisch", "critical",
+                    "erhebliches risiko", "significant risk"
+                ])
+
+                if high_risk_claims and "mitigation" not in strategy_lower and "maßnahme" not in strategy_lower:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="RISK_006",
+                        severity="INFO",
+                        domain="risk_engine",
+                        source_section="risk_engine",
+                        target_section="strategy_plan",
+                        message="Strategy betont Risiken obwohl Risk Score günstig ist",
+                        expected=f"Balanced Risk-Narrative für Score {consolidated_score:.0f}",
+                        actual="Strategy überbetont Risiken",
+                        suggestion="Balanciere Risiko-Darstellung im Strategy Plan",
+                    ))
+
+    def _extract_tools_vendor_risk(self, html: str) -> Optional[int]:
+        """Extract maximum vendor risk from Tools Engine HTML."""
+        if not html:
+            return None
+
+        import re
+
+        # Look for vendor-risk badges or scores
+        # Pattern: vendor-4, vendor_risk: 4, vendor risk score 4, etc.
+        patterns = [
+            r'vendor[\-_](\d)',
+            r'vendor[\s_-]*risk[\s:]*(\d)',
+            r'vendor[\s_-]*score[\s:]*(\d)',
+        ]
+
+        max_risk = None
+        for pattern in patterns:
+            matches = re.findall(pattern, html.lower())
+            for match in matches:
+                try:
+                    risk = int(match)
+                    if 1 <= risk <= 5:
+                        if max_risk is None or risk > max_risk:
+                            max_risk = risk
+                except ValueError:
+                    continue
+
+        return max_risk
+
+    def _extract_vendor_score_from_risk_engine(self, html: str) -> Optional[int]:
+        """Extract vendor risk score from Risk Engine HTML."""
+        if not html:
+            return None
+
+        import re
+
+        # Look for vendor risk score patterns
+        patterns = [
+            r'vendor[\s_-]*risk[\s_-]*score[\s:]*(\d)',
+            r'vendor[\s_-]*score[\s:]*(\d)',
+            r'>(\d)/5</span>',  # Common badge format
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, html.lower())
+            if match:
+                try:
+                    return int(match.group(1))
+                except ValueError:
+                    continue
+
+        return None
+
+    def _extract_high_compliance_tools(self, html: str) -> List[str]:
+        """Extract tool names with high compliance scores (>=4)."""
+        if not html:
+            return []
+
+        import re
+
+        # Look for compliance-4 or compliance-5 badges near tool names
+        tools: List[str] = []
+
+        # Pattern 1: compliance badge with nearby tool name
+        compliance_pattern = r'compliance-[45]'
+        if re.search(compliance_pattern, html.lower()):
+            # Extract tool names from same HTML
+            tool_names = _extract_tool_names(html)
+            # For simplicity, return first few tools as potentially high-compliance
+            tools = tool_names[:3]
+
+        return tools
+
+    def _extract_consolidated_score(self, html: str) -> Optional[float]:
+        """Extract consolidated score from Risk Engine HTML."""
+        if not html:
+            return None
+
+        import re
+
+        # Look for score patterns like "Score: 75" or large numbers in score context
+        patterns = [
+            r'score[\s:]*(\d+(?:\.\d+)?)',
+            r'>(\d{2,3})</p>',  # Large numbers in paragraphs
+            r'sicherheits[\s-]*score[\s:]*(\d+)',
+            r'safety[\s-]*score[\s:]*(\d+)',
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, html.lower())
+            if match:
+                try:
+                    score = float(match.group(1))
+                    if 0 <= score <= 100:
+                        return score
+                except ValueError:
+                    continue
+
+        return None
+
+    # -------------------------------------------------------------------------
     # SCORING
     # -------------------------------------------------------------------------
 
     def _calculate_domain_scores(self) -> None:
         """Calculate scores per domain."""
-        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot"]
+        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot", "risk_engine"]
 
         for domain in domains:
             domain_issues = [i for i in self.report.issues if i.domain == domain]
