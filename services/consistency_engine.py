@@ -651,6 +651,150 @@ class ConsistencyEngine:
                 suggestion="Prüfe Förder-Eligibility für Unternehmensgrße",
             ))
 
+        # G26: Additional Funding Engine V2 rules
+        self._check_funding_v2_consistency(ki_stack_html, funding_html)
+
+    def _check_funding_v2_consistency(self, ki_stack_html: str, funding_html: str) -> None:
+        """G26: Check Funding Engine V2 consistency rules."""
+        self.report.checked_rules += 5
+
+        size = self.briefing.get("unternehmensgroesse", "").lower()
+        size_label = "solo" if "solo" in size or "freiberuf" in size else (
+            "team" if "team" in size or "klein" in size else "kmu"
+        )
+        region = self.briefing.get("bundesland", "").upper()
+
+        # Get funding matrix HTML if available
+        funding_matrix_html = self.sections.get("FUNDING_MATRIX_2025_HTML", "")
+        combined_html = funding_html + funding_matrix_html
+
+        # Rule FUNDING_003: Year badges must be present in multi-year matrix
+        if funding_matrix_html:
+            has_year_badges = any(f"year-{y}" in funding_matrix_html or f"{y}</span>" in funding_matrix_html
+                                  for y in [2025, 2026, 2027])
+
+            if not has_year_badges:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="FUNDING_003",
+                    severity="WARNING",
+                    domain="funding",
+                    source_section="funding_matrix_2025",
+                    target_section="funding_matrix_2025",
+                    message="Fördermatrix enthält keine Jahr-Badges (2025/2026/2027)",
+                    expected="Jahr-Badges für Multi-Jahres-Ansicht",
+                    actual="Keine Jahr-Badges gefunden",
+                    suggestion="Füge Jahr-Badges zur Fördermatrix hinzu (G26)",
+                ))
+
+        # Rule FUNDING_004: Level badges must be consistent (EU/Bund/Land)
+        if funding_matrix_html:
+            has_level_badges = any(level in funding_matrix_html.lower()
+                                   for level in ["level-eu", "level-federal", "level-state", "bund", "land"])
+
+            if not has_level_badges and len(funding_matrix_html) > 200:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="FUNDING_004",
+                    severity="INFO",
+                    domain="funding",
+                    source_section="funding_matrix_2025",
+                    target_section="funding_matrix_2025",
+                    message="Fördermatrix enthält keine Ebenen-Badges (EU/Bund/Land)",
+                    expected="Ebenen-Klassifikation für Programme",
+                    actual="Keine Ebenen-Badges gefunden",
+                    suggestion="Füge Ebenen-Badges zur Fördermatrix hinzu",
+                ))
+
+        # Rule FUNDING_005: Regional funding must match Bundesland
+        if region and len(region) == 2:
+            # Check for regional programmes that don't match
+            regional_markers = {
+                "BY": ["bayern", "bayerisch", "freistaat"],
+                "NW": ["nrw", "nordrhein", "westfalen"],
+                "BW": ["baden", "württemberg"],
+                "BE": ["berlin"],
+                "HE": ["hessen", "hessisch"],
+                "SN": ["sachsen", "sächsisch"],
+                "NI": ["niedersachsen"],
+                "HH": ["hamburg"],
+            }
+
+            other_regions = {r: markers for r, markers in regional_markers.items() if r != region}
+            funding_lower = combined_html.lower()
+
+            wrong_region_found = []
+            for other_region, markers in other_regions.items():
+                if any(m in funding_lower for m in markers):
+                    # Check it's actually a programme recommendation, not just mention
+                    for m in markers:
+                        if f"programm" in funding_lower and m in funding_lower:
+                            wrong_region_found.append(other_region)
+                            break
+
+            if wrong_region_found:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="FUNDING_005",
+                    severity="WARNING",
+                    domain="funding",
+                    source_section="funding_matrix_2025",
+                    target_section="foerderpotenzial",
+                    message=f"Landesspezifische Programme aus anderen Bundesländern empfohlen",
+                    expected=f"Nur Programme für Region {region}",
+                    actual=f"Programme aus: {', '.join(wrong_region_found[:2])}",
+                    suggestion=f"Filtere Förderprogramme nach Bundesland {region}",
+                ))
+
+        # Rule FUNDING_006: Deadline urgency must be highlighted
+        if funding_matrix_html:
+            # Check for 2025 programmes without urgency indicators
+            has_2025_deadline = "2025" in funding_matrix_html
+            has_urgency = any(term in funding_matrix_html.lower()
+                              for term in ["urgent", "dringend", "auslauf", "bald", "schnell"])
+
+            if has_2025_deadline and not has_urgency:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="FUNDING_006",
+                    severity="INFO",
+                    domain="funding",
+                    source_section="funding_matrix_2025",
+                    target_section="funding_matrix_2025",
+                    message="2025-Programme ohne Dringlichkeits-Hinweis",
+                    expected="Dringlichkeits-Indikator für auslaufende Programme",
+                    actual="Keine Dringlichkeits-Hinweise gefunden",
+                    suggestion="Füge Dringlichkeits-Badges für 2025-Programme hinzu",
+                ))
+
+        # Rule FUNDING_007: Fit scores must align with company size
+        if funding_matrix_html:
+            # Check for mismatched fit indicators
+            mismatched_fit = False
+
+            if size_label == "solo":
+                # Solo should not have programmes with low solo fit
+                if "fit_solo: 0.2" in funding_matrix_html or "fit_solo: 0.3" in funding_matrix_html:
+                    mismatched_fit = True
+            elif size_label == "kmu":
+                # KMU should not have programmes with low KMU fit
+                if "fit_kmu: 0.2" in funding_matrix_html or "fit_kmu: 0.3" in funding_matrix_html:
+                    mismatched_fit = True
+
+            # Also check for size badges in HTML
+            if size_label == "solo" and any(term in funding_matrix_html.lower()
+                                            for term in ["nur kmu", "ab 10 mitarbeiter", "> 10 ma"]):
+                mismatched_fit = True
+
+            if mismatched_fit:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="FUNDING_007",
+                    severity="WARNING",
+                    domain="funding",
+                    source_section="funding_matrix_2025",
+                    target_section="briefing",
+                    message=f"Förderprogramme mit niedrigem Fit für {size_label} empfohlen",
+                    expected=f"Programme mit hohem Fit für {size_label}",
+                    actual=f"Programme mit niedrigem Size-Fit gefunden",
+                    suggestion=f"Priorisiere Programme mit hohem fit_{size_label} Score",
+                ))
+
     # -------------------------------------------------------------------------
     # DOMAIN 3: KPI Consistency
     # -------------------------------------------------------------------------
