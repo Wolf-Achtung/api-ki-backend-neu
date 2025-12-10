@@ -605,7 +605,9 @@ class TestManifestCompleteness:
             manifest = json.load(f)
 
         assert "_meta" in manifest, "Manifest should have _meta section"
-        assert manifest["_meta"]["version"] == "5.3", "Manifest version should be 5.3"
+        # SPRINT N1: Manifest version updated from 5.3 to 5.4
+        assert manifest["_meta"]["version"] in ("5.3", "5.4"), \
+            f"Manifest version should be 5.3 or 5.4, got {manifest['_meta']['version']}"
 
     def test_manifest_has_de_and_en_sections(self):
         """Verify manifest has both DE and EN sections."""

@@ -187,13 +187,20 @@ class TestTaskE_ValidatorPolish:
     """Tests for TASK E: Validator Polish"""
 
     def test_min_lengths_adjusted_for_solo(self):
-        """Validator should have adjusted min lengths for Solo."""
+        """Validator should have adjusted min lengths for Solo.
+
+        SPRINT N1 UPDATE: Min lengths further reduced for Solo to avoid fallbacks.
+        - strategie_governance: 110 → 90
+        - foerderpotenzial: 800 → 600
+        """
         from services.report_validator import ReportValidator
 
         solo_lengths = ReportValidator.MIN_SECTION_LENGTH_BY_SIZE["solo"]
-        assert solo_lengths.get("strategie_governance") == 110
+        # SPRINT N1: strategie_governance reduced from 110 to 90
+        assert solo_lengths.get("strategie_governance") == 90
         assert solo_lengths.get("tools_empfehlungen") == 110
-        assert solo_lengths.get("foerderpotenzial") == 800
+        # SPRINT N1: foerderpotenzial reduced from 800 to 600
+        assert solo_lengths.get("foerderpotenzial") == 600
 
     def test_min_lengths_adjusted_for_kmu(self):
         """Validator should have adjusted min lengths for KMU."""
