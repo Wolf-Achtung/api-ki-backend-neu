@@ -5306,7 +5306,6 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
 
         bc_simulation = generate_business_case_simulation(
             context=None,
-            sections=sections,
             business_case=sections.get("_bc_report"),
             risk_report_v3=sections.get("_risk_report_v3"),
             auto_report=sections.get("_automation_roadmap_report"),
@@ -5318,17 +5317,16 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         sections["_business_case_simulation_report"] = bc_simulation
 
         # Extract key values for template usage
-        if bc_simulation.roi_distribution:
-            sections["ROI_P50"] = bc_simulation.roi_distribution.p50
-            sections["ROI_P80"] = bc_simulation.roi_distribution.p80
-            sections["ROI_P90"] = bc_simulation.roi_distribution.p90
-        if bc_simulation.payback_distribution:
-            sections["PAYBACK_P50"] = bc_simulation.payback_distribution.p50
+        if bc_simulation.distribution:
+            sections["ROI_P50"] = bc_simulation.distribution.roi_p50
+            sections["ROI_P80"] = bc_simulation.distribution.roi_p80
+            sections["ROI_P90"] = bc_simulation.distribution.roi_p90
+            sections["PAYBACK_P50"] = bc_simulation.distribution.payback_p50
 
         log.info("[%s] ✅ G34 Business Case Simulation generated: P50 ROI=%.1f%%, P80 ROI=%.1f%%",
                  run_id,
-                 bc_simulation.roi_distribution.p50 if bc_simulation.roi_distribution else 0,
-                 bc_simulation.roi_distribution.p80 if bc_simulation.roi_distribution else 0)
+                 bc_simulation.distribution.roi_p50 if bc_simulation.distribution else 0,
+                 bc_simulation.distribution.roi_p80 if bc_simulation.distribution else 0)
     except ImportError:
         log.debug("[%s] G34 business_case_simulation not available", run_id)
         sections.setdefault("BUSINESS_CASE_SIM_HTML", "")
