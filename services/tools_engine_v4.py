@@ -253,8 +253,15 @@ def _estimate_cost_level(tool_name: str, price: str, category: str) -> int:
     price_lower = price.lower() if price else ""
     name_lower = tool_name.lower()
 
-    # Check for free indicators first (exact matches or start of string)
-    if not price_lower or price_lower in ("free", "kostenlos", "gratis", "0", "0€", "$0"):
+    # If no price info, return default moderate
+    if not price_lower:
+        # Check if enterprise tool by name/category
+        if "enterprise" in name_lower or "enterprise" in category.lower():
+            return 4
+        return 3  # Default moderate when unknown
+
+    # Check for free indicators (exact matches or start of string)
+    if price_lower in ("free", "kostenlos", "gratis", "0", "0€", "$0"):
         return 1
     if price_lower.startswith("0 ") or price_lower.startswith("0-") or price_lower.startswith("0€"):
         return 1
