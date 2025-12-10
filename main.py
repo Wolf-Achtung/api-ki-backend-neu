@@ -89,7 +89,7 @@ async def lifespan(app: FastAPI):
 # ---------------------------------------------------------------------------
 # FastAPI App
 # ---------------------------------------------------------------------------
-APP_VERSION = os.getenv("APP_VERSION", "1.2.0")
+APP_VERSION = os.getenv("APP_VERSION", "4.20.0")  # Sprint N3: Quality & Reliability Upgrade
 app = FastAPI(
     title=os.getenv("APP_NAME", "KI-Status-Report API"),
     version=APP_VERSION,

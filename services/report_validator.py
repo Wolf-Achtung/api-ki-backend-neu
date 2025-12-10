@@ -14,7 +14,7 @@ Prüft:
 - Prompt-Leaks in Quick-Wins
 - Generic LLM response leaks (Sprint N1)
 
-Version: 1.7.0-SPRINT-N2 (Placeholder & Leak Healing)
+Version: 1.8.0-SPRINT-N3 (Leak-Buster v2 + Tone Normalizer)
 Author: Claude + Wolf
 
 PLATIN+ ÄNDERUNG: Validierung basiert jetzt auf WÖRTERN statt Zeichen!
@@ -224,8 +224,11 @@ class ReportValidator:
     # SPRINT N1: Generic LLM response leaks - ChatGPT/GPT "standard answers"
     # These indicate the LLM didn't understand the task or returned default responses
     # Case-insensitive matching, triggers CRITICAL error → PLATIN fallback
+    # SPRINT N3-04: Extended to 95+ phrases (Leak-Buster v2)
     GENERIC_LLM_LEAK_PHRASES = [
+        # =================================================================
         # German generic LLM responses
+        # =================================================================
         "ich sehe keine konkrete frage",
         "ich sehe keine konkrete aufgabe",
         "wie kann ich dir helfen",
@@ -245,7 +248,55 @@ class ReportValidator:
         "ich kann keine echtzeitdaten",
         "mein wissen endet",
         "mein trainingsdaten reichen bis",
+        # N3-04: Additional German LLM leak phrases
+        "wie kann ich behilflich sein",
+        "bitte gib mehr details",
+        "bitte geben sie mehr details",
+        "ich benötige weitere informationen",
+        "können sie mir mehr kontext geben",
+        "könnten sie ihre frage präzisieren",
+        "ich verstehe ihre anfrage nicht",
+        "ich verstehe deine anfrage nicht",
+        "ohne weitere angaben kann ich",
+        "ich brauche mehr informationen",
+        "bitte spezifizieren sie",
+        "bitte konkretisieren sie",
+        "leider verstehe ich nicht",
+        "ich bin nicht sicher, was sie meinen",
+        "was genau meinen sie mit",
+        "können sie das näher erläutern",
+        "wie soll ich das verstehen",
+        "ich habe keinen zugang zu aktuellen",
+        "ich verfüge über keine echtzeitdaten",
+        "basierend auf meinem wissensstand",
+        "nach meinem kenntnisstand",
+        "soweit mir bekannt ist",
+        "ich bin mir nicht sicher, ob",
+        "ich kann diese anfrage nicht bearbeiten",
+        "das übersteigt meine fähigkeiten",
+        "ich bin darauf trainiert",
+        "als künstliche intelligenz",
+        "als ki bin ich",
+        "mir fehlen die nötigen informationen",
+        "ohne die entsprechenden daten",
+        "das kann ich leider nicht beantworten",
+        "ich empfehle ihnen, einen experten zu konsultieren",
+        "wenden sie sich bitte an",
+        "bitte haben sie verständnis",
+        "entschuldigung, aber ich kann",
+        "tut mir leid, ich verstehe nicht",
+        "leider kann ich dazu nichts sagen",
+        "ich kann ihnen dabei nicht helfen",
+        "das liegt außerhalb meiner möglichkeiten",
+        "stellen sie mir gerne weitere fragen",
+        "haben sie noch weitere fragen",
+        "ich hoffe, das hilft",
+        "ich hoffe, ich konnte helfen",
+        "lassen sie mich wissen, wenn sie",
+        "bei weiteren fragen stehe ich",
+        # =================================================================
         # English generic LLM responses
+        # =================================================================
         "i don't see a specific question",
         "how can i help you",
         "please describe your request",
@@ -257,12 +308,69 @@ class ReportValidator:
         "i cannot provide real-time",
         "my knowledge cutoff",
         "my training data ends",
+        # N3-04: Additional English LLM leak phrases
+        "how can i assist you",
+        "please provide more details",
+        "i need more information",
+        "could you clarify your question",
+        "i'm not sure what you mean",
+        "i cannot access real-time data",
+        "based on my training",
+        "as of my knowledge cutoff",
+        "i'm an ai language model",
+        "i'm just an ai",
+        "i don't have the ability to",
+        "i cannot browse the internet",
+        "i cannot access external",
+        "feel free to ask me anything",
+        "let me know if you need",
+        "hope this helps",
+        "hope that helps",
+        "i hope this information",
+        "if you have any other questions",
+        "please let me know if",
+        "i'm here to help",
+        "i'm happy to help",
+        "what else can i help",
+        "is there anything else",
+        "unfortunately i cannot",
+        "i apologize but i cannot",
+        "i'm sorry but i can't",
+        "i would recommend consulting",
+        "please consult a professional",
+        # =================================================================
         # Meta-responses that shouldn't appear in reports
+        # =================================================================
         "hier ist meine antwort",
         "im folgenden finden sie meine analyse",
         "gerne erstelle ich",
         "natürlich, hier ist",
         "selbstverständlich, hier ist",
+        # N3-04: Additional meta-response leaks
+        "hier ist eine übersicht",
+        "hier ist ein überblick",
+        "nachfolgend finden sie",
+        "anbei finden sie",
+        "im anschluss finden sie",
+        "ich habe für sie zusammengestellt",
+        "ich fasse zusammen",
+        "here is an overview",
+        "here's a summary",
+        "below you will find",
+        "i've compiled for you",
+        "let me summarize",
+        "to summarize",
+        # Prompt-echo leaks (LLM repeating instructions)
+        "der nutzer fragt nach",
+        "die anfrage lautet",
+        "laut ihrer eingabe",
+        "gemäß ihrer anfrage",
+        "wie in ihrer frage erwähnt",
+        "the user asks for",
+        "the request is to",
+        "according to your input",
+        "as per your request",
+        "as mentioned in your question",
     ]
 
     # SPRINT N: Extended SIZE_FORBIDDEN for Solo personas

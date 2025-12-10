@@ -18,6 +18,14 @@ HYBRID APPROACH (2025-11-20):
 - Perplexity für Markt-/Wettbewerbs-Insights (strukturierte Analyse)
 
 =============================================================================
+Sprint N3-01: RESEARCH RELIABILITY LAYER
+=============================================================================
+- 2-stage retry mechanism for Perplexity timeouts
+- Fallback to Tavily-only mode after max retries
+- Research mode tagging (hybrid, tavily_only, partial_perplexity)
+- Short Query Mode for finance/beratung branches with EN language
+
+=============================================================================
 Sprint N4.3: RESEARCH INTEGRATION MAPPING
 =============================================================================
 
@@ -64,6 +72,7 @@ from __future__ import annotations
 import os
 import html
 import logging
+import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -73,6 +82,15 @@ from . import provider_tavily
 from . import provider_perplexity
 
 log = logging.getLogger(__name__)
+
+# =============================================================================
+# Sprint N3-01: Research Reliability Configuration
+# =============================================================================
+RETRY_DELAYS = [1.5, 3.0]  # Exponential backoff delays in seconds
+MAX_RETRIES = 2
+
+# Branches that benefit from short query mode
+SHORT_QUERY_BRANCHES = ["finance", "finanzen", "beratung", "consulting", "banking"]
 
 # --- Quellen (RSS/Listen) ---
 
@@ -311,10 +329,91 @@ def _tavily_tools_search(branche: str, use_cases: List[str], days: int = 60) -> 
 
 # --- PERPLEXITY INTEGRATION ---
 
-def _perplexity_market_insights(branche: str, hauptleistung: str, days: int = 30) -> List[Dict[str, str]]:
-    """Markt- und Wettbewerbs-Insights via Perplexity API."""
+# =============================================================================
+# Sprint N3-01: Short Query Mode & Retry Mechanism
+# =============================================================================
+
+def shorten_query(query: str) -> str:
+    """
+    N3-01: Short Query Mode for finance/beratung branches.
+    Removes German/English context suffixes for cleaner API queries.
+    """
+    # Split on common context separators
+    for sep in [" für ", " for ", " in der ", " in the "]:
+        if sep in query.lower():
+            parts = query.split(sep[0] + sep[1:])  # case-sensitive split
+            if parts:
+                return parts[0].strip()
+    return query
+
+
+def _perplexity_with_retry(
+    search_func,
+    *args,
+    retry_delays: List[float] = None,
+    **kwargs
+) -> Tuple[List[Dict[str, str]], bool]:
+    """
+    N3-01: Execute Perplexity search with 2-stage retry mechanism.
+
+    Args:
+        search_func: The search function to call
+        *args: Arguments to pass to search_func
+        retry_delays: List of delay times between retries
+        **kwargs: Keyword arguments to pass to search_func
+
+    Returns:
+        Tuple of (results, success_flag)
+        - results: List of search results (may be empty)
+        - success_flag: True if succeeded without fallback
+    """
+    if retry_delays is None:
+        retry_delays = RETRY_DELAYS
+
+    last_error = None
+
+    for attempt in range(MAX_RETRIES + 1):
+        try:
+            results = search_func(*args, **kwargs)
+            if results:
+                return results, True
+            # Empty result but no error - might be valid
+            if attempt == 0:
+                log.info("[RESEARCH-WARN] Perplexity returned empty, retrying...")
+        except Exception as exc:
+            last_error = exc
+            if attempt < MAX_RETRIES:
+                delay = retry_delays[attempt] if attempt < len(retry_delays) else retry_delays[-1]
+                log.warning(
+                    "[RESEARCH-WARN] Perplexity timeout (attempt %d/%d) – retrying in %.1fs...",
+                    attempt + 1, MAX_RETRIES + 1, delay
+                )
+                time.sleep(delay)
+            else:
+                log.warning(
+                    "[RESEARCH-WARN] Perplexity failed after %d attempts: %s",
+                    MAX_RETRIES + 1, exc
+                )
+
+    return [], False
+
+
+def _perplexity_market_insights(
+    branche: str,
+    hauptleistung: str,
+    days: int = 30,
+    lang: str = "de"
+) -> Tuple[List[Dict[str, str]], bool]:
+    """
+    Markt- und Wettbewerbs-Insights via Perplexity API.
+
+    N3-01 Enhanced:
+    - Short Query Mode for finance/beratung + EN
+    - 2-stage retry mechanism
+    - Returns (results, success_flag)
+    """
     if not os.getenv("PERPLEXITY_API_KEY"):
-        return []
+        return [], False
 
     # Build research topic
     topic_parts = ["KI Einsatz und Trends"]
@@ -325,31 +424,57 @@ def _perplexity_market_insights(branche: str, hauptleistung: str, days: int = 30
     topic_parts.append("Deutschland")
 
     topic = " ".join(topic_parts)
+
+    # N3-01: Short Query Mode for finance/beratung with EN language
+    branche_lower = branche.lower() if branche else ""
+    if lang == "en" and any(b in branche_lower for b in SHORT_QUERY_BRANCHES):
+        topic = shorten_query(topic)
+        log.info("[N3-01] Short Query Mode activated for %s (EN)", branche)
+
     log.info("🔍 Perplexity market insights: %s", topic)
 
-    try:
-        results = provider_perplexity.search(topic, days=days, max_items=6)
-        log.info("✅ Perplexity returned %d market insights", len(results))
-        return results
-    except Exception as exc:
-        log.warning("⚠️ Perplexity market insights failed: %s", exc)
-        return []
+    def _do_search():
+        return provider_perplexity.search(topic, days=days, max_items=6)
 
-def _perplexity_competitor_analysis(branche: str, days: int = 30) -> List[Dict[str, str]]:
-    """Wettbewerber-Analyse via Perplexity API."""
+    results, success = _perplexity_with_retry(_do_search)
+    if results:
+        log.info("✅ Perplexity returned %d market insights", len(results))
+    return results, success
+
+
+def _perplexity_competitor_analysis(
+    branche: str,
+    days: int = 30,
+    lang: str = "de"
+) -> Tuple[List[Dict[str, str]], bool]:
+    """
+    Wettbewerber-Analyse via Perplexity API.
+
+    N3-01 Enhanced:
+    - Short Query Mode for finance/beratung + EN
+    - 2-stage retry mechanism
+    - Returns (results, success_flag)
+    """
     if not os.getenv("PERPLEXITY_API_KEY"):
-        return []
+        return [], False
 
     topic = f"Wettbewerber und Marktführer KI-Lösungen {branche} Deutschland 2025"
+
+    # N3-01: Short Query Mode for finance/beratung with EN language
+    branche_lower = branche.lower() if branche else ""
+    if lang == "en" and any(b in branche_lower for b in SHORT_QUERY_BRANCHES):
+        topic = shorten_query(topic)
+        log.info("[N3-01] Short Query Mode activated for competitor analysis (EN)")
+
     log.info("🔍 Perplexity competitor analysis: %s", topic)
 
-    try:
-        results = provider_perplexity.search(topic, days=days, max_items=5)
+    def _do_search():
+        return provider_perplexity.search(topic, days=days, max_items=5)
+
+    results, success = _perplexity_with_retry(_do_search)
+    if results:
         log.info("✅ Perplexity returned %d competitor insights", len(results))
-        return results
-    except Exception as exc:
-        log.warning("⚠️ Perplexity competitor analysis failed: %s", exc)
-        return []
+    return results, success
 
 def run_research(answers: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -358,6 +483,11 @@ def run_research(answers: Dict[str, Any]) -> Dict[str, Any]:
     Sprint N4.1: Enhanced with status tracking and robust error handling.
     Each research component has status: success | partial | error | fallback
 
+    Sprint N3-01: Research Reliability Layer
+    - 2-stage retry for Perplexity
+    - Fallback to tavily_only mode
+    - Research mode tagging (hybrid, tavily_only, partial_perplexity)
+
     Returns:
       {
         "TOOLS_TABLE_HTML": "...",
@@ -365,7 +495,8 @@ def run_research(answers: Dict[str, Any]) -> Dict[str, Any]:
         "MARKET_INSIGHTS_HTML": "...",
         "NEWS_BOX_HTML": "...",
         "last_updated": "YYYY-MM-DD",
-        "research_status": {...}  # NEW: status per component
+        "research_status": {...},
+        "research_sources": {"mode": "hybrid" | "tavily_only" | "partial_perplexity"}
       }
     """
     provider = os.getenv("RESEARCH_PROVIDER", "hybrid").strip().lower()
@@ -380,17 +511,29 @@ def run_research(answers: Dict[str, Any]) -> Dict[str, Any]:
         "news": "pending",
     }
 
+    # Sprint N3-01: Research mode tracking
+    research_sources = {
+        "mode": "hybrid",  # Will be updated based on success/failure
+        "perplexity_success": False,
+        "tavily_success": False,
+    }
+
     # Extract context from answers
     branche = answers.get("BRANCHE_LABEL") or answers.get("branche") or ""
     bundesland = answers.get("BUNDESLAND_LABEL") or answers.get("bundesland") or ""
     hauptleistung = answers.get("hauptleistung") or ""
     use_cases = answers.get("anwendungsfaelle", []) or []
+    lang = answers.get("LANG") or answers.get("lang") or "de"
 
     kws = _kw(answers)
     tools: List[Dict[str, str]] = []
     funding: List[Dict[str, str]] = []
     news: List[Dict[str, str]] = []
     market_insights: List[Dict[str, str]] = []
+
+    # N3-01: Track Perplexity success separately
+    pplx_market_success = False
+    pplx_competitor_success = False
 
     if not offline_only:
         log.info("🔬 Running HYBRID research (Tavily + Perplexity + RSS)...")
@@ -411,30 +554,58 @@ def run_research(answers: Dict[str, Any]) -> Dict[str, Any]:
                     _tavily_funding_search, bundesland, branche
                 )
 
-            # 3. Perplexity for Market Insights
+            # 3. Perplexity for Market Insights (N3-01: with retry + lang)
             if os.getenv("PERPLEXITY_API_KEY"):
                 futures["pplx_market"] = executor.submit(
-                    _perplexity_market_insights, branche, hauptleistung
+                    _perplexity_market_insights, branche, hauptleistung, 30, lang
                 )
 
-            # 4. Perplexity for Competitor Analysis
+            # 4. Perplexity for Competitor Analysis (N3-01: with retry + lang)
             if os.getenv("PERPLEXITY_API_KEY"):
                 futures["pplx_competitor"] = executor.submit(
-                    _perplexity_competitor_analysis, branche
+                    _perplexity_competitor_analysis, branche, 30, lang
                 )
 
             # Collect results
             for key, future in futures.items():
                 try:
-                    result = future.result(timeout=30)
+                    result = future.result(timeout=45)  # Extended timeout for retries
                     if key == "tavily_tools":
                         tools.extend(result)
+                        if result:
+                            research_sources["tavily_success"] = True
                     elif key == "tavily_funding":
                         funding.extend(result)
-                    elif key in ("pplx_market", "pplx_competitor"):
-                        market_insights.extend(result)
+                        if result:
+                            research_sources["tavily_success"] = True
+                    elif key == "pplx_market":
+                        # N3-01: Unpack (results, success_flag)
+                        pplx_results, pplx_market_success = result
+                        market_insights.extend(pplx_results)
+                    elif key == "pplx_competitor":
+                        # N3-01: Unpack (results, success_flag)
+                        pplx_results, pplx_competitor_success = result
+                        market_insights.extend(pplx_results)
                 except Exception as exc:
                     log.warning("⚠️ %s failed: %s", key, exc)
+
+        # N3-01: Determine research mode based on success
+        research_sources["perplexity_success"] = pplx_market_success or pplx_competitor_success
+
+        if research_sources["perplexity_success"] and research_sources["tavily_success"]:
+            research_sources["mode"] = "hybrid"
+        elif research_sources["tavily_success"] and not research_sources["perplexity_success"]:
+            research_sources["mode"] = "tavily_only"
+            log.warning("[N3-01] Perplexity unavailable, switched to tavily_only mode")
+            # Mark market insights as fallback mode
+            if not market_insights:
+                research_status["market"] = "fallback_mode"
+        elif research_sources["perplexity_success"] and not research_sources["tavily_success"]:
+            research_sources["mode"] = "partial_perplexity"
+        else:
+            research_sources["mode"] = "fallback"
+
+        log.info("[N3-01] Research mode: %s", research_sources["mode"])
 
     # --- FALLBACK: Traditional web scraping if Tavily returned nothing ---
     if not tools and not offline_only:
@@ -537,7 +708,8 @@ def run_research(answers: Dict[str, Any]) -> Dict[str, Any]:
         "MARKET_INSIGHTS_HTML": market_html,
         "NEWS_BOX_HTML": news_html,
         "last_updated": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-        "research_status": research_status,  # NEW: status per component
+        "research_status": research_status,  # Sprint N4.1: status per component
+        "research_sources": research_sources,  # Sprint N3-01: mode tracking
     }
     return data
 
