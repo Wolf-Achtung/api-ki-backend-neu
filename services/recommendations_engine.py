@@ -16,7 +16,11 @@ SPRINT N1 CHANGES (RECO_002):
 - Derives risks from: risk_report analysis, keyword matching
 - Called automatically in generate_recommendations_report()
 
-Version: 1.1.0 (Sprint N1 - RECO_002 Consistency Healing)
+SPRINT N2 CHANGES (N2-4.2):
+- Updated derive_relevant_risks() fallback to use "general_risk_reduction"
+- Ensures reduces_risk recommendations always have at least one related_risk
+
+Version: 1.2.0 (Sprint N2 - N2-4.2 Risk Relation Fallback)
 Author: Claude + Wolf
 """
 
@@ -1016,9 +1020,11 @@ def derive_relevant_risks(
                     risks.append(risk_type)
                     break
 
-    # Default fallback if nothing found
+    # SPRINT N2 (N2-4.2): Default fallback to "general_risk_reduction"
+    # Ensures reduces_risk recommendations always have at least one related_risk
     if not risks:
-        risks.append("risk_process")
+        log.info("[N2-4.2] No specific risks derived, using general_risk_reduction fallback")
+        risks.append("general_risk_reduction")
 
     return risks
 
