@@ -3785,7 +3785,7 @@ class ConsistencyEngine:
 
         if risk_report:
             if hasattr(risk_report, "residual_risk_grade"):
-                return risk_report.residual_risk_grade
+                return str(risk_report.residual_risk_grade)
 
         if risk_v3_html:
             # Look for grade indicators
