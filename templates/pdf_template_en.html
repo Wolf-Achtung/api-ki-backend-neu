@@ -2146,6 +2146,24 @@
                     </div>
                 </section>
                 {% endif %}
+                <!-- G37: Benchmark Engine – Industry Comparison & Competitive Position -->
+                {% if BENCHMARK_ENGINE_HTML %}
+                <section class="section chapter" id="benchmark-engine">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Benchmarking</span>
+                            <h2>Industry Comparison & Competitive Position</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            AI Maturity • Industry Median • SWOT
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ BENCHMARK_ENGINE_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
                 <!-- G32: Recommendations Engine – Prioritized Action Recommendations -->
                 {% if RECOMMENDATIONS_ENGINE_HTML %}
                 <section class="section chapter" id="recommendations-engine">
