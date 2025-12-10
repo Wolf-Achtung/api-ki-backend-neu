@@ -242,6 +242,15 @@ class VendorAuditEntry:
             if "Weak security posture" not in self.audit_flags:
                 self.audit_flags.append("Weak security posture")
 
+        # Rule: EU vendor with EU hosting + DPA + certifications -> promote to green
+        if (self.jurisdiction == "EU" and self.data_location == "EU-only" and
+            self.has_dpa and len(self.certifications) >= 1 and
+            self.dsgvo_risk_level != "high" and self.security_posture != "weak"):
+            if self.overall_category == "yellow":
+                self.overall_category = "green"
+                # Remove any flags that were added during yellow checks
+                self.audit_flags = [f for f in self.audit_flags if "Unknown" not in f]
+
     @property
     def is_eu_compliant(self) -> bool:
         """Check if vendor is EU-compliant (EU jurisdiction with DPA)."""

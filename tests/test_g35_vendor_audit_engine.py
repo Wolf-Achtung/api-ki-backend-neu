@@ -307,7 +307,17 @@ class TestVendorAuditReport:
         """Test VendorAuditReport can be instantiated."""
         from services.vendor_audit_engine import VendorAuditReport, VendorAuditEntry
 
-        entry1 = VendorAuditEntry(name="Tool 1", category="LLM", overall_category="green")
+        # Green entry needs: EU jurisdiction, DPA, EU-only data, low risk, certifications
+        entry1 = VendorAuditEntry(
+            name="Tool 1",
+            category="LLM",
+            jurisdiction="EU",
+            has_dpa=True,
+            data_location="EU-only",
+            vendor_risk_score=1,
+            certifications=["ISO 27001"],
+            overall_category="green",
+        )
         entry2 = VendorAuditEntry(name="Tool 2", category="Analytics", overall_category="yellow")
 
         report = VendorAuditReport(
@@ -331,6 +341,7 @@ class TestVendorAuditReport:
             has_dpa=True,
             data_location="EU-only",
             vendor_risk_score=1,
+            certifications=["ISO 27001"],  # Required for green
             overall_category="green",
         )
         entry_red = VendorAuditEntry(
@@ -363,8 +374,9 @@ class TestVendorAuditReport:
         from services.vendor_audit_engine import VendorAuditReport, VendorAuditEntry
 
         entries = [
-            VendorAuditEntry(name="Green 1", category="LLM", jurisdiction="EU", has_dpa=True, vendor_risk_score=1, data_location="EU-only"),
-            VendorAuditEntry(name="Green 2", category="LLM", jurisdiction="EU", has_dpa=True, vendor_risk_score=2, data_location="EU-only"),
+            # Green entries need certifications to stay green
+            VendorAuditEntry(name="Green 1", category="LLM", jurisdiction="EU", has_dpa=True, vendor_risk_score=1, data_location="EU-only", certifications=["ISO 27001"]),
+            VendorAuditEntry(name="Green 2", category="LLM", jurisdiction="EU", has_dpa=True, vendor_risk_score=2, data_location="EU-only", certifications=["SOC2"]),
             VendorAuditEntry(name="Yellow 1", category="LLM", vendor_risk_score=3),
             VendorAuditEntry(name="Red 1", category="LLM", vendor_risk_score=5),
         ]
@@ -393,8 +405,9 @@ class TestVendorAuditReport:
         from services.vendor_audit_engine import VendorAuditReport, VendorAuditEntry
 
         entries = [
-            VendorAuditEntry(name="Green 1", category="LLM", jurisdiction="EU", has_dpa=True, vendor_risk_score=1, data_location="EU-only"),
-            VendorAuditEntry(name="Green 2", category="LLM", jurisdiction="EU", has_dpa=True, vendor_risk_score=2, data_location="EU-only"),
+            # Green entries need certifications to stay green
+            VendorAuditEntry(name="Green 1", category="LLM", jurisdiction="EU", has_dpa=True, vendor_risk_score=1, data_location="EU-only", certifications=["ISO 27001"]),
+            VendorAuditEntry(name="Green 2", category="LLM", jurisdiction="EU", has_dpa=True, vendor_risk_score=2, data_location="EU-only", certifications=["SOC2"]),
         ]
 
         report = VendorAuditReport(entries=entries)
@@ -431,9 +444,9 @@ class TestVendorAuditReport:
         """Test compliance_score calculation."""
         from services.vendor_audit_engine import VendorAuditReport, VendorAuditEntry
 
-        # All green vendors
+        # All green vendors - need certifications for green status
         entries_green = [
-            VendorAuditEntry(name="Green 1", category="LLM", jurisdiction="EU", has_dpa=True, vendor_risk_score=1, data_location="EU-only"),
+            VendorAuditEntry(name="Green 1", category="LLM", jurisdiction="EU", has_dpa=True, vendor_risk_score=1, data_location="EU-only", certifications=["ISO 27001"]),
         ]
         report_green = VendorAuditReport(entries=entries_green)
         assert report_green.compliance_score >= 100.0  # Green = 100 + EU bonus
@@ -466,7 +479,8 @@ class TestVendorAuditReport:
         from services.vendor_audit_engine import VendorAuditReport, VendorAuditEntry
 
         entries = [
-            VendorAuditEntry(name="Green 1", category="LLM", jurisdiction="EU", has_dpa=True, vendor_risk_score=1, data_location="EU-only"),
+            # Green entry needs certifications
+            VendorAuditEntry(name="Green 1", category="LLM", jurisdiction="EU", has_dpa=True, vendor_risk_score=1, data_location="EU-only", certifications=["ISO 27001"]),
             VendorAuditEntry(name="Yellow 1", category="LLM", vendor_risk_score=3),
             VendorAuditEntry(name="Red 1", category="LLM", vendor_risk_score=5),
         ]
