@@ -5167,6 +5167,56 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         sections.setdefault("VENDOR_AUDIT_HTML", "")
 
     # =========================================================================
+    # SPRINT G36: Automation Roadmap Engine – Prozessanalyse & Transformationspfade
+    # =========================================================================
+    try:
+        from services.automation_roadmap_engine import (
+            generate_automation_roadmap,
+            automation_roadmap_to_html,
+        )
+
+        automation_roadmap_report = generate_automation_roadmap(
+            context=None,
+            sections=sections,
+            tools_data=sections.get("_tools_data"),
+            funding_data=sections.get("_funding_data"),
+            risk_report_v3=sections.get("_risk_report_v3"),
+            business_case=sections.get("_bc_report"),
+            strategy_plan=sections.get("_strategy_plan"),
+            vendor_audit_report=sections.get("_vendor_audit_report"),
+            briefing=answers,
+            llm_response=None,
+        )
+
+        sections["AUTOMATION_ROADMAP_HTML"] = automation_roadmap_to_html(
+            automation_roadmap_report,
+            lang=report_lang
+        )
+        sections["_automation_roadmap_report"] = automation_roadmap_report
+
+        # Extract key values for template usage
+        sections["AUTO_TOTAL_PROCESSES"] = automation_roadmap_report.total_processes
+        sections["AUTO_QUICK_WINS"] = automation_roadmap_report.quick_win_count
+        sections["AUTO_AVG_POTENTIAL"] = automation_roadmap_report.avg_automation_potential
+        sections["AUTO_PHASE_1_COUNT"] = len(automation_roadmap_report.phase_1_processes)
+        sections["AUTO_PHASE_2_COUNT"] = len(automation_roadmap_report.phase_2_processes)
+        sections["AUTO_PHASE_3_COUNT"] = len(automation_roadmap_report.phase_3_processes)
+        sections["AUTO_TOTAL_PATHS"] = automation_roadmap_report.total_paths
+
+        log.info("[%s] ✅ G36 Automation Roadmap generated: %d processes, %d paths, %d quick wins, avg potential=%.0f%%",
+                 run_id,
+                 automation_roadmap_report.total_processes,
+                 automation_roadmap_report.total_paths,
+                 automation_roadmap_report.quick_win_count,
+                 automation_roadmap_report.avg_automation_potential * 100)
+    except ImportError:
+        log.debug("[%s] G36 automation_roadmap_engine not available", run_id)
+        sections.setdefault("AUTOMATION_ROADMAP_HTML", "")
+    except Exception as e:
+        log.warning("[%s] ⚠️ G36 Automation Roadmap Engine failed: %s", run_id, e)
+        sections.setdefault("AUTOMATION_ROADMAP_HTML", "")
+
+    # =========================================================================
     # SPRINT G30: Business Case Engine 2.0 – ROI-Simulation & Szenarien
     # =========================================================================
     try:
