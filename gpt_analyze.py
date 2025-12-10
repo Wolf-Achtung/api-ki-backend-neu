@@ -5048,6 +5048,41 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         log.warning("[%s] ⚠️ G19 Tools Branch Alignment failed: %s", run_id, e)
         sections.setdefault("TOOLS_BRANCH_ALIGNMENT_HTML", "")
 
+    # =========================================================================
+    # SPRINT G29: Risk Engine 2.0 – Konsolidierte Risikoanalyse
+    # =========================================================================
+    try:
+        from services.risk_engine_v2 import generate_risk_report, risk_report_to_html
+
+        risk_report = generate_risk_report(
+            context=None,
+            sections=sections,
+            tools_data=sections.get("_tools_data"),  # Pass tools data if available
+            funding_data=sections.get("_funding_data"),  # Pass funding data if available
+            briefing=answers,
+            llm_response=None,  # No LLM call for now, uses extraction
+        )
+
+        sections["RISK_ENGINE_HTML"] = risk_report_to_html(risk_report, lang=report_lang)
+        sections["_risk_report"] = risk_report  # Store for Strategy Engine usage
+
+        # Extract key values for template usage
+        sections["RISK_CONSOLIDATED_SCORE"] = risk_report.consolidated_score
+        sections["RISK_CONSOLIDATED_GRADE"] = risk_report.consolidated_grade
+        sections["RISK_AI_ACT_CLASS"] = risk_report.ai_act_class
+        sections["RISK_DSGVO_LEVEL"] = risk_report.dsgvo_risk_level
+        sections["RISK_VENDOR_SCORE"] = risk_report.vendor_risk_score
+
+        log.info("[%s] ✅ G29 Risk Engine 2.0 generated: score=%.1f, grade=%s, ai_act=%s",
+                 run_id, risk_report.consolidated_score, risk_report.consolidated_grade,
+                 risk_report.ai_act_class)
+    except ImportError:
+        log.debug("[%s] G29 risk_engine_v2 not available", run_id)
+        sections.setdefault("RISK_ENGINE_HTML", "")
+    except Exception as e:
+        log.warning("[%s] ⚠️ G29 Risk Engine 2.0 failed: %s", run_id, e)
+        sections.setdefault("RISK_ENGINE_HTML", "")
+
     log.info("[%s] 🎨 Rendering final HTML...", run_id)
     # --- Sanitize dynamic sections to prevent HTML leaks (z. B. eingebettetes <html> im Pilot-Plan) ---
     try:
