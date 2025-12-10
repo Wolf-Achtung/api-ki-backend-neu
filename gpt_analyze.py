@@ -5133,20 +5133,14 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             recommendations_report_to_html,
         )
 
-        # Build context summaries from previous engines
-        tools_summary = sections.get("KI_STACK_SUMMARY_HTML", "")[:2000] if sections.get("KI_STACK_SUMMARY_HTML") else ""
-        funding_summary = sections.get("FUNDING_MATRIX_2025_HTML", "")[:2000] if sections.get("FUNDING_MATRIX_2025_HTML") else ""
-        risk_summary = sections.get("RISK_ENGINE_HTML", "")[:2000] if sections.get("RISK_ENGINE_HTML") else ""
-        strategy_summary = sections.get("STRATEGY_PLAN_HTML", "")[:2000] if sections.get("STRATEGY_PLAN_HTML") else ""
-        bc_summary = sections.get("BUSINESS_CASE_ENGINE_HTML", "")[:2000] if sections.get("BUSINESS_CASE_ENGINE_HTML") else ""
-
         reco_report = generate_recommendations_report(
             context=None,
-            tools_summary=tools_summary,
-            funding_summary=funding_summary,
-            risk_summary=risk_summary,
-            strategy_summary=strategy_summary,
-            business_case_summary=bc_summary,
+            sections=sections,
+            tools_data=sections.get("_tools_data"),
+            funding_data=sections.get("_funding_data"),
+            risk_report=sections.get("_risk_report"),
+            strategy_plan=sections.get("_strategy_plan"),
+            business_case=sections.get("_bc_report"),
             briefing=answers,
             llm_response=None,  # Will use extraction-based generation
         )
