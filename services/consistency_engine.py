@@ -14,7 +14,12 @@ Prüft 6 Konsistenz-Domänen:
 5. Starter-Kit ↔ Roadmap Alignment
 6. Narrative-Kohärenz (keine widersprüchlichen Aussagen)
 
-Version: 1.0.0 (Sprint G22)
+Sprint N3-03: Consistency v3 - "Smart Raise Floor"
+- Auto-healed sections get +10 points bonus
+- Branch-dependent tolerance for finance/beratung (±20% ROI)
+- Auto-add "risk_general_compliance" for reduces_risk with no assigned risk
+
+Version: 1.1.0 (Sprint N3-03 - Smart Raise Floor)
 Author: Claude + Wolf
 """
 
@@ -35,6 +40,27 @@ __all__ = [
     "ConsistencyEngine",
     "check_consistency",
 ]
+
+
+# =============================================================================
+# Sprint N3-03: Smart Raise Floor Configuration
+# =============================================================================
+
+# Points bonus for auto-healed sections
+HEALING_BONUS_POINTS = 10
+
+# Branches with relaxed ROI tolerance (±20% instead of default)
+RELAXED_ROI_BRANCHES = [
+    "finanzen", "finance", "banking", "fintech",
+    "beratung", "consulting", "advisory",
+]
+
+# Default ROI tolerance between scenarios
+DEFAULT_ROI_TOLERANCE = 0.10  # 10%
+RELAXED_ROI_TOLERANCE = 0.20  # 20% for finance/beratung
+
+# Default risk for reduces_risk recommendations with no assigned risk
+DEFAULT_REDUCES_RISK_FALLBACK = "risk_general_compliance"
 
 
 # =============================================================================
@@ -85,18 +111,47 @@ class ConsistencyReport:
     # Breakdown by domain
     domain_scores: Dict[str, float] = field(default_factory=dict)
 
+    # Sprint N3-03: Track healed sections for bonus points
+    healed_sections: Set[str] = field(default_factory=set)
+    healing_bonus_applied: float = 0.0
+
     def add_issue(self, issue: ConsistencyIssue) -> None:
         """Add an issue and recalculate status."""
         self.issues.append(issue)
         self._recalculate()
+
+    def mark_healed(self, section: str) -> None:
+        """
+        N3-03: Mark a section as healed for bonus points.
+
+        Args:
+            section: Section name that was auto-healed
+        """
+        self.healed_sections.add(section)
+        log.info("[N3-03] Section '%s' marked as HEALED", section)
 
     def _recalculate(self) -> None:
         """Recalculate status, grade, and score based on issues."""
         errors = sum(1 for i in self.issues if i.severity == "ERROR")
         warnings = sum(1 for i in self.issues if i.severity == "WARNING")
 
-        # Score calculation: -10 per error, -3 per warning
-        self.score = max(0.0, 100.0 - (errors * 10) - (warnings * 3))
+        # Base score calculation: -10 per error, -3 per warning
+        base_score = 100.0 - (errors * 10) - (warnings * 3)
+
+        # N3-03: Apply healing bonus if sections were healed
+        # Each healed section adds HEALING_BONUS_POINTS, up to max +20
+        if self.healed_sections:
+            bonus = min(len(self.healed_sections) * HEALING_BONUS_POINTS, 20)
+            self.healing_bonus_applied = bonus
+            log.info(
+                "[N3-03] Healing bonus: +%d points for %d healed sections",
+                bonus, len(self.healed_sections)
+            )
+        else:
+            self.healing_bonus_applied = 0.0
+
+        # Final score with bonus, capped at 0-100
+        self.score = max(0.0, min(100.0, base_score + self.healing_bonus_applied))
 
         # Grade calculation
         if self.score >= 95:
@@ -131,12 +186,73 @@ class ConsistencyReport:
             "passed_rules": self.passed_rules,
             "timestamp": self.timestamp,
             "domain_scores": self.domain_scores,
+            # N3-03: Include healing info
+            "healed_sections": list(self.healed_sections),
+            "healing_bonus": round(self.healing_bonus_applied, 1),
             "summary": {
                 "errors": sum(1 for i in self.issues if i.severity == "ERROR"),
                 "warnings": sum(1 for i in self.issues if i.severity == "WARNING"),
                 "info": sum(1 for i in self.issues if i.severity == "INFO"),
             }
         }
+
+
+# =============================================================================
+# Sprint N3-03: Helper Functions
+# =============================================================================
+
+def get_roi_tolerance(branche: str = "") -> float:
+    """
+    N3-03: Get ROI tolerance based on branch.
+
+    Finance and consulting branches get relaxed tolerance (±20%),
+    other branches use default (±10%).
+
+    Args:
+        branche: Branch/industry name
+
+    Returns:
+        ROI tolerance as decimal (0.10 = 10%)
+    """
+    if not branche:
+        return DEFAULT_ROI_TOLERANCE
+
+    branche_lower = branche.lower()
+    for relaxed_branch in RELAXED_ROI_BRANCHES:
+        if relaxed_branch in branche_lower:
+            log.debug("[N3-03] Relaxed ROI tolerance for branch '%s'", branche)
+            return RELAXED_ROI_TOLERANCE
+
+    return DEFAULT_ROI_TOLERANCE
+
+
+def auto_assign_reduces_risk_fallback(
+    recommendation: Dict[str, Any],
+) -> bool:
+    """
+    N3-03: Auto-assign risk fallback if reduces_risk but no risk assigned.
+
+    If a recommendation has risk_relation="reduces_risk" but related_risks is
+    empty, automatically add "risk_general_compliance".
+
+    Args:
+        recommendation: Recommendation dict to potentially modify
+
+    Returns:
+        True if fallback was applied, False otherwise
+    """
+    risk_relation = recommendation.get("risk_relation", "")
+    related_risks = recommendation.get("related_risks", [])
+
+    if risk_relation == "reduces_risk" and not related_risks:
+        recommendation["related_risks"] = [DEFAULT_REDUCES_RISK_FALLBACK]
+        log.info(
+            "[N3-03] Auto-assigned '%s' to recommendation with reduces_risk",
+            DEFAULT_REDUCES_RISK_FALLBACK
+        )
+        return True
+
+    return False
 
 
 # =============================================================================

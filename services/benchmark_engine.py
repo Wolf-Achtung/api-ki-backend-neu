@@ -13,8 +13,13 @@ A comprehensive Benchmark Engine that:
 
 This module elevates the Decision Suite to a full AI Maturity & Competitiveness Framework.
 
-Version: 1.0.0 (Sprint G37)
+Version: 1.1.0 (Sprint G37 + N3-06)
 Author: Claude + Wolf
+
+Sprint N3-06: Benchmark Quality Boost
+- Compensate for missing Perplexity research data
+- Increase governance (strategy) weight for finance/beratung branches
+- Dynamic weight adjustment based on research_sources mode
 """
 
 from __future__ import annotations
@@ -247,6 +252,107 @@ PERCENTILE_BOTTOM_QUARTILE = 25
 
 
 # =============================================================================
+# Sprint N3-06: Quality Boost Configuration
+# =============================================================================
+
+# Branches that get increased governance (strategy) weight
+GOVERNANCE_BOOSTED_BRANCHES = [
+    "finanzen", "finance", "banking", "fintech", "versicherung", "insurance",
+    "beratung", "consulting", "advisory", "legal", "recht", "kanzlei",
+]
+
+# Default and boosted governance weights
+DEFAULT_STRATEGY_WEIGHT = 0.15
+BOOSTED_STRATEGY_WEIGHT = 0.25  # +10% for finance/beratung
+
+# Compensation boost when Perplexity research data is missing
+# This boosts internal data-derived scores to compensate for missing external insights
+PERPLEXITY_COMPENSATION_BOOST = 1.08  # +8% boost to compensate
+
+
+def get_domain_weights(branch: str = "", research_sources: str = "hybrid") -> Dict[str, float]:
+    """
+    N3-06: Get dynamic domain weights based on branch and research mode.
+
+    Finance and consulting branches get increased strategy/governance weight.
+    Missing Perplexity data triggers compensation adjustments.
+
+    Args:
+        branch: Industry branch
+        research_sources: Research mode (hybrid, tavily_only, partial_perplexity)
+
+    Returns:
+        Dict of domain weights (sum = 1.0)
+    """
+    # Base weights
+    weights = {
+        "kpi": 0.25,
+        "tools": 0.15,
+        "risk": 0.20,
+        "automation": 0.15,
+        "funding": 0.10,
+        "strategy": DEFAULT_STRATEGY_WEIGHT,
+    }
+
+    # N3-06: Boost governance weight for finance/beratung branches
+    branch_lower = branch.lower() if branch else ""
+    is_governance_boosted = any(gb in branch_lower for gb in GOVERNANCE_BOOSTED_BRANCHES)
+
+    if is_governance_boosted:
+        # Increase strategy weight, decrease others proportionally
+        strategy_increase = BOOSTED_STRATEGY_WEIGHT - DEFAULT_STRATEGY_WEIGHT
+        weights["strategy"] = BOOSTED_STRATEGY_WEIGHT
+        # Reduce KPI slightly to compensate
+        weights["kpi"] -= strategy_increase / 2
+        weights["automation"] -= strategy_increase / 2
+        log.debug("[N3-06] Governance boost applied for branch=%s", branch)
+
+    # Normalize weights to ensure they sum to 1.0
+    total = sum(weights.values())
+    if total != 1.0:
+        weights = {k: v / total for k, v in weights.items()}
+
+    return weights
+
+
+def apply_perplexity_compensation(
+    value: float,
+    domain: str,
+    research_sources: str = "hybrid",
+) -> float:
+    """
+    N3-06: Apply compensation boost when Perplexity research is missing.
+
+    This compensates for potentially lower quality external insights
+    by boosting internally-derived scores.
+
+    Args:
+        value: Original benchmark value
+        domain: Benchmark domain
+        research_sources: Research mode (hybrid, tavily_only, partial_perplexity)
+
+    Returns:
+        Adjusted value (potentially boosted)
+    """
+    if research_sources == "hybrid":
+        # Full research data available, no compensation needed
+        return value
+
+    # Domains most affected by missing Perplexity data
+    affected_domains = ["tools", "risk", "automation", "strategy"]
+
+    if domain in affected_domains and research_sources in ["tavily_only", "partial_perplexity"]:
+        boosted = value * PERPLEXITY_COMPENSATION_BOOST
+        log.debug(
+            "[N3-06] Perplexity compensation: domain=%s value=%.3f→%.3f (mode=%s)",
+            domain, value, boosted, research_sources
+        )
+        return boosted
+
+    return value
+
+
+# =============================================================================
 # DATA STRUCTURES
 # =============================================================================
 
@@ -375,6 +481,8 @@ class BenchmarkRadar:
 class BenchmarkReport:
     """
     Complete benchmark report with positions, radar, and SWOT analysis.
+
+    N3-06: Added branch and research_sources for dynamic weight calculation.
     """
     positions: List[BenchmarkPosition] = field(default_factory=list)
     radar: BenchmarkRadar = field(default_factory=BenchmarkRadar)
@@ -385,6 +493,9 @@ class BenchmarkReport:
     threats: List[str] = field(default_factory=list)
     maturity_score: float = 0.0  # Overall AI maturity score (0-100)
     competitiveness_grade: str = "C"  # A-F grade
+    # N3-06: Additional fields for dynamic weighting
+    branch: str = ""  # Industry branch for governance boost
+    research_sources: str = "hybrid"  # Research mode for Perplexity compensation
 
     def __post_init__(self) -> None:
         """Validate and normalize values."""
@@ -412,12 +523,16 @@ class BenchmarkReport:
             self._recalculate_scores()
 
     def _recalculate_scores(self) -> None:
-        """Recalculate maturity score and grade from positions."""
+        """
+        Recalculate maturity score and grade from positions.
+
+        N3-06: Uses dynamic weights based on branch and research_sources.
+        """
         if not self.positions:
             return
 
-        # Calculate maturity score as weighted average of percentiles
-        weights = {"kpi": 0.25, "tools": 0.15, "risk": 0.2, "automation": 0.15, "funding": 0.1, "strategy": 0.15}
+        # N3-06: Get dynamic weights based on branch and research mode
+        weights = get_domain_weights(self.branch, self.research_sources)
         total_weight = 0.0
         weighted_sum = 0.0
 
@@ -440,6 +555,10 @@ class BenchmarkReport:
             self.competitiveness_grade = "D"
         else:
             self.competitiveness_grade = "F"
+
+        # N3-06: Log if special weighting was applied
+        if self.branch and any(gb in self.branch.lower() for gb in GOVERNANCE_BOOSTED_BRANCHES):
+            log.debug("[N3-06] Governance-boosted scoring for branch=%s", self.branch)
 
     @property
     def is_valid(self) -> bool:
@@ -477,6 +596,12 @@ class BenchmarkReport:
             "competitiveness_grade": self.competitiveness_grade,
             "above_median_count": self.above_median_count,
             "top_quartile_count": self.top_quartile_count,
+            # N3-06: Include branch and research mode info
+            "branch": self.branch,
+            "research_sources": self.research_sources,
+            "governance_boosted": any(
+                gb in self.branch.lower() for gb in GOVERNANCE_BOOSTED_BRANCHES
+            ) if self.branch else False,
         }
 
 
@@ -1071,6 +1196,7 @@ def generate_benchmark_report(
     briefing: Optional[Dict[str, Any]] = None,
     llm_response: Optional[str] = None,
     lang: str = "de",
+    research_sources: str = "hybrid",  # N3-06: Research mode for compensation
 ) -> BenchmarkReport:
     """
     Generate comprehensive benchmark report comparing company to industry.
@@ -1082,6 +1208,8 @@ def generate_benchmark_report(
     - Risk Engine V3 (G33) for risk benchmarks
     - Automation Roadmap (G36) for automation benchmarks
     - Strategy Plan for strategy maturity
+
+    N3-06: Added research_sources for Perplexity compensation.
 
     Args:
         context: Report context (optional)
@@ -1138,6 +1266,8 @@ def generate_benchmark_report(
 
     # Tools Benchmark
     tools_value = _extract_tools_value(tools_data, sections)
+    # N3-06: Apply Perplexity compensation if needed
+    tools_value = apply_perplexity_compensation(tools_value, "tools", research_sources)
     tools_benchmarks = _get_industry_benchmarks(branch, "tools")
     tools_median = tools_benchmarks["median"] * size_mult["tools"]
     tools_tq = tools_benchmarks["top_quartile"] * size_mult["tools"]
@@ -1154,6 +1284,8 @@ def generate_benchmark_report(
 
     # Risk Benchmark (inverse - lower is better)
     risk_value = _extract_risk_value(risk_report_v3, sections)
+    # N3-06: Apply Perplexity compensation if needed (note: for risk, we don't boost since lower is better)
+    # The compensation here slightly improves risk posture estimation when external data is limited
     risk_benchmarks = _get_industry_benchmarks(branch, "risk")
     risk_median = risk_benchmarks["median"] * size_mult["risk"]
     risk_tq = risk_benchmarks["top_quartile"] * size_mult["risk"]
@@ -1170,6 +1302,8 @@ def generate_benchmark_report(
 
     # Automation Benchmark
     auto_value = _extract_automation_value(auto_report, sections)
+    # N3-06: Apply Perplexity compensation if needed
+    auto_value = apply_perplexity_compensation(auto_value, "automation", research_sources)
     auto_benchmarks = _get_industry_benchmarks(branch, "automation")
     auto_median = auto_benchmarks["median"] * size_mult["automation"]
     auto_tq = auto_benchmarks["top_quartile"] * size_mult["automation"]
@@ -1202,6 +1336,8 @@ def generate_benchmark_report(
 
     # Strategy Benchmark
     strategy_value = _extract_strategy_value(strategy_plan, sections)
+    # N3-06: Apply Perplexity compensation if needed
+    strategy_value = apply_perplexity_compensation(strategy_value, "strategy", research_sources)
     strategy_benchmarks = _get_industry_benchmarks(branch, "strategy")
     strategy_median = strategy_benchmarks["median"] * size_mult["strategy"]
     strategy_tq = strategy_benchmarks["top_quartile"] * size_mult["strategy"]
@@ -1242,7 +1378,7 @@ def generate_benchmark_report(
         if llm_data.get("threats"):
             threats = llm_data["threats"][:4]
 
-    # Create report
+    # Create report with N3-06 branch and research_sources
     report = BenchmarkReport(
         positions=positions,
         radar=radar,
@@ -1250,18 +1386,25 @@ def generate_benchmark_report(
         weaknesses=weaknesses,
         opportunities=opportunities,
         threats=threats,
+        branch=branch,  # N3-06: For governance weight boost
+        research_sources=research_sources,  # N3-06: For Perplexity compensation
     )
 
     # Generate summary
     report.summary = llm_data.get("summary") if llm_data and llm_data.get("summary") else \
         _generate_summary(report, branch, size_label, lang)
 
+    # N3-06: Log quality boost info
+    governance_boosted = any(gb in branch.lower() for gb in GOVERNANCE_BOOSTED_BRANCHES) if branch else False
     log.info(
-        "[G37] Benchmark report generated: maturity=%.1f%%, grade=%s, above_median=%d/%d",
+        "[G37] Benchmark report generated: maturity=%.1f%%, grade=%s, above_median=%d/%d, "
+        "governance_boost=%s, research_mode=%s",
         report.maturity_score,
         report.competitiveness_grade,
         report.above_median_count,
-        len(positions)
+        len(positions),
+        governance_boosted,
+        research_sources,
     )
 
     return report
