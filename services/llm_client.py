@@ -13,7 +13,13 @@ SPRINT N1 CHANGES:
 - Enhanced soft-retry with immediate retry on first timeout
 - Soft-retry retries once before falling back to PLATIN
 
-Version: 1.1.0 (Sprint N1 - Enhanced Timeout + Soft-Retry)
+SPRINT A (PLATIN++ v4.16) CHANGES:
+- Added SECTION_TIMEOUT_OVERRIDES for section-specific timeouts
+- PREMIUM_SECTIONS list for enhanced retry behavior
+- Two-stage soft-retry for premium sections
+- Enhanced logging with section resilience metrics
+
+Version: 1.2.0 (Sprint A - Section Resilience Layer)
 """
 from __future__ import annotations
 
@@ -43,6 +49,53 @@ LLM_RETRY_BACKOFF_MULTIPLIER = float(os.getenv("LLM_RETRY_BACKOFF_MULTIPLIER", "
 
 # SPRINT N1: Enable soft-retry on first timeout (retry once immediately before fallback)
 LLM_SOFT_RETRY_ENABLED = os.getenv("LLM_SOFT_RETRY_ENABLED", "1").lower() in ("1", "true", "yes")
+
+# =============================================================================
+# SPRINT A: SECTION-SPECIFIC TIMEOUT OVERRIDES
+# =============================================================================
+
+# Premium sections that get extended timeout and enhanced retry
+PREMIUM_SECTIONS: set[str] = {
+    "unternehmensprofil_markt",
+    "strategie_governance",
+    "wettbewerb_benchmark",
+    "roadmap_12m",
+    "risks",
+    "gamechanger",
+    "recommendations",
+    "foerderpotenzial",
+}
+
+# Section-specific timeout overrides (seconds)
+# These sections typically require more generation time
+SECTION_TIMEOUT_OVERRIDES: dict[str, float] = {
+    "unternehmensprofil_markt": 90.0,
+    "strategie_governance": 90.0,
+    "wettbewerb_benchmark": 120.0,  # Complex competitor analysis
+    "roadmap_12m": 90.0,
+    "risks": 90.0,
+    "gamechanger": 100.0,  # Creative content needs time
+    "recommendations": 100.0,
+    "foerderpotenzial": 90.0,
+}
+
+
+def get_section_timeout(section: str) -> float:
+    """
+    Get timeout for a specific section.
+
+    Args:
+        section: Section name
+
+    Returns:
+        Timeout in seconds (section-specific or default)
+    """
+    return SECTION_TIMEOUT_OVERRIDES.get(section, LLM_TIMEOUT)
+
+
+def is_premium_section(section: str) -> bool:
+    """Check if section is a premium section requiring enhanced retry."""
+    return section in PREMIUM_SECTIONS
 
 
 # =============================================================================
@@ -78,6 +131,8 @@ class RetryConfig:
     # SPRINT N1: Soft-retry configuration
     timeout: float = LLM_TIMEOUT
     soft_retry_enabled: bool = LLM_SOFT_RETRY_ENABLED
+    # SPRINT A: Premium section enhanced retry (2 stages for premium sections)
+    premium_retry_stages: int = 2  # Number of soft-retry attempts for premium sections
 
 
 # =============================================================================
@@ -164,6 +219,10 @@ class LLMClient:
             "retries": 0,
             "short_retries": 0,
             "fallbacks": 0,
+            # SPRINT A: Premium section tracking
+            "premium_calls": 0,
+            "premium_retries": 0,
+            "premium_successes": 0,
         }
 
     def call_with_retry(
@@ -176,6 +235,9 @@ class LLMClient:
         """
         Execute LLM call with retry logic.
 
+        SPRINT A: Enhanced with section-specific timeouts and 2-stage soft-retry
+        for premium sections.
+
         Args:
             call_fn: The actual LLM API call function
             section: Section name for logging
@@ -187,6 +249,16 @@ class LLMClient:
         """
         start_time = time.perf_counter()
         self._call_stats["total_calls"] += 1
+
+        # SPRINT A: Track premium section calls
+        is_premium = is_premium_section(section)
+        section_timeout = get_section_timeout(section)
+        if is_premium:
+            self._call_stats["premium_calls"] += 1
+            log.info(
+                "[A-Resilience] Premium section=%s timeout=%.0fs",
+                section, section_timeout
+            )
 
         result = LLMCallResult(success=False)
         last_error: Optional[Exception] = None
@@ -211,6 +283,8 @@ class LLMClient:
                     result.retries_used = attempt
                     result.final_strategy = "primary" if attempt == 0 else "retry"
                     result.total_time_ms = (time.perf_counter() - start_time) * 1000
+                    if is_premium:
+                        self._call_stats["premium_successes"] += 1
                     return result
 
             except Exception as e:
@@ -260,74 +334,112 @@ class LLMClient:
                         "[G14-Retry] Short-retry SUCCESS section=%s time=%.1fms",
                         section, result.total_time_ms
                     )
+                    if is_premium:
+                        self._call_stats["premium_successes"] += 1
                     return result
 
             except Exception as e:
+                last_error = e
                 log.warning(
                     "[G14-Retry] Short-retry FAILED section=%s error=%s",
                     section, str(e)[:100]
                 )
 
-        # Phase 2.5 (SPRINT N1): Soft-retry - one more immediate retry on timeout
+        # Phase 2.5 (SPRINT A): Enhanced Soft-retry with 2 stages for premium sections
+        # For premium sections: retry up to premium_retry_stages times
+        # For regular sections: retry once (original N1 behavior)
         if (
             self.config.soft_retry_enabled
             and last_error is not None
             and isinstance(last_error, (requests.exceptions.Timeout, TimeoutError))
         ):
-            log.warning(
-                "[N1-SoftRetry] Timeout on section=%s, retrying once…",
-                section
+            retry_stages = (
+                self.config.premium_retry_stages if is_premium else 1
             )
 
-            try:
-                content = call_fn(max_tokens=max_tokens, section=section, **kwargs)
-
-                if content is not None:
-                    result.success = True
-                    result.content = content
-                    result.retries_used = self.config.max_retries + 2
-                    result.final_strategy = "soft_retry"
-                    result.total_time_ms = (time.perf_counter() - start_time) * 1000
-                    log.info(
-                        "[N1-SoftRetry] SUCCESS section=%s time=%.1fms",
-                        section, result.total_time_ms
+            for stage in range(retry_stages):
+                if is_premium:
+                    self._call_stats["premium_retries"] += 1
+                    log.warning(
+                        "[A-SoftRetry] Premium section=%s stage=%d/%d, retrying…",
+                        section, stage + 1, retry_stages
                     )
-                    return result
+                else:
+                    log.warning(
+                        "[N1-SoftRetry] Timeout on section=%s, retrying once…",
+                        section
+                    )
 
-            except Exception as e:
-                log.warning(
-                    "[N1-SoftRetry] FAILED section=%s error=%s",
-                    section, str(e)[:100]
-                )
+                try:
+                    content = call_fn(max_tokens=max_tokens, section=section, **kwargs)
+
+                    if content is not None:
+                        result.success = True
+                        result.content = content
+                        result.retries_used = self.config.max_retries + 2 + stage
+                        result.final_strategy = (
+                            f"premium_soft_retry_stage{stage + 1}" if is_premium
+                            else "soft_retry"
+                        )
+                        result.total_time_ms = (time.perf_counter() - start_time) * 1000
+                        log.info(
+                            "[A-SoftRetry] SUCCESS section=%s stage=%d time=%.1fms",
+                            section, stage + 1, result.total_time_ms
+                        )
+                        if is_premium:
+                            self._call_stats["premium_successes"] += 1
+                        return result
+
+                except Exception as e:
+                    last_error = e
+                    log.warning(
+                        "[A-SoftRetry] stage=%d FAILED section=%s error=%s",
+                        stage + 1, section, str(e)[:100]
+                    )
+                    # Small delay between premium retry stages
+                    if is_premium and stage < retry_stages - 1:
+                        time.sleep(1.0)
 
         # Phase 3: All retries exhausted → signal fallback needed
         log.warning(
-            "[G14-Retry] All retries exhausted → PLATIN fallback section=%s",
-            section
+            "[G14-Retry] All retries exhausted → PLATIN fallback section=%s premium=%s",
+            section, is_premium
         )
         self._call_stats["fallbacks"] += 1
 
         result.error = str(last_error)[:200] if last_error else "Unknown error"
         result.retries_used = self.config.max_retries + (
             1 if self.config.short_retry_enabled else 0
-        )
+        ) + (self.config.premium_retry_stages if is_premium else 1)
         result.final_strategy = "fallback"
         result.total_time_ms = (time.perf_counter() - start_time) * 1000
 
         return result
 
     def get_stats(self) -> Dict[str, Any]:
-        """Get call statistics."""
+        """Get call statistics including premium section metrics."""
         total = self._call_stats["total_calls"]
+        premium = self._call_stats["premium_calls"]
         if total == 0:
             return self._call_stats
 
-        return {
+        stats = {
             **self._call_stats,
             "retry_rate": self._call_stats["retries"] / total * 100,
             "short_retry_rate": self._call_stats["short_retries"] / total * 100,
             "fallback_rate": self._call_stats["fallbacks"] / total * 100,
         }
+
+        # SPRINT A: Premium section success rate
+        if premium > 0:
+            stats["premium_success_rate"] = (
+                self._call_stats["premium_successes"] / premium * 100
+            )
+            stats["premium_retry_rate"] = (
+                self._call_stats["premium_retries"] / premium * 100
+            )
+
+        return stats
 
     def reset_stats(self) -> None:
         """Reset call statistics."""
@@ -336,6 +448,10 @@ class LLMClient:
             "retries": 0,
             "short_retries": 0,
             "fallbacks": 0,
+            # SPRINT A: Premium section tracking
+            "premium_calls": 0,
+            "premium_retries": 0,
+            "premium_successes": 0,
         }
 
 
@@ -384,8 +500,8 @@ def call_llm_with_retry(
 # =============================================================================
 
 log.info(
-    "[G14] LLM Client loaded - timeout=%.0fs retry_enabled=%s short_retry=%s "
-    "soft_retry=%s max_retries=%d short_retry_tokens=%d backoff=%.1f×%.1f",
+    "[G14/A] LLM Client v1.2.0 loaded - default_timeout=%.0fs retry_enabled=%s "
+    "short_retry=%s soft_retry=%s max_retries=%d short_retry_tokens=%d backoff=%.1f×%.1f",
     LLM_TIMEOUT,
     True,  # Retry always enabled
     LLM_SHORT_RETRY_ENABLED,
@@ -394,4 +510,15 @@ log.info(
     LLM_SHORT_RETRY_MAXTOKENS,
     LLM_RETRY_BACKOFF_BASE,
     LLM_RETRY_BACKOFF_MULTIPLIER,
+)
+
+# SPRINT A: Log section-specific timeout configuration
+log.info(
+    "[A-Resilience] Premium sections (%d): %s",
+    len(PREMIUM_SECTIONS),
+    ", ".join(sorted(PREMIUM_SECTIONS))
+)
+log.info(
+    "[A-Resilience] Section timeout overrides: %s",
+    ", ".join(f"{k}={v}s" for k, v in sorted(SECTION_TIMEOUT_OVERRIDES.items()))
 )
