@@ -293,6 +293,136 @@ def validate_business_case_with_ai_act(
 
 
 # =============================================================================
+# SPRINT G25: TOOL PROFILE VALIDATION
+# =============================================================================
+
+class ToolProfileValidation:
+    """
+    Validation rules for G25 Tools Engine v4 ToolProfile fields.
+
+    Score interpretation:
+    - Levels (1-5): 1 = best/low, 5 = worst/high (varies by field)
+    - Fit scores (0.0-1.0): 1.0 = perfect fit
+    """
+
+    # Level field bounds (1-5)
+    COST_LEVEL_MIN: int = 1
+    COST_LEVEL_MAX: int = 5
+    COMPLEXITY_LEVEL_MIN: int = 1
+    COMPLEXITY_LEVEL_MAX: int = 5
+    MATURITY_LEVEL_MIN: int = 1
+    MATURITY_LEVEL_MAX: int = 5
+    COMPLIANCE_SCORE_MIN: int = 1
+    COMPLIANCE_SCORE_MAX: int = 5
+    VENDOR_RISK_MIN: int = 1
+    VENDOR_RISK_MAX: int = 5
+
+    # Fit score bounds (0.0-1.0)
+    FIT_SCORE_MIN: float = 0.0
+    FIT_SCORE_MAX: float = 1.0
+
+    @classmethod
+    def validate_level(cls, value: int, field_name: str) -> Tuple[bool, str]:
+        """Validate a level field (1-5)."""
+        if not isinstance(value, int):
+            return False, f"{field_name} must be int, got {type(value).__name__}"
+        if value < 1 or value > 5:
+            return False, f"{field_name} must be 1-5, got {value}"
+        return True, ""
+
+    @classmethod
+    def validate_fit_score(cls, value: float, field_name: str) -> Tuple[bool, str]:
+        """Validate a fit score field (0.0-1.0)."""
+        if not isinstance(value, (int, float)):
+            return False, f"{field_name} must be numeric, got {type(value).__name__}"
+        if value < 0.0 or value > 1.0:
+            return False, f"{field_name} must be 0.0-1.0, got {value}"
+        return True, ""
+
+    @classmethod
+    def validate_eu_hosting(cls, value: Any) -> Tuple[bool, str]:
+        """Validate eu_hosting field (bool or None)."""
+        if value is not None and not isinstance(value, bool):
+            return False, f"eu_hosting must be bool or None, got {type(value).__name__}"
+        return True, ""
+
+    @classmethod
+    def validate_tool_profile(cls, profile: Dict[str, Any]) -> List[str]:
+        """
+        Validate a complete tool profile dictionary.
+
+        Returns list of error messages (empty if valid).
+        """
+        errors = []
+
+        # Required fields
+        if not profile.get("name"):
+            errors.append("Tool profile missing 'name' field")
+        if not profile.get("category"):
+            errors.append("Tool profile missing 'category' field")
+
+        # Level fields
+        level_fields = [
+            ("cost_level", "cost_level"),
+            ("complexity_level", "complexity_level"),
+            ("maturity_level", "maturity_level"),
+            ("compliance_score", "compliance_score"),
+            ("vendor_risk", "vendor_risk"),
+        ]
+
+        for field_key, field_name in level_fields:
+            if field_key in profile:
+                valid, msg = cls.validate_level(profile[field_key], field_name)
+                if not valid:
+                    errors.append(msg)
+
+        # Fit score fields
+        fit_fields = ["fit_solo", "fit_team", "fit_kmu"]
+        for field in fit_fields:
+            if field in profile:
+                valid, msg = cls.validate_fit_score(profile[field], field)
+                if not valid:
+                    errors.append(msg)
+
+        # EU hosting
+        if "eu_hosting" in profile:
+            valid, msg = cls.validate_eu_hosting(profile["eu_hosting"])
+            if not valid:
+                errors.append(msg)
+
+        return errors
+
+    @classmethod
+    def get_defaults(cls) -> Dict[str, Any]:
+        """Get default values for tool profile fields."""
+        return {
+            "cost_level": 3,
+            "complexity_level": 3,
+            "maturity_level": 3,
+            "compliance_score": 3,
+            "vendor_risk": 3,
+            "eu_hosting": None,
+            "fit_solo": 0.5,
+            "fit_team": 0.5,
+            "fit_kmu": 0.5,
+        }
+
+
+def validate_tool_profile_v4(profile: Dict[str, Any]) -> Tuple[bool, List[str]]:
+    """
+    Validate a G25 tool profile.
+
+    Args:
+        profile: Tool profile dictionary
+
+    Returns:
+        Tuple of (is_valid, list of error messages)
+    """
+    errors = ToolProfileValidation.validate_tool_profile(profile)
+    return len(errors) == 0, errors
+
+
+# =============================================================================
 # SPRINT G15-A: RELEASE CONFIGURATION VALIDATION
 # =============================================================================
 
