@@ -452,6 +452,7 @@ class ConsistencyEngine:
         self._check_business_case_consistency()  # G30
         self._check_recommendations_consistency()  # G32
         self._check_risk_engine_v3_consistency()  # G33
+        self._check_vendor_audit_consistency()  # G35
 
         # Calculate domain scores
         self._calculate_domain_scores()
@@ -2657,12 +2658,281 @@ class ConsistencyEngine:
         return None
 
     # -------------------------------------------------------------------------
+    # DOMAIN 12: Vendor Audit Engine Consistency (G35)
+    # -------------------------------------------------------------------------
+
+    def _check_vendor_audit_consistency(self) -> None:
+        """
+        G35: Check Vendor Audit Engine consistency with other sections.
+
+        Rules:
+        - VA_001: vendor_risk_score in VendorAuditEntry must not be lower than
+                  vendor_risk from Tools Engine 4.0
+        - VA_002: Vendors with overall_category='red' must appear in RiskReportV3
+                  as risk or be addressed in Mitigation Plan
+        - VA_003: Vendors with jurisdiction='US' and has_dpa=False must not be 'green'
+        - VA_004: Tools with eu_hosting=True and compliance_score <= 2 must not be
+                  'red' without audit_flags
+        - VA_005: Strategy Engine must not use vendor as 'critical pillar' if
+                  VendorAuditReport has it as 'red' without mitigation
+        - VA_006: Recommendations Engine may only recommend vendor change if
+                  justified in Audit Report or Risk Report
+        """
+        vendor_audit_html = self.sections.get("VENDOR_AUDIT_HTML", "")
+
+        if not vendor_audit_html:
+            log.debug("[G35] Vendor Audit consistency: Skipping (no vendor audit section)")
+            return
+
+        self.report.checked_rules += 6
+
+        tools_html = self.sections.get("TOOLS_EMPFEHLUNGEN_HTML", "") or self.sections.get("TOOLS_HTML", "")
+        risk_v3_html = self.sections.get("RISK_ENGINE_V3_HTML", "")
+        strategy_html = self.sections.get("STRATEGY_HTML", "") or self.sections.get("STRATEGY_ENGINE_HTML", "")
+        reco_html = self.sections.get("RECOMMENDATIONS_ENGINE_HTML", "")
+
+        # Extract data from sections
+        vendor_audit_data = self._extract_vendor_audit_data(vendor_audit_html)
+        tools_vendor_risk = self._extract_tools_vendor_risk(tools_html)
+        mitigation_plan = self._extract_mitigation_plan(risk_v3_html)
+
+        # VA_001: vendor_risk_score must not be lower than Tools Engine vendor_risk
+        if tools_vendor_risk and vendor_audit_data:
+            for vendor in vendor_audit_data:
+                vendor_name = vendor.get("name", "")
+                va_risk = vendor.get("vendor_risk_score", 3)
+                # Compare with max tools vendor risk
+                if va_risk < tools_vendor_risk:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="VA_001",
+                        severity="ERROR",
+                        domain="vendor_audit",
+                        source_section="vendor_audit",
+                        target_section="tools_empfehlungen",
+                        message=f"Vendor '{vendor_name}' risk score ist niedriger als Tools Engine",
+                        expected=f"vendor_risk_score >= {tools_vendor_risk} (Tools Engine)",
+                        actual=f"vendor_risk_score = {va_risk}",
+                        suggestion="Vendor Audit risk score muss >= Tools Engine vendor_risk sein",
+                    ))
+                    break  # Only report once
+
+        # VA_002: Red vendors must appear in Risk Report or Mitigation Plan
+        red_vendors = [v.get("name", "") for v in vendor_audit_data if v.get("overall_category") == "red"]
+        if red_vendors and risk_v3_html:
+            mitigation_text = " ".join(str(m) for m in mitigation_plan).lower()
+
+            for vendor in red_vendors:
+                vendor_lower = vendor.lower()
+                if vendor_lower not in mitigation_text and vendor_lower not in risk_v3_html.lower():
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="VA_002",
+                        severity="WARNING",
+                        domain="vendor_audit",
+                        source_section="vendor_audit",
+                        target_section="risk_engine_v3",
+                        message=f"Red Vendor '{vendor}' nicht in Risk Report oder Mitigation Plan",
+                        expected="Red Vendors muessen in RiskReportV3 oder Mitigation Plan adressiert werden",
+                        actual=f"'{vendor}' fehlt in beiden Sections",
+                        suggestion=f"Fuege '{vendor}' zum Mitigation Plan hinzu oder erklaere Risiko im Risk Report",
+                    ))
+
+        # VA_003: US vendors without DPA must not be green
+        for vendor in vendor_audit_data:
+            if (vendor.get("jurisdiction") == "US" and
+                not vendor.get("has_dpa", False) and
+                vendor.get("overall_category") == "green"):
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="VA_003",
+                    severity="ERROR",
+                    domain="vendor_audit",
+                    source_section="vendor_audit",
+                    target_section="vendor_audit",
+                    message=f"US Vendor '{vendor.get('name')}' ohne DPA als 'green' klassifiziert",
+                    expected="US Vendors ohne DPA duerfen nicht 'green' sein",
+                    actual=f"jurisdiction=US, has_dpa=False, overall_category=green",
+                    suggestion="Setze overall_category auf 'yellow' oder 'red'",
+                ))
+
+        # VA_004: EU-hosted tools with good compliance should not be red without flags
+        eu_hosted_tools = self._extract_eu_hosted_tools(tools_html)
+        for vendor in vendor_audit_data:
+            vendor_name = vendor.get("name", "")
+            if (vendor_name in eu_hosted_tools and
+                vendor.get("overall_category") == "red" and
+                not vendor.get("audit_flags", [])):
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="VA_004",
+                    severity="WARNING",
+                    domain="vendor_audit",
+                    source_section="vendor_audit",
+                    target_section="tools_empfehlungen",
+                    message=f"EU-hosted Tool '{vendor_name}' als 'red' ohne audit_flags",
+                    expected="Tools mit eu_hosting=True duerfen nicht ohne audit_flags 'red' sein",
+                    actual=f"'{vendor_name}' ist eu_hosted aber red ohne Flags",
+                    suggestion="Fuege audit_flags hinzu oder korrigiere overall_category",
+                ))
+
+        # VA_005: Strategy must not use red vendor as critical pillar without mitigation
+        if strategy_html and red_vendors:
+            strategy_lower = strategy_html.lower()
+            critical_keywords = ["kritische saeule", "critical pillar", "kernkomponente", "core component"]
+
+            for vendor in red_vendors:
+                vendor_lower = vendor.lower()
+                # Check if vendor is mentioned in strategy as critical
+                if vendor_lower in strategy_lower:
+                    for keyword in critical_keywords:
+                        if keyword in strategy_lower:
+                            # Check if mitigation exists
+                            if vendor_lower not in mitigation_text:
+                                self.report.add_issue(ConsistencyIssue(
+                                    rule_id="VA_005",
+                                    severity="ERROR",
+                                    domain="vendor_audit",
+                                    source_section="strategy",
+                                    target_section="vendor_audit",
+                                    message=f"Red Vendor '{vendor}' als kritische Saeule in Strategy ohne Mitigation",
+                                    expected="Red Vendors duerfen nicht als kritische Saeule verwendet werden ohne Mitigation",
+                                    actual=f"'{vendor}' ist rot und als kritisch markiert ohne Mitigation",
+                                    suggestion="Entferne Vendor aus kritischen Saeulen oder fuege Mitigation hinzu",
+                                ))
+                            break
+
+        # VA_006: Recommendations can only suggest vendor change if justified
+        if reco_html:
+            reco_lower = reco_html.lower()
+            vendor_change_keywords = ["vendor wechsel", "vendor change", "anbieter wechseln", "alternative", "ersetzen"]
+
+            has_vendor_change_reco = any(kw in reco_lower for kw in vendor_change_keywords)
+
+            if has_vendor_change_reco:
+                # Check if any vendor is actually red or has issues
+                has_red_or_yellow = any(
+                    v.get("overall_category") in ["red", "yellow"]
+                    for v in vendor_audit_data
+                )
+
+                if not has_red_or_yellow:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="VA_006",
+                        severity="WARNING",
+                        domain="vendor_audit",
+                        source_section="recommendations_engine",
+                        target_section="vendor_audit",
+                        message="Vendor-Wechsel empfohlen ohne entsprechenden Befund im Audit",
+                        expected="Vendor-Wechsel nur empfehlen wenn im Audit Report oder Risk Report begruendet",
+                        actual="Alle Vendors sind 'green' aber Wechsel wird empfohlen",
+                        suggestion="Entferne Vendor-Wechsel Empfehlung oder korrigiere Audit Bewertung",
+                    ))
+
+    def _extract_vendor_audit_data(self, html: str) -> List[Dict[str, Any]]:
+        """Extract vendor audit data from HTML."""
+        if not html:
+            return []
+
+        vendors: List[Dict[str, Any]] = []
+
+        import re
+
+        # Look for vendor cards with category badges
+        # Pattern: name in h4, category badge (GREEN/YELLOW/RED)
+        vendor_pattern = r'<h4[^>]*>([^<]+)</h4>'
+        category_pattern = r'>(GREEN|YELLOW|RED)</span>'
+        jurisdiction_pattern = r'>([A-Z]{2})</span>'
+
+        names = re.findall(vendor_pattern, html)
+        categories = re.findall(category_pattern, html, re.IGNORECASE)
+        jurisdictions = re.findall(jurisdiction_pattern, html)
+
+        # Build vendor list
+        for i, name in enumerate(names[:len(categories)]):
+            vendor = {
+                "name": name.strip(),
+                "overall_category": categories[i].lower() if i < len(categories) else "yellow",
+                "jurisdiction": jurisdictions[i] if i < len(jurisdictions) else "Unknown",
+                "has_dpa": "dpa" in html.lower() and name.lower() in html.lower(),
+                "vendor_risk_score": self._extract_vendor_risk_from_html(html, name),
+                "audit_flags": self._extract_audit_flags(html, name),
+            }
+            vendors.append(vendor)
+
+        return vendors
+
+    def _extract_vendor_risk_from_html(self, html: str, vendor_name: str) -> int:
+        """Extract vendor risk score for a specific vendor from HTML."""
+        import re
+
+        # Find risk score near vendor name
+        name_lower = vendor_name.lower()
+        html_lower = html.lower()
+
+        # Find vendor section
+        name_pos = html_lower.find(name_lower)
+        if name_pos == -1:
+            return 3
+
+        # Search within 500 chars after name
+        search_area = html[name_pos:name_pos + 500]
+
+        patterns = [
+            r'vendor_risk_score["\s:]*(\d)',
+            r'risk[\s:]*(\d)/5',
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, search_area, re.IGNORECASE)
+            if match:
+                try:
+                    return int(match.group(1))
+                except ValueError:
+                    continue
+
+        return 3
+
+    def _extract_audit_flags(self, html: str, vendor_name: str) -> List[str]:
+        """Extract audit flags for a specific vendor from HTML."""
+        import re
+
+        flags: List[str] = []
+        name_lower = vendor_name.lower()
+        html_lower = html.lower()
+
+        name_pos = html_lower.find(name_lower)
+        if name_pos == -1:
+            return flags
+
+        # Search within 800 chars after name
+        search_area = html[name_pos:name_pos + 800]
+
+        # Look for warning badges
+        flag_pattern = r'⚠️\s*([^<]+)</span>'
+        matches = re.findall(flag_pattern, search_area)
+        flags.extend(matches)
+
+        return flags
+
+    def _extract_eu_hosted_tools(self, html: str) -> List[str]:
+        """Extract tool names that have EU hosting."""
+        if not html:
+            return []
+
+        tools: List[str] = []
+
+        # Look for eu-hosting badge near tool names
+        if "eu-hosting" in html.lower() or "eu hosting" in html.lower():
+            tool_names = _extract_tool_names(html)
+            # Simplified: return all tools if EU hosting mentioned
+            tools = tool_names[:5]
+
+        return tools
+
+    # -------------------------------------------------------------------------
     # SCORING
     # -------------------------------------------------------------------------
 
     def _calculate_domain_scores(self) -> None:
         """Calculate scores per domain."""
-        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot", "risk_engine", "business_case", "recommendations", "risk_engine_v3"]
+        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot", "risk_engine", "business_case", "recommendations", "risk_engine_v3", "vendor_audit"]
 
         for domain in domains:
             domain_issues = [i for i in self.report.issues if i.domain == domain]

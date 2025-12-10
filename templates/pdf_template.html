@@ -2557,6 +2557,24 @@
                     </div>
                 </section>
                 {% endif %}
+                <!-- G35: Vendor Audit Engine – KI-TUV for Tools & Models -->
+                {% if VENDOR_AUDIT_HTML %}
+                <section class="section chapter" id="vendor-audit">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Vendor Audit</span>
+                            <h2>KI-TÜV für Ihre Tools & Anbieter</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            DSGVO • AI Act • Vendor Risk
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ VENDOR_AUDIT_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
                 <!-- G30: Business Case Engine 2.0 – ROI-Simulation & Szenarien -->
                 {% if BUSINESS_CASE_ENGINE_HTML %}
                 <section class="section chapter" id="business-case-engine">
