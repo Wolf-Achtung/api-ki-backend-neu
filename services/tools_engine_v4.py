@@ -253,10 +253,35 @@ def _estimate_cost_level(tool_name: str, price: str, category: str) -> int:
     price_lower = price.lower() if price else ""
     name_lower = tool_name.lower()
 
-    # Check direct price patterns
-    for pattern, level in COST_HEURISTICS.items():
-        if pattern in price_lower:
-            return level
+    # Check for free indicators first (exact matches or start of string)
+    if not price_lower or price_lower in ("free", "kostenlos", "gratis", "0", "0€", "$0"):
+        return 1
+    if price_lower.startswith("0 ") or price_lower.startswith("0-") or price_lower.startswith("0€"):
+        return 1
+    if "kostenlos" in price_lower or "gratis" in price_lower or "free" in price_lower:
+        return 1
+
+    # Extract numeric value from price string using regex
+    # Match patterns like "30 €", "ab 100", "100€", etc.
+    price_match = re.search(r'(\d+)', price_lower)
+    if price_match:
+        price_value = int(price_match.group(1))
+
+        # Categorize by price value
+        if price_value == 0:
+            return 1  # Free
+        elif price_value < 15:
+            return 2  # Cheap
+        elif price_value < 80:
+            return 3  # Moderate
+        elif price_value < 300:
+            return 4  # Expensive
+        else:
+            return 5  # Very expensive
+
+    # Check for enterprise/custom pricing keywords
+    if any(kw in price_lower for kw in ("enterprise", "custom", "auf anfrage", "kontakt")):
+        return 5
 
     # Enterprise tools tend to be expensive
     if "enterprise" in name_lower or "enterprise" in category.lower():
