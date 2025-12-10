@@ -65,9 +65,10 @@ class TestG17SRoadmapMinWords:
         assert ("team", "roadmap_90d") in SECTION_MIN_WORDS
         assert ("kmu", "roadmap_90d") in SECTION_MIN_WORDS
 
-        assert SECTION_MIN_WORDS[("solo", "roadmap_90d")] == 150
-        assert SECTION_MIN_WORDS[("team", "roadmap_90d")] == 200
-        assert SECTION_MIN_WORDS[("kmu", "roadmap_90d")] == 220
+        # SPRINT N2: Reduced min-words thresholds
+        assert SECTION_MIN_WORDS[("solo", "roadmap_90d")] == 130
+        assert SECTION_MIN_WORDS[("team", "roadmap_90d")] == 170
+        assert SECTION_MIN_WORDS[("kmu", "roadmap_90d")] == 190
 
 
 class TestG17SToolsEmpfehlungenExtension:

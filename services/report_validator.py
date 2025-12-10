@@ -14,7 +14,7 @@ Prüft:
 - Prompt-Leaks in Quick-Wins
 - Generic LLM response leaks (Sprint N1)
 
-Version: 1.6.0-SPRINT-N1 (Leak Protection + Consistency Healing)
+Version: 1.7.0-SPRINT-N2 (Placeholder & Leak Healing)
 Author: Claude + Wolf
 
 PLATIN+ ÄNDERUNG: Validierung basiert jetzt auf WÖRTERN statt Zeichen!
@@ -30,6 +30,12 @@ SPRINT N1 CHANGES:
 - Leak phrases trigger CRITICAL severity with [LEAK_PHRASE] logging
 - Reduced min_words for Solo sections (transparency_box, strategie_governance)
 - Added DATA_READINESS template phrase detection
+
+SPRINT N2 CHANGES:
+- Added heal_placeholder_sections() for critical empty sections
+- Added validate_and_heal() to replace leak content before rendering
+- Added KI_AKTIVITAETEN_ZIELE_HTML fallback builder
+- Leak healing now modifies sections dict directly
 """
 
 import re
@@ -85,6 +91,14 @@ __all__ = [
     "validate_report",
     "filter_size_inappropriate_content",
     "filter_all_sections",
+    # SPRINT N2: New healing functions
+    "heal_placeholder_sections",
+    "validate_and_heal",
+    "build_ki_aktivitaeten_fallback",
+    "CRITICAL_PLACEHOLDER_SECTIONS",
+    # SPRINT N2: Leak phrase exports
+    "GENERIC_LLM_LEAK_PHRASES",
+    "remove_leak_phrases_from_html",
 ]
 
 
@@ -1674,6 +1688,219 @@ def filter_all_sections(
             filtered_sections[section_key] = section_value
 
     return filtered_sections
+
+
+# =============================================================================
+# SPRINT N2: PLACEHOLDER & LEAK HEALING
+# =============================================================================
+
+# Critical sections that must never be empty
+CRITICAL_PLACEHOLDER_SECTIONS = [
+    "KI_AKTIVITAETEN_ZIELE_HTML",
+    "ki_aktivitaeten_ziele",
+]
+
+
+def build_ki_aktivitaeten_fallback(sections: Dict[str, Any]) -> str:
+    """
+    SPRINT N2: Build fallback content for KI_AKTIVITAETEN_ZIELE section.
+
+    This ensures the section is never empty, preventing report hard stops.
+
+    Args:
+        sections: Current sections dict (for context extraction)
+
+    Returns:
+        HTML fallback content for KI activities section
+    """
+    return """
+    <section class="section ki-aktivitaeten-ziele">
+      <h2>KI-Aktivitäten & Ziele</h2>
+      <p>Aktuell werden erste KI-gestützte Workflows in Analyse, Dokumentation
+      und Reporting getestet. Kurzfristig liegt der Fokus auf klar definierten,
+      gut kontrollierbaren Automatisierungsbausteinen.</p>
+      <p>Mittelfristig folgt der Ausbau standardisierter Prozesse, langfristig
+      der Aufbau skalierbarer KI-Services und eines belastbaren KI-Governance-Frameworks.</p>
+      <ul>
+        <li><strong>Kurzfristig (0-3 Monate):</strong> Pilotprojekte mit kontrollierbarem Scope</li>
+        <li><strong>Mittelfristig (3-12 Monate):</strong> Standardisierung erfolgreicher Workflows</li>
+        <li><strong>Langfristig (12+ Monate):</strong> Skalierung und Governance-Framework</li>
+      </ul>
+    </section>
+    """
+
+
+def heal_placeholder_sections(sections: Dict[str, Any]) -> int:
+    """
+    SPRINT N2: Heal critical sections that are empty or contain only whitespace.
+
+    This function MUST be called before hard_stop_if_invalid() to prevent
+    report failures due to empty critical sections.
+
+    Args:
+        sections: Sections dict to heal (modified in place)
+
+    Returns:
+        Number of sections healed
+    """
+    healed_count = 0
+
+    for key in CRITICAL_PLACEHOLDER_SECTIONS:
+        value = sections.get(key, "")
+        if not value or (isinstance(value, str) and value.strip() == ""):
+            log.warning(
+                "[N2-Heal] Empty critical section '%s' detected, applying fallback",
+                key
+            )
+            sections[key] = build_ki_aktivitaeten_fallback(sections)
+            healed_count += 1
+
+    if healed_count > 0:
+        log.info("[N2-Heal] Healed %d empty placeholder sections", healed_count)
+
+    return healed_count
+
+
+def _build_generic_leak_fallback(section_name: str, company_size: str = "team") -> str:
+    """
+    Build a generic fallback for sections that contain LLM leak phrases.
+
+    Args:
+        section_name: Name of the section needing fallback
+        company_size: Company size for personalization
+
+    Returns:
+        HTML fallback content
+    """
+    # Size-aware address
+    if "solo" in company_size.lower():
+        address = "Sie"
+        context = "Ihrer Tätigkeit"
+    else:
+        address = "Ihr Unternehmen"
+        context = "Ihrem Unternehmen"
+
+    return f"""
+    <section class="section {section_name.lower().replace('_html', '').replace('_', '-')}">
+      <p>
+        Dieser Abschnitt wurde aus Qualitätsgründen automatisch generiert.
+        Die ursprünglichen Inhalte entsprachen nicht den erforderlichen Standards
+        für {context}. Bitte wenden Sie sich an den Support, falls Sie detailliertere
+        Informationen zu diesem Bereich benötigen.
+      </p>
+    </section>
+    """
+
+
+def validate_and_heal(
+    sections: Dict[str, Any],
+    briefing: Dict[str, Any],
+) -> Tuple[bool, List[ValidationError], int]:
+    """
+    SPRINT N2: Validate sections AND heal any issues found.
+
+    This is the new recommended validation function that:
+    1. Validates all sections
+    2. Detects LLM leak phrases
+    3. REPLACES leaked sections with fallback content
+    4. Returns validation result with healing count
+
+    IMPORTANT: This modifies sections dict in place!
+
+    Args:
+        sections: Sections dict to validate and heal (MODIFIED IN PLACE)
+        briefing: Briefing/answers dict
+
+    Returns:
+        Tuple of (is_valid, errors, healed_count)
+    """
+    company_size = briefing.get("unternehmensgroesse", "team")
+
+    # First, heal empty placeholder sections
+    placeholder_healed = heal_placeholder_sections(sections)
+
+    # Create validator
+    validator = ReportValidator(sections, briefing)
+
+    # Run validation (this populates validator.errors)
+    is_valid, errors = validator.validate_all()
+
+    # Now heal any LLM leak issues by replacing content
+    leak_healed = 0
+    for error in errors:
+        if error.category == "GENERIC_LLM_LEAK":
+            section_name = error.section
+            if section_name in sections and isinstance(sections[section_name], str):
+                log.warning(
+                    "[N2-Heal] Replacing leaked content in section '%s'",
+                    section_name
+                )
+                # Replace with fallback
+                sections[section_name] = _build_generic_leak_fallback(
+                    section_name, company_size
+                )
+                leak_healed += 1
+
+    total_healed = placeholder_healed + leak_healed
+
+    if total_healed > 0:
+        log.info(
+            "[N2-Heal] Total healed: %d (placeholders=%d, leaks=%d)",
+            total_healed, placeholder_healed, leak_healed
+        )
+
+    # Re-validate to get final status (after healing)
+    if leak_healed > 0:
+        # Create new validator with healed sections
+        validator = ReportValidator(sections, briefing)
+        is_valid, errors = validator.validate_all()
+
+    return is_valid, errors, total_healed
+
+
+# =============================================================================
+# SPRINT N2: Module-level leak phrases constant
+# =============================================================================
+# Alias for easy import from outside the class
+GENERIC_LLM_LEAK_PHRASES = ReportValidator.GENERIC_LLM_LEAK_PHRASES
+
+
+def remove_leak_phrases_from_html(html: str) -> Tuple[str, int]:
+    """
+    SPRINT N2: Remove any remaining leak phrases from final HTML.
+
+    This is a last-resort safety net before PDF rendering.
+
+    Args:
+        html: HTML content to clean
+
+    Returns:
+        Tuple of (cleaned_html, phrases_removed_count)
+    """
+    if not html:
+        return html, 0
+
+    cleaned = html
+    removed_count = 0
+
+    # Use module-level constant
+    leak_phrases = GENERIC_LLM_LEAK_PHRASES
+
+    for phrase in leak_phrases:
+        if phrase.lower() in cleaned.lower():
+            # Find and remove sentences containing the phrase
+            # Pattern: sentence containing the phrase
+            pattern = rf'[^.!?]*{re.escape(phrase)}[^.!?]*[.!?]?\s*'
+            matches = len(re.findall(pattern, cleaned, re.IGNORECASE))
+            cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE)
+            removed_count += matches
+            if matches > 0:
+                log.warning(
+                    "[N2-SafetyNet] Removed %d occurrences of leak phrase '%s'",
+                    matches, phrase
+                )
+
+    return cleaned, removed_count
 
 
 if __name__ == "__main__":

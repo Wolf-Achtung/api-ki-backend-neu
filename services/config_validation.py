@@ -125,11 +125,12 @@ class ValidationConfig:
 SECTION_MIN_WORDS: Dict[Tuple[str, str], int] = {
     # ----- SOLO -----
     # SPRINT N1: Reduced min_words for Solo to avoid unnecessary fallbacks
+    # SPRINT N2: Further reduced roadmap thresholds
     ("solo", "executive_summary"): 150,
     ("solo", "ki_stack_summary"): 150,  # G20: KI-Stack Summary Card
     ("solo", "quick_wins"): 60,
-    ("solo", "roadmap_90d"): 150,       # SPRINT G17.S: Added (reduced from 250)
-    ("solo", "roadmap_12m"): 600,       # SPRINT N1: balanced target
+    ("solo", "roadmap_90d"): 130,       # SPRINT N2: 150→130 (reduced warnings)
+    ("solo", "roadmap_12m"): 550,       # SPRINT N2: 600→550 (reduced warnings)
     ("solo", "strategie_governance"): 90,   # SPRINT N1: 130→90 (Solo-friendly)
     ("solo", "recommendations"): 500,
     ("solo", "risks"): 500,
@@ -143,11 +144,12 @@ SECTION_MIN_WORDS: Dict[Tuple[str, str], int] = {
     ("solo", "branch_deep_dive"): 250,  # G24: Branch Deep-Dive Addon
 
     # ----- TEAM -----
+    # SPRINT N2: Reduced roadmap thresholds
     ("team", "executive_summary"): 180,
     ("team", "ki_stack_summary"): 180,  # G20: KI-Stack Summary Card
     ("team", "quick_wins"): 90,
-    ("team", "roadmap_90d"): 200,       # SPRINT G17.S: Added (reduced from 300)
-    ("team", "roadmap_12m"): 600,
+    ("team", "roadmap_90d"): 170,       # SPRINT N2: 200→170 (reduced warnings)
+    ("team", "roadmap_12m"): 550,       # SPRINT N2: 600→550 (reduced warnings)
     ("team", "strategie_governance"): 130,
     ("team", "recommendations"): 600,
     ("team", "risks"): 600,
@@ -161,11 +163,12 @@ SECTION_MIN_WORDS: Dict[Tuple[str, str], int] = {
     ("team", "branch_deep_dive"): 300,  # G24: Branch Deep-Dive Addon
 
     # ----- KMU -----
+    # SPRINT N2: Reduced roadmap thresholds
     ("kmu", "executive_summary"): 200,
     ("kmu", "ki_stack_summary"): 200,  # G20: KI-Stack Summary Card
     ("kmu", "quick_wins"): 120,
-    ("kmu", "roadmap_90d"): 220,        # SPRINT G17.S: Added (reduced from 350)
-    ("kmu", "roadmap_12m"): 700,
+    ("kmu", "roadmap_90d"): 190,        # SPRINT N2: 220→190 (reduced warnings)
+    ("kmu", "roadmap_12m"): 650,        # SPRINT N2: 700→650 (reduced warnings)
     ("kmu", "strategie_governance"): 160,
     ("kmu", "recommendations"): 700,
     ("kmu", "risks"): 700,
