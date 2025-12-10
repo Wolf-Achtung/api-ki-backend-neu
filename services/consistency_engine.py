@@ -457,6 +457,12 @@ class ConsistencyEngine:
         self._check_business_case_simulation_consistency()  # G34
         self._check_benchmark_consistency()  # G37
 
+        # SPRINT C: New G22+ Consistency Intelligence v2 rules
+        self._check_risk_strategy_alignment()  # C1: Risk ↔ Strategy
+        self._check_benchmark_kpi_derivation()  # C2: Benchmark → KPI
+        self._check_cross_section_references()  # C3: Cross-section references
+        self._check_timeline_alignment()  # C4: Timeline alignment
+
         # Calculate domain scores
         self._calculate_domain_scores()
 
@@ -4089,12 +4095,398 @@ class ConsistencyEngine:
             return 50.0
 
     # -------------------------------------------------------------------------
+    # SPRINT C: G22+ CONSISTENCY INTELLIGENCE v2
+    # -------------------------------------------------------------------------
+
+    def _check_risk_strategy_alignment(self) -> None:
+        """
+        C1: Risk ↔ Strategy Alignment
+
+        Ensures that risks mentioned in the risks section are addressed
+        in the strategie_governance section with appropriate mitigations.
+        """
+        self.report.checked_rules += 3
+
+        risks_html = (
+            self.sections.get("RISKS_HTML", "") or
+            self.sections.get("risks", "") or
+            ""
+        )
+        strategy_html = (
+            self.sections.get("STRATEGIE_GOVERNANCE_HTML", "") or
+            self.sections.get("strategie_governance", "") or
+            ""
+        )
+
+        if not risks_html or not strategy_html:
+            log.debug("[C1] Risk-Strategy alignment: Skipping (missing sections)")
+            return
+
+        risks_text = _strip_html(risks_html).lower()
+        strategy_text = _strip_html(strategy_html).lower()
+
+        # Extract key risk topics
+        risk_topics = {
+            "datenschutz": ["datenschutz", "dsgvo", "gdpr", "privacy"],
+            "compliance": ["compliance", "regulierung", "ai act", "ai-act"],
+            "sicherheit": ["sicherheit", "security", "cyberrisiko", "datenleck"],
+            "mitarbeiter": ["mitarbeiter", "akzeptanz", "schulung", "change"],
+            "technologie": ["technologie", "integration", "schnittstelle", "legacy"],
+        }
+
+        # Rule C1_001: Key risks must be addressed in strategy
+        unaddressed_risks = []
+        for topic, keywords in risk_topics.items():
+            # Check if risk is mentioned
+            risk_mentioned = any(kw in risks_text for kw in keywords)
+            strategy_addresses = any(kw in strategy_text for kw in keywords)
+
+            if risk_mentioned and not strategy_addresses:
+                unaddressed_risks.append(topic)
+
+        if unaddressed_risks:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="C1_001",
+                severity="WARNING",
+                domain="strategy",
+                source_section="risks",
+                target_section="strategie_governance",
+                message="Risiken ohne entsprechende Governance-Maßnahmen",
+                expected="Alle wesentlichen Risiken werden in der Strategie adressiert",
+                actual=f"Nicht adressiert: {', '.join(unaddressed_risks)}",
+                suggestion="Ergänze Governance-Maßnahmen für identifizierte Risiken",
+            ))
+
+        # Rule C1_002: Strategy governance mentions should reference related risks
+        governance_keywords = ["governance", "richtlinie", "policy", "verantwortung"]
+        has_governance = any(kw in strategy_text for kw in governance_keywords)
+        has_risk_reference = "risiko" in strategy_text or "risk" in strategy_text
+
+        if has_governance and not has_risk_reference:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="C1_002",
+                severity="INFO",
+                domain="strategy",
+                source_section="strategie_governance",
+                target_section="risks",
+                message="Governance-Abschnitt ohne Risiko-Bezug",
+                expected="Governance-Maßnahmen referenzieren zugehörige Risiken",
+                actual="Keine Risiko-Referenz in Governance gefunden",
+                suggestion="Verknüpfe Governance-Maßnahmen mit spezifischen Risiken",
+            ))
+
+        # Rule C1_003: High-risk items need explicit mitigation in strategy
+        high_risk_indicators = ["hoch", "kritisch", "high", "critical", "dringend"]
+        has_high_risk = any(ind in risks_text for ind in high_risk_indicators)
+        has_mitigation = any(
+            kw in strategy_text
+            for kw in ["maßnahme", "mitigation", "reduzierung", "kontrolle"]
+        )
+
+        if has_high_risk and not has_mitigation:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="C1_003",
+                severity="WARNING",
+                domain="strategy",
+                source_section="risks",
+                target_section="strategie_governance",
+                message="Kritische Risiken ohne explizite Mitigationsmaßnahmen",
+                expected="Kritische Risiken haben konkrete Mitigationsstrategien",
+                actual="Keine Mitigationsmaßnahmen in Strategie gefunden",
+                suggestion="Definiere konkrete Maßnahmen für kritische Risiken",
+            ))
+
+    def _check_benchmark_kpi_derivation(self) -> None:
+        """
+        C2: Benchmark → KPI Derivation
+
+        Ensures competitive benchmarks lead to measurable KPIs
+        in roadmap and business case sections.
+        """
+        self.report.checked_rules += 3
+
+        benchmark_html = (
+            self.sections.get("WETTBEWERB_BENCHMARK_HTML", "") or
+            self.sections.get("wettbewerb_benchmark", "") or
+            ""
+        )
+        roadmap_html = (
+            self.sections.get("ROADMAP_12M_HTML", "") or
+            self.sections.get("roadmap_12m", "") or
+            ""
+        )
+        bc_html = (
+            self.sections.get("BUSINESS_CASE_HTML", "") or
+            self.sections.get("business_case", "") or
+            ""
+        )
+
+        if not benchmark_html:
+            log.debug("[C2] Benchmark-KPI derivation: Skipping (missing benchmark)")
+            return
+
+        benchmark_text = _strip_html(benchmark_html).lower()
+        roadmap_text = _strip_html(roadmap_html).lower() if roadmap_html else ""
+        bc_text = _strip_html(bc_html).lower() if bc_html else ""
+
+        # Extract competitive metrics from benchmark
+        benchmark_metrics = {
+            "marktanteil": ["marktanteil", "market share", "marktposition"],
+            "effizienz": ["effizienz", "efficiency", "produktivität"],
+            "kosten": ["kosten", "cost", "einsparung"],
+            "geschwindigkeit": ["geschwindigkeit", "speed", "zeit", "durchlaufzeit"],
+            "qualität": ["qualität", "quality", "fehlerquote"],
+        }
+
+        combined_target_text = roadmap_text + " " + bc_text
+
+        # Rule C2_001: Benchmark metrics should have corresponding KPIs
+        metrics_without_kpis = []
+        for metric, keywords in benchmark_metrics.items():
+            benchmark_mentions = any(kw in benchmark_text for kw in keywords)
+            has_kpi = any(kw in combined_target_text for kw in keywords)
+
+            if benchmark_mentions and not has_kpi:
+                metrics_without_kpis.append(metric)
+
+        if metrics_without_kpis:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="C2_001",
+                severity="WARNING",
+                domain="kpi",
+                source_section="wettbewerb_benchmark",
+                target_section="roadmap_12m",
+                message="Benchmark-Metriken ohne korrespondierende KPIs",
+                expected="Alle Benchmark-Vergleiche führen zu messbaren Zielen",
+                actual=f"Ohne KPI: {', '.join(metrics_without_kpis)}",
+                suggestion="Leite KPIs aus Wettbewerbsvergleichen ab",
+            ))
+
+        # Rule C2_002: Numeric benchmarks should have numeric targets
+        # Check for percentages in benchmark
+        has_benchmark_numbers = bool(re.search(r'\d+\s*%', benchmark_text))
+        has_target_numbers = bool(re.search(r'\d+\s*%', combined_target_text))
+
+        if has_benchmark_numbers and not has_target_numbers and combined_target_text:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="C2_002",
+                severity="INFO",
+                domain="kpi",
+                source_section="wettbewerb_benchmark",
+                target_section="business_case",
+                message="Quantitative Benchmarks ohne quantitative Ziele",
+                expected="Benchmark-Zahlen führen zu konkreten Zielwerten",
+                actual="Keine quantitativen Ziele gefunden",
+                suggestion="Definiere messbare Ziele basierend auf Benchmark",
+            ))
+
+        # Rule C2_003: Gap analysis should lead to action items
+        gap_keywords = ["lücke", "gap", "rückstand", "aufholen", "deficit"]
+        action_keywords = ["maßnahme", "action", "schritt", "initiative", "projekt"]
+
+        has_gaps = any(kw in benchmark_text for kw in gap_keywords)
+        has_actions = any(kw in roadmap_text for kw in action_keywords)
+
+        if has_gaps and not has_actions:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="C2_003",
+                severity="WARNING",
+                domain="roadmap",
+                source_section="wettbewerb_benchmark",
+                target_section="roadmap_12m",
+                message="Gap-Analyse ohne konkrete Maßnahmen in Roadmap",
+                expected="Identifizierte Gaps haben Maßnahmen in der Roadmap",
+                actual="Keine korrespondierenden Maßnahmen gefunden",
+                suggestion="Füge Maßnahmen zur Schließung identifizierter Gaps hinzu",
+            ))
+
+    def _check_cross_section_references(self) -> None:
+        """
+        C3: Cross-Section Reference Consistency
+
+        Ensures references between sections (e.g., "siehe Roadmap")
+        are valid and consistent.
+        """
+        self.report.checked_rules += 2
+
+        # Collect all section content
+        all_sections = {
+            "executive_summary": self.sections.get("EXEC_SUMMARY_HTML", ""),
+            "roadmap_12m": self.sections.get("ROADMAP_12M_HTML", ""),
+            "roadmap_90d": self.sections.get("ROADMAP_90D_HTML", ""),
+            "risks": self.sections.get("RISKS_HTML", ""),
+            "business_case": self.sections.get("BUSINESS_CASE_HTML", ""),
+            "recommendations": self.sections.get("RECOMMENDATIONS_HTML", ""),
+        }
+
+        # Reference patterns (German and English)
+        reference_patterns = [
+            (r"siehe\s+(roadmap|business\s*case|risiko|empfehlung)", "de"),
+            (r"→\s*(roadmap|business\s*case|risiko|empfehlung)", "de"),
+            (r"see\s+(roadmap|business\s*case|risk|recommendation)", "en"),
+            (r"refer\s+to\s+(roadmap|business\s*case|risk|recommendation)", "en"),
+        ]
+
+        # Section name mappings
+        section_mappings = {
+            "roadmap": ["roadmap_12m", "roadmap_90d"],
+            "business case": ["business_case"],
+            "business_case": ["business_case"],
+            "risiko": ["risks"],
+            "risk": ["risks"],
+            "empfehlung": ["recommendations"],
+            "recommendation": ["recommendations"],
+        }
+
+        broken_refs = []
+
+        for section_name, content in all_sections.items():
+            if not content:
+                continue
+
+            content_lower = content.lower()
+
+            for pattern, lang in reference_patterns:
+                for match in re.finditer(pattern, content_lower):
+                    ref_target = match.group(1).lower().strip()
+
+                    # Find target sections
+                    target_sections = section_mappings.get(ref_target, [])
+
+                    # Check if any target section has content
+                    has_target = any(
+                        all_sections.get(ts, "") for ts in target_sections
+                    )
+
+                    if not has_target and target_sections:
+                        broken_refs.append(f"{section_name} → {ref_target}")
+
+        # Rule C3_001: All cross-references must have valid targets
+        if broken_refs:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="C3_001",
+                severity="WARNING",
+                domain="narrative",
+                source_section="multiple",
+                target_section="multiple",
+                message="Broken cross-section references detected",
+                expected="All section references point to existing content",
+                actual=f"Broken: {', '.join(broken_refs[:3])}",
+                suggestion="Remove or update invalid cross-references",
+            ))
+
+        # Rule C3_002: Key sections should reference each other
+        exec_summary = all_sections.get("executive_summary", "").lower()
+        has_ref_to_roadmap = "roadmap" in exec_summary
+        has_ref_to_bc = "business" in exec_summary or "case" in exec_summary
+
+        if exec_summary and not (has_ref_to_roadmap or has_ref_to_bc):
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="C3_002",
+                severity="INFO",
+                domain="narrative",
+                source_section="executive_summary",
+                target_section="roadmap_12m",
+                message="Executive Summary ohne Verweise auf Hauptabschnitte",
+                expected="Exec Summary verweist auf Roadmap und/oder Business Case",
+                actual="Keine Cross-References gefunden",
+                suggestion="Füge Verweise auf wichtige Folgeabschnitte hinzu",
+            ))
+
+    def _check_timeline_alignment(self) -> None:
+        """
+        C4: Timeline Alignment
+
+        Ensures timeline references are consistent across sections
+        (90-day, 6-month, 12-month plans align logically).
+        """
+        self.report.checked_rules += 3
+
+        roadmap_90d = self.sections.get("ROADMAP_90D_HTML", "")
+        roadmap_12m = self.sections.get("ROADMAP_12M_HTML", "")
+        bc_html = self.sections.get("BUSINESS_CASE_HTML", "")
+
+        if not roadmap_90d and not roadmap_12m:
+            log.debug("[C4] Timeline alignment: Skipping (missing roadmaps)")
+            return
+
+        roadmap_90d_text = _strip_html(roadmap_90d).lower() if roadmap_90d else ""
+        roadmap_12m_text = _strip_html(roadmap_12m).lower() if roadmap_12m else ""
+        bc_text = _strip_html(bc_html).lower() if bc_html else ""
+
+        # Rule C4_001: 90-day items should not include 12-month terms
+        long_term_in_90d = any(
+            term in roadmap_90d_text
+            for term in ["12 monate", "ein jahr", "langfristig", "12 months", "one year"]
+        )
+
+        if long_term_in_90d:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="C4_001",
+                severity="WARNING",
+                domain="roadmap",
+                source_section="roadmap_90d",
+                target_section="roadmap_12m",
+                message="90-Tage-Roadmap enthält langfristige Zeitreferenzen",
+                expected="90-Tage-Plan fokussiert auf kurzfristige Maßnahmen",
+                actual="Langfristige Zeitangaben in 90-Tage-Roadmap gefunden",
+                suggestion="Verschiebe langfristige Items in 12-Monats-Roadmap",
+            ))
+
+        # Rule C4_002: Payback period should align with roadmap timeline
+        payback_match = re.search(r'payback[:\s]*(\d+)\s*monat', bc_text)
+        if payback_match:
+            payback_months = int(payback_match.group(1))
+
+            # If payback > 12 months but 12m roadmap doesn't mention long-term
+            if payback_months > 12 and roadmap_12m_text:
+                long_term_mentioned = any(
+                    term in roadmap_12m_text
+                    for term in ["langfristig", "long-term", "phase 4", "nachhaltig"]
+                )
+                if not long_term_mentioned:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="C4_002",
+                        severity="INFO",
+                        domain="kpi",
+                        source_section="business_case",
+                        target_section="roadmap_12m",
+                        message=f"Payback ({payback_months} Monate) übersteigt Roadmap-Horizont",
+                        expected="Roadmap adressiert Zeitraum bis zum ROI-Break-even",
+                        actual="12-Monats-Roadmap ohne langfristige Perspektive",
+                        suggestion="Ergänze langfristige Phase oder passe Payback an",
+                    ))
+
+        # Rule C4_003: Phase numbering should be sequential
+        phases_90d = re.findall(r'phase\s*(\d+)', roadmap_90d_text)
+        phases_12m = re.findall(r'phase\s*(\d+)', roadmap_12m_text)
+
+        if phases_90d and phases_12m:
+            max_90d_phase = max(int(p) for p in phases_90d) if phases_90d else 0
+            min_12m_phase = min(int(p) for p in phases_12m) if phases_12m else 1
+
+            # 12m phases should continue from 90d phases
+            if max_90d_phase >= min_12m_phase and max_90d_phase > 0:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="C4_003",
+                    severity="INFO",
+                    domain="roadmap",
+                    source_section="roadmap_90d",
+                    target_section="roadmap_12m",
+                    message="Phase-Nummerierung nicht sequentiell zwischen Roadmaps",
+                    expected=f"12M-Roadmap beginnt mit Phase {max_90d_phase + 1}+",
+                    actual=f"90d endet Phase {max_90d_phase}, 12m beginnt Phase {min_12m_phase}",
+                    suggestion="Synchronisiere Phase-Nummerierung zwischen Roadmaps",
+                ))
+
+    # -------------------------------------------------------------------------
     # SCORING
     # -------------------------------------------------------------------------
 
     def _calculate_domain_scores(self) -> None:
         """Calculate scores per domain."""
-        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot", "risk_engine", "business_case", "recommendations", "risk_engine_v3", "vendor_audit", "automation_roadmap", "business_case_sim", "benchmark"]
+        # SPRINT C: Added "strategy" domain for C1 rules
+        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot", "risk_engine", "business_case", "recommendations", "risk_engine_v3", "vendor_audit", "automation_roadmap", "business_case_sim", "benchmark", "strategy"]
 
         for domain in domains:
             domain_issues = [i for i in self.report.issues if i.domain == domain]
