@@ -2092,6 +2092,24 @@
                     </div>
                 </section>
                 {% endif %}
+                <!-- G36: Automation Roadmap Engine – Process Analysis & Transformation Paths -->
+                {% if AUTOMATION_ROADMAP_HTML %}
+                <section class="section chapter" id="automation-roadmap">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Automation Roadmap</span>
+                            <h2>Process Automation Paths & Priorities</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Impact × Feasibility • Phases 1-3
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ AUTOMATION_ROADMAP_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
                 <!-- G30: Business Case Engine 2.0 – ROI Simulation & Scenarios -->
                 {% if BUSINESS_CASE_ENGINE_HTML %}
                 <section class="section chapter" id="business-case-engine">
