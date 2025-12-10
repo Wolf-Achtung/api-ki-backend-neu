@@ -449,6 +449,7 @@ class ConsistencyEngine:
         self._check_narrative_coherence()
         self._check_exec_snapshot_consistency()  # G27
         self._check_risk_engine_consistency()  # G29
+        self._check_business_case_consistency()  # G30
 
         # Calculate domain scores
         self._calculate_domain_scores()
@@ -1545,12 +1546,375 @@ class ConsistencyEngine:
         return None
 
     # -------------------------------------------------------------------------
+    # DOMAIN 9: Business Case Engine V2 Consistency (G30)
+    # -------------------------------------------------------------------------
+
+    def _check_business_case_consistency(self) -> None:
+        """
+        G30: Check Business Case Engine V2 consistency with other sections.
+
+        Rules:
+        - BC_001: Scenario ordering (optimistic >= realistic >= conservative)
+        - BC_002: ROI matches existing KPI calculations from briefing/KI-Stack
+        - BC_003: Investment aligns with Tools Engine cost estimates
+        - BC_004: Savings align with time savings baseline
+        - BC_005: Funding effect matches Funding Engine
+        """
+        bc_html = self.sections.get("BUSINESS_CASE_ENGINE_HTML", "")
+
+        if not bc_html:
+            log.debug("[G30] Business Case consistency: Skipping (no business case section)")
+            return
+
+        self.report.checked_rules += 5
+
+        bc_html_lower = bc_html.lower()
+
+        # Rule BC_001: Scenario ordering consistency
+        # Extract ROI values from scenarios
+        scenario_rois = self._extract_scenario_rois(bc_html)
+
+        if scenario_rois:
+            opt_roi = scenario_rois.get("optimistic", 0)
+            real_roi = scenario_rois.get("realistic", 0)
+            cons_roi = scenario_rois.get("conservative", 0)
+
+            # Check ordering: optimistic >= realistic >= conservative
+            if opt_roi < real_roi:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="BC_001",
+                    severity="ERROR",
+                    domain="business_case",
+                    source_section="business_case_engine",
+                    target_section="business_case_engine",
+                    message="Szenario-Reihenfolge inkonsistent: Optimistic ROI < Realistic ROI",
+                    expected=f"Optimistic ROI >= Realistic ROI",
+                    actual=f"Optimistic: {opt_roi:.1f}%, Realistic: {real_roi:.1f}%",
+                    suggestion="Korrigiere Szenario-Werte, sodass optimistic >= realistic >= conservative",
+                ))
+
+            if real_roi < cons_roi:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="BC_001",
+                    severity="ERROR",
+                    domain="business_case",
+                    source_section="business_case_engine",
+                    target_section="business_case_engine",
+                    message="Szenario-Reihenfolge inkonsistent: Realistic ROI < Conservative ROI",
+                    expected=f"Realistic ROI >= Conservative ROI",
+                    actual=f"Realistic: {real_roi:.1f}%, Conservative: {cons_roi:.1f}%",
+                    suggestion="Korrigiere Szenario-Werte, sodass optimistic >= realistic >= conservative",
+                ))
+
+        # Rule BC_002: ROI matches existing KPI calculations
+        briefing_roi = self.briefing.get("ROI_12M")
+        ki_stack_kpis = _extract_kpis(self.sections.get("KI_STACK_SUMMARY_HTML", ""))
+        ki_stack_roi = ki_stack_kpis.get("roi")
+
+        bc_realistic_roi = scenario_rois.get("realistic") if scenario_rois else None
+
+        if bc_realistic_roi is not None:
+            reference_roi = None
+            reference_source = None
+
+            if ki_stack_roi is not None:
+                reference_roi = ki_stack_roi
+                reference_source = "KI-Stack Summary"
+            elif briefing_roi is not None:
+                try:
+                    reference_roi = float(briefing_roi)
+                    reference_source = "Briefing"
+                except (ValueError, TypeError):
+                    pass
+
+            if reference_roi is not None:
+                # Allow 25% tolerance
+                roi_diff = abs(bc_realistic_roi - reference_roi)
+                tolerance = max(25, abs(reference_roi) * 0.25)
+
+                if roi_diff > tolerance:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="BC_002",
+                        severity="WARNING",
+                        domain="business_case",
+                        source_section="business_case_engine",
+                        target_section="ki_stack_summary",
+                        message=f"Business Case ROI weicht von {reference_source} ab",
+                        expected=f"ROI ~{reference_roi:.1f}% (aus {reference_source})",
+                        actual=f"Business Case Realistic ROI: {bc_realistic_roi:.1f}%",
+                        suggestion="Überprüfe ROI-Berechnung in Business Case Engine",
+                    ))
+
+        # Rule BC_003: Investment aligns with Tools Engine cost estimates
+        tools_html = self.sections.get("KI_STACK_SUMMARY_HTML", "") or self.sections.get("TOOLS_HTML", "")
+        bc_investment = self._extract_investment_from_bc(bc_html)
+        tools_cost_estimate = self._estimate_tools_cost(tools_html)
+
+        if bc_investment is not None and tools_cost_estimate is not None:
+            # Investment should be reasonably close to tools cost (within 3x)
+            if bc_investment > 0 and tools_cost_estimate > 0:
+                ratio = bc_investment / tools_cost_estimate
+
+                if ratio > 5:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="BC_003",
+                        severity="WARNING",
+                        domain="business_case",
+                        source_section="business_case_engine",
+                        target_section="tools_engine",
+                        message="Business Case Investment deutlich höher als Tools-Kosten",
+                        expected=f"Investment nahe Tools-Schätzung (~{tools_cost_estimate:.0f}€)",
+                        actual=f"BC Investment: {bc_investment:.0f}€ ({ratio:.1f}x Tools-Kosten)",
+                        suggestion="Prüfe, ob alle Investment-Komponenten berechtigt sind",
+                    ))
+                elif ratio < 0.3:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="BC_003",
+                        severity="INFO",
+                        domain="business_case",
+                        source_section="business_case_engine",
+                        target_section="tools_engine",
+                        message="Business Case Investment niedriger als Tools-Kosten",
+                        expected=f"Investment >= Tools-Schätzung (~{tools_cost_estimate:.0f}€)",
+                        actual=f"BC Investment: {bc_investment:.0f}€",
+                        suggestion="Prüfe, ob alle Tool-Kosten im Investment berücksichtigt sind",
+                    ))
+
+        # Rule BC_004: Savings align with time savings baseline
+        briefing_hours = self.briefing.get("EINSPARUNG_STUNDEN_MONAT")
+        briefing_savings = self.briefing.get("EINSPARUNG_MONAT_EUR")
+        bc_savings = self._extract_monthly_savings_from_bc(bc_html)
+
+        if bc_savings is not None and bc_savings > 0:
+            expected_savings = None
+
+            if briefing_savings:
+                try:
+                    expected_savings = float(briefing_savings)
+                except (ValueError, TypeError):
+                    pass
+            elif briefing_hours:
+                try:
+                    hours = float(briefing_hours)
+                    # Estimate at 50€/hour
+                    expected_savings = hours * 50
+                except (ValueError, TypeError):
+                    pass
+
+            if expected_savings is not None and expected_savings > 0:
+                savings_ratio = bc_savings / expected_savings
+
+                if savings_ratio > 3:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="BC_004",
+                        severity="WARNING",
+                        domain="business_case",
+                        source_section="business_case_engine",
+                        target_section="briefing",
+                        message="Business Case Ersparnis deutlich höher als Baseline",
+                        expected=f"Monatl. Ersparnis ~{expected_savings:.0f}€ (aus Briefing)",
+                        actual=f"BC Ersparnis: {bc_savings:.0f}€ ({savings_ratio:.1f}x Baseline)",
+                        suggestion="Überprüfe Ersparnis-Annahmen im Business Case",
+                    ))
+                elif savings_ratio < 0.3:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="BC_004",
+                        severity="INFO",
+                        domain="business_case",
+                        source_section="business_case_engine",
+                        target_section="briefing",
+                        message="Business Case Ersparnis niedriger als Baseline",
+                        expected=f"Monatl. Ersparnis ~{expected_savings:.0f}€ (aus Briefing)",
+                        actual=f"BC Ersparnis: {bc_savings:.0f}€",
+                        suggestion="Prüfe, ob Einspar-Potenzial vollständig erfasst ist",
+                    ))
+
+        # Rule BC_005: Funding effect matches Funding Engine
+        funding_html = self.sections.get("FUNDING_MATRIX_2025_HTML", "") or self.sections.get("FOERDERPOTENZIAL_HTML", "")
+        bc_funding_effect = self._extract_funding_effect_from_bc(bc_html)
+
+        if bc_funding_effect is not None and bc_funding_effect > 0:
+            # Check if funding section mentions any programs
+            has_funding_programs = bool(_extract_funding_programs(funding_html))
+
+            if not has_funding_programs:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="BC_005",
+                    severity="WARNING",
+                    domain="business_case",
+                    source_section="business_case_engine",
+                    target_section="funding_engine",
+                    message="Business Case enthält Fördereffekt ohne passende Förderprogramme",
+                    expected="Fördereffekt basiert auf identifizierten Programmen",
+                    actual=f"Fördereffekt: {bc_funding_effect:.0f}€, keine Programme gefunden",
+                    suggestion="Verknüpfe Fördereffekt mit konkreten Programmen aus Funding Engine",
+                ))
+
+            # Check if funding effect is unrealistically high
+            if bc_investment is not None and bc_funding_effect > bc_investment * 0.8:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="BC_005",
+                    severity="WARNING",
+                    domain="business_case",
+                    source_section="business_case_engine",
+                    target_section="funding_engine",
+                    message="Fördereffekt unrealistisch hoch (>80% des Investments)",
+                    expected="Fördereffekt max. 50-70% des Investments",
+                    actual=f"Fördereffekt: {bc_funding_effect:.0f}€ bei {bc_investment:.0f}€ Investment",
+                    suggestion="Überprüfe Förder-Berechnungen auf Plausibilität",
+                ))
+
+    def _extract_scenario_rois(self, html: str) -> Dict[str, float]:
+        """Extract ROI values for each scenario from Business Case HTML."""
+        if not html:
+            return {}
+
+        rois: Dict[str, float] = {}
+
+        # Pattern: scenario name followed by ROI value
+        import re
+
+        # Look for scenario cards/sections with ROI
+        scenarios = ["optimistic", "optimistisch", "realistic", "realistisch", "conservative", "konservativ"]
+
+        for scenario in scenarios:
+            # Normalize to English
+            normalized = scenario
+            if scenario == "optimistisch":
+                normalized = "optimistic"
+            elif scenario == "realistisch":
+                normalized = "realistic"
+            elif scenario == "konservativ":
+                normalized = "conservative"
+
+            # Look for ROI near scenario name
+            pattern = rf'{scenario}[^<]*?(\d+(?:[.,]\d+)?)\s*%'
+            match = re.search(pattern, html.lower())
+            if match:
+                try:
+                    rois[normalized] = float(match.group(1).replace(",", "."))
+                except ValueError:
+                    pass
+
+        return rois
+
+    def _extract_investment_from_bc(self, html: str) -> Optional[float]:
+        """Extract total investment from Business Case HTML."""
+        if not html:
+            return None
+
+        import re
+
+        patterns = [
+            r'investment[:\s]*(\d+(?:[.,]\d+)?)\s*€',
+            r'(\d+(?:[.,]\d+)?)\s*€\s*(?:investment|invest)',
+            r'investition[:\s]*(\d+(?:[.,]\d+)?)\s*€',
+            r'gesamt[:\s]*(\d+(?:[.,]\d+)?)\s*€',
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, html.lower())
+            if match:
+                try:
+                    value = match.group(1).replace(".", "").replace(",", ".")
+                    return float(value)
+                except ValueError:
+                    continue
+
+        return None
+
+    def _extract_monthly_savings_from_bc(self, html: str) -> Optional[float]:
+        """Extract monthly savings from Business Case HTML."""
+        if not html:
+            return None
+
+        import re
+
+        patterns = [
+            r'monatl[^<]*?(\d+(?:[.,]\d+)?)\s*€',
+            r'monthly[^<]*?(\d+(?:[.,]\d+)?)\s*€',
+            r'ersparnis[^<]*?(\d+(?:[.,]\d+)?)\s*€',
+            r'savings[^<]*?(\d+(?:[.,]\d+)?)\s*€',
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, html.lower())
+            if match:
+                try:
+                    value = match.group(1).replace(".", "").replace(",", ".")
+                    return float(value)
+                except ValueError:
+                    continue
+
+        return None
+
+    def _extract_funding_effect_from_bc(self, html: str) -> Optional[float]:
+        """Extract funding effect from Business Case HTML."""
+        if not html:
+            return None
+
+        import re
+
+        patterns = [
+            r'förder[^<]*?(\d+(?:[.,]\d+)?)\s*€',
+            r'funding[^<]*?(\d+(?:[.,]\d+)?)\s*€',
+            r'zuschuss[^<]*?(\d+(?:[.,]\d+)?)\s*€',
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, html.lower())
+            if match:
+                try:
+                    value = match.group(1).replace(".", "").replace(",", ".")
+                    return float(value)
+                except ValueError:
+                    continue
+
+        return None
+
+    def _estimate_tools_cost(self, html: str) -> Optional[float]:
+        """Estimate tools cost from Tools Engine HTML."""
+        if not html:
+            return None
+
+        import re
+
+        # Look for cost indicators
+        cost_sum = 0.0
+        found_costs = False
+
+        # Pattern: cost-level badges
+        cost_level_pattern = r'cost-level-(\d)'
+        for match in re.finditer(cost_level_pattern, html.lower()):
+            level = int(match.group(1))
+            # Estimate: level 1=0, 2=10, 3=50, 4=150, 5=500 €/month
+            cost_estimates = {1: 0, 2: 10, 3: 50, 4: 150, 5: 500}
+            cost_sum += cost_estimates.get(level, 50) * 12  # Annual
+            found_costs = True
+
+        # Add setup costs (2-3 months of operating)
+        if found_costs:
+            return cost_sum + (cost_sum / 12) * 2.5
+
+        # Pattern: direct EUR amounts
+        eur_pattern = r'(\d+(?:[.,]\d+)?)\s*€\s*/?\s*(?:monat|month)'
+        for match in re.finditer(eur_pattern, html.lower()):
+            try:
+                value = match.group(1).replace(".", "").replace(",", ".")
+                cost_sum += float(value) * 12
+                found_costs = True
+            except ValueError:
+                continue
+
+        return cost_sum if found_costs else None
+
+    # -------------------------------------------------------------------------
     # SCORING
     # -------------------------------------------------------------------------
 
     def _calculate_domain_scores(self) -> None:
         """Calculate scores per domain."""
-        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot", "risk_engine"]
+        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot", "risk_engine", "business_case"]
 
         for domain in domains:
             domain_issues = [i for i in self.report.issues if i.domain == domain]
