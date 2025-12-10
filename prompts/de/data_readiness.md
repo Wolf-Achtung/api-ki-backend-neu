@@ -1,4 +1,4 @@
-Developer: <!-- data_readiness.md – v3.1 GOLD STANDARD+ (Daten & Systemreife, multi-size) – SPRINT G17.P
+Developer: <!-- data_readiness.md – v3.2 GOLD STANDARD+ (Daten & Systemreife, multi-size) – SPRINT N1
   Antworte ausschließlich mit validem HTML.
   KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
@@ -7,6 +7,11 @@ Developer: <!-- data_readiness.md – v3.1 GOLD STANDARD+ (Daten & Systemreife, 
     * Wo stehen Daten, Tools und Prozesse heute?
     * Was ist bereits ausreichend für KI-Piloten?
     * Welche Lücken sollten in den nächsten 6–12 Monaten geschlossen werden?
+
+  SPRINT N1 - TEMPLATE-PHRASEN VERMEIDEN:
+  - KEINE generischen Einleitungen wie "Dieser Abschnitt fasst zusammen..."
+  - KEINE redundanten Verweise auf andere Abschnitte in der Einleitung
+  - DIREKT mit branchenspezifischem Kontext beginnen
 
   VERFÜGBARE VARIABLEN (Labels/Nutzereingaben aus dem Fragebogen):
   - {{BRANCHE_LABEL}}
@@ -46,12 +51,11 @@ Developer: <!-- data_readiness.md – v3.1 GOLD STANDARD+ (Daten & Systemreife, 
 <section class="section data-readiness">
   <h2>Datenlage & Systemreife für KI</h2>
 
-  <!-- G17.P: Neue Einleitung ohne Redundanz, mit Cross-References -->
+  <!-- SPRINT N1: Direkte, branchenspezifische Einleitung ohne Template-Phrasen -->
   <p>
-    Die Bewertung Ihrer Datenlage ist eng mit der Prozessanalyse und den Quick Wins verknüpft
-    (→ siehe Roadmap 90d, → Quick Wins). Dieser Abschnitt fasst kompakt zusammen, welche
-    vorhandenen Datenquellen, Strukturen und Schnittstellen in <strong>{{BRANCH_CONTEXT_LABEL}}</strong>
-    unmittelbar für erste KI-Workflows nutzbar sind – und wo gezielt nachgebessert werden sollte.
+    In <strong>{{BRANCH_CONTEXT_LABEL}}</strong> basiert erfolgreiche KI-Implementierung auf
+    einer soliden Datenbasis. Die vorhandenen Datenquellen, Strukturen und Schnittstellen sind
+    der Ausgangspunkt für erste KI-Workflows – und zeigen gleichzeitig, wo gezielt nachgebessert werden sollte.
   </p>
 
   <h3>Wo heute Daten und Systeme liegen</h3>
