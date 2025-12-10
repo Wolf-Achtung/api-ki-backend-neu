@@ -2056,6 +2056,24 @@
                     </div>
                 </section>
                 {% endif %}
+                <!-- G33: Risk Engine 3.0 – DPIA & AI Act Conformity -->
+                {% if RISK_ENGINE_V3_HTML %}
+                <section class="section chapter" id="risk-engine-v3">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">DPIA &amp; Compliance</span>
+                            <h2>DPIA Analysis &amp; AI Act Conformity</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            GDPR Art. 35 • AI Act Annex III
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ RISK_ENGINE_V3_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
                 <!-- G30: Business Case Engine 2.0 – ROI Simulation & Scenarios -->
                 {% if BUSINESS_CASE_ENGINE_HTML %}
                 <section class="section chapter" id="business-case-engine">
