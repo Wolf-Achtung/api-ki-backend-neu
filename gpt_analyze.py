@@ -5084,6 +5084,47 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         sections.setdefault("RISK_ENGINE_HTML", "")
 
     # =========================================================================
+    # SPRINT G33: Risk Engine 3.0 – DPIA & AI Act Conformity Mapping
+    # =========================================================================
+    try:
+        from services.risk_engine_v3 import generate_risk_report_v3, risk_report_v3_to_html
+
+        risk_report_v3 = generate_risk_report_v3(
+            context=None,
+            sections=sections,
+            tools_data=sections.get("_tools_data"),
+            funding_data=sections.get("_funding_data"),
+            strategy_data=sections.get("_strategy_plan"),
+            base_risk_report=sections.get("_risk_report"),
+            briefing=answers,
+            llm_response=None,
+        )
+
+        sections["RISK_ENGINE_V3_HTML"] = risk_report_v3_to_html(risk_report_v3, lang=report_lang)
+        sections["_risk_report_v3"] = risk_report_v3
+
+        # Extract key values for template usage
+        sections["DPIA_REQUIRED"] = risk_report_v3.dpia_required
+        sections["DPIA_REASON"] = risk_report_v3.dpia_reason
+        sections["AI_ACT_CONFORMITY_SCORE"] = risk_report_v3.ai_act_conformity.conformity_score
+        sections["RESIDUAL_RISK_SCORE"] = risk_report_v3.residual_risk_score
+        sections["RESIDUAL_RISK_GRADE"] = risk_report_v3.residual_risk_grade
+        sections["COMPLIANCE_STATUS"] = risk_report_v3.compliance_status
+
+        log.info("[%s] ✅ G33 Risk Engine V3 generated: DPIA=%s, Conformity=%.0f%%, Residual=%s (%s)",
+                 run_id,
+                 "Required" if risk_report_v3.dpia_required else "Not Required",
+                 risk_report_v3.ai_act_conformity.conformity_score * 100,
+                 risk_report_v3.residual_risk_grade,
+                 risk_report_v3.compliance_status)
+    except ImportError:
+        log.debug("[%s] G33 risk_engine_v3 not available", run_id)
+        sections.setdefault("RISK_ENGINE_V3_HTML", "")
+    except Exception as e:
+        log.warning("[%s] ⚠️ G33 Risk Engine V3 failed: %s", run_id, e)
+        sections.setdefault("RISK_ENGINE_V3_HTML", "")
+
+    # =========================================================================
     # SPRINT G30: Business Case Engine 2.0 – ROI-Simulation & Szenarien
     # =========================================================================
     try:

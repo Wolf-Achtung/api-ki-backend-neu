@@ -451,6 +451,7 @@ class ConsistencyEngine:
         self._check_risk_engine_consistency()  # G29
         self._check_business_case_consistency()  # G30
         self._check_recommendations_consistency()  # G32
+        self._check_risk_engine_v3_consistency()  # G33
 
         # Calculate domain scores
         self._calculate_domain_scores()
@@ -2295,12 +2296,373 @@ class ConsistencyEngine:
         return total_count
 
     # -------------------------------------------------------------------------
+    # DOMAIN 11: Risk Engine V3 Consistency (G33)
+    # -------------------------------------------------------------------------
+
+    def _check_risk_engine_v3_consistency(self) -> None:
+        """
+        G33: Check Risk Engine V3 (DPIA & AI Act Conformity) consistency.
+
+        Rules:
+        - RISK3_001: If dpia_required=True, Strategy Engine must contain measures
+        - RISK3_002: Missing AI Act Controls must be in Strategy Phase 1 or 2
+        - RISK3_003: Residual Risk Score cannot be < 20 if Vendor Risk > 4
+        - RISK3_004: DSGVO Data Category "sensitive" → Risk Level >= medium
+        - RISK3_005: If Funding Programme requires "High Compliance" → must be in DPIA
+        - RISK3_006: DPIA Entries must not contradict Controls
+        - RISK3_007: Mitigation Plan must reference Strategy Engine use-cases
+        - RISK3_008: AIActConformity.conformity_score < 0.5 → Strategy cannot claim "Low Risk"
+        """
+        risk_v3_html = self.sections.get("RISK_ENGINE_V3_HTML", "")
+
+        if not risk_v3_html:
+            log.debug("[G33] Risk Engine V3 consistency: Skipping (no risk_v3 section)")
+            return
+
+        self.report.checked_rules += 8
+
+        risk_v3_lower = risk_v3_html.lower()
+        strategy_html = self.sections.get("STRATEGY_PLAN_HTML", "") or self.sections.get("ROADMAP_12M_HTML", "")
+        strategy_lower = strategy_html.lower() if strategy_html else ""
+        funding_html = self.sections.get("FUNDING_MATRIX_2025_HTML", "") or self.sections.get("FOERDERPOTENZIAL_HTML", "")
+
+        # Get company size
+        size = self.briefing.get("unternehmensgroesse", "").lower()
+        size_label = "solo" if "solo" in size or "freiberuf" in size else (
+            "team" if "team" in size or "klein" in size else "kmu"
+        )
+
+        # Rule RISK3_001: If DPIA required, Strategy must contain measures
+        dpia_required = "dpia erforderlich" in risk_v3_lower or "dpia required" in risk_v3_lower or '"dpia_required": true' in risk_v3_lower
+        dpia_yes = "dpia_required.*ja" in risk_v3_lower or "dpia required.*yes" in risk_v3_lower
+
+        if dpia_required or dpia_yes:
+            dpia_keywords = ["dpia", "datenschutz", "privacy", "dsgvo", "gdpr", "folgenabschätzung", "impact assessment"]
+            has_dpia_in_strategy = any(kw in strategy_lower for kw in dpia_keywords)
+
+            if not has_dpia_in_strategy and strategy_html:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="RISK3_001",
+                    severity="ERROR",
+                    domain="risk_engine_v3",
+                    source_section="risk_engine_v3",
+                    target_section="strategy_plan",
+                    message="DPIA erforderlich, aber keine DPIA-Maßnahmen im Strategy Plan",
+                    expected="Strategy Plan sollte DPIA-bezogene Maßnahmen enthalten",
+                    actual="Keine DPIA-Keywords im Strategy Plan gefunden",
+                    suggestion="Füge DPIA-Implementierung zum Strategy Plan hinzu",
+                ))
+
+        # Rule RISK3_002: Missing AI Act Controls must be in Strategy Phase 1 or 2
+        missing_controls = self._extract_missing_controls(risk_v3_html)
+        if missing_controls and strategy_html:
+            unaddressed_controls = []
+            for ctrl in missing_controls:
+                ctrl_keywords = ctrl.replace("_", " ").split()
+                if not any(kw in strategy_lower for kw in ctrl_keywords):
+                    unaddressed_controls.append(ctrl)
+
+            if unaddressed_controls:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="RISK3_002",
+                    severity="ERROR",
+                    domain="risk_engine_v3",
+                    source_section="risk_engine_v3",
+                    target_section="strategy_plan",
+                    message="Fehlende AI Act Controls nicht im Strategy Plan adressiert",
+                    expected="Missing Controls sollten in Phase 1 oder 2 geplant sein",
+                    actual=f"Nicht adressiert: {', '.join(unaddressed_controls[:3])}",
+                    suggestion="Füge AI Act Control-Implementierung zum Strategy Plan hinzu",
+                ))
+
+        # Rule RISK3_003: Residual Risk Score >= 20 if Vendor Risk > 4
+        residual_score = self._extract_residual_risk_score(risk_v3_html)
+        vendor_risk = self._extract_vendor_risk_score(risk_v3_html)
+
+        if vendor_risk > 4 and residual_score is not None and residual_score < 20:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="RISK3_003",
+                severity="ERROR",
+                domain="risk_engine_v3",
+                source_section="risk_engine_v3",
+                target_section="risk_engine_v3",
+                message="Residual Risk Score zu niedrig bei hohem Vendor Risk",
+                expected="Residual Risk Score >= 20 wenn Vendor Risk > 4",
+                actual=f"Residual Score: {residual_score}, Vendor Risk: {vendor_risk}",
+                suggestion="Überprüfe Vendor Risk Mitigation oder passe Residual Score an",
+            ))
+
+        # Rule RISK3_004: Sensitive data category → Risk Level >= medium
+        has_sensitive_data = any(term in risk_v3_lower for term in [
+            "sensitive_health", "sensitive_biometric", "sensitive_genetic",
+            "sensitive_political", "sensitive_religious", "sensitive_ethnic",
+            "sensitive_sexual", "children_data", "gesundheit", "biometri",
+            "genetik", "politisch", "religiös", "kinder"
+        ])
+
+        if has_sensitive_data:
+            has_low_risk = "residual_risk.*low" in risk_v3_lower or '"low"' in risk_v3_lower
+            # Check if any DPIA entry with sensitive data has low residual risk
+            if has_low_risk and "sensitive" in risk_v3_lower:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="RISK3_004",
+                    severity="WARNING",
+                    domain="risk_engine_v3",
+                    source_section="risk_engine_v3",
+                    target_section="risk_engine_v3",
+                    message="Sensible Datenkategorie mit niedrigem Restrisiko",
+                    expected="Verarbeitung sensibler Daten sollte Risk Level >= medium haben",
+                    actual="Sensible Daten gefunden, aber 'low' Risk Level",
+                    suggestion="Erhöhe das Risk Level für DPIA-Einträge mit sensiblen Daten",
+                ))
+
+        # Rule RISK3_005: High Compliance Funding → must be in DPIA
+        if funding_html:
+            high_compliance_funding = any(term in funding_html.lower() for term in [
+                "high compliance", "hohe compliance", "strenge anforderung",
+                "datenschutz-anforderung", "dsgvo-konform"
+            ])
+
+            if high_compliance_funding and dpia_required:
+                funding_in_dpia = "funding" in risk_v3_lower or "förder" in risk_v3_lower
+                if not funding_in_dpia:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="RISK3_005",
+                        severity="WARNING",
+                        domain="risk_engine_v3",
+                        source_section="funding_engine",
+                        target_section="risk_engine_v3",
+                        message="High Compliance Förderprogramm nicht in DPIA referenziert",
+                        expected="Förderprogramme mit hohen Compliance-Anforderungen sollten in DPIA erwähnt werden",
+                        actual="Funding mit Compliance-Anforderungen, aber keine Erwähnung in DPIA",
+                        suggestion="Ergänze Funding-Compliance-Anforderungen in DPIA-Analyse",
+                    ))
+
+        # Rule RISK3_006: DPIA Entries must not contradict Controls
+        # Check for contradictions between DPIA mitigations and missing controls
+        dpia_mitigations = self._extract_dpia_mitigations(risk_v3_html)
+        if dpia_mitigations and missing_controls:
+            # If human oversight is missing but DPIA claims Human-in-the-Loop
+            if "human_oversight" in missing_controls:
+                has_human_loop = any("human" in m.lower() for m in dpia_mitigations)
+                if has_human_loop:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="RISK3_006",
+                        severity="WARNING",
+                        domain="risk_engine_v3",
+                        source_section="risk_engine_v3",
+                        target_section="risk_engine_v3",
+                        message="DPIA-Mitigation widerspricht fehlendem AI Act Control",
+                        expected="DPIA-Mitigationen sollten mit implementierten Controls übereinstimmen",
+                        actual="Human-in-the-Loop in DPIA, aber human_oversight als fehlend markiert",
+                        suggestion="Korrigiere entweder DPIA-Mitigationen oder AI Act Control-Status",
+                    ))
+
+        # Rule RISK3_007: Mitigation Plan must reference Strategy Engine use-cases
+        mitigation_plan = self._extract_mitigation_plan(risk_v3_html)
+        strategy_phases = self._extract_strategy_phases(strategy_html)
+
+        if mitigation_plan and strategy_phases:
+            # Check if at least one mitigation references strategy content
+            mitigation_text = " ".join(mitigation_plan).lower()
+            strategy_text = " ".join(strategy_phases).lower()
+
+            common_terms = ["phase", "implementier", "implement", "einführ", "deploy"]
+            has_alignment = any(term in mitigation_text and term in strategy_text for term in common_terms)
+
+            if not has_alignment:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="RISK3_007",
+                    severity="WARNING",
+                    domain="risk_engine_v3",
+                    source_section="risk_engine_v3",
+                    target_section="strategy_plan",
+                    message="Mitigation Plan ohne Bezug zum Strategy Plan",
+                    expected="Mitigation Plan sollte Strategy Engine Use-Cases referenzieren",
+                    actual="Keine Überschneidung zwischen Mitigation und Strategy gefunden",
+                    suggestion="Verknüpfe Mitigation-Maßnahmen mit Strategy-Phasen",
+                ))
+
+        # Rule RISK3_008: Conformity Score < 0.5 → Strategy cannot claim "Low Risk"
+        conformity_score = self._extract_conformity_score(risk_v3_html)
+        if conformity_score is not None and conformity_score < 0.5:
+            strategy_claims_low_risk = any(term in strategy_lower for term in [
+                "low risk", "niedriges risiko", "geringes risiko", "minimal risk"
+            ])
+
+            if strategy_claims_low_risk:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="RISK3_008",
+                    severity="ERROR",
+                    domain="risk_engine_v3",
+                    source_section="strategy_plan",
+                    target_section="risk_engine_v3",
+                    message="Strategy behauptet 'Low Risk' trotz niedriger AI Act Conformity",
+                    expected="Bei Conformity Score < 50% sollte Strategy kein 'Low Risk' behaupten",
+                    actual=f"Conformity Score: {conformity_score*100:.0f}%, Strategy: 'Low Risk'",
+                    suggestion="Korrigiere Risikobewertung im Strategy Plan oder verbessere AI Act Conformity",
+                ))
+
+    def _extract_missing_controls(self, html: str) -> List[str]:
+        """Extract missing AI Act controls from Risk Engine V3 HTML."""
+        if not html:
+            return []
+
+        controls: List[str] = []
+
+        import re
+
+        # Pattern: missing_controls: ["control_a", "control_b"]
+        pattern = r'missing_controls["\s:]*\[(.*?)\]'
+        matches = re.findall(pattern, html, re.IGNORECASE | re.DOTALL)
+
+        for match in matches:
+            ctrl_names = re.findall(r'"([^"]+)"', match)
+            controls.extend(ctrl_names)
+
+        # Also look for "Missing" or "Fehlend" badges
+        missing_pattern = r'(?:missing|fehlend)[^<]*>([^<]+)<'
+        for match in re.finditer(missing_pattern, html, re.IGNORECASE):
+            ctrl = match.group(1).strip()
+            if len(ctrl) > 3 and "_" in ctrl.lower().replace(" ", "_"):
+                controls.append(ctrl.lower().replace(" ", "_"))
+
+        return list(set(controls))
+
+    def _extract_residual_risk_score(self, html: str) -> Optional[float]:
+        """Extract residual risk score from Risk Engine V3 HTML."""
+        if not html:
+            return None
+
+        import re
+
+        # Pattern: residual_risk_score: 65.0 or "65"
+        patterns = [
+            r'residual_risk_score["\s:]*(\d+(?:\.\d+)?)',
+            r'residual[^>]*>(\d+)</div>',
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, html, re.IGNORECASE)
+            if match:
+                try:
+                    return float(match.group(1))
+                except ValueError:
+                    continue
+
+        return None
+
+    def _extract_vendor_risk_score(self, html: str) -> int:
+        """Extract vendor risk score from Risk Engine V3 HTML."""
+        if not html:
+            return 3
+
+        import re
+
+        patterns = [
+            r'vendor_risk_score["\s:]*(\d+)',
+            r'vendor[_\-]?risk[^>]*>(\d+)<',
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, html, re.IGNORECASE)
+            if match:
+                try:
+                    return int(match.group(1))
+                except ValueError:
+                    continue
+
+        return 3
+
+    def _extract_dpia_mitigations(self, html: str) -> List[str]:
+        """Extract DPIA mitigation measures from HTML."""
+        if not html:
+            return []
+
+        mitigations: List[str] = []
+
+        import re
+
+        # Pattern: mitigation_measures: ["measure_a", "measure_b"]
+        pattern = r'mitigation_measures["\s:]*\[(.*?)\]'
+        matches = re.findall(pattern, html, re.IGNORECASE | re.DOTALL)
+
+        for match in matches:
+            measure_names = re.findall(r'"([^"]+)"', match)
+            mitigations.extend(measure_names)
+
+        return list(set(mitigations))
+
+    def _extract_mitigation_plan(self, html: str) -> List[str]:
+        """Extract mitigation plan items from HTML."""
+        if not html:
+            return []
+
+        items: List[str] = []
+
+        import re
+
+        # Pattern: mitigation_plan: ["item_a", "item_b"]
+        pattern = r'mitigation_plan["\s:]*\[(.*?)\]'
+        matches = re.findall(pattern, html, re.IGNORECASE | re.DOTALL)
+
+        for match in matches:
+            item_names = re.findall(r'"([^"]+)"', match)
+            items.extend(item_names)
+
+        return items
+
+    def _extract_strategy_phases(self, html: str) -> List[str]:
+        """Extract strategy phase content from HTML."""
+        if not html:
+            return []
+
+        phases: List[str] = []
+
+        import re
+
+        # Look for phase content
+        phase_pattern = r'phase[_\s]?\d[^>]*>([^<]+)<'
+        for match in re.finditer(phase_pattern, html, re.IGNORECASE):
+            content = match.group(1).strip()
+            if len(content) > 5:
+                phases.append(content)
+
+        return phases
+
+    def _extract_conformity_score(self, html: str) -> Optional[float]:
+        """Extract AI Act conformity score from HTML."""
+        if not html:
+            return None
+
+        import re
+
+        patterns = [
+            r'conformity_score["\s:]*(\d+(?:\.\d+)?)',
+            r'(\d+(?:\.\d+)?)\s*%[^<]*conformity',
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, html, re.IGNORECASE)
+            if match:
+                try:
+                    score = float(match.group(1))
+                    # If percentage, convert to 0-1 scale
+                    if score > 1:
+                        score = score / 100
+                    return score
+                except ValueError:
+                    continue
+
+        return None
+
+    # -------------------------------------------------------------------------
     # SCORING
     # -------------------------------------------------------------------------
 
     def _calculate_domain_scores(self) -> None:
         """Calculate scores per domain."""
-        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot", "risk_engine", "business_case", "recommendations"]
+        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot", "risk_engine", "business_case", "recommendations", "risk_engine_v3"]
 
         for domain in domains:
             domain_issues = [i for i in self.report.issues if i.domain == domain]
