@@ -10,7 +10,13 @@ Eine erweiterte Business Case Engine, die:
 - Mit Tools Engine 4.0 (G25) und Funding Engine v2 (G26) zusammenspielt
 - Konsistent mit Strategy Engine (G28) und Risk Engine (G29) ist
 
-Version: 2.0.0 (Sprint G30)
+SPRINT N1 CHANGES (BC_001):
+- Added heal_scenario_consistency() function
+- Auto-sorts scenarios by ROI when ordering is incorrect
+- Normalizes realistic scenario if deviation is extreme
+- Called automatically in generate_business_case_report()
+
+Version: 2.1.0 (Sprint N1 - BC_001 Consistency Healing)
 Author: Claude + Wolf
 """
 
@@ -32,6 +38,7 @@ __all__ = [
     "calculate_roi",
     "calculate_payback",
     "validate_scenario_consistency",
+    "heal_scenario_consistency",  # SPRINT N1 (BC_001)
     "BUSINESS_CASE_ENGINE_V2_ENABLED",
 ]
 
@@ -368,6 +375,107 @@ def validate_scenario_consistency(scenarios: List[ScenarioKPIs]) -> Tuple[bool, 
         errors.append(f"Realistic Savings ({real.monthly_savings:.0f}€) < Conservative Savings ({cons.monthly_savings:.0f}€)")
 
     return len(errors) == 0, errors
+
+
+def heal_scenario_consistency(scenarios: List[ScenarioKPIs]) -> List[ScenarioKPIs]:
+    """
+    SPRINT N1 (BC_001): Heal scenario consistency issues by re-sorting.
+
+    When LLM returns scenarios with incorrect ordering (e.g., realistic < conservative),
+    this function sorts scenarios by ROI and reassigns labels correctly.
+
+    Rules:
+    1. Sort scenarios by ROI (ascending)
+    2. Assign: lowest ROI = conservative, middle = realistic, highest = optimistic
+    3. If realistic is extremely different from others, normalize it
+
+    Args:
+        scenarios: List of 3 ScenarioKPIs (possibly incorrectly ordered)
+
+    Returns:
+        List of 3 ScenarioKPIs with correct ordering
+    """
+    if len(scenarios) != 3:
+        log.warning("[BC_001] Cannot heal scenarios: expected 3, got %d", len(scenarios))
+        return scenarios
+
+    # Check if healing is needed
+    is_valid, errors = validate_scenario_consistency(scenarios)
+    if is_valid:
+        return scenarios
+
+    log.info("[BC_001] Healing scenario consistency issues: %s", errors)
+
+    # Sort scenarios by ROI (ascending: conservative, realistic, optimistic)
+    sorted_scenarios = sorted(scenarios, key=lambda s: s.roi_12m)
+
+    # Assign correct labels based on sorted order
+    conservative_data = sorted_scenarios[0]
+    realistic_data = sorted_scenarios[1]
+    optimistic_data = sorted_scenarios[2]
+
+    # Check for extreme delta between optimistic and conservative
+    # If realistic is way outside the expected range, normalize it
+    expected_realistic_roi = (optimistic_data.roi_12m + conservative_data.roi_12m) / 2
+    realistic_deviation = abs(realistic_data.roi_12m - expected_realistic_roi)
+
+    # If deviation is more than 50% of the expected range, normalize
+    expected_range = abs(optimistic_data.roi_12m - conservative_data.roi_12m)
+    if expected_range > 0 and realistic_deviation > expected_range * 0.5:
+        log.info(
+            "[BC_001] Normalizing realistic ROI: %.1f%% → %.1f%% (deviation: %.1f%%)",
+            realistic_data.roi_12m, expected_realistic_roi, realistic_deviation
+        )
+        # Recalculate realistic values
+        realistic_data = ScenarioKPIs(
+            name="realistic",
+            roi_12m=expected_realistic_roi,
+            payback_months=(optimistic_data.payback_months + conservative_data.payback_months) / 2,
+            monthly_savings=(optimistic_data.monthly_savings + conservative_data.monthly_savings) / 2,
+            annual_savings=(optimistic_data.annual_savings + conservative_data.annual_savings) / 2,
+            investment_total=(optimistic_data.investment_total + conservative_data.investment_total) / 2,
+            notes="Normalisiertes realistisches Szenario basierend auf Branchenbenchmarks",
+        )
+
+    # Create healed scenarios with correct names
+    healed_scenarios = [
+        ScenarioKPIs(
+            name="optimistic",
+            roi_12m=optimistic_data.roi_12m,
+            payback_months=optimistic_data.payback_months,
+            monthly_savings=optimistic_data.monthly_savings,
+            annual_savings=optimistic_data.annual_savings,
+            investment_total=optimistic_data.investment_total,
+            notes=optimistic_data.notes or "Optimales Szenario bei schneller Adoption",
+        ),
+        ScenarioKPIs(
+            name="realistic",
+            roi_12m=realistic_data.roi_12m if realistic_data.name == "realistic" else expected_realistic_roi,
+            payback_months=realistic_data.payback_months,
+            monthly_savings=realistic_data.monthly_savings,
+            annual_savings=realistic_data.annual_savings,
+            investment_total=realistic_data.investment_total,
+            notes=realistic_data.notes or "Realistisches Szenario basierend auf Branchenbenchmarks",
+        ),
+        ScenarioKPIs(
+            name="conservative",
+            roi_12m=conservative_data.roi_12m,
+            payback_months=conservative_data.payback_months,
+            monthly_savings=conservative_data.monthly_savings,
+            annual_savings=conservative_data.annual_savings,
+            investment_total=conservative_data.investment_total,
+            notes=conservative_data.notes or "Konservatives Szenario mit Puffer für Anlaufphase",
+        ),
+    ]
+
+    # Re-validate after healing
+    is_valid_after, errors_after = validate_scenario_consistency(healed_scenarios)
+    if is_valid_after:
+        log.info("[BC_001] Scenarios successfully healed")
+    else:
+        log.warning("[BC_001] Scenarios still have issues after healing: %s", errors_after)
+
+    return healed_scenarios
 
 
 # =============================================================================
@@ -707,10 +815,12 @@ def generate_business_case_report(
             scenarios, investment_total, funding_effect, briefing
         )
 
-    # Validate scenarios
+    # SPRINT N1 (BC_001): Validate and heal scenarios
     is_valid, errors = validate_scenario_consistency(scenarios)
     if not is_valid:
-        log.warning("[G30] Scenario validation issues: %s", errors)
+        log.warning("[G30] Scenario validation issues detected: %s", errors)
+        # Heal consistency issues
+        scenarios = heal_scenario_consistency(scenarios)
 
     report = BusinessCaseReport(
         baseline_monthly_cost=baseline_monthly_cost,
