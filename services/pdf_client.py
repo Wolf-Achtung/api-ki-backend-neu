@@ -24,9 +24,11 @@ PDF_TIMEOUT = int(os.getenv("PDF_TIMEOUT_MS", "90000")) / 1000.0  # Sekunden
 MAX_RETRIES = int(os.getenv("PDF_MAX_RETRIES", "3"))
 
 # PDF-SLIMDOWN v2.0: Size Validation Limits
-MAX_HTML_PAYLOAD_KB = int(os.getenv("MAX_HTML_PAYLOAD_KB", "350"))  # 350KB default
+# ENV-gesteuert: PDF_MAX_HTML_KB (Default: 1024 KB = 1 MB)
+MAX_HTML_PAYLOAD_KB = int(os.getenv("PDF_MAX_HTML_KB", "1024"))  # Default: 1024 KB = 1 MB
 MAX_PDF_SIZE_MB = int(os.getenv("MAX_PDF_SIZE_MB", "20"))  # 20MB default
 WARN_PDF_SIZE_MB = 10  # Warning threshold at 10MB
+WARN_HTML_SIZE_KB = 500  # Warning threshold at 500KB
 
 # SPRINT G14-D: Error categorization for better diagnostics
 TRANSIENT_ERRORS = {408, 429, 500, 502, 503, 504}  # Errors worth retrying
@@ -70,15 +72,31 @@ def validate_html_size(html: str) -> Optional[str]:
         return "HTML content is empty"
 
     html_size_kb = len(html.encode('utf-8')) / 1024
+
+    # Log payload size for monitoring
+    log.info(
+        "[PDF] HTML payload size before render: %.1fKB (limit=%dKB)",
+        html_size_kb,
+        MAX_HTML_PAYLOAD_KB
+    )
+
     if html_size_kb > MAX_HTML_PAYLOAD_KB:
-        log.error(
-            "PDF-1 VIOLATION: HTML payload too large: %.1fKB > %dKB limit",
+        error_msg = (
+            f"PDF failed: HTML payload {html_size_kb:.1f}KB exceeds limit {MAX_HTML_PAYLOAD_KB}KB. "
+            "Consider enabling SLIM mode or reducing content."
+        )
+        log.error("[PDF] %s", error_msg)
+        return error_msg
+
+    if html_size_kb > WARN_HTML_SIZE_KB:
+        log.warning(
+            "[PDF] HTML payload approaching limit: %.1fKB (warning threshold: %dKB, limit: %dKB)",
             html_size_kb,
+            WARN_HTML_SIZE_KB,
             MAX_HTML_PAYLOAD_KB
         )
-        return f"HTML payload too large: {html_size_kb:.1f}KB exceeds {MAX_HTML_PAYLOAD_KB}KB limit"
 
-    log.debug("HTML size validation passed: %.1fKB", html_size_kb)
+    log.debug("[PDF] HTML size validation passed: %.1fKB", html_size_kb)
     return None
 
 
@@ -114,6 +132,48 @@ def validate_pdf_size(pdf_bytes: bytes) -> Optional[str]:
 
     log.debug("PDF size validation passed: %.2fMB", pdf_size_mb)
     return None
+
+
+def slim_html_sections(sections: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Optional Slim Mode – removes large comfort sections to reduce HTML payload size.
+
+    This function is prepared for future use (G38+) but NOT activated by default.
+    It removes sections that are nice-to-have but not essential for the core report.
+
+    Args:
+        sections: Dictionary containing HTML sections
+
+    Returns:
+        Modified sections dict with large non-essential sections removed
+
+    Note:
+        To activate, call this function before rendering HTML template.
+        Example: sections = slim_html_sections(sections)
+    """
+    # Keys of large comfort sections that can be removed in slim mode
+    SLIM_REMOVE_KEYS = [
+        "NEWS_BOX_HTML",           # Market news (can be large)
+        "MARKET_INSIGHTS_HTML",    # Market insights
+        "KREATIV_SPECIAL_HTML",    # Creative special sections
+        "RESEARCH_DETAILS_HTML",   # Detailed research output
+        "RAW_RESEARCH_HTML",       # Raw research data
+    ]
+
+    removed_keys = []
+    for key in SLIM_REMOVE_KEYS:
+        if key in sections:
+            sections.pop(key, None)
+            removed_keys.append(key)
+
+    if removed_keys:
+        log.info(
+            "[PDF-SLIM] Removed %d sections to reduce payload: %s",
+            len(removed_keys),
+            ", ".join(removed_keys)
+        )
+
+    return sections
 
 
 def render_pdf_from_html(html: str, meta: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
