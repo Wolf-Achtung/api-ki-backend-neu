@@ -2539,6 +2539,24 @@
                     </div>
                 </section>
                 {% endif %}
+                <!-- G30: Business Case Engine 2.0 – ROI-Simulation & Szenarien -->
+                {% if BUSINESS_CASE_ENGINE_HTML %}
+                <section class="section chapter" id="business-case-engine">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">ROI-Simulation</span>
+                            <h2>Business Case – 3 Szenarien</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            ROI • Payback • KPI-Forecasts
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ BUSINESS_CASE_ENGINE_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
                 <!-- ROADMAP -->
                 <section class="section chapter">
                     <div class="section-header">
