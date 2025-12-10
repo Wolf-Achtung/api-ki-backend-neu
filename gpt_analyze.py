@@ -5125,6 +5125,48 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         sections.setdefault("RISK_ENGINE_V3_HTML", "")
 
     # =========================================================================
+    # SPRINT G35: Vendor Audit Engine – KI-TUV for Tools & Models
+    # =========================================================================
+    try:
+        from services.vendor_audit_engine import (
+            generate_vendor_audit_report,
+            vendor_audit_report_to_html,
+        )
+
+        vendor_audit_report = generate_vendor_audit_report(
+            context=None,
+            tools_data=sections.get("_tools_data"),
+            risk_report_v2=sections.get("_risk_report"),
+            risk_report_v3=sections.get("_risk_report_v3"),
+            briefing=answers,
+            llm_response=None,
+        )
+
+        sections["VENDOR_AUDIT_HTML"] = vendor_audit_report_to_html(vendor_audit_report, lang=report_lang)
+        sections["_vendor_audit_report"] = vendor_audit_report
+
+        # Extract key values for template usage
+        sections["VENDOR_AUDIT_TOTAL"] = vendor_audit_report.total_vendors
+        sections["VENDOR_AUDIT_GREEN"] = vendor_audit_report.green_count
+        sections["VENDOR_AUDIT_YELLOW"] = vendor_audit_report.yellow_count
+        sections["VENDOR_AUDIT_RED"] = vendor_audit_report.red_count
+        sections["VENDOR_AUDIT_COMPLIANCE_SCORE"] = vendor_audit_report.compliance_score
+        sections["VENDOR_AUDIT_STATUS"] = vendor_audit_report.overall_audit_status
+
+        log.info("[%s] ✅ G35 Vendor Audit generated: %d vendors, %d green, %d yellow, %d red",
+                 run_id,
+                 vendor_audit_report.total_vendors,
+                 vendor_audit_report.green_count,
+                 vendor_audit_report.yellow_count,
+                 vendor_audit_report.red_count)
+    except ImportError:
+        log.debug("[%s] G35 vendor_audit_engine not available", run_id)
+        sections.setdefault("VENDOR_AUDIT_HTML", "")
+    except Exception as e:
+        log.warning("[%s] ⚠️ G35 Vendor Audit Engine failed: %s", run_id, e)
+        sections.setdefault("VENDOR_AUDIT_HTML", "")
+
+    # =========================================================================
     # SPRINT G30: Business Case Engine 2.0 – ROI-Simulation & Szenarien
     # =========================================================================
     try:
