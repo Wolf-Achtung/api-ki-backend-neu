@@ -16,7 +16,12 @@ SPRINT N1 CHANGES (BC_001):
 - Normalizes realistic scenario if deviation is extreme
 - Called automatically in generate_business_case_report()
 
-Version: 2.1.0 (Sprint N1 - BC_001 Consistency Healing)
+SPRINT N2 CHANGES (N2-4.1):
+- Enhanced heal_scenario_consistency() with additional ROI floor check
+- If realistic.roi_12m < conservative.roi_12m after healing, set to average
+- Ensures strict ordering: optimistic >= realistic >= conservative
+
+Version: 2.2.0 (Sprint N2 - N2-4.1 ROI Consistency Enhancement)
 Author: Claude + Wolf
 """
 
@@ -467,6 +472,34 @@ def heal_scenario_consistency(scenarios: List[ScenarioKPIs]) -> List[ScenarioKPI
             notes=conservative_data.notes or "Konservatives Szenario mit Puffer für Anlaufphase",
         ),
     ]
+
+    # SPRINT N2 (N2-4.1): Additional ROI floor check
+    # Ensure strict ordering: optimistic >= realistic >= conservative
+    opt_healed = next((s for s in healed_scenarios if s.name == "optimistic"), None)
+    real_healed = next((s for s in healed_scenarios if s.name == "realistic"), None)
+    cons_healed = next((s for s in healed_scenarios if s.name == "conservative"), None)
+
+    if opt_healed and real_healed and cons_healed:
+        # N2-4.1: If realistic < conservative, set realistic to average
+        if real_healed.roi_12m < cons_healed.roi_12m:
+            avg_roi = (opt_healed.roi_12m + cons_healed.roi_12m) / 2
+            log.info(
+                "[N2-4.1] Realistic ROI (%.1f%%) < Conservative ROI (%.1f%%), "
+                "setting to average: %.1f%%",
+                real_healed.roi_12m, cons_healed.roi_12m, avg_roi
+            )
+            # Update realistic scenario with corrected ROI
+            real_healed = ScenarioKPIs(
+                name="realistic",
+                roi_12m=avg_roi,
+                payback_months=(opt_healed.payback_months + cons_healed.payback_months) / 2,
+                monthly_savings=real_healed.monthly_savings,
+                annual_savings=real_healed.annual_savings,
+                investment_total=real_healed.investment_total,
+                notes="ROI normalisiert (N2-4.1): zwischen optimistisch und konservativ",
+            )
+            # Rebuild healed_scenarios with corrected realistic
+            healed_scenarios = [opt_healed, real_healed, cons_healed]
 
     # Re-validate after healing
     is_valid_after, errors_after = validate_scenario_consistency(healed_scenarios)
