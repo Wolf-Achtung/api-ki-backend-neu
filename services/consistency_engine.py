@@ -453,6 +453,7 @@ class ConsistencyEngine:
         self._check_recommendations_consistency()  # G32
         self._check_risk_engine_v3_consistency()  # G33
         self._check_vendor_audit_consistency()  # G35
+        self._check_automation_roadmap_consistency()  # G36
 
         # Calculate domain scores
         self._calculate_domain_scores()
@@ -2927,12 +2928,509 @@ class ConsistencyEngine:
         return tools
 
     # -------------------------------------------------------------------------
+    # DOMAIN 12: Automation Roadmap Consistency (G36)
+    # -------------------------------------------------------------------------
+
+    def _check_automation_roadmap_consistency(self) -> None:
+        """
+        G36: Check Automation Roadmap Engine consistency rules.
+
+        Rules AUTO_001-AUTO_008:
+        - AUTO_001: Processes cannot require tools with fit < 0.3
+        - AUTO_002: Processes with high GDPR risk must appear in DPIA
+        - AUTO_003: Processes with missing AI Act controls cannot be in Phase 1
+        - AUTO_004: Impact × Feasibility cannot exceed 1.0
+        - AUTO_005: Funding recommendations must match G26 programs
+        - AUTO_006: Strategy phase assignment must match automation phase
+        - AUTO_007: Processes with vendor_risk >= 4 cannot be in Phase 1
+        - AUTO_008: AutomationPaths must have at least 1 KPI gain
+        """
+        self.report.checked_rules += 8
+
+        # Get automation roadmap data
+        auto_html = self.sections.get("AUTOMATION_ROADMAP_HTML", "")
+        auto_report = self.sections.get("_automation_roadmap_report")
+
+        if not auto_html and not auto_report:
+            log.debug("[G22] Automation roadmap consistency: Skipping (no data)")
+            return
+
+        # Get related sections
+        tools_html = self.sections.get("TOOLS_EMPFEHLUNGEN_HTML", "") or self.sections.get("TOOLS_HTML", "")
+        funding_html = self.sections.get("FOERDERPOTENZIAL_HTML", "") or self.sections.get("FOERDERPROGRAMME_HTML", "")
+        risk_v3_html = self.sections.get("RISK_ENGINE_V3_HTML", "")
+        strategy_html = self.sections.get("STRATEGIE_GOVERNANCE_HTML", "") or self.sections.get("STRATEGY_HTML", "")
+        vendor_audit_html = self.sections.get("VENDOR_AUDIT_HTML", "")
+
+        # Extract automation data
+        automation_data = self._extract_automation_data(auto_html, auto_report)
+        processes = automation_data.get("processes", [])
+        paths = automation_data.get("paths", [])
+
+        if not processes:
+            log.debug("[G22] Automation roadmap consistency: No processes found")
+            return
+
+        # AUTO_001: Processes cannot require tools with fit < 0.3
+        self._check_auto_001_tool_fit(processes, tools_html)
+
+        # AUTO_002: Processes with high GDPR risk must appear in DPIA
+        self._check_auto_002_dpia_coverage(processes, risk_v3_html)
+
+        # AUTO_003: Processes with missing AI Act controls cannot be in Phase 1
+        self._check_auto_003_ai_act_phase(processes, risk_v3_html)
+
+        # AUTO_004: Impact × Feasibility cannot exceed 1.0
+        self._check_auto_004_potential_bounds(processes)
+
+        # AUTO_005: Funding recommendations must match G26 programs
+        self._check_auto_005_funding_match(processes, funding_html)
+
+        # AUTO_006: Strategy phase assignment must match automation phase
+        self._check_auto_006_strategy_phase(processes, strategy_html)
+
+        # AUTO_007: Processes with vendor_risk >= 4 cannot be in Phase 1
+        self._check_auto_007_vendor_risk_phase(processes, vendor_audit_html)
+
+        # AUTO_008: AutomationPaths must have at least 1 KPI gain
+        self._check_auto_008_kpi_gains(paths)
+
+    def _extract_automation_data(
+        self,
+        html: str,
+        report_obj: Any
+    ) -> Dict[str, Any]:
+        """Extract automation roadmap data from HTML or report object."""
+        data: Dict[str, Any] = {"processes": [], "paths": []}
+
+        # Try to get from report object first
+        if report_obj:
+            if hasattr(report_obj, "to_dict"):
+                d = report_obj.to_dict()
+                data["processes"] = d.get("processes", [])
+                data["paths"] = d.get("automation_paths", [])
+                return data
+            elif isinstance(report_obj, dict):
+                data["processes"] = report_obj.get("processes", [])
+                data["paths"] = report_obj.get("automation_paths", [])
+                return data
+
+        # Extract from HTML
+        if not html:
+            return data
+
+        import re
+
+        # Extract process cards
+        # Look for process names in h4 tags with phase badges
+        process_pattern = r'<h4[^>]*>([^<]+)</h4>'
+        phase_pattern = r'(phase[_\s]?[123])'
+        impact_pattern = r'Impact[:\s]*(\d+(?:\.\d+)?)\s*%'
+        feasibility_pattern = r'(?:Feasibility|Machbarkeit)[:\s]*(\d+(?:\.\d+)?)\s*%'
+
+        names = re.findall(process_pattern, html)
+        phases = re.findall(phase_pattern, html, re.IGNORECASE)
+
+        for i, name in enumerate(names[:12]):  # Max 12 processes
+            proc = {
+                "name": name.strip(),
+                "phase_assignment": phases[i].lower().replace(" ", "_") if i < len(phases) else "phase_2",
+                "impact_score": 0.5,
+                "feasibility_score": 0.5,
+                "automation_potential": 0.25,
+                "recommended_tools": [],
+                "recommended_funding": [],
+                "risk_relation": "medium",
+            }
+
+            # Try to extract scores
+            search_area = html[html.find(name):html.find(name) + 800] if name in html else ""
+            impact_match = re.search(impact_pattern, search_area, re.IGNORECASE)
+            feas_match = re.search(feasibility_pattern, search_area, re.IGNORECASE)
+
+            if impact_match:
+                proc["impact_score"] = float(impact_match.group(1)) / 100
+            if feas_match:
+                proc["feasibility_score"] = float(feas_match.group(1)) / 100
+            proc["automation_potential"] = proc["impact_score"] * proc["feasibility_score"]
+
+            # Extract tools badges
+            tool_pattern = r'🔧\s*([^<]+)</span>'
+            tool_matches = re.findall(tool_pattern, search_area)
+            proc["recommended_tools"] = tool_matches
+
+            # Extract funding badges
+            funding_pattern = r'💰\s*([^<]+)</span>'
+            funding_matches = re.findall(funding_pattern, search_area)
+            proc["recommended_funding"] = funding_matches
+
+            # Extract risk relation
+            if "high" in search_area.lower() and "risk" in search_area.lower():
+                proc["risk_relation"] = "high"
+            elif "low" in search_area.lower() and "risk" in search_area.lower():
+                proc["risk_relation"] = "low"
+
+            data["processes"].append(proc)
+
+        # Extract automation paths
+        path_title_pattern = r'<h4[^>]*>([^<]*(?:Pfad|Path)[^<]*)</h4>'
+        path_titles = re.findall(path_title_pattern, html, re.IGNORECASE)
+
+        for title in path_titles[:5]:  # Max 5 paths
+            path = {
+                "title": title.strip(),
+                "expected_kpi_gain": {},
+            }
+
+            # Look for KPI gains near path
+            search_area = html[html.find(title):html.find(title) + 500] if title in html else ""
+
+            kpi_patterns = [
+                (r'ROI[:\s]*\+?(\d+(?:\.\d+)?)\s*%', "roi"),
+                (r'Savings?[:\s]*\+?(\d+(?:\.\d+)?)\s*%', "savings"),
+                (r'Time[_\s]?Reduction[:\s]*\+?(\d+(?:\.\d+)?)\s*%', "time_reduction"),
+                (r'Quality[:\s]*\+?(\d+(?:\.\d+)?)\s*%', "quality"),
+                (r'Efficiency[:\s]*\+?(\d+(?:\.\d+)?)\s*%', "efficiency"),
+            ]
+
+            for pattern, key in kpi_patterns:
+                match = re.search(pattern, search_area, re.IGNORECASE)
+                if match:
+                    path["expected_kpi_gain"][key] = float(match.group(1))
+
+            data["paths"].append(path)
+
+        return data
+
+    def _check_auto_001_tool_fit(
+        self,
+        processes: List[Dict[str, Any]],
+        tools_html: str
+    ) -> None:
+        """AUTO_001: Processes cannot require tools with fit < 0.3."""
+        if not tools_html:
+            return
+
+        # Extract tool fit scores from tools HTML
+        tool_fits = self._extract_tool_fit_scores(tools_html)
+
+        for proc in processes:
+            for tool in proc.get("recommended_tools", []):
+                tool_lower = tool.lower()
+                for known_tool, fit in tool_fits.items():
+                    if tool_lower in known_tool.lower() or known_tool.lower() in tool_lower:
+                        if fit < 0.3:
+                            self.report.add_issue(ConsistencyIssue(
+                                rule_id="AUTO_001",
+                                severity="ERROR",
+                                domain="automation_roadmap",
+                                source_section="automation_roadmap",
+                                target_section="tools_empfehlungen",
+                                message=f"Prozess '{proc.get('name', 'Unknown')}' empfiehlt Tool '{tool}' mit Fit < 0.3",
+                                expected="Nur Tools mit fit_score >= 0.3 empfehlen",
+                                actual=f"Tool '{tool}' hat fit_score = {fit:.2f}",
+                                suggestion=f"Ersetze '{tool}' durch ein Tool mit hoeherem Fit",
+                            ))
+                        break
+
+    def _extract_tool_fit_scores(self, html: str) -> Dict[str, float]:
+        """Extract tool fit scores from tools HTML."""
+        import re
+
+        fits: Dict[str, float] = {}
+
+        # Look for tool names with fit scores
+        tool_names = _extract_tool_names(html)
+
+        for tool in tool_names:
+            # Search for fit score near tool name
+            search_start = html.find(tool)
+            if search_start == -1:
+                continue
+
+            search_area = html[search_start:search_start + 400]
+
+            # Try different fit patterns
+            patterns = [
+                r'fit[_\s]*score[:\s]*(\d+(?:\.\d+)?)',
+                r'fit[:\s]*(\d+(?:\.\d+)?)',
+                r'overall[_\s]*score[:\s]*(\d+(?:\.\d+)?)',
+            ]
+
+            for pattern in patterns:
+                match = re.search(pattern, search_area, re.IGNORECASE)
+                if match:
+                    score = float(match.group(1))
+                    # Normalize if > 1 (percentage)
+                    if score > 1:
+                        score = score / 100
+                    fits[tool] = score
+                    break
+
+        return fits
+
+    def _check_auto_002_dpia_coverage(
+        self,
+        processes: List[Dict[str, Any]],
+        risk_v3_html: str
+    ) -> None:
+        """AUTO_002: Processes with high GDPR risk must appear in DPIA."""
+        if not risk_v3_html:
+            return
+
+        # Check if DPIA section exists
+        has_dpia = "dpia" in risk_v3_html.lower() or "datenschutz-folge" in risk_v3_html.lower()
+
+        if not has_dpia:
+            return
+
+        for proc in processes:
+            if proc.get("risk_relation") == "high":
+                proc_name = proc.get("name", "").lower()
+
+                # Check if process is mentioned in DPIA context
+                if proc_name and proc_name not in risk_v3_html.lower():
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="AUTO_002",
+                        severity="WARNING",
+                        domain="automation_roadmap",
+                        source_section="automation_roadmap",
+                        target_section="risk_engine_v3",
+                        message=f"High-Risk Prozess '{proc.get('name')}' nicht in DPIA (G33) gefunden",
+                        expected="Prozesse mit hohem DSGVO-Risiko muessen in DPIA erscheinen",
+                        actual=f"'{proc.get('name')}' hat risk_relation='high' aber fehlt in DPIA",
+                        suggestion="Fuege Prozess zur DPIA-Analyse hinzu oder korrigiere risk_relation",
+                    ))
+
+    def _check_auto_003_ai_act_phase(
+        self,
+        processes: List[Dict[str, Any]],
+        risk_v3_html: str
+    ) -> None:
+        """AUTO_003: Processes with missing AI Act controls cannot be in Phase 1."""
+        if not risk_v3_html:
+            return
+
+        # Check for missing controls indicator
+        has_missing_controls = (
+            "missing" in risk_v3_html.lower() and "control" in risk_v3_html.lower()
+        ) or "nicht erfuellt" in risk_v3_html.lower()
+
+        if not has_missing_controls:
+            return
+
+        for proc in processes:
+            phase = proc.get("phase_assignment", "phase_2")
+
+            if phase == "phase_1":
+                proc_name = proc.get("name", "").lower()
+
+                # If process is in phase_1 and there are missing controls
+                # Check if process seems related to AI Act
+                ai_keywords = ["ki", "ai", "ml", "llm", "automation", "automat"]
+                is_ai_related = any(kw in proc_name for kw in ai_keywords)
+
+                if is_ai_related:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="AUTO_003",
+                        severity="WARNING",
+                        domain="automation_roadmap",
+                        source_section="automation_roadmap",
+                        target_section="risk_engine_v3",
+                        message=f"KI-Prozess '{proc.get('name')}' in Phase 1 trotz fehlender AI Act Controls",
+                        expected="Prozesse mit missing controls duerfen nicht in Phase 1 sein",
+                        actual=f"'{proc.get('name')}' ist KI-bezogen und in phase_1",
+                        suggestion="Verschiebe Prozess nach Phase 2 oder 3 bis Controls implementiert sind",
+                    ))
+
+    def _check_auto_004_potential_bounds(
+        self,
+        processes: List[Dict[str, Any]]
+    ) -> None:
+        """AUTO_004: Impact × Feasibility cannot exceed 1.0."""
+        for proc in processes:
+            impact = proc.get("impact_score", 0.5)
+            feasibility = proc.get("feasibility_score", 0.5)
+            potential = proc.get("automation_potential", impact * feasibility)
+
+            if potential > 1.0:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="AUTO_004",
+                    severity="ERROR",
+                    domain="automation_roadmap",
+                    source_section="automation_roadmap",
+                    target_section="automation_roadmap",
+                    message=f"Prozess '{proc.get('name')}' hat automation_potential > 1.0",
+                    expected="automation_potential (impact × feasibility) muss <= 1.0 sein",
+                    actual=f"impact={impact:.2f} × feasibility={feasibility:.2f} = {potential:.2f}",
+                    suggestion="Korrigiere impact_score und/oder feasibility_score",
+                ))
+
+    def _check_auto_005_funding_match(
+        self,
+        processes: List[Dict[str, Any]],
+        funding_html: str
+    ) -> None:
+        """AUTO_005: Funding recommendations must match G26 programs."""
+        if not funding_html:
+            return
+
+        # Extract known funding programs from G26
+        known_programs = _extract_funding_programs(funding_html)
+        known_lower = [p.lower() for p in known_programs]
+
+        for proc in processes:
+            for funding in proc.get("recommended_funding", []):
+                funding_lower = funding.lower()
+
+                # Check if funding exists in G26
+                matches = any(
+                    funding_lower in kp or kp in funding_lower
+                    for kp in known_lower
+                )
+
+                if not matches and funding:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="AUTO_005",
+                        severity="WARNING",
+                        domain="automation_roadmap",
+                        source_section="automation_roadmap",
+                        target_section="foerderpotenzial",
+                        message=f"Foerderprogramm '{funding}' nicht in Funding Engine (G26) gefunden",
+                        expected="Nur Foerderprogramme aus G26 empfehlen",
+                        actual=f"'{funding}' fuer Prozess '{proc.get('name')}' ist nicht in G26",
+                        suggestion="Verwende nur Foerderprogramme aus der Funding Engine",
+                    ))
+
+    def _check_auto_006_strategy_phase(
+        self,
+        processes: List[Dict[str, Any]],
+        strategy_html: str
+    ) -> None:
+        """AUTO_006: Strategy phase assignment must match automation phase."""
+        if not strategy_html:
+            return
+
+        strategy_lower = strategy_html.lower()
+
+        # Check for phase keywords in strategy
+        phase_1_keywords = ["phase 1", "phase_1", "quick win", "sofort", "immediate"]
+        phase_2_keywords = ["phase 2", "phase_2", "strategic", "strategisch", "mittelfrist"]
+        phase_3_keywords = ["phase 3", "phase_3", "transform", "langfrist"]
+
+        for proc in processes:
+            proc_name = proc.get("name", "")
+            proc_phase = proc.get("phase_assignment", "phase_2")
+            proc_name_lower = proc_name.lower()
+
+            # Skip if process name is too generic
+            if len(proc_name_lower) < 5:
+                continue
+
+            # Check if process is mentioned in strategy
+            if proc_name_lower not in strategy_lower:
+                continue
+
+            # Find where process is mentioned
+            proc_pos = strategy_lower.find(proc_name_lower)
+            context = strategy_lower[max(0, proc_pos - 200):proc_pos + 200]
+
+            # Determine strategy phase context
+            strategy_phase = None
+            if any(kw in context for kw in phase_1_keywords):
+                strategy_phase = "phase_1"
+            elif any(kw in context for kw in phase_3_keywords):
+                strategy_phase = "phase_3"
+            elif any(kw in context for kw in phase_2_keywords):
+                strategy_phase = "phase_2"
+
+            if strategy_phase and strategy_phase != proc_phase:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="AUTO_006",
+                    severity="WARNING",
+                    domain="automation_roadmap",
+                    source_section="automation_roadmap",
+                    target_section="strategy",
+                    message=f"Phase-Zuordnung fuer '{proc_name}' inkonsistent mit Strategy Engine",
+                    expected=f"Phase sollte mit Strategy Engine uebereinstimmen: {strategy_phase}",
+                    actual=f"Automation Roadmap: {proc_phase}, Strategy: {strategy_phase}",
+                    suggestion="Synchronisiere Phase-Zuordnung zwischen Engines",
+                ))
+
+    def _check_auto_007_vendor_risk_phase(
+        self,
+        processes: List[Dict[str, Any]],
+        vendor_audit_html: str
+    ) -> None:
+        """AUTO_007: Processes with vendor_risk >= 4 cannot be in Phase 1."""
+        if not vendor_audit_html:
+            return
+
+        # Extract vendor risks from audit
+        vendor_data = self._extract_vendor_audit_data(vendor_audit_html)
+        high_risk_vendors = {
+            v.get("name", "").lower(): v.get("vendor_risk_score", 3)
+            for v in vendor_data
+            if v.get("vendor_risk_score", 3) >= 4
+        }
+
+        for proc in processes:
+            if proc.get("phase_assignment") != "phase_1":
+                continue
+
+            # Check if any recommended tool is a high-risk vendor
+            for tool in proc.get("recommended_tools", []):
+                tool_lower = tool.lower()
+
+                for vendor, risk in high_risk_vendors.items():
+                    if tool_lower in vendor or vendor in tool_lower:
+                        self.report.add_issue(ConsistencyIssue(
+                            rule_id="AUTO_007",
+                            severity="ERROR",
+                            domain="automation_roadmap",
+                            source_section="automation_roadmap",
+                            target_section="vendor_audit",
+                            message=f"Prozess '{proc.get('name')}' in Phase 1 nutzt High-Risk Vendor '{tool}'",
+                            expected="Prozesse mit vendor_risk >= 4 duerfen nicht in Phase 1 sein",
+                            actual=f"'{tool}' hat vendor_risk_score = {risk}",
+                            suggestion="Verschiebe Prozess nach Phase 2/3 oder ersetze Vendor",
+                        ))
+                        break
+
+    def _check_auto_008_kpi_gains(
+        self,
+        paths: List[Dict[str, Any]]
+    ) -> None:
+        """AUTO_008: AutomationPaths must have at least 1 KPI gain."""
+        for path in paths:
+            kpi_gains = path.get("expected_kpi_gain", {})
+
+            # Check if any KPI gain > 0
+            has_gains = any(
+                isinstance(v, (int, float)) and v > 0
+                for v in kpi_gains.values()
+            )
+
+            if not has_gains:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="AUTO_008",
+                    severity="ERROR",
+                    domain="automation_roadmap",
+                    source_section="automation_roadmap",
+                    target_section="automation_roadmap",
+                    message=f"AutomationPath '{path.get('title', 'Unknown')}' hat keine KPI-Gewinne",
+                    expected="Jeder AutomationPath muss mindestens 1 KPI-Gain haben",
+                    actual=f"expected_kpi_gain: {kpi_gains}",
+                    suggestion="Fuege erwartete KPI-Gewinne (ROI, Savings, etc.) hinzu",
+                ))
+
+    # -------------------------------------------------------------------------
     # SCORING
     # -------------------------------------------------------------------------
 
     def _calculate_domain_scores(self) -> None:
         """Calculate scores per domain."""
-        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot", "risk_engine", "business_case", "recommendations", "risk_engine_v3", "vendor_audit"]
+        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot", "risk_engine", "business_case", "recommendations", "risk_engine_v3", "vendor_audit", "automation_roadmap"]
 
         for domain in domains:
             domain_issues = [i for i in self.report.issues if i.domain == domain]
