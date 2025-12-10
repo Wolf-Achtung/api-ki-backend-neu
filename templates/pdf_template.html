@@ -2629,6 +2629,24 @@
                     </div>
                 </section>
                 {% endif %}
+                <!-- G37: Benchmark Engine – Branchenvergleich & Wettbewerbsposition -->
+                {% if BENCHMARK_ENGINE_HTML %}
+                <section class="section chapter" id="benchmark-engine">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Benchmarking</span>
+                            <h2>Branchenvergleich & Wettbewerbsposition</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            KI-Reife • Branchenmedian • SWOT
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ BENCHMARK_ENGINE_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
                 <!-- G32: Recommendations Engine – Priorisierte Handlungsempfehlungen -->
                 {% if RECOMMENDATIONS_ENGINE_HTML %}
                 <section class="section chapter" id="recommendations-engine">
