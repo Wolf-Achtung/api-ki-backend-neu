@@ -10,7 +10,13 @@ Eine Meta-Engine, die:
 - Tools/Funding/Risiken/Strategie/Business Case verknüpft
 - Size-aware (Solo/Team/KMU) und branch-aware ist
 
-Version: 1.0.0 (Sprint G32)
+SPRINT N1 CHANGES (RECO_002):
+- Added heal_recommendations_consistency() function
+- Auto-derives related_risks when risk_relation="reduces_risk" but list is empty
+- Derives risks from: risk_report analysis, keyword matching
+- Called automatically in generate_recommendations_report()
+
+Version: 1.1.0 (Sprint N1 - RECO_002 Consistency Healing)
 Author: Claude + Wolf
 """
 
@@ -29,6 +35,8 @@ __all__ = [
     "RecommendationsReport",
     "generate_recommendations_report",
     "recommendations_report_to_html",
+    "heal_recommendations_consistency",  # SPRINT N1 (RECO_002)
+    "derive_relevant_risks",  # SPRINT N1 (RECO_002)
     "RECOMMENDATIONS_ENGINE_ENABLED",
 ]
 
@@ -717,6 +725,13 @@ def generate_recommendations_report(
         top_3_ids = _select_top_3(recommendations)
         summary = _generate_summary(recommendations, size_label, branch)
 
+    # SPRINT N1 (RECO_002): Heal consistency issues
+    # Auto-populate related_risks for recommendations with risk_relation="reduces_risk"
+    recommendations = heal_recommendations_consistency(
+        recommendations=recommendations,
+        risk_report=risk_report,
+    )
+
     report = RecommendationsReport(
         recommendations=recommendations,
         summary=summary,
@@ -899,6 +914,161 @@ def recommendations_report_to_html(
     html_parts.append('</div>')
 
     return '\n'.join(html_parts)
+
+
+# =============================================================================
+# SPRINT N1 (RECO_002): CONSISTENCY HEALING
+# =============================================================================
+
+# Valid risk types that can be referenced
+VALID_RISK_TYPES = [
+    "risk_ai_act",
+    "risk_dsgvo",
+    "risk_vendor",
+    "risk_process",
+    "risk_governance",
+]
+
+# Risk type mapping from titles/descriptions
+RISK_TYPE_KEYWORDS = {
+    "risk_ai_act": ["ai act", "ki-verordnung", "regulation", "compliance"],
+    "risk_dsgvo": ["dsgvo", "gdpr", "datenschutz", "privacy", "personal data"],
+    "risk_vendor": ["vendor", "hosting", "anbieter", "abhängigkeit", "lock-in"],
+    "risk_process": ["prozess", "process", "workflow", "integration"],
+    "risk_governance": ["governance", "richtlinie", "policy", "standard"],
+}
+
+
+def derive_relevant_risks(
+    risk_report: Optional[Any] = None,
+    recommendation_title: str = "",
+    recommendation_description: str = "",
+) -> List[str]:
+    """
+    SPRINT N1 (RECO_002): Derive relevant risk types from risk report.
+
+    When a recommendation has risk_relation="reduces_risk" but no related_risks,
+    this function derives appropriate risk types based on:
+    1. Risk report analysis (AI Act level, DSGVO level, vendor risk)
+    2. Recommendation title/description keyword matching
+
+    Args:
+        risk_report: Risk Engine 2.0 report
+        recommendation_title: Title of the recommendation
+        recommendation_description: Description of the recommendation
+
+    Returns:
+        List of risk type strings (e.g., ["risk_ai_act", "risk_dsgvo"])
+    """
+    risks: List[str] = []
+    combined_text = f"{recommendation_title} {recommendation_description}".lower()
+
+    # First, analyze risk report for high-level risks
+    if risk_report:
+        # Extract AI Act risk level
+        ai_act_risk = "minimal"
+        if hasattr(risk_report, "ai_act_risk"):
+            ai_act_risk = risk_report.ai_act_risk
+        elif isinstance(risk_report, dict):
+            ai_act_risk = risk_report.get("ai_act_risk", "minimal")
+
+        if ai_act_risk != "minimal":
+            risks.append("risk_ai_act")
+
+        # Extract DSGVO level
+        dsgvo_level = "niedrig"
+        if hasattr(risk_report, "dsgvo_level"):
+            dsgvo_level = risk_report.dsgvo_level
+        elif isinstance(risk_report, dict):
+            dsgvo_level = risk_report.get("dsgvo_level", "niedrig")
+
+        if dsgvo_level not in ["niedrig", "low"]:
+            risks.append("risk_dsgvo")
+
+        # Extract vendor risk (check risk_matrix for vendor-related risks)
+        risk_matrix = []
+        if hasattr(risk_report, "risk_matrix"):
+            risk_matrix = risk_report.risk_matrix
+        elif isinstance(risk_report, dict):
+            risk_matrix = risk_report.get("risk_matrix", [])
+
+        for risk_item in risk_matrix:
+            risk_title = ""
+            risk_color = "medium"
+            if isinstance(risk_item, dict):
+                risk_title = risk_item.get("title", "").lower()
+                risk_color = risk_item.get("color", "medium")
+            else:
+                risk_title = getattr(risk_item, "title", "").lower()
+                risk_color = getattr(risk_item, "color", "medium")
+
+            # High/critical vendor risks
+            if risk_color in ["high", "critical"]:
+                if "vendor" in risk_title or "hosting" in risk_title:
+                    if "risk_vendor" not in risks:
+                        risks.append("risk_vendor")
+
+    # Second, analyze recommendation text for keywords
+    for risk_type, keywords in RISK_TYPE_KEYWORDS.items():
+        if risk_type not in risks:
+            for keyword in keywords:
+                if keyword in combined_text:
+                    risks.append(risk_type)
+                    break
+
+    # Default fallback if nothing found
+    if not risks:
+        risks.append("risk_process")
+
+    return risks
+
+
+def heal_recommendations_consistency(
+    recommendations: List[Recommendation],
+    risk_report: Optional[Any] = None,
+) -> List[Recommendation]:
+    """
+    SPRINT N1 (RECO_002): Heal recommendations consistency issues.
+
+    When a recommendation has risk_relation="reduces_risk" but empty related_risks,
+    this function auto-populates related_risks based on the risk report.
+
+    Args:
+        recommendations: List of Recommendation objects
+        risk_report: Risk Engine 2.0 report (optional)
+
+    Returns:
+        List of healed Recommendation objects
+    """
+    healed_count = 0
+
+    for rec in recommendations:
+        # RECO_002: Check for risk_relation="reduces_risk" with empty related_risks
+        if rec.risk_relation == "reduces_risk" and not rec.related_risks:
+            log.warning(
+                '[RECO_002] Recommendation "%s" has risk_relation="reduces_risk" '
+                'but empty related_risks - auto-deriving',
+                rec.id
+            )
+
+            derived_risks = derive_relevant_risks(
+                risk_report=risk_report,
+                recommendation_title=rec.title,
+                recommendation_description=rec.description,
+            )
+
+            rec.related_risks = derived_risks
+            healed_count += 1
+
+            log.info(
+                '[RECO_002] Healed recommendation "%s" with related_risks=%s',
+                rec.id, derived_risks
+            )
+
+    if healed_count > 0:
+        log.info("[RECO_002] Healed %d recommendations with missing related_risks", healed_count)
+
+    return recommendations
 
 
 # =============================================================================

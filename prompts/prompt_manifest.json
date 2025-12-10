@@ -1,21 +1,24 @@
 {
   "_meta": {
-    "version": "5.3",
-    "description": "PLATIN++ V5.3 Prompt Manifest - Sprint N (Persona Leak Elimination + Length Stabilization)",
+    "version": "5.4",
+    "description": "PLATIN++ V5.4 Prompt Manifest - Sprint N1 (Leak Protection + Token Limits)",
     "updated": "2024-12",
-    "sprint": "N",
+    "sprint": "N1",
     "changes": [
-      "Updated token budgets for length stabilization",
-      "Added min_words requirements per size",
-      "Enhanced size-aware configuration"
+      "SPRINT N1: Increased token budgets for Premium sections",
+      "SPRINT N1: Reduced min_words for Solo to avoid fallbacks",
+      "SPRINT N1: roadmap_12m 2800→4500, gamechanger 3000→4200",
+      "SPRINT N1: strategie_governance 2000→3200, wettbewerb_benchmark 2000→3500"
     ]
   },
   "_token_budgets": {
-    "_note": "LLM token budgets (base) use PDF-SLIMDOWN v2.0 values; min_words enforced by report_validator.py",
+    "_note": "LLM token budgets (base) - SPRINT N1 increased for Premium sections; min_words enforced by report_validator.py",
     "executive_summary": {"base": 800, "min_words": {"solo": 150, "team": 180, "kmu": 200}, "validator_only": true},
     "tools_empfehlungen": {"base": 1800, "min_words": {"solo": 120, "team": 160, "kmu": 200}, "validator_only": true},
-    "gamechanger": {"base": 3000, "min_words": {"solo": 750, "team": 750, "kmu": 750}},
-    "roadmap_12m": {"base": 2800, "min_words": {"solo": 500, "team": 600, "kmu": 700}}
+    "gamechanger": {"base": 4200, "min_words": {"solo": 500, "team": 600, "kmu": 700}},
+    "roadmap_12m": {"base": 4500, "min_words": {"solo": 600, "team": 600, "kmu": 700}},
+    "strategie_governance": {"base": 3200, "min_words": {"solo": 90, "team": 130, "kmu": 160}},
+    "wettbewerb_benchmark": {"base": 3500, "min_words": {"solo": 200, "team": 300, "kmu": 400}}
   },
   "de": {
     "executive_summary": {
@@ -117,10 +120,10 @@
       "required": true,
       "output": "html",
       "tokens": {
-        "base": 2800,
-        "solo": 2240,
-        "team": 2800,
-        "kmu": 3220
+        "base": 4500,
+        "solo": 3600,
+        "team": 4500,
+        "kmu": 5175
       },
       "redundancy_rules": [
         "no_repeat_roadmap_90d",
@@ -179,10 +182,10 @@
       "required": true,
       "output": "html",
       "tokens": {
-        "base": 2200,
-        "solo": 1760,
-        "team": 2200,
-        "kmu": 2530
+        "base": 4200,
+        "solo": 3360,
+        "team": 4200,
+        "kmu": 4830
       },
       "persona_rules": {
         "solo": {
@@ -358,10 +361,10 @@
       "required": true,
       "output": "html",
       "tokens": {
-        "base": 2000,
-        "solo": 1600,
-        "team": 2000,
-        "kmu": 2300
+        "base": 3200,
+        "solo": 2560,
+        "team": 3200,
+        "kmu": 3680
       },
       "persona_rules": {
         "solo": {
@@ -416,10 +419,10 @@
       "required": true,
       "output": "html",
       "tokens": {
-        "base": 2000,
-        "solo": 1600,
-        "team": 2000,
-        "kmu": 2300
+        "base": 3500,
+        "solo": 2800,
+        "team": 3500,
+        "kmu": 4025
       },
       "persona_rules": {
         "solo": {
@@ -889,10 +892,10 @@
       "required": true,
       "output": "html",
       "tokens": {
-        "base": 2800,
-        "solo": 2240,
-        "team": 2800,
-        "kmu": 3220
+        "base": 4500,
+        "solo": 3600,
+        "team": 4500,
+        "kmu": 5175
       },
       "redundancy_rules": [
         "no_repeat_roadmap_90d",
@@ -951,10 +954,10 @@
       "required": true,
       "output": "html",
       "tokens": {
-        "base": 2200,
-        "solo": 1760,
-        "team": 2200,
-        "kmu": 2530
+        "base": 4200,
+        "solo": 3360,
+        "team": 4200,
+        "kmu": 4830
       },
       "persona_rules": {
         "solo": {
@@ -1160,10 +1163,10 @@
       "required": true,
       "output": "html",
       "tokens": {
-        "base": 2000,
-        "solo": 1600,
-        "team": 2000,
-        "kmu": 2300
+        "base": 3200,
+        "solo": 2560,
+        "team": 3200,
+        "kmu": 3680
       },
       "persona_rules": {
         "solo": {
@@ -1218,10 +1221,10 @@
       "required": true,
       "output": "html",
       "tokens": {
-        "base": 2000,
-        "solo": 1600,
-        "team": 2000,
-        "kmu": 2300
+        "base": 3500,
+        "solo": 2800,
+        "team": 3500,
+        "kmu": 4025
       },
       "persona_rules": {
         "solo": {

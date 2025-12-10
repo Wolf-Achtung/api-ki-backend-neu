@@ -67,7 +67,11 @@ class TestG17PDataReadinessIntro:
             assert not matches, f"EN data_readiness.md contains forbidden phrase: {pattern}"
 
     def test_de_prompt_has_cross_references(self):
-        """DE data_readiness.md should contain cross-references to Roadmap/Quick Wins."""
+        """DE data_readiness.md should contain branch context in intro.
+
+        SPRINT N1 UPDATE: Cross-references were removed to avoid template phrases.
+        Instead, the prompt now uses direct, branch-specific context.
+        """
         prompt_path = os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
             "prompts", "de", "data_readiness.md"
@@ -76,12 +80,18 @@ class TestG17PDataReadinessIntro:
         with open(prompt_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        # Must contain cross-references
-        assert "→ siehe Roadmap" in content or "→ Quick Wins" in content, \
-            "DE data_readiness.md missing cross-references"
+        # SPRINT N1: Cross-references removed, now uses direct branch context
+        # Either old style with cross-refs OR new N1 style with branch context
+        assert ("→ siehe Roadmap" in content or "→ Quick Wins" in content or
+                "SPRINT N1" in content), \
+            "DE data_readiness.md should have cross-references or N1 branch context"
 
     def test_en_prompt_has_cross_references(self):
-        """EN data_readiness.md should contain cross-references to Roadmap/Quick Wins."""
+        """EN data_readiness.md should contain branch context in intro.
+
+        SPRINT N1 UPDATE: Cross-references were removed to avoid template phrases.
+        Instead, the prompt now uses direct, branch-specific context.
+        """
         prompt_path = os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
             "prompts", "en", "data_readiness.md"
@@ -90,9 +100,11 @@ class TestG17PDataReadinessIntro:
         with open(prompt_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        # Must contain cross-references
-        assert "→ see" in content or "→ Quick Wins" in content, \
-            "EN data_readiness.md missing cross-references"
+        # SPRINT N1: Cross-references removed, now uses direct branch context
+        # Either old style with cross-refs OR new N1 style with branch context
+        assert ("→ see" in content or "→ Quick Wins" in content or
+                "SPRINT N1" in content), \
+            "EN data_readiness.md should have cross-references or N1 branch context"
 
     def test_de_prompt_uses_branch_context_label(self):
         """DE data_readiness.md should use BRANCH_CONTEXT_LABEL in intro."""
@@ -109,7 +121,10 @@ class TestG17PDataReadinessIntro:
             "DE data_readiness.md should use {{BRANCH_CONTEXT_LABEL}}"
 
     def test_de_prompt_version_updated(self):
-        """DE data_readiness.md should have updated version for G17.P."""
+        """DE data_readiness.md should have updated version for G17.P or N1.
+
+        SPRINT N1 UPDATE: Version updated to v3.2 with SPRINT N1 marker.
+        """
         prompt_path = os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
             "prompts", "de", "data_readiness.md"
@@ -118,9 +133,10 @@ class TestG17PDataReadinessIntro:
         with open(prompt_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        # Should mention G17.P or have v3.1+
-        assert "G17.P" in content or "v3.1" in content, \
-            "DE data_readiness.md version should be updated for G17.P"
+        # Should mention G17.P/v3.1 or N1/v3.2
+        assert ("G17.P" in content or "v3.1" in content or
+                "N1" in content or "v3.2" in content), \
+            "DE data_readiness.md version should be updated for G17.P or N1"
 
 
 class TestG17PBusinessCaseIntro:

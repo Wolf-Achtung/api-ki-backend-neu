@@ -8,7 +8,12 @@ Provides robust LLM API calls with:
 - Circuit breaker integration
 - Detailed logging for timeout scenarios
 
-Version: 1.0.0 (Sprint G14)
+SPRINT N1 CHANGES:
+- Added LLM_TIMEOUT configuration (default: 75s, increased from 60s)
+- Enhanced soft-retry with immediate retry on first timeout
+- Soft-retry retries once before falling back to PLATIN
+
+Version: 1.1.0 (Sprint N1 - Enhanced Timeout + Soft-Retry)
 """
 from __future__ import annotations
 
@@ -27,11 +32,17 @@ log = logging.getLogger(__name__)
 # ENV CONFIGURATION
 # =============================================================================
 
+# SPRINT N1: Increased default timeout from 60s to 75s
+LLM_TIMEOUT = float(os.getenv("LLM_TIMEOUT", "75"))
+
 LLM_SHORT_RETRY_ENABLED = os.getenv("LLM_SHORT_RETRY_ENABLED", "1").lower() in ("1", "true", "yes")
 LLM_SHORT_RETRY_MAXTOKENS = int(os.getenv("LLM_SHORT_RETRY_MAXTOKENS", "1200"))
 LLM_MAX_RETRIES = int(os.getenv("LLM_MAX_RETRIES", "2"))
 LLM_RETRY_BACKOFF_BASE = float(os.getenv("LLM_RETRY_BACKOFF_BASE", "1.0"))
 LLM_RETRY_BACKOFF_MULTIPLIER = float(os.getenv("LLM_RETRY_BACKOFF_MULTIPLIER", "2.0"))
+
+# SPRINT N1: Enable soft-retry on first timeout (retry once immediately before fallback)
+LLM_SOFT_RETRY_ENABLED = os.getenv("LLM_SOFT_RETRY_ENABLED", "1").lower() in ("1", "true", "yes")
 
 
 # =============================================================================
@@ -64,6 +75,9 @@ class RetryConfig:
     backoff_multiplier: float = LLM_RETRY_BACKOFF_MULTIPLIER
     short_retry_enabled: bool = LLM_SHORT_RETRY_ENABLED
     short_retry_max_tokens: int = LLM_SHORT_RETRY_MAXTOKENS
+    # SPRINT N1: Soft-retry configuration
+    timeout: float = LLM_TIMEOUT
+    soft_retry_enabled: bool = LLM_SOFT_RETRY_ENABLED
 
 
 # =============================================================================
@@ -254,9 +268,41 @@ class LLMClient:
                     section, str(e)[:100]
                 )
 
+        # Phase 2.5 (SPRINT N1): Soft-retry - one more immediate retry on timeout
+        if (
+            self.config.soft_retry_enabled
+            and last_error is not None
+            and isinstance(last_error, (requests.exceptions.Timeout, TimeoutError))
+        ):
+            log.warning(
+                "[N1-SoftRetry] Timeout on section=%s, retrying once…",
+                section
+            )
+
+            try:
+                content = call_fn(max_tokens=max_tokens, section=section, **kwargs)
+
+                if content is not None:
+                    result.success = True
+                    result.content = content
+                    result.retries_used = self.config.max_retries + 2
+                    result.final_strategy = "soft_retry"
+                    result.total_time_ms = (time.perf_counter() - start_time) * 1000
+                    log.info(
+                        "[N1-SoftRetry] SUCCESS section=%s time=%.1fms",
+                        section, result.total_time_ms
+                    )
+                    return result
+
+            except Exception as e:
+                log.warning(
+                    "[N1-SoftRetry] FAILED section=%s error=%s",
+                    section, str(e)[:100]
+                )
+
         # Phase 3: All retries exhausted → signal fallback needed
         log.warning(
-            "[G14-Retry] Timeout (secondary) → PLATIN fallback section=%s",
+            "[G14-Retry] All retries exhausted → PLATIN fallback section=%s",
             section
         )
         self._call_stats["fallbacks"] += 1
@@ -338,10 +384,12 @@ def call_llm_with_retry(
 # =============================================================================
 
 log.info(
-    "[G14] LLM Client loaded - retry_enabled=%s short_retry=%s max_retries=%d "
-    "short_retry_tokens=%d backoff=%.1f×%.1f",
+    "[G14] LLM Client loaded - timeout=%.0fs retry_enabled=%s short_retry=%s "
+    "soft_retry=%s max_retries=%d short_retry_tokens=%d backoff=%.1f×%.1f",
+    LLM_TIMEOUT,
     True,  # Retry always enabled
     LLM_SHORT_RETRY_ENABLED,
+    LLM_SOFT_RETRY_ENABLED,
     LLM_MAX_RETRIES,
     LLM_SHORT_RETRY_MAXTOKENS,
     LLM_RETRY_BACKOFF_BASE,
