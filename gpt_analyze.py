@@ -5083,6 +5083,47 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         log.warning("[%s] ⚠️ G29 Risk Engine 2.0 failed: %s", run_id, e)
         sections.setdefault("RISK_ENGINE_HTML", "")
 
+    # =========================================================================
+    # SPRINT G30: Business Case Engine 2.0 – ROI-Simulation & Szenarien
+    # =========================================================================
+    try:
+        from services.business_case_engine_v2 import (
+            generate_business_case_report,
+            business_case_report_to_html,
+        )
+
+        bc_report = generate_business_case_report(
+            context=None,
+            sections=sections,
+            tools_data=sections.get("_tools_data"),  # Pass tools data if available
+            funding_data=sections.get("_funding_data"),  # Pass funding data if available
+            briefing=answers,
+            llm_response=None,  # Uses extraction-based calculation
+        )
+
+        sections["BUSINESS_CASE_ENGINE_HTML"] = business_case_report_to_html(bc_report, lang=report_lang)
+        sections["_bc_report"] = bc_report  # Store for consistency checks
+
+        # Extract key values for template usage
+        realistic = bc_report.realistic_scenario
+        if realistic:
+            sections["BC_ROI_REALISTIC"] = realistic.roi_12m
+            sections["BC_PAYBACK_REALISTIC"] = realistic.payback_months
+            sections["BC_MONTHLY_SAVINGS_REALISTIC"] = realistic.monthly_savings
+            sections["BC_INVESTMENT_TOTAL"] = bc_report.investment_total
+            sections["BC_FUNDING_EFFECT"] = bc_report.funding_effect
+
+        log.info("[%s] ✅ G30 Business Case Engine 2.0 generated: investment=%.0f€, ROI=%.1f%%, payback=%.1f months",
+                 run_id, bc_report.investment_total,
+                 realistic.roi_12m if realistic else 0,
+                 realistic.payback_months if realistic else 0)
+    except ImportError:
+        log.debug("[%s] G30 business_case_engine_v2 not available", run_id)
+        sections.setdefault("BUSINESS_CASE_ENGINE_HTML", "")
+    except Exception as e:
+        log.warning("[%s] ⚠️ G30 Business Case Engine 2.0 failed: %s", run_id, e)
+        sections.setdefault("BUSINESS_CASE_ENGINE_HTML", "")
+
     log.info("[%s] 🎨 Rendering final HTML...", run_id)
     # --- Sanitize dynamic sections to prevent HTML leaks (z. B. eingebettetes <html> im Pilot-Plan) ---
     try:
