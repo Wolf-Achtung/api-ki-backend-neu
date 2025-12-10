@@ -447,6 +447,7 @@ class ConsistencyEngine:
         self._check_risk_level_consistency()
         self._check_roadmap_alignment()
         self._check_narrative_coherence()
+        self._check_exec_snapshot_consistency()  # G27
 
         # Calculate domain scores
         self._calculate_domain_scores()
@@ -1122,12 +1123,137 @@ class ConsistencyEngine:
                 ))
 
     # -------------------------------------------------------------------------
+    # DOMAIN 7: Executive Snapshot Consistency (G27)
+    # -------------------------------------------------------------------------
+
+    def _check_exec_snapshot_consistency(self) -> None:
+        """G27: Check Executive Snapshot consistency with other sections."""
+        snapshot_html = self.sections.get("EXEC_SNAPSHOT_HTML", "")
+
+        if not snapshot_html:
+            log.debug("[G27] Exec Snapshot consistency: Skipping (no snapshot)")
+            return
+
+        self.report.checked_rules += 5
+
+        # Rule SNAPSHOT_001: KPIs must match Business Case
+        bc_html = self.sections.get("BUSINESS_CASE_HTML", "")
+        if bc_html and snapshot_html:
+            # Extract ROI from both
+            import re
+            snapshot_roi_match = re.search(r'(\d+(?:[.,]\d+)?)\s*%', snapshot_html)
+            bc_roi_match = re.search(r'ROI[:\s]*(\d+(?:[.,]\d+)?)\s*%', bc_html, re.IGNORECASE)
+
+            if snapshot_roi_match and bc_roi_match:
+                snapshot_roi = float(snapshot_roi_match.group(1).replace(",", "."))
+                bc_roi = float(bc_roi_match.group(1).replace(",", "."))
+
+                if abs(snapshot_roi - bc_roi) > 20:  # More than 20% deviation
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="SNAPSHOT_001",
+                        severity="ERROR",
+                        domain="snapshot",
+                        source_section="exec_snapshot",
+                        target_section="business_case",
+                        message="Snapshot ROI weicht stark vom Business Case ab",
+                        expected=f"ROI ~{bc_roi:.0f}% (wie Business Case)",
+                        actual=f"Snapshot zeigt {snapshot_roi:.0f}%",
+                        suggestion="Synchronisiere KPI-Werte zwischen Snapshot und Business Case",
+                    ))
+
+        # Rule SNAPSHOT_002: Tools must match Tools Engine 4.0
+        ki_stack_html = self.sections.get("KI_STACK_SUMMARY_HTML", "")
+        if ki_stack_html and snapshot_html:
+            ki_stack_tools = _extract_tool_names(ki_stack_html)
+            snapshot_tools = _extract_tool_names(snapshot_html)
+
+            if ki_stack_tools and snapshot_tools:
+                # Check if snapshot tools are subset of ki_stack tools
+                mismatched = [t for t in snapshot_tools
+                              if not any(t.lower() in kt.lower() or kt.lower() in t.lower()
+                                        for kt in ki_stack_tools)]
+
+                if len(mismatched) > len(snapshot_tools) * 0.5:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="SNAPSHOT_002",
+                        severity="WARNING",
+                        domain="snapshot",
+                        source_section="exec_snapshot",
+                        target_section="ki_stack_summary",
+                        message="Snapshot Tools stimmen nicht mit KI-Stack überein",
+                        expected="Tools aus KI-Stack Summary",
+                        actual=f"Abweichende Tools: {', '.join(mismatched[:2])}",
+                        suggestion="Verwende Tools aus Tools Engine 4.0",
+                    ))
+
+        # Rule SNAPSHOT_003: Funding must match Funding Engine 2.0
+        funding_html = self.sections.get("FUNDING_MATRIX_2025_HTML", "") or self.sections.get("FOERDERPOTENZIAL_HTML", "")
+        if funding_html and snapshot_html:
+            funding_progs = _extract_funding_programs(funding_html)
+            snapshot_progs = _extract_funding_programs(snapshot_html)
+
+            if snapshot_progs and funding_progs:
+                mismatched = [p for p in snapshot_progs
+                              if not any(p.lower() in fp.lower() or fp.lower() in p.lower()
+                                        for fp in funding_progs)]
+
+                if mismatched:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="SNAPSHOT_003",
+                        severity="WARNING",
+                        domain="snapshot",
+                        source_section="exec_snapshot",
+                        target_section="funding_matrix",
+                        message="Snapshot Förderprogramme stimmen nicht mit Matrix überein",
+                        expected="Programme aus Funding Engine 2.0",
+                        actual=f"Unbekannte Programme: {', '.join(mismatched[:2])}",
+                        suggestion="Verwende Programme aus Funding Matrix",
+                    ))
+
+        # Rule SNAPSHOT_004: Quick Wins must not contain unsuitable tools
+        size = self.briefing.get("unternehmensgroesse", "").lower()
+        if "solo" in size and snapshot_html:
+            enterprise_indicators = ["enterprise", "team-plan", "business-plan", "konzern"]
+            snapshot_lower = snapshot_html.lower()
+
+            has_enterprise = any(ind in snapshot_lower for ind in enterprise_indicators)
+            if has_enterprise:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="SNAPSHOT_004",
+                    severity="WARNING",
+                    domain="snapshot",
+                    source_section="exec_snapshot",
+                    target_section="briefing",
+                    message="Snapshot enthält Enterprise-Tools für Solo-Unternehmer",
+                    expected="Solo-geeignete Quick Wins",
+                    actual="Enterprise-Tools in Snapshot gefunden",
+                    suggestion="Wähle Solo-freundliche Alternativen",
+                ))
+
+        # Rule SNAPSHOT_005: Risk level must be consistent
+        ai_act_risk = self.sections.get("AI_ACT_RISK_LEVEL", "").lower()
+        snapshot_lower = snapshot_html.lower()
+
+        if ai_act_risk == "high-risk" and "minimal" in snapshot_lower and "risk" in snapshot_lower:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="SNAPSHOT_005",
+                severity="ERROR",
+                domain="snapshot",
+                source_section="exec_snapshot",
+                target_section="ai_act",
+                message="Snapshot zeigt 'minimal risk' obwohl AI Act High-Risk klassifiziert",
+                expected="Konsistente Risiko-Darstellung",
+                actual="Widersprüchliche Risiko-Level",
+                suggestion="Synchronisiere Risiko-Level mit AI Act Analyse",
+            ))
+
+    # -------------------------------------------------------------------------
     # SCORING
     # -------------------------------------------------------------------------
 
     def _calculate_domain_scores(self) -> None:
         """Calculate scores per domain."""
-        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative"]
+        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot"]
 
         for domain in domains:
             domain_issues = [i for i in self.report.issues if i.domain == domain]
