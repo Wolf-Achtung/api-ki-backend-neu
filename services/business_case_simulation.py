@@ -559,9 +559,9 @@ def _extract_risk_grade(risk_report_v3: Any) -> str:
         return "C"
 
     if hasattr(risk_report_v3, "residual_risk_grade"):
-        return risk_report_v3.residual_risk_grade
+        return str(risk_report_v3.residual_risk_grade)
     elif isinstance(risk_report_v3, dict):
-        return risk_report_v3.get("residual_risk_grade", "C")
+        return str(risk_report_v3.get("residual_risk_grade", "C"))
 
     return "C"
 
@@ -572,7 +572,7 @@ def _extract_residual_risk_score(risk_report_v3: Any) -> float:
         return 50.0
 
     if hasattr(risk_report_v3, "residual_risk_score"):
-        return risk_report_v3.residual_risk_score
+        return float(risk_report_v3.residual_risk_score)
     elif isinstance(risk_report_v3, dict):
         return float(risk_report_v3.get("residual_risk_score", 50.0))
 
@@ -642,9 +642,9 @@ def generate_default_assumptions(
         speed_min *= 0.9  # Higher risk = potentially slower
         speed_max *= 0.95
 
-    # Risk adjustment factor
+    # Risk adjustment factor - higher risk score = lower factor
     risk_score = _extract_residual_risk_score(risk_report_v3)
-    risk_factor_mode = min(1.0, risk_score / 100 + 0.5)  # 50% score = 1.0 factor
+    risk_factor_mode = max(0.5, min(1.0, 1.5 - risk_score / 100))  # 50% score = 1.0, 100% = 0.5
     risk_factor_min = max(0.5, risk_factor_mode - 0.2 * combined_variance)
     risk_factor_max = min(1.2, risk_factor_mode + 0.1)
 
