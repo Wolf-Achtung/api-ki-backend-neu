@@ -2038,6 +2038,24 @@
                     </div>
                 </section>
                 {% endif %}
+                <!-- G29: Risk Engine 2.0 – Consolidated Risk Analysis -->
+                {% if RISK_ENGINE_HTML %}
+                <section class="section chapter" id="risk-engine">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Risk Analysis &amp; Compliance</span>
+                            <h2>Your AI Risk &amp; Compliance Profile</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            AI Act • GDPR • Vendor Risk
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ RISK_ENGINE_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
 <!-- ROADMAP -->
                 <section class="section chapter">
                     <div class="section-header">
