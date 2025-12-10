@@ -1,4 +1,4 @@
-Developer: <!-- data_readiness.md – v3.1 GOLD STANDARD+ (Data & System Readiness, multi-size) – SPRINT G17.P
+Developer: <!-- data_readiness.md – v3.2 GOLD STANDARD+ (Data & System Readiness, multi-size) – SPRINT N1
   Respond exclusively with valid HTML.
   NO <html>, <head> or <body>. NO Markdown fences.
 
@@ -7,6 +7,11 @@ Developer: <!-- data_readiness.md – v3.1 GOLD STANDARD+ (Data & System Readine
     * Where do data, tools, and processes stand today?
     * What is already sufficient for AI pilots?
     * What gaps should be closed in the next 6-12 months?
+
+  SPRINT N1 - AVOID TEMPLATE PHRASES:
+  - NO generic introductions like "This section summarizes..."
+  - NO redundant references to other sections in the introduction
+  - START DIRECTLY with branch-specific context
 
   AVAILABLE VARIABLES (Labels/Free text from questionnaire):
   - {{BRANCHE_LABEL}}
@@ -46,12 +51,11 @@ Developer: <!-- data_readiness.md – v3.1 GOLD STANDARD+ (Data & System Readine
 <section class="section data-readiness">
   <h2>Data Situation & System Readiness for AI</h2>
 
-  <!-- G17.P: New intro without redundancy, with cross-references -->
+  <!-- SPRINT N1: Direct, branch-specific intro without template phrases -->
   <p>
-    Your data readiness assessment directly aligns with the process analysis and early Quick Wins
-    (→ see 90-Day Roadmap, → Quick Wins). This section summarizes which existing data sources,
-    structures, and integrations in <strong>{{BRANCH_CONTEXT_LABEL}}</strong> can be used
-    immediately for AI workflows — and where targeted improvements are required.
+    In <strong>{{BRANCH_CONTEXT_LABEL}}</strong>, successful AI implementation builds on
+    a solid data foundation. Your existing data sources, structures, and integrations provide
+    the starting point for initial AI workflows — and reveal where targeted improvements are required.
   </p>
 
   <h3>Where Data and Systems Stand Today</h3>

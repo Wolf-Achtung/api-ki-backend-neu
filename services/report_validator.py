@@ -12,8 +12,9 @@ Prüft:
 - Größen-spezifische Fehler ("Team" bei Solo)
 - Template-Text statt echtem Content
 - Prompt-Leaks in Quick-Wins
+- Generic LLM response leaks (Sprint N1)
 
-Version: 1.5.0-SPRINT-G7 (AI Act Compliance Validation + Persona Leak Elimination)
+Version: 1.6.0-SPRINT-N1 (Leak Protection + Consistency Healing)
 Author: Claude + Wolf
 
 PLATIN+ ÄNDERUNG: Validierung basiert jetzt auf WÖRTERN statt Zeichen!
@@ -23,6 +24,12 @@ SPRINT N CHANGES:
 - Updated MIN_SECTION_LENGTH_BY_SIZE with new minimums
 - Added HARD_STOP_ON_SIZE_MISMATCH option
 - Critical sections now enforce minimum word counts strictly
+
+SPRINT N1 CHANGES:
+- Added GENERIC_LLM_LEAK_PHRASES detection (ChatGPT standard responses)
+- Leak phrases trigger CRITICAL severity with [LEAK_PHRASE] logging
+- Reduced min_words for Solo sections (transparency_box, strategie_governance)
+- Added DATA_READINESS template phrase detection
 """
 
 import re
@@ -198,6 +205,50 @@ class ReportValidator:
         "Schritt 1 – beschreibe den ersten konkreten Handgriff",
         "Schritt 2 – definiere ein kurzes Prüfverfahren",
         "Schritt 3 – integriere die Methode in den bestehenden Alltag",
+    ]
+
+    # SPRINT N1: Generic LLM response leaks - ChatGPT/GPT "standard answers"
+    # These indicate the LLM didn't understand the task or returned default responses
+    # Case-insensitive matching, triggers CRITICAL error → PLATIN fallback
+    GENERIC_LLM_LEAK_PHRASES = [
+        # German generic LLM responses
+        "ich sehe keine konkrete frage",
+        "ich sehe keine konkrete aufgabe",
+        "wie kann ich dir helfen",
+        "wie kann ich ihnen helfen",
+        "bitte beschreibe kurz dein anliegen",
+        "bitte beschreiben sie kurz ihr anliegen",
+        "wie kann ich dich unterstützen",
+        "was kann ich für dich tun",
+        "was kann ich für sie tun",
+        "ich bin ein ki-assistent",
+        "ich bin ein sprachmodell",
+        "als ki-assistent",
+        "als sprachmodell kann ich",
+        "ich wurde von openai entwickelt",
+        "ich wurde von anthropic entwickelt",
+        "ich habe keinen zugriff auf",
+        "ich kann keine echtzeitdaten",
+        "mein wissen endet",
+        "mein trainingsdaten reichen bis",
+        # English generic LLM responses
+        "i don't see a specific question",
+        "how can i help you",
+        "please describe your request",
+        "as an ai assistant",
+        "as a language model",
+        "i was developed by openai",
+        "i was developed by anthropic",
+        "i don't have access to",
+        "i cannot provide real-time",
+        "my knowledge cutoff",
+        "my training data ends",
+        # Meta-responses that shouldn't appear in reports
+        "hier ist meine antwort",
+        "im folgenden finden sie meine analyse",
+        "gerne erstelle ich",
+        "natürlich, hier ist",
+        "selbstverständlich, hier ist",
     ]
 
     # SPRINT N: Extended SIZE_FORBIDDEN for Solo personas
@@ -399,16 +450,17 @@ class ReportValidator:
             # SPRINT N: Updated minimums
             # SPRINT G17.S: roadmap_90d reduced from 250 to 150
             # SPRINT G18: strategie_governance + tools_empfehlungen gelockert
+            # SPRINT N1: Further reductions for Solo to avoid fallbacks
             "executive_summary": 150,   # SPRINT N requirement
             "quick_wins": 60,
             "roadmap_90d": 150,         # SPRINT G17.S: reduced from 250
-            "roadmap_12m": 500,         # SPRINT N: erhöht von 400
+            "roadmap_12m": 600,         # SPRINT N1: 500→600 (balanced)
             "org_change": 80,
-            "strategie_governance": 110,  # SPRINT G18: gelockert von 130
+            "strategie_governance": 90,  # SPRINT N1: 110→90 (Solo-friendly)
             "tools_empfehlungen": 110,  # SPRINT G18: gelockert von 120
-            "foerderpotenzial": 800,    # SPRINT G18: erhöht für Substanz
-            "gamechanger": 750,         # SPRINT N: Mindestlänge fix
-            "transparency_box": 100,
+            "foerderpotenzial": 600,    # SPRINT N1: 800→600 (Solo-realistic)
+            "gamechanger": 500,         # SPRINT N1: 750→500 (Solo-realistic)
+            "transparency_box": 50,     # SPRINT N1: 100→50 (minimal overhead)
             "technologie_prozesse": 150,
         },
         "team": {
@@ -677,6 +729,7 @@ class ReportValidator:
         self._check_empty_or_short_sections()
         self._check_template_phrases()
         self._check_quick_wins_prompt_leaks()
+        self._check_generic_llm_leaks()  # Sprint N1: ChatGPT standard response detection
         self._check_size_specific_issues()
         self._check_redundancy()  # Sprint G2.4
         self._check_ai_act_sections()  # Sprint G7
@@ -904,6 +957,48 @@ class ReportValidator:
                             details=f'Gefunden: "{phrase}"',
                         )
                     )
+                    break
+
+    def _check_generic_llm_leaks(self) -> None:
+        """
+        SPRINT N1: Check for generic LLM response leaks.
+
+        These are "standard ChatGPT responses" that indicate the LLM
+        didn't properly understand the task or returned default responses.
+
+        When found:
+        - Log as [LEAK_PHRASE] warning
+        - Mark section as CRITICAL (triggers PLATIN fallback)
+        """
+        for section_name, content in self.sections.items():
+            if not isinstance(content, str) or not content:
+                continue
+
+            lower = content.lower()
+            for phrase in self.GENERIC_LLM_LEAK_PHRASES:
+                if phrase.lower() in lower:
+                    # Log the leak for monitoring
+                    log.warning(
+                        '[LEAK_PHRASE] phrase="%s" in section="%s"',
+                        phrase, section_name
+                    )
+
+                    self.errors.append(
+                        ValidationError(
+                            severity="CRITICAL",
+                            category="GENERIC_LLM_LEAK",
+                            section=section_name,
+                            message=(
+                                f"Generische LLM-Antwort erkannt: '{phrase}' - "
+                                "Section enthält Standard-ChatGPT-Antwort statt Report-Inhalt"
+                            ),
+                            details=(
+                                "Section wird durch PLATIN-Fallback ersetzt. "
+                                "LLM hat Aufgabe nicht korrekt verstanden."
+                            ),
+                        )
+                    )
+                    # Only report first leak per section
                     break
 
     def _check_size_specific_issues(self) -> None:

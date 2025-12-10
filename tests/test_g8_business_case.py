@@ -183,11 +183,15 @@ class TestG83CentralizedMinLengths:
     """G8.3: Test centralized min-length configuration."""
 
     def test_get_min_words_solo(self):
-        """Test min words retrieval for Solo size."""
+        """Test min words retrieval for Solo size.
+
+        SPRINT N1 UPDATE: roadmap_12m for Solo changed from 500 to 600.
+        """
         from services.config_validation import get_min_words
 
         assert get_min_words("Solo-Selbstständig", "executive_summary") == 150
-        assert get_min_words("solo", "roadmap_12m") == 500
+        # SPRINT N1: roadmap_12m increased from 500 to 600 for balanced target
+        assert get_min_words("solo", "roadmap_12m") == 600
         assert get_min_words("Freiberufler", "quick_wins") == 60
 
     def test_get_min_words_team(self):

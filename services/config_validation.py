@@ -124,18 +124,19 @@ class ValidationConfig:
 
 SECTION_MIN_WORDS: Dict[Tuple[str, str], int] = {
     # ----- SOLO -----
+    # SPRINT N1: Reduced min_words for Solo to avoid unnecessary fallbacks
     ("solo", "executive_summary"): 150,
     ("solo", "ki_stack_summary"): 150,  # G20: KI-Stack Summary Card
     ("solo", "quick_wins"): 60,
     ("solo", "roadmap_90d"): 150,       # SPRINT G17.S: Added (reduced from 250)
-    ("solo", "roadmap_12m"): 500,
-    ("solo", "strategie_governance"): 130,
+    ("solo", "roadmap_12m"): 600,       # SPRINT N1: balanced target
+    ("solo", "strategie_governance"): 90,   # SPRINT N1: 130→90 (Solo-friendly)
     ("solo", "recommendations"): 500,
     ("solo", "risks"): 500,
-    ("solo", "gamechanger"): 500,
+    ("solo", "gamechanger"): 500,       # SPRINT N1: reasonable for Solo
     ("solo", "foerderpotenzial"): 600,
     ("solo", "technologie_prozesse"): 130,
-    ("solo", "transparency_box"): 130,
+    ("solo", "transparency_box"): 50,   # SPRINT N1: 130→50 (minimal overhead)
     ("solo", "tools_empfehlungen"): 100,
     ("solo", "org_change"): 300,
     ("solo", "unternehmensprofil_markt"): 350,
