@@ -958,6 +958,94 @@
         .timeline-bar { height: 100%; border-radius: 6pt; }
         .timeline-count { font-size: 10pt; font-weight: 600; color: var(--color-text-muted); width: 20pt; text-align: right; }
 
+        /* G28: Strategy Plan - 12-Month AI Strategy */
+        .strategy-plan-container { page-break-before: always; padding: 16pt; background: var(--color-bg-page); }
+        .strategy-plan-header { display: flex; align-items: center; gap: 12pt; margin-bottom: 16pt; padding-bottom: 12pt; border-bottom: 2px solid var(--color-brand-primary); }
+        .strategy-plan-title { font-size: 20pt; font-weight: 700; color: var(--color-text-strong); margin: 0; }
+        .strategy-plan-badge { font-size: 9pt; padding: 2pt 8pt; background: #8b5cf6; color: #fff; border-radius: 4pt; font-weight: 600; }
+        .strategy-plan-grid { display: flex; flex-direction: column; gap: 14pt; }
+        .strategy-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12pt; }
+        .strategy-row.row-2, .strategy-row.row-5 { grid-template-columns: 1fr; }
+        .strategy-block { background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: 8pt; padding: 12pt; }
+        .strategy-block-title { font-size: 11pt; font-weight: 700; color: var(--color-text-strong); margin: 0 0 10pt 0; padding-bottom: 6pt; border-bottom: 1px solid var(--color-border-subtle); }
+
+        /* G28: Vision Block */
+        .vision-content { display: flex; flex-direction: column; gap: 8pt; }
+        .vision-headline { font-size: 14pt; font-weight: 700; color: var(--color-brand-primary); }
+        .vision-description { font-size: 10pt; color: var(--color-text-normal); }
+        .vision-target { font-size: 10pt; color: var(--color-text-muted); padding: 8pt; background: var(--color-bg-surface); border-radius: 4pt; }
+        .vision-target .target-label { font-weight: 600; color: var(--color-text-strong); }
+        .vision-horizon { margin-top: 6pt; }
+        .horizon-badge { background: #dbeafe; color: #1e40af; font-size: 9pt; }
+
+        /* G28: Priority Matrix */
+        .priority-matrix-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8pt; }
+        .priority-quadrant { padding: 8pt; background: var(--color-bg-surface); border-radius: 4pt; }
+        .quadrant-header { font-size: 10pt; font-weight: 700; margin-bottom: 4pt; }
+        .quadrant-desc { font-size: 8pt; color: var(--color-text-muted); margin-bottom: 6pt; }
+        .quadrant-items { display: flex; flex-direction: column; gap: 4pt; }
+        .priority-item { font-size: 9pt; color: var(--color-text-normal); padding: 4pt 6pt; background: var(--color-bg-card); border-radius: 3pt; }
+
+        /* G28: 3-Phase Roadmap */
+        .roadmap-phases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10pt; }
+        .roadmap-phase { padding: 10pt; background: var(--color-bg-surface); border-radius: 6pt; }
+        .phase-header { display: flex; align-items: center; gap: 6pt; margin-bottom: 8pt; }
+        .phase-number { width: 20pt; height: 20pt; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10pt; font-weight: 700; }
+        .phase-title { font-size: 11pt; font-weight: 700; color: var(--color-text-strong); }
+        .phase-months { font-size: 9pt; color: var(--color-text-muted); margin-left: auto; }
+        .phase-focus { font-size: 9pt; color: var(--color-brand-primary); font-weight: 600; margin-bottom: 8pt; }
+        .phase-milestones { list-style: none; margin: 0; padding: 0; }
+        .phase-milestones .milestone-item { font-size: 9pt; color: var(--color-text-normal); padding: 2pt 0; }
+        .phase-tools { font-size: 8pt; color: var(--color-text-muted); margin-top: 6pt; padding-top: 6pt; border-top: 1px dashed var(--color-border); }
+        .phase-tools .tools-label { font-weight: 600; }
+        .phase-budget { font-size: 8pt; color: var(--color-text-muted); margin-top: 4pt; }
+
+        /* G28: Tool Deployment Table */
+        .deployment-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+        .deployment-table th { padding: 8pt 6pt; text-align: left; font-weight: 600; background: var(--color-bg-surface); color: var(--color-text-strong); border-bottom: 2px solid var(--color-border); }
+        .deployment-table td { padding: 6pt; border-bottom: 1px solid var(--color-border-subtle); color: var(--color-text-normal); }
+        .deployment-table .tool-name { font-weight: 600; }
+        .phase-badge .badge.phase-1 { background: #dbeafe; color: #1e40af; }
+        .phase-badge .badge.phase-2 { background: #ede9fe; color: #6b21a8; }
+        .phase-badge .badge.phase-3 { background: #fce7f3; color: #be185d; }
+
+        /* G28: Funding Plan */
+        .funding-plan-items { display: flex; flex-direction: column; gap: 8pt; }
+        .funding-plan-item { padding: 8pt; background: var(--color-bg-surface); border-radius: 4pt; }
+        .funding-plan-item .funding-header { display: flex; align-items: center; justify-content: space-between; }
+        .funding-plan-item .funding-name { font-size: 10pt; font-weight: 600; }
+        .funding-plan-item .funding-details { display: flex; gap: 12pt; margin-top: 4pt; }
+        .funding-plan-item .funding-amount { font-size: 10pt; font-weight: 600; color: #22c55e; }
+        .funding-plan-item .funding-phase { font-size: 9pt; color: var(--color-text-muted); }
+
+        /* G28: KPI Targets Table */
+        .kpi-targets-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+        .kpi-targets-table th { padding: 8pt 6pt; text-align: left; font-weight: 600; background: var(--color-bg-surface); color: var(--color-text-strong); border-bottom: 2px solid var(--color-border); }
+        .kpi-targets-table td { padding: 6pt; border-bottom: 1px solid var(--color-border-subtle); color: var(--color-text-normal); }
+        .kpi-targets-table .kpi-name { font-weight: 600; }
+        .kpi-targets-table .kpi-current { color: var(--color-text-muted); }
+        .kpi-targets-table .kpi-target { color: var(--color-brand-primary); }
+        .kpi-targets-table .kpi-final { font-weight: 700; color: #22c55e; }
+
+        /* G28: Risk Mitigation */
+        .risk-items { display: flex; flex-direction: column; gap: 8pt; }
+        .risk-item { padding: 8pt; background: var(--color-bg-surface); border-radius: 4pt; }
+        .risk-item .risk-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6pt; }
+        .risk-item .risk-name { font-size: 10pt; font-weight: 600; color: var(--color-text-strong); }
+        .risk-item .risk-badges { display: flex; gap: 4pt; }
+        .risk-item .risk-mitigation { font-size: 9pt; color: var(--color-text-normal); }
+
+        /* G28: RACI Table */
+        .raci-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+        .raci-table th { padding: 8pt 6pt; text-align: left; font-weight: 600; background: var(--color-bg-surface); color: var(--color-text-strong); border-bottom: 2px solid var(--color-border); }
+        .raci-table td { padding: 6pt; border-bottom: 1px solid var(--color-border-subtle); color: var(--color-text-normal); }
+        .raci-table .raci-task { font-weight: 600; }
+        .raci-table .raci-r { color: #22c55e; }
+        .raci-table .raci-a { color: #3b82f6; }
+        .raci-table .raci-c { color: #f59e0b; }
+        .raci-table .raci-i { color: #6b7280; }
+        .raci-legend { display: flex; gap: 16pt; margin-top: 8pt; font-size: 8pt; color: var(--color-text-muted); }
+
         /* ================================================
            TABLES (PLATIN++ V5.2 Light Mode)
            ================================================ */

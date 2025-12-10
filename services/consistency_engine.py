@@ -448,6 +448,7 @@ class ConsistencyEngine:
         self._check_roadmap_alignment()
         self._check_narrative_coherence()
         self._check_exec_snapshot_consistency()  # G27
+        self._check_strategy_consistency()  # G28
 
         # Calculate domain scores
         self._calculate_domain_scores()
@@ -1248,12 +1249,161 @@ class ConsistencyEngine:
             ))
 
     # -------------------------------------------------------------------------
+    # DOMAIN 8: Strategy Plan Consistency (G28)
+    # -------------------------------------------------------------------------
+
+    def _check_strategy_consistency(self) -> None:
+        """G28: Check Strategy Plan consistency with other sections."""
+        strategy_html = self.sections.get("STRATEGY_PLAN_HTML", "")
+
+        if not strategy_html:
+            log.debug("[G28] Strategy consistency: Skipping (no strategy plan)")
+            return
+
+        self.report.checked_rules += 6
+
+        # Rule STRAT_001: Roadmap phases must align with KPIs
+        kpi_html = self.sections.get("BUSINESS_CASE_HTML", "") or self.sections.get("KPI_DASHBOARD_HTML", "")
+        if kpi_html and strategy_html:
+            # Check if ROI targets in strategy match business case
+            import re
+            strategy_roi_matches = re.findall(r'(\d+(?:[.,]\d+)?)\s*%', strategy_html)
+            kpi_roi_match = re.search(r'ROI[:\s]*(\d+(?:[.,]\d+)?)\s*%', kpi_html, re.IGNORECASE)
+
+            if strategy_roi_matches and kpi_roi_match:
+                kpi_roi = float(kpi_roi_match.group(1).replace(",", "."))
+                # Check if any strategy ROI is close to KPI ROI
+                strategy_rois = [float(r.replace(",", ".")) for r in strategy_roi_matches if float(r.replace(",", ".")) > 10]
+
+                if strategy_rois and not any(abs(sr - kpi_roi) < 30 for sr in strategy_rois[:5]):
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="STRAT_001",
+                        severity="WARNING",
+                        domain="strategy",
+                        source_section="strategy_plan",
+                        target_section="business_case",
+                        message="Strategie-ROI-Ziele weichen stark vom Business Case ab",
+                        expected=f"ROI-Ziel ~{kpi_roi:.0f}%",
+                        actual=f"Strategie zeigt andere Werte",
+                        suggestion="Synchronisiere KPI-Ziele mit Business Case",
+                    ))
+
+        # Rule STRAT_002: Tool Deployment must match Tools Engine 4.0
+        ki_stack_html = self.sections.get("KI_STACK_SUMMARY_HTML", "")
+        if ki_stack_html and strategy_html:
+            ki_stack_tools = _extract_tool_names(ki_stack_html)
+            strategy_tools = _extract_tool_names(strategy_html)
+
+            if ki_stack_tools and strategy_tools:
+                # Check if strategy tools are subset of ki_stack tools
+                mismatched = [t for t in strategy_tools[:5]
+                              if not any(t.lower() in kt.lower() or kt.lower() in t.lower()
+                                        for kt in ki_stack_tools)]
+
+                if len(mismatched) > 2:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="STRAT_002",
+                        severity="WARNING",
+                        domain="strategy",
+                        source_section="strategy_plan",
+                        target_section="ki_stack_summary",
+                        message="Strategie-Deployment enthält Tools außerhalb des KI-Stack",
+                        expected="Tools aus KI-Stack Summary",
+                        actual=f"Abweichende Tools: {', '.join(mismatched[:2])}",
+                        suggestion="Verwende Tools aus Tools Engine 4.0",
+                    ))
+
+        # Rule STRAT_003: Funding Integration must match Funding Engine 2.0
+        funding_html = self.sections.get("FUNDING_MATRIX_2025_HTML", "") or self.sections.get("FOERDERPOTENZIAL_HTML", "")
+        if funding_html and strategy_html:
+            funding_progs = _extract_funding_programs(funding_html)
+            strategy_progs = _extract_funding_programs(strategy_html)
+
+            if strategy_progs and funding_progs:
+                mismatched = [p for p in strategy_progs
+                              if not any(p.lower() in fp.lower() or fp.lower() in p.lower()
+                                        for fp in funding_progs)]
+
+                if len(mismatched) > 1:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="STRAT_003",
+                        severity="WARNING",
+                        domain="strategy",
+                        source_section="strategy_plan",
+                        target_section="funding_matrix",
+                        message="Strategie-Förderplan enthält unbekannte Programme",
+                        expected="Programme aus Funding Engine 2.0",
+                        actual=f"Unbekannte Programme: {', '.join(mismatched[:2])}",
+                        suggestion="Verwende Programme aus Funding Matrix",
+                    ))
+
+        # Rule STRAT_004: RACI must match company size
+        size = self.briefing.get("unternehmensgroesse", "").lower()
+        strategy_lower = strategy_html.lower()
+
+        if "solo" in size:
+            # Solo should not have complex RACI with multiple roles
+            complex_roles = ["compliance", "hr", "legal", "it-leitung", "it lead", "stakeholder"]
+            has_complex_raci = sum(1 for role in complex_roles if role in strategy_lower)
+
+            if has_complex_raci >= 3:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="STRAT_004",
+                    severity="WARNING",
+                    domain="strategy",
+                    source_section="strategy_plan",
+                    target_section="briefing",
+                    message="RACI-Matrix zu komplex für Solo-Unternehmer",
+                    expected="Vereinfachte RACI für Solo",
+                    actual=f"Gefundene Enterprise-Rollen",
+                    suggestion="Verwende Solo-angepasste Verantwortlichkeiten",
+                ))
+
+        # Rule STRAT_005: Phase budget allocation must sum to ~100%
+        import re
+        budget_matches = re.findall(r'Budget[:\s]*(\d+(?:[.,]\d+)?)\s*%', strategy_html, re.IGNORECASE)
+        if budget_matches:
+            total_budget = sum(float(b.replace(",", ".")) for b in budget_matches)
+            if abs(total_budget - 100) > 15:  # Allow 15% deviation
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="STRAT_005",
+                    severity="INFO",
+                    domain="strategy",
+                    source_section="strategy_plan",
+                    target_section="strategy_plan",
+                    message="Phasen-Budget summiert sich nicht auf 100%",
+                    expected="Budget-Summe ~100%",
+                    actual=f"Summe: {total_budget:.0f}%",
+                    suggestion="Überprüfe Budget-Verteilung der 3 Phasen",
+                ))
+
+        # Rule STRAT_006: Risk mitigation must address AI Act if high-risk
+        ai_act_risk = self.sections.get("AI_ACT_RISK_LEVEL", "").lower()
+
+        if ai_act_risk in ("high-risk", "limited"):
+            ai_act_keywords = ["ai act", "ai-act", "compliance", "konformität"]
+            has_ai_act_mitigation = any(kw in strategy_lower for kw in ai_act_keywords)
+
+            if not has_ai_act_mitigation:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="STRAT_006",
+                    severity="ERROR",
+                    domain="strategy",
+                    source_section="strategy_plan",
+                    target_section="ai_act",
+                    message="Strategie enthält keine AI Act Compliance-Maßnahmen trotz High-Risk",
+                    expected="AI Act Risiko-Mitigation in Strategie",
+                    actual="Keine Compliance-Maßnahmen gefunden",
+                    suggestion="Füge AI Act Compliance zu Risiko-Mitigation hinzu",
+                ))
+
+    # -------------------------------------------------------------------------
     # SCORING
     # -------------------------------------------------------------------------
 
     def _calculate_domain_scores(self) -> None:
         """Calculate scores per domain."""
-        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot"]
+        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot", "strategy"]
 
         for domain in domains:
             domain_issues = [i for i in self.report.issues if i.domain == domain]
