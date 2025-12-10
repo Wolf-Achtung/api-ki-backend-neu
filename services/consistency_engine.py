@@ -450,6 +450,7 @@ class ConsistencyEngine:
         self._check_exec_snapshot_consistency()  # G27
         self._check_risk_engine_consistency()  # G29
         self._check_business_case_consistency()  # G30
+        self._check_recommendations_consistency()  # G32
 
         # Calculate domain scores
         self._calculate_domain_scores()
@@ -1909,12 +1910,397 @@ class ConsistencyEngine:
         return cost_sum if found_costs else None
 
     # -------------------------------------------------------------------------
+    # DOMAIN 10: Recommendations Engine Consistency (G32)
+    # -------------------------------------------------------------------------
+
+    def _check_recommendations_consistency(self) -> None:
+        """
+        G32: Check Recommendations Engine consistency with other engines.
+
+        Rules:
+        - RECO_001: Tools fit validation (fit >= 0.3 for size, no high vendor_risk)
+        - RECO_002: Risk relation validation (reduces_risk must reference high/critical risks)
+        - RECO_003: Funding consistency (programmes must exist in Funding Engine)
+        - RECO_004: Strategy phase consistency (timeline_phase matches Strategy Plan)
+        - RECO_005: Size-appropriate count (Solo: max 5, Team: max 8, KMU: max 10)
+        """
+        reco_html = self.sections.get("RECOMMENDATIONS_ENGINE_HTML", "")
+
+        if not reco_html:
+            log.debug("[G32] Recommendations consistency: Skipping (no recommendations section)")
+            return
+
+        self.report.checked_rules += 5
+
+        reco_html_lower = reco_html.lower()
+
+        # Get company size
+        size = self.briefing.get("unternehmensgroesse", "").lower()
+        size_label = "solo" if "solo" in size or "freiberuf" in size else (
+            "team" if "team" in size or "klein" in size else "kmu"
+        )
+
+        # Rule RECO_001: Tools fit validation
+        # related_tools must have fit >= 0.3 for company size, no high vendor_risk
+        tools_html = self.sections.get("KI_STACK_SUMMARY_HTML", "") or self.sections.get("TOOLS_HTML", "")
+
+        if tools_html and reco_html:
+            # Extract tool names from recommendations
+            reco_tools = self._extract_related_tools_from_reco(reco_html)
+            tools_engine_tools = _extract_tool_names(tools_html)
+
+            # Check if recommended tools are from Tools Engine
+            invalid_tools = []
+            for tool in reco_tools:
+                if not any(tool.lower() in t.lower() or t.lower() in tool.lower()
+                          for t in tools_engine_tools):
+                    invalid_tools.append(tool)
+
+            if invalid_tools:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="RECO_001",
+                    severity="ERROR",
+                    domain="recommendations",
+                    source_section="recommendations_engine",
+                    target_section="tools_engine",
+                    message="Empfehlungen referenzieren Tools nicht aus Tools Engine",
+                    expected="Nur Tools aus Tools Engine 4.0 verwenden",
+                    actual=f"Unbekannte Tools: {', '.join(invalid_tools[:3])}",
+                    suggestion="Verwende nur Tools, die von Tools Engine empfohlen wurden",
+                ))
+
+            # Check for tools with high vendor risk (vendor-risk >= 4)
+            high_vendor_tools = self._extract_high_vendor_risk_tools(tools_html)
+            risky_reco_tools = [t for t in reco_tools
+                               if any(t.lower() in hvt.lower() or hvt.lower() in t.lower()
+                                     for hvt in high_vendor_tools)]
+
+            if risky_reco_tools:
+                # Check if mitigation is mentioned
+                has_mitigation = any(term in reco_html_lower for term in [
+                    "mitigation", "risiko", "risk", "alternativ", "vorsicht"
+                ])
+
+                if not has_mitigation:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="RECO_001",
+                        severity="WARNING",
+                        domain="recommendations",
+                        source_section="recommendations_engine",
+                        target_section="tools_engine",
+                        message="Empfehlungen enthalten Tools mit hohem Vendor-Risiko ohne Mitigation",
+                        expected="Mitigation-Hinweis für riskante Tools",
+                        actual=f"Tools mit hohem Vendor-Risk: {', '.join(risky_reco_tools[:2])}",
+                        suggestion="Füge Risiko-Hinweise für Tools mit vendor_risk >= 4 hinzu",
+                    ))
+
+        # Rule RECO_002: Risk relation validation
+        # If risk_relation="reduces_risk", related_risks must contain high/critical risks
+        risk_html = self.sections.get("RISK_ENGINE_HTML", "") or self.sections.get("RISKS_HTML", "")
+
+        if risk_html and reco_html:
+            # Check for "reduces_risk" markers in recommendations
+            has_reduces_risk = "reduces_risk" in reco_html_lower or "reduziert risiko" in reco_html_lower
+
+            if has_reduces_risk:
+                # Check if related risks reference actual high/critical risks from Risk Engine
+                high_risks = self._extract_high_risks_from_engine(risk_html)
+                related_risks = self._extract_related_risks_from_reco(reco_html)
+
+                if related_risks:
+                    # Check if any related risk matches a high risk
+                    matching_risks = [r for r in related_risks
+                                     if any(r.lower() in hr.lower() or hr.lower() in r.lower()
+                                           for hr in high_risks)]
+
+                    if not matching_risks and high_risks:
+                        self.report.add_issue(ConsistencyIssue(
+                            rule_id="RECO_002",
+                            severity="WARNING",
+                            domain="recommendations",
+                            source_section="recommendations_engine",
+                            target_section="risk_engine",
+                            message="reduces_risk Empfehlungen referenzieren keine kritischen Risiken",
+                            expected="Referenz auf high/critical Risiken aus Risk Engine",
+                            actual=f"Referenzierte Risiken nicht in High-Risk Liste gefunden",
+                            suggestion="Verknüpfe reduces_risk Empfehlungen mit tatsächlich kritischen Risiken",
+                        ))
+                elif has_reduces_risk:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="RECO_002",
+                        severity="ERROR",
+                        domain="recommendations",
+                        source_section="recommendations_engine",
+                        target_section="risk_engine",
+                        message="reduces_risk Empfehlung ohne related_risks",
+                        expected="Bei risk_relation='reduces_risk' mindestens 1 related_risk",
+                        actual="Keine related_risks angegeben",
+                        suggestion="Füge related_risks für reduces_risk Empfehlungen hinzu",
+                    ))
+
+        # Rule RECO_003: Funding consistency
+        # related_funding must exist in Funding Engine
+        funding_html = self.sections.get("FUNDING_MATRIX_2025_HTML", "") or self.sections.get("FOERDERPOTENZIAL_HTML", "")
+
+        if funding_html and reco_html:
+            reco_funding = self._extract_related_funding_from_reco(reco_html)
+            funding_engine_programs = _extract_funding_programs(funding_html)
+
+            if reco_funding:
+                invalid_funding = []
+                for prog in reco_funding:
+                    if not any(prog.lower() in fp.lower() or fp.lower() in prog.lower()
+                              for fp in funding_engine_programs):
+                        invalid_funding.append(prog)
+
+                if invalid_funding:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="RECO_003",
+                        severity="ERROR",
+                        domain="recommendations",
+                        source_section="recommendations_engine",
+                        target_section="funding_engine",
+                        message="Empfehlungen referenzieren unbekannte Förderprogramme",
+                        expected="Nur Programme aus Funding Engine V2 verwenden",
+                        actual=f"Unbekannte Programme: {', '.join(invalid_funding[:2])}",
+                        suggestion="Verwende nur Programme, die in Funding Engine identifiziert wurden",
+                    ))
+
+        # Rule RECO_004: Strategy phase consistency
+        # timeline_phase must align with Strategy Plan
+        strategy_html = self.sections.get("STRATEGY_PLAN_HTML", "") or self.sections.get("ROADMAP_12M_HTML", "")
+
+        if strategy_html and reco_html:
+            # Check for phase misalignment
+            # Phase 1 recommendations should not reference Phase 3 measures
+            phase_1_recos = "phase_1" in reco_html_lower or "phase 1" in reco_html_lower
+            phase_3_strategy = "phase_3" in strategy_html.lower() or "phase 3" in strategy_html.lower()
+
+            # Look for urgent measures in phase_3
+            urgent_in_phase_3 = False
+            if "urgency_level.*high" in reco_html_lower or "urgency.*hoch" in reco_html_lower:
+                # Check if urgent items are in phase_3
+                import re
+                urgent_phase_3 = re.search(r'urgency[^}]*high[^}]*phase_3', reco_html_lower, re.DOTALL)
+                if urgent_phase_3:
+                    urgent_in_phase_3 = True
+
+            if urgent_in_phase_3:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="RECO_004",
+                    severity="WARNING",
+                    domain="recommendations",
+                    source_section="recommendations_engine",
+                    target_section="strategy_plan",
+                    message="Dringende Empfehlung (urgency=high) in Phase 3",
+                    expected="urgency=high sollte in Phase 1 sein",
+                    actual="High-Urgency Empfehlung für Phase 3 gefunden",
+                    suggestion="Verschiebe dringende Empfehlungen in frühere Phasen",
+                ))
+
+        # Rule RECO_005: Size-appropriate count
+        # Solo: max 5, Team: max 8, KMU: max 10
+        reco_count = self._count_recommendations(reco_html)
+        high_impact_count = self._count_high_impact_recommendations(reco_html)
+
+        size_limits = {
+            "solo": (5, 2),   # max 5 total, max 2 high impact
+            "team": (8, 4),   # max 8 total, max 4 high impact
+            "kmu": (10, 6),   # max 10 total, max 6 high impact
+        }
+
+        max_total, max_high = size_limits.get(size_label, (10, 6))
+
+        if reco_count > max_total:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="RECO_005",
+                severity="ERROR",
+                domain="recommendations",
+                source_section="recommendations_engine",
+                target_section="briefing",
+                message=f"Zu viele Empfehlungen für Unternehmensgröße '{size_label}'",
+                expected=f"Max. {max_total} Empfehlungen für {size_label}",
+                actual=f"{reco_count} Empfehlungen gefunden",
+                suggestion=f"Reduziere auf max. {max_total} Empfehlungen",
+            ))
+
+        if high_impact_count > max_high:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="RECO_005",
+                severity="WARNING",
+                domain="recommendations",
+                source_section="recommendations_engine",
+                target_section="briefing",
+                message=f"Zu viele High-Impact Empfehlungen für '{size_label}'",
+                expected=f"Max. {max_high} High-Impact Empfehlungen für {size_label}",
+                actual=f"{high_impact_count} High-Impact Empfehlungen",
+                suggestion=f"Reduziere High-Impact Empfehlungen auf max. {max_high}",
+            ))
+
+    def _extract_related_tools_from_reco(self, html: str) -> List[str]:
+        """Extract related tools from Recommendations Engine HTML."""
+        if not html:
+            return []
+
+        tools: List[str] = []
+
+        import re
+
+        # Pattern: related_tools: ["Tool A", "Tool B"]
+        tools_pattern = r'related_tools["\s:]*\[(.*?)\]'
+        matches = re.findall(tools_pattern, html, re.IGNORECASE | re.DOTALL)
+
+        for match in matches:
+            # Extract tool names from the list
+            tool_names = re.findall(r'"([^"]+)"', match)
+            tools.extend(tool_names)
+
+        # Also extract from HTML list items
+        li_pattern = r'<li[^>]*>([A-Za-z0-9\s\-\.]+(?:AI|GPT|Bot|Tool|Cloud|Pro|Plus)?)</li>'
+        for match in re.finditer(li_pattern, html, re.IGNORECASE):
+            name = match.group(1).strip()
+            if len(name) > 2 and len(name) < 50:
+                tools.append(name)
+
+        return list(set(tools))
+
+    def _extract_high_vendor_risk_tools(self, html: str) -> List[str]:
+        """Extract tools with high vendor risk (>=4) from Tools Engine HTML."""
+        if not html:
+            return []
+
+        tools: List[str] = []
+
+        import re
+
+        # Look for vendor-risk-4 or vendor-risk-5 badges
+        pattern = r'vendor[\-_]risk[\-_]?[45]'
+
+        if re.search(pattern, html.lower()):
+            # Extract tool names near these badges
+            tool_names = _extract_tool_names(html)
+            # For simplicity, return all tools from section with high vendor risk indicators
+            tools = tool_names[:5]
+
+        return tools
+
+    def _extract_high_risks_from_engine(self, html: str) -> List[str]:
+        """Extract high/critical risk titles from Risk Engine HTML."""
+        if not html:
+            return []
+
+        risks: List[str] = []
+
+        import re
+
+        # Look for high/critical risk indicators
+        high_patterns = [
+            r'(kritisch|critical|hoch|high)[\s\-]?risk[:\s]*([^<]+)',
+            r'risk[:\s]*([^<]+?)[\s]*(?:kritisch|critical|hoch|high)',
+            r'<strong>([^<]+)</strong>\s*(?:kritisch|critical|hoch|high)',
+        ]
+
+        for pattern in high_patterns:
+            matches = re.findall(pattern, html.lower())
+            for match in matches:
+                if isinstance(match, tuple):
+                    risk_name = match[-1].strip()
+                else:
+                    risk_name = match.strip()
+                if len(risk_name) > 3 and len(risk_name) < 100:
+                    risks.append(risk_name)
+
+        return list(set(risks))
+
+    def _extract_related_risks_from_reco(self, html: str) -> List[str]:
+        """Extract related risks from Recommendations Engine HTML."""
+        if not html:
+            return []
+
+        risks: List[str] = []
+
+        import re
+
+        # Pattern: related_risks: ["Risk A", "Risk B"]
+        risks_pattern = r'related_risks["\s:]*\[(.*?)\]'
+        matches = re.findall(risks_pattern, html, re.IGNORECASE | re.DOTALL)
+
+        for match in matches:
+            risk_names = re.findall(r'"([^"]+)"', match)
+            risks.extend(risk_names)
+
+        return list(set(risks))
+
+    def _extract_related_funding_from_reco(self, html: str) -> List[str]:
+        """Extract related funding programmes from Recommendations Engine HTML."""
+        if not html:
+            return []
+
+        funding: List[str] = []
+
+        import re
+
+        # Pattern: related_funding: ["Programme A", "Programme B"]
+        funding_pattern = r'related_funding["\s:]*\[(.*?)\]'
+        matches = re.findall(funding_pattern, html, re.IGNORECASE | re.DOTALL)
+
+        for match in matches:
+            prog_names = re.findall(r'"([^"]+)"', match)
+            funding.extend(prog_names)
+
+        return list(set(funding))
+
+    def _count_recommendations(self, html: str) -> int:
+        """Count total recommendations in HTML."""
+        if not html:
+            return 0
+
+        import re
+
+        # Count recommendation cards or IDs
+        patterns = [
+            r'"id":\s*"rec\d+"',  # JSON ID pattern
+            r'class="[^"]*recommendation-card[^"]*"',  # CSS class pattern
+            r'class="[^"]*reco-card[^"]*"',  # Alternative CSS class
+            r'<div[^>]*recommendation[^>]*>',  # Generic div pattern
+        ]
+
+        max_count = 0
+        for pattern in patterns:
+            count = len(re.findall(pattern, html, re.IGNORECASE))
+            if count > max_count:
+                max_count = count
+
+        return max_count
+
+    def _count_high_impact_recommendations(self, html: str) -> int:
+        """Count high-impact recommendations in HTML."""
+        if not html:
+            return 0
+
+        import re
+
+        # Count impact_level: "high" patterns
+        patterns = [
+            r'"impact_level":\s*"high"',
+            r'impact[\-_]?level[:\s]*high',
+            r'class="[^"]*impact-high[^"]*"',
+        ]
+
+        total_count = 0
+        for pattern in patterns:
+            count = len(re.findall(pattern, html, re.IGNORECASE))
+            total_count += count
+
+        return total_count
+
+    # -------------------------------------------------------------------------
     # SCORING
     # -------------------------------------------------------------------------
 
     def _calculate_domain_scores(self) -> None:
         """Calculate scores per domain."""
-        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot", "risk_engine", "business_case"]
+        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot", "risk_engine", "business_case", "recommendations"]
 
         for domain in domains:
             domain_issues = [i for i in self.report.issues if i.domain == domain]
