@@ -742,7 +742,9 @@ class TestVendorAuditReportToHtml:
 
         html = vendor_audit_report_to_html(report, lang="en")
 
-        assert "Vendor Audit" in html or "AI-TUV" in html
+        # Check for G35 badge and vendor-audit class (titles are in template, not in engine output)
+        assert "G35" in html
+        assert "vendor-audit" in html
 
     def test_html_contains_category_badges(self) -> None:
         """Test HTML contains category badges (GREEN/YELLOW/RED)."""
