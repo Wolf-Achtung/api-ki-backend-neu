@@ -5124,6 +5124,50 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         log.warning("[%s] ⚠️ G30 Business Case Engine 2.0 failed: %s", run_id, e)
         sections.setdefault("BUSINESS_CASE_ENGINE_HTML", "")
 
+    # =========================================================================
+    # SPRINT G32: Recommendations Engine – Meta-Empfehlungsschicht
+    # =========================================================================
+    try:
+        from services.recommendations_engine import (
+            generate_recommendations_report,
+            recommendations_report_to_html,
+        )
+
+        # Build context summaries from previous engines
+        tools_summary = sections.get("KI_STACK_SUMMARY_HTML", "")[:2000] if sections.get("KI_STACK_SUMMARY_HTML") else ""
+        funding_summary = sections.get("FUNDING_MATRIX_2025_HTML", "")[:2000] if sections.get("FUNDING_MATRIX_2025_HTML") else ""
+        risk_summary = sections.get("RISK_ENGINE_HTML", "")[:2000] if sections.get("RISK_ENGINE_HTML") else ""
+        strategy_summary = sections.get("STRATEGY_PLAN_HTML", "")[:2000] if sections.get("STRATEGY_PLAN_HTML") else ""
+        bc_summary = sections.get("BUSINESS_CASE_ENGINE_HTML", "")[:2000] if sections.get("BUSINESS_CASE_ENGINE_HTML") else ""
+
+        reco_report = generate_recommendations_report(
+            context=None,
+            tools_summary=tools_summary,
+            funding_summary=funding_summary,
+            risk_summary=risk_summary,
+            strategy_summary=strategy_summary,
+            business_case_summary=bc_summary,
+            briefing=answers,
+            llm_response=None,  # Will use extraction-based generation
+        )
+
+        sections["RECOMMENDATIONS_ENGINE_HTML"] = recommendations_report_to_html(reco_report, lang=report_lang)
+        sections["_reco_report"] = reco_report  # Store for consistency checks
+
+        # Extract key values for template usage
+        sections["RECO_COUNT"] = len(reco_report.recommendations)
+        sections["RECO_TOP_3_IDS"] = reco_report.top_3_ids
+        sections["RECO_SUMMARY"] = reco_report.summary
+
+        log.info("[%s] ✅ G32 Recommendations Engine generated: %d recommendations, top_3=%s",
+                 run_id, len(reco_report.recommendations), reco_report.top_3_ids[:3])
+    except ImportError:
+        log.debug("[%s] G32 recommendations_engine not available", run_id)
+        sections.setdefault("RECOMMENDATIONS_ENGINE_HTML", "")
+    except Exception as e:
+        log.warning("[%s] ⚠️ G32 Recommendations Engine failed: %s", run_id, e)
+        sections.setdefault("RECOMMENDATIONS_ENGINE_HTML", "")
+
     log.info("[%s] 🎨 Rendering final HTML...", run_id)
     # --- Sanitize dynamic sections to prevent HTML leaks (z. B. eingebettetes <html> im Pilot-Plan) ---
     try:
