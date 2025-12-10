@@ -454,6 +454,7 @@ class ConsistencyEngine:
         self._check_risk_engine_v3_consistency()  # G33
         self._check_vendor_audit_consistency()  # G35
         self._check_automation_roadmap_consistency()  # G36
+        self._check_business_case_simulation_consistency()  # G34
 
         # Calculate domain scores
         self._calculate_domain_scores()
@@ -3425,12 +3426,389 @@ class ConsistencyEngine:
                 ))
 
     # -------------------------------------------------------------------------
+    # DOMAIN 14: Business Case Simulation Consistency (G34)
+    # -------------------------------------------------------------------------
+
+    def _check_business_case_simulation_consistency(self) -> None:
+        """
+        G34: Check Business Case Simulation consistency with G30 deterministic baseline.
+
+        Rules BCSIM_001-BCSIM_006:
+        - BCSIM_001: P50 ROI must be near realistic scenario ROI (±20%)
+        - BCSIM_002: P80 ROI must not be below conservative scenario
+        - BCSIM_003: P20 ROI must be plausible (near conservative/realistic)
+        - BCSIM_004: Payback P50 cannot be < 0 or < best deterministic payback
+        - BCSIM_005: High residual risk must result in wider distributions
+        - BCSIM_006: Strategy cannot be too optimistic if P80 ROI << optimistic
+        """
+        self.report.checked_rules += 6
+
+        # Get simulation HTML and report data
+        sim_html = self.sections.get("BUSINESS_CASE_SIM_HTML", "")
+        sim_report = self.sections.get("_business_case_simulation_report")
+
+        # Get G30 baseline
+        bc_html = self.sections.get("BUSINESS_CASE_ENGINE_HTML", "")
+        bc_report = self.sections.get("_business_case_report")
+
+        if not sim_html and not sim_report:
+            log.debug("[G34] Business Case Simulation consistency: Skipping (no simulation data)")
+            return
+
+        # Extract simulation metrics from HTML or report
+        sim_metrics = self._extract_simulation_metrics(sim_html, sim_report)
+
+        if not sim_metrics:
+            log.debug("[G34] Business Case Simulation consistency: Could not extract metrics")
+            return
+
+        # Extract G30 baseline scenarios
+        scenario_rois = self._extract_scenario_rois(bc_html)
+        if not scenario_rois and bc_report:
+            scenario_rois = self._extract_scenario_rois_from_report(bc_report)
+
+        if not scenario_rois:
+            log.debug("[G34] Business Case Simulation consistency: No G30 baseline scenarios")
+            return
+
+        opt_roi = scenario_rois.get("optimistic", 0)
+        real_roi = scenario_rois.get("realistic", 0)
+        cons_roi = scenario_rois.get("conservative", 0)
+
+        # Rule BCSIM_001: P50 ROI must be near realistic scenario ROI (±20%)
+        p50_roi = sim_metrics.get("roi_p50", 0)
+        if real_roi > 0 and p50_roi > 0:
+            deviation = abs(p50_roi - real_roi) / real_roi * 100
+            if deviation > 25:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="BCSIM_001",
+                    severity="WARNING",
+                    domain="business_case_sim",
+                    source_section="business_case_simulation",
+                    target_section="business_case_engine",
+                    message="P50 ROI weicht stark vom realistischen Szenario ab",
+                    expected=f"P50 ROI nahe realistic ROI (±25%): {real_roi:.1f}%",
+                    actual=f"P50 ROI: {p50_roi:.1f}% (Abweichung: {deviation:.0f}%)",
+                    suggestion="Pruefe Simulationsannahmen oder passe G30 Szenarien an",
+                ))
+
+        # Rule BCSIM_002: P80 ROI must not be below conservative scenario
+        p80_roi = sim_metrics.get("roi_p80", 0)
+        if cons_roi > 0 and p80_roi < cons_roi * 0.8:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="BCSIM_002",
+                severity="WARNING",
+                domain="business_case_sim",
+                source_section="business_case_simulation",
+                target_section="business_case_engine",
+                message="P80 ROI liegt unter dem konservativen Szenario",
+                expected=f"P80 ROI >= conservative ROI ({cons_roi:.1f}%)",
+                actual=f"P80 ROI: {p80_roi:.1f}%",
+                suggestion="Simulationsverteilung ist pessimistischer als G30 conservative",
+            ))
+
+        # Rule BCSIM_003: P20 ROI must be plausible
+        p20_roi = sim_metrics.get("roi_p20", 0)
+        # P20 should be somewhere between 50% of conservative and conservative
+        lower_bound = cons_roi * 0.4
+        if p20_roi < lower_bound and cons_roi > 0:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="BCSIM_003",
+                severity="INFO",
+                domain="business_case_sim",
+                source_section="business_case_simulation",
+                target_section="business_case_engine",
+                message="P20 ROI liegt sehr deutlich unter conservative Szenario",
+                expected=f"P20 ROI >= {lower_bound:.1f}% (40% von conservative)",
+                actual=f"P20 ROI: {p20_roi:.1f}%",
+                suggestion="Hohe Worst-Case-Varianz - pruefen ob realistisch",
+            ))
+
+        # Rule BCSIM_004: Payback P50 must be valid
+        payback_p50 = sim_metrics.get("payback_p50", 0)
+        scenario_paybacks = self._extract_scenario_paybacks(bc_html)
+        if not scenario_paybacks and bc_report:
+            scenario_paybacks = self._extract_scenario_paybacks_from_report(bc_report)
+
+        if payback_p50 < 0:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="BCSIM_004",
+                severity="ERROR",
+                domain="business_case_sim",
+                source_section="business_case_simulation",
+                target_section="business_case_simulation",
+                message="Payback P50 ist negativ",
+                expected="Payback P50 >= 0",
+                actual=f"Payback P50: {payback_p50:.1f} Monate",
+                suggestion="Pruefe Simulationslogik fuer Payback-Berechnung",
+            ))
+
+        opt_payback = scenario_paybacks.get("optimistic", 0) if scenario_paybacks else 0
+        if payback_p50 > 0 and opt_payback > 0 and payback_p50 < opt_payback * 0.5:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="BCSIM_004",
+                severity="INFO",
+                domain="business_case_sim",
+                source_section="business_case_simulation",
+                target_section="business_case_engine",
+                message="Payback P50 besser als optimistisches Szenario",
+                expected=f"Payback P50 >= optimistic Payback * 0.5 ({opt_payback * 0.5:.1f} Mo.)",
+                actual=f"Payback P50: {payback_p50:.1f} Monate",
+                suggestion="Simulation zeigt zu optimistische Payback-Erwartung",
+            ))
+
+        # Rule BCSIM_005: High risk must result in wider distributions
+        risk_grade = self._extract_risk_grade_from_sections()
+        roi_std = sim_metrics.get("roi_std", 0)
+        roi_mean = sim_metrics.get("roi_mean", 1)
+
+        if roi_mean != 0:
+            cv = abs(roi_std / roi_mean) if roi_mean else 0  # Coefficient of variation
+
+            if risk_grade in ["D", "F"]:
+                # High risk should have high variance (CV > 0.3)
+                if cv < 0.2:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="BCSIM_005",
+                        severity="WARNING",
+                        domain="business_case_sim",
+                        source_section="business_case_simulation",
+                        target_section="risk_engine_v3",
+                        message=f"Niedrige Varianz trotz hohem Risiko-Grade ({risk_grade})",
+                        expected=f"Bei Risk-Grade {risk_grade}: CV > 0.2",
+                        actual=f"Coefficient of Variation: {cv:.2f}",
+                        suggestion="Erhoehe Verteilungs-Bandbreiten bei hohem Risiko",
+                    ))
+            elif risk_grade in ["A", "B"]:
+                # Low risk should have lower variance (CV < 0.5)
+                if cv > 0.6:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="BCSIM_005",
+                        severity="INFO",
+                        domain="business_case_sim",
+                        source_section="business_case_simulation",
+                        target_section="risk_engine_v3",
+                        message=f"Hohe Varianz trotz niedrigem Risiko-Grade ({risk_grade})",
+                        expected=f"Bei Risk-Grade {risk_grade}: CV < 0.6",
+                        actual=f"Coefficient of Variation: {cv:.2f}",
+                        suggestion="Engere Verteilungen bei niedrigem Risiko erwarten",
+                    ))
+
+        # Rule BCSIM_006: Strategy cannot be too optimistic if P80 ROI << optimistic
+        strategy_html = self.sections.get("STRATEGIE_GOVERNANCE_HTML", "") or self.sections.get("EXECUTIVE_SUMMARY_HTML", "")
+
+        if strategy_html and p80_roi > 0 and opt_roi > 0:
+            # Check if strategy is optimistic
+            optimistic_terms = ["hervorragend", "excellent", "outstanding", "massiv", "enorm",
+                               "schnell amortisier", "hohe rendite", "high return"]
+            strategy_lower = strategy_html.lower()
+            is_optimistic_strategy = any(term in strategy_lower for term in optimistic_terms)
+
+            # P80 ROI significantly below optimistic (more than 50% gap)
+            gap_pct = (opt_roi - p80_roi) / opt_roi * 100 if opt_roi else 0
+
+            if is_optimistic_strategy and gap_pct > 40:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="BCSIM_006",
+                    severity="WARNING",
+                    domain="business_case_sim",
+                    source_section="strategy",
+                    target_section="business_case_simulation",
+                    message="Strategy-Narrativ zu optimistisch im Vergleich zu P80 ROI",
+                    expected=f"P80 ROI ({p80_roi:.1f}%) sollte naeher an optimistic ({opt_roi:.1f}%) liegen",
+                    actual=f"Gap zwischen P80 und optimistic: {gap_pct:.0f}%",
+                    suggestion="Passe Strategy-Narrativ an realistische Simulation an",
+                ))
+
+    def _extract_simulation_metrics(
+        self,
+        html: str,
+        report: Any
+    ) -> Dict[str, float]:
+        """Extract simulation metrics from HTML or report object."""
+        import re
+
+        metrics: Dict[str, float] = {}
+
+        # Try from report object first
+        if report:
+            if hasattr(report, "distribution"):
+                dist = report.distribution
+                if hasattr(dist, "roi_p50"):
+                    metrics["roi_p50"] = dist.roi_p50
+                if hasattr(dist, "roi_p80"):
+                    metrics["roi_p80"] = dist.roi_p80
+                if hasattr(dist, "roi_p90"):
+                    metrics["roi_p90"] = dist.roi_p90
+                if hasattr(dist, "roi_p20"):
+                    metrics["roi_p20"] = dist.roi_p20
+                if hasattr(dist, "roi_std"):
+                    metrics["roi_std"] = dist.roi_std
+                if hasattr(dist, "roi_mean"):
+                    metrics["roi_mean"] = dist.roi_mean
+                if hasattr(dist, "payback_p50"):
+                    metrics["payback_p50"] = dist.payback_p50
+
+            if metrics:
+                return metrics
+
+        # Fall back to HTML parsing
+        if not html:
+            return metrics
+
+        # Extract P50 ROI
+        p50_patterns = [
+            r'P50.*?ROI.*?(\d+(?:\.\d+)?)\s*%',
+            r'ROI.*?P50.*?(\d+(?:\.\d+)?)\s*%',
+            r'Median.*?ROI.*?(\d+(?:\.\d+)?)\s*%',
+            r'roi_p50.*?(\d+(?:\.\d+)?)',
+        ]
+        for pattern in p50_patterns:
+            match = re.search(pattern, html, re.IGNORECASE)
+            if match:
+                metrics["roi_p50"] = float(match.group(1))
+                break
+
+        # Extract P80 ROI
+        p80_patterns = [
+            r'P80.*?ROI.*?(\d+(?:\.\d+)?)\s*%',
+            r'ROI.*?P80.*?(\d+(?:\.\d+)?)\s*%',
+            r'roi_p80.*?(\d+(?:\.\d+)?)',
+        ]
+        for pattern in p80_patterns:
+            match = re.search(pattern, html, re.IGNORECASE)
+            if match:
+                metrics["roi_p80"] = float(match.group(1))
+                break
+
+        # Extract P20 ROI
+        p20_patterns = [
+            r'P20.*?ROI.*?(\d+(?:\.\d+)?)\s*%',
+            r'ROI.*?P20.*?(\d+(?:\.\d+)?)\s*%',
+            r'roi_p20.*?(\d+(?:\.\d+)?)',
+        ]
+        for pattern in p20_patterns:
+            match = re.search(pattern, html, re.IGNORECASE)
+            if match:
+                metrics["roi_p20"] = float(match.group(1))
+                break
+
+        # Extract Payback P50
+        payback_patterns = [
+            r'P50.*?Payback.*?(\d+(?:\.\d+)?)',
+            r'Payback.*?P50.*?(\d+(?:\.\d+)?)',
+            r'payback_p50.*?(\d+(?:\.\d+)?)',
+        ]
+        for pattern in payback_patterns:
+            match = re.search(pattern, html, re.IGNORECASE)
+            if match:
+                metrics["payback_p50"] = float(match.group(1))
+                break
+
+        # Extract std deviation
+        std_patterns = [
+            r'Std.*?(\d+(?:\.\d+)?)\s*%',
+            r'roi_std.*?(\d+(?:\.\d+)?)',
+            r'Standard.*?(\d+(?:\.\d+)?)',
+        ]
+        for pattern in std_patterns:
+            match = re.search(pattern, html, re.IGNORECASE)
+            if match:
+                metrics["roi_std"] = float(match.group(1))
+                break
+
+        return metrics
+
+    def _extract_scenario_rois_from_report(self, report: Any) -> Dict[str, float]:
+        """Extract scenario ROIs from G30 report object."""
+        rois: Dict[str, float] = {}
+
+        if not report:
+            return rois
+
+        scenarios = getattr(report, "scenarios", [])
+        for scenario in scenarios:
+            name = getattr(scenario, "name", "")
+            roi = getattr(scenario, "roi_12m", 0)
+            if name in ["optimistic", "realistic", "conservative"]:
+                rois[name] = roi
+
+        return rois
+
+    def _extract_scenario_paybacks(self, html: str) -> Dict[str, float]:
+        """Extract scenario payback periods from HTML."""
+        import re
+
+        paybacks: Dict[str, float] = {}
+
+        if not html:
+            return paybacks
+
+        scenario_names = ["optimistic", "realistic", "conservative"]
+
+        for scenario in scenario_names:
+            # Look for payback near scenario name
+            patterns = [
+                rf'{scenario}.*?payback.*?(\d+(?:\.\d+)?)',
+                rf'{scenario}.*?amortis.*?(\d+(?:\.\d+)?)',
+                rf'payback.*?{scenario}.*?(\d+(?:\.\d+)?)',
+            ]
+
+            for pattern in patterns:
+                match = re.search(pattern, html, re.IGNORECASE)
+                if match:
+                    paybacks[scenario] = float(match.group(1))
+                    break
+
+        return paybacks
+
+    def _extract_scenario_paybacks_from_report(self, report: Any) -> Dict[str, float]:
+        """Extract scenario paybacks from G30 report object."""
+        paybacks: Dict[str, float] = {}
+
+        if not report:
+            return paybacks
+
+        scenarios = getattr(report, "scenarios", [])
+        for scenario in scenarios:
+            name = getattr(scenario, "name", "")
+            payback = getattr(scenario, "payback_months", 0)
+            if name in ["optimistic", "realistic", "conservative"]:
+                paybacks[name] = payback
+
+        return paybacks
+
+    def _extract_risk_grade_from_sections(self) -> str:
+        """Extract risk grade from Risk Engine V3 section."""
+        risk_v3_html = self.sections.get("RISK_ENGINE_V3_HTML", "")
+        risk_report = self.sections.get("_risk_report_v3")
+
+        if risk_report:
+            if hasattr(risk_report, "residual_risk_grade"):
+                return risk_report.residual_risk_grade
+
+        if risk_v3_html:
+            # Look for grade indicators
+            import re
+            grade_patterns = [
+                r'Grade[:\s]*([A-F])',
+                r'Risk.*?Grade[:\s]*([A-F])',
+                r'residual.*?grade[:\s]*([A-F])',
+            ]
+            for pattern in grade_patterns:
+                match = re.search(pattern, risk_v3_html, re.IGNORECASE)
+                if match:
+                    return match.group(1).upper()
+
+        return "C"  # Default medium risk
+
+    # -------------------------------------------------------------------------
     # SCORING
     # -------------------------------------------------------------------------
 
     def _calculate_domain_scores(self) -> None:
         """Calculate scores per domain."""
-        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot", "risk_engine", "business_case", "recommendations", "risk_engine_v3", "vendor_audit", "automation_roadmap"]
+        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot", "risk_engine", "business_case", "recommendations", "risk_engine_v3", "vendor_audit", "automation_roadmap", "business_case_sim"]
 
         for domain in domains:
             domain_issues = [i for i in self.report.issues if i.domain == domain]

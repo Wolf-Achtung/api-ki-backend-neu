@@ -2611,6 +2611,24 @@
                     </div>
                 </section>
                 {% endif %}
+                <!-- G34: Business Case Simulation – Monte Carlo ROI & Payback Analysis -->
+                {% if BUSINESS_CASE_SIM_HTML %}
+                <section class="section chapter" id="business-case-simulation">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Monte-Carlo Simulation</span>
+                            <h2>Risiko- und Szenarioanalyse</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            P50/P80/P90 • Unsicherheitsmodell
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ BUSINESS_CASE_SIM_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
                 <!-- G32: Recommendations Engine – Priorisierte Handlungsempfehlungen -->
                 {% if RECOMMENDATIONS_ENGINE_HTML %}
                 <section class="section chapter" id="recommendations-engine">
