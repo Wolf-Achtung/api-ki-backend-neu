@@ -2,10 +2,11 @@
 """
 Report Renderer for PDF Generation.
 
-Version: 4.16.0 PDF-SLIMDOWN
+Version: 4.17.0 PDF-SLIMDOWN + N2-5 Leak-Check
 - HTML compression and minification
 - Unused section stripping
 - CSS optimization
+- SPRINT N2 (N2-5): Final leak phrase safety check before PDF render
 """
 from __future__ import annotations
 import os, logging, re
@@ -16,6 +17,7 @@ from markupsafe import Markup
 
 from utils.logo_embedder import embed_logos_in_html
 from services.html_minifier import optimize_html_for_pdf, strip_unused_sections
+from services.report_validator import GENERIC_LLM_LEAK_PHRASES, remove_leak_phrases_from_html
 
 log = logging.getLogger(__name__)
 
@@ -220,5 +222,38 @@ def render(briefing_obj: Any,
     if original_size > 0:
         savings_pct = (1 - new_size / original_size) * 100
         log.info(f"[RENDER] PDF-SLIMDOWN: {original_size}→{new_size} bytes ({savings_pct:.1f}% saved)")
+
+    # =========================================================================
+    # SPRINT N2 (N2-5): Final leak phrase safety check
+    # =========================================================================
+    # This is the LAST line of defense before PDF rendering.
+    # If any leak phrases survived until here, we remove them with a warning.
+    html_lower = html.lower()
+    found_leaks = []
+    for phrase in GENERIC_LLM_LEAK_PHRASES:
+        if phrase.lower() in html_lower:
+            found_leaks.append(phrase)
+
+    if found_leaks:
+        log.warning(
+            f"⚠️ [N2-5] LEAK-CHECK: Found {len(found_leaks)} leak phrases in final HTML! "
+            f"Phrases: {found_leaks[:3]}... Applying emergency cleanup for {run_id}"
+        )
+        # Apply emergency cleanup
+        html, removed_count = remove_leak_phrases_from_html(html)
+        log.info(f"[N2-5] Emergency cleanup removed {removed_count} leak phrases from final HTML")
+
+        # Assert that all leaks are now gone (soft-fail: log error but don't crash)
+        html_lower_after = html.lower()
+        remaining_leaks = [p for p in GENERIC_LLM_LEAK_PHRASES if p.lower() in html_lower_after]
+        if remaining_leaks:
+            log.error(
+                f"❌ [N2-5] CRITICAL: {len(remaining_leaks)} leak phrases STILL present after cleanup! "
+                f"Phrases: {remaining_leaks[:3]}... Report {run_id} may contain visible leaks."
+            )
+        else:
+            log.info(f"✅ [N2-5] All leak phrases successfully removed from final HTML for {run_id}")
+    else:
+        log.debug(f"[N2-5] Leak check passed - no leak phrases found in final HTML for {run_id}")
 
     return {"html": html, "meta": meta or {}}

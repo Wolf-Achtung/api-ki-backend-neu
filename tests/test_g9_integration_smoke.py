@@ -75,11 +75,13 @@ def test_g94_min_length_unification():
 
     # Central config
     assert get_min_words("solo", "executive_summary") == 150
-    assert get_min_words("kmu", "roadmap_12m") == 700
+    # SPRINT N2: roadmap_12m reduced from 700 to 650
+    assert get_min_words("kmu", "roadmap_12m") == 650
 
     # Prompt enhancer uses central config
     pe_min = get_platin_min_words("roadmap_12m", "kmu")
-    assert pe_min == 700
+    # SPRINT N2: roadmap_12m reduced from 700 to 650
+    assert pe_min == 650
 
     print("✅ G9.4: Min-Length Unification OK")
 

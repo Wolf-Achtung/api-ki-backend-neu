@@ -186,12 +186,13 @@ class TestG83CentralizedMinLengths:
         """Test min words retrieval for Solo size.
 
         SPRINT N1 UPDATE: roadmap_12m for Solo changed from 500 to 600.
+        SPRINT N2 UPDATE: roadmap_12m reduced to 550 for all sizes.
         """
         from services.config_validation import get_min_words
 
         assert get_min_words("Solo-Selbstständig", "executive_summary") == 150
-        # SPRINT N1: roadmap_12m increased from 500 to 600 for balanced target
-        assert get_min_words("solo", "roadmap_12m") == 600
+        # SPRINT N2: roadmap_12m reduced from 600 to 550
+        assert get_min_words("solo", "roadmap_12m") == 550
         assert get_min_words("Freiberufler", "quick_wins") == 60
 
     def test_get_min_words_team(self):
@@ -199,7 +200,8 @@ class TestG83CentralizedMinLengths:
         from services.config_validation import get_min_words
 
         assert get_min_words("Team (2-10 MA)", "executive_summary") == 180
-        assert get_min_words("team", "roadmap_12m") == 600
+        # SPRINT N2: roadmap_12m reduced from 600 to 550
+        assert get_min_words("team", "roadmap_12m") == 550
         assert get_min_words("klein", "quick_wins") == 90
 
     def test_get_min_words_kmu(self):
@@ -207,7 +209,8 @@ class TestG83CentralizedMinLengths:
         from services.config_validation import get_min_words
 
         assert get_min_words("KMU (11-50 MA)", "executive_summary") == 200
-        assert get_min_words("kmu", "roadmap_12m") == 700
+        # SPRINT N2: roadmap_12m reduced from 700 to 650
+        assert get_min_words("kmu", "roadmap_12m") == 650
         assert get_min_words("Mittelstand", "quick_wins") == 120
 
     def test_get_all_min_words_for_size(self):

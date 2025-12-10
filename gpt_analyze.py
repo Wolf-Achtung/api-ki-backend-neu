@@ -5554,15 +5554,22 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     from services.report_validator import (
         validate_report,
         filter_all_sections,
+        # SPRINT N2: Import healing functions
+        validate_and_heal,
+        heal_placeholder_sections,
 )
 
 
     log.info(f"[{run_id}] 🔍 Applying size-inappropriate content filter...")
     sections = filter_all_sections(sections, answers)
 
-    # === VALIDATION GATE - Wolf 2025-11-19 (moved after placeholder replacement) ===
-    log.info(f"[{run_id}] 🔍 Running report validation...")
-    is_valid = validate_report(sections, answers)
+    # === SPRINT N2: VALIDATE AND HEAL - Wolf 2025-12 ===
+    # New flow: validate_and_heal() replaces leaked content BEFORE rendering
+    log.info(f"[{run_id}] 🔍 Running report validation with N2 healing...")
+    is_valid, validation_errors, healed_count = validate_and_heal(sections, answers)
+
+    if healed_count > 0:
+        log.info(f"[{run_id}] 🔧 N2-Healing: Fixed {healed_count} sections")
 
     if not is_valid:
         log.warning(f"[{run_id}] ⚠️ Report has validation errors (see above) - continuing anyway")
@@ -5619,6 +5626,12 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     # Sprint N3.1: Apply content filter AGAIN to catch RESPONSIBLE_AI_HTML and other late additions
     log.info(f"[{run_id}] 🔍 Re-applying size-inappropriate content filter for late sections...")
     sections = filter_all_sections(sections, answers)
+
+    # === SPRINT N2: Final placeholder healing before hard stop ===
+    log.info(f"[{run_id}] 🔧 N2: Final placeholder healing pass...")
+    final_healed = heal_placeholder_sections(sections)
+    if final_healed > 0:
+        log.info(f"[{run_id}] 🔧 N2: Healed {final_healed} empty sections in final pass")
 
     # === HARD STOP GATE: Validate report BEFORE rendering ===
     # Derive persona from unternehmensgroesse
