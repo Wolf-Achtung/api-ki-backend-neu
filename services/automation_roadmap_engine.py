@@ -933,14 +933,15 @@ def _generate_default_processes(
                 blockers.append(f"vendor_dependency ({tool})")
 
         # Calculate scores
+        category_str = str(template["category"])
         impact = _determine_impact_score(
-            template["category"],
-            available_tools,
+            category_str,
+            list(available_tools),
             briefing,
         )
         feasibility = _determine_feasibility_score(
-            template["category"],
-            available_tools,
+            category_str,
+            list(available_tools),
             blockers,
             risk_level,
         )
@@ -960,18 +961,18 @@ def _generate_default_processes(
             phase = "phase_3"
 
         process = ProcessCandidate(
-            id=template["id"],
-            name=template["name"],
-            description=template["description"],
+            id=str(template["id"]),
+            name=str(template["name"]),
+            description=str(template["description"]),
             impact_score=impact,
             feasibility_score=feasibility,
             dependencies=[],
             blockers=blockers,
-            recommended_tools=available_tools,
-            recommended_funding=available_funding,
+            recommended_tools=list(available_tools),
+            recommended_funding=list(available_funding),
             risk_relation=risk_rel,
             phase_assignment=phase,
-            category=template["category"],
+            category=category_str,
         )
 
         processes.append(process)
