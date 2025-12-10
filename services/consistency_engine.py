@@ -523,6 +523,83 @@ class ConsistencyEngine:
                 suggestion="Erweitere Tool-Empfehlungen basierend auf Branche und Use Cases",
             ))
 
+        # G25: Additional Tools Engine v4 rules
+        self._check_tools_v4_consistency(ki_stack_html, tools_html)
+
+    def _check_tools_v4_consistency(self, ki_stack_html: str, tools_html: str) -> None:
+        """G25: Check Tools Engine v4 consistency rules."""
+        self.report.checked_rules += 3
+
+        size = self.briefing.get("unternehmensgroesse", "").lower()
+        size_label = "solo" if "solo" in size or "freiberuf" in size else (
+            "team" if "team" in size or "klein" in size else "kmu"
+        )
+
+        # Rule TOOLS_004: Cost Level must match recommended savings potential
+        # Check if high-cost tools (€€€) are recommended when savings are low
+        einsparung = self.briefing.get("EINSPARUNG_MONAT_EUR", 0)
+        try:
+            einsparung = float(einsparung) if einsparung else 0
+        except (ValueError, TypeError):
+            einsparung = 0
+
+        # Check for expensive tool badges in HTML
+        has_expensive_tools = "cost-level-4" in ki_stack_html or "cost-level-5" in ki_stack_html or "€€€" in ki_stack_html
+
+        if has_expensive_tools and einsparung < 500:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="TOOLS_004",
+                severity="WARNING",
+                domain="tools",
+                source_section="ki_stack_summary",
+                target_section="business_case",
+                message="Teure Tools empfohlen bei geringem Einsparpotenzial",
+                expected="Kostengünstige Tools bei geringer Ersparnis",
+                actual=f"Enterprise-Tools bei {einsparung:.0f}€/Monat Ersparnis",
+                suggestion="Wähle kostengünstigere Tool-Alternativen für das Budget",
+            ))
+
+        # Rule TOOLS_005: Compliance Score must align with Risk Assessment
+        risk_level = self.sections.get("AI_ACT_RISK_LEVEL", "").lower()
+        has_compliance_risk = "compliance-4" in ki_stack_html or "compliance-5" in ki_stack_html or "compliance-risk" in ki_stack_html
+
+        if risk_level == "high-risk" and has_compliance_risk:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="TOOLS_005",
+                severity="ERROR",
+                domain="tools",
+                source_section="ki_stack_summary",
+                target_section="ai_act",
+                message="Tools mit Compliance-Risiko bei High-Risk AI Act Klassifikation",
+                expected="EU-konforme Tools für High-Risk Anwendungen",
+                actual="Tools mit Compliance-Warnung in High-Risk Kontext",
+                suggestion="Ersetze riskante Tools durch EU-konforme Alternativen",
+            ))
+
+        # Rule TOOLS_006: Fit Level must match size recommendation
+        # Check if tools for wrong size are recommended
+        wrong_fit_indicators = []
+
+        if size_label == "solo":
+            # Solo should not have enterprise/complex tools
+            if "complexity-4" in ki_stack_html or "complexity-5" in ki_stack_html:
+                wrong_fit_indicators.append("komplexe Enterprise-Tools")
+            if "cost-level-5" in ki_stack_html:
+                wrong_fit_indicators.append("Enterprise-Preisklasse")
+
+        if wrong_fit_indicators:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="TOOLS_006",
+                severity="WARNING",
+                domain="tools",
+                source_section="ki_stack_summary",
+                target_section="roadmap",
+                message=f"Tool-Empfehlungen passen nicht zur Unternehmensgröße ({size_label})",
+                expected=f"Tools mit hohem Fit für {size_label}",
+                actual=f"Gefunden: {', '.join(wrong_fit_indicators)}",
+                suggestion=f"Wähle Tools mit besserer Eignung für {size_label}-Unternehmen",
+            ))
+
     # -------------------------------------------------------------------------
     # DOMAIN 2: Funding Consistency
     # -------------------------------------------------------------------------
