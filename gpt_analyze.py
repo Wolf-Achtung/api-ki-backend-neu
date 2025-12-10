@@ -5295,6 +5295,90 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         log.warning("[%s] ⚠️ G32 Recommendations Engine failed: %s", run_id, e)
         sections.setdefault("RECOMMENDATIONS_ENGINE_HTML", "")
 
+    # =========================================================================
+    # SPRINT G34: Business Case Simulation – Monte Carlo ROI & Payback Analysis
+    # =========================================================================
+    try:
+        from services.business_case_simulation import (
+            generate_business_case_simulation,
+            business_case_simulation_to_html,
+        )
+
+        bc_simulation = generate_business_case_simulation(
+            context=None,
+            business_case=sections.get("_bc_report"),
+            risk_report_v3=sections.get("_risk_report_v3"),
+            auto_report=sections.get("_automation_roadmap_report"),
+            briefing=answers,
+            llm_response=None,
+        )
+
+        sections["BUSINESS_CASE_SIM_HTML"] = business_case_simulation_to_html(bc_simulation, lang=report_lang)
+        sections["_business_case_simulation_report"] = bc_simulation
+
+        # Extract key values for template usage
+        if bc_simulation.distribution:
+            sections["ROI_P50"] = bc_simulation.distribution.roi_p50
+            sections["ROI_P80"] = bc_simulation.distribution.roi_p80
+            sections["ROI_P90"] = bc_simulation.distribution.roi_p90
+            sections["PAYBACK_P50"] = bc_simulation.distribution.payback_p50
+
+        log.info("[%s] ✅ G34 Business Case Simulation generated: P50 ROI=%.1f%%, P80 ROI=%.1f%%",
+                 run_id,
+                 bc_simulation.distribution.roi_p50 if bc_simulation.distribution else 0,
+                 bc_simulation.distribution.roi_p80 if bc_simulation.distribution else 0)
+    except ImportError:
+        log.debug("[%s] G34 business_case_simulation not available", run_id)
+        sections.setdefault("BUSINESS_CASE_SIM_HTML", "")
+    except Exception as e:
+        log.warning("[%s] ⚠️ G34 Business Case Simulation failed: %s", run_id, e)
+        sections.setdefault("BUSINESS_CASE_SIM_HTML", "")
+
+    # =========================================================================
+    # SPRINT G37: Benchmark Engine – Branchenvergleich & Wettbewerbsposition
+    # =========================================================================
+    try:
+        from services.benchmark_engine import (
+            generate_benchmark_report,
+            benchmark_report_to_html,
+        )
+
+        benchmark_report = generate_benchmark_report(
+            context=None,
+            sections=sections,
+            kpi_data=sections.get("_business_case_simulation_report"),
+            tools_data=sections.get("_tools_data"),
+            funding_data=sections.get("_funding_data"),
+            risk_report_v3=sections.get("_risk_report_v3"),
+            auto_report=sections.get("_automation_roadmap_report"),
+            strategy_plan=sections.get("_strategy_plan"),
+            business_case=sections.get("_bc_report"),
+            briefing=answers,
+            llm_response=None,
+            lang=report_lang,
+        )
+
+        sections["BENCHMARK_ENGINE_HTML"] = benchmark_report_to_html(benchmark_report, lang=report_lang)
+        sections["_benchmark_report"] = benchmark_report
+
+        # Extract key values for template usage
+        sections["BENCHMARK_MATURITY_SCORE"] = benchmark_report.maturity_score
+        sections["BENCHMARK_GRADE"] = benchmark_report.competitiveness_grade
+        sections["BENCHMARK_ABOVE_MEDIAN"] = benchmark_report.above_median_count
+
+        log.info("[%s] ✅ G37 Benchmark Engine generated: maturity=%.0f%%, grade=%s, above_median=%d/%d",
+                 run_id,
+                 benchmark_report.maturity_score,
+                 benchmark_report.competitiveness_grade,
+                 benchmark_report.above_median_count,
+                 len(benchmark_report.positions))
+    except ImportError:
+        log.debug("[%s] G37 benchmark_engine not available", run_id)
+        sections.setdefault("BENCHMARK_ENGINE_HTML", "")
+    except Exception as e:
+        log.warning("[%s] ⚠️ G37 Benchmark Engine failed: %s", run_id, e)
+        sections.setdefault("BENCHMARK_ENGINE_HTML", "")
+
     log.info("[%s] 🎨 Rendering final HTML...", run_id)
     # --- Sanitize dynamic sections to prevent HTML leaks (z. B. eingebettetes <html> im Pilot-Plan) ---
     try:

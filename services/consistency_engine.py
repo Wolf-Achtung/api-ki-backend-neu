@@ -455,6 +455,7 @@ class ConsistencyEngine:
         self._check_vendor_audit_consistency()  # G35
         self._check_automation_roadmap_consistency()  # G36
         self._check_business_case_simulation_consistency()  # G34
+        self._check_benchmark_consistency()  # G37
 
         # Calculate domain scores
         self._calculate_domain_scores()
@@ -3803,12 +3804,297 @@ class ConsistencyEngine:
         return "C"  # Default medium risk
 
     # -------------------------------------------------------------------------
+    # DOMAIN 15: Benchmark Engine Consistency (G37)
+    # -------------------------------------------------------------------------
+
+    def _check_benchmark_consistency(self) -> None:
+        """
+        G37: Check Benchmark Engine consistency with other engines.
+
+        Rules BENCH_001-BENCH_008:
+        - BENCH_001: score_percentile must be 0-100
+        - BENCH_002: company_value cannot be > 10x industry_median (outlier protection)
+        - BENCH_003: If RiskScore high, risk_percentile cannot be in top quartile
+        - BENCH_004: Radar scores must match calculation (normalization check)
+        - BENCH_005: Strengths must not contradict RiskReport
+        - BENCH_006: Weaknesses cannot be "none" - always improvement potential
+        - BENCH_007: Opportunities must align with Funding Engine
+        - BENCH_008: Summary must correctly reflect BenchmarkPositions
+        """
+        self.report.checked_rules += 8
+
+        # Get benchmark HTML and report data
+        bench_html = self.sections.get("BENCHMARK_ENGINE_HTML", "")
+        bench_report = self.sections.get("_benchmark_report")
+
+        if not bench_html and not bench_report:
+            log.debug("[G37] Benchmark consistency: Skipping (no benchmark data)")
+            return
+
+        # Extract benchmark metrics
+        positions = self._extract_benchmark_positions(bench_html, bench_report)
+        radar_scores = self._extract_benchmark_radar(bench_html, bench_report)
+        swot = self._extract_benchmark_swot(bench_html, bench_report)
+
+        # Rule BENCH_001: score_percentile must be 0-100
+        for pos in positions:
+            percentile = pos.get("score_percentile", 0)
+            if percentile < 0 or percentile > 100:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="BENCH_001",
+                    severity="ERROR",
+                    domain="benchmark",
+                    source_section="benchmark_engine",
+                    target_section="benchmark_engine",
+                    message=f"score_percentile ausserhalb des gueltigen Bereichs fuer {pos.get('domain', 'unknown')}",
+                    expected="score_percentile zwischen 0 und 100",
+                    actual=f"score_percentile: {percentile}",
+                    suggestion="Korrigiere die Perzentil-Berechnung",
+                ))
+
+        # Rule BENCH_002: company_value cannot be > 10x industry_median
+        for pos in positions:
+            company_val = pos.get("company_value", 0)
+            median = pos.get("industry_median", 1)
+            if median > 0 and company_val > median * 10:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="BENCH_002",
+                    severity="ERROR",
+                    domain="benchmark",
+                    source_section="benchmark_engine",
+                    target_section="benchmark_engine",
+                    message=f"company_value ist ein extremer Outlier fuer {pos.get('domain', 'unknown')}",
+                    expected=f"company_value <= 10x industry_median ({median * 10:.2f})",
+                    actual=f"company_value: {company_val:.2f}",
+                    suggestion="Pruefe die Eingabedaten auf Fehler",
+                ))
+
+        # Rule BENCH_003: If RiskScore high, risk_percentile cannot be in top quartile
+        risk_score = self._extract_risk_score_for_benchmark()
+        risk_position = next((p for p in positions if p.get("domain") == "risk"), None)
+        if risk_position and risk_score > 70:  # High risk
+            risk_percentile = risk_position.get("score_percentile", 50)
+            if risk_percentile >= 75:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="BENCH_003",
+                    severity="WARNING",
+                    domain="benchmark",
+                    source_section="benchmark_engine",
+                    target_section="risk_engine_v3",
+                    message="Risiko-Perzentil im Top-Quartil trotz hohem Risiko-Score",
+                    expected=f"Bei Risk Score {risk_score:.0f}% sollte Perzentil < 75 sein",
+                    actual=f"risk_percentile: {risk_percentile:.0f}%",
+                    suggestion="Pruefe Konsistenz zwischen Benchmark und Risk Engine",
+                ))
+
+        # Rule BENCH_004: Radar scores must match positions (normalization check)
+        if radar_scores and positions:
+            for i, pos in enumerate(positions):
+                if i < len(radar_scores):
+                    expected_radar = pos.get("score_percentile", 0) / 100
+                    actual_radar = radar_scores[i]
+                    if abs(expected_radar - actual_radar) > 0.1:
+                        self.report.add_issue(ConsistencyIssue(
+                            rule_id="BENCH_004",
+                            severity="WARNING",
+                            domain="benchmark",
+                            source_section="benchmark_engine",
+                            target_section="benchmark_engine",
+                            message=f"Radar-Score stimmt nicht mit Position fuer {pos.get('domain', 'unknown')} ueberein",
+                            expected=f"Radar score nahe {expected_radar:.2f}",
+                            actual=f"Radar score: {actual_radar:.2f}",
+                            suggestion="Synchronisiere Radar mit Positions-Daten",
+                        ))
+
+        # Rule BENCH_005: Strengths must not contradict RiskReport
+        strengths = swot.get("strengths", [])
+        risk_grade = self._extract_risk_grade_from_sections()
+        if risk_grade in ["D", "F"]:
+            risk_strength_keywords = ["risiko", "risk", "sicher", "secure", "compliance"]
+            for strength in strengths:
+                if any(kw in strength.lower() for kw in risk_strength_keywords):
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="BENCH_005",
+                        severity="WARNING",
+                        domain="benchmark",
+                        source_section="benchmark_engine",
+                        target_section="risk_engine_v3",
+                        message="Staerke 'Risikomanagement' widerspricht hohem Risiko-Grade",
+                        expected=f"Bei Risk Grade {risk_grade} keine Risiko-Staerke",
+                        actual=f"Staerke: {strength}",
+                        suggestion="Entferne widerspruchliche Staerken oder korrigiere Risk Assessment",
+                    ))
+
+        # Rule BENCH_006: Weaknesses cannot be empty or "none"
+        weaknesses = swot.get("weaknesses", [])
+        if not weaknesses or all(w.lower() in ["none", "keine", "-", ""] for w in weaknesses):
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="BENCH_006",
+                severity="WARNING",
+                domain="benchmark",
+                source_section="benchmark_engine",
+                target_section="benchmark_engine",
+                message="Keine Schwaechen identifiziert - unrealistisch",
+                expected="Mindestens 1 konkrete Schwaeche",
+                actual=f"Schwaechen: {weaknesses}",
+                suggestion="Identifiziere Verbesserungspotenziale auch bei guter Performance",
+            ))
+
+        # Rule BENCH_007: Opportunities must align with Funding Engine
+        opportunities = swot.get("opportunities", [])
+        funding_html = self.sections.get("FUNDING_ENGINE_V2_HTML", "") or self.sections.get("FOERDERPROGRAMME_HTML", "")
+        funding_keywords = ["foerder", "funding", "programm", "zuschuss", "grant"]
+        funding_opportunities = [o for o in opportunities if any(kw in o.lower() for kw in funding_keywords)]
+        if funding_opportunities and not funding_html:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="BENCH_007",
+                severity="INFO",
+                domain="benchmark",
+                source_section="benchmark_engine",
+                target_section="funding_engine",
+                message="Foerder-Chancen genannt aber keine Funding Engine Daten",
+                expected="Funding-Opportunities sollten von Funding Engine gestuetzt werden",
+                actual=f"Opportunities: {funding_opportunities[:2]}",
+                suggestion="Aktiviere Funding Engine fuer konsistente Empfehlungen",
+            ))
+
+        # Rule BENCH_008: Summary must reflect positions
+        summary = self._extract_benchmark_summary(bench_html, bench_report)
+        if summary:
+            above_median_count = sum(1 for p in positions if p.get("score_percentile", 0) >= 50)
+            total_positions = len(positions)
+
+            # Check if summary mentions being above/below median correctly
+            above_keywords = ["ueber", "above", "besser", "better", "fuehrend", "leading"]
+            below_keywords = ["unter", "below", "schlechter", "worse", "nachholbedarf"]
+
+            summary_positive = any(kw in summary.lower() for kw in above_keywords)
+            summary_negative = any(kw in summary.lower() for kw in below_keywords)
+
+            majority_above = above_median_count > total_positions / 2
+
+            if majority_above and summary_negative and not summary_positive:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="BENCH_008",
+                    severity="WARNING",
+                    domain="benchmark",
+                    source_section="benchmark_engine",
+                    target_section="benchmark_engine",
+                    message="Summary ist negativ aber Mehrheit der Positionen ueber Median",
+                    expected=f"{above_median_count}/{total_positions} Positionen ueber Median - positive Summary",
+                    actual="Summary betont Schwaechen",
+                    suggestion="Passe Summary an die tatsaechliche Benchmark-Performance an",
+                ))
+            elif not majority_above and summary_positive and not summary_negative:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="BENCH_008",
+                    severity="WARNING",
+                    domain="benchmark",
+                    source_section="benchmark_engine",
+                    target_section="benchmark_engine",
+                    message="Summary ist positiv aber Mehrheit der Positionen unter Median",
+                    expected=f"{above_median_count}/{total_positions} Positionen ueber Median - ausgewogene Summary",
+                    actual="Summary betont nur Staerken",
+                    suggestion="Erwaehne auch Verbesserungspotenziale in der Summary",
+                ))
+
+    def _extract_benchmark_positions(self, html: str, report: Any) -> List[Dict[str, Any]]:
+        """Extract benchmark positions from HTML or report."""
+        positions: List[Dict[str, Any]] = []
+
+        if report:
+            if hasattr(report, "positions"):
+                for pos in report.positions:
+                    positions.append({
+                        "domain": getattr(pos, "domain", ""),
+                        "company_value": getattr(pos, "company_value", 0),
+                        "industry_median": getattr(pos, "industry_median", 1),
+                        "industry_top_quartile": getattr(pos, "industry_top_quartile", 1),
+                        "score_percentile": getattr(pos, "score_percentile", 50),
+                    })
+                return positions
+            if isinstance(report, dict) and "positions" in report:
+                return list(report["positions"])
+
+        if html:
+            # Try to extract from HTML table
+            percentile_pattern = r'P(\d+(?:\.\d+)?)'
+            for match in re.finditer(percentile_pattern, html):
+                try:
+                    percentile = float(match.group(1))
+                    positions.append({"score_percentile": percentile, "domain": "unknown"})
+                except ValueError:
+                    pass
+
+        return positions
+
+    def _extract_benchmark_radar(self, html: str, report: Any) -> List[float]:
+        """Extract radar scores from HTML or report."""
+        if report:
+            if hasattr(report, "radar") and hasattr(report.radar, "scores"):
+                return list(report.radar.scores)
+            if isinstance(report, dict) and "radar" in report:
+                return list(report["radar"].get("scores", []))
+
+        return []
+
+    def _extract_benchmark_swot(self, html: str, report: Any) -> Dict[str, List[str]]:
+        """Extract SWOT elements from HTML or report."""
+        swot: Dict[str, List[str]] = {
+            "strengths": [],
+            "weaknesses": [],
+            "opportunities": [],
+            "threats": [],
+        }
+
+        if report:
+            if hasattr(report, "strengths"):
+                swot["strengths"] = list(report.strengths)
+            if hasattr(report, "weaknesses"):
+                swot["weaknesses"] = list(report.weaknesses)
+            if hasattr(report, "opportunities"):
+                swot["opportunities"] = list(report.opportunities)
+            if hasattr(report, "threats"):
+                swot["threats"] = list(report.threats)
+            return swot
+
+        if isinstance(report, dict):
+            swot["strengths"] = report.get("strengths", [])
+            swot["weaknesses"] = report.get("weaknesses", [])
+            swot["opportunities"] = report.get("opportunities", [])
+            swot["threats"] = report.get("threats", [])
+
+        return swot
+
+    def _extract_benchmark_summary(self, html: str, report: Any) -> str:
+        """Extract summary from HTML or report."""
+        if report:
+            if hasattr(report, "summary"):
+                return str(report.summary)
+            if isinstance(report, dict) and "summary" in report:
+                return str(report["summary"])
+
+        return ""
+
+    def _extract_risk_score_for_benchmark(self) -> float:
+        """Extract risk score for benchmark validation."""
+        risk_report = self.sections.get("_risk_report_v3")
+        if risk_report and hasattr(risk_report, "residual_risk_score"):
+            return float(risk_report.residual_risk_score)
+
+        risk_score_str = self.sections.get("RESIDUAL_RISK_SCORE", "50")
+        try:
+            return float(str(risk_score_str).replace(",", "."))
+        except ValueError:
+            return 50.0
+
+    # -------------------------------------------------------------------------
     # SCORING
     # -------------------------------------------------------------------------
 
     def _calculate_domain_scores(self) -> None:
         """Calculate scores per domain."""
-        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot", "risk_engine", "business_case", "recommendations", "risk_engine_v3", "vendor_audit", "automation_roadmap", "business_case_sim"]
+        domains = ["tools", "funding", "kpi", "risk", "roadmap", "narrative", "snapshot", "risk_engine", "business_case", "recommendations", "risk_engine_v3", "vendor_audit", "automation_roadmap", "business_case_sim", "benchmark"]
 
         for domain in domains:
             domain_issues = [i for i in self.report.issues if i.domain == domain]
