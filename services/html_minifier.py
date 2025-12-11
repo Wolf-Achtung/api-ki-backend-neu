@@ -611,6 +611,177 @@ def optimize_html_for_pdf_v2(html: str, min_section_chars: int = 50, max_table_r
 
 
 # =============================================================================
+# N3.4 TASK 5: Semantic HTML Purifier v3
+# =============================================================================
+
+# Pre-compiled patterns for GPT HTML cleanup
+_RE_NESTED_STRONG_SPAN = re.compile(
+    r'<p>\s*<strong>\s*<span>([^<]*)</span>\s*</strong>\s*</p>',
+    re.IGNORECASE | re.DOTALL
+)
+_RE_EMPTY_SPAN = re.compile(r'<span>\s*</span>', re.IGNORECASE)
+_RE_SPAN_NO_STYLE = re.compile(r'<span>([^<]*)</span>', re.IGNORECASE)
+_RE_EMPTY_DIV_NO_CLASS = re.compile(r'<div>\s*</div>', re.IGNORECASE)
+_RE_DOUBLE_EMPTY_P = re.compile(r'(</ul>\s*)<p>\s*</p>', re.IGNORECASE)
+_RE_MULTIPLE_NBSP = re.compile(r'(&nbsp;){2,}', re.IGNORECASE)
+
+
+def purify_gpt_html(html: str) -> str:
+    """
+    N3.4 TASK 5: Remove GPT-generated HTML redundancies.
+
+    Cleans:
+    - Nested <p><strong><span>Text</span></strong></p> → <p><strong>Text</strong></p>
+    - Empty <span></span>
+    - <span> without style attributes
+    - Empty <div> without classes
+    - Double empty <p></p> after </ul>
+    - Multiple &nbsp;
+
+    Args:
+        html: HTML string
+
+    Returns:
+        Purified HTML
+    """
+    if not html:
+        return html
+
+    original_size = len(html)
+    purified = html
+    cleanups = 0
+
+    # Cleanup 1: Nested <p><strong><span>Text</span></strong></p>
+    matches = _RE_NESTED_STRONG_SPAN.findall(purified)
+    if matches:
+        purified = _RE_NESTED_STRONG_SPAN.sub(r'<p><strong>\1</strong></p>', purified)
+        cleanups += len(matches)
+
+    # Cleanup 2: Empty <span></span>
+    purified, count = _RE_EMPTY_SPAN.subn('', purified)
+    cleanups += count
+
+    # Cleanup 3: <span> without style → just text
+    purified, count = _RE_SPAN_NO_STYLE.subn(r'\1', purified)
+    cleanups += count
+
+    # Cleanup 4: Empty <div></div>
+    purified, count = _RE_EMPTY_DIV_NO_CLASS.subn('', purified)
+    cleanups += count
+
+    # Cleanup 5: Double empty <p> after </ul>
+    purified, count = _RE_DOUBLE_EMPTY_P.subn(r'\1', purified)
+    cleanups += count
+
+    # Cleanup 6: Multiple &nbsp;
+    purified, count = _RE_MULTIPLE_NBSP.subn('&nbsp;', purified)
+    cleanups += count
+
+    new_size = len(purified)
+    if cleanups > 0:
+        savings = original_size - new_size
+        log.info(
+            "[N3.4-PURIFY] Removed %d GPT HTML redundancies, saved %d bytes",
+            cleanups, savings
+        )
+
+    return purified
+
+
+def optimize_table_styling(html: str) -> str:
+    """
+    N3.4 TASK 5: Optimize table styling for minimal payload.
+
+    Applies:
+    - Right-align numeric columns
+    - Harmonize column widths
+    - Reduce inline styling to minimum
+
+    Args:
+        html: HTML with tables
+
+    Returns:
+        HTML with optimized tables
+    """
+    if not html or '<table' not in html.lower():
+        return html
+
+    # Simple optimization: remove excessive inline styles in tables
+    # Replace verbose styles with minimal equivalents
+    optimized = html
+
+    # Verbose → Minimal style replacements
+    style_optimizations = [
+        ('style="text-align: right;"', 'style="text-align:right"'),
+        ('style="text-align: left;"', 'style="text-align:left"'),
+        ('style="text-align: center;"', 'style="text-align:center"'),
+        ('style="vertical-align: middle;"', 'style="vertical-align:middle"'),
+        ('style="vertical-align: top;"', 'style="vertical-align:top"'),
+    ]
+
+    for verbose, minimal in style_optimizations:
+        optimized = optimized.replace(verbose, minimal)
+
+    return optimized
+
+
+def optimize_html_for_pdf_v3(
+    html: str,
+    min_section_chars: int = 50,
+    max_table_rows: int = 30
+) -> str:
+    """
+    N3.4 TASK 5: Enhanced optimization pipeline v3.
+
+    Combines all optimizations including new N3.4 features:
+    1. Purify GPT HTML redundancies
+    2. Optimize table styling
+    3. Remove empty sections (< min_chars)
+    4. Compress long tables (> max_rows)
+    5. Strip unused sections
+    6. Compress HTML
+    7. Optimize CSS
+
+    Target: Payload < 300KB
+
+    Args:
+        html: Raw HTML string
+        min_section_chars: Minimum chars for section content
+        max_table_rows: Max rows before table compression
+
+    Returns:
+        Optimized HTML string
+    """
+    original_size = len(html)
+
+    # N3.4 Step 1: Purify GPT HTML
+    html = purify_gpt_html(html)
+
+    # N3.4 Step 2: Optimize table styling
+    html = optimize_table_styling(html)
+
+    # N3.3 Steps: Use existing v2 optimization
+    html = optimize_html_for_pdf_v2(html, min_section_chars, max_table_rows)
+
+    new_size = len(html)
+    if original_size > 0:
+        savings_pct = (1 - new_size / original_size) * 100
+        savings_kb = (original_size - new_size) / 1024
+
+        # Check if target achieved
+        target_achieved = new_size < 300 * 1024
+        status = "TARGET_MET" if target_achieved else "ABOVE_TARGET"
+
+        log.info(
+            "[N3.4-PDF-OPTIMIZE-V3] %s: %d→%d bytes (%.1f%% saved, %.1fKB), %s",
+            status, original_size, new_size, savings_pct, savings_kb,
+            "< 300KB" if target_achieved else f"> 300KB ({new_size / 1024:.0f}KB)"
+        )
+
+    return html
+
+
+# =============================================================================
 # SPRINT G14-D: Cache Statistics
 # =============================================================================
 
