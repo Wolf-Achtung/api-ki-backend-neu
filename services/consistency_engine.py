@@ -1716,9 +1716,9 @@ class ConsistencyEngine:
 
         # Also check legacy flags for backwards compatibility
         if not bc_healed:
-            bc_healed = self.sections.get("_bc_healed", False)
+            bc_healed = bool(self.sections.get("_bc_healed", False))
             if not bc_healed:
-                bc_healed = self.sections.get("_bc_consistency_normalized", False)
+                bc_healed = bool(self.sections.get("_bc_consistency_normalized", False))
 
         # N3.6: G22_SKIP_001 - If BC healed, skip BC_001 entirely
         if bc_healed:
@@ -2157,7 +2157,7 @@ class ConsistencyEngine:
 
         # Also check legacy flag for backwards compatibility
         if not reco_healed:
-            reco_healed = self.sections.get("_reco_healed", False)
+            reco_healed = bool(self.sections.get("_reco_healed", False))
 
         # N3.6: G22_SKIP_002 - If RECO healed, skip RECO_002 entirely
         if reco_healed:
