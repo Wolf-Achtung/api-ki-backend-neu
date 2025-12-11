@@ -1,8 +1,16 @@
-PLATIN++ v5.3
-Architecture Freeze
-2025-12-04
+PLATIN++ v4.20 (Release N3)
+Quality & Reliability Upgrade
+2025-12-10
 
-Changes from v5.0:
+Sprint N3 Changes:
+- N3-01: Research Reliability Layer (Perplexity 2-stage retry, Short Query Mode)
+- N3-02: Auto-Extend Short Sections (size-aware content extension)
+- N3-03: G22 Consistency v3 (Smart Raise Floor, healing bonus +10 points)
+- N3-04: Leak-Buster v2 (95+ leak phrases, DE + EN)
+- N3-05: Tone & Clarity Normalizer (foreign fragment removal, terminology fixes)
+- N3-06: Benchmark Quality Boost (governance weight for finance, Perplexity compensation)
+
+Previous (v5.3):
 - Consolidated error handling (ReportErrorGate)
 - Enhanced manifest schema with tokens, redundancy_rules, persona_rules
 - Improved caching (LRU, deduplication)
