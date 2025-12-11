@@ -71,11 +71,13 @@ MAX_RECOVERY_ATTEMPTS = 1
 # Size-aware min-words thresholds for auto-extension
 # Format: {section: {size: min_words}}
 # SPRINT N3.1: Reduced Solo thresholds to avoid unnecessary fallbacks
+# SPRINT N3.2 (TASK 4): Further reduced thresholds to minimize fallbacks
 EXTEND_MIN_WORDS: Dict[str, Dict[str, int]] = {
     "roadmap_90d": {"solo": 110, "team": 170, "kmu": 190},  # N3.1: solo 130→110
-    "roadmap_12m": {"solo": 550, "team": 700, "kmu": 750},  # N3.1: solo 650→550, team 750→700
+    "roadmap_12m": {"solo": 500, "team": 700, "kmu": 750},  # N3.2: solo 550→500
     "strategie_governance": {"solo": 100, "team": 140, "kmu": 160},  # N3.1: solo 110→100
-    "recommendations": {"solo": 500, "team": 800, "kmu": 900},  # N3.1: solo 700→500, team 900→800
+    "recommendations": {"solo": 450, "team": 800, "kmu": 900},  # N3.2: solo 500→450
+    "risks": {"solo": 700, "team": 850, "kmu": 950},  # N3.2: new entry for risk sections
     "wettbewerb_benchmark": {"solo": 10, "team": 10, "kmu": 10},  # Hard floor
     "gamechanger": {"solo": 600, "team": 750, "kmu": 850},  # N3.1: reduced all tiers
 }
@@ -146,6 +148,21 @@ EXTENSION_PARAGRAPHS: Dict[str, Dict[str, str]] = {
 <li>Bauen Sie interne KI-Expertise systematisch auf</li>
 <li>Evaluieren Sie strategische Partnerschaften mit KI-Dienstleistern</li>
 </ul>
+""",
+    },
+    # N3.2 (TASK 4): New risks section extension paragraphs
+    "risks": {
+        "solo": """
+<p><strong>Risikomanagement für Einzelunternehmer:</strong></p>
+<p>Als Einzelunternehmer ist ein pragmatisches Risikomanagement entscheidend. Fokussieren Sie auf die Top-3 Risiken mit der höchsten Eintrittswahrscheinlichkeit und dem größten potenziellen Schaden. Etablieren Sie einfache Backup-Strategien für kritische Daten und dokumentieren Sie Ihre KI-Nutzung für Compliance-Nachweise. Regelmäßige Überprüfung Ihrer Risikosituation (quartalsweise) hilft, frühzeitig gegenzusteuern.</p>
+""",
+        "team": """
+<p><strong>Risikomanagement für Teams:</strong></p>
+<p>Für Ihr Team empfiehlt sich ein strukturiertes Risikomanagement: Benennen Sie einen Verantwortlichen für die Überwachung von KI-Risiken und führen Sie regelmäßige Risk-Reviews durch. Dokumentieren Sie Entscheidungsprozesse bei der Tool-Auswahl und erstellen Sie Notfallpläne für kritische Systeme. Schulen Sie Ihr Team zu Themen wie Datenschutz und sicherer KI-Nutzung.</p>
+""",
+        "kmu": """
+<p><strong>Enterprise-Risikomanagement:</strong></p>
+<p>Für Ihr Unternehmen empfiehlt sich ein systematisches KI-Risikomanagement: Integrieren Sie KI-Risiken in Ihr bestehendes Risikomanagement-Framework und definieren Sie klare Eskalationswege. Führen Sie regelmäßige Audits durch und dokumentieren Sie alle KI-Systeme gemäß AI Act Anforderungen. Etablieren Sie ein Governance-Board für KI-Entscheidungen und investieren Sie in Compliance-Monitoring.</p>
 """,
     },
     "wettbewerb_benchmark": {
