@@ -2,16 +2,17 @@
 """
 Report Renderer for PDF Generation.
 
-Version: 4.17.0 PDF-SLIMDOWN + N2-5 Leak-Check
+Version: 4.18.0 PDF-SLIMDOWN + N2.5 Final Leak Check Fix
 - HTML compression and minification
 - Unused section stripping
 - CSS optimization
 - SPRINT N2 (N2-5): Final leak phrase safety check before PDF render
+- SPRINT N2.5: Defensive leak cleanup - never blocks PDF dispatch
 """
 from __future__ import annotations
 import os, logging, re
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from jinja2 import Environment, FileSystemLoader, select_autoescape, Undefined
 from markupsafe import Markup
 
@@ -27,6 +28,148 @@ _LEAK_PATTERN = re.compile(
     '|'.join(re.escape(p) for p in GENERIC_LLM_LEAK_PHRASES),
     re.IGNORECASE
 )
+
+
+# =============================================================================
+# SPRINT N2.5: Defensive Final Leak Cleanup
+# =============================================================================
+def detect_leak_phrases(html: str) -> List[str]:
+    """
+    Detect leak phrases in HTML content.
+
+    N2.5: Defensive implementation - never crashes, always returns list.
+
+    Args:
+        html: HTML content to check
+
+    Returns:
+        List of found leak phrases (empty if none or on error)
+    """
+    if not html or not isinstance(html, str):
+        return []
+
+    try:
+        # Use pre-compiled regex for O(n) detection
+        found = _LEAK_PATTERN.findall(html)
+        # Return unique phrases (case-insensitive dedup)
+        return list({p.lower(): p for p in found}.values()) if found else []
+    except Exception as e:
+        log.error(f"[N2.5] detect_leak_phrases failed: {e}", exc_info=True)
+        return []
+
+
+def apply_leak_replacements(html: str, leaks: List[str]) -> Tuple[str, int]:
+    """
+    Remove sentences containing leak phrases from HTML.
+
+    N2.5: Defensive implementation - never crashes, always returns valid HTML.
+
+    Args:
+        html: HTML content to clean
+        leaks: List of leak phrases to remove
+
+    Returns:
+        Tuple of (cleaned_html, count_removed)
+    """
+    if not html or not isinstance(html, str):
+        return html or "", 0
+
+    if not leaks:
+        return html, 0
+
+    cleaned = html
+    removed_count = 0
+
+    try:
+        for phrase in leaks:
+            if not phrase:
+                continue
+            # Remove sentences containing this phrase
+            # Use simple pattern to avoid catastrophic backtracking
+            pattern = rf'[^.!?]*{re.escape(phrase)}[^.!?]*[.!?]?\s*'
+            try:
+                matches = len(re.findall(pattern, cleaned, re.IGNORECASE))
+                if matches > 0:
+                    cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE)
+                    removed_count += matches
+            except re.error as regex_err:
+                log.warning(f"[N2.5] Regex error for phrase '{phrase}': {regex_err}")
+                # Fall back to simple string replacement
+                if phrase.lower() in cleaned.lower():
+                    cleaned = cleaned.replace(phrase, '')
+                    removed_count += 1
+    except Exception as e:
+        log.error(f"[N2.5] apply_leak_replacements failed: {e}", exc_info=True)
+        # Return original HTML on error - don't block PDF generation
+        return html, 0
+
+    return cleaned, removed_count
+
+
+def final_leak_cleanup(html: str, run_id: str | None = None) -> str:
+    """
+    SPRINT N2.5: Final leak phrase cleanup before PDF generation.
+
+    This function is the LAST line of defense before PDF rendering.
+    It is designed to:
+    - ALWAYS return a valid string (never None)
+    - NEVER raise exceptions that block PDF dispatch
+    - Log all issues for debugging
+
+    Args:
+        html: HTML content to clean
+        run_id: Optional run ID for logging
+
+    Returns:
+        Cleaned HTML string (original if cleanup fails)
+    """
+    # Defensive: ensure we always have a string
+    if not html:
+        log.warning(f"[N2.5] final_leak_cleanup received empty HTML for run={run_id}")
+        return html or ""
+
+    if not isinstance(html, str):
+        log.error(f"[N2.5] final_leak_cleanup received non-string type: {type(html)} for run={run_id}")
+        return str(html) if html else ""
+
+    try:
+        # Step 1: Detect leaks
+        leaks = detect_leak_phrases(html)
+
+        if not leaks:
+            log.debug(f"[N2.5] Leak check passed - no leak phrases found for run={run_id}")
+            return html
+
+        # Step 2: Log warning about found leaks
+        log.warning(
+            f"⚠️ [N2-5] LEAK-CHECK: Found {len(leaks)} leak phrases in final HTML! "
+            f"Phrases: {leaks[:3]}{'...' if len(leaks) > 3 else ''} Applying emergency cleanup for run={run_id}"
+        )
+
+        # Step 3: Apply replacements
+        cleaned_html, removed_count = apply_leak_replacements(html, leaks)
+        log.info(f"[N2-5] Emergency cleanup removed {removed_count} leak phrases from final HTML")
+
+        # Step 4: Verify cleanup (soft-fail: log but don't crash)
+        remaining = detect_leak_phrases(cleaned_html)
+        if remaining:
+            log.error(
+                f"❌ [N2-5] CRITICAL: {len(remaining)} leak phrases STILL present after cleanup! "
+                f"Phrases: {remaining[:3]}... Report {run_id} may contain visible leaks."
+            )
+        else:
+            log.info(f"✅ [N2-5] All leak phrases successfully removed from final HTML for run={run_id}")
+
+        return cleaned_html
+
+    except Exception as e:
+        # CRITICAL: Never block PDF generation due to leak cleanup failure
+        log.error(
+            f"❌ [N2.5] Final leak cleanup FAILED for run={run_id}: {e}",
+            exc_info=True
+        )
+        # Return original HTML - better to have leaks than no PDF
+        return html
 
 def _env() -> Environment:
     tpl_dir = Path(os.getenv("REPORT_TEMPLATE_DIR", "templates"))
@@ -231,33 +374,12 @@ def render(briefing_obj: Any,
         log.info(f"[RENDER] PDF-SLIMDOWN: {original_size}→{new_size} bytes ({savings_pct:.1f}% saved)")
 
     # =========================================================================
-    # SPRINT N2 (N2-5): Final leak phrase safety check
+    # SPRINT N2.5: Final leak phrase safety check (defensive)
     # =========================================================================
     # This is the LAST line of defense before PDF rendering.
-    # If any leak phrases survived until here, we remove them with a warning.
-    # N3: Use single compiled regex for O(n) detection instead of O(n*phrases)
-    found_leaks = _LEAK_PATTERN.findall(html)
-
-    if found_leaks:
-        log.warning(
-            f"⚠️ [N2-5] LEAK-CHECK: Found {len(found_leaks)} leak phrases in final HTML! "
-            f"Phrases: {found_leaks[:3]}... Applying emergency cleanup for {run_id}"
-        )
-        # Apply emergency cleanup
-        html, removed_count = remove_leak_phrases_from_html(html)
-        log.info(f"[N2-5] Emergency cleanup removed {removed_count} leak phrases from final HTML")
-
-        # Assert that all leaks are now gone (soft-fail: log error but don't crash)
-        # N3: Use single compiled regex for O(n) verification instead of O(n*phrases)
-        remaining_leaks = _LEAK_PATTERN.findall(html)
-        if remaining_leaks:
-            log.error(
-                f"❌ [N2-5] CRITICAL: {len(remaining_leaks)} leak phrases STILL present after cleanup! "
-                f"Phrases: {remaining_leaks[:3]}... Report {run_id} may contain visible leaks."
-            )
-        else:
-            log.info(f"✅ [N2-5] All leak phrases successfully removed from final HTML for {run_id}")
-    else:
-        log.debug(f"[N2-5] Leak check passed - no leak phrases found in final HTML for {run_id}")
+    # N2.5: Using encapsulated function that NEVER blocks PDF dispatch
+    log.info(f"[RENDER] Before final leak cleanup: len(html)={len(html)} for run={run_id}")
+    html = final_leak_cleanup(html, run_id=run_id)
+    log.info(f"[RENDER] After final leak cleanup: len(html)={len(html)} for run={run_id}")
 
     return {"html": html, "meta": meta or {}}
