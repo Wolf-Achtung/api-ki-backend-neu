@@ -365,7 +365,8 @@ def detect_sentence_redundancy(
 
     for i, sec1 in enumerate(section_list):
         for sec2 in section_list[i:]:
-            pair_key = tuple(sorted([sec1, sec2]))
+            sorted_pair = sorted([sec1, sec2])
+            pair_key: Tuple[str, str] = (sorted_pair[0], sorted_pair[1])
             if pair_key in checked_pairs:
                 continue
             checked_pairs.add(pair_key)

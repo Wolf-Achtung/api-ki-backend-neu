@@ -79,6 +79,7 @@ TONE_HARMONIZATION: Dict[str, str] = {
     "könnte man": "sollte man",
     "würde ich sagen": "empfehlen wir",
     "vielleicht sollte": "wir empfehlen",
+    "vielleicht": "konkret",
     "es wäre möglich": "es ist möglich",
     "man könnte": "wir empfehlen",
     "es gibt optionen": "folgende Optionen bestehen",
