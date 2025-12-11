@@ -265,6 +265,7 @@ class TestReportWorkflow:
 class TestReportGeneration:
     """Test-Suite für Report-Generierung mit gemocktem OpenAI"""
 
+    @pytest.mark.timeout(120)  # Full workflow test needs more time
     @patch("gpt_analyze._call_openai")
     def test_report_generation_mocked(self, mock_openai):
         """Test: Report-Generierung mit gemockten LLM-Antworten"""
