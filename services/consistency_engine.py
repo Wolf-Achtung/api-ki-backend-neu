@@ -32,6 +32,9 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple, Set
 from html import unescape
 
+# N3.6: Import unified healing flags
+from services.types import get_healing_flags, ENGINE_ID_BC, ENGINE_ID_RECO, ENGINE_ID_RISK, ENGINE_ID_AUTO
+
 log = logging.getLogger(__name__)
 
 __all__ = [
@@ -1707,12 +1710,19 @@ class ConsistencyEngine:
         # Extract ROI values from scenarios
         scenario_rois = self._extract_scenario_rois(bc_html)
 
-        # N3.1/N3.3: Check if BC healing was applied (flag from business_case_engine_v2)
-        bc_healed = self.sections.get("_bc_healed", False)
+        # N3.6: Check unified healing flags (supports both legacy and new format)
+        healing_flags = get_healing_flags(self.sections)
+        bc_healed = healing_flags.is_healed(ENGINE_ID_BC)
 
-        # N3.3: Log when skipping BC_001 due to healing
+        # Also check legacy flags for backwards compatibility
+        if not bc_healed:
+            bc_healed = self.sections.get("_bc_healed", False)
+            if not bc_healed:
+                bc_healed = self.sections.get("_bc_consistency_normalized", False)
+
+        # N3.6: G22_SKIP_001 - If BC healed, skip BC_001 entirely
         if bc_healed:
-            log.info("[G22] Skip BC_001 – healed scenario detected (ROI normalized)")
+            log.info("[G22] G22_SKIP_001: Skip BC_001 – healed scenario detected (ROI normalized)")
 
         if scenario_rois and not bc_healed:
             opt_roi = scenario_rois.get("optimistic", 0)
@@ -2141,12 +2151,17 @@ class ConsistencyEngine:
         # If risk_relation="reduces_risk", related_risks must contain high/critical risks
         risk_html = self.sections.get("RISK_ENGINE_HTML", "") or self.sections.get("RISKS_HTML", "")
 
-        # N3.1/N3.3: Check if RECO healing was applied (flag from recommendations_engine)
-        reco_healed = self.sections.get("_reco_healed", False)
+        # N3.6: Check unified healing flags (supports both legacy and new format)
+        healing_flags = get_healing_flags(self.sections)
+        reco_healed = healing_flags.is_healed(ENGINE_ID_RECO)
 
-        # N3.3: Log when skipping RECO_002 due to healing
+        # Also check legacy flag for backwards compatibility
+        if not reco_healed:
+            reco_healed = self.sections.get("_reco_healed", False)
+
+        # N3.6: G22_SKIP_002 - If RECO healed, skip RECO_002 entirely
         if reco_healed:
-            log.info("[G22] Skip RECO_002 – healed recommendations detected")
+            log.info("[G22] G22_SKIP_002: Skip RECO_002 – healed recommendations detected")
 
         if risk_html and reco_html and not reco_healed:
             # Check for "reduces_risk" markers in recommendations
