@@ -72,11 +72,12 @@ MAX_RECOVERY_ATTEMPTS = 1
 # Format: {section: {size: min_words}}
 # SPRINT N3.1: Reduced Solo thresholds to avoid unnecessary fallbacks
 # SPRINT N3.2 (TASK 4): Further reduced thresholds to minimize fallbacks
+# SPRINT N3.3 (TASK 2): Further reduced to minimize fallbacks before progressive extension
 EXTEND_MIN_WORDS: Dict[str, Dict[str, int]] = {
-    "roadmap_90d": {"solo": 110, "team": 170, "kmu": 190},  # N3.1: solo 130→110
-    "roadmap_12m": {"solo": 500, "team": 700, "kmu": 750},  # N3.2: solo 550→500
+    "roadmap_90d": {"solo": 90, "team": 170, "kmu": 190},  # N3.3: solo 110→90
+    "roadmap_12m": {"solo": 480, "team": 700, "kmu": 750},  # N3.3: solo 500→480
     "strategie_governance": {"solo": 100, "team": 140, "kmu": 160},  # N3.1: solo 110→100
-    "recommendations": {"solo": 450, "team": 800, "kmu": 900},  # N3.2: solo 500→450
+    "recommendations": {"solo": 400, "team": 800, "kmu": 900},  # N3.3: solo 450→400
     "risks": {"solo": 700, "team": 850, "kmu": 950},  # N3.2: new entry for risk sections
     "wettbewerb_benchmark": {"solo": 10, "team": 10, "kmu": 10},  # Hard floor
     "gamechanger": {"solo": 600, "team": 750, "kmu": 850},  # N3.1: reduced all tiers
@@ -405,6 +406,170 @@ def extend_to_min_words(
         )
 
     return extended_text, new_word_count, was_extended
+
+
+def progressive_extend(
+    text: str,
+    min_words: int,
+    section: str = "",
+    size: str = "team",
+    branche: str = "",
+    max_rounds: int = 3,
+) -> Tuple[str, int, bool]:
+    """
+    SPRINT N3.3 (TASK 2): Progressive extension engine for sections.
+
+    Applies multiple rounds of extension with decreasing intensity:
+    - Round 1: +15% length (add substantial paragraph)
+    - Round 2: +10% length (add supporting paragraph)
+    - Round 3: +5% length (expand bullets to paragraphs / add detail)
+
+    Only triggers fallback AFTER all extension rounds fail.
+
+    Args:
+        text: Original text content
+        min_words: Minimum word count required
+        section: Section name (topic hint)
+        size: Company size (solo, team, kmu)
+        branche: Branch/industry for context
+        max_rounds: Maximum extension rounds (default 3)
+
+    Returns:
+        Tuple of (extended_text, final_word_count, was_extended)
+    """
+    if not text:
+        return text, 0, False
+
+    original_words = count_words(text)
+
+    if original_words >= min_words:
+        return text, original_words, False
+
+    extended_text = text.strip()
+    was_extended = False
+    rounds_completed = 0
+
+    # Extension content templates for each round
+    round_templates = {
+        1: _get_round1_extension,  # +15% - substantial addition
+        2: _get_round2_extension,  # +10% - supporting content
+        3: _get_round3_extension,  # +5% - detail expansion
+    }
+
+    for round_num in range(1, max_rounds + 1):
+        current_words = count_words(extended_text)
+        if current_words >= min_words:
+            break
+
+        # Get extension for this round
+        extension_func = round_templates.get(round_num, _get_round1_extension)
+        extension = extension_func(section, size, branche)
+
+        if extension:
+            extended_text = extended_text + "\n\n" + extension
+            was_extended = True
+            rounds_completed = round_num
+
+    new_word_count = count_words(extended_text)
+
+    if was_extended:
+        log.info(
+            "[EXTEND] %s extended %d → %d words (target=%d, rounds=%d)",
+            section, original_words, new_word_count, min_words, rounds_completed
+        )
+
+    return extended_text, new_word_count, was_extended
+
+
+def _get_round1_extension(section: str, size: str, branche: str) -> str:
+    """Round 1: +15% substantial addition."""
+    # Use existing extension paragraphs for round 1
+    return build_extension_paragraph(section, size, branche)
+
+
+def _get_round2_extension(section: str, size: str, branche: str) -> str:
+    """Round 2: +10% supporting content."""
+    branch_context = f" in {branche}" if branche else ""
+
+    round2_content = {
+        "roadmap_90d": {
+            "solo": f"""
+<p>Für die erfolgreiche Umsetzung empfiehlt sich ein systematisches Vorgehen{branch_context}:
+Dokumentieren Sie jeden Schritt, messen Sie die Zeitersparnis und adjustieren Sie bei Bedarf.
+Kleine Erfolge motivieren und schaffen die Basis für größere Initiativen.</p>
+""",
+            "team": f"""
+<p>Die Einbindung des gesamten Teams ist entscheidend{branch_context}. Schaffen Sie klare
+Kommunikationskanäle für Feedback und stellen Sie sicher, dass Schulungsressourcen
+zeitnah bereitgestellt werden. Regelmäßige Statusmeetings helfen, Hindernisse früh zu erkennen.</p>
+""",
+            "kmu": f"""
+<p>Für den unternehmensweiten Rollout{branch_context} sollten Sie Pilotabteilungen als
+Multiplikatoren nutzen. Best Practices dokumentieren und intern kommunizieren.
+Ein internes Champion-Netzwerk beschleunigt die Adoption signifikant.</p>
+""",
+        },
+        "roadmap_12m": {
+            "solo": f"""
+<p>Meilensteine für Ihr 12-Monats-Programm{branch_context}: Monat 3 – erste messbare
+Ergebnisse und ROI-Dokumentation. Monat 6 – Prozessoptimierung auf Basis der Erfahrungen.
+Monat 9 – Skalierung erfolgreicher Ansätze. Monat 12 – strategische Planung für das Folgejahr.</p>
+""",
+            "team": f"""
+<p>Quartalsweise Review-Zyklen{branch_context} sichern den Projekterfolg: Q1-Review fokussiert
+auf technische Implementierung, Q2 auf Prozessintegration, Q3 auf Skalierung und
+Q4 auf strategische Weiterentwicklung. Jeder Review sollte KPI-basiert erfolgen.</p>
+""",
+            "kmu": f"""
+<p>Enterprise-Governance{branch_context}: Etablieren Sie quartalsweise Steering-Committee-Meetings.
+Definieren Sie klare KPIs je Bereich und verknüpfen Sie diese mit Unternehmenszielen.
+Die Einbindung des C-Levels sichert strategische Priorität und Ressourcenverfügbarkeit.</p>
+""",
+        },
+        "recommendations": {
+            "solo": f"""
+<p>Bei der Umsetzung der Empfehlungen{branch_context} priorisieren Sie nach
+Implementierungsaufwand und erwartetem ROI. Beginnen Sie mit „Quick Wins" –
+Maßnahmen mit geringem Aufwand und schnell sichtbarem Nutzen.</p>
+""",
+            "team": f"""
+<p>Für Ihr Team{branch_context} empfiehlt sich eine phasenweise Umsetzung:
+Woche 1-2 für Foundation-Building, Woche 3-6 für Kernimplementierung,
+Woche 7-12 für Optimierung und Skalierung. Dedizierte Verantwortlichkeiten sind essenziell.</p>
+""",
+            "kmu": f"""
+<p>Unternehmensweite Empfehlungsumsetzung{branch_context}: Definieren Sie ein
+PMO (Project Management Office) für die Koordination. Budgetierung pro Initiative,
+regelmäßiges Fortschritts-Reporting an das Management und klare Eskalationswege.</p>
+""",
+        },
+    }
+
+    section_content = round2_content.get(section, {})
+    return section_content.get(size, section_content.get("team", "")).strip()
+
+
+def _get_round3_extension(section: str, size: str, branche: str) -> str:
+    """Round 3: +5% detail expansion (bullet to paragraph conversion)."""
+    branch_context = f" in {branche}" if branche else ""
+
+    # Lighter extensions for round 3
+    round3_content = {
+        "roadmap_90d": f"""
+<p>Abschließender Hinweis{branch_context}: Die kontinuierliche Erfolgsmessung und
+Dokumentation Ihrer KI-Initiativen schafft die Basis für zukünftige Investitionsentscheidungen.</p>
+""",
+        "roadmap_12m": f"""
+<p>Langfristiger Erfolg{branch_context} basiert auf iterativer Verbesserung: Etablieren Sie
+einen Feedback-Loop zwischen Anwendern und Projektverantwortlichen für kontinuierliche Optimierung.</p>
+""",
+        "recommendations": f"""
+<p>Die regelmäßige Überprüfung und Anpassung Ihrer Prioritäten{branch_context} stellt sicher,
+dass Ressourcen optimal eingesetzt werden und neue Chancen zeitnah erkannt werden.</p>
+""",
+    }
+
+    return round3_content.get(section, "").strip()
 
 
 def auto_extend_sections(

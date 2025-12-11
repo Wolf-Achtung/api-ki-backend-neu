@@ -326,6 +326,23 @@ PERSONALIZATION_KMU: Dict[str, str] = {
 # Converts informal "du" address to formal/neutral language
 # Used especially in Risk chapter where LLM sometimes uses informal address
 # N3.2: Extended with more contextual patterns and robust regex
+# N3.3: Added section filtering and additional patterns
+
+# N3.3 TASK 4: Sections to apply DU-filter
+TONE_DU_FILTER_SECTIONS: Set[str] = {
+    # Original sections
+    "risk_report",
+    "risk_analysis",
+    # N3.3: Additional sections
+    "wettbewerb_benchmark",
+    "transparency_box",
+    "monetarisierung",
+    "ki_skillplan",
+    # Also include common variations
+    "competition_benchmark",
+    "ki_skill_plan",
+    "monetization",
+}
 
 TONE_NORMALIZATION_DU: Dict[str, str] = {
     # Direct "du" forms → neutral/formal
@@ -333,6 +350,18 @@ TONE_NORMALIZATION_DU: Dict[str, str] = {
     "Du kannst": "Es besteht die Möglichkeit",
     "du solltest": "es empfiehlt sich",
     "Du solltest": "Es empfiehlt sich",
+
+    # N3.3 TASK 4: Reversed word order patterns
+    "kannst du": "kann man",
+    "Kannst du": "Kann man",
+    "solltest du": "sollte man",
+    "Solltest du": "Sollte man",
+    "musst du": "muss man",
+    "Musst du": "Muss man",
+    "wirst du": "wird man",
+    "Wirst du": "Wird man",
+    "hast du": "hat man",
+    "Hast du": "Hat man",
     "du musst": "es ist erforderlich",
     "Du musst": "Es ist erforderlich",
     "du wirst": "es wird",
@@ -414,9 +443,14 @@ TONE_NORMALIZATION_DU: Dict[str, str] = {
     "vor dir": "vor der verantwortlichen Person",
     "Vor dir": "Vor der verantwortlichen Person",
 
+    # N3.3 TASK 4: "dein Team" → "das Team" (before deinem Team)
+    "dein Team": "das Team",
+    "Dein Team": "Das Team",
+
     # Common phrases with du
-    "wenn du": "wenn die verantwortliche Person",
-    "Wenn du": "Wenn die verantwortliche Person",
+    # N3.3 TASK 4: Alternative "wenn du" → "falls im Unternehmen" (more business-like)
+    "wenn du": "falls im Unternehmen",
+    "Wenn du": "Falls im Unternehmen",
     "dass du": "dass man",
     "Dass du": "Dass man",
     "ob du": "ob man",
@@ -843,6 +877,65 @@ def correct_sections(
             corrected[section_name] = content
 
     return corrected, reports
+
+
+def apply_du_filter_to_sections(
+    sections: Dict[str, str],
+    company_size: str = "team",
+    target_sections: Optional[Set[str]] = None,
+) -> Tuple[Dict[str, str], int]:
+    """
+    N3.3 TASK 4: Apply DU-filter only to specific sections.
+
+    This function applies tone normalization (du → formal) only to sections
+    that are in the TONE_DU_FILTER_SECTIONS set or the provided target_sections.
+
+    Args:
+        sections: Dict of section_name -> content
+        company_size: Company size ("solo", "team", "kmu")
+        target_sections: Optional custom set of sections to filter.
+                        If None, uses TONE_DU_FILTER_SECTIONS.
+
+    Returns:
+        Tuple of (corrected_sections, total_corrections)
+    """
+    if target_sections is None:
+        target_sections = TONE_DU_FILTER_SECTIONS
+
+    engine = get_engine("de", company_size)
+    corrected = dict(sections)  # Copy
+    total_corrections = 0
+
+    for section_name, content in sections.items():
+        # Check if section should be filtered (case-insensitive, partial match)
+        section_lower = section_name.lower()
+        should_filter = any(
+            target.lower() in section_lower or section_lower in target.lower()
+            for target in target_sections
+        )
+
+        if not should_filter or not content or not isinstance(content, str):
+            continue
+
+        # Apply only tone normalization (not full correction)
+        corrected_text, report = engine.correct(content)
+
+        if report.tone_normalizations > 0:
+            corrected[section_name] = corrected_text
+            total_corrections += report.tone_normalizations
+            log.info(
+                "[N3.3-DU-Filter] Section '%s': %d du-forms normalized",
+                section_name,
+                report.tone_normalizations
+            )
+
+    if total_corrections > 0:
+        log.info(
+            "[N3.3-DU-Filter] Total: %d informal du-forms normalized across target sections",
+            total_corrections
+        )
+
+    return corrected, total_corrections
 
 
 # =============================================================================

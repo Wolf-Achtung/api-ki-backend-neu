@@ -389,6 +389,228 @@ def optimize_html_for_pdf(html: str) -> str:
 
 
 # =============================================================================
+# N3.3 TASK 6: HTML Payload Reduction Engine Phase 2
+# =============================================================================
+
+# Pre-compiled patterns for section removal
+_RE_SECTION_BLOCK = re.compile(r'<section[^>]*>(.*?)</section>', re.DOTALL | re.IGNORECASE)
+_RE_HTML_TAGS = re.compile(r'<[^>]+>')
+
+# Pre-compiled patterns for table compression
+_RE_TABLE_BLOCK = re.compile(r'<table[^>]*>.*?</table>', re.DOTALL | re.IGNORECASE)
+_RE_TABLE_ROWS = re.compile(r'<tr[^>]*>.*?</tr>', re.DOTALL | re.IGNORECASE)
+_RE_TBODY_CONTENT = re.compile(r'<tbody[^>]*>(.*?)</tbody>', re.DOTALL | re.IGNORECASE)
+_RE_THEAD = re.compile(r'<thead[^>]*>.*?</thead>', re.DOTALL | re.IGNORECASE)
+
+
+def remove_empty_sections(html: str, min_chars: int = 50) -> str:
+    """
+    N3.3 TASK 6: Remove <section> blocks with less than min_chars of content.
+
+    Removes sections that have less than the specified minimum character count
+    of actual text content (excluding HTML tags).
+
+    Args:
+        html: HTML string
+        min_chars: Minimum character count for content (default: 50)
+
+    Returns:
+        HTML with empty/minimal sections removed
+    """
+    original_size = len(html)
+    removed_count = 0
+
+    def check_section(match: re.Match) -> str:
+        nonlocal removed_count
+        full_section = match.group(0)
+        inner_content = match.group(1)
+
+        # Extract text content (remove HTML tags)
+        text_content = _RE_HTML_TAGS.sub('', inner_content)
+        # Remove whitespace for char count
+        text_content = text_content.strip()
+        text_content = ' '.join(text_content.split())
+
+        if len(text_content) < min_chars:
+            removed_count += 1
+            log.debug(
+                "[N3.3-SECTION] Removing section with %d chars (min=%d)",
+                len(text_content), min_chars
+            )
+            return ''
+
+        return full_section
+
+    html = _RE_SECTION_BLOCK.sub(check_section, html)
+
+    new_size = len(html)
+    if removed_count > 0:
+        savings = original_size - new_size
+        log.info(
+            "[N3.3-SECTION] Removed %d empty sections (<%d chars), saved %d bytes",
+            removed_count, min_chars, savings
+        )
+
+    return html
+
+
+def compress_long_tables(html: str, max_rows: int = 30) -> str:
+    """
+    N3.3 TASK 6: Compress tables with more than max_rows to a summary format.
+
+    Tables with > max_rows are compressed to:
+    - First 10 rows
+    - Last 5 rows
+    - Summary row with "... X weitere Zeilen ..."
+
+    Args:
+        html: HTML string
+        max_rows: Maximum rows before compression (default: 30)
+
+    Returns:
+        HTML with long tables compressed
+    """
+    original_size = len(html)
+    compressed_count = 0
+
+    def compress_table(match: re.Match) -> str:
+        nonlocal compressed_count
+        table_html = match.group(0)
+
+        # Check if table has tbody
+        tbody_match = _RE_TBODY_CONTENT.search(table_html)
+        if not tbody_match:
+            # No tbody, check total rows
+            rows = _RE_TABLE_ROWS.findall(table_html)
+            # Skip header rows (usually first row without tbody)
+            if len(rows) <= max_rows:
+                return table_html
+        else:
+            # Has tbody - only count body rows
+            tbody_content = tbody_match.group(1)
+            rows = _RE_TABLE_ROWS.findall(tbody_content)
+            if len(rows) <= max_rows:
+                return table_html
+
+        # Table exceeds max_rows - compress it
+        total_rows = len(rows)
+        first_10 = rows[:10]
+        last_5 = rows[-5:] if total_rows > 15 else rows[10:]
+        hidden_count = total_rows - len(first_10) - len(last_5)
+
+        if hidden_count <= 0:
+            return table_html
+
+        # Build summary row
+        # Count columns from first row
+        col_count = rows[0].count('<td') + rows[0].count('<th')
+        if col_count == 0:
+            col_count = 1
+
+        summary_row = (
+            f'<tr class="table-summary-row">'
+            f'<td colspan="{col_count}" style="text-align:center;font-style:italic;color:#666;">'
+            f'... {hidden_count} weitere Zeilen ...'
+            f'</td></tr>'
+        )
+
+        # Reconstruct table
+        if tbody_match:
+            # Replace tbody content
+            new_tbody = ''.join(first_10) + summary_row + ''.join(last_5)
+            new_table = table_html[:tbody_match.start(1)] + new_tbody + table_html[tbody_match.end(1):]
+        else:
+            # No tbody - replace rows directly (keeping thead if present)
+            thead_match = _RE_THEAD.search(table_html)
+            if thead_match:
+                thead = thead_match.group(0)
+                # Find where tbody/rows start after thead
+                after_thead = table_html[thead_match.end():]
+                # Remove old rows and add compressed
+                after_thead_clean = _RE_TABLE_ROWS.sub('', after_thead, count=len(rows))
+                new_rows = ''.join(first_10) + summary_row + ''.join(last_5)
+                # Insert before </table>
+                table_end_idx = after_thead_clean.lower().rfind('</table>')
+                if table_end_idx >= 0:
+                    new_table = (
+                        table_html[:thead_match.end()] +
+                        new_rows +
+                        after_thead_clean[table_end_idx:]
+                    )
+                else:
+                    new_table = table_html[:thead_match.end()] + new_rows + after_thead_clean
+            else:
+                # No thead - just compress all rows
+                new_rows = ''.join(first_10) + summary_row + ''.join(last_5)
+                # Find table boundaries
+                table_start = table_html.lower().find('<table')
+                table_start_end = table_html.find('>', table_start) + 1
+                table_end = table_html.lower().rfind('</table>')
+                new_table = table_html[:table_start_end] + new_rows + table_html[table_end:]
+
+        compressed_count += 1
+        log.debug(
+            "[N3.3-TABLE] Compressed table: %d rows → %d visible + summary",
+            total_rows, len(first_10) + len(last_5)
+        )
+        return new_table
+
+    html = _RE_TABLE_BLOCK.sub(compress_table, html)
+
+    new_size = len(html)
+    if compressed_count > 0:
+        savings = original_size - new_size
+        log.info(
+            "[N3.3-TABLE] Compressed %d long tables, saved %d bytes",
+            compressed_count, savings
+        )
+
+    return html
+
+
+def optimize_html_for_pdf_v2(html: str, min_section_chars: int = 50, max_table_rows: int = 30) -> str:
+    """
+    N3.3 TASK 6: Enhanced optimization pipeline with Phase 2 features.
+
+    Combines all optimization steps including new N3.3 features:
+    1. Remove empty sections (< min_chars)
+    2. Compress long tables (> max_rows)
+    3. Strip unused sections
+    4. Compress HTML
+    5. Optimize CSS
+
+    Args:
+        html: Raw HTML string
+        min_section_chars: Minimum chars for section content (default: 50)
+        max_table_rows: Max rows before table compression (default: 30)
+
+    Returns:
+        Optimized HTML string
+    """
+    original_size = len(html)
+
+    # N3.3 Step 1: Remove empty sections
+    html = remove_empty_sections(html, min_chars=min_section_chars)
+
+    # N3.3 Step 2: Compress long tables
+    html = compress_long_tables(html, max_rows=max_table_rows)
+
+    # Original Steps 3-5: Use existing optimization
+    html = optimize_html_for_pdf(html)
+
+    new_size = len(html)
+    if original_size > 0:
+        savings_pct = (1 - new_size / original_size) * 100
+        savings_kb = (original_size - new_size) / 1024
+        log.info(
+            "[N3.3-PDF-OPTIMIZE] Total: %d→%d bytes (%.1f%% saved, %.1fKB reduced)",
+            original_size, new_size, savings_pct, savings_kb
+        )
+
+    return html
+
+
+# =============================================================================
 # SPRINT G14-D: Cache Statistics
 # =============================================================================
 
