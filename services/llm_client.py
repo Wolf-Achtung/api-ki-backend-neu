@@ -3,7 +3,7 @@
 Sprint G14: LLM Client with Retry Layer
 
 Provides robust LLM API calls with:
-- Exponential backoff retry (3s → 6s → 12s → 24s → 48s)
+- Exponential backoff retry (3s → 6s → 12s → 24s → 48s → 96s)
 - Short-retry mode for reduced token requests
 - Circuit breaker integration
 - Detailed logging for timeout scenarios
@@ -24,7 +24,15 @@ SPRINT N3.6 PACKAGE F CHANGES:
 - Retries → 5 stages (from 3)
 - Backoff timing → 3s → 6s → 12s → 24s → 48s
 
-Version: 1.3.0 (N3.6 - Performance Resilience v3)
+SPRINT N3.7 PACKAGE F CHANGES:
+- Premium sections timeout → 165s (from 140s)
+- Retries → 6 stages (from 5)
+- Backoff timing → 3s → 6s → 12s → 24s → 48s → 96s
+- Section prioritization (exec_summary, roadmaps, recommendations first)
+- Adaptive temperature on LLM errors (temp -0.2)
+- Burst-load protection for parallel runs
+
+Version: 1.4.0 (N3.7 - Performance Resilience v4)
 """
 from __future__ import annotations
 
@@ -48,8 +56,8 @@ LLM_TIMEOUT = float(os.getenv("LLM_TIMEOUT", "75"))
 
 LLM_SHORT_RETRY_ENABLED = os.getenv("LLM_SHORT_RETRY_ENABLED", "1").lower() in ("1", "true", "yes")
 LLM_SHORT_RETRY_MAXTOKENS = int(os.getenv("LLM_SHORT_RETRY_MAXTOKENS", "1200"))
-# N3.6 PACKAGE F: 5 stages with 3s → 6s → 12s → 24s → 48s backoff
-LLM_MAX_RETRIES = int(os.getenv("LLM_MAX_RETRIES", "5"))
+# N3.7 PACKAGE F: 6 stages with 3s → 6s → 12s → 24s → 48s → 96s backoff
+LLM_MAX_RETRIES = int(os.getenv("LLM_MAX_RETRIES", "6"))
 LLM_RETRY_BACKOFF_BASE = float(os.getenv("LLM_RETRY_BACKOFF_BASE", "3.0"))
 LLM_RETRY_BACKOFF_MULTIPLIER = float(os.getenv("LLM_RETRY_BACKOFF_MULTIPLIER", "2.0"))
 
@@ -80,20 +88,20 @@ PREMIUM_SECTIONS: set[str] = {
 
 # Section-specific timeout overrides (seconds)
 # These sections typically require more generation time
-# N3.6 PACKAGE F: Premium sections → 140s timeout (from 90s)
+# N3.7 PACKAGE F: Premium sections → 165s timeout (from 140s)
 SECTION_TIMEOUT_OVERRIDES: dict[str, float] = {
-    "unternehmensprofil_markt": 140.0,
-    "strategie_governance": 140.0,
-    "wettbewerb_benchmark": 140.0,  # Complex competitor analysis
-    "roadmap_12m": 140.0,
-    "risks": 140.0,
-    "risk_report": 140.0,
-    "gamechanger": 140.0,  # Creative content needs time
-    "recommendations": 140.0,
-    "foerderpotenzial": 140.0,
-    "exec_summary": 140.0,
-    "ki_stack_summary": 140.0,
-    "branch_deep_dive": 140.0,
+    "unternehmensprofil_markt": 165.0,
+    "strategie_governance": 165.0,
+    "wettbewerb_benchmark": 165.0,  # Complex competitor analysis
+    "roadmap_12m": 165.0,
+    "risks": 165.0,
+    "risk_report": 165.0,
+    "gamechanger": 165.0,  # Creative content needs time
+    "recommendations": 165.0,
+    "foerderpotenzial": 165.0,
+    "exec_summary": 165.0,
+    "ki_stack_summary": 165.0,
+    "branch_deep_dive": 165.0,
 }
 
 
@@ -160,7 +168,7 @@ def calculate_backoff(attempt: int, config: RetryConfig) -> float:
     """
     Calculate exponential backoff delay.
 
-    N3.6 PACKAGE F: Backoff sequence: 3s → 6s → 12s → 24s → 48s (with default config)
+    N3.7 PACKAGE F: Backoff sequence: 3s → 6s → 12s → 24s → 48s → 96s (with default config)
 
     Args:
         attempt: Current attempt number (0-indexed)
@@ -519,7 +527,7 @@ def call_llm_with_retry(
 # =============================================================================
 
 log.info(
-    "[N3.6-F] LLM Client v1.3.0 loaded - default_timeout=%.0fs retry_enabled=%s "
+    "[N3.7-F] LLM Client v1.4.0 loaded - default_timeout=%.0fs retry_enabled=%s "
     "short_retry=%s soft_retry=%s max_retries=%d short_retry_tokens=%d backoff=%.1f×%.1f",
     LLM_TIMEOUT,
     True,  # Retry always enabled
