@@ -21,6 +21,11 @@ from services.report_validator import GENERIC_LLM_LEAK_PHRASES, remove_leak_phra
 
 log = logging.getLogger(__name__)
 
+# N3: Pre-compute lowercase leak phrases once for O(1) lookup
+_LEAK_PHRASES_LOWER = {p.lower() for p in GENERIC_LLM_LEAK_PHRASES}
+# Map lowercase -> original for reporting
+_LEAK_PHRASES_MAP = {p.lower(): p for p in GENERIC_LLM_LEAK_PHRASES}
+
 def _env() -> Environment:
     tpl_dir = Path(os.getenv("REPORT_TEMPLATE_DIR", "templates"))
     env = Environment(
@@ -229,10 +234,12 @@ def render(briefing_obj: Any,
     # This is the LAST line of defense before PDF rendering.
     # If any leak phrases survived until here, we remove them with a warning.
     html_lower = html.lower()
-    found_leaks = []
-    for phrase in GENERIC_LLM_LEAK_PHRASES:
-        if phrase.lower() in html_lower:
-            found_leaks.append(phrase)
+    # N3: Use pre-computed lowercase phrases for O(n) instead of O(n*m)
+    found_leaks = [
+        _LEAK_PHRASES_MAP[phrase_lower]
+        for phrase_lower in _LEAK_PHRASES_LOWER
+        if phrase_lower in html_lower
+    ]
 
     if found_leaks:
         log.warning(
@@ -245,7 +252,12 @@ def render(briefing_obj: Any,
 
         # Assert that all leaks are now gone (soft-fail: log error but don't crash)
         html_lower_after = html.lower()
-        remaining_leaks = [p for p in GENERIC_LLM_LEAK_PHRASES if p.lower() in html_lower_after]
+        # N3: Use pre-computed lowercase phrases for O(n) instead of O(n*m)
+        remaining_leaks = [
+            _LEAK_PHRASES_MAP[phrase_lower]
+            for phrase_lower in _LEAK_PHRASES_LOWER
+            if phrase_lower in html_lower_after
+        ]
         if remaining_leaks:
             log.error(
                 f"❌ [N2-5] CRITICAL: {len(remaining_leaks)} leak phrases STILL present after cleanup! "
