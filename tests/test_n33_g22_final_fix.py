@@ -48,7 +48,7 @@ class TestBC001FinalFix:
             result = engine.check_all()
 
         # Should log the skip message
-        assert any("[G22] Skip BC_001" in record.message for record in caplog.records), \
+        assert any("G22_SKIP_001" in record.message and "Skip BC_001" in record.message for record in caplog.records), \
             "Should log BC_001 skip when healed"
 
         # Should NOT have BC_001 issues
@@ -73,7 +73,7 @@ class TestBC001FinalFix:
             result = engine.check_all()
 
         # Should NOT log the skip message
-        assert not any("[G22] Skip BC_001" in record.message for record in caplog.records), \
+        assert not any("G22_SKIP_001" in record.message for record in caplog.records), \
             "Should not log BC_001 skip when not healed"
 
 
@@ -100,7 +100,7 @@ class TestRECO002FinalFix:
             result = engine.check_all()
 
         # Should log the skip message
-        assert any("[G22] Skip RECO_002" in record.message for record in caplog.records), \
+        assert any("G22_SKIP_002" in record.message and "Skip RECO_002" in record.message for record in caplog.records), \
             "Should log RECO_002 skip when healed"
 
         # Should NOT have RECO_002 issues
@@ -126,7 +126,7 @@ class TestRECO002FinalFix:
             result = engine.check_all()
 
         # Should NOT log the skip message
-        assert not any("[G22] Skip RECO_002" in record.message for record in caplog.records), \
+        assert not any("G22_SKIP_002" in record.message for record in caplog.records), \
             "Should not log RECO_002 skip when not healed"
 
 
