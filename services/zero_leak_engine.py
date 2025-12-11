@@ -471,8 +471,8 @@ def remove_leaks(text: str, aggressive: bool = False) -> Tuple[str, ZeroLeakRepo
             leak.replaced = True
 
     # Apply fuzzy pattern replacements
-    for pattern, replacement in FUZZY_LEAK_PATTERNS:
-        cleaned = re.sub(pattern, replacement, cleaned, flags=re.IGNORECASE)
+    for fuzzy_pattern, replacement in FUZZY_LEAK_PATTERNS:
+        cleaned = re.sub(fuzzy_pattern, replacement, cleaned, flags=re.IGNORECASE)
 
     # Cleanup artifacts
     cleaned = re.sub(r'\s{2,}', ' ', cleaned)
