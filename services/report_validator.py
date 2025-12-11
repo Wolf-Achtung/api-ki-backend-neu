@@ -14,7 +14,7 @@ Prüft:
 - Prompt-Leaks in Quick-Wins
 - Generic LLM response leaks (Sprint N1)
 
-Version: 1.7.0-SPRINT-N2 (Placeholder & Leak Healing)
+Version: 1.8.0-SPRINT-N3 (Leak-Buster v2 + Tone Normalizer)
 Author: Claude + Wolf
 
 PLATIN+ ÄNDERUNG: Validierung basiert jetzt auf WÖRTERN statt Zeichen!
@@ -224,8 +224,11 @@ class ReportValidator:
     # SPRINT N1: Generic LLM response leaks - ChatGPT/GPT "standard answers"
     # These indicate the LLM didn't understand the task or returned default responses
     # Case-insensitive matching, triggers CRITICAL error → PLATIN fallback
+    # SPRINT N3-04: Extended to 95+ phrases (Leak-Buster v2)
     GENERIC_LLM_LEAK_PHRASES = [
+        # =================================================================
         # German generic LLM responses
+        # =================================================================
         "ich sehe keine konkrete frage",
         "ich sehe keine konkrete aufgabe",
         "wie kann ich dir helfen",
@@ -245,7 +248,55 @@ class ReportValidator:
         "ich kann keine echtzeitdaten",
         "mein wissen endet",
         "mein trainingsdaten reichen bis",
+        # N3-04: Additional German LLM leak phrases
+        "wie kann ich behilflich sein",
+        "bitte gib mehr details",
+        "bitte geben sie mehr details",
+        "ich benötige weitere informationen",
+        "können sie mir mehr kontext geben",
+        "könnten sie ihre frage präzisieren",
+        "ich verstehe ihre anfrage nicht",
+        "ich verstehe deine anfrage nicht",
+        "ohne weitere angaben kann ich",
+        "ich brauche mehr informationen",
+        "bitte spezifizieren sie",
+        "bitte konkretisieren sie",
+        "leider verstehe ich nicht",
+        "ich bin nicht sicher, was sie meinen",
+        "was genau meinen sie mit",
+        "können sie das näher erläutern",
+        "wie soll ich das verstehen",
+        "ich habe keinen zugang zu aktuellen",
+        "ich verfüge über keine echtzeitdaten",
+        "basierend auf meinem wissensstand",
+        "nach meinem kenntnisstand",
+        "soweit mir bekannt ist",
+        "ich bin mir nicht sicher, ob",
+        "ich kann diese anfrage nicht bearbeiten",
+        "das übersteigt meine fähigkeiten",
+        "ich bin darauf trainiert",
+        "als künstliche intelligenz",
+        "als ki bin ich",
+        "mir fehlen die nötigen informationen",
+        "ohne die entsprechenden daten",
+        "das kann ich leider nicht beantworten",
+        "ich empfehle ihnen, einen experten zu konsultieren",
+        "wenden sie sich bitte an",
+        "bitte haben sie verständnis",
+        "entschuldigung, aber ich kann",
+        "tut mir leid, ich verstehe nicht",
+        "leider kann ich dazu nichts sagen",
+        "ich kann ihnen dabei nicht helfen",
+        "das liegt außerhalb meiner möglichkeiten",
+        "stellen sie mir gerne weitere fragen",
+        "haben sie noch weitere fragen",
+        "ich hoffe, das hilft",
+        "ich hoffe, ich konnte helfen",
+        "lassen sie mich wissen, wenn sie",
+        "bei weiteren fragen stehe ich",
+        # =================================================================
         # English generic LLM responses
+        # =================================================================
         "i don't see a specific question",
         "how can i help you",
         "please describe your request",
@@ -257,12 +308,69 @@ class ReportValidator:
         "i cannot provide real-time",
         "my knowledge cutoff",
         "my training data ends",
+        # N3-04: Additional English LLM leak phrases
+        "how can i assist you",
+        "please provide more details",
+        "i need more information",
+        "could you clarify your question",
+        "i'm not sure what you mean",
+        "i cannot access real-time data",
+        "based on my training",
+        "as of my knowledge cutoff",
+        "i'm an ai language model",
+        "i'm just an ai",
+        "i don't have the ability to",
+        "i cannot browse the internet",
+        "i cannot access external",
+        "feel free to ask me anything",
+        "let me know if you need",
+        "hope this helps",
+        "hope that helps",
+        "i hope this information",
+        "if you have any other questions",
+        "please let me know if",
+        "i'm here to help",
+        "i'm happy to help",
+        "what else can i help",
+        "is there anything else",
+        "unfortunately i cannot",
+        "i apologize but i cannot",
+        "i'm sorry but i can't",
+        "i would recommend consulting",
+        "please consult a professional",
+        # =================================================================
         # Meta-responses that shouldn't appear in reports
+        # =================================================================
         "hier ist meine antwort",
         "im folgenden finden sie meine analyse",
         "gerne erstelle ich",
         "natürlich, hier ist",
         "selbstverständlich, hier ist",
+        # N3-04: Additional meta-response leaks
+        "hier ist eine übersicht",
+        "hier ist ein überblick",
+        "nachfolgend finden sie",
+        "anbei finden sie",
+        "im anschluss finden sie",
+        "ich habe für sie zusammengestellt",
+        "ich fasse zusammen",
+        "here is an overview",
+        "here's a summary",
+        "below you will find",
+        "i've compiled for you",
+        "let me summarize",
+        "to summarize",
+        # Prompt-echo leaks (LLM repeating instructions)
+        "der nutzer fragt nach",
+        "die anfrage lautet",
+        "laut ihrer eingabe",
+        "gemäß ihrer anfrage",
+        "wie in ihrer frage erwähnt",
+        "the user asks for",
+        "the request is to",
+        "according to your input",
+        "as per your request",
+        "as mentioned in your question",
     ]
 
     # SPRINT N: Extended SIZE_FORBIDDEN for Solo personas
@@ -1864,12 +1972,22 @@ def validate_and_heal(
 # Alias for easy import from outside the class
 GENERIC_LLM_LEAK_PHRASES = ReportValidator.GENERIC_LLM_LEAK_PHRASES
 
+# N3: Pre-compile single regex for O(n) leak detection instead of O(n*phrases)
+_LEAK_DETECTION_PATTERN = re.compile(
+    '|'.join(re.escape(p) for p in GENERIC_LLM_LEAK_PHRASES),
+    re.IGNORECASE
+)
+
 
 def remove_leak_phrases_from_html(html: str) -> Tuple[str, int]:
     """
     SPRINT N2: Remove any remaining leak phrases from final HTML.
 
     This is a last-resort safety net before PDF rendering.
+
+    SPRINT N3: Optimized for performance with 95+ phrases.
+    - Use single compiled regex for O(n) detection
+    - Only process phrases that were actually found
 
     Args:
         html: HTML content to clean
@@ -1880,25 +1998,29 @@ def remove_leak_phrases_from_html(html: str) -> Tuple[str, int]:
     if not html:
         return html, 0
 
+    # N3: Single-pass detection using pre-compiled regex - O(n) instead of O(n*phrases)
+    found_phrases = _LEAK_DETECTION_PATTERN.findall(html)
+    if not found_phrases:
+        return html, 0
+
+    # Get unique phrases found (case-insensitive dedup)
+    unique_phrases = list({p.lower(): p for p in found_phrases}.values())
+
     cleaned = html
     removed_count = 0
 
-    # Use module-level constant
-    leak_phrases = GENERIC_LLM_LEAK_PHRASES
-
-    for phrase in leak_phrases:
-        if phrase.lower() in cleaned.lower():
-            # Find and remove sentences containing the phrase
-            # Pattern: sentence containing the phrase
-            pattern = rf'[^.!?]*{re.escape(phrase)}[^.!?]*[.!?]?\s*'
-            matches = len(re.findall(pattern, cleaned, re.IGNORECASE))
+    # Only process phrases that were actually found (usually 0-3, not 95+)
+    for phrase in unique_phrases:
+        # Remove sentences containing this phrase
+        pattern = rf'[^.!?]*{re.escape(phrase)}[^.!?]*[.!?]?\s*'
+        matches = len(re.findall(pattern, cleaned, re.IGNORECASE))
+        if matches > 0:
             cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE)
             removed_count += matches
-            if matches > 0:
-                log.warning(
-                    "[N2-SafetyNet] Removed %d occurrences of leak phrase '%s'",
-                    matches, phrase
-                )
+            log.warning(
+                "[N2-SafetyNet] Removed %d occurrences of leak phrase '%s'",
+                matches, phrase
+            )
 
     return cleaned, removed_count
 
