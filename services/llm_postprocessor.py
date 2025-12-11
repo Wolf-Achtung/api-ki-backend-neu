@@ -481,6 +481,411 @@ def progressive_extend(
     return extended_text, new_word_count, was_extended
 
 
+# =============================================================================
+# N3.4 TASK 1: Smart Expand Engine v2 - Semantic Expansion
+# =============================================================================
+
+# Forbidden phrases that indicate GPT fluff (to be removed/avoided)
+SMART_EXPAND_FORBIDDEN_PHRASES: List[str] = [
+    "In diesem Abschnitt wird erläutert",
+    "Es wäre sinnvoll",
+    "Sie sollten",
+    "Es könnte hilfreich sein",
+    "Zusammenfassend lässt sich sagen",
+    "Es ist wichtig zu beachten",
+    "Es wäre wichtig zu beachten",
+    "Wie bereits erwähnt",
+    "Wie oben beschrieben",
+    "Lassen Sie uns",
+    "Wie kann ich helfen",
+    "es ist anzumerken",
+    "es sei darauf hingewiesen",
+    "abschließend sei erwähnt",
+    "im Folgenden wird",
+    "nachfolgend werden",
+]
+
+# Style templates for semantic expansion
+SMART_EXPAND_STYLES: Dict[str, Dict[str, str]] = {
+    "consulting_structured": {
+        "intro_pattern": "",  # No intro - direct content
+        "bullet_style": "colon",  # "Point: Explanation"
+        "sentence_target": 20,  # avg words per sentence
+        "tone": "analytical_decisive",
+    },
+    "bcg_case_style": {
+        "intro_pattern": "",
+        "bullet_style": "impact_first",  # Lead with result
+        "sentence_target": 18,
+        "tone": "strategic_quantified",
+    },
+    "oxford_academic": {
+        "intro_pattern": "",
+        "bullet_style": "thesis",  # Argument-based
+        "sentence_target": 24,
+        "tone": "evidence_based",
+    },
+    "executive_summary_mode": {
+        "intro_pattern": "",
+        "bullet_style": "action",  # Verb-first
+        "sentence_target": 16,
+        "tone": "decisive_concise",
+    },
+}
+
+
+def smart_expand(
+    section_text: str,
+    min_words: int,
+    section: str = "",
+    style: str = "consulting_structured",
+    depth_level: int = 2,
+    size: str = "team",
+    branche: str = "",
+) -> Tuple[str, int, bool]:
+    """
+    N3.4 TASK 1: Smart semantic expansion engine v2.
+
+    Provides intelligent content expansion without GPT fluff:
+    - Semantic expansion with new arguments/examples
+    - Branch-specific cases and edge cases
+    - Prioritization over repetition
+    - No intro sentences or filler phrases
+
+    Args:
+        section_text: Original text content
+        min_words: Minimum word count required
+        section: Section name for context
+        style: Expansion style (consulting_structured, bcg_case_style, etc.)
+        depth_level: 1 = 8-15%, 2 = 15-30%, 3 = structural expansion
+        size: Company size (solo, team, kmu)
+        branche: Branch/industry for context
+
+    Returns:
+        Tuple of (expanded_text, final_word_count, was_expanded)
+    """
+    if not section_text:
+        return section_text, 0, False
+
+    original_words = count_words(section_text)
+
+    if original_words >= min_words:
+        return section_text, original_words, False
+
+    # First: Clean any existing forbidden phrases
+    expanded_text = _remove_forbidden_phrases(section_text)
+
+    # Calculate expansion target based on depth_level
+    target_words = min_words
+    gap = target_words - count_words(expanded_text)
+
+    if gap <= 0:
+        return expanded_text, count_words(expanded_text), True
+
+    was_expanded = False
+
+    # Apply semantic expansions based on depth level
+    if depth_level >= 1:
+        # Level 1: Add supporting arguments (8-15%)
+        expansion = _get_semantic_arguments(section, size, branche, style)
+        if expansion:
+            expanded_text = expanded_text.strip() + "\n\n" + expansion
+            was_expanded = True
+
+    current_words = count_words(expanded_text)
+    if current_words >= min_words:
+        log.info(
+            "[SMART-EXPAND] %s: %d → %d words (depth=%d, style=%s)",
+            section, original_words, current_words, depth_level, style
+        )
+        return expanded_text, current_words, was_expanded
+
+    if depth_level >= 2:
+        # Level 2: Add branch-specific examples (15-30%)
+        expansion = _get_branch_specific_examples(section, size, branche, style)
+        if expansion:
+            expanded_text = expanded_text.strip() + "\n\n" + expansion
+            was_expanded = True
+
+    current_words = count_words(expanded_text)
+    if current_words >= min_words:
+        log.info(
+            "[SMART-EXPAND] %s: %d → %d words (depth=%d, style=%s)",
+            section, original_words, current_words, depth_level, style
+        )
+        return expanded_text, current_words, was_expanded
+
+    if depth_level >= 3:
+        # Level 3: Structural expansion with new subsections
+        expansion = _get_structural_expansion(section, size, branche, style)
+        if expansion:
+            expanded_text = expanded_text.strip() + "\n\n" + expansion
+            was_expanded = True
+
+    final_words = count_words(expanded_text)
+
+    if was_expanded:
+        log.info(
+            "[SMART-EXPAND] %s: %d → %d words (depth=%d, style=%s)",
+            section, original_words, final_words, depth_level, style
+        )
+
+    return expanded_text, final_words, was_expanded
+
+
+def _remove_forbidden_phrases(text: str) -> str:
+    """Remove forbidden GPT fluff phrases from text."""
+    cleaned = text
+    for phrase in SMART_EXPAND_FORBIDDEN_PHRASES:
+        # Case-insensitive removal
+        import re
+        pattern = re.compile(re.escape(phrase), re.IGNORECASE)
+        cleaned = pattern.sub("", cleaned)
+
+    # Clean up double spaces and empty sentences
+    cleaned = re.sub(r'\s{2,}', ' ', cleaned)
+    cleaned = re.sub(r'\.\s*\.', '.', cleaned)
+    cleaned = re.sub(r'<p>\s*</p>', '', cleaned)
+
+    return cleaned.strip()
+
+
+def _get_semantic_arguments(section: str, size: str, branche: str, style: str) -> str:
+    """Level 1: Generate supporting arguments (8-15% expansion)."""
+    branch_context = f" für {branche}" if branche else ""
+
+    # Consulting-style semantic arguments per section
+    arguments = {
+        "roadmap_90d": {
+            "solo": f"""
+<p><strong>Erfolgsfaktoren der Umsetzung:</strong> Fokussierung auf maximal zwei parallele Initiativen{branch_context}. Wöchentliche Fortschrittsmessung anhand definierter KPIs. Dokumentation von Learnings für spätere Skalierung.</p>
+""",
+            "team": f"""
+<p><strong>Kritische Erfolgsfaktoren:</strong> Klare Verantwortlichkeiten je Initiative{branch_context}. Dedizierte Zeitbudgets für KI-Projekte (min. 20% der Arbeitszeit). Etablierung eines internen Feedback-Loops zur kontinuierlichen Optimierung.</p>
+""",
+            "kmu": f"""
+<p><strong>Enterprise-Erfolgsfaktoren:</strong> Cross-funktionale Task-Forces{branch_context}. Executive Sponsorship für jede strategische Initiative. Integration in bestehende Governance-Strukturen und Reporting-Zyklen.</p>
+""",
+        },
+        "roadmap_12m": {
+            "solo": f"""
+<p><strong>Meilenstein-Framework:</strong> Quartalsweise Zielsetzung mit messbaren Outcomes{branch_context}. Q1: Foundation & erste Quick Wins. Q2: Prozessintegration & Optimierung. Q3: Skalierung erfolgreicher Ansätze. Q4: Strategische Neuausrichtung für Folgejahr.</p>
+""",
+            "team": f"""
+<p><strong>Strategische Meilensteine:</strong> Phasenmodell mit Gate-Reviews{branch_context}. Phase 1 (M1-3): Proof of Concept. Phase 2 (M4-6): Pilotierung. Phase 3 (M7-9): Rollout. Phase 4 (M10-12): Optimierung und Verankerung.</p>
+""",
+            "kmu": f"""
+<p><strong>Enterprise-Transformation-Framework:</strong> Agile Implementierung in Waves{branch_context}. Wave 1: High-Impact Quick Wins. Wave 2: Kernprozess-Transformation. Wave 3: Organisation & Kultur. Wave 4: Continuous Improvement Institutionalisierung.</p>
+""",
+        },
+        "recommendations": {
+            "solo": f"""
+<p><strong>Priorisierungslogik:</strong> Empfehlungen nach Impact-Effort-Matrix sortiert{branch_context}. Fokus auf Maßnahmen mit hohem ROI bei geringem Implementierungsaufwand. Sequenzielle Umsetzung zur Ressourcenoptimierung.</p>
+""",
+            "team": f"""
+<p><strong>Umsetzungsstrategie:</strong> Parallele Workstreams für unabhängige Maßnahmen{branch_context}. Ressourcenallokation nach strategischer Priorität. Regelmäßige Priorisierungs-Reviews zur Anpassung an veränderte Rahmenbedingungen.</p>
+""",
+            "kmu": f"""
+<p><strong>Portfolio-Management:</strong> Empfehlungen als strategisches Maßnahmenportfolio{branch_context}. Balancierung zwischen Quick Wins, strategischen Initiativen und Infrastruktur-Investments. Quartalsweise Portfolio-Reviews mit C-Level.</p>
+""",
+        },
+        "risks": {
+            "solo": f"""
+<p><strong>Risiko-Mitigation:</strong> Identifizierte Risiken erfordern proaktives Management{branch_context}. Etablierung von Frühwarnindikatoren. Definition von Eskalationsschwellen und Reaktionsmaßnahmen.</p>
+""",
+            "team": f"""
+<p><strong>Risiko-Governance:</strong> Strukturiertes Risikomanagement{branch_context}. Monatliche Risiko-Reviews. Klare Verantwortlichkeiten für Risiko-Ownership. Dokumentierte Mitigationsstrategien je Risikokategorie.</p>
+""",
+            "kmu": f"""
+<p><strong>Enterprise Risk Management:</strong> Integration in Corporate-Governance{branch_context}. Risiko-Reporting an Vorstand und Aufsichtsrat. Verknüpfung mit Compliance- und Audit-Strukturen. Quantifizierte Risikoexposure-Bewertung.</p>
+""",
+        },
+        "gamechanger": {
+            "solo": f"""
+<p><strong>Differenzierungspotenzial:</strong> KI als strategischer Hebel{branch_context}. Aufbau einzigartiger Capabilities vor dem Wettbewerb. First-Mover-Advantage durch frühe Adoption innovativer Technologien.</p>
+""",
+            "team": f"""
+<p><strong>Wettbewerbsvorteile:</strong> Systematische Identifikation von Differenzierungspotenzialen{branch_context}. Kombination aus Effizienzgewinnen und Innovationsfähigkeit. Aufbau schwer kopierbarer KI-basierter Capabilities.</p>
+""",
+            "kmu": f"""
+<p><strong>Strategische Differenzierung:</strong> KI als Kernbestandteil der Unternehmensstrategie{branch_context}. Entwicklung proprietärer KI-Assets. Aufbau von Data Moats und technologischen Eintrittsbarrieren.</p>
+""",
+        },
+    }
+
+    section_args = arguments.get(section, {})
+    return section_args.get(size, section_args.get("team", "")).strip()
+
+
+def _get_branch_specific_examples(section: str, size: str, branche: str, style: str) -> str:
+    """Level 2: Generate branch-specific examples (15-30% expansion)."""
+    branch_context = f" in {branche}" if branche else ""
+
+    # Branch-specific practical examples
+    examples = {
+        "roadmap_90d": f"""
+<p><strong>Praktische Anwendungsfälle{branch_context}:</strong></p>
+<ul>
+<li><strong>Dokumentenverarbeitung:</strong> Automatisierte Extraktion und Kategorisierung von Geschäftsdokumenten – typische Zeitersparnis 60-80%</li>
+<li><strong>Kundeninteraktion:</strong> KI-gestützte Erstbearbeitung von Anfragen – Reduktion der Bearbeitungszeit um 40-50%</li>
+<li><strong>Reporting:</strong> Automatisierte Berichtserstellung aus Rohdaten – Qualitätssteigerung bei 70% Zeitersparnis</li>
+</ul>
+""",
+        "roadmap_12m": f"""
+<p><strong>Langfristige Transformationsfelder{branch_context}:</strong></p>
+<ul>
+<li><strong>Prozessautomatisierung:</strong> End-to-End-Automatisierung von Kernprozessen mit KI-Orchestrierung</li>
+<li><strong>Datengetriebene Entscheidungen:</strong> Aufbau von Analytics-Capabilities für strategische und operative Entscheidungen</li>
+<li><strong>Kundenzentrierung:</strong> Personalisierung durch KI-basierte Kundensegmentierung und Predictive Analytics</li>
+<li><strong>Innovation:</strong> Etablierung von KI-gestützten Innovationsprozessen für neue Produkte und Services</li>
+</ul>
+""",
+        "recommendations": f"""
+<p><strong>Konkrete Umsetzungsbeispiele{branch_context}:</strong></p>
+<ul>
+<li><strong>Quick Win:</strong> Implementierung eines KI-Assistenten für wiederkehrende Aufgaben – ROI innerhalb von 8 Wochen</li>
+<li><strong>Medium-Term:</strong> Integration von KI in Kerngeschäftsprozesse – Effizienzsteigerung 25-40%</li>
+<li><strong>Strategic:</strong> Entwicklung KI-basierter Produkte oder Services – neue Umsatzpotenziale erschließen</li>
+</ul>
+""",
+        "risks": f"""
+<p><strong>Spezifische Risikofelder{branch_context}:</strong></p>
+<ul>
+<li><strong>Technologierisiko:</strong> Schnelle Obsoleszenz von Tools – Mitigation durch flexible Architektur und Vendor-Diversifikation</li>
+<li><strong>Compliance-Risiko:</strong> EU AI Act Anforderungen – Mitigation durch frühzeitige Compliance-Prüfung und Dokumentation</li>
+<li><strong>Organisationsrisiko:</strong> Widerstand gegen Veränderung – Mitigation durch Change Management und frühe Einbindung</li>
+</ul>
+""",
+        "gamechanger": f"""
+<p><strong>Disruptive Potenziale{branch_context}:</strong></p>
+<ul>
+<li><strong>Geschäftsmodell-Innovation:</strong> KI ermöglicht neue Erlösmodelle und Wertschöpfungsketten</li>
+<li><strong>Marktpositionierung:</strong> Differenzierung durch überlegene Kundenerfahrung und Reaktionsgeschwindigkeit</li>
+<li><strong>Skalierbarkeit:</strong> KI-basierte Prozesse ermöglichen Wachstum ohne proportionale Ressourcenaufstockung</li>
+</ul>
+""",
+    }
+
+    return examples.get(section, "").strip()
+
+
+def _get_structural_expansion(section: str, size: str, branche: str, style: str) -> str:
+    """Level 3: Generate structural expansion with new subsections."""
+    branch_context = f" für {branche}" if branche else ""
+
+    # Structural expansions with new subsections
+    structural = {
+        "roadmap_90d": f"""
+<p><strong>Implementierungs-Checkliste{branch_context}:</strong></p>
+<ol>
+<li><strong>Woche 1-2:</strong> Stakeholder-Alignment und Ressourcenplanung abschließen</li>
+<li><strong>Woche 3-4:</strong> Technische Infrastruktur und Zugänge einrichten</li>
+<li><strong>Woche 5-8:</strong> Pilotimplementierung mit definiertem Scope durchführen</li>
+<li><strong>Woche 9-10:</strong> Evaluation und Optimierung basierend auf Piloterkenntnissen</li>
+<li><strong>Woche 11-12:</strong> Rollout-Planung und Dokumentation für Skalierung</li>
+</ol>
+<p><strong>Erfolgsmessung:</strong> Definition von 3-5 KPIs je Initiative. Baseline-Messung vor Implementierung. Wöchentliches Tracking während der Umsetzung.</p>
+""",
+        "roadmap_12m": f"""
+<p><strong>Governance-Struktur{branch_context}:</strong></p>
+<ol>
+<li><strong>Steering Committee:</strong> Quartalsweise strategische Reviews mit Entscheidungskompetenz</li>
+<li><strong>Projektteam:</strong> Operative Umsetzung mit wöchentlichen Stand-ups</li>
+<li><strong>Fachbereiche:</strong> Integration in Tagesgeschäft mit definierten Ansprechpartnern</li>
+</ol>
+<p><strong>Budget-Framework:</strong> Initiales Investment für Foundation-Phase. Skalierungsbudget nach erfolgreichem Pilot. Laufende Kosten für Maintenance und Weiterentwicklung einplanen.</p>
+""",
+        "recommendations": f"""
+<p><strong>Umsetzungs-Roadmap{branch_context}:</strong></p>
+<ol>
+<li><strong>Sofort (0-30 Tage):</strong> Quick Wins mit geringem Risiko und schnellem ROI</li>
+<li><strong>Kurzfristig (1-3 Monate):</strong> Foundational Capabilities aufbauen</li>
+<li><strong>Mittelfristig (3-6 Monate):</strong> Kernprozesse transformieren</li>
+<li><strong>Langfristig (6-12 Monate):</strong> Strategische Differenzierung realisieren</li>
+</ol>
+<p><strong>Ressourcenplanung:</strong> Dedizierte FTEs für Implementierung. Externe Expertise für Spezialbereiche. Schulungsbudget für Kompetenzaufbau.</p>
+""",
+        "risks": f"""
+<p><strong>Risiko-Management-Framework{branch_context}:</strong></p>
+<ol>
+<li><strong>Identifikation:</strong> Kontinuierliche Risiko-Scans und Stakeholder-Feedback</li>
+<li><strong>Bewertung:</strong> Quantifizierung nach Eintrittswahrscheinlichkeit × Impact</li>
+<li><strong>Mitigation:</strong> Definierte Maßnahmen je Risikokategorie mit Verantwortlichkeiten</li>
+<li><strong>Monitoring:</strong> Regelmäßige Reviews und Anpassung der Risikobewertung</li>
+</ol>
+<p><strong>Eskalationspfade:</strong> Klare Schwellenwerte für Eskalation. Definierte Entscheidungskompetenzen je Eskalationsstufe.</p>
+""",
+        "gamechanger": f"""
+<p><strong>Innovationsportfolio{branch_context}:</strong></p>
+<ol>
+<li><strong>Horizon 1 (Core):</strong> KI zur Optimierung bestehender Prozesse und Produkte</li>
+<li><strong>Horizon 2 (Adjacent):</strong> KI für neue Geschäftsfelder im Kernmarkt</li>
+<li><strong>Horizon 3 (Transformational):</strong> Disruptive KI-basierte Geschäftsmodelle</li>
+</ol>
+<p><strong>Investment-Allokation:</strong> 70% Horizon 1, 20% Horizon 2, 10% Horizon 3. Regelmäßige Rebalancierung basierend auf Marktentwicklung.</p>
+""",
+    }
+
+    return structural.get(section, "").strip()
+
+
+def smart_expand_sections(
+    sections: Dict[str, Any],
+    size: str = "team",
+    branche: str = "",
+    style: str = "consulting_structured",
+) -> Dict[str, int]:
+    """
+    N3.4: Apply smart_expand to all configured sections.
+
+    Args:
+        sections: Dict of section_name -> content
+        size: Company size
+        branche: Branch/industry
+        style: Expansion style
+
+    Returns:
+        Dict of section_name -> words_added
+    """
+    expansion_stats: Dict[str, int] = {}
+
+    # Sections that benefit from smart expansion
+    smart_expand_sections = [
+        "roadmap_90d", "roadmap_12m", "gamechanger",
+        "recommendations", "risks"
+    ]
+
+    for section_key in smart_expand_sections:
+        for key_variant in [section_key, f"{section_key.upper()}_HTML", f"{section_key}_HTML"]:
+            if key_variant not in sections:
+                continue
+
+            content = sections[key_variant]
+            if not isinstance(content, str) or not content.strip():
+                continue
+
+            min_words = get_extend_min_words(section_key, size)
+            if min_words <= 0:
+                continue
+
+            # Use smart_expand with depth level 3 for comprehensive expansion
+            expanded, new_count, was_expanded = smart_expand(
+                content, min_words, section_key,
+                style=style, depth_level=3, size=size, branche=branche
+            )
+
+            if was_expanded:
+                sections[key_variant] = expanded
+                original_count = count_words(content)
+                expansion_stats[key_variant] = new_count - original_count
+
+    total_expanded = sum(1 for v in expansion_stats.values() if v > 0)
+    if total_expanded > 0:
+        log.info("[N3.4-SMART-EXPAND] Smart-expanded %d sections", total_expanded)
+
+    return expansion_stats
+
+
 def _get_round1_extension(section: str, size: str, branche: str) -> str:
     """Round 1: +15% substantial addition."""
     # Use existing extension paragraphs for round 1

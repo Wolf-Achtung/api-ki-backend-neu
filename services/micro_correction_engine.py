@@ -939,6 +939,543 @@ def apply_du_filter_to_sections(
 
 
 # =============================================================================
+# N3.4 TASK 3: Tone Harmonizer v3 - Big-Four Consulting Style
+# =============================================================================
+
+# Forbidden phrases that indicate GPT fluff (to be replaced/removed)
+CONSULTING_AVOID_LIST: List[str] = [
+    "kannst du",
+    "du solltest",
+    "es wäre wichtig zu beachten",
+    "lassen Sie uns",
+    "wie kann ich helfen",
+    "könnte hilfreich sein",
+    "solltest du",
+    "es wäre sinnvoll",
+    "zusammenfassend lässt sich sagen",
+    "wie bereits erwähnt",
+    "es ist anzumerken",
+    "abschließend sei erwähnt",
+    "im Folgenden wird",
+    "nachfolgend werden",
+    "es könnte empfehlenswert sein",
+    "man könnte argumentieren",
+    "grundsätzlich gilt",
+    "generell kann man sagen",
+]
+
+# Big-Four consulting style replacements (GPT → Consulting)
+BIG_FOUR_REPLACEMENTS: Dict[str, str] = {
+    # Weak → Strong formulations
+    "könnte sinnvoll sein": "empfiehlt sich",
+    "wäre empfehlenswert": "ist empfehlenswert",
+    "sollte man überlegen": "ist prioritär umzusetzen",
+    "könnte man in Betracht ziehen": "ist zu evaluieren",
+    "wäre eine Option": "stellt eine strategische Option dar",
+    "könnte helfen": "unterstützt",
+    "würde empfehlen": "empfehlen wir",
+    "man sollte bedenken": "zu berücksichtigen ist",
+    "es wäre gut": "empfehlenswert ist",
+    "es könnte sein": "es zeigt sich",
+
+    # Passive → Active consulting voice
+    "es wird empfohlen": "empfehlenswert ist",
+    "es sollte beachtet werden": "zu beachten ist",
+    "es ist wichtig": "zentral ist",
+    "es ist zu beachten": "zu berücksichtigen gilt",
+    "es muss bedacht werden": "wesentlich ist",
+
+    # Generic → Specific consulting terms
+    "Dinge": "Faktoren",
+    "Sachen": "Aspekte",
+    "sehr gut": "überdurchschnittlich",
+    "ziemlich": "signifikant",
+    "ein bisschen": "moderat",
+    "vielleicht": "potenziell",
+    "irgendwie": "in gewissem Maße",
+
+    # GPT support phrases → Removed
+    "Gerne helfe ich": "",
+    "gerne erkläre ich": "",
+    "Ich würde empfehlen": "Empfehlenswert ist",
+    "ich denke": "die Analyse zeigt",
+    "meiner Meinung nach": "basierend auf der Evaluation",
+
+    # Weak conclusions → Strong conclusions
+    "zusammenfassend": "im Ergebnis",
+    "abschließend": "resultierend",
+    "zum Schluss": "als Handlungsempfehlung",
+}
+
+# Target sentence length for consulting style (18-24 words average)
+CONSULTING_SENTENCE_TARGET_MIN = 18
+CONSULTING_SENTENCE_TARGET_MAX = 24
+
+
+def harmonize_consulting_tone(text: str, aggressive: bool = False) -> Tuple[str, int]:
+    """
+    N3.4 TASK 3: Harmonize text to Big-Four consulting style.
+
+    Applies:
+    1. Removal/replacement of avoid_list phrases
+    2. Big-Four style replacements
+    3. Optional sentence length optimization
+
+    Args:
+        text: Input text
+        aggressive: If True, also optimizes sentence length
+
+    Returns:
+        Tuple of (harmonized_text, replacement_count)
+    """
+    if not text:
+        return text, 0
+
+    harmonized = text
+    replacement_count = 0
+
+    # Step 1: Remove/replace avoid_list phrases
+    for phrase in CONSULTING_AVOID_LIST:
+        pattern = re.compile(re.escape(phrase), re.IGNORECASE)
+        if pattern.search(harmonized):
+            harmonized = pattern.sub("", harmonized)
+            replacement_count += 1
+
+    # Step 2: Apply Big-Four replacements
+    for gpt_phrase, consulting_phrase in BIG_FOUR_REPLACEMENTS.items():
+        pattern = re.compile(re.escape(gpt_phrase), re.IGNORECASE)
+        if pattern.search(harmonized):
+            # Preserve case of first character
+            def replace_preserve_case(match):
+                original = match.group(0)
+                if original[0].isupper() and consulting_phrase:
+                    return consulting_phrase[0].upper() + consulting_phrase[1:]
+                return consulting_phrase
+
+            harmonized = pattern.sub(replace_preserve_case, harmonized)
+            replacement_count += 1
+
+    # Step 3: Clean up artifacts
+    harmonized = re.sub(r'\s{2,}', ' ', harmonized)  # Multiple spaces
+    harmonized = re.sub(r'\.\s*\.', '.', harmonized)  # Double periods
+    harmonized = re.sub(r',\s*,', ',', harmonized)  # Double commas
+    harmonized = re.sub(r'<p>\s*</p>', '', harmonized)  # Empty paragraphs
+
+    if replacement_count > 0:
+        log.debug(
+            "[N3.4-ToneHarmonizer] Applied %d consulting tone replacements",
+            replacement_count
+        )
+
+    return harmonized.strip(), replacement_count
+
+
+def apply_consulting_tone_to_sections(
+    sections: Dict[str, str],
+    target_sections: Optional[Set[str]] = None,
+) -> Tuple[Dict[str, str], int]:
+    """
+    N3.4 TASK 3: Apply consulting tone harmonization to sections.
+
+    Args:
+        sections: Dict of section_name -> content
+        target_sections: Optional set of sections to process.
+                        If None, processes all sections.
+
+    Returns:
+        Tuple of (harmonized_sections, total_replacements)
+    """
+    harmonized = dict(sections)
+    total_replacements = 0
+
+    for section_name, content in sections.items():
+        if not content or not isinstance(content, str):
+            continue
+
+        # If target_sections specified, check if this section should be processed
+        if target_sections:
+            section_lower = section_name.lower()
+            should_process = any(
+                target.lower() in section_lower or section_lower in target.lower()
+                for target in target_sections
+            )
+            if not should_process:
+                continue
+
+        harmonized_text, count = harmonize_consulting_tone(content)
+
+        if count > 0:
+            harmonized[section_name] = harmonized_text
+            total_replacements += count
+            log.info(
+                "[N3.4-ToneHarmonizer] Section '%s': %d replacements",
+                section_name, count
+            )
+
+    if total_replacements > 0:
+        log.info(
+            "[N3.4-ToneHarmonizer] Total: %d consulting tone replacements",
+            total_replacements
+        )
+
+    return harmonized, total_replacements
+
+
+# =============================================================================
+# N3.4 TASK 7: Executive Summary Enhancer - 3+3+3 Structure
+# =============================================================================
+
+# Target structure for Executive Summary
+EXEC_SUMMARY_STRUCTURE = {
+    "key_insights": 3,  # 3 Key Insights bullets
+    "handlungsfelder": 3,  # 3 Action Areas bullets
+    "risiko_mitigation": 3,  # 3 Risk Mitigation points
+    "strategic_context": 2,  # 2 sentences strategic framing
+}
+
+# Template patterns for each section
+EXEC_SUMMARY_TEMPLATES = {
+    "key_insights": [
+        "KI-Reifegrad liegt bei {level}% – {implication}",
+        "Automatisierungspotenzial identifiziert: {potential}",
+        "{branch}-spezifische KI-Adoption zeigt {trend}",
+    ],
+    "handlungsfelder": [
+        "Priorisierung der {area} als strategischer Schwerpunkt",
+        "Aufbau von {capability} für nachhaltige KI-Nutzung",
+        "Integration von {tool_type} in bestehende Prozesse",
+    ],
+    "risiko_mitigation": [
+        "DSGVO-Compliance durch {measure} sicherstellen",
+        "Mitarbeiter-Akzeptanz via {approach} fördern",
+        "Technologie-Abhängigkeiten durch {strategy} minimieren",
+    ],
+    "strategic_context": [
+        "Die strategische Positionierung im KI-Wettbewerb erfordert einen fokussierten Ansatz.",
+        "Durch gezielte Maßnahmen kann {company} einen nachhaltigen Wettbewerbsvorteil erzielen.",
+    ],
+}
+
+# Section headers for 3+3+3 structure
+EXEC_SUMMARY_HEADERS = {
+    "key_insights": "Zentrale Erkenntnisse",
+    "handlungsfelder": "Strategische Handlungsfelder",
+    "risiko_mitigation": "Risiko-Mitigation",
+}
+
+
+@dataclass
+class ExecSummarySection:
+    """Section of executive summary."""
+    section_type: str
+    bullets: List[str] = field(default_factory=list)
+    html: str = ""
+
+
+@dataclass
+class ExecSummaryStructure:
+    """Structured executive summary (3+3+3 format)."""
+    key_insights: ExecSummarySection = field(
+        default_factory=lambda: ExecSummarySection("key_insights")
+    )
+    handlungsfelder: ExecSummarySection = field(
+        default_factory=lambda: ExecSummarySection("handlungsfelder")
+    )
+    risiko_mitigation: ExecSummarySection = field(
+        default_factory=lambda: ExecSummarySection("risiko_mitigation")
+    )
+    strategic_context: List[str] = field(default_factory=list)
+    is_valid: bool = False
+    total_bullets: int = 0
+
+
+def extract_bullets_from_html(html: str) -> List[str]:
+    """
+    Extract bullet points from HTML content.
+
+    Args:
+        html: HTML string with <li> or <p>• tags
+
+    Returns:
+        List of bullet text strings
+    """
+    bullets: List[str] = []
+
+    # Pattern 1: <li> items
+    li_pattern = re.compile(r'<li[^>]*>(.*?)</li>', re.DOTALL | re.IGNORECASE)
+    li_matches = li_pattern.findall(html)
+    for match in li_matches:
+        text = re.sub(r'<[^>]+>', '', match).strip()
+        if text and len(text) > 10:
+            bullets.append(text)
+
+    # Pattern 2: Bullet characters (•, -, *)
+    if not bullets:
+        bullet_pattern = re.compile(r'[•\-\*]\s*([^\n<]+)', re.MULTILINE)
+        bullet_matches = bullet_pattern.findall(html)
+        for match in bullet_matches:
+            text = match.strip()
+            if text and len(text) > 10:
+                bullets.append(text)
+
+    # Pattern 3: Numbered items (1., 2., etc.)
+    if not bullets:
+        numbered_pattern = re.compile(r'\d+\.\s*([^\n<]+)', re.MULTILINE)
+        numbered_matches = numbered_pattern.findall(html)
+        for match in numbered_matches:
+            text = match.strip()
+            if text and len(text) > 10:
+                bullets.append(text)
+
+    return bullets
+
+
+def classify_bullet(bullet: str) -> str:
+    """
+    Classify a bullet point into a category.
+
+    Args:
+        bullet: Bullet text
+
+    Returns:
+        Category: "key_insights", "handlungsfelder", or "risiko_mitigation"
+    """
+    bullet_lower = bullet.lower()
+
+    # Risk/Mitigation indicators
+    risk_indicators = [
+        "risiko", "dsgvo", "compliance", "datenschutz", "sicherheit",
+        "abhängigkeit", "mitigation", "vermeid", "minimier", "schutz",
+    ]
+    if any(ind in bullet_lower for ind in risk_indicators):
+        return "risiko_mitigation"
+
+    # Action/Handlungsfeld indicators
+    action_indicators = [
+        "prioris", "aufbau", "integration", "implement", "etabl",
+        "entwickl", "schritt", "maßnahme", "handlung", "strateg",
+    ]
+    if any(ind in bullet_lower for ind in action_indicators):
+        return "handlungsfelder"
+
+    # Default to key insights
+    return "key_insights"
+
+
+def analyze_exec_summary_structure(
+    exec_summary_html: str,
+) -> ExecSummaryStructure:
+    """
+    N3.4 TASK 7: Analyze executive summary for 3+3+3 structure.
+
+    Args:
+        exec_summary_html: Executive summary HTML content
+
+    Returns:
+        ExecSummaryStructure with classified bullets
+    """
+    structure = ExecSummaryStructure()
+
+    if not exec_summary_html:
+        return structure
+
+    # Extract all bullets
+    all_bullets = extract_bullets_from_html(exec_summary_html)
+
+    # Classify bullets
+    for bullet in all_bullets:
+        category = classify_bullet(bullet)
+
+        if category == "key_insights":
+            structure.key_insights.bullets.append(bullet)
+        elif category == "handlungsfelder":
+            structure.handlungsfelder.bullets.append(bullet)
+        elif category == "risiko_mitigation":
+            structure.risiko_mitigation.bullets.append(bullet)
+
+    # Calculate totals
+    structure.total_bullets = (
+        len(structure.key_insights.bullets)
+        + len(structure.handlungsfelder.bullets)
+        + len(structure.risiko_mitigation.bullets)
+    )
+
+    # Check if structure is valid (at least 2 bullets per category)
+    structure.is_valid = (
+        len(structure.key_insights.bullets) >= 2
+        and len(structure.handlungsfelder.bullets) >= 2
+        and len(structure.risiko_mitigation.bullets) >= 2
+    )
+
+    return structure
+
+
+def enhance_exec_summary_structure(
+    exec_summary_html: str,
+    briefing: Optional[Dict[str, Any]] = None,
+) -> Tuple[str, ExecSummaryStructure]:
+    """
+    N3.4 TASK 7: Enhance executive summary to 3+3+3 structure.
+
+    Restructures the executive summary into:
+    - 3 Key Insights bullets
+    - 3 Handlungsfelder bullets
+    - 3 Risk Mitigation bullets
+    - 2 strategic context sentences
+
+    Args:
+        exec_summary_html: Original executive summary HTML
+        briefing: Optional briefing data for context
+
+    Returns:
+        Tuple of (enhanced_html, structure_analysis)
+    """
+    if not exec_summary_html:
+        return exec_summary_html, ExecSummaryStructure()
+
+    # Analyze current structure
+    structure = analyze_exec_summary_structure(exec_summary_html)
+
+    # If already valid 3+3+3 structure, return as-is
+    if structure.is_valid:
+        log.info(
+            "[N3.4-ExecSummary] Structure already valid: %d/%d/%d bullets",
+            len(structure.key_insights.bullets),
+            len(structure.handlungsfelder.bullets),
+            len(structure.risiko_mitigation.bullets)
+        )
+        return exec_summary_html, structure
+
+    # Build enhanced HTML
+    html_parts = []
+
+    # Key Insights section
+    if structure.key_insights.bullets:
+        html_parts.append(
+            f'<h4>{EXEC_SUMMARY_HEADERS["key_insights"]}</h4>'
+        )
+        html_parts.append('<ul>')
+        for bullet in structure.key_insights.bullets[:3]:
+            html_parts.append(f'<li>{bullet}</li>')
+        html_parts.append('</ul>')
+
+    # Handlungsfelder section
+    if structure.handlungsfelder.bullets:
+        html_parts.append(
+            f'<h4>{EXEC_SUMMARY_HEADERS["handlungsfelder"]}</h4>'
+        )
+        html_parts.append('<ul>')
+        for bullet in structure.handlungsfelder.bullets[:3]:
+            html_parts.append(f'<li>{bullet}</li>')
+        html_parts.append('</ul>')
+
+    # Risk Mitigation section
+    if structure.risiko_mitigation.bullets:
+        html_parts.append(
+            f'<h4>{EXEC_SUMMARY_HEADERS["risiko_mitigation"]}</h4>'
+        )
+        html_parts.append('<ul>')
+        for bullet in structure.risiko_mitigation.bullets[:3]:
+            html_parts.append(f'<li>{bullet}</li>')
+        html_parts.append('</ul>')
+
+    # If no structured content, return original
+    if not html_parts:
+        return exec_summary_html, structure
+
+    enhanced_html = '\n'.join(html_parts)
+
+    log.info(
+        "[N3.4-ExecSummary] Enhanced to 3+3+3: %d/%d/%d bullets",
+        min(len(structure.key_insights.bullets), 3),
+        min(len(structure.handlungsfelder.bullets), 3),
+        min(len(structure.risiko_mitigation.bullets), 3)
+    )
+
+    return enhanced_html, structure
+
+
+def validate_exec_summary_333(
+    exec_summary_html: str,
+) -> Tuple[bool, List[str]]:
+    """
+    N3.4 TASK 7: Validate executive summary has 3+3+3 structure.
+
+    Args:
+        exec_summary_html: Executive summary HTML
+
+    Returns:
+        Tuple of (is_valid, list of issues)
+    """
+    issues: List[str] = []
+    structure = analyze_exec_summary_structure(exec_summary_html)
+
+    # Check Key Insights
+    if len(structure.key_insights.bullets) < 3:
+        issues.append(
+            f"Key Insights: {len(structure.key_insights.bullets)}/3 bullets"
+        )
+
+    # Check Handlungsfelder
+    if len(structure.handlungsfelder.bullets) < 3:
+        issues.append(
+            f"Handlungsfelder: {len(structure.handlungsfelder.bullets)}/3 bullets"
+        )
+
+    # Check Risk Mitigation
+    if len(structure.risiko_mitigation.bullets) < 3:
+        issues.append(
+            f"Risiko-Mitigation: {len(structure.risiko_mitigation.bullets)}/3 bullets"
+        )
+
+    is_valid = len(issues) == 0
+    return is_valid, issues
+
+
+def get_exec_summary_template(
+    branche: str = "",
+    company_size: str = "team",
+) -> str:
+    """
+    N3.4 TASK 7: Get template for 3+3+3 executive summary.
+
+    Args:
+        branche: Industry/branch
+        company_size: Company size
+
+    Returns:
+        HTML template with placeholder structure
+    """
+    template = f'''
+<div class="exec-summary-333">
+    <h4>{EXEC_SUMMARY_HEADERS["key_insights"]}</h4>
+    <ul>
+        <li>{{KEY_INSIGHT_1}}</li>
+        <li>{{KEY_INSIGHT_2}}</li>
+        <li>{{KEY_INSIGHT_3}}</li>
+    </ul>
+
+    <h4>{EXEC_SUMMARY_HEADERS["handlungsfelder"]}</h4>
+    <ul>
+        <li>{{HANDLUNGSFELD_1}}</li>
+        <li>{{HANDLUNGSFELD_2}}</li>
+        <li>{{HANDLUNGSFELD_3}}</li>
+    </ul>
+
+    <h4>{EXEC_SUMMARY_HEADERS["risiko_mitigation"]}</h4>
+    <ul>
+        <li>{{RISIKO_1}}</li>
+        <li>{{RISIKO_2}}</li>
+        <li>{{RISIKO_3}}</li>
+    </ul>
+
+    <p class="strategic-context">{{STRATEGIC_CONTEXT}}</p>
+</div>
+'''
+    return template.strip()
+
+
+# =============================================================================
 # MODULE INITIALIZATION
 # =============================================================================
 
