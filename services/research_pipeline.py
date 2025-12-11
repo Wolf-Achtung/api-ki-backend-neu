@@ -74,8 +74,8 @@ import html
 import logging
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Tuple
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any, Dict, List, Tuple, Union
+from concurrent.futures import ThreadPoolExecutor, as_completed, Future
 
 from .research_clients import parse_rss, harvest_links
 from . import provider_tavily
@@ -540,7 +540,8 @@ def run_research(answers: Dict[str, Any]) -> Dict[str, Any]:
 
         # --- PARALLEL API CALLS for better performance ---
         with ThreadPoolExecutor(max_workers=5) as executor:
-            futures = {}
+            # N3: Use Any type to accommodate different return types (List and Tuple)
+            futures: Dict[str, Future[Any]] = {}
 
             # 1. Tavily for Tools
             if os.getenv("TAVILY_API_KEY"):
@@ -571,20 +572,26 @@ def run_research(answers: Dict[str, Any]) -> Dict[str, Any]:
                 try:
                     result = future.result(timeout=45)  # Extended timeout for retries
                     if key == "tavily_tools":
-                        tools.extend(result)
-                        if result:
+                        # Tavily returns List[Dict]
+                        tavily_result: List[Dict[str, str]] = result
+                        tools.extend(tavily_result)
+                        if tavily_result:
                             research_sources["tavily_success"] = True
                     elif key == "tavily_funding":
-                        funding.extend(result)
-                        if result:
+                        # Tavily returns List[Dict]
+                        tavily_result = result
+                        funding.extend(tavily_result)
+                        if tavily_result:
                             research_sources["tavily_success"] = True
                     elif key == "pplx_market":
-                        # N3-01: Unpack (results, success_flag)
-                        pplx_results, pplx_market_success = result
+                        # N3-01: Perplexity returns Tuple[List[Dict], bool]
+                        pplx_tuple: Tuple[List[Dict[str, str]], bool] = result
+                        pplx_results, pplx_market_success = pplx_tuple
                         market_insights.extend(pplx_results)
                     elif key == "pplx_competitor":
-                        # N3-01: Unpack (results, success_flag)
-                        pplx_results, pplx_competitor_success = result
+                        # N3-01: Perplexity returns Tuple[List[Dict], bool]
+                        pplx_tuple = result
+                        pplx_results, pplx_competitor_success = pplx_tuple
                         market_insights.extend(pplx_results)
                 except Exception as exc:
                     log.warning("⚠️ %s failed: %s", key, exc)
