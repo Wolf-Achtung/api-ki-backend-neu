@@ -21,10 +21,12 @@ from services.report_validator import GENERIC_LLM_LEAK_PHRASES, remove_leak_phra
 
 log = logging.getLogger(__name__)
 
-# N3: Pre-compute lowercase leak phrases once for O(1) lookup
-_LEAK_PHRASES_LOWER = {p.lower() for p in GENERIC_LLM_LEAK_PHRASES}
-# Map lowercase -> original for reporting
-_LEAK_PHRASES_MAP = {p.lower(): p for p in GENERIC_LLM_LEAK_PHRASES}
+# N3: Pre-compute a single regex pattern for O(n) leak detection instead of O(n*phrases)
+# This matches ANY leak phrase in a single pass through the HTML
+_LEAK_PATTERN = re.compile(
+    '|'.join(re.escape(p) for p in GENERIC_LLM_LEAK_PHRASES),
+    re.IGNORECASE
+)
 
 def _env() -> Environment:
     tpl_dir = Path(os.getenv("REPORT_TEMPLATE_DIR", "templates"))
@@ -233,13 +235,8 @@ def render(briefing_obj: Any,
     # =========================================================================
     # This is the LAST line of defense before PDF rendering.
     # If any leak phrases survived until here, we remove them with a warning.
-    html_lower = html.lower()
-    # N3: Use pre-computed lowercase phrases for O(n) instead of O(n*m)
-    found_leaks = [
-        _LEAK_PHRASES_MAP[phrase_lower]
-        for phrase_lower in _LEAK_PHRASES_LOWER
-        if phrase_lower in html_lower
-    ]
+    # N3: Use single compiled regex for O(n) detection instead of O(n*phrases)
+    found_leaks = _LEAK_PATTERN.findall(html)
 
     if found_leaks:
         log.warning(
@@ -251,13 +248,8 @@ def render(briefing_obj: Any,
         log.info(f"[N2-5] Emergency cleanup removed {removed_count} leak phrases from final HTML")
 
         # Assert that all leaks are now gone (soft-fail: log error but don't crash)
-        html_lower_after = html.lower()
-        # N3: Use pre-computed lowercase phrases for O(n) instead of O(n*m)
-        remaining_leaks = [
-            _LEAK_PHRASES_MAP[phrase_lower]
-            for phrase_lower in _LEAK_PHRASES_LOWER
-            if phrase_lower in html_lower_after
-        ]
+        # N3: Use single compiled regex for O(n) verification instead of O(n*phrases)
+        remaining_leaks = _LEAK_PATTERN.findall(html)
         if remaining_leaks:
             log.error(
                 f"❌ [N2-5] CRITICAL: {len(remaining_leaks)} leak phrases STILL present after cleanup! "
