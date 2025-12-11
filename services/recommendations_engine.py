@@ -20,7 +20,11 @@ SPRINT N2 CHANGES (N2-4.2):
 - Updated derive_relevant_risks() fallback to use "general_risk_reduction"
 - Ensures reduces_risk recommendations always have at least one related_risk
 
-Version: 1.2.0 (Sprint N2 - N2-4.2 Risk Relation Fallback)
+SPRINT N3.2 CHANGES (TASK 3.2):
+- Set _reco_healed flag in sections after recommendations healing
+- Prevents consistency_engine RECO_002 from re-flagging healed recommendations
+
+Version: 1.3.0 (Sprint N3.2 - TASK 3.2 RECO Healing Flag)
 Author: Claude + Wolf
 """
 
@@ -648,7 +652,7 @@ def _generate_summary(
 
 def generate_recommendations_report(
     context: Optional[Any] = None,
-    sections: Optional[Dict[str, str]] = None,
+    sections: Optional[Dict[str, Any]] = None,
     tools_data: Optional[Any] = None,
     funding_data: Optional[Any] = None,
     risk_report: Optional[Any] = None,
@@ -679,8 +683,11 @@ def generate_recommendations_report(
     """
     log.info("[G32] Generating Recommendations Report...")
 
-    sections = sections or {}
-    briefing = briefing or {}
+    # N3.2: Use 'is None' check to preserve passed-in empty dict for flag setting
+    if sections is None:
+        sections = {}
+    if briefing is None:
+        briefing = {}
 
     # Determine size and branch
     size_label = _determine_size_label(briefing)
@@ -731,10 +738,19 @@ def generate_recommendations_report(
 
     # SPRINT N1 (RECO_002): Heal consistency issues
     # Auto-populate related_risks for recommendations with risk_relation="reduces_risk"
+    # SPRINT N3.2 (TASK 3.2): Track whether healing was performed to set _reco_healed flag
+    recs_needing_heal = any(
+        rec.risk_relation == "reduces_risk" and not rec.related_risks
+        for rec in recommendations
+    )
     recommendations = heal_recommendations_consistency(
         recommendations=recommendations,
         risk_report=risk_report,
     )
+    # SPRINT N3.2: Set _reco_healed flag in sections if healing was performed
+    if recs_needing_heal and sections is not None:
+        sections["_reco_healed"] = True
+        log.info("[N3.2] Set _reco_healed flag in sections after healing")
 
     report = RecommendationsReport(
         recommendations=recommendations,

@@ -579,6 +579,11 @@ class ConsistencyEngine:
         self._check_cross_section_references()  # C3: Cross-section references
         self._check_timeline_alignment()  # C4: Timeline alignment
 
+        # N3.4 TASK 4: Cross-section coherence v3
+        self._check_risk_recommendations_roadmap_coherence()  # N34_001
+        self._check_benchmark_market_coherence()  # N34_002
+        self._check_tools_roadmap_risk_coherence()  # N34_003
+
         # Calculate domain scores
         self._calculate_domain_scores()
 
@@ -1702,8 +1707,12 @@ class ConsistencyEngine:
         # Extract ROI values from scenarios
         scenario_rois = self._extract_scenario_rois(bc_html)
 
-        # N3.1: Check if BC healing was applied (flag from business_case_engine_v2)
+        # N3.1/N3.3: Check if BC healing was applied (flag from business_case_engine_v2)
         bc_healed = self.sections.get("_bc_healed", False)
+
+        # N3.3: Log when skipping BC_001 due to healing
+        if bc_healed:
+            log.info("[G22] Skip BC_001 – healed scenario detected (ROI normalized)")
 
         if scenario_rois and not bc_healed:
             opt_roi = scenario_rois.get("optimistic", 0)
@@ -2132,8 +2141,12 @@ class ConsistencyEngine:
         # If risk_relation="reduces_risk", related_risks must contain high/critical risks
         risk_html = self.sections.get("RISK_ENGINE_HTML", "") or self.sections.get("RISKS_HTML", "")
 
-        # N3.1: Check if RECO healing was applied (flag from recommendations_engine)
+        # N3.1/N3.3: Check if RECO healing was applied (flag from recommendations_engine)
         reco_healed = self.sections.get("_reco_healed", False)
+
+        # N3.3: Log when skipping RECO_002 due to healing
+        if reco_healed:
+            log.info("[G22] Skip RECO_002 – healed recommendations detected")
 
         if risk_html and reco_html and not reco_healed:
             # Check for "reduces_risk" markers in recommendations
@@ -4608,6 +4621,163 @@ class ConsistencyEngine:
                     expected=f"12M-Roadmap beginnt mit Phase {max_90d_phase + 1}+",
                     actual=f"90d endet Phase {max_90d_phase}, 12m beginnt Phase {min_12m_phase}",
                     suggestion="Synchronisiere Phase-Nummerierung zwischen Roadmaps",
+                ))
+
+    # -------------------------------------------------------------------------
+    # N3.4 TASK 4: Cross-Section Coherence v3
+    # -------------------------------------------------------------------------
+
+    def _check_risk_recommendations_roadmap_coherence(self) -> None:
+        """
+        N3.4: Check Risk ↔ Recommendations ↔ Roadmap coherence.
+
+        Rules:
+        - Each risk category should have a matching recommendation
+        - Recommendations should appear in roadmap phases
+        """
+        self.report.checked_rules += 2
+
+        risks_html = self.sections.get("RISKS_HTML", "") or self.sections.get("RISK_REPORT_HTML", "")
+        recommendations_html = self.sections.get("RECOMMENDATIONS_HTML", "")
+        roadmap_html = self.sections.get("ROADMAP_90D_HTML", "") + self.sections.get("ROADMAP_12M_HTML", "")
+
+        if not risks_html or not recommendations_html:
+            return
+
+        # Extract risk categories
+        risk_categories = re.findall(
+            r'(?:Risiko|Risk|Gefahr)[:\s]*([^<,\.]+)',
+            risks_html, re.IGNORECASE
+        )
+
+        # Check if recommendations address risks
+        recommendations_text = _strip_html(recommendations_html).lower()
+
+        unaddressed_risks = []
+        for risk in risk_categories[:5]:  # Check first 5 risks
+            risk_lower = risk.strip().lower()
+            if len(risk_lower) > 3 and risk_lower not in recommendations_text:
+                # Check for partial matches
+                risk_words = risk_lower.split()
+                if not any(word in recommendations_text for word in risk_words if len(word) > 4):
+                    unaddressed_risks.append(risk.strip())
+
+        if unaddressed_risks:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="N34_001",
+                severity="INFO",
+                domain="recommendations",
+                source_section="risks",
+                target_section="recommendations",
+                message=f"Risikokategorien ohne korrespondierende Empfehlungen: {', '.join(unaddressed_risks[:3])}",
+                expected="Jede Risikokategorie sollte eine Empfehlung haben",
+                actual=f"{len(unaddressed_risks)} Risiken ohne Empfehlung",
+                suggestion="Ergänze Empfehlungen für identifizierte Risiken",
+            ))
+
+    def _check_benchmark_market_coherence(self) -> None:
+        """
+        N3.4: Check Benchmark ↔ Market profile coherence.
+
+        Rules:
+        - If benchmark shows "unter Median", market profile should not say "führend"
+        - Terminology should be consistent
+        """
+        self.report.checked_rules += 1
+
+        benchmark_html = self.sections.get("BENCHMARK_HTML", "") or self.sections.get("WETTBEWERB_BENCHMARK_HTML", "")
+        market_html = self.sections.get("UNTERNEHMENSPROFIL_MARKT_HTML", "") or self.sections.get("MARKTPROFIL_HTML", "")
+
+        if not benchmark_html or not market_html:
+            return
+
+        benchmark_text = _strip_html(benchmark_html).lower()
+        market_text = _strip_html(market_html).lower()
+
+        # Check for contradictions
+        negative_benchmark_indicators = ["unter median", "unterdurchschnittlich", "nachholbedarf", "rückstand"]
+        positive_market_indicators = ["marktführer", "führend", "spitzenposition", "vorreiter"]
+
+        has_negative_benchmark = any(ind in benchmark_text for ind in negative_benchmark_indicators)
+        has_positive_market = any(ind in market_text for ind in positive_market_indicators)
+
+        if has_negative_benchmark and has_positive_market:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="N34_002",
+                severity="WARNING",
+                domain="benchmark",
+                source_section="benchmark",
+                target_section="marktprofil",
+                message="Widerspruch: Benchmark zeigt Nachholbedarf, Marktprofil spricht von Führungsposition",
+                expected="Konsistente Bewertung der Marktposition",
+                actual="Benchmark negativ, Marktprofil positiv",
+                suggestion="Harmonisiere Benchmark- und Marktprofil-Aussagen",
+            ))
+
+    def _check_tools_roadmap_risk_coherence(self) -> None:
+        """
+        N3.4: Check Tools ↔ Roadmap risk coherence.
+
+        Rules:
+        - Tools with high risk score (>=4) should not appear in Phase 1
+        - Tools without EU hosting should have DSGVO hint
+        """
+        self.report.checked_rules += 2
+
+        tools_html = self.sections.get("TOOLS_EMPFEHLUNGEN_HTML", "") or self.sections.get("TOOLS_HTML", "")
+        roadmap_90d_html = self.sections.get("ROADMAP_90D_HTML", "")
+
+        if not tools_html or not roadmap_90d_html:
+            return
+
+        # Extract tools with risk indicators
+        high_risk_tools = re.findall(
+            r'([A-Za-z0-9\-]+)[^<]*(?:Risiko|Risk)[:\s]*(?:hoch|high|[4-5])',
+            tools_html, re.IGNORECASE
+        )
+
+        # Check if high-risk tools appear in Phase 1
+        phase_1_match = re.search(
+            r'(?:Phase\s*1|Woche\s*1|Monat\s*1)[^<]*(?:<[^>]*>)*([^<]+)',
+            roadmap_90d_html, re.IGNORECASE | re.DOTALL
+        )
+
+        if phase_1_match and high_risk_tools:
+            phase_1_text = phase_1_match.group(1).lower()
+            risky_in_phase_1 = [t for t in high_risk_tools if t.lower() in phase_1_text]
+
+            if risky_in_phase_1:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="N34_003",
+                    severity="INFO",
+                    domain="roadmap",
+                    source_section="tools",
+                    target_section="roadmap_90d",
+                    message=f"High-Risk Tools in Phase 1: {', '.join(risky_in_phase_1[:3])}",
+                    expected="High-Risk Tools in späteren Phasen nach Evaluation",
+                    actual="High-Risk Tools in Phase 1 geplant",
+                    suggestion="Verschiebe High-Risk Tools in spätere Phasen",
+                ))
+
+        # Check for EU hosting / DSGVO hints
+        non_eu_tools = re.findall(
+            r'([A-Za-z0-9\-]+)[^<]*(?:US|non-EU|nicht-EU)',
+            tools_html, re.IGNORECASE
+        )
+
+        if non_eu_tools:
+            dsgvo_mentioned = "dsgvo" in tools_html.lower() or "gdpr" in tools_html.lower()
+            if not dsgvo_mentioned:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="N34_004",
+                    severity="INFO",
+                    domain="tools",
+                    source_section="tools",
+                    target_section="tools",
+                    message=f"Non-EU Tools ohne DSGVO-Hinweis: {', '.join(non_eu_tools[:3])}",
+                    expected="DSGVO-Hinweis bei Non-EU Tools",
+                    actual="Kein DSGVO-Hinweis gefunden",
+                    suggestion="Ergänze DSGVO-Compliance-Hinweise",
                 ))
 
     # -------------------------------------------------------------------------

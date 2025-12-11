@@ -93,8 +93,8 @@ class TestN3AutoExtendSections:
         from services.llm_postprocessor import get_extend_min_words
 
         # Test different sizes
-        # N3.1: Reduced from 130 to 110
-        assert get_extend_min_words("roadmap_90d", "solo") == 110
+        # N3.3: Reduced from 110 to 90 to minimize fallbacks
+        assert get_extend_min_words("roadmap_90d", "solo") == 90
         assert get_extend_min_words("roadmap_90d", "team") == 170
         assert get_extend_min_words("roadmap_90d", "kmu") == 190
 
