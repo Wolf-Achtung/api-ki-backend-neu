@@ -1979,6 +1979,10 @@ def remove_leak_phrases_from_html(html: str) -> Tuple[str, int]:
 
     This is a last-resort safety net before PDF rendering.
 
+    SPRINT N3: Optimized for performance with 95+ phrases.
+    - Pre-compute lowercase once
+    - Skip expensive .lower() calls in loop
+
     Args:
         html: HTML content to clean
 
@@ -1994,19 +1998,27 @@ def remove_leak_phrases_from_html(html: str) -> Tuple[str, int]:
     # Use module-level constant
     leak_phrases = GENERIC_LLM_LEAK_PHRASES
 
+    # N3: Pre-compute lowercase version once for faster checking
+    cleaned_lower = cleaned.lower()
+
     for phrase in leak_phrases:
-        if phrase.lower() in cleaned.lower():
-            # Find and remove sentences containing the phrase
-            # Pattern: sentence containing the phrase
-            pattern = rf'[^.!?]*{re.escape(phrase)}[^.!?]*[.!?]?\s*'
-            matches = len(re.findall(pattern, cleaned, re.IGNORECASE))
+        phrase_lower = phrase.lower()
+        # Quick check using pre-computed lowercase (fast)
+        if phrase_lower not in cleaned_lower:
+            continue
+
+        # Found a match - use regex to remove sentences containing it
+        pattern = rf'[^.!?]*{re.escape(phrase)}[^.!?]*[.!?]?\s*'
+        matches = len(re.findall(pattern, cleaned, re.IGNORECASE))
+        if matches > 0:
             cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE)
+            # Update lowercase version after modification
+            cleaned_lower = cleaned.lower()
             removed_count += matches
-            if matches > 0:
-                log.warning(
-                    "[N2-SafetyNet] Removed %d occurrences of leak phrase '%s'",
-                    matches, phrase
-                )
+            log.warning(
+                "[N2-SafetyNet] Removed %d occurrences of leak phrase '%s'",
+                matches, phrase
+            )
 
     return cleaned, removed_count
 
