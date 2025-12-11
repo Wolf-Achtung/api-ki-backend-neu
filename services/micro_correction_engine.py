@@ -321,10 +321,11 @@ PERSONALIZATION_KMU: Dict[str, str] = {
 
 
 # =============================================================================
-# N3.1: TONE NORMALIZATION (du → neutral/Sie)
+# N3.2: TONE NORMALIZATION (du → neutral/Sie) - Enhanced
 # =============================================================================
 # Converts informal "du" address to formal/neutral language
 # Used especially in Risk chapter where LLM sometimes uses informal address
+# N3.2: Extended with more contextual patterns and robust regex
 
 TONE_NORMALIZATION_DU: Dict[str, str] = {
     # Direct "du" forms → neutral/formal
@@ -336,10 +337,35 @@ TONE_NORMALIZATION_DU: Dict[str, str] = {
     "Du musst": "Es ist erforderlich",
     "du wirst": "es wird",
     "Du wirst": "Es wird",
-    "du hast": "es besteht",
-    "Du hast": "Es besteht",
-    "du bist": "es ist",
-    "Du bist": "Es ist",
+    "du hast": "es bestehen",
+    "Du hast": "Es bestehen",
+    "du bist": "es besteht",
+    "Du bist": "Es besteht",
+    "du brauchst": "es wird benötigt",
+    "Du brauchst": "Es wird benötigt",
+    "du siehst": "es zeigt sich",
+    "Du siehst": "Es zeigt sich",
+    "du weißt": "es ist bekannt",
+    "Du weißt": "Es ist bekannt",
+    "du machst": "es wird gemacht",
+    "Du machst": "Es wird gemacht",
+    "du arbeitest": "es wird gearbeitet",
+    "Du arbeitest": "Es wird gearbeitet",
+
+    # N3.2: Risk-specific phrases
+    "du hast viele halbfertige Produkte": "es entstehen viele halbfertige Produkte",
+    "Du hast viele halbfertige Produkte": "Es entstehen viele halbfertige Produkte",
+    "liegen bei dir": "liegen bei einer einzelnen Person im Unternehmen",
+    "Liegen bei dir": "Liegen bei einer einzelnen Person im Unternehmen",
+    "wenn du ausfällst": "bei Ausfall der Einzelverantwortlichen",
+    "Wenn du ausfällst": "Bei Ausfall der Einzelverantwortlichen",
+    "fällt alles auf dich zurück": "liegt die gesamte Verantwortung bei einer Person",
+    "hängt von dir ab": "hängt von der Einzelperson ab",
+    "nur du": "nur eine Person",
+    "Nur du": "Nur eine Person",
+    "alles bei dir": "alles bei einer Person",
+    "Alles bei dir": "Alles bei einer Person",
+
     # Possessive "dein" forms → neutral
     "dein Geschäftsmodell": "das Geschäftsmodell",
     "Dein Geschäftsmodell": "Das Geschäftsmodell",
@@ -353,42 +379,75 @@ TONE_NORMALIZATION_DU: Dict[str, str] = {
     "Deiner Branche": "Der Branche",
     "deinem Team": "dem Team",
     "Deinem Team": "Dem Team",
+    "deine Arbeit": "die Arbeit",
+    "Deine Arbeit": "Die Arbeit",
+    "dein Wissen": "das Fachwissen",
+    "Dein Wissen": "Das Fachwissen",
+    "deine Zeit": "die verfügbare Zeit",
+    "Deine Zeit": "Die verfügbare Zeit",
+    "deine Ressourcen": "die Ressourcen",
+    "Deine Ressourcen": "Die Ressourcen",
+    "dein Know-how": "das Know-how",
+    "Dein Know-how": "Das Know-how",
+    "deine Kapazität": "die Kapazität",
+    "Deine Kapazität": "Die Kapazität",
+    "deinem Kopf": "einer einzelnen Person",
+    "Deinem Kopf": "Einer einzelnen Person",
+    "deiner Person": "der verantwortlichen Person",
+    "Deiner Person": "Der verantwortlichen Person",
+
     # Accusative/Dative "dich/dir" → neutral
-    "für dich": "für Sie",
-    "Für dich": "Für Sie",
-    "bei dir": "in diesem Fall",
-    "Bei dir": "In diesem Fall",
-    "an dich": "an Sie",
-    "An dich": "An Sie",
-    "mit dir": "mit Ihnen",
-    "Mit dir": "Mit Ihnen",
+    "für dich": "für das Unternehmen",
+    "Für dich": "Für das Unternehmen",
+    "bei dir": "bei der verantwortlichen Person",
+    "Bei dir": "Bei der verantwortlichen Person",
+    "an dich": "an die verantwortliche Stelle",
+    "An dich": "An die verantwortliche Stelle",
+    "mit dir": "mit der zuständigen Person",
+    "Mit dir": "Mit der zuständigen Person",
+    "auf dich": "auf die Einzelperson",
+    "Auf dich": "Auf die Einzelperson",
+    "ohne dich": "ohne die Schlüsselperson",
+    "Ohne dich": "Ohne die Schlüsselperson",
+    "nach dir": "nach der verantwortlichen Person",
+    "Nach dir": "Nach der verantwortlichen Person",
+    "vor dir": "vor der verantwortlichen Person",
+    "Vor dir": "Vor der verantwortlichen Person",
+
     # Common phrases with du
-    "wenn du": "wenn Sie",
-    "Wenn du": "Wenn Sie",
-    "dass du": "dass Sie",
-    "Dass du": "Dass Sie",
-    "ob du": "ob Sie",
-    "Ob du": "Ob Sie",
+    "wenn du": "wenn die verantwortliche Person",
+    "Wenn du": "Wenn die verantwortliche Person",
+    "dass du": "dass man",
+    "Dass du": "Dass man",
+    "ob du": "ob man",
+    "Ob du": "Ob man",
+    "weil du": "weil eine Person",
+    "Weil du": "Weil eine Person",
+    "damit du": "damit das Unternehmen",
+    "Damit du": "Damit das Unternehmen",
+    "sobald du": "sobald man",
+    "Sobald du": "Sobald man",
+    "falls du": "falls die zuständige Person",
+    "Falls du": "Falls die zuständige Person",
+    "obwohl du": "obwohl man",
+    "Obwohl du": "Obwohl man",
 }
 
-# Regex patterns for remaining "du" forms (fallback)
+# N3.2: Enhanced regex patterns for remaining "du" forms (fallback)
 TONE_NORMALIZATION_DU_PATTERNS: List[Tuple[str, str]] = [
-    (r'\bdu\b', 'Sie'),
-    (r'\bDu\b', 'Sie'),
-    (r'\bdich\b', 'Sie'),
-    (r'\bDich\b', 'Sie'),
-    (r'\bdir\b', 'Ihnen'),
-    (r'\bDir\b', 'Ihnen'),
-    (r'\bdein\b', 'Ihr'),
-    (r'\bDein\b', 'Ihr'),
-    (r'\bdeine\b', 'Ihre'),
-    (r'\bDeine\b', 'Ihre'),
-    (r'\bdeinen\b', 'Ihren'),
-    (r'\bDeinen\b', 'Ihren'),
-    (r'\bdeinem\b', 'Ihrem'),
-    (r'\bDeinem\b', 'Ihrem'),
-    (r'\bdeiner\b', 'Ihrer'),
-    (r'\bDeiner\b', 'Ihrer'),
+    # Basic pronouns
+    (r'\bdu\b', 'man'),
+    (r'\bDu\b', 'Man'),
+    (r'\bdich\b', 'sich'),
+    (r'\bDich\b', 'Sich'),
+    (r'\bdir\b', 'der verantwortlichen Person'),
+    (r'\bDir\b', 'Der verantwortlichen Person'),
+    # Possessive forms with all declinations
+    (r'\bdein(?:e|en|em|er|es)?\b', 'das entsprechende'),
+    (r'\bDein(?:e|en|em|er|es)?\b', 'Das entsprechende'),
+    # N3.2: Catch-all for any remaining "dein" variants
+    (r'\bdeines\b', 'des Unternehmens'),
+    (r'\bDeines\b', 'Des Unternehmens'),
 ]
 
 

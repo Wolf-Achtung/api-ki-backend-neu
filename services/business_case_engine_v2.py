@@ -21,7 +21,11 @@ SPRINT N2 CHANGES (N2-4.1):
 - If realistic.roi_12m < conservative.roi_12m after healing, set to average
 - Ensures strict ordering: optimistic >= realistic >= conservative
 
-Version: 2.2.0 (Sprint N2 - N2-4.1 ROI Consistency Enhancement)
+SPRINT N3.2 CHANGES (TASK 3.1):
+- Set _bc_healed flag in sections after scenario healing
+- Prevents consistency_engine BC_001 from re-flagging healed scenarios
+
+Version: 2.3.0 (Sprint N3.2 - TASK 3.1 BC Healing Flag)
 Author: Claude + Wolf
 """
 
@@ -789,8 +793,11 @@ def generate_business_case_report(
     """
     log.info("[G30] Generating Business Case Report...")
 
-    sections = sections or {}
-    briefing = briefing or {}
+    # N3.2: Use 'is None' check to preserve passed-in empty dict for flag setting
+    if sections is None:
+        sections = {}
+    if briefing is None:
+        briefing = {}
 
     # Extract baseline
     baseline = extract_baseline_from_sections(sections, briefing)
@@ -854,6 +861,11 @@ def generate_business_case_report(
         log.warning("[G30] Scenario validation issues detected: %s", errors)
         # Heal consistency issues
         scenarios = heal_scenario_consistency(scenarios)
+        # SPRINT N3.2 (TASK 3.1): Set _bc_healed flag in sections
+        # This flag prevents consistency_engine BC_001 from re-flagging healed scenarios
+        if sections is not None:
+            sections["_bc_healed"] = True
+            log.info("[N3.2] Set _bc_healed flag in sections after healing")
 
     report = BusinessCaseReport(
         baseline_monthly_cost=baseline_monthly_cost,
