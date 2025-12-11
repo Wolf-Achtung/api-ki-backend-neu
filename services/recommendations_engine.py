@@ -652,7 +652,7 @@ def _generate_summary(
 
 def generate_recommendations_report(
     context: Optional[Any] = None,
-    sections: Optional[Dict[str, str]] = None,
+    sections: Optional[Dict[str, Any]] = None,
     tools_data: Optional[Any] = None,
     funding_data: Optional[Any] = None,
     risk_report: Optional[Any] = None,

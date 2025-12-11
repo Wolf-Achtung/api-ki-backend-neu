@@ -26,7 +26,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 log = logging.getLogger(__name__)
 
@@ -506,7 +506,7 @@ SMART_EXPAND_FORBIDDEN_PHRASES: List[str] = [
 ]
 
 # Style templates for semantic expansion
-SMART_EXPAND_STYLES: Dict[str, Dict[str, str]] = {
+SMART_EXPAND_STYLES: Dict[str, Dict[str, Union[str, int]]] = {
     "consulting_structured": {
         "intro_pattern": "",  # No intro - direct content
         "bullet_style": "colon",  # "Point: Explanation"

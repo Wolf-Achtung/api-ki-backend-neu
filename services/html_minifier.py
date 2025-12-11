@@ -420,10 +420,10 @@ def remove_empty_sections(html: str, min_chars: int = 50) -> str:
     original_size = len(html)
     removed_count = 0
 
-    def check_section(match: re.Match) -> str:
+    def check_section(match: re.Match[str]) -> str:
         nonlocal removed_count
-        full_section = match.group(0)
-        inner_content = match.group(1)
+        full_section: str = match.group(0)
+        inner_content: str = match.group(1)
 
         # Extract text content (remove HTML tags)
         text_content = _RE_HTML_TAGS.sub('', inner_content)
@@ -473,9 +473,9 @@ def compress_long_tables(html: str, max_rows: int = 30) -> str:
     original_size = len(html)
     compressed_count = 0
 
-    def compress_table(match: re.Match) -> str:
+    def compress_table(match: re.Match[str]) -> str:
         nonlocal compressed_count
-        table_html = match.group(0)
+        table_html: str = match.group(0)
 
         # Check if table has tbody
         tbody_match = _RE_TBODY_CONTENT.search(table_html)
@@ -484,13 +484,13 @@ def compress_long_tables(html: str, max_rows: int = 30) -> str:
             rows = _RE_TABLE_ROWS.findall(table_html)
             # Skip header rows (usually first row without tbody)
             if len(rows) <= max_rows:
-                return table_html
+                return str(table_html)
         else:
             # Has tbody - only count body rows
-            tbody_content = tbody_match.group(1)
+            tbody_content: str = tbody_match.group(1)
             rows = _RE_TABLE_ROWS.findall(tbody_content)
             if len(rows) <= max_rows:
-                return table_html
+                return str(table_html)
 
         # Table exceeds max_rows - compress it
         total_rows = len(rows)
@@ -499,7 +499,7 @@ def compress_long_tables(html: str, max_rows: int = 30) -> str:
         hidden_count = total_rows - len(first_10) - len(last_5)
 
         if hidden_count <= 0:
-            return table_html
+            return str(table_html)
 
         # Build summary row
         # Count columns from first row
@@ -553,7 +553,7 @@ def compress_long_tables(html: str, max_rows: int = 30) -> str:
             "[N3.3-TABLE] Compressed table: %d rows → %d visible + summary",
             total_rows, len(first_10) + len(last_5)
         )
-        return new_table
+        return str(new_table)
 
     html = _RE_TABLE_BLOCK.sub(compress_table, html)
 
