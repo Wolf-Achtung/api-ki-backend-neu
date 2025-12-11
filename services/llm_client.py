@@ -43,8 +43,9 @@ LLM_TIMEOUT = float(os.getenv("LLM_TIMEOUT", "75"))
 
 LLM_SHORT_RETRY_ENABLED = os.getenv("LLM_SHORT_RETRY_ENABLED", "1").lower() in ("1", "true", "yes")
 LLM_SHORT_RETRY_MAXTOKENS = int(os.getenv("LLM_SHORT_RETRY_MAXTOKENS", "1200"))
-LLM_MAX_RETRIES = int(os.getenv("LLM_MAX_RETRIES", "2"))
-LLM_RETRY_BACKOFF_BASE = float(os.getenv("LLM_RETRY_BACKOFF_BASE", "1.0"))
+# N3.3 TASK 5: Updated to 3 retries with 2s, 4s, 8s backoff
+LLM_MAX_RETRIES = int(os.getenv("LLM_MAX_RETRIES", "3"))
+LLM_RETRY_BACKOFF_BASE = float(os.getenv("LLM_RETRY_BACKOFF_BASE", "2.0"))
 LLM_RETRY_BACKOFF_MULTIPLIER = float(os.getenv("LLM_RETRY_BACKOFF_MULTIPLIER", "2.0"))
 
 # SPRINT N1: Enable soft-retry on first timeout (retry once immediately before fallback)
@@ -55,28 +56,40 @@ LLM_SOFT_RETRY_ENABLED = os.getenv("LLM_SOFT_RETRY_ENABLED", "1").lower() in ("1
 # =============================================================================
 
 # Premium sections that get extended timeout and enhanced retry
+# N3.3 TASK 5: Added exec_summary, ki_stack_summary, branch_deep_dive, risk_report
 PREMIUM_SECTIONS: set[str] = {
     "unternehmensprofil_markt",
     "strategie_governance",
     "wettbewerb_benchmark",
     "roadmap_12m",
     "risks",
+    "risk_report",  # N3.3: Added
     "gamechanger",
     "recommendations",
     "foerderpotenzial",
+    # N3.3 TASK 5: Premium "Exec" sections
+    "exec_summary",
+    "ki_stack_summary",
+    "branch_deep_dive",
 }
 
 # Section-specific timeout overrides (seconds)
 # These sections typically require more generation time
+# N3.3 TASK 5: Added exec_summary, ki_stack_summary, branch_deep_dive, risk_report with 90s
 SECTION_TIMEOUT_OVERRIDES: dict[str, float] = {
     "unternehmensprofil_markt": 90.0,
     "strategie_governance": 90.0,
     "wettbewerb_benchmark": 120.0,  # Complex competitor analysis
     "roadmap_12m": 90.0,
     "risks": 90.0,
+    "risk_report": 90.0,  # N3.3: Added
     "gamechanger": 100.0,  # Creative content needs time
     "recommendations": 100.0,
     "foerderpotenzial": 90.0,
+    # N3.3 TASK 5: Premium "Exec" sections - 90s timeout
+    "exec_summary": 90.0,
+    "ki_stack_summary": 90.0,
+    "branch_deep_dive": 90.0,
 }
 
 
@@ -268,8 +281,9 @@ class LLMClient:
             try:
                 if attempt > 0:
                     delay = calculate_backoff(attempt - 1, self.config)
+                    # N3.3 TASK 5: Updated log format "[RETRY] {section} attempt {n}/3 after {error}"
                     log.info(
-                        "[G14-Retry] section=%s attempt=%d/%d backoff=%.1fs",
+                        "[RETRY] %s attempt %d/%d after %.1fs backoff",
                         section, attempt + 1, self.config.max_retries + 1, delay
                     )
                     time.sleep(delay)
@@ -298,9 +312,10 @@ class LLMClient:
                     )
                     break
 
+                # N3.3 TASK 5: Updated log format "[RETRY] {section} attempt {n}/3 after {error}"
                 log.warning(
-                    "[G14-Retry] Retryable error section=%s attempt=%d error=%s: %s",
-                    section, attempt + 1, error_type, str(e)[:100]
+                    "[RETRY] %s attempt %d/%d after %s: %s",
+                    section, attempt + 1, self.config.max_retries + 1, error_type, str(e)[:100]
                 )
 
         # Phase 2: Short-retry with reduced tokens (if enabled and was timeout)
