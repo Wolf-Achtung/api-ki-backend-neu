@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-SPRINT N3.3: Tests for Timeout & Retry Optimization.
+SPRINT N3.3/N3.6: Tests for Timeout & Retry Optimization.
 
 Tests the updated timeout configurations and retry logic.
+
+N3.6 PACKAGE F Updates:
+- Premium sections timeout → 140s (from 90s)
+- Retries → 5 stages (from 3)
+- Backoff timing → 3s → 6s → 12s → 24s → 48s
 """
 import pytest
 
@@ -11,16 +16,16 @@ class TestTimeoutConfiguration:
     """Test the timeout configuration constants."""
 
     def test_default_max_retries(self):
-        """Default max retries should be 3."""
+        """N3.6: Default max retries should be 5."""
         from services.llm_client import LLM_MAX_RETRIES
 
-        assert LLM_MAX_RETRIES == 3
+        assert LLM_MAX_RETRIES == 5
 
     def test_default_backoff_base(self):
-        """Default backoff base should be 2.0s for 2s, 4s, 8s sequence."""
+        """N3.6: Default backoff base should be 3.0s for 3s, 6s, 12s, 24s, 48s sequence."""
         from services.llm_client import LLM_RETRY_BACKOFF_BASE
 
-        assert LLM_RETRY_BACKOFF_BASE == 2.0
+        assert LLM_RETRY_BACKOFF_BASE == 3.0
 
     def test_default_backoff_multiplier(self):
         """Default backoff multiplier should be 2.0."""
@@ -32,20 +37,26 @@ class TestTimeoutConfiguration:
 class TestBackoffSequence:
     """Test the exponential backoff sequence."""
 
-    def test_backoff_sequence_2_4_8(self):
-        """Backoff sequence should be 2s, 4s, 8s."""
+    def test_backoff_sequence_3_6_12_24_48(self):
+        """N3.6: Backoff sequence should be 3s, 6s, 12s, 24s, 48s."""
         from services.llm_client import calculate_backoff, RetryConfig
 
         config = RetryConfig()
 
-        # Attempt 0 (first retry) -> 2s
-        assert calculate_backoff(0, config) == 2.0
+        # Attempt 0 (first retry) -> 3s
+        assert calculate_backoff(0, config) == 3.0
 
-        # Attempt 1 (second retry) -> 4s
-        assert calculate_backoff(1, config) == 4.0
+        # Attempt 1 (second retry) -> 6s
+        assert calculate_backoff(1, config) == 6.0
 
-        # Attempt 2 (third retry) -> 8s
-        assert calculate_backoff(2, config) == 8.0
+        # Attempt 2 (third retry) -> 12s
+        assert calculate_backoff(2, config) == 12.0
+
+        # Attempt 3 (fourth retry) -> 24s
+        assert calculate_backoff(3, config) == 24.0
+
+        # Attempt 4 (fifth retry) -> 48s
+        assert calculate_backoff(4, config) == 48.0
 
 
 class TestPremiumSections:
@@ -98,42 +109,42 @@ class TestSectionTimeoutOverrides:
     """Test section-specific timeout overrides."""
 
     def test_exec_summary_timeout(self):
-        """exec_summary should have 90s timeout."""
+        """N3.6: exec_summary should have 140s timeout."""
         from services.llm_client import SECTION_TIMEOUT_OVERRIDES
 
-        assert SECTION_TIMEOUT_OVERRIDES.get("exec_summary") == 90.0
+        assert SECTION_TIMEOUT_OVERRIDES.get("exec_summary") == 140.0
 
     def test_ki_stack_summary_timeout(self):
-        """ki_stack_summary should have 90s timeout."""
+        """N3.6: ki_stack_summary should have 140s timeout."""
         from services.llm_client import SECTION_TIMEOUT_OVERRIDES
 
-        assert SECTION_TIMEOUT_OVERRIDES.get("ki_stack_summary") == 90.0
+        assert SECTION_TIMEOUT_OVERRIDES.get("ki_stack_summary") == 140.0
 
     def test_branch_deep_dive_timeout(self):
-        """branch_deep_dive should have 90s timeout."""
+        """N3.6: branch_deep_dive should have 140s timeout."""
         from services.llm_client import SECTION_TIMEOUT_OVERRIDES
 
-        assert SECTION_TIMEOUT_OVERRIDES.get("branch_deep_dive") == 90.0
+        assert SECTION_TIMEOUT_OVERRIDES.get("branch_deep_dive") == 140.0
 
     def test_risk_report_timeout(self):
-        """risk_report should have 90s timeout."""
+        """N3.6: risk_report should have 140s timeout."""
         from services.llm_client import SECTION_TIMEOUT_OVERRIDES
 
-        assert SECTION_TIMEOUT_OVERRIDES.get("risk_report") == 90.0
+        assert SECTION_TIMEOUT_OVERRIDES.get("risk_report") == 140.0
 
     def test_roadmap_12m_timeout(self):
-        """roadmap_12m should have 90s timeout."""
+        """N3.6: roadmap_12m should have 140s timeout."""
         from services.llm_client import SECTION_TIMEOUT_OVERRIDES
 
-        assert SECTION_TIMEOUT_OVERRIDES.get("roadmap_12m") == 90.0
+        assert SECTION_TIMEOUT_OVERRIDES.get("roadmap_12m") == 140.0
 
     def test_get_section_timeout_premium(self):
-        """get_section_timeout should return correct timeout for premium sections."""
+        """N3.6: get_section_timeout should return 140s for premium sections."""
         from services.llm_client import get_section_timeout
 
-        assert get_section_timeout("exec_summary") == 90.0
-        assert get_section_timeout("ki_stack_summary") == 90.0
-        assert get_section_timeout("branch_deep_dive") == 90.0
+        assert get_section_timeout("exec_summary") == 140.0
+        assert get_section_timeout("ki_stack_summary") == 140.0
+        assert get_section_timeout("branch_deep_dive") == 140.0
 
     def test_get_section_timeout_default(self):
         """get_section_timeout should return default for unknown sections."""
@@ -146,18 +157,18 @@ class TestRetryConfig:
     """Test RetryConfig defaults."""
 
     def test_retry_config_max_retries(self):
-        """RetryConfig should use 3 max retries by default."""
+        """N3.6: RetryConfig should use 5 max retries by default."""
         from services.llm_client import RetryConfig
 
         config = RetryConfig()
-        assert config.max_retries == 3
+        assert config.max_retries == 5
 
     def test_retry_config_backoff_base(self):
-        """RetryConfig should use 2.0s backoff base."""
+        """N3.6: RetryConfig should use 3.0s backoff base."""
         from services.llm_client import RetryConfig
 
         config = RetryConfig()
-        assert config.backoff_base == 2.0
+        assert config.backoff_base == 3.0
 
     def test_retry_config_backoff_multiplier(self):
         """RetryConfig should use 2.0 multiplier."""
@@ -170,14 +181,14 @@ class TestRetryConfig:
 class TestAllPremiumSectionsHaveTimeouts:
     """Ensure all premium sections have timeout overrides."""
 
-    def test_all_n33_premium_sections_have_timeouts(self):
-        """All N3.3 premium sections should have timeout overrides."""
+    def test_all_premium_sections_have_140s_timeouts(self):
+        """N3.6: All premium sections should have 140s timeout overrides."""
         from services.llm_client import (
             PREMIUM_SECTIONS,
             SECTION_TIMEOUT_OVERRIDES,
         )
 
-        n33_sections = [
+        n36_sections = [
             "exec_summary",
             "ki_stack_summary",
             "branch_deep_dive",
@@ -185,7 +196,7 @@ class TestAllPremiumSectionsHaveTimeouts:
             "roadmap_12m",
         ]
 
-        for section in n33_sections:
+        for section in n36_sections:
             assert section in PREMIUM_SECTIONS, f"{section} not in PREMIUM_SECTIONS"
             assert section in SECTION_TIMEOUT_OVERRIDES, f"{section} not in SECTION_TIMEOUT_OVERRIDES"
-            assert SECTION_TIMEOUT_OVERRIDES[section] >= 90.0, f"{section} timeout < 90s"
+            assert SECTION_TIMEOUT_OVERRIDES[section] == 140.0, f"{section} timeout != 140s"
