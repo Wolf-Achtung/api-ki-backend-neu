@@ -671,10 +671,10 @@ class CacheAwarePromptBuilder:
 
         cached = self.get_cached(key)
         if cached is not None:
-            return cached
+            return dict(cached)  # type: ignore[arg-type]
 
         # Build profile
-        profile = {
+        profile: Dict[str, Any] = {
             "branch": briefing.get("branch", ""),
             "sub_branch": briefing.get("sub_branch", ""),
             "market_segment": briefing.get("market_segment", ""),
@@ -700,10 +700,10 @@ class CacheAwarePromptBuilder:
 
         cached = self.get_cached(key)
         if cached is not None:
-            return cached
+            return dict(cached)  # type: ignore[arg-type]
 
         # Build KPI context
-        context = {
+        context: Dict[str, Any] = {
             "company_size": determine_company_size(
                 briefing.get("employees", 50)
             ).value,
@@ -734,7 +734,7 @@ class CacheAwarePromptBuilder:
 
         cached = self.get_cached(key)
         if cached is not None:
-            return cached
+            return str(cached)
 
         # Get branch profile and KPI context
         branch_profile = self.build_branch_profile(briefing)
