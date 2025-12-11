@@ -897,7 +897,7 @@ def generate_kpi_targets(
 
 def generate_business_case_report(
     context: Optional[Any] = None,
-    sections: Optional[Dict[str, str]] = None,
+    sections: Optional[Dict[str, Any]] = None,
     tools_data: Optional[Any] = None,
     funding_data: Optional[Any] = None,
     briefing: Optional[Dict[str, Any]] = None,
