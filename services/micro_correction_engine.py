@@ -321,10 +321,28 @@ PERSONALIZATION_KMU: Dict[str, str] = {
 
 
 # =============================================================================
-# N3.1: TONE NORMALIZATION (du → neutral/Sie)
+# N3.2: TONE NORMALIZATION (du → neutral/Sie) - Enhanced
 # =============================================================================
 # Converts informal "du" address to formal/neutral language
 # Used especially in Risk chapter where LLM sometimes uses informal address
+# N3.2: Extended with more contextual patterns and robust regex
+# N3.3: Added section filtering and additional patterns
+
+# N3.3 TASK 4: Sections to apply DU-filter
+TONE_DU_FILTER_SECTIONS: Set[str] = {
+    # Original sections
+    "risk_report",
+    "risk_analysis",
+    # N3.3: Additional sections
+    "wettbewerb_benchmark",
+    "transparency_box",
+    "monetarisierung",
+    "ki_skillplan",
+    # Also include common variations
+    "competition_benchmark",
+    "ki_skill_plan",
+    "monetization",
+}
 
 TONE_NORMALIZATION_DU: Dict[str, str] = {
     # Direct "du" forms → neutral/formal
@@ -332,14 +350,51 @@ TONE_NORMALIZATION_DU: Dict[str, str] = {
     "Du kannst": "Es besteht die Möglichkeit",
     "du solltest": "es empfiehlt sich",
     "Du solltest": "Es empfiehlt sich",
+
+    # N3.3 TASK 4: Reversed word order patterns
+    "kannst du": "kann man",
+    "Kannst du": "Kann man",
+    "solltest du": "sollte man",
+    "Solltest du": "Sollte man",
+    "musst du": "muss man",
+    "Musst du": "Muss man",
+    "wirst du": "wird man",
+    "Wirst du": "Wird man",
+    "hast du": "hat man",
+    "Hast du": "Hat man",
     "du musst": "es ist erforderlich",
     "Du musst": "Es ist erforderlich",
     "du wirst": "es wird",
     "Du wirst": "Es wird",
-    "du hast": "es besteht",
-    "Du hast": "Es besteht",
-    "du bist": "es ist",
-    "Du bist": "Es ist",
+    "du hast": "es bestehen",
+    "Du hast": "Es bestehen",
+    "du bist": "es besteht",
+    "Du bist": "Es besteht",
+    "du brauchst": "es wird benötigt",
+    "Du brauchst": "Es wird benötigt",
+    "du siehst": "es zeigt sich",
+    "Du siehst": "Es zeigt sich",
+    "du weißt": "es ist bekannt",
+    "Du weißt": "Es ist bekannt",
+    "du machst": "es wird gemacht",
+    "Du machst": "Es wird gemacht",
+    "du arbeitest": "es wird gearbeitet",
+    "Du arbeitest": "Es wird gearbeitet",
+
+    # N3.2: Risk-specific phrases
+    "du hast viele halbfertige Produkte": "es entstehen viele halbfertige Produkte",
+    "Du hast viele halbfertige Produkte": "Es entstehen viele halbfertige Produkte",
+    "liegen bei dir": "liegen bei einer einzelnen Person im Unternehmen",
+    "Liegen bei dir": "Liegen bei einer einzelnen Person im Unternehmen",
+    "wenn du ausfällst": "bei Ausfall der Einzelverantwortlichen",
+    "Wenn du ausfällst": "Bei Ausfall der Einzelverantwortlichen",
+    "fällt alles auf dich zurück": "liegt die gesamte Verantwortung bei einer Person",
+    "hängt von dir ab": "hängt von der Einzelperson ab",
+    "nur du": "nur eine Person",
+    "Nur du": "Nur eine Person",
+    "alles bei dir": "alles bei einer Person",
+    "Alles bei dir": "Alles bei einer Person",
+
     # Possessive "dein" forms → neutral
     "dein Geschäftsmodell": "das Geschäftsmodell",
     "Dein Geschäftsmodell": "Das Geschäftsmodell",
@@ -353,42 +408,80 @@ TONE_NORMALIZATION_DU: Dict[str, str] = {
     "Deiner Branche": "Der Branche",
     "deinem Team": "dem Team",
     "Deinem Team": "Dem Team",
+    "deine Arbeit": "die Arbeit",
+    "Deine Arbeit": "Die Arbeit",
+    "dein Wissen": "das Fachwissen",
+    "Dein Wissen": "Das Fachwissen",
+    "deine Zeit": "die verfügbare Zeit",
+    "Deine Zeit": "Die verfügbare Zeit",
+    "deine Ressourcen": "die Ressourcen",
+    "Deine Ressourcen": "Die Ressourcen",
+    "dein Know-how": "das Know-how",
+    "Dein Know-how": "Das Know-how",
+    "deine Kapazität": "die Kapazität",
+    "Deine Kapazität": "Die Kapazität",
+    "deinem Kopf": "einer einzelnen Person",
+    "Deinem Kopf": "Einer einzelnen Person",
+    "deiner Person": "der verantwortlichen Person",
+    "Deiner Person": "Der verantwortlichen Person",
+
     # Accusative/Dative "dich/dir" → neutral
-    "für dich": "für Sie",
-    "Für dich": "Für Sie",
-    "bei dir": "in diesem Fall",
-    "Bei dir": "In diesem Fall",
-    "an dich": "an Sie",
-    "An dich": "An Sie",
-    "mit dir": "mit Ihnen",
-    "Mit dir": "Mit Ihnen",
+    "für dich": "für das Unternehmen",
+    "Für dich": "Für das Unternehmen",
+    "bei dir": "bei der verantwortlichen Person",
+    "Bei dir": "Bei der verantwortlichen Person",
+    "an dich": "an die verantwortliche Stelle",
+    "An dich": "An die verantwortliche Stelle",
+    "mit dir": "mit der zuständigen Person",
+    "Mit dir": "Mit der zuständigen Person",
+    "auf dich": "auf die Einzelperson",
+    "Auf dich": "Auf die Einzelperson",
+    "ohne dich": "ohne die Schlüsselperson",
+    "Ohne dich": "Ohne die Schlüsselperson",
+    "nach dir": "nach der verantwortlichen Person",
+    "Nach dir": "Nach der verantwortlichen Person",
+    "vor dir": "vor der verantwortlichen Person",
+    "Vor dir": "Vor der verantwortlichen Person",
+
+    # N3.3 TASK 4: "dein Team" → "das Team" (before deinem Team)
+    "dein Team": "das Team",
+    "Dein Team": "Das Team",
+
     # Common phrases with du
-    "wenn du": "wenn Sie",
-    "Wenn du": "Wenn Sie",
-    "dass du": "dass Sie",
-    "Dass du": "Dass Sie",
-    "ob du": "ob Sie",
-    "Ob du": "Ob Sie",
+    # N3.3 TASK 4: Alternative "wenn du" → "falls im Unternehmen" (more business-like)
+    "wenn du": "falls im Unternehmen",
+    "Wenn du": "Falls im Unternehmen",
+    "dass du": "dass man",
+    "Dass du": "Dass man",
+    "ob du": "ob man",
+    "Ob du": "Ob man",
+    "weil du": "weil eine Person",
+    "Weil du": "Weil eine Person",
+    "damit du": "damit das Unternehmen",
+    "Damit du": "Damit das Unternehmen",
+    "sobald du": "sobald man",
+    "Sobald du": "Sobald man",
+    "falls du": "falls die zuständige Person",
+    "Falls du": "Falls die zuständige Person",
+    "obwohl du": "obwohl man",
+    "Obwohl du": "Obwohl man",
 }
 
-# Regex patterns for remaining "du" forms (fallback)
+# N3.2: Enhanced regex patterns for remaining "du" forms (fallback)
 TONE_NORMALIZATION_DU_PATTERNS: List[Tuple[str, str]] = [
-    (r'\bdu\b', 'Sie'),
-    (r'\bDu\b', 'Sie'),
-    (r'\bdich\b', 'Sie'),
-    (r'\bDich\b', 'Sie'),
-    (r'\bdir\b', 'Ihnen'),
-    (r'\bDir\b', 'Ihnen'),
-    (r'\bdein\b', 'Ihr'),
-    (r'\bDein\b', 'Ihr'),
-    (r'\bdeine\b', 'Ihre'),
-    (r'\bDeine\b', 'Ihre'),
-    (r'\bdeinen\b', 'Ihren'),
-    (r'\bDeinen\b', 'Ihren'),
-    (r'\bdeinem\b', 'Ihrem'),
-    (r'\bDeinem\b', 'Ihrem'),
-    (r'\bdeiner\b', 'Ihrer'),
-    (r'\bDeiner\b', 'Ihrer'),
+    # Basic pronouns
+    (r'\bdu\b', 'man'),
+    (r'\bDu\b', 'Man'),
+    (r'\bdich\b', 'sich'),
+    (r'\bDich\b', 'Sich'),
+    (r'\bdir\b', 'der verantwortlichen Person'),
+    (r'\bDir\b', 'Der verantwortlichen Person'),
+    # Possessive forms with all declinations
+    (r'\bdein(?:e|en|em|er|es)?\b', 'das entsprechende'),
+    (r'\bDein(?:e|en|em|er|es)?\b', 'Das entsprechende'),
+    # N3.2: Catch-all for any remaining "dein" variants
+    (r'\bdeines\b', 'des Unternehmens'),
+    (r'\bDeines\b', 'Des Unternehmens'),
 ]
 
 
@@ -784,6 +877,602 @@ def correct_sections(
             corrected[section_name] = content
 
     return corrected, reports
+
+
+def apply_du_filter_to_sections(
+    sections: Dict[str, str],
+    company_size: str = "team",
+    target_sections: Optional[Set[str]] = None,
+) -> Tuple[Dict[str, str], int]:
+    """
+    N3.3 TASK 4: Apply DU-filter only to specific sections.
+
+    This function applies tone normalization (du → formal) only to sections
+    that are in the TONE_DU_FILTER_SECTIONS set or the provided target_sections.
+
+    Args:
+        sections: Dict of section_name -> content
+        company_size: Company size ("solo", "team", "kmu")
+        target_sections: Optional custom set of sections to filter.
+                        If None, uses TONE_DU_FILTER_SECTIONS.
+
+    Returns:
+        Tuple of (corrected_sections, total_corrections)
+    """
+    if target_sections is None:
+        target_sections = TONE_DU_FILTER_SECTIONS
+
+    engine = get_engine("de", company_size)
+    corrected = dict(sections)  # Copy
+    total_corrections = 0
+
+    for section_name, content in sections.items():
+        # Check if section should be filtered (case-insensitive, partial match)
+        section_lower = section_name.lower()
+        should_filter = any(
+            target.lower() in section_lower or section_lower in target.lower()
+            for target in target_sections
+        )
+
+        if not should_filter or not content or not isinstance(content, str):
+            continue
+
+        # Apply only tone normalization (not full correction)
+        corrected_text, report = engine.correct(content)
+
+        if report.tone_normalizations > 0:
+            corrected[section_name] = corrected_text
+            total_corrections += report.tone_normalizations
+            log.info(
+                "[N3.3-DU-Filter] Section '%s': %d du-forms normalized",
+                section_name,
+                report.tone_normalizations
+            )
+
+    if total_corrections > 0:
+        log.info(
+            "[N3.3-DU-Filter] Total: %d informal du-forms normalized across target sections",
+            total_corrections
+        )
+
+    return corrected, total_corrections
+
+
+# =============================================================================
+# N3.4 TASK 3: Tone Harmonizer v3 - Big-Four Consulting Style
+# =============================================================================
+
+# Forbidden phrases that indicate GPT fluff (to be replaced/removed)
+CONSULTING_AVOID_LIST: List[str] = [
+    "kannst du",
+    "du solltest",
+    "es wäre wichtig zu beachten",
+    "lassen Sie uns",
+    "wie kann ich helfen",
+    "könnte hilfreich sein",
+    "solltest du",
+    "es wäre sinnvoll",
+    "zusammenfassend lässt sich sagen",
+    "wie bereits erwähnt",
+    "es ist anzumerken",
+    "abschließend sei erwähnt",
+    "im Folgenden wird",
+    "nachfolgend werden",
+    "es könnte empfehlenswert sein",
+    "man könnte argumentieren",
+    "grundsätzlich gilt",
+    "generell kann man sagen",
+]
+
+# Big-Four consulting style replacements (GPT → Consulting)
+BIG_FOUR_REPLACEMENTS: Dict[str, str] = {
+    # Weak → Strong formulations
+    "könnte sinnvoll sein": "empfiehlt sich",
+    "wäre empfehlenswert": "ist empfehlenswert",
+    "sollte man überlegen": "ist prioritär umzusetzen",
+    "könnte man in Betracht ziehen": "ist zu evaluieren",
+    "wäre eine Option": "stellt eine strategische Option dar",
+    "könnte helfen": "unterstützt",
+    "würde empfehlen": "empfehlen wir",
+    "man sollte bedenken": "zu berücksichtigen ist",
+    "es wäre gut": "empfehlenswert ist",
+    "es könnte sein": "es zeigt sich",
+
+    # Passive → Active consulting voice
+    "es wird empfohlen": "empfehlenswert ist",
+    "es sollte beachtet werden": "zu beachten ist",
+    "es ist wichtig": "zentral ist",
+    "es ist zu beachten": "zu berücksichtigen gilt",
+    "es muss bedacht werden": "wesentlich ist",
+
+    # Generic → Specific consulting terms
+    "Dinge": "Faktoren",
+    "Sachen": "Aspekte",
+    "sehr gut": "überdurchschnittlich",
+    "ziemlich": "signifikant",
+    "ein bisschen": "moderat",
+    "vielleicht": "potenziell",
+    "irgendwie": "in gewissem Maße",
+
+    # GPT support phrases → Removed
+    "Gerne helfe ich": "",
+    "gerne erkläre ich": "",
+    "Ich würde empfehlen": "Empfehlenswert ist",
+    "ich denke": "die Analyse zeigt",
+    "meiner Meinung nach": "basierend auf der Evaluation",
+
+    # Weak conclusions → Strong conclusions
+    "zusammenfassend": "im Ergebnis",
+    "abschließend": "resultierend",
+    "zum Schluss": "als Handlungsempfehlung",
+}
+
+# Target sentence length for consulting style (18-24 words average)
+CONSULTING_SENTENCE_TARGET_MIN = 18
+CONSULTING_SENTENCE_TARGET_MAX = 24
+
+
+def harmonize_consulting_tone(text: str, aggressive: bool = False) -> Tuple[str, int]:
+    """
+    N3.4 TASK 3: Harmonize text to Big-Four consulting style.
+
+    Applies:
+    1. Removal/replacement of avoid_list phrases
+    2. Big-Four style replacements
+    3. Optional sentence length optimization
+
+    Args:
+        text: Input text
+        aggressive: If True, also optimizes sentence length
+
+    Returns:
+        Tuple of (harmonized_text, replacement_count)
+    """
+    if not text:
+        return text, 0
+
+    harmonized = text
+    replacement_count = 0
+
+    # Step 1: Remove/replace avoid_list phrases
+    for phrase in CONSULTING_AVOID_LIST:
+        pattern = re.compile(re.escape(phrase), re.IGNORECASE)
+        if pattern.search(harmonized):
+            harmonized = pattern.sub("", harmonized)
+            replacement_count += 1
+
+    # Step 2: Apply Big-Four replacements
+    for gpt_phrase, consulting_phrase in BIG_FOUR_REPLACEMENTS.items():
+        pattern = re.compile(re.escape(gpt_phrase), re.IGNORECASE)
+        if pattern.search(harmonized):
+            # Preserve case of first character
+            def replace_preserve_case(match):
+                original = match.group(0)
+                if original[0].isupper() and consulting_phrase:
+                    return consulting_phrase[0].upper() + consulting_phrase[1:]
+                return consulting_phrase
+
+            harmonized = pattern.sub(replace_preserve_case, harmonized)
+            replacement_count += 1
+
+    # Step 3: Clean up artifacts
+    harmonized = re.sub(r'\s{2,}', ' ', harmonized)  # Multiple spaces
+    harmonized = re.sub(r'\.\s*\.', '.', harmonized)  # Double periods
+    harmonized = re.sub(r',\s*,', ',', harmonized)  # Double commas
+    harmonized = re.sub(r'<p>\s*</p>', '', harmonized)  # Empty paragraphs
+
+    if replacement_count > 0:
+        log.debug(
+            "[N3.4-ToneHarmonizer] Applied %d consulting tone replacements",
+            replacement_count
+        )
+
+    return harmonized.strip(), replacement_count
+
+
+def apply_consulting_tone_to_sections(
+    sections: Dict[str, str],
+    target_sections: Optional[Set[str]] = None,
+) -> Tuple[Dict[str, str], int]:
+    """
+    N3.4 TASK 3: Apply consulting tone harmonization to sections.
+
+    Args:
+        sections: Dict of section_name -> content
+        target_sections: Optional set of sections to process.
+                        If None, processes all sections.
+
+    Returns:
+        Tuple of (harmonized_sections, total_replacements)
+    """
+    harmonized = dict(sections)
+    total_replacements = 0
+
+    for section_name, content in sections.items():
+        if not content or not isinstance(content, str):
+            continue
+
+        # If target_sections specified, check if this section should be processed
+        if target_sections:
+            section_lower = section_name.lower()
+            should_process = any(
+                target.lower() in section_lower or section_lower in target.lower()
+                for target in target_sections
+            )
+            if not should_process:
+                continue
+
+        harmonized_text, count = harmonize_consulting_tone(content)
+
+        if count > 0:
+            harmonized[section_name] = harmonized_text
+            total_replacements += count
+            log.info(
+                "[N3.4-ToneHarmonizer] Section '%s': %d replacements",
+                section_name, count
+            )
+
+    if total_replacements > 0:
+        log.info(
+            "[N3.4-ToneHarmonizer] Total: %d consulting tone replacements",
+            total_replacements
+        )
+
+    return harmonized, total_replacements
+
+
+# =============================================================================
+# N3.4 TASK 7: Executive Summary Enhancer - 3+3+3 Structure
+# =============================================================================
+
+# Target structure for Executive Summary
+EXEC_SUMMARY_STRUCTURE = {
+    "key_insights": 3,  # 3 Key Insights bullets
+    "handlungsfelder": 3,  # 3 Action Areas bullets
+    "risiko_mitigation": 3,  # 3 Risk Mitigation points
+    "strategic_context": 2,  # 2 sentences strategic framing
+}
+
+# Template patterns for each section
+EXEC_SUMMARY_TEMPLATES = {
+    "key_insights": [
+        "KI-Reifegrad liegt bei {level}% – {implication}",
+        "Automatisierungspotenzial identifiziert: {potential}",
+        "{branch}-spezifische KI-Adoption zeigt {trend}",
+    ],
+    "handlungsfelder": [
+        "Priorisierung der {area} als strategischer Schwerpunkt",
+        "Aufbau von {capability} für nachhaltige KI-Nutzung",
+        "Integration von {tool_type} in bestehende Prozesse",
+    ],
+    "risiko_mitigation": [
+        "DSGVO-Compliance durch {measure} sicherstellen",
+        "Mitarbeiter-Akzeptanz via {approach} fördern",
+        "Technologie-Abhängigkeiten durch {strategy} minimieren",
+    ],
+    "strategic_context": [
+        "Die strategische Positionierung im KI-Wettbewerb erfordert einen fokussierten Ansatz.",
+        "Durch gezielte Maßnahmen kann {company} einen nachhaltigen Wettbewerbsvorteil erzielen.",
+    ],
+}
+
+# Section headers for 3+3+3 structure
+EXEC_SUMMARY_HEADERS = {
+    "key_insights": "Zentrale Erkenntnisse",
+    "handlungsfelder": "Strategische Handlungsfelder",
+    "risiko_mitigation": "Risiko-Mitigation",
+}
+
+
+@dataclass
+class ExecSummarySection:
+    """Section of executive summary."""
+    section_type: str
+    bullets: List[str] = field(default_factory=list)
+    html: str = ""
+
+
+@dataclass
+class ExecSummaryStructure:
+    """Structured executive summary (3+3+3 format)."""
+    key_insights: ExecSummarySection = field(
+        default_factory=lambda: ExecSummarySection("key_insights")
+    )
+    handlungsfelder: ExecSummarySection = field(
+        default_factory=lambda: ExecSummarySection("handlungsfelder")
+    )
+    risiko_mitigation: ExecSummarySection = field(
+        default_factory=lambda: ExecSummarySection("risiko_mitigation")
+    )
+    strategic_context: List[str] = field(default_factory=list)
+    is_valid: bool = False
+    total_bullets: int = 0
+
+
+def extract_bullets_from_html(html: str) -> List[str]:
+    """
+    Extract bullet points from HTML content.
+
+    Args:
+        html: HTML string with <li> or <p>• tags
+
+    Returns:
+        List of bullet text strings
+    """
+    bullets: List[str] = []
+
+    # Pattern 1: <li> items
+    li_pattern = re.compile(r'<li[^>]*>(.*?)</li>', re.DOTALL | re.IGNORECASE)
+    li_matches = li_pattern.findall(html)
+    for match in li_matches:
+        text = re.sub(r'<[^>]+>', '', match).strip()
+        if text and len(text) > 10:
+            bullets.append(text)
+
+    # Pattern 2: Bullet characters (•, -, *)
+    if not bullets:
+        bullet_pattern = re.compile(r'[•\-\*]\s*([^\n<]+)', re.MULTILINE)
+        bullet_matches = bullet_pattern.findall(html)
+        for match in bullet_matches:
+            text = match.strip()
+            if text and len(text) > 10:
+                bullets.append(text)
+
+    # Pattern 3: Numbered items (1., 2., etc.)
+    if not bullets:
+        numbered_pattern = re.compile(r'\d+\.\s*([^\n<]+)', re.MULTILINE)
+        numbered_matches = numbered_pattern.findall(html)
+        for match in numbered_matches:
+            text = match.strip()
+            if text and len(text) > 10:
+                bullets.append(text)
+
+    return bullets
+
+
+def classify_bullet(bullet: str) -> str:
+    """
+    Classify a bullet point into a category.
+
+    Args:
+        bullet: Bullet text
+
+    Returns:
+        Category: "key_insights", "handlungsfelder", or "risiko_mitigation"
+    """
+    bullet_lower = bullet.lower()
+
+    # Risk/Mitigation indicators
+    risk_indicators = [
+        "risiko", "dsgvo", "compliance", "datenschutz", "sicherheit",
+        "abhängigkeit", "mitigation", "vermeid", "minimier", "schutz",
+    ]
+    if any(ind in bullet_lower for ind in risk_indicators):
+        return "risiko_mitigation"
+
+    # Action/Handlungsfeld indicators
+    action_indicators = [
+        "prioris", "aufbau", "integration", "implement", "etabl",
+        "entwickl", "schritt", "maßnahme", "handlung", "strateg",
+    ]
+    if any(ind in bullet_lower for ind in action_indicators):
+        return "handlungsfelder"
+
+    # Default to key insights
+    return "key_insights"
+
+
+def analyze_exec_summary_structure(
+    exec_summary_html: str,
+) -> ExecSummaryStructure:
+    """
+    N3.4 TASK 7: Analyze executive summary for 3+3+3 structure.
+
+    Args:
+        exec_summary_html: Executive summary HTML content
+
+    Returns:
+        ExecSummaryStructure with classified bullets
+    """
+    structure = ExecSummaryStructure()
+
+    if not exec_summary_html:
+        return structure
+
+    # Extract all bullets
+    all_bullets = extract_bullets_from_html(exec_summary_html)
+
+    # Classify bullets
+    for bullet in all_bullets:
+        category = classify_bullet(bullet)
+
+        if category == "key_insights":
+            structure.key_insights.bullets.append(bullet)
+        elif category == "handlungsfelder":
+            structure.handlungsfelder.bullets.append(bullet)
+        elif category == "risiko_mitigation":
+            structure.risiko_mitigation.bullets.append(bullet)
+
+    # Calculate totals
+    structure.total_bullets = (
+        len(structure.key_insights.bullets)
+        + len(structure.handlungsfelder.bullets)
+        + len(structure.risiko_mitigation.bullets)
+    )
+
+    # Check if structure is valid (at least 2 bullets per category)
+    structure.is_valid = (
+        len(structure.key_insights.bullets) >= 2
+        and len(structure.handlungsfelder.bullets) >= 2
+        and len(structure.risiko_mitigation.bullets) >= 2
+    )
+
+    return structure
+
+
+def enhance_exec_summary_structure(
+    exec_summary_html: str,
+    briefing: Optional[Dict[str, Any]] = None,
+) -> Tuple[str, ExecSummaryStructure]:
+    """
+    N3.4 TASK 7: Enhance executive summary to 3+3+3 structure.
+
+    Restructures the executive summary into:
+    - 3 Key Insights bullets
+    - 3 Handlungsfelder bullets
+    - 3 Risk Mitigation bullets
+    - 2 strategic context sentences
+
+    Args:
+        exec_summary_html: Original executive summary HTML
+        briefing: Optional briefing data for context
+
+    Returns:
+        Tuple of (enhanced_html, structure_analysis)
+    """
+    if not exec_summary_html:
+        return exec_summary_html, ExecSummaryStructure()
+
+    # Analyze current structure
+    structure = analyze_exec_summary_structure(exec_summary_html)
+
+    # If already valid 3+3+3 structure, return as-is
+    if structure.is_valid:
+        log.info(
+            "[N3.4-ExecSummary] Structure already valid: %d/%d/%d bullets",
+            len(structure.key_insights.bullets),
+            len(structure.handlungsfelder.bullets),
+            len(structure.risiko_mitigation.bullets)
+        )
+        return exec_summary_html, structure
+
+    # Build enhanced HTML
+    html_parts = []
+
+    # Key Insights section
+    if structure.key_insights.bullets:
+        html_parts.append(
+            f'<h4>{EXEC_SUMMARY_HEADERS["key_insights"]}</h4>'
+        )
+        html_parts.append('<ul>')
+        for bullet in structure.key_insights.bullets[:3]:
+            html_parts.append(f'<li>{bullet}</li>')
+        html_parts.append('</ul>')
+
+    # Handlungsfelder section
+    if structure.handlungsfelder.bullets:
+        html_parts.append(
+            f'<h4>{EXEC_SUMMARY_HEADERS["handlungsfelder"]}</h4>'
+        )
+        html_parts.append('<ul>')
+        for bullet in structure.handlungsfelder.bullets[:3]:
+            html_parts.append(f'<li>{bullet}</li>')
+        html_parts.append('</ul>')
+
+    # Risk Mitigation section
+    if structure.risiko_mitigation.bullets:
+        html_parts.append(
+            f'<h4>{EXEC_SUMMARY_HEADERS["risiko_mitigation"]}</h4>'
+        )
+        html_parts.append('<ul>')
+        for bullet in structure.risiko_mitigation.bullets[:3]:
+            html_parts.append(f'<li>{bullet}</li>')
+        html_parts.append('</ul>')
+
+    # If no structured content, return original
+    if not html_parts:
+        return exec_summary_html, structure
+
+    enhanced_html = '\n'.join(html_parts)
+
+    log.info(
+        "[N3.4-ExecSummary] Enhanced to 3+3+3: %d/%d/%d bullets",
+        min(len(structure.key_insights.bullets), 3),
+        min(len(structure.handlungsfelder.bullets), 3),
+        min(len(structure.risiko_mitigation.bullets), 3)
+    )
+
+    return enhanced_html, structure
+
+
+def validate_exec_summary_333(
+    exec_summary_html: str,
+) -> Tuple[bool, List[str]]:
+    """
+    N3.4 TASK 7: Validate executive summary has 3+3+3 structure.
+
+    Args:
+        exec_summary_html: Executive summary HTML
+
+    Returns:
+        Tuple of (is_valid, list of issues)
+    """
+    issues: List[str] = []
+    structure = analyze_exec_summary_structure(exec_summary_html)
+
+    # Check Key Insights
+    if len(structure.key_insights.bullets) < 3:
+        issues.append(
+            f"Key Insights: {len(structure.key_insights.bullets)}/3 bullets"
+        )
+
+    # Check Handlungsfelder
+    if len(structure.handlungsfelder.bullets) < 3:
+        issues.append(
+            f"Handlungsfelder: {len(structure.handlungsfelder.bullets)}/3 bullets"
+        )
+
+    # Check Risk Mitigation
+    if len(structure.risiko_mitigation.bullets) < 3:
+        issues.append(
+            f"Risiko-Mitigation: {len(structure.risiko_mitigation.bullets)}/3 bullets"
+        )
+
+    is_valid = len(issues) == 0
+    return is_valid, issues
+
+
+def get_exec_summary_template(
+    branche: str = "",
+    company_size: str = "team",
+) -> str:
+    """
+    N3.4 TASK 7: Get template for 3+3+3 executive summary.
+
+    Args:
+        branche: Industry/branch
+        company_size: Company size
+
+    Returns:
+        HTML template with placeholder structure
+    """
+    template = f'''
+<div class="exec-summary-333">
+    <h4>{EXEC_SUMMARY_HEADERS["key_insights"]}</h4>
+    <ul>
+        <li>{{KEY_INSIGHT_1}}</li>
+        <li>{{KEY_INSIGHT_2}}</li>
+        <li>{{KEY_INSIGHT_3}}</li>
+    </ul>
+
+    <h4>{EXEC_SUMMARY_HEADERS["handlungsfelder"]}</h4>
+    <ul>
+        <li>{{HANDLUNGSFELD_1}}</li>
+        <li>{{HANDLUNGSFELD_2}}</li>
+        <li>{{HANDLUNGSFELD_3}}</li>
+    </ul>
+
+    <h4>{EXEC_SUMMARY_HEADERS["risiko_mitigation"]}</h4>
+    <ul>
+        <li>{{RISIKO_1}}</li>
+        <li>{{RISIKO_2}}</li>
+        <li>{{RISIKO_3}}</li>
+    </ul>
+
+    <p class="strategic-context">{{STRATEGIC_CONTEXT}}</p>
+</div>
+'''
+    return template.strip()
 
 
 # =============================================================================

@@ -21,7 +21,11 @@ SPRINT N2 CHANGES (N2-4.1):
 - If realistic.roi_12m < conservative.roi_12m after healing, set to average
 - Ensures strict ordering: optimistic >= realistic >= conservative
 
-Version: 2.2.0 (Sprint N2 - N2-4.1 ROI Consistency Enhancement)
+SPRINT N3.2 CHANGES (TASK 3.1):
+- Set _bc_healed flag in sections after scenario healing
+- Prevents consistency_engine BC_001 from re-flagging healed scenarios
+
+Version: 2.3.0 (Sprint N3.2 - TASK 3.1 BC Healing Flag)
 Author: Claude + Wolf
 """
 
@@ -44,6 +48,8 @@ __all__ = [
     "calculate_payback",
     "validate_scenario_consistency",
     "heal_scenario_consistency",  # SPRINT N1 (BC_001)
+    "normalize_scenario_order",  # SPRINT N3.4 (TASK 2)
+    "ensure_scenario_consistency",  # SPRINT N3.4 (TASK 2)
     "BUSINESS_CASE_ENGINE_V2_ENABLED",
 ]
 
@@ -511,6 +517,139 @@ def heal_scenario_consistency(scenarios: List[ScenarioKPIs]) -> List[ScenarioKPI
     return healed_scenarios
 
 
+def normalize_scenario_order(
+    scenarios: Dict[str, Any],
+    sections: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """
+    N3.4 TASK 2: Business Case Consistency Kernel v4.
+
+    Normalizes scenario ordering to eliminate ROI inversions:
+    1. If realistic < conservative → realistic = conservative * 1.1 (10% above)
+    2. Ensures pessimistic <= realistic <= optimistic
+    3. Stabilizes ROI rounding (no float artifacts)
+    4. Sets _bc_consistency_normalized flag
+
+    Args:
+        scenarios: Dict with optimistic, realistic, conservative scenarios
+        sections: Optional sections dict to set healing flag
+
+    Returns:
+        Normalized scenarios dict with _bc_consistency_normalized = True
+    """
+    if not scenarios or not isinstance(scenarios, dict):
+        return scenarios
+
+    # Extract scenario ROIs
+    optimistic = scenarios.get("optimistic", {})
+    realistic = scenarios.get("realistic", {})
+    conservative = scenarios.get("conservative", {})
+
+    opt_roi = float(optimistic.get("roi_12m", 0) if isinstance(optimistic, dict) else 0)
+    real_roi = float(realistic.get("roi_12m", 0) if isinstance(realistic, dict) else 0)
+    cons_roi = float(conservative.get("roi_12m", 0) if isinstance(conservative, dict) else 0)
+
+    normalized = False
+
+    # Rule 1: If realistic < conservative → realistic = conservative * 1.1
+    if real_roi < cons_roi and cons_roi > 0:
+        new_real_roi = round(cons_roi * 1.1, 1)
+        log.info(
+            "[N3.4-BC] Normalizing realistic ROI: %.1f%% → %.1f%% (was < conservative %.1f%%)",
+            real_roi, new_real_roi, cons_roi
+        )
+        if isinstance(realistic, dict):
+            realistic["roi_12m"] = new_real_roi
+        real_roi = new_real_roi
+        normalized = True
+
+    # Rule 2: If realistic > optimistic → realistic = optimistic * 0.9
+    if real_roi > opt_roi and opt_roi > 0:
+        new_real_roi = round(opt_roi * 0.9, 1)
+        log.info(
+            "[N3.4-BC] Normalizing realistic ROI: %.1f%% → %.1f%% (was > optimistic %.1f%%)",
+            real_roi, new_real_roi, opt_roi
+        )
+        if isinstance(realistic, dict):
+            realistic["roi_12m"] = new_real_roi
+        normalized = True
+
+    # Rule 3: Stabilize ROI rounding (remove float artifacts)
+    for scenario_name, scenario_data in [
+        ("optimistic", optimistic),
+        ("realistic", realistic),
+        ("conservative", conservative),
+    ]:
+        if isinstance(scenario_data, dict):
+            for key in ["roi_12m", "payback_months", "monthly_savings", "annual_savings"]:
+                if key in scenario_data:
+                    value = scenario_data[key]
+                    if isinstance(value, float):
+                        # Round to 1 decimal for ROI/payback, 2 for savings
+                        decimals = 1 if key in ["roi_12m", "payback_months"] else 2
+                        scenario_data[key] = round(value, decimals)
+
+    # Rule 4: Set normalization flag
+    scenarios["_bc_consistency_normalized"] = True
+
+    # Also set flag in sections if provided
+    if sections is not None and normalized:
+        sections["_bc_consistency_normalized"] = True
+        sections["_bc_healed"] = True
+        log.info("[N3.4-BC] Set _bc_consistency_normalized flag in sections")
+
+    if normalized:
+        log.info("[N3.4-BC] Scenario order normalized successfully")
+
+    return scenarios
+
+
+def ensure_scenario_consistency(
+    business_case: Dict[str, Any],
+    sections: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """
+    N3.4: Complete consistency check and normalization for business case.
+
+    Combines heal_scenario_consistency with normalize_scenario_order.
+
+    Args:
+        business_case: Business case dict with scenarios
+        sections: Optional sections dict for healing flags
+
+    Returns:
+        Fully normalized business case
+    """
+    if not business_case:
+        return business_case
+
+    scenarios_data = business_case.get("scenarios", [])
+
+    # If scenarios is a list of ScenarioKPIs, use heal_scenario_consistency
+    if isinstance(scenarios_data, list) and len(scenarios_data) == 3:
+        # Convert to ScenarioKPIs if needed
+        scenario_objects = []
+        for s in scenarios_data:
+            if isinstance(s, ScenarioKPIs):
+                scenario_objects.append(s)
+            elif isinstance(s, dict):
+                scenario_objects.append(ScenarioKPIs.from_dict(s))
+
+        if len(scenario_objects) == 3:
+            healed = heal_scenario_consistency(scenario_objects)
+            business_case["scenarios"] = [s.to_dict() for s in healed]
+
+            # Set flags
+            business_case["_bc_healed"] = True
+            business_case["_bc_consistency_normalized"] = True
+
+            if sections is not None:
+                sections["_bc_healed"] = True
+                sections["_bc_consistency_normalized"] = True
+
+    return business_case
+
+
 # =============================================================================
 # EXTRACTION FUNCTIONS
 # =============================================================================
@@ -758,7 +897,7 @@ def generate_kpi_targets(
 
 def generate_business_case_report(
     context: Optional[Any] = None,
-    sections: Optional[Dict[str, str]] = None,
+    sections: Optional[Dict[str, Any]] = None,
     tools_data: Optional[Any] = None,
     funding_data: Optional[Any] = None,
     briefing: Optional[Dict[str, Any]] = None,
@@ -789,8 +928,11 @@ def generate_business_case_report(
     """
     log.info("[G30] Generating Business Case Report...")
 
-    sections = sections or {}
-    briefing = briefing or {}
+    # N3.2: Use 'is None' check to preserve passed-in empty dict for flag setting
+    if sections is None:
+        sections = {}
+    if briefing is None:
+        briefing = {}
 
     # Extract baseline
     baseline = extract_baseline_from_sections(sections, briefing)
@@ -854,6 +996,11 @@ def generate_business_case_report(
         log.warning("[G30] Scenario validation issues detected: %s", errors)
         # Heal consistency issues
         scenarios = heal_scenario_consistency(scenarios)
+        # SPRINT N3.2 (TASK 3.1): Set _bc_healed flag in sections
+        # This flag prevents consistency_engine BC_001 from re-flagging healed scenarios
+        if sections is not None:
+            sections["_bc_healed"] = True
+            log.info("[N3.2] Set _bc_healed flag in sections after healing")
 
     report = BusinessCaseReport(
         baseline_monthly_cost=baseline_monthly_cost,

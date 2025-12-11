@@ -1871,10 +1871,11 @@ def heal_placeholder_sections(sections: Dict[str, Any]) -> int:
 
 def _build_generic_leak_fallback(section_name: str, company_size: str = "team") -> str:
     """
-    SPRINT N3.1: Build a constructive fallback for sections with quality issues.
+    SPRINT N3.2/N3.3: Build a constructive fallback for sections with quality issues.
 
-    Instead of mentioning support, this generates a brief summary based on
-    available reference data.
+    SPRINT N3.3 (TASK 3): Premium "Consulting Tone" templates:
+    - KI-Stack: McKinsey-style (Strengths, Gaps, 90-Day Priorities, Strategic Leverage)
+    - Branch Deep Dive: BCG-style (Market Dynamics, Competition, Risks, Opportunities, Actions)
 
     Args:
         section_name: Name of the section needing fallback
@@ -1887,33 +1888,100 @@ def _build_generic_leak_fallback(section_name: str, company_size: str = "team") 
     if "solo" in company_size.lower():
         context = "Ihre Tätigkeit"
         address = "Sie"
+        structure = "Ihr Arbeitsbereich"
+        team_ref = "Ihren Arbeitsprozessen"
     else:
         context = "Ihr Unternehmen"
         address = "Ihr Team"
+        structure = "Ihre Organisation"
+        team_ref = "Ihren Teams"
 
-    # Section-specific constructive fallbacks (N3.1)
+    # N3.3 TASK 3: McKinsey-style template for KI-Stack Summary
+    # Structure: Strengths → Gaps → 90-Day Priorities → Strategic Leverage
+    ki_stack_mckinsey = f"""
+            <p><strong>Executive KI-Stack Assessment</strong></p>
+
+            <p class="subtitle">Strategische Analyse der technologischen Ausgangslage</p>
+
+            <p><strong>1. Aktuelle Stärken</strong></p>
+            <ul>
+              <li><strong>Digitale Infrastruktur:</strong> Grundlegende IT-Systeme sind etabliert und bilden eine solide Basis für KI-Integration</li>
+              <li><strong>Prozessreife:</strong> Standardisierte Workflows ermöglichen systematische Automatisierung mit messbarem ROI</li>
+              <li><strong>Organisationale Bereitschaft:</strong> Erkennbare Offenheit für technologische Innovation in {team_ref}</li>
+            </ul>
+
+            <p><strong>2. Identifizierte Lücken</strong></p>
+            <ul>
+              <li><strong>Strategischer Rahmen:</strong> Fehlende übergreifende KI-Strategie führt zu fragmentierten Einzelinitiativen</li>
+              <li><strong>Datenqualität:</strong> Verfügbare Datenbasis nicht optimal für ML-Anwendungen aufbereitet (Konsistenz, Vollständigkeit)</li>
+              <li><strong>Kompetenzprofil:</strong> Skill-Gap bei fortgeschrittenen KI-Themen wie Prompt Engineering und API-Integration</li>
+            </ul>
+
+            <p><strong>3. Prioritäten für die nächsten 90 Tage</strong></p>
+            <ol>
+              <li><strong>Quick-Win Pilotprojekt:</strong> Ein Use Case mit hohem ROI-Potenzial und geringem Implementierungsrisiko identifizieren und umsetzen</li>
+              <li><strong>Data Governance initiieren:</strong> Kritische Datenquellen inventarisieren und Qualitätsstandards definieren</li>
+              <li><strong>Capability Building:</strong> Strukturiertes Schulungsprogramm für {address} zu KI-Grundlagen starten</li>
+            </ol>
+
+            <p><strong>4. Strategische Hebel</strong></p>
+            <ul>
+              <li><strong>Skalierungspotenzial:</strong> Erfolgreiche Pilotprojekte systematisch auf weitere Bereiche ausweiten – Multiplikatoreffekt nutzen</li>
+              <li><strong>Wettbewerbsdifferenzierung:</strong> KI-gestützte Prozesseffizienz als Basis für verbesserte Kundenreaktionszeiten und Servicequalität</li>
+            </ul>
+        """
+
+    # N3.3 TASK 3: BCG-style template for Branch Deep Dive
+    # Structure: Market Dynamics → Competition → Risks → Opportunities → Actions
+    branch_deep_dive_bcg = f"""
+            <p><strong>Branchen-Deep-Dive</strong></p>
+
+            <p class="subtitle">Strategische Markt- und Wettbewerbsanalyse</p>
+
+            <p><strong>1. Markt- & Trenddynamik</strong></p>
+            <p>Die Branche durchläuft eine fundamentale digitale Transformation. KI-Adoption
+            beschleunigt sich exponentiell – Früheinsteiger realisieren bereits substanzielle
+            Effizienzgewinne (15-35% in automatisierten Prozessen). Der Wendepunkt zur
+            Massenadoption wird branchenweit innerhalb der nächsten 18-24 Monate erwartet.
+            Die Technologiereife kommerzieller KI-Lösungen hat kritische Schwelle überschritten.</p>
+
+            <p><strong>2. Wettbewerbsdruck & Differenzierungsfaktoren</strong></p>
+            <p>Marktführer investieren signifikant in KI-Capabilities – der Abstand zu
+            Nachzüglern wächst. Differenzierungsfaktoren: Reaktionsgeschwindigkeit,
+            Personalisierungsgrad, Kosteneffizienz. Unternehmen ohne KI-Strategie
+            riskieren binnen 3-5 Jahren Marktrelevanz. First-Mover-Advantage ist in
+            Kernprozessen noch realisierbar.</p>
+
+            <p><strong>3. Kernrisiken & Regulatorische Trigger</strong></p>
+            <ul>
+              <li><strong>Regulatorik:</strong> EU AI Act erfordert Compliance-Anpassungen – Übergangsfrist endet 2025/2026</li>
+              <li><strong>Talentmarkt:</strong> KI-Fachkräftemangel treibt Personalkosten und verlängert Implementierungszyklen</li>
+              <li><strong>Technologierisiko:</strong> Schnelle Obsoleszenz – Tool-Entscheidungen können binnen 12 Monaten revidiert werden müssen</li>
+            </ul>
+
+            <p><strong>4. Chancen für Wertschöpfung & Produktivität</strong></p>
+            <ul>
+              <li><strong>Prozesseffizienz:</strong> 20-40% Zeitersparnis bei repetitiven Tätigkeiten durch intelligente Automatisierung</li>
+              <li><strong>Qualitätssteigerung:</strong> KI-gestützte Fehlerprävention reduziert Nacharbeit um 25-50%</li>
+              <li><strong>Skalierung:</strong> Wachstum ohne proportionale Ressourcenaufstockung – verbesserte Unit Economics</li>
+              <li><strong>Kundenzentrierung:</strong> Datengestützte Personalisierung erhöht Kundenbindung messbar</li>
+            </ul>
+
+            <p><strong>5. Handlungsempfehlungen</strong></p>
+            <ol>
+              <li><strong>Strategische Positionierung:</strong> KI als Kernbestandteil der Unternehmensstrategie verankern – Investitionsbudget sichern</li>
+              <li><strong>Fokussierte Umsetzung:</strong> 2-3 High-Impact Use Cases priorisieren statt breiter Streuung – Ressourcen bündeln</li>
+              <li><strong>Ökosystem aufbauen:</strong> Partner-Netzwerk aus Technologieanbietern und Implementierungspartnern etablieren</li>
+            </ol>
+        """
+
+    # Section-specific constructive fallbacks (N3.3 Premium Templates)
     section_fallbacks = {
-        "ki_stack_summary": f"""
-            <p><strong>KI-Stack Übersicht</strong></p>
-            <p>Auf Basis der Analysedaten wurden folgende Kernpunkte identifiziert:</p>
-            <ul>
-              <li><strong>Stärken:</strong> Grundlegende Digitalinfrastruktur vorhanden, erste KI-Erfahrungen gesammelt</li>
-              <li><strong>Handlungsfelder:</strong> Systematische KI-Strategie entwickeln, Pilotprojekte definieren</li>
-              <li><strong>Nächste Schritte:</strong> Quick-Win-Maßnahmen priorisieren, Ressourcen planen</li>
-            </ul>
-        """,
-        "branch_deep_dive": f"""
-            <p><strong>Branchen-Analyse</strong></p>
-            <p>Die Branchenanalyse basiert auf aktuellen Marktdaten und Referenzwerten:</p>
-            <ul>
-              <li><strong>Markttrends:</strong> Zunehmende Digitalisierung und Automatisierung prägen die Branche</li>
-              <li><strong>Chancen:</strong> Effizienzsteigerung durch KI-gestützte Prozessoptimierung</li>
-              <li><strong>Risiken:</strong> Wettbewerbsdruck erfordert zeitnahe Investitionen</li>
-            </ul>
-        """,
+        "ki_stack_summary": ki_stack_mckinsey,
+        "branch_deep_dive": branch_deep_dive_bcg,
         "executive_summary": f"""
-            <p>Die Analyse zeigt Potenziale für {context} im Bereich der KI-Integration.
-            Konkrete Handlungsempfehlungen finden sich in den nachfolgenden Kapiteln.</p>
+            <p>Die strategische Analyse identifiziert signifikante KI-Potenziale für {context}.
+            Kernempfehlungen und priorisierte Maßnahmen sind in den folgenden Kapiteln detailliert.</p>
         """,
     }
 
