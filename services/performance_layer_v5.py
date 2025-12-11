@@ -671,7 +671,7 @@ class CacheAwarePromptBuilder:
 
         cached = self.get_cached(key)
         if cached is not None:
-            return dict(cached)  # type: ignore[arg-type]
+            return dict(cached)
 
         # Build profile
         profile: Dict[str, Any] = {
@@ -700,7 +700,7 @@ class CacheAwarePromptBuilder:
 
         cached = self.get_cached(key)
         if cached is not None:
-            return dict(cached)  # type: ignore[arg-type]
+            return dict(cached)
 
         # Build KPI context
         context: Dict[str, Any] = {
