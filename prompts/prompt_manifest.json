@@ -1,22 +1,25 @@
 {
   "_meta": {
-    "version": "5.4",
-    "description": "PLATIN++ V5.4 Prompt Manifest - Sprint N1 (Leak Protection + Token Limits)",
+    "version": "5.5",
+    "description": "PLATIN++ V5.5 Prompt Manifest - Sprint N3.1 (Token Budget Increase)",
     "updated": "2024-12",
-    "sprint": "N1",
+    "sprint": "N3.1",
     "changes": [
       "SPRINT N1: Increased token budgets for Premium sections",
       "SPRINT N1: Reduced min_words for Solo to avoid fallbacks",
       "SPRINT N1: roadmap_12m 2800→4500, gamechanger 3000→4200",
-      "SPRINT N1: strategie_governance 2000→3200, wettbewerb_benchmark 2000→3500"
+      "SPRINT N1: strategie_governance 2000→3200, wettbewerb_benchmark 2000→3500",
+      "SPRINT N3.1: roadmap_12m 4500→4800, recommendations token boost",
+      "SPRINT N3.1: Reduced Solo min_words for roadmap/recommendations"
     ]
   },
   "_token_budgets": {
-    "_note": "LLM token budgets (base) - SPRINT N1 increased for Premium sections; min_words enforced by report_validator.py",
+    "_note": "LLM token budgets (base) - SPRINT N3.1 increased for roadmap sections; min_words enforced by report_validator.py",
     "executive_summary": {"base": 800, "min_words": {"solo": 150, "team": 180, "kmu": 200}, "validator_only": true},
     "tools_empfehlungen": {"base": 1800, "min_words": {"solo": 120, "team": 160, "kmu": 200}, "validator_only": true},
     "gamechanger": {"base": 4200, "min_words": {"solo": 500, "team": 600, "kmu": 700}},
-    "roadmap_12m": {"base": 4500, "min_words": {"solo": 600, "team": 600, "kmu": 700}},
+    "roadmap_12m": {"base": 4800, "min_words": {"solo": 550, "team": 600, "kmu": 650}},
+    "recommendations": {"base": 2800, "min_words": {"solo": 450, "team": 550, "kmu": 650}},
     "strategie_governance": {"base": 3200, "min_words": {"solo": 90, "team": 130, "kmu": 160}},
     "wettbewerb_benchmark": {"base": 3500, "min_words": {"solo": 200, "team": 300, "kmu": 400}}
   },
@@ -120,10 +123,10 @@
       "required": true,
       "output": "html",
       "tokens": {
-        "base": 4500,
-        "solo": 3600,
-        "team": 4500,
-        "kmu": 5175
+        "base": 4800,
+        "solo": 3840,
+        "team": 4800,
+        "kmu": 5520
       },
       "redundancy_rules": [
         "no_repeat_roadmap_90d",
@@ -892,10 +895,10 @@
       "required": true,
       "output": "html",
       "tokens": {
-        "base": 4500,
-        "solo": 3600,
-        "team": 4500,
-        "kmu": 5175
+        "base": 4800,
+        "solo": 3840,
+        "team": 4800,
+        "kmu": 5520
       },
       "redundancy_rules": [
         "no_repeat_roadmap_90d",
