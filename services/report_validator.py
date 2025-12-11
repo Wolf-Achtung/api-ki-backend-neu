@@ -1972,6 +1972,12 @@ def validate_and_heal(
 # Alias for easy import from outside the class
 GENERIC_LLM_LEAK_PHRASES = ReportValidator.GENERIC_LLM_LEAK_PHRASES
 
+# N3: Pre-compile single regex for O(n) leak detection instead of O(n*phrases)
+_LEAK_DETECTION_PATTERN = re.compile(
+    '|'.join(re.escape(p) for p in GENERIC_LLM_LEAK_PHRASES),
+    re.IGNORECASE
+)
+
 
 def remove_leak_phrases_from_html(html: str) -> Tuple[str, int]:
     """
@@ -1980,8 +1986,8 @@ def remove_leak_phrases_from_html(html: str) -> Tuple[str, int]:
     This is a last-resort safety net before PDF rendering.
 
     SPRINT N3: Optimized for performance with 95+ phrases.
-    - Pre-compute lowercase once
-    - Skip expensive .lower() calls in loop
+    - Use single compiled regex for O(n) detection
+    - Only process phrases that were actually found
 
     Args:
         html: HTML content to clean
@@ -1992,28 +1998,24 @@ def remove_leak_phrases_from_html(html: str) -> Tuple[str, int]:
     if not html:
         return html, 0
 
+    # N3: Single-pass detection using pre-compiled regex - O(n) instead of O(n*phrases)
+    found_phrases = _LEAK_DETECTION_PATTERN.findall(html)
+    if not found_phrases:
+        return html, 0
+
+    # Get unique phrases found (case-insensitive dedup)
+    unique_phrases = list({p.lower(): p for p in found_phrases}.values())
+
     cleaned = html
     removed_count = 0
 
-    # Use module-level constant
-    leak_phrases = GENERIC_LLM_LEAK_PHRASES
-
-    # N3: Pre-compute lowercase version once for faster checking
-    cleaned_lower = cleaned.lower()
-
-    for phrase in leak_phrases:
-        phrase_lower = phrase.lower()
-        # Quick check using pre-computed lowercase (fast)
-        if phrase_lower not in cleaned_lower:
-            continue
-
-        # Found a match - use regex to remove sentences containing it
+    # Only process phrases that were actually found (usually 0-3, not 95+)
+    for phrase in unique_phrases:
+        # Remove sentences containing this phrase
         pattern = rf'[^.!?]*{re.escape(phrase)}[^.!?]*[.!?]?\s*'
         matches = len(re.findall(pattern, cleaned, re.IGNORECASE))
         if matches > 0:
             cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE)
-            # Update lowercase version after modification
-            cleaned_lower = cleaned.lower()
             removed_count += matches
             log.warning(
                 "[N2-SafetyNet] Removed %d occurrences of leak phrase '%s'",
