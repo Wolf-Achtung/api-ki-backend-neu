@@ -321,6 +321,78 @@ PERSONALIZATION_KMU: Dict[str, str] = {
 
 
 # =============================================================================
+# N3.1: TONE NORMALIZATION (du → neutral/Sie)
+# =============================================================================
+# Converts informal "du" address to formal/neutral language
+# Used especially in Risk chapter where LLM sometimes uses informal address
+
+TONE_NORMALIZATION_DU: Dict[str, str] = {
+    # Direct "du" forms → neutral/formal
+    "du kannst": "es besteht die Möglichkeit",
+    "Du kannst": "Es besteht die Möglichkeit",
+    "du solltest": "es empfiehlt sich",
+    "Du solltest": "Es empfiehlt sich",
+    "du musst": "es ist erforderlich",
+    "Du musst": "Es ist erforderlich",
+    "du wirst": "es wird",
+    "Du wirst": "Es wird",
+    "du hast": "es besteht",
+    "Du hast": "Es besteht",
+    "du bist": "es ist",
+    "Du bist": "Es ist",
+    # Possessive "dein" forms → neutral
+    "dein Geschäftsmodell": "das Geschäftsmodell",
+    "Dein Geschäftsmodell": "Das Geschäftsmodell",
+    "dein Unternehmen": "das Unternehmen",
+    "Dein Unternehmen": "Das Unternehmen",
+    "deine Prozesse": "die Prozesse",
+    "Deine Prozesse": "Die Prozesse",
+    "deinen Kunden": "den Kunden",
+    "Deinen Kunden": "Den Kunden",
+    "deiner Branche": "der Branche",
+    "Deiner Branche": "Der Branche",
+    "deinem Team": "dem Team",
+    "Deinem Team": "Dem Team",
+    # Accusative/Dative "dich/dir" → neutral
+    "für dich": "für Sie",
+    "Für dich": "Für Sie",
+    "bei dir": "in diesem Fall",
+    "Bei dir": "In diesem Fall",
+    "an dich": "an Sie",
+    "An dich": "An Sie",
+    "mit dir": "mit Ihnen",
+    "Mit dir": "Mit Ihnen",
+    # Common phrases with du
+    "wenn du": "wenn Sie",
+    "Wenn du": "Wenn Sie",
+    "dass du": "dass Sie",
+    "Dass du": "Dass Sie",
+    "ob du": "ob Sie",
+    "Ob du": "Ob Sie",
+}
+
+# Regex patterns for remaining "du" forms (fallback)
+TONE_NORMALIZATION_DU_PATTERNS: List[Tuple[str, str]] = [
+    (r'\bdu\b', 'Sie'),
+    (r'\bDu\b', 'Sie'),
+    (r'\bdich\b', 'Sie'),
+    (r'\bDich\b', 'Sie'),
+    (r'\bdir\b', 'Ihnen'),
+    (r'\bDir\b', 'Ihnen'),
+    (r'\bdein\b', 'Ihr'),
+    (r'\bDein\b', 'Ihr'),
+    (r'\bdeine\b', 'Ihre'),
+    (r'\bDeine\b', 'Ihre'),
+    (r'\bdeinen\b', 'Ihren'),
+    (r'\bDeinen\b', 'Ihren'),
+    (r'\bdeinem\b', 'Ihrem'),
+    (r'\bDeinem\b', 'Ihrem'),
+    (r'\bdeiner\b', 'Ihrer'),
+    (r'\bDeiner\b', 'Ihrer'),
+]
+
+
+# =============================================================================
 # DATA STRUCTURES
 # =============================================================================
 
@@ -341,6 +413,7 @@ class MicroCorrectionReport:
     redundancy_removals: int = 0
     forbidden_replacements: int = 0
     personalization_adjustments: int = 0
+    tone_normalizations: int = 0  # N3.1: du → Sie conversions
     corrections: List[CorrectionResult] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
 
@@ -351,6 +424,8 @@ class MicroCorrectionReport:
 
         if result.category == "spelling":
             self.spelling_corrections += result.count
+        elif result.category == "tone":
+            self.tone_normalizations += result.count
         elif result.category == "redundancy":
             self.redundancy_removals += result.count
         elif result.category == "forbidden":
@@ -366,6 +441,7 @@ class MicroCorrectionReport:
             "redundancy_removals": self.redundancy_removals,
             "forbidden_replacements": self.forbidden_replacements,
             "personalization_adjustments": self.personalization_adjustments,
+            "tone_normalizations": self.tone_normalizations,  # N3.1
             "correction_details": [
                 {
                     "category": c.category,
@@ -471,14 +547,19 @@ class MicroCorrectionEngine:
         # D4: Personalization adjustments
         text = self._apply_personalization(text, report)
 
+        # N3.1: Tone normalization (du → Sie/neutral)
+        if self.language == "de":
+            text = self._apply_tone_normalization(text, report)
+
         log.info(
             "[D-MicroCorrection] Applied %d corrections: spelling=%d redundancy=%d "
-            "forbidden=%d personalization=%d",
+            "forbidden=%d personalization=%d tone=%d",
             report.total_corrections,
             report.spelling_corrections,
             report.redundancy_removals,
             report.forbidden_replacements,
             report.personalization_adjustments,
+            report.tone_normalizations,
         )
 
         return text, report
@@ -578,6 +659,63 @@ class MicroCorrectionEngine:
                     count=count,
                 ))
                 corrections_applied += count
+
+        return text
+
+    def _apply_tone_normalization(
+        self, text: str, report: MicroCorrectionReport
+    ) -> str:
+        """
+        N3.1: Apply tone normalization (du → Sie/neutral).
+
+        Converts informal "du" address to formal/neutral language.
+        This is especially important for the Risk chapter where
+        LLM sometimes uses informal address.
+
+        Two-pass approach:
+        1. Dictionary-based phrase replacement (more accurate)
+        2. Regex-based fallback for remaining "du" forms
+        """
+        corrections_applied = 0
+
+        # Pass 1: Dictionary-based phrase replacements
+        for original, formal in TONE_NORMALIZATION_DU.items():
+            if corrections_applied >= MAX_CORRECTIONS_PER_CATEGORY:
+                break
+
+            if original in text:
+                count = text.count(original)
+                text = text.replace(original, formal)
+                report.add_correction(CorrectionResult(
+                    category="tone",
+                    original=original,
+                    corrected=formal,
+                    count=count,
+                ))
+                corrections_applied += count
+
+        # Pass 2: Regex-based fallback for remaining "du" forms
+        for pattern, replacement in TONE_NORMALIZATION_DU_PATTERNS:
+            if corrections_applied >= MAX_CORRECTIONS_PER_CATEGORY:
+                break
+
+            matches = re.findall(pattern, text)
+            if matches:
+                count = len(matches)
+                text = re.sub(pattern, replacement, text)
+                report.add_correction(CorrectionResult(
+                    category="tone",
+                    original=f"regex:{pattern}",
+                    corrected=replacement,
+                    count=count,
+                ))
+                corrections_applied += count
+
+        if corrections_applied > 0:
+            log.info(
+                "[N3.1-ToneNorm] Normalized %d informal 'du' forms to formal/neutral language",
+                corrections_applied
+            )
 
         return text
 

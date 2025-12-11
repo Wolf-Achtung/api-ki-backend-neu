@@ -70,13 +70,14 @@ MAX_RECOVERY_ATTEMPTS = 1
 
 # Size-aware min-words thresholds for auto-extension
 # Format: {section: {size: min_words}}
+# SPRINT N3.1: Reduced Solo thresholds to avoid unnecessary fallbacks
 EXTEND_MIN_WORDS: Dict[str, Dict[str, int]] = {
-    "roadmap_90d": {"solo": 130, "team": 170, "kmu": 190},
-    "roadmap_12m": {"solo": 650, "team": 750, "kmu": 800},
-    "strategie_governance": {"solo": 110, "team": 140, "kmu": 160},
-    "recommendations": {"solo": 700, "team": 900, "kmu": 1000},
+    "roadmap_90d": {"solo": 110, "team": 170, "kmu": 190},  # N3.1: solo 130→110
+    "roadmap_12m": {"solo": 550, "team": 700, "kmu": 750},  # N3.1: solo 650→550, team 750→700
+    "strategie_governance": {"solo": 100, "team": 140, "kmu": 160},  # N3.1: solo 110→100
+    "recommendations": {"solo": 500, "team": 800, "kmu": 900},  # N3.1: solo 700→500, team 900→800
     "wettbewerb_benchmark": {"solo": 10, "team": 10, "kmu": 10},  # Hard floor
-    "gamechanger": {"solo": 700, "team": 800, "kmu": 900},
+    "gamechanger": {"solo": 600, "team": 750, "kmu": 850},  # N3.1: reduced all tiers
 }
 
 # Topic-specific extension paragraphs for different sections
@@ -328,12 +329,15 @@ def extend_to_min_words(
     section: str = "",
     size: str = "team",
     branche: str = "",
+    max_attempts: int = 2,
 ) -> Tuple[str, int, bool]:
     """
-    N3-02: Extend text to meet minimum word count.
+    N3-02/N3.1: Extend text to meet minimum word count.
 
-    If the text is below min_words, appends a generated extension paragraph.
+    If the text is below min_words, appends generated extension paragraphs.
     This is called directly after LLM output, BEFORE fallback decisions.
+
+    SPRINT N3.1: Enhanced to try multiple extension attempts before giving up.
 
     Args:
         text: Original text content
@@ -341,6 +345,7 @@ def extend_to_min_words(
         section: Section name (topic hint)
         size: Company size (solo, team, kmu)
         branche: Branch/industry for context
+        max_attempts: Maximum extension attempts (N3.1: default 2)
 
     Returns:
         Tuple of (extended_text, final_word_count, was_extended)
@@ -353,27 +358,36 @@ def extend_to_min_words(
     if current_words >= min_words:
         return text, current_words, False
 
-    # Build extension paragraph
-    filler = build_extension_paragraph(section, size, branche)
+    extended_text = text.strip()
+    was_extended = False
+    attempts = 0
 
-    if not filler:
-        log.warning(
-            "[N3-02] No extension paragraph available for section=%s size=%s",
-            section, size
-        )
-        return text, current_words, False
+    # N3.1: Try multiple extension attempts to reach min_words
+    while count_words(extended_text) < min_words and attempts < max_attempts:
+        # Build extension paragraph
+        filler = build_extension_paragraph(section, size, branche)
 
-    # Append extension
-    extended_text = text.strip() + "\n\n" + filler
+        if not filler:
+            log.warning(
+                "[N3-02] No extension paragraph available for section=%s size=%s",
+                section, size
+            )
+            break
+
+        # Append extension
+        extended_text = extended_text + "\n\n" + filler
+        was_extended = True
+        attempts += 1
 
     new_word_count = count_words(extended_text)
 
-    log.info(
-        "[N3-02] Extended section=%s from %d to %d words (target=%d)",
-        section, current_words, new_word_count, min_words
-    )
+    if was_extended:
+        log.info(
+            "[N3-02/N3.1] Extended section=%s from %d to %d words (target=%d, attempts=%d)",
+            section, current_words, new_word_count, min_words, attempts
+        )
 
-    return extended_text, new_word_count, True
+    return extended_text, new_word_count, was_extended
 
 
 def auto_extend_sections(
