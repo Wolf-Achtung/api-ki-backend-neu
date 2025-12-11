@@ -295,7 +295,9 @@ def detect_redundancy(sections: SectionDict) -> List[CoherenceIssue]:
     section_list = list(section_texts.keys())
     for i, sec1 in enumerate(section_list):
         for sec2 in section_list[i + 1:]:
-            pair_key = tuple(sorted([sec1, sec2]))
+            # Create sorted pair key for deduplication
+            sorted_pair = sorted([sec1, sec2])
+            pair_key: Tuple[str, str] = (sorted_pair[0], sorted_pair[1])
             if pair_key in analyzed_pairs:
                 continue
             analyzed_pairs.add(pair_key)

@@ -994,13 +994,13 @@ class TestPackageEZeroLeakReport:
 # =============================================================================
 
 class TestPackageFTimeoutConfig:
-    """Test N3.6 timeout configuration."""
+    """Test N3.7 timeout configuration (updated from N3.6)."""
 
-    def test_max_retries_is_5(self):
-        """N3.6: Max retries should be 5."""
+    def test_max_retries_is_6(self):
+        """N3.7: Max retries should be 6."""
         from services.llm_client import LLM_MAX_RETRIES
 
-        assert LLM_MAX_RETRIES == 5
+        assert LLM_MAX_RETRIES == 6
 
     def test_backoff_base_is_3(self):
         """N3.6: Backoff base should be 3.0s."""
@@ -1008,12 +1008,12 @@ class TestPackageFTimeoutConfig:
 
         assert LLM_RETRY_BACKOFF_BASE == 3.0
 
-    def test_premium_timeout_is_140(self):
-        """N3.6: Premium sections should have 140s timeout."""
+    def test_premium_timeout_is_165(self):
+        """N3.7: Premium sections should have 165s timeout."""
         from services.llm_client import SECTION_TIMEOUT_OVERRIDES
 
-        assert SECTION_TIMEOUT_OVERRIDES["exec_summary"] == 140.0
-        assert SECTION_TIMEOUT_OVERRIDES["recommendations"] == 140.0
+        assert SECTION_TIMEOUT_OVERRIDES["exec_summary"] == 165.0
+        assert SECTION_TIMEOUT_OVERRIDES["recommendations"] == 165.0
 
 
 class TestPackageFBackoffSequence:
