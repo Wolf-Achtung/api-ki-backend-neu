@@ -456,7 +456,7 @@ class AdaptiveParallelizer:
             Recommended cluster size
         """
         config = COMPLEXITY_BY_LOAD.get(load_level.value, COMPLEXITY_BY_LOAD["moderate"])
-        return config["parallel_tasks"]
+        return int(config["parallel_tasks"])
 
     def acquire_slots(self, requested: int, load_level: LoadLevel = LoadLevel.IDLE) -> int:
         """
@@ -483,7 +483,7 @@ class AdaptiveParallelizer:
                 self._active_tasks,
                 max_slots,
             )
-            return granted
+            return int(granted)
 
     def release_slots(self, count: int) -> None:
         """Release processing slots."""
@@ -493,11 +493,11 @@ class AdaptiveParallelizer:
 
     def get_active_tasks(self) -> int:
         """Get number of active tasks."""
-        return self._active_tasks
+        return int(self._active_tasks)
 
     def get_capacity(self) -> int:
         """Get total capacity."""
-        return self._base_cluster_size
+        return int(self._base_cluster_size)
 
 
 # =============================================================================
@@ -571,11 +571,11 @@ class OverloadProtector:
 
     def is_circuit_open(self) -> bool:
         """Check if circuit breaker is open."""
-        return self._circuit_open
+        return bool(self._circuit_open)
 
     def get_load_level(self) -> LoadLevel:
         """Get current load level."""
-        return self._current_load
+        return LoadLevel(self._current_load.value)
 
 
 # =============================================================================
@@ -616,11 +616,11 @@ class RetryManagerV6:
             True if retry is allowed
         """
         config = self.get_retry_config(load_level)
-        max_retries = config["max_retries"]
+        max_retries = int(config["max_retries"])
 
         with self._lock:
             current = self._retry_counts.get(operation_id, 0)
-            return current < max_retries
+            return bool(current < max_retries)
 
     def get_delay(self, operation_id: str, load_level: LoadLevel = LoadLevel.IDLE) -> float:
         """
@@ -639,14 +639,14 @@ class RetryManagerV6:
         with self._lock:
             retry_num = self._retry_counts.get(operation_id, 0)
             if retry_num < len(delays):
-                base_delay = delays[retry_num]
+                base_delay = float(delays[retry_num])
             else:
-                base_delay = delays[-1] if delays else RetryConfigV6.BASE_DELAY
+                base_delay = float(delays[-1]) if delays else RetryConfigV6.BASE_DELAY
 
         # Add jitter
         import random
         jitter = base_delay * RetryConfigV6.JITTER_FACTOR * random.random()
-        return min(base_delay + jitter, RetryConfigV6.MAX_DELAY)
+        return float(min(base_delay + jitter, RetryConfigV6.MAX_DELAY))
 
     def record_retry(self, operation_id: str) -> int:
         """

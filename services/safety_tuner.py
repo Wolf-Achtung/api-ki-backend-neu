@@ -133,12 +133,13 @@ REPORT_TYPE_ADJUSTMENTS: Dict[str, ConfigDict] = {
 }
 
 # Sensitive data patterns (DSGVO/GDPR)
+# Note: Order matters - IBAN must be processed before phone to avoid conflicts
 SENSITIVE_PATTERNS: Dict[str, str] = {
     "email": r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}",
-    "phone_de": r"(\+49|0049|0)\s*[\d\s/\-]{6,14}\d",
     "iban": r"[A-Z]{2}\d{2}\s*[\dA-Z\s]{12,30}",
-    "personal_id": r"\b\d{2}[\.\s]?\d{2}[\.\s]?\d{2}[\.\s\-]?\d{3,5}\b",
     "credit_card": r"\b\d{4}[\s\-]?\d{4}[\s\-]?\d{4}[\s\-]?\d{4}\b",
+    "phone_de": r"(?<![A-Z\d])(\+49|0049|0)\s*[1-9][\d\s/\-]{5,13}\d(?!\d)",
+    "personal_id": r"\b\d{2}[\.\s]?\d{2}[\.\s]?\d{2}[\.\s\-]?\d{3,5}\b",
     "ip_address": r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b",
     "name_prefix": r"\b(Herr|Frau|Dr\.|Prof\.)\s+[A-ZÄÖÜ][a-zäöüß]+\s+[A-ZÄÖÜ][a-zäöüß]+\b",
     "date_of_birth": r"\b\d{1,2}[\.\-/]\d{1,2}[\.\-/]\d{2,4}\b",
