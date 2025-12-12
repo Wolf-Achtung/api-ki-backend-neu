@@ -222,7 +222,7 @@ AI_ACT_RISK_NARRATIVES: Dict[str, Dict[SupportedLanguage, str]] = {
 }
 
 # ISO 42001 chapter templates (multi-language)
-ISO_42001_CHAPTER_TEMPLATES: Dict[str, Dict[SupportedLanguage, Dict[str, str]]] = {
+ISO_42001_CHAPTER_TEMPLATES: Dict[str, Dict[SupportedLanguage, Dict[str, Any]]] = {
     "context": {
         SupportedLanguage.DE: {
             "title": "4. Kontext der Organisation",

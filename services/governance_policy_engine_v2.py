@@ -1473,13 +1473,13 @@ class GovernancePolicyEngineV2:
         # Try exact key
         content = self.sections.get(key)
         if content and isinstance(content, str):
-            return content
+            return str(content)
 
         # Try uppercase HTML variant
         html_key = f"{key.upper()}_HTML"
         content = self.sections.get(html_key)
         if content and isinstance(content, str):
-            return content
+            return str(content)
 
         return None
 
