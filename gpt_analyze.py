@@ -285,6 +285,101 @@ except ImportError:
     accumulate_signals = None
     build_training_dataset = None
 
+# N4.0: Autonomous Engine Layer imports
+try:
+    from services.meta_engine_scheduler import (
+        get_scheduler,
+        process_meta_scheduling,
+        get_engine_status,
+    )
+    META_SCHEDULER_AVAILABLE = True
+except ImportError:
+    get_scheduler = None
+    process_meta_scheduling = None
+    get_engine_status = None
+    META_SCHEDULER_AVAILABLE = False
+
+try:
+    from services.model_strategy_layer import (
+        get_model_strategy,
+        select_model,
+        dual_generate,
+        semantic_merge,
+    )
+    MODEL_STRATEGY_AVAILABLE = True
+except ImportError:
+    get_model_strategy = None
+    select_model = None
+    dual_generate = None
+    semantic_merge = None
+    MODEL_STRATEGY_AVAILABLE = False
+
+try:
+    from services.simulation_engine import (
+        get_simulation_engine,
+        run_monte_carlo,
+        run_scenario_analysis,
+        run_operational_simulation,
+    )
+    SIMULATION_ENGINE_AVAILABLE = True
+except ImportError:
+    get_simulation_engine = None
+    run_monte_carlo = None
+    run_scenario_analysis = None
+    run_operational_simulation = None
+    SIMULATION_ENGINE_AVAILABLE = False
+
+try:
+    from services.knowledge_fusion_engine import (
+        get_knowledge_fusion_engine,
+        fuse_research_insights,
+        cluster_insights,
+        extract_key_signals,
+        build_market_thesis,
+    )
+    KNOWLEDGE_FUSION_AVAILABLE = True
+except ImportError:
+    get_knowledge_fusion_engine = None
+    fuse_research_insights = None
+    cluster_insights = None
+    extract_key_signals = None
+    build_market_thesis = None
+    KNOWLEDGE_FUSION_AVAILABLE = False
+
+try:
+    from services.governance_engine import (
+        get_governance_engine,
+        assess_ai_governance,
+        get_governance_maturity_score,
+        generate_raci_matrix,
+        get_risk_controls,
+    )
+    GOVERNANCE_ENGINE_AVAILABLE = True
+except ImportError:
+    get_governance_engine = None
+    assess_ai_governance = None
+    get_governance_maturity_score = None
+    generate_raci_matrix = None
+    get_risk_controls = None
+    GOVERNANCE_ENGINE_AVAILABLE = False
+
+try:
+    from services.prompt_evolution_engine import (
+        get_prompt_evolution_engine,
+        register_prompt_for_evolution,
+        evolve_prompt,
+        get_evolved_prompt,
+        get_prompt_evolution_map,
+    )
+    PROMPT_EVOLUTION_AVAILABLE = True
+except ImportError:
+    get_prompt_evolution_engine = None
+    register_prompt_for_evolution = None
+    evolve_prompt = None
+    get_evolved_prompt = None
+    get_prompt_evolution_map = None
+    PROMPT_EVOLUTION_AVAILABLE = False
+
 # Initialize logger
 log = logging.getLogger(__name__)
 
