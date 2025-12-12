@@ -920,3 +920,466 @@ def get_narrative_summary(report: NarrativeReport) -> str:
         f"Phases Present: {', '.join(report.phases_present)}\n"
         f"Issues: {len(report.issues)} ({report.healed_issues} healed)"
     )
+
+
+# =============================================================================
+# N3.9: 3-Layer Executive Narrative (C-Suites)
+# =============================================================================
+
+@dataclass
+class ExecutiveLayer:
+    """A single layer of the executive narrative."""
+    layer_type: str  # 'strategic', 'transformation', 'impact'
+    title: str
+    content: str
+    key_messages: List[str] = field(default_factory=list)
+    metrics: Dict[str, Any] = field(default_factory=dict)
+    score: float = 100.0
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "layer_type": self.layer_type,
+            "title": self.title,
+            "content": self.content[:500] if self.content else "",
+            "key_messages": self.key_messages,
+            "metrics": self.metrics,
+            "score": self.score,
+        }
+
+
+@dataclass
+class ExecutiveNarrativeV2:
+    """N3.9: 3-Layer Executive Narrative Report."""
+    strategic_layer: Optional[ExecutiveLayer] = None
+    transformation_layer: Optional[ExecutiveLayer] = None
+    impact_layer: Optional[ExecutiveLayer] = None
+    story_arc_complete: bool = False
+    story_arc_score: float = 100.0
+    consistency_score: float = 100.0
+    issues: List[str] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "strategic_layer": self.strategic_layer.to_dict() if self.strategic_layer else None,
+            "transformation_layer": self.transformation_layer.to_dict() if self.transformation_layer else None,
+            "impact_layer": self.impact_layer.to_dict() if self.impact_layer else None,
+            "story_arc_complete": self.story_arc_complete,
+            "story_arc_score": self.story_arc_score,
+            "consistency_score": self.consistency_score,
+            "issues": self.issues,
+            "overall_score": self.get_overall_score(),
+        }
+
+    def get_overall_score(self) -> float:
+        """Calculate overall executive narrative score."""
+        scores = [self.story_arc_score, self.consistency_score]
+        if self.strategic_layer:
+            scores.append(self.strategic_layer.score)
+        if self.transformation_layer:
+            scores.append(self.transformation_layer.score)
+        if self.impact_layer:
+            scores.append(self.impact_layer.score)
+        return sum(scores) / len(scores) if scores else 0.0
+
+
+# N3.9: Executive story arc phases
+EXECUTIVE_STORY_ARC = [
+    {
+        "phase": "ausgangslage",
+        "layer": "strategic",
+        "keywords": ["situation", "kontext", "ausgangslage", "status quo", "ist-zustand"],
+        "question": "Wo stehen wir?",
+    },
+    {
+        "phase": "herausforderung",
+        "layer": "strategic",
+        "keywords": ["herausforderung", "problem", "challenge", "risiko", "gap", "lücke"],
+        "question": "Was sind die Herausforderungen?",
+    },
+    {
+        "phase": "ki_hebel",
+        "layer": "transformation",
+        "keywords": ["ki", "ai", "automatisierung", "digitalisierung", "hebel", "potenzial"],
+        "question": "Wie kann KI helfen?",
+    },
+    {
+        "phase": "roadmap",
+        "layer": "transformation",
+        "keywords": ["roadmap", "plan", "umsetzung", "phase", "timeline", "schritt"],
+        "question": "Was muss passieren?",
+    },
+    {
+        "phase": "impact",
+        "layer": "impact",
+        "keywords": ["roi", "einsparung", "nutzen", "ergebnis", "wirkung", "value", "benefit"],
+        "question": "Was bringt es?",
+    },
+]
+
+
+def analyze_strategic_layer(sections: SectionDict) -> ExecutiveLayer:
+    """
+    N3.9: Analyze the Strategic Signal Layer.
+
+    "Was bedeutet das für das Unternehmen?"
+    """
+    layer = ExecutiveLayer(
+        layer_type="strategic",
+        title="Strategische Bedeutung",
+        content="",
+    )
+
+    # Collect strategic content
+    strategic_sections = [
+        "EXEC_SUMMARY_HTML", "EXECUTIVE_SUMMARY_HTML",
+        "UNTERNEHMENSPROFIL_MARKT_HTML", "BRANCH_DEEP_DIVE_HTML",
+        "WETTBEWERB_BENCHMARK_HTML",
+    ]
+
+    content_parts = []
+    for key in strategic_sections:
+        content = sections.get(key, "")
+        if content:
+            text = extract_text_from_html(content)
+            content_parts.append(text)
+
+    layer.content = " ".join(content_parts)
+
+    # Extract key strategic messages
+    strategic_keywords = [
+        "marktposition", "wettbewerb", "strategisch", "transformation",
+        "digitalisierung", "position", "zukunft"
+    ]
+
+    sentences = extract_sentences(layer.content)
+    for sentence in sentences[:20]:
+        if any(kw in sentence.lower() for kw in strategic_keywords):
+            if len(layer.key_messages) < 5:
+                layer.key_messages.append(sentence[:200])
+
+    # Score based on content quality
+    if not layer.content:
+        layer.score = 0.0
+    elif len(layer.key_messages) < 2:
+        layer.score = 60.0
+    elif len(layer.key_messages) < 4:
+        layer.score = 80.0
+    else:
+        layer.score = 100.0
+
+    return layer
+
+
+def analyze_transformation_layer(sections: SectionDict) -> ExecutiveLayer:
+    """
+    N3.9: Analyze the Transformation Layer.
+
+    "Was muss als Nächstes passieren?"
+    """
+    layer = ExecutiveLayer(
+        layer_type="transformation",
+        title="Transformations-Roadmap",
+        content="",
+    )
+
+    # Collect transformation content
+    transformation_sections = [
+        "KI_STACK_SUMMARY_HTML", "ROADMAP_90D_HTML", "ROADMAP_12M_HTML",
+        "RECOMMENDATIONS_HTML", "TOOLS_EMPFEHLUNGEN_HTML",
+    ]
+
+    content_parts = []
+    for key in transformation_sections:
+        content = sections.get(key, "")
+        if content:
+            text = extract_text_from_html(content)
+            content_parts.append(text)
+
+    layer.content = " ".join(content_parts)
+
+    # Extract key transformation messages
+    transformation_keywords = [
+        "phase", "schritt", "maßnahme", "umsetzung", "implementierung",
+        "einführung", "rollout", "pilot", "integration"
+    ]
+
+    sentences = extract_sentences(layer.content)
+    for sentence in sentences[:20]:
+        if any(kw in sentence.lower() for kw in transformation_keywords):
+            if len(layer.key_messages) < 5:
+                layer.key_messages.append(sentence[:200])
+
+    # Extract timeline metrics
+    timeline_pattern = r'(\d+)\s*(?:Monate?|Wochen?|Tage?|Phasen?)'
+    timelines = re.findall(timeline_pattern, layer.content, re.IGNORECASE)
+    if timelines:
+        layer.metrics["timelines"] = list(set(timelines[:5]))
+
+    # Score based on content quality
+    if not layer.content:
+        layer.score = 0.0
+    elif len(layer.key_messages) < 2:
+        layer.score = 60.0
+    elif len(layer.key_messages) < 4:
+        layer.score = 80.0
+    else:
+        layer.score = 100.0
+
+    return layer
+
+
+def analyze_impact_layer(sections: SectionDict) -> ExecutiveLayer:
+    """
+    N3.9: Analyze the Impact Layer.
+
+    Concrete Business Value Mechanisms.
+    """
+    layer = ExecutiveLayer(
+        layer_type="impact",
+        title="Business Impact",
+        content="",
+    )
+
+    # Collect impact content
+    impact_sections = [
+        "BUSINESS_CASE_HTML", "FOERDERPOTENZIAL_HTML",
+        "STRATEGIE_GOVERNANCE_HTML", "GAMECHANGER_HTML",
+    ]
+
+    content_parts = []
+    for key in impact_sections:
+        content = sections.get(key, "")
+        if content:
+            text = extract_text_from_html(content)
+            content_parts.append(text)
+
+    layer.content = " ".join(content_parts)
+
+    # Extract key impact metrics
+    # ROI
+    roi_match = re.search(r'ROI[:\s]*(\d+(?:[.,]\d+)?)\s*%', layer.content, re.IGNORECASE)
+    if roi_match:
+        layer.metrics["roi_percent"] = float(roi_match.group(1).replace(",", "."))
+
+    # Payback
+    payback_match = re.search(r'(?:Payback|Amortisation)[:\s]*(\d+(?:[.,]\d+)?)\s*(?:Monate?|months?)',
+                             layer.content, re.IGNORECASE)
+    if payback_match:
+        layer.metrics["payback_months"] = float(payback_match.group(1).replace(",", "."))
+
+    # Savings
+    savings_match = re.search(r'(?:Einsparung|Ersparnis)[:\s]*(\d+(?:[.,\d]+)?)\s*(?:€|EUR)',
+                             layer.content, re.IGNORECASE)
+    if savings_match:
+        layer.metrics["savings_eur"] = savings_match.group(1).replace(".", "").replace(",", ".")
+
+    # Extract key impact messages
+    impact_keywords = [
+        "roi", "einsparung", "ersparnis", "nutzen", "effizienz",
+        "produktivität", "rendite", "wertschöpfung", "ergebnis"
+    ]
+
+    sentences = extract_sentences(layer.content)
+    for sentence in sentences[:20]:
+        if any(kw in sentence.lower() for kw in impact_keywords):
+            if len(layer.key_messages) < 5:
+                layer.key_messages.append(sentence[:200])
+
+    # Score based on metrics presence
+    if not layer.content:
+        layer.score = 0.0
+    elif not layer.metrics:
+        layer.score = 50.0
+    elif len(layer.metrics) < 2:
+        layer.score = 70.0
+    elif len(layer.metrics) < 3:
+        layer.score = 85.0
+    else:
+        layer.score = 100.0
+
+    return layer
+
+
+def check_story_arc_consistency(
+    strategic: ExecutiveLayer,
+    transformation: ExecutiveLayer,
+    impact: ExecutiveLayer,
+) -> Tuple[bool, float, List[str]]:
+    """
+    N3.9: Check story arc consistency across layers.
+
+    Validates: Ausgangslage → Herausforderung → KI-Hebel → Roadmap → Impact
+    """
+    issues: List[str] = []
+    score = 100.0
+
+    # Check all layers present
+    if not strategic.content:
+        issues.append("Strategic Layer fehlt")
+        score -= 25
+    if not transformation.content:
+        issues.append("Transformation Layer fehlt")
+        score -= 25
+    if not impact.content:
+        issues.append("Impact Layer fehlt")
+        score -= 25
+
+    # Check phase coverage in combined content
+    combined_content = (
+        (strategic.content or "") +
+        (transformation.content or "") +
+        (impact.content or "")
+    ).lower()
+
+    phases_present: List[str] = []
+    phases_missing: List[str] = []
+
+    for phase_info in EXECUTIVE_STORY_ARC:
+        phase = phase_info["phase"]
+        keywords = phase_info["keywords"]
+
+        has_phase = any(kw in combined_content for kw in keywords)
+        if has_phase:
+            phases_present.append(str(phase))
+        else:
+            phases_missing.append(str(phase))
+
+    # Score reduction for missing phases
+    if phases_missing:
+        score -= len(phases_missing) * 5
+        issues.append(f"Story-Arc-Phasen fehlen: {', '.join(phases_missing)}")
+
+    # Check logical flow (strategic → transformation → impact)
+    strategic_mentions_ki = any(
+        kw in (strategic.content or "").lower()
+        for kw in ["ki", "ai", "automatisierung"]
+    )
+    transformation_mentions_roi = any(
+        kw in (transformation.content or "").lower()
+        for kw in ["roi", "einsparung", "nutzen"]
+    )
+
+    if strategic_mentions_ki and not transformation.key_messages:
+        issues.append("KI in Strategic erwähnt, aber keine Transformation-Details")
+        score -= 10
+
+    if transformation_mentions_roi and not impact.metrics:
+        issues.append("ROI in Transformation erwähnt, aber keine Impact-Metriken")
+        score -= 10
+
+    # Check metric consistency
+    if impact.metrics.get("roi_percent"):
+        roi_val = impact.metrics["roi_percent"]
+        # Check if ROI is mentioned consistently
+        roi_in_transformation = f"{int(roi_val)}" in (transformation.content or "")
+        if not roi_in_transformation:
+            issues.append(f"ROI ({roi_val}%) nicht in Transformation-Layer erwähnt")
+            score -= 5
+
+    complete = len(phases_present) >= 4 and len(issues) <= 2
+    return complete, max(0, score), issues
+
+
+def analyze_executive_narrative_v2(sections: SectionDict) -> ExecutiveNarrativeV2:
+    """
+    N3.9: Full 3-Layer Executive Narrative Analysis.
+
+    Analyzes:
+    1. Strategic Signal Layer ("Was bedeutet das für das Unternehmen?")
+    2. Transformation Layer ("Was muss als Nächstes passieren?")
+    3. Impact Layer (konkrete Business Value Mechanismen)
+
+    Args:
+        sections: Dictionary of section contents
+
+    Returns:
+        ExecutiveNarrativeV2 report
+    """
+    log.info("[N3.9-Executive] Starting 3-Layer Executive Narrative Analysis...")
+
+    report = ExecutiveNarrativeV2()
+
+    # Analyze each layer
+    report.strategic_layer = analyze_strategic_layer(sections)
+    report.transformation_layer = analyze_transformation_layer(sections)
+    report.impact_layer = analyze_impact_layer(sections)
+
+    # Check story arc consistency
+    complete, arc_score, arc_issues = check_story_arc_consistency(
+        report.strategic_layer,
+        report.transformation_layer,
+        report.impact_layer,
+    )
+
+    report.story_arc_complete = complete
+    report.story_arc_score = arc_score
+    report.issues = arc_issues
+
+    # Calculate overall consistency score
+    layer_scores = []
+    if report.strategic_layer:
+        layer_scores.append(report.strategic_layer.score)
+    if report.transformation_layer:
+        layer_scores.append(report.transformation_layer.score)
+    if report.impact_layer:
+        layer_scores.append(report.impact_layer.score)
+
+    report.consistency_score = sum(layer_scores) / len(layer_scores) if layer_scores else 0.0
+
+    log.info(
+        "[N3.9-Executive] Analysis complete: arc=%s, arc_score=%.1f, consistency=%.1f",
+        report.story_arc_complete,
+        report.story_arc_score,
+        report.consistency_score,
+    )
+
+    return report
+
+
+def process_executive_narrative_v2(
+    sections: SectionDict,
+) -> Tuple[SectionDict, ExecutiveNarrativeV2]:
+    """
+    N3.9: Full Executive Narrative v2 Processing.
+
+    Combines N3.8 narrative processing with N3.9 3-layer analysis.
+
+    Args:
+        sections: Dictionary of section contents
+
+    Returns:
+        Tuple of (processed_sections, executive_report)
+    """
+    # First, run N3.8 narrative processing
+    processed, narrative_report = process_narrative(sections)
+
+    # Then, run N3.9 executive layer analysis
+    executive_report = analyze_executive_narrative_v2(processed)
+
+    # Add executive metadata to sections
+    processed["_executive_narrative_v2"] = executive_report.to_dict()
+    processed["_executive_score"] = executive_report.get_overall_score()
+
+    return processed, executive_report
+
+
+# Module exports
+__all__ = [
+    # N3.8 exports
+    "NarrativeIssue",
+    "NarrativeReport",
+    "analyze_narrative",
+    "process_narrative",
+    "get_narrative_summary",
+    # N3.9 exports
+    "ExecutiveLayer",
+    "ExecutiveNarrativeV2",
+    "analyze_strategic_layer",
+    "analyze_transformation_layer",
+    "analyze_impact_layer",
+    "analyze_executive_narrative_v2",
+    "process_executive_narrative_v2",
+    "EXECUTIVE_STORY_ARC",
+]
