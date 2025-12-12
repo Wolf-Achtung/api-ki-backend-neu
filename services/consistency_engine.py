@@ -536,7 +536,7 @@ class ConsistencyEngine:
 
     def __init__(
         self,
-        sections: Dict[str, str],
+        sections: Dict[str, Any],
         briefing: Dict[str, Any],
         language: str = "de",
     ):
@@ -544,11 +544,11 @@ class ConsistencyEngine:
         Initialize Consistency Engine.
 
         Args:
-            sections: Dict of section_key -> HTML content
+            sections: Dict of section_key -> HTML content (and healing flags)
             briefing: Original briefing/answers dict
             language: Report language ("de" or "en")
         """
-        self.sections = sections
+        self.sections: Dict[str, Any] = sections
         self.briefing = briefing
         self.language = language
         self.report = ConsistencyReport()
@@ -5172,7 +5172,7 @@ class ConsistencyEngine:
 # =============================================================================
 
 def check_consistency(
-    sections: Dict[str, str],
+    sections: Dict[str, Any],
     briefing: Dict[str, Any],
     language: str = "de",
 ) -> ConsistencyReport:
@@ -5180,7 +5180,7 @@ def check_consistency(
     Run cross-section consistency check.
 
     Args:
-        sections: Dict of section_key -> HTML content
+        sections: Dict of section_key -> HTML content (and healing flags)
         briefing: Original briefing/answers dict
         language: Report language ("de" or "en")
 
