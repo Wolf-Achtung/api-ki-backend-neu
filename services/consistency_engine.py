@@ -587,6 +587,12 @@ class ConsistencyEngine:
         self._check_benchmark_market_coherence()  # N34_002
         self._check_tools_roadmap_risk_coherence()  # N34_003
 
+        # N3.9: Final Consistency Kernel v6 rules
+        self._check_n39_risk_roadmap_numerical()  # N39_001
+        self._check_n39_recommendations_kpis_alignment()  # N39_002
+        self._check_n39_tools_automation_correlation()  # N39_003
+        self._check_n39_benchmark_skillplan_depth()  # N39_004
+
         # Calculate domain scores
         self._calculate_domain_scores()
 
@@ -4793,6 +4799,302 @@ class ConsistencyEngine:
                     expected="DSGVO-Hinweis bei Non-EU Tools",
                     actual="Kein DSGVO-Hinweis gefunden",
                     suggestion="Ergänze DSGVO-Compliance-Hinweise",
+                ))
+
+    # -------------------------------------------------------------------------
+    # N3.9: Final Consistency Kernel v6 Rules
+    # -------------------------------------------------------------------------
+
+    def _check_n39_risk_roadmap_numerical(self) -> None:
+        """
+        N39_001: Risk ↔ Roadmap numerical consistency (≤ ±4%).
+
+        Ensures that risk mitigation timelines align with roadmap phases
+        and numerical values are consistent.
+        """
+        self.report.checked_rules += 2
+
+        risks_html = self.sections.get("RISKS_HTML", "") or self.sections.get("RISK_REPORT_HTML", "")
+        roadmap_90d = self.sections.get("ROADMAP_90D_HTML", "")
+        roadmap_12m = self.sections.get("ROADMAP_12M_HTML", "")
+
+        if not risks_html or (not roadmap_90d and not roadmap_12m):
+            return
+
+        # Extract risk mitigation percentages
+        risk_reduction_pattern = r'(?:Reduktion|Reduzierung|Minderung|Mitigation)[:\s]*(\d+(?:[.,]\d+)?)\s*%'
+        risk_reductions = re.findall(risk_reduction_pattern, risks_html, re.IGNORECASE)
+
+        # Extract roadmap improvement percentages
+        roadmap_html = roadmap_90d + roadmap_12m
+        roadmap_improvements_pattern = r'(?:Verbesserung|Improvement|Steigerung|Reduktion)[:\s]*(\d+(?:[.,]\d+)?)\s*%'
+        roadmap_improvements = re.findall(roadmap_improvements_pattern, roadmap_html, re.IGNORECASE)
+
+        # Compare values for consistency
+        if risk_reductions and roadmap_improvements:
+            for risk_val in risk_reductions[:3]:  # Check up to 3
+                risk_pct = float(risk_val.replace(",", "."))
+                # Check if any roadmap value is close (±4%)
+                has_match = any(
+                    abs(risk_pct - float(r.replace(",", "."))) <= 4.0
+                    for r in roadmap_improvements
+                )
+
+                if not has_match and risk_pct > 10:
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="N39_001",
+                        severity="WARNING",
+                        domain="roadmap",
+                        source_section="risks",
+                        target_section="roadmap",
+                        message=f"Risk-Mitigation ({risk_pct}%) nicht in Roadmap reflektiert",
+                        expected=f"Roadmap sollte {risk_pct}% (±4%) Verbesserung zeigen",
+                        actual="Keine entsprechende Verbesserung in Roadmap gefunden",
+                        suggestion="Synchronisiere Risk-Mitigation mit Roadmap-Zielen",
+                    ))
+                    break  # Only report once
+
+        # Check timeline consistency
+        risk_timeline_pattern = r'(\d+)\s*(?:Monate?|Wochen?|Tage?)'
+        risk_timelines = re.findall(risk_timeline_pattern, risks_html, re.IGNORECASE)
+        roadmap_timelines = re.findall(risk_timeline_pattern, roadmap_html, re.IGNORECASE)
+
+        # If risks mention timelines not in roadmap, flag it
+        if risk_timelines and roadmap_timelines:
+            risk_nums = set(int(t) for t in risk_timelines[:5])
+            roadmap_nums = set(int(t) for t in roadmap_timelines[:10])
+
+            # Risk timelines should be subset of roadmap timelines (roughly)
+            unmatched = risk_nums - roadmap_nums
+            if len(unmatched) > 2:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="N39_001b",
+                    severity="INFO",
+                    domain="roadmap",
+                    source_section="risks",
+                    target_section="roadmap",
+                    message="Risk-Zeitrahmen nicht in Roadmap abgebildet",
+                    expected="Risk-Mitigation-Timelines in Roadmap-Phasen",
+                    actual=f"Unverknüpfte Zeiträume: {list(unmatched)[:3]}",
+                    suggestion="Verknüpfe Risk-Mitigation mit Roadmap-Meilensteinen",
+                ))
+
+    def _check_n39_recommendations_kpis_alignment(self) -> None:
+        """
+        N39_002: Recommendations ↔ KPIs alignment required.
+
+        Each recommendation should have measurable KPI impact.
+        """
+        self.report.checked_rules += 2
+
+        recommendations_html = self.sections.get("RECOMMENDATIONS_HTML", "")
+        business_case_html = self.sections.get("BUSINESS_CASE_HTML", "")
+        ki_stack_html = self.sections.get("KI_STACK_SUMMARY_HTML", "")
+
+        if not recommendations_html:
+            return
+
+        # Count recommendations
+        reco_patterns = [
+            r'<(?:li|tr|div)[^>]*class="[^"]*reco',
+            r'Empfehlung\s*\d+',
+            r'Handlungsempfehlung\s*\d+',
+            r'<h[34][^>]*>.*?(?:Empfehlung|Recommendation)',
+        ]
+
+        reco_count = 0
+        for pattern in reco_patterns:
+            matches = re.findall(pattern, recommendations_html, re.IGNORECASE)
+            reco_count = max(reco_count, len(matches))
+
+        if reco_count == 0:
+            # Fallback: count list items in recommendations
+            reco_count = len(re.findall(r'<li[^>]*>', recommendations_html))
+
+        # Check for KPI mentions in recommendations
+        kpi_keywords = ["ROI", "Payback", "Einsparung", "Ersparnis", "Effizienz", "%", "EUR", "€"]
+        kpi_mentions = sum(1 for kw in kpi_keywords if kw.lower() in recommendations_html.lower())
+
+        # Each recommendation should ideally reference at least 1 KPI
+        if reco_count > 0 and kpi_mentions < reco_count * 0.5:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="N39_002",
+                severity="WARNING",
+                domain="recommendations",
+                source_section="recommendations",
+                target_section="business_case",
+                message=f"{reco_count} Empfehlungen aber nur {kpi_mentions} KPI-Referenzen",
+                expected="Jede Empfehlung mit messbarem KPI-Impact",
+                actual=f"KPI-Abdeckung: {kpi_mentions}/{reco_count}",
+                suggestion="Ergänze KPI-Bezüge für alle Handlungsempfehlungen",
+            ))
+
+        # Check if recommendations align with business case ROI
+        if business_case_html:
+            bc_roi_match = re.search(r'ROI[:\s]*(\d+)', business_case_html, re.IGNORECASE)
+            reco_roi_match = re.search(r'ROI[:\s]*(\d+)', recommendations_html, re.IGNORECASE)
+
+            if bc_roi_match and reco_roi_match:
+                bc_roi = int(bc_roi_match.group(1))
+                reco_roi = int(reco_roi_match.group(1))
+
+                if abs(bc_roi - reco_roi) > bc_roi * 0.1:  # More than 10% difference
+                    self.report.add_issue(ConsistencyIssue(
+                        rule_id="N39_002b",
+                        severity="WARNING",
+                        domain="recommendations",
+                        source_section="recommendations",
+                        target_section="business_case",
+                        message=f"ROI in Empfehlungen ({reco_roi}%) weicht von Business Case ({bc_roi}%) ab",
+                        expected=f"ROI-Werte sollten übereinstimmen (±10%)",
+                        actual=f"Differenz: {abs(bc_roi - reco_roi)}%",
+                        suggestion="Synchronisiere ROI-Angaben zwischen Sections",
+                    ))
+
+    def _check_n39_tools_automation_correlation(self) -> None:
+        """
+        N39_003: Tools Fit ↔ Automation Paths must correlate.
+
+        Tools recommended should align with automation opportunities.
+        """
+        self.report.checked_rules += 2
+
+        tools_html = self.sections.get("TOOLS_EMPFEHLUNGEN_HTML", "") or self.sections.get("TOOLS_HTML", "")
+        ki_stack_html = self.sections.get("KI_STACK_SUMMARY_HTML", "")
+        roadmap_html = (self.sections.get("ROADMAP_90D_HTML", "") +
+                       self.sections.get("ROADMAP_12M_HTML", ""))
+
+        combined_tools = tools_html + ki_stack_html
+        if not combined_tools:
+            return
+
+        # Extract automation keywords
+        automation_keywords = [
+            "automatisierung", "automation", "prozess", "workflow",
+            "bot", "rpa", "integration", "api", "schnittstelle"
+        ]
+
+        # Count automation mentions in tools vs roadmap
+        tools_automation_count = sum(
+            len(re.findall(kw, combined_tools, re.IGNORECASE))
+            for kw in automation_keywords
+        )
+
+        roadmap_automation_count = sum(
+            len(re.findall(kw, roadmap_html, re.IGNORECASE))
+            for kw in automation_keywords
+        )
+
+        # Tools should have automation focus if roadmap does
+        if roadmap_automation_count > 5 and tools_automation_count < 2:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="N39_003",
+                severity="WARNING",
+                domain="tools",
+                source_section="roadmap",
+                target_section="tools",
+                message="Roadmap betont Automatisierung, aber Tools-Section fehlt Fokus",
+                expected="Tools-Empfehlungen mit Automatisierungs-Fit",
+                actual=f"Tools: {tools_automation_count} Erwähnungen, Roadmap: {roadmap_automation_count}",
+                suggestion="Ergänze automatisierungsorientierte Tool-Empfehlungen",
+            ))
+
+        # Check for tool-specific automation alignment
+        # E.g., if "RPA" is in roadmap, there should be RPA tools
+        rpa_in_roadmap = "rpa" in roadmap_html.lower() or "robotic" in roadmap_html.lower()
+        rpa_in_tools = "rpa" in combined_tools.lower() or "robotic" in combined_tools.lower()
+
+        if rpa_in_roadmap and not rpa_in_tools:
+            self.report.add_issue(ConsistencyIssue(
+                rule_id="N39_003b",
+                severity="INFO",
+                domain="tools",
+                source_section="roadmap",
+                target_section="tools",
+                message="RPA in Roadmap erwähnt, aber keine RPA-Tools empfohlen",
+                expected="RPA-Tool-Empfehlung wenn RPA in Roadmap",
+                actual="Keine RPA-Tools in Empfehlungen",
+                suggestion="Ergänze RPA-Tool-Empfehlungen (UiPath, Power Automate, etc.)",
+            ))
+
+    def _check_n39_benchmark_skillplan_depth(self) -> None:
+        """
+        N39_004: Benchmark maturity ↔ skillplan depth.
+
+        If benchmark shows low maturity, skillplan should be more detailed.
+        """
+        self.report.checked_rules += 2
+
+        benchmark_html = self.sections.get("WETTBEWERB_BENCHMARK_HTML", "") or self.sections.get("BENCHMARK_HTML", "")
+        roadmap_html = self.sections.get("ROADMAP_12M_HTML", "") or self.sections.get("ROADMAP_90D_HTML", "")
+
+        if not benchmark_html:
+            return
+
+        # Detect maturity level from benchmark
+        maturity_low_indicators = [
+            "niedrig", "gering", "anfänger", "basic", "starter",
+            "1/5", "2/5", "unterdurchschnittlich", "rückstand"
+        ]
+        maturity_high_indicators = [
+            "fortgeschritten", "advanced", "leader", "top",
+            "4/5", "5/5", "überdurchschnittlich", "vorsprung"
+        ]
+
+        benchmark_lower = benchmark_html.lower()
+
+        low_maturity_count = sum(1 for ind in maturity_low_indicators if ind in benchmark_lower)
+        high_maturity_count = sum(1 for ind in maturity_high_indicators if ind in benchmark_lower)
+
+        is_low_maturity = low_maturity_count > high_maturity_count
+
+        # If low maturity, check roadmap for training/skill elements
+        if is_low_maturity and roadmap_html:
+            skill_keywords = [
+                "schulung", "training", "weiterbildung", "skill",
+                "kompetenz", "workshop", "coaching", "qualifizierung"
+            ]
+
+            roadmap_lower = roadmap_html.lower()
+            skill_mentions = sum(1 for kw in skill_keywords if kw in roadmap_lower)
+
+            if skill_mentions < 2:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="N39_004",
+                    severity="WARNING",
+                    domain="roadmap",
+                    source_section="benchmark",
+                    target_section="roadmap",
+                    message="Niedrige Benchmark-Reife, aber wenig Skill-Entwicklung in Roadmap",
+                    expected="Detaillierter Skillplan bei niedriger Reife",
+                    actual=f"Nur {skill_mentions} Skill-Erwähnungen in Roadmap",
+                    suggestion="Ergänze Weiterbildungs- und Schulungsmaßnahmen in Roadmap",
+                ))
+
+        # Check for specific skill-technology alignment
+        # If benchmark mentions specific tech gaps, roadmap should address them
+        tech_gaps = re.findall(
+            r'(?:Lücke|Gap|fehlt|mangel)[^.]*?(?:bei|in|für)\s*([A-Za-z\-]+)',
+            benchmark_html, re.IGNORECASE
+        )
+
+        if tech_gaps and roadmap_html:
+            gaps_addressed = sum(
+                1 for gap in tech_gaps[:3]
+                if gap.lower() in roadmap_html.lower()
+            )
+
+            if len(tech_gaps) > 0 and gaps_addressed == 0:
+                self.report.add_issue(ConsistencyIssue(
+                    rule_id="N39_004b",
+                    severity="INFO",
+                    domain="roadmap",
+                    source_section="benchmark",
+                    target_section="roadmap",
+                    message=f"Benchmark-Lücken nicht in Roadmap adressiert: {', '.join(tech_gaps[:3])}",
+                    expected="Benchmark-Lücken in Roadmap-Maßnahmen",
+                    actual="Keine der identifizierten Lücken in Roadmap erwähnt",
+                    suggestion="Verknüpfe Benchmark-Lücken mit Roadmap-Aktivitäten",
                 ))
 
     # -------------------------------------------------------------------------
