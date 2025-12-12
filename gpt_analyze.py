@@ -216,9 +216,9 @@ try:
     )
     TENANT_MANAGER_AVAILABLE = True
 except ImportError:
-    process_tenant_isolation = None  # type: ignore[assignment]
-    get_tenant_registry = None  # type: ignore[assignment]
-    TenantConfigClass = None  # type: ignore[assignment,misc]
+    process_tenant_isolation = None
+    get_tenant_registry = None
+    TenantConfigClass = None  # type: ignore[misc]
     TENANT_MANAGER_AVAILABLE = False
 
 try:
@@ -229,9 +229,9 @@ try:
     )
     AUDIT_ENGINE_AVAILABLE = True
 except ImportError:
-    get_audit_engine = None  # type: ignore[assignment]
-    AuditContextClass = None  # type: ignore[assignment,misc]
-    EngineTypeClass = None  # type: ignore[assignment,misc]
+    get_audit_engine = None
+    AuditContextClass = None  # type: ignore[misc]
+    EngineTypeClass = None  # type: ignore[misc]
     AUDIT_ENGINE_AVAILABLE = False
 
 try:
