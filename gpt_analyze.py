@@ -1650,6 +1650,126 @@ Abschnitt: {section}. Antworte ausschließlich mit HTML.
     )
     return _clean_html(fixed or s)
 
+
+# -------------------- N4.6: Zero-Leak Policy ----------------
+# Phrases that indicate assistant language "leaking" into report content
+LEAK_PHRASES = [
+    # German assistant language
+    "wie kann ich ihnen helfen",
+    "kann ich ihnen behilflich",
+    "haben sie fragen",
+    "wenn sie möchten",
+    "kontaktieren sie uns",
+    "gerne erkläre ich",
+    "ich kann ihnen",
+    "bei bedarf",
+    "falls gewünscht",
+    "klicken sie hier",
+    "wählen sie",
+    "bei weiteren fragen",
+    "stehe ich zur verfügung",
+    "zögern sie nicht",
+    "melden sie sich",
+    # English assistant language
+    "how can i help",
+    "if you have questions",
+    "feel free to",
+    "please let me know",
+    "i can assist",
+    "don't hesitate",
+    # Meta language
+    "im folgenden",
+    "dieser abschnitt",
+    "hier einfügen",
+    "platzhalter",
+]
+
+# Sections eligible for 2-pass expand (per Batch 3 spec)
+EXPAND_ELIGIBLE_SECTIONS = [
+    "foerderpotenzial",
+    "risks",
+    "recommendations",
+    "roadmap_12m",
+    "gamechanger",
+    "unternehmensprofil_markt",
+]
+
+
+def _detect_leak_phrases(content: str) -> List[str]:
+    """
+    N4.6 Zero-Leak Policy: Detect assistant language leaks in content.
+
+    Args:
+        content: HTML content to check
+
+    Returns:
+        List of detected leak phrases (empty if none found)
+    """
+    if not content:
+        return []
+
+    content_lower = content.lower()
+    detected = []
+
+    for phrase in LEAK_PHRASES:
+        if phrase in content_lower:
+            detected.append(phrase)
+
+    return detected
+
+
+def _regenerate_without_leaks(
+    section_name: str,
+    prompt_text: str,
+    llm: Dict[str, Any],
+    max_retries: int = 1,
+) -> str:
+    """
+    N4.6 Zero-Leak Policy: Regenerate content with strict anti-leak directive.
+
+    Args:
+        section_name: Section being generated
+        prompt_text: Original prompt text
+        llm: LLM parameters dict
+        max_retries: Max regeneration attempts
+
+    Returns:
+        Regenerated content or empty string on failure
+    """
+    strict_directive = """
+
+STRIKT VERBOTEN - ASSISTENTEN-SPRACHE:
+Du schreibst einen FINALEN REPORT, KEIN Gespräch.
+Verwende NIEMALS:
+- Fragen an den Leser
+- Angebote zur Hilfe
+- "Wenn Sie möchten...", "Bei Bedarf...", "Falls gewünscht..."
+- "Ich kann...", "Gerne erkläre ich..."
+- Interaktive Aufforderungen
+"""
+    enhanced_prompt = prompt_text + strict_directive
+
+    log.info(
+        "[N4.6] Regenerating %s with strict zero-leak directive...",
+        section_name
+    )
+
+    result = _call_llm_for_section(
+        section_key=section_name,
+        prompt=enhanced_prompt,
+        system_prompt="Du bist ein Senior-KI-Berater. Antworte nur mit validem HTML. KEINE Assistenten-Sprache.",
+        temperature=max(0.0, llm["temperature"] - 0.1),  # Reduce temperature for stricter output
+        max_tokens=llm["max_tokens"],
+        model=llm["model"],
+    ) or ""
+
+    result = _clean_html(result)
+    if _needs_repair(result):
+        result = _repair_html(section_name, result)
+
+    return result
+
+
 # -------------------- Quick‑Wins sum ----------------
 _QW_RE = re.compile(r"(?:Ersparnis\s*[:=]\s*)(\d+(?:[.,]\d{1,2})?)\s*(?:h|std\.?|stunden?)\s*(?:[/\s]*(?:pro|/)?\s*Monat)", re.IGNORECASE)
 def _sum_hours_from_quick_wins(html_text: str) -> int:
@@ -4043,7 +4163,40 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 developer_words = ["Platzhalter", "TODO", "Beispieltext", "Content wird erstellt", "XXX"]
                 for word in developer_words:
                     result = result.replace(word, "")
-            
+
+            # =========================================================================
+            # N4.6 Zero-Leak Policy: Detect and regenerate if leaks found
+            # =========================================================================
+            detected_leaks = _detect_leak_phrases(result)
+            if detected_leaks:
+                log.warning(
+                    "[N4.6] 🚨 Leak phrases detected in %s: %s – regenerating with strict mode",
+                    section_name,
+                    detected_leaks[:3],  # Log first 3 for brevity
+                )
+                # Try regeneration with strict anti-leak directive
+                regenerated = _regenerate_without_leaks(section_name, prompt_text, llm)
+
+                # Check if regenerated content is still leaky
+                regenerated_leaks = _detect_leak_phrases(regenerated)
+                if not regenerated_leaks and regenerated:
+                    log.info("[N4.6] ✅ Regeneration successful – no leaks in %s", section_name)
+                    result = regenerated
+                else:
+                    # If still leaky, strip the leak phrases as last resort
+                    log.warning(
+                        "[N4.6] ⚠️ Regeneration still has leaks in %s – stripping phrases",
+                        section_name
+                    )
+                    for leak in detected_leaks:
+                        # Remove sentences containing leak phrases
+                        import re as _re_leak
+                        pattern = _re_leak.compile(
+                            r'[^.!?]*' + _re_leak.escape(leak) + r'[^.!?]*[.!?]',
+                            _re_leak.IGNORECASE
+                        )
+                        result = pattern.sub('', result)
+
             # PLATIN+ Minimalumfang prüfen (dynamisch nach Section-Typ)
             # WICHTIG: Werte sind jetzt in WÖRTERN, nicht Zeichen!
             # Für kritische Sections höhere Schwelle, damit size-aware Fallbacks greifen
@@ -4059,6 +4212,7 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 "risks": 800,                 # PLATIN+: 800 Wörter
                 "recommendations": 800,       # PLATIN+: 800 Wörter
                 "gamechanger": 700,           # PLATIN+: 700 Wörter
+                "unternehmensprofil_markt": 600,  # N4.6: Added for 2-pass expand
             }
             min_words = platin_min_words.get(section_name, 10)
 
@@ -4066,6 +4220,66 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
             import re as _re
             text_only = _re.sub(r"<[^>]+>", "", result or "").strip()
             word_count = len(text_only.split()) if text_only else 0
+
+            # =========================================================================
+            # N4.6 2-Pass Expand: If content too short but section is expandable
+            # =========================================================================
+            if result and word_count < min_words and section_name in EXPAND_ELIGIBLE_SECTIONS:
+                log.info(
+                    "[N4.6] 📏 Content for %s too short (%d/%d words) – attempting 2-pass expand",
+                    section_name,
+                    word_count,
+                    min_words,
+                )
+                expand_prompt = f"""
+Der folgende Inhalt ist zu kurz und muss erweitert werden.
+Ziel-Wortanzahl: mindestens {min_words} Wörter (aktuell: {word_count}).
+
+REGELN FÜR ERWEITERUNG:
+- Behalte ALLE bestehenden Informationen und Strukturen
+- Füge MEHR Details, Beispiele und Erklärungen hinzu
+- Vertiefe jeden Punkt mit konkreten Maßnahmen
+- Verwende die gleiche HTML-Struktur
+- KEINE Assistenten-Sprache, KEINE Fragen an den Leser
+
+Bestehender Inhalt zum Erweitern:
+{result}
+
+Gib den erweiterten HTML-Inhalt aus (mindestens {min_words} Wörter):
+"""
+                expanded = _call_llm_for_section(
+                    section_key=f"{section_name}_expand",
+                    prompt=expand_prompt,
+                    system_prompt="Du bist ein Senior-KI-Berater. Erweitere den Inhalt mit mehr Details. Nur valides HTML.",
+                    temperature=llm["temperature"],
+                    max_tokens=llm["max_tokens"] + 500,  # Allow more tokens for expansion
+                    model=llm["model"],
+                ) or ""
+
+                expanded = _clean_html(expanded)
+                if _needs_repair(expanded):
+                    expanded = _repair_html(section_name, expanded)
+
+                # Check if expansion was successful
+                expanded_text = _re.sub(r"<[^>]+>", "", expanded or "").strip()
+                expanded_word_count = len(expanded_text.split()) if expanded_text else 0
+
+                if expanded_word_count >= min_words:
+                    log.info(
+                        "[N4.6] ✅ 2-pass expand successful for %s: %d -> %d words",
+                        section_name,
+                        word_count,
+                        expanded_word_count,
+                    )
+                    result = expanded
+                    word_count = expanded_word_count
+                else:
+                    log.warning(
+                        "[N4.6] ⚠️ 2-pass expand insufficient for %s: %d words (need %d)",
+                        section_name,
+                        expanded_word_count,
+                        min_words,
+                    )
 
             if not result or word_count < min_words:
                 log.info(
