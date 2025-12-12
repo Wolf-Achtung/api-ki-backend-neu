@@ -380,6 +380,97 @@ except ImportError:
     get_prompt_evolution_map = None
     PROMPT_EVOLUTION_AVAILABLE = False
 
+# N4.1: Executive Experience Layer imports
+try:
+    from services.executive_navigation_engine import (
+        get_navigation_engine,
+        build_executive_navigation,
+        get_bookmark_map,
+        get_executive_flow_map,
+    )
+    NAVIGATION_ENGINE_AVAILABLE = True
+except ImportError:
+    get_navigation_engine = None
+    build_executive_navigation = None
+    get_bookmark_map = None
+    get_executive_flow_map = None
+    NAVIGATION_ENGINE_AVAILABLE = False
+
+try:
+    from services.executive_summary_investment import (
+        get_executive_summary_engine,
+        generate_executive_summary_v6,
+        get_investment_thesis,
+        get_ninety_day_mandate,
+    )
+    EXEC_SUMMARY_V6_AVAILABLE = True
+except ImportError:
+    get_executive_summary_engine = None
+    generate_executive_summary_v6 = None
+    get_investment_thesis = None
+    get_ninety_day_mandate = None
+    EXEC_SUMMARY_V6_AVAILABLE = False
+
+try:
+    from services.insight_compression_engine import (
+        get_compression_engine,
+        compress_to_pyramid,
+        get_key_insight,
+        validate_mece_compliance,
+    )
+    INSIGHT_COMPRESSION_AVAILABLE = True
+except ImportError:
+    get_compression_engine = None
+    compress_to_pyramid = None
+    get_key_insight = None
+    validate_mece_compliance = None
+    INSIGHT_COMPRESSION_AVAILABLE = False
+
+try:
+    from services.executive_layout_engine import (
+        get_layout_engine,
+        process_layout,
+        create_card,
+        get_font_spec,
+    )
+    LAYOUT_ENGINE_AVAILABLE = True
+except ImportError:
+    get_layout_engine = None
+    process_layout = None
+    create_card = None
+    get_font_spec = None
+    LAYOUT_ENGINE_AVAILABLE = False
+
+try:
+    from services.executive_transformation_roadmap import (
+        get_roadmap_engine,
+        build_transformation_roadmap,
+        get_decision_checkpoints_by_horizon,
+    )
+    TRANSFORMATION_ROADMAP_AVAILABLE = True
+except ImportError:
+    get_roadmap_engine = None
+    build_transformation_roadmap = None
+    get_decision_checkpoints_by_horizon = None
+    TRANSFORMATION_ROADMAP_AVAILABLE = False
+
+try:
+    from services.executive_clarity_engine import (
+        get_clarity_engine,
+        clarify_text,
+        clarify_sections,
+        validate_report_clarity,
+        get_clarity_score,
+    )
+    CLARITY_ENGINE_AVAILABLE = True
+except ImportError:
+    get_clarity_engine = None
+    clarify_text = None
+    clarify_sections = None
+    validate_report_clarity = None
+    get_clarity_score = None
+    CLARITY_ENGINE_AVAILABLE = False
+
 # Initialize logger
 log = logging.getLogger(__name__)
 
