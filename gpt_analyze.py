@@ -1,26 +1,23 @@
 # -*- coding: utf-8 -*-
 """
-gpt_analyze.py – v4.14.2-PLATIN++
+gpt_analyze.py – v5.2.0-PLATIN+++
 ---------------------------------------------------------------------
-🎯 PLATIN++ OPTIMIERUNGEN (Phase 2.2):
-- ✅ Nutzt prompt_loader.py System (statt hardcoded prompts)
-- ✅ Dynamische Dates in Next Actions ({{TODAY}} Variablen)
-- ✅ Bessere Fallbacks wenn GPT wenig liefert
-- ✅ Quick Wins mit strukturierten Prompts aus /prompts/de/
-- ✅ Roadmap mit Variablen-Interpolation
-- ✅ ROI Calculator Integration vorbereitet
-- ✅ Size-aware Roadmap Fallbacks (keine "Abteilungen" für Solo)
-- ✅ Platzhalter-Texte werden nach Repair entfernt
-- ✅ Konsistentes Aliasing für roadmap_90d/ROADMAP_HTML/ROADMAP_90D_HTML
-- ✅ Vereinheitlichtes Size-Mapping (klein/small_team/small → team)
-- ✅ NEUE Roadmap-Fallbacks inline (700-900 Zeichen, keine externen Dateien)
-- ✅ Vollständig size-aware: solo/team/kmu mit bedingten Texten
+🎯 PLATIN+++ MULTI-LANGUAGE INTELLIGENCE (N4.2):
+- ✅ Native Executive-Tonality in 5 languages (DE, EN, FR, IT, ES)
+- ✅ Language-specific Layout-Adjustments with expansion factors
+- ✅ Dual-Model-Absicherung (GPT+Claude → Semantic Merge)
+- ✅ Zero-Drift Guarantee for Executive Summary + Roadmaps
+- ✅ Cross-language KPI consistency validation
+- ✅ Consulting glossary with language-specific terminology
+- ✅ Multi-pass translation pipeline (Literal → Executive → Semantic → KPI Fix)
+- ✅ Language-aware model selection per section
 
 Version History:
 - 4.13.5-gs: Original mit Research-Integration
 - 4.14.0-PLATIN++: Prompt-System aktiviert, dynamische Daten
 - 4.14.1-PLATIN++: Size-aware Fallbacks, Platzhalter-Fix, Aliasing-Korrektur
 - 4.14.2-PLATIN++: Roadmap-Fallbacks inline, HAUPTLEISTUNG-Integration
+- 5.2.0-PLATIN+++: N4.2 Multi-Language Intelligence Layer
 
 =============================================================================
 Sprint N4.2: LLM SECTION FALLBACK DOCUMENTATION
@@ -1450,7 +1447,7 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
         "enablement": min(ena, 25) * 4,
         "overall": round((min(gov, 25) + min(sec, 25) + min(val, 25) + min(ena, 25)) * 4 / 4),
     }
-    log.info("📊 REALISTIC SCORES v4.14.0-PLATIN++: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
+    log.info("📊 REALISTIC SCORES v5.2.0-PLATIN+++: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
              scores["governance"], scores["security"], scores["value"], scores["enablement"], scores["overall"])
     return {"scores": scores, "details": details, "total": scores["overall"]}
 
@@ -4898,7 +4895,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     answers["_guardrail_hits_count"] = len(guardrail_hits)  # Anzahl für Logik
     answers["_has_guardrails"] = len(guardrail_hits) > 0  # Boolean Flag
 
-    log.info("[%s] 📊 Calculating realistic scores (v4.14.0-PLATIN++)...", run_id)
+    log.info("[%s] 📊 Calculating realistic scores (v5.2.0-PLATIN+++)...", run_id)
     score_wrap = _calculate_realistic_score(answers)
     scores = score_wrap["scores"]
 
@@ -6009,7 +6006,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     db.commit()
     db.refresh(an)
     
-    log.info("[%s] ✅ Analysis created (v4.14.0-PLATIN++): id=%s", run_id, an.id)
+    log.info("[%s] ✅ Analysis created (v5.2.0-PLATIN+++): id=%s", run_id, an.id)
     return an.id, result["html"], result.get("meta", {})
 
 # -------------------- briefing summary for admin ----------------
@@ -6203,7 +6200,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     db = core_db.SessionLocal()
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v4.14.2-PLATIN++ for briefing_id=%s", run_id, briefing_id)
+        log.info("[%s] 🚀 Starting analysis v5.2.0-PLATIN+++ for briefing_id=%s", run_id, briefing_id)
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
         rep = Report(
