@@ -1233,8 +1233,8 @@ def check_story_arc_consistency(
         (impact.content or "")
     ).lower()
 
-    phases_present = []
-    phases_missing = []
+    phases_present: List[str] = []
+    phases_missing: List[str] = []
 
     for phase_info in EXECUTIVE_STORY_ARC:
         phase = phase_info["phase"]

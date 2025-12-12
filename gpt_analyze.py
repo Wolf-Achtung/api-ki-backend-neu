@@ -212,26 +212,26 @@ try:
     from services.tenant_manager import (
         process_tenant_isolation,
         get_tenant_registry,
-        TenantConfig,
+        TenantConfig as TenantConfigClass,
     )
     TENANT_MANAGER_AVAILABLE = True
 except ImportError:
-    process_tenant_isolation = None
-    get_tenant_registry = None
-    TenantConfig = None
+    process_tenant_isolation = None  # type: ignore[assignment]
+    get_tenant_registry = None  # type: ignore[assignment]
+    TenantConfigClass = None  # type: ignore[assignment,misc]
     TENANT_MANAGER_AVAILABLE = False
 
 try:
     from services.audit_trace_engine import (
         get_audit_engine,
-        AuditContext,
-        EngineType,
+        AuditContext as AuditContextClass,
+        EngineType as EngineTypeClass,
     )
     AUDIT_ENGINE_AVAILABLE = True
 except ImportError:
-    get_audit_engine = None
-    AuditContext = None
-    EngineType = None
+    get_audit_engine = None  # type: ignore[assignment]
+    AuditContextClass = None  # type: ignore[assignment,misc]
+    EngineTypeClass = None  # type: ignore[assignment,misc]
     AUDIT_ENGINE_AVAILABLE = False
 
 try:
