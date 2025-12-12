@@ -691,7 +691,7 @@ class PDFNavigationAnchorGenerator:
 
     def _determine_bookmark_level(self, section: Section) -> int:
         """Determine bookmark hierarchy level."""
-        max_level = NAVIGATION_CONFIG["bookmark_max_level"]
+        max_level = int(NAVIGATION_CONFIG["bookmark_max_level"])
 
         # Category-level sections are level 1
         if section.is_jump_point or section.is_impact_hotspot:
@@ -701,7 +701,7 @@ class PDFNavigationAnchorGenerator:
         if section.subcategory and section.subcategory.startswith("G"):
             return 2
 
-        return min(3, max_level)
+        return int(min(3, max_level))
 
     def _requires_page_break(self, section: Section) -> bool:
         """Check if section requires page break before it."""

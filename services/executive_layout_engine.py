@@ -282,60 +282,60 @@ class HeightEstimator:
     def _estimate_heading(self, content: str, style: str) -> float:
         """Estimate heading height."""
         font = FONT_SCALE[style]
-        line_height = font["effective_size"] * font["line_height"]
+        line_height = float(font["effective_size"]) * float(font["line_height"])
 
         # Count lines needed
         lines = len(content) / 50 + 1  # Assume shorter line length for headings
 
-        return line_height * lines
+        return float(line_height * lines)
 
     def _estimate_paragraph(self, content: str) -> float:
         """Estimate paragraph height."""
         font = FONT_SCALE["body"]
-        line_height = font["effective_size"] * font["line_height"]
+        line_height = float(font["effective_size"]) * float(font["line_height"])
 
         # Estimate lines
         lines = len(content) / self._chars_per_line + 1
 
-        return line_height * lines + LAYOUT_CONFIG["paragraph_spacing"]
+        return float(line_height * lines + float(LAYOUT_CONFIG["paragraph_spacing"]))
 
     def _estimate_table(self, content: Dict[str, Any]) -> float:
         """Estimate table height."""
-        rows = content.get("rows", 5)
+        rows = int(content.get("rows", 5))
         header_height = 30
         row_height = 24
 
-        return header_height + (rows * row_height) + LAYOUT_CONFIG["table_margin"] * 2
+        return float(header_height + (rows * row_height) + float(LAYOUT_CONFIG["table_margin"]) * 2)
 
     def _estimate_kpi_visual(self, content: Dict[str, Any]) -> float:
         """Estimate KPI visual height."""
-        kpi_count = content.get("count", 3)
+        kpi_count = int(content.get("count", 3))
 
         # KPIs arranged in row of 3
         rows = (kpi_count + 2) // 3
         kpi_height = 100  # Per row
 
-        return rows * kpi_height
+        return float(rows * kpi_height)
 
     def _estimate_roadmap(self, content: Dict[str, Any]) -> float:
         """Estimate roadmap block height."""
-        phases = content.get("phases", 4)
+        phases = int(content.get("phases", 4))
         phase_height = 80
 
-        return phases * phase_height + 40  # Header
+        return float(phases * phase_height + 40)  # Header
 
     def _estimate_card(self, content: Dict[str, Any]) -> float:
         """Estimate card height."""
         card_type = CardType(content.get("type", "kpi_card"))
         style = CARD_STYLES.get(card_type, CARD_STYLES[CardType.KPI_CARD])
 
-        content_lines = content.get("content_lines", 3)
+        content_lines = int(content.get("content_lines", 3))
         line_height = 20
 
-        return max(
-            style["min_height"],
-            style["padding"] * 2 + 30 + content_lines * line_height,
-        )
+        return float(max(
+            int(style["min_height"]),
+            int(style["padding"]) * 2 + 30 + content_lines * line_height,
+        ))
 
     def _estimate_bullet_list(self, content: List[str]) -> float:
         """Estimate bullet list height."""
@@ -346,12 +346,12 @@ class HeightEstimator:
 
     def _estimate_chart(self, content: Dict[str, Any]) -> float:
         """Estimate chart height."""
-        return content.get("height", 200)
+        return float(content.get("height", 200))
 
     def _estimate_executive_summary(self, content: Dict[str, Any]) -> float:
         """Estimate executive summary height."""
         # Full page minimum
-        return LAYOUT_CONFIG["content_height"] * 0.9
+        return float(LAYOUT_CONFIG["content_height"]) * 0.9
 
 
 # =============================================================================
@@ -464,16 +464,16 @@ class PageBreakOptimizer:
     def _calculate_white_space_score(self, fill_percentage: float) -> float:
         """Calculate white space quality score."""
         white_space = 1.0 - fill_percentage
-        min_ws = LAYOUT_CONFIG["min_white_space_ratio"]
-        max_ws = LAYOUT_CONFIG["max_white_space_ratio"]
+        min_ws = float(LAYOUT_CONFIG["min_white_space_ratio"])
+        max_ws = float(LAYOUT_CONFIG["max_white_space_ratio"])
 
         if min_ws <= white_space <= max_ws:
             return 1.0
 
         if white_space < min_ws:
-            return white_space / min_ws
+            return float(white_space / min_ws)
 
-        return max(0, 1.0 - (white_space - max_ws))
+        return float(max(0, 1.0 - (white_space - max_ws)))
 
 
 # =============================================================================
@@ -933,7 +933,7 @@ class ExecutiveLayoutEngine:
         # White space quality
         ws_score = self._white_space_manager.calculate_overall_score(pages)
 
-        return (fill_score * 0.4 + consistency_score * 0.3 + ws_score * 0.3)
+        return float(fill_score * 0.4 + consistency_score * 0.3 + ws_score * 0.3)
 
 
 # =============================================================================

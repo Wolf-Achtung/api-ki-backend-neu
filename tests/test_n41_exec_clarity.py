@@ -197,10 +197,12 @@ class TestLeadershipClarityRewriter:
         clarity_rewriter: LeadershipClarityRewriter,
     ) -> None:
         """Test long sentence identification."""
+        # This sentence has 30+ words, exceeding the 25 word threshold
         text = (
-            "Die umfassende Analyse der strategischen Positionierung des "
-            "Unternehmens im Kontext der digitalen Transformation zeigt "
-            "erhebliche Potenziale in verschiedenen Bereichen auf."
+            "Die umfassende und tiefgreifende Analyse der strategischen Positionierung des "
+            "Unternehmens im komplexen Kontext der digitalen Transformation und der "
+            "sich wandelnden Marktbedingungen zeigt erhebliche und signifikante Potenziale "
+            "in verschiedenen strategisch wichtigen Bereichen auf."
         )
         _, issues = clarity_rewriter.rewrite(text)
 

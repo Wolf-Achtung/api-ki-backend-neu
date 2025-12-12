@@ -460,10 +460,12 @@ class PyramidStructureBuilder:
     ) -> float:
         """Calculate confidence score for the insight."""
         # Based on argument and evidence completeness
-        arg_score = len(sub_arguments) / COMPRESSION_CONFIG["target_sub_arguments"]
-        evidence_score = len(evidence) / COMPRESSION_CONFIG["target_evidence_points"]
+        target_args = int(COMPRESSION_CONFIG["target_sub_arguments"])
+        target_evidence = int(COMPRESSION_CONFIG["target_evidence_points"])
+        arg_score = len(sub_arguments) / target_args
+        evidence_score = len(evidence) / target_evidence
 
-        return min(1.0, (arg_score * 0.4 + evidence_score * 0.6))
+        return float(min(1.0, (arg_score * 0.4 + evidence_score * 0.6)))
 
     def _calculate_mece_score(
         self,
