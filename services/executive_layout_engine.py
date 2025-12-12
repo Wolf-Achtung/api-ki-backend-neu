@@ -371,7 +371,7 @@ class PageBreakOptimizer:
     """
 
     def __init__(self) -> None:
-        self._content_height = LAYOUT_CONFIG["content_height"]
+        self._content_height: float = float(LAYOUT_CONFIG["content_height"])
 
     def optimize_breaks(
         self,
@@ -441,25 +441,25 @@ class PageBreakOptimizer:
         element_height: float,
     ) -> bool:
         """Determine if page break is needed."""
-        remaining = self._content_height - current_height
+        remaining: float = self._content_height - current_height
 
         if rule == PageBreakRule.ALWAYS_BEFORE:
-            return current_height > 0
+            return bool(current_height > 0)
 
         if rule == PageBreakRule.NEVER_BREAK:
             # Break if element won't fit
-            return remaining < element_height
+            return bool(remaining < element_height)
 
         if rule == PageBreakRule.PREFER_BEFORE:
             # Break if less than 30% page remaining
-            return remaining < self._content_height * 0.3
+            return bool(remaining < self._content_height * 0.3)
 
         if rule == PageBreakRule.KEEP_WITH_NEXT:
             # Break if less than 20% remaining (need room for next element)
-            return remaining < self._content_height * 0.2
+            return bool(remaining < self._content_height * 0.2)
 
         # ALLOW_BREAK - only break if element won't fit
-        return remaining < element_height
+        return bool(remaining < element_height)
 
     def _calculate_white_space_score(self, fill_percentage: float) -> float:
         """Calculate white space quality score."""

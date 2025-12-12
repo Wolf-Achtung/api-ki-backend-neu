@@ -243,7 +243,7 @@ class TestDuplicateSignalFilter:
         pyramids = [
             {
                 "section_id": "1",
-                "top_line": "Die Analyse zeigt erhebliche Automatisierungspotenziale",
+                "top_line": "Die Analyse zeigt erhebliche Automatisierungspotenziale im Bereich Produktion",
                 "sub_arguments": [],
                 "evidence_items": [],
                 "compressed_insight": {
@@ -257,7 +257,7 @@ class TestDuplicateSignalFilter:
             },
             {
                 "section_id": "2",
-                "top_line": "Die Analyse zeigt signifikante Automatisierungspotenziale",
+                "top_line": "Die Analyse zeigt erhebliche Automatisierungspotenziale im Bereich Produktion",
                 "sub_arguments": [],
                 "evidence_items": [],
                 "compressed_insight": {
@@ -273,7 +273,7 @@ class TestDuplicateSignalFilter:
 
         filtered = filter_instance.filter_pyramids(pyramids)
 
-        # Should filter one as duplicate
+        # Should filter one as duplicate (identical top_lines)
         assert len(filtered) < len(pyramids)
 
     def test_reset_filter(self) -> None:

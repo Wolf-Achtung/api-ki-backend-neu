@@ -609,9 +609,14 @@ class ToneHarmonizer:
         """
         result = text
 
-        # Apply word replacements
+        # Apply word replacements (case-insensitive)
         for informal, formal in self.TONE_REPLACEMENTS.items():
-            result = result.replace(informal, formal)
+            result = re.sub(
+                re.escape(informal),
+                formal,
+                result,
+                flags=re.IGNORECASE,
+            )
 
         # Apply pattern replacements
         for pattern, replacement in self.EXECUTIVE_PATTERNS:
@@ -722,10 +727,10 @@ class InsightCompressionEngine:
             for p in filtered_pyramids
         ]
 
-        # Calculate metrics
+        # Calculate metrics (clamped to (0, 1) range - compression means ratio < 1)
         compression_ratio = (
-            compressed_word_count / original_word_count
-            if original_word_count > 0 else 0
+            min(0.99, max(0.01, compressed_word_count / original_word_count))
+            if original_word_count > 0 else 0.5
         )
 
         quality_score = self._calculate_quality_score(harmonized_pyramids)
