@@ -1242,9 +1242,9 @@ def check_story_arc_consistency(
 
         has_phase = any(kw in combined_content for kw in keywords)
         if has_phase:
-            phases_present.append(phase)
+            phases_present.append(str(phase))
         else:
-            phases_missing.append(phase)
+            phases_missing.append(str(phase))
 
     # Score reduction for missing phases
     if phases_missing:
