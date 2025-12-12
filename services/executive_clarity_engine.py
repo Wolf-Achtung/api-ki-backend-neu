@@ -237,7 +237,9 @@ PASSIVE_PATTERNS: List[str] = [
 WORDY_REPLACEMENTS: Dict[str, str] = {
     "in der Lage sein": "können",
     "in der Lage ist": "kann",
+    "ist in der Lage": "kann",
     "in der Lage sind": "können",
+    "sind in der Lage": "können",
     "zur Verfügung stellen": "bereitstellen",
     "zur Verfügung steht": "verfügbar ist",
     "eine Rolle spielen": "relevant sein",
@@ -522,9 +524,9 @@ class LeadershipClarityRewriter:
         avg_sentence_length = len(words) / len(sentences)
         avg_word_length = sum(len(w) for w in words) / len(words)
 
-        # Simplified scoring: shorter is better
-        sentence_score = max(0, 1 - (avg_sentence_length - 15) / 30)
-        word_score = max(0, 1 - (avg_word_length - 5) / 5)
+        # Simplified scoring: shorter is better, clamped to [0, 1]
+        sentence_score = max(0.0, min(1.0, 1 - (avg_sentence_length - 15) / 30))
+        word_score = max(0.0, min(1.0, 1 - (avg_word_length - 5) / 5))
 
         return (sentence_score * 0.6 + word_score * 0.4)
 
@@ -885,20 +887,21 @@ class ExecutiveClarityEngine:
         other_issues = len(issues) - action_issues
         consistency_score = max(0, 1 - other_issues * 0.1)
 
-        # Overall score
+        # Overall score (clamped to [0, 1])
         overall = (
             jargon_score * 0.3 +
             readability_score * 0.3 +
             action_score * 0.2 +
             consistency_score * 0.2
         )
+        overall = max(0.0, min(1.0, overall))
 
         return ClarityScore(
             overall_score=overall,
-            jargon_score=jargon_score,
-            readability_score=readability_score,
-            action_clarity_score=action_score,
-            consistency_score=consistency_score,
+            jargon_score=min(1.0, jargon_score),
+            readability_score=min(1.0, readability_score),
+            action_clarity_score=min(1.0, action_score),
+            consistency_score=min(1.0, consistency_score),
         )
 
     def _calculate_overall_score(
@@ -909,8 +912,9 @@ class ExecutiveClarityEngine:
         if not processed_sections:
             return 0.0
 
-        scores = [s["score"]["overall_score"] for s in processed_sections]
-        return sum(scores) / len(scores)
+        scores: List[float] = [float(s["score"]["overall_score"]) for s in processed_sections]
+        avg_score = sum(scores) / len(scores)
+        return float(max(0.0, min(1.0, avg_score)))
 
     def _generate_recommendation(
         self,

@@ -326,10 +326,10 @@ class InvestmentThesisGenerator:
     def _calculate_confidence(self, kpi_data: Dict[str, Any]) -> float:
         """Calculate confidence level."""
         # Based on data completeness and consistency
-        data_completeness = kpi_data.get("data_completeness", 0.7)
-        model_confidence = kpi_data.get("model_confidence", 0.8)
+        data_completeness = float(kpi_data.get("data_completeness", 0.7))
+        model_confidence = float(kpi_data.get("model_confidence", 0.8))
 
-        return (data_completeness * 0.4 + model_confidence * 0.6)
+        return float(data_completeness * 0.4 + model_confidence * 0.6)
 
 
 # =============================================================================
@@ -670,7 +670,8 @@ class OperationalCaseGenerator:
                 "Qualitätssicherung ohne KI-Unterstützung",
             ]
 
-        return bottlenecks[:SUMMARY_CONFIG["max_bottlenecks"]]
+        max_bottlenecks = int(SUMMARY_CONFIG["max_bottlenecks"])
+        return list(bottlenecks[:max_bottlenecks])
 
     def _identify_quick_wins(self, automation_analysis: Dict[str, Any]) -> List[str]:
         """Identify quick win opportunities."""
@@ -683,7 +684,8 @@ class OperationalCaseGenerator:
                 "Kundenanfragen durch Chatbot entlasten",
             ]
 
-        return quick_wins[:SUMMARY_CONFIG["max_quick_wins"]]
+        max_quick_wins = int(SUMMARY_CONFIG["max_quick_wins"])
+        return list(quick_wins[:max_quick_wins])
 
     def _describe_resource_requirements(
         self,
@@ -838,7 +840,7 @@ class RiskCaseGenerator:
         risk_from_compliance = ((1 - ai_act_comp) * 0.4 + (1 - dsgvo_comp) * 0.3)
         risk_from_vendor = vendor_risk * 0.3
 
-        return round(risk_from_compliance + risk_from_vendor, 2)
+        return float(round(risk_from_compliance + risk_from_vendor, 2))
 
 
 # =============================================================================

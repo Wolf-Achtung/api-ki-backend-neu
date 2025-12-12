@@ -485,10 +485,9 @@ class OperationalRoadmapBuilder:
         factor = 1.0 - (automation_potential / 200)  # Max 20% reduction
         adjusted = int(base_duration * factor)
 
-        return max(
-            ROADMAP_CONFIG["min_phase_duration_days"],
-            min(adjusted, ROADMAP_CONFIG["max_phase_duration_days"]),
-        )
+        min_days = int(ROADMAP_CONFIG["min_phase_duration_days"])
+        max_days = int(ROADMAP_CONFIG["max_phase_duration_days"])
+        return int(max(min_days, min(adjusted, max_days)))
 
     def _create_phase(
         self,
