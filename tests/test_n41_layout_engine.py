@@ -218,7 +218,7 @@ class TestWhiteSpaceManager:
         score = manager.calculate_overall_score(pages)
 
         assert 0 <= score <= 1
-        assert score == 0.85  # Average of 0.8 and 0.9
+        assert score == pytest.approx(0.85)  # Average of 0.8 and 0.9
 
     def test_empty_pages_score(self) -> None:
         """Test score for empty pages list."""
