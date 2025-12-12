@@ -301,7 +301,7 @@ class AuditChain:
         """Get the latest cascaded hash."""
         if not self._chain:
             return self._genesis_hash
-        return self._chain[-1]["cascaded_hash"]
+        return str(self._chain[-1]["cascaded_hash"])
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
@@ -616,7 +616,7 @@ class ResearchAgentOrchestrator:
                 mock_mode=self.mock_mode,
             )
 
-            result = agent.run()
+            result: AgentResult = agent.run()
 
             # Calculate execution time
             execution_time_ms = int((time.time() - start_time) * 1000)
