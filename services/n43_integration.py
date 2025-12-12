@@ -270,7 +270,7 @@ class N43IntegrationEngine:
             self._current_sections, report = engine.process()
 
             self._report.safety_assurance_ok = report.success
-            self._report.safety_violations = report.violations_found - report.violations_resolved
+            self._report.safety_violations = report.violations_found - report.violations_healed
 
             if report.healed:
                 self._report.total_healed += 1
@@ -297,7 +297,7 @@ class N43IntegrationEngine:
             self._current_sections, report = engine.process()
 
             self._report.numerical_integrity_ok = report.success
-            self._report.numerical_inconsistencies = report.issues_found - report.issues_resolved
+            self._report.numerical_inconsistencies = report.issues_found - report.issues_healed
 
             if report.healed:
                 self._report.total_healed += 1
@@ -318,8 +318,6 @@ class N43IntegrationEngine:
             engine = ConsistencyKernelV7(
                 sections=self._current_sections,
                 briefing=self.briefing,
-                risk_class=self._report.risk_class,
-                maturity=self._report.maturity_level,
             )
 
             self._current_sections, report = engine.process()

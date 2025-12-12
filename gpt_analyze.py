@@ -482,7 +482,7 @@ except ImportError:
     process_n43_governance = None
     validate_n43_dod = None
     get_n43_status = None
-    N43Report = None
+    N43Report = None  # type: ignore[misc]
     N43_GOVERNANCE_AVAILABLE = False
 
 # Initialize logger
