@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-gpt_analyze.py – v5.2.0-PLATIN+++
+gpt_analyze.py – v5.3.0-PLATIN+++
 ---------------------------------------------------------------------
 🎯 PLATIN+++ MULTI-LANGUAGE INTELLIGENCE (N4.2):
 - ✅ Native Executive-Tonality in 5 languages (DE, EN, FR, IT, ES)
@@ -18,6 +18,7 @@ Version History:
 - 4.14.1-PLATIN++: Size-aware Fallbacks, Platzhalter-Fix, Aliasing-Korrektur
 - 4.14.2-PLATIN++: Roadmap-Fallbacks inline, HAUPTLEISTUNG-Integration
 - 5.2.0-PLATIN+++: N4.2 Multi-Language Intelligence Layer
+- 5.3.0-PLATIN+++: N4.3 Governance Layer 2.0 / Enterprise Safety Layer
 
 =============================================================================
 Sprint N4.2: LLM SECTION FALLBACK DOCUMENTATION
@@ -467,6 +468,22 @@ except ImportError:
     validate_report_clarity = None
     get_clarity_score = None
     CLARITY_ENGINE_AVAILABLE = False
+
+# N4.3: Governance Layer 2.0 / Enterprise Safety Layer imports
+try:
+    from services.n43_integration import (
+        process_n43_governance,
+        validate_n43_dod,
+        get_n43_status,
+        N43Report,
+    )
+    N43_GOVERNANCE_AVAILABLE = True
+except ImportError:
+    process_n43_governance = None
+    validate_n43_dod = None
+    get_n43_status = None
+    N43Report = None  # type: ignore[misc]
+    N43_GOVERNANCE_AVAILABLE = False
 
 # Initialize logger
 log = logging.getLogger(__name__)
@@ -1447,7 +1464,7 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
         "enablement": min(ena, 25) * 4,
         "overall": round((min(gov, 25) + min(sec, 25) + min(val, 25) + min(ena, 25)) * 4 / 4),
     }
-    log.info("📊 REALISTIC SCORES v5.2.0-PLATIN+++: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
+    log.info("📊 REALISTIC SCORES v5.3.0-PLATIN+++: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
              scores["governance"], scores["security"], scores["value"], scores["enablement"], scores["overall"])
     return {"scores": scores, "details": details, "total": scores["overall"]}
 
@@ -4895,7 +4912,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     answers["_guardrail_hits_count"] = len(guardrail_hits)  # Anzahl für Logik
     answers["_has_guardrails"] = len(guardrail_hits) > 0  # Boolean Flag
 
-    log.info("[%s] 📊 Calculating realistic scores (v5.2.0-PLATIN+++)...", run_id)
+    log.info("[%s] 📊 Calculating realistic scores (v5.3.0-PLATIN+++)...", run_id)
     score_wrap = _calculate_realistic_score(answers)
     scores = score_wrap["scores"]
 
@@ -5876,6 +5893,48 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     if final_healed > 0:
         log.info(f"[{run_id}] 🔧 N2: Healed {final_healed} empty sections in final pass")
 
+    # === SPRINT N4.3: Governance Layer 2.0 / Enterprise Safety Layer ===
+    if N43_GOVERNANCE_AVAILABLE and process_n43_governance:
+        try:
+            # Derive branch and size for N4.3
+            branch_raw = (answers.get("branche", "") or "consulting").lower()
+            size_raw = (answers.get("unternehmensgroesse", "") or "").lower()
+
+            if "solo" in size_raw or "freiberuf" in size_raw:
+                n43_size = "solo"
+            elif "kmu" in size_raw or "11" in size_raw:
+                n43_size = "kmu"
+            elif "enterprise" in size_raw or "konzern" in size_raw or "251" in size_raw:
+                n43_size = "enterprise"
+            else:
+                n43_size = "team"
+
+            target_lang = getattr(br, "lang", "de") or "de"
+
+            log.info(f"[{run_id}] 🛡️ N4.3: Starting Governance Layer 2.0 processing...")
+            sections, n43_report = process_n43_governance(
+                sections=sections,
+                briefing=answers,
+                branch=branch_raw,
+                size=n43_size,
+                target_language=target_lang,
+            )
+
+            if n43_report.dod_passed:
+                log.info(f"[{run_id}] ✅ N4.3: DoD PASSED - score={n43_report.governance_score}, healed={n43_report.total_healed}")
+            else:
+                log.warning(f"[{run_id}] ⚠️ N4.3: DoD FAILED - conflicts={n43_report.governance_conflicts}, issues={len(n43_report.issues)}")
+
+            # Store N4.3 metrics in sections for template access
+            sections["N43_GOVERNANCE_SCORE"] = n43_report.governance_score
+            sections["N43_RISK_CLASS"] = n43_report.risk_class
+            sections["N43_MATURITY_LEVEL"] = n43_report.maturity_level
+            sections["N43_DOD_PASSED"] = n43_report.dod_passed
+
+        except Exception as e:
+            log.error(f"[{run_id}] ❌ N4.3: Governance processing failed: {e}")
+            sections["_n43_error"] = str(e)
+
     # === HARD STOP GATE: Validate report BEFORE rendering ===
     # Derive persona from unternehmensgroesse
     size_raw = (answers.get("unternehmensgroesse", "") or "").lower()
@@ -6006,7 +6065,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     db.commit()
     db.refresh(an)
     
-    log.info("[%s] ✅ Analysis created (v5.2.0-PLATIN+++): id=%s", run_id, an.id)
+    log.info("[%s] ✅ Analysis created (v5.3.0-PLATIN+++): id=%s", run_id, an.id)
     return an.id, result["html"], result.get("meta", {})
 
 # -------------------- briefing summary for admin ----------------
@@ -6200,7 +6259,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     db = core_db.SessionLocal()
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v5.2.0-PLATIN+++ for briefing_id=%s", run_id, briefing_id)
+        log.info("[%s] 🚀 Starting analysis v5.3.0-PLATIN+++ for briefing_id=%s", run_id, briefing_id)
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
         rep = Report(
