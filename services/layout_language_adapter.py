@@ -985,4 +985,7 @@ def get_hyphenation_mode(language: str) -> HyphenationMode:
         return HyphenationMode.CONSERVATIVE
 
     rules = HYPHENATION_RULES.get(lang, HYPHENATION_RULES[SupportedLanguage.DE])
-    return rules.get("mode", HyphenationMode.CONSERVATIVE)
+    mode = rules.get("mode", HyphenationMode.CONSERVATIVE)
+    if isinstance(mode, HyphenationMode):
+        return mode
+    return HyphenationMode.CONSERVATIVE

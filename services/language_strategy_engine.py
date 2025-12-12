@@ -716,7 +716,8 @@ class LanguageStrategyEngine:
         if not self._detection_result:
             self._detect_language()
 
-        lang = self._detection_result.detected_language  # type: ignore
+        assert self._detection_result is not None
+        lang = self._detection_result.detected_language
 
         self._profile = LanguageProfile(
             language=lang,
@@ -806,14 +807,16 @@ class LanguageStrategyEngine:
         if not self._profile:
             self._build_profile()
 
-        return self._profile.get_model_preference(section).value  # type: ignore
+        assert self._profile is not None
+        return self._profile.get_model_preference(section).value
 
     def get_glossary_term(self, key: str) -> str:
         """Get glossary term for key in target language."""
         if not self._profile:
             self._build_profile()
 
-        return self._profile.get_term(key)  # type: ignore
+        assert self._profile is not None
+        return self._profile.get_term(key)
 
 
 # =============================================================================

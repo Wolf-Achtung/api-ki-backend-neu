@@ -469,7 +469,7 @@ def detect_target_language(
         return result.detected_language.value
     except Exception as e:
         log.warning("[N4.2] Language detection failed: %s", e)
-        return briefing.get("lang", "de")
+        return str(briefing.get("lang", "de"))
 
 
 def apply_language_strategy(
