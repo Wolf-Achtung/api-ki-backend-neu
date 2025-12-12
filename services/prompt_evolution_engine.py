@@ -1162,14 +1162,23 @@ def register_prompt_for_evolution(
 def evolve_prompt(
     prompt_id: str,
     feedback: Optional[Dict[str, Any]] = None,
+    max_generations: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
     Evolve a prompt.
 
     Convenience function for external use.
+
+    Args:
+        prompt_id: ID of the registered prompt to evolve
+        feedback: Optional feedback dict with quality metrics
+        max_generations: Optional max number of generations to run
+
+    Returns:
+        Evolution result dict with evolved prompt and metrics
     """
     engine = get_prompt_evolution_engine()
-    return engine.evolve_prompt(prompt_id, feedback)
+    return engine.evolve_prompt(prompt_id, feedback, max_generations)
 
 
 def get_evolved_prompt(prompt_id: str) -> Optional[str]:
