@@ -670,18 +670,18 @@ class CrossLanguageConsistencyEngine:
         # Try exact key
         content = sections.get(section_key)
         if content and isinstance(content, str):
-            return content
+            return str(content)
 
         # Try HTML key variant
         html_key = f"{section_key.upper()}_HTML"
         content = sections.get(html_key)
         if content and isinstance(content, str):
-            return content
+            return str(content)
 
         # Try lowercase
         content = sections.get(section_key.lower())
         if content and isinstance(content, str):
-            return content
+            return str(content)
 
         return None
 
