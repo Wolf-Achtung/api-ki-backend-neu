@@ -207,6 +207,66 @@ try:
 except ImportError:
     track_bc_modification = None
 
+# N3.9: Enterprise Hardening Layer imports
+try:
+    from services.tenant_manager import (
+        process_tenant_isolation,
+        get_tenant_registry,
+        TenantConfig as TenantConfigClass,
+    )
+    TENANT_MANAGER_AVAILABLE = True
+except ImportError:
+    process_tenant_isolation = None
+    get_tenant_registry = None
+    TenantConfigClass = None  # type: ignore[misc]
+    TENANT_MANAGER_AVAILABLE = False
+
+try:
+    from services.audit_trace_engine import (
+        get_audit_engine,
+        AuditContext as AuditContextClass,
+        EngineType as EngineTypeClass,
+    )
+    AUDIT_ENGINE_AVAILABLE = True
+except ImportError:
+    get_audit_engine = None
+    AuditContextClass = None  # type: ignore[misc]
+    EngineTypeClass = None  # type: ignore[misc]
+    AUDIT_ENGINE_AVAILABLE = False
+
+try:
+    from services.safety_tuner import (
+        process_safety_tuning,
+        get_safety_tuner,
+    )
+    SAFETY_TUNER_AVAILABLE = True
+except ImportError:
+    process_safety_tuning = None
+    get_safety_tuner = None
+    SAFETY_TUNER_AVAILABLE = False
+
+try:
+    from services.performance_layer_v6 import (
+        get_performance_layer,
+        process_with_performance_layer,
+    )
+    PERFORMANCE_V6_AVAILABLE = True
+except ImportError:
+    get_performance_layer = None
+    process_with_performance_layer = None
+    PERFORMANCE_V6_AVAILABLE = False
+
+try:
+    from services.executive_narrative_engine import (
+        process_executive_narrative_v2,
+        analyze_executive_narrative_v2,
+    )
+    EXECUTIVE_NARRATIVE_V2_AVAILABLE = True
+except ImportError:
+    process_executive_narrative_v2 = None
+    analyze_executive_narrative_v2 = None
+    EXECUTIVE_NARRATIVE_V2_AVAILABLE = False
+
 # G17.3: Import FT Signal Extractor
 try:
     from services.ft_signal_extractor import (
