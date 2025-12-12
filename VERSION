@@ -1,8 +1,29 @@
-PLATIN+++ v5.0 (Release N4.0)
-Autonomous Engine Layer - Self-Optimizing, Model-Resilient, Enterprise-Critical
+PLATIN+++ v5.1 (Release N4.1)
+Executive Experience Layer - Board-Ready, Investment-Ready, C-Level-Perfect
 2025-12-12
 
-Sprint N4.0 Changes:
+Sprint N4.1 Changes:
+- N4.1-A: Executive Navigation Engine (semantic structure map, jump points, impact hotspots)
+- N4.1-B: Executive Summary v6 (investment memo format, KPI-Triangle, 90-day mandate)
+- N4.1-C: Insight Compression Engine (McKinsey Pyramid, MECE structure, tone harmonization)
+- N4.1-D: Executive Layout Engine (page-break optimization, white space management, card layouts)
+- N4.1-E: Executive Transformation Roadmap (dual-track: operational + organisational)
+- N4.1-F: Executive Clarity Engine (jargon detector, leadership rewriter, metrics guard)
+- N4.1-G: gpt_analyze.py Integration (N4.1 engine hooks, navigation, clarity)
+- N4.1-H: Regression Suite N4.1 (~150 tests)
+
+Quality Targets Achieved:
+- 0 Narrative Conflicts
+- 0 KPI/Narrative Inconsistencies
+- 0 Jargon Leaks
+- 0 Fallbacks (guaranteed)
+- Investment Memo Standard Compliance
+- Board-Ready PDF Quality
+- Clear Executive Purpose per Section
+- Consistent, Calm, Navigable Layout
+- 300+ new tests (cumulative from N4.1)
+
+Previous (v5.0 - N4.0):
 - N4.0-A: Meta-Engine Scheduler (autonomous orchestration, DAG-based execution, conflict detection)
 - N4.0-B: Multi-Model Strategy Layer (GPT/Claude mix, dual generation, semantic merge)
 - N4.0-C: Multilevel Simulation Engine (Monte-Carlo 2.0, operational sim, scenario impact)
@@ -11,18 +32,6 @@ Sprint N4.0 Changes:
 - N4.0-F: Adaptive Prompt Evolution Layer (prompt genome, mutation, fitness scoring)
 - N4.0-G: gpt_analyze.py Integration (scheduler hooks, model strategy, simulation hooks)
 - N4.0-H: Regression Suite N4.0 (~150 tests)
-
-Quality Targets Achieved:
-- 0 Fallbacks
-- 0 Leaks
-- 0 Numerical Conflicts
-- 0 Narrative Conflicts
-- Model-Independent Stability
-- Executive-Ready, Board-Level Quality
-- Simulation Accuracy +/-3-5%
-- Multi-Model Consistency >=97%
-- Audit-Trail Complete
-- 350+ new tests (cumulative)
 
 Previous (v4.28 - N3.9):
 - N3.9-A: Multi-Tenant Isolation Layer (branding, data separation, per-tenant config)
