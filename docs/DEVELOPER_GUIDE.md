@@ -81,3 +81,68 @@ python -c "from services.prompt_loader import load_prompt; print(load_prompt('my
 | guardrail_leaks | Yes | GuardrailHit object leaked to output |
 | placeholder_violations | Yes | Unresolved {{PLACEHOLDER}} |
 | size_mismatches | Yes | Solo report with Team terms |
+
+## Golden Artifacts Generation
+
+Generate reproducible HTML/PDF reports with SHA-256 hashes for regression testing.
+
+### Prerequisites
+
+```bash
+# Backend must have Service-Token enabled
+SERVICE_TOKEN_ENABLED=1
+SERVICE_TOKEN_SECRET=your-secret-here
+```
+
+### Usage
+
+```bash
+# Set the secret (same as backend)
+export SERVICE_TOKEN_SECRET="your-secret-here"
+
+# Generate single profile
+python scripts/generate_golden_reports.py \
+  --base-url https://api.ki-sicherheit.jetzt \
+  --profile solo
+
+# Generate all 3 profiles
+python scripts/generate_golden_reports.py \
+  --base-url https://api.ki-sicherheit.jetzt \
+  --all
+```
+
+### Available Profiles
+
+| Profile | Description |
+|---------|-------------|
+| solo | Solo consultant, German |
+| team_finance | Team, Finance/Insurance sector |
+| kmu_france | KMU, France, English |
+
+### Output Structure
+
+```
+artifacts/golden_reports/
+  solo/
+    report.html
+    report.pdf
+    hashes.json
+  team_finance/
+    ...
+  kmu_france/
+    ...
+```
+
+### hashes.json Format
+
+```json
+{
+  "profile_id": "solo",
+  "briefing_id": 12345,
+  "generated_at": "2025-01-15T10:30:00Z",
+  "html_sha256": "abc123...",
+  "html_size": 45000,
+  "pdf_sha256": "def456...",
+  "pdf_size": 120000
+}
+```
