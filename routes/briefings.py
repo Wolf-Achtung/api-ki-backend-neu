@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from core.security import bearer_token, verify_access_token
+from core.security import bearer_token, verify_access_token, verify_service_token, ServiceTokenPayload
 from settings import get_settings
 from services.rate_limit import RateLimiter
 from utils.idempotency import IdempotencyBox
@@ -68,57 +68,71 @@ async def submit_briefing(
     # Rate-Limit pauschal
     _briefing_rate_limiter.hit(key=request.client.host if request.client else "unknown")
 
-    # JWT optional (falls Frontend ohne Token sendet, nicht hart blockieren)
-    # Prüfe SOWOHL Cookie als auch Authorization Header (wie in get_current_user)
+    # Auth: Service-Token ODER User-Token (Cookie/Header)
+    # Service-Token hat Priorität für headless/automated Zugriff
     authenticated_user = None  # Track if user is authenticated
     user_id = None  # Database user ID
+    service_principal = None  # Track if service token used
 
-    token = None
-
-    # Priority 1: Check httpOnly cookie
-    cookie_token = request.cookies.get("auth_token")
-    if cookie_token:
-        token = cookie_token
-        log.debug("Found auth_token in cookie")
-    # Fallback: Check Authorization header
-    elif request.headers.get("authorization"):
-        auth_header = request.headers.get("authorization")
-        scheme, _, header_token = auth_header.partition(" ")
-        if scheme.lower() == "bearer" and header_token:
-            token = header_token
-            log.debug("Found token in Authorization header")
-
-    if token:
-        # Token validieren - bei Fehler abbrechen
+    # Priority 0: Service-Token (für Golden Reports, CI)
+    service_token = request.headers.get("x-service-token")
+    if service_token and s.security.service_token_enabled:
         try:
-            result = verify_access_token(token)
-            authenticated_user = result.email
-            log.info("✅ Token validated successfully for user: %s", authenticated_user)
-
-            # User aus DB holen oder erstellen
-            try:
-                from models import User
-                user = db.query(User).filter(User.email == authenticated_user).first()
-                if not user:
-                    user = User(email=authenticated_user)
-                    db.add(user)
-                    db.flush()
-                    log.info("✅ Created new user: %s", authenticated_user)
-                else:
-                    log.info("✅ Found existing user: %s (ID=%s)", authenticated_user, user.id)
-                user_id = user.id
-            except Exception as e:
-                log.warning("Could not get/create user: %s", str(e))
-                # Weiter ohne user_id - nicht kritisch
-
+            service_payload = verify_service_token(service_token, required_scope="briefings:submit")
+            service_principal = service_payload.principal
+            log.info("✅ Service-Token authenticated: principal=%s", service_principal)
+            # Service-Token überspringt User-DB-Lookup
+        except HTTPException:
+            raise  # Weiterleiten (401/403)
         except Exception as e:
-            log.error("❌ Token verification failed: %s - %s", type(e).__name__, str(e))
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid or expired token"
-            )
+            log.error("❌ Service-Token verification failed: %s", str(e))
+            raise HTTPException(status_code=401, detail="Service token invalid")
     else:
-        log.debug("No authentication found (no cookie or Authorization header) - proceeding without authentication")
+        # Priority 1: Check httpOnly cookie
+        token = None
+        cookie_token = request.cookies.get("auth_token")
+        if cookie_token:
+            token = cookie_token
+            log.debug("Found auth_token in cookie")
+        # Fallback: Check Authorization header
+        elif request.headers.get("authorization"):
+            auth_header = request.headers.get("authorization")
+            scheme, _, header_token = auth_header.partition(" ")
+            if scheme.lower() == "bearer" and header_token:
+                token = header_token
+                log.debug("Found token in Authorization header")
+
+        if token:
+            # Token validieren - bei Fehler abbrechen
+            try:
+                result = verify_access_token(token)
+                authenticated_user = result.email
+                log.info("✅ Token validated successfully for user: %s", authenticated_user)
+
+                # User aus DB holen oder erstellen
+                try:
+                    from models import User
+                    user = db.query(User).filter(User.email == authenticated_user).first()
+                    if not user:
+                        user = User(email=authenticated_user)
+                        db.add(user)
+                        db.flush()
+                        log.info("✅ Created new user: %s", authenticated_user)
+                    else:
+                        log.info("✅ Found existing user: %s (ID=%s)", authenticated_user, user.id)
+                    user_id = user.id
+                except Exception as e:
+                    log.warning("Could not get/create user: %s", str(e))
+                    # Weiter ohne user_id - nicht kritisch
+
+            except Exception as e:
+                log.error("❌ Token verification failed: %s - %s", type(e).__name__, str(e))
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid or expired token"
+                )
+        else:
+            log.debug("No authentication found - proceeding without authentication")
 
     # Briefing in Datenbank speichern
     try:
@@ -151,12 +165,16 @@ async def submit_briefing(
                 log.error("❌ Failed to trigger analysis: %s", str(e), exc_info=True)
                 # Nicht abbrechen - Briefing ist gespeichert, Analyse kann später manuell getriggert werden
 
-        return {
+        response = {
             "status": "queued",
             "lang": payload.lang,
             "briefing_id": briefing.id,
             "analysis_queued": payload.queue_analysis
         }
+        # Service-Principal hinzufügen wenn Service-Token verwendet
+        if service_principal:
+            response["service_principal"] = service_principal
+        return response
 
     except Exception as e:
         db.rollback()
