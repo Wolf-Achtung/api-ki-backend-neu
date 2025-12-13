@@ -106,4 +106,5 @@ jobs:
           pip install -r requirements-test.txt
           pip install mypy
       - name: Run mypy
-        run: mypy --config-file mypy.ini .
+        # Explicitly scope to core directories to avoid phantom file issues
+        run: mypy --config-file mypy.ini core/ routes/ services/ main.py settings.py
