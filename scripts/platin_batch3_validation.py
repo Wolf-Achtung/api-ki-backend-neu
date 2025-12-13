@@ -47,7 +47,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 from dataclasses import dataclass, field
 
 # Repo-Root
@@ -200,7 +200,8 @@ def load_profile(profile_path: str) -> Dict[str, Any]:
         raise FileNotFoundError(f"Profile not found: {full_path}")
 
     with open(full_path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data: Dict[str, Any] = json.load(f)
+        return data
 
 
 def check_for_leaks(html_content: str) -> List[str]:
@@ -229,25 +230,27 @@ def run_dry_run_validation() -> BatchResult:
     result = BatchResult(total_profiles=len(BATCH3_PROFILES))
 
     for profile_config in BATCH3_PROFILES:
-        profile_id = profile_config["id"]
+        profile_id = str(profile_config["id"])
+        profile_file = str(profile_config["file"])
         print(f"\n[{profile_id}] Validating...")
 
         pr = ProfileResult(profile_id=profile_id)
 
         try:
             # 1. Load and validate profile
-            profile = load_profile(profile_config["file"])
+            profile = load_profile(profile_file)
             print(f"  ✓ Profile loaded ({len(json.dumps(profile))} bytes)")
 
             # 2. Check expected values
-            expected = profile_config["expected"]
+            expected = cast(Dict[str, Any], profile_config["expected"])
+            expected_lang = str(expected.get("lang", "de"))
             profile_lang = profile.get("lang", "de")
             profile_size = profile.get("answers", {}).get("unternehmensgroesse", "unknown")
 
-            if expected["lang"] == profile_lang:
+            if expected_lang == profile_lang:
                 print(f"  ✓ Language: {profile_lang}")
             else:
-                print(f"  ⚠ Language mismatch: expected {expected['lang']}, got {profile_lang}")
+                print(f"  ⚠ Language mismatch: expected {expected_lang}, got {profile_lang}")
 
             # 3. Simulate G22 PASS (based on code changes)
             pr.g22_status = "PASS"
@@ -304,7 +307,7 @@ def run_live_validation(base_url: str, email: str, output_dir: Path) -> BatchRes
     Requires authentication and network access.
     """
     try:
-        import requests
+        import requests  # type: ignore[import-untyped]
     except ImportError:
         print("ERROR: requests module required. Install with: pip install requests")
         sys.exit(1)
@@ -354,7 +357,8 @@ def run_live_validation(base_url: str, email: str, output_dir: Path) -> BatchRes
 
     # 4. Run each profile
     for profile_config in BATCH3_PROFILES:
-        profile_id = profile_config["id"]
+        profile_id = str(profile_config["id"])
+        profile_file = str(profile_config["file"])
         print(f"\n[{profile_id}] Running analysis...")
 
         pr = ProfileResult(profile_id=profile_id)
@@ -362,7 +366,7 @@ def run_live_validation(base_url: str, email: str, output_dir: Path) -> BatchRes
 
         try:
             # Load profile
-            profile = load_profile(profile_config["file"])
+            profile = load_profile(profile_file)
 
             # Submit briefing
             submit_url = f"{base_url}/briefings/submit"
