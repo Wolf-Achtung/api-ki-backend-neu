@@ -307,7 +307,7 @@ def run_live_validation(base_url: str, email: str, output_dir: Path) -> BatchRes
     Requires authentication and network access.
     """
     try:
-        import requests  # type: ignore[import-untyped]
+        import requests
     except ImportError:
         print("ERROR: requests module required. Install with: pip install requests")
         sys.exit(1)
