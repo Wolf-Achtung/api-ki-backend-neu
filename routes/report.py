@@ -3,12 +3,38 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 import asyncio
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi.responses import HTMLResponse, Response, RedirectResponse
 from pydantic import BaseModel, Field
 
+from routes._bootstrap import get_db
+from core.security import (
+    verify_service_token,
+    ServiceTokenPayload,
+    TokenPayload,
+    get_settings,
+)
+from models import Briefing, Analysis, Report
+
 router = APIRouter(prefix="/report", tags=["report"])
+
+
+# ---------------------------------------------------------------------------
+# Service-Token Auth Helper (read-only endpoints)
+# ---------------------------------------------------------------------------
+def get_service_or_skip_auth(
+    x_service_token: Optional[str] = Header(None, alias="X-Service-Token"),
+) -> Optional[ServiceTokenPayload]:
+    """
+    Optional Service-Token auth for read endpoints.
+    Returns ServiceTokenPayload if valid token, None otherwise.
+    """
+    s = get_settings()
+    if x_service_token and s.security.service_token_enabled:
+        return verify_service_token(x_service_token, required_scope="reports:read")
+    return None
 
 
 class ReportQuery(BaseModel):
@@ -78,3 +104,138 @@ async def generate(payload: Dict[str, Any]) -> Dict[str, Any]:
             await loop.run_in_executor(None, lambda: run_async(fallback_id))
 
     return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Golden Reports Endpoints (Service-Token enabled)
+# ---------------------------------------------------------------------------
+
+@router.get("/status/{briefing_id}")
+def get_report_status(
+    briefing_id: int,
+    db=Depends(get_db),
+    auth: Optional[ServiceTokenPayload] = Depends(get_service_or_skip_auth),
+) -> Dict[str, Any]:
+    """
+    Get the status of report generation for a briefing.
+
+    Supports X-Service-Token authentication.
+
+    Returns:
+        {"status": "queued|running|done|failed", "briefing_id": int}
+    """
+    # Verify briefing exists
+    briefing = db.get(Briefing, briefing_id)
+    if not briefing:
+        raise HTTPException(status_code=404, detail="Briefing not found")
+
+    # Get latest report for this briefing
+    report = (
+        db.query(Report)
+        .filter(Report.briefing_id == briefing_id)
+        .order_by(Report.id.desc())
+        .first()
+    )
+
+    if not report:
+        # No report yet - check if analysis exists
+        analysis = (
+            db.query(Analysis)
+            .filter(Analysis.briefing_id == briefing_id)
+            .order_by(Analysis.id.desc())
+            .first()
+        )
+        if analysis:
+            return {"status": "done", "briefing_id": briefing_id, "analysis_id": analysis.id}
+        return {"status": "queued", "briefing_id": briefing_id}
+
+    return {
+        "status": report.status,
+        "briefing_id": briefing_id,
+        "report_id": report.id,
+        "analysis_id": report.analysis_id,
+    }
+
+
+@router.get("/{briefing_id}.html")
+def get_report_html(
+    briefing_id: int,
+    db=Depends(get_db),
+    auth: Optional[ServiceTokenPayload] = Depends(get_service_or_skip_auth),
+) -> HTMLResponse:
+    """
+    Get the rendered HTML report for a briefing.
+
+    Supports X-Service-Token authentication.
+
+    Returns:
+        HTML content of the report
+    """
+    # Verify briefing exists
+    briefing = db.get(Briefing, briefing_id)
+    if not briefing:
+        raise HTTPException(status_code=404, detail="Briefing not found")
+
+    # Get latest analysis for this briefing
+    analysis = (
+        db.query(Analysis)
+        .filter(Analysis.briefing_id == briefing_id)
+        .order_by(Analysis.id.desc())
+        .first()
+    )
+
+    if not analysis:
+        raise HTTPException(status_code=404, detail="Report not yet generated")
+
+    html_content = getattr(analysis, "html", "") or ""
+    if not html_content:
+        raise HTTPException(status_code=404, detail="Report HTML not available")
+
+    return HTMLResponse(content=html_content, media_type="text/html; charset=utf-8")
+
+
+@router.get("/{briefing_id}.pdf")
+def get_report_pdf(
+    briefing_id: int,
+    db=Depends(get_db),
+    auth: Optional[ServiceTokenPayload] = Depends(get_service_or_skip_auth),
+) -> Response:
+    """
+    Get the PDF report for a briefing.
+
+    Supports X-Service-Token authentication.
+
+    Returns:
+        PDF file or redirect to PDF URL
+    """
+    # Verify briefing exists
+    briefing = db.get(Briefing, briefing_id)
+    if not briefing:
+        raise HTTPException(status_code=404, detail="Briefing not found")
+
+    # Get latest report for this briefing
+    report = (
+        db.query(Report)
+        .filter(Report.briefing_id == briefing_id)
+        .order_by(Report.id.desc())
+        .first()
+    )
+
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not yet generated")
+
+    # Check if PDF URL is available
+    pdf_url = getattr(report, "pdf_url", None)
+    if pdf_url:
+        return RedirectResponse(url=pdf_url, status_code=302)
+
+    # Check if PDF bytes are stored (future feature)
+    pdf_bytes = getattr(report, "pdf_bytes", None)
+    if pdf_bytes:
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'attachment; filename="report-{briefing_id}.pdf"'}
+        )
+
+    raise HTTPException(status_code=404, detail="PDF not available")
