@@ -1,0 +1,41 @@
+{
+  "_manifest_metadata": {
+    "manifest_version": "1.0.0",
+    "created_date": "2025-12-13",
+    "last_updated": "2025-12-13",
+    "purpose": "Release-Profil-Manifest für PLATIN+++ Auslieferungs- und Testreferenzen",
+    "audit_note": "Dieses Manifest ist read-only. Änderungen erfordern Versionssprung."
+  },
+  "profiles": {
+    "solo": {
+      "path": "solo/profile.json",
+      "release_version": "1.0.0",
+      "profile_type": "solo",
+      "display_name": "Solo-Selbstständig/Freiberuflich",
+      "description": "Release-Referenz für Solo-Segment (1 Person)",
+      "status": "locked"
+    },
+    "team": {
+      "path": "team/profile.json",
+      "release_version": "1.0.0",
+      "profile_type": "team",
+      "display_name": "2-10 (Kleines Team)",
+      "description": "Release-Referenz für Team-Segment (2-10 Mitarbeiter)",
+      "status": "locked"
+    },
+    "kmu": {
+      "path": "kmu/profile.json",
+      "release_version": "1.0.0",
+      "profile_type": "kmu",
+      "display_name": "11-100 (KMU)",
+      "description": "Release-Referenz für KMU-Segment (11-100 Mitarbeiter)",
+      "status": "locked"
+    }
+  },
+  "rules": {
+    "read_only": true,
+    "changes_require_version_bump": true,
+    "no_derivation_from_optimized": true,
+    "manual_validation_required": true
+  }
+}

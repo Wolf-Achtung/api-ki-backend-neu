@@ -1,0 +1,30 @@
+{
+  "_manifest_metadata": {
+    "manifest_version": "1.0.0",
+    "created_date": "2025-12-13",
+    "last_updated": "2025-12-13",
+    "purpose": "SHA-256 Hashes der Golden Report Artifacts für PLATIN+++ Release-Validation",
+    "checksum_algorithm": "SHA-256",
+    "audit_note": "Golden Reports dürfen NICHT automatisch überschrieben werden. Änderungen erfordern explizites --force Flag und erzeugen Audit-Trail."
+  },
+  "artifacts": {
+    "solo": {
+      "_status": "pending_generation",
+      "_note": "Generierung mit: python scripts/generate_golden_reports.py --base-url <URL> --email <EMAIL>"
+    },
+    "team": {
+      "_status": "pending_generation",
+      "_note": "Generierung mit: python scripts/generate_golden_reports.py --base-url <URL> --email <EMAIL>"
+    },
+    "kmu": {
+      "_status": "pending_generation",
+      "_note": "Generierung mit: python scripts/generate_golden_reports.py --base-url <URL> --email <EMAIL>"
+    }
+  },
+  "validation_rules": {
+    "hash_comparison": true,
+    "consistency_score_required": 100,
+    "no_auto_overwrite": true,
+    "force_flag_required_for_update": true
+  }
+}

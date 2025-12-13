@@ -46,9 +46,12 @@ USAGE EXAMPLES:
   # Alternativer Profilordner:
   python scripts/generate_test_reports.py --profiles-dir data/test_profiles_en
 
+  # Release-Check (PLATIN+++ Release-Validation):
+  python scripts/generate_test_reports.py --release-check
+
 =============================================================================
 
-Version: 2.1.0-PLATIN+ (Sprint Fix: TEST_PROFILE_SOURCE)
+Version: 2.2.0-PLATIN+++ (Release-Readiness)
 """
 
 import argparse
@@ -279,7 +282,28 @@ def main() -> None:
         action="store_true",
         help="PLATIN+ Validierung aktivieren und Zusammenfassung ausgeben",
     )
+    parser.add_argument(
+        "--release-check",
+        action="store_true",
+        help="PLATIN+++ Release-Check ausführen (validiert Release-Profile gegen Golden Reports)",
+    )
     args = parser.parse_args()
+
+    # PLATIN+++ Release-Check Modus (delegiert an release_check.py)
+    if args.release_check:
+        import subprocess
+        script_dir = Path(__file__).resolve().parent
+        release_check_script = script_dir / "release_check.py"
+        if not release_check_script.exists():
+            print(f"ERROR: release_check.py nicht gefunden: {release_check_script}", file=sys.stderr)
+            sys.exit(1)
+        print("=" * 78)
+        print("PLATIN+++ RELEASE-CHECK MODUS")
+        print("=" * 78)
+        print(f"Delegiere an: {release_check_script}")
+        print("=" * 78)
+        result = subprocess.run([sys.executable, str(release_check_script), "--verbose"])
+        sys.exit(result.returncode)
 
     base_url = args.base_url.rstrip("/")
     profiles_dir = pathlib.Path(args.profiles_dir)
