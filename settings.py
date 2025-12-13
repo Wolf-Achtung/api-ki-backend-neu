@@ -17,6 +17,9 @@ class SecurityConfig(BaseModel):
     jwt_secret: str
     jwt_algorithm: str = "HS256"
     jwt_expire_days: int = 7
+    # Service-Token für headless/automated API-Zugriff (Golden Reports, CI)
+    service_token_enabled: bool = False
+    service_token_secret: Optional[str] = None
 
     @field_validator("jwt_secret")
     @classmethod
@@ -238,6 +241,8 @@ class AppSettings(BaseSettings):
                 jwt_secret=os.getenv("JWT_SECRET", ""),
                 jwt_algorithm=os.getenv("JWT_ALGORITHM", "HS256"),
                 jwt_expire_days=int(os.getenv("JWT_EXPIRE_DAYS", "7")),
+                service_token_enabled=get_bool("SERVICE_TOKEN_ENABLED", False),
+                service_token_secret=os.getenv("SERVICE_TOKEN_SECRET"),
             ),
             openai=OpenAIConfig(
                 api_key=os.getenv("OPENAI_API_KEY"),
