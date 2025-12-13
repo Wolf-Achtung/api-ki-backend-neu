@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import HTMLResponse, Response, RedirectResponse
 from pydantic import BaseModel, Field
 
-from core.db import get_db
+from routes._bootstrap import get_db
 from core.security import (
     verify_service_token,
     ServiceTokenPayload,
