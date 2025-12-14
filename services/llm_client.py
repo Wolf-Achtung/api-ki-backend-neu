@@ -32,12 +32,20 @@ SPRINT N3.7 PACKAGE F CHANGES:
 - Adaptive temperature on LLM errors (temp -0.2)
 - Burst-load protection for parallel runs
 
-Version: 1.4.0 (N3.7 - Performance Resilience v4)
+STABILITY PATCH v1 (GPT-5.2):
+- OpenAI read timeout → 120s (OPENAI_TIMEOUT_READ)
+- Max retries → 3 (OPENAI_MAX_RETRIES) with backoff 1s → 3s → 7s
+- Retry on ReadTimeout, 502, 503, ConnectionReset
+- OpenAI concurrency semaphore (OPENAI_MAX_PARALLEL_REQUESTS=3)
+- Log format: [LLM-RETRY] section=… attempt=N/3 reason=…
+
+Version: 1.6.0 (Stability Patch v1 - GPT-5.2)
 """
 from __future__ import annotations
 
 import logging
 import os
+import threading
 import time
 from dataclasses import dataclass
 from enum import Enum
@@ -63,6 +71,95 @@ LLM_RETRY_BACKOFF_MULTIPLIER = float(os.getenv("LLM_RETRY_BACKOFF_MULTIPLIER", "
 
 # SPRINT N1: Enable soft-retry on first timeout (retry once immediately before fallback)
 LLM_SOFT_RETRY_ENABLED = os.getenv("LLM_SOFT_RETRY_ENABLED", "1").lower() in ("1", "true", "yes")
+
+# =============================================================================
+# STABILITY PATCH v1: OpenAI-specific Timeout/Retry/Concurrency
+# =============================================================================
+# Problem: Real ReadTimeout (45s) on long GPT-5.2 calls → fallbacks, truncation
+# Solution: Dedicated OpenAI retry with longer timeout and concurrency control
+#
+# ENV Configuration:
+#   OPENAI_TIMEOUT_READ=120        # Read timeout for OpenAI calls (seconds)
+#   OPENAI_MAX_RETRIES=3           # Max retry attempts for OpenAI
+#   OPENAI_RETRY_BACKOFF=exponential  # Backoff strategy
+#   OPENAI_MAX_PARALLEL_REQUESTS=3 # Max concurrent OpenAI requests
+# =============================================================================
+
+OPENAI_TIMEOUT_READ = float(os.getenv("OPENAI_TIMEOUT_READ", "120"))
+OPENAI_MAX_RETRIES = int(os.getenv("OPENAI_MAX_RETRIES", "3"))
+OPENAI_MAX_PARALLEL_REQUESTS = int(os.getenv("OPENAI_MAX_PARALLEL_REQUESTS", "3"))
+
+# Stability Patch: Custom backoff sequence (1s → 3s → 7s)
+OPENAI_RETRY_BACKOFF_STAGES = [1.0, 3.0, 7.0]
+
+# Retryable HTTP status codes for OpenAI
+OPENAI_RETRYABLE_STATUS_CODES = {502, 503, 429, 500}
+
+# Global semaphore for OpenAI concurrency control
+_openai_semaphore: Optional[threading.Semaphore] = None
+_openai_semaphore_lock = threading.Lock()
+
+# Timeout tracking for adaptive throttling
+_timeout_counter = {"count": 0, "last_reset": time.time()}
+_timeout_counter_lock = threading.Lock()
+
+
+def get_openai_semaphore() -> threading.Semaphore:
+    """Get or create OpenAI concurrency semaphore."""
+    global _openai_semaphore
+    with _openai_semaphore_lock:
+        if _openai_semaphore is None:
+            _openai_semaphore = threading.Semaphore(OPENAI_MAX_PARALLEL_REQUESTS)
+            log.info(
+                "[Stability-v1] OpenAI semaphore initialized: max_parallel=%d",
+                OPENAI_MAX_PARALLEL_REQUESTS
+            )
+        return _openai_semaphore
+
+
+def record_openai_timeout() -> int:
+    """Record a timeout and return current count in window."""
+    global _timeout_counter
+    with _timeout_counter_lock:
+        now = time.time()
+        # Reset counter every 5 minutes
+        if now - _timeout_counter["last_reset"] > 300:
+            _timeout_counter["count"] = 0
+            _timeout_counter["last_reset"] = now
+        _timeout_counter["count"] += 1
+        return int(_timeout_counter["count"])  # Cast to satisfy mypy
+
+
+def is_openai_retryable_error(error: Exception) -> tuple[bool, str]:
+    """
+    Check if an error is retryable for OpenAI calls.
+
+    Returns:
+        Tuple of (is_retryable, reason_string)
+    """
+    # ReadTimeout
+    if isinstance(error, requests.exceptions.ReadTimeout):
+        return True, "timeout"
+
+    # ConnectTimeout
+    if isinstance(error, requests.exceptions.ConnectTimeout):
+        return True, "connect_timeout"
+
+    # ConnectionError (includes ConnectionReset)
+    if isinstance(error, requests.exceptions.ConnectionError):
+        error_str = str(error).lower()
+        if "reset" in error_str or "connection" in error_str:
+            return True, "connection_reset"
+        return True, "connection_error"
+
+    # HTTP errors with retryable status codes (502, 503, 429)
+    if isinstance(error, requests.exceptions.HTTPError):
+        if hasattr(error, 'response') and error.response is not None:
+            status = error.response.status_code
+            if status in OPENAI_RETRYABLE_STATUS_CODES:
+                return True, f"http_{status}"
+
+    return False, "non_retryable"
 
 
 # =============================================================================
@@ -193,6 +290,101 @@ def get_reasoning_effort() -> str:
         return get_settings().openai.reasoning_effort
     except Exception:
         return os.getenv("OPENAI_REASONING_EFFORT", "high")
+
+
+# =============================================================================
+# STABILITY PATCH v1: OpenAI Call Wrapper with Retry & Semaphore
+# =============================================================================
+
+def call_openai_with_stability(
+    call_fn: Callable[..., Optional[str]],
+    section: str,
+    max_tokens: int,
+    **kwargs: Any
+) -> Optional[str]:
+    """
+    Stability Patch v1: Call OpenAI with concurrency control and retry.
+
+    Features:
+    - Semaphore-limited concurrency (default: 3 parallel)
+    - Retry on timeout/502/503/ConnectionReset
+    - Exponential backoff: 1s → 3s → 7s
+    - Adaptive throttling on high timeout count
+
+    Args:
+        call_fn: The actual OpenAI API call function
+        section: Section name for logging
+        max_tokens: Maximum tokens for the call
+        **kwargs: Additional arguments passed to call_fn
+
+    Returns:
+        Response content or None on failure
+    """
+    semaphore = get_openai_semaphore()
+    last_error: Optional[Exception] = None
+
+    for attempt in range(1, OPENAI_MAX_RETRIES + 1):
+        # Acquire semaphore for concurrency control
+        acquired = semaphore.acquire(timeout=OPENAI_TIMEOUT_READ + 30)
+        if not acquired:
+            log.warning(
+                "[LLM-RETRY] section=%s attempt=%d/%d reason=semaphore_timeout",
+                section, attempt, OPENAI_MAX_RETRIES
+            )
+            continue
+
+        try:
+            # Execute the actual call
+            result = call_fn(max_tokens=max_tokens, section=section, **kwargs)
+            return result
+
+        except Exception as e:
+            last_error = e
+            is_retryable, reason = is_openai_retryable_error(e)
+
+            log.warning(
+                "[LLM-RETRY] section=%s attempt=%d/%d reason=%s",
+                section, attempt, OPENAI_MAX_RETRIES, reason
+            )
+
+            if not is_retryable:
+                log.error(
+                    "[LLM-RETRY] section=%s non-retryable error: %s",
+                    section, str(e)[:100]
+                )
+                break
+
+            # Record timeout for adaptive throttling
+            if reason == "timeout":
+                timeout_count = record_openai_timeout()
+                if timeout_count >= 2:
+                    log.warning(
+                        "[LLM-RETRY] High timeout count (%d) in window, consider reducing parallelism",
+                        timeout_count
+                    )
+
+            # Apply backoff before retry
+            if attempt < OPENAI_MAX_RETRIES:
+                backoff_idx = min(attempt - 1, len(OPENAI_RETRY_BACKOFF_STAGES) - 1)
+                backoff = OPENAI_RETRY_BACKOFF_STAGES[backoff_idx]
+                log.info(
+                    "[LLM-RETRY] section=%s backoff=%.1fs before attempt %d",
+                    section, backoff, attempt + 1
+                )
+                time.sleep(backoff)
+
+        finally:
+            semaphore.release()
+
+    # All retries exhausted
+    if last_error:
+        log.error(
+            "[LLM-RETRY] section=%s exhausted all %d retries, last_error=%s",
+            section, OPENAI_MAX_RETRIES, str(last_error)[:100]
+        )
+
+    return None
+
 
 # =============================================================================
 # SPRINT A: SECTION-SPECIFIC TIMEOUT OVERRIDES
@@ -657,7 +849,7 @@ def call_llm_with_retry(
 # =============================================================================
 
 log.info(
-    "[N3.7-F] LLM Client v1.5.0 loaded - default_timeout=%.0fs retry_enabled=%s "
+    "[Stability-v1] LLM Client v1.6.0 loaded - default_timeout=%.0fs retry_enabled=%s "
     "short_retry=%s soft_retry=%s max_retries=%d short_retry_tokens=%d backoff=%.1f×%.1f",
     LLM_TIMEOUT,
     True,  # Retry always enabled
@@ -667,6 +859,16 @@ log.info(
     LLM_SHORT_RETRY_MAXTOKENS,
     LLM_RETRY_BACKOFF_BASE,
     LLM_RETRY_BACKOFF_MULTIPLIER,
+)
+
+# Stability Patch v1: Log OpenAI-specific configuration
+log.info(
+    "[Stability-v1] OpenAI config: timeout_read=%.0fs max_retries=%d max_parallel=%d "
+    "backoff=%s",
+    OPENAI_TIMEOUT_READ,
+    OPENAI_MAX_RETRIES,
+    OPENAI_MAX_PARALLEL_REQUESTS,
+    "→".join(f"{s}s" for s in OPENAI_RETRY_BACKOFF_STAGES),
 )
 
 # SPRINT A: Log section-specific timeout configuration
