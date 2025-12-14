@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 import asyncio
 from typing import Any, Dict, Optional, Union
 
 from fastapi import APIRouter, Depends, Header, HTTPException
-from fastapi.responses import HTMLResponse, Response, RedirectResponse
+from fastapi.responses import HTMLResponse, Response, RedirectResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 from routes._bootstrap import get_db
@@ -17,6 +18,8 @@ from core.security import (
     get_settings,
 )
 from models import Briefing, Analysis, Report
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/report", tags=["report"])
 
@@ -181,15 +184,22 @@ def get_report_pdf_v2(
     Supports X-Service-Token authentication for automated access:
         X-Service-Token: golden_reports:<secret>
 
+    PDF Generation Strategy:
+        1. Return existing PDF if stored (pdf_url or pdf_bytes)
+        2. Otherwise: Generate on-demand from HTML via PDF service
+
     Returns:
         PDF file (application/pdf) or redirect to PDF URL
     """
     # Verify briefing exists
     briefing = db.get(Briefing, briefing_id)
     if not briefing:
-        raise HTTPException(status_code=404, detail="Briefing not found")
+        return JSONResponse(
+            status_code=404,
+            content={"error": "briefing_not_found", "briefing_id": briefing_id}
+        )
 
-    # Get latest report for this briefing
+    # Get latest report for this briefing (may or may not exist)
     report = (
         db.query(Report)
         .filter(Report.briefing_id == briefing_id)
@@ -197,24 +207,99 @@ def get_report_pdf_v2(
         .first()
     )
 
-    if not report:
-        raise HTTPException(status_code=404, detail="Report not yet generated")
+    # Check if PDF URL is available (stored externally)
+    if report:
+        pdf_url = getattr(report, "pdf_url", None)
+        if pdf_url:
+            log.info(f"[PDF] Returning stored PDF URL for briefing {briefing_id}")
+            return RedirectResponse(url=pdf_url, status_code=302)
 
-    # Check if PDF URL is available
-    pdf_url = getattr(report, "pdf_url", None)
-    if pdf_url:
-        return RedirectResponse(url=pdf_url, status_code=302)
+        # Check if PDF bytes are stored in DB
+        pdf_bytes = getattr(report, "pdf_bytes", None)
+        if pdf_bytes:
+            log.info(f"[PDF] Returning stored PDF bytes for briefing {briefing_id}")
+            return Response(
+                content=pdf_bytes,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f'inline; filename="report-{briefing_id}.pdf"'}
+            )
 
-    # Check if PDF bytes are stored (future feature)
-    pdf_bytes = getattr(report, "pdf_bytes", None)
+    # -------------------------------------------------------------------------
+    # ON-DEMAND PDF GENERATION: No stored PDF, generate from HTML
+    # -------------------------------------------------------------------------
+    log.info(f"[PDF] No stored PDF for briefing {briefing_id}, attempting on-demand generation")
+
+    # Get HTML from latest analysis
+    analysis = (
+        db.query(Analysis)
+        .filter(Analysis.briefing_id == briefing_id)
+        .order_by(Analysis.id.desc())
+        .first()
+    )
+
+    if not analysis:
+        return JSONResponse(
+            status_code=404,
+            content={"error": "pdf_not_ready", "reason": "analysis_not_found", "briefing_id": briefing_id}
+        )
+
+    html_content = getattr(analysis, "html", "") or ""
+    if not html_content:
+        return JSONResponse(
+            status_code=404,
+            content={"error": "pdf_not_ready", "reason": "html_not_available", "briefing_id": briefing_id}
+        )
+
+    # Render PDF from HTML via PDF service
+    try:
+        from services.pdf_client import render_pdf_from_html
+    except ImportError as exc:
+        log.error(f"[PDF] pdf_client import failed: {exc}")
+        return JSONResponse(
+            status_code=503,
+            content={"error": "pdf_service_unavailable", "reason": "module_not_found"}
+        )
+
+    log.info(f"[PDF] Rendering on-demand PDF for briefing {briefing_id} (html_size={len(html_content)})")
+
+    result = render_pdf_from_html(
+        html=html_content,
+        meta={"briefing_id": briefing_id, "analysis_id": getattr(analysis, "id", None)}
+    )
+
+    if result.get("error"):
+        log.error(f"[PDF] On-demand render failed for briefing {briefing_id}: {result.get('error')}")
+        return JSONResponse(
+            status_code=502,
+            content={
+                "error": "pdf_generation_failed",
+                "reason": result.get("error"),
+                "briefing_id": briefing_id
+            }
+        )
+
+    # Check for PDF bytes in result
+    pdf_bytes = result.get("pdf_bytes")
     if pdf_bytes:
+        log.info(f"[PDF] On-demand PDF generated: {len(pdf_bytes)} bytes for briefing {briefing_id}")
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f'attachment; filename="report-{briefing_id}.pdf"'}
+            headers={"Content-Disposition": f'inline; filename="report-{briefing_id}.pdf"'}
         )
 
-    raise HTTPException(status_code=404, detail="PDF not available")
+    # Check for PDF URL in result (external storage)
+    pdf_url = result.get("pdf_url")
+    if pdf_url:
+        log.info(f"[PDF] On-demand PDF URL returned for briefing {briefing_id}")
+        return RedirectResponse(url=pdf_url, status_code=302)
+
+    # Fallback: PDF service returned success but no content
+    log.error(f"[PDF] PDF service returned no content for briefing {briefing_id}")
+    return JSONResponse(
+        status_code=502,
+        content={"error": "pdf_generation_failed", "reason": "no_content_returned", "briefing_id": briefing_id}
+    )
 
 
 @router.get("/status/{briefing_id}")
@@ -323,34 +408,5 @@ def get_report_pdf(
     Returns:
         PDF file or redirect to PDF URL
     """
-    # Verify briefing exists
-    briefing = db.get(Briefing, briefing_id)
-    if not briefing:
-        raise HTTPException(status_code=404, detail="Briefing not found")
-
-    # Get latest report for this briefing
-    report = (
-        db.query(Report)
-        .filter(Report.briefing_id == briefing_id)
-        .order_by(Report.id.desc())
-        .first()
-    )
-
-    if not report:
-        raise HTTPException(status_code=404, detail="Report not yet generated")
-
-    # Check if PDF URL is available
-    pdf_url = getattr(report, "pdf_url", None)
-    if pdf_url:
-        return RedirectResponse(url=pdf_url, status_code=302)
-
-    # Check if PDF bytes are stored (future feature)
-    pdf_bytes = getattr(report, "pdf_bytes", None)
-    if pdf_bytes:
-        return Response(
-            content=pdf_bytes,
-            media_type="application/pdf",
-            headers={"Content-Disposition": f'attachment; filename="report-{briefing_id}.pdf"'}
-        )
-
-    raise HTTPException(status_code=404, detail="PDF not available")
+    # Delegate to the new robust endpoint (reuses on-demand generation logic)
+    return get_report_pdf_v2(briefing_id=briefing_id, db=db, auth=auth)
