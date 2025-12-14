@@ -49,7 +49,16 @@ REPO_ROOT = SCRIPT_DIR.parent
 PROFILES_DIR = REPO_ROOT / "data" / "test_profiles_gold_optimized"
 ARTIFACTS_DIR = REPO_ROOT / "artifacts" / "golden_reports"
 
+# ---------------------------------------------------------------------------
+# GOLDEN PROFILES MANIFEST
+# ---------------------------------------------------------------------------
+# Golden Runs use profiles defined in: data/golden_profiles_manifest.json
+# Changes to Golden profiles are review-required to ensure reproducibility.
+# Do NOT add ad-hoc profiles here - update the manifest instead.
+# ---------------------------------------------------------------------------
+
 # Verfügbare Profile (aus test_profiles_gold_optimized)
+# Must match profiles listed in golden_profiles_manifest.json
 AVAILABLE_PROFILES = {
     "solo": "solo_beratung_ki_assessments_optimized.json",
     "team_finance": "team_finance_insurance_advisory_optimized.json",
