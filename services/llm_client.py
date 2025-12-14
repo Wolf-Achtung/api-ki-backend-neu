@@ -64,6 +64,129 @@ LLM_RETRY_BACKOFF_MULTIPLIER = float(os.getenv("LLM_RETRY_BACKOFF_MULTIPLIER", "
 # SPRINT N1: Enable soft-retry on first timeout (retry once immediately before fallback)
 LLM_SOFT_RETRY_ENABLED = os.getenv("LLM_SOFT_RETRY_ENABLED", "1").lower() in ("1", "true", "yes")
 
+
+# =============================================================================
+# GPT-5.2 MIGRATION: MODEL ROUTING (FAST / REASONING)
+# =============================================================================
+# Task-based routing to optimize model usage:
+# - FAST: Quick tasks, HTML snippets, format generation (lower latency)
+# - REASONING: Complex tasks requiring deep analysis (higher quality)
+# - Default: Falls back to primary model from settings
+#
+# ENV configuration (see settings.py):
+# - OPENAI_MODEL_FAST=gpt-5.2-chat-latest
+# - OPENAI_MODEL_REASONING=gpt-5.2
+# - OPENAI_MODEL_FALLBACK=gpt-4o-mini
+# - OPENAI_REASONING_EFFORT=high
+# =============================================================================
+
+class ModelTier(Enum):
+    """Model tier for task-based routing."""
+    FAST = "fast"           # Quick tasks, HTML snippets
+    REASONING = "reasoning"  # Complex analysis (Consistency, Governance)
+    DEFAULT = "default"      # Primary model
+
+
+# Sections that require REASONING model (complex analysis)
+REASONING_SECTIONS: set[str] = {
+    # Cross-Section Consistency / Auto-Heal (G22)
+    "consistency_check",
+    "auto_heal",
+    "cross_section_validation",
+    # Governance / Compliance
+    "governance_narrative",
+    "compliance_analysis",
+    "ai_act_assessment",
+    # Long-form reasoning tasks
+    "executive_summary",
+    "risk_analysis",
+    "strategic_recommendations",
+}
+
+# Sections that use FAST model (quick generation)
+FAST_SECTIONS: set[str] = {
+    # Format/Snippet generators
+    "html_snippet",
+    "badge_generation",
+    "kpi_format",
+    "table_render",
+    # Short content
+    "label_generation",
+    "status_badge",
+}
+
+
+def get_model_tier(section: str) -> ModelTier:
+    """
+    Determine which model tier to use for a section.
+
+    GPT-5.2 Migration: Routes tasks to appropriate model based on complexity.
+
+    Args:
+        section: Section/task name
+
+    Returns:
+        ModelTier enum value
+    """
+    section_lower = section.lower()
+
+    # Check for reasoning keywords
+    for reasoning_key in REASONING_SECTIONS:
+        if reasoning_key in section_lower:
+            return ModelTier.REASONING
+
+    # Check for fast keywords
+    for fast_key in FAST_SECTIONS:
+        if fast_key in section_lower:
+            return ModelTier.FAST
+
+    # Default: use primary model
+    return ModelTier.DEFAULT
+
+
+def get_model_for_section(section: str) -> str:
+    """
+    Get the appropriate model name for a section.
+
+    Reads from settings to support ENV-based configuration.
+
+    Args:
+        section: Section/task name
+
+    Returns:
+        Model name string (e.g., "gpt-5.2" or "gpt-4o")
+    """
+    try:
+        from settings import get_settings
+        s = get_settings()
+        openai_config = s.openai
+    except Exception:
+        # Fallback if settings not available
+        return os.getenv("OPENAI_MODEL", "gpt-4o")
+
+    tier = get_model_tier(section)
+
+    if tier == ModelTier.REASONING:
+        model = openai_config.model_reasoning
+        log.debug("[GPT5.2] Section=%s → REASONING model=%s", section, model)
+        return model
+    elif tier == ModelTier.FAST:
+        model = openai_config.model_fast
+        log.debug("[GPT5.2] Section=%s → FAST model=%s", section, model)
+        return model
+    else:
+        # DEFAULT: use primary model
+        return openai_config.model
+
+
+def get_reasoning_effort() -> str:
+    """Get reasoning effort level from settings."""
+    try:
+        from settings import get_settings
+        return get_settings().openai.reasoning_effort
+    except Exception:
+        return os.getenv("OPENAI_REASONING_EFFORT", "high")
+
 # =============================================================================
 # SPRINT A: SECTION-SPECIFIC TIMEOUT OVERRIDES
 # =============================================================================
@@ -527,7 +650,7 @@ def call_llm_with_retry(
 # =============================================================================
 
 log.info(
-    "[N3.7-F] LLM Client v1.4.0 loaded - default_timeout=%.0fs retry_enabled=%s "
+    "[N3.7-F] LLM Client v1.5.0 loaded - default_timeout=%.0fs retry_enabled=%s "
     "short_retry=%s soft_retry=%s max_retries=%d short_retry_tokens=%d backoff=%.1f×%.1f",
     LLM_TIMEOUT,
     True,  # Retry always enabled
@@ -549,3 +672,27 @@ log.info(
     "[A-Resilience] Section timeout overrides: %s",
     ", ".join(f"{k}={v}s" for k, v in sorted(SECTION_TIMEOUT_OVERRIDES.items()))
 )
+
+# GPT-5.2 Migration: Log model routing configuration
+try:
+    from settings import get_settings
+    _s = get_settings()
+    log.info(
+        "[GPT5.2] Model Routing enabled - fast=%s reasoning=%s fallback=%s effort=%s",
+        _s.openai.model_fast,
+        _s.openai.model_reasoning,
+        _s.openai.model_fallback,
+        _s.openai.reasoning_effort,
+    )
+    log.info(
+        "[GPT5.2] REASONING sections (%d): %s",
+        len(REASONING_SECTIONS),
+        ", ".join(sorted(REASONING_SECTIONS))
+    )
+    log.info(
+        "[GPT5.2] FAST sections (%d): %s",
+        len(FAST_SECTIONS),
+        ", ".join(sorted(FAST_SECTIONS))
+    )
+except Exception as _e:
+    log.warning("[GPT5.2] Could not load settings for model routing: %s", _e)
