@@ -109,6 +109,108 @@ async def generate(payload: Dict[str, Any]) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Golden Reports Endpoints (Service-Token enabled)
 # ---------------------------------------------------------------------------
+# ROUTING DESIGN NOTE:
+# We use explicit path prefixes (/html/{id}, /pdf/{id}) instead of file extension
+# suffixes (/{id}.html, /{id}.pdf) to avoid routing conflicts with generic routes
+# like /{id}. FastAPI would otherwise try to parse "254.html" as an integer,
+# resulting in 422 errors. Explicit prefixes are:
+#   - Conflict-free (no dependency on route declaration order)
+#   - CI-friendly (stable for Golden Artifact generation)
+#   - Readable and self-documenting
+# ---------------------------------------------------------------------------
+
+
+@router.get("/html/{briefing_id}")
+def get_report_html_v2(
+    briefing_id: int,
+    db=Depends(get_db),
+    auth: Optional[ServiceTokenPayload] = Depends(get_service_or_skip_auth),
+) -> HTMLResponse:
+    """
+    Get the rendered HTML report for a briefing (robust endpoint).
+
+    This is the preferred endpoint for fetching HTML reports.
+    Uses explicit path prefix to avoid routing conflicts.
+
+    Supports X-Service-Token authentication for automated access:
+        X-Service-Token: golden_reports:<secret>
+
+    Returns:
+        HTML content with Content-Type: text/html; charset=utf-8
+    """
+    # Verify briefing exists
+    briefing = db.get(Briefing, briefing_id)
+    if not briefing:
+        raise HTTPException(status_code=404, detail="Briefing not found")
+
+    # Get latest analysis for this briefing
+    analysis = (
+        db.query(Analysis)
+        .filter(Analysis.briefing_id == briefing_id)
+        .order_by(Analysis.id.desc())
+        .first()
+    )
+
+    if not analysis:
+        raise HTTPException(status_code=404, detail="Report not yet generated")
+
+    html_content = getattr(analysis, "html", "") or ""
+    if not html_content:
+        raise HTTPException(status_code=404, detail="Report HTML not available")
+
+    return HTMLResponse(content=html_content, media_type="text/html; charset=utf-8")
+
+
+@router.get("/pdf/{briefing_id}")
+def get_report_pdf_v2(
+    briefing_id: int,
+    db=Depends(get_db),
+    auth: Optional[ServiceTokenPayload] = Depends(get_service_or_skip_auth),
+) -> Response:
+    """
+    Get the PDF report for a briefing (robust endpoint).
+
+    This is the preferred endpoint for fetching PDF reports.
+    Uses explicit path prefix to avoid routing conflicts.
+
+    Supports X-Service-Token authentication for automated access:
+        X-Service-Token: golden_reports:<secret>
+
+    Returns:
+        PDF file (application/pdf) or redirect to PDF URL
+    """
+    # Verify briefing exists
+    briefing = db.get(Briefing, briefing_id)
+    if not briefing:
+        raise HTTPException(status_code=404, detail="Briefing not found")
+
+    # Get latest report for this briefing
+    report = (
+        db.query(Report)
+        .filter(Report.briefing_id == briefing_id)
+        .order_by(Report.id.desc())
+        .first()
+    )
+
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not yet generated")
+
+    # Check if PDF URL is available
+    pdf_url = getattr(report, "pdf_url", None)
+    if pdf_url:
+        return RedirectResponse(url=pdf_url, status_code=302)
+
+    # Check if PDF bytes are stored (future feature)
+    pdf_bytes = getattr(report, "pdf_bytes", None)
+    if pdf_bytes:
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'attachment; filename="report-{briefing_id}.pdf"'}
+        )
+
+    raise HTTPException(status_code=404, detail="PDF not available")
+
 
 @router.get("/status/{briefing_id}")
 def get_report_status(
@@ -157,7 +259,8 @@ def get_report_status(
     }
 
 
-@router.get("/{briefing_id}.html")
+# DEPRECATED: Use /html/{briefing_id} instead. Suffix routes may cause 422 errors.
+@router.get("/{briefing_id}.html", deprecated=True)
 def get_report_html(
     briefing_id: int,
     db=Depends(get_db),
@@ -165,6 +268,9 @@ def get_report_html(
 ) -> HTMLResponse:
     """
     Get the rendered HTML report for a briefing.
+
+    DEPRECATED: Use GET /html/{briefing_id} instead.
+    This suffix-based route may conflict with other routes.
 
     Supports X-Service-Token authentication.
 
@@ -194,7 +300,8 @@ def get_report_html(
     return HTMLResponse(content=html_content, media_type="text/html; charset=utf-8")
 
 
-@router.get("/{briefing_id}.pdf")
+# DEPRECATED: Use /pdf/{briefing_id} instead. Suffix routes may cause 422 errors.
+@router.get("/{briefing_id}.pdf", deprecated=True)
 def get_report_pdf(
     briefing_id: int,
     db=Depends(get_db),
@@ -202,6 +309,9 @@ def get_report_pdf(
 ) -> Response:
     """
     Get the PDF report for a briefing.
+
+    DEPRECATED: Use GET /pdf/{briefing_id} instead.
+    This suffix-based route may conflict with other routes.
 
     Supports X-Service-Token authentication.
 
