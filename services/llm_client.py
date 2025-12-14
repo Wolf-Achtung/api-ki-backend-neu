@@ -127,7 +127,7 @@ def record_openai_timeout() -> int:
             _timeout_counter["count"] = 0
             _timeout_counter["last_reset"] = now
         _timeout_counter["count"] += 1
-        return _timeout_counter["count"]
+        return int(_timeout_counter["count"])  # Cast to satisfy mypy
 
 
 def is_openai_retryable_error(error: Exception) -> tuple[bool, str]:
