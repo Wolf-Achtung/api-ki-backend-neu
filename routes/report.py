@@ -349,6 +349,266 @@ def get_report_status(
     }
 
 
+# ---------------------------------------------------------------------------
+# QA/CI Summary Endpoint (read-only, deterministic, plain-text)
+# ---------------------------------------------------------------------------
+# This endpoint is a quality seismograph for CI gates and debugging.
+# It does NOT trigger any renders, writes, or side effects.
+# ---------------------------------------------------------------------------
+
+# Expected sections for a complete report
+EXPECTED_SECTIONS = [
+    "EXECUTIVE_SUMMARY_HTML",
+    "RISK_MATRIX_HTML",
+    "RECOMMENDATIONS_HTML",
+    "FUNDING_HTML",
+    "BUSINESS_CASE_HTML",
+    "ROADMAP_HTML",
+]
+
+# Expected badges for a complete report
+EXPECTED_BADGES = [
+    "badge_security",
+    "badge_compliance",
+    "badge_efficiency",
+]
+
+
+@router.get("/summary/{briefing_id}")
+def get_report_summary(
+    briefing_id: int,
+    db=Depends(get_db),
+    auth: Optional[ServiceTokenPayload] = Depends(get_service_or_skip_auth),
+) -> Response:
+    """
+    Get a deterministic plain-text summary of a report for QA/CI purposes.
+
+    This is a READ-ONLY endpoint with NO side effects:
+    - No database writes
+    - No PDF/HTML rendering triggered
+    - No on-demand generation
+    - All timestamps from DB, not generated
+
+    Supports X-Service-Token authentication for automated access:
+        X-Service-Token: golden_reports:<secret>
+
+    Returns:
+        text/plain summary with grep-friendly key: value format
+    """
+    lines = []
+    errors = []
+    warnings = []
+
+    # -------------------------------------------------------------------------
+    # 1. Briefing lookup
+    # -------------------------------------------------------------------------
+    briefing = db.get(Briefing, briefing_id)
+    if not briefing:
+        return Response(
+            content=f"error: briefing_not_found\nbriefing_id: {briefing_id}\n",
+            media_type="text/plain; charset=utf-8",
+            status_code=404,
+        )
+
+    # -------------------------------------------------------------------------
+    # 2. Analysis lookup
+    # -------------------------------------------------------------------------
+    analysis = (
+        db.query(Analysis)
+        .filter(Analysis.briefing_id == briefing_id)
+        .order_by(Analysis.id.desc())
+        .first()
+    )
+
+    # -------------------------------------------------------------------------
+    # 3. Report lookup
+    # -------------------------------------------------------------------------
+    report = (
+        db.query(Report)
+        .filter(Report.briefing_id == briefing_id)
+        .order_by(Report.id.desc())
+        .first()
+    )
+
+    # -------------------------------------------------------------------------
+    # 4. Build summary (deterministic, from DB only)
+    # -------------------------------------------------------------------------
+    lines.append(f"briefing_id: {briefing_id}")
+    lines.append(f"report_id: {getattr(report, 'id', 'none')}")
+    lines.append(f"analysis_id: {getattr(analysis, 'id', 'none')}")
+
+    # Language (from briefing or analysis)
+    lang = getattr(briefing, "lang", None) or getattr(analysis, "lang", None) or "de"
+    lines.append(f"lang: {lang}")
+
+    # Timestamps from DB (deterministic - no now())
+    created_at = getattr(briefing, "created_at", None)
+    lines.append(f"briefing_created_at: {created_at.isoformat() if created_at else 'unknown'}")
+
+    analysis_created_at = getattr(analysis, "created_at", None) if analysis else None
+    lines.append(f"analysis_created_at: {analysis_created_at.isoformat() if analysis_created_at else 'none'}")
+
+    # -------------------------------------------------------------------------
+    # 5. Metadata extraction (from briefing answers)
+    # -------------------------------------------------------------------------
+    answers = getattr(briefing, "answers", {}) or {}
+    if isinstance(answers, str):
+        try:
+            import json
+            answers = json.loads(answers)
+        except Exception:
+            answers = {}
+
+    lines.append(f"branche: {answers.get('branche', 'unknown')}")
+    lines.append(f"unternehmensgroesse: {answers.get('unternehmensgroesse', 'unknown')}")
+    lines.append(f"bundesland: {answers.get('bundesland', 'unknown')}")
+    lines.append(f"version: {getattr(analysis, 'version', 'unknown') if analysis else 'none'}")
+
+    # -------------------------------------------------------------------------
+    # 6. Sections analysis (from analysis.sections or analysis.html)
+    # -------------------------------------------------------------------------
+    sections_present = []
+    sections_missing = []
+
+    if analysis:
+        # Try to get sections dict
+        sections_data = getattr(analysis, "sections", None) or {}
+        if isinstance(sections_data, str):
+            try:
+                import json
+                sections_data = json.loads(sections_data)
+            except Exception:
+                sections_data = {}
+
+        # Check each expected section
+        for section_key in EXPECTED_SECTIONS:
+            section_value = sections_data.get(section_key, "")
+            if section_value and len(str(section_value)) > 10:
+                sections_present.append(section_key)
+            else:
+                sections_missing.append(section_key)
+    else:
+        sections_missing = list(EXPECTED_SECTIONS)
+
+    lines.append(f"sections_expected: {len(EXPECTED_SECTIONS)}")
+    lines.append(f"sections_present: {len(sections_present)}")
+    lines.append(f"sections_missing: {len(sections_missing)}")
+    lines.append(f"sections_missing_list: {sections_missing}")
+
+    # -------------------------------------------------------------------------
+    # 7. Badges analysis
+    # -------------------------------------------------------------------------
+    badges_present = []
+    badges_missing = []
+
+    if analysis:
+        sections_data = getattr(analysis, "sections", None) or {}
+        if isinstance(sections_data, str):
+            try:
+                import json
+                sections_data = json.loads(sections_data)
+            except Exception:
+                sections_data = {}
+
+        for badge_key in EXPECTED_BADGES:
+            badge_value = sections_data.get(badge_key)
+            if badge_value is not None:
+                badges_present.append(badge_key)
+            else:
+                badges_missing.append(badge_key)
+    else:
+        badges_missing = list(EXPECTED_BADGES)
+
+    lines.append(f"badges_expected: {len(EXPECTED_BADGES)}")
+    lines.append(f"badges_present: {len(badges_present)}")
+    lines.append(f"badges_missing: {badges_missing}")
+
+    # -------------------------------------------------------------------------
+    # 8. Integrity checks (read-only validation)
+    # -------------------------------------------------------------------------
+    html_content = getattr(analysis, "html", "") if analysis else ""
+    html_valid = bool(html_content and "<html" in html_content.lower())
+    html_size = len(html_content) if html_content else 0
+
+    lines.append(f"html_valid: {str(html_valid).lower()}")
+    lines.append(f"html_size_bytes: {html_size}")
+
+    # Check for common HTML issues (read-only)
+    if html_content:
+        # Count internal links
+        import re
+        links = re.findall(r'href=["\']([^"\']+)["\']', html_content)
+        internal_links = [l for l in links if l.startswith("#") or l.startswith("/")]
+        lines.append(f"links_internal: {len(internal_links)}")
+        lines.append(f"links_total: {len(links)}")
+
+        # Check for unreplaced template variables
+        unresolved = re.findall(r'\{\{\s*[^}]+\s*\}\}', html_content)
+        if unresolved:
+            warnings.append(f"unresolved_template_vars: {len(unresolved)}")
+
+        # Check for leak phrases (read-only detection)
+        leak_phrases = ["als KI", "als AI", "als Sprachmodell", "I cannot", "I'm unable"]
+        for phrase in leak_phrases:
+            if phrase.lower() in html_content.lower():
+                warnings.append(f"potential_leak_phrase: {phrase}")
+
+    # JSON validity of sections
+    json_valid = False
+    if analysis:
+        sections_raw = getattr(analysis, "sections", None)
+        if sections_raw:
+            if isinstance(sections_raw, dict):
+                json_valid = True
+            elif isinstance(sections_raw, str):
+                try:
+                    import json
+                    json.loads(sections_raw)
+                    json_valid = True
+                except Exception:
+                    errors.append("sections_json_invalid")
+    lines.append(f"json_valid: {str(json_valid).lower()}")
+
+    # -------------------------------------------------------------------------
+    # 9. Report status
+    # -------------------------------------------------------------------------
+    if report:
+        lines.append(f"report_status: {getattr(report, 'status', 'unknown')}")
+        lines.append(f"pdf_url_present: {str(bool(getattr(report, 'pdf_url', None))).lower()}")
+    else:
+        lines.append("report_status: none")
+        lines.append("pdf_url_present: false")
+        if analysis:
+            warnings.append("report_missing_but_analysis_exists")
+
+    # -------------------------------------------------------------------------
+    # 10. Warnings and errors
+    # -------------------------------------------------------------------------
+    if not analysis:
+        errors.append("analysis_not_found")
+    if sections_missing:
+        warnings.append(f"missing_{len(sections_missing)}_sections")
+
+    lines.append(f"warnings: {len(warnings)}")
+    for w in warnings:
+        lines.append(f"  - {w}")
+
+    lines.append(f"errors: {len(errors)}")
+    for e in errors:
+        lines.append(f"  - {e}")
+
+    # -------------------------------------------------------------------------
+    # Final output
+    # -------------------------------------------------------------------------
+    summary_text = "\n".join(lines) + "\n"
+
+    return Response(
+        content=summary_text,
+        media_type="text/plain; charset=utf-8",
+        status_code=200,
+    )
+
+
 # DEPRECATED: Use /html/{briefing_id} instead. Suffix routes may cause 422 errors.
 @router.get("/{briefing_id}.html", deprecated=True)
 def get_report_html(
