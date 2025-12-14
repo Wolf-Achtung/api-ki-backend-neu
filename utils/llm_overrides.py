@@ -5,27 +5,39 @@ Helper to override model/temperature/max_tokens for specific sections.
 STABILITY PATCH v1 (GPT-5.2):
 Section-specific token budgets to prevent truncation on long-form sections.
 
-ENV Variables (Railway):
+ENV Variables (Railway) - Priority Order:
+
+  1. OPENAI_MAX_TOKENS_<SECTION> (canonical, recommended)
+     Example: OPENAI_MAX_TOKENS_ROADMAP=4500
+
+  2. TOKENS_<SECTION> (legacy Stability Patch v1)
+     Example: TOKENS_ROADMAP=4500
+
+  3. SECTION_TOKEN_BUDGETS code defaults
+
+  4. OPENAI_MAX_TOKENS global fallback (default 3000)
+
+Canonical ENV Keys (recommended):
   # High-Risk sections (must be high)
-  TOKENS_ROADMAP=4500
-  TOKENS_ROADMAP_12M=4500
-  TOKENS_ORG_CHANGE=3000
-  TOKENS_UNTERNEHMENSPROFIL_MARKT=2800
-  TOKENS_BUSINESS_CASE=5000
-  TOKENS_GAMECHANGER=5000
+  OPENAI_MAX_TOKENS_ROADMAP=4500
+  OPENAI_MAX_TOKENS_ROADMAP_12M=4500
+  OPENAI_MAX_TOKENS_ORG_CHANGE=3000
+  OPENAI_MAX_TOKENS_UNTERNEHMENSPROFIL_MARKT=2800
+  OPENAI_MAX_TOKENS_BUSINESS_CASE=5000
+  OPENAI_MAX_TOKENS_GAMECHANGER=5000
 
   # Medium sections
-  TOKENS_RISKS=3500
-  TOKENS_STRATEGIE_GOVERNANCE=3500
-  TOKENS_WETTBEWERB_BENCHMARK=3500
-  TOKENS_FOERDERPOTENZIAL=3500
+  OPENAI_MAX_TOKENS_RISKS=4000
+  OPENAI_MAX_TOKENS_STRATEGIE_GOVERNANCE=4000
+  OPENAI_MAX_TOKENS_WETTBEWERB_BENCHMARK=4000
+  OPENAI_MAX_TOKENS_FOERDERPOTENZIAL=4000
 
-  # Short-form (warnings OK)
-  TOKENS_ONE_LINER=80
-  TOKENS_KI_STACK_SUMMARY=1200
-  TOKENS_EXECUTIVE_SUMMARY=1500
+  # Short-form
+  OPENAI_MAX_TOKENS_EXECUTIVE_SUMMARY=1500
+  OPENAI_MAX_TOKENS_KI_STACK_SUMMARY=1200
 
-Fallback: If ENV not set, uses code default from SECTION_TOKEN_BUDGETS.
+Legacy ENV Keys (still supported):
+  TOKENS_ROADMAP, TOKENS_BUSINESS_CASE, TOKENS_GAMECHANGER, etc.
 """
 from __future__ import annotations
 import os
@@ -96,8 +108,11 @@ def get_section_token_budget(section: str) -> int:
     """
     Get token budget for a specific section.
 
-    Checks ENV first (e.g., TOKENS_ROADMAP), falls back to SECTION_TOKEN_BUDGETS,
-    then to global OPENAI_MAX_TOKENS default.
+    Priority (highest to lowest):
+      1. OPENAI_MAX_TOKENS_<SECTION> (canonical, e.g. OPENAI_MAX_TOKENS_ROADMAP)
+      2. TOKENS_<SECTION> (legacy Stability Patch v1, e.g. TOKENS_ROADMAP)
+      3. SECTION_TOKEN_BUDGETS code defaults
+      4. OPENAI_MAX_TOKENS global fallback (default 3000)
 
     Args:
         section: Section name (case-insensitive)
@@ -107,7 +122,18 @@ def get_section_token_budget(section: str) -> int:
     """
     section_lower = section.lower().strip()
 
-    # Check ENV override first (TOKENS_<SECTION_NAME>)
+    # Priority 1: Canonical section override (OPENAI_MAX_TOKENS_<SECTION>)
+    openai_env_key = f"OPENAI_MAX_TOKENS_{section_lower.upper()}"
+    openai_env_value = os.getenv(openai_env_key)
+    if openai_env_value:
+        try:
+            tokens = int(openai_env_value)
+            log.debug("[TokenBudget] %s → %d (from ENV %s)", section, tokens, openai_env_key)
+            return tokens
+        except ValueError:
+            pass
+
+    # Priority 2: Legacy Stability Patch v1 (TOKENS_<SECTION>)
     env_key = f"{TOKEN_ENV_PREFIX}{section_lower.upper()}"
     env_value = os.getenv(env_key)
     if env_value:
