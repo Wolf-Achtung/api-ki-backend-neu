@@ -26,7 +26,7 @@ Usage:
   python scripts/generate_golden_reports.py --base-url https://api.example.com --profile solo
   python scripts/generate_golden_reports.py --base-url https://api.example.com --all
 
-Version: 2.1.0 (Golden Artifacts + Summary Gate)
+Version: 2.2.0 (Golden Artifacts + Summary Gate + Retry/Timeout Resilience)
 """
 
 import argparse
@@ -72,6 +72,14 @@ AVAILABLE_PROFILES = {
 POLL_INTERVAL_SEC = 5
 POLL_MAX_ATTEMPTS = 120  # 10 Minuten max
 
+# ---------------------------------------------------------------------------
+# RETRY/TIMEOUT DEFAULTS (CLI-overridable)
+# ---------------------------------------------------------------------------
+DEFAULT_SUBMIT_TIMEOUT = 120   # seconds for POST /submit read timeout
+DEFAULT_DOWNLOAD_TIMEOUT = 120  # seconds for GET html/pdf
+DEFAULT_RETRIES = 3             # max retry attempts
+CONNECT_TIMEOUT = 10            # fixed connect timeout (fast fail on DNS/network)
+
 
 # ---------------------------------------------------------------------------
 # MANIFEST LOADING
@@ -108,6 +116,97 @@ def is_profile_in_manifest(profile_name: str, manifest: Dict[str, Any]) -> bool:
 
     manifest_profiles = manifest.get("profiles", [])
     return profile_filename in manifest_profiles
+
+
+# ---------------------------------------------------------------------------
+# RETRY / TIMEOUT HELPERS
+# ---------------------------------------------------------------------------
+def ping_router_status(base_url: str) -> None:
+    """
+    Optional diagnostic: ping /api/router-status on timeout.
+    Logs result but does not affect retry logic.
+    """
+    try:
+        url = f"{base_url}/api/router-status"
+        resp = requests.get(url, timeout=(5, 10))
+        print(f"[retry-diag] Router status ({resp.status_code}): {resp.text[:100]}")
+    except Exception as e:
+        print(f"[retry-diag] Router status unreachable: {e}")
+
+
+def request_with_retry(
+    method: str,
+    url: str,
+    headers: Dict[str, str],
+    timeout: tuple,
+    max_retries: int,
+    base_url: str,
+    **kwargs
+) -> requests.Response:
+    """
+    Execute HTTP request with exponential backoff retry on timeout.
+
+    Args:
+        method: HTTP method ('GET' or 'POST')
+        url: Full URL
+        headers: Request headers
+        timeout: Tuple (connect_timeout, read_timeout)
+        max_retries: Maximum retry attempts
+        base_url: Base URL for router-status diagnostic
+        **kwargs: Additional args for requests (json, etc.)
+
+    Returns:
+        Response object
+
+    Raises:
+        requests.RequestException on final failure
+    """
+    last_exception = None
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            if method.upper() == "POST":
+                resp = requests.post(url, headers=headers, timeout=timeout, **kwargs)
+            else:
+                resp = requests.get(url, headers=headers, timeout=timeout, **kwargs)
+            return resp
+
+        except requests.exceptions.ReadTimeout as e:
+            last_exception = e
+            backoff = 2 ** (attempt - 1)  # 1s, 2s, 4s
+            print(f"[retry] ReadTimeout on attempt {attempt}/{max_retries}, backoff {backoff}s")
+
+            # Diagnostic: ping router-status on first timeout
+            if attempt == 1:
+                ping_router_status(base_url)
+
+            if attempt < max_retries:
+                time.sleep(backoff)
+            else:
+                print(f"[retry] Max retries ({max_retries}) exhausted")
+
+        except requests.exceptions.ConnectTimeout as e:
+            last_exception = e
+            backoff = 2 ** (attempt - 1)
+            print(f"[retry] ConnectTimeout on attempt {attempt}/{max_retries}, backoff {backoff}s")
+
+            if attempt < max_retries:
+                time.sleep(backoff)
+            else:
+                print(f"[retry] Max retries ({max_retries}) exhausted")
+
+        except requests.exceptions.ConnectionError as e:
+            last_exception = e
+            backoff = 2 ** (attempt - 1)
+            print(f"[retry] ConnectionError on attempt {attempt}/{max_retries}, backoff {backoff}s")
+
+            if attempt < max_retries:
+                time.sleep(backoff)
+            else:
+                print(f"[retry] Max retries ({max_retries}) exhausted")
+
+    # All retries exhausted
+    raise last_exception
 
 
 # ---------------------------------------------------------------------------
@@ -308,10 +407,22 @@ def submit_briefing(
     base_url: str,
     service_token: str,
     answers: Dict[str, Any],
-    lang: str = "de"
+    lang: str = "de",
+    submit_timeout: int = DEFAULT_SUBMIT_TIMEOUT,
+    max_retries: int = DEFAULT_RETRIES,
 ) -> int:
     """
     Sendet Briefing an /api/briefings/submit mit Service-Token.
+
+    Uses retry logic with exponential backoff for network resilience.
+
+    Args:
+        base_url: Backend URL
+        service_token: Service auth token
+        answers: Briefing answers dict
+        lang: Language code
+        submit_timeout: Read timeout in seconds (default: 120)
+        max_retries: Max retry attempts on timeout (default: 3)
 
     Returns:
         briefing_id
@@ -329,9 +440,21 @@ def submit_briefing(
         "queue_analysis": True,
     }
 
-    print(f"[submit] POST {url}")
+    print(f"[submit] POST {url} (timeout={CONNECT_TIMEOUT}s/{submit_timeout}s, retries={max_retries})")
 
-    resp = requests.post(url, json=payload, headers=headers, timeout=30)
+    try:
+        resp = request_with_retry(
+            method="POST",
+            url=url,
+            headers=headers,
+            timeout=(CONNECT_TIMEOUT, submit_timeout),
+            max_retries=max_retries,
+            base_url=base_url,
+            json=payload,
+        )
+    except requests.RequestException as e:
+        print(f"[submit] FAILED after {max_retries} retries: {e}")
+        sys.exit(1)
 
     if resp.status_code in (200, 202):
         data = resp.json()
@@ -381,14 +504,32 @@ def poll_status(base_url: str, service_token: str, briefing_id: int) -> str:
     return "timeout"
 
 
-def download_html(base_url: str, service_token: str, briefing_id: int) -> Optional[bytes]:
+def download_html(
+    base_url: str,
+    service_token: str,
+    briefing_id: int,
+    download_timeout: int = DEFAULT_DOWNLOAD_TIMEOUT,
+    max_retries: int = DEFAULT_RETRIES,
+) -> Optional[bytes]:
     """Download HTML report via robust endpoint (no suffix conflicts)."""
     url = f"{base_url}/api/report/html/{briefing_id}"
     headers = {"X-Service-Token": service_token}
 
-    print(f"[download] GET {url}")
+    print(f"[download] GET {url} (timeout={CONNECT_TIMEOUT}s/{download_timeout}s)")
 
-    resp = requests.get(url, headers=headers, timeout=60)
+    try:
+        resp = request_with_retry(
+            method="GET",
+            url=url,
+            headers=headers,
+            timeout=(CONNECT_TIMEOUT, download_timeout),
+            max_retries=max_retries,
+            base_url=base_url,
+        )
+    except requests.RequestException as e:
+        print(f"[download] HTML failed after retries: {e}")
+        return None
+
     if resp.status_code == 200:
         print(f"[download] HTML: {len(resp.content)} bytes")
         return resp.content
@@ -397,14 +538,33 @@ def download_html(base_url: str, service_token: str, briefing_id: int) -> Option
         return None
 
 
-def download_pdf(base_url: str, service_token: str, briefing_id: int) -> Optional[bytes]:
+def download_pdf(
+    base_url: str,
+    service_token: str,
+    briefing_id: int,
+    download_timeout: int = DEFAULT_DOWNLOAD_TIMEOUT,
+    max_retries: int = DEFAULT_RETRIES,
+) -> Optional[bytes]:
     """Download PDF report via robust endpoint (follows redirects, no suffix conflicts)."""
     url = f"{base_url}/api/report/pdf/{briefing_id}"
     headers = {"X-Service-Token": service_token}
 
-    print(f"[download] GET {url}")
+    print(f"[download] GET {url} (timeout={CONNECT_TIMEOUT}s/{download_timeout}s)")
 
-    resp = requests.get(url, headers=headers, timeout=120, allow_redirects=True)
+    try:
+        resp = request_with_retry(
+            method="GET",
+            url=url,
+            headers=headers,
+            timeout=(CONNECT_TIMEOUT, download_timeout),
+            max_retries=max_retries,
+            base_url=base_url,
+            allow_redirects=True,
+        )
+    except requests.RequestException as e:
+        print(f"[download] PDF failed after retries: {e}")
+        return None
+
     if resp.status_code == 200:
         # Check if we got a PDF
         content_type = resp.headers.get("content-type", "")
@@ -472,6 +632,9 @@ def process_profile(
     service_token: str,
     lang: str = "de",
     run_gate: bool = False,
+    submit_timeout: int = DEFAULT_SUBMIT_TIMEOUT,
+    download_timeout: int = DEFAULT_DOWNLOAD_TIMEOUT,
+    max_retries: int = DEFAULT_RETRIES,
 ) -> Dict[str, Any]:
     """
     Verarbeitet ein einzelnes Profil end-to-end.
@@ -482,6 +645,9 @@ def process_profile(
         service_token: Service-Token für Auth
         lang: Sprache (default: de)
         run_gate: Ob das Summary-Gate ausgeführt werden soll
+        submit_timeout: Read timeout for submit (seconds)
+        download_timeout: Read timeout for downloads (seconds)
+        max_retries: Max retry attempts on timeout
 
     Returns:
         Result dict with status, hashes, and gate_result
@@ -492,14 +658,19 @@ def process_profile(
         print(f"[profile] Summary Gate: ENABLED (Golden Run)")
     else:
         print(f"[profile] Summary Gate: disabled (ad-hoc run)")
+    print(f"[profile] Timeouts: submit={submit_timeout}s download={download_timeout}s retries={max_retries}")
     print(f"{'='*60}")
 
     # 1. Load profile
     profile_data = load_profile(profile_name)
     answers = profile_data.get("answers", profile_data)
 
-    # 2. Submit briefing
-    briefing_id = submit_briefing(base_url, service_token, answers, lang)
+    # 2. Submit briefing (with retry)
+    briefing_id = submit_briefing(
+        base_url, service_token, answers, lang,
+        submit_timeout=submit_timeout,
+        max_retries=max_retries,
+    )
 
     # 3. Poll until done
     status = poll_status(base_url, service_token, briefing_id)
@@ -526,11 +697,19 @@ def process_profile(
                 "error": gate_error,
             }
 
-    # 5. Download HTML
-    html_bytes = download_html(base_url, service_token, briefing_id)
+    # 5. Download HTML (with retry)
+    html_bytes = download_html(
+        base_url, service_token, briefing_id,
+        download_timeout=download_timeout,
+        max_retries=max_retries,
+    )
 
-    # 6. Download PDF
-    pdf_bytes = download_pdf(base_url, service_token, briefing_id)
+    # 6. Download PDF (with retry)
+    pdf_bytes = download_pdf(
+        base_url, service_token, briefing_id,
+        download_timeout=download_timeout,
+        max_retries=max_retries,
+    )
 
     # 7. Save artifacts and compute hashes
     hashes = save_artifacts(profile_name, briefing_id, html_bytes, pdf_bytes)
@@ -578,6 +757,25 @@ def main():
         action="store_true",
         help="Skip Summary Gate even for --all (for debugging)"
     )
+    # Timeout/Retry options for network resilience
+    parser.add_argument(
+        "--submit-timeout",
+        type=int,
+        default=DEFAULT_SUBMIT_TIMEOUT,
+        help=f"Read timeout for submit request in seconds (default: {DEFAULT_SUBMIT_TIMEOUT})"
+    )
+    parser.add_argument(
+        "--download-timeout",
+        type=int,
+        default=DEFAULT_DOWNLOAD_TIMEOUT,
+        help=f"Read timeout for download requests in seconds (default: {DEFAULT_DOWNLOAD_TIMEOUT})"
+    )
+    parser.add_argument(
+        "--retries",
+        type=int,
+        default=DEFAULT_RETRIES,
+        help=f"Max retry attempts on timeout (default: {DEFAULT_RETRIES})"
+    )
 
     args = parser.parse_args()
 
@@ -614,6 +812,9 @@ def main():
         print("ERROR: Specify --profile <name> or --all")
         sys.exit(1)
 
+    # Log timeout/retry settings
+    print(f"[mode] Timeouts: submit={args.submit_timeout}s download={args.download_timeout}s retries={args.retries}")
+
     # Process profiles
     results = []
     gate_failures = []
@@ -624,6 +825,9 @@ def main():
             service_token,
             args.lang,
             run_gate=run_gate,
+            submit_timeout=args.submit_timeout,
+            download_timeout=args.download_timeout,
+            max_retries=args.retries,
         )
         results.append(result)
 
