@@ -47,10 +47,15 @@ async def ping() -> Dict[str, str]:
     return {"status": "ok", "at": datetime.now(timezone.utc).isoformat()}
 
 
-@router.get("/{id}")
+# NOTE: We use /by-id/{id} instead of /{id} to prevent routing conflicts.
+# A generic /{id} route would shadow static paths like /ping, /status, /html, /pdf
+# because FastAPI tries to parse "ping" or "html" as integers, causing 422 errors.
+@router.get("/by-id/{id}")
 async def fetch_report(id: int) -> Dict[str, Any]:
     """
     Return a minimal placeholder for an existing report.
+
+    Uses /by-id/{id} path to avoid conflicts with static routes.
     The full DB-backed implementation can be wired here without blocking router startup.
     """
     # Implement your DB lookup here; return 404 when not found.
