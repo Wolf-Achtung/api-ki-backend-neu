@@ -66,18 +66,25 @@ LLM_SOFT_RETRY_ENABLED = os.getenv("LLM_SOFT_RETRY_ENABLED", "1").lower() in ("1
 
 
 # =============================================================================
-# GPT-5.2 MIGRATION: MODEL ROUTING (FAST / REASONING)
+# GPT-5.2 MIGRATION: MODEL ROUTING SCAFFOLDING
 # =============================================================================
-# Task-based routing to optimize model usage:
+# Task-based routing infrastructure to optimize model usage:
 # - FAST: Quick tasks, HTML snippets, format generation (lower latency)
 # - REASONING: Complex tasks requiring deep analysis (higher quality)
-# - Default: Falls back to primary model from settings
+# - DEFAULT: Falls back to primary model (OPENAI_MODEL)
 #
-# ENV configuration (see settings.py):
-# - OPENAI_MODEL_FAST=gpt-5.2-chat-latest
-# - OPENAI_MODEL_REASONING=gpt-5.2
-# - OPENAI_MODEL_FALLBACK=gpt-4o-mini
-# - OPENAI_REASONING_EFFORT=high
+# PHASE 0/1 - SCAFFOLDING (Zero-Change):
+#   No ENV changes needed. If OPENAI_MODEL_FAST/REASONING are not set,
+#   the system uses OPENAI_MODEL (existing behavior preserved).
+#
+# PHASE 2 - ENABLE GPT-5.2 (Railway ENV Overrides):
+#   OPENAI_MODEL_FAST=gpt-5.2-chat-latest      # Quick tasks
+#   OPENAI_MODEL_REASONING=gpt-5.2             # Complex analysis
+#   OPENAI_MODEL_FALLBACK=gpt-4.1-mini         # Stable fallback (not 5.2)
+#   OPENAI_REASONING_EFFORT=high               # low|medium|high (xhigh selectively)
+#
+# VERIFICATION (Railway Logs):
+#   Search for "[GPT5.2] Model Routing enabled" in Railway log viewer.
 # =============================================================================
 
 class ModelTier(Enum):
