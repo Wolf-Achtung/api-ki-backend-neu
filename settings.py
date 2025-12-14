@@ -71,6 +71,18 @@ class OpenAIConfig(BaseModel):
     timeout: int = 90  # SPRINT G13-D: reduced from 120s for faster fallback triggering
     gamechanger_temperature: float = 0.4
 
+    # ---------------------------------------------------------------------------
+    # GPT-5.2 Migration: Model Routing (FAST / REASONING / FALLBACK)
+    # ---------------------------------------------------------------------------
+    # FAST: Quick tasks, HTML snippets, format generation
+    model_fast: str = "gpt-4o"  # Default: current model (safe)
+    # REASONING: Complex tasks (Consistency, Governance, Auto-Heal)
+    model_reasoning: str = "gpt-4o"  # Default: current model (safe)
+    # FALLBACK: Fallback model when primary fails
+    model_fallback: str = "gpt-4o-mini"
+    # Reasoning effort for reasoning model (low/medium/high/xhigh)
+    reasoning_effort: str = "high"
+
     @property
     def max_tokens(self) -> int:
         """Backwards-kompatibler Alias für max_completion_tokens"""
@@ -251,6 +263,11 @@ class AppSettings(BaseSettings):
                 max_completion_tokens=int(os.getenv("OPENAI_MAX_TOKENS", "3000")),
                 timeout=int(os.getenv("OPENAI_TIMEOUT", "120")),
                 gamechanger_temperature=float(os.getenv("OPENAI_TEMP_GAMECHANGER", "0.4")),
+                # GPT-5.2 Migration: Model Routing
+                model_fast=os.getenv("OPENAI_MODEL_FAST", os.getenv("OPENAI_MODEL", "gpt-4o")),
+                model_reasoning=os.getenv("OPENAI_MODEL_REASONING", os.getenv("OPENAI_MODEL", "gpt-4o")),
+                model_fallback=os.getenv("OPENAI_MODEL_FALLBACK", "gpt-4o-mini"),
+                reasoning_effort=os.getenv("OPENAI_REASONING_EFFORT", "high"),
             ),
             perplexity=PerplexityConfig(
                 api_key=os.getenv("PERPLEXITY_API_KEY"),
