@@ -72,15 +72,18 @@ class OpenAIConfig(BaseModel):
     gamechanger_temperature: float = 0.4
 
     # ---------------------------------------------------------------------------
-    # GPT-5.2 Migration: Model Routing (FAST / REASONING / FALLBACK)
+    # GPT-5.2 Migration: Model Routing Scaffolding
     # ---------------------------------------------------------------------------
+    # PHASE 0/1 (SCAFFOLDING): Safe defaults - no behavior change until ENV set.
+    # PHASE 2 (ENABLE): Set via Railway ENV to activate GPT-5.2.
+    #
     # FAST: Quick tasks, HTML snippets, format generation
-    model_fast: str = "gpt-4o"  # Default: current model (safe)
+    model_fast: str = "gpt-4o"  # Phase 0/1: safe default (uses current model)
     # REASONING: Complex tasks (Consistency, Governance, Auto-Heal)
-    model_reasoning: str = "gpt-4o"  # Default: current model (safe)
-    # FALLBACK: Fallback model when primary fails
-    model_fallback: str = "gpt-4o-mini"
-    # Reasoning effort for reasoning model (low/medium/high/xhigh)
+    model_reasoning: str = "gpt-4o"  # Phase 0/1: safe default (uses current model)
+    # FALLBACK: Stable fallback model when primary fails (keep stable, not 5.2)
+    model_fallback: str = "gpt-4o-mini"  # Stable fallback
+    # Reasoning effort for reasoning model (low/medium/high, xhigh selectively)
     reasoning_effort: str = "high"
 
     @property
