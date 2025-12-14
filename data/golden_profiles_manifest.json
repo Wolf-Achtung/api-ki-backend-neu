@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "profiles_dir": "data/test_profiles_gold_optimized",
+  "purpose": "Golden artifact generation (HTML, PDF, hashes)",
+  "description": "This manifest defines the authoritative list of profiles used for Golden Artifact runs. Only profiles listed here should be used by generate_golden_reports.py.",
+  "profiles": [
+    "solo_beratung_ki_assessments_optimized.json",
+    "team_finance_insurance_advisory_optimized.json",
+    "kmu_france_eu_core_en_gold_optimized.json"
+  ],
+  "rules": {
+    "changes_require_review": true,
+    "no_adhoc_profiles": true,
+    "source_of_truth": "test_profiles_gold_optimized/"
+  }
+}
