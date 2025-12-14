@@ -14,8 +14,8 @@ Ablauf:
   1. Lädt Profile aus data/test_profiles_gold_optimized/
   2. POST /api/briefings/submit mit Service-Token
   3. Pollt /api/report/status/{briefing_id} bis done
-  4. GET /api/report/{briefing_id}.html
-  5. GET /api/report/{briefing_id}.pdf
+  4. GET /api/report/html/{briefing_id}  (robust, keine Suffix-Konflikte)
+  5. GET /api/report/pdf/{briefing_id}   (robust, keine Suffix-Konflikte)
   6. Berechnet SHA-256 Hashes
   7. Speichert unter artifacts/golden_reports/<profile_id>/
 
@@ -161,8 +161,8 @@ def poll_status(base_url: str, service_token: str, briefing_id: int) -> str:
 
 
 def download_html(base_url: str, service_token: str, briefing_id: int) -> Optional[bytes]:
-    """Download HTML report."""
-    url = f"{base_url}/api/report/{briefing_id}.html"
+    """Download HTML report via robust endpoint (no suffix conflicts)."""
+    url = f"{base_url}/api/report/html/{briefing_id}"
     headers = {"X-Service-Token": service_token}
 
     print(f"[download] GET {url}")
@@ -177,8 +177,8 @@ def download_html(base_url: str, service_token: str, briefing_id: int) -> Option
 
 
 def download_pdf(base_url: str, service_token: str, briefing_id: int) -> Optional[bytes]:
-    """Download PDF report (follows redirects)."""
-    url = f"{base_url}/api/report/{briefing_id}.pdf"
+    """Download PDF report via robust endpoint (follows redirects, no suffix conflicts)."""
+    url = f"{base_url}/api/report/pdf/{briefing_id}"
     headers = {"X-Service-Token": service_token}
 
     print(f"[download] GET {url}")
