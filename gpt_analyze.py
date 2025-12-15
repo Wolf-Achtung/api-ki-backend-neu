@@ -6162,6 +6162,22 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     # Execute hard stop validation
     hard_stop_if_invalid(sections, error_gate, persona=persona, run_id=run_id)
 
+    # === SPRINT FIX: Store sections in meta for Golden Gate summary ===
+    # Filter sections to only include JSON-serializable string values (HTML sections)
+    # This enables /api/report/summary to validate sections_present
+    serializable_sections = {}
+    for k, v in sections.items():
+        # Skip internal/debug keys and non-string values
+        if k.startswith("_"):
+            continue
+        if isinstance(v, str) and len(v) < 500000:  # Limit size per section
+            serializable_sections[k] = v
+        elif isinstance(v, (int, float, bool)):
+            serializable_sections[k] = v
+        # Skip complex objects (GuardrailHit, dicts, etc.) to keep meta clean
+
+    log.info(f"[{run_id}] 📦 Storing {len(serializable_sections)} sections in meta for Golden Gate")
+
     result = render(
         br,
         run_id=run_id,
@@ -6171,7 +6187,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         meta={
             "scores": scores,
             "score_details": score_wrap.get("details", {}),
-            "research_last_updated": sections["research_last_updated"]
+            "research_last_updated": sections["research_last_updated"],
+            "sections": serializable_sections,  # Store sections for summary gate
         }
     )
 
