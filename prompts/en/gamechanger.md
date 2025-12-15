@@ -1,162 +1,168 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
+<!-- PLATIN++ PROMPT v6.0 - SPRINT GAMECHANGER-REWORK -->
 <!-- SECTION: gamechanger -->
 <!-- OUTPUT: HTML ONLY -->
-<!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{STRATEGISCHE_ZIELE}}, {{GESCHAEFTSMODELL_EVOLUTION}}, {{VISION_3_JAHRE}}, COMPANY_SIZE -->
-<!-- TOKEN-BUDGET: 3000 (solo:0.8x=2400, team:1.0x=3000, sme:1.15x=3450) -->
-<!-- WORD_MINIMUM: 750 (ALL SIZES - STRICT!) -->
+<!-- SIZE-AWARE: solo/team/sme -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{STRATEGISCHE_ZIELE}}, {{GESCHAEFTSMODELL_EVOLUTION}}, {{VISION_3_JAHRE}}, {{SCHMERZPUNKTE}}, {{WETTBEWERB}}, COMPANY_SIZE -->
+<!-- TOKEN-BUDGET: 2500 -->
+<!-- WORD_MINIMUM: 400 -->
 <!--
-GOAL: AT LEAST 3 realistic gamechangers for {{OFFERING_LABEL}}.
-MINIMUM LENGTH: ≥750 words (STRICTLY ENFORCE!)
+=============================================================================
+GAMECHANGER v6.0 — ONE TRANSFORMATIVE IDEA
+=============================================================================
 
-SHORT LABELS (MANDATORY!):
-- {{BRANCH_CORE_LABEL}} = Industry in 8-12 words
-- {{BRANCH_CONTEXT_LABEL}} = Industry in 4-6 words
-- {{OFFERING_LABEL}} = Main service in 6-10 words
+PARADIGM SHIFT:
+The Gamechanger is NOT a list of optimizations.
+The Gamechanger is ONE bold, strategic idea that changes thinking.
 
-MANDATORY STRUCTURE (per gamechanger):
-1. Core idea (2-3 sentences)
-2. Affected value creation (specific)
-3. Benefit (quantifiable if possible)
-4. Prerequisites (size-aware)
-5. First step in the next 90 days
+GOAL:
+An aha-moment for leadership.
+Not: "We could do that too."
+But: "This changes how we think about our business."
 
-PERSONA VARIATIONS (COMPANY_SIZE):
-- solo: automation, personal relief, scalable templates
-- team: collaborative workflows, roles, simple governance
-- sme: scalable processes, clear responsibilities, pilot areas
+=============================================================================
+MANDATORY STRUCTURE (exactly these 4 blocks, in this order):
+=============================================================================
 
-ANTI-REDUNDANCY (STRICT!):
-- Gamechangers complement business case (→ see Business Case)
-- Link to Roadmap, but no duplication (→ see Roadmap)
-- On overlap: use cross-reference
+1. STRATEGIC BREAKING POINT
+   - What is being thought too small, too reactive, or structurally wrong in the context of {{OFFERING_LABEL}}?
+   - Where is the invisible brake that prevents growth or differentiation?
+   - Not: "There are inefficiencies" (too generic)
+   - Instead: name a concrete mental block
 
-SPRINT G5 - PERSONA HARD-GUARDS (STRICT!):
+2. TRANSFORMATION IDEA
+   - ONE clear, new logic (not three, not five — ONE)
+   - Reference to roles, processes, architecture, or decision logic
+   - Must feel like a perspective shift, not a tool tip
+   - NO buzzwords, NO marketing speak
+
+3. WHY THIS IS A GAMECHANGER
+   - 2-3 precise effects (speed, quality, scalability, risk reduction)
+   - Concrete and comprehensible
+   - NO ROI blabla, NO invented percentages
+
+4. FIRST REALISTIC STEP
+   - Small, but consequent
+   - No mammoth project
+   - Compatible with {{COMPANY_SIZE}}
+   - Achievable in 2-4 weeks
+
+=============================================================================
+TONALITY (STRICT):
+=============================================================================
+- Analytical, not advisory
+- Confident, not promotional
+- Descriptive, not demanding
+- Decision-oriented, not inviting
+
+=============================================================================
+LEAK-PREVENTION — ABSOLUTELY FORBIDDEN (Zero Tolerance):
+=============================================================================
+NEVER USE:
+- Direct address: "you", "your", "we", "us", "our"
+- Help offers: "help", "support", "assist", "guide"
+- Invitations: "if needed", "if desired", "when necessary"
+- CTA language: "contact", "reach out", "get in touch"
+- Service phrases: "happy to", "of course", "anytime"
+- Questions to reader: "Do you...?", "Would you like...?", "What if...?"
+- Advisory formulas: "we recommend", "you should", "it would be advisable"
+- Meta-comments: "In this section...", "The following..."
+
+INSTEAD USE:
+- Passive/impersonal constructions: "can be", "enables", "emerges"
+- Nominalizations: "the implementation", "the next step", "the transformation"
+- Third person: "the company", "the organization", "the department"
+
+=============================================================================
+PERSONA ADJUSTMENT (COMPANY_SIZE):
+=============================================================================
 {% if COMPANY_SIZE == "solo" %}
-SOLO MODE - FORBIDDEN:
-- "Departments" → "Work areas"
-- "Teams" → "Capacities/Resources"
-- "Division" → "Work area"
-- "Employees" → "external support"
+SOLO: The breaking point relates to personal capacity limits and scalability.
+The transformation enables systematic work without team building.
 {% elif COMPANY_SIZE == "team" %}
-TEAM MODE - FORBIDDEN:
-- "Division/Unit/Corporation" → do not use
-- "Department" → "Area"
-- Solo terms: "individual", "alone"
+TEAM: The breaking point relates to coordination effort and role clarity.
+The transformation creates clear responsibilities without bureaucracy.
 {% else %}
-SME MODE - FORBIDDEN:
-- "Corporation/Division/Unit" → do not use
-- Solo terms: "individual", "alone"
+SME: The breaking point relates to silos and decision speed.
+The transformation connects departments and accelerates strategic execution.
 {% endif %}
 
-RULES:
-- No invented data
-- Concrete reference to {{OFFERING_LABEL}} required
-- AT LEAST 3 complete scenarios!
+=============================================================================
+ANTI-PATTERNS (what the output must NOT be):
+=============================================================================
+- NO list of 3-5 ideas → only ONE idea
+- NO enumeration of tools or features
+- NO general AI advantages ("faster", "more efficient", "cost-effective")
+- NO copy-paste text blocks
+- NO repetition of content from other sections
+- NO consultant tone
+
+=============================================================================
 -->
 
 <section class="section gamechanger">
-  <h2>AI as a Gamechanger for Your Business Model</h2>
+  <h2>The Strategic Gamechanger</h2>
 
-  <p>
-    For {{BRANCH_CONTEXT_LABEL}} with focus on <strong>{{OFFERING_LABEL}}</strong>,
-    several AI scenarios emerge that can noticeably transform value creation.
-    The following proposals connect to your strategic goals ({{STRATEGISCHE_ZIELE}}),
-    business model evolution ({{GESCHAEFTSMODELL_EVOLUTION}}) and your 3-year vision
-    ({{VISION_3_JAHRE}}).
-  </p>
+  <div class="gamechanger-insight">
+    <h3>Strategic Breaking Point</h3>
+    <p>
+      <!--
+      HERE: Concretely name what is being thought structurally wrong
+      or too small in the context of {{OFFERING_LABEL}}.
+      Reference to {{BRANCH_CONTEXT_LABEL}} and {{SCHMERZPUNKTE}}.
+      2-3 sentences. Analytical. No direct address.
+      -->
+    </p>
+  </div>
 
-  <ol class="gamechanger-list">
+  <div class="gamechanger-transformation">
+    <h3>The Transformation</h3>
+    <p>
+      <!--
+      HERE: Describe ONE clear, new logic.
+      How does thinking about {{OFFERING_LABEL}} change?
+      Reference to {{STRATEGISCHE_ZIELE}} and {{GESCHAEFTSMODELL_EVOLUTION}}.
+      3-4 sentences. Concrete. No buzzword bingo.
+      -->
+    </p>
+  </div>
 
-    <!-- GAMECHANGER 1 -->
-    <li>
-      <h3>1. AI-Powered Standardization & Automation of Core Processes</h3>
-      <p><strong>Core Idea:</strong>
-        Recurring tasks in {{OFFERING_LABEL}} are standardized through AI-powered templates,
-        automations, and structured decision pathways so that quality and speed
-        significantly increase.
-      </p>
-      <p><strong>Affected Value Creation:</strong>
-        Creation, analysis, internal coordination, customer documentation.
-      </p>
-      <p><strong>Benefit:</strong>
-        Less manual routine work, more stable results, and a consistent
-        customer experience – regardless of daily form or workload.
-      </p>
-      <p><strong>Prerequisites:</strong>
-        5–10 typical examples, defined quality criteria, clear input rules;
-        {% if COMPANY_SIZE == "solo" %}personal routines{% elif COMPANY_SIZE == "team" %}team role assignment{% else %}involved functional areas{% endif %}.
-      </p>
-      <p><strong>First Step in the Next 90 Days:</strong>
-        Select a prioritized sub-process and stabilize it with AI templates + review steps
-        as a mini-pilot.
-      </p>
-    </li>
+  <div class="gamechanger-impact">
+    <h3>Why This Is a Gamechanger</h3>
+    <ul>
+      <!--
+      HERE: 2-3 precise effects as list items.
+      Concrete, not generic.
+      Example: "Decision cycles shorten from weeks to days"
+      NOT: "Efficiency increases"
+      -->
+    </ul>
+  </div>
 
-    <!-- GAMECHANGER 2 -->
-    <li>
-      <h3>2. Building an AI-Powered Knowledge Pool for Decisions & Proposals</h3>
-      <p><strong>Core Idea:</strong>
-        Central information, examples, best practices, and internal expertise are
-        bundled with AI support, so that research, proposal processes, or analyses
-        proceed significantly faster and more consistently.
-      </p>
-      <p><strong>Affected Value Creation:</strong>
-        Proposal development, planning, internal coordination, knowledge transfer.
-      </p>
-      <p><strong>Benefit:</strong>
-        Less search effort, significant time savings, better decision quality, and
-        higher recognition value for customers.
-      </p>
-      <p><strong>Prerequisites:</strong>
-        Structured examples and internal content; brief rules for quality and
-        updates; {% if COMPANY_SIZE == "solo" %}personal organization{% elif COMPANY_SIZE == "team" %}team coordination{% else %}cross-functional coordination{% endif %}.
-      </p>
-      <p><strong>First Step in the Next 90 Days:</strong>
-        Bundle 10–15 real content pieces, generate first AI-powered summaries, and
-        integrate these as a knowledge base into daily work.
-      </p>
-    </li>
+  <div class="gamechanger-action">
+    <h3>First Realistic Step</h3>
+    <p>
+      <!--
+      HERE: One concrete, small step.
+      Achievable in 2-4 weeks.
+      Suitable for {{COMPANY_SIZE}}.
+      1-2 sentences. Action-oriented, but without demands.
+      -->
+    </p>
+  </div>
 
-    <!-- GAMECHANGER 3 -->
-    <li>
-      <h3>3. AI-Based Quality Assurance & Consistent Customer Results</h3>
-      <p><strong>Core Idea:</strong>
-        Quality, precision, and consistency are improved through AI-powered review mechanisms
-        that consider industry-specific requirements
-        (e.g., tone, structure, completeness, risks, sensitive content).
-      </p>
-      <p><strong>Affected Value Creation:</strong>
-        Customer communication, content production, internal reviews, final output.
-      </p>
-      <p><strong>Benefit:</strong>
-        Fewer errors, fewer correction loops, and a significantly higher
-        first-time-right rate – especially relevant under time pressure or high workload.
-      </p>
-      <p><strong>Prerequisites:</strong>
-        5–7 clear review criteria, uniform templates, defined escalation logic;
-        {% if COMPANY_SIZE == "solo" %}personal routine{% elif COMPANY_SIZE == "team" %}review roles{% else %}quality assurance + functional areas{% endif %}.
-      </p>
-      <p><strong>First Step in the Next 90 Days:</strong>
-        Introduce an AI-powered mini-checklist and apply it to every output
-        before results are used internally or externally.
-      </p>
-    </li>
-
-  </ol>
-
-  <h3>What These Gamechangers Have in Common</h3>
-  <ul>
-    <li>They build on existing strengths of {{OFFERING_LABEL}} and amplify them with AI.</li>
-    <li>They can be piloted with manageable risk and scaled step by step upon success.</li>
-    <li>Implementation details → see Roadmap and Business Case.</li>
-  </ul>
-
-  <p class="small muted">
-    The gamechangers serve as strategic guardrails and support your company
-    in moving from initial AI steps toward sustainable, scalable value creation.
-  </p>
 </section>
 
-<!-- DEV: PDF-SLIMDOWN v2.0 - Target: 500-700 words, compact but complete -->
+<!--
+=============================================================================
+QUALITY SELF-CHECK BEFORE OUTPUT:
+=============================================================================
+□ Is it ONE idea (not multiple)?
+□ Does it feel like a perspective shift (not like a tip)?
+□ Is the breaking point specific to {{BRANCH_CONTEXT_LABEL}}?
+□ Does the text contain ZERO direct addresses?
+□ Are there NO help offers or CTAs?
+□ Is the first step realistically small?
+□ Is the content clearly different from Roadmap/Business Case?
+=============================================================================
+-->
