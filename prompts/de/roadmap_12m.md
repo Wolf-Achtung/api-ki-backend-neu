@@ -1,17 +1,58 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
+<!-- PLATIN+++ PROMPT v6.1 - SPRINT INHALTLICHE FINALISIERUNG -->
 <!-- SECTION: roadmap_12m -->
+<!--
+=============================================================================
+PLATIN+++ CONTENT DOD (verbindlich):
+=============================================================================
+- Transformationsbericht MIT Sicherheits- & Governance-Geländer
+- Zentrale strategische Weichenstellung KLAR benennen
+- Alte Logik EXPLIZIT ersetzen (Formel: "Nicht mehr X, sondern Y")
+- Hauptleistung ({{HAUPTUMSATZTREIBER}}) als Bezugspunkt
+- ENTSCHEIDUNGEN beschreiben, nicht Tools
+- KEINE Beratungssprache, KEINE CTAs
+- Kurze Absätze: ein Gedanke pro Absatz, 2-4 Sätze
+
+MICRO-CONSISTENCY (verbindlich):
+Die in der Executive Summary benannte Weichenstellung muss im Gamechanger
+ausgearbeitet und in den Roadmaps sprachlich referenziert werden
+(gleiche Begriffe, gleiche Logik).
+=============================================================================
+-->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
+<!-- SPRINT G18 -->
 <!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 4200 (solo:0.8x=3360, team:1.0x=4200, kmu:1.15x=4830) -->
 <!-- WORD_MINIMUM_SOLO: 500 -->
 <!-- WORD_MINIMUM_TEAM: 600 -->
 <!-- WORD_MINIMUM_KMU: 700 -->
 <!--
-ZIEL: 12-Monats-Roadmap mit Meilensteinen, aufbauend auf 90-Tage-Ergebnissen.
+ZIEL: 12-Monats-Roadmap als strategische Entscheidungskette (nicht Tool-Rollout).
 
-MINDESTLÄNGE (SPRINT G18 - STRIKT VERPFLICHTEND!):
+=============================================================================
+SPRACHSHIFT v6.0 — ENTSCHEIDUNGEN STATT IMPLEMENTIERUNGEN:
+=============================================================================
+
+VERBOTENE FORMULIERUNGEN → ERSETZUNGEN:
+❌ "Einführung / Implementierung"  → ✅ "Festlegung / Definition / Abgrenzung"
+❌ "Tool ausrollen"                → ✅ "Standards etablieren"
+❌ "System integrieren"            → ✅ "Verantwortlichkeiten klären"
+❌ "Workflow automatisieren"       → ✅ "Entscheidungsrahmen schaffen"
+❌ "Digitalisierung vorantreiben"  → ✅ "Prioritäten setzen"
+
+Die Roadmap zeigt WELCHE ENTSCHEIDUNGEN zu treffen sind,
+nicht WELCHE TOOLS einzuführen sind.
+
+LESBARKEIT (v6.1 NEU):
+- Maximal EIN abstrakter Gedanke pro Absatz
+- 2–4 Sätze pro Absatz (nicht mehr)
+- Keine Schachtelsätze – ein Hauptsatz, maximal ein Nebensatz
+- Max. 3 Sätze pro Bullet-Punkt
+
+=============================================================================
+
+MINDESTLÄNGE (STRIKT VERPFLICHTEND!):
 - Solo: mind. 500 Wörter (inkl. Q1-Q4 Phasen)
 - Team: mind. 600 Wörter (inkl. Rollen und Standards)
 - KMU: mind. 700 Wörter (inkl. 5-Dimensionen-Rollout)
@@ -28,6 +69,12 @@ STRUKTUR NACH GRÖSSE (max 3 Hauptabschnitte):
 - Solo: Zeitbasierte Phasen (Q1, Q2, Q3-4)
 - Team: Zeitbasierte Phasen mit Rollen
 - KMU: Block-Struktur (Tech, Data, Org, Product, Compliance) + Rollout
+
+LEITENTSCHEIDUNGEN PRO QUARTAL (v6.1 NEU - implizit verankern, nicht als Überschrift):
+- Q1: "Fundament vor Fläche" – Qualität der Basis sichern
+- Q2: "Standards vor Skalierung" – einheitliche Regeln etablieren
+- Q3-Q4: "Verantwortung vor Geschwindigkeit" – Governance mitführen
+Diese Prinzipien sprachlich in die Quartals-Beschreibungen einfließen lassen.
 
 FORMAT:
 - Meilensteine statt langer Texte
