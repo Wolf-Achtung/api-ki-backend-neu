@@ -3,6 +3,7 @@ Developer:
 <!-- SECTION: roadmap_12m -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
+<!-- SPRINT G18 -->
 <!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 4200 (solo:0.8x=3360, team:1.0x=4200, kmu:1.15x=4830) -->
 <!-- WORD_MINIMUM_SOLO: 500 -->

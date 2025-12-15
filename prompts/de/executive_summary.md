@@ -3,6 +3,7 @@ Developer:
 <!-- SECTION: executive_summary -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
+<!-- SPRINT G18 - BRANCHENSÄTZE HARMONISIEREN -->
 <!-- INPUT: {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{HAUPTUMSATZTREIBER}}, {{STRATEGISCHE_ZIELE}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 1500 -->
 <!-- WORD_MINIMUM: 250 -->
