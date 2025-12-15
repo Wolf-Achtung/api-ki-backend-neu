@@ -1,4 +1,26 @@
-GAMECHANGER v7.0 — EINE NICHT-AUSTAUSCHBARE TRANSFORMATIONSIDEE
+Developer:
+<!-- PLATIN+++ PROMPT v7.1 - SPRINT INHALTLICHE FINALISIERUNG -->
+<!-- SECTION: gamechanger -->
+<!--
+=============================================================================
+PLATIN+++ CONTENT DOD (verbindlich):
+=============================================================================
+- Transformationsbericht MIT Sicherheits- & Governance-Geländer
+- Zentrale strategische Weichenstellung KLAR benennen
+- Alte Logik EXPLIZIT ersetzen (Formel: "Nicht mehr X, sondern Y")
+- Hauptleistung ({{HAUPTUMSATZTREIBER}}) als Bezugspunkt
+- ENTSCHEIDUNGEN beschreiben, nicht Tools
+- KEINE Beratungssprache, KEINE CTAs
+- Kurze Absätze: ein Gedanke pro Absatz, 2-4 Sätze
+
+MICRO-CONSISTENCY (verbindlich):
+Die in der Executive Summary benannte Weichenstellung muss im Gamechanger
+ausgearbeitet und in den Roadmaps sprachlich referenziert werden
+(gleiche Begriffe, gleiche Logik).
+=============================================================================
+-->
+
+GAMECHANGER v7.1 — EINE NICHT-AUSTAUSCHBARE TRANSFORMATIONSIDEE
 
 KERN-ANFORDERUNG (v7.0 NEU):
 Der Gamechanger MUSS so spezifisch sein, dass er für ein Unternehmen
@@ -30,6 +52,9 @@ VERBINDLICHE STRUKTUR (4 Blöcke):
    - Was wird bei {{OFFERING_LABEL}} heute strukturell falsch gedacht?
    - Bezug auf {{HAUPTUMSATZTREIBER}} und {{WETTBEWERB}} erforderlich
    - Konkrete Denkblockade, nicht "Ineffizienzen"
+   - PFLICHT (v7.1): Die obsolet werdende Logik EXPLIZIT benennen
+     (Form: "Nicht mehr X, sondern Y" – z.B. "Nicht mehr reaktive
+     Einzelfallbearbeitung, sondern proaktive Musteranwendung")
 
 2. TRANSFORMATIONS-IDEE
    - EINE klare, neue Wertschöpfungslogik
@@ -153,7 +178,7 @@ Die Transformation ermöglicht strategische Neupositionierung – nicht nur Opti
 </section>
 
 <!--
-QUALITÄTS-SELBSTCHECK VOR OUTPUT (v7.0):
+QUALITÄTS-SELBSTCHECK VOR OUTPUT (v7.1):
 □ Ist es EINE Idee (nicht mehrere)?
 □ Würde die Idee für eine andere Branche NICHT funktionieren?
 □ Ist {{OFFERING_LABEL}} oder {{HAUPTUMSATZTREIBER}} konkret referenziert?
@@ -161,6 +186,11 @@ QUALITÄTS-SELBSTCHECK VOR OUTPUT (v7.0):
 □ Enthält der Text NULL direkte Anreden?
 □ Gibt es KEINE Hilfsangebote oder CTAs?
 □ Unterscheidet sich der Inhalt klar von Roadmap/Business Case?
+
+INTERNE PRÜFFRAGEN (v7.1 NEU - nicht ausgeben):
+□ Welche bisherige Denk- oder Arbeitslogik wird EXPLIZIT aufgegeben?
+□ Welche neue Logik tritt an ihre Stelle – bezogen auf {{HAUPTUMSATZTREIBER}}?
+□ Ist der Logikwechsel im Format "Nicht mehr X, sondern Y" formulierbar?
 -->
 # GAMECHANGER – STRATEGISCHE TRANSFORMATIONS-IDEE (v7.0)
 
@@ -243,17 +273,24 @@ Beschreibe **einen umsetzbaren Startschritt**, der:
 ## Sprach- & Stilregeln (verbindlich)
 
 ### Verboten
-- direkte Ansprache („Sie“, „du“, „wir“)
-- Hilfsangebote („helfen“, „unterstützen“, „begleiten“)
-- Call-to-Actions („bei Bedarf“, „kontaktieren“, „anfragen“)
+- direkte Ansprache („Sie", „du", „wir")
+- Hilfsangebote („helfen", „unterstützen", „begleiten")
+- Call-to-Actions („bei Bedarf", „kontaktieren", „anfragen")
 - Service- oder Beratungssprache
 - Fragen an den Leser
+- Schachtelsätze mit mehr als einem Nebensatz
 
 ### Stattdessen
 - analytisch
 - beschreibend
 - strategisch nüchtern
 - entscheidungsorientiert
+
+### Lesbarkeit (v7.1 NEU)
+- Maximal EIN abstrakter Gedanke pro Absatz
+- 2–4 Sätze pro Absatz (nicht mehr)
+- Keine Schachtelsätze – ein Hauptsatz, maximal ein Nebensatz
+- Ton: analytisch, souverän, entscheidungsorientiert
 
 Der Text soll wie eine **interne strategische Analyse** wirken, nicht wie Beratung.
 

@@ -1,6 +1,24 @@
 Developer:
-<!-- PLATIN+++ PROMPT v6.0 - SPRINT PRODUKT-SCHÄRFUNG -->
+<!-- PLATIN+++ PROMPT v6.1 - SPRINT INHALTLICHE FINALISIERUNG -->
 <!-- SECTION: executive_summary -->
+<!--
+=============================================================================
+PLATIN+++ CONTENT DOD (verbindlich):
+=============================================================================
+- Transformationsbericht MIT Sicherheits- & Governance-Geländer
+- Zentrale strategische Weichenstellung KLAR benennen
+- Alte Logik EXPLIZIT ersetzen (Formel: "Nicht mehr X, sondern Y")
+- Hauptleistung ({{HAUPTUMSATZTREIBER}}) als Bezugspunkt
+- ENTSCHEIDUNGEN beschreiben, nicht Tools
+- KEINE Beratungssprache, KEINE CTAs
+- Kurze Absätze: ein Gedanke pro Absatz, 2-4 Sätze
+
+MICRO-CONSISTENCY (verbindlich):
+Die in der Executive Summary benannte Weichenstellung muss im Gamechanger
+ausgearbeitet und in den Roadmaps sprachlich referenziert werden
+(gleiche Begriffe, gleiche Logik).
+=============================================================================
+-->
 <!--
 SPRINT G18 - BRANCHENSÄTZE HARMONISIEREN
 
@@ -59,6 +77,14 @@ ABSATZ 3: KONSEQUENZ & HALTUNG
 - Kein CTA, keine Empfehlung, keine Einladung
 - 3-4 Sätze. Abschließend. Ruhig.
 
+PFLICHT (v6.1) - HALTUNGSSATZ im 3. Absatz:
+Ein Satz MUSS klar abgrenzen:
+- Tool-Euphorie → Nein ("Es geht nicht um das nächste KI-Tool")
+- Verantwortung → Ja ("Entscheidungen bleiben bei Menschen")
+- Kontrolle → Ja ("Governance-Rahmen vor Geschwindigkeit")
+Beispiel: "Die Transformation verändert Arbeitslogik, nicht die
+Verantwortlichkeit – Entscheidungen bleiben dort, wo sie hingehören."
+
 =============================================================================
 TONALITÄT (STRIKT):
 =============================================================================
@@ -66,6 +92,12 @@ TONALITÄT (STRIKT):
 - Entscheidungsorientiert, nicht verkaufend
 - Strategisch nüchtern, nicht enthusiastisch
 - Sachlich-souverän, nicht beratend
+
+LESBARKEIT (v6.1 NEU):
+- Maximal EIN abstrakter Gedanke pro Absatz
+- 2–4 Sätze pro Absatz (nicht mehr)
+- Keine Schachtelsätze – ein Hauptsatz, maximal ein Nebensatz
+- Ton: analytisch, souverän, entscheidungsorientiert
 
 =============================================================================
 LEAK-PREVENTION — ABSOLUT VERBOTEN:
@@ -138,6 +170,8 @@ ANTI-PATTERNS:
     ABSATZ 3: KONSEQUENZ & HALTUNG
     Was bedeutet das für Prioritäten und Tempo?
     Sicherheitsgeländer: Governance, Kontrolle, Verantwortung.
+    PFLICHT: Ein Haltungssatz, der Tool-Euphorie abgrenzt und
+    Verantwortung/Kontrolle betont (keine CTA, keine Ansprache).
     Kein CTA. Ruhiger Abschluss.
     3-4 Sätze.
     -->
