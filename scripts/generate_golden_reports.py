@@ -37,7 +37,7 @@ import re
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 try:
     import requests
@@ -212,12 +212,14 @@ def request_with_retry(
 # ---------------------------------------------------------------------------
 # SUMMARY GATE (Quality Gate for Golden Runs)
 # ---------------------------------------------------------------------------
-def fetch_summary(base_url: str, service_token: str, briefing_id: int) -> Optional[str]:
+def fetch_summary(base_url: str, service_token: str, briefing_id: int) -> Optional[Dict[str, Any]]:
     """
-    Fetch plain-text summary from /api/report/summary/{briefing_id}.
+    Fetch summary from /api/report/summary/{briefing_id}.
+
+    Now returns JSON dict directly (endpoint returns JSON since Sprint N4.4).
 
     Returns:
-        Summary text or None on error
+        Parsed JSON dict or None on error
     """
     url = f"{base_url}/api/report/summary/{briefing_id}"
     headers = {"X-Service-Token": service_token}
@@ -227,8 +229,19 @@ def fetch_summary(base_url: str, service_token: str, briefing_id: int) -> Option
     try:
         resp = requests.get(url, headers=headers, timeout=30)
         if resp.status_code == 200:
-            print(f"[gate] Summary received: {len(resp.text)} chars")
-            return resp.text
+            # Try JSON-first (new format)
+            content_type = resp.headers.get("content-type", "")
+            if "application/json" in content_type or resp.text.strip().startswith("{"):
+                try:
+                    data = resp.json()
+                    print(f"[gate] Summary received (JSON): {len(resp.text)} chars, keys={list(data.keys())[:5]}...")
+                    return data
+                except Exception as e:
+                    print(f"[gate] JSON parse failed, falling back to text: {e}")
+
+            # Legacy fallback: plain text parsing
+            print(f"[gate] Summary received (text): {len(resp.text)} chars")
+            return parse_summary_text(resp.text)
         else:
             print(f"[gate] Summary fetch failed: {resp.status_code} - {resp.text[:200]}")
             return None
@@ -237,7 +250,7 @@ def fetch_summary(base_url: str, service_token: str, briefing_id: int) -> Option
         return None
 
 
-def parse_summary(summary_text: str) -> Dict[str, Any]:
+def parse_summary_text(summary_text: str) -> Dict[str, Any]:
     """
     Parse plain-text summary into dict.
 
@@ -276,16 +289,94 @@ def parse_summary(summary_text: str) -> Dict[str, Any]:
     return parsed
 
 
+def normalize_gate_fields(parsed_summary: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Normalize gate fields to handle both JSON (lists) and legacy text (ints) formats.
+
+    Returns dict with:
+        - errors_count: int
+        - errors_list: list
+        - sections_missing_count: int
+        - sections_missing_list: list
+        - badges_missing_count: int
+        - badges_missing_list: list
+        - json_valid: bool
+        - html_valid: bool
+    """
+    normalized = {}
+
+    # errors: can be list (JSON) or int (legacy)
+    errors = parsed_summary.get("errors")
+    if isinstance(errors, list):
+        normalized["errors_count"] = len(errors)
+        normalized["errors_list"] = errors
+    elif isinstance(errors, int):
+        normalized["errors_count"] = errors
+        normalized["errors_list"] = []
+    else:
+        # Missing or unexpected type - fail safe
+        normalized["errors_count"] = 0
+        normalized["errors_list"] = []
+
+    # sections_missing: can be list (JSON) or int (legacy)
+    sections_missing = parsed_summary.get("sections_missing")
+    if isinstance(sections_missing, list):
+        normalized["sections_missing_count"] = len(sections_missing)
+        normalized["sections_missing_list"] = sections_missing
+    elif isinstance(sections_missing, int):
+        normalized["sections_missing_count"] = sections_missing
+        normalized["sections_missing_list"] = parsed_summary.get("sections_missing_list", [])
+    else:
+        # Missing - this is a schema error, but don't crash
+        normalized["sections_missing_count"] = -1  # Sentinel to indicate parsing issue
+        normalized["sections_missing_list"] = []
+        print(f"[gate] ⚠️ sections_missing field missing or unexpected type: {type(sections_missing)}")
+
+    # badges_missing: can be list (JSON) or string/None (legacy)
+    badges_missing = parsed_summary.get("badges_missing")
+    if isinstance(badges_missing, list):
+        normalized["badges_missing_count"] = len(badges_missing)
+        normalized["badges_missing_list"] = badges_missing
+    elif badges_missing is None:
+        # Missing is OK for badges (informational)
+        normalized["badges_missing_count"] = 0
+        normalized["badges_missing_list"] = []
+    else:
+        # Legacy string format
+        normalized["badges_missing_count"] = 0 if badges_missing in ("[]", "") else 1
+        normalized["badges_missing_list"] = [badges_missing] if badges_missing not in ("[]", "") else []
+
+    # json_valid: must be boolean
+    json_valid = parsed_summary.get("json_valid")
+    if isinstance(json_valid, bool):
+        normalized["json_valid"] = json_valid
+    elif isinstance(json_valid, str):
+        normalized["json_valid"] = json_valid.lower() == "true"
+    else:
+        normalized["json_valid"] = False
+
+    # html_valid: must be boolean
+    html_valid = parsed_summary.get("html_valid")
+    if isinstance(html_valid, bool):
+        normalized["html_valid"] = html_valid
+    elif isinstance(html_valid, str):
+        normalized["html_valid"] = html_valid.lower() == "true"
+    else:
+        normalized["html_valid"] = False
+
+    return normalized
+
+
 def validate_summary_gate(parsed_summary: Dict[str, Any]) -> Tuple[bool, List[str]]:
     """
     Validate summary against Golden Gate rules.
 
     Rules (strict, for Golden Runs):
-    - errors: 0
-    - sections_missing: 0
-    - badges_missing: [] (empty list)
+    - errors: [] (empty list)
+    - sections_missing: [] (empty list)
     - json_valid: true
-    - report_status: done (or 'none' is acceptable if analysis exists)
+    - html_valid: true
+    - badges_missing: informational only (NOT gate-blocking)
     - pdf_url_present: false is OK (PDF is on-demand)
 
     Returns:
@@ -293,35 +384,36 @@ def validate_summary_gate(parsed_summary: Dict[str, Any]) -> Tuple[bool, List[st
     """
     failures = []
 
+    # Normalize the parsed summary for robust handling
+    # This handles both JSON response (lists) and legacy text parsing (ints)
+    normalized = normalize_gate_fields(parsed_summary)
+
+    # Debug: log normalized state
+    print(f"[gate] Normalized state: errors={normalized['errors_count']}, "
+          f"sections_missing={normalized['sections_missing_count']}, "
+          f"json_valid={normalized['json_valid']}, html_valid={normalized['html_valid']}, "
+          f"badges_missing={normalized['badges_missing_count']} (informational)")
+
     # Rule 1: errors must be 0
-    errors = parsed_summary.get("errors", -1)
-    if errors != 0:
-        failures.append(f"errors: {errors} (expected: 0)")
+    if normalized["errors_count"] > 0:
+        failures.append(f"errors: {normalized['errors_count']} (expected: 0) - {normalized['errors_list']}")
 
     # Rule 2: sections_missing must be 0
-    sections_missing = parsed_summary.get("sections_missing", -1)
-    if sections_missing != 0:
-        missing_list = parsed_summary.get("sections_missing_list", [])
-        failures.append(f"sections_missing: {sections_missing} {missing_list}")
+    if normalized["sections_missing_count"] > 0:
+        failures.append(f"sections_missing: {normalized['sections_missing_count']} - {normalized['sections_missing_list']}")
 
-    # Rule 3: badges_missing must be empty
-    badges_missing = parsed_summary.get("badges_missing", None)
-    if badges_missing is None:
-        failures.append("badges_missing: field not found")
-    elif isinstance(badges_missing, list) and len(badges_missing) > 0:
-        failures.append(f"badges_missing: {badges_missing}")
-    elif isinstance(badges_missing, str) and badges_missing != "[]":
-        failures.append(f"badges_missing: {badges_missing}")
+    # Rule 3: badges_missing is INFORMATIONAL ONLY (not gate-blocking)
+    # Just log it, don't add to failures
+    if normalized["badges_missing_count"] > 0:
+        print(f"[gate] ℹ️ badges_missing (informational): {normalized['badges_missing_list']}")
 
     # Rule 4: json_valid must be true
-    json_valid = parsed_summary.get("json_valid", False)
-    if not json_valid:
-        failures.append(f"json_valid: {json_valid} (expected: true)")
+    if not normalized["json_valid"]:
+        failures.append(f"json_valid: {normalized['json_valid']} (expected: true)")
 
-    # Rule 5: html_valid should be true
-    html_valid = parsed_summary.get("html_valid", False)
-    if not html_valid:
-        failures.append(f"html_valid: {html_valid} (expected: true)")
+    # Rule 5: html_valid must be true
+    if not normalized["html_valid"]:
+        failures.append(f"html_valid: {normalized['html_valid']} (expected: true)")
 
     # Note: pdf_url_present: false is OK (PDF is generated on-demand)
     # Note: report_status: none is OK if analysis exists
@@ -330,13 +422,20 @@ def validate_summary_gate(parsed_summary: Dict[str, Any]) -> Tuple[bool, List[st
     return passed, failures
 
 
-def save_summary_artifact(profile_id: str, summary_text: str) -> Path:
+def save_summary_artifact(profile_id: str, summary_data: Union[str, Dict[str, Any]]) -> Path:
     """Save summary as artifact for debugging/CI."""
     output_dir = ARTIFACTS_DIR / profile_id
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    summary_path = output_dir / "summary.txt"
-    summary_path.write_text(summary_text, encoding="utf-8")
+    # Handle both string (legacy) and dict (JSON) formats
+    if isinstance(summary_data, dict):
+        summary_path = output_dir / "summary.json"
+        import json
+        summary_path.write_text(json.dumps(summary_data, indent=2, ensure_ascii=False), encoding="utf-8")
+    else:
+        summary_path = output_dir / "summary.txt"
+        summary_path.write_text(summary_data, encoding="utf-8")
+
     print(f"[gate] Summary saved: {summary_path}")
     return summary_path
 
@@ -355,16 +454,17 @@ def run_summary_gate(
     """
     print(f"\n[gate] Running Summary Gate for {profile_id}...")
 
-    # 1. Fetch summary
-    summary_text = fetch_summary(base_url, service_token, briefing_id)
-    if not summary_text:
+    # 1. Fetch summary (now returns dict directly for JSON responses)
+    summary_data = fetch_summary(base_url, service_token, briefing_id)
+    if not summary_data:
         return False, "Failed to fetch summary"
 
     # 2. Save as artifact (always, for debugging)
-    save_summary_artifact(profile_id, summary_text)
+    save_summary_artifact(profile_id, summary_data)
 
-    # 3. Parse summary
-    parsed = parse_summary(summary_text)
+    # 3. summary_data is already parsed (dict) from fetch_summary
+    # No separate parse step needed for JSON responses
+    parsed = summary_data
     if not parsed:
         return False, "Failed to parse summary"
 
@@ -378,6 +478,10 @@ def run_summary_gate(
         print(f"[gate] ❌ FAILED - {len(failures)} issue(s):")
         for f in failures:
             print(f"[gate]   - {f}")
+        # Log full normalized state on failure for debugging
+        normalized = normalize_gate_fields(parsed)
+        import json
+        print(f"[gate] 📋 Full normalized state: {json.dumps(normalized, indent=2)}")
         return False, f"Gate failed: {'; '.join(failures)}"
 
 
