@@ -1,178 +1,168 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
+<!-- PLATIN++ PROMPT v6.0 - SPRINT GAMECHANGER-REWORK -->
 <!-- SECTION: gamechanger -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{STRATEGISCHE_ZIELE}}, {{GESCHAEFTSMODELL_EVOLUTION}}, {{VISION_3_JAHRE}}, COMPANY_SIZE -->
-<!-- TOKEN-BUDGET: 3500 (solo:0.8x=2800, team:1.0x=3500, kmu:1.15x=4025) -->
-<!-- WORD_MINIMUM: 750 (ALLE GRÖSSEN - STRIKT!) -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{STRATEGISCHE_ZIELE}}, {{GESCHAEFTSMODELL_EVOLUTION}}, {{VISION_3_JAHRE}}, {{SCHMERZPUNKTE}}, {{WETTBEWERB}}, COMPANY_SIZE -->
+<!-- TOKEN-BUDGET: 2500 -->
+<!-- WORD_MINIMUM: 400 -->
 <!--
-ZIEL: MINDESTENS 3 realistische Gamechanger für {{OFFERING_LABEL}}.
-MINDESTLÄNGE: ≥750 Wörter (STRIKT EINHALTEN! NICHT nach 1-2 Ideen abbrechen!)
+=============================================================================
+GAMECHANGER v6.0 — EINE TRANSFORMATIVE IDEE
+=============================================================================
 
-KURZLABELS (VERPFLICHTEND!):
-- {{BRANCH_CORE_LABEL}} = Branche in 8-12 Wörtern
-- {{BRANCH_CONTEXT_LABEL}} = Branche in 4-6 Wörtern
-- {{OFFERING_LABEL}} = Hauptleistung in 6-10 Wörtern
+PARADIGMENWECHSEL:
+Der Gamechanger ist KEINE Liste von Optimierungen.
+Der Gamechanger ist EINE mutige, strategische Idee, die das Denken verändert.
 
-PFLICHTSTRUKTUR (pro Gamechanger):
-1. Kernidee (2-3 Sätze)
-2. Betroffene Wertschöpfung (konkret)
-3. Nutzen (quantifizierbar wenn möglich)
-4. Voraussetzungen (size-aware)
-5. Erster Schritt in den nächsten 90 Tagen
+ZIEL:
+Ein Aha-Moment für die Geschäftsführung.
+Nicht: "Das könnten wir auch machen."
+Sondern: "Das verändert, wie wir über unser Geschäft nachdenken."
 
-PERSONA-VARIATIONEN (COMPANY_SIZE):
-- solo: Automatisierung, persönliche Entlastung, skalierbare Vorlagen
-- team: arbeitsteilige Workflows, Rollen, einfache Governance
-- kmu: skalierbare Prozesse, klare Verantwortlichkeiten, Pilotbereiche
+=============================================================================
+VERBINDLICHE STRUKTUR (genau diese 4 Blöcke, in dieser Reihenfolge):
+=============================================================================
 
-ANTI-REDUNDANZ (STRIKT!):
-- Gamechanger ergänzen Business Case (→ siehe Business Case)
-- Verknüpfung mit Roadmap, aber keine Dopplung (→ siehe Roadmap)
-- Bei Überschneidung: Querverweis nutzen
+1. STRATEGISCHER BRUCHPUNKT
+   - Was wird im Kontext von {{OFFERING_LABEL}} heute zu klein, zu reaktiv oder strukturell falsch gedacht?
+   - Wo liegt die unsichtbare Bremse, die Wachstum oder Differenzierung verhindert?
+   - Nicht: "Es gibt Ineffizienzen" (zu generisch)
+   - Sondern: konkrete Denkblockade benennen
 
-REGELN:
-- Keine erfundenen Daten
-- Konkreter Bezug zu {{OFFERING_LABEL}} erforderlich
-- MINDESTENS 3 vollständige Szenarien beschreiben!
+2. TRANSFORMATIONS-IDEE
+   - EINE klare, neue Logik (nicht drei, nicht fünf — EINE)
+   - Bezug zu Rollen, Prozessen, Architektur oder Entscheidungslogik
+   - Muss sich anfühlen wie ein Perspektivwechsel, nicht wie ein Tool-Tipp
+   - KEINE Buzzwords, KEIN Marketing-Sprech
 
-SPRINT G5 - PERSONA HARD-GUARDS (STRIKT!):
+3. WARUM DAS EIN GAMECHANGER IST
+   - 2-3 präzise Wirkungen (Geschwindigkeit, Qualität, Skalierbarkeit, Risikoreduktion)
+   - Konkret und nachvollziehbar
+   - KEIN ROI-Blabla, KEINE erfundenen Prozentzahlen
+
+4. ERSTER REALISTISCHER SCHRITT
+   - Klein, aber konsequent
+   - Kein Mammutprojekt
+   - Anschlussfähig an {{COMPANY_SIZE}}
+   - In 2-4 Wochen umsetzbar
+
+=============================================================================
+TONALITÄT (STRIKT):
+=============================================================================
+- Analytisch, nicht beratend
+- Souverän, nicht werbend
+- Beschreibend, nicht auffordernd
+- Entscheidungsorientiert, nicht einladend
+
+=============================================================================
+LEAK-PREVENTION — ABSOLUT VERBOTEN (Null-Toleranz):
+=============================================================================
+NIEMALS VERWENDEN:
+- Direkte Anrede: "Sie", "Ihr", "du", "dein", "wir", "uns", "unser"
+- Hilfsangebote: "helfen", "unterstützen", "begleiten", "beraten"
+- Einladungen: "bei Bedarf", "falls gewünscht", "wenn nötig"
+- CTA-Sprache: "kontaktieren", "anfragen", "sprechen Sie uns an"
+- Service-Phrasen: "gerne", "selbstverständlich", "jederzeit"
+- Fragen an den Leser: "Haben Sie...?", "Möchten Sie...?", "Was wäre wenn...?"
+- Beratungsformeln: "empfehlen wir", "sollten Sie", "es wäre ratsam"
+- Meta-Kommentare: "In diesem Abschnitt...", "Im Folgenden..."
+
+STATTDESSEN:
+- Passive/unpersönliche Konstruktionen: "lässt sich", "ermöglicht", "entsteht"
+- Substantivierungen: "die Umsetzung", "der nächste Schritt", "die Transformation"
+- Dritte Person: "das Unternehmen", "die Organisation", "der Bereich"
+
+=============================================================================
+PERSONA-ANPASSUNG (COMPANY_SIZE):
+=============================================================================
 {% if COMPANY_SIZE == "solo" %}
-SOLO-MODUS - VERBOTEN:
-- "Abteilungen" → "Arbeitsbereiche"
-- "Teams" → "Kapazitäten/Ressourcen"
-- "Fachbereich" → "Arbeitsfeld"
-- "Team aufbauen" → "Kapazität erweitern"
-- "Mitarbeiter" → "externe Unterstützung"
+SOLO: Der Bruchpunkt bezieht sich auf persönliche Kapazitätsgrenzen und Skalierbarkeit.
+Die Transformation ermöglicht systematisches Arbeiten ohne Teamaufbau.
 {% elif COMPANY_SIZE == "team" %}
-TEAM-MODUS - VERBOTEN:
-- "Division/Unit/Konzern" → nicht verwenden
-- "Abteilung" → "Bereich"
-- Solo-Begriffe: "Einzelperson", "allein"
+TEAM: Der Bruchpunkt bezieht sich auf Koordinationsaufwand und Rollenklarheit.
+Die Transformation schafft klare Verantwortlichkeiten ohne Bürokratie.
 {% else %}
-KMU-MODUS - VERBOTEN:
-- "Konzern/Division/Unit" → nicht verwenden
-- Solo-Begriffe: "Einzelperson", "allein"
+KMU: Der Bruchpunkt bezieht sich auf Silos und Entscheidungsgeschwindigkeit.
+Die Transformation verbindet Bereiche und beschleunigt strategische Umsetzung.
 {% endif %}
+
+=============================================================================
+ANTI-PATTERNS (was der Output NICHT sein darf):
+=============================================================================
+- KEINE Liste von 3-5 Ideen → nur EINE Idee
+- KEINE Aufzählung von Tools oder Features
+- KEINE allgemeinen KI-Vorteile ("schneller", "effizienter", "kostengünstiger")
+- KEINE Copy-Paste-fähigen Textbausteine
+- KEINE Wiederholung von Inhalten aus anderen Sektionen
+- KEIN Berater-Tonfall
+
+=============================================================================
 -->
 
 <section class="section gamechanger">
-  <h2>KI als Gamechanger für Ihr Geschäftsmodell</h2>
+  <h2>Der strategische Gamechanger</h2>
 
-  <p>
-    Für {{BRANCH_CONTEXT_LABEL}} mit Schwerpunkt <strong>{{OFFERING_LABEL}}</strong>
-    ergeben sich mehrere KI-Szenarien, die die Wertschöpfung spürbar verändern können.
-    Die folgenden Vorschläge knüpfen an Ihre strategischen Ziele ({{STRATEGISCHE_ZIELE}}),
-    die Geschäftsmodell-Evolution ({{GESCHAEFTSMODELL_EVOLUTION}}) und Ihre 3-Jahres-Vision
-    ({{VISION_3_JAHRE}}) an.
-  </p>
+  <div class="gamechanger-insight">
+    <h3>Strategischer Bruchpunkt</h3>
+    <p>
+      <!--
+      HIER: Konkret benennen, was im Kontext von {{OFFERING_LABEL}}
+      strukturell falsch oder zu klein gedacht wird.
+      Bezug zu {{BRANCH_CONTEXT_LABEL}} und {{SCHMERZPUNKTE}}.
+      2-3 Sätze. Analytisch. Keine Anrede.
+      -->
+    </p>
+  </div>
 
-  <ol class="gamechanger-list">
+  <div class="gamechanger-transformation">
+    <h3>Die Transformation</h3>
+    <p>
+      <!--
+      HIER: EINE klare, neue Logik beschreiben.
+      Wie verändert sich das Denken über {{OFFERING_LABEL}}?
+      Bezug zu {{STRATEGISCHE_ZIELE}} und {{GESCHAEFTSMODELL_EVOLUTION}}.
+      3-4 Sätze. Konkret. Kein Buzzword-Bingo.
+      -->
+    </p>
+  </div>
 
-    <!-- GAMECHANGER 1 -->
-    <li>
-      <h3>1. KI-gestützte Standardisierung & Automatisierung zentraler Kernprozesse</h3>
-      <p><strong>Kernidee:</strong>
-        Wiederkehrende Aufgaben in {{OFFERING_LABEL}} werden über KI-gestützte Vorlagen,
-        Automatisierungen und strukturierte Entscheidungswege so standardisiert, dass
-        Qualität und Geschwindigkeit deutlich steigen.
-      </p>
-      <p><strong>Betroffene Wertschöpfung:</strong>
-        Erstellung, Analyse, interne Abstimmungen, Kundendokumentation.
-      </p>
-      <p><strong>Nutzen:</strong>
-        Weniger manuelle Routinearbeit, stabilere Ergebnisse und eine konsistente
-        Kundenerfahrung – unabhängig von Tagesform oder Auslastung.
-      </p>
-      <p><strong>Voraussetzungen:</strong>
-        5–10 typische Beispiele, definierte Qualitätskriterien, klare Input-Regeln;
-        {% if COMPANY_SIZE == "solo" %}persönliche Routinen{% elif COMPANY_SIZE == "team" %}Teamrollenzuordnung{% else %}beteiligte Fachbereiche{% endif %}.
-      </p>
-      <p><strong>Erster Schritt in den nächsten 90 Tagen:</strong>
-        Einen priorisierten Teilprozess auswählen und mit KI-Vorlagen + Review-Schritten
-        als Mini-Pilot stabilisieren.
-      </p>
-    </li>
+  <div class="gamechanger-impact">
+    <h3>Warum das ein Gamechanger ist</h3>
+    <ul>
+      <!--
+      HIER: 2-3 präzise Wirkungen als Listenpunkte.
+      Konkret, nicht generisch.
+      Beispiel: "Entscheidungszyklen verkürzen sich von Wochen auf Tage"
+      NICHT: "Die Effizienz steigt"
+      -->
+    </ul>
+  </div>
 
-    <!-- GAMECHANGER 2 -->
-    <li>
-      <h3>2. Aufbau eines KI-gestützten Wissenspools für Entscheidungen & Angebotserstellung</h3>
-      <p><strong>Kernidee:</strong>
-        Zentrale Informationen, Beispiele, Best Practices und interne Expertise werden
-        KI-unterstützt gebündelt, sodass Recherchen, Angebotsprozesse oder Analysen
-        deutlich schneller und konsistenter erfolgen.
-      </p>
-      <p><strong>Betroffene Wertschöpfung:</strong>
-        Angebotsentwicklung, Planung, interne Abstimmungen, Wissenstransfer.
-      </p>
-      <p><strong>Nutzen:</strong>
-        Weniger Suchaufwand, deutliche Zeitersparnis, bessere Entscheidungsqualität und
-        höherer Wiedererkennungswert für Kund:innen.
-      </p>
-      <p><strong>Voraussetzungen:</strong>
-        Strukturierte Beispiele und interne Inhalte; kurze Regeln für Qualität und
-        Aktualisierung; {% if COMPANY_SIZE == "solo" %}persönliche Sortierung{% elif COMPANY_SIZE == "team" %}Teamabstimmung{% else %}bereichsübergreifende Koordination{% endif %}.
-      </p>
-      <p><strong>Erster Schritt in den nächsten 90 Tagen:</strong>
-        10–15 reale Inhalte bündeln, erste KI-gestützte Zusammenfassungen erzeugen und
-        diese als Wissensbasis in den Arbeitsalltag integrieren.
-      </p>
-    </li>
+  <div class="gamechanger-action">
+    <h3>Erster realistischer Schritt</h3>
+    <p>
+      <!--
+      HIER: Ein konkreter, kleiner Schritt.
+      In 2-4 Wochen umsetzbar.
+      Passend für {{COMPANY_SIZE}}.
+      1-2 Sätze. Handlungsorientiert, aber ohne Aufforderung.
+      -->
+    </p>
+  </div>
 
-    <!-- GAMECHANGER 3 -->
-    <li>
-      <h3>3. KI-basierte Qualitätssicherung & konsistente Kundenergebnisse</h3>
-      <p><strong>Kernidee:</strong>
-        Qualität, Präzision und Konsistenz werden über KI-gestützte Prüfmechanismen
-        verbessert, die branchenspezifische Anforderungen berücksichtigen
-        (z.&nbsp;B. Tonalität, Struktur, Vollständigkeit, Risiken, sensible Inhalte).
-      </p>
-      <p><strong>Betroffene Wertschöpfung:</strong>
-        Kundenkommunikation, inhaltliche Produktion, interne Reviews, finaler Output.
-      </p>
-      <p><strong>Nutzen:</strong>
-        Weniger Fehler, weniger Korrekturschleifen und eine deutlich höhere
-        Ersttrefferquote – besonders relevant bei Zeitdruck oder hoher Auslastung.
-      </p>
-      <p><strong>Voraussetzungen:</strong>
-        5–7 klare Prüfkriterien, einheitliche Vorlagen, definierte Eskalationslogik;
-        {% if COMPANY_SIZE == "solo" %}persönliche Routine{% elif COMPANY_SIZE == "team" %}Review-Rollen{% else %}Qualitätssicherung + Fachbereiche{% endif %}.
-      </p>
-      <p><strong>Erster Schritt in den nächsten 90 Tagen:</strong>
-        Eine KI-gestützte Mini-Checkliste einführen und bei jedem Output anwenden,
-        bevor Ergebnisse intern oder extern genutzt werden.
-      </p>
-    </li>
-
-  </ol>
-
-  <h3>Was diese Gamechanger gemeinsam haben</h3>
-  <ul>
-    <li>Sie bauen auf bestehenden Stärken von {{OFFERING_LABEL}} auf und verstärken diese mit KI.</li>
-    <li>Sie lassen sich mit überschaubarem Risiko pilotieren und bei Erfolg schrittweise skalieren.</li>
-    <li>Details zur Umsetzung → siehe Roadmap und Business Case.</li>
-  </ul>
-
-  <p class="small muted">
-    Die Gamechanger dienen als strategische Leitplanken und unterstützen Ihr Unternehmen
-    dabei, von ersten KI-Schritten hin zu nachhaltiger, skalierbarer Wertschöpfung zu kommen.
-  </p>
 </section>
 
-<!-- DEV: SPRINT N - Ziel: ≥750 Wörter, mindestens 3 vollständige Szenarien -->
-
-
-<!-- ZERO-LEAK POLICY (N4.6) -->
 <!--
-VERBOTEN – NIEMALS VERWENDEN:
-- Keine Fragen an den Leser ("Haben Sie Fragen?", "Möchten Sie mehr erfahren?")
-- Keine Aufforderungen ("Wenn Sie möchten...", "Kontaktieren Sie uns...")
-- Keine Assistenten-Sprache ("Ich kann Ihnen helfen...", "Gerne erkläre ich...")
-- Keine Angebote ("Bei Bedarf...", "Falls gewünscht...")
-- Keine interaktiven Elemente ("Klicken Sie hier...", "Wählen Sie...")
-- Keine Platzhalter ("[Hier einfügen]", "{{VARIABLE}}" außer definierten)
-- Keine Meta-Kommentare ("Dieser Abschnitt...", "Im Folgenden...")
-
-Der Output ist ein FINALER REPORT-ABSCHNITT, kein Gespräch.
+=============================================================================
+QUALITÄTS-SELBSTCHECK VOR OUTPUT:
+=============================================================================
+□ Ist es EINE Idee (nicht mehrere)?
+□ Fühlt es sich wie ein Perspektivwechsel an (nicht wie ein Tipp)?
+□ Ist der Bruchpunkt spezifisch für {{BRANCH_CONTEXT_LABEL}}?
+□ Enthält der Text NULL direkte Anreden?
+□ Gibt es KEINE Hilfsangebote oder CTAs?
+□ Ist der erste Schritt realistisch klein?
+□ Unterscheidet sich der Inhalt klar von Roadmap/Business Case?
+=============================================================================
 -->
