@@ -463,10 +463,10 @@ def get_report_summary(
     # -------------------------------------------------------------------------
     # 5. Sections analysis
     # -------------------------------------------------------------------------
-    sections_present = []
-    sections_missing = []
-    optional_present = []
-    sections_data = {}
+    sections_present: list[str] = []
+    sections_missing: list[str] = []
+    optional_present: list[str] = []
+    sections_data: dict[str, Any] = {}
 
     if analysis:
         sections_data = getattr(analysis, "sections", None) or {}
