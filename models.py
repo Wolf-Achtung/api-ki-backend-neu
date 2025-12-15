@@ -49,6 +49,9 @@ class User(Base):
 
 class Briefing(Base):
     __tablename__ = "briefings"
+    __table_args__ = (
+        Index("ix_briefings_status_accepted_at", "status", "accepted_at"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[Optional[int]] = mapped_column(
@@ -62,10 +65,28 @@ class Briefing(Base):
         nullable=False
     )
 
+    # Worker-Queue Status Fields (Sprint: DB-Backed Worker)
+    status: Mapped[str] = mapped_column(
+        String(20), default="accepted", nullable=False, index=True
+    )
+    accepted_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=True
+    )
+    processing_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    done_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    worker_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+
     user = relationship("User", lazy="joined")
 
     def __repr__(self) -> str:  # pragma: no cover
-        return f"<Briefing id={self.id} user_id={self.user_id}>"
+        return f"<Briefing id={self.id} status={self.status!r} user_id={self.user_id}>"
 
 
 class Analysis(Base):

@@ -6484,6 +6484,109 @@ def run_analysis_for_briefing(briefing_id: int, email: Optional[str] = None) -> 
     """Public API: Start analysis for a briefing (called from routes/briefings.py)"""
     run_async(briefing_id, email)
 
+
+def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = None, run_id: Optional[str] = None) -> None:
+    """
+    Execute the full briefing analysis pipeline (LLM + PDF + Email).
+
+    Called by the worker process. Expects an external DB session and handles
+    all processing without managing session lifecycle.
+
+    Args:
+        db: SQLAlchemy session (managed by caller/worker)
+        briefing_id: ID of the briefing to process
+        email: Optional user email for notifications
+        run_id: Optional run ID for logging (generated if not provided)
+
+    Raises:
+        ValueError: If briefing not found or PDF generation fails
+        Exception: Any error during analysis/PDF/email
+    """
+    if not run_id:
+        run_id = f"worker-{uuid.uuid4().hex[:8]}"
+
+    rep: Optional[Report] = None
+    try:
+        log.info("[%s] 🚀 Starting analysis v5.3.0-PLATIN+++ for briefing_id=%s (worker mode)", run_id, briefing_id)
+
+        # Core analysis pipeline
+        an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
+
+        br = db.get(Briefing, briefing_id)
+        if not br:
+            raise ValueError(f"Briefing {briefing_id} not found after analysis")
+
+        # Create Report record
+        rep = Report(
+            user_id=br.user_id if br else None,
+            briefing_id=briefing_id,
+            analysis_id=an_id,
+            created_at=datetime.now(timezone.utc)
+        )
+        if hasattr(rep, "user_email"):
+            rep.user_email = (email or "")
+        if hasattr(rep, "task_id"):
+            rep.task_id = f"worker-{uuid.uuid4()}"
+        if hasattr(rep, "status"):
+            rep.status = "pending"
+        db.add(rep)
+        db.commit()
+        db.refresh(rep)
+
+        # PDF generation
+        if DBG_PDF:
+            log.debug("[%s] 📄 pdf_render start", run_id)
+        pdf_info = render_pdf_from_html(html, meta={"analysis_id": an_id, "briefing_id": briefing_id, "run_id": run_id})
+        pdf_url = pdf_info.get("pdf_url")
+        pdf_bytes = pdf_info.get("pdf_bytes")
+        pdf_error = pdf_info.get("error")
+        if DBG_PDF:
+            log.debug("[%s] 📄 pdf_render done url=%s bytes=%s error=%s", run_id, bool(pdf_url), len(pdf_bytes or b""), pdf_error)
+
+        if not pdf_url and not pdf_bytes:
+            error_msg = f"PDF failed: {pdf_error or 'no output'}"
+            log.error("[%s] ❌ %s", run_id, error_msg)
+            if hasattr(rep, "status"):
+                rep.status = "failed"
+            if hasattr(rep, "email_error_user"):
+                rep.email_error_user = error_msg
+            if hasattr(rep, "updated_at"):
+                rep.updated_at = datetime.now(timezone.utc)
+            db.add(rep)
+            db.commit()
+            raise ValueError(error_msg)
+
+        # Update Report with PDF info
+        if hasattr(rep, "pdf_url"):
+            rep.pdf_url = pdf_url
+        if hasattr(rep, "pdf_bytes_len") and pdf_bytes:
+            rep.pdf_bytes_len = len(pdf_bytes)
+        if hasattr(rep, "status"):
+            rep.status = "done"
+        if hasattr(rep, "updated_at"):
+            rep.updated_at = datetime.now(timezone.utc)
+        db.add(rep)
+        db.commit()
+        db.refresh(rep)
+
+        # Send notification emails
+        _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id)
+
+        log.info("[%s] ✅ Pipeline complete for briefing_id=%s", run_id, briefing_id)
+
+    except Exception as exc:
+        log.error("[%s] ❌ Pipeline failed: %s", run_id, exc, exc_info=True)
+        if rep and hasattr(rep, "status"):
+            rep.status = "failed"
+            if hasattr(rep, "email_error_user"):
+                rep.email_error_user = str(exc)
+            if hasattr(rep, "updated_at"):
+                rep.updated_at = datetime.now(timezone.utc)
+            db.add(rep)
+            db.commit()
+        raise
+
+
 def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     run_id = f"run-{uuid.uuid4().hex[:8]}"
 
