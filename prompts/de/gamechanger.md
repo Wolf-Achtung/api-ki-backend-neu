@@ -1,51 +1,81 @@
 Developer:
-<!-- PLATIN++ PROMPT v6.0 - SPRINT GAMECHANGER-REWORK -->
+<!-- PLATIN+++ PROMPT v7.0 - SPRINT PRODUKT-SCHÄRFUNG -->
 <!-- SECTION: gamechanger -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{STRATEGISCHE_ZIELE}}, {{GESCHAEFTSMODELL_EVOLUTION}}, {{VISION_3_JAHRE}}, {{SCHMERZPUNKTE}}, {{WETTBEWERB}}, COMPANY_SIZE -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{STRATEGISCHE_ZIELE}}, {{GESCHAEFTSMODELL_EVOLUTION}}, {{HAUPTUMSATZTREIBER}}, {{WETTBEWERB}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 2500 -->
 <!-- WORD_MINIMUM: 400 -->
 <!--
 =============================================================================
-GAMECHANGER v6.0 — EINE TRANSFORMATIVE IDEE
+GAMECHANGER v7.0 — EINE NICHT-AUSTAUSCHBARE TRANSFORMATIONSIDEE
 =============================================================================
 
-PARADIGMENWECHSEL:
-Der Gamechanger ist KEINE Liste von Optimierungen.
-Der Gamechanger ist EINE mutige, strategische Idee, die das Denken verändert.
+KERN-ANFORDERUNG (v7.0 NEU):
+Der Gamechanger MUSS so spezifisch sein, dass er für ein Unternehmen
+- anderer Branche ODER
+- anderer Größe ODER
+- anderer Hauptleistung
+NICHT unverändert gelten würde.
 
-ZIEL:
-Ein Aha-Moment für die Geschäftsführung.
-Nicht: "Das könnten wir auch machen."
-Sondern: "Das verändert, wie wir über unser Geschäft nachdenken."
+PRÜFFRAGE VOR OUTPUT:
+"Würde diese Idee auch für einen Steuerberater / IT-Dienstleister / Handwerker funktionieren?"
+→ Wenn JA: zu generisch. Neu formulieren.
 
 =============================================================================
-VERBINDLICHE STRUKTUR (genau diese 4 Blöcke, in dieser Reihenfolge):
+WERTSCHÖPFUNGSLOGIK STATT PROZESSIDEE (v7.0 NEU):
+=============================================================================
+
+FALSCH (zu generisch):
+"Prozesse automatisieren" / "Workflows optimieren" / "Zeit sparen"
+
+RICHTIG (wertschöpfungsbezogen):
+- WIE verändert sich die Art, wie {{OFFERING_LABEL}} erbracht wird?
+- WO entsteht ein struktureller Vorteil gegenüber {{WETTBEWERB}}?
+- WELCHE Rolle spielt der {{HAUPTUMSATZTREIBER}}?
+
+Der Gamechanger muss erklären, warum diese Transformation
+für genau dieses Geschäftsmodell ein Hebel ist.
+
+=============================================================================
+VERBINDLICHE STRUKTUR (4 Blöcke):
 =============================================================================
 
 1. STRATEGISCHER BRUCHPUNKT
-   - Was wird im Kontext von {{OFFERING_LABEL}} heute zu klein, zu reaktiv oder strukturell falsch gedacht?
-   - Wo liegt die unsichtbare Bremse, die Wachstum oder Differenzierung verhindert?
-   - Nicht: "Es gibt Ineffizienzen" (zu generisch)
-   - Sondern: konkrete Denkblockade benennen
+   - Was wird bei {{OFFERING_LABEL}} heute strukturell falsch gedacht?
+   - Bezug auf {{HAUPTUMSATZTREIBER}} und {{WETTBEWERB}} erforderlich
+   - Konkrete Denkblockade, nicht "Ineffizienzen"
 
 2. TRANSFORMATIONS-IDEE
-   - EINE klare, neue Logik (nicht drei, nicht fünf — EINE)
-   - Bezug zu Rollen, Prozessen, Architektur oder Entscheidungslogik
-   - Muss sich anfühlen wie ein Perspektivwechsel, nicht wie ein Tool-Tipp
-   - KEINE Buzzwords, KEIN Marketing-Sprech
+   - EINE klare, neue Wertschöpfungslogik
+   - Muss sich unterscheiden von: Automatisierung, Effizienzsteigerung, Kostensenkung
+   - Bezug zu {{GESCHAEFTSMODELL_EVOLUTION}} erforderlich
 
 3. WARUM DAS EIN GAMECHANGER IST
-   - 2-3 präzise Wirkungen (Geschwindigkeit, Qualität, Skalierbarkeit, Risikoreduktion)
-   - Konkret und nachvollziehbar
-   - KEIN ROI-Blabla, KEINE erfundenen Prozentzahlen
+   - 2-3 präzise Wirkungen auf Wertschöpfung (nicht auf Prozesse)
+   - Bezug auf strukturellen Wettbewerbsvorteil
+   - KEIN ROI-Blabla
 
 4. ERSTER REALISTISCHER SCHRITT
-   - Klein, aber konsequent
-   - Kein Mammutprojekt
-   - Anschlussfähig an {{COMPANY_SIZE}}
-   - In 2-4 Wochen umsetzbar
+   - Klein, in 2-4 Wochen machbar
+   - Passend für {{COMPANY_SIZE}}
+   - Bezug zur Transformation, nicht zur Tool-Einführung
+
+=============================================================================
+DIFFERENZIERUNGS-TEST (v7.0 NEU):
+=============================================================================
+
+Der Output MUSS mindestens 2 der folgenden Elemente konkret benennen:
+□ Spezifischer Aspekt von {{OFFERING_LABEL}}
+□ Charakteristik von {{BRANCH_CONTEXT_LABEL}}
+□ Besonderheit bei {{COMPANY_SIZE}}
+□ Bezug zu {{HAUPTUMSATZTREIBER}}
+
+Generische Formulierungen sind VERBOTEN:
+❌ "Routineaufgaben automatisieren"
+❌ "Wissen zentral verfügbar machen"
+❌ "Qualität standardisieren"
+❌ "Zeit für Kernaufgaben gewinnen"
 
 =============================================================================
 TONALITÄT (STRIKT):
@@ -77,25 +107,15 @@ STATTDESSEN:
 PERSONA-ANPASSUNG (COMPANY_SIZE):
 =============================================================================
 {% if COMPANY_SIZE == "solo" %}
-SOLO: Der Bruchpunkt bezieht sich auf persönliche Kapazitätsgrenzen und Skalierbarkeit.
-Die Transformation ermöglicht systematisches Arbeiten ohne Teamaufbau.
+SOLO: Der Bruchpunkt bezieht sich auf persönliche Skalierungsgrenzen.
+Die Transformation verändert, wie Wert geschaffen wird – nicht nur wie schnell.
 {% elif COMPANY_SIZE == "team" %}
-TEAM: Der Bruchpunkt bezieht sich auf Koordinationsaufwand und Rollenklarheit.
-Die Transformation schafft klare Verantwortlichkeiten ohne Bürokratie.
+TEAM: Der Bruchpunkt bezieht sich auf Koordinationskosten und Wissenssilos.
+Die Transformation schafft neue Formen der Zusammenarbeit – nicht nur Effizienz.
 {% else %}
-KMU: Der Bruchpunkt bezieht sich auf Silos und Entscheidungsgeschwindigkeit.
-Die Transformation verbindet Bereiche und beschleunigt strategische Umsetzung.
+KMU: Der Bruchpunkt bezieht sich auf organisatorische Trägheit und Marktdynamik.
+Die Transformation ermöglicht strategische Neupositionierung – nicht nur Optimierung.
 {% endif %}
-
-=============================================================================
-ANTI-PATTERNS (was der Output NICHT sein darf):
-=============================================================================
-- KEINE Liste von 3-5 Ideen → nur EINE Idee
-- KEINE Aufzählung von Tools oder Features
-- KEINE allgemeinen KI-Vorteile ("schneller", "effizienter", "kostengünstiger")
-- KEINE Copy-Paste-fähigen Textbausteine
-- KEINE Wiederholung von Inhalten aus anderen Sektionen
-- KEIN Berater-Tonfall
 
 =============================================================================
 -->
@@ -107,9 +127,10 @@ ANTI-PATTERNS (was der Output NICHT sein darf):
     <h3>Strategischer Bruchpunkt</h3>
     <p>
       <!--
-      HIER: Konkret benennen, was im Kontext von {{OFFERING_LABEL}}
-      strukturell falsch oder zu klein gedacht wird.
-      Bezug zu {{BRANCH_CONTEXT_LABEL}} und {{SCHMERZPUNKTE}}.
+      HIER: Konkret benennen, was bei {{OFFERING_LABEL}} strukturell
+      falsch oder zu klein gedacht wird.
+      MUSS Bezug zu {{HAUPTUMSATZTREIBER}} oder {{WETTBEWERB}} haben.
+      Keine generischen Prozessaussagen.
       2-3 Sätze. Analytisch. Keine Anrede.
       -->
     </p>
@@ -119,10 +140,11 @@ ANTI-PATTERNS (was der Output NICHT sein darf):
     <h3>Die Transformation</h3>
     <p>
       <!--
-      HIER: EINE klare, neue Logik beschreiben.
-      Wie verändert sich das Denken über {{OFFERING_LABEL}}?
-      Bezug zu {{STRATEGISCHE_ZIELE}} und {{GESCHAEFTSMODELL_EVOLUTION}}.
-      3-4 Sätze. Konkret. Kein Buzzword-Bingo.
+      HIER: EINE klare, neue Wertschöpfungslogik beschreiben.
+      Nicht "Prozesse optimieren", sondern "wie sich die Art der
+      Leistungserbringung grundlegend verändert".
+      Bezug zu {{GESCHAEFTSMODELL_EVOLUTION}} erforderlich.
+      3-4 Sätze. Konkret. Branchenspezifisch.
       -->
     </p>
   </div>
@@ -131,10 +153,10 @@ ANTI-PATTERNS (was der Output NICHT sein darf):
     <h3>Warum das ein Gamechanger ist</h3>
     <ul>
       <!--
-      HIER: 2-3 präzise Wirkungen als Listenpunkte.
-      Konkret, nicht generisch.
-      Beispiel: "Entscheidungszyklen verkürzen sich von Wochen auf Tage"
-      NICHT: "Die Effizienz steigt"
+      HIER: 2-3 präzise Wirkungen auf Wertschöpfung.
+      Fokus auf strukturellen Vorteil, nicht auf Effizienz.
+      Bezug zu {{BRANCH_CONTEXT_LABEL}} oder {{WETTBEWERB}}.
+      NICHT: "spart Zeit", "reduziert Kosten", "steigert Effizienz"
       -->
     </ul>
   </div>
@@ -146,6 +168,7 @@ ANTI-PATTERNS (was der Output NICHT sein darf):
       HIER: Ein konkreter, kleiner Schritt.
       In 2-4 Wochen umsetzbar.
       Passend für {{COMPANY_SIZE}}.
+      Bezug zur Wertschöpfungsänderung, nicht zur Tool-Einführung.
       1-2 Sätze. Handlungsorientiert, aber ohne Aufforderung.
       -->
     </p>
@@ -155,14 +178,14 @@ ANTI-PATTERNS (was der Output NICHT sein darf):
 
 <!--
 =============================================================================
-QUALITÄTS-SELBSTCHECK VOR OUTPUT:
+QUALITÄTS-SELBSTCHECK VOR OUTPUT (v7.0):
 =============================================================================
 □ Ist es EINE Idee (nicht mehrere)?
-□ Fühlt es sich wie ein Perspektivwechsel an (nicht wie ein Tipp)?
-□ Ist der Bruchpunkt spezifisch für {{BRANCH_CONTEXT_LABEL}}?
+□ Würde die Idee für eine andere Branche NICHT funktionieren?
+□ Ist {{OFFERING_LABEL}} oder {{HAUPTUMSATZTREIBER}} konkret referenziert?
+□ Geht es um Wertschöpfung (nicht nur Prozesse)?
 □ Enthält der Text NULL direkte Anreden?
 □ Gibt es KEINE Hilfsangebote oder CTAs?
-□ Ist der erste Schritt realistisch klein?
 □ Unterscheidet sich der Inhalt klar von Roadmap/Business Case?
 =============================================================================
 -->

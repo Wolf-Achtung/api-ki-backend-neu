@@ -1,5 +1,5 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
+<!-- PLATIN+++ PROMPT v6.0 - SPRINT PRODUKT-SCHÄRFUNG -->
 <!-- SECTION: roadmap_12m -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
@@ -9,9 +9,25 @@ Developer:
 <!-- WORD_MINIMUM_TEAM: 600 -->
 <!-- WORD_MINIMUM_KMU: 700 -->
 <!--
-ZIEL: 12-Monats-Roadmap mit Meilensteinen, aufbauend auf 90-Tage-Ergebnissen.
+ZIEL: 12-Monats-Roadmap als strategische Entscheidungskette (nicht Tool-Rollout).
 
-MINDESTLÄNGE (SPRINT G18 - STRIKT VERPFLICHTEND!):
+=============================================================================
+SPRACHSHIFT v6.0 — ENTSCHEIDUNGEN STATT IMPLEMENTIERUNGEN:
+=============================================================================
+
+VERBOTENE FORMULIERUNGEN → ERSETZUNGEN:
+❌ "Einführung / Implementierung"  → ✅ "Festlegung / Definition / Abgrenzung"
+❌ "Tool ausrollen"                → ✅ "Standards etablieren"
+❌ "System integrieren"            → ✅ "Verantwortlichkeiten klären"
+❌ "Workflow automatisieren"       → ✅ "Entscheidungsrahmen schaffen"
+❌ "Digitalisierung vorantreiben"  → ✅ "Prioritäten setzen"
+
+Die Roadmap zeigt WELCHE ENTSCHEIDUNGEN zu treffen sind,
+nicht WELCHE TOOLS einzuführen sind.
+
+=============================================================================
+
+MINDESTLÄNGE (STRIKT VERPFLICHTEND!):
 - Solo: mind. 500 Wörter (inkl. Q1-Q4 Phasen)
 - Team: mind. 600 Wörter (inkl. Rollen und Standards)
 - KMU: mind. 700 Wörter (inkl. 5-Dimensionen-Rollout)

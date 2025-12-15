@@ -1,11 +1,34 @@
-<!-- PLATIN++ PROMPT v5.5 - SPRINT G17.R (Roadmap-Booster) -->
+<!-- PLATIN+++ PROMPT v6.0 - SPRINT PRODUKT-SCHÄRFUNG -->
 <!-- SECTION: roadmap_90d -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 2800 (solo:0.8x=2240, team:1.0x=2800, kmu:1.15x=3220) -->
 <!--
-ZIEL: 90-Tage-Roadmap mit 4 klaren Phasen + Meilensteinen + Effekte-Abschnitt + Booster-Sektionen.
+ZIEL: 90-Tage-Roadmap als Abfolge von ENTSCHEIDUNGEN (nicht Tool-Einführungen).
+
+=============================================================================
+SPRACHSHIFT v6.0 — ENTSCHEIDUNGEN STATT IMPLEMENTIERUNGEN:
+=============================================================================
+
+Die Roadmap ist KEINE To-do-Liste für Tool-Rollouts.
+Die Roadmap ist eine Abfolge von bewussten Entscheidungen.
+
+VERBOTENE FORMULIERUNGEN → ERSETZUNGEN:
+❌ "Einführung eines KI-Tools"     → ✅ "Festlegung, welche Aufgaben automatisiert werden"
+❌ "Tool implementieren"           → ✅ "Grenzen des KI-Einsatzes definieren"
+❌ "KI-System einrichten"          → ✅ "Entscheidungsrahmen für KI-Nutzung schaffen"
+❌ "Automatisierung aufsetzen"     → ✅ "Kriterien für Automatisierung festlegen"
+❌ "Workflow digitalisieren"       → ✅ "Abgrenzung zwischen manuell und automatisiert"
+❌ "Software ausrollen"            → ✅ "Standards für den Einsatz etablieren"
+❌ "Integration durchführen"       → ✅ "Schnittstellen-Verantwortlichkeiten klären"
+
+TONALITÄT:
+- Entscheidungsorientiert, nicht technisch
+- Strategisch, nicht operativ
+- Abgrenzend, nicht aufzählend
+
+=============================================================================
 
 KURZLABELS (VERPFLICHTEND!):
 - {{BRANCH_CORE_LABEL}} = Branche in 8-12 Wörtern
