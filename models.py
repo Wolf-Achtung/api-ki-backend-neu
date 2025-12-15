@@ -100,7 +100,8 @@ class Analysis(Base):
         if isinstance(sections_data, str):
             import json
             try:
-                return json.loads(sections_data)
+                parsed = json.loads(sections_data)
+                return parsed if isinstance(parsed, dict) else {}
             except (json.JSONDecodeError, ValueError):
                 return {}
         return {}

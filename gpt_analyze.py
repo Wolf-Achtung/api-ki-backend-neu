@@ -6165,7 +6165,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     # === SPRINT FIX: Store sections in meta for Golden Gate summary ===
     # Filter sections to only include JSON-serializable string values (HTML sections)
     # This enables /api/report/summary to validate sections_present
-    serializable_sections = {}
+    serializable_sections: Dict[str, Any] = {}
     for k, v in sections.items():
         # Skip internal/debug keys and non-string values
         if k.startswith("_"):
