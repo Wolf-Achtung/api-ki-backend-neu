@@ -1,6 +1,24 @@
 Developer:
-<!-- PLATIN+++ PROMPT v6.0 - SPRINT PRODUKT-SCHÄRFUNG -->
+<!-- PLATIN+++ PROMPT v6.1 - SPRINT INHALTLICHE FINALISIERUNG -->
 <!-- SECTION: roadmap_12m -->
+<!--
+=============================================================================
+PLATIN+++ CONTENT DOD (verbindlich):
+=============================================================================
+- Transformationsbericht MIT Sicherheits- & Governance-Geländer
+- Zentrale strategische Weichenstellung KLAR benennen
+- Alte Logik EXPLIZIT ersetzen (Formel: "Nicht mehr X, sondern Y")
+- Hauptleistung ({{HAUPTUMSATZTREIBER}}) als Bezugspunkt
+- ENTSCHEIDUNGEN beschreiben, nicht Tools
+- KEINE Beratungssprache, KEINE CTAs
+- Kurze Absätze: ein Gedanke pro Absatz, 2-4 Sätze
+
+MICRO-CONSISTENCY (verbindlich):
+Die in der Executive Summary benannte Weichenstellung muss im Gamechanger
+ausgearbeitet und in den Roadmaps sprachlich referenziert werden
+(gleiche Begriffe, gleiche Logik).
+=============================================================================
+-->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- SPRINT G18 -->
@@ -26,6 +44,12 @@ VERBOTENE FORMULIERUNGEN → ERSETZUNGEN:
 Die Roadmap zeigt WELCHE ENTSCHEIDUNGEN zu treffen sind,
 nicht WELCHE TOOLS einzuführen sind.
 
+LESBARKEIT (v6.1 NEU):
+- Maximal EIN abstrakter Gedanke pro Absatz
+- 2–4 Sätze pro Absatz (nicht mehr)
+- Keine Schachtelsätze – ein Hauptsatz, maximal ein Nebensatz
+- Max. 3 Sätze pro Bullet-Punkt
+
 =============================================================================
 
 MINDESTLÄNGE (STRIKT VERPFLICHTEND!):
@@ -45,6 +69,12 @@ STRUKTUR NACH GRÖSSE (max 3 Hauptabschnitte):
 - Solo: Zeitbasierte Phasen (Q1, Q2, Q3-4)
 - Team: Zeitbasierte Phasen mit Rollen
 - KMU: Block-Struktur (Tech, Data, Org, Product, Compliance) + Rollout
+
+LEITENTSCHEIDUNGEN PRO QUARTAL (v6.1 NEU - implizit verankern, nicht als Überschrift):
+- Q1: "Fundament vor Fläche" – Qualität der Basis sichern
+- Q2: "Standards vor Skalierung" – einheitliche Regeln etablieren
+- Q3-Q4: "Verantwortung vor Geschwindigkeit" – Governance mitführen
+Diese Prinzipien sprachlich in die Quartals-Beschreibungen einfließen lassen.
 
 FORMAT:
 - Meilensteine statt langer Texte

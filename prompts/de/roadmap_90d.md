@@ -1,5 +1,24 @@
-<!-- PLATIN+++ PROMPT v6.0 - SPRINT PRODUKT-SCHÄRFUNG -->
+Developer:
+<!-- PLATIN+++ PROMPT v6.1 - SPRINT INHALTLICHE FINALISIERUNG -->
 <!-- SECTION: roadmap_90d -->
+<!--
+=============================================================================
+PLATIN+++ CONTENT DOD (verbindlich):
+=============================================================================
+- Transformationsbericht MIT Sicherheits- & Governance-Geländer
+- Zentrale strategische Weichenstellung KLAR benennen
+- Alte Logik EXPLIZIT ersetzen (Formel: "Nicht mehr X, sondern Y")
+- Hauptleistung ({{HAUPTUMSATZTREIBER}}) als Bezugspunkt
+- ENTSCHEIDUNGEN beschreiben, nicht Tools
+- KEINE Beratungssprache, KEINE CTAs
+- Kurze Absätze: ein Gedanke pro Absatz, 2-4 Sätze
+
+MICRO-CONSISTENCY (verbindlich):
+Die in der Executive Summary benannte Weichenstellung muss im Gamechanger
+ausgearbeitet und in den Roadmaps sprachlich referenziert werden
+(gleiche Begriffe, gleiche Logik).
+=============================================================================
+-->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE -->
@@ -28,6 +47,12 @@ TONALITÄT:
 - Strategisch, nicht operativ
 - Abgrenzend, nicht aufzählend
 
+LESBARKEIT (v6.1 NEU):
+- Maximal EIN abstrakter Gedanke pro Absatz
+- 2–4 Sätze pro Absatz (nicht mehr)
+- Keine Schachtelsätze – ein Hauptsatz, maximal ein Nebensatz
+- Max. 3 Sätze pro Bullet-Punkt
+
 =============================================================================
 
 KURZLABELS (VERPFLICHTEND!):
@@ -53,6 +78,14 @@ PHASEN-STRUKTUR (STRIKT EINHALTEN):
 - Phase 2 (Woche 6–10): Produktiver Einsatz – Workflows stabilisieren
 - Phase 3 (Woche 11–13): Konsolidierung – Ergebnisse messen, Entscheidung treffen
 - PFLICHT: "Erwartete Effekte nach 90 Tagen" (eigener Abschnitt am Ende)
+
+LEITENTSCHEIDUNGEN PRO PHASE (v6.1 NEU - implizit verankern, nicht als Überschrift):
+- Phase 0: "Transparenz vor Automatisierung" – erst verstehen, dann einsetzen
+- Phase 1: "Regeln vor Skalierung" – Qualitätskriterien definieren, bevor mehr automatisiert wird
+- Phase 2: "Verantwortung vor Geschwindigkeit" – Prüfschleifen einbauen, nicht nur beschleunigen
+- Phase 3: "Evidenz vor Expansion" – Entscheidungen auf Basis gemessener Ergebnisse
+
+Diese Prinzipien sprachlich in die Phase-Beschreibungen einfließen lassen.
 
 FORMAT:
 - Jede Phase: Ziel (1 Satz) + 3-5 Bullets + Meilenstein
