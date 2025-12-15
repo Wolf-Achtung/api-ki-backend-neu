@@ -476,13 +476,15 @@ def get_report_summary(
             except Exception:
                 sections_data = {}
 
-        # Check required sections
-        for section_key in EXPECTED_SECTIONS:
-            section_value = sections_data.get(section_key, "")
-            if section_value and len(str(section_value)) > 10:
-                sections_present.append(section_key)
-            else:
-                sections_missing.append(section_key)
+        # Extract ALL keys from sections_data as sections_present
+        sections_present = list(sections_data.keys())
+
+        # Debug warning: if analysis.sections existed but extracted no keys
+        if not sections_present and sections_data:
+            log.warning("[SummaryGate] sections_data truthy but no keys extracted: %s", type(sections_data))
+
+        # Calculate missing: EXPECTED_SECTIONS not found in sections_present
+        sections_missing = [s for s in EXPECTED_SECTIONS if s not in sections_present]
 
         # Check optional sections (informational)
         for section_key in OPTIONAL_SECTIONS:
