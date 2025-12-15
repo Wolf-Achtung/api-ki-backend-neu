@@ -1,6 +1,18 @@
 Developer:
 <!-- PLATIN+++ PROMPT v6.0 - SPRINT PRODUKT-SCHÄRFUNG -->
 <!-- SECTION: executive_summary -->
+<!--
+SPRINT G18 - BRANCHENSÄTZE HARMONISIEREN
+
+BRANCH_CORE_LABEL (verbindlich):
+- Kernbranche in 4-6 Wörtern
+- Beispiel: "Steuerberatung mit Schwerpunkt Freiberufler"
+
+BRANCH_SHORT_LABEL (verbindlich):
+- Verwende ein kurzes Label für Branche + Hauptleistung.
+- Format: "BRANCH_SHORT_LABEL: <Branche> — <Hauptleistung>"
+- Max. 90 Zeichen, keine Aufzählungen, keine Tool-Namen.
+-->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- SPRINT G18 - BRANCHENSÄTZE HARMONISIEREN -->
