@@ -89,6 +89,23 @@ class Analysis(Base):
     user = relationship("User", lazy="joined")
     briefing = relationship("Briefing", lazy="joined")
 
+    @property
+    def sections(self) -> dict:
+        """Return sections from meta JSON. Supports dict or JSON string."""
+        sections_data = (self.meta or {}).get("sections")
+        if sections_data is None:
+            return {}
+        if isinstance(sections_data, dict):
+            return sections_data
+        if isinstance(sections_data, str):
+            import json
+            try:
+                parsed = json.loads(sections_data)
+                return parsed if isinstance(parsed, dict) else {}
+            except (json.JSONDecodeError, ValueError):
+                return {}
+        return {}
+
     def __repr__(self) -> str:  # pragma: no cover
         return f"<Analysis id={self.id} briefing_id={self.briefing_id}>"
 
