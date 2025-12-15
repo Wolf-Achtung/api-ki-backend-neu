@@ -165,7 +165,7 @@ async def submit_briefing(
             log.info("📋 Briefing %s queued for worker pickup (status=accepted)", briefing.id)
 
         response = {
-            "status": "accepted",  # Neu: "accepted" statt "queued" (klarer)
+            "status": "queued",  # API zeigt "queued", DB intern "accepted"
             "lang": payload.lang,
             "briefing_id": briefing.id,
             "analysis_queued": payload.queue_analysis
