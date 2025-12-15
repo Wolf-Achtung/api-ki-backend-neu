@@ -134,39 +134,38 @@ async def submit_briefing(
         else:
             log.debug("No authentication found - proceeding without authentication")
 
-    # Briefing in Datenbank speichern
+    # Briefing in Datenbank speichern (DB-Backed Worker: nur speichern, KEIN run_async!)
     try:
         from models import Briefing
+        from datetime import datetime, timezone
 
         # Fix UTF-8 encoding before saving
         log.info("[ENCODING-FIX] Cleaning briefing data before save")
         cleaned_answers = clean_briefing_data(payload.answers)
 
+        now = datetime.now(timezone.utc)
         briefing = Briefing(
             user_id=user_id,
             lang=payload.lang,
-            answers=cleaned_answers
+            answers=cleaned_answers,
+            # Worker-Queue: Status "accepted" für Worker-Abholung
+            status="accepted" if payload.queue_analysis else "skipped",
+            accepted_at=now if payload.queue_analysis else None,
         )
         db.add(briefing)
         db.commit()
         db.refresh(briefing)
 
-        log.info("✅ Briefing saved to database: ID=%s, user_id=%s, len=%s",
-                 briefing.id, user_id, len(json.dumps(payload.answers)))
+        log.info("✅ Briefing saved to database: ID=%s, user_id=%s, status=%s, len=%s",
+                 briefing.id, user_id, briefing.status, len(json.dumps(payload.answers)))
 
-        # Analyse triggern wenn gewünscht
+        # WICHTIG: KEIN gpt_analyze.run_async() mehr hier!
+        # Worker-Prozess holt Jobs mit status="accepted" aus der DB.
         if payload.queue_analysis:
-            try:
-                from gpt_analyze import run_async
-                log.info("🚀 Triggering analysis for briefing_id=%s", briefing.id)
-                run_async(briefing.id, authenticated_user)
-                log.info("✅ Analysis queued for briefing_id=%s", briefing.id)
-            except Exception as e:
-                log.error("❌ Failed to trigger analysis: %s", str(e), exc_info=True)
-                # Nicht abbrechen - Briefing ist gespeichert, Analyse kann später manuell getriggert werden
+            log.info("📋 Briefing %s queued for worker pickup (status=accepted)", briefing.id)
 
         response = {
-            "status": "queued",
+            "status": "queued",  # API zeigt "queued", DB intern "accepted"
             "lang": payload.lang,
             "briefing_id": briefing.id,
             "analysis_queued": payload.queue_analysis
@@ -183,3 +182,47 @@ async def submit_briefing(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to save briefing"
         )
+
+
+@router.get("/{briefing_id}")
+async def get_briefing_status(
+    briefing_id: int,
+    db: Session = Depends(get_db)
+) -> dict:
+    """
+    Get the current status of a briefing.
+
+    Returns status information including processing state and timestamps.
+    Useful for polling after submit to check when report is ready.
+
+    Args:
+        briefing_id: The briefing ID returned from /submit
+        db: Database session
+
+    Returns:
+        dict: Status with timestamps and error info if failed
+    """
+    from models import Briefing
+
+    briefing = db.get(Briefing, briefing_id)
+    if not briefing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Briefing {briefing_id} not found"
+        )
+
+    response = {
+        "briefing_id": briefing.id,
+        "status": briefing.status,
+        "lang": briefing.lang,
+        "created_at": briefing.created_at.isoformat() if briefing.created_at else None,
+        "accepted_at": briefing.accepted_at.isoformat() if briefing.accepted_at else None,
+        "processing_at": briefing.processing_at.isoformat() if briefing.processing_at else None,
+        "done_at": briefing.done_at.isoformat() if briefing.done_at else None,
+    }
+
+    # Include error only if failed
+    if briefing.status == "failed" and briefing.error:
+        response["error"] = briefing.error[:500]  # Truncate for safety
+
+    return response
