@@ -163,6 +163,8 @@ def request_with_retry(
     """
     last_exception = None
 
+    max_retries = max(1, max_retries)
+
     for attempt in range(1, max_retries + 1):
         try:
             if method.upper() == "POST":
