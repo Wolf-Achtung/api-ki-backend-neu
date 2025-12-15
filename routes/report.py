@@ -356,17 +356,26 @@ def get_report_status(
 # It does NOT trigger any renders, writes, or side effects.
 # ---------------------------------------------------------------------------
 
-# Expected sections for a complete report
+# Expected sections for a complete report (core sections that must exist)
 EXPECTED_SECTIONS = [
     "EXECUTIVE_SUMMARY_HTML",
-    "RISK_MATRIX_HTML",
+    "RISKS_HTML",  # Changed from RISK_MATRIX_HTML (actual key in production)
     "RECOMMENDATIONS_HTML",
     "FUNDING_HTML",
     "BUSINESS_CASE_HTML",
     "ROADMAP_HTML",
 ]
 
-# Expected badges for a complete report
+# Optional sections (informational, not gate-blocking)
+OPTIONAL_SECTIONS = [
+    "ROADMAP_12M_HTML",
+    "FOERDERPOTENZIAL_HTML",
+    "AI_ACT_HTML",
+    "TOOLS_HTML",
+]
+
+# Expected badges (informational only - not gate-blocking)
+# These are checked but missing badges don't fail the gate
 EXPECTED_BADGES = [
     "badge_security",
     "badge_compliance",
@@ -379,9 +388,9 @@ def get_report_summary(
     briefing_id: int,
     db=Depends(get_db),
     auth: Optional[ServiceTokenPayload] = Depends(get_service_or_skip_auth),
-) -> Response:
+) -> JSONResponse:
     """
-    Get a deterministic plain-text summary of a report for QA/CI purposes.
+    Get a deterministic JSON summary of a report for QA/CI purposes.
 
     This is a READ-ONLY endpoint with NO side effects:
     - No database writes
@@ -393,9 +402,11 @@ def get_report_summary(
         X-Service-Token: golden_reports:<secret>
 
     Returns:
-        text/plain summary with grep-friendly key: value format
+        JSON with structured report summary for CI gates
     """
-    lines = []
+    import json as _json
+    import re
+
     errors = []
     warnings = []
 
@@ -404,9 +415,12 @@ def get_report_summary(
     # -------------------------------------------------------------------------
     briefing = db.get(Briefing, briefing_id)
     if not briefing:
-        return Response(
-            content=f"error: briefing_not_found\nbriefing_id: {briefing_id}\n",
-            media_type="text/plain; charset=utf-8",
+        return JSONResponse(
+            content={
+                "error": "briefing_not_found",
+                "briefing_id": briefing_id,
+                "ok": False,
+            },
             status_code=404,
         )
 
@@ -431,85 +445,60 @@ def get_report_summary(
     )
 
     # -------------------------------------------------------------------------
-    # 4. Build summary (deterministic, from DB only)
+    # 4. Basic metadata
     # -------------------------------------------------------------------------
-    lines.append(f"briefing_id: {briefing_id}")
-    lines.append(f"report_id: {getattr(report, 'id', 'none')}")
-    lines.append(f"analysis_id: {getattr(analysis, 'id', 'none')}")
-
-    # Language (from briefing or analysis)
     lang = getattr(briefing, "lang", None) or getattr(analysis, "lang", None) or "de"
-    lines.append(f"lang: {lang}")
+    version = getattr(analysis, "version", "unknown") if analysis else "none"
 
-    # Timestamps from DB (deterministic - no now())
-    created_at = getattr(briefing, "created_at", None)
-    lines.append(f"briefing_created_at: {created_at.isoformat() if created_at else 'unknown'}")
-
-    analysis_created_at = getattr(analysis, "created_at", None) if analysis else None
-    lines.append(f"analysis_created_at: {analysis_created_at.isoformat() if analysis_created_at else 'none'}")
-
-    # -------------------------------------------------------------------------
-    # 5. Metadata extraction (from briefing answers)
-    # -------------------------------------------------------------------------
-    answers = getattr(briefing, "answers", {}) or {}
-    if isinstance(answers, str):
-        try:
-            import json
-            answers = json.loads(answers)
-        except Exception:
-            answers = {}
-
-    lines.append(f"branche: {answers.get('branche', 'unknown')}")
-    lines.append(f"unternehmensgroesse: {answers.get('unternehmensgroesse', 'unknown')}")
-    lines.append(f"bundesland: {answers.get('bundesland', 'unknown')}")
-    lines.append(f"version: {getattr(analysis, 'version', 'unknown') if analysis else 'none'}")
+    # Determine status
+    if not analysis:
+        status = "failed"
+    elif report and getattr(report, "status", None) == "done":
+        status = "done"
+    elif report and getattr(report, "status", None) == "queued":
+        status = "queued"
+    else:
+        status = "processing"
 
     # -------------------------------------------------------------------------
-    # 6. Sections analysis (from analysis.sections or analysis.html)
+    # 5. Sections analysis
     # -------------------------------------------------------------------------
     sections_present = []
     sections_missing = []
+    optional_present = []
+    sections_data = {}
 
     if analysis:
-        # Try to get sections dict
         sections_data = getattr(analysis, "sections", None) or {}
         if isinstance(sections_data, str):
             try:
-                import json
-                sections_data = json.loads(sections_data)
+                sections_data = _json.loads(sections_data)
             except Exception:
                 sections_data = {}
 
-        # Check each expected section
+        # Check required sections
         for section_key in EXPECTED_SECTIONS:
             section_value = sections_data.get(section_key, "")
             if section_value and len(str(section_value)) > 10:
                 sections_present.append(section_key)
             else:
                 sections_missing.append(section_key)
+
+        # Check optional sections (informational)
+        for section_key in OPTIONAL_SECTIONS:
+            section_value = sections_data.get(section_key, "")
+            if section_value and len(str(section_value)) > 10:
+                optional_present.append(section_key)
     else:
         sections_missing = list(EXPECTED_SECTIONS)
 
-    lines.append(f"sections_expected: {len(EXPECTED_SECTIONS)}")
-    lines.append(f"sections_present: {len(sections_present)}")
-    lines.append(f"sections_missing: {len(sections_missing)}")
-    lines.append(f"sections_missing_list: {sections_missing}")
-
     # -------------------------------------------------------------------------
-    # 7. Badges analysis
+    # 6. Badges analysis (informational only - not gate-blocking)
     # -------------------------------------------------------------------------
     badges_present = []
     badges_missing = []
 
-    if analysis:
-        sections_data = getattr(analysis, "sections", None) or {}
-        if isinstance(sections_data, str):
-            try:
-                import json
-                sections_data = json.loads(sections_data)
-            except Exception:
-                sections_data = {}
-
+    if analysis and sections_data:
         for badge_key in EXPECTED_BADGES:
             badge_value = sections_data.get(badge_key)
             if badge_value is not None:
@@ -519,41 +508,32 @@ def get_report_summary(
     else:
         badges_missing = list(EXPECTED_BADGES)
 
-    lines.append(f"badges_expected: {len(EXPECTED_BADGES)}")
-    lines.append(f"badges_present: {len(badges_present)}")
-    lines.append(f"badges_missing: {badges_missing}")
+    # Note: Badge warnings are informational, not gate-blocking
+    if badges_missing:
+        warnings.append(f"badges_missing: {badges_missing}")
 
     # -------------------------------------------------------------------------
-    # 8. Integrity checks (read-only validation)
+    # 7. HTML integrity checks
     # -------------------------------------------------------------------------
     html_content = getattr(analysis, "html", "") if analysis else ""
     html_valid = bool(html_content and "<html" in html_content.lower())
     html_size = len(html_content) if html_content else 0
 
-    lines.append(f"html_valid: {str(html_valid).lower()}")
-    lines.append(f"html_size_bytes: {html_size}")
-
-    # Check for common HTML issues (read-only)
     if html_content:
-        # Count internal links
-        import re
-        links = re.findall(r'href=["\']([^"\']+)["\']', html_content)
-        internal_links = [l for l in links if l.startswith("#") or l.startswith("/")]
-        lines.append(f"links_internal: {len(internal_links)}")
-        lines.append(f"links_total: {len(links)}")
-
         # Check for unreplaced template variables
         unresolved = re.findall(r'\{\{\s*[^}]+\s*\}\}', html_content)
         if unresolved:
             warnings.append(f"unresolved_template_vars: {len(unresolved)}")
 
-        # Check for leak phrases (read-only detection)
+        # Check for leak phrases
         leak_phrases = ["als KI", "als AI", "als Sprachmodell", "I cannot", "I'm unable"]
         for phrase in leak_phrases:
             if phrase.lower() in html_content.lower():
                 warnings.append(f"potential_leak_phrase: {phrase}")
 
-    # JSON validity of sections
+    # -------------------------------------------------------------------------
+    # 8. JSON validity of sections
+    # -------------------------------------------------------------------------
     json_valid = False
     if analysis:
         sections_raw = getattr(analysis, "sections", None)
@@ -562,51 +542,57 @@ def get_report_summary(
                 json_valid = True
             elif isinstance(sections_raw, str):
                 try:
-                    import json
-                    json.loads(sections_raw)
+                    _json.loads(sections_raw)
                     json_valid = True
                 except Exception:
                     errors.append("sections_json_invalid")
-    lines.append(f"json_valid: {str(json_valid).lower()}")
 
     # -------------------------------------------------------------------------
-    # 9. Report status
-    # -------------------------------------------------------------------------
-    if report:
-        lines.append(f"report_status: {getattr(report, 'status', 'unknown')}")
-        lines.append(f"pdf_url_present: {str(bool(getattr(report, 'pdf_url', None))).lower()}")
-    else:
-        lines.append("report_status: none")
-        lines.append("pdf_url_present: false")
-        if analysis:
-            warnings.append("report_missing_but_analysis_exists")
-
-    # -------------------------------------------------------------------------
-    # 10. Warnings and errors
+    # 9. Collect errors
     # -------------------------------------------------------------------------
     if not analysis:
         errors.append("analysis_not_found")
     if sections_missing:
-        warnings.append(f"missing_{len(sections_missing)}_sections")
-
-    lines.append(f"warnings: {len(warnings)}")
-    for w in warnings:
-        lines.append(f"  - {w}")
-
-    lines.append(f"errors: {len(errors)}")
-    for e in errors:
-        lines.append(f"  - {e}")
+        warnings.append(f"missing_{len(sections_missing)}_sections: {sections_missing}")
 
     # -------------------------------------------------------------------------
-    # Final output
+    # 10. Determine overall OK status
+    # Gate passes if: analysis exists, no missing required sections, html valid, json valid
+    # Note: badges_missing does NOT block the gate (informational only)
     # -------------------------------------------------------------------------
-    summary_text = "\n".join(lines) + "\n"
-
-    return Response(
-        content=summary_text,
-        media_type="text/plain; charset=utf-8",
-        status_code=200,
+    ok = (
+        analysis is not None
+        and len(sections_missing) == 0
+        and html_valid
+        and json_valid
     )
+
+    # -------------------------------------------------------------------------
+    # Build JSON response
+    # -------------------------------------------------------------------------
+    response_data = {
+        "briefing_id": briefing_id,
+        "report_id": getattr(report, "id", None) if report else None,
+        "analysis_id": getattr(analysis, "id", None) if analysis else None,
+        "lang": lang,
+        "version": version,
+        "status": status,
+        "json_valid": json_valid,
+        "html_valid": html_valid,
+        "html_size_bytes": html_size,
+        "sections_expected": EXPECTED_SECTIONS,
+        "sections_present": sections_present,
+        "sections_missing": sections_missing,
+        "optional_sections_present": optional_present,
+        "badges_expected": EXPECTED_BADGES,
+        "badges_present": badges_present,
+        "badges_missing": badges_missing,
+        "warnings": warnings,
+        "errors": errors,
+        "ok": ok,
+    }
+
+    return JSONResponse(content=response_data, status_code=200)
 
 
 # DEPRECATED: Use /html/{briefing_id} instead. Suffix routes may cause 422 errors.
