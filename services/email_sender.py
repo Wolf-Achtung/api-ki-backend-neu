@@ -160,6 +160,16 @@ def _send_via_smtp(to_email: str, subject: str, text: str) -> bool:
 
 def send_code(to_email: str, code: str) -> bool:
     """Versendet den Login‑Code gemäß EMAIL_PROVIDER (default: resend)."""
+    # Global Email Kill-Switch - blocks ALL emails including auth codes
+    if _truthy("DISABLE_EMAILS", False):
+        log.info(
+            "Emails disabled via DISABLE_EMAILS=1. Skipping auth code email. "
+            "Code for %s: %s",
+            to_email,
+            code,
+        )
+        return True  # Return True to not break auth flow (code is logged for staging)
+
     subject = _build_subject()
     text = _build_text(code)
     provider = (_env("EMAIL_PROVIDER", "resend") or "resend").strip().lower()

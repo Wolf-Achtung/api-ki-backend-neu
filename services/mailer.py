@@ -1,4 +1,3 @@
-
 """
 services/mailer.py — E-Mail Versand via Resend oder SMTP
 """
@@ -6,6 +5,8 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
+import os
 import smtplib
 from email.mime.text import MIMEText
 from typing import Optional
@@ -15,6 +16,14 @@ import httpx
 from pydantic import EmailStr
 
 from settings import AppSettings, get_settings
+
+logger = logging.getLogger(__name__)
+
+
+def _is_emails_disabled() -> bool:
+    """Check if global email kill-switch is enabled."""
+    val = os.getenv("DISABLE_EMAILS", "").strip().lower()
+    return val in ("1", "true", "yes", "on")
 
 
 class Mailer:
@@ -26,6 +35,11 @@ class Mailer:
         return cls(s or get_settings())
 
     async def send(self, to: str | EmailStr, subject: str, text: str, html: Optional[str] = None) -> None:
+        # Global Email Kill-Switch
+        if _is_emails_disabled():
+            logger.info("📧 Emails disabled via DISABLE_EMAILS=1. Skipping email to %s", to)
+            return
+
         provider = (self.s.mail.provider or "resend").lower()
         if provider == "resend":
             await self._send_resend(to=str(to), subject=subject, text=text, html=html)

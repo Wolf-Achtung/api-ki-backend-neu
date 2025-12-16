@@ -34,6 +34,9 @@ class MailConfig(BaseModel):
     from_email: Optional[EmailStr] = None
     from_name: str | None = None
 
+    # Global Email Kill-Switch
+    disable_emails: bool = False  # DISABLE_EMAILS=1 blocks ALL email sending
+
     # SMTP
     host: Optional[str] = None
     port: int = 587
@@ -245,6 +248,7 @@ class AppSettings(BaseSettings):
                 provider=os.getenv("EMAIL_PROVIDER", "resend"),
                 from_email=os.getenv("RESEND_FROM") or os.getenv("SMTP_FROM"),
                 from_name=os.getenv("SMTP_FROM_NAME") or "KI‑Sicherheit.jetzt",
+                disable_emails=get_bool("DISABLE_EMAILS", False),
                 host=os.getenv("SMTP_HOST"),
                 port=int(os.getenv("SMTP_PORT", "587")),
                 user=os.getenv("SMTP_USER"),
