@@ -512,6 +512,95 @@ SOLO_FORBIDDEN_TERMS = [
     "Fachbereich", "Fachbereiche", "Projektteam", "Teams"
 ]
 
+# =============================================================================
+# TEIL 3.1.4: UI_STRINGS - Language-aware UI labels for EN/DE
+# =============================================================================
+# Maps German UI strings to English equivalents for locale-aware fallback content
+UI_STRINGS: Dict[str, Dict[str, str]] = {
+    # Section headers
+    "recommendations_title": {"de": "Handlungsempfehlungen – Ihre nächsten Schritte mit KI", "en": "Recommendations – Your Next Steps with AI"},
+    "recommendations_h2": {"de": "Handlungsempfehlungen", "en": "Recommendations"},
+    "overview": {"de": "Überblick", "en": "Overview"},
+    "risk_matrix": {"de": "Risiko-Matrix – Überblick über zentrale Risiken", "en": "Risk Matrix – Overview of Key Risks"},
+    "priorities_overview": {"de": "Prioritäten-Überblick", "en": "Priorities Overview"},
+    "company_overview": {"de": "Ihr Unternehmen im Überblick", "en": "Your Company at a Glance"},
+    "summary": {"de": "Zusammenfassung", "en": "Summary"},
+    "assessment": {"de": "Bewertung", "en": "Assessment"},
+    "maturity_level": {"de": "Reifegrad", "en": "Maturity Level"},
+    "key_metrics": {"de": "Kennzahlen", "en": "Key Metrics"},
+    "risks": {"de": "Risiken", "en": "Risks"},
+    "measures": {"de": "Maßnahmen", "en": "Measures"},
+    "primary_goal": {"de": "Hauptziel", "en": "Primary Goal"},
+    "next_steps": {"de": "Nächste Schritte", "en": "Next Steps"},
+
+    # Table headers and labels
+    "company_size": {"de": "Unternehmensgröße", "en": "Company Size"},
+    "report_date": {"de": "Reportdatum", "en": "Report Date"},
+    "industry": {"de": "Branche", "en": "Industry"},
+    "comparison": {"de": "Vergleich", "en": "Comparison"},
+    "value": {"de": "Wert", "en": "Value"},
+    "source": {"de": "Quelle", "en": "Source"},
+    "estimate": {"de": "Schätzung (konservativ)", "en": "Estimate (conservative)"},
+
+    # Compliance terms
+    "gdpr": {"de": "DSGVO", "en": "GDPR"},
+    "gdpr_compliant": {"de": "DSGVO-konforme", "en": "GDPR-compliant"},
+    "gdpr_recommendation": {"de": "DSGVO-konforme Empfehlung (ohne Rechtsberatung)", "en": "GDPR-compliant recommendation (without legal advice)"},
+
+    # Notes and estimates
+    "note": {"de": "Hinweis", "en": "Note"},
+    "estimates": {"de": "Näherungen", "en": "Estimates"},
+    "example": {"de": "Beispiel", "en": "Example"},
+    "hint": {"de": "Hinweis", "en": "Note"},
+
+    # Business case labels
+    "costs": {"de": "Kosten", "en": "Costs"},
+    "benefits": {"de": "Nutzen", "en": "Benefits"},
+    "investment": {"de": "Investition", "en": "Investment"},
+    "savings": {"de": "Einsparungen", "en": "Savings"},
+    "conservative": {"de": "Konservativ", "en": "Conservative"},
+    "realistic": {"de": "Realistisch", "en": "Realistic"},
+    "optimistic": {"de": "Optimistisch", "en": "Optimistic"},
+    "time_horizon": {"de": "Zeithorizont", "en": "Time Horizon"},
+    "priority": {"de": "Priorität", "en": "Priority"},
+    "ownership": {"de": "Verantwortung", "en": "Ownership"},
+    "responsible": {"de": "Verantwortlich", "en": "Responsible"},
+
+    # Recommendation labels
+    "focus": {"de": "Schwerpunkt", "en": "Focus"},
+    "action": {"de": "Maßnahme", "en": "Action"},
+    "benefit_impact": {"de": "Nutzen & Wirkung", "en": "Benefit & Impact"},
+    "effort_budget": {"de": "Aufwand & Budget", "en": "Effort & Budget"},
+    "funding_opportunity": {"de": "Förderchance", "en": "Funding Opportunity"},
+    "recommended_actions": {"de": "Empfohlene Schwerpunkt-Maßnahmen", "en": "Recommended Focus Actions"},
+
+    # Quick wins / Roadmap
+    "quick_win": {"de": "Quick Win", "en": "Quick Win"},
+    "roadmap": {"de": "Roadmap", "en": "Roadmap"},
+    "implementation": {"de": "Umsetzung", "en": "Implementation"},
+
+    # Risk labels
+    "risk_level": {"de": "Risiko-Level", "en": "Risk Level"},
+    "probability": {"de": "Eintrittswahrscheinlichkeit", "en": "Probability"},
+    "impact": {"de": "Auswirkung", "en": "Impact"},
+
+    # Time/Size terms
+    "month": {"de": "Monat", "en": "Month"},
+    "months": {"de": "Monate", "en": "Months"},
+    "quarter": {"de": "Quartal", "en": "Quarter"},
+    "your_company": {"de": "Ihr Unternehmen", "en": "Your Company"},
+    "your_region": {"de": "Ihrem Bundesland", "en": "your region"},
+
+    # Misc fallback texts
+    "size_hint_note": {"de": "Hinweis: Größenwerte sind konservative Schätzungen (mangels belastbarer Daten). Branchenwerte stammen aus aktuellen Studien; siehe Quelle.", "en": "Note: Size values are conservative estimates (due to lack of reliable data). Industry values are from current studies; see source."},
+}
+
+
+def ui(key: str, lang: str = "de") -> str:
+    """Get UI string for the given key in the specified language."""
+    entry = UI_STRINGS.get(key, {})
+    return entry.get(lang, entry.get("de", key))
+
 
 class ReportErrorGate:
     """
@@ -1829,7 +1918,8 @@ def _estimate_size_benchmark(size_label: str) -> Dict[str, int]:
     # Fallback (should rarely happen)
     return {"avg": 30, "top25": 50}
 
-def _build_benchmark_html(briefing: Dict[str, Any]) -> str:
+def _build_benchmark_html(briefing: Dict[str, Any], lang: str = "de") -> str:
+    """Build benchmark HTML table - TEIL 3.1.4: Language-aware."""
     benchmarks = _load_branch_benchmarks()
     branche = briefing.get("BRANCHE_LABEL") or briefing.get("branche", "")
     size_label = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
@@ -1840,23 +1930,23 @@ def _build_benchmark_html(briefing: Dict[str, Any]) -> str:
         if bench and isinstance(bench, dict):
             avg = bench.get("avg", "—")
             top25 = bench.get("top25", "—")
-            source = bench.get("source", "Branchenstudie 2024")
-            row_html.append(f"<tr><td><strong>Branche</strong>: {html.escape(branche)}</td><td>Ø {avg}% · Top‑25% {top25}%</td><td>{html.escape(source)}</td></tr>")
+            source = bench.get("source", "Industry Study 2024" if lang == "en" else "Branchenstudie 2024")
+            row_html.append(f"<tr><td><strong>{ui('industry', lang)}</strong>: {html.escape(branche)}</td><td>Ø {avg}% · Top‑25% {top25}%</td><td>{html.escape(source)}</td></tr>")
         else:
-            row_html.append(f"<tr><td><strong>Branche</strong>: {html.escape(branche or '—')}</td><td>—</td><td>—</td></tr>")
+            row_html.append(f"<tr><td><strong>{ui('industry', lang)}</strong>: {html.escape(branche or '—')}</td><td>—</td><td>—</td></tr>")
     if size_label:
         sb = _estimate_size_benchmark(size_label)
         row_html.append(
-            f"<tr><td><strong>Unternehmensgröße</strong>: {html.escape(size_label)}</td>"
+            f"<tr><td><strong>{ui('company_size', lang)}</strong>: {html.escape(size_label)}</td>"
             f"<td>Ø {sb['avg']}% · Top‑25% {sb['top25']}%</td>"
-            f"<td>Schätzung (konservativ)</td></tr>"
+            f"<td>{ui('estimate', lang)}</td></tr>"
         )
     table = (
         "<table class='table'>"
-        "<thead><tr><th>Vergleich</th><th>Wert</th><th>Quelle</th></tr></thead>"
+        f"<thead><tr><th>{ui('comparison', lang)}</th><th>{ui('value', lang)}</th><th>{ui('source', lang)}</th></tr></thead>"
         f"<tbody>{''.join(row_html)}</tbody>"
         "</table>"
-        "<p class='small muted'>Hinweis: Größenwerte sind konservative Schätzungen (mangels belastbarer Daten). Branchenwerte stammen aus aktuellen Studien; siehe Quelle.</p>"
+        f"<p class='small muted'>{ui('size_hint_note', lang)}</p>"
     )
     return table
 
@@ -2545,6 +2635,46 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     # 🎯 PLATIN+ FALLBACK: FOERDERPOTENZIAL (900+ Wörter)
     # ════════════════════════════════════════════════════════════════════════════
     if section_key == "foerderpotenzial":
+        # TEIL 3.1.4: EN fallback for funding potential
+        if briefing_lang == "en":
+            return f"""<section class="section funding-potential">
+  <h2>Funding Potential for Your AI Project</h2>
+  <p>
+    Companies in the <strong>{branche}</strong> industry with size <strong>{size_label}</strong> often have good prerequisites
+    for funding for projects in <strong>{hauptleistung or "AI-supported process optimization"}</strong>. The combination of
+    digitization focus, AI support, and clear process improvement corresponds to the priorities of many programs at national and EU level.
+  </p>
+  <h3>1. Business Case Assessment Without Funding</h3>
+  <p>
+    The current business case shows one-time investments of approximately <strong>€{capex}</strong> and ongoing costs of
+    around <strong>€{opex} per month</strong>. The expected monthly relief is approximately <strong>€{einsparung}</strong>,
+    leading to an amortization period of about <strong>{payback} months</strong> and a realistic ROI of around <strong>{roi_12m}%</strong>
+    in the first year. These metrics form a solid basis for evaluating funding eligibility.
+  </p>
+  <h3>2. How Funding Can Improve the Business Case</h3>
+  <p>
+    Public funding programs typically cover 30-70% of eligible investment costs, depending on company size and project scope.
+    This can significantly reduce the capital commitment and accelerate the payback period. For your project, a funding rate of
+    40-50% could reduce the effective initial investment by €{int(capex * 0.45)}, improving ROI to well over 100% in the first year.
+  </p>
+  <h3>3. EU Funding Opportunities</h3>
+  <ul>
+    <li><strong>Horizon Europe:</strong> EU research and innovation program with SME instruments for innovative AI projects.</li>
+    <li><strong>Digital Europe Programme:</strong> Supports AI adoption and digital transformation in businesses.</li>
+    <li><strong>European Innovation Council:</strong> Funding for breakthrough innovations and scale-ups.</li>
+    <li><strong>National Recovery Plans:</strong> Many countries allocate funds to digitization and AI adoption as part of EU recovery funding.</li>
+  </ul>
+  <h3>4. Application Strategy</h3>
+  <p>
+    For optimal funding success, we recommend: (1) Document your AI use case with clear metrics and expected impact.
+    (2) Prepare a project plan with milestones and deliverables. (3) Calculate the investment breakdown including personnel,
+    software, and consulting costs. (4) Research funding programs matching your industry and company size.
+  </p>
+  <p class="small muted">
+    {ui('note', 'en')}: Funding availability varies by region and program cycle. This overview serves as orientation –
+    specific funding commitments require individual assessment. Consult with funding advisors for personalized guidance.
+  </p>
+</section>"""
         # Size-aware Förderhinweise
         if size_group == "solo":
             foerder_focus = "Beratungsförderung, Gründerprogramme und niedrigschwellige Digitalisierungszuschüsse"
@@ -2676,6 +2806,51 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         score_gov = scores.get("governance", 50)
         score_sec = scores.get("sicherheit", 50)
 
+        # TEIL 3.1.4: EN fallback for risks
+        if briefing_lang == "en":
+            return f"""<section class="section risks">
+  <h2>Key {ui('risks', 'en')} in AI Deployment for {hauptleistung or "Your Core Business"}</h2>
+  <p>
+    The deployment of AI in <strong>{hauptleistung or "your core business"}</strong> in the <strong>{branche}</strong> industry
+    offers significant opportunities but also brings different risk profiles depending on {ui('company_size', 'en').lower()} <strong>{size_label}</strong>.
+    The current Governance score of <strong>{score_gov}/100</strong> and Security score of <strong>{score_sec}/100</strong> show
+    how far structures for control, documentation, and protection mechanisms have been developed.
+  </p>
+  <h3>1. Strategic and Organizational {ui('risks', 'en')}</h3>
+  <ul>
+    <li><strong>Unclear goals and priorities for AI.</strong> Without clearly defined goals, there is a risk that AI experiments fizzle out, isolated solutions emerge, or important opportunities remain unused. <em>Countermeasure:</em> A concise target vision with 2-3 prioritized use cases and a simple implementation plan.</li>
+    <li><strong>Dependency on individuals (single point of failure).</strong> If knowledge concentrates with one person, experiments and implementation stall when they are unavailable. <em>Countermeasure:</em> Documentation of knowledge so it is not lost.</li>
+    <li><strong>Lack of role and responsibility clarity.</strong> In growing setups it is often unclear who prioritizes AI projects and who is responsible for quality. <em>Countermeasure:</em> A clearly named role for AI responsibility and transparent communication of responsibilities.</li>
+  </ul>
+  <h3>2. Data, Security, and Compliance {ui('risks', 'en')}</h3>
+  <ul>
+    <li><strong>Insufficient control over incoming and outgoing data.</strong> Without regulation of what information may be entered into AI systems, confidential customer data or sensitive content can be processed uncontrolled. <em>Countermeasure:</em> Clear guidelines for data use and technical protection mechanisms.</li>
+    <li><strong>Gaps in information security and access protection.</strong> The security score of {score_sec}/100 indicates room for improvement in passwords, access rights, or backup concepts. <em>Countermeasure:</em> A compact security concept and regular password and rights reviews.</li>
+    <li><strong>Unclear responsibility for legal requirements.</strong> Without defined accountability, requirements for data protection, copyright, or industry-specific regulation may only be observed sporadically. <em>Countermeasure:</em> A designated function that bundles minimum requirements.</li>
+  </ul>
+  <h3>3. Quality, Transparency, and Acceptance {ui('risks', 'en')}</h3>
+  <ul>
+    <li><strong>Inconsistent results and quality variance.</strong> Without documented prompts, templates, and workflows, quality and style depend heavily on the individual. <em>Countermeasure:</em> Uniform templates, brief guidelines, and regular reviews of sample outputs.</li>
+    <li><strong>Over-reliance on AI results (hallucinations).</strong> If texts, analyses, or evaluations are adopted without review, errors or hallucinations can flow directly into customer documents. <em>Countermeasure:</em> Clear rules for manual review and four-eyes principle for critical content.</li>
+    <li><strong>Acceptance problems in daily use.</strong> Resistance arises in teams when the benefits of AI are not understandable or workflows are perceived as too complex. <em>Countermeasure:</em> Understandable communication of goals and small pilot projects with visible benefits.</li>
+  </ul>
+  <h3>4. Technical and Operational {ui('risks', 'en')}</h3>
+  <ul>
+    <li><strong>Dependency on external providers (vendor lock-in).</strong> Heavy reliance on a single AI provider creates risks if pricing, availability, or functionality changes. <em>Countermeasure:</em> Evaluate alternatives, avoid deep dependencies where possible.</li>
+    <li><strong>Integration complexity.</strong> Connecting AI tools with existing systems can require significant technical effort. <em>Countermeasure:</em> Start with standalone pilots before deep integration.</li>
+  </ul>
+  <h3>5. {ui('risk_matrix', 'en')}</h3>
+  <table class="table">
+    <thead><tr><th>Risk Category</th><th>Description</th><th>{ui('probability', 'en')}</th><th>{ui('impact', 'en')}</th><th>{ui('recommended_actions', 'en')}</th></tr></thead>
+    <tbody>
+      <tr><td>Data & Security</td><td>Uncontrolled data processing, gaps</td><td>medium</td><td>high</td><td>Data use guidelines, access concepts</td></tr>
+      <tr><td>Quality & Acceptance</td><td>Inconsistent results, distrust</td><td>medium</td><td>medium to high</td><td>Templates, review loops, communication</td></tr>
+      <tr><td>Dependencies & Operations</td><td>Interruptions, extra costs, lock-in</td><td>low to medium</td><td>medium</td><td>Fallback scenarios, tool consolidation</td></tr>
+      <tr><td>AI-specific: Hallucinations</td><td>Incorrect information, reputation damage</td><td>medium to high</td><td>high</td><td>Four-eyes principle, fact-checking</td></tr>
+    </tbody>
+  </table>
+  <p class="small muted">This risk analysis shows the most important action areas for AI in <strong>{hauptleistung or "your core business"}</strong> for a company of size <strong>{size_label}</strong>. In the next step, risks should be prioritized by probability and impact and transferred to a concrete action plan.</p>
+</section>"""
         if size_group == "solo":
             org_risk = "Als Solo-Selbstständige:r konzentriert sich Know-how und Verantwortung auf eine Person"
             org_measure = "Dokumentation zentraler Workflows, Checklisten und bewusste Verankerung von KI-Routinen"
@@ -2884,6 +3059,72 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     # 🎯 PLATIN+ FALLBACK: RECOMMENDATIONS (800+ Wörter)
     # ════════════════════════════════════════════════════════════════════════════
     if section_key == "recommendations":
+        # TEIL 3.1.4: EN fallback for recommendations
+        if briefing_lang == "en":
+            return f"""<section class="section recommendations">
+  <h2>{ui('recommendations_title', 'en')}</h2>
+  <p>
+    For a company in the <strong>{branche}</strong> industry with size <strong>{size_label}</strong>,
+    there are several immediately actionable levers to effectively deploy AI in the process <strong>{hauptleistung or "your core business"}</strong>.
+    The following recommendations are prioritized, practical, and aligned with realistic resources.
+  </p>
+  <ol class="recommendations-list">
+    <li>
+      <h3>Recommendation 1: Quick Win – Implement Standard Workflow</h3>
+      <p><strong>{ui('focus', 'en')}:</strong> Improve a central, recurring step in {hauptleistung or "your core business"} that frequently takes time and is suitable for AI support.</p>
+      <p><strong>{ui('action', 'en')}:</strong> Introduce an AI-supported standard workflow with clear rules for inputs, quality checks, and approvals.</p>
+      <p><strong>{ui('benefit_impact', 'en')}:</strong> Directly measurable relief for recurring tasks, higher consistency and more stable quality.</p>
+      <p><strong>{ui('effort_budget', 'en')}:</strong> Low to medium – achievable in a few days; tool costs typically in the double to low triple-digit range per month.</p>
+      <p><strong>{ui('responsible', 'en')}:</strong> Owner/Team Lead</p>
+    </li>
+    <li>
+      <h3>Recommendation 2: Quality Assurance – AI-Supported Consistency Check</h3>
+      <p><strong>{ui('focus', 'en')}:</strong> AI-supported consistency check for documents, content, or data structures tailored to industry requirements in {branche}.</p>
+      <p><strong>{ui('action', 'en')}:</strong> Set up an automated review step before release including fact-checking, tone analysis, and compliance checks.</p>
+      <p><strong>{ui('benefit_impact', 'en')}:</strong> Less rework, lower risk of errors, more stable quality across multiple projects.</p>
+      <p><strong>{ui('effort_budget', 'en')}:</strong> Medium – 2-5 days setup; licenses dependent on user count.</p>
+      <p><strong>{ui('responsible', 'en')}:</strong> Quality Management</p>
+    </li>
+    <li>
+      <h3>Recommendation 3: Knowledge Management – Documentation & Knowledge Base</h3>
+      <p><strong>{ui('focus', 'en')}:</strong> Improve documentation and knowledge management – a typical pain point that can be significantly alleviated with AI support.</p>
+      <p><strong>{ui('action', 'en')}:</strong> Build an AI-supported knowledge library with templates, standards, checklists, and best practices.</p>
+      <p><strong>{ui('benefit_impact', 'en')}:</strong> Faster onboarding, higher first-time hit rate, fewer follow-up questions and more consistent results.</p>
+      <p><strong>{ui('effort_budget', 'en')}:</strong> Low to medium – depending on existing material; ongoing costs low.</p>
+      <p><strong>{ui('responsible', 'en')}:</strong> Owner/Team Lead</p>
+    </li>
+    <li>
+      <h3>Recommendation 4: Industry-Specific Use Case</h3>
+      <p><strong>{ui('focus', 'en')}:</strong> An industry-specific use case for {branche} that promises high visibility and quick ROI.</p>
+      <p><strong>{ui('action', 'en')}:</strong> Pilot a clearly defined AI use case that addresses typical industry workflows.</p>
+      <p><strong>{ui('benefit_impact', 'en')}:</strong> Visible benefit immediately in daily operations, momentum for further digitization steps.</p>
+      <p><strong>{ui('effort_budget', 'en')}:</strong> Variable depending on size and complexity; typically 3-10 days for a focused pilot.</p>
+      <p><strong>{ui('responsible', 'en')}:</strong> Department + Management</p>
+    </li>
+    <li>
+      <h3>Recommendation 5: Governance & Security</h3>
+      <p><strong>{ui('focus', 'en')}:</strong> Establish clear guidelines and controls for AI use to minimize risks and ensure compliance.</p>
+      <p><strong>{ui('action', 'en')}:</strong> Create a compact AI guideline with rules for data protection, quality checks, and approval processes.</p>
+      <p><strong>{ui('benefit_impact', 'en')}:</strong> Higher legal certainty, transparent processes, strengthened trust with customers and partners. Preparation for EU AI Act.</p>
+      <p><strong>{ui('effort_budget', 'en')}:</strong> Medium – policy development in 1-2 weeks.</p>
+      <p><strong>{ui('responsible', 'en')}:</strong> Owner/Team Lead</p>
+    </li>
+  </ol>
+  <h3>{ui('priorities_overview', 'en')}</h3>
+  <table class="table">
+    <thead><tr><th>{ui('priority', 'en')}</th><th>Recommendation</th><th>{ui('time_horizon', 'en')}</th><th>Main Benefit</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Implement standard workflow</td><td>0-3 months</td><td>Immediate relief & quality improvement</td></tr>
+      <tr><td>2</td><td>AI-supported consistency check</td><td>3-6 months</td><td>Less rework & lower risk</td></tr>
+      <tr><td>3</td><td>Centralize knowledge library</td><td>3-6 months</td><td>Faster onboarding & stable results</td></tr>
+      <tr><td>4</td><td>Implement industry-specific pilot</td><td>6-12 months</td><td>Visible benefit & scaling momentum</td></tr>
+      <tr><td>5</td><td>Governance & security guidelines</td><td>3-9 months</td><td>Legal certainty & trust</td></tr>
+    </tbody>
+  </table>
+  <h3>{ui('summary', 'en')} and Success Factors</h3>
+  <p>The successful implementation depends on several critical success factors. First, consistent follow-through is more important than perfect planning – start with a focused pilot and learn in the process. Second, define success metrics from the start to make progress measurable.</p>
+  <p class="small muted">The recommendations are formulated to be immediately transferable to project planning and consistent with roadmap, business case, and risk analysis. Time frames are adapted to the {ui('company_size', 'en')} <strong>{size_label}</strong>.</p>
+</section>"""
         if size_group == "solo":
             verantwortlich_1 = "Inhaber:in"
             verantwortlich_2 = "Inhaber:in"
@@ -3073,13 +3314,43 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
 
     # 🎯 SIZE-AWARE ROADMAP FALLBACKS (inline HTML, 1000+ Zeichen)
     if section_key in ("roadmap", "roadmap_90d"):
+        # TEIL 3.1.4: EN fallback for roadmap
+        if briefing_lang == "en":
+            phase3_text_en = ""
+            if size_group == "team":
+                phase3_text_en = " and share with 1-2 colleagues"
+            elif size_group == "kmu":
+                phase3_text_en = " and roll out aligned with departments"
+            return f"""<div class="roadmap">
+  <h4>Phase 1: Test & Preparation (0-30 days)</h4>
+  <ul>
+    <li>Define and document 2-3 most important AI deployment points in the {hauptleistung or "core business"} process.</li>
+    <li>Select toolset, conduct initial tests, and log experiences.</li>
+    <li>Create and communicate brief guide for inputs, quality criteria, and secure workflows.</li>
+    <li>Collect initial examples and store in structured form (start prompt library).</li>
+  </ul>
+  <h4>Phase 2: Piloting (31-60 days)</h4>
+  <ul>
+    <li>Test a pilot workflow in daily operations, systematically collect feedback and document learnings.</li>
+    <li>Schedule weekly mini-reviews to identify adjustment needs early.</li>
+    <li>Document templates, examples, and best practices and prepare for repeated use.</li>
+    <li>Define quality metrics (time, error rate, consistency) and conduct initial measurements.</li>
+  </ul>
+  <h4>Phase 3: Consolidation (61-90 days)</h4>
+  <ul>
+    <li>Establish proven workflows{phase3_text_en} and integrate into regular work routine.</li>
+    <li>Define simple AI guidelines (data handling, approval processes, quality assurance).</li>
+    <li>Prioritize next use cases, prepare {ui('roadmap', 'en')} 2.0, and plan resources.</li>
+    <li>Conduct initial impact measurement: document time savings, quality improvement, risk reduction.</li>
+  </ul>
+</div>"""
         # Bedingter Text für Phase 3 basierend auf size_group
         phase3_text = ""
         if size_group == "team":
             phase3_text = " und an 1–2 Kolleg:innen weitergeben"
         elif size_group == "kmu":
             phase3_text = " und abgestimmt mit Fachbereichen ausrollen"
-        
+
         return f"""<div class="roadmap">
   <h4>Phase 1: Test &amp; Vorbereitung (0–30 Tage)</h4>
   <ul>
@@ -4881,19 +5152,33 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     )
 
     # Benchmark-HTML & KPI-Kontext
-    sections["BENCHMARK_HTML"] = _build_benchmark_html(briefing)
+    # TEIL 3.1.4: Pass lang for locale-aware benchmark table
+    benchmark_lang = briefing.get("lang", "de") if isinstance(briefing, dict) else "de"
+    sections["BENCHMARK_HTML"] = _build_benchmark_html(briefing, lang=benchmark_lang)
 
     score_overall = scores.get("overall", 0)
     benchmark_avg = briefing.get("benchmark_avg", 35)
     benchmark_top = briefing.get("benchmark_top", 55)
-    if score_overall >= 70:
-        interpretation = "Sehr gut – überdurchschnittlich"
-    elif score_overall >= 50:
-        interpretation = "Solide – im guten Mittelfeld"
+    # TEIL 3.1.4: Language-aware interpretation
+    if benchmark_lang == "en":
+        if score_overall >= 70:
+            interpretation = "Very good – above average"
+        elif score_overall >= 50:
+            interpretation = "Solid – in the upper middle field"
+        else:
+            interpretation = "Room for improvement – considerable potential"
+        kpi_context = f"""<div class="kpi-context">
+<p><strong>Interpretation:</strong> {interpretation}</p>
+<p><strong>Benchmark:</strong> Average {benchmark_avg}/100 · Top quartile {benchmark_top}/100</p>
+</div>"""
     else:
-        interpretation = "Ausbaufähig – erhebliches Potenzial vorhanden"
-
-    kpi_context = f"""<div class="kpi-context">
+        if score_overall >= 70:
+            interpretation = "Sehr gut – überdurchschnittlich"
+        elif score_overall >= 50:
+            interpretation = "Solide – im guten Mittelfeld"
+        else:
+            interpretation = "Ausbaufähig – erhebliches Potenzial vorhanden"
+        kpi_context = f"""<div class="kpi-context">
 <p><strong>Interpretation:</strong> {interpretation}</p>
 <p><strong>Benchmark:</strong> Durchschnitt {benchmark_avg}/100 · Top-Quartil {benchmark_top}/100</p>
 </div>"""
@@ -4901,20 +5186,35 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 
     try:
         _s = scores
-        kpi_rows = (
-            "<tr><td>Governance</td><td>" + str(_s.get("governance", 0)) + "</td></tr>"
-            "<tr><td>Sicherheit</td><td>" + str(_s.get("security", 0)) + "</td></tr>"
-            "<tr><td>Wertschöpfung</td><td>" + str(_s.get("value", 0)) + "</td></tr>"
-            "<tr><td>Befähigung</td><td>" + str(_s.get("enablement", 0)) + "</td></tr>"
-            "<tr><td><strong>Gesamt</strong></td><td><strong>" + str(_s.get("overall", 0)) + "</strong></td></tr>"
-        )
-        sections["KPI_SCORES_HTML"] = (
-            "<table class='table'><thead><tr><th>Dimension</th><th>Score (0–100)</th></tr></thead><tbody>"
-            + kpi_rows
-            + "</tbody></table>"
-            + sections.get("BENCHMARK_HTML", "")
-            + sections.get("KPI_CONTEXT_HTML", "")
-        )
+        # TEIL 3.1.4: Language-aware KPI labels
+        if benchmark_lang == "en":
+            kpi_rows = (
+                "<tr><td>Governance</td><td>" + str(_s.get("governance", 0)) + "</td></tr>"
+                "<tr><td>Security</td><td>" + str(_s.get("security", 0)) + "</td></tr>"
+                "<tr><td>Value Creation</td><td>" + str(_s.get("value", 0)) + "</td></tr>"
+                "<tr><td>Enablement</td><td>" + str(_s.get("enablement", 0)) + "</td></tr>"
+                "<tr><td><strong>Overall</strong></td><td><strong>" + str(_s.get("overall", 0)) + "</strong></td></tr>"
+            )
+            sections["KPI_SCORES_HTML"] = (
+                "<table class='table'><thead><tr><th>Dimension</th><th>Score (0–100)</th></tr></thead><tbody>"
+                + kpi_rows
+                + "</tbody></table>"
+            )
+        else:
+            kpi_rows = (
+                "<tr><td>Governance</td><td>" + str(_s.get("governance", 0)) + "</td></tr>"
+                "<tr><td>Sicherheit</td><td>" + str(_s.get("security", 0)) + "</td></tr>"
+                "<tr><td>Wertschöpfung</td><td>" + str(_s.get("value", 0)) + "</td></tr>"
+                "<tr><td>Befähigung</td><td>" + str(_s.get("enablement", 0)) + "</td></tr>"
+                "<tr><td><strong>Gesamt</strong></td><td><strong>" + str(_s.get("overall", 0)) + "</strong></td></tr>"
+            )
+            sections["KPI_SCORES_HTML"] = (
+                "<table class='table'><thead><tr><th>Dimension</th><th>Score (0–100)</th></tr></thead><tbody>"
+                + kpi_rows
+                + "</tbody></table>"
+                + sections.get("BENCHMARK_HTML", "")
+                + sections.get("KPI_CONTEXT_HTML", "")
+            )
     except Exception:
         sections.setdefault("KPI_SCORES_HTML", sections.get("KPI_CONTEXT_HTML", ""))
 
