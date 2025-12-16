@@ -114,12 +114,15 @@ TOXICITY_PATTERNS: Dict[SupportedLanguage, List[str]] = {
 }
 
 # Vendor authority phrases that should be masked
+# NOTE: Generic "Anbieter" pattern removed (v5.4) - caused grammatical case errors
+#       (nominative "ein geeigneter" replaced accusative contexts).
+#       Vendor neutrality is now enforced via prompts (PLATIN+++ v7.1).
 VENDOR_AUTHORITY_PATTERNS: Dict[SupportedLanguage, List[Tuple[str, str]]] = {
     SupportedLanguage.DE: [
-        (r"(?:nur\s+)?(?:ein\s+)?(?:spezifischer\s+)?Anbieter\s+(?:wie\s+)?\w+", "ein geeigneter Anbieter"),
-        (r"(?:wir\s+)?empfehlen\s+(?:ausschließlich\s+)?\w+(?:\s+als\s+Lösung)?", "wir empfehlen eine passende Lösung"),
-        (r"(?:Microsoft|Google|Amazon|IBM|SAP|Oracle|Salesforce)\s+ist\s+(?:der\s+)?beste", "ein führender Anbieter bietet"),
-        (r"(?:Sie\s+)?müssen\s+(?:unbedingt\s+)?\w+\s+verwenden", "eine geeignete Lösung sollte gewählt werden"),
+        # Pattern 1 REMOVED: "(nur)? (ein)? (spezifischer)? Anbieter (wie)? X" → grammar errors
+        (r"(?:wir\s+)?empfehlen\s+(?:ausschließlich\s+)?(Microsoft|Google|Amazon|IBM|SAP|Oracle|Salesforce)(?:\s+als\s+Lösung)?", "wir empfehlen eine passende Lösung"),
+        (r"(Microsoft|Google|Amazon|IBM|SAP|Oracle|Salesforce)\s+ist\s+(?:der\s+)?beste", "ein führender Anbieter bietet"),
+        (r"(?:Sie\s+)?müssen\s+(?:unbedingt\s+)?(Microsoft|Google|Amazon|IBM|SAP|Oracle|Salesforce)\s+verwenden", "eine geeignete Lösung sollte gewählt werden"),
     ],
     SupportedLanguage.EN: [
         (r"(?:only\s+)?(?:a\s+)?(?:specific\s+)?vendor\s+(?:like\s+)?\w+", "a suitable vendor"),
