@@ -621,6 +621,7 @@ def run_summary_gate(
     service_token: str,
     briefing_id: int,
     profile_id: str,
+    expected_lang: str = "de",  # TEIL 3.1.2: Expected lang from profile
 ) -> Tuple[bool, Optional[str]]:
     """
     Run the full Summary Gate check.
@@ -643,6 +644,12 @@ def run_summary_gate(
     parsed = summary_data
     if not parsed:
         return False, "Failed to parse summary"
+
+    # TEIL 3.1.2: Verify summary.lang matches expected profile lang
+    summary_lang = parsed.get("lang", "de")
+    print(f"[gate] summary.lang = {summary_lang}, expected = {expected_lang}")
+    if expected_lang == "en" and summary_lang != "en":
+        return False, f"summary.lang mismatch: expected 'en', got '{summary_lang}'"
 
     # 4. Validate against gate rules
     passed, failures = validate_summary_gate(parsed)
@@ -720,6 +727,8 @@ def submit_briefing(
         "queue_analysis": True,
     }
 
+    # TEIL 3.1.2: Explicit lang logging for EN profiles
+    print(f"[submit] Payload lang: {lang}")
     print(f"[submit] POST {url} (timeout={CONNECT_TIMEOUT}s/{submit_timeout}s, retries={max_retries})")
 
     try:
@@ -971,8 +980,10 @@ def process_profile(
     gate_passed = True
     gate_error = None
     if run_gate:
+        # TEIL 3.1.2: Pass expected_lang for strict EN validation
         gate_passed, gate_error = run_summary_gate(
-            base_url, service_token, briefing_id, profile_name
+            base_url, service_token, briefing_id, profile_name,
+            expected_lang=profile_lang,
         )
         if not gate_passed:
             return {
