@@ -373,15 +373,24 @@ def generate_short_labels(briefing_data: Dict[str, Any], lang: str = "de") -> Di
         context_labels = BRANCH_CONTEXT_LABELS_DE
         short_labels = BRANCH_SHORT_LABELS_DE
 
-    # Get labels with fallbacks
-    branch_core = branch_labels.get(branche, branch_labels.get("beratung", "KI-Beratung"))
-    offering = offering_labels.get(branche, offering_labels.get("beratung", "KI-Lösungen"))
+    # Get labels with fallbacks - TEIL 3.1.1: Language-aware fallbacks
+    if lang == "en":
+        default_branch = "AI Consulting"
+        default_offering = "AI Solutions"
+        default_short = "Your Company"
+    else:
+        default_branch = "KI-Beratung"
+        default_offering = "KI-Lösungen"
+        default_short = "Ihr Unternehmen"
+
+    branch_core = branch_labels.get(branche, branch_labels.get("beratung", default_branch))
+    offering = offering_labels.get(branche, offering_labels.get("beratung", default_offering))
     # SPRINT G4.2: Short context label (4-6 words)
     branch_context = context_labels.get(branche, context_labels.get("beratung", "Consulting"))
 
     # SPRINT G17.S: Size-aware short label (3-5 words)
     short_key = f"{company_size}_{branche}"
-    branch_short = short_labels.get(short_key, short_labels.get(f"{company_size}_beratung", "Ihr Unternehmen"))
+    branch_short = short_labels.get(short_key, short_labels.get(f"{company_size}_beratung", default_short))
 
     # Regulatory label only for regulated industries
     regulatory = ""

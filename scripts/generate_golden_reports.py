@@ -62,6 +62,41 @@ FORBIDDEN_TOKENS: List[str] = [
     "FIXME:",
     "__DEBUG__",
 ]
+
+# =============================================================================
+# TEIL 3.1.1: German UI strings that must NOT appear in EN reports
+# =============================================================================
+DE_UI_STRINGS_EN_HARDFAIL: List[str] = [
+    # Report Header / Meta
+    "KI-Status-Report",
+    "Überblick",
+    "Unternehmensgröße",
+    "Reportdatum",
+    # Core Sections
+    "Handlungsempfehlungen",
+    "Nächste Schritte",
+    "Bewertung",
+    "Reifegrad",
+    "Kennzahlen",
+    "Risiken",
+    "Maßnahmen",
+    "Hauptziel",
+    "Zusammenfassung",
+    # Compliance/Notes
+    "DSGVO-konforme",
+    "DSGVO",
+    "Hinweis",
+    "Näherungen",
+    # Business Case
+    "Einsparungen",
+    "Konservativ",
+    "Realistisch",
+    "Optimistisch",
+    "Zeithorizont",
+    "Priorität",
+    "Verantwortung",
+]
+
 PROFILES_DIR = REPO_ROOT / "data" / "test_profiles_gold_optimized"
 ARTIFACTS_DIR = REPO_ROOT / "artifacts" / "golden_reports"
 MANIFEST_PATH = REPO_ROOT / "data" / "golden_profiles_manifest.json"
@@ -484,6 +519,85 @@ def scan_html_for_forbidden_tokens(html_bytes: bytes, profile_id: str) -> Tuple[
         return True, []
 
 
+# =============================================================================
+# TEIL 3.1.1: Locale scan for EN profiles (German UI = Hard-Fail)
+# =============================================================================
+def scan_html_for_locale_leaks(html_text: str, expected_lang: str, profile_id: str) -> Tuple[bool, List[str]]:
+    """
+    Scan HTML for German UI strings when expected_lang is 'en'.
+
+    This ensures EN profiles don't have mixed-locale content.
+    Only scans when expected_lang == "en".
+
+    Args:
+        html_text: Decoded HTML content
+        expected_lang: Expected language from profile ("en" or "de")
+        profile_id: For logging
+
+    Returns:
+        (passed: bool, found_leaks: list of found German strings)
+    """
+    if expected_lang != "en":
+        return True, []  # Only check EN profiles
+
+    found_leaks = []
+    for de_string in DE_UI_STRINGS_EN_HARDFAIL:
+        if de_string in html_text:
+            # Find context
+            idx = html_text.find(de_string)
+            start = max(0, idx - 20)
+            end = min(len(html_text), idx + len(de_string) + 20)
+            context = html_text[start:end].replace("\n", " ").strip()
+            found_leaks.append(f"{de_string} (context: ...{context}...)")
+
+    if found_leaks:
+        print(f"[locale-scan] ❌ FAILED for {profile_id} - {len(found_leaks)} German UI string(s) in EN report:")
+        for leak in found_leaks[:5]:  # Show first 5
+            print(f"[locale-scan]   - {leak}")
+        if len(found_leaks) > 5:
+            print(f"[locale-scan]   ... and {len(found_leaks) - 5} more")
+        return False, found_leaks
+    else:
+        print(f"[locale-scan] ✅ PASSED for {profile_id} - no German UI leaks in EN report")
+        return True, []
+
+
+def scan_html_lang_attribute(html_text: str, expected_lang: str, profile_id: str) -> Tuple[bool, str]:
+    """
+    Verify <html lang="..."> attribute matches expected language.
+
+    For EN profiles: <html lang="en"> must exist.
+    <html lang="de"> or missing lang = FAIL.
+
+    Args:
+        html_text: Decoded HTML content
+        expected_lang: Expected language ("en" or "de")
+        profile_id: For logging
+
+    Returns:
+        (passed: bool, error_message: str if failed)
+    """
+    if expected_lang != "en":
+        return True, ""  # Only strict check for EN profiles
+
+    import re
+    # Look for <html ... lang="..." ...> in first 500 chars
+    html_head = html_text[:500]
+    match = re.search(r'<html[^>]*\slang=["\']([^"\']+)["\']', html_head, re.IGNORECASE)
+
+    if not match:
+        print(f"[lang-attr] ❌ FAILED for {profile_id} - no lang attribute in <html> tag")
+        return False, "Missing lang attribute in <html> tag"
+
+    found_lang = match.group(1).lower()
+    if found_lang != "en":
+        print(f"[lang-attr] ❌ FAILED for {profile_id} - <html lang=\"{found_lang}\"> (expected: en)")
+        return False, f"Wrong lang attribute: found '{found_lang}', expected 'en'"
+
+    print(f"[lang-attr] ✅ PASSED for {profile_id} - <html lang=\"en\">")
+    return True, ""
+
+
 def save_summary_artifact(profile_id: str, summary_data: Union[str, Dict[str, Any]]) -> Path:
     """Save summary as artifact for debugging/CI."""
     output_dir = ARTIFACTS_DIR / profile_id
@@ -885,6 +999,30 @@ def process_profile(
                 "briefing_id": briefing_id,
                 "status": "gate_failed",
                 "error": f"Forbidden tokens in final HTML: {found_tokens}",
+            }
+
+    # 5.6 TEIL 3.1.1: Locale scan for EN profiles (German UI = Hard-Fail)
+    if run_gate and html_bytes and profile_lang == "en":
+        html_text = html_bytes.decode("utf-8", errors="replace")
+
+        # A1: Check for German UI strings in EN report
+        locale_passed, found_de_strings = scan_html_for_locale_leaks(html_text, profile_lang, profile_name)
+        if not locale_passed:
+            return {
+                "profile": profile_name,
+                "briefing_id": briefing_id,
+                "status": "gate_failed",
+                "error": f"German UI strings in EN report: {found_de_strings[:3]}",
+            }
+
+        # A2: Check <html lang="en"> attribute
+        lang_attr_passed, lang_attr_error = scan_html_lang_attribute(html_text, profile_lang, profile_name)
+        if not lang_attr_passed:
+            return {
+                "profile": profile_name,
+                "briefing_id": briefing_id,
+                "status": "gate_failed",
+                "error": f"HTML lang attribute error: {lang_attr_error}",
             }
 
     # 6. Download PDF (with retry)

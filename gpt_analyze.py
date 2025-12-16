@@ -2502,14 +2502,18 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     - NEU: recommendations Fallback mit 800+ Wörtern
     - roadmap_12m: Erweitert auf 900+ Wörter
     """
-    branche = briefing.get("BRANCHE_LABEL") or briefing.get("branche", "Ihr Unternehmen")
+    # TEIL 3.1.1: Get lang first for language-aware fallbacks
+    briefing_lang = briefing.get("lang", "de") if isinstance(briefing, dict) else "de"
+
+    # Language-aware fallbacks
+    default_company = "Your Company" if briefing_lang == "en" else "Ihr Unternehmen"
+    branche = briefing.get("BRANCHE_LABEL") or briefing.get("branche", default_company)
     size_label = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
     hauptleistung = briefing.get("hauptleistung", briefing.get("HAUPTLEISTUNG", ""))
 
     # SPRINT G2.4: Generate short labels for redundancy reduction
     # PLATIN+++ v5.4: Use briefing's actual lang, not hardcoded "de"
     from services.prompt_enhancer import generate_short_labels
-    briefing_lang = briefing.get("lang", "de") if isinstance(briefing, dict) else "de"
     short_labels = generate_short_labels(briefing, lang=briefing_lang)
     branch_core_label = short_labels.get("BRANCH_CORE_LABEL", branche)
     offering_label = short_labels.get("OFFERING_LABEL", "")
@@ -2524,8 +2528,9 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     else:
         size_group = "kmu"
 
-    # Business Case Variablen
-    bundesland = briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", "Ihrem Bundesland")
+    # Business Case Variablen - TEIL 3.1.1: Language-aware
+    default_bundesland = "your region" if briefing_lang == "en" else "Ihrem Bundesland"
+    bundesland = briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", default_bundesland)
     # BC-Werte mit sinnvollen Defaults (werden von calc_business_case vorher gesetzt)
     capex = briefing.get("CAPEX_REALISTISCH_EUR") or 5000
     opex = briefing.get("OPEX_REALISTISCH_EUR") or 150
