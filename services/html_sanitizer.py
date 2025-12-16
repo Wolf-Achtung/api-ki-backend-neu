@@ -662,6 +662,104 @@ def _guardrails_hint_en() -> str:
 
 
 # =============================================================================
+# PLATIN+++ v5.4: HTML Contract Enforcement for Text Sections
+# =============================================================================
+# Root Cause Fix: GPT generates forbidden HTML elements (<h1>-<h4>, <section>, <article>)
+# in text sections where only inline/block text is expected.
+#
+# HTML CONTRACT:
+# - ALLOWED in text sections: <p>, <ul>, <ol>, <li>, <strong>, <em>, <b>, <i>, <br>
+# - FORBIDDEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>, <header>, <footer>
+# - Tables are handled separately (allowed in certain sections)
+
+TEXT_SECTION_ALLOWED_TAGS = {'p', 'ul', 'ol', 'li', 'strong', 'em', 'b', 'i', 'br', 'span'}
+TEXT_SECTION_FORBIDDEN_TAGS = {'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'section', 'article', 'header', 'footer', 'nav', 'aside'}
+
+
+def enforce_text_section_html_contract(html_content: str, section_name: str = "") -> str:
+    """
+    Enforces HTML contract for text sections.
+
+    PLATIN+++ v5.4 Root Cause Fix: Removes forbidden HTML elements that GPT
+    sometimes generates despite prompt instructions.
+
+    ALLOWED: <p>, <ul>, <ol>, <li>, <strong>, <em>, <b>, <i>, <br>, <span>
+    FORBIDDEN: <h1>-<h6>, <section>, <article>, <header>, <footer>, <nav>, <aside>
+
+    Forbidden tags are REMOVED but their text content is PRESERVED.
+
+    Args:
+        html_content: HTML string from GPT
+        section_name: Name of section (for logging)
+
+    Returns:
+        HTML with forbidden tags removed (content preserved)
+    """
+    if not html_content:
+        return ""
+
+    result = html_content
+    violations_found = []
+
+    for tag in TEXT_SECTION_FORBIDDEN_TAGS:
+        # Pattern matches opening and closing tags
+        # Opening tags: <h1>, <h1 class="...">, etc.
+        open_pattern = re.compile(rf'<{tag}(?:\s+[^>]*)?\s*>', re.IGNORECASE)
+        close_pattern = re.compile(rf'</{tag}\s*>', re.IGNORECASE)
+
+        if open_pattern.search(result) or close_pattern.search(result):
+            violations_found.append(tag)
+
+        # Remove opening and closing tags but keep content
+        result = open_pattern.sub('', result)
+        result = close_pattern.sub('', result)
+
+    # Log violations for monitoring
+    if violations_found:
+        log.warning(
+            "[HTML-CONTRACT] Section '%s': Removed forbidden tags: %s",
+            section_name or "unknown",
+            ", ".join(violations_found)
+        )
+
+    # Clean up resulting empty lines and double spaces
+    result = re.sub(r'\n{3,}', '\n\n', result)
+    result = re.sub(r'  +', ' ', result)
+
+    return result.strip()
+
+
+def is_text_section(section_name: str) -> bool:
+    """
+    Determines if a section should enforce text-only HTML contract.
+
+    Text sections: Most content sections (gamechanger, executive_summary,
+    recommendations, roadmaps, etc.)
+
+    Exceptions (allow tables/complex HTML): ai_act_table, business_case,
+    financial sections
+    """
+    if not section_name:
+        return False
+
+    name_lower = section_name.lower()
+
+    # Sections that ALLOW tables and complex HTML
+    complex_html_sections = {
+        'ai_act_table', 'ai_act_compliance_table',
+        'business_case', 'business_case_visual',
+        'financial_summary', 'kpi_table',
+        'tool_comparison', 'benchmark_table',
+    }
+
+    if any(exc in name_lower for exc in complex_html_sections):
+        return False
+
+    # All other content sections enforce text contract
+    return True
+
+
+# =============================================================================
 # Sprint N3.3: Executive Summary Hard-Clean
 # =============================================================================
 
@@ -886,13 +984,22 @@ def sanitize_section_html(
     return s
 
 def sanitize_sections_dict(sections: dict, truthy_env: Optional[bool] = True) -> dict:
-    """Sanitisiert alle string‑Werte in einem Sections‑Dict."""
+    """
+    Sanitisiert alle string‑Werte in einem Sections‑Dict.
+
+    PLATIN+++ v5.4: Now also enforces HTML contract for text sections.
+    """
     if not isinstance(sections, dict):
         return sections
     out = {}
     for k, v in sections.items():
         if isinstance(v, str):
-            out[k] = sanitize_section_html(v, compress_ws=True)
+            # Step 1: Basic sanitization
+            sanitized = sanitize_section_html(v, compress_ws=True)
+            # Step 2: Enforce HTML contract for text sections (PLATIN+++ v5.4)
+            if is_text_section(k):
+                sanitized = enforce_text_section_html_contract(sanitized, section_name=k)
+            out[k] = sanitized
         else:
             out[k] = v
     return out

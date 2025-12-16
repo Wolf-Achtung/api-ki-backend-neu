@@ -24,6 +24,69 @@ SectionDict = Dict[str, Any]
 
 
 # =============================================================================
+# PLATIN+++ v5.4: CENTRALIZED FALLBACK COORDINATION
+# =============================================================================
+# Root Cause Fix: Multiple uncoordinated fallback systems (FallbackGuard,
+# auto_healing, report_validator) could apply fallbacks to the same section.
+# This registry ensures only ONE fallback per section per report run.
+
+from threading import Lock
+from typing import Set as TypingSet
+
+# Thread-safe registry of sections that have received fallbacks
+_fallback_registry: Dict[str, TypingSet[str]] = {}  # run_id -> set of sections
+_registry_lock = Lock()
+
+
+def register_fallback(run_id: str, section_name: str) -> bool:
+    """
+    Register a fallback for a section. Returns True if this is the FIRST fallback.
+
+    Thread-safe. Use before applying any fallback content.
+
+    Args:
+        run_id: Report run ID
+        section_name: Section that received fallback
+
+    Returns:
+        True if fallback was registered (first time), False if already registered
+    """
+    with _registry_lock:
+        if run_id not in _fallback_registry:
+            _fallback_registry[run_id] = set()
+
+        if section_name in _fallback_registry[run_id]:
+            log.warning(
+                "[FALLBACK-COORD] Section '%s' already has fallback (run=%s), skipping duplicate",
+                section_name, run_id
+            )
+            return False
+
+        _fallback_registry[run_id].add(section_name)
+        log.info("[FALLBACK-COORD] Registered fallback for section '%s' (run=%s)", section_name, run_id)
+        return True
+
+
+def has_fallback(run_id: str, section_name: str) -> bool:
+    """Check if a section already has a fallback registered."""
+    with _registry_lock:
+        return run_id in _fallback_registry and section_name in _fallback_registry[run_id]
+
+
+def clear_fallback_registry(run_id: str) -> None:
+    """Clear fallback registry for a run (call at end of report generation)."""
+    with _registry_lock:
+        if run_id in _fallback_registry:
+            del _fallback_registry[run_id]
+
+
+def get_fallback_count(run_id: str) -> int:
+    """Get number of fallbacks for a run."""
+    with _registry_lock:
+        return len(_fallback_registry.get(run_id, set()))
+
+
+# =============================================================================
 # CONFIGURATION
 # =============================================================================
 

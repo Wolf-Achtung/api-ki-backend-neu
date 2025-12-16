@@ -34,15 +34,31 @@ RESEARCH_CACHE_PATH = os.getenv("RESEARCH_CACHE_PATH", "data/research_cache.json
 # HTML Sanitize Auto-Recovery
 # =============================================================================
 
+# PLATIN+++ v5.4: Import centralized fallback coordination
+try:
+    from services.fallback_guard import register_fallback, has_fallback
+    _HAS_FALLBACK_COORD = True
+except ImportError:
+    _HAS_FALLBACK_COORD = False
+    def register_fallback(run_id: str, section_name: str) -> bool:
+        return True  # Fallback: always allow
+    def has_fallback(run_id: str, section_name: str) -> bool:
+        return False
+
+
 def auto_recover_section(
     section_name: str,
     content: str,
     size: str = "solo",
     lang: str = "de",
     attempt: int = 1,
+    run_id: str = "",  # PLATIN+++ v5.4: Added for fallback coordination
 ) -> Tuple[str, bool]:
     """
     Auto-recover section content if it doesn't meet minimum word requirements.
+
+    PLATIN+++ v5.4: Now uses centralized fallback coordination to prevent
+    multiple fallback systems from applying redundant fallbacks.
 
     Args:
         section_name: Name of the section (e.g., "roadmap_90d")
@@ -50,12 +66,21 @@ def auto_recover_section(
         size: Company size (solo/team/kmu)
         lang: Language (de/en)
         attempt: Recovery attempt number (max 2)
+        run_id: Report run ID for fallback coordination
 
     Returns:
         Tuple of (recovered_content, was_recovered)
     """
+    # PLATIN+++ v5.4: Check if fallback already applied by another system
+    if run_id and has_fallback(run_id, section_name):
+        log.info("auto_recover_section: Skipping %s - fallback already applied (run=%s)", section_name, run_id)
+        return content, False
+
     if not content:
         log.warning("auto_recover_section: Empty content for %s, using fallback", section_name)
+        # Register fallback before applying
+        if run_id:
+            register_fallback(run_id, section_name)
         return _get_fallback_content(section_name, size, lang), True
 
     word_count = len(content.split())
@@ -73,6 +98,9 @@ def auto_recover_section(
         log.error("auto_recover_section: Max attempts for %s, using fallback", section_name)
         from services.monitoring import record_section_generation
         record_section_generation(section_name, success=True, is_fallback=True, word_count=word_count)
+        # Register fallback before applying
+        if run_id:
+            register_fallback(run_id, section_name)
         return _get_fallback_content(section_name, size, lang), True
 
     # Try to enhance content
@@ -84,6 +112,9 @@ def auto_recover_section(
         return enhanced, True
 
     # Still not enough, use fallback
+    # Register fallback before applying
+    if run_id:
+        register_fallback(run_id, section_name)
     return _get_fallback_content(section_name, size, lang), True
 
 
