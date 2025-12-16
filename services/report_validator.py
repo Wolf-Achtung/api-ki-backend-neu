@@ -2121,9 +2121,10 @@ def remove_leak_phrases_from_html(html: str) -> Tuple[str, int]:
     for phrase in unique_phrases:
         # PLATIN+++ v5.4: More precise leak removal
         # OLD (greedy): [^.!?]*{phrase}[^.!?]*[.!?]?\s* - matched across HTML elements
-        # NEW: Respect HTML boundaries with [^<>]* to stay within single text node
+        # NEW: Respect HTML boundaries by excluding < and > from character class
         escaped_phrase = re.escape(phrase)
-        pattern = rf'(?<=[.!?>]|^)[^<>]*?{escaped_phrase}[^<>]*?(?=[.!?<]|$)'
+        # Pattern: match text with phrase, stopping at sentence boundaries AND HTML tags
+        pattern = rf'[^<>.!?]*{escaped_phrase}[^<>.!?]*[.!?]?\s*'
         matches = re.findall(pattern, cleaned, re.IGNORECASE)
         if matches:
             for match in matches:

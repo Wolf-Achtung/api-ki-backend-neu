@@ -86,17 +86,13 @@ def apply_leak_replacements(html: str, leaks: List[str]) -> Tuple[str, int]:
                 continue
             # PLATIN+++ v5.4: More precise leak removal
             # OLD (greedy): [^.!?]*{phrase}[^.!?]*[.!?]?\s* - matched across HTML elements
-            # NEW: Match sentence containing phrase, but respect HTML boundaries
-            # Strategy:
-            # 1. Find phrase position
-            # 2. Extend backwards to sentence start (. ! ? or tag close >)
-            # 3. Extend forwards to sentence end (. ! ? or tag open <)
+            # NEW: Respect HTML boundaries by excluding < and > from character class
             # This prevents removing content from adjacent HTML elements
             try:
                 escaped_phrase = re.escape(phrase)
-                # Pattern: sentence boundary (or >) then text with phrase then sentence end (or <)
-                # [^<>]* ensures we stay within a single HTML text node
-                pattern = rf'(?<=[.!?>]|^)[^<>]*?{escaped_phrase}[^<>]*?(?=[.!?<]|$)'
+                # Pattern: match text with phrase, stopping at sentence boundaries AND HTML tags
+                # [^<>.!?]* excludes both HTML tag chars and sentence-ending punctuation
+                pattern = rf'[^<>.!?]*{escaped_phrase}[^<>.!?]*[.!?]?\s*'
                 matches = re.findall(pattern, cleaned, re.IGNORECASE)
                 if matches:
                     for match in matches:
