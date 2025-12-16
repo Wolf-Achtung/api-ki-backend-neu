@@ -476,6 +476,26 @@ def validate_summary_gate(parsed_summary: Dict[str, Any]) -> Tuple[bool, List[st
 # =============================================================================
 # FIX 1: PLATIN+++ v5.4 - Final HTML Token Scan (Hard-Fail Gate)
 # =============================================================================
+def _strip_noncontent(html: str) -> str:
+    """
+    Strip <style>, <script>, and base64 data URIs before token scanning.
+
+    This prevents false positives from:
+    - CSS minification artifacts like '}}' or '{{' in style rules
+    - JavaScript template literals or object syntax
+    - Base64-encoded images containing token-like sequences
+
+    TEIL 3.1.3: Token-Scan False Positive Fix
+    """
+    # Strip <style> blocks (CSS can contain }} from minification)
+    html = re.sub(r"<style\b[^>]*>.*?</style>", "", html, flags=re.IGNORECASE | re.DOTALL)
+    # Strip <script> blocks (JS can contain template syntax)
+    html = re.sub(r"<script\b[^>]*>.*?</script>", "", html, flags=re.IGNORECASE | re.DOTALL)
+    # Neutralize base64 data URIs (can contain any byte sequence)
+    html = re.sub(r"data:image/[^\"']+;base64,[^\"']+", "data:image/…;base64,…", html, flags=re.IGNORECASE)
+    return html
+
+
 def scan_html_for_forbidden_tokens(html_bytes: bytes, profile_id: str) -> Tuple[bool, List[str]]:
     """
     Scan final HTML for forbidden development tokens.
@@ -499,9 +519,12 @@ def scan_html_for_forbidden_tokens(html_bytes: bytes, profile_id: str) -> Tuple[
         print(f"[token-scan] ⚠️ Failed to decode HTML for {profile_id}: {e}")
         return True, []  # Decode error = can't scan, let it pass
 
+    # TEIL 3.1.3: Strip <style>/<script>/base64 before scanning to avoid false positives
+    scan_text = _strip_noncontent(html_text)
+
     found_tokens = []
     for token in FORBIDDEN_TOKENS:
-        if token in html_text:
+        if token in scan_text:
             # Find context (first occurrence, up to 100 chars around it)
             idx = html_text.find(token)
             start = max(0, idx - 30)
