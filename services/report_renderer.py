@@ -84,14 +84,28 @@ def apply_leak_replacements(html: str, leaks: List[str]) -> Tuple[str, int]:
         for phrase in leaks:
             if not phrase:
                 continue
-            # Remove sentences containing this phrase
-            # Use simple pattern to avoid catastrophic backtracking
-            pattern = rf'[^.!?]*{re.escape(phrase)}[^.!?]*[.!?]?\s*'
+            # PLATIN+++ v5.4: More precise leak removal
+            # OLD (greedy): [^.!?]*{phrase}[^.!?]*[.!?]?\s* - matched across HTML elements
+            # NEW: Respect HTML boundaries by excluding < and > from character class
+            # This prevents removing content from adjacent HTML elements
             try:
-                matches = len(re.findall(pattern, cleaned, re.IGNORECASE))
-                if matches > 0:
-                    cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE)
-                    removed_count += matches
+                escaped_phrase = re.escape(phrase)
+                # Pattern: match text with phrase, stopping at sentence boundaries AND HTML tags
+                # [^<>.!?]* excludes both HTML tag chars and sentence-ending punctuation
+                pattern = rf'[^<>.!?]*{escaped_phrase}[^<>.!?]*[.!?]?\s*'
+                matches = re.findall(pattern, cleaned, re.IGNORECASE)
+                if matches:
+                    for match in matches:
+                        # Safety: only remove if match is reasonable length (< 500 chars)
+                        # Prevents accidental removal of large content blocks
+                        if len(match) < 500:
+                            cleaned = cleaned.replace(match, '', 1)
+                            removed_count += 1
+                        else:
+                            # Fallback: just remove the phrase itself
+                            log.warning(f"[N2.5] Match too long ({len(match)} chars), removing phrase only")
+                            cleaned = re.sub(escaped_phrase, '', cleaned, count=1, flags=re.IGNORECASE)
+                            removed_count += 1
             except re.error as regex_err:
                 log.warning(f"[N2.5] Regex error for phrase '{phrase}': {regex_err}")
                 # Fall back to simple string replacement
