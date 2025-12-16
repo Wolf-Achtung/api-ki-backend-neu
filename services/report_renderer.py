@@ -185,6 +185,65 @@ def final_leak_cleanup(html: str, run_id: str | None = None) -> str:
         # Return original HTML - better to have leaks than no PDF
         return html
 
+
+# =============================================================================
+# PLATIN+++ v5.4: Final Development Placeholder Scrub
+# =============================================================================
+# Root Cause Fix: Development placeholders like DEFAULT_STUNDENSATZ_EUR
+# can leak into final HTML if not caught by source fixes.
+
+# Patterns to scrub from final HTML (development/debug tokens)
+_DEV_PLACEHOLDER_PATTERNS = [
+    r"DEFAULT_STUNDENSATZ_EUR",
+    r"DEFAULT_[A-Z_]+_EUR",  # Any DEFAULT_*_EUR pattern
+    r"\{\{[A-Z_]+\}\}",  # Unreplaced {{PLACEHOLDER}} patterns
+]
+
+
+def scrub_development_placeholders(html: str, run_id: str | None = None) -> str:
+    """
+    PLATIN+++ v5.4: Final scrub for development placeholders before PDF rendering.
+
+    This is a last-line-of-defense that removes any development tokens
+    that leaked into the final HTML.
+
+    Args:
+        html: HTML content to scrub
+        run_id: Optional run ID for logging
+
+    Returns:
+        Scrubbed HTML string
+    """
+    if not html or not isinstance(html, str):
+        return html or ""
+
+    result = html
+    scrubbed_count = 0
+
+    try:
+        for pattern in _DEV_PLACEHOLDER_PATTERNS:
+            matches = re.findall(pattern, result)
+            if matches:
+                scrubbed_count += len(matches)
+                result = re.sub(pattern, "", result)
+
+        # Normalize whitespace (double spaces -> single)
+        result = re.sub(r"  +", " ", result)
+
+        if scrubbed_count > 0:
+            log.warning(
+                "[PLATIN-SCRUB] Removed %d development placeholders from final HTML (run=%s)",
+                scrubbed_count, run_id
+            )
+
+    except Exception as e:
+        log.error(f"[PLATIN-SCRUB] Scrub failed for run={run_id}: {e}")
+        # Return original on error - don't block PDF
+        return html
+
+    return result
+
+
 def _env() -> Environment:
     tpl_dir = Path(os.getenv("REPORT_TEMPLATE_DIR", "templates"))
     env = Environment(
@@ -395,5 +454,10 @@ def render(briefing_obj: Any,
     log.info(f"[RENDER] Before final leak cleanup: len(html)={len(html)} for run={run_id}")
     html = final_leak_cleanup(html, run_id=run_id)
     log.info(f"[RENDER] After final leak cleanup: len(html)={len(html)} for run={run_id}")
+
+    # =========================================================================
+    # PLATIN+++ v5.4: Final development placeholder scrub
+    # =========================================================================
+    html = scrub_development_placeholders(html, run_id=run_id)
 
     return {"html": html, "meta": meta or {}}

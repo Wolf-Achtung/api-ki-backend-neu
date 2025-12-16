@@ -771,9 +771,14 @@ def process_profile(
     profile_data = load_profile(profile_name)
     answers = profile_data.get("answers", profile_data)
 
+    # PLATIN+++ v5.4: Use lang from profile if available (overrides CLI default)
+    profile_lang = profile_data.get("lang", lang)
+    if profile_lang != lang:
+        print(f"[profile] Using profile lang '{profile_lang}' (override CLI default '{lang}')")
+
     # 2. Submit briefing (with retry)
     briefing_id = submit_briefing(
-        base_url, service_token, answers, lang,
+        base_url, service_token, answers, profile_lang,
         submit_timeout=submit_timeout,
         max_retries=max_retries,
     )
