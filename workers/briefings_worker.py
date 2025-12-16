@@ -71,6 +71,8 @@ def claim_next_briefing(db: Session) -> Optional[Briefing]:
     This ensures that multiple workers can safely compete for jobs without
     double-processing. PostgreSQL's SKIP LOCKED allows non-blocking claims.
 
+    PLATIN+++ v5.4: Now accepts both 'accepted' AND 'queued' status for robustness.
+
     Args:
         db: SQLAlchemy session
 
@@ -79,10 +81,11 @@ def claim_next_briefing(db: Session) -> Optional[Briefing]:
     """
     if is_sqlite:
         # SQLite fallback: simple SELECT (not race-safe, but works for dev/test)
+        # PLATIN+++ v5.4: Accept both 'accepted' and 'queued'
         briefing = db.query(Briefing).filter(
-            Briefing.status == "accepted"
+            Briefing.status.in_(["accepted", "queued"])
         ).order_by(
-            Briefing.accepted_at.asc()
+            Briefing.created_at.asc()  # FIFO by creation time
         ).first()
 
         if briefing:
@@ -96,11 +99,12 @@ def claim_next_briefing(db: Session) -> Optional[Briefing]:
     # PostgreSQL: Use FOR UPDATE SKIP LOCKED for race-safe claiming
     try:
         # Raw SQL for FOR UPDATE SKIP LOCKED (SQLAlchemy 2.x compatible)
+        # PLATIN+++ v5.4: Accept both 'accepted' and 'queued'
         result = db.execute(
             text("""
                 SELECT id FROM briefings
-                WHERE status = 'accepted'
-                ORDER BY accepted_at ASC
+                WHERE status IN ('accepted', 'queued')
+                ORDER BY created_at ASC
                 LIMIT 1
                 FOR UPDATE SKIP LOCKED
             """)

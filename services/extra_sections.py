@@ -362,7 +362,7 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
     <thead><tr><th>Parameter</th><th>Wert</th><th>Erläuterung</th></tr></thead>
     <tbody>
       <tr><td>Gesamteinsparung</td><td>{_fmt_eur(total_hours)} h/Monat</td><td>Summe Quick‑Wins</td></tr>
-      <tr><td>Stundensatz</td><td>{_fmt_eur(stundensatz)} €</td><td>DEFAULT_STUNDENSATZ_EUR (size-aware)</td></tr>
+      <tr><td>Stundensatz</td><td>{_fmt_eur(stundensatz)} €</td><td>Standardsatz (größenabhängig)</td></tr>
       <tr><td>Monetärer Nutzen</td><td>{_fmt_eur(einsparung_monat_eur)} €/Monat</td><td>Einsparung × Stundensatz (gedeckelt)</td></tr>
       <tr><td>Einführungskosten (CAPEX)</td><td>{_fmt_eur(capex)} €</td><td>Mittel des Budgetbandes, größenbereinigt</td></tr>
       <tr><td>Laufende Kosten (OPEX)</td><td>{_fmt_eur(opex)} €/Monat</td><td>Lizenzen &amp; Betrieb (größenbereinigt)</td></tr>
