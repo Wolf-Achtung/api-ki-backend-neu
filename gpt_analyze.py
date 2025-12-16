@@ -6390,6 +6390,11 @@ def _fetch_pdf_if_needed(pdf_url: Optional[str], pdf_bytes: Optional[bytes]) -> 
 
 def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str], pdf_bytes: Optional[bytes], run_id: str) -> None:
     """Send emails via Resend API"""
+    # Global Email Kill-Switch
+    if os.getenv("DISABLE_EMAILS", "").lower() in ("1", "true", "yes", "on"):
+        log.info("[%s] 📧 Emails disabled via DISABLE_EMAILS=1. Skipping user/admin email send.", run_id)
+        return
+
     best_pdf = _fetch_pdf_if_needed(pdf_url, pdf_bytes)
     attachments_admin: List[Dict[str, Any]] = []
     if best_pdf:
