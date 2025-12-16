@@ -2119,15 +2119,25 @@ def remove_leak_phrases_from_html(html: str) -> Tuple[str, int]:
 
     # Only process phrases that were actually found (usually 0-3, not 95+)
     for phrase in unique_phrases:
-        # Remove sentences containing this phrase
-        pattern = rf'[^.!?]*{re.escape(phrase)}[^.!?]*[.!?]?\s*'
-        matches = len(re.findall(pattern, cleaned, re.IGNORECASE))
-        if matches > 0:
-            cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE)
-            removed_count += matches
+        # PLATIN+++ v5.4: More precise leak removal
+        # OLD (greedy): [^.!?]*{phrase}[^.!?]*[.!?]?\s* - matched across HTML elements
+        # NEW: Respect HTML boundaries with [^<>]* to stay within single text node
+        escaped_phrase = re.escape(phrase)
+        pattern = rf'(?<=[.!?>]|^)[^<>]*?{escaped_phrase}[^<>]*?(?=[.!?<]|$)'
+        matches = re.findall(pattern, cleaned, re.IGNORECASE)
+        if matches:
+            for match in matches:
+                # Safety: only remove if match is reasonable length (< 500 chars)
+                if len(match) < 500:
+                    cleaned = cleaned.replace(match, '', 1)
+                    removed_count += 1
+                else:
+                    # Fallback: just remove the phrase itself
+                    cleaned = re.sub(escaped_phrase, '', cleaned, count=1, flags=re.IGNORECASE)
+                    removed_count += 1
             log.warning(
                 "[N2-SafetyNet] Removed %d occurrences of leak phrase '%s'",
-                matches, phrase
+                len(matches), phrase
             )
 
     return cleaned, removed_count

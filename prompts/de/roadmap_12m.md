@@ -17,6 +17,11 @@ MICRO-CONSISTENCY (verbindlich):
 Die in der Executive Summary benannte Weichenstellung muss im Gamechanger
 ausgearbeitet und in den Roadmaps sprachlich referenziert werden
 (gleiche Begriffe, gleiche Logik).
+
+HTML-VERTRAG (verbindlich):
+ERLAUBT: <p>, <ul>, <ol>, <li>, <strong>, <em>
+VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>
+→ Überschriften werden vom Template gesetzt, nicht vom GPT-Output
 =============================================================================
 -->
 <!-- OUTPUT: HTML ONLY -->
