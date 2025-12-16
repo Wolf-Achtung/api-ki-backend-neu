@@ -64,7 +64,8 @@ FORBIDDEN_TOKENS: List[str] = [
 ]
 
 # =============================================================================
-# TEIL 3.1.1: German UI strings that must NOT appear in EN reports
+# TEIL 3.1.1 + 3.1.4: German UI strings that must NOT appear in EN reports
+# Extended to 80+ strings for comprehensive locale validation
 # =============================================================================
 DE_UI_STRINGS_EN_HARDFAIL: List[str] = [
     # Report Header / Meta
@@ -72,6 +73,9 @@ DE_UI_STRINGS_EN_HARDFAIL: List[str] = [
     "Überblick",
     "Unternehmensgröße",
     "Reportdatum",
+    "Unternehmen",
+    "Branche",
+    "Unternehmensprofil",
     # Core Sections
     "Handlungsempfehlungen",
     "Nächste Schritte",
@@ -82,12 +86,17 @@ DE_UI_STRINGS_EN_HARDFAIL: List[str] = [
     "Maßnahmen",
     "Hauptziel",
     "Zusammenfassung",
+    "Kurzfazit",
+    "Empfehlung",
+    "Empfehlungen",
     # Compliance/Notes
     "DSGVO-konforme",
     "DSGVO",
     "Hinweis",
     "Näherungen",
-    # Business Case
+    "Datenschutz",
+    "Compliance",
+    # Business Case / Financial
     "Einsparungen",
     "Konservativ",
     "Realistisch",
@@ -95,6 +104,62 @@ DE_UI_STRINGS_EN_HARDFAIL: List[str] = [
     "Zeithorizont",
     "Priorität",
     "Verantwortung",
+    "Kosten",
+    "Nutzen",
+    "Investition",
+    "Wirtschaftlichkeit",
+    "Aufwand",
+    "Nutzenpotenzial",
+    "Amortisation",
+    "Förderpotenzial",
+    # Risk / Strategy
+    "Risikolage",
+    "Risiko-Matrix",
+    "Risikoprofil",
+    "Priorisierung",
+    "Verantwortlich",
+    "Zielbild",
+    "Roadmap",
+    "Zeitplan",
+    # Time Units
+    "Monat",
+    "Monate",
+    "Quartal",
+    "Woche",
+    "Wochen",
+    # Table Headers
+    "Vergleich",
+    "Wert",
+    "Quelle",
+    "Schätzung",
+    "Beschreibung",
+    "Auswirkung",
+    "Eintrittswahrscheinlichkeit",
+    # Section Headers (German patterns)
+    "Ihr Unternehmen",
+    "Ihre Branche",
+    "Ihre nächsten",
+    "Ihre Rechte",
+    "Wesentliche Risiken",
+    # Action / Process Labels
+    "Schwerpunkt",
+    "Umsetzung",
+    "Förderchance",
+    "Förderprogramme",
+    "Bundesland",
+    # KPI Labels
+    "Sicherheit",
+    "Wertschöpfung",
+    "Befähigung",
+    "Gesamt",
+    "Durchschnitt",
+    "Top-Quartil",
+    # Misc UI Labels
+    "Sehr gut",
+    "Solide",
+    "Ausbaufähig",
+    "Branchenstudie",
+    "Ihr Kerngeschäft",
 ]
 
 PROFILES_DIR = REPO_ROOT / "data" / "test_profiles_gold_optimized"
@@ -543,7 +608,7 @@ def scan_html_for_forbidden_tokens(html_bytes: bytes, profile_id: str) -> Tuple[
 
 
 # =============================================================================
-# TEIL 3.1.1: Locale scan for EN profiles (German UI = Hard-Fail)
+# TEIL 3.1.1 + 3.1.4: Locale scan for EN profiles (German UI = Hard-Fail)
 # =============================================================================
 def scan_html_for_locale_leaks(html_text: str, expected_lang: str, profile_id: str) -> Tuple[bool, List[str]]:
     """
@@ -551,6 +616,9 @@ def scan_html_for_locale_leaks(html_text: str, expected_lang: str, profile_id: s
 
     This ensures EN profiles don't have mixed-locale content.
     Only scans when expected_lang == "en".
+
+    TEIL 3.1.4: Uses _strip_noncontent() to avoid false positives from
+    style/script/base64 content.
 
     Args:
         html_text: Decoded HTML content
@@ -563,15 +631,19 @@ def scan_html_for_locale_leaks(html_text: str, expected_lang: str, profile_id: s
     if expected_lang != "en":
         return True, []  # Only check EN profiles
 
+    # TEIL 3.1.4: Strip style/script/base64 before locale scan
+    scan_text = _strip_noncontent(html_text)
+
     found_leaks = []
     for de_string in DE_UI_STRINGS_EN_HARDFAIL:
-        if de_string in html_text:
-            # Find context
+        if de_string in scan_text:
+            # Find context (from original for debugging)
             idx = html_text.find(de_string)
-            start = max(0, idx - 20)
-            end = min(len(html_text), idx + len(de_string) + 20)
-            context = html_text[start:end].replace("\n", " ").strip()
-            found_leaks.append(f"{de_string} (context: ...{context}...)")
+            if idx >= 0:
+                start = max(0, idx - 20)
+                end = min(len(html_text), idx + len(de_string) + 20)
+                context = html_text[start:end].replace("\n", " ").strip()
+                found_leaks.append(f"{de_string} (context: ...{context}...)")
 
     if found_leaks:
         print(f"[locale-scan] ❌ FAILED for {profile_id} - {len(found_leaks)} German UI string(s) in EN report:")
