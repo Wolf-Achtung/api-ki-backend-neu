@@ -366,6 +366,13 @@ def validate_scenario_consistency(scenarios: List[ScenarioKPIs]) -> Tuple[bool, 
     if not all([opt, real, cons]):
         return False, ["Missing one or more scenario types"]
 
+    # PLATIN+++ v5.4: Block 0.0% scenarios - these are NOT healable
+    # 0.0% ROI in realistic/optimistic indicates fundamentally broken data
+    if real and real.roi_12m <= 0.0:
+        errors.append(f"CRITICAL: Realistic ROI is {real.roi_12m:.1f}% (must be > 0%)")
+    if opt and opt.roi_12m <= 0.0:
+        errors.append(f"CRITICAL: Optimistic ROI is {opt.roi_12m:.1f}% (must be > 0%)")
+
     # Validate ordering
     if opt and real and opt.roi_12m < real.roi_12m:
         errors.append(f"Optimistic ROI ({opt.roi_12m:.1f}%) < Realistic ROI ({real.roi_12m:.1f}%)")
@@ -414,6 +421,12 @@ def heal_scenario_consistency(scenarios: List[ScenarioKPIs]) -> List[ScenarioKPI
     is_valid, errors = validate_scenario_consistency(scenarios)
     if is_valid:
         return scenarios
+
+    # PLATIN+++ v5.4: CRITICAL errors cannot be healed - need full fallback
+    critical_errors = [e for e in errors if "CRITICAL" in e]
+    if critical_errors:
+        log.error("[BC_001] CRITICAL errors detected - cannot heal: %s", critical_errors)
+        raise ValueError(f"Business case has unhealable CRITICAL errors: {critical_errors}")
 
     log.info("[BC_001] Healing scenario consistency issues: %s", errors)
 

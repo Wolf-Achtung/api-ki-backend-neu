@@ -2507,8 +2507,10 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     hauptleistung = briefing.get("hauptleistung", briefing.get("HAUPTLEISTUNG", ""))
 
     # SPRINT G2.4: Generate short labels for redundancy reduction
+    # PLATIN+++ v5.4: Use briefing's actual lang, not hardcoded "de"
     from services.prompt_enhancer import generate_short_labels
-    short_labels = generate_short_labels(briefing, lang="de")
+    briefing_lang = briefing.get("lang", "de") if isinstance(briefing, dict) else "de"
+    short_labels = generate_short_labels(briefing, lang=briefing_lang)
     branch_core_label = short_labels.get("BRANCH_CORE_LABEL", branche)
     offering_label = short_labels.get("OFFERING_LABEL", "")
 
@@ -4183,19 +4185,26 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                     log.info("[N4.6] ✅ Regeneration successful – no leaks in %s", section_name)
                     result = regenerated
                 else:
-                    # If still leaky, strip the leak phrases as last resort
+                    # PLATIN+++ v5.4: If still leaky, use PLATIN fallback instead of stripping
+                    # Rationale: Stripped content is often broken/incoherent - full fallback is better
                     log.warning(
-                        "[N4.6] ⚠️ Regeneration still has leaks in %s – stripping phrases",
+                        "[N4.6] ⚠️ Regeneration still has leaks in %s – using PLATIN fallback (not stripping)",
                         section_name
                     )
-                    for leak in detected_leaks:
-                        # Remove sentences containing leak phrases
-                        import re as _re_leak
-                        pattern = _re_leak.compile(
-                            r'[^.!?]*' + _re_leak.escape(leak) + r'[^.!?]*[.!?]',
-                            _re_leak.IGNORECASE
-                        )
-                        result = pattern.sub('', result)
+                    fallback_content = _get_fallback_content(section_name, briefing, scores)
+                    if fallback_content:
+                        log.info("[N4.6] ✅ PLATIN fallback used for %s", section_name)
+                        result = fallback_content
+                    else:
+                        # Last resort: strip only if no fallback available
+                        log.warning("[N4.6] No fallback for %s, stripping leaks as last resort", section_name)
+                        for leak in detected_leaks:
+                            import re as _re_leak
+                            pattern = _re_leak.compile(
+                                r'[^.!?]*' + _re_leak.escape(leak) + r'[^.!?]*[.!?]',
+                                _re_leak.IGNORECASE
+                            )
+                            result = pattern.sub('', result)
 
             # PLATIN+ Minimalumfang prüfen (dynamisch nach Section-Typ)
             # WICHTIG: Werte sind jetzt in WÖRTERN, nicht Zeichen!
@@ -4706,15 +4715,19 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     )
 
     # NEXT ACTIONS – Prompt-System oder Legacy
+    # PLATIN+++ v5.4: Use briefing's actual lang
+    briefing_lang_for_actions = briefing.get("lang", "de") if isinstance(briefing, dict) else "de"
     if USE_PROMPT_SYSTEM:
         try:
             vars_dict = _build_prompt_vars(briefing, scores)
-            prompt_text = load_prompt("next_actions", lang="de", vars_dict=vars_dict)
+            prompt_text = load_prompt("next_actions", lang=briefing_lang_for_actions, vars_dict=vars_dict)
             params = _llm_params_for("next_actions")
+            # PLATIN+++ v5.4: Language-aware system prompt
+            sys_prompt = "Du bist PMO-Lead. Antworte nur mit HTML." if briefing_lang_for_actions == "de" else "You are a PMO lead. Reply only with HTML."
             nxt = _call_llm_for_section(
                 section_key="next_actions",
                 prompt=prompt_text,
-                system_prompt="Du bist PMO-Lead. Antworte nur mit HTML.",
+                system_prompt=sys_prompt,
                 temperature=params["temperature"],
                 max_tokens=min(params["max_tokens"], 600),
                 model=params["model"],

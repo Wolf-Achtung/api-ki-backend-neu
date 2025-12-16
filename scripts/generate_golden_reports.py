@@ -48,6 +48,20 @@ except ImportError:
 # Repo-Root
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent
+
+# =============================================================================
+# FIX 1: PLATIN+++ v5.4 - Forbidden tokens that must not appear in final HTML/PDF
+# =============================================================================
+FORBIDDEN_TOKENS: List[str] = [
+    "DEFAULT_STUNDENSATZ_EUR",
+    "DEFAULT_",  # Any DEFAULT_ pattern
+    "{{",        # Unresolved template placeholders
+    "}}",
+    "PLACEHOLDER_",
+    "TODO:",
+    "FIXME:",
+    "__DEBUG__",
+]
 PROFILES_DIR = REPO_ROOT / "data" / "test_profiles_gold_optimized"
 ARTIFACTS_DIR = REPO_ROOT / "artifacts" / "golden_reports"
 MANIFEST_PATH = REPO_ROOT / "data" / "golden_profiles_manifest.json"
@@ -422,6 +436,52 @@ def validate_summary_gate(parsed_summary: Dict[str, Any]) -> Tuple[bool, List[st
 
     passed = len(failures) == 0
     return passed, failures
+
+
+# =============================================================================
+# FIX 1: PLATIN+++ v5.4 - Final HTML Token Scan (Hard-Fail Gate)
+# =============================================================================
+def scan_html_for_forbidden_tokens(html_bytes: bytes, profile_id: str) -> Tuple[bool, List[str]]:
+    """
+    Scan final HTML for forbidden development tokens.
+
+    This is the LAST line of defense - if tokens appear here, Gate MUST fail.
+    No report with visible tokens should reach test users.
+
+    Args:
+        html_bytes: Raw HTML content as bytes
+        profile_id: For logging
+
+    Returns:
+        (passed: bool, found_tokens: list of found token strings)
+    """
+    if not html_bytes:
+        return True, []  # No HTML = nothing to scan
+
+    try:
+        html_text = html_bytes.decode("utf-8", errors="replace")
+    except Exception as e:
+        print(f"[token-scan] ⚠️ Failed to decode HTML for {profile_id}: {e}")
+        return True, []  # Decode error = can't scan, let it pass
+
+    found_tokens = []
+    for token in FORBIDDEN_TOKENS:
+        if token in html_text:
+            # Find context (first occurrence, up to 100 chars around it)
+            idx = html_text.find(token)
+            start = max(0, idx - 30)
+            end = min(len(html_text), idx + len(token) + 30)
+            context = html_text[start:end].replace("\n", " ").strip()
+            found_tokens.append(f"{token} (context: ...{context}...)")
+
+    if found_tokens:
+        print(f"[token-scan] ❌ FAILED for {profile_id} - {len(found_tokens)} forbidden token(s) found:")
+        for t in found_tokens:
+            print(f"[token-scan]   - {t}")
+        return False, found_tokens
+    else:
+        print(f"[token-scan] ✅ PASSED for {profile_id} - no forbidden tokens")
+        return True, []
 
 
 def save_summary_artifact(profile_id: str, summary_data: Union[str, Dict[str, Any]]) -> Path:
@@ -814,6 +874,18 @@ def process_profile(
         download_timeout=download_timeout,
         max_retries=max_retries,
     )
+
+    # 5.5 PLATIN+++ v5.4: Token scan on final HTML (Hard-Fail Gate)
+    # This catches ANY forbidden tokens that escaped earlier scrubbing
+    if run_gate and html_bytes:
+        token_scan_passed, found_tokens = scan_html_for_forbidden_tokens(html_bytes, profile_name)
+        if not token_scan_passed:
+            return {
+                "profile": profile_name,
+                "briefing_id": briefing_id,
+                "status": "gate_failed",
+                "error": f"Forbidden tokens in final HTML: {found_tokens}",
+            }
 
     # 6. Download PDF (with retry)
     pdf_bytes = download_pdf(
