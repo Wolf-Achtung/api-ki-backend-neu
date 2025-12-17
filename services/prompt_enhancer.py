@@ -1395,6 +1395,10 @@ class PromptEnhancer:
 
         groesse = briefing_data.get("unternehmensgroesse", "")
 
+        # 3.1.4.15: Get language for i18n context labels
+        lang_raw = (briefing_data.get("lang") or briefing_data.get("LANG") or briefing_data.get("sprache") or "de")
+        report_lang = str(lang_raw).lower().strip()
+
         if not branche or not groesse:
             return "<!-- Context data incomplete -->"
 
@@ -1402,40 +1406,59 @@ class PromptEnhancer:
         branch_ctx = self.builder.load_context("branch", branche)
         size_ctx = self.builder.load_context("size", groesse)
 
-        log.info("✅ Context loaded: branch=%s, size=%s", branche, groesse)
+        log.info("✅ Context loaded: branch=%s, size=%s, lang=%s", branche, groesse, report_lang)
 
         # Build compact HTML context block
-        context_html = self._build_html_block(branch_ctx, size_ctx)
+        context_html = self._build_html_block(branch_ctx, size_ctx, report_lang)
 
         return context_html
 
     def _build_html_block(
-        self, branch_ctx: Dict[str, Any], size_ctx: Dict[str, Any]
+        self, branch_ctx: Dict[str, Any], size_ctx: Dict[str, Any], lang: str = "de"
     ) -> str:
-        """Build compact HTML context block"""
+        """Build compact HTML context block with i18n support"""
+
+        # 3.1.4.15: i18n labels for EN/DE
+        is_en = str(lang or "de").lower().startswith("en")
+
+        # i18n label definitions
+        L = {
+            "branch_context": "📋 Industry Context:" if is_en else "📋 Branchen-Context:",
+            "size_context": "🏢 Size Context:" if is_en else "🏢 Größen-Context:",
+            "unknown": "Unknown" if is_en else "Unbekannt",
+            "no_data": "(No data available)" if is_en else "(Keine Angaben)",
+            "typical_workflows": "Typical Workflows:" if is_en else "Typische Workflows:",
+            "pain_points": "Common Pain Points:" if is_en else "Häufigste Pain Points:",
+            "typical_tools": "Typical Tools in Use:" if is_en else "Typische Tools im Einsatz:",
+            "characteristics": "Characteristics:" if is_en else "Charakteristika:",
+            "employees": "Employees:" if is_en else "Mitarbeiter:",
+            "per_month": "/month" if is_en else "/Monat",
+            "focus_priorities": "Focus Priorities:" if is_en else "Fokus-Prioritäten:",
+            "not_recommended": "Not recommended for your current size:" if is_en else "In Ihrer aktuellen Größe nicht sinnvoll:",
+        }
 
         # Helper to format list items
         def format_items(items: list, max_items: int = 4) -> str:
             if not items:
-                return "<li>(Keine Angaben)</li>"
+                return f"<li>{L['no_data']}</li>"
             return "\n    ".join([f"<li>{item}</li>" for item in items[:max_items]])
 
         # Branch section
         branch_html = f"""
 <div class="context-block" style="background:#f3f4f6;padding:12px;border-left:3px solid #2563eb;margin:16px 0;font-size:11px;">
-  <h4 style="margin:0 0 8px 0;font-size:12px;color:#1e40af;">📋 Branchen-Context: {branch_ctx.get('display_name', 'Unbekannt')}</h4>
-  
-  <p style="margin:6px 0;"><strong>Typische Workflows:</strong></p>
+  <h4 style="margin:0 0 8px 0;font-size:12px;color:#1e40af;">{L['branch_context']} {branch_ctx.get('display_name', L['unknown'])}</h4>
+
+  <p style="margin:6px 0;"><strong>{L['typical_workflows']}</strong></p>
   <ul style="margin:4px 0;padding-left:20px;">
     {format_items(branch_ctx.get('typical_workflows', []))}
   </ul>
-  
-  <p style="margin:6px 0;"><strong>Häufigste Pain Points:</strong></p>
+
+  <p style="margin:6px 0;"><strong>{L['pain_points']}</strong></p>
   <ul style="margin:4px 0;padding-left:20px;">
     {format_items(branch_ctx.get('common_pain_points', []))}
   </ul>
-  
-  <p style="margin:6px 0;"><strong>Typische Tools im Einsatz:</strong></p>
+
+  <p style="margin:6px 0;"><strong>{L['typical_tools']}</strong></p>
   <ul style="margin:4px 0;padding-left:20px;">
     {format_items(branch_ctx.get('typical_tools', []))}
   </ul>"""
@@ -1446,26 +1469,39 @@ class PromptEnhancer:
 
         size_html = f"""
   <hr style="margin:12px 0;border:none;border-top:1px solid #cbd5e1;">
-  
-  <h4 style="margin:8px 0 8px 0;font-size:12px;color:#1e40af;">🏢 Größen-Context: {size_ctx.get('display_name', 'Unbekannt')}</h4>
-  
-  <p style="margin:6px 0;"><strong>Charakteristika:</strong></p>
+
+  <h4 style="margin:8px 0 8px 0;font-size:12px;color:#1e40af;">{L['size_context']} {size_ctx.get('display_name', L['unknown'])}</h4>
+
+  <p style="margin:6px 0;"><strong>{L['characteristics']}</strong></p>
   <ul style="margin:4px 0;padding-left:20px;">
-    <li>Mitarbeiter: {chars.get('mitarbeiter', 'unbekannt')}</li>
+    <li>{L['employees']} {chars.get('mitarbeiter', L['unknown'])}</li>
     <li>Budget CAPEX max: {budget.get('capex_max', 0):,}€</li>
-    <li>Budget OPEX max: {budget.get('opex_monthly_max', 0)}€/Monat</li>
+    <li>Budget OPEX max: {budget.get('opex_monthly_max', 0)}€{L['per_month']}</li>
   </ul>
-  
-  <p style="margin:6px 0;"><strong>Fokus-Prioritäten:</strong></p>
+
+  <p style="margin:6px 0;"><strong>{L['focus_priorities']}</strong></p>
   <ul style="margin:4px 0;padding-left:20px;">
     {format_items(size_ctx.get('focus_priorities', []), max_items=3)}
   </ul>
-  
-  <p style="margin:6px 0;"><strong>In Ihrer aktuellen Größe nicht sinnvoll:</strong></p>
+
+  <p style="margin:6px 0;"><strong>{L['not_recommended']}</strong></p>
   <ul style="margin:4px 0;padding-left:20px;color:#64748b;">
     {format_items(size_ctx.get('forbidden_recommendations', []), max_items=5)}
   </ul>
 </div>"""
+
+        # 3.1.4.15: EN hard guard - catch any German strings that slipped through
+        if is_en:
+            result = branch_html + size_html
+            de_markers = ["Branchen-Context:", "Größen-Context:", "Unbekannt", "Keine Angaben",
+                          "Typische Workflows:", "Häufigste Pain Points:", "Typische Tools im Einsatz:",
+                          "Charakteristika:", "Mitarbeiter:", "/Monat", "Fokus-Prioritäten:",
+                          "In Ihrer aktuellen Größe nicht sinnvoll:"]
+            found_de = [m for m in de_markers if m in result]
+            if found_de:
+                import logging
+                logging.warning(f"[3.1.4.15] EN context block contains DE strings: {found_de}")
+            return result
 
         return branch_html + size_html
 
@@ -2571,7 +2607,7 @@ if __name__ == "__main__":  # pragma: no cover - manual test harness
     for prompt_name in ["unternehmensprofil_markt", "quick_wins", "executive_summary"]:
         try:
             enhanced = enhancer.enhance_prompt(prompt_name, test_briefing)
-            has_context = "Branchen-Context:" in enhanced
+            has_context = ("Branchen-Context:" in enhanced) or ("Industry Context:" in enhanced)
             print(f"✅ {prompt_name}: Context={'YES ✓' if has_context else 'NO ✗'}")
         except Exception as exc:
             print(f"❌ {prompt_name}: Error - {exc}")
