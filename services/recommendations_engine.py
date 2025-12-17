@@ -620,28 +620,48 @@ def _generate_summary(
     recommendations: List[Recommendation],
     size_label: str,
     branch: str,
+    lang: str = "de",
 ) -> str:
     """Generate narrative summary for recommendations."""
     count = len(recommendations)
     high_impact = sum(1 for r in recommendations if r.impact_level == "high")
     phase_1 = sum(1 for r in recommendations if r.timeline_phase == "phase_1")
 
-    size_names = {"solo": "Einzelunternehmer", "team": "Teams", "kmu": "KMU"}
-    size_name = size_names.get(size_label, "Unternehmen")
+    # 3.1.4.14: i18n for summary text
+    is_en = str(lang or "de").lower().startswith("en")
+
+    if is_en:
+        size_names = {"solo": "solo business", "team": "team", "kmu": "SME"}
+        size_name = size_names.get(size_label, "company")
+    else:
+        size_names = {"solo": "Einzelunternehmer", "team": "Teams", "kmu": "KMU"}
+        size_name = size_names.get(size_label, "Unternehmen")
 
     parts = []
 
-    parts.append(f"Für Ihr {size_name} in der Branche {branch} wurden {count} konkrete Handlungsempfehlungen identifiziert.")
+    if is_en:
+        parts.append(f"For your {size_name} in the {branch} industry, {count} concrete recommendations were identified.")
+    else:
+        parts.append(f"Für Ihr {size_name} in der Branche {branch} wurden {count} konkrete Handlungsempfehlungen identifiziert.")
 
     if high_impact > 0:
-        parts.append(f"Davon haben {high_impact} eine hohe Auswirkung auf Ihren KI-Erfolg.")
+        if is_en:
+            parts.append(f"Of these, {high_impact} have a high impact on your AI success.")
+        else:
+            parts.append(f"Davon haben {high_impact} eine hohe Auswirkung auf Ihren KI-Erfolg.")
 
     if phase_1 > 0:
-        parts.append(f"Starten Sie mit den {phase_1} Empfehlungen für Phase 1, um schnelle Ergebnisse zu erzielen.")
+        if is_en:
+            parts.append(f"Start with the {phase_1} Phase 1 recommendations for quick results.")
+        else:
+            parts.append(f"Starten Sie mit den {phase_1} Empfehlungen für Phase 1, um schnelle Ergebnisse zu erzielen.")
 
     total_invest = sum(r.required_investment or 0 for r in recommendations)
     if total_invest > 0:
-        parts.append(f"Die geschätzte Gesamtinvestition beträgt ca. {total_invest:,.0f} €.")
+        if is_en:
+            parts.append(f"The estimated total investment is approx. €{total_invest:,.0f}.")
+        else:
+            parts.append(f"Die geschätzte Gesamtinvestition beträgt ca. {total_invest:,.0f} €.")
 
     return " ".join(parts)
 
@@ -693,6 +713,9 @@ def generate_recommendations_report(
     size_label = _determine_size_label(briefing)
     branch = briefing.get("branche", "Allgemein")
 
+    # 3.1.4.14: Get language for i18n
+    report_lang = briefing.get("lang") or briefing.get("LANG") or briefing.get("sprache") or "de"
+
     # Extract summaries from all engines
     tools_summary = _extract_tools_summary(tools_data)
     funding_summary = _extract_funding_summary(funding_data)
@@ -719,7 +742,7 @@ def generate_recommendations_report(
             top_3_ids = _select_top_3(recommendations)
 
         if not summary:
-            summary = _generate_summary(recommendations, size_label, branch)
+            summary = _generate_summary(recommendations, size_label, branch, report_lang)
 
     else:
         # Generate default recommendations
@@ -734,7 +757,7 @@ def generate_recommendations_report(
         )
 
         top_3_ids = _select_top_3(recommendations)
-        summary = _generate_summary(recommendations, size_label, branch)
+        summary = _generate_summary(recommendations, size_label, branch, report_lang)
 
     # SPRINT N1 (RECO_002): Heal consistency issues
     # Auto-populate related_risks for recommendations with risk_relation="reduces_risk"
