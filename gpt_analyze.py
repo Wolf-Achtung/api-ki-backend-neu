@@ -4382,6 +4382,22 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
     # Prompt-System verwenden, wenn aktiv und Prompt vorhanden
     if USE_PROMPT_SYSTEM and prompt_key and _prompt_enhancer:
         try:
+            # TEIL 3.1.4.8: Hard locale normalization for prompt routing
+            # Ensure prompt_enhancer sees correct language for EN profiles
+            if isinstance(briefing, dict):
+                lang_raw = (
+                    briefing.get("lang")
+                    or briefing.get("LANG")
+                    or briefing.get("sprache")
+                    or "de"
+                )
+                lang_norm = str(lang_raw).lower().strip()
+                prompt_lang = "en" if lang_norm.startswith("en") else "de"
+
+                briefing["lang"] = prompt_lang
+                briefing["LANG"] = prompt_lang
+                briefing["sprache"] = prompt_lang
+
             # 1. Prompt mit Kontext (Branche/Größe) anreichern
             enhanced_prompt = _prompt_enhancer.enhance_prompt(prompt_key, briefing)
             
@@ -4397,7 +4413,7 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
             briefing_lang = briefing.get("lang", "de") if isinstance(briefing, dict) else "de"
             if section_name == "foerderpotenzial" and briefing_lang != "en":
                 try:
-                    foerder_prog_text = load_prompt("foerderprogramme", lang="de", vars_dict=vars_dict)
+                    foerder_prog_text = load_prompt("foerderprogramme", lang=briefing_lang, vars_dict=vars_dict)
                 except Exception:
                     foerder_prog_text = None
                 if foerder_prog_text:
