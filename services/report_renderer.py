@@ -21,6 +21,7 @@ from services.html_minifier import optimize_html_for_pdf, strip_unused_sections
 from services.report_validator import GENERIC_LLM_LEAK_PHRASES, remove_leak_phrases_from_html
 from services.html_sanitizer import sanitize_en_locale_tokens
 from services.lang_utils import normalize_lang
+from services.i18n import ui as ui_factory
 
 log = logging.getLogger(__name__)
 
@@ -388,7 +389,7 @@ def render(briefing_obj: Any,
 
     # Safe defaults with FIXED UTF-8
     # TEIL 3.1.4.x: Force LANG to detected value (no fallback to sections)
-    ctx = {
+    ctx: Dict[str, Any] = {
         "LANG": "en" if is_en else "de",  # FORCED, not from sections
         "OWNER_NAME": sections.get("OWNER_NAME", os.getenv("OWNER_NAME", "KI-Sicherheit.jetzt")),  # ✅ FIXED
         "report_date": sections.get("report_date", ""),
@@ -402,8 +403,14 @@ def render(briefing_obj: Any,
         **sections,
     }
 
+    # =========================================================================
+    # Multilingual v1 Step 4: Inject ui() into template context
+    # =========================================================================
+    ctx["ui"] = ui_factory(lang)
+    ctx["report_lang"] = lang
+
     # Log what we're rendering (for debugging)
-    log.info(f"🎨 Rendering report {run_id} with {len(sections)} sections")
+    log.info(f"🎨 Rendering report {run_id} with {len(sections)} sections (lang={lang})")
     log.debug(f"Sections available: {list(sections.keys())}")
 
     html = env.get_template(tpl_name).render(**ctx)
