@@ -109,6 +109,68 @@ def _normalize_special_chars(text: str) -> str:
     return text
 
 
+# =============================================================================
+# 3.1.4.16: EN Lastline Locale Sanitizer (mirrors locale-scan needles)
+# =============================================================================
+# Final guardrail to prevent residual German UI tokens in EN reports.
+# Synchronized with scripts/generate_golden_reports.py locale-scan needles.
+
+from typing import List, Tuple, Union, Callable
+
+LocaleRepl = Union[str, Callable[[re.Match], str]]
+
+_EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
+    # longer phrases first (avoid partial collisions)
+    (r"\bIhr Unternehmen\b", "Your Company"),
+    (r"\bIhre Branche\b", "Your industry"),
+    (r"\bUnternehmensgröße\b", "Company size"),
+    (r"\bUnternehmensprofil\b", "Company profile"),
+    (r"\bHandlungsempfehlungen\b", "Recommendations"),
+    (r"\bBranchenstudie\b", "Industry study"),
+    (r"\bBranchenspezifisch\b", "Industry-specific"),
+    (r"\bBranchenmedian\b", "Industry median"),
+    (r"\bBranchenvergleich\b", "Industry comparison"),
+
+    # single tokens / common nouns
+    (r"\bUnternehmen\b", "Company"),
+    (r"\bBranche\b", "Industry"),
+    (r"\bBewertung\b", "Assessment"),
+    (r"\bReifegrad\b", "Maturity level"),
+    (r"\bKennzahlen\b", "KPIs"),
+    (r"\bRisiken\b", "Risks"),
+]
+
+
+def sanitize_en_locale_tokens(html: str, lang: str) -> str:
+    """
+    3.1.4.16: Final guardrail to prevent residual German UI tokens in EN reports.
+    Runs ONLY when lang startswith('en').
+
+    Args:
+        html: HTML content to sanitize
+        lang: Language code (en/de)
+
+    Returns:
+        HTML with German tokens replaced by English equivalents (EN only)
+    """
+    lang_norm = (lang or "").strip().lower()
+    if not lang_norm.startswith("en"):
+        return html
+
+    out = html or ""
+    for pattern, repl in _EN_LOCALE_REPLACEMENTS:
+        out = re.sub(pattern, repl, out)
+
+    # Optional: Log leftover detection (warning only)
+    de_check_words = ["Unternehmen", "Branche", "Bewertung", "Reifegrad",
+                      "Kennzahlen", "Risiken", "Handlungsempfehlungen", "Unternehmensgröße"]
+    leftovers = [w for w in de_check_words if w in out]
+    if leftovers:
+        log.warning("[locale-sanitize] DE leftovers after sanitize: %s", leftovers)
+
+    return out
+
+
 def _convert_markdown_headings(text: str) -> str:
     """Konvertiert Markdown-Überschriften zu HTML.
 
@@ -932,7 +994,8 @@ def sanitize_or_recover(
 def sanitize_section_html(
     html_content: Optional[str],
     compress_ws: bool = True,
-    minify: bool = True
+    minify: bool = True,
+    lang: str = "de"
 ) -> str:
     """
     Sanitisiert und minifiziert HTML für Report-Sektionen.
@@ -941,6 +1004,7 @@ def sanitize_section_html(
         html_content: HTML-String
         compress_ws: Whitespace normalisieren
         minify: HTML minifizieren (leere Tags, Attribute entfernen)
+        lang: Language code (de/en) for EN locale sanitization (3.1.4.16)
 
     Returns:
         Bereinigtes HTML
@@ -989,21 +1053,26 @@ def sanitize_section_html(
     if minify:
         s = minify_html(s)
 
+    # 3.1.4.16: EN lastline locale sanitizer (final guardrail)
+    s = sanitize_en_locale_tokens(s, lang)
+
     return s
 
-def sanitize_sections_dict(sections: dict, truthy_env: Optional[bool] = True) -> dict:
+
+def sanitize_sections_dict(sections: dict, truthy_env: Optional[bool] = True, lang: str = "de") -> dict:
     """
     Sanitisiert alle string‑Werte in einem Sections‑Dict.
 
     PLATIN+++ v5.4: Now also enforces HTML contract for text sections.
+    3.1.4.16: Now passes lang for EN locale sanitization.
     """
     if not isinstance(sections, dict):
         return sections
     out = {}
     for k, v in sections.items():
         if isinstance(v, str):
-            # Step 1: Basic sanitization
-            sanitized = sanitize_section_html(v, compress_ws=True)
+            # Step 1: Basic sanitization + EN locale sanitization (3.1.4.16)
+            sanitized = sanitize_section_html(v, compress_ws=True, lang=lang)
             # Step 2: Enforce HTML contract for text sections (PLATIN+++ v5.4)
             if is_text_section(k):
                 sanitized = enforce_text_section_html_contract(sanitized, section_name=k)
