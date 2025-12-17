@@ -19,6 +19,7 @@ from markupsafe import Markup
 from utils.logo_embedder import embed_logos_in_html
 from services.html_minifier import optimize_html_for_pdf, strip_unused_sections
 from services.report_validator import GENERIC_LLM_LEAK_PHRASES, remove_leak_phrases_from_html
+from services.html_sanitizer import sanitize_en_locale_tokens
 
 log = logging.getLogger(__name__)
 
@@ -518,5 +519,11 @@ def render(briefing_obj: Any,
     # PLATIN+++ v5.4: Final development placeholder scrub
     # =========================================================================
     html = scrub_development_placeholders(html, run_id=run_id)
+
+    # =========================================================================
+    # 3.1.4.18: FINAL EN locale sanitize on full HTML (global hook)
+    # =========================================================================
+    html = sanitize_en_locale_tokens(html, lang=lang)
+    log.info(f"[RENDER] Applied EN locale sanitizer (lang={lang}) for run={run_id}")
 
     return {"html": html, "meta": meta or {}}
