@@ -520,7 +520,8 @@ def generate_auto_summary(
     recovered_text: str,
     branch: str = "",
     size: str = "",
-    guardrails: bool = False
+    guardrails: bool = False,
+    lang: str = ""
 ) -> str:
     """
     Generiert eine Auto-Summary für Recovery-Situationen (Stufe 3 im Fallback).
@@ -536,6 +537,7 @@ def generate_auto_summary(
         branch: Branche (für branchen-aware Summary)
         size: Unternehmensgröße (solo/team/kmu)
         guardrails: Ob Guardrails-Hinweise eingefügt werden sollen
+        lang: Language code (de/en) - if provided, overrides content detection
 
     Returns:
         HTML-formatierte Auto-Summary (80-120 Wörter)
@@ -638,15 +640,21 @@ Implementation should proceed step by step, taking company size into account.</p
     # Wähle Template
     section_templates = templates.get(section_name, default_template)
 
-    # Sprache aus Kontext erkennen
-    de_indicators = ["der", "die", "das", "und", "für", "mit", "eine", "einen"]
-    is_german = any(ind in recovered_text.lower() for ind in de_indicators)
-    lang = "de" if is_german else "en"
+    # 3.1.4.13: Use explicit lang parameter if provided, otherwise detect from content
+    if lang and str(lang).lower().startswith("en"):
+        detected_lang = "en"
+    elif lang and str(lang).lower().startswith("de"):
+        detected_lang = "de"
+    else:
+        # Sprache aus Kontext erkennen (fallback)
+        de_indicators = ["der", "die", "das", "und", "für", "mit", "eine", "einen"]
+        is_german = any(ind in recovered_text.lower() for ind in de_indicators)
+        detected_lang = "de" if is_german else "en"
 
-    result = section_templates.get(lang, section_templates.get("de", default_template["de"]))
+    result = section_templates.get(detected_lang, section_templates.get("de", default_template["de"]))
 
     log.info("[AUTO-SUMMARY] Generated summary for section=%s (lang=%s, size=%s)",
-             section_name, lang, size or "unknown")
+             section_name, detected_lang, size or "unknown")
 
     return result
 
