@@ -1936,20 +1936,30 @@ def _build_generic_leak_fallback(section_name: str, company_size: str = "team", 
 
     # N3.3 TASK 3: BCG-style template for Branch Deep Dive
     # Structure: Market Dynamics → Competition → Risks → Opportunities → Actions
-    # 3.1.4.13: i18n headings
+    # 3.1.4.13/3.1.4.14: i18n headings and content
     _deep_dive_title = "Industry Deep Dive" if is_en else "Branchen-Deep-Dive"
     _recommendations_title = "Recommendations" if is_en else "Handlungsempfehlungen"
+    _subtitle = "Strategic market and competitive analysis" if is_en else "Strategische Markt- und Wettbewerbsanalyse"
+    _section1_title = "1. Market & Trend Dynamics" if is_en else "1. Markt- & Trenddynamik"
+    _section1_content = (
+        "The industry is undergoing a fundamental digital transformation. AI adoption "
+        "is accelerating exponentially – early adopters are already realizing substantial "
+        "efficiency gains (15-35% in automated processes). The tipping point for mass "
+        "adoption is expected industry-wide within the next 18-24 months."
+    ) if is_en else (
+        "Die Branche durchläuft eine fundamentale digitale Transformation. KI-Adoption "
+        "beschleunigt sich exponentiell – Früheinsteiger realisieren bereits substanzielle "
+        "Effizienzgewinne (15-35% in automatisierten Prozessen). Der Wendepunkt zur "
+        "Massenadoption wird branchenweit innerhalb der nächsten 18-24 Monate erwartet. "
+        "Die Technologiereife kommerzieller KI-Lösungen hat kritische Schwelle überschritten."
+    )
     branch_deep_dive_bcg = f"""
             <p><strong>{_deep_dive_title}</strong></p>
 
-            <p class="subtitle">Strategische Markt- und Wettbewerbsanalyse</p>
+            <p class="subtitle">{_subtitle}</p>
 
-            <p><strong>1. Markt- & Trenddynamik</strong></p>
-            <p>Die Branche durchläuft eine fundamentale digitale Transformation. KI-Adoption
-            beschleunigt sich exponentiell – Früheinsteiger realisieren bereits substanzielle
-            Effizienzgewinne (15-35% in automatisierten Prozessen). Der Wendepunkt zur
-            Massenadoption wird branchenweit innerhalb der nächsten 18-24 Monate erwartet.
-            Die Technologiereife kommerzieller KI-Lösungen hat kritische Schwelle überschritten.</p>
+            <p><strong>{_section1_title}</strong></p>
+            <p>{_section1_content}</p>
 
             <p><strong>2. Wettbewerbsdruck & Differenzierungsfaktoren</strong></p>
             <p>Marktführer investieren signifikant in KI-Capabilities – der Abstand zu
