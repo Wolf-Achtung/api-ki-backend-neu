@@ -136,9 +136,17 @@ _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
     (r"\bBewertungen\b", "Assessments"),
     (r"\bMaßnahmenplan\b", "Action plan"),
     (r"\bMaßnahmen\b", "Actions"),
+    (r"\bZusammenfassungen\b", "Summaries"),  # 3.1.4.18: plural before singular
     (r"\bZusammenfassung\b", "Summary"),
     (r"\bEmpfehlungen\b", "Recommendations"),
     (r"\bEmpfehlung\b", "Recommendation"),
+
+    # --- 3.1.4.18: compound/plural + GDPR ---
+    (r"\bBranchen-", "Industry-"),  # Prefix for Branchen-Templates, Branchen-Module, etc.
+    (r"\bBranchen\b", "Industries"),  # plural before singular
+    (r"\bDatenschutz\b", "Data protection"),
+    (r"\bDSGVO\b", "GDPR"),
+    (r"\bHinweis\b", "Note"),
 
     # single tokens / common nouns
     (r"\bBranche\b", "Industry"),
