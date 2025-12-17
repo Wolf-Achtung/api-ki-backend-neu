@@ -1712,8 +1712,9 @@ Nutze den Strategischen Kontext wie folgt:
 
         Sprint G4.1: Now size-aware - uses Team/KMU perspective for non-Solo profiles.
         """
-        # Determine language from briefing
-        lang = "en" if briefing_data.get("sprache", "de").lower() == "en" else "de"
+        # Determine language from briefing (robust: lang > LANG > sprache)
+        lang_raw = briefing_data.get("lang") or briefing_data.get("LANG") or briefing_data.get("sprache") or "de"
+        lang = "en" if str(lang_raw).lower().strip().startswith("en") else "de"
         short_labels = generate_short_labels(briefing_data, lang=lang)
 
         branch_label = short_labels.get("BRANCH_CORE_LABEL", "")
