@@ -284,19 +284,77 @@ def render(briefing_obj: Any,
     - Consistent score handling
 
     v4.15.0: Language-aware template selection (EN/DE)
+    v4.15.1 (TEIL 3.1.4.x): Robust language detection with multiple fallbacks
     """
-    # Language-aware template selection
-    lang = (generated_sections or {}).get("LANG", "de")
-    if lang == "en":
-        default_tpl = "templates/pdf_template_en.html"
-        log.info(f"🌐 Using English template for report {run_id}")
-    else:
-        default_tpl = "templates/pdf_template.html"
+    # =========================================================================
+    # TEIL 3.1.4.x: ROBUST LANGUAGE DETECTION
+    # Priority: LANG → lang → meta.lang → briefing_obj.lang → "de"
+    # =========================================================================
+    lang_raw = None
+    sections_dict = generated_sections or {}
 
-    tpl_path = os.getenv("REPORT_TEMPLATE_PATH", default_tpl)
-    # Allow language-specific override via env
-    if lang == "en" and os.getenv("REPORT_TEMPLATE_PATH_EN"):
-        tpl_path = os.getenv("REPORT_TEMPLATE_PATH_EN")
+    # 1. Check generated_sections["LANG"] (uppercase)
+    if sections_dict.get("LANG"):
+        lang_raw = sections_dict["LANG"]
+        log.debug(f"[LANG] Found LANG in sections: {lang_raw}")
+
+    # 2. Check generated_sections["lang"] (lowercase)
+    if not lang_raw and sections_dict.get("lang"):
+        lang_raw = sections_dict["lang"]
+        log.debug(f"[LANG] Found lang in sections: {lang_raw}")
+
+    # 3. Check meta["lang"] if provided
+    if not lang_raw and meta and isinstance(meta, dict) and meta.get("lang"):
+        lang_raw = meta["lang"]
+        log.debug(f"[LANG] Found lang in meta: {lang_raw}")
+
+    # 4. Check briefing_obj.lang (attribute or dict key)
+    if not lang_raw and briefing_obj:
+        if hasattr(briefing_obj, "lang") and getattr(briefing_obj, "lang", None):
+            lang_raw = briefing_obj.lang
+            log.debug(f"[LANG] Found lang in briefing_obj attribute: {lang_raw}")
+        elif isinstance(briefing_obj, dict) and briefing_obj.get("lang"):
+            lang_raw = briefing_obj["lang"]
+            log.debug(f"[LANG] Found lang in briefing_obj dict: {lang_raw}")
+
+    # 5. Fallback to "de"
+    if not lang_raw:
+        lang_raw = "de"
+        log.debug("[LANG] No language found, defaulting to: de")
+
+    # Normalize: lowercase, strip, check for "en" prefix
+    lang = str(lang_raw).lower().strip()
+    is_en = lang.startswith("en")
+
+    log.info(f"[LANG] Detected language: '{lang}' (is_en={is_en}) for report {run_id}")
+
+    # =========================================================================
+    # TEIL 3.1.4.x: TEMPLATE SELECTION (EN cannot fall back to DE)
+    # =========================================================================
+    if is_en:
+        # EN: Use REPORT_TEMPLATE_PATH_EN or hardcoded EN template
+        default_tpl = "templates/pdf_template_en.html"
+        env_override = os.getenv("REPORT_TEMPLATE_PATH_EN")
+        if env_override:
+            tpl_path = env_override
+            log.info(f"🌐 Using English template (env override): {tpl_path}")
+        else:
+            tpl_path = default_tpl
+            log.info(f"🌐 Using English template (default): {tpl_path}")
+    else:
+        # DE: Use REPORT_TEMPLATE_PATH_DE or REPORT_TEMPLATE_PATH (legacy) or default
+        default_tpl = "templates/pdf_template.html"
+        env_override_de = os.getenv("REPORT_TEMPLATE_PATH_DE")
+        env_override_legacy = os.getenv("REPORT_TEMPLATE_PATH")
+        if env_override_de:
+            tpl_path = env_override_de
+            log.info(f"🇩🇪 Using German template (env DE): {tpl_path}")
+        elif env_override_legacy:
+            tpl_path = env_override_legacy
+            log.info(f"🇩🇪 Using German template (env legacy): {tpl_path}")
+        else:
+            tpl_path = default_tpl
+            log.info(f"🇩🇪 Using German template (default): {tpl_path}")
 
     tpl_dir = Path(tpl_path).parent
     tpl_name = Path(tpl_path).name
@@ -327,8 +385,9 @@ def render(briefing_obj: Any,
     sections = safe_sections
 
     # Safe defaults with FIXED UTF-8
+    # TEIL 3.1.4.x: Force LANG to detected value (no fallback to sections)
     ctx = {
-        "LANG": sections.get("LANG", "de"),
+        "LANG": "en" if is_en else "de",  # FORCED, not from sections
         "OWNER_NAME": sections.get("OWNER_NAME", os.getenv("OWNER_NAME", "KI-Sicherheit.jetzt")),  # ✅ FIXED
         "report_date": sections.get("report_date", ""),
         "report_id": sections.get("report_id", ""),
