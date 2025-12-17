@@ -4382,7 +4382,7 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
     # Prompt-System verwenden, wenn aktiv und Prompt vorhanden
     if USE_PROMPT_SYSTEM and prompt_key and _prompt_enhancer:
         try:
-            # TEIL 3.1.4.8/3.1.4.9: Locale normalization for prompt routing
+            # TEIL 3.1.4.8/3.1.4.9/3.1.4.11: Locale normalization for prompt routing
             # Note: Authoritative lang is set upstream from br.lang (3.1.4.9)
             # This block is a safety net ensuring consistent lang/LANG/sprache fields
             if isinstance(briefing, dict):
@@ -4398,6 +4398,9 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 briefing["lang"] = prompt_lang
                 briefing["LANG"] = prompt_lang
                 briefing["sprache"] = prompt_lang
+
+                # 3.1.4.11: Debug trace for locale normalization
+                log.debug("[locale] section=%s lang_raw=%s → prompt_lang=%s", section_name, lang_raw, prompt_lang)
 
             # 1. Prompt mit Kontext (Branche/Größe) anreichern
             enhanced_prompt = _prompt_enhancer.enhance_prompt(prompt_key, briefing)
