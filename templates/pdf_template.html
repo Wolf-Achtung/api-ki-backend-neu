@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>KI-Status-Report {{ report_id }} – {{ company_name or kundencode or 'Ihr Unternehmen' }}</title>
+    <title>KI-Status-Report {{ report_id }} – {{ company_name or kundencode or ('Your Company' if ((lang or briefing_lang or report_lang or 'de')|lower)[:2] == 'en' else 'Ihr Unternehmen') }}</title>
     <style id="platin-v52-template">
         /* ============================================
            PLATIN++ V5.2 PDF TEMPLATE
@@ -2138,7 +2138,7 @@
     </style>
 </head>
 <body>
-{# --- 3.1.4.12: minimal i18n for template UI strings --- #}
+{# --- 3.1.4.12/3.1.4.13: minimal i18n for template UI strings --- #}
 {% set LANG = (lang or briefing_lang or report_lang or 'de')|lower %}
 {% set IS_EN = LANG.startswith('en') %}
 {% set T = {
@@ -2155,7 +2155,11 @@
     'industry_tools_sub': 'KI-Tools mit höchster Branchenrelevanz',
     'missing_info': 'Diese Informationen fehlen für eine vollständige Compliance-Bewertung:',
     'feedback_cta': 'Helfen Sie uns, diesen Report noch besser zu machen. Ihre Rückmeldung hilft anderen Unternehmen.',
-    'your_industry': 'Ihre Branche'
+    'your_industry': 'Ihre Branche',
+    'company_label_colon': 'Unternehmen:',
+    'industry_label_colon': 'Branche:',
+    'company_size_label_colon': 'Unternehmensgröße:',
+    'your_company': 'Ihr Unternehmen'
   },
   'en': {
     'deep_dive_for': 'Deep dive for',
@@ -2170,7 +2174,11 @@
     'industry_tools_sub': 'AI tools with the highest industry relevance',
     'missing_info': 'This information is missing for a complete compliance assessment:',
     'feedback_cta': 'Help us improve this report. Your feedback helps other companies.',
-    'your_industry': 'Your industry'
+    'your_industry': 'Your industry',
+    'company_label_colon': 'Company:',
+    'industry_label_colon': 'Industry:',
+    'company_size_label_colon': 'Company size:',
+    'your_company': 'Your Company'
   }
 } %}
 {% set TR = T['en'] if IS_EN else T['de'] %}
@@ -2185,8 +2193,8 @@
         <span class="section-kicker">KI-Status-Report</span>
         <span class="eyebrow-divider"></span>
         <span class="small">
-          Unternehmen:
-          <strong>{{ company_name or kundencode or 'Ihr Unternehmen' }}</strong>
+          {{ TR.company_label_colon }}
+          <strong>{{ company_name or kundencode or TR.your_company }}</strong>
         </span>
       </div>
       <span class="small">Report-ID: {{ report_id }}</span>
@@ -2196,7 +2204,7 @@
         <h1>KI-Readiness {{ score_rating }}</h1>
         <p class="subtitle">
           Individuelle Standortbestimmung für
-          {{ company_name or BRANCHE_LABEL or 'Ihr Unternehmen' }} – mit Fokus auf
+          {{ company_name or BRANCHE_LABEL or TR.your_company }} – mit Fokus auf
           Sicherheit, Effizienz und Förderpotenziale.
         </p>
       </div>
@@ -2211,11 +2219,11 @@
     </div>
     <div class="meta-grid">
       <div class="meta-item">
-        <span class="meta-label">Branche:</span>
+        <span class="meta-label">{{ TR.industry_label_colon }}</span>
         <span class="meta-value">{{ BRANCHE_LABEL }}</span>
       </div>
       <div class="meta-item">
-        <span class="meta-label">Unternehmensgröße:</span>
+        <span class="meta-label">{{ TR.company_size_label_colon }}</span>
         <span class="meta-value">{{ UNTERNEHMENSGROESSE_LABEL }}</span>
       </div>
       <div class="meta-item">
