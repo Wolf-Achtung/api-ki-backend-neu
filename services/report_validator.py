@@ -1869,7 +1869,7 @@ def heal_placeholder_sections(sections: Dict[str, Any]) -> int:
     return healed_count
 
 
-def _build_generic_leak_fallback(section_name: str, company_size: str = "team") -> str:
+def _build_generic_leak_fallback(section_name: str, company_size: str = "team", lang: str = "de") -> str:
     """
     SPRINT N3.2/N3.3: Build a constructive fallback for sections with quality issues.
 
@@ -1880,10 +1880,13 @@ def _build_generic_leak_fallback(section_name: str, company_size: str = "team") 
     Args:
         section_name: Name of the section needing fallback
         company_size: Company size for personalization
+        lang: Language code (de/en)
 
     Returns:
         HTML fallback content
     """
+    # 3.1.4.13: i18n helper for fallback headings
+    is_en = str(lang or "de").lower().startswith("en")
     # Size-aware context
     if "solo" in company_size.lower():
         context = "Ihre Tätigkeit"
@@ -1933,8 +1936,11 @@ def _build_generic_leak_fallback(section_name: str, company_size: str = "team") 
 
     # N3.3 TASK 3: BCG-style template for Branch Deep Dive
     # Structure: Market Dynamics → Competition → Risks → Opportunities → Actions
+    # 3.1.4.13: i18n headings
+    _deep_dive_title = "Industry Deep Dive" if is_en else "Branchen-Deep-Dive"
+    _recommendations_title = "Recommendations" if is_en else "Handlungsempfehlungen"
     branch_deep_dive_bcg = f"""
-            <p><strong>Branchen-Deep-Dive</strong></p>
+            <p><strong>{_deep_dive_title}</strong></p>
 
             <p class="subtitle">Strategische Markt- und Wettbewerbsanalyse</p>
 
@@ -1967,7 +1973,7 @@ def _build_generic_leak_fallback(section_name: str, company_size: str = "team") 
               <li><strong>Kundenzentrierung:</strong> Datengestützte Personalisierung erhöht Kundenbindung messbar</li>
             </ul>
 
-            <p><strong>5. Handlungsempfehlungen</strong></p>
+            <p><strong>5. {_recommendations_title}</strong></p>
             <ol>
               <li><strong>Strategische Positionierung:</strong> KI als Kernbestandteil der Unternehmensstrategie verankern – Investitionsbudget sichern</li>
               <li><strong>Fokussierte Umsetzung:</strong> 2-3 High-Impact Use Cases priorisieren statt breiter Streuung – Ressourcen bündeln</li>
@@ -2031,6 +2037,8 @@ def validate_and_heal(
         Tuple of (is_valid, errors, healed_count)
     """
     company_size = briefing.get("unternehmensgroesse", "team")
+    # 3.1.4.13: Get language for i18n fallbacks
+    report_lang = briefing.get("lang") or briefing.get("LANG") or briefing.get("sprache") or "de"
 
     # First, heal empty placeholder sections
     placeholder_healed = heal_placeholder_sections(sections)
@@ -2051,9 +2059,9 @@ def validate_and_heal(
                     "[N2-Heal] Replacing leaked content in section '%s'",
                     section_name
                 )
-                # Replace with fallback
+                # Replace with fallback (3.1.4.13: pass lang for i18n)
                 sections[section_name] = _build_generic_leak_fallback(
-                    section_name, company_size
+                    section_name, company_size, report_lang
                 )
                 leak_healed += 1
 
