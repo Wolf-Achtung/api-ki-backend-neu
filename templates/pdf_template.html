@@ -2138,6 +2138,42 @@
     </style>
 </head>
 <body>
+{# --- 3.1.4.12: minimal i18n for template UI strings --- #}
+{% set LANG = (lang or briefing_lang or report_lang or 'de')|lower %}
+{% set IS_EN = LANG.startswith('en') %}
+{% set T = {
+  'de': {
+    'deep_dive_for': 'Tiefenanalyse für',
+    'industry_benchmark_title': 'Branchenvergleich & Wettbewerbsposition',
+    'industry_benchmark_kicker': 'KI-Reife • Branchenmedian • SWOT',
+    'recommendations': 'Handlungsempfehlungen',
+    'industry_specific': 'Branchenspezifisch',
+    'industry_funding_title': 'Branchen-Förderpotenzial',
+    'industry_funding_sub': 'Förderprogramme optimiert für Ihre Branche',
+    'industry_optimized': 'Branchenoptimiert',
+    'industry_tools_title': 'Branchen-Tool-Alignment',
+    'industry_tools_sub': 'KI-Tools mit höchster Branchenrelevanz',
+    'missing_info': 'Diese Informationen fehlen für eine vollständige Compliance-Bewertung:',
+    'feedback_cta': 'Helfen Sie uns, diesen Report noch besser zu machen. Ihre Rückmeldung hilft anderen Unternehmen.',
+    'your_industry': 'Ihre Branche'
+  },
+  'en': {
+    'deep_dive_for': 'Deep dive for',
+    'industry_benchmark_title': 'Industry comparison & competitive position',
+    'industry_benchmark_kicker': 'AI maturity • Industry median • SWOT',
+    'recommendations': 'Recommendations',
+    'industry_specific': 'Industry-specific',
+    'industry_funding_title': 'Industry funding potential',
+    'industry_funding_sub': 'Funding programs optimized for your industry',
+    'industry_optimized': 'Industry-optimized',
+    'industry_tools_title': 'Industry tool alignment',
+    'industry_tools_sub': 'AI tools with the highest industry relevance',
+    'missing_info': 'This information is missing for a complete compliance assessment:',
+    'feedback_cta': 'Help us improve this report. Your feedback helps other companies.',
+    'your_industry': 'Your industry'
+  }
+} %}
+{% set TR = T['en'] if IS_EN else T['de'] %}
     <div class="page">
         <div class="content">
             <div class="content-inner">
@@ -2513,7 +2549,7 @@
                         </div>
                         <span class="section-pill">
                             <span class="pill-dot"></span>
-                            Tiefenanalyse für {{BRANCH_SHORT_LABEL|default('Ihre Branche')}}
+                            {{ TR.deep_dive_for }} {{BRANCH_SHORT_LABEL|default(TR.your_industry)}}
                         </span>
                     </div>
                     <div class="section-body">
@@ -2635,11 +2671,11 @@
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Benchmarking</span>
-                            <h2>Branchenvergleich & Wettbewerbsposition</h2>
+                            <h2>{{ TR.industry_benchmark_title }}</h2>
                         </div>
                         <span class="section-pill">
                             <span class="pill-dot"></span>
-                            KI-Reife • Branchenmedian • SWOT
+                            {{ TR.industry_benchmark_kicker }}
                         </span>
                     </div>
                     <div class="section-body">
@@ -2652,7 +2688,7 @@
                 <section class="section chapter" id="recommendations-engine">
                     <div class="section-header">
                         <div class="section-title">
-                            <span class="section-kicker">Handlungsempfehlungen</span>
+                            <span class="section-kicker">{{ TR.recommendations }}</span>
                             <h2>Priorisierte Maßnahmen</h2>
                         </div>
                         <span class="section-pill">
@@ -2715,12 +2751,12 @@
                 <section class="section chapter" id="funding-branch-alignment">
                     <div class="section-header">
                         <div class="section-title">
-                            <span class="section-kicker">Branchenspezifisch</span>
-                            <h2>Branchen-Förderpotenzial</h2>
+                            <span class="section-kicker">{{ TR.industry_specific }}</span>
+                            <h2>{{ TR.industry_funding_title }}</h2>
                         </div>
                         <span class="section-pill">
                             <span class="pill-dot"></span>
-                            Förderprogramme optimiert für Ihre Branche
+                            {{ TR.industry_funding_sub }}
                         </span>
                     </div>
                     <div class="section-body">
@@ -2769,12 +2805,12 @@
                 <section class="section chapter" id="tools-branch-alignment">
                     <div class="section-header">
                         <div class="section-title">
-                            <span class="section-kicker">Branchenoptimiert</span>
-                            <h2>Branchen-Tool-Alignment</h2>
+                            <span class="section-kicker">{{ TR.industry_optimized }}</span>
+                            <h2>{{ TR.industry_tools_title }}</h2>
                         </div>
                         <span class="section-pill">
                             <span class="pill-dot"></span>
-                            KI-Tools mit höchster Branchenrelevanz
+                            {{ TR.industry_tools_sub }}
                         </span>
                     </div>
                     <div class="section-body">
@@ -2933,7 +2969,7 @@
                         {% if AI_ACT_DATA_GAPS_HTML %}
                         <div class="gaps-section" style="margin-bottom:16px;padding:12px;background:#fffbeb;border-radius:6px;">
                             <h3 style="font-size:14px;margin-bottom:8px;color:#856404;">Datenlücken</h3>
-                            <p class="section-intro" style="font-size:12px;color:#666;margin-bottom:8px;">Diese Informationen fehlen für eine vollständige Compliance-Bewertung:</p>
+                            <p class="section-intro" style="font-size:12px;color:#666;margin-bottom:8px;">{{ TR.missing_info }}</p>
                             {{ AI_ACT_DATA_GAPS_HTML|safe }}
                         </div>
                         {% endif %}
@@ -3044,7 +3080,7 @@
                 <!-- FEEDBACK SECTION -->
                 <div class="feedback-section">
                     <h2>Ihr Feedback ist uns wichtig!</h2>
-                    <p>Helfen Sie uns, diesen Report noch besser zu machen. Ihre Rückmeldung hilft anderen Unternehmen.</p>
+                    <p>{{ TR.feedback_cta }}</p>
                     <div class="highlight-box">
                         <p><strong>Was hat Ihnen gefallen?</strong> Was können wir verbessern?</p>
                         <p>Nehmen Sie sich 2 Minuten Zeit für unser Feedback-Formular:</p>
