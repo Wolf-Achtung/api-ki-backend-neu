@@ -2148,7 +2148,7 @@
                 <!-- HEADER -->
 <header class="header">
   <div class="header-main">
-    <div class="eyebrow">
+    <div class="eyebrow" data-ui="1">
       <div class="eyebrow-left">
         <span class="section-kicker">KI-Status-Report</span>
         <span class="eyebrow-divider"></span>
@@ -2168,7 +2168,7 @@
           Sicherheit, Effizienz und Förderpotenziale.
         </p>
       </div>
-      <div class="score-badge">
+      <div class="score-badge" data-ui="1">
         <span class="score-label">Gesamt-Score</span>
         <div class="score-main">
           <span class="score-value">{{ score_gesamt }}</span>
@@ -2177,7 +2177,7 @@
         <span class="score-sub">{{ score_rating }}</span>
       </div>
     </div>
-    <div class="meta-grid">
+    <div class="meta-grid" data-ui="1">
       <div class="meta-item">
         <span class="meta-label">{{ ui("industry_label_colon") }}</span>
         <span class="meta-value">{{ BRANCHE_LABEL }}</span>
@@ -2187,17 +2187,17 @@
         <span class="meta-value">{{ UNTERNEHMENSGROESSE_LABEL }}</span>
       </div>
       <div class="meta-item">
-        <span class="meta-label">Hauptziel mit KI:</span>
+        <span class="meta-label" data-ui="1">Hauptziel mit KI:</span>
         <span class="meta-value">
           {{ STRATEGISCHE_ZIELE or KI_ZIELE_LABELS or 'nicht spezifiziert' }}
         </span>
       </div>
       <div class="meta-item">
-        <span class="meta-label">Reportdatum:</span>
+        <span class="meta-label" data-ui="1">Reportdatum:</span>
         <span class="meta-value">{{ report_date }}</span>
       </div>
     </div>
-    <div class="badge-row">
+    <div class="badge-row" data-ui="1">
       <span class="badge badge-eu">
         <span class="badge-dot"></span>
         EU AI Act – PLATIN++ Branchenbest Practices
@@ -2231,7 +2231,7 @@
                 <!-- HEADER:END -->
                 <!-- HERO METRICS -->
                 <section class="section">
-                    <div class="section-header">
+                    <div class="section-header" data-ui="1">
                         <div class="section-title">
                             <span class="section-kicker">Überblick</span>
                             {% if size_label != 'Solo-Berater' and size_label != 'Solo-Unternehmer' and size_label != 'Freiberufler' %}
@@ -2510,7 +2510,7 @@
                 <!-- G24: Branch Deep-Dive Addon -->
                 {% if BRANCH_DEEP_DIVE_HTML %}
                 <section class="section chapter" id="branch-deep-dive">
-                    <div class="section-header">
+                    <div class="section-header" data-ui="1">
                         <div class="section-title">
                             <span class="section-kicker">Branch Deep Dive</span>
                             <h2>Branchenanalyse & Trends 2025/26</h2>
@@ -2636,7 +2636,7 @@
                 <!-- G37: Benchmark Engine – Branchenvergleich & Wettbewerbsposition -->
                 {% if BENCHMARK_ENGINE_HTML %}
                 <section class="section chapter" id="benchmark-engine">
-                    <div class="section-header">
+                    <div class="section-header" data-ui="1">
                         <div class="section-title">
                             <span class="section-kicker">Benchmarking</span>
                             <h2>{{ ui("industry_benchmark_title") }}</h2>
@@ -2654,7 +2654,7 @@
                 <!-- G32: Recommendations Engine – Priorisierte Handlungsempfehlungen -->
                 {% if RECOMMENDATIONS_ENGINE_HTML %}
                 <section class="section chapter" id="recommendations-engine">
-                    <div class="section-header">
+                    <div class="section-header" data-ui="1">
                         <div class="section-title">
                             <span class="section-kicker">{{ ui("recommendations") }}</span>
                             <h2>Priorisierte Maßnahmen</h2>
@@ -2717,7 +2717,7 @@
                 <!-- SPRINT G19: Funding × Branch Alignment -->
                 {% if FUNDING_BRANCH_ALIGNMENT_HTML %}
                 <section class="section chapter" id="funding-branch-alignment">
-                    <div class="section-header">
+                    <div class="section-header" data-ui="1">
                         <div class="section-title">
                             <span class="section-kicker">{{ ui("industry_specific") }}</span>
                             <h2>{{ ui("industry_funding_title") }}</h2>
@@ -2771,7 +2771,7 @@
                 <!-- SPRINT G19: Tools × Branch Alignment -->
                 {% if TOOLS_BRANCH_ALIGNMENT_HTML %}
                 <section class="section chapter" id="tools-branch-alignment">
-                    <div class="section-header">
+                    <div class="section-header" data-ui="1">
                         <div class="section-title">
                             <span class="section-kicker">{{ ui("industry_optimized") }}</span>
                             <h2>{{ ui("industry_tools_title") }}</h2>
@@ -2936,8 +2936,8 @@
                         <!-- Data Gaps -->
                         {% if AI_ACT_DATA_GAPS_HTML %}
                         <div class="gaps-section" style="margin-bottom:16px;padding:12px;background:#fffbeb;border-radius:6px;">
-                            <h3 style="font-size:14px;margin-bottom:8px;color:#856404;">Datenlücken</h3>
-                            <p class="section-intro" style="font-size:12px;color:#666;margin-bottom:8px;">{{ ui("missing_info") }}</p>
+                            <h3 style="font-size:14px;margin-bottom:8px;color:#856404;" data-ui="1">Datenlücken</h3>
+                            <p class="section-intro" style="font-size:12px;color:#666;margin-bottom:8px;" data-ui="1">{{ ui("missing_info") }}</p>
                             {{ AI_ACT_DATA_GAPS_HTML|safe }}
                         </div>
                         {% endif %}
@@ -2945,7 +2945,7 @@
                         <!-- Next Steps -->
                         {% if AI_ACT_RECOMMENDED_NEXT_STEPS_HTML %}
                         <div class="next-steps-section" style="margin-bottom:16px;">
-                            <h3 style="font-size:14px;margin-bottom:8px;">Empfohlene Nächste Schritte</h3>
+                            <h3 style="font-size:14px;margin-bottom:8px;" data-ui="1">Empfohlene Nächste Schritte</h3>
                             {{ AI_ACT_RECOMMENDED_NEXT_STEPS_HTML|safe }}
                         </div>
                         {% endif %}
@@ -3046,7 +3046,7 @@
                 </section>
                 {% endif %}
                 <!-- FEEDBACK SECTION -->
-                <div class="feedback-section">
+                <div class="feedback-section" data-ui="1">
                     <h2>Ihr Feedback ist uns wichtig!</h2>
                     <p>{{ ui("feedback_cta") }}</p>
                     <div class="highlight-box">

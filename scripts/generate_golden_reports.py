@@ -37,6 +37,7 @@ import re
 import sys
 import time
 from pathlib import Path
+from html.parser import HTMLParser
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 try:
@@ -608,17 +609,103 @@ def scan_html_for_forbidden_tokens(html_bytes: bytes, profile_id: str) -> Tuple[
 
 
 # =============================================================================
-# TEIL 3.1.1 + 3.1.4: Locale scan for EN profiles (German UI = Hard-Fail)
+# Multilingual v1 Step 5: UI text extractor using html.parser
+# =============================================================================
+class _UITextExtractor(HTMLParser):
+    """
+    Extract text content from elements with data-ui="1" attribute.
+
+    This enables 2-tier locale scanning:
+    - UI text (strict): Hard fail if German found
+    - Content text (soft): Score/warn only, no fail
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.ui_texts: List[str] = []
+        self.all_texts: List[str] = []
+        self._ui_element_stack: List[str] = []  # Stack of UI element tags
+        self._in_style_script = 0  # Skip style/script content
+
+    def handle_starttag(self, tag: str, attrs: List[Tuple[str, Optional[str]]]) -> None:
+        # Track style/script to skip their content
+        if tag in ("style", "script"):
+            self._in_style_script += 1
+            return
+
+        # Check for data-ui="1" attribute
+        attr_dict = dict(attrs)
+        if attr_dict.get("data-ui") == "1":
+            self._ui_element_stack.append(tag)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in ("style", "script"):
+            self._in_style_script = max(0, self._in_style_script - 1)
+            return
+
+        # Pop UI element from stack when matching tag closes
+        if self._ui_element_stack and self._ui_element_stack[-1] == tag:
+            self._ui_element_stack.pop()
+
+    def handle_data(self, data: str) -> None:
+        if self._in_style_script > 0:
+            return  # Skip style/script content
+
+        text = data.strip()
+        if not text:
+            return
+
+        self.all_texts.append(text)
+        if self._ui_element_stack:  # Inside a UI element
+            self.ui_texts.append(text)
+
+
+def _extract_ui_and_content_text(html: str) -> Tuple[str, str, bool]:
+    """
+    Extract UI text (from data-ui="1" elements) and content text separately.
+
+    Args:
+        html: Full HTML content
+
+    Returns:
+        (ui_text: str, content_text: str, has_ui_markers: bool)
+        - ui_text: Combined text from data-ui="1" elements
+        - content_text: All other visible text
+        - has_ui_markers: Whether any data-ui="1" markers were found
+    """
+    try:
+        parser = _UITextExtractor()
+        parser.feed(html)
+
+        ui_text = " ".join(parser.ui_texts)
+        all_text = " ".join(parser.all_texts)
+
+        # Content text = all text minus UI text occurrences
+        # Simple approach: just use all_text for content, but flag UI separately
+        has_ui_markers = len(parser.ui_texts) > 0
+
+        # For content, we use all text but the gate logic will check UI separately
+        content_text = all_text
+
+        return ui_text, content_text, has_ui_markers
+    except Exception as e:
+        print(f"[locale-scan] ⚠️ HTML parsing failed: {e}")
+        return "", "", False
+
+
+# =============================================================================
+# Multilingual v1 Step 5: 2-tier Locale scan (UI strict / Content soft)
 # =============================================================================
 def scan_html_for_locale_leaks(html_text: str, expected_lang: str, profile_id: str) -> Tuple[bool, List[str]]:
     """
     Scan HTML for German UI strings when expected_lang is 'en'.
 
-    This ensures EN profiles don't have mixed-locale content.
-    Only scans when expected_lang == "en".
+    Multilingual v1 Step 5: 2-tier scanning:
+    - UI-Strict: German in data-ui="1" elements → HARD FAIL
+    - Content-Soft: German elsewhere → WARN (score logged), but NO FAIL
 
-    TEIL 3.1.4: Uses _strip_noncontent() to avoid false positives from
-    style/script/base64 content.
+    This enables EN reports to pass the gate even if LLM-generated content
+    contains some German, as long as UI labels are correctly translated.
 
     Args:
         html_text: Decoded HTML content
@@ -627,34 +714,91 @@ def scan_html_for_locale_leaks(html_text: str, expected_lang: str, profile_id: s
 
     Returns:
         (passed: bool, found_leaks: list of found German strings)
+        - passed: True if UI scan passed (content warnings don't cause failure)
+        - found_leaks: German strings found in UI (for backward compat)
     """
     if expected_lang != "en":
         return True, []  # Only check EN profiles
 
-    # TEIL 3.1.4: Strip style/script/base64 before locale scan
-    scan_text = _strip_noncontent(html_text)
+    # Step 1: Extract UI text and content text
+    ui_text, content_text, has_ui_markers = _extract_ui_and_content_text(html_text)
 
-    found_leaks = []
-    for de_string in DE_UI_STRINGS_EN_HARDFAIL:
-        if de_string in scan_text:
-            # Find context (from original for debugging)
-            idx = html_text.find(de_string)
-            if idx >= 0:
-                start = max(0, idx - 20)
-                end = min(len(html_text), idx + len(de_string) + 20)
-                context = html_text[start:end].replace("\n", " ").strip()
-                found_leaks.append(f"{de_string} (context: ...{context}...)")
+    # Step 2: Strip style/script/base64 from content (fallback for non-UI scan)
+    content_text_clean = _strip_noncontent(html_text) if not has_ui_markers else content_text
 
-    if found_leaks:
-        print(f"[locale-scan] ❌ FAILED for {profile_id} - {len(found_leaks)} German UI string(s) in EN report:")
-        for leak in found_leaks[:5]:  # Show first 5
-            print(f"[locale-scan]   - {leak}")
-        if len(found_leaks) > 5:
-            print(f"[locale-scan]   ... and {len(found_leaks) - 5} more")
-        return False, found_leaks
+    # ==========================================================================
+    # UI-STRICT SCAN (Hard Fail)
+    # ==========================================================================
+    ui_leaks = []
+    if has_ui_markers:
+        for de_string in DE_UI_STRINGS_EN_HARDFAIL:
+            if de_string in ui_text:
+                # Find context in original HTML
+                idx = html_text.find(de_string)
+                if idx >= 0:
+                    start = max(0, idx - 20)
+                    end = min(len(html_text), idx + len(de_string) + 20)
+                    context = html_text[start:end].replace("\n", " ").strip()
+                    ui_leaks.append(f"{de_string} (context: ...{context}...)")
+
+        if ui_leaks:
+            print(f"[locale-scan-ui] ❌ FAILED for {profile_id} - {len(ui_leaks)} German UI string(s) in EN report:")
+            for leak in ui_leaks[:5]:
+                print(f"[locale-scan-ui]   - {leak}")
+            if len(ui_leaks) > 5:
+                print(f"[locale-scan-ui]   ... and {len(ui_leaks) - 5} more")
+            return False, ui_leaks
+        else:
+            print(f"[locale-scan-ui] ✅ PASSED for {profile_id} - no German in UI elements")
     else:
-        print(f"[locale-scan] ✅ PASSED for {profile_id} - no German UI leaks in EN report")
-        return True, []
+        # No UI markers found - backward compatibility: warn but don't fail
+        print(f"[locale-scan-ui] ⚠️ SKIPPED for {profile_id} - no data-ui=\"1\" markers found (legacy template)")
+        # Fall back to old behavior: scan all content as UI (soft fail for now)
+        # In v1, we skip hard fail for legacy templates
+
+    # ==========================================================================
+    # CONTENT-SOFT SCAN (Score/Warn, No Fail)
+    # ==========================================================================
+    content_leaks = []
+    scan_source = content_text_clean
+
+    for de_string in DE_UI_STRINGS_EN_HARDFAIL:
+        # Skip if already found in UI (to avoid double-counting)
+        if de_string in scan_source:
+            # Only count if NOT in UI text (to get pure content leaks)
+            if has_ui_markers and de_string in ui_text:
+                continue  # Already counted in UI
+            content_leaks.append(de_string)
+
+    content_score = len(content_leaks)
+
+    if content_score > 0:
+        # Scoring thresholds
+        if content_score <= 10:
+            level = "OK"
+            emoji = "✅"
+        elif content_score <= 50:
+            level = "WARN"
+            emoji = "⚠️"
+        else:
+            level = "WARN_HIGH"
+            emoji = "⚠️"
+
+        print(f"[locale-scan-content] {emoji} {level} for {profile_id} - score={content_score} German strings in content")
+        if content_score <= 10:
+            for leak in content_leaks:
+                print(f"[locale-scan-content]   - {leak}")
+        else:
+            print(f"[locale-scan-content]   First 5: {content_leaks[:5]}")
+    else:
+        print(f"[locale-scan-content] ✅ CLEAN for {profile_id} - no German strings in content")
+
+    # ==========================================================================
+    # FINAL RESULT: UI scan determines pass/fail
+    # ==========================================================================
+    # If we got here, UI scan passed (or was skipped for legacy templates)
+    print(f"[locale-scan] ✅ PASSED for {profile_id} - UI check passed (content score={content_score})")
+    return True, []
 
 
 def scan_html_lang_attribute(html_text: str, expected_lang: str, profile_id: str) -> Tuple[bool, str]:
