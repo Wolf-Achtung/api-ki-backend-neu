@@ -389,7 +389,7 @@ def render(briefing_obj: Any,
 
     # Safe defaults with FIXED UTF-8
     # TEIL 3.1.4.x: Force LANG to detected value (no fallback to sections)
-    ctx = {
+    ctx: Dict[str, Any] = {
         "LANG": "en" if is_en else "de",  # FORCED, not from sections
         "OWNER_NAME": sections.get("OWNER_NAME", os.getenv("OWNER_NAME", "KI-Sicherheit.jetzt")),  # ✅ FIXED
         "report_date": sections.get("report_date", ""),
