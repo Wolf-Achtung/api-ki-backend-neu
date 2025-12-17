@@ -6202,11 +6202,12 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
 
     log.info("[%s] 🎨 Rendering final HTML...", run_id)
     # --- Sanitize dynamic sections to prevent HTML leaks (z. B. eingebettetes <html> im Pilot-Plan) ---
+    # 3.1.4.16: Pass lang for EN locale sanitization (lastline guardrail)
     try:
         if os.getenv("ENABLE_REPAIR_HTML", "1") in ("1","true","TRUE","yes","YES"):
             _pre_sanitize_count = sum(1 for _k,_v in sections.items() if isinstance(_v, str))
-            sections = sanitize_sections_dict(sections, truthy_env=True)
-            log.info("[%s] 🧼 HTML sanitized for %s string sections", run_id, _pre_sanitize_count)
+            sections = sanitize_sections_dict(sections, truthy_env=True, lang=report_lang)
+            log.info("[%s] 🧼 HTML sanitized for %s string sections (lang=%s)", run_id, _pre_sanitize_count, report_lang)
     except Exception as _exc:
         log.warning("[%s] ⚠️ Sanitizer skipped: %s", run_id, _exc)
 
