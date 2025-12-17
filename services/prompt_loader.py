@@ -168,6 +168,7 @@ def load_prompt(section: str, lang: str = "de", vars_dict: Optional[Dict[str, An
         log.error(error_msg)
         raise FileNotFoundError(error_msg)
 
-    log.debug(f"✅ Loading prompt: {path}")
+    # 3.1.4.9: Debug trace for prompt routing verification
+    log.info("[prompt_loader] section=%s lang=%s path=%s", section, lang, path)
     payload = _read_file(path)
     return _interpolate(payload, vars_dict)

@@ -4382,8 +4382,9 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
     # Prompt-System verwenden, wenn aktiv und Prompt vorhanden
     if USE_PROMPT_SYSTEM and prompt_key and _prompt_enhancer:
         try:
-            # TEIL 3.1.4.8: Hard locale normalization for prompt routing
-            # Ensure prompt_enhancer sees correct language for EN profiles
+            # TEIL 3.1.4.8/3.1.4.9: Locale normalization for prompt routing
+            # Note: Authoritative lang is set upstream from br.lang (3.1.4.9)
+            # This block is a safety net ensuring consistent lang/LANG/sprache fields
             if isinstance(briefing, dict):
                 lang_raw = (
                     briefing.get("lang")
@@ -5443,6 +5444,15 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     report_lang = getattr(br, "lang", "de")
     strategic_context = build_strategic_context_block(answers, lang=report_lang)
     answers["strategic_context_block"] = strategic_context
+
+    # === 3.1.4.9: AUTHORITATIVE LANGUAGE from br.lang ===
+    # Set lang/LANG/sprache BEFORE content generation so prompt routing is correct
+    # This is the single source of truth - briefing dict alone must NOT decide
+    answers["lang"] = report_lang
+    answers["LANG"] = report_lang
+    answers["sprache"] = report_lang
+    log.info("[%s] 🌐 Authoritative language set from br.lang: %s", run_id, report_lang)
+
     if strategic_context:
         log.info("[%s] 📋 Strategic context block generated (%d chars)", run_id, len(strategic_context))
     else:
