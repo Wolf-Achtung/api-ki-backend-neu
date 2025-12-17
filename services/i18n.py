@@ -226,7 +226,7 @@ def get_available_langs(key: str) -> list:
 # JINJA2 WRAPPER
 # =============================================================================
 
-def ui(lang: str) -> Callable[[str, Optional[str]], str]:
+def ui(lang: str) -> Callable[..., str]:
     """
     Create a Jinja2-compatible label getter for a specific language.
 
