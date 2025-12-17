@@ -1871,7 +1871,12 @@ Nutze den Strategischen Kontext wie folgt:
         try:
             from services.prompt_loader import load_prompt
 
-            base_prompt = load_prompt(prompt_name, lang="de", vars_dict=None)
+            # TEIL 3.1.4.x: Dynamic language from briefing_data
+            lang_raw = briefing_data.get("lang") or briefing_data.get("LANG") or "de"
+            lang = str(lang_raw).lower().strip()
+            prompt_lang = "en" if lang.startswith("en") else "de"
+
+            base_prompt = load_prompt(prompt_name, lang=prompt_lang, vars_dict=None)
 
             if not isinstance(base_prompt, str):
                 log.warning(
