@@ -148,6 +148,15 @@ def load_prompt(section: str, lang: str = "de", vars_dict: Optional[Dict[str, An
         raise ValueError("section must be a non-empty string")
 
     lang = lang or DEFAULT_LANG
+
+    # 3.1.4.11: Normalize language variants (en-US, EN, en_GB → en)
+    lang_norm = str(lang).lower().strip()
+    if lang_norm.startswith("en"):
+        lang = "en"
+    else:
+        lang = "de"  # Only de/en supported
+
+    requested_lang = lang  # Store original request for guardrail check
     path, used_lang = _resolve_section_path(section, lang)
     
     if not path:
@@ -168,7 +177,18 @@ def load_prompt(section: str, lang: str = "de", vars_dict: Optional[Dict[str, An
         log.error(error_msg)
         raise FileNotFoundError(error_msg)
 
-    # 3.1.4.9: Debug trace for prompt routing verification
-    log.info("[prompt_loader] section=%s lang=%s path=%s", section, lang, path)
+    # 3.1.4.11: HARD GUARDRAIL - EN requests must NEVER resolve to DE prompts
+    # This prevents silent fallback from prompts/en/* to prompts/de/*
+    path_str = str(path).replace("\\", "/")  # Normalize for Windows compatibility
+    if requested_lang == "en" and "/prompts/de/" in path_str:
+        raise RuntimeError(
+            f"EN prompt routing violation: section={section} "
+            f"requested_lang={requested_lang} resolved_path={path} "
+            f"(DE fallback is forbidden for EN profiles)"
+        )
+
+    # 3.1.4.9/3.1.4.11: Debug trace for prompt routing verification
+    log.info("[prompt_loader] section=%s requested_lang=%s used_lang=%s path=%s",
+             section, requested_lang, used_lang, path)
     payload = _read_file(path)
     return _interpolate(payload, vars_dict)
