@@ -123,6 +123,7 @@ from services.coverage_guard import analyze_coverage, build_html_report
 from services.prompt_loader import load_prompt
 from services.prompt_enhancer import PromptEnhancer, get_platin_config
 from services.html_sanitizer import sanitize_sections_dict
+from services.lang_utils import normalize_lang
 from utils.hotfix_gold_standard import apply_hotfix, UTF8Handler
 from utils.encoding_fixer import clean_briefing_data
 from services.anthropic_client import call_anthropic, should_use_anthropic
@@ -5294,10 +5295,8 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     # Sprint G7/G8: AI Act Compliance Sections with Cross-Integration
     # ==========================================================================
     try:
-        # Determine report language from briefing
-        report_lang = briefing.get("lang", "de")
-        if report_lang not in ["de", "en"]:
-            report_lang = "de"
+        # Determine report language from briefing (Multilingual v1: normalize)
+        report_lang = normalize_lang(briefing.get("lang"), default="de")
 
         # G8.6: Use optimized version with caching
         ai_act_data = build_ai_act_sections_optimized(briefing, lang=report_lang)
@@ -5444,7 +5443,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         pass
 
     # === STRATEGIC CONTEXT BLOCK erzeugen (für spätere Prompt-Anreicherung) ===
-    report_lang = getattr(br, "lang", "de")
+    # Multilingual v1: normalize language from br.lang
+    report_lang = normalize_lang(getattr(br, "lang", "de"), default="de")
     strategic_context = build_strategic_context_block(answers, lang=report_lang)
     answers["strategic_context_block"] = strategic_context
 
@@ -5667,7 +5667,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     # 🎯 KERN-FÖRDERMATRIX 2025/2026: Statischer, size-aware Kern immer einfügen
     # v4.16.0: Enable funding for EN reports when country is DE/Germany
     # v4.17.0: Phase 2 - Enable EU core funding for EN reports with non-German countries
-    report_lang = sections.get("LANG", "de")
+    # Multilingual v1: normalize language from sections
+    report_lang = normalize_lang(sections.get("LANG"), default="de")
     report_country = (answers.get("country") or "").upper()
 
     # Check if this is an EN report for Germany (enable DE funding)

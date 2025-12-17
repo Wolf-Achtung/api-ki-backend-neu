@@ -20,6 +20,7 @@ from utils.logo_embedder import embed_logos_in_html
 from services.html_minifier import optimize_html_for_pdf, strip_unused_sections
 from services.report_validator import GENERIC_LLM_LEAK_PHRASES, remove_leak_phrases_from_html
 from services.html_sanitizer import sanitize_en_locale_tokens
+from services.lang_utils import normalize_lang
 
 log = logging.getLogger(__name__)
 
@@ -323,9 +324,9 @@ def render(briefing_obj: Any,
         lang_raw = "de"
         log.debug("[LANG] No language found, defaulting to: de")
 
-    # Normalize: lowercase, strip, check for "en" prefix
-    lang = str(lang_raw).lower().strip()
-    is_en = lang.startswith("en")
+    # Multilingual v1: Normalize to supported language codes (de/en/fr/es/it)
+    lang = normalize_lang(lang_raw, default="de")
+    is_en = (lang == "en")
 
     log.info(f"[LANG] Detected language: '{lang}' (is_en={is_en}) for report {run_id}")
 
