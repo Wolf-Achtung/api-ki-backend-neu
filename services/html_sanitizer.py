@@ -131,13 +131,25 @@ _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
     (r"\bBranchenmedian\b", "Industry median"),
     (r"\bBranchenvergleich\b", "Industry comparison"),
 
+    # --- 3.1.4.17: extended EN locale replacements (plural + UI synonyms) ---
+    (r"\bInterne Review-Bewertungen\b", "Internal review ratings"),
+    (r"\bBewertungen\b", "Assessments"),
+    (r"\bMaßnahmenplan\b", "Action plan"),
+    (r"\bMaßnahmen\b", "Actions"),
+    (r"\bZusammenfassung\b", "Summary"),
+    (r"\bEmpfehlungen\b", "Recommendations"),
+    (r"\bEmpfehlung\b", "Recommendation"),
+
     # single tokens / common nouns
-    (r"\bUnternehmen\b", "Company"),
     (r"\bBranche\b", "Industry"),
     (r"\bBewertung\b", "Assessment"),
     (r"\bReifegrad\b", "Maturity level"),
     (r"\bKennzahlen\b", "KPIs"),
     (r"\bRisiken\b", "Risks"),
+
+    # 3.1.4.17: word-boundary safe replacements inside HTML (tag contexts only)
+    (r">\s*Unternehmen\s*<", "> Company <"),
+    (r">\s*Unternehmens\s*", "> Company "),
 ]
 
 
