@@ -262,6 +262,44 @@ _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
     (r"\bUnternehmen\b", "Company"),
 
     # ==========================================================================
+    # ADDITIONAL COMMON GERMAN TOKENS (Final polish)
+    # ==========================================================================
+    # Personnel/HR terms
+    (r"\bMitarbeitern\b", "Employees"),
+    (r"\bMitarbeiter\b", "Employees"),
+    # Financial terms
+    (r"\bUmsatz\b", "Revenue"),
+    (r"\bPotenzial\b", "Potential"),
+    # Process terms
+    (r"\bProzesse\b", "Processes"),
+    (r"\bProzess\b", "Process"),
+    # Data terms
+    (r"\bDaten\b", "Data"),
+    # Goal terms
+    (r"\bZiele\b", "Goals"),
+    (r"\bZiel\b", "Goal"),
+    # Analysis/Results
+    (r"\bAnalyse\b", "Analysis"),
+    (r"\bErgebnisse\b", "Results"),
+    (r"\bErgebnis\b", "Result"),
+    # Time - Year
+    (r"\bJahre\b", "Years"),
+    (r"\bJahr\b", "Year"),
+    # Time - Day
+    (r"\bTage\b", "Days"),
+    (r"\bTag\b", "Day"),
+    # Additional common terms
+    (r"\bAbteilung\b", "Department"),
+    (r"\bProjekt\b", "Project"),
+    (r"\bProjekte\b", "Projects"),
+    (r"\bLösung\b", "Solution"),
+    (r"\bLösungen\b", "Solutions"),
+    (r"\bVorteil\b", "Advantage"),
+    (r"\bVorteile\b", "Advantages"),
+    (r"\bAnwendung\b", "Application"),
+    (r"\bAnwendungen\b", "Applications"),
+
+    # ==========================================================================
     # WORD-BOUNDARY SAFE REPLACEMENTS (tag contexts)
     # ==========================================================================
     (r">\s*Unternehmen\s*<", "> Company <"),
@@ -291,7 +329,9 @@ def sanitize_en_locale_tokens(html: str, lang: str) -> str:
 
     # Optional: Log leftover detection (warning only)
     de_check_words = ["Unternehmen", "Branche", "Bewertung", "Reifegrad",
-                      "Kennzahlen", "Risiken", "Handlungsempfehlungen", "Unternehmensgröße"]
+                      "Kennzahlen", "Risiken", "Handlungsempfehlungen", "Unternehmensgröße",
+                      "Mitarbeiter", "Umsatz", "Potenzial", "Prozess", "Daten",
+                      "Ziel", "Analyse", "Ergebnis", "Jahr", "Tag"]
     leftovers = [w for w in de_check_words if w in out]
     if leftovers:
         log.warning("[locale-sanitize] DE leftovers after sanitize: %s", leftovers)
