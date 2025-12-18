@@ -50,6 +50,9 @@ except ImportError:
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent
 
+# Add repo root to path for imports
+sys.path.insert(0, str(REPO_ROOT))
+
 # =============================================================================
 # FIX 1: PLATIN+++ v5.4 - Forbidden tokens that must not appear in final HTML/PDF
 # =============================================================================
@@ -870,6 +873,29 @@ def scan_html_for_locale_leaks(html_text: str, expected_lang: str, profile_id: s
             print(f"[locale-scan-content]   First 5: {content_leaks[:5]}")
     else:
         print(f"[locale-scan-content] ✅ CLEAN for {profile_id} - no German strings in content")
+
+    # ==========================================================================
+    # Multilingual v2: Section-level scan for detailed attribution
+    # ==========================================================================
+    try:
+        from services.locale_rewriter import scan_html_sections, load_locale_budget
+
+        v2_scan = scan_html_sections(html_text, expected_lang)
+        budget = load_locale_budget(expected_lang)
+
+        # v2 output format
+        if v2_scan.total_hits > 0:
+            v2_status = "✅ OK" if v2_scan.total_hits <= budget.content_max_hits else "⚠️ OVER_BUDGET"
+            print(f"[locale-v2] {v2_status} for {profile_id} - score={v2_scan.total_hits} (budget={budget.content_max_hits})")
+            if v2_scan.hits_by_section:
+                top_sections = sorted(v2_scan.hits_by_section.items(), key=lambda x: x[1], reverse=True)[:3]
+                print(f"[locale-v2]   top_sections: {dict(top_sections)}")
+            if v2_scan.top_terms:
+                print(f"[locale-v2]   top_terms: {v2_scan.top_terms[:5]}")
+        else:
+            print(f"[locale-v2] ✅ CLEAN for {profile_id} - score=0 (budget={budget.content_max_hits})")
+    except Exception as e:
+        print(f"[locale-v2] ⚠️ SKIPPED for {profile_id} - {e}")
 
     # ==========================================================================
     # FINAL RESULT: UI scan determines pass/fail
