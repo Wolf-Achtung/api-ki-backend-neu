@@ -29,10 +29,11 @@ log = logging.getLogger(__name__)
 # =============================================================================
 LOCALE_BUDGETS_PATH = Path(__file__).parent.parent / "data" / "locale_budgets.json"
 
-# German tokens to detect (shared with html_sanitizer.py concepts)
-# These are the common German words that should not appear in EN content
+# German tokens to detect (aligned with DE_UI_STRINGS_EN_HARDFAIL in generate_golden_reports.py)
+# IMPORTANT: Only include clearly German words, NOT English words used in both languages.
+# Words like "Governance", "Strategie", "Compliance" are NOT German-only.
 DE_CONTENT_TOKENS: List[str] = [
-    # High-frequency terms from previous scans
+    # High-frequency terms - clearly German
     "Ziel", "Ziele",
     "Prozess", "Prozesse",
     "Daten",
@@ -46,7 +47,7 @@ DE_CONTENT_TOKENS: List[str] = [
     "Branche",
     "Bewertung",
     "Maßnahme", "Maßnahmen",
-    "Strategie",
+    # "Strategie" - borderline, used in German but also as loanword
     "Risiko", "Risiken",
     "Kosten",
     "Nutzen",
@@ -60,11 +61,25 @@ DE_CONTENT_TOKENS: List[str] = [
     "Sicherheit",
     "Wertschöpfung",
     "Befähigung",
-    "Governance",
+    # "Governance" - REMOVED: English word, not German
     "Reifegrad",
     "Kennzahlen",
     "Überblick",
     "Zusammenfassung",
+    # Additional from DE_UI_STRINGS_EN_HARDFAIL
+    "Handlungsempfehlungen",
+    "Nächste Schritte",
+    "Hauptziel",
+    "Kurzfazit",
+    "Hinweis",
+    "Datenschutz",
+    "Einsparungen",
+    "Konservativ",
+    "Realistisch",
+    "Optimistisch",
+    "Zeithorizont",
+    "Priorität",
+    "Verantwortung",
 ]
 
 
