@@ -81,10 +81,12 @@ PROMPT_LEAK_PATTERNS: List[str] = [
 ]
 
 # ---------------------------------------------------------------------------
-# Badge CSS classes expected in rendered HTML
-# These are the actual CSS classes in pdf_template_en.html, not variable names
+# Badge markers expected in rendered HTML
 # ---------------------------------------------------------------------------
+# Visual badges (CSS classes - always present in template)
 EXPECTED_BADGE_CLASSES = ["badge-eu", "badge-dsgvo", "badge-risk", "badge-time"]
+# Data badges (rendered as data attributes from gpt_analyze.py)
+EXPECTED_DATA_BADGES = ["data-badge-security", "data-badge-compliance", "data-badge-efficiency"]
 
 
 def scan_de_tokens(html: str) -> List[Tuple[str, str, int]]:
@@ -119,15 +121,20 @@ def scan_prompt_leaks(html: str) -> List[Tuple[str, int]]:
 
 
 def check_badges(html: str) -> List[str]:
-    """Check for expected badge CSS classes in rendered HTML.
+    """Check for expected badge markers in rendered HTML.
 
-    Returns list of missing badge class names.
+    Checks both visual badges (CSS classes) and data badges (data attributes).
+    Returns list of missing badge markers.
     """
     missing = []
+    # Check visual badges (CSS classes)
     for badge_class in EXPECTED_BADGE_CLASSES:
-        # Check for badge CSS class in HTML (e.g., class="badge badge-eu")
         if badge_class not in html:
             missing.append(badge_class)
+    # Check data badges (data attributes from gpt_analyze.py)
+    for data_badge in EXPECTED_DATA_BADGES:
+        if data_badge not in html:
+            missing.append(data_badge)
     return missing
 
 
