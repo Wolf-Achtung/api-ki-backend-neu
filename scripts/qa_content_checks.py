@@ -81,9 +81,10 @@ PROMPT_LEAK_PATTERNS: List[str] = [
 ]
 
 # ---------------------------------------------------------------------------
-# Badge keys expected in report
+# Badge CSS classes expected in rendered HTML
+# These are the actual CSS classes in pdf_template_en.html, not variable names
 # ---------------------------------------------------------------------------
-EXPECTED_BADGES = ["badge_security", "badge_compliance", "badge_efficiency"]
+EXPECTED_BADGE_CLASSES = ["badge-eu", "badge-dsgvo", "badge-risk", "badge-time"]
 
 
 def scan_de_tokens(html: str) -> List[Tuple[str, str, int]]:
@@ -118,15 +119,15 @@ def scan_prompt_leaks(html: str) -> List[Tuple[str, int]]:
 
 
 def check_badges(html: str) -> List[str]:
-    """Check for expected badge keys in HTML.
+    """Check for expected badge CSS classes in rendered HTML.
 
-    Returns list of missing badge keys.
+    Returns list of missing badge class names.
     """
     missing = []
-    for badge in EXPECTED_BADGES:
-        # Check for badge in HTML content or data attributes
-        if badge not in html:
-            missing.append(badge)
+    for badge_class in EXPECTED_BADGE_CLASSES:
+        # Check for badge CSS class in HTML (e.g., class="badge badge-eu")
+        if badge_class not in html:
+            missing.append(badge_class)
     return missing
 
 
