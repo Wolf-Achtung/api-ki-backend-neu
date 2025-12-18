@@ -22,6 +22,7 @@ from services.report_validator import GENERIC_LLM_LEAK_PHRASES, remove_leak_phra
 from services.html_sanitizer import sanitize_en_locale_tokens
 from services.lang_utils import normalize_lang
 from services.i18n import ui as ui_factory
+from services.locale_rewriter import apply_locale_v2
 
 log = logging.getLogger(__name__)
 
@@ -533,5 +534,19 @@ def render(briefing_obj: Any,
     # =========================================================================
     html = sanitize_en_locale_tokens(html, lang=lang)
     log.info(f"[RENDER] Applied EN locale sanitizer (lang={lang}) for run={run_id}")
+
+    # =========================================================================
+    # Multilingual v2: Locale budget enforcement + section-aware rewrite
+    # =========================================================================
+    html, locale_v2_meta = apply_locale_v2(html, lang)
+    if locale_v2_meta.get("locale_v2", {}).get("sections_rewritten"):
+        log.info(
+            f"[locale-v2] score_before={locale_v2_meta['locale_v2']['score_before']} "
+            f"score_after={locale_v2_meta['locale_v2']['score_after']} "
+            f"sections_rewritten={locale_v2_meta['locale_v2']['sections_rewritten']}"
+        )
+    if meta is None:
+        meta = {}
+    meta.update(locale_v2_meta)
 
     return {"html": html, "meta": meta or {}}
