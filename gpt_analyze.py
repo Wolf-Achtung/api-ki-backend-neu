@@ -2807,51 +2807,10 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         score_gov = scores.get("governance", 50)
         score_sec = scores.get("sicherheit", 50)
 
-        # TEIL 3.1.4: EN fallback for risks
-        if briefing_lang == "en":
-            return f"""<section class="section risks">
-  <h2>Key {ui('risks', 'en')} in AI Deployment for {hauptleistung or "Your Core Business"}</h2>
-  <p>
-    The deployment of AI in <strong>{hauptleistung or "your core business"}</strong> in the <strong>{branche}</strong> industry
-    offers significant opportunities but also brings different risk profiles depending on {ui('company_size', 'en').lower()} <strong>{size_label}</strong>.
-    The current Governance score of <strong>{score_gov}/100</strong> and Security score of <strong>{score_sec}/100</strong> show
-    how far structures for control, documentation, and protection mechanisms have been developed.
-  </p>
-  <h3>1. Strategic and Organizational {ui('risks', 'en')}</h3>
-  <ul>
-    <li><strong>Unclear goals and priorities for AI.</strong> Without clearly defined goals, there is a risk that AI experiments fizzle out, isolated solutions emerge, or important opportunities remain unused. <em>Countermeasure:</em> A concise target vision with 2-3 prioritized use cases and a simple implementation plan.</li>
-    <li><strong>Dependency on individuals (single point of failure).</strong> If knowledge concentrates with one person, experiments and implementation stall when they are unavailable. <em>Countermeasure:</em> Documentation of knowledge so it is not lost.</li>
-    <li><strong>Lack of role and responsibility clarity.</strong> In growing setups it is often unclear who prioritizes AI projects and who is responsible for quality. <em>Countermeasure:</em> A clearly named role for AI responsibility and transparent communication of responsibilities.</li>
-  </ul>
-  <h3>2. Data, Security, and Compliance {ui('risks', 'en')}</h3>
-  <ul>
-    <li><strong>Insufficient control over incoming and outgoing data.</strong> Without regulation of what information may be entered into AI systems, confidential customer data or sensitive content can be processed uncontrolled. <em>Countermeasure:</em> Clear guidelines for data use and technical protection mechanisms.</li>
-    <li><strong>Gaps in information security and access protection.</strong> The security score of {score_sec}/100 indicates room for improvement in passwords, access rights, or backup concepts. <em>Countermeasure:</em> A compact security concept and regular password and rights reviews.</li>
-    <li><strong>Unclear responsibility for legal requirements.</strong> Without defined accountability, requirements for data protection, copyright, or industry-specific regulation may only be observed sporadically. <em>Countermeasure:</em> A designated function that bundles minimum requirements.</li>
-  </ul>
-  <h3>3. Quality, Transparency, and Acceptance {ui('risks', 'en')}</h3>
-  <ul>
-    <li><strong>Inconsistent results and quality variance.</strong> Without documented prompts, templates, and workflows, quality and style depend heavily on the individual. <em>Countermeasure:</em> Uniform templates, brief guidelines, and regular reviews of sample outputs.</li>
-    <li><strong>Over-reliance on AI results (hallucinations).</strong> If texts, analyses, or evaluations are adopted without review, errors or hallucinations can flow directly into customer documents. <em>Countermeasure:</em> Clear rules for manual review and four-eyes principle for critical content.</li>
-    <li><strong>Acceptance problems in daily use.</strong> Resistance arises in teams when the benefits of AI are not understandable or workflows are perceived as too complex. <em>Countermeasure:</em> Understandable communication of goals and small pilot projects with visible benefits.</li>
-  </ul>
-  <h3>4. Technical and Operational {ui('risks', 'en')}</h3>
-  <ul>
-    <li><strong>Dependency on external providers (vendor lock-in).</strong> Heavy reliance on a single AI provider creates risks if pricing, availability, or functionality changes. <em>Countermeasure:</em> Evaluate alternatives, avoid deep dependencies where possible.</li>
-    <li><strong>Integration complexity.</strong> Connecting AI tools with existing systems can require significant technical effort. <em>Countermeasure:</em> Start with standalone pilots before deep integration.</li>
-  </ul>
-  <h3>5. {ui('risk_matrix', 'en')}</h3>
-  <table class="table">
-    <thead><tr><th>Risk Category</th><th>Description</th><th>{ui('probability', 'en')}</th><th>{ui('impact', 'en')}</th><th>{ui('recommended_actions', 'en')}</th></tr></thead>
-    <tbody>
-      <tr><td>Data & Security</td><td>Uncontrolled data processing, gaps</td><td>medium</td><td>high</td><td>Data use guidelines, access concepts</td></tr>
-      <tr><td>Quality & Acceptance</td><td>Inconsistent results, distrust</td><td>medium</td><td>medium to high</td><td>Templates, review loops, communication</td></tr>
-      <tr><td>Dependencies & Operations</td><td>Interruptions, extra costs, lock-in</td><td>low to medium</td><td>medium</td><td>Fallback scenarios, tool consolidation</td></tr>
-      <tr><td>AI-specific: Hallucinations</td><td>Incorrect information, reputation damage</td><td>medium to high</td><td>high</td><td>Four-eyes principle, fact-checking</td></tr>
-    </tbody>
-  </table>
-  <p class="small muted">This risk analysis shows the most important action areas for AI in <strong>{hauptleistung or "your core business"}</strong> for a company of size <strong>{size_label}</strong>. In the next step, risks should be prioritized by probability and impact and transferred to a concrete action plan.</p>
-</section>"""
+        # NOTE: English fallback removed (Content Quality Pack v1)
+        # English reports now use prompts/en/risks.md exclusively
+        # This prevents any potential language leakage in German reports
+
         if size_group == "solo":
             org_risk = "Als Solo-Selbstständige:r konzentriert sich Know-how und Verantwortung auf eine Person"
             org_measure = "Dokumentation zentraler Workflows, Checklisten und bewusste Verankerung von KI-Routinen"
