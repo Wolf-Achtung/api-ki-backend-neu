@@ -77,26 +77,45 @@ BOOSTER-SEKTIONEN (NEU - SPRINT G17.R):
 - Team: Team-Kommunikation & Rollout-Rituale, Dokumentation & Wissensspeicher
 - KMU: Change-Kommunikation auf Führungsebene, KPI-Framework für Arbeitsbereiche
 
-PHASEN-STRUKTUR (STRIKT EINHALTEN):
-- Phase 0 (Woche 1–2): Setup – Grundlagen schaffen
-- Phase 1 (Woche 3–5): Entlastung – Quick Wins umsetzen
-- Phase 2 (Woche 6–10): Produktiver Einsatz – Workflows stabilisieren
-- Phase 3 (Woche 11–13): Konsolidierung – Ergebnisse messen, Entscheidung treffen
-- PFLICHT: "Erwartete Effekte nach 90 Tagen" (eigener Abschnitt am Ende)
+PHASEN-STRUKTUR (CONTENT QUALITY PACK v7.0):
+=============================================================================
 
-LEITENTSCHEIDUNGEN PRO PHASE (v6.1 NEU - implizit verankern, nicht als Überschrift):
+PHASE 0 & PHASE 1 MÜSSEN BESONDERS SICHTBAR SEIN:
+- DEUTLICHE ÜBERSCHRIFTEN für Phase 0 und Phase 1
+- Genau 3 Bullets pro Phase (nicht mehr, nicht weniger)
+- Phase 0 MUSS "Startpunkt 30 Minuten" referenzieren (aus Brutal Summary)
+
+PHASE 0 (Woche 1–2): Setup – Grundlagen schaffen
+→ Überschrift: "Phase 0: Setup (Woche 1-2)"
+→ Referenz: "Beginnen Sie mit dem 'Startpunkt in 30 Minuten' aus der Zusammenfassung."
+→ 3 Bullets: Minimal-Stack, erster Workflow, Review-Regel
+
+PHASE 1 (Woche 3–5): Entlastung – Quick Wins umsetzen
+→ Überschrift: "Phase 1: Entlastung (Woche 3-5)"
+→ 3 Bullets: Quick Wins umsetzen, Zeitmessung starten, Prompt-Bibliothek aufbauen
+
+Phase 2 (Woche 6–10): Produktiver Einsatz – Workflows stabilisieren
+→ 3-4 Bullets: Workflow festigen, Qualitäts-Checkliste, iteratives Verbessern
+
+Phase 3 (Woche 11–13): Konsolidierung – Ergebnisse messen, Entscheidung treffen
+→ 3-4 Bullets: Messung, Lessons Learned, Entscheidung Ausweiten/Vertiefen/Stabilisieren
+
+PFLICHT: "Erwartete Effekte nach 90 Tagen" (eigener Abschnitt am Ende)
+
+=============================================================================
+LEITENTSCHEIDUNGEN PRO PHASE (implizit verankern):
 - Phase 0: "Transparenz vor Automatisierung" – erst verstehen, dann einsetzen
-- Phase 1: "Regeln vor Skalierung" – Qualitätskriterien definieren, bevor mehr automatisiert wird
-- Phase 2: "Verantwortung vor Geschwindigkeit" – Prüfschleifen einbauen, nicht nur beschleunigen
+- Phase 1: "Regeln vor Skalierung" – Qualitätskriterien definieren
+- Phase 2: "Verantwortung vor Geschwindigkeit" – Prüfschleifen einbauen
 - Phase 3: "Evidenz vor Expansion" – Entscheidungen auf Basis gemessener Ergebnisse
 
-Diese Prinzipien sprachlich in die Phase-Beschreibungen einfließen lassen.
-
-FORMAT:
-- Jede Phase: Ziel (1 Satz) + 3-5 Bullets + Meilenstein
-- Meilenstein = konkret, messbar, erreichbar
+=============================================================================
+FORMAT v7.0 (STRIKT):
+- Jede Phase: Ziel (1 Satz) + GENAU 3 Bullets + Meilenstein (1 Satz)
+- KEINE Absätze > 6 Zeilen
 - KEINE langen Texte – nur Kernpunkte
 - KEINE generischen Definitionen ("Eine Roadmap ist...")
+- Durchschnittliche Satzlänge: maximal 18-22 Wörter
 
 ANTI-REDUNDANZ (STRIKT!):
 - Quick Wins wurden in quick_wins.md beschrieben → NICHT wiederholen
