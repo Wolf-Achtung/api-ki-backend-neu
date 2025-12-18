@@ -148,6 +148,55 @@ _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
     (r"\bDSGVO\b", "GDPR"),
     (r"\bHinweis\b", "Note"),
 
+    # --- QA-Gate v1: Extended content sanitization ---
+    # Priority/Scheduling terms
+    (r"\bPriorität\b", "Priority"),
+    (r"\bPrioritäten\b", "Priorities"),
+    (r"\bZeithorizont\b", "Time horizon"),
+    (r"\bNächste Schritte\b", "Next steps"),
+    (r"\bNächster Schritt\b", "Next step"),
+    # Cost/Business terms
+    (r"\bKosten\b", "Costs"),
+    (r"\bNutzen\b", "Benefits"),
+    (r"\bInvestition\b", "Investment"),
+    (r"\bInvestitionen\b", "Investments"),
+    (r"\bEinsparungen\b", "Savings"),
+    (r"\bEinsparung\b", "Saving"),
+    (r"\bAmortisation\b", "Payback"),
+    (r"\bFörderpotenzial\b", "Funding potential"),
+    (r"\bFörderprogramme\b", "Funding programmes"),
+    (r"\bFörderprogramm\b", "Funding programme"),
+    # Risk terms
+    (r"\bRisikolage\b", "Risk situation"),
+    (r"\bRisikoprofil\b", "Risk profile"),
+    (r"\bRisiko-Matrix\b", "Risk matrix"),
+    (r"\bRisiko\b", "Risk"),
+    # Process/Strategy terms
+    (r"\bUmsetzung\b", "Implementation"),
+    (r"\bStrategie\b", "Strategy"),
+    (r"\bRoadmap\b", "Roadmap"),
+    (r"\bZielbild\b", "Target state"),
+    # Scoring/Rating terms
+    (r"\bGesamt\b", "Overall"),
+    (r"\bDurchschnitt\b", "Average"),
+    (r"\bSehr gut\b", "Very good"),
+    (r"\bSolide\b", "Solid"),
+    (r"\bAusbaufähig\b", "Needs improvement"),
+    # Time units
+    (r"\bMonat\b", "Month"),
+    (r"\bMonate\b", "Months"),
+    (r"\bWoche\b", "Week"),
+    (r"\bWochen\b", "Weeks"),
+    (r"\bQuartal\b", "Quarter"),
+    # Table/Structure terms
+    (r"\bBeschreibung\b", "Description"),
+    (r"\bAuswirkung\b", "Impact"),
+    (r"\bVerantwortung\b", "Responsibility"),
+    (r"\bVerantwortlich\b", "Responsible"),
+    (r"\bQuelle\b", "Source"),
+    (r"\bWert\b", "Value"),
+    (r"\bVergleich\b", "Comparison"),
+
     # single tokens / common nouns
     (r"\bBranche\b", "Industry"),
     (r"\bBewertung\b", "Assessment"),
