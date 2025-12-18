@@ -177,6 +177,7 @@ _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
     (r"\bFörderprogramme\b", "Funding programmes"),
     (r"\bFörderprogramm\b", "Funding programme"),
     (r"\bFörderchance\b", "Funding opportunity"),
+    (r"\bFörderung\b", "Funding"),
     # Scenario labels
     (r"\bKonservativ\b", "Conservative"),
     (r"\bRealistisch\b", "Realistic"),
