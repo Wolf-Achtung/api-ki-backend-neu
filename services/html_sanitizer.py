@@ -326,7 +326,7 @@ def sanitize_en_locale_tokens(html: str, lang: str) -> str:
 
     out = html or ""
     for pattern, repl in _EN_LOCALE_REPLACEMENTS:
-        out = re.sub(pattern, repl, out)
+        out = re.sub(pattern, repl, out, flags=re.IGNORECASE)
 
     # Optional: Log leftover detection (warning only)
     de_check_words = ["Unternehmen", "Branche", "Bewertung", "Reifegrad",
