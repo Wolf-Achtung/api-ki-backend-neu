@@ -44,51 +44,56 @@ BRANCH_SHORT_LABEL (verbindlich):
 <!-- WORD_MINIMUM: 250 -->
 <!--
 =============================================================================
-EXECUTIVE SUMMARY v6.0 — STRATEGISCHE EINORDNUNG
+EXECUTIVE SUMMARY v7.0 — CONTENT QUALITY PACK
 =============================================================================
 
 DIE EXECUTIVE SUMMARY IST:
 - KEINE Inhaltsangabe des Reports
 - KEINE technische Erklärung
 - KEINE Auflistung von Scores oder Analysen
+- KEINE "Berater-Prosa" mit langen Schachtelsätzen
 
 DIE EXECUTIVE SUMMARY IST:
-Eine strategische Einordnung, die implizit beantwortet:
-"Was ist hier die eigentliche Entscheidung – und warum jetzt?"
+Eine knappe strategische Einordnung, die in unter 60 Sekunden lesbar ist.
+"Was ist die Entscheidung – und was ist der erste Schritt?"
 
 ZIELGRUPPE:
-Eine entscheidungsverantwortliche Person, die nicht täglich operativ mit KI arbeitet.
-Sachlich, strategisch, souverän. Keine Beratungssprache. Keine Tool-Euphorie.
+Eine entscheidungsverantwortliche Person mit wenig Zeit.
+Sachlich, kurz, handlungsorientiert. Keine Floskeln.
 
 =============================================================================
-VERBINDLICHE STRUKTUR — GENAU 3 ABSÄTZE:
+VERBINDLICHE STRUKTUR v7.0 — KNAPP UND KONKRET:
 =============================================================================
 
-ABSATZ 1: AUSGANGSLAGE (konzentriert)
-- Wo steht das Unternehmen im Kontext KI?
-- Welche strukturelle Herausforderung ist relevant für {{OFFERING_LABEL}}?
-- KEINE Detailanalyse, KEIN Score-Listing
-- 3-4 Sätze. Nüchtern. Faktisch.
+ELEMENT 1: PROFIL-SATZ (1 Satz)
+- Ein einziger Satz, der die Situation auf den Punkt bringt
+- Format: "{{BRANCH_CONTEXT_LABEL}} mit Fokus auf {{OFFERING_LABEL}} steht vor [Kernherausforderung]."
+- Maximal 25 Wörter
 
-ABSATZ 2: ZENTRALE STRATEGISCHE WEICHENSTELLUNG
-- Bezug auf den Gamechanger (ohne ihn zu wiederholen)
-- Was würde sich grundlegend ändern?
-- Warum ist das keine Optimierung, sondern eine Richtungsentscheidung?
-- 4-5 Sätze. Kernaussage des Reports.
+ELEMENT 2: DREI ENTSCHEIDUNGEN (Bullet-Liste)
+- Genau 3 Bullets, nummeriert
+- Jeder Bullet = 1 klare Entscheidung (nicht Analyse)
+- Format pro Bullet: "[Verb] + [Was] + [Warum in 5-7 Wörtern]"
+- Beispiele:
+  • "1. Standardisieren statt improvisieren – konsistente Qualität ohne Mehraufwand."
+  • "2. Review vor Freigabe – Compliance von Anfang an sichern."
+  • "3. Minimal-Stack festlegen – Klarheit vor Tool-Vielfalt."
 
-ABSATZ 3: KONSEQUENZ & HALTUNG
-- Was bedeutet das für Prioritäten, Tempo, Risiko?
-- Betonung des Sicherheitsgeländers (Governance, Kontrolle, Verantwortung)
-- Kein CTA, keine Empfehlung, keine Einladung
-- 3-4 Sätze. Abschließend. Ruhig.
+ELEMENT 3: KONKRETER NÄCHSTER SCHRITT (1 Satz)
+- Ein einziger Satz mit dem sofort umsetzbaren ersten Schritt
+- Format: "Konkreter nächster Schritt: [Was genau tun] [in welchem Zeitrahmen]."
+- Beispiel: "Konkreter nächster Schritt: Einen Workflow für {{OFFERING_LABEL}} standardisieren – in den nächsten 30 Minuten festlegen."
 
-PFLICHT (v6.1) - HALTUNGSSATZ im 3. Absatz:
-Ein Satz MUSS klar abgrenzen:
-- Tool-Euphorie → Nein ("Es geht nicht um das nächste KI-Tool")
-- Verantwortung → Ja ("Entscheidungen bleiben bei Menschen")
-- Kontrolle → Ja ("Governance-Rahmen vor Geschwindigkeit")
-Beispiel: "Die Transformation verändert Arbeitslogik, nicht die
-Verantwortlichkeit – Entscheidungen bleiben dort, wo sie hingehören."
+=============================================================================
+STILREGELN v7.0 (STRIKT):
+=============================================================================
+- Durchschnittliche Satzlänge: maximal 18-22 Wörter
+- Mehr Verben, weniger Nominalstil
+- VERBOTEN: "fundamental", "exponentiell", "kritische Schwelle", "ganzheitlich"
+- Jeder Absatz braucht eine Handlungsaussage: Entscheiden / Stoppen / Starten / Prüfen
+
+HALTUNGSSATZ (PFLICHT) im Element 3:
+Ein Nebensatz MUSS betonen: Entscheidungen bleiben bei Menschen, nicht bei Tools.
 
 =============================================================================
 TONALITÄT (STRIKT):
@@ -152,48 +157,45 @@ ANTI-PATTERNS:
 
   <p>
     <!--
-    ABSATZ 1: AUSGANGSLAGE
-    Wo steht das Unternehmen im KI-Kontext?
-    Welche strukturelle Herausforderung ist relevant?
-    Bezug zu {{BRANCH_CONTEXT_LABEL}} und {{OFFERING_LABEL}}.
-    3-4 Sätze. Faktisch. Keine Scores.
+    ELEMENT 1: PROFIL-SATZ (1 Satz, max. 25 Wörter)
+    "[Branche] mit Fokus auf [Hauptleistung] steht vor [Kernherausforderung]."
     -->
   </p>
 
-  <p>
+  <ol>
     <!--
-    ABSATZ 2: STRATEGISCHE WEICHENSTELLUNG
-    Was ist die zentrale Entscheidung?
-    Bezug zum Gamechanger (implizit, nicht wiederholen).
-    Warum Richtungsentscheidung, nicht Optimierung?
-    4-5 Sätze. Das Herzstück.
+    ELEMENT 2: DREI ENTSCHEIDUNGEN (nummerierte Liste)
+    Genau 3 Bullets. Format: "[Verb] + [Was] + [Warum in 5-7 Wörtern]"
+    Beispiel: "Standardisieren statt improvisieren – konsistente Qualität ohne Mehraufwand."
     -->
-  </p>
+    <li><!-- Entscheidung 1: [Verb] + [Was] – [Warum] --></li>
+    <li><!-- Entscheidung 2: [Verb] + [Was] – [Warum] --></li>
+    <li><!-- Entscheidung 3: [Verb] + [Was] – [Warum] --></li>
+  </ol>
 
   <p>
     <!--
-    ABSATZ 3: KONSEQUENZ & HALTUNG
-    Was bedeutet das für Prioritäten und Tempo?
-    Sicherheitsgeländer: Governance, Kontrolle, Verantwortung.
-    PFLICHT: Ein Haltungssatz, der Tool-Euphorie abgrenzt und
-    Verantwortung/Kontrolle betont (keine CTA, keine Ansprache).
-    Kein CTA. Ruhiger Abschluss.
-    3-4 Sätze.
+    ELEMENT 3: KONKRETER NÄCHSTER SCHRITT (1 Satz)
+    "Konkreter nächster Schritt: [Was] [Zeitrahmen]."
+    PFLICHT: Nebensatz mit "Entscheidungen bleiben bei Menschen".
     -->
+    <strong>Konkreter nächster Schritt:</strong>
+    <!-- [Handlung in 30 Minuten umsetzbar] – Entscheidungen bleiben bei Menschen, nicht bei Tools. -->
   </p>
 
 </section>
 
 <!--
 =============================================================================
-QUALITÄTS-SELBSTCHECK VOR OUTPUT:
+QUALITÄTS-SELBSTCHECK v7.0 VOR OUTPUT:
 =============================================================================
-□ Genau 3 Absätze?
-□ Kein Score-Listing oder Report-Inhaltsverzeichnis?
-□ Bezug zum Gamechanger ohne Wiederholung?
-□ Sicherheitsgeländer (Governance) erwähnt?
+□ Genau 1 Profil-Satz (max. 25 Wörter)?
+□ Genau 3 nummerierte Entscheidungen?
+□ Genau 1 "Konkreter nächster Schritt" Satz?
+□ Haltungssatz zu menschlicher Kontrolle vorhanden?
+□ Durchschnittliche Satzlänge unter 22 Wörtern?
+□ Keine Floskeln ("fundamental", "ganzheitlich", "exponentiell")?
 □ NULL direkte Anreden?
-□ KEINE Empfehlungen oder CTAs?
-□ Liest sich wie strategische Einordnung, nicht wie Analyse?
+□ In unter 60 Sekunden lesbar?
 =============================================================================
 -->

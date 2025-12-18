@@ -2135,6 +2135,202 @@
             height: 18pt;
             vertical-align: middle;
         }
+
+        /* ================================================
+           BRUTAL SUMMARY - Content Quality Pack v1
+           ================================================ */
+        .brutal-summary {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border: 2px solid var(--color-brand-primary);
+            border-radius: var(--radius-card);
+            padding: var(--space-lg);
+            margin: var(--space-section) 0;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .brutal-summary h2 {
+            color: var(--color-brand-accent);
+            font-size: var(--font-h2);
+            margin: 0 0 var(--space-md) 0;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        .brutal-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-md);
+        }
+        .brutal-block {
+            background: var(--color-bg-card);
+            border-radius: 8pt;
+            padding: var(--space-md);
+            border: 1px solid var(--color-border);
+        }
+        .brutal-block h4 {
+            margin: 0 0 var(--space-xs) 0;
+            font-size: var(--font-h4);
+            color: var(--color-text-strong);
+            display: flex;
+            align-items: center;
+            gap: 6pt;
+        }
+        .brutal-block ul {
+            margin: 0;
+            padding-left: var(--space-md);
+            font-size: var(--font-body);
+        }
+        .brutal-block li {
+            margin-bottom: 4pt;
+        }
+        .brutal-block.stop { border-left: 3px solid #dc2626; }
+        .brutal-block.change { border-left: 3px solid #f59e0b; }
+        .brutal-block.start { border-left: 3px solid #22c55e; }
+        .brutal-block.action { border-left: 3px solid #3b82f6; }
+
+        /* ================================================
+           SAFE START BOX - Finance Only
+           ================================================ */
+        .safe-start-box {
+            background: #f0fdf4;
+            border: 2px solid #22c55e;
+            border-radius: var(--radius-card);
+            padding: var(--space-md);
+            margin: var(--space-md) 0;
+            page-break-inside: avoid;
+        }
+        .safe-start-box h3 {
+            margin: 0 0 var(--space-sm) 0;
+            color: #166534;
+            display: flex;
+            align-items: center;
+            gap: 6pt;
+        }
+        .safe-start-box ol {
+            margin: 0;
+            padding-left: var(--space-md);
+        }
+        .safe-start-box li {
+            margin-bottom: 6pt;
+        }
+
+        /* ================================================
+           TOP-3 MUSS BOX
+           ================================================ */
+        .top3-muss-box {
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            border: 2px solid #f59e0b;
+            border-radius: var(--radius-card);
+            padding: var(--space-md);
+            margin: var(--space-md) 0;
+            page-break-inside: avoid;
+        }
+        .top3-muss-box h3 {
+            margin: 0 0 var(--space-sm) 0;
+            color: #92400e;
+            display: flex;
+            align-items: center;
+            gap: 6pt;
+        }
+        .top3-muss-box ol {
+            margin: 0;
+            padding-left: var(--space-md);
+            counter-reset: muss-counter;
+            list-style: none;
+        }
+        .top3-muss-box li {
+            margin-bottom: var(--space-sm);
+            padding-left: 8pt;
+            position: relative;
+            counter-increment: muss-counter;
+        }
+        .top3-muss-box li::before {
+            content: counter(muss-counter);
+            position: absolute;
+            left: -20pt;
+            top: 0;
+            width: 20pt;
+            height: 20pt;
+            background: #f59e0b;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 10pt;
+        }
+        .muss-reason {
+            font-size: var(--font-small);
+            color: var(--color-text-muted);
+            margin-top: 2pt;
+        }
+
+        /* ================================================
+           ROI-INTERPRETATION BOX
+           ================================================ */
+        .roi-interpretation-box {
+            background: #f8fafc;
+            border: 1px solid var(--color-border);
+            border-left: 4px solid var(--color-brand-primary);
+            border-radius: 6pt;
+            padding: var(--space-sm) var(--space-md);
+            margin: var(--space-sm) 0;
+            font-size: var(--font-body);
+        }
+        .roi-interpretation-box h4 {
+            margin: 0 0 6pt 0;
+            font-size: var(--font-h4);
+            color: var(--color-brand-accent);
+        }
+        .roi-interpretation-box ul {
+            margin: 0 0 6pt 0;
+            padding-left: var(--space-md);
+        }
+        .roi-interpretation-box li {
+            margin-bottom: 2pt;
+        }
+        .roi-interpretation-box .roi-formula {
+            font-style: italic;
+            color: var(--color-text-muted);
+            font-size: var(--font-small);
+            padding-top: 6pt;
+            border-top: 1px dashed var(--color-border);
+            margin-top: 6pt;
+        }
+
+        /* ================================================
+           RECOMMENDATIONS MUSS/OPTIONEN STYLING
+           ================================================ */
+        .recommendations-muss {
+            margin: var(--space-sm) 0;
+            padding-left: var(--space-lg);
+        }
+        .recommendations-muss li {
+            margin-bottom: var(--space-sm);
+            padding-left: 4pt;
+        }
+        .recommendations-muss .muss-detail {
+            font-size: var(--font-small);
+            color: var(--color-text-muted);
+            margin: 4pt 0 0 0;
+        }
+        .recommendations-optionen {
+            margin: var(--space-sm) 0;
+            padding-left: var(--space-md);
+            list-style-type: disc;
+        }
+        .recommendations-optionen li {
+            margin-bottom: 6pt;
+        }
+        .option-timing {
+            font-size: var(--font-small);
+            color: var(--color-text-muted);
+            background: var(--color-bg-surface);
+            padding: 2pt 6pt;
+            border-radius: var(--radius-tag);
+            margin-left: 6pt;
+        }
     </style>
 </head>
 <body>
@@ -2342,6 +2538,136 @@
                         </div>
                     </div>
                     <div class="exec-divider"></div>
+                </section>
+
+                <!-- CONTENT QUALITY PACK v1: BRUTAL SUMMARY -->
+                <!-- Platzierung: Früh im Report (Seite 2-3), direkt nach Executive Overview -->
+                <section class="section brutal-summary" id="exec-brutal-summary">
+                    <h2>
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        In 90 Sekunden entscheidungsfähig
+                    </h2>
+                    <div class="brutal-summary-grid">
+                        <!-- Block 1: Heute ineffizient -->
+                        <div class="brutal-block stop">
+                            <h4>
+                                <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#dc2626" stroke-width="2">
+                                    <circle cx="8" cy="8" r="6"/>
+                                    <line x1="6" y1="6" x2="10" y2="10"/>
+                                    <line x1="10" y1="6" x2="6" y2="10"/>
+                                </svg>
+                                Heute ineffizient
+                            </h4>
+                            <ul>
+                                {% if zeitersparnis_prioritaet %}
+                                <li>{{ zeitersparnis_prioritaet | truncate(120, True) }}</li>
+                                {% else %}
+                                <li>Zu viel manuelle Auswertung und Nacharbeit</li>
+                                {% endif %}
+                                <li>Zu viele Einzelschritte ohne Standard-Bausteine</li>
+                                <li>Compliance-/Qualitätsprüfungen kosten zu viel Zeit</li>
+                            </ul>
+                        </div>
+                        <!-- Block 2: In 90 Tagen anders -->
+                        <div class="brutal-block change">
+                            <h4>
+                                <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#f59e0b" stroke-width="2">
+                                    <path d="M8 2L14 8L8 14L2 8L8 2Z"/>
+                                </svg>
+                                In 90 Tagen anders
+                            </h4>
+                            <ul>
+                                {% if COMPANY_SIZE == "solo" %}
+                                <li>Standard-Analyse-Backbone statt Einzelfall-Handwerk</li>
+                                {% else %}
+                                <li>Auditierbare Workflows statt Excel-/Dokumenteninseln</li>
+                                {% endif %}
+                                <li>Klare Prüfpunkte + wiederverwendbare Module</li>
+                                <li>Messbare Zeitgewinne durch konsistente Prozesse</li>
+                            </ul>
+                        </div>
+                        <!-- Block 3: Ab morgen lassen -->
+                        <div class="brutal-block start">
+                            <h4>
+                                <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#22c55e" stroke-width="2">
+                                    <rect x="2" y="2" width="12" height="12" rx="2"/>
+                                    <line x1="5" y1="8" x2="11" y2="8"/>
+                                </svg>
+                                Ab morgen lassen
+                            </h4>
+                            <ul>
+                                <li>Tool-Zoo und neue Experimente ohne Nutzenbeleg</li>
+                                <li>Ad-hoc-Prompts ohne Standards und Review-Regeln</li>
+                                <li>Compliance-Textbausteine ohne Quellen/Prüfung</li>
+                            </ul>
+                        </div>
+                        <!-- Block 4: Startpunkt in 30 Minuten -->
+                        <div class="brutal-block action">
+                            <h4>
+                                <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#3b82f6" stroke-width="2">
+                                    <polygon points="5,3 13,8 5,13"/>
+                                </svg>
+                                Startpunkt in 30 Minuten
+                            </h4>
+                            <ul>
+                                <li><strong>1.</strong> Minimal-Stack festlegen (1–2 Tools, 1 Ablageort)</li>
+                                <li><strong>2.</strong> Einen Workflow standardisieren (Input → Draft → Review)</li>
+                                <li><strong>3.</strong> Eine Review-Regel fixieren (Vier-Augen / Quellenpflicht)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- TOP-3 MUSS-MAßNAHMEN -->
+                    <div class="top3-muss-box">
+                        <h3>
+                            <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M8 2L10 6L14 6.5L11 9.5L12 14L8 12L4 14L5 9.5L2 6.5L6 6L8 2Z"/>
+                            </svg>
+                            Top-3 MUSS-Maßnahmen
+                        </h3>
+                        <ol>
+                            <li>
+                                <strong>Minimal-Stack definieren</strong> – 1 zentrales KI-Tool, 1 Ablage, keine Experimente
+                                <div class="muss-reason">Warum jetzt? Klarheit vor Komplexität schafft Handlungsfähigkeit.</div>
+                            </li>
+                            <li>
+                                <strong>Ersten Standard-Workflow etablieren</strong> – Input → KI-Draft → Review → Freigabe
+                                <div class="muss-reason">Warum jetzt? Ohne Prozess keine messbare Verbesserung.</div>
+                            </li>
+                            <li>
+                                <strong>Review-Regel einführen</strong> – Vier-Augen-Prinzip und Quellenpflicht für KI-Outputs
+                                <div class="muss-reason">Warum jetzt? Qualität und Compliance von Anfang an sichern.</div>
+                            </li>
+                        </ol>
+                        <p class="small muted" style="margin-top: 8pt;">
+                            Alle weiteren Maßnahmen sind <strong>OPTIONEN</strong> für Phase 2/3 – erst nach stabiler Basis.
+                        </p>
+                    </div>
+
+                    <!-- SAFE START BOX - Nur für Finance/High-Risk -->
+                    {% if (BRANCHE_LABEL and ('finan' in BRANCHE_LABEL|lower or 'versicher' in BRANCHE_LABEL|lower or 'bank' in BRANCHE_LABEL|lower)) or AI_ACT_RISK_LEVEL == 'high-risk' %}
+                    <div class="safe-start-box">
+                        <h3>
+                            <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M8 1L14 4V8C14 11.3 11.3 14 8 15C4.7 14 2 11.3 2 8V4L8 1Z"/>
+                                <polyline points="5 8 7 10 11 6"/>
+                            </svg>
+                            Safe Start (30–45 Tage, ohne regulatorisches Risiko)
+                        </h3>
+                        <ol>
+                            <li><strong>Regelwerks-Assistenz intern aufsetzen</strong> – nur internes Material, keine Kundendaten. KI analysiert interne Regelwerke, Handbücher und Richtlinien.</li>
+                            <li><strong>Einen Report-Baustein standardisieren</strong> – Executive Summary Draft + menschliche Freigabe. KI erstellt Entwurf, Mensch prüft und gibt frei.</li>
+                            <li><strong>Review-Workflow definieren</strong> – Vier-Augen + Quellenpflicht + Logging light. Jeder KI-Output durchläuft dokumentierte Prüfung.</li>
+                        </ol>
+                        <p class="small muted" style="margin-top: 8pt;">
+                            Dieser Einstieg vermeidet regulatorische Risiken und schafft Vertrauen durch nachvollziehbare Prozesse.
+                        </p>
+                    </div>
+                    {% endif %}
                 </section>
 
                 <!-- G20: KI-STACK SUMMARY CARD -->
@@ -2615,6 +2941,18 @@
                     </div>
                     <div class="section-body">
                         {{ BUSINESS_CASE_ENGINE_HTML|safe }}
+                        <!-- ROI-Interpretation Mini-Box (Content Quality Pack v1) -->
+                        <div class="roi-interpretation-box">
+                            <h4>📊 ROI-Interpretation</h4>
+                            <ul>
+                                <li><strong>Planen:</strong> Monte-Carlo P50 (Baseline) – konservative Annahme für Budgetierung</li>
+                                <li><strong>Ziel:</strong> Realistic / G30 – erreichbar bei strukturierter Umsetzung</li>
+                                <li><strong>Upside:</strong> P80/P90 oder Optimistic – bei hoher Umsetzungsdisziplin und starker Governance</li>
+                            </ul>
+                            <p class="roi-formula">
+                                Planen Sie mit P50 als Baseline, steuern Sie auf Realistic als Ziel und betrachten Sie P80/P90 bzw. Optimistic als Upside – abhängig von Umsetzungsdisziplin und Governance.
+                            </p>
+                        </div>
                     </div>
                 </section>
                 {% endif %}
@@ -2633,6 +2971,18 @@
                     </div>
                     <div class="section-body">
                         {{ BUSINESS_CASE_SIM_HTML|safe }}
+                        <!-- ROI-Interpretation Mini-Box (Content Quality Pack v1) -->
+                        <div class="roi-interpretation-box">
+                            <h4>📊 So lesen Sie die Szenarien</h4>
+                            <ul>
+                                <li><strong>P50 (Median):</strong> 50% Wahrscheinlichkeit, diesen Wert zu erreichen oder zu übertreffen – nutzen Sie P50 für Ihre Budgetplanung</li>
+                                <li><strong>P80:</strong> 80% Wahrscheinlichkeit – optimistisches, aber realistisches Ziel bei guter Umsetzung</li>
+                                <li><strong>P90:</strong> 90% Wahrscheinlichkeit – Upside bei exzellenter Governance und konsequenter Durchführung</li>
+                            </ul>
+                            <p class="roi-formula">
+                                Planen Sie mit P50 als Baseline, steuern Sie auf Realistic als Ziel und betrachten Sie P80/P90 als Upside – abhängig von Umsetzungsdisziplin und Governance.
+                            </p>
+                        </div>
                     </div>
                 </section>
                 {% endif %}
