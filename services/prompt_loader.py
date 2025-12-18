@@ -28,6 +28,34 @@ log = logging.getLogger(__name__)
 
 DEFAULT_LANG = os.getenv("PROMPTS_DEFAULT_LANG", "de")
 
+# =============================================================================
+# Multilingual v1: EN alias mapping (German section names → English filenames)
+# =============================================================================
+# When lang=en and a German-named section is requested, try the English equivalent.
+# This prevents EN profiles from falling back to prompts/de/*.md
+ALIASES_EN: Dict[str, str] = {
+    # German section name → English filename (without .md)
+    "strategie_governance": "strategy_governance",
+    "wettbewerb_benchmark": "competition_benchmark",
+    "technologie_prozesse": "technology_processes",
+    "tools_empfehlungen": "tools_recommendations",
+    "foerderpotenzial": "funding_potential",
+    "ki_aktivitaeten_ziele": "ai_activities_goals",
+    "monetarisierung": "monetization",
+    "kickoff_vorlage": "kickoff_template",
+    # foerderprogramme has its own EN file (with EU-core preference)
+    "foerderprogramme": "foerderprogramme",
+    # Additional common mappings
+    "zusammenfassung": "executive_summary",
+    "kurzfazit": "exec_snapshot",
+    "naechste_schritte": "next_actions",
+    "schnellgewinne": "quick_wins",
+    "datenreife": "data_readiness",
+    "kosten_uebersicht": "costs_overview",
+    "geschaeftsfall": "business_case",
+    "org_veraenderung": "org_change",
+}
+
 # FIX: Use absolute path based on this file's location
 # __file__ = /app/services/prompt_loader.py
 # .parent = /app/services/
@@ -100,7 +128,13 @@ def _read_manifest(lang: str) -> Dict[str, Any]:
     return {}
 
 
-def _resolve_section_path(section: str, lang: str) -> Tuple[Optional[Path], str]:
+def _resolve_section_path(section: str, lang: str, _tried_alias: bool = False) -> Tuple[Optional[Path], str]:
+    """
+    Resolve section name to file path.
+
+    Multilingual v1: For lang=en, tries ALIASES_EN mapping before fallback.
+    This ensures German-named sections find their English equivalents.
+    """
     manifest = _read_manifest(lang)
     if isinstance(manifest, dict):
         rel = manifest.get(section)
@@ -117,7 +151,25 @@ def _resolve_section_path(section: str, lang: str) -> Tuple[Optional[Path], str]
             log.debug(f"✅ Found prompt: {p}")
             return p, lang
 
-    # fallback to default lang
+    # =========================================================================
+    # Multilingual v1: Try EN alias before falling back to DE
+    # =========================================================================
+    if lang == "en" and not _tried_alias:
+        alias = ALIASES_EN.get(section)
+        if alias and alias != section:
+            log.debug(f"🔄 Trying EN alias: {section} → {alias}")
+            result = _resolve_section_path(alias, lang, _tried_alias=True)
+            if result[0]:
+                return result
+
+    # =========================================================================
+    # HARD BLOCK: EN must NEVER fall back to DE
+    # =========================================================================
+    if lang == "en":
+        log.warning(f"❌ EN prompt '{section}' not found (no DE fallback allowed)")
+        return None, lang
+
+    # fallback to default lang (only for non-EN)
     if lang != DEFAULT_LANG:
         log.debug(f"⚠️ Prompt '{section}' not found for lang '{lang}', trying default lang '{DEFAULT_LANG}'")
         return _resolve_section_path(section, DEFAULT_LANG)
