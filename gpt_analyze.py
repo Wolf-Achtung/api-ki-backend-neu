@@ -5515,6 +5515,31 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["score_befaehigung"] = scores.get("enablement", 0)
     sections["score_gesamt"] = scores.get("overall", 0)
 
+    # ==========================================================================
+    # Badges: Derived from scores for QA-Gate compliance
+    # badge_security: Based on security score (score_sicherheit)
+    # badge_compliance: Based on governance score (score_governance)
+    # badge_efficiency: Based on value/efficiency score (score_nutzen)
+    # ==========================================================================
+    sec_score = scores.get("security", 0)
+    gov_score = scores.get("governance", 0)
+    val_score = scores.get("value", 0)
+
+    # Badge status: "green" if score >= 60, "yellow" if >= 30, "red" otherwise
+    def _badge_status(score: float) -> str:
+        if score >= 60:
+            return "green"
+        elif score >= 30:
+            return "yellow"
+        return "red"
+
+    sections["badge_security"] = _badge_status(sec_score)
+    sections["badge_compliance"] = _badge_status(gov_score)
+    sections["badge_efficiency"] = _badge_status(val_score)
+
+    log.debug("[%s] Badges set: security=%s, compliance=%s, efficiency=%s",
+              run_id, sections["badge_security"], sections["badge_compliance"], sections["badge_efficiency"])
+
     # Copy all label variables from answers to sections using loops
     # Single-choice labels with fallback
     label_with_fallback = [

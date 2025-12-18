@@ -120,9 +120,14 @@ from typing import List, Tuple, Union, Callable
 LocaleRepl = Union[str, Callable[[re.Match], str]]
 
 _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
-    # longer phrases first (avoid partial collisions)
+    # ==========================================================================
+    # LONGER PHRASES FIRST (avoid partial collisions)
+    # ==========================================================================
     (r"\bIhr Unternehmen\b", "Your Company"),
     (r"\bIhre Branche\b", "Your industry"),
+    (r"\bIhre nächsten\b", "Your next"),
+    (r"\bIhre Rechte\b", "Your rights"),
+    (r"\bIhr Kerngeschäft\b", "Your core business"),
     (r"\bUnternehmensgröße\b", "Company size"),
     (r"\bUnternehmensprofil\b", "Company profile"),
     (r"\bHandlungsempfehlungen\b", "Recommendations"),
@@ -130,65 +135,103 @@ _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
     (r"\bBranchenspezifisch\b", "Industry-specific"),
     (r"\bBranchenmedian\b", "Industry median"),
     (r"\bBranchenvergleich\b", "Industry comparison"),
+    (r"\bWesentliche Risiken\b", "Key risks"),
+    (r"\bNächste Schritte\b", "Next steps"),
+    (r"\bNächster Schritt\b", "Next step"),
+    (r"\bEintrittswahrscheinlichkeit\b", "Probability"),
+    (r"\bDSGVO-konforme\b", "GDPR-compliant"),
+    (r"\bDSGVO-konform\b", "GDPR-compliant"),
 
-    # --- 3.1.4.17: extended EN locale replacements (plural + UI synonyms) ---
+    # --- Extended EN locale replacements (plural + UI synonyms) ---
     (r"\bInterne Review-Bewertungen\b", "Internal review ratings"),
     (r"\bBewertungen\b", "Assessments"),
     (r"\bMaßnahmenplan\b", "Action plan"),
     (r"\bMaßnahmen\b", "Actions"),
-    (r"\bZusammenfassungen\b", "Summaries"),  # 3.1.4.18: plural before singular
+    (r"\bZusammenfassungen\b", "Summaries"),
     (r"\bZusammenfassung\b", "Summary"),
     (r"\bEmpfehlungen\b", "Recommendations"),
     (r"\bEmpfehlung\b", "Recommendation"),
 
-    # --- 3.1.4.18: compound/plural + GDPR ---
-    (r"\bBranchen-", "Industry-"),  # Prefix for Branchen-Templates, Branchen-Module, etc.
-    (r"\bBranchen\b", "Industries"),  # plural before singular
+    # --- Compound/plural + GDPR ---
+    (r"\bBranchen-", "Industry-"),
+    (r"\bBranchen\b", "Industries"),
     (r"\bDatenschutz\b", "Data protection"),
     (r"\bDSGVO\b", "GDPR"),
     (r"\bHinweis\b", "Note"),
+    (r"\bHinweise\b", "Notes"),
 
-    # --- QA-Gate v1: Extended content sanitization ---
-    # Priority/Scheduling terms
-    (r"\bPriorität\b", "Priority"),
-    (r"\bPrioritäten\b", "Priorities"),
-    (r"\bZeithorizont\b", "Time horizon"),
-    (r"\bNächste Schritte\b", "Next steps"),
-    (r"\bNächster Schritt\b", "Next step"),
-    # Cost/Business terms
+    # ==========================================================================
+    # BUSINESS CASE / FINANCIAL TERMS
+    # ==========================================================================
     (r"\bKosten\b", "Costs"),
     (r"\bNutzen\b", "Benefits"),
+    (r"\bNutzenpotenzial\b", "Benefit potential"),
     (r"\bInvestition\b", "Investment"),
     (r"\bInvestitionen\b", "Investments"),
     (r"\bEinsparungen\b", "Savings"),
     (r"\bEinsparung\b", "Saving"),
     (r"\bAmortisation\b", "Payback"),
+    (r"\bWirtschaftlichkeit\b", "Cost-effectiveness"),
+    (r"\bAufwand\b", "Effort"),
     (r"\bFörderpotenzial\b", "Funding potential"),
     (r"\bFörderprogramme\b", "Funding programmes"),
     (r"\bFörderprogramm\b", "Funding programme"),
-    # Risk terms
+    (r"\bFörderchance\b", "Funding opportunity"),
+    # Scenario labels
+    (r"\bKonservativ\b", "Conservative"),
+    (r"\bRealistisch\b", "Realistic"),
+    (r"\bOptimistisch\b", "Optimistic"),
+
+    # ==========================================================================
+    # RISK / STRATEGY TERMS
+    # ==========================================================================
     (r"\bRisikolage\b", "Risk situation"),
     (r"\bRisikoprofil\b", "Risk profile"),
     (r"\bRisiko-Matrix\b", "Risk matrix"),
     (r"\bRisiko\b", "Risk"),
-    # Process/Strategy terms
+    (r"\bRisiken\b", "Risks"),
     (r"\bUmsetzung\b", "Implementation"),
     (r"\bStrategie\b", "Strategy"),
     (r"\bRoadmap\b", "Roadmap"),
     (r"\bZielbild\b", "Target state"),
-    # Scoring/Rating terms
+    (r"\bZeitplan\b", "Timeline"),
+    (r"\bPriorisierung\b", "Prioritization"),
+    (r"\bPriorität\b", "Priority"),
+    (r"\bPrioritäten\b", "Priorities"),
+    (r"\bZeithorizont\b", "Time horizon"),
+    (r"\bSchwerpunkt\b", "Focus"),
+
+    # ==========================================================================
+    # SCORING / RATING TERMS
+    # ==========================================================================
     (r"\bGesamt\b", "Overall"),
     (r"\bDurchschnitt\b", "Average"),
+    (r"\bTop-Quartil\b", "Top quartile"),
     (r"\bSehr gut\b", "Very good"),
     (r"\bSolide\b", "Solid"),
     (r"\bAusbaufähig\b", "Needs improvement"),
-    # Time units
+
+    # ==========================================================================
+    # KPI / DIMENSION LABELS
+    # ==========================================================================
+    (r"\bSicherheit\b", "Security"),
+    (r"\bWertschöpfung\b", "Value creation"),
+    (r"\bBefähigung\b", "Enablement"),
+    (r"\bGovernance\b", "Governance"),
+
+    # ==========================================================================
+    # TIME UNITS
+    # ==========================================================================
     (r"\bMonat\b", "Month"),
     (r"\bMonate\b", "Months"),
     (r"\bWoche\b", "Week"),
     (r"\bWochen\b", "Weeks"),
     (r"\bQuartal\b", "Quarter"),
-    # Table/Structure terms
+    (r"\bQuartale\b", "Quarters"),
+
+    # ==========================================================================
+    # TABLE / STRUCTURE TERMS
+    # ==========================================================================
     (r"\bBeschreibung\b", "Description"),
     (r"\bAuswirkung\b", "Impact"),
     (r"\bVerantwortung\b", "Responsibility"),
@@ -196,15 +239,31 @@ _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
     (r"\bQuelle\b", "Source"),
     (r"\bWert\b", "Value"),
     (r"\bVergleich\b", "Comparison"),
+    (r"\bSchätzung\b", "Estimate"),
+    (r"\bNäherungen\b", "Approximations"),
+    (r"\bNäherung\b", "Approximation"),
 
-    # single tokens / common nouns
+    # ==========================================================================
+    # HEADER / META TERMS
+    # ==========================================================================
+    (r"\bÜberblick\b", "Overview"),
+    (r"\bReportdatum\b", "Report date"),
+    (r"\bHauptziel\b", "Primary goal"),
+    (r"\bKurzfazit\b", "Brief summary"),
+    (r"\bBundesland\b", "Region"),
+
+    # ==========================================================================
+    # SINGLE TOKENS / COMMON NOUNS
+    # ==========================================================================
     (r"\bBranche\b", "Industry"),
     (r"\bBewertung\b", "Assessment"),
     (r"\bReifegrad\b", "Maturity level"),
     (r"\bKennzahlen\b", "KPIs"),
-    (r"\bRisiken\b", "Risks"),
+    (r"\bUnternehmen\b", "Company"),
 
-    # 3.1.4.17: word-boundary safe replacements inside HTML (tag contexts only)
+    # ==========================================================================
+    # WORD-BOUNDARY SAFE REPLACEMENTS (tag contexts)
+    # ==========================================================================
     (r">\s*Unternehmen\s*<", "> Company <"),
     (r">\s*Unternehmens\s*", "> Company "),
 ]
