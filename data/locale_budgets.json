@@ -1,0 +1,46 @@
+{
+  "_comment": "Locale budget configuration for Multilingual v2",
+  "_version": "2.0.0",
+  "en": {
+    "content_max_hits": 5,
+    "rewrite_threshold": 5,
+    "max_passes": 1,
+    "max_sections": 5,
+    "ui_max_hits": 0
+  },
+  "de": {
+    "content_max_hits": 999,
+    "rewrite_threshold": 999,
+    "max_passes": 0,
+    "max_sections": 0,
+    "ui_max_hits": 999
+  },
+  "fr": {
+    "content_max_hits": 10,
+    "rewrite_threshold": 10,
+    "max_passes": 1,
+    "max_sections": 3,
+    "ui_max_hits": 0
+  },
+  "es": {
+    "content_max_hits": 10,
+    "rewrite_threshold": 10,
+    "max_passes": 1,
+    "max_sections": 3,
+    "ui_max_hits": 0
+  },
+  "it": {
+    "content_max_hits": 10,
+    "rewrite_threshold": 10,
+    "max_passes": 1,
+    "max_sections": 3,
+    "ui_max_hits": 0
+  },
+  "defaults": {
+    "content_max_hits": 20,
+    "rewrite_threshold": 20,
+    "max_passes": 1,
+    "max_sections": 3,
+    "ui_max_hits": 0
+  }
+}
