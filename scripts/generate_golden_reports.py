@@ -609,6 +609,83 @@ def scan_html_for_forbidden_tokens(html_bytes: bytes, profile_id: str) -> Tuple[
 
 
 # =============================================================================
+# QA-Gate v1: Prompt-leak detection (LLM assistant phrases in final HTML)
+# =============================================================================
+PROMPT_LEAK_PHRASES: List[str] = [
+    # German assistant waiting phrases
+    "du hast noch keine frage",
+    "du hast noch keine aufgabe",
+    "sie haben noch keine frage",
+    "bitte beschreibe, wobei ich dir helfen",
+    "bitte beschreibe kurz, was du benötigst",
+    "wie kann ich dir helfen",
+    "wie kann ich ihnen helfen",
+    "womit kann ich ihnen dienen",
+    "ich stehe dir zur verfügung",
+    "ich stehe ihnen zur verfügung",
+    "keine eingabe erkannt",
+    "keine anfrage erkannt",
+    # German generic LLM responses
+    "ich sehe keine konkrete frage",
+    "als ki-assistent",
+    "als sprachmodell kann ich",
+    "ich bin ein ki-assistent",
+    "ich bin ein sprachmodell",
+    # English assistant waiting phrases
+    "you haven't asked a question yet",
+    "please describe what you need help with",
+    "how can i help you",
+    "how can i assist you",
+    "i'm waiting for your input",
+    "no input detected",
+    "what can i do for you today",
+    # English generic LLM responses
+    "i don't see a specific question",
+    "as an ai assistant",
+    "as a language model",
+    "i'm an ai language model",
+    "i'm just an ai",
+]
+
+
+def scan_html_for_prompt_leaks(html_text: str, profile_id: str) -> Tuple[bool, List[str]]:
+    """
+    QA-Gate v1: Scan HTML for prompt-leak phrases.
+
+    These are LLM assistant phrases that indicate the model didn't understand
+    the task and output generic waiting/help text instead of report content.
+
+    Args:
+        html_text: Decoded HTML content
+        profile_id: For logging
+
+    Returns:
+        (passed: bool, found_leaks: list of found leak phrases)
+    """
+    if not html_text:
+        return True, []
+
+    # Strip style/script/base64 before scanning
+    scan_text = _strip_noncontent(html_text).lower()
+
+    found_leaks = []
+    for phrase in PROMPT_LEAK_PHRASES:
+        if phrase.lower() in scan_text:
+            found_leaks.append(phrase)
+
+    if found_leaks:
+        print(f"[prompt-leak] ❌ FAILED for {profile_id} - {len(found_leaks)} prompt-leak phrase(s) found:")
+        for leak in found_leaks[:5]:
+            print(f"[prompt-leak]   - \"{leak}\"")
+        if len(found_leaks) > 5:
+            print(f"[prompt-leak]   ... and {len(found_leaks) - 5} more")
+        return False, found_leaks
+    else:
+        print(f"[prompt-leak] ✅ PASSED for {profile_id} - no prompt-leak phrases")
+        return True, []
+
+
+# =============================================================================
 # Multilingual v1 Step 5: UI text extractor using html.parser
 # =============================================================================
 class _UITextExtractor(HTMLParser):
@@ -751,10 +828,11 @@ def scan_html_for_locale_leaks(html_text: str, expected_lang: str, profile_id: s
         else:
             print(f"[locale-scan-ui] ✅ PASSED for {profile_id} - no German in UI elements")
     else:
-        # No UI markers found - backward compatibility: warn but don't fail
-        print(f"[locale-scan-ui] ⚠️ SKIPPED for {profile_id} - no data-ui=\"1\" markers found (legacy template)")
-        # Fall back to old behavior: scan all content as UI (soft fail for now)
-        # In v1, we skip hard fail for legacy templates
+        # =======================================================================
+        # QA-Gate v1: No UI markers = HARD FAIL (must have data-ui="1" markers)
+        # =======================================================================
+        print(f"[locale-scan-ui] ❌ FAILED for {profile_id} - no data-ui=\"1\" markers found (template must have UI markers)")
+        return False, ["NO_UI_MARKERS_FOUND"]
 
     # ==========================================================================
     # CONTENT-SOFT SCAN (Score/Warn, No Fail)
@@ -1249,6 +1327,19 @@ def process_profile(
                 "briefing_id": briefing_id,
                 "status": "gate_failed",
                 "error": f"Forbidden tokens in final HTML: {found_tokens}",
+            }
+
+    # 5.55 QA-Gate v1: Prompt-leak scan on final HTML (Hard-Fail Gate)
+    # Catches LLM assistant phrases that indicate task misunderstanding
+    if run_gate and html_bytes:
+        html_text_for_leak = html_bytes.decode("utf-8", errors="replace")
+        leak_scan_passed, found_leaks = scan_html_for_prompt_leaks(html_text_for_leak, profile_name)
+        if not leak_scan_passed:
+            return {
+                "profile": profile_name,
+                "briefing_id": briefing_id,
+                "status": "gate_failed",
+                "error": f"Prompt-leak phrases in final HTML: {found_leaks[:3]}",
             }
 
     # 5.6 TEIL 3.1.1: Locale scan for EN profiles (German UI = Hard-Fail)

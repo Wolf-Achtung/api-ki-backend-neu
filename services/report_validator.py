@@ -371,6 +371,39 @@ class ReportValidator:
         "according to your input",
         "as per your request",
         "as mentioned in your question",
+        # =================================================================
+        # QA-Gate v1: Additional prompt-leak patterns
+        # =================================================================
+        # German assistant waiting phrases
+        "du hast noch keine frage",
+        "du hast noch keine aufgabe",
+        "sie haben noch keine frage",
+        "sie haben noch keine aufgabe",
+        "bitte beschreibe, wobei ich dir helfen",
+        "bitte beschreibe kurz, was du benötigst",
+        "bitte beschreiben sie, wobei ich ihnen helfen",
+        "ich stehe dir zur verfügung",
+        "ich stehe ihnen zur verfügung",
+        "womit kann ich ihnen dienen",
+        "womit kann ich dir dienen",
+        "was führt sie zu mir",
+        "was führt dich zu mir",
+        "ich warte auf ihre eingabe",
+        "ich warte auf deine eingabe",
+        "keine eingabe erkannt",
+        "keine anfrage erkannt",
+        # English assistant waiting phrases
+        "you haven't asked a question yet",
+        "you haven't provided a task",
+        "please describe what you need help with",
+        "please tell me what you'd like",
+        "i'm waiting for your input",
+        "no input detected",
+        "no request detected",
+        "what can i do for you today",
+        "what brings you here today",
+        "i'm ready when you are",
+        "just let me know what you need",
     ]
 
     # SPRINT N: Extended SIZE_FORBIDDEN for Solo personas
