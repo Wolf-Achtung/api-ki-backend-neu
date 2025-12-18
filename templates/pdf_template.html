@@ -2197,7 +2197,10 @@
         <span class="meta-value">{{ report_date }}</span>
       </div>
     </div>
-    <div class="badge-row" data-ui="1">
+    <div class="badge-row" data-ui="1"
+         data-badge-security="{{ badge_security or 'pending' }}"
+         data-badge-compliance="{{ badge_compliance or 'pending' }}"
+         data-badge-efficiency="{{ badge_efficiency or 'pending' }}">
       <span class="badge badge-eu">
         <span class="badge-dot"></span>
         EU AI Act – PLATIN++ Branchenbest Practices
