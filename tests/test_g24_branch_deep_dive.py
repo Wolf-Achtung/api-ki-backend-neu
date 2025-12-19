@@ -288,14 +288,14 @@ class TestG24ContentValidation:
     """Tests for content validation requirements."""
 
     def test_trends_minimum_count(self) -> None:
-        """Test that prompt requires minimum 3 trends."""
+        """Test that prompt specifies trend count (Content Quality Pack v1.2: max 3)."""
         prompts_dir = Path(__file__).parent.parent / "prompts"
         prompt_file = prompts_dir / "de" / "branch_deep_dive.md"
         content = prompt_file.read_text(encoding="utf-8")
 
-        # Check for trend count requirement
-        assert "3–5 Trends" in content or "3-5 Trends" in content or "3 to 5" in content, \
-            "Prompt should require 3-5 trends"
+        # Check for trend count requirement (updated: max. 3 Trends for conciseness)
+        assert "max. 3 Trends" in content or "3–5 Trends" in content or "3-5 Trends" in content, \
+            "Prompt should specify trend count (max. 3 or 3-5)"
 
     def test_risks_opportunities_count(self) -> None:
         """Test that prompt requires Top-5 for risks and opportunities."""
