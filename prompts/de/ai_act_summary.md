@@ -88,14 +88,16 @@ Developer:
     Berater:innen hinzugezogen werden.
   </p>
 
-  <h3>Relevanz für „{{HAUPTLEISTUNG}}“ in der Branche {{BRANCHE_LABEL}}</h3>
+  <h3>Relevanz für „{{HAUPTLEISTUNG}}" in der Branche {{BRANCHE_LABEL}}</h3>
   <p>
     Der Einsatz von KI im Bereich <strong>{{HAUPTLEISTUNG}}</strong> innerhalb der Branche
     <strong>{{BRANCHE_LABEL}}</strong> fällt in der Regel <strong>nicht in die Hochrisiko-Kategorie
-    gemäß Art.&nbsp;6</strong>. Dies gilt insbesondere, wenn KI zur Textgenerierung,
-    Analyse, Wissensaufbereitung oder internen Unterstützung eingesetzt wird und keine
-    automatisierten Einzelentscheidungen über Personen erfolgen (z.&nbsp;B. Kreditvergabe,
-    medizinische Diagnosen, Personalentscheidungen).
+    gemäß Art.&nbsp;6</strong>.
+  </p>
+  <p>
+    Dies gilt insbesondere bei KI zur Textgenerierung, Analyse oder internen Unterstützung.
+    Automatisierte Einzelentscheidungen über Personen (Kreditvergabe, Diagnosen, Personal)
+    würden strengere Anforderungen auslösen.
   </p>
 
   <p>
