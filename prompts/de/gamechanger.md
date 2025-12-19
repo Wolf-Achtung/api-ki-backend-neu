@@ -131,53 +131,58 @@ Die Transformation ermöglicht strategische Neupositionierung – nicht nur Opti
 
   <div class="gamechanger-insight">
     <h3>Strategischer Bruchpunkt</h3>
-    <p>
+    <p><strong>Die obsolete Logik:</strong></p>
+    <ul>
       <!--
-      HIER: Konkret benennen, was bei {{OFFERING_LABEL}} strukturell
-      falsch oder zu klein gedacht wird.
-      MUSS Bezug zu {{HAUPTUMSATZTREIBER}} oder {{WETTBEWERB}} haben.
-      Keine generischen Prozessaussagen.
-      2-3 Sätze. Analytisch. Keine Anrede.
+      HIER: 3 kurze Bullets (je 1 Satz):
+      - Was wird bei {{OFFERING_LABEL}} falsch gedacht?
+      - Welche alte Denkweise blockiert?
+      - Format: "Nicht mehr X" oder "Bisher: X"
+      Bezug zu {{HAUPTUMSATZTREIBER}} erforderlich.
       -->
-    </p>
+    </ul>
   </div>
 
   <div class="gamechanger-transformation">
     <h3>Die Transformation</h3>
-    <p>
+    <p><strong>Die neue Wertschöpfungslogik:</strong></p>
+    <ul>
       <!--
-      HIER: EINE klare, neue Wertschöpfungslogik beschreiben.
-      Nicht "Prozesse optimieren", sondern "wie sich die Art der
-      Leistungserbringung grundlegend verändert".
+      HIER: 3 kurze Bullets (je 1-2 Sätze):
+      - WIE verändert sich die Leistungserbringung?
+      - WAS ist der neue Ansatz?
+      - Format: "Stattdessen: Y" oder "Künftig: Y"
       Bezug zu {{GESCHAEFTSMODELL_EVOLUTION}} erforderlich.
-      3-4 Sätze. Konkret. Branchenspezifisch.
       -->
-    </p>
+    </ul>
   </div>
 
   <div class="gamechanger-impact">
     <h3>Warum das ein Gamechanger ist</h3>
     <ul>
       <!--
-      HIER: 2-3 präzise Wirkungen auf Wertschöpfung.
-      Fokus auf strukturellen Vorteil, nicht auf Effizienz.
-      Bezug zu {{BRANCH_CONTEXT_LABEL}} oder {{WETTBEWERB}}.
-      NICHT: "spart Zeit", "reduziert Kosten", "steigert Effizienz"
+      HIER: 3 kurze Bullets (je 1 Satz):
+      - Struktureller Vorteil 1
+      - Struktureller Vorteil 2
+      - Struktureller Vorteil 3
+      NICHT: "spart Zeit", "reduziert Kosten"
       -->
     </ul>
   </div>
 
   <div class="gamechanger-action">
     <h3>Erster realistischer Schritt</h3>
-    <p>
+    <p><strong>In 2-4 Wochen umsetzbar:</strong></p>
+    <ol>
       <!--
-      HIER: Ein konkreter, kleiner Schritt.
-      In 2-4 Wochen umsetzbar.
+      HIER: 3-5 kurze Bullets (je 1 Satz):
+      - Konkreter Mini-Schritt 1
+      - Konkreter Mini-Schritt 2
+      - Konkreter Mini-Schritt 3
       Passend für {{COMPANY_SIZE}}.
-      Bezug zur Wertschöpfungsänderung, nicht zur Tool-Einführung.
-      1-2 Sätze. Handlungsorientiert, aber ohne Aufforderung.
+      Bezug zur Transformation, nicht zur Tool-Einführung.
       -->
-    </p>
+    </ol>
   </div>
 
 </section>
