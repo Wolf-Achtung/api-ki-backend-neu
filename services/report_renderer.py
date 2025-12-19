@@ -549,4 +549,8 @@ def render(briefing_obj: Any,
         meta = {}
     meta.update(locale_v2_meta)
 
+    # Add report metadata for PDF footer
+    meta["report_id"] = ctx.get("report_id", "")
+    meta["report_date"] = ctx.get("report_date", "")
+
     return {"html": html, "meta": meta or {}}

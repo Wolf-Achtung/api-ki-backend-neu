@@ -116,7 +116,7 @@ import core.db as core_db
 from field_registry import fields  # added by Patch03
 from models import Analysis, Briefing, Report, User
 from services.report_renderer import render
-from services.pdf_client import render_pdf_from_html
+from services.pdf_client import render_pdf_from_html, build_footer_template
 from services.email_templates import render_report_ready_email
 from settings import settings
 from services.coverage_guard import analyze_coverage, build_html_report
@@ -6873,10 +6873,29 @@ def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = 
         db.commit()
         db.refresh(rep)
 
-        # PDF generation
+        # PDF generation with footer
         if DBG_PDF:
             log.debug("[%s] 📄 pdf_render start", run_id)
-        pdf_info = render_pdf_from_html(html, meta={"analysis_id": an_id, "briefing_id": briefing_id, "run_id": run_id})
+
+        # Build PDF options with footer template (page numbers + report metadata)
+        footer_template = build_footer_template(
+            report_id=meta.get("report_id", ""),
+            report_date=meta.get("report_date", "")
+        )
+        pdf_options = {
+            "format": "A4",
+            "printBackground": True,
+            "displayHeaderFooter": True,
+            "headerTemplate": "<div></div>",
+            "footerTemplate": footer_template,
+            "margin": {"top": "12mm", "right": "12mm", "bottom": "20mm", "left": "12mm"}
+        }
+
+        pdf_info = render_pdf_from_html(
+            html,
+            meta={"analysis_id": an_id, "briefing_id": briefing_id, "run_id": run_id},
+            pdf_options=pdf_options
+        )
         pdf_url = pdf_info.get("pdf_url")
         pdf_bytes = pdf_info.get("pdf_bytes")
         pdf_error = pdf_info.get("error")
@@ -6952,13 +6971,33 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
         db.commit()
         db.refresh(rep)
         
-        if DBG_PDF: 
+        # PDF generation with footer
+        if DBG_PDF:
             log.debug("[%s] 📄 pdf_render start", run_id)
-        pdf_info = render_pdf_from_html(html, meta={"analysis_id": an_id, "briefing_id": briefing_id, "run_id": run_id})
+
+        # Build PDF options with footer template (page numbers + report metadata)
+        footer_template = build_footer_template(
+            report_id=meta.get("report_id", ""),
+            report_date=meta.get("report_date", "")
+        )
+        pdf_options = {
+            "format": "A4",
+            "printBackground": True,
+            "displayHeaderFooter": True,
+            "headerTemplate": "<div></div>",
+            "footerTemplate": footer_template,
+            "margin": {"top": "12mm", "right": "12mm", "bottom": "20mm", "left": "12mm"}
+        }
+
+        pdf_info = render_pdf_from_html(
+            html,
+            meta={"analysis_id": an_id, "briefing_id": briefing_id, "run_id": run_id},
+            pdf_options=pdf_options
+        )
         pdf_url = pdf_info.get("pdf_url")
         pdf_bytes = pdf_info.get("pdf_bytes")
         pdf_error = pdf_info.get("error")
-        if DBG_PDF: 
+        if DBG_PDF:
             log.debug("[%s] 📄 pdf_render done url=%s bytes=%s error=%s", run_id, bool(pdf_url), len(pdf_bytes or b""), pdf_error)
         
         if not pdf_url and not pdf_bytes:
