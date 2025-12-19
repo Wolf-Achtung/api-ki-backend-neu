@@ -187,15 +187,55 @@ ANTI-PATTERNS:
 
 <!--
 =============================================================================
-QUALITÄTS-SELBSTCHECK v7.0 VOR OUTPUT:
+ELEMENT 4: INDIVIDUELLER STARTPUNKT (PFLICHT) — Content Quality Pack v1.2
+=============================================================================
+
+Formuliere am Ende der Executive Summary **genau einen einzelnen Satz**, der mit
+**„Wenn Sie nur eines tun:"** beginnt.
+
+Dieser Satz muss:
+- die **wichtigste Startmaßnahme** aus den priorisierten Empfehlungen aufgreifen,
+- **konkret** sein (klarer Workflow oder klarer Prozessschritt),
+- **branchen- und größenbezogen** formuliert sein,
+- **risikobewusst** sein (z. B. ohne Kundendaten, mit Review-Regel, keine automatisierten Entscheidungen),
+- **keine allgemeinen Aussagen** enthalten (z. B. „Starten Sie mit KI" ist unzulässig).
+
+Der Satz darf **maximal 25–30 Wörter** lang sein.
+Keine Bulletpoints. Kein zweiter Satz.
+
+WICHTIG:
+- Der Satz ist eine Verdichtung von Top-3-MUSS / Safe-Start / Roadmap Phase 0
+- KEINE neue Empfehlung erfinden
+- Kein Marketing-Wording
+
+BEISPIELE (nur zur Orientierung – nicht kopieren):
+
+Finance / Team:
+„Wenn Sie nur eines tun: Starten Sie mit einer internen KI-Assistenz für Regelwerks- und Risikoanalysen ohne Kundendaten, mit fester Review-Regel für alle Ergebnisse."
+
+Solo-Beratung:
+„Wenn Sie nur eines tun: Standardisieren Sie einen wiederkehrenden Analyse- oder Reporting-Workflow mit KI-Unterstützung und klarer Freigabe, bevor Sie weitere Tools einsetzen."
+
+HTML-FORMAT für Element 4:
+<p class="takeaway">
+  <strong>Wenn Sie nur eines tun:</strong> [individueller Satz hier]
+</p>
+
+=============================================================================
+-->
+
+<!--
+=============================================================================
+QUALITÄTS-SELBSTCHECK v7.1 VOR OUTPUT:
 =============================================================================
 □ Genau 1 Profil-Satz (max. 25 Wörter)?
 □ Genau 3 nummerierte Entscheidungen?
 □ Genau 1 "Konkreter nächster Schritt" Satz?
 □ Haltungssatz zu menschlicher Kontrolle vorhanden?
+□ Genau 1 "Wenn Sie nur eines tun:" Satz (Element 4)?
 □ Durchschnittliche Satzlänge unter 22 Wörtern?
 □ Keine Floskeln ("fundamental", "ganzheitlich", "exponentiell")?
-□ NULL direkte Anreden?
+□ NULL direkte Anreden (außer im Takeaway-Satz)?
 □ In unter 60 Sekunden lesbar?
 =============================================================================
 -->
