@@ -44,19 +44,19 @@ def _truthy(name: str, default: bool = False) -> bool:
 
 
 def _build_subject() -> str:
-    return _env("SMTP_SUBJECT_LOGIN", "Dein Login‑Code – KI‑Sicherheit.jetzt")
+    return _env("SMTP_SUBJECT_LOGIN", "Ihr Anmeldecode")
 
 
 def _build_text(code: str) -> str:
     ttl = int(_env("OTP_TTL_SECONDS", "600") or "600")
     mins = max(1, ttl // 60)
     return (
-        "Hallo!\n\n"
-        f"Dein 6‑stelliger Login‑Code lautet: {code}\n"
-        f"Er ist {mins} Minuten gültig.\n\n"
-        "Falls du diesen Code nicht angefordert hast, kannst du diese E‑Mail ignorieren.\n\n"
-        "Viele Grüße\n"
-        "KI‑Sicherheit.jetzt"
+        f"Ihr persönlicher Anmeldecode lautet:\n\n"
+        f"{code}\n\n"
+        f"Der Code ist {mins} Minuten gültig.\n\n"
+        "Falls Sie diese Anmeldung nicht angefordert haben, "
+        "können Sie diese E-Mail ignorieren.\n\n"
+        "– ki-sicherheit.jetzt"
     )
 
 
