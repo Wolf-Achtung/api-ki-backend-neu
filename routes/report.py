@@ -252,7 +252,7 @@ def get_report_pdf_v2(
 
     # Render PDF from HTML via PDF service
     try:
-        from services.pdf_client import render_pdf_from_html
+        from services.pdf_client import render_pdf_from_html, build_footer_template
     except ImportError as exc:
         log.error(f"[PDF] pdf_client import failed: {exc}")
         return JSONResponse(
@@ -262,9 +262,26 @@ def get_report_pdf_v2(
 
     log.info(f"[PDF] Rendering on-demand PDF for briefing {briefing_id} (html_size={len(html_content)})")
 
+    # Extract report metadata from analysis for footer
+    analysis_meta = getattr(analysis, "meta", {}) or {}
+    report_id = analysis_meta.get("report_id", "")
+    report_date = analysis_meta.get("report_date", "")
+
+    # Build PDF options with footer template (page numbers + report metadata)
+    footer_template = build_footer_template(report_id=report_id, report_date=report_date)
+    pdf_options = {
+        "format": "A4",
+        "printBackground": True,
+        "displayHeaderFooter": True,
+        "headerTemplate": "<div></div>",
+        "footerTemplate": footer_template,
+        "margin": {"top": "12mm", "right": "12mm", "bottom": "20mm", "left": "12mm"}
+    }
+
     result = render_pdf_from_html(
         html=html_content,
-        meta={"briefing_id": briefing_id, "analysis_id": getattr(analysis, "id", None)}
+        meta={"briefing_id": briefing_id, "analysis_id": getattr(analysis, "id", None)},
+        pdf_options=pdf_options
     )
 
     if result.get("error"):
