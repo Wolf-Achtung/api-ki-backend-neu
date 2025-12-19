@@ -55,11 +55,11 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
   <h2>KI-Strategie &amp; Governance</h2>
 
   <p>
-    Für ein Unternehmen der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> in der Branche
-    <strong>{{BRANCHE_LABEL}}</strong> ist eine klare, pragmatische Governance für den KI-Einsatz
-    entscheidend, um Qualität, Sicherheit und Verantwortlichkeiten zu sichern. Die aktuelle Einschätzung
-    zeigt, wie weit Richtlinien, Meldewege, Datenschutzregeln und vorhandene Kompetenzen bereits greifen
-    und an welchen Stellen strukturelle Weiterentwicklungen nötig sind.
+    Für <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> in <strong>{{BRANCHE_LABEL}}</strong>
+    ist pragmatische Governance entscheidend.
+  </p>
+  <p>
+    Die aktuelle Einschätzung zeigt, wo Richtlinien greifen und wo Weiterentwicklung nötig ist.
   </p>
 
   <h3>Rahmenbedingungen &amp; aktueller Status</h3>
@@ -129,23 +129,28 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
 
   <h3>Verantwortung &amp; Steuerung</h3>
   <p>
-    Die Steuerung des KI-Einsatzes sollte zur Organisationsstruktur passen:
-    Solo-Unternehmen arbeiten mit einer klar definierten Owner-Rolle und
-    festen Routinen; kleine Teams nutzen einen kompakten Steuerungskreis aus
-    Teamlead und Anwender:innen; KMU setzen auf abgestimmte Verantwortlichkeiten
-    zwischen Fachbereichen, Management und Datenschutz/IT.
-    Transparenz, kurze Entscheidungswege und regelmäßige Reviews sind für alle
-    Größen zentral, um Qualität und Sicherheit zu gewährleisten.
+    Die Steuerung sollte zur Organisationsstruktur passen:
+  </p>
+  <ul>
+    <li><strong>Solo:</strong> Owner-Rolle + feste Routinen</li>
+    <li><strong>Team:</strong> Kompakter Kreis aus Teamlead + Anwender:innen</li>
+    <li><strong>KMU:</strong> Abgestimmte Verantwortlichkeiten zwischen Fachbereichen und IT</li>
+  </ul>
+  <p>
+    Transparenz und kurze Entscheidungswege sind für alle Größen zentral.
   </p>
 
   <h3>KI-Kultur &amp; Akzeptanz</h3>
   <p>
     {% if COMPANY_SIZE == "solo" %}
-    Betrachten Sie KI als Werkzeug zur Entlastung, nicht als Ersatz eigener Expertise. Regelmäßige Selbstreflexion über Qualität und Grenzen der KI-Outputs stärkt die eigene Urteilsfähigkeit und verhindert übermäßige Abhängigkeit.
+    KI ist Werkzeug zur Entlastung, nicht Ersatz eigener Expertise.
+    Regelmäßige Selbstreflexion stärkt die Urteilsfähigkeit.
     {% elif COMPANY_SIZE == "team" %}
-    Fördern Sie offenen Austausch über erfolgreiche und gescheiterte KI-Anwendungen. Kurze Erfahrungsberichte in bestehenden Meetings schaffen gemeinsames Lernen und bauen Vorbehalte ab, ohne zusätzlichen Aufwand zu erzeugen.
+    Offener Austausch über KI-Erfahrungen schafft gemeinsames Lernen.
+    Kurze Berichte in bestehenden Meetings bauen Vorbehalte ab.
     {% else %}
-    Etablieren Sie eine positive Fehlerkultur bei der KI-Nutzung: Offenes Teilen von Learnings beschleunigt den organisationsweiten Lernprozess. Champions in Fachbereichen können als Multiplikatoren wirken und Akzeptanz nachhaltig steigern.
+    Positive Fehlerkultur beschleunigt den Lernprozess.
+    Champions in Fachbereichen wirken als Multiplikatoren.
     {% endif %}
   </p>
 

@@ -79,11 +79,11 @@ ANTI-REDUNDANZ:
   <h3>Datensicherheit &amp; Compliance</h3>
   <p>
     {% if COMPANY_SIZE == "solo" %}
-    Nutzen Sie ausschließlich DSGVO-konforme Tools mit EU-Datenverarbeitung. Vermeiden Sie die Eingabe sensibler Kundendaten in KI-Systeme ohne vorherige Anonymisierung oder explizite Einwilligung.
+    DSGVO-konforme Tools mit EU-Hosting nutzen. Sensible Daten nur anonymisiert eingeben.
     {% elif COMPANY_SIZE == "team" %}
-    Definieren Sie klare Regeln, welche Datentypen in KI-Tools verwendet werden dürfen. Ein zentraler Leitfaden für alle Beteiligten verhindert unbeabsichtigte Datenschutzverletzungen und schafft Rechtssicherheit.
+    Klare Regeln für Datentypen in KI-Tools. Zentraler Leitfaden für Rechtssicherheit.
     {% else %}
-    Integrieren Sie KI-Nutzungsrichtlinien in bestehende Datenschutzprozesse. Regelmäßige Audits der verwendeten Tools und Datenflüsse sichern Compliance. Dokumentieren Sie Verarbeitungstätigkeiten gemäß Art. 30 DSGVO.
+    KI-Richtlinien in Datenschutzprozesse integrieren. Regelmäßige Audits + Art.-30-Dokumentation.
     {% endif %}
   </p>
 

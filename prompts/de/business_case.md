@@ -61,10 +61,8 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
 
   <!-- G17.P: Neue Einleitung ohne Redundanz, mit Cross-References -->
   <p>
-    Der Business Case verbindet Ihre Quick Wins (→ siehe Sofortmaßnahmen) mit der realistischen
-    ROI-Prognose und zeigt, welche Investitionen sich in welchem Zeitraum amortisieren. Im Fokus
-    stehen Zeitersparnis, Qualitätsgewinne und die Auswirkungen der KI-Readiness-Roadmap auf
-    CAPEX, OPEX und Payback für <strong>{{OFFERING_LABEL}}</strong>.
+    Der Business Case zeigt, welche Investitionen sich in welchem Zeitraum amortisieren.
+    Fokus: Zeitersparnis, Qualitätsgewinne, CAPEX/OPEX und Payback.
   </p>
 
   <h3>Investition und laufende Kosten</h3>
@@ -94,42 +92,36 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
   <h3>Einordnung nach Unternehmensgröße</h3>
   {% if COMPANY_SIZE == "solo" %}
   <p>
-    Für Sie als Einzelunternehmer:in gilt: Je stärker Ihr Prozess
-    <strong>{{HAUPTLEISTUNG}}</strong> auf wiederkehrenden, standardisierbaren Aufgaben beruht,
-    desto schneller wirkt sich Ihre Investition aus. Bei konsequenter Nutzung verkürzt sich Ihre
-    Amortisation spürbar – Sie gewinnen Zeit zurück, die Sie direkt in Ihr Kerngeschäft investieren können.
+    Je stärker <strong>{{HAUPTLEISTUNG}}</strong> auf wiederkehrenden Aufgaben beruht,
+    desto schneller wirkt sich Ihre Investition aus.
   </p>
   {% elif COMPANY_SIZE == "team" %}
   <p>
-    Für Ihr Team gilt: Je stärker der Prozess <strong>{{HAUPTLEISTUNG}}</strong> auf
-    wiederkehrenden, standardisierbaren Aufgaben beruht, desto schneller wirkt sich die
-    Investition aus. Bei konsequenter gemeinsamer Nutzung verkürzt sich die Amortisation spürbar.
+    Je stärker <strong>{{HAUPTLEISTUNG}}</strong> auf wiederkehrenden Aufgaben beruht,
+    desto schneller wirkt sich die Team-Investition aus.
   </p>
   {% else %}
   <p>
-    Für ein Unternehmen der Größe <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> gilt: Je stärker der Prozess
-    <strong>{{HAUPTLEISTUNG}}</strong> auf wiederkehrenden, standardisierbaren Aufgaben beruht,
-    desto schneller wirkt sich die Investition aus. Bei konsequenter Nutzung verkürzt sich die
-    Amortisation spürbar; bei geringerer Auslastung verlängert sie sich entsprechend.
+    Je stärker <strong>{{HAUPTLEISTUNG}}</strong> auf standardisierbaren Aufgaben beruht,
+    desto schneller die Amortisation.
   </p>
   {% endif %}
 
-  <h3>Verbindung zu Fördermöglichkeiten (qualitativ)</h3>
+  <h3>Verbindung zu Fördermöglichkeiten</h3>
   <p>
-    In <strong>{{BUNDESLAND_LABEL}}</strong> existieren Programme, die KI- und
-    Digitalisierungsprojekte unterstützen können. Werden Teile der einmaligen Investition
-    gefördert, verbessert sich der Business Case durch eine verkürzte Amortisationsdauer
-    und einen höheren effektiven ROI. Konkrete Programme und Details werden im
-    Förderkapitel erläutert.
+    In <strong>{{BUNDESLAND_LABEL}}</strong> existieren Förderprogramme für KI-Projekte.
+    Eine Förderung verkürzt die Amortisation. Details → siehe Förderkapitel.
   </p>
 
-  <h3>Zusätzliche Erlöspotenziale (Monetarisierung)</h3>
+  <h3>Zusätzliche Erlöspotenziale</h3>
   <p>
-    Neben der Effizienzsteigerung bieten KI-gestützte Prozesse auch Erlöspotenziale:
-    Digitale Produkte (z.B. automatisierte Analysen, Reports), neue Serviceformate
-    (Workshops, Beratung) oder skalierbare Angebote können den ROI zusätzlich verbessern.
-    Details zu Pricing-Modellen finden sich im Kapitel "Monetarisierung".
+    Neben Effizienzgewinnen bieten KI-Prozesse Erlöspotenziale:
   </p>
+  <ul>
+    <li>Digitale Produkte (automatisierte Analysen, Reports)</li>
+    <li>Neue Serviceformate (Workshops, Beratung)</li>
+    <li>Skalierbare Angebote</li>
+  </ul>
 
   <p class="small muted">
     Diese Werte basieren auf typischen Erfahrungswerten für {{BRANCHE_LABEL}}-Unternehmen.
