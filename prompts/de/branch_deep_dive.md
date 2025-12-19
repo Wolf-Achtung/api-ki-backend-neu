@@ -22,12 +22,13 @@ WICHTIG
 
 INHALTLICHE STRUKTUR (6 feste Bausteine)
 
-1) Branch Trends 2025–2026 (3–5 Trends)
-   - Fokus auf wirtschaftlich und technologisch relevante Entwicklungen für {{BRANCH_SHORT_LABEL}}.
-   - Pro Trend:
-     - Prägnanter Titel
-     - 1–2 Sätze Erläuterung mit konkretem Bezug zur Branche
-   - Beispiel-Bereiche: KI-Adoption, Automatisierung, Regulierung, Marktverschiebungen, Digitalisierung
+1) Branch Trends 2025–2026 (max. 3 Trends, VERDICHTET)
+   - Maximal 3–4 Sätze für den gesamten Abschnitt
+   - Fokus auf konkrete Auswirkungen auf Prozesse und Entscheidungen
+   - KEINE generischen Phrasen wie "fundamentale Transformation", "kritische Schwelle", "exponentielle Entwicklung"
+   - Pro Trend: 1 Satz mit messbarer oder konkreter Auswirkung
+   - Zielstil: "KI wird im Branchenkontext dort relevant, wo wiederkehrende Prüf-, Analyse- und Dokumentationsaufgaben Zeit binden."
+   - NICHT: "Die Branche durchläuft eine fundamentale digitale Transformation..."
 
 2) Benchmarks & Industry Metrics
    - Branchenspezifische Kennzahlen:
