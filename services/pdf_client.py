@@ -176,15 +176,48 @@ def slim_html_sections(sections: Dict[str, Any]) -> Dict[str, Any]:
     return sections
 
 
-def render_pdf_from_html(html: str, meta: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def build_footer_template(report_id: str, report_date: str) -> str:
+    """
+    Build Puppeteer footerTemplate with page numbers and report metadata.
+
+    Args:
+        report_id: Report ID (e.g., "R-20251219-KND")
+        report_date: Report date in DD.MM.YYYY format
+
+    Returns:
+        HTML string for footerTemplate
+    """
+    # Fallback for missing values
+    report_id_display = report_id if report_id else "–"
+    report_date_display = report_date if report_date else "–"
+
+    return f'''<div style="width:100%; font-size:9px; padding:0 14mm; box-sizing:border-box; color:#666;
+            display:flex; align-items:center; justify-content:space-between;">
+  <div>
+    Seite <span class="pageNumber"></span> / <span class="totalPages"></span>
+  </div>
+  <div>
+    Report-ID: {report_id_display} • {report_date_display}
+  </div>
+</div>'''
+
+
+def render_pdf_from_html(
+    html: str,
+    meta: Optional[Dict[str, Any]] = None,
+    pdf_options: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     """
     Render HTML to PDF via PDF service.
 
     SPRINT G14-D: Enhanced with error categorization and retry metrics.
+    Footer Support: Added pdf_options parameter for Puppeteer page.pdf() settings.
 
     Args:
         html: HTML content to render
         meta: Optional metadata dict
+        pdf_options: Optional PDF rendering options (footerTemplate, headerTemplate,
+                     displayHeaderFooter, margin, etc.)
 
     Returns:
         Dict with pdf_bytes/pdf_url or error
@@ -202,7 +235,13 @@ def render_pdf_from_html(html: str, meta: Optional[Dict[str, Any]] = None) -> Di
     rid = _as_str(rid)
     url = f"{PDF_SERVICE_URL}/generate-pdf"
 
-    payload = {"html": html, "meta": meta}
+    # Build payload with optional PDF options
+    payload: Dict[str, Any] = {"html": html, "meta": meta}
+
+    # Add PDF options if provided (for Puppeteer page.pdf() settings)
+    if pdf_options:
+        payload["pdf_options"] = pdf_options
+        log.debug("[PDF] Using custom PDF options: %s", list(pdf_options.keys()))
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/pdf, application/json",
