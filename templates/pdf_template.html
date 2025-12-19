@@ -933,13 +933,15 @@
             align-items: center;
             justify-content: center;
             margin-top: var(--space-sm);
-            padding: var(--space-sm) var(--space-md);
+            padding: 10pt 20pt;
             border-radius: var(--radius-tag);
-            font-size: var(--font-small);
+            font-size: var(--font-body);
+            font-weight: 600;
             border: 1px solid var(--color-brand-primary);
             background: var(--color-brand-primary);
             color: #ffffff;
             text-decoration: none;
+            box-shadow: var(--shadow-card);
         }
         .feedback-button:hover {
             background: var(--color-brand-accent);
@@ -3418,19 +3420,6 @@
                     </div>
                 </section>
                 {% endif %}
-                <!-- FEEDBACK SECTION -->
-                <div class="feedback-section" data-ui="1">
-                    <h2>Ihr Feedback ist uns wichtig!</h2>
-                    <p>{{ ui("feedback_cta") }}</p>
-                    <div class="highlight-box">
-                        <p><strong>Was hat Ihnen gefallen?</strong> Was können wir verbessern?</p>
-                        <p>Nehmen Sie sich 2 Minuten Zeit für unser Feedback-Formular:</p>
-                    </div>
-                    <a href="https://make.ki-sicherheit.jetzt/feedback/feedback.html" class="feedback-button" target="_blank">
-                        📝 Feedback geben
-                    </a>
-                    <p class="small">Ihre Angaben werden anonym ausgewertet und helfen uns bei der Weiterentwicklung.</p>
-                </div>
         <!-- Annex: Kreativ-Tools & Glossar -->
 <section class="annex-section annex-kreativtools chapter">
   <h2>Kreativ-Tools 2025 – modulare Alternativen</h2>
@@ -3518,6 +3507,19 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
                             <a href="mailto:wolf@ki-sicherheit.jetzt">wolf@ki-sicherheit.jetzt</a>.
                         </p>
                     </div>
+                </div>
+                <!-- FEEDBACK SECTION (nach Impressum für letzte Seite) -->
+                <div class="feedback-section" data-ui="1">
+                    <h2>Ihr Feedback ist uns wichtig!</h2>
+                    <p>{{ ui("feedback_cta") }}</p>
+                    <div class="highlight-box">
+                        <p><strong>Was hat Ihnen gefallen?</strong> Was können wir verbessern?</p>
+                        <p>Nehmen Sie sich 2 Minuten Zeit für unser Feedback-Formular:</p>
+                    </div>
+                    <a href="https://make.ki-sicherheit.jetzt/feedback/feedback.html" class="feedback-button" target="_blank">
+                        📝 Feedback geben
+                    </a>
+                    <p class="small">Ihre Angaben werden anonym ausgewertet und helfen uns bei der Weiterentwicklung.</p>
                 </div>
                 <p class="small" style="text-align: center;">
                     © {{report_year}} KI-Sicherheit.jetzt —
