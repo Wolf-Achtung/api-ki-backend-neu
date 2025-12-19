@@ -3,7 +3,7 @@ Developer:
 <!-- SECTION: business_case -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCHE_LABEL}}, {{COMPANY_SIZE}}, {{HAUPTLEISTUNG}}, {{BUNDESLAND_LABEL}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}} -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{COMPANY_SIZE}}, {{HAUPTLEISTUNG}}, {{BUNDESLAND_LABEL}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}}, {{OFFERING_LABEL}} -->
 <!-- TOKEN-BUDGET: 1800 (solo:0.8x=1440, team:1.0x=1800, kmu:1.15x=2070) -->
 <!-- WORD_MINIMUM_SOLO: 130 -->
 <!-- WORD_MINIMUM_TEAM: 150 -->
@@ -61,8 +61,12 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
 
   <!-- G17.P: Neue Einleitung ohne Redundanz, mit Cross-References -->
   <p>
-    Der Business Case zeigt, welche Investitionen sich in welchem Zeitraum amortisieren.
-    Fokus: Zeitersparnis, Qualitätsgewinne, CAPEX/OPEX und Payback.
+    Für <strong>{{OFFERING_LABEL}}</strong> in der Branche <strong>{{BRANCHE_LABEL}}</strong>
+    lässt sich ein konkreter Investitionsrahmen ableiten. Der Business Case zeigt, welche
+    Aufwände für Setup und laufenden Betrieb realistisch sind und in welchem Zeitraum
+    sich diese amortisieren. Im Fokus stehen Zeitersparnis, Qualitätsgewinne und ein
+    nachvollziehbarer Payback. Die Quick Wins aus der Roadmap beschleunigen den ROI
+    zusätzlich → siehe Sofortmaßnahmen.
   </p>
 
   <h3>Investition und laufende Kosten</h3>

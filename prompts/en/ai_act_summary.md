@@ -67,9 +67,12 @@ Developer:
   <p>
     The use of AI in <strong>{{HAUPTLEISTUNG}}</strong> within the
     <strong>{{BRANCHE_LABEL}}</strong> industry typically <strong>does not fall into the high-risk
-    category under Art.&nbsp;6</strong>. This applies particularly when AI is used for text generation,
-    analysis, knowledge processing, or internal support, and no automated individual decisions
-    about people are made (e.g., credit decisions, medical diagnoses, HR decisions).
+    category under Art.&nbsp;6</strong>.
+  </p>
+  <p>
+    This applies particularly for AI used in text generation, analysis, or internal support.
+    Automated individual decisions about people (credit, medical diagnoses, HR) would trigger
+    stricter requirements.
   </p>
 
   <p>
