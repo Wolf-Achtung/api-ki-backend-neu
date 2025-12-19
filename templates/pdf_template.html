@@ -2829,7 +2829,9 @@
                     </div>
                 </section>
                 {% endif %}
-                {% if BRANCH_RISKS_HTML %}
+                {# G27: Risks - Hard Stop if placeholder content (Content Quality Pack v1.1) #}
+                {% set risks_txt = (BRANCH_RISKS_HTML or "") | string %}
+                {% if risks_txt and "In diesem Abschnitt wurden keine konkreten Inhalte bereitgestellt" not in risks_txt and "no specific content was provided" not in risks_txt|lower %}
                 <section class="section" id="branch-risks">
                     <div class="section-body">
                         {{ BRANCH_RISKS_HTML|safe }}

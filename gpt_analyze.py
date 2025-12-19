@@ -2821,8 +2821,10 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
             org_risk = "In größeren Strukturen können unklare Verantwortlichkeiten und fehlende Governance zu Insellösungen führen"
             org_measure = "Governance-Framework, definierte Prozesse und bereichsübergreifende Koordination"
 
+        # Content Quality Pack v1.1: Use ui() for localized heading
+        risks_heading = ui("risks", briefing_lang)
         return f"""<section class="section risks">
-  <h2>Wesentliche Risiken beim Einsatz von KI in {hauptleistung or "Ihrem Kerngeschäft"}</h2>
+  <h2>{risks_heading}</h2>
 
   <p>
     Der Einsatz von KI im Bereich <strong>{hauptleistung or "Ihrem Kerngeschäft"}</strong> in der Branche
