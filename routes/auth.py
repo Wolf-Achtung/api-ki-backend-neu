@@ -28,6 +28,7 @@ EMAIL_WHITELIST = {email.lower() for email in [
     "post@zero2.de",
     "giselapeter@peter-partner.de",
     "berndemhart46@gmail.com",
+    "wolfhohl@googlemail.com",
     "Po@wbs-slg.de",
     "trailerman01@outlook.de",
     "wolf.hohl@web.de",
