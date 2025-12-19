@@ -131,114 +131,52 @@ async def request_code(payload: RequestCodeIn, request: Request):
     _store_code(str(payload.email), code, ttl_sec=600)
 
     mailer = Mailer.from_settings(s)
-    
-    # HTML-E-Mail im Stil der Landingpage (Farben, Claim, Layout angelehnt an index.html)
+
+    # Neutral HTML template for better deliverability (Outlook/web.de)
     html_template = f"""
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Ihr KI-Check Login-Code</title>
+  <title>Ihr Anmeldecode</title>
 </head>
-<body style="margin:0;padding:0;background:#0b1f33;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-    <tr>
-      <td align="center" style="padding:32px 16px;">
-        <!-- Card-Wrapper -->
-        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:640px;border-collapse:collapse;">
-          <tr>
-            <!-- Kopf / Brand ähnlich mk-card-header -->
-            <td style="background:#0f304b;padding:20px 24px;border-radius:16px 16px 0 0;text-align:left;">
-              <div style="font-size:18px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#cde8ff;">
-                KI-Sicherheit.jetzt
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <!-- Body / Inhalt ähnlich mk-card-body -->
-            <td style="background:#ffffff;padding:28px 24px 24px 24px;border-radius:0 0 16px 16px;border:1px solid #d6e4f0;border-top:none;">
-              <!-- Headline, angelehnt an "Zertifiziert. Dokumentiert. KI-konform." -->
-              <h1 style="margin:0 0 12px 0;font-size:22px;line-height:1.35;font-weight:700;color:#0b1f33;">
-                Zertifiziert.<br>Dokumentiert.<br>KI-konform.
-              </h1>
-
-              <p style="margin:0 0 12px 0;font-size:15px;line-height:1.5;color:#243447;">
-                Für Ihren persönlichen <strong>KI-Check-Report</strong> ist nur noch ein Schritt nötig:
-                Bitte geben Sie den folgenden 6-stelligen Login-Code auf der Website ein.
-              </p>
-
-              <!-- Feature-Liste im Stil der mk-features-list -->
-              <ul style="margin:0 0 16px 20px;padding:0;font-size:14px;line-height:1.5;color:#243447;">
-                <li><strong>DSGVO- &amp; EU AI Act-konformer Check</strong></li>
-                <li><strong>Dokumentierter Status Ihres KI-Einsatzes</strong></li>
-                <li><strong>Konkrete Empfehlungen &amp; nächste Schritte</strong></li>
-              </ul>
-
-              <!-- Code-Box im Card-Stil -->
-              <div style="margin:20px 0;padding:20px 16px;background:#f0f7ff;border:1px solid #2a7fb8;border-radius:12px;text-align:center;">
-                <div style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#2a7fb8;margin-bottom:8px;">
-                  Ihr Login-Code
-                </div>
-                <div style="font-size:32px;font-weight:700;letter-spacing:0.35em;color:#0b1f33;font-family:'Share Tech Mono',Menlo,Consolas,monospace;">
-                  {code}
-                </div>
-                <div style="margin-top:10px;font-size:13px;color:#4b627a;">
-                  Gültig für <strong>10 Minuten</strong>. Bitte geben Sie den Code direkt nach Erhalt ein.
-                </div>
-              </div>
-
-              <!-- Hinweis / Support -->
-              <p style="margin:0 0 12px 0;font-size:13px;line-height:1.5;color:#4b627a;">
-                <strong>Kein Code angekommen?</strong><br>
-                • Spam- oder Werbe-Ordner prüfen<br>
-                • Code einfach erneut anfordern<br>
-                • Bei Problemen: support@ki-sicherheit.jetzt
-              </p>
-
-              <p style="margin:16px 0 4px 0;font-size:11px;color:#8fa2b7;">
-                Diese E-Mail gehört zum Login-Prozess von <strong>KI-Sicherheit.jetzt</strong>.
-                Die Leistung ist als Unternehmensberatung in der Regel steuerlich absetzbar.
-              </p>
-
-              <!-- Kleine „Logo“-Zeile als Text-Ersatz der Badges -->
-              <p style="margin:0;font-size:11px;color:#8fa2b7;">
-                DSGVO · EU AI Act Ready · KI-Ready 2025 · TÜV-zertifiziertes KI-Management (Wolf Hohl)
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
+<body style="margin:0;padding:20px;font-family:Arial,sans-serif;background:#ffffff;">
+  <p style="margin:0 0 16px 0;font-size:15px;color:#333333;">
+    Ihr persönlicher Anmeldecode lautet:
+  </p>
+  <p style="margin:0 0 16px 0;font-size:28px;font-weight:bold;letter-spacing:0.2em;color:#000000;font-family:monospace;">
+    {code}
+  </p>
+  <p style="margin:0 0 16px 0;font-size:14px;color:#555555;">
+    Der Code ist 10 Minuten gültig.
+  </p>
+  <p style="margin:0 0 16px 0;font-size:13px;color:#777777;">
+    Falls Sie diese Anmeldung nicht angefordert haben, können Sie diese E-Mail ignorieren.
+  </p>
+  <p style="margin:24px 0 0 0;font-size:12px;color:#999999;">
+    – ki-sicherheit.jetzt
+  </p>
 </body>
 </html>
     """
-    
-    # Plain-Text-Version
+
+    # Neutral plain text for better deliverability
     text_template = f"""
-KI-Sicherheit.jetzt - Ihr Login-Code für den KI-Check
+Ihr persönlicher Anmeldecode lautet:
 
-Ihr 6-stelliger Login-Code lautet: {code}
+{code}
 
-Bitte geben Sie den Code innerhalb von 10 Minuten auf der Website ein.
+Der Code ist 10 Minuten gültig.
 
-Kurz erklärt:
-- DSGVO- & EU AI Act-konformer KI-Check
-- Dokumentierter Status Ihres KI-Einsatzes
-- Konkrete Empfehlungen & nächste Schritte
+Falls Sie diese Anmeldung nicht angefordert haben, können Sie diese E-Mail ignorieren.
 
-Hilfe bei Problemen:
-- Kein Code erhalten? Prüfen Sie Spam/Werbung.
-- Erneut senden: Klicken Sie nochmal auf "Code anfordern".
-- Support: support@ki-sicherheit.jetzt
-
-© 2024 KI-Sicherheit.jetzt
+– ki-sicherheit.jetzt
     """
-    
+
     try:
         await mailer.send(
             to=str(payload.email),
-            subject="Ihr KI-Sicherheit Login-Code",
+            subject="Ihr Anmeldecode",
             text=text_template.strip(),
             html=html_template.strip(),
         )
