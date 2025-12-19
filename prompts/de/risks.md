@@ -56,140 +56,87 @@ REGELN:
   <h2>Wesentliche Risiken beim Einsatz von KI in {{OFFERING_LABEL}}</h2>
 
   <p>
-    Der Einsatz von KI für {{BRANCH_CONTEXT_LABEL}} bietet erhebliche Chancen,
-    bringt jedoch unterschiedliche Risikoprofile mit sich. Der aktuelle Governance-Score von
-    <strong>{{score_governance}}/100</strong> und der Sicherheits-Score von
-    <strong>{{score_sicherheit}}/100</strong> zeigen den Reifegrad der Strukturen.
-    Die folgenden Abschnitte bündeln die wichtigsten Risikofelder.
+    Governance-Score: <strong>{{score_governance}}/100</strong>,
+    Sicherheits-Score: <strong>{{score_sicherheit}}/100</strong>.
   </p>
 
   <h3>1. Strategische und organisatorische Risiken</h3>
   <ul>
     <li>
-      <strong>Unklare Zielbilder und Prioritäten für KI.</strong>
-      Ohne klar definierte Ziele für {{OFFERING_LABEL}} besteht das Risiko, dass KI-Experimente
-      versanden, Insellösungen entstehen oder wichtige Chancen ungenutzt bleiben.
-      Gegenmaßnahmen sind ein knappes Zielbild mit 2–3 priorisierten Anwendungsfällen,
-      ein einfacher Umsetzungsplan sowie regelmäßige Überprüfung, ob Maßnahmen zum
-      übergeordneten Geschäftsmodell passen.
+      <strong>Unklare Zielbilder:</strong>
+      Risiko von Insellösungen. Maßnahme: 2–3 priorisierte Use Cases definieren.
     </li>
     <li>
-      <strong>Abhängigkeit von einzelnen Personen.</strong>
-      In sehr kleinen Setups bis hin zu Solo-Strukturen konzentriert sich Know-how häufig
-      auf eine Person. Fällt diese aus oder ist dauerhaft überlastet, kommen Experimente
-      und Umsetzung ins Stocken. Dem lässt sich durch kurze Dokumentation zentraler Workflows,
-      einfache Checklisten und die bewusste Verankerung von KI-Routinen im Alltag begegnen.
+      <strong>Abhängigkeit von Einzelpersonen:</strong>
+      Know-how-Konzentration. Maßnahme: Dokumentation + Checklisten.
     </li>
     <li>
-      <strong>Fehlende Rollen- und Verantwortlichkeitsklarheit.</strong>
-      In Teams und wachsenden Unternehmen ist oft unklar, wer KI-Vorhaben priorisiert,
-      wer für Qualität verantwortlich ist und wer Tools auswählt.
-      Sinnvolle Gegenmaßnahmen sind eine klar benannte Rolle für KI-Verantwortung,
-      ein schlanker Entscheidungsprozess für Tool-Einführung und transparente Kommunikation
-      von Zuständigkeiten.
+      <strong>Fehlende Rollenklarheit:</strong>
+      Unklare Zuständigkeiten. Maßnahme: KI-Verantwortliche:n benennen.
     </li>
     <li>
-      <strong>Überlastung durch zusätzliche Aufgaben.</strong>
-      Wenn KI-Einführung „on top" zum Tagesgeschäft läuft, werden neue Workflows nicht
-      dauerhaft etabliert. Hilfreich sind kleine, gut planbare Piloten mit klar
-      begrenztem Umfang sowie die bewusste Entlastung an anderer Stelle, damit Zeit
-      für Experimente und Lernphasen entsteht.
+      <strong>Überlastung:</strong>
+      KI „on top" scheitert. Maßnahme: Kleine Piloten mit klarem Umfang.
     </li>
   </ul>
 
   <h3>2. Daten-, Sicherheits- und Compliance-Risiken</h3>
   <ul>
     <li>
-      <strong>Unzureichende Kontrolle über ein- und ausgehende Daten.</strong>
-      Wenn nicht geregelt ist, welche Informationen in KI-Systeme eingegeben werden dürfen,
-      können vertrauliche Kundendaten, interne Dokumente oder sensible Inhalte unkontrolliert
-      verarbeitet werden. Gegenmaßnahmen sind klare Richtlinien für Datennutzung,
-      ein kurzer Leitfaden für alle Beteiligten sowie technische Schutzmechanismen,
-      etwa Zugriffsbeschränkungen oder getrennte Arbeitsbereiche.
+      <strong>Datenkontrolle:</strong>
+      Sensible Daten in KI-Systemen. Maßnahme: Richtlinien + Zugriffsbeschränkungen.
     </li>
     <li>
-      <strong>Lücken in Informationssicherheit und Zugriffsschutz.</strong>
-      Ein mittlerer oder niedriger Sicherheits-Score (z.&nbsp;B. {{score_sicherheit}}&#x2F;100)
-      deutet darauf hin, dass Passwörter, Zugriffsrechte oder Backup-Konzepte nicht
-      durchgehend geregelt sind. Erforderlich sind ein kompaktes Sicherheitskonzept,
-      regelmäßige Passwort- und Rechte-Reviews sowie eine klare Dokumentation der
-      eingesetzten Cloud- und KI-Dienste.
+      <strong>Sicherheitslücken:</strong>
+      Score {{score_sicherheit}}/100. Maßnahme: Sicherheitskonzept + regelmäßige Reviews.
     </li>
     <li>
-      <strong>Unklare Verantwortlichkeit für rechtliche Anforderungen.</strong>
-      Ohne definierte Zuständigkeit besteht das Risiko, dass Vorgaben zu Datenschutz,
-      Urheberrecht oder branchenspezifischer Regulierung nur punktuell beachtet werden.
-      Sinnvoll ist eine benannte Stelle, die Mindestanforderungen bündelt, praxisnahe
-      Leitlinien formuliert und bei Unsicherheiten externe fachliche Beratung einholt.
+      <strong>Rechtliche Verantwortung:</strong>
+      Datenschutz/Urheberrecht. Maßnahme: Benannte Zuständigkeit + Leitlinien.
     </li>
     <li>
-      <strong>Fehlende Transparenz gegenüber Kund:innen und Partnern.</strong>
-      Wenn unklar bleibt, an welchen Stellen KI Beiträge leistet, kann dies zu
-      Vertrauensverlust führen. Gegenmaßnahmen sind kurze, verständliche Hinweise
-      zur Nutzung von KI sowie nachvollziehbare Dokumentation im Hintergrund.
+      <strong>Transparenz:</strong>
+      Vertrauensverlust bei unklarer KI-Nutzung. Maßnahme: Hinweise + Dokumentation.
     </li>
   </ul>
 
   <h3>3. Qualitäts-, Transparenz- und Akzeptanzrisiken</h3>
   <ul>
     <li>
-      <strong>Inkonsistente Ergebnisse und Qualitätsstreuung.</strong>
-      Werden Prompts, Vorlagen und Workflows nicht dokumentiert, hängen Qualität und
-      Stil stark von der jeweiligen Person ab. Dies erschwert reproduzierbare Ergebnisse.
-      Abhilfe schaffen einheitliche Templates, kurze Leitfäden und regelmäßige Reviews
-      von Beispielausgaben.
+      <strong>Inkonsistente Ergebnisse:</strong>
+      Qualitätsstreuung ohne Templates. Maßnahme: Einheitliche Vorlagen + Reviews.
     </li>
     <li>
-      <strong>Übervertrauen in KI-Ergebnisse.</strong>
-      Wenn Texte, Analysen oder Bewertungen ungeprüft übernommen werden, können
-      Fehler oder Halluzinationen direkt in Kundendokumente und Entscheidungen
-      einfließen. Notwendig sind klare Regeln für manuelle Prüfung, Vier-Augen-Prinzip
-      bei kritischen Inhalten sowie einfache Checklisten für Qualitätskontrolle.
+      <strong>Übervertrauen:</strong>
+      Halluzinationen in Kundendokumenten. Maßnahme: Prüfpflicht + Checklisten.
     </li>
     <li>
-      <strong>Akzeptanzprobleme im Alltag.</strong>
-      In Teams und größeren Organisationen entsteht Widerstand, wenn der Nutzen von KI
-      nicht nachvollziehbar ist oder Workflows als zu komplex empfunden werden.
-      Gegenmaßnahmen sind verständliche Kommunikation der Ziele, kleine Pilotprojekte
-      mit sichtbarem Nutzen und das aktive Einholen von Feedback, um Routinen anzupassen.
+      <strong>Akzeptanzprobleme:</strong>
+      Widerstand bei unklarem Nutzen. Maßnahme: Piloten + Feedback einholen.
     </li>
     <li>
-      <strong>Unklare Nachvollziehbarkeit von Entscheidungen.</strong>
-      Wenn nicht dokumentiert ist, welche Rolle KI in der Vorbereitung von Angeboten,
-      Reports oder Entscheidungen spielt, wird es im Streitfall schwierig, Entscheidungswege
-      zu rekonstruieren. Eine kurze interne Dokumentation zu „Wo unterstützt KI?" senkt
-      dieses Risiko deutlich.
+      <strong>Nachvollziehbarkeit:</strong>
+      Unklare KI-Rolle. Maßnahme: Dokumentation „Wo unterstützt KI?".
     </li>
   </ul>
 
   <h3>4. Abhängigkeiten, Betriebs- und Lieferantenrisiken</h3>
   <ul>
     <li>
-      <strong>Starke Abhängigkeit von einzelnen Tools oder Plattformen.</strong>
-      Wenn zentrale Workflows ausschließlich auf einem Dienst oder einem Modell basieren,
-      führen Preisänderungen, Ausfälle oder geänderte Nutzungsbedingungen schnell zu
-      Unterbrechungen. Gegenmaßnahmen sind einfache Fallback-Szenarien, Exportmöglichkeiten
-      für Daten sowie die Beobachtung von Alternativen.
+      <strong>Tool-Abhängigkeit:</strong>
+      Vendor Lock-in. Maßnahme: Fallback-Szenarien + Datenexport.
     </li>
     <li>
-      <strong>Unklare Regelungen mit Dienstleistern.</strong>
-      Werden Auftragsverhältnisse, Datenverarbeitung oder Service-Level nicht explizit
-      vereinbart, können Lücken in Haftung und Verfügbarkeit entstehen.
-      Sinnvoll sind klare Verträge, vereinbarte Reaktionszeiten und transparente
-      Angaben zur Datenhaltung.
+      <strong>Dienstleister-Regelungen:</strong>
+      Lücken in Haftung/SLA. Maßnahme: Klare Verträge + Reaktionszeiten.
     </li>
     <li>
-      <strong>Fehlende Notfall- und Wiederanlaufplanung.</strong>
-      Wenn nicht vorab geklärt ist, wie im Fall von Systemausfällen, Datenverlust oder
-      Fehlkonfigurationen reagiert wird, verzögert sich der Wiederanlauf.
-      Empfohlen sind einfache Notfallpläne, regelmäßige Backups sowie definierte
-      Kontaktwege für kritische Vorfälle.
+      <strong>Notfallplanung:</strong>
+      Kein Wiederanlauf definiert. Maßnahme: Backups + Notfallkontakte.
     </li>
     <li>
-      <strong>Überkomplexe Tool-Landschaft.</strong>
-      Werden zu viele spezialisierte KI-Tools parallel eingeführt, steigt der Aufwand
-      für Pflege, Schulung und Koordination. Gegenmaßnahmen sind Konsolidierung auf
-      wenige Kernlösungen und eine bewusst schlanke Tool-Strategie.
+      <strong>Tool-Komplexität:</strong>
+      Zu viele Parallel-Tools. Maßnahme: Konsolidierung auf Kernlösungen.
     </li>
   </ul>
 

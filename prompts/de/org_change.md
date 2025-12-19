@@ -56,35 +56,29 @@ REGELN:
   <h2>Veränderungsfähigkeit &amp; Lernen</h2>
 
   <p>
-    Für {{BRANCH_CONTEXT_LABEL}} mit Schwerpunkt <strong>{{OFFERING_LABEL}}</strong>
-    erfordert die KI-Einführung neue Arbeitsweisen und Routinenanpassung. Die aktuelle
-    Selbsteinschätzung – KI-Kompetenz (<strong>{{ki_kompetenz}}</strong>) und Ziele
-    <strong>{{KI_ZIELE_LABELS}}</strong> – zeigt vorhandenes Potenzial.
+    Für {{BRANCH_CONTEXT_LABEL}} erfordert die KI-Einführung neue Arbeitsweisen.
+    Die aktuelle Selbsteinschätzung zeigt vorhandenes Potenzial.
+  </p>
+  <p>
     Hemmnisse wie <strong>{{KI_HEMMNISSE_LABELS}}</strong> erfordern geschärfte
-    Strukturen, Prioritäten und Verantwortlichkeiten.
+    Strukturen und klare Verantwortlichkeiten.
   </p>
 
   <h3>1. Wo Sie heute stehen</h3>
   <p>
-    Die Analyse der Scores zeigt ein differenziertes Bild:
-    Governance (<strong>{{score_governance}}</strong>), Sicherheit
-    (<strong>{{score_sicherheit}}</strong>), Nutzen (<strong>{{score_nutzen}}</strong>)
-    und Befähigung (<strong>{{score_befaehigung}}</strong>) sind unterschiedlich ausgeprägt.
-    Für {{OFFERING_LABEL}} bedeutet das: Einige Routinen funktionieren,
-    jedoch braucht es klarere Entscheidungswege und einheitliche Qualitätsstandards.
+    <strong>Score-Übersicht:</strong> Governance ({{score_governance}}), Sicherheit ({{score_sicherheit}}),
+    Nutzen ({{score_nutzen}}), Befähigung ({{score_befaehigung}}).
   </p>
-
   <p>
-    Die notwendigen Schritte unterscheiden sich je nach Unternehmensgröße:
+    Einige Routinen funktionieren bereits. Es braucht klarere Entscheidungswege und einheitliche Standards.
+  </p>
+  <p>
     {% if COMPANY_SIZE == "solo" %}
-      In Solo-Setups hängt alles an klaren persönlichen Routinen, einfachen Standards und
-      konsequenter Selbstorganisation.
+      In Solo-Setups zählen persönliche Routinen und konsequente Selbstorganisation.
     {% elif COMPANY_SIZE == "team" %}
-      In kleinen Teams ist entscheidend, Rollen sauber zu definieren und kurze,
-      verlässliche Abstimmungen zu etablieren.
+      In kleinen Teams sind saubere Rollendefinitionen und kurze Abstimmungen entscheidend.
     {% else %}
-      In KMU stehen koordinierte Prozesse, Verantwortlichkeiten pro Fachbereich
-      und eine konsistente Kommunikation im Vordergrund.
+      In KMU stehen koordinierte Prozesse und Verantwortlichkeiten pro Fachbereich im Fokus.
     {% endif %}
   </p>
 
@@ -163,20 +157,18 @@ REGELN:
 
   <h3>4. Umgang mit Widerständen</h3>
   <p>
-    Widerstände entstehen meist durch Unsicherheit über Qualität, Datenschutz oder
-    veränderte Arbeitsweisen. Entscheidend ist ein transparenter Umgang mit den neuen
-    KI-gestützten Routinen – und zwar size-aware:
+    Widerstände entstehen durch Unsicherheit über Qualität, Datenschutz oder veränderte Arbeitsweisen.
+  </p>
+  <p>
     {% if COMPANY_SIZE == "solo" %}
-      Solo-Unternehmen profitieren vor allem von klaren, leicht überprüfbaren persönlichen
-      Routinen, die Vertrauen schaffen.
+      Klare, überprüfbare Routinen schaffen Vertrauen.
     {% elif COMPANY_SIZE == "team" %}
-      Kleine Teams benötigen offene, kurze Abstimmungen und klare Rollen, damit sich die
-      neuen Arbeitsweisen im Alltag stabilisieren.
+      Offene Abstimmungen und klare Rollen stabilisieren neue Arbeitsweisen.
     {% else %}
-      In KMU sind verständliche Kommunikation, transparente Vorgaben und fachbereichsnahe
-      Verantwortlichkeiten entscheidend, um Vorbehalte zu reduzieren.
+      Verständliche Kommunikation und fachbereichsnahe Verantwortlichkeiten reduzieren Vorbehalte.
     {% endif %}
-    Kontinuierliches Feedback – verbunden mit konkreten kleinen Verbesserungen –
-    sorgt dafür, dass KI als verlässlicher Bestandteil der Wertschöpfung akzeptiert wird.
+  </p>
+  <p>
+    Kontinuierliches Feedback sorgt dafür, dass KI als verlässlicher Bestandteil akzeptiert wird.
   </p>
 </section>
