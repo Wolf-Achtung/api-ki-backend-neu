@@ -7,7 +7,7 @@ Comprehensive GPT leak detection and removal:
 - Full-sentence replacement
 - Guarantee: PDF never fails due to leaks
 
-Version: 1.0.0 (N3.6 - PLATIN++ v4.21)
+Version: 1.1.0 (N3.6 + Hard Blacklist for Executive-Frontlayer)
 """
 from __future__ import annotations
 
@@ -17,6 +17,130 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Pattern, Tuple
 
 log = logging.getLogger(__name__)
+
+
+# =============================================================================
+# HARD BLACKLIST - Executive-Safe (absolute block, not just heal)
+# =============================================================================
+# These phrases must NEVER appear in executive sections. They are removed
+# with specific logging and replaced with empty string or neutral ending.
+
+HARD_BLACKLIST_PHRASES: List[str] = [
+    # German assistant phrases (critical)
+    "wie kann ich dir helfen",
+    "wie kann ich Ihnen helfen",
+    "wie kann ich ihnen helfen",
+    "ich helfe Ihnen gern",
+    "ich helfe ihnen gern",
+    "gern helfe ich Ihnen",
+    "gerne helfe ich Ihnen",
+    "gerne helfe ich ihnen",
+    "als KI kann ich",
+    "als KI-Assistent",
+    "als KI-Modell",
+    "ich bin ein KI-Modell",
+    "ich bin ein KI-Assistent",
+    "als künstliche Intelligenz",
+    "ich bin eine künstliche Intelligenz",
+    # English assistant phrases
+    "how can I help you",
+    "how may I assist you",
+    "I'm happy to help",
+    "as an AI",
+    "as an AI assistant",
+    "as a language model",
+    "I am an AI",
+    "I'm an AI",
+]
+
+# Executive sections that require hard blacklist enforcement
+EXECUTIVE_SECTIONS: List[str] = [
+    "EXECUTIVE_SUMMARY_HTML",
+    "EXECUTIVE_DECISION_HTML",
+    "ROADMAP_90D_DECISION_HTML",
+    "GAMECHANGER_DECISION_HTML",
+    "KI_STACK_SUMMARY_HTML",
+]
+
+
+def apply_hard_blacklist(text: str, section_name: str = "") -> Tuple[str, List[str]]:
+    """
+    Apply hard blacklist to remove forbidden assistant phrases.
+
+    These phrases are completely removed (not healed/rephrased).
+    Specific logging is emitted for monitoring.
+
+    Args:
+        text: Input text/HTML
+        section_name: Section name for logging context
+
+    Returns:
+        Tuple of (cleaned_text, list_of_removed_phrases)
+    """
+    if not text:
+        return text, []
+
+    removed: List[str] = []
+    cleaned = text
+
+    for phrase in HARD_BLACKLIST_PHRASES:
+        # Case-insensitive substring match
+        pattern = re.compile(re.escape(phrase), re.IGNORECASE)
+        matches = pattern.findall(cleaned)
+
+        if matches:
+            for match in matches:
+                log.warning(
+                    '[leak_blacklist] removed forbidden assistant phrase: "%s" (section=%s)',
+                    match,
+                    section_name or "unknown"
+                )
+                removed.append(match)
+
+            # Remove the phrase
+            cleaned = pattern.sub("", cleaned)
+
+    # Cleanup artifacts (double spaces, empty tags)
+    if removed:
+        cleaned = re.sub(r'\s{2,}', ' ', cleaned)
+        cleaned = re.sub(r'<p>\s*</p>', '', cleaned)
+        cleaned = re.sub(r'<li>\s*</li>', '', cleaned)
+        cleaned = re.sub(r'\.\s*\.', '.', cleaned)
+
+    return cleaned.strip(), removed
+
+
+def process_executive_sections_blacklist(
+    sections: Dict[str, Any]
+) -> Tuple[Dict[str, Any], Dict[str, List[str]]]:
+    """
+    Apply hard blacklist specifically to executive sections.
+
+    Args:
+        sections: Section dictionary
+
+    Returns:
+        Tuple of (cleaned_sections, removed_phrases_by_section)
+    """
+    cleaned = dict(sections)
+    removed_by_section: Dict[str, List[str]] = {}
+
+    for section_name in EXECUTIVE_SECTIONS:
+        content = sections.get(section_name)
+        if not content or not isinstance(content, str):
+            continue
+
+        cleaned_content, removed = apply_hard_blacklist(content, section_name)
+
+        if removed:
+            cleaned[section_name] = cleaned_content
+            removed_by_section[section_name] = removed
+            log.info(
+                "[leak_blacklist] Executive section %s: %d phrases removed",
+                section_name, len(removed)
+            )
+
+    return cleaned, removed_by_section
 
 
 # =============================================================================
@@ -548,16 +672,28 @@ def process_sections_zero_leak(
     """
     N3.6: Process all sections for zero-leak compliance.
 
+    Now includes hard blacklist pre-processing for executive sections.
+
     Args:
         sections: Section dictionary
 
     Returns:
         Tuple of (cleaned_sections, aggregated_report)
     """
-    cleaned = dict(sections)
+    # Step 1: Apply hard blacklist to executive sections FIRST
+    cleaned, blacklist_removed = process_executive_sections_blacklist(sections)
     total_report = ZeroLeakReport()
 
-    for section_id, content in sections.items():
+    # Track blacklist removals in report
+    for section_name, phrases in blacklist_removed.items():
+        total_report.categories["hard_blacklist"] = (
+            total_report.categories.get("hard_blacklist", 0) + len(phrases)
+        )
+        total_report.leaks_removed += len(phrases)
+        total_report.total_leaks_found += len(phrases)
+
+    # Step 2: Apply regular leak removal to all sections
+    for section_id, content in cleaned.items():
         # Skip metadata
         if section_id.startswith("_"):
             continue
@@ -580,8 +716,9 @@ def process_sections_zero_leak(
 
     if total_report.leaks_removed > 0:
         log.info(
-            "[N3.6-ZeroLeak] Sections processed: %d leaks removed total",
-            total_report.leaks_removed
+            "[N3.6-ZeroLeak] Sections processed: %d leaks removed total (hard_blacklist=%d)",
+            total_report.leaks_removed,
+            total_report.categories.get("hard_blacklist", 0)
         )
 
     return cleaned, total_report

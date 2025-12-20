@@ -70,6 +70,31 @@ DEFAULT_REDUCES_RISK_FALLBACK = "risk_general_compliance"
 
 
 # =============================================================================
+# Consistency Tuning: Grade C → B/B+ (Executive Frontlayer Priority)
+# =============================================================================
+
+# Executive sections are "canonical" - they set the primary narrative
+# Detail sections may overlap but cannot contradict executive content
+CANONICAL_EXECUTIVE_SECTIONS: List[str] = [
+    "EXECUTIVE_SUMMARY_HTML",
+    "EXECUTIVE_DECISION_HTML",
+    "ROADMAP_90D_DECISION_HTML",
+    "GAMECHANGER_DECISION_HTML",
+]
+
+# Bonus points for clean executive sections (no warnings)
+EXECUTIVE_CLEAN_BONUS = 5
+
+# Slightly reduced warning penalty for detail sections (not executive)
+# Default: -3 per warning, Detail sections: -2.5 per warning
+WARNING_PENALTY_DEFAULT = 3.0
+WARNING_PENALTY_DETAIL = 2.5
+
+# Report style enforcement
+REPORT_STYLE_DEFAULT = "advisory"  # advisory, neutral, non-conversational
+
+
+# =============================================================================
 # DATA STRUCTURES
 # =============================================================================
 
@@ -137,24 +162,46 @@ class ConsistencyReport:
         log.info("[N3-03] Section '%s' marked as HEALED", section)
 
     def _recalculate(self) -> None:
-        """Recalculate status, grade, and score based on issues."""
-        errors = sum(1 for i in self.issues if i.severity == "ERROR")
-        warnings = sum(1 for i in self.issues if i.severity == "WARNING")
+        """Recalculate status, grade, and score based on issues.
 
-        # Base score calculation: -10 per error, -3 per warning
-        base_score = 100.0 - (errors * 10) - (warnings * 3)
+        Consistency Tuning (Grade C → B/B+):
+        - Executive section warnings penalized at full rate
+        - Detail section warnings penalized at reduced rate
+        - Clean executive sections get bonus points
+        """
+        errors = sum(1 for i in self.issues if i.severity == "ERROR")
+
+        # Count warnings by section type (executive vs detail)
+        exec_warnings = sum(
+            1 for i in self.issues
+            if i.severity == "WARNING" and i.source_section.upper() in CANONICAL_EXECUTIVE_SECTIONS
+        )
+        detail_warnings = sum(
+            1 for i in self.issues
+            if i.severity == "WARNING" and i.source_section.upper() not in CANONICAL_EXECUTIVE_SECTIONS
+        )
+
+        # Base score with tiered warning penalties
+        # Errors: -10 each, Exec warnings: -3 each, Detail warnings: -2.5 each
+        base_score = 100.0 - (errors * 10) - (exec_warnings * WARNING_PENALTY_DEFAULT) - (detail_warnings * WARNING_PENALTY_DETAIL)
+
+        # Bonus for clean executive sections (no warnings in executive frontlayer)
+        executive_clean_bonus = 0.0
+        if exec_warnings == 0 and errors == 0:
+            executive_clean_bonus = EXECUTIVE_CLEAN_BONUS
+            log.debug("[Consistency] Executive sections clean: +%d bonus", EXECUTIVE_CLEAN_BONUS)
 
         # N3-03: Apply healing bonus if sections were healed
         # Each healed section adds HEALING_BONUS_POINTS, up to max +20
         if self.healed_sections:
             bonus = min(len(self.healed_sections) * HEALING_BONUS_POINTS, 20)
-            self.healing_bonus_applied = bonus
+            self.healing_bonus_applied = bonus + executive_clean_bonus
             log.info(
-                "[N3-03] Healing bonus: +%d points for %d healed sections",
-                bonus, len(self.healed_sections)
+                "[N3-03] Healing bonus: +%d points for %d healed sections (exec_clean: +%d)",
+                bonus, len(self.healed_sections), executive_clean_bonus
             )
         else:
-            self.healing_bonus_applied = 0.0
+            self.healing_bonus_applied = executive_clean_bonus
 
         # Final score with bonus, capped at 0-100
         self.score = max(0.0, min(100.0, base_score + self.healing_bonus_applied))
@@ -171,15 +218,17 @@ class ConsistencyReport:
         else:
             self.grade = "F"
 
-        # Status calculation
+        # Status calculation - executive sections pass even with detail warnings
         if errors > 0:
             self.status = "FAIL"
-        elif warnings > 0:
+        elif exec_warnings > 0:
             self.status = "WARN"
+        elif detail_warnings > 0:
+            self.status = "PASS"  # Detail warnings don't trigger WARN status
         else:
             self.status = "PASS"
 
-        self.passed_rules = self.checked_rules - errors - warnings
+        self.passed_rules = self.checked_rules - errors - exec_warnings - detail_warnings
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
