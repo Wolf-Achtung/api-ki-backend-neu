@@ -109,6 +109,34 @@
         }
       }
     },
+    "gamechanger_decision": {
+      "title": "Gamechanger Entscheidungsfassung",
+      "path": "gamechanger_decision.md",
+      "purpose": "Strategische Verdichtung des Gamechangers",
+      "size_aware": true,
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 800,
+        "solo": 700,
+        "team": 800,
+        "kmu": 900
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner"
+          }
+        }
+      }
+    },
     "quick_wins": {
       "title": "Quick Wins",
       "path": "quick_wins.md",
@@ -921,6 +949,34 @@
         "solo": 500,
         "team": 600,
         "kmu": 700
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Department",
+            "Team",
+            "Employees",
+            "Board"
+          ],
+          "replacement_map": {
+            "Governance": "Self-management",
+            "Stakeholder": "Partner"
+          }
+        }
+      }
+    },
+    "gamechanger_decision": {
+      "title": "Gamechanger Decision Version",
+      "path": "gamechanger_decision.md",
+      "purpose": "Strategic distillation of Gamechanger",
+      "size_aware": true,
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 800,
+        "solo": 700,
+        "team": 800,
+        "kmu": 900
       },
       "persona_rules": {
         "solo": {
