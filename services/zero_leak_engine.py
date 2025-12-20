@@ -62,6 +62,25 @@ EXECUTIVE_SECTIONS: List[str] = [
     "KI_STACK_SUMMARY_HTML",
 ]
 
+# Dual-key aliases: If we clean EXECUTIVE_SUMMARY_HTML, also clean executive_summary
+DUAL_KEY_ALIASES: Dict[str, str] = {
+    "EXECUTIVE_SUMMARY_HTML": "executive_summary",
+    "EXECUTIVE_DECISION_HTML": "executive_decision",
+    "ROADMAP_90D_DECISION_HTML": "roadmap_90d_decision",
+    "GAMECHANGER_DECISION_HTML": "gamechanger_decision",
+    "KI_STACK_SUMMARY_HTML": "ki_stack_summary",
+    "BRANCH_DEEP_DIVE_HTML": "branch_deep_dive",
+    "ROADMAP_SPRINT_HTML": "roadmap_sprint",
+    "QUICK_WINS_HTML": "quick_wins",
+    "BUSINESSCASE_HTML": "businesscase",
+    "GAMECHANGER_HTML": "gamechanger",
+    "RISIKEN_CHANCEN_HTML": "risiken_chancen",
+    "PROZESSCHECK_HTML": "prozesscheck",
+    "DATENSTRATEGIE_HTML": "datenstrategie",
+    "MITARBEITER_ENABLEMENT_HTML": "mitarbeiter_enablement",
+    "RESPONSIBLE_AI_HTML": "responsible_ai",
+}
+
 
 def apply_hard_blacklist(text: str, section_name: str = "") -> Tuple[str, List[str]]:
     """
@@ -722,3 +741,91 @@ def process_sections_zero_leak(
         )
 
     return cleaned, total_report
+
+
+def precommit_zero_leak_all_sections(
+    sections: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    Pre-commit zero-leak guard for ALL sections.
+
+    This function runs IMMEDIATELY after section generation, BEFORE
+    ReportValidator and N2-Healing. It applies the hard blacklist to
+    ALL sections (not just executive), with dual-key hygiene.
+
+    Features:
+    - Runs on ALL section keys, not just EXECUTIVE_SECTIONS
+    - Dual-key hygiene: cleans both *_HTML and lowercase aliases
+    - Logs: [leak_blacklist] and [precommit_zero_leak]
+
+    Args:
+        sections: Section dictionary from _generate_content_sections()
+
+    Returns:
+        Cleaned sections dictionary
+    """
+    cleaned = dict(sections)
+    cleaned_count = 0
+    total_phrases_removed = 0
+
+    # Process all string sections
+    for section_key, content in list(sections.items()):
+        # Skip metadata and non-string content
+        if section_key.startswith("_"):
+            continue
+        if not isinstance(content, str):
+            continue
+        if not content:
+            continue
+
+        # Apply hard blacklist
+        cleaned_content, removed_phrases = apply_hard_blacklist(content, section_key)
+
+        if removed_phrases:
+            cleaned[section_key] = cleaned_content
+            cleaned_count += 1
+            total_phrases_removed += len(removed_phrases)
+
+            # Dual-key hygiene: also clean the alias if exists
+            alias_key = DUAL_KEY_ALIASES.get(section_key)
+            if alias_key and alias_key in cleaned:
+                alias_content = cleaned.get(alias_key)
+                if isinstance(alias_content, str) and alias_content:
+                    cleaned_alias, alias_removed = apply_hard_blacklist(alias_content, alias_key)
+                    if alias_removed:
+                        cleaned[alias_key] = cleaned_alias
+                        log.debug(
+                            "[leak_blacklist] Also cleaned alias %s (%d phrases)",
+                            alias_key, len(alias_removed)
+                        )
+
+    # Also check reverse: lowercase keys that have uppercase aliases
+    reverse_aliases = {v: k for k, v in DUAL_KEY_ALIASES.items()}
+    for section_key, content in list(sections.items()):
+        if section_key.startswith("_"):
+            continue
+        if not isinstance(content, str) or not content:
+            continue
+        if section_key in DUAL_KEY_ALIASES:
+            continue  # Already processed above
+
+        # Check if this lowercase key has an uppercase alias
+        uppercase_key = reverse_aliases.get(section_key)
+        if uppercase_key:
+            # Already handled via dual-key hygiene above
+            continue
+
+        # Apply blacklist to remaining sections
+        cleaned_content, removed_phrases = apply_hard_blacklist(content, section_key)
+        if removed_phrases:
+            cleaned[section_key] = cleaned_content
+            cleaned_count += 1
+            total_phrases_removed += len(removed_phrases)
+
+    if cleaned_count > 0:
+        log.info(
+            "[precommit_zero_leak] cleaned=%d sections, phrases_removed=%d",
+            cleaned_count, total_phrases_removed
+        )
+
+    return cleaned
