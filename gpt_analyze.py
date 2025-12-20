@@ -4966,17 +4966,43 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     rate = int(
         briefing.get("stundensatz_eur") or os.getenv("DEFAULT_STUNDENSATZ_EUR", "60") or 60
     )
-    if total_h > 0:
+
+    # === CANONICAL TIME SAVINGS: Apply size-based cap for consistency ===
+    # Cap must match _build_prompt_vars() Block 7 and services/extra_sections.py
+    size_raw = (briefing.get("unternehmensgroesse", "") or "").lower()
+    if "solo" in size_raw or "freiberuf" in size_raw:
+        size_key = "solo"
+    elif "kmu" in size_raw or "11" in size_raw:
+        size_key = "kmu"
+    else:
+        size_key = "team"
+
+    max_hours_by_size = {"solo": 20, "team": 80, "kmu": 200}
+    max_hours = max_hours_by_size.get(size_key, 80)
+    capped_h = min(total_h, max_hours) if total_h > 0 else 0
+
+    if capped_h < total_h:
+        log.info(
+            "[_generate_content_sections] Capped time savings from %d to %d for size '%s'",
+            total_h, capped_h, size_key
+        )
+
+    if capped_h > 0:
         sections.update(
             {
-                "monatsersparnis_stunden": total_h,
-                "monatsersparnis_eur": total_h * rate,
-                "jahresersparnis_stunden": total_h * 12,
-                "jahresersparnis_eur": total_h * rate * 12,
+                # CANONICAL time savings variables (capped)
+                "monatsersparnis_stunden": capped_h,
+                "monatsersparnis_eur": capped_h * rate,
+                "jahresersparnis_stunden": capped_h * 12,
+                "jahresersparnis_eur": capped_h * rate * 12,
+                # Additional aliases for template consistency
+                "TIME_SAVINGS_MONTH_HOURS_CAPPED": capped_h,
+                "EINSPARUNG_STUNDEN_MONAT": capped_h,
+                "qw_hours_total": capped_h,  # Ensure qw_hours_total also uses capped value
                 "stundensatz_eur": rate,
                 "REALITY_NOTE_QW": (
                     "Praxis-Hinweis: Diese Quick-Wins sparen ~"
-                    f"{max(1, int(round(total_h * 0.7)))}–{int(round(total_h * 1.2))} h/Monat "
+                    f"{max(1, int(round(capped_h * 0.7)))}–{int(round(capped_h * 1.2))} h/Monat "
                     "(konservativ geschätzt)."
                 ),
             }
@@ -5476,7 +5502,19 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
 
     log.info("[%s] 🎨 Generating content sections with %s...", run_id, "PROMPT SYSTEM" if USE_PROMPT_SYSTEM else "legacy prompts")
     sections = _generate_content_sections(briefing=answers, scores=scores)
-    
+
+    # === PRECOMMIT ZERO-LEAK GUARD - Run BEFORE ReportValidator/N2-Healing ===
+    # Applies hard blacklist to ALL sections (not just executive), with dual-key hygiene
+    try:
+        from services.zero_leak_engine import precommit_zero_leak_all_sections
+        log.info("[%s] 🛡️ Running precommit zero-leak guard on ALL sections...", run_id)
+        sections = precommit_zero_leak_all_sections(sections)
+    except ImportError:
+        log.debug("[%s] zero_leak_engine.precommit_zero_leak_all_sections not available", run_id)
+    except Exception as exc:
+        log.warning("[%s] ⚠️ Precommit zero-leak guard failed: %s", run_id, exc)
+    # === END PRECOMMIT ZERO-LEAK GUARD ===
+
     now = datetime.now()
     # Core metadata + Language
     sections["LANG"] = getattr(br, "lang", "de")
