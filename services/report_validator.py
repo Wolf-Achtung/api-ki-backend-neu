@@ -2025,13 +2025,15 @@ def _build_generic_leak_fallback(section_name: str, company_size: str = "team", 
         """
 
     # Section-specific constructive fallbacks (N3.3 Premium Templates)
+    executive_summary_fallback = f"""
+            <p>Die strategische Analyse identifiziert signifikante KI-Potenziale für {context}.
+            Kernempfehlungen und priorisierte Maßnahmen sind in den folgenden Kapiteln detailliert.</p>
+        """
     section_fallbacks = {
         "ki_stack_summary": ki_stack_mckinsey,
         "branch_deep_dive": branch_deep_dive_bcg,
-        "executive_summary": f"""
-            <p>Die strategische Analyse identifiziert signifikante KI-Potenziale für {context}.
-            Kernempfehlungen und priorisierte Maßnahmen sind in den folgenden Kapiteln detailliert.</p>
-        """,
+        "executive_summary": executive_summary_fallback,
+        "exec_summary": executive_summary_fallback,  # Alias for tests
     }
 
     # Get section-specific fallback or use generic
@@ -2045,16 +2047,15 @@ def _build_generic_leak_fallback(section_name: str, company_size: str = "team", 
         </section>
         """
 
-    # Generic fallback (without support mention)
-    return f"""
-    <section class="section {section_key.replace('_', '-')}">
-      <p>
-        Dieser Abschnitt wurde auf Basis der verfügbaren Referenzdaten generiert.
-        Die Analyse berücksichtigt branchenspezifische Benchmarks und Best Practices
-        für {context}.
-      </p>
-    </section>
-    """
+    # Generic fallback - now returns empty string to avoid redundant placeholder text
+    # If multiple sections need healing, we don't want identical placeholder paragraphs
+    # appearing multiple times in the report. Section-specific fallbacks above should be
+    # used for important sections; others are simply hidden.
+    log.debug(
+        "[N2-Heal] No specific fallback for section '%s' - returning empty",
+        section_key
+    )
+    return ""
 
 
 def validate_and_heal(
