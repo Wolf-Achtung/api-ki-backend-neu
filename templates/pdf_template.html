@@ -2308,6 +2308,27 @@
         }
 
         /* ================================================
+           ROADMAP DECISION (Step 2/3)
+           ================================================ */
+        .roadmap-decision {
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 10pt;
+            padding: 12pt 14pt;
+            margin: 12pt 0 16pt 0;
+            background: rgba(0,0,0,0.02);
+        }
+        .roadmap-decision p {
+            margin: 0 0 8pt 0;
+        }
+        .roadmap-decision ul {
+            margin: 6pt 0 12pt 18pt;
+            padding: 0;
+        }
+        .roadmap-decision li {
+            margin: 4pt 0;
+        }
+
+        /* ================================================
            ROI-INTERPRETATION BOX
            ================================================ */
         .roi-interpretation-box {
@@ -2715,6 +2736,13 @@
                 {% if EXECUTIVE_DECISION_HTML %}
                 <div class="section executive-decision">
                     {{ EXECUTIVE_DECISION_HTML|safe }}
+                </div>
+                {% endif %}
+
+                <!-- Step 2/3: 90-DAY ROADMAP DECISION VERSION -->
+                {% if ROADMAP_90D_DECISION_HTML %}
+                <div class="section roadmap-decision-section">
+                    {{ ROADMAP_90D_DECISION_HTML|safe }}
                 </div>
                 {% endif %}
 
