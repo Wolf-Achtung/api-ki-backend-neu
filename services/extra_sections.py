@@ -361,7 +361,7 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
   <table class="table">
     <thead><tr><th>Parameter</th><th>Wert</th><th>Erläuterung</th></tr></thead>
     <tbody>
-      <tr><td>Gesamteinsparung</td><td>{_fmt_eur(total_hours)} h/Monat</td><td>Summe Quick‑Wins</td></tr>
+      <tr><td>Gesamteinsparung</td><td>{_fmt_eur(capped_hours)} h/Monat</td><td>Summe Quick‑Wins (gedeckelt)</td></tr>
       <tr><td>Stundensatz</td><td>{_fmt_eur(stundensatz)} €</td><td>Standardsatz (größenabhängig)</td></tr>
       <tr><td>Monetärer Nutzen</td><td>{_fmt_eur(einsparung_monat_eur)} €/Monat</td><td>Einsparung × Stundensatz (gedeckelt)</td></tr>
       <tr><td>Einführungskosten (CAPEX)</td><td>{_fmt_eur(capex)} €</td><td>Mittel des Budgetbandes, größenbereinigt</td></tr>
@@ -383,6 +383,10 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
         "ROI_12M": roi_12m_percent,
         "ROI_12M_EUR": roi_12m_eur,
         "BUSINESS_CASE_TABLE_HTML": table,
+        # Add capped hours for consistent display across report
+        "CAPPED_HOURS": capped_hours,
+        "monatsersparnis_stunden": capped_hours,
+        "qw_hours_total": capped_hours,
     }
 
 

@@ -2485,17 +2485,32 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # ===== BLOCK 7: Quick Wins & ROI (EXTENDED!) =====
     # Calculate hourly rate using our smart estimation function
     stundensatz_eur = _estimate_hourly_rate_from_revenue(briefing)
-    
+
     # Quick Win hours from environment or defaults
     qw1_h = int(os.getenv("DEFAULT_QW1_H", "20"))
     qw2_h = int(os.getenv("DEFAULT_QW2_H", "15"))
-    
-    # Calculate monthly and yearly savings
-    monatsersparnis_stunden = qw1_h + qw2_h
+
+    # Calculate monthly and yearly savings with SIZE-BASED CAP
+    # Cap must match services/extra_sections.py get_size_constraints()
+    max_hours_by_size = {
+        "solo": 20,
+        "team": 80,
+        "kmu": 200,
+    }
+    max_hours = max_hours_by_size.get(company_size, 80)
+    raw_hours = qw1_h + qw2_h
+    monatsersparnis_stunden = min(raw_hours, max_hours)
+
+    if monatsersparnis_stunden < raw_hours:
+        log.info(
+            "[gpt_analyze] Capped monatsersparnis_stunden from %d to %d for size '%s'",
+            raw_hours, monatsersparnis_stunden, company_size
+        )
+
     monatsersparnis_eur = monatsersparnis_stunden * stundensatz_eur
     jahresersparnis_stunden = monatsersparnis_stunden * 12
     jahresersparnis_eur = monatsersparnis_eur * 12
-    
+
     base_vars.update({
         "qw1_monat_stunden": qw1_h,
         "qw2_monat_stunden": qw2_h,
