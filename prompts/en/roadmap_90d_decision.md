@@ -84,3 +84,10 @@ STYLE:
 - Short sentences, one thought per bullet
 - No explanations, only action directives
 - Each phase must be independently readable
+
+STRICT OUTPUT RULE (mandatory):
+- NO placeholders like [1 sentence], [Max. 2-3 steps], {variable}, {{token}}
+- NO square brackets [ ] or curly braces { } in output
+- Write fully formulated, concrete sentences
+- If industry-specific details are missing, use realistic standard measures
+- Every bullet must be actionable as written, not as a template
