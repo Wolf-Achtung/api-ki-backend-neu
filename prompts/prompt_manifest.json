@@ -53,6 +53,34 @@
         }
       }
     },
+    "executive_decision": {
+      "title": "Executive Decision",
+      "path": "executive_decision.md",
+      "purpose": "Entscheidungsblock Tun/Lassen/Stop-Signal",
+      "size_aware": true,
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 400,
+        "solo": 350,
+        "team": 400,
+        "kmu": 450
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner"
+          }
+        }
+      }
+    },
     "quick_wins": {
       "title": "Quick Wins",
       "path": "quick_wins.md",
@@ -821,6 +849,34 @@
             "Governance": "Eigenverantwortung",
             "Stakeholder": "Partner",
             "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
+    },
+    "executive_decision": {
+      "title": "Executive Decision",
+      "path": "executive_decision.md",
+      "purpose": "Decision block Do/Don't/Stop-Signal",
+      "size_aware": true,
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 400,
+        "solo": 350,
+        "team": 400,
+        "kmu": 450
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Department",
+            "Team",
+            "Employees",
+            "Board"
+          ],
+          "replacement_map": {
+            "Governance": "Self-management",
+            "Stakeholder": "Partner"
           }
         }
       }
