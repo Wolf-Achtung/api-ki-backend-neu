@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from models import Briefing, Analysis, Report
+from utils.encoding_fixer import clean_briefing_data
 
 log = logging.getLogger(__name__)
 
@@ -22,11 +23,15 @@ def build_briefing_export_zip(db: Session, briefing_id: int, include_pdf: bool =
 
     mem = io.BytesIO()
     with ZipFile(mem, "w", ZIP_DEFLATED) as z:
+        # Apply encoding fix to answers (handles legacy data with Mojibake)
+        raw_answers = getattr(b, "answers", {}) or {}
+        cleaned_answers = clean_briefing_data(raw_answers)
+
         z.writestr("briefing.json", json.dumps({
             "id": b.id,
             "user_id": b.user_id,
             "lang": getattr(b, "lang", "de"),
-            "answers": getattr(b, "answers", {}),
+            "answers": cleaned_answers,
             "created_at": getattr(b, "created_at", None).isoformat() if getattr(b, "created_at", None) else None,
         }, ensure_ascii=False, indent=2))
 
