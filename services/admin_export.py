@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from models import Briefing, Analysis, Report
-from utils.encoding_fixer import clean_briefing_data
+from utils.encoding_fixer import clean_briefing_data, fix_utf8_encoding
 
 log = logging.getLogger(__name__)
 
@@ -36,8 +36,15 @@ def build_briefing_export_zip(db: Session, briefing_id: int, include_pdf: bool =
         }, ensure_ascii=False, indent=2))
 
         if a:
-            z.writestr("analysis/meta.json", json.dumps(getattr(a, "meta", {}) or {}, ensure_ascii=False, indent=2))
-            z.writestr("analysis/report.html", getattr(a, "html", "") or "")
+            # Also clean analysis.meta for UTF-8 consistency
+            raw_meta = getattr(a, "meta", {}) or {}
+            cleaned_meta = clean_briefing_data(raw_meta)
+            z.writestr("analysis/meta.json", json.dumps(cleaned_meta, ensure_ascii=False, indent=2))
+
+            # Clean report HTML for UTF-8 consistency
+            raw_html = getattr(a, "html", "") or ""
+            cleaned_html = fix_utf8_encoding(raw_html) if raw_html else ""
+            z.writestr("analysis/report.html", cleaned_html)
 
         if r:
             z.writestr("report/info.json", json.dumps({
