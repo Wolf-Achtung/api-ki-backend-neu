@@ -1766,6 +1766,25 @@
             font-style: italic;
             margin: 8pt 0 16pt 0;
         }
+
+        /* ================================================
+           REPORT READING HINT (Executive Frontlayer)
+           ================================================ */
+        .report-reading-hint {
+            margin: 20pt 0 24pt 0;
+            padding: 14pt 16pt;
+            background: rgba(0,0,0,0.02);
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 8pt;
+            font-size: 0.95em;
+        }
+        .report-reading-hint p {
+            margin: 0 0 8pt 0;
+            line-height: 1.5;
+        }
+        .report-reading-hint p:last-child {
+            margin-bottom: 0;
+        }
     </style>
 </head>
 <body>
@@ -1948,7 +1967,6 @@
                 <div class="section gamechanger-decision-section">
                     {{ GAMECHANGER_DECISION_HTML|safe }}
                 </div>
-                <p class="decision-bridge">The following section elaborates on this logic.</p>
                 {% endif %}
 
                 <!-- G20: AI STACK SUMMARY CARD -->
@@ -1970,7 +1988,25 @@
                 </section>
                 {% endif %}
 
-<!-- STRATEGIC CONTEXT & GUARDRAILS -->
+                <!-- EXECUTIVE FRONTLAYER ENDS - READING HINT -->
+                <div class="section report-reading-hint">
+                    <p><strong>How to read this report</strong></p>
+                    <p>
+                        The first pages summarize results, decisions,
+                        and next steps for quick orientation.
+                    </p>
+                    <p>
+                        The following chapters provide detail and
+                        background and are optional, depending on
+                        your information needs.
+                    </p>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- FULL REPORT BEGINS                             -->
+                <!-- ============================================== -->
+
+                <!-- STRATEGIC CONTEXT & GUARDRAILS -->
                 {% if strategische_ziele or zeitersparnis_prioritaet or hauptleistung or ki_projekte or geschaeftsmodell_evolution or vision_3_jahre or ki_guardrails %}
                 <section class="section chapter">
                     <div class="section-header">
