@@ -2329,6 +2329,33 @@
         }
 
         /* ================================================
+           GAMECHANGER DECISION (Step 3/3)
+           ================================================ */
+        .gamechanger-decision {
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 10pt;
+            padding: 14pt 16pt;
+            margin: 14pt 0 18pt 0;
+            background: rgba(0,0,0,0.02);
+        }
+        .gamechanger-decision p {
+            margin: 0 0 10pt 0;
+        }
+        .gamechanger-decision ul {
+            margin: 8pt 0 12pt 18pt;
+            padding: 0;
+        }
+        .gamechanger-decision li {
+            margin: 5pt 0;
+        }
+        .decision-bridge {
+            font-size: 9pt;
+            color: #666;
+            font-style: italic;
+            margin: 8pt 0 16pt 0;
+        }
+
+        /* ================================================
            ROI-INTERPRETATION BOX
            ================================================ */
         .roi-interpretation-box {
@@ -2744,6 +2771,14 @@
                 <div class="section roadmap-decision-section">
                     {{ ROADMAP_90D_DECISION_HTML|safe }}
                 </div>
+                {% endif %}
+
+                <!-- Step 3/3: GAMECHANGER DECISION VERSION -->
+                {% if GAMECHANGER_DECISION_HTML %}
+                <div class="section gamechanger-decision-section">
+                    {{ GAMECHANGER_DECISION_HTML|safe }}
+                </div>
+                <p class="decision-bridge">Die folgende Ausführung vertieft diese Logik.</p>
                 {% endif %}
 
                 <!-- G20: KI-STACK SUMMARY CARD -->

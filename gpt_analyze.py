@@ -4826,6 +4826,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         ("executive_summary", "EXECUTIVE_SUMMARY_HTML"),
         ("executive_decision", "EXECUTIVE_DECISION_HTML"),  # Step 1/3: Executive Decision Block
         ("roadmap_90d_decision", "ROADMAP_90D_DECISION_HTML"),  # Step 2/3: 90-Day Roadmap Decision Version
+        ("gamechanger_decision", "GAMECHANGER_DECISION_HTML"),  # Step 3/3: Gamechanger Decision Version
         ("ki_stack_summary", "KI_STACK_SUMMARY_HTML"),  # G20: KI-Stack Summary Card
         ("quick_wins", "_QUICK_WINS_RAW"),  # wird später aufbereitet
         ("roadmap", "PILOT_PLAN_HTML"),
