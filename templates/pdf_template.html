@@ -2356,6 +2356,25 @@
         }
 
         /* ================================================
+           REPORT READING HINT (Executive Frontlayer)
+           ================================================ */
+        .report-reading-hint {
+            margin: 20pt 0 24pt 0;
+            padding: 14pt 16pt;
+            background: rgba(0,0,0,0.02);
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 8pt;
+            font-size: 0.95em;
+        }
+        .report-reading-hint p {
+            margin: 0 0 8pt 0;
+            line-height: 1.5;
+        }
+        .report-reading-hint p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* ================================================
            ROI-INTERPRETATION BOX
            ================================================ */
         .roi-interpretation-box {
@@ -2778,7 +2797,6 @@
                 <div class="section gamechanger-decision-section">
                     {{ GAMECHANGER_DECISION_HTML|safe }}
                 </div>
-                <p class="decision-bridge">Die folgende Ausführung vertieft diese Logik.</p>
                 {% endif %}
 
                 <!-- G20: KI-STACK SUMMARY CARD -->
@@ -2799,6 +2817,24 @@
                     </div>
                 </section>
                 {% endif %}
+
+                <!-- EXECUTIVE FRONTLAYER ENDS - READING HINT -->
+                <div class="section report-reading-hint">
+                    <p><strong>Hinweis zur Struktur dieses Reports</strong></p>
+                    <p>
+                        Die ersten Seiten dieses Dokuments fassen die Ergebnisse,
+                        Entscheidungen und nächsten Schritte bewusst zusammen.
+                    </p>
+                    <p>
+                        Die folgenden Kapitel dienen der Vertiefung, Einordnung
+                        und Nachvollziehbarkeit und sind optional – je nach
+                        Informationsbedarf.
+                    </p>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- FULL REPORT BEGINS                             -->
+                <!-- ============================================== -->
 
                 <!-- STRATEGISCHER KONTEXT & LEITPLANKEN -->
                 {% if strategische_ziele or zeitersparnis_prioritaet or hauptleistung or ki_projekte or geschaeftsmodell_evolution or vision_3_jahre or ki_guardrails %}
