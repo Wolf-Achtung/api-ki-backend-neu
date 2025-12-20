@@ -2025,13 +2025,15 @@ def _build_generic_leak_fallback(section_name: str, company_size: str = "team", 
         """
 
     # Section-specific constructive fallbacks (N3.3 Premium Templates)
+    executive_summary_fallback = f"""
+            <p>Die strategische Analyse identifiziert signifikante KI-Potenziale für {context}.
+            Kernempfehlungen und priorisierte Maßnahmen sind in den folgenden Kapiteln detailliert.</p>
+        """
     section_fallbacks = {
         "ki_stack_summary": ki_stack_mckinsey,
         "branch_deep_dive": branch_deep_dive_bcg,
-        "executive_summary": f"""
-            <p>Die strategische Analyse identifiziert signifikante KI-Potenziale für {context}.
-            Kernempfehlungen und priorisierte Maßnahmen sind in den folgenden Kapiteln detailliert.</p>
-        """,
+        "executive_summary": executive_summary_fallback,
+        "exec_summary": executive_summary_fallback,  # Alias for tests
     }
 
     # Get section-specific fallback or use generic
