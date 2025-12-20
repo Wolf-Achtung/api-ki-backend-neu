@@ -84,3 +84,10 @@ STIL:
 - Kurze Sätze, ein Gedanke pro Bullet
 - Keine Erklärungen, nur Handlungsanweisungen
 - Jede Phase muss eigenständig lesbar sein
+
+STRIKTE AUSGABEREGEL (verbindlich):
+- KEINE Platzhalter wie [1 Satz], [Max. 2-3 Schritte], {variable}, {{token}}
+- KEINE eckigen Klammern [ ] oder geschweiften Klammern { } im Output
+- Schreibe vollständig ausformulierte, konkrete Sätze
+- Falls branchenspezifische Details fehlen, verwende realistische Standard-Maßnahmen
+- Jeder Bullet muss sofort umsetzbar formuliert sein, nicht als Template
