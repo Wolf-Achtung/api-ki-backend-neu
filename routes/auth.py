@@ -27,10 +27,6 @@ EMAIL_WHITELIST = {email.lower() for email in [
     "kerstin.geffert@gmail.com",
     "post@zero2.de",
     "giselapeter@peter-partner.de",
-    "berndemhart46@gmail.com",
-    "wolfhohl@googlemail.com",
-    "Po@wbs-slg.de",
-    "trailerman01@outlook.de",
     "wolf.hohl@web.de",
     "geffertj@mac.com",
     "geffertkilian@gmail.com",
@@ -131,54 +127,46 @@ async def request_code(payload: RequestCodeIn, request: Request):
     _store_code(str(payload.email), code, ttl_sec=600)
 
     mailer = Mailer.from_settings(s)
+    
+    # HTML-E-Mail im Stil der Landingpage (Farben, Claim, Layout angelehnt an index.html)
+    # Build minimal login email (deliverability-first)
+    ttl_sec = 600
+    mins = max(1, ttl_sec // 60)
+    subject = "Ihr Anmeldecode"
+    text_template = (
+        "Ihr persönlicher Anmeldecode lautet:
 
-    # Neutral HTML template for better deliverability (Outlook/web.de)
-    html_template = f"""
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <title>Ihr Anmeldecode</title>
-</head>
-<body style="margin:0;padding:20px;font-family:Arial,sans-serif;background:#ffffff;">
-  <p style="margin:0 0 16px 0;font-size:15px;color:#333333;">
-    Ihr persönlicher Anmeldecode lautet:
-  </p>
-  <p style="margin:0 0 16px 0;font-size:28px;font-weight:bold;letter-spacing:0.2em;color:#000000;font-family:monospace;">
-    {code}
-  </p>
-  <p style="margin:0 0 16px 0;font-size:14px;color:#555555;">
-    Der Code ist 10 Minuten gültig.
-  </p>
-  <p style="margin:0 0 16px 0;font-size:13px;color:#777777;">
-    Falls Sie diese Anmeldung nicht angefordert haben, können Sie diese E-Mail ignorieren.
-  </p>
-  <p style="margin:24px 0 0 0;font-size:12px;color:#999999;">
-    – ki-sicherheit.jetzt
-  </p>
-</body>
-</html>
-    """
+"
+        f"{code}
 
-    # Neutral plain text for better deliverability
-    text_template = f"""
-Ihr persönlicher Anmeldecode lautet:
+"
+        f"Der Code ist {mins} Minuten gültig.
 
-{code}
+"
+        "Falls Sie diese Anmeldung nicht angefordert haben, können Sie diese E-Mail ignorieren.
 
-Der Code ist 10 Minuten gültig.
+"
+        "Kein Code angekommen?
+"
+        "• Spam- oder Junk-Ordner prüfen
+"
+        "• Code einfach erneut anfordern
+"
+        "• Bei Problemen: support@ki-sicherheit.jetzt
 
-Falls Sie diese Anmeldung nicht angefordert haben, können Sie diese E-Mail ignorieren.
-
-– ki-sicherheit.jetzt
-    """
+"
+        "Diese E-Mail gehört zum Login-Prozess von ki-sicherheit.jetzt.
+"
+        "Es handelt sich nicht um Werbung.
+"
+    )
 
     try:
         await mailer.send(
             to=str(payload.email),
-            subject="Ihr Anmeldecode",
+            subject=subject,
             text=text_template.strip(),
-            html=html_template.strip(),
+            html=None,
         )
     except Exception as e:
         log.error("Failed to send login code email to %s: %s", payload.email, str(e))
