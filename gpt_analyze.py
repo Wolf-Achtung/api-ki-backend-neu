@@ -6243,6 +6243,55 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         log.warning("[%s] ⚠️ G37 Benchmark Engine failed: %s", run_id, e)
         sections.setdefault("BENCHMARK_ENGINE_HTML", "")
 
+    # =========================================================================
+    # FINAL-CHECK INTRO: ≤600 chars meta orientation + 2-3 decisions (Point 1)
+    # =========================================================================
+    try:
+        # Extract key KPIs for summary
+        overall_score = int(scores.get("overall", 0))
+        score_rating = sections.get("score_rating", "Starter")
+        company_size = sections.get("size_label", "KMU")
+        branch_label = sections.get("BRANCHE_LABEL", "")
+        payback_months = sections.get("PAYBACK_MONTHS", 0)
+        roi_12m = sections.get("ROI_12M", 0)
+
+        # Build ≤600 char intro based on score and language
+        if report_lang == "en":
+            intro_template = (
+                f"This AI Readiness Report analyzes your current AI maturity ({overall_score}/100 = {score_rating}) "
+                f"and provides actionable recommendations for {company_size}. "
+                f"Focus areas: Security, Efficiency, and Funding opportunities. "
+                f"Expected ROI: {roi_12m:.0f}% after 12 months with {'quick' if payback_months and payback_months < 6 else 'realistic'} payback."
+            )
+            decisions = [
+                "Start with 1 Quick Win within 14 days to validate AI benefits",
+                "Review 90-Day Roadmap for structured implementation phases",
+                "Check Funding section for eligible EU/national programs"
+            ]
+        else:
+            intro_template = (
+                f"Dieser KI-Readiness-Report analysiert Ihren aktuellen KI-Reifegrad ({overall_score}/100 = {score_rating}) "
+                f"und liefert konkrete Handlungsempfehlungen für {company_size}. "
+                f"Schwerpunkte: Sicherheit, Effizienz und Förderpotenziale. "
+                f"Erwarteter ROI: {roi_12m:.0f}% nach 12 Monaten bei {'schnellem' if payback_months and payback_months < 6 else 'realistischem'} Payback."
+            )
+            decisions = [
+                "Starten Sie mit 1 Quick Win innerhalb von 14 Tagen zur KI-Validierung",
+                "Prüfen Sie die 90-Tage-Roadmap für strukturierte Umsetzungsphasen",
+                "Sichten Sie die Förderprogramme für passende EU-/Bundesmittel"
+            ]
+
+        # Truncate to ≤600 chars
+        sections["FINAL_CHECK_INTRO"] = intro_template[:600]
+        sections["FINAL_CHECK_DECISIONS"] = decisions[:3]  # Max 3 decisions
+
+        log.info("[%s] ✅ Final-Check Intro generated (%d chars, %d decisions)",
+                 run_id, len(sections["FINAL_CHECK_INTRO"]), len(sections["FINAL_CHECK_DECISIONS"]))
+    except Exception as e:
+        log.warning("[%s] ⚠️ Final-Check Intro generation failed: %s", run_id, e)
+        sections.setdefault("FINAL_CHECK_INTRO", "")
+        sections.setdefault("FINAL_CHECK_DECISIONS", [])
+
     log.info("[%s] 🎨 Rendering final HTML...", run_id)
     # --- Sanitize dynamic sections to prevent HTML leaks (z. B. eingebettetes <html> im Pilot-Plan) ---
     # 3.1.4.16: Pass lang for EN locale sanitization (lastline guardrail)
