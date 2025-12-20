@@ -128,51 +128,45 @@ async def request_code(payload: RequestCodeIn, request: Request):
         return
 
     code = f"{secrets.randbelow(1000000):06d}"
-    _store_code(str(payload.email), code, ttl_sec=600)
+    ttl_sec = 600
+    _store_code(str(payload.email), code, ttl_sec=ttl_sec)
 
     mailer = Mailer.from_settings(s)
+    mins = max(1, ttl_sec // 60)
 
-    # Neutral HTML template for better deliverability (Outlook/web.de)
-    html_template = (
-        "<!DOCTYPE html>\n"
-        "<html lang=\"de\">\n"
-        "<head>\n"
-        "  <meta charset=\"UTF-8\">\n"
-        "  <title>Ihr Anmeldecode</title>\n"
-        "</head>\n"
-        "<body style=\"margin:0;padding:20px;font-family:Arial,sans-serif;background:#ffffff;\">\n"
-        "  <p style=\"margin:0 0 16px 0;font-size:15px;color:#333333;\">\n"
-        "    Ihr Anmeldecode lautet:\n"
-        "  </p>\n"
-        "  <p style=\"margin:0 0 16px 0;font-size:28px;font-weight:bold;letter-spacing:0.2em;color:#000000;font-family:monospace;\">\n"
-        f"    {code}\n"
-        "  </p>\n"
-        "  <p style=\"margin:0 0 16px 0;font-size:14px;color:#555555;\">\n"
-        "    Der Code ist 10 Minuten gueltig.\n"
-        "  </p>\n"
-        "  <p style=\"margin:0 0 16px 0;font-size:13px;color:#777777;\">\n"
-        "    Falls Sie diese Anmeldung nicht angefordert haben, koennen Sie diese E-Mail ignorieren.\n"
-        "  </p>\n"
-        "  <p style=\"margin:24px 0 0 0;font-size:12px;color:#999999;\">\n"
-        "    - ki-sicherheit.jetzt\n"
-        "  </p>\n"
-        "</body>\n"
-        "</html>"
+    subject = "Ihr Anmeldecode"
+
+    text_template = (
+        "Ihr persönlicher Anmeldecode lautet:\n\n"
+        + f"{code}\n\n"
+        + f"Der Code ist {mins} Minuten gültig.\n\n"
+        + "Falls Sie diese Anmeldung nicht angefordert haben, können Sie diese E-Mail ignorieren.\n\n"
+        + "Kein Code angekommen?\n"
+        + "• Spam- oder Junk-Ordner prüfen\n"
+        + "• Code einfach erneut anfordern\n"
+        + "• Bei Problemen: support@ki-sicherheit.jetzt\n\n"
+        + "Diese E-Mail gehört zum Login-Prozess von ki-sicherheit.jetzt.\n"
+        + "Es handelt sich nicht um Werbung.\n\n"
+        + "– ki-sicherheit.jetzt\n"
     )
 
-    # Neutral plain text for better deliverability
-    text_template = (
-        "Ihr Anmeldecode lautet:\n\n"
-        f"{code}\n\n"
-        "Der Code ist 10 Minuten gueltig.\n\n"
-        "Falls Sie diese Anmeldung nicht angefordert haben, koennen Sie diese E-Mail ignorieren.\n\n"
-        "- ki-sicherheit.jetzt"
+    html_template = (
+        "<!DOCTYPE html>\n"
+        + "<html lang=\"de\">\n"
+        + "<head><meta charset=\"UTF-8\"><title>Ihr Anmeldecode</title></head>\n"
+        + "<body style=\"margin:0;padding:20px;font-family:Arial,sans-serif;background:#fff;\">\n"
+        + "<p style=\"font-size:15px;color:#333;\">Ihr persönlicher Anmeldecode lautet:</p>\n"
+        + f"<p style=\"font-size:28px;font-weight:bold;letter-spacing:0.2em;font-family:monospace;\">{code}</p>\n"
+        + f"<p style=\"font-size:14px;color:#555;\">Der Code ist {mins} Minuten gültig.</p>\n"
+        + "<p style=\"font-size:13px;color:#777;\">Falls Sie diese Anmeldung nicht angefordert haben, können Sie diese E-Mail ignorieren.</p>\n"
+        + "<p style=\"font-size:12px;color:#999;margin-top:24px;\">– ki-sicherheit.jetzt</p>\n"
+        + "</body></html>"
     )
 
     try:
         await mailer.send(
             to=str(payload.email),
-            subject="Ihr Anmeldecode",
+            subject=subject,
             text=text_template,
             html=html_template,
         )
