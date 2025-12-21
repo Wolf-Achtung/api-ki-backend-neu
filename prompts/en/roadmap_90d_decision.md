@@ -1,4 +1,6 @@
 Developer:
+IMPORTANT: Use no address, no questions, no assistant or chat phrasing. Write in neutral report language only.
+
 <!-- PLATIN+++ PROMPT v1.0 - ROADMAP 90D DECISION -->
 <!-- SECTION: roadmap_90d_decision -->
 <!--
