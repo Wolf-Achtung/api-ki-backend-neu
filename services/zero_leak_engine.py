@@ -85,6 +85,16 @@ HARD_BLACKLIST_PHRASES: List[str] = [
     "you have not asked a question",
     "describe what you need help with",
     "tell me what you need",
+    # FINAL GO FIX v3: Fragment patterns (remnants after partial cleanup)
+    "oder aufgabe in deiner nachricht",
+    "oder frage in deiner nachricht",
+    "aufgabe in deiner nachricht",
+    "frage in deiner nachricht",
+    "in deiner nachricht",
+    "in ihrer nachricht",
+    "or task in your message",
+    "or question in your message",
+    "in your message",
 ]
 
 # Executive sections that require hard blacklist enforcement
@@ -796,6 +806,7 @@ def precommit_zero_leak_all_sections(
     Features:
     - Runs on ALL section keys, not just EXECUTIVE_SECTIONS
     - Dual-key hygiene: cleans both *_HTML and lowercase aliases
+    - FAIL-CLOSED for EXECUTIVE_SECTIONS: if any phrase removed, suppress entirely
     - Logs: [leak_blacklist] and [precommit_zero_leak]
 
     Args:
@@ -822,6 +833,23 @@ def precommit_zero_leak_all_sections(
         cleaned_content, removed_phrases = apply_hard_blacklist(content, section_key)
 
         if removed_phrases:
+            # FINAL GO FIX v3: FAIL-CLOSED for executive sections
+            # If ANY phrase was removed from an executive section, suppress it entirely
+            # Better no section than fragmentary assistant text
+            if section_key in EXECUTIVE_SECTIONS:
+                log.warning(
+                    "[precommit_zero_leak] FAIL-CLOSED: %s had %d phrases removed - suppressing section entirely",
+                    section_key, len(removed_phrases)
+                )
+                cleaned[section_key] = ""
+                # Also suppress the alias
+                alias_key = DUAL_KEY_ALIASES.get(section_key)
+                if alias_key and alias_key in cleaned:
+                    cleaned[alias_key] = ""
+                cleaned_count += 1
+                total_phrases_removed += len(removed_phrases)
+                continue
+
             cleaned[section_key] = cleaned_content
             cleaned_count += 1
             total_phrases_removed += len(removed_phrases)

@@ -400,7 +400,7 @@ def render(briefing_obj: Any,
                     sections[key] = cleaned
                     log.debug("[RENDER-HYGIENE] Cleaned '?' from HTML: %s", key)
 
-    # FINAL GO FIX v2: Fail-closed for BRANCH_DEEP_DIVE_HTML
+    # FINAL GO FIX v3: Fail-closed for executive sections with assistant text
     # Suppress section entirely if it contains assistant-like text
     ASSISTANT_POISON_PHRASES = [
         "beschreibe dein anliegen",
@@ -413,7 +413,13 @@ def render(briefing_obj: Any,
         "describe your request",
         "tell me what you need",
         "I don't see a question",
+        # FINAL GO v3: Additional fragment patterns
+        "oder aufgabe in deiner nachricht",
+        "in deiner nachricht",
+        "aufgabe in deiner",
+        "frage in deiner",
     ]
+    # Check BRANCH_DEEP_DIVE_HTML
     if sections.get("BRANCH_DEEP_DIVE_HTML"):
         content_lower = sections["BRANCH_DEEP_DIVE_HTML"].lower()
         for phrase in ASSISTANT_POISON_PHRASES:
@@ -421,6 +427,15 @@ def render(briefing_obj: Any,
                 log.warning("[RENDER-HYGIENE] BRANCH_DEEP_DIVE_HTML contains assistant text '%s' - suppressing section", phrase)
                 sections["BRANCH_DEEP_DIVE_HTML"] = ""
                 sections["branch_deep_dive"] = ""
+                break
+    # Check KI_STACK_SUMMARY_HTML (FINAL GO v3)
+    if sections.get("KI_STACK_SUMMARY_HTML"):
+        content_lower = sections["KI_STACK_SUMMARY_HTML"].lower()
+        for phrase in ASSISTANT_POISON_PHRASES:
+            if phrase.lower() in content_lower:
+                log.warning("[RENDER-HYGIENE] KI_STACK_SUMMARY_HTML contains assistant text '%s' - suppressing section", phrase)
+                sections["KI_STACK_SUMMARY_HTML"] = ""
+                sections["ki_stack_summary"] = ""
                 break
 
     # Mark HTML sections as safe (prevent escaping)
