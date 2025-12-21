@@ -1,4 +1,24 @@
-Developer:
+SYSTEMMODUS (zwingend):
+Dies ist KEINE Antwort auf eine Anfrage.
+Es wird ein fertiger Berichtstext erzeugt.
+Es existiert kein Dialog, keine Frage, kein Nutzer.
+Der Text wird direkt in ein PDF übernommen.
+
+AUSGABEKONTRAKT:
+- Ausschließlich deklarative Berichtssätze
+- Keine Anrede, keine Fragen, keine Meta-Kommentare
+- Keine Imperative
+- Kein Bezug auf Eingaben, Nachrichten oder Nutzer
+- Keine Selbstreferenzen
+
+STARTFORMAT (zwingend):
+Beginne mit einem neutralen Substantivsatz
+(z. B. „Der aktuelle Zustand…", „Die empfohlene Vorgehensweise…").
+
+NICHT ERLAUBT:
+„wie kann ich helfen", „ich sehe keine frage", „beschreibe dein anliegen",
+„du hast noch keine frage", „bitte", „frage".
+
 <!-- PLATIN+++ PROMPT v1.0 - EXECUTIVE DECISION BLOCK -->
 <!-- SECTION: executive_decision -->
 <!--
@@ -33,7 +53,7 @@ VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>, <header>
 <!-- WORD_MINIMUM: 60 -->
 <!-- WORD_MAXIMUM: 90 -->
 
-Erstelle einen kompakten Entscheidungsblock für {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
+Erzeuge einen kompakten Entscheidungsblock für {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
 
 INHALTLICHE VERDICHTUNG (nutze nur vorhandene Konzepte):
 - "Standard-Workflow" = Input → KI-Entwurf → Review → Freigabe
