@@ -3186,8 +3186,8 @@
                     </div>
                 </section>
                 {% endif %}
-                <!-- G24: Branch Deep-Dive Addon -->
-                {% if BRANCH_DEEP_DIVE_HTML %}
+                <!-- G24: Branch Deep-Dive Addon (FINAL GO: fail-closed) -->
+                {% if BRANCH_DEEP_DIVE_HTML and BRANCH_DEEP_DIVE_HTML|trim and '<' in BRANCH_DEEP_DIVE_HTML %}
                 <section class="section chapter" id="branch-deep-dive">
                     <div class="section-header" data-ui="1">
                         <div class="section-title">

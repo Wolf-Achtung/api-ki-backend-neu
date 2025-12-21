@@ -400,6 +400,29 @@ def render(briefing_obj: Any,
                     sections[key] = cleaned
                     log.debug("[RENDER-HYGIENE] Cleaned '?' from HTML: %s", key)
 
+    # FINAL GO FIX v2: Fail-closed for BRANCH_DEEP_DIVE_HTML
+    # Suppress section entirely if it contains assistant-like text
+    ASSISTANT_POISON_PHRASES = [
+        "beschreibe dein anliegen",
+        "schreib mir, wobei ich dir helfen",
+        "dann antworte ich",
+        "wobei ich dir helfen soll",
+        "ich sehe keine konkrete frage",
+        "du hast noch keine frage",
+        "wie kann ich dir helfen",
+        "describe your request",
+        "tell me what you need",
+        "I don't see a question",
+    ]
+    if sections.get("BRANCH_DEEP_DIVE_HTML"):
+        content_lower = sections["BRANCH_DEEP_DIVE_HTML"].lower()
+        for phrase in ASSISTANT_POISON_PHRASES:
+            if phrase.lower() in content_lower:
+                log.warning("[RENDER-HYGIENE] BRANCH_DEEP_DIVE_HTML contains assistant text '%s' - suppressing section", phrase)
+                sections["BRANCH_DEEP_DIVE_HTML"] = ""
+                sections["branch_deep_dive"] = ""
+                break
+
     # Mark HTML sections as safe (prevent escaping)
     safe_sections = {}
     for key, value in sections.items():
