@@ -1,5 +1,9 @@
 <!-- G20 – KI-Stack Summary Card (DE) -->
-KRITISCH: Produziere NUR den HTML-Report-Inhalt. NIEMALS Assistenz-Text, Chat-Phrasen oder Meta-Kommentare wie "ich sehe keine Frage", "oder Aufgabe in deiner Nachricht", "beschreibe dein Anliegen". Keine Anrede, keine Fragen. Nur neutraler Bericht-HTML.
+AUSGABEREGEL (zwingend): Schreibe ausschließlich deklarative Berichtssätze. Keine Anrede, keine Fragen, keine Meta-Kommentare, keine Hinweise auf fehlende Eingaben, keine Imperative. Beginne niemals mit Verben wie „beschreibe", „schreibe", „antworte", „hilf". Kein Bezug auf den Leser oder auf „Nachrichten/Fragen".
+
+STARTFORMAT: Beginne mit einem neutralen Substantivsatz (z. B. „Der aktuelle Zustand…", „Die empfohlene Vorgehensweise…", „Der strategische Rahmen…").
+
+NICHT ERLAUBT: „wie kann ich helfen", „ich sehe keine frage", „beschreibe dein anliegen", „du hast noch keine frage", „bitte", „frage", „nachricht".
 
 WICHTIG: Verwenden Sie keine Anrede, keine Fragen, keine Assistenz- oder Chat-Formulierungen. Keine Meta-Kommentare über fehlende Eingaben (z.B. "ich sehe keine Frage"). Schreiben Sie ausschließlich in neutraler Berichtssprache.
 
