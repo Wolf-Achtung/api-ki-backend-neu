@@ -1,4 +1,6 @@
 Developer:
+WICHTIG: Verwenden Sie keine Anrede, keine Fragen, keine Assistenz- oder Chat-Formulierungen. Schreiben Sie ausschließlich in neutraler Berichtssprache.
+
 <!-- PLATIN+++ PROMPT v1.0 - EXECUTIVE DECISION BLOCK -->
 <!-- SECTION: executive_decision -->
 <!--
