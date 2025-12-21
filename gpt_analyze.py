@@ -6893,9 +6893,9 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
         if user_email:
             user_attachments = [] if pdf_url else attachments_admin[:1]
             ok, err = _send_email_via_resend(
-                user_email, 
-                "Ihr KI‑Status‑Report ist fertig", 
-                render_report_ready_email(recipient="user", pdf_url=pdf_url),
+                user_email,
+                "Ihr KI‑Status‑Report ist fertig",
+                render_report_ready_email(recipient="user", pdf_url=pdf_url, user_email=user_email),
                 attachments=user_attachments
             )
             if ok: 

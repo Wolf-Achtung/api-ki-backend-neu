@@ -3,8 +3,15 @@ from __future__ import annotations
 """E‑Mail‑Templates (HTML) für den Report-Versand (UTF‑8, mobil‑tauglich)."""
 from html import escape
 from typing import Optional
+from urllib.parse import quote
 
-def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_summary_html: Optional[str] = None) -> str:
+
+def generate_feedback_link(email: str) -> str:
+    """Generiert den Feedback-Link mit der E-Mail als URL-Parameter."""
+    encoded_email = quote(email)
+    return f"https://make.ki-sicherheit.jetzt/feedback/feedback.html?email={encoded_email}"
+
+def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_summary_html: Optional[str] = None, user_email: Optional[str] = None) -> str:
     if recipient == "admin":
         title = "Kopie: KI‑Status‑Report (inkl. Briefing)"
         intro = "dies ist die Admin‑Kopie des automatisch generierten KI‑Status‑Reports."
@@ -24,6 +31,17 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
         <h2 style="color:#0b3b8f;font-size:18px;margin:16px 0 8px">📋 Briefing-Details</h2>
         <p class="muted">Nachfolgend die wichtigsten Angaben des Users für Qualitätskontrolle und Nachvollziehbarkeit:</p>
         {briefing_summary_html}
+        """
+
+    # Add feedback section for user emails only
+    feedback_section = ""
+    if recipient != "admin" and user_email:
+        feedback_link = generate_feedback_link(user_email)
+        feedback_section = f"""
+        <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
+        <p style="font-size:15px;margin:0 0 8px">💬 <strong>Ihr Feedback hilft!</strong></p>
+        <p class="muted" style="margin:0 0 12px">Wie hilfreich war der Report? Was können wir verbessern?<br>Dauert nur 2–3 Minuten:</p>
+        <p><a href="{escape(feedback_link)}" style="color:#0b3b8f;font-weight:600">→ Feedback geben</a></p>
         """
 
     return f"""<!doctype html>
@@ -51,6 +69,7 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
         {link_html}
         {briefing_section}
         <p class="muted">{escape(cta_hint)}</p>
+        {feedback_section}
         <p class="muted">Hinweis: Diese E‑Mail wurde automatisch erzeugt.</p>
       </div>
     </div>
