@@ -378,6 +378,17 @@ def render(briefing_obj: Any,
         # Fallback: 10 + 8 + 18 = 36 hours (DEFAULT_QW1_H + DEFAULT_QW2_H + FALLBACK_QW_MONTHLY_H)
         sections['qw_hours_total'] = 36
 
+    # FIX #1: Server-side hygiene for placeholder strings
+    # Clean up placeholder artifacts before template rendering
+    PLACEHOLDER_ARTIFACTS = {'?', '??', '???', '—', '-', '–', '...', '…', 'n/a', 'N/A', 'TBD'}
+    for key, value in list(sections.items()):
+        if isinstance(value, str) and key.endswith('_HTML'):
+            stripped = value.strip()
+            # If the entire section is just a placeholder, set to empty string
+            if stripped in PLACEHOLDER_ARTIFACTS or not stripped:
+                sections[key] = ''
+                log.debug("[RENDER-HYGIENE] Cleared placeholder section: %s", key)
+
     # Mark HTML sections as safe (prevent escaping)
     safe_sections = {}
     for key, value in sections.items():
