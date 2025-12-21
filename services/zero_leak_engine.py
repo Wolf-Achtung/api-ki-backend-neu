@@ -42,6 +42,18 @@ HARD_BLACKLIST_PHRASES: List[str] = [
     "ich bin ein KI-Assistent",
     "als künstliche Intelligenz",
     "ich bin eine künstliche Intelligenz",
+    # FINAL GO FIX: Meta-commentary phrases (LLM safety responses)
+    "ich sehe keine konkrete frage",
+    "ich sehe keine konkrete aufgabe",
+    "ich sehe keine frage",
+    "ich sehe keine aufgabe",
+    "keine konkrete frage",
+    "keine konkrete aufgabe",
+    "bitte beschreibe kurz dein anliegen",
+    "bitte beschreiben sie kurz ihr anliegen",
+    "ich benötige weitere informationen",
+    "ohne weitere angaben kann ich",
+    "mir fehlen die nötigen informationen",
     # English assistant phrases
     "how can I help you",
     "how may I assist you",
@@ -51,6 +63,11 @@ HARD_BLACKLIST_PHRASES: List[str] = [
     "as a language model",
     "I am an AI",
     "I'm an AI",
+    # English meta-commentary
+    "I don't see a specific question",
+    "I don't see a question",
+    "please describe your request",
+    "I need more information",
 ]
 
 # Executive sections that require hard blacklist enforcement
