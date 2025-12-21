@@ -623,6 +623,11 @@ def remove_leaks(text: str, aggressive: bool = False) -> Tuple[str, ZeroLeakRepo
     cleaned = re.sub(r',\s*,', ',', cleaned)
     cleaned = re.sub(r'<p>\s*</p>', '', cleaned)
     cleaned = re.sub(r'<li>\s*</li>', '', cleaned)
+    # FIX B: Remove standalone "?" placeholders (not in natural text like "Warum jetzt?")
+    # Pattern: "?" alone in a tag, or "?" at start of line, or "??" sequences
+    cleaned = re.sub(r'>\s*\?\s*<', '><', cleaned)  # "?" alone between tags
+    cleaned = re.sub(r'^\s*\?\s*$', '', cleaned, flags=re.MULTILINE)  # "?" alone on line
+    cleaned = re.sub(r'\?\?+', '—', cleaned)  # Multiple "?" become em-dash
 
     report.leaks_removed = len(leaks)
 

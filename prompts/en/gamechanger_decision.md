@@ -81,3 +81,6 @@ STRICT OUTPUT RULE (mandatory):
 - Write fully formulated, concrete sentences
 - If industry-specific details are missing, use realistic standard statements
 - Every paragraph must be immediately quotable, not a template
+
+GUARDRAIL (mandatory):
+No assistant or chat formulations (e.g., "how can I help", "I'd be happy to explain"). Use report language only.
