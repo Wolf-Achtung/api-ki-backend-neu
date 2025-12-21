@@ -121,14 +121,14 @@ Use the PLATIN++ Design Enhancement System with the following components:
 <div class="ki-stack-summary">
   <!-- Top 3 Tools -->
   <div class="stack-section">
-    <h3 class="stack-section-title">Top 3 Recommended Tools</h3>
+    <p class="stack-section-title"><strong>Top 3 Recommended Tools</strong></p>
 
     <div class="pair-card">
       <div class="pair-card-icon">
         [Insert SVG icon here]
       </div>
       <div class="pair-card-content">
-        <h4 class="pair-card-name">Tool Name</h4>
+        <p class="pair-card-name"><strong>Tool Name</strong></p>
         <span class="pair-card-category">Automation</span>
         <p class="pair-card-description">Brief description in one sentence.</p>
       </div>
@@ -138,17 +138,17 @@ Use the PLATIN++ Design Enhancement System with the following components:
 
   <!-- Funding Programmes -->
   <div class="stack-section">
-    <h3 class="stack-section-title">Relevant Funding Programmes</h3>
+    <p class="stack-section-title"><strong>Relevant Funding Programmes</strong></p>
     [2 pair-cards with funding icon...]
   </div>
 
   <!-- Starter Kit -->
   <div class="stack-section">
-    <h3 class="stack-section-title">Starter Kit in 3 Steps</h3>
+    <p class="stack-section-title"><strong>Starter Kit in 3 Steps</strong></p>
     <div class="step-cards">
       <div class="step-card">
         <div class="step-card-number">1</div>
-        <h4 class="step-card-title">Setup</h4>
+        <p class="step-card-title"><strong>Setup</strong></p>
         <div class="step-card-body">Description...</div>
       </div>
       [Steps 2 and 3...]
@@ -157,7 +157,7 @@ Use the PLATIN++ Design Enhancement System with the following components:
 
   <!-- KPIs -->
   <div class="stack-section">
-    <h3 class="stack-section-title">Business Case Metrics</h3>
+    <p class="stack-section-title"><strong>Business Case Metrics</strong></p>
     <div class="kpi-triple">
       <div class="kpi">
         <span class="kpi-label">ROI</span>
@@ -196,3 +196,6 @@ Return exactly one HTML block containing the five components in this order:
 5. Branch badge + AI Act risk level
 
 No additional comments, no meta explanations.
+
+GUARDRAIL (mandatory):
+No assistant or chat formulations (e.g., "how can I help", "I'd be happy to explain"). Use report language only.
