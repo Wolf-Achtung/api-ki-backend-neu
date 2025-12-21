@@ -41,7 +41,7 @@ FORBIDDEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>, <header>
 <!-- WORD_MINIMUM: 60 -->
 <!-- WORD_MAXIMUM: 90 -->
 
-Create a compact decision block for {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
+Generate a compact decision block for {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
 
 CONTENT CONDENSATION (use only existing concepts):
 - "Standard workflow" = Input → AI draft → Review → Release

@@ -44,7 +44,7 @@ VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>, <header>
 <!-- WORD_MINIMUM: 200 -->
 <!-- WORD_MAXIMUM: 300 -->
 
-Erstelle eine Entscheidungsfassung der 90-Tage-Roadmap für {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
+Erzeuge eine Entscheidungsfassung der 90-Tage-Roadmap für {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
 
 INHALTLICHE GRUNDLAGE:
 Verdichte die bestehenden Roadmap-Inhalte. Erfinde nichts Neues.

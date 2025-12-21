@@ -44,7 +44,7 @@ FORBIDDEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>, <header>
 <!-- WORD_MINIMUM: 200 -->
 <!-- WORD_MAXIMUM: 300 -->
 
-Create a decision version of the 90-day roadmap for {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
+Generate a decision version of the 90-day roadmap for {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
 
 CONTENT BASIS:
 Condense existing roadmap content. Do not invent anything new.

@@ -44,7 +44,7 @@ FORBIDDEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>, <header>
 <!-- WORD_MINIMUM: 350 -->
 <!-- WORD_MAXIMUM: 450 -->
 
-Create a strategic decision version of the Gamechanger for {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
+Generate a strategic decision version of the Gamechanger for {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
 
 CONTENT BASIS:
 Distill existing Gamechanger content. Do not invent anything new.
