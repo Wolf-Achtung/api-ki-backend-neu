@@ -1972,205 +1972,488 @@
             color: rgba(0,0,0,0.55);
             text-decoration: underline;
         }
+
+        /* ================================================
+           EXECUTIVE PAGES REDESIGN (McKinsey-Style)
+           Page 1: Orientation | Page 2: Decision | Page 3: ToC
+           ================================================ */
+
+        /* --- Page 1: Executive Orientation --- */
+        .exec-orientation {
+            padding: var(--space-lg) 0;
+        }
+        .exec-orientation .header {
+            border: none;
+            background: transparent;
+            padding: var(--space-md) 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+        .exec-kpi-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-md);
+            margin: var(--space-lg) 0;
+            padding: var(--space-md) 0;
+            border-top: 1px solid var(--color-border-subtle);
+            border-bottom: 1px solid var(--color-border-subtle);
+        }
+        .exec-kpi-item {
+            text-align: center;
+            padding: var(--space-sm);
+        }
+        .exec-kpi-item:not(:last-child) {
+            border-right: 1px solid var(--color-border-subtle);
+        }
+        .exec-kpi-value {
+            font-size: 18pt;
+            font-weight: 700;
+            color: var(--color-text-strong);
+            margin-bottom: 2pt;
+        }
+        .exec-kpi-label {
+            font-size: var(--font-caption);
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .exec-kpi-note {
+            font-size: 7.5pt;
+            color: var(--color-text-muted);
+            margin-top: 2pt;
+        }
+        .exec-maturity-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-sm);
+            margin: var(--space-md) 0;
+            padding: var(--space-sm);
+            background: var(--color-bg-surface);
+            border-radius: var(--radius-tag);
+            font-size: var(--font-body);
+        }
+        .exec-maturity-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4pt;
+            padding: 2pt 8pt;
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border: 1px solid var(--color-brand-primary);
+            border-radius: var(--radius-tag);
+            font-weight: 600;
+            color: var(--color-brand-accent);
+        }
+        .exec-trust-line {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-md);
+            margin-top: var(--space-md);
+            font-size: 7.5pt;
+            color: var(--color-text-muted);
+        }
+        .exec-trust-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4pt;
+        }
+        .exec-trust-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--color-text-muted);
+        }
+
+        /* --- Page 2: Executive Decision --- */
+        .exec-decision-page {
+            page-break-before: always;
+            break-before: page;
+            padding-top: var(--space-lg);
+        }
+        .exec-decision-header {
+            margin-bottom: var(--space-md);
+        }
+        .exec-decision-header h2 {
+            font-size: var(--font-h3);
+            color: var(--color-text-strong);
+            margin: 0 0 var(--space-xs) 0;
+        }
+        .exec-final-check {
+            margin-bottom: var(--space-lg);
+            padding: var(--space-md);
+            background: var(--color-bg-surface);
+            border-left: 3px solid var(--color-brand-primary);
+            border-radius: 0 var(--radius-tag) var(--radius-tag) 0;
+        }
+        .exec-final-check h3 {
+            font-size: var(--font-body);
+            font-weight: 600;
+            color: var(--color-brand-accent);
+            margin: 0 0 var(--space-xs) 0;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .exec-final-check p {
+            font-size: var(--font-body);
+            margin: 0 0 var(--space-sm) 0;
+            max-width: none;
+        }
+        .exec-final-check ul {
+            margin: 0;
+            padding-left: var(--space-md);
+        }
+        .exec-final-check li {
+            font-size: var(--font-body);
+            margin-bottom: 2pt;
+        }
+        .exec-top3 {
+            margin-bottom: var(--space-lg);
+        }
+        .exec-top3 h3 {
+            font-size: var(--font-h4);
+            color: var(--color-text-strong);
+            margin: 0 0 var(--space-sm) 0;
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+        .exec-top3 ol {
+            margin: 0;
+            padding-left: var(--space-lg);
+            counter-reset: top3-counter;
+            list-style: none;
+        }
+        .exec-top3 li {
+            position: relative;
+            padding: var(--space-xs) 0;
+            border-bottom: 1px solid var(--color-border-subtle);
+            font-size: var(--font-body);
+            counter-increment: top3-counter;
+            padding-left: var(--space-lg);
+        }
+        .exec-top3 li::before {
+            content: counter(top3-counter);
+            position: absolute;
+            left: 0;
+            width: 18px;
+            height: 18px;
+            background: var(--color-brand-primary);
+            color: #fff;
+            border-radius: 50%;
+            font-size: 10pt;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .exec-top3 li:last-child {
+            border-bottom: none;
+        }
+        .exec-continue {
+            margin-top: var(--space-md);
+            padding: var(--space-sm);
+            background: var(--color-bg-surface);
+            border-radius: var(--radius-tag);
+            font-size: var(--font-small);
+            color: var(--color-text-muted);
+            text-align: center;
+        }
+
+        /* --- Page 3: Executive ToC --- */
+        .exec-toc-page {
+            page-break-before: always;
+            break-before: page;
+            padding-top: var(--space-lg);
+        }
+        .exec-toc {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .exec-toc h2 {
+            font-size: var(--font-h2);
+            color: var(--color-text-strong);
+            margin: 0 0 var(--space-lg) 0;
+            text-align: center;
+        }
+        .exec-toc-group {
+            margin-bottom: var(--space-lg);
+        }
+        .exec-toc-group-title {
+            font-size: var(--font-caption);
+            font-weight: 600;
+            color: var(--color-brand-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: var(--space-sm);
+            padding-bottom: var(--space-xs);
+            border-bottom: 1px solid var(--color-border-subtle);
+        }
+        .exec-toc-items {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .exec-toc-items li {
+            padding: var(--space-xs) 0;
+            font-size: var(--font-body);
+            color: var(--color-text-normal);
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+        .exec-toc-items li::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--color-border);
+            flex-shrink: 0;
+        }
+        .exec-toc-note {
+            margin-top: var(--space-lg);
+            padding: var(--space-sm);
+            background: var(--color-bg-surface);
+            border-radius: var(--radius-tag);
+            font-size: var(--font-small);
+            color: var(--color-text-muted);
+            text-align: center;
+        }
+
+        /* --- Utility: Hide/Move sections --- */
+        .exec-hidden {
+            display: none;
+        }
+        .exec-page-break {
+            page-break-before: always;
+            break-before: page;
+        }
     </style>
 </head>
 <body>
     <div class="page">
         <div class="content">
             <div class="content-inner">
-                <!-- HEADER -->
-<header class="header">
-  <div class="header-main">
-    <div class="eyebrow" data-ui="1">
-      <div class="eyebrow-left">
-        <span class="section-kicker">AI Status Report</span>
-        <span class="eyebrow-divider"></span>
-        <span class="small">
-          Company:
-          <strong>{{ company_name or kundencode or 'Your Company' }}</strong>
-        </span>
-      </div>
-      <span class="small">Report ID: {{ report_id }}</span>
-    </div>
-    <div class="title-row">
-      <div>
-        <h1>AI Readiness {{ score_rating }}</h1>
-        <p class="subtitle">
-          Individual assessment for
-          {{ company_name or BRANCHE_LABEL or 'Your Company' }} – focusing on
-          security, efficiency, and funding opportunities.
-        </p>
-      </div>
-      <div class="score-badge" data-ui="1">
-        <span class="score-label">Overall Score</span>
-        <div class="score-main">
-          <span class="score-value">{{ score_gesamt }}</span>
-          <span class="score-max">/ 100</span>
-        </div>
-        <span class="score-sub">{{ score_rating }}</span>
-      </div>
-    </div>
-    <div class="meta-grid" data-ui="1">
-      <div class="meta-item">
-        <span class="meta-label">Industry:</span>
-        <span class="meta-value">{{ BRANCHE_LABEL }}</span>
-      </div>
-      <div class="meta-item">
-        <span class="meta-label">Company Size:</span>
-        <span class="meta-value">{{ UNTERNEHMENSGROESSE_LABEL }}</span>
-      </div>
-      <div class="meta-item">
-        <span class="meta-label">Primary AI Goal:</span>
-        <span class="meta-value">
-          {{ STRATEGISCHE_ZIELE or KI_ZIELE_LABELS or 'not specified' }}
-        </span>
-      </div>
-      <div class="meta-item">
-        <span class="meta-label">Report Date:</span>
-        <span class="meta-value">{{ report_date }}</span>
-      </div>
-    </div>
-    <div class="badge-row" data-ui="1"
-         data-badge-security="{{ badge_security or 'pending' }}"
-         data-badge-compliance="{{ badge_compliance or 'pending' }}"
-         data-badge-efficiency="{{ badge_efficiency or 'pending' }}">
-      <span class="badge badge-eu">
-        <span class="badge-dot"></span>
-        EU AI Act – PLATIN++ Industry Best Practices
-      </span>
-      <span class="badge badge-dsgvo">
-        <span class="badge-dot"></span>
-        GDPR-compliant Recommendation (not legal advice)
-      </span>
-      <span class="badge badge-risk">
-        <span class="badge-dot"></span>
-        Risk & Funding Perspective for SMEs/Freelancers
-      </span>
-      <span class="badge badge-time">
-        <span class="badge-dot"></span>
-        Time Horizon: Focus on 6–24 Months
-      </span>
-    </div>
-  </div>
-  <div class="logo-panel">
-    <div class="logo-row-main">
-      <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt Logo" class="logo-ki">
-      <img src="tuev-logo-transparent.webp" alt="TÜV Austria – AI Manager certified" class="logo-tuev">
-    </div>
-    <div class="logo-row-badges">
-      <img src="ki-ready-2025.webp" alt="AI-READY 2025 Badge" class="logo-ready">
-      <img src="dsgvo.svg" alt="GDPR compliant" class="logo-dsgvo">
-      <img src="eu-ai.svg" alt="EU AI Act ready" class="logo-eu">
-    </div>
-  </div>
-</header>
-                <!-- HEADER:END -->
-                <!-- POINT 1: FINAL-CHECK INTRO (≤600 chars) -->
-                {% if FINAL_CHECK_INTRO %}
-                <div class="final-check-intro" data-ui="1">
-                    <h3>{{ ui("final_check_title", "🎯 Final Check: Your AI Readiness at a Glance") }}</h3>
-                    <p>{{ FINAL_CHECK_INTRO }}</p>
-                    {% if FINAL_CHECK_DECISIONS %}
-                    <ul class="final-check-decisions">
-                        {% for decision in FINAL_CHECK_DECISIONS %}
-                        <li>{{ decision }}</li>
-                        {% endfor %}
-                    </ul>
-                    {% endif %}
-                </div>
-                {% endif %}
-<!-- HERO METRICS -->
-                <section class="section">
-                    <div class="section-header" data-ui="1">
-                        <div class="section-title">
-                            <span class="section-kicker">Overview</span>
-                            <h2>Executive Summary</h2>
+
+                <!-- ============================================== -->
+                <!-- PAGE 1: EXECUTIVE ORIENTATION (MINIMAL)        -->
+                <!-- ============================================== -->
+                <div class="exec-orientation">
+                    <!-- HEADER: Minimal, trust-building -->
+                    <header class="header" style="background: transparent; border: none; padding: 0;">
+                        <div class="header-main">
+                            <div class="eyebrow" data-ui="1">
+                                <div class="eyebrow-left">
+                                    <span class="section-kicker">AI Status Report</span>
+                                    <span class="eyebrow-divider"></span>
+                                    <span class="small">{{ report_date }}</span>
+                                </div>
+                                <span class="small">Report ID: {{ report_id }}</span>
+                            </div>
+                            <div class="title-row">
+                                <div>
+                                    <h1>AI Readiness Report</h1>
+                                    <p class="subtitle">
+                                        Company: <strong>{{ company_name or kundencode or 'Your Company' }}</strong>
+                                        · {{ BRANCHE_LABEL }} · {{ UNTERNEHMENSGROESSE_LABEL }}
+                                    </p>
+                                </div>
+                                <div class="score-badge" data-ui="1">
+                                    <span class="score-label">Overall Score</span>
+                                    <div class="score-main">
+                                        <span class="score-value">{{ score_gesamt }}</span>
+                                        <span class="score-max">/ 100</span>
+                                    </div>
+                                    <span class="score-sub">{{ score_rating }}</span>
+                                </div>
+                            </div>
                         </div>
-                        <span class="section-pill">
-                            <span class="pill-dot"></span>
-                            First orientation in 60 seconds
+                        <div class="logo-panel">
+                            <div class="logo-row-main">
+                                <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt Logo" class="logo-ki">
+                                <img src="tuev-logo-transparent.webp" alt="TÜV Austria – AI Manager certified" class="logo-tuev">
+                            </div>
+                        </div>
+                    </header>
+
+                    <!-- MATURITY LINE: Clear rating statement -->
+                    <div class="exec-maturity-line">
+                        <span>Maturity Level:</span>
+                        <span class="exec-maturity-badge">{{ score_rating }}</span>
+                        <span class="muted">·</span>
+                        <span>{{ size_label }}</span>
+                        {% if top10_score_for_size and (top10_score_for_size|int > score_gesamt|int) %}
+                        <span class="muted">·</span>
+                        <span class="muted">Potential: +{{ (top10_score_for_size|int) - (score_gesamt|int) }} points</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- 3 KPI ROW: Calm, professional -->
+                    <div class="exec-kpi-row">
+                        <div class="exec-kpi-item">
+                            <div class="exec-kpi-value">{{ time_savings_display or (monatsersparnis_stunden|string + ' hrs') or 'n/a' }}</div>
+                            <div class="exec-kpi-label">Time Savings/Month</div>
+                            <div class="exec-kpi-note">when implementing recommendations</div>
+                        </div>
+                        <div class="exec-kpi-item">
+                            <div class="exec-kpi-value">{{ (ROI_12M or 0) | round(0) | int }}%</div>
+                            <div class="exec-kpi-label">ROI (12 Months)</div>
+                            <div class="exec-kpi-note">Payback: {{ PAYBACK_MONTHS or 'n/a' }} months</div>
+                        </div>
+                        <div class="exec-kpi-item">
+                            <div class="exec-kpi-value">{{ AI_ACT_RISK_LEVEL or 'minimal' }}</div>
+                            <div class="exec-kpi-label">AI Act Risk</div>
+                            <div class="exec-kpi-note">GDPR-compliant recommendation</div>
+                        </div>
+                    </div>
+
+                    <!-- LEAD STATEMENT: One sentence profile -->
+                    {% if LEAD_EXEC %}
+                    <div style="text-align: center; max-width: 600px; margin: 0 auto; padding: var(--space-md) 0;">
+                        <p style="font-size: var(--font-body); color: var(--color-text-normal); margin: 0;">{{ LEAD_EXEC }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- TRUST LINE: Small, grey, compliance hints -->
+                    <div class="exec-trust-line">
+                        <span class="exec-trust-item">
+                            <span class="exec-trust-dot"></span>
+                            EU AI Act compliant
+                        </span>
+                        <span class="exec-trust-item">
+                            <span class="exec-trust-dot"></span>
+                            GDPR-oriented
+                        </span>
+                        <span class="exec-trust-item">
+                            <span class="exec-trust-dot"></span>
+                            Not legal advice
                         </span>
                     </div>
-                    <div class="section-body">
-                        <div class="hero-grid">
-                            <div class="hero-metric-card">
-                                <div class="hero-metric-row">
-                                    <div>
-                                        <div class="hero-metric-label">Current Maturity Level</div>
-                                        <div class="hero-metric-value">{{ score_rating }} ({{ score_gesamt }} / 100)</div>
-                                        <div class="hero-metric-sub">Assessment based on questionnaire profile</div>
-                                    </div>
-                                    <span class="tag">
-                                        <span class="tag-dot"></span>
-                                        {{ size_label }}
-                                    </span>
-                                </div>
-                                <div class="sparkline">
-                                    <span class="sparkline-label">Potential when implementing recommendations</span>
-                                    <div class="sparkline-bar"></div>
-                                    <span class="sparkline-badge">
-                                        +{{
-                                            ((top10_score_for_size or 0) - (score_gesamt or 0))
-                                            if (top10_score_for_size or 0) > (score_gesamt or 0)
-                                            else 0
-                                        }} Points
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="hero-metric-card">
-                                <div class="hero-metric-row">
-                                    <div>
-                                        <div class="hero-metric-label">Time Savings Potential</div>
-                                        <div class="hero-metric-value">{{ time_savings_display }}</div>
-                                        <div class="hero-metric-sub">Estimated weekly hours through AI automation</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- G23: KPI Visuals -->
-                            {% if KPI_VISUALS_HTML %}
-                            <div class="kpi-visuals">
-                                {{ KPI_VISUALS_HTML|safe }}
-                            </div>
-                            {% endif %}
+                </div>
+                <!-- END PAGE 1 -->
+
+                <!-- ============================================== -->
+                <!-- PAGE 2: EXECUTIVE DECISION                     -->
+                <!-- ============================================== -->
+                <div class="exec-decision-page">
+                    <div class="exec-decision-header">
+                        <h2>Decision & Focus</h2>
+                    </div>
+
+                    <!-- FINAL-CHECK: Short intro with 2-3 decisions -->
+                    {% if FINAL_CHECK_INTRO %}
+                    <div class="exec-final-check">
+                        <h3>Final Check</h3>
+                        <p>{{ FINAL_CHECK_INTRO }}</p>
+                        {% if FINAL_CHECK_DECISIONS %}
+                        <ul>
+                            {% for decision in FINAL_CHECK_DECISIONS %}
+                            <li>{{ decision }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- TOP-3 MUST-ACTIONS: Condensed, 1-2 lines each -->
+                    <div class="exec-top3">
+                        <h3>Top 3 Must-Do Actions</h3>
+                        <ol>
+                            <li><strong>Define minimal stack</strong> – 1 central AI tool, 1 storage, no experiments</li>
+                            <li><strong>Establish standard workflow</strong> – Input → AI Draft → Review → Approval</li>
+                            <li><strong>Introduce review rules</strong> – Four-eyes principle and source requirements</li>
+                        </ol>
+                    </div>
+
+                    <!-- Executive Decision Blocks (if available) -->
+                    {% if EXECUTIVE_DECISION_HTML %}
+                    <div class="exec-summary" style="margin-top: var(--space-md); padding: var(--space-md); background: var(--color-bg-surface); border-radius: var(--radius-tag);">
+                        {{ EXECUTIVE_DECISION_HTML|safe }}
+                    </div>
+                    {% endif %}
+
+                    <!-- HOW TO CONTINUE -->
+                    <div class="exec-continue">
+                        Details and rationale follow from page 4 – depending on your information needs.
+                    </div>
+                </div>
+                <!-- END PAGE 2 -->
+
+                <!-- ============================================== -->
+                <!-- PAGE 3: EXECUTIVE TOC                          -->
+                <!-- ============================================== -->
+                <div class="exec-toc-page">
+                    <div class="exec-toc">
+                        <h2>How to Read This Report</h2>
+
+                        <!-- GROUP 1: Decision Overview -->
+                        <div class="exec-toc-group">
+                            <div class="exec-toc-group-title">Decision Overview</div>
+                            <ul class="exec-toc-items">
+                                <li>Executive Summary & Quick Assessment</li>
+                                <li>Top 3 Actions & 90-Day Focus</li>
+                            </ul>
                         </div>
-                        <div class="exec-summary">
-                            <div class="exec-highlight">
-                                {{EXECUTIVE_SUMMARY_HTML}}
-                                {% if exec_key_findings %}
-                                <p><strong>Key Findings:</strong> {{ exec_key_findings }}</p>
-                                {% endif %}
-                                <p class="small muted">
-                                    The following pages break down this assessment into sub-areas and show concrete
-                                    next steps (Quick Wins, Roadmap, Funding Options).
-                                </p>
-                            </div>
+
+                        <!-- GROUP 2: Economics & Risk -->
+                        <div class="exec-toc-group">
+                            <div class="exec-toc-group-title">Economics & Risk</div>
+                            <ul class="exec-toc-items">
+                                <li>Business Case (ROI/Payback) & Assumptions</li>
+                                <li>Risk & Compliance Assessment (AI Act / GDPR / Vendor)</li>
+                            </ul>
+                        </div>
+
+                        <!-- GROUP 3: Implementation & Depth -->
+                        <div class="exec-toc-group">
+                            <div class="exec-toc-group-title">Implementation & Depth</div>
+                            <ul class="exec-toc-items">
+                                <li>Roadmap (90 Days / 12 Months)</li>
+                                <li>Industry & Tool Alignment</li>
+                                <li>Funding Options & Next Steps</li>
+                            </ul>
+                        </div>
+
+                        <div class="exec-toc-note">
+                            From page 4: Deep-dive analyses and detailed breakdowns
                         </div>
                     </div>
-                    <div class="exec-divider"></div>
-                </section>
-
-                <!-- Step 1/3: EXECUTIVE DECISION BLOCK -->
-                {% if EXECUTIVE_DECISION_HTML %}
-                <div class="section executive-decision">
-                    {{ EXECUTIVE_DECISION_HTML|safe }}
                 </div>
-                {% endif %}
+                <!-- END PAGE 3 -->
 
-                <!-- Step 2/3: 90-DAY ROADMAP DECISION VERSION -->
+                <!-- ============================================== -->
+                <!-- PAGE 4+: FULL REPORT / DETAIL SECTIONS         -->
+                <!-- ============================================== -->
+
+                <!-- MOVED: 90-Day Roadmap Decision (Detail) -->
                 {% if ROADMAP_90D_DECISION_HTML %}
-                <div class="section roadmap-decision-section">
-                    {{ ROADMAP_90D_DECISION_HTML|safe }}
+                <div class="section chapter roadmap-decision-section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">90-Day Plan</span>
+                            <h2>Roadmap Decision</h2>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        {{ ROADMAP_90D_DECISION_HTML|safe }}
+                    </div>
                 </div>
                 {% endif %}
 
-                <!-- Step 3/3: GAMECHANGER DECISION VERSION -->
+                <!-- MOVED: Gamechanger Decision (Detail) -->
                 {% if GAMECHANGER_DECISION_HTML %}
-                <div class="section gamechanger-decision-section">
-                    {{ GAMECHANGER_DECISION_HTML|safe }}
+                <div class="section chapter gamechanger-decision-section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Strategic Options</span>
+                            <h2>Gamechanger Analysis</h2>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        {{ GAMECHANGER_DECISION_HTML|safe }}
+                    </div>
                 </div>
                 {% endif %}
 
-                <!-- G20: AI STACK SUMMARY CARD -->
+                <!-- MOVED: AI Stack Summary (Detail) -->
                 {% if KI_STACK_SUMMARY_HTML %}
                 <section class="section chapter">
                     <div class="section-header">
@@ -2189,19 +2472,27 @@
                 </section>
                 {% endif %}
 
-                <!-- EXECUTIVE FRONTLAYER ENDS - READING HINT -->
-                <div class="section report-reading-hint">
-                    <p><strong>How to read this report</strong></p>
-                    <p>
-                        The first pages summarize results, decisions,
-                        and next steps for quick orientation.
-                    </p>
-                    <p>
-                        The following chapters provide detail and
-                        background and are optional, depending on
-                        your information needs.
-                    </p>
-                </div>
+                <!-- MOVED: Executive Summary Detail -->
+                {% if EXECUTIVE_SUMMARY_HTML %}
+                <section class="section chapter" id="executive-summary-detail">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Overview</span>
+                            <h2>Executive Summary</h2>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div class="exec-summary">
+                            <div class="exec-highlight">
+                                {{EXECUTIVE_SUMMARY_HTML}}
+                                {% if exec_key_findings %}
+                                <p><strong>Key Findings:</strong> {{ exec_key_findings }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                {% endif %}
 
                 <!-- ============================================== -->
                 <!-- FULL REPORT BEGINS                             -->
