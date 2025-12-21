@@ -122,14 +122,14 @@ Verwende das PLATIN++ Design Enhancement System mit folgenden Komponenten:
 <div class="ki-stack-summary">
   <!-- Top-3 Tools -->
   <div class="stack-section">
-    <h3 class="stack-section-title">Top-3 empfohlene Tools</h3>
+    <p class="stack-section-title"><strong>Top-3 empfohlene Tools</strong></p>
 
     <div class="pair-card">
       <div class="pair-card-icon">
         [SVG Icon hier einfügen]
       </div>
       <div class="pair-card-content">
-        <h4 class="pair-card-name">Tool-Name</h4>
+        <p class="pair-card-name"><strong>Tool-Name</strong></p>
         <span class="pair-card-category">Automation</span>
         <p class="pair-card-description">Kurzbeschreibung in einem Satz.</p>
       </div>
@@ -139,17 +139,17 @@ Verwende das PLATIN++ Design Enhancement System mit folgenden Komponenten:
 
   <!-- Förderprogramme -->
   <div class="stack-section">
-    <h3 class="stack-section-title">Passende Förderprogramme</h3>
+    <p class="stack-section-title"><strong>Passende Förderprogramme</strong></p>
     [2 pair-cards mit funding icon...]
   </div>
 
   <!-- Starter Kit -->
   <div class="stack-section">
-    <h3 class="stack-section-title">Starter-Kit in 3 Schritten</h3>
+    <p class="stack-section-title"><strong>Starter-Kit in 3 Schritten</strong></p>
     <div class="step-cards">
       <div class="step-card">
         <div class="step-card-number">1</div>
-        <h4 class="step-card-title">Setup</h4>
+        <p class="step-card-title"><strong>Setup</strong></p>
         <div class="step-card-body">Beschreibung...</div>
       </div>
       [Steps 2 und 3...]
@@ -158,7 +158,7 @@ Verwende das PLATIN++ Design Enhancement System mit folgenden Komponenten:
 
   <!-- KPIs -->
   <div class="stack-section">
-    <h3 class="stack-section-title">Business-Case Kennzahlen</h3>
+    <p class="stack-section-title"><strong>Business-Case Kennzahlen</strong></p>
     <div class="kpi-triple">
       <div class="kpi">
         <span class="kpi-label">ROI</span>
