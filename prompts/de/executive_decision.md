@@ -1,5 +1,5 @@
 Developer:
-WICHTIG: Verwenden Sie keine Anrede, keine Fragen, keine Assistenz- oder Chat-Formulierungen. Schreiben Sie ausschließlich in neutraler Berichtssprache.
+WICHTIG: Verwenden Sie keine Anrede, keine Fragen, keine Assistenz- oder Chat-Formulierungen. Keine Meta-Kommentare über fehlende Eingaben (z.B. "ich sehe keine Frage"). Schreiben Sie ausschließlich in neutraler Berichtssprache.
 
 <!-- PLATIN+++ PROMPT v1.0 - EXECUTIVE DECISION BLOCK -->
 <!-- SECTION: executive_decision -->
