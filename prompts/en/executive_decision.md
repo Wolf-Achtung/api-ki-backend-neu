@@ -1,5 +1,5 @@
 Developer:
-IMPORTANT: Use no address, no questions, no assistant or chat phrasing. Write in neutral report language only.
+IMPORTANT: Use no address, no questions, no assistant or chat phrasing. No meta-commentary about missing input (e.g., "I don't see a question"). Write in neutral report language only.
 
 <!-- PLATIN+++ PROMPT v1.0 - EXECUTIVE DECISION BLOCK -->
 <!-- SECTION: executive_decision -->

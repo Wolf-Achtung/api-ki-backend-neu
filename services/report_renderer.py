@@ -378,16 +378,27 @@ def render(briefing_obj: Any,
         # Fallback: 10 + 8 + 18 = 36 hours (DEFAULT_QW1_H + DEFAULT_QW2_H + FALLBACK_QW_MONTHLY_H)
         sections['qw_hours_total'] = 36
 
-    # FIX #1: Server-side hygiene for placeholder strings
-    # Clean up placeholder artifacts before template rendering
-    PLACEHOLDER_ARTIFACTS = {'?', '??', '???', '—', '-', '–', '...', '…', 'n/a', 'N/A', 'TBD'}
+    # FINAL GO FIX: Server-side hygiene for placeholder strings
+    # Clean up placeholder artifacts before template rendering - ALL string values, not just _HTML
+    PLACEHOLDER_ARTIFACTS = {'?', '??', '???', '—', '-', '–', '...', '…', 'n/a', 'N/A', 'TBD', ''}
     for key, value in list(sections.items()):
-        if isinstance(value, str) and key.endswith('_HTML'):
+        if isinstance(value, str):
             stripped = value.strip()
-            # If the entire section is just a placeholder, set to empty string
-            if stripped in PLACEHOLDER_ARTIFACTS or not stripped:
+            # If the entire value is just a placeholder, set to empty string
+            if stripped in PLACEHOLDER_ARTIFACTS:
                 sections[key] = ''
-                log.debug("[RENDER-HYGIENE] Cleared placeholder section: %s", key)
+                log.debug("[RENDER-HYGIENE] Cleared placeholder value: %s", key)
+            # Also clean "?" embedded in HTML content (safety net)
+            elif key.endswith('_HTML') and '>' in stripped:
+                import re
+                # Remove standalone "?" between tags or at line boundaries
+                cleaned = re.sub(r'>\s*\?\s*<', '><', stripped)
+                cleaned = re.sub(r'<p>\s*\?\s*</p>', '', cleaned)
+                cleaned = re.sub(r'<li>\s*\?\s*</li>', '', cleaned)
+                cleaned = re.sub(r'<div>\s*\?\s*</div>', '', cleaned)
+                if cleaned != stripped:
+                    sections[key] = cleaned
+                    log.debug("[RENDER-HYGIENE] Cleaned '?' from HTML: %s", key)
 
     # Mark HTML sections as safe (prevent escaping)
     safe_sections = {}
