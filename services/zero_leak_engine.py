@@ -54,6 +54,19 @@ HARD_BLACKLIST_PHRASES: List[str] = [
     "ich benötige weitere informationen",
     "ohne weitere angaben kann ich",
     "mir fehlen die nötigen informationen",
+    # FINAL GO FIX v2: Additional meta-commentary and help-prompt phrases
+    "du hast noch keine frage",
+    "du hast noch keine aufgabe",
+    "sie haben noch keine frage",
+    "sie haben noch keine aufgabe",
+    "beschreibe dein anliegen",
+    "beschreiben sie ihr anliegen",
+    "schreib mir, wobei ich dir helfen",
+    "schreiben sie mir, wobei ich ihnen helfen",
+    "dann antworte ich",
+    "dann werde ich antworten",
+    "wobei ich dir helfen soll",
+    "wobei ich ihnen helfen soll",
     # English assistant phrases
     "how can I help you",
     "how may I assist you",
@@ -68,6 +81,10 @@ HARD_BLACKLIST_PHRASES: List[str] = [
     "I don't see a question",
     "please describe your request",
     "I need more information",
+    "you haven't asked a question",
+    "you have not asked a question",
+    "describe what you need help with",
+    "tell me what you need",
 ]
 
 # Executive sections that require hard blacklist enforcement
@@ -77,6 +94,7 @@ EXECUTIVE_SECTIONS: List[str] = [
     "ROADMAP_90D_DECISION_HTML",
     "GAMECHANGER_DECISION_HTML",
     "KI_STACK_SUMMARY_HTML",
+    "BRANCH_DEEP_DIVE_HTML",  # FINAL GO: Add to prevent assistant text
 ]
 
 # Dual-key aliases: If we clean EXECUTIVE_SUMMARY_HTML, also clean executive_summary
