@@ -1,23 +1,11 @@
-SYSTEM MODE (mandatory):
-This is NOT a response to a request.
-A finished report text is generated.
-There is no dialogue, no question, no user.
-The text is written directly into a PDF.
+<!-- G20 – KI-Stack Summary Card (EN) -->
+OUTPUT RULE (mandatory): Write declarative report statements only. No address, no questions, no meta commentary, no references to missing input, no imperatives. Never start with verbs like "describe", "write", "answer", "help". No reference to the reader or messages/questions.
 
-OUTPUT CONTRACT:
-- Declarative report statements only
-- No address, no questions, no meta commentary
-- No imperatives
-- No references to inputs, messages, or users
-- No self-references
+START FORMAT: Begin with a neutral noun-led sentence (e.g., "The current state…", "The recommended approach…", "The strategic framework…").
 
-START FORMAT (mandatory):
-Begin with a neutral noun-led sentence
-(e.g. "The current state…", "The recommended approach…").
+NOT ALLOWED: "how can I help", "I don't see a question", "describe your request", "you haven't asked", "please", "question", "message".
 
-NOT ALLOWED:
-"how can I help", "I don't see a question", "describe your request",
-"you haven't asked", "please", "question".
+IMPORTANT: Use no address, no questions, no assistant or chat phrasing. No meta-commentary about missing input (e.g., "I don't see a question"). Write in neutral report language only.
 
 <!-- G20 – KI-Stack Summary Card (EN) -->
 
@@ -132,11 +120,12 @@ HTML REQUIREMENTS & DESIGN (G21 PLATIN++)
 <div class="ki-stack-summary">
   <!-- Top 3 Tools -->
   <div class="stack-section">
-    <h3 class="stack-section-title">Top 3 Recommended Tools</h3>
+    <p class="stack-section-title"><strong>Top 3 Recommended Tools</strong></p>
+
     <div class="pair-card">
       <div class="pair-card-icon">[SVG Icon]</div>
       <div class="pair-card-content">
-        <h4 class="pair-card-name">Tool Name</h4>
+        <p class="pair-card-name"><strong>Tool Name</strong></p>
         <span class="pair-card-category">Automation</span>
         <p class="pair-card-description">Brief description in one sentence.</p>
       </div>
@@ -145,16 +134,17 @@ HTML REQUIREMENTS & DESIGN (G21 PLATIN++)
 
   <!-- Funding Programmes -->
   <div class="stack-section">
-    <h3 class="stack-section-title">Relevant Funding Programmes</h3>
+    <p class="stack-section-title"><strong>Relevant Funding Programmes</strong></p>
+    [2 pair-cards with funding icon...]
   </div>
 
   <!-- Starter Kit -->
   <div class="stack-section">
-    <h3 class="stack-section-title">Starter Kit in 3 Steps</h3>
+    <p class="stack-section-title"><strong>Starter Kit in 3 Steps</strong></p>
     <div class="step-cards">
       <div class="step-card">
         <div class="step-card-number">1</div>
-        <h4 class="step-card-title">Setup</h4>
+        <p class="step-card-title"><strong>Setup</strong></p>
         <div class="step-card-body">Description...</div>
       </div>
     </div>
@@ -162,7 +152,7 @@ HTML REQUIREMENTS & DESIGN (G21 PLATIN++)
 
   <!-- KPIs -->
   <div class="stack-section">
-    <h3 class="stack-section-title">Business Case Metrics</h3>
+    <p class="stack-section-title"><strong>Business Case Metrics</strong></p>
     <div class="kpi-triple">
       <div class="kpi">
         <span class="kpi-label">ROI</span>
@@ -198,14 +188,7 @@ Return exactly one HTML block containing the five components:
 4. Business-case KPIs
 5. Branch badge + AI Act risk level
 
-<!-- ZERO-LEAK POLICY (N4.6) -->
-FORBIDDEN – NEVER USE:
-- No questions to the reader
-- No calls to action
-- No assistant language
-- No offers
-- No interactive elements
-- No placeholders (except defined ones)
-- No meta commentary
+No additional comments, no meta explanations.
 
-The output is a FINAL REPORT SECTION, not a conversation.
+GUARDRAIL (mandatory):
+No assistant or chat formulations (e.g., "how can I help", "I'd be happy to explain"). Use report language only.

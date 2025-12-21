@@ -2980,28 +2980,28 @@
                 </section>
 
                 <!-- Step 1/3: EXECUTIVE DECISION BLOCK -->
-                {% if EXECUTIVE_DECISION_HTML %}
+                {% if EXECUTIVE_DECISION_HTML and EXECUTIVE_DECISION_HTML|trim and '<' in EXECUTIVE_DECISION_HTML %}
                 <div class="section executive-decision">
                     {{ EXECUTIVE_DECISION_HTML|safe }}
                 </div>
                 {% endif %}
 
                 <!-- Step 2/3: 90-DAY ROADMAP DECISION VERSION -->
-                {% if ROADMAP_90D_DECISION_HTML %}
+                {% if ROADMAP_90D_DECISION_HTML and ROADMAP_90D_DECISION_HTML|trim and '<' in ROADMAP_90D_DECISION_HTML %}
                 <div class="section roadmap-decision-section">
                     {{ ROADMAP_90D_DECISION_HTML|safe }}
                 </div>
                 {% endif %}
 
                 <!-- Step 3/3: GAMECHANGER DECISION VERSION -->
-                {% if GAMECHANGER_DECISION_HTML %}
+                {% if GAMECHANGER_DECISION_HTML and GAMECHANGER_DECISION_HTML|trim and '<' in GAMECHANGER_DECISION_HTML %}
                 <div class="section gamechanger-decision-section">
                     {{ GAMECHANGER_DECISION_HTML|safe }}
                 </div>
                 {% endif %}
 
                 <!-- G20: KI-STACK SUMMARY CARD -->
-                {% if KI_STACK_SUMMARY_HTML %}
+                {% if KI_STACK_SUMMARY_HTML and KI_STACK_SUMMARY_HTML|trim and '<' in KI_STACK_SUMMARY_HTML %}
                 <section class="section chapter">
                     <div class="section-header">
                         <div class="section-title">
@@ -3186,8 +3186,8 @@
                     </div>
                 </section>
                 {% endif %}
-                <!-- G24: Branch Deep-Dive Addon -->
-                {% if BRANCH_DEEP_DIVE_HTML %}
+                <!-- G24: Branch Deep-Dive Addon (FINAL GO: fail-closed) -->
+                {% if BRANCH_DEEP_DIVE_HTML and BRANCH_DEEP_DIVE_HTML|trim and '<' in BRANCH_DEEP_DIVE_HTML %}
                 <section class="section chapter" id="branch-deep-dive">
                     <div class="section-header" data-ui="1">
                         <div class="section-title">
