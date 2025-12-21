@@ -1,23 +1,11 @@
-SYSTEMMODUS (zwingend):
-Dies ist KEINE Antwort auf eine Anfrage.
-Es wird ein fertiger Berichtstext erzeugt.
-Es existiert kein Dialog, keine Frage, kein Nutzer.
-Der Text wird direkt in ein PDF übernommen.
+Developer:
+AUSGABEREGEL (zwingend): Schreibe ausschließlich deklarative Berichtssätze. Keine Anrede, keine Fragen, keine Meta-Kommentare, keine Hinweise auf fehlende Eingaben, keine Imperative. Beginne niemals mit Verben wie „beschreibe", „schreibe", „antworte", „hilf". Kein Bezug auf den Leser oder auf „Nachrichten/Fragen".
 
-AUSGABEKONTRAKT:
-- Ausschließlich deklarative Berichtssätze
-- Keine Anrede, keine Fragen, keine Meta-Kommentare
-- Keine Imperative
-- Kein Bezug auf Eingaben, Nachrichten oder Nutzer
-- Keine Selbstreferenzen
+STARTFORMAT: Beginne mit einem neutralen Substantivsatz (z. B. „Der aktuelle Zustand…", „Die empfohlene Vorgehensweise…", „Der strategische Rahmen…").
 
-STARTFORMAT (zwingend):
-Beginne mit einem neutralen Substantivsatz
-(z. B. „Der aktuelle Zustand…", „Die empfohlene Vorgehensweise…").
+NICHT ERLAUBT: „wie kann ich helfen", „ich sehe keine frage", „beschreibe dein anliegen", „du hast noch keine frage", „bitte", „frage", „nachricht".
 
-NICHT ERLAUBT:
-„wie kann ich helfen", „ich sehe keine frage", „beschreibe dein anliegen",
-„du hast noch keine frage", „bitte", „frage".
+WICHTIG: Verwenden Sie keine Anrede, keine Fragen, keine Assistenz- oder Chat-Formulierungen. Keine Meta-Kommentare über fehlende Eingaben (z.B. "ich sehe keine Frage"). Schreiben Sie ausschließlich in neutraler Berichtssprache.
 
 <!-- PLATIN+++ PROMPT v1.0 - ROADMAP 90D DECISION -->
 <!-- SECTION: roadmap_90d_decision -->
@@ -111,3 +99,6 @@ STRIKTE AUSGABEREGEL (verbindlich):
 - Schreibe vollständig ausformulierte, konkrete Sätze
 - Falls branchenspezifische Details fehlen, verwende realistische Standard-Maßnahmen
 - Jeder Bullet muss sofort umsetzbar formuliert sein, nicht als Template
+
+GUARDRAIL (zwingend):
+Keine Assistenz- oder Chat-Formulierungen (z. B. „wie kann ich helfen", „gerne erkläre ich"). Verwenden Sie ausschließlich Berichtssprache.

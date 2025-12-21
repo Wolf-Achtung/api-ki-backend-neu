@@ -5639,9 +5639,18 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     # G23: KPI Visualisation Layer
     try:
         from utils.kpi_visuals import generate_kpi_visuals
+        # FIX A: Use canonical TIME_SAVINGS_MONTH_HOURS_CAPPED for consistent time savings display
+        # This ensures KPI bar chart matches KPI box and business case table values
+        capped_hours_for_kpi = (
+            sections.get("TIME_SAVINGS_MONTH_HOURS_CAPPED")
+            or sections.get("monatsersparnis_stunden")
+            or answers.get("monatsersparnis_stunden")
+            or 0
+        )
         kpi_data = {
             "roi": answers.get("ROI_12M") or sections.get("ROI_12M") or 0,
             "payback_months": answers.get("PAYBACK_MONTHS") or sections.get("PAYBACK_MONTHS") or 0,
+            "time_savings_hours": capped_hours_for_kpi,  # Use capped hours directly, not EUR
             "time_savings_eur": answers.get("EINSPARUNG_MONAT_EUR") or sections.get("EINSPARUNG_MONAT_EUR") or 0,
         }
         # Add industry benchmark if available from branch profile
@@ -6884,9 +6893,9 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
         if user_email:
             user_attachments = [] if pdf_url else attachments_admin[:1]
             ok, err = _send_email_via_resend(
-                user_email, 
-                "Ihr KI‑Status‑Report ist fertig", 
-                render_report_ready_email(recipient="user", pdf_url=pdf_url),
+                user_email,
+                "Ihr KI‑Status‑Report ist fertig",
+                render_report_ready_email(recipient="user", pdf_url=pdf_url, user_email=user_email),
                 attachments=user_attachments
             )
             if ok: 

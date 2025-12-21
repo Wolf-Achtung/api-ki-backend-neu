@@ -42,6 +42,31 @@ HARD_BLACKLIST_PHRASES: List[str] = [
     "ich bin ein KI-Assistent",
     "als künstliche Intelligenz",
     "ich bin eine künstliche Intelligenz",
+    # FINAL GO FIX: Meta-commentary phrases (LLM safety responses)
+    "ich sehe keine konkrete frage",
+    "ich sehe keine konkrete aufgabe",
+    "ich sehe keine frage",
+    "ich sehe keine aufgabe",
+    "keine konkrete frage",
+    "keine konkrete aufgabe",
+    "bitte beschreibe kurz dein anliegen",
+    "bitte beschreiben sie kurz ihr anliegen",
+    "ich benötige weitere informationen",
+    "ohne weitere angaben kann ich",
+    "mir fehlen die nötigen informationen",
+    # FINAL GO FIX v2: Additional meta-commentary and help-prompt phrases
+    "du hast noch keine frage",
+    "du hast noch keine aufgabe",
+    "sie haben noch keine frage",
+    "sie haben noch keine aufgabe",
+    "beschreibe dein anliegen",
+    "beschreiben sie ihr anliegen",
+    "schreib mir, wobei ich dir helfen",
+    "schreiben sie mir, wobei ich ihnen helfen",
+    "dann antworte ich",
+    "dann werde ich antworten",
+    "wobei ich dir helfen soll",
+    "wobei ich ihnen helfen soll",
     # English assistant phrases
     "how can I help you",
     "how may I assist you",
@@ -51,6 +76,25 @@ HARD_BLACKLIST_PHRASES: List[str] = [
     "as a language model",
     "I am an AI",
     "I'm an AI",
+    # English meta-commentary
+    "I don't see a specific question",
+    "I don't see a question",
+    "please describe your request",
+    "I need more information",
+    "you haven't asked a question",
+    "you have not asked a question",
+    "describe what you need help with",
+    "tell me what you need",
+    # FINAL GO FIX v3: Fragment patterns (remnants after partial cleanup)
+    "oder aufgabe in deiner nachricht",
+    "oder frage in deiner nachricht",
+    "aufgabe in deiner nachricht",
+    "frage in deiner nachricht",
+    "in deiner nachricht",
+    "in ihrer nachricht",
+    "or task in your message",
+    "or question in your message",
+    "in your message",
 ]
 
 # Executive sections that require hard blacklist enforcement
@@ -60,6 +104,7 @@ EXECUTIVE_SECTIONS: List[str] = [
     "ROADMAP_90D_DECISION_HTML",
     "GAMECHANGER_DECISION_HTML",
     "KI_STACK_SUMMARY_HTML",
+    "BRANCH_DEEP_DIVE_HTML",  # FINAL GO: Add to prevent assistant text
 ]
 
 # Dual-key aliases: If we clean EXECUTIVE_SUMMARY_HTML, also clean executive_summary
@@ -623,6 +668,11 @@ def remove_leaks(text: str, aggressive: bool = False) -> Tuple[str, ZeroLeakRepo
     cleaned = re.sub(r',\s*,', ',', cleaned)
     cleaned = re.sub(r'<p>\s*</p>', '', cleaned)
     cleaned = re.sub(r'<li>\s*</li>', '', cleaned)
+    # FIX B: Remove standalone "?" placeholders (not in natural text like "Warum jetzt?")
+    # Pattern: "?" alone in a tag, or "?" at start of line, or "??" sequences
+    cleaned = re.sub(r'>\s*\?\s*<', '><', cleaned)  # "?" alone between tags
+    cleaned = re.sub(r'^\s*\?\s*$', '', cleaned, flags=re.MULTILINE)  # "?" alone on line
+    cleaned = re.sub(r'\?\?+', '—', cleaned)  # Multiple "?" become em-dash
 
     report.leaks_removed = len(leaks)
 
@@ -756,6 +806,7 @@ def precommit_zero_leak_all_sections(
     Features:
     - Runs on ALL section keys, not just EXECUTIVE_SECTIONS
     - Dual-key hygiene: cleans both *_HTML and lowercase aliases
+    - FAIL-CLOSED for EXECUTIVE_SECTIONS: if any phrase removed, suppress entirely
     - Logs: [leak_blacklist] and [precommit_zero_leak]
 
     Args:
@@ -782,6 +833,23 @@ def precommit_zero_leak_all_sections(
         cleaned_content, removed_phrases = apply_hard_blacklist(content, section_key)
 
         if removed_phrases:
+            # FINAL GO FIX v3: FAIL-CLOSED for executive sections
+            # If ANY phrase was removed from an executive section, suppress it entirely
+            # Better no section than fragmentary assistant text
+            if section_key in EXECUTIVE_SECTIONS:
+                log.warning(
+                    "[precommit_zero_leak] FAIL-CLOSED: %s had %d phrases removed - suppressing section entirely",
+                    section_key, len(removed_phrases)
+                )
+                cleaned[section_key] = ""
+                # Also suppress the alias
+                alias_key = DUAL_KEY_ALIASES.get(section_key)
+                if alias_key and alias_key in cleaned:
+                    cleaned[alias_key] = ""
+                cleaned_count += 1
+                total_phrases_removed += len(removed_phrases)
+                continue
+
             cleaned[section_key] = cleaned_content
             cleaned_count += 1
             total_phrases_removed += len(removed_phrases)

@@ -1,23 +1,11 @@
-SYSTEM MODE (mandatory):
-This is NOT a response to a request.
-A finished report text is generated.
-There is no dialogue, no question, no user.
-The text is written directly into a PDF.
+Developer:
+OUTPUT RULE (mandatory): Write declarative report statements only. No address, no questions, no meta commentary, no references to missing input, no imperatives. Never start with verbs like "describe", "write", "answer", "help". No reference to the reader or messages/questions.
 
-OUTPUT CONTRACT:
-- Declarative report statements only
-- No address, no questions, no meta commentary
-- No imperatives
-- No references to inputs, messages, or users
-- No self-references
+START FORMAT: Begin with a neutral noun-led sentence (e.g., "The current state…", "The recommended approach…", "The strategic framework…").
 
-START FORMAT (mandatory):
-Begin with a neutral noun-led sentence
-(e.g. "The current state…", "The recommended approach…").
+NOT ALLOWED: "how can I help", "I don't see a question", "describe your request", "you haven't asked", "please", "question", "message".
 
-NOT ALLOWED:
-"how can I help", "I don't see a question", "describe your request",
-"you haven't asked", "please", "question".
+IMPORTANT: Use no address, no questions, no assistant or chat phrasing. No meta-commentary about missing input (e.g., "I don't see a question"). Write in neutral report language only.
 
 <!-- PLATIN+++ PROMPT v1.0 - EXECUTIVE DECISION BLOCK -->
 <!-- SECTION: executive_decision -->
@@ -77,3 +65,6 @@ STYLE:
 - Detached-professional, like an external advisor
 - Short sentences, one thought per bullet
 - No explanations, only action directives
+
+GUARDRAIL (mandatory):
+No assistant or chat formulations (e.g., "how can I help", "I'd be happy to explain"). Use report language only.

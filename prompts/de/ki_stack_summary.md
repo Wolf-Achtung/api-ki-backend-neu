@@ -1,23 +1,11 @@
-SYSTEMMODUS (zwingend):
-Dies ist KEINE Antwort auf eine Anfrage.
-Es wird ein fertiger Berichtstext erzeugt.
-Es existiert kein Dialog, keine Frage, kein Nutzer.
-Der Text wird direkt in ein PDF übernommen.
+<!-- G20 – KI-Stack Summary Card (DE) -->
+AUSGABEREGEL (zwingend): Schreibe ausschließlich deklarative Berichtssätze. Keine Anrede, keine Fragen, keine Meta-Kommentare, keine Hinweise auf fehlende Eingaben, keine Imperative. Beginne niemals mit Verben wie „beschreibe", „schreibe", „antworte", „hilf". Kein Bezug auf den Leser oder auf „Nachrichten/Fragen".
 
-AUSGABEKONTRAKT:
-- Ausschließlich deklarative Berichtssätze
-- Keine Anrede, keine Fragen, keine Meta-Kommentare
-- Keine Imperative
-- Kein Bezug auf Eingaben, Nachrichten oder Nutzer
-- Keine Selbstreferenzen
+STARTFORMAT: Beginne mit einem neutralen Substantivsatz (z. B. „Der aktuelle Zustand…", „Die empfohlene Vorgehensweise…", „Der strategische Rahmen…").
 
-STARTFORMAT (zwingend):
-Beginne mit einem neutralen Substantivsatz
-(z. B. „Der aktuelle Zustand…", „Die empfohlene Vorgehensweise…").
+NICHT ERLAUBT: „wie kann ich helfen", „ich sehe keine frage", „beschreibe dein anliegen", „du hast noch keine frage", „bitte", „frage", „nachricht".
 
-NICHT ERLAUBT:
-„wie kann ich helfen", „ich sehe keine frage", „beschreibe dein anliegen",
-„du hast noch keine frage", „bitte", „frage".
+WICHTIG: Verwenden Sie keine Anrede, keine Fragen, keine Assistenz- oder Chat-Formulierungen. Keine Meta-Kommentare über fehlende Eingaben (z.B. "ich sehe keine Frage"). Schreiben Sie ausschließlich in neutraler Berichtssprache.
 
 <!-- G20 – KI-Stack Summary Card (DE) -->
 
@@ -132,11 +120,12 @@ HTML-ANFORDERUNGEN & DESIGN (G21 PLATIN++)
 <div class="ki-stack-summary">
   <!-- Top-3 Tools -->
   <div class="stack-section">
-    <h3 class="stack-section-title">Top-3 empfohlene Tools</h3>
+    <p class="stack-section-title"><strong>Top-3 empfohlene Tools</strong></p>
+
     <div class="pair-card">
       <div class="pair-card-icon">[SVG Icon]</div>
       <div class="pair-card-content">
-        <h4 class="pair-card-name">Tool-Name</h4>
+        <p class="pair-card-name"><strong>Tool-Name</strong></p>
         <span class="pair-card-category">Automation</span>
         <p class="pair-card-description">Kurzbeschreibung in einem Satz.</p>
       </div>
@@ -145,16 +134,17 @@ HTML-ANFORDERUNGEN & DESIGN (G21 PLATIN++)
 
   <!-- Förderprogramme -->
   <div class="stack-section">
-    <h3 class="stack-section-title">Passende Förderprogramme</h3>
+    <p class="stack-section-title"><strong>Passende Förderprogramme</strong></p>
+    [2 pair-cards mit funding icon...]
   </div>
 
   <!-- Starter Kit -->
   <div class="stack-section">
-    <h3 class="stack-section-title">Starter-Kit in 3 Schritten</h3>
+    <p class="stack-section-title"><strong>Starter-Kit in 3 Schritten</strong></p>
     <div class="step-cards">
       <div class="step-card">
         <div class="step-card-number">1</div>
-        <h4 class="step-card-title">Setup</h4>
+        <p class="step-card-title"><strong>Setup</strong></p>
         <div class="step-card-body">Beschreibung...</div>
       </div>
     </div>
@@ -162,7 +152,7 @@ HTML-ANFORDERUNGEN & DESIGN (G21 PLATIN++)
 
   <!-- KPIs -->
   <div class="stack-section">
-    <h3 class="stack-section-title">Business-Case Kennzahlen</h3>
+    <p class="stack-section-title"><strong>Business-Case Kennzahlen</strong></p>
     <div class="kpi-triple">
       <div class="kpi">
         <span class="kpi-label">ROI</span>
