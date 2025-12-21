@@ -41,7 +41,7 @@ VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>, <header>
 <!-- WORD_MINIMUM: 60 -->
 <!-- WORD_MAXIMUM: 90 -->
 
-Erstelle einen kompakten Entscheidungsblock für {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
+Erzeuge einen kompakten Entscheidungsblock für {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
 
 INHALTLICHE VERDICHTUNG (nutze nur vorhandene Konzepte):
 - "Standard-Workflow" = Input → KI-Entwurf → Review → Freigabe
