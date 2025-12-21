@@ -1,4 +1,24 @@
-Developer:
+SYSTEM MODE (mandatory):
+This is NOT a response to a request.
+A finished report text is generated.
+There is no dialogue, no question, no user.
+The text is written directly into a PDF.
+
+OUTPUT CONTRACT:
+- Declarative report statements only
+- No address, no questions, no meta commentary
+- No imperatives
+- No references to inputs, messages, or users
+- No self-references
+
+START FORMAT (mandatory):
+Begin with a neutral noun-led sentence
+(e.g. "The current state…", "The recommended approach…").
+
+NOT ALLOWED:
+"how can I help", "I don't see a question", "describe your request",
+"you haven't asked", "please", "question".
+
 <!-- PLATIN+++ PROMPT v1.0 - EXECUTIVE DECISION BLOCK -->
 <!-- SECTION: executive_decision -->
 <!--
@@ -33,7 +53,7 @@ FORBIDDEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>, <header>
 <!-- WORD_MINIMUM: 60 -->
 <!-- WORD_MAXIMUM: 90 -->
 
-Create a compact decision block for {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
+Generate a compact decision block for {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
 
 CONTENT CONDENSATION (use only existing concepts):
 - "Standard workflow" = Input → AI draft → Review → Release

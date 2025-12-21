@@ -1,95 +1,105 @@
-<!-- G20 – KI-Stack Summary Card (DE) -->
+SYSTEMMODUS (zwingend):
+Dies ist KEINE Antwort auf eine Anfrage.
+Es wird ein fertiger Berichtstext erzeugt.
+Es existiert kein Dialog, keine Frage, kein Nutzer.
+Der Text wird direkt in ein PDF übernommen.
 
-Du bist ein erfahrener KI-Consultant mit Fokus auf KMU, Teams und Solo-Selbstständige.
-Du erhältst im Kontext oberhalb:
-- die Fragebogen-Auswertung,
-- das Branch-Profil (inkl. {{BRANCH_SHORT_LABEL}}),
-- die Ergebnisse der Tools Engine 3.0,
-- die Funding-Analyse (Förderprogramme),
-- das Starter-Kit / Quick-Wins
-- sowie die Business-Case-Kennzahlen (insb. ROI, Payback, Zeitersparnis/Monat).
+AUSGABEKONTRAKT:
+- Ausschließlich deklarative Berichtssätze
+- Keine Anrede, keine Fragen, keine Meta-Kommentare
+- Keine Imperative
+- Kein Bezug auf Eingaben, Nachrichten oder Nutzer
+- Keine Selbstreferenzen
+
+STARTFORMAT (zwingend):
+Beginne mit einem neutralen Substantivsatz
+(z. B. „Der aktuelle Zustand…", „Die empfohlene Vorgehensweise…").
+
+NICHT ERLAUBT:
+„wie kann ich helfen", „ich sehe keine frage", „beschreibe dein anliegen",
+„du hast noch keine frage", „bitte", „frage".
+
+<!-- G20 – KI-Stack Summary Card (DE) -->
 
 AUFGABE
 Erzeuge eine kompakte, C-Level-taugliche „KI-Stack Summary Card" als HTML-Block ohne <h1> oder <h2>.
 Der Block wird direkt nach dem Executive Summary in einem PDF-Report eingesetzt.
 
+KONTEXTQUELLEN (oberhalb verfügbar):
+- Fragebogen-Auswertung
+- Branch-Profil (inkl. {{BRANCH_SHORT_LABEL}})
+- Tools Engine 3.0 Ergebnisse
+- Funding-Analyse (Förderprogramme)
+- Starter-Kit / Quick-Wins
+- Business-Case-Kennzahlen (ROI, Payback, Zeitersparnis/Monat)
+
 WICHTIG
 - Schreibe in sachlich-professionellem, motivierendem Ton.
-- Duzen oder Siezen der Leser:innen vermeiden – neutrale Formulierungen wählen.
-- Keine Erklärungen zur Prompt-Struktur oder zu Modellen ausgeben.
-- Nur die HTML-Struktur zurückgeben, keine Einleitung wie „Hier ist der HTML-Block".
+- Neutrale Formulierungen – kein Duzen oder Siezen.
+- Nur die HTML-Struktur ausgeben, keine Einleitung.
 
 INHALTLICHE STRUKTUR (5 feste Bausteine)
 
 1) Top-3 Tools (Score-basiert aus der Tools Engine 3.0)
-   - Wähle die drei relevantesten Tools aus dem vorhandenen Kontext.
+   - Die drei relevantesten Tools aus dem vorhandenen Kontext.
    - Pro Tool ausgeben:
      - Name
-     - Kategorie: eine der Kategorien
-       - Automation
-       - Analysis
-       - Collaboration
-       - Compliance
-       - Research
+     - Kategorie: Automation / Analysis / Collaboration / Compliance / Research
      - Kurzsatz zum Nutzen (genau 1 Zeile, klar und konkret, ohne Buzzwords).
 
 2) Top-2 Förderprogramme (aus Funding Alignment)
-   - Wähle zwei Programme, die für das vorliegende Profil (Größe + Branche + Vorhaben) besonders passend sind.
+   - Zwei Programme, die für das vorliegende Profil (Größe + Branche + Vorhaben) besonders passend sind.
    - Pro Programm:
      - Name
-     - geschätzte Förderquote ODER klarer Relevanzindikator (z. B. „sehr hohe Passung für KMU mit Digitalisierungsschwerpunkt")
+     - geschätzte Förderquote ODER klarer Relevanzindikator
      - Kurzsatz zum Mehrwert im Kontext der geplanten KI-Einführung.
 
 3) Starter-Kit Kurzpfad (verdichtetes Starter Kit)
-   - Exakt drei Schritte, mit der Logik:
-     1. Setup (Grundlage schaffen, z. B. Tool-Auswahl, Zugang, Verantwortliche)
-     2. Workflow (konkrete Einbindung in Prozesse, Pilot-Workflows, erste Routinen)
-     3. Optimierung (Feintuning, Standards, Monitoring, Governance)
+   - Exakt drei Schritte:
+     1. Setup (Grundlage schaffen)
+     2. Workflow (konkrete Einbindung in Prozesse)
+     3. Optimierung (Feintuning, Standards, Governance)
    - Jeder Schritt: 1–2 Sätze, klar verständlich und umsetzungsorientiert.
 
 4) 3 wichtigste Business-Case KPIs
-   - Nutze die vorhandenen Kennzahlen und leite realistische Werte ab:
-     - ROI-Rate (in %, plausibel, konsistent mit dem Business Case)
-     - Payback (Monate, realistisch, nicht „0" oder „>60" ohne Begründung)
-     - Zeitersparnis/Monat (in Stunden oder in Euro, abhängig vom restlichen Report).
+   - Realistische Werte aus dem Business Case:
+     - ROI-Rate (in %)
+     - Payback (Monate)
+     - Zeitersparnis/Monat (in Stunden oder Euro)
    - Kurz kommentieren, was diese KPIs für die Entscheidungsebene bedeuten.
 
 5) Branch Badge + Risikoindikator
-   - Binde das Branch-Label ein: {{BRANCH_SHORT_LABEL}}.
-   - Lege einen AI-Act Risk Level fest (z. B. „niedrig", „mittel", „erhöht") basierend auf Branche, Use Cases und Datenlage.
-   - Ergänze 1–2 Sätze, was dieses Risikoniveau konkret bedeutet (z. B. Bedarf an Policies, Dokumentation, Aufsicht).
+   - Branch-Label: {{BRANCH_SHORT_LABEL}}.
+   - AI-Act Risk Level (niedrig / mittel / erhöht) basierend auf Branche, Use Cases und Datenlage.
+   - 1–2 Sätze, was dieses Risikoniveau konkret bedeutet.
 
 SIZE-AWARE LOGIK
 
-Passe Tonalität und Schwerpunkt an die Unternehmensgröße an:
-
 - SOLO (Ein-Personen-Setup):
   - Fokus auf Machbarkeit, Fokus, wenige Tools und klare Prioritäten.
-  - Starter-Kit stark auf persönliche Arbeitsweise und Zeitersparnis ausrichten.
+  - Starter-Kit auf persönliche Arbeitsweise und Zeitersparnis ausrichten.
   - Textumfang: mindestens 150 Wörter.
 
-- TEAM (kleine Teams, typischerweise 2–15 Personen):
+- TEAM (kleine Teams, 2–15 Personen):
   - Fokus auf Zusammenarbeit, Rollen, erste Governance-Ansätze und einfache Standards.
-  - Tools und Förderprogramme so auswählen, dass Team-Workflows profitieren.
+  - Tools und Förderprogramme so wählen, dass Team-Workflows profitieren.
   - Textumfang: mindestens 180 Wörter.
 
 - KMU:
-  - Fokus auf Skalierung, Standardisierung, Verantwortlichkeiten, Risikomanagement (AI-Act/DSGVO).
-  - Förderprogramme und KPIs stärker strategisch und investitionsorientiert darstellen.
+  - Fokus auf Skalierung, Standardisierung, Verantwortlichkeiten, Risikomanagement.
+  - Förderprogramme und KPIs strategisch und investitionsorientiert darstellen.
   - Textumfang: mindestens 200 Wörter.
 
 Maximale Gesamtlänge: 350 Wörter (alle Bausteine zusammen).
 
 HTML-ANFORDERUNGEN & DESIGN (G21 PLATIN++)
 
-Verwende das PLATIN++ Design Enhancement System mit folgenden Komponenten:
-
 **Verfügbare CSS-Klassen:**
 - `.pair-card` – Card für einzelne Tools oder Förderprogramme
-- `.pair-card-icon` – Icon-Container (verwende passende SVG Icons)
+- `.pair-card-icon` – Icon-Container (passende SVG Icons)
 - `.pair-card-content` – Hauptinhalt der Card
 - `.pair-card-name` – Name des Tools/Programms (fett)
-- `.pair-card-category` – Kategorie-Badge (Automation, Analysis, etc.)
+- `.pair-card-category` – Kategorie-Badge
 - `.pair-card-description` – Beschreibung (1 Zeile)
 
 - `.step-cards` – Grid für 3 Schritte (Starter Kit)
@@ -100,13 +110,13 @@ Verwende das PLATIN++ Design Enhancement System mit folgenden Komponenten:
 
 - `.kpi-triple` – Grid für 3 KPIs
 - `.kpi` – Einzelner KPI-Block
-- `.kpi-label` – KPI-Bezeichnung (z.B. "ROI")
+- `.kpi-label` – KPI-Bezeichnung
 - `.kpi-value` – KPI-Wert (groß, fett, blau)
-- `.kpi-sub` – Zusatzinformation (klein)
+- `.kpi-sub` – Zusatzinformation
 
 - `.badge-block` – Container für Branch + Risk
 - `.badge-block-item` – Einzelnes Badge
-- `.badge-block-label` – Label (z.B. "Branche")
+- `.badge-block-label` – Label
 - `.badge-block-value` – Wert
 - `.risk-low`, `.risk-medium`, `.risk-high` – Risiko-Farben
 
@@ -123,24 +133,19 @@ Verwende das PLATIN++ Design Enhancement System mit folgenden Komponenten:
   <!-- Top-3 Tools -->
   <div class="stack-section">
     <h3 class="stack-section-title">Top-3 empfohlene Tools</h3>
-
     <div class="pair-card">
-      <div class="pair-card-icon">
-        [SVG Icon hier einfügen]
-      </div>
+      <div class="pair-card-icon">[SVG Icon]</div>
       <div class="pair-card-content">
         <h4 class="pair-card-name">Tool-Name</h4>
         <span class="pair-card-category">Automation</span>
         <p class="pair-card-description">Kurzbeschreibung in einem Satz.</p>
       </div>
     </div>
-    [2 weitere pair-cards...]
   </div>
 
   <!-- Förderprogramme -->
   <div class="stack-section">
     <h3 class="stack-section-title">Passende Förderprogramme</h3>
-    [2 pair-cards mit funding icon...]
   </div>
 
   <!-- Starter Kit -->
@@ -152,7 +157,6 @@ Verwende das PLATIN++ Design Enhancement System mit folgenden Komponenten:
         <h4 class="step-card-title">Setup</h4>
         <div class="step-card-body">Beschreibung...</div>
       </div>
-      [Steps 2 und 3...]
     </div>
   </div>
 
@@ -165,7 +169,6 @@ Verwende das PLATIN++ Design Enhancement System mit folgenden Komponenten:
         <span class="kpi-value">45%</span>
         <span class="kpi-sub">nach 12 Monaten</span>
       </div>
-      [2 weitere KPIs...]
     </div>
   </div>
 
@@ -188,24 +191,21 @@ Verwende das PLATIN++ Design Enhancement System mit folgenden Komponenten:
 
 AUSGABEFORMAT
 
-Gib ausschließlich den fertigen HTML-Block aus, der die fünf Bausteine in logisch klarer Reihenfolge enthält:
-
+Gib ausschließlich den fertigen HTML-Block aus mit den fünf Bausteinen:
 1. Top-3 Tools
 2. Top-2 Förderprogramme
 3. Starter-Kit Kurzpfad
 4. Business-Case KPIs
 5. Branch Badge + AI-Act Risk Level
 
-Keine zusätzlichen Kommentare, keine Meta-Erklärungen.
-
 <!-- ZERO-LEAK POLICY (N4.6) -->
 VERBOTEN – NIEMALS VERWENDEN:
-- Keine Fragen an den Leser ("Haben Sie Fragen?", "Möchten Sie mehr erfahren?")
-- Keine Aufforderungen ("Wenn Sie möchten...", "Kontaktieren Sie uns...")
-- Keine Assistenten-Sprache ("Ich kann Ihnen helfen...", "Gerne erkläre ich...")
-- Keine Angebote ("Bei Bedarf...", "Falls gewünscht...")
-- Keine interaktiven Elemente ("Klicken Sie hier...", "Wählen Sie...")
-- Keine Platzhalter ("[Hier einfügen]", "{{VARIABLE}}" außer definierten)
-- Keine Meta-Kommentare ("Dieser Abschnitt...", "Im Folgenden...")
+- Keine Fragen an den Leser
+- Keine Aufforderungen
+- Keine Assistenten-Sprache
+- Keine Angebote
+- Keine interaktiven Elemente
+- Keine Platzhalter (außer definierten)
+- Keine Meta-Kommentare
 
 Der Output ist ein FINALER REPORT-ABSCHNITT, kein Gespräch.

@@ -1,4 +1,24 @@
-Developer:
+SYSTEM MODE (mandatory):
+This is NOT a response to a request.
+A finished report text is generated.
+There is no dialogue, no question, no user.
+The text is written directly into a PDF.
+
+OUTPUT CONTRACT:
+- Declarative report statements only
+- No address, no questions, no meta commentary
+- No imperatives
+- No references to inputs, messages, or users
+- No self-references
+
+START FORMAT (mandatory):
+Begin with a neutral noun-led sentence
+(e.g. "The current state…", "The recommended approach…").
+
+NOT ALLOWED:
+"how can I help", "I don't see a question", "describe your request",
+"you haven't asked", "please", "question".
+
 <!-- PLATIN+++ PROMPT v1.0 - ROADMAP 90D DECISION -->
 <!-- SECTION: roadmap_90d_decision -->
 <!--
@@ -36,7 +56,7 @@ FORBIDDEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>, <header>
 <!-- WORD_MINIMUM: 200 -->
 <!-- WORD_MAXIMUM: 300 -->
 
-Create a decision version of the 90-day roadmap for {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
+Generate a decision version of the 90-day roadmap for {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
 
 CONTENT BASIS:
 Condense existing roadmap content. Do not invent anything new.

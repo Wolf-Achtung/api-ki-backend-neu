@@ -1,4 +1,24 @@
-Developer:
+SYSTEMMODUS (zwingend):
+Dies ist KEINE Antwort auf eine Anfrage.
+Es wird ein fertiger Berichtstext erzeugt.
+Es existiert kein Dialog, keine Frage, kein Nutzer.
+Der Text wird direkt in ein PDF übernommen.
+
+AUSGABEKONTRAKT:
+- Ausschließlich deklarative Berichtssätze
+- Keine Anrede, keine Fragen, keine Meta-Kommentare
+- Keine Imperative
+- Kein Bezug auf Eingaben, Nachrichten oder Nutzer
+- Keine Selbstreferenzen
+
+STARTFORMAT (zwingend):
+Beginne mit einem neutralen Substantivsatz
+(z. B. „Der aktuelle Zustand…", „Die empfohlene Vorgehensweise…").
+
+NICHT ERLAUBT:
+„wie kann ich helfen", „ich sehe keine frage", „beschreibe dein anliegen",
+„du hast noch keine frage", „bitte", „frage".
+
 <!-- PLATIN+++ PROMPT v1.0 - GAMECHANGER DECISION -->
 <!-- SECTION: gamechanger_decision -->
 <!--
@@ -36,7 +56,7 @@ VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>, <header>
 <!-- WORD_MINIMUM: 350 -->
 <!-- WORD_MAXIMUM: 450 -->
 
-Erstelle eine strategische Entscheidungsfassung des Gamechangers für {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
+Erzeuge eine strategische Entscheidungsfassung des Gamechangers für {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
 
 INHALTLICHE GRUNDLAGE:
 Verdichte den bestehenden Gamechanger-Content. Erfinde nichts Neues.

@@ -1,70 +1,83 @@
+SYSTEM MODE (mandatory):
+This is NOT a response to a request.
+A finished report text is generated.
+There is no dialogue, no question, no user.
+The text is written directly into a PDF.
+
+OUTPUT CONTRACT:
+- Declarative report statements only
+- No address, no questions, no meta commentary
+- No imperatives
+- No references to inputs, messages, or users
+- No self-references
+
+START FORMAT (mandatory):
+Begin with a neutral noun-led sentence
+(e.g. "The current state…", "The recommended approach…").
+
+NOT ALLOWED:
+"how can I help", "I don't see a question", "describe your request",
+"you haven't asked", "please", "question".
+
 <!-- G20 – KI-Stack Summary Card (EN) -->
 
-You are an experienced AI consultant for SMEs, small teams and solo professionals.
-The context above contains:
-- the questionnaire evaluation,
-- the branch profile (including {{BRANCH_SHORT_LABEL}}),
-- the Tools Engine 3.0 results,
-- the funding alignment (relevant programmes),
-- the starter kit / quick wins,
-- and the business-case metrics (especially ROI, payback, time savings per month).
-
 TASK
-Create a compact, C-level-ready "AI Stack Summary Card" as an HTML block without any <h1> or <h2> tags.
+Generate a compact, C-level-ready "AI Stack Summary Card" as an HTML block without any <h1> or <h2> tags.
 This block is placed directly after the Executive Summary in a PDF report.
 
+CONTEXT SOURCES (available above):
+- Questionnaire evaluation
+- Branch profile (including {{BRANCH_SHORT_LABEL}})
+- Tools Engine 3.0 results
+- Funding alignment (relevant programmes)
+- Starter kit / quick wins
+- Business-case metrics (ROI, payback, time savings per month)
+
 IMPORTANT
-- Use a neutral, professional, motivating tone (no "you" / "we" / "I" addressing the reader).
-- Do not mention prompts, models or system internals.
-- Return only the HTML, no phrases like "Here is your HTML".
+- Use a neutral, professional, motivating tone.
+- Neutral formulations only – no direct address.
+- Return only the HTML, no introduction.
 
 CONTENT STRUCTURE (5 fixed components)
 
 1) Top 3 tools (score-based from Tools Engine 3.0)
-   - Select the three most relevant tools from the context.
+   - The three most relevant tools from the context.
    - For each tool, output:
      - Name
-     - Category: one of
-       - Automation
-       - Analysis
-       - Collaboration
-       - Compliance
-       - Research
+     - Category: Automation / Analysis / Collaboration / Compliance / Research
      - One-line benefit sentence (clear, specific, no buzzwords).
 
 2) Top 2 funding programmes (from funding alignment)
-   - Select two programmes that fit best with the size, branch and planned AI use cases.
+   - Two programmes that fit best with the size, branch and planned AI use cases.
    - For each programme:
      - Name
-     - Estimated funding rate OR a clear relevance indicator (e.g. "very strong fit for SMEs with digitalisation projects")
+     - Estimated funding rate OR a clear relevance indicator
      - One-line benefit sentence in the context of the planned AI implementation.
 
 3) Starter kit short path (condensed starter kit)
-   - Exactly three steps following this logic:
-     1. Setup (foundations, e.g. tool selection, access, responsibilities)
-     2. Workflow (embed in concrete processes, pilots, early routines)
-     3. Optimisation (fine-tuning, standards, monitoring, governance)
+   - Exactly three steps:
+     1. Setup (foundations)
+     2. Workflow (embed in concrete processes)
+     3. Optimisation (fine-tuning, standards, governance)
    - Each step in 1–2 sentences, practical and actionable.
 
 4) 3 key business-case KPIs
-   - Use the available numbers and derive realistic values:
-     - ROI rate (in %, consistent with the business case)
-     - Payback (months, realistic)
-     - Time savings per month (in hours or in currency, consistent with the rest of the report).
-   - Briefly explain what these KPIs mean for decision makers.
+   - Realistic values from the business case:
+     - ROI rate (in %)
+     - Payback (months)
+     - Time savings per month (in hours or currency)
+   - Brief explanation of what these KPIs mean for decision makers.
 
 5) Branch badge + risk indicator
-   - Include the branch label: {{BRANCH_SHORT_LABEL}}.
-   - Assign an AI Act risk level (e.g. "low", "medium", "elevated") based on branch, use cases and data.
-   - Add 1–2 sentences about what this risk level implies (e.g. need for policies, documentation, oversight).
+   - Branch label: {{BRANCH_SHORT_LABEL}}.
+   - AI Act risk level (low / medium / elevated) based on branch, use cases and data.
+   - 1–2 sentences about what this risk level implies.
 
 SIZE-AWARE LOGIC
 
-Adapt emphasis and nuance to the organisation size:
-
 - SOLO:
   - Focus on feasibility, focus, a small toolset and clear priorities.
-  - Starter kit strongly oriented towards personal workflow and time savings.
+  - Starter kit oriented towards personal workflow and time savings.
   - Minimum length: 150 words.
 
 - TEAM:
@@ -73,7 +86,7 @@ Adapt emphasis and nuance to the organisation size:
   - Minimum length: 180 words.
 
 - SME:
-  - Focus on scaling, standardisation, responsibilities and risk management (AI Act / GDPR).
+  - Focus on scaling, standardisation, responsibilities and risk management.
   - Position funding and KPIs more strategically, as an investment case.
   - Minimum length: 200 words.
 
@@ -81,14 +94,12 @@ Global maximum length: 350 words (all components combined).
 
 HTML REQUIREMENTS & DESIGN (G21 PLATIN++)
 
-Use the PLATIN++ Design Enhancement System with the following components:
-
 **Available CSS Classes:**
 - `.pair-card` – Card for individual tools or funding programmes
-- `.pair-card-icon` – Icon container (use appropriate SVG icons)
+- `.pair-card-icon` – Icon container (appropriate SVG icons)
 - `.pair-card-content` – Main card content
 - `.pair-card-name` – Tool/Programme name (bold)
-- `.pair-card-category` – Category badge (Automation, Analysis, etc.)
+- `.pair-card-category` – Category badge
 - `.pair-card-description` – Description (one line)
 
 - `.step-cards` – Grid for 3 steps (Starter Kit)
@@ -99,13 +110,13 @@ Use the PLATIN++ Design Enhancement System with the following components:
 
 - `.kpi-triple` – Grid for 3 KPIs
 - `.kpi` – Individual KPI block
-- `.kpi-label` – KPI label (e.g. "ROI")
+- `.kpi-label` – KPI label
 - `.kpi-value` – KPI value (large, bold, blue)
-- `.kpi-sub` – Additional information (small)
+- `.kpi-sub` – Additional information
 
 - `.badge-block` – Container for Branch + Risk
 - `.badge-block-item` – Individual badge
-- `.badge-block-label` – Label (e.g. "Branch")
+- `.badge-block-label` – Label
 - `.badge-block-value` – Value
 - `.risk-low`, `.risk-medium`, `.risk-high` – Risk colors
 
@@ -122,24 +133,19 @@ Use the PLATIN++ Design Enhancement System with the following components:
   <!-- Top 3 Tools -->
   <div class="stack-section">
     <h3 class="stack-section-title">Top 3 Recommended Tools</h3>
-
     <div class="pair-card">
-      <div class="pair-card-icon">
-        [Insert SVG icon here]
-      </div>
+      <div class="pair-card-icon">[SVG Icon]</div>
       <div class="pair-card-content">
         <h4 class="pair-card-name">Tool Name</h4>
         <span class="pair-card-category">Automation</span>
         <p class="pair-card-description">Brief description in one sentence.</p>
       </div>
     </div>
-    [2 more pair-cards...]
   </div>
 
   <!-- Funding Programmes -->
   <div class="stack-section">
     <h3 class="stack-section-title">Relevant Funding Programmes</h3>
-    [2 pair-cards with funding icon...]
   </div>
 
   <!-- Starter Kit -->
@@ -151,7 +157,6 @@ Use the PLATIN++ Design Enhancement System with the following components:
         <h4 class="step-card-title">Setup</h4>
         <div class="step-card-body">Description...</div>
       </div>
-      [Steps 2 and 3...]
     </div>
   </div>
 
@@ -164,7 +169,6 @@ Use the PLATIN++ Design Enhancement System with the following components:
         <span class="kpi-value">45%</span>
         <span class="kpi-sub">after 12 months</span>
       </div>
-      [2 more KPIs...]
     </div>
   </div>
 
@@ -187,12 +191,21 @@ Use the PLATIN++ Design Enhancement System with the following components:
 
 OUTPUT FORMAT
 
-Return exactly one HTML block containing the five components in this order:
-
+Return exactly one HTML block containing the five components:
 1. Top 3 tools
 2. Top 2 funding programmes
 3. Starter kit short path
 4. Business-case KPIs
 5. Branch badge + AI Act risk level
 
-No additional comments, no meta explanations.
+<!-- ZERO-LEAK POLICY (N4.6) -->
+FORBIDDEN – NEVER USE:
+- No questions to the reader
+- No calls to action
+- No assistant language
+- No offers
+- No interactive elements
+- No placeholders (except defined ones)
+- No meta commentary
+
+The output is a FINAL REPORT SECTION, not a conversation.
