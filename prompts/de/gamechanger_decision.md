@@ -81,3 +81,6 @@ STRIKTE AUSGABEREGEL (verbindlich):
 - Schreibe vollständig ausformulierte, konkrete Sätze
 - Falls branchenspezifische Details fehlen, verwende realistische Standard-Aussagen
 - Jeder Absatz muss sofort zitierbar sein, nicht als Template
+
+GUARDRAIL (zwingend):
+Keine Assistenz- oder Chat-Formulierungen (z. B. „wie kann ich helfen", „gerne erkläre ich"). Verwenden Sie ausschließlich Berichtssprache.
