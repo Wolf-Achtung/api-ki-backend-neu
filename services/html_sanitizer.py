@@ -1010,6 +1010,9 @@ def clean_exec_summary_html(html: str) -> str:
     Ziel: Exec Summary soll nur Fließtext enthalten, keine redundanten
     Überschriften wie "Executive Summary", "Zusammenfassung", "Kurzfassung".
 
+    PLATIN+++ v5.4.1: Also handles HTML-escaped tags and literal text patterns
+    that GPT might output (e.g., `&lt;h2&gt;` or literal `<h2>` as text).
+
     Args:
         html: Der HTML-Inhalt der Executive Summary
 
@@ -1025,6 +1028,25 @@ def clean_exec_summary_html(html: str) -> str:
         '',
         html,
         flags=re.IGNORECASE | re.DOTALL
+    )
+
+    # 1b) PLATIN+++ v5.4.1: Entferne HTML-escaped h1/h2 tags
+    # Pattern: &lt;h2&gt;...&lt;/h2&gt; (HTML entities)
+    html = re.sub(
+        r'&lt;h[12][^&]*&gt;.*?&lt;/h[12]&gt;',
+        '',
+        html,
+        flags=re.IGNORECASE | re.DOTALL
+    )
+
+    # 1c) PLATIN+++ v5.4.1: Entferne literal text patterns where GPT outputs
+    # tag-like strings as text (e.g., "<h2>Executive Summary</h2>" as string)
+    # This catches edge cases where < and > are literal characters
+    html = re.sub(
+        r'&lt;h[12]&gt;\s*(?:Executive\s+Summary|Zusammenfassung|Summary|Kurzfassung|Überblick)\s*&lt;/h[12]&gt;',
+        '',
+        html,
+        flags=re.IGNORECASE
     )
 
     # 2) Entferne führende Label-Überschriften (auch als Klartext)

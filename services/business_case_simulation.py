@@ -1187,6 +1187,27 @@ def business_case_simulation_to_html(
         deviation_pct = report.roi_p50_vs_realistic_deviation
         comparison_color = colors["green"] if deviation_pct < 15 else (colors["yellow"] if deviation_pct < 30 else colors["red"])
 
+        # PLATIN+++ v5.4.1: Spread explanation labels (DE/EN)
+        if lang == "en":
+            spread_explanation = (
+                "The P50 (median) from Monte Carlo simulation is typically more conservative than the "
+                "deterministic 'Realistic' scenario. The Realistic scenario uses expected values "
+                "assuming optimal conditions. Monte Carlo, however, runs 1,000 simulations with "
+                "varying assumptions (savings ±40%, investment ±30%, implementation speed ±20%). "
+                "Because downside risks are often larger than upside potential, the statistical "
+                "median (P50) is more conservative. A deviation under 30% indicates robust assumptions."
+            )
+        else:
+            spread_explanation = (
+                "Der P50 (Median) aus der Monte-Carlo-Simulation ist typischerweise konservativer "
+                "als das deterministische 'Realistisch'-Szenario. Das Realistisch-Szenario verwendet "
+                "Erwartungswerte unter optimalen Bedingungen. Monte-Carlo hingegen führt 1.000 "
+                "Simulationen mit variierenden Annahmen durch (Einsparungen ±40%, Investment ±30%, "
+                "Implementierungsgeschwindigkeit ±20%). Da Abwärtsrisiken oft größer sind als "
+                "Aufwärtspotenziale, ist der statistische Median (P50) konservativer. "
+                "Eine Abweichung unter 30% deutet auf robuste Annahmen hin."
+            )
+
         html_parts.append(f'''
     <!-- Comparison to G30 -->
     <div style="padding:16px;background:{colors["yellow_bg"]};border-radius:12px;border:1px solid #fcd34d;margin-bottom:20px;">
@@ -1201,6 +1222,12 @@ def business_case_simulation_to_html(
                 <span style="font-size:9px;color:{colors["text_secondary"]};">Abweichung</span>
                 <div style="font-size:16px;font-weight:700;color:{comparison_color};">{deviation_pct:.0f}%</div>
             </div>
+        </div>
+        <!-- PLATIN+++ v5.4.1: Spread explanation -->
+        <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #fcd34d;">
+            <p style="font-size:9pt;color:{colors["text_secondary"]};margin:0;line-height:1.5;">
+                {spread_explanation}
+            </p>
         </div>
     </div>
 ''')
