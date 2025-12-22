@@ -3005,9 +3005,9 @@ class ConsistencyEngine:
                         source_section="vendor_audit",
                         target_section="risk_engine_v3",
                         message=f"Red Vendor '{vendor}' nicht in Risk Report oder Mitigation Plan",
-                        expected="Red Vendors muessen in RiskReportV3 oder Mitigation Plan adressiert werden",
+                        expected="Red Vendors müssen in RiskReportV3 oder Mitigation Plan adressiert werden",
                         actual=f"'{vendor}' fehlt in beiden Sections",
-                        suggestion=f"Fuege '{vendor}' zum Mitigation Plan hinzu oder erklaere Risiko im Risk Report",
+                        suggestion=f"Füge '{vendor}' zum Mitigation Plan hinzu oder erkläre Risiko im Risk Report",
                     ))
 
         # VA_003: US vendors without DPA must not be green
@@ -3022,7 +3022,7 @@ class ConsistencyEngine:
                     source_section="vendor_audit",
                     target_section="vendor_audit",
                     message=f"US Vendor '{vendor.get('name')}' ohne DPA als 'green' klassifiziert",
-                    expected="US Vendors ohne DPA duerfen nicht 'green' sein",
+                    expected="US Vendors ohne DPA dürfen nicht 'green' sein",
                     actual=f"jurisdiction=US, has_dpa=False, overall_category=green",
                     suggestion="Setze overall_category auf 'yellow' oder 'red'",
                 ))
@@ -3041,15 +3041,15 @@ class ConsistencyEngine:
                     source_section="vendor_audit",
                     target_section="tools_empfehlungen",
                     message=f"EU-hosted Tool '{vendor_name}' als 'red' ohne audit_flags",
-                    expected="Tools mit eu_hosting=True duerfen nicht ohne audit_flags 'red' sein",
+                    expected="Tools mit eu_hosting=True dürfen nicht ohne audit_flags 'red' sein",
                     actual=f"'{vendor_name}' ist eu_hosted aber red ohne Flags",
-                    suggestion="Fuege audit_flags hinzu oder korrigiere overall_category",
+                    suggestion="Füge audit_flags hinzu oder korrigiere overall_category",
                 ))
 
         # VA_005: Strategy must not use red vendor as critical pillar without mitigation
         if strategy_html and red_vendors:
             strategy_lower = strategy_html.lower()
-            critical_keywords = ["kritische saeule", "critical pillar", "kernkomponente", "core component"]
+            critical_keywords = ["kritische säule", "critical pillar", "kernkomponente", "core component"]
 
             for vendor in red_vendors:
                 vendor_lower = vendor.lower()
@@ -3065,10 +3065,10 @@ class ConsistencyEngine:
                                     domain="vendor_audit",
                                     source_section="strategy",
                                     target_section="vendor_audit",
-                                    message=f"Red Vendor '{vendor}' als kritische Saeule in Strategy ohne Mitigation",
-                                    expected="Red Vendors duerfen nicht als kritische Saeule verwendet werden ohne Mitigation",
+                                    message=f"Red Vendor '{vendor}' als kritische Säule in Strategy ohne Mitigation",
+                                    expected="Red Vendors dürfen nicht als kritische Säule verwendet werden ohne Mitigation",
                                     actual=f"'{vendor}' ist rot und als kritisch markiert ohne Mitigation",
-                                    suggestion="Entferne Vendor aus kritischen Saeulen oder fuege Mitigation hinzu",
+                                    suggestion="Entferne Vendor aus kritischen Säulen oder füge Mitigation hinzu",
                                 ))
                             break
 
@@ -3094,7 +3094,7 @@ class ConsistencyEngine:
                         source_section="recommendations_engine",
                         target_section="vendor_audit",
                         message="Vendor-Wechsel empfohlen ohne entsprechenden Befund im Audit",
-                        expected="Vendor-Wechsel nur empfehlen wenn im Audit Report oder Risk Report begruendet",
+                        expected="Vendor-Wechsel nur empfehlen wenn im Audit Report oder Risk Report begründet",
                         actual="Alle Vendors sind 'green' aber Wechsel wird empfohlen",
                         suggestion="Entferne Vendor-Wechsel Empfehlung oder korrigiere Audit Bewertung",
                     ))
@@ -3402,7 +3402,7 @@ class ConsistencyEngine:
                                 message=f"Prozess '{proc.get('name', 'Unknown')}' empfiehlt Tool '{tool}' mit Fit < 0.3",
                                 expected="Nur Tools mit fit_score >= 0.3 empfehlen",
                                 actual=f"Tool '{tool}' hat fit_score = {fit:.2f}",
-                                suggestion=f"Ersetze '{tool}' durch ein Tool mit hoeherem Fit",
+                                suggestion=f"Ersetze '{tool}' durch ein Tool mit höherem Fit",
                             ))
                         break
 
@@ -3470,9 +3470,9 @@ class ConsistencyEngine:
                         source_section="automation_roadmap",
                         target_section="risk_engine_v3",
                         message=f"High-Risk Prozess '{proc.get('name')}' nicht in DPIA (G33) gefunden",
-                        expected="Prozesse mit hohem DSGVO-Risiko muessen in DPIA erscheinen",
+                        expected="Prozesse mit hohem DSGVO-Risiko müssen in DPIA erscheinen",
                         actual=f"'{proc.get('name')}' hat risk_relation='high' aber fehlt in DPIA",
-                        suggestion="Fuege Prozess zur DPIA-Analyse hinzu oder korrigiere risk_relation",
+                        suggestion="Füge Prozess zur DPIA-Analyse hinzu oder korrigiere risk_relation",
                     ))
 
     def _check_auto_003_ai_act_phase(
@@ -3487,7 +3487,7 @@ class ConsistencyEngine:
         # Check for missing controls indicator
         has_missing_controls = (
             "missing" in risk_v3_html.lower() and "control" in risk_v3_html.lower()
-        ) or "nicht erfuellt" in risk_v3_html.lower()
+        ) or "nicht erfüllt" in risk_v3_html.lower()
 
         if not has_missing_controls:
             return
@@ -3511,7 +3511,7 @@ class ConsistencyEngine:
                         source_section="automation_roadmap",
                         target_section="risk_engine_v3",
                         message=f"KI-Prozess '{proc.get('name')}' in Phase 1 trotz fehlender AI Act Controls",
-                        expected="Prozesse mit missing controls duerfen nicht in Phase 1 sein",
+                        expected="Prozesse mit missing controls dürfen nicht in Phase 1 sein",
                         actual=f"'{proc.get('name')}' ist KI-bezogen und in phase_1",
                         suggestion="Verschiebe Prozess nach Phase 2 oder 3 bis Controls implementiert sind",
                     ))
@@ -3569,10 +3569,10 @@ class ConsistencyEngine:
                         domain="automation_roadmap",
                         source_section="automation_roadmap",
                         target_section="foerderpotenzial",
-                        message=f"Foerderprogramm '{funding}' nicht in Funding Engine (G26) gefunden",
-                        expected="Nur Foerderprogramme aus G26 empfehlen",
-                        actual=f"'{funding}' fuer Prozess '{proc.get('name')}' ist nicht in G26",
-                        suggestion="Verwende nur Foerderprogramme aus der Funding Engine",
+                        message=f"Förderprogramm '{funding}' nicht in Funding Engine (G26) gefunden",
+                        expected="Nur Förderprogramme aus G26 empfehlen",
+                        actual=f"'{funding}' für Prozess '{proc.get('name')}' ist nicht in G26",
+                        suggestion="Verwende nur Förderprogramme aus der Funding Engine",
                     ))
 
     def _check_auto_006_strategy_phase(
@@ -3624,8 +3624,8 @@ class ConsistencyEngine:
                     domain="automation_roadmap",
                     source_section="automation_roadmap",
                     target_section="strategy",
-                    message=f"Phase-Zuordnung fuer '{proc_name}' inkonsistent mit Strategy Engine",
-                    expected=f"Phase sollte mit Strategy Engine uebereinstimmen: {strategy_phase}",
+                    message=f"Phase-Zuordnung für '{proc_name}' inkonsistent mit Strategy Engine",
+                    expected=f"Phase sollte mit Strategy Engine übereinstimmen: {strategy_phase}",
                     actual=f"Automation Roadmap: {proc_phase}, Strategy: {strategy_phase}",
                     suggestion="Synchronisiere Phase-Zuordnung zwischen Engines",
                 ))
@@ -3664,7 +3664,7 @@ class ConsistencyEngine:
                             source_section="automation_roadmap",
                             target_section="vendor_audit",
                             message=f"Prozess '{proc.get('name')}' in Phase 1 nutzt High-Risk Vendor '{tool}'",
-                            expected="Prozesse mit vendor_risk >= 4 duerfen nicht in Phase 1 sein",
+                            expected="Prozesse mit vendor_risk >= 4 dürfen nicht in Phase 1 sein",
                             actual=f"'{tool}' hat vendor_risk_score = {risk}",
                             suggestion="Verschiebe Prozess nach Phase 2/3 oder ersetze Vendor",
                         ))
@@ -3761,7 +3761,7 @@ class ConsistencyEngine:
                     message="P50 ROI weicht stark vom realistischen Szenario ab",
                     expected=f"P50 ROI nahe realistic ROI (±25%): {real_roi:.1f}%",
                     actual=f"P50 ROI: {p50_roi:.1f}% (Abweichung: {deviation:.0f}%)",
-                    suggestion="Pruefe Simulationsannahmen oder passe G30 Szenarien an",
+                    suggestion="Prüfe Simulationsannahmen oder passe G30 Szenarien an",
                 ))
 
         # Rule BCSIM_002: P80 ROI must not be below conservative scenario
@@ -3793,7 +3793,7 @@ class ConsistencyEngine:
                 message="P20 ROI liegt sehr deutlich unter conservative Szenario",
                 expected=f"P20 ROI >= {lower_bound:.1f}% (40% von conservative)",
                 actual=f"P20 ROI: {p20_roi:.1f}%",
-                suggestion="Hohe Worst-Case-Varianz - pruefen ob realistisch",
+                suggestion="Hohe Worst-Case-Varianz - prüfen ob realistisch",
             ))
 
         # Rule BCSIM_004: Payback P50 must be valid
@@ -3812,7 +3812,7 @@ class ConsistencyEngine:
                 message="Payback P50 ist negativ",
                 expected="Payback P50 >= 0",
                 actual=f"Payback P50: {payback_p50:.1f} Monate",
-                suggestion="Pruefe Simulationslogik fuer Payback-Berechnung",
+                suggestion="Prüfe Simulationslogik für Payback-Berechnung",
             ))
 
         opt_payback = scenario_paybacks.get("optimistic", 0) if scenario_paybacks else 0
@@ -3849,7 +3849,7 @@ class ConsistencyEngine:
                         message=f"Niedrige Varianz trotz hohem Risiko-Grade ({risk_grade})",
                         expected=f"Bei Risk-Grade {risk_grade}: CV > 0.2",
                         actual=f"Coefficient of Variation: {cv:.2f}",
-                        suggestion="Erhoehe Verteilungs-Bandbreiten bei hohem Risiko",
+                        suggestion="Erhöhe Verteilungs-Bandbreiten bei hohem Risiko",
                     ))
             elif risk_grade in ["A", "B"]:
                 # Low risk should have lower variance (CV < 0.5)
@@ -3887,7 +3887,7 @@ class ConsistencyEngine:
                     source_section="strategy",
                     target_section="business_case_simulation",
                     message="Strategy-Narrativ zu optimistisch im Vergleich zu P80 ROI",
-                    expected=f"P80 ROI ({p80_roi:.1f}%) sollte naeher an optimistic ({opt_roi:.1f}%) liegen",
+                    expected=f"P80 ROI ({p80_roi:.1f}%) sollte näher an optimistic ({opt_roi:.1f}%) liegen",
                     actual=f"Gap zwischen P80 und optimistic: {gap_pct:.0f}%",
                     suggestion="Passe Strategy-Narrativ an realistische Simulation an",
                 ))
@@ -4117,7 +4117,7 @@ class ConsistencyEngine:
                     domain="benchmark",
                     source_section="benchmark_engine",
                     target_section="benchmark_engine",
-                    message=f"score_percentile ausserhalb des gueltigen Bereichs fuer {pos.get('domain', 'unknown')}",
+                    message=f"score_percentile außerhalb des gültigen Bereichs für {pos.get('domain', 'unknown')}",
                     expected="score_percentile zwischen 0 und 100",
                     actual=f"score_percentile: {percentile}",
                     suggestion="Korrigiere die Perzentil-Berechnung",
@@ -4134,10 +4134,10 @@ class ConsistencyEngine:
                     domain="benchmark",
                     source_section="benchmark_engine",
                     target_section="benchmark_engine",
-                    message=f"company_value ist ein extremer Outlier fuer {pos.get('domain', 'unknown')}",
+                    message=f"company_value ist ein extremer Outlier für {pos.get('domain', 'unknown')}",
                     expected=f"company_value <= 10x industry_median ({median * 10:.2f})",
                     actual=f"company_value: {company_val:.2f}",
-                    suggestion="Pruefe die Eingabedaten auf Fehler",
+                    suggestion="Prüfe die Eingabedaten auf Fehler",
                 ))
 
         # Rule BENCH_003: If RiskScore high, risk_percentile cannot be in top quartile
@@ -4155,7 +4155,7 @@ class ConsistencyEngine:
                     message="Risiko-Perzentil im Top-Quartil trotz hohem Risiko-Score",
                     expected=f"Bei Risk Score {risk_score:.0f}% sollte Perzentil < 75 sein",
                     actual=f"risk_percentile: {risk_percentile:.0f}%",
-                    suggestion="Pruefe Konsistenz zwischen Benchmark und Risk Engine",
+                    suggestion="Prüfe Konsistenz zwischen Benchmark und Risk Engine",
                 ))
 
         # Rule BENCH_004: Radar scores must match positions (normalization check)
@@ -4171,7 +4171,7 @@ class ConsistencyEngine:
                             domain="benchmark",
                             source_section="benchmark_engine",
                             target_section="benchmark_engine",
-                            message=f"Radar-Score stimmt nicht mit Position fuer {pos.get('domain', 'unknown')} ueberein",
+                            message=f"Radar-Score stimmt nicht mit Position für {pos.get('domain', 'unknown')} überein",
                             expected=f"Radar score nahe {expected_radar:.2f}",
                             actual=f"Radar score: {actual_radar:.2f}",
                             suggestion="Synchronisiere Radar mit Positions-Daten",
@@ -4190,10 +4190,10 @@ class ConsistencyEngine:
                         domain="benchmark",
                         source_section="benchmark_engine",
                         target_section="risk_engine_v3",
-                        message="Staerke 'Risikomanagement' widerspricht hohem Risiko-Grade",
-                        expected=f"Bei Risk Grade {risk_grade} keine Risiko-Staerke",
-                        actual=f"Staerke: {strength}",
-                        suggestion="Entferne widerspruchliche Staerken oder korrigiere Risk Assessment",
+                        message="Stärke 'Risikomanagement' widerspricht hohem Risiko-Grade",
+                        expected=f"Bei Risk Grade {risk_grade} keine Risiko-Stärke",
+                        actual=f"Stärke: {strength}",
+                        suggestion="Entferne widersprüchliche Stärken oder korrigiere Risk Assessment",
                     ))
 
         # Rule BENCH_006: Weaknesses cannot be empty or "none"
@@ -4205,16 +4205,16 @@ class ConsistencyEngine:
                 domain="benchmark",
                 source_section="benchmark_engine",
                 target_section="benchmark_engine",
-                message="Keine Schwaechen identifiziert - unrealistisch",
-                expected="Mindestens 1 konkrete Schwaeche",
-                actual=f"Schwaechen: {weaknesses}",
+                message="Keine Schwächen identifiziert - unrealistisch",
+                expected="Mindestens 1 konkrete Schwäche",
+                actual=f"Schwächen: {weaknesses}",
                 suggestion="Identifiziere Verbesserungspotenziale auch bei guter Performance",
             ))
 
         # Rule BENCH_007: Opportunities must align with Funding Engine
         opportunities = swot.get("opportunities", [])
         funding_html = self.sections.get("FUNDING_ENGINE_V2_HTML", "") or self.sections.get("FOERDERPROGRAMME_HTML", "")
-        funding_keywords = ["foerder", "funding", "programm", "zuschuss", "grant"]
+        funding_keywords = ["förder", "funding", "programm", "zuschuss", "grant"]
         funding_opportunities = [o for o in opportunities if any(kw in o.lower() for kw in funding_keywords)]
         if funding_opportunities and not funding_html:
             self.report.add_issue(ConsistencyIssue(
@@ -4223,10 +4223,10 @@ class ConsistencyEngine:
                 domain="benchmark",
                 source_section="benchmark_engine",
                 target_section="funding_engine",
-                message="Foerder-Chancen genannt aber keine Funding Engine Daten",
-                expected="Funding-Opportunities sollten von Funding Engine gestuetzt werden",
+                message="Förder-Chancen genannt aber keine Funding Engine Daten",
+                expected="Funding-Opportunities sollten von Funding Engine gestützt werden",
                 actual=f"Opportunities: {funding_opportunities[:2]}",
-                suggestion="Aktiviere Funding Engine fuer konsistente Empfehlungen",
+                suggestion="Aktiviere Funding Engine für konsistente Empfehlungen",
             ))
 
         # Rule BENCH_008: Summary must reflect positions
@@ -4236,7 +4236,7 @@ class ConsistencyEngine:
             total_positions = len(positions)
 
             # Check if summary mentions being above/below median correctly
-            above_keywords = ["ueber", "above", "besser", "better", "fuehrend", "leading"]
+            above_keywords = ["über", "above", "besser", "better", "führend", "leading"]
             below_keywords = ["unter", "below", "schlechter", "worse", "nachholbedarf"]
 
             summary_positive = any(kw in summary.lower() for kw in above_keywords)
@@ -4251,10 +4251,10 @@ class ConsistencyEngine:
                     domain="benchmark",
                     source_section="benchmark_engine",
                     target_section="benchmark_engine",
-                    message="Summary ist negativ aber Mehrheit der Positionen ueber Median",
-                    expected=f"{above_median_count}/{total_positions} Positionen ueber Median - positive Summary",
-                    actual="Summary betont Schwaechen",
-                    suggestion="Passe Summary an die tatsaechliche Benchmark-Performance an",
+                    message="Summary ist negativ aber Mehrheit der Positionen über Median",
+                    expected=f"{above_median_count}/{total_positions} Positionen über Median - positive Summary",
+                    actual="Summary betont Schwächen",
+                    suggestion="Passe Summary an die tatsächliche Benchmark-Performance an",
                 ))
             elif not majority_above and summary_positive and not summary_negative:
                 self.report.add_issue(ConsistencyIssue(
@@ -4264,9 +4264,9 @@ class ConsistencyEngine:
                     source_section="benchmark_engine",
                     target_section="benchmark_engine",
                     message="Summary ist positiv aber Mehrheit der Positionen unter Median",
-                    expected=f"{above_median_count}/{total_positions} Positionen ueber Median - ausgewogene Summary",
-                    actual="Summary betont nur Staerken",
-                    suggestion="Erwaehne auch Verbesserungspotenziale in der Summary",
+                    expected=f"{above_median_count}/{total_positions} Positionen über Median - ausgewogene Summary",
+                    actual="Summary betont nur Stärken",
+                    suggestion="Erwähne auch Verbesserungspotenziale in der Summary",
                 ))
 
     def _extract_benchmark_positions(self, html: str, report: Any) -> List[Dict[str, Any]]:

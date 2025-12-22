@@ -1038,7 +1038,7 @@ def _generate_recommendations(
     if red_vendors:
         names = ", ".join([e.name for e in red_vendors[:2]])
         recommendations.append(
-            f"Hochrisiko-Anbieter pruefen und ggf. durch EU-Alternativen ersetzen: {names}"
+            f"Hochrisiko-Anbieter prüfen und ggf. durch EU-Alternativen ersetzen: {names}"
         )
 
     # Check for unknown data locations
@@ -1046,7 +1046,7 @@ def _generate_recommendations(
     if unknown_location:
         names = ", ".join([e.name for e in unknown_location[:2]])
         recommendations.append(
-            f"Datenstandorte klaeren fuer: {names}"
+            f"Datenstandorte klären für: {names}"
         )
 
     # Check for weak security
@@ -1054,7 +1054,7 @@ def _generate_recommendations(
     if weak_security:
         names = ", ".join([e.name for e in weak_security[:2]])
         recommendations.append(
-            f"Sicherheitsbewertung anfordern fuer: {names}"
+            f"Sicherheitsbewertung anfordern für: {names}"
         )
 
     # Check for high AI Act relevance
@@ -1062,7 +1062,7 @@ def _generate_recommendations(
     if high_ai_act:
         names = ", ".join([e.name for e in high_ai_act[:2]])
         recommendations.append(
-            f"AI Act Konformitaetspruefung durchfuehren fuer: {names}"
+            f"AI Act Konformitätsprüfung durchführen für: {names}"
         )
 
     # Check for missing certifications
@@ -1096,7 +1096,7 @@ def _generate_summary(
         Summary string
     """
     if not entries:
-        return "Keine Anbieter zur Pruefung vorhanden." if lang == "de" else "No vendors to audit."
+        return "Keine Anbieter zur Prüfung vorhanden." if lang == "de" else "No vendors to audit."
 
     total = len(entries)
     green = sum(1 for e in entries if e.overall_category == "green")
@@ -1113,8 +1113,8 @@ def _generate_summary(
         )
     else:
         return (
-            f"Vendor-Audit fuer {total} Tools/Anbieter abgeschlossen. "
-            f"Ergebnis: {green} gruen (niedriges Risiko), {yellow} gelb (mittleres Risiko), {red} rot (hohes Risiko). "
+            f"Vendor-Audit für {total} Tools/Anbieter abgeschlossen. "
+            f"Ergebnis: {green} grün (niedriges Risiko), {yellow} gelb (mittleres Risiko), {red} rot (hohes Risiko). "
             f"{eu_compliant} Anbieter sind EU-konform. "
             f"{'Sofortiger Handlungsbedarf bei Hochrisiko-Anbietern.' if red > 0 else 'Keine kritischen Befunde.'}"
         )
@@ -1254,11 +1254,11 @@ def vendor_audit_report_to_html(
         }
     else:
         labels = {
-            "title": "Vendor Audit – KI-TUeV fuer Ihre Tools",
+            "title": "Vendor Audit – KI-TÜV für Ihre Tools",
             "subtitle": "Umfassende Anbieter-Risikobewertung",
-            "overview": "Uebersicht",
-            "total_vendors": "Gepruefte Anbieter",
-            "green_vendors": "Niedriges Risiko (Gruen)",
+            "overview": "Übersicht",
+            "total_vendors": "Geprüfte Anbieter",
+            "green_vendors": "Niedriges Risiko (Grün)",
             "yellow_vendors": "Mittleres Risiko (Gelb)",
             "red_vendors": "Hohes Risiko (Rot)",
             "eu_compliant": "EU-Konform",
@@ -1271,7 +1271,7 @@ def vendor_audit_report_to_html(
             "certifications": "Zertifizierungen",
             "audit_flags": "Audit-Hinweise",
             "recommendations": "Empfehlungen",
-            "no_flags": "Keine Auffaelligkeiten",
+            "no_flags": "Keine Auffälligkeiten",
             "dpa_yes": "AVV vorhanden",
             "dpa_no": "Kein AVV",
             "notes": "Hinweise",

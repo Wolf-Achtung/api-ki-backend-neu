@@ -170,7 +170,7 @@ DEFAULT_TOOLS: List[Dict[str, Any]] = [
         "trust_url": "https://legal.hubspot.com/privacy-policy",
         "category": "CRM / Sales",
         "price": "Free / ab 18 EUR/Monat",
-        "gdpr": "AVV verfuegbar",
+        "gdpr": "AVV verfügbar",
         "host": "EU/US",
         "best_for_size": ["team", "kmu"],
         "best_for_industries": ["beratung", "dienstleistungen", "handel"],
@@ -192,7 +192,7 @@ DEFAULT_TOOLS: List[Dict[str, Any]] = [
         "trust_url": "https://greatexpectations.io/privacy",
         "category": "Data Quality",
         "price": "Open Source + Enterprise",
-        "gdpr": "Self-hosted moeglich",
+        "gdpr": "Self-hosted möglich",
         "host": "Self/Cloud",
         "best_for_size": ["kmu"],
         "best_for_industries": ["it", "dienstleistungen", "handel"],
@@ -271,7 +271,7 @@ SMART_DEFAULTS: Dict[str, Dict[str, Any]] = {
         "focus": "automation",
         "priorities": ["workflow_automation", "ai_assistants", "productivity"],
         "max_tools": 8,
-        "description": "Fokus auf Automatisierungs-Tools fuer Einzelunternehmer",
+        "description": "Fokus auf Automatisierungs-Tools für Einzelunternehmer",
         "recommended_categories": [
             "Workflow-Automation",
             "KI-API",
@@ -283,7 +283,7 @@ SMART_DEFAULTS: Dict[str, Dict[str, Any]] = {
         "focus": "collaboration",
         "priorities": ["collaboration", "documentation", "project_management"],
         "max_tools": 10,
-        "description": "Fokus auf Kollaboration + Dokumentation fuer Teams",
+        "description": "Fokus auf Kollaboration + Dokumentation für Teams",
         "recommended_categories": [
             "Team-Kommunikation",
             "Wissensmanagement / Docs",
@@ -295,7 +295,7 @@ SMART_DEFAULTS: Dict[str, Dict[str, Any]] = {
         "focus": "governance",
         "priorities": ["data_quality", "governance", "analytics", "security"],
         "max_tools": 12,
-        "description": "Fokus auf Data Quality + Governance fuer KMU",
+        "description": "Fokus auf Data Quality + Governance für KMU",
         "recommended_categories": [
             "Data Quality",
             "ML Lifecycle / Governance",
@@ -812,7 +812,7 @@ def generate_insights(
         insights.append({
             "type": "high_adoption",
             "title": "Hohe Adoption in Ihrem Segment",
-            "description": f"{len(high_conf_tools)} Tools werden haeufig in aehnlichen Unternehmen eingesetzt.",
+            "description": f"{len(high_conf_tools)} Tools werden häufig in ähnlichen Unternehmen eingesetzt.",
             "tools": [t.tool_name for t in high_conf_tools[:3]],
             "icon": "chart-line-up"
         })
@@ -822,7 +822,7 @@ def generate_insights(
     if rising_tools:
         insights.append({
             "type": "emerging",
-            "title": f"Aufstrebende Tools fuer {branch_group.capitalize() or 'Ihre Branche'}",
+            "title": f"Aufstrebende Tools für {branch_group.capitalize() or 'Ihre Branche'}",
             "description": f"{len(rising_tools)} Tools zeigen einen positiven Trend.",
             "tools": [t.tool_name for t in rising_tools[:3]],
             "icon": "rocket"
@@ -835,7 +835,7 @@ def generate_insights(
             insights.append({
                 "type": "governance",
                 "title": "Starke Governance-Ausrichtung",
-                "description": f"{len(governance_tools)} Tools unterstuetzen Ihre Compliance-Anforderungen.",
+                "description": f"{len(governance_tools)} Tools unterstützen Ihre Compliance-Anforderungen.",
                 "tools": [t.tool_name for t in governance_tools[:3]],
                 "icon": "shield-check"
             })
@@ -1134,7 +1134,7 @@ def generate_confidence_table_html(tools: List[Dict[str, Any]]) -> str:
             <tr>
                 <th>Tool</th>
                 <th style="text-align: center;">Konfidenz</th>
-                <th style="text-align: center;">Stabilitaet</th>
+                <th style="text-align: center;">Stabilität</th>
                 <th style="text-align: center;">AI Act</th>
                 <th style="text-align: center;">Persona</th>
             </tr>
@@ -1237,9 +1237,9 @@ def generate_segment_stability_html(stability: str, context: Dict[str, str]) -> 
         "weak": "Begrenzte Datenbasis"
     }
     descriptions = {
-        "strong": "Empfehlungen basieren auf einer grossen Anzahl aehnlicher Profile.",
+        "strong": "Empfehlungen basieren auf einer großen Anzahl ähnlicher Profile.",
         "medium": "Empfehlungen basieren auf einer moderaten Datenbasis.",
-        "weak": "Empfehlungen basieren auf begrenzten Daten. Generische Fallbacks koennen enthalten sein."
+        "weak": "Empfehlungen basieren auf begrenzten Daten. Generische Fallbacks können enthalten sein."
     }
 
     color = colors.get(stability, colors["medium"])
