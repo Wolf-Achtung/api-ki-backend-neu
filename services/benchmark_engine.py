@@ -242,7 +242,7 @@ SIZE_BENCHMARK_MULTIPLIERS = {
 }
 
 # Radar categories for visualization
-RADAR_CATEGORIES_DE = ["ROI", "Risiko", "Tools", "Automation", "Foerderung", "Strategie"]
+RADAR_CATEGORIES_DE = ["ROI", "Risiko", "Tools", "Automation", "Förderung", "Strategie"]
 RADAR_CATEGORIES_EN = ["ROI", "Risk", "Tools", "Automation", "Funding", "Strategy"]
 
 # Percentile thresholds
@@ -901,20 +901,20 @@ def _generate_position_narrative(
         position = "Top-Quartil" if lang == "de" else "top quartile"
         trend = "unterdurchschnittlich (positiv)" if is_inverse and lang == "de" else \
                 "below average (positive)" if is_inverse else \
-                "ueberdurchschnittlich" if lang == "de" else "above average"
+                "überdurchschnittlich" if lang == "de" else "above average"
     elif percentile >= 50:
-        position = "obere Haelfte" if lang == "de" else "upper half"
+        position = "obere Hälfte" if lang == "de" else "upper half"
         trend = "unter Median (positiv)" if is_inverse and lang == "de" else \
                 "below median (positive)" if is_inverse else \
-                "ueber Median" if lang == "de" else "above median"
+                "über Median" if lang == "de" else "above median"
     elif percentile >= 25:
-        position = "untere Haelfte" if lang == "de" else "lower half"
-        trend = "ueber Median (negativ)" if is_inverse and lang == "de" else \
+        position = "untere Hälfte" if lang == "de" else "lower half"
+        trend = "über Median (negativ)" if is_inverse and lang == "de" else \
                 "above median (negative)" if is_inverse else \
                 "unter Median" if lang == "de" else "below median"
     else:
         position = "unterste Quartil" if lang == "de" else "bottom quartile"
-        trend = "ueberdurchschnittlich (negativ)" if is_inverse and lang == "de" else \
+        trend = "überdurchschnittlich (negativ)" if is_inverse and lang == "de" else \
                 "above average (negative)" if is_inverse else \
                 "unterdurchschnittlich" if lang == "de" else "below average"
 
@@ -923,7 +923,7 @@ def _generate_position_narrative(
         "tools": "Tool-Reife",
         "risk": "Risiko-Management",
         "automation": "Automationsgrad",
-        "funding": "Foerder-Ausschoepfung",
+        "funding": "Förder-Ausschöpfung",
         "strategy": "Strategie-Reife"
     }
     domain_names_en = {
@@ -958,7 +958,7 @@ def _generate_swot_from_positions(
         "tools": "Fortschrittlicher Tool-Stack",
         "risk": "Gutes Risikomanagement",
         "automation": "Hoher Automationsgrad",
-        "funding": "Gute Foerder-Ausschoepfung",
+        "funding": "Gute Förder-Ausschöpfung",
         "strategy": "Klare KI-Strategie"
     }
     domain_labels_en = {
@@ -971,11 +971,11 @@ def _generate_swot_from_positions(
     }
 
     weakness_labels_de = {
-        "kpi": "ROI-Potenzial noch nicht ausgeschoepft",
-        "tools": "Tool-Stack ausbaufaehig",
-        "risk": "Risikomanagement verbesserungswuerdig",
+        "kpi": "ROI-Potenzial noch nicht ausgeschöpft",
+        "tools": "Tool-Stack ausbaufähig",
+        "risk": "Risikomanagement verbesserungswürdig",
         "automation": "Automationspotenzial ungenutzt",
-        "funding": "Foerdermittel unterbeansprucht",
+        "funding": "Fördermittel unterbeansprucht",
         "strategy": "KI-Strategie unklar definiert"
     }
     weakness_labels_en = {
@@ -989,10 +989,10 @@ def _generate_swot_from_positions(
 
     opportunity_labels_de = {
         "kpi": "Weitere ROI-Steigerung durch KI-Optimierung",
-        "tools": "Neue KI-Tools koennen Effizienz steigern",
+        "tools": "Neue KI-Tools können Effizienz steigern",
         "risk": "Compliance-Vorsprung als Wettbewerbsvorteil",
         "automation": "Skalierung durch weitere Automatisierung",
-        "funding": "Zusaetzliche Foerderprogramme verfuegbar",
+        "funding": "Zusätzliche Förderprogramme verfügbar",
         "strategy": "Strategische Positionierung als KI-Leader"
     }
     opportunity_labels_en = {
@@ -1007,10 +1007,10 @@ def _generate_swot_from_positions(
     threat_labels_de = {
         "kpi": "Wettbewerber holen bei ROI auf",
         "tools": "Technologische Disruption durch neue Tools",
-        "risk": "Regulatorische Verschaerfungen (AI Act)",
+        "risk": "Regulatorische Verschärfungen (AI Act)",
         "automation": "Wettbewerber automatisieren schneller",
-        "funding": "Foerderbudgets werden kompetitiver",
-        "strategy": "Strategielucke gegenueber Wettbewerbern"
+        "funding": "Förderbudgets werden kompetitiver",
+        "strategy": "Strategielücke gegenüber Wettbewerbern"
     }
     threat_labels_en = {
         "kpi": "Competitors catching up on ROI",
@@ -1047,17 +1047,17 @@ def _generate_swot_from_positions(
     # Ensure at least one item in each category
     if not strengths:
         strengths.append(
-            "Solide Grundlage fuer KI-Transformation" if lang == "de"
+            "Solide Grundlage für KI-Transformation" if lang == "de"
             else "Solid foundation for AI transformation"
         )
     if not weaknesses:
         weaknesses.append(
-            "Keine kritischen Schwaechen identifiziert" if lang == "de"
+            "Keine kritischen Schwächen identifiziert" if lang == "de"
             else "No critical weaknesses identified"
         )
     if not opportunities:
         opportunities.append(
-            "Potenzial zur Branchenfuehrerschaft" if lang == "de"
+            "Potenzial zur Branchenführerschaft" if lang == "de"
             else "Potential for industry leadership"
         )
     if not threats:
@@ -1087,14 +1087,14 @@ def _generate_summary(
             "B": "gut",
             "C": "durchschnittlich",
             "D": "unter dem Durchschnitt",
-            "F": "verbesserungswuerdig"
+            "F": "verbesserungswürdig"
         }
         size_labels = {"solo": "Einzelunternehmer", "team": "Team", "kmu": "KMU"}
 
         return (
             f"Ihre KI-Wettbewerbsposition ist {grade_labels.get(grade, 'solide')} (Note {grade}). "
             f"Mit einem Reifegrad von {maturity:.0f}% liegen Sie in {above_median} von {total} "
-            f"Benchmark-Kategorien ueber dem Branchenmedian. "
+            f"Benchmark-Kategorien über dem Branchenmedian. "
             f"Als {size_labels.get(size_label, 'Unternehmen')} in der Branche {branch} "
             f"haben Sie eine {_get_position_phrase_de(maturity)} Ausgangsposition."
         )
@@ -1512,7 +1512,7 @@ def _generate_header_html(report: BenchmarkReport, lang: str) -> str:
 
     maturity_label = "KI-Reifegrad" if lang == "de" else "AI Maturity"
     grade_label = "Wettbewerbsnote" if lang == "de" else "Competitiveness Grade"
-    above_median_label = "ueber Branchenmedian" if lang == "de" else "above industry median"
+    above_median_label = "über Branchenmedian" if lang == "de" else "above industry median"
 
     return f"""
 <div class="benchmark-header" style="display: flex; gap: 24px; margin-bottom: 24px; flex-wrap: wrap;">
@@ -1545,7 +1545,7 @@ def _generate_positions_table_html(positions: List[BenchmarkPosition], lang: str
         "tools": "Tool-Reife",
         "risk": "Risiko-Management",
         "automation": "Automationsgrad",
-        "funding": "Foerder-Ausschoepfung",
+        "funding": "Förder-Ausschöpfung",
         "strategy": "Strategie-Reife"
     }
     domain_labels_en = {
@@ -1697,8 +1697,8 @@ def _generate_swot_html(report: BenchmarkReport, lang: str) -> str:
     """Generate SWOT analysis HTML."""
     title = "Mini-SWOT Analyse" if lang == "de" else "Mini-SWOT Analysis"
     labels = {
-        "strengths": "Staerken" if lang == "de" else "Strengths",
-        "weaknesses": "Schwaechen" if lang == "de" else "Weaknesses",
+        "strengths": "Stärken" if lang == "de" else "Strengths",
+        "weaknesses": "Schwächen" if lang == "de" else "Weaknesses",
         "opportunities": "Chancen" if lang == "de" else "Opportunities",
         "threats": "Risiken" if lang == "de" else "Threats",
     }
