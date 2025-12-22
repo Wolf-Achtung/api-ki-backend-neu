@@ -2645,7 +2645,7 @@
                 </section>
                 {% endif %}
                 <!-- G24: Branch Deep-Dive Addon -->
-                {% if BRANCH_DEEP_DIVE_HTML %}
+                {% if BRANCH_DEEP_DIVE_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="branch-deep-dive">
                     <div class="section-header">
                         <div class="section-title">
@@ -2663,7 +2663,7 @@
                 </section>
                 {% endif %}
                 <!-- G29: Risk Engine 2.0 – Consolidated Risk Analysis -->
-                {% if RISK_ENGINE_HTML %}
+                {% if RISK_ENGINE_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="risk-engine">
                     <div class="section-header">
                         <div class="section-title">
@@ -2714,7 +2714,7 @@
                 </section>
                 {% endif %}
                 <!-- G33: Risk Engine 3.0 – DPIA & AI Act Conformity -->
-                {% if RISK_ENGINE_V3_HTML %}
+                {% if RISK_ENGINE_V3_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="risk-engine-v3">
                     <div class="section-header">
                         <div class="section-title">
@@ -2732,7 +2732,7 @@
                 </section>
                 {% endif %}
                 <!-- G35: Vendor Audit Engine – AI-TUV for Tools & Models -->
-                {% if VENDOR_AUDIT_HTML %}
+                {% if VENDOR_AUDIT_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="vendor-audit">
                     <div class="section-header">
                         <div class="section-title">
@@ -2750,7 +2750,7 @@
                 </section>
                 {% endif %}
                 <!-- G36: Automation Roadmap Engine – Process Analysis & Transformation Paths -->
-                {% if AUTOMATION_ROADMAP_HTML %}
+                {% if AUTOMATION_ROADMAP_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="automation-roadmap">
                     <div class="section-header">
                         <div class="section-title">
@@ -2786,7 +2786,7 @@
                 </section>
                 {% endif %}
                 <!-- G34: Business Case Simulation – Monte Carlo ROI & Payback Analysis -->
-                {% if BUSINESS_CASE_SIM_HTML %}
+                {% if BUSINESS_CASE_SIM_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="business-case-simulation">
                     <div class="section-header">
                         <div class="section-title">
@@ -2804,7 +2804,7 @@
                 </section>
                 {% endif %}
                 <!-- G37: Benchmark Engine – Industry Comparison & Competitive Position -->
-                {% if BENCHMARK_ENGINE_HTML %}
+                {% if BENCHMARK_ENGINE_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="benchmark-engine">
                     <div class="section-header">
                         <div class="section-title">
@@ -2956,7 +2956,7 @@
                 </section>
                 {% endif %}
                 <!-- SPRINT G19: Funding × Branch Alignment -->
-                {% if FUNDING_BRANCH_ALIGNMENT_HTML %}
+                {% if FUNDING_BRANCH_ALIGNMENT_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="funding-branch-alignment">
                     <div class="section-header">
                         <div class="section-title">
@@ -2974,7 +2974,7 @@
                 </section>
                 {% endif %}
                 <!-- SPRINT B2.2: Tools × Funding Alignment -->
-                {% if TOOLS_FUNDING_ALIGNMENT_HTML %}
+                {% if TOOLS_FUNDING_ALIGNMENT_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="tools-funding-alignment">
                     <div class="section-header">
                         <div class="section-title">
@@ -3010,7 +3010,7 @@
                 </section>
                 {% endif %}
                 <!-- SPRINT G19: Tools × Branch Alignment -->
-                {% if TOOLS_BRANCH_ALIGNMENT_HTML %}
+                {% if TOOLS_BRANCH_ALIGNMENT_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="tools-branch-alignment">
                     <div class="section-header">
                         <div class="section-title">
@@ -3080,7 +3080,7 @@
                 </section>
                 {% endif %}
                 <!-- NEW SECTIONS: ROI Tracking, AI Mini Policy, Kickoff Template, Prompt Framework -->
-                {% if ROI_TRACKING_HTML %}
+                {% if ROI_TRACKING_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter">
                     <div class="section-header">
                         <div class="section-title">
