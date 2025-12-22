@@ -5543,6 +5543,29 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["user_email"] = answers.get("email") or answers.get("kontakt_email") or ""
     sections["ki_kompetenz"] = answers.get("ki_kompetenz") or answers.get("ki_knowhow", "")
 
+    # === PLATIN+++ v5.4.2: APPENDIX MODE for streamlined reports ===
+    # Derive company_size from answers
+    size_raw = (answers.get("unternehmensgroesse") or "solo").lower()
+    size_map = {"solo": "solo", "klein": "team", "kmu": "kmu"}
+    company_size = size_map.get(size_raw, "team")
+
+    # Read ENV variable PLATIN_APPENDIX_MODE
+    appendix_mode_env = os.environ.get("PLATIN_APPENDIX_MODE", "").lower().strip()
+    if appendix_mode_env == "all":
+        solo_appendix_mode = True  # Enable for all sizes
+    elif appendix_mode_env == "solo":
+        solo_appendix_mode = (company_size == "solo")  # Original v5.4.1 behavior
+    elif appendix_mode_env in ("none", "disabled", "off", "false", "0"):
+        solo_appendix_mode = False  # Disable for all
+    else:
+        # Default: enable for all sizes (v5.4.2 - reports should be max 25 pages)
+        solo_appendix_mode = True
+
+    sections["SOLO_APPENDIX_MODE"] = solo_appendix_mode
+    sections["COMPANY_SIZE"] = company_size
+    log.info("[%s] 📄 [APPENDIX] Mode=%s, company_size=%s, SOLO_APPENDIX_MODE=%s",
+             run_id, appendix_mode_env or "(default=all)", company_size, solo_appendix_mode)
+
     # Scores
     sections["score_governance"] = scores.get("governance", 0)
     sections["score_sicherheit"] = scores.get("security", 0)
