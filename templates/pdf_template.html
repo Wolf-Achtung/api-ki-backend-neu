@@ -3334,7 +3334,8 @@
                 </section>
                 {% endif %}
                 <!-- G24: Branch Deep-Dive Addon (FINAL GO: fail-closed) -->
-                {% if BRANCH_DEEP_DIVE_HTML and BRANCH_DEEP_DIVE_HTML|trim and '<' in BRANCH_DEEP_DIVE_HTML %}
+                <!-- PLATIN+++ v5.4.2: Move to appendix for solo users -->
+                {% if BRANCH_DEEP_DIVE_HTML and BRANCH_DEEP_DIVE_HTML|trim and '<' in BRANCH_DEEP_DIVE_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="branch-deep-dive">
                     <div class="section-header" data-ui="1">
                         <div class="section-title">
@@ -3352,7 +3353,8 @@
                 </section>
                 {% endif %}
                 <!-- G29: Risk Engine 2.0 – Konsolidierte Risikoanalyse -->
-                {% if RISK_ENGINE_HTML %}
+                <!-- PLATIN+++ v5.4.2: Move to appendix for solo users -->
+                {% if RISK_ENGINE_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="risk-engine">
                     <div class="section-header">
                         <div class="section-title">
@@ -3644,7 +3646,8 @@
                     {{FOERDERPOTENZIAL_HTML}}
                 </section>
                 <!-- SPRINT G19: Funding × Branch Alignment -->
-                {% if FUNDING_BRANCH_ALIGNMENT_HTML %}
+                <!-- PLATIN+++ v5.4.2: Move to appendix for solo users -->
+                {% if FUNDING_BRANCH_ALIGNMENT_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="funding-branch-alignment">
                     <div class="section-header" data-ui="1">
                         <div class="section-title">
@@ -3662,7 +3665,8 @@
                 </section>
                 {% endif %}
                 <!-- SPRINT B2.2: Tools × Funding Alignment -->
-                {% if TOOLS_FUNDING_ALIGNMENT_HTML %}
+                <!-- PLATIN+++ v5.4.2: Move to appendix for solo users -->
+                {% if TOOLS_FUNDING_ALIGNMENT_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="tools-funding-alignment">
                     <div class="section-header">
                         <div class="section-title">
@@ -3698,7 +3702,8 @@
                 </section>
                 {% endif %}
                 <!-- SPRINT G19: Tools × Branch Alignment -->
-                {% if TOOLS_BRANCH_ALIGNMENT_HTML %}
+                <!-- PLATIN+++ v5.4.2: Move to appendix for solo users -->
+                {% if TOOLS_BRANCH_ALIGNMENT_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="tools-branch-alignment">
                     <div class="section-header" data-ui="1">
                         <div class="section-title">
@@ -3768,7 +3773,8 @@
                 </section>
                 {% endif %}
                 <!-- NEUE SEKTIONEN: ROI Tracking, AI Policy, Kickoff, Prompt Framework -->
-                {% if ROI_TRACKING_HTML %}
+                <!-- PLATIN+++ v5.4.2: Move to appendix for solo users -->
+                {% if ROI_TRACKING_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter">
                     <div class="section-header">
                         <div class="section-title">
