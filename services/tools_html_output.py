@@ -80,13 +80,13 @@ SAMPLE_INSIGHT_CARDS = [
     {
         "type": "high_adoption",
         "title": "Hohe Adoption in Ihrem Segment",
-        "description": "3 Tools werden haeufig in aehnlichen Unternehmen eingesetzt.",
+        "description": "3 Tools werden häufig in ähnlichen Unternehmen eingesetzt.",
         "tools": ["Notion", "Make (Integromat)", "Slack"],
         "icon": "chart-line-up"
     },
     {
         "type": "emerging",
-        "title": "Aufstrebende Tools fuer IT",
+        "title": "Aufstrebende Tools für IT",
         "description": "2 Tools zeigen einen positiven Trend.",
         "tools": ["Claude API", "Great Expectations"],
         "icon": "rocket"
@@ -94,13 +94,13 @@ SAMPLE_INSIGHT_CARDS = [
     {
         "type": "governance",
         "title": "Starke Governance-Ausrichtung",
-        "description": "4 Tools unterstuetzen Ihre Compliance-Anforderungen.",
+        "description": "4 Tools unterstützen Ihre Compliance-Anforderungen.",
         "tools": ["MLflow", "DataDog", "Grafana"],
         "icon": "shield-check"
     },
     {
         "type": "persona_fit",
-        "title": "Fokus auf Data Quality + Governance fuer KMU",
+        "title": "Fokus auf Data Quality + Governance für KMU",
         "description": "Empfohlene Kategorien: Data Quality, ML Lifecycle, Monitoring",
         "tools": [],
         "icon": "user-check"
@@ -317,7 +317,7 @@ def get_sample_validation_analysis() -> Dict[str, Any]:
         "overall_status": "PASS",
         "recommendations": [
             "Alle Tools haben Konfidenz-Metadaten - gut!",
-            "Governance-Tools fuer 'limited' Risk-Level vorhanden",
+            "Governance-Tools für 'limited' Risk-Level vorhanden",
             "Tool-Anzahl im akzeptablen Bereich"
         ]
     }
@@ -331,7 +331,7 @@ GOLD_PROFILES: List[Dict[str, Any]] = [
     {
         "name": "Solo Consultant - IT Beratung",
         "briefing": {
-            "unternehmensgroesse": "Solo-Selbststaendige/r (1)",
+            "unternehmensgroesse": "Solo-Selbstständige/r (1)",
             "branche": "IT & Softwareentwicklung",
             "ai_act_risk_level": "minimal"
         },
