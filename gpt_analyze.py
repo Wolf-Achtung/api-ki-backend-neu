@@ -1293,14 +1293,16 @@ def build_extra_sections(answers: dict, scores: dict) -> dict:
         if callable(get_score_context):
             overall_score = scores.get("overall", 0)
             size = answers.get("unternehmensgroesse", "klein")
-            score_context = get_score_context(overall_score, size)
+            # Extract language from answers for bilingual support
+            lang = answers.get("lang") or answers.get("LANG") or answers.get("sprache") or "de"
+            score_context = get_score_context(overall_score, size, lang=lang)
             extra["score_context"] = score_context
             extra["score_rating"] = score_context.get("score_rating", "")
             extra["size_label"] = score_context.get("size_label", "")
             extra["avg_score_for_size"] = score_context.get("avg_score_for_size", 0)
             extra["top10_score_for_size"] = score_context.get("top10_score_for_size", 0)
-            log.info("✅ Score context added: %s for %s (avg=%s, top10=%s)",
-                     score_context.get("score_rating"), size,
+            log.info("✅ Score context added: %s for %s (lang=%s, avg=%s, top10=%s)",
+                     score_context.get("score_rating"), size, lang,
                      score_context.get("avg_score_for_size"), score_context.get("top10_score_for_size"))
     except Exception as exc:
         log.warning("Score context failed: %s", exc)
@@ -2430,6 +2432,10 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # Derive size_label (human-readable label for size)
     size_label = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
 
+    # PLATIN+++ v5.4.1: Solo Appendix Mode - move engine sections to appendix for solo users
+    # Solo users get streamlined reports (20-25 pages vs 35+ for teams/KMU)
+    solo_appendix_mode = (company_size == "solo")
+
     base_vars.update({
         "BRANCHE": briefing.get("branche", ""),
         "branche": briefing.get("branche", ""),
@@ -2439,6 +2445,7 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "UNTERNEHMENSGROESSE_LABEL": size_label,
         "size_label": size_label,  # Consistent key for size-sensitive prompts
         "COMPANY_SIZE": company_size,  # For roadmap_90d.md and gamechanger.md
+        "SOLO_APPENDIX_MODE": solo_appendix_mode,  # PLATIN+++ v5.4.1: Move engines to appendix for solo
         "BUNDESLAND_LABEL": briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", ""),
         "bundesland": briefing.get("bundesland", ""),
         "HAUPTLEISTUNG": briefing.get("hauptleistung", ""),
@@ -6258,7 +6265,24 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     try:
         # Extract key KPIs for summary
         overall_score = int(scores.get("overall", 0))
-        score_rating = sections.get("score_rating", "Starter")
+
+        # FIX: Calculate score_rating dynamically if not yet in sections
+        # This prevents the "Starter" vs "exzellent" contradiction
+        score_rating = sections.get("score_rating")
+        if not score_rating:
+            try:
+                from services.extra_sections import get_score_context
+                size = answers.get("unternehmensgroesse", "klein")
+                score_context = get_score_context(overall_score, size, lang=report_lang)
+                score_rating = score_context.get("score_rating", "im Durchschnitt" if report_lang == "de" else "average")
+                # Also populate sections for downstream usage
+                sections["score_rating"] = score_rating
+                sections["size_label"] = score_context.get("size_label", "KMU" if report_lang == "de" else "SME")
+                log.info("[%s] ✅ score_rating calculated on-demand: %s (lang=%s)", run_id, score_rating, report_lang)
+            except Exception as e:
+                log.warning("[%s] ⚠️ score_rating fallback failed: %s", run_id, e)
+                score_rating = "im Durchschnitt" if report_lang == "de" else "average"
+
         company_size = sections.get("size_label", "KMU")
         branch_label = sections.get("BRANCHE_LABEL", "")
         payback_months = sections.get("PAYBACK_MONTHS", 0)

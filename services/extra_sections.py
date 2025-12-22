@@ -31,30 +31,66 @@ BENCHMARK_SCORES = {
 }
 
 
-def get_score_context(overall_score: int, size: str) -> Dict[str, Any]:
+def get_score_context(overall_score: int, size: str, lang: str = "de") -> Dict[str, Any]:
+    """
+    Calculate score context with size-relative benchmarking.
+
+    Args:
+        overall_score: The overall score (0-100)
+        size: Company size ('solo', 'klein', 'mittel', 'gross')
+        lang: Language code ('de' or 'en')
+
+    Returns:
+        Dict with score_rating, size_label, avg_score_for_size, top10_score_for_size
+    """
     benchmark = BENCHMARK_SCORES.get(size.lower(), BENCHMARK_SCORES["klein"])
 
-    if overall_score >= benchmark["top10"]:
-        rating = "exzellent - Sie gehören zu den Top 10%"
-    elif overall_score >= benchmark["avg"] + 10:
-        rating = "überdurchschnittlich"
-    elif overall_score >= benchmark["avg"]:
-        rating = "gut - über dem Durchschnitt"
-    elif overall_score >= benchmark["avg"] - 10:
-        rating = "solide - im Durchschnitt"
-    else:
-        rating = "ausbaufähig - unter dem Durchschnitt"
+    # Bilingual rating labels
+    if lang == "en":
+        if overall_score >= benchmark["top10"]:
+            rating = "excellent - You are in the Top 10%"
+        elif overall_score >= benchmark["avg"] + 10:
+            rating = "above average"
+        elif overall_score >= benchmark["avg"]:
+            rating = "good - above average"
+        elif overall_score >= benchmark["avg"] - 10:
+            rating = "solid - on average"
+        else:
+            rating = "developing - below average"
 
-    size_labels = {
-        "solo": "Solo-Berater",
-        "klein": "Kleinunternehmen",
-        "mittel": "mittelständisches Unternehmen",
-        "gross": "Großunternehmen",
-    }
+        size_labels = {
+            "solo": "Solo Consultant",
+            "klein": "Small Business",
+            "mittel": "Mid-sized Company",
+            "gross": "Enterprise",
+            "team": "Small Team",
+        }
+        default_label = "Company"
+    else:
+        # German (default)
+        if overall_score >= benchmark["top10"]:
+            rating = "exzellent - Sie gehören zu den Top 10%"
+        elif overall_score >= benchmark["avg"] + 10:
+            rating = "überdurchschnittlich"
+        elif overall_score >= benchmark["avg"]:
+            rating = "gut - über dem Durchschnitt"
+        elif overall_score >= benchmark["avg"] - 10:
+            rating = "solide - im Durchschnitt"
+        else:
+            rating = "ausbaufähig - unter dem Durchschnitt"
+
+        size_labels = {
+            "solo": "Solo-Berater",
+            "klein": "Kleinunternehmen",
+            "mittel": "mittelständisches Unternehmen",
+            "gross": "Großunternehmen",
+            "team": "Kleines Team",
+        }
+        default_label = "Unternehmen"
 
     return {
         "score_rating": rating,
-        "size_label": size_labels.get(size.lower(), "Unternehmen"),
+        "size_label": size_labels.get(size.lower(), default_label),
         "avg_score_for_size": benchmark["avg"],
         "top10_score_for_size": benchmark["top10"],
     }

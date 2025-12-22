@@ -58,34 +58,34 @@ Erstelle eine umfassende Automations-Roadmap mit:
 
 ### Phase Assignment
 - `phase_1`: Quick Wins (hohe Machbarkeit, niedriges Risiko, 0-3 Monate)
-- `phase_2`: Strategische Projekte (mittlere Komplexitaet, 3-6 Monate)
+- `phase_2`: Strategische Projekte (mittlere Komplexität, 3-6 Monate)
 - `phase_3`: Transformation (komplexe Implementierung, 6-12 Monate)
 
-## Groessen-Constraints
+## Größen-Constraints
 
 ### Solo (Einzelunternehmer)
 - Max. 5 Prozesse
 - Max. 2 Automationspfade
-- Max. 2 Abhaengigkeiten pro Prozess
+- Max. 2 Abhängigkeiten pro Prozess
 
 ### Team (kleines Team)
 - Max. 7 Prozesse
 - Max. 3 Automationspfade
-- Max. 3 Abhaengigkeiten pro Prozess
+- Max. 3 Abhängigkeiten pro Prozess
 
 ### KMU (kleine/mittlere Unternehmen)
 - Max. 12 Prozesse
 - Max. 5 Automationspfade
-- Max. 4 Abhaengigkeiten pro Prozess
+- Max. 4 Abhängigkeiten pro Prozess
 
 ## Fehlervermeidungs-Regeln
 
 1. **Tool-Konsistenz**: Empfehle nur Tools, die in Tools Engine 4.0 (G25) vorkommen
-2. **Funding-Konsistenz**: Empfehle nur Foerderprogramme aus Funding Engine v2 (G26)
-3. **KI-Plausibilitaet**: Prozesse muessen technisch automatisierbar sein
-4. **Risiko-Konsistenz**: Prozesse mit hohem DSGVO-Risiko muessen in DPIA (G33) erscheinen
-5. **AI Act Compliance**: Prozesse mit missing controls duerfen nicht in Phase 1 sein
-6. **Vendor Risk**: Prozesse mit vendor_risk >= 4 duerfen nicht in Phase 1 sein
+2. **Funding-Konsistenz**: Empfehle nur Förderprogramme aus Funding Engine v2 (G26)
+3. **KI-Plausibilität**: Prozesse müssen technisch automatisierbar sein
+4. **Risiko-Konsistenz**: Prozesse mit hohem DSGVO-Risiko müssen in DPIA (G33) erscheinen
+5. **AI Act Compliance**: Prozesse mit missing controls dürfen nicht in Phase 1 sein
+6. **Vendor Risk**: Prozesse mit vendor_risk >= 4 dürfen nicht in Phase 1 sein
 7. **Impact × Machbarkeit**: Produkt darf nicht > 1.0 sein
 8. **KPI Gains**: Jeder Automationspfad muss mindestens 1 KPI-Gain haben
 
@@ -176,20 +176,20 @@ Erstelle eine umfassende Automations-Roadmap mit:
 ## Wichtige Regeln
 
 1. **Keine narrativen Texte** - nur strukturiertes JSON
-2. **Konsistenz** - Tools/Funding muessen mit G25/G26 uebereinstimmen
-3. **Phasen-Logik** - Abhaengigkeiten beachten (abhaengiger Prozess nicht vor Vorgaenger)
+2. **Konsistenz** - Tools/Funding müssen mit G25/G26 übereinstimmen
+3. **Phasen-Logik** - Abhängigkeiten beachten (abhängiger Prozess nicht vor Vorgänger)
 4. **KPI-Gains** - Realistische Werte (ROI 20-150%, Savings 10-50%, etc.)
-5. **Vollstaendigkeit** - Alle Pflichtfelder ausfuellen
-6. **Groessenanpassung** - Anzahl an Unternehmensgroesse anpassen
+5. **Vollständigkeit** - Alle Pflichtfelder ausfüllen
+6. **Größenanpassung** - Anzahl an Unternehmensgröße anpassen
 
 ## Integration mit anderen Engines
 
 - **Tools Engine 4.0 (G25)**: Tool-Empfehlungen, Fit-Scores
-- **Funding Engine v2 (G26)**: Foerderprogramme, Foerderquoten
+- **Funding Engine v2 (G26)**: Förderprogramme, Förderquoten
 - **Risk Engine 2.0 (G29)**: AI Act, DSGVO, Vendor Risk
 - **Risk Engine 3.0 (G33)**: DPIA, AI Act Conformity
 - **Business Case (G30)**: ROI, Investment, Payback
-- **Strategy Engine (G28)**: Phasen, Prioritaeten
+- **Strategy Engine (G28)**: Phasen, Prioritäten
 - **Vendor Audit (G35)**: Vendor Risk Scores
 
 ## KPI-Gain Kategorien

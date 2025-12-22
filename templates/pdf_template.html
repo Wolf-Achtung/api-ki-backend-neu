@@ -3403,7 +3403,8 @@
                 </section>
                 {% endif %}
                 <!-- G33: Risk Engine 3.0 – DPIA & AI Act Conformity -->
-                {% if RISK_ENGINE_V3_HTML %}
+                <!-- PLATIN+++ v5.4.1: Move to appendix for solo users -->
+                {% if RISK_ENGINE_V3_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="risk-engine-v3">
                     <div class="section-header">
                         <div class="section-title">
@@ -3421,7 +3422,8 @@
                 </section>
                 {% endif %}
                 <!-- G35: Vendor Audit Engine – KI-TUV for Tools & Models -->
-                {% if VENDOR_AUDIT_HTML %}
+                <!-- PLATIN+++ v5.4.1: Move to appendix for solo users -->
+                {% if VENDOR_AUDIT_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="vendor-audit">
                     <div class="section-header">
                         <div class="section-title">
@@ -3439,7 +3441,8 @@
                 </section>
                 {% endif %}
                 <!-- G36: Automation Roadmap Engine – Prozessanalyse & Transformationspfade -->
-                {% if AUTOMATION_ROADMAP_HTML %}
+                <!-- PLATIN+++ v5.4.1: Move to appendix for solo users -->
+                {% if AUTOMATION_ROADMAP_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="automation-roadmap">
                     <div class="section-header">
                         <div class="section-title">
@@ -3487,7 +3490,8 @@
                 </section>
                 {% endif %}
                 <!-- G34: Business Case Simulation – Monte Carlo ROI & Payback Analysis -->
-                {% if BUSINESS_CASE_SIM_HTML %}
+                <!-- PLATIN+++ v5.4.1: Move to appendix for solo users -->
+                {% if BUSINESS_CASE_SIM_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="business-case-simulation">
                     <div class="section-header">
                         <div class="section-title">
@@ -3517,7 +3521,8 @@
                 </section>
                 {% endif %}
                 <!-- G37: Benchmark Engine – Branchenvergleich & Wettbewerbsposition -->
-                {% if BENCHMARK_ENGINE_HTML %}
+                <!-- PLATIN+++ v5.4.1: Move to appendix for solo users -->
+                {% if BENCHMARK_ENGINE_HTML and not SOLO_APPENDIX_MODE %}
                 <section class="section chapter" id="benchmark-engine">
                     <div class="section-header" data-ui="1">
                         <div class="section-title">
@@ -4057,6 +4062,62 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
                         </p>
                     </div>
                 </div>
+                <!-- ============================================== -->
+                <!-- PLATIN+++ v5.4.1: APPENDIX FOR SOLO USERS     -->
+                <!-- ============================================== -->
+                {% if SOLO_APPENDIX_MODE %}
+                <section class="section chapter appendix-section" id="appendix" style="page-break-before: always;">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Appendix</span>
+                            <h2>{{ ui("appendix_title", "Detailanalysen & Engines") }}</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            {{ ui("appendix_subtitle", "Erweiterte Analysen für die Vertiefung") }}
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        <p class="appendix-intro">{{ ui("appendix_intro", "Die folgenden detaillierten Analysen wurden für Solo-Reports in den Appendix verschoben, um den Kernbericht kompakt zu halten. Alle Inhalte sind vollständig und können bei Bedarf herangezogen werden.") }}</p>
+
+                        {% if RISK_ENGINE_V3_HTML %}
+                        <div class="appendix-subsection" style="margin-top: 24px;">
+                            <h3>DPIA-Analyse & AI Act Konformität</h3>
+                            {{ RISK_ENGINE_V3_HTML|safe }}
+                        </div>
+                        {% endif %}
+
+                        {% if VENDOR_AUDIT_HTML %}
+                        <div class="appendix-subsection" style="margin-top: 24px;">
+                            <h3>Vendor Audit – KI-TÜV für Tools & Anbieter</h3>
+                            {{ VENDOR_AUDIT_HTML|safe }}
+                        </div>
+                        {% endif %}
+
+                        {% if AUTOMATION_ROADMAP_HTML %}
+                        <div class="appendix-subsection" style="margin-top: 24px;">
+                            <h3>Automations-Roadmap & Prozessanalyse</h3>
+                            {{ AUTOMATION_ROADMAP_HTML|safe }}
+                        </div>
+                        {% endif %}
+
+                        {% if BUSINESS_CASE_SIM_HTML %}
+                        <div class="appendix-subsection" style="margin-top: 24px;">
+                            <h3>Monte-Carlo Simulation & Szenarioanalyse</h3>
+                            {{ BUSINESS_CASE_SIM_HTML|safe }}
+                        </div>
+                        {% endif %}
+
+                        {% if BENCHMARK_ENGINE_HTML %}
+                        <div class="appendix-subsection" style="margin-top: 24px;">
+                            <h3>{{ ui("industry_benchmark_title", "Branchenvergleich & Wettbewerbsposition") }}</h3>
+                            {{ BENCHMARK_ENGINE_HTML|safe }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </section>
+                {% endif %}
+
                 <!-- FEEDBACK SECTION (nach Impressum für letzte Seite) -->
                 <div class="feedback-section" data-ui="1">
                     <h2>Ihr Feedback ist uns wichtig!</h2>
