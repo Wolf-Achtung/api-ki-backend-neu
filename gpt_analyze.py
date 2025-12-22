@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-gpt_analyze.py – v5.4.2-PLATIN+++
+gpt_analyze.py – v5.4.3-PLATIN+++
 ---------------------------------------------------------------------
 🎯 PLATIN+++ MULTI-LANGUAGE INTELLIGENCE (N4.2):
 - ✅ Native Executive-Tonality in 5 languages (DE, EN, FR, IT, ES)
@@ -1556,7 +1556,7 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
         "enablement": min(ena, 25) * 4,
         "overall": round((min(gov, 25) + min(sec, 25) + min(val, 25) + min(ena, 25)) * 4 / 4),
     }
-    log.info("📊 REALISTIC SCORES v5.4.2-PLATIN+++: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
+    log.info("📊 REALISTIC SCORES v5.4.3-PLATIN+++: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
              scores["governance"], scores["security"], scores["value"], scores["enablement"], scores["overall"])
     return {"scores": scores, "details": details, "total": scores["overall"]}
 
@@ -2432,21 +2432,21 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # Derive size_label (human-readable label for size)
     size_label = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
 
-    # PLATIN+++ v5.4.2: Appendix Mode - move engine sections to appendix for streamlined reports
+    # PLATIN+++ v5.4.3: Compact Report Mode - hide engine sections for solo & klein users
     # Controllable via ENV variable PLATIN_APPENDIX_MODE:
-    # - "all"  = enable for all sizes (solo, team, kmu) - 20-25 page reports
+    # - "all"  = compact mode for solo+klein (≤25 pages), full for kmu (~43 pages)
     # - "solo" = only for solo users (original v5.4.1 behavior)
     # - "none" or unset = disabled for all sizes - full reports
     appendix_mode_env = os.environ.get("PLATIN_APPENDIX_MODE", "").lower().strip()
     if appendix_mode_env == "all":
-        solo_appendix_mode = True  # Enable for all sizes
+        compact_report_mode = (company_size in ["solo", "klein"])  # Solo + Klein = compact
     elif appendix_mode_env == "solo":
-        solo_appendix_mode = (company_size == "solo")  # Original v5.4.1 behavior
+        compact_report_mode = (company_size == "solo")  # Original v5.4.1 behavior
     elif appendix_mode_env in ("none", "disabled", "off", "false", "0"):
-        solo_appendix_mode = False  # Disable for all
+        compact_report_mode = False  # Disable for all
     else:
-        # Default: enable for all sizes (v5.4.2 - reports should be max 25 pages)
-        solo_appendix_mode = True
+        # Default: compact for solo+klein (v5.4.3)
+        compact_report_mode = (company_size in ["solo", "klein"])
 
     base_vars.update({
         "BRANCHE": briefing.get("branche", ""),
@@ -2457,7 +2457,7 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "UNTERNEHMENSGROESSE_LABEL": size_label,
         "size_label": size_label,  # Consistent key for size-sensitive prompts
         "COMPANY_SIZE": company_size,  # For roadmap_90d.md and gamechanger.md
-        "SOLO_APPENDIX_MODE": solo_appendix_mode,  # PLATIN+++ v5.4.1: Move engines to appendix for solo
+        "COMPACT_REPORT_MODE": compact_report_mode,  # PLATIN+++ v5.4.3: Compact for solo+klein
         "BUNDESLAND_LABEL": briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", ""),
         "bundesland": briefing.get("bundesland", ""),
         "HAUPTLEISTUNG": briefing.get("hauptleistung", ""),
@@ -5497,7 +5497,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     answers["_guardrail_hits_count"] = len(guardrail_hits)  # Anzahl für Logik
     answers["_has_guardrails"] = len(guardrail_hits) > 0  # Boolean Flag
 
-    log.info("[%s] 📊 Calculating realistic scores (v5.4.2-PLATIN+++)...", run_id)
+    log.info("[%s] 📊 Calculating realistic scores (v5.4.3-PLATIN+++)...", run_id)
     score_wrap = _calculate_realistic_score(answers)
     scores = score_wrap["scores"]
 
@@ -5543,28 +5543,31 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["user_email"] = answers.get("email") or answers.get("kontakt_email") or ""
     sections["ki_kompetenz"] = answers.get("ki_kompetenz") or answers.get("ki_knowhow", "")
 
-    # === PLATIN+++ v5.4.2: APPENDIX MODE for streamlined reports ===
+    # === PLATIN+++ v5.4.3: COMPACT REPORT MODE for streamlined reports ===
     # Derive company_size from answers
     size_raw = (answers.get("unternehmensgroesse") or "solo").lower()
-    size_map = {"solo": "solo", "klein": "team", "kmu": "kmu"}
-    company_size = size_map.get(size_raw, "team")
+    size_map = {"solo": "solo", "klein": "klein", "kmu": "kmu"}
+    company_size = size_map.get(size_raw, "klein")
 
     # Read ENV variable PLATIN_APPENDIX_MODE
+    # - "all"  = compact mode for solo+klein (≤25 pages), full for kmu (~43 pages)
+    # - "solo" = only for solo users (original v5.4.1 behavior)
+    # - "none" = disabled for all sizes - full reports
     appendix_mode_env = os.environ.get("PLATIN_APPENDIX_MODE", "").lower().strip()
     if appendix_mode_env == "all":
-        solo_appendix_mode = True  # Enable for all sizes
+        compact_report_mode = (company_size in ["solo", "klein"])  # Solo + Klein = compact
     elif appendix_mode_env == "solo":
-        solo_appendix_mode = (company_size == "solo")  # Original v5.4.1 behavior
+        compact_report_mode = (company_size == "solo")  # Original v5.4.1 behavior
     elif appendix_mode_env in ("none", "disabled", "off", "false", "0"):
-        solo_appendix_mode = False  # Disable for all
+        compact_report_mode = False  # Disable for all
     else:
-        # Default: enable for all sizes (v5.4.2 - reports should be max 25 pages)
-        solo_appendix_mode = True
+        # Default: compact for solo+klein (v5.4.3)
+        compact_report_mode = (company_size in ["solo", "klein"])
 
-    sections["SOLO_APPENDIX_MODE"] = solo_appendix_mode
+    sections["COMPACT_REPORT_MODE"] = compact_report_mode
     sections["COMPANY_SIZE"] = company_size
-    log.info("[%s] 📄 [APPENDIX] Mode=%s, company_size=%s, SOLO_APPENDIX_MODE=%s",
-             run_id, appendix_mode_env or "(default=all)", company_size, solo_appendix_mode)
+    log.info("[%s] 📄 [COMPACT] Mode=%s, company_size=%s, COMPACT_REPORT_MODE=%s",
+             run_id, appendix_mode_env or "(default=all)", company_size, compact_report_mode)
 
     # Scores
     sections["score_governance"] = scores.get("governance", 0)
@@ -6805,7 +6808,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     db.commit()
     db.refresh(an)
     
-    log.info("[%s] ✅ Analysis created (v5.4.2-PLATIN+++): id=%s", run_id, an.id)
+    log.info("[%s] ✅ Analysis created (v5.4.3-PLATIN+++): id=%s", run_id, an.id)
     return an.id, result["html"], result.get("meta", {})
 
 # -------------------- briefing summary for admin ----------------
@@ -7021,7 +7024,7 @@ def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = 
 
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v5.4.2-PLATIN+++ for briefing_id=%s (worker mode)", run_id, briefing_id)
+        log.info("[%s] 🚀 Starting analysis v5.4.3-PLATIN+++ for briefing_id=%s (worker mode)", run_id, briefing_id)
 
         # Core analysis pipeline
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
@@ -7126,7 +7129,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     db = core_db.SessionLocal()
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v5.4.2-PLATIN+++ for briefing_id=%s", run_id, briefing_id)
+        log.info("[%s] 🚀 Starting analysis v5.4.3-PLATIN+++ for briefing_id=%s", run_id, briefing_id)
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
         rep = Report(
