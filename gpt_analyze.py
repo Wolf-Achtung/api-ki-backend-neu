@@ -2432,9 +2432,21 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # Derive size_label (human-readable label for size)
     size_label = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
 
-    # PLATIN+++ v5.4.1: Solo Appendix Mode - move engine sections to appendix for solo users
-    # Solo users get streamlined reports (20-25 pages vs 35+ for teams/KMU)
-    solo_appendix_mode = (company_size == "solo")
+    # PLATIN+++ v5.4.2: Appendix Mode - move engine sections to appendix for streamlined reports
+    # Controllable via ENV variable PLATIN_APPENDIX_MODE:
+    # - "all"  = enable for all sizes (solo, team, kmu) - 20-25 page reports
+    # - "solo" = only for solo users (original v5.4.1 behavior)
+    # - "none" or unset = disabled for all sizes - full reports
+    appendix_mode_env = os.environ.get("PLATIN_APPENDIX_MODE", "").lower().strip()
+    if appendix_mode_env == "all":
+        solo_appendix_mode = True  # Enable for all sizes
+    elif appendix_mode_env == "solo":
+        solo_appendix_mode = (company_size == "solo")  # Original v5.4.1 behavior
+    elif appendix_mode_env in ("none", "disabled", "off", "false", "0"):
+        solo_appendix_mode = False  # Disable for all
+    else:
+        # Default: enable for all sizes (v5.4.2 - reports should be max 25 pages)
+        solo_appendix_mode = True
 
     base_vars.update({
         "BRANCHE": briefing.get("branche", ""),
@@ -6285,8 +6297,9 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
 
         company_size = sections.get("size_label", "KMU")
         branch_label = sections.get("BRANCHE_LABEL", "")
-        payback_months = sections.get("PAYBACK_MONTHS", 0)
-        roi_12m = sections.get("ROI_12M", 0)
+        # PLATIN+++ v5.4.2: Read from answers first (timing bug fix - sections populated later)
+        payback_months = answers.get("PAYBACK_MONTHS") or sections.get("PAYBACK_MONTHS", 0)
+        roi_12m = answers.get("ROI_12M") or sections.get("ROI_12M", 0)
 
         # Build ≤600 char intro based on score and language
         if report_lang == "en":
