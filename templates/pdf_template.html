@@ -3334,7 +3334,8 @@
                 </section>
                 {% endif %}
                 <!-- G24: Branch Deep-Dive Addon (FINAL GO: fail-closed) -->
-                {% if BRANCH_DEEP_DIVE_HTML and BRANCH_DEEP_DIVE_HTML|trim and '<' in BRANCH_DEEP_DIVE_HTML %}
+                <!-- PLATIN+++ v5.4.2: Move to appendix for solo users -->
+                {% if BRANCH_DEEP_DIVE_HTML and BRANCH_DEEP_DIVE_HTML|trim and '<' in BRANCH_DEEP_DIVE_HTML and not COMPACT_REPORT_MODE %}
                 <section class="section chapter" id="branch-deep-dive">
                     <div class="section-header" data-ui="1">
                         <div class="section-title">
@@ -3352,7 +3353,8 @@
                 </section>
                 {% endif %}
                 <!-- G29: Risk Engine 2.0 – Konsolidierte Risikoanalyse -->
-                {% if RISK_ENGINE_HTML %}
+                <!-- PLATIN+++ v5.4.2: Move to appendix for solo users -->
+                {% if RISK_ENGINE_HTML and not COMPACT_REPORT_MODE %}
                 <section class="section chapter" id="risk-engine">
                     <div class="section-header">
                         <div class="section-title">
@@ -3404,7 +3406,7 @@
                 {% endif %}
                 <!-- G33: Risk Engine 3.0 – DPIA & AI Act Conformity -->
                 <!-- PLATIN+++ v5.4.1: Move to appendix for solo users -->
-                {% if RISK_ENGINE_V3_HTML and not SOLO_APPENDIX_MODE %}
+                {% if RISK_ENGINE_V3_HTML and not COMPACT_REPORT_MODE %}
                 <section class="section chapter" id="risk-engine-v3">
                     <div class="section-header">
                         <div class="section-title">
@@ -3423,7 +3425,7 @@
                 {% endif %}
                 <!-- G35: Vendor Audit Engine – KI-TUV for Tools & Models -->
                 <!-- PLATIN+++ v5.4.1: Move to appendix for solo users -->
-                {% if VENDOR_AUDIT_HTML and not SOLO_APPENDIX_MODE %}
+                {% if VENDOR_AUDIT_HTML and not COMPACT_REPORT_MODE %}
                 <section class="section chapter" id="vendor-audit">
                     <div class="section-header">
                         <div class="section-title">
@@ -3442,7 +3444,7 @@
                 {% endif %}
                 <!-- G36: Automation Roadmap Engine – Prozessanalyse & Transformationspfade -->
                 <!-- PLATIN+++ v5.4.1: Move to appendix for solo users -->
-                {% if AUTOMATION_ROADMAP_HTML and not SOLO_APPENDIX_MODE %}
+                {% if AUTOMATION_ROADMAP_HTML and not COMPACT_REPORT_MODE %}
                 <section class="section chapter" id="automation-roadmap">
                     <div class="section-header">
                         <div class="section-title">
@@ -3491,7 +3493,7 @@
                 {% endif %}
                 <!-- G34: Business Case Simulation – Monte Carlo ROI & Payback Analysis -->
                 <!-- PLATIN+++ v5.4.1: Move to appendix for solo users -->
-                {% if BUSINESS_CASE_SIM_HTML and not SOLO_APPENDIX_MODE %}
+                {% if BUSINESS_CASE_SIM_HTML and not COMPACT_REPORT_MODE %}
                 <section class="section chapter" id="business-case-simulation">
                     <div class="section-header">
                         <div class="section-title">
@@ -3522,7 +3524,7 @@
                 {% endif %}
                 <!-- G37: Benchmark Engine – Branchenvergleich & Wettbewerbsposition -->
                 <!-- PLATIN+++ v5.4.1: Move to appendix for solo users -->
-                {% if BENCHMARK_ENGINE_HTML and not SOLO_APPENDIX_MODE %}
+                {% if BENCHMARK_ENGINE_HTML and not COMPACT_REPORT_MODE %}
                 <section class="section chapter" id="benchmark-engine">
                     <div class="section-header" data-ui="1">
                         <div class="section-title">
@@ -3644,7 +3646,8 @@
                     {{FOERDERPOTENZIAL_HTML}}
                 </section>
                 <!-- SPRINT G19: Funding × Branch Alignment -->
-                {% if FUNDING_BRANCH_ALIGNMENT_HTML %}
+                <!-- PLATIN+++ v5.4.2: Move to appendix for solo users -->
+                {% if FUNDING_BRANCH_ALIGNMENT_HTML and not COMPACT_REPORT_MODE %}
                 <section class="section chapter" id="funding-branch-alignment">
                     <div class="section-header" data-ui="1">
                         <div class="section-title">
@@ -3662,7 +3665,8 @@
                 </section>
                 {% endif %}
                 <!-- SPRINT B2.2: Tools × Funding Alignment -->
-                {% if TOOLS_FUNDING_ALIGNMENT_HTML %}
+                <!-- PLATIN+++ v5.4.2: Move to appendix for solo users -->
+                {% if TOOLS_FUNDING_ALIGNMENT_HTML and not COMPACT_REPORT_MODE %}
                 <section class="section chapter" id="tools-funding-alignment">
                     <div class="section-header">
                         <div class="section-title">
@@ -3698,7 +3702,8 @@
                 </section>
                 {% endif %}
                 <!-- SPRINT G19: Tools × Branch Alignment -->
-                {% if TOOLS_BRANCH_ALIGNMENT_HTML %}
+                <!-- PLATIN+++ v5.4.2: Move to appendix for solo users -->
+                {% if TOOLS_BRANCH_ALIGNMENT_HTML and not COMPACT_REPORT_MODE %}
                 <section class="section chapter" id="tools-branch-alignment">
                     <div class="section-header" data-ui="1">
                         <div class="section-title">
@@ -3768,7 +3773,8 @@
                 </section>
                 {% endif %}
                 <!-- NEUE SEKTIONEN: ROI Tracking, AI Policy, Kickoff, Prompt Framework -->
-                {% if ROI_TRACKING_HTML %}
+                <!-- PLATIN+++ v5.4.2: Move to appendix for solo users -->
+                {% if ROI_TRACKING_HTML and not COMPACT_REPORT_MODE %}
                 <section class="section chapter">
                     <div class="section-header">
                         <div class="section-title">
@@ -4065,7 +4071,7 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
                 <!-- ============================================== -->
                 <!-- PLATIN+++ v5.4.1: APPENDIX FOR SOLO USERS     -->
                 <!-- ============================================== -->
-                {% if SOLO_APPENDIX_MODE %}
+                {% if COMPACT_REPORT_MODE %}
                 <section class="section chapter appendix-section" id="appendix" style="page-break-before: always;">
                     <div class="section-header">
                         <div class="section-title">
