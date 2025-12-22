@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-gpt_analyze.py – v5.3.0-PLATIN+++
+gpt_analyze.py – v5.4.2-PLATIN+++
 ---------------------------------------------------------------------
 🎯 PLATIN+++ MULTI-LANGUAGE INTELLIGENCE (N4.2):
 - ✅ Native Executive-Tonality in 5 languages (DE, EN, FR, IT, ES)
@@ -1556,7 +1556,7 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
         "enablement": min(ena, 25) * 4,
         "overall": round((min(gov, 25) + min(sec, 25) + min(val, 25) + min(ena, 25)) * 4 / 4),
     }
-    log.info("📊 REALISTIC SCORES v5.3.0-PLATIN+++: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
+    log.info("📊 REALISTIC SCORES v5.4.2-PLATIN+++: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
              scores["governance"], scores["security"], scores["value"], scores["enablement"], scores["overall"])
     return {"scores": scores, "details": details, "total": scores["overall"]}
 
@@ -5497,7 +5497,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     answers["_guardrail_hits_count"] = len(guardrail_hits)  # Anzahl für Logik
     answers["_has_guardrails"] = len(guardrail_hits) > 0  # Boolean Flag
 
-    log.info("[%s] 📊 Calculating realistic scores (v5.3.0-PLATIN+++)...", run_id)
+    log.info("[%s] 📊 Calculating realistic scores (v5.4.2-PLATIN+++)...", run_id)
     score_wrap = _calculate_realistic_score(answers)
     scores = score_wrap["scores"]
 
@@ -6805,7 +6805,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     db.commit()
     db.refresh(an)
     
-    log.info("[%s] ✅ Analysis created (v5.3.0-PLATIN+++): id=%s", run_id, an.id)
+    log.info("[%s] ✅ Analysis created (v5.4.2-PLATIN+++): id=%s", run_id, an.id)
     return an.id, result["html"], result.get("meta", {})
 
 # -------------------- briefing summary for admin ----------------
@@ -7021,7 +7021,7 @@ def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = 
 
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v5.3.0-PLATIN+++ for briefing_id=%s (worker mode)", run_id, briefing_id)
+        log.info("[%s] 🚀 Starting analysis v5.4.2-PLATIN+++ for briefing_id=%s (worker mode)", run_id, briefing_id)
 
         # Core analysis pipeline
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
@@ -7126,7 +7126,7 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     db = core_db.SessionLocal()
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v5.3.0-PLATIN+++ for briefing_id=%s", run_id, briefing_id)
+        log.info("[%s] 🚀 Starting analysis v5.4.2-PLATIN+++ for briefing_id=%s", run_id, briefing_id)
         an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
         rep = Report(
