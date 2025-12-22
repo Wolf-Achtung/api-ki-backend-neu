@@ -58,22 +58,22 @@ Normalisierter Wert (typisch 0.0-1.5):
 ### industry_median / industry_top_quartile
 Branchentypische Referenzwerte basierend auf:
 - Branche: {{branche}}
-- Unternehmensgroesse: {{unternehmensgroesse}}
+- Unternehmensgröße: {{unternehmensgroesse}}
 
-## Groessen-Constraints
+## Größen-Constraints
 
 ### Solo (Einzelunternehmer)
 - Niedrigere Median-Erwartungen bei Tools/Automation
-- Hoehere relative Varianz bei KPIs
-- Limitierte Foerder-Optionen
+- Höhere relative Varianz bei KPIs
+- Limitierte Förder-Optionen
 
 ### Team (kleines Team)
 - Standard-Branchenbenchmarks
 - Fokus auf Quick Wins und Effizienz
 
 ### KMU (kleine/mittlere Unternehmen)
-- Hoehere Erwartungen an Governance/Strategie
-- Mehr Foerder-Potenzial
+- Höhere Erwartungen an Governance/Strategie
+- Mehr Förder-Potenzial
 - Komplexere Automationspfade
 
 ## Fehlervermeidungs-Regeln
@@ -192,10 +192,10 @@ Branchentypische Referenzwerte basierend auf:
 
 ## Wichtige Hinweise
 
-1. **Branchenspezifisch**: Benchmarks muessen zur angegebenen Branche passen
-2. **Groessen-aware**: Erwartungen an Solo vs. KMU unterscheiden
-3. **Konsistent**: Alle Werte muessen zueinander passen
-4. **Realistisch**: Keine uebertrieben positiven oder negativen Bewertungen
+1. **Branchenspezifisch**: Benchmarks müssen zur angegebenen Branche passen
+2. **Größen-aware**: Erwartungen an Solo vs. KMU unterscheiden
+3. **Konsistent**: Alle Werte müssen zueinander passen
+4. **Realistisch**: Keine übertrieben positiven oder negativen Bewertungen
 5. **Actionable**: SWOT muss konkrete Handlungsoptionen aufzeigen
 
 Erstelle jetzt die Benchmark-Analyse basierend auf den bereitgestellten Daten.
