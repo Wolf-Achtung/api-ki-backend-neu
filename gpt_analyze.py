@@ -6900,6 +6900,47 @@ def _fetch_pdf_if_needed(pdf_url: Optional[str], pdf_bytes: Optional[bytes]) -> 
         return None
     return None
 
+
+def _extract_scores_from_report(rep: Report) -> Dict[str, int]:
+    """
+    Extract scores from Report's linked Analysis meta field.
+
+    PLATIN+++ v5.4.3: Fix for scores showing as 0 in briefing JSON.
+    Scores are stored in Analysis.meta["scores"], not as Report attributes.
+    """
+    default_scores = {"overall": 0, "governance": 0, "security": 0, "value": 0, "enablement": 0}
+
+    try:
+        # Get Analysis linked to Report
+        analysis = getattr(rep, "analysis", None)
+        if not analysis:
+            log.debug("No analysis linked to report %s", getattr(rep, "id", "?"))
+            return default_scores
+
+        # Get meta dict from Analysis
+        meta = getattr(analysis, "meta", None)
+        if not meta or not isinstance(meta, dict):
+            log.debug("No meta dict in analysis for report %s", getattr(rep, "id", "?"))
+            return default_scores
+
+        # Extract scores from meta
+        scores_data = meta.get("scores", {})
+        if not scores_data or not isinstance(scores_data, dict):
+            log.debug("No scores in analysis.meta for report %s", getattr(rep, "id", "?"))
+            return default_scores
+
+        return {
+            "overall": int(scores_data.get("overall", 0) or 0),
+            "governance": int(scores_data.get("governance", 0) or 0),
+            "security": int(scores_data.get("security", 0) or 0),
+            "value": int(scores_data.get("value", 0) or 0),
+            "enablement": int(scores_data.get("enablement", 0) or 0),
+        }
+    except Exception as e:
+        log.warning("Failed to extract scores from report: %s", str(e)[:100])
+        return default_scores
+
+
 def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str], pdf_bytes: Optional[bytes], run_id: str) -> None:
     """Send emails via Resend API"""
     # Global Email Kill-Switch
@@ -6925,13 +6966,7 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
             "user_email": user_email,
             "created_at": str(getattr(br, "created_at", "")),
             "lang": getattr(br, "lang", "de"),
-            "scores": {
-                "overall": getattr(rep, "score_overall", 0),
-                "governance": getattr(rep, "score_governance", 0),
-                "security": getattr(rep, "score_security", 0),
-                "value": getattr(rep, "score_value", 0),
-                "enablement": getattr(rep, "score_enablement", 0),
-            },
+            "scores": _extract_scores_from_report(rep),
             "answers": getattr(br, "answers", {}) or {},
         }
 
