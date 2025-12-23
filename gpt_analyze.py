@@ -6967,7 +6967,7 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
             "created_at": str(getattr(br, "created_at", "")),
             "lang": getattr(br, "lang", "de"),
             "scores": _extract_scores_from_report(rep),
-            "answers": getattr(br, "answers", {}) or {},
+            "answers": clean_briefing_data(getattr(br, "answers", {}) or {}),  # ENCODING-FIX for old DB data
         }
 
         bjson = json.dumps(briefing_data, ensure_ascii=False, indent=2).encode("utf-8")
