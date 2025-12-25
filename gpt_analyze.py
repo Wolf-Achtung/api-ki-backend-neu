@@ -1560,6 +1560,175 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
              scores["governance"], scores["security"], scores["value"], scores["enablement"], scores["overall"])
     return {"scores": scores, "details": details, "total": scores["overall"]}
 
+
+# =============================================================================
+# PLATIN+++ v5.4.3: SCORE CALIBRATION
+# =============================================================================
+# Applies realistic dampening to prevent absurdly high scores for solo/testphase
+
+# Size-based score caps: Realistic maximum scores for each company size
+_SIZE_CAPS = {
+    "solo": {
+        "overall": 75,
+        "governance": 70,
+        "security": 60,
+        "value": 85,
+        "enablement": 80,
+    },
+    "klein": {
+        "overall": 82,
+        "governance": 78,
+        "security": 72,
+        "value": 88,
+        "enablement": 85,
+    },
+    "mittel": {
+        "overall": 90,
+        "governance": 88,
+        "security": 82,
+        "value": 92,
+        "enablement": 90,
+    },
+    "gross": {
+        "overall": 95,
+        "governance": 92,
+        "security": 88,
+        "value": 95,
+        "enablement": 92,
+    },
+}
+
+# Project status factors: Reduce scores for early-stage projects
+_STATUS_FACTORS = {
+    "testphase": 0.85,      # 15% reduction
+    "pilotphase": 0.90,     # 10% reduction
+    "pilot": 0.90,
+    "konzept": 0.80,        # 20% reduction for concept phase
+    "production": 1.0,
+    "produktiv": 1.0,
+}
+
+
+def _infer_project_status(answers: Dict[str, Any]) -> str:
+    """
+    Infer the project status from briefing answers.
+
+    Returns: 'testphase', 'pilotphase', 'production', or 'unknown'
+    """
+    # Check various fields for project status indicators
+    projekt_status = answers.get("projekt_status", "").lower()
+    ki_projekte = answers.get("ki_projekte", "").lower()
+    ki_strategie = answers.get("ki_strategie", "").lower()
+    ki_einsatz = answers.get("ki_einsatz", "").lower()
+
+    # Test phase indicators
+    test_indicators = ["test", "versuch", "experiment", "ausprobier", "proof of concept", "poc"]
+    for ind in test_indicators:
+        if ind in projekt_status or ind in ki_projekte or ind in ki_einsatz:
+            return "testphase"
+
+    # Pilot phase indicators
+    pilot_indicators = ["pilot", "pilotierung"]
+    for ind in pilot_indicators:
+        if ind in projekt_status or ind in ki_projekte:
+            return "pilotphase"
+
+    # Production indicators
+    prod_indicators = ["produktiv", "production", "live", "betrieb"]
+    for ind in prod_indicators:
+        if ind in projekt_status or ind in ki_projekte or ind in ki_einsatz:
+            return "production"
+
+    # Default: assume testphase for solo, pilotphase for klein
+    size = answers.get("unternehmensgroesse", "solo").lower()
+    if size == "solo":
+        return "testphase"
+    elif size == "klein":
+        return "pilotphase"
+
+    return "unknown"
+
+
+def _calibrate_scores(scores: Dict[str, int], answers: Dict[str, Any]) -> Dict[str, int]:
+    """
+    PLATIN+++ v5.4.3: Apply realistic score calibration.
+
+    Applies:
+    1. Size-based score caps (solo/klein can't get 100%)
+    2. Project status dampening (testphase = -15%)
+    3. Security reality check (never 100% without comprehensive measures)
+
+    Args:
+        scores: Raw calculated scores
+        answers: Original briefing answers for context
+
+    Returns:
+        Calibrated scores dictionary
+    """
+    # Get context
+    size = answers.get("unternehmensgroesse", "solo").lower()
+    if size not in _SIZE_CAPS:
+        size = "solo"  # Default to most restrictive
+
+    status = _infer_project_status(answers)
+    status_factor = _STATUS_FACTORS.get(status, 0.95)  # Default 5% reduction for unknown
+
+    caps = _SIZE_CAPS.get(size, _SIZE_CAPS["solo"])
+    calibrated = {}
+
+    for key, value in scores.items():
+        if key not in caps:
+            calibrated[key] = value
+            continue
+
+        cap = caps[key]
+
+        # Apply status factor first
+        adjusted = int(value * status_factor)
+
+        # Then apply cap
+        calibrated[key] = min(adjusted, cap)
+
+    # Special handling for security score
+    # Security should NEVER be 100% unless extensive measures are documented
+    if calibrated.get("security", 0) > 85:
+        # Check for comprehensive security measures
+        has_dsgvo = answers.get("dsgvo_konform") in ["ja", "yes", True]
+        has_security_training = answers.get("sicherheitsschulung") in ["ja", "yes", "regelmaessig", True]
+        has_risk_assessment = answers.get("risikobewertung") in ["ja", "yes", True]
+        has_data_protection = answers.get("datenschutzbeauftragter") in ["ja", "yes", True]
+
+        security_measures = sum([has_dsgvo, has_security_training, has_risk_assessment, has_data_protection])
+
+        if security_measures < 3:
+            # Cap at 70 + (measures * 5) if not comprehensive
+            calibrated["security"] = min(calibrated["security"], 70 + (security_measures * 5))
+
+    # Recalculate overall score as average of dimensions
+    dimension_scores = [
+        calibrated.get("governance", 0),
+        calibrated.get("security", 0),
+        calibrated.get("value", 0),
+        calibrated.get("enablement", 0),
+    ]
+    calibrated["overall"] = round(sum(dimension_scores) / len(dimension_scores))
+
+    # Apply cap to overall as well
+    if calibrated["overall"] > caps.get("overall", 100):
+        calibrated["overall"] = caps["overall"]
+
+    log.info("📊 CALIBRATED SCORES v5.4.3-PLATIN+++: size=%s, status=%s, factor=%.2f | "
+             "Gov=%s→%s Sec=%s→%s Val=%s→%s Ena=%s→%s Overall=%s→%s",
+             size, status, status_factor,
+             scores.get("governance", 0), calibrated.get("governance", 0),
+             scores.get("security", 0), calibrated.get("security", 0),
+             scores.get("value", 0), calibrated.get("value", 0),
+             scores.get("enablement", 0), calibrated.get("enablement", 0),
+             scores.get("overall", 0), calibrated.get("overall", 0))
+
+    return calibrated
+
+
 # -------------------- OpenAI client ----------------
 def _call_openai(
     prompt: str,
@@ -5499,7 +5668,12 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
 
     log.info("[%s] 📊 Calculating realistic scores (v5.4.3-PLATIN+++)...", run_id)
     score_wrap = _calculate_realistic_score(answers)
-    scores = score_wrap["scores"]
+    raw_scores = score_wrap["scores"]
+
+    # PLATIN+++ v5.4.3: Apply score calibration for realistic dampening
+    scores = _calibrate_scores(raw_scores, answers)
+    score_wrap["scores"] = scores  # Update the wrapper with calibrated scores
+    score_wrap["raw_scores"] = raw_scores  # Preserve raw scores for debugging
 
     # === Business Case FRÜHZEITIG berechnen (vor Content-Generierung!) ===
     # Damit sind BC-Werte (CAPEX, OPEX, ROI, etc.) für alle Fallbacks verfügbar
