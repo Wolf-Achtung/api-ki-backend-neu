@@ -2697,6 +2697,37 @@
             font-weight: 600;
             color: var(--color-brand-accent);
         }
+        /* PLATIN+++ v5.4.3: Dimension Scores Row */
+        .exec-dimension-scores {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-sm);
+            margin: var(--space-md) 0;
+            padding: var(--space-sm) 0;
+        }
+        .dimension-score-item {
+            text-align: center;
+            padding: var(--space-xs) var(--space-sm);
+            background: var(--color-bg-surface);
+            border-radius: var(--radius-tag);
+            border: 1px solid var(--color-border-subtle);
+        }
+        .dimension-score-label {
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--color-text-muted);
+            margin-bottom: 2pt;
+        }
+        .dimension-score-value {
+            font-size: 14pt;
+            font-weight: 700;
+            color: var(--color-brand-accent);
+        }
+        .dimension-score-max {
+            font-size: 8pt;
+            color: var(--color-text-muted);
+        }
         .exec-trust-line {
             display: flex;
             justify-content: center;
@@ -2942,6 +2973,26 @@
                         <span class="muted">·</span>
                         <span class="muted">Potenzial: +{{ (top10_score_for_size|int) - (score_gesamt|int) }} Punkte</span>
                         {% endif %}
+                    </div>
+
+                    <!-- PLATIN+++ v5.4.3: 4 DIMENSION SCORES ROW -->
+                    <div class="exec-dimension-scores">
+                        <div class="dimension-score-item">
+                            <div class="dimension-score-label">Governance</div>
+                            <div class="dimension-score-value">{{ score_governance or 0 }}<span class="dimension-score-max">/100</span></div>
+                        </div>
+                        <div class="dimension-score-item">
+                            <div class="dimension-score-label">Sicherheit</div>
+                            <div class="dimension-score-value">{{ score_sicherheit or 0 }}<span class="dimension-score-max">/100</span></div>
+                        </div>
+                        <div class="dimension-score-item">
+                            <div class="dimension-score-label">Wertschöpfung</div>
+                            <div class="dimension-score-value">{{ score_wertschoepfung or score_nutzen or 0 }}<span class="dimension-score-max">/100</span></div>
+                        </div>
+                        <div class="dimension-score-item">
+                            <div class="dimension-score-label">Befähigung</div>
+                            <div class="dimension-score-value">{{ score_befaehigung or 0 }}<span class="dimension-score-max">/100</span></div>
+                        </div>
                     </div>
 
                     <!-- 3 KPI ROW: Calm, professional -->
