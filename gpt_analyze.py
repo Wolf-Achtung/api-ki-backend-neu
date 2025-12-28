@@ -1609,6 +1609,18 @@ _STATUS_FACTORS = {
 }
 
 
+def _safe_lower(value: Any) -> str:
+    """Safely convert a value to lowercase string, handling lists and other types."""
+    if value is None:
+        return ""
+    if isinstance(value, list):
+        # Join list elements into a single string
+        return " ".join(str(v).lower() for v in value if v)
+    if isinstance(value, str):
+        return value.lower()
+    return str(value).lower()
+
+
 def _infer_project_status(answers: Dict[str, Any]) -> str:
     """
     Infer the project status from briefing answers.
@@ -1616,10 +1628,11 @@ def _infer_project_status(answers: Dict[str, Any]) -> str:
     Returns: 'testphase', 'pilotphase', 'production', or 'unknown'
     """
     # Check various fields for project status indicators
-    projekt_status = answers.get("projekt_status", "").lower()
-    ki_projekte = answers.get("ki_projekte", "").lower()
-    ki_strategie = answers.get("ki_strategie", "").lower()
-    ki_einsatz = answers.get("ki_einsatz", "").lower()
+    # Use _safe_lower to handle lists, strings, and None values
+    projekt_status = _safe_lower(answers.get("projekt_status", ""))
+    ki_projekte = _safe_lower(answers.get("ki_projekte", ""))
+    ki_strategie = _safe_lower(answers.get("ki_strategie", ""))
+    ki_einsatz = _safe_lower(answers.get("ki_einsatz", ""))
 
     # Test phase indicators
     test_indicators = ["test", "versuch", "experiment", "ausprobier", "proof of concept", "poc"]
@@ -1640,7 +1653,7 @@ def _infer_project_status(answers: Dict[str, Any]) -> str:
             return "production"
 
     # Default: assume testphase for solo, pilotphase for klein
-    size = answers.get("unternehmensgroesse", "solo").lower()
+    size = _safe_lower(answers.get("unternehmensgroesse", "solo"))
     if size == "solo":
         return "testphase"
     elif size == "klein":
@@ -1666,7 +1679,7 @@ def _calibrate_scores(scores: Dict[str, int], answers: Dict[str, Any]) -> Dict[s
         Calibrated scores dictionary
     """
     # Get context
-    size = answers.get("unternehmensgroesse", "solo").lower()
+    size = _safe_lower(answers.get("unternehmensgroesse", "solo"))
     if size not in _SIZE_CAPS:
         size = "solo"  # Default to most restrictive
 
