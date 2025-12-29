@@ -4360,6 +4360,75 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   </p>
 </section>"""
 
+    # ════════════════════════════════════════════════════════════════════════════
+    # 🎯 PHASE 2 FIX: QUICK WINS FALLBACK - DYNAMISCH basierend auf Briefing
+    # ════════════════════════════════════════════════════════════════════════════
+    if section_key == "quick_wins":
+        # Extrahiere individuelle Briefing-Daten
+        zeitersparnis = briefing.get("zeitersparnis_prioritaet", "")
+        ki_projekte = briefing.get("ki_projekte", "")
+        trainings = briefing.get("trainings_interessen", [])
+        score_security = scores.get("security", 50)
+        score_governance = scores.get("governance", 50)
+
+        # Dynamische Quick Wins basierend auf hauptleistung und zeitersparnis
+        qw_items = []
+
+        # Quick Win 1: IMMER basierend auf zeitersparnis_prioritaet
+        if zeitersparnis:
+            qw_items.append(f"""<li><strong>Prozessoptimierung für "{zeitersparnis[:50]}...":</strong>
+KI-gestützte Automatisierung der zeitintensivsten Aufgabe, die Sie genannt haben.
+Nutzen Sie Claude/GPT für Vorlagen und Standardisierung. <em>Ersparnis: 8-12 h/Monat</em></li>""")
+        else:
+            qw_items.append(f"""<li><strong>Kernprozess-Automatisierung:</strong>
+Identifizieren Sie den zeitintensivsten wiederkehrenden Prozess in "{hauptleistung or branche}"
+und erstellen Sie KI-gestützte Vorlagen. <em>Ersparnis: 8-12 h/Monat</em></li>""")
+
+        # Quick Win 2: Basierend auf hauptleistung
+        if hauptleistung:
+            qw_items.append(f"""<li><strong>KI-Templates für {offering_label or 'Ihre Kernleistung'}:</strong>
+Erstellen Sie strukturierte Vorlagen für "{hauptleistung[:60]}..." mit KI-Unterstützung.
+Standardisierte Outputs bei gleichbleibender Qualität. <em>Ersparnis: 6-10 h/Monat</em></li>""")
+        else:
+            qw_items.append(f"""<li><strong>Dokumenten-Vorlagen standardisieren:</strong>
+Nutzen Sie KI für wiederkehrende Dokumente und Berichte in Ihrem Bereich {branche}.
+<em>Ersparnis: 6-10 h/Monat</em></li>""")
+
+        # Quick Win 3: Score-abhängig (Security < 50 = Security Quick Win)
+        if score_security < 50:
+            qw_items.append(f"""<li><strong>🔒 KI-Sicherheitsrichtlinie erstellen:</strong>
+Ihr Security-Score liegt bei {score_security}/100 - definieren Sie klare Regeln für den KI-Einsatz:
+Welche Daten dürfen in welche Tools? Erstellen Sie eine einfache Checkliste. <em>Priorität: Hoch</em></li>""")
+        elif score_governance < 50:
+            qw_items.append(f"""<li><strong>📋 KI-Governance Light:</strong>
+Ihr Governance-Score liegt bei {score_governance}/100 - legen Sie fest, wer welche KI-Tools nutzen darf
+und wie Ergebnisse geprüft werden. Einfache Dokumentation reicht. <em>Priorität: Hoch</em></li>""")
+        else:
+            qw_items.append(f"""<li><strong>Meeting-Protokolle automatisieren:</strong>
+Nutzen Sie Tools wie Otter.ai oder Fathom für automatische Transkription und Zusammenfassung.
+<em>Ersparnis: 4-6 h/Monat</em></li>""")
+
+        # Quick Win 4: Branchen-/Größen-spezifisch
+        if size_group == "solo":
+            qw_items.append(f"""<li><strong>Persönliche Prompt-Bibliothek:</strong>
+Sammeln Sie Ihre besten Prompts für wiederkehrende Aufgaben in {branche}.
+10-15 Vorlagen decken 80% Ihres Alltags ab. <em>Ersparnis: 3-5 h/Monat</em></li>""")
+        elif size_group == "team":
+            qw_items.append(f"""<li><strong>Team Prompt-Repository:</strong>
+Erstellen Sie ein geteiltes Dokument mit den besten Prompts für Ihr Team.
+Jedes Teammitglied trägt 2-3 bewährte Vorlagen bei. <em>Ersparnis: 5-8 h/Monat</em></li>""")
+        else:
+            qw_items.append(f"""<li><strong>KI-Wissenstransfer im Team:</strong>
+Etablieren Sie einen monatlichen "KI-Learnings"-Austausch zwischen Abteilungen.
+Erfolgreiche Anwendungen werden dokumentiert und geteilt. <em>Ersparnis: 10-15 h/Monat</em></li>""")
+
+        qw_html = "\n".join(qw_items)
+
+        return f"""<ul>
+{qw_html}
+</ul>
+<p class="small muted">Individualisiert für {branche} · {size_label} · basierend auf Ihren Angaben</p>"""
+
     # SPRINT G2.5: Helper for formatting ROI/Payback values
     def _fmt_num(val, decimals=1):
         if val is None or val == "—":
@@ -4372,15 +4441,10 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     _payback_fmt = _fmt_num(briefing.get("PAYBACK_MONTHS"), 1)
     _roi_fmt = _fmt_num(briefing.get("ROI_12M"), 0)
 
-    # Statische Fallbacks (Quick Wins UNVERÄNDERT)
+    # Statische Fallbacks (HINWEIS: quick_wins wird jetzt dynamisch generiert - siehe Block oben bei Zeile 4366)
     fallbacks = {
-        "quick_wins": f"""<ul>
-<li><strong>E-Mail-Entwürfe automatisieren:</strong> Automatische Vorschläge für Standard-Antworten und Textbausteine. <em>Ersparnis: 20 h/Monat</em></li>
-<li><strong>Meeting-Protokolle mit KI:</strong> Automatische Transkription und Zusammenfassung von Besprechungen. <em>Ersparnis: 15 h/Monat</em></li>
-<li><strong>Dokumenten-Recherche beschleunigen:</strong> Semantische Suche in Ihrer Wissensdatenbank statt manuelles Durchsuchen. <em>Ersparnis: 12 h/Monat</em></li>
-<li><strong>Social Media Posts generieren:</strong> KI-gestützte Content-Vorschläge für LinkedIn, Instagram und andere Kanäle. <em>Ersparnis: 8 h/Monat</em></li>
-</ul>
-<p class="small muted">Angepasst an {branche} · {size_label}</p>""",
+        # PHASE 2: quick_wins wurde ENTFERNT - wird jetzt dynamisch im Handler oben generiert
+        # Der alte statische E-Mail-Entwürfe Fallback wurde gelöscht
         "business_case": f"""<div class="business-case-fallback">
   <h3>Investition und erwarteter Nutzen</h3>
   <p>
