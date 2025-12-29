@@ -180,14 +180,15 @@ class TestG151C_RoadmapLength:
         Solo roadmap content should meet minimum word count.
 
         The validator minimum for solo roadmap_90d is 250 words.
+        Phase 3 update: Regex now allows for comment blocks between Jinja if and h3.
         """
         prompt_path = Path("prompts/de/roadmap_90d.md")
         content = prompt_path.read_text(encoding="utf-8")
 
         # Extract Solo HTML section (between {% if COMPANY_SIZE == "solo" %} and {% elif)
-        # The actual content starts after the VERBOTEN instructions (after the comment block)
+        # Phase 3: Allow for comment blocks (<!--...-->) between Jinja if and first h3
         solo_match = re.search(
-            r'\{% if COMPANY_SIZE == "solo" %\}\s*\n\s*<h3>(.*?)\{% elif',
+            r'\{% if COMPANY_SIZE == "solo" %\}.*?<h3>(.*?)\{% elif COMPANY_SIZE == "team"',
             content,
             re.DOTALL
         )
@@ -197,8 +198,9 @@ class TestG151C_RoadmapLength:
         # Prepend the h3 tag back for the HTML content
         solo_content = "<h3>" + solo_match.group(1)
 
-        # Remove HTML tags for word count
-        text_only = re.sub(r'<[^>]+>', ' ', solo_content)
+        # Remove HTML tags and comments for word count
+        text_only = re.sub(r'<!--.*?-->', ' ', solo_content, flags=re.DOTALL)
+        text_only = re.sub(r'<[^>]+>', ' ', text_only)
         text_only = re.sub(r'\s+', ' ', text_only).strip()
 
         word_count = len(text_only.split())
@@ -210,22 +212,30 @@ class TestG151C_RoadmapLength:
         )
 
     def test_roadmap_solo_uses_solo_terminology(self) -> None:
-        """Solo roadmap HTML content should not contain Team/KMU terminology."""
+        """Solo roadmap HTML content should not contain Team/KMU terminology.
+
+        Phase 3 update: Regex now allows for comment blocks between Jinja if and h3.
+        Comments are stripped before checking forbidden terms.
+        """
         prompt_path = Path("prompts/de/roadmap_90d.md")
         content = prompt_path.read_text(encoding="utf-8")
 
         # Extract Solo HTML section (only the actual HTML, not instructions)
+        # Phase 3: Allow for comment blocks (<!--...-->) between Jinja if and first h3
         solo_match = re.search(
-            r'\{% if COMPANY_SIZE == "solo" %\}\s*\n\s*<h3>(.*?)\{% elif',
+            r'\{% if COMPANY_SIZE == "solo" %\}.*?<h3>(.*?)\{% elif COMPANY_SIZE == "team"',
             content,
             re.DOTALL
         )
         assert solo_match, "Could not find Solo section in roadmap_90d.md"
 
-        solo_content = solo_match.group(1).lower()
+        # Get content and strip HTML comments (which may contain examples/documentation)
+        solo_content = solo_match.group(1)
+        solo_content_no_comments = re.sub(r'<!--.*?-->', '', solo_content, flags=re.DOTALL)
+        solo_content_clean = solo_content_no_comments.lower()
 
         # Solo HTML content should not contain these terms
-        # Note: instruction comments may contain forbidden terms for documentation
+        # Note: instruction comments are now stripped before checking
         forbidden_in_solo = [
             "mitarbeiter einstellen",
             "team aufbauen",
@@ -233,7 +243,7 @@ class TestG151C_RoadmapLength:
         ]
 
         for term in forbidden_in_solo:
-            assert term not in solo_content, (
+            assert term not in solo_content_clean, (
                 f"Forbidden term '{term}' found in Solo roadmap HTML content"
             )
 
