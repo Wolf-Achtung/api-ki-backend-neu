@@ -104,10 +104,17 @@ ELEMENT 2: DREI ENTSCHEIDUNGEN (Bullet-Liste)
 - Genau 3 Bullets, nummeriert
 - Jeder Bullet = 1 klare Entscheidung (nicht Analyse)
 - Format pro Bullet: "[Verb] + [Was] + [Warum in 5-7 Wörtern]"
-- Beispiele:
-  • "1. Standardisieren statt improvisieren – konsistente Qualität ohne Mehraufwand."
-  • "2. Review vor Freigabe – Compliance von Anfang an sichern."
-  • "3. Minimal-Stack festlegen – Klarheit vor Tool-Vielfalt."
+- Beispiele (INDIVIDUALISIERT, nicht generisch!):
+  • "1. [Bezug zu {{hauptleistung}}] – [konkreter Nutzen für diese Leistung]."
+  • "2. [Bezug zu {{ZEITERSPARNIS_PRIORITAET}}] – [wie das Zeit spart]."
+  • "3. [Bezug zu {{KI_GUARDRAILS}} oder Qualität] – [Risikominimierung]."
+
+  KONKRETE BEISPIELE:
+  • KI-Berater: "1. Template-Bibliothek statt Custom-Code – wiederverwendbare Analysen für jeden Kunden."
+  • Steuerberater: "1. Dokument-Klassifizierung automatisieren – eliminiert manuelle Vorsortierung."
+  • Content-Agentur: "1. Batch-Produktion statt Einzelanfertigung – skaliert Output ohne Qualitätsverlust."
+
+  VERBOTEN: "Minimal-Stack festlegen" (zu generisch!)
 
 ELEMENT 3: KONKRETER NÄCHSTER SCHRITT (1 Satz)
 - Ein einziger Satz mit dem sofort umsetzbaren ersten Schritt
@@ -247,6 +254,35 @@ Finance / Team:
 
 Solo-Beratung:
 „Wenn Sie nur eines tun: Standardisieren Sie einen wiederkehrenden Analyse- oder Reporting-Workflow mit KI-Unterstützung und klarer Freigabe, bevor Sie weitere Tools einsetzen."
+
+=============================================================================
+PHASE 2b: VERBESSERTE INDIVIDUALISIERUNG (STRIKT!)
+=============================================================================
+
+STRUKTUR MUSS SEIN (exakt 3 Komponenten, max 50 Wörter gesamt):
+
+SATZ 1: Was macht der User? (max 15 Wörter)
+→ NUTZE: {{hauptleistung}} WÖRTLICH (nicht paraphrasieren!)
+→ BEISPIEL: "Ein Beratungsunternehmen erstellt Fragebogen und GPT-gestützte Auswertungen für KI-Readiness."
+→ VERBOTEN: Abstrakte Umschreibungen wie "bietet Dienstleistungen an"
+
+SATZ 2: Was ist das Hauptproblem? (max 15 Wörter)
+→ NUTZE: {{ZEITERSPARNIS_PRIORITAET}} EXPLIZIT
+→ FORMAT: "Größter Zeitfresser: [wörtlich aus {{ZEITERSPARNIS_PRIORITAET}}]."
+→ BEISPIEL: "Größter Zeitfresser: Umsetzung/Programmierung individueller Kundenprojekte."
+→ VERBOTEN: "steht vor Herausforderungen" (zu vage!)
+
+SATZ 3: Kernempfehlung (max 20 Wörter)
+→ FORMAT: "Kernempfehlung → [Strategischer Shift]: [3-5 konkrete Maßnahmen]."
+→ BEISPIEL: "Kernempfehlung → Von Custom-Code zu Templates: Fragebogen-Bibliothek, Prompt-Standards, Review-Checkliste."
+→ VERBOTEN: Theorie wie "skalierbare Prozesse etablieren"
+
+VERBOTENE PHRASEN:
+- "steht vor der Herausforderung"
+- "Skalierbare Prozesse"
+- "End-to-End-System"
+- "Standardisierung der Abläufe"
+- Jede Phrase die zu JEDEM User passt
 
 HTML-FORMAT für Element 4:
 <p class="takeaway">
