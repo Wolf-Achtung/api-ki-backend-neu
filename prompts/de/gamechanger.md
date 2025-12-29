@@ -27,6 +27,63 @@ VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>
 
 GAMECHANGER v7.1 — EINE NICHT-AUSTAUSCHBARE TRANSFORMATIONSIDEE
 
+<!--
+=============================================================================
+PHASE 3: INDIVIDUALISIERUNG DES STRATEGISCHEN BRUCHPUNKTS (PFLICHT!)
+=============================================================================
+
+Der Gamechanger MUSS die konkreten Briefing-Daten des Users aufgreifen.
+Generische Bruchpunkte sind VERBOTEN.
+
+INDIVIDUALISIERUNGS-KONTEXT (verfügbar aus Briefing):
+- {{hauptleistung}} = Was der User konkret anbietet
+- {{ZEITERSPARNIS_PRIORITAET}} = Wo der User am meisten Zeit verliert
+- {{KI_GUARDRAILS}} = Einschränkungen/No-Gos für KI-Nutzung
+- {{VISION_3_JAHRE}} = Langfristige Vision des Users
+
+STRATEGISCHER BRUCHPUNKT - KONKRET FORMULIEREN:
+
+BEISPIEL für Briefing 369 (KI-Berater mit Fragebogen-Erstellung):
+- hauptleistung: "Fragebogen-Erstellung und GPT-gestützte Auswertung"
+- zeitersparnis_prioritaet: "Umsetzung/Programmierung"
+- vision_3_jahre: "Skalierbare KI-Beratung mit automatisierten Analyse-Pipelines"
+
+ERWARTETER BRUCHPUNKT für Briefing 369:
+❌ VERBOTEN: "Prozesse sind ineffizient und skalieren nicht"
+✅ RICHTIG: "Bisher: Jede KI-Readiness-Analyse wird als Custom-Entwicklung programmiert.
+            Obwohl 70% der Fragebogen-Logik wiederkehrend ist, startet jedes Projekt bei Null."
+
+❌ VERBOTEN: "Nicht mehr reaktiv, sondern proaktiv"
+✅ RICHTIG: "Nicht mehr jede Auswertung individuell programmieren,
+            sondern einen wiederverwendbaren Analyse-Baukasten für {{hauptleistung}} etablieren."
+
+DIE TRANSFORMATION - MIT VISION VERKNÜPFEN:
+
+Der Gamechanger muss zeigen, wie die Transformation zu {{VISION_3_JAHRE}} führt.
+
+BEISPIEL für Briefing 369:
+❌ VERBOTEN: "Von manuell zu automatisiert"
+✅ RICHTIG: "Von Custom-Programmierung zu Template-basierter Skalierung:
+            Der Weg zu '{{VISION_3_JAHRE}}' beginnt mit Standardisierung der Auswertungslogik."
+
+ERSTER SCHRITT - BEZUG ZU {{ZEITERSPARNIS_PRIORITAET}}:
+
+Der erste Schritt muss direkt {{ZEITERSPARNIS_PRIORITAET}} adressieren.
+
+BEISPIEL für Briefing 369:
+❌ VERBOTEN: "Einen Prozess dokumentieren"
+✅ RICHTIG: "Die 3 häufigsten Fragebogen-Strukturen als Templates definieren,
+            um Programmieraufwand bei Neuprojekten um 60% zu reduzieren."
+
+GUARDRAILS INTEGRIEREN:
+
+Wenn {{KI_GUARDRAILS}} vorhanden, im Bruchpunkt oder der Transformation erwähnen.
+
+BEISPIEL für Briefing 369:
+"Dabei gilt: {{KI_GUARDRAILS}} – keine Prognosen außerhalb des definierten Rahmens."
+=============================================================================
+-->
+
 KERN-ANFORDERUNG (v7.0 NEU):
 Der Gamechanger MUSS so spezifisch sein, dass er für ein Unternehmen
 - anderer Branche ODER
@@ -131,56 +188,95 @@ Die Transformation ermöglicht strategische Neupositionierung – nicht nur Opti
 
   <div class="gamechanger-insight">
     <h3>Strategischer Bruchpunkt</h3>
+    <!--
+    PHASE 3: INDIVIDUALISIERUNG PFLICHT!
+    Nutze {{hauptleistung}} statt {{OFFERING_LABEL}} wenn vorhanden.
+    Der Bruchpunkt muss {{ZEITERSPARNIS_PRIORITAET}} direkt adressieren.
+    -->
     <p><strong>Die obsolete Logik:</strong></p>
     <ul>
       <!--
       HIER: 3 kurze Bullets (je 1 Satz):
-      - Was wird bei {{OFFERING_LABEL}} falsch gedacht?
-      - Welche alte Denkweise blockiert?
-      - Format: "Nicht mehr X" oder "Bisher: X"
-      Bezug zu {{HAUPTUMSATZTREIBER}} erforderlich.
+      - Was wird bei {{hauptleistung}} falsch gedacht?
+      - PRIMÄR: Bezug zu {{ZEITERSPARNIS_PRIORITAET}} herstellen
+      - Format: "Bisher: [konkretes Problem bei {{hauptleistung}}]"
+
+      BEISPIEL Briefing 369:
+      - "Bisher: Jede KI-Readiness-Analyse als Custom-Entwicklung programmiert"
+      - "Obwohl 70% der Fragebogen-Logik wiederkehrend ist, startet jedes Projekt bei Null"
+      - "Der Hauptzeitfresser {{ZEITERSPARNIS_PRIORITAET}} wird nicht adressiert"
+
+      VERBOTEN: Generische Phrasen wie "Prozesse sind ineffizient"
       -->
     </ul>
   </div>
 
   <div class="gamechanger-transformation">
     <h3>Die Transformation</h3>
+    <!--
+    PHASE 3: Die Transformation muss zu {{VISION_3_JAHRE}} führen.
+    -->
     <p><strong>Die neue Wertschöpfungslogik:</strong></p>
     <ul>
       <!--
       HIER: 3 kurze Bullets (je 1-2 Sätze):
-      - WIE verändert sich die Leistungserbringung?
-      - WAS ist der neue Ansatz?
-      - Format: "Stattdessen: Y" oder "Künftig: Y"
-      Bezug zu {{GESCHAEFTSMODELL_EVOLUTION}} erforderlich.
+      - WIE verändert sich {{hauptleistung}}?
+      - WAS löst {{ZEITERSPARNIS_PRIORITAET}} als Hebel?
+      - Format: "Stattdessen: [konkreter Ansatz] → Weg zu {{VISION_3_JAHRE}}"
+
+      BEISPIEL Briefing 369:
+      - "Stattdessen: Template-basierte Analyse statt Custom-Programmierung"
+      - "Ein Baukasten für {{hauptleistung}}, der 60% Programmieraufwand eliminiert"
+      - "Fundament für {{VISION_3_JAHRE}}: Skalierbare Analyse-Pipelines"
+
+      VERBOTEN: "Von manuell zu automatisiert" (zu generisch!)
       -->
     </ul>
   </div>
 
   <div class="gamechanger-impact">
     <h3>Warum das ein Gamechanger ist</h3>
+    <!--
+    PHASE 3: Strukturelle Vorteile für {{hauptleistung}} benennen.
+    -->
     <ul>
       <!--
       HIER: 3 kurze Bullets (je 1 Satz):
-      - Struktureller Vorteil 1
-      - Struktureller Vorteil 2
-      - Struktureller Vorteil 3
-      NICHT: "spart Zeit", "reduziert Kosten"
+      - Struktureller Vorteil für {{hauptleistung}}
+      - Wie adressiert das {{ZEITERSPARNIS_PRIORITAET}}?
+      - Wie führt das zu {{VISION_3_JAHRE}}?
+
+      BEISPIEL Briefing 369:
+      - "Jede neue KI-Readiness-Analyse nutzt bewährte Komponenten statt Neuprogrammierung"
+      - "Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}} von 40-60%"
+      - "Grundlage für {{VISION_3_JAHRE}}: Automatisierte Pipelines sind skalierbar"
+
+      VERBOTEN: "spart Zeit" (zu vage!), "reduziert Kosten" (zu generisch!)
       -->
     </ul>
   </div>
 
   <div class="gamechanger-action">
     <h3>Erster realistischer Schritt</h3>
+    <!--
+    PHASE 3: Der erste Schritt muss {{ZEITERSPARNIS_PRIORITAET}} direkt angreifen.
+    Falls {{KI_GUARDRAILS}} vorhanden: Als Qualitätskriterium einbauen.
+    -->
     <p><strong>In 2-4 Wochen umsetzbar:</strong></p>
     <ol>
       <!--
       HIER: 3-5 kurze Bullets (je 1 Satz):
-      - Konkreter Mini-Schritt 1
-      - Konkreter Mini-Schritt 2
-      - Konkreter Mini-Schritt 3
+      - Schritt 1: Direkt {{ZEITERSPARNIS_PRIORITAET}} adressieren
+      - Schritt 2: Bezug zu {{hauptleistung}}
+      - Schritt 3: {{KI_GUARDRAILS}} als Qualitätskriterium verankern
+
+      BEISPIEL Briefing 369:
+      - "Die 3 häufigsten Fragebogen-Strukturen für {{hauptleistung}} als Templates definieren"
+      - "Wiederverwendbare Auswertungs-Prompts dokumentieren"
+      - "Review-Checkliste mit {{KI_GUARDRAILS}} erstellen"
+
       Passend für {{COMPANY_SIZE}}.
-      Bezug zur Transformation, nicht zur Tool-Einführung.
+      VERBOTEN: "Einen Prozess dokumentieren" (zu generisch!)
       -->
     </ol>
   </div>
