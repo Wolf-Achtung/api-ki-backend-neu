@@ -3,7 +3,46 @@
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{COMPANY_SIZE}} -->
+<!-- INPUT NEW: {{hauptleistung}}, {{ZEITERSPARNIS_PRIORITAET}}, {{KI_GUARDRAILS}}, {{VISION_3_JAHRE}} -->
 <!-- TOKEN-BUDGET: 800 (solo:0.8x=640, team:1.0x=800, kmu:1.15x=920) -->
+
+<!--
+=============================================================================
+PHASE 3: INDIVIDUALISIERUNG DER HANDLUNGSEMPFEHLUNGEN (PFLICHT!)
+=============================================================================
+
+Die Handlungsempfehlungen MÜSSEN auf den konkreten User zugeschnitten sein.
+Generische Aktionen sind VERBOTEN.
+
+INDIVIDUALISIERUNGS-KONTEXT (verfügbar aus Briefing):
+- {{hauptleistung}} = Was der User konkret anbietet
+- {{ZEITERSPARNIS_PRIORITAET}} = Wo der User am meisten Zeit verliert
+- {{KI_GUARDRAILS}} = Einschränkungen/No-Gos für KI-Nutzung
+- {{VISION_3_JAHRE}} = Langfristige Vision des Users
+
+HANDLUNGSEMPFEHLUNGEN - KONKRET FORMULIEREN:
+
+BEISPIEL für Briefing 369 (KI-Berater mit Fragebogen-Erstellung):
+- hauptleistung: "Fragebogen-Erstellung und GPT-gestützte Auswertung"
+- zeitersparnis_prioritaet: "Umsetzung/Programmierung"
+- ki_guardrails: "Keine Gesundheitsprognosen, keine Finanzberatung"
+
+ERWARTETE AKTIONEN für Briefing 369:
+❌ VERBOTEN: "KI-Zugang einrichten und erste Vorlage erstellen"
+✅ RICHTIG: "Erste Fragebogen-Template-Bibliothek anlegen – 3 Basis-Strukturen für {{hauptleistung}} dokumentieren"
+
+❌ VERBOTEN: "Ersten Quick Win umsetzen und Zeit messen"
+✅ RICHTIG: "GPT-Auswertungs-Prompt standardisieren – Programmieraufwand bei nächster Analyse messen"
+
+❌ VERBOTEN: "Einfache Qualitäts-Checkliste erstellen"
+✅ RICHTIG: "Review-Checkliste mit {{KI_GUARDRAILS}} erstellen – Keine Gesundheitsprognosen, keine Finanzberatung als Prüfpunkte"
+
+ERWARTETER EFFEKT - INDIVIDUALISIEREN:
+❌ VERBOTEN: "Zeitersparnis: 4-8 Stunden im ersten Monat"
+✅ RICHTIG: "Zeitersparnis: 40-60% bei {{ZEITERSPARNIS_PRIORITAET}} durch Template-Wiederverwendung"
+=============================================================================
+-->
+
 <!--
 ZIEL: 3 konkrete Handlungsempfehlungen für die nächsten 30 Tage.
 
@@ -56,59 +95,80 @@ SIZE-AWARE VERANTWORTLICHKEITEN:
 
   <ul class="checklist">
     {% if COMPANY_SIZE == "solo" %}
+    <!--
+    PHASE 3 SOLO-INDIVIDUALISIERUNG:
+    Alle Aktionen MÜSSEN {{hauptleistung}} und {{ZEITERSPARNIS_PRIORITAET}} aufgreifen!
+    -->
     <li>
-      <strong>KI-Zugang einrichten und erste Vorlage erstellen</strong> (Woche 1–2)<br/>
-      Basis für {{OFFERING_LABEL}} schaffen – Zugang testen, erste Prompt-Vorlage für Kernaufgabe anlegen.
+      <strong>[DYNAMISCH: Erste {{hauptleistung}}-Template-Bibliothek anlegen]</strong> (Woche 1–2)<br/>
+      <!-- NICHT "erste Vorlage erstellen" - sondern konkret für {{hauptleistung}} -->
+      Basis-Strukturen für {{hauptleistung}} dokumentieren – 3 wiederverwendbare Templates erstellen.
     </li>
     <li>
-      <strong>Ersten Quick Win umsetzen und Zeit messen</strong> (Woche 2–3)<br/>
-      Wiederkehrende Aufgabe mit KI-Unterstützung durchführen, Zeitersparnis dokumentieren (→ siehe Quick Wins).
+      <strong>[DYNAMISCH: {{ZEITERSPARNIS_PRIORITAET}} mit erstem Template testen]</strong> (Woche 2–3)<br/>
+      <!-- NICHT "Quick Win umsetzen" - sondern konkret {{ZEITERSPARNIS_PRIORITAET}} adressieren -->
+      Template für {{hauptleistung}} einsetzen, Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}} messen.
     </li>
     <li>
-      <strong>Einfache Qualitäts-Checkliste erstellen</strong> (Woche 3–4)<br/>
-      3-5 Prüfpunkte definieren, um KI-Ergebnisse vor Verwendung zu validieren.
+      <strong>[DYNAMISCH: Review-Checkliste mit {{KI_GUARDRAILS}} erstellen]</strong> (Woche 3–4)<br/>
+      <!-- NICHT "Qualitäts-Checkliste" - sondern konkrete Guardrails -->
+      {{KI_GUARDRAILS}} als Prüfpunkte dokumentieren, um {{hauptleistung}}-Ergebnisse zu validieren.
     </li>
     {% elif COMPANY_SIZE == "team" %}
+    <!--
+    PHASE 3 TEAM-INDIVIDUALISIERUNG:
+    Alle Aktionen MÜSSEN {{hauptleistung}} und {{ZEITERSPARNIS_PRIORITAET}} aufgreifen!
+    -->
     <li>
-      <strong>KI-Owner benennen und gemeinsamen Zugang einrichten</strong> (Woche 1–2)<br/>
-      Verantwortlichkeit für Standards und Qualität klären, alle Beteiligten mit Zugang ausstatten.
+      <strong>[DYNAMISCH: KI-Owner für {{hauptleistung}} benennen]</strong> (Woche 1–2)<br/>
+      Verantwortlichkeit für {{hauptleistung}}-Standards und Qualität klären, Team-Templates erstellen.
     </li>
     <li>
-      <strong>Ersten teamweiten Quick Win umsetzen</strong> (Woche 2–3)<br/>
-      Ausgewählte Aufgabe aus {{OFFERING_LABEL}} mit KI testen, Erfahrungen im Team teilen (→ siehe Quick Wins).
+      <strong>[DYNAMISCH: {{ZEITERSPARNIS_PRIORITAET}} im Team adressieren]</strong> (Woche 2–3)<br/>
+      Template-Bibliothek für {{hauptleistung}} teamweit testen, Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}} messen.
     </li>
     <li>
-      <strong>Kurzen Review-Prozess etablieren</strong> (Woche 3–4)<br/>
-      Wöchentliches 15-Minuten-Review einführen: Was funktioniert, was nicht? Vorlagen bei Bedarf anpassen.
+      <strong>[DYNAMISCH: Team-Review mit {{KI_GUARDRAILS}} etablieren]</strong> (Woche 3–4)<br/>
+      Wöchentliches Review mit {{KI_GUARDRAILS}}-Prüfung einführen, {{hauptleistung}}-Vorlagen verbessern.
     </li>
     {% else %}
+    <!--
+    PHASE 3 KMU-INDIVIDUALISIERUNG:
+    Alle Aktionen MÜSSEN {{hauptleistung}} und {{ZEITERSPARNIS_PRIORITAET}} aufgreifen!
+    -->
     <li>
-      <strong>Pilotbereich definieren und KI-Verantwortliche:n benennen</strong> (Woche 1–2)<br/>
-      Fachbereich mit hohem Potenzial auswählen, Governance-Grundregeln festlegen, Zugänge einrichten.
+      <strong>[DYNAMISCH: Pilotbereich für {{hauptleistung}} definieren]</strong> (Woche 1–2)<br/>
+      Bereich mit hohem {{ZEITERSPARNIS_PRIORITAET}}-Potenzial auswählen, {{KI_GUARDRAILS}} als Governance festlegen.
     </li>
     <li>
-      <strong>Quick Wins im Pilotbereich starten und dokumentieren</strong> (Woche 2–4)<br/>
-      2-3 priorisierte Anwendungsfälle aus {{OFFERING_LABEL}} testen, erste Zeitersparnis quantifizieren (→ siehe Quick Wins).
+      <strong>[DYNAMISCH: {{hauptleistung}}-Templates im Pilotbereich testen]</strong> (Woche 2–4)<br/>
+      Template-Bibliothek für {{hauptleistung}} pilotieren, Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}} quantifizieren.
     </li>
     <li>
-      <strong>Wöchentliche Kurz-Reviews etablieren und Learnings sammeln</strong> (Woche 3–4)<br/>
-      Feedback-Schleifen im Pilotbereich einführen, Basis für SOPs und Schulungskonzept schaffen.
+      <strong>[DYNAMISCH: SOPs mit {{KI_GUARDRAILS}} dokumentieren]</strong> (Woche 3–4)<br/>
+      {{hauptleistung}}-Workflows mit {{KI_GUARDRAILS}}-Review als SOPs festhalten, Schulungskonzept vorbereiten.
     </li>
     {% endif %}
   </ul>
 
   <div class="roi-tracking">
     <h4>Erwarteter Effekt nach 30 Tagen</h4>
+    <!--
+    PHASE 3: Erwartete Effekte MÜSSEN {{ZEITERSPARNIS_PRIORITAET}} referenzieren!
+    -->
     <ul>
       {% if COMPANY_SIZE == "solo" %}
-      <li><strong>Zeitersparnis:</strong> 4–8 Stunden im ersten Monat</li>
-      <li><strong>Routine:</strong> KI ist fester Bestandteil des Alltags</li>
+      <li><strong>Zeitersparnis:</strong> 30-50% bei {{ZEITERSPARNIS_PRIORITAET}} durch Template-Wiederverwendung</li>
+      <li><strong>Routine:</strong> {{hauptleistung}}-Templates sind fester Bestandteil des Alltags</li>
+      <li><strong>Compliance:</strong> {{KI_GUARDRAILS}} als Review-Checkliste etabliert</li>
       {% elif COMPANY_SIZE == "team" %}
-      <li><strong>Zeitersparnis:</strong> 10–20 Stunden im Team gesamt</li>
-      <li><strong>Klarheit:</strong> Rollen, Zuständigkeiten und erste Standards definiert</li>
+      <li><strong>Zeitersparnis:</strong> 30-50% bei {{ZEITERSPARNIS_PRIORITAET}} im Team</li>
+      <li><strong>Klarheit:</strong> {{hauptleistung}}-Standards und Team-Templates definiert</li>
+      <li><strong>Compliance:</strong> {{KI_GUARDRAILS}} als Team-Review etabliert</li>
       {% else %}
-      <li><strong>Zeitersparnis:</strong> 15–30 Stunden im Pilotbereich</li>
-      <li><strong>Governance:</strong> Klare Regeln, erste Dokumentation, messbare Basis</li>
+      <li><strong>Zeitersparnis:</strong> 30-50% bei {{ZEITERSPARNIS_PRIORITAET}} im Pilotbereich</li>
+      <li><strong>Governance:</strong> {{KI_GUARDRAILS}} als SOPs dokumentiert</li>
+      <li><strong>Skalierbarkeit:</strong> {{hauptleistung}}-Templates für Rollout vorbereitet</li>
       {% endif %}
     </ul>
   </div>
