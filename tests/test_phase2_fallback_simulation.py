@@ -2,112 +2,33 @@
 """
 PHASE 2: Fallback Simulation Test
 
-Testet den neuen dynamischen Quick Wins Fallback OHNE Datenbankzugriff.
+Testet den neuen dynamischen Quick Wins Fallback OHNE gpt_analyze Import.
 Simuliert verschiedene Briefings und zeigt die generierten Quick Wins.
+
+WICHTIG: Dieser Test ist STANDALONE und importiert NICHT von gpt_analyze,
+da das SQLAlchemy und andere Dependencies erfordern würde.
+Stattdessen wird die Fallback-Logik hier direkt implementiert.
 
 Run with:
     python tests/test_phase2_fallback_simulation.py
+
+For pytest (skipped by default):
+    pytest tests/test_phase2_fallback_simulation.py -v
 """
 
 import sys
 from pathlib import Path
 
-# Minimale Mock-Umgebung für den Import
-class MockSession:
-    pass
+# NOTE: This test does NOT import gpt_analyze to avoid SQLAlchemy dependency issues
+# Instead, we implement the fallback logic directly here for testing
 
-# Patch sqlalchemy before import
-class MockSQLAlchemy:
-    class orm:
-        Session = MockSession
-
-sys.modules['sqlalchemy'] = type(sys)('sqlalchemy')
-sys.modules['sqlalchemy'].orm = MockSQLAlchemy.orm
-sys.modules['sqlalchemy.orm'] = MockSQLAlchemy.orm
-
-# Add parent to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+REPO_ROOT = Path(__file__).parent.parent
 
 
-def simulate_quick_wins_fallback():
+def generate_quick_wins_fallback(briefing: dict, scores: dict) -> str:
     """
-    Simuliert den Quick Wins Fallback für verschiedene Briefings.
-    """
-    print("=" * 70)
-    print("PHASE 2: QUICK WINS FALLBACK SIMULATION")
-    print("=" * 70)
-    print()
-
-    # ===== TEST BRIEFINGS =====
-    briefings = [
-        {
-            "name": "KI-Berater (Briefing 368)",
-            "briefing": {
-                "branche": "Beratung",
-                "BRANCHE_LABEL": "Beratung",
-                "unternehmensgroesse": "solo",
-                "UNTERNEHMENSGROESSE_LABEL": "Solo-Selbstständig",
-                "hauptleistung": "Beratung von Unternehmen zur Integration von KI mittels Fragebogen und GPT-Auswertung",
-                "zeitersparnis_prioritaet": "Umsetzung und Programmierung und überprüfen der Machbarkeit",
-                "lang": "de",
-            },
-            "scores": {"security": 60, "governance": 70, "overall": 70},
-        },
-        {
-            "name": "Social Media Manager",
-            "briefing": {
-                "branche": "Marketing",
-                "BRANCHE_LABEL": "Marketing & Kommunikation",
-                "unternehmensgroesse": "solo",
-                "UNTERNEHMENSGROESSE_LABEL": "Solo-Selbstständig",
-                "hauptleistung": "Social Media Management für lokale Restaurants, Content-Erstellung",
-                "zeitersparnis_prioritaet": "Bildbearbeitung und Texterstellung für Posts",
-                "lang": "de",
-            },
-            "scores": {"security": 70, "governance": 55, "overall": 65},
-        },
-        {
-            "name": "Steuerberater (niedriger Security-Score)",
-            "briefing": {
-                "branche": "Finanzen",
-                "BRANCHE_LABEL": "Finanzdienstleistungen",
-                "unternehmensgroesse": "team",
-                "UNTERNEHMENSGROESSE_LABEL": "Kleines Team (2-5)",
-                "hauptleistung": "Steuerberatung für Freiberufler und kleine Unternehmen",
-                "zeitersparnis_prioritaet": "Mandantenkorrespondenz und Dokumentenablage",
-                "lang": "de",
-            },
-            "scores": {"security": 35, "governance": 60, "overall": 55},  # NIEDRIGER Security!
-        },
-    ]
-
-    for test in briefings:
-        print(f"\n{'='*70}")
-        print(f"BRIEFING: {test['name']}")
-        print(f"{'='*70}")
-        print(f"hauptleistung: {test['briefing'].get('hauptleistung', '')[:60]}...")
-        print(f"zeitersparnis: {test['briefing'].get('zeitersparnis_prioritaet', '')}")
-        print(f"security_score: {test['scores'].get('security', 50)}")
-        print()
-
-        # Simuliere den Fallback-Handler direkt (kopiert aus gpt_analyze.py)
-        quick_wins_html = generate_quick_wins_fallback(test['briefing'], test['scores'])
-
-        print("GENERIERTE QUICK WINS:")
-        print("-" * 70)
-        # Bereinige HTML für Anzeige
-        import re
-        clean = re.sub(r'<[^>]+>', '', quick_wins_html)
-        clean = re.sub(r'\n\s*\n', '\n', clean)
-        for line in clean.strip().split('\n'):
-            if line.strip():
-                print(f"  {line.strip()[:75]}")
-        print()
-
-
-def generate_quick_wins_fallback(briefing, scores):
-    """
-    Direkte Kopie der neuen Quick Wins Fallback-Logik aus gpt_analyze.py
+    Standalone implementation of the Quick Wins fallback logic.
+    This mirrors the logic in gpt_analyze.py:4366-4430 for testing purposes.
     """
     # Briefing-Daten extrahieren
     branche = briefing.get("BRANCHE_LABEL") or briefing.get("branche", "Unternehmen")
@@ -188,6 +109,82 @@ Erfolgreiche Anwendungen werden dokumentiert und geteilt. <em>Ersparnis: 10-15 h
 <p class="small muted">Individualisiert für {branche} · {size_label} · basierend auf Ihren Angaben</p>"""
 
 
+def simulate_quick_wins_fallback():
+    """
+    Simuliert den Quick Wins Fallback für verschiedene Briefings.
+    """
+    print("=" * 70)
+    print("PHASE 2: QUICK WINS FALLBACK SIMULATION")
+    print("=" * 70)
+    print()
+
+    # ===== TEST BRIEFINGS =====
+    briefings = [
+        {
+            "name": "KI-Berater (Briefing 368)",
+            "briefing": {
+                "branche": "Beratung",
+                "BRANCHE_LABEL": "Beratung",
+                "unternehmensgroesse": "solo",
+                "UNTERNEHMENSGROESSE_LABEL": "Solo-Selbstständig",
+                "hauptleistung": "Beratung von Unternehmen zur Integration von KI mittels Fragebogen und GPT-Auswertung",
+                "zeitersparnis_prioritaet": "Umsetzung und Programmierung und überprüfen der Machbarkeit",
+                "lang": "de",
+            },
+            "scores": {"security": 60, "governance": 70, "overall": 70},
+        },
+        {
+            "name": "Social Media Manager",
+            "briefing": {
+                "branche": "Marketing",
+                "BRANCHE_LABEL": "Marketing & Kommunikation",
+                "unternehmensgroesse": "solo",
+                "UNTERNEHMENSGROESSE_LABEL": "Solo-Selbstständig",
+                "hauptleistung": "Social Media Management für lokale Restaurants, Content-Erstellung",
+                "zeitersparnis_prioritaet": "Bildbearbeitung und Texterstellung für Posts",
+                "lang": "de",
+            },
+            "scores": {"security": 70, "governance": 55, "overall": 65},
+        },
+        {
+            "name": "Steuerberater (niedriger Security-Score)",
+            "briefing": {
+                "branche": "Finanzen",
+                "BRANCHE_LABEL": "Finanzdienstleistungen",
+                "unternehmensgroesse": "team",
+                "UNTERNEHMENSGROESSE_LABEL": "Kleines Team (2-5)",
+                "hauptleistung": "Steuerberatung für Freiberufler und kleine Unternehmen",
+                "zeitersparnis_prioritaet": "Mandantenkorrespondenz und Dokumentenablage",
+                "lang": "de",
+            },
+            "scores": {"security": 35, "governance": 60, "overall": 55},  # NIEDRIGER Security!
+        },
+    ]
+
+    for test in briefings:
+        print(f"\n{'='*70}")
+        print(f"BRIEFING: {test['name']}")
+        print(f"{'='*70}")
+        print(f"hauptleistung: {test['briefing'].get('hauptleistung', '')[:60]}...")
+        print(f"zeitersparnis: {test['briefing'].get('zeitersparnis_prioritaet', '')}")
+        print(f"security_score: {test['scores'].get('security', 50)}")
+        print()
+
+        # Simuliere den Fallback-Handler direkt
+        quick_wins_html = generate_quick_wins_fallback(test['briefing'], test['scores'])
+
+        print("GENERIERTE QUICK WINS:")
+        print("-" * 70)
+        # Bereinige HTML für Anzeige
+        import re
+        clean = re.sub(r'<[^>]+>', '', quick_wins_html)
+        clean = re.sub(r'\n\s*\n', '\n', clean)
+        for line in clean.strip().split('\n'):
+            if line.strip():
+                print(f"  {line.strip()[:75]}")
+        print()
+
+
 def validate_results():
     """Validiere die generierten Quick Wins"""
     print()
@@ -229,6 +226,75 @@ def validate_results():
     else:
         print("❌ EINIGE VALIDIERUNGEN FEHLGESCHLAGEN")
         return False
+
+
+# =============================================================================
+# Pytest-compatible tests (these don't require any external imports)
+# =============================================================================
+
+class TestQuickWinsFallbackSimulation:
+    """Standalone tests for Quick Wins fallback logic."""
+
+    def test_no_static_email_automation(self):
+        """Check that fallback doesn't include static E-Mail automation."""
+        briefing = {
+            "branche": "Beratung",
+            "hauptleistung": "KI-Beratung",
+            "zeitersparnis_prioritaet": "Programmierung",
+            "UNTERNEHMENSGROESSE_LABEL": "Solo",
+        }
+        scores = {"security": 60, "governance": 70}
+
+        result = generate_quick_wins_fallback(briefing, scores)
+        assert "E-Mail-Entwürfe automatisieren" not in result
+
+    def test_uses_zeitersparnis_prioritaet(self):
+        """Check that fallback uses zeitersparnis_prioritaet."""
+        briefing = {
+            "branche": "Marketing",
+            "hauptleistung": "Social Media",
+            "zeitersparnis_prioritaet": "Bildbearbeitung und Texterstellung",
+            "UNTERNEHMENSGROESSE_LABEL": "Solo",
+        }
+        scores = {"security": 70, "governance": 60}
+
+        result = generate_quick_wins_fallback(briefing, scores)
+        assert "Bildbearbeitung" in result
+
+    def test_security_quickwin_on_low_score(self):
+        """Check that low security score triggers security quick win."""
+        briefing = {
+            "branche": "Finanzen",
+            "hauptleistung": "Steuerberatung",
+            "zeitersparnis_prioritaet": "Dokumentation",
+            "UNTERNEHMENSGROESSE_LABEL": "Kleines Team",
+        }
+        scores = {"security": 35, "governance": 60}  # Low security!
+
+        result = generate_quick_wins_fallback(briefing, scores)
+        assert "Sicherheitsrichtlinie" in result or "Security" in result
+
+    def test_size_specific_output(self):
+        """Check that solo vs team produces different content."""
+        briefing_solo = {
+            "branche": "IT",
+            "hauptleistung": "Entwicklung",
+            "zeitersparnis_prioritaet": "Coding",
+            "UNTERNEHMENSGROESSE_LABEL": "Solo-Selbstständig",
+        }
+        briefing_team = {
+            "branche": "IT",
+            "hauptleistung": "Entwicklung",
+            "zeitersparnis_prioritaet": "Coding",
+            "UNTERNEHMENSGROESSE_LABEL": "Kleines Team (2-5)",
+        }
+        scores = {"security": 60, "governance": 60}
+
+        result_solo = generate_quick_wins_fallback(briefing_solo, scores)
+        result_team = generate_quick_wins_fallback(briefing_team, scores)
+
+        assert "Persönliche Prompt-Bibliothek" in result_solo
+        assert "Team Prompt-Repository" in result_team
 
 
 if __name__ == "__main__":
