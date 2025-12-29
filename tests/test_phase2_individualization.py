@@ -14,10 +14,35 @@ Run with:
 import sys
 from pathlib import Path
 
+import pytest
+
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# Check for required dependencies
+try:
+    import sqlalchemy
+    HAS_SQLALCHEMY = True
+except ImportError:
+    HAS_SQLALCHEMY = False
 
+try:
+    from gpt_analyze import _build_prompt_vars
+    HAS_GPT_ANALYZE = True
+except ImportError:
+    HAS_GPT_ANALYZE = False
+    _build_prompt_vars = None
+
+try:
+    from services.prompt_loader import load_prompt
+    HAS_PROMPT_LOADER = True
+except ImportError:
+    HAS_PROMPT_LOADER = False
+    load_prompt = None
+
+
+@pytest.mark.skipif(not HAS_SQLALCHEMY, reason="SQLAlchemy not installed")
+@pytest.mark.skipif(not HAS_GPT_ANALYZE, reason="gpt_analyze not importable")
 class TestPhase2FreitextVariables:
     """Test COMMIT 1: Freitext-Variablen in _build_prompt_vars"""
 
@@ -78,6 +103,8 @@ class TestPhase2FreitextVariables:
         print("✅ CHECK 2 PASSED: Scores available for Quick Win prioritization")
 
 
+@pytest.mark.skipif(not HAS_SQLALCHEMY, reason="SQLAlchemy not installed")
+@pytest.mark.skipif(not HAS_PROMPT_LOADER, reason="prompt_loader not importable")
 class TestPhase2PromptInterpolation:
     """Test COMMIT 2 & 3: Prompts use the new variables"""
 
@@ -142,7 +169,7 @@ class TestPhase2PromptInterpolation:
 
 
 class TestPhase2QuickWinsDynamic:
-    """Test COMMIT 3: Quick Wins are no longer static"""
+    """Test COMMIT 3: Quick Wins are no longer static (no external deps needed)"""
 
     def test_quick_wins_prompt_no_static_email_automation(self):
         """Check that quick_wins.md doesn't have hardcoded E-Mail automation"""
@@ -196,6 +223,9 @@ class TestPhase2QuickWinsDynamic:
         print("✅ CHECK 6 PASSED: quick_wins.md has dynamic generation rules")
 
 
+@pytest.mark.skipif(not HAS_SQLALCHEMY, reason="SQLAlchemy not installed")
+@pytest.mark.skipif(not HAS_GPT_ANALYZE, reason="gpt_analyze not importable")
+@pytest.mark.skipif(not HAS_PROMPT_LOADER, reason="prompt_loader not importable")
 class TestPhase2EndToEnd:
     """Integration test: Full variable flow"""
 
