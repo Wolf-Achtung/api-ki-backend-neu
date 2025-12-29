@@ -4441,15 +4441,10 @@ Erfolgreiche Anwendungen werden dokumentiert und geteilt. <em>Ersparnis: 10-15 h
     _payback_fmt = _fmt_num(briefing.get("PAYBACK_MONTHS"), 1)
     _roi_fmt = _fmt_num(briefing.get("ROI_12M"), 0)
 
-    # Statische Fallbacks (Quick Wins UNVERÄNDERT)
+    # Statische Fallbacks (HINWEIS: quick_wins wird jetzt dynamisch generiert - siehe Block oben bei Zeile 4366)
     fallbacks = {
-        "quick_wins": f"""<ul>
-<li><strong>E-Mail-Entwürfe automatisieren:</strong> Automatische Vorschläge für Standard-Antworten und Textbausteine. <em>Ersparnis: 20 h/Monat</em></li>
-<li><strong>Meeting-Protokolle mit KI:</strong> Automatische Transkription und Zusammenfassung von Besprechungen. <em>Ersparnis: 15 h/Monat</em></li>
-<li><strong>Dokumenten-Recherche beschleunigen:</strong> Semantische Suche in Ihrer Wissensdatenbank statt manuelles Durchsuchen. <em>Ersparnis: 12 h/Monat</em></li>
-<li><strong>Social Media Posts generieren:</strong> KI-gestützte Content-Vorschläge für LinkedIn, Instagram und andere Kanäle. <em>Ersparnis: 8 h/Monat</em></li>
-</ul>
-<p class="small muted">Angepasst an {branche} · {size_label}</p>""",
+        # PHASE 2: quick_wins wurde ENTFERNT - wird jetzt dynamisch im Handler oben generiert
+        # Der alte statische E-Mail-Entwürfe Fallback wurde gelöscht
         "business_case": f"""<div class="business-case-fallback">
   <h3>Investition und erwarteter Nutzen</h3>
   <p>
