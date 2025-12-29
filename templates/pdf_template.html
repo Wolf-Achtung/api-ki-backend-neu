@@ -3065,13 +3065,8 @@
                     <!-- TOP-3 MUSS-MAßNAHMEN: Condensed, 1-2 lines each -->
                     <div class="exec-top3">
                         <h3>{{ ui("top3_title", "Top-3 MUSS-Maßnahmen") }}</h3>
-                        <ol>
-                            <li><strong>Minimal-Stack definieren</strong> – 1 zentrales KI-Tool, 1 Ablage, keine Experimente</li>
-                            <li><strong>Standard-Workflow etablieren</strong> – Input → KI-Draft → Review → Freigabe</li>
-                            <li><strong>Review-Regel einführen</strong> – Vier-Augen-Prinzip und Quellenpflicht</li>
-                        </ol>
+                        {{ TOP_3_MASSNAHMEN_HTML | safe }}
                     </div>
-
                     <!-- Executive Decision Blocks (if available) -->
                     {% if EXECUTIVE_DECISION_HTML and EXECUTIVE_DECISION_HTML|trim and '<' in EXECUTIVE_DECISION_HTML %}
                     <div class="exec-summary" style="margin-top: var(--space-md); padding: var(--space-md); background: var(--color-bg-surface); border-radius: var(--radius-tag);">
