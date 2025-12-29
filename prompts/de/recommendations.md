@@ -23,8 +23,32 @@ ABSCHNITT 1: MUSS-MAßNAHMEN (genau 3 Punkte)
 - Nummeriert 1-3
 - Pro Punkt: 1 Satz Maßnahme + 1 Kurzsatz "Warum jetzt?" (7-10 Wörter)
 - Format: "<strong>1. [Maßnahme]</strong> – [Warum jetzt in 7-10 Wörtern]"
-- Beispiel: "<strong>1. Minimal-Stack festlegen</strong> – Klarheit vor Komplexität schafft Handlungsfähigkeit."
 - KEINE Detailerklärungen in diesem Abschnitt
+- PHASE 2b: INDIVIDUALISIERUNG STATT GENERIK (PFLICHT!)
+
+INDIVIDUALISIERUNGS-KONTEXT (verfügbar aus Briefing):
+- {{hauptleistung}} = Was der User konkret anbietet
+- {{ZEITERSPARNIS_PRIORITAET}} = Wo der User am meisten Zeit verliert
+- {{KI_GUARDRAILS}} = Einschränkungen/No-Gos für KI-Nutzung
+- {{VISION_3_JAHRE}} = Wohin will der User langfristig
+
+MAßNAHME 1: MUSS {{ZEITERSPARNIS_PRIORITAET}} direkt adressieren
+→ Frage: Wie kann KI/Automatisierung DIESEN spezifischen Zeitfresser reduzieren?
+→ VERBOTEN: "Minimal-Stack definieren" (zu generisch!)
+→ Beispiel KI-Berater: "Fragebogen-Template-Bibliothek aufbauen – reduziert Umsetzungsaufwand pro Projekt"
+→ Beispiel Steuerberater: "Mandanten-Dokumente automatisch klassifizieren – eliminiert manuelle Vorsortierung"
+
+MAßNAHME 2: MUSS zu {{hauptleistung}} passen
+→ Frage: Was ist DER kritische Erfolgsfaktor für diese spezielle Leistung?
+→ VERBOTEN: "Standard-Workflow etablieren" (zu allgemein!)
+→ Beispiel Fragebogen+GPT: "GPT-Auswertungs-Standard definieren – konsistente Qualität bei jeder Analyse"
+→ Beispiel Content-Agentur: "Prompt-Templates für Kundenprojekte – skaliert Output ohne Qualitätsverlust"
+
+MAßNAHME 3: MUSS Risiken/Guardrails adressieren
+→ Beachte {{KI_GUARDRAILS}} explizit wenn vorhanden
+→ VERBOTEN: "Review-Regel einführen" (zu vage!)
+→ Beispiel mit Guardrails: "Review-Checkliste gegen unerlaubte Prognosen – verhindert Compliance-Verstöße"
+→ Beispiel ohne Guardrails: "Qualitätssicherung für KI-Outputs – schützt vor Fehlinformationen"
 
 ABSCHNITT 2: OPTIONEN (für später / Phase 2-3)
 - Weitere 2-4 Empfehlungen als OPTIONEN gekennzeichnet
@@ -81,20 +105,40 @@ KMU-MODUS - VERBOTEN:
     gelten folgende priorisierte Empfehlungen.
   </p>
 
-  <!-- ABSCHNITT 1: MUSS-MAßNAHMEN (genau 3) -->
+  <!-- ABSCHNITT 1: MUSS-MAßNAHMEN (genau 3) - PHASE 2b INDIVIDUALISIERT -->
+  <!--
+  WICHTIG: Diese Maßnahmen werden vom LLM DYNAMISCH generiert basierend auf:
+  - Maßnahme 1: {{ZEITERSPARNIS_PRIORITAET}} (größter Zeitfresser des Users)
+  - Maßnahme 2: {{hauptleistung}} (konkrete Kernleistung des Users)
+  - Maßnahme 3: {{KI_GUARDRAILS}} (Einschränkungen/No-Gos)
+
+  NICHT die statischen Beispiele unten verwenden!
+  -->
   <h3>MUSS – Sofort umsetzen</h3>
   <ol class="recommendations-muss">
     <li>
-      <strong>Minimal-Stack festlegen</strong> – Klarheit vor Komplexität schafft Handlungsfähigkeit.
-      <p class="muss-detail">1 zentrales KI-Tool, 1 Ablageort, keine parallelen Experimente.</p>
+      <!--
+      MASCHINE GENERIERT: Basierend auf {{ZEITERSPARNIS_PRIORITAET}}
+      Beispiel: "Fragebogen-Template-Bibliothek aufbauen" statt "Minimal-Stack"
+      -->
+      <strong>[Maßnahme die {{ZEITERSPARNIS_PRIORITAET}} direkt adressiert]</strong> – [Warum diese Maßnahme Zeit spart].
+      <p class="muss-detail">[Konkrete Umsetzung für {{hauptleistung}}]</p>
     </li>
     <li>
-      <strong>Ersten Standard-Workflow etablieren</strong> – Ohne Prozess keine messbare Verbesserung.
-      <p class="muss-detail">Input → KI-Entwurf → Review → Freigabe für {{OFFERING_LABEL}}.</p>
+      <!--
+      MASCHINE GENERIERT: Basierend auf {{hauptleistung}}
+      Beispiel: "GPT-Auswertungs-Standard definieren" statt "Standard-Workflow"
+      -->
+      <strong>[Maßnahme die {{hauptleistung}} optimiert]</strong> – [Warum das die Kernleistung verbessert].
+      <p class="muss-detail">[Konkrete Prozessschritte für {{OFFERING_LABEL}}]</p>
     </li>
     <li>
-      <strong>Review-Regel einführen</strong> – Qualität und Compliance von Anfang an sichern.
-      <p class="muss-detail">Vier-Augen-Prinzip + Quellenpflicht für alle KI-Outputs.</p>
+      <!--
+      MASCHINE GENERIERT: Basierend auf {{KI_GUARDRAILS}} oder allgemeine Qualitätssicherung
+      Beispiel: "Review-Checkliste gegen unerlaubte Prognosen" statt "Review-Regel"
+      -->
+      <strong>[Qualitäts-/Risiko-Maßnahme passend zu {{KI_GUARDRAILS}}]</strong> – [Warum das Risiken minimiert].
+      <p class="muss-detail">[Konkrete Checkliste oder Freigabeprozess]</p>
     </li>
   </ol>
 
@@ -121,9 +165,10 @@ KMU-MODUS - VERBOTEN:
       <tr><th>Typ</th><th>Empfehlung</th><th>Zeitrahmen</th><th>Hauptnutzen</th></tr>
     </thead>
     <tbody>
-      <tr><td><strong>MUSS</strong></td><td>Minimal-Stack</td><td>Sofort</td><td>Handlungsfähigkeit</td></tr>
-      <tr><td><strong>MUSS</strong></td><td>Standard-Workflow</td><td>Woche 1-2</td><td>Messbare Verbesserung</td></tr>
-      <tr><td><strong>MUSS</strong></td><td>Review-Regel</td><td>Woche 1-2</td><td>Qualität & Compliance</td></tr>
+      <!-- PHASE 2b: Tabelle wird DYNAMISCH generiert basierend auf den 3 MUSS-Maßnahmen oben -->
+      <tr><td><strong>MUSS</strong></td><td>[Kurzform Maßnahme 1 - zu {{ZEITERSPARNIS_PRIORITAET}}]</td><td>Sofort</td><td>Zeitersparnis</td></tr>
+      <tr><td><strong>MUSS</strong></td><td>[Kurzform Maßnahme 2 - zu {{hauptleistung}}]</td><td>Woche 1-2</td><td>Qualitätssteigerung</td></tr>
+      <tr><td><strong>MUSS</strong></td><td>[Kurzform Maßnahme 3 - zu {{KI_GUARDRAILS}}]</td><td>Woche 1-2</td><td>Risikominimierung</td></tr>
       <tr><td>Option</td><td>Wissensmanagement</td><td>{% if COMPANY_SIZE == "solo" %}Monat 3+{% else %}Monat 4-6{% endif %}</td><td>Stabile Ergebnisse</td></tr>
       <tr><td>Option</td><td>Pilot ausweiten</td><td>{% if COMPANY_SIZE == "solo" %}Monat 6+{% else %}Monat 6-9{% endif %}</td><td>Sichtbarer Erfolg</td></tr>
       <tr><td>Option</td><td>Governance formalisieren</td><td>{% if COMPANY_SIZE == "solo" %}Monat 3+{% else %}Monat 6+{% endif %}</td><td>Rechtssicherheit</td></tr>
@@ -144,4 +189,42 @@ VERBOTEN – NIEMALS VERWENDEN:
 - Keine Meta-Kommentare ("Dieser Abschnitt...", "Im Folgenden...")
 
 Der Output ist ein FINALER REPORT-ABSCHNITT, kein Gespräch.
+-->
+
+<!-- PHASE 2b: GENERISCHE PHRASEN VERBOTEN -->
+<!--
+=============================================================================
+VERBOTEN FÜR MUSS-MAßNAHMEN (STRIKT!):
+=============================================================================
+Die folgenden Phrasen sind ZU GENERISCH und VERBOTEN:
+- "Minimal-Stack festlegen/definieren"
+- "Standard-Workflow etablieren"
+- "Review-Regel einführen"
+- "Klarheit vor Komplexität"
+- "Ein zentrales Tool"
+- "Input → KI-Entwurf → Review"
+- Jede Phrase die zu JEDEM User passen würde
+
+STATTDESSEN NUTZEN:
+- Konkrete Bezüge zu {{hauptleistung}}
+- Konkrete Bezüge zu {{ZEITERSPARNIS_PRIORITAET}}
+- Konkrete Bezüge zu {{KI_GUARDRAILS}}
+- Branchenspezifische Begriffe aus {{BRANCH_CONTEXT_LABEL}}
+
+BEISPIEL-TRANSFORMATIONEN:
+❌ "Minimal-Stack festlegen"
+✅ "Fragebogen-Template-Bibliothek aufbauen" (für KI-Berater)
+✅ "Mandanten-Dokument-Klassifizierung automatisieren" (für Steuerberater)
+✅ "Content-Batch-Prozess etablieren" (für Content-Agentur)
+
+❌ "Standard-Workflow etablieren"
+✅ "GPT-Auswertungs-Standard definieren" (für Fragebogen-Business)
+✅ "Steuererklärungsentwurf-Pipeline aufbauen" (für Steuerberater)
+✅ "Editorial-Freigabe-Workflow implementieren" (für Content-Agentur)
+
+❌ "Review-Regel einführen"
+✅ "Review-Checkliste gegen unerlaubte Prognosen" (bei Gesundheits-Guardrails)
+✅ "Vier-Augen-Prinzip für Steuerbescheide" (bei Finanz-Compliance)
+✅ "Fakten-Check vor Veröffentlichung" (bei Content-Risiken)
+=============================================================================
 -->
