@@ -2647,17 +2647,41 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "INVESTITIONSBUDGET": briefing.get("investitionsbudget", ""),  # For gamechanger.md
     })
     
-    # ===== BLOCK 3: Strategy & Vision =====
-    # Strategic direction and goals
+    # ===== BLOCK 3: Strategy & Vision (EXTENDED Sprint Phase2) =====
+    # Strategic direction and goals - NOW includes all freetext fields
     hemmnisse_raw = briefing.get("ki_hemmnisse", [])  # Fixed: was "hemmnisse", should be "ki_hemmnisse"
     if not hemmnisse_raw:
         hemmnisse_raw = briefing.get("hemmnisse", [])  # Fallback for legacy data
-    
+
+    # PHASE 2 FIX: Extract all strategic freetext fields for individualization
+    zeitersparnis_prioritaet = briefing.get("zeitersparnis_prioritaet", "")
+    vision_3_jahre = briefing.get("vision_3_jahre", "")
+    geschaeftsmodell_evolution = briefing.get("geschaeftsmodell_evolution", "")
+    ki_guardrails = briefing.get("ki_guardrails", "")
+    strategische_ziele = briefing.get("strategische_ziele", "")
+    hauptleistung = briefing.get("hauptleistung", "")
+
     base_vars.update({
-        "VISION_PRIORITAET": briefing.get("vision_3_jahre", ""),
-        "PROJEKTZIEL": ", ".join(briefing.get("ki_ziele", [])) if briefing.get("ki_ziele") else briefing.get("strategische_ziele", ""),
+        # Original fields
+        "VISION_PRIORITAET": vision_3_jahre,
+        "PROJEKTZIEL": ", ".join(briefing.get("ki_ziele", [])) if briefing.get("ki_ziele") else strategische_ziele,
         "KI_KNOWHOW": briefing.get("ki_kompetenz", ""),
         "KI_HEMMNISSE": ", ".join(hemmnisse_raw) if isinstance(hemmnisse_raw, list) else hemmnisse_raw,
+
+        # PHASE 2: NEW freetext fields for Quick Wins & Executive Summary individualization
+        "ZEITERSPARNIS_PRIORITAET": zeitersparnis_prioritaet,
+        "zeitersparnis_prioritaet": zeitersparnis_prioritaet,  # lowercase alias
+        "VISION_3_JAHRE": vision_3_jahre,
+        "vision_3_jahre": vision_3_jahre,  # lowercase alias
+        "GESCHAEFTSMODELL_EVOLUTION": geschaeftsmodell_evolution,
+        "geschaeftsmodell_evolution": geschaeftsmodell_evolution,  # lowercase alias
+        "KI_GUARDRAILS": ki_guardrails,
+        "ki_guardrails": ki_guardrails,  # lowercase alias
+        "STRATEGISCHE_ZIELE": strategische_ziele,
+        "strategische_ziele": strategische_ziele,  # lowercase alias
+
+        # Ensure HAUPTLEISTUNG is available in both cases
+        "hauptleistung": hauptleistung,  # lowercase for Jinja2
     })
     
     # ===== BLOCK 4: Resources =====
