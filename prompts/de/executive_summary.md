@@ -39,9 +39,37 @@ BRANCH_SHORT_LABEL (verbindlich):
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- SPRINT G18 - BRANCHENSÄTZE HARMONISIEREN -->
+<!-- PHASE 2 FIX: Now uses actual freetext data instead of generic labels -->
 <!-- INPUT: {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{HAUPTUMSATZTREIBER}}, {{STRATEGISCHE_ZIELE}}, COMPANY_SIZE -->
+<!-- INPUT NEW: {{hauptleistung}}, {{ZEITERSPARNIS_PRIORITAET}}, {{STRATEGISCHE_ZIELE}}, {{KI_GUARDRAILS}} -->
 <!-- TOKEN-BUDGET: 1500 -->
 <!-- WORD_MINIMUM: 250 -->
+
+<!--
+=============================================================================
+PHASE 2: INDIVIDUALISIERUNGS-KONTEXT (VERBINDLICH)
+=============================================================================
+Die folgenden Felder kommen DIREKT aus dem Briefing und müssen den
+generischen Labels vorgezogen werden, wenn sie vorhanden sind:
+
+KERNGESCHÄFT DES USERS (PRIMÄR):
+{{hauptleistung}}
+
+WO VERLIERT DER USER ZEIT (für konkrete Empfehlungen):
+{{ZEITERSPARNIS_PRIORITAET}}
+
+STRATEGISCHE AUSRICHTUNG (für 3 Entscheidungen):
+{{STRATEGISCHE_ZIELE}}
+
+EINSCHRÄNKUNGEN/GUARDRAILS (für verantwortungsvollen Umgang):
+{{KI_GUARDRAILS}}
+
+WICHTIG:
+- Wenn {{hauptleistung}} vorhanden ist, nutze ES statt {{OFFERING_LABEL}}
+- Wenn {{ZEITERSPARNIS_PRIORITAET}} vorhanden ist, beziehe die Entscheidungen darauf
+- Wenn {{KI_GUARDRAILS}} vorhanden ist, erwähne Einschränkungen im nächsten Schritt
+=============================================================================
+-->
 <!--
 =============================================================================
 EXECUTIVE SUMMARY v7.0 — CONTENT QUALITY PACK
@@ -67,7 +95,9 @@ VERBINDLICHE STRUKTUR v7.0 — KNAPP UND KONKRET:
 
 ELEMENT 1: PROFIL-SATZ (1 Satz)
 - Ein einziger Satz, der die Situation auf den Punkt bringt
-- Format: "{{BRANCH_CONTEXT_LABEL}} mit Fokus auf {{OFFERING_LABEL}} steht vor [Kernherausforderung]."
+- PRIMÄR: Nutze die echte {{hauptleistung}} wenn vorhanden
+- FALLBACK: "{{BRANCH_CONTEXT_LABEL}} mit Fokus auf {{OFFERING_LABEL}} steht vor [Kernherausforderung]."
+- BEISPIEL mit echten Daten: "Ein Beratungsunternehmen mit Fokus auf {{hauptleistung}} steht vor der Herausforderung, {{ZEITERSPARNIS_PRIORITAET}} effizienter zu gestalten."
 - Maximal 25 Wörter
 
 ELEMENT 2: DREI ENTSCHEIDUNGEN (Bullet-Liste)
@@ -81,8 +111,10 @@ ELEMENT 2: DREI ENTSCHEIDUNGEN (Bullet-Liste)
 
 ELEMENT 3: KONKRETER NÄCHSTER SCHRITT (1 Satz)
 - Ein einziger Satz mit dem sofort umsetzbaren ersten Schritt
+- PRIMÄR: Beziehe dich auf {{ZEITERSPARNIS_PRIORITAET}} wenn vorhanden
 - Format: "Konkreter nächster Schritt: [Was genau tun] [in welchem Zeitrahmen]."
-- Beispiel: "Konkreter nächster Schritt: Einen Workflow für {{OFFERING_LABEL}} standardisieren – in den nächsten 30 Minuten festlegen."
+- BEISPIEL mit echten Daten: "Konkreter nächster Schritt: Den Prozess für {{ZEITERSPARNIS_PRIORITAET}} mit einem Template standardisieren – heute festlegen."
+- FALLS {{KI_GUARDRAILS}} vorhanden: Einschränkungen beachten (z.B. "ohne Kundendaten", "mit Review-Regel")
 
 =============================================================================
 STILREGELN v7.0 (STRIKT):
