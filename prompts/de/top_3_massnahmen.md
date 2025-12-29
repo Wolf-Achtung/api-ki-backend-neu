@@ -1,11 +1,13 @@
-Developer:
 <!-- PHASE 2B: TOP-3 MASSNAHMEN EXTRACTOR -->
 <!-- OUTPUT: HTML <ol> list ONLY -->
 <!-- INPUT: {{hauptleistung}}, {{ZEITERSPARNIS_PRIORITAET}}, {{KI_GUARDRAILS}} -->
 <!-- TOKEN-BUDGET: 150 (nur die 3 Listenelemente) -->
 
-Generiere NUR eine HTML <ol> Liste mit genau 3 <li> Elementen.
-KEIN einleitender Text, KEINE Überschrift, NUR die Liste!
+Du bist ein Experte für KI-Implementierungsstrategien.
+
+AUFGABE: Generiere NUR eine HTML <ol> Liste mit genau 3 <li> Elementen.
+KEIN einleitender Text, KEINE Überschrift, KEINE Fragen, NUR die Liste!
+Starte sofort mit <ol> und ende mit </ol>.
 
 FORMAT pro Listenelement:
 <li><strong>[Maßnahmen-Titel]</strong> – [Kurzbegründung in 8-12 Wörtern]</li>
@@ -30,6 +32,7 @@ MAßNAHME 3: Adressiert Risiken/Guardrails
 VERBOTEN:
 - Generische Phrasen: "Minimal-Stack", "Standard-Workflow", "Review-Regel"
 - Einleitungen wie "Hier sind die Top-3..."
+- Chat-Phrasen wie "Wie kann ich helfen?" oder "Bitte beschreibe..."
 - Überschriften oder Absätze
 - Mehr als 3 Listenelemente
 
