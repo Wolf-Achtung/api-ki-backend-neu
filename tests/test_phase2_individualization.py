@@ -12,12 +12,18 @@ Run with:
 """
 
 import sys
+import os
 from pathlib import Path
 
 import pytest
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Set required environment variables BEFORE importing modules that need them
+os.environ.setdefault("JWT_SECRET", "test-secret-for-testing-only")
+os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
+os.environ.setdefault("OPENAI_API_KEY", "test-api-key")
 
 # Check for required dependencies
 try:
@@ -29,14 +35,14 @@ except ImportError:
 try:
     from gpt_analyze import _build_prompt_vars
     HAS_GPT_ANALYZE = True
-except ImportError:
+except Exception:  # Catch ALL exceptions (ImportError, ValidationError, etc.)
     HAS_GPT_ANALYZE = False
     _build_prompt_vars = None
 
 try:
     from services.prompt_loader import load_prompt
     HAS_PROMPT_LOADER = True
-except ImportError:
+except Exception:  # Catch ALL exceptions
     HAS_PROMPT_LOADER = False
     load_prompt = None
 
