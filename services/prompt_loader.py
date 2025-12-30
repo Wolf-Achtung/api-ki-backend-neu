@@ -22,7 +22,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
-__all__ = ["load_prompt"]
+__all__ = ["load_prompt", "clear_prompt_cache", "get_prompt_info"]
 
 log = logging.getLogger(__name__)
 
@@ -244,3 +244,124 @@ def load_prompt(section: str, lang: str = "de", vars_dict: Optional[Dict[str, An
              section, requested_lang, used_lang, path)
     payload = _read_file(path)
     return _interpolate(payload, vars_dict)
+
+
+# =============================================================================
+# CACHE MANAGEMENT & DEBUGGING (Sprint G19: Cache-Clear für Deployments)
+# =============================================================================
+
+def clear_prompt_cache() -> Dict[str, Any]:
+    """
+    Clear the manifest LRU cache to force re-reading from disk.
+
+    Call this after deployment or when prompts are updated to ensure
+    fresh content is loaded. Note: The actual prompt files are NOT cached,
+    only the manifest.json files are cached via LRU.
+
+    Returns:
+        Dict with cache clear status and info
+    """
+    try:
+        cache_info_before = _read_manifest.cache_info()
+        _read_manifest.cache_clear()
+        cache_info_after = _read_manifest.cache_info()
+
+        log.info("🔄 [prompt_loader] Manifest cache cleared. Before: %s, After: %s",
+                 cache_info_before, cache_info_after)
+
+        return {
+            "success": True,
+            "message": "Manifest cache cleared successfully",
+            "cache_before": {
+                "hits": cache_info_before.hits,
+                "misses": cache_info_before.misses,
+                "size": cache_info_before.currsize,
+            },
+            "cache_after": {
+                "hits": cache_info_after.hits,
+                "misses": cache_info_after.misses,
+                "size": cache_info_after.currsize,
+            },
+            "note": "Prompt files are read fresh on each request (no LRU cache on file content)"
+        }
+    except Exception as e:
+        log.error("❌ [prompt_loader] Failed to clear cache: %s", e)
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
+def get_prompt_info(section: str, lang: str = "de") -> Dict[str, Any]:
+    """
+    Get debugging info about a prompt without loading its full content.
+
+    Useful for verifying that prompts are being loaded from the correct path
+    and that files exist after deployment.
+
+    Args:
+        section: Prompt section name (e.g., "quick_wins", "roadmap_90d")
+        lang: Language code ("de" or "en")
+
+    Returns:
+        Dict with prompt path, existence, size, and modification time
+    """
+    import os
+    from datetime import datetime
+
+    lang_norm = str(lang).lower().strip()
+    if lang_norm.startswith("en"):
+        lang = "en"
+    else:
+        lang = "de"
+
+    path, used_lang = _resolve_section_path(section, lang)
+
+    info: Dict[str, Any] = {
+        "section": section,
+        "requested_lang": lang,
+        "used_lang": used_lang,
+        "base_dir": str(BASE_DIR),
+        "base_dir_exists": BASE_DIR.exists(),
+    }
+
+    if path:
+        info["path"] = str(path)
+        info["exists"] = path.exists()
+
+        if path.exists():
+            stat = path.stat()
+            info["size_bytes"] = stat.st_size
+            info["modified"] = datetime.fromtimestamp(stat.st_mtime).isoformat()
+
+            # Read first 200 chars to verify content
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    preview = f.read(200)
+                    info["preview"] = preview.replace('\n', ' ')[:150] + "..."
+
+                    # Check for v7.0 marker (Phase 3 hyper-personalization)
+                    if "v7.0" in preview or "PHASE 3" in preview:
+                        info["version_detected"] = "v7.0 (Phase 3)"
+                    elif "v6" in preview:
+                        info["version_detected"] = "v6.x"
+                    else:
+                        info["version_detected"] = "unknown"
+            except Exception as e:
+                info["preview_error"] = str(e)
+    else:
+        info["path"] = None
+        info["exists"] = False
+        info["error"] = f"Prompt '{section}' not found for lang '{lang}'"
+
+    # Cache info
+    cache_info = _read_manifest.cache_info()
+    info["manifest_cache"] = {
+        "hits": cache_info.hits,
+        "misses": cache_info.misses,
+        "size": cache_info.currsize,
+        "maxsize": cache_info.maxsize,
+    }
+
+    log.info("[prompt_loader] get_prompt_info: %s", info)
+    return info
