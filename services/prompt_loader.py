@@ -22,7 +22,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
-__all__ = ["load_prompt", "clear_prompt_cache", "get_prompt_info"]
+__all__ = ["load_prompt", "clear_prompt_cache", "get_prompt_info", "diagnose_prompt_system"]
 
 log = logging.getLogger(__name__)
 
@@ -365,3 +365,131 @@ def get_prompt_info(section: str, lang: str = "de") -> Dict[str, Any]:
 
     log.info("[prompt_loader] get_prompt_info: %s", info)
     return info
+
+
+def diagnose_prompt_system() -> Dict[str, Any]:
+    """
+    Comprehensive diagnostic check for the prompt system.
+
+    Checks:
+    - Environment variables (USE_PROMPT_SYSTEM, ENABLE_LLM_CONTENT)
+    - PromptEnhancer initialization status
+    - Prompt files existence and versions
+    - Potential issues that could cause fallback to legacy prompts
+
+    Returns:
+        Dict with full diagnostic report
+    """
+    import os
+    from datetime import datetime
+
+    report: Dict[str, Any] = {
+        "timestamp": datetime.now().isoformat(),
+        "status": "OK",
+        "issues": [],
+        "recommendations": [],
+    }
+
+    # 1. Check environment variables
+    use_prompt_system = os.getenv("USE_PROMPT_SYSTEM", "1")
+    enable_llm = os.getenv("ENABLE_LLM_CONTENT", "1")
+
+    report["environment"] = {
+        "USE_PROMPT_SYSTEM": use_prompt_system,
+        "USE_PROMPT_SYSTEM_effective": use_prompt_system in ("1", "true", "TRUE", "yes", "YES"),
+        "ENABLE_LLM_CONTENT": enable_llm,
+        "ENABLE_LLM_CONTENT_effective": enable_llm in ("1", "true", "TRUE", "yes", "YES"),
+        "PROMPTS_DEFAULT_LANG": DEFAULT_LANG,
+        "PROMPTS_BASE_DIR": os.getenv("PROMPTS_BASE_DIR", "(not set - using default)"),
+    }
+
+    if use_prompt_system not in ("1", "true", "TRUE", "yes", "YES"):
+        report["issues"].append("USE_PROMPT_SYSTEM is OFF - legacy hardcoded prompts will be used!")
+        report["recommendations"].append("Set USE_PROMPT_SYSTEM=1 in Railway environment")
+        report["status"] = "CRITICAL"
+
+    # 2. Check PromptEnhancer
+    try:
+        from services.prompt_enhancer import PromptEnhancer
+        test_enhancer = PromptEnhancer(data_dir="data")
+        report["prompt_enhancer"] = {
+            "can_import": True,
+            "can_initialize": True,
+        }
+    except Exception as e:
+        report["prompt_enhancer"] = {
+            "can_import": True,
+            "can_initialize": False,
+            "error": str(e),
+        }
+        report["issues"].append(f"PromptEnhancer failed to initialize: {e}")
+        report["status"] = "ERROR"
+
+    # 3. Check BASE_DIR
+    report["base_dir"] = {
+        "path": str(BASE_DIR),
+        "exists": BASE_DIR.exists(),
+    }
+
+    if not BASE_DIR.exists():
+        report["issues"].append(f"BASE_DIR does not exist: {BASE_DIR}")
+        report["status"] = "CRITICAL"
+    else:
+        # List language directories
+        de_dir = BASE_DIR / "de"
+        en_dir = BASE_DIR / "en"
+        report["base_dir"]["de_exists"] = de_dir.exists()
+        report["base_dir"]["en_exists"] = en_dir.exists()
+
+    # 4. Check critical prompt files
+    critical_prompts = [
+        ("quick_wins", "de"),
+        ("quick_wins", "en"),
+        ("roadmap_90d", "de"),
+        ("roadmap_90d", "en"),
+        ("executive_summary", "de"),
+    ]
+
+    prompt_checks = []
+    for section, lang in critical_prompts:
+        info = get_prompt_info(section, lang)
+        check = {
+            "section": section,
+            "lang": lang,
+            "exists": info.get("exists", False),
+            "version": info.get("version_detected", "unknown"),
+            "size_bytes": info.get("size_bytes", 0),
+        }
+
+        if not check["exists"]:
+            report["issues"].append(f"Prompt '{section}' for '{lang}' not found!")
+            if report["status"] == "OK":
+                report["status"] = "WARNING"
+        elif check["version"] != "v7.0 (Phase 3)":
+            report["issues"].append(f"Prompt '{section}' ({lang}) is not v7.0: {check['version']}")
+            if report["status"] == "OK":
+                report["status"] = "WARNING"
+
+        prompt_checks.append(check)
+
+    report["prompt_files"] = prompt_checks
+
+    # 5. Check manifest cache
+    cache_info = _read_manifest.cache_info()
+    report["manifest_cache"] = {
+        "hits": cache_info.hits,
+        "misses": cache_info.misses,
+        "size": cache_info.currsize,
+        "maxsize": cache_info.maxsize,
+    }
+
+    # 6. Summary
+    if not report["issues"]:
+        report["summary"] = "✅ Prompt system is correctly configured. v7.0 prompts should be in use."
+    else:
+        report["summary"] = f"⚠️ {len(report['issues'])} issue(s) found. Check 'issues' and 'recommendations'."
+
+    log.info("[prompt_loader] diagnose_prompt_system: status=%s, issues=%d",
+             report["status"], len(report["issues"]))
+
+    return report
