@@ -2660,6 +2660,7 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     ki_guardrails = briefing.get("ki_guardrails", "")
     strategische_ziele = briefing.get("strategische_ziele", "")
     hauptleistung = briefing.get("hauptleistung", "")
+    ki_projekte = briefing.get("ki_projekte", "")  # PHASE 3: Added for Quick Wins personalization
 
     base_vars.update({
         # Original fields
@@ -2679,6 +2680,10 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "ki_guardrails": ki_guardrails,  # lowercase alias
         "STRATEGISCHE_ZIELE": strategische_ziele,
         "strategische_ziele": strategische_ziele,  # lowercase alias
+
+        # PHASE 3: ki_projekte for Quick Wins personalization
+        "KI_PROJEKTE": ki_projekte,
+        "ki_projekte": ki_projekte,  # lowercase alias
 
         # Ensure HAUPTLEISTUNG is available in both cases
         "hauptleistung": hauptleistung,  # lowercase for Jinja2
