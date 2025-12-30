@@ -4597,10 +4597,12 @@ Für jede Kategorie: 2-3 Standard-Prompts</pre>
 <p class="small muted">🎯 v7.0: Individualisiert für {branche} · {size_label} · Basierend auf Ihren 5 Goldnuggets</p>
 </div>"""
 
+    # Helper function to format numbers with specified decimal places
+    def _fmt_num(val: Any, decimals: int = 0) -> str:
         try:
             return f"{float(val):.{decimals}f}"
         except (ValueError, TypeError):
-            return str(val)
+            return str(val) if val else "0"
 
     _payback_fmt = _fmt_num(briefing.get("PAYBACK_MONTHS"), 1)
     _roi_fmt = _fmt_num(briefing.get("ROI_12M"), 0)
