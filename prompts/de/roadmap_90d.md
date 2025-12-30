@@ -1,6 +1,7 @@
 Developer:
-<!-- PLATIN+++ PROMPT v6.1 - SPRINT INHALTLICHE FINALISIERUNG -->
+<!-- PLATIN+++ PROMPT v7.0 - PHASE 3 HYPER-PERSONALIZATION -->
 <!-- SECTION: roadmap_90d -->
+<!-- PHASE 3: Maximum personalization using ALL 5 Goldnuggets -->
 <!--
 =============================================================================
 PLATIN+++ CONTENT DOD (verbindlich):
@@ -27,7 +28,7 @@ VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE -->
-<!-- INPUT NEW: {{hauptleistung}}, {{ZEITERSPARNIS_PRIORITAET}}, {{KI_GUARDRAILS}}, {{VISION_3_JAHRE}} -->
+<!-- INPUT NEW: {{hauptleistung}}, {{ZEITERSPARNIS_PRIORITAET}}, {{ki_projekte}}, {{KI_GUARDRAILS}}, {{VISION_3_JAHRE}} -->
 <!-- TOKEN-BUDGET: 2800 (solo:0.8x=2240, team:1.0x=2800, kmu:1.15x=3220) -->
 
 <!--
@@ -287,6 +288,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     <li>Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}} messen und mit Ziel abgleichen</li>
     <li>Qualität der {{hauptleistung}}-Ergebnisse bewerten: Fehlerquote, Nacharbeitsaufwand</li>
     <li>Entscheidung: Ausweiten Richtung {{VISION_3_JAHRE}}, Vertiefen oder Stabilisieren?</li>
+    {% if ki_projekte %}<li>Geplantes Projekt <em>{{ki_projekte}}</em> als nächsten Schritt evaluieren</li>{% endif %}
     <li>Nächste Use Cases für Weg zu {{VISION_3_JAHRE}} priorisieren</li>
   </ul>
   <p><strong>Meilenstein:</strong> Klare Entscheidung und priorisierte Liste Richtung {{VISION_3_JAHRE}}.</p>
@@ -411,6 +413,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     <li>Wirkungsmessung bei {{ZEITERSPARNIS_PRIORITAET}}: Zeit, Qualität, Fehlerquote</li>
     <li>Lessons Learned für {{hauptleistung}}-Workflows dokumentieren</li>
     <li>Entscheidung: Stabilisieren / Ausweiten Richtung {{VISION_3_JAHRE}} / Vertiefen</li>
+    {% if ki_projekte %}<li>Geplantes Projekt <em>{{ki_projekte}}</em> als Team-Projekt evaluieren</li>{% endif %}
     <li>Backlog für nächste {{hauptleistung}}-Use Cases priorisieren</li>
   </ul>
   <p><strong>Meilenstein:</strong> Klare Entscheidung Richtung {{VISION_3_JAHRE}}, priorisiertes Backlog.</p>
@@ -526,6 +529,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     <li>Business-Case-Validierung für {{hauptleistung}} anhand Pilotdaten</li>
     <li>Lessons Learned aus {{hauptleistung}}-Pilot zusammenfassen</li>
     <li>Entscheidung: Rollout Richtung {{VISION_3_JAHRE}}? Ja/Nein/Anpassungen?</li>
+    {% if ki_projekte %}<li>Geplantes Projekt <em>{{ki_projekte}}</em> für unternehmensweiten Rollout evaluieren</li>{% endif %}
     <li>Priorisiertes Backlog für {{hauptleistung}}-Skalierung erstellen</li>
     <li>Ressourcenplanung für Weg zu {{VISION_3_JAHRE}} vorbereiten</li>
   </ul>
