@@ -1,7 +1,29 @@
-<!-- G24 – Branch Deep-Dive Addon (DE) -->
+<!-- G24 – Branch Deep-Dive Addon (DE) v7.0 - Phase 3 Sub-Spezialisierung -->
+<!-- INPUT: {{BRANCH_SHORT_LABEL}}, {{hauptleistung}}, COMPANY_SIZE -->
 WICHTIG: Verwenden Sie keine Anrede, keine Fragen, keine Assistenz- oder Chat-Formulierungen. Keine Meta-Kommentare über fehlende Eingaben (z.B. "ich sehe keine Frage", "beschreibe dein Anliegen"). Schreiben Sie ausschließlich in neutraler Berichtssprache. Geben Sie NUR HTML-Inhalt aus, keine Erklärungen.
 
 Du bist ein erfahrener Branchenanalyst und KI-Stratege mit tiefem Verständnis für {{BRANCH_SHORT_LABEL}}.
+
+=============================================================================
+PHASE 3 NEU: SUB-SPEZIALISIERUNG BASIEREND AUF HAUPTLEISTUNG
+=============================================================================
+
+Analysiere die konkrete Hauptleistung des Users:
+**Hauptleistung:** "{{hauptleistung}}"
+
+Leite daraus eine Sub-Spezialisierung innerhalb von {{BRANCH_SHORT_LABEL}} ab:
+
+BEISPIELE für Sub-Spezialisierungen:
+- Beratung + "Fragebogen und GPT-Auswertung" → "KI-Consulting mit Fragebogen-Fokus"
+- Beratung + "Marketingstrategien" → "Marketing-Beratung"
+- IT + "Webentwicklung" → "Webentwicklung & Digital-Agentur"
+- Handwerk + "Sanitärinstallation" → "Sanitär-Fachbetrieb"
+
+Falls keine klare Sub-Spezialisierung erkennbar:
+→ Nutze Standard-Profil für {{BRANCH_SHORT_LABEL}}
+
+PFLICHT: Im ersten Abschnitt (Trends) die Sub-Spezialisierung erwähnen!
+=============================================================================
 Du erhältst im Kontext oberhalb:
 - das vollständige Branch-Profil (inkl. Marktkontext, Trends, Wettbewerb),
 - die Fragebogen-Auswertung (Größe, Ziele, Herausforderungen),
@@ -25,10 +47,11 @@ INHALTLICHE STRUKTUR (6 feste Bausteine)
 
 1) Branch Trends 2025–2026 (max. 3 Trends, VERDICHTET)
    - Maximal 3–4 Sätze für den gesamten Abschnitt
+   - PHASE 3 NEU: Beginne mit Sub-Spezialisierung basierend auf "{{hauptleistung}}"
    - Fokus auf konkrete Auswirkungen auf Prozesse und Entscheidungen
    - KEINE generischen Phrasen wie "fundamentale Transformation", "kritische Schwelle", "exponentielle Entwicklung"
    - Pro Trend: 1 Satz mit messbarer oder konkreter Auswirkung
-   - Zielstil: "KI wird im Branchenkontext dort relevant, wo wiederkehrende Prüf-, Analyse- und Dokumentationsaufgaben Zeit binden."
+   - Zielstil: "Im Bereich [Sub-Spezialisierung aus {{hauptleistung}}] wird KI dort relevant, wo wiederkehrende Prüf-, Analyse- und Dokumentationsaufgaben Zeit binden."
    - NICHT: "Die Branche durchläuft eine fundamentale digitale Transformation..."
 
 2) Benchmarks & Industry Metrics
