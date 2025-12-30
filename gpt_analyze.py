@@ -4885,8 +4885,9 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {min_words} Wörter):
             # Track general prompt failure
             if error_gate:
                 error_gate.add_prompt_failure(section_name, str(e))
-    
+
     # ---------------- Fallback: Legacy-hardcoded Prompts ----------------
+    # v7.0 PHASE 3: Upgraded to hyper-personalization using 5 Goldnuggets
     branche = briefing.get("branche", "Unternehmen")
     hauptleistung = briefing.get("hauptleistung", "")
     unternehmensgroesse = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse") or ""
@@ -4895,6 +4896,9 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {min_words} Wörter):
     ki_projekte = briefing.get("ki_projekte", "")
     vision = briefing.get("vision_3_jahre", "")
     trainings_liste = briefing.get("trainings_interessen", [])
+    # v7.0 PHASE 3: Add missing Goldnuggets
+    zeitersparnis_prioritaet = briefing.get("zeitersparnis_prioritaet", "")
+    ki_guardrails = briefing.get("ki_guardrails", "")
     overall = scores.get("overall", 0)
     governance = scores.get("governance", 0)
     security = scores.get("security", 0)
@@ -4906,18 +4910,54 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {min_words} Wörter):
     )
     tone = "Sprache: neutral, dritte Person; keine Wir/Ich-Formulierungen."
     only_html = "Antworte ausschließlich mit validem HTML (ohne Markdown-Fences)."
+
+    # v7.0 PHASE 3: Enhanced quick_wins prompt with hyper-personalization
+    quick_wins_prompt = f"""Erstelle 4–6 **konkrete Quick Wins** (0–90 Tage) für {context}
+
+🎯 MANDATORY: Quick Win #1 MUSS direkt auf die Zeitersparnis-Priorität eingehen:
+> "{zeitersparnis_prioritaet}"
+
+Jeder Quick Win braucht:
+1. Titel mit konkretem Bezug zu {branche}
+2. WARUM gerade DIESE Maßnahme (Bezug zu Hauptleistung: {hauptleistung})
+3. Copy-Paste-Prompt in <pre class="prompt-template">...</pre>
+4. 3–5 nummerierte Schritte zur Umsetzung
+5. Realistische Ersparnis: X h/Monat
+
+{"Bezug zu geplantem KI-Projekt: " + ki_projekte if ki_projekte else ""}
+{"Beachte diese Leitplanken: " + ki_guardrails if ki_guardrails else ""}
+Trainingsinteressen: {', '.join(trainings_liste) if trainings_liste else 'keine angegeben'}
+
+{tone} {only_html}
+Format pro Quick Win:
+<div class="quick-win">
+  <h4>Quick Win: [Titel]</h4>
+  <p><strong>Warum:</strong> [Bezug zu {hauptleistung}]</p>
+  <pre class="prompt-template">[Copy-Paste Prompt]</pre>
+  <ol><li>Schritt 1</li><li>Schritt 2</li><li>Schritt 3</li></ol>
+  <p><em>Ersparnis: X h/Monat</em></p>
+</div>"""
+
+    # v7.0 PHASE 3: Enhanced roadmap prompt with vision reference
+    roadmap_prompt = f"""Erstelle eine **90-Tage-Roadmap** (0–30 Test; 31–60 Pilot; 61–90 Rollout) für {context}
+
+{"3-Jahres-Vision des Unternehmens: " + vision if vision else ""}
+{"Geplantes KI-Projekt für Phase 3: " + ki_projekte if ki_projekte else ""}
+
+Pro Phase 3–5 konkrete Meilensteine mit Bezug zu:
+- Hauptleistung: {hauptleistung}
+- Zeitersparnis-Fokus: {zeitersparnis_prioritaet if zeitersparnis_prioritaet else 'allgemeine Effizienz'}
+
+{tone} {only_html}
+Format: <h4>Phase 1: Test (Tag 0–30)</h4> + <ul>...</ul>"""
+
     prompts = {
         "executive_summary": f"""Erstelle eine prägnante Executive Summary. {context}
 KI-Ziele: {', '.join(ki_ziele) if ki_ziele else 'nicht definiert'} • Vision: {vision}
 KI-Reifegrad: Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/100 • Nutzen {value}/100 • Befähigung {enablement}/100
 {tone} {only_html} Verwende nur <p>-Absätze.""",
-        "quick_wins": f"""Liste 4–6 **konkrete Quick Wins** (0–90 Tage) für {context}
-Jeder Quick Win: Titel, 1–2 Sätze Nutzen, realistische **Ersparnis: … h/Monat**.
-Bezug: Hauptleistung {hauptleistung}; Projekte: {ki_projekte or 'keine'}; Trainingsinteressen: {', '.join(trainings_liste) if trainings_liste else '—'}.
-{tone} {only_html} Liefere exakt eine <ul>-Liste mit <li>-Einträgen im Format:
-<li><strong>Titel:</strong> Beschreibung. <em>Ersparnis: 5 h/Monat</em></li>""",
-        "roadmap": f"""Erstelle eine **90-Tage-Roadmap** (0–30 Test; 31–60 Pilot; 61–90 Rollout) mit Bezug auf {context}
-{tone} {only_html} Pro Phase 3–5 Meilensteine. Format: <h4>Phase …</h4> + <ul>…</ul>.""",
+        "quick_wins": quick_wins_prompt,
+        "roadmap": roadmap_prompt,
         "roadmap_12m": f"""Erstelle eine **12-Monats-Roadmap** in 3 Phasen (0–3/3–6/6–12) für {context}.
 {tone} {only_html} Format: <div class="roadmap"><div class="roadmap-phase">…</div></div>. """,
         "business_roi": f"""Erstelle eine **ROI & Payback**-Tabelle (Jahr 1) für {context}. {tone} {only_html}
