@@ -4369,75 +4369,234 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     # 🎯 PHASE 2 FIX: QUICK WINS FALLBACK - DYNAMISCH basierend auf Briefing
     # ════════════════════════════════════════════════════════════════════════════
     if section_key == "quick_wins":
-        # Extrahiere individuelle Briefing-Daten
+        # v7.0 PHASE 3: Upgrade fallback to match primary prompt hyper-personalization
+        # Extrahiere ALLE 5 Goldnuggets
         zeitersparnis = briefing.get("zeitersparnis_prioritaet", "")
         ki_projekte = briefing.get("ki_projekte", "")
+        geschaeftsmodell = briefing.get("geschaeftsmodell_evolution", "")
+        ki_guardrails = briefing.get("ki_guardrails", "")
         trainings = briefing.get("trainings_interessen", [])
         score_security = scores.get("security", 50)
         score_governance = scores.get("governance", 50)
 
-        # Dynamische Quick Wins basierend auf hauptleistung und zeitersparnis
+        # v7.0: Dynamische Quick Wins mit hyper-personalization
         qw_items = []
 
-        # Quick Win 1: IMMER basierend auf zeitersparnis_prioritaet
+        # Quick Win 1: MANDATORY - Vollständiges Zitat
         if zeitersparnis:
-            qw_items.append(f"""<li><strong>Prozessoptimierung für "{zeitersparnis[:50]}...":</strong>
-KI-gestützte Automatisierung der zeitintensivsten Aufgabe, die Sie genannt haben.
-Nutzen Sie Claude/GPT für Vorlagen und Standardisierung. <em>Ersparnis: 8-12 h/Monat</em></li>""")
-        else:
-            qw_items.append(f"""<li><strong>Kernprozess-Automatisierung:</strong>
-Identifizieren Sie den zeitintensivsten wiederkehrenden Prozess in "{hauptleistung or branche}"
-und erstellen Sie KI-gestützte Vorlagen. <em>Ersparnis: 8-12 h/Monat</em></li>""")
+            qw_title = f"🎯 {offering_label or 'Workflow'}-Automatisierung für Zeitersparnis"
+            qw_items.append(f"""<div class="quick-win">
+  <h4>{qw_title}</h4>
+  <p><strong>Ihre Priorität:</strong> "{zeitersparnis}"</p>
+  <p><strong>Warum:</strong> Diese Automatisierung adressiert direkt Ihren zeitintensivsten Bereich und schafft sofort Entlastung bei {hauptleistung or branche}.</p>
+  <pre class="prompt-template">Sie sind KI-Berater für {branche}. Aufgabe: Erstellen Sie einen detaillierten Workflow für "{zeitersparnis[:100]}". 
 
-        # Quick Win 2: Basierend auf hauptleistung
+Anforderungen:
+- Identifizieren Sie 3-5 konkrete Teilschritte
+- Für jeden Schritt: Was kann KI übernehmen?
+- Welche manuelle Prüfung bleibt nötig?
+
+Format: Schritt-für-Schritt-Anleitung mit Zeitschätzung pro Schritt.</pre>
+  <p><strong>Umsetzung:</strong></p>
+  <ol>
+    <li>Aktuelle Arbeitsweise dokumentieren (1-2h): Notieren Sie alle Schritte des Prozesses</li>
+    <li>KI-Potenziale identifizieren (2h): Markieren Sie, welche Schritte automatisierbar sind</li>
+    <li>Template erstellen (3-4h): Entwickeln Sie wiederverwendbare Vorlagen mit obigem Prompt</li>
+    <li>Pilotdurchlauf (2h): Testen Sie den Workflow an einem echten Fall</li>
+  </ol>
+  <p><em>Zeitersparnis: 8-12 h/Monat nach Einführung</em></p>
+</div>""")
+        else:
+            qw_items.append(f"""<div class="quick-win">
+  <h4>🎯 Kernprozess-Automatisierung</h4>
+  <p><strong>Warum:</strong> Identifizieren und automatisieren Sie den zeitintensivsten Prozess in {hauptleistung or branche}.</p>
+  <pre class="prompt-template">Analysieren Sie den Prozess "{hauptleistung or branche}" und identifizieren Sie:
+1. Die 3 zeitintensivsten Teilschritte
+2. Welche davon sind wiederholbar und strukturiert?
+3. Vorschlag für KI-gestützte Automatisierung</pre>
+  <p><strong>Umsetzung:</strong></p>
+  <ol>
+    <li>Prozess dokumentieren (2h)</li>
+    <li>Automatisierungspotenzial bewerten (1h)</li>
+    <li>KI-Template entwickeln (3-4h)</li>
+  </ol>
+  <p><em>Zeitersparnis: 8-12 h/Monat</em></p>
+</div>""")
+
+        # Quick Win 2: Basiert auf hauptleistung UND geschaeftsmodell
         if hauptleistung:
-            qw_items.append(f"""<li><strong>KI-Templates für {offering_label or 'Ihre Kernleistung'}:</strong>
-Erstellen Sie strukturierte Vorlagen für "{hauptleistung[:60]}..." mit KI-Unterstützung.
-Standardisierte Outputs bei gleichbleibender Qualität. <em>Ersparnis: 6-10 h/Monat</em></li>""")
-        else:
-            qw_items.append(f"""<li><strong>Dokumenten-Vorlagen standardisieren:</strong>
-Nutzen Sie KI für wiederkehrende Dokumente und Berichte in Ihrem Bereich {branche}.
-<em>Ersparnis: 6-10 h/Monat</em></li>""")
+            context_hint = ""
+            if geschaeftsmodell:
+                context_hint = f" Perspektive: {geschaeftsmodell[:80]}"
+            
+            qw_items.append(f"""<div class="quick-win">
+  <h4>📋 Templates für {offering_label or hauptleistung[:40]}</h4>
+  <p><strong>Ihre Hauptleistung:</strong> {hauptleistung}</p>
+  <p><strong>Warum:</strong> Standardisierte Vorlagen steigern Qualität und Geschwindigkeit.{context_hint}</p>
+  <pre class="prompt-template">Erstellen Sie ein wiederverwendbares Template für "{hauptleistung[:100]}":
 
-        # Quick Win 3: Score-abhängig (Security < 50 = Security Quick Win)
+Struktur:
+- Kernbausteine die immer gleich sind
+- Variable Elemente die angepasst werden
+- Quality-Gates zur Prüfung
+{"- Beachten Sie: " + ki_guardrails[:100] if ki_guardrails else ""}
+
+Ziel: 70% Zeitersparnis bei gleichbleibender Qualität.</pre>
+  <p><strong>Umsetzung:</strong></p>
+  <ol>
+    <li>Gemeinsame Muster analysieren (2h): Vergleichen Sie 3-5 vergangene Projekte</li>
+    <li>Template-Struktur entwickeln (3h): Definieren Sie fixe und variable Teile</li>
+    <li>KI-Integration testen (2-3h): Nutzen Sie Claude/GPT für variable Teile</li>
+    <li>Qualitätskriterien definieren (1h): Checkliste für Ergebnisqualität</li>
+  </ol>
+  <p><em>Zeitersparnis: 6-10 h/Monat</em></p>
+</div>""")
+        else:
+            qw_items.append(f"""<div class="quick-win">
+  <h4>📋 Dokumenten-Templates standardisieren</h4>
+  <p><strong>Warum:</strong> Wiederkehrende Dokumente in {branche} mit KI-Unterstützung beschleunigen.</p>
+  <pre class="prompt-template">Erstellen Sie Templates für die 3 häufigsten Dokumenttypen in Ihrem Bereich.
+Für jeden Typ: Fixe Struktur + KI-generierbare Abschnitte identifizieren.</pre>
+  <p><strong>Umsetzung:</strong></p>
+  <ol>
+    <li>Top-3 Dokumenttypen identifizieren (1h)</li>
+    <li>Template-Struktur je Typ (2-3h)</li>
+    <li>KI-Prompts entwickeln (2h)</li>
+  </ol>
+  <p><em>Zeitersparnis: 6-10 h/Monat</em></p>
+</div>""")
+
+        # Quick Win 3: Score-abhängig ODER ki_projekte
         if score_security < 50:
-            qw_items.append(f"""<li><strong>🔒 KI-Sicherheitsrichtlinie erstellen:</strong>
-Ihr Security-Score liegt bei {score_security}/100 - definieren Sie klare Regeln für den KI-Einsatz:
-Welche Daten dürfen in welche Tools? Erstellen Sie eine einfache Checkliste. <em>Priorität: Hoch</em></li>""")
+            qw_items.append(f"""<div class="quick-win">
+  <h4>🔒 KI-Sicherheitsrichtlinie erstellen</h4>
+  <p><strong>Ihr Security-Score:</strong> {score_security}/100 (Handlungsbedarf!)</p>
+  <p><strong>Warum:</strong> Ohne klare Sicherheitsregeln riskieren Sie Datenschutzverletzungen.</p>
+  <pre class="prompt-template">Erstellen Sie eine kompakte KI-Sicherheitsrichtlinie:
+1. Welche Datentypen dürfen in KI-Tools?
+2. Welche Tools sind für welche Zwecke freigegeben?
+3. Wer prüft KI-Ergebnisse vor Verwendung?
+{"4. Spezielle Leitplanken: " + ki_guardrails if ki_guardrails else ""}</pre>
+  <p><strong>Umsetzung:</strong></p>
+  <ol>
+    <li>Datenklassifikation (1h): Sensible vs. unkritische Daten</li>
+    <li>Tool-Freigabeliste (30min): Welche Tools für welche Zwecke</li>
+    <li>Prüfregeln definieren (30min): Checkliste für KI-Ergebnisse</li>
+  </ol>
+  <p><em>Priorität: Hoch · Zeitaufwand: 2h</em></p>
+</div>""")
         elif score_governance < 50:
-            qw_items.append(f"""<li><strong>📋 KI-Governance Light:</strong>
-Ihr Governance-Score liegt bei {score_governance}/100 - legen Sie fest, wer welche KI-Tools nutzen darf
-und wie Ergebnisse geprüft werden. Einfache Dokumentation reicht. <em>Priorität: Hoch</em></li>""")
+            qw_items.append(f"""<div class="quick-win">
+  <h4>📋 KI-Governance Light einführen</h4>
+  <p><strong>Ihr Governance-Score:</strong> {score_governance}/100 (Verbesserungspotenzial)</p>
+  <p><strong>Warum:</strong> Klare Regeln verhindern Wildwuchs und schaffen Vertrauen.</p>
+  <pre class="prompt-template">Definieren Sie minimale Governance-Regeln:
+1. Wer darf welche KI-Tools nutzen?
+2. Wie werden Ergebnisse dokumentiert?
+3. Wer ist verantwortlich bei Fehlern?</pre>
+  <p><strong>Umsetzung:</strong></p>
+  <ol>
+    <li>Rollen definieren (1h): Wer nutzt KI wofür?</li>
+    <li>Freigabeprozess (1h): Wer prüft kritische Outputs?</li>
+    <li>Dokumentation (30min): Einfaches Template für KI-Nutzung</li>
+  </ol>
+  <p><em>Priorität: Hoch · Zeitaufwand: 2-3h</em></p>
+</div>""")
+        elif ki_projekte:
+            qw_items.append(f"""<div class="quick-win">
+  <h4>🚀 Quick Start für Ihr KI-Projekt</h4>
+  <p><strong>Ihr Projekt:</strong> {ki_projekte[:150]}</p>
+  <p><strong>Warum:</strong> Ihr laufendes Projekt kann sofort von strukturiertem Testing profitieren.</p>
+  <pre class="prompt-template">Für Projekt "{ki_projekte[:100]}":
+1. Definieren Sie 3-5 Testszenarien
+2. Was sind Erfolgskriterien pro Szenario?
+3. Welche manuelle Prüfung bleibt nötig?</pre>
+  <p><strong>Umsetzung:</strong></p>
+  <ol>
+    <li>Testfälle definieren (2h)</li>
+    <li>Pilot durchführen (3-4h)</li>
+    <li>Ergebnisse dokumentieren (1h)</li>
+  </ol>
+  <p><em>Zeitersparnis: 5-8 h/Monat nach Pilot</em></p>
+</div>""")
         else:
-            qw_items.append(f"""<li><strong>Meeting-Protokolle automatisieren:</strong>
-Nutzen Sie Tools wie Otter.ai oder Fathom für automatische Transkription und Zusammenfassung.
-<em>Ersparnis: 4-6 h/Monat</em></li>""")
+            qw_items.append(f"""<div class="quick-win">
+  <h4>📝 Meeting-Protokolle automatisieren</h4>
+  <p><strong>Warum:</strong> Automatische Transkription spart Zeit und verbessert Nachvollziehbarkeit.</p>
+  <pre class="prompt-template">Nach Meeting-Transkript:
+"Fasse folgendes Meeting zusammen:
+- Hauptthemen (3-5 Punkte)
+- Beschlossene Aktionen mit Verantwortlichen
+- Offene Fragen
+Format: Übersichtliche Bullet-Liste"</pre>
+  <p><strong>Umsetzung:</strong></p>
+  <ol>
+    <li>Tool auswählen (30min): z.B. Otter.ai, Fathom</li>
+    <li>Test-Meeting (1h): Erste Aufnahme & KI-Auswertung</li>
+    <li>Template verfeinern (1h): Anpassung an Ihre Bedürfnisse</li>
+  </ol>
+  <p><em>Zeitersparnis: 4-6 h/Monat</em></p>
+</div>""")
 
-        # Quick Win 4: Branchen-/Größen-spezifisch
+        # Quick Win 4: Größenspezifisch
         if size_group == "solo":
-            qw_items.append(f"""<li><strong>Persönliche Prompt-Bibliothek:</strong>
-Sammeln Sie Ihre besten Prompts für wiederkehrende Aufgaben in {branche}.
-10-15 Vorlagen decken 80% Ihres Alltags ab. <em>Ersparnis: 3-5 h/Monat</em></li>""")
+            qw_items.append(f"""<div class="quick-win">
+  <h4>💡 Persönliche Prompt-Bibliothek</h4>
+  <p><strong>Warum:</strong> 10-15 bewährte Prompts decken 80% Ihrer Alltagsaufgaben ab.</p>
+  <pre class="prompt-template">Beispiel-Kategorien:
+- Angebotserstellung für {branche}
+- Kundenkorrespondenz
+- Dokumentation
+- Recherche & Analyse
+Für jede Kategorie: 2-3 Standard-Prompts</pre>
+  <p><strong>Umsetzung:</strong></p>
+  <ol>
+    <li>Häufige Aufgaben identifizieren (1h)</li>
+    <li>Prompts entwickeln & testen (2-3h)</li>
+    <li>Bibliothek anlegen (30min): Notion, Obsidian o.ä.</li>
+  </ol>
+  <p><em>Zeitersparnis: 3-5 h/Monat</em></p>
+</div>""")
         elif size_group == "team":
-            qw_items.append(f"""<li><strong>Team Prompt-Repository:</strong>
-Erstellen Sie ein geteiltes Dokument mit den besten Prompts für Ihr Team.
-Jedes Teammitglied trägt 2-3 bewährte Vorlagen bei. <em>Ersparnis: 5-8 h/Monat</em></li>""")
+            qw_items.append(f"""<div class="quick-win">
+  <h4>👥 Team Prompt-Repository</h4>
+  <p><strong>Warum:</strong> Geteiltes Wissen multipliziert die Produktivität aller Teammitglieder.</p>
+  <pre class="prompt-template">Repository-Struktur:
+- Pro Rolle: Top-5 Prompts
+- Erfolgsbeispiele dokumentieren
+- Verbesserungsvorschläge sammeln</pre>
+  <p><strong>Umsetzung:</strong></p>
+  <ol>
+    <li>Repository anlegen (1h): Shared Notion/Confluence</li>
+    <li>Initiale Befüllung (2h): Jedes Mitglied 2-3 Prompts</li>
+    <li>Wöchentlicher Review (30min/Woche): Neue Prompts testen</li>
+  </ol>
+  <p><em>Zeitersparnis: 5-8 h/Monat pro Person</em></p>
+</div>""")
         else:
-            qw_items.append(f"""<li><strong>KI-Wissenstransfer im Team:</strong>
-Etablieren Sie einen monatlichen "KI-Learnings"-Austausch zwischen Abteilungen.
-Erfolgreiche Anwendungen werden dokumentiert und geteilt. <em>Ersparnis: 10-15 h/Monat</em></li>""")
+            qw_items.append(f"""<div class="quick-win">
+  <h4>🎓 KI-Wissenstransfer etablieren</h4>
+  <p><strong>Warum:</strong> Systematischer Erfahrungsaustausch beschleunigt Lernkurve.</p>
+  <pre class="prompt-template">Monatlicher KI-Learnings-Call:
+- Jede Abteilung: 1 Erfolgsbeispiel
+- Was hat funktioniert? Was nicht?
+- Prompts & Workflows dokumentieren</pre>
+  <p><strong>Umsetzung:</strong></p>
+  <ol>
+    <li>Termin einrichten (30min): Monatlicher 60min-Slot</li>
+    <li>Dokumentation vorbereiten (1h): Template für Learnings</li>
+    <li>Pilotdurchlauf (1h): Erste Session durchführen</li>
+  </ol>
+  <p><em>Zeitersparnis: 10-15 h/Monat unternehmensweit</em></p>
+</div>""")
 
         qw_html = "\n".join(qw_items)
 
-        return f"""<ul>
+        return f"""<div class="quick-wins-section">
 {qw_html}
-</ul>
-<p class="small muted">Individualisiert für {branche} · {size_label} · basierend auf Ihren Angaben</p>"""
+<p class="small muted">🎯 v7.0: Individualisiert für {branche} · {size_label} · Basierend auf Ihren 5 Goldnuggets</p>
+</div>"""
 
-    # SPRINT G2.5: Helper for formatting ROI/Payback values
-    def _fmt_num(val, decimals=1):
-        if val is None or val == "—":
-            return "—"
         try:
             return f"{float(val):.{decimals}f}"
         except (ValueError, TypeError):
