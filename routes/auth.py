@@ -136,25 +136,24 @@ async def request_code(payload: RequestCodeIn, request: Request):
 
     mailer = Mailer.from_settings(s)
     
-    # HTML-E-Mail im Stil der Landingpage (Farben, Claim, Layout angelehnt an index.html)
     # Build minimal login email (deliverability-first)
-      ttl_sec = 600
-      mins = max(1, ttl_sec // 60)
-      subject = "Ihr Anmeldecode"
+    ttl_sec = 600
+    mins = max(1, ttl_sec // 60)
+    subject = "Ihr Anmeldecode"
 
-      text_template = (
-          "Ihr persönlicher Anmeldecode lautet:\n\n"
-          f"{code}\n\n"
-          f"Der Code ist {mins} Minuten gültig.\n\n"
-          "Falls Sie diese Anmeldung nicht angefordert haben, können Sie diese E-Mail ignorieren.\n\n"
-          "Kein Code angekommen?\n"
-          "• Spam- oder Junk-Ordner prüfen\n"
-          "• Code einfach erneut anfordern\n"
-          "• Bei Problemen: support@ki-sicherheit.jetzt\n\n"
-          "Diese E-Mail gehört zum Login-Prozess von ki-sicherheit.jetzt.\n"
-          "Es handelt sich nicht um Werbung.\n\n"
-          "– ki-sicherheit.jetzt\n"
-      )
+    text_template = (
+        "Ihr persönlicher Anmeldecode lautet:\n\n"
+        f"{code}\n\n"
+        f"Der Code ist {mins} Minuten gültig.\n\n"
+        "Falls Sie diese Anmeldung nicht angefordert haben, können Sie diese E-Mail ignorieren.\n\n"
+        "Kein Code angekommen?\n"
+        "• Spam- oder Junk-Ordner prüfen\n"
+        "• Code einfach erneut anfordern\n"
+        "• Bei Problemen: support@ki-sicherheit.jetzt\n\n"
+        "Diese E-Mail gehört zum Login-Prozess von ki-sicherheit.jetzt.\n"
+        "Es handelt sich nicht um Werbung.\n\n"
+        "– ki-sicherheit.jetzt\n"
+    )
 
     try:
         await mailer.send(
