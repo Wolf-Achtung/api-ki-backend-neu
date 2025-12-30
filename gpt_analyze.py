@@ -5124,31 +5124,156 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {min_words} Wörter):
     only_html = "Antworte ausschließlich mit validem HTML (ohne Markdown-Fences)."
 
     # v7.0 PHASE 3: Enhanced quick_wins prompt with hyper-personalization
-    quick_wins_prompt = f"""Erstelle 4–6 **konkrete Quick Wins** (0–90 Tage) für {context}
+    # =========================================================================
+    # UPGRADED TO FULL v7.0 FORMAT - Matches prompts/de/quick_wins.md structure
+    # This is the safety net if PromptEnhancer fails
+    # =========================================================================
 
-🎯 MANDATORY: Quick Win #1 MUSS direkt auf die Zeitersparnis-Priorität eingehen:
-> "{zeitersparnis_prioritaet}"
+    # Determine company size for appropriate number of quick wins
+    size_raw = unternehmensgroesse.lower() if unternehmensgroesse else ""
+    if "solo" in size_raw or "freiberuf" in size_raw or "1" in size_raw:
+        qw_count = "genau 3"
+        size_style = "Persönlich, 'Sie' (direkt). Budget: max 50€/Monat Tools. Keine Team-/Enterprise-Begriffe!"
+    elif "2" in size_raw or "team" in size_raw or "kleines" in size_raw:
+        qw_count = "genau 4"
+        size_style = "'Sie/Ihr Team'. Budget: max 200€/Monat Tools. Kollaboration erwähnen."
+    else:
+        qw_count = "4-5"
+        size_style = "'Ihr Unternehmen/Ihre Teams'. Skalierbare Lösungen. Governance-Aspekte einbauen."
 
-Jeder Quick Win braucht:
-1. Titel mit konkretem Bezug zu {branche}
-2. WARUM gerade DIESE Maßnahme (Bezug zu Hauptleistung: {hauptleistung})
-3. Copy-Paste-Prompt in <pre class="prompt-template">...</pre>
-4. 3–5 nummerierte Schritte zur Umsetzung
-5. Realistische Ersparnis: X h/Monat
+    quick_wins_prompt = f"""Du bist ein Senior-KI-Berater und erstellst **Quick Wins** (sofort umsetzbare Maßnahmen).
 
-{"Bezug zu geplantem KI-Projekt: " + ki_projekte if ki_projekte else ""}
-{"Beachte diese Leitplanken: " + ki_guardrails if ki_guardrails else ""}
-Trainingsinteressen: {', '.join(trainings_liste) if trainings_liste else 'keine angegeben'}
+## KONTEXT
+**Branche:** {branche}
+**Größe:** {unternehmensgroesse}
+**Hauptleistung:** {hauptleistung}
+
+## DIE 5 GOLDNUGGETS (ALLE NUTZEN!)
+
+1. **ZEITERSPARNIS_PRIORITAET** (größter Zeitfresser):
+   "{zeitersparnis_prioritaet}"
+   → Quick Win #1 MUSS dieses Problem lösen!
+
+2. **KI_PROJEKTE** (bereits geplant):
+   {f'"{ki_projekte}"' if ki_projekte else 'Keine geplanten Projekte'}
+   → Quick Win #2 greift dies auf (falls vorhanden)
+
+3. **KI_GUARDRAILS** (TABU):
+   {f'"{ki_guardrails}"' if ki_guardrails else 'Keine speziellen Einschränkungen'}
+   → In ALLEN Prompts beachten!
+
+4. **HAUPTLEISTUNG** (Kerntätigkeit):
+   "{hauptleistung}"
+   → Alle Quick Wins müssen dazu passen
+
+5. **Trainingsinteressen:**
+   {', '.join(trainings_liste) if trainings_liste else 'keine angegeben'}
+
+## ANZAHL UND STIL
+- Erstelle **{qw_count} Quick Wins**
+- Sprache: {size_style}
+
+## PFLICHT-FORMAT FÜR QUICK WIN #1
+
+Quick Win #1 MUSS EXAKT so aufgebaut sein:
+
+<div class="quick-win">
+  <h3>🎯 [Titel bezogen auf die Zeitersparnis-Priorität]</h3>
+
+  <p><strong>Ihr Engpass:</strong></p>
+  <blockquote>"{zeitersparnis_prioritaet}"</blockquote>
+
+  <p><strong>Aktuell:</strong> [Beschreibe den manuellen Prozess, 1-2 Sätze]</p>
+
+  <p><strong>Mit KI:</strong> [Was wird automatisiert, konkret]</p>
+
+  <p><strong>⚡ Copy-Paste-Prompt für [TOOL-NAME]:</strong></p>
+  <pre class="prompt-template">
+[ECHTER funktionierender Prompt, der zu {hauptleistung} und {branche} passt]
+{f"Hinweis: {ki_guardrails}" if ki_guardrails else ""}
+  </pre>
+
+  <p><strong>Setup in [X] Tagen:</strong></p>
+  <ol>
+    <li><strong>[Schritt mit Tool-Name]</strong> ([Zeit], [Kosten])</li>
+    <li><strong>[Schritt]</strong> ([Zeit])</li>
+    <li><strong>[Test/Rollout]</strong> ([Zeit])</li>
+  </ol>
+
+  <p><em>Zeitersparnis: [X]-[Y] h/Monat</em></p>
+</div>
+
+## FORMAT FÜR QUICK WIN #2
+
+{f'''Quick Win #2 MUSS das geplante Projekt aufgreifen:
+
+<div class="quick-win">
+  <h3>🚀 [Titel bezogen auf {ki_projekte[:50] if ki_projekte else "Produktivität"}]</h3>
+
+  <p><strong>Ihr geplantes Projekt:</strong></p>
+  <blockquote>"{ki_projekte}"</blockquote>
+
+  <p><strong>Der schnelle Einstieg:</strong> [Wie KI beim geplanten Projekt hilft]</p>
+
+  <p><strong>⚡ Copy-Paste-Prompt:</strong></p>
+  <pre class="prompt-template">
+[Prompt der zum geplanten Projekt passt]
+  </pre>
+
+  <p><strong>Setup in [X] Tagen:</strong></p>
+  <ol>
+    <li><strong>[Schritt]</strong> ([Zeit])</li>
+    <li><strong>[Schritt]</strong> ([Zeit])</li>
+    <li><strong>[Schritt]</strong> ([Zeit])</li>
+  </ol>
+
+  <p><em>Zeitersparnis: [X]-[Y] h/Monat</em></p>
+</div>''' if ki_projekte else 'Quick Win #2 fokussiert auf Produktivität passend zu ' + (hauptleistung or branche) + '.'}
+
+## FORMAT FÜR WEITERE QUICK WINS
+
+<div class="quick-win">
+  <h3>[Emoji] [Titel]</h3>
+
+  <p><strong>Problem:</strong> [1-2 Sätze, bezogen auf {branche} und {hauptleistung}]</p>
+
+  <p><strong>⚡ Copy-Paste-Prompt:</strong></p>
+  <pre class="prompt-template">
+[Konkreter Prompt]
+  </pre>
+
+  <p><strong>Setup in [X] Tagen:</strong></p>
+  <ol>
+    <li><strong>[Schritt]</strong> ([Zeit])</li>
+    <li><strong>[Schritt]</strong> ([Zeit])</li>
+  </ol>
+
+  <p><em>Zeitersparnis: [X]-[Y] h/Monat</em></p>
+</div>
+
+## PRIORISIERUNG
+{"- Security-Score < 50: Ein Quick Win MUSS Security adressieren (z.B. 'KI-Sicherheitsrichtlinie erstellen')" if security < 50 else ""}
+{"- Governance-Score < 50: Ein Quick Win MUSS Governance adressieren (z.B. 'KI-Governance Light einführen')" if governance < 50 else ""}
+
+## ANTI-PATTERNS (NICHT TUN!)
+❌ "KI-gestützte Automatisierung" ohne konkretes Tool
+❌ "Optimieren Sie Ihre Prozesse" ohne konkreten Prompt
+❌ Abgeschnittene Zitate ("Umsetzung und Programmierung von Pro...")
+❌ Prompts ohne Branchen-Bezug
+❌ Guardrails ignorieren
+
+## QUALITY-CHECK
+- Quick Win #1 zitiert die Zeitersparnis-Priorität WÖRTLICH in <blockquote>?
+- ALLE Quick Wins haben Copy-Paste-Prompts in <pre class="prompt-template">?
+- ALLE Quick Wins haben nummerierte Setup-Schritte in <ol><li>?
+- Tool-Namen sind KONKRET (nicht "KI-Tools")?
+- Jeder Quick Win ist in <div class="quick-win"> gewrappt?
 
 {tone} {only_html}
-Format pro Quick Win:
-<div class="quick-win">
-  <h4>Quick Win: [Titel]</h4>
-  <p><strong>Warum:</strong> [Bezug zu {hauptleistung}]</p>
-  <pre class="prompt-template">[Copy-Paste Prompt]</pre>
-  <ol><li>Schritt 1</li><li>Schritt 2</li><li>Schritt 3</li></ol>
-  <p><em>Ersparnis: X h/Monat</em></p>
-</div>"""
+
+WICHTIG: Generiere NUR HTML. Beginne direkt mit dem ersten <div class="quick-win">.
+Vergiss nicht den Footer am Ende: <p class="small muted">🎯 v7.0: Individualisiert für {branche} · {unternehmensgroesse} · Basierend auf Ihren 5 Goldnuggets</p>
+"""
 
     # v7.0 PHASE 3: Enhanced roadmap prompt with vision reference
     roadmap_prompt = f"""Erstelle eine **90-Tage-Roadmap** (0–30 Test; 31–60 Pilot; 61–90 Rollout) für {context}
