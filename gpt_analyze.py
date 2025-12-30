@@ -6482,6 +6482,18 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
 
         log.info("[%s] ✅ G32 Recommendations Engine generated: %d recommendations, top_3=%s",
                  run_id, len(reco_report.recommendations), reco_report.top_3_ids[:3])
+
+        # Phase 2b: Generate Top-3 HTML for Page 2
+        if reco_report.top_3_recommendations:
+            sections["TOP_3_MASSNAHMEN_HTML"] = _build_top_3_massnahmen_html(
+                reco_report.top_3_recommendations, 
+                lang=report_lang
+            )
+            log.info("[%s] ✅ Phase 2b: Top-3 HTML generated (%d items)",
+                     run_id, len(reco_report.top_3_recommendations))
+        else:
+            sections["TOP_3_MASSNAHMEN_HTML"] = ""
+            log.warning("[%s] ⚠️ Phase 2b: No top-3 recommendations available", run_id)
     except ImportError:
         log.debug("[%s] G32 recommendations_engine not available", run_id)
         sections.setdefault("RECOMMENDATIONS_ENGINE_HTML", "")
@@ -7623,3 +7635,34 @@ def _fix_exec_placeholders(html_block: str, scores: Dict[str, Any], sections: Di
         fixed = fixed.replace(f"{{{tpl}}}", "")       # Einfache {}
 
     return fixed
+def _build_top_3_massnahmen_html(top_3_recommendations: List, lang: str = "de") -> str:
+    """
+    Build simple HTML <ol> list for Top-3 Maßnahmen (Page 2).
+    
+    Args:
+        top_3_recommendations: List of top 3 Recommendation objects
+        lang: Language code
+    
+    Returns:
+        HTML <ol> string with 3 <li> elements
+    """
+    if not top_3_recommendations:
+        return ""
+    
+    html_parts = ['<ol style="margin:0;padding-left:24px;line-height:1.8;">']
+    
+    for rec in top_3_recommendations[:3]:  # Ensure max 3
+        # Shorten reason to ~10 words
+        reason_words = rec.reason.split()[:12]
+        short_reason = " ".join(reason_words)
+        if len(rec.reason.split()) > 12:
+            short_reason += "..."
+        
+        html_parts.append(
+            f'<li style="margin-bottom:8px;">'
+            f'<strong>{rec.title}</strong> – {short_reason}'
+            f'</li>'
+        )
+    
+    html_parts.append('</ol>')
+    return "".join(html_parts)
