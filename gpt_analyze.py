@@ -4810,6 +4810,18 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
     llm = _llm_params_for(section_name)
 
     # Prompt-System verwenden, wenn aktiv und Prompt vorhanden
+    # =========================================================================
+    # v7.0 DEBUG: Log which path is being used for quick_wins
+    # =========================================================================
+    if section_name == "quick_wins":
+        log.warning("=" * 80)
+        log.warning("🔍 QUICK_WINS DEBUG START")
+        log.warning(f"USE_PROMPT_SYSTEM={USE_PROMPT_SYSTEM}")
+        log.warning(f"prompt_key={prompt_key}")
+        log.warning(f"_prompt_enhancer initialized: {bool(_prompt_enhancer)}")
+        log.warning(f"Briefing has zeitersparnis_prioritaet: {bool(briefing.get('zeitersparnis_prioritaet', ''))}")
+        log.warning(f"Briefing has ki_projekte: {bool(briefing.get('ki_projekte', ''))}")
+
     if USE_PROMPT_SYSTEM and prompt_key and _prompt_enhancer:
         try:
             # TEIL 3.1.4.8/3.1.4.9/3.1.4.11: Locale normalization for prompt routing
@@ -4871,6 +4883,16 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
             
             log.info("✅ Using enhanced prompt for %s (with context)", section_name)
 
+            # v7.0 DEBUG: Log prompt details for quick_wins
+            if section_name == "quick_wins":
+                log.warning("🔍 PromptEnhancer path SUCCEEDED for quick_wins")
+                log.warning(f"Prompt length: {len(prompt_text)}")
+                log.warning(f"Prompt starts with: {prompt_text[:300]}...")
+                has_v7_marker = "PLATIN+++ v7.0" in prompt_text
+                has_div_quick_win = '<div class="quick-win">' in prompt_text
+                log.warning(f"Contains 'PLATIN+++ v7.0': {has_v7_marker}")
+                log.warning(f"Contains '<div class=\"quick-win\">': {has_div_quick_win}")
+
             # 4. LLM-Aufruf mit bereits definierten Parametern (llm defined before try block)
             result = _call_llm_for_section(
                 section_key=section_name,
@@ -4881,7 +4903,17 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 model=llm["model"],
             ) or ""
 
-            
+            # v7.0 DEBUG: Log GPT response for quick_wins
+            if section_name == "quick_wins":
+                log.warning(f"🤖 GPT response length: {len(result)}")
+                log.warning(f"Response starts: {result[:500]}...")
+                has_div = '<div class="quick-win">' in result
+                has_blockquote = '<blockquote>' in result
+                has_pre = '<pre class="prompt-template">' in result
+                log.warning(f"Contains div.quick-win: {has_div}")
+                log.warning(f"Contains blockquote: {has_blockquote}")
+                log.warning(f"Contains pre.prompt-template: {has_pre}")
+
             result = _clean_html(result)
             if _needs_repair(result):
                 result = _repair_html(section_name, result)
@@ -5028,12 +5060,22 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {min_words} Wörter):
                     error_gate.increment_fallback()
                 return _get_fallback_content(section_name, briefing, scores)
 
+            # v7.0 DEBUG: Log success end for quick_wins
+            if section_name == "quick_wins":
+                log.warning("✅ QUICK_WINS: PromptEnhancer path completed successfully!")
+                log.warning("🔍 QUICK_WINS DEBUG END")
+                log.warning("=" * 80)
+
             return result
 
         except FileNotFoundError as e:
             log.warning(
                 "⚠️ Prompt file not found for %s: %s - using legacy", prompt_key, e
             )
+            # v7.0 DEBUG: Log exception for quick_wins
+            if section_name == "quick_wins":
+                log.warning("🔍 QUICK_WINS: FileNotFoundError - falling to LEGACY path!")
+                log.warning(f"Exception: {e}")
             # Track prompt failure in error gate
             if error_gate:
                 error_gate.add_prompt_failure(str(prompt_key), f"File not found: {e}")
@@ -5041,12 +5083,23 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {min_words} Wörter):
             log.error(
                 "❌ Error loading/using prompt for %s: %s - using legacy", section_name, e
             )
+            # v7.0 DEBUG: Log exception for quick_wins
+            if section_name == "quick_wins":
+                log.warning("🔍 QUICK_WINS: Exception - falling to LEGACY path!")
+                log.warning(f"Exception type: {type(e).__name__}")
+                log.warning(f"Exception: {e}")
+                import traceback
+                log.warning(f"Traceback: {traceback.format_exc()}")
             # Track general prompt failure
             if error_gate:
                 error_gate.add_prompt_failure(section_name, str(e))
 
     # ---------------- Fallback: Legacy-hardcoded Prompts ----------------
     # v7.0 PHASE 3: Upgraded to hyper-personalization using 5 Goldnuggets
+    # v7.0 DEBUG: Log when legacy path is used
+    if section_name == "quick_wins":
+        log.warning("⚠️  QUICK_WINS: USING LEGACY FALLBACK PROMPTS (lines 5086+)")
+        log.warning("This means PromptEnhancer either failed, returned empty, or wasn't available")
     branche = briefing.get("branche", "Unternehmen")
     hauptleistung = briefing.get("hauptleistung", "")
     unternehmensgroesse = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse") or ""
@@ -5140,6 +5193,12 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
 {tone} {only_html} Gib 4–6 Bullet-Points (<ul>) aus.""",
     }
     
+    # v7.0 DEBUG: Log the legacy prompt being used for quick_wins
+    if section_name == "quick_wins":
+        legacy_prompt = prompts.get(section_name, "")
+        log.warning(f"🔍 LEGACY prompt length: {len(legacy_prompt)}")
+        log.warning(f"LEGACY prompt starts: {legacy_prompt[:300]}...")
+
     out = _call_llm_for_section(
         section_key=section_name,
         prompt=prompts.get(section_name, ""),
@@ -5148,16 +5207,28 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
         max_tokens=llm["max_tokens"],
         model=llm["model"],
     ) or ""
+
+    # v7.0 DEBUG: Log legacy response for quick_wins
+    if section_name == "quick_wins":
+        log.warning(f"🤖 LEGACY GPT response length: {len(out)}")
+        log.warning(f"LEGACY response starts: {out[:500]}...")
+        has_div = '<div class="quick-win">' in out
+        has_blockquote = '<blockquote>' in out
+        log.warning(f"Contains div.quick-win: {has_div}")
+        log.warning(f"Contains blockquote: {has_blockquote}")
+        log.warning("🔍 QUICK_WINS DEBUG END")
+        log.warning("=" * 80)
+
     out = _clean_html(out)
     if _needs_repair(out):
         out = _repair_html(section_name, out)
-    
+
     # 🎯 PLATZHALTER-FIX: Entferne Developer-Wörter die GPT manchmal ausgibt
     if out:
         developer_words = ["Platzhalter", "TODO", "Beispieltext", "Content wird erstellt", "XXX"]
         for word in developer_words:
             out = out.replace(word, "")
-    
+
     # Fallback wenn GPT wirklich gar nichts bringt
     if not out or len(out.strip()) < 50:
         # Track fallback usage in error gate
