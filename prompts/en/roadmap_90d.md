@@ -5,11 +5,18 @@ Developer:
 <!-- SIZE-AWARE: solo/team/sme -->
 <!-- PHASE 3: Maximum personalization using ALL 5 Goldnuggets -->
 <!-- INPUT: {{hauptleistung}}, {{ZEITERSPARNIS_PRIORITAET}}, {{ki_projekte}}, {{KI_GUARDRAILS}}, {{VISION_3_JAHRE}}, {{BRANCHE_LABEL}}, COMPANY_SIZE -->
-<!-- TOKEN-BUDGET: 2000 (solo:0.8x=1600, team:1.0x=2000, sme:1.15x=2300) -->
+<!-- TOKEN-BUDGET: 2800 (solo:0.8x=2240, team:1.0x=2800, sme:1.15x=3220) -->
 <!--
 =============================================================================
 PLATIN+++ v7.0: HYPER-PERSONALIZED 90-DAY ROADMAP (Phase 3 Sprint 1)
 =============================================================================
+
+MINIMUM LENGTH (STRICT - SPRINT G18!):
+- Solo: At least 180–230 words, clearly structured.
+- Team: At least 220–280 words, including change communication.
+- SME: At least 250–300 words, including leadership/stakeholder guidance.
+
+IMPORTANT: Section will be rejected if below minimum!
 
 CRITICAL v7.0 CHANGES:
 1. ALL 5 Goldnuggets (freetext fields) MUST be used
@@ -244,9 +251,27 @@ FORBIDDEN: corporation, division, stakeholders
   </ul>
   {% endif %}
 
+  <h3>Risk Mitigation During Rollout</h3>
+  <p>
+    {% if COMPANY_SIZE == "solo" %}
+    Start with low-criticality tasks to build experience. Always maintain a manual
+    review step for important outputs. Document early error sources to iteratively
+    improve your prompts and refine quality over time.
+    {% elif COMPANY_SIZE == "team" %}
+    Begin with clearly defined pilot tasks within your area. Establish peer reviews
+    as a fixed part of the workflow. Collect feedback systematically and adjust
+    templates based on concrete experiences.
+    {% else %}
+    Limit the initial pilot scope to non-critical processes. Define clear escalation
+    paths for unexpected results. Conduct regular retrospectives and only scale to
+    additional areas after validated quality.
+    {% endif %}
+  </p>
+
+  <!-- SPRINT G18: Narrative Connections -->
   <p class="small muted">
-    This roadmap focuses on your specific bottleneck ({{ZEITERSPARNIS_PRIORITAET}})
-    and builds toward your vision ({{VISION_3_JAHRE}}).
-    Tools and Quick Wins are detailed in their respective sections.
+    Use the <strong>Starter Kit</strong> to technically implement Phase 1 (→ see Starter Kit).
+    This roadmap references Quick Wins (→ see Immediate Measures) and
+    Tools (→ see AI Stack). Details on Change Management → see Organizational Change.
   </p>
 </section>
