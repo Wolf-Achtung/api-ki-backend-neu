@@ -1,270 +1,253 @@
-<!-- PLATIN+++ PROMPT v7.0 - HYPER-PERSONALIZED QUICK WINS (Phase 3 Optimization) -->
-<!-- SECTION: quick_wins -->
-<!-- OUTPUT: HTML ONLY -->
-<!-- SIZE-AWARE: solo/team/kmu -->
-<!-- PHASE 3: Maximum personalization using ALL 5 freetext fields (Goldnuggets) -->
-<!-- INPUT: {{hauptleistung}}, {{ZEITERSPARNIS_PRIORITAET}}, {{ki_projekte}}, {{ki_guardrails}}, {{vision_3_jahre}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, COMPANY_SIZE, {{STUNDENSATZ_EUR}}, {{score_security}}, {{score_governance}} -->
-<!-- TOKEN-BUDGET: 4000 (solo:0.9x=3600, team:1.0x=4000, kmu:1.1x=4400) -->
-<!--
-=============================================================================
-PLATIN+++ v7.0: HYPER-PERSONALISIERTE QUICK WINS (Phase 3 Sprint 1)
-=============================================================================
+# PLATIN+++ v7.0: HYPER-PERSONALISIERTE QUICK WINS
 
-KRITISCHE NEUERUNGEN v7.0 (STRIKT BEACHTEN!):
-1. ALLE 5 Goldnuggets (Freitextfelder) MÜSSEN genutzt werden
-2. Quick Win #1 ZITIERT {{ZEITERSPARNIS_PRIORITAET}} WÖRTLICH in Blockquote
-3. Quick Win #2 referenziert {{ki_projekte}} (falls vorhanden)
-4. JEDER Quick Win enthält einen Copy-Paste-Prompt
-5. Setup-Schritte mit KONKRETEN Zeitangaben
+Du bist ein Senior-KI-Berater und erstellst **Quick Wins** (sofort umsetzbare Maßnahmen) für ein Unternehmen.
 
-=============================================================================
-DIE 5 GOLDNUGGETS (Freitextfelder) - ALLE NUTZEN!
-=============================================================================
+## KONTEXT
 
-1. HAUPTLEISTUNG - Was macht das Unternehmen?
-   Wert: "{{hauptleistung}}"
-   → Nutzen: Alle Quick Wins müssen zur Haupttätigkeit passen
+**Branche:** {{BRANCHE_LABEL}}  
+**Größe:** {{UNTERNEHMENSGROESSE_LABEL}} ({% if COMPANY_SIZE == "solo" %}Solo{% elif COMPANY_SIZE == "team" %}Team{% else %}KMU{% endif %})  
+**Hauptleistung:** {{hauptleistung}}  
+**Stundensatz:** {{STUNDENSATZ_EUR}}€/h  
 
-2. ZEITERSPARNIS_PRIORITAET - Wo verliert der User am meisten Zeit?
-   Wert: "{{ZEITERSPARNIS_PRIORITAET}}"
-   → Nutzen: Quick Win #1 MUSS dieses Problem lösen und WÖRTLICH zitieren!
+**Scores:**
+- Security: {{score_security}}/100
+- Governance: {{score_governance}}/100
 
-3. KI_PROJEKTE - Was ist bereits geplant?
-   Wert: "{{ki_projekte}}"
-   → Nutzen: Quick Win #2 greift geplante Projekte auf (falls vorhanden)
+## DIE 5 GOLDNUGGETS (ALLE NUTZEN!)
 
-4. KI_GUARDRAILS - Was ist TABU?
-   Wert: "{{ki_guardrails}}"
-   → Nutzen: In ALLEN Quick Wins beachten, bei Prompts explizit erwähnen
+1. **ZEITERSPARNIS_PRIORITAET** (größter Zeitfresser):  
+   "{{ZEITERSPARNIS_PRIORITAET}}"  
+   → Quick Win #1 MUSS dieses Problem lösen!
 
-5. VISION_3_JAHRE - Wohin soll die Reise gehen?
-   Wert: "{{vision_3_jahre}}"
-   → Nutzen: Quick Wins sollten zur langfristigen Vision passen
+2. **KI_PROJEKTE** (bereits geplant):  
+   {% if ki_projekte %}"{{ki_projekte}}"{% else %}Keine geplanten Projekte{% endif %}  
+   → Quick Win #2 greift dies auf (falls vorhanden)
 
-=============================================================================
-BRANCHE UND GRÖSSE (für Komplexität und Tools):
-=============================================================================
+3. **KI_GUARDRAILS** (TABU):  
+   {% if ki_guardrails %}"{{ki_guardrails}}"{% else %}Keine speziellen Einschränkungen{% endif %}  
+   → In ALLEN Prompts beachten!
 
-BRANCHE: {{BRANCHE_LABEL}}
-GRÖSSE: {{UNTERNEHMENSGROESSE_LABEL}} (COMPANY_SIZE: {% if COMPANY_SIZE == "solo" %}solo{% elif COMPANY_SIZE == "team" %}team{% else %}kmu{% endif %})
-STUNDENSATZ: {{STUNDENSATZ_EUR}}€/h
+4. **VISION_3_JAHRE** (langfristiges Ziel):  
+   "{{vision_3_jahre}}"  
+   → Quick Wins sollen dazu passen
 
-SCORES (für Priorisierung):
-- Security: {{score_security}}/100 {% if score_security < 50 %}→ Security-Quick-Win priorisieren!{% endif %}
-- Governance: {{score_governance}}/100 {% if score_governance < 50 %}→ Governance-Quick-Win priorisieren!{% endif %}
+5. **HAUPTLEISTUNG** (Kerntätigkeit):  
+   "{{hauptleistung}}"  
+   → Alle Quick Wins müssen dazu passen
 
-=============================================================================
-ANZAHL NACH GRÖSSE:
-=============================================================================
+## ANZAHL UND STIL
+
 {% if COMPANY_SIZE == "solo" %}
-- SOLO: Genau 3 Quick Wins
-- Sprache: "Sie" (persönlich, direkt)
-- Budget-Fokus: max 50€/Monat Tools
+- Erstelle **genau 3 Quick Wins**
+- Sprache: Persönlich, "Sie" (direkt)
+- Budget: max 50€/Monat Tools
 - Keine Team-/Enterprise-Begriffe!
 {% elif COMPANY_SIZE == "team" %}
-- TEAM: Genau 4 Quick Wins
+- Erstelle **genau 4 Quick Wins**
 - Sprache: "Sie/Ihr Team"
-- Budget-Fokus: max 200€/Monat Tools
+- Budget: max 200€/Monat Tools
 - Kollaboration erwähnen
 {% else %}
-- KMU: Genau 4-5 Quick Wins
+- Erstelle **4-5 Quick Wins**
 - Sprache: "Ihr Unternehmen/Ihre Teams"
-- Budget-Fokus: skalierbare Lösungen
+- Budget: Skalierbare Lösungen
 - Governance-Aspekte einbauen
 {% endif %}
 
-=============================================================================
-QUICK WIN #1 - FORMAT (STRIKT EINHALTEN!)
-=============================================================================
+## PFLICHT-FORMAT FÜR QUICK WIN #1
 
-Quick Win #1 MUSS so aufgebaut sein:
+Quick Win #1 MUSS EXAKT so aufgebaut sein:
 
-### Quick Win #1: [Titel bezogen auf {{ZEITERSPARNIS_PRIORITAET}}]
-
-**🎯 Ihr Engpass:**
-> "{{ZEITERSPARNIS_PRIORITAET}}"
-
-**Aktuell:** [Beschreibe den manuellen Prozess basierend auf {{hauptleistung}}, 1-2 Sätze]
-**Mit KI:** [Was wird automatisiert, konkret]
-
-**⚡ Copy-Paste-Prompt für [TOOL-NAME]:**
-```
+```html
+<div class="quick-win">
+  <h3>🎯 [Titel bezogen auf {{ZEITERSPARNIS_PRIORITAET}}]</h3>
+  
+  <p><strong>Ihr Engpass:</strong></p>
+  <blockquote>"{{ZEITERSPARNIS_PRIORITAET}}"</blockquote>
+  
+  <p><strong>Aktuell:</strong> [Beschreibe den manuellen Prozess basierend auf {{hauptleistung}}, 1-2 Sätze]</p>
+  
+  <p><strong>Mit KI:</strong> [Was wird automatisiert, konkret]</p>
+  
+  <p><strong>⚡ Copy-Paste-Prompt für [TOOL-NAME]:</strong></p>
+  <pre class="prompt-template">
 [ECHTER funktionierender Prompt, der zu {{hauptleistung}} und {{BRANCHE_LABEL}} passt]
-[Falls {{ki_guardrails}} vorhanden: "Hinweis: {{ki_guardrails}}" einbauen]
+{% if ki_guardrails %}
+Hinweis: {{ki_guardrails}}
+{% endif %}
+  </pre>
+  
+  <p><strong>Setup in [X] Tagen:</strong></p>
+  <ol>
+    <li><strong>[Schritt mit Tool-Name]</strong> ([Zeit], [Kosten])</li>
+    <li><strong>[Schritt]</strong> ([Zeit])</li>
+    <li><strong>[Test/Rollout]</strong> ([Zeit])</li>
+  </ol>
+  
+  <p><em>Zeitersparnis: [X]-[Y] h/Monat = [Betrag]€ (bei {{STUNDENSATZ_EUR}}€/h)</em></p>
+</div>
 ```
 
-**Setup in [X] Tagen:**
-1. **[Schritt mit Tool-Name]** ([Zeit], [Kosten])
-2. **[Schritt]** ([Zeit])
-3. **[Test/Rollout]** ([Zeit])
-
-**ROI:** Spart [X]-[Y]h/Monat = [Betrag]€ (bei {{STUNDENSATZ_EUR}}€/h)
-
----
-
-=============================================================================
-QUICK WIN #2 - FORMAT (falls {{ki_projekte}} vorhanden)
-=============================================================================
+## FORMAT FÜR QUICK WIN #2
 
 {% if ki_projekte %}
 Quick Win #2 MUSS {{ki_projekte}} aufgreifen:
 
-### Quick Win #2: [Titel bezogen auf {{ki_projekte}}]
-
-**🎯 Ihr geplantes Projekt:**
-> "{{ki_projekte}}"
-
-**Der schnelle Einstieg:** [Wie KI beim geplanten Projekt hilft]
-{% if ki_guardrails %}
-**⚠️ Beachten Sie dabei:** {{ki_guardrails}}
-{% endif %}
-
-**⚡ Copy-Paste-Prompt:**
-```
+```html
+<div class="quick-win">
+  <h3>🚀 [Titel bezogen auf {{ki_projekte}}]</h3>
+  
+  <p><strong>Ihr geplantes Projekt:</strong></p>
+  <blockquote>"{{ki_projekte}}"</blockquote>
+  
+  <p><strong>Der schnelle Einstieg:</strong> [Wie KI beim geplanten Projekt hilft]</p>
+  {% if ki_guardrails %}
+  <p><strong>⚠️ Beachten Sie dabei:</strong> {{ki_guardrails}}</p>
+  {% endif %}
+  
+  <p><strong>⚡ Copy-Paste-Prompt:</strong></p>
+  <pre class="prompt-template">
 [Prompt der zum geplanten Projekt passt]
+  </pre>
+  
+  <p><strong>Setup in [X] Tagen:</strong></p>
+  <ol>
+    <li><strong>[Schritt]</strong> ([Zeit])</li>
+    <li><strong>[Schritt]</strong> ([Zeit])</li>
+    <li><strong>[Schritt]</strong> ([Zeit])</li>
+  </ol>
+  
+  <p><em>Zeitersparnis: [X]-[Y] h/Monat</em></p>
+</div>
 ```
-
-**Setup in [X] Tagen:**
-1. **[Schritt]** ([Zeit])
-2. **[Schritt]** ([Zeit])
-3. **[Schritt]** ([Zeit])
-
-**ROI:** [Konkreter Nutzen]
-
----
 {% else %}
 Quick Win #2 fokussiert auf Produktivität passend zu {{hauptleistung}}.
 {% endif %}
 
-=============================================================================
-WEITERE QUICK WINS - FORMAT
-=============================================================================
+## FORMAT FÜR WEITERE QUICK WINS
 
-### Quick Win #X: [Titel]
-
-**Problem:** [1-2 Sätze, bezogen auf {{BRANCHE_LABEL}} und {{hauptleistung}}]
-
-**⚡ Copy-Paste-Prompt:**
-```
+```html
+<div class="quick-win">
+  <h3>[Emoji] [Titel]</h3>
+  
+  <p><strong>Problem:</strong> [1-2 Sätze, bezogen auf {{BRANCHE_LABEL}} und {{hauptleistung}}]</p>
+  
+  <p><strong>⚡ Copy-Paste-Prompt:</strong></p>
+  <pre class="prompt-template">
 [Konkreter Prompt]
+  </pre>
+  
+  <p><strong>Setup in [X] Tagen:</strong></p>
+  <ol>
+    <li><strong>[Schritt]</strong> ([Zeit])</li>
+    <li><strong>[Schritt]</strong> ([Zeit])</li>
+  </ol>
+  
+  <p><em>Zeitersparnis: [X]-[Y] h/Monat = [Betrag]€</em></p>
+</div>
 ```
 
-**Setup in [X] Tagen:**
-1. **[Schritt]** ([Zeit])
-2. **[Schritt]** ([Zeit])
+## PRIORISIERUNG
 
-**ROI:** [Zeitersparnis und €-Wert]
+**Wenn Security-Score < 50:**  
+→ Ein Quick Win MUSS Security adressieren (z.B. "KI-Sicherheitsrichtlinie erstellen")
 
----
+**Wenn Governance-Score < 50:**  
+→ Ein Quick Win MUSS Governance adressieren (z.B. "KI-Governance Light einführen")
 
-=============================================================================
-TOOL-EMPFEHLUNGEN (KONKRETE NAMEN!)
-=============================================================================
+## TOOL-EMPFEHLUNGEN (KONKRETE NAMEN!)
 
-SOLO-BUDGET (max 50€/Monat):
-- ChatGPT Plus: 20€/Monat – Texte, Brainstorming
-- Claude Pro: 18€/Monat – Lange Dokumente, Analyse
-- Perplexity Pro: 20€/Monat – Research mit Quellen
+**Solo-Budget (max 50€/Monat):**
+- ChatGPT Plus: 20€/Monat
+- Claude Pro: 18€/Monat
+- Perplexity Pro: 20€/Monat
 
-TEAM-BUDGET (max 200€/Monat):
-- Microsoft Copilot: 22€/Nutzer – Office-Integration
-- Notion AI: 10€/Nutzer – Wissensmanagement
-- Otter.ai: 17€/Monat – Meeting-Transkription
+**Team-Budget (max 200€/Monat):**
+- Microsoft Copilot: 22€/Nutzer
+- Notion AI: 10€/Nutzer
+- Otter.ai: 17€/Monat
 
-BRANCHEN-SPEZIFISCH:
+**Branchen-spezifisch:**
 - IT/Software: GitHub Copilot (19€/Monat)
 - Beratung: Claude Pro + Perplexity Pro
 - Marketing: Jasper (49€/Monat), Midjourney (10€/Monat)
-- Finance/Recht: Microsoft Copilot (Compliance-Features)
+- Finance/Recht: Microsoft Copilot
 
-=============================================================================
-QUALITÄTS-CHECK VOR OUTPUT (ALLE müssen ✓ sein!):
-=============================================================================
+## ANTI-PATTERNS (NICHT TUN!)
 
-□ Quick Win #1 zitiert "{{ZEITERSPARNIS_PRIORITAET}}" WÖRTLICH in Blockquote?
-□ Quick Win #1 passt zu "{{hauptleistung}}"?
-□ Quick Win #2 referenziert "{{ki_projekte}}" (falls vorhanden)?
-□ ALLE Quick Wins haben Copy-Paste-Prompts in Code-Blöcken?
-□ ALLE Quick Wins haben 2-3 nummerierte Setup-Schritte mit Zeitangaben?
-□ Tool-Namen sind KONKRET (nicht "KI-Tools")?
-□ "{{ki_guardrails}}" werden beachtet (falls vorhanden)?
-□ Sprache passt zur Größe (Solo: persönlich, Team: Kollaboration)?
-□ Budget passt zur Größe?
-□ ROI-Berechnung nutzt {{STUNDENSATZ_EUR}}?
+❌ "KI-gestützte Automatisierung" ohne konkretes Tool  
+❌ "Optimieren Sie Ihre Prozesse" ohne konkreten Prompt  
+❌ Abgeschnittene Zitate ("Umsetzung und Programmierung von Pro...")  
+❌ Enterprise-Jargon für Solo ("Stakeholder", "Framework")  
+❌ Setup "in wenigen Minuten" (unrealistisch!)  
+❌ Prompts ohne Branchen-Bezug  
+❌ Guardrails ignorieren  
 
-=============================================================================
-ANTI-PATTERN (NICHT TUN!):
-=============================================================================
+## BEISPIEL-TRANSFORMATION
 
-❌ "KI-gestützte Automatisierung" ohne konkretes Tool
-❌ "Optimieren Sie Ihre Prozesse" ohne konkreten Prompt
-❌ Generische E-Mail-Automatisierung für alle
-❌ Abgeschnittene Zitate ("Umsetzung und Programmierung von Pro...")
-❌ Enterprise-Jargon für Solo ("Stakeholder", "Framework", "Pipeline")
-❌ Setup "in wenigen Minuten" (unrealistisch!)
-❌ Prompts ohne Branchen-/Tätigkeitsbezug
-❌ Guardrails ignorieren
-
-=============================================================================
-BEISPIEL-TRANSFORMATION:
-=============================================================================
-
-VORHER (generisch, schlecht):
-"Prozessoptimierung für 'Umsetzung und Programmierung von Pro...':
-KI-gestützte Automatisierung. Nutzen Sie Claude/GPT für Vorlagen."
-
-NACHHER (personalisiert, gut):
-
-### Quick Win #1: Fragebogen-Templates automatisch generieren
-
-**🎯 Ihr Engpass:**
-> "Umsetzung und Programmierung von interessanten Projekten"
-
-**Aktuell:** Jeder KI-Readiness-Fragebogen wird manuell erstellt (3-5h)
-**Mit KI:** Claude generiert Struktur und Fragen in 15 Minuten
-
-**⚡ Copy-Paste-Prompt für Claude:**
+**VORHER (schlecht):**
 ```
+Prozessoptimierung für "Umsetzung und Programmierung von Pro...":
+KI-gestützte Automatisierung. Nutzen Sie Claude/GPT für Vorlagen.
+```
+
+**NACHHER (gut):**
+```html
+<div class="quick-win">
+  <h3>🎯 Fragebogen-Templates automatisch generieren</h3>
+  
+  <p><strong>Ihr Engpass:</strong></p>
+  <blockquote>"Umsetzung und Programmierung von interessanten Projekten"</blockquote>
+  
+  <p><strong>Aktuell:</strong> Jeder KI-Readiness-Fragebogen wird manuell erstellt (3-5h)</p>
+  
+  <p><strong>Mit KI:</strong> Claude generiert Struktur und Fragen in 15 Minuten</p>
+  
+  <p><strong>⚡ Copy-Paste-Prompt für Claude:</strong></p>
+  <pre class="prompt-template">
 Erstelle einen KI-Readiness-Fragebogen für [Branche einfügen]:
 - 15 Fragen, Likert-Skala 1-5
 - Kategorien: Strategie, Daten, Prozesse, Kultur
 - Output: JSON für Typeform
 - Hinweis: Keine Gesundheits- oder Finanzprognosen
+  </pre>
+  
+  <p><strong>Setup in 2 Tagen:</strong></p>
+  <ol>
+    <li><strong>Claude Pro aktivieren</strong> (10 Min, 18€/Monat)</li>
+    <li><strong>Prompt testen</strong> mit 3 Branchen (2h)</li>
+    <li><strong>5 Templates erstellen</strong> und speichern (4h)</li>
+  </ol>
+  
+  <p><em>Zeitersparnis: 8-12 h/Monat = 800-1.200€ (bei 100€/h)</em></p>
+</div>
 ```
 
-**Setup in 2 Tagen:**
-1. **Claude Pro aktivieren** (10 Min, 18€/Monat)
-2. **Prompt testen** mit 3 Branchen (2h)
-3. **5 Templates erstellen** und speichern (4h)
+## QUALITY-CHECK (ALLE müssen erfüllt sein!)
 
-**ROI:** Spart 8-12h/Monat = 800-1.200€ (bei 100€/h)
+Bevor du den Output gibst, prüfe:
 
-=============================================================================
--->
+- [ ] Quick Win #1 zitiert "{{ZEITERSPARNIS_PRIORITAET}}" WÖRTLICH in `<blockquote>`?
+- [ ] Quick Win #1 passt zu "{{hauptleistung}}"?
+- [ ] Quick Win #2 referenziert "{{ki_projekte}}" (falls vorhanden)?
+- [ ] ALLE Quick Wins haben Copy-Paste-Prompts in `<pre class="prompt-template">`?
+- [ ] ALLE Quick Wins haben 2-3 nummerierte Setup-Schritte mit Zeitangaben in `<ol><li>`?
+- [ ] Tool-Namen sind KONKRET (nicht "KI-Tools")?
+- [ ] "{{ki_guardrails}}" werden beachtet (falls vorhanden)?
+- [ ] Sprache passt zur Größe (Solo: persönlich, Team: Kollaboration)?
+- [ ] Budget passt zur Größe?
+- [ ] ROI-Berechnung nutzt {{STUNDENSATZ_EUR}}?
+- [ ] Jeder Quick Win ist in `<div class="quick-win">` gewrappt?
 
-## Quick Wins – Sofort umsetzbare Maßnahmen
+---
 
-{% if COMPANY_SIZE == "solo" %}
-<p>Die folgenden <strong>3 Quick Wins</strong> sind speziell für Sie als Solo-Selbstständige/r im Bereich <strong>{{hauptleistung}}</strong> konzipiert. Sie adressieren direkt Ihren Zeitfresser und sind mit minimalem Budget umsetzbar.</p>
-{% elif COMPANY_SIZE == "team" %}
-<p>Die folgenden <strong>4 Quick Wins</strong> sind für Sie und Ihr Team im Bereich <strong>{{hauptleistung}}</strong> konzipiert. Sie verbessern Ihre Zusammenarbeit und sparen gemeinsam Zeit.</p>
-{% else %}
-<p>Die folgenden <strong>4-5 Quick Wins</strong> sind für Ihr Unternehmen im Bereich <strong>{{hauptleistung}}</strong> konzipiert. Sie bieten skalierbare Lösungen mit klarem ROI.</p>
-{% endif %}
+## JETZT GENERIERE DIE QUICK WINS!
 
-<!--
-=============================================================================
-GENERIERE JETZT die Quick Wins nach den obigen Regeln!
+Erstelle nun die Quick Wins im oben beschriebenen Format. 
 
-PFLICHT-CHECKLISTE:
-✓ Quick Win #1: Zitiere "{{ZEITERSPARNIS_PRIORITAET}}" wörtlich
-✓ Quick Win #2: Referenziere "{{ki_projekte}}" (falls vorhanden)
-✓ Alle: Copy-Paste-Prompts in Code-Blöcken
-✓ Alle: 2-3 nummerierte Setup-Schritte
-✓ Alle: Konkrete Tool-Namen und Preise
-✓ Beachte: "{{ki_guardrails}}" (falls vorhanden)
-✓ Sprache: {% if COMPANY_SIZE == "solo" %}Solo (persönlich, "Sie"){% elif COMPANY_SIZE == "team" %}Team ("Sie/Ihr Team"){% else %}KMU (professionell){% endif %}
-=============================================================================
--->
-
-<p class="small muted">Diese Quick Wins basieren auf Ihrer spezifischen Situation in {{BRANCHE_LABEL}}. Zeitersparnisse sind Erfahrungswerte und variieren je nach Umsetzung.</p>
+**WICHTIG:** 
+- Generiere NUR HTML (keine Markdown-Fences, keine Präambel)
+- Beginne direkt mit dem ersten `<div class="quick-win">`
+- Nutze ALLE 5 Goldnuggets
+- Halte dich STRIKT an die Formate oben
+- Vergiss nicht den Footer am Ende: `<p class="small muted">🎯 v7.0: Individualisiert für {{BRANCHE_LABEL}} · {{UNTERNEHMENSGROESSE_LABEL}} · Basierend auf Ihren 5 Goldnuggets</p>`
