@@ -3079,48 +3079,96 @@
                 </div>
                 <!-- END PAGE 1 -->
 
-                <!-- PAGE 2: EXECUTIVE DECISION                     -->
+                                <!-- PAGE 2: EXECUTIVE DECISION                     -->
                 <!-- ============================================== -->
-                <div class="exec-decision-page">
-                    <div class="exec-decision-header">
-                        <h2>{{ ui("exec_decision_title", "Entscheidung & Fokus") }}</h2>
+                <div class="exec-decision-page" style="padding: var(--space-xl) var(--space-lg);">
+                    
+                    <!-- Header -->
+                    <div style="margin-bottom: var(--space-xl);">
+                        <h2 style="font-size: 28px; font-weight: 600; margin: 0 0 var(--space-sm) 0;">
+                            {{ ui("exec_decision_title", "Entscheidung & Fokus") }}
+                        </h2>
                     </div>
 
-                    <!-- FINAL-CHECK: Short intro with 2-3 decisions -->
-                    {% if FINAL_CHECK_INTRO %}
-                    <div class="exec-final-check">
-                        <h3>Final-Check</h3>
-                        <p>{{ FINAL_CHECK_INTRO }}</p>
+                    <!-- Quick Summary Box -->
+                    <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-left: 4px solid var(--color-primary); padding: var(--space-lg); border-radius: 8px; margin-bottom: var(--space-xl);">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg);">
+                            <div>
+                                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: var(--space-xs);">
+                                    Ihr KI-Reifegrad
+                                </div>
+                                <div style="font-size: 24px; font-weight: 600; color: var(--color-text-normal);">
+                                    {{ score_gesamt }}/100 - {{ score_rating }}
+                                </div>
+                            </div>
+                            <div>
+                                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: var(--space-xs);">
+                                    Erwarteter ROI
+                                </div>
+                                <div style="font-size: 24px; font-weight: 600; color: var(--color-text-normal);">
+                                    {{ (ROI_12M or 0) | round(0) | int }}% nach 12 Monaten
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FINAL CHECK with prominent actions -->
+                    {% if FINAL_CHECK_INTRO or FINAL_CHECK_DECISIONS %}
+                    <div style="background: var(--color-primary); color: white; padding: var(--space-lg); border-radius: 12px; margin-bottom: var(--space-xl);">
+                        <h3 style="font-size: 20px; font-weight: 600; margin: 0 0 var(--space-md) 0; display: flex; align-items: center; gap: var(--space-sm);">
+                            <span style="font-size: 24px;">🚀</span>
+                            Final-Check
+                        </h3>
+                        {% if FINAL_CHECK_INTRO %}
+                        <p style="margin: 0 0 var(--space-md) 0; opacity: 0.95;">{{ FINAL_CHECK_INTRO }}</p>
+                        {% endif %}
                         {% if FINAL_CHECK_DECISIONS %}
-                        <ul>
+                        <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
                             {% for decision in FINAL_CHECK_DECISIONS %}
-                            <li>{{ decision }}</li>
+                            <div style="display: flex; align-items: start; gap: var(--space-sm); background: rgba(255,255,255,0.1); padding: var(--space-sm) var(--space-md); border-radius: 6px;">
+                                <span style="font-weight: 600;">•</span>
+                                <span>{{ decision }}</span>
+                            </div>
                             {% endfor %}
-                        </ul>
+                        </div>
                         {% endif %}
                     </div>
                     {% endif %}
 
-                    <!-- TOP-3 MUSS-MAßNAHMEN: Condensed, 1-2 lines each -->
-                    <div class="exec-top3">
-                        <h3>{{ ui("top3_title", "Top-3 MUSS-Maßnahmen") }}</h3>
-                        {{ TOP_3_MASSNAHMEN_HTML | safe }}
+                    <!-- TOP-3 MUSS-MAßNAHMEN with color coding -->
+                    <div style="margin-bottom: var(--space-xl);">
+                        <h3 style="font-size: 20px; font-weight: 600; margin: 0 0 var(--space-md) 0; display: flex; align-items: center; gap: var(--space-sm);">
+                            <span style="font-size: 24px;">⚠️</span>
+                            {{ ui("top3_title", "Top-3 MUSS-Maßnahmen") }}
+                        </h3>
+                        <div style="font-size: 13px; color: var(--color-text-muted); margin-bottom: var(--space-md);">
+                            Diese Risiken wurden als hoch/kritisch eingestuft und erfordern sofortige Aufmerksamkeit.
+                        </div>
+                        <div class="top3-measures-enhanced">
+                            {{ TOP_3_MASSNAHMEN_HTML | safe }}
+                        </div>
                     </div>
-                    <!-- Executive Decision Blocks (if available) -->
+
+                    <!-- Executive Decision Blocks -->
                     {% if EXECUTIVE_DECISION_HTML and EXECUTIVE_DECISION_HTML|trim and '<' in EXECUTIVE_DECISION_HTML %}
-                    <div class="exec-summary" style="margin-top: var(--space-md); padding: var(--space-md); background: var(--color-bg-surface); border-radius: var(--radius-tag);">
+                    <div style="background: var(--color-bg-subtle); border: 1px solid var(--color-border); border-radius: 8px; padding: var(--space-lg); margin-bottom: var(--space-lg);">
+                        <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 var(--space-md) 0;">
+                            Strategische Empfehlungen
+                        </h3>
                         {{ EXECUTIVE_DECISION_HTML|safe }}
                     </div>
                     {% endif %}
 
-                    <!-- HOW TO CONTINUE -->
-                    <div class="exec-continue">
-                        {{ ui("exec_continue", "Details und Begründungen folgen ab Seite 4 – je nach Informationsbedarf.") }}
+                    <!-- Continue Note -->
+                    <div style="text-align: center; padding: var(--space-lg); background: var(--color-bg-subtle); border-radius: 8px;">
+                        <p style="margin: 0; font-size: 13px; color: var(--color-text-muted);">
+                            {{ ui("exec_continue", "Details und Begründungen folgen ab Seite 4 – je nach Informationsbedarf.") }}
+                        </p>
                     </div>
+
                 </div>
                 <!-- END PAGE 2 -->
 
-                <!-- ============================================== -->
                 <!-- PAGE 3: EXECUTIVE TOC                          -->
                 <!-- ============================================== -->
                 <div class="exec-toc-page">
