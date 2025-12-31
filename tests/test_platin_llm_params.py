@@ -63,7 +63,7 @@ class TestPlatinCriticalSections:
             "recommendations": 2500,
             "roadmap_12m": 2800,
             "roadmap_90d": 2800,  # G17.R: Increased from 2200 for Booster sections
-            "quick_wins": 1800,
+            "quick_wins": 3500,  # v7.0: increased for structured boxes, blockquotes, prompts
             "gamechanger": 3000,
             "unternehmensprofil_markt": 3000,
             "transparency_box": 1500,
