@@ -2923,29 +2923,22 @@
             <div class="content-inner">
 
                 <!-- ============================================== -->
-                                <!-- PAGE 1: EXECUTIVE ORIENTATION (MINIMAL)        -->
+                                                <!-- PAGE 1: EXECUTIVE ORIENTATION (MINIMAL)        -->
                 <!-- ============================================== -->
-                <div class="exec-orientation" style="display: flex; flex-direction: column; min-height: 100vh; padding: var(--space-xl) 0;">
+                <div class="exec-orientation" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; min-height: 100vh; padding: var(--space-xl) 0;">
                     
-                    <!-- COMPACT HEADER: Logo + Report ID only -->
-                    <header class="header" style="background: transparent; border: none; padding: 0 0 var(--space-lg) 0;">
-                        <div class="header-main" style="display: flex; justify-content: space-between; align-items: center;">
-                            <div class="logo-row-main" style="display: flex; align-items: center; gap: var(--space-md);">
-                                <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt Logo" class="logo-ki" style="height: 32px;">
-                                <img src="tuev-logo-transparent.webp" alt="TÜV Austria" class="logo-tuev" style="height: 28px;">
-                            </div>
-                            <div class="small muted">Report-ID: {{ report_id }}</div>
-                        </div>
-                    </header>
-
-                    <!-- HERO SECTION: Centered, prominent -->
-                    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: var(--space-xl) 0;">
+                    <!-- HERO SECTION: Fully centered, integrated -->
+                    <div style="max-width: 800px; width: 100%;">
                         
+                        <!-- Eyebrow + Report ID: Small, integrated -->
+                        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: var(--space-md);">
+                            KI-Status-Report · {{ report_date }}
+                            <span class="muted" style="margin: 0 8px;">·</span>
+                            Report-ID: {{ report_id }}
+                        </div>
+
                         <!-- Title & Company -->
                         <div style="margin-bottom: var(--space-xl);">
-                            <div class="eyebrow" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: var(--space-sm);">
-                                KI-Status-Report · {{ report_date }}
-                            </div>
                             <h1 style="font-size: 32px; font-weight: 600; margin: 0 0 var(--space-sm) 0; color: var(--color-text-normal);">
                                 KI-Readiness Report
                             </h1>
@@ -2976,8 +2969,13 @@
                             </div>
                         </div>
 
+                        <!-- MAIN LOGO: Large, centered under score -->
+                        <div style="margin-bottom: var(--space-xl);">
+                            <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt" style="height: 48px; max-width: 300px;">
+                        </div>
+
                         <!-- 4 DIMENSION SCORES: Horizontal cards -->
-                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-md); max-width: 800px; margin-bottom: var(--space-xl);">
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-md); margin-bottom: var(--space-xl);">
                             <div style="background: var(--color-bg-subtle); border: 1px solid var(--color-border); border-radius: 8px; padding: var(--space-md); text-align: center;">
                                 <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: var(--space-xs);">
                                     Governance
@@ -3017,7 +3015,7 @@
                         </div>
 
                         <!-- 3 KPI ROW: Large, prominent -->
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-lg); max-width: 800px; margin-bottom: var(--space-lg);">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-lg); margin-bottom: var(--space-xl);">
                             <div style="text-align: center;">
                                 <div style="font-size: 36px; font-weight: 600; color: var(--color-text-normal); margin-bottom: var(--space-xs);">
                                     {{ monatsersparnis_stunden or qw_hours_total }} <span style="font-size: 20px; font-weight: 400;">Std.</span>
@@ -3051,6 +3049,14 @@
                                     DSGVO-konforme Empfehlung
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- AUTHOR CREDENTIALS: TÜV Badge -->
+                        <div style="display: flex; align-items: center; justify-content: center; gap: var(--space-sm); padding: var(--space-md); background: var(--color-bg-subtle); border-radius: 8px; margin-bottom: var(--space-lg);">
+                            <img src="tuev-logo-transparent.webp" alt="TÜV Austria" style="height: 24px; opacity: 0.7;">
+                            <span style="font-size: 12px; color: var(--color-text-muted);">
+                                Erstellt von: <strong style="color: var(--color-text-normal);">TÜV-zertifizierter KI-Manager</strong>
+                            </span>
                         </div>
 
                         <!-- TRUST BADGES: Small, at bottom -->
