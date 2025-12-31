@@ -984,14 +984,13 @@ def is_text_section(section_name: str) -> bool:
     name_lower = section_name.lower()
 
     # Sections that ALLOW tables and complex HTML (including h3/h4)
-        complex_html_sections = {
+    complex_html_sections = {
         'ai_act_table', 'ai_act_compliance_table',
         'business_case', 'business_case_visual',
         'financial_summary', 'kpi_table',
         'tool_comparison', 'benchmark_table',
         # v7.0: Quick Wins needs h3/h4 for structured boxes
         'quick_wins', 'quick_wins_html', 'quick_wins_html_left', 'quick_wins_html_right',
-    }
     }
 
     if any(exc in name_lower for exc in complex_html_sections):
