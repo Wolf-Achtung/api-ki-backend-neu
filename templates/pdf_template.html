@@ -3377,112 +3377,128 @@
                 <!-- FULL REPORT BEGINS                             -->
                 <!-- ============================================== -->
 
-                <!-- STRATEGISCHER KONTEXT & LEITPLANKEN -->
+                                <!-- STRATEGISCHER KONTEXT & LEITPLANKEN -->
                 {% if strategische_ziele or zeitersparnis_prioritaet or hauptleistung or ki_projekte or geschaeftsmodell_evolution or vision_3_jahre or ki_guardrails %}
-                <section class="section chapter">
-                    <div class="section-header">
-                        <div class="section-title">
-                            <span class="section-kicker">Kontext</span>
-                            <h2>Strategischer Kontext &amp; Leitplanken</h2>
+                <section class="section chapter" style="padding: var(--space-xl) var(--space-lg);">
+                    
+                    <!-- Header -->
+                    <div style="margin-bottom: var(--space-xl);">
+                        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: var(--space-xs);">
+                            Kontext
                         </div>
-                        <span class="section-pill">
-                            <span class="pill-dot"></span>
+                        <h2 style="font-size: 28px; font-weight: 600; margin: 0 0 var(--space-xs) 0;">
+                            Strategischer Kontext &amp; Leitplanken
+                        </h2>
+                        <p style="font-size: 14px; color: var(--color-text-muted); margin: 0;">
                             Ihre strategischen Vorgaben
-                        </span>
+                        </p>
                     </div>
-                    <div class="section-body">
-                        <div class="grid-2">
-                            {% if strategische_ziele %}
-                            <div class="card card-goal">
-                                <h4 class="context-card-title">
-                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <circle cx="8" cy="8" r="6" stroke="#3B82F6" stroke-width="1.5" fill="rgba(59,130,246,0.1)"/>
-                                        <circle cx="8" cy="8" r="2.5" fill="#1E3A8A"/>
-                                    </svg>
+
+                    <!-- Context Cards Grid -->
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-lg); margin-bottom: var(--space-xl);">
+                        
+                        {% if strategische_ziele %}
+                        <div style="background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: var(--space-lg);">
+                            <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-md);">
+                                <span style="font-size: 24px;">🎯</span>
+                                <h4 style="font-size: 14px; font-weight: 600; margin: 0;">
                                     Strategische Prioritäten
                                 </h4>
-                                <p>{{ strategische_ziele }}</p>
                             </div>
-                            {% endif %}
+                            <p style="margin: 0; font-size: 13px; line-height: 1.6; color: var(--color-text-muted);">
+                                {{ strategische_ziele }}
+                            </p>
+                        </div>
+                        {% endif %}
 
-                            {% if zeitersparnis_prioritaet %}
-                            <div class="card card-process">
-                                <h4 class="context-card-title">
-                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M8 2L14 13H2L8 2Z" stroke="#3B82F6" stroke-width="1.5" fill="rgba(30,58,138,0.1)"/>
-                                    </svg>
+                        {% if zeitersparnis_prioritaet %}
+                        <div style="background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%); border-left: 4px solid #ef4444; padding: var(--space-lg); border-radius: 8px;">
+                            <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-md);">
+                                <span style="font-size: 24px;">⏰</span>
+                                <h4 style="font-size: 14px; font-weight: 600; margin: 0; color: #dc2626;">
                                     Zeitersparnis-Priorität
                                 </h4>
-                                <p>{{ zeitersparnis_prioritaet }}</p>
                             </div>
-                            {% endif %}
+                            <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #6b7280;">
+                                {{ zeitersparnis_prioritaet }}
+                            </p>
+                        </div>
+                        {% endif %}
 
-                            {% if hauptleistung %}
-                            <div class="card card-process">
-                                <h4 class="context-card-title">
-                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M8 1L14.5 4.75V11.25L8 15L1.5 11.25V4.75L8 1Z" stroke="#3B82F6" stroke-width="1.5" fill="rgba(30,58,138,0.1)"/>
-                                    </svg>
+                        {% if hauptleistung %}
+                        <div style="background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: var(--space-lg);">
+                            <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-md);">
+                                <span style="font-size: 24px;">💼</span>
+                                <h4 style="font-size: 14px; font-weight: 600; margin: 0;">
                                     Hauptleistung
                                 </h4>
-                                <p>{{ hauptleistung }}</p>
                             </div>
-                            {% endif %}
+                            <p style="margin: 0; font-size: 13px; line-height: 1.6; color: var(--color-text-muted);">
+                                {{ hauptleistung }}
+                            </p>
+                        </div>
+                        {% endif %}
 
-                            {% if ki_projekte %}
-                            <div class="card card-model">
-                                <h4 class="context-card-title">
-                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <circle cx="8" cy="8" r="2" fill="#1E3A8A"/>
-                                        <circle cx="3" cy="4" r="1.5" fill="#93C5FD"/>
-                                        <circle cx="13" cy="4" r="1.5" fill="#93C5FD"/>
-                                        <circle cx="3" cy="12" r="1.5" fill="#93C5FD"/>
-                                        <circle cx="13" cy="12" r="1.5" fill="#93C5FD"/>
-                                        <line x1="8" y1="8" x2="3" y2="4" stroke="#3B82F6" stroke-width="1"/>
-                                        <line x1="8" y1="8" x2="13" y2="4" stroke="#3B82F6" stroke-width="1"/>
-                                        <line x1="8" y1="8" x2="3" y2="12" stroke="#3B82F6" stroke-width="1"/>
-                                        <line x1="8" y1="8" x2="13" y2="12" stroke="#3B82F6" stroke-width="1"/>
-                                    </svg>
+                        {% if ki_projekte %}
+                        <div style="background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: var(--space-lg);">
+                            <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-md);">
+                                <span style="font-size: 24px;">✨</span>
+                                <h4 style="font-size: 14px; font-weight: 600; margin: 0;">
                                     Laufende/geplante KI-Projekte
                                 </h4>
-                                <p>{{ ki_projekte }}</p>
                             </div>
-                            {% endif %}
+                            <p style="margin: 0; font-size: 13px; line-height: 1.6; color: var(--color-text-muted);">
+                                {{ ki_projekte }}
+                            </p>
+                        </div>
+                        {% endif %}
 
-                            {% if geschaeftsmodell_evolution %}
-                            <div class="card card-model">
-                                <h4 class="context-card-title">
-                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <rect x="3" y="3" width="10" height="10" rx="1" stroke="#3B82F6" stroke-width="1.5" fill="rgba(147,197,253,0.15)" transform="rotate(0 8 8)"/>
-                                        <rect x="5.5" y="5.5" width="5" height="5" rx="0.5" fill="#1E3A8A"/>
-                                    </svg>
+                        {% if geschaeftsmodell_evolution %}
+                        <div style="background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: var(--space-lg);">
+                            <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-md);">
+                                <span style="font-size: 24px;">📈</span>
+                                <h4 style="font-size: 14px; font-weight: 600; margin: 0;">
                                     Geschäftsmodell-Evolution
                                 </h4>
-                                <p>{{ geschaeftsmodell_evolution }}</p>
                             </div>
-                            {% endif %}
+                            <p style="margin: 0; font-size: 13px; line-height: 1.6; color: var(--color-text-muted);">
+                                {{ geschaeftsmodell_evolution }}
+                            </p>
+                        </div>
+                        {% endif %}
 
-                            {% if vision_3_jahre %}
-                            <div class="card card-vision">
-                                <h4 class="context-card-title">
-                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M1 10C3 6 5 12 8 8C11 4 13 10 15 6" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-                                        <circle cx="15" cy="6" r="1.5" fill="#1E3A8A"/>
-                                    </svg>
+                        {% if vision_3_jahre %}
+                        <div style="background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: var(--space-lg);">
+                            <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-md);">
+                                <span style="font-size: 24px;">🔮</span>
+                                <h4 style="font-size: 14px; font-weight: 600; margin: 0;">
                                     3-Jahres-Vision
                                 </h4>
-                                <p>{{ vision_3_jahre }}</p>
                             </div>
-                            {% endif %}
-                        </div>
-
-                        {% if ki_guardrails %}
-                        <div class="callout callout-guardrails">
-                            <h4>⚠️ Guardrails / No-Gos</h4>
-                            <p>{{ ki_guardrails }}</p>
+                            <p style="margin: 0; font-size: 13px; line-height: 1.6; color: var(--color-text-muted);">
+                                {{ vision_3_jahre }}
+                            </p>
                         </div>
                         {% endif %}
                     </div>
+
+                    <!-- Guardrails: Prominent red box -->
+                    {% if ki_guardrails %}
+                    <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 2px solid #dc2626; border-radius: 12px; padding: var(--space-xl); margin-bottom: var(--space-lg);">
+                        <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-md);">
+                            <div style="background: #dc2626; border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <span style="font-size: 28px;">⚠️</span>
+                            </div>
+                            <h4 style="font-size: 18px; font-weight: 600; margin: 0; color: #dc2626;">
+                                Guardrails / No-Gos
+                            </h4>
+                        </div>
+                        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #6b7280;">
+                            {{ ki_guardrails }}
+                        </p>
+                    </div>
+                    {% endif %}
+
                 </section>
                 {% endif %}
 
