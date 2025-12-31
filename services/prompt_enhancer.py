@@ -1093,9 +1093,9 @@ PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
         "frequency_penalty": 0.1,
         "min_words": 320,  # G17.R: Base 320 → Solo 256 (0.8x), Team 320 (1.0x), KMU 368 (1.15x)
     },
-    # Quick Wins: kompakt (4 Quick Wins)
+    # Quick Wins: v7.0 format needs more tokens for structured boxes, blockquotes, prompts
     "quick_wins": {
-        "max_tokens": 1800,  # Kompakt: ~100 Wörter je nach Größe
+        "max_tokens": 3500,  # v7.0: strukturierte Boxen, Blockquotes, Copy-Paste-Prompts
         "temperature": 0.3,
         "presence_penalty": 0.1,
         "frequency_penalty": 0.1,
