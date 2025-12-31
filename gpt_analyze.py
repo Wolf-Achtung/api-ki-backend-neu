@@ -5622,7 +5622,14 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     if _needs_repair(qw_html):
         qw_html = _repair_html("quick_wins", qw_html)
 
-    left, right = _split_li_list_to_columns(qw_html)
+    # v7.0: Detect structured format and skip column split
+    if '<div class="quick-win">' in qw_html:
+        # v7.0: Use full HTML without column split
+        left = qw_html
+        right = ""
+    else:
+        # v6.0: Use column split for bullet lists
+        left, right = _split_li_list_to_columns(qw_html)
     sections["QUICK_WINS_HTML_LEFT"] = left
     sections["QUICK_WINS_HTML_RIGHT"] = right
     sections["QUICK_WINS_HTML"] = (
