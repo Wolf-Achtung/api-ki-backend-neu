@@ -256,10 +256,10 @@ jobs:
                   if field not in config:
                       errors.append(f'{section}: Missing field {field}')
 
-              # Validate max_tokens (PDF-SLIMDOWN v2.0: varied limits 1500-3200)
+              # Validate max_tokens (FIX 178969e: extended range to prevent truncation)
               max_tokens = config.get('max_tokens', 0)
-              if not 1500 <= max_tokens <= 3500:
-                  errors.append(f"{section}: max_tokens {max_tokens} not in range [1500, 3500]")
+              if not 1500 <= max_tokens <= 5000:
+                  errors.append(f"{section}: max_tokens {max_tokens} not in range [1500, 5000]")
 
               # Validate temperature range
               temp = config.get('temperature', 0)
