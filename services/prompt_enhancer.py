@@ -1067,18 +1067,18 @@ PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
         "frequency_penalty": 0.0,
         "min_words": 600,  # Reduziert von 800
     },
-    # Recommendations: deutlich reduziert (5 Empfehlungen, je 80-100 Wörter)
+    # Recommendations: erhöht um Truncation zu vermeiden
     "recommendations": {
-        "max_tokens": 2500,  # Reduziert von 4096 (-39%)
+        "max_tokens": 4000,  # FIX: Erhöht von 2500 um Truncation zu vermeiden
         "temperature": 0.4,
         "presence_penalty": 0.1,  # Leichte Penalty gegen Wiederholungen
         "frequency_penalty": 0.1,
         "min_words": 400,  # Reduziert von 800
     },
-    # Roadmap 12m: PDF-SLIMDOWN v2.0 token budget
+    # Roadmap 12m: Erhöht um Truncation zu vermeiden
     # Sprint N min_words enforced via report_validator.py (size-aware: 500/600/700)
     "roadmap_12m": {
-        "max_tokens": 2800,  # PDF-SLIMDOWN v2.0 value
+        "max_tokens": 4000,  # FIX: Erhöht von 2800 um Truncation zu vermeiden
         "temperature": 0.4,
         "presence_penalty": 0.1,
         "frequency_penalty": 0.1,
@@ -1087,7 +1087,7 @@ PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
     # Roadmap 90d: Sprint G17.R - Roadmap-Booster (extended with KPI + Change sections)
     # Size-aware min_words: Solo 250, Team 320, KMU 350 (after multipliers)
     "roadmap_90d": {
-        "max_tokens": 2800,  # G17.R: Increased for booster sections
+        "max_tokens": 4000,  # FIX: Erhöht von 2800 um Truncation zu vermeiden
         "temperature": 0.4,
         "presence_penalty": 0.1,
         "frequency_penalty": 0.1,
@@ -1095,7 +1095,7 @@ PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
     },
     # Quick Wins: v7.0 format needs more tokens for structured boxes, blockquotes, prompts
     "quick_wins": {
-        "max_tokens": 3500,  # v7.0: strukturierte Boxen, Blockquotes, Copy-Paste-Prompts
+        "max_tokens": 4500,  # FIX: Erhöht von 3500 um Truncation zu vermeiden
         "temperature": 0.3,
         "presence_penalty": 0.1,
         "frequency_penalty": 0.1,
@@ -1777,13 +1777,19 @@ Nutze den Strategischen Kontext wie folgt:
             size_perspective_en = "as an SME/company"
 
         if lang == "en":
+            # FIX: Ensure labels are not empty
+            branch_label_safe = branch_label or "Your Industry"
+            offering_label_safe = offering_label or "Your Core Services"
+            context_label_safe = context_label or "Your Business"
+
             instructions = f"""
 ## Anti-Redundancy: Use Short Labels (Sprint G4)
 
-**Use ONLY these short labels for context references:**
-- **Branch Focus:** {branch_label}
-- **Core Offering:** {offering_label}
-- **Context Tag:** {context_label}
+**IMPORTANT: The following labels are for reference only - do NOT output them literally!**
+**Use natural language with these concepts instead:**
+- Industry: {branch_label_safe}
+- Service Area: {offering_label_safe}
+- Context: {context_label_safe}
 """
             if regulatory_label:
                 instructions += f"- **Compliance:** {regulatory_label}\n"
@@ -1812,13 +1818,19 @@ Nutze den Strategischen Kontext wie folgt:
 
 """
         else:
+            # FIX: Sicherstellen dass Labels nicht leer sind
+            branch_label_safe = branch_label or "Ihr Fachbereich"
+            offering_label_safe = offering_label or "Ihre Kernleistung"
+            context_label_safe = context_label or "Ihr Geschäftsbereich"
+
             instructions = f"""
 ## Anti-Redundanz: Kurzlabels verwenden (Sprint G4)
 
-**Verwende ausschließlich diese Kurzlabels für Kontextbezüge:**
-- **Branchen-Fokus:** {branch_label}
-- **Hauptleistung:** {offering_label}
-- **Kontext-Tag:** {context_label}
+**WICHTIG: Die folgenden Labels dienen nur als Referenz - gib sie NICHT wortwörtlich im Output aus!**
+**Nutze stattdessen natürliche Formulierungen mit diesen Begriffen:**
+- Branche: {branch_label_safe}
+- Leistungsbereich: {offering_label_safe}
+- Kontext: {context_label_safe}
 """
             if regulatory_label:
                 instructions += f"- **Compliance:** {regulatory_label}\n"
