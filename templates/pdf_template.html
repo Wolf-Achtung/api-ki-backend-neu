@@ -2912,6 +2912,500 @@
             page-break-before: always;
             break-before: page;
         }
+
+        /* ============================================
+           DESIGN-OPTIMIERUNG: WHITESPACE & SPACING
+           ============================================ */
+
+        /* Seiten-Padding erhöhen */
+        .page-enhanced, .pdf-page-enhanced {
+            padding: 50pt 55pt;
+        }
+
+        /* Sektions-Abstände erweitert */
+        .section-enhanced, .report-section-enhanced {
+            margin-bottom: 2.5rem;
+        }
+
+        /* Absatz-Abstände optimiert */
+        .content-enhanced p {
+            margin-bottom: 0.875rem;
+            line-height: 1.65;
+        }
+
+        .content-enhanced p + p {
+            margin-top: 0.75rem;
+        }
+
+        /* Überschriften-Abstände optimiert */
+        .content-enhanced h1 {
+            margin-bottom: 1.5rem;
+        }
+
+        .content-enhanced h2 {
+            margin-top: 2.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .content-enhanced h3 {
+            margin-top: 1.75rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Listen-Abstände erweitert */
+        .content-enhanced ul, .content-enhanced ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .content-enhanced li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+
+        .content-enhanced li:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Zwischen Hauptsektionen mehr Platz */
+        .section-enhanced + .section-enhanced {
+            margin-top: 3rem;
+        }
+
+        /* Content-Blöcke */
+        .content-block-enhanced {
+            margin-bottom: 1.5rem;
+        }
+
+        /* ============================================
+           DESIGN-OPTIMIERUNG: MODERNE TABELLEN
+           ============================================ */
+
+        .table-modern {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            margin: 1.5rem 0;
+            font-size: 10pt;
+        }
+
+        .table-modern thead {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        }
+
+        .table-modern th {
+            color: white;
+            font-weight: 600;
+            font-size: 9pt;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 14px 18px;
+            text-align: left;
+            border: none;
+        }
+
+        .table-modern th:first-child {
+            border-top-left-radius: 10px;
+        }
+
+        .table-modern th:last-child {
+            border-top-right-radius: 10px;
+        }
+
+        .table-modern td {
+            padding: 14px 18px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+            background: white;
+        }
+
+        .table-modern tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table-modern tbody tr:last-child td:first-child {
+            border-bottom-left-radius: 10px;
+        }
+
+        .table-modern tbody tr:last-child td:last-child {
+            border-bottom-right-radius: 10px;
+        }
+
+        .table-modern tbody tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        /* Status-Badges für Tabellen */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 8pt;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .badge-high, .badge-hoch {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-medium, .badge-mittel {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-low, .badge-niedrig {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-phase1 {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-phase2 {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-phase3 {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+
+        /* ============================================
+           DESIGN-OPTIMIERUNG: INFO-BOXEN / CALLOUTS
+           ============================================ */
+
+        .callout-modern {
+            display: flex;
+            gap: 14px;
+            padding: 18px 22px;
+            border-radius: 10px;
+            margin: 1.25rem 0;
+            border-left: 4px solid;
+        }
+
+        .callout-modern .callout-icon {
+            flex-shrink: 0;
+            font-size: 20px;
+            line-height: 1.4;
+        }
+
+        .callout-modern .callout-content {
+            flex: 1;
+        }
+
+        .callout-modern .callout-title {
+            font-weight: 600;
+            font-size: 11pt;
+            margin-bottom: 4px;
+        }
+
+        .callout-modern .callout-text {
+            font-size: 10pt;
+            line-height: 1.5;
+            color: #475569;
+        }
+
+        /* Info (Blau) */
+        .callout-info {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-color: #3b82f6;
+        }
+        .callout-info .callout-icon { color: #2563eb; }
+        .callout-info .callout-title { color: #1e40af; }
+
+        /* Erfolg (Grün) */
+        .callout-success {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-color: #22c55e;
+        }
+        .callout-success .callout-icon { color: #16a34a; }
+        .callout-success .callout-title { color: #166534; }
+
+        /* Warnung (Orange/Gelb) */
+        .callout-warning {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border-color: #f59e0b;
+        }
+        .callout-warning .callout-icon { color: #d97706; }
+        .callout-warning .callout-title { color: #92400e; }
+
+        /* Kritisch (Rot) */
+        .callout-danger {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-color: #ef4444;
+        }
+        .callout-danger .callout-icon { color: #dc2626; }
+        .callout-danger .callout-title { color: #991b1b; }
+
+        /* Highlight (Blau voll) - für Top-Empfehlungen */
+        .callout-highlight {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            border-color: #1e3a8a;
+            color: white;
+        }
+        .callout-highlight .callout-icon { color: #93c5fd; }
+        .callout-highlight .callout-title { color: white; }
+        .callout-highlight .callout-text { color: #e0e7ff; }
+
+        /* ============================================
+           DESIGN-OPTIMIERUNG: DIMENSION CARDS
+           ============================================ */
+
+        .dimensions-grid-modern {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .dimension-card-modern {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+
+        .dimension-card-modern .dimension-label {
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .dimension-card-modern .dimension-score {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .dimension-card-modern .dimension-bar {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .dimension-card-modern .dimension-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        /* Farbcodierung für Dimension Cards */
+        .dimension-card-modern[data-level="excellent"] .dimension-score { color: #16a34a; }
+        .dimension-card-modern[data-level="excellent"] .dimension-bar-fill { background: #22c55e; }
+
+        .dimension-card-modern[data-level="good"] .dimension-score { color: #65a30d; }
+        .dimension-card-modern[data-level="good"] .dimension-bar-fill { background: #84cc16; }
+
+        .dimension-card-modern[data-level="medium"] .dimension-score { color: #ca8a04; }
+        .dimension-card-modern[data-level="medium"] .dimension-bar-fill { background: #eab308; }
+
+        .dimension-card-modern[data-level="low"] .dimension-score { color: #dc2626; }
+        .dimension-card-modern[data-level="low"] .dimension-bar-fill { background: #ef4444; }
+
+        /* ============================================
+           DESIGN-OPTIMIERUNG: HERO SCORE RING
+           ============================================ */
+
+        .hero-score-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3rem;
+            margin: 2rem 0;
+        }
+
+        .hero-score-ring {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            flex-shrink: 0;
+        }
+
+        .hero-score-ring svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .hero-score-ring .ring-background {
+            fill: none;
+            stroke: #e2e8f0;
+            stroke-width: 14;
+        }
+
+        .hero-score-ring .ring-progress {
+            fill: none;
+            stroke-width: 14;
+            stroke-linecap: round;
+        }
+
+        /* Farbcodierung nach Score */
+        .hero-score-ring[data-level="excellent"] .ring-progress {
+            stroke: #22c55e; /* Grün: 80-100 */
+        }
+        .hero-score-ring[data-level="good"] .ring-progress {
+            stroke: #84cc16; /* Hellgrün: 65-79 */
+        }
+        .hero-score-ring[data-level="medium"] .ring-progress {
+            stroke: #eab308; /* Gelb: 50-64 */
+        }
+        .hero-score-ring[data-level="low"] .ring-progress {
+            stroke: #f97316; /* Orange: 30-49 */
+        }
+        .hero-score-ring[data-level="critical"] .ring-progress {
+            stroke: #ef4444; /* Rot: 0-29 */
+        }
+
+        .hero-score-ring .score-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .hero-score-ring .score-number {
+            font-size: 52px;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-score-ring .score-max {
+            font-size: 18px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .hero-score-ring .score-label {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        /* ============================================
+           DESIGN-OPTIMIERUNG: ROADMAP TIMELINE
+           ============================================ */
+
+        .roadmap-timeline-modern {
+            display: flex;
+            position: relative;
+            margin: 2.5rem 0;
+            padding: 0 20px;
+        }
+
+        /* Verbindungslinie */
+        .roadmap-timeline-modern::before {
+            content: '';
+            position: absolute;
+            top: 28px;
+            left: 100px;
+            right: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6 0%, #22c55e 50%, #8b5cf6 100%);
+            border-radius: 2px;
+        }
+
+        .roadmap-timeline-modern .phase {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            padding-top: 60px;
+        }
+
+        /* Phase-Marker (Kreis auf der Linie) */
+        .roadmap-timeline-modern .phase-marker {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 28px;
+            height: 28px;
+            background: white;
+            border: 4px solid #3b82f6;
+            border-radius: 50%;
+            z-index: 2;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .roadmap-timeline-modern .phase:nth-child(1) .phase-marker { border-color: #3b82f6; }
+        .roadmap-timeline-modern .phase:nth-child(2) .phase-marker { border-color: #22c55e; }
+        .roadmap-timeline-modern .phase:nth-child(3) .phase-marker { border-color: #8b5cf6; }
+
+        /* Aktive Phase */
+        .roadmap-timeline-modern .phase.active .phase-marker {
+            background: #3b82f6;
+        }
+        .roadmap-timeline-modern .phase:nth-child(2).active .phase-marker { background: #22c55e; }
+        .roadmap-timeline-modern .phase:nth-child(3).active .phase-marker { background: #8b5cf6; }
+
+        .roadmap-timeline-modern .phase-header {
+            margin-bottom: 1rem;
+        }
+
+        .roadmap-timeline-modern .phase-title {
+            font-size: 12pt;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 6px;
+        }
+
+        .roadmap-timeline-modern .phase-duration {
+            display: inline-block;
+            font-size: 9pt;
+            color: white;
+            padding: 3px 12px;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+
+        .roadmap-timeline-modern .phase:nth-child(1) .phase-duration { background: #3b82f6; }
+        .roadmap-timeline-modern .phase:nth-child(2) .phase-duration { background: #22c55e; }
+        .roadmap-timeline-modern .phase:nth-child(3) .phase-duration { background: #8b5cf6; }
+
+        .roadmap-timeline-modern .phase-content {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 16px;
+            margin: 0 10px;
+            text-align: left;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            min-height: 180px;
+        }
+
+        .roadmap-timeline-modern .phase-content ul {
+            margin: 0;
+            padding-left: 18px;
+            font-size: 9pt;
+        }
+
+        .roadmap-timeline-modern .phase-content li {
+            margin-bottom: 8px;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .roadmap-timeline-modern .phase-content li:last-child {
+            margin-bottom: 0;
+        }
     </style>
 </head>
 <body>
@@ -2952,16 +3446,22 @@
                             </p>
                         </div>
 
-                        <!-- HERO SCORE: Very large, centered -->
+                        <!-- HERO SCORE RING: Visual progress ring with color coding -->
                         <div style="margin-bottom: var(--space-xl);">
-                            <div style="font-size: 72px; font-weight: 700; line-height: 1; color: var(--color-primary); margin-bottom: var(--space-xs);">
-                                {{ score_gesamt }}
-                                <span style="font-size: 36px; font-weight: 400; color: var(--color-text-muted);">/100</span>
+                            {% set score_level = 'excellent' if (score_gesamt|int) >= 80 else 'good' if (score_gesamt|int) >= 65 else 'medium' if (score_gesamt|int) >= 50 else 'low' if (score_gesamt|int) >= 30 else 'critical' %}
+                            <div class="hero-score-ring" data-level="{{ score_level }}">
+                                <svg viewBox="0 0 100 100">
+                                    <circle class="ring-background" cx="50" cy="50" r="40"/>
+                                    <circle class="ring-progress" cx="50" cy="50" r="40"
+                                            stroke-dasharray="{{ ((score_gesamt|int) / 100) * 251.2 }} 251.2"/>
+                                </svg>
+                                <div class="score-content">
+                                    <div class="score-number">{{ score_gesamt }}</div>
+                                    <div class="score-max">/100</div>
+                                    <div class="score-label">{{ score_rating }}</div>
+                                </div>
                             </div>
-                            <div style="font-size: 18px; font-weight: 500; color: var(--color-text-normal); margin-bottom: var(--space-xs);">
-                                {{ score_rating }}
-                            </div>
-                            <div style="font-size: 14px; color: var(--color-text-muted);">
+                            <div style="font-size: 14px; color: var(--color-text-muted); margin-top: var(--space-md);">
                                 Reifegrad: {{ size_label }}
                                 {% if top10_score_for_size and (top10_score_for_size|int > score_gesamt|int) %}
                                 <span class="muted"> · </span>
@@ -2975,42 +3475,45 @@
                             <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt" style="height: 48px; max-width: 300px;">
                         </div>
 
-                        <!-- 4 DIMENSION SCORES: Horizontal cards -->
-                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-md); margin-bottom: var(--space-xl);">
-                            <div style="background: var(--color-bg-subtle); border: 1px solid var(--color-border); border-radius: 8px; padding: var(--space-md); text-align: center;">
-                                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: var(--space-xs);">
-                                    Governance
-                                </div>
-                                <div style="font-size: 28px; font-weight: 600; color: var(--color-text-normal);">
-                                    {{ score_governance or 0 }}
-                                    <span style="font-size: 14px; font-weight: 400; color: var(--color-text-muted);">/100</span>
-                                </div>
-                            </div>
-                            <div style="background: var(--color-bg-subtle); border: 1px solid var(--color-border); border-radius: 8px; padding: var(--space-md); text-align: center;">
-                                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: var(--space-xs);">
-                                    Sicherheit
-                                </div>
-                                <div style="font-size: 28px; font-weight: 600; color: var(--color-text-normal);">
-                                    {{ score_sicherheit or 0 }}
-                                    <span style="font-size: 14px; font-weight: 400; color: var(--color-text-muted);">/100</span>
+                        <!-- 4 DIMENSION SCORES: Modern cards with progress bars -->
+                        <div class="dimensions-grid-modern">
+                            {% set gov_score = score_governance|int or 0 %}
+                            {% set gov_level = 'excellent' if gov_score >= 80 else 'good' if gov_score >= 65 else 'medium' if gov_score >= 50 else 'low' %}
+                            <div class="dimension-card-modern" data-level="{{ gov_level }}">
+                                <div class="dimension-label">Governance</div>
+                                <div class="dimension-score">{{ gov_score }}</div>
+                                <div class="dimension-bar">
+                                    <div class="dimension-bar-fill" style="width: {{ gov_score }}%"></div>
                                 </div>
                             </div>
-                            <div style="background: var(--color-bg-subtle); border: 1px solid var(--color-border); border-radius: 8px; padding: var(--space-md); text-align: center;">
-                                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: var(--space-xs);">
-                                    Wertschöpfung
-                                </div>
-                                <div style="font-size: 28px; font-weight: 600; color: var(--color-text-normal);">
-                                    {{ score_wertschoepfung or score_nutzen or 0 }}
-                                    <span style="font-size: 14px; font-weight: 400; color: var(--color-text-muted);">/100</span>
+
+                            {% set sec_score = score_sicherheit|int or 0 %}
+                            {% set sec_level = 'excellent' if sec_score >= 80 else 'good' if sec_score >= 65 else 'medium' if sec_score >= 50 else 'low' %}
+                            <div class="dimension-card-modern" data-level="{{ sec_level }}">
+                                <div class="dimension-label">Sicherheit</div>
+                                <div class="dimension-score">{{ sec_score }}</div>
+                                <div class="dimension-bar">
+                                    <div class="dimension-bar-fill" style="width: {{ sec_score }}%"></div>
                                 </div>
                             </div>
-                            <div style="background: var(--color-bg-subtle); border: 1px solid var(--color-border); border-radius: 8px; padding: var(--space-md); text-align: center;">
-                                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: var(--space-xs);">
-                                    Befähigung
+
+                            {% set wert_score = (score_wertschoepfung or score_nutzen or 0)|int %}
+                            {% set wert_level = 'excellent' if wert_score >= 80 else 'good' if wert_score >= 65 else 'medium' if wert_score >= 50 else 'low' %}
+                            <div class="dimension-card-modern" data-level="{{ wert_level }}">
+                                <div class="dimension-label">Wertschöpfung</div>
+                                <div class="dimension-score">{{ wert_score }}</div>
+                                <div class="dimension-bar">
+                                    <div class="dimension-bar-fill" style="width: {{ wert_score }}%"></div>
                                 </div>
-                                <div style="font-size: 28px; font-weight: 600; color: var(--color-text-normal);">
-                                    {{ score_befaehigung or 0 }}
-                                    <span style="font-size: 14px; font-weight: 400; color: var(--color-text-muted);">/100</span>
+                            </div>
+
+                            {% set bef_score = score_befaehigung|int or 0 %}
+                            {% set bef_level = 'excellent' if bef_score >= 80 else 'good' if bef_score >= 65 else 'medium' if bef_score >= 50 else 'low' %}
+                            <div class="dimension-card-modern" data-level="{{ bef_level }}">
+                                <div class="dimension-label">Befähigung</div>
+                                <div class="dimension-score">{{ bef_score }}</div>
+                                <div class="dimension-bar">
+                                    <div class="dimension-bar-fill" style="width: {{ bef_score }}%"></div>
                                 </div>
                             </div>
                         </div>
@@ -3160,11 +3663,15 @@
                     </div>
                     {% endif %}
 
-                    <!-- Continue Note -->
-                    <div style="text-align: center; padding: var(--space-lg); background: var(--color-bg-subtle); border-radius: 8px;">
-                        <p style="margin: 0; font-size: 13px; color: var(--color-text-muted);">
-                            {{ ui("exec_continue", "Details und Begründungen folgen ab Seite 4 – je nach Informationsbedarf.") }}
-                        </p>
+                    <!-- Continue Note - Modern Info Callout -->
+                    <div class="callout-modern callout-info">
+                        <div class="callout-icon">📋</div>
+                        <div class="callout-content">
+                            <div class="callout-title">Weiterführende Details</div>
+                            <div class="callout-text">
+                                {{ ui("exec_continue", "Details und Begründungen folgen ab Seite 4 – je nach Informationsbedarf.") }}
+                            </div>
+                        </div>
                     </div>
 
                 </div>
@@ -3362,13 +3869,18 @@
 
                         <!-- SAFE START BOX - Nur für Finance/High-Risk -->
                         {% if (BRANCHE_LABEL and ('finan' in BRANCHE_LABEL|lower or 'versicher' in BRANCHE_LABEL|lower or 'bank' in BRANCHE_LABEL|lower)) or AI_ACT_RISK_LEVEL == 'high-risk' %}
-                        <div class="callout" style="margin-top: var(--space-md); border-color: #22c55e; background: #f0fdf4;">
-                            <h4 style="margin-top: 0; color: #166534;">{{ ui("safe_start_title", "Safe Start (30–45 Tage, ohne regulatorisches Risiko)") }}</h4>
-                            <ol style="margin: 0; padding-left: var(--space-md);">
-                                <li><strong>Regelwerks-Assistenz intern</strong> – nur internes Material, keine Kundendaten</li>
-                                <li><strong>Report-Baustein standardisieren</strong> – KI-Entwurf + menschliche Freigabe</li>
-                                <li><strong>Review-Workflow definieren</strong> – Vier-Augen + Quellenpflicht + Logging</li>
-                            </ol>
+                        <div class="callout-modern callout-success" style="margin-top: var(--space-md);">
+                            <div class="callout-icon">✅</div>
+                            <div class="callout-content">
+                                <div class="callout-title">{{ ui("safe_start_title", "Safe Start (30–45 Tage, ohne regulatorisches Risiko)") }}</div>
+                                <div class="callout-text">
+                                    <ol style="margin: 0.5rem 0 0 0; padding-left: var(--space-md);">
+                                        <li><strong>Regelwerks-Assistenz intern</strong> – nur internes Material, keine Kundendaten</li>
+                                        <li><strong>Report-Baustein standardisieren</strong> – KI-Entwurf + menschliche Freigabe</li>
+                                        <li><strong>Review-Workflow definieren</strong> – Vier-Augen + Quellenpflicht + Logging</li>
+                                    </ol>
+                                </div>
+                            </div>
                         </div>
                         {% endif %}
                     </div>
@@ -3752,6 +4264,61 @@
                         </span>
                     </div>
                     <div class="section-body">
+                        <!-- Visuelle Roadmap-Timeline -->
+                        <div class="roadmap-timeline-modern">
+                            <!-- Phase 1: Test & Vorbereitung -->
+                            <div class="phase active">
+                                <div class="phase-marker"></div>
+                                <div class="phase-header">
+                                    <div class="phase-title">Test & Vorbereitung</div>
+                                    <span class="phase-duration">0–30 Tage</span>
+                                </div>
+                                <div class="phase-content">
+                                    <ul>
+                                        <li>KI-Einsatzstellen identifizieren</li>
+                                        <li>Werkzeug-Set auswählen</li>
+                                        <li>Kurzleitfaden erstellen</li>
+                                        <li>Prompt-Bibliothek starten</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Phase 2: Pilotierung -->
+                            <div class="phase">
+                                <div class="phase-marker"></div>
+                                <div class="phase-header">
+                                    <div class="phase-title">Pilotierung</div>
+                                    <span class="phase-duration">31–60 Tage</span>
+                                </div>
+                                <div class="phase-content">
+                                    <ul>
+                                        <li>Pilot-Workflow testen</li>
+                                        <li>Wöchentliche Reviews</li>
+                                        <li>Best Practices dokumentieren</li>
+                                        <li>Metriken definieren</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Phase 3: Verstetigung -->
+                            <div class="phase">
+                                <div class="phase-marker"></div>
+                                <div class="phase-header">
+                                    <div class="phase-title">Verstetigung</div>
+                                    <span class="phase-duration">61–90 Tage</span>
+                                </div>
+                                <div class="phase-content">
+                                    <ul>
+                                        <li>Abläufe verstetigen</li>
+                                        <li>KI-Leitlinien definieren</li>
+                                        <li>Nächste Use Cases priorisieren</li>
+                                        <li>Wirkungsmessung durchführen</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamischer Roadmap-Content -->
                         {{ROADMAP_HTML}}
                     </div>
                 </section>
