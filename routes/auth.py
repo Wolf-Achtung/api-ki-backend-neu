@@ -65,6 +65,18 @@ EMAIL_WHITELIST = {email.lower() for email in [
     "test-v7-14@ki-sicherheit.jetzt",
     "test-v7-15@ki-sicherheit.jetzt",
     "test-v7-16@ki-sicherheit.jetzt",
+    "test-v7-17@ki-sicherheit.jetzt",
+    "test-v7-18@ki-sicherheit.jetzt",
+    "test-v7-19@ki-sicherheit.jetzt",
+    "test-v7-20@ki-sicherheit.jetzt",
+    "test-v7-21@ki-sicherheit.jetzt",
+    "test-v7-22@ki-sicherheit.jetzt",
+    "test-v7-23@ki-sicherheit.jetzt",
+    "test-v7-24@ki-sicherheit.jetzt",
+    "test-v7-25@ki-sicherheit.jetzt",
+    "test-v7-26@ki-sicherheit.jetzt",
+    "test-v7-27@ki-sicherheit.jetzt",
+    "test-v7-28@ki-sicherheit.jetzt",
     "test-v7-9@ki-sicherheit.jetzt",
 ]}
 
