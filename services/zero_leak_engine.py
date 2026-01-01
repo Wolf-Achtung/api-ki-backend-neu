@@ -170,6 +170,9 @@ def apply_hard_blacklist(text: str, section_name: str = "") -> Tuple[str, List[s
         cleaned = re.sub(r'<p>\s*</p>', '', cleaned)
         cleaned = re.sub(r'<li>\s*</li>', '', cleaned)
         cleaned = re.sub(r'\.\s*\.', '.', cleaned)
+        # FIX: Remove empty angle brackets <> that remain after phrase removal
+        # Pattern: <> or < > or <  > (empty or whitespace-only between brackets)
+        cleaned = re.sub(r'<\s*>', '', cleaned)
 
     return cleaned.strip(), removed
 
@@ -668,6 +671,8 @@ def remove_leaks(text: str, aggressive: bool = False) -> Tuple[str, ZeroLeakRepo
     cleaned = re.sub(r',\s*,', ',', cleaned)
     cleaned = re.sub(r'<p>\s*</p>', '', cleaned)
     cleaned = re.sub(r'<li>\s*</li>', '', cleaned)
+    # FIX: Remove empty angle brackets <> that remain after phrase removal
+    cleaned = re.sub(r'<\s*>', '', cleaned)
     # FIX B: Remove standalone "?" placeholders (not in natural text like "Warum jetzt?")
     # Pattern: "?" alone in a tag, or "?" at start of line, or "??" sequences
     cleaned = re.sub(r'>\s*\?\s*<', '><', cleaned)  # "?" alone between tags
