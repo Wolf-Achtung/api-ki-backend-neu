@@ -170,7 +170,7 @@ def build_html(branche: str) -> str:
     return (
         "<div>"
         f"<p><strong>Branchen‑Benchmark ({canonicalize(branche)})</strong></p>"
-        "<table class='table'>"
+        "<table class='table table-modern'>"
         "<thead><tr><th>Messgröße</th><th>Wert</th></tr></thead>"
         f"<tbody><tr><td>Durchschnittlicher KI‑Reifegrad</td><td>{avg}/100</td></tr>"
         f"<tr><td>Top‑Quartil (25 %)</td><td>{top25}/100</td></tr></tbody>"

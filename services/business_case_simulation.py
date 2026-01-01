@@ -1147,7 +1147,7 @@ def business_case_simulation_to_html(
     html_parts.append(f'''
     <!-- Percentile Table -->
     <div style="margin-bottom:20px;">
-        <table style="width:100%;border-collapse:collapse;font-size:10pt;">
+        <table class="table-modern" style="width:100%;border-collapse:collapse;font-size:10pt;">
             <tr style="background:{colors["gray_light"]};">
                 <th style="padding:10px;text-align:left;border:1px solid {colors["gray_border"]};">{labels["percentile"]}</th>
                 <th style="padding:10px;text-align:right;border:1px solid {colors["gray_border"]};">{labels["roi_label"]}</th>

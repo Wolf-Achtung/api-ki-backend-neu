@@ -85,7 +85,7 @@ def to_html(programs: List[Dict[str, Any]], research_stand: str | None = None) -
         return head + "<p class='muted'>Keine passenden Förderprogramme gefunden.</p>"
     rows = [head]
     rows.append(
-        """<table class="table">
+        """<table class="table table-modern">
 <thead><tr>
 <th>Programm</th>
 <th>Förderung</th>

@@ -972,7 +972,7 @@ def generate_funding_matrix_html(
             <span style="font-size:9px;padding:2px 8px;background:#3b82f6;color:#fff;border-radius:4px;">G26</span>
         </h3>
 
-        <table class="funding-table" style="width:100%;border-collapse:collapse;font-size:11px;">
+        <table class="funding-table table-modern" style="width:100%;border-collapse:collapse;font-size:11px;">
             <thead>
                 <tr style="background:#f1f5f9;">
                     <th style="padding:8px;text-align:left;font-weight:600;">{headers[0]}</th>
