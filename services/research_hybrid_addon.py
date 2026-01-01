@@ -65,7 +65,7 @@ def _merge_tables_by_link(html_a: str, html_b: str) -> str:
     # try to keep original table header from html_a if present, else simple wrap
     head_match = re.search(r"(<thead>.*?</thead>)", html_a or "", flags=re.I|re.S)
     thead = head_match.group(1) if head_match else ""
-    return "<table class='table'>" + thead + "<tbody>" + "".join(out_rows) + "</tbody></table>"
+    return "<table class='table table-modern'>" + thead + "<tbody>" + "".join(out_rows) + "</tbody></table>"
 
 def _tools_prompt(ans: Dict[str, Any]) -> str:
     branche = ans.get("BRANCHE_LABEL") or ans.get("branche","")

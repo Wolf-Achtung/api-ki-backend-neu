@@ -1221,7 +1221,7 @@ def generate_funding_predicted_opportunities_html(
             <span>🎯</span> {title}
             <span style="font-size:9px;padding:2px 6px;background:#007bff;color:#fff;border-radius:4px;">PREDICTIVE</span>
         </h4>
-        <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:4px;overflow:hidden;">
+        <table class="table-modern" style="width:100%;border-collapse:collapse;background:#fff;border-radius:4px;overflow:hidden;">
             <thead>
                 <tr style="background:#e9ecef;">
                     <th style="padding:8px;font-size:10px;text-align:left;">{headers[0]}</th>
@@ -1913,7 +1913,7 @@ def generate_funding_branch_alignment_html(
         </h3>
         <p style="margin:0 0 14px 0;font-size:11px;color:#64748b;">{subtitle}</p>
 
-        <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:6px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+        <table class="table-modern" style="width:100%;border-collapse:collapse;background:#fff;border-radius:6px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
             <thead>
                 <tr style="background:#f1f5f9;">
                     <th style="padding:10px;font-size:10px;text-align:left;font-weight:600;color:#475569;">{headers[0]}</th>
