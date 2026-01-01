@@ -7069,8 +7069,14 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
                  run_id, len(sections["FINAL_CHECK_INTRO"]), len(sections["FINAL_CHECK_DECISIONS"]))
     except Exception as e:
         log.warning("[%s] ⚠️ Final-Check Intro generation failed: %s", run_id, e)
-        sections.setdefault("FINAL_CHECK_INTRO", "")
-        sections.setdefault("FINAL_CHECK_DECISIONS", [])
+        # FIX: Use non-empty fallback values so template conditional evaluates to True
+        sections.setdefault("FINAL_CHECK_INTRO",
+            "Dieser Report analysiert Ihren KI-Reifegrad und liefert konkrete Handlungsempfehlungen.")
+        sections.setdefault("FINAL_CHECK_DECISIONS", [
+            "Starten Sie mit 1 Quick Win innerhalb von 14 Tagen",
+            "Prüfen Sie die 90-Tage-Roadmap für strukturierte Umsetzung",
+            "Sichten Sie die Förderprogramme für passende Förderungen"
+        ])
 
     log.info("[%s] 🎨 Rendering final HTML...", run_id)
     # --- Sanitize dynamic sections to prevent HTML leaks (z. B. eingebettetes <html> im Pilot-Plan) ---
