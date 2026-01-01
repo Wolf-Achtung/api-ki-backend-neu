@@ -6239,6 +6239,16 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["vision_3_jahre"] = answers.get("vision_3_jahre", "")
     sections["ki_guardrails"] = answers.get("ki_guardrails", "")
 
+    # === DEBUG: Page 4 Template Variables ===
+    log.info("=" * 80)
+    log.info("[%s] 🔍 DEBUG: Page 4 Template Variables Check", run_id)
+    log.info("[%s] strategische_ziele: '%s'", run_id, sections.get("strategische_ziele", "NOT SET")[:100] if sections.get("strategische_ziele") else "EMPTY")
+    log.info("[%s] hauptleistung: '%s'", run_id, sections.get("hauptleistung", "NOT SET")[:100] if sections.get("hauptleistung") else "EMPTY")
+    log.info("[%s] zeitersparnis_prioritaet: '%s'", run_id, sections.get("zeitersparnis_prioritaet", "NOT SET")[:100] if sections.get("zeitersparnis_prioritaet") else "EMPTY")
+    log.info("[%s] ki_guardrails: '%s'", run_id, sections.get("ki_guardrails", "NOT SET")[:100] if sections.get("ki_guardrails") else "EMPTY")
+    log.info("[%s] FROM ANSWERS - strategische_ziele: '%s'", run_id, answers.get("strategische_ziele", "NOT IN ANSWERS")[:100] if answers.get("strategische_ziele") else "EMPTY IN ANSWERS")
+    log.info("=" * 80)
+
     # === PLATIN+++ v5.4.3: COMPACT REPORT MODE for streamlined reports ===
     # Derive company_size from answers
     size_raw = (answers.get("unternehmensgroesse") or "solo").lower()
@@ -7078,6 +7088,13 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             "Sichten Sie die Förderprogramme für passende Förderungen"
         ])
 
+    # === DEBUG: Page 2 FINAL_CHECK Variables ===
+    log.info("=" * 80)
+    log.info("[%s] 🔍 DEBUG: Page 2 FINAL_CHECK Variables Check", run_id)
+    log.info("[%s] FINAL_CHECK_INTRO: '%s'", run_id, str(sections.get("FINAL_CHECK_INTRO", "NOT SET"))[:150])
+    log.info("[%s] FINAL_CHECK_DECISIONS: %s", run_id, sections.get("FINAL_CHECK_DECISIONS", "NOT SET"))
+    log.info("=" * 80)
+
     log.info("[%s] 🎨 Rendering final HTML...", run_id)
     # --- Sanitize dynamic sections to prevent HTML leaks (z. B. eingebettetes <html> im Pilot-Plan) ---
     # 3.1.4.16: Pass lang for EN locale sanitization (lastline guardrail)
@@ -7403,6 +7420,15 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         # Skip complex objects (GuardrailHit, dicts, etc.) to keep meta clean
 
     log.info(f"[{run_id}] 📦 Storing {len(serializable_sections)} sections in meta for Golden Gate")
+
+    # === DEBUG: FINAL CHECK - Variables before render() ===
+    log.info("=" * 80)
+    log.info("[%s] 🔍 DEBUG: FINAL VARIABLES BEFORE RENDER", run_id)
+    log.info("[%s] Page 4 - strategische_ziele: %s", run_id, "SET" if sections.get("strategische_ziele") else "EMPTY/MISSING")
+    log.info("[%s] Page 4 - hauptleistung: %s", run_id, "SET" if sections.get("hauptleistung") else "EMPTY/MISSING")
+    log.info("[%s] Page 2 - FINAL_CHECK_INTRO: %s", run_id, "SET" if sections.get("FINAL_CHECK_INTRO") else "EMPTY/MISSING")
+    log.info("[%s] Page 2 - FINAL_CHECK_DECISIONS: %s", run_id, "SET" if sections.get("FINAL_CHECK_DECISIONS") else "EMPTY/MISSING")
+    log.info("=" * 80)
 
     result = render(
         br,
