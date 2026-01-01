@@ -1,3 +1,4 @@
+# Template rebuild trigger: 2026-01-01 16:30 - Railway cache bust for Pages 2,3,4 redesign
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
