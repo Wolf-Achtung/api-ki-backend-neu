@@ -487,7 +487,7 @@ def _html_risks(risks: List[Tuple[str, str]]) -> str:
         for r, m in risks
     )
     return (
-        "<table class='table'><thead><tr><th>Risiko</th><th>Mitigation</th>"
+        "<table class='table table-modern'><thead><tr><th>Risiko</th><th>Mitigation</th>"
         "</tr></thead><tbody>" + rows + "</tbody></table>"
     )
 

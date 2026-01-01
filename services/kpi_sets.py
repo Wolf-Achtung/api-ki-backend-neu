@@ -123,7 +123,7 @@ def build_kpi_table_html(branche: str | None) -> str:
             "</tr>"
         )
     return (
-        "<table class='table'>"
+        "<table class='table table-modern'>"
         "<thead><tr><th>KPI</th><th>Definition</th><th>Formel</th><th>Zielwert (Richtwert)</th></tr></thead>"
         "<tbody>" + "".join(rows) + "</tbody></table>"
     )

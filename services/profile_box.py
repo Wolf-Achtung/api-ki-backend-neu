@@ -91,7 +91,7 @@ def build_profile_box(answers: dict) -> str:
     if not rows:
         return "<p class='small muted'>Keine Angaben vorhanden.</p>"
     return (
-        "<table class='table'>"
+        "<table class='table table-modern'>"
         "<thead><tr><th>Feld</th><th>Angabe</th></tr></thead>"
         f"<tbody>{''.join(rows)}</tbody>"
         "</table>"

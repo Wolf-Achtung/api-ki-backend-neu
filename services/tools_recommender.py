@@ -940,7 +940,7 @@ def to_html(tools: List[Dict[str, Any]]) -> str:
 
     rows: List[str] = []
     rows.append(
-        """<table class="table tools-table">
+        """<table class="table table-modern tools-table">
 <thead><tr>
 <th>Tool/Produkt</th>
 <th>Kategorie</th>
@@ -1129,7 +1129,7 @@ def generate_confidence_table_html(tools: List[Dict[str, Any]]) -> str:
         """)
 
     return f"""
-    <table class="table confidence-table" style="margin-top: 24px;">
+    <table class="table table-modern confidence-table" style="margin-top: 24px;">
         <thead>
             <tr>
                 <th>Tool</th>

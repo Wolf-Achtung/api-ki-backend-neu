@@ -67,7 +67,7 @@ def run_ensemble(answers: Dict) -> Dict[str, str]:
 
     # HTML: Summary
     summary_html = f"""
-    <table class="table">
+    <table class="table table-modern">
       <thead><tr><th>Dimension</th><th>Score</th><th>Gewicht</th></tr></thead>
       <tbody>
         <tr><td>Compliance</td><td>{round(comp.score*100)}/100</td><td>{int(w_comp*100)}%</td></tr>

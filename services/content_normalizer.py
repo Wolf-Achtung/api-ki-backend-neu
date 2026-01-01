@@ -41,7 +41,7 @@ def build_score_bars_html(scores: Dict[str, Any]) -> str:
         bar_row("Befähigung", scores.get("befaehigung", 0) or scores.get("befähigung", 0)),
         bar_row("Gesamt", scores.get("gesamt", 0)),
     ])
-    return f"<table style='width:100%;border-collapse:collapse'>{rows}</table>"
+    return f"<table class='table-modern' style='width:100%;border-collapse:collapse'>{rows}</table>"
 
 # ---------------- Kreativ-Tools (txt -> HTML) ----------------
 def build_kreativ_tools_html(path: str) -> str:

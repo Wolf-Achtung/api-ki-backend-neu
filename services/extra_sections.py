@@ -394,7 +394,7 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
     table = f"""
 <section class="card">
   <h2>Business‑Case (realistische Annahmen)</h2>
-  <table class="table">
+  <table class="table table-modern">
     <thead><tr><th>Parameter</th><th>Wert</th><th>Erläuterung</th></tr></thead>
     <tbody>
       <tr><td>Gesamteinsparung</td><td>{_fmt_eur(capped_hours)} h/Monat</td><td>Summe Quick‑Wins (gedeckelt)</td></tr>
@@ -558,7 +558,7 @@ def _generate_ai_act_adjusted_table(
     table = f"""
 <section class="card">
   <h2>Business‑Case (inkl. AI Act Compliance)</h2>
-  <table class="table">
+  <table class="table table-modern">
     <thead><tr><th>Parameter</th><th>Wert</th><th>Erläuterung</th></tr></thead>
     <tbody>
       <tr><td>Monetärer Nutzen</td><td>{_fmt_eur(einsparung)} €/Monat</td><td>Einsparung durch KI-Automatisierung</td></tr>
@@ -643,7 +643,7 @@ def build_core_funding_table_html(briefing: Dict[str, Any]) -> str:
     # HTML-Tabelle bauen
     html_parts = []
     html_parts.append('<div class="funding-matrix">')
-    html_parts.append('  <table class="funding-table">')
+    html_parts.append('  <table class="funding-table table-modern">')
     html_parts.append('    <thead>')
     html_parts.append('      <tr>')
     html_parts.append('        <th>Programm</th>')

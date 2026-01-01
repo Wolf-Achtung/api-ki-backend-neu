@@ -511,7 +511,7 @@ def generate_alignment_html(result: AlignmentResult, lang: str = "de") -> str:
         </h3>
         <p style="margin:0 0 16px 0;font-size:12px;color:#6b7280;">{subtitle}</p>
 
-        <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;">
+        <table class="table-modern" style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;">
             <thead>
                 <tr style="background:#e0e7ff;">
                     <th style="padding:10px;font-size:11px;text-align:left;">{headers[0]}</th>

@@ -330,7 +330,7 @@ def generate_duty_matrix_html(
 def _generate_duty_matrix_de(risk_level: str, branche: str, is_solo: bool) -> str:
     """German duty matrix."""
 
-    header = """<table class="table duty-matrix">
+    header = """<table class="table table-modern duty-matrix">
   <thead>
     <tr>
       <th>Pflicht / Best Practice</th>
@@ -400,7 +400,7 @@ def _generate_duty_matrix_de(risk_level: str, branche: str, is_solo: bool) -> st
 def _generate_duty_matrix_en(risk_level: str, branche: str, is_solo: bool) -> str:
     """English duty matrix."""
 
-    header = """<table class="table duty-matrix">
+    header = """<table class="table table-modern duty-matrix">
   <thead>
     <tr>
       <th>Obligation / Best Practice</th>
