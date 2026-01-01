@@ -57,13 +57,14 @@ class TestPlatinCriticalSections:
 
         # PDF-SLIMDOWN v2.0: Expected token limits per section
         # G17.R: roadmap_90d increased for Roadmap-Booster sections
+        # FIX 178969e: Increased limits to prevent text truncation
         expected_tokens = {
             "foerderpotenzial": 3200,
             "risks": 3000,
-            "recommendations": 2500,
-            "roadmap_12m": 2800,
-            "roadmap_90d": 2800,  # G17.R: Increased from 2200 for Booster sections
-            "quick_wins": 3500,  # v7.0: increased for structured boxes, blockquotes, prompts
+            "recommendations": 4000,  # FIX: Increased from 2500 to prevent truncation
+            "roadmap_12m": 4000,      # FIX: Increased from 2800 to prevent truncation
+            "roadmap_90d": 4000,      # FIX: Increased from 2800 to prevent truncation
+            "quick_wins": 4500,       # FIX: Increased from 3500 to prevent truncation
             "gamechanger": 3000,
             "unternehmensprofil_markt": 3000,
             "transparency_box": 1500,
@@ -78,8 +79,9 @@ class TestPlatinCriticalSections:
                 )
             else:
                 # Any section not in expected_tokens should still be in valid range
-                assert 1500 <= config["max_tokens"] <= 3500, (
-                    f"Section {section} max_tokens={config['max_tokens']} not in valid range [1500, 3500]"
+                # FIX 178969e: Extended range to [1500, 5000] for truncation prevention
+                assert 1500 <= config["max_tokens"] <= 5000, (
+                    f"Section {section} max_tokens={config['max_tokens']} not in valid range [1500, 5000]"
                 )
 
     def test_platin_temperature_is_reasonable(self):
