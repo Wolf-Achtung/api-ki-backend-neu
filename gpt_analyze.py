@@ -6228,6 +6228,17 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     sections["user_email"] = answers.get("email") or answers.get("kontakt_email") or ""
     sections["ki_kompetenz"] = answers.get("ki_kompetenz") or answers.get("ki_knowhow", "")
 
+    # === PAGE 4 CONTEXT CARDS - User Input Variables for Template ===
+    # These variables are needed for the Page 4 emoji-cards and Guardrails box
+    # Template uses lowercase keys with {% if variable %} conditionals
+    sections["strategische_ziele"] = answers.get("strategische_ziele", "")
+    sections["zeitersparnis_prioritaet"] = answers.get("zeitersparnis_prioritaet", "")
+    sections["hauptleistung"] = answers.get("hauptleistung", "")
+    sections["ki_projekte"] = answers.get("ki_projekte", "")
+    sections["geschaeftsmodell_evolution"] = answers.get("geschaeftsmodell_evolution", "")
+    sections["vision_3_jahre"] = answers.get("vision_3_jahre", "")
+    sections["ki_guardrails"] = answers.get("ki_guardrails", "")
+
     # === PLATIN+++ v5.4.3: COMPACT REPORT MODE for streamlined reports ===
     # Derive company_size from answers
     size_raw = (answers.get("unternehmensgroesse") or "solo").lower()
