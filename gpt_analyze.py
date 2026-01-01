@@ -3050,7 +3050,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     # ════════════════════════════════════════════════════════════════════════════
     if section_key == "risks":
         score_gov = scores.get("governance", 50)
-        score_sec = scores.get("sicherheit", 50)
+        score_sec = scores.get("security", 50)  # FIX: "sicherheit" → "security" (korrekter Key)
 
         # NOTE: English fallback removed (Content Quality Pack v1)
         # English reports now use prompts/en/risks.md exclusively
