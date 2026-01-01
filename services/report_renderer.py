@@ -255,6 +255,7 @@ def _env() -> Environment:
         autoescape=select_autoescape(["html","xml"]),
         undefined=Undefined,  # ✅ Fixed: Use Undefined class instead of None
         trim_blocks=True, lstrip_blocks=True,
+        auto_reload=True,  # ✅ Reload templates on file change (no rebuild needed)
     )
     # Backwards-compat filter for old templates using {{LANG|de}}
     env.filters["de"] = lambda v=None: (v or "de")
