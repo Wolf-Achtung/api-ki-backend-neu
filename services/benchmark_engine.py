@@ -1620,7 +1620,7 @@ def _generate_positions_table_html(positions: List[BenchmarkPosition], lang: str
     return f"""
 <div class="benchmark-positions" style="margin-bottom: 24px;">
     <h3 style="font-size: 14pt; font-weight: 600; color: var(--color-text-strong, #0f172a); margin-bottom: 16px;">{title}</h3>
-    <table style="width: 100%; border-collapse: collapse; background: var(--color-bg-card, #ffffff); border-radius: 8px; overflow: hidden; border: 1px solid var(--color-border, #e2e8f0);">
+    <table class="table-modern" style="width: 100%; border-collapse: collapse; background: var(--color-bg-card, #ffffff); border-radius: 8px; overflow: hidden; border: 1px solid var(--color-border, #e2e8f0);">
         <thead>
             <tr style="background: var(--color-bg-surface, #f8fafc);">
                 <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 10pt; color: var(--color-text-muted, #64748b); border-bottom: 1px solid var(--color-border, #e2e8f0);">Domain</th>
@@ -1676,7 +1676,7 @@ def _generate_radar_table_html(radar: BenchmarkRadar, lang: str) -> str:
     return f"""
 <div class="benchmark-radar" style="margin-bottom: 24px;">
     <h3 style="font-size: 14pt; font-weight: 600; color: var(--color-text-strong, #0f172a); margin-bottom: 16px;">{title}</h3>
-    <table style="width: 100%; border-collapse: collapse; background: var(--color-bg-card, #ffffff); border-radius: 8px; overflow: hidden; border: 1px solid var(--color-border, #e2e8f0);">
+    <table class="table-modern" style="width: 100%; border-collapse: collapse; background: var(--color-bg-card, #ffffff); border-radius: 8px; overflow: hidden; border: 1px solid var(--color-border, #e2e8f0);">
         <tbody>
             {"".join(rows)}
         </tbody>

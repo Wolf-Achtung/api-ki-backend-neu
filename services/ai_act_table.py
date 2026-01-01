@@ -50,7 +50,7 @@ def build_timeline(text: Optional[str], phase_label: str = "2025–2027") -> Dic
             rows.append((d,"Meilenstein","Stichtag laut AI‑Act‑Info","—","—"))
     rows.sort(key=lambda r: r[0])
     body = "".join(f"<tr><td>{_fmt(d)}</td><td>{sec}</td><td>{what}</td><td>{who}</td><td>{tip}</td></tr>" for d,sec,what,who,tip in rows)
-    table_html = ('<table class="table"><thead><tr>'
+    table_html = ('<table class="table table-modern"><thead><tr>'
                   '<th>Datum</th><th>Regel/Abschnitt</th><th>Was gilt</th><th>Zielgruppe</th><th>Praxis‑Checkpoint</th>'
                   f'</tr></thead><tbody>{body}</tbody></table>')
     return {"table_html": table_html, "csv_bytes": _csv_bytes(rows), "tasks_li": _tasks_30d(), "phase_label": phase_label}

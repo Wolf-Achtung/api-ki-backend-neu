@@ -1626,7 +1626,7 @@ def generate_branch_profile_html(
             <h3 style="font-size:14px;margin:0 0 12px 0;color:var(--color-text-strong);display:flex;align-items:center;gap:8px;">
                 <span>💡</span> {use_cases_title}
             </h3>
-            <table style="width:100%;border-collapse:collapse;font-size:11px;">
+            <table class="table-modern" style="width:100%;border-collapse:collapse;font-size:11px;">
                 <thead>
                     <tr style="background:var(--color-bg-surface);border-bottom:1px solid var(--color-border);">
                         <th style="padding:8px;text-align:left;">{"Use Case" if lang == "en" else "Anwendungsfall"}</th>

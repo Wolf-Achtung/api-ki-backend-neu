@@ -862,7 +862,7 @@ def _generate_kpi_table_html(shifts: List[KPIShift], lang: str) -> str:
     return f"""
     <div style="margin-bottom:16px;">
         <div style="font-size:12px;font-weight:600;color:#212529;margin-bottom:8px;">📊 {title}</div>
-        <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:4px;overflow:hidden;">
+        <table class="table-modern" style="width:100%;border-collapse:collapse;background:#fff;border-radius:4px;overflow:hidden;">
             <thead>
                 <tr style="background:#e9ecef;">
                     <th style="padding:8px;font-size:10px;text-align:left;">{headers[0]}</th>

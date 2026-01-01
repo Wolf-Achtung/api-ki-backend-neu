@@ -242,7 +242,7 @@ class FundingService:
 
         html_parts = []
         html_parts.append('<div class="funding-matrix">')
-        html_parts.append('  <table class="funding-table">')
+        html_parts.append('  <table class="funding-table table-modern">')
         html_parts.append('    <thead>')
         html_parts.append('      <tr>')
         html_parts.append(f'        <th>{headers["programme"]}</th>')

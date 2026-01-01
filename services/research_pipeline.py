@@ -179,14 +179,14 @@ def _tools_table(items: List[Dict[str, str]]) -> str:
 
     visible_rows, hidden_rows = _build_rows_with_collapse(items, build_row)
 
-    table_html = "<table class='table'><thead><tr><th>Tool</th><th>Quelle</th></tr></thead><tbody>"
+    table_html = "<table class='table table-modern'><thead><tr><th>Tool</th><th>Quelle</th></tr></thead><tbody>"
     table_html += visible_rows
     table_html += "</tbody></table>"
 
     if hidden_rows:
         hidden_count = len(items) - MAX_VISIBLE_ITEMS
         table_html += f"<details class='research-overflow'><summary class='small'>Weitere Tools ({hidden_count})</summary>"
-        table_html += "<table class='table'><tbody>" + hidden_rows + "</tbody></table></details>"
+        table_html += "<table class='table table-modern'><tbody>" + hidden_rows + "</tbody></table></details>"
 
     return table_html
 
@@ -203,14 +203,14 @@ def _funding_table(items: List[Dict[str, str]]) -> str:
 
     visible_rows, hidden_rows = _build_rows_with_collapse(items, build_row)
 
-    table_html = "<table class='table'><thead><tr><th>Programm</th><th>Quelle</th></tr></thead><tbody>"
+    table_html = "<table class='table table-modern'><thead><tr><th>Programm</th><th>Quelle</th></tr></thead><tbody>"
     table_html += visible_rows
     table_html += "</tbody></table>"
 
     if hidden_rows:
         hidden_count = len(items) - MAX_VISIBLE_ITEMS
         table_html += f"<details class='research-overflow'><summary class='small'>Weitere Programme ({hidden_count})</summary>"
-        table_html += "<table class='table'><tbody>" + hidden_rows + "</tbody></table></details>"
+        table_html += "<table class='table table-modern'><tbody>" + hidden_rows + "</tbody></table></details>"
 
     return table_html
 

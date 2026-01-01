@@ -65,7 +65,7 @@ SIZE_HINTS = {
 def _table(rows: List[List[str]], header: List[str]) -> str:
     head = "<thead><tr>" + "".join(f"<th>{h}</th>" for h in header) + "</tr></thead>"
     body = "<tbody>" + "".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in rows) + "</tbody>"
-    return f'<table class="table">{head}{body}</table>'
+    return f'<table class="table table-modern">{head}{body}</table>'
 
 def build_kpis(answers: Dict) -> str:
     branche = (answers or {}).get("branche", "")

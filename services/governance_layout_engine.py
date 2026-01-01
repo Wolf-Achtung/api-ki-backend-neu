@@ -1372,7 +1372,7 @@ def _render_matrix_html(matrix: Dict[str, Any], labels: Dict[str, str]) -> str:
     rows = matrix.get("rows", 0)
 
     html = f"""
-    <table class="governance-matrix" style="width: 100%; border-collapse: collapse;">
+    <table class="governance-matrix table-modern" style="width: 100%; border-collapse: collapse;">
         <caption style="font-weight: bold; margin-bottom: 8px;">
             {matrix.get('title', '')}
         </caption>

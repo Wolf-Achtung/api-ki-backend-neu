@@ -29,7 +29,7 @@ def build_insights(briefing: Dict[str,Any] | Any) -> Dict[str,Any]:
 def to_html(ins: Dict[str,Any]) -> str:
     if not ins:
         return ""
-    rows = ["<h3>Wettbewerber (Auswahl)</h3><table class='table'>",
+    rows = ["<h3>Wettbewerber (Auswahl)</h3><table class='table table-modern'>",
             "<thead><tr><th>Anbieter</th><th>Modell</th><th>Preis</th><th>Schwäche</th></tr></thead><tbody>"]
     for c in ins.get("competitors", []):
         rows.append(f"""<tr>

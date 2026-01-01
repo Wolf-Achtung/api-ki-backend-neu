@@ -1043,7 +1043,7 @@ def risk_report_to_html(
         html_parts.append(f'''
         <div class="risk-block matrix-block" style="margin-bottom:20px;">
             <p style="margin:0 0 12px 0;font-weight:600;color:#1e293b;">{labels["matrix_title"]}</p>
-            <table style="width:100%;border-collapse:collapse;font-size:10pt;">
+            <table class="table-modern" style="width:100%;border-collapse:collapse;font-size:10pt;">
                 <tr style="background:#f8fafc;">
                     <td style="padding:8px;font-weight:600;border-bottom:1px solid #e2e8f0;">Risiko</td>
                     <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;">L</td>

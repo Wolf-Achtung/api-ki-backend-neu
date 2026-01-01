@@ -2127,7 +2127,7 @@ def _build_benchmark_html(briefing: Dict[str, Any], lang: str = "de") -> str:
             f"<td>{ui('estimate', lang)}</td></tr>"
         )
     table = (
-        "<table class='table'>"
+        "<table class='table table-modern'>"
         f"<thead><tr><th>{ui('comparison', lang)}</th><th>{ui('value', lang)}</th><th>{ui('source', lang)}</th></tr></thead>"
         f"<tbody>{''.join(row_html)}</tbody>"
         "</table>"
@@ -2428,7 +2428,7 @@ def _build_score_bars_html(scores: Dict[str, Any]) -> str:
         row("Befähigung", "enablement"),
         row("Gesamt", "overall"),
     ])
-    return f"<table style='width:100%;border-collapse:collapse'>{rows}</table>"
+    return f"<table class='table-modern' style='width:100%;border-collapse:collapse'>{rows}</table>"
 
 # -------------------- Werkbank (dynamisch nach Branche/Größe) ----------------
 def _build_werkbank_html_dynamic(answers: Dict[str, Any]) -> str:
@@ -3206,7 +3206,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     Die folgende Übersicht zeigt die wichtigsten Risikofelder nach Eintrittswahrscheinlichkeit und
     Auswirkungsstärke, um die Priorisierung von Gegenmaßnahmen zu erleichtern.
   </p>
-  <table class="table">
+  <table class="table table-modern">
     <thead>
       <tr>
         <th>Risikobereich</th>
@@ -3318,7 +3318,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     </li>
   </ol>
   <h3>{ui('priorities_overview', 'en')}</h3>
-  <table class="table">
+  <table class="table table-modern">
     <thead><tr><th>{ui('priority', 'en')}</th><th>Recommendation</th><th>{ui('time_horizon', 'en')}</th><th>Main Benefit</th></tr></thead>
     <tbody>
       <tr><td>1</td><td>Implement standard workflow</td><td>0-3 months</td><td>Immediate relief & quality improvement</td></tr>
@@ -3450,7 +3450,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   </ol>
 
   <h3>Prioritäten-Überblick</h3>
-  <table class="table">
+  <table class="table table-modern">
     <thead>
       <tr>
         <th>Priorität</th>
@@ -4001,7 +4001,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
 
         return f"""<div class="business-case-summary">
   <h3>Business Case Übersicht</h3>
-  <table class="table">
+  <table class="table table-modern">
     <tr>
       <td><strong>Einführungskosten (CAPEX)</strong></td>
       <td class="text-right">{capex} €</td>
@@ -4618,7 +4618,7 @@ Für jede Kategorie: 2-3 Standard-Prompts</pre>
     Einschätzung der Aufwände und des erwarteten Nutzens. Die Investition umfasst sowohl
     einmalige Einführungskosten (CAPEX) als auch laufende Betriebskosten (OPEX).
   </p>
-  <table class="table">
+  <table class="table table-modern">
     <tr>
       <td><strong>Einführungskosten (CAPEX)</strong></td>
       <td class="text-right">{briefing.get("CAPEX_REALISTISCH_EUR", "—")} €</td>
@@ -5426,7 +5426,7 @@ def _build_ai_act_blocks() -> Dict[str, str]:
            "<strong>Auf Wunsch:</strong> Tabellarische Übersicht der Termine/Fristen – Phase "
            f"<strong>{html.escape(AI_ACT_PHASE_LABEL)}</strong> – inkl. Verantwortlichkeiten und Checkpoints."
            "</div>")
-    packages = ('<table class="table">'
+    packages = ('<table class="table table-modern">'
                 "<thead><tr><th>Paket</th><th>Umfang</th><th>Ergebnisse</th></tr></thead><tbody>"
                 "<tr><td><strong>Lite: Tabellen‑Kit</strong></td>"
                 "<td>Termin-/Fristen‑Tabelle (2025–2027) + 10–15 Checkpoints.</td>"
@@ -5709,7 +5709,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 
     # Statische Sensitivitäts-Tabelle
     sections["BUSINESS_SENSITIVITY_HTML"] = (
-        '<table class="table"><thead><tr><th>Adoption</th><th>Kommentar</th></tr></thead>'
+        '<table class="table table-modern"><thead><tr><th>Adoption</th><th>Kommentar</th></tr></thead>'
         "<tbody><tr><td>100%</td><td>Planmäßige Wirkung der Maßnahmen.</td></tr>"
         "<tr><td>80%</td><td>Leichte Abweichungen – Payback +2–3 Monate.</td></tr>"
         "<tr><td>60%</td><td>Konservativ – nur Kernmaßnahmen; Payback länger.</td></tr></tbody></table>"
@@ -5921,7 +5921,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
                 "<tr><td><strong>Overall</strong></td><td><strong>" + str(_s.get("overall", 0)) + "</strong></td></tr>"
             )
             sections["KPI_SCORES_HTML"] = (
-                "<table class='table'><thead><tr><th>Dimension</th><th>Score (0–100)</th></tr></thead><tbody>"
+                "<table class='table table-modern'><thead><tr><th>Dimension</th><th>Score (0–100)</th></tr></thead><tbody>"
                 + kpi_rows
                 + "</tbody></table>"
             )
@@ -5934,7 +5934,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
                 "<tr><td><strong>Gesamt</strong></td><td><strong>" + str(_s.get("overall", 0)) + "</strong></td></tr>"
             )
             sections["KPI_SCORES_HTML"] = (
-                "<table class='table'><thead><tr><th>Dimension</th><th>Score (0–100)</th></tr></thead><tbody>"
+                "<table class='table table-modern'><thead><tr><th>Dimension</th><th>Score (0–100)</th></tr></thead><tbody>"
                 + kpi_rows
                 + "</tbody></table>"
                 + sections.get("BENCHMARK_HTML", "")
@@ -7560,7 +7560,7 @@ def _build_briefing_summary_html(br: Briefing, rep: Report, user_email: str) -> 
     metrics = f"""
     <div style="background:#f8f9fa;padding:16px;border-radius:8px;margin:16px 0">
         <h3 style="margin:0 0 12px 0;color:#111827">📊 Briefing-Übersicht</h3>
-        <table style="width:100%;border-collapse:collapse">
+        <table class="table-modern" style="width:100%;border-collapse:collapse">
             <tr><td><b>Briefing ID:</b></td><td>{br.id}</td></tr>
             <tr><td><b>Analysis ID:</b></td><td>{getattr(rep, 'analysis_id', 'N/A')}</td></tr>
             <tr><td><b>User:</b></td><td>{user_email}</td></tr>
@@ -7574,7 +7574,7 @@ def _build_briefing_summary_html(br: Briefing, rep: Report, user_email: str) -> 
     scores_html = f"""
     <div style="background:#eff6ff;padding:16px;border-radius:8px;margin:16px 0">
         <h3 style="margin:0 0 12px 0;color:#1e40af">🎯 Scores</h3>
-        <table style="width:100%;border-collapse:collapse">
+        <table class="table-modern" style="width:100%;border-collapse:collapse">
             <tr><td><b>Gesamt:</b></td><td>{getattr(rep, 'score_overall', 0)}/100</td></tr>
             <tr><td><b>Governance:</b></td><td>{getattr(rep, 'score_governance', 0)}/100</td></tr>
             <tr><td><b>Sicherheit:</b></td><td>{getattr(rep, 'score_security', 0)}/100</td></tr>
@@ -7610,7 +7610,7 @@ def _build_briefing_summary_html(br: Briefing, rep: Report, user_email: str) -> 
     answers_html = f"""
     <div style="background:#fef3c7;padding:16px;border-radius:8px;margin:16px 0">
         <h3 style="margin:0 0 12px 0;color:#92400e">📝 Wichtige Antworten</h3>
-        <table style="width:100%;border-collapse:collapse">
+        <table class="table-modern" style="width:100%;border-collapse:collapse">
             {''.join(answers_rows)}
         </table>
         <p style="margin:8px 0 0 0;font-size:12px;color:#78716c">

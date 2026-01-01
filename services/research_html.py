@@ -97,7 +97,7 @@ def items_to_table(
     items: List[Dict[str, Any]],
     headers: Optional[List[str]] = None,
     columns: Optional[List[str]] = None,
-    table_class: str = "table table-striped"
+    table_class: str = "table table-striped table-modern"
 ) -> str:
     """
     Konvertiert Result-Items zu HTML-Tabelle.

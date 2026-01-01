@@ -701,7 +701,7 @@ def generate_diamond_html(model: DiamondModel) -> str:
     html_parts.append('<h3>Erwarteter Impact</h3>')
     html_parts.append(f'<p>{model.impact}</p>')
     if model.kpis:
-        html_parts.append('<table class="kpi-table">')
+        html_parts.append('<table class="kpi-table table-modern">')
         html_parts.append('<tr><th>KPI</th><th>Wert</th></tr>')
         for kpi in model.kpis[:5]:
             html_parts.append(f'<tr><td>{kpi.name}</td><td>{kpi.value}{kpi.unit}</td></tr>')
