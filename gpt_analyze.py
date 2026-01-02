@@ -4539,7 +4539,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     <div class="quick-win-header-new">
         <div class="quick-win-icon-new">{icon_html}</div>
         <div class="quick-win-title-row">
-            <h2 class="quick-win-title-new">{title}</h2>
+            <h3 class="quick-win-title-new">{title}</h3>
             <span class="quick-win-time">{time_savings}</span>
         </div>
     </div>
@@ -4556,6 +4556,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
             <ol class="qw-steps-list">
 {steps_html}
             </ol>
+            <div class="qw-steps-result">Zeitersparnis: {time_savings}</div>
         </div>
         <div class="quick-win-prompt">
             <div class="qw-prompt-header">{doc_icon} Copy-Paste-Prompt für ChatGPT/Claude</div>
@@ -5865,22 +5866,11 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     if _needs_repair(qw_html):
         qw_html = _repair_html("quick_wins", qw_html)
 
-    # v7.0: Detect structured format and skip column split
-    if '<div class="quick-win">' in qw_html:
-        # v7.0: Use full HTML without column split
-        left = qw_html
-        right = ""
-    else:
-        # v6.0: Use column split for bullet lists
-        left, right = _split_li_list_to_columns(qw_html)
-    sections["QUICK_WINS_HTML_LEFT"] = left
-    sections["QUICK_WINS_HTML_RIGHT"] = right
-    sections["QUICK_WINS_HTML"] = (
-        "<div style='display:grid;grid-template-columns:1fr 1fr;gap:16px'>"
-        + left
-        + right
-        + "</div>"
-    )
+    # v7.1: Single-column layout for Quick Wins (no grid split)
+    # The CSS classes in pdf_template.html handle the card styling
+    sections["QUICK_WINS_HTML"] = qw_html
+    sections["QUICK_WINS_HTML_LEFT"] = qw_html  # Legacy compatibility
+    sections["QUICK_WINS_HTML_RIGHT"] = ""  # Legacy compatibility
     # logischer Inhalt (Validator)
     sections["quick_wins"] = qw_html
 
