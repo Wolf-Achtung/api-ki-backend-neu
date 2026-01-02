@@ -2542,11 +2542,13 @@ def _format_gamechanger_section(html_content: str) -> str:
             part_lower = part.lower()
             # Find matching section config
             for sec in sections_config:
-                if sec["keyword"].lower() in part_lower:
+                keyword = str(sec["keyword"])
+                alt_keywords = sec["alt_keywords"]
+                if keyword.lower() in part_lower:
                     current_section = sec
                     break
                 # Try alt keywords
-                if any(kw in part_lower for kw in sec["alt_keywords"]):
+                if isinstance(alt_keywords, list) and any(kw in part_lower for kw in alt_keywords):
                     current_section = sec
                     break
             continue
@@ -2554,13 +2556,17 @@ def _format_gamechanger_section(html_content: str) -> str:
         # This is content
         if current_section:
             # Create table-based highlight box
+            sec_color = str(current_section['color'])
+            sec_bg = str(current_section['bg'])
+            sec_icon = str(current_section['icon'])
+            sec_keyword = str(current_section['keyword'])
             box_html = f"""
-<table style="width: 100%; border-collapse: collapse; margin: 20px 0; border-left: 6px solid {current_section['color']}; background-color: {current_section['bg']}; page-break-inside: avoid;">
+<table style="width: 100%; border-collapse: collapse; margin: 20px 0; border-left: 6px solid {sec_color}; background-color: {sec_bg}; page-break-inside: avoid;">
   <tr>
     <td style="padding: 20px;">
       <div style="margin-bottom: 12px;">
-        <span style="font-size: 24px; margin-right: 8px;">{current_section['icon']}</span>
-        <span style="color: {current_section['color']}; font-size: 18px; font-weight: bold;">{current_section['keyword']}</span>
+        <span style="font-size: 24px; margin-right: 8px;">{sec_icon}</span>
+        <span style="color: {sec_color}; font-size: 18px; font-weight: bold;">{sec_keyword}</span>
       </div>
       <div style="color: #374151; line-height: 1.6;">
         {part.strip()}
