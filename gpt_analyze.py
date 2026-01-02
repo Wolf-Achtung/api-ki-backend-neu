@@ -2208,7 +2208,8 @@ def _parse_quick_wins_json(raw_response: str) -> Optional[List[Dict[str, Any]]]:
 
 def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse: str = "Unbekannt") -> str:
     """
-    Baut Quick Wins HTML aus JSON-Daten mit garantierter Struktur.
+    Baut Quick Wins HTML mit TABELLENSTRUKTUR (WeasyPrint-kompatibel).
+    Keine Flexbox, keine Grid, keine komplexen Gradients.
 
     Args:
         quick_wins: List of dicts mit Quick Win Daten
@@ -2220,35 +2221,27 @@ def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse
     """
     import html as html_module
 
-    # Context-Banner (nur 1x oben)
+    # Context-Banner als Tabelle (nur 1x oben)
     html = f"""
-<div class="context-banner" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 24px; margin-bottom: 32px; border-radius: 16px; border: 1px solid #bfdbfe;">
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
-                📋
-            </div>
-            <div>
-                <div style="font-size: 12px; color: #1e40af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Branche</div>
-                <div style="color: #1e3a8a; font-size: 16px; font-weight: 600; margin-top: 2px;">{html_module.escape(branche)}</div>
-            </div>
-        </div>
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
-                👥
-            </div>
-            <div>
-                <div style="font-size: 12px; color: #1e40af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Größe</div>
-                <div style="color: #1e3a8a; font-size: 16px; font-weight: 600; margin-top: 2px;">{html_module.escape(groesse)}</div>
-            </div>
-        </div>
-    </div>
+<div class="qw-context-banner">
+    <table style="width: 100%; border-collapse: collapse; background: #eff6ff; border-radius: 12px; margin-bottom: 30px;">
+        <tr>
+            <td style="padding: 20px; width: 50%; border-right: 1px solid #bfdbfe;">
+                <div style="color: #1e40af; font-weight: bold; font-size: 13px; margin-bottom: 4px;">📋 BRANCHE</div>
+                <div style="color: #1e3a8a; font-size: 16px; font-weight: 600;">{html_module.escape(branche)}</div>
+            </td>
+            <td style="padding: 20px; width: 50%;">
+                <div style="color: #1e40af; font-weight: bold; font-size: 13px; margin-bottom: 4px;">👥 GRÖSSE</div>
+                <div style="color: #1e3a8a; font-size: 16px; font-weight: 600;">{html_module.escape(groesse)}</div>
+            </td>
+        </tr>
+    </table>
 </div>
 """
 
-    # Quick Win Cards
+    # Quick Win Cards - JEDE als eigene Struktur mit Tabellen-Header
     for i, qw in enumerate(quick_wins, 1):
-        # Escape HTML in Texten
+        # Escape HTML
         title = html_module.escape(str(qw.get('title', 'Ohne Titel')))
         icon = qw.get('icon', '🎯')
         time = html_module.escape(str(qw.get('time', 'Unbekannt')))
@@ -2258,76 +2251,75 @@ def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse
         steps = qw.get('steps', [])
         zeitersparnis = html_module.escape(str(qw.get('zeitersparnis', '')))
 
-        # Steps HTML
-        steps_html = ""
+        # Steps als nummerierte Liste
+        steps_html = '<ol style="margin: 12px 0 12px 20px; padding: 0; color: #065f46;">'
         for step in steps:
             step_clean = html_module.escape(str(step))
-            steps_html += f'<li style="margin-bottom: 8px; line-height: 1.5;">{step_clean}</li>'
+            steps_html += f'<li style="margin-bottom: 8px; line-height: 1.6;">{step_clean}</li>'
+        steps_html += '</ol>'
 
         html += f"""
-<div class="quick-win-card-new" style="border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px; margin-bottom: 24px; page-break-inside: avoid; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+<div class="quick-win-card" style="border: 2px solid #3b82f6; border-radius: 12px; padding: 0; margin-bottom: 30px; page-break-inside: avoid; background: white;">
 
-    <!-- Header -->
-    <div class="quick-win-header-new" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-        <div style="display: flex; align-items: center; gap: 16px;">
-            <div class="quick-win-icon-new" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                {icon}
-            </div>
-            <div style="flex: 1; min-width: 0;">
-                <h4 style="color: white; margin: 0 0 8px 0; font-size: 19px; font-weight: 600; line-height: 1.3;">{title}</h4>
-                <span class="quick-win-time" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; display: inline-block;">
+    <!-- Header (Tabelle für Layout) -->
+    <table style="width: 100%; border-collapse: collapse; background: #3b82f6; border-radius: 10px 10px 0 0;">
+        <tr>
+            <td style="padding: 16px; width: 70px; text-align: center; background: #fbbf24; border-radius: 10px 0 0 0;">
+                <div style="font-size: 36px; line-height: 1;">{icon}</div>
+            </td>
+            <td style="padding: 16px; color: white;">
+                <div style="font-size: 18px; font-weight: bold; margin-bottom: 6px;">{title}</div>
+                <span style="background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 600;">
                     ⏱️ {time}
                 </span>
-            </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Content Area -->
+    <div style="padding: 20px;">
+
+        <!-- Engpass Box -->
+        <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 14px; margin-bottom: 16px; border-radius: 6px;">
+            <div style="font-weight: bold; color: #92400e; font-size: 13px; margin-bottom: 4px;">🎯 IHR ENGPASS:</div>
+            <div style="color: #78350f; font-size: 14px;">"{engpass}"</div>
         </div>
-    </div>
 
-    <!-- Engpass Box -->
-    <div class="quick-win-context" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 4px solid #f59e0b; padding: 16px 20px; margin-bottom: 20px; border-radius: 0 10px 10px 0;">
-        <div style="display: flex; align-items: start; gap: 10px;">
-            <span style="font-size: 18px; flex-shrink: 0;">🎯</span>
-            <div>
-                <span style="font-weight: 700; color: #92400e; font-size: 14px; display: block; margin-bottom: 4px;">Ihr Engpass:</span>
-                <span style="color: #78350f; font-size: 14px; line-height: 1.5; font-style: italic;">"{engpass}"</span>
-            </div>
+        <!-- Aktuell -->
+        <div style="margin-bottom: 14px;">
+            <p style="margin: 0; color: #374151; line-height: 1.6; font-size: 14px;">
+                <strong style="color: #1f2937;">Aktuell:</strong> {description}
+            </p>
         </div>
-    </div>
 
-    <!-- Description -->
-    <div style="margin-bottom: 18px;">
-        <p style="margin: 0; color: #374151; line-height: 1.7; font-size: 15px;"><strong style="color: #1f2937;">Aktuell:</strong> {description}</p>
-    </div>
+        <!-- Mit KI Box -->
+        <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 14px; margin-bottom: 16px; border-radius: 6px;">
+            <p style="margin: 0; color: #065f46; line-height: 1.6; font-size: 14px;">
+                <strong style="color: #047857;">✨ Mit KI:</strong> {mit_ki}
+            </p>
+        </div>
 
-    <!-- Mit KI -->
-    <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 16px 20px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #10b981;">
-        <p style="margin: 0; color: #065f46; line-height: 1.7; font-size: 15px;"><strong style="color: #047857;">✨ Mit KI:</strong> {mit_ki}</p>
-    </div>
-
-    <!-- Steps -->
-    <div class="quick-win-steps" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 20px; border-radius: 10px; margin-bottom: 18px;">
-        <h5 style="margin: 0 0 14px 0; color: #047857; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 18px;">🚀</span>
-            Umsetzungsschritte:
-        </h5>
-        <ol style="margin: 0; padding-left: 22px; color: #065f46; font-size: 14px;">
+        <!-- Steps -->
+        <div style="background: #f0fdf4; padding: 16px; border-radius: 6px; margin-bottom: 14px;">
+            <div style="font-weight: bold; color: #047857; font-size: 14px; margin-bottom: 8px;">🚀 Umsetzungsschritte:</div>
             {steps_html}
-        </ol>
-    </div>
+        </div>
 
-    <!-- Zeitersparnis Footer -->
-    <div style="text-align: right; padding-top: 14px; border-top: 2px solid #f3f4f6;">
-        <span style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46; font-weight: 700; font-size: 15px; padding: 8px 16px; border-radius: 20px; display: inline-block;">
-            💰 Zeitersparnis: {zeitersparnis}
-        </span>
-    </div>
+        <!-- Zeitersparnis Footer -->
+        <div style="text-align: right; padding-top: 12px; border-top: 2px solid #e5e7eb;">
+            <span style="background: #d1fae5; color: #065f46; font-weight: bold; font-size: 14px; padding: 6px 14px; border-radius: 12px;">
+                💰 {zeitersparnis}
+            </span>
+        </div>
 
+    </div>
 </div>
 """
 
     # Footer
     html += f"""
 <p class="small muted" style="text-align: center; color: #6b7280; font-size: 12px; margin-top: 24px;">
-    🎯 v8.0: Individualisiert für {html_module.escape(branche)} · {html_module.escape(groesse)} · JSON-basierte Generierung
+    🎯 v8.0: Individualisiert für {html_module.escape(branche)} · {html_module.escape(groesse)} · WeasyPrint-optimiert
 </p>
 """
 
