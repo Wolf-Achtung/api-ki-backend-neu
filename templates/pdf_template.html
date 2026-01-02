@@ -661,6 +661,42 @@
             border-radius: 50%;
             background: var(--color-success);
         }
+
+        /* ══════════════════════════════════════════════════════════════
+           FIX: Prompt-Templates Text-Wrapping (Seite 5 Quick Wins)
+           ══════════════════════════════════════════════════════════════ */
+
+        pre,
+        code,
+        .prompt-template,
+        pre.prompt-template {
+            white-space: pre-wrap !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box;
+        }
+
+        /* Spezifisch für Prompt-Boxen in Quick Wins */
+        .quick-win pre,
+        .quick-win code,
+        .quick-win-card pre,
+        .quick-win-card code,
+        section pre,
+        section code {
+            white-space: pre-wrap !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            font-size: 11px;
+            line-height: 1.5;
+            padding: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            max-width: 100%;
+        }
+
         /* Roadmap Grid - Light Mode */
         .roadmap-grid {
             display: grid;
