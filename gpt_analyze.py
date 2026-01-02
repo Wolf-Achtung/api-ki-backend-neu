@@ -2353,48 +2353,107 @@ def _fallback_quick_wins_html(branche: str, groesse: str) -> str:
 
 # -------------------- Textwüsten-Formatierung (v9.0 - h3-based) ----------------
 
+
+def _create_svg_decorated_box(
+    icon: str,
+    title: str,
+    body_html: str,
+    bg_color: str,
+    border_color: str,
+    box_style: str = "full"  # "full" = 4-sided border, "left" = left border only
+) -> str:
+    """
+    Create a box with SVG-decorated border and HTML content.
+
+    Uses inline SVG for the decorative border/background, but keeps
+    content as regular HTML for proper text flow and line wrapping.
+
+    Args:
+        icon: Emoji icon for the header
+        title: Box title
+        body_html: HTML content for the body
+        bg_color: Background color (hex, e.g. "#E3F2FD")
+        border_color: Border/accent color (hex, e.g. "#1565C0")
+        box_style: "full" for 4-sided border (risks), "left" for left-accent (gamechanger)
+
+    Returns:
+        HTML string with SVG-decorated box
+    """
+    # Clean up title - remove HTML tags but keep text
+    clean_title = re.sub(r'<[^>]+>', '', title).strip()
+
+    # For full border style (risks): use thick border on all sides
+    # For left accent style (gamechanger): use left border only
+    if box_style == "full":
+        border_style = f"border: 4px solid {border_color};"
+    else:
+        border_style = f"border-left: 6px solid {border_color}; border: 1px solid #e5e7eb; border-left: 6px solid {border_color};"
+
+    # Build the box with inline SVG icon and styled container
+    box_html = f'''
+<div style="margin: 20px 0; padding: 0; page-break-inside: avoid;">
+    <div style="background-color: {bg_color}; {border_style} padding: 16px; font-family: Arial, sans-serif;">
+        <div style="display: flex; align-items: center; margin-bottom: 12px;">
+            <svg width="28" height="28" viewBox="0 0 28 28" style="margin-right: 10px; flex-shrink: 0;">
+                <circle cx="14" cy="14" r="13" fill="{border_color}" opacity="0.15"/>
+                <circle cx="14" cy="14" r="13" fill="none" stroke="{border_color}" stroke-width="1.5"/>
+            </svg>
+            <span style="font-size: 18px; font-weight: bold; color: {border_color};">
+                {icon} {clean_title}
+            </span>
+        </div>
+        <div style="color: #374151; font-size: 14px; line-height: 1.7;">
+            {body_html}
+        </div>
+    </div>
+</div>
+'''
+    return box_html
+
+
 def _format_risks_with_visual_breaks(html_content: str) -> str:
     """
-    Format risk sections with colored table-based boxes.
+    Format risk sections with SVG-decorated colored boxes.
 
-    Version 2: Pure inline styles, no CSS classes - for WeasyPrint compatibility.
+    Version 3: Hybrid SVG/HTML approach - SVG for decoration, HTML for content.
+    This ensures proper text flow while maintaining visual styling.
     """
     if not html_content or len(html_content) < 100:
         return html_content
 
-    log.info("[FORMAT-RISKS-V2] Starting inline-style formatting (length: %d chars)", len(html_content))
+    log.info("[FORMAT-RISKS-V3] Starting SVG-decorated formatting (length: %d chars)", len(html_content))
 
-    # Risk categories with INLINE STYLES ONLY
+    # Risk categories with colors (matching design system)
     risk_configs = [
         {
             "icon": "💼",
             "pattern": r"(Strategische\s+und\s+organisatorische\s+Risiken.*?)(• • •|$)",
-            "border_color": "#3b82f6",
-            "bg_color": "#eff6ff"
+            "border_color": "#1565C0",  # Blue
+            "bg_color": "#E3F2FD"
         },
         {
             "icon": "🔒",
-            "pattern": r"(Daten-?\s+und\s+Sicherheits.*?risiken.*?)(• • •|$)",
-            "border_color": "#f59e0b",
-            "bg_color": "#fffbeb"
+            "pattern": r"(Daten-?,?\s*Sicherheits-?\s*und\s+Compliance-?[Rr]isiken.*?)(• • •|$)",
+            "border_color": "#E65100",  # Orange
+            "bg_color": "#FFF3E0"
         },
         {
             "icon": "⚠️",
-            "pattern": r"(Qualitäts-?\s+und\s+Transparenz.*?risiken.*?)(• • •|$)",
-            "border_color": "#8b5cf6",
-            "bg_color": "#faf5ff"
+            "pattern": r"(Qualitäts-?,?\s*Transparenz-?\s*und\s+Akzeptanz.*?[Rr]isiken.*?)(• • •|$)",
+            "border_color": "#6A1B9A",  # Purple
+            "bg_color": "#F3E5F5"
         },
         {
             "icon": "🔗",
-            "pattern": r"(Abhängigkeits-?\s+und\s+Betriebs.*?risiken.*?)(• • •|$)",
-            "border_color": "#10b981",
-            "bg_color": "#f0fdf4"
+            "pattern": r"(Abhängigkeits-?,?\s*Betriebs-?\s*und\s+Lieferanten.*?[Rr]isiken.*?)(• • •|$)",
+            "border_color": "#2E7D32",  # Green
+            "bg_color": "#E8F5E9"
         },
         {
             "icon": "📊",
-            "pattern": r"(KI-spezifisch.*?Halluzinationen.*?)(• • •|$)",
-            "border_color": "#ef4444",
-            "bg_color": "#fef2f2"
+            "pattern": r"(Risiko-?[Mm]atrix|Überblick\s+über\s+zentrale\s+Risiken.*?)(• • •|$)",
+            "border_color": "#C62828",  # Red
+            "bg_color": "#FFEBEE"
         }
     ]
 
@@ -2417,41 +2476,36 @@ def _format_risks_with_visual_breaks(html_content: str) -> str:
                 # Remove heading from content to get body
                 body_content = re.sub(r'<h\d[^>]*>.*?</h\d>', '', original_content, count=1, flags=re.DOTALL | re.IGNORECASE)
 
-                # Create table box with PURE INLINE STYLES
-                table_box = f'''
-<table style="width: 100%; border-collapse: collapse; margin: 16px 0; background-color: {config["bg_color"]}; border: 4px solid {config["border_color"]};">
-    <tr>
-        <td style="padding: 16px; font-family: Arial, sans-serif;">
-            <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 16px; font-weight: bold;">
-                {config["icon"]} {heading_text}
-            </h4>
-            <div style="color: #374151; font-size: 14px; line-height: 1.6;">
-                {body_content}
-            </div>
-        </td>
-    </tr>
-</table>
-'''
+                # Create SVG-decorated box (full border style for risks)
+                svg_box = _create_svg_decorated_box(
+                    icon=config["icon"],
+                    title=heading_text,
+                    body_html=body_content,
+                    bg_color=config["bg_color"],
+                    border_color=config["border_color"],
+                    box_style="full"
+                )
 
-                # Replace original with table box
-                output = output.replace(original_content, table_box)
+                # Replace original with SVG-decorated box
+                output = output.replace(original_content, svg_box)
                 boxes_created += 1
-                log.info("[FORMAT-RISKS-V2] Created box %d: %s %s...", boxes_created, config['icon'], heading_text[:30])
+                log.info("[FORMAT-RISKS-V3] Created SVG box %d: %s %s...", boxes_created, config['icon'], heading_text[:30])
 
-    log.info("[FORMAT-RISKS-V2] Complete (output: %d chars, %d boxes created)", len(output), boxes_created)
+    log.info("[FORMAT-RISKS-V3] Complete (output: %d chars, %d SVG boxes created)", len(output), boxes_created)
     return output
 
 
 def _format_gamechanger_section(html_content: str) -> str:
     """
-    Format gamechanger sections with colored highlight boxes.
+    Format gamechanger sections with SVG-decorated colored boxes.
 
-    Version 2: Multiple regex patterns with fallbacks + pure inline styles.
+    Version 3: Hybrid SVG/HTML approach with left-accent border style.
+    Uses inline SVG for visual decoration, HTML for content flow.
     """
     if not html_content or len(html_content) < 100:
         return html_content
 
-    log.info("[FORMAT-GAMECHANGER-V2] Starting inline-style formatting (length: %d chars)", len(html_content))
+    log.info("[FORMAT-GAMECHANGER-V3] Starting SVG-decorated formatting (length: %d chars)", len(html_content))
 
     # Gamechanger sections with MULTIPLE PATTERNS for better matching
     gc_configs = [
@@ -2461,8 +2515,8 @@ def _format_gamechanger_section(html_content: str) -> str:
                 r"((?:<h\d[^>]*>)?.*?[Ss]trategische.*?[Bb]ruchpunkt.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
                 r"((?:<h\d[^>]*>)?.*?1\..*?[Bb]ruchpunkt.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
             ],
-            "border_color": "#f59e0b",
-            "bg_color": "#fffbeb"
+            "border_color": "#E65100",  # Orange
+            "bg_color": "#FFF3E0"
         },
         {
             "icon": "💡",
@@ -2470,8 +2524,8 @@ def _format_gamechanger_section(html_content: str) -> str:
                 r"((?:<h\d[^>]*>)?.*?[Tt]ransformations.*?[Ii]dee.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
                 r"((?:<h\d[^>]*>)?.*?2\..*?[Tt]ransformations.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
             ],
-            "border_color": "#3b82f6",
-            "bg_color": "#eff6ff"
+            "border_color": "#1565C0",  # Blue
+            "bg_color": "#E3F2FD"
         },
         {
             "icon": "🚀",
@@ -2479,8 +2533,8 @@ def _format_gamechanger_section(html_content: str) -> str:
                 r"((?:<h\d[^>]*>)?.*?[Gg]amechanger.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
                 r"((?:<h\d[^>]*>)?.*?3\..*?[Gg]amechanger.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
             ],
-            "border_color": "#10b981",
-            "bg_color": "#f0fdf4"
+            "border_color": "#2E7D32",  # Green
+            "bg_color": "#E8F5E9"
         },
         {
             "icon": "✅",
@@ -2488,8 +2542,8 @@ def _format_gamechanger_section(html_content: str) -> str:
                 r"((?:<h\d[^>]*>)?.*?[Ee]rster.*?[Ss]chritt.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
                 r"((?:<h\d[^>]*>)?.*?4\..*?[Ss]chritt.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
             ],
-            "border_color": "#8b5cf6",
-            "bg_color": "#faf5ff"
+            "border_color": "#6A1B9A",  # Purple
+            "bg_color": "#F3E5F5"
         }
     ]
 
@@ -2515,36 +2569,30 @@ def _format_gamechanger_section(html_content: str) -> str:
                     # Get body without heading
                     body_content = re.sub(r'<h\d[^>]*>.*?</h\d>', '', original_content, count=1, flags=re.DOTALL | re.IGNORECASE)
 
-                    # Create table box with PURE INLINE STYLES
-                    table_box = f'''
-<table style="width: 100%; border-collapse: collapse; margin: 16px 0; background-color: {config["bg_color"]}; border-left: 6px solid {config["border_color"]};">
-    <tr>
-        <td style="padding: 16px; font-family: Arial, sans-serif;">
-            <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 16px; font-weight: bold;">
-                {config["icon"]} {heading_text}
-            </h4>
-            <div style="color: #374151; font-size: 14px; line-height: 1.6;">
-                {body_content}
-            </div>
-        </td>
-    </tr>
-</table>
-'''
+                    # Create SVG-decorated box (left accent style for gamechanger)
+                    svg_box = _create_svg_decorated_box(
+                        icon=config["icon"],
+                        title=heading_text,
+                        body_html=body_content,
+                        bg_color=config["bg_color"],
+                        border_color=config["border_color"],
+                        box_style="left"
+                    )
 
-                    # Replace original with table box
-                    output = output.replace(original_content, table_box)
+                    # Replace original with SVG-decorated box
+                    output = output.replace(original_content, svg_box)
                     boxes_created += 1
                     matched = True
-                    log.info("[FORMAT-GAMECHANGER-V2] Created box %d: %s %s...", boxes_created, config['icon'], heading_text[:30])
+                    log.info("[FORMAT-GAMECHANGER-V3] Created SVG box %d: %s %s...", boxes_created, config['icon'], heading_text[:30])
                     break  # Stop trying patterns for this config
 
         if not matched:
-            log.warning("[FORMAT-GAMECHANGER-V2] No match found for %s section (tried %d patterns)", config['icon'], len(config['patterns']))
+            log.warning("[FORMAT-GAMECHANGER-V3] No match found for %s section (tried %d patterns)", config['icon'], len(config['patterns']))
 
     if boxes_created == 0:
-        log.warning("[FORMAT-GAMECHANGER-V2] No gamechanger sections matched, returning original")
+        log.warning("[FORMAT-GAMECHANGER-V3] No gamechanger sections matched, returning original")
     else:
-        log.info("[FORMAT-GAMECHANGER-V2] Complete (output: %d chars, %d boxes created)", len(output), boxes_created)
+        log.info("[FORMAT-GAMECHANGER-V3] Complete (output: %d chars, %d SVG boxes created)", len(output), boxes_created)
 
     return output
 
