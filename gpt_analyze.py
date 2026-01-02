@@ -4513,8 +4513,57 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
 
     # ════════════════════════════════════════════════════════════════════════════
     # 🎯 PHASE 2 FIX: QUICK WINS FALLBACK - DYNAMISCH basierend auf Briefing
+    # v8.0: Redesigned card-based layout with SVG icons
     # ════════════════════════════════════════════════════════════════════════════
     if section_key == "quick_wins":
+        # Helper function to build a Quick Win card with new design
+        def _build_qw_card(
+            icon_name: str,
+            title: str,
+            time_savings: str,
+            context_label: str,
+            context_value: str,
+            solution: str,
+            setup_duration: str,
+            steps: list,
+            prompt: str,
+        ) -> str:
+            """Build a Quick Win card with the new card-based design."""
+            icon_html = get_icon(icon_name, 26)
+            check_icon = get_icon("check", 16, "success")
+            doc_icon = get_icon("document", 14, "gray")
+
+            steps_html = "\n".join([f"<li>{step}</li>" for step in steps])
+
+            return f'''<div class="quick-win-card-new">
+    <div class="quick-win-header-new">
+        <div class="quick-win-icon-new">{icon_html}</div>
+        <div class="quick-win-title-row">
+            <h2 class="quick-win-title-new">{title}</h2>
+            <span class="quick-win-time">{time_savings}</span>
+        </div>
+    </div>
+    <div class="quick-win-body-new">
+        <div class="quick-win-context">
+            <span class="qw-context-label">{context_label}</span>
+            <span class="qw-context-value">"{context_value}"</span>
+        </div>
+        <div class="quick-win-solution">
+            <p>{solution}</p>
+        </div>
+        <div class="quick-win-steps">
+            <div class="qw-steps-header">{check_icon} Setup in {setup_duration}:</div>
+            <ol class="qw-steps-list">
+{steps_html}
+            </ol>
+        </div>
+        <div class="quick-win-prompt">
+            <div class="qw-prompt-header">{doc_icon} Copy-Paste-Prompt für ChatGPT/Claude</div>
+            <pre class="qw-prompt-content">{prompt}</pre>
+        </div>
+    </div>
+</div>'''
+
         # v7.0 PHASE 3: Upgrade fallback to match primary prompt hyper-personalization
         # Extrahiere ALLE 5 Goldnuggets (mit Typo-Korrektur für User-Input)
         zeitersparnis = _fix_typos(briefing.get("zeitersparnis_prioritaet", ""))
@@ -4525,223 +4574,271 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         score_security = scores.get("security", 50)
         score_governance = scores.get("governance", 50)
 
-        # v7.0: Dynamische Quick Wins mit hyper-personalization
+        # v8.0: Dynamische Quick Wins mit hyper-personalization und neuem Card-Design
         qw_items = []
 
         # Quick Win 1: MANDATORY - Vollständiges Zitat
         if zeitersparnis:
-            qw_title = f"🎯 {offering_label or 'Workflow'}-Automatisierung für Zeitersparnis"
-            qw_items.append(f"""<div class="quick-win">
-  <h4>{qw_title}</h4>
-  <p><strong>Ihre Priorität:</strong> "{zeitersparnis}"</p>
-  <p><strong>Warum:</strong> Diese Automatisierung adressiert direkt Ihren zeitintensivsten Bereich und schafft sofort Entlastung bei {hauptleistung or branche}.</p>
-  <pre class="prompt-template">Sie sind KI-Berater für {branche}. Aufgabe: Erstellen Sie einen detaillierten Workflow für "{_smart_truncate(zeitersparnis, 100, '')}". 
+            qw_items.append(_build_qw_card(
+                icon_name="target",
+                title=f"{offering_label or 'Workflow'}-Automatisierung",
+                time_savings="8-12h/M",
+                context_label="Ihre Priorität:",
+                context_value=_smart_truncate(zeitersparnis, 120, '...'),
+                solution=f"Diese Automatisierung adressiert direkt Ihren zeitintensivsten Bereich und schafft sofort Entlastung bei {hauptleistung or branche}.",
+                setup_duration="1-2 Tage",
+                steps=[
+                    "Aktuelle Arbeitsweise dokumentieren (1-2h)",
+                    "KI-Potenziale identifizieren (2h)",
+                    "Template erstellen (3-4h)",
+                    "Pilotdurchlauf (2h)"
+                ],
+                prompt=f'''Sie sind KI-Berater für {branche}. Aufgabe: Erstellen Sie einen detaillierten Workflow für "{_smart_truncate(zeitersparnis, 100, '')}".
 
 Anforderungen:
 - Identifizieren Sie 3-5 konkrete Teilschritte
 - Für jeden Schritt: Was kann KI übernehmen?
 - Welche manuelle Prüfung bleibt nötig?
 
-Format: Schritt-für-Schritt-Anleitung mit Zeitschätzung pro Schritt.</pre>
-  <p><strong>Umsetzung:</strong></p>
-  <ol>
-    <li>Aktuelle Arbeitsweise dokumentieren (1-2h): Notieren Sie alle Schritte des Prozesses</li>
-    <li>KI-Potenziale identifizieren (2h): Markieren Sie, welche Schritte automatisierbar sind</li>
-    <li>Template erstellen (3-4h): Entwickeln Sie wiederverwendbare Vorlagen mit obigem Prompt</li>
-    <li>Pilotdurchlauf (2h): Testen Sie den Workflow an einem echten Fall</li>
-  </ol>
-  <p><em>Zeitersparnis: 8-12 h/Monat nach Einführung</em></p>
-</div>""")
+Format: Schritt-für-Schritt-Anleitung mit Zeitschätzung.'''
+            ))
         else:
-            qw_items.append(f"""<div class="quick-win">
-  <h4>🎯 Kernprozess-Automatisierung</h4>
-  <p><strong>Warum:</strong> Identifizieren und automatisieren Sie den zeitintensivsten Prozess in {hauptleistung or branche}.</p>
-  <pre class="prompt-template">Analysieren Sie den Prozess "{hauptleistung or branche}" und identifizieren Sie:
+            qw_items.append(_build_qw_card(
+                icon_name="target",
+                title="Kernprozess-Automatisierung",
+                time_savings="8-12h/M",
+                context_label="Fokus:",
+                context_value=hauptleistung or branche,
+                solution=f"Identifizieren und automatisieren Sie den zeitintensivsten Prozess in {hauptleistung or branche}.",
+                setup_duration="1 Tag",
+                steps=[
+                    "Prozess dokumentieren (2h)",
+                    "Automatisierungspotenzial bewerten (1h)",
+                    "KI-Template entwickeln (3-4h)"
+                ],
+                prompt=f'''Analysieren Sie den Prozess "{hauptleistung or branche}" und identifizieren Sie:
 1. Die 3 zeitintensivsten Teilschritte
 2. Welche davon sind wiederholbar und strukturiert?
-3. Vorschlag für KI-gestützte Automatisierung</pre>
-  <p><strong>Umsetzung:</strong></p>
-  <ol>
-    <li>Prozess dokumentieren (2h)</li>
-    <li>Automatisierungspotenzial bewerten (1h)</li>
-    <li>KI-Template entwickeln (3-4h)</li>
-  </ol>
-  <p><em>Zeitersparnis: 8-12 h/Monat</em></p>
-</div>""")
+3. Vorschlag für KI-gestützte Automatisierung'''
+            ))
 
         # Quick Win 2: Basiert auf hauptleistung UND geschaeftsmodell
         if hauptleistung:
-            context_hint = ""
-            if geschaeftsmodell:
-                context_hint = f" Perspektive: {_smart_truncate(geschaeftsmodell, 80, '')}"
-            
-            qw_items.append(f"""<div class="quick-win">
-  <h4>📋 Templates für {offering_label or _smart_truncate(hauptleistung, 40, '')}</h4>
-  <p><strong>Ihre Hauptleistung:</strong> {hauptleistung}</p>
-  <p><strong>Warum:</strong> Standardisierte Vorlagen steigern Qualität und Geschwindigkeit.{context_hint}</p>
-  <pre class="prompt-template">Erstellen Sie ein wiederverwendbares Template für "{_smart_truncate(hauptleistung, 100, '')}":
+            context_hint = f" ({_smart_truncate(geschaeftsmodell, 60, '')})" if geschaeftsmodell else ""
+            guardrails_line = f"\n- Beachten Sie: {_smart_truncate(ki_guardrails, 80, '')}" if ki_guardrails else ""
+
+            qw_items.append(_build_qw_card(
+                icon_name="document",
+                title=f"Templates für {offering_label or _smart_truncate(hauptleistung, 30, '')}",
+                time_savings="6-10h/M",
+                context_label="Ihre Hauptleistung:",
+                context_value=_smart_truncate(hauptleistung, 100, '...') + context_hint,
+                solution="Standardisierte Vorlagen steigern Qualität und Geschwindigkeit bei wiederkehrenden Aufgaben.",
+                setup_duration="1 Tag",
+                steps=[
+                    "Gemeinsame Muster analysieren (2h)",
+                    "Template-Struktur entwickeln (3h)",
+                    "KI-Integration testen (2-3h)",
+                    "Qualitätskriterien definieren (1h)"
+                ],
+                prompt=f'''Erstellen Sie ein wiederverwendbares Template für "{_smart_truncate(hauptleistung, 80, '')}":
 
 Struktur:
 - Kernbausteine die immer gleich sind
 - Variable Elemente die angepasst werden
-- Quality-Gates zur Prüfung
-{"- Beachten Sie: " + _smart_truncate(ki_guardrails, 100, '') if ki_guardrails else ""}
+- Quality-Gates zur Prüfung{guardrails_line}
 
-Ziel: 70% Zeitersparnis bei gleichbleibender Qualität.</pre>
-  <p><strong>Umsetzung:</strong></p>
-  <ol>
-    <li>Gemeinsame Muster analysieren (2h): Vergleichen Sie 3-5 vergangene Projekte</li>
-    <li>Template-Struktur entwickeln (3h): Definieren Sie fixe und variable Teile</li>
-    <li>KI-Integration testen (2-3h): Nutzen Sie Claude/GPT für variable Teile</li>
-    <li>Qualitätskriterien definieren (1h): Checkliste für Ergebnisqualität</li>
-  </ol>
-  <p><em>Zeitersparnis: 6-10 h/Monat</em></p>
-</div>""")
+Ziel: 70% Zeitersparnis bei gleichbleibender Qualität.'''
+            ))
         else:
-            qw_items.append(f"""<div class="quick-win">
-  <h4>📋 Dokumenten-Templates standardisieren</h4>
-  <p><strong>Warum:</strong> Wiederkehrende Dokumente in {branche} mit KI-Unterstützung beschleunigen.</p>
-  <pre class="prompt-template">Erstellen Sie Templates für die 3 häufigsten Dokumenttypen in Ihrem Bereich.
-Für jeden Typ: Fixe Struktur + KI-generierbare Abschnitte identifizieren.</pre>
-  <p><strong>Umsetzung:</strong></p>
-  <ol>
-    <li>Top-3 Dokumenttypen identifizieren (1h)</li>
-    <li>Template-Struktur je Typ (2-3h)</li>
-    <li>KI-Prompts entwickeln (2h)</li>
-  </ol>
-  <p><em>Zeitersparnis: 6-10 h/Monat</em></p>
-</div>""")
+            qw_items.append(_build_qw_card(
+                icon_name="document",
+                title="Dokumenten-Templates standardisieren",
+                time_savings="6-10h/M",
+                context_label="Branche:",
+                context_value=branche,
+                solution=f"Wiederkehrende Dokumente in {branche} mit KI-Unterstützung beschleunigen.",
+                setup_duration="1 Tag",
+                steps=[
+                    "Top-3 Dokumenttypen identifizieren (1h)",
+                    "Template-Struktur je Typ (2-3h)",
+                    "KI-Prompts entwickeln (2h)"
+                ],
+                prompt='''Erstellen Sie Templates für die 3 häufigsten Dokumenttypen in Ihrem Bereich.
+Für jeden Typ: Fixe Struktur + KI-generierbare Abschnitte identifizieren.'''
+            ))
 
         # Quick Win 3: Score-abhängig ODER ki_projekte
         if score_security < 50:
-            qw_items.append(f"""<div class="quick-win">
-  <h4>🔒 KI-Sicherheitsrichtlinie erstellen</h4>
-  <p><strong>Ihr Security-Score:</strong> {score_security}/100 (Handlungsbedarf!)</p>
-  <p><strong>Warum:</strong> Ohne klare Sicherheitsregeln riskieren Sie Datenschutzverletzungen.</p>
-  <pre class="prompt-template">Erstellen Sie eine kompakte KI-Sicherheitsrichtlinie:
+            guardrails_prompt = f"\n4. Spezielle Leitplanken: {ki_guardrails}" if ki_guardrails else ""
+            qw_items.append(_build_qw_card(
+                icon_name="lock",
+                title="KI-Sicherheitsrichtlinie erstellen",
+                time_savings="2h Setup",
+                context_label="Ihr Security-Score:",
+                context_value=f"{score_security}/100 (Handlungsbedarf)",
+                solution="Ohne klare Sicherheitsregeln riskieren Sie Datenschutzverletzungen. Eine kompakte Richtlinie schafft Klarheit.",
+                setup_duration="2 Stunden",
+                steps=[
+                    "Datenklassifikation (1h): Sensible vs. unkritische Daten",
+                    "Tool-Freigabeliste (30min): Welche Tools für welche Zwecke",
+                    "Prüfregeln definieren (30min): Checkliste für KI-Ergebnisse"
+                ],
+                prompt=f'''Erstellen Sie eine kompakte KI-Sicherheitsrichtlinie:
 1. Welche Datentypen dürfen in KI-Tools?
 2. Welche Tools sind für welche Zwecke freigegeben?
-3. Wer prüft KI-Ergebnisse vor Verwendung?
-{"4. Spezielle Leitplanken: " + ki_guardrails if ki_guardrails else ""}</pre>
-  <p><strong>Umsetzung:</strong></p>
-  <ol>
-    <li>Datenklassifikation (1h): Sensible vs. unkritische Daten</li>
-    <li>Tool-Freigabeliste (30min): Welche Tools für welche Zwecke</li>
-    <li>Prüfregeln definieren (30min): Checkliste für KI-Ergebnisse</li>
-  </ol>
-  <p><em>Priorität: Hoch · Zeitaufwand: 2h</em></p>
-</div>""")
+3. Wer prüft KI-Ergebnisse vor Verwendung?{guardrails_prompt}'''
+            ))
         elif score_governance < 50:
-            qw_items.append(f"""<div class="quick-win">
-  <h4>📋 KI-Governance Light einführen</h4>
-  <p><strong>Ihr Governance-Score:</strong> {score_governance}/100 (Verbesserungspotenzial)</p>
-  <p><strong>Warum:</strong> Klare Regeln verhindern Wildwuchs und schaffen Vertrauen.</p>
-  <pre class="prompt-template">Definieren Sie minimale Governance-Regeln:
+            qw_items.append(_build_qw_card(
+                icon_name="checklist",
+                title="KI-Governance Light einführen",
+                time_savings="2-3h Setup",
+                context_label="Ihr Governance-Score:",
+                context_value=f"{score_governance}/100 (Verbesserungspotenzial)",
+                solution="Klare Regeln verhindern Wildwuchs und schaffen Vertrauen bei allen Beteiligten.",
+                setup_duration="2-3 Stunden",
+                steps=[
+                    "Rollen definieren (1h): Wer nutzt KI wofür?",
+                    "Freigabeprozess (1h): Wer prüft kritische Outputs?",
+                    "Dokumentation (30min): Einfaches Template für KI-Nutzung"
+                ],
+                prompt='''Definieren Sie minimale Governance-Regeln:
 1. Wer darf welche KI-Tools nutzen?
 2. Wie werden Ergebnisse dokumentiert?
-3. Wer ist verantwortlich bei Fehlern?</pre>
-  <p><strong>Umsetzung:</strong></p>
-  <ol>
-    <li>Rollen definieren (1h): Wer nutzt KI wofür?</li>
-    <li>Freigabeprozess (1h): Wer prüft kritische Outputs?</li>
-    <li>Dokumentation (30min): Einfaches Template für KI-Nutzung</li>
-  </ol>
-  <p><em>Priorität: Hoch · Zeitaufwand: 2-3h</em></p>
-</div>""")
+3. Wer ist verantwortlich bei Fehlern?'''
+            ))
         elif ki_projekte:
-            qw_items.append(f"""<div class="quick-win">
-  <h4>🚀 Quick Start für Ihr KI-Projekt</h4>
-  <p><strong>Ihr Projekt:</strong> {_smart_truncate(ki_projekte, 150, '')}</p>
-  <p><strong>Warum:</strong> Ihr laufendes Projekt kann sofort von strukturiertem Testing profitieren.</p>
-  <pre class="prompt-template">Für Projekt "{_smart_truncate(ki_projekte, 100, '')}":
+            qw_items.append(_build_qw_card(
+                icon_name="rocket",
+                title="Quick Start für Ihr KI-Projekt",
+                time_savings="5-8h/M",
+                context_label="Ihr Projekt:",
+                context_value=_smart_truncate(ki_projekte, 120, '...'),
+                solution="Ihr laufendes Projekt kann sofort von strukturiertem Testing profitieren.",
+                setup_duration="1 Tag",
+                steps=[
+                    "Testfälle definieren (2h)",
+                    "Pilot durchführen (3-4h)",
+                    "Ergebnisse dokumentieren (1h)"
+                ],
+                prompt=f'''Für Projekt "{_smart_truncate(ki_projekte, 80, '')}":
 1. Definieren Sie 3-5 Testszenarien
 2. Was sind Erfolgskriterien pro Szenario?
-3. Welche manuelle Prüfung bleibt nötig?</pre>
-  <p><strong>Umsetzung:</strong></p>
-  <ol>
-    <li>Testfälle definieren (2h)</li>
-    <li>Pilot durchführen (3-4h)</li>
-    <li>Ergebnisse dokumentieren (1h)</li>
-  </ol>
-  <p><em>Zeitersparnis: 5-8 h/Monat nach Pilot</em></p>
-</div>""")
+3. Welche manuelle Prüfung bleibt nötig?'''
+            ))
         else:
-            qw_items.append(f"""<div class="quick-win">
-  <h4>📝 Meeting-Protokolle automatisieren</h4>
-  <p><strong>Warum:</strong> Automatische Transkription spart Zeit und verbessert Nachvollziehbarkeit.</p>
-  <pre class="prompt-template">Nach Meeting-Transkript:
+            qw_items.append(_build_qw_card(
+                icon_name="clock",
+                title="Meeting-Protokolle automatisieren",
+                time_savings="4-6h/M",
+                context_label="Anwendungsfall:",
+                context_value="Wiederkehrende Meetings dokumentieren",
+                solution="Automatische Transkription spart Zeit und verbessert Nachvollziehbarkeit.",
+                setup_duration="2-3 Stunden",
+                steps=[
+                    "Tool auswählen (30min): z.B. Otter.ai, Fathom",
+                    "Test-Meeting (1h): Erste Aufnahme & KI-Auswertung",
+                    "Template verfeinern (1h): Anpassung an Ihre Bedürfnisse"
+                ],
+                prompt='''Nach Meeting-Transkript:
 "Fasse folgendes Meeting zusammen:
 - Hauptthemen (3-5 Punkte)
 - Beschlossene Aktionen mit Verantwortlichen
 - Offene Fragen
-Format: Übersichtliche Bullet-Liste"</pre>
-  <p><strong>Umsetzung:</strong></p>
-  <ol>
-    <li>Tool auswählen (30min): z.B. Otter.ai, Fathom</li>
-    <li>Test-Meeting (1h): Erste Aufnahme & KI-Auswertung</li>
-    <li>Template verfeinern (1h): Anpassung an Ihre Bedürfnisse</li>
-  </ol>
-  <p><em>Zeitersparnis: 4-6 h/Monat</em></p>
-</div>""")
+Format: Übersichtliche Bullet-Liste"'''
+            ))
 
         # Quick Win 4: Größenspezifisch
         if size_group == "solo":
-            qw_items.append(f"""<div class="quick-win">
-  <h4>💡 Persönliche Prompt-Bibliothek</h4>
-  <p><strong>Warum:</strong> 10-15 bewährte Prompts decken 80% Ihrer Alltagsaufgaben ab.</p>
-  <pre class="prompt-template">Beispiel-Kategorien:
+            qw_items.append(_build_qw_card(
+                icon_name="lightbulb",
+                title="Persönliche Prompt-Bibliothek",
+                time_savings="3-5h/M",
+                context_label="Für:",
+                context_value="Solo-Selbstständige & Freiberufler",
+                solution="10-15 bewährte Prompts decken 80% Ihrer Alltagsaufgaben ab.",
+                setup_duration="3-4 Stunden",
+                steps=[
+                    "Häufige Aufgaben identifizieren (1h)",
+                    "Prompts entwickeln & testen (2-3h)",
+                    "Bibliothek anlegen (30min): Notion, Obsidian o.ä."
+                ],
+                prompt=f'''Beispiel-Kategorien:
 - Angebotserstellung für {branche}
 - Kundenkorrespondenz
 - Dokumentation
 - Recherche & Analyse
-Für jede Kategorie: 2-3 Standard-Prompts</pre>
-  <p><strong>Umsetzung:</strong></p>
-  <ol>
-    <li>Häufige Aufgaben identifizieren (1h)</li>
-    <li>Prompts entwickeln & testen (2-3h)</li>
-    <li>Bibliothek anlegen (30min): Notion, Obsidian o.ä.</li>
-  </ol>
-  <p><em>Zeitersparnis: 3-5 h/Monat</em></p>
-</div>""")
+Für jede Kategorie: 2-3 Standard-Prompts'''
+            ))
         elif size_group == "team":
-            qw_items.append(f"""<div class="quick-win">
-  <h4>👥 Team Prompt-Repository</h4>
-  <p><strong>Warum:</strong> Geteiltes Wissen multipliziert die Produktivität aller Teammitglieder.</p>
-  <pre class="prompt-template">Repository-Struktur:
+            qw_items.append(_build_qw_card(
+                icon_name="users",
+                title="Team Prompt-Repository",
+                time_savings="5-8h/M pro Person",
+                context_label="Für:",
+                context_value="Teams & kleine Unternehmen",
+                solution="Geteiltes Wissen multipliziert die Produktivität aller Teammitglieder.",
+                setup_duration="3-4 Stunden",
+                steps=[
+                    "Repository anlegen (1h): Shared Notion/Confluence",
+                    "Initiale Befüllung (2h): Jedes Mitglied 2-3 Prompts",
+                    "Wöchentlicher Review (30min/Woche): Neue Prompts testen"
+                ],
+                prompt='''Repository-Struktur:
 - Pro Rolle: Top-5 Prompts
 - Erfolgsbeispiele dokumentieren
-- Verbesserungsvorschläge sammeln</pre>
-  <p><strong>Umsetzung:</strong></p>
-  <ol>
-    <li>Repository anlegen (1h): Shared Notion/Confluence</li>
-    <li>Initiale Befüllung (2h): Jedes Mitglied 2-3 Prompts</li>
-    <li>Wöchentlicher Review (30min/Woche): Neue Prompts testen</li>
-  </ol>
-  <p><em>Zeitersparnis: 5-8 h/Monat pro Person</em></p>
-</div>""")
+- Verbesserungsvorschläge sammeln'''
+            ))
         else:
-            qw_items.append(f"""<div class="quick-win">
-  <h4>🎓 KI-Wissenstransfer etablieren</h4>
-  <p><strong>Warum:</strong> Systematischer Erfahrungsaustausch beschleunigt Lernkurve.</p>
-  <pre class="prompt-template">Monatlicher KI-Learnings-Call:
+            qw_items.append(_build_qw_card(
+                icon_name="star",
+                title="KI-Wissenstransfer etablieren",
+                time_savings="10-15h/M gesamt",
+                context_label="Für:",
+                context_value="Unternehmen mit mehreren Abteilungen",
+                solution="Systematischer Erfahrungsaustausch beschleunigt die Lernkurve im gesamten Unternehmen.",
+                setup_duration="2-3 Stunden",
+                steps=[
+                    "Termin einrichten (30min): Monatlicher 60min-Slot",
+                    "Dokumentation vorbereiten (1h): Template für Learnings",
+                    "Pilotdurchlauf (1h): Erste Session durchführen"
+                ],
+                prompt='''Monatlicher KI-Learnings-Call:
 - Jede Abteilung: 1 Erfolgsbeispiel
 - Was hat funktioniert? Was nicht?
-- Prompts & Workflows dokumentieren</pre>
-  <p><strong>Umsetzung:</strong></p>
-  <ol>
-    <li>Termin einrichten (30min): Monatlicher 60min-Slot</li>
-    <li>Dokumentation vorbereiten (1h): Template für Learnings</li>
-    <li>Pilotdurchlauf (1h): Erste Session durchführen</li>
-  </ol>
-  <p><em>Zeitersparnis: 10-15 h/Monat unternehmensweit</em></p>
-</div>""")
+- Prompts & Workflows dokumentieren'''
+            ))
 
+        # Build the full Quick Wins section with new layout
         qw_html = "\n".join(qw_items)
+        target_icon = get_icon("target", 16, "purple")
 
-        return f"""<div class="quick-wins-section">
+        return f'''<div class="quick-wins-section">
+    <div class="section-header-new">
+        <span class="section-label">SCHNELLE EFFEKTE</span>
+        <h1 class="section-title-new">Quick Wins</h1>
+        <p class="section-subtitle">3–4 Maßnahmen mit sofortigem Hebel für {branche}</p>
+    </div>
+
+    <div class="context-banner">
+        <div class="context-item">
+            <span class="context-item-label">Branche:</span>
+            <span class="context-item-value">{branche}</span>
+        </div>
+        <div class="context-item">
+            <span class="context-item-label">Größe:</span>
+            <span class="context-item-value">{size_label}</span>
+        </div>
+    </div>
+
 {qw_html}
-<p class="small muted">🎯 v7.0: Individualisiert für {branche} · {size_label} · Basierend auf Ihren 5 Goldnuggets</p>
-</div>"""
+
+    <div class="quick-wins-footer">
+        {target_icon}
+        <span>v8.0: Individualisiert für {branche} · {size_label} · Basierend auf Ihren Goldnuggets</span>
+    </div>
+</div>'''
 
     # Helper function to format numbers with specified decimal places
     def _fmt_num(val: Any, decimals: int = 0) -> str:
