@@ -2365,26 +2365,26 @@ def _format_risks_with_visual_breaks(html: str) -> str:
     # ========== DEFENSIVE GUARD CLAUSES ==========
     # Check 1: Input validation
     if not html:
-        logger.warning("[FORMAT-RISKS] Input is None or empty, returning empty string")
+        log.warning("[FORMAT-RISKS] Input is None or empty, returning empty string")
         return ""
 
     if not isinstance(html, str):
-        logger.warning(f"[FORMAT-RISKS] Input is not string (type={type(html)}), returning as-is")
+        log.warning(f"[FORMAT-RISKS] Input is not string (type={type(html)}), returning as-is")
         return str(html) if html else ""
 
     # Check 2: Minimum content length
     if len(html.strip()) < 100:
-        logger.warning(f"[FORMAT-RISKS] Input too short ({len(html)} chars), skipping formatting")
+        log.warning(f"[FORMAT-RISKS] Input too short ({len(html)} chars), skipping formatting")
         return html
 
     # Check 3: Contains expected content (relaxed check)
     if 'Risiko' not in html and 'risiko' not in html.lower():
-        logger.warning("[FORMAT-RISKS] Expected risk content not found, skipping formatting")
+        log.warning("[FORMAT-RISKS] Expected risk content not found, skipping formatting")
         return html
 
     # ========== SAFE PROCESSING ==========
     try:
-        logger.info(f"[FORMAT-RISKS] Starting formatting, input length: {len(html)}")
+        log.info(f"[FORMAT-RISKS] Starting formatting, input length: {len(html)}")
         original_html = html  # Keep original for fallback
 
         # Haupt-Kategorien in farbige Info-Boxen umwandeln
@@ -2463,15 +2463,15 @@ def _format_risks_with_visual_breaks(html: str) -> str:
 
         # Validate output
         if not formatted_html or len(formatted_html) < len(original_html) * 0.5:
-            logger.warning(f"[FORMAT-RISKS] Output suspicious (len={len(formatted_html) if formatted_html else 0}), returning original")
+            log.warning(f"[FORMAT-RISKS] Output suspicious (len={len(formatted_html) if formatted_html else 0}), returning original")
             return original_html
 
-        logger.info(f"[FORMAT-RISKS] Formatting complete, output length: {len(formatted_html)}")
+        log.info(f"[FORMAT-RISKS] Formatting complete, output length: {len(formatted_html)}")
         return formatted_html
 
     except Exception as e:
-        logger.error(f"[FORMAT-RISKS] Formatting failed: {e}")
-        logger.error(f"[FORMAT-RISKS] Traceback: {traceback.format_exc()}")
+        log.error(f"[FORMAT-RISKS] Formatting failed: {e}")
+        log.error(f"[FORMAT-RISKS] Traceback: {traceback.format_exc()}")
         # CRITICAL: Return original on any error
         return html
 
@@ -2487,26 +2487,26 @@ def _format_gamechanger_section(html: str) -> str:
     # ========== DEFENSIVE GUARD CLAUSES ==========
     # Check 1: Input validation
     if not html:
-        logger.warning("[FORMAT-GAMECHANGER] Input is None or empty, returning empty string")
+        log.warning("[FORMAT-GAMECHANGER] Input is None or empty, returning empty string")
         return ""
 
     if not isinstance(html, str):
-        logger.warning(f"[FORMAT-GAMECHANGER] Input is not string (type={type(html)}), returning as-is")
+        log.warning(f"[FORMAT-GAMECHANGER] Input is not string (type={type(html)}), returning as-is")
         return str(html) if html else ""
 
     # Check 2: Minimum content length
     if len(html.strip()) < 100:
-        logger.warning(f"[FORMAT-GAMECHANGER] Input too short ({len(html)} chars), skipping formatting")
+        log.warning(f"[FORMAT-GAMECHANGER] Input too short ({len(html)} chars), skipping formatting")
         return html
 
     # Check 3: Contains expected content (relaxed check)
     if 'Bruchpunkt' not in html and 'Transformations' not in html and 'Gamechanger' not in html:
-        logger.warning("[FORMAT-GAMECHANGER] Expected gamechanger content not found, skipping formatting")
+        log.warning("[FORMAT-GAMECHANGER] Expected gamechanger content not found, skipping formatting")
         return html
 
     # ========== SAFE PROCESSING ==========
     try:
-        logger.info(f"[FORMAT-GAMECHANGER] Starting formatting, input length: {len(html)}")
+        log.info(f"[FORMAT-GAMECHANGER] Starting formatting, input length: {len(html)}")
         original_html = html  # Keep original for fallback
 
         # Haupt-Abschnitte in farbige Highlight-Boxen
@@ -2566,15 +2566,15 @@ def _format_gamechanger_section(html: str) -> str:
 
         # Validate output
         if not formatted_html or len(formatted_html) < len(original_html) * 0.5:
-            logger.warning(f"[FORMAT-GAMECHANGER] Output suspicious (len={len(formatted_html) if formatted_html else 0}), returning original")
+            log.warning(f"[FORMAT-GAMECHANGER] Output suspicious (len={len(formatted_html) if formatted_html else 0}), returning original")
             return original_html
 
-        logger.info(f"[FORMAT-GAMECHANGER] Formatting complete, output length: {len(formatted_html)}")
+        log.info(f"[FORMAT-GAMECHANGER] Formatting complete, output length: {len(formatted_html)}")
         return formatted_html
 
     except Exception as e:
-        logger.error(f"[FORMAT-GAMECHANGER] Formatting failed: {e}")
-        logger.error(f"[FORMAT-GAMECHANGER] Traceback: {traceback.format_exc()}")
+        log.error(f"[FORMAT-GAMECHANGER] Formatting failed: {e}")
+        log.error(f"[FORMAT-GAMECHANGER] Traceback: {traceback.format_exc()}")
         # CRITICAL: Return original on any error
         return html
 
@@ -6754,34 +6754,34 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     # v8.0: Formatiere Textwüsten mit visuellen Breaks
     # ========== SAFE RISKS FORMATTING ==========
     risks_html = sections.get("RISKS_HTML", "")
-    logger.info(f"[INTEGRATION] Risks HTML before formatting: {len(risks_html) if risks_html else 0} chars")
+    log.info(f"[INTEGRATION] Risks HTML before formatting: {len(risks_html) if risks_html else 0} chars")
     if risks_html and len(risks_html) > 100:
         try:
             original_length = len(risks_html)
             risks_html = _format_risks_with_visual_breaks(risks_html)
-            logger.info(f"[INTEGRATION] Risks HTML after formatting: {len(risks_html)} chars (delta: {len(risks_html) - original_length})")
+            log.info(f"[INTEGRATION] Risks HTML after formatting: {len(risks_html)} chars (delta: {len(risks_html) - original_length})")
             sections["RISKS_HTML"] = risks_html
         except Exception as e:
-            logger.error(f"[INTEGRATION] Risks formatting failed at integration point: {e}")
+            log.error(f"[INTEGRATION] Risks formatting failed at integration point: {e}")
             # Keep original - don't break pipeline
     else:
-        logger.warning("[INTEGRATION] Risks HTML empty or too short, skipping formatting")
+        log.warning("[INTEGRATION] Risks HTML empty or too short, skipping formatting")
     sections["risks"] = risks_html
 
     # ========== SAFE GAMECHANGER FORMATTING ==========
     gamechanger_html = sections.get("GAMECHANGER_HTML", "")
-    logger.info(f"[INTEGRATION] Gamechanger HTML before formatting: {len(gamechanger_html) if gamechanger_html else 0} chars")
+    log.info(f"[INTEGRATION] Gamechanger HTML before formatting: {len(gamechanger_html) if gamechanger_html else 0} chars")
     if gamechanger_html and len(gamechanger_html) > 100:
         try:
             original_length = len(gamechanger_html)
             gamechanger_html = _format_gamechanger_section(gamechanger_html)
-            logger.info(f"[INTEGRATION] Gamechanger HTML after formatting: {len(gamechanger_html)} chars (delta: {len(gamechanger_html) - original_length})")
+            log.info(f"[INTEGRATION] Gamechanger HTML after formatting: {len(gamechanger_html)} chars (delta: {len(gamechanger_html) - original_length})")
             sections["GAMECHANGER_HTML"] = gamechanger_html
         except Exception as e:
-            logger.error(f"[INTEGRATION] Gamechanger formatting failed at integration point: {e}")
+            log.error(f"[INTEGRATION] Gamechanger formatting failed at integration point: {e}")
             # Keep original - don't break pipeline
     else:
-        logger.warning("[INTEGRATION] Gamechanger HTML empty or too short, skipping formatting")
+        log.warning("[INTEGRATION] Gamechanger HTML empty or too short, skipping formatting")
     sections["gamechanger"] = gamechanger_html
 
     sections["recommendations"] = sections.get("RECOMMENDATIONS_HTML", "")
