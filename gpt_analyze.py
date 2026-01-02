@@ -1961,6 +1961,63 @@ def _smart_truncate(text: str, max_len: int = 100, suffix: str = "...") -> str:
     return truncated.rstrip('.,;:') + suffix
 
 
+def _apply_pdf_inline_styles(html: str) -> str:
+    """
+    Apply inline styles for Puppeteer PDF rendering compatibility.
+
+    Puppeteer often fails to render CSS-based gradients and colors in PDFs.
+    This function adds inline styles to ensure proper rendering:
+    - Table header gradients
+    - White text on colored backgrounds
+    - Emoji fallbacks
+    """
+    if not html:
+        return html
+
+    import re
+    result = html
+
+    # Fix 1: Add inline gradient to <thead> elements
+    # Matches <thead> with or without existing attributes
+    thead_pattern = re.compile(r'<thead(\s+[^>]*)?>', re.IGNORECASE)
+    thead_style = 'style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); -webkit-print-color-adjust: exact; print-color-adjust: exact;"'
+
+    def add_thead_style(match):
+        attrs = match.group(1) or ''
+        if 'style=' in attrs.lower():
+            # Already has style, prepend our gradient
+            return re.sub(
+                r'style="([^"]*)"',
+                r'style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); -webkit-print-color-adjust: exact; \1"',
+                match.group(0),
+                flags=re.IGNORECASE
+            )
+        return f'<thead{attrs} {thead_style}>'
+
+    result = thead_pattern.sub(add_thead_style, result)
+
+    # Fix 2: Add inline color to <th> elements within table-modern
+    # Ensure white text on gradient backgrounds
+    th_pattern = re.compile(r'<th(\s+[^>]*)?>', re.IGNORECASE)
+    th_style = 'style="color: white; font-weight: 600; padding: 14px 18px;"'
+
+    def add_th_style(match):
+        attrs = match.group(1) or ''
+        if 'style=' in attrs.lower():
+            # Already has style, prepend our color
+            return re.sub(
+                r'style="([^"]*)"',
+                r'style="color: white; font-weight: 600; \1"',
+                match.group(0),
+                flags=re.IGNORECASE
+            )
+        return f'<th{attrs} {th_style}>'
+
+    result = th_pattern.sub(add_th_style, result)
+
+    return result
+
+
 def _needs_repair(s: str) -> bool:
     if not s: return True
     sl = s.lower()
@@ -7900,6 +7957,9 @@ def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = 
             "margin": {"top": "12mm", "right": "12mm", "bottom": "20mm", "left": "12mm"}
         }
 
+        # Apply inline styles for Puppeteer PDF compatibility (table headers, etc.)
+        html = _apply_pdf_inline_styles(html)
+
         pdf_info = render_pdf_from_html(
             html,
             meta={"analysis_id": an_id, "briefing_id": briefing_id, "run_id": run_id},
@@ -7997,6 +8057,9 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
             "footerTemplate": footer_template,
             "margin": {"top": "12mm", "right": "12mm", "bottom": "20mm", "left": "12mm"}
         }
+
+        # Apply inline styles for Puppeteer PDF compatibility (table headers, etc.)
+        html = _apply_pdf_inline_styles(html)
 
         pdf_info = render_pdf_from_html(
             html,
