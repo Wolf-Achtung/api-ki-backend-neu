@@ -1,8 +1,0 @@
-    complex_html_sections = {
-        'ai_act_table', 'ai_act_compliance_table',
-        'business_case', 'business_case_visual',
-        'financial_summary', 'kpi_table',
-        'tool_comparison', 'benchmark_table',
-        # v7.0: Quick Wins needs h3/h4 for structured boxes
-        'quick_wins', 'quick_wins_html', 'quick_wins_html_left', 'quick_wins_html_right',
-    }
