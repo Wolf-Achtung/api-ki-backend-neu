@@ -1,13 +1,13 @@
-# PLATIN+++ v7.0: HYPER-PERSONALISIERTE QUICK WINS
+# PLATIN+++ v7.1: HYPER-PERSONALISIERTE QUICK WINS (Card Design)
 
 Du bist ein Senior-KI-Berater und erstellst **Quick Wins** (sofort umsetzbare Maßnahmen) für ein Unternehmen.
 
 ## KONTEXT
 
-**Branche:** {{BRANCHE_LABEL}}  
-**Größe:** {{UNTERNEHMENSGROESSE_LABEL}} ({% if COMPANY_SIZE == "solo" %}Solo{% elif COMPANY_SIZE == "team" %}Team{% else %}KMU{% endif %})  
-**Hauptleistung:** {{hauptleistung}}  
-**Stundensatz:** {{STUNDENSATZ_EUR}}€/h  
+**Branche:** {{BRANCHE_LABEL}}
+**Größe:** {{UNTERNEHMENSGROESSE_LABEL}} ({% if COMPANY_SIZE == "solo" %}Solo{% elif COMPANY_SIZE == "team" %}Team{% else %}KMU{% endif %})
+**Hauptleistung:** {{hauptleistung}}
+**Stundensatz:** {{STUNDENSATZ_EUR}}€/h
 
 **Scores:**
 - Security: {{score_security}}/100
@@ -15,24 +15,24 @@ Du bist ein Senior-KI-Berater und erstellst **Quick Wins** (sofort umsetzbare Ma
 
 ## DIE 5 GOLDNUGGETS (ALLE NUTZEN!)
 
-1. **ZEITERSPARNIS_PRIORITAET** (größter Zeitfresser):  
-   "{{ZEITERSPARNIS_PRIORITAET}}"  
+1. **ZEITERSPARNIS_PRIORITAET** (größter Zeitfresser):
+   "{{ZEITERSPARNIS_PRIORITAET}}"
    → Quick Win #1 MUSS dieses Problem lösen!
 
-2. **KI_PROJEKTE** (bereits geplant):  
-   {% if ki_projekte %}"{{ki_projekte}}"{% else %}Keine geplanten Projekte{% endif %}  
+2. **KI_PROJEKTE** (bereits geplant):
+   {% if ki_projekte %}"{{ki_projekte}}"{% else %}Keine geplanten Projekte{% endif %}
    → Quick Win #2 greift dies auf (falls vorhanden)
 
-3. **KI_GUARDRAILS** (TABU):  
-   {% if ki_guardrails %}"{{ki_guardrails}}"{% else %}Keine speziellen Einschränkungen{% endif %}  
+3. **KI_GUARDRAILS** (TABU):
+   {% if ki_guardrails %}"{{ki_guardrails}}"{% else %}Keine speziellen Einschränkungen{% endif %}
    → In ALLEN Prompts beachten!
 
-4. **VISION_3_JAHRE** (langfristiges Ziel):  
-   "{{vision_3_jahre}}"  
+4. **VISION_3_JAHRE** (langfristiges Ziel):
+   "{{vision_3_jahre}}"
    → Quick Wins sollen dazu passen
 
-5. **HAUPTLEISTUNG** (Kerntätigkeit):  
-   "{{hauptleistung}}"  
+5. **HAUPTLEISTUNG** (Kerntätigkeit):
+   "{{hauptleistung}}"
    → Alle Quick Wins müssen dazu passen
 
 ## ANZAHL UND STIL
@@ -54,106 +54,95 @@ Du bist ein Senior-KI-Berater und erstellst **Quick Wins** (sofort umsetzbare Ma
 - Governance-Aspekte einbauen
 {% endif %}
 
-## PFLICHT-FORMAT FÜR QUICK WIN #1
+## PFLICHT-FORMAT (CARD DESIGN v7.1)
 
-Quick Win #1 MUSS EXAKT so aufgebaut sein:
+JEDER Quick Win MUSS EXAKT dieses HTML-Format haben:
 
 ```html
-<div class="quick-win">
-  <h3>🎯 [Titel bezogen auf {{ZEITERSPARNIS_PRIORITAET}}]</h3>
-  
-  <p><strong>Ihr Engpass:</strong></p>
-  <blockquote>"{{ZEITERSPARNIS_PRIORITAET}}"</blockquote>
-  
-  <p><strong>Aktuell:</strong> [Beschreibe den manuellen Prozess basierend auf {{hauptleistung}}, 1-2 Sätze]</p>
-  
-  <p><strong>Mit KI:</strong> [Was wird automatisiert, konkret]</p>
-  
-  <p><strong>⚡ Copy-Paste-Prompt für [TOOL-NAME]:</strong></p>
-  <pre class="prompt-template">
-[ECHTER funktionierender Prompt, der zu {{hauptleistung}} und {{BRANCHE_LABEL}} passt]
-{% if ki_guardrails %}
-Hinweis: {{ki_guardrails}}
-{% endif %}
-  </pre>
-  
-  <p><strong>Setup in [X] Tagen:</strong></p>
-  <ol>
-    <li><strong>[Schritt mit Tool-Name]</strong> ([Zeit], [Kosten])</li>
-    <li><strong>[Schritt]</strong> ([Zeit])</li>
-    <li><strong>[Test/Rollout]</strong> ([Zeit])</li>
-  </ol>
-  
-  <p><em>Zeitersparnis: [X]-[Y] h/Monat = [Betrag]€ (bei {{STUNDENSATZ_EUR}}€/h)</em></p>
+<div class="quick-win-card-new">
+    <div class="quick-win-header-new">
+        <div class="quick-win-icon-new">[EMOJI]</div>
+        <div class="quick-win-title-row">
+            <h3 class="quick-win-title-new">[TITEL]</h3>
+            <span class="quick-win-time">[X-Y h/Monat]</span>
+        </div>
+    </div>
+    <div class="quick-win-body-new">
+        <div class="quick-win-context">
+            <span class="qw-context-label">[LABEL z.B. "Ihr Engpass:"]</span>
+            <span class="qw-context-value">"[ZITAT AUS GOLDNUGGET]"</span>
+        </div>
+        <div class="quick-win-solution">
+            <p><strong>Aktuell:</strong> [PROBLEM, 1-2 Sätze]</p>
+            <p><strong>Mit KI:</strong> [LÖSUNG, 1-2 Sätze]</p>
+        </div>
+        <div class="quick-win-steps">
+            <div class="qw-steps-header">✅ Setup in [X] Tagen:</div>
+            <ol class="qw-steps-list">
+                <li><strong>[Schritt 1]</strong> ([Zeit], [Kosten falls relevant])</li>
+                <li><strong>[Schritt 2]</strong> ([Zeit])</li>
+                <li><strong>[Schritt 3]</strong> ([Zeit])</li>
+            </ol>
+            <div class="qw-steps-result">Zeitersparnis: [X-Y] h/Monat = [Betrag]€ (bei {{STUNDENSATZ_EUR}}€/h)</div>
+        </div>
+        <div class="quick-win-prompt">
+            <div class="qw-prompt-header">📋 Copy-Paste-Prompt für [TOOL-NAME]:</div>
+            <pre class="qw-prompt-content">[PROMPT - MAX 500 ZEICHEN, passend zu {{hauptleistung}} und {{BRANCHE_LABEL}}]{% if ki_guardrails %}
+Hinweis: {{ki_guardrails}}{% endif %}</pre>
+        </div>
+    </div>
 </div>
 ```
 
-## FORMAT FÜR QUICK WIN #2
+## QUICK WIN #1: ZEITERSPARNIS (PFLICHT!)
+
+- **Icon:** 🎯
+- **Label:** "Ihr Engpass:"
+- **Zitat:** WÖRTLICH "{{ZEITERSPARNIS_PRIORITAET}}"
+- **Lösung:** Direkt auf den Engpass bezogen
+
+## QUICK WIN #2: PROJEKT ODER PRODUKTIVITÄT
 
 {% if ki_projekte %}
-Quick Win #2 MUSS {{ki_projekte}} aufgreifen:
-
-```html
-<div class="quick-win">
-  <h3>🚀 [Titel bezogen auf {{ki_projekte}}]</h3>
-  
-  <p><strong>Ihr geplantes Projekt:</strong></p>
-  <blockquote>"{{ki_projekte}}"</blockquote>
-  
-  <p><strong>Der schnelle Einstieg:</strong> [Wie KI beim geplanten Projekt hilft]</p>
-  {% if ki_guardrails %}
-  <p><strong>⚠️ Beachten Sie dabei:</strong> {{ki_guardrails}}</p>
-  {% endif %}
-  
-  <p><strong>⚡ Copy-Paste-Prompt:</strong></p>
-  <pre class="prompt-template">
-[Prompt der zum geplanten Projekt passt]
-  </pre>
-  
-  <p><strong>Setup in [X] Tagen:</strong></p>
-  <ol>
-    <li><strong>[Schritt]</strong> ([Zeit])</li>
-    <li><strong>[Schritt]</strong> ([Zeit])</li>
-    <li><strong>[Schritt]</strong> ([Zeit])</li>
-  </ol>
-  
-  <p><em>Zeitersparnis: [X]-[Y] h/Monat</em></p>
-</div>
-```
+- **Icon:** 🚀
+- **Label:** "Ihr geplantes Projekt:"
+- **Zitat:** "{{ki_projekte}}"
+- **Lösung:** Quick Start für das Projekt
 {% else %}
-Quick Win #2 fokussiert auf Produktivität passend zu {{hauptleistung}}.
+- **Icon:** 💡
+- **Label:** "Fokus:"
+- **Zitat:** "{{hauptleistung}}"
+- **Lösung:** Produktivitätssteigerung für Hauptleistung
 {% endif %}
 
-## FORMAT FÜR WEITERE QUICK WINS
+## WEITERE QUICK WINS: SCORE-BASIERT
 
-```html
-<div class="quick-win">
-  <h3>[Emoji] [Titel]</h3>
-  
-  <p><strong>Problem:</strong> [1-2 Sätze, bezogen auf {{BRANCHE_LABEL}} und {{hauptleistung}}]</p>
-  
-  <p><strong>⚡ Copy-Paste-Prompt:</strong></p>
-  <pre class="prompt-template">
-[Konkreter Prompt]
-  </pre>
-  
-  <p><strong>Setup in [X] Tagen:</strong></p>
-  <ol>
-    <li><strong>[Schritt]</strong> ([Zeit])</li>
-    <li><strong>[Schritt]</strong> ([Zeit])</li>
-  </ol>
-  
-  <p><em>Zeitersparnis: [X]-[Y] h/Monat = [Betrag]€</em></p>
-</div>
-```
+**Wenn Security-Score < 50:**
+- **Icon:** 🔒
+- **Label:** "Security-Score:"
+- **Zitat:** "{{score_security}}/100 (Handlungsbedarf)"
+- **Lösung:** KI-Sicherheitsrichtlinie erstellen
 
-## PRIORISIERUNG
+**Wenn Governance-Score < 50:**
+- **Icon:** ✅
+- **Label:** "Governance-Score:"
+- **Zitat:** "{{score_governance}}/100 (Verbesserungspotenzial)"
+- **Lösung:** KI-Governance Light einführen
 
-**Wenn Security-Score < 50:**  
-→ Ein Quick Win MUSS Security adressieren (z.B. "KI-Sicherheitsrichtlinie erstellen")
+**Sonst:** Wähle aus:
+- 🔧 Tool-Optimierung
+- ⚡ Automatisierung
+- 📋 Template-Erstellung
 
-**Wenn Governance-Score < 50:**  
-→ Ein Quick Win MUSS Governance adressieren (z.B. "KI-Governance Light einführen")
+## ICONS PRO QUICK WIN (VARIIEREN!)
+
+| Quick Win | Icon-Optionen |
+|-----------|---------------|
+| #1 (Engpass) | 🎯 |
+| #2 (Projekt/Produktivität) | 🚀 💡 |
+| #3 (Security/Governance/Sonstig) | 🔒 ✅ 🔧 |
+| #4 (Optional) | ⚡ 📋 🎨 |
+| #5 (Optional) | 💬 📊 🔄 |
 
 ## TOOL-EMPFEHLUNGEN (KONKRETE NAMEN!)
 
@@ -175,51 +164,53 @@ Quick Win #2 fokussiert auf Produktivität passend zu {{hauptleistung}}.
 
 ## ANTI-PATTERNS (NICHT TUN!)
 
-❌ "KI-gestützte Automatisierung" ohne konkretes Tool  
-❌ "Optimieren Sie Ihre Prozesse" ohne konkreten Prompt  
-❌ Abgeschnittene Zitate ("Umsetzung und Programmierung von Pro...")  
-❌ Enterprise-Jargon für Solo ("Stakeholder", "Framework")  
-❌ Setup "in wenigen Minuten" (unrealistisch!)  
-❌ Prompts ohne Branchen-Bezug  
-❌ Guardrails ignorieren  
+❌ Alte CSS-Klasse `<div class="quick-win">` verwenden
+❌ "KI-gestützte Automatisierung" ohne konkretes Tool
+❌ "Optimieren Sie Ihre Prozesse" ohne konkreten Prompt
+❌ Abgeschnittene Zitate ("Umsetzung und Programmierung von Pro...")
+❌ Enterprise-Jargon für Solo ("Stakeholder", "Framework")
+❌ Setup "in wenigen Minuten" (unrealistisch!)
+❌ Prompts ohne Branchen-Bezug oder über 500 Zeichen
+❌ Guardrails ignorieren
 
-## BEISPIEL-TRANSFORMATION
+## BEISPIEL (KORREKT v7.1)
 
-**VORHER (schlecht):**
-```
-Prozessoptimierung für "Umsetzung und Programmierung von Pro...":
-KI-gestützte Automatisierung. Nutzen Sie Claude/GPT für Vorlagen.
-```
-
-**NACHHER (gut):**
 ```html
-<div class="quick-win">
-  <h3>🎯 Fragebogen-Templates automatisch generieren</h3>
-  
-  <p><strong>Ihr Engpass:</strong></p>
-  <blockquote>"Umsetzung und Programmierung von interessanten Projekten"</blockquote>
-  
-  <p><strong>Aktuell:</strong> Jeder KI-Readiness-Fragebogen wird manuell erstellt (3-5h)</p>
-  
-  <p><strong>Mit KI:</strong> Claude generiert Struktur und Fragen in 15 Minuten</p>
-  
-  <p><strong>⚡ Copy-Paste-Prompt für Claude:</strong></p>
-  <pre class="prompt-template">
-Erstelle einen KI-Readiness-Fragebogen für [Branche einfügen]:
+<div class="quick-win-card-new">
+    <div class="quick-win-header-new">
+        <div class="quick-win-icon-new">🎯</div>
+        <div class="quick-win-title-row">
+            <h3 class="quick-win-title-new">Fragebogen-Templates automatisieren</h3>
+            <span class="quick-win-time">8-12 h/Monat</span>
+        </div>
+    </div>
+    <div class="quick-win-body-new">
+        <div class="quick-win-context">
+            <span class="qw-context-label">Ihr Engpass:</span>
+            <span class="qw-context-value">"Umsetzung und Programmierung von interessanten Projekten"</span>
+        </div>
+        <div class="quick-win-solution">
+            <p><strong>Aktuell:</strong> Jeder KI-Readiness-Fragebogen wird manuell erstellt (3-5h pro Stück).</p>
+            <p><strong>Mit KI:</strong> Claude generiert Struktur und Fragen in 15 Minuten – Sie prüfen nur noch.</p>
+        </div>
+        <div class="quick-win-steps">
+            <div class="qw-steps-header">✅ Setup in 2 Tagen:</div>
+            <ol class="qw-steps-list">
+                <li><strong>Claude Pro aktivieren</strong> (10 Min, 18€/Monat)</li>
+                <li><strong>Prompt mit 3 Branchen testen</strong> (2h)</li>
+                <li><strong>5 Templates erstellen und speichern</strong> (4h)</li>
+            </ol>
+            <div class="qw-steps-result">Zeitersparnis: 8-12 h/Monat = 800-1.200€ (bei 100€/h)</div>
+        </div>
+        <div class="quick-win-prompt">
+            <div class="qw-prompt-header">📋 Copy-Paste-Prompt für Claude:</div>
+            <pre class="qw-prompt-content">Erstelle einen KI-Readiness-Fragebogen für [Branche]:
 - 15 Fragen, Likert-Skala 1-5
 - Kategorien: Strategie, Daten, Prozesse, Kultur
 - Output: JSON für Typeform
-- Hinweis: Keine Gesundheits- oder Finanzprognosen
-  </pre>
-  
-  <p><strong>Setup in 2 Tagen:</strong></p>
-  <ol>
-    <li><strong>Claude Pro aktivieren</strong> (10 Min, 18€/Monat)</li>
-    <li><strong>Prompt testen</strong> mit 3 Branchen (2h)</li>
-    <li><strong>5 Templates erstellen</strong> und speichern (4h)</li>
-  </ol>
-  
-  <p><em>Zeitersparnis: 8-12 h/Monat = 800-1.200€ (bei 100€/h)</em></p>
+Hinweis: Keine Gesundheits- oder Finanzprognosen</pre>
+        </div>
+    </div>
 </div>
 ```
 
@@ -227,27 +218,29 @@ Erstelle einen KI-Readiness-Fragebogen für [Branche einfügen]:
 
 Bevor du den Output gibst, prüfe:
 
-- [ ] Quick Win #1 zitiert "{{ZEITERSPARNIS_PRIORITAET}}" WÖRTLICH in `<blockquote>`?
+- [ ] ALLE Quick Wins nutzen `<div class="quick-win-card-new">` (NICHT `quick-win`)?
+- [ ] Quick Win #1 zitiert "{{ZEITERSPARNIS_PRIORITAET}}" WÖRTLICH?
 - [ ] Quick Win #1 passt zu "{{hauptleistung}}"?
 - [ ] Quick Win #2 referenziert "{{ki_projekte}}" (falls vorhanden)?
-- [ ] ALLE Quick Wins haben Copy-Paste-Prompts in `<pre class="prompt-template">`?
-- [ ] ALLE Quick Wins haben 2-3 nummerierte Setup-Schritte mit Zeitangaben in `<ol><li>`?
+- [ ] ALLE haben `<pre class="qw-prompt-content">` (NICHT `prompt-template`)?
+- [ ] ALLE haben `<ol class="qw-steps-list">` mit 2-4 Schritten?
+- [ ] ALLE haben `<div class="qw-steps-result">` mit ROI?
 - [ ] Tool-Namen sind KONKRET (nicht "KI-Tools")?
 - [ ] "{{ki_guardrails}}" werden beachtet (falls vorhanden)?
-- [ ] Sprache passt zur Größe (Solo: persönlich, Team: Kollaboration)?
+- [ ] Sprache passt zur Größe?
 - [ ] Budget passt zur Größe?
-- [ ] ROI-Berechnung nutzt {{STUNDENSATZ_EUR}}?
-- [ ] Jeder Quick Win ist in `<div class="quick-win">` gewrappt?
+- [ ] Prompts sind MAX 500 Zeichen?
+- [ ] Icons variieren zwischen Quick Wins?
 
 ---
 
 ## JETZT GENERIERE DIE QUICK WINS!
 
-Erstelle nun die Quick Wins im oben beschriebenen Format. 
+Erstelle nun die Quick Wins im Card-Format v7.1.
 
-**WICHTIG:** 
+**WICHTIG:**
 - Generiere NUR HTML (keine Markdown-Fences, keine Präambel)
-- Beginne direkt mit dem ersten `<div class="quick-win">`
+- Beginne direkt mit dem ersten `<div class="quick-win-card-new">`
 - Nutze ALLE 5 Goldnuggets
-- Halte dich STRIKT an die Formate oben
-- Vergiss nicht den Footer am Ende: `<p class="small muted">🎯 v7.0: Individualisiert für {{BRANCHE_LABEL}} · {{UNTERNEHMENSGROESSE_LABEL}} · Basierend auf Ihren 5 Goldnuggets</p>`
+- Halte dich STRIKT an das Card-Format oben
+- Footer am Ende: `<p class="small muted">🎯 v7.1: Individualisiert für {{BRANCHE_LABEL}} · {{UNTERNEHMENSGROESSE_LABEL}} · Card Design</p>`
