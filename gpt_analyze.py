@@ -96,7 +96,7 @@ import threading
 import uuid
 import html
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 from urllib.parse import urlparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -2129,13 +2129,13 @@ def _enforce_quick_win_css_classes(html: str) -> str:
 
 # -------------------- Quick Wins JSON-basierte Generierung (v8.0) ----------------
 
-def _parse_quick_wins_json(raw_response: str) -> list:
+def _parse_quick_wins_json(raw_response: str) -> Optional[List[Dict[str, Any]]]:
     """
     Extrahiert und parst JSON aus OpenAI Response.
     Robust gegen häufige Fehler (Backticks, zusätzlicher Text).
 
     Returns:
-        list: Parsed Quick Wins Array
+        List[Dict[str, Any]]: Parsed Quick Wins Array
         None: Bei Parsing-Fehler (Fallback nötig)
     """
     import json
@@ -2195,7 +2195,7 @@ def _parse_quick_wins_json(raw_response: str) -> list:
                         qw[field] = ""
 
         log.info(f"✅ Quick Wins JSON erfolgreich geparst: {len(quick_wins)} Items")
-        return quick_wins
+        return cast(List[Dict[str, Any]], quick_wins)
 
     except json.JSONDecodeError as e:
         log.error(f"JSON Parsing Fehler: {e}")
