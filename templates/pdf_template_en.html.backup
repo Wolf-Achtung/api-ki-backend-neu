@@ -1,0 +1,3503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Status Report {{ report_id }} – {{ company_name or kundencode or 'Your Company' }}</title>
+    <style id="platin-v52-template">
+        /* ============================================
+           PLATIN++ V5.2 PDF TEMPLATE (EN)
+           Sprint G – Visual Polish (Light Mode Only)
+
+           Typography Scale: 28/20/16/13/11/10.5 pt
+           Baseline Grid: 8pt
+           Max-Width: 68ch
+           ============================================ */
+        @page {
+            size: A4;
+            margin: 18mm;
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 8pt;
+                color: #64748b;
+            }
+        }
+        :root {
+            /* ================================================
+               PLATIN++ V5.2 COLOR PALETTE (Light Mode Only)
+               ================================================ */
+            --color-bg-page: #ffffff;
+            --color-bg-surface: #f8fafc;
+            --color-bg-card: #ffffff;
+            --color-text-strong: #0f172a;
+            --color-text-normal: #1e293b;
+            --color-text-muted: #64748b;
+            --color-border: #e2e8f0;
+            --color-border-subtle: #f1f5f9;
+            --color-brand-primary: #3b82f6;
+            --color-brand-accent: #1e40af;
+            --color-warning: #f59e0b;
+            --color-critical: #dc2626;
+            --color-success: #22c55e;
+
+            /* ================================================
+               TYPOGRAPHY SCALE (PLATIN++ V5.2)
+               ================================================ */
+            --font-h1: 28pt;
+            --font-h2: 20pt;
+            --font-h3: 16pt;
+            --font-h4: 13pt;
+            --font-body: 11pt;
+            --font-table: 10.5pt;
+            --font-small: 9pt;
+            --font-caption: 8pt;
+
+            /* ================================================
+               SPACING (8pt Baseline Grid)
+               ================================================ */
+            --space-xs: 4pt;
+            --space-sm: 8pt;
+            --space-md: 16pt;
+            --space-lg: 24pt;
+            --space-xl: 32pt;
+            --space-section: 24pt;
+            --space-card-gap: 16pt;
+
+            /* ================================================
+               COMPONENT TOKENS
+               ================================================ */
+            --radius-card: 10pt;
+            --radius-tag: 4pt;
+            --radius-pill: 999px;
+            --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+            --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.04);
+            --measure: 68ch;
+            --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", sans-serif;
+
+            /* Legacy tokens for compatibility */
+            --text-strong: var(--color-text-strong);
+            --text-normal: var(--color-text-normal);
+            --text-muted: var(--color-text-muted);
+            --text-soft: #94a3b8;
+            --border-subtle: var(--color-border);
+            --surface-elevated: var(--color-bg-card);
+            --primary-500: var(--color-brand-primary);
+            --primary-600: #2563eb;
+            --primary-700: #1d4ed8;
+            --primary-800: var(--color-brand-accent);
+            --success-500: var(--color-success);
+            --success-600: #16a34a;
+            --amber-500: var(--color-warning);
+            --red-600: var(--color-critical);
+        }
+        * {
+            box-sizing: border-box;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-sans);
+            font-size: var(--font-body);
+            line-height: 1.5;
+            color: var(--color-text-normal);
+            background: var(--color-bg-page);
+            background-color: var(--color-bg-page);
+            font-feature-settings: "tnum" 1, "liga" 1;
+            font-variant-numeric: tabular-nums;
+        }
+        body {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .page {
+            width: 100%;
+            max-width: 780px;
+            margin: 0 auto;
+            padding: var(--space-lg) 0 var(--space-xl);
+            background: var(--color-bg-page);
+        }
+        .content {
+            background: var(--color-bg-card);
+            border-radius: var(--radius-card);
+            padding: var(--space-lg);
+            border: 1px solid var(--color-border);
+            box-shadow: var(--shadow-card);
+        }
+        .content-inner {
+            position: relative;
+        }
+        /* ================================================
+           TYPOGRAPHY (PLATIN++ V5.2)
+           ================================================ */
+        h1, h2, h3, h4 {
+            color: var(--color-text-strong);
+            margin-top: 0;
+            line-height: 1.2;
+            break-after: avoid;
+            page-break-after: avoid;
+        }
+        h1 {
+            font-size: var(--font-h1);
+            letter-spacing: -0.01em;
+            margin-bottom: var(--space-sm);
+        }
+        h2 {
+            font-size: var(--font-h2);
+            margin: var(--space-section) 0 var(--space-sm);
+        }
+        h3 {
+            font-size: var(--font-h3);
+            margin: var(--space-md) 0 var(--space-xs);
+        }
+        h4 {
+            font-size: var(--font-h4);
+            margin: var(--space-sm) 0 var(--space-xs);
+        }
+        p {
+            font-size: var(--font-body);
+            margin: 0 0 var(--space-sm) 0;
+            max-width: var(--measure);
+        }
+        ul, ol {
+            font-size: var(--font-body);
+            margin: var(--space-xs) 0 var(--space-sm);
+            padding-left: var(--space-md);
+        }
+        li {
+            margin-bottom: var(--space-xs);
+        }
+        strong {
+            color: var(--color-text-strong);
+            font-weight: 600;
+        }
+        a {
+            color: var(--color-brand-primary);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+        .muted {
+            color: var(--color-text-muted);
+        }
+        .small {
+            font-size: var(--font-caption);
+        }
+        /* ================================================
+           PAGEBREAK RULES (PLATIN++ V5.2)
+           ================================================ */
+        .chapter {
+            page-break-before: always;
+            break-before: page;
+        }
+        .chapter:first-of-type {
+            page-break-before: auto;
+            break-before: auto;
+        }
+        .chapter-start {
+            page-break-before: always;
+            break-before: page;
+        }
+        .no-page-break-inside,
+        .card,
+        .kpi-card,
+        .quick-win-card,
+        .hero-metric-card,
+        .roadmap-phase,
+        .section {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        /* ================================================
+           TAGS (PLATIN++ V5.2)
+           ================================================ */
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: 2pt 6pt;
+            border-radius: var(--radius-tag);
+            font-size: var(--font-small);
+            border: 1px solid var(--color-border);
+            background: var(--color-bg-surface);
+            color: var(--color-text-normal);
+        }
+        .tag-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--color-success);
+        }
+        .tag-warning {
+            border-color: #fcd34d;
+            background: #fffbeb;
+            color: #92400e;
+        }
+        .tag-warning .tag-dot {
+            background: var(--color-warning);
+        }
+        .tag-critical {
+            border-color: #fca5a5;
+            background: #fef2f2;
+            color: #991b1b;
+        }
+        .tag-critical .tag-dot {
+            background: var(--color-critical);
+        }
+        .tag-safe {
+            border-color: #86efac;
+            background: #f0fdf4;
+            color: #166534;
+        }
+        .tag-safe .tag-dot {
+            background: var(--color-success);
+        }
+        /* ================================================
+           HEADER (PLATIN++ V5.2 Light Mode)
+           ================================================ */
+        .header {
+            display: grid;
+            grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+            gap: var(--space-md);
+            padding: var(--space-md);
+            border-radius: var(--radius-card);
+            border: 1px solid var(--color-border);
+            background: var(--color-bg-surface);
+            border-bottom: 2px solid var(--color-border);
+        }
+        .header-main {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+        .eyebrow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-sm);
+            font-size: var(--font-caption);
+            color: var(--color-text-muted);
+        }
+        .eyebrow-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        .eyebrow-divider {
+            width: 1px;
+            height: 10px;
+            background: var(--color-border);
+        }
+        .title-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: var(--space-sm);
+        }
+        .subtitle {
+            font-size: var(--font-small);
+            color: var(--color-text-muted);
+            max-width: 340px;
+        }
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: var(--space-xs) var(--space-md);
+            margin-top: var(--space-xs);
+        }
+        .meta-item {
+            font-size: var(--font-caption);
+            color: var(--color-text-muted);
+        }
+        .meta-label {
+            color: var(--color-text-muted);
+        }
+        .meta-value {
+            color: var(--color-text-strong);
+            font-weight: 500;
+        }
+        /* Score Badge - Light Mode */
+        .score-badge {
+            align-self: flex-start;
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-card);
+            border: 1px solid var(--color-brand-primary);
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            box-shadow: var(--shadow-card);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 108px;
+        }
+        .score-label {
+            font-size: var(--font-caption);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--color-brand-accent);
+        }
+        .score-main {
+            display: flex;
+            align-items: baseline;
+            gap: var(--space-xs);
+        }
+        .score-value {
+            font-size: 18pt;
+            font-weight: 700;
+            color: var(--color-brand-accent);
+        }
+        .score-max {
+            font-size: var(--font-caption);
+            color: var(--color-text-muted);
+        }
+        .score-sub {
+            font-size: var(--font-caption);
+            color: var(--color-brand-primary);
+        }
+        /* Badges - Light Mode */
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-xs);
+            margin-top: var(--space-sm);
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: 2pt 6pt;
+            border-radius: var(--radius-tag);
+            font-size: var(--font-caption);
+            border: 1px solid var(--color-border);
+            background: var(--color-bg-card);
+            color: var(--color-text-normal);
+        }
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--color-brand-primary);
+        }
+        .badge-eu {
+            border-color: var(--color-brand-primary);
+            background: #eff6ff;
+        }
+        .badge-eu .badge-dot {
+            background: var(--color-brand-primary);
+        }
+        .badge-dsgvo {
+            border-color: #60a5fa;
+            background: #eff6ff;
+        }
+        .badge-dsgvo .badge-dot {
+            background: #60a5fa;
+        }
+        .badge-risk {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+        .badge-risk .badge-dot {
+            background: #2563eb;
+        }
+        .badge-time {
+            border-color: #1d4ed8;
+            background: #eff6ff;
+        }
+        .badge-time .badge-dot {
+            background: #1d4ed8;
+        }
+        /* ================================================
+           HERO GRID & METRICS (PLATIN++ V5.2 Light Mode)
+           ================================================ */
+        .hero-grid {
+            margin-top: var(--space-sm);
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: var(--space-card-gap);
+        }
+        .hero-metric-card {
+            padding: 18pt;
+            border-radius: var(--radius-card);
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            box-shadow: var(--shadow-card);
+        }
+        .hero-metric-row {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-xs);
+        }
+        .hero-metric-label {
+            font-size: var(--font-caption);
+            color: var(--color-text-muted);
+        }
+        .hero-metric-value {
+            font-size: var(--font-body);
+            font-weight: 600;
+            color: var(--color-text-strong);
+        }
+        .hero-metric-sub {
+            font-size: var(--font-caption);
+            color: var(--color-text-muted);
+        }
+        .sparkline {
+            margin-top: var(--space-xs);
+            height: 26px;
+            border-radius: var(--radius-pill);
+            background: var(--color-bg-surface);
+            border: 1px solid var(--color-border);
+            display: flex;
+            align-items: center;
+            padding: 2px var(--space-sm);
+            justify-content: space-between;
+            gap: var(--space-xs);
+        }
+        .sparkline-label {
+            font-size: var(--font-caption);
+            color: var(--color-text-muted);
+        }
+        .sparkline-bar {
+            flex: 1;
+            height: 10px;
+            border-radius: var(--radius-pill);
+            background: linear-gradient(90deg, var(--color-brand-primary), var(--color-success));
+        }
+        .sparkline-badge {
+            font-size: var(--font-caption);
+            padding: 2pt 6pt;
+            border-radius: var(--radius-tag);
+            border: 1px solid var(--color-success);
+            color: #166534;
+            background: #f0fdf4;
+        }
+        /* Logo Panel - Light Mode */
+        .logo-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: var(--space-sm);
+        }
+        .logo-row-main {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        .logo-row-main img {
+            display: block;
+        }
+        .logo-ki {
+            height: 28px;
+        }
+        .logo-tuev {
+            height: 28px;
+        }
+        .logo-row-badges {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+        .logo-ready {
+            height: 20px;
+        }
+        .logo-eu, .logo-dsgvo {
+            height: 18px;
+        }
+        /* ================================================
+           SECTIONS (PLATIN++ V5.2 Light Mode)
+           ================================================ */
+        .section {
+            margin-top: var(--space-section);
+            padding: 18pt;
+            border-radius: var(--radius-card);
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            box-shadow: var(--shadow-card);
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-sm);
+        }
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        .section-kicker {
+            font-size: var(--font-caption);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--color-brand-primary);
+        }
+        .section-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: 2pt 6pt;
+            border-radius: var(--radius-tag);
+            font-size: var(--font-caption);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-muted);
+            background: var(--color-bg-surface);
+        }
+        .section-body {
+            font-size: var(--font-body);
+            color: var(--color-text-normal);
+        }
+        .pill-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--color-brand-primary);
+        }
+        /* ================================================
+           GRIDS (PLATIN++ V5.2)
+           ================================================ */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: var(--space-card-gap);
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: var(--space-card-gap);
+        }
+        /* ================================================
+           CARDS (PLATIN++ V5.2 Light Mode)
+           ================================================ */
+        .card {
+            padding: 18pt;
+            border-radius: var(--radius-card);
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            box-shadow: var(--shadow-card);
+            font-size: var(--font-body);
+        }
+        .card-muted {
+            background: var(--color-bg-surface);
+        }
+        .card h3 {
+            margin-top: 0;
+            margin-bottom: var(--space-xs);
+        }
+        .card p {
+            margin-bottom: var(--space-xs);
+        }
+        .card p,
+        .card li,
+        .card div {
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            hyphens: auto;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: var(--space-xs);
+        }
+        .metric-label {
+            font-size: var(--font-caption);
+            color: var(--color-text-muted);
+        }
+        .metric-value {
+            font-size: var(--font-body);
+            font-weight: 600;
+            color: var(--color-text-strong);
+        }
+        .metric-sub {
+            font-size: var(--font-caption);
+            color: var(--color-text-muted);
+        }
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: 2pt 6pt;
+            border-radius: var(--radius-tag);
+            font-size: var(--font-caption);
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            background: #fef2f2;
+        }
+        .risk-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--color-critical);
+        }
+        /* Quick Wins Grid - Light Mode */
+        .quick-wins-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: var(--space-card-gap);
+            margin-top: var(--space-sm);
+        }
+        .quick-win-card {
+            padding: 18pt;
+            border-radius: var(--radius-card);
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            box-shadow: var(--shadow-card);
+            font-size: var(--font-body);
+        }
+        .quick-win-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: 2pt 6pt;
+            border-radius: var(--radius-tag);
+            font-size: var(--font-caption);
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid var(--color-success);
+        }
+        .quick-win-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--color-success);
+        }
+        /* Roadmap Grid - Light Mode */
+        .roadmap-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: var(--space-card-gap);
+            margin-top: var(--space-sm);
+        }
+        .roadmap-phase {
+            padding: 18pt;
+            border-radius: var(--radius-card);
+            background: #eff6ff;
+            border: 1px solid var(--color-brand-primary);
+            box-shadow: var(--shadow-card);
+            font-size: var(--font-body);
+        }
+        .roadmap-phase-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: var(--space-xs);
+        }
+        .phase-label {
+            font-size: var(--font-caption);
+            color: var(--color-brand-accent);
+        }
+        .phase-duration {
+            font-size: var(--font-caption);
+            color: var(--color-text-muted);
+        }
+        .pill-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            font-size: var(--font-caption);
+            background: var(--color-brand-primary);
+            border: none;
+            color: #ffffff;
+        }
+        .roadmap-items {
+            margin-top: var(--space-xs);
+            padding-left: var(--space-md);
+        }
+        .roadmap-items li {
+            margin-bottom: 2px;
+        }
+        /* Business Case Grid - Light Mode */
+        .business-case-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: var(--space-card-gap);
+            margin-top: var(--space-sm);
+        }
+        .kpi-card {
+            padding: 18pt;
+            border-radius: var(--radius-card);
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            box-shadow: var(--shadow-card);
+            font-size: var(--font-body);
+        }
+        .kpi-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: var(--space-xs);
+        }
+        .kpi-label {
+            font-size: var(--font-caption);
+            color: var(--color-text-muted);
+        }
+        .kpi-value {
+            font-size: var(--font-body);
+            font-weight: 600;
+            color: var(--color-text-strong);
+        }
+        .kpi-sub {
+            font-size: var(--font-caption);
+            color: var(--color-text-muted);
+        }
+        .kpi-highlight {
+            font-size: var(--font-caption);
+            padding: 2pt 6pt;
+            border-radius: var(--radius-tag);
+            border: 1px solid var(--color-success);
+            color: #166534;
+            background: #f0fdf4;
+        }
+        .kpi-note {
+            font-size: var(--font-caption);
+            color: var(--color-text-muted);
+            margin-top: var(--space-xs);
+        }
+
+        /* G23: KPI Visuals CSS */
+        .kpi-visuals {
+            margin: 16pt 0;
+            break-inside: avoid;
+        }
+        .kpi-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 10pt;
+        }
+        .kpi-bar {
+            display: block;
+            max-width: 100%;
+        }
+        .kpi-sparkline-container {
+            margin-top: 12pt;
+            padding: 10pt;
+            background: var(--color-bg-surface);
+            border-radius: var(--radius-card);
+        }
+        .kpi-benchmark-container {
+            margin-top: 12pt;
+            padding: 10pt;
+            background: var(--color-bg-surface);
+            border-radius: var(--radius-card);
+        }
+        @media print {
+            .kpi-visuals {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .kpi-bar, .kpi-sparkline, .kpi-benchmark {
+                max-width: 100%;
+            }
+        }
+
+        /* G25: Tool Engine v4 Badges */
+        .tool-badge {
+            display: inline-block;
+            padding: 2pt 6pt;
+            border-radius: var(--radius-tag);
+            font-size: var(--font-caption);
+            font-weight: 600;
+            margin-right: 4pt;
+            vertical-align: middle;
+        }
+        .tool-badge-compact {
+            display: inline-block;
+            padding: 1pt 4pt;
+            border-radius: 3pt;
+            font-size: 8pt;
+            font-weight: 600;
+            margin-right: 2pt;
+        }
+        /* Cost level badges (blue scale) */
+        .cost-level-1 { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+        .cost-level-2 { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
+        .cost-level-3 { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+        .cost-level-4 { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+        .cost-level-5 { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        /* Complexity badges (purple scale) */
+        .complexity-1 { background: #f3e8ff; color: #6b21a8; border: 1px solid #d8b4fe; }
+        .complexity-2 { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; }
+        .complexity-3 { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+        .complexity-4 { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+        .complexity-5 { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        /* Compliance badges (green/red scale) */
+        .compliance-1 { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .compliance-2 { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+        .compliance-3 { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+        .compliance-4 { background: #fed7aa; color: #9a3412; border: 1px solid #fdba74; }
+        .compliance-5 { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        /* Vendor risk badges (orange scale) */
+        .vendor-1 { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .vendor-2 { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+        .vendor-3 { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+        .vendor-4 { background: #ffedd5; color: #9a3412; border: 1px solid #fdba74; }
+        .vendor-5 { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        /* EU hosting badge */
+        .eu-hosting { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+
+        /* G26: Funding year badges */
+        .year-badge { display: inline-block; padding: 2pt 6pt; border-radius: 4pt; font-size: 9pt; font-weight: 600; }
+        .year-2025 { background: #3b82f6; color: #ffffff; }
+        .year-2026 { background: #8b5cf6; color: #ffffff; }
+        .year-2027 { background: #ec4899; color: #ffffff; }
+
+        /* G26: Funding level badges */
+        .level-badge { display: inline-block; padding: 2pt 6pt; border-radius: 3pt; font-size: 9pt; font-weight: 500; }
+        .level-eu { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+        .level-federal { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .level-state { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+        .level-regional { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+
+        /* G26: Funding category badges */
+        .category-badge { display: inline-block; padding: 2pt 6pt; border-radius: 3pt; font-size: 8pt; font-weight: 500; }
+        .category-ki { background: #fae8ff; color: #86198f; border: 1px solid #e879f9; }
+        .category-digitalisierung { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+        .category-innovation { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+        .category-nachhaltigkeit { background: #d1fae5; color: #047857; border: 1px solid #34d399; }
+        .category-gruendung { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+
+        /* G26: Match score indicators */
+        .match-high { color: #22c55e; font-weight: 700; }
+        .match-medium { color: #f59e0b; font-weight: 600; }
+        .match-low { color: #6b7280; font-weight: 500; }
+
+        /* G26: Deadline urgency badges */
+        .deadline-urgent { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; font-weight: 600; }
+        .deadline-normal { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+        .deadline-flexible { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+
+        /* G26: Funding matrix table */
+        .funding-matrix-v2 { margin-top: 16pt; }
+        .funding-matrix-v2 table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+        .funding-matrix-v2 th { background: #f1f5f9; padding: 8pt; text-align: left; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; }
+        .funding-matrix-v2 td { padding: 10pt 8pt; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+        .funding-matrix-v2 tr:hover { background: #f8fafc; }
+
+        /* G26: Funding timeline */
+        .funding-timeline { margin-top: 16pt; padding: 14pt; background: #f8fafc; border-radius: 8pt; }
+        .funding-timeline h4 { margin: 0 0 12pt 0; font-size: 12pt; color: #475569; }
+
+        /* G27: Executive Snapshot One-Pager */
+        .exec-snapshot-container { page-break-before: always; padding: 16pt; background: var(--color-bg-page); }
+        .exec-snapshot-header { display: flex; align-items: center; gap: 12pt; margin-bottom: 16pt; padding-bottom: 12pt; border-bottom: 2px solid var(--color-brand-primary); }
+        .exec-snapshot-title { font-size: 20pt; font-weight: 700; color: var(--color-text-strong); margin: 0; }
+        .exec-snapshot-badge { font-size: 9pt; padding: 2pt 8pt; background: var(--color-brand-primary); color: #fff; border-radius: 4pt; font-weight: 600; }
+        .exec-snapshot-grid { display: flex; flex-direction: column; gap: 14pt; }
+        .snapshot-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12pt; }
+        .snapshot-row.row-3 { grid-template-columns: 1fr 1fr; }
+        .snapshot-block { background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: 8pt; padding: 12pt; }
+        .snapshot-block-title { font-size: 11pt; font-weight: 700; color: var(--color-text-strong); margin: 0 0 10pt 0; padding-bottom: 6pt; border-bottom: 1px solid var(--color-border-subtle); }
+
+        /* G27: KPI Mini Bars */
+        .kpi-mini-bars { display: flex; flex-direction: column; gap: 8pt; }
+        .kpi-mini-row { display: flex; align-items: center; gap: 8pt; }
+        .kpi-label { font-size: 9pt; color: var(--color-text-muted); width: 70pt; flex-shrink: 0; }
+        .kpi-bar-track { flex: 1; height: 8pt; background: var(--color-bg-surface); border-radius: 4pt; overflow: hidden; }
+        .kpi-bar-fill { height: 100%; border-radius: 4pt; }
+        .kpi-bar-fill.kpi-roi { background: #3b82f6; }
+        .kpi-bar-fill.kpi-payback { background: #f59e0b; }
+        .kpi-bar-fill.kpi-savings { background: #22c55e; }
+        .kpi-value { font-size: 10pt; font-weight: 600; color: var(--color-text-strong); width: 50pt; text-align: right; }
+        .kpi-benchmark { margin-top: 8pt; padding-top: 8pt; border-top: 1px dashed var(--color-border); }
+        .benchmark-label { font-size: 8pt; color: var(--color-text-muted); }
+        .benchmark-bars { display: flex; gap: 4pt; margin-top: 4pt; }
+        .benchmark-bar { height: 6pt; border-radius: 3pt; }
+        .benchmark-bar.you { background: #3b82f6; }
+        .benchmark-bar.industry { background: #94a3b8; }
+
+        /* G27: Tool Mini Cards */
+        .tool-mini-cards { display: flex; flex-direction: column; gap: 6pt; }
+        .tool-mini-card { display: flex; justify-content: space-between; align-items: center; padding: 6pt 8pt; background: var(--color-bg-surface); border-radius: 4pt; }
+        .tool-name { font-size: 10pt; font-weight: 600; color: var(--color-text-strong); }
+        .tool-badges { display: flex; gap: 4pt; }
+        .tool-badges .badge { font-size: 8pt; padding: 1pt 4pt; }
+
+        /* G27: Funding Mini Cards */
+        .funding-mini-cards { display: flex; flex-direction: column; gap: 6pt; }
+        .funding-mini-card { padding: 6pt 8pt; background: var(--color-bg-surface); border-radius: 4pt; }
+        .funding-header { display: flex; align-items: center; gap: 6pt; }
+        .funding-name { font-size: 10pt; font-weight: 600; color: var(--color-text-strong); }
+        .funding-details { display: flex; align-items: center; gap: 6pt; margin-top: 4pt; }
+        .funding-rate { font-size: 9pt; color: var(--color-text-muted); }
+        .match-score { font-size: 9pt; font-weight: 600; color: #22c55e; }
+        .flag { font-size: 10pt; }
+        .flag.time-critical { color: #f59e0b; }
+        .flag.provisional { color: #8b5cf6; }
+
+        /* G27: Branch Block */
+        .branch-badges { display: flex; flex-wrap: wrap; gap: 6pt; }
+        .branch-badge { background: #dbeafe; color: #1e40af; font-size: 10pt; padding: 4pt 8pt; border-radius: 4pt; font-weight: 600; }
+        .risk-low { background: #dcfce7; color: #166534; }
+        .risk-medium { background: #fef3c7; color: #92400e; }
+        .risk-high { background: #fee2e2; color: #991b1b; }
+        .risk-critical { background: #7f1d1d; color: #fff; }
+        .dsgvo-badge { background: #f3e8ff; color: #6b21a8; }
+
+        /* G27: Quick Wins & Risks */
+        .quickwins-list, .risks-list { list-style: none; margin: 0; padding: 0; }
+        .quickwin-item { display: flex; align-items: flex-start; gap: 8pt; font-size: 10pt; color: var(--color-text-normal); padding: 4pt 0; }
+        .qw-num { width: 18pt; height: 18pt; background: #22c55e; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9pt; font-weight: 700; flex-shrink: 0; }
+        .risk-item { font-size: 10pt; color: var(--color-text-normal); padding: 4pt 0; border-bottom: 1px solid var(--color-border-subtle); }
+        .risk-item:last-child { border-bottom: none; }
+
+        /* G27: Mini Roadmap */
+        .roadmap-steps { display: flex; gap: 8pt; }
+        .roadmap-step { flex: 1; display: flex; gap: 8pt; padding: 8pt; background: var(--color-bg-surface); border-radius: 6pt; }
+        .step-number { width: 22pt; height: 22pt; background: var(--color-brand-primary); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11pt; font-weight: 700; flex-shrink: 0; }
+        .step-content { flex: 1; }
+        .step-title { font-size: 10pt; font-weight: 700; color: var(--color-text-strong); }
+        .step-desc { font-size: 9pt; color: var(--color-text-muted); margin-top: 2pt; }
+
+        /* G27: Timeline */
+        .timeline-container { display: flex; flex-direction: column; gap: 8pt; }
+        .timeline-year { display: flex; align-items: center; gap: 8pt; }
+        .timeline-label { font-size: 11pt; font-weight: 700; color: var(--color-text-strong); width: 40pt; }
+        .timeline-bar-track { flex: 1; height: 12pt; background: var(--color-bg-surface); border-radius: 6pt; overflow: hidden; }
+        .timeline-bar { height: 100%; border-radius: 6pt; }
+        .timeline-count { font-size: 10pt; font-weight: 600; color: var(--color-text-muted); width: 20pt; text-align: right; }
+
+        /* ================================================
+           TABLES (PLATIN++ V5.2 Light Mode)
+           ================================================ */
+        .risk-matrix {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: var(--space-sm);
+            font-size: var(--font-table);
+        }
+        .risk-matrix th,
+        .risk-matrix td {
+            padding: 8pt 6pt;
+            border: 1px solid var(--color-border);
+            text-align: left;
+            vertical-align: top;
+        }
+        .risk-matrix thead th {
+            background: var(--color-bg-surface);
+            color: var(--color-text-strong);
+            font-weight: 600;
+        }
+        .risk-matrix tbody tr:nth-child(even) td {
+            background: rgba(0, 0, 0, 0.02);
+        }
+        .risk-very-low {
+            background: #f0fdf4;
+        }
+        .risk-low {
+            background: #fefce8;
+        }
+        .risk-medium {
+            background: #fffbeb;
+        }
+        .risk-high {
+            background: #fff7ed;
+        }
+        .risk-critical {
+            background: #fef2f2;
+        }
+        .risk-label {
+            font-weight: 600;
+            color: var(--color-text-strong);
+        }
+        .list-compact {
+            margin: 2px 0;
+            padding-left: var(--space-md);
+        }
+        .list-compact li {
+            margin-bottom: 1px;
+        }
+        /* ================================================
+           CALLOUTS (PLATIN++ V5.2 Light Mode)
+           ================================================ */
+        .callout {
+            margin-top: var(--space-sm);
+            padding: var(--space-sm);
+            border-radius: var(--radius-tag);
+            border: 1px dashed var(--color-border);
+            background: var(--color-bg-surface);
+            font-size: var(--font-small);
+            color: var(--color-text-normal);
+        }
+        .callout strong {
+            color: var(--color-text-strong);
+        }
+        .callout-guardrails {
+            margin-top: var(--space-md);
+            padding: 18pt;
+            border: 2px solid #fca5a5;
+            background: #fef2f2;
+            border-radius: var(--radius-card);
+        }
+        .callout-guardrails h4 {
+            margin-top: 0;
+            color: #991b1b;
+            font-weight: 700;
+        }
+        /* 2.2 Strategic Context Card Variants */
+        .card-goal {
+            background: rgba(59, 130, 246, 0.04);
+        }
+        .card-process {
+            background: rgba(30, 58, 138, 0.03);
+        }
+        .card-model {
+            background: rgba(147, 197, 253, 0.05);
+        }
+        .card-vision {
+            background: rgba(29, 78, 216, 0.03);
+        }
+        /* Context Card Title mit Micro-Icon */
+        .context-card-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+            margin-top: 0;
+        }
+        .context-card-title svg {
+            flex-shrink: 0;
+            width: 14px;
+            height: 14px;
+        }
+        /* Executive Summary Polish – FINAL GOLD */
+        .exec-summary p {
+            margin: 4px 0 6px 0;
+            line-height: 1.45;
+            orphans: 2;
+            widows: 2;
+        }
+        .exec-highlight {
+            border-left: 3px solid #3B82F6;
+            padding-left: 10px;
+            margin: 4px 0;
+        }
+        .exec-title {
+            font-size: 20pt;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .exec-divider {
+            height: 1px;
+            background: rgba(30, 41, 59, 0.15);
+            margin: 16px 0 24px 0;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 7.5pt;
+            color: var(--text-soft);
+        }
+        .legend-swatch {
+            width: 11px;
+            height: 7px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.8);
+        }
+        .swatch-low {
+            background: linear-gradient(90deg, #22C55E, #16A34A);
+        }
+        .swatch-medium {
+            background: linear-gradient(90deg, #FACC15, #D97706);
+        }
+        .swatch-high {
+            background: linear-gradient(90deg, #FB923C, #C2410C);
+        }
+        .swatch-critical {
+            background: linear-gradient(90deg, #F97373, #B91C1C);
+        }
+        /* ================================================
+           FEEDBACK SECTION (PLATIN++ V5.2 Light Mode)
+           ================================================ */
+        .feedback-section {
+            margin-top: var(--space-md);
+            padding: 18pt;
+            border-radius: var(--radius-card);
+            background: #eff6ff;
+            border: 1px solid var(--color-brand-primary);
+            box-shadow: var(--shadow-card);
+        }
+        .feedback-section h2 {
+            margin-top: 0;
+        }
+        .feedback-section p {
+            font-size: var(--font-small);
+        }
+        .feedback-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: var(--space-sm);
+            padding: 10pt 20pt;
+            border-radius: var(--radius-tag);
+            font-size: var(--font-body);
+            font-weight: 600;
+            border: 1px solid var(--color-brand-primary);
+            background: var(--color-brand-primary);
+            color: #ffffff;
+            text-decoration: none;
+            box-shadow: var(--shadow-card);
+        }
+        .feedback-button:hover {
+            background: var(--color-brand-accent);
+        }
+        .highlight-box {
+            margin-top: var(--space-xs);
+            padding: var(--space-sm);
+            border-radius: var(--radius-tag);
+            background: var(--color-bg-surface);
+            border: 1px dashed var(--color-brand-primary);
+            font-size: var(--font-small);
+        }
+        /* ================================================
+           IMPRESSUM / FOOTER (PLATIN++ V5.2 Light Mode)
+           ================================================ */
+        .impressum {
+            margin-top: var(--space-lg);
+            padding: 18pt;
+            border-radius: var(--radius-card);
+            background: var(--color-bg-surface);
+            border: 1px solid var(--color-border);
+            border-top: 2px solid var(--color-border);
+            font-size: var(--font-caption);
+        }
+        .impressum h3 {
+            margin-top: 0;
+            margin-bottom: var(--space-xs);
+        }
+        .impressum-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1.1fr 0.8fr;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-xs);
+        }
+        .impressum-block h4 {
+            margin-bottom: 2px;
+        }
+        .impressum-block p,
+        .impressum-block ul {
+            margin: 2px 0;
+        }
+        .impressum-block ul {
+            padding-left: var(--space-md);
+        }
+        .compliance-strip {
+            margin-top: var(--space-xs);
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-tag);
+            border: 1px solid var(--color-border);
+            background: var(--color-bg-card);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: var(--space-xs) var(--space-md);
+        }
+        .compliance-item {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            font-size: var(--font-caption);
+            color: var(--color-text-muted);
+        }
+        .compliance-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--color-success);
+        }
+        .legal-note {
+            font-size: var(--font-caption);
+            color: var(--color-text-muted);
+            margin-top: var(--space-xs);
+        }
+        .impressum-divider {
+            height: 1px;
+            margin: var(--space-sm) 0;
+            background: var(--color-border);
+        }
+        .impressum-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-sm) var(--space-md);
+            font-size: var(--font-caption);
+            color: var(--color-text-muted);
+        }
+        .impressum-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+        .meta-separator {
+            width: 1px;
+            height: 8px;
+            background: var(--color-border);
+        }
+        .watermark {
+            position: fixed;
+            bottom: 10mm;
+            right: 10mm;
+            opacity: 0.05;
+            font-size: var(--font-small);
+            letter-spacing: 0.05em;
+            color: var(--color-brand-primary);
+            transform: rotate(-45deg);
+        }
+        /* ================================================
+           ANNEX SECTIONS (PLATIN++ V5.2 Light Mode)
+           ================================================ */
+        .annex-section {
+            page-break-before: always;
+            break-before: page;
+            margin-top: var(--space-xl);
+            padding: 18pt;
+            border-radius: var(--radius-card);
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            box-shadow: var(--shadow-card);
+        }
+        .annex-section + .annex-section {
+            page-break-before: auto;
+            break-before: auto;
+            margin-top: var(--space-lg);
+        }
+        .annex-section h2 {
+            font-size: var(--font-h3);
+            margin-bottom: var(--space-sm);
+            color: var(--color-brand-primary);
+        }
+        .annex-section .section-intro {
+            font-size: var(--font-small);
+            color: var(--color-text-muted);
+            margin-bottom: var(--space-md);
+        }
+        .glossary-list {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(0, 3fr);
+            column-gap: var(--space-md);
+            row-gap: var(--space-xs);
+            margin: var(--space-md) 0;
+            font-size: var(--font-small);
+        }
+        .glossary-list dt {
+            font-weight: 600;
+            color: var(--color-text-strong);
+        }
+        .glossary-list dd {
+            margin: 0;
+            color: var(--color-text-muted);
+        }
+        .annex-kreativtools ul {
+            margin: var(--space-md) 0;
+            padding-left: var(--space-md);
+            font-size: var(--font-small);
+        }
+        .annex-kreativtools li {
+            margin-bottom: var(--space-xs);
+        }
+        /* ================================================
+           PRINT STYLES (PLATIN++ V5.2)
+           ================================================ */
+        @media print {
+            h1, h2, h3, h4 {
+                page-break-after: avoid;
+                break-after: avoid;
+            }
+            .card, .quick-win-card, .timeline-item, .kpi-card, .hero-metric-card {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            table, figure, .section {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .page-break {
+                break-after: page;
+                page-break-after: always;
+            }
+            a[href]:after {
+                content: "";
+            }
+        }
+        /* ================================================
+           GENERAL TABLE STYLES (PLATIN++ V5.2)
+           ================================================ */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            break-inside: avoid;
+            font-size: var(--font-table);
+        }
+        th, td {
+            padding: 8pt 6pt;
+            border: 1px solid var(--color-border);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        th {
+            font-weight: 600;
+            text-align: left;
+            background: var(--color-bg-surface);
+            color: var(--color-text-strong);
+        }
+        /* Zebra stripes - PLATIN++ V5.2 spec: rgba(0,0,0,0.02) */
+        tbody tr:nth-child(even) td {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        /* ================================================
+           G21: PLATIN++ DESIGN ENHANCEMENT SYSTEM
+           ================================================ */
+
+        /* Report Card System */
+        .report-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-card);
+            padding: 16pt 18pt;
+            margin: 12pt 0;
+            box-shadow: var(--shadow-card);
+            break-inside: avoid;
+        }
+        .report-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10pt;
+            margin-bottom: 12pt;
+            border-bottom: 1px solid var(--color-border-subtle);
+            padding-bottom: 10pt;
+        }
+        .report-card-icon {
+            width: 20pt;
+            height: 20pt;
+            flex-shrink: 0;
+        }
+        .report-card-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: var(--color-brand-primary);
+            fill: none;
+            stroke-width: 1.5;
+        }
+        .report-card-title {
+            font-size: var(--font-h4);
+            font-weight: 700;
+            color: var(--color-text-strong);
+            margin: 0;
+            flex: 1;
+        }
+        .report-card-badge {
+            font-size: var(--font-small);
+            color: var(--color-text-muted);
+            background: var(--color-bg-surface);
+            padding: 4pt 8pt;
+            border-radius: var(--radius-tag);
+            font-weight: 500;
+        }
+        .report-card-body {
+            color: var(--color-text-normal);
+            line-height: 1.5;
+        }
+        .report-card-body p {
+            margin: 0 0 8pt 0;
+        }
+        .report-card-body p:last-child {
+            margin-bottom: 0;
+        }
+        .report-card-body ul {
+            margin: 8pt 0;
+            padding-left: 18pt;
+        }
+        .report-card-body li {
+            margin: 4pt 0;
+        }
+
+        /* Card Variations */
+        .report-card-muted {
+            background: var(--color-bg-surface);
+            border-color: var(--color-border-subtle);
+        }
+        .report-card-highlight {
+            border-left: 3pt solid var(--color-brand-primary);
+        }
+        .report-card-warning {
+            border-left: 3pt solid var(--color-warning);
+        }
+
+        /* Card Grid Layouts */
+        .card-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16pt;
+            margin: 12pt 0;
+        }
+        .card-grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12pt;
+            margin: 12pt 0;
+        }
+
+        /* KPI Triple Block */
+        .kpi-triple {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16pt;
+            margin: 16pt 0;
+            padding: 16pt;
+            background: var(--color-bg-surface);
+            border-radius: var(--radius-card);
+            break-inside: avoid;
+        }
+        .kpi {
+            text-align: center;
+            padding: 12pt;
+            background: var(--color-bg-card);
+            border-radius: 8pt;
+            border: 1px solid var(--color-border-subtle);
+        }
+        .kpi-label {
+            display: block;
+            font-size: var(--font-small);
+            color: var(--color-text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5pt;
+            margin-bottom: 6pt;
+        }
+        .kpi-value {
+            display: block;
+            font-size: 22pt;
+            font-weight: 700;
+            color: var(--color-brand-primary);
+            line-height: 1.2;
+        }
+        .kpi-sub {
+            display: block;
+            font-size: var(--font-small);
+            color: var(--color-text-muted);
+            margin-top: 4pt;
+            line-height: 1.3;
+        }
+
+        /* Step Cards (for Starter Kit) */
+        .step-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14pt;
+            margin: 16pt 0;
+        }
+        .step-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-card);
+            padding: 14pt;
+            position: relative;
+            break-inside: avoid;
+        }
+        .step-card-number {
+            position: absolute;
+            top: -10pt;
+            left: 14pt;
+            width: 26pt;
+            height: 26pt;
+            background: var(--color-brand-primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14pt;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+        .step-card-title {
+            font-size: var(--font-h4);
+            font-weight: 700;
+            color: var(--color-text-strong);
+            margin: 14pt 0 8pt 0;
+        }
+        .step-card-body {
+            font-size: var(--font-body);
+            color: var(--color-text-normal);
+            line-height: 1.5;
+        }
+
+        /* Tool/Funding Pair Cards */
+        .pair-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-card);
+            padding: 12pt 14pt;
+            margin: 8pt 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 12pt;
+            break-inside: avoid;
+        }
+        .pair-card-icon {
+            width: 18pt;
+            height: 18pt;
+            flex-shrink: 0;
+            margin-top: 2pt;
+        }
+        .pair-card-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: var(--color-brand-primary);
+            fill: none;
+            stroke-width: 1.5;
+        }
+        .pair-card-content {
+            flex: 1;
+        }
+        .pair-card-name {
+            font-size: var(--font-h4);
+            font-weight: 700;
+            color: var(--color-text-strong);
+            margin: 0 0 4pt 0;
+        }
+        .pair-card-category {
+            font-size: var(--font-small);
+            color: var(--color-text-muted);
+            background: var(--color-bg-surface);
+            padding: 2pt 6pt;
+            border-radius: var(--radius-tag);
+            display: inline-block;
+            margin-bottom: 6pt;
+            font-weight: 500;
+        }
+        .pair-card-description {
+            font-size: var(--font-body);
+            color: var(--color-text-normal);
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        /* Badge Block (Branch + Risk) */
+        .badge-block {
+            display: flex;
+            align-items: center;
+            gap: 12pt;
+            padding: 14pt 16pt;
+            background: var(--color-bg-surface);
+            border-radius: var(--radius-card);
+            margin: 16pt 0;
+            border: 1px solid var(--color-border);
+            break-inside: avoid;
+        }
+        .badge-block-item {
+            display: flex;
+            align-items: center;
+            gap: 8pt;
+            padding: 8pt 12pt;
+            background: var(--color-bg-card);
+            border-radius: 8pt;
+            border: 1px solid var(--color-border-subtle);
+        }
+        .badge-block-label {
+            font-size: var(--font-small);
+            color: var(--color-text-muted);
+            font-weight: 500;
+        }
+        .badge-block-value {
+            font-size: var(--font-h4);
+            font-weight: 700;
+            color: var(--color-text-strong);
+        }
+        .badge-block-icon {
+            width: 16pt;
+            height: 16pt;
+        }
+        .badge-block-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: var(--color-brand-primary);
+            fill: none;
+            stroke-width: 1.5;
+        }
+
+        /* Risk Level Colors */
+        .risk-low {
+            color: var(--color-success);
+        }
+        .risk-low svg {
+            stroke: var(--color-success);
+        }
+        .risk-medium {
+            color: var(--color-warning);
+        }
+        .risk-medium svg {
+            stroke: var(--color-warning);
+        }
+        .risk-high {
+            color: var(--color-critical);
+        }
+        .risk-high svg {
+            stroke: var(--color-critical);
+        }
+
+        /* Enhanced Section Kicker */
+        .section-kicker-enhanced {
+            display: inline-flex;
+            align-items: center;
+            gap: 6pt;
+            font-size: var(--font-small);
+            font-weight: 600;
+            color: var(--color-brand-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.8pt;
+            margin-bottom: 8pt;
+        }
+        .section-kicker-enhanced svg {
+            width: 14pt;
+            height: 14pt;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.5;
+        }
+
+        /* KI-Stack Summary Container */
+        .ki-stack-summary {
+            display: grid;
+            gap: 18pt;
+        }
+        .stack-section {
+            break-inside: avoid;
+        }
+        .stack-section-title {
+            font-size: var(--font-h3);
+            font-weight: 700;
+            color: var(--color-text-strong);
+            margin: 0 0 12pt 0;
+            padding-bottom: 8pt;
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        /* Inline SVG Icons - minimal outline style */
+        .icon-automation,
+        .icon-analysis,
+        .icon-collaboration,
+        .icon-compliance,
+        .icon-research,
+        .icon-funding,
+        .icon-kpi,
+        .icon-risk,
+        .icon-branch,
+        .icon-step {
+            display: inline-block;
+            width: 18pt;
+            height: 18pt;
+            vertical-align: middle;
+        }
+
+        /* ================================================
+           EXECUTIVE DECISION BOX (Step 1/3)
+           ================================================ */
+        .exec-decision-box {
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 10pt;
+            padding: 12pt 14pt;
+            margin: 10pt 0 12pt 0;
+            background: rgba(0,0,0,0.02);
+        }
+        .exec-decision-box p {
+            margin: 0 0 8pt 0;
+        }
+        .exec-decision-box ul {
+            margin: 8pt 0 0 18pt;
+            padding: 0;
+        }
+        .exec-decision-box li {
+            margin: 4pt 0;
+        }
+
+        /* ================================================
+           ROADMAP DECISION (Step 2/3)
+           ================================================ */
+        .roadmap-decision {
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 10pt;
+            padding: 12pt 14pt;
+            margin: 12pt 0 16pt 0;
+            background: rgba(0,0,0,0.02);
+        }
+        .roadmap-decision p {
+            margin: 0 0 8pt 0;
+        }
+        .roadmap-decision ul {
+            margin: 6pt 0 12pt 18pt;
+            padding: 0;
+        }
+        .roadmap-decision li {
+            margin: 4pt 0;
+        }
+
+        /* ================================================
+           GAMECHANGER DECISION (Step 3/3)
+           ================================================ */
+        .gamechanger-decision {
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 10pt;
+            padding: 14pt 16pt;
+            margin: 14pt 0 18pt 0;
+            background: rgba(0,0,0,0.02);
+        }
+        .gamechanger-decision p {
+            margin: 0 0 10pt 0;
+        }
+        .gamechanger-decision ul {
+            margin: 8pt 0 12pt 18pt;
+            padding: 0;
+        }
+        .gamechanger-decision li {
+            margin: 5pt 0;
+        }
+        .decision-bridge {
+            font-size: 9pt;
+            color: #666;
+            font-style: italic;
+            margin: 8pt 0 16pt 0;
+        }
+
+        /* ================================================
+           REPORT READING HINT (Executive Frontlayer)
+           ================================================ */
+        .report-reading-hint {
+            margin: 20pt 0 24pt 0;
+            padding: 14pt 16pt;
+            background: rgba(0,0,0,0.02);
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 8pt;
+            font-size: 0.95em;
+        }
+        .report-reading-hint p {
+            margin: 0 0 8pt 0;
+            line-height: 1.5;
+        }
+        .report-reading-hint p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* ================================================
+           FINAL-CHECK INTRO (Point 1)
+           ================================================ */
+        .final-check-intro {
+            margin: 16pt 0 20pt 0;
+            padding: 14pt 18pt;
+            background: linear-gradient(135deg, #f8fafc 0%, #e8f4f8 100%);
+            border: 1px solid rgba(0, 102, 153, 0.15);
+            border-left: 4px solid var(--color-brand-primary);
+            border-radius: 8pt;
+        }
+        .final-check-intro h3 {
+            margin: 0 0 8pt 0;
+            font-size: 11pt;
+            font-weight: 600;
+            color: var(--color-brand-primary);
+            letter-spacing: 0.3pt;
+        }
+        .final-check-intro p {
+            margin: 0 0 10pt 0;
+            font-size: 9.5pt;
+            line-height: 1.55;
+            color: var(--color-text-normal);
+        }
+        .final-check-decisions {
+            margin: 0;
+            padding-left: 16pt;
+            list-style: none;
+        }
+        .final-check-decisions li {
+            position: relative;
+            padding-left: 18pt;
+            margin-bottom: 6pt;
+            font-size: 9pt;
+            line-height: 1.5;
+        }
+        .final-check-decisions li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--color-brand-primary);
+            font-weight: bold;
+        }
+
+        /* ================================================
+           RISK MATRIX LEGEND (Point 2)
+           ================================================ */
+        .risk-matrix-legend {
+            margin: 0 0 16pt 0;
+            padding: 12pt 14pt;
+            background: #fafafa;
+            border: 1px solid var(--color-border);
+            border-radius: 6pt;
+            font-size: 9pt;
+        }
+        .risk-matrix-legend h4 {
+            margin: 0 0 8pt 0;
+            font-size: 10pt;
+            font-weight: 600;
+            color: var(--color-text-strong);
+        }
+        .risk-legend-axes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12pt;
+            margin-bottom: 10pt;
+        }
+        .risk-legend-axis {
+            display: flex;
+            align-items: flex-start;
+            gap: 6pt;
+        }
+        .risk-legend-axis .axis-label {
+            font-weight: 600;
+            color: var(--color-brand-primary);
+            min-width: 60pt;
+        }
+        .risk-legend-colors {
+            display: flex;
+            gap: 12pt;
+            margin-top: 8pt;
+            padding-top: 8pt;
+            border-top: 1px dashed var(--color-border);
+        }
+        .risk-color-item {
+            display: flex;
+            align-items: center;
+            gap: 4pt;
+            font-size: 8.5pt;
+        }
+        .risk-color-dot {
+            width: 10pt;
+            height: 10pt;
+            border-radius: 50%;
+        }
+        .risk-color-dot.green { background: #28a745; }
+        .risk-color-dot.yellow { background: #ffc107; }
+        .risk-color-dot.red { background: #dc3545; }
+
+        /* ================================================
+           FUNDING TRUST BLOCK (Point 3)
+           ================================================ */
+        .funding-trust-block {
+            margin: 0 0 20pt 0;
+            padding: 16pt;
+            background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fc 100%);
+            border: 1px solid rgba(0, 82, 147, 0.12);
+            border-radius: 8pt;
+        }
+        .funding-trust-header {
+            display: flex;
+            align-items: center;
+            gap: 12pt;
+            margin-bottom: 12pt;
+        }
+        .eu-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6pt;
+            padding: 6pt 12pt;
+            background: #003399;
+            color: #fff;
+            border-radius: 4pt;
+            font-size: 9pt;
+            font-weight: 600;
+        }
+        .eu-badge::before {
+            content: "🇪🇺";
+            font-size: 12pt;
+        }
+        .funding-trust-title {
+            font-size: 11pt;
+            font-weight: 600;
+            color: var(--color-brand-primary);
+            margin: 0;
+        }
+        .funding-paths {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12pt;
+            margin-top: 12pt;
+        }
+        .funding-path-card {
+            padding: 12pt;
+            background: #fff;
+            border: 1px solid rgba(0, 82, 147, 0.1);
+            border-radius: 6pt;
+        }
+        .funding-path-name {
+            font-weight: 600;
+            font-size: 10pt;
+            color: var(--color-brand-accent);
+            margin-bottom: 6pt;
+        }
+        .funding-path-detail {
+            font-size: 8.5pt;
+            line-height: 1.5;
+            margin-bottom: 4pt;
+        }
+        .funding-path-detail strong {
+            color: var(--color-text-strong);
+        }
+        .funding-path-next {
+            margin-top: 8pt;
+            padding-top: 6pt;
+            border-top: 1px dashed rgba(0,0,0,0.1);
+            font-size: 8.5pt;
+            color: var(--color-brand-primary);
+            font-weight: 500;
+        }
+
+        /* ================================================
+           GDPR MINI DISCLAIMER (Point 4)
+           ================================================ */
+        .gdpr-mini-disclaimer {
+            text-align: right;
+            font-size: 7.5pt;
+            color: rgba(0,0,0,0.45);
+            padding: 8pt 0;
+            margin-top: 12pt;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+        .gdpr-mini-disclaimer a {
+            color: rgba(0,0,0,0.55);
+            text-decoration: underline;
+        }
+
+        /* ================================================
+           EXECUTIVE PAGES REDESIGN (McKinsey-Style)
+           Page 1: Orientation | Page 2: Decision | Page 3: ToC
+           ================================================ */
+
+        /* --- Page 1: Executive Orientation --- */
+        .exec-orientation {
+            padding: var(--space-lg) 0;
+        }
+        .exec-orientation .header {
+            border: none;
+            background: transparent;
+            padding: var(--space-md) 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+        .exec-kpi-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-md);
+            margin: var(--space-lg) 0;
+            padding: var(--space-md) 0;
+            border-top: 1px solid var(--color-border-subtle);
+            border-bottom: 1px solid var(--color-border-subtle);
+        }
+        .exec-kpi-item {
+            text-align: center;
+            padding: var(--space-sm);
+        }
+        .exec-kpi-item:not(:last-child) {
+            border-right: 1px solid var(--color-border-subtle);
+        }
+        .exec-kpi-value {
+            font-size: 18pt;
+            font-weight: 700;
+            color: var(--color-text-strong);
+            margin-bottom: 2pt;
+        }
+        .exec-kpi-label {
+            font-size: var(--font-caption);
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .exec-kpi-note {
+            font-size: 7.5pt;
+            color: var(--color-text-muted);
+            margin-top: 2pt;
+        }
+        .exec-maturity-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-sm);
+            margin: var(--space-md) 0;
+            padding: var(--space-sm);
+            background: var(--color-bg-surface);
+            border-radius: var(--radius-tag);
+            font-size: var(--font-body);
+        }
+        .exec-maturity-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4pt;
+            padding: 2pt 8pt;
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border: 1px solid var(--color-brand-primary);
+            border-radius: var(--radius-tag);
+            font-weight: 600;
+            color: var(--color-brand-accent);
+        }
+        /* PLATIN+++ v5.4.3: Dimension Scores Row */
+        .exec-dimension-scores {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-sm);
+            margin: var(--space-md) 0;
+            padding: var(--space-sm) 0;
+        }
+        .dimension-score-item {
+            text-align: center;
+            padding: var(--space-xs) var(--space-sm);
+            background: var(--color-bg-surface);
+            border-radius: var(--radius-tag);
+            border: 1px solid var(--color-border-subtle);
+        }
+        .dimension-score-label {
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--color-text-muted);
+            margin-bottom: 2pt;
+        }
+        .dimension-score-value {
+            font-size: 14pt;
+            font-weight: 700;
+            color: var(--color-brand-accent);
+        }
+        .dimension-score-max {
+            font-size: 8pt;
+            color: var(--color-text-muted);
+        }
+        .exec-trust-line {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-md);
+            margin-top: var(--space-md);
+            font-size: 7.5pt;
+            color: var(--color-text-muted);
+        }
+        .exec-trust-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4pt;
+        }
+        .exec-trust-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--color-text-muted);
+        }
+
+        /* --- Page 2: Executive Decision --- */
+        .exec-decision-page {
+            page-break-before: always;
+            break-before: page;
+            padding-top: var(--space-lg);
+        }
+        .exec-decision-header {
+            margin-bottom: var(--space-md);
+        }
+        .exec-decision-header h2 {
+            font-size: var(--font-h3);
+            color: var(--color-text-strong);
+            margin: 0 0 var(--space-xs) 0;
+        }
+        .exec-final-check {
+            margin-bottom: var(--space-lg);
+            padding: var(--space-md);
+            background: var(--color-bg-surface);
+            border-left: 3px solid var(--color-brand-primary);
+            border-radius: 0 var(--radius-tag) var(--radius-tag) 0;
+        }
+        .exec-final-check h3 {
+            font-size: var(--font-body);
+            font-weight: 600;
+            color: var(--color-brand-accent);
+            margin: 0 0 var(--space-xs) 0;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .exec-final-check p {
+            font-size: var(--font-body);
+            margin: 0 0 var(--space-sm) 0;
+            max-width: none;
+        }
+        .exec-final-check ul {
+            margin: 0;
+            padding-left: var(--space-md);
+        }
+        .exec-final-check li {
+            font-size: var(--font-body);
+            margin-bottom: 2pt;
+        }
+        .exec-top3 {
+            margin-bottom: var(--space-lg);
+        }
+        .exec-top3 h3 {
+            font-size: var(--font-h4);
+            color: var(--color-text-strong);
+            margin: 0 0 var(--space-sm) 0;
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+        .exec-top3 ol {
+            margin: 0;
+            padding-left: var(--space-lg);
+            counter-reset: top3-counter;
+            list-style: none;
+        }
+        .exec-top3 li {
+            position: relative;
+            padding: var(--space-xs) 0;
+            border-bottom: 1px solid var(--color-border-subtle);
+            font-size: var(--font-body);
+            counter-increment: top3-counter;
+            padding-left: var(--space-lg);
+        }
+        .exec-top3 li::before {
+            content: counter(top3-counter);
+            position: absolute;
+            left: 0;
+            width: 18px;
+            height: 18px;
+            background: var(--color-brand-primary);
+            color: #fff;
+            border-radius: 50%;
+            font-size: 10pt;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .exec-top3 li:last-child {
+            border-bottom: none;
+        }
+        .exec-continue {
+            margin-top: var(--space-md);
+            padding: var(--space-sm);
+            background: var(--color-bg-surface);
+            border-radius: var(--radius-tag);
+            font-size: var(--font-small);
+            color: var(--color-text-muted);
+            text-align: center;
+        }
+
+        /* --- Page 3: Executive ToC --- */
+        .exec-toc-page {
+            page-break-before: always;
+            break-before: page;
+            padding-top: var(--space-lg);
+        }
+        .exec-toc {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .exec-toc h2 {
+            font-size: var(--font-h2);
+            color: var(--color-text-strong);
+            margin: 0 0 var(--space-lg) 0;
+            text-align: center;
+        }
+        .exec-toc-group {
+            margin-bottom: var(--space-lg);
+        }
+        .exec-toc-group-title {
+            font-size: var(--font-caption);
+            font-weight: 600;
+            color: var(--color-brand-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: var(--space-sm);
+            padding-bottom: var(--space-xs);
+            border-bottom: 1px solid var(--color-border-subtle);
+        }
+        .exec-toc-items {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .exec-toc-items li {
+            padding: var(--space-xs) 0;
+            font-size: var(--font-body);
+            color: var(--color-text-normal);
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+        .exec-toc-items li::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--color-border);
+            flex-shrink: 0;
+        }
+        .exec-toc-note {
+            margin-top: var(--space-lg);
+            padding: var(--space-sm);
+            background: var(--color-bg-surface);
+            border-radius: var(--radius-tag);
+            font-size: var(--font-small);
+            color: var(--color-text-muted);
+            text-align: center;
+        }
+
+        /* --- Utility: Hide/Move sections --- */
+        .exec-hidden {
+            display: none;
+        }
+        .exec-page-break {
+            page-break-before: always;
+            break-before: page;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="content">
+            <div class="content-inner">
+
+                <!-- ============================================== -->
+                <!-- PAGE 1: EXECUTIVE ORIENTATION (MINIMAL)        -->
+                <!-- ============================================== -->
+                <div class="exec-orientation">
+                    <!-- HEADER: Minimal, trust-building -->
+                    <header class="header" style="background: transparent; border: none; padding: 0;">
+                        <div class="header-main">
+                            <div class="eyebrow" data-ui="1">
+                                <div class="eyebrow-left">
+                                    <span class="section-kicker">AI Status Report</span>
+                                    <span class="eyebrow-divider"></span>
+                                    <span class="small">{{ report_date }}</span>
+                                </div>
+                                <span class="small">Report ID: {{ report_id }}</span>
+                            </div>
+                            <div class="title-row">
+                                <div>
+                                    <h1>AI Readiness Report</h1>
+                                    <p class="subtitle">
+                                        Company: <strong>{{ company_name or kundencode or 'Your Company' }}</strong>
+                                        · {{ BRANCHE_LABEL }} · {{ UNTERNEHMENSGROESSE_LABEL }}
+                                    </p>
+                                </div>
+                                <div class="score-badge" data-ui="1">
+                                    <span class="score-label">Overall Score</span>
+                                    <div class="score-main">
+                                        <span class="score-value">{{ score_gesamt }}</span>
+                                        <span class="score-max">/ 100</span>
+                                    </div>
+                                    <span class="score-sub">{{ score_rating }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="logo-panel">
+                            <div class="logo-row-main">
+                                <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt Logo" class="logo-ki">
+                                <img src="tuev-logo-transparent.webp" alt="TÜV Austria – AI Manager certified" class="logo-tuev">
+                            </div>
+                        </div>
+                    </header>
+
+                    <!-- MATURITY LINE: Clear rating statement -->
+                    <div class="exec-maturity-line">
+                        <span>Maturity Level:</span>
+                        <span class="exec-maturity-badge">{{ score_rating }}</span>
+                        <span class="muted">·</span>
+                        <span>{{ size_label }}</span>
+                        {% if top10_score_for_size and (top10_score_for_size|int > score_gesamt|int) %}
+                        <span class="muted">·</span>
+                        <span class="muted">Potential: +{{ (top10_score_for_size|int) - (score_gesamt|int) }} points</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- PLATIN+++ v5.4.3: 4 DIMENSION SCORES ROW -->
+                    <div class="exec-dimension-scores">
+                        <div class="dimension-score-item">
+                            <div class="dimension-score-label">Governance</div>
+                            <div class="dimension-score-value">{{ score_governance or 0 }}<span class="dimension-score-max">/100</span></div>
+                        </div>
+                        <div class="dimension-score-item">
+                            <div class="dimension-score-label">Security</div>
+                            <div class="dimension-score-value">{{ score_sicherheit or 0 }}<span class="dimension-score-max">/100</span></div>
+                        </div>
+                        <div class="dimension-score-item">
+                            <div class="dimension-score-label">Value Creation</div>
+                            <div class="dimension-score-value">{{ score_wertschoepfung or score_nutzen or 0 }}<span class="dimension-score-max">/100</span></div>
+                        </div>
+                        <div class="dimension-score-item">
+                            <div class="dimension-score-label">Enablement</div>
+                            <div class="dimension-score-value">{{ score_befaehigung or 0 }}<span class="dimension-score-max">/100</span></div>
+                        </div>
+                    </div>
+
+                    <!-- 3 KPI ROW: Calm, professional -->
+                    <div class="exec-kpi-row">
+                        <div class="exec-kpi-item">
+                            <div class="exec-kpi-value">{{ time_savings_display or (monatsersparnis_stunden|string + ' hrs') or 'n/a' }}</div>
+                            <div class="exec-kpi-label">Time Savings/Month</div>
+                            <div class="exec-kpi-note">when implementing recommendations</div>
+                        </div>
+                        <div class="exec-kpi-item">
+                            <div class="exec-kpi-value">{{ (ROI_12M or 0) | round(0) | int }}%</div>
+                            <div class="exec-kpi-label">ROI (12 Months)</div>
+                            <div class="exec-kpi-note">Payback: {{ PAYBACK_MONTHS or 'n/a' }} months</div>
+                        </div>
+                        <div class="exec-kpi-item">
+                            <div class="exec-kpi-value">{{ AI_ACT_RISK_LEVEL or 'minimal' }}</div>
+                            <div class="exec-kpi-label">AI Act Risk</div>
+                            <div class="exec-kpi-note">GDPR-compliant recommendation</div>
+                        </div>
+                    </div>
+
+                    <!-- LEAD STATEMENT: One sentence profile -->
+                    {% if LEAD_EXEC %}
+                    <div style="text-align: center; max-width: 600px; margin: 0 auto; padding: var(--space-md) 0;">
+                        <p style="font-size: var(--font-body); color: var(--color-text-normal); margin: 0;">{{ LEAD_EXEC }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- TRUST LINE: Small, grey, compliance hints -->
+                    <div class="exec-trust-line">
+                        <span class="exec-trust-item">
+                            <span class="exec-trust-dot"></span>
+                            EU AI Act compliant
+                        </span>
+                        <span class="exec-trust-item">
+                            <span class="exec-trust-dot"></span>
+                            GDPR-oriented
+                        </span>
+                        <span class="exec-trust-item">
+                            <span class="exec-trust-dot"></span>
+                            Not legal advice
+                        </span>
+                    </div>
+                </div>
+                <!-- END PAGE 1 -->
+
+                <!-- ============================================== -->
+                <!-- PAGE 2: EXECUTIVE DECISION                     -->
+                <!-- ============================================== -->
+                <div class="exec-decision-page">
+                    <div class="exec-decision-header">
+                        <h2>Decision & Focus</h2>
+                    </div>
+
+                    <!-- FINAL-CHECK: Short intro with 2-3 decisions -->
+                    {% if FINAL_CHECK_INTRO %}
+                    <div class="exec-final-check">
+                        <h3>Final Check</h3>
+                        <p>{{ FINAL_CHECK_INTRO }}</p>
+                        {% if FINAL_CHECK_DECISIONS %}
+                        <ul>
+                            {% for decision in FINAL_CHECK_DECISIONS %}
+                            <li>{{ decision }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- TOP-3 MUST-ACTIONS: Condensed, 1-2 lines each -->
+                    <div class="exec-top3">
+                        <h3>Top 3 Must-Do Actions</h3>
+                        <ol>
+                            <li><strong>Define minimal stack</strong> – 1 central AI tool, 1 storage, no experiments</li>
+                            <li><strong>Establish standard workflow</strong> – Input → AI Draft → Review → Approval</li>
+                            <li><strong>Introduce review rules</strong> – Four-eyes principle and source requirements</li>
+                        </ol>
+                    </div>
+
+                    <!-- Executive Decision Blocks (if available) -->
+                    {% if EXECUTIVE_DECISION_HTML %}
+                    <div class="exec-summary" style="margin-top: var(--space-md); padding: var(--space-md); background: var(--color-bg-surface); border-radius: var(--radius-tag);">
+                        {{ EXECUTIVE_DECISION_HTML|safe }}
+                    </div>
+                    {% endif %}
+
+                    <!-- HOW TO CONTINUE -->
+                    <div class="exec-continue">
+                        Details and rationale follow from page 4 – depending on your information needs.
+                    </div>
+                </div>
+                <!-- END PAGE 2 -->
+
+                <!-- ============================================== -->
+                <!-- PAGE 3: EXECUTIVE TOC                          -->
+                <!-- ============================================== -->
+                <div class="exec-toc-page">
+                    <div class="exec-toc">
+                        <h2>How to Read This Report</h2>
+
+                        <!-- GROUP 1: Decision Overview -->
+                        <div class="exec-toc-group">
+                            <div class="exec-toc-group-title">Decision Overview</div>
+                            <ul class="exec-toc-items">
+                                <li>Executive Summary & Quick Assessment</li>
+                                <li>Top 3 Actions & 90-Day Focus</li>
+                            </ul>
+                        </div>
+
+                        <!-- GROUP 2: Economics & Risk -->
+                        <div class="exec-toc-group">
+                            <div class="exec-toc-group-title">Economics & Risk</div>
+                            <ul class="exec-toc-items">
+                                <li>Business Case (ROI/Payback) & Assumptions</li>
+                                <li>Risk & Compliance Assessment (AI Act / GDPR / Vendor)</li>
+                            </ul>
+                        </div>
+
+                        <!-- GROUP 3: Implementation & Depth -->
+                        <div class="exec-toc-group">
+                            <div class="exec-toc-group-title">Implementation & Depth</div>
+                            <ul class="exec-toc-items">
+                                <li>Roadmap (90 Days / 12 Months)</li>
+                                <li>Industry & Tool Alignment</li>
+                                <li>Funding Options & Next Steps</li>
+                            </ul>
+                        </div>
+
+                        <div class="exec-toc-note">
+                            From page 4: Deep-dive analyses and detailed breakdowns
+                        </div>
+                    </div>
+                </div>
+                <!-- END PAGE 3 -->
+
+                <!-- ============================================== -->
+                <!-- PAGE 4+: FULL REPORT / DETAIL SECTIONS         -->
+                <!-- ============================================== -->
+
+                <!-- MOVED: 90-Day Roadmap Decision (Detail) -->
+                {% if ROADMAP_90D_DECISION_HTML %}
+                <div class="section chapter roadmap-decision-section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">90-Day Plan</span>
+                            <h2>Roadmap Decision</h2>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        {{ ROADMAP_90D_DECISION_HTML|safe }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- MOVED: Gamechanger Decision (Detail) -->
+                {% if GAMECHANGER_DECISION_HTML %}
+                <div class="section chapter gamechanger-decision-section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Strategic Options</span>
+                            <h2>Gamechanger Analysis</h2>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        {{ GAMECHANGER_DECISION_HTML|safe }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- MOVED: AI Stack Summary (Detail) -->
+                {% if KI_STACK_SUMMARY_HTML %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Executive AI Stack</span>
+                            <h2>Your AI Stack at a Glance</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Recommended tools, funding and next steps
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ KI_STACK_SUMMARY_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+
+                <!-- MOVED: Executive Summary Detail -->
+                {% if EXECUTIVE_SUMMARY_HTML %}
+                <section class="section chapter" id="executive-summary-detail">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Overview</span>
+                            <h2>Executive Summary</h2>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div class="exec-summary">
+                            <div class="exec-highlight">
+                                {{EXECUTIVE_SUMMARY_HTML}}
+                                {% if exec_key_findings %}
+                                <p><strong>Key Findings:</strong> {{ exec_key_findings }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                {% endif %}
+
+                <!-- ============================================== -->
+                <!-- FULL REPORT BEGINS                             -->
+                <!-- ============================================== -->
+
+                <!-- STRATEGIC CONTEXT & GUARDRAILS -->
+                {% if strategische_ziele or zeitersparnis_prioritaet or hauptleistung or ki_projekte or geschaeftsmodell_evolution or vision_3_jahre or ki_guardrails %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Context</span>
+                            <h2>Strategic Context &amp; Guardrails</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Your strategic parameters
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        <div class="grid-2">
+                            {% if strategische_ziele %}
+                            <div class="card card-goal">
+                                <h4 class="context-card-title">
+                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="8" cy="8" r="6" stroke="#3B82F6" stroke-width="1.5" fill="rgba(59,130,246,0.1)"/>
+                                        <circle cx="8" cy="8" r="2.5" fill="#1E3A8A"/>
+                                    </svg>
+                                    Strategic Priorities
+                                </h4>
+                                <p>{{ strategische_ziele }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if zeitersparnis_prioritaet %}
+                            <div class="card card-process">
+                                <h4 class="context-card-title">
+                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M8 2L14 13H2L8 2Z" stroke="#3B82F6" stroke-width="1.5" fill="rgba(30,58,138,0.1)"/>
+                                    </svg>
+                                    Time Savings Priority
+                                </h4>
+                                <p>{{ zeitersparnis_prioritaet }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if hauptleistung %}
+                            <div class="card card-process">
+                                <h4 class="context-card-title">
+                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M8 1L14.5 4.75V11.25L8 15L1.5 11.25V4.75L8 1Z" stroke="#3B82F6" stroke-width="1.5" fill="rgba(30,58,138,0.1)"/>
+                                    </svg>
+                                    Core Service
+                                </h4>
+                                <p>{{ hauptleistung }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if ki_projekte %}
+                            <div class="card card-model">
+                                <h4 class="context-card-title">
+                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="8" cy="8" r="2" fill="#1E3A8A"/>
+                                        <circle cx="3" cy="4" r="1.5" fill="#93C5FD"/>
+                                        <circle cx="13" cy="4" r="1.5" fill="#93C5FD"/>
+                                        <circle cx="3" cy="12" r="1.5" fill="#93C5FD"/>
+                                        <circle cx="13" cy="12" r="1.5" fill="#93C5FD"/>
+                                        <line x1="8" y1="8" x2="3" y2="4" stroke="#3B82F6" stroke-width="1"/>
+                                        <line x1="8" y1="8" x2="13" y2="4" stroke="#3B82F6" stroke-width="1"/>
+                                        <line x1="8" y1="8" x2="3" y2="12" stroke="#3B82F6" stroke-width="1"/>
+                                        <line x1="8" y1="8" x2="13" y2="12" stroke="#3B82F6" stroke-width="1"/>
+                                    </svg>
+                                    Ongoing/Planned AI Projects
+                                </h4>
+                                <p>{{ ki_projekte }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if geschaeftsmodell_evolution %}
+                            <div class="card card-model">
+                                <h4 class="context-card-title">
+                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="3" y="3" width="10" height="10" rx="1" stroke="#3B82F6" stroke-width="1.5" fill="rgba(147,197,253,0.15)" transform="rotate(0 8 8)"/>
+                                        <rect x="5.5" y="5.5" width="5" height="5" rx="0.5" fill="#1E3A8A"/>
+                                    </svg>
+                                    Business Model Evolution
+                                </h4>
+                                <p>{{ geschaeftsmodell_evolution }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if vision_3_jahre %}
+                            <div class="card card-vision">
+                                <h4 class="context-card-title">
+                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M1 10C3 6 5 12 8 8C11 4 13 10 15 6" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                                        <circle cx="15" cy="6" r="1.5" fill="#1E3A8A"/>
+                                    </svg>
+                                    3-Year Vision
+                                </h4>
+                                <p>{{ vision_3_jahre }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {% if ki_guardrails %}
+                        <div class="callout callout-guardrails">
+                            <h4>⚠️ Guardrails / No-Gos</h4>
+                            <p>{{ ki_guardrails }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </section>
+                {% endif %}
+<!-- QUICK WINS -->
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Quick Results</span>
+                            <h2>Quick Wins</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            3–5 measures with immediate impact
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{QUICK_WINS_HTML}}
+                    </div>
+                </section>
+                <!-- SPRINT G19: Branch Profile & Market Intelligence -->
+                {% if BRANCH_PROFILE_HTML %}
+                <section class="section chapter" id="branch-profile">
+                    <div class="section-body">
+                        {{ BRANCH_PROFILE_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                {% if BRANCH_OPPORTUNITIES_HTML %}
+                <section class="section" id="branch-opportunities">
+                    <div class="section-body">
+                        {{ BRANCH_OPPORTUNITIES_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                {% if BRANCH_RISKS_HTML %}
+                <section class="section" id="branch-risks">
+                    <div class="section-body">
+                        {{ BRANCH_RISKS_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                <!-- G24: Branch Deep-Dive Addon -->
+                {% if BRANCH_DEEP_DIVE_HTML and not COMPACT_REPORT_MODE %}
+                <section class="section chapter" id="branch-deep-dive">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Branch Deep Dive</span>
+                            <h2>Industry Analysis & Trends 2025/26</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            In-depth analysis for {{BRANCH_SHORT_LABEL|default('Your Industry')}}
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ BRANCH_DEEP_DIVE_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                <!-- G29: Risk Engine 2.0 – Consolidated Risk Analysis -->
+                {% if RISK_ENGINE_HTML and not COMPACT_REPORT_MODE %}
+                <section class="section chapter" id="risk-engine">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Risk Analysis &amp; Compliance</span>
+                            <h2>Your AI Risk &amp; Compliance Profile</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            AI Act • GDPR • Vendor Risk
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        <!-- POINT 2: RISK MATRIX LEGEND -->
+                        {% if RISK_MATRIX_LEGEND_ENABLED|default(true) %}
+                        <div class="risk-matrix-legend" data-ui="1">
+                            <h4>{{ ui("risk_legend_title", "📊 How to Read the Risk Matrix") }}</h4>
+                            <div class="risk-legend-axes">
+                                <div class="risk-legend-axis">
+                                    <span class="axis-label">{{ ui("risk_axis_x", "X-Axis:") }}</span>
+                                    <span>{{ ui("risk_axis_x_desc", "Probability of occurrence (low → high)") }}</span>
+                                </div>
+                                <div class="risk-legend-axis">
+                                    <span class="axis-label">{{ ui("risk_axis_y", "Y-Axis:") }}</span>
+                                    <span>{{ ui("risk_axis_y_desc", "Impact severity if it occurs (low → critical)") }}</span>
+                                </div>
+                            </div>
+                            <div class="risk-legend-colors">
+                                <div class="risk-color-item">
+                                    <span class="risk-color-dot green"></span>
+                                    <span>{{ ui("risk_color_green", "Acceptable – monitoring sufficient") }}</span>
+                                </div>
+                                <div class="risk-color-item">
+                                    <span class="risk-color-dot yellow"></span>
+                                    <span>{{ ui("risk_color_yellow", "Watch – plan mitigations") }}</span>
+                                </div>
+                                <div class="risk-color-item">
+                                    <span class="risk-color-dot red"></span>
+                                    <span>{{ ui("risk_color_red", "Critical – act immediately") }}</span>
+                                </div>
+                            </div>
+                            {% if RISK_MATRIX_HINT %}
+                            <p style="margin-top: 8pt; font-size: 8.5pt; color: #666;">{{ RISK_MATRIX_HINT }}</p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        {{ RISK_ENGINE_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                <!-- G33: Risk Engine 3.0 – DPIA & AI Act Conformity -->
+                {% if RISK_ENGINE_V3_HTML and not COMPACT_REPORT_MODE %}
+                <section class="section chapter" id="risk-engine-v3">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">DPIA &amp; Compliance</span>
+                            <h2>DPIA Analysis &amp; AI Act Conformity</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            GDPR Art. 35 • AI Act Annex III
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ RISK_ENGINE_V3_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                <!-- G35: Vendor Audit Engine – AI-TUV for Tools & Models -->
+                {% if VENDOR_AUDIT_HTML and not COMPACT_REPORT_MODE %}
+                <section class="section chapter" id="vendor-audit">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Vendor Audit</span>
+                            <h2>AI-TUV for Your Tools & Vendors</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            GDPR • AI Act • Vendor Risk
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ VENDOR_AUDIT_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                <!-- G36: Automation Roadmap Engine – Process Analysis & Transformation Paths -->
+                {% if AUTOMATION_ROADMAP_HTML and not COMPACT_REPORT_MODE %}
+                <section class="section chapter" id="automation-roadmap">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Automation Roadmap</span>
+                            <h2>Process Automation Paths & Priorities</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Impact × Feasibility • Phases 1-3
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ AUTOMATION_ROADMAP_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                <!-- G30: Business Case Engine 2.0 – ROI Simulation & Scenarios -->
+                {% if BUSINESS_CASE_ENGINE_HTML %}
+                <section class="section chapter" id="business-case-engine">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">ROI Simulation</span>
+                            <h2>Business Case – 3 Scenarios</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            ROI • Payback • KPI Forecasts
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ BUSINESS_CASE_ENGINE_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                <!-- G34: Business Case Simulation – Monte Carlo ROI & Payback Analysis -->
+                {% if BUSINESS_CASE_SIM_HTML and not COMPACT_REPORT_MODE %}
+                <section class="section chapter" id="business-case-simulation">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Monte Carlo Simulation</span>
+                            <h2>Risk & Scenario Analysis</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            P50/P80/P90 • Uncertainty Model
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ BUSINESS_CASE_SIM_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                <!-- G37: Benchmark Engine – Industry Comparison & Competitive Position -->
+                {% if BENCHMARK_ENGINE_HTML and not COMPACT_REPORT_MODE %}
+                <section class="section chapter" id="benchmark-engine">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Benchmarking</span>
+                            <h2>Industry Comparison & Competitive Position</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            AI Maturity • Industry Median • SWOT
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ BENCHMARK_ENGINE_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                <!-- G32: Recommendations Engine – Prioritized Action Recommendations -->
+                {% if RECOMMENDATIONS_ENGINE_HTML %}
+                <section class="section chapter" id="recommendations-engine">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Action Recommendations</span>
+                            <h2>Prioritized Measures</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Top 3 • Impact • Timeline
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ RECOMMENDATIONS_ENGINE_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+<!-- ROADMAP -->
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Orientation</span>
+                            <h2>90-Day Roadmap</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Focus on pragmatic implementation
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ROADMAP_HTML}}
+                    </div>
+                </section>
+<!-- BUSINESS CASE DETAIL -->
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Profitability</span>
+                            <h2>Business Case</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Savings Potential & Investment
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{BUSINESS_CASE_HTML}}
+                    </div>
+                </section>
+<!-- RISKS, GAMECHANGER, RECOMMENDATIONS -->
+                <section class="chapter">
+                    {{RISKS_HTML}}
+                </section>
+                <section class="chapter">
+                    {{GAMECHANGER_HTML}}
+                </section>
+                <section class="chapter">
+                    {{RECOMMENDATIONS_HTML}}
+                </section>
+                <!-- POINT 3: FUNDING TRUST BLOCK WITH EU BADGE -->
+                {% if FUNDING_TRUST_BLOCK_ENABLED|default(true) %}
+                <div class="funding-trust-block" data-ui="1">
+                    <div class="funding-trust-header">
+                        <span class="eu-badge">{{ ui("eu_funding_badge", "EU Funding Programs Listed") }}</span>
+                        <h3 class="funding-trust-title">{{ ui("funding_quick_paths", "Fastest Funding Paths for Your Business") }}</h3>
+                    </div>
+                    <div class="funding-paths">
+                        {% if FUNDING_PATH_1 %}
+                        <div class="funding-path-card">
+                            <div class="funding-path-name">{{ FUNDING_PATH_1.name }}</div>
+                            <div class="funding-path-detail"><strong>{{ ui("funding_fit", "Fit:") }}</strong> {{ FUNDING_PATH_1.fit }}</div>
+                            <div class="funding-path-detail"><strong>{{ ui("funding_requirements", "Requirements:") }}</strong> {{ FUNDING_PATH_1.requirements }}</div>
+                            <div class="funding-path-next">→ {{ FUNDING_PATH_1.next_step }}</div>
+                        </div>
+                        {% else %}
+                        <div class="funding-path-card">
+                            <div class="funding-path-name">{{ ui("funding_digital_jetzt", "Digital Now / go-digital") }}</div>
+                            <div class="funding-path-detail"><strong>{{ ui("funding_fit", "Fit:") }}</strong> {{ ui("funding_fit_high", "High – SME-focused, AI projects eligible") }}</div>
+                            <div class="funding-path-detail"><strong>{{ ui("funding_requirements", "Requirements:") }}</strong> {{ ui("funding_req_kmu", "SME status, EU-based, <500 employees") }}</div>
+                            <div class="funding-path-next">→ {{ ui("funding_next_1", "Check eligibility within 7 days") }}</div>
+                        </div>
+                        {% endif %}
+                        {% if FUNDING_PATH_2 %}
+                        <div class="funding-path-card">
+                            <div class="funding-path-name">{{ FUNDING_PATH_2.name }}</div>
+                            <div class="funding-path-detail"><strong>{{ ui("funding_fit", "Fit:") }}</strong> {{ FUNDING_PATH_2.fit }}</div>
+                            <div class="funding-path-detail"><strong>{{ ui("funding_requirements", "Requirements:") }}</strong> {{ FUNDING_PATH_2.requirements }}</div>
+                            <div class="funding-path-next">→ {{ FUNDING_PATH_2.next_step }}</div>
+                        </div>
+                        {% else %}
+                        <div class="funding-path-card">
+                            <div class="funding-path-name">{{ ui("funding_eic_horizon", "EIC Accelerator / Horizon Europe") }}</div>
+                            <div class="funding-path-detail"><strong>{{ ui("funding_fit", "Fit:") }}</strong> {{ ui("funding_fit_medium", "Medium – for scalable AI innovations") }}</div>
+                            <div class="funding-path-detail"><strong>{{ ui("funding_requirements", "Requirements:") }}</strong> {{ ui("funding_req_eu", "EU legal entity, innovation grade, TRL 5+") }}</div>
+                            <div class="funding-path-next">→ {{ ui("funding_next_2", "Create project outline with partner (14 days)") }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                <!-- FUNDING SECTION - Enabled for EN reports (DE funding or EU core funding) -->
+                {% if FUNDING_HTML %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Financial Support</span>
+                            {% if FUNDING_SCOPE == "DE" %}
+                            <h2>Funding Opportunities (Germany)</h2>
+                            {% elif FUNDING_SCOPE == "EU_CORE" %}
+                            <h2>EU Funding Opportunities</h2>
+                            {% else %}
+                            <h2>Funding Opportunities</h2>
+                            {% endif %}
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            {% if FUNDING_SCOPE == "DE" %}
+                            German grant programs for your profile
+                            {% elif FUNDING_SCOPE == "EU_CORE" %}
+                            EU-wide programmes for AI &amp; digitalisation
+                            {% else %}
+                            Relevant funding programmes
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{FUNDING_HTML}}
+                        {% if FOERDERPOTENZIAL_HTML %}
+                        {{FOERDERPOTENZIAL_HTML}}
+                        {% endif %}
+                    </div>
+                </section>
+                {% endif %}
+                <!-- SPRINT G19: Funding × Branch Alignment -->
+                {% if FUNDING_BRANCH_ALIGNMENT_HTML and not COMPACT_REPORT_MODE %}
+                <section class="section chapter" id="funding-branch-alignment">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Industry-Specific</span>
+                            <h2>Industry Funding Potential</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Funding programmes optimized for your industry
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ FUNDING_BRANCH_ALIGNMENT_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                <!-- SPRINT B2.2: Tools × Funding Alignment -->
+                {% if TOOLS_FUNDING_ALIGNMENT_HTML and not COMPACT_REPORT_MODE %}
+                <section class="section chapter" id="tools-funding-alignment">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Premium Insights</span>
+                            <h2>Tools × Funding Alignment</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Recommended tools matched with relevant funding programmes
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ TOOLS_FUNDING_ALIGNMENT_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                <!-- SPRINT B2.2: Starter Kit -->
+                {% if STARTER_KIT_HTML %}
+                <section class="section chapter" id="starter-kit">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Your Starting Point</span>
+                            <h2>Starter Kit: Tools & Funding Path</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            A curated combination of tools, funding options and a pragmatic first implementation path
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ STARTER_KIT_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                <!-- SPRINT G19: Tools × Branch Alignment -->
+                {% if TOOLS_BRANCH_ALIGNMENT_HTML and not COMPACT_REPORT_MODE %}
+                <section class="section chapter" id="tools-branch-alignment">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Industry-Optimized</span>
+                            <h2>Industry-Tool Alignment</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            AI tools with highest industry relevance
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ TOOLS_BRANCH_ALIGNMENT_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                <!-- NEW SECTIONS: Monetization, Skill Plan, Templates -->
+                {% if MONETARISIERUNG_HTML %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Value Creation</span>
+                            <h2>Monetization & Service Models</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Pricing Models for AI Services
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ MONETARISIERUNG_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                {% if KI_SKILLPLAN_HTML %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Skill Development</span>
+                            <h2>AI Skill Roadmap 2025</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            From Beginner to Expert
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ KI_SKILLPLAN_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                {% if TEMPLATES_START_HTML %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Get Started</span>
+                            <h2>Starter Templates</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Copy-Paste Templates for Quick Start
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ TEMPLATES_START_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                <!-- NEW SECTIONS: ROI Tracking, AI Mini Policy, Kickoff Template, Prompt Framework -->
+                {% if ROI_TRACKING_HTML and not COMPACT_REPORT_MODE %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Measurement</span>
+                            <h2>ROI Tracking</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Monthly KPIs & Success Metrics
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ ROI_TRACKING_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                {% if AI_POLICY_MINI_HTML %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Governance</span>
+                            <h2>AI Mini Policy</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            7 Rules for Daily AI Use
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ AI_POLICY_MINI_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                <!-- SPRINT G7/G8: AI Act Compliance Section (EN) -->
+                {% if AI_ACT_RISK_LEVEL %}
+                <section class="section chapter ai-act-compliance" style="page-break-inside: avoid;">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">EU AI Act</span>
+                            <h2>AI Act Compliance & Obligations</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot {% if AI_ACT_RISK_LEVEL == 'high-risk' %}pill-danger{% elif AI_ACT_RISK_LEVEL == 'limited' %}pill-warning{% else %}pill-success{% endif %}" style="{% if AI_ACT_RISK_LEVEL == 'high-risk' %}background:#dc3545{% elif AI_ACT_RISK_LEVEL == 'limited' %}background:#ffc107{% else %}background:#28a745{% endif %}"></span>
+                            Risk Class: {{ AI_ACT_RISK_LEVEL }}
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        <!-- Risk Level Badge -->
+                        <div class="risk-level-banner" style="padding:12px 16px;border-radius:8px;margin-bottom:16px;{% if AI_ACT_RISK_LEVEL == 'high-risk' %}background:#fff5f5;border-left:4px solid #dc3545{% elif AI_ACT_RISK_LEVEL == 'limited' %}background:#fffbeb;border-left:4px solid #ffc107{% else %}background:#f0fff4;border-left:4px solid #28a745{% endif %}">
+                            {% if AI_ACT_RISK_LEVEL == 'high-risk' %}
+                            <strong style="color:#dc3545">⚠️ High-Risk Classification</strong> – Comprehensive compliance requirements per EU AI Act
+                            {% elif AI_ACT_RISK_LEVEL == 'limited' %}
+                            <strong style="color:#856404">📋 Limited Risk</strong> – Transparency obligations apply
+                            {% else %}
+                            <strong style="color:#28a745">✅ Minimal Risk</strong> – Best practices recommended
+                            {% endif %}
+                        </div>
+
+                        <!-- Risk Reasoning -->
+                        {% if AI_ACT_RISK_REASONING %}
+                        <div class="risk-reasoning" style="margin-bottom:16px;">
+                            <h3 style="font-size:14px;margin-bottom:8px;">Classification Reasoning</h3>
+                            <p style="line-height:1.5;">{{ AI_ACT_RISK_REASONING }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Duty Matrix -->
+                        {% if AI_ACT_DUTY_MATRIX_HTML %}
+                        <div class="duty-matrix-section" style="margin-bottom:16px;">
+                            <h3 style="font-size:14px;margin-bottom:8px;">Obligations Matrix</h3>
+                            <div style="overflow-x:auto;width:100%;">
+                            {{ AI_ACT_DUTY_MATRIX_HTML|safe }}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Use Cases with Risk Tags -->
+                        {% if AI_ACT_RELATED_USECASES_HTML %}
+                        <div class="usecases-risk-section" style="margin-bottom:16px;">
+                            <h3 style="font-size:14px;margin-bottom:8px;">Use Cases with Risk Classification</h3>
+                            {{ AI_ACT_RELATED_USECASES_HTML|safe }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Non-Compliance Alerts -->
+                        {% if AI_ACT_NONCOMPLIANCE_ALERTS_HTML %}
+                        <div class="alerts-section" style="margin-bottom:16px;padding:12px;background:#fff5f5;border-radius:6px;">
+                            <h3 style="font-size:14px;margin-bottom:8px;color:#dc3545;">Compliance Gaps</h3>
+                            <p class="section-intro" style="font-size:12px;color:#666;margin-bottom:8px;">Address these items as a priority:</p>
+                            {{ AI_ACT_NONCOMPLIANCE_ALERTS_HTML|safe }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Data Gaps -->
+                        {% if AI_ACT_DATA_GAPS_HTML %}
+                        <div class="gaps-section" style="margin-bottom:16px;padding:12px;background:#fffbeb;border-radius:6px;">
+                            <h3 style="font-size:14px;margin-bottom:8px;color:#856404;">Data Gaps</h3>
+                            <p class="section-intro" style="font-size:12px;color:#666;margin-bottom:8px;">The following information is needed for a complete compliance assessment:</p>
+                            {{ AI_ACT_DATA_GAPS_HTML|safe }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Next Steps -->
+                        {% if AI_ACT_RECOMMENDED_NEXT_STEPS_HTML %}
+                        <div class="next-steps-section" style="margin-bottom:16px;">
+                            <h3 style="font-size:14px;margin-bottom:8px;">Recommended Next Steps</h3>
+                            {{ AI_ACT_RECOMMENDED_NEXT_STEPS_HTML|safe }}
+                        </div>
+                        {% endif %}
+
+                        <!-- G9.3: AI-Act Compliance Summary Card (Business Case Impact) -->
+                        {% if AI_ACT_BC_APPLIED %}
+                        <div class="ai-act-bc-summary-card" style="margin-bottom:16px;padding:16px;background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);border-radius:8px;border:1px solid #dee2e6;">
+                            <h3 style="font-size:14px;margin-bottom:12px;color:#212529;display:flex;align-items:center;gap:8px;">
+                                <span style="font-size:18px;">📊</span> Business Case Compliance Impact
+                            </h3>
+                            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+                                <!-- CAPEX Card -->
+                                <div style="background:#fff;padding:12px;border-radius:6px;border:1px solid #e9ecef;">
+                                    <div style="font-size:11px;color:#6c757d;text-transform:uppercase;letter-spacing:0.5px;">CAPEX Adjustment</div>
+                                    <div style="font-size:18px;font-weight:600;color:{% if AI_ACT_BC_CAPEX_FACTOR > 1.0 %}#dc3545{% else %}#28a745{% endif %};">
+                                        {% if AI_ACT_BC_CAPEX_FACTOR > 1.0 %}+{{ ((AI_ACT_BC_CAPEX_FACTOR - 1) * 100)|round|int }}%{% else %}±0%{% endif %}
+                                    </div>
+                                    {% if AI_ACT_BC_ORIGINAL_CAPEX %}
+                                    <div style="font-size:11px;color:#868e96;margin-top:4px;">
+                                        €{{ "{:,.0f}".format(AI_ACT_BC_ORIGINAL_CAPEX) }} → €{{ "{:,.0f}".format(CAPEX_REALISTISCH_EUR) }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <!-- OPEX Card -->
+                                <div style="background:#fff;padding:12px;border-radius:6px;border:1px solid #e9ecef;">
+                                    <div style="font-size:11px;color:#6c757d;text-transform:uppercase;letter-spacing:0.5px;">OPEX Adjustment</div>
+                                    <div style="font-size:18px;font-weight:600;color:{% if AI_ACT_BC_OPEX_FACTOR > 1.0 %}#dc3545{% else %}#28a745{% endif %};">
+                                        {% if AI_ACT_BC_OPEX_FACTOR > 1.0 %}+{{ ((AI_ACT_BC_OPEX_FACTOR - 1) * 100)|round|int }}%{% else %}±0%{% endif %}
+                                    </div>
+                                    {% if AI_ACT_BC_ORIGINAL_OPEX %}
+                                    <div style="font-size:11px;color:#868e96;margin-top:4px;">
+                                        €{{ "{:,.0f}".format(AI_ACT_BC_ORIGINAL_OPEX) }}/month → €{{ "{:,.0f}".format(OPEX_REALISTISCH_EUR) }}/month
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <!-- Payback Impact Row -->
+                            {% if AI_ACT_BC_PAYBACK_DELTA > 0 %}
+                            <div style="margin-top:12px;padding:10px;background:#fffbeb;border-radius:6px;border:1px solid #ffc107;">
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <span style="font-size:16px;">⏱️</span>
+                                    <div>
+                                        <div style="font-size:12px;color:#856404;font-weight:500;">Payback Extension for Compliance</div>
+                                        <div style="font-size:14px;color:#212529;">+{{ AI_ACT_BC_PAYBACK_DELTA }} months for documentation & audits</div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <!-- Risk Level Footer -->
+                            <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e9ecef;font-size:11px;color:#6c757d;display:flex;justify-content:space-between;align-items:center;">
+                                <span>Based on risk class: <strong style="color:{% if AI_ACT_RISK_LEVEL == 'high-risk' %}#dc3545{% elif AI_ACT_RISK_LEVEL == 'limited' %}#856404{% else %}#28a745{% endif %}">{{ AI_ACT_RISK_LEVEL }}</strong></span>
+                                <span style="font-style:italic;">EU AI Act Art. 6, 52</span>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- G8: Tools Injection -->
+                        {% if AI_ACT_TOOLS_INJECTION %}
+                        <div class="ai-act-tools-section" style="margin-bottom:16px;">
+                            {{ AI_ACT_TOOLS_INJECTION|safe }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </section>
+                {% endif %}
+                {% if KICKOFF_VORLAGE_HTML %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">Project Start</span>
+                            <h2>Kickoff Template</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Agenda & Checklist
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ KICKOFF_VORLAGE_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+                {% if PROMPT_FRAMEWORK_HTML %}
+                <section class="section chapter">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">AI Communication</span>
+                            <h2>Prompt Framework</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            5-Step Prompting Guide
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ PROMPT_FRAMEWORK_HTML|safe }}
+                    </div>
+                </section>
+                {% endif %}
+<!-- Annex: Creative Tools & Glossary -->
+<section class="annex-section annex-kreativtools chapter">
+  <h2>Creative Tools 2025 – Modular Alternatives</h2>
+  <p>Many creative tasks can now be efficiently handled with a modular toolset – often more affordable than 
+monolithic subscription ecosystems. Proven tools in daily use include:</p>
+<ul>
+  <li><strong>Figma (UI/UX, Collaboration):</strong> Real-time prototyping & teamwork in the browser.</li>
+  <li><strong>Affinity 3 (Graphics/Layout):</strong> Vector & raster without subscription – strong alternative for classic graphics work.</li>
+  <li><strong>DaVinci Resolve (Video/Grading):</strong> Professional editing, color correction and effects; many features free – often sufficient instead of Premiere.</li>
+  <li><strong>Blender (3D/VFX):</strong> Open-source suite for 3D modeling, animation & rendering.</li>
+  <li><strong>Milanote (Concept/Moodboards):</strong> Visual thinking & idea organization in early project phases.</li>
+</ul>
+<p><em>Conclusion:</em> Adobe remains relevant in specialized cases. For many SMEs, the above tools fully cover day-to-day creative work.</p>
+</section>
+<section class="annex-section annex-glossar chapter">
+  <h2>Glossary – Key AI Terms</h2>
+  <p class="section-intro">Brief overview of important terms used in this report. Serves as a reference for management, departments, and IT.</p>
+  <dl class="glossary-list">
+    <dt>AI Act (EU)</dt>
+    <dd>European regulation on AI systems with obligations based on risk classification (transparency, data quality, oversight, documentation).</dd>
+    <dt>Alignment</dt>
+    <dd>Adjusting a model to desired goals/behavior (safety, ethics, style).</dd>
+    <dt>API</dt>
+    <dd>Programming interface for connecting or automating software.</dd>
+    <dt>Assistive AI</dt>
+    <dd>AI as support in workflows (not fully autonomous).</dd>
+    <dt>Benchmark</dt>
+    <dd>Comparative standard for evaluating one's own performance.</dd>
+    <dt>Chatbot</dt>
+    <dd>Dialog system based on an LLM, e.g., for support or internal inquiries.</dd>
+    <dt>Context Window</dt>
+    <dd>Amount of tokens a model can process per request.</dd>
+    <dt>Copilot</dt>
+    <dd>Assistant integrated into existing tools (e.g., M365 Copilot).</dd>
+    <dt>Data Leakage</dt>
+    <dd>Unintentional disclosure of sensitive data through logs, training data, or prompting.</dd>
+    <dt>Data Loss Prevention (DLP)</dt>
+    <dd>Techniques/rules that prevent data exfiltration.</dd>
+    <dt>Dataset Governance</dt>
+    <dd>Policies for origin, quality, and use of training/context data.</dd>
+    <dt>Embeddings</dt>
+    <dd>Vector representation of text/images for search, RAG, etc.</dd>
+    <dt>Enterprise Readiness</dt>
+    <dd>Fulfillment of requirements for security, compliance, operations & support.</dd>
+    <dt>Few-shot Prompting</dt>
+    <dd>Examples in the prompt to guide the model.</dd>
+    <dt>Fine-Tuning</dt>
+    <dd>Additional training of a model on custom data.</dd>
+    <dt>Guardrails</dt>
+    <dd>Validation steps (policies, tools) that validate/filter outputs.</dd>
+    <dt>Hallucination</dt>
+    <dd>Plausible-sounding but factually incorrect output from a model.</dd>
+    <dt>Inference</dt>
+    <dd>Running a model to answer a request.</dd>
+    <dt>KB / Knowledge Base</dt>
+    <dd>Curated, versioned collection of relevant documents.</dd>
+    <dt>Latency</dt>
+    <dd>Response time of a system.</dd>
+    <dt>LLM</dt>
+    <dd>Large Language Model (e.g., GPT-4.1, Claude 3.5, Llama 3.1).</dd>
+    <dt>Maturity Index</dt>
+    <dd>Indicator for a company's AI maturity level.</dd>
+    <dt>Open-Source Models</dt>
+    <dd>Freely available models (e.g., Llama, Mistral) – often deployable locally.</dd>
+    <dt>Prompt</dt>
+    <dd>Input instruction to an LLM.</dd>
+    <dt>Prompt Leakage</dt>
+    <dd>Disclosure of sensitive system instructions (e.g., through follow-up questions).</dd>
+    <dt>RAG</dt>
+    <dd>Retrieval-Augmented Generation: Model uses its own knowledge base.</dd>
+    <dt>Red Teaming</dt>
+    <dd>Systematic testing against misuse/errors (security).</dd>
+    <dt>Responsible AI</dt>
+    <dd>Responsible development/use with ethics & compliance.</dd>
+    <dt>Runtime Cost</dt>
+    <dd>Runtime/token costs per request.</dd>
+    <dt>Service Levels (SLA)</dt>
+    <dd>Agreed availability/performance thresholds.</dd>
+    <dt>Shadow IT</dt>
+    <dd>Unauthorized tools/automations that pose risks.</dd>
+    <dt>SLA Drift</dt>
+    <dd>Gradual degradation against agreed values.</dd>
+    <dt>Tavily / Perplexity</dt>
+    <dd>Research APIs that structure web sources.</dd>
+    <dt>Token</dt>
+    <dd>Basic unit of model processing (~3-4 characters).</dd>
+    <dt>Toolformer</dt>
+    <dd>Model uses external tools/plugins for problem-solving.</dd>
+    <dt>Vector Store</dt>
+    <dd>Database for embeddings (e.g., FAISS, pgvector).</dd>
+  </dl>
+  <p class="small muted">Source: curated, as of {{LAST_UPDATED}}.</p>
+</section>
+<!-- Legal Notice -->
+                <div class="impressum chapter">
+                    <h3>Legal Information & Transparency</h3>
+                    <div class="impressum-grid">
+                        <div class="impressum-block">
+                            <h4>Legal Notice</h4>
+                            <p><strong>Responsible for content:</strong><br>
+                            KI-Sicherheit.jetzt – Wolf Hohl<br>
+                            Greifswalder Str. 224a<br>
+                            10405 Berlin, Germany</p>
+                            <p>Email: <a href="mailto:wolf@ki-sicherheit.jetzt">wolf@ki-sicherheit.jetzt</a></p>
+                        </div>
+                        <div class="impressum-block">
+                            <h4>Disclaimer</h4>
+                            <p>This project is for informational purposes only. Despite careful review, I assume no liability for the content of external links.</p>
+                            <h4>Copyright</h4>
+                            <p>All content on this website is subject to German copyright law. All images were generated with the help of AI.</p>
+                        </div>
+                        <div class="impressum-block">
+                            <h4>EU AI Act Notice</h4>
+                            <p>This website provides information about obligations, risks, and funding opportunities when using AI under the EU AI Act and GDPR. It does not constitute legal advice.</p>
+                        </div>
+                    </div>
+                    <div class="impressum-divider"></div>
+                    <div class="impressum-block impressum-box">
+                        <h3>Privacy Policy</h3>
+                        <p>The protection of your personal data is of particular concern to me.</p>
+                        <h4>Contact</h4>
+                        <p>If you contact me via form or email, your information will be stored for processing for six months.</p>
+                        <h4>Cookies</h4>
+                        <p>This website does not use cookies for user tracking or analytics.</p>
+                        <h4>Your Rights under GDPR</h4>
+                        <ul>
+                            <li>Information, correction, or deletion of your data</li>
+                            <li>Data portability</li>
+                            <li>Revocation of given consent</li>
+                            <li>Complaint to the data protection authority</li>
+                        </ul>
+                        <p>If you wish to exercise your rights, please contact
+                            <a href="mailto:wolf@ki-sicherheit.jetzt">wolf@ki-sicherheit.jetzt</a>.
+                        </p>
+                    </div>
+                </div>
+                <!-- FEEDBACK SECTION (after Legal Notice for last page) -->
+                <div class="feedback-section" data-ui="1">
+                    <h2>Your Feedback Matters!</h2>
+                    <p>Help us make this report even better. Your feedback helps other companies.</p>
+                    <div class="highlight-box">
+                        <p><strong>What did you like?</strong> What can we improve?</p>
+                        <p>Take 2 minutes for our feedback form:</p>
+                    </div>
+                    <a href="https://make.ki-sicherheit.jetzt/feedback/feedback.html" class="feedback-button" target="_blank">
+                        📝 Give Feedback
+                    </a>
+                    <p class="small">Your responses will be evaluated anonymously and help us with further development.</p>
+                </div>
+                <!-- POINT 4: GDPR MINI DISCLAIMER -->
+                <div class="gdpr-mini-disclaimer" data-ui="1">
+                    {{ GDPR_MINI_DISCLAIMER|default(ui("gdpr_mini_default", "This report uses company data for AI readiness analysis. Processing based on Art. 6 (1) b GDPR. DPA on request.")) }}
+                    <a href="https://ki-sicherheit.jetzt/datenschutz" target="_blank">{{ ui("gdpr_link_text", "Privacy Policy") }}</a>
+                </div>
+                <p class="small" style="text-align: center;">
+                    © {{report_year}} KI-Sicherheit.jetzt —
+                    Report ID: {{report_id}} —
+                    Generated: {{LAST_UPDATED}}
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
