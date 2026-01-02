@@ -183,19 +183,28 @@
             font-size: var(--font-caption);
         }
         /* ================================================
-           PAGEBREAK RULES (PLATIN++ V5.2)
+           PAGEBREAK RULES (PLATIN++ V5.2) - ROBUST FIX
            ================================================ */
         .chapter {
-            page-break-before: always;
-            break-before: page;
+            page-break-before: always !important;
+            break-before: page !important;
         }
         .chapter:first-of-type {
-            page-break-before: auto;
-            break-before: auto;
+            page-break-before: auto !important;
+            break-before: auto !important;
         }
         .chapter-start {
-            page-break-before: always;
-            break-before: page;
+            page-break-before: always !important;
+            break-before: page !important;
+        }
+        /* Verstärkte Regeln für Haupt-Sections */
+        .section.chapter {
+            page-break-before: always !important;
+            break-before: page !important;
+        }
+        .section.chapter:first-of-type {
+            page-break-before: auto !important;
+            break-before: auto !important;
         }
         .no-page-break-inside,
         .card,
@@ -4376,7 +4385,7 @@
                         </span>
                     </div>
                     <div class="section-body">
-                        {{QUICK_WINS_HTML}}
+                        {{ QUICK_WINS_HTML|safe }}
                     </div>
                 </section>
                 <!-- SPRINT G19: Branch Profile & Market Intelligence -->
