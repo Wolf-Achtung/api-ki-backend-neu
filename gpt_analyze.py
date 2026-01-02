@@ -2023,7 +2023,27 @@ def _apply_pdf_inline_styles(html: str) -> str:
 
     result = th_pattern.sub(add_th_style, result)
 
-    # Fix 3: Replace emojis with custom SVG icons for reliable PDF rendering
+    # Fix 3: Add inline styles to <pre> elements for text wrapping (Quick Wins prompts)
+    # Puppeteer may ignore CSS classes, so inline styles ensure proper word-wrap
+    pre_wrap_style = 'white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; max-width: 100%; overflow-x: hidden;'
+
+    # Fix <pre class="prompt-template"> specifically
+    result = result.replace(
+        '<pre class="prompt-template"',
+        f'<pre class="prompt-template" style="{pre_wrap_style}"'
+    )
+
+    # Fix other <pre> tags that don't have inline styles yet
+    pre_pattern = re.compile(r'<pre(?!\s+style)(\s+class="[^"]*")?(\s*)>', re.IGNORECASE)
+
+    def add_pre_style(match):
+        class_attr = match.group(1) or ''
+        space = match.group(2) or ''
+        return f'<pre{class_attr} style="{pre_wrap_style}"{space}>'
+
+    result = pre_pattern.sub(add_pre_style, result)
+
+    # Fix 4: Replace emojis with custom SVG icons for reliable PDF rendering
     # Uses the icon_system module with branded SVG icons
     result = replace_emojis_with_icons(result, size=18)
 
