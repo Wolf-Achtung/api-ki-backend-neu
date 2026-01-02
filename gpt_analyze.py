@@ -2415,43 +2415,50 @@ def _format_risks_with_visual_breaks(html_content: str) -> str:
     """
     Format risk sections with SVG-decorated colored boxes.
 
-    Version 3: Hybrid SVG/HTML approach - SVG for decoration, HTML for content.
-    This ensures proper text flow while maintaining visual styling.
+    Version 4: Fixed regex patterns to match numbered headings (1., 2., etc.)
+    and use proper section delimiters (<h3> tags instead of • • •).
     """
     if not html_content or len(html_content) < 100:
         return html_content
 
-    log.info("[FORMAT-RISKS-V3] Starting SVG-decorated formatting (length: %d chars)", len(html_content))
+    log.info("[FORMAT-RISKS-V4] Starting SVG-decorated formatting (length: %d chars)", len(html_content))
 
-    # Risk categories with colors (matching design system)
+    # Risk categories with colors and FIXED patterns for numbered headings
+    # Patterns now: 1) Match optional <h3> tag, 2) Match optional "1. " numbering,
+    # 3) Use lookahead for next <h3> or end as delimiter
     risk_configs = [
         {
             "icon": "💼",
-            "pattern": r"(Strategische\s+und\s+organisatorische\s+Risiken.*?)(• • •|$)",
+            "pattern": r"(<h3[^>]*>\s*\d*\.?\s*Strategische\s+und\s+organisatorische\s+Risiken[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
+            "keyword": "strategisch",
             "border_color": "#1565C0",  # Blue
             "bg_color": "#E3F2FD"
         },
         {
             "icon": "🔒",
-            "pattern": r"(Daten-?,?\s*Sicherheits-?\s*und\s+Compliance-?[Rr]isiken.*?)(• • •|$)",
+            "pattern": r"(<h3[^>]*>\s*\d*\.?\s*Daten[^<]*Sicherheits[^<]*Compliance[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
+            "keyword": "sicherheit",
             "border_color": "#E65100",  # Orange
             "bg_color": "#FFF3E0"
         },
         {
             "icon": "⚠️",
-            "pattern": r"(Qualitäts-?,?\s*Transparenz-?\s*und\s+Akzeptanz.*?[Rr]isiken.*?)(• • •|$)",
+            "pattern": r"(<h3[^>]*>\s*\d*\.?\s*Qualit[äa]ts[^<]*Transparenz[^<]*Akzeptanz[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
+            "keyword": "qualität",
             "border_color": "#6A1B9A",  # Purple
             "bg_color": "#F3E5F5"
         },
         {
             "icon": "🔗",
-            "pattern": r"(Abhängigkeits-?,?\s*Betriebs-?\s*und\s+Lieferanten.*?[Rr]isiken.*?)(• • •|$)",
+            "pattern": r"(<h3[^>]*>\s*\d*\.?\s*Abh[äa]ngigkeit[^<]*Betriebs[^<]*Lieferanten[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
+            "keyword": "abhängigkeit",
             "border_color": "#2E7D32",  # Green
             "bg_color": "#E8F5E9"
         },
         {
             "icon": "📊",
-            "pattern": r"(Risiko-?[Mm]atrix|Überblick\s+über\s+zentrale\s+Risiken.*?)(• • •|$)",
+            "pattern": r"(<h3[^>]*>\s*\d*\.?\s*Risiko[^<]*[Mm]atrix[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
+            "keyword": "matrix",
             "border_color": "#C62828",  # Red
             "bg_color": "#FFEBEE"
         }
@@ -2461,20 +2468,23 @@ def _format_risks_with_visual_breaks(html_content: str) -> str:
     boxes_created = 0
 
     for config in risk_configs:
-        # Try to find the section
+        # Try to find the section with fixed pattern
         match = re.search(config["pattern"], output, re.DOTALL | re.IGNORECASE)
 
         if match:
             original_content = match.group(1)
+            log.debug("[FORMAT-RISKS-V4] Matched section for %s: %d chars", config['keyword'], len(original_content))
 
             # Extract heading and body
-            heading_match = re.search(r'<h\d[^>]*>(.*?)</h\d>', original_content, re.DOTALL | re.IGNORECASE)
+            heading_match = re.search(r'<h3[^>]*>(.*?)</h3>', original_content, re.DOTALL | re.IGNORECASE)
 
             if heading_match:
                 heading_text = heading_match.group(1).strip()
+                # Remove number prefix for cleaner display (e.g., "1. " -> "")
+                heading_text = re.sub(r'^\d+\.\s*', '', heading_text)
 
                 # Remove heading from content to get body
-                body_content = re.sub(r'<h\d[^>]*>.*?</h\d>', '', original_content, count=1, flags=re.DOTALL | re.IGNORECASE)
+                body_content = re.sub(r'<h3[^>]*>.*?</h3>', '', original_content, count=1, flags=re.DOTALL | re.IGNORECASE)
 
                 # Create SVG-decorated box (full border style for risks)
                 svg_box = _create_svg_decorated_box(
@@ -2489,9 +2499,11 @@ def _format_risks_with_visual_breaks(html_content: str) -> str:
                 # Replace original with SVG-decorated box
                 output = output.replace(original_content, svg_box)
                 boxes_created += 1
-                log.info("[FORMAT-RISKS-V3] Created SVG box %d: %s %s...", boxes_created, config['icon'], heading_text[:30])
+                log.info("[FORMAT-RISKS-V4] Created SVG box %d: %s %s", boxes_created, config['icon'], heading_text[:40])
+        else:
+            log.debug("[FORMAT-RISKS-V4] No match for pattern keyword: %s", config['keyword'])
 
-    log.info("[FORMAT-RISKS-V3] Complete (output: %d chars, %d SVG boxes created)", len(output), boxes_created)
+    log.info("[FORMAT-RISKS-V4] Complete (output: %d chars, %d SVG boxes created)", len(output), boxes_created)
     return output
 
 
@@ -2499,49 +2511,45 @@ def _format_gamechanger_section(html_content: str) -> str:
     """
     Format gamechanger sections with SVG-decorated colored boxes.
 
-    Version 3: Hybrid SVG/HTML approach with left-accent border style.
-    Uses inline SVG for visual decoration, HTML for content flow.
+    Version 4: Fixed patterns to match actual template headings:
+    - "Strategischer Bruchpunkt"
+    - "Die Transformation"
+    - "Warum das ein Gamechanger ist"
+    - "Erster realistischer Schritt"
     """
     if not html_content or len(html_content) < 100:
         return html_content
 
-    log.info("[FORMAT-GAMECHANGER-V3] Starting SVG-decorated formatting (length: %d chars)", len(html_content))
+    log.info("[FORMAT-GAMECHANGER-V4] Starting SVG-decorated formatting (length: %d chars)", len(html_content))
 
-    # Gamechanger sections with MULTIPLE PATTERNS for better matching
+    # Gamechanger sections with FIXED PATTERNS matching actual template headings
+    # Pattern structure: <h3>heading</h3>content until next <h3> or end
     gc_configs = [
         {
             "icon": "🎯",
-            "patterns": [
-                r"((?:<h\d[^>]*>)?.*?[Ss]trategische.*?[Bb]ruchpunkt.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
-                r"((?:<h\d[^>]*>)?.*?1\..*?[Bb]ruchpunkt.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
-            ],
+            "pattern": r"(<h3[^>]*>\s*Strategischer\s+Bruchpunkt[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
+            "keyword": "bruchpunkt",
             "border_color": "#E65100",  # Orange
             "bg_color": "#FFF3E0"
         },
         {
             "icon": "💡",
-            "patterns": [
-                r"((?:<h\d[^>]*>)?.*?[Tt]ransformations.*?[Ii]dee.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
-                r"((?:<h\d[^>]*>)?.*?2\..*?[Tt]ransformations.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
-            ],
+            "pattern": r"(<h3[^>]*>\s*Die\s+Transformation[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
+            "keyword": "transformation",
             "border_color": "#1565C0",  # Blue
             "bg_color": "#E3F2FD"
         },
         {
             "icon": "🚀",
-            "patterns": [
-                r"((?:<h\d[^>]*>)?.*?[Gg]amechanger.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
-                r"((?:<h\d[^>]*>)?.*?3\..*?[Gg]amechanger.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
-            ],
+            "pattern": r"(<h3[^>]*>\s*Warum\s+das\s+ein\s+Gamechanger[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
+            "keyword": "gamechanger",
             "border_color": "#2E7D32",  # Green
             "bg_color": "#E8F5E9"
         },
         {
             "icon": "✅",
-            "patterns": [
-                r"((?:<h\d[^>]*>)?.*?[Ee]rster.*?[Ss]chritt.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
-                r"((?:<h\d[^>]*>)?.*?4\..*?[Ss]chritt.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
-            ],
+            "pattern": r"(<h3[^>]*>\s*Erster\s+realistischer\s+Schritt[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
+            "keyword": "schritt",
             "border_color": "#6A1B9A",  # Purple
             "bg_color": "#F3E5F5"
         }
@@ -2551,48 +2559,42 @@ def _format_gamechanger_section(html_content: str) -> str:
     boxes_created = 0
 
     for config in gc_configs:
-        matched = False
+        match = re.search(config["pattern"], output, re.DOTALL | re.IGNORECASE)
 
-        # Try each pattern until one matches
-        for pattern in config["patterns"]:
-            match = re.search(pattern, output, re.DOTALL | re.IGNORECASE)
+        if match:
+            original_content = match.group(1)
+            log.debug("[FORMAT-GAMECHANGER-V4] Matched section for %s: %d chars", config['keyword'], len(original_content))
 
-            if match:
-                original_content = match.group(1)
+            # Extract heading
+            heading_match = re.search(r'<h3[^>]*>(.*?)</h3>', original_content, re.DOTALL | re.IGNORECASE)
 
-                # Extract heading
-                heading_match = re.search(r'<h\d[^>]*>(.*?)</h\d>', original_content, re.DOTALL | re.IGNORECASE)
+            if heading_match:
+                heading_text = heading_match.group(1).strip()
 
-                if heading_match:
-                    heading_text = heading_match.group(1).strip()
+                # Get body without heading
+                body_content = re.sub(r'<h3[^>]*>.*?</h3>', '', original_content, count=1, flags=re.DOTALL | re.IGNORECASE)
 
-                    # Get body without heading
-                    body_content = re.sub(r'<h\d[^>]*>.*?</h\d>', '', original_content, count=1, flags=re.DOTALL | re.IGNORECASE)
+                # Create SVG-decorated box (left accent style for gamechanger)
+                svg_box = _create_svg_decorated_box(
+                    icon=config["icon"],
+                    title=heading_text,
+                    body_html=body_content,
+                    bg_color=config["bg_color"],
+                    border_color=config["border_color"],
+                    box_style="left"
+                )
 
-                    # Create SVG-decorated box (left accent style for gamechanger)
-                    svg_box = _create_svg_decorated_box(
-                        icon=config["icon"],
-                        title=heading_text,
-                        body_html=body_content,
-                        bg_color=config["bg_color"],
-                        border_color=config["border_color"],
-                        box_style="left"
-                    )
-
-                    # Replace original with SVG-decorated box
-                    output = output.replace(original_content, svg_box)
-                    boxes_created += 1
-                    matched = True
-                    log.info("[FORMAT-GAMECHANGER-V3] Created SVG box %d: %s %s...", boxes_created, config['icon'], heading_text[:30])
-                    break  # Stop trying patterns for this config
-
-        if not matched:
-            log.warning("[FORMAT-GAMECHANGER-V3] No match found for %s section (tried %d patterns)", config['icon'], len(config['patterns']))
+                # Replace original with SVG-decorated box
+                output = output.replace(original_content, svg_box)
+                boxes_created += 1
+                log.info("[FORMAT-GAMECHANGER-V4] Created SVG box %d: %s %s", boxes_created, config['icon'], heading_text[:40])
+        else:
+            log.debug("[FORMAT-GAMECHANGER-V4] No match for pattern keyword: %s", config['keyword'])
 
     if boxes_created == 0:
-        log.warning("[FORMAT-GAMECHANGER-V3] No gamechanger sections matched, returning original")
+        log.warning("[FORMAT-GAMECHANGER-V4] No gamechanger sections matched, returning original")
     else:
-        log.info("[FORMAT-GAMECHANGER-V3] Complete (output: %d chars, %d SVG boxes created)", len(output), boxes_created)
+        log.info("[FORMAT-GAMECHANGER-V4] Complete (output: %d chars, %d SVG boxes created)", len(output), boxes_created)
 
     return output
 
