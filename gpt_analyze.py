@@ -2351,6 +2351,160 @@ def _fallback_quick_wins_html(branche: str, groesse: str) -> str:
 """
 
 
+# -------------------- Textwüsten-Formatierung (v8.0) ----------------
+
+def _format_risks_with_visual_breaks(html: str) -> str:
+    """
+    Strukturiert Risiko-Section mit visuellen Breaks und farbigen Boxen.
+    Verbessert Lesbarkeit durch Kategorie-Header und Separatoren.
+    """
+    import re
+
+    if not html or len(html) < 100:
+        return html
+
+    # Haupt-Kategorien in farbige Info-Boxen umwandeln
+    category_configs = [
+        ('Strategische und organisatorische Risiken', '#3b82f6', '#eff6ff', '💼'),
+        ('Daten-, Sicherheits- und Compliance-Risiken', '#f59e0b', '#fffbeb', '🔒'),
+        ('Qualitäts-, Transparenz- und Akzeptanzrisiken', '#8b5cf6', '#faf5ff', '⚠️'),
+        ('Abhängigkeiten, Betriebs- und Lieferantenrisiken', '#10b981', '#f0fdf4', '🔗'),
+        ('Risiko-Matrix', '#ef4444', '#fef2f2', '📊'),
+    ]
+
+    for category_name, border_color, bg_color, icon in category_configs:
+        # Pattern für verschiedene Formatierungen der Kategorie
+        patterns = [
+            f'<p><strong>\\d+\\.\\s*{re.escape(category_name)}</strong></p>',
+            f'<h4>\\d+\\.\\s*{re.escape(category_name)}</h4>',
+            f'<p><strong>{re.escape(category_name)}</strong></p>',
+        ]
+
+        replacement = f'''
+<div style="margin: 25px 0 15px 0; page-break-inside: avoid;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="background: {border_color}; color: white; padding: 12px 18px; font-size: 16px; font-weight: bold; border-radius: 8px;">
+                {icon} {category_name}
+            </td>
+        </tr>
+    </table>
+</div>
+'''
+        for pattern in patterns:
+            html = re.sub(pattern, replacement, html, flags=re.IGNORECASE)
+
+    # Visual Breaks alle 4 Absätze (• • •)
+    parts = html.split('</p>')
+    enhanced = []
+    counter = 0
+
+    for part in parts:
+        if not part.strip():
+            enhanced.append(part)
+            continue
+
+        enhanced.append(part + '</p>')
+        counter += 1
+
+        # Alle 4 Absätze einen visuellen Separator
+        if counter % 4 == 0 and counter > 0:
+            enhanced.append('''
+<div style="margin: 15px 0; text-align: center; color: #9ca3af; font-size: 16px; letter-spacing: 8px;">
+    •••
+</div>
+''')
+
+    html = ''.join(enhanced)
+
+    # Risiko-Matrix Tabelle besser stylen
+    if '<table' in html.lower():
+        # Füge Tabellen-Styling hinzu
+        html = re.sub(
+            r'<table([^>]*)>',
+            r'<table\1 style="width: 100%; border-collapse: collapse; margin: 20px 0; border: 2px solid #e5e7eb;">',
+            html,
+            count=5
+        )
+        html = re.sub(
+            r'<th([^>]*)>',
+            r'<th\1 style="background: #f3f4f6; padding: 10px; text-align: left; border: 1px solid #e5e7eb; font-weight: bold;">',
+            html
+        )
+        html = re.sub(
+            r'<td([^>]*)>',
+            r'<td\1 style="padding: 8px; border: 1px solid #e5e7eb; vertical-align: top;">',
+            html
+        )
+
+    return html
+
+
+def _format_gamechanger_section(html: str) -> str:
+    """
+    Strukturiert Gamechanger/Strategischer Bruchpunkt mit Highlight-Boxen.
+    """
+    import re
+
+    if not html or len(html) < 100:
+        return html
+
+    # Haupt-Abschnitte in farbige Highlight-Boxen
+    section_configs = [
+        ('Der strategische Bruchpunkt', '🎯', '#f59e0b', '#fffbeb', 'STRATEGISCHER BRUCHPUNKT'),
+        ('Die Transformations-Idee', '💡', '#3b82f6', '#eff6ff', 'TRANSFORMATIONS-IDEE'),
+        ('Warum das ein Gamechanger ist', '🚀', '#10b981', '#f0fdf4', 'GAMECHANGER-EFFEKT'),
+        ('Erster realistischer Schritt', '✅', '#8b5cf6', '#faf5ff', 'NÄCHSTER SCHRITT'),
+    ]
+
+    for search_text, icon, color, bg, title in section_configs:
+        # Pattern für verschiedene Formatierungen
+        patterns = [
+            f'<p><strong>{re.escape(search_text)}</strong>',
+            f'<h4>{re.escape(search_text)}</h4>',
+            f'<p>{re.escape(search_text)}',
+        ]
+
+        replacement = f'''
+<div style="margin: 25px 0 15px 0; page-break-inside: avoid;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="background: {color}; color: white; padding: 12px 18px; font-size: 15px; font-weight: bold; border-radius: 8px 8px 0 0;">
+                {icon} {title}
+            </td>
+        </tr>
+        <tr>
+            <td style="background: {bg}; border: 2px solid {color}; border-top: none; padding: 18px; border-radius: 0 0 8px 8px;">
+                <p style="margin: 0;"><strong>'''
+
+        for pattern in patterns:
+            if re.search(pattern, html, re.IGNORECASE):
+                html = re.sub(pattern, replacement, html, count=1, flags=re.IGNORECASE)
+                break
+
+    # Visual Breaks alle 3 Absätze
+    parts = html.split('</p>')
+    enhanced = []
+    counter = 0
+
+    for part in parts:
+        if not part.strip():
+            enhanced.append(part)
+            continue
+
+        enhanced.append(part + '</p>')
+        counter += 1
+
+        if counter % 3 == 0 and counter > 0:
+            enhanced.append('''
+<div style="margin: 12px 0; text-align: center; color: #d1d5db; font-size: 14px; letter-spacing: 6px;">
+    •••
+</div>
+''')
+
+    return ''.join(enhanced)
+
+
 # -------------------- N4.6: Zero-Leak Policy ----------------
 # Phrases that indicate assistant language "leaking" into report content
 LEAK_PHRASES = [
@@ -6522,8 +6676,20 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections["org_change"] = sections.get("ORG_CHANGE_HTML", "")
     sections["tools_empfehlungen"] = sections.get("TOOLS_EMPFEHLUNGEN_HTML", "")
     sections["foerderpotenzial"] = sections.get("FOERDERPOTENZIAL_HTML", "")
-    sections["risks"] = sections.get("RISKS_HTML", "")
-    sections["gamechanger"] = sections.get("GAMECHANGER_HTML", "")
+
+    # v8.0: Formatiere Textwüsten mit visuellen Breaks
+    risks_html = sections.get("RISKS_HTML", "")
+    if risks_html:
+        risks_html = _format_risks_with_visual_breaks(risks_html)
+        sections["RISKS_HTML"] = risks_html
+    sections["risks"] = risks_html
+
+    gamechanger_html = sections.get("GAMECHANGER_HTML", "")
+    if gamechanger_html:
+        gamechanger_html = _format_gamechanger_section(gamechanger_html)
+        sections["GAMECHANGER_HTML"] = gamechanger_html
+    sections["gamechanger"] = gamechanger_html
+
     sections["recommendations"] = sections.get("RECOMMENDATIONS_HTML", "")
     # Sprint N3.3: Apply Exec Summary Hard-Clean to remove H1/H2 and label text
     from services.html_sanitizer import clean_exec_summary_html
