@@ -2357,30 +2357,54 @@ def _format_risks_with_visual_breaks(html: str) -> str:
     """
     Strukturiert Risiko-Section mit visuellen Breaks und farbigen Boxen.
     Verbessert Lesbarkeit durch Kategorie-Header und Separatoren.
+    DEFENSIVE: Returns original if input invalid or processing fails.
     """
     import re
+    import traceback
 
-    if not html or len(html) < 100:
+    # ========== DEFENSIVE GUARD CLAUSES ==========
+    # Check 1: Input validation
+    if not html:
+        log.warning("[FORMAT-RISKS] Input is None or empty, returning empty string")
+        return ""
+
+    if not isinstance(html, str):
+        log.warning(f"[FORMAT-RISKS] Input is not string (type={type(html)}), returning as-is")
+        return str(html) if html else ""
+
+    # Check 2: Minimum content length
+    if len(html.strip()) < 100:
+        log.warning(f"[FORMAT-RISKS] Input too short ({len(html)} chars), skipping formatting")
         return html
 
-    # Haupt-Kategorien in farbige Info-Boxen umwandeln
-    category_configs = [
-        ('Strategische und organisatorische Risiken', '#3b82f6', '#eff6ff', '💼'),
-        ('Daten-, Sicherheits- und Compliance-Risiken', '#f59e0b', '#fffbeb', '🔒'),
-        ('Qualitäts-, Transparenz- und Akzeptanzrisiken', '#8b5cf6', '#faf5ff', '⚠️'),
-        ('Abhängigkeiten, Betriebs- und Lieferantenrisiken', '#10b981', '#f0fdf4', '🔗'),
-        ('Risiko-Matrix', '#ef4444', '#fef2f2', '📊'),
-    ]
+    # Check 3: Contains expected content (relaxed check)
+    if 'Risiko' not in html and 'risiko' not in html.lower():
+        log.warning("[FORMAT-RISKS] Expected risk content not found, skipping formatting")
+        return html
 
-    for category_name, border_color, bg_color, icon in category_configs:
-        # Pattern für verschiedene Formatierungen der Kategorie
-        patterns = [
-            f'<p><strong>\\d+\\.\\s*{re.escape(category_name)}</strong></p>',
-            f'<h4>\\d+\\.\\s*{re.escape(category_name)}</h4>',
-            f'<p><strong>{re.escape(category_name)}</strong></p>',
+    # ========== SAFE PROCESSING ==========
+    try:
+        log.info(f"[FORMAT-RISKS] Starting formatting, input length: {len(html)}")
+        original_html = html  # Keep original for fallback
+
+        # Haupt-Kategorien in farbige Info-Boxen umwandeln
+        category_configs = [
+            ('Strategische und organisatorische Risiken', '#3b82f6', '#eff6ff', '💼'),
+            ('Daten-, Sicherheits- und Compliance-Risiken', '#f59e0b', '#fffbeb', '🔒'),
+            ('Qualitäts-, Transparenz- und Akzeptanzrisiken', '#8b5cf6', '#faf5ff', '⚠️'),
+            ('Abhängigkeiten, Betriebs- und Lieferantenrisiken', '#10b981', '#f0fdf4', '🔗'),
+            ('Risiko-Matrix', '#ef4444', '#fef2f2', '📊'),
         ]
 
-        replacement = f'''
+        for category_name, border_color, bg_color, icon in category_configs:
+            # Pattern für verschiedene Formatierungen der Kategorie
+            patterns = [
+                f'<p><strong>\\d+\\.\\s*{re.escape(category_name)}</strong></p>',
+                f'<h4>\\d+\\.\\s*{re.escape(category_name)}</h4>',
+                f'<p><strong>{re.escape(category_name)}</strong></p>',
+            ]
+
+            replacement = f'''
 <div style="margin: 25px 0 15px 0; page-break-inside: avoid;">
     <table style="width: 100%; border-collapse: collapse;">
         <tr>
@@ -2391,81 +2415,117 @@ def _format_risks_with_visual_breaks(html: str) -> str:
     </table>
 </div>
 '''
-        for pattern in patterns:
-            html = re.sub(pattern, replacement, html, flags=re.IGNORECASE)
+            for pattern in patterns:
+                html = re.sub(pattern, replacement, html, flags=re.IGNORECASE)
 
-    # Visual Breaks alle 4 Absätze (• • •)
-    parts = html.split('</p>')
-    enhanced = []
-    counter = 0
+        # Visual Breaks alle 4 Absätze (• • •)
+        parts = html.split('</p>')
+        enhanced = []
+        counter = 0
 
-    for part in parts:
-        if not part.strip():
-            enhanced.append(part)
-            continue
+        for part in parts:
+            if not part.strip():
+                enhanced.append(part)
+                continue
 
-        enhanced.append(part + '</p>')
-        counter += 1
+            enhanced.append(part + '</p>')
+            counter += 1
 
-        # Alle 4 Absätze einen visuellen Separator
-        if counter % 4 == 0 and counter > 0:
-            enhanced.append('''
+            # Alle 4 Absätze einen visuellen Separator
+            if counter % 4 == 0 and counter > 0:
+                enhanced.append('''
 <div style="margin: 15px 0; text-align: center; color: #9ca3af; font-size: 16px; letter-spacing: 8px;">
     •••
 </div>
 ''')
 
-    html = ''.join(enhanced)
+        formatted_html = ''.join(enhanced)
 
-    # Risiko-Matrix Tabelle besser stylen
-    if '<table' in html.lower():
-        # Füge Tabellen-Styling hinzu
-        html = re.sub(
-            r'<table([^>]*)>',
-            r'<table\1 style="width: 100%; border-collapse: collapse; margin: 20px 0; border: 2px solid #e5e7eb;">',
-            html,
-            count=5
-        )
-        html = re.sub(
-            r'<th([^>]*)>',
-            r'<th\1 style="background: #f3f4f6; padding: 10px; text-align: left; border: 1px solid #e5e7eb; font-weight: bold;">',
-            html
-        )
-        html = re.sub(
-            r'<td([^>]*)>',
-            r'<td\1 style="padding: 8px; border: 1px solid #e5e7eb; vertical-align: top;">',
-            html
-        )
+        # Risiko-Matrix Tabelle besser stylen
+        if '<table' in formatted_html.lower():
+            # Füge Tabellen-Styling hinzu
+            formatted_html = re.sub(
+                r'<table([^>]*)>',
+                r'<table\1 style="width: 100%; border-collapse: collapse; margin: 20px 0; border: 2px solid #e5e7eb;">',
+                formatted_html,
+                count=5
+            )
+            formatted_html = re.sub(
+                r'<th([^>]*)>',
+                r'<th\1 style="background: #f3f4f6; padding: 10px; text-align: left; border: 1px solid #e5e7eb; font-weight: bold;">',
+                formatted_html
+            )
+            formatted_html = re.sub(
+                r'<td([^>]*)>',
+                r'<td\1 style="padding: 8px; border: 1px solid #e5e7eb; vertical-align: top;">',
+                formatted_html
+            )
 
-    return html
+        # Validate output
+        if not formatted_html or len(formatted_html) < len(original_html) * 0.5:
+            log.warning(f"[FORMAT-RISKS] Output suspicious (len={len(formatted_html) if formatted_html else 0}), returning original")
+            return original_html
+
+        log.info(f"[FORMAT-RISKS] Formatting complete, output length: {len(formatted_html)}")
+        return formatted_html
+
+    except Exception as e:
+        log.error(f"[FORMAT-RISKS] Formatting failed: {e}")
+        log.error(f"[FORMAT-RISKS] Traceback: {traceback.format_exc()}")
+        # CRITICAL: Return original on any error
+        return html
 
 
 def _format_gamechanger_section(html: str) -> str:
     """
     Strukturiert Gamechanger/Strategischer Bruchpunkt mit Highlight-Boxen.
+    DEFENSIVE: Returns original if input invalid or processing fails.
     """
     import re
+    import traceback
 
-    if not html or len(html) < 100:
+    # ========== DEFENSIVE GUARD CLAUSES ==========
+    # Check 1: Input validation
+    if not html:
+        log.warning("[FORMAT-GAMECHANGER] Input is None or empty, returning empty string")
+        return ""
+
+    if not isinstance(html, str):
+        log.warning(f"[FORMAT-GAMECHANGER] Input is not string (type={type(html)}), returning as-is")
+        return str(html) if html else ""
+
+    # Check 2: Minimum content length
+    if len(html.strip()) < 100:
+        log.warning(f"[FORMAT-GAMECHANGER] Input too short ({len(html)} chars), skipping formatting")
         return html
 
-    # Haupt-Abschnitte in farbige Highlight-Boxen
-    section_configs = [
-        ('Der strategische Bruchpunkt', '🎯', '#f59e0b', '#fffbeb', 'STRATEGISCHER BRUCHPUNKT'),
-        ('Die Transformations-Idee', '💡', '#3b82f6', '#eff6ff', 'TRANSFORMATIONS-IDEE'),
-        ('Warum das ein Gamechanger ist', '🚀', '#10b981', '#f0fdf4', 'GAMECHANGER-EFFEKT'),
-        ('Erster realistischer Schritt', '✅', '#8b5cf6', '#faf5ff', 'NÄCHSTER SCHRITT'),
-    ]
+    # Check 3: Contains expected content (relaxed check)
+    if 'Bruchpunkt' not in html and 'Transformations' not in html and 'Gamechanger' not in html:
+        log.warning("[FORMAT-GAMECHANGER] Expected gamechanger content not found, skipping formatting")
+        return html
 
-    for search_text, icon, color, bg, title in section_configs:
-        # Pattern für verschiedene Formatierungen
-        patterns = [
-            f'<p><strong>{re.escape(search_text)}</strong>',
-            f'<h4>{re.escape(search_text)}</h4>',
-            f'<p>{re.escape(search_text)}',
+    # ========== SAFE PROCESSING ==========
+    try:
+        log.info(f"[FORMAT-GAMECHANGER] Starting formatting, input length: {len(html)}")
+        original_html = html  # Keep original for fallback
+
+        # Haupt-Abschnitte in farbige Highlight-Boxen
+        section_configs = [
+            ('Der strategische Bruchpunkt', '🎯', '#f59e0b', '#fffbeb', 'STRATEGISCHER BRUCHPUNKT'),
+            ('Die Transformations-Idee', '💡', '#3b82f6', '#eff6ff', 'TRANSFORMATIONS-IDEE'),
+            ('Warum das ein Gamechanger ist', '🚀', '#10b981', '#f0fdf4', 'GAMECHANGER-EFFEKT'),
+            ('Erster realistischer Schritt', '✅', '#8b5cf6', '#faf5ff', 'NÄCHSTER SCHRITT'),
         ]
 
-        replacement = f'''
+        for search_text, icon, color, bg, title in section_configs:
+            # Pattern für verschiedene Formatierungen
+            patterns = [
+                f'<p><strong>{re.escape(search_text)}</strong>',
+                f'<h4>{re.escape(search_text)}</h4>',
+                f'<p>{re.escape(search_text)}',
+            ]
+
+            replacement = f'''
 <div style="margin: 25px 0 15px 0; page-break-inside: avoid;">
     <table style="width: 100%; border-collapse: collapse;">
         <tr>
@@ -2477,32 +2537,46 @@ def _format_gamechanger_section(html: str) -> str:
             <td style="background: {bg}; border: 2px solid {color}; border-top: none; padding: 18px; border-radius: 0 0 8px 8px;">
                 <p style="margin: 0;"><strong>'''
 
-        for pattern in patterns:
-            if re.search(pattern, html, re.IGNORECASE):
-                html = re.sub(pattern, replacement, html, count=1, flags=re.IGNORECASE)
-                break
+            for pattern in patterns:
+                if re.search(pattern, html, re.IGNORECASE):
+                    html = re.sub(pattern, replacement, html, count=1, flags=re.IGNORECASE)
+                    break
 
-    # Visual Breaks alle 3 Absätze
-    parts = html.split('</p>')
-    enhanced = []
-    counter = 0
+        # Visual Breaks alle 3 Absätze
+        parts = html.split('</p>')
+        enhanced = []
+        counter = 0
 
-    for part in parts:
-        if not part.strip():
-            enhanced.append(part)
-            continue
+        for part in parts:
+            if not part.strip():
+                enhanced.append(part)
+                continue
 
-        enhanced.append(part + '</p>')
-        counter += 1
+            enhanced.append(part + '</p>')
+            counter += 1
 
-        if counter % 3 == 0 and counter > 0:
-            enhanced.append('''
+            if counter % 3 == 0 and counter > 0:
+                enhanced.append('''
 <div style="margin: 12px 0; text-align: center; color: #d1d5db; font-size: 14px; letter-spacing: 6px;">
     •••
 </div>
 ''')
 
-    return ''.join(enhanced)
+        formatted_html = ''.join(enhanced)
+
+        # Validate output
+        if not formatted_html or len(formatted_html) < len(original_html) * 0.5:
+            log.warning(f"[FORMAT-GAMECHANGER] Output suspicious (len={len(formatted_html) if formatted_html else 0}), returning original")
+            return original_html
+
+        log.info(f"[FORMAT-GAMECHANGER] Formatting complete, output length: {len(formatted_html)}")
+        return formatted_html
+
+    except Exception as e:
+        log.error(f"[FORMAT-GAMECHANGER] Formatting failed: {e}")
+        log.error(f"[FORMAT-GAMECHANGER] Traceback: {traceback.format_exc()}")
+        # CRITICAL: Return original on any error
+        return html
 
 
 # -------------------- N4.6: Zero-Leak Policy ----------------
@@ -6678,16 +6752,36 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections["foerderpotenzial"] = sections.get("FOERDERPOTENZIAL_HTML", "")
 
     # v8.0: Formatiere Textwüsten mit visuellen Breaks
+    # ========== SAFE RISKS FORMATTING ==========
     risks_html = sections.get("RISKS_HTML", "")
-    if risks_html:
-        risks_html = _format_risks_with_visual_breaks(risks_html)
-        sections["RISKS_HTML"] = risks_html
+    log.info(f"[INTEGRATION] Risks HTML before formatting: {len(risks_html) if risks_html else 0} chars")
+    if risks_html and len(risks_html) > 100:
+        try:
+            original_length = len(risks_html)
+            risks_html = _format_risks_with_visual_breaks(risks_html)
+            log.info(f"[INTEGRATION] Risks HTML after formatting: {len(risks_html)} chars (delta: {len(risks_html) - original_length})")
+            sections["RISKS_HTML"] = risks_html
+        except Exception as e:
+            log.error(f"[INTEGRATION] Risks formatting failed at integration point: {e}")
+            # Keep original - don't break pipeline
+    else:
+        log.warning("[INTEGRATION] Risks HTML empty or too short, skipping formatting")
     sections["risks"] = risks_html
 
+    # ========== SAFE GAMECHANGER FORMATTING ==========
     gamechanger_html = sections.get("GAMECHANGER_HTML", "")
-    if gamechanger_html:
-        gamechanger_html = _format_gamechanger_section(gamechanger_html)
-        sections["GAMECHANGER_HTML"] = gamechanger_html
+    log.info(f"[INTEGRATION] Gamechanger HTML before formatting: {len(gamechanger_html) if gamechanger_html else 0} chars")
+    if gamechanger_html and len(gamechanger_html) > 100:
+        try:
+            original_length = len(gamechanger_html)
+            gamechanger_html = _format_gamechanger_section(gamechanger_html)
+            log.info(f"[INTEGRATION] Gamechanger HTML after formatting: {len(gamechanger_html)} chars (delta: {len(gamechanger_html) - original_length})")
+            sections["GAMECHANGER_HTML"] = gamechanger_html
+        except Exception as e:
+            log.error(f"[INTEGRATION] Gamechanger formatting failed at integration point: {e}")
+            # Keep original - don't break pipeline
+    else:
+        log.warning("[INTEGRATION] Gamechanger HTML empty or too short, skipping formatting")
     sections["gamechanger"] = gamechanger_html
 
     sections["recommendations"] = sections.get("RECOMMENDATIONS_HTML", "")
