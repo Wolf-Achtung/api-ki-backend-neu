@@ -2071,6 +2071,62 @@ Abschnitt: {section}. Antworte ausschließlich mit HTML.
     return _clean_html(fixed or s)
 
 
+# -------------------- Quick Wins Post-Processing (Robust Fix) ----------------
+
+def _remove_duplicate_context_banners(html: str) -> str:
+    """
+    Entfernt doppelte Branchen/Größen Context-Boxen aus Quick Wins.
+    Behält nur die ERSTE Occurrence von context-banner, entfernt alle weiteren.
+    """
+    if not html:
+        return html
+
+    import re
+
+    # Pattern für context-banner (der globale Branchen/Größen Banner)
+    pattern = r'<div class="context-banner">.*?</div>\s*</div>'
+    matches = list(re.finditer(pattern, html, re.DOTALL))
+
+    if len(matches) > 1:
+        # Entferne alle außer dem ersten Match (von hinten nach vorne)
+        for match in reversed(matches[1:]):
+            html = html[:match.start()] + html[match.end():]
+        log.debug("Removed %d duplicate context-banners from Quick Wins", len(matches) - 1)
+
+    return html
+
+
+def _enforce_quick_win_css_classes(html: str) -> str:
+    """
+    Erzwingt korrekte CSS-Klassen für Quick Win Cards.
+    Ersetzt alte/fehlende Klassen durch neue Standard-Klassen.
+    """
+    if not html:
+        return html
+
+    import re
+
+    replacements = [
+        # Card Container - alte Klasse zur neuen
+        (r'<div class="quick-win"(?=[>\s])', '<div class="quick-win-card-new"'),
+        # Header ohne -new Suffix
+        (r'<div class="qw-header"', '<div class="quick-win-header-new"'),
+        (r'<div class="quick-win-header"(?!-new)', '<div class="quick-win-header-new"'),
+        # Icon ohne -new Suffix
+        (r'<div class="qw-icon"', '<div class="quick-win-icon-new"'),
+        (r'<div class="quick-win-icon"(?!-new)', '<div class="quick-win-icon-new"'),
+        # Zeit ohne korrekten Klassenname
+        (r'<span class="qw-time"', '<span class="quick-win-time"'),
+        # Body ohne -new Suffix
+        (r'<div class="quick-win-body"(?!-new)', '<div class="quick-win-body-new"'),
+    ]
+
+    for old_pattern, new_class in replacements:
+        html = re.sub(old_pattern, new_class, html)
+
+    return html
+
+
 # -------------------- N4.6: Zero-Leak Policy ----------------
 # Phrases that indicate assistant language "leaking" into report content
 LEAK_PHRASES = [
@@ -5865,6 +5921,10 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     qw_html = sections.pop("_QUICK_WINS_RAW", "")
     if _needs_repair(qw_html):
         qw_html = _repair_html("quick_wins", qw_html)
+
+    # Robust Fix: Post-Processing für Quick Wins
+    qw_html = _remove_duplicate_context_banners(qw_html)  # Entferne doppelte Branchen/Größen Boxen
+    qw_html = _enforce_quick_win_css_classes(qw_html)     # Erzwinge korrekte CSS-Klassen
 
     # v7.1: Single-column layout for Quick Wins (no grid split)
     # The CSS classes in pdf_template.html handle the card styling
