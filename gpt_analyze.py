@@ -2355,250 +2355,198 @@ def _fallback_quick_wins_html(branche: str, groesse: str) -> str:
 
 def _format_risks_with_visual_breaks(html_content: str) -> str:
     """
-    Format risks section with table-based visual boxes and breaks.
-    Converts LLM-generated HTML into structured, visually distinct risk categories.
+    Format risk sections with colored table-based boxes.
 
-    v9.0: Uses h3-based splitting for more robust parsing of LLM output.
-
-    Args:
-        html_content: Raw HTML from LLM with <h3> headers and content
-
-    Returns:
-        Formatted HTML with table-based colored boxes and visual breaks
+    Version 2: Pure inline styles, no CSS classes - for WeasyPrint compatibility.
     """
-    if not html_content or len(html_content.strip()) < 50:
+    if not html_content or len(html_content) < 100:
         return html_content
 
-    log.info("[FORMAT-RISKS] Starting table-based formatting (length: %d chars)", len(html_content))
+    log.info("[FORMAT-RISKS-V2] Starting inline-style formatting (length: %d chars)", len(html_content))
 
-    # Define 5 risk categories with icons and colors
-    risk_categories = [
+    # Risk categories with INLINE STYLES ONLY
+    risk_configs = [
         {
-            "title": "Strategische und organisatorische Risiken",
             "icon": "💼",
-            "color": "#2563eb",  # Blue
-            "bg": "#eff6ff"
+            "pattern": r"(Strategische\s+und\s+organisatorische\s+Risiken.*?)(• • •|$)",
+            "border_color": "#3b82f6",
+            "bg_color": "#eff6ff"
         },
         {
-            "title": "Daten-, Sicherheits- und Compliance-Risiken",
             "icon": "🔒",
-            "color": "#ea580c",  # Orange
-            "bg": "#fff7ed"
+            "pattern": r"(Daten-?\s+und\s+Sicherheits.*?risiken.*?)(• • •|$)",
+            "border_color": "#f59e0b",
+            "bg_color": "#fffbeb"
         },
         {
-            "title": "Qualitäts-, Transparenz- und Akzeptanzrisiken",
             "icon": "⚠️",
-            "color": "#9333ea",  # Purple
-            "bg": "#faf5ff"
+            "pattern": r"(Qualitäts-?\s+und\s+Transparenz.*?risiken.*?)(• • •|$)",
+            "border_color": "#8b5cf6",
+            "bg_color": "#faf5ff"
         },
         {
-            "title": "Abhängigkeiten, Betriebs- und Lieferantenrisiken",
             "icon": "🔗",
-            "color": "#16a34a",  # Green
-            "bg": "#f0fdf4"
+            "pattern": r"(Abhängigkeits-?\s+und\s+Betriebs.*?risiken.*?)(• • •|$)",
+            "border_color": "#10b981",
+            "bg_color": "#f0fdf4"
         },
         {
-            "title": "Risiko-Matrix",
             "icon": "📊",
-            "color": "#dc2626",  # Red
-            "bg": "#fef2f2"
+            "pattern": r"(KI-spezifisch.*?Halluzinationen.*?)(• • •|$)",
+            "border_color": "#ef4444",
+            "bg_color": "#fef2f2"
         }
     ]
 
-    result_parts = []
+    output = html_content
     boxes_created = 0
 
-    # Split content by h3 headers
-    sections = re.split(r'(<h3[^>]*>.*?</h3>)', html_content, flags=re.DOTALL | re.IGNORECASE)
+    for config in risk_configs:
+        # Try to find the section
+        match = re.search(config["pattern"], output, re.DOTALL | re.IGNORECASE)
 
-    current_category_idx = 0
-    pending_header = None
+        if match:
+            original_content = match.group(1)
 
-    for i, section in enumerate(sections):
-        if not section.strip():
-            continue
+            # Extract heading and body
+            heading_match = re.search(r'<h\d[^>]*>(.*?)</h\d>', original_content, re.DOTALL | re.IGNORECASE)
 
-        # Check if this is an h3 header
-        if re.match(r'<h3[^>]*>', section.strip(), re.IGNORECASE):
-            # Find matching category
-            section_lower = section.lower()
-            for idx, cat in enumerate(risk_categories):
-                # Check if category title (or key part) is in the header
-                title_parts = cat["title"].lower().split()
-                if any(part in section_lower for part in title_parts[:2]):
-                    current_category_idx = idx
-                    pending_header = cat
-                    break
-            continue
+            if heading_match:
+                heading_text = heading_match.group(1).strip()
 
-        # This is content after an h3
-        if pending_header and current_category_idx < len(risk_categories):
-            cat = pending_header
+                # Remove heading from content to get body
+                body_content = re.sub(r'<h\d[^>]*>.*?</h\d>', '', original_content, count=1, flags=re.DOTALL | re.IGNORECASE)
 
-            # Create table-based box
-            box_html = f"""
-<table style="width: 100%; border-collapse: collapse; margin: 20px 0; border: 4px solid {cat['color']}; background-color: {cat['bg']}; page-break-inside: avoid;">
-  <tr>
-    <td style="padding: 16px;">
-      <div style="margin-bottom: 12px;">
-        <span style="font-size: 24px; margin-right: 8px;">{cat['icon']}</span>
-        <span style="color: {cat['color']}; font-size: 18px; font-weight: bold;">{cat['title']}</span>
-      </div>
-      <div style="color: #374151; line-height: 1.6;">
-        {section.strip()}
-      </div>
-    </td>
-  </tr>
+                # Create table box with PURE INLINE STYLES
+                table_box = f'''
+<table style="width: 100%; border-collapse: collapse; margin: 16px 0; background-color: {config["bg_color"]}; border: 4px solid {config["border_color"]};">
+    <tr>
+        <td style="padding: 16px; font-family: Arial, sans-serif;">
+            <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 16px; font-weight: bold;">
+                {config["icon"]} {heading_text}
+            </h4>
+            <div style="color: #374151; font-size: 14px; line-height: 1.6;">
+                {body_content}
+            </div>
+        </td>
+    </tr>
 </table>
-"""
-            result_parts.append(box_html)
-            boxes_created += 1
+'''
 
-            # Add visual break after each box (except last)
-            if current_category_idx < len(risk_categories) - 1:
-                result_parts.append('<p style="text-align: center; color: #9ca3af; margin: 16px 0;">• • •</p>')
+                # Replace original with table box
+                output = output.replace(original_content, table_box)
+                boxes_created += 1
+                log.info("[FORMAT-RISKS-V2] Created box %d: %s %s...", boxes_created, config['icon'], heading_text[:30])
 
-            current_category_idx += 1
-            pending_header = None
-        elif not pending_header and i == 0:
-            # Content before first h3 - keep as is
-            result_parts.append(section)
-
-    # If no boxes created, return original content
-    if boxes_created == 0:
-        log.warning("[FORMAT-RISKS] No risk categories matched, returning original")
-        return html_content
-
-    formatted = "\n".join(result_parts)
-    log.info("[FORMAT-RISKS] Complete (output: %d chars, %d boxes created)", len(formatted), boxes_created)
-
-    return formatted
+    log.info("[FORMAT-RISKS-V2] Complete (output: %d chars, %d boxes created)", len(output), boxes_created)
+    return output
 
 
 def _format_gamechanger_section(html_content: str) -> str:
     """
-    Format gamechanger section with table-based highlight boxes and breaks.
-    Converts LLM-generated content into visually distinct, structured sections.
+    Format gamechanger sections with colored highlight boxes.
 
-    v9.0: Uses h2/h3-based splitting for more robust parsing of LLM output.
-
-    Args:
-        html_content: Raw HTML from LLM with headers and content
-
-    Returns:
-        Formatted HTML with table-based colored boxes and visual breaks
+    Version 2: Multiple regex patterns with fallbacks + pure inline styles.
     """
-    if not html_content or len(html_content.strip()) < 50:
+    if not html_content or len(html_content) < 100:
         return html_content
 
-    log.info("[FORMAT-GAMECHANGER] Starting table-based formatting (length: %d chars)", len(html_content))
+    log.info("[FORMAT-GAMECHANGER-V2] Starting inline-style formatting (length: %d chars)", len(html_content))
 
-    # Define 4 key sections with icons and colors
-    sections_config = [
+    # Gamechanger sections with MULTIPLE PATTERNS for better matching
+    gc_configs = [
         {
-            "keyword": "Strategischer Bruchpunkt",
-            "alt_keywords": ["bruchpunkt", "strategisch"],
             "icon": "🎯",
-            "color": "#ea580c",  # Orange
-            "bg": "#fff7ed"
+            "patterns": [
+                r"((?:<h\d[^>]*>)?.*?[Ss]trategische.*?[Bb]ruchpunkt.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
+                r"((?:<h\d[^>]*>)?.*?1\..*?[Bb]ruchpunkt.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
+            ],
+            "border_color": "#f59e0b",
+            "bg_color": "#fffbeb"
         },
         {
-            "keyword": "Transformations-Idee",
-            "alt_keywords": ["transformation", "idee"],
             "icon": "💡",
-            "color": "#2563eb",  # Blue
-            "bg": "#eff6ff"
+            "patterns": [
+                r"((?:<h\d[^>]*>)?.*?[Tt]ransformations.*?[Ii]dee.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
+                r"((?:<h\d[^>]*>)?.*?2\..*?[Tt]ransformations.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
+            ],
+            "border_color": "#3b82f6",
+            "bg_color": "#eff6ff"
         },
         {
-            "keyword": "Gamechanger-Effekt",
-            "alt_keywords": ["gamechanger", "warum"],
             "icon": "🚀",
-            "color": "#16a34a",  # Green
-            "bg": "#f0fdf4"
+            "patterns": [
+                r"((?:<h\d[^>]*>)?.*?[Gg]amechanger.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
+                r"((?:<h\d[^>]*>)?.*?3\..*?[Gg]amechanger.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
+            ],
+            "border_color": "#10b981",
+            "bg_color": "#f0fdf4"
         },
         {
-            "keyword": "Nächster Schritt",
-            "alt_keywords": ["schritt", "realistisch", "erster"],
             "icon": "✅",
-            "color": "#9333ea",  # Purple
-            "bg": "#faf5ff"
+            "patterns": [
+                r"((?:<h\d[^>]*>)?.*?[Ee]rster.*?[Ss]chritt.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
+                r"((?:<h\d[^>]*>)?.*?4\..*?[Ss]chritt.*?</h\d>.*?)(• • •|(?=<h\d)|$)",
+            ],
+            "border_color": "#8b5cf6",
+            "bg_color": "#faf5ff"
         }
     ]
 
-    result_parts = []
+    output = html_content
     boxes_created = 0
 
-    # Split by major headers (h2, h3)
-    parts = re.split(r'(<h[23][^>]*>.*?</h[23]>)', html_content, flags=re.DOTALL | re.IGNORECASE)
+    for config in gc_configs:
+        matched = False
 
-    current_section = None
+        # Try each pattern until one matches
+        for pattern in config["patterns"]:
+            match = re.search(pattern, output, re.DOTALL | re.IGNORECASE)
 
-    for i, part in enumerate(parts):
-        if not part.strip():
-            continue
+            if match:
+                original_content = match.group(1)
 
-        # Check if this is a header
-        if re.match(r'<h[23][^>]*>', part.strip(), re.IGNORECASE):
-            part_lower = part.lower()
-            # Find matching section config
-            for sec in sections_config:
-                keyword = str(sec["keyword"])
-                alt_keywords = sec["alt_keywords"]
-                if keyword.lower() in part_lower:
-                    current_section = sec
-                    break
-                # Try alt keywords
-                if isinstance(alt_keywords, list) and any(kw in part_lower for kw in alt_keywords):
-                    current_section = sec
-                    break
-            continue
+                # Extract heading
+                heading_match = re.search(r'<h\d[^>]*>(.*?)</h\d>', original_content, re.DOTALL | re.IGNORECASE)
 
-        # This is content
-        if current_section:
-            # Create table-based highlight box
-            sec_color = str(current_section['color'])
-            sec_bg = str(current_section['bg'])
-            sec_icon = str(current_section['icon'])
-            sec_keyword = str(current_section['keyword'])
-            box_html = f"""
-<table style="width: 100%; border-collapse: collapse; margin: 20px 0; border-left: 6px solid {sec_color}; background-color: {sec_bg}; page-break-inside: avoid;">
-  <tr>
-    <td style="padding: 20px;">
-      <div style="margin-bottom: 12px;">
-        <span style="font-size: 24px; margin-right: 8px;">{sec_icon}</span>
-        <span style="color: {sec_color}; font-size: 18px; font-weight: bold;">{sec_keyword}</span>
-      </div>
-      <div style="color: #374151; line-height: 1.6;">
-        {part.strip()}
-      </div>
-    </td>
-  </tr>
+                if heading_match:
+                    heading_text = heading_match.group(1).strip()
+
+                    # Get body without heading
+                    body_content = re.sub(r'<h\d[^>]*>.*?</h\d>', '', original_content, count=1, flags=re.DOTALL | re.IGNORECASE)
+
+                    # Create table box with PURE INLINE STYLES
+                    table_box = f'''
+<table style="width: 100%; border-collapse: collapse; margin: 16px 0; background-color: {config["bg_color"]}; border-left: 6px solid {config["border_color"]};">
+    <tr>
+        <td style="padding: 16px; font-family: Arial, sans-serif;">
+            <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 16px; font-weight: bold;">
+                {config["icon"]} {heading_text}
+            </h4>
+            <div style="color: #374151; font-size: 14px; line-height: 1.6;">
+                {body_content}
+            </div>
+        </td>
+    </tr>
 </table>
-"""
-            result_parts.append(box_html)
-            boxes_created += 1
+'''
 
-            # Add visual break
-            result_parts.append('<p style="text-align: center; color: #9ca3af; margin: 16px 0;">• • •</p>')
+                    # Replace original with table box
+                    output = output.replace(original_content, table_box)
+                    boxes_created += 1
+                    matched = True
+                    log.info("[FORMAT-GAMECHANGER-V2] Created box %d: %s %s...", boxes_created, config['icon'], heading_text[:30])
+                    break  # Stop trying patterns for this config
 
-            current_section = None
-        elif i == 0 and not current_section:
-            # Unmatched content before first header - keep as is
-            result_parts.append(part)
+        if not matched:
+            log.warning("[FORMAT-GAMECHANGER-V2] No match found for %s section (tried %d patterns)", config['icon'], len(config['patterns']))
 
-    # Remove trailing visual break if present
-    if result_parts and result_parts[-1].strip().startswith('<p style="text-align: center'):
-        result_parts.pop()
-
-    # If no boxes created, return original content
     if boxes_created == 0:
-        log.warning("[FORMAT-GAMECHANGER] No gamechanger sections matched, returning original")
-        return html_content
+        log.warning("[FORMAT-GAMECHANGER-V2] No gamechanger sections matched, returning original")
+    else:
+        log.info("[FORMAT-GAMECHANGER-V2] Complete (output: %d chars, %d boxes created)", len(output), boxes_created)
 
-    formatted = "\n".join(result_parts)
-    log.info("[FORMAT-GAMECHANGER] Complete (output: %d chars, %d boxes created)", len(formatted), boxes_created)
-
-    return formatted
+    return output
 
 
 # -------------------- N4.6: Zero-Leak Policy ----------------
