@@ -1904,6 +1904,159 @@ def _clean_html(s: str) -> str:
     if not s: return s
     return s.replace("```html","").replace("```","").strip()
 
+
+# -------------------- Typo Correction & Smart Truncation ----------------
+# Common German typos that slip through user input
+TYPO_FIXES = {
+    "Enwicklung": "Entwicklung",
+    "Entwickung": "Entwicklung",
+    "Enwicklungs": "Entwicklungs",
+    "Optimerung": "Optimierung",
+    "Automatsierung": "Automatisierung",
+    "Automatiserung": "Automatisierung",
+    "Digitalsierung": "Digitalisierung",
+    "Digitaliseirung": "Digitalisierung",
+    "Kommunikaion": "Kommunikation",
+    "Dokumentaion": "Dokumentation",
+    "Intergration": "Integration",
+    "Implmentierung": "Implementierung",
+    "Kundenaquise": "Kundenakquise",
+    "Akquise": "Akquise",
+    "Prozessoptimeirung": "Prozessoptimierung",
+}
+
+
+def _fix_typos(text: str) -> str:
+    """Fix common German typos in user-provided text."""
+    if not text:
+        return text
+    result = text
+    for typo, correct in TYPO_FIXES.items():
+        result = result.replace(typo, correct)
+    return result
+
+
+def _smart_truncate(text: str, max_len: int = 100, suffix: str = "...") -> str:
+    """
+    Truncate text at word boundary instead of cutting mid-word.
+
+    Args:
+        text: The text to truncate
+        max_len: Maximum length (default 100)
+        suffix: Suffix to add if truncated (default "...")
+
+    Returns:
+        Truncated text that ends at a word boundary
+    """
+    if not text or len(text) <= max_len:
+        return text
+
+    # Find last space before max_len
+    truncated = text[:max_len]
+    last_space = truncated.rfind(' ')
+
+    if last_space > max_len // 2:  # Only use space if it's in the second half
+        truncated = truncated[:last_space]
+
+    return truncated.rstrip('.,;:') + suffix
+
+
+def _apply_pdf_inline_styles(html: str) -> str:
+    """
+    Apply inline styles for Puppeteer PDF rendering compatibility.
+
+    Puppeteer often fails to render CSS-based gradients and colors in PDFs.
+    This function adds inline styles to ensure proper rendering:
+    - Table header gradients
+    - White text on colored backgrounds
+    - Emoji fallbacks
+    """
+    if not html:
+        return html
+
+    import re
+    result = html
+
+    # Fix 1: Add inline gradient to <thead> elements
+    # Matches <thead> with or without existing attributes
+    thead_pattern = re.compile(r'<thead(\s+[^>]*)?>', re.IGNORECASE)
+    thead_style = 'style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); -webkit-print-color-adjust: exact; print-color-adjust: exact;"'
+
+    def add_thead_style(match):
+        attrs = match.group(1) or ''
+        if 'style=' in attrs.lower():
+            # Already has style, prepend our gradient
+            return re.sub(
+                r'style="([^"]*)"',
+                r'style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); -webkit-print-color-adjust: exact; \1"',
+                match.group(0),
+                flags=re.IGNORECASE
+            )
+        return f'<thead{attrs} {thead_style}>'
+
+    result = thead_pattern.sub(add_thead_style, result)
+
+    # Fix 2: Add inline color to <th> elements within table-modern
+    # Ensure white text on gradient backgrounds
+    th_pattern = re.compile(r'<th(\s+[^>]*)?>', re.IGNORECASE)
+    th_style = 'style="color: white; font-weight: 600; padding: 14px 18px;"'
+
+    def add_th_style(match):
+        attrs = match.group(1) or ''
+        if 'style=' in attrs.lower():
+            # Already has style, prepend our color
+            return re.sub(
+                r'style="([^"]*)"',
+                r'style="color: white; font-weight: 600; \1"',
+                match.group(0),
+                flags=re.IGNORECASE
+            )
+        return f'<th{attrs} {th_style}>'
+
+    result = th_pattern.sub(add_th_style, result)
+
+    # Fix 3: Replace emojis with HTML-styled equivalents for reliable PDF rendering
+    # Puppeteer in headless mode often lacks emoji fonts, causing empty boxes
+    emoji_replacements = {
+        # Status indicators
+        '✅': '<span style="color: #16a34a; font-weight: bold;">✓</span>',
+        '❌': '<span style="color: #dc2626; font-weight: bold;">✗</span>',
+        '⚠️': '<span style="color: #d97706; font-weight: bold;">!</span>',
+        '⚠': '<span style="color: #d97706; font-weight: bold;">!</span>',
+        # Section/category markers
+        '📋': '<span style="color: #2563eb; font-weight: bold;">■</span>',
+        '🚀': '<span style="color: #7c3aed; font-weight: bold;">▶</span>',
+        '📊': '<span style="color: #0891b2; font-weight: bold;">▣</span>',
+        '💡': '<span style="color: #eab308; font-weight: bold;">★</span>',
+        '🔹': '<span style="color: #3b82f6; font-weight: bold;">◆</span>',
+        '📈': '<span style="color: #16a34a; font-weight: bold;">↑</span>',
+        '🎯': '<span style="color: #dc2626; font-weight: bold;">●</span>',
+        '📌': '<span style="color: #dc2626; font-weight: bold;">▪</span>',
+        '🔍': '<span style="color: #6b7280; font-weight: bold;">◎</span>',
+        '⏰': '<span style="color: #d97706; font-weight: bold;">⊙</span>',
+        '📄': '<span style="color: #64748b; font-weight: bold;">▤</span>',
+        '🏢': '<span style="color: #475569; font-weight: bold;">■</span>',
+        '👥': '<span style="color: #2563eb; font-weight: bold;">◈</span>',
+        '💼': '<span style="color: #4b5563; font-weight: bold;">▣</span>',
+        '🔧': '<span style="color: #6b7280; font-weight: bold;">⚙</span>',
+        '📅': '<span style="color: #0891b2; font-weight: bold;">▦</span>',
+        '💰': '<span style="color: #16a34a; font-weight: bold;">€</span>',
+        '🏆': '<span style="color: #eab308; font-weight: bold;">★</span>',
+        '⚡': '<span style="color: #eab308; font-weight: bold;">⚡</span>',
+        '🔒': '<span style="color: #64748b; font-weight: bold;">▣</span>',
+        '📧': '<span style="color: #2563eb; font-weight: bold;">@</span>',
+        '🌐': '<span style="color: #0891b2; font-weight: bold;">◉</span>',
+        '📱': '<span style="color: #6b7280; font-weight: bold;">▢</span>',
+        '🖥️': '<span style="color: #475569; font-weight: bold;">▣</span>',
+        '🤖': '<span style="color: #7c3aed; font-weight: bold;">◈</span>',
+    }
+
+    for emoji, replacement in emoji_replacements.items():
+        result = result.replace(emoji, replacement)
+
+    return result
+
+
 def _needs_repair(s: str) -> bool:
     if not s: return True
     sl = s.lower()
@@ -4370,10 +4523,10 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     # ════════════════════════════════════════════════════════════════════════════
     if section_key == "quick_wins":
         # v7.0 PHASE 3: Upgrade fallback to match primary prompt hyper-personalization
-        # Extrahiere ALLE 5 Goldnuggets
-        zeitersparnis = briefing.get("zeitersparnis_prioritaet", "")
-        ki_projekte = briefing.get("ki_projekte", "")
-        geschaeftsmodell = briefing.get("geschaeftsmodell_evolution", "")
+        # Extrahiere ALLE 5 Goldnuggets (mit Typo-Korrektur für User-Input)
+        zeitersparnis = _fix_typos(briefing.get("zeitersparnis_prioritaet", ""))
+        ki_projekte = _fix_typos(briefing.get("ki_projekte", ""))
+        geschaeftsmodell = _fix_typos(briefing.get("geschaeftsmodell_evolution", ""))
         ki_guardrails = briefing.get("ki_guardrails", "")
         trainings = briefing.get("trainings_interessen", [])
         score_security = scores.get("security", 50)
@@ -4389,7 +4542,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   <h4>{qw_title}</h4>
   <p><strong>Ihre Priorität:</strong> "{zeitersparnis}"</p>
   <p><strong>Warum:</strong> Diese Automatisierung adressiert direkt Ihren zeitintensivsten Bereich und schafft sofort Entlastung bei {hauptleistung or branche}.</p>
-  <pre class="prompt-template">Sie sind KI-Berater für {branche}. Aufgabe: Erstellen Sie einen detaillierten Workflow für "{zeitersparnis[:100]}". 
+  <pre class="prompt-template">Sie sind KI-Berater für {branche}. Aufgabe: Erstellen Sie einen detaillierten Workflow für "{_smart_truncate(zeitersparnis, 100, '')}". 
 
 Anforderungen:
 - Identifizieren Sie 3-5 konkrete Teilschritte
@@ -4427,19 +4580,19 @@ Format: Schritt-für-Schritt-Anleitung mit Zeitschätzung pro Schritt.</pre>
         if hauptleistung:
             context_hint = ""
             if geschaeftsmodell:
-                context_hint = f" Perspektive: {geschaeftsmodell[:80]}"
+                context_hint = f" Perspektive: {_smart_truncate(geschaeftsmodell, 80, '')}"
             
             qw_items.append(f"""<div class="quick-win">
-  <h4>📋 Templates für {offering_label or hauptleistung[:40]}</h4>
+  <h4>📋 Templates für {offering_label or _smart_truncate(hauptleistung, 40, '')}</h4>
   <p><strong>Ihre Hauptleistung:</strong> {hauptleistung}</p>
   <p><strong>Warum:</strong> Standardisierte Vorlagen steigern Qualität und Geschwindigkeit.{context_hint}</p>
-  <pre class="prompt-template">Erstellen Sie ein wiederverwendbares Template für "{hauptleistung[:100]}":
+  <pre class="prompt-template">Erstellen Sie ein wiederverwendbares Template für "{_smart_truncate(hauptleistung, 100, '')}":
 
 Struktur:
 - Kernbausteine die immer gleich sind
 - Variable Elemente die angepasst werden
 - Quality-Gates zur Prüfung
-{"- Beachten Sie: " + ki_guardrails[:100] if ki_guardrails else ""}
+{"- Beachten Sie: " + _smart_truncate(ki_guardrails, 100, '') if ki_guardrails else ""}
 
 Ziel: 70% Zeitersparnis bei gleichbleibender Qualität.</pre>
   <p><strong>Umsetzung:</strong></p>
@@ -4505,9 +4658,9 @@ Für jeden Typ: Fixe Struktur + KI-generierbare Abschnitte identifizieren.</pre>
         elif ki_projekte:
             qw_items.append(f"""<div class="quick-win">
   <h4>🚀 Quick Start für Ihr KI-Projekt</h4>
-  <p><strong>Ihr Projekt:</strong> {ki_projekte[:150]}</p>
+  <p><strong>Ihr Projekt:</strong> {_smart_truncate(ki_projekte, 150, '')}</p>
   <p><strong>Warum:</strong> Ihr laufendes Projekt kann sofort von strukturiertem Testing profitieren.</p>
-  <pre class="prompt-template">Für Projekt "{ki_projekte[:100]}":
+  <pre class="prompt-template">Für Projekt "{_smart_truncate(ki_projekte, 100, '')}":
 1. Definieren Sie 3-5 Testszenarien
 2. Was sind Erfolgskriterien pro Szenario?
 3. Welche manuelle Prüfung bleibt nötig?</pre>
@@ -7843,6 +7996,9 @@ def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = 
             "margin": {"top": "12mm", "right": "12mm", "bottom": "20mm", "left": "12mm"}
         }
 
+        # Apply inline styles for Puppeteer PDF compatibility (table headers, etc.)
+        html = _apply_pdf_inline_styles(html)
+
         pdf_info = render_pdf_from_html(
             html,
             meta={"analysis_id": an_id, "briefing_id": briefing_id, "run_id": run_id},
@@ -7940,6 +8096,9 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
             "footerTemplate": footer_template,
             "margin": {"top": "12mm", "right": "12mm", "bottom": "20mm", "left": "12mm"}
         }
+
+        # Apply inline styles for Puppeteer PDF compatibility (table headers, etc.)
+        html = _apply_pdf_inline_styles(html)
 
         pdf_info = render_pdf_from_html(
             html,
