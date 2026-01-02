@@ -2015,6 +2015,45 @@ def _apply_pdf_inline_styles(html: str) -> str:
 
     result = th_pattern.sub(add_th_style, result)
 
+    # Fix 3: Replace emojis with HTML-styled equivalents for reliable PDF rendering
+    # Puppeteer in headless mode often lacks emoji fonts, causing empty boxes
+    emoji_replacements = {
+        # Status indicators
+        '✅': '<span style="color: #16a34a; font-weight: bold;">✓</span>',
+        '❌': '<span style="color: #dc2626; font-weight: bold;">✗</span>',
+        '⚠️': '<span style="color: #d97706; font-weight: bold;">!</span>',
+        '⚠': '<span style="color: #d97706; font-weight: bold;">!</span>',
+        # Section/category markers
+        '📋': '<span style="color: #2563eb; font-weight: bold;">■</span>',
+        '🚀': '<span style="color: #7c3aed; font-weight: bold;">▶</span>',
+        '📊': '<span style="color: #0891b2; font-weight: bold;">▣</span>',
+        '💡': '<span style="color: #eab308; font-weight: bold;">★</span>',
+        '🔹': '<span style="color: #3b82f6; font-weight: bold;">◆</span>',
+        '📈': '<span style="color: #16a34a; font-weight: bold;">↑</span>',
+        '🎯': '<span style="color: #dc2626; font-weight: bold;">●</span>',
+        '📌': '<span style="color: #dc2626; font-weight: bold;">▪</span>',
+        '🔍': '<span style="color: #6b7280; font-weight: bold;">◎</span>',
+        '⏰': '<span style="color: #d97706; font-weight: bold;">⊙</span>',
+        '📄': '<span style="color: #64748b; font-weight: bold;">▤</span>',
+        '🏢': '<span style="color: #475569; font-weight: bold;">■</span>',
+        '👥': '<span style="color: #2563eb; font-weight: bold;">◈</span>',
+        '💼': '<span style="color: #4b5563; font-weight: bold;">▣</span>',
+        '🔧': '<span style="color: #6b7280; font-weight: bold;">⚙</span>',
+        '📅': '<span style="color: #0891b2; font-weight: bold;">▦</span>',
+        '💰': '<span style="color: #16a34a; font-weight: bold;">€</span>',
+        '🏆': '<span style="color: #eab308; font-weight: bold;">★</span>',
+        '⚡': '<span style="color: #eab308; font-weight: bold;">⚡</span>',
+        '🔒': '<span style="color: #64748b; font-weight: bold;">▣</span>',
+        '📧': '<span style="color: #2563eb; font-weight: bold;">@</span>',
+        '🌐': '<span style="color: #0891b2; font-weight: bold;">◉</span>',
+        '📱': '<span style="color: #6b7280; font-weight: bold;">▢</span>',
+        '🖥️': '<span style="color: #475569; font-weight: bold;">▣</span>',
+        '🤖': '<span style="color: #7c3aed; font-weight: bold;">◈</span>',
+    }
+
+    for emoji, replacement in emoji_replacements.items():
+        result = result.replace(emoji, replacement)
+
     return result
 
 
