@@ -2355,228 +2355,222 @@ def _fallback_quick_wins_html(branche: str, groesse: str) -> str:
 
 def _format_risks_with_visual_breaks(html: str) -> str:
     """
-    Strukturiert Risiko-Section mit visuellen Breaks und farbigen Boxen.
-    Verbessert Lesbarkeit durch Kategorie-Header und Separatoren.
-    DEFENSIVE: Returns original if input invalid or processing fails.
+    WeasyPrint-Safe: Formatiert Risiken-Section mit farbigen TABLE-Boxen
+    statt div-Boxen, da WeasyPrint tables besser rendert.
     """
+    import logging
     import re
-    import traceback
 
-    # ========== DEFENSIVE GUARD CLAUSES ==========
-    # Check 1: Input validation
+    logger = logging.getLogger(__name__)
+
+    # 1. Input validation
     if not html:
-        log.warning("[FORMAT-RISKS] Input is None or empty, returning empty string")
+        logger.warning("[FORMAT-RISKS] Input is None or empty")
         return ""
 
     if not isinstance(html, str):
-        log.warning(f"[FORMAT-RISKS] Input is not string (type={type(html)}), returning as-is")
+        logger.warning(f"[FORMAT-RISKS] Input not a string: {type(html)}")
         return str(html) if html else ""
 
-    # Check 2: Minimum content length
-    if len(html.strip()) < 100:
-        log.warning(f"[FORMAT-RISKS] Input too short ({len(html)} chars), skipping formatting")
+    if len(html.strip()) < 50:
+        logger.warning(f"[FORMAT-RISKS] Input too short ({len(html)} chars)")
         return html
 
-    # Check 3: Contains expected content (relaxed check)
-    if 'Risiko' not in html and 'risiko' not in html.lower():
-        log.warning("[FORMAT-RISKS] Expected risk content not found, skipping formatting")
+    # 2. Content check (lockerer als vorher)
+    if 'risiko' not in html.lower():
+        logger.warning("[FORMAT-RISKS] No 'Risiko' content found")
         return html
 
-    # ========== SAFE PROCESSING ==========
+    logger.info(f"[FORMAT-RISKS] Starting formatting, input length: {len(html)}")
+
     try:
-        log.info(f"[FORMAT-RISKS] Starting formatting, input length: {len(html)}")
-        original_html = html  # Keep original for fallback
+        # 3. Kategorie-Definitionen (WeasyPrint-safe colors)
+        categories = {
+            '1. Strategische und organisatorische Risiken': {
+                'border': '#3b82f6',
+                'bg': '#eff6ff',
+                'icon': '💼'
+            },
+            '2. Daten-, Sicherheits- und Compliance-Risiken': {
+                'border': '#f59e0b',
+                'bg': '#fffbeb',
+                'icon': '🔒'
+            },
+            '3. Qualitäts-, Transparenz- und Akzeptanzrisiken': {
+                'border': '#8b5cf6',
+                'bg': '#faf5ff',
+                'icon': '⚠️'
+            },
+            '4. Abhängigkeiten, Betriebs- und Lieferantenrisiken': {
+                'border': '#10b981',
+                'bg': '#f0fdf4',
+                'icon': '🔗'
+            },
+            '5. Risiko-Matrix': {
+                'border': '#ef4444',
+                'bg': '#fef2f2',
+                'icon': '📊'
+            }
+        }
 
-        # Haupt-Kategorien in farbige Info-Boxen umwandeln
-        category_configs = [
-            ('Strategische und organisatorische Risiken', '#3b82f6', '#eff6ff', '💼'),
-            ('Daten-, Sicherheits- und Compliance-Risiken', '#f59e0b', '#fffbeb', '🔒'),
-            ('Qualitäts-, Transparenz- und Akzeptanzrisiken', '#8b5cf6', '#faf5ff', '⚠️'),
-            ('Abhängigkeiten, Betriebs- und Lieferantenrisiken', '#10b981', '#f0fdf4', '🔗'),
-            ('Risiko-Matrix', '#ef4444', '#fef2f2', '📊'),
-        ]
+        formatted_html = html
 
-        for category_name, border_color, bg_color, icon in category_configs:
-            # Pattern für verschiedene Formatierungen der Kategorie
-            patterns = [
-                f'<p><strong>\\d+\\.\\s*{re.escape(category_name)}</strong></p>',
-                f'<h4>\\d+\\.\\s*{re.escape(category_name)}</h4>',
-                f'<p><strong>{re.escape(category_name)}</strong></p>',
-            ]
+        # 4. Für jede Kategorie eine farbige Table-Box erstellen
+        for category_title, style in categories.items():
+            # Suche die Kategorie-Überschrift (flexibler Regex)
+            pattern = f'({re.escape(category_title)})'
 
-            replacement = f'''
-<div style="margin: 25px 0 15px 0; page-break-inside: avoid;">
-    <table style="width: 100%; border-collapse: collapse;">
-        <tr>
-            <td style="background: {border_color}; color: white; padding: 12px 18px; font-size: 16px; font-weight: bold; border-radius: 8px;">
-                {icon} {category_name}
-            </td>
-        </tr>
-    </table>
-</div>
+            if re.search(pattern, formatted_html, re.IGNORECASE):
+                # WeasyPrint-safe TABLE-Box (statt div)
+                table_box = f'''
+<table style="width: 100%; border: 4px solid {style['border']}; background-color: {style['bg']};
+              border-collapse: collapse; margin: 16px 0 16px 0; page-break-inside: avoid;">
+    <tr>
+        <td style="padding: 16px; border: none;">
+            <h4 style="color: {style['border']}; margin: 0 0 12px 0; font-size: 18px; font-weight: bold;">
+                {style['icon']} {category_title}
+            </h4>
 '''
-            for pattern in patterns:
-                html = re.sub(pattern, replacement, html, flags=re.IGNORECASE)
 
-        # Visual Breaks alle 4 Absätze (• • •)
-        parts = html.split('</p>')
-        enhanced = []
-        counter = 0
+                # Ersetze die Überschrift mit der Table-Box-Opening
+                formatted_html = re.sub(
+                    pattern,
+                    table_box,
+                    formatted_html,
+                    count=1,
+                    flags=re.IGNORECASE
+                )
 
-        for part in parts:
-            if not part.strip():
-                enhanced.append(part)
-                continue
+                # Finde das Ende dieser Kategorie (nächste Überschrift oder Ende)
+                # Suche nach der nächsten Kategorie oder Visual Break
+                next_category_pattern = r'((?:1|2|3|4|5)\.\s+[A-ZÄÖÜ]|•\s*•\s*•)'
 
-            enhanced.append(part + '</p>')
-            counter += 1
+                # Füge Table-Closing vor der nächsten Kategorie/Break ein
+                parts = re.split(next_category_pattern, formatted_html, maxsplit=1)
+                if len(parts) >= 2:
+                    formatted_html = parts[0] + '</td></tr></table>\n' + parts[1] + ''.join(parts[2:])
 
-            # Alle 4 Absätze einen visuellen Separator
-            if counter % 4 == 0 and counter > 0:
-                enhanced.append('''
-<div style="margin: 15px 0; text-align: center; color: #9ca3af; font-size: 16px; letter-spacing: 8px;">
-    •••
-</div>
-''')
-
-        formatted_html = ''.join(enhanced)
-
-        # Risiko-Matrix Tabelle besser stylen
-        if '<table' in formatted_html.lower():
-            # Füge Tabellen-Styling hinzu
+        # 5. Visual Breaks zwischen Kategorien (falls noch nicht vorhanden)
+        if '• • •' not in formatted_html:
+            # Füge Breaks zwischen </table> und nächster <table> ein
             formatted_html = re.sub(
-                r'<table([^>]*)>',
-                r'<table\1 style="width: 100%; border-collapse: collapse; margin: 20px 0; border: 2px solid #e5e7eb;">',
-                formatted_html,
-                count=5
-            )
-            formatted_html = re.sub(
-                r'<th([^>]*)>',
-                r'<th\1 style="background: #f3f4f6; padding: 10px; text-align: left; border: 1px solid #e5e7eb; font-weight: bold;">',
-                formatted_html
-            )
-            formatted_html = re.sub(
-                r'<td([^>]*)>',
-                r'<td\1 style="padding: 8px; border: 1px solid #e5e7eb; vertical-align: top;">',
+                r'</table>\s*<table',
+                '</table>\n<p style="text-align: center; color: #94a3b8; font-size: 24px; margin: 20px 0;">• • •</p>\n<table',
                 formatted_html
             )
 
-        # Validate output
-        if not formatted_html or len(formatted_html) < len(original_html) * 0.5:
-            log.warning(f"[FORMAT-RISKS] Output suspicious (len={len(formatted_html) if formatted_html else 0}), returning original")
-            return original_html
-
-        log.info(f"[FORMAT-RISKS] Formatting complete, output length: {len(formatted_html)}")
+        logger.info(f"[FORMAT-RISKS] Formatting complete, output length: {len(formatted_html)}")
         return formatted_html
 
     except Exception as e:
-        log.error(f"[FORMAT-RISKS] Formatting failed: {e}")
-        log.error(f"[FORMAT-RISKS] Traceback: {traceback.format_exc()}")
-        # CRITICAL: Return original on any error
-        return html
+        logger.error(f"[FORMAT-RISKS] Formatting failed: {e}", exc_info=True)
+        return html  # FALLBACK bei Error
 
 
 def _format_gamechanger_section(html: str) -> str:
     """
-    Strukturiert Gamechanger/Strategischer Bruchpunkt mit Highlight-Boxen.
-    DEFENSIVE: Returns original if input invalid or processing fails.
+    WeasyPrint-Safe: Formatiert Gamechanger-Section mit farbigen TABLE-Boxen.
     """
+    import logging
     import re
-    import traceback
 
-    # ========== DEFENSIVE GUARD CLAUSES ==========
-    # Check 1: Input validation
+    logger = logging.getLogger(__name__)
+
+    # 1. Input validation
     if not html:
-        log.warning("[FORMAT-GAMECHANGER] Input is None or empty, returning empty string")
+        logger.warning("[FORMAT-GAMECHANGER] Input is None or empty")
         return ""
 
     if not isinstance(html, str):
-        log.warning(f"[FORMAT-GAMECHANGER] Input is not string (type={type(html)}), returning as-is")
+        logger.warning(f"[FORMAT-GAMECHANGER] Input not a string: {type(html)}")
         return str(html) if html else ""
 
-    # Check 2: Minimum content length
-    if len(html.strip()) < 100:
-        log.warning(f"[FORMAT-GAMECHANGER] Input too short ({len(html)} chars), skipping formatting")
+    if len(html.strip()) < 50:
+        logger.warning(f"[FORMAT-GAMECHANGER] Input too short ({len(html)} chars)")
         return html
 
-    # Check 3: Contains expected content (relaxed check)
-    if 'Bruchpunkt' not in html and 'Transformations' not in html and 'Gamechanger' not in html:
-        log.warning("[FORMAT-GAMECHANGER] Expected gamechanger content not found, skipping formatting")
+    # 2. Content check
+    if 'strategi' not in html.lower() and 'bruchpunkt' not in html.lower():
+        logger.warning("[FORMAT-GAMECHANGER] No gamechanger content found")
         return html
 
-    # ========== SAFE PROCESSING ==========
+    logger.info(f"[FORMAT-GAMECHANGER] Starting formatting, input length: {len(html)}")
+
     try:
-        log.info(f"[FORMAT-GAMECHANGER] Starting formatting, input length: {len(html)}")
-        original_html = html  # Keep original for fallback
+        # 3. Section-Definitionen (WeasyPrint-safe)
+        sections = {
+            'Der strategische Bruchpunkt': {
+                'icon': '🎯',
+                'border': '#f59e0b',
+                'bg': '#fffbeb'
+            },
+            'Die Transformations-Idee': {
+                'icon': '💡',
+                'border': '#3b82f6',
+                'bg': '#eff6ff'
+            },
+            'Warum das ein Gamechanger ist': {
+                'icon': '🚀',
+                'border': '#10b981',
+                'bg': '#f0fdf4'
+            },
+            'Erster realistischer Schritt': {
+                'icon': '✅',
+                'border': '#8b5cf6',
+                'bg': '#faf5ff'
+            }
+        }
 
-        # Haupt-Abschnitte in farbige Highlight-Boxen
-        section_configs = [
-            ('Der strategische Bruchpunkt', '🎯', '#f59e0b', '#fffbeb', 'STRATEGISCHER BRUCHPUNKT'),
-            ('Die Transformations-Idee', '💡', '#3b82f6', '#eff6ff', 'TRANSFORMATIONS-IDEE'),
-            ('Warum das ein Gamechanger ist', '🚀', '#10b981', '#f0fdf4', 'GAMECHANGER-EFFEKT'),
-            ('Erster realistischer Schritt', '✅', '#8b5cf6', '#faf5ff', 'NÄCHSTER SCHRITT'),
-        ]
+        formatted_html = html
 
-        for search_text, icon, color, bg, title in section_configs:
-            # Pattern für verschiedene Formatierungen
-            patterns = [
-                f'<p><strong>{re.escape(search_text)}</strong>',
-                f'<h4>{re.escape(search_text)}</h4>',
-                f'<p>{re.escape(search_text)}',
-            ]
+        # 4. Für jede Section eine Highlight-Box erstellen
+        for section_title, style in sections.items():
+            # Flexibler Pattern (findet auch Varianten)
+            pattern = f'({re.escape(section_title)})'
 
-            replacement = f'''
-<div style="margin: 25px 0 15px 0; page-break-inside: avoid;">
-    <table style="width: 100%; border-collapse: collapse;">
-        <tr>
-            <td style="background: {color}; color: white; padding: 12px 18px; font-size: 15px; font-weight: bold; border-radius: 8px 8px 0 0;">
-                {icon} {title}
-            </td>
-        </tr>
-        <tr>
-            <td style="background: {bg}; border: 2px solid {color}; border-top: none; padding: 18px; border-radius: 0 0 8px 8px;">
-                <p style="margin: 0;"><strong>'''
+            if re.search(pattern, formatted_html, re.IGNORECASE):
+                # WeasyPrint-safe TABLE-Highlight-Box
+                highlight_box = f'''
+<table style="width: 100%; border-left: 6px solid {style['border']}; background-color: {style['bg']};
+              border-collapse: collapse; margin: 20px 0 20px 0; page-break-inside: avoid;">
+    <tr>
+        <td style="padding: 20px; border: none;">
+            <h3 style="color: {style['border']}; margin: 0 0 16px 0; font-size: 20px; font-weight: bold;">
+                {style['icon']} {section_title.upper()}
+            </h3>
+'''
 
-            for pattern in patterns:
-                if re.search(pattern, html, re.IGNORECASE):
-                    html = re.sub(pattern, replacement, html, count=1, flags=re.IGNORECASE)
-                    break
+                # Ersetze Überschrift mit Box-Opening
+                formatted_html = re.sub(
+                    pattern,
+                    highlight_box,
+                    formatted_html,
+                    count=1,
+                    flags=re.IGNORECASE
+                )
 
-        # Visual Breaks alle 3 Absätze
-        parts = html.split('</p>')
-        enhanced = []
-        counter = 0
+                # Finde Ende der Section
+                # Suche nach: nächste Section-Überschrift ODER Visual Break ODER Ende
+                next_section_pattern = r'((?:Der strategische|Die Transformations|Warum das ein|Erster realistischer)|•\s*•\s*•)'
 
-        for part in parts:
-            if not part.strip():
-                enhanced.append(part)
-                continue
+                parts = re.split(next_section_pattern, formatted_html, maxsplit=1)
+                if len(parts) >= 2:
+                    formatted_html = parts[0] + '</td></tr></table>\n' + parts[1] + ''.join(parts[2:])
 
-            enhanced.append(part + '</p>')
-            counter += 1
+        # 5. Visual Breaks zwischen Sections
+        if '• • •' not in formatted_html:
+            formatted_html = re.sub(
+                r'</table>\s*<table',
+                '</table>\n<p style="text-align: center; color: #94a3b8; font-size: 24px; margin: 24px 0;">• • •</p>\n<table',
+                formatted_html
+            )
 
-            if counter % 3 == 0 and counter > 0:
-                enhanced.append('''
-<div style="margin: 12px 0; text-align: center; color: #d1d5db; font-size: 14px; letter-spacing: 6px;">
-    •••
-</div>
-''')
-
-        formatted_html = ''.join(enhanced)
-
-        # Validate output
-        if not formatted_html or len(formatted_html) < len(original_html) * 0.5:
-            log.warning(f"[FORMAT-GAMECHANGER] Output suspicious (len={len(formatted_html) if formatted_html else 0}), returning original")
-            return original_html
-
-        log.info(f"[FORMAT-GAMECHANGER] Formatting complete, output length: {len(formatted_html)}")
+        logger.info(f"[FORMAT-GAMECHANGER] Formatting complete, output length: {len(formatted_html)}")
         return formatted_html
 
     except Exception as e:
-        log.error(f"[FORMAT-GAMECHANGER] Formatting failed: {e}")
-        log.error(f"[FORMAT-GAMECHANGER] Traceback: {traceback.format_exc()}")
-        # CRITICAL: Return original on any error
-        return html
+        logger.error(f"[FORMAT-GAMECHANGER] Formatting failed: {e}", exc_info=True)
+        return html  # FALLBACK
 
 
 # -------------------- N4.6: Zero-Leak Policy ----------------
