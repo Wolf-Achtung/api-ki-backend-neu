@@ -4281,61 +4281,6 @@
                 </section>
                 {% endif %}
 
-                <!-- MOVED: Detailed Analysis (Brutal Summary for context) -->
-                <section class="section chapter" id="detail-analysis">
-                    <div class="section-header">
-                        <div class="section-title">
-                            <span class="section-kicker">{{ ui("detail_kicker", "Detailanalyse") }}</span>
-                            <h2>{{ ui("detail_title", "Situationsanalyse & Handlungsfelder") }}</h2>
-                        </div>
-                    </div>
-                    <div class="section-body">
-                        <div class="grid-2" style="gap: var(--space-md);">
-                            <div class="card">
-                                <h4 style="color: #dc2626; margin-top: 0;">{{ ui("today_inefficient", "Heute ineffizient") }}</h4>
-                                <ul style="margin: 0; padding-left: var(--space-md);">
-                                    {% if zeitersparnis_prioritaet %}
-                                    <li>{{ zeitersparnis_prioritaet | truncate(120, True) }}</li>
-                                    {% else %}
-                                    <li>Zu viel manuelle Auswertung und Nacharbeit</li>
-                                    {% endif %}
-                                    <li>Einzelschritte ohne Standard-Bausteine</li>
-                                    <li>Compliance-Prüfungen kosten Zeit</li>
-                                </ul>
-                            </div>
-                            <div class="card">
-                                <h4 style="color: #22c55e; margin-top: 0;">{{ ui("in_90_days", "In 90 Tagen anders") }}</h4>
-                                <ul style="margin: 0; padding-left: var(--space-md);">
-                                    {% if COMPANY_SIZE == "solo" %}
-                                    <li>Standard-Analyse-Backbone statt Handwerk</li>
-                                    {% else %}
-                                    <li>Auditierbare Workflows statt Inseln</li>
-                                    {% endif %}
-                                    <li>Klare Prüfpunkte + Module</li>
-                                    <li>Messbare Zeitgewinne</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <!-- SAFE START BOX - Nur für Finance/High-Risk -->
-                        {% if (BRANCHE_LABEL and ('finan' in BRANCHE_LABEL|lower or 'versicher' in BRANCHE_LABEL|lower or 'bank' in BRANCHE_LABEL|lower)) or AI_ACT_RISK_LEVEL == 'high-risk' %}
-                        <div class="callout-modern callout-success" style="margin-top: var(--space-md);">
-                            <div class="callout-icon">✅</div>
-                            <div class="callout-content">
-                                <div class="callout-title">{{ ui("safe_start_title", "Safe Start (30–45 Tage, ohne regulatorisches Risiko)") }}</div>
-                                <div class="callout-text">
-                                    <ol style="margin: 0.5rem 0 0 0; padding-left: var(--space-md);">
-                                        <li><strong>Regelwerks-Assistenz intern</strong> – nur internes Material, keine Kundendaten</li>
-                                        <li><strong>Report-Baustein standardisieren</strong> – KI-Entwurf + menschliche Freigabe</li>
-                                        <li><strong>Review-Workflow definieren</strong> – Vier-Augen + Quellenpflicht + Logging</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                </section>
-
                 <!-- ============================================== -->
                 <!-- FULL REPORT BEGINS                             -->
                 <!-- ============================================== -->
