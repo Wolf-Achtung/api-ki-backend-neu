@@ -4539,7 +4539,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     <div class="quick-win-header-new">
         <div class="quick-win-icon-new">{icon_html}</div>
         <div class="quick-win-title-row">
-            <h2 class="quick-win-title-new">{title}</h2>
+            <h3 class="quick-win-title-new">{title}</h3>
             <span class="quick-win-time">{time_savings}</span>
         </div>
     </div>
@@ -4556,6 +4556,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
             <ol class="qw-steps-list">
 {steps_html}
             </ol>
+            <div class="qw-steps-result">Zeitersparnis: {time_savings}</div>
         </div>
         <div class="quick-win-prompt">
             <div class="qw-prompt-header">{doc_icon} Copy-Paste-Prompt für ChatGPT/Claude</div>
