@@ -697,6 +697,408 @@
             max-width: 100%;
         }
 
+        /* ══════════════════════════════════════════════════════════════
+           SEITE 3: Report Guide / Lesehinweise - Redesign
+           ══════════════════════════════════════════════════════════════ */
+
+        .report-guide {
+            padding: 40px;
+        }
+
+        .report-guide .section-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-bottom: 32px;
+        }
+
+        /* Vorher/Nachher Vergleich */
+        .comparison-row {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .comparison-card {
+            flex: 1;
+            border-radius: 12px;
+            padding: 20px 24px;
+            border: 1px solid;
+        }
+
+        .comparison-before {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-color: #fecaca;
+        }
+
+        .comparison-after {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-color: #bbf7d0;
+        }
+
+        .comparison-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .comparison-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .comparison-before .comparison-title {
+            color: #b91c1c;
+        }
+
+        .comparison-after .comparison-title {
+            color: #166534;
+        }
+
+        .comparison-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .comparison-list li {
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .comparison-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #9ca3af;
+        }
+
+        /* Guide Navigation Cards */
+        .guide-nav {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .guide-card {
+            flex: 1;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .guide-icon {
+            width: 48px;
+            height: 48px;
+            background: #f3f4f6;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .guide-card-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin: 0 0 12px 0;
+        }
+
+        .guide-items {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 16px 0;
+        }
+
+        .guide-items li {
+            font-size: 13px;
+            color: #4b5563;
+            padding: 4px 0;
+            padding-left: 16px;
+            position: relative;
+        }
+
+        .guide-items li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #9ca3af;
+        }
+
+        .guide-page-ref {
+            font-size: 12px;
+            font-weight: 600;
+            color: #3b82f6;
+        }
+
+        .guide-footer {
+            text-align: center;
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 24px;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           QUICK WINS SECTION - Komplettes Redesign (Single Column Cards)
+           ══════════════════════════════════════════════════════════════ */
+
+        .quick-wins-section {
+            padding: 24px 40px;
+        }
+
+        /* Section Header */
+        .quick-wins-section .section-header-new {
+            margin-bottom: 28px;
+        }
+
+        .quick-wins-section .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #6b7280;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .quick-wins-section .section-title-new {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin: 0 0 8px 0;
+        }
+
+        .quick-wins-section .section-subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        /* Context Banner (kompakt) */
+        .context-banner {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 14px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 28px;
+        }
+
+        .context-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .context-item-label {
+            color: #1e40af;
+            font-weight: 600;
+        }
+
+        .context-item-value {
+            color: #374151;
+        }
+
+        /* Quick Win Card - New Design */
+        .quick-win-card-new {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 24px 28px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            page-break-inside: avoid;
+        }
+
+        /* Card Header */
+        .quick-win-header-new {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .quick-win-icon-new {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .quick-win-title-row {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .quick-win-title-new {
+            font-size: 17px;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        .quick-win-time {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 5px 11px;
+            border-radius: 20px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* Card Body */
+        .quick-win-body-new {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Context/Engpass */
+        .quick-win-context {
+            background: #fffbeb;
+            border-left: 3px solid #f59e0b;
+            padding: 10px 14px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .qw-context-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #92400e;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .qw-context-value {
+            font-size: 13px;
+            color: #374151;
+            font-style: italic;
+        }
+
+        /* Solution */
+        .quick-win-solution {
+            font-size: 13px;
+            line-height: 1.65;
+            color: #374151;
+        }
+
+        .quick-win-solution p {
+            margin: 0;
+        }
+
+        /* Steps */
+        .quick-win-steps {
+            background: #f0fdf4;
+            border-radius: 10px;
+            padding: 14px 18px;
+        }
+
+        .qw-steps-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #166534;
+            margin-bottom: 10px;
+        }
+
+        .qw-steps-list {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .qw-steps-list li {
+            font-size: 12px;
+            color: #374151;
+            padding: 3px 0;
+            line-height: 1.5;
+        }
+
+        .qw-steps-list li strong {
+            color: #111827;
+        }
+
+        /* Prompt Box */
+        .quick-win-prompt {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .qw-prompt-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: #f1f5f9;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .qw-prompt-content {
+            margin: 0;
+            padding: 12px 14px;
+            font-size: 10px;
+            line-height: 1.55;
+            color: #334155;
+            background: #f8fafc;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-height: 160px;
+            overflow-y: auto;
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+        }
+
+        /* Time Savings */
+        .quick-win-savings {
+            font-size: 12px;
+            font-style: italic;
+            color: #6b7280;
+            padding-top: 4px;
+        }
+
+        /* Footer */
+        .quick-wins-footer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px;
+            margin-top: 12px;
+            font-size: 11px;
+            color: #6b7280;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
         /* Roadmap Grid - Light Mode */
         .roadmap-grid {
             display: grid;
