@@ -2127,6 +2127,238 @@ def _enforce_quick_win_css_classes(html: str) -> str:
     return html
 
 
+# -------------------- Quick Wins JSON-basierte Generierung (v8.0) ----------------
+
+def _parse_quick_wins_json(raw_response: str) -> list:
+    """
+    Extrahiert und parst JSON aus OpenAI Response.
+    Robust gegen häufige Fehler (Backticks, zusätzlicher Text).
+
+    Returns:
+        list: Parsed Quick Wins Array
+        None: Bei Parsing-Fehler (Fallback nötig)
+    """
+    import json
+    import re
+
+    if not raw_response or not raw_response.strip():
+        log.warning("Quick Wins: Leere Response erhalten")
+        return None
+
+    try:
+        # Entferne Markdown-Backticks falls vorhanden
+        cleaned = raw_response.strip()
+        if cleaned.startswith("```"):
+            # Extrahiere JSON zwischen Backticks
+            match = re.search(r'```(?:json)?\s*(\[.*?\])\s*```', cleaned, re.DOTALL)
+            if match:
+                cleaned = match.group(1)
+            else:
+                # Fallback: Alles nach ersten ``` bis letzte ```
+                cleaned = re.sub(r'^```(?:json)?\s*', '', cleaned)
+                cleaned = re.sub(r'\s*```$', '', cleaned)
+
+        # Entferne Text vor/nach JSON Array
+        match = re.search(r'(\[.*\])', cleaned, re.DOTALL)
+        if match:
+            cleaned = match.group(1)
+
+        # Parse JSON
+        quick_wins = json.loads(cleaned)
+
+        # Validierung: Muss Array sein
+        if not isinstance(quick_wins, list):
+            # Falls Object mit "quick_wins" Key
+            if isinstance(quick_wins, dict) and "quick_wins" in quick_wins:
+                quick_wins = quick_wins["quick_wins"]
+            else:
+                log.warning("Quick Wins JSON ist kein Array")
+                return None
+
+        if len(quick_wins) < 1:
+            log.warning("Quick Wins Array ist leer")
+            return None
+
+        # Validiere jedes Quick Win
+        required_fields = ['title', 'icon', 'time', 'engpass', 'description', 'mit_ki', 'steps', 'zeitersparnis']
+        for i, qw in enumerate(quick_wins):
+            missing = [f for f in required_fields if f not in qw]
+            if missing:
+                log.warning(f"Quick Win {i+1} fehlt Felder: {missing}")
+                # Setze Defaults für fehlende Felder
+                for field in missing:
+                    if field == 'steps':
+                        qw[field] = ["Schritt 1", "Schritt 2", "Schritt 3"]
+                    elif field == 'icon':
+                        qw[field] = "🎯"
+                    else:
+                        qw[field] = ""
+
+        log.info(f"✅ Quick Wins JSON erfolgreich geparst: {len(quick_wins)} Items")
+        return quick_wins
+
+    except json.JSONDecodeError as e:
+        log.error(f"JSON Parsing Fehler: {e}")
+        log.debug(f"Raw Response (erste 500 Zeichen): {raw_response[:500]}")
+        return None
+    except Exception as e:
+        log.error(f"Unerwarteter Fehler beim JSON Parsing: {e}")
+        return None
+
+
+def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse: str = "Unbekannt") -> str:
+    """
+    Baut Quick Wins HTML aus JSON-Daten mit garantierter Struktur.
+
+    Args:
+        quick_wins: List of dicts mit Quick Win Daten
+        branche: Branche des Unternehmens (für Context-Banner)
+        groesse: Größe des Unternehmens (für Context-Banner)
+
+    Returns:
+        str: Komplettes HTML für Quick Wins Section
+    """
+    import html as html_module
+
+    # Context-Banner (nur 1x oben)
+    html = f"""
+<div class="context-banner" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 24px; margin-bottom: 32px; border-radius: 16px; border: 1px solid #bfdbfe;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                📋
+            </div>
+            <div>
+                <div style="font-size: 12px; color: #1e40af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Branche</div>
+                <div style="color: #1e3a8a; font-size: 16px; font-weight: 600; margin-top: 2px;">{html_module.escape(branche)}</div>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                👥
+            </div>
+            <div>
+                <div style="font-size: 12px; color: #1e40af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Größe</div>
+                <div style="color: #1e3a8a; font-size: 16px; font-weight: 600; margin-top: 2px;">{html_module.escape(groesse)}</div>
+            </div>
+        </div>
+    </div>
+</div>
+"""
+
+    # Quick Win Cards
+    for i, qw in enumerate(quick_wins, 1):
+        # Escape HTML in Texten
+        title = html_module.escape(str(qw.get('title', 'Ohne Titel')))
+        icon = qw.get('icon', '🎯')
+        time = html_module.escape(str(qw.get('time', 'Unbekannt')))
+        engpass = html_module.escape(str(qw.get('engpass', '')))
+        description = html_module.escape(str(qw.get('description', '')))
+        mit_ki = html_module.escape(str(qw.get('mit_ki', '')))
+        steps = qw.get('steps', [])
+        zeitersparnis = html_module.escape(str(qw.get('zeitersparnis', '')))
+
+        # Steps HTML
+        steps_html = ""
+        for step in steps:
+            step_clean = html_module.escape(str(step))
+            steps_html += f'<li style="margin-bottom: 8px; line-height: 1.5;">{step_clean}</li>'
+
+        html += f"""
+<div class="quick-win-card-new" style="border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px; margin-bottom: 24px; page-break-inside: avoid; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+
+    <!-- Header -->
+    <div class="quick-win-header-new" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div class="quick-win-icon-new" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                {icon}
+            </div>
+            <div style="flex: 1; min-width: 0;">
+                <h4 style="color: white; margin: 0 0 8px 0; font-size: 19px; font-weight: 600; line-height: 1.3;">{title}</h4>
+                <span class="quick-win-time" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; display: inline-block;">
+                    ⏱️ {time}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Engpass Box -->
+    <div class="quick-win-context" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 4px solid #f59e0b; padding: 16px 20px; margin-bottom: 20px; border-radius: 0 10px 10px 0;">
+        <div style="display: flex; align-items: start; gap: 10px;">
+            <span style="font-size: 18px; flex-shrink: 0;">🎯</span>
+            <div>
+                <span style="font-weight: 700; color: #92400e; font-size: 14px; display: block; margin-bottom: 4px;">Ihr Engpass:</span>
+                <span style="color: #78350f; font-size: 14px; line-height: 1.5; font-style: italic;">"{engpass}"</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description -->
+    <div style="margin-bottom: 18px;">
+        <p style="margin: 0; color: #374151; line-height: 1.7; font-size: 15px;"><strong style="color: #1f2937;">Aktuell:</strong> {description}</p>
+    </div>
+
+    <!-- Mit KI -->
+    <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 16px 20px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #10b981;">
+        <p style="margin: 0; color: #065f46; line-height: 1.7; font-size: 15px;"><strong style="color: #047857;">✨ Mit KI:</strong> {mit_ki}</p>
+    </div>
+
+    <!-- Steps -->
+    <div class="quick-win-steps" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 20px; border-radius: 10px; margin-bottom: 18px;">
+        <h5 style="margin: 0 0 14px 0; color: #047857; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 18px;">🚀</span>
+            Umsetzungsschritte:
+        </h5>
+        <ol style="margin: 0; padding-left: 22px; color: #065f46; font-size: 14px;">
+            {steps_html}
+        </ol>
+    </div>
+
+    <!-- Zeitersparnis Footer -->
+    <div style="text-align: right; padding-top: 14px; border-top: 2px solid #f3f4f6;">
+        <span style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46; font-weight: 700; font-size: 15px; padding: 8px 16px; border-radius: 20px; display: inline-block;">
+            💰 Zeitersparnis: {zeitersparnis}
+        </span>
+    </div>
+
+</div>
+"""
+
+    # Footer
+    html += f"""
+<p class="small muted" style="text-align: center; color: #6b7280; font-size: 12px; margin-top: 24px;">
+    🎯 v8.0: Individualisiert für {html_module.escape(branche)} · {html_module.escape(groesse)} · JSON-basierte Generierung
+</p>
+"""
+
+    return html
+
+
+def _fallback_quick_wins_html(branche: str, groesse: str) -> str:
+    """
+    Fallback HTML wenn JSON-Parsing fehlschlägt.
+    Zeigt Fehlermeldung mit Support-Info.
+    """
+    import html as html_module
+
+    return f"""
+<div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 2px solid #fca5a5; border-radius: 16px; padding: 32px; text-align: center;">
+    <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+    <h3 style="color: #991b1b; margin: 0 0 12px 0; font-size: 20px;">Quick Wins konnten nicht generiert werden</h3>
+    <p style="color: #7f1d1d; margin: 0 0 20px 0; font-size: 15px; line-height: 1.6;">
+        Die automatische Generierung der Quick Wins ist fehlgeschlagen.<br>
+        Bitte kontaktieren Sie den Support mit Ihrer Report-ID.
+    </p>
+    <div style="background: white; padding: 16px; border-radius: 8px; display: inline-block;">
+        <p style="margin: 0; color: #374151; font-size: 14px;">
+            <strong>Branche:</strong> {html_module.escape(branche)}<br>
+            <strong>Größe:</strong> {html_module.escape(groesse)}
+        </p>
+    </div>
+</div>
+"""
+
+
 # -------------------- N4.6: Zero-Leak Policy ----------------
 # Phrases that indicate assistant language "leaking" into report content
 LEAK_PHRASES = [
@@ -5917,17 +6149,37 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     )
     sections["executive_summary"] = sections["EXECUTIVE_SUMMARY_HTML"]
 
-    # Quick Wins: reparieren, splitten, Aliase setzen
-    qw_html = sections.pop("_QUICK_WINS_RAW", "")
-    if _needs_repair(qw_html):
-        qw_html = _repair_html("quick_wins", qw_html)
+    # Quick Wins: JSON-basiertes System (v8.0)
+    qw_raw = sections.pop("_QUICK_WINS_RAW", "")
 
-    # Robust Fix: Post-Processing für Quick Wins
-    qw_html = _remove_duplicate_context_banners(qw_html)  # Entferne doppelte Branchen/Größen Boxen
-    qw_html = _enforce_quick_win_css_classes(qw_html)     # Erzwinge korrekte CSS-Klassen
+    # Extrahiere Branche und Größe für Context-Banner
+    qw_branche = briefing.get("BRANCHE_LABEL") or briefing.get("branche", "Unbekannt")
+    qw_groesse = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "Unbekannt")
 
-    # v7.1: Single-column layout for Quick Wins (no grid split)
-    # The CSS classes in pdf_template.html handle the card styling
+    # Parse JSON aus OpenAI Response
+    quick_wins_list = _parse_quick_wins_json(qw_raw)
+
+    # Build HTML (mit Fallback bei Parse-Fehler)
+    if quick_wins_list:
+        qw_html = _build_quick_wins_html(quick_wins_list, branche=qw_branche, groesse=qw_groesse)
+        log.info("✅ Quick Wins HTML erfolgreich generiert (%d Cards)", len(quick_wins_list))
+    else:
+        # Fallback 1: Versuche altes HTML-Repair System
+        log.warning("⚠️ JSON-Parsing fehlgeschlagen, versuche HTML-Repair Fallback")
+        if qw_raw and _needs_repair(qw_raw):
+            qw_html = _repair_html("quick_wins", qw_raw)
+            qw_html = _remove_duplicate_context_banners(qw_html)
+            qw_html = _enforce_quick_win_css_classes(qw_html)
+        elif qw_raw:
+            # Hat schon HTML, nur Post-Processing
+            qw_html = _remove_duplicate_context_banners(qw_raw)
+            qw_html = _enforce_quick_win_css_classes(qw_html)
+        else:
+            # Fallback 2: Zeige Fehlermeldung
+            log.warning("⚠️ Kein Quick Wins Content, zeige Fallback-HTML")
+            qw_html = _fallback_quick_wins_html(branche=qw_branche, groesse=qw_groesse)
+
+    # v8.0: Single-column layout for Quick Wins
     sections["QUICK_WINS_HTML"] = qw_html
     sections["QUICK_WINS_HTML_LEFT"] = qw_html  # Legacy compatibility
     sections["QUICK_WINS_HTML_RIGHT"] = ""  # Legacy compatibility
