@@ -250,6 +250,8 @@ EMOJI_MAP = {
     "💡": "lightbulb",
     "🎯": "target",
     "🚀": "rocket",
+    "🛣️": "rocket",  # Road/Implementation → rocket icon
+    "🛣": "rocket",   # Variant without selector
     "⭐": "star",
     "✨": "star",
     "⚡": "lightbulb",
