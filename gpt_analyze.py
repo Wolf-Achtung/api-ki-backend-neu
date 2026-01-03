@@ -2766,6 +2766,142 @@ def _format_foerderpotenzial_section(html_content: str) -> str:
     return output
 
 
+# -------------------- Maßnahme 2: Anti-Textwüsten Post-Processing ----------------
+
+# Keywords to auto-bold in German business/consulting context
+BOLD_KEYWORDS_DE = [
+    "Maßnahme", "Risiko", "Vorteil", "Nachteil", "Empfehlung", "Ergebnis",
+    "Fazit", "Kernaussage", "Wichtig", "Hinweis", "Achtung", "Tipp",
+    "Beispiel", "Praxistipp", "Best Practice", "Erfolgsfaktor",
+    "Handlungsfeld", "Schwerpunkt", "Priorität", "Zeitrahmen",
+    "Budget", "Aufwand", "Nutzen", "ROI", "Amortisation",
+    "Investition", "Einsparung", "Potenzial", "Chance", "Herausforderung",
+    "Lösung", "Problem", "Ursache", "Wirkung", "Ziel", "Strategie",
+    "Umsetzung", "Implementierung", "Pilotprojekt", "Rollout",
+    "Compliance", "Governance", "Sicherheit", "Datenschutz", "DSGVO",
+    "KI", "Automatisierung", "Digitalisierung", "Transformation",
+]
+
+
+def _enhance_text_readability(html_content: str) -> str:
+    """
+    Post-processing to improve text readability in PDF output.
+
+    Version 1.0 - Maßnahme 2 gegen Textwüsten:
+    1. Split long paragraphs (>100 words) into shorter chunks
+    2. Auto-bold keywords at start of sentences
+    3. Add visual breaks between dense text blocks
+
+    This runs AFTER GPT output but BEFORE SVG box wrapping.
+    """
+    if not html_content or len(html_content) < 200:
+        return html_content
+
+    log.info("[ENHANCE-READABILITY-V1] Starting post-processing (length: %d chars)", len(html_content))
+
+    output = html_content
+    enhancements_made = 0
+
+    # 1. Split long paragraphs into shorter ones
+    # Find <p> tags with very long content (>100 words)
+    def split_long_paragraph(match):
+        nonlocal enhancements_made
+        p_content = match.group(1)
+        words = p_content.split()
+
+        if len(words) <= 100:
+            return match.group(0)  # Keep as-is
+
+        # Split into chunks of ~50-70 words at sentence boundaries
+        sentences = re.split(r'(?<=[.!?])\s+', p_content)
+        chunks = []
+        current_chunk = []
+        current_word_count = 0
+
+        for sentence in sentences:
+            sentence_words = len(sentence.split())
+            if current_word_count + sentence_words > 60 and current_chunk:
+                chunks.append(' '.join(current_chunk))
+                current_chunk = [sentence]
+                current_word_count = sentence_words
+            else:
+                current_chunk.append(sentence)
+                current_word_count += sentence_words
+
+        if current_chunk:
+            chunks.append(' '.join(current_chunk))
+
+        if len(chunks) > 1:
+            enhancements_made += 1
+            # Join with paragraph breaks
+            return '</p>\n<p>'.join(f'<p>{chunk}' for chunk in chunks) + '</p>'
+
+        return match.group(0)
+
+    # Apply paragraph splitting
+    output = re.sub(r'<p[^>]*>(.*?)</p>', split_long_paragraph, output, flags=re.DOTALL)
+
+    # 2. Auto-bold keywords at the start of sentences or list items
+    for keyword in BOLD_KEYWORDS_DE:
+        # Pattern: keyword followed by colon at start of <li> or <p>
+        # e.g., "Maßnahme: Text" -> "<strong>Maßnahme:</strong> Text"
+        pattern = rf'(<(?:li|p)[^>]*>)\s*({re.escape(keyword)})\s*:\s*'
+        replacement = rf'\1<strong>\2:</strong> '
+        new_output = re.sub(pattern, replacement, output, flags=re.IGNORECASE)
+        if new_output != output:
+            enhancements_made += 1
+            output = new_output
+
+        # Also catch "Keyword:" in middle of text (after sentence boundary)
+        pattern2 = rf'([.!?]\s+)({re.escape(keyword)})\s*:\s*'
+        replacement2 = rf'\1<strong>\2:</strong> '
+        new_output = re.sub(pattern2, replacement2, output, flags=re.IGNORECASE)
+        if new_output != output:
+            enhancements_made += 1
+            output = new_output
+
+    # 3. Convert obvious list patterns into actual <ul> lists
+    # Pattern: Multiple lines starting with "- " or "• " inside a <p>
+    def convert_inline_lists(match):
+        nonlocal enhancements_made
+        p_content = match.group(1)
+
+        # Check for dash/bullet patterns
+        if re.search(r'(?:^|\n)\s*[-•]\s+', p_content):
+            items = re.split(r'(?:^|\n)\s*[-•]\s+', p_content)
+            items = [item.strip() for item in items if item.strip()]
+
+            if len(items) >= 2:
+                enhancements_made += 1
+                # First item might be intro text
+                intro = items[0] if not items[0].endswith(':') else items[0]
+                list_items = items[1:] if not items[0].endswith(':') else items
+
+                if intro and not intro.endswith(':'):
+                    result = f'<p>{intro}</p>\n<ul>\n'
+                else:
+                    result = '<ul>\n'
+
+                for item in list_items:
+                    result += f'  <li>{item}</li>\n'
+                result += '</ul>'
+                return result
+
+        return match.group(0)
+
+    output = re.sub(r'<p[^>]*>(.*?)</p>', convert_inline_lists, output, flags=re.DOTALL)
+
+    # 4. Ensure paragraphs after headers have proper spacing
+    output = re.sub(r'(</h3>)\s*(<p)', r'\1\n\2', output)
+
+    # 5. Add line breaks between consecutive long paragraphs for visual breathing room
+    # (This helps PDF rendering)
+    output = re.sub(r'(</p>)\s*(<p)', r'\1\n\2', output)
+
+    log.info("[ENHANCE-READABILITY-V1] Complete (%d enhancements made)", enhancements_made)
+    return output
+
+
 # -------------------- N4.6: Zero-Leak Policy ----------------
 # Phrases that indicate assistant language "leaking" into report content
 LEAK_PHRASES = [
@@ -6939,14 +7075,19 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections["foerderpotenzial"] = sections.get("FOERDERPOTENZIAL_HTML", "")
 
     # v8.0: Formatiere Textwüsten mit visuellen Breaks
+    # v8.1: Maßnahme 2 - Post-Processing für Lesbarkeit (BEFORE SVG boxes)
     # ========== SAFE RISKS FORMATTING ==========
     risks_html = sections.get("RISKS_HTML", "")
     log.info(f"[INTEGRATION] Risks HTML before formatting: {len(risks_html) if risks_html else 0} chars")
     if risks_html and len(risks_html) > 100:
         try:
             original_length = len(risks_html)
+            # Maßnahme 2: Enhance readability FIRST (paragraph splits, auto-bold)
+            risks_html = _enhance_text_readability(risks_html)
+            log.info(f"[INTEGRATION] Risks HTML after readability enhancement: {len(risks_html)} chars")
+            # Then apply SVG box formatting
             risks_html = _format_risks_with_visual_breaks(risks_html)
-            log.info(f"[INTEGRATION] Risks HTML after formatting: {len(risks_html)} chars (delta: {len(risks_html) - original_length})")
+            log.info(f"[INTEGRATION] Risks HTML after SVG formatting: {len(risks_html)} chars (delta: {len(risks_html) - original_length})")
             sections["RISKS_HTML"] = risks_html
         except Exception as e:
             log.error(f"[INTEGRATION] Risks formatting failed at integration point: {e}")
@@ -6961,8 +7102,12 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     if gamechanger_html and len(gamechanger_html) > 100:
         try:
             original_length = len(gamechanger_html)
+            # Maßnahme 2: Enhance readability FIRST (paragraph splits, auto-bold)
+            gamechanger_html = _enhance_text_readability(gamechanger_html)
+            log.info(f"[INTEGRATION] Gamechanger HTML after readability enhancement: {len(gamechanger_html)} chars")
+            # Then apply SVG box formatting
             gamechanger_html = _format_gamechanger_section(gamechanger_html)
-            log.info(f"[INTEGRATION] Gamechanger HTML after formatting: {len(gamechanger_html)} chars (delta: {len(gamechanger_html) - original_length})")
+            log.info(f"[INTEGRATION] Gamechanger HTML after SVG formatting: {len(gamechanger_html)} chars (delta: {len(gamechanger_html) - original_length})")
             sections["GAMECHANGER_HTML"] = gamechanger_html
         except Exception as e:
             log.error(f"[INTEGRATION] Gamechanger formatting failed at integration point: {e}")
@@ -6977,8 +7122,12 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     if foerderpotenzial_html and len(foerderpotenzial_html) > 100:
         try:
             original_length = len(foerderpotenzial_html)
+            # Maßnahme 2: Enhance readability FIRST (paragraph splits, auto-bold)
+            foerderpotenzial_html = _enhance_text_readability(foerderpotenzial_html)
+            log.info(f"[INTEGRATION] Förderpotenzial HTML after readability enhancement: {len(foerderpotenzial_html)} chars")
+            # Then apply SVG box formatting
             foerderpotenzial_html = _format_foerderpotenzial_section(foerderpotenzial_html)
-            log.info(f"[INTEGRATION] Förderpotenzial HTML after formatting: {len(foerderpotenzial_html)} chars (delta: {len(foerderpotenzial_html) - original_length})")
+            log.info(f"[INTEGRATION] Förderpotenzial HTML after SVG formatting: {len(foerderpotenzial_html)} chars (delta: {len(foerderpotenzial_html) - original_length})")
             sections["FOERDERPOTENZIAL_HTML"] = foerderpotenzial_html
         except Exception as e:
             log.error(f"[INTEGRATION] Förderpotenzial formatting failed at integration point: {e}")
