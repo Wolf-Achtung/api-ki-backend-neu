@@ -2511,45 +2511,44 @@ def _format_gamechanger_section(html_content: str) -> str:
     """
     Format gamechanger sections with SVG-decorated colored boxes.
 
-    Version 4: Fixed patterns to match actual template headings:
-    - "Strategischer Bruchpunkt"
-    - "Die Transformation"
-    - "Warum das ein Gamechanger ist"
-    - "Erster realistischer Schritt"
+    Version 5: Flexible patterns that match BOTH:
+    - <h3> tags (if template sets them)
+    - <strong>/<b> tags (if GPT output uses them per HTML-Vertrag)
+    - Numbered headings like "1. Strategischer Bruchpunkt"
     """
     if not html_content or len(html_content) < 100:
         return html_content
 
-    log.info("[FORMAT-GAMECHANGER-V4] Starting SVG-decorated formatting (length: %d chars)", len(html_content))
+    log.info("[FORMAT-GAMECHANGER-V5] Starting SVG-decorated formatting (length: %d chars)", len(html_content))
 
-    # Gamechanger sections with FIXED PATTERNS matching actual template headings
-    # Pattern structure: <h3>heading</h3>content until next <h3> or end
+    # Gamechanger sections - flexible patterns for <h3>, <strong>, <b>, or plain numbered text
+    # The GPT prompt forbids <h3> so output likely uses <strong> or <b>
     gc_configs = [
         {
             "icon": "🎯",
-            "pattern": r"(<h3[^>]*>\s*Strategischer\s+Bruchpunkt[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
             "keyword": "bruchpunkt",
+            "search_terms": ["Strategischer Bruchpunkt", "strategische Bruchpunkt", "Bruchpunkt"],
             "border_color": "#E65100",  # Orange
             "bg_color": "#FFF3E0"
         },
         {
             "icon": "💡",
-            "pattern": r"(<h3[^>]*>\s*Die\s+Transformation[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
             "keyword": "transformation",
+            "search_terms": ["Die Transformation", "Transformations-Idee", "Transformation"],
             "border_color": "#1565C0",  # Blue
             "bg_color": "#E3F2FD"
         },
         {
             "icon": "🚀",
-            "pattern": r"(<h3[^>]*>\s*Warum\s+das\s+ein\s+Gamechanger[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
             "keyword": "gamechanger",
+            "search_terms": ["Warum das ein Gamechanger", "Gamechanger ist", "ein Gamechanger"],
             "border_color": "#2E7D32",  # Green
             "bg_color": "#E8F5E9"
         },
         {
             "icon": "✅",
-            "pattern": r"(<h3[^>]*>\s*Erster\s+realistischer\s+Schritt[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
             "keyword": "schritt",
+            "search_terms": ["Erster realistischer Schritt", "realistischer Schritt", "Erster Schritt"],
             "border_color": "#6A1B9A",  # Purple
             "bg_color": "#F3E5F5"
         }
@@ -2559,42 +2558,84 @@ def _format_gamechanger_section(html_content: str) -> str:
     boxes_created = 0
 
     for config in gc_configs:
-        match = re.search(config["pattern"], output, re.DOTALL | re.IGNORECASE)
+        matched = False
 
-        if match:
-            original_content = match.group(1)
-            log.debug("[FORMAT-GAMECHANGER-V4] Matched section for %s: %d chars", config['keyword'], len(original_content))
+        for search_term in config["search_terms"]:
+            if matched:
+                break
 
-            # Extract heading
-            heading_match = re.search(r'<h3[^>]*>(.*?)</h3>', original_content, re.DOTALL | re.IGNORECASE)
+            # Try multiple pattern formats:
+            # 1. <h3>heading</h3> format
+            # 2. <strong>heading</strong> format (with optional <p> wrapper)
+            # 3. <b>heading</b> format
+            # 4. Numbered format like "1. heading" or "2. heading"
+            patterns = [
+                # h3 tag format
+                rf"(<h3[^>]*>[^<]*{re.escape(search_term)}[^<]*</h3>.*?)(?=<h3[^>]*>|<p[^>]*>\s*<strong>\s*\d|<strong>\s*\d|\Z)",
+                # <p><strong>N. heading</strong></p> format
+                rf"(<p[^>]*>\s*<strong>\s*\d*\.?\s*{re.escape(search_term)}[^<]*</strong>\s*</p>.*?)(?=<p[^>]*>\s*<strong>\s*\d|<strong>\s*\d|\Z)",
+                # <strong>N. heading</strong> format (no p wrapper)
+                rf"(<strong>\s*\d*\.?\s*{re.escape(search_term)}[^<]*</strong>.*?)(?=<strong>\s*\d|\Z)",
+                # <b>N. heading</b> format
+                rf"(<b>\s*\d*\.?\s*{re.escape(search_term)}[^<]*</b>.*?)(?=<b>\s*\d|\Z)",
+            ]
 
-            if heading_match:
-                heading_text = heading_match.group(1).strip()
+            for pattern in patterns:
+                match = re.search(pattern, output, re.DOTALL | re.IGNORECASE)
 
-                # Get body without heading
-                body_content = re.sub(r'<h3[^>]*>.*?</h3>', '', original_content, count=1, flags=re.DOTALL | re.IGNORECASE)
+                if match:
+                    original_content = match.group(1)
+                    log.debug("[FORMAT-GAMECHANGER-V5] Matched '%s' with pattern, length: %d chars",
+                             config['keyword'], len(original_content))
 
-                # Create SVG-decorated box (left accent style for gamechanger)
-                svg_box = _create_svg_decorated_box(
-                    icon=config["icon"],
-                    title=heading_text,
-                    body_html=body_content,
-                    bg_color=config["bg_color"],
-                    border_color=config["border_color"],
-                    box_style="left"
-                )
+                    # Extract heading from various tag formats
+                    heading_match = (
+                        re.search(r'<h3[^>]*>(.*?)</h3>', original_content, re.DOTALL | re.IGNORECASE) or
+                        re.search(r'<strong>(.*?)</strong>', original_content, re.DOTALL | re.IGNORECASE) or
+                        re.search(r'<b>(.*?)</b>', original_content, re.DOTALL | re.IGNORECASE)
+                    )
 
-                # Replace original with SVG-decorated box
-                output = output.replace(original_content, svg_box)
-                boxes_created += 1
-                log.info("[FORMAT-GAMECHANGER-V4] Created SVG box %d: %s %s", boxes_created, config['icon'], heading_text[:40])
-        else:
-            log.debug("[FORMAT-GAMECHANGER-V4] No match for pattern keyword: %s", config['keyword'])
+                    if heading_match:
+                        heading_text = heading_match.group(1).strip()
+                        # Remove number prefix for cleaner display
+                        heading_text = re.sub(r'^\d+\.\s*', '', heading_text)
+
+                        # Get body without the heading tag
+                        body_content = re.sub(
+                            r'<(h3|strong|b)[^>]*>.*?</\1>',
+                            '',
+                            original_content,
+                            count=1,
+                            flags=re.DOTALL | re.IGNORECASE
+                        )
+                        # Also remove wrapper <p> if it only contained the heading
+                        body_content = re.sub(r'<p[^>]*>\s*</p>', '', body_content)
+
+                        # Create SVG-decorated box (left accent style for gamechanger)
+                        svg_box = _create_svg_decorated_box(
+                            icon=config["icon"],
+                            title=heading_text,
+                            body_html=body_content,
+                            bg_color=config["bg_color"],
+                            border_color=config["border_color"],
+                            box_style="left"
+                        )
+
+                        # Replace original with SVG-decorated box
+                        output = output.replace(original_content, svg_box)
+                        boxes_created += 1
+                        matched = True
+                        log.info("[FORMAT-GAMECHANGER-V5] Created SVG box %d: %s %s",
+                                boxes_created, config['icon'], heading_text[:40])
+                        break
+
+        if not matched:
+            log.debug("[FORMAT-GAMECHANGER-V5] No match for keyword: %s", config['keyword'])
 
     if boxes_created == 0:
-        log.warning("[FORMAT-GAMECHANGER-V4] No gamechanger sections matched, returning original")
+        log.warning("[FORMAT-GAMECHANGER-V5] No gamechanger sections matched, returning original")
     else:
-        log.info("[FORMAT-GAMECHANGER-V4] Complete (output: %d chars, %d SVG boxes created)", len(output), boxes_created)
+        log.info("[FORMAT-GAMECHANGER-V5] Complete (output: %d chars, %d SVG boxes created)", len(output), boxes_created)
 
     return output
 
