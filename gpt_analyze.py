@@ -2368,6 +2368,8 @@ def _create_svg_decorated_box(
     Uses inline SVG for the decorative border/background, but keeps
     content as regular HTML for proper text flow and line wrapping.
 
+    Version 2: Added table-aware handling to prevent layout issues with large tables.
+
     Args:
         icon: Emoji icon for the header
         title: Box title
@@ -2382,6 +2384,9 @@ def _create_svg_decorated_box(
     # Clean up title - remove HTML tags but keep text
     clean_title = re.sub(r'<[^>]+>', '', title).strip()
 
+    # Check if body contains a table - needs special handling
+    has_table = '<table' in body_html.lower()
+
     # For full border style (risks): use thick border on all sides
     # For left accent style (gamechanger): use left border only
     if box_style == "full":
@@ -2389,11 +2394,35 @@ def _create_svg_decorated_box(
     else:
         border_style = f"border-left: 6px solid {border_color}; border: 1px solid #e5e7eb; border-left: 6px solid {border_color};"
 
+    # Page break handling: allow breaks for tables, avoid for regular content
+    if has_table:
+        # Tables need to be able to break across pages
+        page_break_style = "page-break-inside: auto;"
+        # Add table-specific styles to ensure proper rendering
+        table_styles = '''
+        <style>
+            .svg-box-table table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+            .svg-box-table th, .svg-box-table td { padding: 8px 6px; border: 1px solid #ddd; word-wrap: break-word; overflow-wrap: break-word; }
+            .svg-box-table th { background-color: ''' + border_color + '''22; font-weight: bold; text-align: left; }
+            .svg-box-table th:nth-child(1) { width: 15%; }
+            .svg-box-table th:nth-child(2) { width: 25%; }
+            .svg-box-table th:nth-child(3) { width: 15%; }
+            .svg-box-table th:nth-child(4) { width: 15%; }
+            .svg-box-table th:nth-child(5) { width: 30%; }
+        </style>
+        '''
+        body_wrapper_class = 'class="svg-box-table"'
+    else:
+        page_break_style = "page-break-inside: avoid;"
+        table_styles = ""
+        body_wrapper_class = ""
+
     # Build the box with inline SVG icon and styled container
     box_html = f'''
-<div style="margin: 20px 0; padding: 0; page-break-inside: avoid;">
+{table_styles}
+<div style="margin: 20px 0; padding: 0; {page_break_style}">
     <div style="background-color: {bg_color}; {border_style} padding: 16px; font-family: Arial, sans-serif;">
-        <div style="display: flex; align-items: center; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; margin-bottom: 12px; page-break-after: avoid;">
             <svg width="28" height="28" viewBox="0 0 28 28" style="margin-right: 10px; flex-shrink: 0;">
                 <circle cx="14" cy="14" r="13" fill="{border_color}" opacity="0.15"/>
                 <circle cx="14" cy="14" r="13" fill="none" stroke="{border_color}" stroke-width="1.5"/>
@@ -2402,7 +2431,7 @@ def _create_svg_decorated_box(
                 {icon} {clean_title}
             </span>
         </div>
-        <div style="color: #374151; font-size: 14px; line-height: 1.7;">
+        <div {body_wrapper_class} style="color: #374151; font-size: 14px; line-height: 1.7;">
             {body_html}
         </div>
     </div>
@@ -2511,45 +2540,44 @@ def _format_gamechanger_section(html_content: str) -> str:
     """
     Format gamechanger sections with SVG-decorated colored boxes.
 
-    Version 4: Fixed patterns to match actual template headings:
-    - "Strategischer Bruchpunkt"
-    - "Die Transformation"
-    - "Warum das ein Gamechanger ist"
-    - "Erster realistischer Schritt"
+    Version 5: Flexible patterns that match BOTH:
+    - <h3> tags (if template sets them)
+    - <strong>/<b> tags (if GPT output uses them per HTML-Vertrag)
+    - Numbered headings like "1. Strategischer Bruchpunkt"
     """
     if not html_content or len(html_content) < 100:
         return html_content
 
-    log.info("[FORMAT-GAMECHANGER-V4] Starting SVG-decorated formatting (length: %d chars)", len(html_content))
+    log.info("[FORMAT-GAMECHANGER-V5] Starting SVG-decorated formatting (length: %d chars)", len(html_content))
 
-    # Gamechanger sections with FIXED PATTERNS matching actual template headings
-    # Pattern structure: <h3>heading</h3>content until next <h3> or end
+    # Gamechanger sections - flexible patterns for <h3>, <strong>, <b>, or plain numbered text
+    # The GPT prompt forbids <h3> so output likely uses <strong> or <b>
     gc_configs = [
         {
             "icon": "🎯",
-            "pattern": r"(<h3[^>]*>\s*Strategischer\s+Bruchpunkt[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
             "keyword": "bruchpunkt",
+            "search_terms": ["Strategischer Bruchpunkt", "strategische Bruchpunkt", "Bruchpunkt"],
             "border_color": "#E65100",  # Orange
             "bg_color": "#FFF3E0"
         },
         {
             "icon": "💡",
-            "pattern": r"(<h3[^>]*>\s*Die\s+Transformation[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
             "keyword": "transformation",
+            "search_terms": ["Die Transformation", "Transformations-Idee", "Transformation"],
             "border_color": "#1565C0",  # Blue
             "bg_color": "#E3F2FD"
         },
         {
             "icon": "🚀",
-            "pattern": r"(<h3[^>]*>\s*Warum\s+das\s+ein\s+Gamechanger[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
             "keyword": "gamechanger",
+            "search_terms": ["Warum das ein Gamechanger", "Gamechanger ist", "ein Gamechanger"],
             "border_color": "#2E7D32",  # Green
             "bg_color": "#E8F5E9"
         },
         {
             "icon": "✅",
-            "pattern": r"(<h3[^>]*>\s*Erster\s+realistischer\s+Schritt[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
             "keyword": "schritt",
+            "search_terms": ["Erster realistischer Schritt", "realistischer Schritt", "Erster Schritt"],
             "border_color": "#6A1B9A",  # Purple
             "bg_color": "#F3E5F5"
         }
@@ -2559,22 +2587,161 @@ def _format_gamechanger_section(html_content: str) -> str:
     boxes_created = 0
 
     for config in gc_configs:
+        matched = False
+
+        for search_term in config["search_terms"]:
+            if matched:
+                break
+
+            # Try multiple pattern formats:
+            # 1. <h3>heading</h3> format
+            # 2. <strong>heading</strong> format (with optional <p> wrapper)
+            # 3. <b>heading</b> format
+            # 4. Numbered format like "1. heading" or "2. heading"
+            patterns = [
+                # h3 tag format
+                rf"(<h3[^>]*>[^<]*{re.escape(search_term)}[^<]*</h3>.*?)(?=<h3[^>]*>|<p[^>]*>\s*<strong>\s*\d|<strong>\s*\d|\Z)",
+                # <p><strong>N. heading</strong></p> format
+                rf"(<p[^>]*>\s*<strong>\s*\d*\.?\s*{re.escape(search_term)}[^<]*</strong>\s*</p>.*?)(?=<p[^>]*>\s*<strong>\s*\d|<strong>\s*\d|\Z)",
+                # <strong>N. heading</strong> format (no p wrapper)
+                rf"(<strong>\s*\d*\.?\s*{re.escape(search_term)}[^<]*</strong>.*?)(?=<strong>\s*\d|\Z)",
+                # <b>N. heading</b> format
+                rf"(<b>\s*\d*\.?\s*{re.escape(search_term)}[^<]*</b>.*?)(?=<b>\s*\d|\Z)",
+            ]
+
+            for pattern in patterns:
+                match = re.search(pattern, output, re.DOTALL | re.IGNORECASE)
+
+                if match:
+                    original_content = match.group(1)
+                    log.debug("[FORMAT-GAMECHANGER-V5] Matched '%s' with pattern, length: %d chars",
+                             config['keyword'], len(original_content))
+
+                    # Extract heading from various tag formats
+                    heading_match = (
+                        re.search(r'<h3[^>]*>(.*?)</h3>', original_content, re.DOTALL | re.IGNORECASE) or
+                        re.search(r'<strong>(.*?)</strong>', original_content, re.DOTALL | re.IGNORECASE) or
+                        re.search(r'<b>(.*?)</b>', original_content, re.DOTALL | re.IGNORECASE)
+                    )
+
+                    if heading_match:
+                        heading_text = heading_match.group(1).strip()
+                        # Remove number prefix for cleaner display
+                        heading_text = re.sub(r'^\d+\.\s*', '', heading_text)
+
+                        # Get body without the heading tag
+                        body_content = re.sub(
+                            r'<(h3|strong|b)[^>]*>.*?</\1>',
+                            '',
+                            original_content,
+                            count=1,
+                            flags=re.DOTALL | re.IGNORECASE
+                        )
+                        # Also remove wrapper <p> if it only contained the heading
+                        body_content = re.sub(r'<p[^>]*>\s*</p>', '', body_content)
+
+                        # Create SVG-decorated box (left accent style for gamechanger)
+                        # Cast to str for mypy (dict contains mixed str/list values)
+                        svg_box = _create_svg_decorated_box(
+                            icon=str(config["icon"]),
+                            title=heading_text,
+                            body_html=body_content,
+                            bg_color=str(config["bg_color"]),
+                            border_color=str(config["border_color"]),
+                            box_style="left"
+                        )
+
+                        # Replace original with SVG-decorated box
+                        output = output.replace(original_content, svg_box)
+                        boxes_created += 1
+                        matched = True
+                        log.info("[FORMAT-GAMECHANGER-V5] Created SVG box %d: %s %s",
+                                boxes_created, config['icon'], heading_text[:40])
+                        break
+
+        if not matched:
+            log.debug("[FORMAT-GAMECHANGER-V5] No match for keyword: %s", config['keyword'])
+
+    if boxes_created == 0:
+        log.warning("[FORMAT-GAMECHANGER-V5] No gamechanger sections matched, returning original")
+    else:
+        log.info("[FORMAT-GAMECHANGER-V5] Complete (output: %d chars, %d SVG boxes created)", len(output), boxes_created)
+
+    return output
+
+
+def _format_foerderpotenzial_section(html_content: str) -> str:
+    """
+    Format Förderpotenzial (funding potential) sections with SVG-decorated colored boxes.
+
+    Version 1: Patterns match <h3> numbered headings for 4 funding sections.
+
+    Sections:
+    1. Einordnung des Business Case ohne Förderung
+    2. Wie Fördermittel den Business Case verbessern
+    3. Passende Förderschwerpunkte für Ihr Vorhaben
+    4. Nächste Schritte für die Förderprüfung
+    """
+    if not html_content or len(html_content) < 100:
+        return html_content
+
+    log.info("[FORMAT-FOERDERPOTENZIAL-V1] Starting SVG-decorated formatting (length: %d chars)", len(html_content))
+
+    # Förderpotenzial sections with colors
+    fp_configs = [
+        {
+            "icon": "💰",
+            "pattern": r"(<h3[^>]*>\s*\d*\.?\s*Einordnung\s+des\s+Business\s+Case[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
+            "keyword": "einordnung",
+            "border_color": "#F9A825",  # Gold/Yellow
+            "bg_color": "#FFFDE7"
+        },
+        {
+            "icon": "📈",
+            "pattern": r"(<h3[^>]*>\s*\d*\.?\s*Wie\s+F[öo]rdermittel[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
+            "keyword": "fördermittel",
+            "border_color": "#2E7D32",  # Green
+            "bg_color": "#E8F5E9"
+        },
+        {
+            "icon": "🎯",
+            "pattern": r"(<h3[^>]*>\s*\d*\.?\s*Passende\s+F[öo]rder[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
+            "keyword": "förderschwerpunkte",
+            "border_color": "#1565C0",  # Blue
+            "bg_color": "#E3F2FD"
+        },
+        {
+            "icon": "✅",
+            "pattern": r"(<h3[^>]*>\s*\d*\.?\s*N[äa]chste\s+Schritte[^<]*</h3>.*?)(?=<h3[^>]*>|\Z)",
+            "keyword": "nächste schritte",
+            "border_color": "#6A1B9A",  # Purple
+            "bg_color": "#F3E5F5"
+        }
+    ]
+
+    output = html_content
+    boxes_created = 0
+
+    for config in fp_configs:
+        # Try to find the section with pattern
         match = re.search(config["pattern"], output, re.DOTALL | re.IGNORECASE)
 
         if match:
             original_content = match.group(1)
-            log.debug("[FORMAT-GAMECHANGER-V4] Matched section for %s: %d chars", config['keyword'], len(original_content))
+            log.debug("[FORMAT-FOERDERPOTENZIAL-V1] Matched section for %s: %d chars", config['keyword'], len(original_content))
 
-            # Extract heading
+            # Extract heading and body
             heading_match = re.search(r'<h3[^>]*>(.*?)</h3>', original_content, re.DOTALL | re.IGNORECASE)
 
             if heading_match:
                 heading_text = heading_match.group(1).strip()
+                # Remove number prefix for cleaner display (e.g., "1. " -> "")
+                heading_text = re.sub(r'^\d+\.\s*', '', heading_text)
 
-                # Get body without heading
+                # Remove heading from content to get body
                 body_content = re.sub(r'<h3[^>]*>.*?</h3>', '', original_content, count=1, flags=re.DOTALL | re.IGNORECASE)
 
-                # Create SVG-decorated box (left accent style for gamechanger)
+                # Create SVG-decorated box (left accent style for förderpotenzial)
                 svg_box = _create_svg_decorated_box(
                     icon=config["icon"],
                     title=heading_text,
@@ -2587,14 +2754,14 @@ def _format_gamechanger_section(html_content: str) -> str:
                 # Replace original with SVG-decorated box
                 output = output.replace(original_content, svg_box)
                 boxes_created += 1
-                log.info("[FORMAT-GAMECHANGER-V4] Created SVG box %d: %s %s", boxes_created, config['icon'], heading_text[:40])
+                log.info("[FORMAT-FOERDERPOTENZIAL-V1] Created SVG box %d: %s %s", boxes_created, config['icon'], heading_text[:40])
         else:
-            log.debug("[FORMAT-GAMECHANGER-V4] No match for pattern keyword: %s", config['keyword'])
+            log.debug("[FORMAT-FOERDERPOTENZIAL-V1] No match for pattern keyword: %s", config['keyword'])
 
     if boxes_created == 0:
-        log.warning("[FORMAT-GAMECHANGER-V4] No gamechanger sections matched, returning original")
+        log.warning("[FORMAT-FOERDERPOTENZIAL-V1] No sections matched, returning original")
     else:
-        log.info("[FORMAT-GAMECHANGER-V4] Complete (output: %d chars, %d SVG boxes created)", len(output), boxes_created)
+        log.info("[FORMAT-FOERDERPOTENZIAL-V1] Complete (output: %d chars, %d SVG boxes created)", len(output), boxes_created)
 
     return output
 
@@ -6803,6 +6970,22 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     else:
         log.warning("[INTEGRATION] Gamechanger HTML empty or too short, skipping formatting")
     sections["gamechanger"] = gamechanger_html
+
+    # ========== SAFE FÖRDERPOTENZIAL FORMATTING ==========
+    foerderpotenzial_html = sections.get("FOERDERPOTENZIAL_HTML", "")
+    log.info(f"[INTEGRATION] Förderpotenzial HTML before formatting: {len(foerderpotenzial_html) if foerderpotenzial_html else 0} chars")
+    if foerderpotenzial_html and len(foerderpotenzial_html) > 100:
+        try:
+            original_length = len(foerderpotenzial_html)
+            foerderpotenzial_html = _format_foerderpotenzial_section(foerderpotenzial_html)
+            log.info(f"[INTEGRATION] Förderpotenzial HTML after formatting: {len(foerderpotenzial_html)} chars (delta: {len(foerderpotenzial_html) - original_length})")
+            sections["FOERDERPOTENZIAL_HTML"] = foerderpotenzial_html
+        except Exception as e:
+            log.error(f"[INTEGRATION] Förderpotenzial formatting failed at integration point: {e}")
+            # Keep original - don't break pipeline
+    else:
+        log.warning("[INTEGRATION] Förderpotenzial HTML empty or too short, skipping formatting")
+    sections["foerderpotenzial"] = foerderpotenzial_html
 
     sections["recommendations"] = sections.get("RECOMMENDATIONS_HTML", "")
     # Sprint N3.3: Apply Exec Summary Hard-Clean to remove H1/H2 and label text
