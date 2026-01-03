@@ -50,6 +50,36 @@ REGELN:
 - Scores aktiv interpretieren
 - Branchenspezifische Compliance bei regulierten Branchen
 - Sachlich, konkret, keine Floskeln
+
+=============================================================================
+ANTI-TEXTWÜSTEN REGELN v1.0 (STRIKT - PFLICHT!)
+=============================================================================
+PROBLEM: Risiko-Sektionen werden oft zu Fließtext-Wänden.
+LÖSUNG: Strikte Bullet-Struktur einhalten!
+
+FORMAT PRO RISIKO-SEKTION (PFLICHT):
+Jede der 4 Risiko-Sektionen MUSS als Bullet-Liste formatiert sein:
+<ul>
+  <li><strong>[Risiko-Name]:</strong> [1 Satz Beschreibung]. Maßnahme: [1 Satz].</li>
+  <li><strong>[Risiko-Name]:</strong> [1 Satz Beschreibung]. Maßnahme: [1 Satz].</li>
+  ...
+</ul>
+
+VERBOTEN:
+❌ Fließtext-Absätze statt Bullet-Listen
+❌ Mehr als 2 Sätze pro Bullet-Punkt
+❌ Risiko-Beschreibungen über 40 Wörter
+❌ Maßnahmen über 20 Wörter
+
+BEISPIEL - SO NICHT:
+❌ "Ein wesentliches Risiko besteht in der mangelnden Transparenz bezüglich der
+    KI-gestützten Entscheidungsprozesse, was zu Misstrauen bei Kunden führen kann
+    und langfristig die Akzeptanz der Lösungen gefährdet..." [= TEXTWÜSTE!]
+
+BEISPIEL - SO JA:
+✅ <li><strong>Mangelnde Transparenz:</strong> Kunden verstehen KI-Entscheidungen nicht.
+   Maßnahme: Einfache Erklärungen zu KI-Methoden bereitstellen.</li>
+=============================================================================
 -->
 
 <section class="section risks">

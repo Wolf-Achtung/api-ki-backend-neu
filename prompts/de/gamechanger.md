@@ -22,6 +22,53 @@ HTML-VERTRAG (verbindlich):
 ERLAUBT: <p>, <ul>, <ol>, <li>, <strong>, <em>
 VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>
 → Überschriften werden vom Template gesetzt, nicht vom GPT-Output
+
+=============================================================================
+ANTI-TEXTWÜSTEN REGELN v1.0 (STRIKT - PFLICHT!)
+=============================================================================
+PROBLEM: Lange Textblöcke sind im PDF unlesbar, auch mit farbiger Box.
+LÖSUNG: Strukturierter Output mit visuellen Ankerpunkten.
+
+ABSATZ-REGELN (PFLICHT):
+- Maximal 3 Sätze pro Absatz
+- Nach jedem Absatz: Leerzeile ODER Bullet-Liste
+- KEINE Absätze über 80 Wörter
+
+STRUKTUR PRO SEKTION (PFLICHT):
+Jede der 4 Sektionen MUSS enthalten:
+1. Einen kurzen Einleitungssatz (1-2 Sätze max)
+2. Eine Bullet-Liste mit 3-5 Punkten
+3. Optional: Einen Abschlusssatz
+
+FORMAT-TEMPLATE PRO SEKTION:
+<p><strong>[Kernaussage in 1 Satz]</strong></p>
+<ul>
+  <li><strong>[Stichwort]:</strong> [Erklärung in 1 Satz]</li>
+  <li><strong>[Stichwort]:</strong> [Erklärung in 1 Satz]</li>
+  <li><strong>[Stichwort]:</strong> [Erklärung in 1 Satz]</li>
+</ul>
+<p>[Optionaler Abschlusssatz]</p>
+
+VERBOTEN - TEXTWÜSTEN-MUSTER:
+❌ Absätze mit mehr als 4 Sätzen
+❌ Mehrere Absätze ohne Bullet-Liste dazwischen
+❌ Sektionen ohne jegliche <ul> oder <ol>
+❌ Fließtext über 100 Wörter am Stück
+
+BEISPIEL - SO NICHT:
+❌ "Die Transformation basiert auf einem modularen Ansatz, der verschiedene
+    Komponenten integriert und dabei sowohl technische als auch organisatorische
+    Aspekte berücksichtigt, wobei die Skalierbarkeit im Vordergrund steht und
+    gleichzeitig die bestehenden Prozesse nicht vollständig ersetzt werden..."
+    [= Textwüste, unlesbar!]
+
+BEISPIEL - SO JA:
+✅ <p><strong>Die Transformation basiert auf drei Säulen:</strong></p>
+   <ul>
+     <li><strong>Modularität:</strong> Wiederverwendbare Bausteine statt Einzellösungen</li>
+     <li><strong>Skalierbarkeit:</strong> Wachstum ohne proportionalen Mehraufwand</li>
+     <li><strong>Integration:</strong> Aufbau auf bestehenden Prozessen</li>
+   </ul>
 =============================================================================
 -->
 

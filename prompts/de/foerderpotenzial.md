@@ -34,6 +34,53 @@ REGELN:
 - Sachlich, neutral, keine Werbung
 - Keine Platzhalter, keine Developer-Sprache
 
+=============================================================================
+ANTI-TEXTWÜSTEN REGELN v1.0 (STRIKT - PFLICHT!)
+=============================================================================
+PROBLEM: Lange Textblöcke sind im PDF unlesbar, auch mit farbiger Box.
+LÖSUNG: Jede Sektion MUSS strukturiert sein mit Bullets.
+
+ABSATZ-REGELN (PFLICHT):
+- Maximal 3 Sätze pro Absatz
+- Nach jedem Absatz: Leerzeile ODER Bullet-Liste
+- KEINE Absätze über 80 Wörter
+- KEINE Sektion ohne Bullet-Liste
+
+STRUKTUR PRO SEKTION (PFLICHT):
+1. Einleitungssatz (1-2 Sätze max)
+2. Bullet-Liste mit 3-5 Punkten (PFLICHT in JEDER Sektion!)
+3. Optional: Kurzer Abschlusssatz
+
+FORMAT-TEMPLATE:
+<p><strong>[Kernaussage]</strong></p>
+<ul>
+  <li><strong>[Stichwort]:</strong> [Erklärung in 1 Satz]</li>
+  <li><strong>[Stichwort]:</strong> [Erklärung in 1 Satz]</li>
+  <li><strong>[Stichwort]:</strong> [Erklärung in 1 Satz]</li>
+</ul>
+
+VERBOTEN - TEXTWÜSTEN-MUSTER:
+❌ Absätze mit mehr als 4 Sätzen
+❌ Mehrere Absätze hintereinander ohne Bullet-Liste
+❌ Sektionen die NUR aus Fließtext bestehen
+❌ Fließtext über 100 Wörter am Stück
+
+BEISPIEL Sektion 1 - SO NICHT:
+❌ "Das Geschäftsmodell basiert auf einem skalierbaren Angebot, das verschiedene
+    Komponenten kombiniert und dabei die Wirtschaftlichkeit im Blick behält,
+    wobei die Investitionen sich über einen planbaren Zeitraum amortisieren
+    und gleichzeitig Spielraum für weitere Entwicklung lassen..." [= TEXTWÜSTE!]
+
+BEISPIEL Sektion 1 - SO JA:
+✅ <p><strong>Der Business Case ist auch ohne Förderung tragfähig:</strong></p>
+   <ul>
+     <li><strong>Investition:</strong> Überschaubare Anfangsinvestition mit klarem Scope</li>
+     <li><strong>Amortisation:</strong> Rückfluss innerhalb von X Monaten realistisch</li>
+     <li><strong>Risiko:</strong> Geringes Ausfallrisiko durch modularen Ansatz</li>
+   </ul>
+   <p>Fördermittel verbessern diese Ausgangslage zusätzlich.</p>
+=============================================================================
+
 SPRINT N - SOLO PERSONA REGELN (STRIKT!):
 {% if COMPANY_SIZE == "solo" %}
 NICHT VERWENDEN für Solo:
@@ -56,14 +103,14 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
   </p>
 
   <h3>1. Einordnung des Business Case ohne Förderung</h3>
-  <p>
-    Das KI-Projekt weist eine solide wirtschaftliche Grundlage auf. Die Investition amortisiert sich
-    in überschaubarem Zeitraum bei positivem ROI im ersten Jahr.
-  </p>
-  <p>
-    Das Projekt ist betriebswirtschaftlich plausibel und der Eigenbeitrag tragfähig.
-    Fördermittel können die Investitionsbelastung reduzieren und die Rentabilität verbessern.
-  </p>
+  <p><strong>Der Business Case trägt sich auch ohne Fördermittel:</strong></p>
+  <ul>
+    <li><strong>Investitionshöhe:</strong> [Einordnung der Kosten für {{COMPANY_SIZE}}]</li>
+    <li><strong>Amortisation:</strong> Rückfluss in überschaubarem Zeitraum realistisch</li>
+    <li><strong>Risikoprofil:</strong> [Einordnung des Risikos für {{BRANCHE_LABEL}}]</li>
+    <li><strong>Eigenbeitrag:</strong> Aus laufendem Betrieb finanzierbar</li>
+  </ul>
+  <p>Fördermittel sind kein Muss, verbessern aber die Ausgangslage deutlich.</p>
 
   <h3>2. Wie Fördermittel den Business Case verbessern können</h3>
   <p>
