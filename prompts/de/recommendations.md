@@ -68,6 +68,39 @@ STILREGELN v7.0:
 - VERBOTEN: "fundamental", "exponentiell", "ganzheitlich", "holistisch"
 - Jede Empfehlung braucht eine klare Handlungsaussage
 
+=============================================================================
+ANTI-TEXTWÜSTEN REGELN v2.0 (AGGRESSIV - PFLICHT!)
+=============================================================================
+PROBLEM: Empfehlungs-Abschnitte werden zu langen Textwänden.
+LÖSUNG: KOMPAKTE Struktur mit harten Wortlimits.
+
+HARTE LIMITS PRO EMPFEHLUNG:
+┌─────────────────────────────────────────────────────────┐
+│ Feld                  │ Max Wörter │ Max Sätze        │
+├─────────────────────────────────────────────────────────┤
+│ Empfehlungs-Titel     │ 8 Wörter   │ -                │
+│ Schwerpunkt           │ 20 Wörter  │ 1 Satz           │
+│ Maßnahme              │ 20 Wörter  │ 1 Satz           │
+│ Nutzen & Wirkung      │ 15 Wörter  │ 1 Satz           │
+│ Aufwand & Budget      │ 12 Wörter  │ 1 Satz           │
+│ Förderchance          │ 15 Wörter  │ 1 Satz           │
+└─────────────────────────────────────────────────────────┘
+
+FORMAT PRO EMPFEHLUNG (PFLICHT):
+<strong>N. Empfehlung: [Titel max 8 Wörter]</strong>
+<strong>Schwerpunkt:</strong> [1 Satz, max 20 Wörter]
+<strong>Maßnahme:</strong> [1 Satz, max 20 Wörter]
+<strong>Nutzen:</strong> [1 Satz, max 15 Wörter]
+<strong>Aufwand:</strong> [Kategorie] – [kurze Beschreibung max 12 Wörter]
+<strong>Förderchance:</strong> [1 Satz, max 15 Wörter]
+
+VERBOTEN (STRIKT!):
+❌ Mehr als 5 Empfehlungen
+❌ Beschreibungen über 20 Wörter
+❌ Mehrere Sätze pro Feld
+❌ Erklärende Einleitungstexte zwischen Empfehlungen
+❌ Schachtelsätze mit Nebensätzen
+
 ANTI-REDUNDANZ (STRIKT!):
 - KEINE Wiederholung von Quick Wins (→ siehe Abschnitt Quick Wins)
 - KEINE Wiederholung von Roadmap-Inhalten (→ siehe Roadmap)
