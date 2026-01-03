@@ -1,0 +1,654 @@
+2026-01-02T22:16:56.363440136Z [inf]  INFO:     100.64.0.2:49096 - "GET /api/healthz HTTP/1.1" 200 OK
+2026-01-02T22:16:56.363449030Z [inf]  INFO:     100.64.0.3:35198 - "GET /api/smoke HTTP/1.1" 200 OK
+2026-01-02T22:16:56.363458303Z [inf]  INFO:     100.64.0.4:60340 - "GET /api/report/ping HTTP/1.1" 200 OK
+2026-01-02T22:20:47.082328382Z [inf]  INFO:     100.64.0.4:62254 - "GET /api/healthz HTTP/1.1" 200 OK
+2026-01-02T22:20:47.082334544Z [inf]  INFO:     100.64.0.5:12980 - "GET /api/smoke HTTP/1.1" 200 OK
+2026-01-02T22:20:47.082340224Z [inf]  INFO:     100.64.0.3:39594 - "GET /api/report/ping HTTP/1.1" 200 OK
+2026-01-02T22:21:15.000000000Z [inf]  Starting Container
+2026-01-02T22:21:18.727417772Z [err]  2026-01-02 22:21:16 [INFO] ki-backend: ✓ CORS configured for: https://ki-sicherheit.jetzt, https://www.ki-sicherheit.jetzt, https://ki-foerderung.jetzt, https://make.ki-sicherheit.jetzt, https://www.make.ki-sicherheit.jetzt
+2026-01-02T22:21:18.727423197Z [err]  2026-01-02 22:21:16 [INFO] services.rate_limit: [G12] Rate Limiter loaded - enabled=True user_limit=5/min global_limit=20/min
+2026-01-02T22:21:18.727429898Z [err]  2026-01-02 22:21:16 [INFO] ki-backend: ✓ Mounted: routes.auth -> /api/auth
+2026-01-02T22:21:18.727435218Z [err]  2026-01-02 22:21:17 [INFO] utils.encoding_fixer: ✅ ftfy library available for enhanced UTF-8 fixing
+2026-01-02T22:21:18.727442675Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ✓ Mounted: routes.briefings -> /api/briefings
+2026-01-02T22:21:18.727448269Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ✓ Mounted: routes.analyze -> /api/analyze
+2026-01-02T22:21:18.727453810Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ✓ Mounted: routes.report -> /api/report
+2026-01-02T22:21:18.727459960Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ✓ Mounted: routes.feedback -> /api/feedback
+2026-01-02T22:21:18.727466029Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ✓ Mounted: routes.smoke -> /api/smoke
+2026-01-02T22:21:18.727472987Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ✓ Mounted: routes.monitoring -> /api/monitoring
+2026-01-02T22:21:18.727478766Z [err]  2026-01-02 22:21:17 [INFO] routes.reports_registry: [G11] Reports Registry API routes loaded
+2026-01-02T22:21:18.727484435Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ✓ Mounted: routes.reports_registry -> /api/reports
+2026-01-02T22:21:18.727490486Z [err]  2026-01-02 22:21:17 [INFO] routes.dashboard: [G11/G15] Dashboard API routes loaded - enabled=True
+2026-01-02T22:21:18.727497881Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ✓ Mounted: routes.dashboard -> /api/dashboard
+2026-01-02T22:21:18.727504629Z [err]  2026-01-02 22:21:17 [INFO] routes.funding: [G11] Funding API routes loaded - premium=True
+2026-01-02T22:21:20.000000000Z [inf]  Stopping Container
+2026-01-02T22:21:20.329460799Z [err]  INFO:     Started server process [1]
+2026-01-02T22:21:20.329471154Z [err]  INFO:     Waiting for application startup.
+2026-01-02T22:21:20.329477571Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ============================================================
+2026-01-02T22:21:20.329727919Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ✓ Mounted: routes.funding -> /api/funding
+2026-01-02T22:21:20.329734351Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ✓ Mounted: routes.feedback_dashboard -> /feedback-dashboard
+2026-01-02T22:21:20.329740691Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ✓ Mounted: routes.tools_dashboard -> /tools-dashboard
+2026-01-02T22:21:20.329746566Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ------------------------------------------------------------
+2026-01-02T22:21:20.329752957Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: Router Summary: 12/12 mounted successfully
+2026-01-02T22:21:20.329759260Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ✓ All routers mounted successfully!
+2026-01-02T22:21:20.329765624Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ------------------------------------------------------------
+2026-01-02T22:21:20.329771878Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ============================================================
+2026-01-02T22:21:20.329779700Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: KI-Backend ready!
+2026-01-02T22:21:20.329786985Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: Environment: production
+2026-01-02T22:21:20.329826071Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: Log Level: INFO
+2026-01-02T22:21:20.329834029Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ============================================================
+2026-01-02T22:21:20.329841076Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ✓ Test-Dashboard verfügbar unter: /test-dashboard.html und /test-dashboard-minimal.html
+2026-01-02T22:21:20.329849113Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ✓ Endpoint present: /api/briefings/submit
+2026-01-02T22:21:22.041499700Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: Starting KI-Backend...
+2026-01-02T22:21:22.041505287Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ============================================================
+2026-01-02T22:21:22.041619305Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ✓ Login-codes table ready
+2026-01-02T22:21:22.041628056Z [err]  2026-01-02 22:21:17 [INFO] services.alerts: Email alert notifications registered
+2026-01-02T22:21:22.041635410Z [err]  2026-01-02 22:21:17 [INFO] ki-backend: ✓ Alert email notifications configured
+2026-01-02T22:21:22.041642952Z [err]  INFO:     Application startup complete.
+2026-01-02T22:21:22.041650686Z [err]  INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+2026-01-02T22:21:27.377809218Z [err]  2026-01-02 22:21:19 [INFO] ki-backend: Shutting down KI-Backend...
+2026-01-02T22:21:27.377815931Z [err]  INFO:     Shutting down
+2026-01-02T22:21:27.377821369Z [err]  INFO:     Application shutdown complete.
+2026-01-02T22:21:27.377829982Z [err]  INFO:     Waiting for application shutdown.
+2026-01-02T22:21:27.377830511Z [err]  INFO:     Finished server process [1]
+2026-01-02T22:21:38.000000000Z [inf]  Starting Container
+2026-01-02T22:21:39.996514635Z [err]  2026-01-02 22:21:39 [INFO] briefings-worker: ============================================================
+2026-01-02T22:21:39.996519065Z [err]  2026-01-02 22:21:39 [INFO] briefings-worker: Briefings Worker starting...
+2026-01-02T22:21:39.996523109Z [err]  2026-01-02 22:21:39 [INFO] briefings-worker: Worker ID: worker-1741af19
+2026-01-02T22:21:39.996527158Z [err]  2026-01-02 22:21:39 [INFO] briefings-worker: Poll interval: 2.0 seconds
+2026-01-02T22:21:39.996532294Z [err]  2026-01-02 22:21:39 [INFO] briefings-worker: Database: PostgreSQL
+2026-01-02T22:21:39.996536046Z [err]  2026-01-02 22:21:39 [INFO] briefings-worker: ============================================================
+2026-01-02T22:21:43.000000000Z [inf]  Stopping Container
+2026-01-02T22:21:44.560578935Z [err]  2026-01-02 22:21:42 [INFO] briefings-worker: Shutdown signal received (sig=15), finishing current job...
+2026-01-02T22:21:44.560586692Z [err]  2026-01-02 22:21:43 [INFO] briefings-worker: ============================================================
+2026-01-02T22:21:44.560594854Z [err]  2026-01-02 22:21:43 [INFO] briefings-worker: Worker shutdown complete
+2026-01-02T22:21:44.560602067Z [err]  2026-01-02 22:21:43 [INFO] briefings-worker: Jobs processed: 0
+2026-01-02T22:21:44.560609856Z [err]  2026-01-02 22:21:43 [INFO] briefings-worker: Jobs failed: 0
+2026-01-02T22:21:44.560616612Z [err]  2026-01-02 22:21:43 [INFO] briefings-worker: ============================================================
+2026-01-02T22:23:20.166868934Z [err]  2026-01-02 22:23:15 [INFO] services.mailer: 📬 Email ID: d4e83102-1bda-4dd5-af74-c6c41a7d3e91
+2026-01-02T22:23:20.166875591Z [inf]  INFO:     100.64.0.3:28556 - "POST /api/auth/request-code HTTP/1.1" 204 No Content
+2026-01-02T22:23:20.166932313Z [inf]  INFO:     100.64.0.2:40240 - "OPTIONS /api/auth/request-code HTTP/1.1" 200 OK
+2026-01-02T22:23:20.166937426Z [err]  2026-01-02 22:23:15 [INFO] services.mailer: 📧 Resend: Sending email FROM=ki-sicherheit.jetzt <noreply@ki-sicherheit.jetzt> TO=test-v7-41@ki-sicherheit.jetzt SUBJECT=Ihr Anmeldecode...
+2026-01-02T22:23:20.166941749Z [err]  2026-01-02 22:23:15 [INFO] httpx: HTTP Request: POST https://api.resend.com/emails "HTTP/1.1 200 OK"
+2026-01-02T22:23:20.166945773Z [err]  2026-01-02 22:23:15 [INFO] services.mailer: ✅ Resend Response [200]: {"id": "d4e83102-1bda-4dd5-af74-c6c41a7d3e91"}
+2026-01-02T22:23:39.610785982Z [inf]  INFO:     100.64.0.2:10544 - "OPTIONS /api/auth/login HTTP/1.1" 200 OK
+2026-01-02T22:23:39.610791951Z [err]  2026-01-02 22:23:31 [INFO] routes.auth: Creating access token for user: test-v7-41@ki-sicherheit.jetzt
+2026-01-02T22:23:39.610797622Z [err]  2026-01-02 22:23:31 [INFO] routes.auth: 🍪 Set httpOnly cookie for user: test-v7-41@ki-sicherheit.jetzt
+2026-01-02T22:23:39.610802637Z [inf]  INFO:     100.64.0.3:27232 - "POST /api/auth/login HTTP/1.1" 200 OK
+2026-01-02T22:23:39.610808311Z [inf]  INFO:     100.64.0.2:10544 - "OPTIONS /api/briefings/submit HTTP/1.1" 200 OK
+2026-01-02T22:23:39.610814409Z [err]  2026-01-02 22:23:33 [INFO] routes.briefings: ✅ Token validated successfully for user: test-v7-41@ki-sicherheit.jetzt
+2026-01-02T22:23:39.610820655Z [err]  2026-01-02 22:23:33 [INFO] routes.briefings: ✅ Created new user: test-v7-41@ki-sicherheit.jetzt
+2026-01-02T22:23:39.610826420Z [err]  2026-01-02 22:23:33 [INFO] routes.briefings: [ENCODING-FIX] Cleaning briefing data before save
+2026-01-02T22:23:39.610832582Z [err]  2026-01-02 22:23:33 [INFO] routes.briefings: ✅ Briefing saved to database: ID=423, user_id=82, status=accepted, len=2333
+2026-01-02T22:23:39.610838272Z [err]  2026-01-02 22:23:33 [INFO] routes.briefings: 📋 Briefing 423 queued for worker pickup (status=accepted)
+2026-01-02T22:23:39.610844067Z [inf]  INFO:     100.64.0.3:27232 - "POST /api/briefings/submit HTTP/1.1" 202 Accepted
+2026-01-02T22:23:39.986086923Z [err]  2026-01-02 22:23:36 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] [ENCODING-FIX] Double-check on briefing 423
+2026-01-02T22:23:39.986089836Z [err]  2026-01-02 22:23:35 [INFO] briefings-worker: Claimed briefing 423 for processing
+2026-01-02T22:23:39.986098881Z [err]  2026-01-02 22:23:35 [INFO] briefings-worker: [worker-1741af19-423-6bb3] Processing briefing 423...
+2026-01-02T22:23:39.986106912Z [err]  2026-01-02 22:23:35 [INFO] services.config_validation: [CONFIG] ValidationConfig loaded: HARD_STOP=False, MAX_REDUNDANCY=5, AI_ACT_MIN_REASONING=60
+2026-01-02T22:23:39.986113516Z [err]  2026-01-02 22:23:35 [INFO] services.tools_analytics: [B2-A/G19] Tools Analytics loaded - enabled=True, branch_alignment=True
+2026-01-02T22:23:39.986119806Z [err]  2026-01-02 22:23:35 [INFO] services.prompt_loader: 🔍 Prompt loader initialized: BASE_DIR=/app/prompts (exists: True)
+2026-01-02T22:23:39.986126382Z [err]  2026-01-02 22:23:35 [INFO] services.branch_mapping: [G19.1-MAP] Branch Mapping loaded - 12 frontend values, 87 synonyms
+2026-01-02T22:23:39.986132840Z [err]  2026-01-02 22:23:35 [INFO] services.prompt_enhancer: [G17.2-B] Smart Defaults loaded - enabled=True, word_increase_factor=1.12
+2026-01-02T22:23:39.986140531Z [err]  2026-01-02 22:23:35 [INFO] utils.encoding_fixer: ✅ ftfy library available for enhanced UTF-8 fixing
+2026-01-02T22:23:39.986146845Z [err]  2026-01-02 22:23:35 [INFO] services.monitoring_ai_act: [G9.1] monitoring_ai_act.py loaded - AI Act BC monitoring enabled
+2026-01-02T22:23:39.986150984Z [err]  2026-01-02 22:23:36 [INFO] services.prompt_builder: 📁 Using data_dir: /app/data
+2026-01-02T22:23:39.986154906Z [err]  2026-01-02 22:23:36 [INFO] services.prompt_enhancer: ✅ PromptEnhancer initialized (data_dir=data)
+2026-01-02T22:23:39.986158486Z [err]  2026-01-02 22:23:36 [INFO] gpt_analyze: ✅ PromptEnhancer initialized with context system
+2026-01-02T22:23:39.986162075Z [err]  2026-01-02 22:23:36 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 🚀 Starting analysis v5.4.3-PLATIN+++ for briefing_id=423 (worker mode)
+2026-01-02T22:23:39.986724866Z [err]  2026-01-02 22:23:36 [INFO] gpt_analyze: 🚀 Generating 35 sections in PARALLEL (max_workers=4)...
+2026-01-02T22:23:39.986732385Z [err]  2026-01-02 22:23:36 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 🌐 Authoritative language set from br.lang: de
+2026-01-02T22:23:39.986732536Z [err]  2026-01-02 22:23:36 [INFO] services.prompt_loader: [prompt_loader] section=executive_summary requested_lang=de used_lang=de path=/app/prompts/de/executive_summary.md
+2026-01-02T22:23:39.986739826Z [err]  2026-01-02 22:23:36 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 📋 Strategic context block generated (863 chars)
+2026-01-02T22:23:39.986740079Z [err]  2026-01-02 22:23:36 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:23:39.986746619Z [err]  2026-01-02 22:23:36 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 📊 Calculating realistic scores (v5.4.3-PLATIN+++)...
+2026-01-02T22:23:39.986747037Z [err]  2026-01-02 22:23:36 [INFO] gpt_analyze: ✅ Using enhanced prompt for executive_summary (with context)
+2026-01-02T22:23:39.986753325Z [err]  2026-01-02 22:23:36 [INFO] gpt_analyze: 📊 REALISTIC SCORES v5.4.3-PLATIN+++: Gov=88 Sec=100 Val=100 Ena=100 Overall=97
+2026-01-02T22:23:39.986759713Z [err]  2026-01-02 22:23:36 [INFO] gpt_analyze: 📊 CALIBRATED SCORES v5.4.3-PLATIN+++: size=solo, status=testphase, factor=0.85 | Gov=88→70 Sec=100→60 Val=100→85 Ena=100→80 Overall=97→74
+2026-01-02T22:23:39.986765826Z [err]  2026-01-02 22:23:36 [INFO] services.extra_sections: [BUSINESS-CASE] Capped hours from 36.0 to 20.0 for size 'solo'
+2026-01-02T22:23:39.986772677Z [err]  2026-01-02 22:23:36 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 💰 Business Case pre-calculated: CAPEX=5000, OPEX=180, Payback=3.5m, ROI=284.0%
+2026-01-02T22:23:39.986779304Z [err]  2026-01-02 22:23:36 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 🎨 Generating content sections with PROMPT SYSTEM...
+2026-01-02T22:23:39.987166792Z [err]  2026-01-02 22:23:36 [INFO] services.anthropic_client: ✅ Anthropic-Client initialisiert.
+2026-01-02T22:23:39.987175433Z [err]  2026-01-02 22:23:36 [INFO] services.anthropic_client: ✅ Anthropic-Client initialisiert.
+2026-01-02T22:23:39.987182292Z [err]  2026-01-02 22:23:36 [INFO] services.anthropic_client: ✅ Anthropic-Client initialisiert.
+2026-01-02T22:23:39.987188921Z [err]  2026-01-02 22:23:36 [INFO] services.anthropic_client: ✅ Anthropic-Client initialisiert.
+2026-01-02T22:23:39.987195519Z [err]  2026-01-02 22:23:37 [INFO] gpt_analyze: ✅ LLM section=executive_decision finished with reason=stop (tokens=62, max=5000)
+2026-01-02T22:23:39.987202541Z [err]  2026-01-02 22:23:38 [INFO] gpt_analyze: ✅ LLM section=roadmap_90d_decision finished with reason=stop (tokens=72, max=5000)
+2026-01-02T22:23:39.987210691Z [err]  2026-01-02 22:23:38 [INFO] gpt_analyze: ✅ LLM section=top_3_massnahmen finished with reason=stop (tokens=72, max=5000)
+2026-01-02T22:23:39.987216956Z [err]  2026-01-02 22:23:38 [WARNING] gpt_analyze: ================================================================================
+2026-01-02T22:23:39.987223159Z [err]  2026-01-02 22:23:38 [WARNING] gpt_analyze: 🔍 QUICK_WINS DEBUG START
+2026-01-02T22:23:39.987229501Z [err]  2026-01-02 22:23:38 [WARNING] gpt_analyze: USE_PROMPT_SYSTEM=True
+2026-01-02T22:23:39.987236772Z [err]  2026-01-02 22:23:38 [WARNING] gpt_analyze: prompt_key=quick_wins
+2026-01-02T22:23:39.987240652Z [err]  2026-01-02 22:23:38 [WARNING] gpt_analyze: _prompt_enhancer initialized: True
+2026-01-02T22:23:39.987244359Z [err]  2026-01-02 22:23:38 [WARNING] gpt_analyze: Briefing has zeitersparnis_prioritaet: True
+2026-01-02T22:23:39.987248732Z [err]  2026-01-02 22:23:38 [WARNING] gpt_analyze: Briefing has ki_projekte: True
+2026-01-02T22:23:39.987252828Z [err]  2026-01-02 22:23:38 [INFO] services.prompt_loader: [prompt_loader] section=quick_wins requested_lang=de used_lang=de path=/app/prompts/de/quick_wins.md
+2026-01-02T22:23:39.987817591Z [err]  2026-01-02 22:23:38 [WARNING] gpt_analyze: Contains 'PLATIN+++ v7.0': False
+2026-01-02T22:23:39.987825389Z [err]  2026-01-02 22:23:38 [WARNING] gpt_analyze: Contains '<div class="quick-win">': False
+2026-01-02T22:23:39.987832085Z [err]  2026-01-02 22:23:39 [INFO] gpt_analyze: ✅ LLM section=gamechanger_decision finished with reason=stop (tokens=62, max=5000)
+2026-01-02T22:23:39.987834891Z [err]  2026-01-02 22:23:38 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:23:39.987838873Z [err]  2026-01-02 22:23:39 [INFO] services.prompt_loader: [prompt_loader] section=roadmap_90d requested_lang=de used_lang=de path=/app/prompts/de/roadmap_90d.md
+2026-01-02T22:23:39.987844219Z [err]  2026-01-02 22:23:38 [INFO] gpt_analyze: ✅ Using enhanced prompt for quick_wins (with context)
+2026-01-02T22:23:39.987846257Z [err]  2026-01-02 22:23:39 [INFO] services.prompt_enhancer: 🎯 Applying roadmap size constraints for 'roadmap_90d'
+2026-01-02T22:23:39.987851305Z [err]  2026-01-02 22:23:38 [WARNING] gpt_analyze: 🔍 PromptEnhancer path SUCCEEDED for quick_wins
+2026-01-02T22:23:39.987853611Z [err]  2026-01-02 22:23:39 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:23:39.987858191Z [err]  2026-01-02 22:23:38 [WARNING] gpt_analyze: Prompt length: 11824
+2026-01-02T22:23:39.987864526Z [err]  2026-01-02 22:23:38 [WARNING] gpt_analyze: Prompt starts with: 
+2026-01-02T22:23:39.987872057Z [err]  ## Strategischer Kontext (Originalangaben des Unternehmens)
+2026-01-02T22:23:39.987878489Z [err]  
+2026-01-02T22:23:39.987885631Z [err]  Strategische Prioritäten:
+2026-01-02T22:23:39.987892126Z [err]  die Geschäftsidee soll weiter ausgebaut werden, neue Produkte soll generiert werden, mehr Umsatz, mehr Gewinn, die Lebensgrundlage sichern
+2026-01-02T22:23:39.987898753Z [err]  
+2026-01-02T22:23:39.987905363Z [err]  Zeitfresser & Prozess-Pain-Points:
+2026-01-02T22:23:39.987912742Z [err]  Enwicklung und Optimierung von Abläuf...
+2026-01-02T22:23:39.988048049Z [err]  2026-01-02 22:23:39 [INFO] gpt_analyze: ✅ Using enhanced prompt for roadmap (with context)
+2026-01-02T22:23:39.988053214Z [err]  2026-01-02 22:23:39 [INFO] gpt_analyze: ✅ LLM section=ki_stack_summary finished with reason=stop (tokens=81, max=5000)
+2026-01-02T22:23:39.988060140Z [err]  2026-01-02 22:23:39 [INFO] services.prompt_loader: [prompt_loader] section=roadmap_12m requested_lang=de used_lang=de path=/app/prompts/de/roadmap_12m.md
+2026-01-02T22:23:39.988066319Z [err]  2026-01-02 22:23:39 [INFO] services.prompt_enhancer: 🎯 Applying roadmap size constraints for 'roadmap_12m'
+2026-01-02T22:23:39.988072726Z [err]  2026-01-02 22:23:39 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:23:39.988079270Z [err]  2026-01-02 22:23:39 [INFO] gpt_analyze: ✅ Using enhanced prompt for roadmap_12m (with context)
+2026-01-02T22:23:40.001261156Z [err]  2026-01-02 22:23:39 [INFO] gpt_analyze: ✅ LLM section=executive_summary finished with reason=stop (tokens=281, max=3000)
+2026-01-02T22:23:40.001269879Z [err]  2026-01-02 22:23:39 [INFO] gpt_analyze: 📌 Using static fallback for business_roi (no GPT call)
+2026-01-02T22:23:40.001276506Z [err]  2026-01-02 22:23:39 [INFO] gpt_analyze: 📌 Using static fallback for business_costs (no GPT call)
+2026-01-02T22:23:40.001280817Z [err]  2026-01-02 22:23:40 [INFO] services.prompt_loader: [prompt_loader] section=business_case requested_lang=de used_lang=de path=/app/prompts/de/business_case.md
+2026-01-02T22:23:40.001284640Z [err]  2026-01-02 22:23:40 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:23:40.005699621Z [err]  2026-01-02 22:23:40 [INFO] gpt_analyze: ✅ Using enhanced prompt for business_case (with context)
+2026-01-02T22:23:41.172099480Z [err]  2026-01-02 22:23:41 [INFO] gpt_analyze: ✅ LLM section=roadmap finished with reason=stop (tokens=14, max=4500)
+2026-01-02T22:23:41.173311843Z [err]  2026-01-02 22:23:41 [INFO] gpt_analyze: ℹ️ LLM content for roadmap too short (0 words < 100 min) – using PLATIN fallback.
+2026-01-02T22:23:41.173320406Z [err]  2026-01-02 22:23:41 [INFO] services.prompt_loader: [prompt_loader] section=data_readiness requested_lang=de used_lang=de path=/app/prompts/de/data_readiness.md
+2026-01-02T22:23:41.178462314Z [err]  2026-01-02 22:23:41 [INFO] gpt_analyze: ✅ Using enhanced prompt for data_readiness (with context)
+2026-01-02T22:23:49.744974394Z [err]  2026-01-02 22:23:49 [INFO] gpt_analyze: ✅ LLM section=quick_wins finished with reason=stop (tokens=1130, max=5000)
+2026-01-02T22:23:49.744983848Z [err]  2026-01-02 22:23:49 [WARNING] gpt_analyze: 🤖 GPT response length: 4264
+2026-01-02T22:23:49.744991074Z [err]  2026-01-02 22:23:49 [WARNING] gpt_analyze: Response starts: [
+2026-01-02T22:23:49.744998026Z [err]    {
+2026-01-02T22:23:49.745004085Z [err]      "title": "Standard-Workflow für Ihre KI-Beratungsprojekte",
+2026-01-02T22:23:49.745010673Z [err]      "icon": "🎯",
+2026-01-02T22:23:49.745017998Z [err]      "time": "6-10 h/Monat",
+2026-01-02T22:23:49.745024328Z [err]      "engpass": "Enwicklung und Optimierung von Abläufen",
+2026-01-02T22:23:49.745030834Z [err]      "description": "Sie strukturieren Fragebogen, Auswertung und Ergebnispräsentation aktuell jedes Mal neu. Das kostet viel Zeit, erschwert die Skalierung und macht Ihre Leistung schwer wiederholbar.",
+2026-01-02T22:23:49.745037336Z [err]      "mit_ki": "Mit ChatGPT Plus erstellen Sie einen wiederverwendbaren Ablauf: von der Intake-Fragebogen-Version über die GP...
+2026-01-02T22:23:49.745043895Z [err]  2026-01-02 22:23:49 [WARNING] gpt_analyze: Contains div.quick-win: False
+2026-01-02T22:23:49.745050298Z [err]  2026-01-02 22:23:49 [WARNING] gpt_analyze: Contains blockquote: False
+2026-01-02T22:23:49.745056250Z [err]  2026-01-02 22:23:49 [WARNING] gpt_analyze: Contains pre.prompt-template: False
+2026-01-02T22:23:53.144271604Z [err]  2026-01-02 22:23:53 [INFO] gpt_analyze: ✅ LLM section=business_case finished with reason=stop (tokens=1547, max=5000)
+2026-01-02T22:23:53.144284241Z [err]  2026-01-02 22:23:53 [INFO] services.prompt_loader: [prompt_loader] section=org_change requested_lang=de used_lang=de path=/app/prompts/de/org_change.md
+2026-01-02T22:23:53.144292276Z [err]  2026-01-02 22:23:53 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:23:53.144299102Z [err]  2026-01-02 22:23:53 [INFO] gpt_analyze: ✅ Using enhanced prompt for org_change (with context)
+2026-01-02T22:23:53.305990410Z [err]  2026-01-02 22:23:53 [INFO] gpt_analyze: ✅ LLM section=data_readiness finished with reason=stop (tokens=1181, max=5000)
+2026-01-02T22:23:53.307187609Z [err]  2026-01-02 22:23:53 [WARNING] gpt_analyze: [N4.6] 🚨 Leak phrases detected in data_readiness: ['wählen sie'] – regenerating with strict mode
+2026-01-02T22:23:53.307195861Z [err]  2026-01-02 22:23:53 [INFO] gpt_analyze: [N4.6] Regenerating data_readiness with strict zero-leak directive...
+2026-01-02T22:23:58.795241907Z [err]  2026-01-02 22:23:58 [WARNING] gpt_analyze: ⚠️ LLM section=html_repair finished with reason=length (hit token limit 1200) – risk of truncation
+2026-01-02T22:23:58.795247078Z [err]  2026-01-02 22:23:58 [WARNING] gpt_analyze: ✅ QUICK_WINS: PromptEnhancer path completed successfully!
+2026-01-02T22:23:58.795250900Z [err]  2026-01-02 22:23:58 [WARNING] gpt_analyze: 🔍 QUICK_WINS DEBUG END
+2026-01-02T22:23:58.795255263Z [err]  2026-01-02 22:23:58 [WARNING] gpt_analyze: ================================================================================
+2026-01-02T22:23:58.795258969Z [err]  2026-01-02 22:23:58 [INFO] services.prompt_loader: [prompt_loader] section=risks requested_lang=de used_lang=de path=/app/prompts/de/risks.md
+2026-01-02T22:23:58.795262593Z [err]  2026-01-02 22:23:58 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:23:58.799447178Z [err]  2026-01-02 22:23:58 [INFO] gpt_analyze: ✅ Using enhanced prompt for risks (with context)
+2026-01-02T22:24:05.260012708Z [err]  2026-01-02 22:24:05 [INFO] gpt_analyze: ✅ LLM section=roadmap_12m finished with reason=stop (tokens=2585, max=4500)
+2026-01-02T22:24:05.260018364Z [err]  2026-01-02 22:24:05 [WARNING] gpt_analyze: [N4.6] 🚨 Leak phrases detected in roadmap_12m: ['bei bedarf'] – regenerating with strict mode
+2026-01-02T22:24:05.260022377Z [err]  2026-01-02 22:24:05 [INFO] gpt_analyze: [N4.6] Regenerating roadmap_12m with strict zero-leak directive...
+2026-01-02T22:24:08.187415873Z [err]  2026-01-02 22:24:08 [INFO] gpt_analyze: ✅ LLM section=data_readiness finished with reason=stop (tokens=1736, max=5000)
+2026-01-02T22:24:08.189488715Z [err]  2026-01-02 22:24:08 [INFO] gpt_analyze: [N4.6] ✅ Regeneration successful – no leaks in data_readiness
+2026-01-02T22:24:08.189497259Z [err]  2026-01-02 22:24:08 [INFO] services.prompt_loader: [prompt_loader] section=gamechanger requested_lang=de used_lang=de path=/app/prompts/de/gamechanger.md
+2026-01-02T22:24:08.190192877Z [err]  2026-01-02 22:24:08 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:24:08.198482568Z [err]  2026-01-02 22:24:08 [INFO] gpt_analyze: ✅ Using enhanced prompt for gamechanger (with context)
+2026-01-02T22:24:14.299841443Z [err]  2026-01-02 22:24:14 [INFO] gpt_analyze: ✅ LLM section=org_change finished with reason=stop (tokens=1998, max=3500)
+2026-01-02T22:24:14.299847895Z [err]  2026-01-02 22:24:14 [INFO] services.prompt_loader: [prompt_loader] section=recommendations requested_lang=de used_lang=de path=/app/prompts/de/recommendations.md
+2026-01-02T22:24:14.299854150Z [err]  2026-01-02 22:24:14 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:24:14.299861904Z [err]  2026-01-02 22:24:14 [INFO] gpt_analyze: ✅ Using enhanced prompt for recommendations (with context)
+2026-01-02T22:24:16.404393365Z [err]  2026-01-02 22:24:16 [INFO] gpt_analyze: ✅ LLM section=gamechanger finished with reason=stop (tokens=807, max=5000)
+2026-01-02T22:24:16.410106520Z [err]  2026-01-02 22:24:16 [INFO] gpt_analyze: [N4.6] 📏 Content for gamechanger too short (386/700 words) – attempting 2-pass expand
+2026-01-02T22:24:16.895623490Z [err]  2026-01-02 22:24:16 [INFO] gpt_analyze: ✅ LLM section=risks finished with reason=stop (tokens=2045, max=4000)
+2026-01-02T22:24:16.895631326Z [err]  2026-01-02 22:24:16 [INFO] gpt_analyze: [N4.6] 📏 Content for risks too short (768/800 words) – attempting 2-pass expand
+2026-01-02T22:24:36.895416067Z [err]  2026-01-02 22:24:29 [INFO] gpt_analyze: ✅ LLM section=roadmap_12m finished with reason=stop (tokens=2527, max=4500)
+2026-01-02T22:24:36.895425963Z [err]  2026-01-02 22:24:29 [INFO] gpt_analyze: [N4.6] ✅ Regeneration successful – no leaks in roadmap_12m
+2026-01-02T22:24:36.895436402Z [err]  2026-01-02 22:24:29 [INFO] services.prompt_loader: [prompt_loader] section=executive_summary requested_lang=de used_lang=de path=/app/prompts/de/executive_summary.md
+2026-01-02T22:24:36.895441932Z [err]  2026-01-02 22:24:29 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:24:36.895446134Z [err]  2026-01-02 22:24:29 [INFO] gpt_analyze: ✅ Using enhanced prompt for reifegrad_sowhat (with context)
+2026-01-02T22:24:36.895450261Z [err]  2026-01-02 22:24:30 [INFO] gpt_analyze: ✅ LLM section=recommendations finished with reason=stop (tokens=1940, max=3500)
+2026-01-02T22:24:36.895454594Z [err]  2026-01-02 22:24:30 [INFO] gpt_analyze: [N4.6] 📏 Content for recommendations too short (421/800 words) – attempting 2-pass expand
+2026-01-02T22:24:36.895458694Z [err]  2026-01-02 22:24:33 [INFO] gpt_analyze: ✅ LLM section=reifegrad_sowhat finished with reason=stop (tokens=316, max=5000)
+2026-01-02T22:24:36.895462554Z [err]  2026-01-02 22:24:33 [INFO] gpt_analyze: 📌 Using static fallback for ai_act_summary (no GPT call)
+2026-01-02T22:24:36.895466514Z [err]  2026-01-02 22:24:33 [INFO] services.prompt_loader: [prompt_loader] section=strategie_governance requested_lang=de used_lang=de path=/app/prompts/de/strategie_governance.md
+2026-01-02T22:24:36.895470333Z [err]  2026-01-02 22:24:33 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:24:36.895474712Z [err]  2026-01-02 22:24:33 [INFO] gpt_analyze: ✅ Using enhanced prompt for strategie_governance (with context)
+2026-01-02T22:24:40.007041155Z [err]  2026-01-02 22:24:40 [INFO] gpt_analyze: ✅ LLM section=gamechanger_expand finished with reason=stop (tokens=2890, max=5500)
+2026-01-02T22:24:40.007046496Z [err]  2026-01-02 22:24:40 [INFO] gpt_analyze: [N4.6] ✅ 2-pass expand successful for gamechanger: 386 -> 1530 words
+2026-01-02T22:24:40.007050927Z [err]  2026-01-02 22:24:40 [INFO] services.prompt_loader: [prompt_loader] section=wettbewerb_benchmark requested_lang=de used_lang=de path=/app/prompts/de/wettbewerb_benchmark.md
+2026-01-02T22:24:40.007055366Z [err]  2026-01-02 22:24:40 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:24:40.016886587Z [err]  2026-01-02 22:24:40 [INFO] gpt_analyze: ✅ Using enhanced prompt for wettbewerb_benchmark (with context)
+2026-01-02T22:24:48.249822460Z [err]  2026-01-02 22:24:48 [INFO] gpt_analyze: ✅ LLM section=risks_expand finished with reason=stop (tokens=4136, max=4500)
+2026-01-02T22:24:48.249834381Z [err]  2026-01-02 22:24:48 [INFO] gpt_analyze: [N4.6] ✅ 2-pass expand successful for risks: 768 -> 1719 words
+2026-01-02T22:24:48.249841569Z [err]  2026-01-02 22:24:48 [INFO] services.prompt_loader: [prompt_loader] section=technologie_prozesse requested_lang=de used_lang=de path=/app/prompts/de/technologie_prozesse.md
+2026-01-02T22:24:48.249849002Z [err]  2026-01-02 22:24:48 [INFO] gpt_analyze: ✅ Using enhanced prompt for technologie_prozesse (with context)
+2026-01-02T22:24:52.510732076Z [err]  2026-01-02 22:24:52 [INFO] gpt_analyze: ✅ LLM section=strategie_governance finished with reason=stop (tokens=1790, max=4000)
+2026-01-02T22:24:52.512404547Z [err]  2026-01-02 22:24:52 [INFO] services.prompt_loader: [prompt_loader] section=unternehmensprofil_markt requested_lang=de used_lang=de path=/app/prompts/de/unternehmensprofil_markt.md
+2026-01-02T22:24:52.513250131Z [err]  2026-01-02 22:24:52 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:24:52.518499679Z [err]  2026-01-02 22:24:52 [INFO] gpt_analyze: ✅ Using enhanced prompt for unternehmensprofil_markt (with context)
+2026-01-02T22:25:00.891472024Z [err]  2026-01-02 22:25:00 [INFO] gpt_analyze: ✅ LLM section=technologie_prozesse finished with reason=stop (tokens=1422, max=3000)
+2026-01-02T22:25:00.892425816Z [err]  2026-01-02 22:25:00 [INFO] services.prompt_loader: [prompt_loader] section=tools_empfehlungen requested_lang=de used_lang=de path=/app/prompts/de/tools_empfehlungen.md
+2026-01-02T22:25:00.893448010Z [err]  2026-01-02 22:25:00 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:25:00.898685066Z [err]  2026-01-02 22:25:00 [INFO] gpt_analyze: ✅ Using enhanced prompt for tools_empfehlungen (with context)
+2026-01-02T22:25:03.984459964Z [err]  2026-01-02 22:25:03 [WARNING] gpt_analyze: ⚠️ LLM section=recommendations_expand finished with reason=length (hit token limit 4000) – risk of truncation
+2026-01-02T22:25:04.981163459Z [err]  2026-01-02 22:25:04 [INFO] gpt_analyze: ✅ LLM section=html_repair finished with reason=stop (tokens=31, max=1200)
+2026-01-02T22:25:04.982373119Z [err]  2026-01-02 22:25:04 [WARNING] gpt_analyze: [N4.6] ⚠️ 2-pass expand insufficient for recommendations: 1 words (need 800)
+2026-01-02T22:25:04.982379056Z [err]  2026-01-02 22:25:04 [INFO] gpt_analyze: ℹ️ LLM content for recommendations too short (421 words < 800 min) – using PLATIN fallback.
+2026-01-02T22:25:04.983077666Z [err]  2026-01-02 22:25:04 [INFO] services.prompt_loader: [prompt_loader] section=foerderpotenzial requested_lang=de used_lang=de path=/app/prompts/de/foerderpotenzial.md
+2026-01-02T22:25:04.983487638Z [err]  2026-01-02 22:25:04 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:25:04.988830741Z [err]  2026-01-02 22:25:04 [INFO] services.prompt_loader: [prompt_loader] section=foerderprogramme requested_lang=de used_lang=de path=/app/prompts/de/foerderprogramme.md
+2026-01-02T22:25:04.988838224Z [err]  2026-01-02 22:25:04 [INFO] gpt_analyze: ✅ Using enhanced prompt for foerderpotenzial (with context)
+2026-01-02T22:25:10.162323854Z [err]  2026-01-02 22:25:10 [INFO] gpt_analyze: ✅ LLM section=tools_empfehlungen finished with reason=stop (tokens=706, max=5000)
+2026-01-02T22:25:10.162331666Z [err]  2026-01-02 22:25:10 [INFO] services.prompt_loader: [prompt_loader] section=transparency_box requested_lang=de used_lang=de path=/app/prompts/de/transparency_box.md
+2026-01-02T22:25:10.162339619Z [err]  2026-01-02 22:25:10 [INFO] gpt_analyze: ✅ Using enhanced prompt for transparency_box (with context)
+2026-01-02T22:25:13.341325626Z [err]  2026-01-02 22:25:13 [INFO] gpt_analyze: ✅ LLM section=wettbewerb_benchmark finished with reason=stop (tokens=3165, max=4000)
+2026-01-02T22:25:13.342093921Z [err]  2026-01-02 22:25:13 [WARNING] gpt_analyze: [N4.6] 🚨 Leak phrases detected in wettbewerb_benchmark: ['wenn sie möchten'] – regenerating with strict mode
+2026-01-02T22:25:13.342099903Z [err]  2026-01-02 22:25:13 [INFO] gpt_analyze: [N4.6] Regenerating wettbewerb_benchmark with strict zero-leak directive...
+2026-01-02T22:25:15.972245003Z [err]  2026-01-02 22:25:15 [INFO] gpt_analyze: ✅ LLM section=unternehmensprofil_markt finished with reason=stop (tokens=2488, max=4000)
+2026-01-02T22:25:15.972253098Z [err]  2026-01-02 22:25:15 [INFO] services.prompt_loader: [prompt_loader] section=ki_aktivitaeten_ziele requested_lang=de used_lang=de path=/app/prompts/de/ki_aktivitaeten_ziele.md
+2026-01-02T22:25:15.972261289Z [err]  2026-01-02 22:25:15 [INFO] gpt_analyze: ✅ Using enhanced prompt for ki_aktivitaeten_ziele (with context)
+2026-01-02T22:25:20.542558278Z [err]  2026-01-02 22:25:20 [INFO] gpt_analyze: ✅ LLM section=transparency_box finished with reason=stop (tokens=927, max=2500)
+2026-01-02T22:25:20.544041947Z [err]  2026-01-02 22:25:20 [INFO] services.prompt_loader: [prompt_loader] section=monetarisierung requested_lang=de used_lang=de path=/app/prompts/de/monetarisierung.md
+2026-01-02T22:25:20.544783112Z [err]  2026-01-02 22:25:20 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:25:20.546950394Z [err]  2026-01-02 22:25:20 [INFO] gpt_analyze: ✅ Using enhanced prompt for monetarisierung (with context)
+2026-01-02T22:25:23.345377565Z [err]  2026-01-02 22:25:23 [INFO] gpt_analyze: ✅ LLM section=ki_aktivitaeten_ziele finished with reason=stop (tokens=762, max=5000)
+2026-01-02T22:25:23.346864370Z [err]  2026-01-02 22:25:23 [INFO] services.prompt_loader: [prompt_loader] section=ki_skillplan requested_lang=de used_lang=de path=/app/prompts/de/ki_skillplan.md
+2026-01-02T22:25:23.347632998Z [err]  2026-01-02 22:25:23 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:25:23.350119847Z [err]  2026-01-02 22:25:23 [INFO] gpt_analyze: ✅ Using enhanced prompt for ki_skillplan (with context)
+2026-01-02T22:25:23.591164619Z [err]  2026-01-02 22:25:23 [INFO] gpt_analyze: ✅ LLM section=foerderpotenzial finished with reason=stop (tokens=1800, max=4000)
+2026-01-02T22:25:23.596237537Z [err]  2026-01-02 22:25:23 [INFO] gpt_analyze: [N4.6] 📏 Content for foerderpotenzial too short (837/900 words) – attempting 2-pass expand
+2026-01-02T22:25:26.687778383Z [err]  2026-01-02 22:25:26 [INFO] gpt_analyze: ✅ LLM section=monetarisierung finished with reason=stop (tokens=652, max=5000)
+2026-01-02T22:25:26.692736009Z [err]  2026-01-02 22:25:26 [WARNING] gpt_analyze: [N4.6] 🚨 Leak phrases detected in monetarisierung: ['bei bedarf'] – regenerating with strict mode
+2026-01-02T22:25:26.692743939Z [err]  2026-01-02 22:25:26 [INFO] gpt_analyze: [N4.6] Regenerating monetarisierung with strict zero-leak directive...
+2026-01-02T22:25:28.032196110Z [err]  2026-01-02 22:25:28 [INFO] gpt_analyze: ✅ LLM section=ki_skillplan finished with reason=stop (tokens=432, max=5000)
+2026-01-02T22:25:28.037021178Z [err]  2026-01-02 22:25:28 [INFO] services.prompt_loader: [prompt_loader] section=templates_start requested_lang=de used_lang=de path=/app/prompts/de/templates_start.md
+2026-01-02T22:25:28.037030563Z [err]  2026-01-02 22:25:28 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:25:28.037037636Z [err]  2026-01-02 22:25:28 [INFO] gpt_analyze: ✅ Using enhanced prompt for templates_start (with context)
+2026-01-02T22:25:33.506790528Z [err]  2026-01-02 22:25:33 [INFO] gpt_analyze: ✅ LLM section=templates_start finished with reason=stop (tokens=552, max=5000)
+2026-01-02T22:25:33.511490455Z [err]  2026-01-02 22:25:33 [INFO] services.prompt_loader: [prompt_loader] section=roi_tracking requested_lang=de used_lang=de path=/app/prompts/de/roi_tracking.md
+2026-01-02T22:25:33.511497032Z [err]  2026-01-02 22:25:33 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:25:33.511502271Z [err]  2026-01-02 22:25:33 [INFO] gpt_analyze: ✅ Using enhanced prompt for roi_tracking (with context)
+2026-01-02T22:25:34.022896517Z [err]  2026-01-02 22:25:34 [INFO] gpt_analyze: ✅ LLM section=monetarisierung finished with reason=stop (tokens=816, max=5000)
+2026-01-02T22:25:34.027713339Z [err]  2026-01-02 22:25:34 [INFO] gpt_analyze: [N4.6] ✅ Regeneration successful – no leaks in monetarisierung
+2026-01-02T22:25:34.027721567Z [err]  2026-01-02 22:25:34 [INFO] services.prompt_loader: [prompt_loader] section=ai_policy_mini requested_lang=de used_lang=de path=/app/prompts/de/ai_policy_mini.md
+2026-01-02T22:25:34.027726613Z [err]  2026-01-02 22:25:34 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:25:34.028115831Z [err]  2026-01-02 22:25:34 [INFO] gpt_analyze: ✅ Using enhanced prompt for ai_policy_mini (with context)
+2026-01-02T22:25:40.253500657Z [err]  2026-01-02 22:25:40 [INFO] gpt_analyze: ✅ LLM section=ai_policy_mini finished with reason=stop (tokens=599, max=5000)
+2026-01-02T22:25:40.255141697Z [err]  2026-01-02 22:25:40 [INFO] services.prompt_loader: [prompt_loader] section=kickoff_vorlage requested_lang=de used_lang=de path=/app/prompts/de/kickoff_vorlage.md
+2026-01-02T22:25:40.255149741Z [err]  2026-01-02 22:25:40 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:25:40.255982102Z [err]  2026-01-02 22:25:40 [INFO] gpt_analyze: ✅ Using enhanced prompt for kickoff_vorlage (with context)
+2026-01-02T22:25:42.352540484Z [err]  2026-01-02 22:25:42 [INFO] gpt_analyze: ✅ LLM section=roi_tracking finished with reason=stop (tokens=1101, max=5000)
+2026-01-02T22:25:42.352548508Z [err]  2026-01-02 22:25:42 [WARNING] gpt_analyze: [N4.6] 🚨 Leak phrases detected in roi_tracking: ['bei bedarf'] – regenerating with strict mode
+2026-01-02T22:25:42.352556051Z [err]  2026-01-02 22:25:42 [INFO] gpt_analyze: [N4.6] Regenerating roi_tracking with strict zero-leak directive...
+2026-01-02T22:25:45.786924344Z [err]  2026-01-02 22:25:45 [WARNING] gpt_analyze: ⚠️ LLM section=wettbewerb_benchmark finished with reason=length (hit token limit 4000) – risk of truncation
+2026-01-02T22:25:46.613560085Z [err]  2026-01-02 22:25:46 [INFO] gpt_analyze: ✅ LLM section=html_repair finished with reason=stop (tokens=14, max=1200)
+2026-01-02T22:25:46.613568965Z [err]  2026-01-02 22:25:46 [INFO] gpt_analyze: [N4.6] ✅ Regeneration successful – no leaks in wettbewerb_benchmark
+2026-01-02T22:25:46.613575070Z [err]  2026-01-02 22:25:46 [INFO] gpt_analyze: ℹ️ LLM content for wettbewerb_benchmark too short (0 words < 10 min) – using PLATIN fallback.
+2026-01-02T22:25:46.613581479Z [err]  2026-01-02 22:25:46 [INFO] services.prompt_loader: [prompt_loader] section=prompt_framework requested_lang=de used_lang=de path=/app/prompts/de/prompt_framework.md
+2026-01-02T22:25:46.613588289Z [err]  2026-01-02 22:25:46 [INFO] services.prompt_enhancer: ✅ Context loaded: branch=beratung, size=solo, lang=de
+2026-01-02T22:25:46.613594488Z [err]  2026-01-02 22:25:46 [INFO] gpt_analyze: ✅ Using enhanced prompt for prompt_framework (with context)
+2026-01-02T22:25:47.662942057Z [err]  2026-01-02 22:25:42.782 UTC [27] LOG:  checkpoint starting: time
+2026-01-02T22:25:47.662949159Z [err]  2026-01-02 22:25:44.227 UTC [27] LOG:  checkpoint complete: wrote 15 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.416 s, sync=0.010 s, total=1.446 s; sync files=15, longest=0.008 s, average=0.001 s; distance=47 kB, estimate=545 kB; lsn=0/CD08708, redo lsn=0/CD086B0
+2026-01-02T22:25:48.692528875Z [err]  2026-01-02 22:25:48 [INFO] gpt_analyze: ✅ LLM section=roi_tracking finished with reason=stop (tokens=559, max=5000)
+2026-01-02T22:25:48.693298896Z [err]  2026-01-02 22:25:48 [WARNING] gpt_analyze: [N4.6] ⚠️ Regeneration still has leaks in roi_tracking – using PLATIN fallback (not stripping)
+2026-01-02T22:25:48.694077279Z [err]  2026-01-02 22:25:48 [INFO] gpt_analyze: [N4.6] ✅ PLATIN fallback used for roi_tracking
+2026-01-02T22:25:50.122188126Z [err]  2026-01-02 22:25:50 [INFO] gpt_analyze: ✅ LLM section=branch_deep_dive finished with reason=stop (tokens=72, max=5000)
+2026-01-02T22:25:56.115900857Z [err]  2026-01-02 22:25:56 [INFO] gpt_analyze: ✅ LLM section=kickoff_vorlage finished with reason=stop (tokens=2005, max=5000)
+2026-01-02T22:25:59.515785569Z [err]  2026-01-02 22:25:59 [INFO] gpt_analyze: ✅ LLM section=prompt_framework finished with reason=stop (tokens=1376, max=5000)
+2026-01-02T22:26:01.019330155Z [err]  2026-01-02 22:26:01 [INFO] gpt_analyze: ✅ LLM section=foerderpotenzial_expand finished with reason=stop (tokens=4009, max=4500)
+2026-01-02T22:26:01.021443341Z [err]  2026-01-02 22:26:01 [INFO] gpt_analyze: [N4.6] ✅ 2-pass expand successful for foerderpotenzial: 837 -> 2006 words
+2026-01-02T22:26:01.022447810Z [err]  2026-01-02 22:26:01 [INFO] gpt_analyze: ✅ Parallel generation completed in 145.0s (vs ~525s sequential)
+2026-01-02T22:26:01.022454420Z [err]  2026-01-02 22:26:01 [INFO] gpt_analyze: ✅ Quick Wins JSON erfolgreich geparst: 3 Items
+2026-01-02T22:26:01.022461995Z [err]  2026-01-02 22:26:01 [INFO] gpt_analyze: ✅ Quick Wins HTML erfolgreich generiert (3 Cards)
+2026-01-02T22:26:01.023056338Z [err]  2026-01-02 22:26:01 [INFO] services.prompt_loader: [prompt_loader] section=next_actions requested_lang=de used_lang=de path=/app/prompts/de/next_actions.md
+2026-01-02T22:26:06.026722811Z [err]  2026-01-02 22:26:06 [INFO] gpt_analyze: ✅ LLM section=next_actions finished with reason=stop (tokens=507, max=600)
+2026-01-02T22:26:06.028297086Z [err]  2026-01-02 22:26:06 [INFO] gpt_analyze: 🚀 Generating 23 one-liners in PARALLEL...
+2026-01-02T22:26:07.391504667Z [err]  2026-01-02 22:26:07 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=37, max=80)
+2026-01-02T22:26:08.110951955Z [err]  2026-01-02 22:26:08 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=75, max=80)
+2026-01-02T22:26:08.258648451Z [err]  2026-01-02 22:26:08 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=75, max=80)
+2026-01-02T22:26:08.383493996Z [err]  2026-01-02 22:26:08 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=71, max=80)
+2026-01-02T22:26:09.274795065Z [err]  2026-01-02 22:26:09 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=72, max=80)
+2026-01-02T22:26:09.394159050Z [err]  2026-01-02 22:26:09 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=48, max=80)
+2026-01-02T22:26:09.777880160Z [err]  2026-01-02 22:26:09 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=76, max=80)
+2026-01-02T22:26:10.646461382Z [err]  2026-01-02 22:26:10 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=61, max=80)
+2026-01-02T22:26:11.158871675Z [err]  2026-01-02 22:26:11 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=71, max=80)
+2026-01-02T22:26:11.393544560Z [err]  2026-01-02 22:26:11 [WARNING] gpt_analyze: ⚠️ LLM section=one_liner finished with reason=length (hit token limit 80) – risk of truncation
+2026-01-02T22:26:11.877487564Z [err]  2026-01-02 22:26:11 [WARNING] gpt_analyze: ⚠️ LLM section=one_liner finished with reason=length (hit token limit 80) – risk of truncation
+2026-01-02T22:26:12.359899058Z [err]  2026-01-02 22:26:12 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=68, max=80)
+2026-01-02T22:26:12.919772412Z [err]  2026-01-02 22:26:12 [WARNING] gpt_analyze: ⚠️ LLM section=one_liner finished with reason=length (hit token limit 80) – risk of truncation
+2026-01-02T22:26:13.096706350Z [err]  2026-01-02 22:26:13 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=52, max=80)
+2026-01-02T22:26:13.488502555Z [err]  2026-01-02 22:26:13 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=60, max=80)
+2026-01-02T22:26:13.541140449Z [err]  2026-01-02 22:26:13 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=63, max=80)
+2026-01-02T22:26:14.505461242Z [err]  2026-01-02 22:26:14 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=65, max=80)
+2026-01-02T22:26:14.608328666Z [err]  2026-01-02 22:26:14 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=60, max=80)
+2026-01-02T22:26:15.197612376Z [err]  2026-01-02 22:26:15 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=67, max=80)
+2026-01-02T22:26:16.290052844Z [err]  2026-01-02 22:26:16 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=58, max=80)
+2026-01-02T22:26:16.636947814Z [err]  2026-01-02 22:26:16 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=57, max=80)
+2026-01-02T22:26:16.654770463Z [err]  2026-01-02 22:26:16 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=59, max=80)
+2026-01-02T22:26:16.662179240Z [err]  2026-01-02 22:26:16 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=64, max=80)
+2026-01-02T22:26:16.667256965Z [err]  2026-01-02 22:26:16 [INFO] gpt_analyze: ✅ One-liners completed in 10.6s (vs ~69s sequential)
+2026-01-02T22:26:18.519681703Z [err]  2026-01-02 22:26:18 [INFO] gpt_analyze: [FORMAT-RISKS-V4] Created SVG box 5: 📊 Risiko-Matrix – Überblick über zentrale 
+2026-01-02T22:26:18.519689102Z [err]  2026-01-02 22:26:18 [INFO] gpt_analyze: [FORMAT-RISKS-V4] Complete (output: 21467 chars, 5 SVG boxes created)
+2026-01-02T22:26:18.519695313Z [err]  2026-01-02 22:26:18 [INFO] gpt_analyze: [INTEGRATION] Risks HTML after formatting: 21467 chars (delta: 4036)
+2026-01-02T22:26:18.519698150Z [err]  2026-01-02 22:26:18 [INFO] gpt_analyze: ✅ LLM section=one_liner finished with reason=stop (tokens=51, max=80)
+2026-01-02T22:26:18.519701900Z [err]  2026-01-02 22:26:18 [INFO] gpt_analyze: [INTEGRATION] Gamechanger HTML before formatting: 13441 chars
+2026-01-02T22:26:18.519707655Z [err]  2026-01-02 22:26:18 [INFO] gpt_analyze: [FORMAT-GAMECHANGER-V4] Starting SVG-decorated formatting (length: 13441 chars)
+2026-01-02T22:26:18.519709520Z [err]  2026-01-02 22:26:18 [INFO] gpt_analyze: [INTEGRATION] Risks HTML before formatting: 17431 chars
+2026-01-02T22:26:18.519714705Z [err]  2026-01-02 22:26:18 [WARNING] gpt_analyze: [FORMAT-GAMECHANGER-V4] No gamechanger sections matched, returning original
+2026-01-02T22:26:18.519717640Z [err]  2026-01-02 22:26:18 [INFO] gpt_analyze: [FORMAT-RISKS-V4] Starting SVG-decorated formatting (length: 17431 chars)
+2026-01-02T22:26:18.519723680Z [err]  2026-01-02 22:26:18 [INFO] gpt_analyze: [FORMAT-RISKS-V4] Created SVG box 1: 💼 Strategische und organisatorische Risike
+2026-01-02T22:26:18.519730640Z [err]  2026-01-02 22:26:18 [INFO] gpt_analyze: [FORMAT-RISKS-V4] Created SVG box 2: 🔒 Daten-, Sicherheits- und Compliance-Risi
+2026-01-02T22:26:18.519736673Z [err]  2026-01-02 22:26:18 [INFO] gpt_analyze: [FORMAT-RISKS-V4] Created SVG box 3: ⚠️ Qualitäts-, Transparenz- und Akzeptanzri
+2026-01-02T22:26:18.519740936Z [err]  2026-01-02 22:26:18 [INFO] gpt_analyze: [FORMAT-RISKS-V4] Created SVG box 4: 🔗 Abhängigkeiten, Betriebs- und Lieferante
+2026-01-02T22:26:18.519969634Z [err]  2026-01-02 22:26:18 [INFO] gpt_analyze: [INTEGRATION] Gamechanger HTML after formatting: 13441 chars (delta: 0)
+2026-01-02T22:26:18.519974332Z [err]  2026-01-02 22:26:18 [INFO] services.ai_act_module: 🏛️ AI Act sections (optimized): risk_level=minimal
+2026-01-02T22:26:18.519978493Z [err]  2026-01-02 22:26:18 [INFO] services.ai_act_module: 🔄 AI Act harmonization complete: 0 warnings
+2026-01-02T22:26:18.519982817Z [err]  2026-01-02 22:26:18 [INFO] gpt_analyze: ✅ AI Act sections validated & harmonized successfully
+2026-01-02T22:26:18.521563487Z [err]  2026-01-02 22:26:18 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 🛡️ Running precommit zero-leak guard on ALL sections...
+2026-01-02T22:26:18.522234397Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "Wie kann ich dir helfen" (section=EXECUTIVE_DECISION_HTML)
+2026-01-02T22:26:18.527204835Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [precommit_zero_leak] FAIL-CLOSED: EXECUTIVE_DECISION_HTML had 1 phrases removed - suppressing section entirely
+2026-01-02T22:26:18.527212945Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "Wie kann ich dir helfen" (section=executive_decision)
+2026-01-02T22:26:18.527219913Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "Wie kann ich dir helfen" (section=ROADMAP_90D_DECISION_HTML)
+2026-01-02T22:26:18.527226465Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "beschreibe dein Anliegen" (section=ROADMAP_90D_DECISION_HTML)
+2026-01-02T22:26:18.527231950Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [precommit_zero_leak] FAIL-CLOSED: ROADMAP_90D_DECISION_HTML had 2 phrases removed - suppressing section entirely
+2026-01-02T22:26:18.527239326Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "Wie kann ich dir helfen" (section=roadmap_90d_decision)
+2026-01-02T22:26:18.527246410Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "beschreibe dein Anliegen" (section=roadmap_90d_decision)
+2026-01-02T22:26:18.527252175Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "Wie kann ich dir helfen" (section=TOP_3_MASSNAHMEN_HTML)
+2026-01-02T22:26:18.527257727Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "beschreibe dein Anliegen" (section=TOP_3_MASSNAHMEN_HTML)
+2026-01-02T22:26:18.527263118Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "Wie kann ich dir helfen" (section=top_3_massnahmen)
+2026-01-02T22:26:18.527933575Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "beschreibe dein Anliegen" (section=top_3_massnahmen)
+2026-01-02T22:26:18.527939059Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "Wie kann ich dir helfen" (section=GAMECHANGER_DECISION_HTML)
+2026-01-02T22:26:18.527943491Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [precommit_zero_leak] FAIL-CLOSED: GAMECHANGER_DECISION_HTML had 1 phrases removed - suppressing section entirely
+2026-01-02T22:26:18.527947598Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "Wie kann ich dir helfen" (section=gamechanger_decision)
+2026-01-02T22:26:18.527951758Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "Wie kann ich dir helfen" (section=KI_STACK_SUMMARY_HTML)
+2026-01-02T22:26:18.527956185Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "beschreibe dein Anliegen" (section=KI_STACK_SUMMARY_HTML)
+2026-01-02T22:26:18.527961042Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [precommit_zero_leak] FAIL-CLOSED: KI_STACK_SUMMARY_HTML had 2 phrases removed - suppressing section entirely
+2026-01-02T22:26:18.527965084Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "Wie kann ich dir helfen" (section=ki_stack_summary)
+2026-01-02T22:26:18.527970080Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "beschreibe dein Anliegen" (section=ki_stack_summary)
+2026-01-02T22:26:18.763557242Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "Wie kann ich dir helfen" (section=BRANCH_DEEP_DIVE_HTML)
+2026-01-02T22:26:18.763569756Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "beschreibe dein Anliegen" (section=BRANCH_DEEP_DIVE_HTML)
+2026-01-02T22:26:18.763580031Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [precommit_zero_leak] FAIL-CLOSED: BRANCH_DEEP_DIVE_HTML had 2 phrases removed - suppressing section entirely
+2026-01-02T22:26:18.763588814Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "Wie kann ich dir helfen" (section=branch_deep_dive)
+2026-01-02T22:26:18.763597980Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "beschreibe dein Anliegen" (section=branch_deep_dive)
+2026-01-02T22:26:18.845702988Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "Wie kann ich dir helfen" (section=TOP_3_MASSNAHMEN_HTML)
+2026-01-02T22:26:18.845710787Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "beschreibe dein Anliegen" (section=TOP_3_MASSNAHMEN_HTML)
+2026-01-02T22:26:18.845716578Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "Wie kann ich dir helfen" (section=top_3_massnahmen)
+2026-01-02T22:26:18.845720767Z [err]  2026-01-02 22:26:18 [WARNING] services.zero_leak_engine: [leak_blacklist] removed forbidden assistant phrase: "beschreibe dein Anliegen" (section=top_3_massnahmen)
+2026-01-02T22:26:19.070447511Z [err]  2026-01-02 22:26:19 [INFO] services.zero_leak_engine: [precommit_zero_leak] cleaned=14 sections, phrases_removed=24
+2026-01-02T22:26:19.070458472Z [err]  2026-01-02 22:26:19 [INFO] gpt_analyze: ================================================================================
+2026-01-02T22:26:19.070466450Z [err]  2026-01-02 22:26:19 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 🔍 DEBUG: Page 4 Template Variables Check
+2026-01-02T22:26:19.070473820Z [err]  2026-01-02 22:26:19 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] strategische_ziele: 'die Geschäftsidee soll weiter ausgebaut werden, neue Produkte soll generiert werden, mehr Umsatz, me'
+2026-01-02T22:26:19.070480908Z [err]  2026-01-02 22:26:19 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] hauptleistung: 'Beratung von Unternehmen zur Integration von KI in ihre Unternehmen mittels eines Fragebogens und an'
+2026-01-02T22:26:19.070488621Z [err]  2026-01-02 22:26:19 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] zeitersparnis_prioritaet: 'Enwicklung und Optimierung von Abläufen'
+2026-01-02T22:26:19.070496188Z [err]  2026-01-02 22:26:19 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ki_guardrails: 'keine Gesundheits- und Finanzprognosen'
+2026-01-02T22:26:19.070503497Z [err]  2026-01-02 22:26:19 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] FROM ANSWERS - strategische_ziele: 'die Geschäftsidee soll weiter ausgebaut werden, neue Produkte soll generiert werden, mehr Umsatz, me'
+2026-01-02T22:26:19.070510613Z [err]  2026-01-02 22:26:19 [INFO] gpt_analyze: ================================================================================
+2026-01-02T22:26:19.070517790Z [err]  2026-01-02 22:26:19 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 📄 [COMPACT] Mode=all, company_size=solo, COMPACT_REPORT_MODE=True
+2026-01-02T22:26:19.070524640Z [err]  2026-01-02 22:26:19 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] Copied 38 label variables to sections
+2026-01-02T22:26:19.181782061Z [err]  2026-01-02 22:26:19 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 🔬 Running internal research...
+2026-01-02T22:26:19.181795359Z [err]  2026-01-02 22:26:19 [INFO] services.research_pipeline: 🔬 Running HYBRID research (Tavily + Perplexity + RSS)...
+2026-01-02T22:26:19.182553612Z [err]  2026-01-02 22:26:19 [INFO] services.research_pipeline: 🔍 Tavily tools search: KI Tools AI Software Beratung & Dienstleistungen content_generation datenanalyse 2025
+2026-01-02T22:26:19.187359610Z [err]  2026-01-02 22:26:19 [INFO] services.research_pipeline: 🔍 Tavily funding search: Förderprogramme KI Digitalisierung KMU Berlin Beratung & Dienstleistungen 2025
+2026-01-02T22:26:19.189759143Z [err]  2026-01-02 22:26:19 [INFO] services.research_pipeline: 🔍 Perplexity market insights: KI Einsatz und Trends in der Branche Beratung & Dienstleistungen für Beratung von Unternehmen zur Integration von KI in ihre Unternehmen mittels eines Fragebogens und anschliessender GPT-Auswertung Deutschland
+2026-01-02T22:26:19.191781066Z [err]  2026-01-02 22:26:19 [INFO] services.research_pipeline: 🔍 Perplexity competitor analysis: Wettbewerber und Marktführer KI-Lösungen Beratung & Dienstleistungen Deutschland 2025
+2026-01-02T22:26:21.516680640Z [err]  2026-01-02 22:26:21 [INFO] services.research_pipeline: ✅ Tavily returned 8 tools results
+2026-01-02T22:26:22.071067260Z [err]  2026-01-02 22:26:22 [INFO] services.research_pipeline: ✅ Tavily returned 8 funding results
+2026-01-02T22:26:22.992931818Z [err]  2026-01-02 22:26:22 [INFO] services.research_pipeline: ✅ Perplexity returned 4 competitor insights
+2026-01-02T22:26:23.795505068Z [err]  2026-01-02 22:26:23 [INFO] services.research_pipeline: ✅ Perplexity returned 5 market insights
+2026-01-02T22:26:23.796307187Z [err]  2026-01-02 22:26:23 [INFO] services.research_pipeline: [N3-01] Research mode: hybrid
+2026-01-02T22:26:25.727792936Z [err]  2026-01-02 22:26:25 [INFO] services.research_pipeline: [RESEARCH] tools=success, funding=success, market=success, news=success
+2026-01-02T22:26:25.727798729Z [err]  2026-01-02 22:26:25 [INFO] services.research_pipeline: 📊 Research complete: 8 tools, 8 funding, 4 news, 9 market insights
+2026-01-02T22:26:25.727804685Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 📈 Coverage: 48% (present=25, missing=13)
+2026-01-02T22:26:25.727811196Z [err]  2026-01-02 22:26:25 [INFO] services.tools_funding_alignment: [B2.2] Tools-Funding Alignment Engine loaded - enabled=True, min_score=0.35
+2026-01-02T22:26:25.727817012Z [err]  2026-01-02 22:26:25 [INFO] services.funding_recommender: [G11/G17.2-C/G17.8-C/G19] Funding Recommender loaded - premium=True, insights=True, predictive=True, roi_tracking=True, branch_alignment=True
+2026-01-02T22:26:25.727822897Z [err]  2026-01-02 22:26:25 [INFO] services.tools_funding_alignment: ✅ [B2.2] Injected 8 tool-funding alignments
+2026-01-02T22:26:25.727829853Z [err]  2026-01-02 22:26:25 [INFO] services.tools_starter_kits: [B2.2] Starter-Kit Generator loaded - enabled=True, max_tools=5
+2026-01-02T22:26:25.727835541Z [err]  2026-01-02 22:26:25 [INFO] services.tools_starter_kits: ✅ [B2.2] Generated starter kit: Solo-Starter Kit für Beratung
+2026-01-02T22:26:25.727841789Z [err]  2026-01-02 22:26:25 [INFO] services.branch_profile_engine: [G19] Branch Profile Engine loaded - enabled=True, cache=True
+2026-01-02T22:26:25.727847302Z [err]  2026-01-02 22:26:25 [INFO] services.branch_profile_engine: [G19] Built branch profile: beratung (size=solo, lang=de, maturity=65)
+2026-01-02T22:26:25.727853123Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ G19 Branch Profile injected
+2026-01-02T22:26:25.727861190Z [err]  2026-01-02 22:26:25 [INFO] services.funding_recommender: ✅ Injected funding branch alignment into report
+2026-01-02T22:26:25.727867796Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ G19 Funding Branch Alignment injected
+2026-01-02T22:26:25.735636393Z [err]  2026-01-02 22:26:25 [INFO] services.tools_analytics: ✅ Injected tools branch alignment into report
+2026-01-02T22:26:25.735645589Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ G19 Tools Branch Alignment injected
+2026-01-02T22:26:25.735654363Z [err]  2026-01-02 22:26:25 [INFO] services.risk_engine_v2: [G29] Risk Engine 2.0 loaded
+2026-01-02T22:26:25.735661055Z [err]  2026-01-02 22:26:25 [INFO] services.risk_engine_v2: [G29] Generating Risk Report...
+2026-01-02T22:26:25.735667625Z [err]  2026-01-02 22:26:25 [INFO] services.risk_engine_v2: [G29] Risk Report generated: ai_act=minimal, dsgvo=niedrig, vendor=3, score=87.0 (A)
+2026-01-02T22:26:25.735675406Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ G29 Risk Engine 2.0 generated: score=87.0, grade=A, ai_act=minimal
+2026-01-02T22:26:25.735681954Z [err]  2026-01-02 22:26:25 [INFO] services.risk_engine_v3: [G33] Risk Engine V3 loaded
+2026-01-02T22:26:25.735688536Z [err]  2026-01-02 22:26:25 [INFO] services.risk_engine_v3: [G33] Generating Risk Report V3 with DPIA & AI Act Conformity...
+2026-01-02T22:26:25.735695043Z [err]  2026-01-02 22:26:25 [INFO] services.risk_engine_v3: [G33] Risk Report V3 generated: DPIA=Not Required, AI Act Conformity=100%, Residual Risk=A (100/100), Compliance=compliant
+2026-01-02T22:26:25.735708941Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ G33 Risk Engine V3 generated: DPIA=Not Required, Conformity=100%, Residual=A (compliant)
+2026-01-02T22:26:25.735716439Z [err]  2026-01-02 22:26:25 [INFO] services.vendor_audit_engine: [G35] Vendor Audit Engine loaded
+2026-01-02T22:26:25.735729443Z [err]  2026-01-02 22:26:25 [INFO] services.vendor_audit_engine: [G35] Generating Vendor Audit Report...
+2026-01-02T22:26:25.735735517Z [err]  2026-01-02 22:26:25 [INFO] services.vendor_audit_engine: [G35] Vendor Audit Report generated: 0 vendors, 0 green, 0 yellow, 0 red
+2026-01-02T22:26:25.735808503Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ G35 Vendor Audit generated: 0 vendors, 0 green, 0 yellow, 0 red
+2026-01-02T22:26:25.735815122Z [err]  2026-01-02 22:26:25 [INFO] services.automation_roadmap_engine: [G36] Starting Automation Roadmap generation...
+2026-01-02T22:26:25.735821979Z [err]  2026-01-02 22:26:25 [INFO] services.automation_roadmap_engine: [G36] Generated 5 process candidates
+2026-01-02T22:26:25.735828117Z [err]  2026-01-02 22:26:25 [INFO] services.automation_roadmap_engine: [G36] Generated 2 automation paths
+2026-01-02T22:26:25.735834160Z [err]  2026-01-02 22:26:25 [INFO] services.automation_roadmap_engine: [G36] ✅ Automation Roadmap generated: 5 processes, 2 paths, 4 quick wins, avg potential=67%
+2026-01-02T22:26:25.735839878Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ G36 Automation Roadmap generated: 5 processes, 2 paths, 4 quick wins, avg potential=67%
+2026-01-02T22:26:25.735845770Z [err]  2026-01-02 22:26:25 [INFO] services.business_case_engine_v2: [G30] Business Case Engine 2.0 loaded
+2026-01-02T22:26:25.735852769Z [err]  2026-01-02 22:26:25 [INFO] services.business_case_engine_v2: [G30] Generating Business Case Report...
+2026-01-02T22:26:25.735859076Z [err]  2026-01-02 22:26:25 [INFO] services.business_case_engine_v2: [G30] Business Case Report generated: investment=5000€, ROI=284.0%, payback=3.1 months
+2026-01-02T22:26:25.735865125Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ G30 Business Case Engine 2.0 generated: investment=5000€, ROI=284.0%, payback=3.1 months
+2026-01-02T22:26:25.735871319Z [err]  2026-01-02 22:26:25 [INFO] services.recommendations_engine: [G32] Recommendations Engine loaded
+2026-01-02T22:26:25.735877207Z [err]  2026-01-02 22:26:25 [INFO] services.recommendations_engine: [G32] Generating Recommendations Report...
+2026-01-02T22:26:25.735883428Z [err]  2026-01-02 22:26:25 [INFO] services.recommendations_engine: [G32] Recommendations Report generated: 4 recommendations, top_3=['rec_risk_1', 'rec_training_1', 'rec_kpi_1']
+2026-01-02T22:26:25.735951178Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ G32 Recommendations Engine generated: 4 recommendations, top_3=['rec_risk_1', 'rec_training_1', 'rec_kpi_1']
+2026-01-02T22:26:25.735957734Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ Phase 2b: Top-3 HTML generated (3 items)
+2026-01-02T22:26:25.735963793Z [err]  2026-01-02 22:26:25 [INFO] services.business_case_simulation: [G34] Business Case Simulation Engine loaded
+2026-01-02T22:26:25.735969663Z [err]  2026-01-02 22:26:25 [INFO] services.business_case_simulation: [G34] Starting Business Case Monte Carlo Simulation...
+2026-01-02T22:26:25.735975421Z [err]  2026-01-02 22:26:25 [INFO] services.business_case_simulation: [G34] Generating default assumptions from business case
+2026-01-02T22:26:25.735981100Z [err]  2026-01-02 22:26:25 [INFO] services.business_case_simulation: [G34] Running Monte Carlo simulation with 1000 runs...
+2026-01-02T22:26:25.735987052Z [err]  2026-01-02 22:26:25 [INFO] services.business_case_simulation: [G34] Business Case Simulation complete: ROI P50=96.3%, P80=127.7%, P90=144.4%, Payback P50=6.1 months, runs=1000
+2026-01-02T22:26:25.735992868Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ G34 Business Case Simulation generated: P50 ROI=96.3%, P80 ROI=127.7%
+2026-01-02T22:26:25.735998782Z [err]  2026-01-02 22:26:25 [INFO] services.benchmark_engine: [G37] Generating benchmark report for branch=beratung, size=solo
+2026-01-02T22:26:25.736004639Z [err]  2026-01-02 22:26:25 [INFO] services.benchmark_engine: [G37] Benchmark report generated: maturity=61.3%, grade=C, above_median=5/6, governance_boost=True, research_mode=hybrid
+2026-01-02T22:26:25.736010442Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ G37 Benchmark Engine generated: maturity=61%, grade=C, above_median=5/6
+2026-01-02T22:26:25.736025544Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ score_rating calculated on-demand: gut - über dem Durchschnitt (lang=de)
+2026-01-02T22:26:25.736097247Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ Final-Check Intro generated (284 chars, 3 decisions)
+2026-01-02T22:26:25.736103388Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: ================================================================================
+2026-01-02T22:26:25.736109223Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 🔍 DEBUG: Page 2 FINAL_CHECK Variables Check
+2026-01-02T22:26:25.736116724Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] FINAL_CHECK_INTRO: 'Dieser KI-Readiness-Report analysiert Ihren aktuellen KI-Reifegrad (74/100 = gut - über dem Durchschnitt) und liefert konkrete Handlungsempfehlungen f'
+2026-01-02T22:26:25.736122407Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] FINAL_CHECK_DECISIONS: ['Starten Sie mit 1 Quick Win innerhalb von 14 Tagen zur KI-Validierung', 'Prüfen Sie die 90-Tage-Roadmap für strukturierte Umsetzungsphasen', 'Sichten Sie die Förderprogramme für passende EU-/Bundesmittel']
+2026-01-02T22:26:25.736128753Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: ================================================================================
+2026-01-02T22:26:25.736134638Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 🎨 Rendering final HTML...
+2026-01-02T22:26:25.736140398Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'ROI_HTML': Removed forbidden tags: h3
+2026-01-02T22:26:25.736147236Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'business_roi': Removed forbidden tags: h3
+2026-01-02T22:26:25.736152944Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'COSTS_OVERVIEW_HTML': Removed forbidden tags: h3
+2026-01-02T22:26:25.736159226Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'business_costs': Removed forbidden tags: h3
+2026-01-02T22:26:25.736243723Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'PILOT_PLAN_HTML': Removed forbidden tags: h4
+2026-01-02T22:26:25.736250599Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'roadmap': Removed forbidden tags: h4
+2026-01-02T22:26:25.736257431Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'DATA_READINESS_HTML': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.736264134Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'data_readiness': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.736270855Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'ORG_CHANGE_HTML': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.736277584Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'org_change': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.736284079Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'ROADMAP_12M_HTML': Removed forbidden tags: article
+2026-01-02T22:26:25.736290793Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'roadmap_12m': Removed forbidden tags: article
+2026-01-02T22:26:25.736298489Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'AI_ACT_SUMMARY_HTML': Removed forbidden tags: h3
+2026-01-02T22:26:25.736305240Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'ai_act_summary': Removed forbidden tags: h3, h4
+2026-01-02T22:26:25.736311646Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'RISKS_HTML': Removed forbidden tags: h2, section
+2026-01-02T22:26:25.737201854Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'risks': Removed forbidden tags: h2, section
+2026-01-02T22:26:25.737277632Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'STRATEGIE_GOVERNANCE_HTML': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.737284137Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'strategie_governance': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.737291302Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'TECHNOLOGIE_PROZESSE_HTML': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.737365849Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'technologie_prozesse': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.777338064Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'RECOMMENDATIONS_HTML': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.777347426Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'recommendations': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.777355381Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'TOOLS_EMPFEHLUNGEN_HTML': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.777362154Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'tools_empfehlungen': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.777368942Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'UNTERNEHMENSPROFIL_MARKT_HTML': Removed forbidden tags: h2, section, h3, h4
+2026-01-02T22:26:25.777376508Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'unternehmensprofil_markt': Removed forbidden tags: h2, section, h3, h4
+2026-01-02T22:26:25.777383942Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'TRANSPARENCY_BOX_HTML': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.777390940Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'transparency_box': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.777400391Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'KI_AKTIVITAETEN_ZIELE_HTML': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.777407190Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'ki_aktivitaeten_ziele': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.777414052Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'KI_SKILLPLAN_HTML': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.822082063Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'ki_skillplan': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.822089336Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'TEMPLATES_START_HTML': Removed forbidden tags: h2, section, h4
+2026-01-02T22:26:25.822095168Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'templates_start': Removed forbidden tags: h2, section, h4
+2026-01-02T22:26:25.822101006Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'MONETARISIERUNG_HTML': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.822106791Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'monetarisierung': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.822112364Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'AI_POLICY_MINI_HTML': Removed forbidden tags: h2, section, h4
+2026-01-02T22:26:25.822117543Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'ai_policy_mini': Removed forbidden tags: h2, section, h4
+2026-01-02T22:26:25.822122725Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'KICKOFF_VORLAGE_HTML': Removed forbidden tags: h2, section, h3, h4
+2026-01-02T22:26:25.822127848Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'kickoff_vorlage': Removed forbidden tags: h2, section, h3, h4
+2026-01-02T22:26:25.822133681Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'PROMPT_FRAMEWORK_HTML': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.822139360Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'prompt_framework': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.822145077Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'FOERDERPOTENZIAL_HTML': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.846824814Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'foerderpotenzial': Removed forbidden tags: h2, section, h3
+2026-01-02T22:26:25.846839180Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'NEXT_ACTIONS_HTML': Removed forbidden tags: h2, section, h4
+2026-01-02T22:26:25.846845106Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_ROADMAP_12': Removed forbidden tags: h2
+2026-01-02T22:26:25.846849656Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_KPI': Removed forbidden tags: h2
+2026-01-02T22:26:25.846855084Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_BUSINESS': Removed forbidden tags: h2
+2026-01-02T22:26:25.846858857Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_EXEC': Removed forbidden tags: h2
+2026-01-02T22:26:25.846863847Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_BUSINESS_DETAIL': Removed forbidden tags: h2
+2026-01-02T22:26:25.846867315Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_ROADMAP_90': Removed forbidden tags: h2
+2026-01-02T22:26:25.846872304Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_ORG': Removed forbidden tags: h2
+2026-01-02T22:26:25.846875694Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_QW': Removed forbidden tags: h2
+2026-01-02T22:26:25.846880368Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_TOOLS': Removed forbidden tags: h2
+2026-01-02T22:26:25.846887205Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_GC': Removed forbidden tags: h2
+2026-01-02T22:26:25.846894139Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_FUNDING': Removed forbidden tags: h2
+2026-01-02T22:26:25.849538695Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_AI_ACT': Removed forbidden tags: h2
+2026-01-02T22:26:25.849545088Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_STRATEGIE': Removed forbidden tags: h2
+2026-01-02T22:26:25.849550487Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_TECH': Removed forbidden tags: h2
+2026-01-02T22:26:25.849556074Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_WETTBEWERB': Removed forbidden tags: h2
+2026-01-02T22:26:25.849561221Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_UNTERNEHMEN': Removed forbidden tags: h2
+2026-01-02T22:26:25.849567388Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_FOERDER': Removed forbidden tags: h2
+2026-01-02T22:26:25.849572552Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_TRANSPARENCY': Removed forbidden tags: h2
+2026-01-02T22:26:25.849577623Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_TOOLS_EMPF': Removed forbidden tags: h2
+2026-01-02T22:26:25.849583082Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'KREATIV_TOOLS_HTML': Removed forbidden tags: h3
+2026-01-02T22:26:25.849589789Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEAD_ROADMAP': Removed forbidden tags: h2
+2026-01-02T22:26:25.849595184Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'roadmap_90d': Removed forbidden tags: h4
+2026-01-02T22:26:25.849600535Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'ROADMAP_HTML': Removed forbidden tags: h4
+2026-01-02T22:26:25.849605626Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'ROADMAP_90D_HTML': Removed forbidden tags: h4
+2026-01-02T22:26:25.886224284Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'FREITEXT_SNIPPETS_HTML': Removed forbidden tags: section, h3
+2026-01-02T22:26:25.886232422Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'KREATIV_SPECIAL_HTML': Removed forbidden tags: h3
+2026-01-02T22:26:25.886238300Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'LEISTUNG_NACHWEIS_HTML': Removed forbidden tags: h3
+2026-01-02T22:26:25.886248037Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'MARKET_INSIGHTS_HTML': Removed forbidden tags: h3
+2026-01-02T22:26:25.886254090Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'FOERDERPROGRAMME_HTML': Removed forbidden tags: h3
+2026-01-02T22:26:25.886260586Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'SOURCES_BOX_HTML': Removed forbidden tags: h3
+2026-01-02T22:26:25.886265557Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'WERKBANK_HTML': Removed forbidden tags: h3
+2026-01-02T22:26:25.886270573Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'FUNDING_HTML': Removed forbidden tags: h3
+2026-01-02T22:26:25.886277387Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'TOOLS_FUNDING_ALIGNMENT_HTML': Removed forbidden tags: h3
+2026-01-02T22:26:25.886283080Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'STARTER_KIT_HTML': Removed forbidden tags: h3, h4
+2026-01-02T22:26:25.886289640Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'BRANCH_PROFILE_HTML': Removed forbidden tags: h2, h3
+2026-01-02T22:26:25.886296657Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'BRANCH_OPPORTUNITIES_HTML': Removed forbidden tags: h3
+2026-01-02T22:26:25.929835467Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'BRANCH_RISKS_HTML': Removed forbidden tags: h3
+2026-01-02T22:26:25.929842375Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'FUNDING_BRANCH_ALIGNMENT_HTML': Removed forbidden tags: h3
+2026-01-02T22:26:25.929849207Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'TOOLS_BRANCH_ALIGNMENT_HTML': Removed forbidden tags: h3
+2026-01-02T22:26:25.929854867Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'AUTOMATION_ROADMAP_HTML': Removed forbidden tags: h4
+2026-01-02T22:26:25.929860513Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'RECOMMENDATIONS_ENGINE_HTML': Removed forbidden tags: h3, h4
+2026-01-02T22:26:25.929866020Z [err]  2026-01-02 22:26:25 [WARNING] services.html_sanitizer: [HTML-CONTRACT] Section 'BENCHMARK_ENGINE_HTML': Removed forbidden tags: h3, h4
+2026-01-02T22:26:25.929871383Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 🧼 HTML sanitized for 250 string sections (lang=de)
+2026-01-02T22:26:25.929877317Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 📊 ROI Details: ROI_12M=284.0% (Rate=2.84, Low=227.2%, High=340.8%)
+2026-01-02T22:26:25.929882713Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 📊 Payback: Realistisch=3.5 Monate, Pessimistisch=4.5, Optimistisch=2.9
+2026-01-02T22:26:25.929888627Z [err]  2026-01-02 22:26:25 [WARNING] gpt_analyze: [worker-1741af19-423-6bb3] ⚠️ No Business Case replacements made - check if sections contain placeholders
+2026-01-02T22:26:25.929894705Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: ✅ Score context added: gut - über dem Durchschnitt for solo (lang=de, avg=65, top10=82)
+2026-01-02T22:26:25.929900869Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: ✅ Research provenance added: 02.01.2026
+2026-01-02T22:26:25.950949266Z [err]  2026-01-02 22:26:25 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 🔍 Applying size-inappropriate content filter...
+2026-01-02T22:26:25.950956144Z [err]  2026-01-02 22:26:25 [INFO] services.report_validator: [CONTENT-FILTER] Filtering size-inappropriate content for solo
+2026-01-02T22:26:26.368128183Z [err]  2026-01-02 22:26:26 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 🔍 Running report validation with N2 healing...
+2026-01-02T22:26:26.855738275Z [inf]  DEBUG ReportValidator – sections keys: ['EXECUTIVE_DECISION_HTML', 'executive_decision', 'ROADMAP_90D_DECISION_HTML', 'roadmap_90d_decision', 'TOP_3_MASSNAHMEN_HTML', 'top_3_massnahmen', 'GAMECHANGER_DECISION_HTML', 'gamechanger_decision', 'KI_STACK_SUMMARY_HTML', 'ki_stack_summary', 'EXECUTIVE_SUMMARY_HTML', 'executive_summary', 'ROI_HTML', 'business_roi', 'COSTS_OVERVIEW_HTML', 'business_costs', 'PILOT_PLAN_HTML', 'roadmap', 'BUSINESS_CASE_HTML', 'business_case', 'quick_wins', 'DATA_READINESS_HTML', 'data_readiness', 'ORG_CHANGE_HTML', 'org_change', 'ROADMAP_12M_HTML', 'roadmap_12m', 'REIFEGRAD_SOWHAT_HTML', 'reifegrad_sowhat', 'AI_ACT_SUMMARY_HTML', 'ai_act_summary', 'GAMECHANGER_HTML', 'gamechanger', 'RISKS_HTML', 'risks', 'STRATEGIE_GOVERNANCE_HTML', 'strategie_governance', 'TECHNOLOGIE_PROZESSE_HTML', 'technologie_prozesse', 'RECOMMENDATIONS_HTML', 'recommendations', 'TOOLS_EMPFEHLUNGEN_HTML', 'tools_empfehlungen', 'UNTERNEHMENSPROFIL_MARKT_HTML', 'unternehmensprofil_markt', 'TRANSPARENCY_BOX_HTML', 'transparency_box', 'KI_AKTIVITAETEN_ZIELE_HTML', 'ki_aktivitaeten_ziele', 'KI_SKILLPLAN_HTML', 'ki_skillplan', 'TEMPLATES_START_HTML', 'templates_start', 'MONETARISIERUNG_HTML', 'monetarisierung', 'AI_POLICY_MINI_HTML', 'ai_policy_mini', 'WETTBEWERB_BENCHMARK_HTML', 'wettbewerb_benchmark', 'ROI_TRACKING_HTML', 'roi_tracking', 'BRANCH_DEEP_DIVE_HTML', 'branch_deep_dive', 'KICKOFF_VORLAGE_HTML', 'kickoff_vorlage', 'PROMPT_FRAMEWORK_HTML', 'prompt_framework', 'FOERDERPOTENZIAL_HTML', 'foerderpotenzial', 'QUICK_WINS_HTML', 'QUICK_WINS_HTML_LEFT', 'QUICK_WINS_HTML_RIGHT', 'monatsersparnis_stunden', 'monatsersparnis_eur', 'jahresersparnis_stunden', 'jahresersparnis_eur', 'TIME_SAVINGS_MONTH_HOURS_CAPPED', 'EINSPARUNG_STUNDEN_MONAT', 'qw_hours_total', 'stundensatz_eur', 'REALITY_NOTE_QW', 'BUSINESS_SENSITIVITY_HTML', 'NEXT_ACTIONS_HTML', 'LEAD_KPI', 'LEAD_EXEC', 'LEAD_ROADMAP_90', 'LEAD_QW', 'LEAD_ROADMAP_12', 'LEAD_BUSINESS', 'LEAD_BUSINESS_DETAIL', 'LEAD_ORG', 'LEAD_TOOLS', 'LEAD_DATA', 'LEAD_RISKS', 'LEAD_GC', 'LEAD_NEXT_ACTIONS', 'LEAD_FUNDING', 'LEAD_AI_ACT', 'LEAD_STRATEGIE', 'LEAD_TECH', 'LEAD_WETTBEWERB', 'LEAD_UNTERNEHMEN', 'LEAD_FOERDER', 'LEAD_KI_AKTIVITAETEN', 'LEAD_TRANSPARENCY', 'LEAD_TOOLS_EMPF', 'BENCHMARK_HTML', 'KPI_CONTEXT_HTML', 'KPI_SCORES_HTML', 'ZIM_ALERT_HTML', 'ZIM_WORKFLOW_HTML', 'KREATIV_TOOLS_HTML', 'LEAD_ZIM_ALERT', 'LEAD_ZIM_WORKFLOW', 'LEAD_CREATIV', 'LEAD_ROADMAP', 'roadmap_90d', 'ROADMAP_HTML', 'ROADMAP_90D_HTML', 'BUSINESS_CASE_TABLE_HTML', 'EXEC_SUMMARY_HTML', 'AI_ACT_RISK_LEVEL', 'AI_ACT_RISK_REASONING', 'AI_ACT_DUTY_MATRIX_HTML', 'AI_ACT_NONCOMPLIANCE_ALERTS', 'AI_ACT_DATA_GAPS', 'AI_ACT_RECOMMENDED_NEXT_STEPS_HTML', 'AI_ACT_RELATED_USECASES_HTML', 'AI_ACT_NONCOMPLIANCE_ALERTS_HTML', 'AI_ACT_DATA_GAPS_HTML', 'AI_ACT_EXEC_INJECTION', 'CAPEX_MODIFIER', 'OPEX_MODIFIER', 'AI_ACT_BUSINESS_CASE_TEXT', 'AI_ACT_ROADMAP_90D_INJECTION', 'AI_ACT_ROADMAP_12M_INJECTION', 'AI_ACT_GOVERNANCE_INJECTION', 'AI_ACT_RISKS_INJECTION', 'AI_ACT_TOOLS_INJECTION', 'AI_ACT_CONSISTENCY_WARNINGS', 'LANG', 'report_date', 'report_year', 'transparency_text', 'user_email', 'ki_kompetenz', 'strategische_ziele', 'zeitersparnis_prioritaet', 'hauptleistung', 'ki_projekte', 'geschaeftsmodell_evolution', 'vision_3_jahre', 'ki_guardrails', 'COMPACT_REPORT_MODE', 'COMPANY_SIZE', 'score_governance', 'score_sicherheit', 'score_nutzen', 'score_wertschoepfung', 'score_befaehigung', 'score_gesamt', 'badge_security', 'badge_compliance', 'badge_efficiency', 'BRANCHE_LABEL', 'BUNDESLAND_LABEL', 'UNTERNEHMENSGROESSE_LABEL', 'JAHRESUMSATZ_LABEL', 'HAUPTLEISTUNG', 'IT_INFRASTRUKTUR_LABEL', 'PROZESSE_PAPIERLOS_LABEL', 'AUTOMATISIERUNGSGRAD_LABEL', 'ROADMAP_VORHANDEN_LABEL', 'GOVERNANCE_RICHTLINIEN_LABEL', 'CHANGE_MANAGEMENT_LABEL', 'MELDEWEGE_LABEL', 'DATENSCHUTZ_LABEL', 'LOESCHREGELN_LABEL', 'DATENSCHUTZBEAUFTRAGTER_LABEL', 'FOLGENABSCHAETZUNG_LABEL', 'INTERNE_KI_KOMPETENZEN_LABEL', 'STRATEGISCHE_ZIELE', 'GESCHAEFTSMODELL_EVOLUTION', 'ZEITERSPARNIS_PRIORITAET', 'KI_PROJEKTE', 'VISION_3_JAHRE', 'KI_GUARDRAILS', 'MITARBEITER_LABEL', 'UMSATZ_LABEL', 'SELBSTSTAENDIG_LABEL', 'ZIELGRUPPEN_LABELS', 'MARKTPOSITION_LABEL', 'BENCHMARK_WETTBEWERB_LABEL', 'INTERESSE_FOERDERUNG_LABEL', 'KI_ZIELE_LABELS', 'KI_HEMMNISSE_LABELS', 'ANWENDUNGSFAELLE_LABELS', 'DATENQUELLEN_LABELS', 'VORHANDENE_TOOLS_LABELS', 'REGULIERTE_BRANCHE_LABELS', 'TRAININGS_INTERESSEN_LABELS', 'strategic_context_block', 'GUARDRAILS_HITS', 'kundencode', 'report_id', 'report_version', 'WATERMARK_TEXT', 'BUILD_STAMP', 'CHANGELOG_SHORT', 'AUDITOR_INITIALS', 'KPI_VISUALS_HTML', 'KPI_HTML', 'FEEDBACK_BOX_HTML', 'DATA_COVERAGE_HTML', 'FREITEXT_SNIPPETS_HTML', 'KREATIV_SPECIAL_HTML', 'LEISTUNG_NACHWEIS_HTML', 'GLOSSAR_HTML', 'MARKET_INSIGHTS_HTML', 'NEWS_BOX_HTML', 'last_updated', 'research_last_updated', 'LAST_UPDATED', 'TOOLS_HTML', 'FOERDERPROGRAMME_HTML', 'SOURCES_BOX_HTML', 'LOGO_PRIMARY_SRC', 'FOOTER_LEFT_LOGO_SRC', 'FOOTER_MID_LOGO_SRC', 'FOOTER_RIGHT_LOGO_SRC', 'FEEDBACK_URL', 'FOOTER_BRANDS_HTML', 'OWNER_NAME', 'CONTACT_EMAIL', 'THEME_CSS_VARS', 'BUILD_ID', 'WERKBANK_HTML', 'AI_ACT_TABLE_OFFER_HTML', 'AI_ACT_ADDON_PACKAGES_HTML', 'ai_act_phase_label', 'FUNDING_HTML', 'TOOLS_FUNDING_ALIGNMENT_HTML', 'TOOLS_FUNDING_ALIGNMENT_COMPACT_HTML', 'STARTER_KIT_HTML', 'STARTER_KIT_COMPACT_HTML', 'BRANCH_PROFILE_HTML', 'BRANCH_OPPORTUNITIES_HTML', 'BRANCH_RISKS_HTML', 'branch_profile', 'branch_risk_map', 'FUNDING_BRANCH_ALIGNMENT_HTML', 'TOOLS_BRANCH_ALIGNMENT_HTML', 'RISK_ENGINE_HTML', '_risk_report', 'RISK_CONSOLIDATED_SCORE', 'RISK_CONSOLIDATED_GRADE', 'RISK_AI_ACT_CLASS', 'RISK_DSGVO_LEVEL', 'RISK_VENDOR_SCORE', 'RISK_ENGINE_V3_HTML', '_risk_report_v3', 'DPIA_REQUIRED', 'DPIA_REASON', 'AI_ACT_CONFORMITY_SCORE', 'RESIDUAL_RISK_SCORE', 'RESIDUAL_RISK_GRADE', 'COMPLIANCE_STATUS', 'VENDOR_AUDIT_HTML', '_vendor_audit_report', 'VENDOR_AUDIT_TOTAL', 'VENDOR_AUDIT_GREEN', 'VENDOR_AUDIT_YELLOW', 'VENDOR_AUDIT_RED', 'VENDOR_AUDIT_COMPLIANCE_SCORE', 'VENDOR_AUDIT_STATUS', 'AUTOMATION_ROADMAP_HTML', '_automation_roadmap_report', 'AUTO_TOTAL_PROCESSES', 'AUTO_QUICK_WINS', 'AUTO_AVG_POTENTIAL', 'AUTO_PHASE_1_COUNT', 'AUTO_PHASE_2_COUNT', 'AUTO_PHASE_3_COUNT', 'AUTO_TOTAL_PATHS', 'BUSINESS_CASE_ENGINE_HTML', '_bc_report', 'BC_ROI_REALISTIC', 'BC_PAYBACK_REALISTIC', 'BC_MONTHLY_SAVINGS_REALISTIC', 'BC_INVESTMENT_TOTAL', 'BC_FUNDING_EFFECT', 'RECOMMENDATIONS_ENGINE_HTML', '_reco_report', 'RECO_COUNT', 'RECO_TOP_3_IDS', 'RECO_SUMMARY', 'BUSINESS_CASE_SIM_HTML', '_business_case_simulation_report', 'ROI_P50', 'ROI_P80', 'ROI_P90', 'PAYBACK_P50', 'BENCHMARK_ENGINE_HTML', '_benchmark_report', 'BENCHMARK_MATURITY_SCORE', 'BENCHMARK_GRADE', 'BENCHMARK_ABOVE_MEDIAN', 'score_rating', 'size_label', 'FINAL_CHECK_INTRO', 'FINAL_CHECK_DECISIONS', 'business_case_table_html', 'CAPEX_REALISTISCH_EUR', 'OPEX_REALISTISCH_EUR', 'EINSPARUNG_MONAT_EUR', 'PAYBACK_MONTHS', 'ROI_12M', 'ROI_12M_RATE', 'ROI_12M_LOW', 'ROI_12M_HIGH', 'EINSPARUNG_MONAT_EUR_LOW', 'EINSPARUNG_MONAT_EUR_HIGH', 'OPEX_REALISTISCH_EUR_LOW', 'OPEX_REALISTISCH_EUR_HIGH', 'PAYBACK_MONTHS_PESSIMISTIC', 'PAYBACK_MONTHS_OPTIMISTIC', 'BENCHMARKS_SECTION_HTML', 'STARTER_STACKS_HTML', 'RESPONSIBLE_AI_HTML', 'score_context', 'avg_score_for_size', 'top10_score_for_size', 'research_sources', 'RESEARCH_PROVENANCE_HTML']
+2026-01-02T22:26:26.855743768Z [err]  2026-01-02 22:26:26 [WARNING] gpt_analyze: [worker-1741af19-423-6bb3] ⚠️ Report has validation errors (see above) - continuing anyway
+2026-01-02T22:26:26.855750319Z [err]  2026-01-02 22:26:26 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 🔗 Running G22 cross-section consistency check...
+2026-01-02T22:26:26.855755875Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [G22] Starting cross-section consistency check...
+2026-01-02T22:26:26.855761378Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [G22] BC_001 ordering violation detected: Realistic (0.0%) < Conservative (124.0%)
+2026-01-02T22:26:26.855767022Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [G22] BC_001 auto-healing: Normalizing scenario ROI ordering...
+2026-01-02T22:26:26.855772671Z [err]  2026-01-02 22:26:26 [INFO] services.business_case_engine_v2: [N3.4-BC] Normalizing realistic ROI: 0.0% → 136.4% (was < conservative 124.0%)
+2026-01-02T22:26:26.855778662Z [err]  2026-01-02 22:26:26 [INFO] services.business_case_engine_v2: [N3.4-BC] Set _bc_consistency_normalized flag in sections
+2026-01-02T22:26:26.855784215Z [err]  2026-01-02 22:26:26 [INFO] services.business_case_engine_v2: [N3.4-BC] Scenario order normalized successfully
+2026-01-02T22:26:26.855789694Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [G22] BC_001 auto-healed: Conservative=124.0% <= Realistic=136.4% <= Optimistic=0.0%
+2026-01-02T22:26:26.855795142Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [N3-03] Section 'business_case_engine' marked as HEALED
+2026-01-02T22:26:26.855802092Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [N3-03] Healing bonus: +10 points for 1 healed sections (exec_clean: +5)
+2026-01-02T22:26:26.855807833Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [G22] RECO_002 auto-fix: reduces_risk without related_risks detected, marking as healed (conceptually setting reduces_risk=False)
+2026-01-02T22:26:26.871415953Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [N3-03] Section 'recommendations_engine' marked as HEALED
+2026-01-02T22:26:26.871426261Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [N3-03] Healing bonus: +20 points for 2 healed sections (exec_clean: +5)
+2026-01-02T22:26:26.871432398Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [N3-03] Healing bonus: +20 points for 2 healed sections (exec_clean: +5)
+2026-01-02T22:26:26.871439196Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [N3-03] Healing bonus: +20 points for 2 healed sections (exec_clean: +5)
+2026-01-02T22:26:26.871445327Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [N3-03] Healing bonus: +20 points for 2 healed sections (exec_clean: +5)
+2026-01-02T22:26:26.871451281Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [N3-03] Healing bonus: +20 points for 2 healed sections (exec_clean: +5)
+2026-01-02T22:26:26.871456441Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [N3-03] Healing bonus: +20 points for 2 healed sections (exec_clean: +5)
+2026-01-02T22:26:26.871461784Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [N3-03] Healing bonus: +20 points for 2 healed sections (exec_clean: +5)
+2026-01-02T22:26:26.871467662Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [N3-03] Healing bonus: +20 points for 2 healed sections (exec_clean: +5)
+2026-01-02T22:26:26.871473873Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [N3-03] Healing bonus: +20 points for 2 healed sections (exec_clean: +5)
+2026-01-02T22:26:26.871479163Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [N3-03] Healing bonus: +20 points for 2 healed sections (exec_clean: +5)
+2026-01-02T22:26:26.871484393Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [N3-03] Healing bonus: +20 points for 2 healed sections (exec_clean: +5)
+2026-01-02T22:26:26.871545002Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [N3-03] Healing bonus: +20 points for 2 healed sections (exec_clean: +5)
+2026-01-02T22:26:26.871548914Z [err]  2026-01-02 22:26:26 [INFO] services.consistency_engine: [G22] Consistency check complete: status=PASS, grade=A, score=100.0
+2026-01-02T22:26:26.871552528Z [err]  2026-01-02 22:26:26 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ G22 Consistency: PASS (Grade A, Score 100.0)
+2026-01-02T22:26:26.871556877Z [err]  2026-01-02 22:26:26 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 🔍 Re-applying size-inappropriate content filter for late sections...
+2026-01-02T22:26:26.871560743Z [err]  2026-01-02 22:26:26 [INFO] services.report_validator: [CONTENT-FILTER] Filtering size-inappropriate content for solo
+2026-01-02T22:26:27.172446030Z [err]  2026-01-02 22:26:27 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 🔧 N2: Final placeholder healing pass...
+2026-01-02T22:26:27.172452874Z [err]  2026-01-02 22:26:27 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 🛡️ N4.3: Starting Governance Layer 2.0 processing...
+2026-01-02T22:26:27.172461215Z [err]  2026-01-02 22:26:27 [INFO] services.n43_integration: [N4.3] Integration engine initialized: branch=beratung, size=solo, lang=de
+2026-01-02T22:26:27.172468334Z [err]  2026-01-02 22:26:27 [INFO] services.n43_integration: [N4.3] Starting N4.3 Governance Layer processing
+2026-01-02T22:26:27.213398427Z [err]  2026-01-02 22:26:27 [INFO] services.governance_policy_engine_v2: [N4.3-Governance] Engine initialized: branch=beratung, size=solo, lang=de
+2026-01-02T22:26:27.213413408Z [err]  2026-01-02 22:26:27 [INFO] services.governance_policy_engine_v2: [N4.3-Governance] Processing started
+2026-01-02T22:26:27.213421964Z [err]  2026-01-02 22:26:27 [INFO] services.governance_policy_engine_v2: [N4.3-Governance] Complete: score=54, controls=3, validated=True
+2026-01-02T22:26:27.213430265Z [err]  2026-01-02 22:26:27 [INFO] services.n43_integration: [N4.3] Governance Policy Engine: score=54, controls=3
+2026-01-02T22:26:27.213438206Z [err]  2026-01-02 22:26:27 [INFO] services.safety_assurance_layer_v3: [N4.3-Safety] Layer initialized: lang=de, strict=False
+2026-01-02T22:26:27.213447212Z [err]  2026-01-02 22:26:27 [INFO] services.safety_assurance_layer_v3: [N4.3-Safety] Processing started
+2026-01-02T22:26:57.367132815Z [err]  2026-01-02 22:26:52 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ Analysis created (v5.4.3-PLATIN+++): id=394
+2026-01-02T22:26:57.367145856Z [err]  2026-01-02 22:26:52 [INFO] services.pdf_client: [PDF] HTML payload size before render: 362.8KB (limit=1536KB)
+2026-01-02T22:26:57.367152973Z [err]  2026-01-02 22:26:52 [INFO] services.pdf_client: [PDF-G14] Calling PDF service: https://make-ki-pdfservice-production.up.railway.app/generate-pdf (attempt=1/3, timeout=120.0s, rid=worker-1741af19-423-6bb3)
+2026-01-02T22:26:57.367159425Z [err]  2026-01-02 22:26:56 [INFO] services.pdf_client: [PDF-G14] PDF generated successfully: 1811238 bytes (1.73MB) in 4.2s, retries=0
+2026-01-02T22:26:57.367197095Z [err]  2026-01-02 22:26:51 [INFO] services.report_renderer: [RENDER] Before final leak cleanup: len(html)=326951 for run=worker-1741af19-423-6bb3
+2026-01-02T22:26:57.367204357Z [err]  2026-01-02 22:26:52 [INFO] services.report_renderer: [RENDER] After final leak cleanup: len(html)=326951 for run=worker-1741af19-423-6bb3
+2026-01-02T22:26:57.367212210Z [err]  2026-01-02 22:26:52 [INFO] services.report_renderer: [RENDER] Applied EN locale sanitizer (lang=de) for run=worker-1741af19-423-6bb3
+2026-01-02T22:26:57.367219115Z [err]  2026-01-02 22:26:52 [INFO] services.feedback_analyzer: Building segment snapshot for last 90 days...
+2026-01-02T22:26:57.367225073Z [err]  2026-01-02 22:26:52 [WARNING] services.feedback_analyzer: No feedback entries found for segment analysis
+2026-01-02T22:26:57.367233483Z [err]  2026-01-02 22:26:52 [INFO] services.ft_signal_extractor: Extracted 0 FT signals from report
+2026-01-02T22:26:57.367266745Z [err]  2026-01-02 22:26:56 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 📎 Added briefing JSON attachment for admin (2992 bytes)
+2026-01-02T22:26:57.367381470Z [err]  2026-01-02 22:26:50 [INFO] services.safety_assurance_layer_v3: [N4.3-Safety] Complete: violations=1, healed=1, validated=True
+2026-01-02T22:26:57.367389605Z [err]  2026-01-02 22:26:50 [INFO] services.n43_integration: [N4.3] Safety Assurance Layer: violations=1
+2026-01-02T22:26:57.367397145Z [err]  2026-01-02 22:26:50 [INFO] services.numerical_integrity_engine_v4: [N4.3-Numerical] Engine initialized: branch=beratung
+2026-01-02T22:26:57.367405141Z [err]  2026-01-02 22:26:50 [INFO] services.numerical_integrity_engine_v4: [N4.3-Numerical] Processing started
+2026-01-02T22:26:57.367412241Z [err]  2026-01-02 22:26:51 [INFO] services.numerical_integrity_engine_v4: [N4.3-Numerical] Complete: metrics=23, issues=1, healed=1
+2026-01-02T22:26:57.367419635Z [err]  2026-01-02 22:26:51 [INFO] services.n43_integration: [N4.3] Numerical Integrity Engine: issues=1
+2026-01-02T22:26:57.367426405Z [err]  2026-01-02 22:26:51 [INFO] services.consistency_kernel_v7: [N4.3-Consistency] Kernel initialized
+2026-01-02T22:26:57.367433633Z [err]  2026-01-02 22:26:51 [INFO] services.consistency_kernel_v7: [N4.3-Consistency] Processing started
+2026-01-02T22:26:57.367442115Z [err]  2026-01-02 22:26:51 [INFO] services.consistency_kernel_v7: [N4.3-Consistency] Complete: alignment=1.00, contradictions=0/0 resolved
+2026-01-02T22:26:57.367448914Z [err]  2026-01-02 22:26:51 [INFO] services.n43_integration: [N4.3] Consistency Kernel: aligned=True
+2026-01-02T22:26:57.367455118Z [err]  2026-01-02 22:26:51 [INFO] services.compliance_narrative_engine_v3: [N4.3-Narrative] Engine initialized: lang=de, risk=minimal, maturity=initial
+2026-01-02T22:26:57.367461787Z [err]  2026-01-02 22:26:51 [INFO] services.compliance_narrative_engine_v3: [N4.3-Narrative] Processing started
+2026-01-02T22:26:57.367468657Z [err]  2026-01-02 22:26:51 [INFO] services.compliance_narrative_engine_v3: [N4.3-Narrative] Complete: narratives=2, chapters=7, healed=False
+2026-01-02T22:26:57.367476192Z [err]  2026-01-02 22:26:51 [INFO] services.n43_integration: [N4.3] Compliance Narrative Engine: narratives=2
+2026-01-02T22:26:57.367558846Z [err]  2026-01-02 22:26:51 [INFO] services.governance_layout_engine: [N4.3-Layout] Engine initialized: lang=de, mode=pdf, style=executive
+2026-01-02T22:26:57.367565860Z [err]  2026-01-02 22:26:51 [INFO] services.governance_layout_engine: [N4.3-Layout] Processing started
+2026-01-02T22:26:57.367571892Z [err]  2026-01-02 22:26:51 [INFO] services.governance_layout_engine: [N4.3-Layout] Complete: cards=5, matrices=2, pages=2
+2026-01-02T22:26:57.367579348Z [err]  2026-01-02 22:26:51 [INFO] services.n43_integration: [N4.3] Governance Layout Engine: cards=5, pages=2
+2026-01-02T22:26:57.367586079Z [err]  2026-01-02 22:26:51 [INFO] services.n43_integration: [N4.3] DoD PASSED: All criteria met
+2026-01-02T22:26:57.367593182Z [err]  2026-01-02 22:26:51 [INFO] services.n43_integration: [N4.3] Processing complete: success=True, dod_passed=True, healed=2
+2026-01-02T22:26:57.367599765Z [err]  2026-01-02 22:26:51 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ N4.3: DoD PASSED - score=54, healed=2
+2026-01-02T22:26:57.367606885Z [err]  2026-01-02 22:26:51 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ Error gate passed - report is valid for rendering
+2026-01-02T22:26:57.367613255Z [err]  2026-01-02 22:26:51 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 📦 Storing 325 sections in meta for Golden Gate
+2026-01-02T22:26:57.367620379Z [err]  2026-01-02 22:26:51 [INFO] gpt_analyze: ================================================================================
+2026-01-02T22:26:57.367626440Z [err]  2026-01-02 22:26:51 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 🔍 DEBUG: FINAL VARIABLES BEFORE RENDER
+2026-01-02T22:26:57.367632817Z [err]  2026-01-02 22:26:51 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] Page 4 - strategische_ziele: SET
+2026-01-02T22:26:57.367640675Z [err]  2026-01-02 22:26:51 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] Page 4 - hauptleistung: SET
+2026-01-02T22:26:57.367652664Z [err]  2026-01-02 22:26:51 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] Page 2 - FINAL_CHECK_INTRO: SET
+2026-01-02T22:26:57.367726077Z [err]  2026-01-02 22:26:51 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] Page 2 - FINAL_CHECK_DECISIONS: SET
+2026-01-02T22:26:57.367732750Z [err]  2026-01-02 22:26:51 [INFO] gpt_analyze: ================================================================================
+2026-01-02T22:26:57.367739192Z [err]  2026-01-02 22:26:51 [INFO] services.report_renderer: [LANG] Detected language: 'de' (is_en=False) for report worker-1741af19-423-6bb3
+2026-01-02T22:26:57.367746106Z [err]  2026-01-02 22:26:51 [INFO] services.report_renderer: 🇩🇪 Using German template (default): templates/pdf_template.html
+2026-01-02T22:26:57.367752399Z [err]  2026-01-02 22:26:51 [INFO] services.report_renderer: ✔ Template validated: pdf_template.html
+2026-01-02T22:26:57.367758844Z [err]  2026-01-02 22:26:51 [INFO] services.report_renderer: 🎨 Rendering report worker-1741af19-423-6bb3 with 382 sections (lang=de)
+2026-01-02T22:26:57.367765493Z [err]  2026-01-02 22:26:51 [INFO] services.i18n: [i18n] Loaded 116 UI labels from ui_labels.json
+2026-01-02T22:26:57.367775007Z [err]  2026-01-02 22:26:51 [INFO] services.report_renderer: [RENDER] Debug HTML saved: /tmp/report_debug_R-20260102-KND.html
+2026-01-02T22:26:57.367781522Z [err]  2026-01-02 22:26:51 [INFO] services.report_renderer: 🔧 Applied 28 expression replacements for report worker-1741af19-423-6bb3
+2026-01-02T22:26:57.367786735Z [err]  2026-01-02 22:26:51 [INFO] utils.logo_embedder: [LOGO-EMBED] Loaded 5 logos, optimized 152880→152642 bytes (0% saved)
+2026-01-02T22:26:57.367790745Z [err]  2026-01-02 22:26:51 [INFO] utils.logo_embedder: [LOGO-EMBED] Made 2 logo replacements in HTML
+2026-01-02T22:26:57.367796445Z [err]  2026-01-02 22:26:51 [INFO] services.report_renderer: [RENDER] Embedded logos in HTML for report worker-1741af19-423-6bb3
+2026-01-02T22:26:57.367802434Z [err]  2026-01-02 22:26:51 [INFO] services.html_minifier: [CSS-TRIM] Removed unused classes: 60389→17353 bytes (71.3% saved)
+2026-01-02T22:26:57.367872180Z [err]  2026-01-02 22:26:51 [INFO] services.html_minifier: [HTML-MINIFY] Compressed 356809→326951 bytes (8.4% saved)
+2026-01-02T22:26:57.367878591Z [err]  2026-01-02 22:26:51 [INFO] services.html_minifier: [PDF-OPTIMIZE] Total: 454442→326951 bytes (28.1% saved)
+2026-01-02T22:26:57.367885256Z [err]  2026-01-02 22:26:51 [INFO] services.report_renderer: [RENDER] PDF-SLIMDOWN: 454442→326951 bytes (28.1% saved)
+2026-01-02T22:26:57.923386433Z [err]  2026-01-02 22:26:57 [INFO] gpt_analyze: 📬 Resend Email ID: fb844d1d-b0b5-4677-a934-abfcf3b093d0 → tes***@ki-sicherheit.jetzt
+2026-01-02T22:26:57.923391455Z [err]  2026-01-02 22:26:57 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 📧 Mail sent to user tes***@ki-sicherheit.jetzt via Resend
+2026-01-02T22:26:57.923395594Z [err]  2026-01-02 22:26:57 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 📋 Generated briefing summary HTML for admin email
+2026-01-02T22:26:58.525565693Z [err]  2026-01-02 22:26:58 [INFO] gpt_analyze: 📬 Resend Email ID: 520f26ef-9555-4aef-ad68-9c2175db7951 → bew***@ki-sicherheit.jetzt
+2026-01-02T22:26:58.525575858Z [err]  2026-01-02 22:26:58 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 📧 Admin notify sent to bew***@ki-sicherheit.jetzt via Resend
+2026-01-02T22:26:59.164764748Z [err]  2026-01-02 22:26:59 [INFO] gpt_analyze: 📬 Resend Email ID: f6e78293-2e52-4648-a5e7-ff39084e0703 → wol***@ki-sicherheit.jetzt
+2026-01-02T22:26:59.164772127Z [err]  2026-01-02 22:26:59 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] 📧 Admin notify sent to wol***@ki-sicherheit.jetzt via Resend
+2026-01-02T22:26:59.164777328Z [err]  2026-01-02 22:26:59 [INFO] gpt_analyze: [worker-1741af19-423-6bb3] ✅ Pipeline complete for briefing_id=423
+2026-01-02T22:26:59.312598326Z [err]  2026-01-02 22:26:59 [INFO] briefings-worker: [worker-1741af19-423-6bb3] ✅ Briefing 423 completed successfully
