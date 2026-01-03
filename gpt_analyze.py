@@ -2641,12 +2641,13 @@ def _format_gamechanger_section(html_content: str) -> str:
                         body_content = re.sub(r'<p[^>]*>\s*</p>', '', body_content)
 
                         # Create SVG-decorated box (left accent style for gamechanger)
+                        # Cast to str for mypy (dict contains mixed str/list values)
                         svg_box = _create_svg_decorated_box(
-                            icon=config["icon"],
+                            icon=str(config["icon"]),
                             title=heading_text,
                             body_html=body_content,
-                            bg_color=config["bg_color"],
-                            border_color=config["border_color"],
+                            bg_color=str(config["bg_color"]),
+                            border_color=str(config["border_color"]),
                             box_style="left"
                         )
 
