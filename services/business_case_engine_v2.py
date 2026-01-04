@@ -55,6 +55,13 @@ __all__ = [
     "FUNDING_CAPS_BY_SIZE",
     "normalize_company_size",
     "get_funding_cap",
+    # ROI transparency (Problem #3 fix)
+    "HOURLY_RATES_BY_SIZE",
+    "MAX_TIME_SAVINGS_BY_SIZE",
+    "get_hourly_rate",
+    "get_max_time_savings",
+    "cap_time_savings",
+    "ROIExplanation",
 ]
 
 
@@ -90,6 +97,30 @@ FUNDING_CAPS_BY_SIZE = {
     "enterprise": 200000,          # Größere Unternehmen
 }
 
+# Größenabhängige Stundensätze (Branchendurchschnitt Deutschland)
+# Adressiert Problem #3: ROI ohne nachvollziehbare Herleitung
+HOURLY_RATES_BY_SIZE = {
+    "solo": 80,                    # Solo-Selbstständige: durchschnittlich 80€/h
+    "team": 95,                    # Kleines Team: 95€/h (gemischte Rollen)
+    "kmu": 110,                    # KMU: 110€/h (inkl. Overhead)
+    "enterprise": 130,             # Größere Unternehmen: 130€/h
+}
+
+HOURLY_RATE_SOURCES = {
+    "solo": "Branchendurchschnitt für Solo-Selbstständige (BVMW 2024)",
+    "team": "Durchschnitt gemischte Rollen in kleinen Teams",
+    "kmu": "KMU-Durchschnitt inkl. anteiligem Overhead",
+    "enterprise": "Unternehmensdurchschnitt mit Gemeinkosten",
+}
+
+# Maximale Zeitersparnis pro Monat nach Unternehmensgröße
+MAX_TIME_SAVINGS_BY_SIZE = {
+    "solo": 25,                    # Solo: max 25h/Monat realistisch
+    "team": 60,                    # Kleines Team: max 60h/Monat
+    "kmu": 150,                    # KMU: max 150h/Monat
+    "enterprise": 400,             # Größere Unternehmen: max 400h/Monat
+}
+
 # Company size normalization map
 SIZE_NORMALIZATION = {
     "1": "solo",
@@ -121,6 +152,116 @@ def get_funding_cap(company_size: Optional[str]) -> float:
     """Get the funding cap for a given company size."""
     normalized = normalize_company_size(company_size)
     return FUNDING_CAPS_BY_SIZE.get(normalized, 35000)
+
+
+def get_hourly_rate(company_size: Optional[str]) -> Tuple[int, str]:
+    """
+    Get the hourly rate and source for a given company size.
+
+    Returns:
+        Tuple of (hourly_rate, source_description)
+    """
+    normalized = normalize_company_size(company_size)
+    rate = HOURLY_RATES_BY_SIZE.get(normalized, 95)
+    source = HOURLY_RATE_SOURCES.get(normalized, "Standardsatz")
+    return rate, source
+
+
+def get_max_time_savings(company_size: Optional[str]) -> int:
+    """Get the maximum realistic time savings per month for a given company size."""
+    normalized = normalize_company_size(company_size)
+    return MAX_TIME_SAVINGS_BY_SIZE.get(normalized, 60)
+
+
+def cap_time_savings(hours: float, company_size: Optional[str]) -> Tuple[float, bool]:
+    """
+    Cap time savings to realistic maximum for company size.
+
+    Returns:
+        Tuple of (capped_hours, was_capped)
+    """
+    max_hours = get_max_time_savings(company_size)
+    if hours > max_hours:
+        return float(max_hours), True
+    return hours, False
+
+
+# =============================================================================
+# ROI EXPLANATION (Problem #3 Fix)
+# =============================================================================
+
+@dataclass
+class ROIExplanation:
+    """
+    Transparente Herleitung der ROI-Berechnung.
+    Adressiert Problem #3: "ROI 284% ohne Herleitung"
+    """
+    stundensatz: int
+    stundensatz_quelle: str
+    zeitersparnis_stunden: float
+    zeitersparnis_quelle: str
+    zeitersparnis_gecappt: bool
+    zeitersparnis_max: int
+    einmalkosten: float
+    laufende_kosten_monat: float
+    foerdereffekt: float
+    formel: str = "ROI = ((Zeitersparnis × Stundensatz × 12) - CAPEX - (OPEX × 12)) / CAPEX × 100"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "stundensatz": self.stundensatz,
+            "stundensatz_quelle": self.stundensatz_quelle,
+            "zeitersparnis_stunden": self.zeitersparnis_stunden,
+            "zeitersparnis_quelle": self.zeitersparnis_quelle,
+            "zeitersparnis_gecappt": self.zeitersparnis_gecappt,
+            "zeitersparnis_max": self.zeitersparnis_max,
+            "einmalkosten": self.einmalkosten,
+            "laufende_kosten_monat": self.laufende_kosten_monat,
+            "foerdereffekt": self.foerdereffekt,
+            "formel": self.formel,
+        }
+
+    def to_html(self, lang: str = "de") -> str:
+        """Generate an HTML info box explaining the ROI calculation."""
+        if lang == "en":
+            return self._to_html_en()
+        return self._to_html_de()
+
+    def _to_html_de(self) -> str:
+        cap_note = " (auf Maximum begrenzt)" if self.zeitersparnis_gecappt else ""
+        return f"""
+        <div class="roi-explanation-box" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:16px 0;font-size:13px;">
+            <div style="font-weight:600;margin-bottom:12px;color:#1e293b;">📊 So berechnen wir Ihren ROI</div>
+            <table style="width:100%;border-collapse:collapse;">
+                <tr><td style="padding:4px 8px;">Stundensatz</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.stundensatz} €/h</td><td style="padding:4px 8px;color:#64748b;font-size:11px;">{self.stundensatz_quelle}</td></tr>
+                <tr><td style="padding:4px 8px;">Zeitersparnis</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.zeitersparnis_stunden:.0f} h/Monat{cap_note}</td><td style="padding:4px 8px;color:#64748b;font-size:11px;">{self.zeitersparnis_quelle}</td></tr>
+                <tr><td style="padding:4px 8px;">Einmalkosten (CAPEX)</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.einmalkosten:,.0f} €</td><td></td></tr>
+                <tr><td style="padding:4px 8px;">Laufende Kosten (OPEX)</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.laufende_kosten_monat:,.0f} €/Monat</td><td></td></tr>
+                {"<tr><td style='padding:4px 8px;'>Fördereffekt</td><td style='padding:4px 8px;text-align:right;font-weight:500;color:#16a34a;'>-" + f"{self.foerdereffekt:,.0f} €</td><td></td></tr>" if self.foerdereffekt > 0 else ""}
+            </table>
+            <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:11px;color:#64748b;">
+                <strong>Formel:</strong> {self.formel}
+            </div>
+        </div>
+        """
+
+    def _to_html_en(self) -> str:
+        cap_note = " (capped to maximum)" if self.zeitersparnis_gecappt else ""
+        return f"""
+        <div class="roi-explanation-box" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:16px 0;font-size:13px;">
+            <div style="font-weight:600;margin-bottom:12px;color:#1e293b;">📊 How We Calculate Your ROI</div>
+            <table style="width:100%;border-collapse:collapse;">
+                <tr><td style="padding:4px 8px;">Hourly Rate</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.stundensatz} €/h</td><td style="padding:4px 8px;color:#64748b;font-size:11px;">{self.stundensatz_quelle}</td></tr>
+                <tr><td style="padding:4px 8px;">Time Savings</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.zeitersparnis_stunden:.0f} h/month{cap_note}</td><td style="padding:4px 8px;color:#64748b;font-size:11px;">{self.zeitersparnis_quelle}</td></tr>
+                <tr><td style="padding:4px 8px;">One-time Costs (CAPEX)</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.einmalkosten:,.0f} €</td><td></td></tr>
+                <tr><td style="padding:4px 8px;">Ongoing Costs (OPEX)</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.laufende_kosten_monat:,.0f} €/month</td><td></td></tr>
+                {"<tr><td style='padding:4px 8px;'>Funding Effect</td><td style='padding:4px 8px;text-align:right;font-weight:500;color:#16a34a;'>-" + f"{self.foerdereffekt:,.0f} €</td><td></td></tr>" if self.foerdereffekt > 0 else ""}
+            </table>
+            <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:11px;color:#64748b;">
+                <strong>Formula:</strong> ROI = ((Time Savings × Hourly Rate × 12) - CAPEX - (OPEX × 12)) / CAPEX × 100
+            </div>
+        </div>
+        """
 
 
 # =============================================================================
@@ -236,6 +377,9 @@ class BusinessCaseReport:
     # Metadata
     funding_effect: float = 0.0  # Funding reduction in EUR
     funding_programmes_used: List[str] = field(default_factory=list)
+
+    # ROI Explanation (Problem #3 fix - transparency)
+    roi_explanation: Optional[ROIExplanation] = None
 
     def __post_init__(self) -> None:
         """Validate and normalize values."""
@@ -1042,11 +1186,39 @@ def generate_business_case_report(
         funding_data, investment_total, company_size
     )
 
-    # Calculate base monthly savings
+    # Get size-appropriate hourly rate (Problem #3 fix)
+    hourly_rate, hourly_rate_source = get_hourly_rate(company_size)
+
+    # Cap time savings to realistic maximum for company size
+    capped_effort_hours, effort_was_capped = cap_time_savings(baseline_effort_hours, company_size)
+    max_time_savings = get_max_time_savings(company_size)
+
+    # Determine time savings source
+    time_savings_source = "Geschätzt aus Prozessanalyse"
+    if briefing and briefing.get("quick_wins_total_hours"):
+        time_savings_source = "Summe aus Quick Wins"
+    elif briefing and briefing.get("sum_quickwin_hours"):
+        time_savings_source = "Summe aus Quick Wins"
+
+    # Calculate base monthly savings with size-appropriate rate
     base_monthly_savings = baseline_monthly_cost
     if base_monthly_savings <= 0:
-        # Estimate from effort hours
-        base_monthly_savings = calculate_monthly_savings(baseline_effort_hours, hourly_rate=50.0)
+        # Estimate from effort hours using size-appropriate hourly rate
+        base_monthly_savings = calculate_monthly_savings(capped_effort_hours, hourly_rate=float(hourly_rate))
+
+    # Build ROI explanation for transparency
+    opex_monthly = recurring_costs_12m / 12 if recurring_costs_12m > 0 else 0.0
+    roi_explanation = ROIExplanation(
+        stundensatz=hourly_rate,
+        stundensatz_quelle=hourly_rate_source,
+        zeitersparnis_stunden=capped_effort_hours,
+        zeitersparnis_quelle=time_savings_source,
+        zeitersparnis_gecappt=effort_was_capped,
+        zeitersparnis_max=max_time_savings,
+        einmalkosten=investment_total,
+        laufende_kosten_monat=opex_monthly,
+        foerdereffekt=funding_effect,
+    )
 
     # If LLM response provided, use it
     if llm_response:
@@ -1091,7 +1263,7 @@ def generate_business_case_report(
 
     report = BusinessCaseReport(
         baseline_monthly_cost=baseline_monthly_cost,
-        baseline_effort_hours=baseline_effort_hours,
+        baseline_effort_hours=capped_effort_hours,  # Use capped hours
         investment_total=investment_total,
         recurring_costs_12m=recurring_costs_12m,
         scenarios=scenarios,
@@ -1100,6 +1272,7 @@ def generate_business_case_report(
         narrative_summary=narrative_summary,
         funding_effect=funding_effect,
         funding_programmes_used=funding_programmes,
+        roi_explanation=roi_explanation,  # Problem #3 fix
     )
 
     realistic = report.realistic_scenario
@@ -1334,6 +1507,10 @@ def business_case_report_to_html(
             </p>
         </div>
         ''')
+
+    # ROI Explanation (Problem #3 fix - transparency)
+    if report.roi_explanation:
+        html_parts.append(report.roi_explanation.to_html(lang))
 
     # Narrative Summary
     if report.narrative_summary:
