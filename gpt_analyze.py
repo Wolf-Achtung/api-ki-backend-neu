@@ -2893,89 +2893,242 @@ def _wrap_risk_matrix_with_pagebreak(html_content: str) -> str:
     return output
 
 
-# -------------------- FIX 5: Compact Recommendations ----------------
+# -------------------- FIX 5: Compact Recommendations (v2.0 Robust) ----------------
 
 def _format_recommendations_compact(html_content: str) -> str:
     """
     Transform recommendation sections into compact card layout.
 
-    FIX 5: Converts verbose recommendation bullets into compact
-    cards with minimal text for better PDF readability.
+    FIX 5 v2.0: More robust pattern matching for various GPT output formats:
+    - <strong>Title</strong> – Description
+    - <p><strong>Title</strong> – Description...</p>
+    - Bold titles followed by long paragraphs
     """
     if not html_content or len(html_content) < 200:
         return html_content
 
-    log.info("[RECOMMENDATIONS-COMPACT] Starting transformation (length: %d chars)", len(html_content))
+    log.info("[RECOMMENDATIONS-COMPACT-V2] Starting transformation (length: %d chars)", len(html_content))
 
     output = html_content
     cards_created = 0
 
-    # Pattern to match recommendation list items with strong title
-    # <li><strong>N. Title:</strong> Description... <strong>Maßnahme:</strong>...</li>
-    rec_pattern = re.compile(
-        r'<li>\s*<strong>\s*(\d+\.?\s*)?([^<:]+)(?::</strong>|</strong>:?)\s*'  # Number + Title
-        r'([^<]*(?:<[^>]+>[^<]*)*?)'  # Description (may contain tags)
-        r'(?:<strong>Maßnahme:</strong>\s*([^<]*(?:<[^>]+>[^<]*)*?))?'  # Optional Maßnahme
-        r'(?:<strong>(?:Nutzen|Aufwand|Förderchance):</strong>[^<]*)*'  # Optional extra fields
-        r'\s*</li>',
+    # Pattern 1: <strong>Title</strong> – Description (common format)
+    # Matches: <p><strong>Title</strong> – Long description text...</p>
+    bold_dash_pattern = re.compile(
+        r'<p>\s*<strong>([^<]+)</strong>\s*[–\-—]\s*([^<]+(?:<(?!/?p)[^>]*>[^<]*)*)</p>',
         re.DOTALL | re.IGNORECASE
     )
 
-    def replace_recommendation(match):
+    def create_card(title: str, description: str) -> str:
         nonlocal cards_created
 
-        num = match.group(1) or ""
-        title = match.group(2).strip()
-        desc = match.group(3).strip() if match.group(3) else ""
-        massnahme = match.group(4).strip() if match.group(4) else ""
+        # Clean and truncate description
+        desc_clean = re.sub(r'<[^>]+>', '', description).strip()
 
-        # Clean up description - limit to first sentence
-        desc_clean = re.sub(r'<[^>]+>', '', desc).strip()
-        if len(desc_clean) > 100:
-            # Truncate at sentence boundary
-            sentences = re.split(r'(?<=[.!?])\s+', desc_clean)
-            desc_clean = sentences[0] if sentences else desc_clean[:100] + "..."
+        # Limit to 2 sentences or 80 characters
+        sentences = re.split(r'(?<=[.!?])\s+', desc_clean)
+        if len(sentences) > 2:
+            desc_clean = ' '.join(sentences[:2])
+        if len(desc_clean) > 120:
+            desc_clean = desc_clean[:120].rsplit(' ', 1)[0] + '...'
 
-        # Build compact card
-        card_html = f'''
-<div class="recommendation-card-compact">
-    <h4>{num}{title}</h4>
+        cards_created += 1
+        return f'''<div class="recommendation-card-compact">
+    <h4>{title.strip()}</h4>
     <p>{desc_clean}</p>
-    {f'<p class="rec-meta"><strong>Maßnahme:</strong> {massnahme[:80]}{"..." if len(massnahme) > 80 else ""}</p>' if massnahme else ''}
 </div>
 '''
-        cards_created += 1
-        return card_html
 
-    # Only transform if we find recommendation patterns
-    if rec_pattern.search(output):
-        # First, find the recommendations section
-        rec_section = re.search(
-            r'(<h3[^>]*>(?:MUSS|Handlungsempfehlungen)[^<]*</h3>.*?<(?:ul|ol)[^>]*>)(.*?)(</(?:ul|ol)>)',
-            output, re.DOTALL | re.IGNORECASE
+    # Process bold-dash pattern paragraphs
+    def replace_bold_dash(match):
+        title = match.group(1)
+        desc = match.group(2)
+        return create_card(title, desc)
+
+    # Apply pattern 1
+    new_output = bold_dash_pattern.sub(replace_bold_dash, output)
+
+    # Pattern 2: Consecutive paragraphs after MUSS/OPTIONEN headers
+    # Look for <h3>MUSS</h3> or <h3>OPTIONEN</h3> followed by paragraphs
+    if cards_created == 0:
+        # Try to find recommendation sections with just paragraphs
+        section_pattern = re.compile(
+            r'(<h3[^>]*>(?:MUSS|OPTIONEN)[^<]*</h3>)(.*?)(?=<h3|</section>|$)',
+            re.DOTALL | re.IGNORECASE
         )
-        if rec_section:
-            section_start = rec_section.group(1)
-            list_content = rec_section.group(2)
-            section_end = rec_section.group(3)
 
-            # Transform list items to cards
-            transformed_content = rec_pattern.sub(replace_recommendation, list_content)
+        for section_match in section_pattern.finditer(output):
+            header = section_match.group(1)
+            content = section_match.group(2)
 
-            if cards_created > 0:
-                # Replace list wrapper with div container
-                new_section = f'{section_start.replace("<ul", "<div").replace("<ol", "<div")}{transformed_content}{section_end.replace("</ul>", "</div>").replace("</ol>", "</div>")}'
-                output = output[:rec_section.start()] + new_section + output[rec_section.end():]
+            # Find paragraphs in this section
+            para_pattern = re.compile(r'<p>([^<]+(?:<(?!/?p)[^>]*>[^<]*)*)</p>', re.DOTALL)
+
+            new_content = content
+            for para_match in para_pattern.finditer(content):
+                para_text = para_match.group(1)
+
+                # Only convert if it's a long paragraph (likely a recommendation)
+                text_only = re.sub(r'<[^>]+>', '', para_text)
+                if len(text_only) > 150:
+                    # Extract first sentence as title
+                    sentences = re.split(r'(?<=[.!?])\s+', text_only.strip())
+                    if sentences:
+                        title = sentences[0][:60] + ('...' if len(sentences[0]) > 60 else '')
+                        desc = ' '.join(sentences[1:3]) if len(sentences) > 1 else ''
+                        if len(desc) > 100:
+                            desc = desc[:100] + '...'
+
+                        card = f'''<div class="recommendation-card-compact">
+    <h4>{title}</h4>
+    <p>{desc}</p>
+</div>
+'''
+                        new_content = new_content.replace(para_match.group(0), card, 1)
+                        cards_created += 1
+
+            if new_content != content:
+                new_output = new_output.replace(content, new_content)
 
     if cards_created > 0:
-        log.info("[RECOMMENDATIONS-COMPACT] Created %d compact recommendation cards", cards_created)
+        output = new_output
+        log.info("[RECOMMENDATIONS-COMPACT-V2] Created %d compact recommendation cards", cards_created)
     else:
-        log.debug("[RECOMMENDATIONS-COMPACT] No recommendations matched, returning original")
+        log.debug("[RECOMMENDATIONS-COMPACT-V2] No recommendations matched, returning original")
 
     return output
 
 
 # -------------------- Maßnahme 2: Anti-Textwüsten Post-Processing ----------------
+
+# -------------------- AGGRESSIVE TEXT TRUNCATION (Maßnahme 1+2 Final) ----------------
+
+def _aggressive_text_truncation(html_content: str) -> str:
+    """
+    AGGRESSIVE text truncation to eliminate Textwüsten.
+
+    Final Fix v1.0 - Forces compliance with word limits:
+    - Paragraphs: Max 50 words, max 2 sentences
+    - Bullets: Max 25 words, max 1-2 sentences
+    - Removes filler phrases and redundant text
+
+    This is the NUCLEAR option - enforces limits regardless of GPT output.
+    """
+    if not html_content or len(html_content) < 200:
+        return html_content
+
+    log.info("[AGGRESSIVE-TRUNCATION] Starting (length: %d chars)", len(html_content))
+
+    output = html_content
+    truncations = 0
+
+    # 1. Truncate long paragraphs to max 50 words / 2 sentences
+    def truncate_paragraph(match):
+        nonlocal truncations
+        p_content = match.group(1)
+
+        # Don't truncate if it contains important elements
+        if '<table' in p_content.lower() or '<ul' in p_content.lower():
+            return match.group(0)
+
+        # Count words (excluding HTML tags)
+        text_only = re.sub(r'<[^>]+>', '', p_content)
+        words = text_only.split()
+
+        if len(words) <= 50:
+            return match.group(0)  # Already short enough
+
+        # Split into sentences and take first 2
+        sentences = re.split(r'(?<=[.!?])\s+', text_only.strip())
+        if len(sentences) <= 2:
+            # Just truncate at word limit
+            truncated_words = words[:50]
+            truncated_text = ' '.join(truncated_words)
+            if not truncated_text.endswith('.'):
+                truncated_text += '.'
+            truncations += 1
+            return f'<p>{truncated_text}</p>'
+
+        # Take first 2 sentences
+        truncated = ' '.join(sentences[:2])
+        truncated_words = truncated.split()
+        if len(truncated_words) > 55:
+            truncated = ' '.join(truncated_words[:50]) + '.'
+        truncations += 1
+        return f'<p>{truncated}</p>'
+
+    output = re.sub(r'<p>([^<]*(?:<(?!/?p)[^>]*>[^<]*)*)</p>', truncate_paragraph, output, flags=re.DOTALL)
+
+    # 2. Truncate long bullet points to max 25 words
+    def truncate_bullet(match):
+        nonlocal truncations
+        li_content = match.group(1)
+
+        # Don't truncate if it contains nested lists
+        if '<ul' in li_content.lower() or '<ol' in li_content.lower():
+            return match.group(0)
+
+        # Extract text content
+        text_only = re.sub(r'<[^>]+>', ' ', li_content)
+        text_only = re.sub(r'\s+', ' ', text_only).strip()
+        words = text_only.split()
+
+        if len(words) <= 25:
+            return match.group(0)  # Already short enough
+
+        # Preserve the first <strong> tag if present
+        strong_match = re.match(r'^(\s*<strong>[^<]*</strong>:?\s*)', li_content)
+        if strong_match:
+            prefix = strong_match.group(1)
+            rest = li_content[len(prefix):]
+            rest_text = re.sub(r'<[^>]+>', '', rest).strip()
+            rest_words = rest_text.split()
+
+            # Calculate how many words are in prefix
+            prefix_text = re.sub(r'<[^>]+>', '', prefix).strip()
+            prefix_word_count = len(prefix_text.split())
+
+            # Truncate rest to fit within 25 total words
+            max_rest_words = max(15, 25 - prefix_word_count)
+            if len(rest_words) > max_rest_words:
+                truncated_rest = ' '.join(rest_words[:max_rest_words])
+                if not truncated_rest.endswith('.'):
+                    truncated_rest += '.'
+                truncations += 1
+                return f'<li>{prefix}{truncated_rest}</li>'
+            return match.group(0)
+
+        # No strong tag - just truncate
+        truncated = ' '.join(words[:25])
+        if not truncated.endswith('.'):
+            truncated += '.'
+        truncations += 1
+        return f'<li>{truncated}</li>'
+
+    output = re.sub(r'<li>([^<]*(?:<(?!/?li)[^>]*>[^<]*)*)</li>', truncate_bullet, output, flags=re.DOTALL | re.IGNORECASE)
+
+    # 3. Remove common filler phrases that bloat text
+    filler_phrases = [
+        r'\s*,\s*wobei\s+[^,\.]+',
+        r'\s*,\s*während\s+[^,\.]+',
+        r'\s*,\s*sodass\s+[^,\.]+',
+        r'\s*,\s*was\s+dazu\s+führt[^,\.]+',
+        r'\s*–\s*insbesondere\s+[^,\.–]+',
+        r'Darüber hinaus ist zu beachten, dass\s*',
+        r'Es ist wichtig zu betonen, dass\s*',
+        r'In diesem Zusammenhang\s*',
+        r'Grundsätzlich gilt, dass\s*',
+    ]
+
+    for pattern in filler_phrases:
+        new_output = re.sub(pattern, '', output, flags=re.IGNORECASE)
+        if new_output != output:
+            truncations += 1
+            output = new_output
+
+    log.info("[AGGRESSIVE-TRUNCATION] Complete: %d truncations made", truncations)
+    return output
+
 
 # Keywords to auto-bold in German business/consulting context
 BOLD_KEYWORDS_DE = [
@@ -7606,6 +7759,30 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     # v8.0: Formatiere Textwüsten mit visuellen Breaks
     # v8.1: Maßnahme 2 - Post-Processing für Lesbarkeit (BEFORE SVG boxes)
     # v9.0: Maßnahmen 3-5 - Card-Layouts und Tabellen
+    # v10.0: AGGRESSIVE TRUNCATION für ALLE Sektionen (Final Fix)
+
+    # ========== GLOBAL AGGRESSIVE TRUNCATION (v10.0) ==========
+    # Apply to ALL major content sections FIRST
+    truncation_targets = [
+        "RISKS_HTML", "GAMECHANGER_HTML", "FOERDERPOTENZIAL_HTML", "RECOMMENDATIONS_HTML",
+        "ORG_CHANGE_HTML", "BUSINESS_CASE_HTML", "PILOT_PLAN_HTML", "ROADMAP_12M_HTML",
+        "DATA_READINESS_HTML", "STRATEGIE_GOVERNANCE_HTML", "UNTERNEHMENSPROFIL_MARKT_HTML",
+        "MONETARISIERUNG_HTML", "KI_SKILLPLAN_HTML"
+    ]
+    log.info("[GLOBAL-TRUNCATION] Starting aggressive truncation for %d sections", len(truncation_targets))
+    for key in truncation_targets:
+        html = sections.get(key, "")
+        if html and len(html) > 200:
+            try:
+                original_len = len(html)
+                truncated = _aggressive_text_truncation(html)
+                sections[key] = truncated
+                delta = len(truncated) - original_len
+                if delta != 0:
+                    log.info(f"[GLOBAL-TRUNCATION] {key}: {original_len} -> {len(truncated)} chars (delta: {delta})")
+            except Exception as e:
+                log.warning(f"[GLOBAL-TRUNCATION] {key} failed: {e}")
+
     # ========== SAFE RISKS FORMATTING ==========
     risks_html = sections.get("RISKS_HTML", "")
     log.info(f"[INTEGRATION] Risks HTML before formatting: {len(risks_html) if risks_html else 0} chars")
