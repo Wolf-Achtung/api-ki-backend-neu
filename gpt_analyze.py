@@ -8652,55 +8652,60 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     #         sections["QUICK_WINS_HTML_LEFT"] = qw_html_format
     #     except Exception as e:
     #         log.error(f"[INTEGRATION] Quick Wins formatting failed: {e}")
-    log.info("[INTEGRATION] Quick Wins formatter DISABLED (v13.1) - using original GPT output")
+    log.info("[INTEGRATION] Quick Wins formatter DISABLED (v14.0) - using original GPT output")
 
-    # Maßnahme 2: Roadmap phases compact formatting (for 12M roadmap)
-    # v13.1: NUR anwenden wenn Textwüsten-Muster erkannt werden
-    roadmap_12m_html = sections.get("ROADMAP_12M_HTML", "")
-    if roadmap_12m_html and len(roadmap_12m_html) > 200:
-        try:
-            original_length = len(roadmap_12m_html)
-            roadmap_12m_html = _format_roadmap_phases_compact(roadmap_12m_html)
-            log.info(f"[INTEGRATION] Roadmap 12M HTML after phase formatting: {len(roadmap_12m_html)} chars (delta: {len(roadmap_12m_html) - original_length})")
-            sections["ROADMAP_12M_HTML"] = roadmap_12m_html
-            sections["roadmap_12m"] = roadmap_12m_html
-        except Exception as e:
-            log.error(f"[INTEGRATION] Roadmap 12M formatting failed: {e}")
+    # ==========================================================================
+    # v14.0: CLEAN RESTART - ALLE FORMATTER DEAKTIVIERT
+    # ==========================================================================
+    # Die folgenden Formatter wurden ALLE deaktiviert weil sie:
+    # - Card-Layouts erzeugen die mehr Platz verbrauchen als Fließtext
+    # - Patterns haben die nicht auf den tatsächlichen GPT-Output matchen
+    # - Mehr Probleme verursachen als sie lösen (47 statt 45 Seiten, leere Seiten)
+    #
+    # BEHALTEN: Nur SIEZEN-Guard (funktioniert zuverlässig)
+    # BEHALTEN: Tabellen-Inline-Styles (direkter Ansatz)
+    # ==========================================================================
 
-    # Maßnahme 3: Empfehlungen v3.0 formatting (apply after existing formatter)
-    rec_html = sections.get("RECOMMENDATIONS_HTML", "")
-    if rec_html and len(rec_html) > 200:
-        try:
-            original_length = len(rec_html)
-            rec_html = _format_empfehlungen_v3(rec_html)
-            rec_html = _format_recommendations_compact(rec_html)
-            log.info(f"[INTEGRATION] Recommendations HTML after v3.0 formatting: {len(rec_html)} chars (delta: {len(rec_html) - original_length})")
-            sections["RECOMMENDATIONS_HTML"] = rec_html
-            sections["recommendations"] = rec_html
-        except Exception as e:
-            log.error(f"[INTEGRATION] Empfehlungen v3.0 formatting failed: {e}")
+    # Maßnahme 2: Roadmap phases - DEAKTIVIERT v14.0
+    # Pattern matcht nicht auf "Phase 0: Titel (Woche 1-2)" Format
+    log.info("[INTEGRATION] Roadmap formatter DISABLED (v14.0) - pattern doesn't match GPT output")
 
-    # Maßnahme 4: Förderprüfung compact formatting
-    foerder_html = sections.get("FOERDERPOTENZIAL_HTML", "")
-    if foerder_html and len(foerder_html) > 200:
-        try:
-            original_length = len(foerder_html)
-            foerder_html = _format_foerderpruefung_compact(foerder_html)
-            log.info(f"[INTEGRATION] Förderpotenzial HTML after checklist formatting: {len(foerder_html)} chars (delta: {len(foerder_html) - original_length})")
-            sections["FOERDERPOTENZIAL_HTML"] = foerder_html
-            sections["foerderpotenzial"] = foerder_html
-        except Exception as e:
-            log.error(f"[INTEGRATION] Förderprüfung formatting failed: {e}")
+    # Maßnahme 3: Empfehlungen - DEAKTIVIERT v14.0
+    # Card-Layout verursacht Seitenaufblähung
+    log.info("[INTEGRATION] Empfehlungen formatter DISABLED (v14.0) - cards cause page bloat")
 
-    # ========== v12.0: TABLE COLGROUP INJECTION ==========
-    # Apply colgroups to all sections with tables to fix column overflow
+    # Maßnahme 4: Förderprüfung - DEAKTIVIERT v14.0
+    log.info("[INTEGRATION] Förderprüfung formatter DISABLED (v14.0) - using original GPT output")
+
+    # ========== v14.0: TABLE INLINE STYLES (ersetzt Colgroup) ==========
+    # Direkter Ansatz: Inline-Styles auf <table> und <td> Tags
+    # Dies wird von PDF-Engines besser respektiert als CSS-Klassen
     table_sections = ["RISKS_HTML", "RECOMMENDATIONS_HTML", "BUSINESS_CASE_HTML", "FOERDERPOTENZIAL_HTML"]
     for key in table_sections:
         html = sections.get(key, "")
         if html and '<table' in html.lower():
             try:
-                original_len = len(html)
-                html_fixed = _inject_table_colgroups(html)
+                # Add inline styles directly to table tag
+                html_fixed = re.sub(
+                    r'<table([^>]*)>',
+                    r'<table\1 style="table-layout:fixed;width:100%;border-collapse:collapse;font-size:9pt;">',
+                    html,
+                    flags=re.IGNORECASE
+                )
+                # Add word-wrap to all td elements
+                html_fixed = re.sub(
+                    r'<td([^>]*)>',
+                    r'<td\1 style="word-wrap:break-word;overflow-wrap:break-word;padding:6px 8px;vertical-align:top;">',
+                    html_fixed,
+                    flags=re.IGNORECASE
+                )
+                # Add word-wrap to all th elements
+                html_fixed = re.sub(
+                    r'<th([^>]*)>',
+                    r'<th\1 style="word-wrap:break-word;overflow-wrap:break-word;padding:6px 8px;vertical-align:top;font-weight:bold;">',
+                    html_fixed,
+                    flags=re.IGNORECASE
+                )
                 sections[key] = html_fixed
                 # Update aliases
                 if key == "RISKS_HTML":
@@ -8709,9 +8714,9 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
                     sections["recommendations"] = html_fixed
                 elif key == "FOERDERPOTENZIAL_HTML":
                     sections["foerderpotenzial"] = html_fixed
-                log.info(f"[TABLE-COLGROUP] {key}: colgroups injected")
+                log.info(f"[TABLE-INLINE-STYLES] {key}: inline styles applied")
             except Exception as e:
-                log.warning(f"[TABLE-COLGROUP] {key} failed: {e}")
+                log.warning(f"[TABLE-INLINE-STYLES] {key} failed: {e}")
 
     # ========== v13.0: SIEZEN-GUARD (Anti-Duzen Post-Processor) ==========
     # Apply formal "Sie" conversion to ALL text sections
