@@ -3507,32 +3507,119 @@
         }
 
         /* ============================================
-           FIX 3: TABELLEN-OVERFLOW BEHEBEN
+           FIX 3: TABELLEN-OVERFLOW BEHEBEN (v2 - Aggressive)
            ============================================ */
+        /* Global table fixes */
+        table,
+        .table,
+        .table-modern,
+        .svg-box-table table,
+        .svg-decorated-box table {
+            table-layout: fixed !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            border-collapse: collapse;
+        }
+        /* All table cells with word-wrap */
+        td, th,
         .table td,
         .table th,
         .table-modern td,
-        .table-modern th {
+        .table-modern th,
+        .svg-box-table td,
+        .svg-box-table th,
+        .svg-decorated-box td,
+        .svg-decorated-box th {
             word-wrap: break-word !important;
             overflow-wrap: break-word !important;
+            word-break: break-word !important;
             hyphens: auto !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis;
+            max-width: 150px;
+            padding: 8px 6px !important;
+            font-size: 9.5pt !important;
+            line-height: 1.4 !important;
+            vertical-align: top !important;
+        }
+        /* First column (usually category) - narrower */
+        td:first-child,
+        th:first-child {
+            max-width: 100px;
+            width: 15%;
+        }
+        /* Last column (usually "Maßnahmen") - wider but still wrapped */
+        td:last-child,
+        th:last-child {
+            max-width: 200px;
+            width: 25%;
+        }
+        /* Risk Matrix specific - 5 column layout */
+        .risk-matrix-section table {
+            font-size: 9pt !important;
+        }
+        .risk-matrix-section td,
+        .risk-matrix-section th {
+            padding: 6px 4px !important;
+            max-width: 120px;
+        }
+        .risk-matrix-section td:last-child,
+        .risk-matrix-section th:last-child {
             max-width: 180px;
-        }
-        /* Letzte Spalte (oft "Maßnahmen") mit mehr Platz aber auch Wrapping */
-        .table td:last-child,
-        .table th:last-child,
-        .table-modern td:last-child,
-        .table-modern th:last-child {
-            max-width: 220px;
-            font-size: 9.5pt;
-        }
-        .table {
-            table-layout: fixed !important;
-            width: 100% !important;
+            width: 30%;
         }
 
         /* ============================================
-           FIX 4: SVG-BOX OVERFLOW VERHINDERN
+           FIX 4a: LEERRAUM-OPTIMIERUNG
+           ============================================ */
+        /* Reduce section margins for tighter layout */
+        .section {
+            margin-bottom: 16px;
+        }
+        .section h2 {
+            margin-top: 12px;
+            margin-bottom: 8px;
+        }
+        .section h3 {
+            margin-top: 10px;
+            margin-bottom: 6px;
+        }
+        .section p {
+            margin-bottom: 6px;
+        }
+        .section ul, .section ol {
+            margin-top: 4px;
+            margin-bottom: 8px;
+        }
+        .section li {
+            margin-bottom: 3px;
+        }
+        /* Orphan/Widow control - prevent single lines at top/bottom */
+        p, li, h3, h4 {
+            orphans: 3;
+            widows: 3;
+        }
+        /* Prevent tiny content fragments at page end */
+        .section > p:last-child,
+        .section > ul:last-child,
+        .section > ol:last-child {
+            page-break-after: avoid;
+        }
+        /* Content continuation - avoid breaks after headings */
+        h2, h3, h4 {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
+        }
+        /* Keep at least 3 items together in lists */
+        ul, ol {
+            page-break-inside: auto;
+        }
+        li:nth-last-child(-n+2) {
+            page-break-before: avoid;
+        }
+
+        /* ============================================
+           FIX 4b: SVG-BOX OVERFLOW VERHINDERN
            ============================================ */
         .svg-decorated-box {
             overflow: hidden !important;
