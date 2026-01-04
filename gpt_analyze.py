@@ -2902,6 +2902,314 @@ def _enhance_text_readability(html_content: str) -> str:
     return output
 
 
+# ================================================================================
+# MAßNAHME 3: Card-Layout für Risk-Bullets (v9.0)
+# ================================================================================
+def _convert_risk_bullets_to_cards(html_content: str) -> str:
+    """
+    Convert risk bullet lists into visual card layout.
+
+    Version 9.0 - Maßnahme 3: Jedes Risiko wird zu einer eigenen Card.
+
+    Input: <ul><li><strong>Risiko:</strong> Beschreibung. Maßnahme: ...</li></ul>
+    Output: Grid of cards with icon, title, description, and action
+    """
+    if not html_content or len(html_content) < 100:
+        return html_content
+
+    log.info("[RISK-CARDS-V9] Converting risk bullets to cards (length: %d chars)", len(html_content))
+
+    output = html_content
+    cards_created = 0
+
+    # Find all <ul> blocks within risk sections
+    def convert_ul_to_cards(match):
+        nonlocal cards_created
+        ul_content = match.group(1)
+
+        # Extract all <li> items
+        li_pattern = r'<li[^>]*>(.*?)</li>'
+        items = re.findall(li_pattern, ul_content, re.DOTALL)
+
+        if len(items) < 2:
+            return match.group(0)  # Keep as-is if too few items
+
+        cards_html = '<div class="risk-cards-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 16px 0;">\n'
+
+        for item in items:
+            # Parse: <strong>Title:</strong> Description. Maßnahme: Action.
+            title_match = re.search(r'<strong>([^<:]+):?</strong>', item)
+            title = title_match.group(1).strip() if title_match else "Risiko"
+
+            # Get content after title
+            content = re.sub(r'<strong>[^<]+</strong>\s*:?\s*', '', item).strip()
+
+            # Split into description and Maßnahme if present
+            if 'Maßnahme:' in content or 'Maßnahme :' in content:
+                parts = re.split(r'Maßnahme\s*:\s*', content, maxsplit=1)
+                description = parts[0].strip().rstrip('.')
+                action = parts[1].strip() if len(parts) > 1 else ""
+            else:
+                description = content
+                action = ""
+
+            # Truncate long descriptions
+            if len(description) > 120:
+                description = description[:117] + "..."
+
+            # Create card HTML
+            card_html = f'''<div class="risk-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; break-inside: avoid;">
+    <div style="font-weight: 600; color: #1e293b; margin-bottom: 6px; font-size: 0.95em;">⚠️ {title}</div>
+    <div style="color: #475569; font-size: 0.85em; line-height: 1.4; margin-bottom: 8px;">{description}</div>
+    {f'<div style="color: #059669; font-size: 0.8em; border-top: 1px solid #e2e8f0; padding-top: 6px;"><strong>→</strong> {action}</div>' if action else ''}
+</div>
+'''
+            cards_html += card_html
+            cards_created += 1
+
+        cards_html += '</div>'
+        return cards_html
+
+    # Apply to all <ul> blocks (but not in tables)
+    output = re.sub(r'<ul[^>]*>(.*?)</ul>', convert_ul_to_cards, output, flags=re.DOTALL)
+
+    log.info("[RISK-CARDS-V9] Created %d risk cards", cards_created)
+    return output
+
+
+# ================================================================================
+# MAßNAHME 4: Gamechanger Vergleichs-Tabelle (v9.0)
+# ================================================================================
+def _convert_gamechanger_to_comparison_table(html_content: str) -> str:
+    """
+    Convert Gamechanger "obsolete Logik" and "neue Wertschöpfungslogik" into comparison table.
+
+    Version 9.0 - Maßnahme 4: Statt Textwüsten eine übersichtliche Tabelle.
+    """
+    if not html_content or len(html_content) < 100:
+        return html_content
+
+    log.info("[GC-TABLE-V9] Converting gamechanger bullets to table (length: %d chars)", len(html_content))
+
+    output = html_content
+
+    # Look for patterns like "Die obsolete Logik:" followed by bullets
+    # and "Die neue Wertschöpfungslogik:" followed by bullets
+
+    # Pattern to find "Bisher:" / "obsolete Logik" bullet points
+    bisher_patterns = [
+        r'<p[^>]*>\s*<strong>\s*(?:Die\s+)?obsolete\s+Logik:?\s*</strong>\s*</p>\s*<ul[^>]*>(.*?)</ul>',
+        r'<strong>\s*(?:Die\s+)?obsolete\s+Logik:?\s*</strong>\s*<ul[^>]*>(.*?)</ul>',
+        r'<p[^>]*>\s*<strong>\s*Bisher:?\s*</strong>\s*</p>\s*<ul[^>]*>(.*?)</ul>',
+    ]
+
+    # Pattern to find "Stattdessen:" / "neue Wertschöpfungslogik" bullet points
+    neu_patterns = [
+        r'<p[^>]*>\s*<strong>\s*(?:Die\s+)?neue\s+Wertsch[öo]pfungslogik:?\s*</strong>\s*</p>\s*<ul[^>]*>(.*?)</ul>',
+        r'<strong>\s*(?:Die\s+)?neue\s+Wertsch[öo]pfungslogik:?\s*</strong>\s*<ul[^>]*>(.*?)</ul>',
+        r'<p[^>]*>\s*<strong>\s*Stattdessen:?\s*</strong>\s*</p>\s*<ul[^>]*>(.*?)</ul>',
+    ]
+
+    bisher_items = []
+    neu_items = []
+    bisher_match_full = None
+    neu_match_full = None
+
+    # Find "Bisher" section
+    for pattern in bisher_patterns:
+        match = re.search(pattern, output, re.DOTALL | re.IGNORECASE)
+        if match:
+            bisher_match_full = match.group(0)
+            ul_content = match.group(1)
+            bisher_items = re.findall(r'<li[^>]*>(.*?)</li>', ul_content, re.DOTALL)
+            break
+
+    # Find "Neu" section
+    for pattern in neu_patterns:
+        match = re.search(pattern, output, re.DOTALL | re.IGNORECASE)
+        if match:
+            neu_match_full = match.group(0)
+            ul_content = match.group(1)
+            neu_items = re.findall(r'<li[^>]*>(.*?)</li>', ul_content, re.DOTALL)
+            break
+
+    # If we found both sections with items, create comparison table
+    if bisher_items and neu_items and len(bisher_items) >= 2 and len(neu_items) >= 2:
+        log.info("[GC-TABLE-V9] Found %d bisher items and %d neu items", len(bisher_items), len(neu_items))
+
+        # Clean up items
+        def clean_item(item):
+            # Remove HTML tags except <strong>
+            text = re.sub(r'<(?!/?strong)[^>]+>', '', item)
+            text = re.sub(r'\s+', ' ', text).strip()
+            # Truncate if too long
+            if len(text) > 100:
+                text = text[:97] + "..."
+            return text
+
+        # Build comparison table
+        table_html = '''
+<div class="gc-comparison-wrapper" style="margin: 20px 0;">
+<table class="gc-comparison-table" style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+<thead>
+<tr>
+<th style="background: #fef2f2; color: #991b1b; padding: 12px; text-align: left; border: 1px solid #fecaca; width: 50%;">❌ Bisher (obsolete Logik)</th>
+<th style="background: #f0fdf4; color: #166534; padding: 12px; text-align: left; border: 1px solid #bbf7d0; width: 50%;">✅ Neu (Wertschöpfungslogik)</th>
+</tr>
+</thead>
+<tbody>
+'''
+
+        # Match items row by row
+        max_rows = max(len(bisher_items), len(neu_items))
+        for i in range(max_rows):
+            bisher_text = clean_item(bisher_items[i]) if i < len(bisher_items) else ""
+            neu_text = clean_item(neu_items[i]) if i < len(neu_items) else ""
+
+            table_html += f'''<tr>
+<td style="padding: 10px; border: 1px solid #e5e7eb; vertical-align: top; background: #fff;">{bisher_text}</td>
+<td style="padding: 10px; border: 1px solid #e5e7eb; vertical-align: top; background: #fff;">{neu_text}</td>
+</tr>
+'''
+
+        table_html += '''</tbody>
+</table>
+</div>
+'''
+
+        # Replace both sections with the combined table
+        # First, mark positions
+        if bisher_match_full and neu_match_full:
+            # Check which comes first
+            bisher_pos = output.find(bisher_match_full)
+            neu_pos = output.find(neu_match_full)
+
+            if bisher_pos < neu_pos:
+                # Replace bisher with table, remove neu
+                output = output.replace(bisher_match_full, table_html)
+                output = output.replace(neu_match_full, '')
+            else:
+                # Replace neu with table, remove bisher
+                output = output.replace(neu_match_full, table_html)
+                output = output.replace(bisher_match_full, '')
+
+        log.info("[GC-TABLE-V9] Created comparison table with %d rows", max_rows)
+    else:
+        log.info("[GC-TABLE-V9] No matching Bisher/Neu sections found or too few items")
+
+    return output
+
+
+# ================================================================================
+# MAßNAHME 5: Empfehlungen als 2-Spalten Cards (v9.0)
+# ================================================================================
+def _format_recommendations_as_cards(html_content: str) -> str:
+    """
+    Convert recommendations numbered list into compact 2-column card layout.
+
+    Version 9.0 - Maßnahme 5: Kompakte Cards statt langer Listen.
+    """
+    if not html_content or len(html_content) < 100:
+        return html_content
+
+    log.info("[REC-CARDS-V9] Formatting recommendations as cards (length: %d chars)", len(html_content))
+
+    output = html_content
+
+    # Find numbered recommendation items (1. Empfehlung X, 2. Empfehlung Y, etc.)
+    # Pattern: <strong>N. Empfehlung N:</strong> or similar structures
+    rec_pattern = r'(\d+)\.\s*Empfehlung\s*\d*:?\s*([^<]+?)(?:<|$)'
+
+    # Also look for structured recommendations with sub-fields
+    # <li>...<strong>Schwerpunkt:</strong>...<strong>Maßnahme:</strong>...</li>
+    structured_pattern = r'<li[^>]*>(.*?)</li>'
+
+    # Find all numbered sections that look like recommendations
+    numbered_sections = re.findall(
+        r'(\d+)\.\s*Empfehlung[^:]*:([^<]*?)(?:Schwerpunkt|Maßnahme|Nutzen|Aufwand)',
+        output,
+        re.DOTALL | re.IGNORECASE
+    )
+
+    if numbered_sections and len(numbered_sections) >= 3:
+        log.info("[REC-CARDS-V9] Found %d recommendation sections", len(numbered_sections))
+
+        # Extract key info per recommendation
+        cards_data = []
+        for num, title in numbered_sections[:5]:  # Max 5 recommendations
+            # Find the full section for this recommendation
+            section_pattern = rf'{num}\.\s*Empfehlung[^:]*:.*?(?=\d+\.\s*Empfehlung|\Z)'
+            section_match = re.search(section_pattern, output, re.DOTALL | re.IGNORECASE)
+
+            if section_match:
+                section_text = section_match.group(0)
+
+                # Extract fields
+                schwerpunkt = ""
+                massnahme = ""
+                zeitrahmen = ""
+
+                sp_match = re.search(r'Schwerpunkt:\s*([^<\n]+)', section_text, re.IGNORECASE)
+                if sp_match:
+                    schwerpunkt = sp_match.group(1).strip()[:80]
+
+                ma_match = re.search(r'Maßnahme:\s*([^<\n]+)', section_text, re.IGNORECASE)
+                if ma_match:
+                    massnahme = ma_match.group(1).strip()[:80]
+
+                zr_match = re.search(r'(?:Aufwand|Zeitrahmen)[^:]*:\s*([^<\n]+)', section_text, re.IGNORECASE)
+                if zr_match:
+                    zeitrahmen = zr_match.group(1).strip()[:40]
+
+                cards_data.append({
+                    'num': num,
+                    'title': title.strip()[:60],
+                    'schwerpunkt': schwerpunkt,
+                    'massnahme': massnahme,
+                    'zeitrahmen': zeitrahmen
+                })
+
+        if cards_data:
+            # Build cards grid
+            cards_html = '''
+<div class="rec-cards-container" style="margin: 20px 0;">
+<div class="rec-cards-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+'''
+
+            colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444']
+
+            for i, card in enumerate(cards_data):
+                color = colors[i % len(colors)]
+                card_html = f'''
+<div class="rec-card" style="background: white; border: 1px solid #e5e7eb; border-left: 4px solid {color}; border-radius: 8px; padding: 14px; break-inside: avoid;">
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+        <span style="background: {color}; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85em;">{card['num']}</span>
+        <strong style="color: #1e293b; font-size: 0.95em;">{card['title']}</strong>
+    </div>
+    {f'<div style="color: #475569; font-size: 0.85em; margin-bottom: 6px;"><strong>Fokus:</strong> {card["schwerpunkt"]}</div>' if card['schwerpunkt'] else ''}
+    {f'<div style="color: #059669; font-size: 0.8em;"><strong>→</strong> {card["massnahme"]}</div>' if card['massnahme'] else ''}
+    {f'<div style="color: #6b7280; font-size: 0.75em; margin-top: 6px;">⏱️ {card["zeitrahmen"]}</div>' if card['zeitrahmen'] else ''}
+</div>
+'''
+                cards_html += card_html
+
+            cards_html += '''
+</div>
+</div>
+'''
+
+            # Insert cards at the beginning of recommendations section, before the detailed list
+            # Look for <h2>Handlungsempfehlungen or similar
+            insert_pattern = r'(<h2[^>]*>Handlungsempfehlungen[^<]*</h2>\s*<p[^>]*>[^<]+</p>)'
+            insert_match = re.search(insert_pattern, output, re.DOTALL | re.IGNORECASE)
+
+            if insert_match:
+                output = output.replace(insert_match.group(0), insert_match.group(0) + cards_html)
+                log.info("[REC-CARDS-V9] Inserted %d recommendation cards", len(cards_data))
+
+    return output
+
+
 # -------------------- N4.6: Zero-Leak Policy ----------------
 # Phrases that indicate assistant language "leaking" into report content
 LEAK_PHRASES = [
@@ -7076,6 +7384,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 
     # v8.0: Formatiere Textwüsten mit visuellen Breaks
     # v8.1: Maßnahme 2 - Post-Processing für Lesbarkeit (BEFORE SVG boxes)
+    # v9.0: Maßnahmen 3-5 - Card-Layouts und Tabellen
     # ========== SAFE RISKS FORMATTING ==========
     risks_html = sections.get("RISKS_HTML", "")
     log.info(f"[INTEGRATION] Risks HTML before formatting: {len(risks_html) if risks_html else 0} chars")
@@ -7085,6 +7394,9 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             # Maßnahme 2: Enhance readability FIRST (paragraph splits, auto-bold)
             risks_html = _enhance_text_readability(risks_html)
             log.info(f"[INTEGRATION] Risks HTML after readability enhancement: {len(risks_html)} chars")
+            # Maßnahme 3: Convert risk bullets to cards (v9.0)
+            risks_html = _convert_risk_bullets_to_cards(risks_html)
+            log.info(f"[INTEGRATION] Risks HTML after card conversion: {len(risks_html)} chars")
             # Then apply SVG box formatting
             risks_html = _format_risks_with_visual_breaks(risks_html)
             log.info(f"[INTEGRATION] Risks HTML after SVG formatting: {len(risks_html)} chars (delta: {len(risks_html) - original_length})")
@@ -7105,6 +7417,9 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             # Maßnahme 2: Enhance readability FIRST (paragraph splits, auto-bold)
             gamechanger_html = _enhance_text_readability(gamechanger_html)
             log.info(f"[INTEGRATION] Gamechanger HTML after readability enhancement: {len(gamechanger_html)} chars")
+            # Maßnahme 4: Convert Bisher/Neu to comparison table (v9.0)
+            gamechanger_html = _convert_gamechanger_to_comparison_table(gamechanger_html)
+            log.info(f"[INTEGRATION] Gamechanger HTML after table conversion: {len(gamechanger_html)} chars")
             # Then apply SVG box formatting
             gamechanger_html = _format_gamechanger_section(gamechanger_html)
             log.info(f"[INTEGRATION] Gamechanger HTML after SVG formatting: {len(gamechanger_html)} chars (delta: {len(gamechanger_html) - original_length})")
@@ -7136,6 +7451,19 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         log.warning("[INTEGRATION] Förderpotenzial HTML empty or too short, skipping formatting")
     sections["foerderpotenzial"] = foerderpotenzial_html
 
+    # ========== SAFE RECOMMENDATIONS FORMATTING (v9.0 - Maßnahme 5) ==========
+    recommendations_html = sections.get("RECOMMENDATIONS_HTML", "")
+    log.info(f"[INTEGRATION] Recommendations HTML before formatting: {len(recommendations_html) if recommendations_html else 0} chars")
+    if recommendations_html and len(recommendations_html) > 100:
+        try:
+            original_length = len(recommendations_html)
+            # Maßnahme 5: Add card overview at top
+            recommendations_html = _format_recommendations_as_cards(recommendations_html)
+            log.info(f"[INTEGRATION] Recommendations HTML after card formatting: {len(recommendations_html)} chars (delta: {len(recommendations_html) - original_length})")
+            sections["RECOMMENDATIONS_HTML"] = recommendations_html
+        except Exception as e:
+            log.error(f"[INTEGRATION] Recommendations formatting failed: {e}")
+            # Keep original - don't break pipeline
     sections["recommendations"] = sections.get("RECOMMENDATIONS_HTML", "")
     # Sprint N3.3: Apply Exec Summary Hard-Clean to remove H1/H2 and label text
     from services.html_sanitizer import clean_exec_summary_html

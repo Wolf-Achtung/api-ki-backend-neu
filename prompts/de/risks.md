@@ -52,33 +52,45 @@ REGELN:
 - Sachlich, konkret, keine Floskeln
 
 =============================================================================
-ANTI-TEXTWÜSTEN REGELN v1.0 (STRIKT - PFLICHT!)
+ANTI-TEXTWÜSTEN REGELN v2.0 (AGGRESSIV - PFLICHT!)
 =============================================================================
-PROBLEM: Risiko-Sektionen werden oft zu Fließtext-Wänden.
-LÖSUNG: Strikte Bullet-Struktur einhalten!
+PROBLEM: Risiko-Bullets werden zu Mini-Aufsätzen. UNLESBAR!
+LÖSUNG: STRENGE Wortlimits pro Risiko-Bullet.
 
-FORMAT PRO RISIKO-SEKTION (PFLICHT):
-Jede der 4 Risiko-Sektionen MUSS als Bullet-Liste formatiert sein:
-<ul>
-  <li><strong>[Risiko-Name]:</strong> [1 Satz Beschreibung]. Maßnahme: [1 Satz].</li>
-  <li><strong>[Risiko-Name]:</strong> [1 Satz Beschreibung]. Maßnahme: [1 Satz].</li>
-  ...
-</ul>
+HARTE LIMITS PRO RISIKO-BULLET:
+┌─────────────────────────────────────────────────────────┐
+│ Teil                  │ Max Wörter │ Max Sätze        │
+├─────────────────────────────────────────────────────────┤
+│ Risiko-Beschreibung   │ 15 Wörter  │ 1 Satz           │
+│ Maßnahme              │ 12 Wörter  │ 1 Satz           │
+│ Gesamt pro Bullet     │ 30 Wörter  │ 2 Sätze          │
+└─────────────────────────────────────────────────────────┘
 
-VERBOTEN:
-❌ Fließtext-Absätze statt Bullet-Listen
-❌ Mehr als 2 Sätze pro Bullet-Punkt
-❌ Risiko-Beschreibungen über 40 Wörter
-❌ Maßnahmen über 20 Wörter
+FORMAT PRO RISIKO (PFLICHT - KEIN ABWEICHEN!):
+<li><strong>[Risiko in 2-4 Wörtern]:</strong> [Problem in 10-15 Wörtern].
+<strong>Maßnahme:</strong> [Lösung in 10-12 Wörtern].</li>
+
+VERBOTEN (STRIKT!):
+❌ Risiko-Beschreibungen über 15 Wörter
+❌ Maßnahmen über 12 Wörter
+❌ Erklärungen mit "wobei", "da", "weil", "sodass"
+❌ Verschachtelte Sätze
+❌ Mehr als 1 Maßnahme pro Risiko
+❌ Fließtext unter/über der Bullet-Liste
 
 BEISPIEL - SO NICHT:
 ❌ "Ein wesentliches Risiko besteht in der mangelnden Transparenz bezüglich der
     KI-gestützten Entscheidungsprozesse, was zu Misstrauen bei Kunden führen kann
-    und langfristig die Akzeptanz der Lösungen gefährdet..." [= TEXTWÜSTE!]
+    und langfristig die Akzeptanz der Lösungen gefährdet..." [= 35 Wörter = ABGELEHNT!]
 
 BEISPIEL - SO JA:
-✅ <li><strong>Mangelnde Transparenz:</strong> Kunden verstehen KI-Entscheidungen nicht.
-   Maßnahme: Einfache Erklärungen zu KI-Methoden bereitstellen.</li>
+✅ <li><strong>Fehlende Transparenz:</strong> Kunden verstehen KI-Entscheidungen nicht.
+   <strong>Maßnahme:</strong> KI-Methoden einfach dokumentieren.</li> [= 12 Wörter = PERFEKT!]
+
+SEKTION-LIMITS:
+- Pro Risiko-Kategorie: Exakt 4 Bullets (nicht mehr, nicht weniger)
+- Keine Einleitungstexte zwischen Überschrift und Liste
+- Keine Abschlusstexte nach der Liste
 =============================================================================
 -->
 
