@@ -9346,6 +9346,20 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     
     # BUILD_ID - timestamp for report generation tracking
     sections["BUILD_ID"] = f"{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M')}"
+
+    # Problem #7 FIX: Personalized report subtitle from hauptleistung
+    hauptleistung = answers.get("hauptleistung", "").strip()
+    if hauptleistung:
+        # Smart truncation at word boundary
+        max_len = 60
+        if len(hauptleistung) <= max_len:
+            sections["REPORT_SUBTITLE"] = hauptleistung
+        else:
+            truncated = hauptleistung[:max_len].rsplit(" ", 1)[0]
+            sections["REPORT_SUBTITLE"] = truncated + "..."
+    else:
+        # Fallback to branch label
+        sections["REPORT_SUBTITLE"] = sections.get("BRANCHE_LABEL", "")
     
     # Werkbank
     sections["WERKBANK_HTML"] = _build_werkbank_html_dynamic(answers)
