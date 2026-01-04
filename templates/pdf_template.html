@@ -1748,6 +1748,178 @@
         }
 
         /* ================================================
+           CI-DESIGN v2.0 Phase 2 - Score Circle (SVG)
+           Ersetzt alten Donut-Chart
+           ================================================ */
+        .score-circle {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto;
+        }
+        .score-circle svg {
+            display: block;
+        }
+        .score-circle__value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .score-circle__number {
+            font-family: var(--font-heading);
+            font-size: 36pt;
+            font-weight: 700;
+            color: var(--color-primary);
+            display: block;
+            line-height: 1;
+        }
+        .score-circle__max {
+            font-size: 14pt;
+            color: var(--color-text-secondary);
+        }
+        .score-circle__rating {
+            font-size: 11pt;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            margin-top: 8pt;
+            display: block;
+            text-align: center;
+        }
+
+        /* ================================================
+           CI-DESIGN v2.0 Phase 2 - Dimension Score Bars
+           ================================================ */
+        .dimension-scores {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        .dimension-score {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .dimension-score__label {
+            width: 110px;
+            font-size: 10pt;
+            font-weight: 500;
+            color: var(--color-text-primary);
+        }
+        .dimension-score__bar {
+            flex: 1;
+            height: 8px;
+            background: #E5E7EB;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .dimension-score__fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+        .dimension-score__fill--high {
+            background: var(--color-accent);
+        }
+        .dimension-score__fill--medium {
+            background: var(--color-warning);
+        }
+        .dimension-score__fill--low {
+            background: var(--color-danger);
+        }
+        .dimension-score__value {
+            width: 32px;
+            text-align: right;
+            font-family: var(--font-heading);
+            font-weight: 600;
+            font-size: 11pt;
+            color: var(--color-primary);
+        }
+
+        /* ================================================
+           CI-DESIGN v2.0 Phase 2 - Icon System
+           Einheitliche Icons statt Emoji-Mix
+           ================================================ */
+        .icon {
+            display: inline-block;
+            width: 16px;
+            text-align: center;
+            margin-right: 6px;
+            font-style: normal;
+        }
+        .icon--success { color: var(--color-accent); }
+        .icon--warning { color: var(--color-warning); }
+        .icon--danger { color: var(--color-danger); }
+        .icon--info { color: var(--color-info); }
+        .icon--muted { color: var(--color-text-muted); }
+        .icon--primary { color: var(--color-primary); }
+
+        /* ================================================
+           CI-DESIGN v2.0 Phase 2 - KPI Cards
+           ================================================ */
+        .kpi-grid {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin: 32px 0;
+        }
+        .kpi-card {
+            text-align: center;
+            padding: 20px 24px;
+            background: var(--color-bg-light);
+            border-radius: 8px;
+            min-width: 140px;
+        }
+        .kpi-card--highlight {
+            background: var(--color-card-highlight);
+            border: 1px solid #BFDBFE;
+        }
+        .kpi-card--success {
+            background: var(--color-card-success);
+            border: 1px solid #A7F3D0;
+        }
+        .kpi-card--warning {
+            background: var(--color-card-alert);
+            border: 1px solid #FCD34D;
+        }
+        .kpi-card__value {
+            display: block;
+            font-family: var(--font-heading);
+            font-size: 24pt;
+            font-weight: 700;
+            color: var(--color-primary);
+            line-height: 1.2;
+        }
+        .kpi-card__label {
+            display: block;
+            font-size: 10pt;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            margin-top: 4px;
+        }
+        .kpi-card__sublabel {
+            display: block;
+            font-size: 8pt;
+            color: var(--color-text-muted);
+            margin-top: 2px;
+        }
+
+        /* Task metadata styling (Next Actions) */
+        .task-meta {
+            display: block;
+            font-size: 9pt;
+            color: var(--color-text-muted);
+            margin: 4px 0 6px 0;
+            font-style: italic;
+        }
+
+        /* Icon variant: error (red) */
+        .icon--error {
+            color: var(--color-danger);
+        }
+
+        /* ================================================
            G21: PLATIN++ DESIGN ENHANCEMENT SYSTEM
            ================================================ */
 
