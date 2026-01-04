@@ -3130,6 +3130,412 @@ def _aggressive_text_truncation(html_content: str) -> str:
     return output
 
 
+# -------------------- Maßnahme 1 v11.0: Quick Wins Formatter ----------------
+
+def _format_quick_wins_compact(html_content: str) -> str:
+    """
+    Transform Quick Wins section into compact card layout.
+
+    v11.0: Targets the "SCHNELLE EFFEKTE Quick Wins" section.
+    - Detects blocks with Zeitbedarf, Engpass, Mit KI, Schritte
+    - Truncates each block to max 80 words
+    - Creates compact cards with icon indicators
+    """
+    if not html_content or len(html_content) < 200:
+        return html_content
+
+    log.info("[QUICK-WINS-FORMATTER] Starting transformation (length: %d chars)", len(html_content))
+
+    output = html_content
+    cards_created = 0
+
+    # Pattern for Quick Win blocks (Title with emoji/icon followed by content)
+    # Matches: <strong>Title</strong> or <h4>Title</h4> followed by Zeitbedarf/Engpass/etc
+    quick_win_pattern = re.compile(
+        r'<(?:strong|h4|h3)[^>]*>([^<]+(?:Playbook|MVP|Template|Workflow|Automation)[^<]*)</(?:strong|h4|h3)>'
+        r'(.*?)(?=<(?:strong|h4|h3)[^>]*>[^<]+(?:Playbook|MVP|Template|Workflow|Automation)|<h2|</section>|$)',
+        re.DOTALL | re.IGNORECASE
+    )
+
+    # Alternative pattern: Look for "Zeitbedarf:" pattern
+    zeitbedarf_pattern = re.compile(
+        r'(<(?:p|div)[^>]*>.*?<strong>([^<]+)</strong>.*?)'
+        r'(Zeitbedarf:[^<]+)'
+        r'(.*?Potenzielle Zeitersparnis:[^<]+)',
+        re.DOTALL | re.IGNORECASE
+    )
+
+    def create_quick_win_card(title: str, content: str) -> str:
+        nonlocal cards_created
+
+        # Extract key info from content
+        zeitbedarf_match = re.search(r'Zeitbedarf:\s*([^<\n]+)', content, re.IGNORECASE)
+        ersparnis_match = re.search(r'Potenzielle Zeitersparnis:\s*([^<\n]+)', content, re.IGNORECASE)
+
+        zeitbedarf = zeitbedarf_match.group(1).strip()[:30] if zeitbedarf_match else ""
+        ersparnis = ersparnis_match.group(1).strip()[:40] if ersparnis_match else ""
+
+        # Extract and truncate the main description (Mit KI section)
+        mit_ki_match = re.search(r'Mit KI:\s*([^<]+(?:<(?!strong)[^>]*>[^<]*)*)', content, re.IGNORECASE | re.DOTALL)
+        description = ""
+        if mit_ki_match:
+            desc_text = re.sub(r'<[^>]+>', '', mit_ki_match.group(1)).strip()
+            words = desc_text.split()
+            if len(words) > 25:
+                description = ' '.join(words[:25]) + '...'
+            else:
+                description = desc_text
+
+        # Extract max 3 steps
+        schritte = []
+        schritte_match = re.search(r'Schritte:(.*?)(?=Potenzielle|$)', content, re.DOTALL | re.IGNORECASE)
+        if schritte_match:
+            li_matches = re.findall(r'<li>([^<]+)', schritte_match.group(1))
+            for i, li in enumerate(li_matches[:3]):
+                step_text = li.strip()
+                if len(step_text) > 50:
+                    step_text = step_text[:50] + '...'
+                schritte.append(step_text)
+
+        cards_created += 1
+
+        # Build compact card
+        card_html = f'''<div class="quick-win-card">
+    <div class="quick-win-header">
+        <span class="quick-win-icon">⚡</span>
+        <strong>{title.strip()[:50]}</strong>
+        <span class="quick-win-meta">{zeitbedarf}</span>
+    </div>
+    <p class="quick-win-desc">{description}</p>'''
+
+        if schritte:
+            card_html += '\n    <ul class="quick-win-steps">'
+            for step in schritte:
+                card_html += f'\n        <li>{step}</li>'
+            card_html += '\n    </ul>'
+
+        if ersparnis:
+            card_html += f'\n    <div class="quick-win-savings">💰 {ersparnis}</div>'
+
+        card_html += '\n</div>\n'
+        return card_html
+
+    # Try to find and transform Quick Win sections
+    # Look for sections with multiple "Zeitbedarf:" entries
+    sections_found = list(re.finditer(
+        r'(<strong>([^<]+)</strong>\s*[🔧⚡📋]*\s*)(.*?)(Potenzielle Zeitersparnis:[^<]+)',
+        output, re.DOTALL | re.IGNORECASE
+    ))
+
+    if sections_found:
+        # Process in reverse to maintain string positions
+        for match in reversed(sections_found):
+            full_match = match.group(0)
+            title = match.group(2)
+            content = match.group(3) + match.group(4)
+
+            # Only transform if it looks like a Quick Win block
+            if 'Zeitbedarf:' in content and 'Mit KI:' in content:
+                card = create_quick_win_card(title, content)
+                output = output[:match.start()] + card + output[match.end():]
+
+    if cards_created > 0:
+        log.info("[QUICK-WINS-FORMATTER] Created %d compact Quick Win cards", cards_created)
+    else:
+        log.debug("[QUICK-WINS-FORMATTER] No Quick Win blocks matched")
+
+    return output
+
+
+# -------------------- Maßnahme 2 v11.0: Roadmap Phase Formatter ----------------
+
+def _format_roadmap_phases_compact(html_content: str) -> str:
+    """
+    Transform Roadmap phases into compact cards.
+
+    v11.0: Targets Phase 0-3 sections in Roadmap.
+    - Extracts Ziel, key steps, and Meilenstein
+    - Limits each phase to max 60 words
+    - Creates visual phase cards
+    """
+    if not html_content or len(html_content) < 200:
+        return html_content
+
+    log.info("[ROADMAP-PHASE-FORMATTER] Starting transformation (length: %d chars)", len(html_content))
+
+    output = html_content
+    phases_created = 0
+
+    # Pattern for Phase sections
+    # Matches: Phase 0:, Phase 1:, etc. followed by content
+    phase_pattern = re.compile(
+        r'<(?:strong|h4|h3|p)[^>]*>\s*(?:<strong>)?\s*Phase\s*(\d+)[:\s]*([^<]*?)(?:</strong>)?\s*'
+        r'(?:\(([^)]+)\))?\s*</(?:strong|h4|h3|p)>'
+        r'(.*?)(?=<(?:strong|h4|h3|p)[^>]*>\s*(?:<strong>)?\s*Phase\s*\d|<h2|<h3[^>]*>(?!.*Phase)|</section>|$)',
+        re.DOTALL | re.IGNORECASE
+    )
+
+    def create_phase_card(phase_num: str, phase_title: str, timeframe: str, content: str) -> str:
+        nonlocal phases_created
+
+        # Extract Ziel if present
+        ziel_match = re.search(r'Ziel:\s*([^<]+)', content, re.IGNORECASE)
+        ziel = ""
+        if ziel_match:
+            ziel_text = ziel_match.group(1).strip()
+            words = ziel_text.split()
+            if len(words) > 20:
+                ziel = ' '.join(words[:20]) + '...'
+            else:
+                ziel = ziel_text
+
+        # Extract bullet points (max 4)
+        bullets = []
+        li_matches = re.findall(r'<li>([^<]+(?:<(?!/?li)[^>]*>[^<]*)*)</li>', content, re.IGNORECASE)
+        for li in li_matches[:4]:
+            text = re.sub(r'<[^>]+>', '', li).strip()
+            if len(text) > 60:
+                text = text[:60] + '...'
+            if text:
+                bullets.append(text)
+
+        # Extract Meilenstein if present
+        meilenstein_match = re.search(r'Meilenstein:\s*([^<]+)', content, re.IGNORECASE)
+        meilenstein = ""
+        if meilenstein_match:
+            ms_text = meilenstein_match.group(1).strip()
+            if len(ms_text) > 80:
+                meilenstein = ms_text[:80] + '...'
+            else:
+                meilenstein = ms_text
+
+        phases_created += 1
+
+        # Determine phase color based on number
+        colors = ['#10B981', '#6366F1', '#F59E0B', '#EC4899']
+        color = colors[int(phase_num) % len(colors)]
+
+        title_clean = phase_title.strip() if phase_title else f"Phase {phase_num}"
+        timeframe_clean = timeframe.strip() if timeframe else ""
+
+        card_html = f'''<div class="roadmap-phase-card" style="border-left: 4px solid {color};">
+    <h4><span class="phase-badge" style="background: {color};">Phase {phase_num}</span> {title_clean}</h4>'''
+
+        if timeframe_clean:
+            card_html += f'\n    <div class="phase-timeframe">📅 {timeframe_clean}</div>'
+
+        if ziel:
+            card_html += f'\n    <p class="phase-ziel"><strong>Ziel:</strong> {ziel}</p>'
+
+        if bullets:
+            card_html += '\n    <ul>'
+            for b in bullets:
+                card_html += f'\n        <li>{b}</li>'
+            card_html += '\n    </ul>'
+
+        if meilenstein:
+            card_html += f'\n    <div class="milestone"><strong>Meilenstein:</strong> {meilenstein}</div>'
+
+        card_html += '\n</div>\n'
+        return card_html
+
+    # Find all phase sections
+    matches = list(phase_pattern.finditer(output))
+
+    if matches:
+        # Process in reverse order
+        for match in reversed(matches):
+            phase_num = match.group(1)
+            phase_title = match.group(2) or ""
+            timeframe = match.group(3) or ""
+            content = match.group(4)
+
+            card = create_phase_card(phase_num, phase_title, timeframe, content)
+            output = output[:match.start()] + card + output[match.end():]
+
+    if phases_created > 0:
+        log.info("[ROADMAP-PHASE-FORMATTER] Created %d phase cards", phases_created)
+    else:
+        log.debug("[ROADMAP-PHASE-FORMATTER] No phases matched")
+
+    return output
+
+
+# -------------------- Maßnahme 3 v11.0: Empfehlungen Formatter v3.0 ----------------
+
+def _format_empfehlungen_v3(html_content: str) -> str:
+    """
+    Transform numbered Empfehlungen into structured cards.
+
+    v3.0: Handles "Empfehlung 1:", "Empfehlung 2:" patterns.
+    - Extracts Schwerpunkt and Maßnahme
+    - Creates numbered cards with clear structure
+    - Max 50 words per card
+    """
+    if not html_content or len(html_content) < 200:
+        return html_content
+
+    log.info("[EMPFEHLUNGEN-V3] Starting transformation (length: %d chars)", len(html_content))
+
+    output = html_content
+    cards_created = 0
+
+    # Pattern for "Empfehlung X:" format (common in GPT output)
+    empfehlung_pattern = re.compile(
+        r'Empfehlung\s*(\d+)[:\s]*([^<]*?)(?:Schwerpunkt[:\s]*)?([^<]*?)'
+        r'(?:Maßnahme[:\s]*([^<]*))?'
+        r'(?=Empfehlung\s*\d|<h[23]|</section>|$)',
+        re.DOTALL | re.IGNORECASE
+    )
+
+    # Alternative: Look for numbered recommendations in paragraphs
+    numbered_rec_pattern = re.compile(
+        r'<p>\s*Empfehlung\s*(\d+)[:\s–\-]+\s*([^<]+)</p>'
+        r'(.*?)(?=<p>\s*Empfehlung\s*\d|<h[23]|</section>|$)',
+        re.DOTALL | re.IGNORECASE
+    )
+
+    def create_empfehlung_card(num: str, title: str, content: str) -> str:
+        nonlocal cards_created
+
+        # Extract Schwerpunkt
+        schwerpunkt_match = re.search(r'Schwerpunkt:\s*([^<.]+)', content, re.IGNORECASE)
+        schwerpunkt = ""
+        if schwerpunkt_match:
+            sp_text = schwerpunkt_match.group(1).strip()
+            if len(sp_text) > 60:
+                schwerpunkt = sp_text[:60] + '...'
+            else:
+                schwerpunkt = sp_text
+
+        # Extract Maßnahme
+        massnahme_match = re.search(r'Maßnahme:\s*([^<.]+)', content, re.IGNORECASE)
+        massnahme = ""
+        if massnahme_match:
+            ma_text = massnahme_match.group(1).strip()
+            if len(ma_text) > 60:
+                massnahme = ma_text[:60] + '...'
+            else:
+                massnahme = ma_text
+
+        # Clean title
+        title_clean = title.strip()
+        if len(title_clean) > 50:
+            title_clean = title_clean[:50] + '...'
+
+        cards_created += 1
+
+        card_html = f'''<div class="empfehlung-card">
+    <div class="empfehlung-header">
+        <span class="empfehlung-num">{num}</span>
+        <strong>{title_clean}</strong>
+    </div>'''
+
+        if schwerpunkt:
+            card_html += f'\n    <p class="empfehlung-schwerpunkt"><span class="label">Schwerpunkt:</span> {schwerpunkt}</p>'
+
+        if massnahme:
+            card_html += f'\n    <p class="empfehlung-massnahme"><span class="label">Maßnahme:</span> {massnahme}</p>'
+
+        card_html += '\n</div>\n'
+        return card_html
+
+    # Try numbered_rec_pattern first
+    matches = list(numbered_rec_pattern.finditer(output))
+
+    if matches:
+        for match in reversed(matches):
+            num = match.group(1)
+            title = match.group(2)
+            content = match.group(3) if match.group(3) else ""
+
+            card = create_empfehlung_card(num, title, content)
+            output = output[:match.start()] + card + output[match.end():]
+
+    if cards_created > 0:
+        log.info("[EMPFEHLUNGEN-V3] Created %d Empfehlung cards", cards_created)
+    else:
+        log.debug("[EMPFEHLUNGEN-V3] No Empfehlungen matched, trying fallback")
+
+    return output
+
+
+# -------------------- Maßnahme 4 v11.0: Förderprüfung Formatter ----------------
+
+def _format_foerderpruefung_compact(html_content: str) -> str:
+    """
+    Transform Förderprüfung steps into compact checklist cards.
+
+    v11.0: Targets sections like Projektsteckbrief, Förderfit, etc.
+    - Creates checklist-style cards
+    - Max 40 words per item
+    """
+    if not html_content or len(html_content) < 200:
+        return html_content
+
+    log.info("[FOERDERPRUEFUNG-FORMATTER] Starting transformation (length: %d chars)", len(html_content))
+
+    output = html_content
+    items_created = 0
+
+    # Pattern for bold label followed by description
+    # Matches: <strong>Label:</strong> Description text
+    label_pattern = re.compile(
+        r'<(?:strong|b)>([^<:]+):</(?:strong|b)>\s*([^<]+(?:<(?!strong|b|/p)[^>]*>[^<]*)*)',
+        re.DOTALL | re.IGNORECASE
+    )
+
+    def truncate_description(desc: str, max_words: int = 35) -> str:
+        text = re.sub(r'<[^>]+>', '', desc).strip()
+        words = text.split()
+        if len(words) > max_words:
+            return ' '.join(words[:max_words]) + '...'
+        return text
+
+    def create_checklist_item(label: str, description: str) -> str:
+        nonlocal items_created
+
+        desc_truncated = truncate_description(description, 35)
+        items_created += 1
+
+        return f'''<div class="foerder-checklist-item">
+    <span class="foerder-check">☑</span>
+    <div class="foerder-content">
+        <strong>{label.strip()}</strong>
+        <p>{desc_truncated}</p>
+    </div>
+</div>
+'''
+
+    # Find and transform labeled sections
+    matches = list(label_pattern.finditer(output))
+
+    # Only process if we find typical Förderprüfung labels
+    foerder_labels = ['projektsteckbrief', 'förderfit', 'ressourcenplanung',
+                      'dokumente', 'zeitliche', 'nächster schritt']
+
+    relevant_matches = []
+    for match in matches:
+        label_lower = match.group(1).lower()
+        if any(fl in label_lower for fl in foerder_labels):
+            relevant_matches.append(match)
+
+    if relevant_matches:
+        for match in reversed(relevant_matches):
+            label = match.group(1)
+            desc = match.group(2)
+
+            item = create_checklist_item(label, desc)
+            output = output[:match.start()] + item + output[match.end():]
+
+    if items_created > 0:
+        log.info("[FOERDERPRUEFUNG-FORMATTER] Created %d checklist items", items_created)
+    else:
+        log.debug("[FOERDERPRUEFUNG-FORMATTER] No Förderprüfung items matched")
+
+    return output
+
+
 # Keywords to auto-bold in German business/consulting context
 BOLD_KEYWORDS_DE = [
     "Maßnahme", "Risiko", "Vorteil", "Nachteil", "Empfehlung", "Ergebnis",
@@ -7767,7 +8173,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         "RISKS_HTML", "GAMECHANGER_HTML", "FOERDERPOTENZIAL_HTML", "RECOMMENDATIONS_HTML",
         "ORG_CHANGE_HTML", "BUSINESS_CASE_HTML", "PILOT_PLAN_HTML", "ROADMAP_12M_HTML",
         "DATA_READINESS_HTML", "STRATEGIE_GOVERNANCE_HTML", "UNTERNEHMENSPROFIL_MARKT_HTML",
-        "MONETARISIERUNG_HTML", "KI_SKILLPLAN_HTML"
+        "MONETARISIERUNG_HTML", "KI_SKILLPLAN_HTML", "QUICK_WINS_HTML"
     ]
     log.info("[GLOBAL-TRUNCATION] Starting aggressive truncation for %d sections", len(truncation_targets))
     for key in truncation_targets:
@@ -7866,6 +8272,57 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             log.error(f"[INTEGRATION] Recommendations formatting failed: {e}")
             # Keep original - don't break pipeline
     sections["recommendations"] = sections.get("RECOMMENDATIONS_HTML", "")
+
+    # ========== v11.0: ADDITIONAL SECTION FORMATTERS ==========
+    # Maßnahme 1: Quick Wins compact card formatting
+    qw_html_format = sections.get("QUICK_WINS_HTML", "")
+    if qw_html_format and len(qw_html_format) > 200:
+        try:
+            original_length = len(qw_html_format)
+            qw_html_format = _format_quick_wins_compact(qw_html_format)
+            log.info(f"[INTEGRATION] Quick Wins HTML after compact formatting: {len(qw_html_format)} chars (delta: {len(qw_html_format) - original_length})")
+            sections["QUICK_WINS_HTML"] = qw_html_format
+            sections["QUICK_WINS_HTML_LEFT"] = qw_html_format
+        except Exception as e:
+            log.error(f"[INTEGRATION] Quick Wins formatting failed: {e}")
+
+    # Maßnahme 2: Roadmap phases compact formatting (for 12M roadmap)
+    roadmap_12m_html = sections.get("ROADMAP_12M_HTML", "")
+    if roadmap_12m_html and len(roadmap_12m_html) > 200:
+        try:
+            original_length = len(roadmap_12m_html)
+            roadmap_12m_html = _format_roadmap_phases_compact(roadmap_12m_html)
+            log.info(f"[INTEGRATION] Roadmap 12M HTML after phase formatting: {len(roadmap_12m_html)} chars (delta: {len(roadmap_12m_html) - original_length})")
+            sections["ROADMAP_12M_HTML"] = roadmap_12m_html
+            sections["roadmap_12m"] = roadmap_12m_html
+        except Exception as e:
+            log.error(f"[INTEGRATION] Roadmap 12M formatting failed: {e}")
+
+    # Maßnahme 3: Empfehlungen v3.0 formatting (apply after existing formatter)
+    rec_html = sections.get("RECOMMENDATIONS_HTML", "")
+    if rec_html and len(rec_html) > 200:
+        try:
+            original_length = len(rec_html)
+            rec_html = _format_empfehlungen_v3(rec_html)
+            rec_html = _format_recommendations_compact(rec_html)
+            log.info(f"[INTEGRATION] Recommendations HTML after v3.0 formatting: {len(rec_html)} chars (delta: {len(rec_html) - original_length})")
+            sections["RECOMMENDATIONS_HTML"] = rec_html
+            sections["recommendations"] = rec_html
+        except Exception as e:
+            log.error(f"[INTEGRATION] Empfehlungen v3.0 formatting failed: {e}")
+
+    # Maßnahme 4: Förderprüfung compact formatting
+    foerder_html = sections.get("FOERDERPOTENZIAL_HTML", "")
+    if foerder_html and len(foerder_html) > 200:
+        try:
+            original_length = len(foerder_html)
+            foerder_html = _format_foerderpruefung_compact(foerder_html)
+            log.info(f"[INTEGRATION] Förderpotenzial HTML after checklist formatting: {len(foerder_html)} chars (delta: {len(foerder_html) - original_length})")
+            sections["FOERDERPOTENZIAL_HTML"] = foerder_html
+            sections["foerderpotenzial"] = foerder_html
+        except Exception as e:
+            log.error(f"[INTEGRATION] Förderprüfung formatting failed: {e}")
+
     # Sprint N3.3: Apply Exec Summary Hard-Clean to remove H1/H2 and label text
     from services.html_sanitizer import clean_exec_summary_html
     exec_summary_cleaned = clean_exec_summary_html(sections.get("EXECUTIVE_SUMMARY_HTML", ""))
