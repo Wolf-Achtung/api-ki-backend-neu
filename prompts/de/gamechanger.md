@@ -24,51 +24,56 @@ VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>
 → Überschriften werden vom Template gesetzt, nicht vom GPT-Output
 
 =============================================================================
-ANTI-TEXTWÜSTEN REGELN v1.0 (STRIKT - PFLICHT!)
+ANTI-TEXTWÜSTEN REGELN v2.0 (AGGRESSIV - PFLICHT!)
 =============================================================================
-PROBLEM: Lange Textblöcke sind im PDF unlesbar, auch mit farbiger Box.
-LÖSUNG: Strukturierter Output mit visuellen Ankerpunkten.
+PROBLEM: GPT erzeugt zu lange Textblöcke - auch in Bullet-Listen.
+LÖSUNG: STRENGE Wort- und Satzlimits pro Element.
+
+HARTE LIMITS (ÜBERSCHREITUNG = UNGÜLTIG):
+┌─────────────────────────────────────────────────────────┐
+│ Element               │ Max Wörter │ Max Sätze        │
+├─────────────────────────────────────────────────────────┤
+│ Absatz (<p>)          │ 50 Wörter  │ 2 Sätze          │
+│ Bullet (<li>)         │ 30 Wörter  │ 1-2 Sätze        │
+│ Sektion gesamt        │ 150 Wörter │ -                │
+└─────────────────────────────────────────────────────────┘
 
 ABSATZ-REGELN (PFLICHT):
-- Maximal 3 Sätze pro Absatz
-- Nach jedem Absatz: Leerzeile ODER Bullet-Liste
-- KEINE Absätze über 80 Wörter
+- Maximal 2 Sätze pro Absatz (NICHT 3!)
+- KEINE Absätze über 50 Wörter
+- Jede Sektion beginnt mit 1 Satz Einleitung
+
+BULLET-REGELN (PFLICHT):
+- Maximal 30 Wörter pro Bullet
+- Format: <strong>Stichwort:</strong> Ein kurzer Satz.
+- KEINE Nebensätze in Bullets
+- KEINE verschachtelten Aufzählungen
 
 STRUKTUR PRO SEKTION (PFLICHT):
-Jede der 4 Sektionen MUSS enthalten:
-1. Einen kurzen Einleitungssatz (1-2 Sätze max)
-2. Eine Bullet-Liste mit 3-5 Punkten
-3. Optional: Einen Abschlusssatz
-
-FORMAT-TEMPLATE PRO SEKTION:
-<p><strong>[Kernaussage in 1 Satz]</strong></p>
+<p><strong>[Kernaussage in MAX 15 Wörtern]</strong></p>
 <ul>
-  <li><strong>[Stichwort]:</strong> [Erklärung in 1 Satz]</li>
-  <li><strong>[Stichwort]:</strong> [Erklärung in 1 Satz]</li>
-  <li><strong>[Stichwort]:</strong> [Erklärung in 1 Satz]</li>
+  <li><strong>Bisher:</strong> [Problem in 1 Satz, max 25 Wörter]</li>
+  <li><strong>Neu:</strong> [Lösung in 1 Satz, max 25 Wörter]</li>
+  <li><strong>Nutzen:</strong> [Wirkung in 1 Satz, max 25 Wörter]</li>
 </ul>
-<p>[Optionaler Abschlusssatz]</p>
 
-VERBOTEN - TEXTWÜSTEN-MUSTER:
-❌ Absätze mit mehr als 4 Sätzen
-❌ Mehrere Absätze ohne Bullet-Liste dazwischen
-❌ Sektionen ohne jegliche <ul> oder <ol>
-❌ Fließtext über 100 Wörter am Stück
+VERBOTEN (STRIKT!):
+❌ Absätze mit mehr als 2 Sätzen
+❌ Bullets mit mehr als 30 Wörtern
+❌ Sektionen über 150 Wörter
+❌ Schachtelsätze (Sätze mit "wobei", "während", "indem")
+❌ Fließtext ohne Bullet-Listen
+❌ Einleitungen länger als 1 Satz
 
 BEISPIEL - SO NICHT:
-❌ "Die Transformation basiert auf einem modularen Ansatz, der verschiedene
-    Komponenten integriert und dabei sowohl technische als auch organisatorische
-    Aspekte berücksichtigt, wobei die Skalierbarkeit im Vordergrund steht und
-    gleichzeitig die bestehenden Prozesse nicht vollständig ersetzt werden..."
-    [= Textwüste, unlesbar!]
+❌ "Bisher: Jede KI-Readiness-Analyse wird wie ein einmaliges Beratungsprojekt
+    behandelt, obwohl sich Struktur und Fragen stark ähneln. Die Erhebung von
+    Daten, die Formulierung der Fragen und die Ableitung von Empfehlungen
+    werden immer wieder neu konzipiert." [= 45 Wörter = TEXTWÜSTE!]
 
 BEISPIEL - SO JA:
-✅ <p><strong>Die Transformation basiert auf drei Säulen:</strong></p>
-   <ul>
-     <li><strong>Modularität:</strong> Wiederverwendbare Bausteine statt Einzellösungen</li>
-     <li><strong>Skalierbarkeit:</strong> Wachstum ohne proportionalen Mehraufwand</li>
-     <li><strong>Integration:</strong> Aufbau auf bestehenden Prozessen</li>
-   </ul>
+✅ <li><strong>Bisher:</strong> Jede Analyse startet bei Null, obwohl 70%
+   der Logik wiederkehrend ist.</li> [= 15 Wörter = PERFEKT!]
 =============================================================================
 -->
 
