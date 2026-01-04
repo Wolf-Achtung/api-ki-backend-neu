@@ -18,7 +18,7 @@ STRUKTUR (4 Pflicht-Abschnitte):
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: niedrige Hürden, <10.000€, Beratungs-/Gründerförderung, BAFA, ERP-Gründerkredit
 - team: Prozessdigitalisierung, KMU-innovativ, go-digital
-- kmu: Digital Jetzt, ZIM, strukturelle Förderung
+- kmu: ZIM, KfW-Digitalisierung, strukturelle Förderung
 
 ANTI-REDUNDANZ:
 - Business-Case-Zahlen EINMAL nennen, nicht wiederholen

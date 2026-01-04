@@ -249,14 +249,6 @@ FUNDING_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
     ],
     "team": [
         {
-            "program_id": "digital_jetzt",
-            "name": "Digital Jetzt",
-            "provider": "BMWK",
-            "max_amount": "50.000 €",
-            "fit_reason": "Optimal für kleine Teams, KI-Qualifizierung inklusive",
-            "application_complexity": "medium",
-        },
-        {
             "program_id": "go_digital",
             "name": "go-digital",
             "provider": "BMWK",
@@ -281,14 +273,6 @@ FUNDING_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
             "max_amount": "380.000 €",
             "fit_reason": "Für größere KI-Innovationsprojekte",
             "application_complexity": "high",
-        },
-        {
-            "program_id": "digital_jetzt",
-            "name": "Digital Jetzt",
-            "provider": "BMWK",
-            "max_amount": "50.000 €",
-            "fit_reason": "KI-Qualifizierung und Digitalisierung",
-            "application_complexity": "medium",
         },
         {
             "program_id": "ai_act_compliance",
@@ -372,7 +356,7 @@ CHECKLIST_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
         {
             "step": 5,
             "title": "Förderantrag vorbereiten",
-            "description": "Unterlagen für Digital Jetzt oder go-digital zusammenstellen",
+            "description": "Unterlagen für go-digital oder regionale Programme zusammenstellen",
             "category": "funding",
             "estimated_hours": 8,
         },

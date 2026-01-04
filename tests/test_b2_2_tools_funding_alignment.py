@@ -335,7 +335,7 @@ class TestCategoryMappings:
 
         assert len(FUNDING_FOCUS_AREAS) > 0
         assert "go_digital" in FUNDING_FOCUS_AREAS
-        assert "digital_jetzt" in FUNDING_FOCUS_AREAS
+        assert "zim" in FUNDING_FOCUS_AREAS
 
     def test_size_compatibility_matrix(self):
         """SIZE_COMPATIBILITY should have all sizes."""

@@ -112,7 +112,6 @@ TOOL_CATEGORY_TO_FUNDING_AREA: Dict[str, List[str]] = {
 # Funding program focus areas
 FUNDING_FOCUS_AREAS: Dict[str, List[str]] = {
     "go_digital": ["digitalisierung", "it_sicherheit", "prozessoptimierung"],
-    "digital_jetzt": ["digitalisierung", "ki_integration", "qualifizierung"],
     "zim": ["innovation", "forschung", "ki_integration"],
     "exist": ["innovation", "technologie", "startup"],
     "kfw_digitalisierung": ["digitalisierung", "investition"],
@@ -125,9 +124,9 @@ FUNDING_FOCUS_AREAS: Dict[str, List[str]] = {
 
 # Size compatibility matrix
 SIZE_COMPATIBILITY: Dict[str, Dict[str, float]] = {
-    "solo": {"go_digital": 0.9, "nrw_digital": 0.8, "exist": 0.7, "digital_jetzt": 0.3},
-    "team": {"go_digital": 0.8, "digital_jetzt": 0.9, "nrw_digital": 0.8, "invest_bw": 0.7, "bavarian_ai": 0.7},
-    "kmu": {"digital_jetzt": 0.8, "zim": 0.9, "horizon_europe": 0.7, "kfw_digitalisierung": 0.8, "ai_act_compliance": 0.8},
+    "solo": {"go_digital": 0.9, "nrw_digital": 0.8, "exist": 0.7},
+    "team": {"go_digital": 0.8, "nrw_digital": 0.8, "invest_bw": 0.7, "bavarian_ai": 0.7},
+    "kmu": {"zim": 0.9, "horizon_europe": 0.7, "kfw_digitalisierung": 0.8, "ai_act_compliance": 0.8},
 }
 
 

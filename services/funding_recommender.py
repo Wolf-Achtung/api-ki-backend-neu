@@ -79,21 +79,6 @@ CORE_FUNDING_PROGRAMS: List[Dict[str, Any]] = [
         "summary_en": "Funding program for digitalization and IT security in SMEs",
     },
     {
-        "id": "digital_jetzt",
-        "name": "Digital Jetzt",
-        "provider": "BMWK",
-        "max_funding": "50.000 €",
-        "funding_rate": "40-50%",
-        "ki_relevance": "high",
-        "complexity": "medium",
-        "size_match": ["team", "kmu"],
-        "branches": ["all"],
-        "regions": ["DE"],
-        "url": "https://www.bmwk.de/digital-jetzt",
-        "summary_de": "Investitionszuschuss für digitale Technologien und KI-Qualifizierung",
-        "summary_en": "Investment grant for digital technologies and AI qualification",
-    },
-    {
         "id": "zim",
         "name": "ZIM - Zentrales Innovationsprogramm Mittelstand",
         "provider": "BMWK",
@@ -1657,67 +1642,56 @@ FUNDING_BRANCH_ALIGNMENT_ENABLED = os.getenv("FUNDING_BRANCH_ALIGNMENT_ENABLED",
 BRANCH_FUNDING_PRIORITIES: Dict[str, List[Tuple[str, float, str]]] = {
     "beratung": [
         ("go_digital", 1.3, "Ideal für Digitalisierung der Beratungsprozesse"),
-        ("digital_jetzt", 1.25, "Passt zu KI-Tools für Beratungsunternehmen"),
         ("kfw_digitalisierung", 1.2, "Flexibler Kredit für Tool-Investitionen"),
     ],
     "it": [
         ("zim", 1.4, "F&E-Projekte für innovative Softwarelösungen"),
         ("exist", 1.35, "Spin-offs und Tech-Startups"),
         ("horizon_europe", 1.3, "EU-Förderung für disruptive Tech"),
-        ("digital_jetzt", 1.2, "KI-Qualifizierung für IT-Teams"),
     ],
     "handel": [
         ("go_digital", 1.35, "E-Commerce-Digitalisierung"),
-        ("digital_jetzt", 1.3, "KI für Kundenservice und Personalisierung"),
         ("nrw_digital", 1.25, "Regionale Förderung für Handelsunternehmen"),
         ("kfw_digitalisierung", 1.2, "Finanzierung von Shop-Systemen"),
     ],
     "finanzen": [
         ("ai_act_compliance", 1.4, "Compliance-Unterstützung für regulierte KI"),
         ("zim", 1.3, "RegTech-Entwicklung"),
-        ("digital_jetzt", 1.25, "KI-Qualifizierung für Finanzteams"),
         ("bavarian_ai", 1.2, "KI-Förderung für bayerische Finanzdienstleister"),
     ],
     "gesundheit": [
         ("zim", 1.4, "F&E für Medizin-KI"),
         ("horizon_europe", 1.35, "EU-Förderung für Health-Tech"),
         ("ai_act_compliance", 1.3, "Compliance für High-Risk-KI im Gesundheitswesen"),
-        ("digital_jetzt", 1.2, "Digitalisierung von Praxen und Kliniken"),
     ],
     "industrie": [
         ("zim", 1.4, "Industrie-4.0-Projekte"),
         ("invest_bw", 1.3, "Innovationsförderung für Industriebetriebe"),
-        ("digital_jetzt", 1.25, "KI für Predictive Maintenance"),
         ("kfw_digitalisierung", 1.2, "IoT-Infrastruktur-Finanzierung"),
     ],
     "bildung": [
-        ("digital_jetzt", 1.35, "EdTech und Lernplattformen"),
-        ("go_digital", 1.3, "Digitalisierung von Bildungseinrichtungen"),
+        ("go_digital", 1.35, "Digitalisierung von Bildungseinrichtungen"),
         ("horizon_europe", 1.2, "EU-Bildungsprojekte"),
     ],
     "marketing": [
         ("go_digital", 1.35, "Digitale Marketing-Tools"),
-        ("digital_jetzt", 1.3, "KI für Content und Analytics"),
         ("nrw_digital", 1.2, "Regionale Agenturförderung"),
     ],
     # G19.1: New branch funding priorities
     "bauwesen_architektur": [
-        ("digital_jetzt", 1.4, "BIM-Digitalisierung und Planungstools"),
-        ("zim", 1.35, "F&E für Smart Building und Digital Twins"),
+        ("zim", 1.4, "F&E für Smart Building und Digital Twins"),
         ("kfw_energieeffizienz", 1.3, "Energieeffiziente Gebäudetechnik mit KI"),
         ("go_digital", 1.25, "Digitalisierung von Bauprozessen"),
         ("bafa_energieberatung", 1.2, "Energieberatung und Sanierung"),
     ],
     "verwaltung": [
         ("ozg_digitalisierung", 1.45, "Onlinezugangsgesetz - Pflicht zur Digitalisierung"),
-        ("digital_jetzt", 1.35, "E-Government und Bürgerservices"),
         ("foerderprogramm_bund_laender", 1.3, "Bund-Länder-Digitalisierungsinitiative"),
         ("ai_act_compliance", 1.35, "Compliance für behördliche High-Risk-KI"),
         ("open_data", 1.2, "Open Data und GovTech-Initiativen"),
     ],
     "transport_logistik": [
         ("cef_transport", 1.4, "EU CEF Transport - Infrastrukturdigitalisierung"),
-        ("digital_jetzt", 1.35, "Flottenmanagement und Supply-Chain-KI"),
         ("zim", 1.3, "F&E für Predictive Logistics und Routenoptimierung"),
         ("kfw_klimaschutz", 1.25, "E-Logistik und nachhaltige Mobilität"),
         ("go_digital", 1.2, "Digitalisierung von Logistikprozessen"),
@@ -1727,7 +1701,6 @@ BRANCH_FUNDING_PRIORITIES: Dict[str, List[Tuple[str, float, str]]] = {
 # Default priorities for unknown branches
 DEFAULT_FUNDING_PRIORITIES: List[Tuple[str, float, str]] = [
     ("go_digital", 1.2, "Universelles Digitalisierungsprogramm"),
-    ("digital_jetzt", 1.15, "KI-Investitionszuschuss für alle Branchen"),
     ("kfw_digitalisierung", 1.1, "Flexibler Digitalisierungskredit"),
 ]
 

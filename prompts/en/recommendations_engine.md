@@ -217,21 +217,21 @@ Selection based on:
       "risk_relation": "neutral",
       "required_investment": 8000.0,
       "related_tools": ["ChatGPT Enterprise"],
-      "related_funding": ["Digital Jetzt"],
+      "related_funding": ["go-digital"],
       "related_risks": [],
       "timeline_phase": "phase_1"
     },
     {
       "id": "rec2",
-      "title": "Submit Digital Jetzt funding application by Q1",
-      "description": "Prepare the funding application for 'Digital Jetzt'. Funding up to 50% of investment costs possible.",
-      "reason": "Expiring programme with high match to your industry and size.",
+      "title": "Submit go-digital funding application by Q1",
+      "description": "Prepare the funding application for 'go-digital'. Funding up to 50% of consulting costs possible.",
+      "reason": "Federal programme with high match to your industry and size.",
       "impact_level": "high",
       "urgency_level": "high",
       "risk_relation": "neutral",
       "required_investment": 500.0,
       "related_tools": ["ChatGPT Enterprise", "Microsoft Copilot"],
-      "related_funding": ["Digital Jetzt"],
+      "related_funding": ["go-digital"],
       "related_risks": [],
       "timeline_phase": "phase_1"
     },
@@ -301,7 +301,7 @@ Selection based on:
       "risk_relation": "requires_mitigation",
       "required_investment": 10000.0,
       "related_tools": ["ChatGPT Enterprise", "Microsoft Copilot"],
-      "related_funding": ["Digital Jetzt"],
+      "related_funding": ["ZIM"],
       "related_risks": [],
       "timeline_phase": "phase_3"
     }
