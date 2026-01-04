@@ -5169,6 +5169,250 @@ def _get_chapter_header(section_key: str) -> str:
     return ""
 
 
+# -------------------- CI-Design v2.0 Phase 4: Content-Komprimierung ----------------
+
+def _generate_gamechanger_compact(
+    bruchpunkt_headline: str,
+    bruchpunkt_detail: str,
+    transformation_headline: str,
+    benefits: List[str],
+    schritte: List[str]
+) -> str:
+    """Generiert kompakte Gamechanger-Sektion (CI-Design v2.0 Phase 4).
+
+    Reduziert Gamechanger von 5 auf 2 Seiten durch Problem/Lösung Layout.
+    """
+    # Benefits als Liste (max 3)
+    benefits_html = ''.join(f'<li>{html.escape(str(b))}</li>' for b in benefits[:3])
+
+    # Schritte als 2x2 Grid (max 4)
+    schritte_html = ''
+    for i, schritt in enumerate(schritte[:4], 1):
+        schritte_html += f'''
+        <div class="gamechanger-step">
+          <span class="gamechanger-step__number">{i}</span>
+          <p>{html.escape(str(schritt))}</p>
+        </div>
+        '''
+
+    return f'''
+    <div class="gamechanger-section">
+      <!-- Problem + Lösung nebeneinander -->
+      <div class="gamechanger-insight">
+        <div class="gamechanger-insight__problem">
+          <h3><span class="icon icon--warning">⚠</span> Strategischer Bruchpunkt</h3>
+          <p class="gamechanger-insight__headline">{html.escape(bruchpunkt_headline)}</p>
+          <p class="gamechanger-insight__detail">{html.escape(bruchpunkt_detail)}</p>
+        </div>
+
+        <div class="gamechanger-insight__arrow">→</div>
+
+        <div class="gamechanger-insight__solution">
+          <h3><span class="icon icon--success">✓</span> Transformations-Idee</h3>
+          <p class="gamechanger-insight__headline">{html.escape(transformation_headline)}</p>
+          <ul class="gamechanger-insight__benefits">
+            {benefits_html}
+          </ul>
+        </div>
+      </div>
+
+      <!-- Konkrete Schritte als Grid -->
+      <div class="gamechanger-steps card">
+        <h3><span class="icon">◎</span> Erster realistischer Schritt</h3>
+        <div class="gamechanger-steps__grid">
+          {schritte_html}
+        </div>
+      </div>
+    </div>
+    '''
+
+
+def _generate_funding_compact(
+    foerderquote: str = "30-50%",
+    max_foerderung: str = "16.500 €",
+    programme: List[Dict[str, str]] = None,
+    next_steps: List[str] = None
+) -> str:
+    """Generiert kompakte Förder-Sektion (CI-Design v2.0 Phase 4).
+
+    Reduziert Förderung von 5 auf 2 Seiten.
+    """
+    if programme is None:
+        programme = [
+            {'name': 'go-digital', 'geber': 'BMWK', 'eignung': 'Hoch', 'betrag': '16.500 €', 'komplexitaet': 'Niedrig'},
+            {'name': 'BAFA-Beratung', 'geber': 'Bund', 'eignung': 'Hoch', 'betrag': '3.200 €', 'komplexitaet': 'Niedrig'},
+        ]
+
+    if next_steps is None:
+        next_steps = [
+            'Projektsteckbrief erstellen (1-2 Seiten)',
+            'Förderfähigkeit mit go-digital prüfen',
+            'Antrag VOR Projektstart einreichen'
+        ]
+
+    # Programm-Tabelle
+    rows_html = ''
+    for prog in programme[:4]:
+        eignung = prog.get('eignung', 'Mittel')
+        badge_class = 'badge--success' if eignung == 'Hoch' else 'badge--warning'
+        rows_html += f'''
+        <tr>
+          <td><strong>{html.escape(prog.get("name", ""))}</strong><br><span class="text-muted">{html.escape(prog.get("geber", ""))}</span></td>
+          <td><span class="badge {badge_class}">{html.escape(eignung)}</span></td>
+          <td>{html.escape(prog.get("betrag", "—"))}</td>
+          <td>{html.escape(prog.get("komplexitaet", "Mittel"))}</td>
+        </tr>
+        '''
+
+    # Next Steps
+    steps_html = ''.join(f'<li>{html.escape(str(s))}</li>' for s in next_steps[:4])
+
+    return f'''
+    <div class="funding-section">
+      <!-- Kompakte Übersicht -->
+      <div class="funding-overview card card--highlight">
+        <h3>Förderpotenzial für Ihr KI-Projekt</h3>
+        <div class="funding-overview__grid">
+          <div class="funding-stat">
+            <span class="funding-stat__value">{html.escape(foerderquote)}</span>
+            <span class="funding-stat__label">Typische Förderquote</span>
+          </div>
+          <div class="funding-stat">
+            <span class="funding-stat__value">{html.escape(max_foerderung)}</span>
+            <span class="funding-stat__label">Max. Fördersumme</span>
+          </div>
+          <div class="funding-stat">
+            <span class="funding-stat__value">Auch ohne</span>
+            <span class="funding-stat__label">Business Case tragfähig</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Programme als kompakte Tabelle -->
+      <h3>Relevante Programme</h3>
+      <table class="funding-table compact">
+        <thead>
+          <tr>
+            <th>Programm</th>
+            <th>Eignung</th>
+            <th>Max. Förderung</th>
+            <th>Komplexität</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows_html}
+        </tbody>
+      </table>
+
+      <!-- Nächste Schritte -->
+      <div class="funding-next-steps card" style="margin-top: 16px;">
+        <h4><span class="icon">◎</span> Nächste Schritte</h4>
+        <ol class="checklist">
+          {steps_html}
+        </ol>
+      </div>
+    </div>
+    '''
+
+
+def _generate_recommendations_table(recommendations: List[Dict[str, str]]) -> str:
+    """Generiert Empfehlungen als kompakte Tabelle (CI-Design v2.0 Phase 4)."""
+    if not recommendations:
+        return ""
+
+    rows_html = ''
+    for i, rec in enumerate(recommendations[:6], 1):
+        auswirkung = rec.get('auswirkung', 'Mittel')
+        badge_class = 'badge--success' if auswirkung == 'Hoch' else 'badge--warning' if auswirkung == 'Mittel' else 'badge--info'
+
+        rows_html += f'''
+        <tr>
+          <td class="text-center">{i}</td>
+          <td><strong>{html.escape(rec.get("titel", ""))}</strong></td>
+          <td>{html.escape(rec.get("zeitrahmen", "—"))}</td>
+          <td><span class="badge {badge_class}">{html.escape(auswirkung)}</span></td>
+          <td>{html.escape(rec.get("nutzen", ""))}</td>
+        </tr>
+        '''
+
+    return f'''
+    <table class="recommendations-table">
+      <thead>
+        <tr>
+          <th width="5%">#</th>
+          <th width="30%">Empfehlung</th>
+          <th width="15%">Zeitrahmen</th>
+          <th width="15%">Auswirkung</th>
+          <th width="35%">Hauptnutzen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows_html}
+      </tbody>
+    </table>
+    '''
+
+
+def _generate_starter_kit_compact(
+    tools: List[Dict[str, str]],
+    total_setup_days: int = 9,
+    annual_cost: str = "500–2.000 €"
+) -> str:
+    """Generiert kompaktes Starter-Kit (CI-Design v2.0 Phase 4).
+
+    Reduziert von 2 auf 1 Seite durch Grid-Layout.
+    """
+    tools_html = ''
+    for tool in tools[:4]:
+        badge_class = 'tool-card__badge--recommended' if tool.get('type') == 'Empfohlen' else ''
+        tools_html += f'''
+        <div class="tool-card">
+          <span class="tool-card__badge {badge_class}">{html.escape(tool.get("type", "Essential"))}</span>
+          <h4>{html.escape(tool.get("name", ""))}</h4>
+          <p>{html.escape(tool.get("beschreibung", ""))}</p>
+          <span class="tool-card__setup">~{html.escape(tool.get("setup", "1 Tag"))}</span>
+        </div>
+        '''
+
+    return f'''
+    <div class="starter-kit">
+      <div class="starter-kit__header card card--highlight">
+        <h3>Ihr KI-Starter-Kit</h3>
+        <div class="starter-kit__meta">
+          <span>{len(tools)} Tools</span>
+          <span>•</span>
+          <span>{total_setup_days} Tage Setup</span>
+          <span>•</span>
+          <span>{html.escape(annual_cost)}/Jahr</span>
+        </div>
+      </div>
+
+      <div class="starter-kit__tools">
+        {tools_html}
+      </div>
+    </div>
+    '''
+
+
+def _generate_glossary_compact(terms: Dict[str, str]) -> str:
+    """Generiert kompaktes 2-spaltiges Glossar (CI-Design v2.0 Phase 4)."""
+    if not terms:
+        return ""
+
+    items_html = ''
+    for term, definition in list(terms.items())[:12]:  # Max 12 Begriffe
+        items_html += f'''
+        <dt>{html.escape(term)}</dt>
+        <dd>{html.escape(definition)}</dd>
+        '''
+
+    return f'''
+    <dl class="glossary">
+      {items_html}
+    </dl>
+    '''
+
+
 # -------------------- Score Bars (Legacy - CSS-only) ----------------
 def _build_score_bars_html(scores: Dict[str, Any]) -> str:
     def row(label: str, key: str) -> str:

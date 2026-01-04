@@ -2333,6 +2333,309 @@
         }
 
         /* ================================================
+           PHASE 4: CONTENT-KOMPRIMIERUNG (CI-Design v2.0)
+           ================================================ */
+
+        /* === 4.1 GAMECHANGER KOMPAKT === */
+        .gamechanger-section {
+            page-break-inside: avoid;
+        }
+
+        .gamechanger-insight {
+            display: flex;
+            gap: 24px;
+            align-items: stretch;
+            margin-bottom: 32px;
+        }
+
+        .gamechanger-insight__problem,
+        .gamechanger-insight__solution {
+            flex: 1;
+            padding: 24px;
+            border-radius: 8px;
+        }
+
+        .gamechanger-insight__problem {
+            background: #FEF3C7;
+            border-left: 4px solid var(--color-warning);
+        }
+
+        .gamechanger-insight__solution {
+            background: #ECFDF5;
+            border-left: 4px solid var(--color-accent);
+        }
+
+        .gamechanger-insight__arrow {
+            display: flex;
+            align-items: center;
+            font-size: 24pt;
+            color: var(--color-text-muted);
+        }
+
+        .gamechanger-insight__headline {
+            font-weight: 600;
+            font-size: 11pt;
+            margin-bottom: 8px;
+        }
+
+        .gamechanger-insight__detail {
+            font-size: 10pt;
+            color: var(--color-text-secondary);
+        }
+
+        .gamechanger-insight__benefits {
+            font-size: 10pt;
+            padding-left: 16px;
+            margin: 0;
+        }
+
+        .gamechanger-insight__benefits li {
+            margin-bottom: 4px;
+        }
+
+        .gamechanger-steps__grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .gamechanger-step {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .gamechanger-step__number {
+            width: 24px;
+            height: 24px;
+            background: var(--color-primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11pt;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .gamechanger-step p {
+            font-size: 9pt;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* === 4.2 FÖRDER-SEKTION KOMPAKT === */
+        .funding-overview__grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .funding-stat {
+            text-align: center;
+        }
+
+        .funding-stat__value {
+            display: block;
+            font-family: var(--font-heading);
+            font-size: 18pt;
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+
+        .funding-stat__label {
+            font-size: 9pt;
+            color: var(--color-text-secondary);
+        }
+
+        .funding-table.compact td,
+        .funding-table.compact th {
+            padding: 8px 12px;
+            font-size: 9pt;
+        }
+
+        .badge--success {
+            background: #ECFDF5;
+            color: #065F46;
+        }
+
+        .badge--warning {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge--info {
+            background: #EFF6FF;
+            color: #1E40AF;
+        }
+
+        .checklist {
+            padding-left: 20px;
+        }
+
+        .checklist li {
+            margin-bottom: 8px;
+            font-size: 10pt;
+        }
+
+        /* === 4.3 EMPFEHLUNGEN-TABELLE === */
+        .recommendations-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+        }
+
+        .recommendations-table th {
+            background: var(--color-primary);
+            color: white;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .recommendations-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--color-border);
+            vertical-align: top;
+        }
+
+        .recommendations-table tr:nth-child(even) {
+            background: var(--color-bg-light);
+        }
+
+        /* === 4.4 STARTER-KIT KOMPAKT === */
+        .starter-kit__meta {
+            display: flex;
+            gap: 8px;
+            font-size: 10pt;
+            color: var(--color-text-secondary);
+            margin-top: 8px;
+        }
+
+        .starter-kit__tools {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .tool-card {
+            padding: 16px;
+            background: white;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            page-break-inside: avoid;
+        }
+
+        .tool-card__badge {
+            font-size: 8pt;
+            padding: 2px 6px;
+            background: var(--color-primary);
+            color: white;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+
+        .tool-card__badge--recommended {
+            background: var(--color-accent);
+        }
+
+        .tool-card h4 {
+            font-size: 11pt;
+            margin: 8px 0 4px;
+        }
+
+        .tool-card p {
+            font-size: 9pt;
+            color: var(--color-text-secondary);
+            margin: 0;
+        }
+
+        .tool-card__setup {
+            font-size: 8pt;
+            color: var(--color-text-muted);
+            display: block;
+            margin-top: 8px;
+        }
+
+        /* === 4.5 CODE-BLÖCKE KOMPAKT === */
+        .code-block {
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 8pt;
+            line-height: 1.4;
+            background: #F8FAFC;
+            color: #334155;
+            border: 1px solid var(--color-border);
+            padding: 16px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        @media print {
+            .code-block {
+                font-size: 7pt;
+                padding: 12px;
+            }
+        }
+
+        /* === 4.6 GLOSSAR 2-SPALTIG === */
+        .glossary {
+            column-count: 2;
+            column-gap: 24px;
+        }
+
+        .glossary dt {
+            font-weight: 600;
+            font-size: 9pt;
+            color: var(--color-primary);
+            margin-top: 8px;
+            break-after: avoid;
+        }
+
+        .glossary dd {
+            font-size: 9pt;
+            margin: 0 0 8px 0;
+            color: var(--color-text-secondary);
+        }
+
+        /* === 4.7 KOMPAKTE HILFSELEMENTE === */
+        .text-muted {
+            color: var(--color-text-muted);
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .compact-list {
+            font-size: 9pt;
+            padding-left: 16px;
+            margin: 8px 0;
+        }
+
+        .compact-list li {
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        /* Kompakte Info-Box */
+        .info-box-compact {
+            background: var(--color-bg-light);
+            border-left: 3px solid var(--color-primary);
+            padding: 12px 16px;
+            font-size: 9pt;
+            margin: 16px 0;
+        }
+
+        .info-box-compact p {
+            margin: 0;
+        }
+
+        /* ================================================
            G21: PLATIN++ DESIGN ENHANCEMENT SYSTEM
            ================================================ */
 
