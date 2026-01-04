@@ -8,15 +8,6 @@ from ._normalize import _briefing_to_dict
 
 DEFAULT_PROGRAMS: List[Dict[str, Any]] = [
     {
-        "name": "Digital Jetzt (BMWK)",
-        "region": "DE",
-        "target": "KMU (bis 499 MA)",
-        "amount": "bis 50.000 € (bis 50%)",
-        "deadline": "31.03.2026",
-        "url": "https://www.bmwk.de",
-        "notes": "Investitionen in digitale Technologien & Qualifizierung",
-    },
-    {
         "name": "go-digital (BMWK)",
         "region": "DE",
         "target": "Beratungszuschuss für KMU",

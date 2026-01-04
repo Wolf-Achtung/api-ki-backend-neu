@@ -25,26 +25,6 @@
       "url": "https://www.bmwk.de/go-digital"
     },
     {
-      "id": "digital_jetzt",
-      "name_de": "Digital Jetzt (BMWK)",
-      "name_en": "Digital Now (Federal Ministry of Economics Grant)",
-      "region": "DE",
-      "region_de": "Deutschland (bundesweit)",
-      "region_en": "Germany (nationwide)",
-      "regions_en": ["Germany"],
-      "funding_type_en": "Grant",
-      "funding_rate_en": "up to 50%",
-      "max_amount": 50000,
-      "max_amount_en": "up to €50,000",
-      "focus_en": "Investments in digital technologies & employee training",
-      "summary_en": "Federal grant supporting SME investments in digital technologies and employee qualification programs for digital transformation.",
-      "suitable_for": ["team", "kmu"],
-      "notes_en": "SMEs up to 499 employees, deadline: 31.03.2026",
-      "relevance_ki": "high",
-      "priority": 1,
-      "url": "https://www.bmwk.de"
-    },
-    {
       "id": "kfw_digital_innovation",
       "name_de": "KfW-Förderkredite Digitalisierung & Innovation",
       "name_en": "KfW Development Bank Loans – Digitalization & Innovation",
