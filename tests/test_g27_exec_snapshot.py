@@ -81,7 +81,7 @@ def sample_sections() -> Dict[str, Any]:
         ],
         "FUNDING_V2_DATA": [
             {"name": "go-digital", "year": 2025, "level": "federal", "funding_rate": "50%", "match_score": 0.85},
-            {"name": "Digital Jetzt", "year": 2025, "level": "federal", "funding_rate": "40%", "match_score": 0.75},
+            {"name": "ZIM", "year": 2025, "level": "federal", "funding_rate": "25-60%", "match_score": 0.75},
         ],
         "QUICK_WINS_DATA": [
             "ChatGPT für Recherche einsetzen",

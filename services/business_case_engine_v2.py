@@ -51,6 +51,10 @@ __all__ = [
     "normalize_scenario_order",  # SPRINT N3.4 (TASK 2)
     "ensure_scenario_consistency",  # SPRINT N3.4 (TASK 2)
     "BUSINESS_CASE_ENGINE_V2_ENABLED",
+    # Funding caps (Problem #2 fix)
+    "FUNDING_CAPS_BY_SIZE",
+    "normalize_company_size",
+    "get_funding_cap",
 ]
 
 
@@ -73,6 +77,50 @@ MIN_ROI = -100.0  # -100% = total loss
 MAX_ROI = 1000.0  # 1000% = 10x return
 MIN_PAYBACK_MONTHS = 0.5  # Half a month minimum
 MAX_PAYBACK_MONTHS = 60.0  # 5 years maximum
+
+# Größenabhängige Funding-Caps (realistische Maximalwerte)
+# Adressiert Problem #2: "91.500€ für Solo unrealistisch"
+FUNDING_CAPS_BY_SIZE = {
+    "1": 15000,                    # Solo-Selbstständig/Freiberuflich
+    "solo": 15000,                 # Alias
+    "2-10": 35000,                 # Kleines Team
+    "team": 35000,                 # Alias
+    "11-100": 75000,               # KMU
+    "kmu": 75000,                  # Alias
+    "enterprise": 200000,          # Größere Unternehmen
+}
+
+# Company size normalization map
+SIZE_NORMALIZATION = {
+    "1": "solo",
+    "solo": "solo",
+    "selbstständig": "solo",
+    "freiberuflich": "solo",
+    "freelancer": "solo",
+    "2-10": "team",
+    "team": "team",
+    "kleines team": "team",
+    "11-100": "kmu",
+    "kmu": "kmu",
+    "mittelstand": "kmu",
+    ">100": "enterprise",
+    "enterprise": "enterprise",
+    "großunternehmen": "enterprise",
+}
+
+
+def normalize_company_size(size: Optional[str]) -> str:
+    """Normalize company size to standard categories."""
+    if not size:
+        return "team"  # Default
+    size_lower = str(size).lower().strip()
+    return SIZE_NORMALIZATION.get(size_lower, "team")
+
+
+def get_funding_cap(company_size: Optional[str]) -> float:
+    """Get the funding cap for a given company size."""
+    normalized = normalize_company_size(company_size)
+    return FUNDING_CAPS_BY_SIZE.get(normalized, 35000)
 
 
 # =============================================================================
@@ -722,16 +770,23 @@ def extract_investment_from_tools(
 def extract_funding_effect(
     funding_data: Optional[Any] = None,
     investment_total: float = 0.0,
+    company_size: Optional[str] = None,
 ) -> Tuple[float, List[str]]:
     """
-    Calculate funding effect on investment.
+    Calculate funding effect on investment with size-appropriate caps.
 
     Args:
         funding_data: Funding engine output
         investment_total: Total investment before funding
+        company_size: Company size category for applying realistic caps
 
     Returns:
         Tuple of (funding_reduction_eur, list of programme names used)
+
+    Note:
+        Applies FUNDING_CAPS_BY_SIZE to prevent unrealistic funding amounts.
+        E.g., Solo consultants are capped at 15,000€ regardless of theoretical
+        programme maximums (fixes Problem #2: "91.500€ für Solo unrealistisch").
     """
     if not funding_data:
         return 0.0, []
@@ -766,7 +821,23 @@ def extract_funding_effect(
             total_funding += investment_total * effective_rate * 0.5  # Conservative estimate
             programme_names.append(name)
 
-    return min(total_funding, investment_total * 0.7), programme_names  # Max 70% funding
+    # Apply multiple caps:
+    # 1. Max 70% of investment
+    investment_cap = investment_total * 0.7
+
+    # 2. Size-specific cap (addresses Problem #2)
+    size_cap = get_funding_cap(company_size)
+
+    # Use the lowest applicable cap
+    final_amount = min(total_funding, investment_cap, size_cap)
+
+    log.debug(
+        f"Funding calculation: raw={total_funding:.0f}, "
+        f"investment_cap={investment_cap:.0f}, size_cap={size_cap:.0f}, "
+        f"final={final_amount:.0f} (size={company_size})"
+    )
+
+    return final_amount, programme_names
 
 
 def extract_baseline_from_sections(
@@ -965,8 +1036,11 @@ def generate_business_case_report(
     if briefing.get("OPEX_REALISTISCH_EUR"):
         recurring_costs_12m = float(briefing.get("OPEX_REALISTISCH_EUR", 0.0)) * 12
 
-    # Extract funding effect
-    funding_effect, funding_programmes = extract_funding_effect(funding_data, investment_total)
+    # Extract funding effect with size-appropriate caps
+    company_size = briefing.get("unternehmensgroesse") if briefing else None
+    funding_effect, funding_programmes = extract_funding_effect(
+        funding_data, investment_total, company_size
+    )
 
     # Calculate base monthly savings
     base_monthly_savings = baseline_monthly_cost

@@ -131,7 +131,7 @@ Erstelle eine umfassende Automations-Roadmap mit:
       "dependencies": ["proc_003"],
       "blockers": ["data_quality"],
       "recommended_tools": ["ChatGPT", "Zendesk"],
-      "recommended_funding": ["Digital Jetzt"],
+      "recommended_funding": ["go-digital"],
       "risk_relation": "low",
       "phase_assignment": "phase_1",
       "category": "customer_service"

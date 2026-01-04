@@ -18,7 +18,7 @@ STRUCTURE (4 sections):
 PERSONA VARIATIONS (COMPANY_SIZE):
 - solo: low barriers, <10,000€, consulting/starter grants
 - team: process digitalization, SME-innovativ, go-digital
-- sme: Digital Jetzt, ZIM, structural funding
+- sme: ZIM, KfW Development Bank, structural funding
 
 ANTI-REDUNDANCY:
 - Business case numbers ONCE here, reference in other sections
