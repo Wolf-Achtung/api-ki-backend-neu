@@ -3376,15 +3376,17 @@ def _format_roadmap_phases_compact(html_content: str) -> str:
 
     # Replace in reverse order to maintain positions
     for phase in reversed(phase_data):
-        card = create_phase_card(
-            phase['phase_num'],
-            phase['title'],
-            phase['timeframe'],
-            phase['ziel'],
-            phase['meilenstein'],
-            phase['bullets']
-        )
-        output = output[:phase['start']] + card + output[phase['end']:]
+        p_num: str = phase.get('phase_num', '')  # type: ignore[assignment]
+        p_title: str = phase.get('title', '')  # type: ignore[assignment]
+        p_timeframe: str = phase.get('timeframe', '')  # type: ignore[assignment]
+        p_ziel: str = phase.get('ziel', '')  # type: ignore[assignment]
+        p_meilenstein: str = phase.get('meilenstein', '')  # type: ignore[assignment]
+        p_bullets: list = phase.get('bullets', [])  # type: ignore[assignment]
+        p_start: int = phase.get('start', 0)  # type: ignore[assignment]
+        p_end: int = phase.get('end', 0)  # type: ignore[assignment]
+
+        card = create_phase_card(p_num, p_title, p_timeframe, p_ziel, p_meilenstein, p_bullets)
+        output = output[:p_start] + card + output[p_end:]
 
     if phases_created > 0:
         log.info("[ROADMAP-PHASE-FORMATTER-V2] Created %d phase cards", phases_created)
@@ -3520,13 +3522,15 @@ def _format_empfehlungen_v3(html_content: str) -> str:
 
     # Replace in reverse order
     for emp in reversed(empfehlung_data):
-        card = create_empfehlung_card(
-            emp['num'],
-            emp['title'],
-            emp['schwerpunkt'],
-            emp['massnahme']
-        )
-        output = output[:emp['start']] + card + output[emp['end']:]
+        e_num: str = emp.get('num', '')  # type: ignore[assignment]
+        e_title: str = emp.get('title', '')  # type: ignore[assignment]
+        e_schwerpunkt: str = emp.get('schwerpunkt', '')  # type: ignore[assignment]
+        e_massnahme: str = emp.get('massnahme', '')  # type: ignore[assignment]
+        e_start: int = emp.get('start', 0)  # type: ignore[assignment]
+        e_end: int = emp.get('end', 0)  # type: ignore[assignment]
+
+        card = create_empfehlung_card(e_num, e_title, e_schwerpunkt, e_massnahme)
+        output = output[:e_start] + card + output[e_end:]
 
     if cards_created > 0:
         log.info("[EMPFEHLUNGEN-V4] Created %d Empfehlung cards", cards_created)
