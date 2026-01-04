@@ -9655,7 +9655,10 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             llm_response=None,  # Will use extraction-based generation
         )
 
-        sections["RECOMMENDATIONS_ENGINE_HTML"] = recommendations_report_to_html(reco_report, lang=report_lang)
+        # exclude_top_3=True because Top-3 is already shown on Page 10 (TOP_3_MASSNAHMEN_HTML)
+        sections["RECOMMENDATIONS_ENGINE_HTML"] = recommendations_report_to_html(
+            reco_report, lang=report_lang, exclude_top_3=True
+        )
         sections["_reco_report"] = reco_report  # Store for consistency checks
 
         # Extract key values for template usage
