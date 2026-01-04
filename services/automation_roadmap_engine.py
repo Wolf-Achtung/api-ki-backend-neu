@@ -807,7 +807,7 @@ def _generate_default_processes(
             "description": "Automatische Beantwortung von Standardanfragen per E-Mail oder Chat mittels KI-gestützter Textgenerierung.",
             "category": "customer_service",
             "tools": ["ChatGPT", "Claude", "Zendesk"],
-            "funding": ["Digital Jetzt", "go-digital"],
+            "funding": ["go-digital"],
         },
         {
             "id": "proc_002",
@@ -815,7 +815,7 @@ def _generate_default_processes(
             "description": "KI-gestützte Erstellung von Blog-Artikeln, Social Media Posts und Marketing-Texten.",
             "category": "content_creation",
             "tools": ["ChatGPT", "Jasper", "Copy.ai"],
-            "funding": ["Digital Jetzt", "KMU-innovativ"],
+            "funding": ["KMU-innovativ"],
         },
         {
             "id": "proc_003",
@@ -831,7 +831,7 @@ def _generate_default_processes(
             "description": "Intelligente E-Mail-Sortierung, automatische Antworten und Follow-up-Erinnerungen.",
             "category": "email_automation",
             "tools": ["Microsoft 365 Copilot", "Gmail AI", "HubSpot"],
-            "funding": ["Digital Jetzt"],
+            "funding": ["go-digital"],
         },
         {
             "id": "proc_005",
@@ -839,7 +839,7 @@ def _generate_default_processes(
             "description": "Automatisierte Erstellung von Reports und Dashboards mit KI-gestützten Insights.",
             "category": "analytics_reporting",
             "tools": ["Power BI", "Tableau", "Looker"],
-            "funding": ["KMU-innovativ", "Digital Jetzt"],
+            "funding": ["KMU-innovativ"],
         },
         {
             "id": "proc_006",
@@ -855,7 +855,7 @@ def _generate_default_processes(
             "description": "Automatische Transkription, Zusammenfassung und Action-Item-Extraktion aus Meetings.",
             "category": "scheduling_planning",
             "tools": ["Otter.ai", "Fireflies.ai", "Microsoft Teams"],
-            "funding": ["Digital Jetzt"],
+            "funding": ["go-digital"],
         },
         {
             "id": "proc_008",
@@ -871,7 +871,7 @@ def _generate_default_processes(
             "description": "KI-gestütztes Wissensmanagement mit semantischer Suche und automatischer Kategorisierung.",
             "category": "internal_communication",
             "tools": ["Notion AI", "Confluence", "Guru"],
-            "funding": ["go-digital", "Digital Jetzt"],
+            "funding": ["go-digital"],
         },
         {
             "id": "proc_010",
@@ -879,7 +879,7 @@ def _generate_default_processes(
             "description": "Verbindung verschiedener Tools und Automatisierung wiederkehrender Workflows.",
             "category": "workflow_automation",
             "tools": ["Zapier", "Make", "n8n"],
-            "funding": ["Digital Jetzt", "Digitalbonus"],
+            "funding": ["Digitalbonus"],
         },
         {
             "id": "proc_011",
@@ -895,7 +895,7 @@ def _generate_default_processes(
             "description": "Automatisierte Datenbereinigung, Transformation und Integration verschiedener Quellen.",
             "category": "data_processing",
             "tools": ["Alteryx", "Fivetran", "dbt"],
-            "funding": ["Digital Jetzt", "KMU-innovativ"],
+            "funding": ["KMU-innovativ"],
         },
     ]
 

@@ -5343,7 +5343,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
             foerder_focus = "go-digital, KMU-innovativ und regionale Digitalisierungsprogramme"
             budget_hinweis = "Für kleine Teams bieten Förderprogramme die Möglichkeit, ambitioniertere Projekte umzusetzen ohne die Liquidität zu gefährden"
         else:
-            foerder_focus = "Digital Jetzt, ZIM und strukturelle KMU-Förderprogramme"
+            foerder_focus = "ZIM, KfW-Digitalisierung und strukturelle KMU-Förderprogramme"
             budget_hinweis = "KMU können von umfangreichen Förderprogrammen profitieren, die sowohl Investitions- als auch Beratungskosten abdecken"
 
         return f"""<section class="section funding-potential">
