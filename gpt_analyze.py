@@ -8634,20 +8634,28 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             # Keep original - don't break pipeline
     sections["recommendations"] = sections.get("RECOMMENDATIONS_HTML", "")
 
-    # ========== v11.0: ADDITIONAL SECTION FORMATTERS ==========
-    # Maßnahme 1: Quick Wins compact card formatting
+    # ========== v13.1: DEAKTIVIERTE FORMATTER (verursachen Seitenaufblähung) ==========
+    # Die folgenden Formatter wurden deaktiviert weil sie Card-Layouts erzeugen,
+    # die mehr Platz verbrauchen als der Original-GPT-Fließtext.
+    # Dies führte zu: 47 statt 45 Seiten, leere Seiten, Textwüsten.
+
+    # Maßnahme 1: Quick Wins compact card formatting - DEAKTIVIERT v13.1
+    # Der Original-GPT-Output fließt besser als die Card-Boxen
     qw_html_format = sections.get("QUICK_WINS_HTML", "")
-    if qw_html_format and len(qw_html_format) > 200:
-        try:
-            original_length = len(qw_html_format)
-            qw_html_format = _format_quick_wins_compact(qw_html_format)
-            log.info(f"[INTEGRATION] Quick Wins HTML after compact formatting: {len(qw_html_format)} chars (delta: {len(qw_html_format) - original_length})")
-            sections["QUICK_WINS_HTML"] = qw_html_format
-            sections["QUICK_WINS_HTML_LEFT"] = qw_html_format
-        except Exception as e:
-            log.error(f"[INTEGRATION] Quick Wins formatting failed: {e}")
+    # v13.1: DEAKTIVIERT - Cards verursachen Seitenaufblähung
+    # if qw_html_format and len(qw_html_format) > 200:
+    #     try:
+    #         original_length = len(qw_html_format)
+    #         qw_html_format = _format_quick_wins_compact(qw_html_format)
+    #         log.info(f"[INTEGRATION] Quick Wins HTML after compact formatting: {len(qw_html_format)} chars (delta: {len(qw_html_format) - original_length})")
+    #         sections["QUICK_WINS_HTML"] = qw_html_format
+    #         sections["QUICK_WINS_HTML_LEFT"] = qw_html_format
+    #     except Exception as e:
+    #         log.error(f"[INTEGRATION] Quick Wins formatting failed: {e}")
+    log.info("[INTEGRATION] Quick Wins formatter DISABLED (v13.1) - using original GPT output")
 
     # Maßnahme 2: Roadmap phases compact formatting (for 12M roadmap)
+    # v13.1: NUR anwenden wenn Textwüsten-Muster erkannt werden
     roadmap_12m_html = sections.get("ROADMAP_12M_HTML", "")
     if roadmap_12m_html and len(roadmap_12m_html) > 200:
         try:
