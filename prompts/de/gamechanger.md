@@ -223,8 +223,36 @@ STATTDESSEN:
 
 PERSONA-ANPASSUNG (COMPANY_SIZE):
 {% if COMPANY_SIZE == "solo" %}
-SOLO: Der Bruchpunkt bezieht sich auf persönliche Skalierungsgrenzen.
-Die Transformation verändert, wie Wert geschaffen wird – nicht nur wie schnell.
+=============================================================================
+SOLO-SPEZIFISCHE REGELN (STRIKT!) - Problem #6 Lösung
+=============================================================================
+
+{% include '_solo_language_rules.md' %}
+
+SOLO-GAMECHANGER FOKUS:
+- Der Bruchpunkt bezieht sich auf persönliche Skalierungsgrenzen
+- Die Transformation verändert, wie Wert geschaffen wird – nicht nur wie schnell
+- KÜRZER: Nur 2 Bullets pro Sektion (statt 3)
+- PRAKTISCHER: Konkrete Zeitangaben statt abstrakte Konzepte
+- BUDGET-REALITÄT: Max. 5.000€ Einmalinvestition, 200€/Monat laufend
+
+STRATEGISCHER BRUCHPUNKT FÜR SOLO (VEREINFACHT):
+- NUR 1-2 kurze Sätze statt komplexer Analyse
+- DIREKT auf "Ihr Zeitproblem" bezogen
+- KEINE Organisationsbegriffe (Team, Abteilung, Rollout, etc.)
+- Format: "Bisher: [Problem]. Künftig: [einfache Lösung]."
+
+VERBOTENE BEGRIFFE FÜR SOLO (Null-Toleranz):
+- "Engine", "Plattform", "Framework", "Pipeline", "Architektur"
+- "Baukasten", "Modul", "Stack", "Layer", "API"
+- "Rollout", "Change Management", "Transformation", "Skalierung"
+- "Stakeholder", "Governance", "Compliance", "Audit"
+
+ERLAUBTE SOLO-BEGRIFFE:
+- "Werkzeug", "Tool", "App", "Vorlage", "Checkliste"
+- "Arbeitszeit", "Alltag", "Kunden", "Aufträge"
+- "Zeit sparen", "automatisieren", "vereinfachen"
+=============================================================================
 {% elif COMPANY_SIZE == "team" %}
 TEAM: Der Bruchpunkt bezieht sich auf Koordinationskosten und Wissenssilos.
 Die Transformation schafft neue Formen der Zusammenarbeit – nicht nur Effizienz.
@@ -454,7 +482,21 @@ Der Text soll wie eine **interne strategische Analyse** wirken, nicht wie Beratu
 
 ---
 
-## Umfang
-Ca. **350–450 Wörter** insgesamt.
+## Umfang (GRÖSSENBEZOGEN - Problem #6 Lösung)
+
+{% if COMPANY_SIZE == "solo" %}
+SOLO: Ca. **200–280 Wörter** insgesamt.
+- Fokus auf praktische Umsetzbarkeit
+- KEIN Strategiejargon
+- Max. 2 Bullets pro Sektion
+{% elif COMPANY_SIZE == "team" %}
+TEAM: Ca. **300–400 Wörter** insgesamt.
+- Moderate Tiefe
+- Koordinationsaspekte einbeziehen
+{% else %}
+KMU: Ca. **350–450 Wörter** insgesamt.
+- Volle strategische Tiefe
+- Alle 4 Blöcke ausführlich
+{% endif %}
 
 Keine Einleitung, keine Zusammenfassung außerhalb der vier Blöcke.
