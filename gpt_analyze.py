@@ -3247,76 +3247,41 @@ def _format_quick_wins_compact(html_content: str) -> str:
     return output
 
 
-# -------------------- Maßnahme 2 v11.0: Roadmap Phase Formatter ----------------
+# -------------------- Maßnahme 2 v12.0: Roadmap Phase Formatter (Robust) ----------------
 
 def _format_roadmap_phases_compact(html_content: str) -> str:
     """
     Transform Roadmap phases into compact cards.
 
-    v11.0: Targets Phase 0-3 sections in Roadmap.
-    - Extracts Ziel, key steps, and Meilenstein
-    - Limits each phase to max 60 words
-    - Creates visual phase cards
+    v12.0: ROBUST pattern matching for various GPT output formats:
+    - "Phase 0: Title (Woche 1-2)" as bold or plain text
+    - "Phase 1: Title" followed by Ziel:/Meilenstein:
+    - Handles both HTML-wrapped and plain-text phase headers
     """
     if not html_content or len(html_content) < 200:
         return html_content
 
-    log.info("[ROADMAP-PHASE-FORMATTER] Starting transformation (length: %d chars)", len(html_content))
+    log.info("[ROADMAP-PHASE-FORMATTER-V2] Starting transformation (length: %d chars)", len(html_content))
 
     output = html_content
     phases_created = 0
 
-    # Pattern for Phase sections
-    # Matches: Phase 0:, Phase 1:, etc. followed by content
-    phase_pattern = re.compile(
-        r'<(?:strong|h4|h3|p)[^>]*>\s*(?:<strong>)?\s*Phase\s*(\d+)[:\s]*([^<]*?)(?:</strong>)?\s*'
-        r'(?:\(([^)]+)\))?\s*</(?:strong|h4|h3|p)>'
-        r'(.*?)(?=<(?:strong|h4|h3|p)[^>]*>\s*(?:<strong>)?\s*Phase\s*\d|<h2|<h3[^>]*>(?!.*Phase)|</section>|$)',
-        re.DOTALL | re.IGNORECASE
-    )
+    # v12.0: More robust pattern - matches plain text "Phase X:" anywhere
+    # Pattern 1: Bold phase headers
+    # Pattern 2: Plain text phase headers in paragraphs
 
-    def create_phase_card(phase_num: str, phase_title: str, timeframe: str, content: str) -> str:
+    def create_phase_card(phase_num: str, title: str, timeframe: str, ziel: str, meilenstein: str, bullets: list) -> str:
         nonlocal phases_created
-
-        # Extract Ziel if present
-        ziel_match = re.search(r'Ziel:\s*([^<]+)', content, re.IGNORECASE)
-        ziel = ""
-        if ziel_match:
-            ziel_text = ziel_match.group(1).strip()
-            words = ziel_text.split()
-            if len(words) > 20:
-                ziel = ' '.join(words[:20]) + '...'
-            else:
-                ziel = ziel_text
-
-        # Extract bullet points (max 4)
-        bullets = []
-        li_matches = re.findall(r'<li>([^<]+(?:<(?!/?li)[^>]*>[^<]*)*)</li>', content, re.IGNORECASE)
-        for li in li_matches[:4]:
-            text = re.sub(r'<[^>]+>', '', li).strip()
-            if len(text) > 60:
-                text = text[:60] + '...'
-            if text:
-                bullets.append(text)
-
-        # Extract Meilenstein if present
-        meilenstein_match = re.search(r'Meilenstein:\s*([^<]+)', content, re.IGNORECASE)
-        meilenstein = ""
-        if meilenstein_match:
-            ms_text = meilenstein_match.group(1).strip()
-            if len(ms_text) > 80:
-                meilenstein = ms_text[:80] + '...'
-            else:
-                meilenstein = ms_text
-
         phases_created += 1
 
-        # Determine phase color based on number
         colors = ['#10B981', '#6366F1', '#F59E0B', '#EC4899']
         color = colors[int(phase_num) % len(colors)]
 
-        title_clean = phase_title.strip() if phase_title else f"Phase {phase_num}"
-        timeframe_clean = timeframe.strip() if timeframe else ""
+        # Clean and truncate
+        title_clean = title.strip()[:60] if title else f"Phase {phase_num}"
+        timeframe_clean = timeframe.strip()[:30] if timeframe else ""
+        ziel_clean = ziel.strip()[:100] + '...' if len(ziel) > 100 else ziel.strip() if ziel else ""
+        meilenstein_clean = meilenstein.strip()[:80] + '...' if len(meilenstein) > 80 else meilenstein.strip() if meilenstein else ""
 
         card_html = f'''<div class="roadmap-phase-card" style="border-left: 4px solid {color};">
     <h4><span class="phase-badge" style="background: {color};">Phase {phase_num}</span> {title_clean}</h4>'''
@@ -3324,106 +3289,138 @@ def _format_roadmap_phases_compact(html_content: str) -> str:
         if timeframe_clean:
             card_html += f'\n    <div class="phase-timeframe">📅 {timeframe_clean}</div>'
 
-        if ziel:
-            card_html += f'\n    <p class="phase-ziel"><strong>Ziel:</strong> {ziel}</p>'
+        if ziel_clean:
+            card_html += f'\n    <p class="phase-ziel"><strong>Ziel:</strong> {ziel_clean}</p>'
 
         if bullets:
             card_html += '\n    <ul>'
-            for b in bullets:
-                card_html += f'\n        <li>{b}</li>'
+            for b in bullets[:4]:  # Max 4 bullets
+                b_clean = b.strip()[:60] + '...' if len(b) > 60 else b.strip()
+                card_html += f'\n        <li>{b_clean}</li>'
             card_html += '\n    </ul>'
 
-        if meilenstein:
-            card_html += f'\n    <div class="milestone"><strong>Meilenstein:</strong> {meilenstein}</div>'
+        if meilenstein_clean:
+            card_html += f'\n    <div class="milestone"><strong>Meilenstein:</strong> {meilenstein_clean}</div>'
 
         card_html += '\n</div>\n'
         return card_html
 
-    # Find all phase sections
-    matches = list(phase_pattern.finditer(output))
+    # v12.0: Find all "Phase X:" occurrences with flexible pattern
+    # Matches: "Phase 0: Title (Woche 1-2)" or "<strong>Phase 1: Title</strong>"
+    phase_header_pattern = re.compile(
+        r'(?:<strong>|<b>|<h[34][^>]*>)?\s*Phase\s*(\d+)\s*:\s*([^<\n]+?)(?:\s*\(([^)]+)\))?\s*(?:</strong>|</b>|</h[34]>)?',
+        re.IGNORECASE
+    )
 
-    if matches:
-        # Process in reverse order
-        for match in reversed(matches):
-            phase_num = match.group(1)
-            phase_title = match.group(2) or ""
-            timeframe = match.group(3) or ""
-            content = match.group(4)
+    # Find all phase headers
+    headers = list(phase_header_pattern.finditer(output))
 
-            card = create_phase_card(phase_num, phase_title, timeframe, content)
-            output = output[:match.start()] + card + output[match.end():]
+    if not headers:
+        log.debug("[ROADMAP-PHASE-FORMATTER-V2] No phase headers found")
+        return output
+
+    log.info("[ROADMAP-PHASE-FORMATTER-V2] Found %d phase headers", len(headers))
+
+    # Process phases by extracting content between headers
+    phase_data = []
+    for i, match in enumerate(headers):
+        phase_num = match.group(1)
+        title = match.group(2) or ""
+        timeframe = match.group(3) or ""
+
+        # Get content until next phase or end
+        start_pos = match.end()
+        if i + 1 < len(headers):
+            end_pos = headers[i + 1].start()
+        else:
+            # Find end markers
+            end_markers = [
+                output.find('<h2', start_pos),
+                output.find('<h3', start_pos),
+                output.find('Erwartete Effekte', start_pos),
+                output.find('KPI-Tracking', start_pos),
+                len(output)
+            ]
+            end_pos = min(p for p in end_markers if p > start_pos)
+
+        content = output[start_pos:end_pos]
+
+        # Extract Ziel
+        ziel = ""
+        ziel_match = re.search(r'Ziel:\s*([^<\n]+?)(?:\.|<|$)', content, re.IGNORECASE)
+        if ziel_match:
+            ziel = ziel_match.group(1).strip()
+
+        # Extract Meilenstein
+        meilenstein = ""
+        ms_match = re.search(r'Meilenstein:\s*([^<\n]+?)(?:\.|<|$)', content, re.IGNORECASE)
+        if ms_match:
+            meilenstein = ms_match.group(1).strip()
+
+        # Extract bullets
+        bullets = []
+        li_matches = re.findall(r'<li[^>]*>([^<]+)', content, re.IGNORECASE)
+        bullets = [re.sub(r'<[^>]+>', '', li).strip() for li in li_matches if li.strip()]
+
+        phase_data.append({
+            'match': match,
+            'phase_num': phase_num,
+            'title': title,
+            'timeframe': timeframe,
+            'ziel': ziel,
+            'meilenstein': meilenstein,
+            'bullets': bullets,
+            'start': match.start(),
+            'end': end_pos
+        })
+
+    # Replace in reverse order to maintain positions
+    for phase in reversed(phase_data):
+        p_num: str = phase.get('phase_num', '')  # type: ignore[assignment]
+        p_title: str = phase.get('title', '')  # type: ignore[assignment]
+        p_timeframe: str = phase.get('timeframe', '')  # type: ignore[assignment]
+        p_ziel: str = phase.get('ziel', '')  # type: ignore[assignment]
+        p_meilenstein: str = phase.get('meilenstein', '')  # type: ignore[assignment]
+        p_bullets: list = phase.get('bullets', [])  # type: ignore[assignment]
+        p_start: int = phase.get('start', 0)  # type: ignore[assignment]
+        p_end: int = phase.get('end', 0)  # type: ignore[assignment]
+
+        card = create_phase_card(p_num, p_title, p_timeframe, p_ziel, p_meilenstein, p_bullets)
+        output = output[:p_start] + card + output[p_end:]
 
     if phases_created > 0:
-        log.info("[ROADMAP-PHASE-FORMATTER] Created %d phase cards", phases_created)
-    else:
-        log.debug("[ROADMAP-PHASE-FORMATTER] No phases matched")
+        log.info("[ROADMAP-PHASE-FORMATTER-V2] Created %d phase cards", phases_created)
 
     return output
 
 
-# -------------------- Maßnahme 3 v11.0: Empfehlungen Formatter v3.0 ----------------
+# -------------------- Maßnahme 3 v12.0: Empfehlungen Formatter v4.0 (Robust) ----------------
 
 def _format_empfehlungen_v3(html_content: str) -> str:
     """
     Transform numbered Empfehlungen into structured cards.
 
-    v3.0: Handles "Empfehlung 1:", "Empfehlung 2:" patterns.
-    - Extracts Schwerpunkt and Maßnahme
-    - Creates numbered cards with clear structure
-    - Max 50 words per card
+    v4.0: ROBUST pattern matching for GPT plain-text output:
+    - "Empfehlung 1: Quick Win – Title Schwerpunkt: ... Maßnahme: ..."
+    - Handles continuous text without HTML paragraph breaks
+    - Extracts title, Schwerpunkt, and Maßnahme from flowing text
     """
     if not html_content or len(html_content) < 200:
         return html_content
 
-    log.info("[EMPFEHLUNGEN-V3] Starting transformation (length: %d chars)", len(html_content))
+    log.info("[EMPFEHLUNGEN-V4] Starting transformation (length: %d chars)", len(html_content))
 
     output = html_content
     cards_created = 0
 
-    # Pattern for "Empfehlung X:" format (common in GPT output)
-    empfehlung_pattern = re.compile(
-        r'Empfehlung\s*(\d+)[:\s]*([^<]*?)(?:Schwerpunkt[:\s]*)?([^<]*?)'
-        r'(?:Maßnahme[:\s]*([^<]*))?'
-        r'(?=Empfehlung\s*\d|<h[23]|</section>|$)',
-        re.DOTALL | re.IGNORECASE
-    )
-
-    # Alternative: Look for numbered recommendations in paragraphs
-    numbered_rec_pattern = re.compile(
-        r'<p>\s*Empfehlung\s*(\d+)[:\s–\-]+\s*([^<]+)</p>'
-        r'(.*?)(?=<p>\s*Empfehlung\s*\d|<h[23]|</section>|$)',
-        re.DOTALL | re.IGNORECASE
-    )
-
-    def create_empfehlung_card(num: str, title: str, content: str) -> str:
+    def create_empfehlung_card(num: str, title: str, schwerpunkt: str, massnahme: str) -> str:
         nonlocal cards_created
-
-        # Extract Schwerpunkt
-        schwerpunkt_match = re.search(r'Schwerpunkt:\s*([^<.]+)', content, re.IGNORECASE)
-        schwerpunkt = ""
-        if schwerpunkt_match:
-            sp_text = schwerpunkt_match.group(1).strip()
-            if len(sp_text) > 60:
-                schwerpunkt = sp_text[:60] + '...'
-            else:
-                schwerpunkt = sp_text
-
-        # Extract Maßnahme
-        massnahme_match = re.search(r'Maßnahme:\s*([^<.]+)', content, re.IGNORECASE)
-        massnahme = ""
-        if massnahme_match:
-            ma_text = massnahme_match.group(1).strip()
-            if len(ma_text) > 60:
-                massnahme = ma_text[:60] + '...'
-            else:
-                massnahme = ma_text
-
-        # Clean title
-        title_clean = title.strip()
-        if len(title_clean) > 50:
-            title_clean = title_clean[:50] + '...'
-
         cards_created += 1
+
+        # Clean and truncate
+        title_clean = title.strip()[:60] + '...' if len(title.strip()) > 60 else title.strip()
+        schwerpunkt_clean = schwerpunkt.strip()[:80] + '...' if len(schwerpunkt.strip()) > 80 else schwerpunkt.strip()
+        massnahme_clean = massnahme.strip()[:80] + '...' if len(massnahme.strip()) > 80 else massnahme.strip()
 
         card_html = f'''<div class="empfehlung-card">
     <div class="empfehlung-header">
@@ -3431,31 +3428,112 @@ def _format_empfehlungen_v3(html_content: str) -> str:
         <strong>{title_clean}</strong>
     </div>'''
 
-        if schwerpunkt:
-            card_html += f'\n    <p class="empfehlung-schwerpunkt"><span class="label">Schwerpunkt:</span> {schwerpunkt}</p>'
+        if schwerpunkt_clean:
+            card_html += f'\n    <p class="empfehlung-schwerpunkt"><span class="label">Schwerpunkt:</span> {schwerpunkt_clean}</p>'
 
-        if massnahme:
-            card_html += f'\n    <p class="empfehlung-massnahme"><span class="label">Maßnahme:</span> {massnahme}</p>'
+        if massnahme_clean:
+            card_html += f'\n    <p class="empfehlung-massnahme"><span class="label">Maßnahme:</span> {massnahme_clean}</p>'
 
         card_html += '\n</div>\n'
         return card_html
 
-    # Try numbered_rec_pattern first
-    matches = list(numbered_rec_pattern.finditer(output))
+    # v4.0: Find all "Empfehlung X:" occurrences - flexible pattern
+    empfehlung_header_pattern = re.compile(
+        r'Empfehlung\s*(\d+)\s*:\s*',
+        re.IGNORECASE
+    )
 
-    if matches:
-        for match in reversed(matches):
-            num = match.group(1)
-            title = match.group(2)
-            content = match.group(3) if match.group(3) else ""
+    headers = list(empfehlung_header_pattern.finditer(output))
 
-            card = create_empfehlung_card(num, title, content)
-            output = output[:match.start()] + card + output[match.end():]
+    if not headers:
+        log.debug("[EMPFEHLUNGEN-V4] No Empfehlung headers found")
+        return output
+
+    log.info("[EMPFEHLUNGEN-V4] Found %d Empfehlung headers", len(headers))
+
+    # Process each Empfehlung
+    empfehlung_data = []
+    for i, match in enumerate(headers):
+        num = match.group(1)
+
+        # Get content until next Empfehlung or section end
+        start_pos = match.end()
+        if i + 1 < len(headers):
+            end_pos = headers[i + 1].start()
+        else:
+            # Find end markers
+            end_markers = [
+                output.find('Prioritäten-Überblick', start_pos),
+                output.find('Zusammenfassung', start_pos),
+                output.find('<h2', start_pos),
+                output.find('<h3', start_pos),
+                output.find('<table', start_pos),
+                len(output)
+            ]
+            valid_ends = [p for p in end_markers if p > start_pos]
+            end_pos = min(valid_ends) if valid_ends else len(output)
+
+        content = output[start_pos:end_pos]
+
+        # Extract title (text before "Schwerpunkt:")
+        title = ""
+        schwerpunkt = ""
+        massnahme = ""
+
+        # Look for "Schwerpunkt:" to split title from rest
+        schwerpunkt_pos = content.lower().find('schwerpunkt')
+        if schwerpunkt_pos > 0:
+            title_raw = content[:schwerpunkt_pos]
+            # Clean title - remove HTML and extra whitespace
+            title = re.sub(r'<[^>]+>', ' ', title_raw)
+            title = re.sub(r'\s+', ' ', title).strip()
+            # Remove trailing dashes/colons
+            title = re.sub(r'[\s–\-:]+$', '', title)
+
+            rest_content = content[schwerpunkt_pos:]
+
+            # Extract Schwerpunkt value
+            sp_match = re.search(r'Schwerpunkt[:\s]*([^.]+?)(?:\.|Maßnahme|$)', rest_content, re.IGNORECASE)
+            if sp_match:
+                schwerpunkt = re.sub(r'<[^>]+>', ' ', sp_match.group(1))
+                schwerpunkt = re.sub(r'\s+', ' ', schwerpunkt).strip()
+
+            # Extract Maßnahme value
+            ma_match = re.search(r'Maßnahme[:\s]*([^.]+?)(?:\.|Empfehlung|$)', rest_content, re.IGNORECASE)
+            if ma_match:
+                massnahme = re.sub(r'<[^>]+>', ' ', ma_match.group(1))
+                massnahme = re.sub(r'\s+', ' ', massnahme).strip()
+        else:
+            # No Schwerpunkt found - use first sentence as title
+            title_match = re.match(r'([^.]+)', content)
+            if title_match:
+                title = re.sub(r'<[^>]+>', ' ', title_match.group(1))
+                title = re.sub(r'\s+', ' ', title).strip()
+
+        if title:
+            empfehlung_data.append({
+                'num': num,
+                'title': title,
+                'schwerpunkt': schwerpunkt,
+                'massnahme': massnahme,
+                'start': match.start(),
+                'end': end_pos
+            })
+
+    # Replace in reverse order
+    for emp in reversed(empfehlung_data):
+        e_num: str = emp.get('num', '')  # type: ignore[assignment]
+        e_title: str = emp.get('title', '')  # type: ignore[assignment]
+        e_schwerpunkt: str = emp.get('schwerpunkt', '')  # type: ignore[assignment]
+        e_massnahme: str = emp.get('massnahme', '')  # type: ignore[assignment]
+        e_start: int = emp.get('start', 0)  # type: ignore[assignment]
+        e_end: int = emp.get('end', 0)  # type: ignore[assignment]
+
+        card = create_empfehlung_card(e_num, e_title, e_schwerpunkt, e_massnahme)
+        output = output[:e_start] + card + output[e_end:]
 
     if cards_created > 0:
-        log.info("[EMPFEHLUNGEN-V3] Created %d Empfehlung cards", cards_created)
-    else:
-        log.debug("[EMPFEHLUNGEN-V3] No Empfehlungen matched, trying fallback")
+        log.info("[EMPFEHLUNGEN-V4] Created %d Empfehlung cards", cards_created)
 
     return output
 
@@ -3532,6 +3610,84 @@ def _format_foerderpruefung_compact(html_content: str) -> str:
         log.info("[FOERDERPRUEFUNG-FORMATTER] Created %d checklist items", items_created)
     else:
         log.debug("[FOERDERPRUEFUNG-FORMATTER] No Förderprüfung items matched")
+
+    return output
+
+
+# -------------------- Maßnahme 3 v12.0: Tabellen-Colgroup-Injection ----------------
+
+def _inject_table_colgroups(html_content: str) -> str:
+    """
+    Inject <colgroup> with explicit column widths into tables.
+
+    v12.0: Fixes table overflow by setting explicit percentage widths.
+    - Detects number of columns in each table
+    - Adds colgroup with appropriate widths
+    - Special handling for Risk Matrix (5 columns)
+    """
+    if not html_content or '<table' not in html_content.lower():
+        return html_content
+
+    log.info("[TABLE-COLGROUP] Starting injection (length: %d chars)", len(html_content))
+
+    output = html_content
+    tables_fixed = 0
+
+    # Find all tables
+    table_pattern = re.compile(r'<table([^>]*)>(.*?)</table>', re.DOTALL | re.IGNORECASE)
+
+    def add_colgroup(match):
+        nonlocal tables_fixed
+
+        table_attrs = match.group(1)
+        table_content = match.group(2)
+
+        # Skip if already has colgroup
+        if '<colgroup' in table_content.lower():
+            return match.group(0)
+
+        # Count columns by checking first row (th or td)
+        header_row = re.search(r'<tr[^>]*>(.*?)</tr>', table_content, re.DOTALL | re.IGNORECASE)
+        if not header_row:
+            return match.group(0)
+
+        # Count th or td elements
+        cells = re.findall(r'<t[hd][^>]*>', header_row.group(1), re.IGNORECASE)
+        num_cols = len(cells)
+
+        if num_cols < 2:
+            return match.group(0)
+
+        # Generate colgroup based on number of columns
+        if num_cols == 5:
+            # Risk Matrix style: Risikobereich | Auswirkung | Eintritt | Auswirkungsstärke | Maßnahmen
+            widths = ['15%', '18%', '18%', '18%', '31%']
+        elif num_cols == 4:
+            # Prioritäten-Überblick style
+            widths = ['10%', '35%', '20%', '35%']
+        elif num_cols == 3:
+            widths = ['25%', '40%', '35%']
+        else:
+            # Default: equal widths
+            width_pct = 100 // num_cols
+            widths = [f'{width_pct}%'] * num_cols
+
+        # Build colgroup HTML
+        cols = '\n        '.join(f'<col style="width: {w};">' for w in widths[:num_cols])
+        colgroup = f'''
+    <colgroup>
+        {cols}
+    </colgroup>'''
+
+        tables_fixed += 1
+
+        # Insert colgroup after <table> opening tag
+        return f'<table{table_attrs}>{colgroup}{table_content}</table>'
+
+    output = table_pattern.sub(add_colgroup, output)
+
+    if tables_fixed > 0:
+        log.info("[TABLE-COLGROUP] Fixed %d tables with colgroups", tables_fixed)
 
     return output
 
@@ -8322,6 +8478,27 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             sections["foerderpotenzial"] = foerder_html
         except Exception as e:
             log.error(f"[INTEGRATION] Förderprüfung formatting failed: {e}")
+
+    # ========== v12.0: TABLE COLGROUP INJECTION ==========
+    # Apply colgroups to all sections with tables to fix column overflow
+    table_sections = ["RISKS_HTML", "RECOMMENDATIONS_HTML", "BUSINESS_CASE_HTML", "FOERDERPOTENZIAL_HTML"]
+    for key in table_sections:
+        html = sections.get(key, "")
+        if html and '<table' in html.lower():
+            try:
+                original_len = len(html)
+                html_fixed = _inject_table_colgroups(html)
+                sections[key] = html_fixed
+                # Update aliases
+                if key == "RISKS_HTML":
+                    sections["risks"] = html_fixed
+                elif key == "RECOMMENDATIONS_HTML":
+                    sections["recommendations"] = html_fixed
+                elif key == "FOERDERPOTENZIAL_HTML":
+                    sections["foerderpotenzial"] = html_fixed
+                log.info(f"[TABLE-COLGROUP] {key}: colgroups injected")
+            except Exception as e:
+                log.warning(f"[TABLE-COLGROUP] {key} failed: {e}")
 
     # Sprint N3.3: Apply Exec Summary Hard-Clean to remove H1/H2 and label text
     from services.html_sanitizer import clean_exec_summary_html
