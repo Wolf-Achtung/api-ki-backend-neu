@@ -443,6 +443,38 @@ class ReportValidator:
             "hire employees",
             "department",
             "departments",
+            # =====================================================
+            # Problem #6 FIX: Enterprise-Sprache für Solo VERBOTEN
+            # Referenz: prompts/de/_solo_language_rules.md
+            # =====================================================
+            # Technical enterprise buzzwords
+            "Engine",
+            "Plattform",
+            "Framework",
+            "Pipeline",
+            "Architektur",
+            "Baukasten",
+            "Modul",
+            "Stack",
+            "Layer",
+            "Deployment",
+            # Organization jargon
+            "Rollout",
+            "Change Management",
+            "Skalierung",
+            "Stakeholder",
+            "Governance-Struktur",
+            "Compliance-Framework",
+            "Audit-Trail",
+            # Abstract concepts
+            "Strategische Roadmap",
+            "Meilenstein-Planung",
+            "KPI-Dashboard",
+            "Prozesslandschaft",
+            "Wertschöpfungskette",
+            "Matrixorganisation",
+            "Enterprise-Software",
+            "Unternehmensarchitektur",
         ],
         "team": [
             # KMU-specific terms not appropriate for small teams
@@ -660,6 +692,17 @@ class ReportValidator:
         "gamechanger",
         "roadmap_12m",
     ]
+
+    # Problem #6 FIX: Maximum report pages by company size
+    # Solo reports should be shorter and more focused
+    MAX_REPORT_PAGES_BY_SIZE = {
+        "solo": 25,   # Focused, practical report
+        "team": 35,   # Moderate depth
+        "kmu": 45,    # Full strategic depth
+    }
+
+    # Estimated words per page (for validation)
+    WORDS_PER_PAGE_ESTIMATE = 350
 
     # Legacy-Alias für Abwärtskompatibilität
     MIN_SECTION_LENGTH = MIN_SECTION_LENGTH_WORDS
