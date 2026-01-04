@@ -503,7 +503,7 @@ def extract_funding(sections: SectionDict) -> List[str]:
     # Funding program patterns
     funding_patterns = [
         r'(?:Förderprogramm|Programm)[:\s]+([^.]+)',
-        r'(?:BAFA|KfW|go-digital|Digital Jetzt|ZIM)[^.]*',
+        r'(?:BAFA|KfW|go-digital|ZIM)[^.]*',
         r'(?:Förderung|Zuschuss)[:\s]+([^.]+)',
     ]
 

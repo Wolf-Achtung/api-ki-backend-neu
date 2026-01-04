@@ -285,7 +285,7 @@ def _extract_funding_timeline(sections: Dict[str, Any]) -> List[Dict[str, Any]]:
 
     if not timeline:
         timeline = [
-            {"year": 2025, "count": 5, "programmes": ["go-digital", "Digital Jetzt"]},
+            {"year": 2025, "count": 5, "programmes": ["go-digital", "ZIM"]},
             {"year": 2026, "count": 3, "programmes": ["AI Made in Germany"]},
             {"year": 2027, "count": 2, "programmes": ["Horizon Europe AI"]},
         ]

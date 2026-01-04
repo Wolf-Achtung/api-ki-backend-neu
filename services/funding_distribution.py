@@ -137,7 +137,7 @@ _default_segments: List[SegmentDefinition] = [
         name="Small Team (2-10)",
         expected_share=0.35,
         applicable_programmes=[
-            "go_digital", "digital_jetzt", "digitalbonus_bayern", "invest_bw",
+            "go_digital", "digitalbonus_bayern", "invest_bw",
             "profit_berlin", "innovationsgutschein_bayern", "zim", "exist"
         ],
         weight=1.2
@@ -147,7 +147,7 @@ _default_segments: List[SegmentDefinition] = [
         name="SME (11-250)",
         expected_share=0.30,
         applicable_programmes=[
-            "digital_jetzt", "kfw_digital_innovation", "invest_bw", "profit_berlin",
+            "kfw_digital_innovation", "invest_bw", "profit_berlin",
             "transfer_bonus_berlin", "zim", "digital_verwaltung_itsec"
         ],
         weight=1.3
@@ -527,7 +527,6 @@ def _get_programme_name(programme_id: str) -> str:
     """Get human-readable programme name."""
     programme_names = {
         "go_digital": "go-digital",
-        "digital_jetzt": "Digital Jetzt",
         "kfw_digital_innovation": "KfW Digital & Innovation",
         "digitalbonus_bayern": "Digitalbonus Bayern",
         "invest_bw": "Invest BW",
