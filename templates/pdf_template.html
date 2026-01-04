@@ -3796,39 +3796,78 @@
         }
 
         /* ============================================
-           v11.0: LEERRAUM-KILLER (Enhanced)
+           v12.0: LEERRAUM-KILLER (Aggressive)
            ============================================ */
-        /* Allow page breaks inside smaller containers to fill space */
+        /* AGGRESSIVE: Allow page breaks inside ALL containers */
         .section,
-        .svg-decorated-box {
-            page-break-inside: auto;
-            break-inside: auto;
+        .svg-decorated-box,
+        .content-section,
+        .report-section {
+            page-break-inside: auto !important;
+            break-inside: auto !important;
         }
-        /* Only prevent breaks in truly critical small blocks */
+        /* Only prevent breaks in small atomic blocks (<150px height typical) */
         .quick-win-card,
         .empfehlung-card,
         .foerder-checklist-item,
         .recommendation-card-compact,
-        .roadmap-phase-card,
         .risk-card {
             page-break-inside: avoid;
             break-inside: avoid;
+            max-height: 200px;
+            overflow: hidden;
         }
-        /* Force content to flow, reduce orphan/widow strictness */
+        /* Roadmap cards can break if too long */
+        .roadmap-phase-card {
+            page-break-inside: auto;
+            break-inside: auto;
+        }
+        /* AGGRESSIVE orphan/widow - allow even 1 line */
         p, li {
-            orphans: 2;
-            widows: 2;
+            orphans: 1 !important;
+            widows: 1 !important;
         }
-        /* Reduce margins to pack content tighter */
+        /* AGGRESSIVE margin reduction */
+        .section {
+            margin-bottom: 8px !important;
+        }
         .section > p,
         .section > ul,
         .section > ol {
-            margin-bottom: 6px;
+            margin-bottom: 4px !important;
+        }
+        .section > h3,
+        .section > h4 {
+            margin-top: 8px !important;
+            margin-bottom: 4px !important;
+        }
+        /* AGGRESSIVE padding reduction on containers */
+        .svg-decorated-box,
+        .svg-decorated-box-content {
+            padding: 12px !important;
         }
         /* Prevent single lonely headers at page bottom */
         h2, h3, h4, h5 {
             page-break-after: avoid;
             break-after: avoid;
+        }
+        /* AGGRESSIVE: Remove excessive whitespace after sections */
+        .section:last-child,
+        .content-section:last-child {
+            margin-bottom: 0 !important;
+            padding-bottom: 0 !important;
+        }
+        /* Tables should never create massive empty space */
+        table {
+            page-break-inside: auto !important;
+        }
+        tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        /* Colgroup fixes for column widths */
+        colgroup col {
+            min-width: 0 !important;
         }
 
         /* FIX 1: ROADMAP KOMPAKT - Phase-Cards */
