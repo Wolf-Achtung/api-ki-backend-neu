@@ -796,6 +796,7 @@ def generate_recommendations_report(
 def recommendations_report_to_html(
     report: RecommendationsReport,
     lang: str = "de",
+    exclude_top_3: bool = False,
 ) -> str:
     """
     Generate HTML section for the Recommendations Report.
@@ -805,6 +806,7 @@ def recommendations_report_to_html(
     Args:
         report: RecommendationsReport object
         lang: Language code ("de" or "en")
+        exclude_top_3: If True, skip top-3 section (used when Top-3 is shown elsewhere)
 
     Returns:
         HTML string for PDF template
@@ -875,9 +877,9 @@ def recommendations_report_to_html(
         </div>
         ''')
 
-    # Top 3 Priorities
+    # Top 3 Priorities (skip if exclude_top_3=True, e.g., when shown on Page 10)
     top_3 = report.top_3_recommendations
-    if top_3:
+    if top_3 and not exclude_top_3:
         html_parts.append(f'''
         <div class="top-priorities-section" style="margin-bottom:32px;">
             <p style="margin:0 0 16px 0;font-weight:600;font-size:14pt;color:#1e293b;">⭐ {labels["top_priorities"]}</p>
