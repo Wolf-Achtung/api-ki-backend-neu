@@ -2418,10 +2418,11 @@ def _create_svg_decorated_box(
         body_wrapper_class = ""
 
     # Build the box with inline SVG icon and styled container
+    # FIX 4: Added svg-decorated-box class and overflow:hidden for containment
     box_html = f'''
 {table_styles}
-<div style="margin: 20px 0; padding: 0; {page_break_style}">
-    <div style="background-color: {bg_color}; {border_style} padding: 16px; font-family: Arial, sans-serif;">
+<div class="svg-decorated-box" style="margin: 20px 0; padding: 0; overflow: hidden; {page_break_style}">
+    <div style="background-color: {bg_color}; {border_style} padding: 16px; font-family: Arial, sans-serif; overflow: hidden;">
         <div style="display: flex; align-items: center; margin-bottom: 12px; page-break-after: avoid;">
             <svg width="28" height="28" viewBox="0 0 28 28" style="margin-right: 10px; flex-shrink: 0;">
                 <circle cx="14" cy="14" r="13" fill="{border_color}" opacity="0.15"/>
@@ -2431,7 +2432,7 @@ def _create_svg_decorated_box(
                 {icon} {clean_title}
             </span>
         </div>
-        <div {body_wrapper_class} style="color: #374151; font-size: 14px; line-height: 1.7;">
+        <div {body_wrapper_class} class="svg-decorated-box-content" style="color: #374151; font-size: 14px; line-height: 1.7; overflow: hidden;">
             {body_html}
         </div>
     </div>
@@ -2762,6 +2763,214 @@ def _format_foerderpotenzial_section(html_content: str) -> str:
         log.warning("[FORMAT-FOERDERPOTENZIAL-V1] No sections matched, returning original")
     else:
         log.info("[FORMAT-FOERDERPOTENZIAL-V1] Complete (output: %d chars, %d SVG boxes created)", len(output), boxes_created)
+
+    return output
+
+
+# -------------------- FIX 1: Roadmap Phase Cards ----------------
+
+def _format_roadmap_as_phase_cards(html_content: str) -> str:
+    """
+    Convert roadmap bullet lists into compact phase cards.
+
+    FIX 1: Transforms <h3>Phase X: Title</h3><ul>...</ul> into
+    compact card layout for better PDF readability.
+    """
+    if not html_content or len(html_content) < 200:
+        return html_content
+
+    log.info("[ROADMAP-PHASE-CARDS] Starting transformation (length: %d chars)", len(html_content))
+
+    output = html_content
+    cards_created = 0
+
+    # Pattern to match Phase headings with their content
+    # Matches: <h3>Phase 0: Title (Woche X-Y)</h3> followed by content until next <h3> or </section>
+    phase_pattern = re.compile(
+        r'<h3>\s*(Phase\s*\d+[^<]*)</h3>\s*'  # Phase heading
+        r'(<p>.*?</p>)?\s*'  # Optional goal paragraph
+        r'(<ul>.*?</ul>)\s*'  # Bullet list
+        r'(<p>.*?Meilenstein.*?</p>)?',  # Optional milestone
+        re.DOTALL | re.IGNORECASE
+    )
+
+    def replace_phase(match):
+        nonlocal cards_created
+
+        phase_title = match.group(1).strip()
+        goal_p = match.group(2) or ""
+        bullet_list = match.group(3) or ""
+        milestone_p = match.group(4) or ""
+
+        # Extract phase number for badge
+        phase_num_match = re.search(r'Phase\s*(\d+)', phase_title)
+        phase_num = phase_num_match.group(1) if phase_num_match else str(cards_created)
+
+        # Clean up goal paragraph
+        goal_text = ""
+        if goal_p:
+            goal_text = re.sub(r'</?p[^>]*>', '', goal_p).strip()
+            goal_text = re.sub(r'<strong>Ziel:</strong>\s*', '', goal_text)
+
+        # Clean up milestone
+        milestone_text = ""
+        if milestone_p:
+            milestone_text = re.sub(r'</?p[^>]*>', '', milestone_p).strip()
+
+        # Build compact phase card
+        card_html = f'''
+<div class="roadmap-phase-card">
+    <h4><span class="phase-badge">P{phase_num}</span> {phase_title}</h4>
+    {f'<p style="margin: 0 0 8px 0; font-size: 10pt; color: #4b5563;"><strong>Ziel:</strong> {goal_text}</p>' if goal_text else ''}
+    {bullet_list}
+    {f'<div class="milestone">{milestone_text}</div>' if milestone_text else ''}
+</div>
+'''
+        cards_created += 1
+        return card_html
+
+    output = phase_pattern.sub(replace_phase, output)
+
+    if cards_created > 0:
+        log.info("[ROADMAP-PHASE-CARDS] Created %d phase cards", cards_created)
+    else:
+        log.debug("[ROADMAP-PHASE-CARDS] No phases matched, returning original")
+
+    return output
+
+
+# -------------------- FIX 2: Risk Matrix Page Break ----------------
+
+def _wrap_risk_matrix_with_pagebreak(html_content: str) -> str:
+    """
+    Wrap the Risiko-Matrix section with a page-break class.
+
+    FIX 2: Ensures the Risk Matrix table starts on a new page
+    for better PDF layout.
+    """
+    if not html_content or len(html_content) < 200:
+        return html_content
+
+    log.info("[RISK-MATRIX-PAGEBREAK] Starting transformation (length: %d chars)", len(html_content))
+
+    # Pattern to find Risk Matrix heading and wrap it
+    # Look for variations: "Risiko-Matrix", "5. Risiko-Matrix", etc.
+    patterns = [
+        (r'(<h3[^>]*>\s*(?:\d+\.\s*)?Risiko-Matrix[^<]*</h3>)', r'<div class="risk-matrix-section">\1'),
+        (r'(<h3[^>]*>\s*Risiko-Matrix\s*–[^<]*</h3>)', r'<div class="risk-matrix-section">\1'),
+    ]
+
+    output = html_content
+    wrapped = False
+
+    for pattern, replacement in patterns:
+        if re.search(pattern, output, re.IGNORECASE):
+            # Find the end of the section (next h3 or </section>)
+            match = re.search(pattern, output, re.IGNORECASE)
+            if match:
+                start_pos = match.start()
+                # Find the closing point - next <h3> or </section>
+                remaining = output[match.end():]
+                end_match = re.search(r'(<h3|</section>)', remaining, re.IGNORECASE)
+                if end_match:
+                    end_pos = match.end() + end_match.start()
+                    # Insert wrapper
+                    output = (
+                        output[:start_pos] +
+                        '<div class="risk-matrix-section">' +
+                        output[start_pos:end_pos] +
+                        '</div>' +
+                        output[end_pos:]
+                    )
+                    wrapped = True
+                    break
+
+    if wrapped:
+        log.info("[RISK-MATRIX-PAGEBREAK] Successfully wrapped Risk Matrix section")
+    else:
+        log.debug("[RISK-MATRIX-PAGEBREAK] No Risk Matrix found to wrap")
+
+    return output
+
+
+# -------------------- FIX 5: Compact Recommendations ----------------
+
+def _format_recommendations_compact(html_content: str) -> str:
+    """
+    Transform recommendation sections into compact card layout.
+
+    FIX 5: Converts verbose recommendation bullets into compact
+    cards with minimal text for better PDF readability.
+    """
+    if not html_content or len(html_content) < 200:
+        return html_content
+
+    log.info("[RECOMMENDATIONS-COMPACT] Starting transformation (length: %d chars)", len(html_content))
+
+    output = html_content
+    cards_created = 0
+
+    # Pattern to match recommendation list items with strong title
+    # <li><strong>N. Title:</strong> Description... <strong>Maßnahme:</strong>...</li>
+    rec_pattern = re.compile(
+        r'<li>\s*<strong>\s*(\d+\.?\s*)?([^<:]+)(?::</strong>|</strong>:?)\s*'  # Number + Title
+        r'([^<]*(?:<[^>]+>[^<]*)*?)'  # Description (may contain tags)
+        r'(?:<strong>Maßnahme:</strong>\s*([^<]*(?:<[^>]+>[^<]*)*?))?'  # Optional Maßnahme
+        r'(?:<strong>(?:Nutzen|Aufwand|Förderchance):</strong>[^<]*)*'  # Optional extra fields
+        r'\s*</li>',
+        re.DOTALL | re.IGNORECASE
+    )
+
+    def replace_recommendation(match):
+        nonlocal cards_created
+
+        num = match.group(1) or ""
+        title = match.group(2).strip()
+        desc = match.group(3).strip() if match.group(3) else ""
+        massnahme = match.group(4).strip() if match.group(4) else ""
+
+        # Clean up description - limit to first sentence
+        desc_clean = re.sub(r'<[^>]+>', '', desc).strip()
+        if len(desc_clean) > 100:
+            # Truncate at sentence boundary
+            sentences = re.split(r'(?<=[.!?])\s+', desc_clean)
+            desc_clean = sentences[0] if sentences else desc_clean[:100] + "..."
+
+        # Build compact card
+        card_html = f'''
+<div class="recommendation-card-compact">
+    <h4>{num}{title}</h4>
+    <p>{desc_clean}</p>
+    {f'<p class="rec-meta"><strong>Maßnahme:</strong> {massnahme[:80]}{"..." if len(massnahme) > 80 else ""}</p>' if massnahme else ''}
+</div>
+'''
+        cards_created += 1
+        return card_html
+
+    # Only transform if we find recommendation patterns
+    if rec_pattern.search(output):
+        # First, find the recommendations section
+        rec_section = re.search(
+            r'(<h3[^>]*>(?:MUSS|Handlungsempfehlungen)[^<]*</h3>.*?<(?:ul|ol)[^>]*>)(.*?)(</(?:ul|ol)>)',
+            output, re.DOTALL | re.IGNORECASE
+        )
+        if rec_section:
+            section_start = rec_section.group(1)
+            list_content = rec_section.group(2)
+            section_end = rec_section.group(3)
+
+            # Transform list items to cards
+            transformed_content = rec_pattern.sub(replace_recommendation, list_content)
+
+            if cards_created > 0:
+                # Replace list wrapper with div container
+                new_section = f'{section_start.replace("<ul", "<div").replace("<ol", "<div")}{transformed_content}{section_end.replace("</ul>", "</div>").replace("</ol>", "</div>")}'
+                output = output[:rec_section.start()] + new_section + output[rec_section.end():]
+
+    if cards_created > 0:
+        log.info("[RECOMMENDATIONS-COMPACT] Created %d compact recommendation cards", cards_created)
+    else:
+        log.debug("[RECOMMENDATIONS-COMPACT] No recommendations matched, returning original")
 
     return output
 
@@ -7353,6 +7562,18 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 
     # 🎯 WICHTIG: Logische Aliase für Validator & Template
 
+    # ========== FIX 1: ROADMAP PHASE CARDS ==========
+    roadmap_html = sections.get("PILOT_PLAN_HTML", "")
+    if roadmap_html and len(roadmap_html) > 200:
+        try:
+            original_length = len(roadmap_html)
+            roadmap_html = _format_roadmap_as_phase_cards(roadmap_html)
+            log.info(f"[INTEGRATION] Roadmap HTML after phase cards: {len(roadmap_html)} chars (delta: {len(roadmap_html) - original_length})")
+            sections["PILOT_PLAN_HTML"] = roadmap_html
+        except Exception as e:
+            log.error(f"[INTEGRATION] Roadmap phase cards formatting failed: {e}")
+            # Keep original - don't break pipeline
+
     # 90-Tage-Roadmap (Validator + Template) - KONSISTENTES MAPPING
     sections["roadmap_90d"] = sections.get("PILOT_PLAN_HTML", "")
     sections["ROADMAP_HTML"] = sections.get("PILOT_PLAN_HTML", "")
@@ -7400,6 +7621,9 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             # Then apply SVG box formatting
             risks_html = _format_risks_with_visual_breaks(risks_html)
             log.info(f"[INTEGRATION] Risks HTML after SVG formatting: {len(risks_html)} chars (delta: {len(risks_html) - original_length})")
+            # FIX 2: Wrap Risk Matrix with page-break class
+            risks_html = _wrap_risk_matrix_with_pagebreak(risks_html)
+            log.info(f"[INTEGRATION] Risks HTML after Risk Matrix page-break: {len(risks_html)} chars")
             sections["RISKS_HTML"] = risks_html
         except Exception as e:
             log.error(f"[INTEGRATION] Risks formatting failed at integration point: {e}")
