@@ -3247,38 +3247,41 @@ def _format_quick_wins_compact(html_content: str) -> str:
     return output
 
 
-# -------------------- Maßnahme 2 v12.0: Roadmap Phase Formatter (Robust) ----------------
+# -------------------- Maßnahme 2 v13.0: Roadmap Phase Formatter (ULTRA-AGGRESSIVE) ----------------
 
 def _format_roadmap_phases_compact(html_content: str) -> str:
     """
     Transform Roadmap phases into compact cards.
 
-    v12.0: ROBUST pattern matching for various GPT output formats:
+    v13.0: ULTRA-AGGRESSIVE pattern matching for various GPT output formats:
     - "Phase 0: Title (Woche 1-2)" as bold or plain text
     - "Phase 1: Title" followed by Ziel:/Meilenstein:
+    - "Q1 (Monate 1-3): Title" format
+    - "### Phase 1: Title" (markdown in HTML)
+    - "<h3>Phase 1</h3>: Title" format
     - Handles both HTML-wrapped and plain-text phase headers
+    - Also handles H3/H4 headings with phase-like content
     """
     if not html_content or len(html_content) < 200:
         return html_content
 
-    log.info("[ROADMAP-PHASE-FORMATTER-V2] Starting transformation (length: %d chars)", len(html_content))
+    log.info("[ROADMAP-PHASE-FORMATTER-V3] Starting transformation (length: %d chars)", len(html_content))
 
     output = html_content
     phases_created = 0
-
-    # v12.0: More robust pattern - matches plain text "Phase X:" anywhere
-    # Pattern 1: Bold phase headers
-    # Pattern 2: Plain text phase headers in paragraphs
 
     def create_phase_card(phase_num: str, title: str, timeframe: str, ziel: str, meilenstein: str, bullets: list) -> str:
         nonlocal phases_created
         phases_created += 1
 
         colors = ['#10B981', '#6366F1', '#F59E0B', '#EC4899']
-        color = colors[int(phase_num) % len(colors)]
+        try:
+            color = colors[int(phase_num) % len(colors)]
+        except (ValueError, TypeError):
+            color = colors[0]
 
         # Clean and truncate
-        title_clean = title.strip()[:60] if title else f"Phase {phase_num}"
+        title_clean = re.sub(r'<[^>]+>', '', title.strip())[:60] if title else f"Phase {phase_num}"
         timeframe_clean = timeframe.strip()[:30] if timeframe else ""
         ziel_clean = ziel.strip()[:100] + '...' if len(ziel) > 100 else ziel.strip() if ziel else ""
         meilenstein_clean = meilenstein.strip()[:80] + '...' if len(meilenstein) > 80 else meilenstein.strip() if meilenstein else ""
@@ -3295,7 +3298,9 @@ def _format_roadmap_phases_compact(html_content: str) -> str:
         if bullets:
             card_html += '\n    <ul>'
             for b in bullets[:4]:  # Max 4 bullets
-                b_clean = b.strip()[:60] + '...' if len(b) > 60 else b.strip()
+                b_clean = re.sub(r'<[^>]+>', '', b.strip())[:60]
+                if len(b.strip()) > 60:
+                    b_clean += '...'
                 card_html += f'\n        <li>{b_clean}</li>'
             card_html += '\n    </ul>'
 
@@ -3305,28 +3310,75 @@ def _format_roadmap_phases_compact(html_content: str) -> str:
         card_html += '\n</div>\n'
         return card_html
 
-    # v12.0: Find all "Phase X:" occurrences with flexible pattern
-    # Matches: "Phase 0: Title (Woche 1-2)" or "<strong>Phase 1: Title</strong>"
-    phase_header_pattern = re.compile(
-        r'(?:<strong>|<b>|<h[34][^>]*>)?\s*Phase\s*(\d+)\s*:\s*([^<\n]+?)(?:\s*\(([^)]+)\))?\s*(?:</strong>|</b>|</h[34]>)?',
-        re.IGNORECASE
-    )
+    # v13.0: ULTRA-AGGRESSIVE - Multiple pattern attempts
+    # Pattern 1: Standard "Phase X:" with optional HTML wrapping
+    patterns = [
+        # Pattern 1: "Phase X: Title" or "<strong>Phase X: Title</strong>" or "<h3>Phase X: Title</h3>"
+        re.compile(
+            r'(?:<p[^>]*>)?(?:<strong>|<b>|<h[34][^>]*>)?\s*Phase\s*(\d+)\s*[:–\-]\s*([^<\n]+?)(?:\s*\(([^)]+)\))?\s*(?:</strong>|</b>|</h[34]>)?(?:</p>)?',
+            re.IGNORECASE
+        ),
+        # Pattern 2: H3/H4 with "Phase X" followed by content
+        re.compile(
+            r'<h[34][^>]*>\s*Phase\s*(\d+)\s*[:–\-]?\s*([^<]*?)\s*</h[34]>',
+            re.IGNORECASE
+        ),
+        # Pattern 3: "Q1/Q2/Q3/Q4 (Monate X-Y): Title" format
+        re.compile(
+            r'(?:<p[^>]*>)?(?:<strong>|<h[34][^>]*>)?\s*(?:Q(\d)|Quartal\s*(\d))\s*\(([^)]+)\)\s*[:–\-]?\s*([^<\n]*?)(?:</strong>|</h[34]>)?(?:</p>)?',
+            re.IGNORECASE
+        ),
+        # Pattern 4: "### Phase X: Title" (markdown in HTML - common from prompt templates)
+        re.compile(
+            r'###\s*Phase\s*(\d+)\s*[:–\-]\s*([^\n<]+?)(?:\s*\(([^)]+)\))?',
+            re.IGNORECASE
+        ),
+    ]
 
-    # Find all phase headers
-    headers = list(phase_header_pattern.finditer(output))
+    # Try each pattern in order
+    headers = []
+    pattern_used = None
+    for pattern in patterns:
+        headers = list(pattern.finditer(output))
+        if headers:
+            pattern_used = pattern
+            log.info("[ROADMAP-PHASE-FORMATTER-V3] Pattern matched: found %d phase headers", len(headers))
+            break
+
+    # If no standard patterns match, try to find Q1/Q2/Q3 sections
+    if not headers:
+        # Q-pattern returns (q_num, None, timeframe, title) or similar - handle specially
+        q_pattern = re.compile(
+            r'(?:<p[^>]*>)?(?:<strong>|<h[34][^>]*>)?\s*Q(\d)\s*\(([^)]+)\)\s*[:–\-]?\s*([^<\n]*?)(?:</strong>|</h[34]>)?(?:</p>)?',
+            re.IGNORECASE
+        )
+        q_matches = list(q_pattern.finditer(output))
+        if q_matches:
+            # Convert Q matches to standard format
+            headers = q_matches
+            pattern_used = q_pattern
+            log.info("[ROADMAP-PHASE-FORMATTER-V3] Q-pattern matched: found %d quarters", len(headers))
 
     if not headers:
-        log.debug("[ROADMAP-PHASE-FORMATTER-V2] No phase headers found")
+        log.debug("[ROADMAP-PHASE-FORMATTER-V3] No phase headers found with any pattern")
         return output
-
-    log.info("[ROADMAP-PHASE-FORMATTER-V2] Found %d phase headers", len(headers))
 
     # Process phases by extracting content between headers
     phase_data = []
     for i, match in enumerate(headers):
-        phase_num = match.group(1)
-        title = match.group(2) or ""
-        timeframe = match.group(3) or ""
+        groups = match.groups()
+
+        # Handle different group structures
+        if pattern_used and 'Q' in pattern_used.pattern:
+            # Q-pattern: group(1) = quarter num, group(2) = timeframe, group(3) = title
+            phase_num = groups[0] if groups[0] else "1"
+            timeframe = groups[1] if len(groups) > 1 and groups[1] else ""
+            title = groups[2] if len(groups) > 2 and groups[2] else ""
+        else:
+            # Standard pattern: group(1) = phase num, group(2) = title, group(3) = timeframe
+            phase_num = groups[0] if groups[0] else "0"
+            title = groups[1] if len(groups) > 1 and groups[1] else ""
+            timeframe = groups[2] if len(groups) > 2 and groups[2] else ""
 
         # Get content until next phase or end
         start_pos = match.end()
@@ -3336,31 +3388,38 @@ def _format_roadmap_phases_compact(html_content: str) -> str:
             # Find end markers
             end_markers = [
                 output.find('<h2', start_pos),
-                output.find('<h3', start_pos),
-                output.find('Erwartete Effekte', start_pos),
-                output.find('KPI-Tracking', start_pos),
+                output.find('<h3', start_pos) if output.find('<h3', start_pos) != -1 else len(output),
+                output.find('Erwartete Effekte', start_pos) if output.find('Erwartete Effekte', start_pos) != -1 else len(output),
+                output.find('KPI-Tracking', start_pos) if output.find('KPI-Tracking', start_pos) != -1 else len(output),
+                output.find('Risikominimierung', start_pos) if output.find('Risikominimierung', start_pos) != -1 else len(output),
                 len(output)
             ]
-            end_pos = min(p for p in end_markers if p > start_pos)
+            end_markers = [p for p in end_markers if p > start_pos]
+            end_pos = min(end_markers) if end_markers else len(output)
 
         content = output[start_pos:end_pos]
 
         # Extract Ziel
         ziel = ""
-        ziel_match = re.search(r'Ziel:\s*([^<\n]+?)(?:\.|<|$)', content, re.IGNORECASE)
+        ziel_match = re.search(r'(?:<strong>)?Ziel(?:</strong>)?:\s*([^<\n]+?)(?:\.|<|$)', content, re.IGNORECASE)
         if ziel_match:
             ziel = ziel_match.group(1).strip()
 
         # Extract Meilenstein
         meilenstein = ""
-        ms_match = re.search(r'Meilenstein:\s*([^<\n]+?)(?:\.|<|$)', content, re.IGNORECASE)
+        ms_match = re.search(r'(?:<strong>)?(?:🎯\s*)?Meilenstein(?:</strong>)?:\s*([^<\n]+?)(?:\.|<|$)', content, re.IGNORECASE)
         if ms_match:
             meilenstein = ms_match.group(1).strip()
 
-        # Extract bullets
+        # Extract bullets from <li> tags
         bullets = []
         li_matches = re.findall(r'<li[^>]*>([^<]+)', content, re.IGNORECASE)
         bullets = [re.sub(r'<[^>]+>', '', li).strip() for li in li_matches if li.strip()]
+
+        # Also try to extract bullet points from plain text (lines starting with -)
+        if not bullets:
+            text_bullets = re.findall(r'[-•]\s*([^\n<]+)', content)
+            bullets = [b.strip() for b in text_bullets if b.strip()][:4]
 
         phase_data.append({
             'match': match,
@@ -3389,7 +3448,148 @@ def _format_roadmap_phases_compact(html_content: str) -> str:
         output = output[:p_start] + card + output[p_end:]
 
     if phases_created > 0:
-        log.info("[ROADMAP-PHASE-FORMATTER-V2] Created %d phase cards", phases_created)
+        log.info("[ROADMAP-PHASE-FORMATTER-V3] Created %d phase cards", phases_created)
+
+    return output
+
+
+# -------------------- v13.0: SIEZEN-GUARD (Anti-Duzen Post-Processor) ----------------
+
+def _fix_duzen_to_siezen(html_content: str) -> str:
+    """
+    v13.0: Convert informal "du" address to formal "Sie" address.
+
+    CRITICAL: German business reports MUST use formal "Sie" form.
+    This post-processor catches any "du" forms that GPT might generate.
+    """
+    if not html_content or len(html_content) < 50:
+        return html_content
+
+    log.info("[SIEZEN-GUARD] Starting du→Sie conversion (length: %d chars)", len(html_content))
+
+    output = html_content
+    replacements_made = 0
+
+    # Du-Form → Sie-Form replacement pairs (case-insensitive patterns)
+    # Format: (pattern, replacement, is_word_boundary_required)
+    du_to_sie_pairs = [
+        # Personal pronouns - nominative
+        (r'\bdu\b', 'Sie', True),
+        (r'\bDu\b', 'Sie', True),
+
+        # Personal pronouns - dative
+        (r'\bdir\b', 'Ihnen', True),
+        (r'\bDir\b', 'Ihnen', True),
+
+        # Personal pronouns - accusative
+        (r'\bdich\b', 'Sie', True),
+        (r'\bDich\b', 'Sie', True),
+
+        # Possessive pronouns - all cases (masculine)
+        (r'\bdein\b', 'Ihr', True),
+        (r'\bDein\b', 'Ihr', True),
+        (r'\bdeinen\b', 'Ihren', True),
+        (r'\bDeinen\b', 'Ihren', True),
+        (r'\bdeinem\b', 'Ihrem', True),
+        (r'\bDeinem\b', 'Ihrem', True),
+        (r'\bdeiner\b', 'Ihrer', True),
+        (r'\bDeiner\b', 'Ihrer', True),
+        (r'\bdeines\b', 'Ihres', True),
+        (r'\bDeines\b', 'Ihres', True),
+
+        # Possessive pronouns - feminine/plural
+        (r'\bdeine\b', 'Ihre', True),
+        (r'\bDeine\b', 'Ihre', True),
+
+        # Common verb conjugations (du-form → Sie-form)
+        (r'\bbist\b', 'sind', True),  # sein
+        (r'\bBist\b', 'Sind', True),
+        (r'\bhast\b', 'haben', True),  # haben
+        (r'\bHast\b', 'Haben', True),
+        (r'\bwirst\b', 'werden', True),  # werden
+        (r'\bWirst\b', 'Werden', True),
+        (r'\bkannst\b', 'können', True),  # können
+        (r'\bKannst\b', 'Können', True),
+        (r'\bmusst\b', 'müssen', True),  # müssen
+        (r'\bMusst\b', 'Müssen', True),
+        (r'\bsollst\b', 'sollten', True),  # sollen (subjunctive for Sie)
+        (r'\bSollst\b', 'Sollten', True),
+        (r'\bdarfst\b', 'dürfen', True),  # dürfen
+        (r'\bDarfst\b', 'Dürfen', True),
+        (r'\bwillst\b', 'wollen', True),  # wollen
+        (r'\bWillst\b', 'Wollen', True),
+        (r'\bweißt\b', 'wissen', True),  # wissen
+        (r'\bWeißt\b', 'Wissen', True),
+        (r'\bsiehst\b', 'sehen', True),  # sehen
+        (r'\bSiehst\b', 'Sehen', True),
+        (r'\bgehst\b', 'gehen', True),  # gehen
+        (r'\bGehst\b', 'Gehen', True),
+        (r'\bkommst\b', 'kommen', True),  # kommen
+        (r'\bKommst\b', 'Kommen', True),
+        (r'\bmachst\b', 'machen', True),  # machen
+        (r'\bMachst\b', 'Machen', True),
+        (r'\bnutzt\b', 'nutzen', True),  # nutzen (common in KI context)
+        (r'\bNutzt\b', 'Nutzen', True),
+        (r'\bbrauchst\b', 'brauchen', True),  # brauchen
+        (r'\bBrauchst\b', 'Brauchen', True),
+        (r'\bfindest\b', 'finden', True),  # finden
+        (r'\bFindest\b', 'Finden', True),
+        (r'\berreichst\b', 'erreichen', True),  # erreichen
+        (r'\bErreichst\b', 'Erreichen', True),
+        (r'\bstartest\b', 'starten', True),  # starten
+        (r'\bStartest\b', 'Starten', True),
+        (r'\bbekommst\b', 'bekommen', True),  # bekommen
+        (r'\bBekommst\b', 'Bekommen', True),
+        (r'\bsparst\b', 'sparen', True),  # sparen
+        (r'\bSparst\b', 'Sparen', True),
+        (r'\bschaffst\b', 'schaffen', True),  # schaffen
+        (r'\bSchaffst\b', 'Schaffen', True),
+        (r'\bbenötigst\b', 'benötigen', True),  # benötigen
+        (r'\bBenötigst\b', 'Benötigen', True),
+        (r'\berhältst\b', 'erhalten', True),  # erhalten
+        (r'\bErhältst\b', 'Erhalten', True),
+        (r'\blernst\b', 'lernen', True),  # lernen
+        (r'\bLernst\b', 'Lernen', True),
+        (r'\bprofitierst\b', 'profitieren', True),  # profitieren
+        (r'\bProfitierst\b', 'Profitieren', True),
+        (r'\bverbesserst\b', 'verbessern', True),  # verbessern
+        (r'\bVerbesserst\b', 'Verbessern', True),
+        (r'\boptimierst\b', 'optimieren', True),  # optimieren
+        (r'\bOptimierst\b', 'Optimieren', True),
+        (r'\bdefinierst\b', 'definieren', True),  # definieren
+        (r'\bDefinierst\b', 'Definieren', True),
+        (r'\bimplementierst\b', 'implementieren', True),  # implementieren
+        (r'\bImplementierst\b', 'Implementieren', True),
+        (r'\berstellst\b', 'erstellen', True),  # erstellen
+        (r'\bErstellst\b', 'Erstellen', True),
+        (r'\bdokumentierst\b', 'dokumentieren', True),  # dokumentieren
+        (r'\bDokumentierst\b', 'Dokumentieren', True),
+        (r'\bprüfst\b', 'prüfen', True),  # prüfen
+        (r'\bPrüfst\b', 'Prüfen', True),
+        (r'\banalysierst\b', 'analysieren', True),  # analysieren
+        (r'\bAnalysierst\b', 'Analysieren', True),
+        (r'\bplanst\b', 'planen', True),  # planen
+        (r'\bPlanst\b', 'Planen', True),
+        (r'\bsetzt\b', 'setzen', True),  # setzen (also works for "Du setzt")
+        (r'\bSetzt\b', 'Setzen', True),
+        (r'\bführst\b', 'führen', True),  # führen
+        (r'\bFührst\b', 'Führen', True),
+        (r'\bbeginnt\b', 'beginnen', True),  # beginnen
+        (r'\bBeginnst\b', 'Beginnen', True),
+        (r'\bverwendest\b', 'verwenden', True),  # verwenden
+        (r'\bVerwendest\b', 'Verwenden', True),
+    ]
+
+    for pattern, replacement, _ in du_to_sie_pairs:
+        matches_before = len(re.findall(pattern, output))
+        if matches_before > 0:
+            output = re.sub(pattern, replacement, output)
+            replacements_made += matches_before
+
+    if replacements_made > 0:
+        log.info("[SIEZEN-GUARD] Made %d du→Sie replacements", replacements_made)
+    else:
+        log.debug("[SIEZEN-GUARD] No du-forms found")
 
     return output
 
@@ -3658,18 +3858,23 @@ def _inject_table_colgroups(html_content: str) -> str:
         if num_cols < 2:
             return match.group(0)
 
-        # Generate colgroup based on number of columns
+        # v13.0: Generate colgroup based on number of columns
+        # FIXED: Reduced percentages to 90% total to account for cell padding
         if num_cols == 5:
             # Risk Matrix style: Risikobereich | Auswirkung | Eintritt | Auswirkungsstärke | Maßnahmen
-            widths = ['15%', '18%', '18%', '18%', '31%']
+            # v13.0: Give more space to last column (Maßnahmen) - reduce others
+            widths = ['12%', '15%', '15%', '15%', '33%']
         elif num_cols == 4:
-            # Prioritäten-Überblick style
-            widths = ['10%', '35%', '20%', '35%']
+            # Prioritäten-Überblick style: Typ | Empfehlung | Zeitrahmen | Hauptnutzen
+            # v13.0: More balanced distribution
+            widths = ['8%', '40%', '15%', '27%']
         elif num_cols == 3:
-            widths = ['25%', '40%', '35%']
+            widths = ['20%', '45%', '25%']
+        elif num_cols == 2:
+            widths = ['35%', '55%']
         else:
             # Default: equal widths
-            width_pct = 100 // num_cols
+            width_pct = 90 // num_cols  # Leave some room for padding
             widths = [f'{width_pct}%'] * num_cols
 
         # Build colgroup HTML
@@ -8499,6 +8704,29 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
                 log.info(f"[TABLE-COLGROUP] {key}: colgroups injected")
             except Exception as e:
                 log.warning(f"[TABLE-COLGROUP] {key} failed: {e}")
+
+    # ========== v13.0: SIEZEN-GUARD (Anti-Duzen Post-Processor) ==========
+    # Apply formal "Sie" conversion to ALL text sections
+    # This catches any informal "du" forms that GPT might have generated
+    siezen_sections = [
+        "ROADMAP_90D_HTML", "ROADMAP_12M_HTML", "QUICK_WINS_HTML",
+        "RECOMMENDATIONS_HTML", "GAMECHANGER_HTML", "FOERDERPOTENZIAL_HTML",
+        "RISKS_HTML", "EXECUTIVE_SUMMARY_HTML", "BUSINESS_CASE_HTML",
+        "ORG_CHANGE_HTML", "DATA_READINESS_HTML"
+    ]
+    for key in siezen_sections:
+        html = sections.get(key, "")
+        if html and len(html) > 50:
+            try:
+                html_fixed = _fix_duzen_to_siezen(html)
+                sections[key] = html_fixed
+                # Update lowercase aliases
+                lower_key = key.replace("_HTML", "").lower()
+                if lower_key in sections:
+                    sections[lower_key] = html_fixed
+                log.info(f"[SIEZEN-GUARD] {key}: du→Sie conversion applied")
+            except Exception as e:
+                log.warning(f"[SIEZEN-GUARD] {key} failed: {e}")
 
     # Sprint N3.3: Apply Exec Summary Hard-Clean to remove H1/H2 and label text
     from services.html_sanitizer import clean_exec_summary_html
