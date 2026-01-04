@@ -3615,6 +3615,29 @@
             color: var(--color-success);
         }
 
+        /* ============================================
+           COMPLIANCE DISCLAIMER FOOTER
+           ============================================ */
+        .compliance-footer {
+            font-size: 9pt;
+            color: #6A6F7A;
+            letter-spacing: 0.02em;
+            text-align: center;
+            padding: 8px 0;
+            margin-top: auto;
+        }
+        .compliance-footer-page1 {
+            position: relative;
+            margin-top: 24px;
+            padding-top: 12px;
+            border-top: 1px solid var(--color-border-subtle);
+        }
+        .compliance-footer-last {
+            font-size: 8pt;
+            margin-top: 16px;
+            padding-top: 8px;
+        }
+
         .badge-phase1 {
             background: #dbeafe;
             color: #1e40af;
@@ -4142,6 +4165,15 @@
                             </span>
                         </div>
 
+                    </div>
+
+                    <!-- Compliance Footer - Page 1 -->
+                    <div class="compliance-footer compliance-footer-page1" role="contentinfo" aria-label="compliance disclaimer">
+                        {% if (lang or briefing_lang or report_lang or 'de')|lower|truncate(2, True, '') == 'en' %}
+                        Note: Assessment aligned with the EU AI Act and GDPR; not legal advice.
+                        {% else %}
+                        Hinweis: Einordnung entlang EU AI Act und DSGVO; keine Rechtsberatung.
+                        {% endif %}
                     </div>
                 </div>
                 <!-- END PAGE 1 -->
@@ -5402,6 +5434,16 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
                     {{ GDPR_MINI_DISCLAIMER|default(ui("gdpr_mini_default", "Dieser Report nutzt Unternehmensdaten zur KI-Readiness-Analyse. Verarbeitung auf Basis von Art. 6 (1) b DSGVO. AVV auf Anfrage.")) }}
                     <a href="https://ki-sicherheit.jetzt/datenschutz" target="_blank">{{ ui("gdpr_link_text", "Datenschutzerklärung") }}</a>
                 </div>
+
+                <!-- Compliance Footer - Last Page (repeated) -->
+                <div class="compliance-footer compliance-footer-last" role="contentinfo" aria-label="compliance disclaimer">
+                    {% if (lang or briefing_lang or report_lang or 'de')|lower|truncate(2, True, '') == 'en' %}
+                    Note: Assessment aligned with the EU AI Act and GDPR; not legal advice.
+                    {% else %}
+                    Hinweis: Einordnung entlang EU AI Act und DSGVO; keine Rechtsberatung.
+                    {% endif %}
+                </div>
+
                 <p class="small" style="text-align: center;">
                     © {{report_year}} KI-Sicherheit.jetzt —
                     Report ID: {{report_id}} —
