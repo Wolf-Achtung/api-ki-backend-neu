@@ -756,7 +756,7 @@ class TestHTMLGeneration:
         report = BusinessCaseReport(
             scenarios=scenarios,
             funding_effect=5000,
-            funding_programmes_used=["go-digital", "Digital Jetzt"],
+            funding_programmes_used=["go-digital", "ZIM"],
         )
 
         html = business_case_report_to_html(report, lang="de")
