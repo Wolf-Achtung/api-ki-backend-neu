@@ -20,7 +20,7 @@ snippets = {
     "COSTS_OVERVIEW_HTML": "<table class='table'><tr><th>CapEx</th><td>6.000 €</td></tr></table>",
     "RISKS_HTML": "<table class='table'><tr><th>Risiko</th><th>Mitigation</th></tr><tr><td>DSGVO</td><td>PII vermeiden</td></tr></table>",
     "GAMECHANGER_HTML": "<p>Transformative Wirkung durch standardisierte KI‑Beratung.</p>",
-    "FOERDERPROGRAMME_HTML": "<ul><li><a href='#'>Digital Jetzt</a></li></ul>",
+    "FOERDERPROGRAMME_HTML": "<ul><li><a href='#'>go-digital</a></li></ul>",
     "QUELLEN_HTML": "<ul><li><a href='#'>EU AI Act</a></li></ul>",
     "TOOLS_HTML": "<ul><li><a href='#'>Mistral AI</a> – EU‑Hosting.</li></ul>",
 }

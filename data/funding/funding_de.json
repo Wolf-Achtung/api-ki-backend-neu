@@ -19,22 +19,6 @@
       "url": "https://www.bmwk.de/go-digital"
     },
     {
-      "id": "digital_jetzt",
-      "title": "Digital Jetzt (BMWK)",
-      "region": "DE",
-      "region_label": "Deutschland (bundesweit)",
-      "funding_type": "Zuschuss",
-      "funding_rate": "bis 50%",
-      "max_amount": 50000,
-      "max_amount_display": "bis 50.000 €",
-      "focus": "Investitionen in digitale Technologien & Qualifizierung",
-      "suitable_for": ["team", "kmu"],
-      "notes": "KMU bis 499 Mitarbeiter, Frist bis 31.03.2026",
-      "relevance_ki": "high",
-      "priority": 1,
-      "url": "https://www.bmwk.de"
-    },
-    {
       "id": "kfw_digital_innovation",
       "title": "KfW-Förderkredite Digitalisierung & Innovation",
       "region": "DE",

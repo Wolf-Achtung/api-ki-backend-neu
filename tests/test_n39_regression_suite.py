@@ -85,7 +85,7 @@ def sample_sections() -> Dict[str, Any]:
         """,
         "FOERDERPOTENZIAL_HTML": """
             <h2>Förderpotenzial</h2>
-            <p>Digital Jetzt: Bis zu 50.000 EUR Förderung.</p>
+            <p>ZIM: Bis zu 550.000 EUR Förderung für innovative Projekte.</p>
             <p>Go-Digital: Beratungsförderung verfügbar.</p>
         """,
         "STRATEGIE_GOVERNANCE_HTML": """

@@ -380,7 +380,7 @@ def _extract_funding_programs(html: str) -> List[str]:
 
     # Known funding programs
     known_programs = [
-        "go-digital", "go digital", "Digital Jetzt", "ZIM",
+        "go-digital", "go digital", "ZIM",
         "INVEST", "KfW", "ERP", "BAFA", "GRW",
         "Digitalbonus", "Digital-Bonus", "Digitalisierungsprämie",
         "Gründungszuschuss", "EXIST", "High-Tech Gründerfonds",

@@ -217,21 +217,21 @@ Auswahl basierend auf:
       "risk_relation": "neutral",
       "required_investment": 8000.0,
       "related_tools": ["ChatGPT Enterprise"],
-      "related_funding": ["Digital Jetzt"],
+      "related_funding": ["go-digital"],
       "related_risks": [],
       "timeline_phase": "phase_1"
     },
     {
       "id": "rec2",
-      "title": "Förderantrag Digital Jetzt bis Q1 einreichen",
-      "description": "Bereiten Sie den Förderantrag für 'Digital Jetzt' vor. Fördersumme bis zu 50% der Investitionskosten möglich.",
-      "reason": "Auslaufendes Programm mit hoher Passung zu Ihrer Branche und Größe.",
+      "title": "Förderantrag go-digital bis Q1 einreichen",
+      "description": "Bereiten Sie den Förderantrag für 'go-digital' vor. Fördersumme bis zu 50% der Beratungskosten möglich.",
+      "reason": "Bundesweites Programm mit hoher Passung zu Ihrer Branche und Größe.",
       "impact_level": "high",
       "urgency_level": "high",
       "risk_relation": "neutral",
       "required_investment": 500.0,
       "related_tools": ["ChatGPT Enterprise", "Microsoft Copilot"],
-      "related_funding": ["Digital Jetzt"],
+      "related_funding": ["go-digital"],
       "related_risks": [],
       "timeline_phase": "phase_1"
     },
@@ -301,7 +301,7 @@ Auswahl basierend auf:
       "risk_relation": "requires_mitigation",
       "required_investment": 10000.0,
       "related_tools": ["ChatGPT Enterprise", "Microsoft Copilot"],
-      "related_funding": ["Digital Jetzt"],
+      "related_funding": ["ZIM"],
       "related_risks": [],
       "timeline_phase": "phase_3"
     }

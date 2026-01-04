@@ -39,7 +39,7 @@ class TestRecommendation:
             risk_relation="neutral",
             required_investment=5000.0,
             related_tools=["ChatGPT"],
-            related_funding=["Digital Jetzt"],
+            related_funding=["go-digital"],
             related_risks=[],
             timeline_phase="phase_1",
         )
@@ -708,7 +708,7 @@ class TestReportGeneration:
         """Test report generation with funding data."""
         from services.recommendations_engine import generate_recommendations_report
 
-        funding_data = {"programmes": [{"name": "Digital Jetzt"}]}
+        funding_data = {"programmes": [{"name": "go-digital"}]}
 
         report = generate_recommendations_report(
             funding_data=funding_data,

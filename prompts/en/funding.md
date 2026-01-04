@@ -63,8 +63,8 @@ Developer:
   {% else %}
   <p>
     Based on your profile, we recommend exploring federal programs such as
-    <strong>go-digital</strong> (digitalization consulting) or <strong>Digital Jetzt</strong>
-    (investment grants). Contact your regional business development agency for personalized guidance.
+    <strong>go-digital</strong> (digitalization consulting) or <strong>KfW Development Bank</strong>
+    loans for digitalization. Contact your regional business development agency for personalized guidance.
   </p>
   {% endif %}
 

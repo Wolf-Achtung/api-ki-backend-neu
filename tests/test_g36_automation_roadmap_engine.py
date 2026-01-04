@@ -333,7 +333,7 @@ class TestProcessCandidate:
             dependencies=["proc_002"],
             blockers=["resource_constraint"],
             recommended_tools=["ChatGPT"],
-            recommended_funding=["Digital Jetzt"],
+            recommended_funding=["go-digital"],
             risk_relation="medium",
         )
 
@@ -1086,7 +1086,7 @@ class TestConsistencyRules:
 
         proc = ProcessCandidate(
             id="p1", name="P1", description="D",
-            recommended_funding=["Digital Jetzt"],
+            recommended_funding=["go-digital"],
         )
 
         # Should not raise
@@ -1246,7 +1246,7 @@ class TestEngineIntegration:
 
         funding_data = {
             "programs": [
-                {"name": "Digital Jetzt", "amount": 50000},
+                {"name": "ZIM", "amount": 50000},
                 {"name": "go-digital", "amount": 16500},
             ]
         }
