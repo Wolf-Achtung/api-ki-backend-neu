@@ -79,6 +79,9 @@ BEISPIEL - SO JA:
 
 GAMECHANGER v7.1 — EINE NICHT-AUSTAUSCHBARE TRANSFORMATIONSIDEE
 
+<!-- Problem #7 FIX: Hauptleistung als Analyse-Kern -->
+{% include '_hauptleistung_context.md' %}
+
 <!--
 =============================================================================
 PHASE 3: INDIVIDUALISIERUNG DES STRATEGISCHEN BRUCHPUNKTS (PFLICHT!)
@@ -87,8 +90,12 @@ PHASE 3: INDIVIDUALISIERUNG DES STRATEGISCHEN BRUCHPUNKTS (PFLICHT!)
 Der Gamechanger MUSS die konkreten Briefing-Daten des Users aufgreifen.
 Generische Bruchpunkte sind VERBOTEN.
 
+KERN-KONTEXT (PFLICHT!):
+Die Hauptleistung "{{hauptleistung}}" ist der ZENTRALE Bezugspunkt.
+Jeder Satz muss sich auf diese Hauptleistung beziehen!
+
 INDIVIDUALISIERUNGS-KONTEXT (verfügbar aus Briefing):
-- {{hauptleistung}} = Was der User konkret anbietet
+- {{hauptleistung}} = Was der User konkret anbietet (PRIMÄR!)
 - {{ZEITERSPARNIS_PRIORITAET}} = Wo der User am meisten Zeit verliert
 - {{KI_GUARDRAILS}} = Einschränkungen/No-Gos für KI-Nutzung
 - {{VISION_3_JAHRE}} = Langfristige Vision des Users

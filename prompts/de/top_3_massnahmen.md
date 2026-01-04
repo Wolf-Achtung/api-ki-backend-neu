@@ -2,6 +2,12 @@
 <!-- OUTPUT: HTML <ol> list ONLY -->
 <!-- INPUT: {{hauptleistung}}, {{ZEITERSPARNIS_PRIORITAET}}, {{KI_GUARDRAILS}} -->
 <!-- TOKEN-BUDGET: 150 (nur die 3 Listenelemente) -->
+<!-- Problem #7 FIX: Hauptleistung als Analyse-Kern -->
+
+## KERN-KONTEXT: "{{hauptleistung}}"
+
+ALLE 3 Maßnahmen MÜSSEN sich erkennbar auf "{{hauptleistung}}" beziehen.
+Keine generischen Empfehlungen, die für jedes Unternehmen gelten würden!
 
 Du bist ein Experte für KI-Implementierungsstrategien.
 

@@ -3,8 +3,14 @@ Developer:
 <!-- SECTION: tools_empfehlungen -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{BRANCH_SHORT_LABEL}}, {{OFFERING_LABEL}}, {{COMPANY_SIZE}} -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{BRANCH_SHORT_LABEL}}, {{OFFERING_LABEL}}, {{COMPANY_SIZE}}, {{hauptleistung}} -->
 <!-- TOKEN-BUDGET: 2800 (solo:0.8x=2240, team:1.0x=2800, kmu:1.15x=3220) -->
+<!--
+=============================================================================
+Problem #7 FIX: Hauptleistung als Analyse-Kern
+=============================================================================
+-->
+{% include '_hauptleistung_context.md' %}
 <!-- WORD_MINIMUM_SOLO: 150 -->
 <!-- WORD_MINIMUM_TEAM: 200 -->
 <!-- WORD_MINIMUM_KMU: 250 -->
@@ -103,8 +109,13 @@ KMU-MODUS - VERBOTEN:
   <h2>Empfohlener KI-Stack für {{BRANCH_CONTEXT_LABEL}}</h2>
 
   <p>
+    {% if hauptleistung %}
+    Für "{{hauptleistung}}" empfiehlt sich ein klar strukturierter KI-Stack,
+    der konkret bei dieser Hauptleistung Zeit spart und sich schrittweise erweitern lässt.
+    {% else %}
     Für {{OFFERING_LABEL}} empfiehlt sich ein klar strukturierter KI-Stack,
     der den Alltag spürbar entlastet und sich bei Bedarf schrittweise erweitern lässt.
+    {% endif %}
   </p>
 
   <h3>Ausrichtung nach Unternehmensgröße</h3>

@@ -4420,6 +4420,12 @@
                             <h1 style="font-size: 32px; font-weight: 600; margin: 0 0 var(--space-sm) 0; color: var(--color-text-normal);">
                                 KI-Readiness Report
                             </h1>
+                            {% if REPORT_SUBTITLE %}
+                            <!-- Problem #7 FIX: Personalized subtitle from hauptleistung -->
+                            <p style="font-size: 14px; color: var(--color-primary); margin: 0 0 var(--space-xs) 0; font-style: italic;">
+                                {{ REPORT_SUBTITLE }}
+                            </p>
+                            {% endif %}
                             <p style="font-size: 16px; color: var(--color-text-muted); margin: 0;">
                                 {{ ui("company_label_colon") }} <strong style="color: var(--color-text-normal);">{{ company_name or kundencode or ui("your_company") }}</strong>
                                 <span class="muted"> · </span>
