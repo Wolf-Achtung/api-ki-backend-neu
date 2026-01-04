@@ -48,13 +48,46 @@ class BranchDriver:
     trend_direction: str = "rising"  # rising, stable, declining
 
 
+# Qualitative trend levels (Problem #4 fix - no fake percentages)
+TREND_LEVELS = {
+    "very_high": {"de": "Sehr stark wachsend", "en": "Very high growth"},
+    "high": {"de": "Stark wachsend", "en": "High growth"},
+    "medium": {"de": "Wachsend", "en": "Growing"},
+    "stable": {"de": "Etabliert", "en": "Established"},
+    "emerging": {"de": "Aufkommend", "en": "Emerging"},
+}
+
+# Colors for trend levels
+TREND_LEVEL_COLORS = {
+    "very_high": "#22c55e",  # Green
+    "high": "#3b82f6",       # Blue
+    "medium": "#8b5cf6",     # Purple
+    "stable": "#64748b",     # Gray
+    "emerging": "#f59e0b",   # Orange
+}
+
+
 @dataclass
 class MarketTrend:
     """Market trend relevant to the industry."""
     title: str
     description: str
-    relevance_score: float = 0.8  # 0.0-1.0
+    trend_level: str = "high"  # very_high, high, medium, stable, emerging
     timeline: str = "2024-2026"
+
+    @property
+    def relevance_score(self) -> float:
+        """Backwards compatibility: convert level to score."""
+        level_scores = {"very_high": 0.95, "high": 0.85, "medium": 0.7, "stable": 0.5, "emerging": 0.6}
+        return level_scores.get(self.trend_level, 0.7)
+
+    def get_label(self, lang: str = "de") -> str:
+        """Get localized label for the trend level."""
+        return TREND_LEVELS.get(self.trend_level, TREND_LEVELS["medium"]).get(lang, self.trend_level)
+
+    def get_color(self) -> str:
+        """Get color for the trend level."""
+        return TREND_LEVEL_COLORS.get(self.trend_level, "#6b7280")
 
 
 @dataclass
@@ -142,16 +175,16 @@ BRANCH_MATURITY_DATA: Dict[str, Dict[str, Any]] = {
             ("Documentation Intensity", "Reports, analyses, presentations dominate - ideal AI automation opportunity"),
         ],
         "trends_de": [
-            ("AI-First Beratung", "Beratungshäuser integrieren KI als Core-Service", 0.9),
-            ("Outcome-Based Pricing", "Shift von Stundensätzen zu Value-Based-Modellen", 0.75),
-            ("Remote-First Delivery", "Hybride Beratungsmodelle werden Standard", 0.85),
-            ("Data-Driven Insights", "Analysen basieren zunehmend auf Echtzeit-Daten", 0.8),
+            ("AI-First Beratung", "Beratungshäuser integrieren KI als Core-Service", "very_high"),
+            ("Outcome-Based Pricing", "Shift von Stundensätzen zu Value-Based-Modellen", "medium"),
+            ("Remote-First Delivery", "Hybride Beratungsmodelle werden Standard", "high"),
+            ("Data-Driven Insights", "Analysen basieren zunehmend auf Echtzeit-Daten", "high"),
         ],
         "trends_en": [
-            ("AI-First Consulting", "Consulting firms integrate AI as core service", 0.9),
-            ("Outcome-Based Pricing", "Shift from hourly rates to value-based models", 0.75),
-            ("Remote-First Delivery", "Hybrid consulting models becoming standard", 0.85),
-            ("Data-Driven Insights", "Analyses increasingly based on real-time data", 0.8),
+            ("AI-First Consulting", "Consulting firms integrate AI as core service", "very_high"),
+            ("Outcome-Based Pricing", "Shift from hourly rates to value-based models", "medium"),
+            ("Remote-First Delivery", "Hybrid consulting models becoming standard", "high"),
+            ("Data-Driven Insights", "Analyses increasingly based on real-time data", "high"),
         ],
         "regulatory_de": [
             ("AI Act Compliance", "Bei KI-gestützter Beratung müssen Transparenzanforderungen erfüllt werden", "medium"),
@@ -223,16 +256,16 @@ BRANCH_MATURITY_DATA: Dict[str, Dict[str, Any]] = {
             ("Talent Shortage", "AI compensates for missing developer capacity"),
         ],
         "trends_de": [
-            ("AI-Assisted Development", "Copilot und ähnliche Tools werden Standard", 0.95),
-            ("Low-Code/No-Code", "Demokratisierung der Softwareentwicklung", 0.8),
-            ("AI Ops", "KI-gestützte IT-Operations und Monitoring", 0.85),
-            ("Security Automation", "KI für Threat Detection und Response", 0.9),
+            ("AI-Assisted Development", "Copilot und ähnliche Tools werden Standard", "very_high"),
+            ("Low-Code/No-Code", "Demokratisierung der Softwareentwicklung", "high"),
+            ("AI Ops", "KI-gestützte IT-Operations und Monitoring", "high"),
+            ("Security Automation", "KI für Threat Detection und Response", "very_high"),
         ],
         "trends_en": [
-            ("AI-Assisted Development", "Copilot and similar tools becoming standard", 0.95),
-            ("Low-Code/No-Code", "Democratization of software development", 0.8),
-            ("AI Ops", "AI-powered IT operations and monitoring", 0.85),
-            ("Security Automation", "AI for threat detection and response", 0.9),
+            ("AI-Assisted Development", "Copilot and similar tools becoming standard", "very_high"),
+            ("Low-Code/No-Code", "Democratization of software development", "high"),
+            ("AI Ops", "AI-powered IT operations and monitoring", "high"),
+            ("Security Automation", "AI for threat detection and response", "very_high"),
         ],
         "regulatory_de": [
             ("AI Act - High-Risk", "Kritische IT-Systeme können als High-Risk klassifiziert werden", "high"),
@@ -306,16 +339,16 @@ BRANCH_MATURITY_DATA: Dict[str, Dict[str, Any]] = {
             ("Customer Journey", "Seamless omnichannel experiences require intelligent systems"),
         ],
         "trends_de": [
-            ("Conversational Commerce", "Chatbots und Voice-Assistenten für Kundenservice", 0.85),
-            ("Dynamic Pricing", "KI-gestützte Preisoptimierung in Echtzeit", 0.75),
-            ("Visual Search", "Produktsuche per Bild wird Standard", 0.7),
-            ("Predictive Analytics", "Nachfrage- und Bestandsprognosen", 0.8),
+            ("Conversational Commerce", "Chatbots und Voice-Assistenten für Kundenservice", "high"),
+            ("Dynamic Pricing", "KI-gestützte Preisoptimierung in Echtzeit", "medium"),
+            ("Visual Search", "Produktsuche per Bild wird Standard", "medium"),
+            ("Predictive Analytics", "Nachfrage- und Bestandsprognosen", "high"),
         ],
         "trends_en": [
-            ("Conversational Commerce", "Chatbots and voice assistants for customer service", 0.85),
-            ("Dynamic Pricing", "AI-powered real-time price optimization", 0.75),
-            ("Visual Search", "Image-based product search becoming standard", 0.7),
-            ("Predictive Analytics", "Demand and inventory forecasting", 0.8),
+            ("Conversational Commerce", "Chatbots and voice assistants for customer service", "high"),
+            ("Dynamic Pricing", "AI-powered real-time price optimization", "medium"),
+            ("Visual Search", "Image-based product search becoming standard", "medium"),
+            ("Predictive Analytics", "Demand and inventory forecasting", "high"),
         ],
         "regulatory_de": [
             ("Preistransparenz", "Dynamische Preise müssen transparent kommuniziert werden", "medium"),
@@ -387,16 +420,16 @@ BRANCH_MATURITY_DATA: Dict[str, Dict[str, Any]] = {
             ("Data Richness", "Financial sector has structured data - ideal for AI"),
         ],
         "trends_de": [
-            ("RegTech", "KI-gestützte Compliance und Reporting", 0.9),
-            ("Fraud Detection", "Echtzeit-Betrugserkennung mit ML", 0.95),
-            ("Robo-Advisory", "Automatisierte Anlageberatung", 0.8),
-            ("Process Automation", "RPA + KI für Back-Office-Prozesse", 0.85),
+            ("RegTech", "KI-gestützte Compliance und Reporting", "very_high"),
+            ("Fraud Detection", "Echtzeit-Betrugserkennung mit ML", "very_high"),
+            ("Robo-Advisory", "Automatisierte Anlageberatung", "high"),
+            ("Process Automation", "RPA + KI für Back-Office-Prozesse", "high"),
         ],
         "trends_en": [
-            ("RegTech", "AI-powered compliance and reporting", 0.9),
-            ("Fraud Detection", "Real-time fraud detection with ML", 0.95),
-            ("Robo-Advisory", "Automated investment advice", 0.8),
-            ("Process Automation", "RPA + AI for back-office processes", 0.85),
+            ("RegTech", "AI-powered compliance and reporting", "very_high"),
+            ("Fraud Detection", "Real-time fraud detection with ML", "very_high"),
+            ("Robo-Advisory", "Automated investment advice", "high"),
+            ("Process Automation", "RPA + AI for back-office processes", "high"),
         ],
         "regulatory_de": [
             ("BaFin/MaRisk", "Strenge Dokumentations- und Prüfpflichten", "high"),
@@ -470,16 +503,16 @@ BRANCH_MATURITY_DATA: Dict[str, Dict[str, Any]] = {
             ("Cost Pressure", "Efficiency improvement in healthcare necessary"),
         ],
         "trends_de": [
-            ("Klinische Dokumentation", "KI-Assistenten für Arztbriefe und Befunde", 0.85),
-            ("Bildgebung", "AI-gestützte Diagnostik bei Röntgen, MRT, CT", 0.9),
-            ("Terminmanagement", "Intelligente Praxisorganisation", 0.75),
-            ("Telemedizin", "KI-unterstützte Ferndiagnose und -behandlung", 0.7),
+            ("Klinische Dokumentation", "KI-Assistenten für Arztbriefe und Befunde", "high"),
+            ("Bildgebung", "AI-gestützte Diagnostik bei Röntgen, MRT, CT", "very_high"),
+            ("Terminmanagement", "Intelligente Praxisorganisation", "medium"),
+            ("Telemedizin", "KI-unterstützte Ferndiagnose und -behandlung", "medium"),
         ],
         "trends_en": [
-            ("Clinical Documentation", "AI assistants for medical reports", 0.85),
-            ("Medical Imaging", "AI-assisted diagnostics for X-ray, MRI, CT", 0.9),
-            ("Appointment Management", "Intelligent practice organization", 0.75),
-            ("Telemedicine", "AI-supported remote diagnosis and treatment", 0.7),
+            ("Clinical Documentation", "AI assistants for medical reports", "high"),
+            ("Medical Imaging", "AI-assisted diagnostics for X-ray, MRI, CT", "very_high"),
+            ("Appointment Management", "Intelligent practice organization", "medium"),
+            ("Telemedicine", "AI-supported remote diagnosis and treatment", "medium"),
         ],
         "regulatory_de": [
             ("MDR/IVDR", "Medizinprodukteverordnung für KI-Systeme", "high"),
@@ -553,16 +586,16 @@ BRANCH_MATURITY_DATA: Dict[str, Dict[str, Any]] = {
             ("Supply Chain Resilience", "AI optimizes supply chain management"),
         ],
         "trends_de": [
-            ("Digital Twin", "Virtuelle Abbilder von Produktionsanlagen", 0.8),
-            ("Autonomous Systems", "Selbststeuernde Logistik und Produktion", 0.75),
-            ("Edge AI", "KI direkt an der Maschine", 0.85),
-            ("Generative Design", "KI entwirft optimierte Bauteile", 0.7),
+            ("Digital Twin", "Virtuelle Abbilder von Produktionsanlagen", "high"),
+            ("Autonomous Systems", "Selbststeuernde Logistik und Produktion", "medium"),
+            ("Edge AI", "KI direkt an der Maschine", "high"),
+            ("Generative Design", "KI entwirft optimierte Bauteile", "medium"),
         ],
         "trends_en": [
-            ("Digital Twin", "Virtual replicas of production facilities", 0.8),
-            ("Autonomous Systems", "Self-controlling logistics and production", 0.75),
-            ("Edge AI", "AI directly at the machine", 0.85),
-            ("Generative Design", "AI designs optimized components", 0.7),
+            ("Digital Twin", "Virtual replicas of production facilities", "high"),
+            ("Autonomous Systems", "Self-controlling logistics and production", "medium"),
+            ("Edge AI", "AI directly at the machine", "high"),
+            ("Generative Design", "AI designs optimized components", "medium"),
         ],
         "regulatory_de": [
             ("Maschinensicherheit", "KI-gesteuerte Maschinen müssen CE-konform sein", "high"),
@@ -634,16 +667,16 @@ BRANCH_MATURITY_DATA: Dict[str, Dict[str, Any]] = {
             ("Lifelong Learning", "Upskilling need increases due to AI itself"),
         ],
         "trends_de": [
-            ("Adaptive Learning", "KI passt Lerninhalte an individuellen Fortschritt an", 0.85),
-            ("AI Tutors", "Intelligente Tutoren für 1:1-Betreuung", 0.8),
-            ("Content-Generierung", "KI erstellt und kuratiert Lehrmaterialien", 0.75),
-            ("Assessment Automation", "Automatisierte Bewertung und Feedback", 0.7),
+            ("Adaptive Learning", "KI passt Lerninhalte an individuellen Fortschritt an", "high"),
+            ("AI Tutors", "Intelligente Tutoren für 1:1-Betreuung", "high"),
+            ("Content-Generierung", "KI erstellt und kuratiert Lehrmaterialien", "medium"),
+            ("Assessment Automation", "Automatisierte Bewertung und Feedback", "medium"),
         ],
         "trends_en": [
-            ("Adaptive Learning", "AI adapts learning content to individual progress", 0.85),
-            ("AI Tutors", "Intelligent tutors for 1:1 support", 0.8),
-            ("Content Generation", "AI creates and curates teaching materials", 0.75),
-            ("Assessment Automation", "Automated evaluation and feedback", 0.7),
+            ("Adaptive Learning", "AI adapts learning content to individual progress", "high"),
+            ("AI Tutors", "Intelligent tutors for 1:1 support", "high"),
+            ("Content Generation", "AI creates and curates teaching materials", "medium"),
+            ("Assessment Automation", "Automated evaluation and feedback", "medium"),
         ],
         "regulatory_de": [
             ("Bildungsdatenschutz", "Besonderer Schutz von Daten Minderjähriger", "high"),
@@ -715,16 +748,16 @@ BRANCH_MATURITY_DATA: Dict[str, Dict[str, Any]] = {
             ("Creativity Boost", "AI as co-creator accelerates ideation"),
         ],
         "trends_de": [
-            ("Generative Content", "KI erstellt Text, Bild, Video auf Knopfdruck", 0.95),
-            ("Hyper-Personalisierung", "Individuelle Ansprache in Echtzeit", 0.85),
-            ("Predictive Analytics", "KI prognostiziert Kampagnen-Performance", 0.8),
-            ("Conversational Marketing", "Chatbots als Marketing-Kanal", 0.75),
+            ("Generative Content", "KI erstellt Text, Bild, Video auf Knopfdruck", "very_high"),
+            ("Hyper-Personalisierung", "Individuelle Ansprache in Echtzeit", "high"),
+            ("Predictive Analytics", "KI prognostiziert Kampagnen-Performance", "high"),
+            ("Conversational Marketing", "Chatbots als Marketing-Kanal", "medium"),
         ],
         "trends_en": [
-            ("Generative Content", "AI creates text, image, video at the push of a button", 0.95),
-            ("Hyper-Personalization", "Individual approach in real-time", 0.85),
-            ("Predictive Analytics", "AI predicts campaign performance", 0.8),
-            ("Conversational Marketing", "Chatbots as marketing channel", 0.75),
+            ("Generative Content", "AI creates text, image, video at the push of a button", "very_high"),
+            ("Hyper-Personalization", "Individual approach in real-time", "high"),
+            ("Predictive Analytics", "AI predicts campaign performance", "high"),
+            ("Conversational Marketing", "Chatbots as marketing channel", "medium"),
         ],
         "regulatory_de": [
             ("DSGVO/E-Privacy", "Tracking und Personalisierung datenschutzkonform gestalten", "high"),
@@ -801,20 +834,20 @@ BRANCH_MATURITY_DATA: Dict[str, Dict[str, Any]] = {
             ("Skilled Labor Shortage", "Construction industry struggles with talent gap - AI compensates missing capacity"),
         ],
         "trends_de": [
-            ("BIM + KI-Integration", "KI-gestützte Planung und Kollisionsprüfung in BIM-Modellen", 0.85),
-            ("Dokumentationsautomatisierung", "Automatische Bautagebücher und Protokolle", 0.8),
-            ("Predictive Maintenance", "Vorausschauende Wartung für Gebäudetechnik", 0.7),
-            ("Generative Design", "KI-gestützte Entwurfsoptimierung", 0.65),
-            ("Digital Twin", "Digitale Gebäudezwillinge für Betrieb und Wartung", 0.75),
-            ("Drohnen + KI", "Automatisierte Baufortschrittskontrolle und Inspektion", 0.7),
+            ("BIM + KI-Integration", "KI-gestützte Planung und Kollisionsprüfung in BIM-Modellen", "high"),
+            ("Dokumentationsautomatisierung", "Automatische Bautagebücher und Protokolle", "high"),
+            ("Predictive Maintenance", "Vorausschauende Wartung für Gebäudetechnik", "medium"),
+            ("Generative Design", "KI-gestützte Entwurfsoptimierung", "emerging"),
+            ("Digital Twin", "Digitale Gebäudezwillinge für Betrieb und Wartung", "medium"),
+            ("Drohnen + KI", "Automatisierte Baufortschrittskontrolle und Inspektion", "medium"),
         ],
         "trends_en": [
-            ("BIM + AI Integration", "AI-powered planning and clash detection in BIM models", 0.85),
-            ("Documentation Automation", "Automatic construction diaries and protocols", 0.8),
-            ("Predictive Maintenance", "Proactive maintenance for building technology", 0.7),
-            ("Generative Design", "AI-powered design optimization", 0.65),
-            ("Digital Twin", "Digital building twins for operations and maintenance", 0.75),
-            ("Drones + AI", "Automated construction progress monitoring and inspection", 0.7),
+            ("BIM + AI Integration", "AI-powered planning and clash detection in BIM models", "high"),
+            ("Documentation Automation", "Automatic construction diaries and protocols", "high"),
+            ("Predictive Maintenance", "Proactive maintenance for building technology", "medium"),
+            ("Generative Design", "AI-powered design optimization", "emerging"),
+            ("Digital Twin", "Digital building twins for operations and maintenance", "medium"),
+            ("Drones + AI", "Automated construction progress monitoring and inspection", "medium"),
         ],
         "regulatory_de": [
             ("Bauvorschriften", "KI-gestützte Planung muss alle Bauordnungen und Normen einhalten", "high"),
@@ -894,20 +927,20 @@ BRANCH_MATURITY_DATA: Dict[str, Dict[str, Any]] = {
             ("Digital Access Act", "OZG obligation drives digitalization - AI can help"),
         ],
         "trends_de": [
-            ("Bürgerportale mit KI", "Intelligente Chatbots für Bürgeranfragen und Antragshilfe", 0.75),
-            ("Dokumentenklassifizierung", "Automatische Sortierung und Routing von Eingängen", 0.8),
-            ("Formularautomatisierung", "KI-gestützte Ausfüllhilfen und Plausibilitätsprüfung", 0.7),
-            ("Bescheidgenerierung", "Automatische Erstellung von Standardbescheiden", 0.65),
-            ("E-Akte-Integration", "KI-Suche und Zusammenfassung in elektronischen Akten", 0.75),
-            ("Prozessdigitalisierung", "Ende-zu-Ende Digitalisierung von Verwaltungsprozessen", 0.8),
+            ("Bürgerportale mit KI", "Intelligente Chatbots für Bürgeranfragen und Antragshilfe", "medium"),
+            ("Dokumentenklassifizierung", "Automatische Sortierung und Routing von Eingängen", "high"),
+            ("Formularautomatisierung", "KI-gestützte Ausfüllhilfen und Plausibilitätsprüfung", "medium"),
+            ("Bescheidgenerierung", "Automatische Erstellung von Standardbescheiden", "emerging"),
+            ("E-Akte-Integration", "KI-Suche und Zusammenfassung in elektronischen Akten", "medium"),
+            ("Prozessdigitalisierung", "Ende-zu-Ende Digitalisierung von Verwaltungsprozessen", "high"),
         ],
         "trends_en": [
-            ("Citizen Portals with AI", "Intelligent chatbots for citizen inquiries and application help", 0.75),
-            ("Document Classification", "Automatic sorting and routing of incoming documents", 0.8),
-            ("Form Automation", "AI-assisted form filling and plausibility checks", 0.7),
-            ("Notice Generation", "Automatic creation of standard notices", 0.65),
-            ("E-File Integration", "AI search and summarization in electronic files", 0.75),
-            ("Process Digitalization", "End-to-end digitalization of administrative processes", 0.8),
+            ("Citizen Portals with AI", "Intelligent chatbots for citizen inquiries and application help", "medium"),
+            ("Document Classification", "Automatic sorting and routing of incoming documents", "high"),
+            ("Form Automation", "AI-assisted form filling and plausibility checks", "medium"),
+            ("Notice Generation", "Automatic creation of standard notices", "emerging"),
+            ("E-File Integration", "AI search and summarization in electronic files", "medium"),
+            ("Process Digitalization", "End-to-end digitalization of administrative processes", "high"),
         ],
         "regulatory_de": [
             ("DSGVO/Datenschutz", "Höchste Anforderungen bei Verarbeitung von Bürgerdaten", "high"),
@@ -987,20 +1020,20 @@ BRANCH_MATURITY_DATA: Dict[str, Dict[str, Any]] = {
             ("Sustainability Pressure", "CO2 reduction requires more efficient route planning"),
         ],
         "trends_de": [
-            ("Predictive Logistics", "KI-gestützte Prognosen für Nachfrage, Lieferzeiten, Kapazitäten", 0.9),
-            ("Routenoptimierung", "Dynamische Tourenplanung mit Echtzeit-Verkehrsdaten", 0.85),
-            ("Autonome Fahrzeuge", "Selbstfahrende LKW und Drohnenlieferung in Entwicklung", 0.6),
-            ("Smart Warehousing", "KI-gesteuerte Lagerroboter und Bestandsoptimierung", 0.8),
-            ("Last Mile Innovation", "KI optimiert die letzte Meile zum Kunden", 0.85),
-            ("Supply Chain Visibility", "End-to-End Transparenz über KI-Analytics", 0.8),
+            ("Predictive Logistics", "KI-gestützte Prognosen für Nachfrage, Lieferzeiten, Kapazitäten", "very_high"),
+            ("Routenoptimierung", "Dynamische Tourenplanung mit Echtzeit-Verkehrsdaten", "high"),
+            ("Autonome Fahrzeuge", "Selbstfahrende LKW und Drohnenlieferung in Entwicklung", "emerging"),
+            ("Smart Warehousing", "KI-gesteuerte Lagerroboter und Bestandsoptimierung", "high"),
+            ("Last Mile Innovation", "KI optimiert die letzte Meile zum Kunden", "high"),
+            ("Supply Chain Visibility", "End-to-End Transparenz über KI-Analytics", "high"),
         ],
         "trends_en": [
-            ("Predictive Logistics", "AI-powered forecasts for demand, delivery times, capacities", 0.9),
-            ("Route Optimization", "Dynamic tour planning with real-time traffic data", 0.85),
-            ("Autonomous Vehicles", "Self-driving trucks and drone delivery in development", 0.6),
-            ("Smart Warehousing", "AI-controlled warehouse robots and inventory optimization", 0.8),
-            ("Last Mile Innovation", "AI optimizes the last mile to customers", 0.85),
-            ("Supply Chain Visibility", "End-to-end transparency through AI analytics", 0.8),
+            ("Predictive Logistics", "AI-powered forecasts for demand, delivery times, capacities", "very_high"),
+            ("Route Optimization", "Dynamic tour planning with real-time traffic data", "high"),
+            ("Autonomous Vehicles", "Self-driving trucks and drone delivery in development", "emerging"),
+            ("Smart Warehousing", "AI-controlled warehouse robots and inventory optimization", "high"),
+            ("Last Mile Innovation", "AI optimizes the last mile to customers", "high"),
+            ("Supply Chain Visibility", "End-to-end transparency through AI analytics", "high"),
         ],
         "regulatory_de": [
             ("Lenk- und Ruhezeiten", "KI-Systeme müssen gesetzliche Fahrervorschriften berücksichtigen", "high"),
@@ -1079,16 +1112,16 @@ DEFAULT_BRANCH_DATA = {
         ("Data Utilization", "Existing data is leveraged for AI applications"),
     ],
     "trends_de": [
-        ("Generative AI", "ChatGPT und ähnliche Tools werden breit eingesetzt", 0.9),
-        ("Process Automation", "RPA und KI automatisieren Routineaufgaben", 0.8),
-        ("Analytics & BI", "Datengetriebene Entscheidungen werden Standard", 0.75),
-        ("Customer Service AI", "Chatbots und virtuelle Assistenten", 0.7),
+        ("Generative AI", "ChatGPT und ähnliche Tools werden breit eingesetzt", "very_high"),
+        ("Process Automation", "RPA und KI automatisieren Routineaufgaben", "high"),
+        ("Analytics & BI", "Datengetriebene Entscheidungen werden Standard", "medium"),
+        ("Customer Service AI", "Chatbots und virtuelle Assistenten", "medium"),
     ],
     "trends_en": [
-        ("Generative AI", "ChatGPT and similar tools widely used", 0.9),
-        ("Process Automation", "RPA and AI automate routine tasks", 0.8),
-        ("Analytics & BI", "Data-driven decisions becoming standard", 0.75),
-        ("Customer Service AI", "Chatbots and virtual assistants", 0.7),
+        ("Generative AI", "ChatGPT and similar tools widely used", "very_high"),
+        ("Process Automation", "RPA and AI automate routine tasks", "high"),
+        ("Analytics & BI", "Data-driven decisions becoming standard", "medium"),
+        ("Customer Service AI", "Chatbots and virtual assistants", "medium"),
     ],
     "regulatory_de": [
         ("AI Act", "Neue EU-Verordnung erfordert Compliance-Prüfung", "medium"),
@@ -1320,13 +1353,13 @@ def build_branch_profile(
         for d in data.get(drivers_key, [])[:6]
     ]
 
-    # Build market trends
+    # Build market trends (now using qualitative levels instead of percentages)
     trends_key = f"trends_{lang_key}"
     trends = [
         MarketTrend(
             title=t[0],
             description=t[1],
-            relevance_score=t[2] if len(t) > 2 else 0.8,
+            trend_level=t[2] if len(t) > 2 else "high",
             timeline="2024-2026"
         )
         for t in data.get(trends_key, [])[:6]
@@ -1580,18 +1613,16 @@ def generate_branch_profile_html(
         """)
 
         for trend in profile.market_trends[:4]:
-            relevance_pct = int(trend.relevance_score * 100)
-            bar_color = "#22c55e" if relevance_pct >= 80 else "#f59e0b" if relevance_pct >= 60 else "#3b82f6"
+            # Use qualitative labels instead of fake percentages (Problem #4 fix)
+            trend_label = trend.get_label(lang)
+            trend_color = trend.get_color()
             html_parts.append(f"""
                 <div style="background:var(--color-bg-surface);border:1px solid var(--color-border);border-radius:6px;padding:10px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
                         <div style="font-weight:600;font-size:12px;color:var(--color-text-strong);">{trend.title}</div>
-                        <div style="font-size:10px;color:{bar_color};font-weight:600;">{relevance_pct}%</div>
+                        <div style="font-size:10px;padding:2px 6px;background:{trend_color}15;color:{trend_color};border-radius:4px;font-weight:600;">{trend_label}</div>
                     </div>
-                    <div style="font-size:11px;color:var(--color-text-muted);margin-bottom:6px;">{trend.description}</div>
-                    <div style="height:4px;background:var(--color-border);border-radius:2px;overflow:hidden;">
-                        <div style="width:{relevance_pct}%;height:100%;background:{bar_color};"></div>
-                    </div>
+                    <div style="font-size:11px;color:var(--color-text-muted);">{trend.description}</div>
                 </div>
             """)
 
