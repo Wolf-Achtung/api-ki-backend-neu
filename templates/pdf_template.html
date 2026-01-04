@@ -3658,6 +3658,179 @@
             color: var(--color-text-muted);
         }
 
+        /* ============================================
+           v11.0: QUICK WIN CARDS
+           ============================================ */
+        .quick-win-card {
+            background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+            border: 1px solid #fde047;
+            border-left: 4px solid #eab308;
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            page-break-inside: avoid;
+        }
+        .quick-win-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .quick-win-icon {
+            font-size: 14pt;
+        }
+        .quick-win-header strong {
+            flex: 1;
+            font-size: 11pt;
+            color: #854d0e;
+        }
+        .quick-win-meta {
+            font-size: 8.5pt;
+            color: #a16207;
+            background: rgba(234, 179, 8, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .quick-win-desc {
+            font-size: 9.5pt;
+            line-height: 1.4;
+            margin: 0 0 6px 0;
+            color: #713f12;
+        }
+        .quick-win-steps {
+            margin: 6px 0;
+            padding-left: 18px;
+            font-size: 9pt;
+        }
+        .quick-win-steps li {
+            margin-bottom: 2px;
+            color: #78350f;
+        }
+        .quick-win-savings {
+            font-size: 9pt;
+            color: #15803d;
+            font-weight: 600;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        /* ============================================
+           v11.0: EMPFEHLUNG CARDS
+           ============================================ */
+        .empfehlung-card {
+            background: var(--color-bg-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            page-break-inside: avoid;
+        }
+        .empfehlung-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .empfehlung-num {
+            background: var(--color-brand-primary);
+            color: white;
+            font-size: 10pt;
+            font-weight: 700;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .empfehlung-header strong {
+            font-size: 11pt;
+            color: var(--color-text-strong);
+        }
+        .empfehlung-schwerpunkt,
+        .empfehlung-massnahme {
+            font-size: 9.5pt;
+            margin: 4px 0;
+            line-height: 1.4;
+        }
+        .empfehlung-schwerpunkt .label,
+        .empfehlung-massnahme .label {
+            font-weight: 600;
+            color: var(--color-text-muted);
+        }
+
+        /* ============================================
+           v11.0: FÖRDERPRÜFUNG CHECKLIST
+           ============================================ */
+        .foerder-checklist-item {
+            display: flex;
+            gap: 10px;
+            padding: 10px 12px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            page-break-inside: avoid;
+        }
+        .foerder-check {
+            font-size: 14pt;
+            color: #16a34a;
+            flex-shrink: 0;
+        }
+        .foerder-content {
+            flex: 1;
+        }
+        .foerder-content strong {
+            font-size: 10pt;
+            color: #166534;
+            display: block;
+            margin-bottom: 3px;
+        }
+        .foerder-content p {
+            font-size: 9pt;
+            margin: 0;
+            line-height: 1.4;
+            color: #15803d;
+        }
+
+        /* ============================================
+           v11.0: LEERRAUM-KILLER (Enhanced)
+           ============================================ */
+        /* Allow page breaks inside smaller containers to fill space */
+        .section,
+        .svg-decorated-box {
+            page-break-inside: auto;
+            break-inside: auto;
+        }
+        /* Only prevent breaks in truly critical small blocks */
+        .quick-win-card,
+        .empfehlung-card,
+        .foerder-checklist-item,
+        .recommendation-card-compact,
+        .roadmap-phase-card,
+        .risk-card {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        /* Force content to flow, reduce orphan/widow strictness */
+        p, li {
+            orphans: 2;
+            widows: 2;
+        }
+        /* Reduce margins to pack content tighter */
+        .section > p,
+        .section > ul,
+        .section > ol {
+            margin-bottom: 6px;
+        }
+        /* Prevent single lonely headers at page bottom */
+        h2, h3, h4, h5 {
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+
         /* FIX 1: ROADMAP KOMPAKT - Phase-Cards */
         .roadmap-phase-card {
             background: var(--color-bg-surface);
@@ -4252,15 +4425,6 @@
                             </span>
                         </div>
 
-                    </div>
-
-                    <!-- Compliance Footer - Page 1 -->
-                    <div class="compliance-footer compliance-footer-page1" role="contentinfo" aria-label="compliance disclaimer">
-                        {% if (lang or briefing_lang or report_lang or 'de')|lower|truncate(2, True, '') == 'en' %}
-                        Note: Assessment aligned with the EU AI Act and GDPR; not legal advice.
-                        {% else %}
-                        Hinweis: Einordnung entlang EU AI Act und DSGVO; keine Rechtsberatung.
-                        {% endif %}
                     </div>
                 </div>
                 <!-- END PAGE 1 -->
@@ -5520,15 +5684,6 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
                 <div class="gdpr-mini-disclaimer" data-ui="1">
                     {{ GDPR_MINI_DISCLAIMER|default(ui("gdpr_mini_default", "Dieser Report nutzt Unternehmensdaten zur KI-Readiness-Analyse. Verarbeitung auf Basis von Art. 6 (1) b DSGVO. AVV auf Anfrage.")) }}
                     <a href="https://ki-sicherheit.jetzt/datenschutz" target="_blank">{{ ui("gdpr_link_text", "Datenschutzerklärung") }}</a>
-                </div>
-
-                <!-- Compliance Footer - Last Page (repeated) -->
-                <div class="compliance-footer compliance-footer-last" role="contentinfo" aria-label="compliance disclaimer">
-                    {% if (lang or briefing_lang or report_lang or 'de')|lower|truncate(2, True, '') == 'en' %}
-                    Note: Assessment aligned with the EU AI Act and GDPR; not legal advice.
-                    {% else %}
-                    Hinweis: Einordnung entlang EU AI Act und DSGVO; keine Rechtsberatung.
-                    {% endif %}
                 </div>
 
                 <p class="small" style="text-align: center;">
