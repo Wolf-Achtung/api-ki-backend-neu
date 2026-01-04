@@ -7,89 +7,122 @@
     <title>KI-Status-Report {{ report_id }} – {{ company_name or kundencode or ('Your Company' if ((lang or briefing_lang or report_lang or 'de')|lower)[:2] == 'en' else 'Ihr Unternehmen') }}</title>
     <style id="platin-v52-template">
         /* ============================================
-           PLATIN++ V5.2 PDF TEMPLATE
-           Sprint G – Visual Polish (Light Mode Only)
+           CI-DESIGN v2.0 - Premium Report Template
+           Transformation: "automatisiert" → "Beratungsprodukt"
 
-           Typography Scale: 28/20/16/13/11/10.5 pt
-           Baseline Grid: 8pt
-           Max-Width: 68ch
+           Typography: Space Grotesk (Headlines) + Inter (Body)
+           Colors: 3 Primärfarben + Graustufen
+           Spacing: Großzügiger Weißraum
            ============================================ */
+
+        /* Google Fonts - Premium Typography */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
+
         @page {
             size: A4;
-            margin: 18mm;
+            margin: 20mm 18mm 22mm 18mm;
             @bottom-right {
                 content: "Seite " counter(page) " von " counter(pages);
                 font-size: 8pt;
-                color: #64748b;
+                color: var(--color-text-muted, #9CA3AF);
             }
         }
         :root {
             /* ================================================
-               PLATIN++ V5.2 COLOR PALETTE (Light Mode Only)
+               CI-DESIGN v2.0 - Premium Color Palette
+               Problem: 7+ Farben → Lösung: 3 Primärfarben + Graustufen
                ================================================ */
+
+            /* Primärfarben */
+            --color-primary: #1E3A5F;           /* Tiefblau - Headlines, CTAs */
+            --color-accent: #10B981;            /* Signalgrün - Scores, Erfolg */
+            --color-warning: #F59E0B;           /* Warmes Orange - Risiken, Alerts */
+
+            /* Graustufen */
+            --color-text-primary: #374151;      /* Haupttext */
+            --color-text-secondary: #6B7280;    /* Sekundärtext */
+            --color-text-muted: #9CA3AF;        /* Dezent, Captions */
+            --color-border: #E5E7EB;            /* Borders, Trennlinien */
+            --color-bg-light: #F9FAFB;          /* Hintergrund-Akzent */
             --color-bg-page: #ffffff;
-            --color-bg-surface: #f8fafc;
             --color-bg-card: #ffffff;
-            --color-text-strong: #0f172a;
-            --color-text-normal: #1e293b;
-            --color-text-muted: #64748b;
-            --color-border: #e2e8f0;
+
+            /* Semantische Farben */
+            --color-success: #10B981;
+            --color-info: #3B82F6;
+            --color-danger: #EF4444;
+
+            /* Card-Hintergründe */
+            --color-card-highlight: #EFF6FF;    /* Hellblau für wichtige Boxen */
+            --color-card-alert: #FEF3C7;        /* Hellorange für Warnungen */
+            --color-card-success: #ECFDF5;      /* Hellgrün für Erfolge */
+
+            /* Legacy Compatibility */
+            --color-text-strong: var(--color-primary);
+            --color-text-normal: var(--color-text-primary);
+            --color-bg-surface: var(--color-bg-light);
             --color-border-subtle: #f1f5f9;
-            --color-brand-primary: #3b82f6;
-            --color-brand-accent: #1e40af;
-            --color-warning: #f59e0b;
-            --color-critical: #dc2626;
-            --color-success: #22c55e;
+            --color-brand-primary: var(--color-primary);
+            --color-brand-accent: var(--color-accent);
+            --color-critical: var(--color-danger);
 
             /* ================================================
-               TYPOGRAPHY SCALE (PLATIN++ V5.2)
+               CI-DESIGN v2.0 - Typography System
+               Premium-Schriften für Beratungsprodukt-Look
                ================================================ */
-            --font-h1: 28pt;
+            --font-heading: 'Space Grotesk', 'SF Pro Display', system-ui, sans-serif;
+            --font-body: 'Inter', 'SF Pro Text', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+            --font-sans: var(--font-body);
+
+            /* Typography Scale - leicht vergrößert für Lesbarkeit */
+            --font-h1: 32pt;
             --font-h2: 20pt;
-            --font-h3: 16pt;
-            --font-h4: 13pt;
-            --font-body: 11pt;
-            --font-table: 10.5pt;
+            --font-h3: 14pt;
+            --font-h4: 12pt;
+            --font-body-size: 10pt;
+            --font-table: 10pt;
             --font-small: 9pt;
             --font-caption: 8pt;
 
             /* ================================================
-               SPACING (8pt Baseline Grid)
+               CI-DESIGN v2.0 - Spacing System (großzügiger)
+               Mehr Weißraum für Premium-Eindruck
                ================================================ */
             --space-xs: 4pt;
             --space-sm: 8pt;
             --space-md: 16pt;
             --space-lg: 24pt;
             --space-xl: 32pt;
-            --space-section: 24pt;
-            --space-card-gap: 16pt;
+            --space-2xl: 48pt;
+            --space-section: 32pt;              /* Erhöht von 24pt */
+            --space-card-gap: 20pt;             /* Erhöht von 16pt */
 
             /* ================================================
                COMPONENT TOKENS
                ================================================ */
-            --radius-card: 10pt;
+            --radius-card: 8pt;
             --radius-tag: 4pt;
             --radius-pill: 999px;
-            --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+            --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08);
             --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.04);
             --measure: 68ch;
-            --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", sans-serif;
 
             /* Legacy tokens for compatibility */
-            --text-strong: var(--color-text-strong);
-            --text-normal: var(--color-text-normal);
+            --text-strong: var(--color-primary);
+            --text-normal: var(--color-text-primary);
             --text-muted: var(--color-text-muted);
-            --text-soft: #94a3b8;
+            --text-soft: var(--color-text-secondary);
             --border-subtle: var(--color-border);
             --surface-elevated: var(--color-bg-card);
-            --primary-500: var(--color-brand-primary);
-            --primary-600: #2563eb;
-            --primary-700: #1d4ed8;
-            --primary-800: var(--color-brand-accent);
+            --primary-500: var(--color-primary);
+            --primary-600: #1E3A5F;
+            --primary-700: #1a3354;
+            --primary-800: #152a45;
             --success-500: var(--color-success);
-            --success-600: #16a34a;
+            --success-600: #059669;
             --amber-500: var(--color-warning);
-            --red-600: var(--color-critical);
+            --red-600: var(--color-danger);
         }
         * {
             box-sizing: border-box;
@@ -97,10 +130,10 @@
         html, body {
             margin: 0;
             padding: 0;
-            font-family: var(--font-sans);
-            font-size: var(--font-body);
-            line-height: 1.5;
-            color: var(--color-text-normal);
+            font-family: var(--font-body);
+            font-size: var(--font-body-size);
+            line-height: 1.6;
+            color: var(--color-text-primary);
             background: var(--color-bg-page);
             background-color: var(--color-bg-page);
             font-feature-settings: "tnum" 1, "liga" 1;
@@ -114,13 +147,13 @@
             width: 100%;
             max-width: 780px;
             margin: 0 auto;
-            padding: var(--space-lg) 0 var(--space-xl);
+            padding: var(--space-lg) 0 var(--space-2xl);
             background: var(--color-bg-page);
         }
         .content {
             background: var(--color-bg-card);
             border-radius: var(--radius-card);
-            padding: var(--space-lg);
+            padding: var(--space-xl);
             border: 1px solid var(--color-border);
             box-shadow: var(--shadow-card);
         }
@@ -128,27 +161,32 @@
             position: relative;
         }
         /* ================================================
-           TYPOGRAPHY (PLATIN++ V5.2)
+           CI-DESIGN v2.0 - Typography Hierarchy
+           Space Grotesk für Headlines, Inter für Body
            ================================================ */
         h1, h2, h3, h4 {
-            color: var(--color-text-strong);
+            font-family: var(--font-heading);
+            color: var(--color-primary);
             margin-top: 0;
             line-height: 1.2;
+            font-weight: 600;
             break-after: avoid;
             page-break-after: avoid;
         }
         h1 {
             font-size: var(--font-h1);
-            letter-spacing: -0.01em;
+            font-weight: 700;
+            letter-spacing: -0.02em;
             margin-bottom: var(--space-sm);
         }
         h2 {
             font-size: var(--font-h2);
-            margin: var(--space-section) 0 var(--space-sm);
+            margin: var(--space-2xl) 0 var(--space-md);
         }
         h3 {
             font-size: var(--font-h3);
-            margin: var(--space-md) 0 var(--space-xs);
+            color: var(--color-text-primary);
+            margin: var(--space-lg) 0 var(--space-sm);
         }
         h4 {
             font-size: var(--font-h4);
@@ -1555,29 +1593,1046 @@
             }
         }
         /* ================================================
-           GENERAL TABLE STYLES (PLATIN++ V5.2)
+           CI-DESIGN v2.0 - Modern Table Styles
+           Keine vertikalen Linien, Zebra-Stripes, Premium-Header
            ================================================ */
         table {
             border-collapse: collapse;
             width: 100%;
             break-inside: avoid;
             font-size: var(--font-table);
+            margin: var(--space-md) 0;
         }
-        th, td {
-            padding: 8pt 6pt;
-            border: 1px solid var(--color-border);
+        thead {
+            background: var(--color-primary);
+        }
+        th {
+            padding: 12pt 16pt;
+            font-weight: 600;
+            text-align: left;
+            color: white;
+            font-size: 9pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: none;
+        }
+        td {
+            padding: 12pt 16pt;
+            border-bottom: 1px solid var(--color-border);
+            border-left: none;
+            border-right: none;
             word-wrap: break-word;
             overflow-wrap: break-word;
         }
-        th {
-            font-weight: 600;
-            text-align: left;
-            background: var(--color-bg-surface);
-            color: var(--color-text-strong);
+        /* Zebra Stripes - subtil aber sichtbar */
+        tbody tr:nth-child(even) {
+            background: var(--color-bg-light);
         }
-        /* Zebra stripes - PLATIN++ V5.2 spec: rgba(0,0,0,0.02) */
-        tbody tr:nth-child(even) td {
-            background: rgba(0, 0, 0, 0.02);
+        /* Kompakte Tabellen-Variante */
+        table.compact th,
+        table.compact td {
+            padding: 8pt 12pt;
+            font-size: 9pt;
+        }
+
+        /* ================================================
+           CI-DESIGN v2.0 - Card System (nur 3 Varianten)
+           ================================================ */
+        .card {
+            background: #FFFFFF;
+            border: 1px solid var(--color-border);
+            border-radius: 8pt;
+            padding: var(--space-lg);
+            margin-bottom: var(--space-card-gap);
+            page-break-inside: avoid;
+        }
+        .card--highlight {
+            background: var(--color-card-highlight);
+            border: 1px solid #BFDBFE;
+        }
+        .card--alert {
+            background: var(--color-card-alert);
+            border: 1px solid #FCD34D;
+            border-left: 4pt solid var(--color-warning);
+        }
+        .card--success {
+            background: var(--color-card-success);
+            border: 1px solid #A7F3D0;
+            border-left: 4pt solid var(--color-accent);
+        }
+
+        /* ================================================
+           CI-DESIGN v2.0 - Page Break Rules
+           ================================================ */
+        .card,
+        .recommendation-card,
+        .info-box,
+        .quick-win,
+        .risk-item,
+        .timeline-item {
+            page-break-inside: avoid;
+        }
+        h2, h3, h4 {
+            page-break-after: avoid;
+            orphans: 3;
+            widows: 3;
+        }
+        .chapter-start,
+        .section--new-page {
+            page-break-before: always;
+        }
+        thead {
+            display: table-header-group;
+        }
+
+        /* ================================================
+           CI-DESIGN v2.0 - Chapter Headers mit Farbbalken
+           ================================================ */
+        .chapter-header {
+            margin-top: var(--space-2xl);
+            margin-bottom: var(--space-xl);
+            page-break-before: always;
+        }
+        .chapter-header__bar {
+            height: 4pt;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+            margin-bottom: var(--space-md);
+            border-radius: 2pt;
+        }
+        .chapter-header__tag {
+            font-size: 10pt;
+            font-weight: 600;
+            font-family: var(--font-heading);
+            color: var(--color-primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: var(--space-xs);
+            display: block;
+        }
+        .chapter-header__title {
+            font-size: 24pt;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin: var(--space-xs) 0;
+            font-family: var(--font-heading);
+        }
+        .chapter-header__subtitle {
+            font-size: 11pt;
+            color: var(--color-text-secondary);
+        }
+
+        /* Score/Metric Values - konsistente Darstellung */
+        .score-value, .kpi-value, .metric {
+            font-family: var(--font-heading);
+            font-weight: 600;
+        }
+
+        /* Code/Template Blocks */
+        .code-block, pre, .prompt-template {
+            font-family: var(--font-mono);
+            font-size: 9pt;
+            background: #F8FAFC;
+            color: #334155;
+            padding: var(--space-md);
+            border-radius: 8pt;
+            border: 1px solid var(--color-border);
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* Caption/Footnote styling */
+        .caption, .footnote, .source {
+            font-size: var(--font-caption);
+            color: var(--color-text-muted);
+        }
+
+        /* ================================================
+           CI-DESIGN v2.0 Phase 2 - Score Circle (SVG)
+           Ersetzt alten Donut-Chart
+           ================================================ */
+        .score-circle {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto;
+        }
+        .score-circle svg {
+            display: block;
+        }
+        .score-circle__value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .score-circle__number {
+            font-family: var(--font-heading);
+            font-size: 36pt;
+            font-weight: 700;
+            color: var(--color-primary);
+            display: block;
+            line-height: 1;
+        }
+        .score-circle__max {
+            font-size: 14pt;
+            color: var(--color-text-secondary);
+        }
+        .score-circle__rating {
+            font-size: 11pt;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            margin-top: 8pt;
+            display: block;
+            text-align: center;
+        }
+
+        /* ================================================
+           CI-DESIGN v2.0 Phase 2 - Dimension Score Bars
+           ================================================ */
+        .dimension-scores {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        .dimension-score {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .dimension-score__label {
+            width: 110px;
+            font-size: 10pt;
+            font-weight: 500;
+            color: var(--color-text-primary);
+        }
+        .dimension-score__bar {
+            flex: 1;
+            height: 8px;
+            background: #E5E7EB;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .dimension-score__fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+        .dimension-score__fill--high {
+            background: var(--color-accent);
+        }
+        .dimension-score__fill--medium {
+            background: var(--color-warning);
+        }
+        .dimension-score__fill--low {
+            background: var(--color-danger);
+        }
+        .dimension-score__value {
+            width: 32px;
+            text-align: right;
+            font-family: var(--font-heading);
+            font-weight: 600;
+            font-size: 11pt;
+            color: var(--color-primary);
+        }
+
+        /* ================================================
+           CI-DESIGN v2.0 Phase 2 - Icon System
+           Einheitliche Icons statt Emoji-Mix
+           ================================================ */
+        .icon {
+            display: inline-block;
+            width: 16px;
+            text-align: center;
+            margin-right: 6px;
+            font-style: normal;
+        }
+        .icon--success { color: var(--color-accent); }
+        .icon--warning { color: var(--color-warning); }
+        .icon--danger { color: var(--color-danger); }
+        .icon--info { color: var(--color-info); }
+        .icon--muted { color: var(--color-text-muted); }
+        .icon--primary { color: var(--color-primary); }
+
+        /* ================================================
+           CI-DESIGN v2.0 Phase 2 - KPI Cards
+           ================================================ */
+        .kpi-grid {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin: 32px 0;
+        }
+        .kpi-card {
+            text-align: center;
+            padding: 20px 24px;
+            background: var(--color-bg-light);
+            border-radius: 8px;
+            min-width: 140px;
+        }
+        .kpi-card--highlight {
+            background: var(--color-card-highlight);
+            border: 1px solid #BFDBFE;
+        }
+        .kpi-card--success {
+            background: var(--color-card-success);
+            border: 1px solid #A7F3D0;
+        }
+        .kpi-card--warning {
+            background: var(--color-card-alert);
+            border: 1px solid #FCD34D;
+        }
+        .kpi-card__value {
+            display: block;
+            font-family: var(--font-heading);
+            font-size: 24pt;
+            font-weight: 700;
+            color: var(--color-primary);
+            line-height: 1.2;
+        }
+        .kpi-card__label {
+            display: block;
+            font-size: 10pt;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            margin-top: 4px;
+        }
+        .kpi-card__sublabel {
+            display: block;
+            font-size: 8pt;
+            color: var(--color-text-muted);
+            margin-top: 2px;
+        }
+
+        /* Task metadata styling (Next Actions) */
+        .task-meta {
+            display: block;
+            font-size: 9pt;
+            color: var(--color-text-muted);
+            margin: 4px 0 6px 0;
+            font-style: italic;
+        }
+
+        /* Icon variant: error (red) */
+        .icon--error {
+            color: var(--color-danger);
+        }
+
+        /* ================================================
+           PHASE 3: LAYOUT & STRUKTUR (CI-Design v2.0)
+           ================================================ */
+
+        /* === 3.1 HERO PAGE === */
+        .hero-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 100vh;
+            padding: 40px;
+            text-align: center;
+            page-break-after: always;
+        }
+
+        .hero-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9pt;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hero-header__tag,
+        .hero-header__id {
+            font-family: var(--font-body);
+        }
+
+        .hero-title h1 {
+            font-family: var(--font-heading);
+            font-size: 36pt;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin: 0 0 8px 0;
+        }
+
+        .hero-title__subtitle {
+            font-size: 12pt;
+            font-style: italic;
+            color: var(--color-primary);
+            margin-bottom: 4px;
+        }
+
+        .hero-title__meta {
+            font-size: 11pt;
+            color: var(--color-text-secondary);
+        }
+
+        .hero-score {
+            margin: 40px 0;
+        }
+
+        .hero-score__rating {
+            font-family: var(--font-heading);
+            font-size: 14pt;
+            font-weight: 600;
+            color: var(--color-accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 16px;
+        }
+
+        .hero-score__potential {
+            font-size: 10pt;
+            color: var(--color-text-secondary);
+            margin-top: 4px;
+        }
+
+        .hero-footer {
+            font-size: 9pt;
+            color: var(--color-text-muted);
+        }
+
+        .hero-footer__badges {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 8px;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            background: var(--color-bg-light);
+            border-radius: 4px;
+            font-size: 8pt;
+            color: var(--color-text-secondary);
+        }
+
+        /* === 3.2 CHAPTER HEADER === */
+        .chapter-header {
+            margin-top: 20px;
+            margin-bottom: 32px;
+            page-break-before: always;
+        }
+
+        .chapter-header:first-of-type {
+            page-break-before: auto;
+        }
+
+        .chapter-header__bar {
+            height: 4px;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+            margin-bottom: 24px;
+            border-radius: 2px;
+        }
+
+        .chapter-header__tag {
+            display: block;
+            font-size: 9pt;
+            font-weight: 600;
+            color: var(--color-primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .chapter-header__title {
+            font-family: var(--font-heading);
+            font-size: 22pt;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            color: var(--color-text-primary);
+        }
+
+        .chapter-header__subtitle {
+            font-size: 11pt;
+            color: var(--color-text-secondary);
+        }
+
+        /* === 3.3 PAGE BREAK RULES === */
+
+        /* Verhindere Breaks innerhalb von Elementen */
+        .card,
+        .card--highlight,
+        .card--alert,
+        .card--success,
+        .kpi-card,
+        .quick-win-card,
+        .recommendation-card,
+        .risk-item,
+        .info-box,
+        .dimension-scores,
+        .timeline-container,
+        .risk-matrix-container {
+            page-break-inside: avoid;
+        }
+
+        /* Tabellen nicht trennen wenn möglich */
+        table {
+            page-break-inside: avoid;
+        }
+
+        /* Bei langen Tabellen: Header auf jeder Seite */
+        thead {
+            display: table-header-group;
+        }
+
+        /* Halte Headlines bei ihrem Content */
+        h2, h3, h4 {
+            page-break-after: avoid;
+            orphans: 3;
+            widows: 3;
+        }
+
+        /* Explizite Breaks */
+        .page-break-before {
+            page-break-before: always;
+        }
+
+        .page-break-after {
+            page-break-after: always;
+        }
+
+        /* Kein Break direkt nach Header */
+        .chapter-header + * {
+            page-break-before: avoid;
+        }
+
+        /* === 3.4 TIMELINE (90-Tage-Roadmap) === */
+        .timeline-container {
+            margin: 32px 0;
+            page-break-inside: avoid;
+        }
+
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            padding-top: 30px;
+        }
+
+        .timeline__track {
+            position: absolute;
+            top: 40px;
+            left: 15%;
+            right: 15%;
+            height: 3px;
+            background: var(--color-border);
+        }
+
+        .timeline__phase {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            padding: 0 8px;
+        }
+
+        .timeline__dot {
+            width: 16px;
+            height: 16px;
+            background: var(--color-border);
+            border: 3px solid white;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 0 0 2px var(--color-border);
+        }
+
+        .timeline__phase--active .timeline__dot {
+            background: var(--color-accent);
+            box-shadow: 0 0 0 2px var(--color-accent);
+        }
+
+        .timeline__period {
+            display: block;
+            font-size: 9pt;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 4px;
+        }
+
+        .timeline__title {
+            font-family: var(--font-heading);
+            font-size: 11pt;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            color: var(--color-text-primary);
+        }
+
+        .timeline__tasks {
+            text-align: left;
+            font-size: 9pt;
+            padding-left: 16px;
+            margin: 0;
+            color: var(--color-text-secondary);
+        }
+
+        .timeline__tasks li {
+            margin-bottom: 3px;
+            line-height: 1.4;
+        }
+
+        /* === 3.5 RISK MATRIX HEATMAP === */
+        .risk-matrix-container {
+            max-width: 450px;
+            margin: 24px auto;
+            page-break-inside: avoid;
+        }
+
+        .risk-matrix {
+            position: relative;
+        }
+
+        .risk-matrix__grid {
+            display: grid;
+            grid-template-columns: 60px 1fr 1fr;
+            gap: 4px;
+        }
+
+        .risk-matrix__corner {
+            /* Empty corner cell */
+        }
+
+        .risk-matrix__col-header,
+        .risk-matrix__row-header {
+            font-size: 9pt;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+        }
+
+        .risk-matrix__cell {
+            padding: 16px 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 9pt;
+            font-weight: 500;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .risk-matrix__cell--high {
+            background: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #FECACA;
+        }
+
+        .risk-matrix__cell--medium {
+            background: #FEF3C7;
+            color: #92400E;
+            border: 1px solid #FDE68A;
+        }
+
+        .risk-matrix__cell--low {
+            background: #ECFDF5;
+            color: #065F46;
+            border: 1px solid #A7F3D0;
+        }
+
+        .risk-matrix__x-axis,
+        .risk-matrix__y-axis {
+            font-size: 9pt;
+            color: var(--color-text-muted);
+            text-align: center;
+        }
+
+        .risk-matrix__x-axis {
+            margin-top: 12px;
+        }
+
+        .risk-matrix__y-axis {
+            position: absolute;
+            left: -40px;
+            top: 50%;
+            transform: rotate(-90deg) translateX(-50%);
+            white-space: nowrap;
+        }
+
+        .risk-matrix__legend {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 16px;
+            font-size: 8pt;
+        }
+
+        .risk-matrix__legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .risk-matrix__legend-item::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .risk-matrix__legend-item--high::before {
+            background: #FEE2E2;
+            border: 1px solid #FECACA;
+        }
+        .risk-matrix__legend-item--medium::before {
+            background: #FEF3C7;
+            border: 1px solid #FDE68A;
+        }
+        .risk-matrix__legend-item--low::before {
+            background: #ECFDF5;
+            border: 1px solid #A7F3D0;
+        }
+
+        /* === 3.6 DEZENTER FOOTER === */
+        .page-footer {
+            position: fixed;
+            bottom: 15px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 7pt;
+            color: var(--color-text-muted);
+            padding-top: 8px;
+            border-top: 0.5px solid var(--color-border);
+        }
+
+        /* KPI Grid für Hero-Seite */
+        .kpi-grid {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin: 24px 0;
+        }
+
+        /* Seite 2: Dimensionen + Executive Summary */
+        .dimension-scores-section {
+            margin-bottom: 32px;
+        }
+
+        .dimension-scores-section h2 {
+            font-family: var(--font-heading);
+            font-size: 16pt;
+            margin-bottom: 16px;
+            color: var(--color-primary);
+        }
+
+        .top-3-section {
+            margin-top: 24px;
+        }
+
+        .top-3-section h3 {
+            font-family: var(--font-heading);
+            color: var(--color-warning);
+            margin-bottom: 16px;
+        }
+
+        /* ================================================
+           PHASE 4: CONTENT-KOMPRIMIERUNG (CI-Design v2.0)
+           ================================================ */
+
+        /* === 4.1 GAMECHANGER KOMPAKT === */
+        .gamechanger-section {
+            page-break-inside: avoid;
+        }
+
+        .gamechanger-insight {
+            display: flex;
+            gap: 24px;
+            align-items: stretch;
+            margin-bottom: 32px;
+        }
+
+        .gamechanger-insight__problem,
+        .gamechanger-insight__solution {
+            flex: 1;
+            padding: 24px;
+            border-radius: 8px;
+        }
+
+        .gamechanger-insight__problem {
+            background: #FEF3C7;
+            border-left: 4px solid var(--color-warning);
+        }
+
+        .gamechanger-insight__solution {
+            background: #ECFDF5;
+            border-left: 4px solid var(--color-accent);
+        }
+
+        .gamechanger-insight__arrow {
+            display: flex;
+            align-items: center;
+            font-size: 24pt;
+            color: var(--color-text-muted);
+        }
+
+        .gamechanger-insight__headline {
+            font-weight: 600;
+            font-size: 11pt;
+            margin-bottom: 8px;
+        }
+
+        .gamechanger-insight__detail {
+            font-size: 10pt;
+            color: var(--color-text-secondary);
+        }
+
+        .gamechanger-insight__benefits {
+            font-size: 10pt;
+            padding-left: 16px;
+            margin: 0;
+        }
+
+        .gamechanger-insight__benefits li {
+            margin-bottom: 4px;
+        }
+
+        .gamechanger-steps__grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .gamechanger-step {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .gamechanger-step__number {
+            width: 24px;
+            height: 24px;
+            background: var(--color-primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11pt;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .gamechanger-step p {
+            font-size: 9pt;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* === 4.2 FÖRDER-SEKTION KOMPAKT === */
+        .funding-overview__grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .funding-stat {
+            text-align: center;
+        }
+
+        .funding-stat__value {
+            display: block;
+            font-family: var(--font-heading);
+            font-size: 18pt;
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+
+        .funding-stat__label {
+            font-size: 9pt;
+            color: var(--color-text-secondary);
+        }
+
+        .funding-table.compact td,
+        .funding-table.compact th {
+            padding: 8px 12px;
+            font-size: 9pt;
+        }
+
+        .badge--success {
+            background: #ECFDF5;
+            color: #065F46;
+        }
+
+        .badge--warning {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge--info {
+            background: #EFF6FF;
+            color: #1E40AF;
+        }
+
+        .checklist {
+            padding-left: 20px;
+        }
+
+        .checklist li {
+            margin-bottom: 8px;
+            font-size: 10pt;
+        }
+
+        /* === 4.3 EMPFEHLUNGEN-TABELLE === */
+        .recommendations-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+        }
+
+        .recommendations-table th {
+            background: var(--color-primary);
+            color: white;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .recommendations-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--color-border);
+            vertical-align: top;
+        }
+
+        .recommendations-table tr:nth-child(even) {
+            background: var(--color-bg-light);
+        }
+
+        /* === 4.4 STARTER-KIT KOMPAKT === */
+        .starter-kit__meta {
+            display: flex;
+            gap: 8px;
+            font-size: 10pt;
+            color: var(--color-text-secondary);
+            margin-top: 8px;
+        }
+
+        .starter-kit__tools {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .tool-card {
+            padding: 16px;
+            background: white;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            page-break-inside: avoid;
+        }
+
+        .tool-card__badge {
+            font-size: 8pt;
+            padding: 2px 6px;
+            background: var(--color-primary);
+            color: white;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+
+        .tool-card__badge--recommended {
+            background: var(--color-accent);
+        }
+
+        .tool-card h4 {
+            font-size: 11pt;
+            margin: 8px 0 4px;
+        }
+
+        .tool-card p {
+            font-size: 9pt;
+            color: var(--color-text-secondary);
+            margin: 0;
+        }
+
+        .tool-card__setup {
+            font-size: 8pt;
+            color: var(--color-text-muted);
+            display: block;
+            margin-top: 8px;
+        }
+
+        /* === 4.5 CODE-BLÖCKE KOMPAKT === */
+        .code-block {
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 8pt;
+            line-height: 1.4;
+            background: #F8FAFC;
+            color: #334155;
+            border: 1px solid var(--color-border);
+            padding: 16px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        @media print {
+            .code-block {
+                font-size: 7pt;
+                padding: 12px;
+            }
+        }
+
+        /* === 4.6 GLOSSAR 2-SPALTIG === */
+        .glossary {
+            column-count: 2;
+            column-gap: 24px;
+        }
+
+        .glossary dt {
+            font-weight: 600;
+            font-size: 9pt;
+            color: var(--color-primary);
+            margin-top: 8px;
+            break-after: avoid;
+        }
+
+        .glossary dd {
+            font-size: 9pt;
+            margin: 0 0 8px 0;
+            color: var(--color-text-secondary);
+        }
+
+        /* === 4.7 KOMPAKTE HILFSELEMENTE === */
+        .text-muted {
+            color: var(--color-text-muted);
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .compact-list {
+            font-size: 9pt;
+            padding-left: 16px;
+            margin: 8px 0;
+        }
+
+        .compact-list li {
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        /* Kompakte Info-Box */
+        .info-box-compact {
+            background: var(--color-bg-light);
+            border-left: 3px solid var(--color-primary);
+            padding: 12px 16px;
+            font-size: 9pt;
+            margin: 16px 0;
+        }
+
+        .info-box-compact p {
+            margin: 0;
         }
 
         /* ================================================

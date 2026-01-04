@@ -2190,7 +2190,7 @@ def _parse_quick_wins_json(raw_response: str) -> Optional[List[Dict[str, Any]]]:
                     if field == 'steps':
                         qw[field] = ["Schritt 1", "Schritt 2", "Schritt 3"]
                     elif field == 'icon':
-                        qw[field] = "🎯"
+                        qw[field] = "◎"
                     else:
                         qw[field] = ""
 
@@ -2227,11 +2227,11 @@ def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse
     <table style="width: 100%; border-collapse: collapse; background: #eff6ff; border-radius: 12px; margin-bottom: 30px;">
         <tr>
             <td style="padding: 20px; width: 50%; border-right: 1px solid #bfdbfe;">
-                <div style="color: #1e40af; font-weight: bold; font-size: 13px; margin-bottom: 4px;">📋 BRANCHE</div>
+                <div style="color: #1e40af; font-weight: bold; font-size: 13px; margin-bottom: 4px;"><span class="icon">▤</span> BRANCHE</div>
                 <div style="color: #1e3a8a; font-size: 16px; font-weight: 600;">{html_module.escape(branche)}</div>
             </td>
             <td style="padding: 20px; width: 50%;">
-                <div style="color: #1e40af; font-weight: bold; font-size: 13px; margin-bottom: 4px;">👥 GRÖSSE</div>
+                <div style="color: #1e40af; font-weight: bold; font-size: 13px; margin-bottom: 4px;"><span class="icon">◈</span> GRÖSSE</div>
                 <div style="color: #1e3a8a; font-size: 16px; font-weight: 600;">{html_module.escape(groesse)}</div>
             </td>
         </tr>
@@ -2243,7 +2243,7 @@ def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse
     for i, qw in enumerate(quick_wins, 1):
         # Escape HTML
         title = html_module.escape(str(qw.get('title', 'Ohne Titel')))
-        icon = qw.get('icon', '🎯')
+        icon = qw.get('icon', '◎')
         time = html_module.escape(str(qw.get('time', 'Unbekannt')))
         engpass = html_module.escape(str(qw.get('engpass', '')))
         description = html_module.escape(str(qw.get('description', '')))
@@ -2281,7 +2281,7 @@ def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse
 
         <!-- Engpass Box -->
         <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 14px; margin-bottom: 16px; border-radius: 6px;">
-            <div style="font-weight: bold; color: #92400e; font-size: 13px; margin-bottom: 4px;">🎯 IHR ENGPASS:</div>
+            <div style="font-weight: bold; color: #92400e; font-size: 13px; margin-bottom: 4px;"><span class="icon">◎</span> IHR ENGPASS:</div>
             <div style="color: #78350f; font-size: 14px;">"{engpass}"</div>
         </div>
 
@@ -2295,20 +2295,20 @@ def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse
         <!-- Mit KI Box -->
         <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 14px; margin-bottom: 16px; border-radius: 6px;">
             <p style="margin: 0; color: #065f46; line-height: 1.6; font-size: 14px;">
-                <strong style="color: #047857;">✨ Mit KI:</strong> {mit_ki}
+                <strong style="color: #047857;"><span class="icon icon--success">✓</span> Mit KI:</strong> {mit_ki}
             </p>
         </div>
 
         <!-- Steps -->
         <div style="background: #f0fdf4; padding: 16px; border-radius: 6px; margin-bottom: 14px;">
-            <div style="font-weight: bold; color: #047857; font-size: 14px; margin-bottom: 8px;">🚀 Umsetzungsschritte:</div>
+            <div style="font-weight: bold; color: #047857; font-size: 14px; margin-bottom: 8px;"><span class="icon icon--accent">▸</span> Umsetzungsschritte:</div>
             {steps_html}
         </div>
 
         <!-- Zeitersparnis Footer -->
         <div style="text-align: right; padding-top: 12px; border-top: 2px solid #e5e7eb;">
             <span style="background: #d1fae5; color: #065f46; font-weight: bold; font-size: 14px; padding: 6px 14px; border-radius: 12px;">
-                💰 {zeitersparnis}
+                <span class="icon icon--success">◆</span> {zeitersparnis}
             </span>
         </div>
 
@@ -2319,7 +2319,7 @@ def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse
     # Footer
     html += f"""
 <p class="small muted" style="text-align: center; color: #6b7280; font-size: 12px; margin-top: 24px;">
-    🎯 v8.0: Individualisiert für {html_module.escape(branche)} · {html_module.escape(groesse)} · WeasyPrint-optimiert
+    <span class="icon">◎</span> v8.0: Individualisiert für {html_module.escape(branche)} · {html_module.escape(groesse)} · WeasyPrint-optimiert
 </p>
 """
 
@@ -2335,7 +2335,7 @@ def _fallback_quick_wins_html(branche: str, groesse: str) -> str:
 
     return f"""
 <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 2px solid #fca5a5; border-radius: 16px; padding: 32px; text-align: center;">
-    <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+    <div style="font-size: 48px; margin-bottom: 16px;"><span class="icon icon--warning">⚠</span></div>
     <h3 style="color: #991b1b; margin: 0 0 12px 0; font-size: 20px;">Quick Wins konnten nicht generiert werden</h3>
     <p style="color: #7f1d1d; margin: 0 0 20px 0; font-size: 15px; line-height: 1.6;">
         Die automatische Generierung der Quick Wins ist fehlgeschlagen.<br>
@@ -4088,7 +4088,7 @@ def _convert_risk_bullets_to_cards(html_content: str) -> str:
 
             # Create card HTML
             card_html = f'''<div class="risk-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; break-inside: avoid;">
-    <div style="font-weight: 600; color: #1e293b; margin-bottom: 6px; font-size: 0.95em;">⚠️ {title}</div>
+    <div style="font-weight: 600; color: #1e293b; margin-bottom: 6px; font-size: 0.95em;"><span class="icon icon--warning">⚠</span> {title}</div>
     <div style="color: #475569; font-size: 0.85em; line-height: 1.4; margin-bottom: 8px;">{description}</div>
     {f'<div style="color: #059669; font-size: 0.8em; border-top: 1px solid #e2e8f0; padding-top: 6px;"><strong>→</strong> {action}</div>' if action else ''}
 </div>
@@ -4182,8 +4182,8 @@ def _convert_gamechanger_to_comparison_table(html_content: str) -> str:
 <table class="gc-comparison-table" style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
 <thead>
 <tr>
-<th style="background: #fef2f2; color: #991b1b; padding: 12px; text-align: left; border: 1px solid #fecaca; width: 50%;">❌ Bisher (obsolete Logik)</th>
-<th style="background: #f0fdf4; color: #166534; padding: 12px; text-align: left; border: 1px solid #bbf7d0; width: 50%;">✅ Neu (Wertschöpfungslogik)</th>
+<th style="background: #fef2f2; color: #991b1b; padding: 12px; text-align: left; border: 1px solid #fecaca; width: 50%;"><span class="icon icon--error">✕</span> Bisher (obsolete Logik)</th>
+<th style="background: #f0fdf4; color: #166534; padding: 12px; text-align: left; border: 1px solid #bbf7d0; width: 50%;"><span class="icon icon--success">✓</span> Neu (Wertschöpfungslogik)</th>
 </tr>
 </thead>
 <tbody>
@@ -4817,7 +4817,603 @@ def _build_werkbank_html() -> str:
     note = "<p class='small muted'>Hinweis: Stacks sind exemplarisch und anpassbar; Auswahl hängt von Datenschutz, Budget und IT‑Landschaft ab.</p>"
     return "<div class='fb-section'>" + "".join(blocks) + note + "</div>"
 
-# -------------------- Score Bars (CSS-only) ----------------
+# ================================================================================
+# CI-DESIGN v2.0 Phase 2 - Score Visualization Components
+# ================================================================================
+
+def _get_score_color_class(score: int) -> str:
+    """Returns CSS class suffix based on score level."""
+    if score >= 70:
+        return "high"    # Green
+    elif score >= 50:
+        return "medium"  # Orange
+    else:
+        return "low"     # Red
+
+
+def _generate_score_svg(score: int, rating_text: str = "") -> str:
+    """Generiert SVG Arc für Score-Visualisierung (CI-Design v2.0)."""
+    try:
+        score = max(0, min(100, int(score)))
+    except (ValueError, TypeError):
+        score = 0
+
+    circumference = 339.3  # 2 * pi * 54
+    offset = circumference - (circumference * score / 100)
+
+    # Color based on score
+    if score >= 70:
+        stroke_color = "var(--color-accent)"
+    elif score >= 50:
+        stroke_color = "var(--color-warning)"
+    else:
+        stroke_color = "var(--color-danger)"
+
+    rating_html = f'<span class="score-circle__rating">{html.escape(rating_text)}</span>' if rating_text else ""
+
+    return f'''
+    <div class="score-circle">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <circle cx="70" cy="70" r="54" fill="none" stroke="#E5E7EB" stroke-width="12"/>
+        <circle cx="70" cy="70" r="54" fill="none"
+                stroke="{stroke_color}" stroke-width="12"
+                stroke-dasharray="339.3"
+                stroke-dashoffset="{offset:.1f}"
+                stroke-linecap="round"
+                transform="rotate(-90 70 70)"/>
+      </svg>
+      <div class="score-circle__value">
+        <span class="score-circle__number">{score}</span>
+        <span class="score-circle__max">/100</span>
+      </div>
+    </div>
+    {rating_html}
+    '''
+
+
+def _generate_dimension_scores_html(dimensions: Dict[str, int]) -> str:
+    """Generiert HTML für Dimension-Score-Bars (CI-Design v2.0)."""
+    html_parts = ['<div class="dimension-scores">']
+
+    for name, score in dimensions.items():
+        try:
+            score_val = max(0, min(100, int(score)))
+        except (ValueError, TypeError):
+            score_val = 0
+
+        color_class = _get_score_color_class(score_val)
+
+        html_parts.append(f'''
+        <div class="dimension-score">
+          <span class="dimension-score__label">{html.escape(str(name))}</span>
+          <div class="dimension-score__bar">
+            <div class="dimension-score__fill dimension-score__fill--{color_class}" style="width: {score_val}%;"></div>
+          </div>
+          <span class="dimension-score__value">{score_val}</span>
+        </div>
+        ''')
+
+    html_parts.append('</div>')
+    return ''.join(html_parts)
+
+
+# CI-Design v2.0 Icon Mapping
+ICON_MAP = {
+    # Status
+    'success': '✓',
+    'warning': '⚠',
+    'error': '✕',
+    'info': '◆',
+    # Navigation
+    'arrow_right': '→',
+    'arrow_up': '↑',
+    'arrow_down': '↓',
+    # Objects
+    'target': '◎',
+    'chart': '▣',
+    'document': '▤',
+    'calendar': '▦',
+    'user': '●',
+    'folder': '▢',
+    'tool': '⚙',
+    'lock': '⚿',
+    # Priority
+    'priority_high': '●',
+    'priority_medium': '●',
+    'priority_low': '●',
+    # Categories
+    'governance': '◈',
+    'security': '⚿',
+    'value': '◆',
+    'enablement': '●',
+}
+
+
+def _icon(name: str, variant: str = 'default') -> str:
+    """Returns HTML for consistent icon (CI-Design v2.0)."""
+    symbol = ICON_MAP.get(name, '•')
+    css_class = f'icon icon--{variant}' if variant != 'default' else 'icon'
+    return f'<span class="{css_class}">{symbol}</span>'
+
+
+def _generate_kpi_card(value: str, label: str, sublabel: str = "", variant: str = "") -> str:
+    """Generiert eine KPI-Card (CI-Design v2.0)."""
+    variant_class = f" kpi-card--{variant}" if variant else ""
+    sublabel_html = f'<span class="kpi-card__sublabel">{html.escape(sublabel)}</span>' if sublabel else ""
+
+    return f'''
+    <div class="kpi-card{variant_class}">
+      <span class="kpi-card__value">{html.escape(str(value))}</span>
+      <span class="kpi-card__label">{html.escape(label)}</span>
+      {sublabel_html}
+    </div>
+    '''
+
+
+# -------------------- CI-Design v2.0 Phase 3: Layout & Struktur ----------------
+
+def _generate_chapter_header(tag: str, title: str, subtitle: str = "") -> str:
+    """Generiert einheitlichen Kapitel-Header mit Gradient-Balken (CI-Design v2.0 Phase 3)."""
+    subtitle_html = f'<span class="chapter-header__subtitle">{html.escape(subtitle)}</span>' if subtitle else ''
+    return f'''
+    <div class="chapter-header">
+      <div class="chapter-header__bar"></div>
+      <span class="chapter-header__tag">{html.escape(tag)}</span>
+      <h2 class="chapter-header__title">{html.escape(title)}</h2>
+      {subtitle_html}
+    </div>
+    '''
+
+
+def _generate_roadmap_timeline(phases: List[Dict[str, Any]]) -> str:
+    """Generiert horizontale Timeline für 90-Tage-Roadmap (CI-Design v2.0 Phase 3).
+
+    Args:
+        phases: List of dicts with keys 'period', 'title', 'tasks' (list of strings)
+    """
+    html_parts = ['<div class="timeline-container"><div class="timeline"><div class="timeline__track"></div>']
+
+    for i, phase in enumerate(phases):
+        active_class = ' timeline__phase--active' if i == 0 else ''
+        tasks = phase.get('tasks', [])[:4]  # Max 4 Tasks pro Phase
+        tasks_html = ''.join(f'<li>{html.escape(str(task))}</li>' for task in tasks)
+
+        html_parts.append(f'''
+        <div class="timeline__phase{active_class}">
+          <div class="timeline__dot"></div>
+          <div class="timeline__content">
+            <span class="timeline__period">{html.escape(str(phase.get("period", "")))}</span>
+            <h4 class="timeline__title">{html.escape(str(phase.get("title", "")))}</h4>
+            <ul class="timeline__tasks">{tasks_html}</ul>
+          </div>
+        </div>
+        ''')
+
+    html_parts.append('</div></div>')
+    return ''.join(html_parts)
+
+
+def _generate_risk_matrix(risks: Dict[str, str]) -> str:
+    """Generiert Risiko-Matrix als Heatmap (CI-Design v2.0 Phase 3).
+
+    Args:
+        risks: Dict mapping risk categories to severity levels ('high', 'medium', 'low')
+              e.g. {'Strategie': 'medium', 'Daten & Sicherheit': 'high', ...}
+    """
+    # Default-Risiken wenn keine übergeben
+    if not risks:
+        risks = {
+            'Strategie': 'medium',
+            'Daten': 'high',
+            'Qualität': 'medium',
+            'Abhängigkeiten': 'low'
+        }
+
+    # Gruppiere Risiken nach Level
+    high_risks = [k for k, v in risks.items() if v == 'high']
+    medium_risks = [k for k, v in risks.items() if v == 'medium']
+    low_risks = [k for k, v in risks.items() if v == 'low']
+
+    high_text = ', '.join(high_risks[:2]) if high_risks else '—'
+    medium_text = ', '.join(medium_risks[:2]) if medium_risks else '—'
+    low_text = ', '.join(low_risks[:2]) if low_risks else '—'
+
+    return f'''
+    <div class="risk-matrix-container">
+      <div class="risk-matrix">
+        <div class="risk-matrix__grid">
+          <div class="risk-matrix__corner"></div>
+          <div class="risk-matrix__col-header">Mittel</div>
+          <div class="risk-matrix__col-header">Hoch</div>
+
+          <div class="risk-matrix__row-header">Hoch</div>
+          <div class="risk-matrix__cell risk-matrix__cell--medium">
+            <span>{html.escape(medium_text)}</span>
+          </div>
+          <div class="risk-matrix__cell risk-matrix__cell--high">
+            <span>{html.escape(high_text)}</span>
+          </div>
+
+          <div class="risk-matrix__row-header">Mittel</div>
+          <div class="risk-matrix__cell risk-matrix__cell--low">
+            <span>{html.escape(low_text)}</span>
+          </div>
+          <div class="risk-matrix__cell risk-matrix__cell--medium">
+            <span>—</span>
+          </div>
+        </div>
+        <div class="risk-matrix__x-axis">
+          <span>Auswirkung →</span>
+        </div>
+      </div>
+
+      <div class="risk-matrix__legend">
+        <span class="risk-matrix__legend-item risk-matrix__legend-item--high">Hoch</span>
+        <span class="risk-matrix__legend-item risk-matrix__legend-item--medium">Mittel</span>
+        <span class="risk-matrix__legend-item risk-matrix__legend-item--low">Niedrig</span>
+      </div>
+    </div>
+    '''
+
+
+def _generate_hero_page(
+    score: int,
+    rating_text: str,
+    hauptleistung: str,
+    company: str,
+    industry: str,
+    size: str,
+    report_id: str,
+    report_date: str,
+    kpi_values: Dict[str, Any],
+    reifegrad: str = "",
+    potential: int = 0
+) -> str:
+    """Generiert Hero-Seite 1 (CI-Design v2.0 Phase 3).
+
+    Args:
+        score: Overall score (0-100)
+        rating_text: Rating text (e.g., "Basis-Readiness", "Fortgeschritten")
+        hauptleistung: Main service description (truncated to 80 chars)
+        company: Company name
+        industry: Industry label
+        size: Company size label
+        report_id: Report ID
+        report_date: Report date string
+        kpi_values: Dict with 'zeitersparnis', 'roi', 'payback' keys
+        reifegrad: Maturity level description
+        potential: Potential score improvement points
+    """
+    # Truncate hauptleistung
+    hl_truncated = hauptleistung[:80] + '...' if len(hauptleistung) > 80 else hauptleistung
+
+    # Generate Score SVG
+    score_svg = _generate_score_svg(score, rating_text)
+
+    # Generate KPI Cards
+    zeitersparnis = kpi_values.get('zeitersparnis', '—')
+    roi = kpi_values.get('roi', '—')
+    payback = kpi_values.get('payback', '—')
+
+    kpi_cards = f'''
+    {_generate_kpi_card(str(zeitersparnis), "Zeitersparnis", "pro Monat", "highlight")}
+    {_generate_kpi_card(str(roi) + "%", "ROI (12 Monate)", "", "success")}
+    {_generate_kpi_card(str(payback) + " Mo.", "Payback-Zeit", "", "")}
+    '''
+
+    # Potential text
+    potential_text = f"Reifegrad: {html.escape(reifegrad)}" if reifegrad else ""
+    if potential > 0:
+        potential_text += f" · Potenzial: +{potential} Punkte"
+
+    return f'''
+    <div class="hero-page">
+      <!-- Header -->
+      <div class="hero-header">
+        <span class="hero-header__tag">KI-STATUS-REPORT · {html.escape(report_date)}</span>
+        <span class="hero-header__id">Report-ID: {html.escape(report_id)}</span>
+      </div>
+
+      <!-- Titel -->
+      <div class="hero-title">
+        <h1>KI-Readiness Report</h1>
+        <p class="hero-title__subtitle">{html.escape(hl_truncated)}</p>
+        <p class="hero-title__meta">{html.escape(company)} · {html.escape(industry)} · {html.escape(size)}</p>
+      </div>
+
+      <!-- Score (zentriert, prominent) -->
+      <div class="hero-score">
+        {score_svg}
+        <p class="hero-score__rating">{html.escape(rating_text)}</p>
+        <p class="hero-score__potential">{potential_text}</p>
+      </div>
+
+      <!-- KPIs (3er Grid) -->
+      <div class="kpi-grid">
+        {kpi_cards}
+      </div>
+
+      <!-- Footer -->
+      <div class="hero-footer">
+        <span>Erstellt von: TÜV-zertifizierter KI-Manager</span>
+        <div class="hero-footer__badges">
+          <span class="badge">EU AI Act konform</span>
+          <span class="badge">DSGVO-orientiert</span>
+          <span class="badge">Keine Rechtsberatung</span>
+        </div>
+      </div>
+    </div>
+    '''
+
+
+# Chapter header mappings for consistent usage
+CHAPTER_HEADERS = {
+    'quick_wins': ('SCHNELLE EFFEKTE', 'Quick Wins', '3–5 Maßnahmen mit sofortigem Hebel'),
+    'business_case': ('ROI-SIMULATION', 'Business Case', 'ROI · Payback · KPI-Forecasts'),
+    'recommendations': ('HANDLUNGSEMPFEHLUNGEN', 'Weitere Maßnahmen', 'Ergänzend zu Top-3'),
+    'roadmap': ('ORIENTIERUNG', '90-Tage Roadmap', 'Fokus auf pragmatische Umsetzung'),
+    'wirtschaftlichkeit': ('WIRTSCHAFTLICHKEIT', 'Business Case', 'Einsparpotenziale & Investition'),
+    'risks': ('RISIKEN', 'Risikoanalyse', 'Strategisch · Operativ · Compliance'),
+    'foerderung': ('FÖRDERUNG', 'Förderprogramme', 'EU · Bund · Land'),
+    'starter_kit': ('STARTER-KIT', 'Tools & Förderpfad', 'Konkrete Kombination'),
+    'governance': ('GOVERNANCE', 'AI Mini-Policy', 'Kompakte KI-Regeln'),
+    'ai_act': ('EU AI ACT', 'Compliance & Pflichten', 'Regulatorische Anforderungen'),
+}
+
+
+def _get_chapter_header(section_key: str) -> str:
+    """Gibt den passenden Chapter-Header für eine Section zurück."""
+    if section_key in CHAPTER_HEADERS:
+        tag, title, subtitle = CHAPTER_HEADERS[section_key]
+        return _generate_chapter_header(tag, title, subtitle)
+    return ""
+
+
+# -------------------- CI-Design v2.0 Phase 4: Content-Komprimierung ----------------
+
+def _generate_gamechanger_compact(
+    bruchpunkt_headline: str,
+    bruchpunkt_detail: str,
+    transformation_headline: str,
+    benefits: List[str],
+    schritte: List[str]
+) -> str:
+    """Generiert kompakte Gamechanger-Sektion (CI-Design v2.0 Phase 4).
+
+    Reduziert Gamechanger von 5 auf 2 Seiten durch Problem/Lösung Layout.
+    """
+    # Benefits als Liste (max 3)
+    benefits_html = ''.join(f'<li>{html.escape(str(b))}</li>' for b in benefits[:3])
+
+    # Schritte als 2x2 Grid (max 4)
+    schritte_html = ''
+    for i, schritt in enumerate(schritte[:4], 1):
+        schritte_html += f'''
+        <div class="gamechanger-step">
+          <span class="gamechanger-step__number">{i}</span>
+          <p>{html.escape(str(schritt))}</p>
+        </div>
+        '''
+
+    return f'''
+    <div class="gamechanger-section">
+      <!-- Problem + Lösung nebeneinander -->
+      <div class="gamechanger-insight">
+        <div class="gamechanger-insight__problem">
+          <h3><span class="icon icon--warning">⚠</span> Strategischer Bruchpunkt</h3>
+          <p class="gamechanger-insight__headline">{html.escape(bruchpunkt_headline)}</p>
+          <p class="gamechanger-insight__detail">{html.escape(bruchpunkt_detail)}</p>
+        </div>
+
+        <div class="gamechanger-insight__arrow">→</div>
+
+        <div class="gamechanger-insight__solution">
+          <h3><span class="icon icon--success">✓</span> Transformations-Idee</h3>
+          <p class="gamechanger-insight__headline">{html.escape(transformation_headline)}</p>
+          <ul class="gamechanger-insight__benefits">
+            {benefits_html}
+          </ul>
+        </div>
+      </div>
+
+      <!-- Konkrete Schritte als Grid -->
+      <div class="gamechanger-steps card">
+        <h3><span class="icon">◎</span> Erster realistischer Schritt</h3>
+        <div class="gamechanger-steps__grid">
+          {schritte_html}
+        </div>
+      </div>
+    </div>
+    '''
+
+
+def _generate_funding_compact(
+    foerderquote: str = "30-50%",
+    max_foerderung: str = "16.500 €",
+    programme: List[Dict[str, str]] = None,
+    next_steps: List[str] = None
+) -> str:
+    """Generiert kompakte Förder-Sektion (CI-Design v2.0 Phase 4).
+
+    Reduziert Förderung von 5 auf 2 Seiten.
+    """
+    if programme is None:
+        programme = [
+            {'name': 'go-digital', 'geber': 'BMWK', 'eignung': 'Hoch', 'betrag': '16.500 €', 'komplexitaet': 'Niedrig'},
+            {'name': 'BAFA-Beratung', 'geber': 'Bund', 'eignung': 'Hoch', 'betrag': '3.200 €', 'komplexitaet': 'Niedrig'},
+        ]
+
+    if next_steps is None:
+        next_steps = [
+            'Projektsteckbrief erstellen (1-2 Seiten)',
+            'Förderfähigkeit mit go-digital prüfen',
+            'Antrag VOR Projektstart einreichen'
+        ]
+
+    # Programm-Tabelle
+    rows_html = ''
+    for prog in programme[:4]:
+        eignung = prog.get('eignung', 'Mittel')
+        badge_class = 'badge--success' if eignung == 'Hoch' else 'badge--warning'
+        rows_html += f'''
+        <tr>
+          <td><strong>{html.escape(prog.get("name", ""))}</strong><br><span class="text-muted">{html.escape(prog.get("geber", ""))}</span></td>
+          <td><span class="badge {badge_class}">{html.escape(eignung)}</span></td>
+          <td>{html.escape(prog.get("betrag", "—"))}</td>
+          <td>{html.escape(prog.get("komplexitaet", "Mittel"))}</td>
+        </tr>
+        '''
+
+    # Next Steps
+    steps_html = ''.join(f'<li>{html.escape(str(s))}</li>' for s in next_steps[:4])
+
+    return f'''
+    <div class="funding-section">
+      <!-- Kompakte Übersicht -->
+      <div class="funding-overview card card--highlight">
+        <h3>Förderpotenzial für Ihr KI-Projekt</h3>
+        <div class="funding-overview__grid">
+          <div class="funding-stat">
+            <span class="funding-stat__value">{html.escape(foerderquote)}</span>
+            <span class="funding-stat__label">Typische Förderquote</span>
+          </div>
+          <div class="funding-stat">
+            <span class="funding-stat__value">{html.escape(max_foerderung)}</span>
+            <span class="funding-stat__label">Max. Fördersumme</span>
+          </div>
+          <div class="funding-stat">
+            <span class="funding-stat__value">Auch ohne</span>
+            <span class="funding-stat__label">Business Case tragfähig</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Programme als kompakte Tabelle -->
+      <h3>Relevante Programme</h3>
+      <table class="funding-table compact">
+        <thead>
+          <tr>
+            <th>Programm</th>
+            <th>Eignung</th>
+            <th>Max. Förderung</th>
+            <th>Komplexität</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows_html}
+        </tbody>
+      </table>
+
+      <!-- Nächste Schritte -->
+      <div class="funding-next-steps card" style="margin-top: 16px;">
+        <h4><span class="icon">◎</span> Nächste Schritte</h4>
+        <ol class="checklist">
+          {steps_html}
+        </ol>
+      </div>
+    </div>
+    '''
+
+
+def _generate_recommendations_table(recommendations: List[Dict[str, str]]) -> str:
+    """Generiert Empfehlungen als kompakte Tabelle (CI-Design v2.0 Phase 4)."""
+    if not recommendations:
+        return ""
+
+    rows_html = ''
+    for i, rec in enumerate(recommendations[:6], 1):
+        auswirkung = rec.get('auswirkung', 'Mittel')
+        badge_class = 'badge--success' if auswirkung == 'Hoch' else 'badge--warning' if auswirkung == 'Mittel' else 'badge--info'
+
+        rows_html += f'''
+        <tr>
+          <td class="text-center">{i}</td>
+          <td><strong>{html.escape(rec.get("titel", ""))}</strong></td>
+          <td>{html.escape(rec.get("zeitrahmen", "—"))}</td>
+          <td><span class="badge {badge_class}">{html.escape(auswirkung)}</span></td>
+          <td>{html.escape(rec.get("nutzen", ""))}</td>
+        </tr>
+        '''
+
+    return f'''
+    <table class="recommendations-table">
+      <thead>
+        <tr>
+          <th width="5%">#</th>
+          <th width="30%">Empfehlung</th>
+          <th width="15%">Zeitrahmen</th>
+          <th width="15%">Auswirkung</th>
+          <th width="35%">Hauptnutzen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows_html}
+      </tbody>
+    </table>
+    '''
+
+
+def _generate_starter_kit_compact(
+    tools: List[Dict[str, str]],
+    total_setup_days: int = 9,
+    annual_cost: str = "500–2.000 €"
+) -> str:
+    """Generiert kompaktes Starter-Kit (CI-Design v2.0 Phase 4).
+
+    Reduziert von 2 auf 1 Seite durch Grid-Layout.
+    """
+    tools_html = ''
+    for tool in tools[:4]:
+        badge_class = 'tool-card__badge--recommended' if tool.get('type') == 'Empfohlen' else ''
+        tools_html += f'''
+        <div class="tool-card">
+          <span class="tool-card__badge {badge_class}">{html.escape(tool.get("type", "Essential"))}</span>
+          <h4>{html.escape(tool.get("name", ""))}</h4>
+          <p>{html.escape(tool.get("beschreibung", ""))}</p>
+          <span class="tool-card__setup">~{html.escape(tool.get("setup", "1 Tag"))}</span>
+        </div>
+        '''
+
+    return f'''
+    <div class="starter-kit">
+      <div class="starter-kit__header card card--highlight">
+        <h3>Ihr KI-Starter-Kit</h3>
+        <div class="starter-kit__meta">
+          <span>{len(tools)} Tools</span>
+          <span>•</span>
+          <span>{total_setup_days} Tage Setup</span>
+          <span>•</span>
+          <span>{html.escape(annual_cost)}/Jahr</span>
+        </div>
+      </div>
+
+      <div class="starter-kit__tools">
+        {tools_html}
+      </div>
+    </div>
+    '''
+
+
+def _generate_glossary_compact(terms: Dict[str, str]) -> str:
+    """Generiert kompaktes 2-spaltiges Glossar (CI-Design v2.0 Phase 4)."""
+    if not terms:
+        return ""
+
+    items_html = ''
+    for term, definition in list(terms.items())[:12]:  # Max 12 Begriffe
+        items_html += f'''
+        <dt>{html.escape(term)}</dt>
+        <dd>{html.escape(definition)}</dd>
+        '''
+
+    return f'''
+    <dl class="glossary">
+      {items_html}
+    </dl>
+    '''
+
+
+# -------------------- Score Bars (Legacy - CSS-only) ----------------
 def _build_score_bars_html(scores: Dict[str, Any]) -> str:
     def row(label: str, key: str) -> str:
         val = 0
@@ -6349,57 +6945,57 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
             # Solo: Persönliche Tasks ohne Rollen
             return f"""<ol>
 <li><strong>Persönliche Priorisierung</strong> — Top-3 KI-Einsatzbereiche für {hauptleistung or "Ihr Kerngeschäft"} definieren<br>
-⏱ 1 Tag · 🎯 hoch · 📆 {(datetime.now() + timedelta(days=7)).strftime('%d.%m.%Y')}<br>
+<span class="task-meta">Dauer: 1 Tag · Priorität: hoch · Termin: {(datetime.now() + timedelta(days=7)).strftime('%d.%m.%Y')}</span><br>
 <em>KPI:</em> 3 priorisierte Use Cases dokumentiert und bewertet</li>
 
 <li><strong>Tool-Evaluation</strong> — 2–3 KI-Tools testen (inkl. DSGVO-Check)<br>
-⏱ 2 Tage · 🎯 hoch · 📆 {(datetime.now() + timedelta(days=14)).strftime('%d.%m.%Y')}<br>
+<span class="task-meta">Dauer: 2 Tage · Priorität: hoch · Termin: {(datetime.now() + timedelta(days=14)).strftime('%d.%m.%Y')}</span><br>
 <em>KPI:</em> 1 Tool ausgewählt mit klarer Begründung</li>
 
 <li><strong>Erste Workflows aufsetzen</strong> — Kurzleitfaden für Eingaben und Qualitätskriterien erstellen<br>
-⏱ 1 Tag · 🎯 mittel · 📆 {(datetime.now() + timedelta(days=21)).strftime('%d.%m.%Y')}<br>
+<span class="task-meta">Dauer: 1 Tag · Priorität: mittel · Termin: {(datetime.now() + timedelta(days=21)).strftime('%d.%m.%Y')}</span><br>
 <em>KPI:</em> Leitfaden dokumentiert, erste Tests durchgeführt</li>
 
 <li><strong>Quick Win pilotieren</strong> — Ersten Use Case im Alltag testen und Wirkung messen<br>
-⏱ 3 Tage · 🎯 hoch · 📆 {(datetime.now() + timedelta(days=28)).strftime('%d.%m.%Y')}<br>
+<span class="task-meta">Dauer: 3 Tage · Priorität: hoch · Termin: {(datetime.now() + timedelta(days=28)).strftime('%d.%m.%Y')}</span><br>
 <em>KPI:</em> Erstes messbares Ergebnis (Zeitersparnis, Qualität) dokumentiert</li>
 </ol>"""
         elif size_group == "team":
             # Team: Team-bezogene Tasks
             return f"""<ol>
 <li><strong>KI-Owner / Teamlead</strong> — Team-Kick-off organisieren und Top-3 Use Cases priorisieren<br>
-⏱ 2 Tage · 🎯 hoch · 📆 {(datetime.now() + timedelta(days=14)).strftime('%d.%m.%Y')}<br>
+<span class="task-meta">Dauer: 2 Tage · Priorität: hoch · Termin: {(datetime.now() + timedelta(days=14)).strftime('%d.%m.%Y')}</span><br>
 <em>KPI:</em> 3–5 priorisierte Use Cases dokumentiert und im Team abgestimmt</li>
 
 <li><strong>IT-Verantwortliche:r</strong> — Tool-Evaluierung durchführen (inkl. DSGVO-Check und Security-Review)<br>
-⏱ 3 Tage · 🎯 hoch · 📆 {(datetime.now() + timedelta(days=21)).strftime('%d.%m.%Y')}<br>
+<span class="task-meta">Dauer: 3 Tage · Priorität: hoch · Termin: {(datetime.now() + timedelta(days=21)).strftime('%d.%m.%Y')}</span><br>
 <em>KPI:</em> 3 Tools evaluiert, 1 konkrete Empfehlung mit Begründung</li>
 
 <li><strong>Team-Koordinator:in</strong> — Qualitätskriterien definieren und erste Workflows dokumentieren<br>
-⏱ 2 Tage · 🎯 mittel · 📆 {(datetime.now() + timedelta(days=21)).strftime('%d.%m.%Y')}<br>
+<span class="task-meta">Dauer: 2 Tage · Priorität: mittel · Termin: {(datetime.now() + timedelta(days=21)).strftime('%d.%m.%Y')}</span><br>
 <em>KPI:</em> Workflow-Dokumentation erstellt, im Team geteilt</li>
 
 <li><strong>Projektleitung</strong> — Pilot-Phase planen und Erwartungen definieren<br>
-⏱ 1 Tag · 🎯 mittel · 📆 {(datetime.now() + timedelta(days=28)).strftime('%d.%m.%Y')}<br>
+<span class="task-meta">Dauer: 1 Tag · Priorität: mittel · Termin: {(datetime.now() + timedelta(days=28)).strftime('%d.%m.%Y')}</span><br>
 <em>KPI:</em> 3–5 konkrete Testszenarien dokumentiert</li>
 </ol>"""
         else:  # kmu
             # KMU: Erweiterte Rollenstruktur
             return f"""<ol>
 <li><strong>Bereichsleitung / Prozessverantwortliche:r</strong> — Stakeholder-Kick-off organisieren und Top-3 Use Cases priorisieren<br>
-⏱ 2 Tage · 🎯 hoch · 📆 {(datetime.now() + timedelta(days=14)).strftime('%d.%m.%Y')}<br>
+<span class="task-meta">Dauer: 2 Tage · Priorität: hoch · Termin: {(datetime.now() + timedelta(days=14)).strftime('%d.%m.%Y')}</span><br>
 <em>KPI:</em> 3–5 priorisierte Use Cases dokumentiert und abgestimmt</li>
 
 <li><strong>IT-Verantwortliche:r</strong> — Tool-Evaluierung durchführen (inkl. DSGVO-Check und Security-Review)<br>
-⏱ 3 Tage · 🎯 hoch · 📆 {(datetime.now() + timedelta(days=21)).strftime('%d.%m.%Y')}<br>
+<span class="task-meta">Dauer: 3 Tage · Priorität: hoch · Termin: {(datetime.now() + timedelta(days=21)).strftime('%d.%m.%Y')}</span><br>
 <em>KPI:</em> 3 Tools evaluiert, 1 konkrete Empfehlung mit Begründung</li>
 
 <li><strong>Datenschutz-Verantwortliche:r</strong> — Datenschutz-Konzept für KI-Einsatz erstellen<br>
-⏱ 2 Tage · 🎯 hoch · 📆 {(datetime.now() + timedelta(days=21)).strftime('%d.%m.%Y')}<br>
+<span class="task-meta">Dauer: 2 Tage · Priorität: hoch · Termin: {(datetime.now() + timedelta(days=21)).strftime('%d.%m.%Y')}</span><br>
 <em>KPI:</em> DSGVO-Checkliste vollständig abgearbeitet</li>
 
 <li><strong>Projektleitung</strong> — Pilot-Phase planen und Erwartungen definieren<br>
-⏱ 1 Tag · 🎯 mittel · 📆 {(datetime.now() + timedelta(days=28)).strftime('%d.%m.%Y')}<br>
+<span class="task-meta">Dauer: 1 Tag · Priorität: mittel · Termin: {(datetime.now() + timedelta(days=28)).strftime('%d.%m.%Y')}</span><br>
 <em>KPI:</em> 3–5 konkrete Testszenarien dokumentiert</li>
 </ol>"""
     
@@ -10329,7 +10925,7 @@ def _build_briefing_summary_html(br: Briefing, rep: Report, user_email: str) -> 
     # Key metrics
     metrics = f"""
     <div style="background:#f8f9fa;padding:16px;border-radius:8px;margin:16px 0">
-        <h3 style="margin:0 0 12px 0;color:#111827">📊 Briefing-Übersicht</h3>
+        <h3 style="margin:0 0 12px 0;color:#111827"><span class="icon">▣</span> Briefing-Übersicht</h3>
         <table class="table-modern" style="width:100%;border-collapse:collapse">
             <tr><td><b>Briefing ID:</b></td><td>{br.id}</td></tr>
             <tr><td><b>Analysis ID:</b></td><td>{getattr(rep, 'analysis_id', 'N/A')}</td></tr>
@@ -10343,7 +10939,7 @@ def _build_briefing_summary_html(br: Briefing, rep: Report, user_email: str) -> 
     # Scores
     scores_html = f"""
     <div style="background:#eff6ff;padding:16px;border-radius:8px;margin:16px 0">
-        <h3 style="margin:0 0 12px 0;color:#1e40af">🎯 Scores</h3>
+        <h3 style="margin:0 0 12px 0;color:#1e40af"><span class="icon">◎</span> Scores</h3>
         <table class="table-modern" style="width:100%;border-collapse:collapse">
             <tr><td><b>Gesamt:</b></td><td>{getattr(rep, 'score_overall', 0)}/100</td></tr>
             <tr><td><b>Governance:</b></td><td>{getattr(rep, 'score_governance', 0)}/100</td></tr>
