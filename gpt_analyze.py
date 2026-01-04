@@ -4950,6 +4950,225 @@ def _generate_kpi_card(value: str, label: str, sublabel: str = "", variant: str 
     '''
 
 
+# -------------------- CI-Design v2.0 Phase 3: Layout & Struktur ----------------
+
+def _generate_chapter_header(tag: str, title: str, subtitle: str = "") -> str:
+    """Generiert einheitlichen Kapitel-Header mit Gradient-Balken (CI-Design v2.0 Phase 3)."""
+    subtitle_html = f'<span class="chapter-header__subtitle">{html.escape(subtitle)}</span>' if subtitle else ''
+    return f'''
+    <div class="chapter-header">
+      <div class="chapter-header__bar"></div>
+      <span class="chapter-header__tag">{html.escape(tag)}</span>
+      <h2 class="chapter-header__title">{html.escape(title)}</h2>
+      {subtitle_html}
+    </div>
+    '''
+
+
+def _generate_roadmap_timeline(phases: List[Dict[str, Any]]) -> str:
+    """Generiert horizontale Timeline für 90-Tage-Roadmap (CI-Design v2.0 Phase 3).
+
+    Args:
+        phases: List of dicts with keys 'period', 'title', 'tasks' (list of strings)
+    """
+    html_parts = ['<div class="timeline-container"><div class="timeline"><div class="timeline__track"></div>']
+
+    for i, phase in enumerate(phases):
+        active_class = ' timeline__phase--active' if i == 0 else ''
+        tasks = phase.get('tasks', [])[:4]  # Max 4 Tasks pro Phase
+        tasks_html = ''.join(f'<li>{html.escape(str(task))}</li>' for task in tasks)
+
+        html_parts.append(f'''
+        <div class="timeline__phase{active_class}">
+          <div class="timeline__dot"></div>
+          <div class="timeline__content">
+            <span class="timeline__period">{html.escape(str(phase.get("period", "")))}</span>
+            <h4 class="timeline__title">{html.escape(str(phase.get("title", "")))}</h4>
+            <ul class="timeline__tasks">{tasks_html}</ul>
+          </div>
+        </div>
+        ''')
+
+    html_parts.append('</div></div>')
+    return ''.join(html_parts)
+
+
+def _generate_risk_matrix(risks: Dict[str, str]) -> str:
+    """Generiert Risiko-Matrix als Heatmap (CI-Design v2.0 Phase 3).
+
+    Args:
+        risks: Dict mapping risk categories to severity levels ('high', 'medium', 'low')
+              e.g. {'Strategie': 'medium', 'Daten & Sicherheit': 'high', ...}
+    """
+    # Default-Risiken wenn keine übergeben
+    if not risks:
+        risks = {
+            'Strategie': 'medium',
+            'Daten': 'high',
+            'Qualität': 'medium',
+            'Abhängigkeiten': 'low'
+        }
+
+    # Gruppiere Risiken nach Level
+    high_risks = [k for k, v in risks.items() if v == 'high']
+    medium_risks = [k for k, v in risks.items() if v == 'medium']
+    low_risks = [k for k, v in risks.items() if v == 'low']
+
+    high_text = ', '.join(high_risks[:2]) if high_risks else '—'
+    medium_text = ', '.join(medium_risks[:2]) if medium_risks else '—'
+    low_text = ', '.join(low_risks[:2]) if low_risks else '—'
+
+    return f'''
+    <div class="risk-matrix-container">
+      <div class="risk-matrix">
+        <div class="risk-matrix__grid">
+          <div class="risk-matrix__corner"></div>
+          <div class="risk-matrix__col-header">Mittel</div>
+          <div class="risk-matrix__col-header">Hoch</div>
+
+          <div class="risk-matrix__row-header">Hoch</div>
+          <div class="risk-matrix__cell risk-matrix__cell--medium">
+            <span>{html.escape(medium_text)}</span>
+          </div>
+          <div class="risk-matrix__cell risk-matrix__cell--high">
+            <span>{html.escape(high_text)}</span>
+          </div>
+
+          <div class="risk-matrix__row-header">Mittel</div>
+          <div class="risk-matrix__cell risk-matrix__cell--low">
+            <span>{html.escape(low_text)}</span>
+          </div>
+          <div class="risk-matrix__cell risk-matrix__cell--medium">
+            <span>—</span>
+          </div>
+        </div>
+        <div class="risk-matrix__x-axis">
+          <span>Auswirkung →</span>
+        </div>
+      </div>
+
+      <div class="risk-matrix__legend">
+        <span class="risk-matrix__legend-item risk-matrix__legend-item--high">Hoch</span>
+        <span class="risk-matrix__legend-item risk-matrix__legend-item--medium">Mittel</span>
+        <span class="risk-matrix__legend-item risk-matrix__legend-item--low">Niedrig</span>
+      </div>
+    </div>
+    '''
+
+
+def _generate_hero_page(
+    score: int,
+    rating_text: str,
+    hauptleistung: str,
+    company: str,
+    industry: str,
+    size: str,
+    report_id: str,
+    report_date: str,
+    kpi_values: Dict[str, Any],
+    reifegrad: str = "",
+    potential: int = 0
+) -> str:
+    """Generiert Hero-Seite 1 (CI-Design v2.0 Phase 3).
+
+    Args:
+        score: Overall score (0-100)
+        rating_text: Rating text (e.g., "Basis-Readiness", "Fortgeschritten")
+        hauptleistung: Main service description (truncated to 80 chars)
+        company: Company name
+        industry: Industry label
+        size: Company size label
+        report_id: Report ID
+        report_date: Report date string
+        kpi_values: Dict with 'zeitersparnis', 'roi', 'payback' keys
+        reifegrad: Maturity level description
+        potential: Potential score improvement points
+    """
+    # Truncate hauptleistung
+    hl_truncated = hauptleistung[:80] + '...' if len(hauptleistung) > 80 else hauptleistung
+
+    # Generate Score SVG
+    score_svg = _generate_score_svg(score, rating_text)
+
+    # Generate KPI Cards
+    zeitersparnis = kpi_values.get('zeitersparnis', '—')
+    roi = kpi_values.get('roi', '—')
+    payback = kpi_values.get('payback', '—')
+
+    kpi_cards = f'''
+    {_generate_kpi_card(str(zeitersparnis), "Zeitersparnis", "pro Monat", "highlight")}
+    {_generate_kpi_card(str(roi) + "%", "ROI (12 Monate)", "", "success")}
+    {_generate_kpi_card(str(payback) + " Mo.", "Payback-Zeit", "", "")}
+    '''
+
+    # Potential text
+    potential_text = f"Reifegrad: {html.escape(reifegrad)}" if reifegrad else ""
+    if potential > 0:
+        potential_text += f" · Potenzial: +{potential} Punkte"
+
+    return f'''
+    <div class="hero-page">
+      <!-- Header -->
+      <div class="hero-header">
+        <span class="hero-header__tag">KI-STATUS-REPORT · {html.escape(report_date)}</span>
+        <span class="hero-header__id">Report-ID: {html.escape(report_id)}</span>
+      </div>
+
+      <!-- Titel -->
+      <div class="hero-title">
+        <h1>KI-Readiness Report</h1>
+        <p class="hero-title__subtitle">{html.escape(hl_truncated)}</p>
+        <p class="hero-title__meta">{html.escape(company)} · {html.escape(industry)} · {html.escape(size)}</p>
+      </div>
+
+      <!-- Score (zentriert, prominent) -->
+      <div class="hero-score">
+        {score_svg}
+        <p class="hero-score__rating">{html.escape(rating_text)}</p>
+        <p class="hero-score__potential">{potential_text}</p>
+      </div>
+
+      <!-- KPIs (3er Grid) -->
+      <div class="kpi-grid">
+        {kpi_cards}
+      </div>
+
+      <!-- Footer -->
+      <div class="hero-footer">
+        <span>Erstellt von: TÜV-zertifizierter KI-Manager</span>
+        <div class="hero-footer__badges">
+          <span class="badge">EU AI Act konform</span>
+          <span class="badge">DSGVO-orientiert</span>
+          <span class="badge">Keine Rechtsberatung</span>
+        </div>
+      </div>
+    </div>
+    '''
+
+
+# Chapter header mappings for consistent usage
+CHAPTER_HEADERS = {
+    'quick_wins': ('SCHNELLE EFFEKTE', 'Quick Wins', '3–5 Maßnahmen mit sofortigem Hebel'),
+    'business_case': ('ROI-SIMULATION', 'Business Case', 'ROI · Payback · KPI-Forecasts'),
+    'recommendations': ('HANDLUNGSEMPFEHLUNGEN', 'Weitere Maßnahmen', 'Ergänzend zu Top-3'),
+    'roadmap': ('ORIENTIERUNG', '90-Tage Roadmap', 'Fokus auf pragmatische Umsetzung'),
+    'wirtschaftlichkeit': ('WIRTSCHAFTLICHKEIT', 'Business Case', 'Einsparpotenziale & Investition'),
+    'risks': ('RISIKEN', 'Risikoanalyse', 'Strategisch · Operativ · Compliance'),
+    'foerderung': ('FÖRDERUNG', 'Förderprogramme', 'EU · Bund · Land'),
+    'starter_kit': ('STARTER-KIT', 'Tools & Förderpfad', 'Konkrete Kombination'),
+    'governance': ('GOVERNANCE', 'AI Mini-Policy', 'Kompakte KI-Regeln'),
+    'ai_act': ('EU AI ACT', 'Compliance & Pflichten', 'Regulatorische Anforderungen'),
+}
+
+
+def _get_chapter_header(section_key: str) -> str:
+    """Gibt den passenden Chapter-Header für eine Section zurück."""
+    if section_key in CHAPTER_HEADERS:
+        tag, title, subtitle = CHAPTER_HEADERS[section_key]
+        return _generate_chapter_header(tag, title, subtitle)
+    return ""
+
+
 # -------------------- Score Bars (Legacy - CSS-only) ----------------
 def _build_score_bars_html(scores: Dict[str, Any]) -> str:
     def row(label: str, key: str) -> str:

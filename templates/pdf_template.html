@@ -1920,6 +1920,419 @@
         }
 
         /* ================================================
+           PHASE 3: LAYOUT & STRUKTUR (CI-Design v2.0)
+           ================================================ */
+
+        /* === 3.1 HERO PAGE === */
+        .hero-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 100vh;
+            padding: 40px;
+            text-align: center;
+            page-break-after: always;
+        }
+
+        .hero-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9pt;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hero-header__tag,
+        .hero-header__id {
+            font-family: var(--font-body);
+        }
+
+        .hero-title h1 {
+            font-family: var(--font-heading);
+            font-size: 36pt;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin: 0 0 8px 0;
+        }
+
+        .hero-title__subtitle {
+            font-size: 12pt;
+            font-style: italic;
+            color: var(--color-primary);
+            margin-bottom: 4px;
+        }
+
+        .hero-title__meta {
+            font-size: 11pt;
+            color: var(--color-text-secondary);
+        }
+
+        .hero-score {
+            margin: 40px 0;
+        }
+
+        .hero-score__rating {
+            font-family: var(--font-heading);
+            font-size: 14pt;
+            font-weight: 600;
+            color: var(--color-accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 16px;
+        }
+
+        .hero-score__potential {
+            font-size: 10pt;
+            color: var(--color-text-secondary);
+            margin-top: 4px;
+        }
+
+        .hero-footer {
+            font-size: 9pt;
+            color: var(--color-text-muted);
+        }
+
+        .hero-footer__badges {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 8px;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            background: var(--color-bg-light);
+            border-radius: 4px;
+            font-size: 8pt;
+            color: var(--color-text-secondary);
+        }
+
+        /* === 3.2 CHAPTER HEADER === */
+        .chapter-header {
+            margin-top: 20px;
+            margin-bottom: 32px;
+            page-break-before: always;
+        }
+
+        .chapter-header:first-of-type {
+            page-break-before: auto;
+        }
+
+        .chapter-header__bar {
+            height: 4px;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+            margin-bottom: 24px;
+            border-radius: 2px;
+        }
+
+        .chapter-header__tag {
+            display: block;
+            font-size: 9pt;
+            font-weight: 600;
+            color: var(--color-primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .chapter-header__title {
+            font-family: var(--font-heading);
+            font-size: 22pt;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            color: var(--color-text-primary);
+        }
+
+        .chapter-header__subtitle {
+            font-size: 11pt;
+            color: var(--color-text-secondary);
+        }
+
+        /* === 3.3 PAGE BREAK RULES === */
+
+        /* Verhindere Breaks innerhalb von Elementen */
+        .card,
+        .card--highlight,
+        .card--alert,
+        .card--success,
+        .kpi-card,
+        .quick-win-card,
+        .recommendation-card,
+        .risk-item,
+        .info-box,
+        .dimension-scores,
+        .timeline-container,
+        .risk-matrix-container {
+            page-break-inside: avoid;
+        }
+
+        /* Tabellen nicht trennen wenn möglich */
+        table {
+            page-break-inside: avoid;
+        }
+
+        /* Bei langen Tabellen: Header auf jeder Seite */
+        thead {
+            display: table-header-group;
+        }
+
+        /* Halte Headlines bei ihrem Content */
+        h2, h3, h4 {
+            page-break-after: avoid;
+            orphans: 3;
+            widows: 3;
+        }
+
+        /* Explizite Breaks */
+        .page-break-before {
+            page-break-before: always;
+        }
+
+        .page-break-after {
+            page-break-after: always;
+        }
+
+        /* Kein Break direkt nach Header */
+        .chapter-header + * {
+            page-break-before: avoid;
+        }
+
+        /* === 3.4 TIMELINE (90-Tage-Roadmap) === */
+        .timeline-container {
+            margin: 32px 0;
+            page-break-inside: avoid;
+        }
+
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            padding-top: 30px;
+        }
+
+        .timeline__track {
+            position: absolute;
+            top: 40px;
+            left: 15%;
+            right: 15%;
+            height: 3px;
+            background: var(--color-border);
+        }
+
+        .timeline__phase {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            padding: 0 8px;
+        }
+
+        .timeline__dot {
+            width: 16px;
+            height: 16px;
+            background: var(--color-border);
+            border: 3px solid white;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 0 0 2px var(--color-border);
+        }
+
+        .timeline__phase--active .timeline__dot {
+            background: var(--color-accent);
+            box-shadow: 0 0 0 2px var(--color-accent);
+        }
+
+        .timeline__period {
+            display: block;
+            font-size: 9pt;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 4px;
+        }
+
+        .timeline__title {
+            font-family: var(--font-heading);
+            font-size: 11pt;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            color: var(--color-text-primary);
+        }
+
+        .timeline__tasks {
+            text-align: left;
+            font-size: 9pt;
+            padding-left: 16px;
+            margin: 0;
+            color: var(--color-text-secondary);
+        }
+
+        .timeline__tasks li {
+            margin-bottom: 3px;
+            line-height: 1.4;
+        }
+
+        /* === 3.5 RISK MATRIX HEATMAP === */
+        .risk-matrix-container {
+            max-width: 450px;
+            margin: 24px auto;
+            page-break-inside: avoid;
+        }
+
+        .risk-matrix {
+            position: relative;
+        }
+
+        .risk-matrix__grid {
+            display: grid;
+            grid-template-columns: 60px 1fr 1fr;
+            gap: 4px;
+        }
+
+        .risk-matrix__corner {
+            /* Empty corner cell */
+        }
+
+        .risk-matrix__col-header,
+        .risk-matrix__row-header {
+            font-size: 9pt;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+        }
+
+        .risk-matrix__cell {
+            padding: 16px 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 9pt;
+            font-weight: 500;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .risk-matrix__cell--high {
+            background: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #FECACA;
+        }
+
+        .risk-matrix__cell--medium {
+            background: #FEF3C7;
+            color: #92400E;
+            border: 1px solid #FDE68A;
+        }
+
+        .risk-matrix__cell--low {
+            background: #ECFDF5;
+            color: #065F46;
+            border: 1px solid #A7F3D0;
+        }
+
+        .risk-matrix__x-axis,
+        .risk-matrix__y-axis {
+            font-size: 9pt;
+            color: var(--color-text-muted);
+            text-align: center;
+        }
+
+        .risk-matrix__x-axis {
+            margin-top: 12px;
+        }
+
+        .risk-matrix__y-axis {
+            position: absolute;
+            left: -40px;
+            top: 50%;
+            transform: rotate(-90deg) translateX(-50%);
+            white-space: nowrap;
+        }
+
+        .risk-matrix__legend {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 16px;
+            font-size: 8pt;
+        }
+
+        .risk-matrix__legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .risk-matrix__legend-item::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .risk-matrix__legend-item--high::before {
+            background: #FEE2E2;
+            border: 1px solid #FECACA;
+        }
+        .risk-matrix__legend-item--medium::before {
+            background: #FEF3C7;
+            border: 1px solid #FDE68A;
+        }
+        .risk-matrix__legend-item--low::before {
+            background: #ECFDF5;
+            border: 1px solid #A7F3D0;
+        }
+
+        /* === 3.6 DEZENTER FOOTER === */
+        .page-footer {
+            position: fixed;
+            bottom: 15px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 7pt;
+            color: var(--color-text-muted);
+            padding-top: 8px;
+            border-top: 0.5px solid var(--color-border);
+        }
+
+        /* KPI Grid für Hero-Seite */
+        .kpi-grid {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin: 24px 0;
+        }
+
+        /* Seite 2: Dimensionen + Executive Summary */
+        .dimension-scores-section {
+            margin-bottom: 32px;
+        }
+
+        .dimension-scores-section h2 {
+            font-family: var(--font-heading);
+            font-size: 16pt;
+            margin-bottom: 16px;
+            color: var(--color-primary);
+        }
+
+        .top-3-section {
+            margin-top: 24px;
+        }
+
+        .top-3-section h3 {
+            font-family: var(--font-heading);
+            color: var(--color-warning);
+            margin-bottom: 16px;
+        }
+
+        /* ================================================
            G21: PLATIN++ DESIGN ENHANCEMENT SYSTEM
            ================================================ */
 
