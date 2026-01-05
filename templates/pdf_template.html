@@ -6697,7 +6697,7 @@
                     </div>
                 </section>
                 {% endif %}
-                {% if KICKOFF_VORLAGE_HTML %}
+                {% if KICKOFF_VORLAGE_HTML and not COMPACT_REPORT_MODE %}
                 <section class="section chapter">
                     <div class="section-header">
                         <div class="section-title">
@@ -6714,7 +6714,7 @@
                     </div>
                 </section>
                 {% endif %}
-                {% if PROMPT_FRAMEWORK_HTML %}
+                {% if PROMPT_FRAMEWORK_HTML and not COMPACT_REPORT_MODE %}
                 <section class="section chapter">
                     <div class="section-header">
                         <div class="section-title">
