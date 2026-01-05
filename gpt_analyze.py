@@ -5845,13 +5845,13 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         hemmnisse_raw = briefing.get("hemmnisse", [])  # Fallback for legacy data
 
     # PHASE 2 FIX: Extract all strategic freetext fields for individualization
-    zeitersparnis_prioritaet = briefing.get("zeitersparnis_prioritaet", "")
-    vision_3_jahre = briefing.get("vision_3_jahre", "")
-    geschaeftsmodell_evolution = briefing.get("geschaeftsmodell_evolution", "")
-    ki_guardrails = briefing.get("ki_guardrails", "")
-    strategische_ziele = briefing.get("strategische_ziele", "")
-    hauptleistung = briefing.get("hauptleistung", "")
-    ki_projekte = briefing.get("ki_projekte", "")  # PHASE 3: Added for Quick Wins personalization
+    zeitersparnis_prioritaet: str = str(briefing.get("zeitersparnis_prioritaet", "") or "")
+    vision_3_jahre: str = str(briefing.get("vision_3_jahre", "") or "")
+    geschaeftsmodell_evolution: str = str(briefing.get("geschaeftsmodell_evolution", "") or "")
+    ki_guardrails: str = str(briefing.get("ki_guardrails", "") or "")
+    strategische_ziele: str = str(briefing.get("strategische_ziele", "") or "")
+    hauptleistung: str = str(briefing.get("hauptleistung", "") or "")
+    ki_projekte: str = str(briefing.get("ki_projekte", "") or "")  # PHASE 3: Added for Quick Wins personalization
 
     base_vars.update({
         # Original fields
@@ -6030,13 +6030,13 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     - roadmap_12m: Erweitert auf 900+ Wörter
     """
     # TEIL 3.1.1: Get lang first for language-aware fallbacks
-    briefing_lang = briefing.get("lang", "de") if isinstance(briefing, dict) else "de"
+    briefing_lang: str = str(briefing.get("lang", "de") if isinstance(briefing, dict) else "de")
 
     # Language-aware fallbacks
-    default_company = "Your Company" if briefing_lang == "en" else "Ihr Unternehmen"
-    branche = briefing.get("BRANCHE_LABEL") or briefing.get("branche", default_company)
-    size_label = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
-    hauptleistung = briefing.get("hauptleistung", briefing.get("HAUPTLEISTUNG", ""))
+    default_company: str = "Your Company" if briefing_lang == "en" else "Ihr Unternehmen"
+    branche: str = str(briefing.get("BRANCHE_LABEL") or briefing.get("branche", default_company) or "")
+    size_label: str = str(briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "") or "")
+    hauptleistung: str = str(briefing.get("hauptleistung", briefing.get("HAUPTLEISTUNG", "")) or "")
 
     # SPRINT G2.4: Generate short labels for redundancy reduction
     # PLATIN+++ v5.4: Use briefing's actual lang, not hardcoded "de"
@@ -6056,17 +6056,17 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         size_group = "kmu"
 
     # Business Case Variablen - TEIL 3.1.1: Language-aware
-    default_bundesland = "your region" if briefing_lang == "en" else "Ihrem Bundesland"
-    bundesland = briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", default_bundesland)
+    default_bundesland: str = "your region" if briefing_lang == "en" else "Ihrem Bundesland"
+    bundesland: str = str(briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", default_bundesland) or "")
     # BC-Werte mit sinnvollen Defaults (werden von calc_business_case vorher gesetzt)
-    capex = briefing.get("CAPEX_REALISTISCH_EUR") or 5000
-    opex = briefing.get("OPEX_REALISTISCH_EUR") or 150
-    einsparung = briefing.get("EINSPARUNG_MONAT_EUR") or 500
+    capex: int = int(briefing.get("CAPEX_REALISTISCH_EUR") or 5000)
+    opex: int = int(briefing.get("OPEX_REALISTISCH_EUR") or 150)
+    einsparung: int = int(briefing.get("EINSPARUNG_MONAT_EUR") or 500)
     # SPRINT G2.5: Format payback and ROI with 1 decimal place to avoid floating point issues
-    payback_raw = briefing.get("PAYBACK_MONTHS") or 10
-    payback = f"{float(payback_raw):.1f}" if isinstance(payback_raw, (int, float)) else payback_raw
-    roi_raw = briefing.get("ROI_12M") or 60
-    roi_12m = f"{float(roi_raw):.0f}" if isinstance(roi_raw, (int, float)) else roi_raw
+    payback_raw: float = float(briefing.get("PAYBACK_MONTHS") or 10)
+    payback: str = f"{float(payback_raw):.1f}" if isinstance(payback_raw, (int, float)) else str(payback_raw)
+    roi_raw: float = float(briefing.get("ROI_12M") or 60)
+    roi_12m: str = f"{float(roi_raw):.0f}" if isinstance(roi_raw, (int, float)) else str(roi_raw)
 
     # ════════════════════════════════════════════════════════════════════════════
     # 🎯 PLATIN+ FALLBACK: FOERDERPOTENZIAL (900+ Wörter)
@@ -6240,8 +6240,8 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     # 🎯 PLATIN+ FALLBACK: RISKS (800+ Wörter)
     # ════════════════════════════════════════════════════════════════════════════
     if section_key == "risks":
-        score_gov = scores.get("governance", 50)
-        score_sec = scores.get("security", 50)  # FIX: "sicherheit" → "security" (korrekter Key)
+        score_gov: int = int(scores.get("governance", 50) or 50)
+        score_sec: int = int(scores.get("security", 50) or 50)  # FIX: "sicherheit" → "security" (korrekter Key)
 
         # NOTE: English fallback removed (Content Quality Pack v1)
         # English reports now use prompts/en/risks.md exclusively
@@ -7615,11 +7615,10 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         zeitersparnis = _fix_typos(briefing.get("zeitersparnis_prioritaet", ""))
         ki_projekte = _fix_typos(briefing.get("ki_projekte", ""))
         hauptleistung = _fix_typos(hauptleistung)
-        strategische_ziele = _fix_typos(strategische_ziele)
-        ki_guardrails = _fix_typos(ki_guardrails)
-        vision_3_jahre = _fix_typos(vision_3_jahre)
+        strategische_ziele = _fix_typos(briefing.get("strategische_ziele", ""))
+        ki_guardrails = _fix_typos(briefing.get("ki_guardrails", ""))
+        vision_3_jahre = _fix_typos(briefing.get("vision_3_jahre", ""))
         geschaeftsmodell = _fix_typos(briefing.get("geschaeftsmodell_evolution", ""))
-        ki_guardrails = briefing.get("ki_guardrails", "")
         trainings = briefing.get("trainings_interessen", [])
         score_security = scores.get("security", 50)
         score_governance = scores.get("governance", 50)
@@ -8401,16 +8400,16 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {min_words} Wörter):
     bundesland = briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland") or ""
     ki_ziele = briefing.get("ki_ziele", [])
     ki_projekte = briefing.get("ki_projekte", "")
-    vision = briefing.get("vision_3_jahre", "")
-    trainings_liste = briefing.get("trainings_interessen", [])
+    vision: str = str(briefing.get("vision_3_jahre", "") or "")
+    trainings_liste: list = list(briefing.get("trainings_interessen", []) or [])
     # v7.0 PHASE 3: Add missing Goldnuggets
-    zeitersparnis_prioritaet = briefing.get("zeitersparnis_prioritaet", "")
-    ki_guardrails = briefing.get("ki_guardrails", "")
-    overall = scores.get("overall", 0)
-    governance = scores.get("governance", 0)
-    security = scores.get("security", 0)
-    value = scores.get("value", 0)
-    enablement = scores.get("enablement", 0)
+    zeitersparnis_prioritaet: str = str(briefing.get("zeitersparnis_prioritaet", "") or "")
+    ki_guardrails: str = str(briefing.get("ki_guardrails", "") or "")
+    overall: int = int(scores.get("overall", 0) or 0)
+    governance: int = int(scores.get("governance", 0) or 0)
+    security: int = int(scores.get("security", 0) or 0)
+    value: int = int(scores.get("value", 0) or 0)
+    enablement: int = int(scores.get("enablement", 0) or 0)
     context = (
         f"Branche: {branche}; Größe: {unternehmensgroesse}; Bundesland: {bundesland}; "
         f"Hauptleistung/-produkt: {hauptleistung}."
