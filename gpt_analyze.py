@@ -1111,7 +1111,7 @@ def build_strategic_context_block(answers: dict, lang: str = "de") -> str:
             lines.append(f"Strategische Prioritäten:\n{val}")
 
     if answers.get("zeitersparnis_prioritaet"):
-        val = answers["zeitersparnis_prioritaet"]
+        val = _fix_typos(answers["zeitersparnis_prioritaet"])
         if val and val != "—":
             lines.append(f"Zeitfresser & Prozess-Pain-Points:\n{val}")
 
