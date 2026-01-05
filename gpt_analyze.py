@@ -9820,13 +9820,13 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     # === PAGE 4 CONTEXT CARDS - User Input Variables for Template ===
     # These variables are needed for the Page 4 emoji-cards and Guardrails box
     # Template uses lowercase keys with {% if variable %} conditionals
-    sections["strategische_ziele"] = answers.get("strategische_ziele", "")
-    sections["zeitersparnis_prioritaet"] = answers.get("zeitersparnis_prioritaet", "")
-    sections["hauptleistung"] = answers.get("hauptleistung", "")
-    sections["ki_projekte"] = answers.get("ki_projekte", "")
-    sections["geschaeftsmodell_evolution"] = answers.get("geschaeftsmodell_evolution", "")
-    sections["vision_3_jahre"] = answers.get("vision_3_jahre", "")
-    sections["ki_guardrails"] = answers.get("ki_guardrails", "")
+    sections["strategische_ziele"] = _fix_typos(answers.get("strategische_ziele", ""))
+    sections["zeitersparnis_prioritaet"] = _fix_typos(answers.get("zeitersparnis_prioritaet", ""))
+    sections["hauptleistung"] = _fix_typos(answers.get("hauptleistung", ""))
+    sections["ki_projekte"] = _fix_typos(answers.get("ki_projekte", ""))
+    sections["geschaeftsmodell_evolution"] = _fix_typos(answers.get("geschaeftsmodell_evolution", ""))
+    sections["vision_3_jahre"] = _fix_typos(answers.get("vision_3_jahre", ""))
+    sections["ki_guardrails"] = _fix_typos(answers.get("ki_guardrails", ""))
 
     # === DEBUG: Page 4 Template Variables ===
     log.info("=" * 80)
