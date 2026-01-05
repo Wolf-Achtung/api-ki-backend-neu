@@ -241,6 +241,19 @@ class ROIExplanation:
             </table>
             <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:11px;color:#64748b;">
                 <strong>Formel:</strong> {self.formel}
+                <div style="margin-top:8px;padding:8px;background:#fff;border-radius:4px;">
+                    <div style="font-weight:600;margin-bottom:4px;color:#334155;">ROI-Herleitung Schritt für Schritt:</div>
+                    <div style="line-height:1.6;">
+                        1. Jahresersparnis: {self.zeitersparnis_stunden:.0f}h/Monat × {self.stundensatz}€/h × 12 = {self.zeitersparnis_stunden * self.stundensatz * 12:,.0f}€<br>
+                        2. Abzüglich Einmalinvestition: {self.einmalkosten:,.0f}€<br>
+                        3. Abzüglich laufende Jahreskosten: {self.laufende_kosten_monat:,.0f}€/Monat × 12 = {self.laufende_kosten_monat * 12:,.0f}€<br>
+                        4. Nettonutzen: {self.zeitersparnis_stunden * self.stundensatz * 12:,.0f}€ - {self.einmalkosten:,.0f}€ - {self.laufende_kosten_monat * 12:,.0f}€ = {(self.zeitersparnis_stunden * self.stundensatz * 12) - self.einmalkosten - (self.laufende_kosten_monat * 12):,.0f}€<br>
+                        5. ROI-Berechnung: {(self.zeitersparnis_stunden * self.stundensatz * 12) - self.einmalkosten - (self.laufende_kosten_monat * 12):,.0f}€ / {self.einmalkosten:,.0f}€ × 100 = {((self.zeitersparnis_stunden * self.stundensatz * 12 - self.einmalkosten - self.laufende_kosten_monat * 12) / self.einmalkosten * 100) if self.einmalkosten > 0 else 0:.0f}%
+                    </div>
+                    <div style="margin-top:4px;font-size:10px;color:#64748b;">
+                        Der ausgewiesene ROI berücksichtigt konservative Annahmen und ist auf realistische Werte begrenzt.
+                    </div>
+                </div>
             </div>
         </div>
         """
