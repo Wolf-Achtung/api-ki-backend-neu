@@ -5336,7 +5336,9 @@ def _generate_gamechanger_compact_from_html(
     transformation_headline = h2_matches[1] if len(h2_matches) > 1 else "Ihre KI-Chance"
 
     # Extrahiere Benefits aus Listenelementen
-    li_matches = re.findall(r'<li[^>]*>([^<]+)</li>', raw_html, re.IGNORECASE)
+    # Match complete content including nested tags (FIX #2)
+    li_matches_raw = re.findall(r'<li[^>]*>(.*?)</li>', raw_html, re.IGNORECASE | re.DOTALL)
+    li_matches = [re.sub(r'<[^>]+>', '', m).strip() for m in li_matches_raw]
     benefits = li_matches[:3] if li_matches else [
         "Zeitersparnis durch Automatisierung",
         "Qualitätssteigerung durch KI-Analyse",
