@@ -5812,14 +5812,14 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # - "none" or unset = disabled for all sizes - full reports
     appendix_mode_env = os.environ.get("PLATIN_APPENDIX_MODE", "").lower().strip()
     if appendix_mode_env == "all":
-        compact_report_mode = (company_size in ["solo", "klein"])  # Solo + Klein = compact
+        compact_report_mode = (company_size in ["solo", "team"])  # Solo + Klein = compact
     elif appendix_mode_env == "solo":
         compact_report_mode = (company_size == "solo")  # Original v5.4.1 behavior
     elif appendix_mode_env in ("none", "disabled", "off", "false", "0"):
         compact_report_mode = False  # Disable for all
     else:
         # Default: compact for solo+klein (v5.4.3)
-        compact_report_mode = (company_size in ["solo", "klein"])
+        compact_report_mode = (company_size in ["solo", "team"])
 
     base_vars.update({
         "BRANCHE": briefing.get("branche", ""),
@@ -7612,13 +7612,17 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
 
         # v7.0 PHASE 3: Upgrade fallback to match primary prompt hyper-personalization
         # Extrahiere ALLE 5 Goldnuggets (mit Typo-Korrektur für User-Input)
-        zeitersparnis: str = _fix_typos(str(briefing.get("zeitersparnis_prioritaet", "") or ""))
-        ki_projekte: str = _fix_typos(str(briefing.get("ki_projekte", "") or ""))
-        geschaeftsmodell: str = _fix_typos(str(briefing.get("geschaeftsmodell_evolution", "") or ""))
-        ki_guardrails: str = str(briefing.get("ki_guardrails", "") or "")
-        trainings: list = list(briefing.get("trainings_interessen", []) or [])
-        score_security: int = int(scores.get("security", 50) or 50)
-        score_governance: int = int(scores.get("governance", 50) or 50)
+        zeitersparnis = _fix_typos(briefing.get("zeitersparnis_prioritaet", ""))
+        ki_projekte = _fix_typos(briefing.get("ki_projekte", ""))
+        hauptleistung = _fix_typos(hauptleistung)
+        strategische_ziele = _fix_typos(strategische_ziele)
+        ki_guardrails = _fix_typos(ki_guardrails)
+        vision_3_jahre = _fix_typos(vision_3_jahre)
+        geschaeftsmodell = _fix_typos(briefing.get("geschaeftsmodell_evolution", ""))
+        ki_guardrails = briefing.get("ki_guardrails", "")
+        trainings = briefing.get("trainings_interessen", [])
+        score_security = scores.get("security", 50)
+        score_governance = scores.get("governance", 50)
 
         # v8.0: Dynamische Quick Wins mit hyper-personalization und neuem Card-Design
         qw_items = []
@@ -9822,14 +9826,14 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     # - "none" = disabled for all sizes - full reports
     appendix_mode_env = os.environ.get("PLATIN_APPENDIX_MODE", "").lower().strip()
     if appendix_mode_env == "all":
-        compact_report_mode = (company_size in ["solo", "klein"])  # Solo + Klein = compact
+        compact_report_mode = (company_size in ["solo", "team"])  # Solo + Klein = compact
     elif appendix_mode_env == "solo":
         compact_report_mode = (company_size == "solo")  # Original v5.4.1 behavior
     elif appendix_mode_env in ("none", "disabled", "off", "false", "0"):
         compact_report_mode = False  # Disable for all
     else:
         # Default: compact for solo+klein (v5.4.3)
-        compact_report_mode = (company_size in ["solo", "klein"])
+        compact_report_mode = (company_size in ["solo", "team"])
 
     sections["COMPACT_REPORT_MODE"] = compact_report_mode
     sections["COMPANY_SIZE"] = company_size
