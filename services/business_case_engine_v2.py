@@ -1522,8 +1522,14 @@ def business_case_report_to_html(
         ''')
 
     # ROI Explanation (Problem #3 fix - transparency)
+    import logging
+    log = logging.getLogger(__name__)
+    log.info(f"[DEBUG] roi_explanation exists: {report.roi_explanation is not None}")
     if report.roi_explanation:
+        log.info(f"[DEBUG] Adding ROI explanation to HTML")
         html_parts.append(report.roi_explanation.to_html(lang))
+    else:
+        log.warning(f"[DEBUG] ROI explanation is None - NOT adding to HTML!")
 
     # Narrative Summary
     if report.narrative_summary:
