@@ -6271,7 +6271,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
             org_risk = "Als Solo-Selbstständige:r konzentriert sich Know-how und Verantwortung auf eine Person"
             org_measure = "Dokumentation zentraler Workflows, Checklisten und bewusste Verankerung von KI-Routinen"
         elif size_group == "team":
-            org_risk = "In kleinen Teams ist oft unklar, wer KI-Vorhaben priorisiert und wer für Qualität verantwortlich ist"
+            org_risk = "In 2-10 Personen Teams fehlt oft eine klare KI-Verantwortung: Jeder testet individuell Tools, niemand dokumentiert was funktioniert, Best Practices gehen verloren"
             org_measure = "Klare Rollenverteilung (KI-Owner), gemeinsame Standards und regelmäßige Team-Abstimmungen"
         else:
             org_risk = "In größeren Strukturen können unklare Verantwortlichkeiten und fehlende Governance zu Insellösungen führen"
@@ -6295,9 +6295,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   <ul>
     <li>
       <strong>Unklare Zielbilder und Prioritäten für KI.</strong>
-      Ohne klar definierte Ziele für {hauptleistung or "Ihr Kerngeschäft"} besteht das Risiko, dass KI-Experimente
-      versanden, Insellösungen entstehen oder wichtige Chancen ungenutzt bleiben. Die Gefahr ist besonders groß,
-      wenn verschiedene Initiativen parallel laufen ohne gemeinsame Ausrichtung.
+      Typisches Szenario: 3-4 KI-Tools werden parallel getestet (ChatGPT, Notion AI, Copy.ai), nach 6 Monaten nutzt niemand sie produktiv, weil unklar ist welches Tool für {hauptleistung or "Ihr Kerngeschäft"} den größten Hebel hat. 67% der KI-Piloten scheitern an fehlender Priorisierung (Gartner 2024).
       <em>Gegenmaßnahme:</em> Ein knappes Zielbild mit 2–3 priorisierten Anwendungsfällen, ein einfacher
       Umsetzungsplan sowie regelmäßige Überprüfung, ob Maßnahmen zum übergeordneten Geschäftsmodell passen.
     </li>
@@ -6308,8 +6306,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     </li>
     <li>
       <strong>Fehlende Rollen- und Verantwortlichkeitsklarheit.</strong>
-      In wachsenden Setups ist oft unklar, wer KI-Vorhaben priorisiert, wer für Qualität verantwortlich ist
-      und wer Tools auswählt. Dies führt zu Verzögerungen und Doppelarbeit.
+      In Teams ohne klaren KI-Owner entstehen Schatten-IT-Lösungen: Marketing nutzt Jasper, Vertrieb ChatGPT Plus, Support ein eigenes Tool – niemand koordiniert, Kosten verdoppeln sich, Datenschutz wird zum Risiko.
       <em>Gegenmaßnahme:</em> Eine klar benannte Rolle für KI-Verantwortung, ein schlanker Entscheidungsprozess
       für Tool-Einführung und transparente Kommunikation von Zuständigkeiten.
     </li>
@@ -6326,8 +6323,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   <ul>
     <li>
       <strong>Unzureichende Kontrolle über ein- und ausgehende Daten.</strong>
-      Wenn nicht geregelt ist, welche Informationen in KI-Systeme eingegeben werden dürfen, können vertrauliche
-      Kundendaten, interne Dokumente oder sensible Inhalte unkontrolliert verarbeitet werden.
+      Echtes Risiko: Ein Mitarbeiter lädt Kundenliste mit E-Mails in ChatGPT zur Segmentierung – die Daten landen auf US-Servern, DSGVO-Verstoß, potenzielle Bußgelder bis 20 Mio. € oder 4% Jahresumsatz.
       <em>Gegenmaßnahme:</em> Klare Richtlinien für Datennutzung, ein kurzer Leitfaden für alle Beteiligten
       sowie technische Schutzmechanismen wie Zugriffsbeschränkungen oder getrennte Arbeitsbereiche.
     </li>
