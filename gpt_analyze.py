@@ -5812,14 +5812,14 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # - "none" or unset = disabled for all sizes - full reports
     appendix_mode_env = os.environ.get("PLATIN_APPENDIX_MODE", "").lower().strip()
     if appendix_mode_env == "all":
-        compact_report_mode = (company_size in ["solo", "klein"])  # Solo + Klein = compact
+        compact_report_mode = (company_size in ["solo", "team"])  # Solo + Klein = compact
     elif appendix_mode_env == "solo":
         compact_report_mode = (company_size == "solo")  # Original v5.4.1 behavior
     elif appendix_mode_env in ("none", "disabled", "off", "false", "0"):
         compact_report_mode = False  # Disable for all
     else:
         # Default: compact for solo+klein (v5.4.3)
-        compact_report_mode = (company_size in ["solo", "klein"])
+        compact_report_mode = (company_size in ["solo", "team"])
 
     base_vars.update({
         "BRANCHE": briefing.get("branche", ""),
@@ -9822,14 +9822,14 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     # - "none" = disabled for all sizes - full reports
     appendix_mode_env = os.environ.get("PLATIN_APPENDIX_MODE", "").lower().strip()
     if appendix_mode_env == "all":
-        compact_report_mode = (company_size in ["solo", "klein"])  # Solo + Klein = compact
+        compact_report_mode = (company_size in ["solo", "team"])  # Solo + Klein = compact
     elif appendix_mode_env == "solo":
         compact_report_mode = (company_size == "solo")  # Original v5.4.1 behavior
     elif appendix_mode_env in ("none", "disabled", "off", "false", "0"):
         compact_report_mode = False  # Disable for all
     else:
         # Default: compact for solo+klein (v5.4.3)
-        compact_report_mode = (company_size in ["solo", "klein"])
+        compact_report_mode = (company_size in ["solo", "team"])
 
     sections["COMPACT_REPORT_MODE"] = compact_report_mode
     sections["COMPANY_SIZE"] = company_size
