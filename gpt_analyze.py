@@ -5315,6 +5315,187 @@ def _generate_funding_compact(
     '''
 
 
+def _generate_gamechanger_compact_from_html(
+    raw_html: str,
+    company_size: str = "1",
+    industry: str = "",
+    hauptleistung: str = ""
+) -> str:
+    """Wrapper: Extrahiert Daten aus raw_html und generiert kompakten Gamechanger.
+
+    CI-Design v2.0: Reduziert ~20 Seiten auf ~2-3 Seiten.
+    """
+    import re
+
+    # Extrahiere Headline/Bruchpunkt aus H2/H3 Tags
+    h2_matches = re.findall(r'<h2[^>]*>([^<]+)</h2>', raw_html, re.IGNORECASE)
+    h3_matches = re.findall(r'<h3[^>]*>([^<]+)</h3>', raw_html, re.IGNORECASE)
+
+    bruchpunkt_headline = h2_matches[0] if h2_matches else "KI-Transformation"
+    bruchpunkt_detail = h3_matches[0] if h3_matches else "Prozessoptimierung durch KI"
+    transformation_headline = h2_matches[1] if len(h2_matches) > 1 else "Ihre KI-Chance"
+
+    # Extrahiere Benefits aus Listenelementen
+    li_matches = re.findall(r'<li[^>]*>([^<]+)</li>', raw_html, re.IGNORECASE)
+    benefits = li_matches[:3] if li_matches else [
+        "Zeitersparnis durch Automatisierung",
+        "Qualitätssteigerung durch KI-Analyse",
+        "Wettbewerbsvorteil durch Innovation"
+    ]
+
+    # Extrahiere Schritte oder generiere Standard-Schritte
+    schritte = li_matches[3:7] if len(li_matches) > 3 else [
+        "Quick-Win identifizieren",
+        "Pilotprojekt starten",
+        "Erfolge messen",
+        "Skalieren"
+    ]
+
+    return _generate_gamechanger_compact(
+        bruchpunkt_headline=bruchpunkt_headline,
+        bruchpunkt_detail=bruchpunkt_detail,
+        transformation_headline=transformation_headline,
+        benefits=benefits,
+        schritte=schritte
+    )
+
+
+def _generate_funding_compact_from_html(
+    raw_html: str,
+    bundesland: str = "",
+    company_size: str = "1"
+) -> str:
+    """Wrapper: Extrahiert Daten aus raw_html und generiert kompakte Förderübersicht.
+
+    CI-Design v2.0: Reduziert ~5 Seiten auf ~2 Seiten.
+    """
+    import re
+
+    # Versuche Programme aus dem HTML zu extrahieren
+    programme = []
+
+    # Suche nach Programmnamen in H2/H3/strong Tags
+    pattern = r'<(?:h[23]|strong)[^>]*>([^<]*(?:digital|BAFA|ZIM|Innovationskredit|Förder)[^<]*)</(?:h[23]|strong)>'
+    matches = re.findall(pattern, raw_html, re.IGNORECASE)
+
+    for match in matches[:4]:
+        name = match.strip()
+        if name:
+            programme.append({
+                'name': name[:40],
+                'geber': 'Bund' if any(x in name.lower() for x in ['bafa', 'zim', 'bmwk']) else bundesland or 'Land',
+                'eignung': 'Hoch',
+                'betrag': '16.500 €' if 'digital' in name.lower() else '5.000 €',
+                'komplexitaet': 'Niedrig'
+            })
+
+    # Fallback wenn keine Programme gefunden
+    if not programme:
+        programme = [
+            {'name': 'go-digital', 'geber': 'BMWK', 'eignung': 'Hoch', 'betrag': '16.500 €', 'komplexitaet': 'Niedrig'},
+            {'name': 'BAFA-Beratung', 'geber': 'Bund', 'eignung': 'Hoch', 'betrag': '3.200 €', 'komplexitaet': 'Niedrig'},
+        ]
+        if bundesland:
+            programme.append({
+                'name': f'{bundesland}-Digitalbonus',
+                'geber': bundesland,
+                'eignung': 'Mittel',
+                'betrag': '10.000 €',
+                'komplexitaet': 'Mittel'
+            })
+
+    # Bestimme Förderquote basierend auf Unternehmensgröße
+    size_int = int(company_size) if company_size.isdigit() else 1
+    if size_int <= 10:
+        foerderquote = "50%"
+        max_foerderung = "16.500 €"
+    elif size_int <= 50:
+        foerderquote = "40%"
+        max_foerderung = "33.000 €"
+    else:
+        foerderquote = "30%"
+        max_foerderung = "50.000 €"
+
+    next_steps = [
+        'Projektsteckbrief erstellen (1-2 Seiten)',
+        'Förderfähigkeit mit go-digital prüfen',
+        'Beratungsunternehmen auswählen',
+        'Antrag einreichen'
+    ]
+
+    return _generate_funding_compact(
+        foerderquote=foerderquote,
+        max_foerderung=max_foerderung,
+        programme=programme,
+        next_steps=next_steps
+    )
+
+
+def _generate_hero_page_from_context(
+    scores: Dict[str, Any],
+    briefing: Dict[str, Any],
+    sections: Dict[str, str]
+) -> str:
+    """Wrapper: Generiert Hero-Page aus Kontext-Daten.
+
+    CI-Design v2.0: Kompakte Seite 1 mit Score-Kreis und KPIs.
+    """
+    from datetime import datetime
+
+    # Score und Rating
+    score = scores.get("overall", 74)
+    if score >= 80:
+        rating_text = "Exzellent"
+    elif score >= 60:
+        rating_text = "Fortgeschritten"
+    elif score >= 40:
+        rating_text = "Basis-Readiness"
+    else:
+        rating_text = "Startphase"
+
+    # Unternehmensdaten
+    hauptleistung = sections.get("HAUPTLEISTUNG", "") or briefing.get("HAUPTLEISTUNG", "Kerngeschäft")
+    company = sections.get("KUNDENCODE", "") or briefing.get("KUNDENCODE", "Unternehmen")
+    industry = sections.get("BRANCHE_LABEL", "") or briefing.get("BRANCHE", "Dienstleistung")
+    size = sections.get("UNTERNEHMENSGROESSE_LABEL", "") or str(briefing.get("UNTERNEHMENSGROESSE", "1-10"))
+
+    # Report-Metadaten
+    report_id = briefing.get("REPORT_ID", f"KI-{datetime.now().strftime('%y%m%d')}")
+    report_date = datetime.now().strftime("%d.%m.%Y")
+
+    # KPI-Werte
+    kpi_values = {
+        'zeitersparnis': briefing.get("ZEITERSPARNIS_H", 18),
+        'roi': briefing.get("ROI_12M", 200),
+        'payback': briefing.get("PAYBACK_MONTHS", 4.4)
+    }
+
+    # Reifegrad und Potenzial
+    if score >= 70:
+        reifegrad = "Fortgeschrittene KI-Readiness"
+        potential = 15
+    elif score >= 50:
+        reifegrad = "Solide Basis vorhanden"
+        potential = 25
+    else:
+        reifegrad = "Hohes Entwicklungspotenzial"
+        potential = 40
+
+    return _generate_hero_page(
+        score=score,
+        rating_text=rating_text,
+        hauptleistung=hauptleistung,
+        company=company,
+        industry=industry,
+        size=size,
+        report_id=report_id,
+        report_date=report_date,
+        kpi_values=kpi_values,
+        reifegrad=reifegrad,
+        potential=potential
+    )
+
+
 def _generate_recommendations_table(recommendations: List[Dict[str, str]]) -> str:
     """Generiert Empfehlungen als kompakte Tabelle (CI-Design v2.0 Phase 4)."""
     if not recommendations:
@@ -9124,6 +9305,23 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     # v9.0: Maßnahmen 3-5 - Card-Layouts und Tabellen
     # v10.0: AGGRESSIVE TRUNCATION für ALLE Sektionen (Final Fix)
 
+    # ========== CI-DESIGN v2.0: HERO PAGE (Seite 1) ==========
+    use_compact_design = os.getenv("USE_COMPACT_CI_DESIGN", "1") == "1"
+    if use_compact_design:
+        try:
+            hero_html = _generate_hero_page_from_context(
+                scores=scores,
+                briefing=briefing,
+                sections=sections
+            )
+            sections["hero"] = hero_html
+            sections["HERO_HTML"] = hero_html
+            log.info(f"[CI-DESIGN] Hero page generated: {len(hero_html)} chars")
+        except Exception as e:
+            log.error(f"[CI-DESIGN] Hero page generation failed: {e}", exc_info=True)
+            sections["hero"] = ""
+            sections["HERO_HTML"] = ""
+
     # ========== GLOBAL AGGRESSIVE TRUNCATION (v10.0) ==========
     # Apply to ALL major content sections FIRST
     truncation_targets = [
@@ -9172,47 +9370,61 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         log.warning("[INTEGRATION] Risks HTML empty or too short, skipping formatting")
     sections["risks"] = risks_html
 
-    # ========== SAFE GAMECHANGER FORMATTING ==========
+    # ========== CI-DESIGN v2.0: COMPACT GAMECHANGER ==========
     gamechanger_html = sections.get("GAMECHANGER_HTML", "")
-    log.info(f"[INTEGRATION] Gamechanger HTML before formatting: {len(gamechanger_html) if gamechanger_html else 0} chars")
+    log.info(f"[CI-DESIGN] Gamechanger HTML input: {len(gamechanger_html) if gamechanger_html else 0} chars")
+
+    # Feature-Flag für kompaktes Design (default: aktiviert)
+    use_compact_design = os.getenv("USE_COMPACT_CI_DESIGN", "1") == "1"
+
     if gamechanger_html and len(gamechanger_html) > 100:
         try:
-            original_length = len(gamechanger_html)
-            # Maßnahme 2: Enhance readability FIRST (paragraph splits, auto-bold)
-            gamechanger_html = _enhance_text_readability(gamechanger_html)
-            log.info(f"[INTEGRATION] Gamechanger HTML after readability enhancement: {len(gamechanger_html)} chars")
-            # Maßnahme 4: Convert Bisher/Neu to comparison table (v9.0)
-            gamechanger_html = _convert_gamechanger_to_comparison_table(gamechanger_html)
-            log.info(f"[INTEGRATION] Gamechanger HTML after table conversion: {len(gamechanger_html)} chars")
-            # Then apply SVG box formatting
-            gamechanger_html = _format_gamechanger_section(gamechanger_html)
-            log.info(f"[INTEGRATION] Gamechanger HTML after SVG formatting: {len(gamechanger_html)} chars (delta: {len(gamechanger_html) - original_length})")
+            if use_compact_design:
+                # NEU: Kompakte CI-Design v2.0 Darstellung
+                gamechanger_html = _generate_gamechanger_compact_from_html(
+                    raw_html=gamechanger_html,
+                    company_size=sections.get("UNTERNEHMENSGROESSE", "1"),
+                    industry=sections.get("BRANCHE", ""),
+                    hauptleistung=sections.get("HAUPTLEISTUNG", "")
+                )
+                log.info(f"[CI-DESIGN] Gamechanger compact: {len(gamechanger_html)} chars")
+            else:
+                # Fallback: Alter Flow
+                gamechanger_html = _enhance_text_readability(gamechanger_html)
+                gamechanger_html = _convert_gamechanger_to_comparison_table(gamechanger_html)
+                gamechanger_html = _format_gamechanger_section(gamechanger_html)
+                log.info(f"[CI-DESIGN] Gamechanger legacy: {len(gamechanger_html)} chars")
             sections["GAMECHANGER_HTML"] = gamechanger_html
         except Exception as e:
-            log.error(f"[INTEGRATION] Gamechanger formatting failed at integration point: {e}")
-            # Keep original - don't break pipeline
+            log.error(f"[CI-DESIGN] Gamechanger formatting failed: {e}", exc_info=True)
     else:
-        log.warning("[INTEGRATION] Gamechanger HTML empty or too short, skipping formatting")
+        log.warning("[CI-DESIGN] Gamechanger HTML empty or too short, skipping")
     sections["gamechanger"] = gamechanger_html
 
-    # ========== SAFE FÖRDERPOTENZIAL FORMATTING ==========
+    # ========== CI-DESIGN v2.0: COMPACT FUNDING ==========
     foerderpotenzial_html = sections.get("FOERDERPOTENZIAL_HTML", "")
-    log.info(f"[INTEGRATION] Förderpotenzial HTML before formatting: {len(foerderpotenzial_html) if foerderpotenzial_html else 0} chars")
+    log.info(f"[CI-DESIGN] Förderpotenzial HTML input: {len(foerderpotenzial_html) if foerderpotenzial_html else 0} chars")
+
     if foerderpotenzial_html and len(foerderpotenzial_html) > 100:
         try:
-            original_length = len(foerderpotenzial_html)
-            # Maßnahme 2: Enhance readability FIRST (paragraph splits, auto-bold)
-            foerderpotenzial_html = _enhance_text_readability(foerderpotenzial_html)
-            log.info(f"[INTEGRATION] Förderpotenzial HTML after readability enhancement: {len(foerderpotenzial_html)} chars")
-            # Then apply SVG box formatting
-            foerderpotenzial_html = _format_foerderpotenzial_section(foerderpotenzial_html)
-            log.info(f"[INTEGRATION] Förderpotenzial HTML after SVG formatting: {len(foerderpotenzial_html)} chars (delta: {len(foerderpotenzial_html) - original_length})")
+            if use_compact_design:
+                # NEU: Kompakte CI-Design v2.0 Darstellung
+                foerderpotenzial_html = _generate_funding_compact_from_html(
+                    raw_html=foerderpotenzial_html,
+                    bundesland=sections.get("BUNDESLAND", ""),
+                    company_size=sections.get("UNTERNEHMENSGROESSE", "1")
+                )
+                log.info(f"[CI-DESIGN] Funding compact: {len(foerderpotenzial_html)} chars")
+            else:
+                # Fallback: Alter Flow
+                foerderpotenzial_html = _enhance_text_readability(foerderpotenzial_html)
+                foerderpotenzial_html = _format_foerderpotenzial_section(foerderpotenzial_html)
+                log.info(f"[CI-DESIGN] Funding legacy: {len(foerderpotenzial_html)} chars")
             sections["FOERDERPOTENZIAL_HTML"] = foerderpotenzial_html
         except Exception as e:
-            log.error(f"[INTEGRATION] Förderpotenzial formatting failed at integration point: {e}")
-            # Keep original - don't break pipeline
+            log.error(f"[CI-DESIGN] Funding formatting failed: {e}", exc_info=True)
     else:
-        log.warning("[INTEGRATION] Förderpotenzial HTML empty or too short, skipping formatting")
+        log.warning("[CI-DESIGN] Förderpotenzial HTML empty or too short")
     sections["foerderpotenzial"] = foerderpotenzial_html
 
     # ========== SAFE RECOMMENDATIONS FORMATTING (v9.0 - Maßnahme 5) ==========
