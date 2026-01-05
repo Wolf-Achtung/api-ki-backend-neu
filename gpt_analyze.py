@@ -6105,8 +6105,12 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   <p>
     The current business case shows one-time investments of approximately <strong>€{capex}</strong> and ongoing costs of
     around <strong>€{opex} per month</strong>. The expected monthly relief is approximately <strong>€{einsparung}</strong>,
-    leading to an amortization period of about <strong>{payback} months</strong> and a realistic ROI of around <strong>{roi_12m}%</strong>
-    in the first year. These metrics form a solid basis for evaluating funding eligibility.
+    leading to an amortization period of about <strong>{payback} months</strong>.
+  </p>
+  <p>
+    <strong>ROI Calculation Example:</strong> At €{einsparung}/month time savings × 12 months = <strong>€{einsparung*12:,} annual savings</strong>. 
+    With an investment of €{capex:,}, this equals a Return on Investment of <strong>{roi_12m}%</strong> in the first year 
+    (Calculation: Annual savings / Investment × 100). This transparent calculation provides a solid basis for evaluating funding eligibility.
   </p>
   <h3>2. How Funding Can Improve the Business Case</h3>
   <p>
@@ -6160,7 +6164,12 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     Der aktuelle Business Case zeigt einmalige Investitionen von etwa <strong>{capex}&nbsp;€</strong> sowie laufende Kosten von
     rund <strong>{opex}&nbsp;€ pro Monat</strong>. Die erwartete monatliche Entlastung liegt bei ungefähr
     <strong>{einsparung}&nbsp;€</strong>, was zu einer Amortisationsdauer von etwa <strong>{payback} Monaten</strong> und
-    einem realistischen ROI von rund <strong>{roi_12m}&nbsp;%</strong> im ersten Jahr führt. Diese Kennzahlen bilden eine
+    einem Payback von <strong>{payback} Monaten</strong>.
+  </p>
+  <p>
+    <strong>ROI-Herleitung (Beispielrechnung):</strong> Bei €{einsparung}/Monat Zeitersparnis × 12 Monate = <strong>€{einsparung*12:,} jährliche Ersparnis</strong>. 
+    Bei einer Investition von €{capex:,} entspricht das einem Return on Investment von <strong>{roi_12m}%</strong> im ersten Jahr 
+    (Berechnung: Jahresersparnis / Investition × 100). Diese transparente Kalkulation bildet eine
     solide Grundlage für die Bewertung der Förderwürdigkeit durch öffentliche Stellen.
   </p>
   <p>
