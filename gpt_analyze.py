@@ -9734,6 +9734,49 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         answers = normalize_answers(raw_answers)
     except Exception:
         pass
+    
+    # ============================================================
+    # NUCLEAR FIX: Apply _fix_typos to ALL string fields
+    # Fix both: answers dict AND briefing object br
+    # ============================================================
+    log.info("🔥 [%s] NUCLEAR: Fixing typos in all string fields", run_id)
+    
+    # 1. Fix answers dict (used throughout the code)
+    freetext_fields = [
+        "strategische_ziele",
+        "zeitersparnis_prioritaet",
+        "hauptleistung", 
+        "ki_projekte",
+        "geschaeftsmodell_evolution",
+        "vision_3_jahre",
+        "ki_guardrails"
+    ]
+    
+    for field in freetext_fields:
+        if field in answers and isinstance(answers[field], str) and answers[field]:
+            original = answers[field]
+            fixed = _fix_typos(original)
+            if fixed != original:
+                log.info(f"  ✅ [%s] Fixed answers['{field}']: '{original[:30]}...' → '{fixed[:30]}...'", run_id)
+            answers[field] = fixed
+    
+    # 2. Also fix the briefing object br (used in some template paths)
+    if hasattr(br, 'strategische_ziele') and br.strategische_ziele:
+        br.strategische_ziele = _fix_typos(br.strategische_ziele)
+    if hasattr(br, 'zeitersparnis_prioritaet') and br.zeitersparnis_prioritaet:
+        br.zeitersparnis_prioritaet = _fix_typos(br.zeitersparnis_prioritaet)
+    if hasattr(br, 'hauptleistung') and br.hauptleistung:
+        br.hauptleistung = _fix_typos(br.hauptleistung)
+    if hasattr(br, 'ki_projekte') and br.ki_projekte:
+        br.ki_projekte = _fix_typos(br.ki_projekte)
+    if hasattr(br, 'geschaeftsmodell_evolution') and br.geschaeftsmodell_evolution:
+        br.geschaeftsmodell_evolution = _fix_typos(br.geschaeftsmodell_evolution)
+    if hasattr(br, 'vision_3_jahre') and br.vision_3_jahre:
+        br.vision_3_jahre = _fix_typos(br.vision_3_jahre)
+    if hasattr(br, 'ki_guardrails') and br.ki_guardrails:
+        br.ki_guardrails = _fix_typos(br.ki_guardrails)
+    
+    log.info("🔥 [%s] NUCLEAR: All typos fixed in answers + br object", run_id)
 
     # === STRATEGIC CONTEXT BLOCK erzeugen (für spätere Prompt-Anreicherung) ===
     # Multilingual v1: normalize language from br.lang
