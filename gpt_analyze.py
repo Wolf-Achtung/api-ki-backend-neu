@@ -6030,13 +6030,13 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     - roadmap_12m: Erweitert auf 900+ Wörter
     """
     # TEIL 3.1.1: Get lang first for language-aware fallbacks
-    briefing_lang = briefing.get("lang", "de") if isinstance(briefing, dict) else "de"
+    briefing_lang: str = str(briefing.get("lang", "de") if isinstance(briefing, dict) else "de")
 
     # Language-aware fallbacks
-    default_company = "Your Company" if briefing_lang == "en" else "Ihr Unternehmen"
-    branche = briefing.get("BRANCHE_LABEL") or briefing.get("branche", default_company)
-    size_label = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
-    hauptleistung = briefing.get("hauptleistung", briefing.get("HAUPTLEISTUNG", ""))
+    default_company: str = "Your Company" if briefing_lang == "en" else "Ihr Unternehmen"
+    branche: str = str(briefing.get("BRANCHE_LABEL") or briefing.get("branche", default_company) or "")
+    size_label: str = str(briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "") or "")
+    hauptleistung: str = str(briefing.get("hauptleistung", briefing.get("HAUPTLEISTUNG", "")) or "")
 
     # SPRINT G2.4: Generate short labels for redundancy reduction
     # PLATIN+++ v5.4: Use briefing's actual lang, not hardcoded "de"
@@ -6056,17 +6056,17 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         size_group = "kmu"
 
     # Business Case Variablen - TEIL 3.1.1: Language-aware
-    default_bundesland = "your region" if briefing_lang == "en" else "Ihrem Bundesland"
-    bundesland = briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", default_bundesland)
+    default_bundesland: str = "your region" if briefing_lang == "en" else "Ihrem Bundesland"
+    bundesland: str = str(briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", default_bundesland) or "")
     # BC-Werte mit sinnvollen Defaults (werden von calc_business_case vorher gesetzt)
-    capex = briefing.get("CAPEX_REALISTISCH_EUR") or 5000
-    opex = briefing.get("OPEX_REALISTISCH_EUR") or 150
-    einsparung = briefing.get("EINSPARUNG_MONAT_EUR") or 500
+    capex: int = int(briefing.get("CAPEX_REALISTISCH_EUR") or 5000)
+    opex: int = int(briefing.get("OPEX_REALISTISCH_EUR") or 150)
+    einsparung: int = int(briefing.get("EINSPARUNG_MONAT_EUR") or 500)
     # SPRINT G2.5: Format payback and ROI with 1 decimal place to avoid floating point issues
-    payback_raw = briefing.get("PAYBACK_MONTHS") or 10
-    payback = f"{float(payback_raw):.1f}" if isinstance(payback_raw, (int, float)) else payback_raw
-    roi_raw = briefing.get("ROI_12M") or 60
-    roi_12m = f"{float(roi_raw):.0f}" if isinstance(roi_raw, (int, float)) else roi_raw
+    payback_raw: float = float(briefing.get("PAYBACK_MONTHS") or 10)
+    payback: str = f"{float(payback_raw):.1f}" if isinstance(payback_raw, (int, float)) else str(payback_raw)
+    roi_raw: float = float(briefing.get("ROI_12M") or 60)
+    roi_12m: str = f"{float(roi_raw):.0f}" if isinstance(roi_raw, (int, float)) else str(roi_raw)
 
     # ════════════════════════════════════════════════════════════════════════════
     # 🎯 PLATIN+ FALLBACK: FOERDERPOTENZIAL (900+ Wörter)
@@ -6240,8 +6240,8 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     # 🎯 PLATIN+ FALLBACK: RISKS (800+ Wörter)
     # ════════════════════════════════════════════════════════════════════════════
     if section_key == "risks":
-        score_gov = scores.get("governance", 50)
-        score_sec = scores.get("security", 50)  # FIX: "sicherheit" → "security" (korrekter Key)
+        score_gov: int = int(scores.get("governance", 50) or 50)
+        score_sec: int = int(scores.get("security", 50) or 50)  # FIX: "sicherheit" → "security" (korrekter Key)
 
         # NOTE: English fallback removed (Content Quality Pack v1)
         # English reports now use prompts/en/risks.md exclusively
