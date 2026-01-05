@@ -5391,6 +5391,24 @@ def _generate_funding_compact_from_html(
                 'komplexitaet': 'Niedrig'
             })
 
+
+    # FIX #3: Wenn zu viele "Land" Einträge, verwende bessere Defaults
+    land_count = sum(1 for p in programme if p.get('geber') == 'Land')
+    if land_count > 2:
+        # Regex fand nichts Brauchbares, verwende kuratierte Defaults
+        programme = [
+            {'name': 'go-digital', 'geber': 'BMWK', 'eignung': 'Hoch', 'betrag': '16.500 €', 'komplexitaet': 'Niedrig'},
+            {'name': 'BAFA-Beratung', 'geber': 'Bund', 'eignung': 'Hoch', 'betrag': '3.200 €', 'komplexitaet': 'Niedrig'},
+        ]
+        if bundesland and bundesland != "":
+            programme.append({
+                'name': f'{bundesland}-Digitalbonus',
+                'geber': bundesland,
+                'eignung': 'Mittel',
+                'betrag': '10.000 €',
+                'komplexitaet': 'Mittel'
+            })
+
     # Fallback wenn keine Programme gefunden
     if not programme:
         programme = [
