@@ -164,6 +164,15 @@ from services.ai_act_module import (
     validate_ai_act_persona_compliance,
 )
 
+# ==================== PHASE 4: LIVE DATA INTEGRATION ====================
+try:
+    from services.live_data_integration import get_live_data_service, BUNDESLAND_MAPPING as LIVE_BUNDESLAND_MAPPING
+    LIVE_DATA_AVAILABLE = True
+except ImportError:
+    LIVE_DATA_AVAILABLE = False
+    log = logging.getLogger(__name__)
+    log.warning("[PHASE 4] Live data integration not available")
+
 # Und direkt nach Zeile 61, vor try:
 UTF8Handler.setup_encoding()  # Global UTF-8 fix beim Start
 try:
@@ -2959,6 +2968,90 @@ def generate_ki_tools_overview_html(branche: str = "Allgemein", company_size: st
     return html
 
 # ==================== ENDE FIX 3.5 ====================
+
+
+# ==================== PHASE 4: LIVE/STATIC HYBRID ====================
+
+def get_foerderprogramme_for_report(
+    briefing_data: dict,
+    force_live: bool = False
+) -> Tuple[List[Dict], str]:
+    """
+    Hole Förderprogramme - hybrid approach mit Live + Static.
+
+    Args:
+        briefing_data: Fragebogen-Daten
+        force_live: Erzwingt Live-Suche (für Testing)
+
+    Returns:
+        (programmes, source) - Liste + Source-Indikator
+    """
+
+    # Extract data from briefing
+    bundesland = briefing_data.get("bundesland", "Deutschland")  # Code: "be", "by", etc.
+    country = briefing_data.get("country", "DE")  # ISO: "DE", "AT", etc.
+    branche = briefing_data.get("branche", "Allgemein")
+    company_size = briefing_data.get("unternehmensgroesse", "1")  # "1", "2–10", "11–100"
+
+    # Map company size
+    size_mapping = {
+        "1": "solo",
+        "2–10": "small",
+        "11–100": "medium"
+    }
+    company_size_normalized = size_mapping.get(str(company_size), "solo")
+
+    # Check if live data is enabled and available
+    enable_live = os.getenv("ENABLE_LIVE_FOERDERPROGRAMME", "false").lower() == "true"
+
+    if (enable_live or force_live) and LIVE_DATA_AVAILABLE:
+        log.info(f"[LIVE DATA] Fetching programmes for {bundesland}, {branche}")
+
+        try:
+            service = get_live_data_service()
+            programmes = service.search_foerderprogramme(
+                bundesland=bundesland,
+                branche=branche,
+                country=country,
+                force_live=force_live
+            )
+
+            # Check if we got live results
+            live_count = sum(1 for p in programmes if p.get("source") == "live_data")
+
+            if live_count > 0:
+                log.info(f"[LIVE DATA] Got {live_count} live + {len(programmes)-live_count} static")
+                return programmes, "live_data"
+            else:
+                log.info("[LIVE DATA] Using static fallback")
+                return programmes, "static"
+
+        except Exception as e:
+            log.error(f"[LIVE DATA] Error: {e}")
+            # Fall through to static
+
+    # Static fallback (Phase 3 function)
+    log.info("[STATIC] Using static funding database")
+
+    # Map Bundesland code to name for Phase 3 function
+    if LIVE_DATA_AVAILABLE:
+        bundesland_name = LIVE_BUNDESLAND_MAPPING.get(str(bundesland).lower(), bundesland)
+    else:
+        bundesland_name = BUNDESLAND_MAPPING.get(str(bundesland).lower(), bundesland)
+
+    programmes = get_foerderprogramme_extended(
+        bundesland=bundesland_name,
+        company_size=company_size_normalized,
+        branche=branche
+    )
+
+    # Add source metadata
+    for prog in programmes:
+        prog["source"] = "static"
+
+    return programmes, "static"
+
+# ==================== ENDE PHASE 4 INTEGRATION ====================
 
 
 def _apply_pdf_inline_styles(html: str) -> str:
