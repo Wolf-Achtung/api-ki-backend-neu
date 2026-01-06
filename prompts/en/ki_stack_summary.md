@@ -114,7 +114,7 @@ Create a compact, C‑level‑appropriate **AI‑Stack Summary Card** as an HTML
 ### Structure example
 
 ```html
-<div class="ai-stack-summary">
+<div class="ki-stack-summary">
   <!-- Top‑3 Tools -->
   <div class="stack-section">
     <p class="stack-section-title"><strong>Top‑3 recommended tools</strong></p>
