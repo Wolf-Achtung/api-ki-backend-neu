@@ -561,28 +561,33 @@ class TestHelperFunctions:
         assert _normalize_size("freelancer") == "solo"
 
     def test_normalize_size_team(self) -> None:
-        """Test _normalize_size recognizes team keywords."""
+        """Test _normalize_size recognizes team/small keywords."""
         from services.benchmark_engine import _normalize_size
 
-        assert _normalize_size("team") == "team"
-        assert _normalize_size("klein") == "team"
-        assert _normalize_size("small") == "team"
+        # Phase 5A: "team" now maps to "small" (questionnaire alignment)
+        assert _normalize_size("team") == "small"
+        assert _normalize_size("klein") == "small"
+        assert _normalize_size("small") == "small"
+        assert _normalize_size("2-10") == "small"
 
     def test_normalize_size_kmu(self) -> None:
-        """Test _normalize_size recognizes kmu keywords."""
+        """Test _normalize_size recognizes kmu/medium keywords."""
         from services.benchmark_engine import _normalize_size
 
-        assert _normalize_size("kmu") == "kmu"
-        assert _normalize_size("sme") == "kmu"
-        assert _normalize_size("mittel") == "kmu"
+        # Phase 5A: "kmu" now maps to "medium" (questionnaire alignment)
+        assert _normalize_size("kmu") == "medium"
+        assert _normalize_size("sme") == "medium"
+        assert _normalize_size("mittel") == "medium"
+        assert _normalize_size("11-100") == "medium"
 
     def test_normalize_size_default(self) -> None:
-        """Test _normalize_size returns team as default."""
+        """Test _normalize_size returns small as default."""
         from services.benchmark_engine import _normalize_size
 
-        assert _normalize_size("unknown") == "team"
-        assert _normalize_size("") == "team"
-        assert _normalize_size(None) == "team"
+        # Phase 5A: default is now "small" (was "team")
+        assert _normalize_size("unknown") == "small"
+        assert _normalize_size("") == "small"
+        assert _normalize_size(None) == "small"
 
     def test_calculate_percentile_above_top_quartile(self) -> None:
         """Test percentile calculation above top quartile."""
