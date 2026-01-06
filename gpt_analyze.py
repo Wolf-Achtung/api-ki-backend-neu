@@ -5096,8 +5096,8 @@ def _generate_hero_page(
         reifegrad: Maturity level description
         potential: Potential score improvement points
     """
-    # Truncate hauptleistung
-    hl_truncated = hauptleistung[:80] + '...' if len(hauptleistung) > 80 else hauptleistung
+    # Truncate hauptleistung - use smart truncation at word boundary
+    hl_truncated = _smart_truncate(hauptleistung, 80, '...') if hauptleistung else ""
 
     # Generate Score SVG
     score_svg = _generate_score_svg(score, rating_text)
@@ -5836,6 +5836,9 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     
     # Derive size_label (human-readable label for size)
     size_label = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
+    # Phase 1B Fix: Normalize size_label for grammar
+    if size_label == "Einzelunternehmer":
+        size_label = "Einzelunternehmen"
 
     # PLATIN+++ v5.4.3: Compact Report Mode - hide engine sections for solo & klein users
     # Controllable via ENV variable PLATIN_APPENDIX_MODE:
@@ -5853,10 +5856,18 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         # Default: compact for solo+klein (v5.4.3)
         compact_report_mode = (company_size in ["solo", "team"])
 
+    # Phase 1B Fix: Normalize branche_label for capitalization
+    branche_raw = briefing.get("BRANCHE_LABEL") or briefing.get("branche", "")
+    # Capitalize first letter if all lowercase (e.g., "beratung" → "Beratung")
+    if branche_raw and branche_raw[0].islower():
+        branche_label = branche_raw.capitalize()
+    else:
+        branche_label = branche_raw
+
     base_vars.update({
         "BRANCHE": briefing.get("branche", ""),
-        "branche": briefing.get("branche", ""),
-        "BRANCHE_LABEL": briefing.get("BRANCHE_LABEL") or briefing.get("branche", ""),
+        "branche": branche_label,  # Use normalized version
+        "BRANCHE_LABEL": branche_label,  # Use normalized version
         "UNTERNEHMENSGROESSE": briefing.get("unternehmensgroesse", ""),
         "unternehmensgroesse": briefing.get("unternehmensgroesse", ""),
         "UNTERNEHMENSGROESSE_LABEL": size_label,
