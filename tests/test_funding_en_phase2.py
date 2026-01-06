@@ -32,10 +32,10 @@ from services.funding_service_en import (
 PROFILE_EN_GERMANY = {
     "lang": "en",
     "country": "Germany",
-    "unternehmensgroesse": "team",
+    "unternehmensgroesse": "small",  # Phase 5A: was "team"
     "branche": "IT & Consulting",
     "mitarbeiter": 15,
-    "bundesland": "BY",
+    "bundesland": "by",  # Phase 5B: lowercase (wie Fragebogen)
     "budget": 50000,
     "hauptleistung": "Software development",
 }
@@ -53,7 +53,7 @@ PROFILE_EN_FRANCE = {
 PROFILE_EN_ITALY = {
     "lang": "en",
     "country": "Italy",
-    "unternehmensgroesse": "kmu",
+    "unternehmensgroesse": "medium",  # Phase 5A: was "kmu"
     "branche": "Manufacturing",
     "mitarbeiter": 80,
     "budget": 200000,
@@ -63,10 +63,10 @@ PROFILE_EN_ITALY = {
 PROFILE_DE_GERMANY = {
     "lang": "de",
     "country": "Deutschland",
-    "unternehmensgroesse": "kmu",
+    "unternehmensgroesse": "medium",  # Phase 5A: was "kmu"
     "branche": "Industrie / Produktion",
     "mitarbeiter": 45,
-    "bundesland": "BY",
+    "bundesland": "by",  # Phase 5B: lowercase (wie Fragebogen)
     "budget": 75000,
     "hauptleistung": "Fertigungsautomatisierung",
 }

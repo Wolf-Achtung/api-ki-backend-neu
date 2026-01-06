@@ -2710,6 +2710,13 @@ def generate_ai_mini_policy_html(branche: str = "Allgemein", company_size: str =
             "Prozess-Dokumentation",
             "Website & Marketing-Content"
         ],
+        # Phase 5B.2: Added Gastronomie & Tourismus
+        "gastronomie & tourismus": [
+            "Speisekarten & Menübeschreibungen",
+            "Buchungsbestätigungen & Gäste-Kommunikation (anonymisiert)",
+            "Social Media Content & Marketing",
+            "Bewertungs-Antworten (ohne Gästedaten)"
+        ],
         "allgemein": [
             "E-Mail-Entwürfe (anonymisiert)",
             "Recherche & Zusammenfassungen",
@@ -2779,6 +2786,12 @@ def generate_ai_mini_policy_html(branche: str = "Allgemein", company_size: str =
             "Kundenadressen & Lieferdetails",
             "Sicherheitsrelevante Routeninformationen",
             "Automatisierte Entscheidungen ohne Review"
+        ],
+        # Phase 5B.2: Added Gastronomie & Tourismus
+        "gastronomie & tourismus": [
+            "Gästedaten & Buchungsdetails eingeben",
+            "Kreditkarten- oder Zahlungsinformationen",
+            "Automatisierte Bewertungs-Antworten ohne Prüfung"
         ],
         "allgemein": [
             "Personenbezogene Daten eingeben",
@@ -2908,6 +2921,12 @@ def generate_ki_tools_overview_html(branche: str = "Allgemein", company_size: st
             {"name": "ChatGPT Plus", "kategorie": "Universal", "preis": "20€/Monat", "use_case": "Kundenservice-Templates", "dsgvo": "⚠️ US-basiert"},
             {"name": "Notion AI", "kategorie": "Organisation", "preis": "ab 8€/Monat", "use_case": "Prozess-Docs", "dsgvo": "✅ EU-Server"},
             {"name": "DeepL Pro", "kategorie": "Übersetzung", "preis": "ab 8€/Monat", "use_case": "Internationale Kommunikation", "dsgvo": "✅ EU-Server"}
+        ],
+        # Phase 5B.2: Added Gastronomie & Tourismus
+        "gastronomie & tourismus": [
+            {"name": "ChatGPT Plus", "kategorie": "Universal", "preis": "20€/Monat", "use_case": "Speisekarten, Social Media", "dsgvo": "⚠️ US-basiert"},
+            {"name": "Canva AI", "kategorie": "Design", "preis": "ab 12€/Monat", "use_case": "Menükarten, Flyer", "dsgvo": "✅ DSGVO-konform"},
+            {"name": "DeepL Pro", "kategorie": "Übersetzung", "preis": "ab 8€/Monat", "use_case": "Mehrsprachige Speisekarten", "dsgvo": "✅ EU-Server"}
         ],
         "allgemein": [
             {"name": "ChatGPT Plus", "kategorie": "Universal", "preis": "20€/Monat", "use_case": "Texte, Recherche", "dsgvo": "⚠️ US-basiert"},

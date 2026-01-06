@@ -208,7 +208,8 @@ def get_funding_for_germany_en(answers: Dict[str, Any]) -> FundingResult:
         company_size = _normalize_company_size(answers)
         bundesland = answers.get("bundesland", answers.get("state", ""))
         if bundesland:
-            bundesland = str(bundesland).upper()[:2]  # Normalize to 2-letter code
+            # Phase 5B: Normalize to lowercase 2-letter code (questionnaire sends lowercase)
+            bundesland = str(bundesland).lower()[:2]
 
         budget_raw = answers.get("budget", answers.get("investitionsvolumen", 0))
         try:
