@@ -5017,6 +5017,71 @@
             }
         }
 
+        /* FIX 3: AI MINI-POLICY - Phase 3 Fix */
+        .ai-policy-mini {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 18px;
+            margin: 16px 0;
+            page-break-inside: avoid;
+        }
+        .ai-policy-mini h4 {
+            color: #1e40af;
+            margin: 0 0 14px 0;
+            font-size: 13pt;
+        }
+        .ai-policy-mini h5 {
+            margin: 0 0 8px 0;
+            font-size: 10.5pt;
+        }
+        .ai-policy-mini ul {
+            margin: 0;
+            padding-left: 16px;
+            font-size: 9.5pt;
+        }
+        .ai-policy-mini li {
+            margin-bottom: 3px;
+        }
+
+        /* FIX 4: KI-TOOLS OVERVIEW - Phase 3 Fix */
+        .ki-tools-overview {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 12px;
+            padding: 18px;
+            margin: 16px 0;
+            page-break-inside: avoid;
+        }
+        .ki-tools-overview h4 {
+            color: #0369a1;
+            margin: 0 0 14px 0;
+            font-size: 13pt;
+        }
+        .ki-tools-overview table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9.5pt;
+        }
+        .ki-tools-overview th {
+            padding: 8px;
+            text-align: left;
+            background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%);
+            color: white;
+        }
+        .ki-tools-overview td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #e0f2fe;
+        }
+
+        @media print {
+            .ai-policy-mini,
+            .ki-tools-overview {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+        }
+
         /* ============================================
            v13.0: ANTI-LEERSEITE (Empty Page Prevention)
            ============================================ */
