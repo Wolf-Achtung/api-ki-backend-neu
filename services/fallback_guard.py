@@ -9,7 +9,18 @@ Ensures 0 PLATIN-Fallbacks in 100% of reports:
 - No fallback triggered twice
 - Fallback content optimized with Tone Harmonizer + Coherence Engine
 
-Version: 1.0.0 (N3.7 - PLATIN++ v4.23 RC)
+Version: 1.1.0 (N3.7 - PLATIN++ v4.23 RC + Phase 5C)
+
+Phase 5C (2026-01-06): Final Polish & Optimizations
+- Enhanced docstrings with all 13 Branchen documented
+- Improved edge-case handling for company size
+- Type hints completed
+- Constants for size values
+
+Supported Company Sizes (aligned with questionnaire):
+    - "1" → "solo" (Solo-Selbstständig)
+    - "2–10" → "small" (Kleines Team)
+    - "11–100" → "medium" (KMU)
 """
 from __future__ import annotations
 
@@ -248,6 +259,17 @@ class FallbackGuardReport:
 # UTILITY FUNCTIONS
 # =============================================================================
 
+# Company size constants (Phase 5C - avoid magic strings)
+SIZE_SOLO: str = "solo"      # 1 person
+SIZE_SMALL: str = "small"    # 2-10 persons
+SIZE_MEDIUM: str = "medium"  # 11-100 persons
+
+# Frontend V2 size values (for direct matching - O(1) set lookup)
+FRONTEND_SIZE_VALUES_SOLO: Set[str] = {"1", "1 mitarbeiter"}
+FRONTEND_SIZE_VALUES_SMALL: Set[str] = {"2-10", "2–10"}
+FRONTEND_SIZE_VALUES_MEDIUM: Set[str] = {"11-100", "11–100"}
+
+
 def get_company_size(briefing: Optional[Dict[str, Any]]) -> str:
     """
     Determine company size from briefing.
@@ -256,16 +278,56 @@ def get_company_size(briefing: Optional[Dict[str, Any]]) -> str:
     - "1" → "solo" (Solo-Selbstständig/Freiberuflich)
     - "2–10" → "small" (Kleines Team)
     - "11–100" → "medium" (KMU)
-    """
-    if not briefing:
-        return "medium"  # Default (was "kmu")
 
-    size_raw = briefing.get("unternehmensgroesse", "").lower()
-    if "solo" in size_raw or "freiberuf" in size_raw or size_raw == "1":
-        return "solo"
-    elif "small" in size_raw or "klein" in size_raw or "team" in size_raw or "2-10" in size_raw or "2–10" in size_raw:
-        return "small"  # was "team"
-    return "medium"  # was "kmu" - covers kmu, mittel, 11-100, etc.
+    **Frontend V2 (current, since 2026-01-06):**
+    - Direct string matching for exact values
+
+    **Legacy Format (pre-2026-01-06):**
+    - Keyword-based fallback (for old data)
+
+    Args:
+        briefing: Briefing dictionary from questionnaire.
+                  Should contain 'unternehmensgroesse' key.
+
+    Returns:
+        str: Normalized size ("solo", "small", or "medium")
+
+    Examples:
+        >>> get_company_size({"unternehmensgroesse": "1"})
+        'solo'
+        >>> get_company_size({"unternehmensgroesse": "2–10"})
+        'small'
+
+    Notes:
+        - Supports both dash types: "–" (En-Dash) and "-" (Hyphen)
+        - Default fallback: "medium" for this service (fallback-focused)
+    """
+    # Edge case: None or empty briefing
+    if not briefing:
+        return SIZE_MEDIUM  # Default
+
+    size_raw = str(briefing.get("unternehmensgroesse", "")).lower().strip()
+
+    # Edge case: empty size value
+    if not size_raw:
+        return SIZE_MEDIUM
+
+    # --- Frontend V2 (fast path with set lookup - O(1)) ---
+    if size_raw in FRONTEND_SIZE_VALUES_SOLO:
+        return SIZE_SOLO
+    if size_raw in FRONTEND_SIZE_VALUES_SMALL:
+        return SIZE_SMALL
+    if size_raw in FRONTEND_SIZE_VALUES_MEDIUM:
+        return SIZE_MEDIUM
+
+    # --- Legacy keyword matching (fallback) ---
+    if any(kw in size_raw for kw in ("solo", "freiberuf", "einzelunternehm")):
+        return SIZE_SOLO
+    if any(kw in size_raw for kw in ("small", "klein", "team")):
+        return SIZE_SMALL
+
+    # Default: medium (covers kmu, mittel, 11-100, and any unknown values)
+    return SIZE_MEDIUM
 
 
 def get_branch_density(briefing: Optional[Dict[str, Any]]) -> float:
