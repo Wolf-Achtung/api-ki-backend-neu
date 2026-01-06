@@ -20,7 +20,7 @@
 
         @page {
             size: A4;
-            margin: 20mm 18mm 22mm 18mm;
+            margin: 15mm 15mm 18mm 15mm; /* Phase 2 Fix: Kompakter für weniger Seiten */
             @bottom-right {
                 content: "Seite " counter(page) " von " counter(pages);
                 font-size: 8pt;
@@ -250,9 +250,27 @@
         .quick-win-card-new,
         .hero-metric-card,
         .roadmap-phase,
+        .phase-card,
+        .roi-herleitung,
+        .roi-explanation-box,
+        .foerder-card,
+        .funding-card,
+        .colored-box,
+        .ai-policy-box,
+        .starter-template,
+        .datenlucken-box,
+        .recommendation-card,
+        .business-case-card,
+        .content-card,
         .section {
             page-break-inside: avoid;
             break-inside: avoid;
+        }
+        /* Erlaube Umbruch VOR neuen Haupt-Sections */
+        .roadmap-section,
+        .business-case-section,
+        .handlungsempfehlungen-section {
+            page-break-before: auto;
         }
         /* ================================================
            TAGS (PLATIN++ V5.2)
