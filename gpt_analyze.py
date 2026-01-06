@@ -2785,8 +2785,10 @@ def _format_roadmap_as_phase_cards(html_content: str) -> str:
     """
     Convert roadmap bullet lists into compact phase cards.
 
-    FIX 1: Transforms <h3>Phase X: Title</h3><ul>...</ul> into
+    FIX 1: Transforms various Phase heading formats into
     compact card layout for better PDF readability.
+
+    Phase 2B Enhancement: Extended pattern matching for more formats.
     """
     if not html_content or len(html_content) < 200:
         return html_content
@@ -2796,9 +2798,8 @@ def _format_roadmap_as_phase_cards(html_content: str) -> str:
     output = html_content
     cards_created = 0
 
-    # Pattern to match Phase headings with their content
-    # Matches: <h3>Phase 0: Title (Woche X-Y)</h3> followed by content until next <h3> or </section>
-    phase_pattern = re.compile(
+    # Pattern 1: <h3>Phase X: Title</h3> format
+    phase_pattern_h3 = re.compile(
         r'<h3>\s*(Phase\s*\d+[^<]*)</h3>\s*'  # Phase heading
         r'(<p>.*?</p>)?\s*'  # Optional goal paragraph
         r'(<ul>.*?</ul>)\s*'  # Bullet list
@@ -2806,7 +2807,23 @@ def _format_roadmap_as_phase_cards(html_content: str) -> str:
         re.DOTALL | re.IGNORECASE
     )
 
-    def replace_phase(match):
+    # Pattern 2: <p><strong>Phase X:</strong>...</p> format
+    phase_pattern_strong = re.compile(
+        r'<p>\s*<strong>\s*(Phase\s*\d+[^<]*)</strong>\s*'  # Phase in strong
+        r'([^<]*(?:<[^/].*?)?)</p>\s*'  # Description
+        r'(<ul>.*?</ul>)?',  # Optional bullet list
+        re.DOTALL | re.IGNORECASE
+    )
+
+    # Pattern 3: <h4>Phase X:</h4> format
+    phase_pattern_h4 = re.compile(
+        r'<h4>\s*(Phase\s*\d+[^<]*)</h4>\s*'
+        r'(<p>.*?</p>)?\s*'
+        r'(<ul>.*?</ul>)?',
+        re.DOTALL | re.IGNORECASE
+    )
+
+    def replace_phase_h3(match):
         nonlocal cards_created
 
         phase_title = match.group(1).strip()
@@ -2841,7 +2858,35 @@ def _format_roadmap_as_phase_cards(html_content: str) -> str:
         cards_created += 1
         return card_html
 
-    output = phase_pattern.sub(replace_phase, output)
+    def replace_phase_strong(match):
+        nonlocal cards_created
+
+        phase_title = match.group(1).strip()
+        description = match.group(2).strip() if match.group(2) else ""
+        bullet_list = match.group(3) or ""
+
+        phase_num_match = re.search(r'Phase\s*(\d+)', phase_title)
+        phase_num = phase_num_match.group(1) if phase_num_match else str(cards_created)
+
+        # Clean description
+        description = re.sub(r'<[^>]+>', '', description).strip()
+
+        card_html = f'''
+<div class="roadmap-phase-card">
+    <h4><span class="phase-badge">P{phase_num}</span> {phase_title}</h4>
+    {f'<p style="margin: 0 0 8px 0; font-size: 10pt; color: #4b5563;">{description}</p>' if description else ''}
+    {bullet_list}
+</div>
+'''
+        cards_created += 1
+        return card_html
+
+    # Try all patterns
+    output = phase_pattern_h3.sub(replace_phase_h3, output)
+    if cards_created == 0:
+        output = phase_pattern_strong.sub(replace_phase_strong, output)
+    if cards_created == 0:
+        output = phase_pattern_h4.sub(replace_phase_h3, output)
 
     if cards_created > 0:
         log.info("[ROADMAP-PHASE-CARDS] Created %d phase cards", cards_created)
@@ -4248,24 +4293,20 @@ def _format_recommendations_as_cards(html_content: str) -> str:
     """
     Convert recommendations numbered list into compact 2-column card layout.
 
-    Version 9.0 - Maßnahme 5: Kompakte Cards statt langer Listen.
+    Version 9.1 - Phase 2B Fix: Erweiterte Patterns für verschiedene HTML-Formate.
     """
     if not html_content or len(html_content) < 100:
         return html_content
 
-    log.info("[REC-CARDS-V9] Formatting recommendations as cards (length: %d chars)", len(html_content))
+    log.info("[REC-CARDS-V9.1] Formatting recommendations as cards (length: %d chars)", len(html_content))
 
     output = html_content
+    cards_data = []
 
-    # Find numbered recommendation items (1. Empfehlung X, 2. Empfehlung Y, etc.)
-    # Pattern: <strong>N. Empfehlung N:</strong> or similar structures
-    rec_pattern = r'(\d+)\.\s*Empfehlung\s*\d*:?\s*([^<]+?)(?:<|$)'
-
-    # Also look for structured recommendations with sub-fields
-    # <li>...<strong>Schwerpunkt:</strong>...<strong>Maßnahme:</strong>...</li>
-    structured_pattern = r'<li[^>]*>(.*?)</li>'
-
-    # Find all numbered sections that look like recommendations
+    # =========================================================================
+    # PATTERN 1: Numbered "N. Empfehlung:" format with fields
+    # Format: <strong>N. Empfehlung: [Title]</strong> Schwerpunkt: ... Maßnahme: ...
+    # =========================================================================
     numbered_sections = re.findall(
         r'(\d+)\.\s*Empfehlung[^:]*:([^<]*?)(?:Schwerpunkt|Maßnahme|Nutzen|Aufwand)',
         output,
@@ -4273,19 +4314,14 @@ def _format_recommendations_as_cards(html_content: str) -> str:
     )
 
     if numbered_sections and len(numbered_sections) >= 3:
-        log.info("[REC-CARDS-V9] Found %d recommendation sections", len(numbered_sections))
+        log.info("[REC-CARDS-V9.1] Pattern 1 matched: %d numbered sections", len(numbered_sections))
 
-        # Extract key info per recommendation
-        cards_data = []
-        for num, title in numbered_sections[:5]:  # Max 5 recommendations
-            # Find the full section for this recommendation
+        for num, title in numbered_sections[:5]:
             section_pattern = rf'{num}\.\s*Empfehlung[^:]*:.*?(?=\d+\.\s*Empfehlung|\Z)'
             section_match = re.search(section_pattern, output, re.DOTALL | re.IGNORECASE)
 
             if section_match:
                 section_text = section_match.group(0)
-
-                # Extract fields
                 schwerpunkt = ""
                 massnahme = ""
                 zeitrahmen = ""
@@ -4310,18 +4346,84 @@ def _format_recommendations_as_cards(html_content: str) -> str:
                     'zeitrahmen': zeitrahmen
                 })
 
-        if cards_data:
-            # Build cards grid
-            cards_html = '''
+    # =========================================================================
+    # PATTERN 2: <ol class="recommendations-muss"><li><strong>...</strong> format
+    # From template: MUSS-Maßnahmen as ordered list
+    # =========================================================================
+    if not cards_data:
+        muss_pattern = re.compile(
+            r'<li[^>]*>\s*<strong>([^<]+)</strong>\s*[–-]\s*([^<]+)',
+            re.DOTALL | re.IGNORECASE
+        )
+        muss_matches = muss_pattern.findall(output)
+
+        if muss_matches and len(muss_matches) >= 2:
+            log.info("[REC-CARDS-V9.1] Pattern 2 matched: %d list items", len(muss_matches))
+            for i, (title, desc) in enumerate(muss_matches[:5], 1):
+                cards_data.append({
+                    'num': str(i),
+                    'title': title.strip()[:60],
+                    'schwerpunkt': desc.strip()[:80],
+                    'massnahme': '',
+                    'zeitrahmen': ''
+                })
+
+    # =========================================================================
+    # PATTERN 3: <h3>MUSS</h3> or <h3>N.</h3> followed by content
+    # =========================================================================
+    if not cards_data:
+        h3_pattern = re.compile(
+            r'<h3[^>]*>(\d+\.?|MUSS[^<]*)</h3>\s*(?:<[^>]+>)*([^<]+)',
+            re.DOTALL | re.IGNORECASE
+        )
+        h3_matches = h3_pattern.findall(output)
+
+        if h3_matches and len(h3_matches) >= 2:
+            log.info("[REC-CARDS-V9.1] Pattern 3 matched: %d h3 sections", len(h3_matches))
+            for i, (num_raw, content) in enumerate(h3_matches[:5], 1):
+                num = re.sub(r'\D', '', num_raw) or str(i)
+                cards_data.append({
+                    'num': num,
+                    'title': content.strip()[:60],
+                    'schwerpunkt': '',
+                    'massnahme': '',
+                    'zeitrahmen': ''
+                })
+
+    # =========================================================================
+    # PATTERN 4: Generic <strong>N.</strong> or <strong>N. Title</strong>
+    # =========================================================================
+    if not cards_data:
+        strong_num_pattern = re.compile(
+            r'<strong>(\d+)\.\s*([^<]*)</strong>\s*[–-]?\s*([^<]*?)(?=<strong>\d+\.|<h[23]|</ol|</ul|$)',
+            re.DOTALL | re.IGNORECASE
+        )
+        strong_matches = strong_num_pattern.findall(output)
+
+        if strong_matches and len(strong_matches) >= 2:
+            log.info("[REC-CARDS-V9.1] Pattern 4 matched: %d strong items", len(strong_matches))
+            for num, title, desc in strong_matches[:5]:
+                cards_data.append({
+                    'num': num,
+                    'title': (title.strip() or desc.strip())[:60],
+                    'schwerpunkt': desc.strip()[:80] if title.strip() else '',
+                    'massnahme': '',
+                    'zeitrahmen': ''
+                })
+
+    # =========================================================================
+    # BUILD CARDS HTML if we have data
+    # =========================================================================
+    if cards_data:
+        cards_html = '''
 <div class="rec-cards-container" style="margin: 20px 0;">
 <div class="rec-cards-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
 '''
+        colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444']
 
-            colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444']
-
-            for i, card in enumerate(cards_data):
-                color = colors[i % len(colors)]
-                card_html = f'''
+        for i, card in enumerate(cards_data):
+            color = colors[i % len(colors)]
+            card_html = f'''
 <div class="rec-card" style="background: white; border: 1px solid #e5e7eb; border-left: 4px solid {color}; border-radius: 8px; padding: 14px; break-inside: avoid;">
     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
         <span style="background: {color}; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85em;">{card['num']}</span>
@@ -4332,21 +4434,39 @@ def _format_recommendations_as_cards(html_content: str) -> str:
     {f'<div style="color: #6b7280; font-size: 0.75em; margin-top: 6px;">⏱️ {card["zeitrahmen"]}</div>' if card['zeitrahmen'] else ''}
 </div>
 '''
-                cards_html += card_html
+            cards_html += card_html
 
-            cards_html += '''
+        cards_html += '''
 </div>
 </div>
 '''
 
-            # Insert cards at the beginning of recommendations section, before the detailed list
-            # Look for <h2>Handlungsempfehlungen or similar
-            insert_pattern = r'(<h2[^>]*>Handlungsempfehlungen[^<]*</h2>\s*<p[^>]*>[^<]+</p>)'
-            insert_match = re.search(insert_pattern, output, re.DOTALL | re.IGNORECASE)
+        # Insert cards - try multiple patterns for flexibility
+        insert_patterns = [
+            # Pattern A: h2 followed by p
+            r'(<h2[^>]*>Handlungsempfehlungen[^<]*</h2>\s*<p[^>]*>[^<]+</p>)',
+            # Pattern B: h2 only
+            r'(<h2[^>]*>Handlungsempfehlungen[^<]*</h2>)',
+            # Pattern C: section with class
+            r'(<section[^>]*class="[^"]*recommendations[^"]*"[^>]*>)',
+        ]
 
+        inserted = False
+        for pattern in insert_patterns:
+            insert_match = re.search(pattern, output, re.DOTALL | re.IGNORECASE)
             if insert_match:
                 output = output.replace(insert_match.group(0), insert_match.group(0) + cards_html)
-                log.info("[REC-CARDS-V9] Inserted %d recommendation cards", len(cards_data))
+                log.info("[REC-CARDS-V9.1] Inserted %d recommendation cards using pattern", len(cards_data))
+                inserted = True
+                break
+
+        if not inserted:
+            # Fallback: prepend to content
+            output = cards_html + output
+            log.info("[REC-CARDS-V9.1] Prepended %d recommendation cards (no insert point found)", len(cards_data))
+
+    else:
+        log.warning("[REC-CARDS-V9.1] No recommendation patterns matched - keeping original")
 
     return output
 
