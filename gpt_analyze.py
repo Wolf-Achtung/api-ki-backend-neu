@@ -2377,6 +2377,248 @@ def get_foerderprogramme_extended(bundesland: str, company_size: str, branche: s
 # ==================== ENDE FIX 3.1 ====================
 
 
+# ==================== FIX 3.2: STARTER-TEMPLATES MIT ANLEITUNG ====================
+
+def generate_starter_templates_html() -> str:
+    """
+    Generiert verständliche Starter-Templates mit klarer Anleitung.
+    Includes: Nutzungsanleitung, 3 Templates, Copy-Paste ready.
+    """
+
+    html = '''
+<div class="templates-section">
+    <h2>📋 Starter-Templates – So nutzen Sie diese</h2>
+
+    <div class="templates-intro">
+        <h3>3 Schritte zur Nutzung:</h3>
+        <ol>
+            <li><strong>Kopieren:</strong> Template unten anklicken & kopieren (Strg+C / Cmd+C)</li>
+            <li><strong>Anpassen:</strong> Platzhalter [IN GROSSBUCHSTABEN] mit Ihren Daten ersetzen</li>
+            <li><strong>Anwenden:</strong> In ChatGPT, Claude oder Ihrem KI-Tool einfügen</li>
+        </ol>
+        <div class="time-savings">⏱️ Zeitersparnis pro Einsatz: 15-30 Minuten</div>
+    </div>
+
+    <!-- Template 1: KI-Auswertung -->
+    <details class="template-card">
+        <summary>
+            <span class="icon">🤖</span>
+            <strong>Template 1: KI-Auswertung Fragebogen</strong>
+            <span class="use-case">Für: Fragebogen-Analyse</span>
+        </summary>
+        <div class="template-content">
+            <p><strong>Wofür:</strong> Ausgefüllten Fragebogen strukturiert analysieren lassen</p>
+            <p><strong>Zeitersparnis:</strong> ~20 Minuten</p>
+            <pre class="code-block">**Rolle:** Du bist KI-Berater für KMU mit Fokus auf praktische Umsetzung.
+
+**Kontext:** Ich habe einen ausgefüllten KI-Readiness-Fragebogen von einem Kunden.
+
+**Aufgabe:** Analysiere die Antworten und identifiziere:
+1. Die 3-5 wichtigsten Potenziale für KI-Einsatz
+2. Die 3 größten Risiken/Hürden
+3. Die 3 wichtigsten nächsten Schritte (SMART formuliert)
+
+**Format:**
+- Bullet Points
+- Konkrete Beispiele statt Buzzwords
+- Begründung für jede Empfehlung
+
+**Sprache:** Deutsch, klar, ohne Marketing-Sprech
+
+**Fragebogen-Daten:**
+[HIER FRAGEBOGEN EINFÜGEN]</pre>
+        </div>
+    </details>
+
+    <!-- Template 2: Qualitäts-Checkliste -->
+    <details class="template-card">
+        <summary>
+            <span class="icon">✅</span>
+            <strong>Template 2: Qualitäts-Checkliste für KI-Outputs</strong>
+            <span class="use-case">Für: Nach jeder KI-Auswertung</span>
+        </summary>
+        <div class="template-content">
+            <p><strong>Wofür:</strong> Sicherstellen, dass KI-Outputs professionell sind</p>
+            <h4>Checkliste (ausdrucken & abhaken):</h4>
+            <ul class="checklist">
+                <li>☐ <strong>Inhaltliche Richtigkeit:</strong> Spiegelt die Analyse die tatsächlichen Fragebogen-Antworten wider?</li>
+                <li>☐ <strong>Umsetzbarkeit:</strong> Sind die Vorschläge konkret und machbar?</li>
+                <li>☐ <strong>DSGVO-Konformität:</strong> Keine personenbezogenen Daten im Output?</li>
+                <li>☐ <strong>Keine Garantien:</strong> Keine Gesundheits-/Finanzprognosen oder Rechtsberatung?</li>
+                <li>☐ <strong>Verständlichkeit:</strong> Sprache klar & frei von Buzzwords?</li>
+                <li>☐ <strong>Quellenangabe:</strong> Bei faktischen Behauptungen Quelle genannt?</li>
+            </ul>
+            <div class="warning-box">
+                <strong>⚠️ Bei 2+ Fehlern:</strong> KI-Output überarbeiten lassen oder selbst anpassen!
+            </div>
+        </div>
+    </details>
+
+    <!-- Template 3: Projekt-Erfolgslog -->
+    <details class="template-card">
+        <summary>
+            <span class="icon">📊</span>
+            <strong>Template 3: Mini-Erfolgslog für Portfolio</strong>
+            <span class="use-case">Für: Portfolio & Marketing</span>
+        </summary>
+        <div class="template-content">
+            <p><strong>Wofür:</strong> Erfolgreiche Projekte dokumentieren für Akquise & Referenzen</p>
+            <pre class="code-block">## Projekt: [KUNDE/BRANCHE]
+**Datum:** [TT.MM.JJJJ]
+
+**Ausgangssituation:**
+[WAS WOLLTE DER KUNDE? WELCHES PROBLEM?]
+
+**Eingesetzte Methode:**
+- KI-Readiness-Assessment
+- [WEITERE METHODEN/TOOLS]
+
+**Haupterkenntnisse:**
+1. [ERKENNTNIS 1]
+2. [ERKENNTNIS 2]
+3. [ERKENNTNIS 3]
+
+**Messbare Ergebnisse:**
+- Zeitersparnis: [X] Stunden/Monat
+- Kostenreduktion: [X] €/Monat
+- Prozessverbesserung: [X]%
+
+**Kunde-Zitat (optional):**
+"[FEEDBACK VOM KUNDEN]"
+
+---
+*Erstellt mit: KI-Sicherheit.jetzt*</pre>
+        </div>
+    </details>
+
+    <div class="templates-footer">
+        <p><strong>💡 Tipp:</strong> Speichern Sie diese Templates in Ihrem Texteditor oder Notion für schnellen Zugriff!</p>
+    </div>
+</div>
+'''
+
+    return html
+
+# ==================== ENDE FIX 3.2 ====================
+
+
+# ==================== FIX 3.4: DATENLÜCKEN TRANSPARENT ERKLÄREN ====================
+
+def generate_data_gaps_explanation_html(verfuegbare_daten: dict) -> str:
+    """
+    Erklärt transparent, welche Daten verfügbar sind und welche fehlen.
+    Hilft User zu verstehen, wo Analyse-Grenzen liegen.
+
+    Args:
+        verfuegbare_daten: Dict mit Flags für verfügbare Datenkategorien
+            z.B. {"has_company_profile": True, "has_process_data": False}
+    """
+
+    # Standard-Struktur für verfügbare Daten
+    data_categories = {
+        "unternehmensprofil": {
+            "label": "Unternehmensprofil",
+            "verfuegbar": verfuegbare_daten.get("has_company_profile", True),
+            "impact": "Niedrig",
+            "was_fehlt": "Genaue Mitarbeiterzahl, Umsatz",
+            "folge": "Benchmarks sind grober"
+        },
+        "prozesse": {
+            "label": "Prozessdaten",
+            "verfuegbar": verfuegbare_daten.get("has_process_data", False),
+            "impact": "Mittel",
+            "was_fehlt": "Detaillierte Prozesszeiten",
+            "folge": "ROI-Schätzungen sind konservativer"
+        },
+        "it_infrastruktur": {
+            "label": "IT-Infrastruktur",
+            "verfuegbar": verfuegbare_daten.get("has_it_data", True),
+            "impact": "Niedrig",
+            "was_fehlt": "Exakte Tool-Versionen",
+            "folge": "Empfehlungen sind generischer"
+        },
+        "datenschutz": {
+            "label": "Datenschutz-Status",
+            "verfuegbar": verfuegbare_daten.get("has_dsgvo_data", True),
+            "impact": "Hoch",
+            "was_fehlt": "-",
+            "folge": "Vollständige Risikoanalyse möglich"
+        }
+    }
+
+    html = '''
+<div class="data-gaps-section">
+    <h2>📊 Datengrundlage & Analysegrenzen</h2>
+
+    <div class="transparency-intro">
+        <p><strong>Transparenz ist uns wichtig:</strong> Diese Tabelle zeigt, welche Daten für Ihre
+        Analyse verfügbar waren und wo Grenzen liegen.</p>
+    </div>
+
+    <table class="data-gaps-table">
+        <thead>
+            <tr>
+                <th>Datenkategorie</th>
+                <th>Status</th>
+                <th>Impact auf Analyse</th>
+                <th>Was bedeutet das?</th>
+            </tr>
+        </thead>
+        <tbody>
+'''
+
+    for key, cat in data_categories.items():
+        status_icon = "✅" if cat["verfuegbar"] else "⚠️"
+        status_text = "Verfügbar" if cat["verfuegbar"] else "Limitiert"
+        impact_class = f"impact-{str(cat['impact']).lower()}"
+
+        erklaerung = "Volle Detailtiefe" if cat["verfuegbar"] else str(cat["folge"])
+
+        html += f'''
+            <tr>
+                <td><strong>{cat["label"]}</strong></td>
+                <td><span class="status-badge">{status_icon} {status_text}</span></td>
+                <td><span class="impact-badge {impact_class}">{cat["impact"]}</span></td>
+                <td>{erklaerung}</td>
+            </tr>
+'''
+
+    html += '''
+        </tbody>
+    </table>
+
+    <div class="data-gaps-legend">
+        <h4>Was bedeutet der Impact?</h4>
+        <ul>
+            <li><span class="impact-badge impact-niedrig">Niedrig</span> = Analyse bleibt sehr aussagekräftig</li>
+            <li><span class="impact-badge impact-mittel">Mittel</span> = Zahlen sind konservativer geschätzt</li>
+            <li><span class="impact-badge impact-hoch">Hoch</span> = Wichtige Daten fehlen, Empfehlungen generischer</li>
+        </ul>
+    </div>
+
+    <div class="data-gaps-action">
+        <h4>💡 Möchten Sie präzisere Ergebnisse?</h4>
+        <p>Für ein Follow-Up-Assessment können Sie folgende Daten nachreichen:</p>
+        <ul>
+'''
+
+    # Zeige nur fehlende Kategorien
+    for key, cat in data_categories.items():
+        if not cat["verfuegbar"] and str(cat["was_fehlt"]) != "-":
+            html += f'            <li>{cat["was_fehlt"]} → Verbessert {cat["label"]}-Analyse</li>\n'
+
+    html += '''
+        </ul>
+        <p><strong>Kontakt:</strong> wolf@ki-sicherheit.jetzt</p>
+    </div>
+</div>
+'''
+
+    return html
+
+# ==================== ENDE FIX 3.4 ====================
+
+
 # ==================== FIX 3.3: AI MINI-POLICY (12 BRANCHEN) ====================
 
 def generate_ai_mini_policy_html(branche: str = "Allgemein", company_size: str = "solo") -> str:
