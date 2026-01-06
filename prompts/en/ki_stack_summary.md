@@ -27,7 +27,7 @@ Create a compact, C‑level‑appropriate **AI‑Stack Summary Card** as an HTML
 
 ### Content structure (5 fixed building blocks)
 
-1. **Top‑3 tools** (score‑based from the Tools Engine 3.0)
+1. **Top 3 tools** (score-based from the Tools Engine 3.0)
    - The three most relevant tools from the available context.
    - For each tool provide:
      - **Name**
@@ -77,7 +77,7 @@ Create a compact, C‑level‑appropriate **AI‑Stack Summary Card** as an HTML
 
 **Maximum total length:** 350 words (all building blocks combined).
 
-### HTML requirements & design (G21 PLATIN++)
+### HTML requirements & design (G21 PLATIN++)
 
 **Available CSS classes:**
 - `.pair-card` – card for individual tools or funding programmes
@@ -174,7 +174,7 @@ Create a compact, C‑level‑appropriate **AI‑Stack Summary Card** as an HTML
 ### Output format
 
 Return **only** the finished HTML block with the five building blocks:
-1. Top‑3 tools
+1. Top 3 tools
 2. Top‑2 funding programmes
 3. Starter kit short path
 4. Business case KPIs
