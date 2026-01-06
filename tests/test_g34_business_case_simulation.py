@@ -463,9 +463,13 @@ class TestHelperFunctions:
 
         assert _determine_size_label({"unternehmensgroesse": "solo"}) == "solo"
         assert _determine_size_label({"unternehmensgroesse": "freiberufler"}) == "solo"
-        assert _determine_size_label({"unternehmensgroesse": "team"}) == "team"
-        assert _determine_size_label({"unternehmensgroesse": "kmu"}) == "kmu"
-        assert _determine_size_label(None) == "team"  # Default
+        # Phase 5A: "team" now maps to "small" (questionnaire alignment)
+        assert _determine_size_label({"unternehmensgroesse": "team"}) == "small"
+        assert _determine_size_label({"unternehmensgroesse": "klein"}) == "small"
+        # Phase 5A: "kmu" now maps to "medium" (questionnaire alignment)
+        assert _determine_size_label({"unternehmensgroesse": "kmu"}) == "medium"
+        assert _determine_size_label({"unternehmensgroesse": "mittel"}) == "medium"
+        assert _determine_size_label(None) == "small"  # Default is now "small"
 
 
 # =============================================================================
