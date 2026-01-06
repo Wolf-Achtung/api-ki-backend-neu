@@ -724,15 +724,20 @@ class TestCompanySize:
     def test_company_size_enum(self):
         """CompanySize enum should be defined."""
         from services.performance_layer_v5 import CompanySize
+        # Phase 5A: Only solo/small/medium exist (LARGE/ENTERPRISE removed)
         assert CompanySize.SOLO.value == "solo"
-        assert CompanySize.ENTERPRISE.value == "enterprise"
+        assert CompanySize.SMALL.value == "small"
+        assert CompanySize.MEDIUM.value == "medium"
 
     def test_determine_company_size(self):
         """Should determine company size correctly."""
         from services.performance_layer_v5 import determine_company_size, CompanySize
-        assert determine_company_size(3) == CompanySize.SOLO
+        # Phase 5A: Aligned with questionnaire (1=solo, 2-10=small, 11+=medium)
+        assert determine_company_size(1) == CompanySize.SOLO
+        assert determine_company_size(3) == CompanySize.SMALL  # was SOLO
+        assert determine_company_size(10) == CompanySize.SMALL
         assert determine_company_size(100) == CompanySize.MEDIUM
-        assert determine_company_size(2000) == CompanySize.ENTERPRISE
+        assert determine_company_size(2000) == CompanySize.MEDIUM  # was ENTERPRISE
 
 
 class TestComplexitySettings:
@@ -742,8 +747,10 @@ class TestComplexitySettings:
         """COMPLEXITY_SETTINGS should be defined."""
         from services.performance_layer_v5 import COMPLEXITY_SETTINGS
         assert isinstance(COMPLEXITY_SETTINGS, dict)
+        # Phase 5A: Only solo/small/medium (enterprise removed)
         assert "solo" in COMPLEXITY_SETTINGS
-        assert "enterprise" in COMPLEXITY_SETTINGS
+        assert "small" in COMPLEXITY_SETTINGS
+        assert "medium" in COMPLEXITY_SETTINGS
 
     def test_get_complexity_settings(self, sample_briefing):
         """Should get complexity settings from briefing."""
