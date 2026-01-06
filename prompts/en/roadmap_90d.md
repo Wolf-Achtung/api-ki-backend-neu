@@ -531,7 +531,7 @@ GUARDRAILS: Consider guardrails from the strategic context.
 
   {% endif %}
 
-  <h3>Risk mitigation during rollout</h3>
+  <h3>Risk Mitigation during rollout</h3>
   <p>
     {% if COMPANY_SIZE == "solo" %}
     Start with tasks of low criticality to gain experience. Always maintain a manual review step for important outputs. Document early error sources to iteratively improve your prompts and refine quality over time.
