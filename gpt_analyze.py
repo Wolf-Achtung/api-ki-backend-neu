@@ -2331,7 +2331,7 @@ def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse
     # Footer
     html += f"""
 <p class="small muted" style="text-align: center; color: #6b7280; font-size: 12px; margin-top: 24px;">
-    <span class="icon">◎</span> v8.0: Individualisiert für {html_module.escape(branche)} · {html_module.escape(groesse)} · WeasyPrint-optimiert
+    <span class="icon">◎</span> Individualisiert für {html_module.escape(branche)} · {html_module.escape(groesse)}
 </p>
 """
 
@@ -7922,7 +7922,7 @@ Für jede Kategorie: 2-3 Standard-Prompts'''
 
     <div class="quick-wins-footer">
         {target_icon}
-        <span>v8.0: Individualisiert für {branche} · {size_label} · Basierend auf Ihren Goldnuggets</span>
+        <span>Individualisiert für {branche} · {size_label}</span>
     </div>
 </div>'''
 
