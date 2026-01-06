@@ -81,7 +81,7 @@ DEFAULT_EFFORT_HOURS = 40.0
 
 # Constraints
 MIN_ROI = -100.0  # -100% = total loss
-MAX_ROI = 1000.0  # 1000% = 10x return
+MAX_ROI = 200.0   # 200% = realistisch & konservativ (Phase 1 Fix)
 MIN_PAYBACK_MONTHS = 0.5  # Half a month minimum
 MAX_PAYBACK_MONTHS = 60.0  # 5 years maximum
 
