@@ -1916,6 +1916,7 @@ def _clean_html(s: str) -> str:
 # -------------------- Typo Correction & Smart Truncation ----------------
 # Common German typos that slip through user input
 TYPO_FIXES = {
+    # Bestehende Typos
     "Enwicklung": "Entwicklung",
     "Entwickung": "Entwicklung",
     "Enwicklungs": "Entwicklungs",
@@ -1931,6 +1932,17 @@ TYPO_FIXES = {
     "Kundenaquise": "Kundenakquise",
     "Akquise": "Akquise",
     "Prozessoptimeirung": "Prozessoptimierung",
+    # Phase 1 Fix: Weitere häufige Typos
+    "Froschung": "Forschung",
+    "Bearbeitungseit": "Bearbeitungszeit",
+    "Bearbeitungzeit": "Bearbeitungszeit",
+    "Analye": "Analyse",
+    "Anaylse": "Analyse",
+    "Strategie-Entwicklung": "Strategieentwicklung",
+    "Prozess-Optimierung": "Prozessoptimierung",
+    "ROI-Berechung": "ROI-Berechnung",
+    "Effizienz-Steigerung": "Effizienzsteigerung",
+    "Kosten-Reduktion": "Kostenreduktion",
 }
 
 
@@ -7656,7 +7668,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
             qw_items.append(_build_qw_card(
                 icon_name="target",
                 title=f"{offering_label or 'Workflow'}-Automatisierung",
-                time_savings="8-12h/M",
+                time_savings="5-7h/M",
                 context_label="Ihre Priorität:",
                 context_value=_smart_truncate(zeitersparnis, 120, '...'),
                 solution=f"Diese Automatisierung adressiert direkt Ihren zeitintensivsten Bereich und schafft sofort Entlastung bei {hauptleistung or branche}.",
@@ -7680,7 +7692,7 @@ Format: Schritt-für-Schritt-Anleitung mit Zeitschätzung.'''
             qw_items.append(_build_qw_card(
                 icon_name="target",
                 title="Kernprozess-Automatisierung",
-                time_savings="8-12h/M",
+                time_savings="4-6h/M",
                 context_label="Fokus:",
                 context_value=hauptleistung or branche,
                 solution=f"Identifizieren und automatisieren Sie den zeitintensivsten Prozess in {hauptleistung or branche}.",
@@ -7704,7 +7716,7 @@ Format: Schritt-für-Schritt-Anleitung mit Zeitschätzung.'''
             qw_items.append(_build_qw_card(
                 icon_name="document",
                 title=f"Templates für {offering_label or _smart_truncate(hauptleistung, 30, '')}",
-                time_savings="6-10h/M",
+                time_savings="3-5h/M",
                 context_label="Ihre Hauptleistung:",
                 context_value=_smart_truncate(hauptleistung, 100, '...') + context_hint,
                 solution="Standardisierte Vorlagen steigern Qualität und Geschwindigkeit bei wiederkehrenden Aufgaben.",
@@ -7728,7 +7740,7 @@ Ziel: 70% Zeitersparnis bei gleichbleibender Qualität.'''
             qw_items.append(_build_qw_card(
                 icon_name="document",
                 title="Dokumenten-Templates standardisieren",
-                time_savings="6-10h/M",
+                time_savings="3-4h/M",
                 context_label="Branche:",
                 context_value=branche,
                 solution=f"Wiederkehrende Dokumente in {branche} mit KI-Unterstützung beschleunigen.",
@@ -7786,7 +7798,7 @@ Für jeden Typ: Fixe Struktur + KI-generierbare Abschnitte identifizieren.'''
             qw_items.append(_build_qw_card(
                 icon_name="rocket",
                 title="Quick Start für Ihr KI-Projekt",
-                time_savings="5-8h/M",
+                time_savings="2-4h/M",
                 context_label="Ihr Projekt:",
                 context_value=_smart_truncate(ki_projekte, 120, '...'),
                 solution="Ihr laufendes Projekt kann sofort von strukturiertem Testing profitieren.",
@@ -7805,7 +7817,7 @@ Für jeden Typ: Fixe Struktur + KI-generierbare Abschnitte identifizieren.'''
             qw_items.append(_build_qw_card(
                 icon_name="clock",
                 title="Meeting-Protokolle automatisieren",
-                time_savings="4-6h/M",
+                time_savings="2-3h/M",
                 context_label="Anwendungsfall:",
                 context_value="Wiederkehrende Meetings dokumentieren",
                 solution="Automatische Transkription spart Zeit und verbessert Nachvollziehbarkeit.",
@@ -7828,7 +7840,7 @@ Format: Übersichtliche Bullet-Liste"'''
             qw_items.append(_build_qw_card(
                 icon_name="lightbulb",
                 title="Persönliche Prompt-Bibliothek",
-                time_savings="3-5h/M",
+                time_savings="2-3h/M",
                 context_label="Für:",
                 context_value="Solo-Selbstständige & Freiberufler",
                 solution="10-15 bewährte Prompts decken 80% Ihrer Alltagsaufgaben ab.",
@@ -7849,7 +7861,7 @@ Für jede Kategorie: 2-3 Standard-Prompts'''
             qw_items.append(_build_qw_card(
                 icon_name="users",
                 title="Team Prompt-Repository",
-                time_savings="5-8h/M pro Person",
+                time_savings="3-5h/M pro Person",
                 context_label="Für:",
                 context_value="Teams & kleine Unternehmen",
                 solution="Geteiltes Wissen multipliziert die Produktivität aller Teammitglieder.",
@@ -7868,7 +7880,7 @@ Für jede Kategorie: 2-3 Standard-Prompts'''
             qw_items.append(_build_qw_card(
                 icon_name="star",
                 title="KI-Wissenstransfer etablieren",
-                time_savings="10-15h/M gesamt",
+                time_savings="6-10h/M gesamt",
                 context_label="Für:",
                 context_value="Unternehmen mit mehreren Abteilungen",
                 solution="Systematischer Erfahrungsaustausch beschleunigt die Lernkurve im gesamten Unternehmen.",
