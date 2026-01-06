@@ -5082,6 +5082,204 @@
             }
         }
 
+        /* ==================== FIX 3.2 + 3.4: CSS ADDITIONS ==================== */
+
+        /* Templates Section */
+        .templates-section {
+            margin: 2rem 0;
+            page-break-inside: avoid;
+        }
+
+        .templates-intro {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0 2rem 0;
+        }
+
+        .templates-intro h3 {
+            color: white;
+            margin-top: 0;
+        }
+
+        .templates-intro ol {
+            margin: 1rem 0;
+        }
+
+        .time-savings {
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .template-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: white;
+            page-break-inside: avoid;
+        }
+
+        .template-card summary {
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .template-card .icon {
+            font-size: 1.5rem;
+        }
+
+        .template-card .use-case {
+            margin-left: auto;
+            font-size: 0.85rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        .template-content {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #abb2bf;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Courier New', 'Monaco', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 0.5rem 0;
+        }
+
+        .checklist {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .checklist li {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .templates-footer {
+            background: #f8f9fa;
+            padding: 1rem;
+            margin-top: 2rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        /* Data Gaps Section */
+        .data-gaps-section {
+            margin: 2rem 0;
+            page-break-inside: avoid;
+        }
+
+        .transparency-intro {
+            background: #e8eaf6;
+            border-left: 4px solid #5c6bc0;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .data-gaps-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+        }
+
+        .data-gaps-table th, .data-gaps-table td {
+            border: 1px solid #ddd;
+            padding: 1rem;
+            text-align: left;
+        }
+
+        .data-gaps-table th {
+            background: #5c6bc0;
+            color: white;
+            font-weight: bold;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .impact-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .impact-niedrig {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .impact-mittel {
+            background: #fff8e1;
+            color: #f57c00;
+        }
+
+        .impact-hoch {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .data-gaps-legend {
+            background: #f8f9fa;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 6px;
+        }
+
+        .data-gaps-action {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 6px;
+        }
+
+        /* Print optimization for templates and data gaps */
+        @media print {
+            .template-card, .data-gaps-section, .templates-section {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* ==================== END FIX 3.2 + 3.4 CSS ==================== */
+
         /* ============================================
            v13.0: ANTI-LEERSEITE (Empty Page Prevention)
            ============================================ */
