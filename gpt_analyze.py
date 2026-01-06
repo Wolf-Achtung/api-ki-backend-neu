@@ -2361,7 +2361,7 @@ def get_foerderprogramme_extended(bundesland: str, company_size: str, branche: s
             continue
 
         # Bundesland passt? (Direct match oder "alle")
-        prog_bundesland = prog.get("bundesland", "").lower()
+        prog_bundesland = str(prog.get("bundesland", "")).lower()
         if prog_bundesland not in ["alle", bundesland_name.lower(), bundesland.lower()]:
             continue
 
@@ -2369,7 +2369,7 @@ def get_foerderprogramme_extended(bundesland: str, company_size: str, branche: s
 
     # Sortieren nach Eignung (Hoch > Mittel > Niedrig)
     eignung_rank = {"Hoch": 3, "Mittel": 2, "Niedrig": 1}
-    relevant.sort(key=lambda x: eignung_rank.get(x.get("eignung", "Niedrig"), 0), reverse=True)
+    relevant.sort(key=lambda x: eignung_rank.get(str(x.get("eignung", "Niedrig")), 0), reverse=True)
 
     # Top 5 zurückgeben
     return relevant[:5]
