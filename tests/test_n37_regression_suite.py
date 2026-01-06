@@ -620,9 +620,10 @@ class TestFallbackConfiguration:
         """FALLBACK_THRESHOLDS should be defined."""
         from services.fallback_guard import FALLBACK_THRESHOLDS
 
+        # Phase 5A: keys are now solo/small/medium (was solo/team/kmu)
         assert "solo" in FALLBACK_THRESHOLDS
-        assert "team" in FALLBACK_THRESHOLDS
-        assert "kmu" in FALLBACK_THRESHOLDS
+        assert "small" in FALLBACK_THRESHOLDS  # was "team"
+        assert "medium" in FALLBACK_THRESHOLDS  # was "kmu"
 
     def test_branch_density(self):
         """BRANCH_DENSITY should be defined."""
@@ -703,7 +704,8 @@ class TestFallbackGuardClass:
 
         guard = FallbackGuard()
 
-        assert guard.size == "kmu"
+        # Phase 5A: default is now "medium" (was "kmu")
+        assert guard.size == "medium"
         assert guard.density == 1.0
 
     def test_guard_with_briefing(self):
