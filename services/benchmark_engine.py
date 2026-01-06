@@ -237,8 +237,8 @@ INDUSTRY_BENCHMARKS: Dict[str, Dict[str, Dict[str, float]]] = {
 # Size multipliers for benchmarks
 SIZE_BENCHMARK_MULTIPLIERS = {
     "solo": {"kpi": 0.85, "tools": 0.75, "risk": 1.1, "automation": 0.7, "funding": 0.6, "strategy": 0.75},
-    "team": {"kpi": 1.0, "tools": 1.0, "risk": 1.0, "automation": 1.0, "funding": 1.0, "strategy": 1.0},
-    "kmu": {"kpi": 1.15, "tools": 1.1, "risk": 0.9, "automation": 1.15, "funding": 1.2, "strategy": 1.15},
+    "small": {"kpi": 1.0, "tools": 1.0, "risk": 1.0, "automation": 1.0, "funding": 1.0, "strategy": 1.0},  # was "team"
+    "medium": {"kpi": 1.15, "tools": 1.1, "risk": 0.9, "automation": 1.15, "funding": 1.2, "strategy": 1.15},  # was "kmu"
 }
 
 # Radar categories for visualization
@@ -1089,7 +1089,7 @@ def _generate_summary(
             "D": "unter dem Durchschnitt",
             "F": "verbesserungswürdig"
         }
-        size_labels = {"solo": "Einzelunternehmer", "team": "Team", "kmu": "KMU"}
+        size_labels = {"solo": "Einzelunternehmen", "small": "Kleinunternehmen", "medium": "Mittelstand (KMU)"}
 
         return (
             f"Ihre KI-Wettbewerbsposition ist {grade_labels.get(grade, 'solide')} (Note {grade}). "
@@ -1106,7 +1106,7 @@ def _generate_summary(
             "D": "below average",
             "F": "needs improvement"
         }
-        size_labels = {"solo": "solo entrepreneur", "team": "team", "kmu": "SME"}
+        size_labels = {"solo": "solo entrepreneur", "small": "small business", "medium": "SME"}
 
         return (
             f"Your AI competitive position is {grade_labels.get(grade, 'solid')} (grade {grade}). "
@@ -1235,7 +1235,7 @@ def generate_benchmark_report(
     # Extract context from briefing
     briefing = briefing or {}
     branch = str(briefing.get("branche", briefing.get("industry", "default"))).lower()
-    size_label = _normalize_size(briefing.get("unternehmensgroesse", briefing.get("company_size", "team")))
+    size_label = _normalize_size(briefing.get("unternehmensgroesse", briefing.get("company_size", "small")))
 
     log.info("[G37] Generating benchmark report for branch=%s, size=%s", branch, size_label)
 
@@ -1243,7 +1243,7 @@ def generate_benchmark_report(
     llm_data = _parse_llm_benchmark_response(llm_response)
 
     # Get size multipliers
-    size_mult = SIZE_BENCHMARK_MULTIPLIERS.get(size_label, SIZE_BENCHMARK_MULTIPLIERS["team"])
+    size_mult = SIZE_BENCHMARK_MULTIPLIERS.get(size_label, SIZE_BENCHMARK_MULTIPLIERS["small"])
 
     # Generate positions for each domain
     positions: List[BenchmarkPosition] = []
@@ -1411,29 +1411,55 @@ def generate_benchmark_report(
 
 
 def _normalize_size(size: Any) -> str:
-    """Normalize company size to standard labels."""
+    """
+    Normalize company size to standard values.
+
+    Maps questionnaire values to backend size keys:
+    - "1" → "solo" (Solo-Selbstständig/Freiberuflich)
+    - "2–10" → "small" (Kleines Team)
+    - "11–100" → "medium" (KMU)
+
+    Args:
+        size: Company size from questionnaire or briefing data
+
+    Returns:
+        Normalized size: "solo", "small", or "medium"
+    """
     if not size:
-        return "team"
+        return "small"  # Default for unknown
 
     size_str = str(size).lower().strip()
 
-    solo_keywords = ["solo", "einzelunternehmer", "freelancer", "selbststaendig", "1", "one"]
-    team_keywords = ["team", "klein", "small", "startup", "2-10", "5"]
-    kmu_keywords = ["kmu", "sme", "mittel", "medium", "10-50", "50", "enterprise"]
+    # Check exact matches first for numeric ranges
+    # Medium: 11-100 employees
+    if size_str in ["11-100", "11–100", "11-100 mitarbeiter", "11–100 mitarbeiter"]:
+        return "medium"
+    # Small: 2-10 employees
+    if size_str in ["2-10", "2–10", "2-10 mitarbeiter", "2–10 mitarbeiter"]:
+        return "small"
+    # Solo: exactly 1
+    if size_str in ["1", "1 mitarbeiter"]:
+        return "solo"
 
+    # Medium keywords (11-100 Personen) - check before small
+    medium_keywords = ["medium", "mittel", "sme", "kmu"]
+    for kw in medium_keywords:
+        if kw in size_str:
+            return "medium"  # was "kmu"
+
+    # Small keywords (2-10 Personen)
+    small_keywords = ["small", "klein", "startup", "team"]
+    for kw in small_keywords:
+        if kw in size_str:
+            return "small"  # was "team"
+
+    # Solo keywords (1 Person) - check last to avoid false matches
+    solo_keywords = ["solo", "einzelunternehmer", "freelancer", "selbststaendig", "freiberuf", "one", "1 person"]
     for kw in solo_keywords:
         if kw in size_str:
             return "solo"
 
-    for kw in kmu_keywords:
-        if kw in size_str:
-            return "kmu"
-
-    for kw in team_keywords:
-        if kw in size_str:
-            return "team"
-
-    return "team"
+    return "small"  # Default fallback (was "team")
 
 
 # =============================================================================

@@ -94,6 +94,7 @@ def get_fallback_count(run_id: str) -> int:
 MAX_EXTEND_ROUNDS = 4
 
 # Fallback thresholds by company size
+# Keys must match: "solo", "small", "medium" (from questionnaire)
 FALLBACK_THRESHOLDS: Dict[str, Dict[str, int]] = {
     "solo": {
         "min_words": 50,
@@ -101,13 +102,13 @@ FALLBACK_THRESHOLDS: Dict[str, Dict[str, int]] = {
         "extend_target": 80,
         "quality_threshold": 60,
     },
-    "team": {
+    "small": {  # was "team"
         "min_words": 80,
         "max_retries": 4,
         "extend_target": 120,
         "quality_threshold": 70,
     },
-    "kmu": {
+    "medium": {  # was "kmu"
         "min_words": 100,
         "max_retries": 5,
         "extend_target": 150,
@@ -248,16 +249,23 @@ class FallbackGuardReport:
 # =============================================================================
 
 def get_company_size(briefing: Optional[Dict[str, Any]]) -> str:
-    """Determine company size from briefing."""
+    """
+    Determine company size from briefing.
+
+    Maps questionnaire values to standard size keys:
+    - "1" → "solo" (Solo-Selbstständig/Freiberuflich)
+    - "2–10" → "small" (Kleines Team)
+    - "11–100" → "medium" (KMU)
+    """
     if not briefing:
-        return "kmu"
+        return "medium"  # Default (was "kmu")
 
     size_raw = briefing.get("unternehmensgroesse", "").lower()
-    if "solo" in size_raw or "freiberuf" in size_raw:
+    if "solo" in size_raw or "freiberuf" in size_raw or size_raw == "1":
         return "solo"
-    elif "team" in size_raw or "klein" in size_raw:
-        return "team"
-    return "kmu"
+    elif "small" in size_raw or "klein" in size_raw or "team" in size_raw or "2-10" in size_raw or "2–10" in size_raw:
+        return "small"  # was "team"
+    return "medium"  # was "kmu" - covers kmu, mittel, 11-100, etc.
 
 
 def get_branch_density(briefing: Optional[Dict[str, Any]]) -> float:
@@ -503,7 +511,7 @@ class FallbackGuard:
         self.briefing = briefing
         self.size = get_company_size(briefing)
         self.density = get_branch_density(briefing)
-        self.thresholds = FALLBACK_THRESHOLDS.get(self.size, FALLBACK_THRESHOLDS["kmu"])
+        self.thresholds = FALLBACK_THRESHOLDS.get(self.size, FALLBACK_THRESHOLDS["medium"])
         self.triggered_sections: Set[str] = set()
         self.report = FallbackGuardReport()
 
