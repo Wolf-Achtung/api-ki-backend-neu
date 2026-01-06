@@ -1,8 +1,14 @@
 {
   "_meta": {
-    "version": "1.0.0",
-    "description": "Multilingual v1 - Centralized UI labels for KI-Status-Report",
-    "supported_languages": ["de", "en", "fr", "es", "it"],
+    "version": "1.1.0",
+    "description": "Multilingual v1.1 - Extended with 46 template UI keys",
+    "supported_languages": [
+      "de",
+      "en",
+      "fr",
+      "es",
+      "it"
+    ],
     "sources": [
       "templates/pdf_template.html (TR dict)",
       "services/prompt_enhancer.py (context block labels)",
@@ -10,184 +16,40 @@
       "services/html_sanitizer.py (locale replacement needles)"
     ]
   },
-
-  "company": {
-    "de": "Unternehmen",
-    "en": "Company",
-    "fr": "Entreprise",
-    "es": "Empresa",
-    "it": "Azienda"
+  "action_plan": {
+    "de": "Maßnahmenplan",
+    "en": "Action plan",
+    "fr": "Plan d'action",
+    "es": "Plan de acción",
+    "it": "Piano d'azione"
   },
-  "company_label_colon": {
-    "de": "Unternehmen:",
-    "en": "Company:",
-    "fr": "Entreprise:",
-    "es": "Empresa:",
-    "it": "Azienda:"
+  "actions": {
+    "de": "Maßnahmen",
+    "en": "Actions",
+    "fr": "Actions",
+    "es": "Acciones",
+    "it": "Azioni"
   },
-  "your_company": {
-    "de": "Ihr Unternehmen",
-    "en": "Your Company",
-    "fr": "Votre entreprise",
-    "es": "Su empresa",
-    "it": "La sua azienda"
+  "appendix_intro": {
+    "de": "Die folgenden detaillierten Analysen wurden für Solo-Reports in den Appendix verschoben, um den Kernbericht kompakt zu halten. Alle Inhalte sind vollständig und können bei Bedarf herangezogen werden.",
+    "en": "The following detailed analyses have been moved to the appendix for solo reports to keep the main report concise. All content is complete and can be referenced as needed.",
+    "fr": "Les analyses détaillées suivantes ont été déplacées vers l'annexe pour les rapports solo afin de garder le rapport principal concis. Tout le contenu est complet et peut être consulté au besoin.",
+    "es": "Los siguientes análisis detallados se han trasladado al apéndice para informes individuales para mantener el informe principal conciso. Todo el contenido está completo y puede consultarse según sea necesario.",
+    "it": "Le seguenti analisi dettagliate sono state spostate nell'appendice per i report singoli per mantenere il report principale conciso. Tutti i contenuti sono completi e possono essere consultati secondo necessità."
   },
-  "company_size": {
-    "de": "Unternehmensgröße",
-    "en": "Company size",
-    "fr": "Taille de l'entreprise",
-    "es": "Tamaño de la empresa",
-    "it": "Dimensione aziendale"
+  "appendix_subtitle": {
+    "de": "Erweiterte Analysen für die Vertiefung",
+    "en": "Extended analyses for deeper insights",
+    "fr": "Analyses approfondies pour des insights plus profonds",
+    "es": "Análisis extendidos para insights más profundos",
+    "it": "Analisi estese per approfondimenti"
   },
-  "company_size_label_colon": {
-    "de": "Unternehmensgröße:",
-    "en": "Company size:",
-    "fr": "Taille de l'entreprise:",
-    "es": "Tamaño de la empresa:",
-    "it": "Dimensione aziendale:"
-  },
-  "company_profile": {
-    "de": "Unternehmensprofil",
-    "en": "Company profile",
-    "fr": "Profil de l'entreprise",
-    "es": "Perfil de la empresa",
-    "it": "Profilo aziendale"
-  },
-
-  "industry": {
-    "de": "Branche",
-    "en": "Industry",
-    "fr": "Secteur",
-    "es": "Sector",
-    "it": "Settore"
-  },
-  "industries": {
-    "de": "Branchen",
-    "en": "Industries",
-    "fr": "Secteurs",
-    "es": "Sectores",
-    "it": "Settori"
-  },
-  "industry_label_colon": {
-    "de": "Branche:",
-    "en": "Industry:",
-    "fr": "Secteur:",
-    "es": "Sector:",
-    "it": "Settore:"
-  },
-  "your_industry": {
-    "de": "Ihre Branche",
-    "en": "Your industry",
-    "fr": "Votre secteur",
-    "es": "Su sector",
-    "it": "Il suo settore"
-  },
-  "industry_specific": {
-    "de": "Branchenspezifisch",
-    "en": "Industry-specific",
-    "fr": "Spécifique au secteur",
-    "es": "Específico del sector",
-    "it": "Specifico del settore"
-  },
-  "industry_optimized": {
-    "de": "Branchenoptimiert",
-    "en": "Industry-optimized",
-    "fr": "Optimisé pour le secteur",
-    "es": "Optimizado para el sector",
-    "it": "Ottimizzato per il settore"
-  },
-  "industry_study": {
-    "de": "Branchenstudie",
-    "en": "Industry study",
-    "fr": "Étude sectorielle",
-    "es": "Estudio sectorial",
-    "it": "Studio di settore"
-  },
-  "industry_median": {
-    "de": "Branchenmedian",
-    "en": "Industry median",
-    "fr": "Médiane du secteur",
-    "es": "Mediana del sector",
-    "it": "Mediana del settore"
-  },
-  "industry_comparison": {
-    "de": "Branchenvergleich",
-    "en": "Industry comparison",
-    "fr": "Comparaison sectorielle",
-    "es": "Comparación sectorial",
-    "it": "Confronto settoriale"
-  },
-
-  "deep_dive_for": {
-    "de": "Tiefenanalyse für",
-    "en": "Deep dive for",
-    "fr": "Analyse approfondie pour",
-    "es": "Análisis profundo para",
-    "it": "Analisi approfondita per"
-  },
-  "industry_deep_dive": {
-    "de": "Branchen-Deep-Dive",
-    "en": "Industry Deep Dive",
-    "fr": "Analyse approfondie du secteur",
-    "es": "Análisis profundo del sector",
-    "it": "Analisi approfondita del settore"
-  },
-  "industry_benchmark_title": {
-    "de": "Branchenvergleich & Wettbewerbsposition",
-    "en": "Industry comparison & competitive position",
-    "fr": "Comparaison sectorielle & position concurrentielle",
-    "es": "Comparación sectorial y posición competitiva",
-    "it": "Confronto settoriale e posizione competitiva"
-  },
-  "industry_benchmark_kicker": {
-    "de": "KI-Reife • Branchenmedian • SWOT",
-    "en": "AI maturity • Industry median • SWOT",
-    "fr": "Maturité IA • Médiane du secteur • SWOT",
-    "es": "Madurez IA • Mediana del sector • SWOT",
-    "it": "Maturità IA • Mediana del settore • SWOT"
-  },
-  "industry_funding_title": {
-    "de": "Branchen-Förderpotenzial",
-    "en": "Industry funding potential",
-    "fr": "Potentiel de financement du secteur",
-    "es": "Potencial de financiación del sector",
-    "it": "Potenziale di finanziamento del settore"
-  },
-  "industry_funding_sub": {
-    "de": "Förderprogramme optimiert für Ihre Branche",
-    "en": "Funding programs optimized for your industry",
-    "fr": "Programmes de financement optimisés pour votre secteur",
-    "es": "Programas de financiación optimizados para su sector",
-    "it": "Programmi di finanziamento ottimizzati per il suo settore"
-  },
-  "industry_tools_title": {
-    "de": "Branchen-Tool-Alignment",
-    "en": "Industry tool alignment",
-    "fr": "Alignement des outils du secteur",
-    "es": "Alineación de herramientas del sector",
-    "it": "Allineamento degli strumenti del settore"
-  },
-  "industry_tools_sub": {
-    "de": "KI-Tools mit höchster Branchenrelevanz",
-    "en": "AI tools with the highest industry relevance",
-    "fr": "Outils IA les plus pertinents pour le secteur",
-    "es": "Herramientas IA con mayor relevancia sectorial",
-    "it": "Strumenti IA più rilevanti per il settore"
-  },
-
-  "recommendations": {
-    "de": "Handlungsempfehlungen",
-    "en": "Recommendations",
-    "fr": "Recommandations",
-    "es": "Recomendaciones",
-    "it": "Raccomandazioni"
-  },
-  "recommendation": {
-    "de": "Empfehlung",
-    "en": "Recommendation",
-    "fr": "Recommandation",
-    "es": "Recomendación",
-    "it": "Raccomandazione"
+  "appendix_title": {
+    "de": "Detailanalysen & Engines",
+    "en": "Detailed Analyses & Engines",
+    "fr": "Analyses détaillées & Moteurs",
+    "es": "Análisis detallados & Motores",
+    "it": "Analisi dettagliate & Motori"
   },
   "assessment": {
     "de": "Bewertung",
@@ -203,320 +65,12 @@
     "es": "Evaluaciones",
     "it": "Valutazioni"
   },
-  "internal_review_ratings": {
-    "de": "Interne Review-Bewertungen",
-    "en": "Internal review ratings",
-    "fr": "Évaluations de révision interne",
-    "es": "Calificaciones de revisión interna",
-    "it": "Valutazioni di revisione interna"
-  },
-  "maturity_level": {
-    "de": "Reifegrad",
-    "en": "Maturity level",
-    "fr": "Niveau de maturité",
-    "es": "Nivel de madurez",
-    "it": "Livello di maturità"
-  },
-  "kpis": {
-    "de": "Kennzahlen",
-    "en": "KPIs",
-    "fr": "KPIs",
-    "es": "KPIs",
-    "it": "KPI"
-  },
-  "risks": {
-    "de": "Risiken",
-    "en": "Risks",
-    "fr": "Risques",
-    "es": "Riesgos",
-    "it": "Rischi"
-  },
-  "actions": {
-    "de": "Maßnahmen",
-    "en": "Actions",
-    "fr": "Actions",
-    "es": "Acciones",
-    "it": "Azioni"
-  },
-  "action_plan": {
-    "de": "Maßnahmenplan",
-    "en": "Action plan",
-    "fr": "Plan d'action",
-    "es": "Plan de acción",
-    "it": "Piano d'azione"
-  },
-  "summary": {
-    "de": "Zusammenfassung",
-    "en": "Summary",
-    "fr": "Résumé",
-    "es": "Resumen",
-    "it": "Riepilogo"
-  },
-  "summaries": {
-    "de": "Zusammenfassungen",
-    "en": "Summaries",
-    "fr": "Résumés",
-    "es": "Resúmenes",
-    "it": "Riepiloghi"
-  },
-
-  "note": {
-    "de": "Hinweis",
-    "en": "Note",
-    "fr": "Note",
-    "es": "Nota",
-    "it": "Nota"
-  },
-  "gdpr": {
-    "de": "DSGVO",
-    "en": "GDPR",
-    "fr": "RGPD",
-    "es": "RGPD",
-    "it": "GDPR"
-  },
-  "data_protection": {
-    "de": "Datenschutz",
-    "en": "Data protection",
-    "fr": "Protection des données",
-    "es": "Protección de datos",
-    "it": "Protezione dei dati"
-  },
-
-  "missing_info": {
-    "de": "Diese Informationen fehlen für eine vollständige Compliance-Bewertung:",
-    "en": "This information is missing for a complete compliance assessment:",
-    "fr": "Ces informations manquent pour une évaluation de conformité complète:",
-    "es": "Esta información falta para una evaluación de cumplimiento completa:",
-    "it": "Queste informazioni mancano per una valutazione di conformità completa:"
-  },
-  "feedback_cta": {
-    "de": "Helfen Sie uns, diesen Report noch besser zu machen. Ihre Rückmeldung hilft anderen Unternehmen.",
-    "en": "Help us improve this report. Your feedback helps other companies.",
-    "fr": "Aidez-nous à améliorer ce rapport. Vos commentaires aident d'autres entreprises.",
-    "es": "Ayúdenos a mejorar este informe. Sus comentarios ayudan a otras empresas.",
-    "it": "Aiutaci a migliorare questo report. Il tuo feedback aiuta altre aziende."
-  },
-
-  "industry_context_title": {
-    "de": "📋 Branchen-Context:",
-    "en": "📋 Industry Context:",
-    "fr": "📋 Contexte du secteur:",
-    "es": "📋 Contexto del sector:",
-    "it": "📋 Contesto del settore:"
-  },
-  "size_context_title": {
-    "de": "🏢 Größen-Context:",
-    "en": "🏢 Size Context:",
-    "fr": "🏢 Contexte de taille:",
-    "es": "🏢 Contexto de tamaño:",
-    "it": "🏢 Contesto dimensionale:"
-  },
-  "unknown": {
-    "de": "Unbekannt",
-    "en": "Unknown",
-    "fr": "Inconnu",
-    "es": "Desconocido",
-    "it": "Sconosciuto"
-  },
-  "no_data": {
-    "de": "(Keine Angaben)",
-    "en": "(No data available)",
-    "fr": "(Aucune donnée disponible)",
-    "es": "(Sin datos disponibles)",
-    "it": "(Nessun dato disponibile)"
-  },
-  "typical_workflows": {
-    "de": "Typische Workflows:",
-    "en": "Typical Workflows:",
-    "fr": "Workflows typiques:",
-    "es": "Flujos de trabajo típicos:",
-    "it": "Workflow tipici:"
-  },
-  "pain_points": {
-    "de": "Häufigste Pain Points:",
-    "en": "Common Pain Points:",
-    "fr": "Points de douleur courants:",
-    "es": "Puntos de dolor comunes:",
-    "it": "Punti critici comuni:"
-  },
-  "typical_tools": {
-    "de": "Typische Tools im Einsatz:",
-    "en": "Typical Tools in Use:",
-    "fr": "Outils typiques utilisés:",
-    "es": "Herramientas típicas en uso:",
-    "it": "Strumenti tipici in uso:"
-  },
-  "characteristics": {
-    "de": "Charakteristika:",
-    "en": "Characteristics:",
-    "fr": "Caractéristiques:",
-    "es": "Características:",
-    "it": "Caratteristiche:"
-  },
-  "employees": {
-    "de": "Mitarbeiter:",
-    "en": "Employees:",
-    "fr": "Employés:",
-    "es": "Empleados:",
-    "it": "Dipendenti:"
-  },
-  "per_month": {
-    "de": "/Monat",
-    "en": "/month",
-    "fr": "/mois",
-    "es": "/mes",
-    "it": "/mese"
-  },
-  "focus_priorities": {
-    "de": "Fokus-Prioritäten:",
-    "en": "Focus Priorities:",
-    "fr": "Priorités de focus:",
-    "es": "Prioridades de enfoque:",
-    "it": "Priorità di focus:"
-  },
-  "not_recommended_for_size": {
-    "de": "In Ihrer aktuellen Größe nicht sinnvoll:",
-    "en": "Not recommended for your current size:",
-    "fr": "Non recommandé pour votre taille actuelle:",
-    "es": "No recomendado para su tamaño actual:",
-    "it": "Non raccomandato per la vostra dimensione attuale:"
-  },
-
-  "strategic_market_analysis": {
-    "de": "Strategische Markt- und Wettbewerbsanalyse",
-    "en": "Strategic market and competitive analysis",
-    "fr": "Analyse stratégique du marché et de la concurrence",
-    "es": "Análisis estratégico de mercado y competencia",
-    "it": "Analisi strategica di mercato e concorrenza"
-  },
-  "market_trend_dynamics": {
-    "de": "1. Markt- & Trenddynamik",
-    "en": "1. Market & Trend Dynamics",
-    "fr": "1. Dynamique du marché et des tendances",
-    "es": "1. Dinámica de mercado y tendencias",
-    "it": "1. Dinamiche di mercato e tendenze"
-  },
-
-  "size_solo": {
-    "de": "Einzelunternehmer",
-    "en": "Solo business",
-    "fr": "Entreprise individuelle",
-    "es": "Negocio individual",
-    "it": "Impresa individuale"
-  },
-  "size_team": {
-    "de": "Teams",
-    "en": "Team",
-    "fr": "Équipe",
-    "es": "Equipo",
-    "it": "Team"
-  },
-  "size_kmu": {
-    "de": "KMU",
-    "en": "SME",
-    "fr": "PME",
-    "es": "PYME",
-    "it": "PMI"
-  },
-
-  "report_title": {
-    "de": "KI-Status-Report",
-    "en": "AI Status Report",
-    "fr": "Rapport de statut IA",
-    "es": "Informe de estado IA",
-    "it": "Report sullo stato dell'IA"
-  },
-  "report_date": {
-    "de": "Reportdatum",
-    "en": "Report date",
-    "fr": "Date du rapport",
-    "es": "Fecha del informe",
-    "it": "Data del report"
-  },
-  "overview": {
-    "de": "Überblick",
-    "en": "Overview",
-    "fr": "Aperçu",
-    "es": "Resumen",
-    "it": "Panoramica"
-  },
-  "next_steps": {
-    "de": "Nächste Schritte",
-    "en": "Next steps",
-    "fr": "Prochaines étapes",
-    "es": "Próximos pasos",
-    "it": "Prossimi passi"
-  },
-  "main_goal": {
-    "de": "Hauptziel",
-    "en": "Main goal",
-    "fr": "Objectif principal",
-    "es": "Objetivo principal",
-    "it": "Obiettivo principale"
-  },
-  "brief_summary": {
-    "de": "Kurzfazit",
-    "en": "Brief summary",
-    "fr": "Résumé bref",
-    "es": "Resumen breve",
-    "it": "Breve riepilogo"
-  },
-
-  "savings": {
-    "de": "Einsparungen",
-    "en": "Savings",
-    "fr": "Économies",
-    "es": "Ahorros",
-    "it": "Risparmi"
-  },
-  "conservative": {
-    "de": "Konservativ",
-    "en": "Conservative",
-    "fr": "Conservateur",
-    "es": "Conservador",
-    "it": "Conservativo"
-  },
-  "realistic": {
-    "de": "Realistisch",
-    "en": "Realistic",
-    "fr": "Réaliste",
-    "es": "Realista",
-    "it": "Realistico"
-  },
-  "optimistic": {
-    "de": "Optimistisch",
-    "en": "Optimistic",
-    "fr": "Optimiste",
-    "es": "Optimista",
-    "it": "Ottimistico"
-  },
-  "time_horizon": {
-    "de": "Zeithorizont",
-    "en": "Time horizon",
-    "fr": "Horizon temporel",
-    "es": "Horizonte temporal",
-    "it": "Orizzonte temporale"
-  },
-  "priority": {
-    "de": "Priorität",
-    "en": "Priority",
-    "fr": "Priorité",
-    "es": "Prioridad",
-    "it": "Priorità"
-  },
-  "responsibility": {
-    "de": "Verantwortung",
-    "en": "Responsibility",
-    "fr": "Responsabilité",
-    "es": "Responsabilidad",
-    "it": "Responsabilità"
-  },
-  "costs": {
-    "de": "Kosten",
-    "en": "Costs",
-    "fr": "Coûts",
-    "es": "Costes",
-    "it": "Costi"
+  "average": {
+    "de": "Durchschnitt",
+    "en": "Average",
+    "fr": "Moyenne",
+    "es": "Promedio",
+    "it": "Media"
   },
   "benefit": {
     "de": "Nutzen",
@@ -525,19 +79,103 @@
     "es": "Beneficio",
     "it": "Beneficio"
   },
-  "investment": {
-    "de": "Investition",
-    "en": "Investment",
-    "fr": "Investissement",
-    "es": "Inversión",
-    "it": "Investimento"
+  "benefit_potential": {
+    "de": "Nutzenpotenzial",
+    "en": "Benefit potential",
+    "fr": "Potentiel de bénéfice",
+    "es": "Potencial de beneficio",
+    "it": "Potenziale di beneficio"
   },
-  "profitability": {
-    "de": "Wirtschaftlichkeit",
-    "en": "Profitability",
-    "fr": "Rentabilité",
-    "es": "Rentabilidad",
-    "it": "Redditività"
+  "brief_summary": {
+    "de": "Kurzfazit",
+    "en": "Brief summary",
+    "fr": "Résumé bref",
+    "es": "Resumen breve",
+    "it": "Breve riepilogo"
+  },
+  "characteristics": {
+    "de": "Charakteristika:",
+    "en": "Characteristics:",
+    "fr": "Caractéristiques:",
+    "es": "Características:",
+    "it": "Caratteristiche:"
+  },
+  "company": {
+    "de": "Unternehmen",
+    "en": "Company",
+    "fr": "Entreprise",
+    "es": "Empresa",
+    "it": "Azienda"
+  },
+  "company_label_colon": {
+    "de": "Unternehmen:",
+    "en": "Company:",
+    "fr": "Entreprise:",
+    "es": "Empresa:",
+    "it": "Azienda:"
+  },
+  "company_profile": {
+    "de": "Unternehmensprofil",
+    "en": "Company profile",
+    "fr": "Profil de l'entreprise",
+    "es": "Perfil de la empresa",
+    "it": "Profilo aziendale"
+  },
+  "company_size": {
+    "de": "Unternehmensgröße",
+    "en": "Company size",
+    "fr": "Taille de l'entreprise",
+    "es": "Tamaño de la empresa",
+    "it": "Dimensione aziendale"
+  },
+  "company_size_label_colon": {
+    "de": "Unternehmensgröße:",
+    "en": "Company size:",
+    "fr": "Taille de l'entreprise:",
+    "es": "Tamaño de la empresa:",
+    "it": "Dimensione aziendale:"
+  },
+  "comparison": {
+    "de": "Vergleich",
+    "en": "Comparison",
+    "fr": "Comparaison",
+    "es": "Comparación",
+    "it": "Confronto"
+  },
+  "conservative": {
+    "de": "Konservativ",
+    "en": "Conservative",
+    "fr": "Conservateur",
+    "es": "Conservador",
+    "it": "Conservativo"
+  },
+  "costs": {
+    "de": "Kosten",
+    "en": "Costs",
+    "fr": "Coûts",
+    "es": "Costes",
+    "it": "Costi"
+  },
+  "data_protection": {
+    "de": "Datenschutz",
+    "en": "Data protection",
+    "fr": "Protection des données",
+    "es": "Protección de datos",
+    "it": "Protezione dei dati"
+  },
+  "deep_dive_for": {
+    "de": "Tiefenanalyse für",
+    "en": "Deep dive for",
+    "fr": "Analyse approfondie pour",
+    "es": "Análisis profundo para",
+    "it": "Analisi approfondita per"
+  },
+  "description": {
+    "de": "Beschreibung",
+    "en": "Description",
+    "fr": "Description",
+    "es": "Descripción",
+    "it": "Descrizione"
   },
   "effort": {
     "de": "Aufwand",
@@ -546,19 +184,131 @@
     "es": "Esfuerzo",
     "it": "Sforzo"
   },
-  "benefit_potential": {
-    "de": "Nutzenpotenzial",
-    "en": "Benefit potential",
-    "fr": "Potentiel de bénéfice",
-    "es": "Potencial de beneficio",
-    "it": "Potenziale di beneficio"
+  "employees": {
+    "de": "Mitarbeiter:",
+    "en": "Employees:",
+    "fr": "Employés:",
+    "es": "Empleados:",
+    "it": "Dipendenti:"
   },
-  "payback": {
-    "de": "Amortisation",
-    "en": "Payback",
-    "fr": "Retour sur investissement",
-    "es": "Retorno de inversión",
-    "it": "Ammortamento"
+  "enablement": {
+    "de": "Befähigung",
+    "en": "Enablement",
+    "fr": "Habilitation",
+    "es": "Habilitación",
+    "it": "Abilitazione"
+  },
+  "estimate": {
+    "de": "Schätzung",
+    "en": "Estimate",
+    "fr": "Estimation",
+    "es": "Estimación",
+    "it": "Stima"
+  },
+  "eu_funding_badge": {
+    "de": "EU-Förderprogramme gelistet",
+    "en": "EU Funding Programs Listed",
+    "fr": "Programmes de financement UE listés",
+    "es": "Programas de financiación UE listados",
+    "it": "Programmi di finanziamento UE elencati"
+  },
+  "exec_continue": {
+    "de": "Details und Begründungen folgen ab Seite 4 – je nach Informationsbedarf.",
+    "en": "Details and rationale follow from page 4 – depending on your information needs.",
+    "fr": "Les détails et justifications suivent à partir de la page 4 – selon vos besoins d'information.",
+    "es": "Los detalles y justificaciones siguen desde la página 4 – según sus necesidades de información.",
+    "it": "I dettagli e le motivazioni seguono da pagina 4 – a seconda delle tue esigenze informative."
+  },
+  "exec_decision_title": {
+    "de": "Entscheidung & Fokus",
+    "en": "Decision & Focus",
+    "fr": "Décision & Focus",
+    "es": "Decisión & Enfoque",
+    "it": "Decisione & Focus"
+  },
+  "federal_state": {
+    "de": "Bundesland",
+    "en": "Federal state",
+    "fr": "État fédéral",
+    "es": "Estado federal",
+    "it": "Stato federale"
+  },
+  "feedback_cta": {
+    "de": "Helfen Sie uns, diesen Report noch besser zu machen. Ihre Rückmeldung hilft anderen Unternehmen.",
+    "en": "Help us improve this report. Your feedback helps other companies.",
+    "fr": "Aidez-nous à améliorer ce rapport. Vos commentaires aident d'autres entreprises.",
+    "es": "Ayúdenos a mejorar este informe. Sus comentarios ayudan a otras empresas.",
+    "it": "Aiutaci a migliorare questo report. Il tuo feedback aiuta altre aziende."
+  },
+  "focus": {
+    "de": "Schwerpunkt",
+    "en": "Focus",
+    "fr": "Focus",
+    "es": "Enfoque",
+    "it": "Focus"
+  },
+  "focus_priorities": {
+    "de": "Fokus-Prioritäten:",
+    "en": "Focus Priorities:",
+    "fr": "Priorités de focus:",
+    "es": "Prioridades de enfoque:",
+    "it": "Priorità di focus:"
+  },
+  "funding_eic_horizon": {
+    "de": "EIC Accelerator / Horizon Europe",
+    "en": "EIC Accelerator / Horizon Europe",
+    "fr": "EIC Accelerator / Horizon Europe",
+    "es": "EIC Accelerator / Horizon Europe",
+    "it": "EIC Accelerator / Horizon Europe"
+  },
+  "funding_fit": {
+    "de": "Eignung:",
+    "en": "Fit:",
+    "fr": "Adéquation:",
+    "es": "Idoneidad:",
+    "it": "Idoneità:"
+  },
+  "funding_fit_high": {
+    "de": "Hoch – KMU-fokussiert, KI-Projekte förderfähig",
+    "en": "High – SME-focused, AI projects eligible",
+    "fr": "Élevé – axé PME, projets IA éligibles",
+    "es": "Alto – enfocado en PYME, proyectos IA elegibles",
+    "it": "Alto – focalizzato PMI, progetti IA ammissibili"
+  },
+  "funding_fit_medium": {
+    "de": "Mittel – für skalierbare KI-Innovationen",
+    "en": "Medium – for scalable AI innovations",
+    "fr": "Moyen – pour des innovations IA évolutives",
+    "es": "Medio – para innovaciones IA escalables",
+    "it": "Medio – per innovazioni IA scalabili"
+  },
+  "funding_go_digital": {
+    "de": "go-digital / ZIM",
+    "en": "go-digital / ZIM",
+    "fr": "go-digital / ZIM",
+    "es": "go-digital / ZIM",
+    "it": "go-digital / ZIM"
+  },
+  "funding_next_1": {
+    "de": "Förderfähigkeit innerhalb 7 Tagen prüfen",
+    "en": "Check eligibility within 7 days",
+    "fr": "Vérifier l'éligibilité sous 7 jours",
+    "es": "Verificar elegibilidad en 7 días",
+    "it": "Verificare l'ammissibilità entro 7 giorni"
+  },
+  "funding_next_2": {
+    "de": "Projektskizze mit Partner erstellen (14 Tage)",
+    "en": "Create project outline with partner (14 days)",
+    "fr": "Créer un aperçu du projet avec partenaire (14 jours)",
+    "es": "Crear esquema del proyecto con socio (14 días)",
+    "it": "Creare schema progetto con partner (14 giorni)"
+  },
+  "funding_opportunity": {
+    "de": "Förderchance",
+    "en": "Funding opportunity",
+    "fr": "Opportunité de financement",
+    "es": "Oportunidad de financiación",
+    "it": "Opportunità di finanziamento"
   },
   "funding_potential": {
     "de": "Förderpotenzial",
@@ -567,13 +317,495 @@
     "es": "Potencial de financiación",
     "it": "Potenziale di finanziamento"
   },
-
-  "risk_situation": {
-    "de": "Risikolage",
-    "en": "Risk situation",
-    "fr": "Situation de risque",
-    "es": "Situación de riesgo",
-    "it": "Situazione di rischio"
+  "funding_programs": {
+    "de": "Förderprogramme",
+    "en": "Funding programs",
+    "fr": "Programmes de financement",
+    "es": "Programas de financiación",
+    "it": "Programmi di finanziamento"
+  },
+  "funding_quick_paths": {
+    "de": "Schnellste Förderpfade für Ihr Unternehmen",
+    "en": "Fastest Funding Paths for Your Business",
+    "fr": "Voies de financement les plus rapides pour votre entreprise",
+    "es": "Vías de financiación más rápidas para su empresa",
+    "it": "Percorsi di finanziamento più rapidi per la tua azienda"
+  },
+  "funding_req_eu": {
+    "de": "EU-Rechtsform, Innovationsgrad, TRL 5+",
+    "en": "EU legal entity, innovation grade, TRL 5+",
+    "fr": "Entité juridique UE, niveau d'innovation, TRL 5+",
+    "es": "Entidad legal UE, grado de innovación, TRL 5+",
+    "it": "Entità legale UE, grado di innovazione, TRL 5+"
+  },
+  "funding_req_kmu": {
+    "de": "KMU-Status, Sitz in DE, <500 MA",
+    "en": "SME status, based in EU, <500 employees",
+    "fr": "Statut PME, basé dans l'UE, <500 employés",
+    "es": "Estado PYME, con sede en UE, <500 empleados",
+    "it": "Stato PMI, sede in UE, <500 dipendenti"
+  },
+  "funding_requirements": {
+    "de": "Voraussetzungen:",
+    "en": "Requirements:",
+    "fr": "Conditions:",
+    "es": "Requisitos:",
+    "it": "Requisiti:"
+  },
+  "gamechanger_kicker": {
+    "de": "Strategische Optionen",
+    "en": "Strategic Options",
+    "fr": "Options stratégiques",
+    "es": "Opciones estratégicas",
+    "it": "Opzioni strategiche"
+  },
+  "gamechanger_title": {
+    "de": "Gamechanger-Analyse",
+    "en": "Gamechanger Analysis",
+    "fr": "Analyse Gamechanger",
+    "es": "Análisis Gamechanger",
+    "it": "Analisi Gamechanger"
+  },
+  "gdpr": {
+    "de": "DSGVO",
+    "en": "GDPR",
+    "fr": "RGPD",
+    "es": "RGPD",
+    "it": "GDPR"
+  },
+  "gdpr_link_text": {
+    "de": "Datenschutzerklärung",
+    "en": "Privacy Policy",
+    "fr": "Politique de confidentialité",
+    "es": "Política de privacidad",
+    "it": "Informativa sulla privacy"
+  },
+  "gdpr_mini_default": {
+    "de": "Dieser Report nutzt Unternehmensdaten zur KI-Readiness-Analyse. Verarbeitung auf Basis von Art. 6 (1) b DSGVO. AVV auf Anfrage.",
+    "en": "This report uses company data for AI readiness analysis. Processing based on Art. 6 (1) b GDPR. DPA available on request.",
+    "fr": "Ce rapport utilise les données de l'entreprise pour l'analyse de préparation IA. Traitement basé sur l'Art. 6 (1) b RGPD. DPA disponible sur demande.",
+    "es": "Este informe utiliza datos de la empresa para análisis de preparación IA. Procesamiento basado en Art. 6 (1) b RGPD. DPA disponible bajo petición.",
+    "it": "Questo report utilizza i dati aziendali per l'analisi della prontezza IA. Elaborazione basata sull'Art. 6 (1) b GDPR. DPA disponibile su richiesta."
+  },
+  "impact": {
+    "de": "Auswirkung",
+    "en": "Impact",
+    "fr": "Impact",
+    "es": "Impacto",
+    "it": "Impatto"
+  },
+  "implementation": {
+    "de": "Umsetzung",
+    "en": "Implementation",
+    "fr": "Mise en œuvre",
+    "es": "Implementación",
+    "it": "Implementazione"
+  },
+  "industries": {
+    "de": "Branchen",
+    "en": "Industries",
+    "fr": "Secteurs",
+    "es": "Sectores",
+    "it": "Settori"
+  },
+  "industry": {
+    "de": "Branche",
+    "en": "Industry",
+    "fr": "Secteur",
+    "es": "Sector",
+    "it": "Settore"
+  },
+  "industry_benchmark_kicker": {
+    "de": "KI-Reife • Branchenmedian • SWOT",
+    "en": "AI maturity • Industry median • SWOT",
+    "fr": "Maturité IA • Médiane du secteur • SWOT",
+    "es": "Madurez IA • Mediana del sector • SWOT",
+    "it": "Maturità IA • Mediana del settore • SWOT"
+  },
+  "industry_benchmark_title": {
+    "de": "Branchenvergleich & Wettbewerbsposition",
+    "en": "Industry comparison & competitive position",
+    "fr": "Comparaison sectorielle & position concurrentielle",
+    "es": "Comparación sectorial y posición competitiva",
+    "it": "Confronto settoriale e posizione competitiva"
+  },
+  "industry_comparison": {
+    "de": "Branchenvergleich",
+    "en": "Industry comparison",
+    "fr": "Comparaison sectorielle",
+    "es": "Comparación sectorial",
+    "it": "Confronto settoriale"
+  },
+  "industry_context_title": {
+    "de": "📋 Branchen-Context:",
+    "en": "📋 Industry Context:",
+    "fr": "📋 Contexte du secteur:",
+    "es": "📋 Contexto del sector:",
+    "it": "📋 Contesto del settore:"
+  },
+  "industry_deep_dive": {
+    "de": "Branchen-Deep-Dive",
+    "en": "Industry Deep Dive",
+    "fr": "Analyse approfondie du secteur",
+    "es": "Análisis profundo del sector",
+    "it": "Analisi approfondita del settore"
+  },
+  "industry_funding_sub": {
+    "de": "Förderprogramme optimiert für Ihre Branche",
+    "en": "Funding programs optimized for your industry",
+    "fr": "Programmes de financement optimisés pour votre secteur",
+    "es": "Programas de financiación optimizados para su sector",
+    "it": "Programmi di finanziamento ottimizzati per il suo settore"
+  },
+  "industry_funding_title": {
+    "de": "Branchen-Förderpotenzial",
+    "en": "Industry funding potential",
+    "fr": "Potentiel de financement du secteur",
+    "es": "Potencial de financiación del sector",
+    "it": "Potenziale di finanziamento del settore"
+  },
+  "industry_label_colon": {
+    "de": "Branche:",
+    "en": "Industry:",
+    "fr": "Secteur:",
+    "es": "Sector:",
+    "it": "Settore:"
+  },
+  "industry_median": {
+    "de": "Branchenmedian",
+    "en": "Industry median",
+    "fr": "Médiane du secteur",
+    "es": "Mediana del sector",
+    "it": "Mediana del settore"
+  },
+  "industry_optimized": {
+    "de": "Branchenoptimiert",
+    "en": "Industry-optimized",
+    "fr": "Optimisé pour le secteur",
+    "es": "Optimizado para el sector",
+    "it": "Ottimizzato per il settore"
+  },
+  "industry_specific": {
+    "de": "Branchenspezifisch",
+    "en": "Industry-specific",
+    "fr": "Spécifique au secteur",
+    "es": "Específico del sector",
+    "it": "Specifico del settore"
+  },
+  "industry_study": {
+    "de": "Branchenstudie",
+    "en": "Industry study",
+    "fr": "Étude sectorielle",
+    "es": "Estudio sectorial",
+    "it": "Studio di settore"
+  },
+  "industry_tools_sub": {
+    "de": "KI-Tools mit höchster Branchenrelevanz",
+    "en": "AI tools with the highest industry relevance",
+    "fr": "Outils IA les plus pertinents pour le secteur",
+    "es": "Herramientas IA con mayor relevancia sectorial",
+    "it": "Strumenti IA più rilevanti per il settore"
+  },
+  "industry_tools_title": {
+    "de": "Branchen-Tool-Alignment",
+    "en": "Industry tool alignment",
+    "fr": "Alignement des outils du secteur",
+    "es": "Alineación de herramientas del sector",
+    "it": "Allineamento degli strumenti del settore"
+  },
+  "internal_review_ratings": {
+    "de": "Interne Review-Bewertungen",
+    "en": "Internal review ratings",
+    "fr": "Évaluations de révision interne",
+    "es": "Calificaciones de revisión interna",
+    "it": "Valutazioni di revisione interna"
+  },
+  "investment": {
+    "de": "Investition",
+    "en": "Investment",
+    "fr": "Investissement",
+    "es": "Inversión",
+    "it": "Investimento"
+  },
+  "key_risks": {
+    "de": "Wesentliche Risiken",
+    "en": "Key risks",
+    "fr": "Risques clés",
+    "es": "Riesgos clave",
+    "it": "Rischi chiave"
+  },
+  "ki_stack_pill": {
+    "de": "Empfohlene Tools, Förderung und nächste Schritte",
+    "en": "Recommended tools, funding, and next steps",
+    "fr": "Outils recommandés, financement et prochaines étapes",
+    "es": "Herramientas recomendadas, financiación y próximos pasos",
+    "it": "Strumenti consigliati, finanziamenti e prossimi passi"
+  },
+  "ki_stack_title": {
+    "de": "Ihr KI-Stack auf einen Blick",
+    "en": "Your AI Stack at a Glance",
+    "fr": "Votre stack IA en un coup d'œil",
+    "es": "Su stack IA de un vistazo",
+    "it": "Il tuo stack IA in sintesi"
+  },
+  "kpis": {
+    "de": "Kennzahlen",
+    "en": "KPIs",
+    "fr": "KPIs",
+    "es": "KPIs",
+    "it": "KPI"
+  },
+  "main_goal": {
+    "de": "Hauptziel",
+    "en": "Main goal",
+    "fr": "Objectif principal",
+    "es": "Objetivo principal",
+    "it": "Obiettivo principale"
+  },
+  "market_trend_dynamics": {
+    "de": "1. Markt- & Trenddynamik",
+    "en": "1. Market & Trend Dynamics",
+    "fr": "1. Dynamique du marché et des tendances",
+    "es": "1. Dinámica de mercado y tendencias",
+    "it": "1. Dinamiche di mercato e tendenze"
+  },
+  "maturity_level": {
+    "de": "Reifegrad",
+    "en": "Maturity level",
+    "fr": "Niveau de maturité",
+    "es": "Nivel de madurez",
+    "it": "Livello di maturità"
+  },
+  "missing_info": {
+    "de": "Diese Informationen fehlen für eine vollständige Compliance-Bewertung:",
+    "en": "This information is missing for a complete compliance assessment:",
+    "fr": "Ces informations manquent pour une évaluation de conformité complète:",
+    "es": "Esta información falta para una evaluación de cumplimiento completa:",
+    "it": "Queste informazioni mancano per una valutazione di conformità completa:"
+  },
+  "month": {
+    "de": "Monat",
+    "en": "Month",
+    "fr": "Mois",
+    "es": "Mes",
+    "it": "Mese"
+  },
+  "months": {
+    "de": "Monate",
+    "en": "Months",
+    "fr": "Mois",
+    "es": "Meses",
+    "it": "Mesi"
+  },
+  "needs_improvement": {
+    "de": "Ausbaufähig",
+    "en": "Needs improvement",
+    "fr": "À améliorer",
+    "es": "Necesita mejora",
+    "it": "Da migliorare"
+  },
+  "next_steps": {
+    "de": "Nächste Schritte",
+    "en": "Next steps",
+    "fr": "Prochaines étapes",
+    "es": "Próximos pasos",
+    "it": "Prossimi passi"
+  },
+  "no_data": {
+    "de": "(Keine Angaben)",
+    "en": "(No data available)",
+    "fr": "(Aucune donnée disponible)",
+    "es": "(Sin datos disponibles)",
+    "it": "(Nessun dato disponibile)"
+  },
+  "not_recommended_for_size": {
+    "de": "In Ihrer aktuellen Größe nicht sinnvoll:",
+    "en": "Not recommended for your current size:",
+    "fr": "Non recommandé pour votre taille actuelle:",
+    "es": "No recomendado para su tamaño actual:",
+    "it": "Non raccomandato per la vostra dimensione attuale:"
+  },
+  "note": {
+    "de": "Hinweis",
+    "en": "Note",
+    "fr": "Note",
+    "es": "Nota",
+    "it": "Nota"
+  },
+  "optimistic": {
+    "de": "Optimistisch",
+    "en": "Optimistic",
+    "fr": "Optimiste",
+    "es": "Optimista",
+    "it": "Ottimistico"
+  },
+  "overview": {
+    "de": "Überblick",
+    "en": "Overview",
+    "fr": "Aperçu",
+    "es": "Resumen",
+    "it": "Panoramica"
+  },
+  "pain_points": {
+    "de": "Häufigste Pain Points:",
+    "en": "Common Pain Points:",
+    "fr": "Points de douleur courants:",
+    "es": "Puntos de dolor comunes:",
+    "it": "Punti critici comuni:"
+  },
+  "payback": {
+    "de": "Amortisation",
+    "en": "Payback",
+    "fr": "Retour sur investissement",
+    "es": "Retorno de inversión",
+    "it": "Ammortamento"
+  },
+  "per_month": {
+    "de": "/Monat",
+    "en": "/month",
+    "fr": "/mois",
+    "es": "/mes",
+    "it": "/mese"
+  },
+  "prioritization": {
+    "de": "Priorisierung",
+    "en": "Prioritization",
+    "fr": "Priorisation",
+    "es": "Priorización",
+    "it": "Prioritizzazione"
+  },
+  "priority": {
+    "de": "Priorität",
+    "en": "Priority",
+    "fr": "Priorité",
+    "es": "Prioridad",
+    "it": "Priorità"
+  },
+  "probability": {
+    "de": "Eintrittswahrscheinlichkeit",
+    "en": "Probability",
+    "fr": "Probabilité",
+    "es": "Probabilidad",
+    "it": "Probabilità"
+  },
+  "profitability": {
+    "de": "Wirtschaftlichkeit",
+    "en": "Profitability",
+    "fr": "Rentabilité",
+    "es": "Rentabilidad",
+    "it": "Redditività"
+  },
+  "quarter": {
+    "de": "Quartal",
+    "en": "Quarter",
+    "fr": "Trimestre",
+    "es": "Trimestre",
+    "it": "Trimestre"
+  },
+  "realistic": {
+    "de": "Realistisch",
+    "en": "Realistic",
+    "fr": "Réaliste",
+    "es": "Realista",
+    "it": "Realistico"
+  },
+  "recommendation": {
+    "de": "Empfehlung",
+    "en": "Recommendation",
+    "fr": "Recommandation",
+    "es": "Recomendación",
+    "it": "Raccomandazione"
+  },
+  "recommendations": {
+    "de": "Handlungsempfehlungen",
+    "en": "Recommendations",
+    "fr": "Recommandations",
+    "es": "Recomendaciones",
+    "it": "Raccomandazioni"
+  },
+  "report_date": {
+    "de": "Reportdatum",
+    "en": "Report date",
+    "fr": "Date du rapport",
+    "es": "Fecha del informe",
+    "it": "Data del report"
+  },
+  "report_title": {
+    "de": "KI-Status-Report",
+    "en": "AI Status Report",
+    "fr": "Rapport de statut IA",
+    "es": "Informe de estado IA",
+    "it": "Report sullo stato dell'IA"
+  },
+  "responsibility": {
+    "de": "Verantwortung",
+    "en": "Responsibility",
+    "fr": "Responsabilité",
+    "es": "Responsabilidad",
+    "it": "Responsabilità"
+  },
+  "responsible": {
+    "de": "Verantwortlich",
+    "en": "Responsible",
+    "fr": "Responsable",
+    "es": "Responsable",
+    "it": "Responsabile"
+  },
+  "risk_axis_x": {
+    "de": "X-Achse:",
+    "en": "X-Axis:",
+    "fr": "Axe X:",
+    "es": "Eje X:",
+    "it": "Asse X:"
+  },
+  "risk_axis_x_desc": {
+    "de": "Eintrittswahrscheinlichkeit (gering → hoch)",
+    "en": "Probability of occurrence (low → high)",
+    "fr": "Probabilité d'occurrence (faible → élevée)",
+    "es": "Probabilidad de ocurrencia (baja → alta)",
+    "it": "Probabilità di occorrenza (bassa → alta)"
+  },
+  "risk_axis_y": {
+    "de": "Y-Achse:",
+    "en": "Y-Axis:",
+    "fr": "Axe Y:",
+    "es": "Eje Y:",
+    "it": "Asse Y:"
+  },
+  "risk_axis_y_desc": {
+    "de": "Schadensausmaß bei Eintritt (gering → kritisch)",
+    "en": "Impact severity if it occurs (low → critical)",
+    "fr": "Gravité de l'impact en cas d'occurrence (faible → critique)",
+    "es": "Gravedad del impacto si ocurre (baja → crítica)",
+    "it": "Gravità dell'impatto se si verifica (bassa → critica)"
+  },
+  "risk_color_green": {
+    "de": "Akzeptabel – Monitoring genügt",
+    "en": "Acceptable – monitoring sufficient",
+    "fr": "Acceptable – surveillance suffisante",
+    "es": "Aceptable – monitoreo suficiente",
+    "it": "Accettabile – monitoraggio sufficiente"
+  },
+  "risk_color_red": {
+    "de": "Kritisch – sofort handeln",
+    "en": "Critical – act immediately",
+    "fr": "Critique – agir immédiatement",
+    "es": "Crítico – actuar inmediatamente",
+    "it": "Critico – agire immediatamente"
+  },
+  "risk_color_yellow": {
+    "de": "Beobachten – Maßnahmen planen",
+    "en": "Watch – plan mitigations",
+    "fr": "Surveiller – planifier des mesures",
+    "es": "Observar – planificar mitigaciones",
+    "it": "Osservare – pianificare mitigazioni"
+  },
+  "risk_legend_title": {
+    "de": "📊 So lesen Sie die Risiko-Matrix",
+    "en": "📊 How to Read the Risk Matrix",
+    "fr": "📊 Comment lire la matrice de risque",
+    "es": "📊 Cómo leer la matriz de riesgo",
+    "it": "📊 Come leggere la matrice di rischio"
   },
   "risk_matrix": {
     "de": "Risiko-Matrix",
@@ -589,26 +821,19 @@
     "es": "Perfil de riesgo",
     "it": "Profilo di rischio"
   },
-  "prioritization": {
-    "de": "Priorisierung",
-    "en": "Prioritization",
-    "fr": "Priorisation",
-    "es": "Priorización",
-    "it": "Prioritizzazione"
+  "risk_situation": {
+    "de": "Risikolage",
+    "en": "Risk situation",
+    "fr": "Situation de risque",
+    "es": "Situación de riesgo",
+    "it": "Situazione di rischio"
   },
-  "responsible": {
-    "de": "Verantwortlich",
-    "en": "Responsible",
-    "fr": "Responsable",
-    "es": "Responsable",
-    "it": "Responsabile"
-  },
-  "target_image": {
-    "de": "Zielbild",
-    "en": "Target vision",
-    "fr": "Vision cible",
-    "es": "Visión objetivo",
-    "it": "Visione target"
+  "risks": {
+    "de": "Risiken",
+    "en": "Risks",
+    "fr": "Risques",
+    "es": "Riesgos",
+    "it": "Rischi"
   },
   "roadmap": {
     "de": "Roadmap",
@@ -617,6 +842,27 @@
     "es": "Hoja de ruta",
     "it": "Roadmap"
   },
+  "roadmap_kicker": {
+    "de": "90-Tage-Plan",
+    "en": "90-Day Plan",
+    "fr": "Plan de 90 jours",
+    "es": "Plan de 90 días",
+    "it": "Piano di 90 giorni"
+  },
+  "roadmap_title": {
+    "de": "Roadmap-Entscheidung",
+    "en": "Roadmap Decision",
+    "fr": "Décision de feuille de route",
+    "es": "Decisión de hoja de ruta",
+    "it": "Decisione roadmap"
+  },
+  "savings": {
+    "de": "Einsparungen",
+    "en": "Savings",
+    "fr": "Économies",
+    "es": "Ahorros",
+    "it": "Risparmi"
+  },
   "schedule": {
     "de": "Zeitplan",
     "en": "Schedule",
@@ -624,27 +870,236 @@
     "es": "Cronograma",
     "it": "Programma"
   },
-
-  "month": {
-    "de": "Monat",
-    "en": "Month",
-    "fr": "Mois",
-    "es": "Mes",
-    "it": "Mese"
+  "security": {
+    "de": "Sicherheit",
+    "en": "Security",
+    "fr": "Sécurité",
+    "es": "Seguridad",
+    "it": "Sicurezza"
   },
-  "months": {
-    "de": "Monate",
-    "en": "Months",
-    "fr": "Mois",
-    "es": "Meses",
-    "it": "Mesi"
+  "size_context_title": {
+    "de": "🏢 Größen-Context:",
+    "en": "🏢 Size Context:",
+    "fr": "🏢 Contexte de taille:",
+    "es": "🏢 Contexto de tamaño:",
+    "it": "🏢 Contesto dimensionale:"
   },
-  "quarter": {
-    "de": "Quartal",
-    "en": "Quarter",
-    "fr": "Trimestre",
-    "es": "Trimestre",
-    "it": "Trimestre"
+  "size_kmu": {
+    "de": "KMU",
+    "en": "SME",
+    "fr": "PME",
+    "es": "PYME",
+    "it": "PMI"
+  },
+  "size_solo": {
+    "de": "Einzelunternehmer",
+    "en": "Solo business",
+    "fr": "Entreprise individuelle",
+    "es": "Negocio individual",
+    "it": "Impresa individuale"
+  },
+  "size_team": {
+    "de": "Teams",
+    "en": "Team",
+    "fr": "Équipe",
+    "es": "Equipo",
+    "it": "Team"
+  },
+  "solid": {
+    "de": "Solide",
+    "en": "Solid",
+    "fr": "Solide",
+    "es": "Sólido",
+    "it": "Solido"
+  },
+  "source": {
+    "de": "Quelle",
+    "en": "Source",
+    "fr": "Source",
+    "es": "Fuente",
+    "it": "Fonte"
+  },
+  "strategic_market_analysis": {
+    "de": "Strategische Markt- und Wettbewerbsanalyse",
+    "en": "Strategic market and competitive analysis",
+    "fr": "Analyse stratégique du marché et de la concurrence",
+    "es": "Análisis estratégico de mercado y competencia",
+    "it": "Analisi strategica di mercato e concorrenza"
+  },
+  "summaries": {
+    "de": "Zusammenfassungen",
+    "en": "Summaries",
+    "fr": "Résumés",
+    "es": "Resúmenes",
+    "it": "Riepiloghi"
+  },
+  "summary": {
+    "de": "Zusammenfassung",
+    "en": "Summary",
+    "fr": "Résumé",
+    "es": "Resumen",
+    "it": "Riepilogo"
+  },
+  "target_image": {
+    "de": "Zielbild",
+    "en": "Target vision",
+    "fr": "Vision cible",
+    "es": "Visión objetivo",
+    "it": "Visione target"
+  },
+  "time_horizon": {
+    "de": "Zeithorizont",
+    "en": "Time horizon",
+    "fr": "Horizon temporel",
+    "es": "Horizonte temporal",
+    "it": "Orizzonte temporale"
+  },
+  "toc_group_decision": {
+    "de": "Entscheidungsübersicht",
+    "en": "Decision Overview",
+    "fr": "Aperçu des décisions",
+    "es": "Resumen de decisiones",
+    "it": "Panoramica decisioni"
+  },
+  "toc_group_economics": {
+    "de": "Wirtschaft & Risiko",
+    "en": "Economics & Risk",
+    "fr": "Économie & Risque",
+    "es": "Economía & Riesgo",
+    "it": "Economia & Rischio"
+  },
+  "toc_group_implementation": {
+    "de": "Umsetzung & Tiefe",
+    "en": "Implementation & Depth",
+    "fr": "Mise en œuvre & Profondeur",
+    "es": "Implementación & Profundidad",
+    "it": "Implementazione & Profondità"
+  },
+  "toc_item_compliance": {
+    "de": "Risiko- & Compliance-Einordnung (AI Act / DSGVO / Vendor)",
+    "en": "Risk & Compliance Assessment (AI Act / GDPR / Vendor)",
+    "fr": "Évaluation risque & conformité (AI Act / RGPD / Fournisseur)",
+    "es": "Evaluación de riesgo & cumplimiento (AI Act / RGPD / Proveedor)",
+    "it": "Valutazione rischio & conformità (AI Act / GDPR / Fornitore)"
+  },
+  "toc_item_funding": {
+    "de": "Förderoptionen & nächste Schritte",
+    "en": "Funding Options & Next Steps",
+    "fr": "Options de financement & prochaines étapes",
+    "es": "Opciones de financiación & próximos pasos",
+    "it": "Opzioni di finanziamento & prossimi passi"
+  },
+  "toc_item_industry": {
+    "de": "Branchen- & Tool-Einordnung",
+    "en": "Industry & Tool Assessment",
+    "fr": "Évaluation secteur & outils",
+    "es": "Evaluación de industria & herramientas",
+    "it": "Valutazione settore & strumenti"
+  },
+  "toc_item_roadmap": {
+    "de": "Roadmap (90 Tage / 12 Monate)",
+    "en": "Roadmap (90 Days / 12 Months)",
+    "fr": "Feuille de route (90 jours / 12 mois)",
+    "es": "Hoja de ruta (90 días / 12 meses)",
+    "it": "Roadmap (90 giorni / 12 mesi)"
+  },
+  "toc_item_roi": {
+    "de": "Wirtschaftlichkeit (ROI/Payback) & Annahmen",
+    "en": "Business Case (ROI/Payback) & Assumptions",
+    "fr": "Business Case (ROI/Payback) & Hypothèses",
+    "es": "Caso de negocio (ROI/Payback) & Suposiciones",
+    "it": "Business Case (ROI/Payback) & Ipotesi"
+  },
+  "toc_item_summary": {
+    "de": "Executive Summary & Kurzurteil",
+    "en": "Executive Summary & Quick Assessment",
+    "fr": "Résumé exécutif & évaluation rapide",
+    "es": "Resumen ejecutivo & evaluación rápida",
+    "it": "Executive Summary & Valutazione rapida"
+  },
+  "toc_item_top3": {
+    "de": "Top-3 Maßnahmen & 90-Tage-Fokus",
+    "en": "Top 3 Actions & 90-Day Focus",
+    "fr": "Top 3 actions & focus 90 jours",
+    "es": "Top 3 acciones & enfoque 90 días",
+    "it": "Top 3 azioni & focus 90 giorni"
+  },
+  "toc_note": {
+    "de": "Ab Seite 4: Vertiefung und Detailanalysen",
+    "en": "From page 4: Detailed analysis and deep dives",
+    "fr": "À partir de la page 4 : Analyses détaillées et approfondies",
+    "es": "Desde página 4: Análisis detallados y profundos",
+    "it": "Da pagina 4: Analisi dettagliate e approfondimenti"
+  },
+  "toc_title": {
+    "de": "So lesen Sie diesen Report",
+    "en": "How to Read This Report",
+    "fr": "Comment lire ce rapport",
+    "es": "Cómo leer este informe",
+    "it": "Come leggere questo report"
+  },
+  "top3_title": {
+    "de": "Top-3 MUSS-Maßnahmen",
+    "en": "Top 3 Must-Do Actions",
+    "fr": "Top 3 actions indispensables",
+    "es": "Top 3 acciones obligatorias",
+    "it": "Top 3 azioni imprescindibili"
+  },
+  "top_quartile": {
+    "de": "Top-Quartil",
+    "en": "Top quartile",
+    "fr": "Quartile supérieur",
+    "es": "Cuartil superior",
+    "it": "Quartile superiore"
+  },
+  "total": {
+    "de": "Gesamt",
+    "en": "Total",
+    "fr": "Total",
+    "es": "Total",
+    "it": "Totale"
+  },
+  "typical_tools": {
+    "de": "Typische Tools im Einsatz:",
+    "en": "Typical Tools in Use:",
+    "fr": "Outils typiques utilisés:",
+    "es": "Herramientas típicas en uso:",
+    "it": "Strumenti tipici in uso:"
+  },
+  "typical_workflows": {
+    "de": "Typische Workflows:",
+    "en": "Typical Workflows:",
+    "fr": "Workflows typiques:",
+    "es": "Flujos de trabajo típicos:",
+    "it": "Workflow tipici:"
+  },
+  "unknown": {
+    "de": "Unbekannt",
+    "en": "Unknown",
+    "fr": "Inconnu",
+    "es": "Desconocido",
+    "it": "Sconosciuto"
+  },
+  "value": {
+    "de": "Wert",
+    "en": "Value",
+    "fr": "Valeur",
+    "es": "Valor",
+    "it": "Valore"
+  },
+  "value_creation": {
+    "de": "Wertschöpfung",
+    "en": "Value creation",
+    "fr": "Création de valeur",
+    "es": "Creación de valor",
+    "it": "Creazione di valore"
+  },
+  "very_good": {
+    "de": "Sehr gut",
+    "en": "Very good",
+    "fr": "Très bien",
+    "es": "Muy bueno",
+    "it": "Molto buono"
   },
   "week": {
     "de": "Woche",
@@ -660,57 +1115,27 @@
     "es": "Semanas",
     "it": "Settimane"
   },
-
-  "comparison": {
-    "de": "Vergleich",
-    "en": "Comparison",
-    "fr": "Comparaison",
-    "es": "Comparación",
-    "it": "Confronto"
+  "your_company": {
+    "de": "Ihr Unternehmen",
+    "en": "Your Company",
+    "fr": "Votre entreprise",
+    "es": "Su empresa",
+    "it": "La sua azienda"
   },
-  "value": {
-    "de": "Wert",
-    "en": "Value",
-    "fr": "Valeur",
-    "es": "Valor",
-    "it": "Valore"
+  "your_core_business": {
+    "de": "Ihr Kerngeschäft",
+    "en": "Your core business",
+    "fr": "Votre activité principale",
+    "es": "Su negocio principal",
+    "it": "Il vostro core business"
   },
-  "source": {
-    "de": "Quelle",
-    "en": "Source",
-    "fr": "Source",
-    "es": "Fuente",
-    "it": "Fonte"
+  "your_industry": {
+    "de": "Ihre Branche",
+    "en": "Your industry",
+    "fr": "Votre secteur",
+    "es": "Su sector",
+    "it": "Il suo settore"
   },
-  "estimate": {
-    "de": "Schätzung",
-    "en": "Estimate",
-    "fr": "Estimation",
-    "es": "Estimación",
-    "it": "Stima"
-  },
-  "description": {
-    "de": "Beschreibung",
-    "en": "Description",
-    "fr": "Description",
-    "es": "Descripción",
-    "it": "Descrizione"
-  },
-  "impact": {
-    "de": "Auswirkung",
-    "en": "Impact",
-    "fr": "Impact",
-    "es": "Impacto",
-    "it": "Impatto"
-  },
-  "probability": {
-    "de": "Eintrittswahrscheinlichkeit",
-    "en": "Probability",
-    "fr": "Probabilité",
-    "es": "Probabilidad",
-    "it": "Probabilità"
-  },
-
   "your_next": {
     "de": "Ihre nächsten",
     "en": "Your next",
@@ -724,120 +1149,5 @@
     "fr": "Vos droits",
     "es": "Sus derechos",
     "it": "I vostri diritti"
-  },
-  "key_risks": {
-    "de": "Wesentliche Risiken",
-    "en": "Key risks",
-    "fr": "Risques clés",
-    "es": "Riesgos clave",
-    "it": "Rischi chiave"
-  },
-
-  "focus": {
-    "de": "Schwerpunkt",
-    "en": "Focus",
-    "fr": "Focus",
-    "es": "Enfoque",
-    "it": "Focus"
-  },
-  "implementation": {
-    "de": "Umsetzung",
-    "en": "Implementation",
-    "fr": "Mise en œuvre",
-    "es": "Implementación",
-    "it": "Implementazione"
-  },
-  "funding_opportunity": {
-    "de": "Förderchance",
-    "en": "Funding opportunity",
-    "fr": "Opportunité de financement",
-    "es": "Oportunidad de financiación",
-    "it": "Opportunità di finanziamento"
-  },
-  "funding_programs": {
-    "de": "Förderprogramme",
-    "en": "Funding programs",
-    "fr": "Programmes de financement",
-    "es": "Programas de financiación",
-    "it": "Programmi di finanziamento"
-  },
-  "federal_state": {
-    "de": "Bundesland",
-    "en": "Federal state",
-    "fr": "État fédéral",
-    "es": "Estado federal",
-    "it": "Stato federale"
-  },
-
-  "security": {
-    "de": "Sicherheit",
-    "en": "Security",
-    "fr": "Sécurité",
-    "es": "Seguridad",
-    "it": "Sicurezza"
-  },
-  "value_creation": {
-    "de": "Wertschöpfung",
-    "en": "Value creation",
-    "fr": "Création de valeur",
-    "es": "Creación de valor",
-    "it": "Creazione di valore"
-  },
-  "enablement": {
-    "de": "Befähigung",
-    "en": "Enablement",
-    "fr": "Habilitation",
-    "es": "Habilitación",
-    "it": "Abilitazione"
-  },
-  "total": {
-    "de": "Gesamt",
-    "en": "Total",
-    "fr": "Total",
-    "es": "Total",
-    "it": "Totale"
-  },
-  "average": {
-    "de": "Durchschnitt",
-    "en": "Average",
-    "fr": "Moyenne",
-    "es": "Promedio",
-    "it": "Media"
-  },
-  "top_quartile": {
-    "de": "Top-Quartil",
-    "en": "Top quartile",
-    "fr": "Quartile supérieur",
-    "es": "Cuartil superior",
-    "it": "Quartile superiore"
-  },
-
-  "very_good": {
-    "de": "Sehr gut",
-    "en": "Very good",
-    "fr": "Très bien",
-    "es": "Muy bueno",
-    "it": "Molto buono"
-  },
-  "solid": {
-    "de": "Solide",
-    "en": "Solid",
-    "fr": "Solide",
-    "es": "Sólido",
-    "it": "Solido"
-  },
-  "needs_improvement": {
-    "de": "Ausbaufähig",
-    "en": "Needs improvement",
-    "fr": "À améliorer",
-    "es": "Necesita mejora",
-    "it": "Da migliorare"
-  },
-  "your_core_business": {
-    "de": "Ihr Kerngeschäft",
-    "en": "Your core business",
-    "fr": "Votre activité principale",
-    "es": "Su negocio principal",
-    "it": "Il vostro core business"
   }
 }
