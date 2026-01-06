@@ -4987,6 +4987,36 @@
             color: var(--color-success);
         }
 
+        /* FIX 2: RECOMMENDATION CARDS - Phase 2B Fix */
+        .rec-cards-container {
+            margin: 16px 0;
+        }
+        .rec-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+        }
+        .rec-card {
+            background: white;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 12px;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        @media print {
+            .rec-cards-grid {
+                display: block;
+            }
+            .rec-card {
+                display: inline-block;
+                width: 48%;
+                margin: 1%;
+                vertical-align: top;
+                page-break-inside: avoid;
+            }
+        }
+
         /* ============================================
            v13.0: ANTI-LEERSEITE (Empty Page Prevention)
            ============================================ */
