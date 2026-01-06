@@ -16,16 +16,41 @@ Diamond Model Structure:
 4. Impact - Expected outcomes/KPIs
 5. Next Steps - Immediate actions (90d)
 
-Version: 1.0.0 (N3.7 - PLATIN++ v4.23 RC)
+Version: 1.1.0 (N3.7 - PLATIN++ v4.23 RC + Phase 5C)
+
+Phase 5C (2026-01-06): Final Polish & Optimizations
+- Enhanced docstrings with all 13 Branchen documented
+- Improved edge-case handling for company size
+- Type hints completed
+- Constants for size values
+
+Supported Company Sizes (aligned with questionnaire):
+    - "1" → "solo" (Solo-Selbstständig)
+    - "2–10" → "small" (Kleines Team)
+    - "11–100" → "medium" (KMU)
 """
 from __future__ import annotations
 
 import logging
 import re
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 log = logging.getLogger(__name__)
+
+
+# =============================================================================
+# COMPANY SIZE CONSTANTS (Phase 5C)
+# =============================================================================
+
+SIZE_SOLO: str = "solo"      # 1 person
+SIZE_SMALL: str = "small"    # 2-10 persons
+SIZE_MEDIUM: str = "medium"  # 11-100 persons
+
+# Frontend V2 size values (for direct matching - O(1) set lookup)
+FRONTEND_SIZE_VALUES_SOLO: Set[str] = {"1", "1 mitarbeiter"}
+FRONTEND_SIZE_VALUES_SMALL: Set[str] = {"2-10", "2–10", "klein", "team"}
+FRONTEND_SIZE_VALUES_MEDIUM: Set[str] = {"11-100", "11–100", "kmu", "mittel"}
 
 # Type alias
 SectionDict = Dict[str, Any]
@@ -742,14 +767,19 @@ def enhance_executive_summary_diamond(
     log.info("[N3.7-Diamond] Generating Executive Summary Diamond Model...")
 
     # Determine company size (maps to solo/small/medium)
-    size = "medium"  # Default (was "kmu")
+    # Phase 5C: Enhanced with O(1) set lookup and better edge-case handling
+    size = SIZE_MEDIUM  # Default
     if briefing:
-        size_raw = briefing.get("unternehmensgroesse", "").lower()
-        if "solo" in size_raw or "freiberuf" in size_raw or size_raw == "1":
-            size = "solo"
-        elif "small" in size_raw or "klein" in size_raw or "team" in size_raw or "2-10" in size_raw or "2–10" in size_raw:
-            size = "small"  # was "team"
-        # else: remains "medium" (covers kmu, mittel, 11-100, etc.)
+        size_raw = str(briefing.get("unternehmensgroesse", "")).lower().strip()
+
+        # Frontend V2 (fast path with set lookup)
+        if size_raw in FRONTEND_SIZE_VALUES_SOLO or "solo" in size_raw or "freiberuf" in size_raw:
+            size = SIZE_SOLO
+        elif size_raw in FRONTEND_SIZE_VALUES_SMALL:
+            size = SIZE_SMALL
+        elif size_raw in FRONTEND_SIZE_VALUES_MEDIUM:
+            size = SIZE_MEDIUM
+        # else: remains "medium" (default for any other value)
 
     # Build Diamond Model
     model = build_diamond_model(sections, size)

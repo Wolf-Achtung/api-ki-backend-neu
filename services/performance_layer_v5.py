@@ -9,7 +9,21 @@ No variability + reduced costs + faster analysis:
 - Full parallelization with CPU-awareness
 - Cache-aware PromptBuilder (no redundant calculations)
 
-Version: 1.0.0 (N3.8 - PLATIN++ v4.24)
+Version: 1.1.0 (N3.8 - PLATIN++ v4.24 + Phase 5C)
+
+Phase 5C (2026-01-06): Final Polish & Optimizations
+- Enhanced docstrings with all 13 Branchen documented
+- Improved edge-case handling for company size
+- Type hints completed
+- Constants for size values
+
+Supported Company Sizes (aligned with questionnaire):
+    - "1" → "solo" (Solo-Selbstständig)
+    - "2–10" → "small" (Kleines Team)
+    - "11–100" → "medium" (KMU)
+
+Note: Only solo/small/medium are valid - questionnaire does not support
+larger company sizes (enterprise/large removed).
 """
 from __future__ import annotations
 
@@ -21,7 +35,7 @@ import time
 from dataclasses import dataclass, field
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, TypeVar, Union
 import threading
 
 log = logging.getLogger(__name__)

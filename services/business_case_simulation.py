@@ -14,8 +14,23 @@ Extends Business Case Engine 2.0 (G30) with:
 This module provides the uncertainty and risk modeling layer on top of
 the deterministic G30 Business Case calculations.
 
-Version: 1.0.0 (Sprint G34)
+Version: 1.1.0 (Sprint G34 + Phase 5C)
 Author: Claude + Wolf
+
+Phase 5C (2026-01-06): Final Polish & Optimizations
+- Enhanced docstrings with all 13 Branchen documented
+- Improved edge-case handling for company size
+- Type hints completed
+- Structured logging for monitoring
+
+Supported Company Sizes (aligned with questionnaire):
+    - "1" → "solo" (Solo-Selbstständig)
+    - "2–10" → "small" (Kleines Team)
+    - "11–100" → "medium" (KMU)
+
+Supported Branchen (13 total, aligned with questionnaire):
+    marketing, beratung, it, finanzen, handel, bildung, verwaltung,
+    gesundheit, bau, medien, industrie, logistik, gastronomie
 """
 
 from __future__ import annotations
@@ -25,7 +40,7 @@ import logging
 import math
 import random
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 # Import G30 Business Case Engine
 from services.business_case_engine_v2 import (
@@ -538,6 +553,17 @@ def _sample_from_distribution(
         return _triangular_sample(min_val, mode_val, max_val)
 
 
+# Company size constants (Phase 5C - avoid magic strings)
+SIZE_SOLO: str = "solo"      # 1 person
+SIZE_SMALL: str = "small"    # 2-10 persons
+SIZE_MEDIUM: str = "medium"  # 11-100 persons
+
+# Frontend V2 size values (for direct matching - O(1) set lookup)
+FRONTEND_SIZE_VALUES_SOLO: Set[str] = {"1", "1 mitarbeiter"}
+FRONTEND_SIZE_VALUES_SMALL: Set[str] = {"2-10", "2–10"}
+FRONTEND_SIZE_VALUES_MEDIUM: Set[str] = {"11-100", "11–100"}
+
+
 def _determine_size_label(briefing: Optional[Dict[str, Any]]) -> str:
     """
     Determine company size label from briefing.
@@ -546,18 +572,62 @@ def _determine_size_label(briefing: Optional[Dict[str, Any]]) -> str:
     - "1" → "solo" (Solo-Selbstständig/Freiberuflich)
     - "2–10" → "small" (Kleines Team)
     - "11–100" → "medium" (KMU)
+
+    **Frontend V2 (current, since 2026-01-06):**
+    - Direct string matching for exact values
+
+    **Legacy Format (pre-2026-01-06):**
+    - Keyword-based fallback (for old data)
+
+    Args:
+        briefing: Briefing dictionary from questionnaire.
+                  Should contain 'unternehmensgroesse' key.
+
+    Returns:
+        str: Normalized size ("solo", "small", or "medium")
+
+    Examples:
+        >>> _determine_size_label({"unternehmensgroesse": "1"})
+        'solo'
+        >>> _determine_size_label({"unternehmensgroesse": "2–10"})
+        'small'
+        >>> _determine_size_label({"unternehmensgroesse": "11–100"})
+        'medium'
+
+    Notes:
+        - Supports both dash types: "–" (En-Dash) and "-" (Hyphen)
+        - Default fallback: "small" (most common use case)
     """
+    # Edge case: None or empty briefing
     if not briefing:
-        return "small"  # Default (was "team")
+        log.debug("Empty briefing received, defaulting size to 'small'")
+        return SIZE_SMALL
 
-    size = str(briefing.get("unternehmensgroesse", "")).lower()
+    size = str(briefing.get("unternehmensgroesse", "")).lower().strip()
 
-    if "solo" in size or "freiberuf" in size or "einzelunternehm" in size or size == "1":
-        return "solo"
-    elif "medium" in size or "mittel" in size or "kmu" in size or "11-100" in size or "11–100" in size:
-        return "medium"  # was "kmu"
-    else:
-        return "small"  # was "team"
+    # Edge case: empty size value
+    if not size:
+        return SIZE_SMALL
+
+    # --- Frontend V2 (fast path with set lookup - O(1)) ---
+    if size in FRONTEND_SIZE_VALUES_SOLO:
+        return SIZE_SOLO
+    if size in FRONTEND_SIZE_VALUES_SMALL:
+        return SIZE_SMALL
+    if size in FRONTEND_SIZE_VALUES_MEDIUM:
+        return SIZE_MEDIUM
+
+    # --- Legacy keyword matching (fallback) ---
+    # Medium (11-100) - check first to avoid false matches
+    if any(kw in size for kw in ("medium", "mittel", "kmu", "11-100", "11–100")):
+        return SIZE_MEDIUM
+
+    # Solo (1 person)
+    if any(kw in size for kw in ("solo", "freiberuf", "einzelunternehm")):
+        return SIZE_SOLO
+
+    # Default: small (2-10) is the most common
+    return SIZE_SMALL
 
 
 def _extract_risk_grade(risk_report_v3: Any) -> str:
