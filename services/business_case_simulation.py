@@ -76,8 +76,8 @@ DISTRIBUTION_NORMAL = "normal"
 # Size-specific variance multipliers
 SIZE_VARIANCE_MULTIPLIERS = {
     "solo": 1.3,   # Higher variance for solo entrepreneurs
-    "team": 1.0,   # Base variance
-    "kmu": 0.85,   # Lower variance for established KMUs
+    "small": 1.0,   # Base variance (was "team")
+    "medium": 0.85,   # Lower variance for established SMEs (was "kmu")
 }
 
 # Risk-adjusted variance factors
@@ -383,7 +383,7 @@ class BusinessCaseSimulationReport:
     narrative_summary: str = ""
 
     # Metadata
-    size_label: str = "team"
+    size_label: str = "small"  # was "team"
     risk_grade: str = "C"
     simulation_runs: int = DEFAULT_SIMULATION_RUNS
 
@@ -465,7 +465,7 @@ class BusinessCaseSimulationReport:
             distribution=distribution,
             assumptions=assumptions,
             narrative_summary=data.get("narrative_summary", ""),
-            size_label=data.get("size_label", "team"),
+            size_label=data.get("size_label", "small"),
             risk_grade=data.get("risk_grade", "C"),
             simulation_runs=data.get("simulation_runs", DEFAULT_SIMULATION_RUNS),
         )
@@ -539,18 +539,25 @@ def _sample_from_distribution(
 
 
 def _determine_size_label(briefing: Optional[Dict[str, Any]]) -> str:
-    """Determine company size label from briefing."""
+    """
+    Determine company size label from briefing.
+
+    Maps questionnaire values to standard size keys:
+    - "1" → "solo" (Solo-Selbstständig/Freiberuflich)
+    - "2–10" → "small" (Kleines Team)
+    - "11–100" → "medium" (KMU)
+    """
     if not briefing:
-        return "team"
+        return "small"  # Default (was "team")
 
     size = str(briefing.get("unternehmensgroesse", "")).lower()
 
-    if "solo" in size or "freiberuf" in size or "einzelunternehm" in size:
+    if "solo" in size or "freiberuf" in size or "einzelunternehm" in size or size == "1":
         return "solo"
-    elif "kmu" in size or "mittel" in size or ">10" in size:
-        return "kmu"
+    elif "medium" in size or "mittel" in size or "kmu" in size or "11-100" in size or "11–100" in size:
+        return "medium"  # was "kmu"
     else:
-        return "team"
+        return "small"  # was "team"
 
 
 def _extract_risk_grade(risk_report_v3: Any) -> str:
@@ -587,7 +594,7 @@ def generate_default_assumptions(
     business_case: BusinessCaseReport,
     risk_report_v3: Any = None,
     auto_report: Any = None,
-    size_label: str = "team",
+    size_label: str = "small",  # was "team"
 ) -> SimulationAssumptions:
     """
     Generate default simulation assumptions from business case baseline.
