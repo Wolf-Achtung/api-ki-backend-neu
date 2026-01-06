@@ -232,6 +232,230 @@ INDUSTRY_BENCHMARKS: Dict[str, Dict[str, Dict[str, float]]] = {
         "funding": {"median": 0.2, "top_quartile": 0.38, "floor": 0.05},
         "strategy": {"median": 0.42, "top_quartile": 0.65, "floor": 0.18},
     },
+    # Phase 5B: Added missing questionnaire Branchen
+    # Handwerk & Bau
+    "handwerk": {
+        "kpi": {"median": 0.6, "top_quartile": 1.0, "floor": 0.25},
+        "tools": {"median": 0.35, "top_quartile": 0.55, "floor": 0.15},
+        "risk": {"median": 0.55, "top_quartile": 0.35, "floor": 0.12},
+        "automation": {"median": 0.3, "top_quartile": 0.5, "floor": 0.1},
+        "funding": {"median": 0.35, "top_quartile": 0.55, "floor": 0.1},
+        "strategy": {"median": 0.38, "top_quartile": 0.6, "floor": 0.15},
+    },
+    "bau": {
+        "kpi": {"median": 0.6, "top_quartile": 1.0, "floor": 0.25},
+        "tools": {"median": 0.35, "top_quartile": 0.55, "floor": 0.15},
+        "risk": {"median": 0.55, "top_quartile": 0.35, "floor": 0.12},
+        "automation": {"median": 0.3, "top_quartile": 0.5, "floor": 0.1},
+        "funding": {"median": 0.35, "top_quartile": 0.55, "floor": 0.1},
+        "strategy": {"median": 0.38, "top_quartile": 0.6, "floor": 0.15},
+    },
+    "construction": {
+        "kpi": {"median": 0.6, "top_quartile": 1.0, "floor": 0.25},
+        "tools": {"median": 0.35, "top_quartile": 0.55, "floor": 0.15},
+        "risk": {"median": 0.55, "top_quartile": 0.35, "floor": 0.12},
+        "automation": {"median": 0.3, "top_quartile": 0.5, "floor": 0.1},
+        "funding": {"median": 0.35, "top_quartile": 0.55, "floor": 0.1},
+        "strategy": {"median": 0.38, "top_quartile": 0.6, "floor": 0.15},
+    },
+    # Gastronomie & Tourismus
+    "gastronomie": {
+        "kpi": {"median": 0.55, "top_quartile": 0.95, "floor": 0.22},
+        "tools": {"median": 0.4, "top_quartile": 0.6, "floor": 0.18},
+        "risk": {"median": 0.5, "top_quartile": 0.32, "floor": 0.1},
+        "automation": {"median": 0.35, "top_quartile": 0.55, "floor": 0.12},
+        "funding": {"median": 0.3, "top_quartile": 0.5, "floor": 0.08},
+        "strategy": {"median": 0.4, "top_quartile": 0.62, "floor": 0.18},
+    },
+    "tourismus": {
+        "kpi": {"median": 0.58, "top_quartile": 1.0, "floor": 0.25},
+        "tools": {"median": 0.45, "top_quartile": 0.65, "floor": 0.2},
+        "risk": {"median": 0.48, "top_quartile": 0.3, "floor": 0.1},
+        "automation": {"median": 0.38, "top_quartile": 0.58, "floor": 0.15},
+        "funding": {"median": 0.32, "top_quartile": 0.52, "floor": 0.1},
+        "strategy": {"median": 0.42, "top_quartile": 0.65, "floor": 0.2},
+    },
+    "hospitality": {
+        "kpi": {"median": 0.55, "top_quartile": 0.95, "floor": 0.22},
+        "tools": {"median": 0.4, "top_quartile": 0.6, "floor": 0.18},
+        "risk": {"median": 0.5, "top_quartile": 0.32, "floor": 0.1},
+        "automation": {"median": 0.35, "top_quartile": 0.55, "floor": 0.12},
+        "funding": {"median": 0.3, "top_quartile": 0.5, "floor": 0.08},
+        "strategy": {"median": 0.4, "top_quartile": 0.62, "floor": 0.18},
+    },
+    # Kreativwirtschaft
+    "kreativ": {
+        "kpi": {"median": 0.75, "top_quartile": 1.3, "floor": 0.3},
+        "tools": {"median": 0.55, "top_quartile": 0.75, "floor": 0.25},
+        "risk": {"median": 0.42, "top_quartile": 0.26, "floor": 0.08},
+        "automation": {"median": 0.48, "top_quartile": 0.7, "floor": 0.18},
+        "funding": {"median": 0.28, "top_quartile": 0.48, "floor": 0.08},
+        "strategy": {"median": 0.5, "top_quartile": 0.72, "floor": 0.22},
+    },
+    "kreativwirtschaft": {
+        "kpi": {"median": 0.75, "top_quartile": 1.3, "floor": 0.3},
+        "tools": {"median": 0.55, "top_quartile": 0.75, "floor": 0.25},
+        "risk": {"median": 0.42, "top_quartile": 0.26, "floor": 0.08},
+        "automation": {"median": 0.48, "top_quartile": 0.7, "floor": 0.18},
+        "funding": {"median": 0.28, "top_quartile": 0.48, "floor": 0.08},
+        "strategy": {"median": 0.5, "top_quartile": 0.72, "floor": 0.22},
+    },
+    "creative": {
+        "kpi": {"median": 0.75, "top_quartile": 1.3, "floor": 0.3},
+        "tools": {"median": 0.55, "top_quartile": 0.75, "floor": 0.25},
+        "risk": {"median": 0.42, "top_quartile": 0.26, "floor": 0.08},
+        "automation": {"median": 0.48, "top_quartile": 0.7, "floor": 0.18},
+        "funding": {"median": 0.28, "top_quartile": 0.48, "floor": 0.08},
+        "strategy": {"median": 0.5, "top_quartile": 0.72, "floor": 0.22},
+    },
+    # Versicherungen (to complete Finanzen & Versicherungen)
+    "versicherung": {
+        "kpi": {"median": 0.85, "top_quartile": 1.4, "floor": 0.35},
+        "tools": {"median": 0.52, "top_quartile": 0.72, "floor": 0.22},
+        "risk": {"median": 0.68, "top_quartile": 0.42, "floor": 0.18},
+        "automation": {"median": 0.42, "top_quartile": 0.65, "floor": 0.15},
+        "funding": {"median": 0.22, "top_quartile": 0.4, "floor": 0.05},
+        "strategy": {"median": 0.52, "top_quartile": 0.75, "floor": 0.22},
+    },
+    "insurance": {
+        "kpi": {"median": 0.85, "top_quartile": 1.4, "floor": 0.35},
+        "tools": {"median": 0.52, "top_quartile": 0.72, "floor": 0.22},
+        "risk": {"median": 0.68, "top_quartile": 0.42, "floor": 0.18},
+        "automation": {"median": 0.42, "top_quartile": 0.65, "floor": 0.15},
+        "funding": {"median": 0.22, "top_quartile": 0.4, "floor": 0.05},
+        "strategy": {"median": 0.52, "top_quartile": 0.75, "floor": 0.22},
+    },
+    # Dienstleistungen (alias for Beratung)
+    "dienstleistungen": {
+        "kpi": {"median": 0.95, "top_quartile": 1.6, "floor": 0.4},
+        "tools": {"median": 0.6, "top_quartile": 0.8, "floor": 0.3},
+        "risk": {"median": 0.45, "top_quartile": 0.28, "floor": 0.1},
+        "automation": {"median": 0.48, "top_quartile": 0.7, "floor": 0.2},
+        "funding": {"median": 0.28, "top_quartile": 0.48, "floor": 0.08},
+        "strategy": {"median": 0.58, "top_quartile": 0.82, "floor": 0.28},
+    },
+    # Industrie (alias for Produktion)
+    "industrie": {
+        "kpi": {"median": 0.85, "top_quartile": 1.4, "floor": 0.35},
+        "tools": {"median": 0.5, "top_quartile": 0.72, "floor": 0.2},
+        "risk": {"median": 0.55, "top_quartile": 0.35, "floor": 0.12},
+        "automation": {"median": 0.5, "top_quartile": 0.75, "floor": 0.2},
+        "funding": {"median": 0.4, "top_quartile": 0.65, "floor": 0.15},
+        "strategy": {"median": 0.5, "top_quartile": 0.75, "floor": 0.25},
+    },
+    # Schulung (alias for Bildung)
+    "schulung": {
+        "kpi": {"median": 0.65, "top_quartile": 1.1, "floor": 0.25},
+        "tools": {"median": 0.45, "top_quartile": 0.65, "floor": 0.2},
+        "risk": {"median": 0.55, "top_quartile": 0.35, "floor": 0.12},
+        "automation": {"median": 0.35, "top_quartile": 0.55, "floor": 0.12},
+        "funding": {"median": 0.45, "top_quartile": 0.7, "floor": 0.15},
+        "strategy": {"median": 0.42, "top_quartile": 0.65, "floor": 0.18},
+    },
+    # Werbung (alias for Marketing)
+    "werbung": {
+        "kpi": {"median": 0.85, "top_quartile": 1.45, "floor": 0.35},
+        "tools": {"median": 0.62, "top_quartile": 0.82, "floor": 0.3},
+        "risk": {"median": 0.42, "top_quartile": 0.25, "floor": 0.08},
+        "automation": {"median": 0.55, "top_quartile": 0.78, "floor": 0.22},
+        "funding": {"median": 0.25, "top_quartile": 0.42, "floor": 0.05},
+        "strategy": {"median": 0.55, "top_quartile": 0.78, "floor": 0.25},
+    },
+    # Soziales (alias for Gesundheit)
+    "soziales": {
+        "kpi": {"median": 0.6, "top_quartile": 1.0, "floor": 0.25},
+        "tools": {"median": 0.4, "top_quartile": 0.6, "floor": 0.18},
+        "risk": {"median": 0.65, "top_quartile": 0.42, "floor": 0.18},
+        "automation": {"median": 0.3, "top_quartile": 0.5, "floor": 0.1},
+        "funding": {"median": 0.4, "top_quartile": 0.65, "floor": 0.12},
+        "strategy": {"median": 0.4, "top_quartile": 0.62, "floor": 0.18},
+    },
+    # Phase 5B.2: Additional Frontend V2 Branchen support
+    # Pflege (for "Gesundheit & Pflege")
+    "pflege": {
+        "kpi": {"median": 0.6, "top_quartile": 1.0, "floor": 0.25},
+        "tools": {"median": 0.4, "top_quartile": 0.6, "floor": 0.18},
+        "risk": {"median": 0.65, "top_quartile": 0.42, "floor": 0.18},
+        "automation": {"median": 0.3, "top_quartile": 0.5, "floor": 0.1},
+        "funding": {"median": 0.4, "top_quartile": 0.65, "floor": 0.12},
+        "strategy": {"median": 0.4, "top_quartile": 0.62, "floor": 0.18},
+    },
+    # Verwaltung (Public Administration)
+    "verwaltung": {
+        "kpi": {"median": 0.55, "top_quartile": 0.9, "floor": 0.22},
+        "tools": {"median": 0.38, "top_quartile": 0.58, "floor": 0.15},
+        "risk": {"median": 0.62, "top_quartile": 0.4, "floor": 0.15},
+        "automation": {"median": 0.28, "top_quartile": 0.48, "floor": 0.1},
+        "funding": {"median": 0.45, "top_quartile": 0.7, "floor": 0.15},
+        "strategy": {"median": 0.38, "top_quartile": 0.6, "floor": 0.15},
+    },
+    "administration": {
+        "kpi": {"median": 0.55, "top_quartile": 0.9, "floor": 0.22},
+        "tools": {"median": 0.38, "top_quartile": 0.58, "floor": 0.15},
+        "risk": {"median": 0.62, "top_quartile": 0.4, "floor": 0.15},
+        "automation": {"median": 0.28, "top_quartile": 0.48, "floor": 0.1},
+        "funding": {"median": 0.45, "top_quartile": 0.7, "floor": 0.15},
+        "strategy": {"median": 0.38, "top_quartile": 0.6, "floor": 0.15},
+    },
+    # Bauwesen & Architektur
+    "bauwesen": {
+        "kpi": {"median": 0.6, "top_quartile": 1.0, "floor": 0.25},
+        "tools": {"median": 0.35, "top_quartile": 0.55, "floor": 0.15},
+        "risk": {"median": 0.55, "top_quartile": 0.35, "floor": 0.12},
+        "automation": {"median": 0.3, "top_quartile": 0.5, "floor": 0.1},
+        "funding": {"median": 0.35, "top_quartile": 0.55, "floor": 0.1},
+        "strategy": {"median": 0.38, "top_quartile": 0.6, "floor": 0.15},
+    },
+    "architektur": {
+        "kpi": {"median": 0.65, "top_quartile": 1.1, "floor": 0.28},
+        "tools": {"median": 0.45, "top_quartile": 0.65, "floor": 0.2},
+        "risk": {"median": 0.52, "top_quartile": 0.32, "floor": 0.1},
+        "automation": {"median": 0.35, "top_quartile": 0.55, "floor": 0.12},
+        "funding": {"median": 0.32, "top_quartile": 0.52, "floor": 0.1},
+        "strategy": {"median": 0.42, "top_quartile": 0.65, "floor": 0.18},
+    },
+    "architecture": {
+        "kpi": {"median": 0.65, "top_quartile": 1.1, "floor": 0.28},
+        "tools": {"median": 0.45, "top_quartile": 0.65, "floor": 0.2},
+        "risk": {"median": 0.52, "top_quartile": 0.32, "floor": 0.1},
+        "automation": {"median": 0.35, "top_quartile": 0.55, "floor": 0.12},
+        "funding": {"median": 0.32, "top_quartile": 0.52, "floor": 0.1},
+        "strategy": {"median": 0.42, "top_quartile": 0.65, "floor": 0.18},
+    },
+    # Transport & Logistik
+    "transport": {
+        "kpi": {"median": 0.65, "top_quartile": 1.1, "floor": 0.28},
+        "tools": {"median": 0.42, "top_quartile": 0.62, "floor": 0.18},
+        "risk": {"median": 0.55, "top_quartile": 0.35, "floor": 0.12},
+        "automation": {"median": 0.4, "top_quartile": 0.6, "floor": 0.15},
+        "funding": {"median": 0.35, "top_quartile": 0.55, "floor": 0.1},
+        "strategy": {"median": 0.42, "top_quartile": 0.65, "floor": 0.18},
+    },
+    "logistik": {
+        "kpi": {"median": 0.7, "top_quartile": 1.15, "floor": 0.3},
+        "tools": {"median": 0.48, "top_quartile": 0.68, "floor": 0.2},
+        "risk": {"median": 0.52, "top_quartile": 0.32, "floor": 0.1},
+        "automation": {"median": 0.45, "top_quartile": 0.68, "floor": 0.18},
+        "funding": {"median": 0.32, "top_quartile": 0.52, "floor": 0.1},
+        "strategy": {"median": 0.45, "top_quartile": 0.68, "floor": 0.2},
+    },
+    "logistics": {
+        "kpi": {"median": 0.7, "top_quartile": 1.15, "floor": 0.3},
+        "tools": {"median": 0.48, "top_quartile": 0.68, "floor": 0.2},
+        "risk": {"median": 0.52, "top_quartile": 0.32, "floor": 0.1},
+        "automation": {"median": 0.45, "top_quartile": 0.68, "floor": 0.18},
+        "funding": {"median": 0.32, "top_quartile": 0.52, "floor": 0.1},
+        "strategy": {"median": 0.45, "top_quartile": 0.68, "floor": 0.2},
+    },
+    # Medien (for "Medien & Kreativwirtschaft")
+    "medien": {
+        "kpi": {"median": 0.78, "top_quartile": 1.35, "floor": 0.32},
+        "tools": {"median": 0.55, "top_quartile": 0.75, "floor": 0.25},
+        "risk": {"median": 0.42, "top_quartile": 0.26, "floor": 0.08},
+        "automation": {"median": 0.48, "top_quartile": 0.7, "floor": 0.18},
+        "funding": {"median": 0.28, "top_quartile": 0.48, "floor": 0.08},
+        "strategy": {"median": 0.5, "top_quartile": 0.72, "floor": 0.22},
+    },
 }
 
 # Size multipliers for benchmarks
@@ -652,6 +876,15 @@ def _normalize_branch(branch: str) -> str:
         "rechtsanwalt": "legal",
         "anwalt": "legal",
         "kanzlei": "legal",
+        # Gastronomie & Tourismus (Phase 5B.2 Quick-Fix)
+        "gastronomie": "gastronomie",
+        "tourismus": "tourismus",
+        "gastronomie & tourismus": "gastronomie",
+        "hotellerie": "gastronomie",
+        "restaurant": "gastronomie",
+        "hotel": "tourismus",
+        "hospitality": "gastronomie",
+        "tourism": "tourismus",
     }
 
     # Check direct mappings

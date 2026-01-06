@@ -205,9 +205,9 @@ def get_sample_tool_stats_json() -> Dict[str, Any]:
                 "top_tools": ["Make (Integromat)", "Notion", "ChatGPT", "Canva", "Tally.so"]
             },
             {
-                "segment_id": "size_team",
+                "segment_id": "size_small",  # Phase 5B: was "size_team"
                 "segment_type": "size_label",
-                "segment_value": "team",
+                "segment_value": "small",  # Phase 5B: was "team"
                 "tool_count": 10,
                 "report_count": 55,
                 "stability": "strong",
@@ -216,9 +216,9 @@ def get_sample_tool_stats_json() -> Dict[str, Any]:
                 "top_tools": ["Slack", "Notion", "Jira", "HubSpot", "Figma"]
             },
             {
-                "segment_id": "size_kmu",
+                "segment_id": "size_medium",  # Phase 5B: was "size_kmu"
                 "segment_type": "size_label",
-                "segment_value": "kmu",
+                "segment_value": "medium",  # Phase 5B: was "kmu"
                 "tool_count": 12,
                 "report_count": 50,
                 "stability": "medium",
@@ -305,7 +305,7 @@ def get_sample_validation_analysis() -> Dict[str, Any]:
             "governance_tools_present": True
         },
         "persona_fit_check": {
-            "persona": "team",
+            "persona": "small",  # Phase 5B: was "team"
             "inappropriate_tools_count": 0,
             "fit_score_average": 0.85
         },
