@@ -876,6 +876,15 @@ def _normalize_branch(branch: str) -> str:
         "rechtsanwalt": "legal",
         "anwalt": "legal",
         "kanzlei": "legal",
+        # Gastronomie & Tourismus (Phase 5B.2 Quick-Fix)
+        "gastronomie": "gastronomie",
+        "tourismus": "tourismus",
+        "gastronomie & tourismus": "gastronomie",
+        "hotellerie": "gastronomie",
+        "restaurant": "gastronomie",
+        "hotel": "tourismus",
+        "hospitality": "gastronomie",
+        "tourism": "tourismus",
     }
 
     # Check direct mappings
