@@ -879,9 +879,10 @@ class TestIndustryBenchmarks:
         """Test size multipliers are defined."""
         from services.benchmark_engine import SIZE_BENCHMARK_MULTIPLIERS
 
+        # Phase 5A: keys are now solo/small/medium (was solo/team/kmu)
         assert "solo" in SIZE_BENCHMARK_MULTIPLIERS
-        assert "team" in SIZE_BENCHMARK_MULTIPLIERS
-        assert "kmu" in SIZE_BENCHMARK_MULTIPLIERS
+        assert "small" in SIZE_BENCHMARK_MULTIPLIERS  # was "team"
+        assert "medium" in SIZE_BENCHMARK_MULTIPLIERS  # was "kmu"
 
 
 # =============================================================================
