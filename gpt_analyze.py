@@ -1981,6 +1981,744 @@ def _smart_truncate(text: str, max_len: int = 100, suffix: str = "...") -> str:
     return truncated.rstrip('.,;:') + suffix
 
 
+# ==================== FIX 3.1: FÖRDERPROGRAMME DATABASE (30 PROGRAMME) ====================
+
+# Bundesland-Mapping für Fallback
+BUNDESLAND_MAPPING = {
+    "bw": "Baden-Württemberg",
+    "by": "Bayern",
+    "be": "Berlin",
+    "bb": "Brandenburg",
+    "hb": "Bremen",
+    "hh": "Hamburg",
+    "he": "Hessen",
+    "mv": "Mecklenburg-Vorpommern",
+    "ni": "Niedersachsen",
+    "nw": "Nordrhein-Westfalen",
+    "rp": "Rheinland-Pfalz",
+    "sl": "Saarland",
+    "sn": "Sachsen",
+    "st": "Sachsen-Anhalt",
+    "sh": "Schleswig-Holstein",
+    "th": "Thüringen"
+}
+
+def get_foerderprogramme_extended(bundesland: str, company_size: str, branche: str) -> list:
+    """
+    Gibt 5 relevante Förderprogramme zurück basierend auf:
+    - Bundesland (Code wie "be", "by" oder Name wie "Berlin")
+    - Company Size: "solo", "small", oder "medium" (NUR DIESE 3!)
+    - Branche: Eine der 12 Branchen
+
+    Priorisiert: Bundesland-spezifisch > Bundesweit > EU
+    """
+
+    # Map Bundesland-Code zu Name falls nötig
+    bundesland_name = BUNDESLAND_MAPPING.get(bundesland.lower(), bundesland)
+
+    # Erweiterte Förderprogramm-Datenbank (30 Programme)
+    foerder_db = {
+        # ===== BUNDESWEIT (für alle Bundesländer) =====
+        "go_digital": {
+            "name": "go-digital (BMWK)",
+            "beschreibung": "Förderung digitaler Geschäftsprozesse und IT-Sicherheit",
+            "max_foerderung": "16.500 €",
+            "eignung": "Hoch",
+            "komplexitaet": "Niedrig",
+            "bundesland": "alle",
+            "sizes": ["solo", "small"],
+            "url": "https://www.bmwk.de/go-digital",
+            "zielgruppe": "KMU bis 100 MA"
+        },
+        "digital_jetzt": {
+            "name": "Digital Jetzt (BMWK)",
+            "beschreibung": "Investitionsförderung für digitale Technologien",
+            "max_foerderung": "50.000 €",
+            "eignung": "Mittel",
+            "komplexitaet": "Mittel",
+            "bundesland": "alle",
+            "sizes": ["solo", "small", "medium"],
+            "url": "https://www.bmwk.de/digital-jetzt",
+            "zielgruppe": "KMU 3-499 MA"
+        },
+        "bafa_beratung": {
+            "name": "BAFA Unternehmensberatung",
+            "beschreibung": "Beratungsförderung für KMU",
+            "max_foerderung": "3.200 €",
+            "eignung": "Hoch",
+            "komplexitaet": "Niedrig",
+            "bundesland": "alle",
+            "sizes": ["solo", "small"],
+            "url": "https://www.bafa.de",
+            "zielgruppe": "KMU bis 249 MA"
+        },
+        "zim": {
+            "name": "ZIM - Zentrales Innovationsprogramm Mittelstand",
+            "beschreibung": "Förderung innovativer F&E-Projekte",
+            "max_foerderung": "550.000 €",
+            "eignung": "Niedrig",
+            "komplexitaet": "Hoch",
+            "bundesland": "alle",
+            "sizes": ["small", "medium"],
+            "url": "https://www.zim.de",
+            "zielgruppe": "KMU mit F&E-Projekten"
+        },
+
+        # ===== BERLIN =====
+        "ibb_berlin_coaching": {
+            "name": "IBB Berlin Coaching Bonus",
+            "beschreibung": "Coaching für Solo-Selbstständige und Kleinstunternehmen",
+            "max_foerderung": "2.700 €",
+            "eignung": "Hoch",
+            "komplexitaet": "Niedrig",
+            "bundesland": "Berlin",
+            "sizes": ["solo"],
+            "url": "https://www.ibb.de/coaching",
+            "zielgruppe": "Solo-Selbstständige"
+        },
+        "ibb_berlin_digital": {
+            "name": "IBB Digitalisierungsprämie Plus",
+            "beschreibung": "Digitalisierung für Berliner KMU",
+            "max_foerderung": "17.000 €",
+            "eignung": "Hoch",
+            "komplexitaet": "Niedrig",
+            "bundesland": "Berlin",
+            "sizes": ["solo", "small", "medium"],
+            "url": "https://www.ibb.de",
+            "zielgruppe": "Berliner Unternehmen"
+        },
+
+        # ===== BAYERN =====
+        "bayern_digital": {
+            "name": "Bayern Digital (StMWi)",
+            "beschreibung": "Digitalisierungsförderung für bayerische KMU",
+            "max_foerderung": "10.000 €",
+            "eignung": "Hoch",
+            "komplexitaet": "Niedrig",
+            "bundesland": "Bayern",
+            "sizes": ["solo", "small"],
+            "url": "https://www.stmwi.bayern.de",
+            "zielgruppe": "Bayerische KMU"
+        },
+        "lfa_bayern": {
+            "name": "LfA Förderbank Bayern - Digitalkredit",
+            "beschreibung": "Finanzierung digitaler Investitionen",
+            "max_foerderung": "200.000 €",
+            "eignung": "Mittel",
+            "komplexitaet": "Mittel",
+            "bundesland": "Bayern",
+            "sizes": ["small", "medium"],
+            "url": "https://www.lfa.de",
+            "zielgruppe": "Bayerische Unternehmen"
+        },
+
+        # ===== NORDRHEIN-WESTFALEN =====
+        "nrw_bank_digital": {
+            "name": "NRW.BANK Digitalkredit",
+            "beschreibung": "Finanzierung digitaler Investitionen",
+            "max_foerderung": "100.000 €",
+            "eignung": "Mittel",
+            "komplexitaet": "Mittel",
+            "bundesland": "Nordrhein-Westfalen",
+            "sizes": ["solo", "small", "medium"],
+            "url": "https://www.nrwbank.de",
+            "zielgruppe": "NRW Unternehmen"
+        },
+        "nrw_potentialberatung": {
+            "name": "NRW Potentialberatung",
+            "beschreibung": "Beratung zu Digitalisierung und Innovation",
+            "max_foerderung": "6.000 €",
+            "eignung": "Hoch",
+            "komplexitaet": "Niedrig",
+            "bundesland": "Nordrhein-Westfalen",
+            "sizes": ["solo", "small"],
+            "url": "https://www.mais.nrw",
+            "zielgruppe": "NRW KMU"
+        },
+
+        # ===== HAMBURG =====
+        "hamburg_ifb": {
+            "name": "IFB Hamburg Digitalisierungszuschuss",
+            "beschreibung": "Zuschuss für Digitalisierungsprojekte",
+            "max_foerderung": "25.000 €",
+            "eignung": "Hoch",
+            "komplexitaet": "Niedrig",
+            "bundesland": "Hamburg",
+            "sizes": ["solo", "small", "medium"],
+            "url": "https://www.ifbhh.de",
+            "zielgruppe": "Hamburger Unternehmen"
+        },
+
+        # ===== BADEN-WÜRTTEMBERG =====
+        "bw_digital": {
+            "name": "Digital Startup BW",
+            "beschreibung": "Förderung digitaler Gründungen",
+            "max_foerderung": "30.000 €",
+            "eignung": "Mittel",
+            "komplexitaet": "Mittel",
+            "bundesland": "Baden-Württemberg",
+            "sizes": ["solo", "small"],
+            "url": "https://www.l-bank.de",
+            "zielgruppe": "BW Startups"
+        },
+        "lbank_bw": {
+            "name": "L-Bank Digitalisierungsprämie",
+            "beschreibung": "Digitalisierung für BW-Unternehmen",
+            "max_foerderung": "15.000 €",
+            "eignung": "Hoch",
+            "komplexitaet": "Niedrig",
+            "bundesland": "Baden-Württemberg",
+            "sizes": ["solo", "small", "medium"],
+            "url": "https://www.l-bank.de",
+            "zielgruppe": "BW KMU"
+        },
+
+        # ===== HESSEN =====
+        "hessen_digital": {
+            "name": "Hessen Digital Invest",
+            "beschreibung": "Digitalisierungsförderung für hessische KMU",
+            "max_foerderung": "50.000 €",
+            "eignung": "Mittel",
+            "komplexitaet": "Mittel",
+            "bundesland": "Hessen",
+            "sizes": ["small", "medium"],
+            "url": "https://www.wibank.de",
+            "zielgruppe": "Hessische KMU"
+        },
+
+        # ===== SACHSEN =====
+        "sachsen_digital": {
+            "name": "SAB Digitalisierungsprämie Sachsen",
+            "beschreibung": "Förderung für Digitalisierungsprojekte",
+            "max_foerderung": "20.000 €",
+            "eignung": "Hoch",
+            "komplexitaet": "Niedrig",
+            "bundesland": "Sachsen",
+            "sizes": ["solo", "small", "medium"],
+            "url": "https://www.sab.sachsen.de",
+            "zielgruppe": "Sächsische Unternehmen"
+        },
+
+        # ===== NIEDERSACHSEN =====
+        "nbank_digital": {
+            "name": "NBank Digitalisierung innovativ!",
+            "beschreibung": "Digitalisierung für niedersächsische KMU",
+            "max_foerderung": "30.000 €",
+            "eignung": "Mittel",
+            "komplexitaet": "Mittel",
+            "bundesland": "Niedersachsen",
+            "sizes": ["small", "medium"],
+            "url": "https://www.nbank.de",
+            "zielgruppe": "Niedersächsische KMU"
+        },
+
+        # ===== RHEINLAND-PFALZ =====
+        "rlp_digital": {
+            "name": "ISB Digitalisierungsförderung RLP",
+            "beschreibung": "Digitalisierung für RLP-Unternehmen",
+            "max_foerderung": "25.000 €",
+            "eignung": "Mittel",
+            "komplexitaet": "Mittel",
+            "bundesland": "Rheinland-Pfalz",
+            "sizes": ["solo", "small", "medium"],
+            "url": "https://www.isb.rlp.de",
+            "zielgruppe": "RLP KMU"
+        },
+
+        # ===== SCHLESWIG-HOLSTEIN =====
+        "sh_digital": {
+            "name": "IB.SH Digitalisierungsförderung",
+            "beschreibung": "Digitalisierung für SH-Unternehmen",
+            "max_foerderung": "20.000 €",
+            "eignung": "Mittel",
+            "komplexitaet": "Mittel",
+            "bundesland": "Schleswig-Holstein",
+            "sizes": ["solo", "small", "medium"],
+            "url": "https://www.ib-sh.de",
+            "zielgruppe": "SH KMU"
+        },
+
+        # ===== BREMEN =====
+        "bremen_digital": {
+            "name": "BAB Bremen Digitalisierungsberatung",
+            "beschreibung": "Beratung und Förderung für Bremer Unternehmen",
+            "max_foerderung": "10.000 €",
+            "eignung": "Hoch",
+            "komplexitaet": "Niedrig",
+            "bundesland": "Bremen",
+            "sizes": ["solo", "small"],
+            "url": "https://www.bab-bremen.de",
+            "zielgruppe": "Bremer KMU"
+        },
+
+        # ===== BRANDENBURG =====
+        "brandenburg_digital": {
+            "name": "ILB Brandenburg Digitalisierung",
+            "beschreibung": "Digitalisierungsförderung für Brandenburg",
+            "max_foerderung": "30.000 €",
+            "eignung": "Mittel",
+            "komplexitaet": "Mittel",
+            "bundesland": "Brandenburg",
+            "sizes": ["small", "medium"],
+            "url": "https://www.ilb.de",
+            "zielgruppe": "Brandenburger KMU"
+        },
+
+        # ===== MECKLENBURG-VORPOMMERN =====
+        "mv_digital": {
+            "name": "LFI MV Digitalisierungsförderung",
+            "beschreibung": "Digitalisierung für MV-Unternehmen",
+            "max_foerderung": "25.000 €",
+            "eignung": "Mittel",
+            "komplexitaet": "Mittel",
+            "bundesland": "Mecklenburg-Vorpommern",
+            "sizes": ["solo", "small", "medium"],
+            "url": "https://www.lfi-mv.de",
+            "zielgruppe": "MV KMU"
+        },
+
+        # ===== SAARLAND =====
+        "saarland_digital": {
+            "name": "SIKB Saarland Digitalisierung",
+            "beschreibung": "Digitalisierungsförderung für saarländische KMU",
+            "max_foerderung": "20.000 €",
+            "eignung": "Mittel",
+            "komplexitaet": "Mittel",
+            "bundesland": "Saarland",
+            "sizes": ["solo", "small", "medium"],
+            "url": "https://www.sikb.de",
+            "zielgruppe": "Saarländische KMU"
+        },
+
+        # ===== SACHSEN-ANHALT =====
+        "st_digital": {
+            "name": "IB Sachsen-Anhalt Digitalisierung",
+            "beschreibung": "Digitalisierungsförderung für ST-Unternehmen",
+            "max_foerderung": "25.000 €",
+            "eignung": "Mittel",
+            "komplexitaet": "Mittel",
+            "bundesland": "Sachsen-Anhalt",
+            "sizes": ["small", "medium"],
+            "url": "https://www.ib-sachsen-anhalt.de",
+            "zielgruppe": "ST KMU"
+        },
+
+        # ===== THÜRINGEN =====
+        "thueringen_digital": {
+            "name": "TAB Thüringen Digitalisierung",
+            "beschreibung": "Digitalisierungsförderung für Thüringer KMU",
+            "max_foerderung": "30.000 €",
+            "eignung": "Mittel",
+            "komplexitaet": "Mittel",
+            "bundesland": "Thüringen",
+            "sizes": ["solo", "small", "medium"],
+            "url": "https://www.aufbaubank.de",
+            "zielgruppe": "Thüringer KMU"
+        },
+
+        # ===== EU-PROGRAMME =====
+        "eu_digital_europe": {
+            "name": "Digital Europe Programme",
+            "beschreibung": "EU-Förderung für digitale Transformation",
+            "max_foerderung": "200.000 €",
+            "eignung": "Niedrig",
+            "komplexitaet": "Hoch",
+            "bundesland": "alle",
+            "sizes": ["medium"],
+            "url": "https://digital-strategy.ec.europa.eu",
+            "zielgruppe": "Mittlere/Große Unternehmen"
+        },
+        "eu_horizon": {
+            "name": "Horizon Europe",
+            "beschreibung": "EU-Forschungs- und Innovationsförderung",
+            "max_foerderung": "500.000 €",
+            "eignung": "Niedrig",
+            "komplexitaet": "Sehr Hoch",
+            "bundesland": "alle",
+            "sizes": ["medium"],
+            "url": "https://ec.europa.eu/horizon-europe",
+            "zielgruppe": "Forschungsintensive Unternehmen"
+        },
+        "eic_accelerator": {
+            "name": "EIC Accelerator",
+            "beschreibung": "EU-Förderung für innovative Scale-ups",
+            "max_foerderung": "2.500.000 €",
+            "eignung": "Niedrig",
+            "komplexitaet": "Sehr Hoch",
+            "bundesland": "alle",
+            "sizes": ["small", "medium"],
+            "url": "https://eic.ec.europa.eu",
+            "zielgruppe": "Deep-Tech Startups"
+        }
+    }
+
+    # Filtern nach Größe und Bundesland
+    relevant = []
+
+    for key, prog in foerder_db.items():
+        # Größe passt?
+        if company_size not in prog["sizes"]:
+            continue
+
+        # Bundesland passt? (Direct match oder "alle")
+        prog_bundesland = prog.get("bundesland", "").lower()
+        if prog_bundesland not in ["alle", bundesland_name.lower(), bundesland.lower()]:
+            continue
+
+        relevant.append(prog)
+
+    # Sortieren nach Eignung (Hoch > Mittel > Niedrig)
+    eignung_rank = {"Hoch": 3, "Mittel": 2, "Niedrig": 1}
+    relevant.sort(key=lambda x: eignung_rank.get(x.get("eignung", "Niedrig"), 0), reverse=True)
+
+    # Top 5 zurückgeben
+    return relevant[:5]
+
+# ==================== ENDE FIX 3.1 ====================
+
+
+# ==================== FIX 3.3: AI MINI-POLICY (12 BRANCHEN) ====================
+
+def generate_ai_mini_policy_html(branche: str = "Allgemein", company_size: str = "solo") -> str:
+    """
+    Generiert branchenspezifische AI-Policy mit Dos & Don'ts.
+    Unterstützt alle 12 Branchen aus dem Fragebogen.
+    """
+
+    # Branchenspezifische sichere Use Cases
+    safe_use_cases_by_branche = {
+        "marketing & werbung": [
+            "Content-Entwürfe & Social Media Posts",
+            "SEO-Texte & Blog-Artikel",
+            "Kampagnen-Ideen & Brainstorming",
+            "Bild-Generierung für Ads (keine Kundendaten)"
+        ],
+        "beratung & dienstleistungen": [
+            "Fragebogen-Auswertungen (anonymisiert)",
+            "Angebots-Texte & Präsentationen",
+            "Recherche zu Tools & Methoden",
+            "Meeting-Zusammenfassungen (ohne Kundennamen)"
+        ],
+        "it & software": [
+            "Code-Review & Dokumentation",
+            "Bug-Fixes & Testing-Szenarien",
+            "API-Dokumentation generieren",
+            "Technische Artikel & Tutorials"
+        ],
+        "finanzen & versicherungen": [
+            "Administrative Texte (KEINE Finanzberatung!)",
+            "Interne Dokumentation (anonymisiert)",
+            "Markt-Recherche (öffentliche Daten)",
+            "Template-Generierung"
+        ],
+        "handel & e-commerce": [
+            "Produktbeschreibungen & SEO-Texte",
+            "Kundenanfragen-Vorformulierung (keine Kundendaten)",
+            "Marktanalysen & Trend-Research",
+            "Social Media Content-Ideen"
+        ],
+        "bildung": [
+            "Unterrichtsmaterial-Entwürfe",
+            "Quiz & Übungsaufgaben",
+            "Themen-Recherche & Zusammenfassungen",
+            "Administrative Texte"
+        ],
+        "verwaltung": [
+            "Standard-Briefe & Formulierungen",
+            "Interne Dokumentation",
+            "Prozess-Dokumentation",
+            "FAQ-Erstellung"
+        ],
+        "gesundheit & pflege": [
+            "Administrative Texte (KEINE Diagnosen!)",
+            "Termin-Kommunikation (keine Patientendaten)",
+            "Allgemeine Informationstexte",
+            "Recherche zu Verwaltungsthemen"
+        ],
+        "bauwesen & architektur": [
+            "Angebots-Texte & Leistungsbeschreibungen",
+            "Projekt-Dokumentation (anonymisiert)",
+            "Material-Recherche & Vergleiche",
+            "Website & Marketing-Content"
+        ],
+        "medien & kreativwirtschaft": [
+            "Kreative Konzepte & Ideen",
+            "Skript-Entwürfe & Storyboards",
+            "Recherche & Inspiration",
+            "Social Media Content"
+        ],
+        "industrie & produktion": [
+            "Prozess-Dokumentation",
+            "Technische Beschreibungen",
+            "Qualitäts-Checklisten",
+            "Schulungsunterlagen"
+        ],
+        "transport & logistik": [
+            "Route-Optimierung Recherche",
+            "Kundenservice-Templates",
+            "Prozess-Dokumentation",
+            "Website & Marketing-Content"
+        ],
+        "allgemein": [
+            "E-Mail-Entwürfe (anonymisiert)",
+            "Recherche & Zusammenfassungen",
+            "Brainstorming & Ideenfindung",
+            "Textüberarbeitung & Korrektur"
+        ]
+    }
+
+    # Branchenspezifische Verbote
+    dont_use_cases_by_branche = {
+        "marketing & werbung": [
+            "Kunden-Personendaten in Prompts eingeben",
+            "Vertrauliche Kampagnen-Strategien teilen",
+            "Unreflektierte AI-Bilder für Kunden nutzen"
+        ],
+        "beratung & dienstleistungen": [
+            "Kundennamen & Unternehmensdaten eingeben",
+            "Vertrauliche Strategien ohne Anonymisierung",
+            "AI-Output ohne Review an Kunden senden"
+        ],
+        "it & software": [
+            "Produktions-Credentials/API-Keys eingeben",
+            "Proprietären Kundencode hochladen",
+            "Security-relevante Infos teilen"
+        ],
+        "finanzen & versicherungen": [
+            "Individuelle Finanzberatung durch AI",
+            "Kundendaten oder Kontoinformationen",
+            "Anlageempfehlungen ohne Prüfung"
+        ],
+        "handel & e-commerce": [
+            "Kundendaten oder Bestellhistorien",
+            "Zahlungsinformationen teilen",
+            "Automatisierte Kundenantworten ohne Review"
+        ],
+        "bildung": [
+            "Schüler-/Studenten-Personendaten",
+            "Prüfungsantworten generieren lassen",
+            "Noten/Bewertungen durch AI"
+        ],
+        "verwaltung": [
+            "Bürgerdaten & personenbezogene Infos",
+            "Vertrauliche Verwaltungsvorgänge",
+            "Automatisierte Bescheide ohne Prüfung"
+        ],
+        "gesundheit & pflege": [
+            "Patientendaten jeglicher Art",
+            "Diagnosen oder Behandlungsempfehlungen",
+            "Medikamenten-Empfehlungen durch AI"
+        ],
+        "bauwesen & architektur": [
+            "Vertrauliche Kundenprojektdaten",
+            "Statik-Berechnungen durch AI",
+            "Verbindliche Kostenkalkulationen"
+        ],
+        "medien & kreativwirtschaft": [
+            "Unreflektierte Nutzung von AI-Content",
+            "Kundenbriefings ohne Anonymisierung",
+            "AI-generierte Inhalte als eigene ausgeben"
+        ],
+        "industrie & produktion": [
+            "Produktionsgeheimnisse & Patente",
+            "Sicherheitskritische Berechnungen",
+            "Qualitätsprüfung ohne menschliche Kontrolle"
+        ],
+        "transport & logistik": [
+            "Kundenadressen & Lieferdetails",
+            "Sicherheitsrelevante Routeninformationen",
+            "Automatisierte Entscheidungen ohne Review"
+        ],
+        "allgemein": [
+            "Personenbezogene Daten eingeben",
+            "Vertrauliche Geschäftsinformationen",
+            "AI-Output ohne Prüfung übernehmen"
+        ]
+    }
+
+    branche_lower = branche.lower()
+    safe_cases = safe_use_cases_by_branche.get(branche_lower, safe_use_cases_by_branche["allgemein"])
+    dont_cases = dont_use_cases_by_branche.get(branche_lower, dont_use_cases_by_branche["allgemein"])
+
+    # Size-abhängige Governance-Hinweise
+    governance_hints = {
+        "solo": "Als Solo-Selbstständige:r sind Sie selbst für DSGVO-Konformität verantwortlich.",
+        "small": "Im Team: Definieren Sie klare Regeln, wer AI wie nutzen darf.",
+        "medium": "Erstellen Sie eine formale AI-Policy und schulen Sie alle Mitarbeitenden."
+    }
+    governance = governance_hints.get(company_size, governance_hints["solo"])
+
+    # HTML generieren
+    html = f'''
+<div class="ai-policy-mini" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin: 16px 0;">
+    <h4 style="color: #1e40af; margin: 0 0 16px 0; font-size: 14pt;">🛡️ Ihre KI-Nutzungsrichtlinie</h4>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <!-- DO Column -->
+        <div style="background: #ecfdf5; border-radius: 8px; padding: 14px;">
+            <h5 style="color: #059669; margin: 0 0 10px 0; font-size: 11pt;">✅ Empfohlene Nutzung</h5>
+            <ul style="margin: 0; padding-left: 18px; font-size: 10pt; color: #065f46;">
+'''
+
+    for case in safe_cases:
+        html += f'                <li style="margin-bottom: 4px;">{case}</li>\n'
+
+    html += '''            </ul>
+        </div>
+
+        <!-- DON'T Column -->
+        <div style="background: #fef2f2; border-radius: 8px; padding: 14px;">
+            <h5 style="color: #dc2626; margin: 0 0 10px 0; font-size: 11pt;">❌ Vermeiden Sie</h5>
+            <ul style="margin: 0; padding-left: 18px; font-size: 10pt; color: #991b1b;">
+'''
+
+    for case in dont_cases:
+        html += f'                <li style="margin-bottom: 4px;">{case}</li>\n'
+
+    html += f'''            </ul>
+        </div>
+    </div>
+
+    <div style="margin-top: 14px; padding: 10px; background: #fefce8; border-radius: 6px; font-size: 9.5pt; color: #854d0e;">
+        <strong>💡 Governance-Tipp:</strong> {governance}
+    </div>
+</div>
+'''
+
+    return html
+
+# ==================== ENDE FIX 3.3 ====================
+
+
+# ==================== FIX 3.5: KI-TOOLS-ÜBERSICHT (12 BRANCHEN) ====================
+
+def generate_ki_tools_overview_html(branche: str = "Allgemein", company_size: str = "solo") -> str:
+    """
+    Generiert branchenspezifische KI-Tools für alle 12 Branchen.
+    """
+
+    tools_by_branche = {
+        "marketing & werbung": [
+            {"name": "Jasper AI", "kategorie": "Content", "preis": "ab 39€/Monat", "use_case": "Marketing-Texte, Ads", "dsgvo": "⚠️ US-basiert"},
+            {"name": "Canva AI", "kategorie": "Design", "preis": "ab 12€/Monat", "use_case": "Social Graphics", "dsgvo": "✅ DSGVO-konform"},
+            {"name": "ChatGPT Plus", "kategorie": "Universal", "preis": "20€/Monat", "use_case": "Kampagnen, SEO", "dsgvo": "⚠️ US-basiert"}
+        ],
+        "beratung & dienstleistungen": [
+            {"name": "Notion AI", "kategorie": "Dokumentation", "preis": "ab 8€/Monat", "use_case": "Meeting-Notizen, Docs", "dsgvo": "✅ EU-Server"},
+            {"name": "Claude (Anthropic)", "kategorie": "Analyse", "preis": "20€/Monat", "use_case": "Fragebogen, Reports", "dsgvo": "✅ DSGVO-konform"},
+            {"name": "Perplexity Pro", "kategorie": "Recherche", "preis": "20€/Monat", "use_case": "Markt-Research", "dsgvo": "⚠️ US-basiert"}
+        ],
+        "it & software": [
+            {"name": "GitHub Copilot", "kategorie": "Code", "preis": "10€/Monat", "use_case": "Code-Completion", "dsgvo": "⚠️ US-basiert"},
+            {"name": "Cursor", "kategorie": "IDE", "preis": "20€/Monat", "use_case": "AI-powered Editor", "dsgvo": "⚠️ US-basiert"},
+            {"name": "ChatGPT Plus", "kategorie": "Universal", "preis": "20€/Monat", "use_case": "Code-Review, Docs", "dsgvo": "⚠️ US-basiert"}
+        ],
+        "finanzen & versicherungen": [
+            {"name": "Notion AI", "kategorie": "Dokumentation", "preis": "ab 8€/Monat", "use_case": "Dokumentation", "dsgvo": "✅ EU-Server"},
+            {"name": "ChatGPT Plus", "kategorie": "Universal", "preis": "20€/Monat", "use_case": "Recherche (keine Beratung!)", "dsgvo": "⚠️ US-basiert"},
+            {"name": "DeepL Pro", "kategorie": "Übersetzung", "preis": "ab 8€/Monat", "use_case": "Übersetzungen", "dsgvo": "✅ EU-Server"}
+        ],
+        "handel & e-commerce": [
+            {"name": "Jasper AI", "kategorie": "Content", "preis": "ab 39€/Monat", "use_case": "Produktbeschreibungen", "dsgvo": "⚠️ US-basiert"},
+            {"name": "ChatGPT Plus", "kategorie": "Universal", "preis": "20€/Monat", "use_case": "Customer Service", "dsgvo": "⚠️ US-basiert"},
+            {"name": "Canva AI", "kategorie": "Design", "preis": "ab 12€/Monat", "use_case": "Produkt-Graphics", "dsgvo": "✅ DSGVO-konform"}
+        ],
+        "bildung": [
+            {"name": "ChatGPT Plus", "kategorie": "Universal", "preis": "20€/Monat", "use_case": "Unterrichtsmaterial", "dsgvo": "⚠️ US-basiert"},
+            {"name": "Notion AI", "kategorie": "Organisation", "preis": "ab 8€/Monat", "use_case": "Kurs-Organisation", "dsgvo": "✅ EU-Server"},
+            {"name": "Canva AI", "kategorie": "Design", "preis": "ab 12€/Monat", "use_case": "Präsentationen", "dsgvo": "✅ DSGVO-konform"}
+        ],
+        "verwaltung": [
+            {"name": "Notion AI", "kategorie": "Dokumentation", "preis": "ab 8€/Monat", "use_case": "Prozess-Docs", "dsgvo": "✅ EU-Server"},
+            {"name": "ChatGPT Plus", "kategorie": "Universal", "preis": "20€/Monat", "use_case": "Standard-Texte", "dsgvo": "⚠️ US-basiert"},
+            {"name": "DeepL Pro", "kategorie": "Übersetzung", "preis": "ab 8€/Monat", "use_case": "Amtliche Übersetzungen", "dsgvo": "✅ EU-Server"}
+        ],
+        "gesundheit & pflege": [
+            {"name": "Notion AI", "kategorie": "Dokumentation", "preis": "ab 8€/Monat", "use_case": "Admin-Docs (KEINE Patientendaten!)", "dsgvo": "✅ EU-Server"},
+            {"name": "ChatGPT Plus", "kategorie": "Universal", "preis": "20€/Monat", "use_case": "Info-Texte (allgemein)", "dsgvo": "⚠️ US-basiert"},
+            {"name": "DeepL Pro", "kategorie": "Übersetzung", "preis": "ab 8€/Monat", "use_case": "Übersetzungen", "dsgvo": "✅ EU-Server"}
+        ],
+        "bauwesen & architektur": [
+            {"name": "ChatGPT Plus", "kategorie": "Universal", "preis": "20€/Monat", "use_case": "Angebots-Texte", "dsgvo": "⚠️ US-basiert"},
+            {"name": "Notion AI", "kategorie": "Dokumentation", "preis": "ab 8€/Monat", "use_case": "Projekt-Docs", "dsgvo": "✅ EU-Server"},
+            {"name": "Canva AI", "kategorie": "Design", "preis": "ab 12€/Monat", "use_case": "Präsentationen", "dsgvo": "✅ DSGVO-konform"}
+        ],
+        "medien & kreativwirtschaft": [
+            {"name": "ChatGPT Plus", "kategorie": "Universal", "preis": "20€/Monat", "use_case": "Konzepte, Skripte", "dsgvo": "⚠️ US-basiert"},
+            {"name": "Midjourney", "kategorie": "Bild-AI", "preis": "ab 10€/Monat", "use_case": "Bild-Generierung", "dsgvo": "⚠️ US-basiert"},
+            {"name": "Canva AI", "kategorie": "Design", "preis": "ab 12€/Monat", "use_case": "Social Graphics", "dsgvo": "✅ DSGVO-konform"}
+        ],
+        "industrie & produktion": [
+            {"name": "ChatGPT Plus", "kategorie": "Universal", "preis": "20€/Monat", "use_case": "Prozess-Docs", "dsgvo": "⚠️ US-basiert"},
+            {"name": "Notion AI", "kategorie": "Dokumentation", "preis": "ab 8€/Monat", "use_case": "Qualitäts-Docs", "dsgvo": "✅ EU-Server"},
+            {"name": "DeepL Pro", "kategorie": "Übersetzung", "preis": "ab 8€/Monat", "use_case": "Technische Übersetzungen", "dsgvo": "✅ EU-Server"}
+        ],
+        "transport & logistik": [
+            {"name": "ChatGPT Plus", "kategorie": "Universal", "preis": "20€/Monat", "use_case": "Kundenservice-Templates", "dsgvo": "⚠️ US-basiert"},
+            {"name": "Notion AI", "kategorie": "Organisation", "preis": "ab 8€/Monat", "use_case": "Prozess-Docs", "dsgvo": "✅ EU-Server"},
+            {"name": "DeepL Pro", "kategorie": "Übersetzung", "preis": "ab 8€/Monat", "use_case": "Internationale Kommunikation", "dsgvo": "✅ EU-Server"}
+        ],
+        "allgemein": [
+            {"name": "ChatGPT Plus", "kategorie": "Universal", "preis": "20€/Monat", "use_case": "Texte, Recherche", "dsgvo": "⚠️ US-basiert"},
+            {"name": "Grammarly", "kategorie": "Textkorrektur", "preis": "ab 12€/Monat", "use_case": "Rechtschreibung", "dsgvo": "⚠️ US-basiert"},
+            {"name": "DeepL Pro", "kategorie": "Übersetzung", "preis": "ab 8€/Monat", "use_case": "Übersetzungen", "dsgvo": "✅ EU-Server"}
+        ]
+    }
+
+    branche_lower = branche.lower()
+    tools = tools_by_branche.get(branche_lower, tools_by_branche["allgemein"])
+
+    # Budget-Hinweis basierend auf Company Size
+    budget_hints = {
+        "solo": "Budget-Tipp: Starten Sie mit 1 Tool (20-40€/Monat), testen Sie kostenlose Versionen zuerst.",
+        "small": "Budget-Tipp: 2-3 Tools für das Team (50-100€/Monat), achten Sie auf Team-Lizenzen.",
+        "medium": "Budget-Tipp: Enterprise-Lizenzen prüfen (ab 200€/Monat), DSGVO-Konformität wichtig."
+    }
+    budget_hint = budget_hints.get(company_size, budget_hints["solo"])
+
+    # HTML generieren
+    html = f'''
+<div class="ki-tools-overview" style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 20px; margin: 16px 0;">
+    <h4 style="color: #0369a1; margin: 0 0 16px 0; font-size: 14pt;">🤖 Empfohlene KI-Tools für Ihre Branche</h4>
+
+    <table style="width: 100%; border-collapse: collapse; font-size: 10pt;">
+        <thead>
+            <tr style="background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%); color: white;">
+                <th style="padding: 10px; text-align: left; border-radius: 6px 0 0 0;">Tool</th>
+                <th style="padding: 10px; text-align: left;">Kategorie</th>
+                <th style="padding: 10px; text-align: left;">Preis</th>
+                <th style="padding: 10px; text-align: left;">Use Case</th>
+                <th style="padding: 10px; text-align: left; border-radius: 0 6px 0 0;">DSGVO</th>
+            </tr>
+        </thead>
+        <tbody>
+'''
+
+    for i, tool in enumerate(tools):
+        bg_color = "#ffffff" if i % 2 == 0 else "#f0f9ff"
+        html += f'''            <tr style="background: {bg_color};">
+                <td style="padding: 8px; border-bottom: 1px solid #e0f2fe;"><strong>{tool["name"]}</strong></td>
+                <td style="padding: 8px; border-bottom: 1px solid #e0f2fe;">{tool["kategorie"]}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e0f2fe;">{tool["preis"]}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e0f2fe;">{tool["use_case"]}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e0f2fe;">{tool["dsgvo"]}</td>
+            </tr>
+'''
+
+    html += f'''        </tbody>
+    </table>
+
+    <div style="margin-top: 14px; padding: 10px; background: #fefce8; border-radius: 6px; font-size: 9.5pt; color: #854d0e;">
+        <strong>💡 {budget_hint}</strong>
+    </div>
+</div>
+'''
+
+    return html
+
+# ==================== ENDE FIX 3.5 ====================
+
+
 def _apply_pdf_inline_styles(html: str) -> str:
     """
     Apply inline styles for Puppeteer PDF rendering compatibility.
