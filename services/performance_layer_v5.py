@@ -49,16 +49,18 @@ class RetryConfig:
 
 
 # Company size thresholds
+# NOTE: Only solo/small/medium are used - these map to questionnaire values:
+# "1" → solo, "2-10" → small, "11-100" → medium
 class CompanySize(Enum):
-    """Company size classification."""
-    SOLO = "solo"  # 1-5 employees
-    SMALL = "small"  # 6-50 employees
-    MEDIUM = "medium"  # 51-250 employees
-    LARGE = "large"  # 251-1000 employees
-    ENTERPRISE = "enterprise"  # 1000+ employees
+    """Company size classification (aligned with questionnaire)."""
+    SOLO = "solo"  # 1 person (Solo-Selbstständig/Freiberuflich)
+    SMALL = "small"  # 2-10 employees (Kleines Team)
+    MEDIUM = "medium"  # 11-100 employees (KMU)
+    # LARGE and ENTERPRISE removed - not in questionnaire
 
 
 # Complexity settings by company size
+# Keys must match: "solo", "small", "medium" (from questionnaire)
 COMPLEXITY_SETTINGS: Dict[str, Dict[str, Any]] = {
     "solo": {
         "max_sections": 15,
@@ -68,7 +70,7 @@ COMPLEXITY_SETTINGS: Dict[str, Dict[str, Any]] = {
         "parallel_tasks": 2,
         "llm_temperature": 0.3,
     },
-    "small": {
+    "small": {  # Maps to "2-10" from questionnaire
         "max_sections": 20,
         "max_words_per_section": 300,
         "detail_level": 2,
@@ -76,7 +78,7 @@ COMPLEXITY_SETTINGS: Dict[str, Dict[str, Any]] = {
         "parallel_tasks": 3,
         "llm_temperature": 0.25,
     },
-    "medium": {
+    "medium": {  # Maps to "11-100" from questionnaire
         "max_sections": 25,
         "max_words_per_section": 400,
         "detail_level": 3,
@@ -84,22 +86,7 @@ COMPLEXITY_SETTINGS: Dict[str, Dict[str, Any]] = {
         "parallel_tasks": 4,
         "llm_temperature": 0.2,
     },
-    "large": {
-        "max_sections": 30,
-        "max_words_per_section": 500,
-        "detail_level": 4,
-        "include_advanced_analytics": True,
-        "parallel_tasks": 6,
-        "llm_temperature": 0.15,
-    },
-    "enterprise": {
-        "max_sections": 35,
-        "max_words_per_section": 600,
-        "detail_level": 5,
-        "include_advanced_analytics": True,
-        "parallel_tasks": 8,
-        "llm_temperature": 0.1,
-    },
+    # "large" and "enterprise" removed - not valid questionnaire values
 }
 
 # Section priorities (higher = more important = process first)
@@ -373,22 +360,26 @@ def determine_company_size(employees: int) -> CompanySize:
     """
     Determine company size category.
 
+    Maps employee counts to questionnaire-aligned categories:
+    - 1 → solo
+    - 2-10 → small
+    - 11+ → medium
+
+    Note: Questionnaire only supports up to 100 employees (11-100 = medium).
+    Any larger company is treated as medium for complexity settings.
+
     Args:
         employees: Number of employees
 
     Returns:
-        CompanySize enum value
+        CompanySize enum value (solo, small, or medium)
     """
-    if employees <= 5:
+    if employees <= 1:
         return CompanySize.SOLO
-    elif employees <= 50:
+    elif employees <= 10:
         return CompanySize.SMALL
-    elif employees <= 250:
-        return CompanySize.MEDIUM
-    elif employees <= 1000:
-        return CompanySize.LARGE
     else:
-        return CompanySize.ENTERPRISE
+        return CompanySize.MEDIUM  # Covers 11-100 and any larger
 
 
 def get_complexity_settings(

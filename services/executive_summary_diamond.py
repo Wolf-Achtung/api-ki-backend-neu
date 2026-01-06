@@ -47,14 +47,14 @@ DIAMOND_WORD_TARGETS: Dict[str, Dict[str, int]] = {
         "impact": 60,
         "next_steps": 50,
     },
-    "team": {
+    "small": {  # was "team"
         "situation": 80,
         "complication": 70,
         "recommendation": 100,
         "impact": 80,
         "next_steps": 70,
     },
-    "kmu": {
+    "medium": {  # was "kmu"
         "situation": 100,
         "complication": 80,
         "recommendation": 120,
@@ -531,9 +531,9 @@ def extract_funding(sections: SectionDict) -> List[str]:
 # DIAMOND MODEL GENERATION
 # =============================================================================
 
-def generate_situation(sections: SectionDict, size: str = "kmu") -> str:
+def generate_situation(sections: SectionDict, size: str = "medium") -> str:
     """Generate Situation section of Diamond Model."""
-    target_words = DIAMOND_WORD_TARGETS.get(size, DIAMOND_WORD_TARGETS["kmu"])["situation"]
+    target_words = DIAMOND_WORD_TARGETS.get(size, DIAMOND_WORD_TARGETS["medium"])["situation"]
 
     # Get source content
     content_parts: List[str] = []
@@ -552,9 +552,9 @@ def generate_situation(sections: SectionDict, size: str = "kmu") -> str:
     return truncate_to_words(combined, target_words)
 
 
-def generate_complication(sections: SectionDict, risks: List[DiamondRisk], size: str = "kmu") -> str:
+def generate_complication(sections: SectionDict, risks: List[DiamondRisk], size: str = "medium") -> str:
     """Generate Complication section of Diamond Model."""
-    target_words = DIAMOND_WORD_TARGETS.get(size, DIAMOND_WORD_TARGETS["kmu"])["complication"]
+    target_words = DIAMOND_WORD_TARGETS.get(size, DIAMOND_WORD_TARGETS["medium"])["complication"]
 
     if risks:
         risk_summary = f"Die kritischen Herausforderungen umfassen: {', '.join(r.title for r in risks[:3])}."
@@ -571,9 +571,9 @@ def generate_complication(sections: SectionDict, risks: List[DiamondRisk], size:
     return "Die Hauptherausforderungen liegen in der Integration, Skalierung und Risikominimierung."
 
 
-def generate_recommendation(sections: SectionDict, actions: List[DiamondAction], size: str = "kmu") -> str:
+def generate_recommendation(sections: SectionDict, actions: List[DiamondAction], size: str = "medium") -> str:
     """Generate Recommendation section of Diamond Model."""
-    target_words = DIAMOND_WORD_TARGETS.get(size, DIAMOND_WORD_TARGETS["kmu"])["recommendation"]
+    target_words = DIAMOND_WORD_TARGETS.get(size, DIAMOND_WORD_TARGETS["medium"])["recommendation"]
 
     if actions:
         action_summary = f"Wir empfehlen priorisiert: {'; '.join(a.title for a in actions[:3])}."
@@ -590,9 +590,9 @@ def generate_recommendation(sections: SectionDict, actions: List[DiamondAction],
     return "Die strategische Empfehlung fokussiert auf schnelle Pilotierung, systematische Skalierung und Risikominimierung."
 
 
-def generate_impact(sections: SectionDict, kpis: List[DiamondKPI], size: str = "kmu") -> str:
+def generate_impact(sections: SectionDict, kpis: List[DiamondKPI], size: str = "medium") -> str:
     """Generate Impact section of Diamond Model."""
-    target_words = DIAMOND_WORD_TARGETS.get(size, DIAMOND_WORD_TARGETS["kmu"])["impact"]
+    target_words = DIAMOND_WORD_TARGETS.get(size, DIAMOND_WORD_TARGETS["medium"])["impact"]
 
     if kpis:
         kpi_summary = f"Erwartete Ergebnisse: {', '.join(k.to_string() for k in kpis[:3])}."
@@ -609,9 +609,9 @@ def generate_impact(sections: SectionDict, kpis: List[DiamondKPI], size: str = "
     return "Die Umsetzung führt zu messbaren ROI-Verbesserungen, Effizienzsteigerungen und Wettbewerbsvorteilen."
 
 
-def generate_next_steps(sections: SectionDict, size: str = "kmu") -> str:
+def generate_next_steps(sections: SectionDict, size: str = "medium") -> str:
     """Generate Next Steps section of Diamond Model."""
-    target_words = DIAMOND_WORD_TARGETS.get(size, DIAMOND_WORD_TARGETS["kmu"])["next_steps"]
+    target_words = DIAMOND_WORD_TARGETS.get(size, DIAMOND_WORD_TARGETS["medium"])["next_steps"]
 
     # Get from 90d roadmap
     for source_key in DIAMOND_SOURCES["next_steps"]:
@@ -624,7 +624,7 @@ def generate_next_steps(sections: SectionDict, size: str = "kmu") -> str:
     return "Nächste Schritte (90 Tage): Pilotprojekt starten, Team aufbauen, Quick Wins realisieren."
 
 
-def build_diamond_model(sections: SectionDict, size: str = "kmu") -> DiamondModel:
+def build_diamond_model(sections: SectionDict, size: str = "medium") -> DiamondModel:
     """
     N3.7: Build complete Diamond Model from sections.
 
@@ -741,14 +741,15 @@ def enhance_executive_summary_diamond(
 
     log.info("[N3.7-Diamond] Generating Executive Summary Diamond Model...")
 
-    # Determine company size
-    size = "kmu"
+    # Determine company size (maps to solo/small/medium)
+    size = "medium"  # Default (was "kmu")
     if briefing:
         size_raw = briefing.get("unternehmensgroesse", "").lower()
-        if "solo" in size_raw or "freiberuf" in size_raw:
+        if "solo" in size_raw or "freiberuf" in size_raw or size_raw == "1":
             size = "solo"
-        elif "team" in size_raw or "klein" in size_raw:
-            size = "team"
+        elif "small" in size_raw or "klein" in size_raw or "team" in size_raw or "2-10" in size_raw or "2–10" in size_raw:
+            size = "small"  # was "team"
+        # else: remains "medium" (covers kmu, mittel, 11-100, etc.)
 
     # Build Diamond Model
     model = build_diamond_model(sections, size)
