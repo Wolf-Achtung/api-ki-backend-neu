@@ -43,6 +43,53 @@ EXPECTED EFFECT – PERSONALISE:
 =============================================================================
 -->
 
+<!--
+GOAL: 3 concrete action recommendations for the next 30 days.
+
+MINIMUM LENGTH (STRICT!):
+- Solo: ≥60 words
+- Team: ≥80 words
+- SME: ≥100 words
+
+STRUCTURE (STRICT!):
+- Exactly 3 bullets (NOT more, NOT fewer)
+- Each bullet: Action + Time frame (Week 1–2, 2–4, etc.)
+- NO meta sentences ("In this section...", "The following actions...")
+- Start directly with the first action
+
+FORMAT PER BULLET:
+<li>
+  <strong>[Concrete action]</strong> (Week [X–Y])<br/>
+  [1 sentence concrete benefit or expected result]
+</li>
+
+ANTI-REDUNDANCY (STRICT!):
+- NO repetition from Quick Wins or Roadmap
+- Focus on NEXT concrete steps, not on summaries
+- Use cross-references: "→ see Roadmap", "→ see Quick Wins"
+
+SPRINT G6 – PERSONA HARD-GUARDS (STRICT!):
+{% if COMPANY_SIZE == "solo" %}
+SOLO MODE – FORBIDDEN:
+- "Team/Teams/Department/Employees" → do not use
+- "PMO team/Project manager" → do not use
+- Instead use: "You", "Business owner", "external support"
+{% elif COMPANY_SIZE == "team" %}
+TEAM MODE – FORBIDDEN:
+- "Division/Unit/Corporation/Department head" → do not use
+- Instead use: "Team", "Project lead", "Team member"
+{% else %}
+SME MODE – FORBIDDEN:
+- "Corporation/Division/Unit" → do not use
+- Instead use: "Project manager", "Functional area", "Compliance officer"
+{% endif %}
+
+SIZE-AWARE RESPONSIBILITIES:
+- Solo: "You", "Business owner (you)", "External support: [role]"
+- Team: "Project lead", "Business owner + [role]", "Team (2–3 people)"
+- SME: "Project manager", "Compliance officer", "Functional area lead"
+-->
+
 <section class="section next-actions">
   <h2>Next Actions (30 Days)</h2>
 
