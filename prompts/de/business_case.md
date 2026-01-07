@@ -1,10 +1,29 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.4 - SPRINT G17.P -->
+<!-- PLATIN++ PROMPT v5.5 - SPRINT G17.P -->
 <!-- SECTION: business_case -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCHE_LABEL}}, {{COMPANY_SIZE}}, {{HAUPTLEISTUNG}}, {{BUNDESLAND_LABEL}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}}, {{OFFERING_LABEL}} -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{COMPANY_SIZE}}, {{hauptleistung}}, {{BUNDESLAND_LABEL}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}}, {{OFFERING_LABEL}} -->
 <!-- TOKEN-BUDGET: 1800 (solo:0.8x=1440, team:1.0x=1800, kmu:1.15x=2070) -->
+<!--
+###############################################################################
+##                    🚨 KRITISCH: HAUPTLEISTUNG INTEGRATION 🚨              ##
+###############################################################################
+
+DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
+SIE MUSS MINDESTENS 5x IM BUSINESS CASE ERSCHEINEN!
+
+PFLICHT-STELLEN FÜR {{hauptleistung}}:
+1. ✅ Im Einleitungsabsatz: "Für Ihr Geschäftsmodell ({{hauptleistung}})..."
+2. ✅ Bei "Monatlicher Effekt": ROI-Berechnung für {{hauptleistung}}
+3. ✅ Bei "Amortisation": Payback spezifisch für {{hauptleistung}}
+4. ✅ Bei "Einordnung nach Größe": {{hauptleistung}}-Skalierung
+5. ✅ Bei "Erlöspotenziale": Neue Produkte basierend auf {{hauptleistung}}
+
+⚠️ BUSINESS CASE OHNE HAUPTLEISTUNG-BEZUG IST GENERISCH UND WERTLOS!
+
+###############################################################################
+-->
 <!-- WORD_MINIMUM_SOLO: 130 -->
 <!-- WORD_MINIMUM_TEAM: 150 -->
 <!-- WORD_MINIMUM_KMU: 180 -->
@@ -59,14 +78,14 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
 <section class="section business-case">
   <h2>Business Case – Investition und erwarteter Nutzen</h2>
 
-  <!-- G17.P: Neue Einleitung ohne Redundanz, mit Cross-References -->
+  <!-- G17.P: Neue Einleitung mit {{hauptleistung}}-Bezug -->
   <p>
-    Für <strong>{{OFFERING_LABEL}}</strong> in der Branche <strong>{{BRANCHE_LABEL}}</strong>
-    lässt sich ein konkreter Investitionsrahmen ableiten. Der Business Case zeigt, welche
+    Für Ihr Geschäftsmodell <strong>{{hauptleistung}}</strong> in der Branche <strong>{{BRANCHE_LABEL}}</strong>
+    lässt sich ein konkreter Investitionsrahmen ableiten. Der Business Case für {{hauptleistung}} zeigt, welche
     Aufwände für Setup und laufenden Betrieb realistisch sind und in welchem Zeitraum
     sich diese amortisieren. Im Fokus stehen Zeitersparnis, Qualitätsgewinne und ein
-    nachvollziehbarer Payback. Die Quick Wins aus der Roadmap beschleunigen den ROI
-    zusätzlich → siehe Sofortmaßnahmen.
+    nachvollziehbarer Payback für Ihr Kerngeschäft. Die Quick Wins aus der Roadmap beschleunigen den ROI
+    für {{hauptleistung}} zusätzlich → siehe Sofortmaßnahmen.
   </p>
 
   <h3>Investition und laufende Kosten</h3>
@@ -77,12 +96,12 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
     Infrastruktur, Tools und potenzielle Lizenzen.
   </p>
 
-  <h3>Monatlicher Effekt im Kerngeschäft</h3>
+  <h3>Monatlicher Effekt bei {{hauptleistung}}</h3>
   <p>
-    Im täglichen Einsatz ist eine realistische Entlastung von rund
+    Bei {{hauptleistung}} ist im täglichen Einsatz eine realistische Entlastung von rund
     <strong>{{EINSPARUNG_MONAT_EUR}}&nbsp;€ pro Monat</strong> erreichbar. Sie entsteht aus
-    Zeitgewinn, geringeren manuellen Schleifen und einer konsistenteren Ergebnisqualität.
-    Voraussetzung ist, dass der neue Workflow im Alltag konsequent genutzt wird.
+    Zeitgewinn bei {{hauptleistung}}-Prozessen, geringeren manuellen Schleifen und einer konsistenteren Ergebnisqualität.
+    Voraussetzung ist, dass der neue Workflow für {{hauptleistung}} im Alltag konsequent genutzt wird.
   </p>
 
   <h3>Amortisation und ROI</h3>
@@ -93,21 +112,21 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
     <strong>{{ROI_12M}}&nbsp;%</strong> – ein realistischer Wert bei konsequenter Nutzung.
   </p>
 
-  <h3>Einordnung nach Unternehmensgröße</h3>
+  <h3>Einordnung für {{hauptleistung}} nach Unternehmensgröße</h3>
   {% if COMPANY_SIZE == "solo" %}
   <p>
-    Je stärker <strong>{{HAUPTLEISTUNG}}</strong> auf wiederkehrenden Aufgaben beruht,
-    desto schneller wirkt sich Ihre Investition aus.
+    Je stärker <strong>{{hauptleistung}}</strong> auf wiederkehrenden Aufgaben beruht,
+    desto schneller wirkt sich Ihre Investition für {{hauptleistung}} aus.
   </p>
   {% elif COMPANY_SIZE == "team" %}
   <p>
-    Je stärker <strong>{{HAUPTLEISTUNG}}</strong> auf wiederkehrenden Aufgaben beruht,
-    desto schneller wirkt sich die Team-Investition aus.
+    Je stärker <strong>{{hauptleistung}}</strong> auf wiederkehrenden Aufgaben beruht,
+    desto schneller wirkt sich die Team-Investition für {{hauptleistung}} aus.
   </p>
   {% else %}
   <p>
-    Je stärker <strong>{{HAUPTLEISTUNG}}</strong> auf standardisierbaren Aufgaben beruht,
-    desto schneller die Amortisation.
+    Je stärker <strong>{{hauptleistung}}</strong> auf standardisierbaren Aufgaben beruht,
+    desto schneller die Amortisation für {{hauptleistung}}.
   </p>
   {% endif %}
 
@@ -117,14 +136,14 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
     Eine Förderung verkürzt die Amortisation. Details → siehe Förderkapitel.
   </p>
 
-  <h3>Zusätzliche Erlöspotenziale</h3>
+  <h3>Zusätzliche Erlöspotenziale durch {{hauptleistung}}</h3>
   <p>
-    Neben Effizienzgewinnen bieten KI-Prozesse Erlöspotenziale:
+    Neben Effizienzgewinnen bei {{hauptleistung}} bieten KI-Prozesse weitere Erlöspotenziale:
   </p>
   <ul>
-    <li>Digitale Produkte (automatisierte Analysen, Reports)</li>
-    <li>Neue Serviceformate (Workshops, Beratung)</li>
-    <li>Skalierbare Angebote</li>
+    <li>Digitale Produkte basierend auf {{hauptleistung}} (automatisierte Analysen, Reports)</li>
+    <li>Neue Serviceformate für {{hauptleistung}} (Workshops, Beratung)</li>
+    <li>Skalierbare {{hauptleistung}}-Angebote</li>
   </ul>
 
   <p class="small muted">
