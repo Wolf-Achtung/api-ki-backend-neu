@@ -1,10 +1,29 @@
-<!-- PLATIN++ PROMPT v5.4 - SPRINT G6 -->
+<!-- PLATIN++ PROMPT v5.5 - SPRINT G6 -->
 <!-- SECTION: next_actions -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{COMPANY_SIZE}} -->
 <!-- INPUT NEW: {{hauptleistung}}, {{ZEITERSPARNIS_PRIORITAET}}, {{KI_GUARDRAILS}}, {{VISION_3_JAHRE}} -->
 <!-- TOKEN-BUDGET: 800 (solo:0.8x=640, team:1.0x=800, kmu:1.15x=920) -->
+<!--
+###############################################################################
+##                    🚨 KRITISCH: HAUPTLEISTUNG INTEGRATION 🚨              ##
+###############################################################################
+
+DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
+SIE MUSS IN JEDER AKTION ERSCHEINEN!
+
+PFLICHT FÜR JEDE AKTION:
+1. ✅ Im <strong>-Titel: Bezug zu {{hauptleistung}}
+2. ✅ In der Beschreibung: Kontext zu {{hauptleistung}}
+3. ✅ Im "Erwarteter Effekt": Alle Effekte bezogen auf {{hauptleistung}}
+
+MINIMUM: {{hauptleistung}} erscheint 6-9x in den Aktionen!
+
+⚠️ AKTIONEN OHNE HAUPTLEISTUNG-BEZUG SIND GENERISCH UND WERTLOS!
+
+###############################################################################
+-->
 
 <!--
 =============================================================================
@@ -91,7 +110,7 @@ SIZE-AWARE VERANTWORTLICHKEITEN:
 -->
 
 <section class="section next-actions">
-  <h2>Nächste Aktionen (30 Tage)</h2>
+  <h2>Nächste Aktionen für {{hauptleistung}} (30 Tage)</h2>
 
   <ul class="checklist">
     {% if COMPANY_SIZE == "solo" %}
