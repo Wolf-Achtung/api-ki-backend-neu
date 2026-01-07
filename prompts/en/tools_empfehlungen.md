@@ -1,132 +1,241 @@
-<!-- PLATIN+++ PROMPT v6.1 - AI Stack Recommendations -->
+<!-- PLATIN++ PROMPT v5.4 - AI Stack Recommendations -->
 <!-- SECTION: tools_recommendations -->
 <!-- OUTPUT: HTML ONLY -->
-<!-- SIZE-AWARE: solo/team/kmu -->
-<!-- TOKEN-BUDGET: 2800 (solo:0.8x=2240, team:1.0x=2800, kmu:1.15x=3220) -->
+<!-- SIZE-AWARE: solo/team/sme -->
+<!-- TOKEN-BUDGET: 2800 (solo:0.8x=2240, team:1.0x=2800, sme:1.15x=3220) -->
 <!-- PHASE 3: Maximum personalization using ALL 5 Goldnuggets -->
 <!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{BRANCH_SHORT_LABEL}}, {{OFFERING_LABEL}}, {{COMPANY_SIZE}}, {{hauptleistung}}, {{KI_GUARDRAILS}}, {{VISION_3_JAHRE}} -->
 
+<!--
 =============================================================================
 PLATIN+++ CONTENT DOD (mandatory):
 =============================================================================
-- [✓] Provide a clear, structured AI tool recommendation section (the “AI stack”) tailored to the branch context {{BRANCH_CONTEXT_LABEL}} and the main service {{OFFERING_LABEL}}/"{{hauptleistung}}".
-- [✓] Use short labels: {{BRANCH_CORE_LABEL}} (8–12 words), {{BRANCH_CONTEXT_LABEL}} (4–6 words), {{BRANCH_SHORT_LABEL}} (3–5 words), {{OFFERING_LABEL}} (6–10 words). Do not translate variable names.
-- [✓] Meet the minimum word counts: ≥150 words (Solo), ≥200 words (Team), ≥250 words (KMU). Keep paragraphs to 2–3 sentences and avoid dense text blocks.
-- [✓] Structure the AI stack into tool clusters by company size:
-  * **Solo:** Four clusters, each with 2–3 examples: (1) AI assistant & basic stack, (2) Core process tools for {{OFFERING_LABEL}}, (3) Quality & documentation, (4) Responsible AI & governance tools.
-  * **Team:** Five clusters: (1) Collaboration & shared workspace, (2) Core process tools for {{OFFERING_LABEL}}, (3) Reporting & analytics, (4) Governance & quality, (5) Responsible AI & governance tools. In regulated industries (finance, health, law), add subsections on data platforms, risk & compliance tools, and reporting & collaboration.
-  * **KMU:** Six clusters: (1) Enterprise foundation (platform, knowledge store), (2) Department-specific tools for {{OFFERING_LABEL}}, (3) Reporting/BI integration, (4) Compliance & governance, (5) Roll-out & training, (6) Responsible AI & governance tools.
-- [✓] Include a mandatory sub-section “Responsible AI & Governance Tools” for all sizes, describing audit trails, versioning and review mechanisms. Length: Solo 30–50 words, Team 40–60 words, KMU 50–70 words. Describe tool classes, not specific brands.
-- [✓] Use narrative connections: reference how these tool categories support the phases of the 90‑day and 12‑month roadmaps, and link to the Starter Kit and relevant funding programmes where appropriate.
-- [✓] Maintain a neutral, product‑agnostic tone: focus on tool categories and their purpose; do not mention brand names. Describe the purpose and integration logic of each cluster. Avoid generic meta-sentences, placeholder text and developer language.
-- [✓] Respect persona vocabulary rules: In Solo mode avoid “department”, “project team”, “employees”; in Team mode avoid corporate jargon (“division”, “unit”); in KMU mode avoid solo or enterprise terms. Use “capacity”, “resources”, “team” etc. accordingly.
+- [✓] Clear, structured AI tool recommendation section ("AI stack")
+      for the industry context {{BRANCH_CONTEXT_LABEL}}
+      and main service {{OFFERING_LABEL}} / "{{hauptleistung}}"
+- [✓] Short labels: {{BRANCH_CORE_LABEL}} (8-12 words), {{BRANCH_CONTEXT_LABEL}} (4-6 words), {{BRANCH_SHORT_LABEL}} (3-5 words), {{OFFERING_LABEL}} (6-10 words)
+      → no translation of variable names
+- [✓] Minimum word counts: ≥150 words (Solo), ≥200 words (Team), ≥250 words (SME)
+      Short paragraphs: 2-3 sentences per paragraph (no text blocks)
+- [✓] AI stack structured by company size:
+      * Solo: 4 clusters with 2-3 examples each – (1) AI assistant & basic stack,
+        (2) Core tools for {{OFFERING_LABEL}}, (3) Quality & documentation, (4) Responsible AI & Governance
+      * Team: 5 clusters – (1) Collaboration & shared workspace, (2) Core tools for {{OFFERING_LABEL}},
+        (3) Reporting & Analytics, (4) Governance & Quality, (5) Responsible AI & Governance.
+        In regulated industries (finance, healthcare, legal): add subsections Data Platforms,
+        Risk & Compliance, Reporting & Collaboration
+      * SME: 6 clusters – (1) Enterprise Foundation (platform, knowledge store),
+        (2) Department-specific tools for {{OFFERING_LABEL}}, (3) Reporting/BI integration,
+        (4) Compliance & Governance, (5) Rollout & training, (6) Responsible AI & Governance
+- [✓] Mandatory "Responsible AI & Governance" sub-section (for all sizes):
+      - Focus: Audit trail, versioning, review mechanisms
+      - Length: Solo 30-50 words, Team 40-60 words, SME 50-70 words
+      - Describe tool CLASSES, not brands
+- [✓] Narrative connections: Reference to 90-day roadmap phases, 12-month roadmap,
+      starter kit and suitable funding programs
+- [✓] Neutral, product-agnostic tone: Tool categories only, no brand names
+      Describe purpose and integration logic of each cluster
+      Avoid generic meta-sentences, placeholder text, and developer language
+- [✓] Persona vocabulary rules:
+      Solo: No "department", "project team", "employees"
+      Team: No corporate language ("division", "unit")
+      SME: No solo or enterprise vocabulary
+      Instead use: "capacity", "resources", "team"
 =============================================================================
+-->
 
 <section class="section tools">
   <h2>Recommended AI Stack for {{BRANCH_CONTEXT_LABEL}}</h2>
 
   <p>
     {% if hauptleistung %}
-    For "{{hauptleistung}}" we recommend a clearly structured AI stack that directly supports this core service, saves time and can be expanded step by step.
+    For "{{hauptleistung}}" a clearly structured AI stack is recommended
+    that directly supports this main service, creates time savings,
+    and can be systematically expanded.
     {% else %}
-    For {{OFFERING_LABEL}} we recommend a clearly structured AI stack that delivers tangible relief and can be scaled in stages as needed.
+    For {{OFFERING_LABEL}} a clearly structured AI stack is recommended
+    that creates tangible relief and can be scaled step by step.
     {% endif %}
   </p>
 
-  <h3>Orientation by Company Size</h3>
+  <h3>Assessment by Company Size</h3>
   <ul>
     <li>
-      <strong>Solo professionals:</strong>
-      A lean stack with 3–5 core components is sufficient – an AI assistant, a structured knowledge store and simple automations. Keep complexity low and maintenance minimal.
+      <strong>Solo operators:</strong>
+      A lean stack with 3-5 components is sufficient – AI assistant, structured knowledge storage,
+      and simple automations. Complexity and maintenance effort remain minimal.
     </li>
     <li>
-      <strong>Small teams (2–10):</strong>
-      Focus on a shared workspace, clear responsibilities and straightforward task coordination. Tools should support collaboration, shared knowledge and aligned workflows.
+      <strong>Small teams (2-10):</strong>
+      Focus on shared workspace, clear responsibilities, and simple task coordination.
+      Tools should support collaboration, shared knowledge, and coordinated workflows.
     </li>
     <li>
-      <strong>SMEs (11–100):</strong>
-      A defined AI stack with roles, permissions and monitoring is key. Departments need autonomous yet compatible solutions embedded in an overarching governance framework.
+      <strong>SMEs (11-100):</strong>
+      A defined AI stack with roles, permissions, and monitoring is central. Areas need
+      autonomous yet compatible solutions within a governance framework.
     </li>
   </ul>
 
   {% if COMPANY_SIZE == "solo" %}
-  <h3>1. AI Assistant &amp; Basics</h3>
+  <h3>1. AI Assistant & Basics</h3>
   <p>
-    Begin with a versatile AI assistant for drafting, editing and summarising text as well as organising notes. Couple this with a lightweight knowledge store for templates and prompts, and simple automation to streamline repetitive tasks.
+    Start with a versatile AI assistant for drafting, editing, and summarizing texts
+    as well as organizing notes. Add a lightweight knowledge storage for templates and prompts,
+    plus simple automation tools to minimize repetitive tasks.
   </p>
 
-  <h3>2. Core Process Tools for {{OFFERING_LABEL}}</h3>
+  <h3>2. Core Tools for {{OFFERING_LABEL}}</h3>
   <p>
-    Choose a form or questionnaire tool to capture client data structured for {{OFFERING_LABEL}}. Pair it with a reporting tool that leverages AI to generate analyses and reports. Add a basic automation tool to link form input, analysis and result delivery.
+    Use a form or questionnaire tool to capture client data in a structured way
+    appropriate to {{OFFERING_LABEL}}. Combine this with an analysis tool
+    that uses AI to generate evaluations and reports. Add basic automation
+    to link form input, analysis, and result delivery.
   </p>
 
-  <h3>3. Quality &amp; Documentation</h3>
+  <h3>3. Quality & Documentation</h3>
   <p>
-    Implement a simple routine for documenting your AI usage: note which tools are used for which purpose, the types of data processed and any protection measures. Establish a quick review process (e.g. a second look at management reports) to ensure consistency and correctness.
+    Establish a simple routine to document AI usage: Which tools are used for what purposes?
+    What types of data are processed, and with what protection? Define a brief review process
+    (e.g., a second look at reports) to ensure consistency and correctness.
   </p>
 
-  <h3>4. Responsible AI &amp; Governance Tools</h3>
+  <h3>4. Responsible AI & Governance</h3>
   <p>
-    Introduce mechanisms for audit trails, version control and review. Tools should log AI requests and responses, track prompt versions and provide simple checklists for approving outputs before delivery. These foundations ensure transparency and facilitate future scaling.
+    Introduce mechanisms for audit trails, version control, and review.
+    Log AI queries and responses, track prompt versions, and use simple checklists
+    to approve results before delivery. These foundations ensure transparency
+    and facilitate later scaling.
   </p>
   {% elif COMPANY_SIZE == "team" %}
-  <h3>1. Collaboration &amp; Shared Workspace</h3>
+  <h3>1. Collaboration & Shared Workspace</h3>
   <p>
-    Use a unified workspace that allows your team to store templates, prompts and best practices in a central knowledge base. Integrate task management to assign responsibilities and deadlines, supporting shared workflows and visibility.
+    Use a unified workspace where your team can centrally store templates, prompts,
+    and best practices in a knowledge base. Integrate task management
+    for responsibilities and deadlines to support shared workflows and visibility.
   </p>
 
-  <h3>2. Core Process Tools for {{OFFERING_LABEL}}</h3>
+  <h3>2. Core Tools for {{OFFERING_LABEL}}</h3>
   <p>
-    Implement a multi‑user form tool to collect structured data and a reporting engine that transforms inputs into consistent AI‑generated analyses. Add an automation layer to connect submissions, evaluations and report creation.
+    Implement multi-user form tools to capture structured data
+    and an analysis engine that transforms inputs into consistent AI-supported evaluations.
+    Add an automation layer that connects submissions, evaluations, and report creation.
   </p>
 
-  <h3>3. Reporting &amp; Analytics</h3>
+  <h3>3. Reporting & Analytics</h3>
   <p>
-    Deploy a business intelligence solution to visualise outcomes and track key metrics related to your AI initiatives. This allows teams to review results, share insights and adjust processes collaboratively.
+    Deploy a business intelligence solution to visualize results
+    and track key metrics of your AI initiatives. This enables results review,
+    sharing insights, and collaborative process adjustments.
   </p>
 
-  <h3>4. Governance &amp; Quality</h3>
+  <h3>4. Governance & Quality</h3>
   <p>
-    Establish short written guidelines on which data may be entered into AI tools, how outputs should be reviewed and who has the final say. Set up brief documentation of AI usage and appoint a coordinator to oversee quality and compliance.
+    Establish brief written rules on which data may go into AI tools,
+    how outputs should be reviewed, and who has final responsibility.
+    Provide a short documentation of AI usage and appoint a coordinator
+    for quality and compliance.
   </p>
 
-  <h3>5. Responsible AI &amp; Governance Tools</h3>
+  <h3>5. Responsible AI & Governance Tools</h3>
   <p>
-    Require audit trails for AI interactions, versioning systems for prompts and models, and defined review workflows. For regulated industries (finance, health, law) add subsections on data platforms, risk & compliance tools and secure reporting and collaboration mechanisms to meet industry standards.
+    Require audit trails for AI interactions, versioning systems for prompts and models,
+    and defined review workflows. For regulated industries (finance, healthcare, legal):
+    Add subsections for data platforms, risk & compliance tools, and
+    secure reporting and collaboration mechanisms to meet industry standards.
   </p>
   {% else %}
   <h3>1. Enterprise Foundation</h3>
   <p>
-    Build your stack on an AI platform and central knowledge repository that support multi‑user access, version control and scalable infrastructure. This foundation should integrate with existing enterprise systems and support knowledge sharing across departments.
+    Build your stack on an AI platform and central knowledge repository
+    with multi-user access, version control, and scalable infrastructure.
+    The foundation should integrate with existing enterprise systems and
+    enable knowledge sharing across departments.
   </p>
 
-  <h3>2. Department‑Specific Tools for {{OFFERING_LABEL}}</h3>
+  <h3>2. Department-Specific Tools for {{OFFERING_LABEL}}</h3>
   <p>
-    Equip each functional area with tailored tools for {{OFFERING_LABEL}}. For example, form tools for structured data capture, analysis engines for automated insights and specialist applications aligned with departmental needs. Ensure all tools adhere to common standards and integrate into the central platform.
+    Equip each area with tailored tools for {{OFFERING_LABEL}}:
+    Form tools for structured data capture, analysis engines for automated evaluations,
+    and specialized applications aligned with departmental needs.
+    All tools should adhere to common standards and integrate into the central platform.
   </p>
 
-  <h3>3. Reporting &amp; BI Integration</h3>
+  <h3>3. Reporting & BI Integration</h3>
   <p>
-    Adopt reporting and business intelligence solutions that consolidate data from across the organisation. These tools should provide dashboards and KPIs to monitor progress and support strategic decision‑making.
+    Adopt reporting and business intelligence solutions
+    that consolidate organization-wide data.
+    These tools should provide dashboards and KPIs
+    to monitor progress and support strategic decisions.
   </p>
 
-  <h3>4. Compliance &amp; Governance</h3>
+  <h3>4. Compliance & Governance</h3>
   <p>
-    Implement enterprise‑grade compliance and governance modules: policy management, data protection controls, risk monitoring and audit capabilities. Align these with industry regulations and internal guardrails.
+    Implement enterprise-grade compliance and governance modules:
+    Policy management, data protection controls, risk monitoring, and audit capabilities.
+    Align these with industry regulations and internal guardrails.
   </p>
 
-  <h3>5. Roll‑out &amp; Training</h3>
+  <h3>5. Rollout & Training</h3>
   <p>
-    Plan a phased roll‑out of your AI stack. Start with core components, then add process‑specific tools and finally integrate automation and governance modules. Include role‑specific training to ensure adoption across all levels of the organisation.
+    Plan a phased rollout of your AI stack: First core components,
+    then process-specific tools, and finally automation and governance modules.
+    Include role-specific training to ensure adoption across all organizational levels.
   </p>
 
-  <h3>6. Responsible AI &amp; Governance Tools</h3>
+  <h3>6. Responsible AI & Governance Tools</h3>
   <p>
-    Adopt tools that provide audit trails, version management and review workflows. Ensure that AI interactions are logged, prompt and model changes are tracked and approvals are obtained before critical outputs are released. These measures build trust and accountability across your organisation.
+    Adopt tools that enable audit trails, version management, and review workflows.
+    Ensure that AI interactions are logged, prompt and model changes are tracked,
+    and approvals are obtained before critical outputs are released.
+    These measures build trust and accountability across your organization.
   </p>
   {% endif %}
 
   <p class="small muted">
-    These AI tool categories align with the phases of your 90‑day and 12‑month roadmaps and complement the curated selections in your Starter Kit. Funding programmes may support investments in compliance and training tools – refer to the funding overview for details. Introduce each component in stages to maximise impact and maintain control.
+    These AI tool categories align with your 90-day roadmap phases
+    and 12-month roadmap and complement the curated selection in your starter kit.
+    Funding programs may support investments in compliance and training tools –
+    refer to the funding overview for details.
+    Introduce each component step by step for maximum impact and control.
   </p>
 </section>
+
+<!-- SPRINT G18 - ANTI-REDUNDANCY (STRICT!):
+- Do NOT describe tools already mentioned in Quick Wins (→ cross-reference)
+- Maximum ONE brief mention "→ see Quick Wins for immediate tool recommendations"
+- Tool stack structure ONLY HERE – do not repeat in other sections
+- Focus: Strategic AI stack planning – NO ad-hoc tool tips
+-->
+
+<!-- SPRINT G18 - NARRATIVE CONNECTIONS:
+- Reference roadmap phases: "The basic stack tools are part of Phase 1 (Safe Start)..."
+- Reference starter kit: "The starter kit contains curated selections from these categories..."
+- Announce funding potential: "Investments in governance tools can be co-funded → see funding potential"
+-->
+
+<!-- SPRINT N - SOLO PERSONA RULES (STRICT!):
+{% if COMPANY_SIZE == "solo" %}
+DO NOT USE for solo:
+- "build team" → instead: "expand capacity"
+- "employees" → instead: "resources" or "external support"
+- "teams" → instead: "capacities"
+- "department" → instead: "work area"
+- "division" → instead: "work area"
+Use formulations without team/department concepts!
+{% endif %}
+-->
+
+<!-- ZERO-LEAK POLICY (N4.6) -->
+<!--
+FORBIDDEN – NEVER USE:
+- No questions to the reader ("Do you have questions?", "Would you like to learn more?")
+- No prompts ("If you would like...", "Contact us...")
+- No assistant language ("I can help you...", "I'm happy to explain...")
+- No offers ("If needed...", "If desired...")
+- No interactive elements ("Click here...", "Select...")
+- No placeholders ("[Insert here]", "{{VARIABLE}}" except defined ones)
+- No meta-comments ("This section...", "In the following...")
+
+The output is a FINAL REPORT SECTION, not a conversation.
+-->

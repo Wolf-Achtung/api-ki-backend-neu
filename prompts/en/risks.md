@@ -1,182 +1,191 @@
-<!-- PLATIN+++ PROMPT v7.1 - SPRINT FINALIZATION -->
+Developer:
+<!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
 <!-- SECTION: risks -->
 <!-- OUTPUT: HTML ONLY -->
-<!-- SIZE‑AWARE: solo/team/sme -->
-<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{score_governance}}, {{score_sicherheit}}, {{hauptleistung}}, {{ZEITERSPARNIS_PRIORITAET}}, {{KI_GUARDRAILS}}, {{VISION_3_JAHRE}}, COMPANY_SIZE, {{RISK_MATRIX}}, {{HIGH_PRIORITY_RISKS}}, {{MITIGATION_STRATEGIES}} -->
-<!-- TOKEN‑BUDGET: 3000 (solo:0.8x=2400, team:1.0x=3000, sme:1.15x=3450) -->
+<!-- SIZE-AWARE: solo/team/sme -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{score_governance}}, {{score_sicherheit}}, COMPANY_SIZE -->
+<!-- TOKEN-BUDGET: 3000 (solo:0.8x=2400, team:1.0x=3000, sme:1.15x=3450) -->
 <!--
-=============================================================================
-PLATIN+++ CONTENT DOD (mandatory):
-=============================================================================
-- Cover five categories of risks: Technical, Data & Privacy, Organizational,
-  Vendor & Dependencies, Compliance & Legal.
-- For each category: list 3–4 specific risks and corresponding mitigation measures.
-- Provide a risk matrix summarizing probability and impact for the most important
-  risks and prioritize them (low/medium/high).
-- Integrate inputs from the Risk Engine v3: {{RISK_MATRIX}},
-  {{HIGH_PRIORITY_RISKS}}, {{MITIGATION_STRATEGIES}} where available.
-- Explicitly address {{KI_GUARDRAILS}} and align with {{VISION_3_JAHRE}} in
-  mitigation strategies.
-- Respect persona hard‑guards (no team language in solo mode, etc.).
-=============================================================================
+GOAL: 5 sections with 120-160 words each (= 600-800 words total).
 
-PERSONALIZATION CONTEXT:
-- {{hauptleistung}} – core business of the user
-- {{ZEITERSPARNIS_PRIORITAET}} – biggest time saver priority
-- {{KI_GUARDRAILS}} – AI guardrails and no‑gos
-- {{VISION_3_JAHRE}} – long‑term vision (3 years)
+SHORT LABELS (MANDATORY!):
+- {{BRANCH_CORE_LABEL}} = Industry in 8-12 words
+- {{BRANCH_CONTEXT_LABEL}} = Industry in 4-6 words
+- {{OFFERING_LABEL}} = Main service in 6-10 words
 
-RISK ENGINE INTEGRATION:
-If the variables {{RISK_MATRIX}}, {{HIGH_PRIORITY_RISKS}}, and
-{{MITIGATION_STRATEGIES}} are provided, incorporate them into the matrix and
-highlight the top five risks with recommended actions.
+STRUCTURE (5 mandatory sections):
+  H3 1. Strategic and Organizational Risks (4 risks + measures)
+  H3 2. Data, Security and Compliance Risks (4 risks + measures)
+  H3 3. Quality, Transparency and Acceptance Risks (4 risks + measures)
+  H3 4. Dependencies, Operational and Vendor Risks (4 risks + measures)
+  H3 5. Risk Matrix (Table with 5 rows)
+
+PERSONA VARIATIONS (COMPANY_SIZE):
+- solo: personal overload, single point of failure, no backup
+- team: role clarity, coordination, knowledge silos
+- sme: governance, processes, documentation, compliance
+
+ANTI-REDUNDANCY (STRICT!):
+- Do NOT repeat risks in guardrails section (→ cross-reference)
+- Keep measures brief, do not repeat in org_change (→ cross-reference)
+- When overlapping: use cross-reference
+
+SPRINT G5 - PERSONA HARD-GUARDS (STRICT!):
+{% if COMPANY_SIZE == "solo" %}
+SOLO MODE - FORBIDDEN:
+- "Team/Teams/Department/Employees" → do not use
+- "Division" → "Work area"
+{% elif COMPANY_SIZE == "team" %}
+TEAM MODE - FORBIDDEN:
+- "Division/Unit/Corporate" → do not use
+- "Department" → "Area"
+- Solo terms: "Individual", "alone"
+{% else %}
+SME MODE - FORBIDDEN:
+- "Corporate/Division/Unit" → do not use
+- Solo terms: "Individual", "alone"
+{% endif %}
+
+RULES:
+- Actively interpret scores
+- Industry-specific compliance for regulated industries
+- Factual, concrete, no platitudes
+
+=============================================================================
+ANTI-TEXT-DESERT RULES v2.0 (AGGRESSIVE - MANDATORY!)
+=============================================================================
+PROBLEM: Risk bullets become mini-essays. UNREADABLE!
+SOLUTION: STRICT word limits per risk bullet.
+
+HARD LIMITS PER RISK BULLET:
+┌─────────────────────────────────────────────────────────┐
+│ Part                  │ Max Words  │ Max Sentences      │
+├─────────────────────────────────────────────────────────┤
+│ Risk Description      │ 15 words   │ 1 sentence         │
+│ Measure               │ 12 words   │ 1 sentence         │
+│ Total per Bullet      │ 30 words   │ 2 sentences        │
+└─────────────────────────────────────────────────────────┘
+
+FORMAT PER RISK (MANDATORY - NO DEVIATION!):
+<li><strong>[Risk in 2-4 words]:</strong> [Problem in 10-15 words].
+<strong>Measure:</strong> [Solution in 10-12 words].</li>
+
+FORBIDDEN (STRICT!):
+❌ Risk descriptions over 15 words
+❌ Measures over 12 words
+❌ Explanations with "whereby", "since", "because", "so that"
+❌ Nested sentences
+❌ More than 1 measure per risk
+❌ Running text below/above the bullet list
+
+EXAMPLE - NOT LIKE THIS:
+❌ "A significant risk lies in the lack of transparency regarding
+    AI-supported decision processes, which can lead to distrust among customers
+    and jeopardize long-term acceptance of the solutions..." [= 35 words = REJECTED!]
+
+EXAMPLE - LIKE THIS:
+✅ <li><strong>Lack of transparency:</strong> Customers don't understand AI decisions.
+   <strong>Measure:</strong> Document AI methods simply.</li> [= 12 words = PERFECT!]
+
+SECTION LIMITS:
+- Per risk category: Exactly 4 bullets (no more, no less)
+- No introductory texts between heading and list
+- No closing texts after the list
+=============================================================================
 -->
 
 <section class="section risks">
-  <h2>Key Risk Analysis for {{OFFERING_LABEL}}</h2>
+  <h2>Key Risks When Using AI in {{OFFERING_LABEL}}</h2>
 
   <p>
-    Introducing AI into {{BRANCH_CONTEXT_LABEL}} unlocks new opportunities but also
-    exposes your organization to a variety of risks. The governance score
-    (<strong>{{score_governance}}/100</strong>) and security score
-    (<strong>{{score_sicherheit}}/100</strong>) reflect the maturity of your current
-    structures. The following sections outline the major risk categories, detail
-    specific vulnerabilities and provide tailored mitigation measures to ensure
-    alignment with your guardrails ({{KI_GUARDRAILS}}) and your
-    <strong>{{VISION_3_JAHRE}}</strong>.
+    Governance Score: <strong>{{score_governance}}/100</strong>,
+    Security Score: <strong>{{score_sicherheit}}/100</strong>.
   </p>
 
-  <h3>1. Technical Risks</h3>
+  <h3>1. Strategic and Organizational Risks</h3>
   <ul>
     <li>
-      <strong>Model hallucinations and unreliable outputs.</strong> When AI tools generate
-      incorrect or fabricated information, it can lead to wrong decisions and loss
-      of trust. Mitigation: introduce a four‑eyes principle, integrate fact‑checking
-      routines and establish clear criteria for manual review.
+      <strong>Unclear objectives:</strong>
+      Risk of isolated solutions. Measure: Define 2–3 prioritized use cases.
     </li>
     <li>
-      <strong>Insufficient performance on edge cases.</strong> Generic models may not
-      handle specialized tasks within {{hauptleistung}}. Countermeasures include
-      continuous prompt refinement, creation of custom templates, and evaluation of
-      domain‑specific models.
+      <strong>Key person dependency:</strong>
+      Knowledge concentration. Measure: Documentation + checklists.
     </li>
     <li>
-      <strong>Lack of transparency in decision logic.</strong> AI systems often operate as
-      black boxes. To reduce risk, implement explainability tools and document
-      prompts and outputs, ensuring decisions can be audited.
+      <strong>Unclear roles:</strong>
+      Unclear responsibilities. Measure: Appoint AI responsible person.
     </li>
     <li>
-      <strong>Technical debt in automation.</strong> Rapidly built solutions can become
-      brittle. Regularly review code and workflows, refactor when necessary, and
-      ensure knowledge transfer among stakeholders.
+      <strong>Overload:</strong>
+      AI "on top" fails. Measure: Small pilots with clear scope.
     </li>
   </ul>
 
-  <h3>2. Data & Privacy Risks</h3>
+  <h3>2. Data, Security and Compliance Risks</h3>
   <ul>
     <li>
-      <strong>Unauthorized disclosure of sensitive data.</strong> Without clear guidance
-      on what data may be fed into AI systems, confidential information could be
-      exposed. Mitigation: define allowed data types, implement access controls
-      and provide clear instructions to users.
+      <strong>Data control:</strong>
+      Sensitive data in AI systems. Measure: Guidelines + access restrictions.
     </li>
     <li>
-      <strong>Non‑compliance with GDPR and AI Act.</strong> Processing personal data in
-      AI systems without proper legal basis can result in fines. Ensure data
-      minimization, maintain records of processing activities and consult legal
-      experts when in doubt.
+      <strong>Security gaps:</strong>
+      Score {{score_sicherheit}}/100. Measure: Security concept + regular reviews.
     </li>
     <li>
-      <strong>Weak security practices.</strong> Poor password hygiene or lack of multi‑factor
-      authentication increases the risk of breaches. Establish a robust security
-      policy, enforce strong authentication and conduct regular audits.
+      <strong>Legal responsibility:</strong>
+      Data protection/copyright. Measure: Named responsibility + guidelines.
     </li>
     <li>
-      <strong>Inadequate data retention and deletion.</strong> Keeping data longer than
-      necessary increases exposure. Define retention periods and implement
-      automated deletion routines.
+      <strong>Transparency:</strong>
+      Loss of trust with unclear AI usage. Measure: Disclosures + documentation.
     </li>
   </ul>
 
-  <h3>3. Organizational Risks</h3>
+  <h3>3. Quality, Transparency and Acceptance Risks</h3>
   <ul>
     <li>
-      <strong>Unclear roles and responsibilities.</strong> Ambiguity about who owns AI
-      initiatives leads to stalled projects. Assign a designated AI owner and
-      define decision rights clearly.
+      <strong>Inconsistent results:</strong>
+      Quality variance without templates. Measure: Uniform templates + reviews.
     </li>
     <li>
-      <strong>Resistance to change.</strong> Teams may hesitate to adopt new workflows.
-      Mitigate by communicating benefits transparently, starting with pilots and
-      providing training and support.
+      <strong>Over-reliance:</strong>
+      Hallucinations in customer documents. Measure: Review requirement + checklists.
     </li>
     <li>
-      <strong>Knowledge silos and single point of failure.</strong> If only one person
-      holds the expertise, absence or overload can halt progress. Encourage
-      documentation, cross‑training and regular knowledge sharing sessions.
+      <strong>Acceptance issues:</strong>
+      Resistance with unclear benefit. Measure: Pilots + gather feedback.
     </li>
     <li>
-      <strong>Overload due to additional tasks.</strong> Introducing AI on top of daily
-      responsibilities can lead to burnout. Plan for resource allocation and
-      relieve other duties to create space for experimentation.
+      <strong>Traceability:</strong>
+      Unclear AI role. Measure: Documentation "Where does AI support?".
     </li>
   </ul>
 
-  <h3>4. Vendor & Dependency Risks</h3>
+  <h3>4. Dependencies, Operational and Vendor Risks</h3>
   <ul>
     <li>
-      <strong>Vendor lock‑in.</strong> Relying on a single provider limits flexibility.
-      Mitigation: explore alternative models, maintain export options and ensure
-      contractual clauses cover future changes.
+      <strong>Tool dependency:</strong>
+      Vendor lock-in. Measure: Fallback scenarios + data export.
     </li>
     <li>
-      <strong>Unclear service agreements.</strong> Without explicit SLAs and data
-      processing agreements, you risk compliance violations and outages. Negotiate
-      clear contracts specifying response times, responsibilities and data
-      protection measures.
+      <strong>Service provider terms:</strong>
+      Gaps in liability/SLA. Measure: Clear contracts + response times.
     </li>
     <li>
-      <strong>Operational downtime.</strong> If AI systems go offline, business
-      operations can grind to a halt. Develop fallback scenarios, maintain
-      redundant processes and schedule regular backups.
+      <strong>Emergency planning:</strong>
+      No recovery defined. Measure: Backups + emergency contacts.
     </li>
     <li>
-      <strong>Complex tool landscape.</strong> Too many specialized tools increase
-      maintenance costs. Consolidate to core solutions and evaluate the total
-      cost of ownership regularly.
+      <strong>Tool complexity:</strong>
+      Too many parallel tools. Measure: Consolidation to core solutions.
     </li>
   </ul>
 
-  <h3>5. Compliance & Legal Risks</h3>
-  <ul>
-    <li>
-      <strong>Violation of sector‑specific regulations.</strong> Industries such as
-      healthcare or finance have additional requirements. Work with legal and
-      compliance teams to ensure AI use adheres to all applicable laws.
-    </li>
-    <li>
-      <strong>Intellectual property issues.</strong> Improper use of third‑party content
-      in prompts can lead to copyright disputes. Train users on fair use and
-      implement monitoring.
-    </li>
-    <li>
-      <strong>Ethical considerations.</strong> Bias and discrimination in AI outputs can
-      damage your reputation. Regularly audit for fairness and involve diverse
-      stakeholders in reviewing outputs.
-    </li>
-    <li>
-      <strong>Litigation risks.</strong> Decisions made with AI assistance must be
-      traceable. Document AI involvement and maintain clear logs for audits.
-    </li>
-  </ul>
-
-  <h3>Risk Matrix</h3>
+  <h3>5. Risk Matrix – Overview of Key Risks</h3>
   <p>
-    The table below summarizes the most important risk areas with their
-    probability of occurrence and impact strength to help prioritize mitigation
-    efforts. If {{RISK_MATRIX}} and {{HIGH_PRIORITY_RISKS}} are provided, they
-    will be reflected here along with the recommended mitigation strategies
-    from {{MITIGATION_STRATEGIES}}.
+    The following overview shows the main risk areas by probability of occurrence
+    and impact strength to facilitate prioritization of countermeasures.
   </p>
   <table class="table">
     <thead>
@@ -185,53 +194,68 @@ highlight the top five risks with recommended actions.
         <th>Typical Impact</th>
         <th>Probability</th>
         <th>Impact Strength</th>
-        <th>Recommended Priority Measures</th>
+        <th>Recommended Focus Measures</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td>Technical</td>
-        <td>Incorrect outputs, system errors</td>
+        <td>Strategy & Organization</td>
+        <td>Fragmentation, lack of impact, daily frustration</td>
         <td>medium</td>
         <td>high</td>
-        <td>Fact‑checking, explainability, code reviews</td>
+        <td>Clear objectives, prioritized use cases, named AI responsibility.</td>
       </tr>
       <tr>
-        <td>Data & Privacy</td>
-        <td>Data breaches, fines</td>
+        <td>Data & Security</td>
+        <td>Lack of transparency, potential data protection violations</td>
         <td>medium to high</td>
         <td>high</td>
-        <td>Access controls, GDPR compliance, deletion routines</td>
+        <td>Brief data usage guideline, access and password concept, service documentation.</td>
       </tr>
       <tr>
-        <td>Organizational</td>
-        <td>Stalled projects, change resistance</td>
+        <td>Quality & Acceptance</td>
+        <td>Inconsistent results, distrust or blind trust in AI</td>
         <td>medium</td>
         <td>medium to high</td>
-        <td>Clear roles, training, resource allocation</td>
+        <td>Template standards, review loops, clear communication of benefits and limits.</td>
       </tr>
       <tr>
-        <td>Vendor & Dependency</td>
-        <td>Downtime, cost increases</td>
+        <td>Dependencies & Operations</td>
+        <td>Operational interruptions, additional costs, lock-in effects</td>
         <td>low to medium</td>
         <td>medium</td>
-        <td>Diversification, SLAs, fallback plans</td>
+        <td>Fallback scenarios, tool landscape consolidation, clear vendor agreements.</td>
       </tr>
       <tr>
-        <td>Compliance & Legal</td>
-        <td>Regulatory penalties, reputational damage</td>
-        <td>medium</td>
+        <td>AI-specific: Hallucinations</td>
+        <td>Incorrect information in customer documents, reputation damage</td>
+        <td>medium to high</td>
         <td>high</td>
-        <td>Legal review, ethical audits, documentation</td>
+        <td>Four-eyes principle, fact-checking, clear quality guidelines for AI output.</td>
       </tr>
     </tbody>
   </table>
 
   <p class="small muted">
-    This risk analysis identifies key action areas for AI in
-    {{OFFERING_LABEL}}. The next step is to prioritize risks based on their
-    likelihood and impact, drawing on the insights provided by your risk
-    engine. For implementation details refer to the Roadmap and Governance
-    sections.
+    This risk analysis shows the key action areas for AI in
+    {{OFFERING_LABEL}}. In the next step, risks should be prioritized
+    by probability and impact.
+    Details on measure planning → see Roadmap and Governance section.
   </p>
 </section>
+
+<!-- DEV: PDF-SLIMDOWN v2.0 - Target: 600-800 words, compact but complete -->
+
+<!-- ZERO-LEAK POLICY (N4.6) -->
+<!--
+FORBIDDEN – NEVER USE:
+- No questions to the reader ("Do you have questions?", "Would you like to learn more?")
+- No prompts ("If you would like...", "Contact us...")
+- No assistant language ("I can help you...", "I'm happy to explain...")
+- No offers ("If needed...", "If desired...")
+- No interactive elements ("Click here...", "Select...")
+- No placeholders ("[Insert here]", "{{VARIABLE}}" except defined ones)
+- No meta-comments ("This section...", "In the following...")
+
+The output is a FINAL REPORT SECTION, not a conversation.
+-->
