@@ -1,6 +1,33 @@
 Developer:
-<!-- PLATIN+++ PROMPT v6.1 - SPRINT INHALTLICHE FINALISIERUNG -->
+<!-- PLATIN+++ PROMPT v6.2 - SPRINT INHALTLICHE FINALISIERUNG -->
 <!-- SECTION: executive_summary -->
+<!--
+###############################################################################
+##                    🚨 KRITISCH: HAUPTLEISTUNG INTEGRATION 🚨              ##
+###############################################################################
+
+DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
+SIE MUSS MINDESTENS 5x IN DER EXECUTIVE SUMMARY ERSCHEINEN!
+
+PFLICHT-STELLEN FÜR {{hauptleistung}}:
+1. ✅ Im Profil-Satz (Element 1)
+2. ✅ In Entscheidung 1 (Element 2)
+3. ✅ In Entscheidung 2 (Element 2)
+4. ✅ Im nächsten Schritt (Element 3)
+5. ✅ Im Takeaway-Satz (Element 4)
+
+BEISPIEL {{hauptleistung}} WERTE:
+- "KI-Beratung und Assessment-Tools"
+- "Automatisierte Report-Generierung mit GPT-4"
+- "Steuerberatung für KMU"
+- "Content-Erstellung und Social Media Management"
+- "IT-Support und Systemadministration"
+
+⚠️ OHNE HAUPTLEISTUNG IST DIE EXECUTIVE SUMMARY WERTLOS!
+⚠️ GENERISCHE REPORTS OHNE GESCHÄFTSMODELL-BEZUG WERDEN ABGELEHNT!
+
+###############################################################################
+-->
 <!--
 =============================================================================
 PLATIN+++ CONTENT DOD (verbindlich):
@@ -93,34 +120,47 @@ Sachlich, kurz, handlungsorientiert. Keine Floskeln.
 VERBINDLICHE STRUKTUR v7.0 — KNAPP UND KONKRET:
 =============================================================================
 
-ELEMENT 1: PROFIL-SATZ (1 Satz)
+ELEMENT 1: PROFIL-SATZ (1 Satz) — HAUPTLEISTUNG PFLICHT!
 - Ein einziger Satz, der die Situation auf den Punkt bringt
-- PRIMÄR: Nutze die echte {{hauptleistung}} wenn vorhanden
-- FALLBACK: "{{BRANCH_CONTEXT_LABEL}} mit Fokus auf {{OFFERING_LABEL}} steht vor [Kernherausforderung]."
-- BEISPIEL mit echten Daten: "Ein Beratungsunternehmen mit Fokus auf {{hauptleistung}} steht vor der Herausforderung, {{ZEITERSPARNIS_PRIORITAET}} effizienter zu gestalten."
+- PFLICHT: Die echte {{hauptleistung}} MUSS WÖRTLICH im Satz erscheinen!
+- FORMAT: "[Branche] mit {{hauptleistung}} steht vor [konkreter Herausforderung basierend auf {{ZEITERSPARNIS_PRIORITAET}}]."
+- BEISPIELE mit hauptleistung:
+  • "Ein Beratungsunternehmen mit {{hauptleistung}} steht vor der Aufgabe, repetitive Analysen zu automatisieren."
+  • "Ein IT-Dienstleister mit {{hauptleistung}} kann manuelle Prozesse durch KI-Unterstützung skalieren."
+  • "Eine Marketing-Agentur mit {{hauptleistung}} hat das Potenzial, Content-Erstellung zu beschleunigen."
+- VERBOTEN: Generische Sätze ohne explizite Nennung von {{hauptleistung}}!
 - Maximal 25 Wörter
 
-ELEMENT 2: DREI ENTSCHEIDUNGEN (Bullet-Liste)
+ELEMENT 2: DREI ENTSCHEIDUNGEN (Bullet-Liste) — HAUPTLEISTUNG IN JEDEM PUNKT!
 - Genau 3 Bullets, nummeriert
 - Jeder Bullet = 1 klare Entscheidung (nicht Analyse)
-- Format pro Bullet: "[Verb] + [Was] + [Warum in 5-7 Wörtern]"
-- Beispiele (INDIVIDUALISIERT, nicht generisch!):
-  • "1. [Bezug zu {{hauptleistung}}] – [konkreter Nutzen für diese Leistung]."
-  • "2. [Bezug zu {{ZEITERSPARNIS_PRIORITAET}}] – [wie das Zeit spart]."
-  • "3. [Bezug zu {{KI_GUARDRAILS}} oder Qualität] – [Risikominimierung]."
+- PFLICHT: Mindestens 2 der 3 Bullets MÜSSEN {{hauptleistung}} explizit referenzieren!
+- Format pro Bullet: "[Verb] + [Was für {{hauptleistung}}] + [Warum in 5-7 Wörtern]"
 
-  KONKRETE BEISPIELE:
-  • KI-Berater: "1. Template-Bibliothek statt Custom-Code – wiederverwendbare Analysen für jeden Kunden."
-  • Steuerberater: "1. Dokument-Klassifizierung automatisieren – eliminiert manuelle Vorsortierung."
-  • Content-Agentur: "1. Batch-Produktion statt Einzelanfertigung – skaliert Output ohne Qualitätsverlust."
+  STRUKTUR DER DREI ENTSCHEIDUNGEN:
+  • ENTSCHEIDUNG 1 (PFLICHT mit {{hauptleistung}}): Wie wird {{hauptleistung}} durch KI effizienter?
+  • ENTSCHEIDUNG 2 (PFLICHT mit {{hauptleistung}}): Welcher Prozess in {{hauptleistung}} wird automatisiert?
+  • ENTSCHEIDUNG 3: Qualitätssicherung oder Governance-Aspekt
 
-  VERBOTEN: "Minimal-Stack festlegen" (zu generisch!)
+  KONKRETE BEISPIELE mit {{hauptleistung}}:
+  • KI-Beratung: "1. Für {{hauptleistung}} Template-Bibliothek statt Custom-Code – wiederverwendbare Assessment-Module."
+  • Steuerberatung: "1. Bei {{hauptleistung}} Dokumente vorab klassifizieren – eliminiert manuelle Sortierung."
+  • Marketing-Agentur: "1. In {{hauptleistung}} Batch-Produktion einführen – skaliert Content ohne Qualitätsverlust."
+  • IT-Dienstleistung: "1. {{hauptleistung}} durch automatisierte Ticket-Triage beschleunigen – Reaktionszeit halbieren."
 
-ELEMENT 3: KONKRETER NÄCHSTER SCHRITT (1 Satz)
+  VERBOTEN:
+  - "Minimal-Stack festlegen" (zu generisch!)
+  - Entscheidungen ohne Bezug zu {{hauptleistung}}
+  - Allgemeine KI-Aussagen ohne Geschäftsmodell-Kontext
+
+ELEMENT 3: KONKRETER NÄCHSTER SCHRITT (1 Satz) — HAUPTLEISTUNG KONTEXT!
 - Ein einziger Satz mit dem sofort umsetzbaren ersten Schritt
-- PRIMÄR: Beziehe dich auf {{ZEITERSPARNIS_PRIORITAET}} wenn vorhanden
-- Format: "Konkreter nächster Schritt: [Was genau tun] [in welchem Zeitrahmen]."
-- BEISPIEL mit echten Daten: "Konkreter nächster Schritt: Den Prozess für {{ZEITERSPARNIS_PRIORITAET}} mit einem Template standardisieren – heute festlegen."
+- PFLICHT: Der nächste Schritt MUSS sich auf {{hauptleistung}} beziehen!
+- Format: "Konkreter nächster Schritt: [Was genau für {{hauptleistung}} tun] [in welchem Zeitrahmen]."
+- BEISPIELE mit {{hauptleistung}}:
+  • "Konkreter nächster Schritt: Für {{hauptleistung}} den zeitintensivsten Prozess identifizieren und mit einem Template standardisieren – diese Woche."
+  • "Konkreter nächster Schritt: In {{hauptleistung}} einen wiederkehrenden Workflow mit KI-Unterstützung testen – erste Session heute."
+  • "Konkreter nächster Schritt: {{hauptleistung}}-Workflow dokumentieren und Automatisierungspotenzial markieren – Freitag abgeschlossen."
 - FALLS {{KI_GUARDRAILS}} vorhanden: Einschränkungen beachten (z.B. "ohne Kundendaten", "mit Review-Regel")
 
 =============================================================================
@@ -256,25 +296,33 @@ Solo-Beratung:
 „Wenn Sie nur eines tun: Standardisieren Sie einen wiederkehrenden Analyse- oder Reporting-Workflow mit KI-Unterstützung und klarer Freigabe, bevor Sie weitere Tools einsetzen."
 
 =============================================================================
-PHASE 2b: VERBESSERTE INDIVIDUALISIERUNG (STRIKT!)
+PHASE 2b: VERBESSERTE INDIVIDUALISIERUNG (STRIKT!) — HAUPTLEISTUNG = KERN!
 =============================================================================
+
+⚠️ KRITISCHE ANFORDERUNG: {{hauptleistung}} MUSS in diesem Abschnitt 2x erscheinen!
 
 STRUKTUR MUSS SEIN (exakt 3 Komponenten, max 50 Wörter gesamt):
 
-SATZ 1: Was macht der User? (max 15 Wörter)
+SATZ 1: Was macht der User? (max 15 Wörter) — HAUPTLEISTUNG PFLICHT!
 → NUTZE: {{hauptleistung}} WÖRTLICH (nicht paraphrasieren!)
-→ BEISPIEL: "Ein Beratungsunternehmen erstellt Fragebogen und GPT-gestützte Auswertungen für KI-Readiness."
+→ FORMAT: "Ein [Branchentyp] mit {{hauptleistung}} [kurze Beschreibung]."
+→ BEISPIELE:
+  • "Ein Beratungsunternehmen mit {{hauptleistung}} erstellt KI-Readiness-Assessments für Mittelständler."
+  • "Ein IT-Dienstleister mit {{hauptleistung}} betreut Geschäftskunden bei der Digitalisierung."
+  • "Eine Marketing-Agentur mit {{hauptleistung}} produziert Content für B2B-Kunden."
 → VERBOTEN: Abstrakte Umschreibungen wie "bietet Dienstleistungen an"
 
 SATZ 2: Was ist das Hauptproblem? (max 15 Wörter)
 → NUTZE: {{ZEITERSPARNIS_PRIORITAET}} EXPLIZIT
-→ FORMAT: "Größter Zeitfresser: [wörtlich aus {{ZEITERSPARNIS_PRIORITAET}}]."
-→ BEISPIEL: "Größter Zeitfresser: Umsetzung/Programmierung individueller Kundenprojekte."
+→ FORMAT: "Größter Zeitfresser in {{hauptleistung}}: [wörtlich aus {{ZEITERSPARNIS_PRIORITAET}}]."
+→ BEISPIEL: "Größter Zeitfresser in {{hauptleistung}}: Umsetzung/Programmierung individueller Kundenprojekte."
 → VERBOTEN: "steht vor Herausforderungen" (zu vage!)
 
-SATZ 3: Kernempfehlung (max 20 Wörter)
-→ FORMAT: "Kernempfehlung → [Strategischer Shift]: [3-5 konkrete Maßnahmen]."
-→ BEISPIEL: "Kernempfehlung → Von Custom-Code zu Templates: Fragebogen-Bibliothek, Prompt-Standards, Review-Checkliste."
+SATZ 3: Kernempfehlung (max 20 Wörter) — HAUPTLEISTUNG PFLICHT!
+→ FORMAT: "Kernempfehlung für {{hauptleistung}} → [Strategischer Shift]: [3-5 konkrete Maßnahmen]."
+→ BEISPIELE:
+  • "Kernempfehlung für {{hauptleistung}} → Von Custom-Code zu Templates: Fragebogen-Bibliothek, Prompt-Standards, Review-Checkliste."
+  • "Kernempfehlung für {{hauptleistung}} → Von Einzelprojekt zu Skalierung: Workflow-Automation, Qualitäts-Checks, Batch-Processing."
 → VERBOTEN: Theorie wie "skalierbare Prozesse etablieren"
 
 VERBOTENE PHRASEN:
@@ -283,10 +331,11 @@ VERBOTENE PHRASEN:
 - "End-to-End-System"
 - "Standardisierung der Abläufe"
 - Jede Phrase die zu JEDEM User passt
+- Sätze OHNE {{hauptleistung}}!
 
 HTML-FORMAT für Element 4:
 <p class="takeaway">
-  <strong>Wenn Sie nur eines tun:</strong> [individueller Satz hier]
+  <strong>Wenn Sie nur eines tun:</strong> [individueller Satz MIT {{hauptleistung}} hier]
 </p>
 
 =============================================================================
@@ -294,16 +343,23 @@ HTML-FORMAT für Element 4:
 
 <!--
 =============================================================================
-QUALITÄTS-SELBSTCHECK v7.1 VOR OUTPUT:
+QUALITÄTS-SELBSTCHECK v7.2 VOR OUTPUT — HAUPTLEISTUNG VALIDIERUNG:
 =============================================================================
 □ Genau 1 Profil-Satz (max. 25 Wörter)?
+□ {{hauptleistung}} im Profil-Satz WÖRTLICH enthalten? ⚠️ PFLICHT!
 □ Genau 3 nummerierte Entscheidungen?
+□ {{hauptleistung}} in mindestens 2 der 3 Entscheidungen? ⚠️ PFLICHT!
 □ Genau 1 "Konkreter nächster Schritt" Satz?
+□ {{hauptleistung}} im nächsten Schritt referenziert? ⚠️ PFLICHT!
 □ Haltungssatz zu menschlicher Kontrolle vorhanden?
 □ Genau 1 "Wenn Sie nur eines tun:" Satz (Element 4)?
+□ {{hauptleistung}} im Takeaway-Satz? ⚠️ PFLICHT!
 □ Durchschnittliche Satzlänge unter 22 Wörtern?
 □ Keine Floskeln ("fundamental", "ganzheitlich", "exponentiell")?
 □ NULL direkte Anreden (außer im Takeaway-Satz)?
 □ In unter 60 Sekunden lesbar?
+
+HAUPTLEISTUNG MINIMUM: 5x in der Executive Summary!
+Falls weniger: Überarbeiten bis Minimum erreicht.
 =============================================================================
 -->
