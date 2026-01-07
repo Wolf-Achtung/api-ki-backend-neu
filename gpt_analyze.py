@@ -7037,12 +7037,27 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # Both uppercase and lowercase variants for compatibility
 
     # Map unternehmensgroesse to COMPANY_SIZE for roadmap/gamechanger prompts
-    # Actual sizes from questionnaire: solo (1), klein (2-10), kmu (11-100)
-    size_raw = briefing.get("unternehmensgroesse", "solo")
+    # Frontend V2 sends: "1", "2–10" (en-dash), "11–100" (en-dash)
+    # Prompts use: "solo", "team", "kmu"
+    size_raw = str(briefing.get("unternehmensgroesse", "1")).strip().lower()
     size_map = {
-        "solo": "solo",   # 1 (Solo-Selbstständig/Freiberuflich)
-        "klein": "team",  # 2-10 (Kleines Team)
-        "kmu": "kmu",     # 11-100 (KMU)
+        # Frontend V2 values (primary) - what the questionnaire sends
+        "1": "solo",       # 1 (Solo-Selbstständig/Freiberuflich)
+        "2–10": "team",    # 2–10 (Kleines Team) - en-dash U+2013
+        "2-10": "team",    # 2-10 (Kleines Team) - hyphen fallback
+        "11–100": "kmu",   # 11–100 (KMU) - en-dash U+2013
+        "11-100": "kmu",   # 11-100 (KMU) - hyphen fallback
+        # Legacy/normalized values (backward compatibility)
+        "solo": "solo",
+        "klein": "team",
+        "kmu": "kmu",
+        "team": "team",
+        # Additional legacy variants
+        "freiberufler": "solo",
+        "freelancer": "solo",
+        "small": "team",
+        "medium": "kmu",
+        "sme": "kmu",
     }
     company_size = size_map.get(size_raw, "team")  # Fallback to "team" if unknown
     
@@ -12092,7 +12107,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             '{OPEX_REALISTISCH_EUR_HIGH}': str(int(sections.get('OPEX_REALISTISCH_EUR_HIGH', 0))),
             '{PAYBACK_MONTHS_PESSIMISTIC}': str(round(sections.get('PAYBACK_MONTHS_PESSIMISTIC', 0), 1)),
             '{PAYBACK_MONTHS_OPTIMISTIC}': str(round(sections.get('PAYBACK_MONTHS_OPTIMISTIC', 0), 1)),
-            '{COMPANY_SIZE}': answers.get('unternehmensgroesse', 'solo'),
+            '{COMPANY_SIZE}': sections.get('COMPANY_SIZE', 'team'),  # Use mapped value from sections
             '{qw_hours_total}': str(qw_hours),
             # Double-brace patterns (Jinja2-style that GPT may use)
             '{{CAPEX_REALISTISCH_EUR}}': str(int(bc.get('CAPEX_REALISTISCH_EUR', 6000))),
