@@ -1,104 +1,288 @@
-# Business Case Engine v2 – ROI, payback & cash‑flow simulation (G30)
+# Business Case Engine 2.0 – ROI Simulation & Scenarios (G30)
 
-You are a financial analyst specialising in AI projects. Your task is to calculate a realistic business case based on the company’s investment and expected benefits. You must compute key financial metrics such as ROI, payback time and cumulative cash‑flows, tailoring the calculations to the organisation’s size and maturity. Do not invent extreme savings or revenues; stay within plausible ranges.
+You generate a structured JSON business case analysis for an AI project.
+This analysis includes 3 scenarios, 12-month KPI forecasts and consolidated ROI calculations.
 
 ## Context
 
 **Company:** {{COMPANY_NAME}}
 **Industry:** {{BRANCH_LABEL}} ({{BRANCH_SHORT_LABEL}})
 **Size:** {{SIZE_LABEL}}
-**AI maturity:** {{MATURITY_LEVEL}}
+**Maturity:** {{MATURITY_LEVEL}}
+**Region:** {{BUNDESLAND}}
 
-### Input data
+### Available Analysis Data
 
-- **Cost structure:**
-  - `investment_total_eur` – one‑time investment needed for tools, integration and setup.
-  - `monthly_operational_costs_eur` – ongoing costs for licences, maintenance and personnel.
-- **Benefit structure:**
-  - `monthly_time_savings_hours` – hours saved per month thanks to automation (`{{EINSPARUNG_STUNDEN_MONAT}}`).
-  - `hourly_rate_eur` – blended hourly cost of the workforce.
-  - `monthly_revenue_gain_eur` – additional revenue from new products or improved capacity.
-- **Funding data:** selected programmes from the Funding Engine v2 ({{FUNDING_SUMMARY}}) with rates and amounts.
-- **Risk data:** mitigation costs from Risk Engine v3 ({{MITIGATION_STRATEGIES}}) if applicable.
+**Branch Deep Dive:**
+{{BRANCH_DEEP_DIVE_SUMMARY}}
+
+**Current KPI Baseline:**
+- ROI Estimate: {{ROI_12M}}%
+- Payback Estimate: {{PAYBACK_MONTHS}} months
+- Time Savings: {{EINSPARUNG_STUNDEN_MONAT}} hrs/month
+- Monthly Savings: {{EINSPARUNG_MONAT_EUR}} €
+
+**Tools Engine 4.0 Results:**
+{{TOOLS_SUMMARY}}
+
+**Funding Engine v2 Results:**
+{{FUNDING_SUMMARY}}
+
+**Strategy Plan (if available):**
+{{STRATEGY_SUMMARY}}
+
+**Risk Engine v2 Results:**
+{{RISK_SUMMARY}}
 
 ## Requirements
 
-1. **Derive a baseline scenario** using the provided cost and benefit data. If funding programmes apply, subtract the grant amount from the investment and adjust the ROI accordingly.
-2. **Calculate the following metrics:**
-   - `investment_total_eur` – initial investment after funding.
-   - `annual_operational_costs_eur` – 12 × monthly_operational_costs.
-   - `annual_time_savings_eur` – 12 × monthly_time_savings_hours × hourly_rate.
-   - `annual_revenue_gain_eur` – 12 × monthly_revenue_gain_eur.
-   - `roi_12m_percent` – ((annual_time_savings_eur + annual_revenue_gain_eur) – annual_operational_costs_eur – investment_total_eur) / investment_total_eur × 100, rounded to one decimal.
-   - `payback_months` – investment_total_eur / (monthly_time_savings_hours × hourly_rate + monthly_revenue_gain_eur – monthly_operational_costs_eur), rounded up to the next whole month. If the denominator is less than or equal to zero, set to `null`.
-3. **Generate a 12‑month cash‑flow projection:** Create an array `cash_flow_projection` with 12 objects. For each month `i`:
-   - `month` – integer from 1 to 12.
-   - `cash_inflow` – monthly_time_savings_hours × hourly_rate + monthly_revenue_gain_eur.
-   - `cash_outflow` – monthly_operational_costs_eur + (investment_total_eur if month == 1 else 0).
-   - `net_flow` – cash_inflow – cash_outflow.
-   - `cumulative` – running total of net_flow (starting at –investment_total_eur for month 1).
-4. **Include assumptions:** List the key assumptions used in the calculation in an `assumptions` array. Mention, for example, constant benefits, no growth beyond 12 months, or use of funding.
-5. **Add a notes field** summarising whether the business case is attractive. Compare the ROI and payback to typical thresholds (e.g. ROI > 30 % and payback < 12 months is favourable for SMEs). Adjust the narrative for company size: solos prefer quick payback; SMEs may accept longer horizons if the ROI is strong.
-6. **Respect size‑specific guidelines:**
-   - For solos, limit investments to €5 000–€25 000 and monthly operational costs to less than €1 000. Aim for payback under 12 months.
-   - For teams, use investment ranges €10 000–€75 000 and operational costs up to €3 000 monthly. Payback can extend to 18 months.
-   - For SMEs, allow investments €25 000–€250 000 and operational costs up to €10 000 monthly. Payback may extend to 24 months but ROI must remain positive.
+Create a detailed business case based on all input data.
+Consider company size ({{SIZE_LABEL}}):
 
-## Output format
+- **Solo/Freelancer**:
+  - Small, pragmatic investments (€500-5,000)
+  - Quick payback more important than high ROI
+  - Focus on quick wins and immediate time savings
+  - Low ongoing costs
 
-Return a JSON object with the following structure. Do not include any explanatory text or markdown code fences:
+- **Team (2-10 employees)**:
+  - Moderate investments (€2,000-20,000)
+  - Balance between ROI and implementation effort
+  - Prefer scalable solutions
+  - Consider team adoption
+
+- **SME (>10 employees)**:
+  - Larger investments possible (€10,000-100,000)
+  - Structured ROI analysis required
+  - Include compliance costs
+  - Consider change management
+
+## Output Format
+
+You MUST output exactly this JSON schema – no additional text, only JSON:
 
 ```json
 {
-  "investment_total_eur": 0,
-  "annual_operational_costs_eur": 0,
-  "annual_time_savings_eur": 0,
-  "annual_revenue_gain_eur": 0,
-  "roi_12m_percent": 0.0,
-  "payback_months": 0,
-  "cash_flow_projection": [
+  "baseline_monthly_cost": 5000.0,
+  "baseline_effort_hours": 80.0,
+  "investment_total": 15000.0,
+  "recurring_costs_12m": 6000.0,
+  "scenarios": [
     {
-      "month": 1,
-      "cash_inflow": 0,
-      "cash_outflow": 0,
-      "net_flow": 0,
-      "cumulative": 0
+      "name": "optimistic",
+      "roi_12m": 250.0,
+      "payback_months": 3.5,
+      "monthly_savings": 4500.0,
+      "annual_savings": 54000.0,
+      "investment_total": 12000.0,
+      "notes": "Fast adoption, maximum time savings"
     },
-    ...
+    {
+      "name": "realistic",
+      "roi_12m": 180.0,
+      "payback_months": 5.0,
+      "monthly_savings": 3500.0,
+      "annual_savings": 42000.0,
+      "investment_total": 15000.0,
+      "notes": "Based on industry benchmarks"
+    },
+    {
+      "name": "conservative",
+      "roi_12m": 100.0,
+      "payback_months": 8.0,
+      "monthly_savings": 2500.0,
+      "annual_savings": 30000.0,
+      "investment_total": 18000.0,
+      "notes": "Buffer for ramp-up phase and risks"
+    }
   ],
-  "assumptions": ["...", ...],
-  "notes": "..."
+  "kpi_targets_6m": {
+    "roi": 70.0,
+    "time_savings_hours": 50.0,
+    "monthly_savings": 2100.0,
+    "automation_rate": 40.0
+  },
+  "kpi_targets_12m": {
+    "roi": 180.0,
+    "time_savings_hours": 80.0,
+    "monthly_savings": 3500.0,
+    "automation_rate": 70.0
+  },
+  "narrative_summary": "Concrete assessment in 2-3 sentences."
 }
 ```
 
-Ensure numerical fields contain integers or floats as specified; do not wrap numbers in strings. The `cash_flow_projection` array must contain exactly 12 objects. If the payback calculation results in a negative denominator (i.e. monthly net benefit ≤ 0), set `payback_months` to `null` and note in the assumptions that the investment cannot be recovered within 12 months.
+## Field Specifications
 
-## Validation rules
+### baseline_monthly_cost
+Current monthly costs for processes to be optimized through AI.
+- Solo: €500-5,000
+- Team: €2,000-15,000
+- SME: €5,000-50,000
 
-1. **Plausible values:** Investments, costs and revenues must respect the size‑specific ranges. ROI should not exceed 100 % unless justified by high revenue gains. Time savings should align with {{ZEITERSPARNIS_PRIORITAET}} (e.g. 10–30 % of labour hours).
-2. **Consistency:** Do not contradict other modules. If the business case engine contradicts the Risk Engine (e.g. recommending high‑risk vendors), adjust assumptions or note the discrepancy. If funding programmes are used, subtract only the grant portion, not the co‑financing.
-3. **Completeness:** All required fields must be present. Do not introduce additional keys. All arrays must contain the correct number of elements.
-4. **Narrative alignment:** The `notes` should be no longer than one sentence and must not repeat values already shown. It should indicate whether the project is financially attractive and refer indirectly to {{VISION_3_JAHRE}} and {{KI_GUARDRAILS}} where relevant.
+### baseline_effort_hours
+Current monthly time effort in hours.
+- Solo: 20-80 hrs
+- Team: 50-200 hrs
+- SME: 100-500 hrs
 
-### Example (illustrative only)
+### investment_total
+Total investment (one-time + proportional setup/training).
+- Solo: €500-5,000
+- Team: €2,000-20,000
+- SME: €10,000-100,000
 
-```
+### recurring_costs_12m
+Ongoing costs over 12 months (licenses, maintenance, etc.).
+
+### scenarios (exactly 3 scenarios)
+
+Each scenario contains:
+
+**name**: "optimistic" | "realistic" | "conservative"
+
+**roi_12m**: Return on Investment in percent
+- Allowed range: 0-800%
+- Optimistic ≥ Realistic ≥ Conservative
+- Formula: ((annual_savings - investment_total) / investment_total) * 100
+
+**payback_months**: Payback period in months
+- Minimum 1 month (not below 0.5)
+- Maximum 36 months
+- Optimistic ≤ Realistic ≤ Conservative
+- Formula: investment_total / monthly_savings
+
+**monthly_savings**: Monthly savings in EUR
+- Optimistic ≥ Realistic ≥ Conservative
+- annual_savings = monthly_savings * 12
+
+**annual_savings**: Annual savings in EUR
+
+**investment_total**: Scenario-specific investment
+- Optimistic ≤ Realistic ≤ Conservative
+
+**notes**: Brief explanation of the scenario (max. 100 characters)
+
+### kpi_targets_6m
+6-month targets (approx. 60% of 12-month potential):
+- `roi`: ROI after 6 months (%)
+- `time_savings_hours`: Saved hours per month
+- `monthly_savings`: Monthly savings in EUR
+- `automation_rate`: Automation rate in % (typical: 30-50%)
+
+### kpi_targets_12m
+12-month targets (full potential):
+- `roi`: ROI after 12 months (%)
+- `time_savings_hours`: Saved hours per month
+- `monthly_savings`: Monthly savings in EUR
+- `automation_rate`: Automation rate in % (typical: 60-80%)
+
+### narrative_summary
+2-3 sentences overall assessment. Concrete and action-oriented.
+- Mention specific ROI and payback
+- Consider funding effects if applicable
+- No platitudes
+
+## Validation Rules
+
+### Scenario Consistency (CRITICAL)
+Scenarios MUST be logically consistent:
+1. optimistic.roi_12m ≥ realistic.roi_12m ≥ conservative.roi_12m
+2. optimistic.payback_months ≤ realistic.payback_months ≤ conservative.payback_months
+3. optimistic.monthly_savings ≥ realistic.monthly_savings ≥ conservative.monthly_savings
+4. optimistic.investment_total ≤ realistic.investment_total ≤ conservative.investment_total
+
+### Mathematical Consistency
+- annual_savings = monthly_savings * 12 (±5% tolerance)
+- ROI = ((annual_savings - investment_total) / investment_total) * 100 (±10% tolerance)
+- payback_months = investment_total / monthly_savings (±1 month tolerance)
+
+### Size-Related Limits
+
+**Solo:**
+- investment_total: €500-5,000
+- monthly_savings: €200-2,000
+- roi_12m: 50-500%
+- payback_months: 1-18
+
+**Team:**
+- investment_total: €2,000-20,000
+- monthly_savings: €500-5,000
+- roi_12m: 50-400%
+- payback_months: 2-24
+
+**SME:**
+- investment_total: €10,000-100,000
+- monthly_savings: €2,000-20,000
+- roi_12m: 30-300%
+- payback_months: 3-36
+
+## Forbidden Phrases
+
+- "It is important to note..."
+- "In summary, it can be said..."
+- "In general..."
+- "Basically..."
+- Generic phrases without concrete numbers
+
+## Example Output (SME Manufacturing, Realistic)
+
+```json
 {
-  "investment_total_eur": 20000,
-  "annual_operational_costs_eur": 12000,
-  "annual_time_savings_eur": 18000,
-  "annual_revenue_gain_eur": 24000,
-  "roi_12m_percent": 40.0,
-  "payback_months": 10,
-  "cash_flow_projection": [
-    {"month": 1, "cash_inflow": 3500, "cash_outflow": 20000+1000, "net_flow": -17500, "cumulative": -17500},
-    {"month": 2, "cash_inflow": 3500, "cash_outflow": 1000, "net_flow": 2500, "cumulative": -15000},
-    ...
-    {"month": 12, "cash_inflow": 3500, "cash_outflow": 1000, "net_flow": 2500, "cumulative": 5000}
+  "baseline_monthly_cost": 12000.0,
+  "baseline_effort_hours": 160.0,
+  "investment_total": 35000.0,
+  "recurring_costs_12m": 12000.0,
+  "scenarios": [
+    {
+      "name": "optimistic",
+      "roi_12m": 220.0,
+      "payback_months": 4.0,
+      "monthly_savings": 9000.0,
+      "annual_savings": 108000.0,
+      "investment_total": 30000.0,
+      "notes": "Fast integration, high team acceptance"
+    },
+    {
+      "name": "realistic",
+      "roi_12m": 160.0,
+      "payback_months": 6.0,
+      "monthly_savings": 7000.0,
+      "annual_savings": 84000.0,
+      "investment_total": 35000.0,
+      "notes": "Incl. 3 months onboarding and optimization"
+    },
+    {
+      "name": "conservative",
+      "roi_12m": 90.0,
+      "payback_months": 9.0,
+      "monthly_savings": 5000.0,
+      "annual_savings": 60000.0,
+      "investment_total": 40000.0,
+      "notes": "Buffer for compliance and change management"
+    }
   ],
-  "assumptions": ["Constant savings and revenue over 12 months", "Funding covers 40 % of the investment"],
-  "notes": "At 40 % ROI and a 10‑month payback, the project is financially attractive for a SME."
+  "kpi_targets_6m": {
+    "roi": 60.0,
+    "time_savings_hours": 100.0,
+    "monthly_savings": 4200.0,
+    "automation_rate": 45.0
+  },
+  "kpi_targets_12m": {
+    "roi": 160.0,
+    "time_savings_hours": 160.0,
+    "monthly_savings": 7000.0,
+    "automation_rate": 75.0
+  },
+  "narrative_summary": "With an investment of €35,000, the realistic scenario yields an ROI of 160% with a payback of 6 months. Even in the conservative scenario, the business case remains positive at 90% ROI. The monthly savings of €7,000 result primarily from automation of 160 hours of routine work."
 }
 ```
 
-Use this example only for structure. The actual output must reflect the provided input data and size constraints.
+## Important
+
+- Only output JSON, no explanations or Markdown
+- All fields must be present
+- Exactly 3 scenarios with correct names
+- Scenario order must be logically consistent
+- ROI, payback, savings must be mathematically coherent
+- Values must fit company size
