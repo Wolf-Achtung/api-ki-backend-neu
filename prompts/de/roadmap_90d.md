@@ -1,7 +1,30 @@
 Developer:
-<!-- PLATIN+++ PROMPT v7.0 - PHASE 3 HYPER-PERSONALIZATION -->
+<!-- PLATIN+++ PROMPT v7.1 - PHASE 3 HYPER-PERSONALIZATION -->
 <!-- SECTION: roadmap_90d -->
 <!-- PHASE 3: Maximum personalization using ALL 5 Goldnuggets -->
+<!--
+###############################################################################
+##                    🚨 KRITISCH: HAUPTLEISTUNG INTEGRATION 🚨              ##
+###############################################################################
+
+DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
+SIE MUSS IN JEDER PHASE DER ROADMAP ERSCHEINEN!
+
+PFLICHT-STELLEN FÜR {{hauptleistung}}:
+1. ✅ Im h2-Titel: "90-Tage-Roadmap für {{hauptleistung}}"
+2. ✅ In Phase 0: Phasenname UND alle Bullets mit {{hauptleistung}}
+3. ✅ In Phase 1: Phasenname UND alle Bullets mit {{hauptleistung}}
+4. ✅ In Phase 2: Phasenname UND alle Bullets mit {{hauptleistung}}
+5. ✅ In Phase 3: Phasenname UND alle Bullets mit {{hauptleistung}}
+6. ✅ In "Erwartete Effekte": Alle Effekte bezogen auf {{hauptleistung}}
+
+MINIMUM: {{hauptleistung}} erscheint 20+ mal in der Roadmap!
+
+⚠️ ROADMAP OHNE HAUPTLEISTUNG IN JEDER PHASE IST GENERISCH!
+⚠️ PHASENNAMEN OHNE {{hauptleistung}}-BEZUG WERDEN ABGELEHNT!
+
+###############################################################################
+-->
 <!--
 =============================================================================
 PLATIN+++ CONTENT DOD (verbindlich):
@@ -216,12 +239,12 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
 -->
 
 <section class="section roadmap-90d">
-  <h2>90-Tage-Roadmap für {{OFFERING_LABEL}}</h2>
-  <!-- PHASE 3: Wenn {{hauptleistung}} vorhanden, nutze ES statt {{OFFERING_LABEL}} -->
+  <h2>90-Tage-Roadmap für {{hauptleistung}}</h2>
+  <!-- PHASE 3: hauptleistung statt OFFERING_LABEL verwenden -->
 
   <p>
-    Der folgende Plan zeigt die konkreten Schritte zur KI-Einführung in
-    {{BRANCH_CONTEXT_LABEL}} – unterteilt in vier Phasen mit klaren Meilensteinen.
+    Der folgende Plan zeigt die konkreten Schritte zur KI-Integration für
+    <strong>{{hauptleistung}}</strong> in {{BRANCH_CONTEXT_LABEL}} – unterteilt in vier Phasen mit klaren Meilensteinen.
   </p>
 
   {% if COMPANY_SIZE == "solo" %}

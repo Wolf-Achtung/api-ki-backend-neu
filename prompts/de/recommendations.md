@@ -1,10 +1,35 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
+<!-- PLATIN++ PROMPT v5.5 - SPRINT G5 -->
 <!-- SECTION: recommendations -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 600 (solo:0.8x=480, team:1.0x=600, kmu:1.15x=690) -->
+<!--
+###############################################################################
+##                    🚨 KRITISCH: HAUPTLEISTUNG INTEGRATION 🚨              ##
+###############################################################################
+
+DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
+SIE MUSS MINDESTENS 5-8x IN DEN EMPFEHLUNGEN ERSCHEINEN!
+
+PFLICHT-STELLEN FÜR {{hauptleistung}}:
+1. ✅ Im Einleitungssatz: "Für Ihr Geschäftsmodell ({{hauptleistung}})..."
+2. ✅ In MUSS-Maßnahme 1: Titel UND Detail mit {{hauptleistung}}
+3. ✅ In MUSS-Maßnahme 2: Titel UND Detail mit {{hauptleistung}}
+4. ✅ In MUSS-Maßnahme 3: Kontext zu {{hauptleistung}}
+5. ✅ In der Prioritäten-Tabelle: {{hauptleistung}}-Bezug in Spalte "Hauptnutzen"
+
+BEISPIEL {{hauptleistung}} WERTE:
+- "KI-Beratung und Assessment-Tools"
+- "Steuerberatung für KMU"
+- "Content-Erstellung und Social Media Management"
+
+⚠️ EMPFEHLUNGEN OHNE HAUPTLEISTUNG-BEZUG SIND WERTLOS!
+⚠️ GENERISCHE PHRASEN OHNE GESCHÄFTSMODELL-KONTEXT WERDEN ABGELEHNT!
+
+###############################################################################
+-->
 <!--
 =============================================================================
 ZIEL (CONTENT QUALITY PACK v7.0): MUSS vs. OPTIONEN klar trennen
@@ -134,44 +159,49 @@ KMU-MODUS - VERBOTEN:
   <h2>Handlungsempfehlungen</h2>
 
   <p>
-    Für {{BRANCH_CONTEXT_LABEL}} mit Fokus auf <strong>{{OFFERING_LABEL}}</strong>
-    gelten folgende priorisierte Empfehlungen.
+    Für Ihr Geschäftsmodell <strong>{{hauptleistung}}</strong> in der Branche {{BRANCH_CONTEXT_LABEL}}
+    gelten folgende priorisierte Empfehlungen, die spezifisch auf {{hauptleistung}} abgestimmt sind.
   </p>
 
   <!-- ABSCHNITT 1: MUSS-MAßNAHMEN (genau 3) - PHASE 2b INDIVIDUALISIERT -->
   <!--
-  WICHTIG: Diese Maßnahmen werden vom LLM DYNAMISCH generiert basierend auf:
-  - Maßnahme 1: {{ZEITERSPARNIS_PRIORITAET}} (größter Zeitfresser des Users)
-  - Maßnahme 2: {{hauptleistung}} (konkrete Kernleistung des Users)
-  - Maßnahme 3: {{KI_GUARDRAILS}} (Einschränkungen/No-Gos)
+  🚨 KRITISCH: JEDE MUSS-MAßNAHME BRAUCHT {{hauptleistung}}! 🚨
 
-  NICHT die statischen Beispiele unten verwenden!
+  WICHTIG: Diese Maßnahmen werden vom LLM DYNAMISCH generiert basierend auf:
+  - Maßnahme 1: {{ZEITERSPARNIS_PRIORITAET}} + KONTEXT zu {{hauptleistung}}
+  - Maßnahme 2: {{hauptleistung}} EXPLIZIT im Titel UND Detail
+  - Maßnahme 3: {{KI_GUARDRAILS}} + wie das {{hauptleistung}} schützt
+
+  PFLICHT: {{hauptleistung}} muss in ALLEN 3 Maßnahmen erscheinen!
   -->
-  <h3>MUSS – Sofort umsetzen</h3>
+  <h3>MUSS – Sofort umsetzen für {{hauptleistung}}</h3>
   <ol class="recommendations-muss">
     <li>
       <!--
       MASCHINE GENERIERT: Basierend auf {{ZEITERSPARNIS_PRIORITAET}}
-      Beispiel: "Fragebogen-Template-Bibliothek aufbauen" statt "Minimal-Stack"
+      PFLICHT: Titel MUSS {{hauptleistung}} enthalten!
+      Beispiel: "Template-Bibliothek für {{hauptleistung}} aufbauen" statt "Minimal-Stack"
       -->
-      <strong>[Maßnahme die {{ZEITERSPARNIS_PRIORITAET}} direkt adressiert]</strong> – [Warum diese Maßnahme Zeit spart].
-      <p class="muss-detail">[Konkrete Umsetzung für {{hauptleistung}}]</p>
+      <strong>[Maßnahme für {{hauptleistung}} die {{ZEITERSPARNIS_PRIORITAET}} löst]</strong> – [Warum das Zeit spart in {{hauptleistung}}].
+      <p class="muss-detail">Für Ihr Kerngeschäft ({{hauptleistung}}): [Konkrete Umsetzungsschritte]</p>
     </li>
     <li>
       <!--
       MASCHINE GENERIERT: Basierend auf {{hauptleistung}}
-      Beispiel: "GPT-Auswertungs-Standard definieren" statt "Standard-Workflow"
+      PFLICHT: {{hauptleistung}} muss 2x in diesem Punkt erscheinen!
+      Beispiel: "Qualitätsstandard für {{hauptleistung}} definieren" statt "Standard-Workflow"
       -->
-      <strong>[Maßnahme die {{hauptleistung}} optimiert]</strong> – [Warum das die Kernleistung verbessert].
-      <p class="muss-detail">[Konkrete Prozessschritte für {{OFFERING_LABEL}}]</p>
+      <strong>[Optimierungsmaßnahme spezifisch für {{hauptleistung}}]</strong> – [Wie das {{hauptleistung}} verbessert].
+      <p class="muss-detail">Bei {{hauptleistung}} konkret: [Prozessschritte mit Tools]</p>
     </li>
     <li>
       <!--
-      MASCHINE GENERIERT: Basierend auf {{KI_GUARDRAILS}} oder allgemeine Qualitätssicherung
-      Beispiel: "Review-Checkliste gegen unerlaubte Prognosen" statt "Review-Regel"
+      MASCHINE GENERIERT: Basierend auf {{KI_GUARDRAILS}}
+      PFLICHT: Erklären wie Qualitätssicherung {{hauptleistung}} schützt!
+      Beispiel: "Review-Prozess für {{hauptleistung}}-Outputs" statt "Review-Regel"
       -->
-      <strong>[Qualitäts-/Risiko-Maßnahme passend zu {{KI_GUARDRAILS}}]</strong> – [Warum das Risiken minimiert].
-      <p class="muss-detail">[Konkrete Checkliste oder Freigabeprozess]</p>
+      <strong>[Qualitätssicherung für {{hauptleistung}} passend zu {{KI_GUARDRAILS}}]</strong> – [Wie das Risiken in {{hauptleistung}} minimiert].
+      <p class="muss-detail">Qualitätscheck für {{hauptleistung}}: [Konkrete Checkliste]</p>
     </li>
   </ol>
 
@@ -192,19 +222,19 @@ KMU-MODUS - VERBOTEN:
     </li>
   </ul>
 
-  <h3>Prioritäten-Überblick</h3>
+  <h3>Prioritäten-Überblick für {{hauptleistung}}</h3>
   <table class="table">
     <thead>
-      <tr><th>Typ</th><th>Empfehlung</th><th>Zeitrahmen</th><th>Hauptnutzen</th></tr>
+      <tr><th>Typ</th><th>Empfehlung für {{hauptleistung}}</th><th>Zeitrahmen</th><th>Hauptnutzen</th></tr>
     </thead>
     <tbody>
-      <!-- PHASE 2b: Tabelle wird DYNAMISCH generiert basierend auf den 3 MUSS-Maßnahmen oben -->
-      <tr><td><strong>MUSS</strong></td><td>[Kurzform Maßnahme 1 - zu {{ZEITERSPARNIS_PRIORITAET}}]</td><td>Sofort</td><td>Zeitersparnis</td></tr>
-      <tr><td><strong>MUSS</strong></td><td>[Kurzform Maßnahme 2 - zu {{hauptleistung}}]</td><td>Woche 1-2</td><td>Qualitätssteigerung</td></tr>
-      <tr><td><strong>MUSS</strong></td><td>[Kurzform Maßnahme 3 - zu {{KI_GUARDRAILS}}]</td><td>Woche 1-2</td><td>Risikominimierung</td></tr>
-      <tr><td>Option</td><td>Wissensmanagement</td><td>{% if COMPANY_SIZE == "solo" %}Monat 3+{% else %}Monat 4-6{% endif %}</td><td>Stabile Ergebnisse</td></tr>
-      <tr><td>Option</td><td>Pilot ausweiten</td><td>{% if COMPANY_SIZE == "solo" %}Monat 6+{% else %}Monat 6-9{% endif %}</td><td>Sichtbarer Erfolg</td></tr>
-      <tr><td>Option</td><td>Governance formalisieren</td><td>{% if COMPANY_SIZE == "solo" %}Monat 3+{% else %}Monat 6+{% endif %}</td><td>Rechtssicherheit</td></tr>
+      <!-- PHASE 2b: Tabelle wird DYNAMISCH generiert - JEDE Zeile mit {{hauptleistung}}-Bezug -->
+      <tr><td><strong>MUSS</strong></td><td>[Maßnahme 1 für {{hauptleistung}}]</td><td>Sofort</td><td>Zeitersparnis bei {{hauptleistung}}</td></tr>
+      <tr><td><strong>MUSS</strong></td><td>[Maßnahme 2 für {{hauptleistung}}]</td><td>Woche 1-2</td><td>Qualität in {{hauptleistung}}</td></tr>
+      <tr><td><strong>MUSS</strong></td><td>[Maßnahme 3 für {{hauptleistung}}]</td><td>Woche 1-2</td><td>Sicherheit bei {{hauptleistung}}</td></tr>
+      <tr><td>Option</td><td>Wissensmanagement für {{hauptleistung}}</td><td>{% if COMPANY_SIZE == "solo" %}Monat 3+{% else %}Monat 4-6{% endif %}</td><td>Skalierung von {{hauptleistung}}</td></tr>
+      <tr><td>Option</td><td>{{hauptleistung}}-Pilot ausweiten</td><td>{% if COMPANY_SIZE == "solo" %}Monat 6+{% else %}Monat 6-9{% endif %}</td><td>Sichtbarer Erfolg</td></tr>
+      <tr><td>Option</td><td>Governance für {{hauptleistung}}</td><td>{% if COMPANY_SIZE == "solo" %}Monat 3+{% else %}Monat 6+{% endif %}</td><td>Rechtssicherheit</td></tr>
     </tbody>
   </table>
 </section>
