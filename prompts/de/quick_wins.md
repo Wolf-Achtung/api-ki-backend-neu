@@ -1,5 +1,24 @@
-# Quick Wins - JSON Output v8.0
+# Quick Wins - JSON Output v8.1
 <!-- Problem #7 FIX: Hauptleistung als Analyse-Kern -->
+
+<!--
+###############################################################################
+##                    🚨 KRITISCH: HAUPTLEISTUNG INTEGRATION 🚨              ##
+###############################################################################
+
+DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
+SIE MUSS IN JEDEM QUICK WIN ERSCHEINEN!
+
+PFLICHT FÜR JEDEN QUICK WIN:
+1. ✅ Im "title" → bezieht sich auf {{hauptleistung}}
+2. ✅ Im "description" → erklärt Problem in {{hauptleistung}}
+3. ✅ Im "mit_ki" → zeigt KI-Lösung für {{hauptleistung}}
+
+MINIMUM: {{hauptleistung}} erscheint 6-9x (2-3x pro Quick Win × 3-4 Quick Wins)
+
+⚠️ QUICK WINS OHNE HAUPTLEISTUNG-BEZUG WERDEN ABGELEHNT!
+###############################################################################
+-->
 
 Du bist ein erfahrener KI-Berater und entwickelst konkrete Quick Wins für die KI-Integration.
 
@@ -64,26 +83,32 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
 - Budget: Skalierbare Lösungen
 {% endif %}
 
-## JSON-FORMAT (EXAKT SO VERWENDEN!)
+## JSON-FORMAT (EXAKT SO VERWENDEN!) — HAUPTLEISTUNG PFLICHT!
 
 ```json
 [
   {
-    "title": "Kurzer prägnanter Titel (max 60 Zeichen)",
+    "title": "[Aktion] für {{hauptleistung}} (max 60 Zeichen)",
     "icon": "🎯",
     "time": "6-10 h/Monat",
     "engpass": "Ihr konkreter Zeitfresser/Pain Point aus ZEITERSPARNIS_PRIORITAET",
-    "description": "Was ist das Problem? 2-3 Sätze, konkret auf Branche bezogen.",
-    "mit_ki": "Wie hilft KI konkret? Welche Tools? 2-3 Sätze.",
+    "description": "In Ihrem Kerngeschäft ({{hauptleistung}}) besteht das Problem... 2-3 Sätze, konkret auf {{hauptleistung}} bezogen.",
+    "mit_ki": "Für {{hauptleistung}} hilft KI konkret durch... Welche Tools? 2-3 Sätze mit Bezug zu {{hauptleistung}}.",
     "steps": [
-      "Konkreter Schritt 1 mit Zeitangabe (z.B. 30min)",
-      "Konkreter Schritt 2 mit Tool-Namen",
-      "Konkreter Schritt 3 mit messbarem Ergebnis"
+      "Konkreter Schritt 1 für {{hauptleistung}} mit Zeitangabe (z.B. 30min)",
+      "Konkreter Schritt 2 mit Tool-Namen und Bezug zu {{hauptleistung}}",
+      "Konkreter Schritt 3 mit messbarem Ergebnis für {{hauptleistung}}"
     ],
     "zeitersparnis": "6-10 h/Monat = 600-1.000€ (bei {{STUNDENSATZ_EUR}}€/h)"
   }
 ]
 ```
+
+### TITEL-MUSTER MIT {{hauptleistung}}:
+- "[Prozess] automatisieren für {{hauptleistung}}"
+- "KI-Assistent für {{hauptleistung}}-Aufgaben"
+- "Template-Bibliothek für {{hauptleistung}}"
+- "Qualitätsprüfung bei {{hauptleistung}} beschleunigen"
 
 ## PFLICHT-REGELN
 
@@ -135,7 +160,7 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
 - Beratung: Claude Pro + Perplexity Pro
 - Marketing: Jasper (49€/Monat), Midjourney (10€/Monat)
 
-## QUALITY-CHECKS (VOR OUTPUT PRÜFEN!)
+## QUALITY-CHECKS (VOR OUTPUT PRÜFEN!) — HAUPTLEISTUNG VALIDIERUNG!
 
 - [ ] Valides JSON (keine trailing commas, escaped quotes)
 - [ ] 3-5 Quick Wins im Array
@@ -145,7 +170,14 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
 - [ ] Keine HTML-Tags im JSON
 - [ ] Quick Win #1 zitiert ZEITERSPARNIS_PRIORITAET
 - [ ] Tool-Namen sind KONKRET (nicht "KI-Tools")
-- [ ] Guardrails werden beachtet (falls vorhanden)
+- [ ] Guardrails werden beachten (falls vorhanden)
+
+### ⚠️ HAUPTLEISTUNG PFLICHT-CHECKS:
+- [ ] JEDER Quick Win title referenziert {{hauptleistung}} oder dessen Kernaspekt
+- [ ] JEDE description erklärt das Problem im Kontext von {{hauptleistung}}
+- [ ] JEDE mit_ki Beschreibung zeigt, wie KI bei {{hauptleistung}} hilft
+- [ ] MINDESTENS 6x {{hauptleistung}} im gesamten Output (2x pro Quick Win)
+- [ ] KEIN Quick Win ist generisch ohne Geschäftsmodell-Bezug
 
 ## HAUPTLEISTUNG-BEZUG: BEISPIEL-TRANSFORMATION
 
@@ -156,6 +188,23 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
 
 ✅ **RICHTIG (hauptleistungsbezogen):**
 "Produktbeschreibungen für neue Büromöbel mit KI generieren – spart 3h/Woche bei neuen Möbel-Listings"
+
+### WEITERE {{hauptleistung}} BEISPIELE:
+
+**hauptleistung:** "KI-Beratung und Assessment-Tools"
+- ✅ "Template-Bibliothek für KI-Beratung und Assessment-Tools erstellen"
+- ✅ "In Ihrem Kerngeschäft (KI-Beratung und Assessment-Tools) automatisiert KI die Fragebogen-Auswertung"
+- ❌ "KI-Tools evaluieren" (zu generisch!)
+
+**hauptleistung:** "Steuerberatung für KMU"
+- ✅ "Dokumentenklassifikation für Steuerberatung für KMU automatisieren"
+- ✅ "Bei Steuerberatung für KMU hilft KI bei der Belegerkennung"
+- ❌ "Dokumente sortieren" (zu generisch!)
+
+**hauptleistung:** "Content-Erstellung und Social Media"
+- ✅ "Batch-Produktion für Content-Erstellung und Social Media"
+- ✅ "Für Content-Erstellung und Social Media generiert KI erste Entwürfe"
+- ❌ "Texte schreiben" (zu generisch!)
 
 ---
 
