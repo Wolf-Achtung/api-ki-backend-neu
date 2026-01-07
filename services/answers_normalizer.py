@@ -33,16 +33,24 @@ BRANCHE_MAP = {
 }
 
 UNTERNEHMENSGROESSE_MAP = {
+    # Frontend V2 raw values (primary)
+    "1": "solo",                                  # Raw value from questionnaire
+    "2–10": "team",                               # En-dash (U+2013)
+    "2-10": "team",                               # Hyphen fallback
+    "11–100": "kmu",                              # En-dash (U+2013)
+    "11-100": "kmu",                              # Hyphen fallback
+    # Frontend V2 with labels
     "1 (solo-selbstständig/freiberuflich)": "solo",
-    "solo": "solo",
     "2–10 (kleines team)": "team",
     "2-10 (kleines team)": "team",
-    "2-10": "team",
-    "team": "team",
     "11–100 (kmu)": "kmu",
     "11-100 (kmu)": "kmu",
-    "11-100": "kmu",
+    # Legacy normalized values
+    "solo": "solo",
+    "team": "team",
     "kmu": "kmu",
+    "klein": "team",
+    "freiberufler": "solo",
 }
 
 # Display-Labels
