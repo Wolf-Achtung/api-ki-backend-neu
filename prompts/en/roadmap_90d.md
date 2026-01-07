@@ -1,3 +1,4 @@
+Developer:
 <!-- PLATIN+++ PROMPT v7.0 - PHASE 3 HYPER‑PERSONALIZATION -->
 <!-- SECTION: roadmap_90d -->
 <!-- PHASE 3: Maximum personalization using ALL 5 Goldnuggets -->
@@ -67,8 +68,25 @@ EXAMPLE for briefing 369:
 GUARDRAILS IN PHASE 0 (MANDATORY if {{KI_GUARDRAILS}} exists):
 Phase 0 MUST mention the guardrails and anchor them as a review rule.
 
+EXAMPLE for briefing 369:
+"Quality criteria: document {{KI_GUARDRAILS}} as checklist"
+→ "Quality criteria: No health prognosis, no financial advice as review checklist"
+
+FORBIDDEN GENERIC PHRASES in bullets:
+- "First prompt template for a core task"
+- "Implement quick wins"
+- "Expand prompt library to 5–10 templates"
+- "Establish routine: at least one task daily"
+- "Document standard workflow"
+
+INSTEAD: Concrete references to {{hauptleistung}}, {{ZEITERSPARNIS_PRIORITAET}}.
+
 EXPECTED EFFECTS – PERSONALIZE:
 Instead of generic "15–25% time savings" → reference {{ZEITERSPARNIS_PRIORITAET}}.
+
+EXAMPLE:
+❌ "Time savings: 15–25% on recurring tasks"
+✅ "Time savings: 40–60% on implementation/programming through template reuse"
 =============================================================================
 -->
 <!--
@@ -129,8 +147,8 @@ PHASE 0 & PHASE 1 MUST BE PARTICULARLY VISIBLE:
 - Exactly 3 bullets per phase (no more, no less)
 - Phase 0 MUST reference "Start point 30 minutes" from the summary
 
-⚠️ PHASE 3 PERSONALIZATION: Phase names and bullets MUST explicitly include
-{{hauptleistung}} and {{ZEITERSPARNIS_PRIORITAET}}!
+⚠️ PHASE 3 PERSONALIZATION: Phase names and bullets MUST explicitly
+   reference {{hauptleistung}} and {{ZEITERSPARNIS_PRIORITAET}}!
 
 PHASE 0 (Week 1–2): [INDIVIDUAL: Reference {{hauptleistung}}]
 → Dynamic headline: "Phase 0: [Reference to {{hauptleistung}}] Setup"
@@ -291,32 +309,57 @@ GUARDRAILS: Consider guardrails from the strategic context.
     Focus on these three core KPIs for your AI use:
   </p>
   <ul>
-    <li><strong>Weekly time savings:</strong> Note the time saved for each AI‑supported task compared to manual processing. A simple tally or table is enough – goal: 3–5 hours saved per month.</li>
-    <li><strong>Output quantity:</strong> How many texts, emails, concepts or other deliverables did you create with AI support? Track the productivity increase quantitatively (for example "12 LinkedIn posts instead of 4 without AI").</li>
-    <li><strong>Quality rating:</strong> Rate your AI outputs on a scale of 1–5 stars. How often could you use a draft directly? Goal: 70%+ first quality.</li>
+    <li><strong>Weekly time savings:</strong> Note the time saved for each AI‑supported task
+    compared to manual processing. A simple tally or table is enough – goal: 3–5 hours
+    saved per month.</li>
+    <li><strong>Output quantity:</strong> How many texts, emails, concepts or other deliverables
+    did you create with AI support? Track the productivity increase quantitatively
+    (for example "12 LinkedIn posts instead of 4 without AI").</li>
+    <li><strong>Quality rating:</strong> Rate your AI outputs on a scale of 1–5 stars. How often
+    could you use a draft directly? Goal: 70%+ first quality.</li>
   </ul>
   <p>
-    <strong>Set up a mini‑dashboard:</strong> Use a simple tool like Notion, Excel or even a notebook. Create a weekly table with columns for task type, time spent (with/without AI), quality stars and short learnings. Reserve 15–20 minutes each Friday to document this. After 90 days you will have reliable data for your investment decision and can prove ROI concretely.
+    <strong>Set up a mini‑dashboard:</strong> Use a simple tool like Notion, Excel or even a
+    notebook. Create a weekly table with columns for task type, time spent (with/without AI),
+    quality stars and short learnings. Reserve 15–20 minutes each Friday for documentation.
+    After 90 days you will have reliable data for your investment decision and can prove
+    ROI concretely.
   </p>
 
   <h3>Micro‑Change Management (one‑person operation)</h3>
   <p>
-    Introducing new AI workflows requires conscious integration into your daily routine – even if you work alone. Without a structured approach there is a risk that new tools will be forgotten after initial enthusiasm.
+    Introducing new AI workflows requires conscious integration into your daily routine –
+    even if you work alone. Without a structured approach there is a risk that new tools
+    will be forgotten after initial enthusiasm.
   </p>
   <ul>
-    <li><strong>Set routine anchors:</strong> Link AI use with existing habits. Example: "After the morning coffee I start with the AI‑supported email draft" or "Before each customer meeting I generate a preparation". Firm triggers significantly increase the likelihood of implementation.</li>
-    <li><strong>Self‑control without pressure:</strong> Keep a "success checklist" with 3–5 AI tasks per week. Tick off what you have completed – without criticizing yourself for omissions. The visual progress motivates continuity.</li>
-    <li><strong>Weekly self‑review (30 min):</strong> Every Friday morning or Sunday evening: What worked well? Where were there hurdles? Which prompts need refinement? Write down 2–3 concrete improvement ideas for the following week.</li>
-    <li><strong>Iterative adjustment:</strong> Your AI workflow is a living system. Adjust templates and routines monthly to changing requirements in {{OFFERING_LABEL}}. What worked in the first month may no longer be optimal in the third.
-    </li>
+    <li><strong>Set routine anchors:</strong> Link AI use with existing habits. Example:
+    "After the morning coffee I start with the AI‑supported email draft" or "Before each
+    customer meeting I generate a preparation". Firm triggers significantly increase the
+    likelihood of implementation.</li>
+    <li><strong>Self‑control without pressure:</strong> Keep a "success checklist" with
+    3–5 AI tasks per week. Tick off what you have completed – without criticizing yourself
+    for omissions. The visual progress motivates continuity.</li>
+    <li><strong>Weekly self‑review (30 min):</strong> Every Friday morning or Sunday evening:
+    What worked well? Where were there hurdles? Which prompts need refinement? Write down
+    2–3 concrete improvement ideas for the following week.</li>
+    <li><strong>Iterative adjustment:</strong> Your AI workflow is a living system. Adjust
+    templates and routines monthly to changing requirements in {{OFFERING_LABEL}}. What
+    worked in the first month may no longer be optimal in the third.</li>
   </ul>
   <p>
-    <strong>Success factor:</strong> Set yourself realistic interim goals. Start with one AI task per day, increase to 2–3 after two weeks. This prevents overwhelm and builds sustainable competence.
+    <strong>Success factor:</strong> Set yourself realistic interim goals. Start with one
+    AI task per day, increase to 2–3 after two weeks. This prevents overwhelm and builds
+    sustainable competence.
   </p>
 
   <h3>Content & Marketing Systematics</h3>
   <p>
-    Focus on 1–2 channels that suit {{OFFERING_LABEL}} (e.g. LinkedIn, newsletter). Establish a fixed content routine: create a short contribution with AI support once a week. Use your own AI readiness reports as marketing assets – they show competence and offer real added value for potential customers. This directly connects your AI introduction with your visibility as an expert in {{BRANCH_CONTEXT_LABEL}}.
+    Focus on 1–2 channels that suit {{OFFERING_LABEL}} (e.g. LinkedIn, newsletter).
+    Establish a fixed content routine: create a short contribution with AI support once a
+    week. Use your own AI readiness reports as marketing assets – they show competence and
+    offer real added value for potential customers. This directly connects your AI
+    introduction with your visibility as an expert in {{BRANCH_CONTEXT_LABEL}}.
   </p>
 
   {% elif COMPANY_SIZE == "team" %}
