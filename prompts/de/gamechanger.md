@@ -1,6 +1,27 @@
 Developer:
-<!-- PLATIN+++ PROMPT v7.1 - SPRINT INHALTLICHE FINALISIERUNG -->
+<!-- PLATIN+++ PROMPT v7.2 - SPRINT INHALTLICHE FINALISIERUNG -->
 <!-- SECTION: gamechanger -->
+<!--
+###############################################################################
+##                    🚨 KRITISCH: HAUPTLEISTUNG INTEGRATION 🚨              ##
+###############################################################################
+
+DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
+SIE MUSS IN ALLEN 4 GAMECHANGER-BLÖCKEN ERSCHEINEN!
+
+PFLICHT-STELLEN FÜR {{hauptleistung}}:
+1. ✅ Im h2-Titel: "Der strategische Gamechanger für {{hauptleistung}}"
+2. ✅ Im Bruchpunkt: Was wird bei {{hauptleistung}} falsch gedacht?
+3. ✅ In der Transformation: Wie verändert sich {{hauptleistung}}?
+4. ✅ Im Impact: Struktureller Vorteil für {{hauptleistung}}
+5. ✅ Im ersten Schritt: Aktion spezifisch für {{hauptleistung}}
+
+MINIMUM: {{hauptleistung}} erscheint 5-8x im Gamechanger!
+
+⚠️ GAMECHANGER OHNE HAUPTLEISTUNG-BEZUG IST ZU GENERISCH!
+
+###############################################################################
+-->
 <!--
 =============================================================================
 PLATIN+++ CONTENT DOD (verbindlich):
@@ -271,10 +292,10 @@ Die Transformation ermöglicht strategische Neupositionierung – nicht nur Opti
 -->
 
 <section class="section gamechanger">
-  <h2>Der strategische Gamechanger</h2>
+  <h2>Der strategische Gamechanger für {{hauptleistung}}</h2>
 
   <div class="gamechanger-insight">
-    <h3>Strategischer Bruchpunkt</h3>
+    <h3>Strategischer Bruchpunkt bei {{hauptleistung}}</h3>
     <!--
     PHASE 3: INDIVIDUALISIERUNG PFLICHT!
     Nutze {{hauptleistung}} statt {{OFFERING_LABEL}} wenn vorhanden.
