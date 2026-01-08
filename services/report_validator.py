@@ -1788,33 +1788,53 @@ class ReportValidator:
         if not hauptleistung or len(hauptleistung) < 3:
             return  # No hauptleistung to check
 
-        # Check Executive Summary (minimum 4)
+        # Check Executive Summary (minimum 3, recommended 4)
         exec_summary = self.sections.get("EXEC_SUMMARY_HTML", "")
         if exec_summary and isinstance(exec_summary, str):
             count = exec_summary.lower().count(hauptleistung.lower())
-            if count < 4:
+            if count < 2:  # CRITICAL: less than 2 is unacceptable
+                self.errors.append(
+                    ValidationError(
+                        severity="CRITICAL",
+                        category="HAUPTLEISTUNG_UNDERUSE",
+                        section="EXEC_SUMMARY_HTML",
+                        message=f"Executive Summary enthält nur {count}x hauptleistung (Minimum: 3)",
+                        details=f"Hauptleistung '{hauptleistung}' muss mindestens 3x vorkommen",
+                    )
+                )
+            elif count < 3:  # WARNING: 2 is low but acceptable
                 self.errors.append(
                     ValidationError(
                         severity="WARNING",
                         category="HAUPTLEISTUNG_UNDERUSE",
                         section="EXEC_SUMMARY_HTML",
-                        message=f"Executive Summary enthält nur {count}x hauptleistung (Minimum: 4)",
-                        details=f"Hauptleistung '{hauptleistung}' sollte mindestens 4x vorkommen",
+                        message=f"Executive Summary enthält nur {count}x hauptleistung (Empfohlen: 3-4)",
+                        details=f"Hauptleistung '{hauptleistung}' sollte 3-4x vorkommen",
                     )
                 )
 
-        # Check Roadmap (maximum 3 per variant)
+        # Check Roadmap (maximum 5, hard limit 8)
         roadmap = self.sections.get("ROADMAP_90D_HTML", "")
         if roadmap and isinstance(roadmap, str):
             count = roadmap.lower().count(hauptleistung.lower())
-            if count > 5:  # Warning threshold (hard limit is 3, but allow some buffer)
+            if count > 10:  # CRITICAL: excessive repetition
+                self.errors.append(
+                    ValidationError(
+                        severity="CRITICAL",
+                        category="HAUPTLEISTUNG_OVERUSE",
+                        section="ROADMAP_90D_HTML",
+                        message=f"Roadmap enthält {count}x hauptleistung (Maximum: 5)",
+                        details=f"Zu viele Wiederholungen - nutze Synonyme",
+                    )
+                )
+            elif count > 5:  # WARNING: high but acceptable
                 self.errors.append(
                     ValidationError(
                         severity="WARNING",
                         category="HAUPTLEISTUNG_OVERUSE",
                         section="ROADMAP_90D_HTML",
-                        message=f"Roadmap enthält {count}x hauptleistung (Maximum: 3-5)",
-                        details=f"Zu viele Wiederholungen von '{hauptleistung}' - nutze Synonyme",
+                        message=f"Roadmap enthält {count}x hauptleistung (Empfohlen: max 5)",
+                        details=f"Zu viele Wiederholungen - nutze Synonyme",
                     )
                 )
 
@@ -1853,13 +1873,25 @@ class ReportValidator:
                 try:
                     official_roi = int(str(roi_12m).replace("%", "").strip())
                     for found_roi in roi_values:
-                        if abs(found_roi - official_roi) > 20:  # Allow 20% tolerance
+                        diff = abs(found_roi - official_roi)
+                        if diff > 50:  # CRITICAL: Major inconsistency (>50%)
+                            self.errors.append(
+                                ValidationError(
+                                    severity="CRITICAL",
+                                    category="ROI_INCONSISTENCY",
+                                    section=section_name,
+                                    message=f"Stark abweichender ROI-Wert {found_roi}% (offiziell: {official_roi}%)",
+                                    details="ROI-Werte müssen konsistent sein - Single Source of Truth!",
+                                )
+                            )
+                            break
+                        elif diff > 20:  # WARNING: Minor inconsistency (20-50%)
                             self.errors.append(
                                 ValidationError(
                                     severity="WARNING",
                                     category="ROI_INCONSISTENCY",
                                     section=section_name,
-                                    message=f"Abweichender ROI-Wert {found_roi}% gefunden (offiziell: {official_roi}%)",
+                                    message=f"Abweichender ROI-Wert {found_roi}% (offiziell: {official_roi}%)",
                                     details="ROI sollte nur im Business Case definiert sein",
                                 )
                             )
@@ -1872,36 +1904,86 @@ class ReportValidator:
         Sprint P1.5-4: Check for incomplete sentence fragments.
         E.g., "Einrichten eines." without completing the sentence.
         """
-        # Patterns for incomplete German sentences
-        incomplete_patterns = [
+        # CRITICAL patterns - obvious fragments that break report quality
+        critical_patterns = [
+            # Empty labeled content
+            r"Maßnahme:\s*\.",  # Empty Maßnahme
+            r"Maßnahme:\s*$",   # Maßnahme without content
+            r"Schwerpunkt:\s*\.",  # Empty Schwerpunkt
+            r"Schwerpunkt:\s*$",   # Schwerpunkt without content
+            r"Nutzen:\s*\.",  # Empty Nutzen
+            r"Nutzen:\s*$",   # Nutzen without content
+            r"Aufwand:\s*\.",  # Empty Aufwand
+            r"Aufwand:\s*$",   # Aufwand without content
+            # Sentence fragments ending with indefinite article
             r"\bEinrichten eines\.\s",
             r"\bImplementieren von\.\s",
             r"\bAufbau einer\.\s",
+            r"\bEinführung eines\.\s",
+            r"\bDefinition einer\.\s",
+            r"\bOptimierung eines\.\s",
+            r"\bAutomatisierung von\.\s",
+            r"\bIntegration von\.\s",
+            # NOTE: Removed preposition patterns (für, mit, auf, etc.) - too many false positives
+            # German separable verbs legitimately end with these (zeigt auf, baut auf, etc.)
+            # Empty bullet points
+            r"<li>\s*</li>",
+            r"<li>\s*\.</li>",
+            # Strong tag without content
+            r"<strong>\s*</strong>",
+            r"<strong>:\s*</strong>",
+        ]
+
+        # WARNING patterns - less severe fragments
+        warning_patterns = [
             r"\bEntwicklung eines\.\s",
             r"\bErstellung einer\.\s",
-            r"\beines\.\s*$",  # Ends with "eines."
-            r"\beiner\.\s*$",  # Ends with "einer."
-            r"\bvon\.\s*$",    # Ends with "von."
+            r"\bAusbau eines\.\s",
+            r"\bVerbesserung der\.\s",
+            r"\beines\.\s*</",  # Ends with "eines." before HTML tag
+            r"\beiner\.\s*</",  # Ends with "einer." before HTML tag
+            r"\beinem\.\s*</",  # Ends with "einem." before HTML tag
+            # Sentences ending with "und" (incomplete enumeration)
+            r"\bund\.\s*</",
+            r"\bsowie\.\s*</",
         ]
 
         for section_name, content in self.sections.items():
             if not isinstance(content, str):
                 continue
 
-            for pattern in incomplete_patterns:
+            # Check CRITICAL patterns
+            for pattern in critical_patterns:
                 if re.search(pattern, content, re.IGNORECASE):
                     match = re.search(pattern, content, re.IGNORECASE)
                     preview = content[max(0, match.start() - 20):match.end() + 20] if match else ""
                     self.errors.append(
                         ValidationError(
-                            severity="WARNING",
+                            severity="CRITICAL",
                             category="INCOMPLETE_SENTENCE",
                             section=section_name,
-                            message="Unvollständiger Satz gefunden",
+                            message="Unvollständiger Satz (Fragment) - Report nicht lieferbar",
                             details=f"Fragment: '...{preview}...'",
                         )
                     )
                     break  # Only report once per section
+
+            # Check WARNING patterns (only if no CRITICAL found)
+            else:
+                for pattern in warning_patterns:
+                    if re.search(pattern, content, re.IGNORECASE):
+                        match = re.search(pattern, content, re.IGNORECASE)
+                        preview = content[max(0, match.start() - 20):match.end() + 20] if match else ""
+                        self.errors.append(
+                            ValidationError(
+                                severity="WARNING",
+                                category="INCOMPLETE_SENTENCE",
+                                section=section_name,
+                                message="Möglicherweise unvollständiger Satz",
+                                details=f"Fragment: '...{preview}...'",
+                            )
+                        )
+                        break
 
     def _check_tone_consistency(self) -> None:
         """
@@ -1991,12 +2073,15 @@ class ReportValidator:
                     continue
 
                 if bl in content:
+                    # CRITICAL for Förderpotenzial (wrong funding info)
+                    # WARNING for other sections
+                    severity = "CRITICAL" if section_name == "FOERDERPOTENZIAL_HTML" else "WARNING"
                     self.errors.append(
                         ValidationError(
-                            severity="WARNING",
+                            severity=severity,
                             category="LOCATION_INCONSISTENCY",
                             section=section_name,
-                            message=f"Falsches Bundesland '{bl}' gefunden",
+                            message=f"Falsches Bundesland '{bl}' gefunden (User: {bundesland})",
                             details=f"User-Bundesland ist '{bundesland}', nicht '{bl}'",
                         )
                     )

@@ -12187,10 +12187,29 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     if healed_count > 0:
         log.info(f"[{run_id}] 🔧 N2-Healing: Fixed {healed_count} sections")
 
+    # Phase 1.5 Quality Gate: Log all validation errors
+    critical_errors = [e for e in validation_errors if e.severity == "CRITICAL"]
+    warning_errors = [e for e in validation_errors if e.severity == "WARNING"]
+
+    if critical_errors:
+        log.error(f"[{run_id}] ❌ CRITICAL validation errors found: {len(critical_errors)}")
+        for err in critical_errors:
+            log.error(f"[{run_id}]   [{err.category}] {err.section}: {err.message}")
+    if warning_errors:
+        log.warning(f"[{run_id}] ⚠️ Validation warnings: {len(warning_errors)}")
+        for err in warning_errors[:5]:  # Only log first 5 warnings
+            log.warning(f"[{run_id}]   [{err.category}] {err.section}: {err.message}")
+
     if not is_valid:
-        log.warning(f"[{run_id}] ⚠️ Report has validation errors (see above) - continuing anyway")
-        # TODO: Later enable Quality Gate:
-        # raise ValueError("Report validation failed - fix errors first!")
+        # Phase 1.5: Quality Gate now LOGS but doesn't block (soft enforcement)
+        # Set to True to enable hard blocking of bad reports
+        HARD_QUALITY_GATE_ENABLED = False  # Set to True in production for strict mode
+
+        if HARD_QUALITY_GATE_ENABLED and critical_errors:
+            log.error(f"[{run_id}] 🚫 QUALITY GATE BLOCKED: {len(critical_errors)} critical errors")
+            raise ValueError(f"Report validation failed with {len(critical_errors)} critical errors")
+        else:
+            log.warning(f"[{run_id}] ⚠️ Report has {len(critical_errors)} critical + {len(warning_errors)} warning errors - continuing (soft mode)")
     else:
         log.info(f"[{run_id}] ✅ Report validation passed - PLATIN++")
     # === END VALIDATION ===
