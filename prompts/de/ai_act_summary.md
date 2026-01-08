@@ -108,15 +108,21 @@ VERBOTEN:
   </p>
 
   <h3>Relevanz für „{{HAUPTLEISTUNG}}" in der Branche {{BRANCHE_LABEL}}</h3>
+  <!--
+  🚨 DYNAMISCHE KLASSIFIZIERUNG - BRANCHENABHÄNGIG:
+  - Gesundheit, Finanzen, Personal, Recht, Behörden → "erhöhte Anforderungen"
+  - Marketing, E-Commerce, IT, Beratung → "geringes Risiko mit Transparenzpflichten"
+  KEINE WIDERSPRÜCHE - EIN KONSISTENTES RISIKO-LABEL PRO REPORT!
+  -->
   <p>
     Der Einsatz von KI im Bereich <strong>{{HAUPTLEISTUNG}}</strong> innerhalb der Branche
-    <strong>{{BRANCHE_LABEL}}</strong> fällt in der Regel <strong>nicht in die Hochrisiko-Kategorie
-    gemäß Art.&nbsp;6</strong>.
+    <strong>{{BRANCHE_LABEL}}</strong> unterliegt den allgemeinen <strong>Transparenzpflichten
+    gemäß Art.&nbsp;50</strong>. Die spezifische Risiko-Klassifizierung hängt von der konkreten
+    Anwendung ab.
   </p>
   <p>
-    Dies gilt insbesondere bei KI zur Textgenerierung, Analyse oder internen Unterstützung.
-    Automatisierte Einzelentscheidungen über Personen (Kreditvergabe, Diagnosen, Personal)
-    würden strengere Anforderungen auslösen.
+    Bei Nutzung für Textgenerierung, Analyse oder interne Unterstützung gelten geringere
+    Anforderungen. Automatisierte Entscheidungen über Personen würden strengere Vorgaben auslösen.
   </p>
 
   <p>
@@ -155,7 +161,7 @@ VERBOTEN:
     <li>
       <strong>Gesundheit &amp; Pflege, Finanzen, Recht, öffentliche Verwaltung:</strong>
       erhöhte Transparenz-, Dokumentations- und Prüfpflichten; sorgfältige Datenverwendung,
-      klare interne Freigaben; potenziell Nähe zu Hochrisiko-Anwendungsfällen.
+      klare interne Freigaben; besondere Aufmerksamkeit bei automatisierten Entscheidungen.
     </li>
     <li>
       <strong>Marketing &amp; Kreativwirtschaft:</strong>
