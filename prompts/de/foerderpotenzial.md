@@ -7,6 +7,30 @@ Developer:
 <!-- TOKEN-BUDGET: 3200 (solo:0.8x, team:1.0x, kmu:1.15x) -->
 <!-- FOERDERLOGIK: DE-Bundesprogramme + Landesprogramme (KEINE EU-Core-Hinweise) -->
 <!--
+###############################################################################
+##                    STANDORT KONSISTENZ (KRITISCH!)                        ##
+###############################################################################
+
+⚠️ KEINE FALSCHEN BUNDESLÄNDER NENNEN!
+
+Das Bundesland des Users ist: {{BUNDESLAND_LABEL}}
+- NUR dieses Bundesland in Förder-Kontexten verwenden
+- KEINE anderen Bundesländer halluzinieren!
+- NICHT "Berlin" schreiben wenn {{BUNDESLAND_LABEL}} = "Nordrhein-Westfalen"
+
+VERBOTEN:
+❌ Ein anderes Bundesland als {{BUNDESLAND_LABEL}} nennen
+❌ Förderprogramme eines anderen Bundeslandes empfehlen
+❌ "Berlin", "Bayern", "NRW" etc. wenn nicht {{BUNDESLAND_LABEL}}
+
+ERLAUBT:
+✅ {{BUNDESLAND_LABEL}} verwenden (der echte Wert)
+✅ "Ihr Bundesland" als generische Alternative
+✅ Bundesprogramme (gelten überall)
+
+###############################################################################
+-->
+<!--
 ZIEL: 4 Abschnitte mit je 180-220 Wörtern (= 720-880 Wörter gesamt).
 
 STRUKTUR (4 Pflicht-Abschnitte):

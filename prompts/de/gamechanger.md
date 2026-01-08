@@ -31,6 +31,24 @@ CONTENT-VALIDIERUNG (PFLICHT!):
 ###############################################################################
 -->
 <!--
+###############################################################################
+##                    ROI KONSISTENZ (SINGLE SOURCE OF TRUTH)                ##
+###############################################################################
+
+⚠️ KEINE ROI-ZAHLEN IN DIESEM ABSCHNITT GENERIEREN!
+
+STRENGE REGEL:
+- Der ROI-Wert wird NUR im Business Case berechnet und angezeigt
+- KEINE eigenen ROI-Prozentsätze erfinden (kein "284%", "337%", "200%")
+- KEIN Payback, KEINE CAPEX/OPEX-Zahlen in diesem Abschnitt
+
+WENN ROI erwähnt werden MUSS:
+→ "Der ROI wird im Business Case detailliert dargestellt"
+→ NIEMALS einen konkreten Prozentwert nennen!
+
+###############################################################################
+-->
+<!--
 =============================================================================
 PLATIN+++ CONTENT DOD (verbindlich):
 =============================================================================
