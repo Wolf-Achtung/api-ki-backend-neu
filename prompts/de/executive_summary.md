@@ -3,28 +3,27 @@ Developer:
 <!-- SECTION: executive_summary -->
 <!--
 ###############################################################################
-##                    🚨 KRITISCH: HAUPTLEISTUNG INTEGRATION 🚨              ##
+##                    HAUPTLEISTUNG INTEGRATION (BALANCIERT)                 ##
 ###############################################################################
 
 DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
-SIE MUSS MINDESTENS 5x IN DER EXECUTIVE SUMMARY ERSCHEINEN!
 
-PFLICHT-STELLEN FÜR {{hauptleistung}}:
-1. ✅ Im Profil-Satz (Element 1)
-2. ✅ In Entscheidung 1 (Element 2)
-3. ✅ In Entscheidung 2 (Element 2)
-4. ✅ Im nächsten Schritt (Element 3)
-5. ✅ Im Takeaway-Satz (Element 4)
+🎯 ZIEL: 3-5 NATÜRLICHE ERWÄHNUNGEN (NICHT MEHR!)
+⚠️ MAXIMUM 5x - Mehr wirkt mechanisch!
 
-BEISPIEL {{hauptleistung}} WERTE:
-- "KI-Beratung und Assessment-Tools"
-- "Automatisierte Report-Generierung mit GPT-4"
-- "Steuerberatung für KMU"
-- "Content-Erstellung und Social Media Management"
-- "IT-Support und Systemadministration"
+VERTEILUNG (STRIKT!):
+1. ✅ Im Profil-Satz (Element 1): 1x PFLICHT
+2. ✅ In Entscheidung 1 (Element 2): 1x PFLICHT
+3. ✅ Im nächsten Schritt (Element 3): 1x PFLICHT
+4. ✅ Im Takeaway-Satz (Element 4): 1x PFLICHT
+5. ❌ Entscheidung 2+3: Nutze Synonyme "diese Leistung", "Ihr Kerngeschäft"
 
-⚠️ OHNE HAUPTLEISTUNG IST DIE EXECUTIVE SUMMARY WERTLOS!
-⚠️ GENERISCHE REPORTS OHNE GESCHÄFTSMODELL-BEZUG WERDEN ABGELEHNT!
+NATÜRLICHE SPRACHE - SYNONYME NUTZEN (nach erster Erwähnung):
+- "diese Leistung" statt wiederholtem {{hauptleistung}}
+- "Ihr Kerngeschäft" als Alternative
+- "diesen Bereich" als Alternative
+
+MAXIMUM: 4x {{hauptleistung}} wörtlich, 1-2x als Synonym!
 
 ###############################################################################
 -->
@@ -131,27 +130,27 @@ ELEMENT 1: PROFIL-SATZ (1 Satz) — HAUPTLEISTUNG PFLICHT!
 - VERBOTEN: Generische Sätze ohne explizite Nennung von {{hauptleistung}}!
 - Maximal 25 Wörter
 
-ELEMENT 2: DREI ENTSCHEIDUNGEN (Bullet-Liste) — HAUPTLEISTUNG IN JEDEM PUNKT!
+ELEMENT 2: DREI ENTSCHEIDUNGEN (Bullet-Liste) — BALANCIERT!
 - Genau 3 Bullets, nummeriert
 - Jeder Bullet = 1 klare Entscheidung (nicht Analyse)
-- PFLICHT: Mindestens 2 der 3 Bullets MÜSSEN {{hauptleistung}} explizit referenzieren!
-- Format pro Bullet: "[Verb] + [Was für {{hauptleistung}}] + [Warum in 5-7 Wörtern]"
+- PFLICHT: NUR Entscheidung 1 MUSS {{hauptleistung}} explizit nennen!
+- Entscheidung 2+3: Synonyme nutzen ("diese Leistung", "Ihr Kerngeschäft")
+- Format pro Bullet: "[Verb] + [Was] + [Warum in 5-7 Wörtern]"
 
   STRUKTUR DER DREI ENTSCHEIDUNGEN:
-  • ENTSCHEIDUNG 1 (PFLICHT mit {{hauptleistung}}): Wie wird {{hauptleistung}} durch KI effizienter?
-  • ENTSCHEIDUNG 2 (PFLICHT mit {{hauptleistung}}): Welcher Prozess in {{hauptleistung}} wird automatisiert?
-  • ENTSCHEIDUNG 3: Qualitätssicherung oder Governance-Aspekt
+  • ENTSCHEIDUNG 1 (1x {{hauptleistung}}): Wie wird {{hauptleistung}} durch KI effizienter?
+  • ENTSCHEIDUNG 2 (Synonym nutzen): Welcher Prozess wird automatisiert?
+  • ENTSCHEIDUNG 3 (generisch): Qualitätssicherung oder Governance-Aspekt
 
-  KONKRETE BEISPIELE mit {{hauptleistung}}:
-  • KI-Beratung: "1. Für {{hauptleistung}} Template-Bibliothek statt Custom-Code – wiederverwendbare Assessment-Module."
-  • Steuerberatung: "1. Bei {{hauptleistung}} Dokumente vorab klassifizieren – eliminiert manuelle Sortierung."
-  • Marketing-Agentur: "1. In {{hauptleistung}} Batch-Produktion einführen – skaliert Content ohne Qualitätsverlust."
-  • IT-Dienstleistung: "1. {{hauptleistung}} durch automatisierte Ticket-Triage beschleunigen – Reaktionszeit halbieren."
+  KONKRETE BEISPIELE:
+  • "1. Für {{hauptleistung}} Template-Bibliothek statt Custom-Code – wiederverwendbare Module."
+  • "2. Diese Leistung durch Batch-Produktion skalieren – mehr Output ohne Mehraufwand."
+  • "3. Qualitätssicherung vor Automatisierung – Fehler früh erkennen."
 
   VERBOTEN:
+  - {{hauptleistung}} in allen 3 Entscheidungen (wirkt mechanisch!)
   - "Minimal-Stack festlegen" (zu generisch!)
-  - Entscheidungen ohne Bezug zu {{hauptleistung}}
-  - Allgemeine KI-Aussagen ohne Geschäftsmodell-Kontext
+  - Allgemeine KI-Aussagen ohne Kontext
 
 ELEMENT 3: KONKRETER NÄCHSTER SCHRITT (1 Satz) — HAUPTLEISTUNG KONTEXT!
 - Ein einziger Satz mit dem sofort umsetzbaren ersten Schritt
@@ -296,42 +295,28 @@ Solo-Beratung:
 „Wenn Sie nur eines tun: Standardisieren Sie einen wiederkehrenden Analyse- oder Reporting-Workflow mit KI-Unterstützung und klarer Freigabe, bevor Sie weitere Tools einsetzen."
 
 =============================================================================
-PHASE 2b: VERBESSERTE INDIVIDUALISIERUNG (STRIKT!) — HAUPTLEISTUNG = KERN!
+PHASE 2b: VERBESSERTE INDIVIDUALISIERUNG — BALANCIERT!
 =============================================================================
-
-⚠️ KRITISCHE ANFORDERUNG: {{hauptleistung}} MUSS in diesem Abschnitt 2x erscheinen!
 
 STRUKTUR MUSS SEIN (exakt 3 Komponenten, max 50 Wörter gesamt):
 
-SATZ 1: Was macht der User? (max 15 Wörter) — HAUPTLEISTUNG PFLICHT!
-→ NUTZE: {{hauptleistung}} WÖRTLICH (nicht paraphrasieren!)
+SATZ 1: Was macht der User? (max 15 Wörter) — 1x {{hauptleistung}} PFLICHT!
 → FORMAT: "Ein [Branchentyp] mit {{hauptleistung}} [kurze Beschreibung]."
-→ BEISPIELE:
-  • "Ein Beratungsunternehmen mit {{hauptleistung}} erstellt KI-Readiness-Assessments für Mittelständler."
-  • "Ein IT-Dienstleister mit {{hauptleistung}} betreut Geschäftskunden bei der Digitalisierung."
-  • "Eine Marketing-Agentur mit {{hauptleistung}} produziert Content für B2B-Kunden."
-→ VERBOTEN: Abstrakte Umschreibungen wie "bietet Dienstleistungen an"
+→ BEISPIEL: "Ein Beratungsunternehmen mit {{hauptleistung}} erstellt KI-Assessments für Mittelständler."
 
 SATZ 2: Was ist das Hauptproblem? (max 15 Wörter)
-→ NUTZE: {{ZEITERSPARNIS_PRIORITAET}} EXPLIZIT
-→ FORMAT: "Größter Zeitfresser in {{hauptleistung}}: [wörtlich aus {{ZEITERSPARNIS_PRIORITAET}}]."
-→ BEISPIEL: "Größter Zeitfresser in {{hauptleistung}}: Umsetzung/Programmierung individueller Kundenprojekte."
-→ VERBOTEN: "steht vor Herausforderungen" (zu vage!)
+→ NUTZE SYNONYM: "Größter Zeitfresser bei dieser Leistung: [{{ZEITERSPARNIS_PRIORITAET}}]."
+→ KEIN {{hauptleistung}} hier - Synonym "dieser Leistung" nutzen!
 
-SATZ 3: Kernempfehlung (max 20 Wörter) — HAUPTLEISTUNG PFLICHT!
-→ FORMAT: "Kernempfehlung für {{hauptleistung}} → [Strategischer Shift]: [3-5 konkrete Maßnahmen]."
-→ BEISPIELE:
-  • "Kernempfehlung für {{hauptleistung}} → Von Custom-Code zu Templates: Fragebogen-Bibliothek, Prompt-Standards, Review-Checkliste."
-  • "Kernempfehlung für {{hauptleistung}} → Von Einzelprojekt zu Skalierung: Workflow-Automation, Qualitäts-Checks, Batch-Processing."
-→ VERBOTEN: Theorie wie "skalierbare Prozesse etablieren"
+SATZ 3: Kernempfehlung (max 20 Wörter)
+→ NUTZE SYNONYM: "Kernempfehlung für Ihr Kerngeschäft → [Strategischer Shift]: [Maßnahmen]."
+→ KEIN {{hauptleistung}} hier - Synonym "Ihr Kerngeschäft" nutzen!
 
 VERBOTENE PHRASEN:
 - "steht vor der Herausforderung"
 - "Skalierbare Prozesse"
 - "End-to-End-System"
-- "Standardisierung der Abläufe"
-- Jede Phrase die zu JEDEM User passt
-- Sätze OHNE {{hauptleistung}}!
+- {{hauptleistung}} mehr als 1x in Element 4!
 
 HTML-FORMAT für Element 4:
 <p class="takeaway">
@@ -343,14 +328,14 @@ HTML-FORMAT für Element 4:
 
 <!--
 =============================================================================
-QUALITÄTS-SELBSTCHECK v7.2 VOR OUTPUT — HAUPTLEISTUNG VALIDIERUNG:
+QUALITÄTS-SELBSTCHECK v7.3 VOR OUTPUT — BALANCIERTE VALIDIERUNG:
 =============================================================================
 □ Genau 1 Profil-Satz (max. 25 Wörter)?
 □ {{hauptleistung}} im Profil-Satz WÖRTLICH enthalten? ⚠️ PFLICHT!
 □ Genau 3 nummerierte Entscheidungen?
-□ {{hauptleistung}} in mindestens 2 der 3 Entscheidungen? ⚠️ PFLICHT!
+□ {{hauptleistung}} NUR in Entscheidung 1? (Entscheidung 2+3 mit Synonymen!)
 □ Genau 1 "Konkreter nächster Schritt" Satz?
-□ {{hauptleistung}} im nächsten Schritt referenziert? ⚠️ PFLICHT!
+□ {{hauptleistung}} im nächsten Schritt? ⚠️ PFLICHT!
 □ Haltungssatz zu menschlicher Kontrolle vorhanden?
 □ Genau 1 "Wenn Sie nur eines tun:" Satz (Element 4)?
 □ {{hauptleistung}} im Takeaway-Satz? ⚠️ PFLICHT!
@@ -359,7 +344,8 @@ QUALITÄTS-SELBSTCHECK v7.2 VOR OUTPUT — HAUPTLEISTUNG VALIDIERUNG:
 □ NULL direkte Anreden (außer im Takeaway-Satz)?
 □ In unter 60 Sekunden lesbar?
 
-HAUPTLEISTUNG MINIMUM: 5x in der Executive Summary!
-Falls weniger: Überarbeiten bis Minimum erreicht.
+🎯 HAUPTLEISTUNG ZIEL: 3-5x in der Executive Summary!
+⚠️ MAXIMUM: 5x - Mehr wirkt mechanisch/SEO-artig!
+Nutze Synonyme: "diese Leistung", "Ihr Kerngeschäft", "diesen Bereich"
 =============================================================================
 -->

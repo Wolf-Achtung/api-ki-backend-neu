@@ -7,26 +7,32 @@ Developer:
 <!-- TOKEN-BUDGET: 600 (solo:0.8x=480, team:1.0x=600, kmu:1.15x=690) -->
 <!--
 ###############################################################################
-##                    🚨 KRITISCH: HAUPTLEISTUNG INTEGRATION 🚨              ##
+##                    HAUPTLEISTUNG INTEGRATION (BALANCIERT)                 ##
 ###############################################################################
 
 DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
-SIE MUSS MINDESTENS 5-8x IN DEN EMPFEHLUNGEN ERSCHEINEN!
 
-PFLICHT-STELLEN FÜR {{hauptleistung}}:
-1. ✅ Im Einleitungssatz: "Für Ihr Geschäftsmodell ({{hauptleistung}})..."
-2. ✅ In MUSS-Maßnahme 1: Titel UND Detail mit {{hauptleistung}}
-3. ✅ In MUSS-Maßnahme 2: Titel UND Detail mit {{hauptleistung}}
-4. ✅ In MUSS-Maßnahme 3: Kontext zu {{hauptleistung}}
-5. ✅ In der Prioritäten-Tabelle: {{hauptleistung}}-Bezug in Spalte "Hauptnutzen"
+🎯 ZIEL: 5-8 NATÜRLICHE ERWÄHNUNGEN (NICHT MEHR!)
+⚠️ OVER-INTEGRATION VERMEIDEN: Mehr als 10x wirkt mechanisch/SEO-artig!
 
-BEISPIEL {{hauptleistung}} WERTE:
-- "KI-Beratung und Assessment-Tools"
-- "Steuerberatung für KMU"
-- "Content-Erstellung und Social Media Management"
+VERTEILUNG (STRIKT!):
+1. ✅ Im Einleitungssatz: 1x {{hauptleistung}} (PFLICHT)
+2. ✅ In MUSS-Maßnahme 1: 1x (nur im Titel ODER Detail)
+3. ✅ In MUSS-Maßnahme 2: 1x (nur im Titel ODER Detail)
+4. ✅ In Prioritäten-Tabelle: 1-2x total (nicht in jeder Zeile!)
+5. ✅ Optional: 1-2x weitere durch Synonyme ersetzen
 
-⚠️ EMPFEHLUNGEN OHNE HAUPTLEISTUNG-BEZUG SIND WERTLOS!
-⚠️ GENERISCHE PHRASEN OHNE GESCHÄFTSMODELL-KONTEXT WERDEN ABGELEHNT!
+NATÜRLICHE SPRACHE - SYNONYME NUTZEN (nach erster Erwähnung):
+- "diese Leistung" statt wiederholtem {{hauptleistung}}
+- "Ihr Kerngeschäft" als Alternative
+- "Ihre Dienstleistung" als Alternative
+- "diesen Bereich" als Alternative
+
+MAXIMUM PRO ABSCHNITT:
+- Einleitung: max 1x
+- MUSS-Maßnahmen: max 3x (1x pro Maßnahme)
+- Tabelle: max 2x (nicht in jeder Zeile!)
+- OPTIONEN: 0x (generisch halten)
 
 ###############################################################################
 -->
@@ -160,48 +166,46 @@ KMU-MODUS - VERBOTEN:
 
   <p>
     Für Ihr Geschäftsmodell <strong>{{hauptleistung}}</strong> in der Branche {{BRANCH_CONTEXT_LABEL}}
-    gelten folgende priorisierte Empfehlungen, die spezifisch auf {{hauptleistung}} abgestimmt sind.
+    gelten folgende priorisierte Empfehlungen.
   </p>
 
   <!-- ABSCHNITT 1: MUSS-MAßNAHMEN (genau 3) - PHASE 2b INDIVIDUALISIERT -->
   <!--
-  🚨 KRITISCH: JEDE MUSS-MAßNAHME BRAUCHT {{hauptleistung}}! 🚨
+  BALANCIERTE INTEGRATION: Max 1x {{hauptleistung}} pro Maßnahme!
 
-  WICHTIG: Diese Maßnahmen werden vom LLM DYNAMISCH generiert basierend auf:
-  - Maßnahme 1: {{ZEITERSPARNIS_PRIORITAET}} + KONTEXT zu {{hauptleistung}}
-  - Maßnahme 2: {{hauptleistung}} EXPLIZIT im Titel UND Detail
-  - Maßnahme 3: {{KI_GUARDRAILS}} + wie das {{hauptleistung}} schützt
+  WICHTIG: Diese Maßnahmen werden vom LLM DYNAMISCH generiert:
+  - Maßnahme 1: {{ZEITERSPARNIS_PRIORITAET}} (1x hauptleistung im Titel ODER Detail)
+  - Maßnahme 2: Kernprozess (1x hauptleistung, Rest mit Synonymen)
+  - Maßnahme 3: {{KI_GUARDRAILS}} (1x Bezug zu "dieser Leistung")
 
-  PFLICHT: {{hauptleistung}} muss in ALLEN 3 Maßnahmen erscheinen!
+  MAXIMUM: 3x {{hauptleistung}} in allen MUSS-Maßnahmen zusammen!
+  Verwende Synonyme: "Ihr Kerngeschäft", "diese Leistung", "diesen Bereich"
   -->
-  <h3>MUSS – Sofort umsetzen für {{hauptleistung}}</h3>
+  <h3>MUSS – Sofort umsetzen</h3>
   <ol class="recommendations-muss">
     <li>
       <!--
       MASCHINE GENERIERT: Basierend auf {{ZEITERSPARNIS_PRIORITAET}}
-      PFLICHT: Titel MUSS {{hauptleistung}} enthalten!
-      Beispiel: "Template-Bibliothek für {{hauptleistung}} aufbauen" statt "Minimal-Stack"
+      MAX 1x {{hauptleistung}} - Nutze Synonym "Ihr Kerngeschäft" für Detail
       -->
-      <strong>[Maßnahme für {{hauptleistung}} die {{ZEITERSPARNIS_PRIORITAET}} löst]</strong> – [Warum das Zeit spart in {{hauptleistung}}].
-      <p class="muss-detail">Für Ihr Kerngeschäft ({{hauptleistung}}): [Konkrete Umsetzungsschritte]</p>
+      <strong>[Maßnahme für {{hauptleistung}} die {{ZEITERSPARNIS_PRIORITAET}} löst]</strong> – [Warum das Zeit spart].
+      <p class="muss-detail">Für Ihr Kerngeschäft: [Konkrete Umsetzungsschritte]</p>
     </li>
     <li>
       <!--
-      MASCHINE GENERIERT: Basierend auf {{hauptleistung}}
-      PFLICHT: {{hauptleistung}} muss 2x in diesem Punkt erscheinen!
-      Beispiel: "Qualitätsstandard für {{hauptleistung}} definieren" statt "Standard-Workflow"
+      MASCHINE GENERIERT: Basierend auf Kernprozess
+      MAX 1x {{hauptleistung}} im Titel - Nutze "diese Leistung" im Detail
       -->
-      <strong>[Optimierungsmaßnahme spezifisch für {{hauptleistung}}]</strong> – [Wie das {{hauptleistung}} verbessert].
-      <p class="muss-detail">Bei {{hauptleistung}} konkret: [Prozessschritte mit Tools]</p>
+      <strong>[Optimierungsmaßnahme für {{hauptleistung}}]</strong> – [Wie das die Qualität verbessert].
+      <p class="muss-detail">Bei dieser Leistung konkret: [Prozessschritte mit Tools]</p>
     </li>
     <li>
       <!--
       MASCHINE GENERIERT: Basierend auf {{KI_GUARDRAILS}}
-      PFLICHT: Erklären wie Qualitätssicherung {{hauptleistung}} schützt!
-      Beispiel: "Review-Prozess für {{hauptleistung}}-Outputs" statt "Review-Regel"
+      0x {{hauptleistung}} - Nutze "diesen Bereich" als Synonym
       -->
-      <strong>[Qualitätssicherung für {{hauptleistung}} passend zu {{KI_GUARDRAILS}}]</strong> – [Wie das Risiken in {{hauptleistung}} minimiert].
-      <p class="muss-detail">Qualitätscheck für {{hauptleistung}}: [Konkrete Checkliste]</p>
+      <strong>[Qualitätssicherung passend zu {{KI_GUARDRAILS}}]</strong> – [Wie das Risiken minimiert].
+      <p class="muss-detail">Qualitätscheck für diesen Bereich: [Konkrete Checkliste]</p>
     </li>
   </ol>
 
@@ -222,19 +226,19 @@ KMU-MODUS - VERBOTEN:
     </li>
   </ul>
 
-  <h3>Prioritäten-Überblick für {{hauptleistung}}</h3>
+  <h3>Prioritäten-Überblick</h3>
   <table class="table">
     <thead>
-      <tr><th>Typ</th><th>Empfehlung für {{hauptleistung}}</th><th>Zeitrahmen</th><th>Hauptnutzen</th></tr>
+      <tr><th>Typ</th><th>Empfehlung</th><th>Zeitrahmen</th><th>Hauptnutzen</th></tr>
     </thead>
     <tbody>
-      <!-- PHASE 2b: Tabelle wird DYNAMISCH generiert - JEDE Zeile mit {{hauptleistung}}-Bezug -->
-      <tr><td><strong>MUSS</strong></td><td>[Maßnahme 1 für {{hauptleistung}}]</td><td>Sofort</td><td>Zeitersparnis bei {{hauptleistung}}</td></tr>
-      <tr><td><strong>MUSS</strong></td><td>[Maßnahme 2 für {{hauptleistung}}]</td><td>Woche 1-2</td><td>Qualität in {{hauptleistung}}</td></tr>
-      <tr><td><strong>MUSS</strong></td><td>[Maßnahme 3 für {{hauptleistung}}]</td><td>Woche 1-2</td><td>Sicherheit bei {{hauptleistung}}</td></tr>
-      <tr><td>Option</td><td>Wissensmanagement für {{hauptleistung}}</td><td>{% if COMPANY_SIZE == "solo" %}Monat 3+{% else %}Monat 4-6{% endif %}</td><td>Skalierung von {{hauptleistung}}</td></tr>
-      <tr><td>Option</td><td>{{hauptleistung}}-Pilot ausweiten</td><td>{% if COMPANY_SIZE == "solo" %}Monat 6+{% else %}Monat 6-9{% endif %}</td><td>Sichtbarer Erfolg</td></tr>
-      <tr><td>Option</td><td>Governance für {{hauptleistung}}</td><td>{% if COMPANY_SIZE == "solo" %}Monat 3+{% else %}Monat 6+{% endif %}</td><td>Rechtssicherheit</td></tr>
+      <!-- TABELLE: Max 2x {{hauptleistung}} - Rest generisch oder mit Synonymen -->
+      <tr><td><strong>MUSS</strong></td><td>[Maßnahme 1 für {{hauptleistung}}]</td><td>Sofort</td><td>Zeitersparnis</td></tr>
+      <tr><td><strong>MUSS</strong></td><td>[Maßnahme 2]</td><td>Woche 1-2</td><td>Qualitätssteigerung</td></tr>
+      <tr><td><strong>MUSS</strong></td><td>[Maßnahme 3]</td><td>Woche 1-2</td><td>Risikominimierung</td></tr>
+      <tr><td>Option</td><td>Wissensmanagement aufbauen</td><td>{% if COMPANY_SIZE == "solo" %}Monat 3+{% else %}Monat 4-6{% endif %}</td><td>Skalierung</td></tr>
+      <tr><td>Option</td><td>Pilot ausweiten</td><td>{% if COMPANY_SIZE == "solo" %}Monat 6+{% else %}Monat 6-9{% endif %}</td><td>Sichtbarer Erfolg</td></tr>
+      <tr><td>Option</td><td>Governance formalisieren</td><td>{% if COMPANY_SIZE == "solo" %}Monat 3+{% else %}Monat 6+{% endif %}</td><td>Rechtssicherheit</td></tr>
     </tbody>
   </table>
 </section>
