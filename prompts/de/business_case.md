@@ -34,6 +34,23 @@ NATÜRLICHE SPRACHE - SYNONYME NUTZEN:
 <!--
 ZIEL: Klarer, realistischer Business Case mit ROI, CAPEX/OPEX.
 
+###############################################################################
+##                    ROI KONSISTENZ (SINGLE SOURCE OF TRUTH)                ##
+###############################################################################
+
+ALLE ROI-WERTE MÜSSEN {{ROI_12M}} VERWENDEN!
+
+⚠️ KONSISTENZ-REGEL (STRIKT!):
+- Der ROI-Wert ist {{ROI_12M}} - DIESEN WERT ÜBERALL VERWENDEN
+- KEINE anderen ROI-Prozentsätze erfinden oder berechnen
+- KEINE widersprüchlichen ROI-Angaben in anderen Sektionen
+
+Wenn in ANDEREN Sektionen ROI erwähnt wird:
+- → VERWEIS: "Der ROI liegt bei {{ROI_12M}}% (→ siehe Business Case)"
+- → NIEMALS: andere Prozentsätze nennen
+
+###############################################################################
+
 REALISMUS-REGELN (STRIKT!):
 - KEINE 90%-Effizienzversprechen – realistische 15–30% Einsparungen
 - KEINE erfundenen Zahlen – nur übergebene Variablen nutzen
