@@ -932,6 +932,12 @@ class ReportValidator:
         self._check_redundancy()  # Sprint G2.4
         self._check_ai_act_sections()  # Sprint G7
         self._check_tools_section()  # Sprint B2-C
+        # Phase 1.5 Consistency Checks
+        self._check_hauptleistung_limits()  # Sprint P1.5-1: Min/max hauptleistung counts
+        self._check_roi_consistency()  # Sprint P1.5-3: Single ROI value
+        self._check_incomplete_sentences()  # Sprint P1.5-4: No sentence fragments
+        self._check_tone_consistency()  # Sprint P1.5-6: Sie vs du
+        self._check_location_consistency()  # Sprint P1.5-7: Correct Bundesland
 
         is_valid = not any(e.severity == "CRITICAL" for e in self.errors)
         return is_valid, self.errors
@@ -1767,6 +1773,236 @@ class ReportValidator:
                         )
                     )
                     redundancy_count += 1
+
+    # ------------------------------------------------------------------
+    # PHASE 1.5 CONSISTENCY VALIDATION METHODS
+    # ------------------------------------------------------------------
+
+    def _check_hauptleistung_limits(self) -> None:
+        """
+        Sprint P1.5-1: Validate hauptleistung occurrence counts.
+        - Executive Summary: MIN 4 occurrences
+        - Roadmap: MAX 3 occurrences per size variant
+        """
+        hauptleistung = self.meta.get("hauptleistung", "")
+        if not hauptleistung or len(hauptleistung) < 3:
+            return  # No hauptleistung to check
+
+        # Check Executive Summary (minimum 4)
+        exec_summary = self.sections.get("EXEC_SUMMARY_HTML", "")
+        if exec_summary and isinstance(exec_summary, str):
+            count = exec_summary.lower().count(hauptleistung.lower())
+            if count < 4:
+                self.errors.append(
+                    ValidationError(
+                        severity="WARNING",
+                        category="HAUPTLEISTUNG_UNDERUSE",
+                        section="EXEC_SUMMARY_HTML",
+                        message=f"Executive Summary enthält nur {count}x hauptleistung (Minimum: 4)",
+                        details=f"Hauptleistung '{hauptleistung}' sollte mindestens 4x vorkommen",
+                    )
+                )
+
+        # Check Roadmap (maximum 3 per variant)
+        roadmap = self.sections.get("ROADMAP_90D_HTML", "")
+        if roadmap and isinstance(roadmap, str):
+            count = roadmap.lower().count(hauptleistung.lower())
+            if count > 5:  # Warning threshold (hard limit is 3, but allow some buffer)
+                self.errors.append(
+                    ValidationError(
+                        severity="WARNING",
+                        category="HAUPTLEISTUNG_OVERUSE",
+                        section="ROADMAP_90D_HTML",
+                        message=f"Roadmap enthält {count}x hauptleistung (Maximum: 3-5)",
+                        details=f"Zu viele Wiederholungen von '{hauptleistung}' - nutze Synonyme",
+                    )
+                )
+
+    def _check_roi_consistency(self) -> None:
+        """
+        Sprint P1.5-3: Validate ROI values are consistent across sections.
+        Only one ROI percentage should appear (from business_case).
+        """
+        roi_12m = self.meta.get("ROI_12M", "")
+        if not roi_12m:
+            return
+
+        # Pattern to find ROI percentages (e.g., "284%", "337%", "200%")
+        roi_pattern = r"(\d{2,3})\s*%"
+
+        # Sections that should NOT have their own ROI calculations
+        non_roi_sections = [
+            "EXEC_SUMMARY_HTML",
+            "GAMECHANGER_HTML",
+            "RECOMMENDATIONS_HTML",
+            "ROADMAP_90D_HTML",
+        ]
+
+        for section_name in non_roi_sections:
+            content = self.sections.get(section_name, "")
+            if not content or not isinstance(content, str):
+                continue
+
+            # Find all ROI-like percentages
+            matches = re.findall(roi_pattern, content)
+            # Filter for typical ROI ranges (100-400%)
+            roi_values = [int(m) for m in matches if 100 <= int(m) <= 500]
+
+            if roi_values:
+                # Check if any differ from the official ROI
+                try:
+                    official_roi = int(str(roi_12m).replace("%", "").strip())
+                    for found_roi in roi_values:
+                        if abs(found_roi - official_roi) > 20:  # Allow 20% tolerance
+                            self.errors.append(
+                                ValidationError(
+                                    severity="WARNING",
+                                    category="ROI_INCONSISTENCY",
+                                    section=section_name,
+                                    message=f"Abweichender ROI-Wert {found_roi}% gefunden (offiziell: {official_roi}%)",
+                                    details="ROI sollte nur im Business Case definiert sein",
+                                )
+                            )
+                            break
+                except (ValueError, TypeError):
+                    pass
+
+    def _check_incomplete_sentences(self) -> None:
+        """
+        Sprint P1.5-4: Check for incomplete sentence fragments.
+        E.g., "Einrichten eines." without completing the sentence.
+        """
+        # Patterns for incomplete German sentences
+        incomplete_patterns = [
+            r"\bEinrichten eines\.\s",
+            r"\bImplementieren von\.\s",
+            r"\bAufbau einer\.\s",
+            r"\bEntwicklung eines\.\s",
+            r"\bErstellung einer\.\s",
+            r"\beines\.\s*$",  # Ends with "eines."
+            r"\beiner\.\s*$",  # Ends with "einer."
+            r"\bvon\.\s*$",    # Ends with "von."
+        ]
+
+        for section_name, content in self.sections.items():
+            if not isinstance(content, str):
+                continue
+
+            for pattern in incomplete_patterns:
+                if re.search(pattern, content, re.IGNORECASE):
+                    match = re.search(pattern, content, re.IGNORECASE)
+                    preview = content[max(0, match.start() - 20):match.end() + 20] if match else ""
+                    self.errors.append(
+                        ValidationError(
+                            severity="WARNING",
+                            category="INCOMPLETE_SENTENCE",
+                            section=section_name,
+                            message="Unvollständiger Satz gefunden",
+                            details=f"Fragment: '...{preview}...'",
+                        )
+                    )
+                    break  # Only report once per section
+
+    def _check_tone_consistency(self) -> None:
+        """
+        Sprint P1.5-6: Check for Sie vs du consistency.
+        Output should always use formal "Sie", never informal "du".
+        """
+        # Patterns for informal "du" forms (German)
+        informal_patterns = [
+            r"\bdu\b",
+            r"\bdein\b",
+            r"\bdeiner\b",
+            r"\bdeinem\b",
+            r"\bdeinen\b",
+            r"\bdir\b",
+            r"\bdich\b",
+            r"\beuer\b",
+            r"\beure\b",
+            r"\beuren\b",
+            r"\beurer\b",
+            r"\beach\b",
+        ]
+
+        # Sections to check (user-facing content)
+        content_sections = [
+            "EXEC_SUMMARY_HTML",
+            "GAMECHANGER_HTML",
+            "RECOMMENDATIONS_HTML",
+            "ROADMAP_90D_HTML",
+            "QUICK_WINS_JSON",
+            "BUSINESS_CASE_HTML",
+            "AI_ACT_SUMMARY_HTML",
+        ]
+
+        for section_name in content_sections:
+            content = self.sections.get(section_name, "")
+            if not content or not isinstance(content, str):
+                continue
+
+            for pattern in informal_patterns:
+                matches = re.findall(pattern, content, re.IGNORECASE)
+                if matches:
+                    self.errors.append(
+                        ValidationError(
+                            severity="WARNING",
+                            category="TONE_INCONSISTENCY",
+                            section=section_name,
+                            message=f"Informelle Anrede gefunden: '{matches[0]}'",
+                            details="Output sollte immer formelles 'Sie' verwenden, nicht 'du'",
+                        )
+                    )
+                    break  # Only report once per section
+
+    def _check_location_consistency(self) -> None:
+        """
+        Sprint P1.5-7: Check that the correct Bundesland is used.
+        Should not mention other Bundesländer.
+        """
+        bundesland = self.meta.get("BUNDESLAND_LABEL", "") or self.meta.get("bundesland", "")
+        if not bundesland:
+            return
+
+        # All German Bundesländer
+        all_bundeslaender = [
+            "Baden-Württemberg", "Bayern", "Berlin", "Brandenburg", "Bremen",
+            "Hamburg", "Hessen", "Mecklenburg-Vorpommern", "Niedersachsen",
+            "Nordrhein-Westfalen", "NRW", "Rheinland-Pfalz", "Saarland",
+            "Sachsen", "Sachsen-Anhalt", "Schleswig-Holstein", "Thüringen",
+        ]
+
+        # Normalize the user's Bundesland
+        user_bundesland_normalized = bundesland.lower().strip()
+
+        # Check sections that mention location
+        location_sections = [
+            "BUSINESS_CASE_HTML",
+            "FOERDERPOTENZIAL_HTML",
+        ]
+
+        for section_name in location_sections:
+            content = self.sections.get(section_name, "")
+            if not content or not isinstance(content, str):
+                continue
+
+            for bl in all_bundeslaender:
+                # Skip if this is the user's Bundesland
+                if bl.lower() in user_bundesland_normalized or user_bundesland_normalized in bl.lower():
+                    continue
+
+                if bl in content:
+                    self.errors.append(
+                        ValidationError(
+                            severity="WARNING",
+                            category="LOCATION_INCONSISTENCY",
+                            section=section_name,
+                            message=f"Falsches Bundesland '{bl}' gefunden",
+                            details=f"User-Bundesland ist '{bundesland}', nicht '{bl}'",
+                        )
+                    )
+                    break  # Only report first mismatch per section
+
+    # ------------------------------------------------------------------
 
 
 def validate_report(sections: Dict[str, Any], briefing: Dict[str, Any]) -> bool:

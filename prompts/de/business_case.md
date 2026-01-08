@@ -51,6 +51,23 @@ Wenn in ANDEREN Sektionen ROI erwähnt wird:
 
 ###############################################################################
 
+###############################################################################
+##                    STANDORT KONSISTENZ (KRITISCH!)                        ##
+###############################################################################
+
+⚠️ KEINE FALSCHEN BUNDESLÄNDER NENNEN!
+
+Das Bundesland des Users ist: {{BUNDESLAND_LABEL}}
+- NUR dieses Bundesland erwähnen
+- KEINE anderen Bundesländer halluzinieren!
+
+VERBOTEN:
+❌ "Berlin" wenn {{BUNDESLAND_LABEL}} ≠ "Berlin"
+❌ "Bayern" wenn {{BUNDESLAND_LABEL}} ≠ "Bayern"
+❌ Förderprogramme eines anderen Bundeslandes nennen
+
+###############################################################################
+
 REALISMUS-REGELN (STRIKT!):
 - KEINE 90%-Effizienzversprechen – realistische 15–30% Einsparungen
 - KEINE erfundenen Zahlen – nur übergebene Variablen nutzen
