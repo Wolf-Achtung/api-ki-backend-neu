@@ -36,19 +36,31 @@ NICHT AUSGEBEN wenn count < 4!
 -->
 <!--
 ###############################################################################
-##                    ROI KONSISTENZ (SINGLE SOURCE OF TRUTH)                ##
+##   🚨🚨🚨 ROI PROHIBITION - ZERO TOLERANCE 🚨🚨🚨                          ##
 ###############################################################################
+
+**HARD RULE - OUTPUT WILL BE REJECTED IF ROI PERCENTAGE FOUND**
 
 ⚠️ KEINE ROI-ZAHLEN IN DIESEM ABSCHNITT GENERIEREN!
 
-STRENGE REGEL:
-- Der ROI-Wert wird NUR im Business Case berechnet und angezeigt
-- KEINE eigenen ROI-Prozentsätze erfinden (kein "284%", "337%", "200%")
-- KEIN Payback, KEINE CAPEX/OPEX-Zahlen in diesem Abschnitt
+**PRE-OUTPUT ENFORCEMENT (KRITISCH!):**
+Nach dem Generieren: SUCHE nach diesen Mustern:
+❌ "ROI von X%" → VERBOTEN!
+❌ "XXX%" mit dreistelliger Zahl → VERBOTEN!
+❌ "Rendite von X%" → VERBOTEN!
+❌ "284%", "337%", "200%", "150%" → VERBOTEN!
+❌ "Payback", "Amortisation" mit Monatsangabe → VERBOTEN!
 
-WENN ROI erwähnt werden MUSS:
-→ "Der ROI wird im Business Case detailliert dargestellt"
+WENN ein ROI-Prozentsatz gefunden: ENTFERNEN und ersetzen!
+
+**EINZIGE ERLAUBTE ROI-ERWÄHNUNG:**
+→ "Der ROI wird im Business Case detailliert dargestellt."
 → NIEMALS einen konkreten Prozentwert nennen!
+
+**WARUM?**
+- ROI wird ZENTRAL im Business Case berechnet (Python)
+- Verschiedene ROI-Werte in verschiedenen Sektionen = INKONSISTENZ
+- INKONSISTENZ = Report wird ABGELEHNT!
 
 ###############################################################################
 -->
@@ -352,6 +364,29 @@ HTML-FORMAT für Element 4:
 -->
 
 <!--
+###############################################################################
+##   🚨🚨🚨 PRE-OUTPUT MINIMUM ENFORCEMENT (KRITISCH!) 🚨🚨🚨               ##
+###############################################################################
+
+**HARD RULE - MINIMUM 4x {{hauptleistung}} - OUTPUT WIRD ABGELEHNT BEI < 4**
+
+ZÄHLE {{hauptleistung}} VOR DEM OUTPUT:
+→ count < 4: STOP! OUTPUT UNGÜLTIG! Füge {{hauptleistung}} an Pflicht-Stellen ein!
+→ count = 4-5: ✅ PERFEKT! Output erlaubt.
+→ count > 5: ⚠️ Zu viel! Reduziere mit Synonymen.
+
+PFLICHT-ZÄHLUNG (ALLE 4 MÜSSEN VORHANDEN SEIN!):
+□ PFLICHT 1 - Profil-Satz: {{hauptleistung}} WÖRTLICH? → COUNT +1
+□ PFLICHT 2 - Entscheidung 1: {{hauptleistung}} WÖRTLICH? → COUNT +1
+□ PFLICHT 3 - Nächster Schritt: {{hauptleistung}} WÖRTLICH? → COUNT +1
+□ PFLICHT 4 - Takeaway-Satz: {{hauptleistung}} WÖRTLICH? → COUNT +1
+
+WENN count < 4: UMSCHREIBEN UND ERNEUT ZÄHLEN!
+NICHT AUSGEBEN bis count >= 4 erreicht ist!
+
+###############################################################################
+-->
+<!--
 =============================================================================
 QUALITÄTS-SELBSTCHECK v7.3 VOR OUTPUT — BALANCIERTE VALIDIERUNG:
 =============================================================================
@@ -369,8 +404,9 @@ QUALITÄTS-SELBSTCHECK v7.3 VOR OUTPUT — BALANCIERTE VALIDIERUNG:
 □ NULL direkte Anreden (außer im Takeaway-Satz)?
 □ In unter 60 Sekunden lesbar?
 
-🎯 HAUPTLEISTUNG ZIEL: 3-5x in der Executive Summary!
+🎯 HAUPTLEISTUNG ZIEL: 4-5x in der Executive Summary!
+⚠️ MINIMUM: 4x - Weniger wird ABGELEHNT!
 ⚠️ MAXIMUM: 5x - Mehr wirkt mechanisch/SEO-artig!
-Nutze Synonyme: "diese Leistung", "Ihr Kerngeschäft", "diesen Bereich"
+Nutze Synonyme für Stellen ÜBER 5: "diese Leistung", "Ihr Kerngeschäft"
 =============================================================================
 -->

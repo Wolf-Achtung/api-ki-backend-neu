@@ -1906,19 +1906,47 @@ class ReportValidator:
         """
         # CRITICAL patterns - obvious fragments that break report quality
         critical_patterns = [
+            # Empty labeled content
             r"Maßnahme:\s*\.",  # Empty Maßnahme
             r"Maßnahme:\s*$",   # Maßnahme without content
+            r"Schwerpunkt:\s*\.",  # Empty Schwerpunkt
+            r"Schwerpunkt:\s*$",   # Schwerpunkt without content
+            r"Nutzen:\s*\.",  # Empty Nutzen
+            r"Nutzen:\s*$",   # Nutzen without content
+            r"Aufwand:\s*\.",  # Empty Aufwand
+            r"Aufwand:\s*$",   # Aufwand without content
+            # Sentence fragments ending with indefinite article
             r"\bEinrichten eines\.\s",
             r"\bImplementieren von\.\s",
             r"\bAufbau einer\.\s",
+            r"\bEinführung eines\.\s",
+            r"\bDefinition einer\.\s",
+            r"\bOptimierung eines\.\s",
+            r"\bAutomatisierung von\.\s",
+            r"\bIntegration von\.\s",
+            # Sentences ending with prepositions (clear fragments)
+            r"\b(?:für|mit|von|zu|auf|in|an|bei|nach)\.\s*</",
+            r"\b(?:für|mit|von|zu|auf|in|an|bei|nach)\.\s*$",
+            # Empty bullet points
+            r"<li>\s*</li>",
+            r"<li>\s*\.</li>",
+            # Strong tag without content
+            r"<strong>\s*</strong>",
+            r"<strong>:\s*</strong>",
         ]
 
         # WARNING patterns - less severe fragments
         warning_patterns = [
             r"\bEntwicklung eines\.\s",
             r"\bErstellung einer\.\s",
+            r"\bAusbau eines\.\s",
+            r"\bVerbesserung der\.\s",
             r"\beines\.\s*</",  # Ends with "eines." before HTML tag
             r"\beiner\.\s*</",  # Ends with "einer." before HTML tag
+            r"\beinem\.\s*</",  # Ends with "einem." before HTML tag
+            # Sentences ending with "und" (incomplete enumeration)
+            r"\bund\.\s*</",
+            r"\bsowie\.\s*</",
         ]
 
         for section_name, content in self.sections.items():

@@ -32,18 +32,25 @@ CONTENT-VALIDIERUNG (PFLICHT!):
 -->
 <!--
 ###############################################################################
-##                    ROI KONSISTENZ (SINGLE SOURCE OF TRUTH)                ##
+##   🚨🚨🚨 ROI PROHIBITION - ZERO TOLERANCE 🚨🚨🚨                          ##
 ###############################################################################
+
+**HARD RULE - OUTPUT WILL BE REJECTED IF ROI PERCENTAGE FOUND**
 
 ⚠️ KEINE ROI-ZAHLEN IN DIESEM ABSCHNITT GENERIEREN!
 
-STRENGE REGEL:
-- Der ROI-Wert wird NUR im Business Case berechnet und angezeigt
-- KEINE eigenen ROI-Prozentsätze erfinden (kein "284%", "337%", "200%")
-- KEIN Payback, KEINE CAPEX/OPEX-Zahlen in diesem Abschnitt
+**PRE-OUTPUT ENFORCEMENT (KRITISCH!):**
+Nach dem Generieren: SUCHE nach diesen Mustern:
+❌ "ROI von X%" → VERBOTEN!
+❌ "XXX%" mit dreistelliger Zahl → VERBOTEN!
+❌ "Rendite von X%" → VERBOTEN!
+❌ "284%", "337%", "200%", "150%" → VERBOTEN!
+❌ "Payback", "Amortisation" mit Monatsangabe → VERBOTEN!
 
-WENN ROI erwähnt werden MUSS:
-→ "Der ROI wird im Business Case detailliert dargestellt"
+WENN ein ROI-Prozentsatz gefunden: ENTFERNEN und ersetzen!
+
+**EINZIGE ERLAUBTE ROI-ERWÄHNUNG:**
+→ "Die finanziellen Effekte werden im Business Case dargestellt."
 → NIEMALS einen konkreten Prozentwert nennen!
 
 ###############################################################################
