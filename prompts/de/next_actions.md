@@ -7,20 +7,25 @@
 <!-- TOKEN-BUDGET: 800 (solo:0.8x=640, team:1.0x=800, kmu:1.15x=920) -->
 <!--
 ###############################################################################
-##                    🚨 KRITISCH: HAUPTLEISTUNG INTEGRATION 🚨              ##
+##                    HAUPTLEISTUNG INTEGRATION (BALANCIERT)                 ##
 ###############################################################################
 
 DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
-SIE MUSS IN JEDER AKTION ERSCHEINEN!
 
-PFLICHT FÜR JEDE AKTION:
-1. ✅ Im <strong>-Titel: Bezug zu {{hauptleistung}}
-2. ✅ In der Beschreibung: Kontext zu {{hauptleistung}}
-3. ✅ Im "Erwarteter Effekt": Alle Effekte bezogen auf {{hauptleistung}}
+🎯 ZIEL: 4-6 NATÜRLICHE ERWÄHNUNGEN (NICHT MEHR!)
+⚠️ MAXIMUM 8x - Mehr wirkt mechanisch!
 
-MINIMUM: {{hauptleistung}} erscheint 6-9x in den Aktionen!
+VERTEILUNG (STRIKT!):
+- h2-Titel: 1x {{hauptleistung}} (PFLICHT)
+- Aktion 1: 1x im Titel ODER Beschreibung
+- Aktion 2: Synonym nutzen ("Ihr Kerngeschäft")
+- Aktion 3: Synonym nutzen ("diese Leistung")
+- Erwarteter Effekt: 1-2x max (Rest mit Synonymen)
 
-⚠️ AKTIONEN OHNE HAUPTLEISTUNG-BEZUG SIND GENERISCH UND WERTLOS!
+NATÜRLICHE SPRACHE - SYNONYME NUTZEN:
+- "Ihr Kerngeschäft" statt wiederholtem {{hauptleistung}}
+- "diese Leistung" als Alternative
+- "Ihre Haupttätigkeit" als Alternative
 
 ###############################################################################
 -->
@@ -115,79 +120,74 @@ SIZE-AWARE VERANTWORTLICHKEITEN:
   <ul class="checklist">
     {% if COMPANY_SIZE == "solo" %}
     <!--
-    PHASE 3 SOLO-INDIVIDUALISIERUNG:
-    Alle Aktionen MÜSSEN {{hauptleistung}} und {{ZEITERSPARNIS_PRIORITAET}} aufgreifen!
+    BALANCIERT: Max 4x {{hauptleistung}} in dieser Sektion!
+    Nutze Synonyme: "Ihr Kerngeschäft", "diese Leistung"
     -->
     <li>
       <strong>[DYNAMISCH: Erste {{hauptleistung}}-Template-Bibliothek anlegen]</strong> (Woche 1–2)<br/>
-      <!-- NICHT "erste Vorlage erstellen" - sondern konkret für {{hauptleistung}} -->
-      Basis-Strukturen für {{hauptleistung}} dokumentieren – 3 wiederverwendbare Templates erstellen.
+      Basis-Strukturen für Ihr Kerngeschäft dokumentieren – 3 wiederverwendbare Templates erstellen.
     </li>
     <li>
       <strong>[DYNAMISCH: {{ZEITERSPARNIS_PRIORITAET}} mit erstem Template testen]</strong> (Woche 2–3)<br/>
-      <!-- NICHT "Quick Win umsetzen" - sondern konkret {{ZEITERSPARNIS_PRIORITAET}} adressieren -->
-      Template für {{hauptleistung}} einsetzen, Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}} messen.
+      Template einsetzen, Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}} messen.
     </li>
     <li>
       <strong>[DYNAMISCH: Review-Checkliste mit {{KI_GUARDRAILS}} erstellen]</strong> (Woche 3–4)<br/>
-      <!-- NICHT "Qualitäts-Checkliste" - sondern konkrete Guardrails -->
-      {{KI_GUARDRAILS}} als Prüfpunkte dokumentieren, um {{hauptleistung}}-Ergebnisse zu validieren.
+      {{KI_GUARDRAILS}} als Prüfpunkte dokumentieren, um Ergebnisse zu validieren.
     </li>
     {% elif COMPANY_SIZE == "team" %}
     <!--
-    PHASE 3 TEAM-INDIVIDUALISIERUNG:
-    Alle Aktionen MÜSSEN {{hauptleistung}} und {{ZEITERSPARNIS_PRIORITAET}} aufgreifen!
+    BALANCIERT: Max 4x {{hauptleistung}} in dieser Sektion!
+    Nutze Synonyme: "Ihr Kerngeschäft", "diese Leistung"
     -->
     <li>
       <strong>[DYNAMISCH: KI-Owner für {{hauptleistung}} benennen]</strong> (Woche 1–2)<br/>
-      Verantwortlichkeit für {{hauptleistung}}-Standards und Qualität klären, Team-Templates erstellen.
+      Verantwortlichkeit für Standards und Qualität klären, Team-Templates erstellen.
     </li>
     <li>
       <strong>[DYNAMISCH: {{ZEITERSPARNIS_PRIORITAET}} im Team adressieren]</strong> (Woche 2–3)<br/>
-      Template-Bibliothek für {{hauptleistung}} teamweit testen, Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}} messen.
+      Template-Bibliothek teamweit testen, Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}} messen.
     </li>
     <li>
       <strong>[DYNAMISCH: Team-Review mit {{KI_GUARDRAILS}} etablieren]</strong> (Woche 3–4)<br/>
-      Wöchentliches Review mit {{KI_GUARDRAILS}}-Prüfung einführen, {{hauptleistung}}-Vorlagen verbessern.
+      Wöchentliches Review mit {{KI_GUARDRAILS}}-Prüfung einführen, Vorlagen verbessern.
     </li>
     {% else %}
     <!--
-    PHASE 3 KMU-INDIVIDUALISIERUNG:
-    Alle Aktionen MÜSSEN {{hauptleistung}} und {{ZEITERSPARNIS_PRIORITAET}} aufgreifen!
+    BALANCIERT: Max 4x {{hauptleistung}} in dieser Sektion!
+    Nutze Synonyme: "Ihr Kerngeschäft", "diese Leistung"
     -->
     <li>
       <strong>[DYNAMISCH: Pilotbereich für {{hauptleistung}} definieren]</strong> (Woche 1–2)<br/>
       Bereich mit hohem {{ZEITERSPARNIS_PRIORITAET}}-Potenzial auswählen, {{KI_GUARDRAILS}} als Governance festlegen.
     </li>
     <li>
-      <strong>[DYNAMISCH: {{hauptleistung}}-Templates im Pilotbereich testen]</strong> (Woche 2–4)<br/>
-      Template-Bibliothek für {{hauptleistung}} pilotieren, Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}} quantifizieren.
+      <strong>[DYNAMISCH: Templates im Pilotbereich testen]</strong> (Woche 2–4)<br/>
+      Template-Bibliothek pilotieren, Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}} quantifizieren.
     </li>
     <li>
       <strong>[DYNAMISCH: SOPs mit {{KI_GUARDRAILS}} dokumentieren]</strong> (Woche 3–4)<br/>
-      {{hauptleistung}}-Workflows mit {{KI_GUARDRAILS}}-Review als SOPs festhalten, Schulungskonzept vorbereiten.
+      Workflows mit {{KI_GUARDRAILS}}-Review als SOPs festhalten, Schulungskonzept vorbereiten.
     </li>
     {% endif %}
   </ul>
 
   <div class="roi-tracking">
     <h4>Erwarteter Effekt nach 30 Tagen</h4>
-    <!--
-    PHASE 3: Erwartete Effekte MÜSSEN {{ZEITERSPARNIS_PRIORITAET}} referenzieren!
-    -->
+    <!-- BALANCIERT: Max 1x {{hauptleistung}} in diesem Abschnitt! -->
     <ul>
       {% if COMPANY_SIZE == "solo" %}
       <li><strong>Zeitersparnis:</strong> 30-50% bei {{ZEITERSPARNIS_PRIORITAET}} durch Template-Wiederverwendung</li>
-      <li><strong>Routine:</strong> {{hauptleistung}}-Templates sind fester Bestandteil des Alltags</li>
+      <li><strong>Routine:</strong> Templates sind fester Bestandteil des Alltags</li>
       <li><strong>Compliance:</strong> {{KI_GUARDRAILS}} als Review-Checkliste etabliert</li>
       {% elif COMPANY_SIZE == "team" %}
       <li><strong>Zeitersparnis:</strong> 30-50% bei {{ZEITERSPARNIS_PRIORITAET}} im Team</li>
-      <li><strong>Klarheit:</strong> {{hauptleistung}}-Standards und Team-Templates definiert</li>
+      <li><strong>Klarheit:</strong> Standards und Team-Templates definiert</li>
       <li><strong>Compliance:</strong> {{KI_GUARDRAILS}} als Team-Review etabliert</li>
       {% else %}
       <li><strong>Zeitersparnis:</strong> 30-50% bei {{ZEITERSPARNIS_PRIORITAET}} im Pilotbereich</li>
       <li><strong>Governance:</strong> {{KI_GUARDRAILS}} als SOPs dokumentiert</li>
-      <li><strong>Skalierbarkeit:</strong> {{hauptleistung}}-Templates für Rollout vorbereitet</li>
+      <li><strong>Skalierbarkeit:</strong> Templates für Rollout vorbereitet</li>
       {% endif %}
     </ul>
   </div>
