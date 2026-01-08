@@ -1924,9 +1924,8 @@ class ReportValidator:
             r"\bOptimierung eines\.\s",
             r"\bAutomatisierung von\.\s",
             r"\bIntegration von\.\s",
-            # Sentences ending with prepositions (clear fragments)
-            r"\b(?:für|mit|von|zu|auf|in|an|bei|nach)\.\s*</",
-            r"\b(?:für|mit|von|zu|auf|in|an|bei|nach)\.\s*$",
+            # NOTE: Removed preposition patterns (für, mit, auf, etc.) - too many false positives
+            # German separable verbs legitimately end with these (zeigt auf, baut auf, etc.)
             # Empty bullet points
             r"<li>\s*</li>",
             r"<li>\s*\.</li>",
