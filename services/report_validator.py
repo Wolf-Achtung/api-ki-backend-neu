@@ -1780,40 +1780,66 @@ class ReportValidator:
 
     def _check_hauptleistung_limits(self) -> None:
         """
-        Sprint P1.5-1: Validate hauptleistung occurrence counts.
-        - Executive Summary: MIN 4 occurrences
-        - Roadmap: MAX 3 occurrences per size variant
+        Phase 2: Validate hauptleistung occurrence counts.
+        - Executive Summary: MIN 4 occurrences (per prompt requirement)
+        - Recommendations: MIN 3 occurrences (per prompt requirement)
+        - Roadmap: MAX 5 occurrences
         """
         hauptleistung = self.meta.get("hauptleistung", "")
         if not hauptleistung or len(hauptleistung) < 3:
             return  # No hauptleistung to check
 
-        # Check Executive Summary (minimum 3, recommended 4)
+        # Check Executive Summary (minimum 4 per prompt requirement)
         exec_summary = self.sections.get("EXEC_SUMMARY_HTML", "")
         if exec_summary and isinstance(exec_summary, str):
             count = exec_summary.lower().count(hauptleistung.lower())
-            if count < 2:  # CRITICAL: less than 2 is unacceptable
+            if count < 4:  # CRITICAL: less than 4 violates prompt requirement
                 self.errors.append(
                     ValidationError(
                         severity="CRITICAL",
                         category="HAUPTLEISTUNG_UNDERUSE",
                         section="EXEC_SUMMARY_HTML",
-                        message=f"Executive Summary enthält nur {count}x hauptleistung (Minimum: 3)",
-                        details=f"Hauptleistung '{hauptleistung}' muss mindestens 3x vorkommen",
+                        message=f"Executive Summary enthält nur {count}x hauptleistung (Minimum: 4)",
+                        details=f"Hauptleistung '{hauptleistung}' muss mindestens 4x vorkommen (Prompt-Requirement)",
                     )
                 )
-            elif count < 3:  # WARNING: 2 is low but acceptable
+            elif count < 5:  # WARNING: 4 is minimum, 5 is ideal
                 self.errors.append(
                     ValidationError(
                         severity="WARNING",
                         category="HAUPTLEISTUNG_UNDERUSE",
                         section="EXEC_SUMMARY_HTML",
-                        message=f"Executive Summary enthält nur {count}x hauptleistung (Empfohlen: 3-4)",
-                        details=f"Hauptleistung '{hauptleistung}' sollte 3-4x vorkommen",
+                        message=f"Executive Summary enthält nur {count}x hauptleistung (Empfohlen: 4-5)",
+                        details=f"Hauptleistung '{hauptleistung}' sollte 4-5x vorkommen für optimale Integration",
                     )
                 )
 
-        # Check Roadmap (maximum 5, hard limit 8)
+        # Check Recommendations (minimum 3 per prompt requirement)
+        recommendations = self.sections.get("RECOMMENDATIONS_HTML", "")
+        if recommendations and isinstance(recommendations, str):
+            count = recommendations.lower().count(hauptleistung.lower())
+            if count < 3:  # CRITICAL: less than 3 violates prompt requirement
+                self.errors.append(
+                    ValidationError(
+                        severity="CRITICAL",
+                        category="HAUPTLEISTUNG_UNDERUSE",
+                        section="RECOMMENDATIONS_HTML",
+                        message=f"Recommendations enthält nur {count}x hauptleistung (Minimum: 3)",
+                        details=f"Hauptleistung '{hauptleistung}' muss mindestens 3x vorkommen (Prompt-Requirement)",
+                    )
+                )
+            elif count > 6:  # WARNING: too many occurrences
+                self.errors.append(
+                    ValidationError(
+                        severity="WARNING",
+                        category="HAUPTLEISTUNG_OVERUSE",
+                        section="RECOMMENDATIONS_HTML",
+                        message=f"Recommendations enthält {count}x hauptleistung (Maximum: 6)",
+                        details=f"Zu viele Wiederholungen - nutze Synonyme",
+                    )
+                )
+
+        # Check Roadmap (maximum 5, hard limit 10)
         roadmap = self.sections.get("ROADMAP_90D_HTML", "")
         if roadmap and isinstance(roadmap, str):
             count = roadmap.lower().count(hauptleistung.lower())
@@ -1840,64 +1866,45 @@ class ReportValidator:
 
     def _check_roi_consistency(self) -> None:
         """
-        Sprint P1.5-3: Validate ROI values are consistent across sections.
-        Only one ROI percentage should appear (from business_case).
+        Phase 2: ROI PROHIBITION - No ROI percentages allowed outside Business Case.
+        Per prompt requirement: ROI-Werte sind in diesen Sektionen VERBOTEN.
         """
-        roi_12m = self.meta.get("ROI_12M", "")
-        if not roi_12m:
-            return
-
-        # Pattern to find ROI percentages (e.g., "284%", "337%", "200%")
+        # Pattern to find ROI percentages (e.g., "284%", "337%", "200%", "150%")
+        # Matches 2-3 digit numbers followed by %
         roi_pattern = r"(\d{2,3})\s*%"
 
-        # Sections that should NOT have their own ROI calculations
-        non_roi_sections = [
+        # Sections where ROI is PROHIBITED (per prompt requirement)
+        prohibited_roi_sections = [
             "EXEC_SUMMARY_HTML",
             "GAMECHANGER_HTML",
             "RECOMMENDATIONS_HTML",
             "ROADMAP_90D_HTML",
         ]
 
-        for section_name in non_roi_sections:
+        for section_name in prohibited_roi_sections:
             content = self.sections.get(section_name, "")
             if not content or not isinstance(content, str):
                 continue
 
-            # Find all ROI-like percentages
+            # Find all percentage values
             matches = re.findall(roi_pattern, content)
-            # Filter for typical ROI ranges (100-400%)
+            # Filter for ROI-like ranges (100-500%) - typical ROI values
             roi_values = [int(m) for m in matches if 100 <= int(m) <= 500]
 
             if roi_values:
-                # Check if any differ from the official ROI
-                try:
-                    official_roi = int(str(roi_12m).replace("%", "").strip())
-                    for found_roi in roi_values:
-                        diff = abs(found_roi - official_roi)
-                        if diff > 50:  # CRITICAL: Major inconsistency (>50%)
-                            self.errors.append(
-                                ValidationError(
-                                    severity="CRITICAL",
-                                    category="ROI_INCONSISTENCY",
-                                    section=section_name,
-                                    message=f"Stark abweichender ROI-Wert {found_roi}% (offiziell: {official_roi}%)",
-                                    details="ROI-Werte müssen konsistent sein - Single Source of Truth!",
-                                )
-                            )
-                            break
-                        elif diff > 20:  # WARNING: Minor inconsistency (20-50%)
-                            self.errors.append(
-                                ValidationError(
-                                    severity="WARNING",
-                                    category="ROI_INCONSISTENCY",
-                                    section=section_name,
-                                    message=f"Abweichender ROI-Wert {found_roi}% (offiziell: {official_roi}%)",
-                                    details="ROI sollte nur im Business Case definiert sein",
-                                )
-                            )
-                            break
-                except (ValueError, TypeError):
-                    pass
+                # ANY ROI percentage in these sections is CRITICAL
+                # Per prompt: "ROI PROHIBITION - ZERO TOLERANCE"
+                self.errors.append(
+                    ValidationError(
+                        severity="CRITICAL",
+                        category="ROI_PROHIBITED",
+                        section=section_name,
+                        message=f"ROI-Prozentsatz {roi_values[0]}% in verbotenem Abschnitt gefunden",
+                        details="ROI-Werte sind nur im Business Case erlaubt. Entfernen oder durch '→ siehe Business Case' ersetzen.",
+                    )
+                )
+                # Only report first occurrence per section
+                continue
 
     def _check_incomplete_sentences(self) -> None:
         """

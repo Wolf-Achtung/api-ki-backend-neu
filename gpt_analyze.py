@@ -12201,9 +12201,9 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             log.warning(f"[{run_id}]   [{err.category}] {err.section}: {err.message}")
 
     if not is_valid:
-        # Phase 1.5: Quality Gate now LOGS but doesn't block (soft enforcement)
-        # Set to True to enable hard blocking of bad reports
-        HARD_QUALITY_GATE_ENABLED = False  # Set to True in production for strict mode
+        # Phase 2: Quality Gate NOW ENABLED - blocks reports with critical errors
+        # Set to False only for debugging/testing
+        HARD_QUALITY_GATE_ENABLED = True  # ENABLED: Strict mode active
 
         if HARD_QUALITY_GATE_ENABLED and critical_errors:
             log.error(f"[{run_id}] 🚫 QUALITY GATE BLOCKED: {len(critical_errors)} critical errors")
