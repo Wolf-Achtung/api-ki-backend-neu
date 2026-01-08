@@ -7,32 +7,40 @@ Developer:
 <!-- TOKEN-BUDGET: 600 (solo:0.8x=480, team:1.0x=600, kmu:1.15x=690) -->
 <!--
 ###############################################################################
-##                    HAUPTLEISTUNG INTEGRATION (BALANCIERT)                 ##
+##   🚨🚨🚨 CRITICAL: MINIMUM 3x {{hauptleistung}} - NON-NEGOTIABLE 🚨🚨🚨  ##
 ###############################################################################
 
+**HARD RULE - OUTPUT WILL BE REJECTED IF FEWER THAN 3 OCCURRENCES**
+
 DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
+Sie MUSS MINDESTENS 3x in den Handlungsempfehlungen erscheinen!
 
-🎯 ZIEL: 5-8 NATÜRLICHE ERWÄHNUNGEN (NICHT MEHR!)
-⚠️ OVER-INTEGRATION VERMEIDEN: Mehr als 10x wirkt mechanisch/SEO-artig!
+**PFLICHT-STELLEN (ALLE 3 ERFORDERLICH - KEINE AUSLASSUNG!):**
+1. ✅ PFLICHT #1: Im Einleitungssatz - WÖRTLICH {{hauptleistung}}
+2. ✅ PFLICHT #2: In MUSS-Maßnahme 1 (Titel ODER Detail) - WÖRTLICH {{hauptleistung}}
+3. ✅ PFLICHT #3: In der Prioritäten-Tabelle (Zeile 1) - WÖRTLICH {{hauptleistung}}
 
-VERTEILUNG (STRIKT!):
-1. ✅ Im Einleitungssatz: 1x {{hauptleistung}} (PFLICHT)
-2. ✅ In MUSS-Maßnahme 1: 1x (nur im Titel ODER Detail)
-3. ✅ In MUSS-Maßnahme 2: 1x (nur im Titel ODER Detail)
-4. ✅ In Prioritäten-Tabelle: 1-2x total (nicht in jeder Zeile!)
-5. ✅ Optional: 1-2x weitere durch Synonyme ersetzen
+**PRE-OUTPUT ENFORCEMENT (KRITISCH!):**
+Nach dem Generieren: ZÄHLE alle {{hauptleistung}}-Vorkommen.
+WENN count < 3: OUTPUT UNGÜLTIG → REWRITE bis count >= 3!
+NICHT AUSGEBEN wenn count < 3!
 
-NATÜRLICHE SPRACHE - SYNONYME NUTZEN (nach erster Erwähnung):
+**ZÄHLUNG VOR OUTPUT:**
+□ Einleitungssatz enthält {{hauptleistung}}? → COUNT +1
+□ MUSS-Maßnahme 1 enthält {{hauptleistung}}? → COUNT +1
+□ Tabelle Zeile 1 enthält {{hauptleistung}}? → COUNT +1
+→ WENN count < 3: UMSCHREIBEN!
+
+**RANGE:** MINIMUM 3x, MAXIMUM 6x {{hauptleistung}}
+- count < 3: ❌ ABGELEHNT - zu wenig Integration
+- count 3-6: ✅ PERFEKT - gute Balance
+- count > 6: ⚠️ REDUZIEREN - wirkt mechanisch
+
+**SYNONYME NUTZEN (für Stellen ÜBER das Minimum):**
 - "diese Leistung" statt wiederholtem {{hauptleistung}}
 - "Ihr Kerngeschäft" als Alternative
 - "Ihre Dienstleistung" als Alternative
 - "diesen Bereich" als Alternative
-
-MAXIMUM PRO ABSCHNITT:
-- Einleitung: max 1x
-- MUSS-Maßnahmen: max 3x (1x pro Maßnahme)
-- Tabelle: max 2x (nicht in jeder Zeile!)
-- OPTIONEN: 0x (generisch halten)
 
 ###############################################################################
 -->
@@ -90,19 +98,31 @@ NICHT AUSGEBEN wenn unvollständige Sätze gefunden!
 -->
 <!--
 ###############################################################################
-##                    ROI KONSISTENZ (SINGLE SOURCE OF TRUTH)                ##
+##   🚨🚨🚨 ROI PROHIBITION - ZERO TOLERANCE 🚨🚨🚨                          ##
 ###############################################################################
+
+**HARD RULE - OUTPUT WILL BE REJECTED IF ROI PERCENTAGE FOUND**
 
 ⚠️ KEINE ROI-ZAHLEN IN DIESEM ABSCHNITT GENERIEREN!
 
-STRENGE REGEL:
-- Der ROI-Wert wird NUR im Business Case berechnet und angezeigt
-- KEINE eigenen ROI-Prozentsätze erfinden (kein "284%", "337%", "200%")
-- KEIN Payback, KEINE CAPEX/OPEX-Zahlen in diesem Abschnitt
+**PRE-OUTPUT ENFORCEMENT (KRITISCH!):**
+Nach dem Generieren: SUCHE nach diesen Mustern:
+❌ "ROI von X%" → VERBOTEN!
+❌ "XXX%" mit dreistelliger Zahl → VERBOTEN!
+❌ "Rendite von X%" → VERBOTEN!
+❌ "284%", "337%", "200%", "150%" → VERBOTEN!
+❌ "Payback", "Amortisation" mit Monatsangabe → VERBOTEN!
 
-WENN ROI erwähnt werden MUSS:
-→ "Der ROI wird im Business Case detailliert dargestellt"
+WENN ein ROI-Prozentsatz gefunden: ENTFERNEN und ersetzen!
+
+**EINZIGE ERLAUBTE ROI-ERWÄHNUNG:**
+→ "Details zum ROI → siehe Business Case"
 → NIEMALS einen konkreten Prozentwert nennen!
+
+**WARUM?**
+- ROI wird ZENTRAL im Business Case berechnet (Python)
+- Verschiedene ROI-Werte in verschiedenen Sektionen = INKONSISTENZ
+- INKONSISTENZ = Report wird ABGELEHNT!
 
 ###############################################################################
 -->
