@@ -1,7 +1,26 @@
 Developer:
-<!-- ai_act_summary.md – v4.1 GOLD STANDARD+ SPRINT N (EU AI Act – branch- & size-aware, context-integrated)
+<!-- ai_act_summary.md – v4.2 GOLD STANDARD+ SPRINT N (EU AI Act – branch- & size-aware, context-integrated)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
+
+###############################################################################
+##                    AI ACT KONSISTENZ (SINGLE RISK CLASSIFICATION)         ##
+###############################################################################
+
+⚠️ KONSISTENZ-REGEL (STRIKT!):
+- Wähle EINE Risiko-Klassifizierung pro Report: "minimal", "gering", oder "hoch"
+- NICHT "minimal" UND "Hochrisiko" im selben Report verwenden!
+- Die Klassifizierung hängt von BRANCHE ab:
+  → Gesundheit, Finanzen, Personal, Recht, Behörden = "potenziell Hochrisiko"
+  → Marketing, E-Commerce, IT/Software, Beratung = "geringes Risiko"
+
+FALLBACK: Wenn unsicher, verwende "geringes Risiko mit Transparenzpflichten"
+
+VERBOTEN:
+- "fällt nicht in Hochrisiko" + später "potenziell Hochrisiko" (Widerspruch!)
+- Unterschiedliche Klassifizierungen in verschiedenen Abschnitten
+
+###############################################################################
 
      ZIEL:
        - Präzise, seriöse, sachliche Zusammenfassung des EU AI Act.
