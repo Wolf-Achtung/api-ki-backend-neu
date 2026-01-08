@@ -3,20 +3,25 @@
 
 <!--
 ###############################################################################
-##                    🚨 KRITISCH: HAUPTLEISTUNG INTEGRATION 🚨              ##
+##                    HAUPTLEISTUNG INTEGRATION (BALANCIERT)                 ##
 ###############################################################################
 
 DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
-SIE MUSS IN JEDEM QUICK WIN ERSCHEINEN!
 
-PFLICHT FÜR JEDEN QUICK WIN:
-1. ✅ Im "title" → bezieht sich auf {{hauptleistung}}
-2. ✅ Im "description" → erklärt Problem in {{hauptleistung}}
-3. ✅ Im "mit_ki" → zeigt KI-Lösung für {{hauptleistung}}
+🎯 ZIEL: 4-6 NATÜRLICHE ERWÄHNUNGEN TOTAL (NICHT MEHR!)
+⚠️ OVER-INTEGRATION VERMEIDEN: Mehr als 8x wirkt mechanisch!
 
-MINIMUM: {{hauptleistung}} erscheint 6-9x (2-3x pro Quick Win × 3-4 Quick Wins)
+VERTEILUNG (STRIKT!):
+- Quick Win #1: 2x {{hauptleistung}} (title + description)
+- Quick Win #2: 1x {{hauptleistung}} (title ODER description)
+- Quick Win #3+: Synonyme nutzen ("Ihr Kerngeschäft", "diese Leistung")
 
-⚠️ QUICK WINS OHNE HAUPTLEISTUNG-BEZUG WERDEN ABGELEHNT!
+NATÜRLICHE SPRACHE - SYNONYME NUTZEN:
+- "Ihr Kerngeschäft" statt wiederholtem {{hauptleistung}}
+- "diese Leistung" als Alternative
+- "Ihre Haupttätigkeit" als Alternative
+
+MAXIMUM PRO QUICK WIN: 2x {{hauptleistung}}!
 ###############################################################################
 -->
 
@@ -83,7 +88,7 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
 - Budget: Skalierbare Lösungen
 {% endif %}
 
-## JSON-FORMAT (EXAKT SO VERWENDEN!) — HAUPTLEISTUNG PFLICHT!
+## JSON-FORMAT — BALANCIERT!
 
 ```json
 [
@@ -92,23 +97,23 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
     "icon": "🎯",
     "time": "6-10 h/Monat",
     "engpass": "Ihr konkreter Zeitfresser/Pain Point aus ZEITERSPARNIS_PRIORITAET",
-    "description": "In Ihrem Kerngeschäft ({{hauptleistung}}) besteht das Problem... 2-3 Sätze, konkret auf {{hauptleistung}} bezogen.",
-    "mit_ki": "Für {{hauptleistung}} hilft KI konkret durch... Welche Tools? 2-3 Sätze mit Bezug zu {{hauptleistung}}.",
+    "description": "In Ihrem Kerngeschäft besteht das Problem... 2-3 Sätze.",
+    "mit_ki": "Für diese Leistung hilft KI konkret durch... Welche Tools? 2-3 Sätze.",
     "steps": [
-      "Konkreter Schritt 1 für {{hauptleistung}} mit Zeitangabe (z.B. 30min)",
-      "Konkreter Schritt 2 mit Tool-Namen und Bezug zu {{hauptleistung}}",
-      "Konkreter Schritt 3 mit messbarem Ergebnis für {{hauptleistung}}"
+      "Konkreter Schritt 1 mit Zeitangabe (z.B. 30min)",
+      "Konkreter Schritt 2 mit Tool-Namen",
+      "Konkreter Schritt 3 mit messbarem Ergebnis"
     ],
     "zeitersparnis": "6-10 h/Monat = 600-1.000€ (bei {{STUNDENSATZ_EUR}}€/h)"
   }
 ]
 ```
 
-### TITEL-MUSTER MIT {{hauptleistung}}:
+### TITEL-MUSTER (NUR 1x {{hauptleistung}} IM TITEL!):
 - "[Prozess] automatisieren für {{hauptleistung}}"
-- "KI-Assistent für {{hauptleistung}}-Aufgaben"
-- "Template-Bibliothek für {{hauptleistung}}"
-- "Qualitätsprüfung bei {{hauptleistung}} beschleunigen"
+- "KI-Assistent für Ihr Kerngeschäft"
+- "Template-Bibliothek erstellen"
+- "Qualitätsprüfung beschleunigen"
 
 ## PFLICHT-REGELN
 
@@ -172,12 +177,13 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
 - [ ] Tool-Namen sind KONKRET (nicht "KI-Tools")
 - [ ] Guardrails werden beachten (falls vorhanden)
 
-### ⚠️ HAUPTLEISTUNG PFLICHT-CHECKS:
-- [ ] JEDER Quick Win title referenziert {{hauptleistung}} oder dessen Kernaspekt
-- [ ] JEDE description erklärt das Problem im Kontext von {{hauptleistung}}
-- [ ] JEDE mit_ki Beschreibung zeigt, wie KI bei {{hauptleistung}} hilft
-- [ ] MINDESTENS 6x {{hauptleistung}} im gesamten Output (2x pro Quick Win)
-- [ ] KEIN Quick Win ist generisch ohne Geschäftsmodell-Bezug
+### ⚠️ HAUPTLEISTUNG BALANCIERTE CHECKS:
+- [ ] Quick Win #1: title UND description referenzieren {{hauptleistung}} (2x)
+- [ ] Quick Win #2: title ODER description referenziert {{hauptleistung}} (1x)
+- [ ] Quick Win #3+: Synonyme nutzen ("Ihr Kerngeschäft", "diese Leistung")
+- [ ] ZIEL: 4-6x {{hauptleistung}} im gesamten Output
+- [ ] MAXIMUM: 8x (mehr wirkt mechanisch!)
+- [ ] Synonyme nach erster Erwähnung: "diese Leistung", "Ihr Kerngeschäft"
 
 ## HAUPTLEISTUNG-BEZUG: BEISPIEL-TRANSFORMATION
 
