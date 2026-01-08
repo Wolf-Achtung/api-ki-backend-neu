@@ -4,24 +4,38 @@ Developer:
 <!-- PHASE 3: Maximum personalization using ALL 5 Goldnuggets -->
 <!--
 ###############################################################################
-##                    🚨 KRITISCH: HAUPTLEISTUNG INTEGRATION 🚨              ##
+##   🚨🚨🚨 CRITICAL HAUPTLEISTUNG LIMIT - NON-NEGOTIABLE 🚨🚨🚨           ##
 ###############################################################################
 
+**HARD RULE - MAXIMUM 3 OCCURRENCES IN ENTIRE ROADMAP SECTION**
+
 DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
-SIE MUSS IN JEDER PHASE DER ROADMAP ERSCHEINEN!
+Sie darf MAXIMAL 3x in der gesamten Roadmap erscheinen!
 
-PFLICHT-STELLEN FÜR {{hauptleistung}}:
-1. ✅ Im h2-Titel: "90-Tage-Roadmap für {{hauptleistung}}"
-2. ✅ In Phase 0: Phasenname UND alle Bullets mit {{hauptleistung}}
-3. ✅ In Phase 1: Phasenname UND alle Bullets mit {{hauptleistung}}
-4. ✅ In Phase 2: Phasenname UND alle Bullets mit {{hauptleistung}}
-5. ✅ In Phase 3: Phasenname UND alle Bullets mit {{hauptleistung}}
-6. ✅ In "Erwartete Effekte": Alle Effekte bezogen auf {{hauptleistung}}
+**ALLOWED LOCATIONS (choose ONLY 3):**
+1. ✅ Im h2-Titel: "90-Tage-Roadmap für {{hauptleistung}}" (1x)
+2. ✅ Opening goal statement (1x)
+3. ✅ ONE milestone OR Success metrics (1x)
 
-MINIMUM: {{hauptleistung}} erscheint 20+ mal in der Roadmap!
+**STRICTLY FORBIDDEN:**
+❌ {{hauptleistung}} in JEDEM Phasennamen
+❌ {{hauptleistung}} in JEDEM Bullet-Point
+❌ {{hauptleistung}} mehr als 1x pro Absatz
+❌ Mehr als 3x TOTAL in dieser Sektion
 
-⚠️ ROADMAP OHNE HAUPTLEISTUNG IN JEDER PHASE IST GENERISCH!
-⚠️ PHASENNAMEN OHNE {{hauptleistung}}-BEZUG WERDEN ABGELEHNT!
+**SYNONYME NUTZEN (PFLICHT nach erster Erwähnung):**
+- "diese Leistung" / "Ihre Dienstleistung"
+- "Ihr Kerngeschäft" / "Ihr Hauptangebot"
+- "dieser Service" / "diesen Bereich"
+- "Ihre Arbeit" / "Ihre Tätigkeit"
+
+**PRE-OUTPUT ENFORCEMENT:**
+Nach dem Generieren: ZÄHLE alle {{hauptleistung}}-Vorkommen.
+Wenn count > 3: UMSCHREIBEN mit Synonymen bis count ≤ 3.
+NICHT AUSGEBEN bis count ≤ 3 erreicht ist.
+
+⚠️ OVER-INTEGRATION (>5x) WIRKT MECHANISCH UND SEO-ARTIG!
+⚠️ REPORT QUALITY VALIDATOR WIRD count > 5 ABLEHNEN!
 
 ###############################################################################
 -->
@@ -68,25 +82,28 @@ INDIVIDUALISIERUNGS-KONTEXT (verfügbar aus Briefing):
 - {{KI_GUARDRAILS}} = Einschränkungen/No-Gos für KI-Nutzung
 - {{VISION_3_JAHRE}} = Langfristige Vision des Users
 
-DYNAMISCHE PHASENNAMEN (PFLICHT!):
-Statt generischer Namen, nutze Begriffe aus {{hauptleistung}} und {{ZEITERSPARNIS_PRIORITAET}}.
+DYNAMISCHE PHASENNAMEN (PFLICHT - ABER OHNE {{hauptleistung}} ÜBERLAST!):
+Statt generischer Namen, nutze spezifische Begriffe aus {{ZEITERSPARNIS_PRIORITAET}}.
+⚠️ NICHT {{hauptleistung}} in jeden Phasennamen einfügen!
 
 BEISPIEL für Briefing 369 (KI-Berater mit Fragebogen-Erstellung):
 ❌ VERBOTEN: "Phase 1: Entlastung"
+❌ VERBOTEN: "Phase 1: {{hauptleistung}} optimieren" (zu repetitiv!)
 ✅ RICHTIG: "Phase 1: Fragebogen-Templates aufbauen"
 
 ❌ VERBOTEN: "Phase 2: Produktiver Einsatz"
 ✅ RICHTIG: "Phase 2: GPT-Auswertungs-Standard etablieren"
 
-DYNAMISCHE BULLET-POINTS (PFLICHT!):
+DYNAMISCHE BULLET-POINTS (PFLICHT - SYNONYME NUTZEN!):
 Statt generischer Schritte, beziehe dich auf konkrete Arbeit des Users.
+⚠️ NUTZE SYNONYME: "Ihr Kerngeschäft", "diese Leistung" statt wiederholtem {{hauptleistung}}!
 
 BEISPIEL für Briefing 369:
 ❌ VERBOTEN: "Erste Prompt-Vorlage für eine Kernaufgabe erstellen"
 ✅ RICHTIG: "Erste Prompt-Vorlage für Fragebogen-Auswertung erstellen"
 
-❌ VERBOTEN: "Quick Wins aus Abschnitt 'Sofortmaßnahmen' umsetzen"
-✅ RICHTIG: "Template-Bibliothek für {{hauptleistung}} mit 3 Basisvorlagen starten"
+❌ VERBOTEN: "Template-Bibliothek für {{hauptleistung}} starten" (wenn schon 3x erwähnt!)
+✅ RICHTIG: "Template-Bibliothek für Ihr Kerngeschäft mit 3 Basisvorlagen starten"
 
 GUARDRAILS IN PHASE 0 (PFLICHT wenn {{KI_GUARDRAILS}} vorhanden):
 Phase 0 MUSS die Guardrails erwähnen und als Review-Regel verankern.
@@ -102,7 +119,8 @@ VERBOTENE GENERISCHE PHRASEN in Bullets:
 - "Routine etablieren: täglich mindestens eine Aufgabe"
 - "Standard-Workflow dokumentieren"
 
-STATTDESSEN: Konkrete Bezüge zu {{hauptleistung}}, {{ZEITERSPARNIS_PRIORITAET}}.
+STATTDESSEN: Konkrete Bezüge zu {{ZEITERSPARNIS_PRIORITAET}} und Synonyme für {{hauptleistung}}.
+⚠️ ERINNERUNG: MAX 3x {{hauptleistung}} TOTAL - nutze Synonyme für alle weiteren!
 
 ERWARTETE EFFEKTE - INDIVIDUALISIEREN:
 Statt generischer "15-25% Zeitersparnis" → Bezug zu {{ZEITERSPARNIS_PRIORITAET}}
@@ -135,6 +153,13 @@ TONALITÄT:
 - Entscheidungsorientiert, nicht technisch
 - Strategisch, nicht operativ
 - Abgrenzend, nicht aufzählend
+
+TONALITÄT KONSISTENZ (FORMELL - "SIE"):
+⚠️ Der OUTPUT verwendet IMMER formelle Anrede "Sie" (nicht "du"!)
+- Auch wenn diese Instruktionen "du" verwenden: OUTPUT ist FORMELL!
+- NIEMALS informelles "du/dein/dir/dich" im Output verwenden!
+- ERLAUBT: "Sie", "Ihr", "Ihnen", "Ihre"
+- VERBOTEN: "du", "dein", "dir", "dich", "euer", "eure"
 
 LESBARKEIT (v6.1 NEU):
 - Maximal EIN abstrakter Gedanke pro Absatz
@@ -250,66 +275,48 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
   {% if COMPANY_SIZE == "solo" %}
   <!--
   =============================================================================
-  PHASE 3 SOLO-INDIVIDUALISIERUNG:
+  SOLO-ROADMAP: MAX 2x {{hauptleistung}} in dieser Sektion!
   =============================================================================
-  ALLE Phasennamen und Bullets MÜSSEN {{hauptleistung}} und
-  {{ZEITERSPARNIS_PRIORITAET}} aufgreifen!
-
-  Beispiel Briefing 369:
-  - hauptleistung: "Fragebogen-Erstellung und GPT-gestützte Auswertung"
-  - zeitersparnis_prioritaet: "Umsetzung/Programmierung"
-  - ki_guardrails: "Keine Gesundheitsprognosen, keine Finanzberatung"
-
-  ERWARTETE PHASENNAMEN für Briefing 369:
-  - "Phase 0: Fragebogen-Analyse Setup" (nicht "Phase 0: Setup")
-  - "Phase 1: Programmier-Aufwand reduzieren" (nicht "Phase 1: Entlastung")
-  - "Phase 2: GPT-Auswertungs-Standard" (nicht "Phase 2: Produktiver Einsatz")
-  - "Phase 3: Analyse-Pipelines evaluieren" (nicht "Phase 3: Konsolidierung")
+  SYNONYME NUTZEN: "Ihr Kerngeschäft", "Ihre Leistung", "dieser Service"
+  {{hauptleistung}} nur im Ziel-Statement, REST mit Synonymen!
   =============================================================================
   -->
-  <h3>Phase 0: [DYNAMISCH: {{hauptleistung}} Setup] (Woche 1–2)</h3>
-  <!-- NICHT "Phase 0: Setup" - sondern z.B. "Phase 0: Fragebogen-Analyse Setup" -->
+  <h3>Phase 0: Setup (Woche 1–2)</h3>
   <p><strong>Ziel:</strong> Arbeitsfähigkeit mit KI für {{hauptleistung}} herstellen.</p>
   <ul>
     <li>Zugang zu einem KI-Assistenten einrichten und erste Testläufe durchführen</li>
-    <li>Erste Prompt-Vorlage für {{hauptleistung}} erstellen</li>
-    <!-- NICHT "für eine Kernaufgabe" - sondern konkret für hauptleistung -->
+    <li>Erste Prompt-Vorlage für Ihr Kerngeschäft erstellen</li>
     <li>Qualitätskriterien definieren: {{KI_GUARDRAILS}} als Review-Checkliste dokumentieren</li>
-    <!-- NICHT "Was ist gut genug?" - sondern konkrete Guardrails -->
     <li>Einfachen Wissensspeicher für Vorlagen anlegen</li>
   </ul>
-  <p><strong>Meilenstein:</strong> KI-Zugang funktioniert, erste Vorlage für {{hauptleistung}} einsatzbereit.</p>
+  <p><strong>Meilenstein:</strong> KI-Zugang funktioniert, erste Vorlage einsatzbereit.</p>
 
-  <h3>Phase 1: [DYNAMISCH: {{ZEITERSPARNIS_PRIORITAET}} reduzieren] (Woche 3–5)</h3>
-  <!-- NICHT "Phase 1: Entlastung" - sondern z.B. "Phase 1: Programmier-Aufwand reduzieren" -->
+  <h3>Phase 1: Zeitersparnis (Woche 3–5)</h3>
   <p><strong>Ziel:</strong> Spürbare Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}}.</p>
   <ul>
-    <li>Template-Bibliothek für {{hauptleistung}} mit 3 Basisvorlagen starten</li>
-    <!-- NICHT "Quick Wins umsetzen" - sondern konkret für diesen User -->
+    <li>Template-Bibliothek mit 3 Basisvorlagen für Ihr Kerngeschäft starten</li>
     <li>Zeiteinsparung bei {{ZEITERSPARNIS_PRIORITAET}} messen (einfache Strichliste reicht)</li>
-    <li>Prompt-Bibliothek auf 5–10 funktionierende Vorlagen für {{hauptleistung}} erweitern</li>
-    <li>Tägliche Routine: Eine {{hauptleistung}}-Aufgabe mit KI-Unterstützung</li>
+    <li>Prompt-Bibliothek auf 5–10 funktionierende Vorlagen erweitern</li>
+    <li>Tägliche Routine: Eine Aufgabe mit KI-Unterstützung</li>
   </ul>
   <p><strong>Meilenstein:</strong> 3–5 Stunden pro Monat bei {{ZEITERSPARNIS_PRIORITAET}} eingespart.</p>
 
-  <h3>Phase 2: [DYNAMISCH: {{hauptleistung}}-Workflow] (Woche 6–10)</h3>
-  <!-- NICHT "Phase 2: Produktiver Einsatz" - sondern z.B. "Phase 2: GPT-Auswertungs-Standard" -->
-  <p><strong>Ziel:</strong> Stabile Workflows für {{hauptleistung}} im Alltag.</p>
+  <h3>Phase 2: Workflow (Woche 6–10)</h3>
+  <p><strong>Ziel:</strong> Stabile Workflows für Ihr Kerngeschäft im Alltag.</p>
   <ul>
-    <li>{{hauptleistung}}-Workflow festigen: Input → KI-Entwurf → Prüfung gemäß {{KI_GUARDRAILS}} → Freigabe</li>
+    <li>Workflow festigen: Input → KI-Entwurf → Prüfung gemäß {{KI_GUARDRAILS}} → Freigabe</li>
     <li>Qualitäts-Checkliste mit {{KI_GUARDRAILS}} als Prüfpunkte erstellen</li>
-    <li>Self-Review zur Gewohnheit machen: jeden Output auf {{KI_GUARDRAILS}} prüfen</li>
-    <li>Prompt-Vorlagen für {{hauptleistung}} verfeinern und dokumentieren</li>
-    <li>Erste Automatisierung für wiederkehrende {{hauptleistung}}-Aufgaben prüfen</li>
+    <li>Self-Review zur Gewohnheit machen: jeden Output prüfen</li>
+    <li>Prompt-Vorlagen verfeinern und dokumentieren</li>
+    <li>Erste Automatisierung für wiederkehrende Aufgaben prüfen</li>
   </ul>
-  <p><strong>Meilenstein:</strong> 70%+ der {{hauptleistung}}-Entwürfe direkt nutzbar.</p>
+  <p><strong>Meilenstein:</strong> 70%+ der Entwürfe direkt nutzbar.</p>
 
-  <h3>Phase 3: [DYNAMISCH: Richtung {{VISION_3_JAHRE}}] (Woche 11–13)</h3>
-  <!-- NICHT "Phase 3: Konsolidierung" - sondern z.B. "Phase 3: Analyse-Pipelines evaluieren" -->
-  <p><strong>Ziel:</strong> Ergebnisse bewerten, nächste Schritte Richtung {{VISION_3_JAHRE}} planen.</p>
+  <h3>Phase 3: Richtung {{VISION_3_JAHRE}} (Woche 11–13)</h3>
+  <p><strong>Ziel:</strong> Ergebnisse bewerten, nächste Schritte planen.</p>
   <ul>
     <li>Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}} messen und mit Ziel abgleichen</li>
-    <li>Qualität der {{hauptleistung}}-Ergebnisse bewerten: Fehlerquote, Nacharbeitsaufwand</li>
+    <li>Qualität der Ergebnisse bewerten: Fehlerquote, Nacharbeitsaufwand</li>
     <li>Entscheidung: Ausweiten Richtung {{VISION_3_JAHRE}}, Vertiefen oder Stabilisieren?</li>
     {% if ki_projekte %}<li>Geplantes Projekt <em>{{ki_projekte}}</em> als nächsten Schritt evaluieren</li>{% endif %}
     <li>Nächste Use Cases für Weg zu {{VISION_3_JAHRE}} priorisieren</li>
@@ -317,13 +324,11 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
   <p><strong>Meilenstein:</strong> Klare Entscheidung und priorisierte Liste Richtung {{VISION_3_JAHRE}}.</p>
 
   <h3>Erwartete Effekte nach 90 Tagen</h3>
-  <!-- PHASE 3: Individualisieren basierend auf {{ZEITERSPARNIS_PRIORITAET}} -->
   <ul>
     <li><strong>Zeitersparnis:</strong> 40-60% bei {{ZEITERSPARNIS_PRIORITAET}} durch Template-Wiederverwendung</li>
-    <!-- NICHT "15-25% bei wiederkehrenden Aufgaben" - sondern konkret -->
-    <li><strong>Qualität:</strong> Konsistentere {{hauptleistung}}-Outputs durch standardisierte Vorlagen</li>
+    <li><strong>Qualität:</strong> Konsistentere Outputs durch standardisierte Vorlagen</li>
     <li><strong>Compliance:</strong> {{KI_GUARDRAILS}} systematisch geprüft in jedem Output</li>
-    <li><strong>Routine:</strong> KI ist Teil des {{hauptleistung}}-Alltags, keine Sonderaktion mehr</li>
+    <li><strong>Routine:</strong> KI ist Teil des Arbeitsalltags, keine Sonderaktion mehr</li>
     <li><strong>Klarheit:</strong> Fundierte Basis für nächste Schritte Richtung {{VISION_3_JAHRE}}</li>
   </ul>
 
@@ -390,63 +395,62 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
   {% elif COMPANY_SIZE == "team" %}
   <!--
   =============================================================================
-  PHASE 3 TEAM-INDIVIDUALISIERUNG:
+  TEAM-ROADMAP: MAX 2x {{hauptleistung}} in dieser Sektion!
   =============================================================================
-  ALLE Phasennamen und Bullets MÜSSEN {{hauptleistung}} und
-  {{ZEITERSPARNIS_PRIORITAET}} aufgreifen!
-  Zusätzlich: {{KI_GUARDRAILS}} als Team-Review-Standard verankern.
+  SYNONYME NUTZEN: "Ihr Kerngeschäft", "diese Leistung", "dieser Service"
+  {{hauptleistung}} nur im Ziel-Statement, REST mit Synonymen!
   =============================================================================
   -->
-  <h3>Phase 0: [DYNAMISCH: {{hauptleistung}} Team-Setup] (Woche 1–2)</h3>
+  <h3>Phase 0: KI-Team-Setup (Woche 1–2)</h3>
   <p><strong>Ziel:</strong> Teamweite Arbeitsfähigkeit mit KI für {{hauptleistung}} herstellen.</p>
   <ul>
-    <li>KI-Owner benennen (verantwortlich für {{hauptleistung}}-Standards und Qualität)</li>
+    <li>KI-Owner benennen (verantwortlich für Standards und Qualität)</li>
     <li>Gemeinsamen Zugang für alle Beteiligten einrichten</li>
-    <li>Erste Vorlagen für {{hauptleistung}} erstellen</li>
+    <li>Erste Vorlagen für Ihr Kerngeschäft erstellen</li>
     <li>{{KI_GUARDRAILS}} als Team-Review-Checkliste dokumentieren</li>
-    <li>Gemeinsamen Wissensspeicher für {{hauptleistung}}-Vorlagen anlegen</li>
+    <li>Gemeinsamen Wissensspeicher für Vorlagen anlegen</li>
   </ul>
-  <p><strong>Meilenstein:</strong> Alle haben Zugang, erste {{hauptleistung}}-Vorlagen verteilt.</p>
+  <p><strong>Meilenstein:</strong> Alle haben Zugang, erste Vorlagen verteilt.</p>
 
-  <h3>Phase 1: [DYNAMISCH: {{ZEITERSPARNIS_PRIORITAET}} Team-Entlastung] (Woche 3–5)</h3>
+  <h3>Phase 1: Team-Entlastung bei {{ZEITERSPARNIS_PRIORITAET}} (Woche 3–5)</h3>
   <p><strong>Ziel:</strong> Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}} im Team umsetzen.</p>
   <ul>
-    <li>Template-Bibliothek für {{hauptleistung}} teamweit ausrollen</li>
-    <li>Jede:r testet mindestens 2 Workflows für {{hauptleistung}}</li>
+    <li>Template-Bibliothek für Ihr Kerngeschäft teamweit ausrollen</li>
+    <li>Jede:r testet mindestens 2 Workflows für diese Leistung</li>
     <li>Erfahrungen zu {{ZEITERSPARNIS_PRIORITAET}} in Weekly-Check teilen</li>
-    <li>Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}} dokumentieren</li>
-    <li>Prompt-Vorlagen für {{hauptleistung}} gemeinsam verbessern</li>
+    <li>Zeitersparnis dokumentieren</li>
+    <li>Prompt-Vorlagen gemeinsam verbessern</li>
   </ul>
-  <p><strong>Meilenstein:</strong> Alle nutzen KI für {{hauptleistung}}, Zeitersparnis dokumentiert.</p>
+  <p><strong>Meilenstein:</strong> Alle nutzen KI für Ihr Kerngeschäft, Zeitersparnis dokumentiert.</p>
 
-  <h3>Phase 2: [DYNAMISCH: {{hauptleistung}}-Standard] (Woche 6–10)</h3>
-  <p><strong>Ziel:</strong> Einheitliche {{hauptleistung}}-Qualitätsstandards etablieren.</p>
+  <h3>Phase 2: Qualitätsstandards etablieren (Woche 6–10)</h3>
+  <p><strong>Ziel:</strong> Einheitliche Qualitätsstandards für diese Leistung etablieren.</p>
   <ul>
-    <li>{{hauptleistung}}-Workflow dokumentieren: Input → KI → Review gemäß {{KI_GUARDRAILS}} → Freigabe</li>
-    <li>Styleguide für {{hauptleistung}}-Outputs erstellen</li>
+    <li>Workflow dokumentieren: Input → KI → Review gemäß {{KI_GUARDRAILS}} → Freigabe</li>
+    <li>Styleguide für KI-Outputs erstellen</li>
     <li>Review-Runden mit {{KI_GUARDRAILS}}-Prüfung etablieren</li>
-    <li>Qualitätskennzahlen für {{hauptleistung}} einführen</li>
-    <li>Erste Automatisierungen für {{hauptleistung}} prüfen</li>
+    <li>Qualitätskennzahlen einführen</li>
+    <li>Erste Automatisierungen prüfen</li>
   </ul>
-  <p><strong>Meilenstein:</strong> Dokumentierter {{hauptleistung}}-Workflow, Erstqualität > 70%.</p>
+  <p><strong>Meilenstein:</strong> Dokumentierter Workflow, Erstqualität > 70%.</p>
 
-  <h3>Phase 3: [DYNAMISCH: Richtung {{VISION_3_JAHRE}}] (Woche 11–13)</h3>
+  <h3>Phase 3: Skalierung Richtung {{VISION_3_JAHRE}} (Woche 11–13)</h3>
   <p><strong>Ziel:</strong> Ergebnisse messen, Skalierung Richtung {{VISION_3_JAHRE}} vorbereiten.</p>
   <ul>
     <li>Wirkungsmessung bei {{ZEITERSPARNIS_PRIORITAET}}: Zeit, Qualität, Fehlerquote</li>
-    <li>Lessons Learned für {{hauptleistung}}-Workflows dokumentieren</li>
+    <li>Lessons Learned für Ihre Workflows dokumentieren</li>
     <li>Entscheidung: Stabilisieren / Ausweiten Richtung {{VISION_3_JAHRE}} / Vertiefen</li>
     {% if ki_projekte %}<li>Geplantes Projekt <em>{{ki_projekte}}</em> als Team-Projekt evaluieren</li>{% endif %}
-    <li>Backlog für nächste {{hauptleistung}}-Use Cases priorisieren</li>
+    <li>Backlog für nächste Use Cases priorisieren</li>
   </ul>
   <p><strong>Meilenstein:</strong> Klare Entscheidung Richtung {{VISION_3_JAHRE}}, priorisiertes Backlog.</p>
 
   <h3>Erwartete Effekte nach 90 Tagen</h3>
   <ul>
     <li><strong>Zeitersparnis:</strong> 30–50% bei {{ZEITERSPARNIS_PRIORITAET}} im Team</li>
-    <li><strong>Qualität:</strong> Einheitliche {{hauptleistung}}-Ergebnisse durch gemeinsame Standards</li>
+    <li><strong>Qualität:</strong> Einheitliche Ergebnisse durch gemeinsame Standards</li>
     <li><strong>Compliance:</strong> {{KI_GUARDRAILS}} systematisch in Team-Reviews geprüft</li>
-    <li><strong>Zusammenarbeit:</strong> Etablierte {{hauptleistung}}-Review-Routinen</li>
+    <li><strong>Zusammenarbeit:</strong> Etablierte Review-Routinen</li>
     <li><strong>Skalierbarkeit:</strong> Dokumentierte Workflows für {{VISION_3_JAHRE}}</li>
   </ul>
 
@@ -506,54 +510,53 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
   {% else %}
   <!--
   =============================================================================
-  PHASE 3 KMU-INDIVIDUALISIERUNG:
+  KMU-ROADMAP: MAX 2x {{hauptleistung}} in dieser Sektion!
   =============================================================================
-  ALLE Phasennamen und Bullets MÜSSEN {{hauptleistung}} und
-  {{ZEITERSPARNIS_PRIORITAET}} aufgreifen!
-  KMU: {{KI_GUARDRAILS}} als Governance-Framework verankern.
+  SYNONYME NUTZEN: "Ihr Kerngeschäft", "diese Leistung", "dieser Service"
+  {{hauptleistung}} nur im Ziel-Statement, REST mit Synonymen!
   =============================================================================
   -->
-  <h3>Phase 0: [DYNAMISCH: {{hauptleistung}} Pilot-Setup] (Woche 1–2)</h3>
+  <h3>Phase 0: KI-Pilot-Setup (Woche 1–2)</h3>
   <p><strong>Ziel:</strong> Pilotbereich für {{hauptleistung}} definieren und Grundlagen schaffen.</p>
   <ul>
-    <li>Pilotbereich für {{hauptleistung}} auswählen (hoher Entlastungspotenzial bei {{ZEITERSPARNIS_PRIORITAET}})</li>
-    <li>KI-Verantwortliche:n für {{hauptleistung}} benennen</li>
+    <li>Pilotbereich auswählen (hoher Entlastungspotenzial bei {{ZEITERSPARNIS_PRIORITAET}})</li>
+    <li>KI-Verantwortliche:n benennen</li>
     <li>Governance-Grundregeln festlegen: {{KI_GUARDRAILS}} als Leitplanken</li>
     <li>Zugänge für Pilotbereich einrichten und dokumentieren</li>
-    <li>Erste Vorlagen für {{hauptleistung}} erstellen</li>
+    <li>Erste Vorlagen für Ihr Kerngeschäft erstellen</li>
   </ul>
-  <p><strong>Meilenstein:</strong> Pilotbereich für {{hauptleistung}} startklar, {{KI_GUARDRAILS}} definiert.</p>
+  <p><strong>Meilenstein:</strong> Pilotbereich startklar, {{KI_GUARDRAILS}} definiert.</p>
 
-  <h3>Phase 1: [DYNAMISCH: {{ZEITERSPARNIS_PRIORITAET}} Pilot-Entlastung] (Woche 3–5)</h3>
+  <h3>Phase 1: Pilot-Entlastung bei {{ZEITERSPARNIS_PRIORITAET}} (Woche 3–5)</h3>
   <p><strong>Ziel:</strong> Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}} im Pilotbereich umsetzen.</p>
   <ul>
-    <li>Template-Bibliothek für {{hauptleistung}} im Pilotbereich einsetzen</li>
-    <li>Pilotbereich schult sich gegenseitig auf {{hauptleistung}}-Workflows</li>
+    <li>Template-Bibliothek für diese Leistung im Pilotbereich einsetzen</li>
+    <li>Pilotbereich schult sich gegenseitig auf KI-Workflows</li>
     <li>Zeiteinsparung bei {{ZEITERSPARNIS_PRIORITAET}} dokumentieren und quantifizieren</li>
-    <li>Wöchentliche {{hauptleistung}}-Reviews im Pilotbereich etablieren</li>
-    <li>Feedback-Kanal für {{hauptleistung}}-Fragen einrichten</li>
+    <li>Wöchentliche Reviews im Pilotbereich etablieren</li>
+    <li>Feedback-Kanal für Fragen einrichten</li>
   </ul>
-  <p><strong>Meilenstein:</strong> Pilotbereich nutzt KI für {{hauptleistung}}, messbare Entlastung bei {{ZEITERSPARNIS_PRIORITAET}}.</p>
+  <p><strong>Meilenstein:</strong> Pilotbereich nutzt KI für Ihr Kerngeschäft, messbare Entlastung bei {{ZEITERSPARNIS_PRIORITAET}}.</p>
 
-  <h3>Phase 2: [DYNAMISCH: {{hauptleistung}}-SOPs] (Woche 6–10)</h3>
-  <p><strong>Ziel:</strong> Skalierbare {{hauptleistung}}-Prozesse etablieren.</p>
+  <h3>Phase 2: Skalierbare SOPs etablieren (Woche 6–10)</h3>
+  <p><strong>Ziel:</strong> Skalierbare Prozesse für diese Leistung etablieren.</p>
   <ul>
-    <li>SOPs für {{hauptleistung}}-Workflows dokumentieren</li>
+    <li>SOPs für KI-Workflows dokumentieren</li>
     <li>QS-Prozess etablieren: Input → KI → Prüfung gemäß {{KI_GUARDRAILS}} → Freigabe</li>
-    <li>Styleguide und Qualitätskriterien für {{hauptleistung}} festlegen</li>
-    <li>Schulungskonzept für {{hauptleistung}}-Rollout auf weitere Bereiche entwickeln</li>
-    <li>KPIs für {{hauptleistung}} definieren: Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}}, Qualität</li>
+    <li>Styleguide und Qualitätskriterien festlegen</li>
+    <li>Schulungskonzept für Rollout auf weitere Bereiche entwickeln</li>
+    <li>KPIs definieren: Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}}, Qualität</li>
   </ul>
-  <p><strong>Meilenstein:</strong> {{hauptleistung}}-SOPs dokumentiert, Schulungskonzept fertig, KPIs definiert.</p>
+  <p><strong>Meilenstein:</strong> SOPs dokumentiert, Schulungskonzept fertig, KPIs definiert.</p>
 
-  <h3>Phase 3: [DYNAMISCH: {{VISION_3_JAHRE}} Rollout-Entscheidung] (Woche 11–13)</h3>
+  <h3>Phase 3: Rollout-Entscheidung Richtung {{VISION_3_JAHRE}} (Woche 11–13)</h3>
   <p><strong>Ziel:</strong> Rollout-Entscheidung und Skalierungsplan Richtung {{VISION_3_JAHRE}}.</p>
   <ul>
-    <li>Business-Case-Validierung für {{hauptleistung}} anhand Pilotdaten</li>
-    <li>Lessons Learned aus {{hauptleistung}}-Pilot zusammenfassen</li>
+    <li>Business-Case-Validierung anhand Pilotdaten</li>
+    <li>Lessons Learned aus dem Pilot zusammenfassen</li>
     <li>Entscheidung: Rollout Richtung {{VISION_3_JAHRE}}? Ja/Nein/Anpassungen?</li>
     {% if ki_projekte %}<li>Geplantes Projekt <em>{{ki_projekte}}</em> für unternehmensweiten Rollout evaluieren</li>{% endif %}
-    <li>Priorisiertes Backlog für {{hauptleistung}}-Skalierung erstellen</li>
+    <li>Priorisiertes Backlog für Skalierung erstellen</li>
     <li>Ressourcenplanung für Weg zu {{VISION_3_JAHRE}} vorbereiten</li>
   </ul>
   <p><strong>Meilenstein:</strong> Management-Entscheidung Richtung {{VISION_3_JAHRE}} getroffen, Rollout-Plan steht.</p>
@@ -561,10 +564,10 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
   <h3>Erwartete Effekte nach 90 Tagen</h3>
   <ul>
     <li><strong>Zeitersparnis:</strong> 30–50% bei {{ZEITERSPARNIS_PRIORITAET}} im Pilotbereich</li>
-    <li><strong>Qualität:</strong> Standardisierte {{hauptleistung}}-Prozesse, dokumentierte Qualitätskriterien</li>
+    <li><strong>Qualität:</strong> Standardisierte Prozesse, dokumentierte Qualitätskriterien</li>
     <li><strong>Governance:</strong> {{KI_GUARDRAILS}} als klare Regeln, Verantwortlichkeiten dokumentiert</li>
-    <li><strong>Skalierbarkeit:</strong> Erprobte {{hauptleistung}}-SOPs für Rollout Richtung {{VISION_3_JAHRE}}</li>
-    <li><strong>Business Case:</strong> Validierte ROI für {{hauptleistung}} auf Basis echter Pilotdaten</li>
+    <li><strong>Skalierbarkeit:</strong> Erprobte SOPs für Rollout Richtung {{VISION_3_JAHRE}}</li>
+    <li><strong>Business Case:</strong> Validierte ROI auf Basis echter Pilotdaten</li>
     <li><strong>Entscheidungsgrundlage:</strong> Fundierte Basis für {{VISION_3_JAHRE}}-Entscheidung</li>
   </ul>
 

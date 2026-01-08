@@ -37,6 +37,76 @@ MAXIMUM PRO ABSCHNITT:
 ###############################################################################
 -->
 <!--
+###############################################################################
+##                    TONALITÄT KONSISTENZ (FORMELL - "SIE")                 ##
+###############################################################################
+
+⚠️ KONSISTENZ-REGEL (STRIKT!):
+- Der OUTPUT verwendet IMMER formelle Anrede "Sie" (nicht "du"!)
+- Auch wenn diese Instruktionen "du" verwenden: OUTPUT ist FORMELL!
+- NIEMALS informelles "du/dein/dir/dich" im Output verwenden!
+
+ERLAUBT im OUTPUT:
+✅ "Sie", "Ihr", "Ihnen", "Ihre"
+✅ "das Unternehmen", "die Organisation"
+
+VERBOTEN im OUTPUT:
+❌ "du", "dein", "dir", "dich"
+❌ "euer", "eure", "euch"
+
+###############################################################################
+-->
+<!--
+###############################################################################
+##   🚨🚨🚨 COMPLETENESS ENFORCEMENT - NON-NEGOTIABLE 🚨🚨🚨                ##
+###############################################################################
+
+**HARD RULE - OUTPUT WILL BE REJECTED IF INCOMPLETE SENTENCES FOUND**
+
+VERBOTEN - SATZFRAGMENTE:
+❌ "Einrichten eines." (unvollständig - WAS einrichten?)
+❌ "Implementieren von." (unvollständig - WAS implementieren?)
+❌ "Aufbau einer." (unvollständig - WELCHER Aufbau?)
+❌ Jeder Satz der mit "eines", "einer", "von" ENDET
+
+JEDER SATZ MUSS:
+✅ Subjekt + Prädikat + Objekt haben
+✅ Komplett sein (keine abgebrochenen Gedanken)
+✅ Mit einem Punkt NACH einem vollständigen Wort enden
+
+**PRE-OUTPUT ENFORCEMENT:**
+Nach dem Generieren: PRÜFE jeden Satz auf Vollständigkeit.
+WENN ein Satz unvollständig ist: UMSCHREIBEN bis vollständig!
+NICHT AUSGEBEN wenn unvollständige Sätze gefunden!
+
+**BEISPIELE:**
+❌ SCHLECHT: "Einrichten eines."
+✅ RICHTIG: "Einrichten eines Standard-Workflows für Dokumentenprüfung."
+
+❌ SCHLECHT: "Implementieren von."
+✅ RICHTIG: "Implementieren von automatisierten Qualitätschecks."
+
+###############################################################################
+-->
+<!--
+###############################################################################
+##                    ROI KONSISTENZ (SINGLE SOURCE OF TRUTH)                ##
+###############################################################################
+
+⚠️ KEINE ROI-ZAHLEN IN DIESEM ABSCHNITT GENERIEREN!
+
+STRENGE REGEL:
+- Der ROI-Wert wird NUR im Business Case berechnet und angezeigt
+- KEINE eigenen ROI-Prozentsätze erfinden (kein "284%", "337%", "200%")
+- KEIN Payback, KEINE CAPEX/OPEX-Zahlen in diesem Abschnitt
+
+WENN ROI erwähnt werden MUSS:
+→ "Der ROI wird im Business Case detailliert dargestellt"
+→ NIEMALS einen konkreten Prozentwert nennen!
+
+###############################################################################
+-->
+<!--
 =============================================================================
 ZIEL (CONTENT QUALITY PACK v7.0): MUSS vs. OPTIONEN klar trennen
 =============================================================================

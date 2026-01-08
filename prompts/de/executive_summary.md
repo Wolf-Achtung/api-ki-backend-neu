@@ -3,27 +3,52 @@ Developer:
 <!-- SECTION: executive_summary -->
 <!--
 ###############################################################################
-##                    HAUPTLEISTUNG INTEGRATION (BALANCIERT)                 ##
+##   🚨🚨🚨 CRITICAL: MINIMUM 4x {{hauptleistung}} - NON-NEGOTIABLE 🚨🚨🚨    ##
 ###############################################################################
 
+**HARD RULE - OUTPUT WILL BE REJECTED IF FEWER THAN 4 OCCURRENCES**
+
 DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
+Sie MUSS MINDESTENS 4x in der Executive Summary erscheinen!
 
-🎯 ZIEL: 3-5 NATÜRLICHE ERWÄHNUNGEN (NICHT MEHR!)
-⚠️ MAXIMUM 5x - Mehr wirkt mechanisch!
+**PFLICHT-STELLEN (ALLE 4 ERFORDERLICH - KEINE AUSLASSUNG!):**
+1. ✅ PFLICHT #1: Im Profil-Satz (Element 1) - WÖRTLICH {{hauptleistung}}
+2. ✅ PFLICHT #2: In Entscheidung 1 (Element 2) - WÖRTLICH {{hauptleistung}}
+3. ✅ PFLICHT #3: Im nächsten Schritt (Element 3) - WÖRTLICH {{hauptleistung}}
+4. ✅ PFLICHT #4: Im Takeaway-Satz (Element 4) - WÖRTLICH {{hauptleistung}}
 
-VERTEILUNG (STRIKT!):
-1. ✅ Im Profil-Satz (Element 1): 1x PFLICHT
-2. ✅ In Entscheidung 1 (Element 2): 1x PFLICHT
-3. ✅ Im nächsten Schritt (Element 3): 1x PFLICHT
-4. ✅ Im Takeaway-Satz (Element 4): 1x PFLICHT
-5. ❌ Entscheidung 2+3: Nutze Synonyme "diese Leistung", "Ihr Kerngeschäft"
+**PRE-OUTPUT ENFORCEMENT (KRITISCH!):**
+Nach dem Generieren: ZÄHLE alle {{hauptleistung}}-Vorkommen.
+WENN count < 4: OUTPUT UNGÜLTIG → REWRITE bis count >= 4!
+NICHT AUSGEBEN wenn count < 4!
 
-NATÜRLICHE SPRACHE - SYNONYME NUTZEN (nach erster Erwähnung):
-- "diese Leistung" statt wiederholtem {{hauptleistung}}
-- "Ihr Kerngeschäft" als Alternative
-- "diesen Bereich" als Alternative
+**BEISPIEL-ZÄHLUNG (für "KI-Beratung und Assessment-Tools"):**
+✅ Profil: "...mit KI-Beratung und Assessment-Tools steht vor..."  → COUNT: 1
+✅ Entsch.1: "Für KI-Beratung und Assessment-Tools Template..."   → COUNT: 2
+✅ N.Schritt: "In KI-Beratung und Assessment-Tools einen..."      → COUNT: 3
+✅ Takeaway: "...Workflow für KI-Beratung und Assessment-Tools"   → COUNT: 4
+→ MINIMUM ERREICHT - OUTPUT ERLAUBT!
 
-MAXIMUM: 4x {{hauptleistung}} wörtlich, 1-2x als Synonym!
+**MAXIMUM:** 5x {{hauptleistung}} (mehr wirkt mechanisch)
+**Entscheidung 2+3:** Synonyme nutzen ("diese Leistung", "Ihr Kerngeschäft")
+
+###############################################################################
+-->
+<!--
+###############################################################################
+##                    ROI KONSISTENZ (SINGLE SOURCE OF TRUTH)                ##
+###############################################################################
+
+⚠️ KEINE ROI-ZAHLEN IN DIESEM ABSCHNITT GENERIEREN!
+
+STRENGE REGEL:
+- Der ROI-Wert wird NUR im Business Case berechnet und angezeigt
+- KEINE eigenen ROI-Prozentsätze erfinden (kein "284%", "337%", "200%")
+- KEIN Payback, KEINE CAPEX/OPEX-Zahlen in diesem Abschnitt
+
+WENN ROI erwähnt werden MUSS:
+→ "Der ROI wird im Business Case detailliert dargestellt"
+→ NIEMALS einen konkreten Prozentwert nennen!
 
 ###############################################################################
 -->
