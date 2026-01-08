@@ -1784,7 +1784,7 @@ class ReportValidator:
         - Executive Summary: MIN 4 occurrences
         - Roadmap: MAX 3 occurrences per size variant
         """
-        hauptleistung = self.briefing.get("hauptleistung", "")
+        hauptleistung = self.meta.get("hauptleistung", "")
         if not hauptleistung or len(hauptleistung) < 3:
             return  # No hauptleistung to check
 
@@ -1823,7 +1823,7 @@ class ReportValidator:
         Sprint P1.5-3: Validate ROI values are consistent across sections.
         Only one ROI percentage should appear (from business_case).
         """
-        roi_12m = self.briefing.get("ROI_12M", "")
+        roi_12m = self.meta.get("ROI_12M", "")
         if not roi_12m:
             return
 
@@ -1959,7 +1959,7 @@ class ReportValidator:
         Sprint P1.5-7: Check that the correct Bundesland is used.
         Should not mention other Bundesländer.
         """
-        bundesland = self.briefing.get("BUNDESLAND_LABEL", "") or self.briefing.get("bundesland", "")
+        bundesland = self.meta.get("BUNDESLAND_LABEL", "") or self.meta.get("bundesland", "")
         if not bundesland:
             return
 
