@@ -7,20 +7,24 @@ Developer:
 <!-- TOKEN-BUDGET: 1800 (solo:0.8x=1440, team:1.0x=1800, kmu:1.15x=2070) -->
 <!--
 ###############################################################################
-##                    🚨 KRITISCH: HAUPTLEISTUNG INTEGRATION 🚨              ##
+##                    HAUPTLEISTUNG INTEGRATION (BALANCIERT)                 ##
 ###############################################################################
 
 DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
-SIE MUSS MINDESTENS 5x IM BUSINESS CASE ERSCHEINEN!
 
-PFLICHT-STELLEN FÜR {{hauptleistung}}:
-1. ✅ Im Einleitungsabsatz: "Für Ihr Geschäftsmodell ({{hauptleistung}})..."
-2. ✅ Bei "Monatlicher Effekt": ROI-Berechnung für {{hauptleistung}}
-3. ✅ Bei "Amortisation": Payback spezifisch für {{hauptleistung}}
-4. ✅ Bei "Einordnung nach Größe": {{hauptleistung}}-Skalierung
-5. ✅ Bei "Erlöspotenziale": Neue Produkte basierend auf {{hauptleistung}}
+🎯 ZIEL: 3-5 NATÜRLICHE ERWÄHNUNGEN (NICHT MEHR!)
+⚠️ MAXIMUM 6x - Mehr wirkt mechanisch!
 
-⚠️ BUSINESS CASE OHNE HAUPTLEISTUNG-BEZUG IST GENERISCH UND WERTLOS!
+VERTEILUNG (STRIKT!):
+1. ✅ Im Einleitungsabsatz: 1x {{hauptleistung}} (PFLICHT)
+2. ✅ Bei "Monatlicher Effekt": 1x (PFLICHT)
+3. ✅ Bei "Einordnung nach Größe": 1x (PFLICHT)
+4. ❌ Amortisation: Nutze "Ihr Kerngeschäft" als Synonym
+5. ❌ Erlöspotenziale: Nutze "diese Leistung" als Synonym
+
+NATÜRLICHE SPRACHE - SYNONYME NUTZEN:
+- "Ihr Kerngeschäft" statt wiederholtem {{hauptleistung}}
+- "diese Leistung" / "Ihre Dienstleistung" als Alternative
 
 ###############################################################################
 -->
@@ -29,6 +33,23 @@ PFLICHT-STELLEN FÜR {{hauptleistung}}:
 <!-- WORD_MINIMUM_KMU: 180 -->
 <!--
 ZIEL: Klarer, realistischer Business Case mit ROI, CAPEX/OPEX.
+
+###############################################################################
+##                    ROI KONSISTENZ (SINGLE SOURCE OF TRUTH)                ##
+###############################################################################
+
+ALLE ROI-WERTE MÜSSEN {{ROI_12M}} VERWENDEN!
+
+⚠️ KONSISTENZ-REGEL (STRIKT!):
+- Der ROI-Wert ist {{ROI_12M}} - DIESEN WERT ÜBERALL VERWENDEN
+- KEINE anderen ROI-Prozentsätze erfinden oder berechnen
+- KEINE widersprüchlichen ROI-Angaben in anderen Sektionen
+
+Wenn in ANDEREN Sektionen ROI erwähnt wird:
+- → VERWEIS: "Der ROI liegt bei {{ROI_12M}}% (→ siehe Business Case)"
+- → NIEMALS: andere Prozentsätze nennen
+
+###############################################################################
 
 REALISMUS-REGELN (STRIKT!):
 - KEINE 90%-Effizienzversprechen – realistische 15–30% Einsparungen
@@ -78,14 +99,13 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
 <section class="section business-case">
   <h2>Business Case – Investition und erwarteter Nutzen</h2>
 
-  <!-- G17.P: Neue Einleitung mit {{hauptleistung}}-Bezug -->
+  <!-- BALANCIERT: 1x {{hauptleistung}} in Einleitung -->
   <p>
     Für Ihr Geschäftsmodell <strong>{{hauptleistung}}</strong> in der Branche <strong>{{BRANCHE_LABEL}}</strong>
-    lässt sich ein konkreter Investitionsrahmen ableiten. Der Business Case für {{hauptleistung}} zeigt, welche
+    lässt sich ein konkreter Investitionsrahmen ableiten. Der Business Case zeigt, welche
     Aufwände für Setup und laufenden Betrieb realistisch sind und in welchem Zeitraum
     sich diese amortisieren. Im Fokus stehen Zeitersparnis, Qualitätsgewinne und ein
-    nachvollziehbarer Payback für Ihr Kerngeschäft. Die Quick Wins aus der Roadmap beschleunigen den ROI
-    für {{hauptleistung}} zusätzlich → siehe Sofortmaßnahmen.
+    nachvollziehbarer Payback. Die Quick Wins aus der Roadmap beschleunigen den ROI zusätzlich → siehe Sofortmaßnahmen.
   </p>
 
   <h3>Investition und laufende Kosten</h3>
@@ -96,12 +116,12 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
     Infrastruktur, Tools und potenzielle Lizenzen.
   </p>
 
-  <h3>Monatlicher Effekt bei {{hauptleistung}}</h3>
+  <h3>Monatlicher Effekt</h3>
   <p>
     Bei {{hauptleistung}} ist im täglichen Einsatz eine realistische Entlastung von rund
     <strong>{{EINSPARUNG_MONAT_EUR}}&nbsp;€ pro Monat</strong> erreichbar. Sie entsteht aus
-    Zeitgewinn bei {{hauptleistung}}-Prozessen, geringeren manuellen Schleifen und einer konsistenteren Ergebnisqualität.
-    Voraussetzung ist, dass der neue Workflow für {{hauptleistung}} im Alltag konsequent genutzt wird.
+    Zeitgewinn bei Kernprozessen, geringeren manuellen Schleifen und einer konsistenteren Ergebnisqualität.
+    Voraussetzung ist, dass der neue Workflow im Alltag konsequent genutzt wird.
   </p>
 
   <h3>Amortisation und ROI</h3>
@@ -112,21 +132,21 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
     <strong>{{ROI_12M}}&nbsp;%</strong> – ein realistischer Wert bei konsequenter Nutzung.
   </p>
 
-  <h3>Einordnung für {{hauptleistung}} nach Unternehmensgröße</h3>
+  <h3>Einordnung nach Unternehmensgröße</h3>
   {% if COMPANY_SIZE == "solo" %}
   <p>
     Je stärker <strong>{{hauptleistung}}</strong> auf wiederkehrenden Aufgaben beruht,
-    desto schneller wirkt sich Ihre Investition für {{hauptleistung}} aus.
+    desto schneller wirkt sich Ihre Investition aus.
   </p>
   {% elif COMPANY_SIZE == "team" %}
   <p>
     Je stärker <strong>{{hauptleistung}}</strong> auf wiederkehrenden Aufgaben beruht,
-    desto schneller wirkt sich die Team-Investition für {{hauptleistung}} aus.
+    desto schneller wirkt sich die Team-Investition aus.
   </p>
   {% else %}
   <p>
     Je stärker <strong>{{hauptleistung}}</strong> auf standardisierbaren Aufgaben beruht,
-    desto schneller die Amortisation für {{hauptleistung}}.
+    desto schneller die Amortisation.
   </p>
   {% endif %}
 
@@ -136,14 +156,14 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
     Eine Förderung verkürzt die Amortisation. Details → siehe Förderkapitel.
   </p>
 
-  <h3>Zusätzliche Erlöspotenziale durch {{hauptleistung}}</h3>
+  <h3>Zusätzliche Erlöspotenziale</h3>
   <p>
-    Neben Effizienzgewinnen bei {{hauptleistung}} bieten KI-Prozesse weitere Erlöspotenziale:
+    Neben Effizienzgewinnen bieten KI-Prozesse weitere Erlöspotenziale:
   </p>
   <ul>
-    <li>Digitale Produkte basierend auf {{hauptleistung}} (automatisierte Analysen, Reports)</li>
-    <li>Neue Serviceformate für {{hauptleistung}} (Workshops, Beratung)</li>
-    <li>Skalierbare {{hauptleistung}}-Angebote</li>
+    <li>Digitale Produkte (automatisierte Analysen, Reports)</li>
+    <li>Neue Serviceformate (Workshops, Beratung)</li>
+    <li>Skalierbare Angebote basierend auf Ihrem Kerngeschäft</li>
   </ul>
 
   <p class="small muted">

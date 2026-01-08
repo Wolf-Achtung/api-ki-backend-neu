@@ -3,22 +3,30 @@ Developer:
 <!-- SECTION: gamechanger -->
 <!--
 ###############################################################################
-##                    🚨 KRITISCH: HAUPTLEISTUNG INTEGRATION 🚨              ##
+##                    HAUPTLEISTUNG INTEGRATION (BALANCIERT)                 ##
 ###############################################################################
 
 DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
-SIE MUSS IN ALLEN 4 GAMECHANGER-BLÖCKEN ERSCHEINEN!
 
-PFLICHT-STELLEN FÜR {{hauptleistung}}:
-1. ✅ Im h2-Titel: "Der strategische Gamechanger für {{hauptleistung}}"
-2. ✅ Im Bruchpunkt: Was wird bei {{hauptleistung}} falsch gedacht?
-3. ✅ In der Transformation: Wie verändert sich {{hauptleistung}}?
-4. ✅ Im Impact: Struktureller Vorteil für {{hauptleistung}}
-5. ✅ Im ersten Schritt: Aktion spezifisch für {{hauptleistung}}
+🎯 ZIEL: 3-5 NATÜRLICHE ERWÄHNUNGEN (NICHT MEHR!)
+⚠️ MAXIMUM 6x - Mehr wirkt mechanisch!
 
-MINIMUM: {{hauptleistung}} erscheint 5-8x im Gamechanger!
+VERTEILUNG (STRIKT!):
+1. ✅ Im h2-Titel: 1x {{hauptleistung}} (PFLICHT)
+2. ✅ Im Bruchpunkt h3: 1x (PFLICHT)
+3. ❌ Transformation: Nutze "diese Leistung" als Synonym
+4. ❌ Impact: Nutze "Ihr Kerngeschäft" als Synonym
+5. ✅ Erster Schritt: 1x (falls passend)
 
-⚠️ GAMECHANGER OHNE HAUPTLEISTUNG-BEZUG IST ZU GENERISCH!
+NATÜRLICHE SPRACHE - SYNONYME NUTZEN:
+- "diese Leistung" / "Ihre Dienstleistung" als Alternative
+- "Ihr Kerngeschäft" als Alternative
+- "diesen Bereich" als Alternative
+
+CONTENT-VALIDIERUNG (PFLICHT!):
+- KEINE unvollständigen Sätze (jeder Satz muss Subjekt + Prädikat haben)
+- KEINE Satzfragmente die mit "und" enden
+- KEINE leeren Abschnitte - jeder Block muss Inhalt haben
 
 ###############################################################################
 -->
@@ -233,9 +241,24 @@ TONALITÄT (STRIKT):
 - Beschreibend, nicht auffordernd
 - Entscheidungsorientiert, nicht einladend
 
+###############################################################################
+##                    TONALITÄT KONSISTENZ (FORMELL - "SIE")                 ##
+###############################################################################
+
+⚠️ KONSISTENZ-REGEL (STRIKT!):
+- Der OUTPUT verwendet IMMER formelle Anrede "Sie" (falls Anrede nötig)
+- NIEMALS informelles "du/dein/dir/dich" im Output!
+- Auch wenn Rollen-Instruktionen "du" verwenden: OUTPUT ist FORMELL!
+
+HINWEIS: Instruktionen an das LLM ("Du bist ein Experte...") sind OK.
+NUR der OUTPUT muss durchgehend formell sein.
+
+###############################################################################
+
 LEAK-PREVENTION — ABSOLUT VERBOTEN (Null-Toleranz):
-NIEMALS VERWENDEN:
-- Direkte Anrede: "Sie", "Ihr", "du", "dein", "wir", "uns", "unser"
+NIEMALS IM OUTPUT VERWENDEN:
+- Informelle Anrede: "du", "dein", "dir", "dich" (VERBOTEN!)
+- Direkte Anrede nur wenn nötig: "Sie", "Ihr" (sparsam verwenden)
 - Hilfsangebote: "helfen", "unterstützen", "begleiten", "beraten"
 - Einladungen: "bei Bedarf", "falls gewünscht", "wenn nötig"
 - CTA-Sprache: "kontaktieren", "anfragen", "sprechen Sie uns an"
