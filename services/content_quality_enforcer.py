@@ -309,6 +309,26 @@ def inject_hauptleistung_recommendations(html: str, hauptleistung: str, current_
          hauptleistung),
         
         # "Ihren Prozessen" → "Ihren {hauptleistung}-Prozessen"
+        
+        # Weitere universelle Patterns für Recommendations
+        (r'\b(Ihre[rn]?\s+Arbeit(?:sweise)?)\b',
+         f'Ihre Arbeit mit {hauptleistung}'),
+        
+        (r'\b(Ihr(?:em?)?\s+Kerngeschäft)\b',
+         hauptleistung),
+        
+        (r'\b(diese[rn]?\s+Leistung(?:en)?)\b',
+         hauptleistung),
+        
+        (r'\b(Ihr(?:em?)?\s+Angebot)\b',
+         hauptleistung),
+        
+        (r'\b(Ihre[rn]?\s+Tätigkeit)\b',
+         hauptleistung),
+        
+        (r'\b(in\s+diesem\s+Bereich)\b',
+         f'im Bereich {hauptleistung}'),
+
         (r'\b(Ihren\s+Prozessen)\b',
          f'Ihren {hauptleistung}-Prozessen'),
     ]
@@ -453,6 +473,65 @@ def apply_extended_siezen_guard(sections: dict) -> dict:
     log.info(f"[EXTENDED-SIEZEN] Complete: {total_fixed} additional du→Sie fixes")
     return sections
 
+# =============================================================================
+# 6. GRAMMAR-FIXER: Korrigiert typische Grammatik-/Formatierungsfehler
+# =============================================================================
+
+GRAMMAR_FIX_PATTERNS = [
+    # "Einzelunternehmer in der Branche beratung" → korrekte Großschreibung
+    (r'in der Branche ([a-zäöü]+)', lambda m: f'in der Branche {m.group(1).title()}'),
+    
+    # "Für Ihr Einzelunternehmer" → "Für Ihren Einzelbetrieb" oder "Für Sie als Einzelunternehmer"
+    (r'Für Ihr Einzelunternehmer', 'Für Sie als Einzelunternehmer'),
+    
+    # Doppelte Leerzeichen
+    (r'  +', ' '),
+    
+    # Punkt vor Komma
+    (r'\.,', ','),
+    
+    # Doppelte Punkte
+    (r'\.\. ', '. '),
+]
+
+def apply_grammar_fixes(html: str) -> tuple[str, int]:
+    """
+    Korrigiert typische Grammatik- und Formatierungsfehler.
+    """
+    if not html:
+        return html, 0
+    
+    fixes = 0
+    result = html
+    
+    for pattern, replacement in GRAMMAR_FIX_PATTERNS:
+        if callable(replacement):
+            new_result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
+        else:
+            new_result = re.sub(pattern, replacement, result)
+        if new_result != result:
+            fixes += 1
+            result = new_result
+    
+    return result, fixes
+
+def apply_grammar_fixer(sections: dict) -> dict:
+    """
+    Wendet Grammar-Fixes auf alle relevanten Sections an.
+    """
+    total_fixes = 0
+    
+    for key, value in sections.items():
+        if isinstance(value, str) and len(value) > 100:
+            fixed, count = apply_grammar_fixes(value)
+            if count > 0:
+                sections[key] = fixed
+                total_fixes += count
+    
+    log.info(f"[GRAMMAR-FIXER] Complete: {total_fixes} grammar fixes")
+    return sections
+
+
 
 # =============================================================================
 # MASTER FUNCTION: Apply All Quality Enforcers
@@ -545,6 +624,7 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     3. Extended Siezen (erweiterte du→Sie)
     4. hauptleistung-Enforcer (injiziert fehlende hauptleistung)
     5. Location-Validator (entfernt falsche Bundesländer)
+    6. Grammar-Fixer (korrigiert Grammatikfehler)
     
     Args:
         sections: Dict mit allen Report-Sections
@@ -570,6 +650,9 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     
     
     # 5. Location-Validator
+    
+    # 6. Grammar-Fixer
+    sections = apply_grammar_fixer(sections)
     if bundesland:
         sections = apply_location_validator(sections, bundesland)
     log.info("[QUALITY-ENFORCER] Pipeline complete")
