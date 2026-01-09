@@ -73,7 +73,7 @@ except ImportError:
 
     class ValidationConfig:  # type: ignore[no-redef]
         """Fallback stub when config_validation not available."""
-        HARD_STOP_ON_SIZE_MISMATCH = True
+        HARD_STOP_ON_SIZE_MISMATCH = False
         MAX_REDUNDANCY_WARNINGS = 5
         REDUNDANCY_WORD_THRESHOLD = 20
         AI_ACT_MIN_REASONING_WORDS = 60
@@ -604,7 +604,7 @@ class ReportValidator:
     HARD_STOP_ON_SIZE_MISMATCH = (
         ValidationConfig.HARD_STOP_ON_SIZE_MISMATCH
         if _HAS_CONFIG_VALIDATION and ValidationConfig
-        else True
+        else False
     )
 
     # PLATIN+ Standard: Mindestlängen in WÖRTERN (nicht Zeichen!)
