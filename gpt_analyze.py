@@ -11950,6 +11950,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
                 score_rating = "im Durchschnitt" if report_lang == "de" else "average"
 
         company_size = sections.get("size_label", "KMU")
+        hauptleistung_fc = answers.get("hauptleistung", "").strip()
         branch_label = sections.get("BRANCHE_LABEL", "")
         # PLATIN+++ v5.4.2: Read from answers first (timing bug fix - sections populated later)
         payback_months = answers.get("PAYBACK_MONTHS") or sections.get("PAYBACK_MONTHS", 0)
@@ -11959,7 +11960,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         if report_lang == "en":
             intro_template = (
                 f"This AI Readiness Report analyzes your current AI maturity ({overall_score}/100 = {score_rating}) "
-                f"and provides actionable recommendations for {company_size}. "
+                f"and provides actionable recommendations for {company_size} focusing on {hauptleistung_fc}. "
                 f"Focus areas: Security, Efficiency, and Funding opportunities. "
                 f"ROI details and payback analysis are provided in the Business Case."
             )
@@ -11971,7 +11972,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         else:
             intro_template = (
                 f"Dieser KI-Readiness-Report analysiert Ihren aktuellen KI-Reifegrad ({overall_score}/100 = {score_rating}) "
-                f"und liefert konkrete Handlungsempfehlungen für {company_size}. "
+                f"und liefert konkrete Handlungsempfehlungen für {company_size} mit Fokus auf {hauptleistung_fc}. "
                 f"Schwerpunkte: Sicherheit, Effizienz und Förderpotenziale. "
                 f"ROI-Details und Payback-Analyse finden Sie im Business Case."
             )
