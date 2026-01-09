@@ -10224,10 +10224,10 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     
     # ========== v14.10: SOFORT-START-SEITE (Gamechanger Feature) ==========
     try:
-        sofort_hauptleistung = briefing.get("hauptleistung", "") or answers.get("hauptleistung", "")
+        sofort_hauptleistung = briefing.get("hauptleistung", "")
         sofort_branche = briefing.get("BRANCHE_LABEL", "") or briefing.get("branche", "") or ""
         sofort_size = briefing.get("UNTERNEHMENSGROESSE_LABEL", "") or briefing.get("unternehmensgroesse", "solo")
-        sofort_zeit = briefing.get("ZEITERSPARNIS_PRIORITAET", "") or answers.get("zeitersparnis_prioritaet", "")
+        sofort_zeit = briefing.get("ZEITERSPARNIS_PRIORITAET", "") or briefing.get("zeitersparnis_prioritaet", "")
         
         sections["SOFORT_START_HTML"] = generate_sofort_start_html(
             hauptleistung=sofort_hauptleistung,
@@ -10242,7 +10242,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     
     # ========== v14.12: 30-TAGE CHALLENGE (Gamechanger #8) ==========
     try:
-        sofort_zeitbudget = briefing.get("zeitbudget", "") or answers.get("zeitbudget", "2_5")
+        sofort_zeitbudget = briefing.get("zeitbudget", "") or "2_5"
         sections["CHALLENGE_30_TAGE_HTML"] = generate_30_tage_challenge_html_v2(
             company_size=sofort_size,
             zeitbudget=sofort_zeitbudget
