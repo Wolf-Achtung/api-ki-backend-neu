@@ -6038,6 +6038,31 @@
 
                 </div>
                 <!-- END PAGE 2 -->
+                
+                <!-- ============================================== -->
+                <!-- PAGE 2b: SOFORT-START (NEU!)                   -->
+                <!-- ============================================== -->
+                {% if SOFORT_START_HTML and SOFORT_START_HTML|trim %}
+                <div class="page-break"></div>
+                <div class="sofort-start-page" style="padding: var(--space-xl) var(--space-lg);">
+                    
+                    <!-- Header -->
+                    <div style="margin-bottom: var(--space-xl); text-align: center;">
+                        <h2 style="font-size: 28px; font-weight: 700; margin: 0 0 var(--space-sm) 0; color: var(--color-brand-primary);">
+                            🎯 Ihr Sofort-Start
+                        </h2>
+                        <p style="font-size: 16px; color: var(--color-text-muted); margin: 0;">
+                            Was Sie HEUTE noch tun können
+                        </p>
+                    </div>
+                    
+                    <!-- Content from gpt_analyze.py -->
+                    {{ SOFORT_START_HTML | safe }}
+                    
+                </div>
+                {% endif %}
+                <!-- END PAGE 2b -->
+
 
                                 <!-- PAGE 3: EXECUTIVE TOC                          -->
                 <!-- ============================================== -->
