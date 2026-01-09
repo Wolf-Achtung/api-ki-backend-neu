@@ -10831,7 +10831,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     # Fixes: ROI-Leak, Fragments, hauptleistung MIN, Extended Siezen
     try:
         from services.content_quality_enforcer import apply_all_quality_enforcers
-        hauptleistung_value = briefing.get("hauptleistung", "") or answers.get("hauptleistung", "")
+        hauptleistung_value = briefing.get("hauptleistung", "")
         sections = apply_all_quality_enforcers(sections, hauptleistung_value)
         log.info(f"[QUALITY-ENFORCER] Applied all quality fixes for hauptleistung={hauptleistung_value[:30] if hauptleistung_value else 'N/A'}...")
     except Exception as e:
