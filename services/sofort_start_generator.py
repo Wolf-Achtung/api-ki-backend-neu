@@ -1,6 +1,6 @@
 """
-SOFORT-START-SEITE Generator
-=============================
+SOFORT-START-SEITE Generator v2.0
+==================================
 Generiert personalisierte "Sofort-Start" Inhalte für den KI-Readiness Report.
 
 Enthält:
@@ -8,6 +8,24 @@ Enthält:
 2. 3 Copy-Paste Prompts für die Hauptleistung
 3. Tool-Empfehlungen mit Links & Preisen
 4. Wichtige Warnungen (Don'ts)
+5. Konkrete Zeitersparnis-Berechnung
+6. Checkliste für den Start
+7. Entscheidungsvorlage für Vorgesetzte
+
+Unterstützte Branchen (13):
+- Marketing & Werbung
+- Beratung & Dienstleistungen
+- IT & Software
+- Finanzen & Versicherungen
+- Handel & E-Commerce
+- Bildung
+- Verwaltung
+- Gesundheit & Pflege
+- Bauwesen & Architektur
+- Medien & Kreativwirtschaft
+- Industrie & Produktion
+- Transport & Logistik
+- Gastronomie & Tourismus
 """
 
 import logging
@@ -16,13 +34,77 @@ from typing import Optional
 log = logging.getLogger(__name__)
 
 # =============================================================================
-# BRANCHEN-SPEZIFISCHE PROMPTS
+# BRANCHEN-SPEZIFISCHE PROMPTS (13 Branchen)
 # =============================================================================
 
 BRANCHE_PROMPTS = {
+    # -------------------------------------------------------------------------
+    # 1. MARKETING & WERBUNG
+    # -------------------------------------------------------------------------
+    "marketing": {
+        "name": "Marketing & Werbung",
+        "erster_schritt": "Lassen Sie ChatGPT 5 Social-Media-Posts für diese Woche erstellen",
+        "zeitersparnis_pro_woche": 8,  # Stunden
+        "typische_aufgaben": ["Content-Erstellung", "Kampagnen-Planung", "Analyse"],
+        "prompts": [
+            {
+                "titel": "Social Media Posts erstellen",
+                "prompt": """Erstelle 5 LinkedIn-Posts für diese Woche:
+
+Thema/Produkt: [BESCHREIBUNG]
+Zielgruppe: [WER]
+Tonalität: [professionell/locker/inspirierend]
+
+Pro Post:
+- Hook (erster Satz, der Aufmerksamkeit erregt)
+- Haupttext (max. 150 Wörter)
+- Call-to-Action
+- 3-5 relevante Hashtags""",
+                "zeitersparnis": "1-2 Std pro Woche"
+            },
+            {
+                "titel": "Newsletter schreiben",
+                "prompt": """Erstelle einen Newsletter:
+
+Thema: [HAUPTTHEMA]
+Zielgruppe: [WER]
+Ziel: [Was soll der Leser tun?]
+
+Struktur:
+1. Betreffzeile (A/B-Varianten)
+2. Preview-Text
+3. Einleitung (persönlich)
+4. Hauptinhalt
+5. CTA-Button-Text
+6. P.S.-Zeile""",
+                "zeitersparnis": "1-2 Std pro Newsletter"
+            },
+            {
+                "titel": "Wettbewerbsanalyse",
+                "prompt": """Analysiere diese Wettbewerber-Positionierung:
+
+Wettbewerber: [NAME/BESCHREIBUNG]
+Mein Unternehmen: [KURZBESCHREIBUNG]
+
+Analysiere:
+1. Positionierung & USP
+2. Zielgruppen-Ansprache
+3. Content-Strategie
+4. Stärken/Schwächen
+5. Was können wir besser machen?""",
+                "zeitersparnis": "2-3 Std pro Analyse"
+            }
+        ]
+    },
+    
+    # -------------------------------------------------------------------------
+    # 2. BERATUNG & DIENSTLEISTUNGEN
+    # -------------------------------------------------------------------------
     "beratung": {
-        "name": "Beratung & Consulting",
+        "name": "Beratung & Dienstleistungen",
         "erster_schritt": "Lassen Sie ChatGPT Ihre nächste Kundenanfrage analysieren",
+        "zeitersparnis_pro_woche": 6,
+        "typische_aufgaben": ["Kundenanalyse", "Angebotserstellung", "Dokumentation"],
         "prompts": [
             {
                 "titel": "Kundenanfrage analysieren",
@@ -41,8 +123,7 @@ Bitte liefere:
                 "titel": "Angebot strukturieren",
                 "prompt": """Erstelle eine Angebotsstruktur für folgendes Projekt:
 
-Kunde: [NAME]
-Branche: [BRANCHE]
+Kunde: [NAME/BRANCHE]
 Problem: [KURZBESCHREIBUNG]
 Budget-Rahmen: [FALLS BEKANNT]
 
@@ -69,9 +150,15 @@ Format:
             }
         ]
     },
+    
+    # -------------------------------------------------------------------------
+    # 3. IT & SOFTWARE
+    # -------------------------------------------------------------------------
     "it": {
         "name": "IT & Software",
         "erster_schritt": "Lassen Sie ChatGPT Ihren nächsten Code-Review unterstützen",
+        "zeitersparnis_pro_woche": 10,
+        "typische_aufgaben": ["Code-Review", "Dokumentation", "Debugging"],
         "prompts": [
             {
                 "titel": "Code Review",
@@ -118,62 +205,72 @@ Format pro Story:
             }
         ]
     },
-    "marketing": {
-        "name": "Marketing & Kommunikation",
-        "erster_schritt": "Lassen Sie ChatGPT 5 Social-Media-Posts für diese Woche erstellen",
+    
+    # -------------------------------------------------------------------------
+    # 4. FINANZEN & VERSICHERUNGEN
+    # -------------------------------------------------------------------------
+    "finanzen": {
+        "name": "Finanzen & Versicherungen",
+        "erster_schritt": "Lassen Sie ChatGPT einen Kundenbrief zu Vertragsänderungen formulieren",
+        "zeitersparnis_pro_woche": 5,
+        "typische_aufgaben": ["Kundenkorrespondenz", "Analyse", "Reporting"],
         "prompts": [
             {
-                "titel": "Social Media Posts",
-                "prompt": """Erstelle 5 LinkedIn-Posts für diese Woche:
+                "titel": "Kundenbrief formulieren",
+                "prompt": """Formuliere einen professionellen Kundenbrief:
 
-Thema/Produkt: [BESCHREIBUNG]
-Zielgruppe: [WER]
-Tonalität: [professionell/locker/inspirierend]
+Anlass: [z.B. Vertragsänderung, Beitragsanpassung]
+Kernbotschaft: [WAS soll kommuniziert werden]
+Tonalität: [seriös/empathisch/sachlich]
 
-Pro Post:
-- Hook (erster Satz, der Aufmerksamkeit erregt)
-- Haupttext (max. 150 Wörter)
-- Call-to-Action
-- 3-5 relevante Hashtags""",
-                "zeitersparnis": "1-2 Std pro Woche"
+Der Brief soll:
+- Verständlich sein (keine Fachsprache)
+- Die wichtigsten Infos zuerst nennen
+- Handlungsoptionen klar darstellen
+- Kontaktmöglichkeiten aufzeigen""",
+                "zeitersparnis": "20-30 Min pro Brief"
             },
             {
-                "titel": "Newsletter schreiben",
-                "prompt": """Erstelle einen Newsletter:
+                "titel": "Risikoanalyse strukturieren",
+                "prompt": """Strukturiere diese Risikoinformationen für einen Kunden:
 
-Thema: [HAUPTTHEMA]
-Zielgruppe: [WER]
-Ziel: [Was soll der Leser tun?]
+Kunde: [PROFIL]
+Produkt/Anlage: [BESCHREIBUNG]
+Marktdaten: [RELEVANTE INFOS]
 
-Struktur:
-1. Betreffzeile (A/B-Varianten)
-2. Preview-Text
-3. Einleitung (persönlich)
-4. Hauptinhalt
-5. CTA-Button-Text
-6. P.S.-Zeile""",
-                "zeitersparnis": "1-2 Std pro Newsletter"
+Erstelle:
+1. Risikozusammenfassung (3 Sätze)
+2. Chancen vs. Risiken (Tabelle)
+3. Empfehlung mit Begründung
+4. Disclaimer (kurz)""",
+                "zeitersparnis": "30-45 Min pro Analyse"
             },
             {
-                "titel": "Wettbewerbsanalyse",
-                "prompt": """Analysiere diese Wettbewerber-Website:
+                "titel": "Reporting-Text erstellen",
+                "prompt": """Erstelle einen Reporting-Text aus diesen Zahlen:
 
-URL: [LINK oder BESCHREIBUNG]
-Mein Unternehmen: [KURZBESCHREIBUNG]
+Kennzahlen: [LISTE]
+Zeitraum: [VON-BIS]
+Vergleich zu: [Vorjahr/Plan/Benchmark]
 
-Analysiere:
-1. Positionierung & USP
-2. Zielgruppen-Ansprache
-3. Content-Strategie
-4. Stärken/Schwächen
-5. Was können wir besser machen?""",
-                "zeitersparnis": "2-3 Std pro Analyse"
+Der Text soll:
+- Die wichtigsten Entwicklungen zusammenfassen
+- Abweichungen erklären
+- Ausblick geben
+- Max. 200 Wörter""",
+                "zeitersparnis": "30-45 Min pro Report"
             }
         ]
     },
+    
+    # -------------------------------------------------------------------------
+    # 5. HANDEL & E-COMMERCE
+    # -------------------------------------------------------------------------
     "handel": {
         "name": "Handel & E-Commerce",
         "erster_schritt": "Lassen Sie ChatGPT 10 Produktbeschreibungen optimieren",
+        "zeitersparnis_pro_woche": 8,
+        "typische_aufgaben": ["Produkttexte", "Kundenservice", "Aktionen"],
         "prompts": [
             {
                 "titel": "Produktbeschreibung optimieren",
@@ -207,8 +304,8 @@ Die Antwort soll:
                 "zeitersparnis": "10-15 Min pro Anfrage"
             },
             {
-                "titel": "Angebotstext erstellen",
-                "prompt": """Erstelle einen überzeugenden Angebotstext:
+                "titel": "Aktionstext erstellen",
+                "prompt": """Erstelle einen überzeugenden Aktionstext:
 
 Aktion: [z.B. 20% Rabatt, Gratis Versand]
 Produkte: [WELCHE]
@@ -225,9 +322,492 @@ Liefere:
             }
         ]
     },
+    
+    # -------------------------------------------------------------------------
+    # 6. BILDUNG
+    # -------------------------------------------------------------------------
+    "bildung": {
+        "name": "Bildung",
+        "erster_schritt": "Lassen Sie ChatGPT einen Unterrichtsentwurf erstellen",
+        "zeitersparnis_pro_woche": 6,
+        "typische_aufgaben": ["Unterrichtsplanung", "Material-Erstellung", "Feedback"],
+        "prompts": [
+            {
+                "titel": "Unterrichtsentwurf erstellen",
+                "prompt": """Erstelle einen Unterrichtsentwurf:
+
+Thema: [THEMA]
+Zielgruppe: [Alter/Niveau]
+Dauer: [MINUTEN]
+Lernziel: [WAS sollen die Teilnehmer können?]
+
+Struktur:
+1. Einstieg (Aktivierung)
+2. Erarbeitung (Methoden)
+3. Sicherung (Übungen)
+4. Transfer (Anwendung)
+5. Benötigte Materialien""",
+                "zeitersparnis": "45-60 Min pro Entwurf"
+            },
+            {
+                "titel": "Übungsaufgaben generieren",
+                "prompt": """Erstelle Übungsaufgaben:
+
+Fach/Thema: [BESCHREIBUNG]
+Schwierigkeitsgrad: [leicht/mittel/schwer]
+Anzahl: [WIE VIELE]
+Format: [Multiple Choice/Freitext/Lückentext]
+
+Bitte mit:
+- Klarer Aufgabenstellung
+- Lösungshinweisen
+- Bewertungskriterien""",
+                "zeitersparnis": "30-45 Min pro Set"
+            },
+            {
+                "titel": "Feedback formulieren",
+                "prompt": """Formuliere konstruktives Feedback:
+
+Leistung: [BESCHREIBUNG der Arbeit]
+Stärken: [WAS war gut?]
+Verbesserungspotenzial: [WAS kann besser werden?]
+
+Das Feedback soll:
+- Wertschätzend beginnen
+- Konkret und nachvollziehbar sein
+- Verbesserungsvorschläge enthalten
+- Motivierend enden""",
+                "zeitersparnis": "15-20 Min pro Feedback"
+            }
+        ]
+    },
+    
+    # -------------------------------------------------------------------------
+    # 7. VERWALTUNG
+    # -------------------------------------------------------------------------
+    "verwaltung": {
+        "name": "Verwaltung",
+        "erster_schritt": "Lassen Sie ChatGPT einen Bescheid-Entwurf strukturieren",
+        "zeitersparnis_pro_woche": 5,
+        "typische_aufgaben": ["Bescheide", "Protokolle", "Bürgeranfragen"],
+        "prompts": [
+            {
+                "titel": "Bescheid-Entwurf erstellen",
+                "prompt": """Erstelle einen Bescheid-Entwurf:
+
+Art: [z.B. Genehmigung, Ablehnung, Änderung]
+Sachverhalt: [KURZBESCHREIBUNG]
+Rechtsgrundlage: [FALLS BEKANNT]
+
+Struktur:
+1. Tenor (Entscheidung)
+2. Sachverhalt
+3. Begründung
+4. Rechtsbehelfsbelehrung
+5. Fristen""",
+                "zeitersparnis": "30-45 Min pro Bescheid"
+            },
+            {
+                "titel": "Bürgeranfrage beantworten",
+                "prompt": """Beantworte diese Bürgeranfrage verständlich:
+
+Anfrage: [TEXT]
+Zuständigkeit: [ABTEILUNG/THEMA]
+
+Die Antwort soll:
+- Verständlich sein (keine Amtssprache)
+- Die Frage direkt beantworten
+- Nächste Schritte erklären
+- Ansprechpartner nennen""",
+                "zeitersparnis": "15-20 Min pro Anfrage"
+            },
+            {
+                "titel": "Sitzungsprotokoll erstellen",
+                "prompt": """Erstelle ein Sitzungsprotokoll:
+
+Gremium: [NAME]
+Datum: [DATUM]
+Notizen: [STICHPUNKTE]
+
+Format:
+- Anwesende/Entschuldigte
+- Tagesordnung
+- Zu jedem TOP: Diskussion, Beschluss
+- Aufgaben mit Verantwortlichen
+- Nächster Termin""",
+                "zeitersparnis": "30-45 Min pro Protokoll"
+            }
+        ]
+    },
+    
+    # -------------------------------------------------------------------------
+    # 8. GESUNDHEIT & PFLEGE
+    # -------------------------------------------------------------------------
+    "gesundheit": {
+        "name": "Gesundheit & Pflege",
+        "erster_schritt": "Lassen Sie ChatGPT eine Patienteninformation formulieren",
+        "zeitersparnis_pro_woche": 4,
+        "typische_aufgaben": ["Patienteninfos", "Dokumentation", "Schulungen"],
+        "prompts": [
+            {
+                "titel": "Patienteninformation erstellen",
+                "prompt": """Erstelle eine verständliche Patienteninformation:
+
+Thema: [z.B. Behandlung, Medikament, Nachsorge]
+Zielgruppe: [Patient/Angehörige]
+Wichtige Punkte: [LISTE]
+
+Die Info soll:
+- Einfache Sprache verwenden
+- Keine medizinischen Fachbegriffe (oder erklärt)
+- Handlungsanweisungen klar formulieren
+- Warnzeichen benennen
+- Kontaktinfos enthalten""",
+                "zeitersparnis": "20-30 Min pro Info"
+            },
+            {
+                "titel": "Übergabe strukturieren",
+                "prompt": """Strukturiere diese Übergabe-Informationen:
+
+Patient: [ANONYMISIERT - NUR ALTER/RELEVANTES]
+Aktuelle Situation: [STICHPUNKTE]
+Maßnahmen: [WAS WURDE GEMACHT]
+
+Erstelle:
+- SBAR-Format (Situation, Background, Assessment, Recommendation)
+- Prioritäten klar markiert
+- Offene Aufgaben""",
+                "zeitersparnis": "10-15 Min pro Übergabe"
+            },
+            {
+                "titel": "Schulungskonzept erstellen",
+                "prompt": """Erstelle ein Schulungskonzept:
+
+Thema: [z.B. Hygiene, Notfall, Gerät]
+Zielgruppe: [WER]
+Dauer: [MINUTEN]
+
+Struktur:
+1. Lernziele
+2. Theorieteil (Kernpunkte)
+3. Praktische Übung
+4. Lernerfolgskontrolle
+5. Handout-Inhalte""",
+                "zeitersparnis": "45-60 Min pro Konzept"
+            }
+        ]
+    },
+    
+    # -------------------------------------------------------------------------
+    # 9. BAUWESEN & ARCHITEKTUR
+    # -------------------------------------------------------------------------
+    "bauwesen": {
+        "name": "Bauwesen & Architektur",
+        "erster_schritt": "Lassen Sie ChatGPT ein Baustellenprotokoll strukturieren",
+        "zeitersparnis_pro_woche": 5,
+        "typische_aufgaben": ["Protokolle", "Ausschreibungen", "Kundenkorrespondenz"],
+        "prompts": [
+            {
+                "titel": "Baustellenprotokoll erstellen",
+                "prompt": """Erstelle ein Baustellenprotokoll:
+
+Projekt: [NAME]
+Datum: [DATUM]
+Notizen: [STICHPUNKTE]
+
+Struktur:
+- Wetter, Anwesende
+- Baufortschritt (mit %)
+- Festgestellte Mängel
+- Vereinbarungen
+- Nächste Schritte
+- Fotodokumentation (Beschreibung)""",
+                "zeitersparnis": "20-30 Min pro Protokoll"
+            },
+            {
+                "titel": "Leistungsverzeichnis-Position",
+                "prompt": """Formuliere eine LV-Position:
+
+Gewerk: [z.B. Mauerwerk, Elektro]
+Leistung: [BESCHREIBUNG]
+Menge: [EINHEIT]
+
+Die Position soll:
+- VOB-konform formuliert sein
+- Alle relevanten Details enthalten
+- Eindeutig kalkulierbar sein""",
+                "zeitersparnis": "15-20 Min pro Position"
+            },
+            {
+                "titel": "Bauherren-Schreiben",
+                "prompt": """Formuliere ein Schreiben an den Bauherrn:
+
+Anlass: [z.B. Nachtrag, Terminverzug, Änderung]
+Kernbotschaft: [WAS soll kommuniziert werden]
+Tonalität: [sachlich/erklärend]
+
+Das Schreiben soll:
+- Sachverhalt klar darstellen
+- Auswirkungen benennen
+- Lösungsvorschlag machen
+- Nächste Schritte definieren""",
+                "zeitersparnis": "20-30 Min pro Schreiben"
+            }
+        ]
+    },
+    
+    # -------------------------------------------------------------------------
+    # 10. MEDIEN & KREATIVWIRTSCHAFT
+    # -------------------------------------------------------------------------
+    "medien": {
+        "name": "Medien & Kreativwirtschaft",
+        "erster_schritt": "Lassen Sie ChatGPT 10 Headline-Varianten generieren",
+        "zeitersparnis_pro_woche": 8,
+        "typische_aufgaben": ["Content-Ideen", "Texte", "Briefings"],
+        "prompts": [
+            {
+                "titel": "Headline-Varianten generieren",
+                "prompt": """Generiere 10 Headline-Varianten:
+
+Thema: [BESCHREIBUNG]
+Medium: [Web/Print/Social]
+Zielgruppe: [WER]
+Tonalität: [seriös/provokant/emotional]
+
+Varianten:
+- 3x sachlich-informativ
+- 3x emotional/storytelling
+- 2x mit Zahlen/Fakten
+- 2x mit Frage/Aufforderung""",
+                "zeitersparnis": "20-30 Min pro Thema"
+            },
+            {
+                "titel": "Creative Brief erstellen",
+                "prompt": """Erstelle ein Creative Brief:
+
+Projekt: [NAME]
+Kunde: [BRANCHE/TYP]
+Ziel: [WAS soll erreicht werden]
+
+Struktur:
+1. Hintergrund & Ausgangslage
+2. Zielgruppe (Detail)
+3. Kernbotschaft
+4. Tone of Voice
+5. Must-haves & No-Gos
+6. Deliverables & Formate
+7. Timeline & Budget""",
+                "zeitersparnis": "30-45 Min pro Brief"
+            },
+            {
+                "titel": "Skript-Outline erstellen",
+                "prompt": """Erstelle eine Skript-Outline:
+
+Format: [Video/Podcast/Präsentation]
+Länge: [MINUTEN]
+Thema: [BESCHREIBUNG]
+Ziel: [WAS soll der Zuschauer mitnehmen]
+
+Struktur:
+- Hook (erste 10 Sekunden)
+- Intro
+- Hauptteil (3-5 Punkte)
+- Call-to-Action
+- Outro""",
+                "zeitersparnis": "30-45 Min pro Outline"
+            }
+        ]
+    },
+    
+    # -------------------------------------------------------------------------
+    # 11. INDUSTRIE & PRODUKTION
+    # -------------------------------------------------------------------------
+    "industrie": {
+        "name": "Industrie & Produktion",
+        "erster_schritt": "Lassen Sie ChatGPT eine Arbeitsanweisung strukturieren",
+        "zeitersparnis_pro_woche": 4,
+        "typische_aufgaben": ["Arbeitsanweisungen", "Fehleranalysen", "Berichte"],
+        "prompts": [
+            {
+                "titel": "Arbeitsanweisung erstellen",
+                "prompt": """Erstelle eine Arbeitsanweisung:
+
+Tätigkeit: [BESCHREIBUNG]
+Zielgruppe: [WER führt aus]
+Sicherheitshinweise: [RELEVANTE]
+
+Struktur:
+1. Zweck & Geltungsbereich
+2. Benötigte Materialien/Werkzeuge
+3. Schritt-für-Schritt-Anleitung
+4. Qualitätskriterien
+5. Sicherheitshinweise
+6. Dokumentation""",
+                "zeitersparnis": "30-45 Min pro Anweisung"
+            },
+            {
+                "titel": "Fehleranalyse (5-Why)",
+                "prompt": """Führe eine 5-Why-Analyse durch:
+
+Fehler/Problem: [BESCHREIBUNG]
+Wann aufgetreten: [ZEITPUNKT]
+Auswirkung: [WAS ist passiert]
+
+Analysiere:
+1. Warum ist das passiert? → Antwort
+2. Warum? (auf Antwort 1) → Antwort
+3. Warum? (auf Antwort 2) → Antwort
+4. Warum? (auf Antwort 3) → Antwort
+5. Warum? (auf Antwort 4) → Grundursache
+
+→ Maßnahmenvorschlag""",
+                "zeitersparnis": "20-30 Min pro Analyse"
+            },
+            {
+                "titel": "Schichtbericht erstellen",
+                "prompt": """Erstelle einen Schichtbericht:
+
+Datum/Schicht: [INFO]
+Notizen: [STICHPUNKTE]
+
+Format:
+- Produktionszahlen (Soll/Ist)
+- Besondere Vorkommnisse
+- Störungen/Stillstände
+- Qualitätsabweichungen
+- Übergabe an Folgeschicht
+- Offene Punkte""",
+                "zeitersparnis": "15-20 Min pro Bericht"
+            }
+        ]
+    },
+    
+    # -------------------------------------------------------------------------
+    # 12. TRANSPORT & LOGISTIK
+    # -------------------------------------------------------------------------
+    "transport": {
+        "name": "Transport & Logistik",
+        "erster_schritt": "Lassen Sie ChatGPT Lieferverzögerungs-Mails formulieren",
+        "zeitersparnis_pro_woche": 5,
+        "typische_aufgaben": ["Kundeninfo", "Routenplanung", "Dokumentation"],
+        "prompts": [
+            {
+                "titel": "Lieferverzögerung kommunizieren",
+                "prompt": """Formuliere eine Kundeninfo zu Lieferverzögerung:
+
+Kunde: [TYP]
+Ursprünglicher Termin: [DATUM]
+Neuer Termin: [DATUM]
+Grund: [KURZ]
+
+Die Nachricht soll:
+- Sich entschuldigen
+- Den neuen Termin klar nennen
+- Grund knapp erklären
+- Kompensation anbieten (falls passend)
+- Kontaktmöglichkeit geben""",
+                "zeitersparnis": "10-15 Min pro Mail"
+            },
+            {
+                "titel": "Frachtbrief-Daten prüfen",
+                "prompt": """Prüfe diese Frachtbrief-Daten auf Vollständigkeit:
+
+[DATEN HIER EINFÜGEN]
+
+Checkliste:
+- Absender vollständig?
+- Empfänger vollständig?
+- Warenbeschreibung korrekt?
+- Gewicht/Maße plausibel?
+- Gefahrgut-Kennzeichnung (falls nötig)?
+- Unterschriften vorhanden?""",
+                "zeitersparnis": "5-10 Min pro Dokument"
+            },
+            {
+                "titel": "Reklamationsantwort formulieren",
+                "prompt": """Formuliere eine Antwort auf diese Reklamation:
+
+Beschwerde: [TEXT]
+Sendungsdaten: [FALLS RELEVANT]
+Unser Verschulden: [ja/nein/teilweise]
+
+Die Antwort soll:
+- Verständnis zeigen
+- Sachverhalt klären
+- Lösung/Kompensation anbieten
+- Verbesserungsmaßnahme nennen""",
+                "zeitersparnis": "15-20 Min pro Antwort"
+            }
+        ]
+    },
+    
+    # -------------------------------------------------------------------------
+    # 13. GASTRONOMIE & TOURISMUS
+    # -------------------------------------------------------------------------
+    "gastronomie": {
+        "name": "Gastronomie & Tourismus",
+        "erster_schritt": "Lassen Sie ChatGPT Ihre Speisekarten-Texte aufwerten",
+        "zeitersparnis_pro_woche": 4,
+        "typische_aufgaben": ["Speisekarten", "Gästekommunikation", "Marketing"],
+        "prompts": [
+            {
+                "titel": "Speisekarten-Text aufwerten",
+                "prompt": """Formuliere diese Gerichtbeschreibung appetitlich um:
+
+Gericht: [NAME]
+Zutaten: [LISTE]
+Besonderheit: [z.B. regional, vegan, hausgemacht]
+
+Die Beschreibung soll:
+- Max. 25 Wörter
+- Appetit machen
+- Besonderheiten hervorheben
+- Allergene-Hinweis (wo nötig)""",
+                "zeitersparnis": "5-10 Min pro Gericht"
+            },
+            {
+                "titel": "Gästebewertung beantworten",
+                "prompt": """Beantworte diese Online-Bewertung:
+
+Bewertung: [TEXT]
+Sterne: [1-5]
+Plattform: [Google/TripAdvisor/etc.]
+
+Die Antwort soll:
+- Persönlich sein (nicht Standard)
+- Positives aufgreifen
+- Bei Kritik: Verständnis + Verbesserung
+- Zur Wiederkehr einladen""",
+                "zeitersparnis": "10-15 Min pro Antwort"
+            },
+            {
+                "titel": "Event-Angebot erstellen",
+                "prompt": """Erstelle ein Angebot für diese Veranstaltung:
+
+Art: [z.B. Hochzeit, Firmenfeier, Geburtstag]
+Personenzahl: [ANZAHL]
+Budget-Rahmen: [FALLS BEKANNT]
+Besondere Wünsche: [LISTE]
+
+Das Angebot soll enthalten:
+- Menüvorschlag (3 Gänge)
+- Getränkepauschale-Optionen
+- Raum/Dekoration
+- Ablauf-Vorschlag
+- Preis-Übersicht""",
+                "zeitersparnis": "30-45 Min pro Angebot"
+            }
+        ]
+    },
+    
+    # -------------------------------------------------------------------------
+    # DEFAULT (Fallback für alle anderen)
+    # -------------------------------------------------------------------------
     "default": {
         "name": "Allgemein",
         "erster_schritt": "Lassen Sie ChatGPT Ihre nächste E-Mail schreiben",
+        "zeitersparnis_pro_woche": 4,
+        "typische_aufgaben": ["E-Mails", "Zusammenfassungen", "Brainstorming"],
         "prompts": [
             {
                 "titel": "E-Mail professionell formulieren",
@@ -334,12 +914,12 @@ WARNUNGEN = [
     {
         "icon": "🔒",
         "titel": "Keine sensiblen Daten",
-        "text": "Geben Sie NIEMALS Kundendaten, Passwörter oder vertrauliche Geschäftszahlen in KI-Tools ein."
+        "text": "Geben Sie NIEMALS Kundendaten, Passwörter oder vertrauliche Zahlen in KI-Tools ein."
     },
     {
         "icon": "🔍",
         "titel": "Immer prüfen",
-        "text": "Vertrauen Sie KI-generierten Zahlen, Fakten und Zitaten nicht blind – immer gegenchecken."
+        "text": "Vertrauen Sie KI-generierten Zahlen und Fakten nicht blind – immer gegenchecken."
     },
     {
         "icon": "🎯",
@@ -349,42 +929,88 @@ WARNUNGEN = [
 ]
 
 # =============================================================================
-# HTML GENERATOR
+# CHECKLISTE FÜR DEN START (Idee #9)
+# =============================================================================
+
+CHECKLISTE_START = [
+    {"text": "ChatGPT oder Claude Account erstellen", "dauer": "5 Min"},
+    {"text": "Ersten Prompt aus diesem Report testen", "dauer": "10 Min"},
+    {"text": "Eine echte Arbeitsaufgabe mit KI lösen", "dauer": "30 Min"},
+    {"text": "Ergebnis prüfen und anpassen", "dauer": "15 Min"},
+    {"text": "Zeitersparnis notieren", "dauer": "5 Min"},
+]
+
+# =============================================================================
+# HELPER FUNCTIONS
 # =============================================================================
 
 def get_branche_key(branche: str) -> str:
     """Mappt Branche auf den passenden Key."""
-    branche_lower = branche.lower() if branche else ""
-    
-    if any(x in branche_lower for x in ["berat", "consult", "coach"]):
-        return "beratung"
-    elif any(x in branche_lower for x in ["it", "software", "tech", "digital", "web"]):
-        return "it"
-    elif any(x in branche_lower for x in ["marketing", "kommunikation", "pr", "werbung", "media"]):
-        return "marketing"
-    elif any(x in branche_lower for x in ["handel", "shop", "commerce", "retail", "verkauf"]):
-        return "handel"
-    else:
+    if not branche:
         return "default"
+    
+    branche_lower = branche.lower()
+    
+    # Mapping basierend auf den 13 Branchen
+    mappings = {
+        "marketing": ["marketing", "werbung", "pr", "kommunikation"],
+        "beratung": ["berat", "consult", "coach", "dienstleist"],
+        "it": ["it", "software", "tech", "digital", "web", "entwickl"],
+        "finanzen": ["finanz", "versicher", "bank", "invest"],
+        "handel": ["handel", "shop", "commerce", "retail", "verkauf", "e-commerce"],
+        "bildung": ["bildung", "schul", "training", "akadem", "lehr"],
+        "verwaltung": ["verwalt", "behörd", "öffentlich", "amt"],
+        "gesundheit": ["gesundheit", "pflege", "medizin", "arzt", "klinik", "praxis"],
+        "bauwesen": ["bau", "architekt", "immobil", "handwerk"],
+        "medien": ["medien", "kreativ", "agentur", "design", "film", "foto"],
+        "industrie": ["industrie", "produktion", "fertigung", "maschin", "herstellung"],
+        "transport": ["transport", "logistik", "spedition", "versand", "lieferung"],
+        "gastronomie": ["gastro", "hotel", "restaurant", "touris", "reise", "catering"],
+    }
+    
+    for key, keywords in mappings.items():
+        if any(kw in branche_lower for kw in keywords):
+            return key
+    
+    return "default"
 
+
+def calculate_yearly_savings(hours_per_week: int, hourly_rate: int = 80) -> dict:
+    """Berechnet Jahresersparnis (Idee #3 + #6)."""
+    hours_per_month = hours_per_week * 4
+    hours_per_year = hours_per_week * 48  # 48 Arbeitswochen
+    
+    savings_per_month = hours_per_month * hourly_rate
+    savings_per_year = hours_per_year * hourly_rate
+    
+    tool_costs_per_year = 240  # ~20€/Monat
+    net_savings = savings_per_year - tool_costs_per_year
+    
+    return {
+        "hours_per_week": hours_per_week,
+        "hours_per_month": hours_per_month,
+        "hours_per_year": hours_per_year,
+        "savings_per_month": savings_per_month,
+        "savings_per_year": savings_per_year,
+        "tool_costs": tool_costs_per_year,
+        "net_savings": net_savings,
+        "hourly_rate": hourly_rate
+    }
+
+
+# =============================================================================
+# HTML GENERATORS
+# =============================================================================
 
 def generate_sofort_start_html(
     hauptleistung: str,
     branche: str,
     company_size: str = "solo",
-    zeitersparnis_prioritaet: str = ""
+    zeitersparnis_prioritaet: str = "",
+    stundensatz: int = 80
 ) -> str:
     """
     Generiert die SOFORT_START_HTML Section.
-    
-    Args:
-        hauptleistung: Das Kerngeschäft des Users
-        branche: Die Branche
-        company_size: solo/team/kmu
-        zeitersparnis_prioritaet: Was der User als Zeitfresser angegeben hat
-        
-    Returns:
-        HTML-String für die Sofort-Start-Seite
     """
     
     branche_key = get_branche_key(branche)
@@ -392,17 +1018,23 @@ def generate_sofort_start_html(
     
     # Company size normalisieren
     size_key = "solo"
-    if company_size and "team" in company_size.lower():
-        size_key = "team"
-    elif company_size and ("kmu" in company_size.lower() or "mittel" in company_size.lower() or "100" in str(company_size)):
-        size_key = "kmu"
+    if company_size:
+        size_lower = company_size.lower()
+        if any(x in size_lower for x in ["team", "klein", "2-10"]):
+            size_key = "team"
+        elif any(x in size_lower for x in ["kmu", "mittel", "11-100", "100"]):
+            size_key = "kmu"
     
     tools = TOOL_EMPFEHLUNGEN.get(size_key, TOOL_EMPFEHLUNGEN["solo"])
     
-    # Personalisiere den ersten Schritt wenn möglich
+    # Zeitersparnis berechnen
+    hours_per_week = branche_data.get("zeitersparnis_pro_woche", 4)
+    savings = calculate_yearly_savings(hours_per_week, stundensatz)
+    
+    # Personalisiere den ersten Schritt
     erster_schritt = branche_data["erster_schritt"]
     if hauptleistung:
-        erster_schritt = f"Testen Sie ChatGPT mit einer typischen Aufgabe aus {hauptleistung}"
+        erster_schritt = f"Testen Sie ChatGPT mit einer typischen Aufgabe aus Ihrem Bereich: {hauptleistung}"
     
     # HTML generieren
     html = f'''
@@ -412,7 +1044,7 @@ def generate_sofort_start_html(
             <span style="font-size: 32px;">⚡</span>
             <div>
                 <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 8px 0; color: white;">
-                    Der EINE erste Schritt
+                    Der EINE erste Schritt – heute noch machbar
                 </h3>
                 <p style="font-size: 15px; margin: 0; opacity: 0.95; line-height: 1.5;">
                     {erster_schritt}
@@ -421,11 +1053,36 @@ def generate_sofort_start_html(
         </div>
     </div>
     
+    <!-- ZEITERSPARNIS-RECHNUNG (Idee #3 + #6) -->
+    <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+        <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; color: #166534; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 20px;">💰</span>
+            Ihre potenzielle Zeitersparnis
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center;">
+            <div style="background: white; border-radius: 6px; padding: 12px;">
+                <div style="font-size: 24px; font-weight: 700; color: #166534;">{savings['hours_per_week']}h</div>
+                <div style="font-size: 11px; color: #64748b;">pro Woche</div>
+            </div>
+            <div style="background: white; border-radius: 6px; padding: 12px;">
+                <div style="font-size: 24px; font-weight: 700; color: #166534;">{savings['hours_per_year']}h</div>
+                <div style="font-size: 11px; color: #64748b;">pro Jahr</div>
+            </div>
+            <div style="background: white; border-radius: 6px; padding: 12px;">
+                <div style="font-size: 24px; font-weight: 700; color: #166534;">{savings['net_savings']:,}€</div>
+                <div style="font-size: 11px; color: #64748b;">Netto-Ersparnis*</div>
+            </div>
+        </div>
+        <p style="font-size: 10px; color: #64748b; margin: 8px 0 0 0; text-align: right;">
+            *Bei {savings['hourly_rate']}€/h, abzgl. ~{savings['tool_costs']}€ Tool-Kosten/Jahr
+        </p>
+    </div>
+    
     <!-- 3 PROMPTS -->
     <div style="margin-bottom: 24px;">
         <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 24px;">📋</span>
-            3 Copy-Paste Prompts für Sie
+            3 Copy-Paste Prompts für {branche_data["name"]}
         </h3>
         <p style="font-size: 13px; color: #64748b; margin: 0 0 16px 0;">
             Kopieren Sie diese Prompts direkt in ChatGPT oder Claude:
@@ -434,18 +1091,19 @@ def generate_sofort_start_html(
     
     # Prompts hinzufügen
     for i, prompt_data in enumerate(branche_data["prompts"], 1):
+        prompt_text = prompt_data["prompt"][:400] + "..." if len(prompt_data["prompt"]) > 400 else prompt_data["prompt"]
         html += f'''
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                 <h4 style="font-size: 14px; font-weight: 600; margin: 0; color: #1e293b;">
                     {i}. {prompt_data["titel"]}
                 </h4>
-                <span style="font-size: 11px; background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px;">
+                <span style="font-size: 11px; background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; white-space: nowrap;">
                     ⏱️ {prompt_data["zeitersparnis"]}
                 </span>
             </div>
-            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 11px; line-height: 1.5; white-space: pre-wrap; color: #334155;">
-{prompt_data["prompt"][:500]}{"..." if len(prompt_data["prompt"]) > 500 else ""}
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 10px; line-height: 1.4; white-space: pre-wrap; color: #334155; max-height: 120px; overflow: hidden;">
+{prompt_text}
             </div>
         </div>
 '''
@@ -465,23 +1123,48 @@ def generate_sofort_start_html(
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
 '''
     
-    for tool in tools[:2]:  # Max 2 Tools
+    for tool in tools[:2]:
         html += f'''
             <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
                 <h4 style="font-size: 15px; font-weight: 600; margin: 0 0 4px 0; color: #1e293b;">
                     {tool["name"]}
                 </h4>
-                <p style="font-size: 13px; color: #64748b; margin: 0 0 8px 0;">
+                <p style="font-size: 12px; color: #64748b; margin: 0 0 8px 0;">
                     {tool["nutzen"]}
                 </p>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="font-size: 14px; font-weight: 600; color: #1e40af;">
                         {tool["preis"]}
                     </span>
-                    <span style="font-size: 11px; color: #64748b;">
+                    <span style="font-size: 10px; color: #64748b;">
                         {tool["url"].replace("https://", "")}
                     </span>
                 </div>
+            </div>
+'''
+    
+    html += '''
+        </div>
+    </div>
+'''
+    
+    # Checkliste hinzufügen (Idee #9)
+    html += '''
+    <!-- CHECKLISTE -->
+    <div style="background: #eff6ff; border: 1px solid #3b82f6; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+        <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; color: #1e40af; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 20px;">✅</span>
+            Ihre Start-Checkliste (erste 60 Minuten)
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+'''
+    
+    for item in CHECKLISTE_START:
+        html += f'''
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                <span style="width: 18px; height: 18px; border: 2px solid #3b82f6; border-radius: 4px; display: inline-block;"></span>
+                <span style="flex: 1;">{item["text"]}</span>
+                <span style="font-size: 11px; color: #64748b; background: white; padding: 2px 6px; border-radius: 4px;">{item["dauer"]}</span>
             </div>
 '''
     
@@ -517,6 +1200,85 @@ def generate_sofort_start_html(
     </div>
 '''
     
+    
+    # Entscheidungsvorlage für Vorgesetzte (Idee #10) - nur für Team/KMU
+    if size_key in ["team", "kmu"]:
+        html += generate_entscheidungsvorlage_html(
+            hauptleistung=hauptleistung,
+            branche=branche_data["name"],
+            company_size=size_key,
+            zeitersparnis_pro_woche=hours_per_week,
+            stundensatz=stundensatz
+        )
+
     log.info(f"[SOFORT-START] Generated for branche={branche_key}, size={size_key}, hauptleistung={hauptleistung[:30] if hauptleistung else 'N/A'}...")
+    
+    return html
+
+
+def generate_entscheidungsvorlage_html(
+    hauptleistung: str,
+    branche: str,
+    company_size: str,
+    zeitersparnis_pro_woche: int = 4,
+    stundensatz: int = 80
+) -> str:
+    """
+    Generiert eine Entscheidungsvorlage für Vorgesetzte (Idee #10).
+    """
+    
+    savings = calculate_yearly_savings(zeitersparnis_pro_woche, stundensatz)
+    
+    html = f'''
+    <div style="background: white; border: 2px solid #1e40af; border-radius: 8px; padding: 20px; margin-top: 24px;">
+        <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 16px 0; color: #1e40af; text-align: center;">
+            📄 Entscheidungsvorlage: KI-Tools einführen
+        </h3>
+        <p style="font-size: 12px; color: #64748b; text-align: center; margin: 0 0 16px 0;">
+            Diese Vorlage können Sie Ihrer Geschäftsführung vorlegen
+        </p>
+        
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 16px;">
+            <h4 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Antrag: Einführung von KI-Assistenz-Tools</h4>
+            
+            <p style="font-size: 13px; margin: 0 0 12px 0;">
+                <strong>Bereich:</strong> {hauptleistung or branche or "Allgemein"}<br>
+                <strong>Beantragt von:</strong> [IHR NAME]<br>
+                <strong>Datum:</strong> [DATUM]
+            </p>
+            
+            <h4 style="font-size: 13px; font-weight: 600; margin: 16px 0 8px 0;">Erwarteter Nutzen:</h4>
+            <ul style="font-size: 13px; margin: 0; padding-left: 20px;">
+                <li>Zeitersparnis: ca. {savings['hours_per_week']} Stunden/Woche</li>
+                <li>Jährliche Ersparnis: ca. {savings['net_savings']:,}€ (netto)</li>
+                <li>Qualitätssteigerung bei Routineaufgaben</li>
+            </ul>
+            
+            <h4 style="font-size: 13px; font-weight: 600; margin: 16px 0 8px 0;">Investition:</h4>
+            <ul style="font-size: 13px; margin: 0; padding-left: 20px;">
+                <li>Tool-Kosten: ca. 20€/Monat pro Nutzer</li>
+                <li>Einarbeitung: ca. 2-4 Stunden</li>
+            </ul>
+            
+            <h4 style="font-size: 13px; font-weight: 600; margin: 16px 0 8px 0;">Risikominimierung:</h4>
+            <ul style="font-size: 13px; margin: 0; padding-left: 20px;">
+                <li>Keine sensiblen Daten in KI-Tools</li>
+                <li>Alle Ergebnisse werden geprüft</li>
+                <li>Testphase von 30 Tagen möglich</li>
+            </ul>
+            
+            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
+                <div>
+                    <p style="font-size: 11px; color: #64748b; margin: 0;">Unterschrift Antragsteller</p>
+                    <div style="border-bottom: 1px solid #1e293b; width: 150px; margin-top: 24px;"></div>
+                </div>
+                <div>
+                    <p style="font-size: 11px; color: #64748b; margin: 0;">Genehmigung</p>
+                    <div style="border-bottom: 1px solid #1e293b; width: 150px; margin-top: 24px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+'''
     
     return html
