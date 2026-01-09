@@ -6062,6 +6062,17 @@
                 </div>
                 {% endif %}
                 <!-- END PAGE 2b -->
+                
+                <!-- ============================================== -->
+                <!-- PAGE 2c: 30-TAGE CHALLENGE                     -->
+                <!-- ============================================== -->
+                {% if CHALLENGE_30_TAGE_HTML and CHALLENGE_30_TAGE_HTML|trim %}
+                <div class="challenge-page" style="padding: var(--space-lg);">
+                    {{ CHALLENGE_30_TAGE_HTML | safe }}
+                </div>
+                {% endif %}
+                <!-- END PAGE 2c -->
+
 
 
                                 <!-- PAGE 3: EXECUTIVE TOC                          -->

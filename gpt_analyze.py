@@ -135,7 +135,7 @@ from services.lang_utils import normalize_lang
 from utils.hotfix_gold_standard import apply_hotfix, UTF8Handler
 from utils.encoding_fixer import clean_briefing_data
 from services.anthropic_client import call_anthropic, should_use_anthropic
-from services.sofort_start_generator import generate_sofort_start_html
+from services.sofort_start_generator import generate_sofort_start_html, generate_30_tage_challenge_html
 from services.guardrails import (
     detect_guardrails_v5,
     format_guardrail_hits_for_context,
@@ -10239,6 +10239,17 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     except Exception as e:
         log.warning("[SOFORT-START] ⚠️ Failed to generate: %s", e)
         sections["SOFORT_START_HTML"] = ""
+    
+    # ========== v14.12: 30-TAGE CHALLENGE (Gamechanger #8) ==========
+    try:
+        sections["CHALLENGE_30_TAGE_HTML"] = generate_30_tage_challenge_html(
+            company_size=sofort_size
+        )
+        log.info("[30-TAGE-CHALLENGE] ✅ Generated")
+    except Exception as e:
+        log.warning("[30-TAGE-CHALLENGE] ⚠️ Failed: %s", e)
+        sections["CHALLENGE_30_TAGE_HTML"] = ""
+
 
 
     # Stunden aus Quick Wins extrahieren

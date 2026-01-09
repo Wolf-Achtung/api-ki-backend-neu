@@ -1282,3 +1282,209 @@ def generate_entscheidungsvorlage_html(
 '''
     
     return html
+
+
+# =============================================================================
+# 30-TAGE CHALLENGE (Idee #8)
+# =============================================================================
+
+CHALLENGE_30_TAGE = {
+    "woche_1": {
+        "titel": "Erste Schritte",
+        "ziel": "KI-Tools kennenlernen und erste Erfolge feiern",
+        "tage": [
+            {"tag": 1, "aufgabe": "ChatGPT oder Claude Account erstellen", "dauer": "10 Min", "kategorie": "Setup"},
+            {"tag": 2, "aufgabe": "Ersten Prompt aus diesem Report testen", "dauer": "15 Min", "kategorie": "Praxis"},
+            {"tag": 3, "aufgabe": "Eine echte E-Mail mit KI formulieren", "dauer": "20 Min", "kategorie": "Praxis"},
+            {"tag": 4, "aufgabe": "Ergebnis mit manueller Version vergleichen", "dauer": "10 Min", "kategorie": "Reflexion"},
+            {"tag": 5, "aufgabe": "Einen Text zusammenfassen lassen", "dauer": "15 Min", "kategorie": "Praxis"},
+            {"tag": 6, "aufgabe": "Brainstorming zu einem aktuellen Thema", "dauer": "20 Min", "kategorie": "Praxis"},
+            {"tag": 7, "aufgabe": "Woche 1 Review: Was hat Zeit gespart?", "dauer": "15 Min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_2": {
+        "titel": "Routinen aufbauen",
+        "ziel": "KI in tägliche Arbeitsabläufe integrieren",
+        "tage": [
+            {"tag": 8, "aufgabe": "Morgen-Routine: Tagesplanung mit KI besprechen", "dauer": "10 Min", "kategorie": "Routine"},
+            {"tag": 9, "aufgabe": "Meeting-Vorbereitung mit KI-Unterstützung", "dauer": "20 Min", "kategorie": "Praxis"},
+            {"tag": 10, "aufgabe": "Komplexe Kundenanfrage analysieren lassen", "dauer": "25 Min", "kategorie": "Praxis"},
+            {"tag": 11, "aufgabe": "Eigene Prompt-Vorlage erstellen und speichern", "dauer": "20 Min", "kategorie": "Optimierung"},
+            {"tag": 12, "aufgabe": "Dokument/Bericht strukturieren lassen", "dauer": "30 Min", "kategorie": "Praxis"},
+            {"tag": 13, "aufgabe": "Feedback zu eigenem Text einholen", "dauer": "15 Min", "kategorie": "Praxis"},
+            {"tag": 14, "aufgabe": "Woche 2 Review: Zeitersparnis dokumentieren", "dauer": "15 Min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_3": {
+        "titel": "Effizienz steigern",
+        "ziel": "Fortgeschrittene Techniken anwenden",
+        "tage": [
+            {"tag": 15, "aufgabe": "Mehrstufigen Prompt testen (Schritt für Schritt)", "dauer": "25 Min", "kategorie": "Fortgeschritten"},
+            {"tag": 16, "aufgabe": "KI als Sparringspartner für Entscheidung nutzen", "dauer": "30 Min", "kategorie": "Praxis"},
+            {"tag": 17, "aufgabe": "Prozess-Dokumentation erstellen lassen", "dauer": "30 Min", "kategorie": "Praxis"},
+            {"tag": 18, "aufgabe": "Zweites KI-Tool testen (z.B. Perplexity)", "dauer": "20 Min", "kategorie": "Exploration"},
+            {"tag": 19, "aufgabe": "Recherche-Aufgabe mit Quellenangaben", "dauer": "30 Min", "kategorie": "Praxis"},
+            {"tag": 20, "aufgabe": "Präsentation/Pitch vorbereiten mit KI", "dauer": "40 Min", "kategorie": "Praxis"},
+            {"tag": 21, "aufgabe": "Woche 3 Review: Beste Use Cases identifizieren", "dauer": "20 Min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_4": {
+        "titel": "Workflow etablieren",
+        "ziel": "Nachhaltige Integration in den Arbeitsalltag",
+        "tage": [
+            {"tag": 22, "aufgabe": "Persönliche Prompt-Bibliothek anlegen", "dauer": "30 Min", "kategorie": "Optimierung"},
+            {"tag": 23, "aufgabe": "Kollegen einen Use Case zeigen", "dauer": "20 Min", "kategorie": "Sharing"},
+            {"tag": 24, "aufgabe": "Komplexes Projekt mit KI-Unterstützung starten", "dauer": "45 Min", "kategorie": "Praxis"},
+            {"tag": 25, "aufgabe": "Qualitätskontrolle: KI-Output kritisch prüfen", "dauer": "20 Min", "kategorie": "Qualität"},
+            {"tag": 26, "aufgabe": "Workflow-Checkliste für wiederkehrende Aufgabe", "dauer": "25 Min", "kategorie": "Optimierung"},
+            {"tag": 27, "aufgabe": "Alternative Formulierungen für gleiche Aufgabe testen", "dauer": "20 Min", "kategorie": "Fortgeschritten"},
+            {"tag": 28, "aufgabe": "Team-Anwendungsfall identifizieren", "dauer": "25 Min", "kategorie": "Scaling"},
+            {"tag": 29, "aufgabe": "ROI der letzten 4 Wochen berechnen", "dauer": "20 Min", "kategorie": "Reflexion"},
+            {"tag": 30, "aufgabe": "Nächste 30 Tage planen: Was wird Standard?", "dauer": "30 Min", "kategorie": "Planung"},
+        ]
+    }
+}
+
+KATEGORIE_ICONS = {
+    "Setup": "⚙️",
+    "Praxis": "💪",
+    "Reflexion": "🔍",
+    "Routine": "🔄",
+    "Optimierung": "⚡",
+    "Fortgeschritten": "🚀",
+    "Exploration": "🔬",
+    "Sharing": "👥",
+    "Qualität": "✅",
+    "Scaling": "📈",
+    "Planung": "📋",
+}
+
+
+def generate_30_tage_challenge_html(company_size: str = "solo") -> str:
+    """
+    Generiert die 30-Tage Challenge als HTML.
+    """
+    
+    html = '''
+    <div style="page-break-before: always;"></div>
+    
+    <!-- 30-TAGE CHALLENGE HEADER -->
+    <div style="text-align: center; margin-bottom: 24px; padding-top: 20px;">
+        <h2 style="font-size: 28px; font-weight: 700; margin: 0 0 8px 0; color: #1e40af;">
+            🏆 Ihre 30-Tage KI-Challenge
+        </h2>
+        <p style="font-size: 16px; color: #64748b; margin: 0;">
+            Von Null auf KI-Profi in 4 Wochen – mit täglichen Micro-Tasks
+        </p>
+    </div>
+    
+    <!-- ÜBERSICHT -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;">
+'''
+    
+    # Wochen-Übersicht
+    wochen_farben = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"]
+    for i, (woche_key, woche_data) in enumerate(CHALLENGE_30_TAGE.items()):
+        farbe = wochen_farben[i]
+        html += f'''
+        <div style="background: {farbe}15; border: 2px solid {farbe}; border-radius: 8px; padding: 12px; text-align: center;">
+            <div style="font-size: 12px; font-weight: 600; color: {farbe}; text-transform: uppercase;">Woche {i+1}</div>
+            <div style="font-size: 14px; font-weight: 700; color: #1e293b; margin: 4px 0;">{woche_data["titel"]}</div>
+            <div style="font-size: 11px; color: #64748b;">{woche_data["ziel"]}</div>
+        </div>
+'''
+    
+    html += '''
+    </div>
+'''
+    
+    # Detaillierte Wochen
+    for i, (woche_key, woche_data) in enumerate(CHALLENGE_30_TAGE.items()):
+        farbe = wochen_farben[i]
+        html += f'''
+    <!-- WOCHE {i+1} -->
+    <div style="margin-bottom: 20px;">
+        <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; color: {farbe}; display: flex; align-items: center; gap: 8px;">
+            <span style="background: {farbe}; color: white; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px;">{i+1}</span>
+            Woche {i+1}: {woche_data["titel"]}
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;">
+'''
+        
+        for tag_data in woche_data["tage"]:
+            icon = KATEGORIE_ICONS.get(tag_data["kategorie"], "📌")
+            html += f'''
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; font-size: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span style="font-weight: 700; color: {farbe};">Tag {tag_data["tag"]}</span>
+                    <span>{icon}</span>
+                </div>
+                <div style="color: #334155; line-height: 1.3; min-height: 36px;">{tag_data["aufgabe"]}</div>
+                <div style="color: #94a3b8; font-size: 9px; margin-top: 4px;">⏱️ {tag_data["dauer"]}</div>
+            </div>
+'''
+        
+        html += '''
+        </div>
+    </div>
+'''
+    
+    # Tracking-Bereich
+    html += '''
+    <!-- ERFOLGS-TRACKING -->
+    <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 8px; padding: 16px; margin-top: 20px;">
+        <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; color: #166534;">
+            📊 Ihr Erfolgs-Tracking
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+            <div style="text-align: center;">
+                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">Woche 1</div>
+                <div style="border: 2px solid #22c55e; border-radius: 8px; padding: 12px; background: white;">
+                    <div style="font-size: 10px; color: #64748b;">Gesparte Zeit:</div>
+                    <div style="font-size: 16px; font-weight: 700; color: #166534;">_____ h</div>
+                </div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">Woche 2</div>
+                <div style="border: 2px solid #22c55e; border-radius: 8px; padding: 12px; background: white;">
+                    <div style="font-size: 10px; color: #64748b;">Gesparte Zeit:</div>
+                    <div style="font-size: 16px; font-weight: 700; color: #166534;">_____ h</div>
+                </div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">Woche 3</div>
+                <div style="border: 2px solid #22c55e; border-radius: 8px; padding: 12px; background: white;">
+                    <div style="font-size: 10px; color: #64748b;">Gesparte Zeit:</div>
+                    <div style="font-size: 16px; font-weight: 700; color: #166534;">_____ h</div>
+                </div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">Woche 4</div>
+                <div style="border: 2px solid #22c55e; border-radius: 8px; padding: 12px; background: white;">
+                    <div style="font-size: 10px; color: #64748b;">Gesparte Zeit:</div>
+                    <div style="font-size: 16px; font-weight: 700; color: #166534;">_____ h</div>
+                </div>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #22c55e;">
+            <span style="font-size: 14px; color: #166534; font-weight: 600;">
+                🎯 Gesamt nach 30 Tagen: _______ Stunden = _______ € gespart
+            </span>
+        </div>
+    </div>
+    
+    <!-- TIPPS -->
+    <div style="background: #eff6ff; border: 1px solid #3b82f6; border-radius: 8px; padding: 12px; margin-top: 16px;">
+        <h4 style="font-size: 13px; font-weight: 600; margin: 0 0 8px 0; color: #1e40af;">💡 Tipps für Ihren Erfolg</h4>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 11px; color: #334155;">
+            <div>✓ Feste Zeit im Kalender blocken</div>
+            <div>✓ Erfolge sofort notieren</div>
+            <div>✓ Bei Problemen: einfacher Prompt</div>
+            <div>✓ Nicht perfekt sein müssen</div>
+            <div>✓ Wochenreview ernst nehmen</div>
+            <div>✓ Mit Kollegen austauschen</div>
+        </div>
+    </div>
+'''
+    
+    return html
