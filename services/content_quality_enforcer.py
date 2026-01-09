@@ -436,7 +436,84 @@ def apply_extended_siezen_guard(sections: dict) -> dict:
 # MASTER FUNCTION: Apply All Quality Enforcers
 # =============================================================================
 
-def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "") -> dict:
+# =============================================================================
+# 5. LOCATION-VALIDATOR: Entfernt falsche Bundesländer aus Förder-Sections
+# =============================================================================
+
+# Alle deutschen Bundesländer
+BUNDESLAENDER = [
+    "Baden-Württemberg", "Bayern", "Berlin", "Brandenburg", "Bremen",
+    "Hamburg", "Hessen", "Mecklenburg-Vorpommern", "Niedersachsen",
+    "Nordrhein-Westfalen", "NRW", "Rheinland-Pfalz", "Saarland", "Sachsen",
+    "Sachsen-Anhalt", "Schleswig-Holstein", "Thüringen"
+]
+
+# Sections wo Location-Check angewendet wird
+LOCATION_CHECK_SECTIONS = [
+    "foerderpotenzial", "FOERDERPOTENZIAL_HTML",
+    "recommendations", "RECOMMENDATIONS_HTML",
+]
+
+def validate_location_in_section(html: str, correct_bundesland: str) -> tuple[str, int]:
+    """
+    Entfernt Referenzen zu falschen Bundesländern.
+    
+    Args:
+        html: HTML content
+        correct_bundesland: Das korrekte Bundesland des Users
+        
+    Returns:
+        tuple: (cleaned_html, removal_count)
+    """
+    if not html or not correct_bundesland:
+        return html, 0
+    
+    removals = 0
+    result = html
+    correct_lower = correct_bundesland.lower()
+    
+    for bundesland in BUNDESLAENDER:
+        # Skip wenn es das korrekte Bundesland ist
+        if bundesland.lower() == correct_lower:
+            continue
+        if bundesland.lower() == "nrw" and "nordrhein" in correct_lower:
+            continue
+        if "nordrhein" in bundesland.lower() and correct_lower == "nrw":
+            continue
+        
+        # Suche nach dem falschen Bundesland
+        pattern = rf'\b{re.escape(bundesland)}\b'
+        matches = list(re.finditer(pattern, result, re.IGNORECASE))
+        if matches:
+            # Ersetze durch "Ihr Bundesland" oder entferne den Satz
+            result = re.sub(pattern, "Ihr Bundesland", result, flags=re.IGNORECASE)
+            removals += len(matches)
+            log.warning(f"[LOCATION-VALIDATOR] Removed wrong Bundesland '{bundesland}' (correct: {correct_bundesland})")
+    
+    return result, removals
+
+def apply_location_validator(sections: dict, bundesland: str) -> dict:
+    """
+    Wendet Location-Validierung auf relevante Sections an.
+    """
+    if not bundesland:
+        log.debug("[LOCATION-VALIDATOR] No bundesland provided, skipping")
+        return sections
+    
+    total_removals = 0
+    
+    for key in LOCATION_CHECK_SECTIONS:
+        if key in sections and sections[key]:
+            fixed, count = validate_location_in_section(sections[key], bundesland)
+            if count > 0:
+                sections[key] = fixed
+                total_removals += count
+                log.info(f"[LOCATION-VALIDATOR] {key}: {count} wrong Bundesland references removed")
+    
+    log.info(f"[LOCATION-VALIDATOR] Complete: {total_removals} total removals")
+    return sections
+def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesland: str = "") -> dict:
+
     """
     Wendet alle Quality Enforcer in der richtigen Reihenfolge an.
     
@@ -445,6 +522,7 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "") -> dict
     2. Fragment-Repair (repariert unvollständige Sätze)
     3. Extended Siezen (erweiterte du→Sie)
     4. hauptleistung-Enforcer (injiziert fehlende hauptleistung)
+    5. Location-Validator (entfernt falsche Bundesländer)
     
     Args:
         sections: Dict mit allen Report-Sections
@@ -468,5 +546,9 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "") -> dict
     if hauptleistung:
         sections = apply_hauptleistung_enforcer(sections, hauptleistung)
     
+    
+    # 5. Location-Validator
+    if bundesland:
+        sections = apply_location_validator(sections, bundesland)
     log.info("[QUALITY-ENFORCER] Pipeline complete")
     return sections
