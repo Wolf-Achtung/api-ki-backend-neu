@@ -247,6 +247,28 @@ def inject_hauptleistung_executive(html: str, hauptleistung: str, current_count:
         # "Ihr Geschäftsmodell" → "Ihr Geschäftsmodell ({hauptleistung})"
         (r'\b(Ihr(?:em?)?\s+Geschäftsmodell)\b(?!\s*\()',
          f'Ihr Geschäftsmodell ({hauptleistung})'),
+        
+        # Weitere universelle Synonyme (alle Größen)
+        (r'\b(Ihre[rn]?\s+Dienstleistung(?:en)?)\b',
+         hauptleistung),
+        
+        (r'\b(Ihr(?:em?)?\s+Angebot)\b(?!\s*\()',
+         f'Ihr Angebot ({hauptleistung})'),
+        
+        (r'\b(dieses\s+Angebot)\b',
+         hauptleistung),
+        
+        (r'\b(Ihre[rn]?\s+Tätigkeit)\b(?!\s*\()',
+         f'Ihre Tätigkeit ({hauptleistung})'),
+        
+        (r'\b(Ihr(?:em?)?\s+Service)\b',
+         hauptleistung),
+        
+        (r'\b(diese[rn]?\s+Service[s]?)\b',
+         hauptleistung),
+        
+        (r'\b(Ihre[rn]?\s+Leistung(?:en)?)\b',
+         hauptleistung),
     ]
     
     for pattern, replacement in injection_patterns:
