@@ -508,7 +508,8 @@ def apply_grammar_fixes(html: str) -> tuple[str, int]:
         if callable(replacement):
             new_result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
         else:
-            new_result = re.sub(pattern, replacement, result)
+            # Type assertion for mypy: replacement is str here
+            new_result = re.sub(pattern, str(replacement), result)
         if new_result != result:
             fixes += 1
             result = new_result
