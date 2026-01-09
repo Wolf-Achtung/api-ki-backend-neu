@@ -11961,7 +11961,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
                 f"This AI Readiness Report analyzes your current AI maturity ({overall_score}/100 = {score_rating}) "
                 f"and provides actionable recommendations for {company_size}. "
                 f"Focus areas: Security, Efficiency, and Funding opportunities. "
-                f"Expected ROI: {roi_12m:.0f}% after 12 months with {'quick' if payback_months and payback_months < 6 else 'realistic'} payback."
+                f"ROI details and payback analysis are provided in the Business Case."
             )
             decisions = [
                 "Start with 1 Quick Win within 14 days to validate AI benefits",
@@ -11973,7 +11973,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
                 f"Dieser KI-Readiness-Report analysiert Ihren aktuellen KI-Reifegrad ({overall_score}/100 = {score_rating}) "
                 f"und liefert konkrete Handlungsempfehlungen für {company_size}. "
                 f"Schwerpunkte: Sicherheit, Effizienz und Förderpotenziale. "
-                f"Erwarteter ROI: {roi_12m:.0f}% nach 12 Monaten bei {'schnellem' if payback_months and payback_months < 6 else 'realistischem'} Payback."
+                f"ROI-Details und Payback-Analyse finden Sie im Business Case."
             )
             decisions = [
                 "Starten Sie mit 1 Quick Win innerhalb von 14 Tagen zur KI-Validierung",
