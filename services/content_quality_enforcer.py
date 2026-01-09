@@ -1,0 +1,447 @@
+"""
+Content Quality Enforcer v1.0
+=============================
+Post-Processing Safety Net für Report-Qualität.
+
+Fixes:
+1. ROI-Filter: Entfernt ROI% außerhalb Business Case
+2. Fragment-Repair: Repariert unvollständige Sätze
+3. hauptleistung-Enforcer: Injiziert hauptleistung wenn unter Minimum
+
+Wird nach SIEZEN-GUARD aufgerufen, vor Validation.
+"""
+
+import re
+import logging
+
+log = logging.getLogger(__name__)
+
+# =============================================================================
+# 1. ROI-FILTER: Entfernt ROI-Prozentsätze außerhalb Business Case
+# =============================================================================
+
+ROI_PATTERNS = [
+    # Explizite ROI-Prozentsätze
+    r'\b(\d{2,3})\s*%?\s*ROI\b',           # "284% ROI" oder "284 ROI"
+    r'\bROI\s*(?:von|of|:)?\s*(\d{2,3})\s*%',  # "ROI von 284%" oder "ROI: 284%"
+    r'\bROI\s*(\d{2,3})\s*%',              # "ROI 284%"
+    r'ERWARTETER\s+ROI\s*:?\s*(\d{2,3})\s*%',  # "ERWARTETER ROI: 284%"
+    # Rendite-Varianten
+    r'\bRendite\s*(?:von)?\s*(\d{2,3})\s*%',
+    # Standalone hohe Prozentsätze im ROI-Kontext (vorsichtig)
+    r'(?:ROI|Rendite|Return)[^.]{0,30}(\d{2,3})\s*%',
+]
+
+# Sections wo ROI ERLAUBT ist
+ROI_ALLOWED_SECTIONS = [
+    "BUSINESS_CASE_HTML", "business_case",
+    "ROI_HTML", "business_roi",
+    "BUSINESS_CASE_TABLE_HTML", "business_case_table_html",
+    "BUSINESS_CASE_ENGINE_HTML",
+    "BUSINESS_CASE_SIM_HTML",
+]
+
+def remove_roi_from_section(html: str, section_name: str) -> tuple[str, int]:
+    """
+    Entfernt ROI-Prozentsätze aus einer Section.
+    
+    Returns:
+        tuple: (cleaned_html, removal_count)
+    """
+    if not html or len(html) < 50:
+        return html, 0
+    
+    # Skip wenn ROI erlaubt
+    if any(allowed in section_name for allowed in ROI_ALLOWED_SECTIONS):
+        return html, 0
+    
+    removal_count = 0
+    result = html
+    
+    for pattern in ROI_PATTERNS:
+        matches = list(re.finditer(pattern, result, re.IGNORECASE))
+        for match in reversed(matches):  # Reverse um Indizes stabil zu halten
+            # Ersetze mit Verweis auf Business Case
+            replacement = "→ siehe Business Case"
+            result = result[:match.start()] + replacement + result[match.end():]
+            removal_count += 1
+            log.info(f"[ROI-FILTER] {section_name}: Removed '{match.group()}' → '{replacement}'")
+    
+    return result, removal_count
+
+
+def apply_roi_filter(sections: dict) -> dict:
+    """
+    Wendet ROI-Filter auf alle relevanten Sections an.
+    """
+    total_removed = 0
+    
+    # Sections die geprüft werden sollen
+    check_sections = [
+        "EXECUTIVE_SUMMARY_HTML", "executive_summary",
+        "RECOMMENDATIONS_HTML", "recommendations", 
+        "GAMECHANGER_HTML", "gamechanger",
+        "QUICK_WINS_HTML", "quick_wins",
+        "HERO_HTML", "hero",
+        "ROADMAP_90D_HTML", "roadmap_90d",
+        "ROADMAP_12M_HTML", "roadmap_12m",
+        "FOERDERPOTENZIAL_HTML", "foerderpotenzial",
+        "ORG_CHANGE_HTML", "org_change",
+        "RISKS_HTML", "risks",
+    ]
+    
+    for key in check_sections:
+        if key in sections and sections[key]:
+            cleaned, count = remove_roi_from_section(sections[key], key)
+            if count > 0:
+                sections[key] = cleaned
+                total_removed += count
+    
+    log.info(f"[ROI-FILTER] Complete: {total_removed} ROI references removed")
+    return sections
+
+
+# =============================================================================
+# 2. FRAGMENT-REPAIR: Repariert unvollständige Sätze
+# =============================================================================
+
+FRAGMENT_PATTERNS = [
+    # "Maßnahme: Einrichten eines." → unvollständig
+    (r'Maßnahme:\s*[A-ZÄÖÜ][a-zäöüß]+\s+eine[sr]?\s*\.', 
+     'Maßnahme: Siehe detaillierte Beschreibung in der Roadmap.'),
+    
+    # "Maßnahme:." → leer
+    (r'Maßnahme:\s*\.', 
+     'Maßnahme: Siehe Roadmap für konkrete Schritte.'),
+    
+    # "Implementieren von." → unvollständig
+    (r'Implementieren\s+von\s*\.', 
+     'Implementieren der empfohlenen KI-Lösung.'),
+    
+    # "Aufbau einer." → unvollständig
+    (r'Aufbau\s+eine[rs]?\s*\.', 
+     'Aufbau einer strukturierten KI-Governance.'),
+    
+    # "Erstellung eines." → unvollständig
+    (r'Erstellung\s+eine[sr]?\s*\.', 
+     'Erstellung eines Pilotprojekt-Plans.'),
+    
+    # "Einrichten eines." → unvollständig
+    (r'Einrichten\s+eine[sr]?\s*\.', 
+     'Einrichten eines standardisierten Workflows.'),
+    
+    # "Integration von." → unvollständig
+    (r'Integration\s+von\s*\.', 
+     'Integration der KI-Tools in bestehende Prozesse.'),
+    
+    # "Entwicklung einer." → unvollständig
+    (r'Entwicklung\s+eine[rs]?\s*\.', 
+     'Entwicklung einer KI-Strategie.'),
+    
+    # Generische Fragment-Erkennung: Satz endet mit Artikel
+    (r'([A-ZÄÖÜ][^.!?]{10,50})\s+(eines|einer|einem|von|für|zur|zum)\s*\.', 
+     r'\1 – siehe Roadmap für Details.'),
+]
+
+def repair_fragments_in_section(html: str, section_name: str) -> tuple[str, int]:
+    """
+    Repariert Fragment-Sätze in einer Section.
+    
+    Returns:
+        tuple: (repaired_html, repair_count)
+    """
+    if not html or len(html) < 50:
+        return html, 0
+    
+    repair_count = 0
+    result = html
+    
+    for pattern, replacement in FRAGMENT_PATTERNS:
+        matches = list(re.finditer(pattern, result, re.IGNORECASE))
+        if matches:
+            result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
+            repair_count += len(matches)
+            for match in matches:
+                log.info(f"[FRAGMENT-REPAIR] {section_name}: Fixed '{match.group()[:50]}...'")
+    
+    return result, repair_count
+
+
+def apply_fragment_repair(sections: dict) -> dict:
+    """
+    Wendet Fragment-Repair auf alle relevanten Sections an.
+    """
+    total_repaired = 0
+    
+    # Sections die geprüft werden sollen
+    check_sections = [
+        "RECOMMENDATIONS_HTML", "recommendations",
+        "QUICK_WINS_HTML", "quick_wins",
+        "ROADMAP_90D_HTML", "roadmap_90d",
+        "ROADMAP_12M_HTML", "roadmap_12m",
+        "GAMECHANGER_HTML", "gamechanger",
+        "ORG_CHANGE_HTML", "org_change",
+    ]
+    
+    for key in check_sections:
+        if key in sections and sections[key]:
+            repaired, count = repair_fragments_in_section(sections[key], key)
+            if count > 0:
+                sections[key] = repaired
+                total_repaired += count
+    
+    log.info(f"[FRAGMENT-REPAIR] Complete: {total_repaired} fragments repaired")
+    return sections
+
+
+# =============================================================================
+# 3. HAUPTLEISTUNG-ENFORCER: Injiziert hauptleistung wenn unter Minimum
+# =============================================================================
+
+def count_hauptleistung(html: str, hauptleistung: str) -> int:
+    """Zählt Vorkommen von hauptleistung in HTML."""
+    if not html or not hauptleistung:
+        return 0
+    # Case-insensitive Suche
+    return len(re.findall(re.escape(hauptleistung), html, re.IGNORECASE))
+
+
+def inject_hauptleistung_executive(html: str, hauptleistung: str, current_count: int, target: int = 4) -> str:
+    """
+    Injiziert hauptleistung in Executive Summary wenn unter Minimum.
+    
+    Strategy:
+    - Ersetzt generische Phrasen durch hauptleistung-Version
+    - Priorisiert wichtige Stellen
+    """
+    if current_count >= target:
+        return html
+    
+    needed = target - current_count
+    injections_made = 0
+    result = html
+    
+    # Injection-Patterns (von spezifisch zu generisch)
+    injection_patterns = [
+        # "Ihr Unternehmen" → "Ihr Unternehmen mit {hauptleistung}"
+        (r'\b(Ihr(?:em?)?\s+Unternehmen)\b(?!\s+mit)', 
+         f'Ihr Unternehmen mit {hauptleistung}'),
+        
+        # "Ihr Kerngeschäft" → hauptleistung direkt
+        (r'\b(Ihr(?:em?)?\s+Kerngeschäft)\b',
+         hauptleistung),
+        
+        # "diese Leistung" → hauptleistung
+        (r'\b(diese[r]?\s+Leistung)\b',
+         hauptleistung),
+        
+        # "Ihr Geschäftsmodell" → "Ihr Geschäftsmodell ({hauptleistung})"
+        (r'\b(Ihr(?:em?)?\s+Geschäftsmodell)\b(?!\s*\()',
+         f'Ihr Geschäftsmodell ({hauptleistung})'),
+    ]
+    
+    for pattern, replacement in injection_patterns:
+        if injections_made >= needed:
+            break
+        match = re.search(pattern, result, re.IGNORECASE)
+        if match:
+            result = re.sub(pattern, replacement, result, count=1, flags=re.IGNORECASE)
+            injections_made += 1
+            log.info(f"[HAUPTLEISTUNG-ENFORCER] Executive: Injected at '{match.group()[:30]}...'")
+    
+    return result
+
+
+def inject_hauptleistung_recommendations(html: str, hauptleistung: str, current_count: int, target: int = 3) -> str:
+    """
+    Injiziert hauptleistung in Recommendations wenn unter Minimum.
+    """
+    if current_count >= target:
+        return html
+    
+    needed = target - current_count
+    injections_made = 0
+    result = html
+    
+    # Injection-Patterns für Recommendations
+    injection_patterns = [
+        # "Für Ihr Geschäftsmodell" → "Für Ihr Geschäftsmodell {hauptleistung}"
+        (r'\b(Für\s+Ihr(?:em?)?\s+Geschäftsmodell)\b(?!\s+' + re.escape(hauptleistung) + ')',
+         f'Für Ihr Geschäftsmodell {hauptleistung}'),
+        
+        # "Ihre Dienstleistung" → hauptleistung
+        (r'\b(Ihre[r]?\s+Dienstleistung(?:en)?)\b',
+         hauptleistung),
+        
+        # "diesen Bereich" → hauptleistung  
+        (r'\b(diesen\s+Bereich)\b',
+         hauptleistung),
+        
+        # "Ihren Prozessen" → "Ihren {hauptleistung}-Prozessen"
+        (r'\b(Ihren\s+Prozessen)\b',
+         f'Ihren {hauptleistung}-Prozessen'),
+    ]
+    
+    for pattern, replacement in injection_patterns:
+        if injections_made >= needed:
+            break
+        match = re.search(pattern, result, re.IGNORECASE)
+        if match:
+            result = re.sub(pattern, replacement, result, count=1, flags=re.IGNORECASE)
+            injections_made += 1
+            log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: Injected at '{match.group()[:30]}...'")
+    
+    return result
+
+
+def apply_hauptleistung_enforcer(sections: dict, hauptleistung: str) -> dict:
+    """
+    Enforced hauptleistung Minimum in Executive Summary und Recommendations.
+    """
+    if not hauptleistung or len(hauptleistung) < 3:
+        log.warning("[HAUPTLEISTUNG-ENFORCER] No hauptleistung provided, skipping")
+        return sections
+    
+    # Executive Summary: Minimum 4x
+    for key in ["EXECUTIVE_SUMMARY_HTML", "executive_summary", "EXEC_SUMMARY_HTML"]:
+        if key in sections and sections[key]:
+            current = count_hauptleistung(sections[key], hauptleistung)
+            if current < 4:
+                log.info(f"[HAUPTLEISTUNG-ENFORCER] {key}: {current}/4 → enforcing")
+                sections[key] = inject_hauptleistung_executive(
+                    sections[key], hauptleistung, current, target=4
+                )
+                new_count = count_hauptleistung(sections[key], hauptleistung)
+                log.info(f"[HAUPTLEISTUNG-ENFORCER] {key}: Now {new_count}/4")
+    
+    # Recommendations: Minimum 3x
+    for key in ["RECOMMENDATIONS_HTML", "recommendations"]:
+        if key in sections and sections[key]:
+            current = count_hauptleistung(sections[key], hauptleistung)
+            if current < 3:
+                log.info(f"[HAUPTLEISTUNG-ENFORCER] {key}: {current}/3 → enforcing")
+                sections[key] = inject_hauptleistung_recommendations(
+                    sections[key], hauptleistung, current, target=3
+                )
+                new_count = count_hauptleistung(sections[key], hauptleistung)
+                log.info(f"[HAUPTLEISTUNG-ENFORCER] {key}: Now {new_count}/3")
+    
+    return sections
+
+
+# =============================================================================
+# 4. SIEZEN-GUARD EXTENSION: Erweiterte du→Sie Patterns
+# =============================================================================
+
+EXTENDED_SIEZEN_PATTERNS = [
+    # Possessive "dein/deine"
+    (r'\b[Dd]eine([rsmn]?)\b', r'Ihre\1'),
+    (r'\b[Dd]einem\b', 'Ihrem'),
+    (r'\b[Dd]einen\b', 'Ihren'),
+    
+    # "Du bist" → "Sie sind"
+    (r'\b[Dd]u\s+bist\b', 'Sie sind'),
+    (r'\b[Dd]u\s+hast\b', 'Sie haben'),
+    (r'\b[Dd]u\s+kannst\b', 'Sie können'),
+    (r'\b[Dd]u\s+solltest\b', 'Sie sollten'),
+    (r'\b[Dd]u\s+musst\b', 'Sie müssen'),
+    (r'\b[Dd]u\s+wirst\b', 'Sie werden'),
+    
+    # Standalone "dir/dich"
+    (r'\b[Dd]ir\b', 'Ihnen'),
+    (r'\b[Dd]ich\b', 'Sie'),
+    
+    # "für dich" → "für Sie"
+    (r'\bfür\s+dich\b', 'für Sie'),
+    (r'\bvon\s+dir\b', 'von Ihnen'),
+    (r'\bbei\s+dir\b', 'bei Ihnen'),
+    (r'\bmit\s+dir\b', 'mit Ihnen'),
+]
+
+def apply_extended_siezen(html: str) -> tuple[str, int]:
+    """
+    Erweiterte du→Sie Konvertierung für Fälle die der Standard-Guard verpasst.
+    """
+    if not html:
+        return html, 0
+    
+    replacements = 0
+    result = html
+    
+    for pattern, replacement in EXTENDED_SIEZEN_PATTERNS:
+        matches = len(re.findall(pattern, result))
+        if matches > 0:
+            result = re.sub(pattern, replacement, result)
+            replacements += matches
+    
+    return result, replacements
+
+
+def apply_extended_siezen_guard(sections: dict) -> dict:
+    """
+    Wendet erweiterte Siezen-Patterns auf alle Text-Sections an.
+    """
+    total_fixed = 0
+    
+    check_sections = [
+        "EXECUTIVE_SUMMARY_HTML", "RECOMMENDATIONS_HTML", "QUICK_WINS_HTML",
+        "ROADMAP_90D_HTML", "ROADMAP_12M_HTML", "GAMECHANGER_HTML",
+        "FOERDERPOTENZIAL_HTML", "RISKS_HTML", "ORG_CHANGE_HTML",
+        "KI_SKILLPLAN_HTML", "TEMPLATES_START_HTML", "KICKOFF_VORLAGE_HTML",
+        "ROI_TRACKING_HTML", "PROMPT_FRAMEWORK_HTML",
+    ]
+    
+    for key in check_sections:
+        if key in sections and sections[key]:
+            fixed, count = apply_extended_siezen(sections[key])
+            if count > 0:
+                sections[key] = fixed
+                total_fixed += count
+                # Update lowercase alias
+                lower_key = key.replace("_HTML", "").lower()
+                if lower_key in sections:
+                    sections[lower_key] = fixed
+                log.info(f"[EXTENDED-SIEZEN] {key}: {count} additional fixes")
+    
+    log.info(f"[EXTENDED-SIEZEN] Complete: {total_fixed} additional du→Sie fixes")
+    return sections
+
+
+# =============================================================================
+# MASTER FUNCTION: Apply All Quality Enforcers
+# =============================================================================
+
+def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "") -> dict:
+    """
+    Wendet alle Quality Enforcer in der richtigen Reihenfolge an.
+    
+    Order:
+    1. ROI-Filter (entfernt verbotene ROI-Werte)
+    2. Fragment-Repair (repariert unvollständige Sätze)
+    3. Extended Siezen (erweiterte du→Sie)
+    4. hauptleistung-Enforcer (injiziert fehlende hauptleistung)
+    
+    Args:
+        sections: Dict mit allen Report-Sections
+        hauptleistung: Das Kerngeschäft des Users
+        
+    Returns:
+        sections: Bereinigtes Dict
+    """
+    log.info("[QUALITY-ENFORCER] Starting quality enforcement pipeline...")
+    
+    # 1. ROI-Filter
+    sections = apply_roi_filter(sections)
+    
+    # 2. Fragment-Repair
+    sections = apply_fragment_repair(sections)
+    
+    # 3. Extended Siezen
+    sections = apply_extended_siezen_guard(sections)
+    
+    # 4. hauptleistung-Enforcer
+    if hauptleistung:
+        sections = apply_hauptleistung_enforcer(sections, hauptleistung)
+    
+    log.info("[QUALITY-ENFORCER] Pipeline complete")
+    return sections
