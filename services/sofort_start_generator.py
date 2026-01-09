@@ -1028,7 +1028,7 @@ def generate_sofort_start_html(
     tools = TOOL_EMPFEHLUNGEN.get(size_key, TOOL_EMPFEHLUNGEN["solo"])
     
     # Zeitersparnis berechnen
-    hours_per_week = branche_data.get("zeitersparnis_pro_woche", 4)
+    hours_per_week = int(branche_data.get("zeitersparnis_pro_woche", 4))
     savings = calculate_yearly_savings(hours_per_week, stundensatz)
     
     # Personalisiere den ersten Schritt
@@ -1090,7 +1090,8 @@ def generate_sofort_start_html(
 '''
     
     # Prompts hinzufügen
-    for i, prompt_data in enumerate(branche_data["prompts"], 1):
+    prompts_list = list(branche_data["prompts"])  # type: ignore[arg-type]
+    for i, prompt_data in enumerate(prompts_list, 1):
         prompt_text = prompt_data["prompt"][:400] + "..." if len(prompt_data["prompt"]) > 400 else prompt_data["prompt"]
         html += f'''
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px;">
@@ -1209,9 +1210,9 @@ def generate_sofort_start_html(
     if size_key in ["team", "kmu"]:
         html += generate_entscheidungsvorlage_html(
             hauptleistung=hauptleistung,
-            branche=branche_data["name"],
+            branche=str(branche_data["name"]),
             company_size=size_key,
-            zeitersparnis_pro_woche=hours_per_week,
+            zeitersparnis_pro_woche=int(hours_per_week),
             stundensatz=stundensatz
         )
 
@@ -1415,8 +1416,8 @@ def generate_30_tage_challenge_html(company_size: str = "solo") -> str:
         <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;">
 '''
         
-        for tag_data in woche_data["tage"]:
-            icon = KATEGORIE_ICONS.get(tag_data["kategorie"], "📌")
+        for tag_data in woche_data["tage"]:  # type: ignore[index]
+            icon = KATEGORIE_ICONS.get(tag_data["kategorie"], "📌")  # type: ignore[index]
             html += f'''
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; font-size: 10px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
@@ -1672,9 +1673,9 @@ def generate_30_tage_challenge_html_v2(
         <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;">
 '''
         
-        for tag_data in woche_data["tage"]:
-            is_prio = tag_data.get("prio", False)
-            is_pause = "Pause" in tag_data.get("aufgabe", "")
+        for tag_data in woche_data["tage"]:  # type: ignore[index]
+            is_prio = tag_data.get("prio", False)  # type: ignore[attr-defined]
+            is_pause = "Pause" in tag_data.get("aufgabe", "")  # type: ignore[attr-defined]
             
             if is_pause:
                 bg_color = "#f1f5f9"
@@ -1932,7 +1933,7 @@ def generate_fallstudie_html(branche: str) -> str:
     Generiert eine branchenspezifische Fallstudie.
     """
     branche_key = get_branche_key(branche)
-    fallstudie = FALLSTUDIEN.get(branche_key, FALLSTUDIEN["default"])
+    fallstudie = FALLSTUDIEN.get(branche_key, FALLSTUDIEN["default"])  # type: ignore[index]
     
     html = f'''
     <!-- FALLSTUDIE -->
