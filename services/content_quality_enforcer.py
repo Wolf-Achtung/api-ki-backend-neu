@@ -269,8 +269,27 @@ def inject_hauptleistung_executive(html: str, hauptleistung: str, current_count:
         
         (r'\b(Ihre[rn]?\s+Leistung(?:en)?)\b',
          hauptleistung),
+        
+        # Aggressive Patterns für mehr Treffer
+        (r'\b(KI-Einsatz)\b(?!\s+für)',
+         f'KI-Einsatz für {hauptleistung}'),
+        
+        (r'\b(Ihrer?\s+Branche)\b(?!\s*\()',
+         f'Ihrer Branche ({hauptleistung})'),
+        
+        (r'\b(Ihrem?\s+Bereich)\b',
+         f'Ihrem Bereich {hauptleistung}'),
+        
+        (r'\b(diesen?\s+Bereich)\b',
+         hauptleistung),
+        
+        (r'\b(Ihr(?:em?)?\s+Betrieb)\b',
+         f'Ihr Betrieb ({hauptleistung})'),
+        
+        (r'\b(diese[rn]?\s+Tätigkeit)\b',
+         hauptleistung),
+
     ]
-    
     for pattern, replacement in injection_patterns:
         if injections_made >= needed:
             break
@@ -554,6 +573,10 @@ BUNDESLAENDER = [
 LOCATION_CHECK_SECTIONS = [
     "foerderpotenzial", "FOERDERPOTENZIAL_HTML",
     "recommendations", "RECOMMENDATIONS_HTML",
+    "quick_wins", "QUICK_WINS_HTML",
+    "tools_section", "TOOLS_SECTION_HTML",
+    "starter_kits", "STARTER_KITS_HTML",
+    "kosten_uebersicht", "KOSTEN_UEBERSICHT_HTML",
 ]
 
 def validate_location_in_section(html: str, correct_bundesland: str) -> tuple[str, int]:
