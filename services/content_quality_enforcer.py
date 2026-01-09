@@ -365,6 +365,22 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'\bvon\s+dir\b', 'von Ihnen'),
     (r'\bbei\s+dir\b', 'bei Ihnen'),
     (r'\bmit\s+dir\b', 'mit Ihnen'),
+    
+    # =========================================
+    # IMPERATIVE (Du-Form → Sie-Form)
+    # =========================================
+    # Am Satzanfang oder nach Aufzählungszeichen
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Lerne\b', r'\1Lernen Sie'),
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Nutze\b', r'\1Nutzen Sie'),
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Teste\b', r'\1Testen Sie'),
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Baue\b', r'\1Bauen Sie'),
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Entwickle\b', r'\1Entwickeln Sie'),
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Prüfe\b', r'\1Prüfen Sie'),
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Erstelle\b', r'\1Erstellen Sie'),
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Starte\b', r'\1Starten Sie'),
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Plane\b', r'\1Planen Sie'),
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Überlege\b', r'\1Überlegen Sie'),
+
 ]
 
 def apply_extended_siezen(html: str) -> tuple[str, int]:
