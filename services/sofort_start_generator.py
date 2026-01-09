@@ -1201,6 +1201,10 @@ def generate_sofort_start_html(
 '''
     
     
+    
+    # Branchen-Fallstudie (Idee #5)
+    html += generate_fallstudie_html(branche)
+
     # Entscheidungsvorlage für Vorgesetzte (Idee #10) - nur für Team/KMU
     if size_key in ["team", "kmu"]:
         html += generate_entscheidungsvorlage_html(
@@ -1726,6 +1730,262 @@ def generate_30_tage_challenge_html_v2(
             <span style="font-size: 14px; color: #166534; font-weight: 600;">
                 🎯 Gesamt nach 30 Tagen: _______ Stunden = _______ € gespart
             </span>
+        </div>
+    </div>
+'''
+    
+    return html
+
+
+# =============================================================================
+# BRANCHEN-FALLSTUDIEN (Idee #5)
+# =============================================================================
+
+FALLSTUDIEN = {
+    "beratung": {
+        "titel": "Unternehmensberater spart 12 Stunden pro Woche",
+        "unternehmen": "Solo-Berater, Strategieberatung",
+        "ausgangslage": "Aufwändige Angebotserstellung (4h pro Angebot), zeitintensive Meeting-Protokolle, repetitive E-Mail-Korrespondenz",
+        "loesung": "ChatGPT Plus für Angebote, Protokolle und E-Mails",
+        "ergebnis": {
+            "zeitersparnis": "12 Stunden/Woche",
+            "kosteneinsparung": "~4.800 €/Monat",
+            "qualitaet": "Konsistentere Angebote, schnellere Reaktionszeit"
+        },
+        "zitat": "Ich kann jetzt doppelt so viele Anfragen bearbeiten – ohne Qualitätsverlust.",
+        "dauer_bis_roi": "2 Wochen"
+    },
+    "it": {
+        "titel": "IT-Freelancer automatisiert Code-Reviews",
+        "unternehmen": "Freelance Entwickler, Web-Anwendungen",
+        "ausgangslage": "Zeitaufwändige Code-Reviews, repetitive Dokumentation, Support-Anfragen",
+        "loesung": "ChatGPT für Code-Review, Dokumentation und technischen Support",
+        "ergebnis": {
+            "zeitersparnis": "15 Stunden/Woche",
+            "kosteneinsparung": "~6.000 €/Monat",
+            "qualitaet": "Weniger Bugs, bessere Dokumentation"
+        },
+        "zitat": "Die KI findet Bugs, die ich übersehen hätte. Meine Code-Qualität ist messbar gestiegen.",
+        "dauer_bis_roi": "1 Woche"
+    },
+    "marketing": {
+        "titel": "Marketing-Agentur verdreifacht Content-Output",
+        "unternehmen": "Kleine Agentur, 5 Mitarbeiter",
+        "ausgangslage": "Hoher Zeitdruck bei Social Media, Newsletter dauern zu lange, Ideenfindung stockt",
+        "loesung": "ChatGPT Team + Midjourney für Content-Erstellung",
+        "ergebnis": {
+            "zeitersparnis": "25 Stunden/Woche (Team)",
+            "kosteneinsparung": "~5.000 €/Monat",
+            "qualitaet": "3x mehr Content bei gleicher Teamgröße"
+        },
+        "zitat": "Wir haben keinen Mitarbeiter eingestellt, sondern KI. Beste Entscheidung.",
+        "dauer_bis_roi": "3 Wochen"
+    },
+    "handel": {
+        "titel": "Online-Shop optimiert 500 Produkttexte",
+        "unternehmen": "E-Commerce, Haushaltsartikel",
+        "ausgangslage": "Generische Produktbeschreibungen, schlechte SEO-Rankings, hohe Retourenquote",
+        "loesung": "ChatGPT für SEO-optimierte Produkttexte + Kundenservice",
+        "ergebnis": {
+            "zeitersparnis": "20 Stunden/Woche",
+            "kosteneinsparung": "~3.200 €/Monat",
+            "qualitaet": "+40% organischer Traffic, -15% Retouren"
+        },
+        "zitat": "Unsere Produktseiten ranken jetzt auf Seite 1. Der ROI war nach einem Monat erreicht.",
+        "dauer_bis_roi": "4 Wochen"
+    },
+    "finanzen": {
+        "titel": "Finanzberater automatisiert Kundenreports",
+        "unternehmen": "Unabhängiger Finanzberater",
+        "ausgangslage": "Zeitintensive Kundenberichte, repetitive Analysen, viele Standardanfragen",
+        "loesung": "ChatGPT für Report-Erstellung und Kundenkorrespondenz",
+        "ergebnis": {
+            "zeitersparnis": "8 Stunden/Woche",
+            "kosteneinsparung": "~3.500 €/Monat",
+            "qualitaet": "Professionellere Reports, schnellere Reaktion"
+        },
+        "zitat": "Meine Kunden bekommen jetzt Reports am gleichen Tag statt nach einer Woche.",
+        "dauer_bis_roi": "2 Wochen"
+    },
+    "bildung": {
+        "titel": "Trainer erstellt Kursmaterial in halber Zeit",
+        "unternehmen": "Freiberuflicher Trainer, IT-Schulungen",
+        "ausgangslage": "Aufwändige Materialerstellung, individuelle Übungsaufgaben, Feedback schreiben",
+        "loesung": "ChatGPT für Kursmaterial, Übungen und Teilnehmer-Feedback",
+        "ergebnis": {
+            "zeitersparnis": "10 Stunden/Woche",
+            "kosteneinsparung": "~2.400 €/Monat",
+            "qualitaet": "Aktuelleres Material, individuellere Übungen"
+        },
+        "zitat": "Ich kann jetzt mehr Kurse anbieten, weil die Vorbereitung so viel schneller geht.",
+        "dauer_bis_roi": "2 Wochen"
+    },
+    "gesundheit": {
+        "titel": "Physiotherapie-Praxis optimiert Dokumentation",
+        "unternehmen": "Praxis mit 3 Therapeuten",
+        "ausgangslage": "Zeitaufwändige Befundberichte, repetitive Übungsanleitungen, Terminkoordination",
+        "loesung": "ChatGPT für Befunde und Patientenanleitungen",
+        "ergebnis": {
+            "zeitersparnis": "6 Stunden/Woche",
+            "kosteneinsparung": "~1.800 €/Monat",
+            "qualitaet": "Ausführlichere Befunde, bessere Patientenkommunikation"
+        },
+        "zitat": "Die Dokumentation frisst nicht mehr unsere Behandlungszeit.",
+        "dauer_bis_roi": "3 Wochen"
+    },
+    "bauwesen": {
+        "titel": "Architekturbüro beschleunigt Leistungsverzeichnisse",
+        "unternehmen": "Kleines Architekturbüro, 4 Mitarbeiter",
+        "ausgangslage": "Zeitintensive LV-Erstellung, Baustellenprotokolle, Kundenkorrespondenz",
+        "loesung": "ChatGPT für LV-Positionen, Protokolle und Schriftverkehr",
+        "ergebnis": {
+            "zeitersparnis": "12 Stunden/Woche",
+            "kosteneinsparung": "~2.800 €/Monat",
+            "qualitaet": "Weniger Fehler in LVs, schnellere Projektabwicklung"
+        },
+        "zitat": "Früher hat ein LV zwei Tage gedauert. Jetzt schaffen wir es in einem halben.",
+        "dauer_bis_roi": "3 Wochen"
+    },
+    "verwaltung": {
+        "titel": "Kommunalverwaltung modernisiert Bürgerservice",
+        "unternehmen": "Stadtverwaltung, 50.000 Einwohner",
+        "ausgangslage": "Viele Standardanfragen, lange Bearbeitungszeiten, Bescheid-Formulierungen",
+        "loesung": "ChatGPT für Bürgeranfragen und Bescheid-Entwürfe (ohne sensible Daten)",
+        "ergebnis": {
+            "zeitersparnis": "15 Stunden/Woche (Sachbearbeiter)",
+            "kosteneinsparung": "~2.400 €/Monat",
+            "qualitaet": "Verständlichere Bescheide, schnellere Antworten"
+        },
+        "zitat": "Die Bürger verstehen unsere Schreiben jetzt besser – weniger Rückfragen.",
+        "dauer_bis_roi": "4 Wochen"
+    },
+    "medien": {
+        "titel": "Kreativagentur skaliert ohne neue Mitarbeiter",
+        "unternehmen": "Design-Agentur, 6 Kreative",
+        "ausgangslage": "Briefings dauern zu lange, Ideenfindung stockt, Textarbeit bindet Designer",
+        "loesung": "ChatGPT für Briefings, Texte und Konzeptentwicklung",
+        "ergebnis": {
+            "zeitersparnis": "20 Stunden/Woche (Team)",
+            "kosteneinsparung": "~4.000 €/Monat",
+            "qualitaet": "Mehr Zeit für Kreativarbeit, bessere Briefings"
+        },
+        "zitat": "Unsere Designer designen wieder – statt Texte zu schreiben.",
+        "dauer_bis_roi": "2 Wochen"
+    },
+    "industrie": {
+        "titel": "Mittelständler optimiert Arbeitsanweisungen",
+        "unternehmen": "Produktionsbetrieb, 80 Mitarbeiter",
+        "ausgangslage": "Veraltete Arbeitsanweisungen, aufwändige Fehleranalysen, Schichtübergaben",
+        "loesung": "ChatGPT für Dokumentation und Prozessanalysen",
+        "ergebnis": {
+            "zeitersparnis": "10 Stunden/Woche",
+            "kosteneinsparung": "~2.000 €/Monat",
+            "qualitaet": "Aktuelle Dokumentation, bessere Fehleranalyse"
+        },
+        "zitat": "Unsere Arbeitsanweisungen sind endlich auf dem neuesten Stand.",
+        "dauer_bis_roi": "4 Wochen"
+    },
+    "transport": {
+        "titel": "Spedition verbessert Kundenkommunikation",
+        "unternehmen": "Regionale Spedition, 25 Fahrzeuge",
+        "ausgangslage": "Viele Kundenanfragen zu Lieferstatus, Reklamationsbearbeitung, Dokumentation",
+        "loesung": "ChatGPT für Kundenkorrespondenz und Reklamationsantworten",
+        "ergebnis": {
+            "zeitersparnis": "8 Stunden/Woche",
+            "kosteneinsparung": "~1.600 €/Monat",
+            "qualitaet": "Schnellere Antworten, professionellere Kommunikation"
+        },
+        "zitat": "Kunden bekommen jetzt in Minuten Antwort statt am nächsten Tag.",
+        "dauer_bis_roi": "2 Wochen"
+    },
+    "gastronomie": {
+        "titel": "Restaurant steigert Online-Bewertungen",
+        "unternehmen": "Gehobenes Restaurant, 40 Plätze",
+        "ausgangslage": "Bewertungen unbeantwortet, Speisekarten veraltet, Eventanfragen zeitaufwändig",
+        "loesung": "ChatGPT für Bewertungsantworten, Speisekartentexte, Eventangebote",
+        "ergebnis": {
+            "zeitersparnis": "5 Stunden/Woche",
+            "kosteneinsparung": "~800 €/Monat",
+            "qualitaet": "+0.4 Sterne bei Google, mehr Eventbuchungen"
+        },
+        "zitat": "Jede Bewertung bekommt jetzt eine persönliche Antwort. Das macht den Unterschied.",
+        "dauer_bis_roi": "3 Wochen"
+    },
+    "default": {
+        "titel": "Selbstständiger spart 8 Stunden pro Woche",
+        "unternehmen": "Freiberufler, Dienstleistungen",
+        "ausgangslage": "Zeitfresser: E-Mails, Angebote, Dokumentation, Recherche",
+        "loesung": "ChatGPT Plus für tägliche Textaufgaben",
+        "ergebnis": {
+            "zeitersparnis": "8 Stunden/Woche",
+            "kosteneinsparung": "~2.500 €/Monat",
+            "qualitaet": "Mehr Zeit für Kerngeschäft, bessere Work-Life-Balance"
+        },
+        "zitat": "Ich arbeite nicht weniger – aber ich schaffe mehr in der gleichen Zeit.",
+        "dauer_bis_roi": "2 Wochen"
+    }
+}
+
+
+def generate_fallstudie_html(branche: str) -> str:
+    """
+    Generiert eine branchenspezifische Fallstudie.
+    """
+    branche_key = get_branche_key(branche)
+    fallstudie = FALLSTUDIEN.get(branche_key, FALLSTUDIEN["default"])
+    
+    html = f'''
+    <!-- FALLSTUDIE -->
+    <div style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border: 1px solid #cbd5e1; border-radius: 12px; padding: 20px; margin-top: 24px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+            <span style="font-size: 24px;">📊</span>
+            <h3 style="font-size: 18px; font-weight: 700; margin: 0; color: #1e293b;">
+                Fallstudie: {fallstudie["titel"]}
+            </h3>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div>
+                <div style="font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Unternehmen</div>
+                <div style="font-size: 13px; color: #334155;">{fallstudie["unternehmen"]}</div>
+            </div>
+            <div>
+                <div style="font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">ROI erreicht nach</div>
+                <div style="font-size: 13px; color: #334155; font-weight: 600;">{fallstudie["dauer_bis_roi"]}</div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Ausgangslage</div>
+            <div style="font-size: 13px; color: #334155;">{fallstudie["ausgangslage"]}</div>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Lösung</div>
+            <div style="font-size: 13px; color: #334155;">{fallstudie["loesung"]}</div>
+        </div>
+        
+        <!-- Ergebnisse -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;">
+            <div style="background: white; border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 20px; font-weight: 700; color: #166534;">{fallstudie["ergebnis"]["zeitersparnis"]}</div>
+                <div style="font-size: 11px; color: #64748b;">Zeitersparnis</div>
+            </div>
+            <div style="background: white; border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 20px; font-weight: 700; color: #166534;">{fallstudie["ergebnis"]["kosteneinsparung"]}</div>
+                <div style="font-size: 11px; color: #64748b;">Ersparnis/Monat</div>
+            </div>
+            <div style="background: white; border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 14px; font-weight: 600; color: #1e40af;">{fallstudie["ergebnis"]["qualitaet"]}</div>
+                <div style="font-size: 11px; color: #64748b;">Qualität</div>
+            </div>
+        </div>
+        
+        <!-- Zitat -->
+        <div style="background: white; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 0 8px 8px 0;">
+            <div style="font-size: 14px; color: #334155; font-style: italic;">
+                "{fallstudie["zitat"]}"
+            </div>
         </div>
     </div>
 '''
