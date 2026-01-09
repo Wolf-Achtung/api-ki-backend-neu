@@ -10832,7 +10832,8 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     try:
         from services.content_quality_enforcer import apply_all_quality_enforcers
         hauptleistung_value = briefing.get("hauptleistung", "")
-        sections = apply_all_quality_enforcers(sections, hauptleistung_value)
+        bundesland_value = briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", "")
+        sections = apply_all_quality_enforcers(sections, hauptleistung_value, bundesland_value)
         log.info(f"[QUALITY-ENFORCER] Applied all quality fixes for hauptleistung={hauptleistung_value[:30] if hauptleistung_value else 'N/A'}...")
     except Exception as e:
         log.warning(f"[QUALITY-ENFORCER] Failed: {e}")
