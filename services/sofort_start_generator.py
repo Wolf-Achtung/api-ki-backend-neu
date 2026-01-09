@@ -1488,3 +1488,246 @@ def generate_30_tage_challenge_html(company_size: str = "solo") -> str:
 '''
     
     return html
+
+
+# =============================================================================
+# ZEITBUDGET-ANGEPASSTE 30-TAGE CHALLENGE
+# =============================================================================
+
+ZEITBUDGET_CONFIG = {
+    "unter_2": {
+        "label": "Unter 2 Stunden/Woche",
+        "minuten_pro_tag": 15,
+        "intensitaet": "light",
+        "empfehlung": "Fokussieren Sie sich auf die wichtigsten Tage (markiert mit ⭐)"
+    },
+    "2_5": {
+        "label": "2–5 Stunden/Woche",
+        "minuten_pro_tag": 30,
+        "intensitaet": "moderate",
+        "empfehlung": "Perfektes Tempo für nachhaltiges Lernen"
+    },
+    "5_10": {
+        "label": "5–10 Stunden/Woche",
+        "minuten_pro_tag": 60,
+        "intensitaet": "intensive",
+        "empfehlung": "Sie können alle Aufgaben plus Bonus-Challenges machen"
+    },
+    "ueber_10": {
+        "label": "Über 10 Stunden/Woche",
+        "minuten_pro_tag": 90,
+        "intensitaet": "full",
+        "empfehlung": "Maximales Lerntempo – ideal für schnelle Transformation"
+    }
+}
+
+# Angepasste Challenges je nach Zeitbudget
+CHALLENGE_LIGHT = {
+    "woche_1": {
+        "titel": "Erste Schritte",
+        "tage": [
+            {"tag": 1, "aufgabe": "Account erstellen", "dauer": "10 Min", "prio": True},
+            {"tag": 2, "aufgabe": "Ersten Prompt testen", "dauer": "15 Min", "prio": True},
+            {"tag": 3, "aufgabe": "E-Mail formulieren lassen", "dauer": "15 Min", "prio": False},
+            {"tag": 4, "aufgabe": "Pause / Nachholen", "dauer": "-", "prio": False},
+            {"tag": 5, "aufgabe": "Text zusammenfassen", "dauer": "10 Min", "prio": True},
+            {"tag": 6, "aufgabe": "Pause / Nachholen", "dauer": "-", "prio": False},
+            {"tag": 7, "aufgabe": "Wochenreview", "dauer": "10 Min", "prio": True},
+        ]
+    },
+    "woche_2": {
+        "titel": "Anwenden",
+        "tage": [
+            {"tag": 8, "aufgabe": "Echte Aufgabe mit KI lösen", "dauer": "15 Min", "prio": True},
+            {"tag": 9, "aufgabe": "Pause / Nachholen", "dauer": "-", "prio": False},
+            {"tag": 10, "aufgabe": "Prompt speichern", "dauer": "10 Min", "prio": True},
+            {"tag": 11, "aufgabe": "Pause / Nachholen", "dauer": "-", "prio": False},
+            {"tag": 12, "aufgabe": "Zweiten Use Case testen", "dauer": "15 Min", "prio": True},
+            {"tag": 13, "aufgabe": "Pause / Nachholen", "dauer": "-", "prio": False},
+            {"tag": 14, "aufgabe": "Wochenreview + Zeitersparnis", "dauer": "10 Min", "prio": True},
+        ]
+    },
+    "woche_3": {
+        "titel": "Vertiefen",
+        "tage": [
+            {"tag": 15, "aufgabe": "Mehrstufiger Prompt", "dauer": "15 Min", "prio": True},
+            {"tag": 16, "aufgabe": "Pause / Nachholen", "dauer": "-", "prio": False},
+            {"tag": 17, "aufgabe": "Routine etablieren", "dauer": "15 Min", "prio": True},
+            {"tag": 18, "aufgabe": "Pause / Nachholen", "dauer": "-", "prio": False},
+            {"tag": 19, "aufgabe": "Dritten Use Case", "dauer": "15 Min", "prio": True},
+            {"tag": 20, "aufgabe": "Pause / Nachholen", "dauer": "-", "prio": False},
+            {"tag": 21, "aufgabe": "Wochenreview", "dauer": "10 Min", "prio": True},
+        ]
+    },
+    "woche_4": {
+        "titel": "Festigen",
+        "tage": [
+            {"tag": 22, "aufgabe": "Prompt-Bibliothek anlegen", "dauer": "15 Min", "prio": True},
+            {"tag": 23, "aufgabe": "Pause / Nachholen", "dauer": "-", "prio": False},
+            {"tag": 24, "aufgabe": "Kollegen zeigen", "dauer": "15 Min", "prio": False},
+            {"tag": 25, "aufgabe": "Pause / Nachholen", "dauer": "-", "prio": False},
+            {"tag": 26, "aufgabe": "Standard-Workflow definieren", "dauer": "15 Min", "prio": True},
+            {"tag": 27, "aufgabe": "Pause / Nachholen", "dauer": "-", "prio": False},
+            {"tag": 28, "aufgabe": "Pause / Nachholen", "dauer": "-", "prio": False},
+            {"tag": 29, "aufgabe": "Gesamt-ROI berechnen", "dauer": "15 Min", "prio": True},
+            {"tag": 30, "aufgabe": "Nächste Schritte planen", "dauer": "15 Min", "prio": True},
+        ]
+    }
+}
+
+
+def generate_30_tage_challenge_html_v2(
+    company_size: str = "solo",
+    zeitbudget: str = "2_5"
+) -> str:
+    """
+    Generiert die 30-Tage Challenge angepasst ans Zeitbudget.
+    
+    Args:
+        company_size: solo/team/kmu
+        zeitbudget: unter_2/2_5/5_10/ueber_10
+    """
+    
+    # Zeitbudget-Config holen
+    zeit_config = ZEITBUDGET_CONFIG.get(zeitbudget, ZEITBUDGET_CONFIG["2_5"])
+    
+    # Challenge-Daten basierend auf Intensität wählen
+    if zeit_config["intensitaet"] == "light":
+        challenge_data = CHALLENGE_LIGHT
+        show_prio = True
+    else:
+        challenge_data = CHALLENGE_30_TAGE
+        show_prio = False
+    
+    html = f'''
+    <div style="page-break-before: always;"></div>
+    
+    <!-- 30-TAGE CHALLENGE HEADER -->
+    <div style="text-align: center; margin-bottom: 24px; padding-top: 20px;">
+        <h2 style="font-size: 28px; font-weight: 700; margin: 0 0 8px 0; color: #1e40af;">
+            🏆 Ihre 30-Tage KI-Challenge
+        </h2>
+        <p style="font-size: 16px; color: #64748b; margin: 0;">
+            Von Null auf KI-Profi – angepasst an Ihr Zeitbudget
+        </p>
+    </div>
+    
+    <!-- ZEITBUDGET-INFO -->
+    <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border-radius: 12px; padding: 16px; margin-bottom: 24px; color: white;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="font-size: 12px; opacity: 0.8; text-transform: uppercase;">Ihr Zeitbudget</div>
+                <div style="font-size: 20px; font-weight: 700;">{zeit_config["label"]}</div>
+                <div style="font-size: 13px; opacity: 0.9; margin-top: 4px;">≈ {zeit_config["minuten_pro_tag"]} Minuten pro Tag</div>
+            </div>
+            <div style="text-align: right; max-width: 250px;">
+                <div style="font-size: 13px; opacity: 0.95;">💡 {zeit_config["empfehlung"]}</div>
+            </div>
+        </div>
+    </div>
+'''
+    
+    # Wenn Light-Version: Hinweis auf Prio-Tasks
+    if show_prio:
+        html += '''
+    <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 12px; margin-bottom: 20px;">
+        <p style="margin: 0; font-size: 13px; color: #92400e;">
+            <strong>⭐ Tipp bei wenig Zeit:</strong> Konzentrieren Sie sich auf die markierten Prioritäts-Aufgaben. 
+            Die anderen Tage sind als Puffer eingeplant.
+        </p>
+    </div>
+'''
+    
+    # Wochen-Übersicht
+    html += '''
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;">
+'''
+    
+    wochen_farben = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"]
+    for i, (woche_key, woche_data) in enumerate(challenge_data.items()):
+        farbe = wochen_farben[i]
+        html += f'''
+        <div style="background: {farbe}15; border: 2px solid {farbe}; border-radius: 8px; padding: 12px; text-align: center;">
+            <div style="font-size: 12px; font-weight: 600; color: {farbe}; text-transform: uppercase;">Woche {i+1}</div>
+            <div style="font-size: 14px; font-weight: 700; color: #1e293b; margin: 4px 0;">{woche_data["titel"]}</div>
+        </div>
+'''
+    
+    html += '''
+    </div>
+'''
+    
+    # Detaillierte Wochen
+    for i, (woche_key, woche_data) in enumerate(challenge_data.items()):
+        farbe = wochen_farben[i]
+        html += f'''
+    <div style="margin-bottom: 20px;">
+        <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; color: {farbe};">
+            Woche {i+1}: {woche_data["titel"]}
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;">
+'''
+        
+        for tag_data in woche_data["tage"]:
+            is_prio = tag_data.get("prio", False)
+            is_pause = "Pause" in tag_data.get("aufgabe", "")
+            
+            if is_pause:
+                bg_color = "#f1f5f9"
+                border_color = "#e2e8f0"
+                text_color = "#94a3b8"
+            elif is_prio and show_prio:
+                bg_color = "#fef3c7"
+                border_color = "#f59e0b"
+                text_color = "#92400e"
+            else:
+                bg_color = "#f8fafc"
+                border_color = "#e2e8f0"
+                text_color = "#334155"
+            
+            prio_star = "⭐ " if is_prio and show_prio else ""
+            
+            html += f'''
+            <div style="background: {bg_color}; border: 1px solid {border_color}; border-radius: 6px; padding: 8px; font-size: 10px;">
+                <div style="font-weight: 700; color: {farbe}; margin-bottom: 4px;">Tag {tag_data["tag"]}</div>
+                <div style="color: {text_color}; line-height: 1.3; min-height: 32px;">{prio_star}{tag_data["aufgabe"]}</div>
+                <div style="color: #94a3b8; font-size: 9px; margin-top: 4px;">⏱️ {tag_data["dauer"]}</div>
+            </div>
+'''
+        
+        html += '''
+        </div>
+    </div>
+'''
+    
+    # Erfolgs-Tracking
+    html += '''
+    <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 8px; padding: 16px; margin-top: 20px;">
+        <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; color: #166534;">
+            📊 Ihr Erfolgs-Tracking
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+'''
+    
+    for w in range(1, 5):
+        html += f'''
+            <div style="text-align: center;">
+                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">Woche {w}</div>
+                <div style="border: 2px solid #22c55e; border-radius: 8px; padding: 12px; background: white;">
+                    <div style="font-size: 10px; color: #64748b;">Gesparte Zeit:</div>
+                    <div style="font-size: 16px; font-weight: 700; color: #166534;">_____ h</div>
+                </div>
+            </div>
+'''
+    
+    html += '''
+        </div>
+        <div style="text-align: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #22c55e;">
+            <span style="font-size: 14px; color: #166534; font-weight: 600;">
+                🎯 Gesamt nach 30 Tagen: _______ Stunden = _______ € gespart
+            </span>
+        </div>
+    </div>
+'''
+    
+    return html
