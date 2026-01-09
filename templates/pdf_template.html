@@ -5900,10 +5900,10 @@
                             </div>
                             <div style="text-align: center;">
                                 <div style="font-size: 36px; font-weight: 600; color: var(--color-text-normal); margin-bottom: var(--space-xs);">
-                                    {{ (ROI_12M or 0) | round(0) | int }}<span style="font-size: 20px; font-weight: 400;">%</span>
+                                    → BC
                                 </div>
                                 <div style="font-size: 13px; font-weight: 500; color: var(--color-text-normal); margin-bottom: 4px;">
-                                    ROI (12 Monate)
+                                    ROI-Details
                                 </div>
                                 <div style="font-size: 11px; color: var(--color-text-muted);">
                                     Payback: {{ PAYBACK_MONTHS or 'n/a' }} Monate
@@ -5974,10 +5974,10 @@
                             </div>
                             <div>
                                 <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: var(--space-xs);">
-                                    Erwarteter ROI
+                                    ROI-Prognose
                                 </div>
                                 <div style="font-size: 24px; font-weight: 600; color: var(--color-text-normal);">
-                                    {{ (ROI_12M or 0) | round(0) | int }}% nach 12 Monaten
+                                    → siehe Business Case
                                 </div>
                             </div>
                         </div>
