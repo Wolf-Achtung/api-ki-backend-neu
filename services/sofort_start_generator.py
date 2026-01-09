@@ -29,7 +29,7 @@ Unterstützte Branchen (13):
 """
 
 import logging
-from typing import Optional
+from typing import Any, Dict, List, Optional, cast
 
 log = logging.getLogger(__name__)
 
@@ -1028,7 +1028,7 @@ def generate_sofort_start_html(
     tools = TOOL_EMPFEHLUNGEN.get(size_key, TOOL_EMPFEHLUNGEN["solo"])
     
     # Zeitersparnis berechnen
-    hours_per_week = branche_data.get("zeitersparnis_pro_woche", 4)
+    hours_per_week: int = cast(int, branche_data.get("zeitersparnis_pro_woche", 4))
     savings = calculate_yearly_savings(hours_per_week, stundensatz)
     
     # Personalisiere den ersten Schritt
@@ -1090,7 +1090,8 @@ def generate_sofort_start_html(
 '''
     
     # Prompts hinzufügen
-    for i, prompt_data in enumerate(branche_data["prompts"], 1):
+    prompts_list: List[Dict[str, Any]] = cast(List[Dict[str, Any]], branche_data["prompts"])
+    for i, prompt_data in enumerate(prompts_list, 1):
         prompt_text = prompt_data["prompt"][:400] + "..." if len(prompt_data["prompt"]) > 400 else prompt_data["prompt"]
         html += f'''
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px;">
@@ -1209,9 +1210,9 @@ def generate_sofort_start_html(
     if size_key in ["team", "kmu"]:
         html += generate_entscheidungsvorlage_html(
             hauptleistung=hauptleistung,
-            branche=branche_data["name"],
+            branche=str(branche_data["name"]),
             company_size=size_key,
-            zeitersparnis_pro_woche=hours_per_week,
+            zeitersparnis_pro_woche=int(hours_per_week),
             stundensatz=stundensatz
         )
 
@@ -1415,16 +1416,17 @@ def generate_30_tage_challenge_html(company_size: str = "solo") -> str:
         <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;">
 '''
         
-        for tag_data in woche_data["tage"]:
-            icon = KATEGORIE_ICONS.get(tag_data["kategorie"], "📌")
+        tage_list: List[Dict[str, Any]] = cast(List[Dict[str, Any]], woche_data["tage"])
+        for tag_data in tage_list:
+            icon = KATEGORIE_ICONS.get(str(tag_data.get("kategorie", "")), "📌")
             html += f'''
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; font-size: 10px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                    <span style="font-weight: 700; color: {farbe};">Tag {tag_data["tag"]}</span>
+                    <span style="font-weight: 700; color: {farbe};">Tag {tag_data.get("tag", "")}</span>
                     <span>{icon}</span>
                 </div>
-                <div style="color: #334155; line-height: 1.3; min-height: 36px;">{tag_data["aufgabe"]}</div>
-                <div style="color: #94a3b8; font-size: 9px; margin-top: 4px;">⏱️ {tag_data["dauer"]}</div>
+                <div style="color: #334155; line-height: 1.3; min-height: 36px;">{tag_data.get("aufgabe", "")}</div>
+                <div style="color: #94a3b8; font-size: 9px; margin-top: 4px;">⏱️ {tag_data.get("dauer", "")}</div>
             </div>
 '''
         
@@ -1672,10 +1674,11 @@ def generate_30_tage_challenge_html_v2(
         <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;">
 '''
         
-        for tag_data in woche_data["tage"]:
+        tage_list2: List[Dict[str, Any]] = cast(List[Dict[str, Any]], woche_data["tage"])
+        for tag_data in tage_list2:
             is_prio = tag_data.get("prio", False)
-            is_pause = "Pause" in tag_data.get("aufgabe", "")
-            
+            is_pause = "Pause" in str(tag_data.get("aufgabe", ""))
+
             if is_pause:
                 bg_color = "#f1f5f9"
                 border_color = "#e2e8f0"
@@ -1688,14 +1691,14 @@ def generate_30_tage_challenge_html_v2(
                 bg_color = "#f8fafc"
                 border_color = "#e2e8f0"
                 text_color = "#334155"
-            
+
             prio_star = "⭐ " if is_prio and show_prio else ""
-            
+
             html += f'''
             <div style="background: {bg_color}; border: 1px solid {border_color}; border-radius: 6px; padding: 8px; font-size: 10px;">
-                <div style="font-weight: 700; color: {farbe}; margin-bottom: 4px;">Tag {tag_data["tag"]}</div>
-                <div style="color: {text_color}; line-height: 1.3; min-height: 32px;">{prio_star}{tag_data["aufgabe"]}</div>
-                <div style="color: #94a3b8; font-size: 9px; margin-top: 4px;">⏱️ {tag_data["dauer"]}</div>
+                <div style="font-weight: 700; color: {farbe}; margin-bottom: 4px;">Tag {tag_data.get("tag", "")}</div>
+                <div style="color: {text_color}; line-height: 1.3; min-height: 32px;">{prio_star}{tag_data.get("aufgabe", "")}</div>
+                <div style="color: #94a3b8; font-size: 9px; margin-top: 4px;">⏱️ {tag_data.get("dauer", "")}</div>
             </div>
 '''
         
@@ -1932,7 +1935,7 @@ def generate_fallstudie_html(branche: str) -> str:
     Generiert eine branchenspezifische Fallstudie.
     """
     branche_key = get_branche_key(branche)
-    fallstudie = FALLSTUDIEN.get(branche_key, FALLSTUDIEN["default"])
+    fallstudie: Dict[str, Any] = cast(Dict[str, Any], FALLSTUDIEN.get(branche_key, FALLSTUDIEN["default"]))
     
     html = f'''
     <!-- FALLSTUDIE -->
