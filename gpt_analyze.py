@@ -135,6 +135,7 @@ from services.lang_utils import normalize_lang
 from utils.hotfix_gold_standard import apply_hotfix, UTF8Handler
 from utils.encoding_fixer import clean_briefing_data
 from services.anthropic_client import call_anthropic, should_use_anthropic
+from services.sofort_start_generator import generate_sofort_start_html
 from services.guardrails import (
     detect_guardrails_v5,
     format_guardrail_hits_for_context,
@@ -10220,6 +10221,25 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections["QUICK_WINS_HTML_RIGHT"] = ""  # Legacy compatibility
     # logischer Inhalt (Validator)
     sections["quick_wins"] = qw_html
+    
+    # ========== v14.10: SOFORT-START-SEITE (Gamechanger Feature) ==========
+    try:
+        sofort_hauptleistung = briefing.get("hauptleistung", "") or answers.get("hauptleistung", "")
+        sofort_branche = briefing.get("BRANCHE_LABEL", "") or briefing.get("branche", "") or ""
+        sofort_size = briefing.get("UNTERNEHMENSGROESSE_LABEL", "") or briefing.get("unternehmensgroesse", "solo")
+        sofort_zeit = briefing.get("ZEITERSPARNIS_PRIORITAET", "") or answers.get("zeitersparnis_prioritaet", "")
+        
+        sections["SOFORT_START_HTML"] = generate_sofort_start_html(
+            hauptleistung=sofort_hauptleistung,
+            branche=sofort_branche,
+            company_size=sofort_size,
+            zeitersparnis_prioritaet=sofort_zeit
+        )
+        log.info("[SOFORT-START] ✅ Generated Sofort-Start page for %s", sofort_branche[:30] if sofort_branche else "default")
+    except Exception as e:
+        log.warning("[SOFORT-START] ⚠️ Failed to generate: %s", e)
+        sections["SOFORT_START_HTML"] = ""
+
 
     # Stunden aus Quick Wins extrahieren
     total_h = 0
