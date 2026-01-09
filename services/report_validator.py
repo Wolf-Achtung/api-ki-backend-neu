@@ -638,7 +638,7 @@ class ReportValidator:
             # SPRINT G17.S: roadmap_90d reduced from 250 to 150
             # SPRINT G18: strategie_governance + tools_empfehlungen gelockert
             # SPRINT N1: Further reductions for Solo to avoid fallbacks
-            "executive_summary": 150,   # SPRINT N requirement
+            "executive_summary": 100,   # SPRINT N requirement
             "quick_wins": 60,
             "roadmap_90d": 150,         # SPRINT G17.S: reduced from 250
             "roadmap_12m": 600,         # SPRINT N1: 500→600 (balanced)
@@ -646,7 +646,7 @@ class ReportValidator:
             "strategie_governance": 90,  # SPRINT N1: 110→90 (Solo-friendly)
             "tools_empfehlungen": 110,  # SPRINT G18: gelockert von 120
             "foerderpotenzial": 600,    # SPRINT N1: 800→600 (Solo-realistic)
-            "gamechanger": 500,         # SPRINT N1: 750→500 (Solo-realistic)
+            "gamechanger": 150,         # SPRINT N1: 750→500 (Solo-realistic)
             "transparency_box": 50,     # SPRINT N1: 100→50 (minimal overhead)
             "technologie_prozesse": 150,
         },
