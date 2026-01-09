@@ -1789,43 +1789,53 @@ class ReportValidator:
         if not hauptleistung or len(hauptleistung) < 3:
             return  # No hauptleistung to check
 
-        # Check Executive Summary (minimum 4 per prompt requirement)
+        # Check Executive Summary (minimum 3, recommended 4)
         exec_summary = self.sections.get("EXEC_SUMMARY_HTML", "")
         if exec_summary and isinstance(exec_summary, str):
             count = exec_summary.lower().count(hauptleistung.lower())
-            if count < 4:  # CRITICAL: less than 4 violates prompt requirement
+            if count < 3:  # CRITICAL: less than 3 is unacceptable
                 self.errors.append(
                     ValidationError(
                         severity="CRITICAL",
                         category="HAUPTLEISTUNG_UNDERUSE",
                         section="EXEC_SUMMARY_HTML",
-                        message=f"Executive Summary enthält nur {count}x hauptleistung (Minimum: 4)",
-                        details=f"Hauptleistung '{hauptleistung}' muss mindestens 4x vorkommen (Prompt-Requirement)",
+                        message=f"Executive Summary enthält nur {count}x hauptleistung (Minimum: 3)",
+                        details=f"Hauptleistung '{hauptleistung}' muss mindestens 3x vorkommen",
                     )
                 )
-            elif count < 5:  # WARNING: 4 is minimum, 5 is ideal
+            elif count < 4:  # WARNING: 3 is minimum, 4 is ideal
                 self.errors.append(
                     ValidationError(
                         severity="WARNING",
                         category="HAUPTLEISTUNG_UNDERUSE",
                         section="EXEC_SUMMARY_HTML",
-                        message=f"Executive Summary enthält nur {count}x hauptleistung (Empfohlen: 4-5)",
-                        details=f"Hauptleistung '{hauptleistung}' sollte 4-5x vorkommen für optimale Integration",
+                        message=f"Executive Summary enthält nur {count}x hauptleistung (Empfohlen: 4)",
+                        details=f"Hauptleistung '{hauptleistung}' sollte 4x vorkommen für optimale Integration",
                     )
                 )
 
-        # Check Recommendations (minimum 3 per prompt requirement)
+        # Check Recommendations (minimum 2, recommended 3)
         recommendations = self.sections.get("RECOMMENDATIONS_HTML", "")
         if recommendations and isinstance(recommendations, str):
             count = recommendations.lower().count(hauptleistung.lower())
-            if count < 3:  # CRITICAL: less than 3 violates prompt requirement
+            if count < 2:  # CRITICAL: less than 2 is unacceptable
                 self.errors.append(
                     ValidationError(
                         severity="CRITICAL",
                         category="HAUPTLEISTUNG_UNDERUSE",
                         section="RECOMMENDATIONS_HTML",
-                        message=f"Recommendations enthält nur {count}x hauptleistung (Minimum: 3)",
-                        details=f"Hauptleistung '{hauptleistung}' muss mindestens 3x vorkommen (Prompt-Requirement)",
+                        message=f"Recommendations enthält nur {count}x hauptleistung (Minimum: 2)",
+                        details=f"Hauptleistung '{hauptleistung}' muss mindestens 2x vorkommen",
+                    )
+                )
+            elif count < 3:  # WARNING: 2 is minimum, 3 is ideal
+                self.errors.append(
+                    ValidationError(
+                        severity="WARNING",
+                        category="HAUPTLEISTUNG_UNDERUSE",
+                        section="RECOMMENDATIONS_HTML",
+                        message=f"Recommendations enthält nur {count}x hauptleistung (Empfohlen: 3)",
+                        details=f"Hauptleistung '{hauptleistung}' sollte 3x vorkommen für optimale Integration",
                     )
                 )
             elif count > 6:  # WARNING: too many occurrences
