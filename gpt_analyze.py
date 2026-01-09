@@ -10827,6 +10827,17 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             except Exception as e:
                 log.warning(f"[SIEZEN-GUARD] {key} failed: {e}")
 
+    # ========== v14.0: CONTENT QUALITY ENFORCER (Post-Processing Safety Net) ==========
+    # Fixes: ROI-Leak, Fragments, hauptleistung MIN, Extended Siezen
+    try:
+        from services.content_quality_enforcer import apply_all_quality_enforcers
+        hauptleistung_value = briefing.get("hauptleistung", "") or answers.get("hauptleistung", "")
+        sections = apply_all_quality_enforcers(sections, hauptleistung_value)
+        log.info(f"[QUALITY-ENFORCER] Applied all quality fixes for hauptleistung={hauptleistung_value[:30] if hauptleistung_value else 'N/A'}...")
+    except Exception as e:
+        log.warning(f"[QUALITY-ENFORCER] Failed: {e}")
+
+
     # Sprint N3.3: Apply Exec Summary Hard-Clean to remove H1/H2 and label text
     from services.html_sanitizer import clean_exec_summary_html
     exec_summary_cleaned = clean_exec_summary_html(sections.get("EXECUTIVE_SUMMARY_HTML", ""))
