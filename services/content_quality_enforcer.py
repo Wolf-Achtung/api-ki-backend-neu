@@ -137,6 +137,15 @@ FRAGMENT_PATTERNS = [
     # "Entwicklung einer." → unvollständig
     (r'Entwicklung\s+eine[rs]?\s*\.', 
      'Entwicklung einer KI-Strategie.'),
+
+    # "Maßnahme: Pilotierung eines klar." → Artikel + abgebrochenes Adjektiv
+    (r'Maßnahme:\s*[A-ZÄÖÜ][a-zäöüß]+\s+eine[sr]?\s+[a-zäöüß]+\s*\.',
+     'Maßnahme: Siehe detaillierte Beschreibung in der Roadmap.'),
+
+    # "...eines kompakten." → Artikel + Adjektiv ohne Nomen
+    (r'([A-ZÄÖÜ][^.!?]{10,50})\s+(eines|einer|einem)\s+[a-zäöüß]+\s*\.',
+     r'\1 – siehe Roadmap für Details.'),
+
     
     # Generische Fragment-Erkennung: Satz endet mit Artikel
     (r'([A-ZÄÖÜ][^.!?]{10,50})\s+(eines|einer|einem|von|für|zur|zum)\s*\.', 
