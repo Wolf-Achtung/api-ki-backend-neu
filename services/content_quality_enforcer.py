@@ -405,6 +405,7 @@ def apply_hauptleistung_enforcer(sections: dict, hauptleistung: str) -> dict:
 
 EXTENDED_SIEZEN_PATTERNS = [
     # Possessive "dein/deine"
+    (r'\b[Dd]ein\b', 'Ihr'),  # "Dein Assessment" → "Ihr Assessment"
     (r'\b[Dd]eine([rsmn]?)\b', r'Ihre\1'),
     (r'\b[Dd]einem\b', 'Ihrem'),
     (r'\b[Dd]einen\b', 'Ihren'),
