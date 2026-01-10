@@ -135,6 +135,9 @@ FRAGMENT_PATTERNS = [
      'Integration der KI-Tools in bestehende Prozesse.'),
     
     # "Entwicklung einer." → unvollständig
+    
+    # "strukturiertem JSON-Output und." → unvollständig (v14.17)
+    (r'\b(\w+)\s+und\.$', r'\1 und mehr.'),
     (r'Entwicklung\s+eine[rs]?\s*\.', 
      'Entwicklung einer KI-Strategie.'),
 
@@ -299,6 +302,21 @@ def inject_hauptleistung_executive(html: str, hauptleistung: str, current_count:
             injections_made += 1
             log.info(f"[HAUPTLEISTUNG-ENFORCER] Executive: Injected at '{match.group()[:30]}...'")
     
+    # v14.17: Fallback wenn nicht genug Pattern-Matches
+    if injections_made < needed:
+        fallback_patterns = [
+            (r'(<strong>Gesamturteil[^<]*</strong>[^<]*)', f'\\1Speziell für {hauptleistung}: '),
+            (r'(Top-3[^:]*:)', f'Top-3 Empfehlungen für {hauptleistung}:'),
+            (r'(<li>)([A-Z])', f'\\1{hauptleistung}: \\2'),
+        ]
+        for fb_pattern, fb_replacement in fallback_patterns:
+            if injections_made >= needed:
+                break
+            if re.search(fb_pattern, result):
+                result = re.sub(fb_pattern, fb_replacement, result, count=1)
+                injections_made += 1
+                log.info(f"[HAUPTLEISTUNG-ENFORCER] Executive: Fallback pattern applied")
+    
     return result
 
 
@@ -442,6 +460,7 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Starte\b', r'\1Starten Sie'),
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Plane\b', r'\1Planen Sie'),
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Überlege\b', r'\1Überlegen Sie'),
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Markiere\b', r'\1Markieren Sie'),  # v14.17
 
 ]
 
@@ -572,6 +591,12 @@ BUNDESLAENDER = [
 
 # Sections wo Location-Check angewendet wird
 LOCATION_CHECK_SECTIONS = [
+    # v14.17: Erweitert um alle Förder-relevanten Sections
+    "funding", "FUNDING_HTML",
+    "foerderprogramme", "FOERDERPROGRAMME_HTML",
+    "funding_branch_alignment", "FUNDING_BRANCH_ALIGNMENT_HTML",
+    "tools_funding_alignment", "TOOLS_FUNDING_ALIGNMENT_HTML",
+    "starter_kit", "STARTER_KIT_HTML",
     "foerderpotenzial", "FOERDERPOTENZIAL_HTML",
     "recommendations", "RECOMMENDATIONS_HTML",
     "quick_wins", "QUICK_WINS_HTML",
