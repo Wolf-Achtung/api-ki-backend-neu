@@ -4711,6 +4711,7 @@
         /* ============================================
            v14.20: GLOBALE ANTI-TRUNKIERUNG (FINAL)
            ============================================ */
+        /* v14.25: Erweiterte Selektoren für Risk-Sections */
         .risk-card, .risk-card *,
         .recommendation-card, .recommendation-card *,
         .recommendation-card-compact, .recommendation-card-compact *,
@@ -4720,7 +4721,13 @@
         section.risks ul, section.risks li,
         section.risks table, section.risks td,
         .section.risks, .section.risks *,
-        .section.risks ul, .section.risks li {
+        .section.risks ul, .section.risks li,
+        #branch-risks, #branch-risks *,
+        #branch-risks ul, #branch-risks li,
+        #branch-risks p, #branch-risks td,
+        #risk-engine, #risk-engine *,
+        #risk-engine ul, #risk-engine li,
+        #risk-engine p, #risk-engine td {
             overflow: visible !important;
             text-overflow: unset !important;
             -webkit-line-clamp: unset !important;
