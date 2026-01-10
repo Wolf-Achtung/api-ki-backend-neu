@@ -12400,6 +12400,15 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     log.info("[%s] Page 4 - hauptleistung: %s", run_id, "SET" if sections.get("hauptleistung") else "EMPTY/MISSING")
     log.info("[%s] Page 2 - FINAL_CHECK_INTRO: %s", run_id, "SET" if sections.get("FINAL_CHECK_INTRO") else "EMPTY/MISSING")
     log.info("[%s] Page 2 - FINAL_CHECK_DECISIONS: %s", run_id, "SET" if sections.get("FINAL_CHECK_DECISIONS") else "EMPTY/MISSING")
+    # v14.21: QUALITY ENFORCER DIREKT VOR RENDER (der EINZIG richtige Platz!)
+    try:
+        from services.content_quality_enforcer import apply_all_quality_enforcers
+        hauptleistung_render = answers.get("hauptleistung", "")
+        bundesland_render = answers.get("BUNDESLAND_LABEL") or answers.get("bundesland", "")
+        sections = apply_all_quality_enforcers(sections, hauptleistung_render, bundesland_render)
+        log.info(f"[{run_id}] ✅ [QUALITY-ENFORCER-RENDER] Applied FINAL quality fixes before render")
+    except Exception as e:
+        log.warning(f"[{run_id}] ⚠️ [QUALITY-ENFORCER-RENDER] Failed: {e}")
     log.info("=" * 80)
 
     result = render(
