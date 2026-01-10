@@ -309,9 +309,11 @@ def inject_hauptleistung_executive(html: str, hauptleistung: str, current_count:
     # v14.17: Fallback wenn nicht genug Pattern-Matches
     if injections_made < needed:
         fallback_patterns = [
-            (r'(<strong>Gesamturteil[^<]*</strong>[^<]*)', f'\\1Speziell für {hauptleistung}: '),
-            (r'(Top-3[^:]*:)', f'Top-3 Empfehlungen für {hauptleistung}:'),
-            (r'(<li>)([A-Z])', f'\\1{hauptleistung}: \\2'),
+            # v14.19: AGGRESSIVERE Patterns
+            (r'(<p>)([A-Z][^<]{10,})', f'\\1Für {hauptleistung}: \\2'),
+            (r'(</strong>)(\s*[A-Z])', f'\\1 Im Bereich {hauptleistung} \\2'),
+            (r'(<li>)([^<]{5,})', f'\\1{hauptleistung} - \\2'),
+            (r'(\w{5,})(</p>)', f'\\1 für {hauptleistung}\\2'),
         ]
         for fb_pattern, fb_replacement in fallback_patterns:
             if injections_made >= needed:
@@ -319,7 +321,14 @@ def inject_hauptleistung_executive(html: str, hauptleistung: str, current_count:
             if re.search(fb_pattern, result):
                 result = re.sub(fb_pattern, fb_replacement, result, count=1)
                 injections_made += 1
-                log.info(f"[HAUPTLEISTUNG-ENFORCER] Executive: Fallback pattern applied")
+                log.info(f"[HAUPTLEISTUNG-ENFORCER] Executive: Aggressive fallback applied")
+    
+    # Level 2: Prefix-Injection wenn immer noch nicht genug
+    if injections_made < needed:
+        prefix = f'<p><strong>Fokus: {hauptleistung}</strong></p>'
+        result = prefix + result
+        injections_made += 1
+        log.info(f"[HAUPTLEISTUNG-ENFORCER] Executive: Prefix injection applied")
     
     return result
 
@@ -382,6 +391,21 @@ def inject_hauptleistung_recommendations(html: str, hauptleistung: str, current_
             result = re.sub(pattern, replacement, result, count=1, flags=re.IGNORECASE)
             injections_made += 1
             log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: Injected at '{match.group()[:30]}...'")
+    
+    # v14.19: Fallback für Recommendations
+    if injections_made < needed:
+        fallback_patterns = [
+            (r'(<li>)([^<]{5,})', f'\1{hauptleistung} - \2'),
+            (r'(<p>)([A-Z][^<]{10,})', f'\1Für {hauptleistung}: \2'),
+            (r'(Empfehlung[^:]*:)', f'\1 {hauptleistung} -'),
+        ]
+        for fb_pattern, fb_replacement in fallback_patterns:
+            if injections_made >= needed:
+                break
+            if re.search(fb_pattern, result):
+                result = re.sub(fb_pattern, fb_replacement, result, count=1)
+                injections_made += 1
+                log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: Fallback applied")
     
     return result
 
@@ -715,8 +739,55 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     # 5. Location-Validator
     
     # 6. Grammar-Fixer
+    
+    # 7. AI-Act Konsistenz (v14.19)
+    sections = apply_ai_act_consistency(sections)
     sections = apply_grammar_fixer(sections)
     if bundesland:
         sections = apply_location_validator(sections, bundesland)
     log.info("[QUALITY-ENFORCER] Pipeline complete")
+    return sections
+
+
+# =============================================================================
+# v14.19: AI-ACT KONSISTENZ-VALIDATOR
+# =============================================================================
+
+def fix_ai_act_consistency(html: str) -> tuple[str, int]:
+    """
+    Behebt Widersprüche in AI-Act Risikoklassen.
+    Problem: Auf derselben Seite steht "Risikoklasse: minimal" UND "Hochrisiko"
+    """
+    if not html:
+        return html, 0
+    
+    fixes = 0
+    result = html
+    
+    # Prüfe auf Widerspruch: minimal + Hochrisiko
+    has_minimal = bool(re.search(r'Risikoklasse:\s*minimal', result, re.IGNORECASE))
+    has_hochrisiko = bool(re.search(r'\bHochrisiko\b', result, re.IGNORECASE))
+    
+    if has_minimal and has_hochrisiko:
+        # Entferne "Hochrisiko" wenn "minimal" definiert ist
+        result = re.sub(r'\bHochrisiko\b', 'geringes Risiko', result)
+        fixes += 1
+        log.warning("[AI-ACT-CONSISTENCY] Fixed contradiction: Hochrisiko → geringes Risiko (weil Risikoklasse minimal)")
+    
+    return result, fixes
+
+
+def apply_ai_act_consistency(sections: dict) -> dict:
+    """Wendet AI-Act Konsistenz-Prüfung auf relevante Sections an."""
+    ai_act_sections = [
+        "AI_ACT_SUMMARY_HTML", "ai_act_summary",
+        "RISKS_HTML", "risks"
+    ]
+    
+    for key in ai_act_sections:
+        if key in sections and sections[key]:
+            fixed, count = fix_ai_act_consistency(sections[key])
+            if count > 0:
+                sections[key] = fixed
+    
     return sections
