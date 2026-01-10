@@ -419,7 +419,7 @@ def apply_hauptleistung_enforcer(sections: dict, hauptleistung: str) -> dict:
         return sections
     
     # Executive Summary: Minimum 4x
-    for key in ["EXECUTIVE_SUMMARY_HTML", "executive_summary", "EXEC_SUMMARY_HTML"]:
+    for key in ["EXECUTIVE_SUMMARY_HTML", "executive_summary", "EXEC_SUMMARY_HTML", "FINAL_CHECK_INTRO", "FINAL_CHECK_DECISIONS"]:  # v14.22: FINAL_CHECK Keys hinzugefuegt
         if key in sections and sections[key]:
             current = count_hauptleistung(sections[key], hauptleistung)
             if current < 4:
@@ -786,6 +786,14 @@ def fix_ai_act_consistency(html: str) -> tuple[str, int]:
 def apply_ai_act_consistency(sections: dict) -> dict:
     """Wendet AI-Act Konsistenz-Prüfung auf relevante Sections an."""
     ai_act_sections = [
+        # v14.22: Alle AI-Act Sections
+        "AI_ACT_DUTY_MATRIX_HTML",
+        "AI_ACT_NONCOMPLIANCE_ALERTS_HTML",
+        "AI_ACT_DATA_GAPS_HTML",
+        "AI_ACT_RECOMMENDED_NEXT_STEPS_HTML",
+        "AI_ACT_RELATED_USECASES_HTML",
+        "AI_ACT_TABLE_OFFER_HTML",
+        "AI_ACT_ADDON_PACKAGES_HTML",
         "AI_ACT_SUMMARY_HTML", "ai_act_summary",
         "RISKS_HTML", "risks"
     ]
