@@ -137,6 +137,10 @@ FRAGMENT_PATTERNS = [
     # "Entwicklung einer." → unvollständig
     
     # "strukturiertem JSON-Output und." → unvollständig (v14.17)
+    # v14.18: "jedes." allein am Ende
+    (r'\b(jedes)\.$', r'\1 Mal.'),
+    # "betrachtet werden,." kaputte Interpunktion
+    (r',\s*\.$', r'.'),
     (r'\b(\w+)\s+und\.$', r'\1 und mehr.'),
     (r'Entwicklung\s+eine[rs]?\s*\.', 
      'Entwicklung einer KI-Strategie.'),
@@ -423,6 +427,7 @@ def apply_hauptleistung_enforcer(sections: dict, hauptleistung: str) -> dict:
 
 EXTENDED_SIEZEN_PATTERNS = [
     # Possessive "dein/deine"
+    (r'[Ff]ür deine', 'Für Ihre'),  # v14.18: 'Für deine Situation' -> 'Für Ihre Situation'
     (r'\b[Dd]ein\b', 'Ihr'),  # "Dein Assessment" → "Ihr Assessment"
     (r'\b[Dd]eine([rsmn]?)\b', r'Ihre\1'),
     (r'\b[Dd]einem\b', 'Ihrem'),
@@ -523,10 +528,14 @@ GRAMMAR_FIX_PATTERNS = [
     # "Für Ihr Einzelunternehmer" → "Für Ihren Einzelbetrieb" oder "Für Sie als Einzelunternehmer"
     (r'Für Ihr Einzelunternehmer', 'Für Sie als Einzelunternehmer'),
     
+    # v14.18: Zusammengeklebte Header trennen
+    (r'([A-ZÄÖÜ]{5,})([A-Z][a-zäöü])', r'\1 - \2'),
     # Doppelte Leerzeichen
     (r'  +', ' '),
     
     # Punkt vor Komma
+    # v14.18: Komma vor Punkt
+    (r',\.', '.'),
     (r'\.,', ','),
     
     # Doppelte Punkte
@@ -591,6 +600,10 @@ BUNDESLAENDER = [
 
 # Sections wo Location-Check angewendet wird
 LOCATION_CHECK_SECTIONS = [
+    "executive_summary", "EXECUTIVE_SUMMARY_HTML",
+    # v14.18: Noch mehr Sections
+    "FOERDERPROGRAMME_HTML", "foerderprogramme",
+    "FUNDING_TABLE_HTML", "funding_table",
     # v14.17: Erweitert um alle Förder-relevanten Sections
     "funding", "FUNDING_HTML",
     "foerderprogramme", "FOERDERPROGRAMME_HTML",

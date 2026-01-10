@@ -20,7 +20,7 @@
 
         @page {
             size: A4;
-            margin: 15mm 15mm 18mm 15mm; /* Phase 2 Fix: Kompakter für weniger Seiten */
+            margin: 20mm 18mm 22mm 18mm;
             @bottom-right {
                 content: "Seite " counter(page) " von " counter(pages);
                 font-size: 8pt;
@@ -250,27 +250,9 @@
         .quick-win-card-new,
         .hero-metric-card,
         .roadmap-phase,
-        .phase-card,
-        .roi-herleitung,
-        .roi-explanation-box,
-        .foerder-card,
-        .funding-card,
-        .colored-box,
-        .ai-policy-box,
-        .starter-template,
-        .datenlucken-box,
-        .recommendation-card,
-        .business-case-card,
-        .content-card,
         .section {
             page-break-inside: avoid;
             break-inside: avoid;
-        }
-        /* Erlaube Umbruch VOR neuen Haupt-Sections */
-        .roadmap-section,
-        .business-case-section,
-        .handlungsempfehlungen-section {
-            page-break-before: auto;
         }
         /* ================================================
            TAGS (PLATIN++ V5.2)
@@ -1262,9 +1244,6 @@
             background: var(--color-bg-surface);
             color: var(--color-text-strong);
             font-weight: 600;
-            word-break: break-word;
-            hyphens: auto;
-            font-size: 9pt;
         }
         .risk-matrix tbody tr:nth-child(even) td {
             background: rgba(0, 0, 0, 0.02);
@@ -4610,6 +4589,9 @@
             overflow-wrap: break-word !important;
             word-break: break-word !important;
             hyphens: auto !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis;
+            max-width: 150px;
             padding: 8px 6px !important;
             font-size: 9.5pt !important;
             line-height: 1.4 !important;
@@ -4695,33 +4677,13 @@
            FIX 4b: SVG-BOX OVERFLOW VERHINDERN
            ============================================ */
         .svg-decorated-box {
-            overflow: visible !important;
+            overflow: hidden !important;
             page-break-inside: avoid;
             break-inside: avoid;
             margin-bottom: 16px;
         }
         .svg-decorated-box-content {
-            overflow: visible;
-        }
-
-        /* ============================================
-        /* ============================================
-           v14.18: GLOBALE ANTI-TRUNKIERUNG (ERWEITERT)
-           ============================================ */
-        .risk-card, .risk-card *,
-        .recommendation-card, .recommendation-card *,
-        .recommendation-card-compact, .recommendation-card-compact *,
-        .empfehlung-card, .empfehlung-card *,
-        .quick-win-card, .quick-win-card *,
-        section.risks, section.risks *,
-        section.risks table, section.risks td,
-        .section.risks, .section.risks * {
-            overflow: visible !important;
-            text-overflow: unset !important;
-            -webkit-line-clamp: unset !important;
-            max-height: none !important;
-            white-space: normal !important;
-        }
+            overflow: hidden;
         }
 
         /* ============================================
@@ -4907,6 +4869,8 @@
         .risk-card {
             page-break-inside: avoid;
             break-inside: avoid;
+            max-height: 200px;
+            overflow: hidden;
         }
         /* Roadmap cards can break if too long */
         .roadmap-phase-card {
@@ -5004,299 +4968,6 @@
         .roadmap-phase-card .milestone strong {
             color: var(--color-success);
         }
-
-        /* FIX 2: RECOMMENDATION CARDS - Phase 2B Fix */
-        .rec-cards-container {
-            margin: 16px 0;
-        }
-        .rec-cards-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 14px;
-        }
-        .rec-card {
-            background: white;
-            border: 1px solid var(--color-border);
-            border-radius: 8px;
-            padding: 12px;
-            page-break-inside: avoid;
-            break-inside: avoid;
-        }
-        @media print {
-            .rec-cards-grid {
-                display: block;
-            }
-            .rec-card {
-                display: inline-block;
-                width: 48%;
-                margin: 1%;
-                vertical-align: top;
-                page-break-inside: avoid;
-            }
-        }
-
-        /* FIX 3: AI MINI-POLICY - Phase 3 Fix */
-        .ai-policy-mini {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 18px;
-            margin: 16px 0;
-            page-break-inside: avoid;
-        }
-        .ai-policy-mini h4 {
-            color: #1e40af;
-            margin: 0 0 14px 0;
-            font-size: 13pt;
-        }
-        .ai-policy-mini h5 {
-            margin: 0 0 8px 0;
-            font-size: 10.5pt;
-        }
-        .ai-policy-mini ul {
-            margin: 0;
-            padding-left: 16px;
-            font-size: 9.5pt;
-        }
-        .ai-policy-mini li {
-            margin-bottom: 3px;
-        }
-
-        /* FIX 4: KI-TOOLS OVERVIEW - Phase 3 Fix */
-        .ki-tools-overview {
-            background: #f0f9ff;
-            border: 1px solid #bae6fd;
-            border-radius: 12px;
-            padding: 18px;
-            margin: 16px 0;
-            page-break-inside: avoid;
-        }
-        .ki-tools-overview h4 {
-            color: #0369a1;
-            margin: 0 0 14px 0;
-            font-size: 13pt;
-        }
-        .ki-tools-overview table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 9.5pt;
-        }
-        .ki-tools-overview th {
-            padding: 8px;
-            text-align: left;
-            background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%);
-            color: white;
-        }
-        .ki-tools-overview td {
-            padding: 6px 8px;
-            border-bottom: 1px solid #e0f2fe;
-        }
-
-        @media print {
-            .ai-policy-mini,
-            .ki-tools-overview {
-                page-break-inside: avoid;
-                break-inside: avoid;
-            }
-        }
-
-        /* ==================== FIX 3.2 + 3.4: CSS ADDITIONS ==================== */
-
-        /* Templates Section */
-        .templates-section {
-            margin: 2rem 0;
-            page-break-inside: avoid;
-        }
-
-        .templates-intro {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin: 1rem 0 2rem 0;
-        }
-
-        .templates-intro h3 {
-            color: white;
-            margin-top: 0;
-        }
-
-        .templates-intro ol {
-            margin: 1rem 0;
-        }
-
-        .time-savings {
-            margin-top: 1rem;
-            padding: 0.5rem;
-            background: rgba(255,255,255,0.2);
-            border-radius: 4px;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .template-card {
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            margin: 1rem 0;
-            padding: 1rem;
-            background: white;
-            page-break-inside: avoid;
-        }
-
-        .template-card summary {
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .template-card .icon {
-            font-size: 1.5rem;
-        }
-
-        .template-card .use-case {
-            margin-left: auto;
-            font-size: 0.85rem;
-            color: #666;
-            font-style: italic;
-        }
-
-        .template-content {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #e0e0e0;
-        }
-
-        .code-block {
-            background: #2d2d2d;
-            color: #abb2bf;
-            padding: 1rem;
-            border-radius: 6px;
-            overflow-x: auto;
-            font-family: 'Courier New', 'Monaco', monospace;
-            font-size: 0.85rem;
-            line-height: 1.5;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            margin: 0.5rem 0;
-        }
-
-        .checklist {
-            list-style: none;
-            padding-left: 0;
-        }
-
-        .checklist li {
-            margin: 0.5rem 0;
-            padding-left: 1.5rem;
-        }
-
-        .warning-box {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 4px;
-        }
-
-        .templates-footer {
-            background: #f8f9fa;
-            padding: 1rem;
-            margin-top: 2rem;
-            border-radius: 6px;
-            text-align: center;
-        }
-
-        /* Data Gaps Section */
-        .data-gaps-section {
-            margin: 2rem 0;
-            page-break-inside: avoid;
-        }
-
-        .transparency-intro {
-            background: #e8eaf6;
-            border-left: 4px solid #5c6bc0;
-            padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 4px;
-        }
-
-        .data-gaps-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 2rem 0;
-        }
-
-        .data-gaps-table th, .data-gaps-table td {
-            border: 1px solid #ddd;
-            padding: 1rem;
-            text-align: left;
-        }
-
-        .data-gaps-table th {
-            background: #5c6bc0;
-            color: white;
-            font-weight: bold;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-
-        .impact-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            font-weight: bold;
-        }
-
-        .impact-niedrig {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-
-        .impact-mittel {
-            background: #fff8e1;
-            color: #f57c00;
-        }
-
-        .impact-hoch {
-            background: #ffebee;
-            color: #c62828;
-        }
-
-        .data-gaps-legend {
-            background: #f8f9fa;
-            padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 6px;
-        }
-
-        .data-gaps-action {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 1.5rem;
-            margin: 2rem 0;
-            border-radius: 6px;
-        }
-
-        /* Print optimization for templates and data gaps */
-        @media print {
-            .template-card, .data-gaps-section, .templates-section {
-                page-break-inside: avoid;
-            }
-        }
-
-        /* ==================== END FIX 3.2 + 3.4 CSS ==================== */
 
         /* ============================================
            v13.0: ANTI-LEERSEITE (Empty Page Prevention)
@@ -5918,10 +5589,10 @@
                             </div>
                             <div style="text-align: center;">
                                 <div style="font-size: 36px; font-weight: 600; color: var(--color-text-normal); margin-bottom: var(--space-xs);">
-                                    → BC
+                                    {{ (ROI_12M or 0) | round(0) | int }}<span style="font-size: 20px; font-weight: 400;">%</span>
                                 </div>
                                 <div style="font-size: 13px; font-weight: 500; color: var(--color-text-normal); margin-bottom: 4px;">
-                                    ROI-Details
+                                    ROI (12 Monate)
                                 </div>
                                 <div style="font-size: 11px; color: var(--color-text-muted);">
                                     Payback: {{ PAYBACK_MONTHS or 'n/a' }} Monate
@@ -5992,10 +5663,10 @@
                             </div>
                             <div>
                                 <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: var(--space-xs);">
-                                    ROI-Prognose
+                                    Erwarteter ROI
                                 </div>
                                 <div style="font-size: 24px; font-weight: 600; color: var(--color-text-normal);">
-                                    → siehe Business Case
+                                    {{ (ROI_12M or 0) | round(0) | int }}% nach 12 Monaten
                                 </div>
                             </div>
                         </div>
@@ -6061,42 +5732,6 @@
 
                 </div>
                 <!-- END PAGE 2 -->
-                
-                <!-- ============================================== -->
-                <!-- PAGE 2b: SOFORT-START (NEU!)                   -->
-                <!-- ============================================== -->
-                {% if SOFORT_START_HTML and SOFORT_START_HTML|trim %}
-                <div class="page-break"></div>
-                <div class="sofort-start-page" style="padding: var(--space-xl) var(--space-lg);">
-                    
-                    <!-- Header -->
-                    <div style="margin-bottom: var(--space-xl); text-align: center;">
-                        <h2 style="font-size: 28px; font-weight: 700; margin: 0 0 var(--space-sm) 0; color: var(--color-brand-primary);">
-                            🎯 Ihr Sofort-Start
-                        </h2>
-                        <p style="font-size: 16px; color: var(--color-text-muted); margin: 0;">
-                            Was Sie HEUTE noch tun können
-                        </p>
-                    </div>
-                    
-                    <!-- Content from gpt_analyze.py -->
-                    {{ SOFORT_START_HTML | safe }}
-                    
-                </div>
-                {% endif %}
-                <!-- END PAGE 2b -->
-                
-                <!-- ============================================== -->
-                <!-- PAGE 2c: 30-TAGE CHALLENGE                     -->
-                <!-- ============================================== -->
-                {% if CHALLENGE_30_TAGE_HTML and CHALLENGE_30_TAGE_HTML|trim %}
-                <div class="challenge-page" style="padding: var(--space-lg);">
-                    {{ CHALLENGE_30_TAGE_HTML | safe }}
-                </div>
-                {% endif %}
-                <!-- END PAGE 2c -->
-
-
 
                                 <!-- PAGE 3: EXECUTIVE TOC                          -->
                 <!-- ============================================== -->
@@ -7062,7 +6697,7 @@
                     </div>
                 </section>
                 {% endif %}
-                {% if KICKOFF_VORLAGE_HTML and not COMPACT_REPORT_MODE %}
+                {% if KICKOFF_VORLAGE_HTML %}
                 <section class="section chapter">
                     <div class="section-header">
                         <div class="section-title">
@@ -7079,7 +6714,7 @@
                     </div>
                 </section>
                 {% endif %}
-                {% if PROMPT_FRAMEWORK_HTML and not COMPACT_REPORT_MODE %}
+                {% if PROMPT_FRAMEWORK_HTML %}
                 <section class="section chapter">
                     <div class="section-header">
                         <div class="section-title">
