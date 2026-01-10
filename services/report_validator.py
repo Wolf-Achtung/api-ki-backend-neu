@@ -646,7 +646,7 @@ class ReportValidator:
             "strategie_governance": 90,  # SPRINT N1: 110→90 (Solo-friendly)
             "tools_empfehlungen": 110,  # SPRINT G18: gelockert von 120
             "foerderpotenzial": 600,    # SPRINT N1: 800→600 (Solo-realistic)
-            "gamechanger": 150,         # SPRINT N1: 750→500 (Solo-realistic)
+            "gamechanger": 100,  # v14.16: 150→100 (kurze aber valide OK)         # SPRINT N1: 750→500 (Solo-realistic)
             "transparency_box": 50,     # SPRINT N1: 100→50 (minimal overhead)
             "technologie_prozesse": 150,
         },
