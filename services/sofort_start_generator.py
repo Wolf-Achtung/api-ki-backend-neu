@@ -1727,6 +1727,21 @@ def generate_30_tage_challenge_html_v2(
             </div>
 '''
     
+    # v14.18: Tipps für Erfolg
+    html += '''
+        <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 16px; margin-top: 16px; margin-bottom: 16px;">
+            <h4 style="font-size: 13px; font-weight: 600; margin: 0 0 12px 0; color: #1e40af;">💡 Tipps für Ihren Erfolg</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; color: #334155;">
+                <div>✓ Feste Zeit im Kalender blocken</div>
+                <div>✓ Kleine Schritte, große Wirkung</div>
+                <div>✓ Erfolge dokumentieren</div>
+                <div>✓ Bei Rückstand: nächsten Tag neu starten</div>
+                <div>✓ Kollegen einbeziehen (wenn vorhanden)</div>
+                <div>✓ Nach 30 Tagen: Routine beibehalten!</div>
+            </div>
+        </div>
+    '''
+    
     html += '''
         </div>
         <div style="text-align: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #22c55e;">

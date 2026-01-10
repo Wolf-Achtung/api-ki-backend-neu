@@ -1262,9 +1262,6 @@
             background: var(--color-bg-surface);
             color: var(--color-text-strong);
             font-weight: 600;
-            word-break: break-word;
-            hyphens: auto;
-            font-size: 9pt;
         }
         .risk-matrix tbody tr:nth-child(even) td {
             background: rgba(0, 0, 0, 0.02);
@@ -4610,6 +4607,9 @@
             overflow-wrap: break-word !important;
             word-break: break-word !important;
             hyphens: auto !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis;
+            max-width: 150px;
             padding: 8px 6px !important;
             font-size: 9.5pt !important;
             line-height: 1.4 !important;
@@ -4695,33 +4695,13 @@
            FIX 4b: SVG-BOX OVERFLOW VERHINDERN
            ============================================ */
         .svg-decorated-box {
-            overflow: visible !important;
+            overflow: hidden !important;
             page-break-inside: avoid;
             break-inside: avoid;
             margin-bottom: 16px;
         }
         .svg-decorated-box-content {
-            overflow: visible;
-        }
-
-        /* ============================================
-        /* ============================================
-           v14.18: GLOBALE ANTI-TRUNKIERUNG (ERWEITERT)
-           ============================================ */
-        .risk-card, .risk-card *,
-        .recommendation-card, .recommendation-card *,
-        .recommendation-card-compact, .recommendation-card-compact *,
-        .empfehlung-card, .empfehlung-card *,
-        .quick-win-card, .quick-win-card *,
-        section.risks, section.risks *,
-        section.risks table, section.risks td,
-        .section.risks, .section.risks * {
-            overflow: visible !important;
-            text-overflow: unset !important;
-            -webkit-line-clamp: unset !important;
-            max-height: none !important;
-            white-space: normal !important;
-        }
+            overflow: hidden;
         }
 
         /* ============================================
@@ -4907,6 +4887,8 @@
         .risk-card {
             page-break-inside: avoid;
             break-inside: avoid;
+            max-height: 200px;
+            overflow: hidden;
         }
         /* Roadmap cards can break if too long */
         .roadmap-phase-card {
@@ -5918,10 +5900,10 @@
                             </div>
                             <div style="text-align: center;">
                                 <div style="font-size: 36px; font-weight: 600; color: var(--color-text-normal); margin-bottom: var(--space-xs);">
-                                    → BC
+                                    {{ (ROI_12M or 0) | round(0) | int }}<span style="font-size: 20px; font-weight: 400;">%</span>
                                 </div>
                                 <div style="font-size: 13px; font-weight: 500; color: var(--color-text-normal); margin-bottom: 4px;">
-                                    ROI-Details
+                                    ROI (12 Monate)
                                 </div>
                                 <div style="font-size: 11px; color: var(--color-text-muted);">
                                     Payback: {{ PAYBACK_MONTHS or 'n/a' }} Monate
@@ -5992,10 +5974,10 @@
                             </div>
                             <div>
                                 <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: var(--space-xs);">
-                                    ROI-Prognose
+                                    Erwarteter ROI
                                 </div>
                                 <div style="font-size: 24px; font-weight: 600; color: var(--color-text-normal);">
-                                    → siehe Business Case
+                                    {{ (ROI_12M or 0) | round(0) | int }}% nach 12 Monaten
                                 </div>
                             </div>
                         </div>
@@ -6061,42 +6043,6 @@
 
                 </div>
                 <!-- END PAGE 2 -->
-                
-                <!-- ============================================== -->
-                <!-- PAGE 2b: SOFORT-START (NEU!)                   -->
-                <!-- ============================================== -->
-                {% if SOFORT_START_HTML and SOFORT_START_HTML|trim %}
-                <div class="page-break"></div>
-                <div class="sofort-start-page" style="padding: var(--space-xl) var(--space-lg);">
-                    
-                    <!-- Header -->
-                    <div style="margin-bottom: var(--space-xl); text-align: center;">
-                        <h2 style="font-size: 28px; font-weight: 700; margin: 0 0 var(--space-sm) 0; color: var(--color-brand-primary);">
-                            🎯 Ihr Sofort-Start
-                        </h2>
-                        <p style="font-size: 16px; color: var(--color-text-muted); margin: 0;">
-                            Was Sie HEUTE noch tun können
-                        </p>
-                    </div>
-                    
-                    <!-- Content from gpt_analyze.py -->
-                    {{ SOFORT_START_HTML | safe }}
-                    
-                </div>
-                {% endif %}
-                <!-- END PAGE 2b -->
-                
-                <!-- ============================================== -->
-                <!-- PAGE 2c: 30-TAGE CHALLENGE                     -->
-                <!-- ============================================== -->
-                {% if CHALLENGE_30_TAGE_HTML and CHALLENGE_30_TAGE_HTML|trim %}
-                <div class="challenge-page" style="padding: var(--space-lg);">
-                    {{ CHALLENGE_30_TAGE_HTML | safe }}
-                </div>
-                {% endif %}
-                <!-- END PAGE 2c -->
-
-
 
                                 <!-- PAGE 3: EXECUTIVE TOC                          -->
                 <!-- ============================================== -->
