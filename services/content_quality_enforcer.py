@@ -801,7 +801,9 @@ def apply_ai_act_consistency(sections: dict) -> dict:
             all_ai_act_text += str(sections[key])
     
     # Globaler Check
-    has_minimal = bool(re.search(r"Risikoklasse:\s*minimal", all_ai_act_text, re.IGNORECASE))
+    # v14.24: Prüfe auch die Variable AI_ACT_RISK_LEVEL direkt
+    risk_level = sections.get("AI_ACT_RISK_LEVEL", "")
+    has_minimal = risk_level == "minimal" or bool(re.search(r"Risikoklasse:\s*minimal", all_ai_act_text, re.IGNORECASE))
     has_hochrisiko = bool(re.search(r"\bHochrisiko\b", all_ai_act_text, re.IGNORECASE))
     
     if has_minimal and has_hochrisiko:
