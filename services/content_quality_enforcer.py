@@ -209,6 +209,33 @@ def apply_fragment_repair(sections: dict) -> dict:
     log.info(f"[FRAGMENT-REPAIR] Complete: {total_repaired} fragments repaired")
     return sections
 
+def fix_truncation_ellipsis(html: str) -> tuple[str, int]:
+    """
+    v14.27: Entfernt Trunkierungs-Ellipsen aus HTML.
+    Patterns wie "daue…", "Le…", "Se…" werden entfernt.
+    """
+    if not html:
+        return html, 0
+    
+    result = html
+    fixes = 0
+    
+    # Pattern: Wort das mit … oder ... endet (Trunkierung)
+    import re
+    truncated = re.findall(r'\b\w{2,}[…\.]{1,3}(?=\s|<|$)', result)
+    for tw in truncated:
+        if tw.endswith('…') or tw.endswith('...'):
+            result = result.replace(tw, '')
+            fixes += 1
+    
+    # Cleanup: Doppelte Leerzeichen
+    result = re.sub(r'  +', ' ', result)
+    
+    if fixes > 0:
+        log.info(f"[ELLIPSIS-FIX] Fixed {fixes} truncation ellipses")
+    
+    return result, fixes
+
 def apply_ellipsis_fix(sections: dict) -> dict:
     """
     v14.27: Wendet Ellipsen-Fix auf alle relevanten Sections an.
