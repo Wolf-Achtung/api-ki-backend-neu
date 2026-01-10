@@ -12013,14 +12013,14 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             ]
         else:
             intro_template = (
-                f"Dieser KI-Readiness-Report analysiert Ihren aktuellen KI-Reifegrad ({overall_score}/100 = {score_rating}) "
+                f"Dieser KI-Readiness-Report für {hauptleistung_fc} analysiert Ihren aktuellen KI-Reifegrad ({overall_score}/100 = {score_rating}) "
                 f"und liefert konkrete Handlungsempfehlungen für {company_size} mit Fokus auf {hauptleistung_fc}. "
                 f"Schwerpunkte: Sicherheit, Effizienz und Förderpotenziale. "
                 f"ROI-Details und Payback-Analyse finden Sie im Business Case."
             )
             decisions = [
-                "Starten Sie mit 1 Quick Win innerhalb von 14 Tagen zur KI-Validierung",
-                "Prüfen Sie die 90-Tage-Roadmap für strukturierte Umsetzungsphasen",
+                f"Starten Sie mit 1 Quick Win für {hauptleistung_fc} innerhalb von 14 Tagen",
+                f"Prüfen Sie die 90-Tage-Roadmap für {hauptleistung_fc}",
                 "Sichten Sie die Förderprogramme für passende EU-/Bundesmittel"
             ]
 

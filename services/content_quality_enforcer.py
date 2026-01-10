@@ -419,7 +419,7 @@ def apply_hauptleistung_enforcer(sections: dict, hauptleistung: str) -> dict:
         return sections
     
     # Executive Summary: Minimum 4x
-    for key in ["EXECUTIVE_SUMMARY_HTML", "executive_summary", "EXEC_SUMMARY_HTML", "FINAL_CHECK_INTRO", "FINAL_CHECK_DECISIONS"]:  # v14.22: FINAL_CHECK Keys hinzugefuegt
+    for key in ["EXECUTIVE_SUMMARY_HTML", "executive_summary", "EXEC_SUMMARY_HTML"]:  # v14.23: FINAL_CHECK entfernt (ist Plain Text, nicht HTML)
         if key in sections and sections[key]:
             current = count_hauptleistung(sections[key], hauptleistung)
             if current < 4:
@@ -639,7 +639,7 @@ LOCATION_CHECK_SECTIONS = [
     "foerderprogramme", "FOERDERPROGRAMME_HTML",
     "funding_branch_alignment", "FUNDING_BRANCH_ALIGNMENT_HTML",
     "tools_funding_alignment", "TOOLS_FUNDING_ALIGNMENT_HTML",
-    "starter_kit", "STARTER_KIT_HTML",
+    "starter_kit", "STARTER_KIT_HTML", "STARTER_KIT_COMPACT_HTML",
     "foerderpotenzial", "FOERDERPOTENZIAL_HTML",
     "recommendations", "RECOMMENDATIONS_HTML",
     "quick_wins", "QUICK_WINS_HTML",
@@ -784,6 +784,36 @@ def fix_ai_act_consistency(html: str) -> tuple[str, int]:
 
 
 def apply_ai_act_consistency(sections: dict) -> dict:
+    """
+    v14.23: Globale Prüfung - erst alle Sections scannen, dann global fixen
+    """
+    # Erst global prüfen
+    all_ai_act_text = ""
+    ai_act_keys = [
+        "AI_ACT_DUTY_MATRIX_HTML", "AI_ACT_NONCOMPLIANCE_ALERTS_HTML",
+        "AI_ACT_DATA_GAPS_HTML", "AI_ACT_RECOMMENDED_NEXT_STEPS_HTML",
+        "AI_ACT_RELATED_USECASES_HTML", "AI_ACT_TABLE_OFFER_HTML",
+        "AI_ACT_ADDON_PACKAGES_HTML", "AI_ACT_SUMMARY_HTML", "ai_act_summary",
+        "RISKS_HTML", "risks"
+    ]
+    for key in ai_act_keys:
+        if key in sections and sections[key]:
+            all_ai_act_text += str(sections[key])
+    
+    # Globaler Check
+    has_minimal = bool(re.search(r"Risikoklasse:\s*minimal", all_ai_act_text, re.IGNORECASE))
+    has_hochrisiko = bool(re.search(r"\bHochrisiko\b", all_ai_act_text, re.IGNORECASE))
+    
+    if has_minimal and has_hochrisiko:
+        log.warning("[AI-ACT-CONSISTENCY] Global contradiction detected - fixing all sections")
+        for key in ai_act_keys:
+            if key in sections and sections[key] and "Hochrisiko" in str(sections[key]):
+                sections[key] = re.sub(r"\bHochrisiko\b", "geringes Risiko", str(sections[key]))
+                log.info(f"[AI-ACT-CONSISTENCY] Fixed Hochrisiko in {key}")
+    
+    return sections
+
+def apply_ai_act_consistency_OLD(sections: dict) -> dict:
     """Wendet AI-Act Konsistenz-Prüfung auf relevante Sections an."""
     ai_act_sections = [
         # v14.22: Alle AI-Act Sections
