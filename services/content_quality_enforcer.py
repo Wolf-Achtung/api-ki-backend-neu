@@ -392,20 +392,11 @@ def inject_hauptleistung_recommendations(html: str, hauptleistung: str, current_
             injections_made += 1
             log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: Injected at '{match.group()[:30]}...'")
     
-    # v14.19: Fallback für Recommendations
+    # v14.25: Fallback für Recommendations - DEAKTIVIERT wegen Artefakten
+    # Die aggressiven Fallbacks erzeugten "hauptleistung - hauptleistung -" Artefakte
+    # Stattdessen: Akzeptiere niedrigere Counts wenn Pattern-Matching nicht greift
     if injections_made < needed:
-        fallback_patterns = [
-            (r'(<li>)([^<]{5,})', f'\1{hauptleistung} - \2'),
-            (r'(<p>)([A-Z][^<]{10,})', f'\1Für {hauptleistung}: \2'),
-            (r'(Empfehlung[^:]*:)', f'\1 {hauptleistung} -'),
-        ]
-        for fb_pattern, fb_replacement in fallback_patterns:
-            if injections_made >= needed:
-                break
-            if re.search(fb_pattern, result):
-                result = re.sub(fb_pattern, fb_replacement, result, count=1)
-                injections_made += 1
-                log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: Fallback applied")
+        log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: {injections_made}/{needed} - Fallback deaktiviert")
     
     return result
 
