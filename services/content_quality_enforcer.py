@@ -209,6 +209,30 @@ def apply_fragment_repair(sections: dict) -> dict:
     log.info(f"[FRAGMENT-REPAIR] Complete: {total_repaired} fragments repaired")
     return sections
 
+def apply_ellipsis_fix(sections: dict) -> dict:
+    """
+    v14.27: Wendet Ellipsen-Fix auf alle relevanten Sections an.
+    Entfernt Trunkierungs-Artefakte wie "daue…", "Le…", "Se…"
+    """
+    ellipsis_sections = [
+        "RISKS_HTML", "risks", "BRANCH_RISKS_HTML",
+        "RECOMMENDATIONS_HTML", "recommendations",
+        "QUICK_WINS_HTML", "quick_wins",
+        "GAMECHANGER_HTML", "gamechanger",
+    ]
+    
+    total_fixed = 0
+    for key in ellipsis_sections:
+        if key in sections and sections[key]:
+            fixed, count = fix_truncation_ellipsis(sections[key])
+            if count > 0:
+                sections[key] = fixed
+                total_fixed += count
+    
+    if total_fixed > 0:
+        log.info(f"[ELLIPSIS-FIX] Complete: {total_fixed} ellipses fixed")
+    return sections
+
 
 # =============================================================================
 # 3. HAUPTLEISTUNG-ENFORCER: Injiziert hauptleistung wenn unter Minimum
@@ -392,11 +416,24 @@ def inject_hauptleistung_recommendations(html: str, hauptleistung: str, current_
             injections_made += 1
             log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: Injected at '{match.group()[:30]}...'")
     
-    # v14.25: Fallback für Recommendations - DEAKTIVIERT wegen Artefakten
-    # Die aggressiven Fallbacks erzeugten "hauptleistung - hauptleistung -" Artefakte
-    # Stattdessen: Akzeptiere niedrigere Counts wenn Pattern-Matching nicht greift
+    # v14.27: Smarter Fallback für Recommendations
+    # Nur anwenden wenn hauptleistung NICHT bereits im Ziel vorhanden
     if injections_made < needed:
-        log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: {injections_made}/{needed} - Fallback deaktiviert")
+        # Finde Stellen wo hauptleistung fehlt und füge dezent hinzu
+        if hauptleistung not in result[:500]:  # Nur wenn nicht in ersten 500 Zeichen
+            # Füge am Anfang des ersten <p> ein
+            if '<p>' in result:
+                result = result.replace('<p>', f'<p>Im Bereich {hauptleistung}: ', 1)
+                injections_made += 1
+                log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: Smart prefix applied")
+        
+        # Prüfe nochmal
+        if injections_made < needed and result.count(hauptleistung) < needed:
+            # Suche nach "Empfehlung" und füge dort ein
+            if 'Empfehlung' in result and hauptleistung not in result.split('Empfehlung')[0][-100:]:
+                result = result.replace('Empfehlung', f'Empfehlung für {hauptleistung}', 1)
+                injections_made += 1
+                log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: Empfehlung prefix applied")
     
     return result
 
@@ -483,6 +520,14 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Markiere\b', r'\1Markieren Sie'),  # v14.17
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Dokumentiere\b', r'\1Dokumentieren Sie'),  # v14.20
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Achte\b', r'\1Achten Sie'),  # v14.26
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Setze\b', r'\1Setzen Sie'),  # v14.27
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Erstelle\b', r'\1Erstellen Sie'),  # v14.27
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Entwickle\b', r'\1Entwickeln Sie'),  # v14.27
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Analysiere\b', r'\1Analysieren Sie'),  # v14.27
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Optimiere\b', r'\1Optimieren Sie'),  # v14.27
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Implementiere\b', r'\1Implementieren Sie'),  # v14.27
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Evaluiere\b', r'\1Evaluieren Sie'),  # v14.27
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Integriere\b', r'\1Integrieren Sie'),  # v14.27
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Standardisiere\b', r'\1Standardisieren Sie'),  # v14.20
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Strukturiere\b', r'\1Strukturieren Sie'),  # v14.20
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Verbinde\b', r'\1Verbinden Sie'),  # v14.20
@@ -725,6 +770,9 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     
     # 2. Fragment-Repair
     sections = apply_fragment_repair(sections)
+    
+    # 2.5 v14.27: Ellipsen-Fix (Trunkierung entfernen)
+    sections = apply_ellipsis_fix(sections)
     
     # 3. Extended Siezen
     sections = apply_extended_siezen_guard(sections)
