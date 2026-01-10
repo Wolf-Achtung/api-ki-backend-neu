@@ -10998,6 +10998,15 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         sections["AI_ACT_RELATED_USECASES_HTML"] = ""
         sections["AI_ACT_CONSISTENCY_WARNINGS"] = []
 
+    # v14.20: QUALITY ENFORCER AM ENDE (nach allen anderen Transformationen)
+    try:
+        from services.content_quality_enforcer import apply_all_quality_enforcers
+        hauptleistung_final = briefing.get("hauptleistung", "")
+        bundesland_final = briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", "")
+        sections = apply_all_quality_enforcers(sections, hauptleistung_final, bundesland_final)
+        log.info(f"[QUALITY-ENFORCER-FINAL] Applied FINAL quality fixes")
+    except Exception as e:
+        log.warning(f"[QUALITY-ENFORCER-FINAL] Failed: {e}")
     return sections
 
 

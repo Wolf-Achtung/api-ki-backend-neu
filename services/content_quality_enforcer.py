@@ -490,6 +490,12 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Plane\b', r'\1Planen Sie'),
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Überlege\b', r'\1Überlegen Sie'),
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Markiere\b', r'\1Markieren Sie'),  # v14.17
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Dokumentiere\b', r'\1Dokumentieren Sie'),  # v14.20
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Standardisiere\b', r'\1Standardisieren Sie'),  # v14.20
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Strukturiere\b', r'\1Strukturieren Sie'),  # v14.20
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Verbinde\b', r'\1Verbinden Sie'),  # v14.20
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Richte\b', r'\1Richten Sie'),  # v14.20
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Definiere\b', r'\1Definieren Sie'),  # v14.20
 
 ]
 

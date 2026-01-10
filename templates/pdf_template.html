@@ -591,6 +591,8 @@
             gap: var(--space-sm);
         }
         .section-kicker {
+            display: block;
+            margin-bottom: 4px;
             font-size: var(--font-caption);
             letter-spacing: 0.08em;
             text-transform: uppercase;
@@ -4706,7 +4708,7 @@
 
         /* ============================================
         /* ============================================
-           v14.18: GLOBALE ANTI-TRUNKIERUNG (ERWEITERT)
+           v14.20: GLOBALE ANTI-TRUNKIERUNG (FINAL)
            ============================================ */
         .risk-card, .risk-card *,
         .recommendation-card, .recommendation-card *,
@@ -4714,16 +4716,20 @@
         .empfehlung-card, .empfehlung-card *,
         .quick-win-card, .quick-win-card *,
         section.risks, section.risks *,
+        section.risks ul, section.risks li,
         section.risks table, section.risks td,
-        .section.risks, .section.risks * {
+        .section.risks, .section.risks *,
+        .section.risks ul, .section.risks li {
             overflow: visible !important;
             text-overflow: unset !important;
             -webkit-line-clamp: unset !important;
             max-height: none !important;
             white-space: normal !important;
+            display: block;
         }
+        section.risks li, .section.risks li {
+            display: list-item !important;
         }
-
         /* ============================================
            FIX 5: EMPFEHLUNGEN KOMPAKTER
            ============================================ */
