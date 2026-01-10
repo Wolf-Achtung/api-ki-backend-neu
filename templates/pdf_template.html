@@ -599,6 +599,12 @@
             text-transform: uppercase;
             color: var(--color-brand-primary);
         }
+        /* v14.26: Erzwinge Abstand zwischen kicker und h2 */
+        .section-title h2 {
+            margin-top: 12px !important;
+            display: block !important;
+            clear: both !important;
+        }
         .section-pill {
             display: inline-flex;
             align-items: center;
@@ -5786,6 +5792,43 @@
 
         .roadmap-timeline-modern .phase-content li:last-child {
             margin-bottom: 0;
+        }
+
+        /* ============================================
+           v14.26: FINALE ANTI-TRUNKIERUNG (HÖCHSTE PRIORITÄT)
+           Muss am Ende stehen für maximale Spezifität!
+           ============================================ */
+        #branch-risks *,
+        #branch-risks p,
+        #branch-risks li,
+        #branch-risks ul,
+        #branch-risks ol,
+        #branch-risks td,
+        #branch-risks th,
+        #branch-risks div,
+        #branch-risks span,
+        #risk-engine *,
+        .section[id*="risk"] *,
+        .section p,
+        .section li {
+            overflow: visible !important;
+            overflow-x: visible !important;
+            overflow-y: visible !important;
+            text-overflow: clip !important;
+            -webkit-line-clamp: unset !important;
+            -webkit-box-orient: unset !important;
+            max-height: none !important;
+            max-width: none !important;
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+        }
+        /* Zusätzlich: Kein Container darf Content beschneiden */
+        #branch-risks,
+        #risk-engine,
+        .section {
+            overflow: visible !important;
+            max-height: none !important;
         }
     </style>
 </head>
