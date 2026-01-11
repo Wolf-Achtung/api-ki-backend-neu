@@ -222,7 +222,10 @@ def fix_truncation_ellipsis(html: str) -> tuple[str, int]:
     
     # Pattern: Wort das mit … oder ... endet (Trunkierung)
     import re
-    truncated = re.findall(r'\b\w{2,}[…\.]{1,3}(?=\s|<|$)', result)
+    # v14.28: Aggressiveres Ellipsis-Pattern (auch 1-Zeichen)
+    truncated = re.findall(r'\b\w+[…..]{1,3}(?=\s|<|$|\*)', result)
+    # Auch Markdown-formatierte truncations
+    truncated += re.findall(r'\*\*\w+[…]+\*\*', result)
     for tw in truncated:
         if tw.endswith('…') or tw.endswith('...'):
             result = result.replace(tw, '')
@@ -443,22 +446,43 @@ def inject_hauptleistung_recommendations(html: str, hauptleistung: str, current_
             injections_made += 1
             log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: Injected at '{match.group()[:30]}...'")
     
-    # v14.27: Smarter Fallback für Recommendations
-    # Nur anwenden wenn hauptleistung NICHT bereits im Ziel vorhanden
-    if injections_made < needed:
-        # Finde Stellen wo hauptleistung fehlt und füge dezent hinzu
-        if hauptleistung not in result[:500]:  # Nur wenn nicht in ersten 500 Zeichen
-            # Füge am Anfang des ersten <p> ein
-            if '<p>' in result:
-                result = result.replace('<p>', f'<p>Im Bereich {hauptleistung}: ', 1)
-                injections_made += 1
-                log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: Smart prefix applied")
+    # v14.28: Count-basierter Fallback für Recommendations
+    # Anwenden solange count < needed (nicht "not in"!)
+    current_count = result.count(hauptleistung)
+    
+    while current_count < needed:
+        injected = False
         
-        # Prüfe nochmal
-        if injections_made < needed and result.count(hauptleistung) < needed:
-            # Suche nach "Empfehlung" und füge dort ein
-            if 'Empfehlung' in result and hauptleistung not in result.split('Empfehlung')[0][-100:]:
-                result = result.replace('Empfehlung', f'Empfehlung für {hauptleistung}', 1)
+        # Strategie 1: Nach "KI " einfügen (natürlich)
+        if 'KI ' in result and f'KI im Bereich {hauptleistung}' not in result:
+            result = result.replace('KI ', f'KI im Bereich {hauptleistung} ', 1)
+            injected = True
+            log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: Injected after 'KI '")
+        
+        # Strategie 2: Nach "Prozess" einfügen
+        elif 'Prozess' in result and f'Prozess {hauptleistung}' not in result:
+            result = result.replace('Prozess', f'Prozess ({hauptleistung})', 1)
+            injected = True
+            log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: Injected after 'Prozess'")
+        
+        # Strategie 3: Am Anfang eines <li> einfügen
+        elif '<li>' in result:
+            # Finde ein <li> ohne hauptleistung
+            import re
+            li_pattern = r'(<li>)([^<]{10,})'
+            match = re.search(li_pattern, result)
+            if match and hauptleistung not in match.group(2)[:50]:
+                result = re.sub(li_pattern, f'\\1Für {hauptleistung}: \\2', result, count=1)
+                injected = True
+                log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: Injected in <li>")
+        
+        if not injected:
+            log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: No more injection points, count={current_count}")
+            break
+        
+        current_count = result.count(hauptleistung)
+        if current_count >= needed:
+            log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: Target reached! count={current_count}")
                 injections_made += 1
                 log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: Empfehlung prefix applied")
     
@@ -555,6 +579,14 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Implementiere\b', r'\1Implementieren Sie'),  # v14.27
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Evaluiere\b', r'\1Evaluieren Sie'),  # v14.27
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Integriere\b', r'\1Integrieren Sie'),  # v14.27
+    
+    # v14.28: Patterns für Copy-Paste Prompts (in <pre> Tags und Zeilenstart)
+    # Diese greifen auch am Anfang einer Zeile (nach Newline)
+    (r'(\n|>)"?Analysiere\b', r'\1"Analysieren Sie'),  # Copy-Paste Prompts
+    (r'(\n|>)"?Erstelle\b', r'\1"Erstellen Sie'),  # Copy-Paste Prompts
+    (r'(\n|>)"?Entwickle\b', r'\1"Entwickeln Sie'),  # Copy-Paste Prompts
+    (r'(\n|>)"?Optimiere\b', r'\1"Optimieren Sie'),  # Copy-Paste Prompts
+    (r'(\n|>)"?Prüfe\b', r'\1"Prüfen Sie'),  # Copy-Paste Prompts
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Standardisiere\b', r'\1Standardisieren Sie'),  # v14.20
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Strukturiere\b', r'\1Strukturieren Sie'),  # v14.20
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Verbinde\b', r'\1Verbinden Sie'),  # v14.20
