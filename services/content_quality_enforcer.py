@@ -623,6 +623,7 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'\bModule\b', 'Bausteine'),  # Modul → Baustein
     (r'\bModul\b', 'Baustein'),
     (r'\bSkalierung\b', 'Erweiterung'),  # feminin bleibt feminin
+    (r'Skalierungs', 'Erweiterungs'),  # v14.33: Komposita wie Skalierungsentscheidung
     (r'\bSkalieren\b', 'Erweitern'),
     (r'\bEngine\b', 'System'),
     (r'\bFramework\b', 'Konzept'),
@@ -705,6 +706,15 @@ GRAMMAR_FIX_PATTERNS = [
     (r'\.,', ','),
     
     # Doppelte Punkte
+    
+    # v14.33.1: Persona-Leak Fixes (auch in GRAMMAR_FIX für alle Sections)
+    (r'\bSkalierung\b', 'Erweiterung'),
+    (r'Skalierungs', 'Erweiterungs'),
+    (r'\bModule\b', 'Bausteine'),
+    (r'\bModul\b', 'Baustein'),
+    (r'\bFramework\b', 'Konzept'),
+    (r'\bPipeline\b', 'Ablauf'),
+    (r'\bEngine\b', 'System'),
     (r'\.\. ', '. '),
 ]
 
