@@ -819,7 +819,7 @@ class DecisionFlowGuidanceGenerator:
         },
         SectionCategory.TRANSFORMATION_ROADMAP: {
             "30": "Planungsunsicherheit, unkoordinierte Einzelinitiativen",
-            "90": "Transformationsverzug, erschwerte Skalierung",
+            "90": "Transformationsverzug, erschwerte Erweiterung",
             "180": "Grundlegende Nachplanung erforderlich, erhöhte Transformationskosten",
         },
         SectionCategory.APPENDIX: {

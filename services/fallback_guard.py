@@ -173,7 +173,7 @@ FALLBACK_TEMPLATES: Dict[str, str] = {
 <ul>
 <li><strong>Q1:</strong> Analyse, Pilotierung, Quick Wins</li>
 <li><strong>Q2:</strong> Implementierung, Prozessintegration</li>
-<li><strong>Q3:</strong> Skalierung, Optimierung</li>
+<li><strong>Q3:</strong> Erweiterung, Optimierung</li>
 <li><strong>Q4:</strong> Konsolidierung, Erweiterung</li>
 </ul>
 </div>

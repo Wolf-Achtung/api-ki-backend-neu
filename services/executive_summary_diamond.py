@@ -593,7 +593,7 @@ def generate_complication(sections: SectionDict, risks: List[DiamondRisk], size:
             if text:
                 return truncate_to_words(extract_first_sentences(text, 2), target_words)
 
-    return "Die Hauptherausforderungen liegen in der Integration, Skalierung und Risikominimierung."
+    return "Die Hauptherausforderungen liegen in der Integration, Erweiterung und Risikominimierung."
 
 
 def generate_recommendation(sections: SectionDict, actions: List[DiamondAction], size: str = "medium") -> str:
@@ -612,7 +612,7 @@ def generate_recommendation(sections: SectionDict, actions: List[DiamondAction],
             if text:
                 return truncate_to_words(extract_first_sentences(text, 3), target_words)
 
-    return "Die strategische Empfehlung fokussiert auf schnelle Pilotierung, systematische Skalierung und Risikominimierung."
+    return "Die strategische Empfehlung fokussiert auf schnelle Pilotierung, systematische Erweiterung und Risikominimierung."
 
 
 def generate_impact(sections: SectionDict, kpis: List[DiamondKPI], size: str = "medium") -> str:

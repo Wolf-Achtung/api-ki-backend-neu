@@ -4323,7 +4323,7 @@ def _format_quick_wins_compact(html_content: str) -> str:
         ersparnis_match = re.search(r'Potenzielle Zeitersparnis:\s*([^<\n]+)', content, re.IGNORECASE)
 
         zeitbedarf = zeitbedarf_match.group(1).strip()[:30] if zeitbedarf_match else ""
-        ersparnis = ersparnis_match.group(1).strip()[:40] if ersparnis_match else ""
+        ersparnis = ersparnis_match.group(1).strip()[:100] if ersparnis_match else ""
 
         # Extract and truncate the main description (Mit KI section)
         mit_ki_match = re.search(r'Mit KI:\s*([^<]+(?:<(?!strong)[^>]*>[^<]*)*)', content, re.IGNORECASE | re.DOTALL)
@@ -4434,7 +4434,7 @@ def _format_roadmap_phases_compact(html_content: str) -> str:
         title_clean = re.sub(r'<[^>]+>', '', title.strip())[:60] if title else f"Phase {phase_num}"
         timeframe_clean = timeframe.strip()[:30] if timeframe else ""
         ziel_clean = ziel.strip()[:100] + '...' if len(ziel) > 100 else ziel.strip() if ziel else ""
-        meilenstein_clean = meilenstein.strip()[:80] + '...' if len(meilenstein) > 80 else meilenstein.strip() if meilenstein else ""
+        meilenstein_clean = meilenstein.strip()[:200] + '...' if len(meilenstein) > 80 else meilenstein.strip() if meilenstein else ""
 
         card_html = f'''<div class="roadmap-phase-card" style="border-left: 4px solid {color};">
     <h4><span class="phase-badge" style="background: {color};">Phase {phase_num}</span> {title_clean}</h4>'''
@@ -4768,9 +4768,9 @@ def _format_empfehlungen_v3(html_content: str) -> str:
         cards_created += 1
 
         # Clean and truncate
-        title_clean = title.strip()[:60] + '...' if len(title.strip()) > 60 else title.strip()
-        schwerpunkt_clean = schwerpunkt.strip()[:80] + '...' if len(schwerpunkt.strip()) > 80 else schwerpunkt.strip()
-        massnahme_clean = massnahme.strip()[:80] + '...' if len(massnahme.strip()) > 80 else massnahme.strip()
+        title_clean = title.strip()[:150] + '...' if len(title.strip()) > 60 else title.strip()
+        schwerpunkt_clean = schwerpunkt.strip()[:200] + '...' if len(schwerpunkt.strip()) > 80 else schwerpunkt.strip()
+        massnahme_clean = massnahme.strip()[:200] + '...' if len(massnahme.strip()) > 80 else massnahme.strip()
 
         card_html = f'''<div class="empfehlung-card">
     <div class="empfehlung-header">
@@ -5421,19 +5421,19 @@ def _format_recommendations_as_cards(html_content: str) -> str:
 
                 sp_match = re.search(r'Schwerpunkt:\s*([^<\n]+)', section_text, re.IGNORECASE)
                 if sp_match:
-                    schwerpunkt = sp_match.group(1).strip()[:80]
+                    schwerpunkt = sp_match.group(1).strip()[:200]
 
                 ma_match = re.search(r'Maßnahme:\s*([^<\n]+)', section_text, re.IGNORECASE)
                 if ma_match:
-                    massnahme = ma_match.group(1).strip()[:80]
+                    massnahme = ma_match.group(1).strip()[:200]
 
                 zr_match = re.search(r'(?:Aufwand|Zeitrahmen)[^:]*:\s*([^<\n]+)', section_text, re.IGNORECASE)
                 if zr_match:
-                    zeitrahmen = zr_match.group(1).strip()[:40]
+                    zeitrahmen = zr_match.group(1).strip()[:100]
 
                 cards_data.append({
                     'num': num,
-                    'title': title.strip()[:60],
+                    'title': title.strip()[:150],
                     'schwerpunkt': schwerpunkt,
                     'massnahme': massnahme,
                     'zeitrahmen': zeitrahmen
@@ -5455,8 +5455,8 @@ def _format_recommendations_as_cards(html_content: str) -> str:
             for i, (title, desc) in enumerate(muss_matches[:5], 1):
                 cards_data.append({
                     'num': str(i),
-                    'title': title.strip()[:60],
-                    'schwerpunkt': desc.strip()[:80],
+                    'title': title.strip()[:150],
+                    'schwerpunkt': desc.strip()[:200],
                     'massnahme': '',
                     'zeitrahmen': ''
                 })
@@ -5477,7 +5477,7 @@ def _format_recommendations_as_cards(html_content: str) -> str:
                 num = re.sub(r'\D', '', num_raw) or str(i)
                 cards_data.append({
                     'num': num,
-                    'title': content.strip()[:60],
+                    'title': content.strip()[:150],
                     'schwerpunkt': '',
                     'massnahme': '',
                     'zeitrahmen': ''
@@ -5498,8 +5498,8 @@ def _format_recommendations_as_cards(html_content: str) -> str:
             for num, title, desc in strong_matches[:5]:
                 cards_data.append({
                     'num': num,
-                    'title': (title.strip() or desc.strip())[:60],
-                    'schwerpunkt': desc.strip()[:80] if title.strip() else '',
+                    'title': (title.strip() or desc.strip())[:150],
+                    'schwerpunkt': desc.strip()[:200] if title.strip() else '',
                     'massnahme': '',
                     'zeitrahmen': ''
                 })

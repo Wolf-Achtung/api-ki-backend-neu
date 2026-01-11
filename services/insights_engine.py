@@ -334,7 +334,7 @@ def _build_generic_maturity_card(report_sections: Dict[str, Any]) -> Optional[In
     if overall_score >= 70:
         title = "Fortgeschrittene KI-Reife"
         body = """<p>✅ Ihr Gesamt-Score deutet auf eine <strong>fortgeschrittene KI-Reife</strong> hin.</p>
-        <p class="insight-detail">Fokussieren Sie sich auf Optimierung und Skalierung bestehender KI-Initiativen.</p>"""
+        <p class="insight-detail">Fokussieren Sie sich auf Optimierung und Erweiterung bestehender KI-Initiativen.</p>"""
         severity = "highlight"
     elif overall_score >= 50:
         title = "Solide KI-Grundlage"

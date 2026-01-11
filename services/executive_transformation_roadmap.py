@@ -168,7 +168,7 @@ OPERATIONAL_PHASE_TEMPLATES: List[Dict[str, Any]] = [
         "deliverables": [
             "Pilot-Ergebnisse",
             "Validierter Business Case",
-            "Skalierungsplan",
+            "Erweiterungsplan",
         ],
         "default_kpis": [
             {"name": "Pilotprojekte abgeschlossen", "unit": "Anzahl", "target": "2"},
@@ -177,7 +177,7 @@ OPERATIONAL_PHASE_TEMPLATES: List[Dict[str, Any]] = [
         ],
     },
     {
-        "name": "Skalierung Phase 1",
+        "name": "Erweiterung Phase 1",
         "duration_days": 90,
         "timeline": "Tag 106-195",
         "objectives": [
@@ -197,7 +197,7 @@ OPERATIONAL_PHASE_TEMPLATES: List[Dict[str, Any]] = [
         ],
     },
     {
-        "name": "Skalierung Phase 2",
+        "name": "Erweiterung Phase 2",
         "duration_days": 90,
         "timeline": "Tag 196-285",
         "objectives": [
@@ -353,22 +353,22 @@ DECISION_CHECKPOINT_TEMPLATES: Dict[TimeHorizon, Dict[str, Any]] = {
     },
     TimeHorizon.SHORT_TERM: {
         "type": DecisionType.RESOURCE_ALLOCATION,
-        "description": "Ressourcen-Allokation für Skalierungsphase",
+        "description": "Ressourcen-Allokation für Erweiterungsphase",
         "decision_makers": ["Geschäftsführung", "CFO"],
         "required_inputs": [
             "Pilot-Ergebnisse",
-            "Skalierungsplan",
+            "Erweiterungsplan",
             "Budget-Anforderung",
         ],
         "success_criteria": [
             "Pilot-Erfolg nachgewiesen",
             "ROI bestätigt",
-            "Skalierungsplan genehmigt",
+            "Erweiterungsplan genehmigt",
         ],
     },
     TimeHorizon.MEDIUM_TERM: {
         "type": DecisionType.SCALING_DECISION,
-        "description": "Skalierungs-Entscheidung für Enterprise Rollout",
+        "description": "Erweiterungs-Entscheidung für Enterprise Rollout",
         "decision_makers": ["Vorstand", "Steering Committee"],
         "required_inputs": [
             "Phase-1-Ergebnisse",

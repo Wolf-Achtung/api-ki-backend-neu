@@ -98,15 +98,15 @@ EXTENSION_PARAGRAPHS: Dict[str, Dict[str, str]] = {
     },
     "roadmap_12m": {
         "solo": """
-<p>Ihre langfristige KI-Strategie sollte auf nachhaltigen Effizienzgewinnen aufbauen. Phase 1 (Monate 1-3): Etablierung der Grundlagen und erste Automatisierungen. Phase 2 (Monate 4-6): Ausbau erfolgreicher Piloten und Integration in Kernprozesse. Phase 3 (Monate 7-9): Optimierung und Skalierung bewährter Lösungen. Phase 4 (Monate 10-12): Konsolidierung und strategische Planung für das Folgejahr.</p>
+<p>Ihre langfristige KI-Strategie sollte auf nachhaltigen Effizienzgewinnen aufbauen. Phase 1 (Monate 1-3): Etablierung der Grundlagen und erste Automatisierungen. Phase 2 (Monate 4-6): Ausbau erfolgreicher Piloten und Integration in Kernprozesse. Phase 3 (Monate 7-9): Optimierung und Erweiterung bewährter Lösungen. Phase 4 (Monate 10-12): Konsolidierung und strategische Planung für das Folgejahr.</p>
 <p>Erwartete Ergebnisse nach 12 Monaten: 20-30% Zeitersparnis bei wiederkehrenden Aufgaben, verbesserte Dokumentationsqualität und ein etabliertes System zur kontinuierlichen Verbesserung.</p>
 """,
         "team": """
-<p>Die 12-Monats-Roadmap für Ihr Team gliedert sich in vier Quartale: Q1 fokussiert auf Foundation-Building mit Tool-Auswahl und Schulung. Q2 konzentriert sich auf die Implementierung der priorisierten Use Cases mit regelmäßigen Fortschrittsmessungen. Q3 widmet sich der Optimierung und dem Ausbau erfolgreicher Implementierungen. Q4 beinhaltet die Skalierung und Vorbereitung der nächsten Entwicklungsphase.</p>
+<p>Die 12-Monats-Roadmap für Ihr Team gliedert sich in vier Quartale: Q1 fokussiert auf Foundation-Building mit Tool-Auswahl und Schulung. Q2 konzentriert sich auf die Implementierung der priorisierten Use Cases mit regelmäßigen Fortschrittsmessungen. Q3 widmet sich der Optimierung und dem Ausbau erfolgreicher Implementierungen. Q4 beinhaltet die Erweiterung und Vorbereitung der nächsten Entwicklungsphase.</p>
 <p>Zielmetriken: 25-40% Effizienzsteigerung in automatisierten Prozessen, messbare Qualitätsverbesserungen und ein eingespieltes Team mit KI-Kompetenz.</p>
 """,
         "kmu": """
-<p>Die Jahresstrategie für Ihr Unternehmen umfasst einen strukturierten Transformationsplan: Q1 fokussiert auf Governance-Grundlagen, Tool-Evaluierung und Pilotprojekt-Definition. Q2 beinhaltet den Rollout in ausgewählten Abteilungen mit begleitendem Change Management. Q3 konzentriert sich auf unternehmensweite Skalierung und Prozessintegration. Q4 umfasst Optimierung, ROI-Analyse und strategische Planung für die Folgejahre.</p>
+<p>Die Jahresstrategie für Ihr Unternehmen umfasst einen strukturierten Transformationsplan: Q1 fokussiert auf Governance-Grundlagen, Tool-Evaluierung und Pilotprojekt-Definition. Q2 beinhaltet den Rollout in ausgewählten Abteilungen mit begleitendem Change Management. Q3 konzentriert sich auf unternehmensweite Erweiterung und Prozessintegration. Q4 umfasst Optimierung, ROI-Analyse und strategische Planung für die Folgejahre.</p>
 <p>Erwartete KPIs nach 12 Monaten: 30-50% Prozesseffizienz in automatisierten Bereichen, etabliertes KI-Governance-Framework und messbare Wettbewerbsvorteile durch KI-Integration.</p>
 """,
     },
@@ -658,7 +658,7 @@ def _get_semantic_arguments(section: str, size: str, branche: str, style: str) -
     arguments = {
         "roadmap_90d": {
             "solo": f"""
-<p><strong>Erfolgsfaktoren der Umsetzung:</strong> Fokussierung auf maximal zwei parallele Initiativen{branch_context}. Wöchentliche Fortschrittsmessung anhand definierter KPIs. Dokumentation von Learnings für spätere Skalierung.</p>
+<p><strong>Erfolgsfaktoren der Umsetzung:</strong> Fokussierung auf maximal zwei parallele Initiativen{branch_context}. Wöchentliche Fortschrittsmessung anhand definierter KPIs. Dokumentation von Learnings für spätere Erweiterung.</p>
 """,
             "team": f"""
 <p><strong>Kritische Erfolgsfaktoren:</strong> Klare Verantwortlichkeiten je Initiative{branch_context}. Dedizierte Zeitbudgets für KI-Projekte (min. 20% der Arbeitszeit). Etablierung eines internen Feedback-Loops zur kontinuierlichen Optimierung.</p>
@@ -669,7 +669,7 @@ def _get_semantic_arguments(section: str, size: str, branche: str, style: str) -
         },
         "roadmap_12m": {
             "solo": f"""
-<p><strong>Meilenstein-Framework:</strong> Quartalsweise Zielsetzung mit messbaren Outcomes{branch_context}. Q1: Foundation & erste Quick Wins. Q2: Prozessintegration & Optimierung. Q3: Skalierung erfolgreicher Ansätze. Q4: Strategische Neuausrichtung für Folgejahr.</p>
+<p><strong>Meilenstein-Framework:</strong> Quartalsweise Zielsetzung mit messbaren Outcomes{branch_context}. Q1: Foundation & erste Quick Wins. Q2: Prozessintegration & Optimierung. Q3: Erweiterung erfolgreicher Ansätze. Q4: Strategische Neuausrichtung für Folgejahr.</p>
 """,
             "team": f"""
 <p><strong>Strategische Meilensteine:</strong> Phasenmodell mit Gate-Reviews{branch_context}. Phase 1 (M1-3): Proof of Concept. Phase 2 (M4-6): Pilotierung. Phase 3 (M7-9): Rollout. Phase 4 (M10-12): Optimierung und Verankerung.</p>
@@ -782,7 +782,7 @@ def _get_structural_expansion(section: str, size: str, branche: str, style: str)
 <li><strong>Woche 3-4:</strong> Technische Infrastruktur und Zugänge einrichten</li>
 <li><strong>Woche 5-8:</strong> Pilotimplementierung mit definiertem Scope durchführen</li>
 <li><strong>Woche 9-10:</strong> Evaluation und Optimierung basierend auf Piloterkenntnissen</li>
-<li><strong>Woche 11-12:</strong> Rollout-Planung und Dokumentation für Skalierung</li>
+<li><strong>Woche 11-12:</strong> Rollout-Planung und Dokumentation für Erweiterung</li>
 </ol>
 <p><strong>Erfolgsmessung:</strong> Definition von 3-5 KPIs je Initiative. Baseline-Messung vor Implementierung. Wöchentliches Tracking während der Umsetzung.</p>
 """,
@@ -793,7 +793,7 @@ def _get_structural_expansion(section: str, size: str, branche: str, style: str)
 <li><strong>Projektteam:</strong> Operative Umsetzung mit wöchentlichen Stand-ups</li>
 <li><strong>Fachbereiche:</strong> Integration in Tagesgeschäft mit definierten Ansprechpartnern</li>
 </ol>
-<p><strong>Budget-Framework:</strong> Initiales Investment für Foundation-Phase. Skalierungsbudget nach erfolgreichem Pilot. Laufende Kosten für Maintenance und Weiterentwicklung einplanen.</p>
+<p><strong>Budget-Framework:</strong> Initiales Investment für Foundation-Phase. Erweiterungsbudget nach erfolgreichem Pilot. Laufende Kosten für Maintenance und Weiterentwicklung einplanen.</p>
 """,
         "recommendations": f"""
 <p><strong>Umsetzungs-Roadmap{branch_context}:</strong></p>
@@ -918,11 +918,11 @@ Ein internes Champion-Netzwerk beschleunigt die Adoption signifikant.</p>
             "solo": f"""
 <p>Meilensteine für Ihr 12-Monats-Programm{branch_context}: Monat 3 – erste messbare
 Ergebnisse und ROI-Dokumentation. Monat 6 – Prozessoptimierung auf Basis der Erfahrungen.
-Monat 9 – Skalierung erfolgreicher Ansätze. Monat 12 – strategische Planung für das Folgejahr.</p>
+Monat 9 – Erweiterung erfolgreicher Ansätze. Monat 12 – strategische Planung für das Folgejahr.</p>
 """,
             "team": f"""
 <p>Quartalsweise Review-Zyklen{branch_context} sichern den Projekterfolg: Q1-Review fokussiert
-auf technische Implementierung, Q2 auf Prozessintegration, Q3 auf Skalierung und
+auf technische Implementierung, Q2 auf Prozessintegration, Q3 auf Erweiterung und
 Q4 auf strategische Weiterentwicklung. Jeder Review sollte KPI-basiert erfolgen.</p>
 """,
             "kmu": f"""
@@ -940,7 +940,7 @@ Maßnahmen mit geringem Aufwand und schnell sichtbarem Nutzen.</p>
             "team": f"""
 <p>Für Ihr Team{branch_context} empfiehlt sich eine phasenweise Umsetzung:
 Woche 1-2 für Foundation-Building, Woche 3-6 für Kernimplementierung,
-Woche 7-12 für Optimierung und Skalierung. Dedizierte Verantwortlichkeiten sind essenziell.</p>
+Woche 7-12 für Optimierung und Erweiterung. Dedizierte Verantwortlichkeiten sind essenziell.</p>
 """,
             "kmu": f"""
 <p>Unternehmensweite Empfehlungsumsetzung{branch_context}: Definieren Sie ein

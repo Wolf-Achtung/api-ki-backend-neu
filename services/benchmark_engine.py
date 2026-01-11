@@ -1339,7 +1339,7 @@ def _generate_swot_from_positions(
         "kpi": "Weitere ROI-Steigerung durch KI-Optimierung",
         "tools": "Neue KI-Tools können Effizienz steigern",
         "risk": "Compliance-Vorsprung als Wettbewerbsvorteil",
-        "automation": "Skalierung durch weitere Automatisierung",
+        "automation": "Erweiterung durch weitere Automatisierung",
         "funding": "Zusätzliche Förderprogramme verfügbar",
         "strategy": "Strategische Positionierung als KI-Leader"
     }
