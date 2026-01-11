@@ -596,6 +596,7 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'\bdass du\b', 'dass Sie'),
     (r'\bwenn du\b', 'wenn Sie'),
     (r'\bob du\b', 'ob Sie'),
+    (r', du ', ', Sie '),  # v14.31: Allgemeines du nach Komma
     
     # v14.29: Persona-Leak Fixes für Solo
     # Diese Enterprise-Begriffe werden für Solo ersetzt

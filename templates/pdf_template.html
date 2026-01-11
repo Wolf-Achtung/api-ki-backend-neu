@@ -5866,6 +5866,29 @@
             overflow: visible !important;
             word-break: break-word !important;
         }
+        /* ============================================
+           v14.31: ERLAUBE SEITENUMBRUCH IN CARDS
+           Das Clipping passiert weil Cards nicht umbrechen dürfen!
+           ============================================ */
+        .risk-card,
+        .recommendation-card,
+        .recommendation-card-compact,
+        .empfehlung-card,
+        #branch-risks .card,
+        #risk-engine .card,
+        section.risks .card {
+            page-break-inside: auto !important;
+            break-inside: auto !important;
+            overflow: visible !important;
+            height: auto !important;
+            max-height: none !important;
+        }
+        /* Cards dürfen über Seiten fließen */
+        .card-grid-2 .card,
+        .card-grid-3 .card {
+            page-break-inside: auto !important;
+            break-inside: auto !important;
+        }
     </style>
 </head>
 <body>
