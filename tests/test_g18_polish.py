@@ -200,8 +200,8 @@ class TestTaskE_ValidatorPolish:
         assert solo_lengths.get("strategie_governance") == 90
         # v14.27: tools_empfehlungen reduced from 110 to 80
         assert solo_lengths.get("tools_empfehlungen") == 80
-        # SPRINT N1: foerderpotenzial reduced from 800 to 600
-        assert solo_lengths.get("foerderpotenzial") == 600
+        # v14.28: foerderpotenzial reduced from 600 to 40 (Solo-realistic)
+        assert solo_lengths.get("foerderpotenzial") == 40
 
     def test_min_lengths_adjusted_for_kmu(self):
         """Validator should have adjusted min lengths for KMU."""
