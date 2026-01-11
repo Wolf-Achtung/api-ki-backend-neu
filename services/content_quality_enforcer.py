@@ -623,7 +623,11 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'\bModule\b', 'Bausteine'),  # Modul → Baustein
     (r'\bModul\b', 'Baustein'),
     (r'\bSkalierung\b', 'Erweiterung'),  # feminin bleibt feminin
-    (r'Skalierungs', 'Erweiterungs'),  # v14.33: Komposita wie Skalierungsentscheidung
+    (r'Skalierungs', 'Erweiterungs'),
+    (r'\bskalieren\b', 'erweitern'),  # v14.34: Verb
+    (r'\bSkalierbarkeit\b', 'Erweiterbarkeit'),  # v14.34: Substantiv
+    (r'\bskalierbar\b', 'erweiterbar'),  # v14.34: Adjektiv
+    (r'\bhochskaliert', 'stark erweitert'),  # v14.34: Partizip
     (r'\bSkalieren\b', 'Erweitern'),
     (r'\bEngine\b', 'System'),
     (r'\bFramework\b', 'Konzept'),
@@ -710,12 +714,23 @@ GRAMMAR_FIX_PATTERNS = [
     # v14.33.1: Persona-Leak Fixes (auch in GRAMMAR_FIX für alle Sections)
     (r'\bSkalierung\b', 'Erweiterung'),
     (r'Skalierungs', 'Erweiterungs'),
+    (r'\bskalieren\b', 'erweitern'),  # v14.34: Verb
+    (r'\bSkalierbarkeit\b', 'Erweiterbarkeit'),  # v14.34: Substantiv
+    (r'\bskalierbar\b', 'erweiterbar'),  # v14.34: Adjektiv
+    (r'\bhochskaliert', 'stark erweitert'),  # v14.34: Partizip
     (r'\bModule\b', 'Bausteine'),
     (r'\bModul\b', 'Baustein'),
     (r'\bFramework\b', 'Konzept'),
     (r'\bPipeline\b', 'Ablauf'),
     (r'\bEngine\b', 'System'),
     (r'\.\. ', '. '),
+    
+    # v14.34: Fragment-Fixes
+    (r'\(z\.$', ''),  # Abgeschnittene "(z." am Zeilenende entfernen
+    (r'\(z\.B\.$', ''),  # Abgeschnittene "(z.B." entfernen
+    (r', die die ([A-Za-z]+)\.$', r', die \1.'),  # "die die X." → "die X."
+    (r'und \.\.\.$', 'und weitere.'),  # "und ..." → "und weitere."
+    (r'und\s*\.$', '.'),  # "und." am Ende → nur "."
 ]
 
 def apply_grammar_fixes(html: str) -> tuple[str, int]:
