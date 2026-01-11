@@ -359,15 +359,15 @@ class TestPromptEnhancerConfig:
     def test_all_platin_sections_have_max_tokens_in_range(self):
         """Verify all PLATIN sections have max_tokens in valid range.
 
-        FIX 178969e: Extended range to [1500, 5000] to prevent text truncation.
-        Some sections (recommendations, roadmap_*, quick_wins) need higher limits.
+        v14.30: Extended range to [1500, 7000] for Risk/Recommendation cards.
+        Some sections (risks, recommendations, roadmap_*, quick_wins) need higher limits.
         """
         from services.prompt_enhancer import PLATIN_CRITICAL_SECTIONS
 
         for section, config in PLATIN_CRITICAL_SECTIONS.items():
             max_tokens = config.get("max_tokens", 0)
-            assert 1500 <= max_tokens <= 5000, (
-                f"Section {section} max_tokens={max_tokens} not in range [1500, 5000]"
+            assert 1500 <= max_tokens <= 7000, (
+                f"Section {section} max_tokens={max_tokens} not in range [1500, 7000]"
             )
 
     def test_all_platin_sections_have_min_words(self):
