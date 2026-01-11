@@ -5830,6 +5830,42 @@
             overflow: visible !important;
             max-height: none !important;
         }
+        /* ============================================
+           v14.29: CARD WORD-BREAK FIX
+           Verhindert harte Wortabschneidungen in Cards
+           ============================================ */
+        .recommendation-card,
+        .recommendation-card *,
+        .recommendation-card h4,
+        .recommendation-card p,
+        .recommendation-card-compact,
+        .recommendation-card-compact *,
+        .recommendation-card-compact h4,
+        .recommendation-card-compact p,
+        .risk-card,
+        .risk-card *,
+        .card,
+        .card * {
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+            hyphens: auto !important;
+            -webkit-hyphens: auto !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            max-width: 100% !important;
+        }
+        /* Verhindere Grid-Abschneidung */
+        .card-grid-2,
+        .card-grid-3 {
+            overflow: visible !important;
+        }
+        .card-grid-2 > *,
+        .card-grid-3 > * {
+            min-width: 0 !important;
+            overflow: visible !important;
+            word-break: break-word !important;
+        }
     </style>
 </head>
 <body>

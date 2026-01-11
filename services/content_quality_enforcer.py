@@ -579,13 +579,33 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Evaluiere\b', r'\1Evaluieren Sie'),  # v14.27
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Integriere\b', r'\1Integrieren Sie'),  # v14.27
     
-    # v14.28: Patterns für Copy-Paste Prompts (in <pre> Tags und Zeilenstart)
-    # Diese greifen auch am Anfang einer Zeile (nach Newline)
-    (r'(\n|>)"?Analysiere\b', r'\1"Analysieren Sie'),  # Copy-Paste Prompts
-    (r'(\n|>)"?Erstelle\b', r'\1"Erstellen Sie'),  # Copy-Paste Prompts
-    (r'(\n|>)"?Entwickle\b', r'\1"Entwickeln Sie'),  # Copy-Paste Prompts
-    (r'(\n|>)"?Optimiere\b', r'\1"Optimieren Sie'),  # Copy-Paste Prompts
-    (r'(\n|>)"?Prüfe\b', r'\1"Prüfen Sie'),  # Copy-Paste Prompts
+    # v14.29: AGGRESSIVE Imperative-Patterns (überall anwenden!)
+    # Diese greifen an JEDER Position im Text
+    (r'"Analysiere\b', '"Analysieren Sie'),  # Copy-Paste Prompts
+    (r'"Erstelle\b', '"Erstellen Sie'),  # Copy-Paste Prompts
+    (r'"Entwickle\b', '"Entwickeln Sie'),  # Copy-Paste Prompts
+    (r'"Optimiere\b', '"Optimieren Sie'),  # Copy-Paste Prompts
+    (r'"Prüfe\b', '"Prüfen Sie'),  # Copy-Paste Prompts
+    # Auch ohne Anführungszeichen
+    (r'(\s)Analysiere\b', r'\1Analysieren Sie'),  # Nach Whitespace
+    (r'(\s)Erstelle\b', r'\1Erstellen Sie'),  # Nach Whitespace
+    # v14.29: Skill-Fahrplan Fixes
+    (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Etabliere\b', r'\1Etablieren Sie'),
+    # "du" → "Sie" in bestimmten Kontexten
+    (r'\bwie du\b', 'wie Sie'),
+    (r'\bdass du\b', 'dass Sie'),
+    (r'\bwenn du\b', 'wenn Sie'),
+    (r'\bob du\b', 'ob Sie'),
+    
+    # v14.29: Persona-Leak Fixes für Solo
+    # Diese Enterprise-Begriffe werden für Solo ersetzt
+    (r'\bModule\b', 'Bausteine'),  # Modul → Baustein
+    (r'\bModul\b', 'Baustein'),
+    (r'\bSkalierung\b', 'Wachstum'),  # Skalierung → Wachstum
+    (r'\bSkalieren\b', 'Erweitern'),
+    (r'\bEngine\b', 'System'),
+    (r'\bFramework\b', 'Konzept'),
+    (r'\bPipeline\b', 'Ablauf'),
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Standardisiere\b', r'\1Standardisieren Sie'),  # v14.20
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Strukturiere\b', r'\1Strukturieren Sie'),  # v14.20
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Verbinde\b', r'\1Verbinden Sie'),  # v14.20
