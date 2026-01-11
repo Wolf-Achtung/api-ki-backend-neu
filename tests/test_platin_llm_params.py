@@ -60,8 +60,8 @@ class TestPlatinCriticalSections:
         # FIX 178969e: Increased limits to prevent text truncation
         expected_tokens = {
             "foerderpotenzial": 3200,
-            "risks": 3000,
-            "recommendations": 4000,  # FIX: Increased from 2500 to prevent truncation
+            "risks": 6000,            # v14.30: Increased for complete Risk-Cards
+            "recommendations": 6000,  # v14.30: Increased for complete Recommendation-Cards
             "roadmap_12m": 4000,      # FIX: Increased from 2800 to prevent truncation
             "roadmap_90d": 4000,      # FIX: Increased from 2800 to prevent truncation
             "quick_wins": 4500,       # FIX: Increased from 3500 to prevent truncation
@@ -79,9 +79,9 @@ class TestPlatinCriticalSections:
                 )
             else:
                 # Any section not in expected_tokens should still be in valid range
-                # FIX 178969e: Extended range to [1500, 5000] for truncation prevention
-                assert 1500 <= config["max_tokens"] <= 5000, (
-                    f"Section {section} max_tokens={config['max_tokens']} not in valid range [1500, 5000]"
+                # v14.30: Extended range to [1500, 7000] for Risk/Recommendation cards
+                assert 1500 <= config["max_tokens"] <= 7000, (
+                    f"Section {section} max_tokens={config['max_tokens']} not in valid range [1500, 7000]"
                 )
 
     def test_platin_temperature_is_reasonable(self):
