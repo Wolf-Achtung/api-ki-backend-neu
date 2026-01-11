@@ -598,6 +598,26 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'\bob du\b', 'ob Sie'),
     (r', du ', ', Sie '),  # v14.31: Allgemeines du nach Komma
     
+    # v14.32: Verbkonjugation nach "Sie" korrigieren (Sie + -st → Sie + -en)
+    (r'\bSie ([\w]+)st\b', r'Sie \1en'),  # Allgemeines Pattern
+    # Spezifische häufige Fälle:
+    (r'\bSie einhältst\b', 'Sie einhalten'),
+    (r'\bSie prüfst\b', 'Sie prüfen'),
+    (r'\bSie erstellst\b', 'Sie erstellen'),
+    (r'\bSie analysierst\b', 'Sie analysieren'),
+    (r'\bSie dokumentierst\b', 'Sie dokumentieren'),
+    (r'\bSie redigierst\b', 'Sie redigieren'),
+    (r'\bSie arbeitest\b', 'Sie arbeiten'),
+    (r'\bSie nutzt\b', 'Sie nutzen'),
+    (r'\bSie verwendest\b', 'Sie verwenden'),
+    (r'\bSie brauchst\b', 'Sie brauchen'),
+    (r'\bSie hast\b', 'Sie haben'),
+    (r'\bSie bist\b', 'Sie sind'),
+    (r'\bSie kannst\b', 'Sie können'),
+    (r'\bSie musst\b', 'Sie müssen'),
+    (r'\bSie sollst\b', 'Sie sollen'),
+    (r'\bSie willst\b', 'Sie wollen'),
+    
     # v14.29: Persona-Leak Fixes für Solo
     # Diese Enterprise-Begriffe werden für Solo ersetzt
     (r'\bModule\b', 'Bausteine'),  # Modul → Baustein

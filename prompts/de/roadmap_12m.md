@@ -77,7 +77,7 @@ STRUKTUR NACH GRÖSSE (max 3 Hauptabschnitte):
 
 LEITENTSCHEIDUNGEN PRO QUARTAL (v6.1 NEU - implizit verankern, nicht als Überschrift):
 - Q1: "Fundament vor Fläche" – Qualität der Basis sichern
-- Q2: "Standards vor Skalierung" – einheitliche Regeln etablieren
+- Q2: "Standards vor Erweiterung" – einheitliche Regeln etablieren
 - Q3-Q4: "Verantwortung vor Geschwindigkeit" – Governance mitführen
 Diese Prinzipien sprachlich in die Quartals-Beschreibungen einfließen lassen.
 
@@ -136,7 +136,7 @@ Aufbauend auf den ersten 90 Tagen – Fokus auf nachhaltige Integration und Erwe
 ### Q2 (Monate 4–6): Qualität steigern
 - Qualitäts-Checkliste für alle KI-Outputs anwenden
 - Erste Datenquellen systematisch einbinden (CRM, Notizen, Dokumente)
-- Workflow-Dokumentation für Vertretung/Skalierung erstellen
+- Workflow-Dokumentation für Vertretung/Erweiterung erstellen
 
 **🎯 Meilenstein Q2:** 90%+ Ersttrefferquote bei Standard-Aufgaben.
 
@@ -148,7 +148,7 @@ Aufbauend auf den ersten 90 Tagen – Fokus auf nachhaltige Integration und Erwe
 **🎯 Meilenstein Jahresende:** Nachweisbarer ROI, klare Prioritäten für nächstes Jahr.
 
 {% elif COMPANY_SIZE == "team" %}
-Aufbauend auf den ersten 90 Tagen – Fokus auf Skalierung im Team.
+Aufbauend auf den ersten 90 Tagen – Fokus auf Erweiterung im Team.
 
 ### Q1 (Monate 1–3): Team-Standards etablieren
 - KI-Koordinator:in festlegen (verantwortlich für Qualität & Standards)
@@ -164,7 +164,7 @@ Aufbauend auf den ersten 90 Tagen – Fokus auf Skalierung im Team.
 
 **🎯 Meilenstein Q2:** Einheitliche Qualität, Fehlerquote < 10%.
 
-### Q3–Q4 (Monate 7–12): Skalierung & ROI
+### Q3–Q4 (Monate 7–12): Erweiterung & ROI
 - Neue Use Cases aus benachbarten Bereichen erschließen
 - Erfolgsmessung ausweiten (Zeit, Kosten, Qualität)
 - Jahresreview: Budget und Prioritäten für Jahr 2
@@ -212,7 +212,7 @@ Aufbauend auf den ersten 90 Tagen – professioneller Rollout über 5 Dimensione
 ### Jahresabschluss
 - Management-Review mit ROI-Nachweis
 - Budget-Planung für Jahr 2
-- Roadmap 2.0 mit Skalierungszielen
+- Roadmap 2.0 mit Erweiterungszielen
 
 **🎯 Meilenstein Jahresende:** Board-Entscheidung für Jahr 2, Rollout-Plan steht.
 {% endif %}

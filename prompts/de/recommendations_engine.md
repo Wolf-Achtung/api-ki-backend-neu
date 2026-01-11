@@ -156,7 +156,7 @@ Auswahl basierend auf:
 - Muss mit Strategy Engine Phasen konsistent sein
 - `phase_1`: Quick Wins, sofortige Maßnahmen (Monat 1-3)
 - `phase_2`: Konsolidierung, Aufbau (Monat 4-6)
-- `phase_3`: Skalierung, Optimierung (Monat 7-12)
+- `phase_3`: Erweiterung, Optimierung (Monat 7-12)
 
 ## Validierungsregeln
 
@@ -295,7 +295,7 @@ Auswahl basierend auf:
       "id": "rec7",
       "title": "KI-Stack auf weitere Abteilungen skalieren",
       "description": "Nach erfolgreicher Pilotphase: Rollout der KI-Tools auf Einkauf und Vertrieb planen.",
-      "reason": "Skalierung maximiert den ROI der getätigten Investitionen.",
+      "reason": "Erweiterung maximiert den ROI der getätigten Investitionen.",
       "impact_level": "high",
       "urgency_level": "low",
       "risk_relation": "requires_mitigation",

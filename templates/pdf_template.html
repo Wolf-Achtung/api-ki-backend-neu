@@ -263,8 +263,8 @@
         .business-case-card,
         .content-card,
         .section {
-            page-break-inside: avoid;
-            break-inside: avoid;
+            page-break-inside: auto;
+            break-inside: auto;
         }
         /* Erlaube Umbruch VOR neuen Haupt-Sections */
         .roadmap-section,
@@ -960,7 +960,7 @@
             padding: 0;
             margin-bottom: 24px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            page-break-inside: avoid;
+            page-break-inside: auto;
             overflow: hidden;
         }
 
@@ -1607,12 +1607,12 @@
                 break-after: avoid;
             }
             .card, .quick-win-card-new, .timeline-item, .kpi-card, .hero-metric-card {
-                page-break-inside: avoid;
-                break-inside: avoid;
+                page-break-inside: auto;
+                break-inside: auto;
             }
             table, figure, .section {
-                break-inside: avoid;
-                page-break-inside: avoid;
+                break-inside: auto;
+                page-break-inside: auto;
             }
             .page-break {
                 break-after: page;
@@ -1629,7 +1629,7 @@
         table {
             border-collapse: collapse;
             width: 100%;
-            break-inside: avoid;
+            break-inside: auto;
             font-size: var(--font-table);
             margin: var(--space-md) 0;
         }
@@ -1674,7 +1674,7 @@
             border-radius: 8pt;
             padding: var(--space-lg);
             margin-bottom: var(--space-card-gap);
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
         .card--highlight {
             background: var(--color-card-highlight);
@@ -1700,7 +1700,7 @@
         .quick-win,
         .risk-item,
         .timeline-item {
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
         h2, h3, h4 {
             page-break-after: avoid;
@@ -2094,12 +2094,12 @@
         .dimension-scores,
         .timeline-container,
         .risk-matrix-container {
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
 
         /* Tabellen nicht trennen wenn möglich */
         table {
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
 
         /* Bei langen Tabellen: Header auf jeder Seite */
@@ -2131,7 +2131,7 @@
         /* === 3.4 TIMELINE (90-Tage-Roadmap) === */
         .timeline-container {
             margin: 32px 0;
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
 
         .timeline {
@@ -2207,7 +2207,7 @@
         .risk-matrix-container {
             max-width: 450px;
             margin: 24px auto;
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
 
         .risk-matrix {
@@ -2368,7 +2368,7 @@
 
         /* === 4.1 GAMECHANGER KOMPAKT === */
         .gamechanger-section {
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
 
         .gamechanger-insight {
@@ -2557,7 +2557,7 @@
             background: white;
             border: 1px solid var(--color-border);
             border-radius: 8px;
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
 
         .tool-card__badge {
@@ -2677,7 +2677,7 @@
             padding: 16pt 18pt;
             margin: 12pt 0;
             box-shadow: var(--shadow-card);
-            break-inside: avoid;
+            break-inside: auto;
         }
         .report-card-header {
             display: flex;
@@ -2767,7 +2767,7 @@
             padding: 16pt;
             background: var(--color-bg-surface);
             border-radius: var(--radius-card);
-            break-inside: avoid;
+            break-inside: auto;
         }
         .kpi {
             text-align: center;
@@ -2803,7 +2803,7 @@
         /* G23: KPI Visuals CSS */
         .kpi-visuals {
             margin: 16pt 0;
-            break-inside: avoid;
+            break-inside: auto;
         }
         .kpi-bars {
             display: flex;
@@ -2828,8 +2828,8 @@
         }
         @media print {
             .kpi-visuals {
-                break-inside: avoid;
-                page-break-inside: avoid;
+                break-inside: auto;
+                page-break-inside: auto;
             }
             .kpi-bar, .kpi-sparkline, .kpi-benchmark {
                 max-width: 100%;
@@ -3456,7 +3456,7 @@
             border-radius: var(--radius-card);
             padding: 14pt;
             position: relative;
-            break-inside: avoid;
+            break-inside: auto;
         }
         .step-card-number {
             position: absolute;
@@ -3496,7 +3496,7 @@
             display: flex;
             align-items: flex-start;
             gap: 12pt;
-            break-inside: avoid;
+            break-inside: auto;
         }
         .pair-card-icon {
             width: 18pt;
@@ -3547,7 +3547,7 @@
             border-radius: var(--radius-card);
             margin: 16pt 0;
             border: 1px solid var(--color-border);
-            break-inside: avoid;
+            break-inside: auto;
         }
         .badge-block-item {
             display: flex;
@@ -3626,7 +3626,7 @@
             gap: 18pt;
         }
         .stack-section {
-            break-inside: avoid;
+            break-inside: auto;
         }
         .stack-section-title {
             font-size: var(--font-h3);
@@ -3681,8 +3681,8 @@
             border-radius: var(--radius-card);
             padding: var(--space-lg);
             margin: var(--space-section) 0;
-            page-break-inside: avoid;
-            break-inside: avoid;
+            page-break-inside: auto;
+            break-inside: auto;
         }
         .brutal-summary h2 {
             color: var(--color-brand-accent);
@@ -3733,7 +3733,7 @@
             border-radius: var(--radius-card);
             padding: var(--space-md);
             margin: var(--space-md) 0;
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
         .safe-start-box h3 {
             margin: 0 0 var(--space-sm) 0;
@@ -3759,7 +3759,7 @@
             border-radius: var(--radius-card);
             padding: var(--space-md);
             margin: var(--space-md) 0;
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
         .top3-muss-box h3 {
             margin: 0 0 var(--space-sm) 0;
@@ -4705,8 +4705,8 @@
            ============================================ */
         .svg-decorated-box {
             overflow: visible !important;
-            page-break-inside: avoid;
-            break-inside: avoid;
+            page-break-inside: auto;
+            break-inside: auto;
             margin-bottom: 16px;
         }
         .svg-decorated-box-content {
@@ -4754,7 +4754,7 @@
             border-radius: 6px;
             padding: 12px 14px;
             margin-bottom: 10px;
-            page-break-inside: avoid;
+            page-break-inside: auto; overflow: visible;
         }
         .recommendation-card-compact h4 {
             margin: 0 0 6px 0;
@@ -4781,7 +4781,7 @@
             border-radius: 8px;
             padding: 12px 14px;
             margin-bottom: 12px;
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
         .quick-win-header {
             display: flex;
@@ -4837,7 +4837,7 @@
             border-radius: 8px;
             padding: 12px 14px;
             margin-bottom: 10px;
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
         .empfehlung-header {
             display: flex;
@@ -4885,7 +4885,7 @@
             border: 1px solid #bbf7d0;
             border-radius: 6px;
             margin-bottom: 8px;
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
         .foerder-check {
             font-size: 14pt;
@@ -4925,8 +4925,8 @@
         .foerder-checklist-item,
         .recommendation-card-compact,
         .risk-card {
-            page-break-inside: avoid;
-            break-inside: avoid;
+            page-break-inside: auto;
+            break-inside: auto;
         }
         /* Roadmap cards can break if too long */
         .roadmap-phase-card {
@@ -4973,8 +4973,8 @@
             page-break-inside: auto !important;
         }
         tr {
-            page-break-inside: avoid;
-            break-inside: avoid;
+            page-break-inside: auto;
+            break-inside: auto;
         }
         /* Colgroup fixes for column widths */
         colgroup col {
@@ -4988,7 +4988,7 @@
             border-radius: 8px;
             padding: 14px 16px;
             margin-bottom: 12px;
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
         .roadmap-phase-card h4 {
             margin: 0 0 8px 0;
@@ -5039,8 +5039,8 @@
             border: 1px solid var(--color-border);
             border-radius: 8px;
             padding: 12px;
-            page-break-inside: avoid;
-            break-inside: avoid;
+            page-break-inside: auto;
+            break-inside: auto;
         }
         @media print {
             .rec-cards-grid {
@@ -5051,7 +5051,7 @@
                 width: 48%;
                 margin: 1%;
                 vertical-align: top;
-                page-break-inside: avoid;
+                page-break-inside: auto;
             }
         }
 
@@ -5062,7 +5062,7 @@
             border-radius: 12px;
             padding: 18px;
             margin: 16px 0;
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
         .ai-policy-mini h4 {
             color: #1e40af;
@@ -5089,7 +5089,7 @@
             border-radius: 12px;
             padding: 18px;
             margin: 16px 0;
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
         .ki-tools-overview h4 {
             color: #0369a1;
@@ -5115,8 +5115,8 @@
         @media print {
             .ai-policy-mini,
             .ki-tools-overview {
-                page-break-inside: avoid;
-                break-inside: avoid;
+                page-break-inside: auto;
+                break-inside: auto;
             }
         }
 
@@ -5125,7 +5125,7 @@
         /* Templates Section */
         .templates-section {
             margin: 2rem 0;
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
 
         .templates-intro {
@@ -5160,7 +5160,7 @@
             margin: 1rem 0;
             padding: 1rem;
             background: white;
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
 
         .template-card summary {
@@ -5232,7 +5232,7 @@
         /* Data Gaps Section */
         .data-gaps-section {
             margin: 2rem 0;
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
 
         .transparency-intro {
@@ -5312,7 +5312,7 @@
         /* Print optimization for templates and data gaps */
         @media print {
             .template-card, .data-gaps-section, .templates-section {
-                page-break-inside: avoid;
+                page-break-inside: auto;
             }
         }
 
@@ -6253,7 +6253,7 @@
                             </div>
                             <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #6c757d; line-height: 1.6;">
                                 <li>Standard-Analyse-Backbone statt Handwerk</li>
-                                <li>Klare Prüfpunkte + Module</li>
+                                <li>Klare Prüfpunkte + Bausteine</li>
                                 <li>Messbare Zeitgewinne</li>
                             </ul>
                         </div>
@@ -7066,7 +7066,7 @@
                 {% endif %}
                 <!-- SPRINT G7/G8: AI Act Compliance Section -->
                 {% if AI_ACT_RISK_LEVEL %}
-                <section class="section chapter ai-act-compliance" style="page-break-inside: avoid;">
+                <section class="section chapter ai-act-compliance" style="page-break-inside: auto;">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">EU AI Act</span>

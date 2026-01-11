@@ -4,7 +4,7 @@ Developer:
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE -->
-<!-- TOKEN-BUDGET: 600 (solo:0.8x=480, team:1.0x=600, kmu:1.15x=690) -->
+<!-- TOKEN-BUDGET: 1200 (solo:0.8x=960, team:1.0x=1200, kmu:1.15x=1380) -->
 <!--
 ###############################################################################
 ##   🚨🚨🚨 CRITICAL: MINIMUM 3x {{hauptleistung}} - NON-NEGOTIABLE 🚨🚨🚨  ##
@@ -326,7 +326,7 @@ KMU-MODUS - VERBOTEN:
       <tr><td><strong>MUSS</strong></td><td>[Maßnahme 1 für {{hauptleistung}}]</td><td>Sofort</td><td>Zeitersparnis</td></tr>
       <tr><td><strong>MUSS</strong></td><td>[Maßnahme 2]</td><td>Woche 1-2</td><td>Qualitätssteigerung</td></tr>
       <tr><td><strong>MUSS</strong></td><td>[Maßnahme 3]</td><td>Woche 1-2</td><td>Risikominimierung</td></tr>
-      <tr><td>Option</td><td>Wissensmanagement aufbauen</td><td>{% if COMPANY_SIZE == "solo" %}Monat 3+{% else %}Monat 4-6{% endif %}</td><td>Skalierung</td></tr>
+      <tr><td>Option</td><td>Wissensmanagement aufbauen</td><td>{% if COMPANY_SIZE == "solo" %}Monat 3+{% else %}Monat 4-6{% endif %}</td><td>Erweiterung</td></tr>
       <tr><td>Option</td><td>Pilot ausweiten</td><td>{% if COMPANY_SIZE == "solo" %}Monat 6+{% else %}Monat 6-9{% endif %}</td><td>Sichtbarer Erfolg</td></tr>
       <tr><td>Option</td><td>Governance formalisieren</td><td>{% if COMPANY_SIZE == "solo" %}Monat 3+{% else %}Monat 6+{% endif %}</td><td>Rechtssicherheit</td></tr>
     </tbody>

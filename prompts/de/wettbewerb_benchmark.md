@@ -200,9 +200,9 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
       {% if COMPANY_SIZE == "solo" %}
         Routine-Festigung: Ihre wiederkehrende Nutzung + Jahresplanung für das kommende Jahr.
       {% elif COMPANY_SIZE == "team" %}
-        Skalierung im Team: automatisierte Qualitätskontrolle + einheitliche KI-Kommunikation.
+        Erweiterung im Team: automatisierte Qualitätskontrolle + einheitliche KI-Kommunikation.
       {% else %}
-        Skalierungsprogramm: Governance erweitern, Auditroutinen, bereichsübergreifende Standards.
+        Erweiterungsprogramm: Governance erweitern, Auditroutinen, bereichsübergreifende Standards.
       {% endif %}
     </li>
   </ol>

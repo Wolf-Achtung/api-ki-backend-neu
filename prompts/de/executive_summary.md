@@ -180,7 +180,7 @@ ELEMENT 2: DREI ENTSCHEIDUNGEN (Bullet-Liste) — BALANCIERT!
   • ENTSCHEIDUNG 3 (generisch): Qualitätssicherung oder Governance-Aspekt
 
   KONKRETE BEISPIELE:
-  • "1. Für {{hauptleistung}} Template-Bibliothek statt Custom-Code – wiederverwendbare Module."
+  • "1. Für {{hauptleistung}} Template-Bibliothek statt Custom-Code – wiederverwendbare Bausteine."
   • "2. Diese Leistung durch Batch-Produktion skalieren – mehr Output ohne Mehraufwand."
   • "3. Qualitätssicherung vor Automatisierung – Fehler früh erkennen."
 

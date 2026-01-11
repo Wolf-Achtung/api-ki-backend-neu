@@ -48,7 +48,7 @@ Developer:
        KMU (11–100):
          - Fokus: skalierbare Prozesse, mehrere Bereiche, strukturierte Abläufe.
          - Herausforderungen: Koordination, Daten-Silos, interne Abstimmung, Governance.
-         - KI-Hebel: datengetriebene Entscheidungen, Skalierung, Richtlinien & Governance.
+         - KI-Hebel: datengetriebene Entscheidungen, Erweiterung, Richtlinien & Governance.
 
      AUSGABEREGELN:
        - Exakt ein <section>-Block mit folgenden Blöcken in dieser Reihenfolge:
@@ -132,7 +132,7 @@ Developer:
         {% elif COMPANY_SIZE == "team" %}
           Kurze Wege und gemeinsame Verantwortung; neue KI-Workflows können im Team erprobt und schrittweise verfeinert werden.
         {% else %}
-          Größeres Skalierungspotenzial und mehr Ressourcen; KI-Lösungen können in mehreren Bereichen ausgerollt und systematisch verankert werden.
+          Größeres Erweiterungspotenzial und mehr Ressourcen; KI-Lösungen können in mehreren Bereichen ausgerollt und systematisch verankert werden.
         {% endif %}
       </li>
       <li>
