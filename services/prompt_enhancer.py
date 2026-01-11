@@ -1061,7 +1061,8 @@ PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
     },
     # Risks: bleibt relativ hoch (wichtige Compliance-Infos)
     "risks": {
-        "max_tokens": 3000,  # Reduziert von 4096 (-27%)
+
+        "max_tokens": 6000,  # v14.30: Erhöht für vollständige Risk-Cards
         "temperature": 0.4,
         "presence_penalty": 0.0,
         "frequency_penalty": 0.0,
@@ -1069,7 +1070,7 @@ PLATIN_CRITICAL_SECTIONS: Dict[str, PlatinSectionConfig] = {
     },
     # Recommendations: erhöht um Truncation zu vermeiden
     "recommendations": {
-        "max_tokens": 4000,  # FIX: Erhöht von 2500 um Truncation zu vermeiden
+        "max_tokens": 6000,  # v14.30: Erhöht für vollständige Recommendation-Cards
         "temperature": 0.4,
         "presence_penalty": 0.1,  # Leichte Penalty gegen Wiederholungen
         "frequency_penalty": 0.1,
