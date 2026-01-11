@@ -198,7 +198,8 @@ class TestTaskE_ValidatorPolish:
         solo_lengths = ReportValidator.MIN_SECTION_LENGTH_BY_SIZE["solo"]
         # SPRINT N1: strategie_governance reduced from 110 to 90
         assert solo_lengths.get("strategie_governance") == 90
-        assert solo_lengths.get("tools_empfehlungen") == 110
+        # v14.27: tools_empfehlungen reduced from 110 to 80
+        assert solo_lengths.get("tools_empfehlungen") == 80
         # SPRINT N1: foerderpotenzial reduced from 800 to 600
         assert solo_lengths.get("foerderpotenzial") == 600
 
