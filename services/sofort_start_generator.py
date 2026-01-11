@@ -112,7 +112,7 @@ Analysieren Sie:
 
 [ANFRAGE HIER EINFÜGEN]
 
-Bitte liefere:
+Bitte liefern Sie:
 1. Kernproblem in einem Satz
 2. 3 mögliche Lösungsansätze
 3. Geschätzter Aufwand (Stunden)
@@ -127,7 +127,7 @@ Kunde: [NAME/BRANCHE]
 Problem: [KURZBESCHREIBUNG]
 Budget-Rahmen: [FALLS BEKANNT]
 
-Liefere:
+Liefern Sie:
 1. Executive Summary (3 Sätze)
 2. Leistungsumfang (Bullet Points)
 3. Zeitplan mit Meilensteinen
@@ -281,7 +281,7 @@ Kategorie: [KATEGORIE]
 Aktuelle Beschreibung: [TEXT]
 Zielgruppe: [WER KAUFT DAS?]
 
-Liefere:
+Liefern Sie:
 1. SEO-optimierter Titel
 2. Kurzbeschreibung (50 Wörter)
 3. Langbeschreibung mit Bullet Points
@@ -312,7 +312,7 @@ Produkte: [WELCHE]
 Zeitraum: [VON-BIS]
 Zielgruppe: [WER]
 
-Liefere:
+Liefern Sie:
 1. Headline (max. 8 Wörter)
 2. Subheadline
 3. 3 Bullet Points mit Benefits
@@ -827,7 +827,7 @@ Tonalität: [formell/freundlich-professionell]""",
 
 [TEXT HIER EINFÜGEN]
 
-Liefere:
+Liefern Sie:
 1. Executive Summary (3 Sätze)
 2. Kernpunkte (5 Bullet Points)
 3. Handlungsempfehlung (falls relevant)""",
@@ -841,7 +841,7 @@ Thema/Problem: [BESCHREIBUNG]
 Kontext: [HINTERGRUND]
 Bisherige Ideen: [FALLS VORHANDEN]
 
-Liefere:
+Liefern Sie:
 1. 10 kreative Ideen (auch unkonventionelle)
 2. Pro/Contra für die Top 3
 3. Empfehlung zum Starten""",
