@@ -601,7 +601,7 @@ EXTENDED_SIEZEN_PATTERNS = [
     # Diese Enterprise-Begriffe werden für Solo ersetzt
     (r'\bModule\b', 'Bausteine'),  # Modul → Baustein
     (r'\bModul\b', 'Baustein'),
-    (r'\bSkalierung\b', 'Wachstum'),  # Skalierung → Wachstum
+    (r'\bSkalierung\b', 'Erweiterung')  # feminin bleibt feminin
     (r'\bSkalieren\b', 'Erweitern'),
     (r'\bEngine\b', 'System'),
     (r'\bFramework\b', 'Konzept'),

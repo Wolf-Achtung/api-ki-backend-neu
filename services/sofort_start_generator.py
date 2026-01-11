@@ -49,7 +49,7 @@ BRANCHE_PROMPTS = {
         "prompts": [
             {
                 "titel": "Social Media Posts erstellen",
-                "prompt": """Erstelle 5 LinkedIn-Posts für diese Woche:
+                "prompt": """Erstellen Sie 5 LinkedIn-Posts für diese Woche:
 
 Thema/Produkt: [BESCHREIBUNG]
 Zielgruppe: [WER]
@@ -64,7 +64,7 @@ Pro Post:
             },
             {
                 "titel": "Newsletter schreiben",
-                "prompt": """Erstelle einen Newsletter:
+                "prompt": """Erstellen Sie einen Newsletter:
 
 Thema: [HAUPTTHEMA]
 Zielgruppe: [WER]
@@ -81,12 +81,12 @@ Struktur:
             },
             {
                 "titel": "Wettbewerbsanalyse",
-                "prompt": """Analysiere diese Wettbewerber-Positionierung:
+                "prompt": """Analysieren Sie diese Wettbewerber-Positionierung:
 
 Wettbewerber: [NAME/BESCHREIBUNG]
 Mein Unternehmen: [KURZBESCHREIBUNG]
 
-Analysiere:
+Analysieren Sie:
 1. Positionierung & USP
 2. Zielgruppen-Ansprache
 3. Content-Strategie
@@ -108,7 +108,7 @@ Analysiere:
         "prompts": [
             {
                 "titel": "Kundenanfrage analysieren",
-                "prompt": """Analysiere diese Kundenanfrage und erstelle eine strukturierte Bedarfsanalyse:
+                "prompt": """Analysieren Sie diese Kundenanfrage und erstellen Sie eine strukturierte Bedarfsanalyse:
 
 [ANFRAGE HIER EINFÜGEN]
 
@@ -121,7 +121,7 @@ Bitte liefere:
             },
             {
                 "titel": "Angebot strukturieren",
-                "prompt": """Erstelle eine Angebotsstruktur für folgendes Projekt:
+                "prompt": """Erstellen Sie eine Angebotsstruktur für folgendes Projekt:
 
 Kunde: [NAME/BRANCHE]
 Problem: [KURZBESCHREIBUNG]
@@ -136,7 +136,7 @@ Liefere:
             },
             {
                 "titel": "Meeting-Protokoll erstellen",
-                "prompt": """Erstelle aus diesen Meeting-Notizen ein professionelles Protokoll:
+                "prompt": """Erstellen Sie aus diesen Meeting-Notizen ein professionelles Protokoll:
 
 [NOTIZEN HIER EINFÜGEN]
 
@@ -170,12 +170,12 @@ Format:
 
 [CODE HIER EINFÜGEN]
 
-Liefere konkrete Verbesserungsvorschläge mit Codebeispielen.""",
+Liefern Sie konkrete Verbesserungsvorschläge mit Codebeispielen.""",
                 "zeitersparnis": "30-60 Min pro Review"
             },
             {
                 "titel": "Technische Dokumentation",
-                "prompt": """Erstelle eine technische Dokumentation für:
+                "prompt": """Erstellen Sie eine technische Dokumentation für:
 
 Komponente/Feature: [NAME]
 Zweck: [KURZBESCHREIBUNG]
@@ -191,7 +191,7 @@ Struktur:
             },
             {
                 "titel": "User Story schreiben",
-                "prompt": """Erstelle User Stories für dieses Feature:
+                "prompt": """Erstellen Sie User Stories für dieses Feature:
 
 Feature: [NAME]
 Zielgruppe: [WER]
@@ -247,7 +247,7 @@ Erstelle:
             },
             {
                 "titel": "Reporting-Text erstellen",
-                "prompt": """Erstelle einen Reporting-Text aus diesen Zahlen:
+                "prompt": """Erstellen Sie einen Reporting-Text aus diesen Zahlen:
 
 Kennzahlen: [LISTE]
 Zeitraum: [VON-BIS]
@@ -305,7 +305,7 @@ Die Antwort soll:
             },
             {
                 "titel": "Aktionstext erstellen",
-                "prompt": """Erstelle einen überzeugenden Aktionstext:
+                "prompt": """Erstellen Sie einen überzeugenden Aktionstext:
 
 Aktion: [z.B. 20% Rabatt, Gratis Versand]
 Produkte: [WELCHE]
@@ -334,7 +334,7 @@ Liefere:
         "prompts": [
             {
                 "titel": "Unterrichtsentwurf erstellen",
-                "prompt": """Erstelle einen Unterrichtsentwurf:
+                "prompt": """Erstellen Sie einen Unterrichtsentwurf:
 
 Thema: [THEMA]
 Zielgruppe: [Alter/Niveau]
@@ -351,7 +351,7 @@ Struktur:
             },
             {
                 "titel": "Übungsaufgaben generieren",
-                "prompt": """Erstelle Übungsaufgaben:
+                "prompt": """Erstellen Sie Übungsaufgaben:
 
 Fach/Thema: [BESCHREIBUNG]
 Schwierigkeitsgrad: [leicht/mittel/schwer]
@@ -393,7 +393,7 @@ Das Feedback soll:
         "prompts": [
             {
                 "titel": "Bescheid-Entwurf erstellen",
-                "prompt": """Erstelle einen Bescheid-Entwurf:
+                "prompt": """Erstellen Sie einen Bescheid-Entwurf:
 
 Art: [z.B. Genehmigung, Ablehnung, Änderung]
 Sachverhalt: [KURZBESCHREIBUNG]
@@ -423,7 +423,7 @@ Die Antwort soll:
             },
             {
                 "titel": "Sitzungsprotokoll erstellen",
-                "prompt": """Erstelle ein Sitzungsprotokoll:
+                "prompt": """Erstellen Sie ein Sitzungsprotokoll:
 
 Gremium: [NAME]
 Datum: [DATUM]
@@ -451,7 +451,7 @@ Format:
         "prompts": [
             {
                 "titel": "Patienteninformation erstellen",
-                "prompt": """Erstelle eine verständliche Patienteninformation:
+                "prompt": """Erstellen Sie eine verständliche Patienteninformation:
 
 Thema: [z.B. Behandlung, Medikament, Nachsorge]
 Zielgruppe: [Patient/Angehörige]
@@ -481,7 +481,7 @@ Erstelle:
             },
             {
                 "titel": "Schulungskonzept erstellen",
-                "prompt": """Erstelle ein Schulungskonzept:
+                "prompt": """Erstellen Sie ein Schulungskonzept:
 
 Thema: [z.B. Hygiene, Notfall, Gerät]
 Zielgruppe: [WER]
@@ -509,7 +509,7 @@ Struktur:
         "prompts": [
             {
                 "titel": "Baustellenprotokoll erstellen",
-                "prompt": """Erstelle ein Baustellenprotokoll:
+                "prompt": """Erstellen Sie ein Baustellenprotokoll:
 
 Projekt: [NAME]
 Datum: [DATUM]
@@ -583,7 +583,7 @@ Varianten:
             },
             {
                 "titel": "Creative Brief erstellen",
-                "prompt": """Erstelle ein Creative Brief:
+                "prompt": """Erstellen Sie ein Creative Brief:
 
 Projekt: [NAME]
 Kunde: [BRANCHE/TYP]
@@ -601,7 +601,7 @@ Struktur:
             },
             {
                 "titel": "Skript-Outline erstellen",
-                "prompt": """Erstelle eine Skript-Outline:
+                "prompt": """Erstellen Sie eine Skript-Outline:
 
 Format: [Video/Podcast/Präsentation]
 Länge: [MINUTEN]
@@ -630,7 +630,7 @@ Struktur:
         "prompts": [
             {
                 "titel": "Arbeitsanweisung erstellen",
-                "prompt": """Erstelle eine Arbeitsanweisung:
+                "prompt": """Erstellen Sie eine Arbeitsanweisung:
 
 Tätigkeit: [BESCHREIBUNG]
 Zielgruppe: [WER führt aus]
@@ -653,7 +653,7 @@ Fehler/Problem: [BESCHREIBUNG]
 Wann aufgetreten: [ZEITPUNKT]
 Auswirkung: [WAS ist passiert]
 
-Analysiere:
+Analysieren Sie:
 1. Warum ist das passiert? → Antwort
 2. Warum? (auf Antwort 1) → Antwort
 3. Warum? (auf Antwort 2) → Antwort
@@ -665,7 +665,7 @@ Analysiere:
             },
             {
                 "titel": "Schichtbericht erstellen",
-                "prompt": """Erstelle einen Schichtbericht:
+                "prompt": """Erstellen Sie einen Schichtbericht:
 
 Datum/Schicht: [INFO]
 Notizen: [STICHPUNKTE]
@@ -710,7 +710,7 @@ Die Nachricht soll:
             },
             {
                 "titel": "Frachtbrief-Daten prüfen",
-                "prompt": """Prüfe diese Frachtbrief-Daten auf Vollständigkeit:
+                "prompt": """Prüfen Sie diese Frachtbrief-Daten auf Vollständigkeit:
 
 [DATEN HIER EINFÜGEN]
 
@@ -782,7 +782,7 @@ Die Antwort soll:
             },
             {
                 "titel": "Event-Angebot erstellen",
-                "prompt": """Erstelle ein Angebot für diese Veranstaltung:
+                "prompt": """Erstellen Sie ein Angebot für diese Veranstaltung:
 
 Art: [z.B. Hochzeit, Firmenfeier, Geburtstag]
 Personenzahl: [ANZAHL]
@@ -823,7 +823,7 @@ Tonalität: [formell/freundlich-professionell]""",
             },
             {
                 "titel": "Zusammenfassung erstellen",
-                "prompt": """Fasse diesen Text zusammen:
+                "prompt": """Fassen Sie diesen Text zusammen:
 
 [TEXT HIER EINFÜGEN]
 
