@@ -665,7 +665,7 @@ def _heuristic_padding(text: str, min_words: int = MIN_WORDS_DEFAULT) -> str:
     """
     Heuristische Aufbereitung um Mindest-Wortanzahl zu garantieren.
 
-    PDF-SLIMDOWN v2.0: Dynamische Skalierung auf min_words durch wiederholte
+    PDF-SLIMDOWN v2.0: Dynamische Erweiterung auf min_words durch wiederholte
     Padding-Blöcke. Garantiert IMMER >= min_words.
 
     Args:
@@ -690,7 +690,7 @@ def _heuristic_padding(text: str, min_words: int = MIN_WORDS_DEFAULT) -> str:
     text_lower = text.lower()
     is_german = any(ind in text_lower for ind in de_indicators)
 
-    # Erweiterte Padding-Blöcke für dynamische Skalierung (~20 Wörter pro Block)
+    # Erweiterte Padding-Blöcke für dynamische Erweiterung (~20 Wörter pro Block)
     padding_blocks_de = [
         "Dieser Abschnitt enthält weitere Details zur Analyse und strategischen Planung.",
         "Die vollständigen Informationen werden im Gesamtkontext des Reports bereitgestellt.",
@@ -788,7 +788,7 @@ def generate_auto_summary(
 <p>Die strategische Roadmap für die nächsten 12 Monate umfasst die systematische
 Einführung von KI-gestützten Prozessen. Die wichtigsten Phasen sind: Fundament &
 erste Use Cases (Monate 1-3), Pilotierung & Qualitätssicherung (Monate 4-6),
-sowie Ausbau & Skalierung (Monate 7-12). Jede Phase enthält konkrete KPIs und
+sowie Ausbau & Erweiterung (Monate 7-12). Jede Phase enthält konkrete KPIs und
 Verantwortlichkeiten angepasst an die Unternehmensgröße{' ' + size if size else ''}.</p>
 {_guardrails_hint() if guardrails else ''}
 </div>""",
@@ -808,7 +808,7 @@ Each phase contains specific KPIs and responsibilities adapted to company size{'
 In den ersten Wochen (Phase 1) werden priorisierte Use Cases definiert und erste Workflows etabliert.
 Die Pilotierung erfolgt in Phase 2 mit dokumentierten Qualitätsstandards bis Woche 8.
 Die abschließende Konsolidierung in Phase 3 (Woche 9-13) mündet in einer klaren Entscheidung für die
-Skalierung. Jede Phase enthält messbare Meilensteine und Verantwortlichkeiten angepasst an die
+Erweiterung. Jede Phase enthält messbare Meilensteine und Verantwortlichkeiten angepasst an die
 Unternehmensgröße{' ' + size if size else ''}. Der Fokus liegt auf pragmatischer Umsetzung mit direktem Mehrwert.</p>
 </div>""",
             "en": f"""<div class="auto-summary">

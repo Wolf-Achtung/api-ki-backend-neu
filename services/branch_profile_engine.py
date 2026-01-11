@@ -164,7 +164,7 @@ BRANCH_MATURITY_DATA: Dict[str, Dict[str, Any]] = {
         "competitive_density": "high",
         "drivers_de": [
             ("Wissensintensität", "Beratung lebt von Expertise und intellektuellem Kapital - KI kann Wissenszugang demokratisieren"),
-            ("Skalierungsdruck", "Traditionelles Geschäftsmodell ist zeitbasiert und schwer skalierbar - KI ermöglicht Kapazitätssteigerung"),
+            ("Erweiterungsdruck", "Traditionelles Geschäftsmodell ist zeitbasiert und schwer skalierbar - KI ermöglicht Kapazitätssteigerung"),
             ("Kundenzentriertheit", "Hohe individuelle Anforderungen pro Mandat - KI personalisiert ohne Zusatzaufwand"),
             ("Dokumentationsintensität", "Reports, Analysen, Präsentationen dominieren - ideale KI-Automatisierungschance"),
         ],
@@ -209,7 +209,7 @@ BRANCH_MATURITY_DATA: Dict[str, Dict[str, Any]] = {
         "kpis": ["Time-to-Offer", "Utilization Rate", "Client Satisfaction Score", "Knowledge Reuse Rate"],
         "opportunities_de": [
             ("Produktivitätssteigerung", "30-50% Zeitersparnis bei dokumentationsintensiven Aufgaben durch KI-Automation"),
-            ("Skalierung ohne Personalaufbau", "KI ermöglicht mehr Mandate pro Berater ohne Qualitätsverlust"),
+            ("Erweiterung ohne Personalaufbau", "KI ermöglicht mehr Mandate pro Berater ohne Qualitätsverlust"),
             ("Premium-Positionierung", "KI-gestützte Insights als differenzierender Mehrwert für Kunden"),
         ],
         "opportunities_en": [
@@ -457,7 +457,7 @@ BRANCH_MATURITY_DATA: Dict[str, Dict[str, Any]] = {
         "opportunities_de": [
             ("Compliance-Effizienz", "KI reduziert Aufwand für regulatorische Anforderungen um 40-60%"),
             ("Risikominimierung", "Bessere Betrugserkennung durch Mustererkennung"),
-            ("Skalierung", "Automatisierung ermöglicht Wachstum ohne proportionalen Personalaufbau"),
+            ("Erweiterung", "Automatisierung ermöglicht Wachstum ohne proportionalen Personalaufbau"),
         ],
         "opportunities_en": [
             ("Compliance Efficiency", "AI reduces regulatory requirement effort by 40-60%"),
@@ -702,7 +702,7 @@ BRANCH_MATURITY_DATA: Dict[str, Dict[str, Any]] = {
         "opportunities_de": [
             ("Personalisiertes Lernen", "Jeder Lernende erhält individuell angepasste Inhalte"),
             ("Lehrerentlastung", "KI übernimmt repetitive Aufgaben wie Korrektur"),
-            ("Skalierung", "Qualitativ hochwertige Bildung für mehr Menschen"),
+            ("Erweiterung", "Qualitativ hochwertige Bildung für mehr Menschen"),
         ],
         "opportunities_en": [
             ("Personalized Learning", "Each learner receives individually adapted content"),
@@ -781,7 +781,7 @@ BRANCH_MATURITY_DATA: Dict[str, Dict[str, Any]] = {
         ],
         "kpis": ["Content Output", "Engagement Rate", "Conversion Rate", "CAC (Customer Acquisition Cost)"],
         "opportunities_de": [
-            ("Content-Skalierung", "10x mehr Content bei gleichen Ressourcen"),
+            ("Content-Erweiterung", "10x mehr Content bei gleichen Ressourcen"),
             ("Kreativitätssteigerung", "Mehr Ideen, schnellere Iteration"),
             ("Performance-Optimierung", "KI-gestützte A/B-Tests verbessern Conversion"),
         ],

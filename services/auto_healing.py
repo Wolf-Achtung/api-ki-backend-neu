@@ -177,7 +177,7 @@ def _get_fallback_content(section_name: str, size: str, lang: str) -> str:
                 In den ersten Wochen (Phase 0-1) werden priorisierte Use Cases definiert und erste Workflows etabliert.
                 Die Pilotierung erfolgt in Phase 2 mit dokumentierten Qualitätsstandards bis Woche 8.
                 Die abschließende Konsolidierung in Phase 3 (Woche 9-13) mündet in einer klaren Entscheidung für die
-                Skalierung. Jede Phase enthält messbare Meilensteine und Verantwortlichkeiten angepasst an die
+                Erweiterung. Jede Phase enthält messbare Meilensteine und Verantwortlichkeiten angepasst an die
                 Unternehmensgröße {size}. Der Fokus liegt auf pragmatischer Umsetzung mit direktem Mehrwert.
                 Nutzen Sie das Starter Kit, um Phase 1 technisch umzusetzen. Die empfohlenen Tools unterstützen
                 die Phasen der Roadmap optimal. Erste Erfolge werden bereits nach 30 Tagen sichtbar.</p>
@@ -718,7 +718,7 @@ PERSONA_FORBIDDEN_TERMS = {
         "de": [
             "Abteilungen", "abteilungsübergreifend", "cross-funktional", "Teamleiter",
             "Team-Meeting", "Abstimmungsrunden", "Governance-Board", "Stakeholder-Management",
-            "Change-Management-Prozess", "Skalierung auf Unternehmensebene",
+            "Change-Management-Prozess", "Erweiterung auf Unternehmensebene",
         ],
         "en": [
             "departments", "cross-departmental", "cross-functional", "team leader",

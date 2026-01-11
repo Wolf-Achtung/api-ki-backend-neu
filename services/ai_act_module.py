@@ -193,7 +193,7 @@ und den Anwendungsfällen ({usecases_str}). Der EU AI Act sieht für diese Kateg
 Transparenzpflichten vor. Für Ihr Unternehmen empfiehlt sich eine strukturierte
 Dokumentation aller KI-Systeme, klare Prozesse für Kennzeichnung und Qualitätsprüfung
 sowie definierte Verantwortlichkeiten. Ein einfaches Governance-Framework mit Logging
-und regelmäßigen Reviews schafft die Basis für Compliance und ermöglicht Skalierung."""
+und regelmäßigen Reviews schafft die Basis für Compliance und ermöglicht Erweiterung."""
 
     else:  # minimal or none
         if is_solo:
@@ -216,7 +216,7 @@ Anwendungsfällen ({usecases_str}). Der EU AI Act sieht für diese Kategorie kei
 spezifischen Pflichten vor. Dennoch empfiehlt sich für Ihr Unternehmen die Etablierung
 freiwilliger Best Practices: Dokumentation der KI-Systeme, einfache Governance-Richtlinien
 und Qualitätsprüfprozesse. Diese Maßnahmen stärken das Vertrauen und schaffen eine
-Grundlage für verantwortungsvolle Skalierung."""
+Grundlage für verantwortungsvolle Erweiterung."""
 
 
 def _generate_risk_reasoning_en(
