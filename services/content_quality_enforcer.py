@@ -483,8 +483,7 @@ def inject_hauptleistung_recommendations(html: str, hauptleistung: str, current_
         current_count = result.count(hauptleistung)
         if current_count >= needed:
             log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: Target reached! count={current_count}")
-                injections_made += 1
-                log.info(f"[HAUPTLEISTUNG-ENFORCER] Recommendations: Empfehlung prefix applied")
+            break
     
     return result
 
