@@ -140,7 +140,7 @@ Passe Tiefe und Schwerpunkt an die Unternehmensgröße an:
   - Textumfang: mindestens 300 Wörter.
 
 - KMU (mittelständische Unternehmen):
-  - Strategische Tiefe: Wettbewerbsvorteile, Skalierung, Governance.
+  - Strategische Tiefe: Wettbewerbsvorteile, Erweiterung, Governance.
   - Benchmarks mit Mittelstandsfokus.
   - Regulatorische Aspekte detaillierter darstellen.
   - Textumfang: mindestens 350 Wörter.

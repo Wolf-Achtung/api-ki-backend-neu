@@ -176,7 +176,7 @@ Der Gamechanger muss zeigen, wie die Transformation zu {{VISION_3_JAHRE}} führt
 
 BEISPIEL für Briefing 369:
 ❌ VERBOTEN: "Von manuell zu automatisiert"
-✅ RICHTIG: "Von Custom-Programmierung zu Template-basierter Skalierung:
+✅ RICHTIG: "Von Custom-Programmierung zu Template-basierter Erweiterung:
             Der Weg zu '{{VISION_3_JAHRE}}' beginnt mit Standardisierung der Auswertungslogik."
 
 ERSTER SCHRITT - BEZUG ZU {{ZEITERSPARNIS_PRIORITAET}}:
@@ -306,7 +306,7 @@ SOLO-SPEZIFISCHE REGELN (STRIKT!) - Problem #6 Lösung
 {% include '_solo_language_rules.md' %}
 
 SOLO-GAMECHANGER FOKUS:
-- Der Bruchpunkt bezieht sich auf persönliche Skalierungsgrenzen
+- Der Bruchpunkt bezieht sich auf persönliche Erweiterungsgrenzen
 - Die Transformation verändert, wie Wert geschaffen wird – nicht nur wie schnell
 - KÜRZER: Nur 2 Bullets pro Sektion (statt 3)
 - PRAKTISCHER: Konkrete Zeitangaben statt abstrakte Konzepte
@@ -321,7 +321,7 @@ STRATEGISCHER BRUCHPUNKT FÜR SOLO (VEREINFACHT):
 VERBOTENE BEGRIFFE FÜR SOLO (Null-Toleranz):
 - "Engine", "Plattform", "Framework", "Pipeline", "Architektur"
 - "Baukasten", "Modul", "Stack", "Layer", "API"
-- "Rollout", "Change Management", "Transformation", "Skalierung"
+- "Rollout", "Change Management", "Transformation", "Erweiterung"
 - "Stakeholder", "Governance", "Compliance", "Audit"
 
 ERLAUBTE SOLO-BEGRIFFE:

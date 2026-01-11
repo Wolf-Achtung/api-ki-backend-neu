@@ -64,7 +64,7 @@ STRUKTUR (exakt einhalten):
 
   <p><strong>Warum das ein Gamechanger ist</strong></p>
   <ul>
-    <li><strong>Skalierung:</strong> [1 Satz]</li>
+    <li><strong>Erweiterung:</strong> [1 Satz]</li>
     <li><strong>Qualität & Governance:</strong> [1 Satz]</li>
     <li><strong>Marktfähigkeit / IP:</strong> [1 Satz]</li>
   </ul>

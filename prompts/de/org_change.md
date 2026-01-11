@@ -101,7 +101,7 @@ REGELN:
         Doppelarbeit und sorgt für transparente Abläufe.
       {% else %}
         Fachbereiche benötigen definierte Verantwortliche für KI-Einsatz,
-        Qualitätssicherung und Freigaben, damit die Skalierung gelingt.
+        Qualitätssicherung und Freigaben, damit die Erweiterung gelingt.
       {% endif %}
     </li>
     <li>
@@ -148,7 +148,7 @@ REGELN:
     </li>
 
     <li>
-      <strong>61–90 Tage – Stabilisierung &amp; erste Skalierung:</strong>
+      <strong>61–90 Tage – Stabilisierung &amp; erste Erweiterung:</strong>
       Regelmäßige Reflexion (Solo: kurzer Wochen-Check; Team: kurze Team-Reviews;
       KMU: Bereichs- oder Prozessrunden), Kennzahlen für Zeitersparnis und Qualität
       festlegen und entscheiden, welche Workflows in den Regelbetrieb überführt werden.

@@ -98,7 +98,7 @@ Developer: <!-- data_readiness.md – v3.2 GOLD STANDARD+ (Daten & Systemreife, 
 
   <p class="small muted">
     Die Datenlage ist damit ausreichend, um gezielte KI-Piloten zu starten.
-    Für eine nachhaltige Skalierung sollten Struktur, Verantwortlichkeiten und Datenqualität
+    Für eine nachhaltige Erweiterung sollten Struktur, Verantwortlichkeiten und Datenqualität
     jedoch Schritt für Schritt verbessert werden.
   </p>
 </section>

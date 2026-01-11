@@ -225,7 +225,7 @@ PFLICHT: "Erwartete Effekte nach 90 Tagen" (eigener Abschnitt am Ende)
 =============================================================================
 LEITENTSCHEIDUNGEN PRO PHASE (implizit verankern):
 - Phase 0: "Transparenz vor Automatisierung" – erst verstehen, dann einsetzen
-- Phase 1: "Regeln vor Skalierung" – Qualitätskriterien definieren
+- Phase 1: "Regeln vor Erweiterung" – Qualitätskriterien definieren
 - Phase 2: "Verantwortung vor Geschwindigkeit" – Prüfschleifen einbauen
 - Phase 3: "Evidenz vor Expansion" – Entscheidungen auf Basis gemessener Ergebnisse
 
@@ -434,8 +434,8 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
   </ul>
   <p><strong>Meilenstein:</strong> Dokumentierter Workflow, Erstqualität > 70%.</p>
 
-  <h3>Phase 3: Skalierung Richtung {{VISION_3_JAHRE}} (Woche 11–13)</h3>
-  <p><strong>Ziel:</strong> Ergebnisse messen, Skalierung Richtung {{VISION_3_JAHRE}} vorbereiten.</p>
+  <h3>Phase 3: Erweiterung Richtung {{VISION_3_JAHRE}} (Woche 11–13)</h3>
+  <p><strong>Ziel:</strong> Ergebnisse messen, Erweiterung Richtung {{VISION_3_JAHRE}} vorbereiten.</p>
   <ul>
     <li>Wirkungsmessung bei {{ZEITERSPARNIS_PRIORITAET}}: Zeit, Qualität, Fehlerquote</li>
     <li>Lessons Learned für Ihre Workflows dokumentieren</li>
@@ -500,7 +500,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     </li>
     <li><strong>Lessons Learned dokumentieren:</strong> Nach jeder Phase (Setup, Entlastung,
     Produktiver Einsatz) kurz festhalten: Was haben wir gelernt? Was würden wir anders
-    machen? Diese Erkenntnisse sind Gold wert für die Skalierung.</li>
+    machen? Diese Erkenntnisse sind Gold wert für die Erweiterung.</li>
   </ul>
   <p>
     <strong>Tipp:</strong> Halten Sie die Dokumentation schlank. Lieber 10 funktionierende
@@ -550,13 +550,13 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
   <p><strong>Meilenstein:</strong> SOPs dokumentiert, Schulungskonzept fertig, KPIs definiert.</p>
 
   <h3>Phase 3: Rollout-Entscheidung Richtung {{VISION_3_JAHRE}} (Woche 11–13)</h3>
-  <p><strong>Ziel:</strong> Rollout-Entscheidung und Skalierungsplan Richtung {{VISION_3_JAHRE}}.</p>
+  <p><strong>Ziel:</strong> Rollout-Entscheidung und Erweiterungsplan Richtung {{VISION_3_JAHRE}}.</p>
   <ul>
     <li>Business-Case-Validierung anhand Pilotdaten</li>
     <li>Lessons Learned aus dem Pilot zusammenfassen</li>
     <li>Entscheidung: Rollout Richtung {{VISION_3_JAHRE}}? Ja/Nein/Anpassungen?</li>
     {% if ki_projekte %}<li>Geplantes Projekt <em>{{ki_projekte}}</em> für unternehmensweiten Rollout evaluieren</li>{% endif %}
-    <li>Priorisiertes Backlog für Skalierung erstellen</li>
+    <li>Priorisiertes Backlog für Erweiterung erstellen</li>
     <li>Ressourcenplanung für Weg zu {{VISION_3_JAHRE}} vorbereiten</li>
   </ul>
   <p><strong>Meilenstein:</strong> Management-Entscheidung Richtung {{VISION_3_JAHRE}} getroffen, Rollout-Plan steht.</p>
@@ -575,7 +575,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
   <p>
     Die KI-Einführung in einem mittelständischen Unternehmen erfordert strategische
     Kommunikation auf Führungsebene. Ohne aktive Einbindung der Entscheidungsträger
-    scheitern selbst erfolgreiche Pilotprojekte an fehlender Unterstützung für die Skalierung.
+    scheitern selbst erfolgreiche Pilotprojekte an fehlender Unterstützung für die Erweiterung.
   </p>
   <ul>
     <li><strong>Stakeholder-Mapping durchführen:</strong> Identifizieren Sie alle relevanten

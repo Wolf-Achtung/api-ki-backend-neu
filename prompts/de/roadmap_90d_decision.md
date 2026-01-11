@@ -77,7 +77,7 @@ STRUKTUR (exakt einhalten):
     <li><strong>Ziel:</strong> [1 Satz, messbar]</li>
     <li><strong>Umsetzung:</strong> [Max. 2-3 konkrete Schritte]</li>
     <li><strong>Erfolgskriterium:</strong> [1 klares, prüfbares Kriterium]</li>
-    <li><strong>Stop-Regel:</strong> [Wann wird Skalierung nicht empfohlen]</li>
+    <li><strong>Stop-Regel:</strong> [Wann wird Erweiterung nicht empfohlen]</li>
   </ul>
 </div>
 ```

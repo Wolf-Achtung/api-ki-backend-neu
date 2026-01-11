@@ -74,7 +74,7 @@ SIZE-AWARE LOGIK
   - Textumfang: mindestens 180 Wörter.
 
 - KMU:
-  - Fokus auf Skalierung, Standardisierung, Verantwortlichkeiten, Risikomanagement.
+  - Fokus auf Erweiterung, Standardisierung, Verantwortlichkeiten, Risikomanagement.
   - Förderprogramme und KPIs strategisch und investitionsorientiert darstellen.
   - Textumfang: mindestens 200 Wörter.
 

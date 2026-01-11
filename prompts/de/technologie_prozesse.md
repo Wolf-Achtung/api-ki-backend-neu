@@ -70,7 +70,7 @@ ANTI-REDUNDANZ:
     <li>Template-Text-Erkennung: Keine Platzhalter im finalen Report</li>
   </ul>
 
-  <h3>Betrieb & Skalierung</h3>
+  <h3>Betrieb & Erweiterung</h3>
   <p>
     Die Architektur ist für parallele Reportgenerierung ausgelegt. EU-Hosting gewährleistet
     DSGVO-Konformität. Monitoring überwacht Latenz und Fehlerquoten kontinuierlich.

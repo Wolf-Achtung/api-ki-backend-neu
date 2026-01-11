@@ -16,7 +16,7 @@ PFLICHTSTRUKTUR (3 Bereiche):
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: 2-3 einfache KPIs (Zeitersparnis, Kostenersparnis), Self-Tracking, keine Dashboards
 - team: 3-4 KPIs inkl. Qualitätsverbesserung, Team-Review monatlich
-- kmu: 4-5 KPIs inkl. Skalierungspotenzial, strukturiertes KPI-Review mit Projektleiter
+- kmu: 4-5 KPIs inkl. Erweiterungspotenzial, strukturiertes KPI-Review mit Projektleiter
 
 SIZE-AWARE VERANTWORTLICHKEITEN:
 - solo: "Sie selbst", "Geschäftsführer (Sie)"
