@@ -390,7 +390,7 @@ class TestG21CSSQuality:
         assert "var(--radius-card)" in g21_section, "G21 CSS should use --radius-card variable"
 
     def test_css_has_break_inside_avoid(self, templates_dir: Path) -> None:
-        """Test that G21 CSS uses break-inside: avoid for cards."""
+        """Test that G21 CSS uses break-inside: auto for cards."""
         template_file = templates_dir / "pdf_template.html"
         content = template_file.read_text(encoding="utf-8")
 
@@ -398,6 +398,6 @@ class TestG21CSSQuality:
         g21_start = content.find("G21: PLATIN++ DESIGN ENHANCEMENT SYSTEM")
         g21_section = content[g21_start:g21_start + 10000]
 
-        # All card types should have break-inside: avoid for PDF rendering
-        assert g21_section.count("break-inside: avoid") >= 5, \
-            "G21 CSS should use break-inside: avoid for proper PDF pagination"
+        # All card types should have break-inside: auto for PDF rendering
+        assert g21_section.count("break-inside: auto") >= 5, \
+            "G21 CSS should use break-inside: auto for proper PDF pagination"
