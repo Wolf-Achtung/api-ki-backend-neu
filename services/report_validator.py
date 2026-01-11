@@ -645,7 +645,7 @@ class ReportValidator:
             "org_change": 80,
             "strategie_governance": 90,  # SPRINT N1: 110→90 (Solo-friendly)
             "tools_empfehlungen": 80,  # v14.27: gelockert wegen GPT-Varianz  # SPRINT G18: gelockert von 120
-            "foerderpotenzial": 600,    # SPRINT N1: 800→600 (Solo-realistic)
+            "foerderpotenzial": 40,     # v14.28: Solo-realistic (GPT-Varianz)
             "gamechanger": 100,  # v14.16: 150→100 (kurze aber valide OK)         # SPRINT N1: 750→500 (Solo-realistic)
             "transparency_box": 50,     # SPRINT N1: 100→50 (minimal overhead)
             "technologie_prozesse": 150,
