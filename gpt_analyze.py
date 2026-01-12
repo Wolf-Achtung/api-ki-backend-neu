@@ -4430,11 +4430,11 @@ def _format_roadmap_phases_compact(html_content: str) -> str:
         except (ValueError, TypeError):
             color = colors[0]
 
-        # Clean and truncate
-        title_clean = re.sub(r'<[^>]+>', '', title.strip())[:60] if title else f"Phase {phase_num}"
-        timeframe_clean = timeframe.strip()[:30] if timeframe else ""
-        ziel_clean = ziel.strip()[:100] + '...' if len(ziel) > 100 else ziel.strip() if ziel else ""
-        meilenstein_clean = meilenstein.strip()[:200] + '...' if len(meilenstein) > 80 else meilenstein.strip() if meilenstein else ""
+        # v14.35: Limits erhöht um Card-Clipping zu vermeiden
+        title_clean = re.sub(r'<[^>]+>', '', title.strip())[:200] if title else f"Phase {phase_num}"
+        timeframe_clean = timeframe.strip()[:100] if timeframe else ""
+        ziel_clean = ziel.strip()[:500] + '...' if len(ziel) > 500 else ziel.strip() if ziel else ""
+        meilenstein_clean = meilenstein.strip()[:500] + '...' if len(meilenstein) > 500 else meilenstein.strip() if meilenstein else ""
 
         card_html = f'''<div class="roadmap-phase-card" style="border-left: 4px solid {color};">
     <h4><span class="phase-badge" style="background: {color};">Phase {phase_num}</span> {title_clean}</h4>'''
@@ -4448,8 +4448,9 @@ def _format_roadmap_phases_compact(html_content: str) -> str:
         if bullets:
             card_html += '\n    <ul>'
             for b in bullets[:4]:  # Max 4 bullets
-                b_clean = re.sub(r'<[^>]+>', '', b.strip())[:60]
-                if len(b.strip()) > 60:
+                # v14.35: Limits erhöht
+                b_clean = re.sub(r'<[^>]+>', '', b.strip())[:300]
+                if len(b.strip()) > 300:
                     b_clean += '...'
                 card_html += f'\n        <li>{b_clean}</li>'
             card_html += '\n    </ul>'
@@ -4767,10 +4768,11 @@ def _format_empfehlungen_v3(html_content: str) -> str:
         nonlocal cards_created
         cards_created += 1
 
-        # Clean and truncate
-        title_clean = title.strip()[:150] + '...' if len(title.strip()) > 60 else title.strip()
-        schwerpunkt_clean = schwerpunkt.strip()[:200] + '...' if len(schwerpunkt.strip()) > 80 else schwerpunkt.strip()
-        massnahme_clean = massnahme.strip()[:200] + '...' if len(massnahme.strip()) > 80 else massnahme.strip()
+        # v14.35: Character-Limits stark erhöht um Card-Clipping zu vermeiden
+        # Vorher: [:150]/[:200] mit niedrigen Thresholds = Text-Abbrüche mitten im Satz
+        title_clean = title.strip()[:500] + '...' if len(title.strip()) > 500 else title.strip()
+        schwerpunkt_clean = schwerpunkt.strip()[:1000] + '...' if len(schwerpunkt.strip()) > 1000 else schwerpunkt.strip()
+        massnahme_clean = massnahme.strip()[:1000] + '...' if len(massnahme.strip()) > 1000 else massnahme.strip()
 
         card_html = f'''<div class="empfehlung-card">
     <div class="empfehlung-header">
@@ -5419,21 +5421,22 @@ def _format_recommendations_as_cards(html_content: str) -> str:
                 massnahme = ""
                 zeitrahmen = ""
 
+                # v14.35: Limits erhöht um Card-Clipping zu vermeiden
                 sp_match = re.search(r'Schwerpunkt:\s*([^<\n]+)', section_text, re.IGNORECASE)
                 if sp_match:
-                    schwerpunkt = sp_match.group(1).strip()[:200]
+                    schwerpunkt = sp_match.group(1).strip()[:1000]
 
                 ma_match = re.search(r'Maßnahme:\s*([^<\n]+)', section_text, re.IGNORECASE)
                 if ma_match:
-                    massnahme = ma_match.group(1).strip()[:200]
+                    massnahme = ma_match.group(1).strip()[:1000]
 
                 zr_match = re.search(r'(?:Aufwand|Zeitrahmen)[^:]*:\s*([^<\n]+)', section_text, re.IGNORECASE)
                 if zr_match:
-                    zeitrahmen = zr_match.group(1).strip()[:100]
+                    zeitrahmen = zr_match.group(1).strip()[:500]
 
                 cards_data.append({
                     'num': num,
-                    'title': title.strip()[:150],
+                    'title': title.strip()[:500],
                     'schwerpunkt': schwerpunkt,
                     'massnahme': massnahme,
                     'zeitrahmen': zeitrahmen
@@ -5453,10 +5456,11 @@ def _format_recommendations_as_cards(html_content: str) -> str:
         if muss_matches and len(muss_matches) >= 2:
             log.info("[REC-CARDS-V9.1] Pattern 2 matched: %d list items", len(muss_matches))
             for i, (title, desc) in enumerate(muss_matches[:5], 1):
+                # v14.35: Limits erhöht
                 cards_data.append({
                     'num': str(i),
-                    'title': title.strip()[:150],
-                    'schwerpunkt': desc.strip()[:200],
+                    'title': title.strip()[:500],
+                    'schwerpunkt': desc.strip()[:1000],
                     'massnahme': '',
                     'zeitrahmen': ''
                 })
@@ -5475,9 +5479,10 @@ def _format_recommendations_as_cards(html_content: str) -> str:
             log.info("[REC-CARDS-V9.1] Pattern 3 matched: %d h3 sections", len(h3_matches))
             for i, (num_raw, content) in enumerate(h3_matches[:5], 1):
                 num = re.sub(r'\D', '', num_raw) or str(i)
+                # v14.35: Limits erhöht
                 cards_data.append({
                     'num': num,
-                    'title': content.strip()[:150],
+                    'title': content.strip()[:500],
                     'schwerpunkt': '',
                     'massnahme': '',
                     'zeitrahmen': ''
@@ -5496,10 +5501,11 @@ def _format_recommendations_as_cards(html_content: str) -> str:
         if strong_matches and len(strong_matches) >= 2:
             log.info("[REC-CARDS-V9.1] Pattern 4 matched: %d strong items", len(strong_matches))
             for num, title, desc in strong_matches[:5]:
+                # v14.35: Limits erhöht
                 cards_data.append({
                     'num': num,
-                    'title': (title.strip() or desc.strip())[:150],
-                    'schwerpunkt': desc.strip()[:200] if title.strip() else '',
+                    'title': (title.strip() or desc.strip())[:500],
+                    'schwerpunkt': desc.strip()[:1000] if title.strip() else '',
                     'massnahme': '',
                     'zeitrahmen': ''
                 })

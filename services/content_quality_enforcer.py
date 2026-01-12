@@ -622,15 +622,24 @@ EXTENDED_SIEZEN_PATTERNS = [
     # Diese Enterprise-Begriffe werden für Solo ersetzt
     (r'\bModule\b', 'Bausteine'),  # Modul → Baustein
     (r'\bModul\b', 'Baustein'),
+    # v14.35: skalier*-Familie komplett (alle deutschen Flexionen)
     (r'\bSkalierung\b', 'Erweiterung'),  # feminin bleibt feminin
     (r'Skalierungs', 'Erweiterungs'),
-    (r'\bskalieren\b', 'erweitern'),  # v14.34: Verb
-    (r'\bSkalierbarkeit\b', 'Erweiterbarkeit'),  # v14.34: Substantiv
-    (r'\bskalierbar\b', 'erweiterbar'),  # v14.34: Adjektiv
-    (r'\bhochskaliert', 'stark erweitert'),  # v14.34: Partizip
+    (r'\bskalieren\b', 'erweitern'),  # Verb
+    (r'\bSkalierbarkeit\b', 'Erweiterbarkeit'),  # Substantiv
+    (r'\bskalierbar\b', 'erweiterbar'),  # Adjektiv Grundform
+    (r'\bskalierbare\b', 'erweiterbare'),  # v14.35: Adjektiv feminin/Plural
+    (r'\bskalierbares\b', 'erweiterbares'),  # v14.35: Adjektiv neutrum
+    (r'\bskalierbaren\b', 'erweiterbaren'),  # v14.35: Adjektiv Dativ/Genitiv
+    (r'\bskalierbarer\b', 'erweiterbarer'),  # v14.35: Adjektiv maskulin/Genitiv
+    (r'\bhochskaliert', 'stark erweitert'),  # Partizip
     (r'\bSkalieren\b', 'Erweitern'),
     (r'\bEngine\b', 'System'),
+    # v14.35: Framework-Familie komplett
+    (r'\bFrameworks\b', 'Konzepte'),  # v14.35: Plural zuerst (greedy)
     (r'\bFramework\b', 'Konzept'),
+    (r'Assessment-Frameworks', 'Bewertungskonzepte'),  # v14.35: Zusammensetzung
+    (r'Business-Case-Frameworks', 'Business-Case-Vorlagen'),  # v14.35: Zusammensetzung
     (r'\bPipeline\b', 'Ablauf'),
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Standardisiere\b', r'\1Standardisieren Sie'),  # v14.20
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Strukturiere\b', r'\1Strukturieren Sie'),  # v14.20
@@ -711,26 +720,43 @@ GRAMMAR_FIX_PATTERNS = [
     
     # Doppelte Punkte
     
-    # v14.33.1: Persona-Leak Fixes (auch in GRAMMAR_FIX für alle Sections)
+    # v14.35: Persona-Leak Fixes (auch in GRAMMAR_FIX für alle Sections)
+    # skalier*-Familie komplett (alle deutschen Flexionen)
     (r'\bSkalierung\b', 'Erweiterung'),
     (r'Skalierungs', 'Erweiterungs'),
-    (r'\bskalieren\b', 'erweitern'),  # v14.34: Verb
-    (r'\bSkalierbarkeit\b', 'Erweiterbarkeit'),  # v14.34: Substantiv
-    (r'\bskalierbar\b', 'erweiterbar'),  # v14.34: Adjektiv
-    (r'\bhochskaliert', 'stark erweitert'),  # v14.34: Partizip
+    (r'\bskalieren\b', 'erweitern'),  # Verb
+    (r'\bSkalierbarkeit\b', 'Erweiterbarkeit'),  # Substantiv
+    (r'\bskalierbar\b', 'erweiterbar'),  # Adjektiv Grundform
+    (r'\bskalierbare\b', 'erweiterbare'),  # v14.35: Adjektiv feminin/Plural
+    (r'\bskalierbares\b', 'erweiterbares'),  # v14.35: Adjektiv neutrum
+    (r'\bskalierbaren\b', 'erweiterbaren'),  # v14.35: Adjektiv Dativ/Genitiv
+    (r'\bskalierbarer\b', 'erweiterbarer'),  # v14.35: Adjektiv maskulin/Genitiv
+    (r'\bhochskaliert', 'stark erweitert'),  # Partizip
     (r'\bModule\b', 'Bausteine'),
     (r'\bModul\b', 'Baustein'),
+    # Framework-Familie komplett
+    (r'\bFrameworks\b', 'Konzepte'),  # v14.35: Plural zuerst (greedy)
     (r'\bFramework\b', 'Konzept'),
+    (r'Assessment-Frameworks', 'Bewertungskonzepte'),  # v14.35
+    (r'Business-Case-Frameworks', 'Business-Case-Vorlagen'),  # v14.35
     (r'\bPipeline\b', 'Ablauf'),
     (r'\bEngine\b', 'System'),
     (r'\.\. ', '. '),
-    
-    # v14.34: Fragment-Fixes
+
+    # v14.35: Fragment-Fixes (erweitert)
     (r'\(z\.$', ''),  # Abgeschnittene "(z." am Zeilenende entfernen
     (r'\(z\.B\.$', ''),  # Abgeschnittene "(z.B." entfernen
     (r', die die ([A-Za-z]+)\.$', r', die \1.'),  # "die die X." → "die X."
     (r'und \.\.\.$', 'und weitere.'),  # "und ..." → "und weitere."
     (r'und\s*\.$', '.'),  # "und." am Ende → nur "."
+    (r', da\.\s*$', '.'),  # v14.35: ", da." → "."
+    (r'für diese\.\s*$', 'für diese Zwecke.'),  # v14.35: "für diese." → "für diese Zwecke."
+    (r'im Rahmen\.\s*$', 'im Rahmen dessen.'),  # v14.35: "im Rahmen." → "im Rahmen dessen."
+    (r'\s+zu\s*$', '.'),  # v14.35: "früh zu" am Ende → "früh."
+    (r'\s+oder\s*$', '.'),  # v14.35: "Schritte oder" am Ende → "Schritte."
+    (r'\s+und\s*$', '.'),  # v14.35: "Tests und" am Ende → "Tests."
+    (r'„[^"]*-\s*$', ''),  # v14.35: Abgeschnittene "„Review-" entfernen
+    (r'Schritt-für-\s*$', 'Schritt-für-Schritt.'),  # v14.35: "Schritt-für-" → "Schritt-für-Schritt."
 ]
 
 def apply_grammar_fixes(html: str) -> tuple[str, int]:
