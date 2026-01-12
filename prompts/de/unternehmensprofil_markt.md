@@ -46,7 +46,7 @@ Developer:
          - KI-Hebel: Wissensmanagement, Templates, vereinheitlichte Workflows, gemeinsame Standards.
 
        KMU (11–100):
-         - Fokus: skalierbare Prozesse, mehrere Bereiche, strukturierte Abläufe.
+         - Fokus: erweiterbare Prozesse, mehrere Bereiche, strukturierte Abläufe.
          - Herausforderungen: Koordination, Daten-Silos, interne Abstimmung, Governance.
          - KI-Hebel: datengetriebene Entscheidungen, Erweiterung, Richtlinien & Governance.
 

@@ -405,7 +405,7 @@ Die Transformation ermöglicht strategische Neupositionierung – nicht nur Opti
       BEISPIEL Briefing 369:
       - "Jede neue KI-Readiness-Analyse nutzt bewährte Komponenten statt Neuprogrammierung"
       - "Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}} von 40-60%"
-      - "Grundlage für {{VISION_3_JAHRE}}: Automatisierte Pipelines sind skalierbar"
+      - "Grundlage für {{VISION_3_JAHRE}}: Automatisierte Pipelines sind erweiterbar"
 
       VERBOTEN: "spart Zeit" (zu vage!), "reduziert Kosten" (zu generisch!)
       -->

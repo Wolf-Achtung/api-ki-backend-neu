@@ -14,7 +14,7 @@ PFLICHTSTRUKTUR (3 Modelle):
 3. Workshop + Setup (Einmal + Follow-Up) – Zielgruppe, Zeit, Preisband, Ergebnis
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
-- solo: Fokus auf Productized Services und Workshops (einfach skalierbar)
+- solo: Fokus auf Productized Services und Workshops (einfach erweiterbar)
 - team: Retainer + Workshops
 - kmu: Alle drei Modelle gleichwertig
 

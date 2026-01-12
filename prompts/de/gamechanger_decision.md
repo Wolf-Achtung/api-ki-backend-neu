@@ -81,7 +81,7 @@ STIL:
 - Ruhig, klar, strategisch
 - Kurze Sätze, ein Gedanke pro Absatz
 - Argumentativ, nicht erklärend
-- Der Leser soll sagen: „Das ist kein Report – das ist ein skalierbares Entscheidungsprodukt."
+- Der Leser soll sagen: „Das ist kein Report – das ist ein erweiterbares Entscheidungsprodukt."
 
 STRIKTE AUSGABEREGEL (verbindlich):
 - KEINE Platzhalter wie [1 Satz], [2-3 Sätze], {variable}, {{token}}

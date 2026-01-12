@@ -122,7 +122,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     <li>
       <strong>Monetarisierungspotenziale evaluieren (optional):</strong>
       KI-gestützte Prozesse können neue Erlösquellen erschließen – etwa durch
-      digitale Produkte, skalierbare Service-Formate oder automatisierte Analysen.
+      digitale Produkte, erweiterbare Service-Formate oder automatisierte Analysen.
       Eine strategische Bewertung lohnt sich insbesondere bei stabilen Kern-Workflows.
     </li>
   </ol>
