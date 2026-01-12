@@ -4,9 +4,9 @@ Developer:
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{score_governance}}, {{score_sicherheit}}, COMPANY_SIZE -->
-<!-- TOKEN-BUDGET: 3000 (solo:0.8x=2400, team:1.0x=3000, kmu:1.15x=3450) -->
+<!-- TOKEN-BUDGET: 4500 (solo:0.85x=3800, team:1.0x=4500, kmu:1.1x=5000) -->
 <!--
-ZIEL: 5 Abschnitte mit je 120-160 Wörtern (= 600-800 Wörter gesamt).
+ZIEL: 5 Abschnitte mit je 200-300 Wörtern (= 1000-1500 Wörter gesamt). WICHTIG: Alle Sätze MÜSSEN vollständig sein - keine Abbrüche!
 
 KURZLABELS (VERPFLICHTEND!):
 - {{BRANCH_CORE_LABEL}} = Branche in 8-12 Wörtern
@@ -61,19 +61,18 @@ HARTE LIMITS PRO RISIKO-BULLET:
 ┌─────────────────────────────────────────────────────────┐
 │ Teil                  │ Max Wörter │ Max Sätze        │
 ├─────────────────────────────────────────────────────────┤
-│ Risiko-Beschreibung   │ 15 Wörter  │ 1 Satz           │
-│ Maßnahme              │ 12 Wörter  │ 1 Satz           │
-│ Gesamt pro Bullet     │ 30 Wörter  │ 2 Sätze          │
+│ Risiko-Beschreibung   │ 50 Wörter  │ 2-3 Sätze        │
+│ Maßnahme              │ 35 Wörter  │ 1-2 Sätze        │
+│ Gesamt pro Bullet     │ 85 Wörter  │ 3-5 Sätze        │
 └─────────────────────────────────────────────────────────┘
 
 FORMAT PRO RISIKO (PFLICHT - KEIN ABWEICHEN!):
-<li><strong>[Risiko in 2-4 Wörtern]:</strong> [Problem in 10-15 Wörtern].
-<strong>Maßnahme:</strong> [Lösung in 10-12 Wörtern].</li>
+<li><strong>[Risiko in 2-4 Wörtern]:</strong> [Problem in 30-50 Wörtern, vollständige Sätze ohne Abbrüche].
+<strong>Maßnahme:</strong> [Lösung in 20-35 Wörtern, vollständige Sätze ohne Abbrüche].</li>
 
 VERBOTEN (STRIKT!):
-❌ Risiko-Beschreibungen über 15 Wörter
-❌ Maßnahmen über 12 Wörter
-❌ Erklärungen mit "wobei", "da", "weil", "sodass"
+❌ Risiko-Beschreibungen über 55 Wörter
+❌ Maßnahmen über 40 Wörter
 ❌ Verschachtelte Sätze
 ❌ Mehr als 1 Maßnahme pro Risiko
 ❌ Fließtext unter/über der Bullet-Liste
@@ -81,11 +80,11 @@ VERBOTEN (STRIKT!):
 BEISPIEL - SO NICHT:
 ❌ "Ein wesentliches Risiko besteht in der mangelnden Transparenz bezüglich der
     KI-gestützten Entscheidungsprozesse, was zu Misstrauen bei Kunden führen kann
-    und langfristig die Akzeptanz der Lösungen gefährdet..." [= 35 Wörter = ABGELEHNT!]
+    und langfristig die Akzeptanz der Lösungen gefährdet..." [= vollständiger Satz = OK wenn nötig]
 
 BEISPIEL - SO JA:
 ✅ <li><strong>Fehlende Transparenz:</strong> Kunden verstehen KI-Entscheidungen nicht.
-   <strong>Maßnahme:</strong> KI-Methoden einfach dokumentieren.</li> [= 12 Wörter = PERFEKT!]
+   <strong>Maßnahme:</strong> KI-Methoden einfach dokumentieren.</li> [= Kompakt UND vollständig = PERFEKT!]
 
 SEKTION-LIMITS:
 - Pro Risiko-Kategorie: Exakt 4 Bullets (nicht mehr, nicht weniger)
