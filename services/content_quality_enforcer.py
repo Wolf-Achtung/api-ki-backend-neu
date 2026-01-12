@@ -595,6 +595,15 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'\bwenn du\b', 'wenn Sie'),
     (r'\bob du\b', 'ob Sie'),
     (r', du ', ', Sie '),  # v14.31: Allgemeines du nach Komma
+    (r'\bsparst du\b', 'sparen Sie'),  # v14.35.3: "sparst du" → "sparen Sie"
+    (r'\bhast du\b', 'haben Sie'),  # v14.35.3: "hast du" → "haben Sie"
+    (r'\bkannst du\b', 'können Sie'),  # v14.35.3: "kannst du" → "können Sie"
+    (r'\bmusst du\b', 'müssen Sie'),  # v14.35.3: "musst du" → "müssen Sie"
+    (r'\bwillst du\b', 'wollen Sie'),  # v14.35.3: "willst du" → "wollen Sie"
+    (r'\bbrauchst du\b', 'brauchen Sie'),  # v14.35.3: "brauchst du" → "brauchen Sie"
+    (r' du ', ' Sie '),  # v14.35.3: Allgemeines " du " → " Sie " 
+    (r'\bsparst du\b', 'sparen Sie'),  # v14.35.3: "sparst du" → "sparen Sie"
+    (r'\b([a-z]+)st du\b', r'\1en Sie'),  # Allgemein: "Xst du" → "Xen Sie"
     
     # v14.32: Verbkonjugation nach "Sie" korrigieren (Sie + -st → Sie + -en)
     (r'\bSie ([\w]+)st\b', r'Sie \1en'),  # Allgemeines Pattern

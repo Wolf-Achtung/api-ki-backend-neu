@@ -2242,7 +2242,7 @@ def build_ki_aktivitaeten_fallback(sections: Dict[str, Any]) -> str:
       und Reporting getestet. Kurzfristig liegt der Fokus auf klar definierten,
       gut kontrollierbaren Automatisierungsbausteinen.</p>
       <p>Mittelfristig folgt der Ausbau standardisierter Prozesse, langfristig
-      der Aufbau skalierbarer KI-Services und eines belastbaren KI-Governance-Frameworks.</p>
+      der Aufbau erweiterbarer KI-Services und eines belastbaren KI-Governance-Frameworks.</p>
       <ul>
         <li><strong>Kurzfristig (0-3 Monate):</strong> Pilotprojekte mit kontrollierbarem Scope</li>
         <li><strong>Mittelfristig (3-12 Monate):</strong> Standardisierung erfolgreicher Workflows</li>

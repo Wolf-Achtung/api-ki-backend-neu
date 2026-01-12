@@ -5235,8 +5235,8 @@ def _convert_risk_bullets_to_cards(html_content: str) -> str:
                 action = ""
 
             # Truncate long descriptions
-            if len(description) > 120:
-                description = description[:117] + "..."
+            if len(description) > 500:
+                description = description[:497] + "..."
 
             # Create card HTML
             card_html = f'''<div class="risk-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; break-inside: avoid;">
@@ -7955,7 +7955,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         <td>4</td>
         <td>Branchenspezifischen Pilot umsetzen</td>
         <td>6–12 Monate</td>
-        <td>Sichtbarer Nutzen & Skalierungsmomentum</td>
+        <td>Sichtbarer Nutzen & Erweiterungsmomentum</td>
       </tr>
       <tr>
         <td>5</td>
@@ -7981,7 +7981,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   </p>
   <p>
     Dokumentieren Sie Ihre Erfahrungen von Anfang an: Welche Prompts funktionieren? Wo entstehen Fehler?
-    Welche Qualitätsprüfungen haben sich bewährt? Diese Erkenntnisse sind wertvoll für die Skalierung auf weitere
+    Welche Qualitätsprüfungen haben sich bewährt? Diese Erkenntnisse sind wertvoll für die Erweiterung auf weitere
     Anwendungsfälle und für das Onboarding zukünftiger Nutzer:innen der KI-Werkzeuge.
   </p>
 
@@ -8087,7 +8087,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
             governance_2 = "Richten Sie ein Governance-Board ein, etablieren Sie einen Audit-Trail für kritische Entscheidungen und formalisieren Sie Compliance-Checks."
             governance_3 = "Finalisieren Sie die KI-Richtlinie und kommunizieren Sie diese unternehmensweit, bereiten Sie ein externes Audit vor und formalisieren Sie das Risiko-Management."
             governance_4 = "Erstellen Sie einen Management-Report zur KI-Governance, evaluieren Sie Compliance-Zertifizierungen und führen Sie eine strategische Risiko-Bewertung für Jahr 2 durch."
-            skalierung = "Pilotieren Sie erfolgreiche Anwendungen in weiteren Fachbereichen, identifizieren Sie Synergien und entwickeln Sie skalierbare Best Practices."
+            skalierung = "Pilotieren Sie erfolgreiche Anwendungen in weiteren Fachbereichen, identifizieren Sie Synergien und entwickeln Sie erweiterbare Best Practices."
             team_aspekt = "Als KMU ermöglicht Ihre Organisationsstruktur die systematische Koordination verschiedener Fachbereiche und die Etablierung verbindlicher Standards."
 
         return f"""<section class="section roadmap-12m">
@@ -8124,7 +8124,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     Parallel bauen Sie eine strukturierte Prompt-Bibliothek mit 10 bis 15 dokumentierten Beispielen
     auf, die auf die spezifischen Anforderungen der Branche <strong>{branche}</strong> abgestimmt sind.
     Sammeln Sie Best Practices und legen Sie klare Qualitätskriterien fest. Diese Dokumentation bildet
-    das Fundament für konsistente Ergebnisse und erleichtert die spätere Skalierung.
+    das Fundament für konsistente Ergebnisse und erleichtert die spätere Erweiterung.
   </p>
 
   <h4>Governance-Grundlagen</h4>
@@ -8167,7 +8167,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     eine messbare Qualitätsverbesserung von mindestens 20 Prozent Zeitersparnis ist dokumentiert.
   </p>
 
-  <h3>Monate 7–12: Ausbau, Skalierung und Governance</h3>
+  <h3>Monate 7–12: Ausbau, Erweiterung und Governance</h3>
 
   <p>
     Die dritte Phase fokussiert auf die Multiplikation erfolgreicher Workflows und die Erschließung
@@ -8176,12 +8176,12 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     {skalierung}
   </p>
 
-  <h4>Systematische Skalierung</h4>
+  <h4>Systematische Erweiterung</h4>
   <p>
     Bauen Sie auf den Erfolgen der ersten sechs Monate auf und skalieren Sie auf 5 bis 8 produktive
     Use Cases mit nachweisbarem ROI. Identifizieren Sie Synergien zwischen verschiedenen
     Anwendungsbereichen und entwickeln Sie systematische Erfolgsmessung mit Dashboards, KPIs und
-    Trendanalysen. Die Skalierung sollte kontrolliert erfolgen, um die Qualität zu gewährleisten.
+    Trendanalysen. Die Erweiterung sollte kontrolliert erfolgen, um die Qualität zu gewährleisten.
     Nutzen Sie die gewonnenen Erkenntnisse aus den ersten sechs Monaten, um die Einführung neuer
     Use Cases zu beschleunigen und typische Fehler zu vermeiden. Eine schrittweise Erweiterung
     minimiert Risiken und ermöglicht kontinuierliches Lernen.
@@ -8242,7 +8242,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   <p class="small muted">
     Diese 12-Monats-Roadmap schafft die Grundlage für eine nachhaltige, strategisch verankerte
     KI-Nutzung in <strong>{hauptleistung or "Ihrem Kerngeschäft"}</strong>. Sie verbindet schnelle
-    operative Erfolge mit langfristiger strategischer Entwicklung und bereitet die Skalierung
+    operative Erfolge mit langfristiger strategischer Entwicklung und bereitet die Erweiterung
     für Jahr 2 systematisch vor.
   </p>
 </section>"""
@@ -8375,7 +8375,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     Starten Sie mit einem klar abgegrenzten Pilotprojekt in einem oder zwei Fachbereichen.
     Definieren Sie Pilotflächen, benennen Sie verantwortliche Personen und etablieren Sie
     regelmäßige Review-Formate (z.B. monatliche Steering-Meetings). Dokumentieren Sie Erfolge
-    und Learnings systematisch, um daraus skalierbare Best Practices abzuleiten.
+    und Learnings systematisch, um daraus erweiterbare Best Practices abzuleiten.
   </p>
 
   <h4>Bereichsübergreifende Standards &amp; Governance</h4>
@@ -8396,7 +8396,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   </p>
 
   <p class="small muted">
-    Der Fokus liegt auf strukturierter Koordination, klaren Verantwortlichkeiten und skalierbaren
+    Der Fokus liegt auf strukturierter Koordination, klaren Verantwortlichkeiten und erweiterbaren
     Prozessen. Ihre Organisationsgröße erfordert formale Governance, bietet aber auch die
     Möglichkeit, bereichsübergreifende Synergien systematisch zu nutzen.
   </p>
@@ -8665,7 +8665,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
             gc_voraussetzung_1 = "In Ihrer Organisation koordinieren Sie die Standardisierung über Fachbereiche hinweg"
             gc_voraussetzung_2 = "Die bereichsübergreifende Koordination erfordert klare Verantwortlichkeiten und Governance"
             gc_voraussetzung_3 = "Binden Sie Qualitätssicherung und Fachbereiche in die KI-gestützte Prüfung ein"
-            gc_team_aspekt = "Ihre Organisationsstruktur ermöglicht systematische Skalierung erfolgreicher Piloten"
+            gc_team_aspekt = "Ihre Organisationsstruktur ermöglicht systematische Erweiterung erfolgreicher Piloten"
 
         return f"""<section class="section gamechanger">
   <h2>KI als Gamechanger für Ihr Geschäftsmodell</h2>
@@ -8821,7 +8821,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     Die drei Gamechanger bilden zusammen eine Transformationsstrategie: Gamechanger 1 schafft die
     operative Grundlage durch Standardisierung, Gamechanger 2 baut das Wissenskapital auf und
     Gamechanger 3 sichert die Qualität ab. Diese Kombination ermöglicht es Ihrem Unternehmen,
-    von ersten KI-Schritten hin zu nachhaltiger, skalierbarer Wertschöpfung zu kommen.
+    von ersten KI-Schritten hin zu nachhaltiger, erweiterbarer Wertschöpfung zu kommen.
   </p>
   <p>
     Die Umsetzung sollte priorisiert erfolgen: Beginnen Sie mit dem Gamechanger, der den größten
@@ -8832,7 +8832,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
 
   <p class="small muted">
     Die Gamechanger dienen als strategische Leitplanken und unterstützen Ihr Unternehmen dabei,
-    von ersten KI-Schritten hin zu nachhaltiger, skalierbarer Wertschöpfung zu kommen. Die
+    von ersten KI-Schritten hin zu nachhaltiger, erweiterbarer Wertschöpfung zu kommen. Die
     konkreten Maßnahmen sollten auf Basis der 90-Tage-Roadmap und der 12-Monats-Strategie
     weiter detailliert werden.
   </p>
