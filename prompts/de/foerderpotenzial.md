@@ -90,7 +90,7 @@ VERBOTEN - TEXTWÜSTEN-MUSTER:
 ❌ Fließtext über 100 Wörter am Stück
 
 BEISPIEL Sektion 1 - SO NICHT:
-❌ "Das Geschäftsmodell basiert auf einem skalierbaren Angebot, das verschiedene
+❌ "Das Geschäftsmodell basiert auf einem erweiterbaren Angebot, das verschiedene
     Komponenten kombiniert und dabei die Wirtschaftlichkeit im Blick behält,
     wobei die Investitionen sich über einen planbaren Zeitraum amortisieren
     und gleichzeitig Spielraum für weitere Entwicklung lassen..." [= TEXTWÜSTE!]

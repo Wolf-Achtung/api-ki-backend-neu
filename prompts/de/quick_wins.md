@@ -245,7 +245,7 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
     "zeitersparnis": "6-10 h/Monat = 600-1.000€ (bei 100€/h)"
   },
   {
-    "title": "Testphase Ihres KI-Fragebogens in skalierbares MVP",
+    "title": "Testphase Ihres KI-Fragebogens in erweiterbares MVP",
     "icon": "🚀",
     "time": "5-8 h/Monat",
     "engpass": "das Projekt mit der Beratung von Unternehmen zur Integration von KI",

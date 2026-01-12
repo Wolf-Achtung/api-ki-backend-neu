@@ -3526,8 +3526,8 @@ def _create_svg_decorated_box(
     # FIX 4: Added svg-decorated-box class and overflow:hidden for containment
     box_html = f'''
 {table_styles}
-<div class="svg-decorated-box" style="margin: 20px 0; padding: 0; overflow: hidden; {page_break_style}">
-    <div style="background-color: {bg_color}; {border_style} padding: 16px; font-family: Arial, sans-serif; overflow: hidden;">
+<div class="svg-decorated-box" style="margin: 20px 0; padding: 0; overflow: visible; {page_break_style}">
+    <div style="background-color: {bg_color}; {border_style} padding: 16px; font-family: Arial, sans-serif; overflow: visible;">
         <div style="display: flex; align-items: center; margin-bottom: 12px; page-break-after: avoid;">
             <svg width="28" height="28" viewBox="0 0 28 28" style="margin-right: 10px; flex-shrink: 0;">
                 <circle cx="14" cy="14" r="13" fill="{border_color}" opacity="0.15"/>
@@ -3537,7 +3537,7 @@ def _create_svg_decorated_box(
                 {icon} {clean_title}
             </span>
         </div>
-        <div {body_wrapper_class} class="svg-decorated-box-content" style="color: #374151; font-size: 14px; line-height: 1.7; overflow: hidden;">
+        <div {body_wrapper_class} class="svg-decorated-box-content" style="color: #374151; font-size: 14px; line-height: 1.7; overflow: visible;">
             {body_html}
         </div>
     </div>

@@ -99,7 +99,7 @@ SPRINT G18 - NARRATIVE VERBINDUNGEN:
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: persönlicher ROI, Zeitentlastung, pragmatische Einschätzung
 - team: Team-ROI, gemeinsame Effizienzgewinne
-- kmu: Abteilungs-ROI, skalierbare Effekte
+- kmu: Abteilungs-ROI, erweiterbare Effekte
 
 SPRINT N - SOLO PERSONA REGELN (STRIKT!):
 {% if COMPANY_SIZE == "solo" %}

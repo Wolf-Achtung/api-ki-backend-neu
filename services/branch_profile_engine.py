@@ -164,7 +164,7 @@ BRANCH_MATURITY_DATA: Dict[str, Dict[str, Any]] = {
         "competitive_density": "high",
         "drivers_de": [
             ("Wissensintensität", "Beratung lebt von Expertise und intellektuellem Kapital - KI kann Wissenszugang demokratisieren"),
-            ("Erweiterungsdruck", "Traditionelles Geschäftsmodell ist zeitbasiert und schwer skalierbar - KI ermöglicht Kapazitätssteigerung"),
+            ("Erweiterungsdruck", "Traditionelles Geschäftsmodell ist zeitbasiert und schwer erweiterbar - KI ermöglicht Kapazitätssteigerung"),
             ("Kundenzentriertheit", "Hohe individuelle Anforderungen pro Mandat - KI personalisiert ohne Zusatzaufwand"),
             ("Dokumentationsintensität", "Reports, Analysen, Präsentationen dominieren - ideale KI-Automatisierungschance"),
         ],

@@ -301,7 +301,7 @@ KMU-MODUS - VERBOTEN:
         <td>Automation &amp; Governance-Bausteine</td>
         <td>
           Reduziert manuelle Zwischenschritte, stärkt Sicherheit und Qualität und macht
-          den Gesamtprozess skalierbar – besonders relevant für wachsende Teams und KMU.
+          den Gesamtprozess erweiterbar – besonders relevant für wachsende Teams und KMU.
         </td>
         <td>ab etwa 60 Tagen</td>
       </tr>

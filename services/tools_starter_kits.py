@@ -435,7 +435,7 @@ KIT_DESCRIPTIONS: Dict[str, str] = {
     ),
     "kmu": (
         "Enterprise-Ready KI-Framework: Umfassendes Kit für KMU mit Fokus auf "
-        "Datenqualität, Governance und skalierbare KI-Integration – inklusive "
+        "Datenqualität, Governance und erweiterbare KI-Integration – inklusive "
         "Unterstützung für größere Förderprojekte wie ZIM."
     ),
 }

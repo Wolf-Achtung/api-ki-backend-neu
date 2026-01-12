@@ -24,7 +24,7 @@ SCORE-LOGIK:
 PERSONA-VARIATIONEN (SIZE-AWARE STRATEGIE):
 - solo: persönliche Routinen, pragmatische Standards, direkte Nutzeneffekte
 - team: Rollen, Abstimmung, gemeinsame Workflows & Reviews
-- kmu: Bereichskoordinierung, Governance, skalierbare Prozesse
+- kmu: Bereichskoordinierung, Governance, erweiterbare Prozesse
 
 BRANCHEN-MODIFIKATOREN:
   FINANZEN/HEALTH/VERWALTUNG = Schwerpunkt Governance & Sicherheit
