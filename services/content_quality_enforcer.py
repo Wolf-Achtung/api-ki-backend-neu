@@ -640,7 +640,7 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r' für\.$', '.'),
     (r' auf\.$', '.'),
     (r' bei\.$', '.'),
-    (r' von\.$', '.')
+    (r' von\.$', '.'),
     (r'\bsparst du\b', 'sparen Sie'),  # v14.35.3: "sparst du" → "sparen Sie"
     (r'\b([a-z]+)st du\b', r'\1en Sie'),  # Allgemein: "Xst du" → "Xen Sie"
     
