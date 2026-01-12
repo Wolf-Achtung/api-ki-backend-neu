@@ -221,7 +221,6 @@ def fix_truncation_ellipsis(html: str) -> tuple[str, int]:
     fixes = 0
     
     # Pattern: Wort das mit … oder ... endet (Trunkierung)
-    import re
     # v14.28: Aggressiveres Ellipsis-Pattern (auch 1-Zeichen)
     truncated = re.findall(r'\b\w+[…..]{1,3}(?=\s|<|$|\*)', result)
     # Auch Markdown-formatierte truncations
@@ -468,7 +467,6 @@ def inject_hauptleistung_recommendations(html: str, hauptleistung: str, current_
         # Strategie 3: Am Anfang eines <li> einfügen
         elif '<li>' in result:
             # Finde ein <li> ohne hauptleistung
-            import re
             li_pattern = r'(<li>)([^<]{10,})'
             match = re.search(li_pattern, result)
             if match and hauptleistung not in match.group(2)[:50]:
