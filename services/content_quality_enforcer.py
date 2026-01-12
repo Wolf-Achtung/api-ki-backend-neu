@@ -619,6 +619,28 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'kommen Experimente\.$', 'kommen Experimente zu kurz.'),
     (r'direkt in Ihre\.$', 'direkt in Ihre Prozesse integrieren.'),
     (r'Testlauf mit\.$', 'Testlauf mit ersten Anwendungsfällen.'),
+    # v14.35.6: Weitere Fragment-Fixes aus Validation
+    (r'Pro Quartal\.$', 'Pro Quartal überprüfen.'),
+    (r'Anforderungen\. \.', 'Anforderungen.'),  # Doppelpunkt-Artefakt
+    (r'Dies steht im Konflikt mit\.$', 'Dies steht im Konflikt mit den Zielen.'),
+    (r'Qualität der\.$', 'Qualität der Ergebnisse.'),
+    (r' direkt\.$', '.'),  # "...Geschäftsmodell direkt." → "...Geschäftsmodell."
+    (r' Workflow\.$', ' Workflow beeinträchtigen.'),
+    (r'\.\s*Dies\.$', '.'),  # ". Dies." → "."
+    (r' automatisierte\.$', ' automatisierte Prozesse.'),
+    (r'\. \.$', '.'),  # ". ." → "."
+    (r'\s+\.$', '.'),  # " ." → "."
+    # Generische Fragment-Fänger (Ende mit Artikel/Präposition)
+    (r' der\.$', '.'),
+    (r' die\.$', '.'),
+    (r' das\.$', '.'),
+    (r' den\.$', '.'),
+    (r' dem\.$', '.'),
+    (r' mit\.$', '.'),
+    (r' für\.$', '.'),
+    (r' auf\.$', '.'),
+    (r' bei\.$', '.'),
+    (r' von\.$', '.')
     (r'\bsparst du\b', 'sparen Sie'),  # v14.35.3: "sparst du" → "sparen Sie"
     (r'\b([a-z]+)st du\b', r'\1en Sie'),  # Allgemein: "Xst du" → "Xen Sie"
     
@@ -815,7 +837,7 @@ def apply_grammar_fixes(html: str) -> tuple[str, int]:
             new_result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
         else:
             # Type assertion for mypy: replacement is str here
-            new_result = re.sub(pattern, str(replacement), result)
+            new_result = re.sub(pattern, str(replacement), result, flags=re.IGNORECASE)
         if new_result != result:
             fixes += 1
             result = new_result
