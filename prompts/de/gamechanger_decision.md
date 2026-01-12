@@ -57,7 +57,7 @@ STRUKTUR (exakt einhalten):
   <p><strong>Der strategische Gamechanger – Entscheidungsfassung</strong></p>
 
   <p><strong>Strategischer Bruchpunkt</strong></p>
-  <p>[Warum das bisherige Vorgehen nicht mehr skaliert – 2-3 Sätze]</p>
+  <p>[Warum das bisherige Vorgehen nicht mehr funktioniert – 2-3 Sätze]</p>
 
   <p><strong>Die neue Logik</strong></p>
   <p>[Was sich fundamental ändert – 1 prägnanter Satz]</p>

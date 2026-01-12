@@ -188,7 +188,7 @@ def _get_fallback_content(section_name: str, size: str, lang: str) -> str:
                 <h4>12-Monats-Roadmap (Zusammenfassung)</h4>
                 <p>Die 12-Monats-Roadmap gliedert die nachhaltige KI-Integration in vier Quartale.
                 Q1 legt die Grundlagen mit Pilotprojekten und ersten Prozessanpassungen.
-                Q2 skaliert erfolgreiche Ansätze und baut interne Kompetenzen auf.
+                Q2 erweitert erfolgreiche Ansätze und baut interne Kompetenzen auf.
                 Q3 erweitert die Integration auf weitere Bereiche mit klaren Governance-Strukturen.
                 Q4 etabliert dauerhafte Prozesse, Monitoring und kontinuierliche Verbesserung.
                 Die Roadmap berücksichtigt die spezifischen Anforderungen für {size}-Unternehmen

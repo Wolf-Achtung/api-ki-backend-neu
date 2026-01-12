@@ -1878,7 +1878,7 @@ FALLSTUDIEN = {
         "dauer_bis_roi": "4 Wochen"
     },
     "medien": {
-        "titel": "Kreativagentur skaliert ohne neue Mitarbeiter",
+        "titel": "Kreativagentur wächst ohne neue Mitarbeiter",
         "unternehmen": "Design-Agentur, 6 Kreative",
         "ausgangslage": "Briefings dauern zu lange, Ideenfindung stockt, Textarbeit bindet Designer",
         "loesung": "ChatGPT für Briefings, Texte und Konzeptentwicklung",

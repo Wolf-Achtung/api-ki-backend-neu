@@ -601,7 +601,24 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'\bmusst du\b', 'müssen Sie'),  # v14.35.3: "musst du" → "müssen Sie"
     (r'\bwillst du\b', 'wollen Sie'),  # v14.35.3: "willst du" → "wollen Sie"
     (r'\bbrauchst du\b', 'brauchen Sie'),  # v14.35.3: "brauchst du" → "brauchen Sie"
-    (r' du ', ' Sie '),  # v14.35.3: Allgemeines " du " → " Sie " 
+    (r' du ', ' Sie '),  # v14.35.3: Allgemeines " du " → " Sie "
+    # v14.35.4: Fragment-Fixes für GPT-generierte Abbrüche
+    (r', weil\.$', '.'),  # ", weil." → "."
+    (r' weil\.$', '.'),  # " weil." → "."
+    (r' zu\.$', '.'),  # " zu." → "."
+    (r'kann zu\.$', 'kann problematisch werden.'),  # "kann zu." → sinnvoll
+    (r'Dies kann zu\.$', 'Dies kann problematisch werden.'),
+    (r': Ein\.$', '.'),  # ": Ein." → "."
+    (r': Eine\.$', '.'),  # ": Eine." → "."
+    (r'Gegenmaßnahme: Ein\.$', 'Gegenmaßnahme: Siehe Empfehlungen.'),
+    (r'Gegenmaßnahme: Eine\.$', 'Gegenmaßnahme: Siehe Empfehlungen.'),
+    (r'Skepsis kann die\.$', 'Skepsis kann die Akzeptanz gefährden.'),
+    (r'wächst es schnell zu\.$', 'wächst es schnell.'),
+    (r'Audits und eine\.$', 'Audits und regelmäßige Überprüfungen.'),
+    (r'Der EU AI Act verlangt\.$', 'Der EU AI Act stellt Anforderungen an KI-Systeme.'),
+    (r'kommen Experimente\.$', 'kommen Experimente zu kurz.'),
+    (r'direkt in Ihre\.$', 'direkt in Ihre Prozesse integrieren.'),
+    (r'Testlauf mit\.$', 'Testlauf mit ersten Anwendungsfällen.'),
     (r'\bsparst du\b', 'sparen Sie'),  # v14.35.3: "sparst du" → "sparen Sie"
     (r'\b([a-z]+)st du\b', r'\1en Sie'),  # Allgemein: "Xst du" → "Xen Sie"
     
@@ -635,6 +652,10 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'\bskalieren\b', 'erweitern'),  # Verb
     (r'\bSkalierbarkeit\b', 'Erweiterbarkeit'),  # Substantiv
     (r'\bskalierbar\b', 'erweiterbar'),  # Adjektiv Grundform
+    (r'\bskaliert\b', 'erweitert'),  # v14.35.4: Verb Partizip/3.Person
+    (r'\bskalieren\b', 'erweitern'),  # v14.35.4: Verb Infinitiv
+    (r'\bSkalierung auf \d+', 'Erweiterung auf'),  # v14.35.4: "Skalierung auf 1000+"
+    (r'\bSkalierungs', 'Erweiterungs'),  # v14.35.4: Komposita
     (r'\bskalierbare\b', 'erweiterbare'),  # v14.35: Adjektiv feminin/Plural
     (r'\bskalierbares\b', 'erweiterbares'),  # v14.35: Adjektiv neutrum
     (r'\bskalierbaren\b', 'erweiterbaren'),  # v14.35: Adjektiv Dativ/Genitiv
@@ -734,6 +755,10 @@ GRAMMAR_FIX_PATTERNS = [
     (r'\bskalieren\b', 'erweitern'),  # Verb
     (r'\bSkalierbarkeit\b', 'Erweiterbarkeit'),  # Substantiv
     (r'\bskalierbar\b', 'erweiterbar'),  # Adjektiv Grundform
+    (r'\bskaliert\b', 'erweitert'),  # v14.35.4: Verb Partizip/3.Person
+    (r'\bskalieren\b', 'erweitern'),  # v14.35.4: Verb Infinitiv
+    (r'\bSkalierung auf \d+', 'Erweiterung auf'),  # v14.35.4: "Skalierung auf 1000+"
+    (r'\bSkalierungs', 'Erweiterungs'),  # v14.35.4: Komposita
     (r'\bskalierbare\b', 'erweiterbare'),  # v14.35: Adjektiv feminin/Plural
     (r'\bskalierbares\b', 'erweiterbares'),  # v14.35: Adjektiv neutrum
     (r'\bskalierbaren\b', 'erweiterbaren'),  # v14.35: Adjektiv Dativ/Genitiv
