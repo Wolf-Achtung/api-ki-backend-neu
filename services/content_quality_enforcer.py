@@ -755,6 +755,15 @@ GRAMMAR_FIX_PATTERNS = [
     (r'\s+und\s*$', '.'),  # v14.35: "Tests und" am Ende → "Tests."
     (r'„[^"]*-\s*$', ''),  # v14.35: Abgeschnittene "„Review-" entfernen
     (r'Schritt-für-\s*$', 'Schritt-für-Schritt.'),  # v14.35: "Schritt-für-" → "Schritt-für-Schritt."
+    # v14.35.2: Zusätzliche Fragment-Fixes
+    (r'– ohne\.\s*$', '.'),  # "– ohne." → "."
+    (r'- ohne\.\s*$', '.'),  # "- ohne." (ASCII) → "."
+    (r'– ohne\.\s*<', '.<'),  # "– ohne." vor Tag → "."
+    (r'klar strukturiere ', 'klar strukturierte '),  # Grammatikfehler
+    (r' mit n ', ' mit einem '),  # Kaputter Platzhalter "mit n"
+    (r' mit n\.', ' mit einem passenden Tool.'),  # "mit n." → sinnvoll
+    (r' und\.</p>', '.</p>'),  # "und.</p>" → ".</p>"
+    (r' und\.<', '.<'),  # "und." vor Tag → "."
 ]
 
 def apply_grammar_fixes(html: str) -> tuple[str, int]:
