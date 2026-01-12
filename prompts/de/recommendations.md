@@ -163,7 +163,7 @@ MAßNAHME 2: MUSS zu {{hauptleistung}} passen
 → Frage: Was ist DER kritische Erfolgsfaktor für diese spezielle Leistung?
 → VERBOTEN: "Standard-Workflow etablieren" (zu allgemein!)
 → Beispiel Fragebogen+GPT: "GPT-Auswertungs-Standard definieren – konsistente Qualität bei jeder Analyse"
-→ Beispiel Content-Agentur: "Prompt-Templates für Kundenprojekte – skaliert Output ohne Qualitätsverlust"
+→ Beispiel Content-Agentur: "Prompt-Templates für Kundenprojekte – erweitert Output ohne Qualitätsverlust"
 
 MAßNAHME 3: MUSS Risiken/Guardrails adressieren
 → Beachte {{KI_GUARDRAILS}} explizit wenn vorhanden

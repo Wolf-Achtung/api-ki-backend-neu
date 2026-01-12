@@ -8787,7 +8787,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   <p>
     Weniger Fehler, weniger Korrekturschleifen und eine deutlich höhere Ersttrefferquote – besonders
     relevant bei Zeitdruck oder hoher Auslastung. Die Qualitätssicherung wird systematisiert und
-    skaliert mit dem Arbeitsvolumen, ohne dass der Aufwand proportional steigt. Kundenreklamationen
+    erweitert mit dem Arbeitsvolumen, ohne dass der Aufwand proportional steigt. Kundenreklamationen
     sinken und die Kundenzufriedenheit steigt messbar.
   </p>
 
