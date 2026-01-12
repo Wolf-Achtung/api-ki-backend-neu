@@ -3171,7 +3171,7 @@ Abschnitt: {section}. Antworte ausschließlich mit HTML.
 {s}
 """,
         system_prompt="Du bist ein strenger HTML‑Sanitizer. Gib nur validen HTML‑Code aus.",
-        temperature=0.0, max_tokens=1200,
+        temperature=0.0, max_tokens=2500,
     )
     return _clean_html(fixed or s)
 
