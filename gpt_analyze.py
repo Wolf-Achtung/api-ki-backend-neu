@@ -116,6 +116,7 @@ import core.db as core_db
 from field_registry import fields  # added by Patch03
 from models import Analysis, Briefing, Report, User
 from services.report_renderer import render
+from services.text_healing import heal_all_text_blocks, heal_text_block
 from services.pdf_client import render_pdf_from_html, build_footer_template
 from services.icon_system import (
     replace_emojis_with_icons,
@@ -12598,6 +12599,13 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
 
         except Exception as ft_exc:
             log.warning("[%s] ⚠️ FT signal extraction failed: %s", run_id, ft_exc)
+
+    # === v14.35.15b: TEXT-HEALING - Strukturelle Fragment-Reparatur ===
+    try:
+        sections = heal_all_text_blocks(sections)
+        log.info(f"[{run_id}] ✅ [TEXT-HEALING] Strukturelle Fragment-Reparatur abgeschlossen")
+    except Exception as e:
+        log.warning(f"[{run_id}] ⚠️ [TEXT-HEALING] Fehler: {e}")
 
     # === v14.35.12: GLOBAL FINAL ENFORCER - Letzte Chance vor PDF! ===
     try:
