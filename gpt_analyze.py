@@ -12734,6 +12734,14 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             (r'\bkernstack\b', 'Kernsysteme'),
             (r'\bStack\b', 'Systemlandschaft'),
             (r'\bstack\b', 'Systemlandschaft'),
+            # === v14.35.15c: Grammatik-Fix + Toolset ===
+            (r'eine standardisierte Report-Ablauf', 'einen standardisierten Report-Ablauf'),
+            (r'eine standardisierter', 'ein standardisierter'),
+            (r'eine standardisierte', 'ein standardisiertes'),
+            (r'\bToolset\b', 'Tool-Set'),
+            (r'\btoolset\b', 'Tool-Set'),
+            (r'\bKern-Toolset\b', 'Kern-Tool-Set'),
+            (r'\bkern-toolset\b', 'Kern-Tool-Set'),
         ]
         
         fixes_count = 0
