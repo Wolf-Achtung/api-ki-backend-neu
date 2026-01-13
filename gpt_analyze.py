@@ -4124,10 +4124,10 @@ def _format_recommendations_compact(html_content: str) -> str:
                     # Extract first sentence as title
                     sentences = re.split(r'(?<=[.!?])\s+', text_only.strip())
                     if sentences:
-                        title = sentences[0][:60] + ('...' if len(sentences[0]) > 60 else '')
+                        title = _smart_truncate(sentences[0], 60)
                         desc = ' '.join(sentences[1:3]) if len(sentences) > 1 else ''
                         if len(desc) > 100:
-                            desc = desc[:100] + '...'
+                            desc = _smart_truncate(desc, 100)
 
                         card = f'''<div class="recommendation-card-compact">
     <h4>{title}</h4>
@@ -4323,7 +4323,7 @@ def _format_quick_wins_compact(html_content: str) -> str:
         ersparnis_match = re.search(r'Potenzielle Zeitersparnis:\s*([^<\n]+)', content, re.IGNORECASE)
 
         zeitbedarf = zeitbedarf_match.group(1).strip()[:30] if zeitbedarf_match else ""
-        ersparnis = ersparnis_match.group(1).strip()[:100] if ersparnis_match else ""
+        ersparnis = _smart_truncate(ersparnis_match.group(1).strip(), 100) if ersparnis_match else ""
 
         # Extract and truncate the main description (Mit KI section)
         mit_ki_match = re.search(r'Mit KI:\s*([^<]+(?:<(?!strong)[^>]*>[^<]*)*)', content, re.IGNORECASE | re.DOTALL)
@@ -4344,7 +4344,7 @@ def _format_quick_wins_compact(html_content: str) -> str:
             for i, li in enumerate(li_matches[:3]):
                 step_text = li.strip()
                 if len(step_text) > 50:
-                    step_text = step_text[:50] + '...'
+                    step_text = _smart_truncate(step_text, 50)
                 schritte.append(step_text)
 
         cards_created += 1
@@ -4353,7 +4353,7 @@ def _format_quick_wins_compact(html_content: str) -> str:
         card_html = f'''<div class="quick-win-card">
     <div class="quick-win-header">
         <span class="quick-win-icon">⚡</span>
-        <strong>{title.strip()[:50]}</strong>
+        <strong>{_smart_truncate(title.strip(), 50)}</strong>
         <span class="quick-win-meta">{zeitbedarf}</span>
     </div>
     <p class="quick-win-desc">{description}</p>'''
@@ -4432,7 +4432,7 @@ def _format_roadmap_phases_compact(html_content: str) -> str:
 
         # v14.35: Limits erhöht um Card-Clipping zu vermeiden
         title_clean = re.sub(r'<[^>]+>', '', title.strip())[:200] if title else f"Phase {phase_num}"
-        timeframe_clean = timeframe.strip()[:100] if timeframe else ""
+        timeframe_clean = _smart_truncate(timeframe.strip(), 100) if timeframe else ""
         ziel_clean = ziel.strip()[:500] + '...' if len(ziel) > 500 else ziel.strip() if ziel else ""
         meilenstein_clean = meilenstein.strip()[:500] + '...' if len(meilenstein) > 500 else meilenstein.strip() if meilenstein else ""
 
