@@ -651,6 +651,16 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'\(z\.\s*B\.[^)]{0,5}$', '(z. B. Templates)'),  # Offene Klammer am Ende
     (r' können zu\.$', ' können zu Problemen führen.'),
     (r' Automatisierung der\.$', ' Automatisierung der Prozesse.'),
+    # v14.35.11: Weitere Fragment-Fixes aus Validation
+    (r' weil als\.$', '.'),
+    (r' Pro Quartal\.$', ' pro Quartal überprüfen.'),
+    (r' was mit\.$', '.'),
+    (r' als Verstoß gegen\.$', ' als Verstoß gegen Richtlinien.'),
+    (r' Tool-Stack auf wenige\.$', ' Tool-Stack auf wenige konzentrieren.'),
+    (r' automatisch\.$', ' automatisch generiert.'),
+    (r' die verschiedene\.$', ' die verschiedene Aufgaben erfüllen.'),
+    (r' Arbeitsalltag der\.$', ' Arbeitsalltag der Mitarbeitenden.'),
+    (r'zugerechnet werden\. \.', 'zugerechnet werden.'),
     (r'\bsparst du\b', 'sparen Sie'),  # v14.35.3: "sparst du" → "sparen Sie"
     (r'\b([a-z]+)st du\b', r'\1en Sie'),  # Allgemein: "Xst du" → "Xen Sie"
     
@@ -678,6 +688,8 @@ EXTENDED_SIEZEN_PATTERNS = [
     # Diese Enterprise-Begriffe werden für Solo ersetzt
     (r'\bModule\b', 'Bausteine'),  # Modul → Baustein
     (r'\bModul\b', 'Baustein'),
+    (r'\bModulen\b', 'Bausteinen'),  # v14.35.11: Dativ Plural
+    (r'\bModulen\b', 'Bausteinen'),  # v14.35.11: Dativ Plural
     # v14.35: skalier*-Familie komplett (alle deutschen Flexionen)
     (r'\bSkalierung\b', 'Erweiterung'),  # feminin bleibt feminin
     (r'Skalierungs', 'Erweiterungs'),
@@ -812,6 +824,8 @@ GRAMMAR_FIX_PATTERNS = [
     (r'\bSkalieren\b', 'Erweitern'),
     (r'\bModule\b', 'Bausteine'),
     (r'\bModul\b', 'Baustein'),
+    (r'\bModulen\b', 'Bausteinen'),  # v14.35.11: Dativ Plural
+    (r'\bModulen\b', 'Bausteinen'),  # v14.35.11: Dativ Plural
     # Framework-Familie komplett
     (r'\bFrameworks\b', 'Konzepte'),  # v14.35: Plural zuerst (greedy)
     (r'\bFramework\b', 'Konzept'),
