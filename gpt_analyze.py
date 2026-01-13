@@ -12615,9 +12615,33 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
             (r'\bund und\b', 'und'),
             # Tippfehler
             (r'\bzunächen\b', 'zunächst'),
-            # Solo-Konsistenz (uns → mir)
+            # Solo-Konsistenz (uns → mir) - KOMPLETT v14.35.14
             (r'Ihr Feedback ist uns wichtig', 'Ihr Feedback ist mir wichtig'),
             (r'Helfen Sie uns', 'Helfen Sie mir'),
+            (r'\buns\b', 'mir'),  # Dativ/Akkusativ
+            (r'\bUnser\b', 'Mein'),
+            (r'\bunser\b', 'mein'),
+            (r'\bUnsere\b', 'Meine'),
+            (r'\bunsere\b', 'meine'),
+            (r'\bUnseren\b', 'Meinen'),
+            (r'\bunseren\b', 'meinen'),
+            (r'\bUnserem\b', 'Meinem'),
+            (r'\bunserem\b', 'meinem'),
+            (r'\bUnserer\b', 'Meiner'),
+            (r'\bunserer\b', 'meiner'),
+            (r'\bUnseres\b', 'Meines'),
+            (r'\bunseres\b', 'meines'),
+            (r'\bWir\b', 'Ich'),
+            (r'\bwir\b', 'ich'),
+            # Stack → Landschaft/Set v14.35.14
+            (r'\bTool-Stack\b', 'Tool-Landschaft'),
+            (r'\btool-stack\b', 'Tool-Landschaft'),
+            (r'\bTech-Stack\b', 'Technologie-Basis'),
+            (r'\btech-stack\b', 'Technologie-Basis'),
+            (r'\bKernstack\b', 'Kernsysteme'),
+            (r'\bkernstack\b', 'Kernsysteme'),
+            (r'\bStack\b', 'Systemlandschaft'),
+            (r'\bstack\b', 'Systemlandschaft'),
         ]
         
         fixes_count = 0
