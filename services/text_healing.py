@@ -159,7 +159,7 @@ def split_sentences(text: str) -> List[str]:
             break
 
         # Boundary if punctuation followed by whitespace + uppercase/digit
-        m2 = re.match(r"\s+([\""„'(\[])?([A-ZÄÖÜ0-9])", tail)
+        m2 = re.match(r"\s+[\x22\x27\(\[]?([A-ZÄÖÜ0-9])", tail)
         if m2:
             sentences.append(t[start:end].strip())
             start = end
