@@ -689,7 +689,7 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'\bSkalierbaren\b', 'Erweiterbaren'),
     (r'\bSkalierbarer\b', 'Erweiterbarer'),
     (r'\bSkaliert\b', 'Erweitert'),  # Am Satzanfang
-    (r'\bSkalieren\b', 'Erweitern')
+    (r'\bSkalieren\b', 'Erweitern'),
     (r'\bSkalieren\b', 'Erweitern'),
     (r'\bEngine\b', 'System'),
     # v14.35: Framework-Familie komplett
@@ -799,7 +799,7 @@ GRAMMAR_FIX_PATTERNS = [
     (r'\bSkalierbaren\b', 'Erweiterbaren'),
     (r'\bSkalierbarer\b', 'Erweiterbarer'),
     (r'\bSkaliert\b', 'Erweitert'),  # Am Satzanfang
-    (r'\bSkalieren\b', 'Erweitern')
+    (r'\bSkalieren\b', 'Erweitern'),
     (r'\bModule\b', 'Bausteine'),
     (r'\bModul\b', 'Baustein'),
     # Framework-Familie komplett
