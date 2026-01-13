@@ -641,6 +641,16 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r' auf\.$', '.'),
     (r' bei\.$', '.'),
     (r' von\.$', '.'),
+    # v14.35.10: Weitere Fragment-Fixes aus v14.35.8 Validation
+    (r' wahrgenommenen\.$', ' wahrgenommenen Nutzen.'),
+    (r' in Ihrem\.$', ' in Ihrem Unternehmen.'),
+    (r' die jede\.$', ' die jede Bewertung absichern.'),
+    (r' laufenden\.$', ' laufenden Projekten.'),
+    (r' eine Ablauf ', ' einen Ablauf '),  # Grammatik-Fix
+    (r'\(z\. B\.$', '(z. B. Templates).'),  # Offene Klammer schließen
+    (r'\(z\.\s*B\.[^)]{0,5}$', '(z. B. Templates)'),  # Offene Klammer am Ende
+    (r' können zu\.$', ' können zu Problemen führen.'),
+    (r' Automatisierung der\.$', ' Automatisierung der Prozesse.'),
     (r'\bsparst du\b', 'sparen Sie'),  # v14.35.3: "sparst du" → "sparen Sie"
     (r'\b([a-z]+)st du\b', r'\1en Sie'),  # Allgemein: "Xst du" → "Xen Sie"
     
