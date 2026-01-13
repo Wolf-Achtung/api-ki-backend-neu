@@ -11183,13 +11183,15 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     # === PAGE 4 CONTEXT CARDS - User Input Variables for Template ===
     # These variables are needed for the Page 4 emoji-cards and Guardrails box
     # Template uses lowercase keys with {% if variable %} conditionals
-    sections["strategische_ziele"] = _fix_typos(answers.get("strategische_ziele", ""))
-    sections["zeitersparnis_prioritaet"] = _fix_typos(answers.get("zeitersparnis_prioritaet", ""))
-    sections["hauptleistung"] = _fix_typos(answers.get("hauptleistung", ""))
-    sections["ki_projekte"] = _fix_typos(answers.get("ki_projekte", ""))
-    sections["geschaeftsmodell_evolution"] = _fix_typos(answers.get("geschaeftsmodell_evolution", ""))
-    sections["vision_3_jahre"] = _fix_typos(answers.get("vision_3_jahre", ""))
-    sections["ki_guardrails"] = _fix_typos(answers.get("ki_guardrails", ""))
+    # v14.35.9: Apply grammar_fixes to catch skalier*-Leaks from user input
+    from services.content_quality_enforcer import apply_grammar_fixes
+    sections["strategische_ziele"], _ = apply_grammar_fixes(_fix_typos(answers.get("strategische_ziele", "")))
+    sections["zeitersparnis_prioritaet"], _ = apply_grammar_fixes(_fix_typos(answers.get("zeitersparnis_prioritaet", "")))
+    sections["hauptleistung"] = _fix_typos(answers.get("hauptleistung", ""))  # Don't modify hauptleistung!
+    sections["ki_projekte"], _ = apply_grammar_fixes(_fix_typos(answers.get("ki_projekte", "")))
+    sections["geschaeftsmodell_evolution"], _ = apply_grammar_fixes(_fix_typos(answers.get("geschaeftsmodell_evolution", "")))
+    sections["vision_3_jahre"], _ = apply_grammar_fixes(_fix_typos(answers.get("vision_3_jahre", "")))
+    sections["ki_guardrails"] = _fix_typos(answers.get("ki_guardrails", ""))  # Don't modify guardrails
 
     # === DEBUG: Page 4 Template Variables ===
     log.info("=" * 80)
