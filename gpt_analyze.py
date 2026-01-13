@@ -91,7 +91,7 @@ from __future__ import annotations
 import json
 import logging
 import os
-import re
+# re already imported at module level
 import threading
 import uuid
 import html
@@ -1005,7 +1005,7 @@ GUARDRAIL_DETECTION_KEYWORDS_EN = GUARDRAIL_KEYWORDS_EN  # EN keywords from guar
 
 def _split_into_sentences(text: str) -> list[str]:
     """Split text into sentences using common delimiters."""
-    import re
+    # re already imported at module level
     # Replace newlines with spaces, then split on . ! ?
     text = text.replace("\n", " ")
     sentences = re.split(r'[.!?]+', text)
@@ -1924,7 +1924,7 @@ def _clean_html(s: str) -> str:
     result = s.replace("```html","").replace("```","").strip()
     
     # v14.35.11: Remove GPT prompt leaks and debug text
-    import re
+    # re already imported at module level
     prompt_leak_patterns = [
         r'(?i)widersprüchliche\s+Formatvorgaben[^.]*\.',
         r'(?i)erlaubte\s+Tags[^.]*\.',
@@ -3106,7 +3106,7 @@ def _apply_pdf_inline_styles(html: str) -> str:
     if not html:
         return html
 
-    import re
+    # re already imported at module level
     result = html
 
     # Fix 1: Add inline gradient to <thead> elements
@@ -3205,7 +3205,7 @@ def _remove_duplicate_context_banners(html: str) -> str:
     if not html:
         return html
 
-    import re
+    # re already imported at module level
 
     # Pattern für context-banner (der globale Branchen/Größen Banner)
     pattern = r'<div class="context-banner">.*?</div>\s*</div>'
@@ -3228,7 +3228,7 @@ def _enforce_quick_win_css_classes(html: str) -> str:
     if not html:
         return html
 
-    import re
+    # re already imported at module level
 
     replacements = [
         # Card Container - alte Klasse zur neuen
@@ -3263,7 +3263,7 @@ def _parse_quick_wins_json(raw_response: str) -> Optional[List[Dict[str, Any]]]:
         None: Bei Parsing-Fehler (Fallback nötig)
     """
     import json
-    import re
+    # re already imported at module level
 
     if not raw_response or not raw_response.strip():
         log.warning("Quick Wins: Leere Response erhalten")
@@ -6575,7 +6575,7 @@ def _generate_gamechanger_compact_from_html(
 
     CI-Design v2.0: Reduziert ~20 Seiten auf ~2-3 Seiten.
     """
-    import re
+    # re already imported at module level
 
     # Extrahiere Headline/Bruchpunkt aus H2/H3 Tags
     h2_matches = re.findall(r'<h2[^>]*>([^<]+)</h2>', raw_html, re.IGNORECASE)
@@ -6621,7 +6621,7 @@ def _generate_funding_compact_from_html(
 
     CI-Design v2.0: Reduziert ~5 Seiten auf ~2 Seiten.
     """
-    import re
+    # re already imported at module level
 
     # Versuche Programme aus dem HTML zu extrahieren
     programme = []
@@ -12574,7 +12574,7 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
 
     # === v14.35.12: GLOBAL FINAL ENFORCER - Letzte Chance vor PDF! ===
     try:
-        import re
+        # re already imported at module level
         final_html = result["html"]
         
         # KRITISCHE REPLACEMENTS auf dem GESAMTEN HTML
