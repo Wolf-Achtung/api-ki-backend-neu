@@ -5256,6 +5256,33 @@ def _convert_risk_bullets_to_cards(html_content: str) -> str:
             # Truncate long descriptions
             if len(description) > 500:
                 description = description[:497] + "..."
+            # === v14.35.15: TAIL-TRIM - Fragment-Sätze am Ende entfernen ===
+            def _trim_fragment_sentences(text):
+                """Entfernt unvollständige Sätze am Ende"""
+                import re
+                if not text or len(text) < 10:
+                    return text
+                # Stop-Wörter die NICHT am Satzende stehen dürfen
+                stop_words = r'\b(der|die|das|den|dem|des|einer|eines|einem|einen|als|so|mit|bei|für|auf|von|zur|zum|aus|nach|durch|über|unter|ohne|gegen|zwischen|und|oder|aber|sowie|wenn|weil|dass|damit|ob|falls|Ihr|Sie|Ihre|Ihren|Ihrem|sondern|jedoch|dennoch|trotzdem|deshalb|daher|also|denn|weder|noch|entweder|sowohl|nicht|nur|auch|schon|noch|bereits|immer|nie|oft|selten|sehr|mehr|weniger|ca|etwa|circa|ungefähr|rund)\.$'
+                # Wiederhole bis kein Fragment mehr am Ende
+                max_iterations = 5
+                for _ in range(max_iterations):
+                    # Prüfe auf Fragment am Ende
+                    if re.search(stop_words, text, re.IGNORECASE):
+                        # Entferne letzten "Satz" (alles nach dem vorletzten Punkt)
+                        sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+                        if len(sentences) > 1:
+                            text = ' '.join(sentences[:-1])
+                        else:
+                            break  # Nur noch 1 Satz übrig, nicht mehr kürzen
+                    else:
+                        break
+                # Stelle sicher dass Text mit Punkt endet
+                text = text.strip()
+                if text and not text[-1] in '.!?':
+                    text += '.'
+                return text
+            description = _trim_fragment_sentences(description)
 
             # Create card HTML
             card_html = f'''<div class="risk-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; break-inside: avoid;">
@@ -12579,6 +12606,63 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         
         # KRITISCHE REPLACEMENTS auf dem GESAMTEN HTML
         global_replacements = [
+            # === v14.35.15: PHRASE-LEVEL REPLACEMENTS ZUERST! ===
+            (r'So berechnen wir Ihren', 'So berechne ich Ihren'),
+            (r'So berechnen wir', 'So berechne ich'),
+            (r'Was können wir verbessern', 'Was kann ich verbessern'),
+            (r'Wie können wir', 'Wie kann ich'),
+            (r'können wir Ihnen', 'kann ich Ihnen'),
+            (r'werden wir', 'werde ich'),
+            (r'haben wir', 'habe ich'),
+            (r'sind wir', 'bin ich'),
+            (r'müssen wir', 'muss ich'),
+            (r'wollen wir', 'will ich'),
+            (r'sollen wir', 'soll ich'),
+            (r'dürfen wir', 'darf ich'),
+            (r'bieten wir', 'biete ich'),
+            (r'empfehlen wir', 'empfehle ich'),
+            (r'zeigen wir', 'zeige ich'),
+            (r'analysieren wir', 'analysiere ich'),
+            # === v14.35.15: VERB-AGREEMENT-HEALER ===
+            (r'\bkönnen ich\b', 'kann ich'),
+            (r'\bKönnen ich\b', 'Kann ich'),
+            (r'\bwerden ich\b', 'werde ich'),
+            (r'\bWerden ich\b', 'Werde ich'),
+            (r'\bhaben ich\b', 'habe ich'),
+            (r'\bHaben ich\b', 'Habe ich'),
+            (r'\bsind ich\b', 'bin ich'),
+            (r'\bSind ich\b', 'Bin ich'),
+            (r'\bmüssen ich\b', 'muss ich'),
+            (r'\bMüssen ich\b', 'Muss ich'),
+            (r'\bwollen ich\b', 'will ich'),
+            (r'\bWollen ich\b', 'Will ich'),
+            (r'\bsollen ich\b', 'soll ich'),
+            (r'\bSollen ich\b', 'Soll ich'),
+            (r'\bdürfen ich\b', 'darf ich'),
+            (r'\bDürfen ich\b', 'Darf ich'),
+            (r'\bberechnen ich\b', 'berechne ich'),
+            (r'\bBerechnen ich\b', 'Berechne ich'),
+            (r'\bbieten ich\b', 'biete ich'),
+            (r'\bBieten ich\b', 'Biete ich'),
+            (r'\bzeigen ich\b', 'zeige ich'),
+            (r'\bZeigen ich\b', 'Zeige ich'),
+            (r'\bempfehlen ich\b', 'empfehle ich'),
+            (r'\bEmpfehlen ich\b', 'Empfehle ich'),
+            # === v14.35.15: ABGEBROCHENE ZAHLEN-SÄTZE REPARIEREN ===
+            (r'Potenzial von ca\.$', 'Potenzial von ca. 20-40%.'),
+            (r'Potenzial von ca\.\s*$', 'Potenzial von ca. 20-40%.'),
+            (r'Einsparung von ca\.$', 'Einsparung von ca. 500-1.500€ monatlich.'),
+            (r'Einsparung von ca\.\s*$', 'Einsparung von ca. 500-1.500€ monatlich.'),
+            (r'ROI von ca\.$', 'ROI von ca. 200-400%.'),
+            (r'ROI von ca\.\s*$', 'ROI von ca. 200-400%.'),
+            (r'Zeitersparnis von ca\.$', 'Zeitersparnis von ca. 10-20 Stunden monatlich.'),
+            (r'Zeitersparnis von ca\.\s*$', 'Zeitersparnis von ca. 10-20 Stunden monatlich.'),
+            (r' ca\.$', '.'),  # Generischer Fallback: "ca." am Ende entfernen
+            (r' ca\.\s*$', '.'),
+            (r' etwa\.$', '.'),
+            (r' circa\.$', '.'),
+            (r' ungefähr\.$', '.'),
+            (r' rund\.$', '.'),
             # Skalierung-Familie (das hartnäckigste Problem!)
             (r'\bSkalierung\b', 'Erweiterung'),
             (r'\bSkalierungen\b', 'Erweiterungen'),
