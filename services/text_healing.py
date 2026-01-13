@@ -386,7 +386,7 @@ def _heal_html_blockwise(html: str, context_hint: str) -> str:
 
         # Skip if contains other tags
         if "<" in inner and ">" in inner:
-            return m.group(0)
+            return str(m.group(0))
 
         healed = heal_text_block(inner, context_hint=context_hint, llm_fallback=None)
         return f"{open_tag}{healed}{close_tag}"
