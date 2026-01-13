@@ -12572,6 +12572,67 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         except Exception as ft_exc:
             log.warning("[%s] ⚠️ FT signal extraction failed: %s", run_id, ft_exc)
 
+    # === v14.35.12: GLOBAL FINAL ENFORCER - Letzte Chance vor PDF! ===
+    try:
+        import re
+        final_html = result["html"]
+        
+        # KRITISCHE REPLACEMENTS auf dem GESAMTEN HTML
+        global_replacements = [
+            # Skalierung-Familie (das hartnäckigste Problem!)
+            (r'\bSkalierung\b', 'Erweiterung'),
+            (r'\bSkalierungen\b', 'Erweiterungen'),
+            (r'\bskalierung\b', 'erweiterung'),
+            (r'\bSkalierbar\b', 'Erweiterbar'),
+            (r'\bskalierbar\b', 'erweiterbar'),
+            (r'\bSkalierbare\b', 'Erweiterbare'),
+            (r'\bskalierbare\b', 'erweiterbare'),
+            (r'\bSkalierbaren\b', 'Erweiterbaren'),
+            (r'\bskalierbaren\b', 'erweiterbaren'),
+            (r'\bSkalierbarer\b', 'Erweiterbarer'),
+            (r'\bskalierbarer\b', 'erweiterbarer'),
+            (r'\bSkalierbares\b', 'Erweiterbares'),
+            (r'\bskalierbares\b', 'erweiterbares'),
+            (r'\bSkaliert\b', 'Erweitert'),
+            (r'\bskaliert\b', 'erweitert'),
+            (r'\bSkalieren\b', 'Erweitern'),
+            (r'\bskalieren\b', 'erweitern'),
+            # Pipeline-Familie
+            (r'\bPipeline\b', 'Prozess'),
+            (r'\bPipelines\b', 'Prozesse'),
+            (r'\bpipeline\b', 'Prozess'),
+            (r'\bpipelines\b', 'Prozesse'),
+            (r'Auswertungs-Pipelines', 'Auswertungs-Prozesse'),
+            # Redaction-Marker (BLOCKER!)
+            (r'\[entfernt - unangemessener Inhalt\]', ''),
+            (r'\[removed - inappropriate content\]', ''),
+            (r'\[REDACTED\]', ''),
+            # Doppelwörter
+            (r'\bzu zu\b', 'zu'),
+            (r'\bdie die\b', 'die'),
+            (r'\bder der\b', 'der'),
+            (r'\bdas das\b', 'das'),
+            (r'\bund und\b', 'und'),
+            # Tippfehler
+            (r'\bzunächen\b', 'zunächst'),
+            # Solo-Konsistenz (uns → mir)
+            (r'Ihr Feedback ist uns wichtig', 'Ihr Feedback ist mir wichtig'),
+            (r'Helfen Sie uns', 'Helfen Sie mir'),
+        ]
+        
+        fixes_count = 0
+        for pattern, replacement in global_replacements:
+            new_html = re.sub(pattern, replacement, final_html, flags=re.IGNORECASE if 'skalier' in pattern.lower() or 'pipeline' in pattern.lower() else 0)
+            if new_html != final_html:
+                fixes_count += 1
+                final_html = new_html
+        
+        result["html"] = final_html
+        log.info(f"[{run_id}] ✅ [GLOBAL-FINAL-ENFORCER] Applied {fixes_count} final fixes on entire HTML")
+    except Exception as e:
+        log.warning(f"[{run_id}] ⚠️ [GLOBAL-FINAL-ENFORCER] Failed: {e}")
+    # === END GLOBAL FINAL ENFORCER ===
+
     an = Analysis(
         user_id=br.user_id, 
         briefing_id=briefing_id, 

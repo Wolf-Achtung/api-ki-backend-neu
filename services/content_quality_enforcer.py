@@ -661,6 +661,13 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r' die verschiedene\.$', ' die verschiedene Aufgaben erfüllen.'),
     (r' Arbeitsalltag der\.$', ' Arbeitsalltag der Mitarbeitenden.'),
     (r'zugerechnet werden\. \.', 'zugerechnet werden.'),
+    # v14.35.12: Weitere Fragmente aus Validation
+    (r' europäischer\.$', ' europäischer Anbieter.'),
+    (r' drohen\.$', ' drohen erhebliche Risiken.'),
+    (r' erschweren\.$', ' erschweren die Umsetzung.'),
+    (r' kein\.$', '.'),
+    (r' eine\.$', '.'),
+    (r' die Sie\.$', ' die Sie nutzen können.')
     (r'\bsparst du\b', 'sparen Sie'),  # v14.35.3: "sparst du" → "sparen Sie"
     (r'\b([a-z]+)st du\b', r'\1en Sie'),  # Allgemein: "Xst du" → "Xen Sie"
     
