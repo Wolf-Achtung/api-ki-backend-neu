@@ -1919,8 +1919,27 @@ def _call_llm_for_section(
 
 # -------------------- HTML repair ----------------
 def _clean_html(s: str) -> str:
+    """Clean HTML and remove GPT prompt leaks."""
     if not s: return s
-    return s.replace("```html","").replace("```","").strip()
+    result = s.replace("```html","").replace("```","").strip()
+    
+    # v14.35.11: Remove GPT prompt leaks and debug text
+    import re
+    prompt_leak_patterns = [
+        r'(?i)widersprüchliche\s+Formatvorgaben[^.]*\.',
+        r'(?i)erlaubte\s+Tags[^.]*\.',
+        r'(?i)Ihr\s+Prompt\s+enthält[^.]*\.',
+        r'(?i)Formatierung\s+nicht\s+erlaubt[^.]*\.',
+        r'(?i)Bitte\s+beachten\s+Sie\s+die\s+Formatvorgaben[^.]*\.',
+        r'(?i)Die\s+Ausgabe\s+muss[^.]*Format[^.]*\.',
+        r'(?i)Verwenden\s+Sie\s+nur\s+die\s+folgenden\s+Tags[^.]*\.',
+        r'<p>\s*</p>',  # Empty paragraphs
+        r'<p>\s*\.\s*</p>',  # Paragraphs with only a dot
+    ]
+    for pattern in prompt_leak_patterns:
+        result = re.sub(pattern, '', result)
+    
+    return result.strip()
 
 
 # -------------------- Typo Correction & Smart Truncation ----------------
@@ -7224,6 +7243,7 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "qw1_monat_stunden": qw1_h,
         "qw2_monat_stunden": qw2_h,
         "stundensatz_eur": stundensatz_eur,
+        "STUNDENSATZ_EUR": stundensatz_eur,  # v14.35.11: Uppercase alias for prompts
         "monatsersparnis_stunden": monatsersparnis_stunden,
         "monatsersparnis_eur": monatsersparnis_eur,
         "jahresersparnis_stunden": jahresersparnis_stunden,
