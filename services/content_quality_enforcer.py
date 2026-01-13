@@ -683,6 +683,13 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'\bskalierbaren\b', 'erweiterbaren'),  # v14.35: Adjektiv Dativ/Genitiv
     (r'\bskalierbarer\b', 'erweiterbarer'),  # v14.35: Adjektiv maskulin/Genitiv
     (r'\bhochskaliert', 'stark erweitert'),  # Partizip
+    # v14.35.8: Explizite Großschreibungs-Patterns (statt IGNORECASE)
+    (r'\bSkalierbare\b', 'Erweiterbare'),  # Am Satzanfang
+    (r'\bSkalierbares\b', 'Erweiterbares'),
+    (r'\bSkalierbaren\b', 'Erweiterbaren'),
+    (r'\bSkalierbarer\b', 'Erweiterbarer'),
+    (r'\bSkaliert\b', 'Erweitert'),  # Am Satzanfang
+    (r'\bSkalieren\b', 'Erweitern')
     (r'\bSkalieren\b', 'Erweitern'),
     (r'\bEngine\b', 'System'),
     # v14.35: Framework-Familie komplett
@@ -786,6 +793,13 @@ GRAMMAR_FIX_PATTERNS = [
     (r'\bskalierbaren\b', 'erweiterbaren'),  # v14.35: Adjektiv Dativ/Genitiv
     (r'\bskalierbarer\b', 'erweiterbarer'),  # v14.35: Adjektiv maskulin/Genitiv
     (r'\bhochskaliert', 'stark erweitert'),  # Partizip
+    # v14.35.8: Explizite Großschreibungs-Patterns (statt IGNORECASE)
+    (r'\bSkalierbare\b', 'Erweiterbare'),  # Am Satzanfang
+    (r'\bSkalierbares\b', 'Erweiterbares'),
+    (r'\bSkalierbaren\b', 'Erweiterbaren'),
+    (r'\bSkalierbarer\b', 'Erweiterbarer'),
+    (r'\bSkaliert\b', 'Erweitert'),  # Am Satzanfang
+    (r'\bSkalieren\b', 'Erweitern')
     (r'\bModule\b', 'Bausteine'),
     (r'\bModul\b', 'Baustein'),
     # Framework-Familie komplett
@@ -837,7 +851,7 @@ def apply_grammar_fixes(html: str) -> tuple[str, int]:
             new_result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
         else:
             # Type assertion for mypy: replacement is str here
-            new_result = re.sub(pattern, str(replacement), result, flags=re.IGNORECASE)
+            new_result = re.sub(pattern, str(replacement), result)
         if new_result != result:
             fixes += 1
             result = new_result
