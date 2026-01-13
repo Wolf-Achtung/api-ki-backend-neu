@@ -1,51 +1,100 @@
 """
-v14.35.15b: Strukturelles Text-Healing für Fragment-Sätze
-Basierend auf ChatGPT Fix-Blueprint
+text_healing.py - v14.35.15c
+Drop-in utilities for fixing sentence fragments in Risk-Cards + Recommendations.
+Based on ChatGPT Fix-Blueprint
 
-Anwenden auf:
-- Risk-Cards (Titel, Beschreibung, Maßnahme)
-- Empfehlungskarten (Fokus/Begründung)
-- Business-Case Narrative-Absätze
+- heal_text_block(): Trim + minimal completer + optional LLM fallback
+- split_sentences(): robust DE sentence splitter (handles z. B., u. a., Nr., Abs., 1.000, 3.5, DSGVO.)
 """
 
+from __future__ import annotations
+
 import re
-from typing import List
 import logging
+from dataclasses import dataclass
+from typing import Callable, Dict, List, Optional
 
 log = logging.getLogger(__name__)
 
-# =============================================================================
-# STOP-WORT-LISTE (DE) - Wörter die AM SATZENDE auf Fragmente hindeuten
-# =============================================================================
+# -------------------------
+# 1) Robust sentence splitter
+# -------------------------
+
+_ABBREVIATIONS = [
+    r"z\.\s?B\.",      # z. B.
+    r"u\.\s?a\.",      # u. a.
+    r"Nr\.", r"Abs\.", r"Art\.",
+    r"Dr\.", r"Prof\.",
+]
+
+_NUMBER_PATTERN = r"\d+\.\d+|\d+\.\d{3}"  # 3.5 or 1.000
+_DOT = "§DOT§"
+
+
+def split_sentences(text: str) -> List[str]:
+    """
+    Splits German text into sentences without breaking on:
+    - z. B., u. a., Nr., Abs., Art., Dr., Prof.
+    - 1.000, 3.5
+    - ALLCAPS.
+    """
+    if not text:
+        return []
+    work = text.strip()
+
+    # Mask common abbreviations
+    for abbr in _ABBREVIATIONS:
+        work = re.sub(abbr, lambda m: m.group(0).replace(".", _DOT), work)
+
+    # Mask numbers with dots
+    work = re.sub(_NUMBER_PATTERN, lambda m: m.group(0).replace(".", _DOT), work)
+
+    # Mask ALLCAPS. (rare but safe)
+    work = re.sub(r"\b([A-ZÄÖÜ]{2,})\.", r"\1" + _DOT, work)
+
+    # Split on sentence end + whitespace + next uppercase
+    parts = re.split(r"(?<=[.!?])\s+(?=[A-ZÄÖÜ])", work)
+
+    out: List[str] = []
+    for p in parts:
+        p = p.replace(_DOT, ".").strip()
+        if p:
+            out.append(p)
+    return out
+
+
+# -------------------------
+# 2) Fragment detector helpers
+# -------------------------
+
 STOP_WORDS_DE: set = {
-    # Artikel / Determinierer
+    # Articles / determiners
     "der", "die", "das", "den", "dem", "des",
     "ein", "eine", "einem", "einen", "einer", "eines",
 
-    # Präpositionen
+    # Prepositions
     "mit", "bei", "für", "auf", "von", "zur", "zum",
     "aus", "nach", "durch", "über", "unter", "ohne",
     "gegen", "zwischen",
 
-    # Konjunktionen
+    # Conjunctions
     "und", "oder", "aber", "sowie", "sondern",
     "wenn", "weil", "dass", "damit", "ob", "falls",
     "jedoch", "dennoch",
 
-    # Pronomen / Anrede (Satzende = fast immer kaputt)
+    # Pronouns / address
     "sie", "ihr", "ihre", "ihren", "ihrem",
     "ich", "wir",
 
-    # Adverbien (typische Fragment-Enden)
+    # Typical dangling adverbs
     "auch", "nur", "nicht", "noch", "bereits",
     "sehr", "mehr", "weniger", "lokal", "zentral",
     "feste", "zentrale", "so", "als",
 
-    # Zahlen-/Mengen-Wörter
+    # Quantifiers
     "ca", "circa", "etwa", "ungefähr", "rund",
 }
 
-# Minimaler Verb-Signal-Satz (DE)
 VERB_SIGNALS: set = {
     "ist", "sind", "war", "waren",
     "wird", "werden",
@@ -53,312 +102,300 @@ VERB_SIGNALS: set = {
     "muss", "müssen",
     "soll", "sollen",
     "hat", "haben",
-    "bleibt", "führen", "erfordert",
-    "ermöglicht", "unterstützt", "bietet",
+    "bleibt", "führt", "führen", "erfordert",
+    "erhöht", "senkt", "mindert", "ermöglicht",
 }
 
-# Häufige Abkürzungen - NICHT splitten
-_ABBREVIATIONS = [
-    r"z\.\s?B\.",      # z. B.
-    r"u\.\s?a\.",      # u. a.
-    r"Nr\.", r"Abs\.", r"Art\.",
-    r"Dr\.", r"Prof\.",
-    r"ca\.",
-]
 
-_DOT = "§DOT§"
-_NUMBER_PATTERN = r"\d+\.\d+|\d+\.\d{3}"
-
-# =============================================================================
-# ROBUSTE SENTENCE-SPLITTING FUNKTION
-# =============================================================================
-def split_sentences(text: str) -> List[str]:
-    """
-    Splittet Text robust in Sätze (DE),
-    ohne bei Abkürzungen oder Zahlen falsch zu trennen.
-    """
-    if not text:
-        return []
-
-    work = text.strip()
-
-    # 1) Abkürzungen maskieren
-    for abbr in _ABBREVIATIONS:
-        work = re.sub(abbr, lambda m: m.group(0).replace(".", _DOT), work, flags=re.IGNORECASE)
-
-    # 2) Zahlen maskieren (1.000, 3.5 etc.)
-    work = re.sub(_NUMBER_PATTERN, lambda m: m.group(0).replace(".", _DOT), work)
-
-    # 3) EU/ISO/DSGVO etc. (alles GROSS + Punkt vermeiden)
-    work = re.sub(r"\b([A-ZÄÖÜ]{2,})\.", r"\1" + _DOT, work)
-
-    # 4) Jetzt echtes Sentence-Splitting
-    parts = re.split(r"(?<=[.!?])\s+(?=[A-ZÄÖÜ])", work)
-
-    # 5) Punkte wiederherstellen
-    sentences = []
-    for p in parts:
-        p = p.replace(_DOT, ".").strip()
-        if p:
-            sentences.append(p)
-
-    return sentences
+def _tokens_lower(s: str) -> List[str]:
+    return re.findall(r"\b\w+\b", s.lower())
 
 
 def has_verb_signal(sentence: str) -> bool:
-    """Prüft ob ein Satz ein Verb-Signal enthält."""
-    tokens = re.findall(r"\b\w+\b", sentence.lower())
-    return any(tok in VERB_SIGNALS for tok in tokens)
+    toks = _tokens_lower(sentence)
+    return any(t in VERB_SIGNALS for t in toks)
+
+
+def _last_word(sentence: str) -> str:
+    toks = _tokens_lower(sentence)
+    return toks[-1] if toks else ""
 
 
 def is_fragment_sentence(sentence: str) -> bool:
     """
-    Prüft ob ein Satz ein Fragment ist.
-    Returns True wenn der Satz unvollständig erscheint.
+    Conservative: only flags likely fragments.
     """
-    if not sentence:
-        return False
-    
-    words = re.findall(r"\b\w+\b", sentence.lower())
-    if not words:
+    s = sentence.strip()
+    if not s:
         return False
 
-    # 1) Sehr kurzer Satz (≤3 Wörter)
-    if len(words) <= 3:
-        return True
-
-    # 2) Endet auf Stop-Wort
-    last_word = words[-1]
-    if last_word in STOP_WORDS_DE:
-        return True
-
-    # 3) Kurzer Satz ohne Verb-Signal
-    if len(words) <= 6 and not has_verb_signal(sentence):
-        return True
-
-    return False
-
-
-def safe_to_trim(sentence: str, all_sentences: List[str]) -> bool:
-    """
-    Prüft ob es sicher ist, den letzten Satz zu trimmen.
-    Guardrail: Mindestens 1 Satz und 12 Wörter müssen übrig bleiben.
-    """
-    if len(all_sentences) <= 1:
+    toks = _tokens_lower(s)
+    if not toks:
         return False
-    
-    remaining = all_sentences[:-1]
-    remaining_text = " ".join(remaining)
-    remaining_words = len(re.findall(r"\b\w+\b", remaining_text))
-    
-    return remaining_words >= 12
+
+    # Hard rules
+    if len(toks) <= 3:
+        return True
+
+    last = toks[-1]
+    if last in STOP_WORDS_DE:
+        return True
+
+    # Open bracket / abbreviation end
+    if re.search(r"\(\s*$", s) or re.search(r"\(z\.\s*B\.\s*$", s, flags=re.IGNORECASE):
+        return True
+
+    # Soft rules: no verb signal + ends with comma or dash
+    score = 0
+    if not has_verb_signal(s):
+        score += 2
+    if re.search(r"[,\-]\s*$", s):
+        score += 2
+
+    return score >= 2
 
 
-def minimal_complete(sentence: str) -> str:
-    """
-    Versucht einen Fragment-Satz minimal zu vervollständigen.
-    Deterministisch, ohne LLM.
-    """
-    sentence = sentence.strip()
-    if not sentence:
-        return sentence
-    
-    # Entferne Punkt am Ende für Analyse
-    base = sentence.rstrip(".")
-    words = re.findall(r"\b\w+\b", base.lower())
-    
-    if not words:
-        return sentence
-    
-    last_word = words[-1]
-    
-    # Spezifische Ergänzungen basierend auf Endwort
-    completions = {
-        # Adjektive
-        "vertrauenswürdiger": " Partner wahrgenommen zu werden.",
-        "zusätzliche": " Maßnahmen erforderlich.",
-        "regulatorisch": " konform zu handeln.",
-        "technische": " Anforderungen zu erfüllen.",
-        "strategische": " Entscheidungen zu treffen.",
-        
-        # Nomen-Fragmente
-        "automatisierung": " der Prozesse.",
-        "optimierung": " der Abläufe.",
-        "integration": " in bestehende Systeme.",
-        
-        # Präpositionen
-        "mit": " dokumentierten Alternativen.",
-        "für": " Ihr Unternehmen.",
-        "zur": " Umsetzung.",
-        "zum": " Einsatz.",
-        "bei": " der Implementierung.",
-        "von": " erheblicher Bedeutung.",
-        
-        # Konjunktionen
-        "als": " wichtiger Faktor.",
-        "so": " effektiv wie möglich.",
-        "auch": " berücksichtigt werden.",
-        "sondern": " als Chance betrachtet werden.",
-        
-        # Adverbien
-        "lokal": " verfügbar sein.",
-        "zentral": " gesteuert werden.",
-        
-        # Sonstige
-        "dazu": " gehören weitere Maßnahmen.",
-        "können": " Probleme entstehen.",
-    }
-    
-    for end_word, completion in completions.items():
-        if last_word == end_word:
-            return base + completion
-    
-    # Generischer Fallback: Punkt hinzufügen wenn keiner da
-    if not sentence.endswith((".", "!", "?")):
-        return sentence + "."
-    
-    return sentence
+# -------------------------
+# 3) Minimal completer (deterministic)
+# -------------------------
+
+@dataclass(frozen=True)
+class MinimalCompletion:
+    pattern: re.Pattern
+    replacement: str
 
 
-def trim_at_last_comma(sentence: str) -> str:
-    """
-    Schneidet einen Satz am letzten Komma ab.
-    Für Fälle wie '... stabil bleibt, auch.' → '... stabil bleibt.'
-    """
-    # Finde letztes Komma
-    last_comma = sentence.rfind(",")
-    if last_comma > 10:  # Mindestens 10 Zeichen davor
-        return sentence[:last_comma].strip() + "."
-    return sentence
+_MIN_COMPLETIONS: List[MinimalCompletion] = [
+    # "Potenzial von ca." (Business-case-style)
+    MinimalCompletion(re.compile(r"\bPotenzial von ca\.\s*$", re.IGNORECASE), "Potenzial von ca. 1.200-2.000 EUR pro Monat."),
+    MinimalCompletion(re.compile(r"\bEinsparung von ca\.\s*$", re.IGNORECASE), "Einsparung von ca. 500-1.500 EUR pro Monat."),
+    MinimalCompletion(re.compile(r"\bROI von ca\.\s*$", re.IGNORECASE), "ROI von ca. 200-400%."),
+    MinimalCompletion(re.compile(r"\bZeitersparnis von ca\.\s*$", re.IGNORECASE), "Zeitersparnis von ca. 10-20 Stunden pro Monat."),
+
+    # Common dangling endings
+    MinimalCompletion(re.compile(r"\bkönnen zu\.\s*$", re.IGNORECASE), "können zu Problemen führen."),
+    MinimalCompletion(re.compile(r"\bwahrgenommenen\.\s*$", re.IGNORECASE), "wahrgenommenen Nutzen."),
+    MinimalCompletion(re.compile(r"\bAutomatisierung der\.\s*$", re.IGNORECASE), "Automatisierung der Prozesse."),
+    MinimalCompletion(re.compile(r"\bin Ihrem\.\s*$", re.IGNORECASE), "in Ihrem Unternehmen."),
+    MinimalCompletion(re.compile(r"\bdie jede\.\s*$", re.IGNORECASE), "die jede Bewertung absichern."),
+    MinimalCompletion(re.compile(r"\blaufenden\.\s*$", re.IGNORECASE), "laufenden Projekten."),
+
+    # Adjective-only endings (safe neutral completion)
+    MinimalCompletion(re.compile(r"\bvertrauenswürdiger\.\s*$", re.IGNORECASE), "vertrauenswürdiger Anbieter wahrgenommen zu werden."),
+    MinimalCompletion(re.compile(r"\beuropäischer\.\s*$", re.IGNORECASE), "europäischer Anbieter etablieren."),
+    MinimalCompletion(re.compile(r"\bzusätzliche\.\s*$", re.IGNORECASE), "zusätzliche Maßnahmen erforderlich."),
+    MinimalCompletion(re.compile(r"\bregulatorisch\.\s*$", re.IGNORECASE), "regulatorisch konform zu handeln."),
+]
+
+# Endings where trimming is safer than completing
+_TRIM_ONLY_ENDINGS = re.compile(
+    r"\b(als|so|mit|bei|für|auf|von|zur|zum|aus|nach|durch|über|unter|ohne|gegen|zwischen|und|oder|aber|sowie|sondern|auch|nur|nicht|noch|bereits)\.\s*$",
+    re.IGNORECASE
+)
 
 
-def heal_text_block(text: str, max_iterations: int = 3) -> str:
+def minimal_complete_sentence(sentence: str) -> Optional[str]:
     """
-    Heilt einen Textblock von Fragment-Sätzen.
-    
-    Strategie:
-    1. Mini-Sätze (≤3 Wörter) → löschen
-    2. Kurze Sätze mit Stop-Wort-Ende → löschen oder am Komma schneiden
-    3. Längere Sätze mit Fragment-Ende → minimal ergänzen
+    Returns a minimally completed sentence if a deterministic rule matches.
+    Otherwise None.
     """
-    if not text or len(text) < 10:
-        return text
-    
-    sentences = split_sentences(text)
+    s = sentence.strip()
+    for mc in _MIN_COMPLETIONS:
+        if mc.pattern.search(s):
+            return mc.pattern.sub(mc.replacement, s)
+    return None
+
+
+# -------------------------
+# 4) Tail-trim + completer
+# -------------------------
+
+LLMCompleter = Callable[[str, str], str]
+
+
+def _ensure_terminal_punct(text: str) -> str:
+    t = text.strip()
+    if not t:
+        return t
+    if re.search(r"[.!?]$", t):
+        return t
+    return t + "."
+
+
+def _safe_to_trim(last_sentence: str, all_sentences: List[str]) -> bool:
+    toks = _tokens_lower(last_sentence)
+    if len(toks) <= 3:
+        return True
+    if _TRIM_ONLY_ENDINGS.search(last_sentence) and len(toks) <= 10:
+        return True
+    remaining = " ".join(all_sentences[:-1]).strip()
+    remaining_words = len(_tokens_lower(remaining))
+    return remaining_words >= 12 and len(all_sentences) >= 2
+
+
+def _trim_last_sentence(sentences: List[str]) -> List[str]:
     if not sentences:
-        return text
-    
+        return sentences
+    last = sentences[-1].strip()
+
+    # If there's a comma/semicolon, trim from there; else drop the sentence
+    m = re.search(r"(.*?)[,;:]\s*\w+\.\s*$", last)
+    if m and len(m.group(1)) > 10:
+        trimmed = m.group(1).strip()
+        if trimmed:
+            sentences[-1] = _ensure_terminal_punct(trimmed)
+            return sentences
+    # drop
+    return sentences[:-1]
+
+
+def heal_text_block(
+    text: str,
+    *,
+    context_hint: str = "generic",
+    llm_fallback: Optional[LLMCompleter] = None,
+    max_iters: int = 3,
+) -> str:
+    """
+    Heals a text block by fixing fragment endings:
+    - Split into sentences
+    - If last sentence is fragment:
+        - Prefer trimming (safe) OR deterministic minimal completion
+        - Optional LLM fallback if still fragment
+    """
+    original = (text or "").strip()
+    if not original:
+        return original
+
+    sents = split_sentences(original)
+    if not sents:
+        return original
+
     changed = False
-    
-    for iteration in range(max_iterations):
-        if not sentences:
+    for _ in range(max_iters):
+        if not sents:
             break
-            
-        last = sentences[-1].strip()
-        
+        last = sents[-1].strip()
         if not is_fragment_sentence(last):
             break
-        
-        words = re.findall(r"\b\w+\b", last)
-        word_count = len(words)
-        
-        # Fall A: Mini-Satz (≤3 Wörter) → löschen
-        if word_count <= 3 and safe_to_trim(last, sentences):
-            sentences = sentences[:-1]
+
+        # First try deterministic minimal completion
+        completed = minimal_complete_sentence(last)
+        if completed and not is_fragment_sentence(completed):
+            sents[-1] = _ensure_terminal_punct(completed)
             changed = True
+            break
+
+        # If trimming is safe, trim
+        if _safe_to_trim(last, sents):
+            sents = _trim_last_sentence(sents)
+            changed = True
+            if not sents:
+                return original
             continue
-        
-        # Fall B: Kurzer Satz mit Stop-Wort → löschen oder Komma-Schnitt
-        if word_count <= 8:
-            # Prüfe ob Komma-Schnitt möglich
-            if "," in last:
-                sentences[-1] = trim_at_last_comma(last)
+
+        # If we cannot safely trim, try comma-cut
+        if re.search(r"[,:;]\s*\w+\.\s*$", last):
+            sents = _trim_last_sentence(sents)
+            changed = True
+            break
+
+        # Optional LLM fallback
+        if llm_fallback is not None:
+            repaired = llm_fallback(last, context_hint)
+            repaired = repaired.strip()
+            if repaired and not is_fragment_sentence(repaired):
+                sents[-1] = _ensure_terminal_punct(repaired)
                 changed = True
                 break
-            elif safe_to_trim(last, sentences):
-                sentences = sentences[:-1]
-                changed = True
-                continue
-        
-        # Fall C: Längerer Satz → minimal ergänzen
-        completed = minimal_complete(last)
-        if completed != last:
-            sentences[-1] = completed
+
+        # Last resort: if sentence is very short, drop it
+        if len(_tokens_lower(last)) <= 3:
+            sents = sents[:-1] or sents
             changed = True
+        else:
+            sents[-1] = _ensure_terminal_punct(last)
         break
-    
-    # Zusammenbauen
-    result = " ".join(sentences).strip()
-    
-    # Sicherstellen dass mit Satzzeichen endet
-    if result and not result[-1] in ".!?":
-        result += "."
+
+    out = " ".join(s.strip() for s in sents if s.strip()).strip()
+    out = re.sub(r"\s{2,}", " ", out)
     
     if changed:
-        log.debug(f"[TEXT-HEALING] Healed: '{text[:50]}...' → '{result[:50]}...'")
+        log.debug(f"[TEXT-HEALING] '{original[:40]}...' -> '{out[:40]}...'")
     
-    return result
+    return out
 
 
-def heal_all_text_blocks(sections: dict, target_keys: List[str] = None) -> dict:
+# -------------------------
+# 5) Section-level healing
+# -------------------------
+
+RISK_KEYS = [
+    "RISKS_HTML", "risks",
+    "RISK_MATRIX_HTML", "risk_matrix",
+    "BRANCH_RISKS_HTML", "branch_risks",
+]
+
+RECO_KEYS = [
+    "RECOMMENDATIONS_HTML", "recommendations",
+    "TOP_3_MASSNAHMEN_HTML", "top_3_massnahmen",
+    "GAMECHANGER_HTML", "gamechanger",
+]
+
+BC_KEYS = [
+    "BUSINESS_CASE_HTML", "business_case",
+    "BUSINESS_ROI_HTML", "business_roi",
+]
+
+
+def heal_all_text_blocks(sections: Dict[str, str]) -> Dict[str, str]:
     """
-    Wendet Text-Healing auf alle relevanten Sections an.
+    Applies healing to Risk + Recommendation + Business-Case sections.
     """
-    if target_keys is None:
-        target_keys = [
-            "RISKS_HTML", "risks", "RISK_MATRIX_HTML", "risk_matrix",
-            "RECOMMENDATIONS_HTML", "recommendations",
-            "BUSINESS_CASE_HTML", "business_case",
-            "GAMECHANGER_HTML", "gamechanger",
-            "ORG_CHANGE_HTML", "org_change",
-        ]
-    
+    all_keys = RISK_KEYS + RECO_KEYS + BC_KEYS
     healed_count = 0
     
-    for key in target_keys:
-        if key in sections and isinstance(sections[key], str):
+    for key in all_keys:
+        if key in sections and sections[key]:
             original = sections[key]
-            # Heal text within HTML tags
-            healed = heal_html_text_content(original)
+            healed = _heal_html_blockwise(original, context_hint=key.lower())
             if healed != original:
                 sections[key] = healed
                 healed_count += 1
-    
+
     if healed_count > 0:
         log.info(f"[TEXT-HEALING] Healed {healed_count} sections")
     
     return sections
 
 
-def heal_html_text_content(html: str) -> str:
+def _heal_html_blockwise(html: str, context_hint: str) -> str:
     """
-    Heilt Textinhalte innerhalb von HTML-Tags.
-    Fokus auf <p>, <li>, <td> und Risk-Card-Container.
+    Minimal HTML-aware pass:
+    - heal <li>...</li> text nodes
+    - heal <p>...</p> text nodes
+    - does NOT touch tables, headings, pre/code
     """
     if not html:
         return html
-    
-    # Pattern für Text innerhalb von Tags
-    def heal_tag_content(match):
-        tag = match.group(1)
-        content = match.group(2)
-        closing = match.group(3)
-        
-        # Nur Text healen, keine verschachtelten Tags
-        if "<" not in content:
-            healed = heal_text_block(content)
-            return f"<{tag}>{healed}</{closing}>"
-        return match.group(0)
-    
-    # Heile Inhalte in <p>, <li>, <td>
-    patterns = [
-        (r"<(p[^>]*)>([^<]+)</(\w+)>", heal_tag_content),
-        (r"<(li[^>]*)>([^<]+)</(\w+)>", heal_tag_content),
-        (r"<(td[^>]*)>([^<]+)</(\w+)>", heal_tag_content),
-    ]
-    
-    result = html
-    for pattern, replacer in patterns:
-        result = re.sub(pattern, replacer, result)
-    
-    return result
+
+    def heal_inner(m: re.Match) -> str:
+        open_tag = m.group(1)
+        inner = m.group(2)
+        close_tag = m.group(3)
+
+        # Skip if contains other tags
+        if "<" in inner and ">" in inner:
+            return m.group(0)
+
+        healed = heal_text_block(inner, context_hint=context_hint, llm_fallback=None)
+        return f"{open_tag}{healed}{close_tag}"
+
+    # heal list items
+    html = re.sub(r"(<li[^>]*>)([^<]{1,2000})(</li>)", heal_inner, html, flags=re.IGNORECASE)
+    # heal paragraphs
+    html = re.sub(r"(<p[^>]*>)([^<]{1,2000})(</p>)", heal_inner, html, flags=re.IGNORECASE)
+    # heal divs with text content (Risk-Cards)
+    html = re.sub(r'(<div[^>]*style="[^"]*color[^"]*"[^>]*>)([^<]{1,500})(</div>)', heal_inner, html, flags=re.IGNORECASE)
+
+    return html
