@@ -8911,6 +8911,11 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         strategische_ziele = _fix_typos(briefing.get("strategische_ziele", ""))
         ki_guardrails = _fix_typos(briefing.get("ki_guardrails", ""))
         vision_3_jahre = _fix_typos(briefing.get("vision_3_jahre", ""))
+        # v14.35.11: Apply Enforcer
+        try:
+            from services.content_quality_enforcer import apply_grammar_fixes
+            vision_3_jahre, _ = apply_grammar_fixes(vision_3_jahre)
+        except: pass
         geschaeftsmodell = _fix_typos(briefing.get("geschaeftsmodell_evolution", ""))
         trainings = briefing.get("trainings_interessen", [])
         score_security = scores.get("security", 50)
@@ -9694,6 +9699,11 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {min_words} Wörter):
     ki_ziele = briefing.get("ki_ziele", [])
     ki_projekte = briefing.get("ki_projekte", "")
     vision: str = str(briefing.get("vision_3_jahre", "") or "")
+    # v14.35.11: Apply Enforcer to vision
+    try:
+        from services.content_quality_enforcer import apply_grammar_fixes
+        vision, _ = apply_grammar_fixes(vision)
+    except: pass
     trainings_liste: list = list(briefing.get("trainings_interessen", []) or [])
     # v7.0 PHASE 3: Add missing Goldnuggets
     zeitersparnis_prioritaet: str = str(briefing.get("zeitersparnis_prioritaet", "") or "")
@@ -11093,6 +11103,11 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         br.geschaeftsmodell_evolution = _fix_typos(br.geschaeftsmodell_evolution)
     if hasattr(br, 'vision_3_jahre') and br.vision_3_jahre:
         br.vision_3_jahre = _fix_typos(br.vision_3_jahre)
+        # v14.35.11: Apply Enforcer
+        try:
+            from services.content_quality_enforcer import apply_grammar_fixes
+            br.vision_3_jahre, _ = apply_grammar_fixes(br.vision_3_jahre)
+        except: pass
     if hasattr(br, 'ki_guardrails') and br.ki_guardrails:
         br.ki_guardrails = _fix_typos(br.ki_guardrails)
     
