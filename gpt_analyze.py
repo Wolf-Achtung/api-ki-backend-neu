@@ -91,7 +91,7 @@ from __future__ import annotations
 import json
 import logging
 import os
-# re already imported at module level
+import re
 import threading
 import uuid
 import html
