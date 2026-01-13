@@ -7129,6 +7129,17 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     strategische_ziele: str = str(briefing.get("strategische_ziele", "") or "")
     hauptleistung: str = str(briefing.get("hauptleistung", "") or "")
     ki_projekte: str = str(briefing.get("ki_projekte", "") or "")  # PHASE 3: Added for Quick Wins personalization
+    
+    # v14.35.7: Apply Quality Enforcer to Briefing freetext fields (skalier*-Leaks!)
+    try:
+        from services.content_quality_enforcer import apply_grammar_fixes
+        vision_3_jahre, _ = apply_grammar_fixes(vision_3_jahre)
+        geschaeftsmodell_evolution, _ = apply_grammar_fixes(geschaeftsmodell_evolution)
+        strategische_ziele, _ = apply_grammar_fixes(strategische_ziele)
+        ki_projekte, _ = apply_grammar_fixes(ki_projekte)
+        log.debug("[BRIEFING-ENFORCER] Applied grammar fixes to briefing fields")
+    except Exception as e:
+        log.warning(f"[BRIEFING-ENFORCER] Failed to apply grammar fixes: {e}")
 
     base_vars.update({
         # Original fields
