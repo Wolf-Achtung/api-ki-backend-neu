@@ -1,6 +1,11 @@
 """
-text_healing.py - v14.35.18 (Restklassen 1-4 Healing)
+text_healing.py - v14.35.19 (Report 465 Micro-Fixes)
 Strukturelles Text-Healing für Fragment-Sätze
+
+v14.35.19: Report 465 Micro-Fixes
+  - B1: "oder konsistent." → "oder konsistent nachvollziehbar."
+  - B2: ", selten." → ", selten sinnvoll."
+  - Teil C: Zahlen-Grammatik ("haben 1" → "hat 1", "den 1 Empfehlungen" → "der 1 Empfehlung")
 
 v14.35.18: Restklassen 1-4 Healing
   - Restklasse 4: Doppelpunkt-Fix (":." → ".")
@@ -339,6 +344,18 @@ MINIMAL_COMPLETIONS: Sequence[MinimalCompletion] = (
         pattern=re.compile(r"\bin\s+Ihrem\.\s*$", flags=re.IGNORECASE),
         replacement="in Ihrem Unternehmen.",
     ),
+
+    # v14.35.19: Report 465 Micro-Fixes (B1, B2)
+    # B1: "oder konsistent." → Risk-Tail mit Adjektiv-Rest
+    MinimalCompletion(
+        pattern=re.compile(r"\boder\s+konsistent\.\s*$", flags=re.IGNORECASE),
+        replacement="oder konsistent nachvollziehbar.",
+    ),
+    # B2: ", selten." → Abgeschnittener Nachsatz
+    MinimalCompletion(
+        pattern=re.compile(r",\s*selten\.\s*$", flags=re.IGNORECASE),
+        replacement=", selten sinnvoll.",
+    ),
 )
 
 
@@ -641,6 +658,36 @@ def _apply_restklassen_healing(sentence: str) -> Tuple[str, str]:
 
 
 # =============================================================================
+# v14.35.19: ZAHLEN-GRAMMATIK-FIXES (Teil C)
+# =============================================================================
+
+# Konkrete Phrasen-Fixes für Singular/Plural-Grammatik bei Zahl "1"
+_NUMBER_GRAMMAR_FIXES: List[Tuple[Pattern, str]] = [
+    # "Davon haben 1 " → "Davon hat 1 "
+    (re.compile(r"\bDavon\s+haben\s+1\b", flags=re.IGNORECASE), "Davon hat 1"),
+    # "den 1 Empfehlungen" → "der 1 Empfehlung"
+    (re.compile(r"\bden\s+1\s+Empfehlungen\b"), "der 1 Empfehlung"),
+    # "mit den 1 Empfehlungen" → "mit der 1 Empfehlung"
+    (re.compile(r"\bmit\s+den\s+1\s+Empfehlungen\b"), "mit der 1 Empfehlung"),
+    # "die 1 Empfehlungen" → "die 1 Empfehlung"
+    (re.compile(r"\bdie\s+1\s+Empfehlungen\b"), "die 1 Empfehlung"),
+    # "1 Empfehlungen" → "1 Empfehlung" (generisch)
+    (re.compile(r"\b1\s+Empfehlungen\b"), "1 Empfehlung"),
+]
+
+
+def _fix_number_grammar(text: str) -> str:
+    """
+    Fixes specific number-related grammar issues (German singular/plural).
+    Only applies to concrete, observed phrases - not a global rule.
+    """
+    t = text
+    for pattern, replacement in _NUMBER_GRAMMAR_FIXES:
+        t = pattern.sub(replacement, t)
+    return t
+
+
+# =============================================================================
 # NORMALIZE TEXT
 # =============================================================================
 
@@ -652,6 +699,8 @@ def _normalize_text(text: str) -> str:
     # fix ". ." artifacts (but keep "..." intact)
     t = re.sub(r"(?<!\.)\.\s+\.(?!\.)", ".", t)
     t = re.sub(r"\s+([,.;:!?])", r"\1", t)
+    # v14.35.19: Apply number grammar fixes
+    t = _fix_number_grammar(t)
     return t.strip()
 
 
