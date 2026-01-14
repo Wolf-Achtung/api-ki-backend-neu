@@ -936,3 +936,167 @@ def heal_risk_card(description: str, measure: str) -> Tuple[str, str]:
 def heal_recommendation(text: str) -> str:
     """Drop-in für Recommendations."""
     return heal_text_block(text, domain="reco", max_tail_sentences=2)
+
+
+# =============================================================================
+# v14.35.19+: SENTENCE-AWARE TRUNCATION (Fix für Satzabbrüche)
+# =============================================================================
+
+# Verbotene Satzenden (Fragmente)
+FORBIDDEN_SENTENCE_ENDINGS = {
+    # Artikel / Determinanten
+    "der", "die", "das", "den", "dem", "des",
+    "ein", "eine", "einer", "eines", "einem", "einen",
+    # Präpositionen
+    "mit", "bei", "für", "auf", "von", "zu", "zur", "zum",
+    "in", "im", "ins", "an", "am", "ans", "aus", "nach",
+    "durch", "über", "unter", "ohne", "gegen", "zwischen",
+    # Konjunktionen / Subjunktionen
+    "und", "oder", "aber", "sowie", "sodass",
+    "wenn", "weil", "dass", "damit", "ob", "falls",
+    # Pronomen
+    "sie", "ihnen", "ihr", "ihre", "ihren", "sich",
+    "dies", "diese", "dieser", "dieses",
+    # Adverbien
+    "auch", "nur", "noch", "so", "als", "bereits",
+}
+
+
+def truncate_to_complete_sentence(text: str, max_words: int = 50, min_words: int = 10) -> str:
+    """
+    Truncates text to max_words while ensuring it ends with a complete sentence.
+
+    v14.35.19+: Sentence-aware truncation to prevent fragment endings like
+    "... der aus Ihren." or "... sowie."
+
+    Args:
+        text: The text to truncate
+        max_words: Maximum number of words allowed
+        min_words: Minimum words to keep (prevents over-aggressive trimming)
+
+    Returns:
+        Truncated text ending with a complete sentence
+    """
+    if not text:
+        return ""
+
+    text = text.strip()
+    words = text.split()
+
+    if len(words) <= max_words:
+        return text
+
+    # Find the last sentence boundary within the word limit
+    # Work backwards from max_words position to find a clean break
+    truncated_words = words[:max_words]
+    truncated_text = " ".join(truncated_words)
+
+    # Find sentence boundaries (., !, ?)
+    sentence_ends = []
+    for i, char in enumerate(truncated_text):
+        if char in ".!?":
+            # Check if it's a real sentence end (not abbreviation)
+            # Look ahead: should be followed by space + uppercase or end of text
+            if i + 1 >= len(truncated_text):
+                sentence_ends.append(i)
+            elif i + 2 < len(truncated_text) and truncated_text[i + 1] == " ":
+                next_char = truncated_text[i + 2]
+                if next_char.isupper() or next_char.isdigit():
+                    sentence_ends.append(i)
+
+    # Find the best cut point
+    if sentence_ends:
+        # Take the last sentence boundary
+        cut_pos = sentence_ends[-1] + 1
+        result = truncated_text[:cut_pos].strip()
+
+        # Check if result is too short
+        if len(result.split()) < min_words and len(sentence_ends) > 1:
+            # Try the second-to-last boundary
+            cut_pos = sentence_ends[-2] + 1 if len(sentence_ends) > 1 else sentence_ends[-1] + 1
+            result = truncated_text[:cut_pos].strip()
+
+        # Validate the ending isn't a fragment
+        result_words = result.rstrip(".!?").split()
+        if result_words:
+            last_word = result_words[-1].lower()
+            if last_word in FORBIDDEN_SENTENCE_ENDINGS:
+                # Bad ending - try previous sentence
+                if len(sentence_ends) > 1:
+                    for end_pos in reversed(sentence_ends[:-1]):
+                        candidate = truncated_text[:end_pos + 1].strip()
+                        candidate_words = candidate.rstrip(".!?").split()
+                        if candidate_words and candidate_words[-1].lower() not in FORBIDDEN_SENTENCE_ENDINGS:
+                            return candidate
+                # No good sentence found - use text_healing to fix it
+                return heal_text_block(result, domain="risk", max_tail_sentences=1)
+
+        return result
+
+    # No sentence boundary found - find a safe word boundary
+    # Go backwards from max_words until we find a word that's not a forbidden ending
+    for i in range(len(truncated_words) - 1, min_words - 1, -1):
+        word = truncated_words[i].lower().rstrip(".,;:")
+        if word not in FORBIDDEN_SENTENCE_ENDINGS:
+            safe_text = " ".join(truncated_words[:i + 1])
+            # Add ellipsis to indicate truncation, not a forced period
+            if not safe_text.endswith((".", "!", "?")):
+                safe_text += "..."
+            return safe_text
+
+    # Fallback: just use the truncated text with ellipsis
+    return " ".join(truncated_words) + "..."
+
+
+def truncate_bullet_safe(text: str, max_words: int = 25) -> str:
+    """
+    Truncates bullet point text safely.
+
+    v14.35.19+: Used for <li> elements to prevent fragment endings.
+    """
+    return truncate_to_complete_sentence(text, max_words=max_words, min_words=8)
+
+
+def validate_no_fragment_endings(text: str) -> Tuple[bool, Optional[str]]:
+    """
+    Validates that text doesn't end with a fragment pattern.
+
+    Returns:
+        (is_valid, error_message)
+    """
+    if not text:
+        return True, None
+
+    text = text.strip()
+    if not text:
+        return True, None
+
+    # Remove trailing punctuation
+    clean_text = text.rstrip(".!?")
+    words = clean_text.split()
+
+    if not words:
+        return True, None
+
+    last_word = words[-1].lower()
+
+    # Check for forbidden endings
+    if last_word in FORBIDDEN_SENTENCE_ENDINGS:
+        return False, f"Fragment ending detected: '{last_word}'"
+
+    # Check for incomplete clause patterns
+    fragment_patterns = [
+        r"\bsowie\s*[.!?]?\s*$",
+        r"\boder\s*[.!?]?\s*$",
+        r"\bund\s*[.!?]?\s*$",
+        r"\bder\s+aus\s+\w+\s*[.!?]?\s*$",
+        r"\bim\s+\w+\s*[.!?]?\s*$",
+        r"\beuropäischen\s*[.!?]?\s*$",
+    ]
+
+    for pattern in fragment_patterns:
+        if re.search(pattern, text, re.IGNORECASE):
+            return False, f"Fragment pattern detected: '{pattern}'"
+
+    return True, None
+
