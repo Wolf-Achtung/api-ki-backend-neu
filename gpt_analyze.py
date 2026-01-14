@@ -1106,6 +1106,7 @@ def build_strategic_context_block(answers: dict, lang: str = "de") -> str:
 
     v3.1: Erweitert um automatische Guardrail-Erkennung in Freitextfeldern.
     v5.0: Nutzt services/guardrails.py mit Confidence-Scoring.
+    v14.35.19: HAUPTLEISTUNG ist jetzt ERSTES Feld (höchste Priorität für Individualisierung)
 
     Args:
         answers: Dict mit den normalisierten Fragebogen-Antworten
@@ -1116,6 +1117,12 @@ def build_strategic_context_block(answers: dict, lang: str = "de") -> str:
     """
     lines = []
 
+    # v14.35.19: HAUPTLEISTUNG ZUERST - primäres Individualisierungs-Kriterium
+    if answers.get("hauptleistung"):
+        val = answers["hauptleistung"]
+        if val and val != "—":
+            lines.append(f"🎯 Kernleistung (Hauptleistung):\n{val}")
+
     if answers.get("strategische_ziele"):
         val = answers["strategische_ziele"]
         if val and val != "—":
@@ -1125,11 +1132,6 @@ def build_strategic_context_block(answers: dict, lang: str = "de") -> str:
         val = _fix_typos(answers["zeitersparnis_prioritaet"])
         if val and val != "—":
             lines.append(f"Zeitfresser & Prozess-Pain-Points:\n{val}")
-
-    if answers.get("hauptleistung"):
-        val = answers["hauptleistung"]
-        if val and val != "—":
-            lines.append(f"Wichtigste Leistung / Hauptprodukt:\n{val}")
 
     if answers.get("ki_projekte"):
         val = answers["ki_projekte"]
