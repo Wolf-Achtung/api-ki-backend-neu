@@ -25,6 +25,13 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
+# v14.35.17: Import text_healing for fragment repair
+try:
+    from services.text_healing import heal_text_block
+    _HEALING_AVAILABLE = True
+except ImportError:
+    _HEALING_AVAILABLE = False
+
 # Import base Risk Engine v2
 from services.risk_engine_v2 import (
     RiskReport,
@@ -1206,6 +1213,32 @@ def risk_report_v3_to_html(
         "D": "#f97316",
         "F": "#dc2626",
     }
+
+    # === v14.35.17: Engine-Level Text Healing ===
+    # Heal all text fields BEFORE HTML rendering to remove fragments
+    if _HEALING_AVAILABLE:
+        # Heal DPIA reason
+        if report.dpia_reason:
+            report.dpia_reason = heal_text_block(report.dpia_reason, domain="risk")
+        # Heal DPIA entries
+        for entry in report.dpia_entries:
+            if entry.description:
+                entry.description = heal_text_block(entry.description, domain="risk")
+            entry.rights_risks = [heal_text_block(r, domain="risk") for r in entry.rights_risks]
+            entry.mitigation_measures = [heal_text_block(m, domain="risk") for m in entry.mitigation_measures]
+        # Heal AI Act conformity risk implications
+        if report.ai_act_conformity:
+            report.ai_act_conformity.risk_implications = [
+                heal_text_block(r, domain="risk") for r in report.ai_act_conformity.risk_implications
+            ]
+        # Heal mitigation plan and compliance gaps
+        report.mitigation_plan = [heal_text_block(m, domain="risk") for m in report.mitigation_plan]
+        report.compliance_gaps = [heal_text_block(g, domain="risk") for g in report.compliance_gaps]
+        # Heal mitigation timeline
+        for phase, items in report.mitigation_timeline.items():
+            report.mitigation_timeline[phase] = [heal_text_block(i, domain="risk") for i in items]
+        log.debug("[G33] Text healing applied to RiskReportV3 fields")
+    # === END v14.35.17 ===
 
     html_parts = [f'''
     <div class="risk-engine-v3" style="font-size:11pt;">

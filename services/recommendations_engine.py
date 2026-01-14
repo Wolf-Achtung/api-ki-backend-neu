@@ -36,6 +36,13 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Literal, Tuple
 
+# v14.35.17: Import text_healing for fragment repair
+try:
+    from services.text_healing import heal_text_block
+    _HEALING_AVAILABLE = True
+except ImportError:
+    _HEALING_AVAILABLE = False
+
 log = logging.getLogger(__name__)
 
 __all__ = [
@@ -860,6 +867,21 @@ def recommendations_report_to_html(
     urgency_colors = {"high": "#dc2626", "medium": "#f59e0b", "low": "#22c55e"}
     phase_colors = {"phase_1": "#3b82f6", "phase_2": "#8b5cf6", "phase_3": "#06b6d4"}
     risk_colors = {"reduces_risk": "#22c55e", "requires_mitigation": "#f59e0b", "neutral": "#6b7280"}
+
+    # === v14.35.17: Engine-Level Text Healing ===
+    # Heal all text fields BEFORE HTML rendering to remove fragments
+    if _HEALING_AVAILABLE:
+        # Heal summary
+        if report.summary:
+            report.summary = heal_text_block(report.summary, domain="reco")
+        # Heal each recommendation's description and reason
+        for rec in report.recommendations:
+            if rec.description:
+                rec.description = heal_text_block(rec.description, domain="reco")
+            if rec.reason:
+                rec.reason = heal_text_block(rec.reason, domain="reco")
+        log.debug("[G32] Text healing applied to RecommendationsReport fields")
+    # === END v14.35.17 ===
 
     html_parts = [f'''
     <div class="recommendations-engine" style="font-size:11pt;">
