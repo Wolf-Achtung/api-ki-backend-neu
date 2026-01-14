@@ -1,6 +1,13 @@
 """
-text_healing.py - v14.35.15g (ChatGPT Final+ Blueprint)
+text_healing.py - v14.35.18 (Restklassen 1-4 Healing)
 Strukturelles Text-Healing für Fragment-Sätze
+
+v14.35.18: Restklassen 1-4 Healing
+  - Restklasse 4: Doppelpunkt-Fix (":." → ".")
+  - Restklasse 3: Nebensatz-Soft-Trim (", in dem alle." → abschneiden)
+  - Restklasse 2: Modal/Passiv-Healing ("werden einmalig." → "werden einmalig festgelegt.")
+  - Restklasse 1: Partizip-Ketten-Healing (Satz ohne finites Verb → "wird/werden" ergänzen)
+  - Micro-Satz-Filter ("Manche.", "Feste." werden entfernt)
 
 Anwenden auf:
 - Risk-Cards (Titel, Beschreibung, Maßnahme)
@@ -72,12 +79,26 @@ STOP_END_PHRASES_DE: set = {
 
 # Finite Verben (Signal: Satz hat Grammatik-Kern)
 FINITE_VERBS_DE: set = {
+    # Hilfsverben
     "ist", "sind", "war", "waren", "wird", "werden",
     "hat", "haben", "hatte", "hatten",
+    # Modalverben
     "kann", "können", "muss", "müssen", "soll", "sollen",
     "darf", "dürfen", "will", "wollen",
+    # Häufige Vollverben (3. Person Singular)
     "bleibt", "führt", "erfordert", "ermöglicht", "bietet", "zeigt",
     "steigt", "fällt", "hilft", "schützt", "minimiert",
+    "speichert", "enthält", "stellt", "setzt", "nutzt", "verwendet",
+    "definiert", "beschreibt", "liefert", "gibt", "nimmt", "macht",
+    "braucht", "benötigt", "verarbeitet", "überprüft", "prüft",
+    "gewährleistet", "sichert", "unterstützt", "basiert", "besteht",
+    # Häufige Vollverben (3. Person Plural)
+    "bleiben", "führen", "erfordern", "ermöglichen", "bieten", "zeigen",
+    "steigen", "fallen", "helfen", "schützen", "minimieren",
+    "speichern", "enthalten", "stellen", "setzen", "nutzen", "verwenden",
+    "definieren", "beschreiben", "liefern", "geben", "nehmen", "machen",
+    "brauchen", "benötigen", "verarbeiten", "überprüfen", "prüfen",
+    "gewährleisten", "sichern", "unterstützen", "basieren", "bestehen",
 }
 
 # =============================================================================
@@ -354,6 +375,272 @@ def _comma_cut(sentence: str) -> str:
 
 
 # =============================================================================
+# v14.35.18: RESTKLASSEN 1-4 HEALING
+# =============================================================================
+
+# Micro-Sätze die erlaubt sind (nicht trimmen)
+ALLOW_MICRO_SENTENCES: set = {
+    "fazit", "hinweis", "tipp", "wichtig", "achtung", "beispiel",
+    "ergebnis", "empfehlung", "zusammenfassung", "übersicht",
+}
+
+# Subordinatoren die ein finites Verb erwarten
+_SUBORDINATORS = {
+    "dass", "weil", "damit", "sodass", "wodurch", "wobei", "obwohl",
+    "wenn", "falls", "sofern", "sobald", "bevor", "nachdem", "indem",
+    "während", "solange", "bis", "seit", "seitdem",
+}
+
+# Nebensatz-Opener Patterns
+_SUBCLAUSE_OPENER_RE = re.compile(
+    r",\s*(in\s+de[mnr]|bei\s+de[mnr]|mit\s+de[mnr]|von\s+de[mnr]|"
+    r"wobei|sodass|wodurch|damit|weil|dass)\b",
+    flags=re.IGNORECASE
+)
+
+# Partizip-Endungen (typisch für deutsche Partizipien)
+_PARTICIPLE_ENDINGS = ("t", "en", "iert", "elt", "ert")
+
+# Modal/Passiv + fehlende Prädikate
+_MODAL_PASSIVE_INCOMPLETE_RE = re.compile(
+    r"\b(werden?|wird|kann|können|muss|müssen|soll|sollen)\s+"
+    r"(einmalig|selten|nur|auch|bereits|noch|hier|dort|dann|jetzt|nun)\s*[.!?]?\s*$",
+    flags=re.IGNORECASE
+)
+
+# Whitelist für Modal/Passiv-Ergänzungen
+_MODAL_PASSIVE_COMPLETIONS: Dict[str, str] = {
+    "einmalig": "festgelegt",
+    "selten": "benötigt",
+    "bereits": "umgesetzt",
+    "noch": "ergänzt",
+}
+
+
+def _fix_colon_tail(sentence: str) -> Tuple[str, bool]:
+    """
+    Restklasse 4: Doppelpunkt-Fix.
+
+    Symptom: "... festhält:." oder "... enthält:"
+    Fix: Ersetze ":." oder ":" am Ende durch "."
+    """
+    s = sentence.strip()
+
+    # Pattern: ":." oder ": ." oder ":" am Ende
+    if re.search(r":\s*\.?\s*$", s):
+        # Entferne : und optional . am Ende, setze sauber .
+        fixed = re.sub(r":\s*\.?\s*$", ".", s)
+        return fixed, (fixed != s)
+
+    return s, False
+
+
+def _soft_trim_subclause(sentence: str) -> Tuple[str, bool]:
+    """
+    Restklasse 3: Nebensatz-Soft-Trim.
+
+    Symptom: "..., in dem alle relevanten."
+    Fix: Schneide am letzten Komma ab, wenn Hauptteil finites Verb hat.
+    """
+    s = sentence.strip()
+
+    # Suche Nebensatz-Opener
+    match = _SUBCLAUSE_OPENER_RE.search(s)
+    if not match:
+        return s, False
+
+    # Position des Kommas vor dem Opener
+    comma_pos = match.start()
+
+    # Prüfe ob Hauptteil (vor Komma) ein finites Verb hat
+    prefix = s[:comma_pos].strip()
+    tokens_prefix = _tokenize(prefix)
+    has_finite_verb_in_prefix = any(
+        tok.lower() in FINITE_VERBS_DE for tok in tokens_prefix
+    )
+
+    if not has_finite_verb_in_prefix:
+        # Hauptteil hat kein finites Verb - nicht sicher zu trimmen
+        return s, False
+
+    # Prüfe ob der Nebensatz-Teil ein Fragment ist (Stop-Ende, kein Verb)
+    suffix = s[comma_pos:].strip()
+    tokens_suffix = _tokenize(suffix)
+
+    # Nebensatz sollte ein finites Verb haben, wenn er vollständig ist
+    has_finite_verb_in_suffix = any(
+        tok.lower() in FINITE_VERBS_DE for tok in tokens_suffix
+    )
+
+    # Prüfe auf Stop-Ende im Suffix
+    if tokens_suffix:
+        last_token = tokens_suffix[-1].lower()
+        is_stop_end = last_token in STOP_END_TOKENS_DE
+    else:
+        is_stop_end = True
+
+    # Wenn Nebensatz kein finites Verb hat ODER Stop-Ende → trimmen
+    if not has_finite_verb_in_suffix or is_stop_end:
+        trimmed = prefix
+        if trimmed and trimmed[-1] not in ".!?":
+            trimmed += "."
+        log.debug(f"[RESTKLASSE-3] Soft-trim: '{s[:40]}...' -> '{trimmed[:40]}...'")
+        return trimmed, True
+
+    return s, False
+
+
+def _heal_modal_passive(sentence: str) -> Tuple[str, bool]:
+    """
+    Restklasse 2: Modal/Passiv-Healing.
+
+    Symptom: "... werden einmalig."
+    Fix: Ergänze whitelisted Prädikate.
+    """
+    s = sentence.strip()
+
+    match = _MODAL_PASSIVE_INCOMPLETE_RE.search(s)
+    if not match:
+        return s, False
+
+    modal_verb = match.group(1).lower()
+    adverb = match.group(2).lower()
+
+    # Prüfe Whitelist
+    if adverb in _MODAL_PASSIVE_COMPLETIONS:
+        completion = _MODAL_PASSIVE_COMPLETIONS[adverb]
+        # Entferne altes Satzende, füge Ergänzung hinzu
+        fixed = re.sub(
+            r"\b" + re.escape(adverb) + r"\s*[.!?]?\s*$",
+            f"{adverb} {completion}.",
+            s,
+            flags=re.IGNORECASE
+        )
+        if fixed != s:
+            log.debug(f"[RESTKLASSE-2] Modal-heal: '{s[:40]}...' -> '{fixed[:40]}...'")
+            return fixed, True
+
+    return s, False
+
+
+def _heal_participle_chain(sentence: str) -> Tuple[str, bool]:
+    """
+    Restklasse 1: Partizip-Ketten-Healing.
+
+    Symptom: "... aufgesetzt, strukturiert."
+    Fix: Ergänze "wird" oder "werden" basierend auf Kontext.
+    """
+    s = sentence.strip()
+    tokens = _tokenize(s)
+
+    if len(tokens) < 6:
+        # Zu kurz für diese Analyse
+        return s, False
+
+    # Prüfe ob ein finites Verb vorhanden ist
+    has_finite_verb = any(tok.lower() in FINITE_VERBS_DE for tok in tokens)
+    if has_finite_verb:
+        # Satz hat bereits finites Verb
+        return s, False
+
+    # Prüfe ob ein Subordinator vorhanden ist (der ein finites Verb erwarten würde)
+    has_subordinator = any(tok.lower() in _SUBORDINATORS for tok in tokens)
+    if not has_subordinator:
+        # Kein Subordinator - diese Regel greift nicht
+        return s, False
+
+    # Prüfe ob die letzten Tokens Partizipien sind (enden auf -t, -en, -iert, etc.)
+    last_tokens = tokens[-3:] if len(tokens) >= 3 else tokens
+    participle_count = sum(
+        1 for tok in last_tokens
+        if any(tok.lower().endswith(end) for end in _PARTICIPLE_ENDINGS)
+    )
+
+    if participle_count < 1:
+        return s, False
+
+    # Ermittle ob Singular oder Plural
+    # Singular-Indikatoren in den letzten 8 Tokens
+    last_8_tokens = tokens[-8:] if len(tokens) >= 8 else tokens
+    singular_indicators = {"ein", "eine", "einen", "einem", "eines", "der", "die", "das"}
+    plural_indicators = {"die", "alle", "viele", "mehrere", "einige"}
+
+    has_singular = any(tok.lower() in singular_indicators for tok in last_8_tokens)
+    has_plural = any(tok.lower() in plural_indicators for tok in last_8_tokens)
+
+    # Entscheide: wird vs werden
+    aux_verb = "wird" if has_singular and not has_plural else "werden"
+
+    # Entferne altes Satzende, füge Hilfsverb hinzu
+    fixed = re.sub(r"\s*[.!?]\s*$", f" {aux_verb}.", s)
+    if fixed != s:
+        log.debug(f"[RESTKLASSE-1] Participle-heal: '{s[:40]}...' -> '{fixed[:40]}...'")
+        return fixed, True
+
+    return s, False
+
+
+def _is_orphan_micro_sentence(sentence: str) -> bool:
+    """
+    Prüft ob ein Satz ein verwaister Micro-Satz ist.
+
+    Micro-Sätze: 1-2 Wörter ohne finites Verb, nicht in ALLOW_MICRO_SENTENCES.
+    Beispiele: "Manche.", "Feste."
+    """
+    s = sentence.strip()
+    tokens = _tokenize(s)
+
+    if len(tokens) > 2:
+        return False
+
+    if not tokens:
+        return True
+
+    # Prüfe ob erlaubt
+    if len(tokens) == 1 and tokens[0].lower().rstrip(".!?") in ALLOW_MICRO_SENTENCES:
+        return False
+
+    # Prüfe auf finites Verb
+    has_finite_verb = any(tok.lower() in FINITE_VERBS_DE for tok in tokens)
+    if has_finite_verb:
+        return False
+
+    return True
+
+
+def _apply_restklassen_healing(sentence: str) -> Tuple[str, str]:
+    """
+    Wendet Restklassen 1-4 Healing auf einen Satz an.
+
+    Returns: (healed_sentence, action_taken)
+    action_taken: "none" | "colon_fix" | "subclause_trim" | "modal_heal" | "participle_heal"
+    """
+    s = sentence.strip()
+
+    # Restklasse 4: Doppelpunkt-Fix (höchste Priorität, sicherste Operation)
+    fixed, changed = _fix_colon_tail(s)
+    if changed:
+        return fixed, "colon_fix"
+
+    # Restklasse 3: Nebensatz-Soft-Trim
+    fixed, changed = _soft_trim_subclause(s)
+    if changed:
+        return fixed, "subclause_trim"
+
+    # Restklasse 2: Modal/Passiv-Healing
+    fixed, changed = _heal_modal_passive(s)
+    if changed:
+        return fixed, "modal_heal"
+
+    # Restklasse 1: Partizip-Ketten-Healing
+    fixed, changed = _heal_participle_chain(s)
+    if changed:
+        return fixed, "participle_heal"
+
+    return s, "none"
+
+
+# =============================================================================
 # NORMALIZE TEXT
 # =============================================================================
 
@@ -402,16 +689,35 @@ def heal_text_block(
     # Only one sentence = don't remove it, just apply completions
     single_sentence_input = len(sentences) == 1
 
-    # Apply minimal completions everywhere
+    # v14.35.18: Apply Restklassen healing + minimal completions everywhere
     out: List[str] = []
     for s in sentences:
-        s2, _ = _apply_minimal_completion(s)
+        # First: Restklassen healing (colon-fix, subclause-trim, modal-heal, participle-heal)
+        s2, action = _apply_restklassen_healing(s)
+        if action != "none":
+            log.debug(f"[TEXT-HEALING] Restklassen ({action}): '{s[:30]}...' -> '{s2[:30]}...'")
+        # Then: Minimal completions
+        s2, _ = _apply_minimal_completion(s2)
         out.append(s2)
+
+    # v14.35.18: Filter out orphan micro-sentences (except if single sentence)
+    if not single_sentence_input:
+        filtered = [s for s in out if not _is_orphan_micro_sentence(s)]
+        # Safety: never filter out all sentences
+        if filtered:
+            out = filtered
 
     # Tail healing: only last N sentences
     tail_budget = max_tail_sentences
     while out and tail_budget > 0:
         last = out[-1].strip()
+
+        # v14.35.18: Try Restklassen healing on the tail
+        last_healed, action = _apply_restklassen_healing(last)
+        if action != "none":
+            out[-1] = last_healed
+            last = last_healed
+            log.debug(f"[TEXT-HEALING] Restklassen tail ({action}): '{last[:30]}...'")
 
         # Try minimal completion again on the tail
         last2, changed = _apply_minimal_completion(last)
