@@ -398,6 +398,10 @@ def heal_text_block(
     if not sentences:
         return t
 
+    # v14.35.17: Protect single-sentence texts from being fully removed
+    # Only one sentence = don't remove it, just apply completions
+    single_sentence_input = len(sentences) == 1
+
     # Apply minimal completions everywhere
     out: List[str] = []
     for s in sentences:
@@ -422,7 +426,12 @@ def heal_text_block(
             break
 
         tokens = _tokenize(last)
-        
+
+        # v14.35.17: Never remove the ONLY sentence - that would empty the text
+        if single_sentence_input and len(out) == 1:
+            log.debug(f"[TEXT-HEALING] Protect single sentence: '{last[:40]}...'")
+            break
+
         # Sehr kurz: trimmen
         if len(tokens) <= 3:
             log.debug(f"[TEXT-HEALING] Trim short: '{last[:40]}...'")
@@ -452,8 +461,9 @@ def heal_text_block(
                 out[-1] = rewritten
                 break
 
-        # Last resort: trimmen
-        out.pop()
+        # Last resort: trimmen (but never the only sentence)
+        if len(out) > 1:
+            out.pop()
         tail_budget -= 1
 
     healed = " ".join(s.strip() for s in out if s.strip()).strip()
