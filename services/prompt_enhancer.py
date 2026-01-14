@@ -835,6 +835,15 @@ SOLO_GOVERNANCE_REPLACEMENTS: Dict[str, str] = {
 # =============================================================================
 # These terms MUST NEVER appear in Solo reports - they indicate team/KMU context
 
+# v14.35.19+: Protected product names that should NOT be replaced
+# These are proper nouns for tools/software - "Microsoft Teams" should stay as-is
+PROTECTED_PRODUCT_NAMES: List[str] = [
+    "Microsoft Teams",
+    "Google Teams",  # hypothetical
+    "Teams Copilot",
+    "MS Teams",
+]
+
 SOLO_FORBIDDEN_TERMS: List[str] = [
     # Team-specific terms (German)
     "team",
@@ -879,6 +888,8 @@ def apply_solo_persona_filter(text: str) -> str:
     IMPORTANT: Uses word boundaries to avoid replacing within compound words
     like "Kundenabteilung" (customer department references should be preserved).
 
+    v14.35.19+: Protects product names like "Microsoft Teams" from replacement.
+
     Args:
         text: Text to filter
 
@@ -890,6 +901,21 @@ def apply_solo_persona_filter(text: str) -> str:
 
     result = text
     replacements_made = []
+
+    # v14.35.19+: Protect product names before replacement
+    # Map: placeholder → original product name
+    protected_map: Dict[str, str] = {}
+    for i, product_name in enumerate(PROTECTED_PRODUCT_NAMES):
+        placeholder = f"__PROTECTED_PRODUCT_{i}__"
+        if product_name.lower() in result.lower():
+            # Case-insensitive replacement with placeholder
+            pattern = re.compile(re.escape(product_name), re.IGNORECASE)
+            # Capture the actual case used in the text
+            match = pattern.search(result)
+            if match:
+                original = match.group(0)
+                protected_map[placeholder] = original
+                result = pattern.sub(placeholder, result)
 
     # 1) Apply phrase replacements FIRST (multi-word patterns)
     for phrase, replacement in SOLO_PHRASE_REPLACEMENTS.items():
@@ -932,6 +958,10 @@ def apply_solo_persona_filter(text: str) -> str:
 
     if replacements_made:
         log.debug(f"🔧 Solo-Persona-Filter: {len(replacements_made)} Ersetzungen")
+
+    # v14.35.19+: Restore protected product names
+    for placeholder, original in protected_map.items():
+        result = result.replace(placeholder, original)
 
     return result
 

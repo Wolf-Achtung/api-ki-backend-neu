@@ -4175,13 +4175,24 @@ def _format_recommendations_compact(html_content: str) -> str:
 
 # -------------------- AGGRESSIVE TEXT TRUNCATION (Maßnahme 1+2 Final) ----------------
 
+# v14.35.19+: Import sentence-aware truncation to prevent fragment endings
+try:
+    from services.text_healing import truncate_to_complete_sentence, truncate_bullet_safe
+    _SENTENCE_AWARE_TRUNCATION = True
+except ImportError:
+    _SENTENCE_AWARE_TRUNCATION = False
+
+
 def _aggressive_text_truncation(html_content: str) -> str:
     """
     AGGRESSIVE text truncation to eliminate Textwüsten.
 
-    Final Fix v1.0 - Forces compliance with word limits:
-    - Paragraphs: Max 50 words, max 2 sentences
-    - Bullets: Max 25 words, max 1-2 sentences
+    v14.35.19+: Uses sentence-aware truncation to prevent fragment endings
+    like "... der aus Ihren." or "... sowie."
+
+    Final Fix v2.0 - Forces compliance with word limits WITHOUT creating fragments:
+    - Paragraphs: Max 50 words, complete sentences only
+    - Bullets: Max 25 words, complete sentences only
     - Removes filler phrases and redundant text
 
     This is the NUCLEAR option - enforces limits regardless of GPT output.
@@ -4210,24 +4221,35 @@ def _aggressive_text_truncation(html_content: str) -> str:
         if len(words) <= 50:
             return match.group(0)  # Already short enough
 
-        # Split into sentences and take first 2
-        sentences = re.split(r'(?<=[.!?])\s+', text_only.strip())
-        if len(sentences) <= 2:
-            # Just truncate at word limit
-            truncated_words = words[:50]
-            truncated_text = ' '.join(truncated_words)
-            if not truncated_text.endswith('.'):
-                truncated_text += '.'
+        # v14.35.19+: Use sentence-aware truncation to prevent fragment endings
+        if _SENTENCE_AWARE_TRUNCATION:
+            truncated_text = truncate_to_complete_sentence(text_only, max_words=50, min_words=15)
             truncations += 1
             return f'<p>{truncated_text}</p>'
 
-        # Take first 2 sentences
-        truncated = ' '.join(sentences[:2])
-        truncated_words = truncated.split()
-        if len(truncated_words) > 55:
-            truncated = ' '.join(truncated_words[:50]) + '.'
+        # Fallback: Split into sentences and take first 2
+        sentences = re.split(r'(?<=[.!?])\s+', text_only.strip())
+        if len(sentences) >= 2:
+            truncated = ' '.join(sentences[:2])
+            truncated_words = truncated.split()
+            if len(truncated_words) <= 55:
+                truncations += 1
+                return f'<p>{truncated}</p>'
+
+        # Last resort: Find last sentence boundary within limit
+        truncated_text = ' '.join(words[:50])
+        last_period = truncated_text.rfind('.')
+        last_excl = truncated_text.rfind('!')
+        last_quest = truncated_text.rfind('?')
+        best_end = max(last_period, last_excl, last_quest)
+
+        if best_end > len(truncated_text) * 0.6:  # At least 60% of content
+            truncated_text = truncated_text[:best_end + 1]
+        else:
+            # No good sentence boundary - add ellipsis instead of forced period
+            truncated_text = truncated_text.rstrip('.,;: ') + '...'
         truncations += 1
-        return f'<p>{truncated}</p>'
+        return f'<p>{truncated_text}</p>'
 
     output = re.sub(r'<p>([^<]*(?:<(?!/?p)[^>]*>[^<]*)*)</p>', truncate_paragraph, output, flags=re.DOTALL)
 
@@ -4263,17 +4285,26 @@ def _aggressive_text_truncation(html_content: str) -> str:
             # Truncate rest to fit within 25 total words
             max_rest_words = max(15, 25 - prefix_word_count)
             if len(rest_words) > max_rest_words:
-                truncated_rest = ' '.join(rest_words[:max_rest_words])
-                if not truncated_rest.endswith('.'):
-                    truncated_rest += '.'
+                # v14.35.19+: Use sentence-aware truncation
+                if _SENTENCE_AWARE_TRUNCATION:
+                    truncated_rest = truncate_bullet_safe(rest_text, max_words=max_rest_words)
+                else:
+                    truncated_rest = ' '.join(rest_words[:max_rest_words])
+                    # Don't add forced period - use ellipsis if incomplete
+                    if not truncated_rest.endswith(('.', '!', '?')):
+                        truncated_rest = truncated_rest.rstrip('.,;: ') + '...'
                 truncations += 1
                 return f'<li>{prefix}{truncated_rest}</li>'
             return match.group(0)
 
-        # No strong tag - just truncate
-        truncated = ' '.join(words[:25])
-        if not truncated.endswith('.'):
-            truncated += '.'
+        # No strong tag - use sentence-aware truncation
+        if _SENTENCE_AWARE_TRUNCATION:
+            truncated = truncate_bullet_safe(text_only, max_words=25)
+        else:
+            truncated = ' '.join(words[:25])
+            # Don't add forced period - use ellipsis if incomplete
+            if not truncated.endswith(('.', '!', '?')):
+                truncated = truncated.rstrip('.,;: ') + '...'
         truncations += 1
         return f'<li>{truncated}</li>'
 
