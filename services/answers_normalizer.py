@@ -53,7 +53,7 @@ UNTERNEHMENSGROESSE_MAP = {
     "freiberufler": "solo",
 }
 
-# Display-Labels
+# Display-Labels (13 Branchen - v14.35.19)
 BRANCHEN_LABELS = {
     "beratung": "Beratung & Dienstleistungen",
     "marketing": "Marketing & Werbung",
@@ -67,6 +67,7 @@ BRANCHEN_LABELS = {
     "medien": "Medien & Kreativwirtschaft",
     "industrie": "Industrie & Produktion",
     "logistik": "Transport & Logistik",
+    "gastronomie": "Gastronomie & Tourismus",  # v14.35.19: 13. Branche hinzugefügt
 }
 
 UNTERNEHMENSGROESSEN_LABELS = {
