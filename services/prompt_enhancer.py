@@ -1384,8 +1384,10 @@ class PromptEnhancer:
         """
         Build HTML-formatted context block for injection into prompts.
 
+        v14.35.19: Hauptleistung-first - primäres Individualisierungs-Kriterium
+
         Args:
-            briefing_data: Complete briefing data with branche, unternehmensgroesse, etc.
+            briefing_data: Complete briefing data with branche, unternehmensgroesse, hauptleistung, etc.
 
         Returns:
             HTML string with context information
@@ -1395,6 +1397,12 @@ class PromptEnhancer:
         branche = map_frontend_branch_to_engine(raw_branch)
 
         groesse = briefing_data.get("unternehmensgroesse", "")
+
+        # v14.35.19: Hauptleistung ist primäres Kriterium
+        hauptleistung = (
+            briefing_data.get("hauptleistung", "") or
+            briefing_data.get("HAUPTLEISTUNG", "") or ""
+        )
 
         # 3.1.4.15: Get language for i18n context labels
         lang_raw = (briefing_data.get("lang") or briefing_data.get("LANG") or briefing_data.get("sprache") or "de")
@@ -1407,23 +1415,30 @@ class PromptEnhancer:
         branch_ctx = self.builder.load_context("branch", branche)
         size_ctx = self.builder.load_context("size", groesse)
 
-        log.info("✅ Context loaded: branch=%s, size=%s, lang=%s", branche, groesse, report_lang)
+        log.info("✅ Context loaded: hauptleistung=%s, branch=%s, size=%s, lang=%s",
+                 hauptleistung[:30] + "..." if len(hauptleistung) > 30 else hauptleistung,
+                 branche, groesse, report_lang)
 
-        # Build compact HTML context block
-        context_html = self._build_html_block(branch_ctx, size_ctx, report_lang)
+        # Build compact HTML context block with hauptleistung-first
+        context_html = self._build_html_block(branch_ctx, size_ctx, report_lang, hauptleistung)
 
         return context_html
 
     def _build_html_block(
-        self, branch_ctx: Dict[str, Any], size_ctx: Dict[str, Any], lang: str = "de"
+        self, branch_ctx: Dict[str, Any], size_ctx: Dict[str, Any], lang: str = "de",
+        hauptleistung: str = ""
     ) -> str:
-        """Build compact HTML context block with i18n support"""
+        """Build compact HTML context block with i18n support
+
+        v14.35.19: hauptleistung-first - primäres Individualisierungs-Kriterium
+        """
 
         # 3.1.4.15: i18n labels for EN/DE
         is_en = str(lang or "de").lower().startswith("en")
 
         # i18n label definitions
         L = {
+            "hauptleistung_label": "🎯 Core Service (Main Offering):" if is_en else "🎯 Kernleistung (Hauptleistung):",
             "branch_context": "📋 Industry Context:" if is_en else "📋 Branchen-Context:",
             "size_context": "🏢 Size Context:" if is_en else "🏢 Größen-Context:",
             "unknown": "Unknown" if is_en else "Unbekannt",
@@ -1443,6 +1458,16 @@ class PromptEnhancer:
             if not items:
                 return f"<li>{L['no_data']}</li>"
             return "\n    ".join([f"<li>{item}</li>" for item in items[:max_items]])
+
+        # v14.35.19: HAUPTLEISTUNG section FIRST (primäres Individualisierungs-Kriterium)
+        hauptleistung_html = ""
+        if hauptleistung and hauptleistung != "—":
+            hauptleistung_html = f"""
+<div class="context-block hauptleistung-first" style="background:#fef3c7;padding:12px;border-left:4px solid #f59e0b;margin:16px 0;font-size:12px;">
+  <h4 style="margin:0 0 8px 0;font-size:13px;color:#b45309;font-weight:bold;">{L['hauptleistung_label']}</h4>
+  <p style="margin:0;font-size:12px;color:#78350f;"><strong>{hauptleistung}</strong></p>
+</div>
+"""
 
         # Branch section
         branch_html = f"""
@@ -1493,18 +1518,20 @@ class PromptEnhancer:
 
         # 3.1.4.15: EN hard guard - catch any German strings that slipped through
         if is_en:
-            result = branch_html + size_html
+            # v14.35.19: hauptleistung_html FIRST
+            result = hauptleistung_html + branch_html + size_html
             de_markers = ["Branchen-Context:", "Größen-Context:", "Unbekannt", "Keine Angaben",
                           "Typische Workflows:", "Häufigste Pain Points:", "Typische Tools im Einsatz:",
                           "Charakteristika:", "Mitarbeiter:", "/Monat", "Fokus-Prioritäten:",
-                          "In Ihrer aktuellen Größe nicht sinnvoll:"]
+                          "In Ihrer aktuellen Größe nicht sinnvoll:", "Kernleistung (Hauptleistung):"]
             found_de = [m for m in de_markers if m in result]
             if found_de:
                 import logging
                 logging.warning(f"[3.1.4.15] EN context block contains DE strings: {found_de}")
             return result
 
-        return branch_html + size_html
+        # v14.35.19: hauptleistung_html FIRST - primäres Individualisierungs-Kriterium
+        return hauptleistung_html + branch_html + size_html
 
     def _build_strategic_context_prompt_block(self, briefing_data: Dict[str, Any]) -> str:
         """
