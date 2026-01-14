@@ -1452,7 +1452,8 @@ def enforce_kpi_consistency(html: str, canonical_kpis: dict) -> tuple[str, int]:
         canonical_hours = canonical_kpis["monatsersparnis_stunden"]
 
         # Pattern: "X Stunden/Monat" or "X h/Monat" or "X Stunden monatlich"
-        pattern = r'(\d+(?:[–-]\d+)?)\s*(?:Stunden?|h)\s*(?:/\s*Monat|monatlich|pro Monat|monthly)'
+        # Note: [-–] puts hyphen first to avoid range interpretation issues
+        pattern = r'(\d+(?:[-–]\d+)?)\s*(?:Stunden?|h)\s*(?:/\s*Monat|monatlich|pro Monat|monthly)'
 
         def fix_monthly_hours(match):
             nonlocal enforcements
@@ -1460,7 +1461,7 @@ def enforce_kpi_consistency(html: str, canonical_kpis: dict) -> tuple[str, int]:
 
             # Handle ranges like "20-35"
             if '–' in matched_text or '-' in matched_text:
-                parts = re.split(r'[–-]', matched_text)
+                parts = re.split(r'[-–]', matched_text)
                 if len(parts) == 2:
                     try:
                         low, high = float(parts[0]), float(parts[1])
@@ -1493,7 +1494,8 @@ def enforce_kpi_consistency(html: str, canonical_kpis: dict) -> tuple[str, int]:
         canonical_hours_year = canonical_kpis["jahresersparnis_stunden"]
 
         # Pattern: "X Stunden/Jahr" or "X h/Jahr" or "X Stunden jährlich"
-        pattern = r'(\d+(?:[–-]\d+)?)\s*(?:Stunden?|h)\s*(?:/\s*Jahr|jährlich|pro Jahr|yearly|p\.a\.)'
+        # Note: [-–] puts hyphen first to avoid range interpretation issues
+        pattern = r'(\d+(?:[-–]\d+)?)\s*(?:Stunden?|h)\s*(?:/\s*Jahr|jährlich|pro Jahr|yearly|p\.a\.)'
 
         def fix_yearly_hours(match):
             nonlocal enforcements
@@ -1501,7 +1503,7 @@ def enforce_kpi_consistency(html: str, canonical_kpis: dict) -> tuple[str, int]:
 
             # Handle ranges
             if '–' in matched_text or '-' in matched_text:
-                parts = re.split(r'[–-]', matched_text)
+                parts = re.split(r'[-–]', matched_text)
                 if len(parts) == 2:
                     try:
                         low, high = float(parts[0]), float(parts[1])

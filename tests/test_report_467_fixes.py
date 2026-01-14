@@ -117,21 +117,22 @@ class TestKPIConsistencyEnforcement:
         assert "38" in result, f"Value was changed: {result}"
 
     def test_enforce_kpi_range_correction(self) -> None:
-        """Bereiche wie '310-350' werden korrigiert."""
+        """Bereiche mit >30% Abweichung werden korrigiert."""
         from services.content_quality_enforcer import enforce_kpi_consistency
 
         canonical_kpis = {
             "jahresersparnis_stunden": 420,
         }
 
-        # Test mit stark abweichendem Bereich
-        html = "<p>Jahresersparnis: 310-350 Stunden/Jahr</p>"
+        # Test mit stark abweichendem Bereich (avg 225 vs canonical 420 = ~46% deviation)
+        # Threshold is 30%, so this should trigger enforcement
+        html = "<p>Jahresersparnis: 200-250 Stunden/Jahr</p>"
         result, count = enforce_kpi_consistency(html, canonical_kpis)
 
         # Bereich sollte korrigiert worden sein
-        assert count > 0, "No enforcement happened"
-        # Neuer Bereich sollte näher an 420 sein
-        assert "310" not in result or "350" not in result, f"Range not corrected: {result}"
+        assert count > 0, f"No enforcement happened (result: {result})"
+        # Neuer Bereich sollte näher an 420 sein (357-483)
+        assert "200" not in result and "250" not in result, f"Range not corrected: {result}"
 
 
 # =============================================================================
