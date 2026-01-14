@@ -7,6 +7,7 @@ Fixes:
 1. ROI-Filter: Entfernt ROI% außerhalb Business Case
 2. Fragment-Repair: Repariert unvollständige Sätze
 3. hauptleistung-Enforcer: Injiziert hauptleistung wenn unter Minimum
+4. Product Name Safety Net: Korrigiert "Microsoft Kapazitäten" → "Microsoft Teams" (v14.35.21)
 
 Wird nach SIEZEN-GUARD aufgerufen, vor Validation.
 """
@@ -15,6 +16,73 @@ import re
 import logging
 
 log = logging.getLogger(__name__)
+
+# =============================================================================
+# v14.35.21: PRODUCT NAME SAFETY NET (Seatbelt)
+# =============================================================================
+# This is a "seatbelt" - should never trigger if protection works correctly,
+# but saves the release if something slips through.
+
+PRODUCT_NAME_MUTATIONS = [
+    # (broken_pattern, correct_replacement)
+    (r"Microsoft\s+Kapazitäten", "Microsoft Teams"),
+    (r"MS\s+Kapazitäten", "MS Teams"),
+    (r"Google\s+Kapazitäten", "Google Teams"),  # hypothetical
+]
+
+
+def fix_product_name_mutations(html: str) -> tuple[str, int]:
+    """
+    Safety Net: Korrigiert fehlerhafte Produktnamen-Mutationen.
+
+    v14.35.21: "Microsoft Kapazitäten" → "Microsoft Teams"
+
+    This is a seatbelt - should never trigger if the protection in
+    apply_solo_persona_filter() works correctly.
+
+    Returns:
+        tuple: (fixed_html, fix_count)
+    """
+    if not html:
+        return html, 0
+
+    result = html
+    fix_count = 0
+
+    for broken_pattern, correct in PRODUCT_NAME_MUTATIONS:
+        pattern = re.compile(broken_pattern, re.IGNORECASE)
+        matches = pattern.findall(result)
+        if matches:
+            result = pattern.sub(correct, result)
+            fix_count += len(matches)
+            log.warning(
+                f"[SAFETY-NET] Fixed product name mutation: "
+                f"'{broken_pattern}' → '{correct}' ({len(matches)}x)"
+            )
+
+    return result, fix_count
+
+
+def apply_product_name_safety_net(sections: dict) -> dict:
+    """
+    Wendet Product Name Safety Net auf alle Sections an.
+
+    v14.35.21: Seatbelt für "Microsoft Kapazitäten" → "Microsoft Teams"
+    """
+    total_fixes = 0
+
+    for key, value in sections.items():
+        if isinstance(value, str) and len(value) > 10:
+            fixed, count = fix_product_name_mutations(value)
+            if count > 0:
+                sections[key] = fixed
+                total_fixes += count
+
+    if total_fixes > 0:
+        log.warning(f"[SAFETY-NET] Total product name mutations fixed: {total_fixes}")
+
+    return sections
+
 
 # =============================================================================
 # 1. ROI-FILTER: Entfernt ROI-Prozentsätze außerhalb Business Case
@@ -1303,6 +1371,9 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
 
     # 8. KPI Consistency Enforcement (v14.35.19+)
     sections = apply_kpi_consistency_enforcer(sections)
+
+    # 9. Product Name Safety Net (v14.35.21) - LAST STEP (seatbelt)
+    sections = apply_product_name_safety_net(sections)
 
     log.info("[QUALITY-ENFORCER] Pipeline complete")
     return sections
