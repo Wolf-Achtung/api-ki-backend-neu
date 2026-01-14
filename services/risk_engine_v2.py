@@ -27,6 +27,13 @@ import re
 from dataclasses import dataclass, field, asdict
 from typing import Any, Dict, List, Optional, Union, Literal
 
+# v14.35.17: Import text_healing for fragment repair
+try:
+    from services.text_healing import heal_text_block
+    _HEALING_AVAILABLE = True
+except ImportError:
+    _HEALING_AVAILABLE = False
+
 log = logging.getLogger(__name__)
 
 __all__ = [
@@ -965,6 +972,20 @@ def risk_report_to_html(
         "D": "#f97316",
         "F": "#dc2626",
     }.get(report.consolidated_grade, "#6b7280")
+
+    # === v14.35.17: Engine-Level Text Healing ===
+    # Heal all text fields BEFORE HTML rendering to remove fragments
+    if _HEALING_AVAILABLE:
+        # Heal list items
+        report.ai_act_reasons = [heal_text_block(r, domain="risk") for r in report.ai_act_reasons]
+        report.ai_act_required_controls = [heal_text_block(c, domain="risk") for c in report.ai_act_required_controls]
+        report.dsgvo_risk_factors = [heal_text_block(f, domain="risk") for f in report.dsgvo_risk_factors]
+        report.vendor_flags = [heal_text_block(f, domain="risk") for f in report.vendor_flags]
+        # Heal narrative summary
+        if report.narrative_summary:
+            report.narrative_summary = heal_text_block(report.narrative_summary, domain="risk")
+        log.debug("[G29] Text healing applied to RiskReport fields")
+    # === END v14.35.17 ===
 
     html_parts = [f'''
     <div class="risk-engine-v2" style="font-size:11pt;">
