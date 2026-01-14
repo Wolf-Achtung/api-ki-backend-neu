@@ -5257,30 +5257,54 @@ def _convert_risk_bullets_to_cards(html_content: str) -> str:
             # Truncate long descriptions
             if len(description) > 500:
                 description = description[:497] + "..."
-            # === v14.35.15: TAIL-TRIM - Fragment-Sätze am Ende entfernen ===
+            # === v14.35.16: TAIL-TRIM - Mini-Sätze + Stop-Wörter entfernen ===
             def _trim_fragment_sentences(text):
-                """Entfernt unvollständige Sätze am Ende"""
+                """Entfernt unvollständige Sätze am Ende (Mini-Sätze + Stop-Wörter)"""
                 import re
                 if not text or len(text) < 10:
                     return text
-                # Stop-Wörter die NICHT am Satzende stehen dürfen
-                stop_words = r'\b(der|die|das|den|dem|des|einer|eines|einem|einen|als|so|mit|bei|für|auf|von|zur|zum|aus|nach|durch|über|unter|ohne|gegen|zwischen|und|oder|aber|sowie|wenn|weil|dass|damit|ob|falls|Ihr|Sie|Ihre|Ihren|Ihrem|sondern|jedoch|dennoch|trotzdem|deshalb|daher|also|denn|weder|noch|entweder|sowohl|nicht|nur|auch|schon|noch|bereits|immer|nie|oft|selten|sehr|mehr|weniger|ca|etwa|circa|ungefähr|rund)\.$'
-                # Wiederhole bis kein Fragment mehr am Ende
+                
                 max_iterations = 5
                 for _ in range(max_iterations):
-                    # Prüfe auf Fragment am Ende
-                    if re.search(stop_words, text, re.IGNORECASE):
-                        # Entferne letzten "Satz" (alles nach dem vorletzten Punkt)
-                        sentences = re.split(r'(?<=[.!?])\s+', text.strip())
-                        if len(sentences) > 1:
-                            text = ' '.join(sentences[:-1])
-                        else:
-                            break  # Nur noch 1 Satz übrig, nicht mehr kürzen
+                    # Split in Sätze
+                    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+                    if len(sentences) <= 1:
+                        break
+                    
+                    last_sentence = sentences[-1].strip()
+                    words = re.findall(r'\b\w+\b', last_sentence)
+                    word_count = len(words)
+                    
+                    should_remove = False
+                    
+                    # 1) MINI-SÄTZE: 1-3 Wörter ohne Verb = Fragment!
+                    if word_count <= 3:
+                        # Prüfe ob ein Verb dabei ist
+                        verbs = {'ist', 'sind', 'war', 'hat', 'haben', 'wird', 'werden', 'kann', 'können', 'muss', 'müssen'}
+                        has_verb = any(w.lower() in verbs for w in words)
+                        if not has_verb:
+                            should_remove = True
+                    
+                    # 2) STOP-WÖRTER am Ende
+                    if not should_remove and words:
+                        last_word = words[-1].lower()
+                        stop_words = {'der', 'die', 'das', 'den', 'dem', 'des', 'ein', 'eine', 'einer', 'eines',
+                                     'mit', 'bei', 'für', 'auf', 'von', 'zur', 'zum', 'aus', 'nach', 'durch',
+                                     'über', 'unter', 'ohne', 'gegen', 'zwischen', 'und', 'oder', 'aber',
+                                     'sowie', 'wenn', 'weil', 'dass', 'damit', 'ob', 'falls', 'sondern',
+                                     'auch', 'nur', 'nicht', 'noch', 'so', 'als', 'ca', 'etwa', 'circa'}
+                        if last_word in stop_words:
+                            should_remove = True
+                    
+                    # 3) Entferne wenn Fragment erkannt
+                    if should_remove:
+                        text = ' '.join(sentences[:-1])
                     else:
                         break
+                
                 # Stelle sicher dass Text mit Punkt endet
                 text = text.strip()
-                if text and not text[-1] in '.!?':
+                if text and text[-1] not in '.!?':
                     text += '.'
                 return text
             description = _trim_fragment_sentences(description)
