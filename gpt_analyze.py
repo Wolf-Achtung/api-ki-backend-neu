@@ -5307,7 +5307,17 @@ def _convert_risk_bullets_to_cards(html_content: str) -> str:
                 if text and text[-1] not in '.!?':
                     text += '.'
                 return text
+            # === v14.35.16 DEBUG: Risk-Card Healing Monitor ===
+            _desc_before = description[-140:] if len(description) > 140 else description
+            print(f"[RISK-RAW-BEFORE] {title} || {_desc_before}")
+
             description = _trim_fragment_sentences(description)
+
+            _desc_after = description[-140:] if len(description) > 140 else description
+            print(f"[RISK-HEALED-AFTER] {title} || {_desc_after}")
+            if any(x in description for x in ["Zeitblöcke.", "Feste.", "Kernprozesse.", "Mindestens."]):
+                print(f"[RISK-STILL-HAS-FRAGMENT] {title} || {description}")
+            # === END DEBUG ===
 
             # Create card HTML
             card_html = f'''<div class="risk-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; break-inside: avoid;">
@@ -5533,11 +5543,25 @@ def _format_recommendations_as_cards(html_content: str) -> str:
                 # v14.35: Limits erhöht um Card-Clipping zu vermeiden
                 sp_match = re.search(r'Schwerpunkt:\s*([^<\n]+)', section_text, re.IGNORECASE)
                 if sp_match:
-                    schwerpunkt = _heal_recommendation_text(sp_match.group(1).strip()[:1000])
+                    _sp_raw = sp_match.group(1).strip()[:1000]
+                    # === v14.35.16 DEBUG: Reco Healing Monitor ===
+                    print(f"[RECO-RAW-BEFORE-SP] {_sp_raw[-140:]}")
+                    schwerpunkt = _heal_recommendation_text(_sp_raw)
+                    print(f"[RECO-HEALED-AFTER-SP] {schwerpunkt[-140:]}")
+                    if schwerpunkt.strip().endswith(", die Sie.") or schwerpunkt.strip().endswith("die Sie."):
+                        print(f"[RECO-STILL-RELTAIL-SP] {schwerpunkt}")
+                    # === END DEBUG ===
 
                 ma_match = re.search(r'Maßnahme:\s*([^<\n]+)', section_text, re.IGNORECASE)
                 if ma_match:
-                    massnahme = _heal_recommendation_text(ma_match.group(1).strip()[:1000])
+                    _ma_raw = ma_match.group(1).strip()[:1000]
+                    # === v14.35.16 DEBUG: Reco Healing Monitor ===
+                    print(f"[RECO-RAW-BEFORE-MA] {_ma_raw[-140:]}")
+                    massnahme = _heal_recommendation_text(_ma_raw)
+                    print(f"[RECO-HEALED-AFTER-MA] {massnahme[-140:]}")
+                    if massnahme.strip().endswith(", die Sie.") or massnahme.strip().endswith("die Sie."):
+                        print(f"[RECO-STILL-RELTAIL-MA] {massnahme}")
+                    # === END DEBUG ===
 
                 zr_match = re.search(r'(?:Aufwand|Zeitrahmen)[^:]*:\s*([^<\n]+)', section_text, re.IGNORECASE)
                 if zr_match:
@@ -11793,6 +11817,14 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         log.info("[%s] ✅ G29 Risk Engine 2.0 generated: score=%.1f, grade=%s, ai_act=%s",
                  run_id, risk_report.consolidated_score, risk_report.consolidated_grade,
                  risk_report.ai_act_class)
+
+        # === v14.35.16 DEBUG: Risk Engine Fragment Monitor ===
+        _risk_engine_html = sections.get("RISK_ENGINE_HTML", "")
+        if _risk_engine_html:
+            for _needle in ["Zeitblöcke.", "Feste.", "Kernprozesse.", "Mindestens.", ", die Sie.", "die Sie."]:
+                if _needle in _risk_engine_html:
+                    print(f"[RISK-ENGINE-HIT] RISK_ENGINE_HTML contains: {_needle}")
+        # === END DEBUG ===
     except ImportError:
         log.debug("[%s] G29 risk_engine_v2 not available", run_id)
         sections.setdefault("RISK_ENGINE_HTML", "")
@@ -12668,6 +12700,24 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         log.info(f"[{run_id}] ✅ [TEXT-HEALING] Strukturelle Fragment-Reparatur abgeschlossen")
     except Exception as e:
         log.warning(f"[{run_id}] ⚠️ [TEXT-HEALING] Fehler: {e}")
+
+    # === v14.35.16 DEBUG: Final Section Fragment Scan ===
+    _WATCH_FRAGMENTS = ["Zeitblöcke.", "Feste.", "Kernprozesse.", "Mindestens.", ", die Sie.", "die Sie."]
+    _SCAN_KEYS = [
+        "RISKS_HTML", "RISK_MATRIX_HTML", "BRANCH_RISKS_HTML", "RISK_ENGINE_HTML",
+        "RISK_ENGINE_V3_HTML", "RECOMMENDATIONS_HTML", "RECOMMENDATIONS_ENGINE_HTML",
+        "TOP_3_MASSNAHMEN_HTML", "EXEC_SUMMARY_HTML", "FINAL_CHECK_INTRO",
+        "FINAL_CHECK_DECISIONS", "GAMECHANGER_HTML", "BUSINESS_CASE_HTML",
+    ]
+    print("[SECTION-SCAN-FINAL] Starting final fragment scan...")
+    for _sk in _SCAN_KEYS:
+        _sv = sections.get(_sk, "")
+        if _sv:
+            for _needle in _WATCH_FRAGMENTS:
+                if _needle in _sv:
+                    print(f"[SECTION-HIT-FINAL] {_sk} contains: {_needle}")
+    print("[SECTION-SCAN-FINAL] Scan complete.")
+    # === END DEBUG ===
 
     # === v14.35.12: GLOBAL FINAL ENFORCER - Letzte Chance vor PDF! ===
     try:
