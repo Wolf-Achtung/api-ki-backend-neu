@@ -5455,6 +5455,44 @@ def _convert_gamechanger_to_comparison_table(html_content: str) -> str:
 # ================================================================================
 # MAßNAHME 5: Empfehlungen als 2-Spalten Cards (v9.0)
 # ================================================================================
+
+def _heal_recommendation_text(text: str) -> str:
+    """v14.35.16: Heilt Fragment-Sätze in Recommendation-Texten"""
+    import re
+    if not text or len(text) < 5:
+        return text
+    
+    # 1) Soft-Trim: ", die Sie." und ähnliche Relativsatz-Fragmente
+    comma_patterns = [
+        (r',\s*die\s+Sie\.?\s*$', ''),
+        (r',\s*der\s+Sie\.?\s*$', ''),
+        (r',\s*das\s+Sie\.?\s*$', ''),
+        (r',\s*welche\s+Sie\.?\s*$', ''),
+    ]
+    for pattern, repl in comma_patterns:
+        if re.search(pattern, text, re.IGNORECASE):
+            last_comma = text.rfind(',')
+            if last_comma > 10:
+                text = text[:last_comma].strip()
+                if text and text[-1] not in '.!?':
+                    text += '.'
+                break
+    
+    # 2) Mini-Sätze am Ende entfernen
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    if len(sentences) > 1:
+        last = sentences[-1]
+        words = re.findall(r'\b\w+\b', last)
+        if len(words) <= 3:
+            verbs = {'ist', 'sind', 'war', 'hat', 'haben', 'wird', 'werden', 'kann', 'können', 'muss', 'müssen'}
+            if not any(w.lower() in verbs for w in words):
+                text = ' '.join(sentences[:-1])
+    
+    if text and text[-1] not in '.!?':
+        text += '.'
+    return text
+
+
 def _format_recommendations_as_cards(html_content: str) -> str:
     """
     Convert recommendations numbered list into compact 2-column card layout.
@@ -5495,11 +5533,11 @@ def _format_recommendations_as_cards(html_content: str) -> str:
                 # v14.35: Limits erhöht um Card-Clipping zu vermeiden
                 sp_match = re.search(r'Schwerpunkt:\s*([^<\n]+)', section_text, re.IGNORECASE)
                 if sp_match:
-                    schwerpunkt = sp_match.group(1).strip()[:1000]
+                    schwerpunkt = _heal_recommendation_text(sp_match.group(1).strip()[:1000])
 
                 ma_match = re.search(r'Maßnahme:\s*([^<\n]+)', section_text, re.IGNORECASE)
                 if ma_match:
-                    massnahme = ma_match.group(1).strip()[:1000]
+                    massnahme = _heal_recommendation_text(ma_match.group(1).strip()[:1000])
 
                 zr_match = re.search(r'(?:Aufwand|Zeitrahmen)[^:]*:\s*([^<\n]+)', section_text, re.IGNORECASE)
                 if zr_match:
