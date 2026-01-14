@@ -7128,7 +7128,10 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     today = now.strftime("%d.%m.%Y")
     date_30d = (now + timedelta(days=30)).strftime("%d.%m.%Y")
     report_year = now.strftime("%Y")
-    
+    # v14.35.21: Dynamic year variables for templates
+    next_year = str(int(report_year) + 1)
+    next_year_short = next_year[-2:]  # "27" for 2027
+
     # ===== BLOCK 1: Time & Date =====
     # Used in next_actions_de.md for dynamic deadlines
     
@@ -7179,6 +7182,9 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "DATE_30D": date_30d,
         "report_date": today,
         "report_year": report_year,
+        # v14.35.21: Dynamic year variables for templates
+        "next_year": next_year,
+        "next_year_short": next_year_short,
     }
     
     # ===== BLOCK 2: Company Basics =====

@@ -969,6 +969,11 @@ def truncate_to_complete_sentence(text: str, max_words: int = 50, min_words: int
     v14.35.19+: Sentence-aware truncation to prevent fragment endings like
     "... der aus Ihren." or "... sowie."
 
+    v14.35.21: Clause-aware enhancement:
+    - Prefer . / ! / ? (sentence boundaries)
+    - If not available: ; / : / ) / ] (clause boundaries)
+    - If on forbidden ending: cut to last comma + period (if subordinate clause)
+
     Args:
         text: The text to truncate
         max_words: Maximum number of words allowed
@@ -991,50 +996,80 @@ def truncate_to_complete_sentence(text: str, max_words: int = 50, min_words: int
     truncated_words = words[:max_words]
     truncated_text = " ".join(truncated_words)
 
-    # Find sentence boundaries (., !, ?)
+    # v14.35.21: Find all boundary types
+    # Priority 1: Sentence boundaries (., !, ?)
     sentence_ends = []
+    # Priority 2: Clause boundaries (; : ) ])
+    clause_ends = []
+    # Priority 3: Comma before subordinate clause starter
+    comma_clause_ends = []
+
+    # Subordinate clause starters (German)
+    SUBORDINATE_STARTERS = {"die", "der", "das", "welche", "welcher", "welches",
+                           "dass", "weil", "um", "wenn", "obwohl", "damit",
+                           "sodass", "indem", "wobei"}
+
     for i, char in enumerate(truncated_text):
         if char in ".!?":
             # Check if it's a real sentence end (not abbreviation)
-            # Look ahead: should be followed by space + uppercase or end of text
             if i + 1 >= len(truncated_text):
                 sentence_ends.append(i)
             elif i + 2 < len(truncated_text) and truncated_text[i + 1] == " ":
                 next_char = truncated_text[i + 2]
                 if next_char.isupper() or next_char.isdigit():
                     sentence_ends.append(i)
+        elif char in ";:)]":
+            # v14.35.21: Clause boundaries
+            clause_ends.append(i)
+        elif char == ",":
+            # v14.35.21: Check if comma precedes subordinate clause starter
+            if i + 2 < len(truncated_text):
+                rest = truncated_text[i + 1:].strip()
+                first_word = rest.split()[0].lower() if rest.split() else ""
+                if first_word in SUBORDINATE_STARTERS:
+                    comma_clause_ends.append(i)
 
-    # Find the best cut point
-    if sentence_ends:
-        # Take the last sentence boundary
-        cut_pos = sentence_ends[-1] + 1
-        result = truncated_text[:cut_pos].strip()
-
-        # Check if result is too short
-        if len(result.split()) < min_words and len(sentence_ends) > 1:
-            # Try the second-to-last boundary
-            cut_pos = sentence_ends[-2] + 1 if len(sentence_ends) > 1 else sentence_ends[-1] + 1
+    # Find the best cut point using priority
+    def try_cut_at_boundaries(boundaries: list, add_period: bool = False) -> str | None:
+        """Try to cut at given boundaries, validate result."""
+        for end_pos in reversed(boundaries):
+            cut_pos = end_pos + 1
             result = truncated_text[:cut_pos].strip()
+            if add_period and not result.endswith((".", "!", "?")):
+                result = result.rstrip(",;:") + "."
 
-        # Validate the ending isn't a fragment
-        result_words = result.rstrip(".!?").split()
-        if result_words:
-            last_word = result_words[-1].lower()
-            if last_word in FORBIDDEN_SENTENCE_ENDINGS:
-                # Bad ending - try previous sentence
-                if len(sentence_ends) > 1:
-                    for end_pos in reversed(sentence_ends[:-1]):
-                        candidate = truncated_text[:end_pos + 1].strip()
-                        candidate_words = candidate.rstrip(".!?").split()
-                        if candidate_words and candidate_words[-1].lower() not in FORBIDDEN_SENTENCE_ENDINGS:
-                            return candidate
-                # No good sentence found - use text_healing to fix it
-                return heal_text_block(result, domain="risk", max_tail_sentences=1)
+            # Check minimum length
+            if len(result.split()) < min_words:
+                continue
 
-        return result
+            # Validate ending
+            result_clean = result.rstrip(".!?;:,")
+            result_words = result_clean.split()
+            if result_words:
+                last_word = result_words[-1].lower()
+                if last_word not in FORBIDDEN_SENTENCE_ENDINGS:
+                    return result
+        return None
 
-    # No sentence boundary found - find a safe word boundary
-    # Go backwards from max_words until we find a word that's not a forbidden ending
+    # Priority 1: Try sentence boundaries
+    if sentence_ends:
+        result = try_cut_at_boundaries(sentence_ends)
+        if result:
+            return result
+
+    # Priority 2: Try clause boundaries (add period)
+    if clause_ends:
+        result = try_cut_at_boundaries(clause_ends, add_period=True)
+        if result:
+            return result
+
+    # Priority 3: Try comma before subordinate clause (add period)
+    if comma_clause_ends:
+        result = try_cut_at_boundaries(comma_clause_ends, add_period=True)
+        if result:
+            return result
+
+    # Fallback: No good boundary found - find a safe word boundary
     for i in range(len(truncated_words) - 1, min_words - 1, -1):
         word = truncated_words[i].lower().rstrip(".,;:")
         if word not in FORBIDDEN_SENTENCE_ENDINGS:
@@ -1044,7 +1079,7 @@ def truncate_to_complete_sentence(text: str, max_words: int = 50, min_words: int
                 safe_text += "..."
             return safe_text
 
-    # Fallback: just use the truncated text with ellipsis
+    # Last resort: truncate with ellipsis
     return " ".join(truncated_words) + "..."
 
 
@@ -1099,4 +1134,162 @@ def validate_no_fragment_endings(text: str) -> Tuple[bool, Optional[str]]:
             return False, f"Fragment pattern detected: '{pattern}'"
 
     return True, None
+
+
+# =============================================================================
+# v14.35.21: TARGETED TAIL REPAIRS
+# =============================================================================
+# Deterministic fixes for specific fragment patterns from Report 467
+
+def fix_possessive_tail_break(text: str) -> Tuple[str, bool]:
+    """
+    Fixes possessive tail breaks like "... der aus Ihren." or "... Ihre."
+
+    v14.35.21: P1.2 targeted repair
+
+    Pattern: Ends with Ihren./Ihre./Ihrem./Ihres. preceded by article/prep
+    Fix: Soft-trim to last comma + period
+
+    Returns:
+        (fixed_text, was_fixed)
+    """
+    if not text:
+        return text, False
+
+    # Pattern: ends with possessive pronoun followed by period
+    possessive_endings = [
+        r"(\bder\s+aus\s+Ihren)\s*\.\s*$",
+        r"(\bdie\s+aus\s+Ihren)\s*\.\s*$",
+        r"(\bdas\s+aus\s+Ihren)\s*\.\s*$",
+        r"(\baus\s+Ihren)\s*\.\s*$",
+        r"(\bin\s+Ihren)\s*\.\s*$",
+        r"(\bmit\s+Ihren)\s*\.\s*$",
+        r"(\bfür\s+Ihren)\s*\.\s*$",
+        r"(\bIhren)\s*\.\s*$",
+        r"(\bIhre)\s*\.\s*$",
+        r"(\bIhrem)\s*\.\s*$",
+        r"(\bIhres)\s*\.\s*$",
+    ]
+
+    for pattern in possessive_endings:
+        if re.search(pattern, text, re.IGNORECASE):
+            # Find last comma to soft-trim
+            last_comma = text.rfind(",")
+            if last_comma > len(text) // 2:  # Only trim if comma is in second half
+                fixed = text[:last_comma].strip()
+                if fixed and not fixed.endswith((".", "!", "?")):
+                    fixed += "."
+                return fixed, True
+
+            # No good comma - try to complete the phrase
+            # "aus Ihren" needs object: "aus Ihren Anforderungen"
+            fixed = re.sub(r"\baus\s+Ihren\s*\.\s*$", "aus Ihren Anforderungen.", text)
+            if fixed != text:
+                return fixed, True
+
+            # Generic completion for other possessives
+            fixed = re.sub(r"(\bIhren)\s*\.\s*$", r"\1 Anforderungen.", text)
+            if fixed != text:
+                return fixed, True
+
+    return text, False
+
+
+def fix_schreibzeit_incomplete(text: str) -> Tuple[str, bool]:
+    """
+    Fixes incomplete "Schreibzeit." endings.
+
+    v14.35.21: P1.2 targeted repair
+
+    Pattern: "um die durchschnittliche Schreibzeit" ends with "Schreibzeit."
+    Fix: Complete with "zu reduzieren." or "zu senken."
+
+    Returns:
+        (fixed_text, was_fixed)
+    """
+    if not text:
+        return text, False
+
+    # Pattern: sentence about "Schreibzeit" without proper ending
+    schreibzeit_patterns = [
+        (r"um\s+die\s+(durchschnittliche\s+)?Schreibzeit\s*\.\s*$",
+         lambda m: f"um die {m.group(1) or ''}Schreibzeit zu reduzieren."),
+        (r"die\s+(durchschnittliche\s+)?Schreibzeit\s*\.\s*$",
+         lambda m: f"die {m.group(1) or ''}Schreibzeit zu reduzieren."),
+        (r"Schreibzeit\s+reduziert\s*\.\s*$",
+         lambda m: "Schreibzeit reduziert werden kann."),
+    ]
+
+    for pattern, replacement in schreibzeit_patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            if callable(replacement):
+                fixed = text[:match.start()] + replacement(match)
+            else:
+                fixed = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+            return fixed, True
+
+    return text, False
+
+
+def fix_die_alle_incomplete(text: str) -> Tuple[str, bool]:
+    """
+    Fixes incomplete "... die alle." endings.
+
+    v14.35.21: P2 cosmetic polish
+
+    Pattern: "... die alle." without completion
+    Fix: Soft-trim to last comma OR complete with "zentral verfügbar sind."
+
+    Returns:
+        (fixed_text, was_fixed)
+    """
+    if not text:
+        return text, False
+
+    # Pattern: ends with "die alle." or similar
+    if re.search(r"\bdie\s+alle\s*\.\s*$", text, re.IGNORECASE):
+        # Try soft-trim at last comma
+        last_comma = text.rfind(",")
+        if last_comma > len(text) // 2:
+            fixed = text[:last_comma].strip()
+            if fixed and not fixed.endswith((".", "!", "?")):
+                fixed += "."
+            return fixed, True
+
+        # Complete the sentence
+        fixed = re.sub(r"\bdie\s+alle\s*\.\s*$", "die alle zentral verfügbar sind.", text)
+        return fixed, True
+
+    return text, False
+
+
+def apply_targeted_tail_repairs(text: str) -> Tuple[str, int]:
+    """
+    Applies all targeted tail repairs.
+
+    v14.35.21: Combines all P1.2/P2 tail fixes.
+
+    Returns:
+        (fixed_text, repair_count)
+    """
+    if not text:
+        return text, 0
+
+    result = text
+    repair_count = 0
+
+    # Apply fixes in order
+    repairs = [
+        fix_possessive_tail_break,
+        fix_schreibzeit_incomplete,
+        fix_die_alle_incomplete,
+    ]
+
+    for repair_fn in repairs:
+        result, was_fixed = repair_fn(result)
+        if was_fixed:
+            repair_count += 1
+
+    return result, repair_count
 
