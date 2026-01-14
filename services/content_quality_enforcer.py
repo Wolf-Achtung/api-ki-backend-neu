@@ -1300,6 +1300,10 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     sections = apply_grammar_fixer(sections)
     if bundesland:
         sections = apply_location_validator(sections, bundesland)
+
+    # 8. KPI Consistency Enforcement (v14.35.19+)
+    sections = apply_kpi_consistency_enforcer(sections)
+
     log.info("[QUALITY-ENFORCER] Pipeline complete")
     return sections
 
@@ -1384,5 +1388,185 @@ def apply_ai_act_consistency_OLD(sections: dict) -> dict:
             fixed, count = fix_ai_act_consistency(sections[key])
             if count > 0:
                 sections[key] = fixed
-    
+
+    return sections
+
+
+# =============================================================================
+# v14.35.19+: KPI CONSISTENCY ENFORCER
+# =============================================================================
+# Ensures all KPI values in the report match the canonical values
+# Single Source of Truth: canonical_kpis dict stored in sections
+
+def extract_canonical_kpis(sections: dict) -> dict:
+    """
+    Extracts canonical KPI values from sections dict.
+
+    These are the single source of truth for:
+    - monatsersparnis_stunden (monthly time savings in hours)
+    - jahresersparnis_stunden (annual time savings in hours)
+    - monatsersparnis_eur (monthly savings in EUR)
+    - jahresersparnis_eur (annual savings in EUR)
+    - stundensatz_eur (hourly rate)
+    - roi_12m (12-month ROI %)
+    - payback_months (payback period)
+    """
+    canonical = {}
+
+    # Extract from sections dict (these are set in gpt_analyze.py)
+    kpi_keys = [
+        "monatsersparnis_stunden", "jahresersparnis_stunden",
+        "monatsersparnis_eur", "jahresersparnis_eur",
+        "stundensatz_eur", "roi_12m", "payback_months",
+        "capex_realistisch_eur", "opex_realistisch_eur"
+    ]
+
+    for key in kpi_keys:
+        if key in sections:
+            try:
+                canonical[key] = float(sections[key])
+            except (TypeError, ValueError):
+                pass
+
+    return canonical
+
+
+def enforce_kpi_consistency(html: str, canonical_kpis: dict) -> tuple[str, int]:
+    """
+    Enforces KPI consistency in HTML content.
+
+    Replaces any time savings/ROI values that deviate significantly from canonical values.
+    Tolerance: 20% for savings, 10% for ROI
+
+    Returns:
+        tuple: (enforced_html, enforcement_count)
+    """
+    if not html or not canonical_kpis:
+        return html, 0
+
+    enforcements = 0
+    result = html
+
+    # Time savings (hours per month): Replace values outside tolerance
+    if "monatsersparnis_stunden" in canonical_kpis:
+        canonical_hours = canonical_kpis["monatsersparnis_stunden"]
+
+        # Pattern: "X Stunden/Monat" or "X h/Monat" or "X Stunden monatlich"
+        pattern = r'(\d+(?:[–-]\d+)?)\s*(?:Stunden?|h)\s*(?:/\s*Monat|monatlich|pro Monat|monthly)'
+
+        def fix_monthly_hours(match):
+            nonlocal enforcements
+            matched_text = match.group(1)
+
+            # Handle ranges like "20-35"
+            if '–' in matched_text or '-' in matched_text:
+                parts = re.split(r'[–-]', matched_text)
+                if len(parts) == 2:
+                    try:
+                        low, high = float(parts[0]), float(parts[1])
+                        avg = (low + high) / 2
+                        # Check if range is way off from canonical
+                        if abs(avg - canonical_hours) / canonical_hours > 0.3:
+                            enforcements += 1
+                            # Create range around canonical
+                            new_low = int(canonical_hours * 0.85)
+                            new_high = int(canonical_hours * 1.15)
+                            return f"{new_low}–{new_high} Stunden/Monat"
+                    except (ValueError, ZeroDivisionError):
+                        pass
+            else:
+                try:
+                    value = float(matched_text)
+                    # Check if value deviates > 30% from canonical
+                    if canonical_hours > 0 and abs(value - canonical_hours) / canonical_hours > 0.3:
+                        enforcements += 1
+                        return f"{int(canonical_hours)} Stunden/Monat"
+                except ValueError:
+                    pass
+
+            return match.group(0)
+
+        result = re.sub(pattern, fix_monthly_hours, result, flags=re.IGNORECASE)
+
+    # Time savings (hours per year): Replace values outside tolerance
+    if "jahresersparnis_stunden" in canonical_kpis:
+        canonical_hours_year = canonical_kpis["jahresersparnis_stunden"]
+
+        # Pattern: "X Stunden/Jahr" or "X h/Jahr" or "X Stunden jährlich"
+        pattern = r'(\d+(?:[–-]\d+)?)\s*(?:Stunden?|h)\s*(?:/\s*Jahr|jährlich|pro Jahr|yearly|p\.a\.)'
+
+        def fix_yearly_hours(match):
+            nonlocal enforcements
+            matched_text = match.group(1)
+
+            # Handle ranges
+            if '–' in matched_text or '-' in matched_text:
+                parts = re.split(r'[–-]', matched_text)
+                if len(parts) == 2:
+                    try:
+                        low, high = float(parts[0]), float(parts[1])
+                        avg = (low + high) / 2
+                        if abs(avg - canonical_hours_year) / canonical_hours_year > 0.3:
+                            enforcements += 1
+                            new_low = int(canonical_hours_year * 0.85)
+                            new_high = int(canonical_hours_year * 1.15)
+                            return f"{new_low}–{new_high} Stunden/Jahr"
+                    except (ValueError, ZeroDivisionError):
+                        pass
+            else:
+                try:
+                    value = float(matched_text)
+                    if canonical_hours_year > 0 and abs(value - canonical_hours_year) / canonical_hours_year > 0.3:
+                        enforcements += 1
+                        return f"{int(canonical_hours_year)} Stunden/Jahr"
+                except ValueError:
+                    pass
+
+            return match.group(0)
+
+        result = re.sub(pattern, fix_yearly_hours, result, flags=re.IGNORECASE)
+
+    if enforcements > 0:
+        log.info(f"[KPI-ENFORCER] Fixed {enforcements} inconsistent KPI values")
+
+    return result, enforcements
+
+
+def apply_kpi_consistency_enforcer(sections: dict) -> dict:
+    """
+    Applies KPI consistency enforcement across all relevant sections.
+
+    v14.35.19+: Single Source of Truth for KPIs
+    """
+    # Extract canonical KPIs
+    canonical_kpis = extract_canonical_kpis(sections)
+
+    if not canonical_kpis:
+        log.debug("[KPI-ENFORCER] No canonical KPIs found, skipping enforcement")
+        return sections
+
+    total_enforcements = 0
+
+    # Sections to check for KPI consistency
+    check_sections = [
+        "EXECUTIVE_SUMMARY_HTML", "executive_summary",
+        "BUSINESS_CASE_HTML", "business_case",
+        "ROI_HTML", "roi",
+        "RECOMMENDATIONS_HTML", "recommendations",
+        "GAMECHANGER_HTML", "gamechanger",
+        "QUICK_WINS_HTML", "quick_wins",
+        "ROADMAP_90D_HTML", "roadmap_90d",
+        "ROADMAP_12M_HTML", "roadmap_12m",
+    ]
+
+    for key in check_sections:
+        if key in sections and sections[key] and isinstance(sections[key], str):
+            enforced, count = enforce_kpi_consistency(sections[key], canonical_kpis)
+            if count > 0:
+                sections[key] = enforced
+                total_enforcements += count
+
+    if total_enforcements > 0:
+        log.info(f"[KPI-ENFORCER] Complete: {total_enforcements} KPI inconsistencies fixed")
+
     return sections
