@@ -94,7 +94,8 @@ SECTION_TOKEN_BUDGETS: Dict[str, int] = {
     "recommendations": 3500,
 
     # 🟢 Short-form (warnings accepted)
-    "one_liner": 80,
+    # v14.35.22: one_liner erhöht von 80 auf 250 für vollständige Sätze
+    "one_liner": 250,
     "ki_stack_summary": 1200,
     "executive_summary": 1500,
     "exec_summary": 1500,
