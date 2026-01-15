@@ -77,3 +77,7 @@ data/funding_patches/
 
 # Runtime Storage
 storage/
+
+# Python
+__pycache__/
+*.pyc
