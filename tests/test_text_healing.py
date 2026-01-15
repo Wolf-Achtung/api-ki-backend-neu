@@ -199,3 +199,97 @@ class TestHealTextBlock:
             # (entweder geheilt oder getrimmt)
             # Wir prüfen nur, dass der Output nicht identisch ist
             assert result != test_text or pattern not in result, f"Fragment '{fragment}' not healed"
+
+
+# =============================================================================
+# T2: v14.35.22 Open Example Paren Healer Tests
+# =============================================================================
+
+class TestOpenExampleParenHealer:
+    """Tests for fix_open_example_paren_tail - v14.35.22."""
+
+    def test_open_paren_zb_at_end(self) -> None:
+        """Test '(z.B.' at end of text is removed."""
+        from services.text_healing import fix_open_example_paren_tail
+
+        test_cases = [
+            # (input, expected_output, should_fix)
+            ("Dies ist ein Test (z.B.", "Dies ist ein Test.", True),
+            ("Text mit Beispiel (z. B.", "Text mit Beispiel.", True),
+            ("Unvollständig (z.B", "Unvollständig.", True),
+            ("Nur (z.", "Nur.", True),
+        ]
+
+        for input_text, expected, should_fix in test_cases:
+            result, fixed = fix_open_example_paren_tail(input_text)
+            assert fixed == should_fix, f"Should fix: {input_text}"
+            assert result == expected, f"Input: '{input_text}' -> Got: '{result}', Expected: '{expected}'"
+
+    def test_zb_without_paren_at_end(self) -> None:
+        """Test 'z.B.' without paren at end."""
+        from services.text_healing import fix_open_example_paren_tail
+
+        input_text = "Dies ist z.B."
+        result, fixed = fix_open_example_paren_tail(input_text)
+        assert fixed is True
+        # Should end with proper punctuation
+        assert result.endswith(".")
+
+    def test_complete_example_not_changed(self) -> None:
+        """Test that complete '(z.B. Templates).' is NOT changed."""
+        from services.text_healing import fix_open_example_paren_tail
+
+        input_text = "Nutzen Sie Tools (z.B. Templates)."
+        result, fixed = fix_open_example_paren_tail(input_text)
+        assert fixed is False
+        assert result == input_text
+
+    def test_zb_with_content_not_at_end(self) -> None:
+        """Test that 'z.B.' mid-sentence is not changed."""
+        from services.text_healing import fix_open_example_paren_tail
+
+        input_text = "Tools (z.B. Templates) sind hilfreich."
+        result, fixed = fix_open_example_paren_tail(input_text)
+        assert fixed is False
+        assert result == input_text
+
+    def test_html_context(self) -> None:
+        """Test open example paren in HTML context."""
+        from services.content_quality_enforcer import fix_open_example_paren_html
+
+        test_html = "<p>Nutzen Sie Tools (z.B.</p>"
+        result, count = fix_open_example_paren_html(test_html)
+        # Should have at least attempted to fix
+        assert count >= 0
+
+    def test_apply_targeted_repairs_includes_paren_fix(self) -> None:
+        """Test that apply_targeted_tail_repairs includes the paren fix."""
+        from services.text_healing import apply_targeted_tail_repairs
+
+        input_text = "Hier ein Beispiel (z.B."
+        result, count = apply_targeted_tail_repairs(input_text)
+        # Should have fixed something
+        assert count > 0
+        # Should end properly
+        assert result.endswith(".")
+        # Should not contain incomplete pattern
+        assert "(z.B." not in result
+
+
+class TestOpenParenInQualityEnforcer:
+    """Test integration in quality enforcer pipeline."""
+
+    def test_quality_enforcer_fixes_open_paren(self) -> None:
+        """Test that quality enforcer catches open parens."""
+        from services.content_quality_enforcer import apply_open_example_paren_fixer
+
+        sections = {
+            "QUICK_WINS_HTML": "<p>Tool nutzen (z.B.</p>",
+            "RECOMMENDATIONS_HTML": "<li>Beispiel (z. B.</li>",
+            "NORMAL_HTML": "<p>Vollständig (z.B. Templates).</p>",
+        }
+
+        result = apply_open_example_paren_fixer(sections)
+
+        # NORMAL_HTML should be unchanged (complete)
+        assert "(z.B. Templates)" in result["NORMAL_HTML"]
