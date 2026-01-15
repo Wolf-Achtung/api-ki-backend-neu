@@ -12616,6 +12616,24 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     else:
         persona = "team"
 
+    # ==========================================================================
+    # v14.35.22: CANONICAL BUSINESS CASE - Single Source of Truth
+    # ==========================================================================
+    # Problem: Report 467/468 had KPI inconsistencies (18h/20h/25h parallel,
+    # different hourly rates implicit in different sections).
+    # Solution: Create ONE canonical BC model and inject into ALL sections.
+    # ==========================================================================
+    try:
+        from services.business_case_engine_v2 import (
+            create_canonical_from_sections,
+            inject_canonical_to_sections,
+        )
+        canonical_bc = create_canonical_from_sections(sections, company_size=size_raw)
+        canon_updates = inject_canonical_to_sections(canonical_bc, sections)
+        log.info(f"[{run_id}] ✅ [CANONICAL-BC] Injected {canon_updates} canonical KPI values")
+    except Exception as e:
+        log.warning(f"[{run_id}] ⚠️ [CANONICAL-BC] Failed to inject canonical values: {e}")
+
     # Execute hard stop validation
     hard_stop_if_invalid(sections, error_gate, persona=persona, run_id=run_id)
 
