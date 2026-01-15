@@ -1284,6 +1284,7 @@ def apply_targeted_tail_repairs(text: str) -> Tuple[str, int]:
         fix_possessive_tail_break,
         fix_schreibzeit_incomplete,
         fix_die_alle_incomplete,
+        fix_open_example_paren_tail,  # v14.35.22: "(z.B." fix
     ]
 
     for repair_fn in repairs:
@@ -1292,4 +1293,128 @@ def apply_targeted_tail_repairs(text: str) -> Tuple[str, int]:
             repair_count += 1
 
     return result, repair_count
+
+
+# =============================================================================
+# v14.35.22: Open Example Parenthesis Healer
+# =============================================================================
+# Problem: Report 468 had "(z.B." or "(z. B." at sentence ends without closing
+# Solution: Trim the incomplete example reference, end with proper punctuation
+# =============================================================================
+
+# Pattern for open "(z.B." / "(z. B." at end of text/sentence
+OPEN_EXAMPLE_PAREN_PATTERNS = [
+    re.compile(r'\(z\.\s*[Bb]\.\s*$'),         # "(z.B." or "(z. B." at end
+    re.compile(r'\(z\.\s*[Bb]\s*$'),            # "(z.B" or "(z. B" at end
+    re.compile(r'\(z\.\s*$'),                   # "(z." at end
+    re.compile(r'\bz\.\s*[Bb]\.\s*$'),          # "z.B." at end (no paren)
+    re.compile(r'\(\s*z\.\s*[Bb]\.\s*[^)]*$'), # "(z.B. <incomplete>" at end
+]
+
+
+def fix_open_example_paren_tail(text: str) -> Tuple[str, bool]:
+    """
+    Fix open example parentheses like "(z.B." at the end of text.
+
+    v14.35.22: Adressiert Report 468 Problem #2 - offene Klammern.
+
+    Patterns fixed:
+    - "(z.B." → trimmed, ends with "."
+    - "(z. B." → trimmed, ends with "."
+    - "z. B." → trimmed, ends with "."
+    - "(z.B. Templates" → trimmed to before "("
+
+    Args:
+        text: Input text to fix
+
+    Returns:
+        Tuple of (fixed_text, was_fixed)
+    """
+    if not text:
+        return text, False
+
+    original = text
+    result = text.rstrip()
+
+    # Check each pattern
+    for pattern in OPEN_EXAMPLE_PAREN_PATTERNS:
+        match = pattern.search(result)
+        if match:
+            # Trim from the match start
+            trim_pos = match.start()
+
+            # Find the last opening parenthesis before the match
+            last_paren = result.rfind('(', 0, trim_pos + 1)
+            if last_paren != -1 and last_paren >= trim_pos - 10:
+                # Trim from the parenthesis
+                result = result[:last_paren].rstrip()
+            else:
+                # Trim from the match
+                result = result[:trim_pos].rstrip()
+
+            # Ensure proper ending punctuation
+            if result and result[-1] not in '.!?:;':
+                result += '.'
+
+            log.debug("[HEAL] Fixed open example paren: '%s...' → '%s...'",
+                      original[-30:], result[-30:])
+            return result, True
+
+    # Also check for incomplete patterns mid-sentence (within HTML)
+    # Pattern: "(z.B." or "(z. B." not followed by closing paren or content
+    incomplete_pattern = re.compile(
+        r'\(z\.\s*[Bb]\.\s*(?=[<\s]*$|[<\s]*</)',
+        re.IGNORECASE
+    )
+
+    if incomplete_pattern.search(result):
+        # Remove the incomplete pattern
+        result = incomplete_pattern.sub('', result)
+        result = result.rstrip()
+        if result and result[-1] not in '.!?:;':
+            result += '.'
+        if result != original:
+            log.debug("[HEAL] Fixed incomplete example mid-text")
+            return result, True
+
+    return original, False
+
+
+def fix_open_example_paren_in_html(html: str) -> Tuple[str, int]:
+    """
+    Fix open example parentheses throughout HTML content.
+
+    v14.35.22: Scans all text content in HTML and fixes open "(z.B." patterns.
+
+    Args:
+        html: HTML content to fix
+
+    Returns:
+        Tuple of (fixed_html, fix_count)
+    """
+    if not html:
+        return html, 0
+
+    fix_count = 0
+
+    # Pattern to find open example parens anywhere in text (not just end)
+    # Look for "(z.B." or "(z. B." not followed by proper content or closing paren
+    open_example_patterns = [
+        # "(z.B." at end of tag content (before </tag>)
+        (re.compile(r'\(z\.\s*[Bb]\.\s*(</)'), r'\1'),
+        # "(z.B." at end of line/text
+        (re.compile(r'\(z\.\s*[Bb]\.\s*$', re.MULTILINE), '.'),
+        # "z.B." at end of sentence (no paren) - careful not to break "z.B. XYZ"
+        (re.compile(r'(?<=[,;])\s*z\.\s*[Bb]\.\s*(</)'), r'\1'),
+    ]
+
+    result = html
+    for pattern, replacement in open_example_patterns:
+        new_result, count = pattern.subn(replacement, result)
+        if count > 0:
+            fix_count += count
+            result = new_result
+            log.debug("[HEAL] Fixed %d open example paren(s) with pattern", count)
+
+    return result, fix_count
 

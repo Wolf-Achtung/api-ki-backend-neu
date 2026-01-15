@@ -85,6 +85,68 @@ def apply_product_name_safety_net(sections: dict) -> dict:
 
 
 # =============================================================================
+# v14.35.22: OPEN EXAMPLE PAREN FIXER
+# =============================================================================
+# Problem: Report 468 had "(z.B." or "(z. B." at sentence ends without closing
+# Solution: Remove incomplete example references, end with proper punctuation
+# =============================================================================
+
+# Pattern for open "(z.B." / "(z. B." patterns
+OPEN_EXAMPLE_PATTERNS = [
+    # "(z.B." at end of tag content (before </tag>)
+    (re.compile(r'\(z\.\s*[Bb]\.\s*(</)'), r'\1'),
+    # "(z. B." with space
+    (re.compile(r'\(z\.\s+[Bb]\.\s*(</)'), r'\1'),
+    # "(z.B." at end of line/text
+    (re.compile(r'\(z\.\s*[Bb]\.\s*$', re.MULTILINE), '.'),
+    # Lone "z.B." at end (careful)
+    (re.compile(r'(?<=[,;:\s])\s*z\.\s*[Bb]\.\s*$', re.MULTILINE), '.'),
+]
+
+
+def fix_open_example_paren_html(html: str) -> tuple[str, int]:
+    """
+    Fix open example parentheses like "(z.B." in HTML content.
+
+    v14.35.22: Adressiert Report 468 Problem #2 - offene Klammern.
+    """
+    if not html:
+        return html, 0
+
+    fix_count = 0
+    result = html
+
+    for pattern, replacement in OPEN_EXAMPLE_PATTERNS:
+        new_result, count = pattern.subn(replacement, result)
+        if count > 0:
+            fix_count += count
+            result = new_result
+
+    return result, fix_count
+
+
+def apply_open_example_paren_fixer(sections: dict) -> dict:
+    """
+    Wendet Open Example Paren Fixer auf alle Sections an.
+
+    v14.35.22: Entfernt unvollständige "(z.B." Muster
+    """
+    total_fixes = 0
+
+    for key, value in sections.items():
+        if isinstance(value, str) and len(value) > 10:
+            fixed, count = fix_open_example_paren_html(value)
+            if count > 0:
+                sections[key] = fixed
+                total_fixes += count
+
+    if total_fixes > 0:
+        log.info(f"[OPEN-PAREN-FIX] Total open example parens fixed: {total_fixes}")
+
+    return sections
+
+
+# =============================================================================
 # 1. ROI-FILTER: Entfernt ROI-Prozentsätze außerhalb Business Case
 # =============================================================================
 
@@ -1374,6 +1436,9 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
 
     # 9. Product Name Safety Net (v14.35.21) - LAST STEP (seatbelt)
     sections = apply_product_name_safety_net(sections)
+
+    # 10. Open Example Paren Fixer (v14.35.22) - Fix "(z.B." incomplete patterns
+    sections = apply_open_example_paren_fixer(sections)
 
     log.info("[QUALITY-ENFORCER] Pipeline complete")
     return sections
