@@ -532,6 +532,19 @@ SOLO_FORBIDDEN_TERMS = [
     "Fachbereich", "Fachbereiche", "Projektteam", "Teams"
 ]
 
+# v14.35.22: Product names and technical terms that should NOT trigger SIZE_MISMATCH
+SOLO_WHITELIST_PATTERNS = [
+    r"Microsoft\s+Teams",
+    r"MS\s+Teams",
+    r"Google\s+Teams",
+    r"Teams\s+Copilot",
+    r"Slack\s+Teams?",
+    r"KI[- ]?Plattform",
+    r"Cloud[- ]?Plattform",
+    r"SaaS[- ]?Plattform",
+    r"Automatisierungs[- ]?Plattform",
+]
+
 # =============================================================================
 # TEIL 3.1.4: UI_STRINGS - Language-aware UI labels for EN/DE
 # =============================================================================
@@ -782,6 +795,9 @@ def check_section_for_size_mismatch(
     """
     Check section content for persona/size term mismatches.
     Returns True if mismatch found, False if clean.
+
+    v14.35.22: Added whitelist for product names and technical terms
+    to prevent false positives (e.g., "Microsoft Teams" should not trigger).
     """
     if not content or not isinstance(content, str):
         return False
@@ -789,9 +805,16 @@ def check_section_for_size_mismatch(
     if persona != "solo":
         return False
 
-    content_lower = content.lower()
+    # v14.35.22: First, mask whitelisted product names to prevent false positives
+    content_masked = content
+    for pattern in SOLO_WHITELIST_PATTERNS:
+        content_masked = re.sub(pattern, "__WHITELISTED__", content_masked, flags=re.IGNORECASE)
+
+    content_lower = content_masked.lower()
     for term in SOLO_FORBIDDEN_TERMS:
         if term.lower() in content_lower:
+            # v14.35.22: Log the match for debugging
+            log.debug("[SIZE_MISMATCH] Found '%s' in %s (persona=%s)", term, section_name, persona)
             gate.add_size_mismatch(section_name, term, persona)
             return True
     return False
@@ -3325,11 +3348,20 @@ def _parse_quick_wins_json(raw_response: str) -> Optional[List[Dict[str, Any]]]:
         return cast(List[Dict[str, Any]], quick_wins)
 
     except json.JSONDecodeError as e:
+        # v14.35.22: Enhanced JSON error logging for debugging
         log.error(f"JSON Parsing Fehler: {e}")
+        log.error(f"  Position: line {e.lineno}, column {e.colno}, char {e.pos}")
+        # Log snippet around error position
+        if e.pos and e.doc:
+            start = max(0, e.pos - 50)
+            end = min(len(e.doc), e.pos + 50)
+            snippet = e.doc[start:end]
+            log.error(f"  Context around error: ...{snippet!r}...")
         log.debug(f"Raw Response (erste 500 Zeichen): {raw_response[:500]}")
+        log.debug(f"Cleaned JSON attempt: {cleaned[:500] if cleaned else 'N/A'}")
         return None
     except Exception as e:
-        log.error(f"Unerwarteter Fehler beim JSON Parsing: {e}")
+        log.error(f"Unerwarteter Fehler beim JSON Parsing: {type(e).__name__}: {e}")
         return None
 
 
@@ -10111,13 +10143,22 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
 
 
 def _one_liner(title: str, section_html: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
+    # v14.35.22: Use configurable token budget instead of hardcoded 80
+    from utils.llm_overrides import get_section_token_budget
+
+    resolved_max_tokens = get_section_token_budget("one_liner")
+    # Check env override explicitly for logging
+    env_override = os.getenv("OPENAI_MAX_TOKENS_ONE_LINER")
+    source = f"OPENAI_MAX_TOKENS_ONE_LINER={env_override}" if env_override else "SECTION_TOKEN_BUDGETS default"
+    log.info("[one_liner] resolved_max_tokens=%d source=%s", resolved_max_tokens, source)
+
     base = f'Erzeuge einen prägnanten One‑liner unter der H2‑Überschrift "{title}". Formel: "Kernaussage; Konsequenz → nächster Schritt". Nur 1 Zeile.'
     text = _call_llm_for_section(
         section_key="one_liner",
         prompt=base + "\n---\n" + re.sub(r"<[^>]+>", " ", section_html)[:1800],
         system_prompt="Du formulierst prägnante One‑liner auf Deutsch.",
         temperature=0.1,
-        max_tokens=80
+        max_tokens=resolved_max_tokens
     )
     return (text or "").strip()
 
@@ -10654,8 +10695,26 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             try:
                 sections[key] = future.result()
             except Exception as exc:
-                log.warning("One-liner %s failed: %s", key, exc)
-                sections[key] = ""
+                # v14.35.22: Use fallback instead of empty string (Zero-Leak Prevention)
+                log.warning("One-liner %s failed: %s – using fallback", key, exc)
+                # Map section keys to section names for fallback
+                section_map = {
+                    "ONE_LINER_ROADMAP": "roadmap",
+                    "ONE_LINER_RISKS": "risks",
+                    "ONE_LINER_STRATEGIE": "strategie_governance",
+                    "ONE_LINER_BUSINESS_CASE": "business_case",
+                    "ONE_LINER_RECOMMENDATIONS": "recommendations",
+                    "ONE_LINER_GAMECHANGER": "gamechanger",
+                }
+                section_name = section_map.get(key, "executive_summary")
+                fallback = _get_fallback_content(section_name, briefing, scores)
+                # Extract first sentence as one-liner fallback
+                if fallback:
+                    import re as _re_oneliner
+                    first_sentence = _re_oneliner.search(r'^[^.!?]+[.!?]', _re_oneliner.sub(r'<[^>]+>', '', fallback))
+                    sections[key] = first_sentence.group(0) if first_sentence else ""
+                else:
+                    sections[key] = ""
 
     oneliner_elapsed = (datetime.now() - oneliner_start).total_seconds()
     log.info(
