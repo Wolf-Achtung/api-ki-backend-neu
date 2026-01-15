@@ -62,6 +62,10 @@ __all__ = [
     "get_max_time_savings",
     "cap_time_savings",
     "ROIExplanation",
+    # v14.35.22: Canonical Single Source of Truth
+    "BusinessCaseCanonical",
+    "create_canonical_from_sections",
+    "inject_canonical_to_sections",
 ]
 
 
@@ -275,6 +279,301 @@ class ROIExplanation:
             </div>
         </div>
         """
+
+
+# =============================================================================
+# v14.35.22: CANONICAL SINGLE SOURCE OF TRUTH
+# =============================================================================
+# Problem: Report 467/468 had KPI inconsistencies (18h/20h/25h parallel,
+# different hourly rates implicit in different sections).
+# Solution: One canonical source, all derived values calculated from it.
+# =============================================================================
+
+@dataclass
+class BusinessCaseCanonical:
+    """
+    Single Source of Truth für alle KPI/Business-Case Werte.
+
+    v14.35.22: Adressiert Report 468 Problem #1 - KPI Inkonsistenzen.
+
+    Alle anderen Felder (ROI_12M, PAYBACK_MONTHS, etc.) werden aus diesen
+    vier kanonischen Werten abgeleitet. Keine eigenen Berechnungen erlaubt!
+    """
+    hours_saved_per_month: float  # Kanonische Zeitersparnis (eine Zahl!)
+    hourly_rate_eur: float        # Kanonischer Stundensatz
+    capex_eur: float              # Einmalinvestition
+    opex_month_eur: float         # Monatliche laufende Kosten
+
+    # Optional: Metadata
+    source: str = "auto"          # "auto", "user_input", "qw_aggregation"
+    was_capped: bool = False      # True wenn hours_saved gecapped wurde
+    company_size: str = "team"    # Für Logging/Debugging
+
+    # Derived values (computed properties)
+    @property
+    def monthly_gross(self) -> float:
+        """Brutto-Monatsersparnis: hours × rate"""
+        return self.hours_saved_per_month * self.hourly_rate_eur
+
+    @property
+    def monthly_net(self) -> float:
+        """Netto-Monatsersparnis: gross - opex"""
+        return self.monthly_gross - self.opex_month_eur
+
+    @property
+    def annual_gross(self) -> float:
+        """Brutto-Jahresersparnis"""
+        return self.monthly_gross * 12
+
+    @property
+    def annual_net(self) -> float:
+        """Netto-Jahresersparnis (nach OPEX)"""
+        return self.monthly_net * 12
+
+    @property
+    def annual_opex(self) -> float:
+        """Jährliche OPEX-Kosten"""
+        return self.opex_month_eur * 12
+
+    @property
+    def payback_months(self) -> float:
+        """Amortisationszeit in Monaten (CAPEX / monthly_net)"""
+        if self.monthly_net <= 0:
+            return MAX_PAYBACK_MONTHS
+        raw = self.capex_eur / self.monthly_net
+        return max(MIN_PAYBACK_MONTHS, min(MAX_PAYBACK_MONTHS, raw))
+
+    @property
+    def roi_12m_net(self) -> float:
+        """ROI nach 12 Monaten (netto, nach CAPEX und OPEX)"""
+        if self.capex_eur <= 0:
+            return 0.0
+        net_benefit = self.annual_net - self.capex_eur
+        raw = (net_benefit / self.capex_eur) * 100
+        return max(MIN_ROI, min(MAX_ROI, raw))
+
+    @property
+    def roi_12m_gross(self) -> float:
+        """ROI nach 12 Monaten (brutto, nur CAPEX abgezogen)"""
+        if self.capex_eur <= 0:
+            return 0.0
+        gross_benefit = self.annual_gross - self.capex_eur
+        raw = (gross_benefit / self.capex_eur) * 100
+        return max(MIN_ROI, min(MAX_ROI, raw))
+
+    @property
+    def weekly_hours(self) -> float:
+        """Wöchentliche Stunden (abgeleitet, nicht kanonisch!)"""
+        return self.hours_saved_per_month / 4.33  # ~4.33 Wochen/Monat
+
+    @property
+    def annual_hours(self) -> float:
+        """Jährliche Stunden"""
+        return self.hours_saved_per_month * 12
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            # Canonical values
+            "hours_saved_per_month": round(self.hours_saved_per_month, 1),
+            "hourly_rate_eur": round(self.hourly_rate_eur, 2),
+            "capex_eur": round(self.capex_eur, 2),
+            "opex_month_eur": round(self.opex_month_eur, 2),
+            # Derived values
+            "monthly_gross": round(self.monthly_gross, 2),
+            "monthly_net": round(self.monthly_net, 2),
+            "annual_gross": round(self.annual_gross, 2),
+            "annual_net": round(self.annual_net, 2),
+            "annual_opex": round(self.annual_opex, 2),
+            "payback_months": round(self.payback_months, 1),
+            "roi_12m_net": round(self.roi_12m_net, 1),
+            "roi_12m_gross": round(self.roi_12m_gross, 1),
+            "weekly_hours": round(self.weekly_hours, 1),
+            "annual_hours": round(self.annual_hours, 1),
+            # Metadata
+            "source": self.source,
+            "was_capped": self.was_capped,
+            "company_size": self.company_size,
+        }
+
+    def __repr__(self) -> str:
+        return (
+            f"BusinessCaseCanonical(hours={self.hours_saved_per_month}h/m, "
+            f"rate={self.hourly_rate_eur}€/h, capex={self.capex_eur}€, "
+            f"opex={self.opex_month_eur}€/m → ROI={self.roi_12m_net:.1f}%)"
+        )
+
+
+def create_canonical_from_sections(
+    sections: Dict[str, Any],
+    company_size: Optional[str] = None
+) -> BusinessCaseCanonical:
+    """
+    Create a BusinessCaseCanonical from existing sections data.
+
+    This is the ENTRY POINT for establishing the single source of truth.
+    It reads from various potential sources and creates ONE canonical model.
+
+    Priority for hours_saved:
+    1. qw_hours_total (aggregated from Quick Wins)
+    2. monatsersparnis_stunden (explicit user input)
+    3. EINSPARUNG_STUNDEN_MONAT (calculated)
+    4. Default based on company size
+
+    Priority for hourly_rate:
+    1. stundensatz_eur (explicit)
+    2. Derived from company size
+    """
+    # Normalize company size
+    size = normalize_company_size(company_size or sections.get("company_size", "team"))
+
+    # 1. Determine hours_saved_per_month (ONE value!)
+    hours_candidates = [
+        sections.get("qw_hours_total"),
+        sections.get("monatsersparnis_stunden"),
+        sections.get("EINSPARUNG_STUNDEN_MONAT"),
+        sections.get("TIME_SAVINGS_MONTH_HOURS_CAPPED"),
+    ]
+    hours_raw = None
+    source = "default"
+    for candidate in hours_candidates:
+        if candidate is not None:
+            try:
+                val = float(candidate)
+                if val > 0:
+                    hours_raw = val
+                    source = "sections"
+                    break
+            except (ValueError, TypeError):
+                continue
+
+    if hours_raw is None:
+        # Default: conservative estimate based on size
+        defaults = {"solo": 15, "team": 25, "kmu": 50, "enterprise": 100}
+        hours_raw = defaults.get(size, 20)
+        source = "default"
+
+    # Apply cap for company size
+    hours_capped, was_capped = cap_time_savings(hours_raw, size)
+
+    # 2. Determine hourly_rate
+    explicit_rate = sections.get("stundensatz_eur")
+    if explicit_rate:
+        try:
+            hourly_rate = float(explicit_rate)
+        except (ValueError, TypeError):
+            hourly_rate, _ = get_hourly_rate(size)
+    else:
+        hourly_rate, _ = get_hourly_rate(size)
+
+    # 3. Determine CAPEX
+    capex_candidates = [
+        sections.get("CANON_CAPEX_EUR"),
+        sections.get("investment_total"),
+        sections.get("BC_CAPEX"),
+    ]
+    capex = DEFAULT_INVESTMENT
+    for candidate in capex_candidates:
+        if candidate is not None:
+            try:
+                val = float(candidate)
+                if val > 0:
+                    capex = val
+                    break
+            except (ValueError, TypeError):
+                continue
+
+    # 4. Determine OPEX
+    opex_candidates = [
+        sections.get("CANON_OPEX_MONTH_EUR"),
+        sections.get("laufende_kosten_monat"),
+        sections.get("BC_OPEX_MONTH"),
+    ]
+    opex = 0.0
+    for candidate in opex_candidates:
+        if candidate is not None:
+            try:
+                val = float(candidate)
+                if val >= 0:
+                    opex = val
+                    break
+            except (ValueError, TypeError):
+                continue
+
+    canonical = BusinessCaseCanonical(
+        hours_saved_per_month=hours_capped,
+        hourly_rate_eur=hourly_rate,
+        capex_eur=capex,
+        opex_month_eur=opex,
+        source=source,
+        was_capped=was_capped,
+        company_size=size,
+    )
+
+    log.info("[CANON] Created: %s", canonical)
+    return canonical
+
+
+def inject_canonical_to_sections(
+    canonical: BusinessCaseCanonical,
+    sections: Dict[str, Any]
+) -> int:
+    """
+    Inject canonical values into sections dict, overwriting inconsistent values.
+
+    Returns the number of fields updated/overwritten.
+
+    v14.35.22: This ensures ALL section keys are derived from the single source.
+    """
+    updates = 0
+
+    # Core canonical values (always set)
+    canon_mappings = {
+        # Primary canonical (never derived elsewhere!)
+        "CANON_HOURS_MONTH": canonical.hours_saved_per_month,
+        "CANON_RATE_EUR": canonical.hourly_rate_eur,
+        "CANON_CAPEX_EUR": canonical.capex_eur,
+        "CANON_OPEX_MONTH_EUR": canonical.opex_month_eur,
+
+        # Derived time values (all from canonical)
+        "monatsersparnis_stunden": canonical.hours_saved_per_month,
+        "jahresersparnis_stunden": canonical.annual_hours,
+        "EINSPARUNG_STUNDEN_MONAT": canonical.hours_saved_per_month,
+        "TIME_SAVINGS_MONTH_HOURS_CAPPED": canonical.hours_saved_per_month,
+        "qw_hours_total": canonical.hours_saved_per_month,
+
+        # Derived money values (all from canonical)
+        "monatsersparnis_eur": canonical.monthly_gross,
+        "jahresersparnis_eur": canonical.annual_gross,
+        "EINSPARUNG_MONAT_EUR": canonical.monthly_gross,
+        "stundensatz_eur": canonical.hourly_rate_eur,
+
+        # ROI / Payback (all from canonical)
+        "ROI_12M": canonical.roi_12m_net,
+        "ROI_12M_RATE": canonical.roi_12m_net,
+        "PAYBACK_MONTHS": canonical.payback_months,
+        "BC_ROI_REALISTIC": canonical.roi_12m_net,
+        "BC_PAYBACK_REALISTIC": canonical.payback_months,
+        "BC_MONTHLY_SAVINGS_REALISTIC": canonical.monthly_net,
+
+        # Weekly (derived, NOT canonical!)
+        "wochenstunden_ersparnis": canonical.weekly_hours,
+    }
+
+    for key, value in canon_mappings.items():
+        old_value = sections.get(key)
+        if old_value != value:
+            if old_value is not None:
+                log.debug("[CANON] Overwriting %s: %s → %s", key, old_value, value)
+            sections[key] = value
+            updates += 1
+
+    # Store the full canonical object for reference
+    sections["_canonical_bc"] = canonical.to_dict()
+    sections["_bc_canonical_applied"] = True
+
+    log.info("[CANON] Injected %d values into sections", updates)
+    return updates
 
 
 # =============================================================================
