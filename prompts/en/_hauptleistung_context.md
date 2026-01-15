@@ -7,7 +7,7 @@ customer's main service. Addresses Problem #7:
 Generic recommendations instead of tailored analysis.
 
 USAGE in other prompts:
-{% include '_hauptleistung_context.md' %}
+{% raw %}{% include '_hauptleistung_context.md' %}{% endraw %}
 =============================================================================
 -->
 

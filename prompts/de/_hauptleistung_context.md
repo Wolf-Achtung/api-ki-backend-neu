@@ -7,7 +7,7 @@ Hauptleistung des Kunden beziehen sollen. Adressiert Problem #7:
 Generische Empfehlungen statt maßgeschneiderter Analyse.
 
 VERWENDUNG in anderen Prompts:
-{% include '_hauptleistung_context.md' %}
+{% raw %}{% include '_hauptleistung_context.md' %}{% endraw %}
 =============================================================================
 -->
 
