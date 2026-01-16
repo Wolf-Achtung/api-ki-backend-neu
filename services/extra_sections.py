@@ -383,24 +383,40 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
     savings_12_months = einsparung_monat_eur * 12
     total_investment = capex
 
+    # v14.35.23: Calculate both raw and capped ROI for consistency
+    # Import MAX_ROI from canonical source
+    try:
+        from services.business_case_engine_v2 import MAX_ROI
+    except ImportError:
+        MAX_ROI = 200.0
+
     roi_12m_eur = savings_12_months - total_investment
     denom = float(total_investment)
     if denom > 0:
         roi_12m_rate = roi_12m_eur / denom
-        roi_12m_percent = roi_12m_rate * 100.0
+        roi_12m_percent_raw = roi_12m_rate * 100.0
+        roi_12m_percent_capped = min(MAX_ROI, max(-100.0, roi_12m_percent_raw))
+        roi_was_capped = roi_12m_percent_raw > MAX_ROI
     else:
         roi_12m_rate = None
-        roi_12m_percent = None
+        roi_12m_percent_raw = None
+        roi_12m_percent_capped = None
+        roi_was_capped = False
 
-    if roi_12m_percent is None:
-        roi_percent_str = "—"
+    # v14.35.23: Format both ROI values (German decimals)
+    def _fmt_roi(val: float | None) -> str:
+        if val is None:
+            return "—"
+        return f"{val:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+    roi_raw_str = _fmt_roi(roi_12m_percent_raw)
+    roi_capped_str = _fmt_roi(roi_12m_percent_capped)
+
+    # v14.35.23: Show both raw and capped ROI if different
+    if roi_was_capped:
+        roi_display = f"{roi_raw_str} % (berechnet) / {roi_capped_str} % (Planwert, gedeckelt)"
     else:
-        roi_percent_str = (
-            f"{roi_12m_percent:,.1f}"
-            .replace(",", "X")
-            .replace(".", ",")
-            .replace("X", ".")
-        )
+        roi_display = f"{roi_capped_str} %"
 
     table = f"""
 <section class="card">
@@ -415,8 +431,8 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
       <tr><td>Laufende Kosten (OPEX)</td><td>{_fmt_eur(opex)} €/Monat</td><td>Lizenzen &amp; Betrieb (größenbereinigt)</td></tr>
       <tr><td>Amortisation</td><td>{'—' if payback is None else _fmt_months(payback) + ' Monate'}</td><td>CAPEX ÷ (Nutzen − OPEX)</td></tr>
       <tr><td>ROI nach 12&nbsp;Monaten</td>
-          <td>{_fmt_eur(roi_12m_eur)} € ({roi_percent_str} %)</td>
-          <td>(Einsparung&nbsp;12M − CAPEX) ÷ CAPEX</td></tr>
+          <td>{_fmt_eur(roi_12m_eur)} € ({roi_display})</td>
+          <td>(Einsparung&nbsp;12M − CAPEX) ÷ CAPEX{' · Cap: ' + str(int(MAX_ROI)) + '%' if roi_was_capped else ''}</td></tr>
     </tbody>
   </table>
 </section>""".strip()
@@ -427,8 +443,10 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
         "EINSPARUNG_MONAT_EUR": einsparung_monat_eur,
         "PAYBACK_MONTHS": payback,
         "ROI_12M_RATE": roi_12m_rate,
-        "ROI_12M": roi_12m_percent,
+        "ROI_12M": roi_12m_percent_capped,  # capped for backwards compatibility
+        "ROI_12M_RAW": roi_12m_percent_raw,  # v14.35.23: raw computed value
         "ROI_12M_EUR": roi_12m_eur,
+        "ROI_WAS_CAPPED": roi_was_capped,
         "BUSINESS_CASE_TABLE_HTML": table,
         # Add capped hours for consistent display across report
         "CAPPED_HOURS": capped_hours,
@@ -545,10 +563,21 @@ def _generate_ai_act_adjusted_table(
     einsparung = bc.get("EINSPARUNG_MONAT_EUR", 0)
     payback = bc.get("PAYBACK_MONTHS")
     roi_12m_eur = bc.get("ROI_12M_EUR", 0)
-    roi_12m_pct = bc.get("ROI_12M")
+    roi_12m_pct = bc.get("ROI_12M")  # capped
+    roi_12m_pct_raw = bc.get("ROI_12M_RAW")  # v14.35.23: raw computed value
+    roi_was_capped = bc.get("ROI_WAS_CAPPED", False)
 
-    # Format values
-    roi_percent_str = "—" if roi_12m_pct is None else f"{roi_12m_pct:,.1f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    # v14.35.23: Format both ROI values (German decimals)
+    def _fmt_roi_val(val) -> str:
+        if val is None:
+            return "—"
+        return f"{val:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+    # v14.35.23: Show both raw and capped ROI if different
+    if roi_was_capped and roi_12m_pct_raw is not None:
+        roi_percent_str = f"{_fmt_roi_val(roi_12m_pct_raw)} % (berechnet) / {_fmt_roi_val(roi_12m_pct)} % (Planwert)"
+    else:
+        roi_percent_str = "—" if roi_12m_pct is None else f"{_fmt_roi_val(roi_12m_pct)} %"
     payback_str = "—" if payback is None else f"{payback:.1f}".replace(".", ",") + " Monate"
 
     # Compliance note based on risk level
