@@ -7,7 +7,7 @@ Comprehensive GPT leak detection and removal:
 - Full-sentence replacement
 - Guarantee: PDF never fails due to leaks
 
-Version: 1.2.0 (N3.6 + CRITICAL vs BENIGN classification for CLEAN-AND-KEEP)
+Version: 1.2.1 (N3.6 + CRITICAL vs BENIGN + regex API key detection)
 """
 from __future__ import annotations
 
@@ -24,6 +24,7 @@ log = logging.getLogger(__name__)
 # =============================================================================
 # These indicate actual prompt/policy/secret leakage. If detected → suppress section.
 
+# String-based CRITICAL patterns (exact substring match, case-insensitive)
 CRITICAL_LEAK_PATTERNS: List[str] = [
     # System/developer prompt references
     "system prompt",
@@ -54,17 +55,16 @@ CRITICAL_LEAK_PATTERNS: List[str] = [
     "I can't disclose",
     "prompt injection",
     "jailbreak",
-    "chain-of-thought",
-    "chain of thought",
+    # NOTE: "chain-of-thought" moved to BENIGN (v1.2.1) - appears in legitimate strategy text
     "function call",
     "tool call",
     "tool use",
-    # Secrets/credentials
+    # Secrets/credentials (string patterns)
     "API key",
     "api_key",
     "Bearer ",
     "Authorization:",
-    "sk-",
+    # NOTE: "sk-" removed (v1.2.1) - replaced with regex pattern below
     "OPENAI_API",
     "secret key",
     "access token",
@@ -82,6 +82,17 @@ CRITICAL_LEAK_PATTERNS: List[str] = [
     "I am programmed to",
 ]
 
+# Regex-based CRITICAL patterns for complex detection (compiled for performance)
+# Each tuple: (compiled_pattern, label_for_logging)
+CRITICAL_LEAK_REGEX: List[Tuple[Pattern, str]] = [
+    # OpenAI API key pattern: sk- followed by 16+ alphanumeric chars
+    (re.compile(r"\bsk-[A-Za-z0-9]{16,}\b"), "OpenAI_API_Key"),
+    # Anthropic API key pattern: sk-ant- followed by alphanumeric
+    (re.compile(r"\bsk-ant-[A-Za-z0-9]{16,}\b"), "Anthropic_API_Key"),
+    # Generic secret patterns with key-like structure
+    (re.compile(r"\b[A-Za-z0-9_]*(SECRET|KEY|TOKEN)[A-Za-z0-9_]*\s*[=:]\s*['\"][A-Za-z0-9+/=]{20,}['\"]", re.IGNORECASE), "Exposed_Secret"),
+]
+
 # =============================================================================
 # BENIGN CHATBOT PHRASES - Safe to remove (CLEAN-AND-KEEP)
 # =============================================================================
@@ -89,7 +100,10 @@ CRITICAL_LEAK_PATTERNS: List[str] = [
 # Removing them is safe; no need to suppress the entire section.
 
 BENIGN_CHATBOT_PHRASES: List[str] = [
-    # German assistant phrases (critical)
+    # v1.2.1: Chain-of-thought moved from CRITICAL (appears in legitimate strategy text)
+    "chain-of-thought",
+    "chain of thought",
+    # German assistant phrases
     "wie kann ich dir helfen",
     "wie kann ich Ihnen helfen",
     "wie kann ich ihnen helfen",
@@ -227,6 +241,7 @@ def apply_blacklist_classified(text: str, section_name: str = "") -> BlacklistRe
 
     v1.2.0: Separates critical leaks (suppress section) from benign chatbot
     phrases (safe to remove and keep content).
+    v1.2.1: Added regex-based CRITICAL patterns for API keys; improved logging.
 
     Args:
         text: Input text/HTML
@@ -242,20 +257,36 @@ def apply_blacklist_classified(text: str, section_name: str = "") -> BlacklistRe
     benign_hits: List[str] = []
     cleaned = text
 
-    # Check CRITICAL patterns first
+    # Check CRITICAL string patterns first
     for phrase in CRITICAL_LEAK_PATTERNS:
         pattern = re.compile(re.escape(phrase), re.IGNORECASE)
         matches = pattern.findall(cleaned)
 
         if matches:
-            for match in matches:
-                log.warning(
-                    '[leak_blacklist] CRITICAL leak detected: "%s" (section=%s)',
-                    match,
-                    section_name or "unknown"
-                )
-                critical_hits.append(match)
+            # Log with pattern label for auditability
+            log.warning(
+                '[leak_blacklist] CRITICAL pattern="%s" hits=%d section=%s',
+                phrase[:30],  # Truncate long patterns
+                len(matches),
+                section_name or "unknown"
+            )
+            critical_hits.extend(matches)
             cleaned = pattern.sub("", cleaned)
+
+    # Check CRITICAL regex patterns (for API keys, secrets)
+    for regex_pattern, label in CRITICAL_LEAK_REGEX:
+        matches = regex_pattern.findall(cleaned)
+
+        if matches:
+            log.warning(
+                '[leak_blacklist] CRITICAL regex=%s hits=%d section=%s',
+                label,
+                len(matches),
+                section_name or "unknown"
+            )
+            # Store label instead of actual match (avoid logging secrets)
+            critical_hits.extend([f"[{label}]"] * len(matches))
+            cleaned = regex_pattern.sub("", cleaned)
 
     # Check BENIGN chatbot phrases
     for phrase in BENIGN_CHATBOT_PHRASES:
