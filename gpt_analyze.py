@@ -13042,6 +13042,120 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         log.warning(f"[{run_id}] [QUALITY-ENFORCER-RENDER] Failed: {e}")
     log.info("=" * 80)
 
+    # =========================================================================
+    # P0.2: CRITICAL SECTIONS NON-EMPTY GUARD
+    # Ensures critical sections don't render with placeholder/empty content
+    # =========================================================================
+    def _is_placeholder_or_too_short(html: str, min_length: int = 200) -> bool:
+        """Check if HTML content is placeholder or too short to be valid."""
+        if not html or not isinstance(html, str):
+            return True
+
+        cleaned = html.strip()
+        if len(cleaned) < min_length:
+            return True
+
+        # Known placeholder patterns (from Report-481 observations)
+        placeholder_patterns = [
+            "Bitte oder deine Frage",
+            "Bitte gib deine Frage",
+            "?? Bitte",
+            "Klar. ??",
+            "Ich sehe keine",
+            "beschreibe dein anliegen",
+            "schreib mir, wobei ich dir helfen",
+            "dann antworte ich",
+            "wobei ich dir helfen soll",
+            "du hast noch keine frage",
+            "wie kann ich dir helfen",
+        ]
+
+        lower_html = cleaned.lower()
+        for pattern in placeholder_patterns:
+            if pattern.lower() in lower_html:
+                return True
+
+        # Check if starts with "??" (chat placeholder)
+        if cleaned.startswith("??") or cleaned.startswith("? "):
+            return True
+
+        # Heuristic: only headings without body content
+        # If no <p>, <ul>, <ol>, <li>, <table> tags, likely empty structure
+        body_tags = ['<p', '<ul', '<ol', '<li', '<table', '<div class="']
+        has_body = any(tag in lower_html for tag in body_tags)
+        if not has_body:
+            return True
+
+        return False
+
+    def _fallback_roadmap_decision_html(context: Dict[str, Any]) -> str:
+        """Generate deterministic fallback for ROADMAP_90D_DECISION_HTML."""
+        branche = context.get("BRANCHE_LABEL", "Ihrem Unternehmen")
+        return f'''<div class="roadmap-fallback">
+  <h3>90-Tage Roadmap – Empfohlene Meilensteine</h3>
+  <ul>
+    <li><strong>Woche 1-2:</strong> Quick-Win-Analyse und Priorisierung der identifizierten Automatisierungspotenziale</li>
+    <li><strong>Woche 3-4:</strong> Pilot-Tool-Auswahl und erste Testläufe mit ausgewählten KI-Werkzeugen</li>
+    <li><strong>Woche 5-6:</strong> Prozessdokumentation und Schulung der Kernnutzer für {branche}</li>
+    <li><strong>Woche 7-8:</strong> Erste Automatisierung eines Kernprozesses implementieren</li>
+    <li><strong>Woche 9-10:</strong> Erfolgsmessung und KPI-Tracking der implementierten Lösung</li>
+    <li><strong>Woche 11-12:</strong> Rollout-Planung und Skalierungsstrategie für weitere Prozesse</li>
+  </ul>
+  <p><em>Diese Roadmap basiert auf bewährten Implementierungsmustern und wird an Ihre spezifischen Anforderungen angepasst.</em></p>
+</div>'''
+
+    def _fallback_ki_stack_summary_html(context: Dict[str, Any]) -> str:
+        """Generate deterministic fallback for KI_STACK_SUMMARY_HTML."""
+        return '''<div class="ki-stack-fallback">
+  <h3>Empfohlener KI-Stack – Übersicht</h3>
+  <ul>
+    <li><strong>Textverarbeitung:</strong> ChatGPT/Claude für Entwürfe, Zusammenfassungen, E-Mail-Vorlagen</li>
+    <li><strong>Dokumentenanalyse:</strong> KI-gestützte Extraktion und Strukturierung von Informationen</li>
+    <li><strong>Prozessautomatisierung:</strong> Workflow-Tools mit KI-Integration für repetitive Aufgaben</li>
+    <li><strong>Datenvisualisierung:</strong> KI-gestützte Dashboards für Geschäftskennzahlen</li>
+    <li><strong>Qualitätssicherung:</strong> Automatisierte Prüfung und Validierung von Outputs</li>
+    <li><strong>Wissensmanagement:</strong> RAG-basierte Systeme für unternehmensspezifisches Wissen</li>
+  </ul>
+  <p><em>Die Tool-Auswahl richtet sich nach Ihrem Budget, Datenschutzanforderungen und bestehender IT-Infrastruktur.</em></p>
+</div>'''
+
+    def _fallback_gamechanger_decision_html(context: Dict[str, Any]) -> str:
+        """Generate deterministic fallback for GAMECHANGER_DECISION_HTML."""
+        branche = context.get("BRANCHE_LABEL", "Ihrem Bereich")
+        return f'''<div class="gamechanger-fallback">
+  <h3>Strategische KI-Optionen – Gamechanger-Potenziale</h3>
+  <ul>
+    <li><strong>Automatisierte Kundeninteraktion:</strong> KI-Chatbots und intelligente Assistenten für {branche}</li>
+    <li><strong>Prädiktive Analysen:</strong> Vorhersagemodelle für Geschäftsentscheidungen und Ressourcenplanung</li>
+    <li><strong>Content-Automatisierung:</strong> KI-gestützte Erstellung von Marketing- und Kommunikationsmaterial</li>
+    <li><strong>Prozessoptimierung:</strong> Identifikation und Automatisierung ineffizienter Workflows</li>
+    <li><strong>Wettbewerbsanalyse:</strong> KI-basiertes Monitoring von Markttrends und Konkurrenz</li>
+    <li><strong>Personalisierung:</strong> Individualisierte Angebote und Empfehlungen durch KI</li>
+  </ul>
+  <p><em>Diese strategischen Optionen bieten signifikantes Differenzierungspotenzial in Ihrer Branche.</em></p>
+</div>'''
+
+    # Critical sections to guard
+    critical_sections = [
+        ("ROADMAP_90D_DECISION_HTML", _fallback_roadmap_decision_html),
+        ("KI_STACK_SUMMARY_HTML", _fallback_ki_stack_summary_html),
+        ("GAMECHANGER_DECISION_HTML", _fallback_gamechanger_decision_html),
+    ]
+
+    guard_context = {
+        "BRANCHE_LABEL": sections.get("BRANCHE_LABEL", answers.get("branche", "Ihrem Unternehmen")),
+    }
+
+    for section_key, fallback_fn in critical_sections:
+        html_content = sections.get(section_key, "")
+        if _is_placeholder_or_too_short(html_content):
+            reason = "placeholder_pattern" if html_content and len(html_content.strip()) >= 200 else "too_short_or_empty"
+            fallback_html = fallback_fn(guard_context)
+            sections[section_key] = fallback_html
+            log.warning(f"[{run_id}] [P0.2-SECTION-GUARD] Fallback used section={section_key} reason={reason} original_len={len(html_content or '')}")
+        else:
+            log.debug(f"[{run_id}] [P0.2-SECTION-GUARD] Section OK: {section_key} len={len(html_content)}")
+
     result = render(
         br,
         run_id=run_id,
