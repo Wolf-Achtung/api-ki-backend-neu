@@ -5,7 +5,21 @@ from ._normalize import _briefing_to_dict
 
 
 def _estimate_hourly_rate(b: Dict[str, Any]) -> float:
-    # konservative Heuristik aus Umsatzklasse
+    """
+    v14.35.23: Use canonical hourly rate from business_case_engine_v2.
+    This ensures ROI calculator output matches Business Case and Quick Wins.
+    """
+    # v14.35.23: Prefer canonical rate based on company size
+    try:
+        from services.business_case_engine_v2 import get_hourly_rate, normalize_company_size
+        size_raw = b.get("unternehmensgroesse", "")
+        size = normalize_company_size(size_raw)
+        rate, _ = get_hourly_rate(size)
+        return float(rate)
+    except ImportError:
+        pass
+
+    # Fallback: konservative Heuristik aus Umsatzklasse
     rev = b.get("jahresumsatz")
     try:
         if isinstance(rev, (int, float)) and rev > 0:
