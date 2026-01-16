@@ -8,6 +8,7 @@ Fixes:
 2. Fragment-Repair: Repariert unvollständige Sätze
 3. hauptleistung-Enforcer: Injiziert hauptleistung wenn unter Minimum
 4. Product Name Safety Net: Korrigiert "Microsoft Kapazitäten" → "Microsoft Teams" (v14.35.21)
+5. Solo Language Normalizer: Enterprise-Begriffe → Solo-freundlich (v14.35.22)
 
 Wird nach SIEZEN-GUARD aufgerufen, vor Validation.
 """
@@ -16,6 +17,96 @@ import re
 import logging
 
 log = logging.getLogger(__name__)
+
+# =============================================================================
+# v14.35.22: SOLO LANGUAGE NORMALIZER
+# =============================================================================
+# Replaces enterprise-ish terms with solo-appropriate alternatives ONLY for solo persona.
+# This reduces SIZE_MISMATCH warnings without changing meaning.
+
+SOLO_TERM_REPLACEMENTS = [
+    # (pattern, replacement, description)
+    # Technical enterprise terms → Solo-friendly alternatives
+    (r'\bModulen\b', 'Bausteinen', 'Modul→Baustein (Dativ Plural)'),
+    (r'\bModule\b', 'Bausteine', 'Modul→Baustein (Plural)'),
+    (r'\bModul\b', 'Baustein', 'Modul→Baustein'),
+    (r'\bPlattformen\b', 'Tool-Setups', 'Plattform→Tool-Setup (Plural)'),
+    (r'\bPlattform\b', 'Tool-Setup', 'Plattform→Tool-Setup'),
+    (r'\bArchitekturen\b', 'Strukturen', 'Architektur→Struktur (Plural)'),
+    (r'\bArchitektur\b', 'Struktur', 'Architektur→Struktur'),
+    (r'\bTech-Stack\b', 'Tool-Set', 'Tech-Stack→Tool-Set'),
+    (r'\bKI-Stack\b', 'KI-Werkzeuge', 'KI-Stack→KI-Werkzeuge'),
+    (r'\bStack\b', 'Tool-Set', 'Stack→Tool-Set'),
+    (r'\bLayer\b', 'Ebene', 'Layer→Ebene'),
+    (r'\bDeployment\b', 'Einrichtung', 'Deployment→Einrichtung'),
+    (r'\bRollout\b', 'Einführung', 'Rollout→Einführung'),
+    (r'\bStakeholder\b', 'Beteiligte', 'Stakeholder→Beteiligte'),
+    (r'\bGovernance-Struktur\b', 'Ordnungsrahmen', 'Governance-Struktur→Ordnungsrahmen'),
+    (r'\bCompliance-Framework\b', 'Regelwerk', 'Compliance-Framework→Regelwerk'),
+    (r'\bKPI-Dashboard\b', 'Kennzahlen-Übersicht', 'KPI-Dashboard→Kennzahlen-Übersicht'),
+    (r'\bProzesslandschaft\b', 'Arbeitsabläufe', 'Prozesslandschaft→Arbeitsabläufe'),
+    (r'\bMeilenstein-Planung\b', 'Etappenplanung', 'Meilenstein-Planung→Etappenplanung'),
+]
+
+
+def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
+    """
+    Ersetzt Enterprise-Begriffe durch Solo-freundliche Alternativen.
+
+    v14.35.22: Nur angewendet wenn company_size == "solo".
+    Reduziert SIZE_MISMATCH Warnings ohne Bedeutungsänderung.
+
+    Args:
+        sections: Dict mit allen Report-Sections
+        company_size: Unternehmensgröße ("solo", "team", "kmu")
+
+    Returns:
+        sections: Bereinigtes Dict
+    """
+    # Only apply for solo
+    if not company_size or company_size.lower() != "solo":
+        return sections
+
+    total_replacements = 0
+    sections_touched = 0
+
+    # Sections to process
+    check_sections = [
+        "EXECUTIVE_SUMMARY_HTML", "RECOMMENDATIONS_HTML", "QUICK_WINS_HTML",
+        "ROADMAP_90D_HTML", "ROADMAP_12M_HTML", "GAMECHANGER_HTML",
+        "FOERDERPOTENZIAL_HTML", "RISKS_HTML", "ORG_CHANGE_HTML",
+        "KI_SKILLPLAN_HTML", "BUSINESS_CASE_HTML", "AI_ACT_HTML",
+        "TOOLS_HTML", "DATA_STRATEGY_HTML", "GOVERNANCE_HTML",
+    ]
+
+    for section_key in check_sections:
+        content = sections.get(section_key)
+        if not content or not isinstance(content, str):
+            continue
+
+        section_replacements = 0
+        modified_content = content
+
+        for pattern, replacement, desc in SOLO_TERM_REPLACEMENTS:
+            matches = len(re.findall(pattern, modified_content, re.IGNORECASE))
+            if matches > 0:
+                modified_content = re.sub(pattern, replacement, modified_content, flags=re.IGNORECASE)
+                section_replacements += matches
+
+        if section_replacements > 0:
+            sections[section_key] = modified_content
+            sections_touched += 1
+            total_replacements += section_replacements
+
+    if total_replacements > 0:
+        log.info(
+            "[SOLO-LANGUAGE] replaced_terms=%d in %d sections (company_size=solo)",
+            total_replacements,
+            sections_touched
+        )
+
+    return sections
+
 
 # =============================================================================
 # v14.35.21: PRODUCT NAME SAFETY NET (Seatbelt)
@@ -1382,11 +1473,11 @@ def apply_location_validator(sections: dict, bundesland: str) -> dict:
     
     log.info(f"[LOCATION-VALIDATOR] Complete: {total_removals} total removals")
     return sections
-def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesland: str = "") -> dict:
+def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesland: str = "", company_size: str = "") -> dict:
 
     """
     Wendet alle Quality Enforcer in der richtigen Reihenfolge an.
-    
+
     Order:
     1. ROI-Filter (entfernt verbotene ROI-Werte)
     2. Fragment-Repair (repariert unvollständige Sätze)
@@ -1394,11 +1485,14 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     4. hauptleistung-Enforcer (injiziert fehlende hauptleistung)
     5. Location-Validator (entfernt falsche Bundesländer)
     6. Grammar-Fixer (korrigiert Grammatikfehler)
-    
+    7. Solo-Language-Normalizer (ersetzt Enterprise-Begriffe für Solo-Persona)
+
     Args:
         sections: Dict mit allen Report-Sections
         hauptleistung: Das Kerngeschäft des Users
-        
+        bundesland: Das Bundesland des Users
+        company_size: Die Unternehmensgröße ("solo", "team", "kmu")
+
     Returns:
         sections: Bereinigtes Dict
     """
@@ -1439,6 +1533,10 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
 
     # 10. Open Example Paren Fixer (v14.35.22) - Fix "(z.B." incomplete patterns
     sections = apply_open_example_paren_fixer(sections)
+
+    # 11. Solo Language Normalizer (v14.35.22) - Replace enterprise terms for solo persona
+    if company_size:
+        sections = apply_solo_language_normalizer(sections, company_size)
 
     log.info("[QUALITY-ENFORCER] Pipeline complete")
     return sections
