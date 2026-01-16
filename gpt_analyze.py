@@ -4175,12 +4175,20 @@ def _format_roadmap_as_phase_cards(html_content: str) -> str:
     )
 
     def replace_phase_h3(match):
+        """
+        Replacement function for phase patterns.
+        Safely handles patterns with different numbers of capture groups.
+        """
         nonlocal cards_created
 
         phase_title = match.group(1).strip()
-        goal_p = match.group(2) or ""
-        bullet_list = match.group(3) or ""
-        milestone_p = match.group(4) or ""
+        # Safely access groups - some patterns have fewer groups
+        goal_p = match.group(2) if match.lastindex >= 2 else ""
+        goal_p = goal_p or ""
+        bullet_list = match.group(3) if match.lastindex >= 3 else ""
+        bullet_list = bullet_list or ""
+        milestone_p = match.group(4) if match.lastindex >= 4 else ""
+        milestone_p = milestone_p or ""
 
         # Extract phase number for badge
         phase_num_match = re.search(r'Phase\s*(\d+)', phase_title)
@@ -4210,11 +4218,17 @@ def _format_roadmap_as_phase_cards(html_content: str) -> str:
         return card_html
 
     def replace_phase_strong(match):
+        """
+        Replacement function for strong-wrapped phase patterns.
+        Safely handles patterns with different numbers of capture groups.
+        """
         nonlocal cards_created
 
         phase_title = match.group(1).strip()
-        description = match.group(2).strip() if match.group(2) else ""
-        bullet_list = match.group(3) or ""
+        # Safely access groups
+        description = match.group(2).strip() if match.lastindex >= 2 and match.group(2) else ""
+        bullet_list = match.group(3) if match.lastindex >= 3 else ""
+        bullet_list = bullet_list or ""
 
         phase_num_match = re.search(r'Phase\s*(\d+)', phase_title)
         phase_num = phase_num_match.group(1) if phase_num_match else str(cards_created)
