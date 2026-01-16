@@ -1381,6 +1381,26 @@ OPENAI_MODEL = settings.openai.model or os.getenv("OPENAI_MODEL", "gpt-4o")
 OPENAI_API_BASE = os.getenv("OPENAI_API_BASE")  # Not in new settings structure
 OPENAI_TEMPERATURE = settings.openai.temperature
 OPENAI_TIMEOUT = settings.openai.timeout
+# v14.35.22: Extended timeout for heavy/expand calls (e.g., 150s instead of 75s)
+OPENAI_TIMEOUT_EXTENDED = int(os.getenv("OPENAI_TIMEOUT_EXTENDED", "150"))
+
+# v14.35.22: Heavy sections that need extended timeout
+# Includes expand calls and other long-running sections
+HEAVY_SECTIONS = frozenset([
+    "quick_wins_expand",
+    "tools_expand",
+    "roadmap_expand",
+    "governance_expand",
+    "security_expand",
+    "ai_act_expand",
+    "business_case_expand",
+    "executive_summary_expand",
+    "einleitung_expand",
+    "fazit_expand",
+    "content_repair",
+    "final_repair",
+])
+
 # Robust: Unterstützt sowohl max_completion_tokens (neu) als auch max_tokens (alt)
 try:
     OPENAI_MAX_TOKENS = getattr(settings.openai, "max_completion_tokens", None)
@@ -1844,6 +1864,26 @@ def _call_openai(
         # as it's no longer supported. Stop sequences are still used for Anthropic models
         # via the anthropic_client.py module.
 
+        # v14.35.22: Section-aware timeout for heavy/expand calls
+        # Heavy sections get extended timeout (150s) to avoid read timeouts
+        is_heavy_section = False
+        if section:
+            # Check explicit allowlist or _expand suffix
+            is_heavy_section = (
+                section in HEAVY_SECTIONS or
+                section.endswith("_expand") or
+                section.endswith("_repair")
+            )
+
+        request_timeout = OPENAI_TIMEOUT_EXTENDED if is_heavy_section else OPENAI_TIMEOUT
+
+        if is_heavy_section:
+            log.info(
+                "⏱️ [EXTENDED-TIMEOUT] section=%s using timeout=%ds (heavy/expand call)",
+                section,
+                request_timeout,
+            )
+
         # v14.35.22: Safe retry for models that reject max_tokens (e.g., gpt-5.1)
         # If we get 400 with "max_tokens unsupported", retry with max_completion_tokens only
         did_retry = False
@@ -1852,7 +1892,7 @@ def _call_openai(
                 url,
                 headers=headers,
                 json=payload,
-                timeout=OPENAI_TIMEOUT,
+                timeout=request_timeout,
             )
 
             # Check for 400 error indicating max_tokens is unsupported
