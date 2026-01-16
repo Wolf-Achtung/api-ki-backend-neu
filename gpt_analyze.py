@@ -3356,6 +3356,131 @@ def _enforce_quick_win_css_classes(html: str) -> str:
     return html
 
 
+# -------------------- Quick Wins: Simple JSON-to-HTML (v14.35.22) ----------------
+
+def _quick_wins_simple_json_to_html(raw: str) -> Optional[str]:
+    """
+    Convert simple JSON Quick Wins formats to HTML.
+
+    v14.35.22: Handles LLM responses that return JSON instead of HTML.
+    Supports:
+    - List of strings: ["Quick win 1", "Quick win 2"]
+    - List of objects: [{"title":"...", "text":"..."}]
+    - Dict with list: {"quick_wins": [...]}
+
+    Args:
+        raw: Raw LLM response
+
+    Returns:
+        HTML string or None if not JSON / parsing failed
+    """
+    import json
+    import html as html_module
+
+    if not raw or not raw.strip():
+        return None
+
+    cleaned = raw.strip()
+
+    # Check if it looks like JSON (starts with [ or {)
+    if not (cleaned.startswith("[") or cleaned.startswith("{")):
+        # Check for code fence wrapping
+        if not cleaned.startswith("```"):
+            return None  # Not JSON, let existing HTML path handle it
+
+    try:
+        # Remove code fences if present
+        if cleaned.startswith("```"):
+            # Extract content between fences
+            match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', cleaned)
+            if match:
+                cleaned = match.group(1).strip()
+            else:
+                # Fallback: strip leading/trailing fences
+                cleaned = re.sub(r'^```(?:json)?\s*', '', cleaned)
+                cleaned = re.sub(r'\s*```$', '', cleaned)
+
+        # Try to find JSON array or object
+        # First try direct parse
+        data = None
+        try:
+            data = json.loads(cleaned)
+        except json.JSONDecodeError:
+            # Try to extract array from surrounding text
+            match = re.search(r'(\[[\s\S]*\])', cleaned)
+            if match:
+                data = json.loads(match.group(1))
+            else:
+                # Try to extract object
+                match = re.search(r'(\{[\s\S]*\})', cleaned)
+                if match:
+                    data = json.loads(match.group(1))
+
+        if data is None:
+            return None
+
+        # Handle dict with quick_wins key
+        if isinstance(data, dict):
+            for key in ["quick_wins", "quickWins", "items", "wins", "list"]:
+                if key in data and isinstance(data[key], list):
+                    data = data[key]
+                    break
+            else:
+                # Not a recognized format
+                log.debug("[quick_wins] JSON is dict without recognized list key")
+                return None
+
+        if not isinstance(data, list) or len(data) == 0:
+            return None
+
+        # Extract text from each item
+        items: List[str] = []
+        text_fields = ["win", "text", "item", "title", "summary", "description", "name", "content"]
+
+        for entry in data:
+            if isinstance(entry, str):
+                # Simple string list
+                if entry.strip():
+                    items.append(html_module.escape(entry.strip()))
+            elif isinstance(entry, dict):
+                # Object - find text field
+                text = None
+                for field in text_fields:
+                    if field in entry and entry[field]:
+                        text = str(entry[field]).strip()
+                        break
+                if not text:
+                    # Fallback: use first non-empty string value
+                    for v in entry.values():
+                        if isinstance(v, str) and v.strip():
+                            text = v.strip()
+                            break
+                if text:
+                    items.append(html_module.escape(text))
+
+        if not items:
+            log.warning("[quick_wins] JSON parsed but no text items extracted (raw: %.120s...)", raw[:120])
+            return None
+
+        # Build HTML
+        li_items = "\n    ".join(f"<li>{item}</li>" for item in items)
+        html_out = f'''<div class="quick-wins">
+  <ul>
+    {li_items}
+  </ul>
+</div>'''
+
+        log.info("[quick_wins] ✅ Simple JSON converted to HTML (%d items)", len(items))
+        return html_out
+
+    except json.JSONDecodeError as e:
+        log.debug("[quick_wins] JSON parse failed: %s (raw: %.120s...)", e, raw[:120])
+        return None
+    except Exception as e:
+        log.debug("[quick_wins] Unexpected error in simple JSON parse: %s", e)
+        return None
+
+
 # -------------------- Quick Wins JSON-basierte Generierung (v8.0) ----------------
 
 def _parse_quick_wins_json(raw_response: str) -> Optional[List[Dict[str, Any]]]:
@@ -10481,35 +10606,49 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     )
     sections["executive_summary"] = sections["EXECUTIVE_SUMMARY_HTML"]
 
-    # Quick Wins: JSON-basiertes System (v8.0)
+    # Quick Wins: JSON-basiertes System (v8.0 + v14.35.22 simple JSON support)
     qw_raw = sections.pop("_QUICK_WINS_RAW", "")
 
     # Extrahiere Branche und Größe für Context-Banner
     qw_branche = briefing.get("BRANCHE_LABEL") or briefing.get("branche", "Unbekannt")
     qw_groesse = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "Unbekannt")
 
-    # Parse JSON aus OpenAI Response
-    quick_wins_list = _parse_quick_wins_json(qw_raw)
+    qw_html = None
 
-    # Build HTML (mit Fallback bei Parse-Fehler)
-    if quick_wins_list:
-        qw_html = _build_quick_wins_html(quick_wins_list, branche=qw_branche, groesse=qw_groesse)
-        log.info("✅ Quick Wins HTML erfolgreich generiert (%d Cards)", len(quick_wins_list))
+    # v14.35.22: Try simple JSON-to-HTML first (handles ["item1", "item2"] etc.)
+    # This avoids JSON parse errors when LLM returns simple JSON lists
+    simple_json_html = _quick_wins_simple_json_to_html(qw_raw)
+    if simple_json_html:
+        qw_html = simple_json_html
+        log.info("✅ Quick Wins: Simple JSON converted to HTML")
     else:
-        # Fallback 1: Versuche altes HTML-Repair System
-        log.warning("⚠️ JSON-Parsing fehlgeschlagen, versuche HTML-Repair Fallback")
-        if qw_raw and _needs_repair(qw_raw):
-            qw_html = _repair_html("quick_wins", qw_raw)
-            qw_html = _remove_duplicate_context_banners(qw_html)
-            qw_html = _enforce_quick_win_css_classes(qw_html)
+        # Try complex JSON parsing (expects full structured objects)
+        quick_wins_list = _parse_quick_wins_json(qw_raw)
+
+        if quick_wins_list:
+            qw_html = _build_quick_wins_html(quick_wins_list, branche=qw_branche, groesse=qw_groesse)
+            log.info("✅ Quick Wins HTML erfolgreich generiert (%d Cards)", len(quick_wins_list))
+        elif qw_raw and "<" in qw_raw:
+            # Content looks like HTML (not JSON), process directly
+            if _needs_repair(qw_raw):
+                qw_html = _repair_html("quick_wins", qw_raw)
+                qw_html = _remove_duplicate_context_banners(qw_html)
+                qw_html = _enforce_quick_win_css_classes(qw_html)
+            else:
+                # Already valid HTML, just post-process
+                qw_html = _remove_duplicate_context_banners(qw_raw)
+                qw_html = _enforce_quick_win_css_classes(qw_html)
         elif qw_raw:
-            # Hat schon HTML, nur Post-Processing
-            qw_html = _remove_duplicate_context_banners(qw_raw)
-            qw_html = _enforce_quick_win_css_classes(qw_html)
-        else:
-            # Fallback 2: Zeige Fehlermeldung
-            log.warning("⚠️ Kein Quick Wins Content, zeige Fallback-HTML")
-            qw_html = _fallback_quick_wins_html(branche=qw_branche, groesse=qw_groesse)
+            # Raw content but not JSON or HTML - log warning with snippet
+            log.warning(
+                "⚠️ Quick Wins: Unrecognized format (raw: %.120s...)",
+                qw_raw[:120].replace('\n', ' ')
+            )
+
+    # Final fallback if no HTML generated
+    if not qw_html:
+        log.warning("⚠️ Kein Quick Wins Content, zeige Fallback-HTML")
+        qw_html = _fallback_quick_wins_html(branche=qw_branche, groesse=qw_groesse)
 
     # v8.0: Single-column layout for Quick Wins
     sections["QUICK_WINS_HTML"] = qw_html
