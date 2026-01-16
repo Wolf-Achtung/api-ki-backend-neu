@@ -7,7 +7,7 @@ Comprehensive GPT leak detection and removal:
 - Full-sentence replacement
 - Guarantee: PDF never fails due to leaks
 
-Version: 1.1.0 (N3.6 + Hard Blacklist for Executive-Frontlayer)
+Version: 1.2.0 (N3.6 + CRITICAL vs BENIGN classification for CLEAN-AND-KEEP)
 """
 from __future__ import annotations
 
@@ -20,12 +20,75 @@ log = logging.getLogger(__name__)
 
 
 # =============================================================================
-# HARD BLACKLIST - Executive-Safe (absolute block, not just heal)
+# CRITICAL LEAK PATTERNS - Real security risks (FAIL-CLOSED)
 # =============================================================================
-# These phrases must NEVER appear in executive sections. They are removed
-# with specific logging and replaced with empty string or neutral ending.
+# These indicate actual prompt/policy/secret leakage. If detected → suppress section.
 
-HARD_BLACKLIST_PHRASES: List[str] = [
+CRITICAL_LEAK_PATTERNS: List[str] = [
+    # System/developer prompt references
+    "system prompt",
+    "systemprompt",
+    "developer prompt",
+    "developer message",
+    "system message",
+    "system instruction",
+    "hidden instruction",
+    "internal instruction",
+    "my instructions",
+    "my prompt",
+    "I was instructed",
+    "I have been instructed",
+    "according to my instructions",
+    "based on my instructions",
+    # Policy/tooling references
+    "OpenAI policy",
+    "Anthropic policy",
+    "usage policy",
+    "content policy",
+    "I can't reveal",
+    "I cannot reveal",
+    "I'm not allowed to",
+    "I am not allowed to",
+    "I must not",
+    "I cannot disclose",
+    "I can't disclose",
+    "prompt injection",
+    "jailbreak",
+    "chain-of-thought",
+    "chain of thought",
+    "function call",
+    "tool call",
+    "tool use",
+    # Secrets/credentials
+    "API key",
+    "api_key",
+    "Bearer ",
+    "Authorization:",
+    "sk-",
+    "OPENAI_API",
+    "secret key",
+    "access token",
+    "password:",
+    "credential",
+    # Meta-responses about restrictions
+    "as an AI model I",
+    "as an AI, I",
+    "as a large language model",
+    "my programming prevents",
+    "my guidelines",
+    "violates my",
+    "against my programming",
+    "I'm programmed to",
+    "I am programmed to",
+]
+
+# =============================================================================
+# BENIGN CHATBOT PHRASES - Safe to remove (CLEAN-AND-KEEP)
+# =============================================================================
+# These are just chatbot meta-phrases (help offers, context requests).
+# Removing them is safe; no need to suppress the entire section.
+
+BENIGN_CHATBOT_PHRASES: List[str] = [
     # German assistant phrases (critical)
     "wie kann ich dir helfen",
     "wie kann ich Ihnen helfen",
@@ -127,54 +190,102 @@ DUAL_KEY_ALIASES: Dict[str, str] = {
 }
 
 
+@dataclass
+class BlacklistResult:
+    """Result of blacklist application with CRITICAL vs BENIGN classification."""
+    cleaned_text: str
+    critical_hits: List[str] = field(default_factory=list)
+    benign_hits: List[str] = field(default_factory=list)
+
+    @property
+    def has_critical(self) -> bool:
+        return len(self.critical_hits) > 0
+
+    @property
+    def has_benign(self) -> bool:
+        return len(self.benign_hits) > 0
+
+    @property
+    def all_removed(self) -> List[str]:
+        return self.critical_hits + self.benign_hits
+
+
 def apply_hard_blacklist(text: str, section_name: str = "") -> Tuple[str, List[str]]:
     """
     Apply hard blacklist to remove forbidden assistant phrases.
 
-    These phrases are completely removed (not healed/rephrased).
-    Specific logging is emitted for monitoring.
+    LEGACY wrapper - returns (cleaned_text, all_removed_phrases).
+    For new code, use apply_blacklist_classified() instead.
+    """
+    result = apply_blacklist_classified(text, section_name)
+    return result.cleaned_text, result.all_removed
+
+
+def apply_blacklist_classified(text: str, section_name: str = "") -> BlacklistResult:
+    """
+    Apply blacklist with CRITICAL vs BENIGN classification.
+
+    v1.2.0: Separates critical leaks (suppress section) from benign chatbot
+    phrases (safe to remove and keep content).
 
     Args:
         text: Input text/HTML
         section_name: Section name for logging context
 
     Returns:
-        Tuple of (cleaned_text, list_of_removed_phrases)
+        BlacklistResult with cleaned_text, critical_hits, benign_hits
     """
     if not text:
-        return text, []
+        return BlacklistResult(cleaned_text=text)
 
-    removed: List[str] = []
+    critical_hits: List[str] = []
+    benign_hits: List[str] = []
     cleaned = text
 
-    for phrase in HARD_BLACKLIST_PHRASES:
-        # Case-insensitive substring match
+    # Check CRITICAL patterns first
+    for phrase in CRITICAL_LEAK_PATTERNS:
         pattern = re.compile(re.escape(phrase), re.IGNORECASE)
         matches = pattern.findall(cleaned)
 
         if matches:
             for match in matches:
                 log.warning(
-                    '[leak_blacklist] removed forbidden assistant phrase: "%s" (section=%s)',
+                    '[leak_blacklist] CRITICAL leak detected: "%s" (section=%s)',
                     match,
                     section_name or "unknown"
                 )
-                removed.append(match)
+                critical_hits.append(match)
+            cleaned = pattern.sub("", cleaned)
 
-            # Remove the phrase
+    # Check BENIGN chatbot phrases
+    for phrase in BENIGN_CHATBOT_PHRASES:
+        pattern = re.compile(re.escape(phrase), re.IGNORECASE)
+        matches = pattern.findall(cleaned)
+
+        if matches:
+            for match in matches:
+                log.debug(
+                    '[leak_blacklist] benign phrase removed: "%s" (section=%s)',
+                    match,
+                    section_name or "unknown"
+                )
+                benign_hits.append(match)
             cleaned = pattern.sub("", cleaned)
 
     # Cleanup artifacts (double spaces, empty tags)
-    if removed:
+    if critical_hits or benign_hits:
         cleaned = re.sub(r'\s{2,}', ' ', cleaned)
         cleaned = re.sub(r'<p>\s*</p>', '', cleaned)
         cleaned = re.sub(r'<li>\s*</li>', '', cleaned)
         cleaned = re.sub(r'\.\s*\.', '.', cleaned)
         # FIX: Remove empty angle brackets <> that remain after phrase removal
-        # Pattern: <> or < > or <  > (empty or whitespace-only between brackets)
         cleaned = re.sub(r'<\s*>', '', cleaned)
 
-    return cleaned.strip(), removed
+    return BlacklistResult(
+        cleaned_text=cleaned.strip(),
+        critical_hits=critical_hits,
+        benign_hits=benign_hits,
+    )
 
 
 def process_executive_sections_blacklist(
@@ -805,14 +916,19 @@ def precommit_zero_leak_all_sections(
     Pre-commit zero-leak guard for ALL sections.
 
     This function runs IMMEDIATELY after section generation, BEFORE
-    ReportValidator and N2-Healing. It applies the hard blacklist to
-    ALL sections (not just executive), with dual-key hygiene.
+    ReportValidator and N2-Healing. It applies the blacklist to
+    ALL sections with dual-key hygiene.
+
+    v1.2.0: CRITICAL vs BENIGN classification:
+    - CRITICAL hits (prompt/policy/secrets) → FAIL-CLOSED (suppress section)
+    - BENIGN hits only (chatbot phrases) → CLEAN-AND-KEEP (remove phrases, keep content)
 
     Features:
     - Runs on ALL section keys, not just EXECUTIVE_SECTIONS
     - Dual-key hygiene: cleans both *_HTML and lowercase aliases
-    - FAIL-CLOSED for EXECUTIVE_SECTIONS: if any phrase removed, suppress entirely
-    - Logs: [leak_blacklist] and [precommit_zero_leak]
+    - FAIL-CLOSED only for CRITICAL leaks in EXECUTIVE_SECTIONS
+    - CLEAN-AND-KEEP for benign-only hits (preserves important sections)
+    - Logs: [zero-leak] FAIL-CLOSED / CLEAN-AND-KEEP
 
     Args:
         sections: Section dictionary from _generate_content_sections()
@@ -822,7 +938,8 @@ def precommit_zero_leak_all_sections(
     """
     cleaned = dict(sections)
     cleaned_count = 0
-    total_phrases_removed = 0
+    total_critical = 0
+    total_benign = 0
 
     # Process all string sections
     for section_key, content in list(sections.items()):
@@ -834,17 +951,18 @@ def precommit_zero_leak_all_sections(
         if not content:
             continue
 
-        # Apply hard blacklist
-        cleaned_content, removed_phrases = apply_hard_blacklist(content, section_key)
+        # Apply blacklist with classification
+        result = apply_blacklist_classified(content, section_key)
 
-        if removed_phrases:
-            # FINAL GO FIX v3: FAIL-CLOSED for executive sections
-            # If ANY phrase was removed from an executive section, suppress it entirely
-            # Better no section than fragmentary assistant text
-            if section_key in EXECUTIVE_SECTIONS:
+        # Decision logic for executive sections
+        if section_key in EXECUTIVE_SECTIONS:
+            if result.has_critical:
+                # FAIL-CLOSED: Critical leak detected → suppress entire section
                 log.warning(
-                    "[precommit_zero_leak] FAIL-CLOSED: %s had %d phrases removed - suppressing section entirely",
-                    section_key, len(removed_phrases)
+                    "[zero-leak] FAIL-CLOSED critical_hits=%d section=%s (phrases: %s)",
+                    len(result.critical_hits),
+                    section_key,
+                    ", ".join(result.critical_hits[:3]),  # Log first 3 for brevity
                 )
                 cleaned[section_key] = ""
                 # Also suppress the alias
@@ -852,24 +970,48 @@ def precommit_zero_leak_all_sections(
                 if alias_key and alias_key in cleaned:
                     cleaned[alias_key] = ""
                 cleaned_count += 1
-                total_phrases_removed += len(removed_phrases)
+                total_critical += len(result.critical_hits)
                 continue
 
-            cleaned[section_key] = cleaned_content
+            elif result.has_benign:
+                # CLEAN-AND-KEEP: Only benign chatbot phrases → remove them, keep content
+                log.info(
+                    "[zero-leak] CLEAN-AND-KEEP benign_hits=%d section=%s",
+                    len(result.benign_hits),
+                    section_key,
+                )
+                cleaned[section_key] = result.cleaned_text
+                cleaned_count += 1
+                total_benign += len(result.benign_hits)
+
+                # Also clean the alias
+                alias_key = DUAL_KEY_ALIASES.get(section_key)
+                if alias_key and alias_key in cleaned:
+                    alias_content = cleaned.get(alias_key)
+                    if isinstance(alias_content, str) and alias_content:
+                        alias_result = apply_blacklist_classified(alias_content, alias_key)
+                        if alias_result.has_benign and not alias_result.has_critical:
+                            cleaned[alias_key] = alias_result.cleaned_text
+                continue
+
+        # Non-executive sections: always clean and keep (no suppression)
+        if result.has_critical or result.has_benign:
+            cleaned[section_key] = result.cleaned_text
             cleaned_count += 1
-            total_phrases_removed += len(removed_phrases)
+            total_critical += len(result.critical_hits)
+            total_benign += len(result.benign_hits)
 
             # Dual-key hygiene: also clean the alias if exists
             alias_key = DUAL_KEY_ALIASES.get(section_key)
             if alias_key and alias_key in cleaned:
                 alias_content = cleaned.get(alias_key)
                 if isinstance(alias_content, str) and alias_content:
-                    cleaned_alias, alias_removed = apply_hard_blacklist(alias_content, alias_key)
-                    if alias_removed:
-                        cleaned[alias_key] = cleaned_alias
+                    alias_result = apply_blacklist_classified(alias_content, alias_key)
+                    if alias_result.all_removed:
+                        cleaned[alias_key] = alias_result.cleaned_text
                         log.debug(
                             "[leak_blacklist] Also cleaned alias %s (%d phrases)",
-                            alias_key, len(alias_removed)
+                            alias_key, len(alias_result.all_removed)
                         )
 
     # Also check reverse: lowercase keys that have uppercase aliases
@@ -888,17 +1030,18 @@ def precommit_zero_leak_all_sections(
             # Already handled via dual-key hygiene above
             continue
 
-        # Apply blacklist to remaining sections
-        cleaned_content, removed_phrases = apply_hard_blacklist(content, section_key)
-        if removed_phrases:
-            cleaned[section_key] = cleaned_content
+        # Apply blacklist to remaining sections (non-executive, always keep)
+        result = apply_blacklist_classified(content, section_key)
+        if result.all_removed:
+            cleaned[section_key] = result.cleaned_text
             cleaned_count += 1
-            total_phrases_removed += len(removed_phrases)
+            total_critical += len(result.critical_hits)
+            total_benign += len(result.benign_hits)
 
     if cleaned_count > 0:
         log.info(
-            "[precommit_zero_leak] cleaned=%d sections, phrases_removed=%d",
-            cleaned_count, total_phrases_removed
+            "[precommit_zero_leak] cleaned=%d sections, critical=%d, benign=%d",
+            cleaned_count, total_critical, total_benign
         )
 
     return cleaned
