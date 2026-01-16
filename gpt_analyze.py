@@ -1832,13 +1832,13 @@ def _call_openai(
             "temperature": float(temperature),
         }
 
-        # v14.35.22: Always set max_tokens for /v1/chat/completions
-        # Fix: Previously GPT-5 branch only set max_completion_tokens, causing truncation
-        payload["max_tokens"] = int(max_tokens)
-
-        # Optional forward-compat for models that support max_completion_tokens
+        # v14.35.22: Set correct token limit parameter based on model
+        # gpt-5.* models require max_completion_tokens (reject max_tokens with 400)
+        # Other models use max_tokens
         if model.startswith("gpt-5"):
             payload["max_completion_tokens"] = int(max_tokens)
+        else:
+            payload["max_tokens"] = int(max_tokens)
 
         # NOTE: stop parameter removed for OpenAI models (gpt-4o-mini, gpt-4.1, etc.)
         # as it's no longer supported. Stop sequences are still used for Anthropic models
