@@ -344,22 +344,30 @@ class BusinessCaseCanonical:
         return max(MIN_PAYBACK_MONTHS, min(MAX_PAYBACK_MONTHS, raw))
 
     @property
-    def roi_12m_net(self) -> float:
-        """ROI nach 12 Monaten (netto, nach CAPEX und OPEX)"""
+    def roi_12m_net_raw(self) -> float:
+        """ROI nach 12 Monaten (netto, UNCAPPED - mathematisch berechnet)"""
         if self.capex_eur <= 0:
             return 0.0
         net_benefit = self.annual_net - self.capex_eur
-        raw = (net_benefit / self.capex_eur) * 100
-        return max(MIN_ROI, min(MAX_ROI, raw))
+        return (net_benefit / self.capex_eur) * 100
 
     @property
-    def roi_12m_gross(self) -> float:
-        """ROI nach 12 Monaten (brutto, nur CAPEX abgezogen)"""
+    def roi_12m_net(self) -> float:
+        """ROI nach 12 Monaten (netto, CAPPED - konservativer Planwert)"""
+        return max(MIN_ROI, min(MAX_ROI, self.roi_12m_net_raw))
+
+    @property
+    def roi_12m_gross_raw(self) -> float:
+        """ROI nach 12 Monaten (brutto, UNCAPPED)"""
         if self.capex_eur <= 0:
             return 0.0
         gross_benefit = self.annual_gross - self.capex_eur
-        raw = (gross_benefit / self.capex_eur) * 100
-        return max(MIN_ROI, min(MAX_ROI, raw))
+        return (gross_benefit / self.capex_eur) * 100
+
+    @property
+    def roi_12m_gross(self) -> float:
+        """ROI nach 12 Monaten (brutto, CAPPED)"""
+        return max(MIN_ROI, min(MAX_ROI, self.roi_12m_gross_raw))
 
     @property
     def weekly_hours(self) -> float:
@@ -386,8 +394,12 @@ class BusinessCaseCanonical:
             "annual_net": round(self.annual_net, 2),
             "annual_opex": round(self.annual_opex, 2),
             "payback_months": round(self.payback_months, 1),
-            "roi_12m_net": round(self.roi_12m_net, 1),
-            "roi_12m_gross": round(self.roi_12m_gross, 1),
+            # ROI values: both raw (computed) and capped (planning value)
+            "roi_12m_net_raw": round(self.roi_12m_net_raw, 1),
+            "roi_12m_net": round(self.roi_12m_net, 1),  # capped
+            "roi_12m_gross_raw": round(self.roi_12m_gross_raw, 1),
+            "roi_12m_gross": round(self.roi_12m_gross, 1),  # capped
+            "roi_was_capped": self.roi_12m_net_raw > MAX_ROI,
             "weekly_hours": round(self.weekly_hours, 1),
             "annual_hours": round(self.annual_hours, 1),
             # Metadata
@@ -549,10 +561,15 @@ def inject_canonical_to_sections(
         "stundensatz_eur": canonical.hourly_rate_eur,
 
         # ROI / Payback (all from canonical)
-        "ROI_12M": canonical.roi_12m_net,
+        # v14.35.23: Both raw (computed) and capped (planning value) ROI
+        "ROI_12M": canonical.roi_12m_net,  # capped value (for backwards compatibility)
+        "ROI_12M_RAW": canonical.roi_12m_net_raw,  # uncapped computed value
+        "ROI_12M_CAPPED": canonical.roi_12m_net,  # explicit capped alias
         "ROI_12M_RATE": canonical.roi_12m_net,
+        "ROI_WAS_CAPPED": canonical.roi_12m_net_raw > MAX_ROI,
         "PAYBACK_MONTHS": canonical.payback_months,
         "BC_ROI_REALISTIC": canonical.roi_12m_net,
+        "BC_ROI_REALISTIC_RAW": canonical.roi_12m_net_raw,
         "BC_PAYBACK_REALISTIC": canonical.payback_months,
         "BC_MONTHLY_SAVINGS_REALISTIC": canonical.monthly_net,
 
