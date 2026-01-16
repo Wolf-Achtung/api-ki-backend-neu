@@ -78,6 +78,12 @@ data/funding_patches/
 # Runtime Storage
 storage/
 
-# Python
+# Local backups / artifacts
+*.backup*
+*.bak
+artifacts/
+*.pdf
+
+# Python cache
 __pycache__/
 *.pyc
