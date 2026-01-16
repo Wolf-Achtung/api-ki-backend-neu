@@ -11347,13 +11347,21 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
                 log.warning(f"[SIEZEN-GUARD] {key} failed: {e}")
 
     # ========== v14.0: CONTENT QUALITY ENFORCER (Post-Processing Safety Net) ==========
-    # Fixes: ROI-Leak, Fragments, hauptleistung MIN, Extended Siezen
+    # Fixes: ROI-Leak, Fragments, hauptleistung MIN, Extended Siezen, Solo Language
     try:
         from services.content_quality_enforcer import apply_all_quality_enforcers
         hauptleistung_value = briefing.get("hauptleistung", "")
         bundesland_value = briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", "")
-        sections = apply_all_quality_enforcers(sections, hauptleistung_value, bundesland_value)
-        log.info(f"[QUALITY-ENFORCER] Applied all quality fixes for hauptleistung={hauptleistung_value[:30] if hauptleistung_value else 'N/A'}...")
+        # Derive company_size for solo-language normalizer
+        size_raw_qe = (briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse") or "").lower()
+        if "solo" in size_raw_qe or "freiberuf" in size_raw_qe or size_raw_qe in ("1", "einzelunternehmer"):
+            company_size_qe = "solo"
+        elif any(x in size_raw_qe for x in ("2-10", "2 bis 10", "team", "klein")):
+            company_size_qe = "team"
+        else:
+            company_size_qe = "kmu"
+        sections = apply_all_quality_enforcers(sections, hauptleistung_value, bundesland_value, company_size_qe)
+        log.info(f"[QUALITY-ENFORCER] Applied all quality fixes for hauptleistung={hauptleistung_value[:30] if hauptleistung_value else 'N/A'}, company_size={company_size_qe}")
     except Exception as e:
         log.warning(f"[QUALITY-ENFORCER] Failed: {e}")
 
@@ -11490,8 +11498,16 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         from services.content_quality_enforcer import apply_all_quality_enforcers
         hauptleistung_final = briefing.get("hauptleistung", "")
         bundesland_final = briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", "")
-        sections = apply_all_quality_enforcers(sections, hauptleistung_final, bundesland_final)
-        log.info(f"[QUALITY-ENFORCER-FINAL] Applied FINAL quality fixes")
+        # Derive company_size for solo-language normalizer (repeat for robustness)
+        size_raw_final = (briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse") or "").lower()
+        if "solo" in size_raw_final or "freiberuf" in size_raw_final or size_raw_final in ("1", "einzelunternehmer"):
+            company_size_final = "solo"
+        elif any(x in size_raw_final for x in ("2-10", "2 bis 10", "team", "klein")):
+            company_size_final = "team"
+        else:
+            company_size_final = "kmu"
+        sections = apply_all_quality_enforcers(sections, hauptleistung_final, bundesland_final, company_size_final)
+        log.info(f"[QUALITY-ENFORCER-FINAL] Applied FINAL quality fixes, company_size={company_size_final}")
     except Exception as e:
         log.warning(f"[QUALITY-ENFORCER-FINAL] Failed: {e}")
     return sections
@@ -12917,10 +12933,18 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         from services.content_quality_enforcer import apply_all_quality_enforcers
         hauptleistung_render = answers.get("hauptleistung", "")
         bundesland_render = answers.get("BUNDESLAND_LABEL") or answers.get("bundesland", "")
-        sections = apply_all_quality_enforcers(sections, hauptleistung_render, bundesland_render)
-        log.info(f"[{run_id}] ✅ [QUALITY-ENFORCER-RENDER] Applied FINAL quality fixes before render")
+        # Derive company_size for solo-language normalizer
+        size_raw_render = (answers.get("UNTERNEHMENSGROESSE_LABEL") or answers.get("unternehmensgroesse") or "").lower()
+        if "solo" in size_raw_render or "freiberuf" in size_raw_render or size_raw_render in ("1", "einzelunternehmer"):
+            company_size_render = "solo"
+        elif any(x in size_raw_render for x in ("2-10", "2 bis 10", "team", "klein")):
+            company_size_render = "team"
+        else:
+            company_size_render = "kmu"
+        sections = apply_all_quality_enforcers(sections, hauptleistung_render, bundesland_render, company_size_render)
+        log.info(f"[{run_id}] [QUALITY-ENFORCER-RENDER] Applied FINAL quality fixes before render, company_size={company_size_render}")
     except Exception as e:
-        log.warning(f"[{run_id}] ⚠️ [QUALITY-ENFORCER-RENDER] Failed: {e}")
+        log.warning(f"[{run_id}] [QUALITY-ENFORCER-RENDER] Failed: {e}")
     log.info("=" * 80)
 
     result = render(
