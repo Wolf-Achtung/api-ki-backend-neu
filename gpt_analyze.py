@@ -3495,13 +3495,22 @@ def _parse_quick_wins_json(raw_response: str) -> Optional[List[Dict[str, Any]]]:
     import json
     # re already imported at module level
 
+    # v14.35.22: Guard against empty/whitespace input
     if not raw_response or not raw_response.strip():
-        log.warning("Quick Wins: Leere Response erhalten")
+        log.debug("[json-parse] skipped (empty) ctx=quick_wins_json")
+        return None
+
+    stripped = raw_response.strip()
+
+    # v14.35.22: Guard against HTML input (not JSON)
+    # If input clearly looks like HTML, skip JSON parsing entirely
+    if stripped.startswith("<") and any(tag in stripped[:100].lower() for tag in ["<div", "<p>", "<ul", "<html", "<section"]):
+        log.debug("[json-parse] skipped (html) ctx=quick_wins_json len=%d", len(stripped))
         return None
 
     try:
         # Entferne Markdown-Backticks falls vorhanden
-        cleaned = raw_response.strip()
+        cleaned = stripped
         if cleaned.startswith("```"):
             # Extrahiere JSON zwischen Backticks
             match = re.search(r'```(?:json)?\s*(\[.*?\])\s*```', cleaned, re.DOTALL)
@@ -3516,6 +3525,21 @@ def _parse_quick_wins_json(raw_response: str) -> Optional[List[Dict[str, Any]]]:
         match = re.search(r'(\[.*\])', cleaned, re.DOTALL)
         if match:
             cleaned = match.group(1)
+        else:
+            # No JSON array found - log trace and return None
+            log.debug(
+                "[json-parse-trace] ctx=quick_wins_json no_array_found len=%d head=\"%.120s\"",
+                len(cleaned),
+                cleaned[:120].replace('\n', ' ')
+            )
+            return None
+
+        # v14.35.22: Trace logging before json.loads
+        log.debug(
+            "[json-parse-trace] ctx=quick_wins_json len=%d head=\"%.120s\"",
+            len(cleaned),
+            cleaned[:120].replace('\n', ' ')
+        )
 
         # Parse JSON
         quick_wins = json.loads(cleaned)
@@ -3552,20 +3576,16 @@ def _parse_quick_wins_json(raw_response: str) -> Optional[List[Dict[str, Any]]]:
         return cast(List[Dict[str, Any]], quick_wins)
 
     except json.JSONDecodeError as e:
-        # v14.35.22: Enhanced JSON error logging for debugging
-        log.error(f"JSON Parsing Fehler: {e}")
-        log.error(f"  Position: line {e.lineno}, column {e.colno}, char {e.pos}")
-        # Log snippet around error position
-        if e.pos and e.doc:
-            start = max(0, e.pos - 50)
-            end = min(len(e.doc), e.pos + 50)
-            snippet = e.doc[start:end]
-            log.error(f"  Context around error: ...{snippet!r}...")
-        log.debug(f"Raw Response (erste 500 Zeichen): {raw_response[:500]}")
-        log.debug(f"Cleaned JSON attempt: {cleaned[:500] if cleaned else 'N/A'}")
+        # v14.35.22: Reduced noise - use warning for expected fallback, include context
+        log.warning(
+            "[json-parse] failed ctx=quick_wins_json pos=%d head=\"%.80s\"",
+            e.pos or 0,
+            (cleaned[:80] if cleaned else raw_response[:80]).replace('\n', ' ')
+        )
+        log.debug("[json-parse] JSONDecodeError details: %s", e)
         return None
     except Exception as e:
-        log.error(f"Unerwarteter Fehler beim JSON Parsing: {type(e).__name__}: {e}")
+        log.warning("[json-parse] unexpected error ctx=quick_wins_json: %s: %s", type(e).__name__, e)
         return None
 
 
