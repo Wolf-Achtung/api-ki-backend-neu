@@ -1844,12 +1844,49 @@ def _call_openai(
         # as it's no longer supported. Stop sequences are still used for Anthropic models
         # via the anthropic_client.py module.
 
-        r = requests.post(
-            url,
-            headers=headers,
-            json=payload,
-            timeout=OPENAI_TIMEOUT,
-        )
+        # v14.35.22: Safe retry for models that reject max_tokens (e.g., gpt-5.1)
+        # If we get 400 with "max_tokens unsupported", retry with max_completion_tokens only
+        did_retry = False
+        while True:
+            r = requests.post(
+                url,
+                headers=headers,
+                json=payload,
+                timeout=OPENAI_TIMEOUT,
+            )
+
+            # Check for 400 error indicating max_tokens is unsupported
+            if r.status_code == 400 and not did_retry:
+                try:
+                    err_data = r.json()
+                    err_code = err_data.get("error", {}).get("code", "")
+                    err_param = err_data.get("error", {}).get("param", "")
+                    err_msg = err_data.get("error", {}).get("message", "")
+
+                    # Detect unsupported max_tokens parameter
+                    is_max_tokens_unsupported = (
+                        (err_code == "unsupported_parameter" and err_param == "max_tokens") or
+                        ("max_tokens" in err_msg.lower() and "not supported" in err_msg.lower())
+                    )
+
+                    if is_max_tokens_unsupported:
+                        log.warning(
+                            "[OpenAI] unsupported_parameter max_tokens → retrying with max_completion_tokens "
+                            "(section=%s, model=%s)",
+                            section or "unknown",
+                            model,
+                        )
+                        # Remove max_tokens, ensure max_completion_tokens is set
+                        payload.pop("max_tokens", None)
+                        payload["max_completion_tokens"] = int(max_tokens)
+                        did_retry = True
+                        continue  # Retry once
+                except (ValueError, KeyError, TypeError):
+                    pass  # JSON parsing failed, proceed to raise_for_status
+
+            # Exit retry loop (success or non-retryable error)
+            break
+
         r.raise_for_status()
 
         # Validate response structure and log finish_reason for diagnostics
