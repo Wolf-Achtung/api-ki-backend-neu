@@ -6023,7 +6023,7 @@
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-lg); margin-bottom: var(--space-xl);">
                             <div style="text-align: center;">
                                 <div style="font-size: 36px; font-weight: 600; color: var(--color-text-normal); margin-bottom: var(--space-xs);">
-                                    {{ monatsersparnis_stunden or qw_hours_total }} <span style="font-size: 20px; font-weight: 400;">Std.</span>
+                                    {{ TIME_SAVINGS_MONTH_HOURS_FMT or monatsersparnis_stunden or qw_hours_total }} <span style="font-size: 20px; font-weight: 400;">Std.</span>
                                 </div>
                                 <div style="font-size: 13px; font-weight: 500; color: var(--color-text-normal); margin-bottom: 4px;">
                                     Zeitersparnis/Monat
@@ -6040,7 +6040,7 @@
                                     ROI-Details
                                 </div>
                                 <div style="font-size: 11px; color: var(--color-text-muted);">
-                                    Payback: {{ PAYBACK_MONTHS or 'n/a' }} Monate
+                                    Payback: {{ PAYBACK_MONTHS_FMT_DE or PAYBACK_MONTHS or 'n/a' }} Monate
                                 </div>
                             </div>
                             <div style="text-align: center;">
@@ -7240,6 +7240,8 @@
                 </section>
                 {% endif %}
         <!-- Annex: Kreativ-Tools & Glossar -->
+        <!-- P0.1: Branch gate - only show Kreativ-Tools for creative industry -->
+{% if BRANCHE_LABEL and 'Kreativ' in BRANCHE_LABEL or BRANCHE_LABEL == 'Medien & Kreativwirtschaft' %}
 <section class="annex-section annex-kreativtools chapter">
   <h2>Kreativ-Tools {{report_year}} – modulare Alternativen</h2>
   <p>Viele Kreativaufgaben lassen sich heute mit einem modularen Toolset effizient erledigen – oft günstiger als im
@@ -7253,6 +7255,7 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
 </ul>
 <p><em>Fazit:</em> Adobe bleibt in Spezialfällen relevant. Für viele KMU decken die obigen Tools den Kreativ-Alltag vollständig ab.</p>
 </section>
+{% endif %}
 <section class="annex-section annex-glossar chapter">
   <h2>Glossar – zentrale KI-Begriffe</h2>
   <p class="section-intro">Die wichtigsten Begriffe aus diesem Report (max. 12 Einträge, kompakt).</p>

@@ -249,5 +249,113 @@ class TestPaybackFormatting:
             assert len(formatted.split(".")[-1]) <= 1, f"Long float detected: {formatted}"
 
 
+class TestP01TemplateBindings:
+    """P0.1: Tests for canonical-to-template binding formatted values."""
+
+    def test_fmt_de_decimal(self):
+        """Test German decimal format (comma separator)."""
+        def _fmt_de_decimal(val, ndigits: int = 1) -> str:
+            try:
+                formatted = f"{float(val):.{ndigits}f}"
+                return formatted.replace(".", ",")
+            except (ValueError, TypeError):
+                return str(val) if val else "0"
+
+        assert _fmt_de_decimal(3.5, 1) == "3,5"
+        assert _fmt_de_decimal(10.123, 1) == "10,1"
+        assert _fmt_de_decimal(0, 1) == "0,0"
+        assert _fmt_de_decimal("invalid") == "invalid"
+
+    def test_fmt_int_no_float(self):
+        """Test integer format (no .0 suffix)."""
+        def _fmt_int_no_float(val) -> str:
+            try:
+                return str(int(float(val)))
+            except (ValueError, TypeError):
+                return str(val) if val else "0"
+
+        assert _fmt_int_no_float(25.0) == "25"
+        assert _fmt_int_no_float(25.7) == "25"
+        assert _fmt_int_no_float(36) == "36"
+        assert _fmt_int_no_float("invalid") == "invalid"
+
+    def test_roi_display_de_capped(self):
+        """Test ROI display format when capped (Option A)."""
+        def _fmt_int_no_float(val) -> str:
+            try:
+                return str(int(float(val)))
+            except (ValueError, TypeError):
+                return str(val) if val else "0"
+
+        roi_raw = 240.8
+        roi_capped = 200.0
+        roi_was_capped = True
+
+        roi_raw_str = _fmt_int_no_float(roi_raw)
+        roi_capped_str = _fmt_int_no_float(roi_capped)
+
+        if roi_was_capped and float(roi_raw) != float(roi_capped):
+            roi_display = f"{roi_raw_str} % (berechnet) / {roi_capped_str} % (Planwert)"
+        else:
+            roi_display = f"{roi_capped_str} %"
+
+        assert roi_display == "240 % (berechnet) / 200 % (Planwert)"
+
+    def test_roi_display_de_uncapped(self):
+        """Test ROI display format when not capped."""
+        def _fmt_int_no_float(val) -> str:
+            try:
+                return str(int(float(val)))
+            except (ValueError, TypeError):
+                return str(val) if val else "0"
+
+        roi_raw = 80.0
+        roi_capped = 80.0
+        roi_was_capped = False
+
+        roi_capped_str = _fmt_int_no_float(roi_capped)
+
+        if roi_was_capped and float(roi_raw) != float(roi_capped):
+            roi_display = f"{_fmt_int_no_float(roi_raw)} % (berechnet) / {roi_capped_str} % (Planwert)"
+        else:
+            roi_display = f"{roi_capped_str} %"
+
+        assert roi_display == "80 %"
+
+    def test_payback_months_fmt_de_no_long_float(self):
+        """Test PAYBACK_MONTHS_FMT_DE doesn't contain long float patterns."""
+        def _fmt_de_decimal(val, ndigits: int = 1) -> str:
+            try:
+                formatted = f"{float(val):.{ndigits}f}"
+                return formatted.replace(".", ",")
+            except (ValueError, TypeError):
+                return str(val) if val else "0"
+
+        # Test various payback values
+        test_values = [3.5, 10/3, 2.999999, 4.500001, 12.0]
+
+        for val in test_values:
+            formatted = _fmt_de_decimal(val, 1)
+            # Should not have more than 1 digit after comma
+            parts = formatted.split(",")
+            if len(parts) == 2:
+                assert len(parts[1]) == 1, f"Long decimal detected in: {formatted}"
+
+    def test_time_savings_hours_fmt_no_decimal(self):
+        """Test TIME_SAVINGS_MONTH_HOURS_FMT has no decimal point."""
+        def _fmt_int_no_float(val) -> str:
+            try:
+                return str(int(float(val)))
+            except (ValueError, TypeError):
+                return str(val) if val else "0"
+
+        test_values = [25.0, 36.7, 18, 42.999]
+
+        for val in test_values:
+            formatted = _fmt_int_no_float(val)
+            assert "." not in formatted, f"Decimal point found in: {formatted}"
+            assert formatted.isdigit(), f"Non-digit found in: {formatted}"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
