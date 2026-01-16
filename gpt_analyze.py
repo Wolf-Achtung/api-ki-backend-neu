@@ -1381,9 +1381,25 @@ OPENAI_MODEL = settings.openai.model or os.getenv("OPENAI_MODEL", "gpt-4o")
 OPENAI_API_BASE = os.getenv("OPENAI_API_BASE")  # Not in new settings structure
 OPENAI_TEMPERATURE = settings.openai.temperature
 OPENAI_TIMEOUT = settings.openai.timeout
-# v14.35.22: Extended read timeout for heavy/expand calls (env: OPENAI_TIMEOUT_READ_EXPAND)
-# Falls back to OPENAI_TIMEOUT if not set
-OPENAI_TIMEOUT_READ_EXPAND = int(os.getenv("OPENAI_TIMEOUT_READ_EXPAND", str(OPENAI_TIMEOUT)))
+# v14.35.22: Extended timeout for heavy/expand calls (e.g., 150s instead of 75s)
+OPENAI_TIMEOUT_EXTENDED = int(os.getenv("OPENAI_TIMEOUT_EXTENDED", "150"))
+
+# v14.35.22: Heavy sections that need extended timeout
+# Includes expand calls and other long-running sections
+HEAVY_SECTIONS = frozenset([
+    "quick_wins_expand",
+    "tools_expand",
+    "roadmap_expand",
+    "governance_expand",
+    "security_expand",
+    "ai_act_expand",
+    "business_case_expand",
+    "executive_summary_expand",
+    "einleitung_expand",
+    "fazit_expand",
+    "content_repair",
+    "final_repair",
+])
 
 # Robust: Unterstützt sowohl max_completion_tokens (neu) als auch max_tokens (alt)
 try:
@@ -1849,19 +1865,23 @@ def _call_openai(
         # via the anthropic_client.py module.
 
         # v14.35.22: Section-aware timeout for heavy/expand calls
-        # Uses OPENAI_TIMEOUT_READ_EXPAND (e.g. 300s) for expand sections to avoid read timeouts
-        is_expand_call = False
+        # Heavy sections get extended timeout (150s) to avoid read timeouts
+        is_heavy_section = False
         if section:
-            is_expand_call = section.endswith("_expand") or "expand" in section
+            # Check explicit allowlist or _expand suffix
+            is_heavy_section = (
+                section in HEAVY_SECTIONS or
+                section.endswith("_expand") or
+                section.endswith("_repair")
+            )
 
-        request_timeout = OPENAI_TIMEOUT_READ_EXPAND if is_expand_call else OPENAI_TIMEOUT
+        request_timeout = OPENAI_TIMEOUT_EXTENDED if is_heavy_section else OPENAI_TIMEOUT
 
-        if is_expand_call:
+        if is_heavy_section:
             log.info(
-                "[OpenAI] using extended read timeout=%ds for section=%s model=%s",
-                request_timeout,
+                "⏱️ [EXTENDED-TIMEOUT] section=%s using timeout=%ds (heavy/expand call)",
                 section,
-                model,
+                request_timeout,
             )
 
         # v14.35.22: Safe retry for models that reject max_tokens (e.g., gpt-5.1)
