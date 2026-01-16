@@ -638,8 +638,9 @@ class ReportValidator:
             # SPRINT G17.S: roadmap_90d reduced from 250 to 150
             # SPRINT G18: strategie_governance + tools_empfehlungen gelockert
             # SPRINT N1: Further reductions for Solo to avoid fallbacks
+            # P3.2: quick_wins reduced from 60 to 30 (Solo-realistic)
             "executive_summary": 100,   # SPRINT N requirement
-            "quick_wins": 60,
+            "quick_wins": 30,           # P3.2: Solo-realistic threshold
             "roadmap_90d": 150,         # SPRINT G17.S: reduced from 250
             "roadmap_12m": 600,         # SPRINT N1: 500→600 (balanced)
             "org_change": 80,
