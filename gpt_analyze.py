@@ -12944,6 +12944,56 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         canonical_bc = create_canonical_from_sections(sections, company_size=size_raw)
         canon_updates = inject_canonical_to_sections(canonical_bc, sections)
         log.info(f"[{run_id}] ✅ [CANONICAL-BC] Injected {canon_updates} canonical KPI values")
+
+        # =========================================================================
+        # P0.1: CANONICAL-TO-TEMPLATE BINDING - Formatted strings for PDF template
+        # These prevent raw floats (e.g., "3.5000001") and ensure German formatting
+        # =========================================================================
+        # Helper: German decimal format (comma separator)
+        def _fmt_de_decimal(val, ndigits: int = 1) -> str:
+            try:
+                formatted = f"{float(val):.{ndigits}f}"
+                return formatted.replace(".", ",")  # German: "3,5" not "3.5"
+            except (ValueError, TypeError):
+                return str(val) if val else "0"
+
+        # Helper: Integer format (no .0 suffix)
+        def _fmt_int_no_float(val) -> str:
+            try:
+                return str(int(float(val)))
+            except (ValueError, TypeError):
+                return str(val) if val else "0"
+
+        # 1. PAYBACK_MONTHS_FMT_DE - German decimal, 1 digit (e.g., "3,5")
+        payback_raw = sections.get("PAYBACK_MONTHS", 0)
+        sections["PAYBACK_MONTHS_FMT_DE"] = _fmt_de_decimal(payback_raw, 1)
+
+        # 2. TIME_SAVINGS_MONTH_HOURS_FMT - Integer, no ".0" (e.g., "25" not "25.0")
+        time_hours_raw = (
+            sections.get("TIME_SAVINGS_MONTH_HOURS_CAPPED")
+            or sections.get("monatsersparnis_stunden")
+            or sections.get("qw_hours_total")
+            or 36
+        )
+        sections["TIME_SAVINGS_MONTH_HOURS_FMT"] = _fmt_int_no_float(time_hours_raw)
+
+        # 3. ROI_12M_DISPLAY_DE - Option A: "241 % (berechnet) / 200 % (Planwert)" if capped
+        roi_capped = sections.get("ROI_12M", 0)
+        roi_raw = sections.get("ROI_12M_RAW", roi_capped)
+        roi_was_capped = sections.get("ROI_WAS_CAPPED", False)
+
+        roi_capped_str = _fmt_int_no_float(roi_capped)
+        roi_raw_str = _fmt_int_no_float(roi_raw)
+
+        if roi_was_capped and float(roi_raw or 0) != float(roi_capped or 0):
+            # Option A: Show both raw (computed) and capped (planning value)
+            sections["ROI_12M_DISPLAY_DE"] = f"{roi_raw_str} % (berechnet) / {roi_capped_str} % (Planwert)"
+        else:
+            sections["ROI_12M_DISPLAY_DE"] = f"{roi_capped_str} %"
+
+        log.info(f"[{run_id}] ✅ [P0.1] Template bindings: PAYBACK={sections['PAYBACK_MONTHS_FMT_DE']}, "
+                 f"HOURS={sections['TIME_SAVINGS_MONTH_HOURS_FMT']}, ROI_DISPLAY={sections['ROI_12M_DISPLAY_DE']}")
+
     except Exception as e:
         log.warning(f"[{run_id}] ⚠️ [CANONICAL-BC] Failed to inject canonical values: {e}")
 
