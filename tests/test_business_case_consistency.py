@@ -105,7 +105,7 @@ class TestBusinessCaseConsistency:
 
     def test_business_case_canonical_roi_consistency(self):
         """Verify ROI values are computed consistently."""
-        from services.business_case_engine_v2 import BusinessCaseCanonical
+        from services.business_case_engine_v2 import BusinessCaseCanonical, MAX_ROI
 
         # Create a canonical business case
         bc = BusinessCaseCanonical(
@@ -119,12 +119,14 @@ class TestBusinessCaseConsistency:
         # monthly_gross = 20 * 80 = 1600
         # monthly_net = 1600 - 180 = 1420
         # annual_net = 1420 * 12 = 17040
-        # roi_12m_net = ((17040 - 5000) / 5000) * 100 = 240.8%
+        # roi_12m_net_raw = ((17040 - 5000) / 5000) * 100 = 240.8%
+        # roi_12m_net = min(MAX_ROI, 240.8) = 200.0% (capped)
 
         assert bc.monthly_gross == 1600
         assert bc.monthly_net == 1420
         assert bc.annual_net == 17040
-        assert round(bc.roi_12m_net, 1) == 240.8
+        # ROI is capped at MAX_ROI (200%) for conservative estimates
+        assert round(bc.roi_12m_net, 1) == MAX_ROI, f"ROI should be capped at {MAX_ROI}%"
 
     def test_no_hardcoded_81_hourly_rate(self):
         """Ensure there are no hardcoded 81€/h rates in the codebase."""
