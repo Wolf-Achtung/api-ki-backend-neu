@@ -7612,8 +7612,16 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     })
     
     # ===== BLOCK 7: Quick Wins & ROI (EXTENDED!) =====
-    # Calculate hourly rate using our smart estimation function
-    stundensatz_eur = _estimate_hourly_rate_from_revenue(briefing)
+    # v14.35.23: Use canonical hourly rate from business_case_engine_v2 for consistency
+    # This ensures Quick Wins monetization matches Business Case and ROI sections
+    try:
+        from services.business_case_engine_v2 import get_hourly_rate
+        stundensatz_eur, stundensatz_source = get_hourly_rate(company_size)
+        log.debug("[PROMPT-VARS] Using canonical hourly rate: %d€/h (%s) for size=%s",
+                  stundensatz_eur, stundensatz_source, company_size)
+    except ImportError:
+        stundensatz_eur = _estimate_hourly_rate_from_revenue(briefing)
+        log.debug("[PROMPT-VARS] Fallback to revenue-based hourly rate: %d€/h", stundensatz_eur)
 
     # Quick Win hours from environment or defaults
     qw1_h = int(os.getenv("DEFAULT_QW1_H", "20"))
@@ -7771,9 +7779,10 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     capex: int = int(briefing.get("CAPEX_REALISTISCH_EUR") or 5000)
     opex: int = int(briefing.get("OPEX_REALISTISCH_EUR") or 150)
     einsparung: int = int(briefing.get("EINSPARUNG_MONAT_EUR") or 500)
-    # SPRINT G2.5: Format payback and ROI with 1 decimal place to avoid floating point issues
+    # SPRINT G2.5 + v14.35.23: Format payback/ROI with 1 decimal, German decimals for DE
     payback_raw: float = float(briefing.get("PAYBACK_MONTHS") or 10)
-    payback: str = f"{float(payback_raw):.1f}" if isinstance(payback_raw, (int, float)) else str(payback_raw)
+    payback_en: str = f"{float(payback_raw):.1f}" if isinstance(payback_raw, (int, float)) else str(payback_raw)
+    payback: str = payback_en.replace(".", ",") if briefing_lang != "en" else payback_en  # German: "3,5" vs English: "3.5"
     roi_raw: float = float(briefing.get("ROI_12M") or 60)
     roi_12m: str = f"{float(roi_raw):.0f}" if isinstance(roi_raw, (int, float)) else str(roi_raw)
 

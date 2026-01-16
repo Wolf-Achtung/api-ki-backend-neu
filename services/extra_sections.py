@@ -242,33 +242,44 @@ def get_size_constraints(
     }
     max_investment = investment_mapping.get(investitionsbudget, 10000)
 
+    # v14.35.23: Use canonical hourly rates from business_case_engine_v2 for consistency
+    # This ensures Business Case table matches ROI derivation and Quick Wins
+    try:
+        from services.business_case_engine_v2 import HOURLY_RATES_BY_SIZE
+        solo_rate = HOURLY_RATES_BY_SIZE.get("solo", 80)
+        team_rate = HOURLY_RATES_BY_SIZE.get("team", 95)
+        kmu_rate = HOURLY_RATES_BY_SIZE.get("kmu", 110)
+        enterprise_rate = HOURLY_RATES_BY_SIZE.get("enterprise", 130)
+    except ImportError:
+        solo_rate, team_rate, kmu_rate, enterprise_rate = 80, 95, 110, 130
+
     constraints: Dict[str, Dict[str, float]] = {
         "solo": {
             "max_monthly_savings": min(monthly_revenue * 0.3, 2000),
             "max_capex": min(max_investment, 10000),
             "max_opex_monthly": 200,
-            "hourly_rate": 80,
+            "hourly_rate": solo_rate,
             "max_time_savings_hours": 20,
         },
         "klein": {
             "max_monthly_savings": min(monthly_revenue * 0.4, 10000),
             "max_capex": min(max_investment, 50000),
             "max_opex_monthly": 1000,
-            "hourly_rate": 100,
+            "hourly_rate": team_rate,  # Maps to "team" in canonical system
             "max_time_savings_hours": 80,
         },
         "mittel": {
             "max_monthly_savings": min(monthly_revenue * 0.5, 50000),
             "max_capex": min(max_investment, 250000),
             "max_opex_monthly": 5000,
-            "hourly_rate": 120,
+            "hourly_rate": kmu_rate,  # Maps to "kmu" in canonical system
             "max_time_savings_hours": 200,
         },
         "gross": {
             "max_monthly_savings": monthly_revenue * 0.6,
             "max_capex": max_investment,
             "max_opex_monthly": 20000,
-            "hourly_rate": 150,
+            "hourly_rate": enterprise_rate,  # Maps to "enterprise" in canonical system
             "max_time_savings_hours": 500,
         },
     }
