@@ -199,6 +199,8 @@ class ROIExplanation:
     """
     Transparente Herleitung der ROI-Berechnung.
     Adressiert Problem #3: "ROI 284% ohne Herleitung"
+
+    v14.35.25 (P0.3): Added roi_raw, roi_capped, roi_was_capped for Option A display
     """
     stundensatz: int
     stundensatz_quelle: str
@@ -210,6 +212,10 @@ class ROIExplanation:
     laufende_kosten_monat: float
     foerdereffekt: float
     formel: str = "ROI = ((Zeitersparnis × Stundensatz × 12) - CAPEX - (OPEX × 12)) / CAPEX × 100"
+    # P0.3: Option A - both raw and capped ROI values
+    roi_raw: float = 0.0  # Uncapped computed ROI
+    roi_capped: float = 0.0  # Capped planning value (max 200%)
+    roi_was_capped: bool = False  # True if raw > MAX_ROI
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -223,6 +229,10 @@ class ROIExplanation:
             "laufende_kosten_monat": self.laufende_kosten_monat,
             "foerdereffekt": self.foerdereffekt,
             "formel": self.formel,
+            # P0.3: Option A ROI values
+            "roi_raw": self.roi_raw,
+            "roi_capped": self.roi_capped,
+            "roi_was_capped": self.roi_was_capped,
         }
 
     def to_html(self, lang: str = "de") -> str:
@@ -233,9 +243,36 @@ class ROIExplanation:
 
     def _to_html_de(self) -> str:
         cap_note = " (auf Maximum begrenzt)" if self.zeitersparnis_gecappt else ""
+
+        # P0.3: Option A - Show both raw and capped ROI when applicable
+        # Use pre-computed roi_raw if available, otherwise calculate inline
+        if self.roi_raw != 0.0:
+            roi_raw_value = self.roi_raw
+        elif self.einmalkosten > 0:
+            roi_raw_value = ((self.zeitersparnis_stunden * self.stundensatz * 12 - self.einmalkosten - self.laufende_kosten_monat * 12) / self.einmalkosten * 100)
+        else:
+            roi_raw_value = 0.0
+
+        # Build step 5 with raw ROI
+        roi_step5 = f"5. ROI (berechnet): {(self.zeitersparnis_stunden * self.stundensatz * 12) - self.einmalkosten - (self.laufende_kosten_monat * 12):,.0f}€ / {self.einmalkosten:,.0f}€ × 100 = <strong>{roi_raw_value:.0f}%</strong>"
+
+        # P0.3: Option A - Add step 6 if ROI was capped
+        if self.roi_was_capped:
+            roi_step6 = f"<br>6. <strong>Planwert (gedeckelt):</strong> {self.roi_capped:.0f}% (konservative Obergrenze: 200%)"
+            roi_conclusion = f"""
+                    <div style="margin-top:8px;padding:8px;background:#fef3c7;border-radius:4px;border-left:3px solid #f59e0b;">
+                        <strong>Ergebnis:</strong> {roi_raw_value:.0f}% (berechnet) → <strong>{self.roi_capped:.0f}%</strong> (Planwert, gedeckelt auf max. 200%)
+                    </div>"""
+        else:
+            roi_step6 = ""
+            roi_conclusion = f"""
+                    <div style="margin-top:8px;padding:8px;background:#d1fae5;border-radius:4px;border-left:3px solid #10b981;">
+                        <strong>Ergebnis:</strong> ROI = <strong>{roi_raw_value:.0f}%</strong>
+                    </div>"""
+
         return f"""
         <div class="roi-explanation-box" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:16px 0;font-size:13px;">
-            <div style="font-weight:600;margin-bottom:12px;color:#1e293b;">📊 So berechnen wir Ihren ROI</div>
+            <div style="font-weight:600;margin-bottom:12px;color:#1e293b;">📊 So berechne ich Ihren ROI</div>
             <table style="width:100%;border-collapse:collapse;">
                 <tr><td style="padding:4px 8px;">Stundensatz</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.stundensatz} €/h</td><td style="padding:4px 8px;color:#64748b;font-size:11px;">{self.stundensatz_quelle}</td></tr>
                 <tr><td style="padding:4px 8px;">Zeitersparnis</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.zeitersparnis_stunden:.0f} h/Monat{cap_note}</td><td style="padding:4px 8px;color:#64748b;font-size:11px;">{self.zeitersparnis_quelle}</td></tr>
@@ -252,11 +289,8 @@ class ROIExplanation:
                         2. Abzüglich Einmalinvestition: {self.einmalkosten:,.0f}€<br>
                         3. Abzüglich laufende Jahreskosten: {self.laufende_kosten_monat:,.0f}€/Monat × 12 = {self.laufende_kosten_monat * 12:,.0f}€<br>
                         4. Nettonutzen: {self.zeitersparnis_stunden * self.stundensatz * 12:,.0f}€ - {self.einmalkosten:,.0f}€ - {self.laufende_kosten_monat * 12:,.0f}€ = {(self.zeitersparnis_stunden * self.stundensatz * 12) - self.einmalkosten - (self.laufende_kosten_monat * 12):,.0f}€<br>
-                        5. ROI-Berechnung: {(self.zeitersparnis_stunden * self.stundensatz * 12) - self.einmalkosten - (self.laufende_kosten_monat * 12):,.0f}€ / {self.einmalkosten:,.0f}€ × 100 = {((self.zeitersparnis_stunden * self.stundensatz * 12 - self.einmalkosten - self.laufende_kosten_monat * 12) / self.einmalkosten * 100) if self.einmalkosten > 0 else 0:.0f}%
-                    </div>
-                    <div style="margin-top:4px;font-size:10px;color:#64748b;">
-                        Der ausgewiesene ROI berücksichtigt konservative Annahmen und ist auf realistische Werte begrenzt.
-                    </div>
+                        {roi_step5}{roi_step6}
+                    </div>{roi_conclusion}
                 </div>
             </div>
         </div>
@@ -264,9 +298,30 @@ class ROIExplanation:
 
     def _to_html_en(self) -> str:
         cap_note = " (capped to maximum)" if self.zeitersparnis_gecappt else ""
+
+        # P0.3: Option A - Show both raw and capped ROI when applicable
+        if self.roi_raw != 0.0:
+            roi_raw_value = self.roi_raw
+        elif self.einmalkosten > 0:
+            roi_raw_value = ((self.zeitersparnis_stunden * self.stundensatz * 12 - self.einmalkosten - self.laufende_kosten_monat * 12) / self.einmalkosten * 100)
+        else:
+            roi_raw_value = 0.0
+
+        # P0.3: Option A result display
+        if self.roi_was_capped:
+            roi_conclusion = f"""
+            <div style="margin-top:12px;padding:8px;background:#fef3c7;border-radius:4px;border-left:3px solid #f59e0b;">
+                <strong>Result:</strong> {roi_raw_value:.0f}% (calculated) → <strong>{self.roi_capped:.0f}%</strong> (planning value, capped at max. 200%)
+            </div>"""
+        else:
+            roi_conclusion = f"""
+            <div style="margin-top:12px;padding:8px;background:#d1fae5;border-radius:4px;border-left:3px solid #10b981;">
+                <strong>Result:</strong> ROI = <strong>{roi_raw_value:.0f}%</strong>
+            </div>"""
+
         return f"""
         <div class="roi-explanation-box" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:16px 0;font-size:13px;">
-            <div style="font-weight:600;margin-bottom:12px;color:#1e293b;">📊 How We Calculate Your ROI</div>
+            <div style="font-weight:600;margin-bottom:12px;color:#1e293b;">📊 How I Calculate Your ROI</div>
             <table style="width:100%;border-collapse:collapse;">
                 <tr><td style="padding:4px 8px;">Hourly Rate</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.stundensatz} €/h</td><td style="padding:4px 8px;color:#64748b;font-size:11px;">{self.stundensatz_quelle}</td></tr>
                 <tr><td style="padding:4px 8px;">Time Savings</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.zeitersparnis_stunden:.0f} h/month{cap_note}</td><td style="padding:4px 8px;color:#64748b;font-size:11px;">{self.zeitersparnis_quelle}</td></tr>
@@ -276,7 +331,7 @@ class ROIExplanation:
             </table>
             <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:11px;color:#64748b;">
                 <strong>Formula:</strong> ROI = ((Time Savings × Hourly Rate × 12) - CAPEX - (OPEX × 12)) / CAPEX × 100
-            </div>
+            </div>{roi_conclusion}
         </div>
         """
 
@@ -1537,6 +1592,18 @@ def generate_business_case_report(
 
     # Build ROI explanation for transparency
     opex_monthly = recurring_costs_12m / 12 if recurring_costs_12m > 0 else 0.0
+
+    # P0.3: Calculate ROI values for Option A display
+    annual_savings = capped_effort_hours * hourly_rate * 12
+    annual_opex = opex_monthly * 12
+    net_benefit = annual_savings - investment_total - annual_opex
+    if investment_total > 0:
+        roi_raw_calc = (net_benefit / investment_total) * 100
+    else:
+        roi_raw_calc = 0.0
+    roi_capped_calc = min(MAX_ROI, roi_raw_calc)
+    roi_was_capped_flag = roi_raw_calc > MAX_ROI
+
     roi_explanation = ROIExplanation(
         stundensatz=hourly_rate,
         stundensatz_quelle=hourly_rate_source,
@@ -1547,6 +1614,9 @@ def generate_business_case_report(
         einmalkosten=investment_total,
         laufende_kosten_monat=opex_monthly,
         foerdereffekt=funding_effect,
+        roi_raw=roi_raw_calc,
+        roi_capped=roi_capped_calc,
+        roi_was_capped=roi_was_capped_flag,
     )
 
     # If LLM response provided, use it
