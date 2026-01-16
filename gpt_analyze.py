@@ -7783,8 +7783,26 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     payback_raw: float = float(briefing.get("PAYBACK_MONTHS") or 10)
     payback_en: str = f"{float(payback_raw):.1f}" if isinstance(payback_raw, (int, float)) else str(payback_raw)
     payback: str = payback_en.replace(".", ",") if briefing_lang != "en" else payback_en  # German: "3,5" vs English: "3.5"
-    roi_raw: float = float(briefing.get("ROI_12M") or 60)
-    roi_12m: str = f"{float(roi_raw):.0f}" if isinstance(roi_raw, (int, float)) else str(roi_raw)
+
+    # v14.35.24: Get both raw (computed) and capped (planning) ROI values
+    roi_capped_val: float = float(briefing.get("ROI_12M") or briefing.get("ROI_12M_CAPPED") or 60)
+    roi_raw_val: float = float(briefing.get("ROI_12M_RAW") or roi_capped_val)
+    roi_was_capped: bool = briefing.get("ROI_WAS_CAPPED", False)
+
+    # Format individual ROI strings
+    roi_capped_str: str = f"{float(roi_capped_val):.0f}"
+    roi_raw_str: str = f"{float(roi_raw_val):.0f}"
+
+    # v14.35.24: Show both raw and capped ROI if different (Option A implementation)
+    if roi_was_capped and roi_raw_val != roi_capped_val:
+        # German: "241 (berechnet) / 200 (Planwert)"
+        # English: "241 (calculated) / 200 (capped)"
+        if briefing_lang == "en":
+            roi_12m = f"{roi_raw_str} (calculated) / {roi_capped_str} (capped)"
+        else:
+            roi_12m = f"{roi_raw_str} (berechnet) / {roi_capped_str} (Planwert)"
+    else:
+        roi_12m = roi_capped_str
 
     # ════════════════════════════════════════════════════════════════════════════
     # 🎯 PLATIN+ FALLBACK: FOERDERPOTENZIAL (900+ Wörter)
@@ -8909,9 +8927,25 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         opex = briefing.get("OPEX_REALISTISCH_EUR", "—")
         einsparung = briefing.get("EINSPARUNG_MONAT_EUR", "—")
         payback = briefing.get("PAYBACK_MONTHS", "—")
-        # SPRINT G2.5: Format ROI with 1 decimal place to avoid floating point issues
-        roi_raw = briefing.get("ROI_12M", "—")
-        roi_12m = f"{float(roi_raw):.1f}" if isinstance(roi_raw, (int, float)) else roi_raw
+        # v14.35.23: Get both raw and capped ROI values
+        roi_capped_val = briefing.get("ROI_12M", "—")
+        roi_raw_val = briefing.get("ROI_12M_RAW")
+        roi_was_capped = briefing.get("ROI_WAS_CAPPED", False)
+
+        # Format ROI values (German decimals)
+        def _fmt_roi_pct(val) -> str:
+            if val is None or val == "—":
+                return "—"
+            try:
+                return f"{float(val):.0f}".replace(".", ",")
+            except (ValueError, TypeError):
+                return str(val)
+
+        # v14.35.23: Show both raw and capped ROI if different
+        if roi_was_capped and roi_raw_val is not None:
+            roi_display = f"{_fmt_roi_pct(roi_raw_val)} % (berechnet) / {_fmt_roi_pct(roi_capped_val)} % (Planwert)"
+        else:
+            roi_display = f"{_fmt_roi_pct(roi_capped_val)} %"
 
         return f"""<div class="business-case-summary">
   <h3>Business Case Übersicht</h3>
@@ -8934,7 +8968,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     </tr>
     <tr>
       <td><strong>ROI nach 12 Monaten</strong></td>
-      <td class="text-right">{roi_12m} %</td>
+      <td class="text-right">{roi_display}</td>
     </tr>
   </table>
   <p class="small muted">Detaillierte Berechnungen finden Sie im Business-Case-Abschnitt.</p>

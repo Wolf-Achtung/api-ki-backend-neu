@@ -3,14 +3,16 @@
 Business Case Consistency Test - Single Source of Truth
 =========================================================
 
-v14.35.23: Tests for Business Case metric consistency across all sections.
+v14.35.24: Tests for Business Case metric consistency across all sections.
 
 Ensures:
 1. Hourly rate is consistent across all sources (canonical from business_case_engine_v2)
 2. Payback formatting doesn't contain long floats
 3. ROI values are derived consistently
+4. Both raw (computed) and capped (planning) ROI values are available (Option A)
 
 Ref: TASK - Business Case Consistency – Single Source of Truth (3 Fixes)
+     TASK - Option A: ROI „berechnet" + ROI „gedeckelt" überall konsistent
 """
 import os
 import re
@@ -127,6 +129,79 @@ class TestBusinessCaseConsistency:
         assert bc.annual_net == 17040
         # ROI is capped at MAX_ROI (200%) for conservative estimates
         assert round(bc.roi_12m_net, 1) == MAX_ROI, f"ROI should be capped at {MAX_ROI}%"
+
+    def test_roi_raw_vs_capped_values(self):
+        """Verify ROI raw (uncapped) and capped values are both available (Option A)."""
+        from services.business_case_engine_v2 import BusinessCaseCanonical, MAX_ROI
+
+        # Create a case with high ROI that will be capped
+        bc = BusinessCaseCanonical(
+            hours_saved_per_month=20,
+            hourly_rate_eur=80,
+            capex_eur=5000,
+            opex_month_eur=180,
+        )
+
+        # Raw ROI should be uncapped (~240.8%)
+        assert bc.roi_12m_net_raw > MAX_ROI, "Raw ROI should exceed MAX_ROI cap"
+        assert round(bc.roi_12m_net_raw, 1) == 240.8, f"Raw ROI should be 240.8%, got {bc.roi_12m_net_raw}"
+
+        # Capped ROI should be exactly MAX_ROI
+        assert bc.roi_12m_net == MAX_ROI, f"Capped ROI should be {MAX_ROI}%, got {bc.roi_12m_net}"
+
+        # Both values should be in to_dict()
+        bc_dict = bc.to_dict()
+        assert "roi_12m_net" in bc_dict, "to_dict should include roi_12m_net"
+        assert "roi_12m_net_raw" in bc_dict, "to_dict should include roi_12m_net_raw"
+        assert "roi_was_capped" in bc_dict, "to_dict should include roi_was_capped"
+        assert bc_dict["roi_was_capped"] is True, "roi_was_capped should be True when ROI exceeds MAX_ROI"
+
+    def test_roi_uncapped_when_below_max(self):
+        """Verify ROI is not capped when below MAX_ROI."""
+        from services.business_case_engine_v2 import BusinessCaseCanonical, MAX_ROI
+
+        # Create a case with low ROI that won't be capped
+        bc = BusinessCaseCanonical(
+            hours_saved_per_month=5,
+            hourly_rate_eur=80,
+            capex_eur=10000,
+            opex_month_eur=200,
+        )
+
+        # Both raw and capped should be the same when below MAX_ROI
+        assert bc.roi_12m_net_raw < MAX_ROI, "This test requires ROI below MAX_ROI"
+        assert bc.roi_12m_net == bc.roi_12m_net_raw, "ROI should not be capped when below MAX_ROI"
+
+        # roi_was_capped should be False
+        bc_dict = bc.to_dict()
+        assert bc_dict["roi_was_capped"] is False, "roi_was_capped should be False when ROI is below MAX_ROI"
+
+    def test_inject_canonical_includes_both_roi_values(self):
+        """Verify inject_canonical_to_sections includes both raw and capped ROI."""
+        from services.business_case_engine_v2 import BusinessCaseCanonical, inject_canonical_to_sections, MAX_ROI
+
+        # Create a case with capped ROI
+        bc = BusinessCaseCanonical(
+            hours_saved_per_month=20,
+            hourly_rate_eur=80,
+            capex_eur=5000,
+            opex_month_eur=180,
+        )
+
+        sections = {}
+        inject_canonical_to_sections(bc, sections)
+
+        # Check all ROI keys are injected
+        assert "ROI_12M" in sections, "ROI_12M should be injected"
+        assert "ROI_12M_RAW" in sections, "ROI_12M_RAW should be injected"
+        assert "ROI_12M_CAPPED" in sections, "ROI_12M_CAPPED should be injected"
+        assert "ROI_WAS_CAPPED" in sections, "ROI_WAS_CAPPED should be injected"
+
+        # Verify values
+        assert sections["ROI_12M"] == MAX_ROI, f"ROI_12M should be capped at {MAX_ROI}"
+        assert round(sections["ROI_12M_RAW"], 1) == 240.8, "ROI_12M_RAW should be 240.8"
+        assert sections["ROI_12M_CAPPED"] == MAX_ROI, f"ROI_12M_CAPPED should be {MAX_ROI}"
+        assert sections["ROI_WAS_CAPPED"] is True, "ROI_WAS_CAPPED should be True"
 
     def test_no_hardcoded_81_hourly_rate(self):
         """Ensure there are no hardcoded 81€/h rates in the codebase."""
