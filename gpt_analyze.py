@@ -1381,8 +1381,9 @@ OPENAI_MODEL = settings.openai.model or os.getenv("OPENAI_MODEL", "gpt-4o")
 OPENAI_API_BASE = os.getenv("OPENAI_API_BASE")  # Not in new settings structure
 OPENAI_TEMPERATURE = settings.openai.temperature
 OPENAI_TIMEOUT = settings.openai.timeout
-# v14.35.22: Extended timeout for heavy/expand calls (e.g., 150s instead of 75s)
-OPENAI_TIMEOUT_EXTENDED = int(os.getenv("OPENAI_TIMEOUT_EXTENDED", "150"))
+# v14.35.22: Extended read timeout for heavy/expand calls
+# P3.3: Consolidated to OPENAI_TIMEOUT_READ_EXPAND with 300s default
+OPENAI_TIMEOUT_READ_EXPAND = int(os.getenv("OPENAI_TIMEOUT_READ_EXPAND", "300"))
 
 # v14.35.22: Heavy sections that need extended timeout
 # Includes expand calls and other long-running sections
@@ -1875,13 +1876,14 @@ def _call_openai(
                 section.endswith("_repair")
             )
 
-        request_timeout = OPENAI_TIMEOUT_EXTENDED if is_heavy_section else OPENAI_TIMEOUT
+        request_timeout = OPENAI_TIMEOUT_READ_EXPAND if is_heavy_section else OPENAI_TIMEOUT
 
         if is_heavy_section:
             log.info(
-                "⏱️ [EXTENDED-TIMEOUT] section=%s using timeout=%ds (heavy/expand call)",
-                section,
+                "[OpenAI] using extended read timeout=%ds for section=%s model=%s",
                 request_timeout,
+                section,
+                model,
             )
 
         # v14.35.22: Safe retry for models that reject max_tokens (e.g., gpt-5.1)
