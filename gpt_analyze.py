@@ -1381,6 +1381,10 @@ OPENAI_MODEL = settings.openai.model or os.getenv("OPENAI_MODEL", "gpt-4o")
 OPENAI_API_BASE = os.getenv("OPENAI_API_BASE")  # Not in new settings structure
 OPENAI_TEMPERATURE = settings.openai.temperature
 OPENAI_TIMEOUT = settings.openai.timeout
+# v14.35.22: Extended read timeout for heavy/expand calls (env: OPENAI_TIMEOUT_READ_EXPAND)
+# Falls back to OPENAI_TIMEOUT if not set
+OPENAI_TIMEOUT_READ_EXPAND = int(os.getenv("OPENAI_TIMEOUT_READ_EXPAND", str(OPENAI_TIMEOUT)))
+
 # Robust: Unterstützt sowohl max_completion_tokens (neu) als auch max_tokens (alt)
 try:
     OPENAI_MAX_TOKENS = getattr(settings.openai, "max_completion_tokens", None)
@@ -1844,6 +1848,22 @@ def _call_openai(
         # as it's no longer supported. Stop sequences are still used for Anthropic models
         # via the anthropic_client.py module.
 
+        # v14.35.22: Section-aware timeout for heavy/expand calls
+        # Uses OPENAI_TIMEOUT_READ_EXPAND (e.g. 300s) for expand sections to avoid read timeouts
+        is_expand_call = False
+        if section:
+            is_expand_call = section.endswith("_expand") or "expand" in section
+
+        request_timeout = OPENAI_TIMEOUT_READ_EXPAND if is_expand_call else OPENAI_TIMEOUT
+
+        if is_expand_call:
+            log.info(
+                "[OpenAI] using extended read timeout=%ds for section=%s model=%s",
+                request_timeout,
+                section,
+                model,
+            )
+
         # v14.35.22: Safe retry for models that reject max_tokens (e.g., gpt-5.1)
         # If we get 400 with "max_tokens unsupported", retry with max_completion_tokens only
         did_retry = False
@@ -1852,7 +1872,7 @@ def _call_openai(
                 url,
                 headers=headers,
                 json=payload,
-                timeout=OPENAI_TIMEOUT,
+                timeout=request_timeout,
             )
 
             # Check for 400 error indicating max_tokens is unsupported
