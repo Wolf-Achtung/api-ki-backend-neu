@@ -7,7 +7,7 @@ Comprehensive GPT leak detection and removal:
 - Full-sentence replacement
 - Guarantee: PDF never fails due to leaks
 
-Version: 1.2.1 (N3.6 + CRITICAL vs BENIGN + regex API key detection)
+Version: 1.2.2 (N3.6 + CRITICAL vs BENIGN + systemprompt false-positive fix)
 """
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 CRITICAL_LEAK_PATTERNS: List[str] = [
     # System/developer prompt references
     "system prompt",
-    "systemprompt",
+    # NOTE: "systemprompt" moved to BENIGN (v1.2.2) - German word appears in explanatory text
     "developer prompt",
     "developer message",
     "system message",
@@ -103,6 +103,9 @@ BENIGN_CHATBOT_PHRASES: List[str] = [
     # v1.2.1: Chain-of-thought moved from CRITICAL (appears in legitimate strategy text)
     "chain-of-thought",
     "chain of thought",
+    # v1.2.2: systemprompt moved from CRITICAL (German "Systemprompt" in explanatory text)
+    "systemprompt",
+    "Systemprompt",
     # German assistant phrases
     "wie kann ich dir helfen",
     "wie kann ich Ihnen helfen",
@@ -242,6 +245,7 @@ def apply_blacklist_classified(text: str, section_name: str = "") -> BlacklistRe
     v1.2.0: Separates critical leaks (suppress section) from benign chatbot
     phrases (safe to remove and keep content).
     v1.2.1: Added regex-based CRITICAL patterns for API keys; improved logging.
+    v1.2.2: systemprompt moved to BENIGN; added debug logging for root cause.
 
     Args:
         text: Input text/HTML
@@ -252,6 +256,24 @@ def apply_blacklist_classified(text: str, section_name: str = "") -> BlacklistRe
     """
     if not text:
         return BlacklistResult(cleaned_text=text)
+
+    # v1.2.2: Debug logging for DATA_READINESS to identify root cause of systemprompt hits
+    if section_name and "DATA_READINESS" in section_name.upper():
+        # Check for systemprompt variants (case-insensitive)
+        text_lower = text.lower()
+        if "systemprompt" in text_lower:
+            # Find position and extract context window (120 chars, sanitized)
+            pos = text_lower.find("systemprompt")
+            start = max(0, pos - 40)
+            end = min(len(text), pos + 80)
+            context = text[start:end]
+            # Sanitize: remove angle brackets and quotes to avoid log injection
+            context = context.replace("<", "[").replace(">", "]").replace('"', "'").replace("\n", " ")
+            log.info(
+                "[zero-leak-debug] section=%s contains_systemprompt=True context=\"...%s...\"",
+                section_name,
+                context[:120]
+            )
 
     critical_hits: List[str] = []
     benign_hits: List[str] = []
