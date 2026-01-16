@@ -357,5 +357,141 @@ class TestP01TemplateBindings:
             assert formatted.isdigit(), f"Non-digit found in: {formatted}"
 
 
+class TestP03ROIExplanationOptionA:
+    """P0.3: Tests for ROI explanation block Option A display."""
+
+    def test_roi_explanation_includes_roi_values(self):
+        """Verify ROIExplanation dataclass includes roi_raw, roi_capped, roi_was_capped."""
+        from services.business_case_engine_v2 import ROIExplanation
+
+        # Create explanation with capped ROI
+        explanation = ROIExplanation(
+            stundensatz=80,
+            stundensatz_quelle="KMU Benchmark",
+            zeitersparnis_stunden=25,
+            zeitersparnis_quelle="Quick Wins",
+            zeitersparnis_gecappt=False,
+            zeitersparnis_max=40,
+            einmalkosten=5000,
+            laufende_kosten_monat=150,
+            foerdereffekt=0,
+            roi_raw=340.0,
+            roi_capped=200.0,
+            roi_was_capped=True,
+        )
+
+        # Check fields exist
+        assert explanation.roi_raw == 340.0
+        assert explanation.roi_capped == 200.0
+        assert explanation.roi_was_capped is True
+
+    def test_roi_explanation_to_dict_includes_roi_values(self):
+        """Verify ROIExplanation.to_dict() includes all ROI values."""
+        from services.business_case_engine_v2 import ROIExplanation
+
+        explanation = ROIExplanation(
+            stundensatz=80,
+            stundensatz_quelle="KMU Benchmark",
+            zeitersparnis_stunden=25,
+            zeitersparnis_quelle="Quick Wins",
+            zeitersparnis_gecappt=False,
+            zeitersparnis_max=40,
+            einmalkosten=5000,
+            laufende_kosten_monat=150,
+            foerdereffekt=0,
+            roi_raw=340.0,
+            roi_capped=200.0,
+            roi_was_capped=True,
+        )
+
+        d = explanation.to_dict()
+        assert "roi_raw" in d
+        assert "roi_capped" in d
+        assert "roi_was_capped" in d
+        assert d["roi_raw"] == 340.0
+        assert d["roi_capped"] == 200.0
+        assert d["roi_was_capped"] is True
+
+    def test_roi_explanation_html_de_shows_option_a_when_capped(self):
+        """Verify German HTML shows Option A format when ROI is capped."""
+        from services.business_case_engine_v2 import ROIExplanation
+
+        explanation = ROIExplanation(
+            stundensatz=80,
+            stundensatz_quelle="KMU Benchmark",
+            zeitersparnis_stunden=25,
+            zeitersparnis_quelle="Quick Wins",
+            zeitersparnis_gecappt=False,
+            zeitersparnis_max=40,
+            einmalkosten=5000,
+            laufende_kosten_monat=150,
+            foerdereffekt=0,
+            roi_raw=340.0,
+            roi_capped=200.0,
+            roi_was_capped=True,
+        )
+
+        html = explanation.to_html(lang="de")
+
+        # Should show both raw and capped values
+        assert "340%" in html or "340 %" in html, "Should show raw ROI 340%"
+        assert "200%" in html or "200 %" in html, "Should show capped ROI 200%"
+        # Should mention capping
+        assert "Planwert" in html or "gedeckelt" in html, "Should mention capping"
+
+    def test_roi_explanation_html_de_no_cap_note_when_below_max(self):
+        """Verify German HTML doesn't show capping when ROI is below MAX_ROI."""
+        from services.business_case_engine_v2 import ROIExplanation
+
+        explanation = ROIExplanation(
+            stundensatz=80,
+            stundensatz_quelle="KMU Benchmark",
+            zeitersparnis_stunden=10,
+            zeitersparnis_quelle="Quick Wins",
+            zeitersparnis_gecappt=False,
+            zeitersparnis_max=40,
+            einmalkosten=8000,
+            laufende_kosten_monat=100,
+            foerdereffekt=0,
+            roi_raw=80.0,
+            roi_capped=80.0,
+            roi_was_capped=False,
+        )
+
+        html = explanation.to_html(lang="de")
+
+        # Should not show step 6 about capping
+        assert "Planwert (gedeckelt)" not in html, "Should not show cap note when below MAX_ROI"
+        # But should show the ROI value
+        assert "80%" in html or "80 %" in html, "Should show ROI 80%"
+
+    def test_generate_business_case_report_passes_roi_to_explanation(self):
+        """Verify generate_business_case_report passes ROI values to ROIExplanation."""
+        from services.business_case_engine_v2 import generate_business_case_report
+
+        briefing = {
+            "unternehmensgroesse": "kmu",
+            "quick_wins_total_hours": 25,
+        }
+
+        report = generate_business_case_report(
+            briefing=briefing,
+            sections={"TIME_SAVINGS_MONTH_HOURS": 25},
+        )
+
+        explanation = report.roi_explanation
+
+        # ROI values should be set (not default 0.0)
+        assert explanation.roi_raw != 0.0 or explanation.einmalkosten == 0, \
+            "roi_raw should be calculated unless CAPEX is zero"
+        assert explanation.roi_capped != 0.0 or explanation.einmalkosten == 0, \
+            "roi_capped should be calculated unless CAPEX is zero"
+
+        # If ROI is high enough to be capped, verify the flag
+        if explanation.roi_raw > 200.0:
+            assert explanation.roi_was_capped is True
+            assert explanation.roi_capped == 200.0
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
