@@ -841,7 +841,7 @@ class TestP0ReleaseBlockerFixes:
                 assert eng not in label_lower, f"German label contains English '{eng}': {label_de}"
 
     def test_business_case_hours_consistent_solo(self):
-        """P0.3: Verify hours consistency - solo capped to 20h everywhere."""
+        """P0.3: Verify hours consistency - solo 25h → capped to 20h everywhere."""
         from services.business_case_engine_v2 import (
             create_canonical_from_sections,
             inject_canonical_to_sections,
@@ -849,12 +849,12 @@ class TestP0ReleaseBlockerFixes:
             MAX_TIME_SAVINGS_BY_SIZE,
         )
 
-        # Verify solo cap is defined (P0.3: 20h for consistent BC display)
-        assert MAX_TIME_SAVINGS_BY_SIZE.get("solo") == 20, "Solo max should be 20h"
+        # Verify solo cap is defined
+        assert MAX_TIME_SAVINGS_BY_SIZE.get("solo") == 25, "Solo max should be 25h"
 
         # Test capping function
         capped, was_capped = cap_time_savings(30, "solo")
-        assert capped == 20, "30h should be capped to 20h for solo"
+        assert capped == 25, "30h should be capped to 25h for solo"
         assert was_capped is True
 
         # Test canonical creation with hours above cap
@@ -864,16 +864,16 @@ class TestP0ReleaseBlockerFixes:
         }
         canonical = create_canonical_from_sections(sections, "solo")
 
-        # Should be capped to 20 (P0.3)
-        assert canonical.hours_saved_per_month == 20, "Canonical hours should be capped to 20 for solo"
+        # Should be capped to 25
+        assert canonical.hours_saved_per_month == 25, "Canonical hours should be capped to 25 for solo"
         assert canonical.was_capped is True
 
         # After injection, all hour keys should have the capped value
         inject_canonical_to_sections(canonical, sections)
 
-        assert sections["qw_hours_total"] == 20, "qw_hours_total should be capped"
-        assert sections["monatsersparnis_stunden"] == 20, "monatsersparnis_stunden should be capped"
-        assert sections["TIME_SAVINGS_MONTH_HOURS_CAPPED"] == 20, "TIME_SAVINGS should be capped"
+        assert sections["qw_hours_total"] == 25, "qw_hours_total should be capped"
+        assert sections["monatsersparnis_stunden"] == 25, "monatsersparnis_stunden should be capped"
+        assert sections["TIME_SAVINGS_MONTH_HOURS_CAPPED"] == 25, "TIME_SAVINGS should be capped"
 
     def test_stray_prefix_in_html_content(self):
         """P0.1: Test stray prefix removal in HTML context."""
@@ -897,9 +897,9 @@ class TestP0ReleaseBlockerFixes:
         """P0.3: Verify hours capping works for all company sizes."""
         from services.business_case_engine_v2 import cap_time_savings, MAX_TIME_SAVINGS_BY_SIZE
 
-        # Actual caps: solo=20 (P0.3), team=60, kmu=150, enterprise=400
+        # Actual caps: solo=25, team=60, kmu=150, enterprise=400
         test_cases = [
-            ("solo", 30, 20),      # 30h → capped to 20h (P0.3)
+            ("solo", 30, 25),      # 30h → capped to 25h
             ("team", 70, 60),      # 70h → capped to 60h
             ("kmu", 200, 150),     # 200h → capped to 150h
             ("enterprise", 500, 400),  # 500h → capped to 400h
