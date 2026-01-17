@@ -700,5 +700,96 @@ class TestFixBatch2CanonicalRateAndNetPayback:
             assert result == expected, f"Expected {expected}, got {result}"
 
 
+class TestFixBatch21FinalLock:
+    """Fix-Batch-2.1: Tests for FINAL LOCK - no canonical rebuild."""
+
+    def test_final_lock_prevents_rebuild(self):
+        """Verify that _bc_canonical_locked prevents rebuild."""
+        from services.business_case_engine_v2 import (
+            create_canonical_from_sections,
+            inject_canonical_to_sections,
+        )
+
+        # First creation - should succeed
+        sections = {"qw_hours_total": 25}
+        canonical1 = create_canonical_from_sections(sections, company_size="solo")
+        assert canonical1 is not None, "First creation should succeed"
+        assert canonical1.hourly_rate_eur == 80
+
+        # Inject and set lock
+        inject_canonical_to_sections(canonical1, sections)
+        assert sections.get("_bc_canonical_locked") is True
+
+        # Second creation attempt - should return None due to lock
+        canonical2 = create_canonical_from_sections(sections, company_size="solo")
+        assert canonical2 is None, "Second creation should be blocked by FINAL LOCK"
+
+    def test_final_lock_preserves_values(self):
+        """Verify locked sections retain their values."""
+        from services.business_case_engine_v2 import (
+            create_canonical_from_sections,
+            inject_canonical_to_sections,
+        )
+
+        sections = {"qw_hours_total": 25}
+        canonical = create_canonical_from_sections(sections, company_size="solo")
+        inject_canonical_to_sections(canonical, sections)
+
+        # Store original values
+        original_rate = sections["CANON_RATE_EUR"]
+        original_hours = sections["CANON_HOURS_MONTH"]
+        original_roi = sections["ROI_12M"]
+
+        # Try to "pollute" sections with different values
+        sections["stundensatz_eur"] = 81  # Try to inject wrong rate
+
+        # Attempt rebuild
+        canonical2 = create_canonical_from_sections(sections, company_size="solo")
+        assert canonical2 is None  # Blocked by lock
+
+        # Values should be unchanged
+        assert sections["CANON_RATE_EUR"] == original_rate
+        assert sections["CANON_HOURS_MONTH"] == original_hours
+        assert sections["ROI_12M"] == original_roi
+
+    def test_solo_rate_always_80(self):
+        """Verify solo company always gets 80€/h rate."""
+        from services.business_case_engine_v2 import create_canonical_from_sections
+
+        # Even with a pre-existing stundensatz_eur, canonical should use 80
+        sections = {
+            "qw_hours_total": 25,
+            "stundensatz_eur": 81,  # This should be ignored
+        }
+        canonical = create_canonical_from_sections(sections, company_size="solo")
+
+        assert canonical.hourly_rate_eur == 80, \
+            f"Solo rate should be 80, got {canonical.hourly_rate_eur}"
+
+    def test_inject_sets_lock_flag(self):
+        """Verify inject_canonical_to_sections sets _bc_canonical_locked."""
+        from services.business_case_engine_v2 import (
+            create_canonical_from_sections,
+            inject_canonical_to_sections,
+        )
+
+        sections = {}
+        canonical = create_canonical_from_sections(sections, company_size="team")
+        inject_canonical_to_sections(canonical, sections)
+
+        assert sections.get("_bc_canonical_locked") is True
+        assert sections.get("_bc_canonical_source") == "G30"
+
+    def test_inject_skips_when_canonical_none(self):
+        """Verify inject handles None canonical (from FINAL LOCK)."""
+        from services.business_case_engine_v2 import inject_canonical_to_sections
+
+        sections = {"_bc_canonical_locked": True, "ROI_12M": 150}
+        updates = inject_canonical_to_sections(None, sections)
+
+        assert updates == 0
+        assert sections["ROI_12M"] == 150  # Value unchanged
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

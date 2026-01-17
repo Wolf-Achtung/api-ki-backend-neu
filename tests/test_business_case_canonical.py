@@ -167,17 +167,23 @@ class TestCreateCanonicalFromSections:
         assert canonical.hours_saved_per_month == 25
         assert canonical.was_capped is True
 
-    def test_create_with_explicit_rate(self):
-        """Test explicit hourly rate."""
+    def test_create_uses_canonical_rate(self):
+        """Test that canonical rates are always used (Fix-Batch-2.1).
+
+        Since Fix-Batch-2.1, explicit stundensatz_eur in sections is ignored
+        to prevent non-canonical rate leaks. Canonical rates are always used:
+        solo=80, team=95, kmu=110, enterprise=130
+        """
         sections = {
             "qw_hours_total": 20,
-            "stundensatz_eur": 100,
+            "stundensatz_eur": 100,  # Should be ignored - canonical rate used
             "company_size": "team",
         }
 
         canonical = create_canonical_from_sections(sections, "team")
 
-        assert canonical.hourly_rate_eur == 100
+        # Canonical rate for team is 95, not the explicit 100
+        assert canonical.hourly_rate_eur == 95
 
 
 class TestInjectCanonicalToSections:

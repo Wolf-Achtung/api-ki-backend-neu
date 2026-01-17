@@ -490,6 +490,8 @@ def create_canonical_from_sections(
     This is the ENTRY POINT for establishing the single source of truth.
     It reads from various potential sources and creates ONE canonical model.
 
+    Fix-Batch-2.1: FINAL LOCK - If canonical already exists, return None to signal skip.
+
     Priority for hours_saved:
     1. qw_hours_total (aggregated from Quick Wins)
     2. monatsersparnis_stunden (explicit user input)
@@ -497,9 +499,14 @@ def create_canonical_from_sections(
     4. Default based on company size
 
     Priority for hourly_rate:
-    1. stundensatz_eur (explicit)
-    2. Derived from company size
+    ALWAYS from get_hourly_rate(size) - never from sections (Fix-Batch-2.1)
     """
+    # Fix-Batch-2.1: FINAL LOCK - Check if canonical already exists
+    if sections.get("_bc_canonical_locked"):
+        existing_rate = sections.get("CANON_RATE_EUR", sections.get("stundensatz_eur", "?"))
+        log.info("[CANON] FINAL LOCK active - skipping rebuild (existing rate=%s€/h)", existing_rate)
+        return None
+
     # Normalize company size
     size = normalize_company_size(company_size or sections.get("company_size", "team"))
 
@@ -532,15 +539,17 @@ def create_canonical_from_sections(
     # Apply cap for company size
     hours_capped, was_capped = cap_time_savings(hours_raw, size)
 
-    # 2. Determine hourly_rate
-    explicit_rate = sections.get("stundensatz_eur")
-    if explicit_rate:
-        try:
-            hourly_rate = float(explicit_rate)
-        except (ValueError, TypeError):
-            hourly_rate, _ = get_hourly_rate(size)
-    else:
-        hourly_rate, _ = get_hourly_rate(size)
+    # 2. Determine hourly_rate - Fix-Batch-2.1: ALWAYS use canonical, never from sections
+    # This prevents non-canonical rate leaks when sections has stale/derived values
+    hourly_rate, rate_source = get_hourly_rate(size)
+    hourly_rate = int(hourly_rate)  # Ensure integer (80, not 80.0)
+
+    # Fix-Batch-2.1: Guard against non-canonical rates
+    expected_rates = {"solo": 80, "team": 95, "kmu": 110, "enterprise": 130}
+    if hourly_rate != expected_rates.get(size, 95):
+        log.warning("[CANON] Rate mismatch for %s: got %d, expected %d - forcing canonical",
+                    size, hourly_rate, expected_rates.get(size, 95))
+        hourly_rate = expected_rates.get(size, 95)
 
     # 3. Determine CAPEX
     capex_candidates = [
@@ -592,12 +601,13 @@ def create_canonical_from_sections(
         company_size=size,
     )
 
-    log.info("[CANON] Created: %s", canonical)
+    # Fix-Batch-2.1: Log with LOCKED indicator
+    log.info("[CANON] Created (LOCKED): %s", canonical)
     return canonical
 
 
 def inject_canonical_to_sections(
-    canonical: BusinessCaseCanonical,
+    canonical: Optional[BusinessCaseCanonical],
     sections: Dict[str, Any]
 ) -> int:
     """
@@ -605,8 +615,14 @@ def inject_canonical_to_sections(
 
     Returns the number of fields updated/overwritten.
 
+    Fix-Batch-2.1: If canonical is None (FINAL LOCK active), returns 0 without changes.
     v14.35.22: This ensures ALL section keys are derived from the single source.
     """
+    # Fix-Batch-2.1: Handle FINAL LOCK case
+    if canonical is None:
+        log.info("[CANON] Injection skipped - FINAL LOCK active")
+        return 0
+
     updates = 0
 
     # Core canonical values (always set)
@@ -659,7 +675,11 @@ def inject_canonical_to_sections(
     sections["_canonical_bc"] = canonical.to_dict()
     sections["_bc_canonical_applied"] = True
 
-    log.info("[CANON] Injected %d values into sections", updates)
+    # Fix-Batch-2.1: Set FINAL LOCK to prevent rebuild
+    sections["_bc_canonical_locked"] = True
+    sections["_bc_canonical_source"] = "G30"
+
+    log.info("[CANON] Injected %d values into sections (LOCKED)", updates)
     return updates
 
 
