@@ -1425,14 +1425,18 @@ def generate_scenarios(
     investment_total: float,
     base_monthly_savings: float,
     funding_effect: float = 0.0,
+    opex_monthly: float = 0.0,
 ) -> List[ScenarioKPIs]:
     """
     Generate 3 scenarios (optimistic, realistic, conservative).
 
+    Fix-Batch-2: Now uses NET payback (gross - opex) for consistency with canonical BC.
+
     Args:
         investment_total: Total investment in EUR
-        base_monthly_savings: Base monthly savings estimate
+        base_monthly_savings: Base monthly savings estimate (GROSS)
         funding_effect: Funding reduction in EUR
+        opex_monthly: Monthly OPEX in EUR (Fix-Batch-2)
 
     Returns:
         List of 3 ScenarioKPIs
@@ -1450,12 +1454,25 @@ def generate_scenarios(
     scenarios: List[ScenarioKPIs] = []
 
     for name, savings_mult, cost_mult in scenarios_config:
-        monthly_savings = base_monthly_savings * savings_mult
+        monthly_savings_gross = base_monthly_savings * savings_mult
         scenario_investment = effective_investment * cost_mult
-        annual_savings = calculate_annual_savings(monthly_savings)
 
-        roi = calculate_roi(annual_savings, scenario_investment)
-        payback = calculate_payback(scenario_investment, monthly_savings)
+        # Fix-Batch-2: Calculate NET monthly savings for payback
+        # Net = Gross - OPEX (OPEX scales with cost multiplier for scenarios)
+        scenario_opex = opex_monthly * cost_mult
+        monthly_net = monthly_savings_gross - scenario_opex
+
+        # Fix-Batch-2: Use NET for payback calculation
+        if monthly_net > 0:
+            payback = scenario_investment / monthly_net
+            payback = max(MIN_PAYBACK_MONTHS, min(MAX_PAYBACK_MONTHS, payback))
+        else:
+            payback = MAX_PAYBACK_MONTHS
+
+        # ROI uses gross annual savings - CAPEX - annual OPEX (same formula as canonical)
+        annual_savings_gross = calculate_annual_savings(monthly_savings_gross)
+        annual_opex = scenario_opex * 12
+        roi = calculate_roi(annual_savings_gross - annual_opex, scenario_investment)
 
         note = ""
         if name == "optimistic":
@@ -1469,8 +1486,8 @@ def generate_scenarios(
             name=name,
             roi_12m=roi,
             payback_months=payback,
-            monthly_savings=monthly_savings,
-            annual_savings=annual_savings,
+            monthly_savings=monthly_savings_gross,  # Keep gross for display
+            annual_savings=annual_savings_gross,
             investment_total=scenario_investment,
             notes=note,
         ))
@@ -1657,8 +1674,8 @@ def generate_business_case_report(
         if llm_response.get("investment_total"):
             investment_total = float(llm_response["investment_total"])
     else:
-        # Generate scenarios
-        scenarios = generate_scenarios(investment_total, base_monthly_savings, funding_effect)
+        # Generate scenarios (Fix-Batch-2: pass opex for net payback)
+        scenarios = generate_scenarios(investment_total, base_monthly_savings, funding_effect, opex_monthly)
 
         # Generate KPI targets
         kpi_targets_6m, kpi_targets_12m = generate_kpi_targets(scenarios, baseline_effort_hours)

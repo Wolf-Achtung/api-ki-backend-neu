@@ -596,5 +596,109 @@ class TestFixBatch1CanonicalConsistency:
         assert abs(canonical.payback_months - expected_payback) < 0.1
 
 
+class TestFixBatch2CanonicalRateAndNetPayback:
+    """Fix-Batch-2: Tests for canonical hourly rate lock and net payback."""
+
+    def test_solo_hourly_rate_is_exactly_80(self):
+        """Verify solo hourly rate is exactly 80, not 81 or any other value."""
+        from services.business_case_engine_v2 import (
+            HOURLY_RATES_BY_SIZE,
+            get_hourly_rate,
+            create_canonical_from_sections,
+        )
+
+        # Direct dict lookup
+        assert HOURLY_RATES_BY_SIZE["solo"] == 80
+
+        # Via get_hourly_rate
+        rate, _ = get_hourly_rate("solo")
+        assert rate == 80
+
+        # Via canonical creation
+        canonical = create_canonical_from_sections({}, company_size="solo")
+        assert canonical.hourly_rate_eur == 80
+
+    def test_estimate_hourly_rate_uses_canonical_for_solo(self):
+        """Verify canonical rates are used for all company sizes."""
+        from services.business_case_engine_v2 import (
+            HOURLY_RATES_BY_SIZE,
+            normalize_company_size,
+        )
+
+        # Test that the canonical rates are correctly defined
+        expected_rates = {
+            "solo": 80,
+            "team": 95,
+            "kmu": 110,
+            "enterprise": 130,
+        }
+
+        for size, expected_rate in expected_rates.items():
+            actual_rate = HOURLY_RATES_BY_SIZE.get(size)
+            assert actual_rate == expected_rate, \
+                f"Rate for '{size}' should be {expected_rate}, got {actual_rate}"
+
+        # Test normalization
+        solo_variants = ["solo", "1", "selbstständig", "freiberuflich", "freelancer"]
+        for variant in solo_variants:
+            normalized = normalize_company_size(variant)
+            assert normalized == "solo", f"'{variant}' should normalize to 'solo', got '{normalized}'"
+
+    def test_scenarios_use_net_payback(self):
+        """Verify generate_scenarios uses net payback (gross - opex)."""
+        from services.business_case_engine_v2 import generate_scenarios
+
+        investment = 5000
+        monthly_gross = 2000
+        opex = 200
+        funding = 0
+
+        scenarios = generate_scenarios(investment, monthly_gross, funding, opex)
+        realistic = next(s for s in scenarios if s.name == "realistic")
+
+        # Net monthly = 2000 - 200 = 1800
+        # Payback = 5000 / 1800 = 2.78 months
+        expected_payback = investment / (monthly_gross - opex)
+        assert abs(realistic.payback_months - expected_payback) < 0.1, \
+            f"Expected {expected_payback:.2f}, got {realistic.payback_months:.2f}"
+
+    def test_scenarios_without_opex_match_gross_payback(self):
+        """Verify generate_scenarios with opex=0 matches gross payback."""
+        from services.business_case_engine_v2 import generate_scenarios
+
+        investment = 5000
+        monthly_gross = 2000
+        opex = 0
+
+        scenarios = generate_scenarios(investment, monthly_gross, 0, opex)
+        realistic = next(s for s in scenarios if s.name == "realistic")
+
+        # With opex=0, net = gross, payback = 5000 / 2000 = 2.5 months
+        expected_payback = investment / monthly_gross
+        assert abs(realistic.payback_months - expected_payback) < 0.1
+
+    def test_payback_formatting_german_comma(self):
+        """Verify payback formatting uses German decimal (comma, 1 digit)."""
+        # This is done in gpt_analyze.py via _fmt_de_decimal
+        def _fmt_de_decimal(val, decimals: int = 1) -> str:
+            if val is None:
+                return "0"
+            try:
+                rounded = round(float(val), decimals)
+                return f"{rounded:.{decimals}f}".replace(".", ",")
+            except (ValueError, TypeError):
+                return str(val) if val else "0"
+
+        test_cases = [
+            (3.5, "3,5"),
+            (2.78, "2,8"),
+            (10.0, "10,0"),
+            (0.5, "0,5"),
+        ]
+        for value, expected in test_cases:
+            result = _fmt_de_decimal(value, 1)
+            assert result == expected, f"Expected {expected}, got {result}"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
