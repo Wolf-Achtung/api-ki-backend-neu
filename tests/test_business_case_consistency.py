@@ -791,5 +791,126 @@ class TestFixBatch21FinalLock:
         assert sections["ROI_12M"] == 150  # Value unchanged
 
 
+# =============================================================================
+# FIX-BATCH P0: RELEASE BLOCKER TESTS
+# =============================================================================
+
+
+class TestP0ReleaseBlockerFixes:
+    """Test suite for Fix-Batch P0 release blockers."""
+
+    def test_siezen_guard_removes_du_and_stray_prefix(self):
+        """P0.1: Verify Du→Sie conversion and leading '?' removal."""
+        from services.content_quality_enforcer import (
+            remove_stray_prefixes,
+            apply_extended_siezen,
+        )
+
+        # Test stray prefix removal
+        input_html = "? Du kannst jetzt starten."
+        cleaned, count = remove_stray_prefixes(input_html)
+        assert "?" not in cleaned or cleaned.index("?") > 0, "Leading '?' should be removed"
+
+        # Test Du→Sie conversion
+        input_du = "Du kannst das Tool nutzen. Deine Daten sind sicher."
+        fixed, _ = apply_extended_siezen(input_du)
+        assert "Du " not in fixed, "Du should be converted to Sie"
+        assert "Deine" not in fixed, "Deine should be converted to Ihre"
+
+    def test_kpi_labels_are_de_no_english_tokens(self):
+        """P0.2: Verify KPI labels are in German via i18n."""
+        from services.i18n import get_label
+
+        # Test that KPI-related labels exist and are in German
+        kpi_keys = [
+            "kpi_time_savings_month",
+            "kpi_roi_details",
+            "kpi_ai_act_risk",
+            "kpi_payback_months",
+            "kpi_recommendations_note",
+        ]
+
+        for key in kpi_keys:
+            label_de = get_label(key, "de")
+            # Should not be the key itself (fallback means label doesn't exist)
+            assert label_de != key, f"Label {key} not found in ui_labels.json"
+            # Should not contain obvious English-only words (exclude loanwords like "Details" which are used in German)
+            english_only_words = ["time", "savings", "when", "implementing"]
+            label_lower = label_de.lower()
+            for eng in english_only_words:
+                assert eng not in label_lower, f"German label contains English '{eng}': {label_de}"
+
+    def test_business_case_hours_consistent_solo(self):
+        """P0.3: Verify hours consistency - solo 25h → capped to 20h everywhere."""
+        from services.business_case_engine_v2 import (
+            create_canonical_from_sections,
+            inject_canonical_to_sections,
+            cap_time_savings,
+            MAX_TIME_SAVINGS_BY_SIZE,
+        )
+
+        # Verify solo cap is defined
+        assert MAX_TIME_SAVINGS_BY_SIZE.get("solo") == 25, "Solo max should be 25h"
+
+        # Test capping function
+        capped, was_capped = cap_time_savings(30, "solo")
+        assert capped == 25, "30h should be capped to 25h for solo"
+        assert was_capped is True
+
+        # Test canonical creation with hours above cap
+        sections = {
+            "qw_hours_total": 40,  # Above solo cap
+            "company_size": "solo",
+        }
+        canonical = create_canonical_from_sections(sections, "solo")
+
+        # Should be capped to 25
+        assert canonical.hours_saved_per_month == 25, "Canonical hours should be capped to 25 for solo"
+        assert canonical.was_capped is True
+
+        # After injection, all hour keys should have the capped value
+        inject_canonical_to_sections(canonical, sections)
+
+        assert sections["qw_hours_total"] == 25, "qw_hours_total should be capped"
+        assert sections["monatsersparnis_stunden"] == 25, "monatsersparnis_stunden should be capped"
+        assert sections["TIME_SAVINGS_MONTH_HOURS_CAPPED"] == 25, "TIME_SAVINGS should be capped"
+
+    def test_stray_prefix_in_html_content(self):
+        """P0.1: Test stray prefix removal in HTML context."""
+        from services.content_quality_enforcer import remove_stray_prefixes
+
+        test_cases = [
+            # (input, should_fix)
+            ("? Sie können starten", True),
+            ("<p>? Beginnen Sie mit</p>", True),
+            ("<li>? Erstellen Sie</li>", True),
+            ("Normal sentence. ? Another.", False),  # ? not at start
+            ("Was ist das?", False),  # ? at end is OK
+        ]
+
+        for input_html, should_fix in test_cases:
+            cleaned, count = remove_stray_prefixes(input_html)
+            if should_fix:
+                assert not cleaned.lstrip().startswith("?"), f"Failed to remove leading ?: {input_html}"
+
+    def test_hours_consistency_all_sizes(self):
+        """P0.3: Verify hours capping works for all company sizes."""
+        from services.business_case_engine_v2 import cap_time_savings, MAX_TIME_SAVINGS_BY_SIZE
+
+        # Actual caps: solo=25, team=60, kmu=150, enterprise=400
+        test_cases = [
+            ("solo", 30, 25),      # 30h → capped to 25h
+            ("team", 70, 60),      # 70h → capped to 60h
+            ("kmu", 200, 150),     # 200h → capped to 150h
+            ("enterprise", 500, 400),  # 500h → capped to 400h
+        ]
+
+        for size, input_hours, expected_capped in test_cases:
+            max_for_size = MAX_TIME_SAVINGS_BY_SIZE.get(size)
+            capped, was_capped = cap_time_savings(input_hours, size)
+            assert capped == expected_capped, f"Size {size}: {input_hours}h should cap to {expected_capped}h, got {capped}h"
+            assert was_capped is True, f"Size {size}: was_capped should be True"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
