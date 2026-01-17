@@ -1689,6 +1689,12 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     # 12. Text Glitch Fixer (Fix-Batch F) - Fix known word corruptions and zero displays
     sections = apply_text_glitch_fixer(sections)
 
+    # 13. Empty Page Killer (Fix-Batch I) - Remove empty page-breaking sections
+    sections = apply_empty_page_killer(sections)
+
+    # 14. Risk Truncation (Fix-Batch I) - Truncate risk descriptions at sentence boundaries
+    sections = apply_risk_truncation(sections)
+
     log.info("[QUALITY-ENFORCER] Pipeline complete")
     return sections
 
@@ -1955,5 +1961,215 @@ def apply_kpi_consistency_enforcer(sections: dict) -> dict:
 
     if total_enforcements > 0:
         log.info(f"[KPI-ENFORCER] Complete: {total_enforcements} KPI inconsistencies fixed")
+
+    return sections
+
+
+# =============================================================================
+# Fix-Batch I: EMPTY PAGE KILLER
+# =============================================================================
+
+def kill_empty_pages(html: str) -> tuple[str, int]:
+    """
+    Fix-Batch I: Remove empty page-breaking sections that only have a heading.
+
+    Empty pages occur when a section div contains only an <h2> or <h3> with
+    no substantial content following it.
+
+    Args:
+        html: HTML string to process
+
+    Returns:
+        Tuple of (cleaned_html, removals_count)
+    """
+    if not html:
+        return html, 0
+
+    removals = 0
+    result = html
+
+    # Pattern: div/section with only heading and minimal content (<100 chars of text)
+    # Match: <div class="..."><h2>Title</h2></div> or <section><h3>Title</h3></section>
+    empty_section_patterns = [
+        # Section with only heading (no other content)
+        (r'<section[^>]*>\s*<h[23][^>]*>[^<]+</h[23]>\s*</section>', 'empty section'),
+        # Div with only heading
+        (r'<div[^>]*class="[^"]*section[^"]*"[^>]*>\s*<h[23][^>]*>[^<]+</h[23]>\s*</div>', 'empty div section'),
+        # Page-break div with only heading
+        (r'<div[^>]*style="[^"]*page-break[^"]*"[^>]*>\s*<h[23][^>]*>[^<]+</h[23]>\s*</div>', 'empty page-break div'),
+    ]
+
+    for pattern, desc in empty_section_patterns:
+        matches = re.findall(pattern, result, re.IGNORECASE | re.DOTALL)
+        if matches:
+            for match in matches:
+                log.warning(f"[EMPTY-PAGE-KILLER] Removing {desc}: {match[:50]}...")
+                removals += 1
+            result = re.sub(pattern, '', result, flags=re.IGNORECASE | re.DOTALL)
+
+    # Also remove sections with heading and only whitespace/empty paragraphs
+    empty_with_p_pattern = r'<(section|div)[^>]*>\s*<h[23][^>]*>[^<]+</h[23]>\s*(?:<p>\s*</p>\s*)*</\1>'
+    matches = re.findall(empty_with_p_pattern, result, re.IGNORECASE | re.DOTALL)
+    if matches:
+        for _ in matches:
+            log.warning("[EMPTY-PAGE-KILLER] Removing section with empty paragraphs")
+            removals += 1
+        result = re.sub(empty_with_p_pattern, '', result, flags=re.IGNORECASE | re.DOTALL)
+
+    return result, removals
+
+
+def apply_empty_page_killer(sections: dict) -> dict:
+    """
+    Fix-Batch I: Apply empty page killer to all HTML sections.
+
+    Args:
+        sections: Dict with all report sections
+
+    Returns:
+        Cleaned sections dict
+    """
+    html_keys = [k for k in sections.keys() if k.endswith('_HTML') or k == 'html']
+    total_removals = 0
+
+    for key in html_keys:
+        if key in sections and sections[key] and isinstance(sections[key], str):
+            cleaned, count = kill_empty_pages(sections[key])
+            if count > 0:
+                sections[key] = cleaned
+                total_removals += count
+
+    if total_removals > 0:
+        log.info(f"[EMPTY-PAGE-KILLER] Complete: {total_removals} empty pages removed")
+
+    return sections
+
+
+# =============================================================================
+# Fix-Batch I: RISK TEXT SENTENCE TRUNCATION
+# =============================================================================
+
+def truncate_at_sentence(text: str, max_chars: int = 500) -> str:
+    """
+    Fix-Batch I: Truncate text at last sentence boundary before max_chars.
+
+    Ensures risk descriptions and other long texts are truncated at
+    proper sentence boundaries (., !, ?) rather than mid-sentence.
+
+    Args:
+        text: Text to truncate
+        max_chars: Maximum character limit
+
+    Returns:
+        Truncated text ending at sentence boundary
+    """
+    if not text or len(text) <= max_chars:
+        return text
+
+    # Find the last sentence boundary before max_chars
+    truncated = text[:max_chars]
+
+    # Look for sentence endings (., !, ?)
+    sentence_endings = ['.', '!', '?']
+    last_boundary = -1
+
+    for i in range(len(truncated) - 1, -1, -1):
+        if truncated[i] in sentence_endings:
+            # Check it's not part of abbreviation (e.g., "z.B.", "bzw.", "etc.")
+            # Simple heuristic: must be followed by space or end of string
+            if i == len(truncated) - 1 or truncated[i + 1] in (' ', '\n', '<'):
+                # Check it's not a single letter abbreviation
+                if i >= 2 and truncated[i-1] != '.':
+                    last_boundary = i
+                    break
+                elif i >= 1:
+                    last_boundary = i
+                    break
+
+    if last_boundary > 0:
+        return truncated[:last_boundary + 1]
+
+    # No sentence boundary found, try to cut at last space
+    last_space = truncated.rfind(' ')
+    if last_space > max_chars // 2:
+        return truncated[:last_space] + '...'
+
+    # Last resort: hard cut with ellipsis
+    return truncated[:max_chars - 3] + '...'
+
+
+def truncate_risk_descriptions(html: str, max_chars: int = 500) -> tuple[str, int]:
+    """
+    Fix-Batch I: Truncate long risk descriptions at sentence boundaries.
+
+    Finds risk description elements and ensures they don't exceed max_chars,
+    cutting only at sentence boundaries.
+
+    Args:
+        html: HTML string containing risk descriptions
+        max_chars: Maximum character limit for descriptions
+
+    Returns:
+        Tuple of (processed_html, truncations_count)
+    """
+    if not html:
+        return html, 0
+
+    truncations = 0
+    result = html
+
+    # Pattern: risk description paragraphs or divs
+    # Look for common risk description patterns
+    desc_patterns = [
+        (r'(<div class="risk-description[^"]*"[^>]*>)([^<]{' + str(max_chars) + r',})(</div>)', 'risk-description div'),
+        (r'(<p class="risk-text[^"]*"[^>]*>)([^<]{' + str(max_chars) + r',})(</p>)', 'risk-text paragraph'),
+        (r'(<td class="risk-desc[^"]*"[^>]*>)([^<]{' + str(max_chars) + r',})(</td>)', 'risk-desc cell'),
+    ]
+
+    for pattern, desc in desc_patterns:
+        def truncate_match(match):
+            nonlocal truncations
+            opening = match.group(1)
+            content = match.group(2)
+            closing = match.group(3)
+            truncated = truncate_at_sentence(content, max_chars)
+            if len(truncated) < len(content):
+                truncations += 1
+                log.info(f"[RISK-TRUNCATION] Truncated {desc} from {len(content)} to {len(truncated)} chars")
+            return opening + truncated + closing
+
+        result = re.sub(pattern, truncate_match, result, flags=re.IGNORECASE | re.DOTALL)
+
+    return result, truncations
+
+
+def apply_risk_truncation(sections: dict, max_chars: int = 500) -> dict:
+    """
+    Fix-Batch I: Apply risk description truncation to relevant sections.
+
+    Args:
+        sections: Dict with all report sections
+        max_chars: Maximum character limit for risk descriptions
+
+    Returns:
+        Processed sections dict
+    """
+    risk_sections = [
+        "RISKS_HTML", "risks",
+        "AI_ACT_SUMMARY_HTML", "ai_act_summary",
+        "COMPLIANCE_HTML", "compliance",
+    ]
+
+    total_truncations = 0
+
+    for key in risk_sections:
+        if key in sections and sections[key] and isinstance(sections[key], str):
+            processed, count = truncate_risk_descriptions(sections[key], max_chars)
+            if count > 0:
+                sections[key] = processed
+                total_truncations += count
+
+    if total_truncations > 0:
+        log.info(f"[RISK-TRUNCATION] Complete: {total_truncations} descriptions truncated at sentence boundary")
 
     return sections

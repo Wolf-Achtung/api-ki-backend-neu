@@ -1184,5 +1184,68 @@
     "fr": "lors de la mise en œuvre des recommandations",
     "es": "al implementar las recomendaciones",
     "it": "implementando le raccomandazioni"
+  },
+  "kpi_roi": {
+    "de": "ROI",
+    "en": "ROI",
+    "fr": "ROI",
+    "es": "ROI",
+    "it": "ROI"
+  },
+  "kpi_roi_12m": {
+    "de": "ROI (12 Monate)",
+    "en": "ROI (12 months)",
+    "fr": "ROI (12 mois)",
+    "es": "ROI (12 meses)",
+    "it": "ROI (12 mesi)"
+  },
+  "kpi_payback_period": {
+    "de": "Amortisation",
+    "en": "Payback Period",
+    "fr": "Période d'amortissement",
+    "es": "Período de amortización",
+    "it": "Periodo di ammortamento"
+  },
+  "kpi_payback_progress": {
+    "de": "Amortisationsfortschritt",
+    "en": "Payback Progress",
+    "fr": "Progression de l'amortissement",
+    "es": "Progreso de amortización",
+    "it": "Progresso ammortamento"
+  },
+  "kpi_time_savings_hours": {
+    "de": "Zeitersparnis (Stunden)",
+    "en": "Time Savings (Hours)",
+    "fr": "Gain de temps (Heures)",
+    "es": "Ahorro de tiempo (Horas)",
+    "it": "Risparmio tempo (Ore)"
+  },
+  "kpi_monthly_savings": {
+    "de": "Monatliche Ersparnis (€)",
+    "en": "Monthly Savings (€)",
+    "fr": "Économies mensuelles (€)",
+    "es": "Ahorro mensual (€)",
+    "it": "Risparmio mensile (€)"
+  },
+  "kpi_12month_trend": {
+    "de": "12-Monats-Trend",
+    "en": "12-Month Trend",
+    "fr": "Tendance sur 12 mois",
+    "es": "Tendencia de 12 meses",
+    "it": "Tendenza 12 mesi"
+  },
+  "kpi_expected_trend": {
+    "de": "Erwarteter Verlauf",
+    "en": "Expected Trend",
+    "fr": "Tendance attendue",
+    "es": "Tendencia esperada",
+    "it": "Tendenza prevista"
+  },
+  "kpi_roi_comparison": {
+    "de": "ROI-Vergleich",
+    "en": "ROI Comparison",
+    "fr": "Comparaison ROI",
+    "es": "Comparación de ROI",
+    "it": "Confronto ROI"
   }
 }
