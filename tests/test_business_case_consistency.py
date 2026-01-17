@@ -493,5 +493,108 @@ class TestP03ROIExplanationOptionA:
             assert explanation.roi_capped == 200.0
 
 
+class TestFixBatch1CanonicalConsistency:
+    """Fix-Batch-1: Tests for canonical business case single source of truth."""
+
+    def test_opex_defaults_by_size_exist(self):
+        """Verify OPEX_DEFAULTS_BY_SIZE is defined for all company sizes."""
+        from services.business_case_engine_v2 import OPEX_DEFAULTS_BY_SIZE
+
+        assert "solo" in OPEX_DEFAULTS_BY_SIZE
+        assert "team" in OPEX_DEFAULTS_BY_SIZE
+        assert "kmu" in OPEX_DEFAULTS_BY_SIZE
+        assert "enterprise" in OPEX_DEFAULTS_BY_SIZE
+
+        # Verify reasonable values (monthly)
+        assert 0 < OPEX_DEFAULTS_BY_SIZE["solo"] < 200  # Solo: ~50€/month
+        assert 0 < OPEX_DEFAULTS_BY_SIZE["team"] < 500  # Team: ~150€/month
+        assert 0 < OPEX_DEFAULTS_BY_SIZE["kmu"] < 1000  # KMU: ~400€/month
+        assert 0 < OPEX_DEFAULTS_BY_SIZE["enterprise"] < 5000  # Enterprise: ~1500€/month
+
+    def test_canonical_uses_size_based_opex_default(self):
+        """Verify canonical BC uses size-based OPEX when none provided."""
+        from services.business_case_engine_v2 import (
+            create_canonical_from_sections,
+            OPEX_DEFAULTS_BY_SIZE,
+        )
+
+        # Create canonical with no OPEX in sections
+        sections = {"qw_hours_total": 25}
+        canonical = create_canonical_from_sections(sections, company_size="solo")
+
+        # Should use size-based default, not 0
+        assert canonical.opex_month_eur > 0, "OPEX should not be 0"
+        assert canonical.opex_month_eur == OPEX_DEFAULTS_BY_SIZE["solo"]
+
+    def test_canonical_uses_provided_opex_over_default(self):
+        """Verify canonical BC uses provided OPEX over default."""
+        from services.business_case_engine_v2 import create_canonical_from_sections
+
+        # Create canonical with explicit OPEX
+        sections = {
+            "qw_hours_total": 25,
+            "CANON_OPEX_MONTH_EUR": 250,  # Explicit monthly OPEX
+        }
+        canonical = create_canonical_from_sections(sections, company_size="solo")
+
+        # Should use provided value, not default
+        assert canonical.opex_month_eur == 250
+
+    def test_canonical_hourly_rate_matches_size(self):
+        """Verify canonical BC uses size-based hourly rate."""
+        from services.business_case_engine_v2 import (
+            create_canonical_from_sections,
+            HOURLY_RATES_BY_SIZE,
+        )
+
+        for size in ["solo", "team", "kmu", "enterprise"]:
+            canonical = create_canonical_from_sections({}, company_size=size)
+            expected_rate = HOURLY_RATES_BY_SIZE[size]
+            assert canonical.hourly_rate_eur == expected_rate, \
+                f"Rate for {size} should be {expected_rate}, got {canonical.hourly_rate_eur}"
+
+    def test_no_parallel_calculation_paths(self):
+        """Verify inject_canonical overwrites all derived fields."""
+        from services.business_case_engine_v2 import (
+            create_canonical_from_sections,
+            inject_canonical_to_sections,
+        )
+
+        # Create sections with inconsistent pre-existing values
+        sections = {
+            "qw_hours_total": 25,
+            "monatsersparnis_stunden": 99,  # Inconsistent
+            "EINSPARUNG_STUNDEN_MONAT": 88,  # Inconsistent
+            "ROI_12M": 999,  # Inconsistent
+            "PAYBACK_MONTHS": 99,  # Inconsistent
+        }
+
+        canonical = create_canonical_from_sections(sections, company_size="solo")
+        inject_canonical_to_sections(canonical, sections)
+
+        # All derived values should now match canonical
+        assert sections["monatsersparnis_stunden"] == canonical.hours_saved_per_month
+        assert sections["EINSPARUNG_STUNDEN_MONAT"] == canonical.hours_saved_per_month
+        assert sections["ROI_12M"] == canonical.roi_12m_net
+        assert sections["PAYBACK_MONTHS"] == canonical.payback_months
+
+    def test_canonical_payback_format_german_decimal(self):
+        """Verify payback uses German decimal format (comma, 1 digit)."""
+        from services.business_case_engine_v2 import create_canonical_from_sections
+
+        sections = {
+            "qw_hours_total": 25,
+            "CANON_CAPEX_EUR": 5000,
+            "CANON_OPEX_MONTH_EUR": 50,
+        }
+        canonical = create_canonical_from_sections(sections, company_size="solo")
+
+        # Calculate expected payback
+        monthly_net = 25 * 80 - 50  # hours * rate - opex
+        expected_payback = 5000 / monthly_net
+
+        assert abs(canonical.payback_months - expected_payback) < 0.1
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

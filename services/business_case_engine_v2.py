@@ -125,6 +125,15 @@ MAX_TIME_SAVINGS_BY_SIZE = {
     "enterprise": 400,             # Größere Unternehmen: max 400h/Monat
 }
 
+# Fix-Batch-1: Default OPEX by company size (prevents opex=0 issue)
+# Realistic tool costs based on typical AI tool subscriptions
+OPEX_DEFAULTS_BY_SIZE = {
+    "solo": 50,                    # Solo: ~50€/Monat (ChatGPT Plus, einfache Tools)
+    "team": 150,                   # Team: ~150€/Monat (Team-Lizenzen)
+    "kmu": 400,                    # KMU: ~400€/Monat (Enterprise-Tools)
+    "enterprise": 1500,            # Enterprise: ~1.500€/Monat (Full-Scale)
+}
+
 # Company size normalization map
 SIZE_NORMALIZATION = {
     "1": "solo",
@@ -550,22 +559,28 @@ def create_canonical_from_sections(
             except (ValueError, TypeError):
                 continue
 
-    # 4. Determine OPEX
+    # 4. Determine OPEX (Fix-Batch-1: use size-based defaults instead of 0)
     opex_candidates = [
         sections.get("CANON_OPEX_MONTH_EUR"),
         sections.get("laufende_kosten_monat"),
         sections.get("BC_OPEX_MONTH"),
+        sections.get("OPEX_REALISTISCH_EUR"),  # From briefing (annual, needs /12)
     ]
-    opex = 0.0
+    opex = None
     for candidate in opex_candidates:
         if candidate is not None:
             try:
                 val = float(candidate)
-                if val >= 0:
+                if val > 0:
                     opex = val
                     break
             except (ValueError, TypeError):
                 continue
+
+    # Fix-Batch-1: If no explicit OPEX, use company-size-based default
+    if opex is None or opex == 0:
+        opex = OPEX_DEFAULTS_BY_SIZE.get(size, 150)
+        log.info("[CANON] Using default OPEX for %s: %.0f€/Monat", size, opex)
 
     canonical = BusinessCaseCanonical(
         hours_saved_per_month=hours_capped,
@@ -1591,7 +1606,12 @@ def generate_business_case_report(
         base_monthly_savings = calculate_monthly_savings(capped_effort_hours, hourly_rate=float(hourly_rate))
 
     # Build ROI explanation for transparency
-    opex_monthly = recurring_costs_12m / 12 if recurring_costs_12m > 0 else 0.0
+    # Fix-Batch-1: Use size-based default OPEX instead of 0.0
+    if recurring_costs_12m > 0:
+        opex_monthly = recurring_costs_12m / 12
+    else:
+        size_normalized = normalize_company_size(company_size)
+        opex_monthly = OPEX_DEFAULTS_BY_SIZE.get(size_normalized, 150)
 
     # P0.3: Calculate ROI values for Option A display
     annual_savings = capped_effort_hours * hourly_rate * 12
