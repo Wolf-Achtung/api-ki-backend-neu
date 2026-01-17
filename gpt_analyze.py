@@ -12931,6 +12931,8 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         from services.business_case_engine_v2 import (
             create_canonical_from_sections,
             inject_canonical_to_sections,
+            cap_time_savings,
+            normalize_company_size,
         )
         canonical_bc = create_canonical_from_sections(sections, company_size=size_raw)
         canon_updates = inject_canonical_to_sections(canonical_bc, sections)
@@ -12960,13 +12962,24 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
         sections["PAYBACK_MONTHS_FMT_DE"] = _fmt_de_decimal(payback_raw, 1)
 
         # 2. TIME_SAVINGS_MONTH_HOURS_FMT - Integer, no ".0" (e.g., "25" not "25.0")
+        # P0.3: Apply safety cap to ensure consistent hours display (25h → 20h for solo)
         time_hours_raw = (
             sections.get("TIME_SAVINGS_MONTH_HOURS_CAPPED")
             or sections.get("monatsersparnis_stunden")
             or sections.get("qw_hours_total")
             or 36
         )
-        sections["TIME_SAVINGS_MONTH_HOURS_FMT"] = _fmt_int_no_float(time_hours_raw)
+        # P0.3: Safety cap - ensures hours are never above max for company size
+        try:
+            size_normalized = normalize_company_size(size_raw or "team")
+            time_hours_capped, _ = cap_time_savings(float(time_hours_raw), size_normalized)
+        except (ValueError, TypeError):
+            time_hours_capped = time_hours_raw
+        sections["TIME_SAVINGS_MONTH_HOURS_FMT"] = _fmt_int_no_float(time_hours_capped)
+        # P0.3: Also update canonical keys with capped value for consistency
+        sections["TIME_SAVINGS_MONTH_HOURS_CAPPED"] = time_hours_capped
+        sections["monatsersparnis_stunden"] = time_hours_capped
+        sections["qw_hours_total"] = time_hours_capped
 
         # 3. ROI_12M_DISPLAY_DE - Option A: "241 % (berechnet) / 200 % (Planwert)" if capped
         roi_capped = sections.get("ROI_12M", 0)
