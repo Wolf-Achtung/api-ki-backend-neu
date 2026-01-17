@@ -141,8 +141,8 @@ class TestCreateCanonicalFromSections:
 
         canonical = create_canonical_from_sections(sections, "solo")
 
-        # Should use qw_hours_total, capped at 25 for solo
-        assert canonical.hours_saved_per_month == 18  # Not capped (under 25)
+        # Should use qw_hours_total, capped at 20 for solo (P0.3)
+        assert canonical.hours_saved_per_month == 18  # Not capped (under 20)
 
     def test_create_from_fallback(self):
         """Test fallback when no hours specified."""
@@ -163,8 +163,8 @@ class TestCreateCanonicalFromSections:
 
         canonical = create_canonical_from_sections(sections, "solo")
 
-        # Should be capped to 25 for solo
-        assert canonical.hours_saved_per_month == 25
+        # Should be capped to 20 for solo (P0.3)
+        assert canonical.hours_saved_per_month == 20
         assert canonical.was_capped is True
 
     def test_create_uses_canonical_rate(self):
@@ -263,13 +263,13 @@ class TestHelperFunctions:
 
     def test_cap_time_savings(self):
         """Test time savings cap."""
-        # Solo: max 25h
+        # Solo: max 20h (P0.3)
         capped, was_capped = cap_time_savings(30, "solo")
-        assert capped == 25
+        assert capped == 20
         assert was_capped is True
 
-        capped, was_capped = cap_time_savings(20, "solo")
-        assert capped == 20
+        capped, was_capped = cap_time_savings(15, "solo")
+        assert capped == 15
         assert was_capped is False
 
         # Team: max 60h
