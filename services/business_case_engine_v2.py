@@ -142,6 +142,7 @@ SIZE_NORMALIZATION = {
     "selbstständig": "solo",
     "freiberuflich": "solo",
     "freelancer": "solo",
+    "einzelunternehmer": "solo",
     "2-10": "team",
     "team": "team",
     "kleines team": "team",
