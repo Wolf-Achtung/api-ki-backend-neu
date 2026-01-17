@@ -23,6 +23,18 @@ from typing import Any, Dict, List, Optional, Tuple
 
 log = logging.getLogger(__name__)
 
+# Fix-Batch H: Import get_label for consistent label localization
+try:
+    from services.i18n import get_label
+
+    def ui(key: str, lang: str = "de") -> str:
+        """Wrapper to call get_label with proper signature."""
+        return get_label(key, lang)
+except ImportError:
+    def ui(key: str, lang: str = "de") -> str:
+        """Fallback ui function."""
+        return key
+
 __all__ = [
     "generate_kpi_visuals",
     "generate_kpi_bar",
@@ -324,15 +336,10 @@ def generate_kpi_visuals(
         if savings_eur > 0:
             time_savings = savings_eur / 60
 
-    # Labels based on language
-    if lang == "de":
-        roi_label = "ROI (12 Monate)"
-        payback_label = "Amortisation"
-        savings_label = "Zeitersparnis/Monat"
-    else:
-        roi_label = "ROI (12 months)"
-        payback_label = "Payback Period"
-        savings_label = "Time Savings/Month"
+    # Fix-Batch H: Labels from ui() for consistent localization
+    roi_label = ui("kpi_roi_12m", lang)  # "ROI (12 Monate)" in DE
+    payback_label = ui("kpi_payback_period", lang)  # "Amortisation" in DE
+    savings_label = ui("kpi_time_savings_month", lang)  # "Zeitersparnis/Monat" in DE
 
     # Generate KPI bars
     bars = []
@@ -373,7 +380,8 @@ def generate_kpi_visuals(
     if include_sparkline:
         monthly_values = kpi.get("monthly_values") or kpi.get("trend_values")
         if monthly_values and len(monthly_values) >= 2:
-            trend_label = "12-Monats-Trend" if lang == "de" else "12-Month Trend"
+            # Fix-Batch H: Use ui() for consistent localization
+            trend_label = ui("kpi_12month_trend", lang)
             result["sparkline_html"] = generate_sparkline(
                 values=monthly_values,
                 color=COLOR_SUCCESS,
@@ -384,7 +392,8 @@ def generate_kpi_visuals(
             # Assumes linear growth to reach ROI target
             monthly_growth = roi / 12 if roi > 0 else 0
             synthetic_values = [i * monthly_growth for i in range(1, 13)]
-            trend_label = "Erwarteter Verlauf" if lang == "de" else "Expected Trend"
+            # Fix-Batch H: Use ui() for consistent localization
+            trend_label = ui("kpi_expected_trend", lang)
             result["sparkline_html"] = generate_sparkline(
                 values=synthetic_values,
                 color=COLOR_SUCCESS,
@@ -395,7 +404,8 @@ def generate_kpi_visuals(
     if include_benchmark:
         industry_roi = kpi.get("industry_roi") or kpi.get("branch_avg_roi")
         if industry_roi and roi > 0:
-            benchmark_label = "ROI-Vergleich" if lang == "de" else "ROI Comparison"
+            # Fix-Batch H: Use ui() for consistent localization
+            benchmark_label = ui("kpi_roi_comparison", lang)
             result["benchmark_html"] = generate_benchmark_bar(
                 your_value=roi,
                 industry_value=industry_roi,
