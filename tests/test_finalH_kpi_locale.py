@@ -87,14 +87,14 @@ class TestKPIVisualsUseUI:
     """Test that KPI visuals use ui() for localization."""
 
     def test_kpi_visuals_has_ui_import(self):
-        """Test that kpi_visuals.py imports get_label as ui."""
+        """Test that kpi_visuals.py imports get_label."""
         from utils import kpi_visuals
         import inspect
 
         source = inspect.getsource(kpi_visuals)
 
-        # Should have get_label import (aliased as ui)
-        assert "from services.i18n import get_label as ui" in source
+        # Should have get_label import
+        assert "from services.i18n import get_label" in source
 
     def test_kpi_visuals_uses_ui_for_labels(self):
         """Test that kpi_visuals.py uses ui() for labels."""
@@ -104,8 +104,8 @@ class TestKPIVisualsUseUI:
         source = inspect.getsource(kpi_visuals)
 
         # Should use ui() for KPI labels
-        assert 'ui("kpi_roi_details"' in source
-        assert 'ui("kpi_payback_months"' in source
+        assert 'ui("kpi_roi_12m"' in source
+        assert 'ui("kpi_payback_period"' in source
         assert 'ui("kpi_time_savings_month"' in source
 
     def test_kpi_visuals_uses_ui_for_trend_labels(self):
