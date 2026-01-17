@@ -914,6 +914,64 @@ def _guardrails_hint_en() -> str:
 TEXT_SECTION_ALLOWED_TAGS = {'p', 'ul', 'ol', 'li', 'strong', 'em', 'b', 'i', 'br', 'span'}
 TEXT_SECTION_FORBIDDEN_TAGS = {'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'section', 'article', 'header', 'footer', 'nav', 'aside'}
 
+# =============================================================================
+# Fix-Batch C: HTML Contract Normalizer - convert semantic tags to styled divs
+# =============================================================================
+
+
+def normalize_html_tags_before_sanitize(html_content: str) -> str:
+    """
+    Fix-Batch C: Normalize semantic HTML tags to styled divs BEFORE sanitization.
+
+    Instead of removing h2/h3/section tags entirely (losing structure),
+    this normalizer converts them to divs with appropriate classes.
+
+    Conversions:
+    - <h2>Title</h2> → <div class="heading heading-h2"><strong>Title</strong></div>
+    - <h3>Title</h3> → <div class="heading heading-h3"><strong>Title</strong></div>
+    - <section>...</section> → <div class="section">...</div>
+    - <article>...</article> → <div class="article">...</div>
+
+    Args:
+        html_content: Raw HTML from GPT
+
+    Returns:
+        HTML with semantic tags converted to divs (structure preserved)
+    """
+    if not html_content:
+        return ""
+
+    result = html_content
+    normalizations = 0
+
+    # Normalize heading tags to styled divs
+    for level in range(1, 7):  # h1-h6
+        tag = f'h{level}'
+        # Match opening tag with optional attributes
+        open_pattern = re.compile(rf'<{tag}(?:\s+[^>]*)?\s*>', re.IGNORECASE)
+        close_pattern = re.compile(rf'</{tag}\s*>', re.IGNORECASE)
+
+        if open_pattern.search(result):
+            # Convert to div with heading class and strong for visual emphasis
+            result = open_pattern.sub(f'<div class="heading heading-{tag}"><strong>', result)
+            result = close_pattern.sub('</strong></div>', result)
+            normalizations += 1
+
+    # Normalize section/article tags to divs
+    for tag in ['section', 'article', 'header', 'footer', 'aside', 'nav']:
+        open_pattern = re.compile(rf'<{tag}(?:\s+[^>]*)?\s*>', re.IGNORECASE)
+        close_pattern = re.compile(rf'</{tag}\s*>', re.IGNORECASE)
+
+        if open_pattern.search(result):
+            result = open_pattern.sub(f'<div class="{tag}">', result)
+            result = close_pattern.sub('</div>', result)
+            normalizations += 1
+
+    if normalizations > 0:
+        log.debug("[HTML-NORMALIZER] Normalized %d semantic tags to styled divs", normalizations)
+
+    return result
+
 
 def enforce_text_section_html_contract(html_content: str, section_name: str = "") -> str:
     """
@@ -922,22 +980,25 @@ def enforce_text_section_html_contract(html_content: str, section_name: str = ""
     PLATIN+++ v5.4 Root Cause Fix: Removes forbidden HTML elements that GPT
     sometimes generates despite prompt instructions.
 
-    ALLOWED: <p>, <ul>, <ol>, <li>, <strong>, <em>, <b>, <i>, <br>, <span>
+    ALLOWED: <p>, <ul>, <ol>, <li>, <strong>, <em>, <b>, <i>, <br>, <span>, <div>
     FORBIDDEN: <h1>-<h6>, <section>, <article>, <header>, <footer>, <nav>, <aside>
 
-    Forbidden tags are REMOVED but their text content is PRESERVED.
+    Fix-Batch C: Now NORMALIZES tags to styled divs first, then removes any remaining.
 
     Args:
         html_content: HTML string from GPT
         section_name: Name of section (for logging)
 
     Returns:
-        HTML with forbidden tags removed (content preserved)
+        HTML with forbidden tags normalized to divs (structure preserved)
     """
     if not html_content:
         return ""
 
-    result = html_content
+    # Fix-Batch C: First normalize semantic tags to styled divs
+    result = normalize_html_tags_before_sanitize(html_content)
+
+    # Now check for any remaining forbidden tags (should be rare after normalization)
     violations_found = []
 
     for tag in TEXT_SECTION_FORBIDDEN_TAGS:
