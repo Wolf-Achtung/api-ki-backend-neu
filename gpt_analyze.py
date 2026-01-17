@@ -6069,7 +6069,58 @@ def _format_recommendations_as_cards(html_content: str) -> str:
             log.info("[REC-CARDS-V9.1] Prepended %d recommendation cards (no insert point found)", len(cards_data))
 
     else:
-        log.warning("[REC-CARDS-V9.1] No recommendation patterns matched - keeping original")
+        # Fix-Batch A: Compact table fallback when patterns don't match
+        # Extract any meaningful text and present as a simple 5-row table
+        log.info("[REC-CARDS-V9.1] No patterns matched - generating compact table fallback")
+
+        # Extract text from paragraphs, li elements, or plain text
+        text_items = []
+        for pattern in [
+            r'<li[^>]*>([^<]+)',
+            r'<p[^>]*>([^<]{20,})',
+            r'<strong>([^<]+)</strong>\s*[–:-]?\s*([^<]+)',
+        ]:
+            matches = re.findall(pattern, output, re.IGNORECASE)
+            for match in matches:
+                if isinstance(match, tuple):
+                    text = ' - '.join([m.strip() for m in match if m.strip()])
+                else:
+                    text = match.strip()
+                if text and len(text) > 15:
+                    text_items.append(text[:200])
+                if len(text_items) >= 5:
+                    break
+            if len(text_items) >= 5:
+                break
+
+        if text_items:
+            # Generate compact table HTML
+            compact_table = '''
+<div class="rec-compact-fallback" style="margin: 15px 0;">
+<table style="width:100%; border-collapse:collapse; font-size:9pt;">
+<thead>
+<tr style="background:#f8fafc;">
+<th style="padding:8px; border:1px solid #e2e8f0; text-align:left;">Nr.</th>
+<th style="padding:8px; border:1px solid #e2e8f0; text-align:left;">Handlungsempfehlung</th>
+</tr>
+</thead>
+<tbody>
+'''
+            for i, item in enumerate(text_items[:5], 1):
+                compact_table += f'''<tr>
+<td style="padding:8px; border:1px solid #e2e8f0; text-align:center; width:40px;">{i}</td>
+<td style="padding:8px; border:1px solid #e2e8f0;">{item}</td>
+</tr>
+'''
+            compact_table += '''</tbody>
+</table>
+</div>
+'''
+            # Prepend compact table to content
+            output = compact_table + output
+            log.info("[REC-CARDS-V9.1] Generated compact table fallback with %d rows", len(text_items))
+        else:
+            log.warning("[REC-CARDS-V9.1] No content found for compact fallback - keeping original")
 
     return output
 
@@ -11365,48 +11416,15 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             # Keep original - don't break pipeline
     sections["recommendations"] = sections.get("RECOMMENDATIONS_HTML", "")
 
-    # ========== v13.1: DEAKTIVIERTE FORMATTER (verursachen Seitenaufblähung) ==========
-    # Die folgenden Formatter wurden deaktiviert weil sie Card-Layouts erzeugen,
-    # die mehr Platz verbrauchen als der Original-GPT-Fließtext.
-    # Dies führte zu: 47 statt 45 Seiten, leere Seiten, Textwüsten.
-
-    # Maßnahme 1: Quick Wins compact card formatting - DEAKTIVIERT v13.1
-    # Der Original-GPT-Output fließt besser als die Card-Boxen
-    qw_html_format = sections.get("QUICK_WINS_HTML", "")
-    # v13.1: DEAKTIVIERT - Cards verursachen Seitenaufblähung
-    # if qw_html_format and len(qw_html_format) > 200:
-    #     try:
-    #         original_length = len(qw_html_format)
-    #         qw_html_format = _format_quick_wins_compact(qw_html_format)
-    #         log.info(f"[INTEGRATION] Quick Wins HTML after compact formatting: {len(qw_html_format)} chars (delta: {len(qw_html_format) - original_length})")
-    #         sections["QUICK_WINS_HTML"] = qw_html_format
-    #         sections["QUICK_WINS_HTML_LEFT"] = qw_html_format
-    #     except Exception as e:
-    #         log.error(f"[INTEGRATION] Quick Wins formatting failed: {e}")
-    log.info("[INTEGRATION] Quick Wins formatter DISABLED (v14.0) - using original GPT output")
-
-    # ==========================================================================
-    # v14.0: CLEAN RESTART - ALLE FORMATTER DEAKTIVIERT
-    # ==========================================================================
-    # Die folgenden Formatter wurden ALLE deaktiviert weil sie:
-    # - Card-Layouts erzeugen die mehr Platz verbrauchen als Fließtext
-    # - Patterns haben die nicht auf den tatsächlichen GPT-Output matchen
-    # - Mehr Probleme verursachen als sie lösen (47 statt 45 Seiten, leere Seiten)
+    # ========== Fix-Batch A: DETERMINISTIC RENDER SPINE ==========
+    # v15.0: Active formatters (applied above in proper order):
+    # - Quick Wins: _build_quick_wins_html() at line ~10789 (JSON→HTML cards)
+    # - Roadmap: _format_roadmap_as_phase_cards() at line ~11190 (PILOT_PLAN_HTML)
+    # - Recommendations: _format_recommendations_as_cards() at line ~11360
     #
-    # BEHALTEN: Nur SIEZEN-Guard (funktioniert zuverlässig)
-    # BEHALTEN: Tabellen-Inline-Styles (direkter Ansatz)
+    # Second-pass compact formatters were removed as they caused page bloat.
+    # The primary formatters above are deterministic and always produce output.
     # ==========================================================================
-
-    # Maßnahme 2: Roadmap phases - DEAKTIVIERT v14.0
-    # Pattern matcht nicht auf "Phase 0: Titel (Woche 1-2)" Format
-    log.info("[INTEGRATION] Roadmap formatter DISABLED (v14.0) - pattern doesn't match GPT output")
-
-    # Maßnahme 3: Empfehlungen - DEAKTIVIERT v14.0
-    # Card-Layout verursacht Seitenaufblähung
-    log.info("[INTEGRATION] Empfehlungen formatter DISABLED (v14.0) - cards cause page bloat")
-
-    # Maßnahme 4: Förderprüfung - DEAKTIVIERT v14.0
-    log.info("[INTEGRATION] Förderprüfung formatter DISABLED (v14.0) - using original GPT output")
 
     # ========== v14.0: TABLE INLINE STYLES (ersetzt Colgroup) ==========
     # Direkter Ansatz: Inline-Styles auf <table> und <td> Tags
@@ -12829,10 +12847,11 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
                     replaced_sections.append(section_key)
 
         if replaced_count > 0:
-            log.info("[%s] 🔧 Business Case variables replaced in %s sections: %s", 
+            log.info("[%s] 🔧 Business Case variables replaced in %s sections: %s",
                      run_id, replaced_count, ", ".join(replaced_sections[:8]))
         else:
-            log.warning("[%s] ⚠️ No Business Case replacements made - check if sections contain placeholders", run_id)
+            # Fix-Batch B: Changed to debug - no replacements is fine when BC table is deterministic
+            log.debug("[%s] ℹ️ No Business Case placeholder replacements needed (table generated deterministically)", run_id)
 
         sections.update(build_extra_sections(answers, scores))
 

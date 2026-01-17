@@ -723,9 +723,14 @@ def render(briefing_obj: Any,
 
     # =========================================================================
     # 3.1.4.18: FINAL EN locale sanitize on full HTML (global hook)
+    # Fix-Batch C: Only applies to EN reports, skipped for DE
     # =========================================================================
+    html_before_locale = html
     html = sanitize_en_locale_tokens(html, lang=lang)
-    log.info(f"[RENDER] Applied EN locale sanitizer (lang={lang}) for run={run_id}")
+    if html != html_before_locale:
+        log.info(f"[RENDER] Applied EN locale sanitizer (lang={lang}) for run={run_id}")
+    else:
+        log.debug(f"[RENDER] EN locale sanitizer skipped (lang={lang}) for run={run_id}")
 
     # =========================================================================
     # Multilingual v2: Locale budget enforcement + section-aware rewrite

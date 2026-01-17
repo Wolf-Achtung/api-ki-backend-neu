@@ -380,7 +380,11 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
     else:
         payback = None
 
-    savings_12_months = einsparung_monat_eur * 12
+    # Fix-Batch B: ROI uses NET formula (OPEX-inclusive), not GROSS
+    # net_12m = (monthly_savings - opex) * 12 - capex
+    # roi_pct = net_12m / capex * 100
+    annual_opex = opex * 12
+    net_savings_12_months = einsparung_monat_eur * 12 - annual_opex  # NET (OPEX-inclusive)
     total_investment = capex
 
     # v14.35.23: Calculate both raw and capped ROI for consistency
@@ -390,7 +394,7 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
     except ImportError:
         MAX_ROI = 200.0
 
-    roi_12m_eur = savings_12_months - total_investment
+    roi_12m_eur = net_savings_12_months - total_investment  # NET 12M - CAPEX
     denom = float(total_investment)
     if denom > 0:
         roi_12m_rate = roi_12m_eur / denom
@@ -432,7 +436,7 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
       <tr><td>Amortisation</td><td>{'—' if payback is None else _fmt_months(payback) + ' Monate'}</td><td>CAPEX ÷ (Nutzen − OPEX)</td></tr>
       <tr><td>ROI nach 12&nbsp;Monaten</td>
           <td>{_fmt_eur(roi_12m_eur)} € ({roi_display})</td>
-          <td>(Einsparung&nbsp;12M − CAPEX) ÷ CAPEX{' · Cap: ' + str(int(MAX_ROI)) + '%' if roi_was_capped else ''}</td></tr>
+          <td>(Einsparung&nbsp;12M − OPEX&nbsp;12M − CAPEX) ÷ CAPEX{' · Cap: ' + str(int(MAX_ROI)) + '%' if roi_was_capped else ''}</td></tr>
     </tbody>
   </table>
 </section>""".strip()
