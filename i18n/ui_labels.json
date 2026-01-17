@@ -1149,5 +1149,40 @@
     "fr": "Vos droits",
     "es": "Sus derechos",
     "it": "I vostri diritti"
+  },
+  "kpi_time_savings_month": {
+    "de": "Zeitersparnis/Monat",
+    "en": "Time Savings/Month",
+    "fr": "Gain de temps/Mois",
+    "es": "Ahorro de tiempo/Mes",
+    "it": "Risparmio tempo/Mese"
+  },
+  "kpi_roi_details": {
+    "de": "ROI-Details",
+    "en": "ROI Details",
+    "fr": "Détails ROI",
+    "es": "Detalles ROI",
+    "it": "Dettagli ROI"
+  },
+  "kpi_ai_act_risk": {
+    "de": "AI Act Risiko",
+    "en": "AI Act Risk",
+    "fr": "Risque AI Act",
+    "es": "Riesgo AI Act",
+    "it": "Rischio AI Act"
+  },
+  "kpi_payback_months": {
+    "de": "Amortisation",
+    "en": "Payback",
+    "fr": "Retour sur investissement",
+    "es": "Amortización",
+    "it": "Ammortamento"
+  },
+  "kpi_recommendations_note": {
+    "de": "bei Umsetzung der Empfehlungen",
+    "en": "when implementing recommendations",
+    "fr": "lors de la mise en œuvre des recommandations",
+    "es": "al implementar las recomendaciones",
+    "it": "implementando le raccomandazioni"
   }
 }

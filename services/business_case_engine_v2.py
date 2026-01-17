@@ -118,8 +118,9 @@ HOURLY_RATE_SOURCES = {
 }
 
 # Maximale Zeitersparnis pro Monat nach Unternehmensgröße
+# P0.3: Solo auf 20h begrenzt für konsistente Business Case Darstellung
 MAX_TIME_SAVINGS_BY_SIZE = {
-    "solo": 25,                    # Solo: max 25h/Monat realistisch
+    "solo": 20,                    # Solo: max 20h/Monat (P0.3: konsistent mit BC-Display)
     "team": 60,                    # Kleines Team: max 60h/Monat
     "kmu": 150,                    # KMU: max 150h/Monat
     "enterprise": 400,             # Größere Unternehmen: max 400h/Monat

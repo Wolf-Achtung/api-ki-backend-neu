@@ -6019,17 +6019,17 @@
                             </div>
                         </div>
 
-                        <!-- 3 KPI ROW: Large, prominent -->
+                        <!-- 3 KPI ROW: Large, prominent (P0.2: i18n labels) -->
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-lg); margin-bottom: var(--space-xl);">
                             <div style="text-align: center;">
                                 <div style="font-size: 36px; font-weight: 600; color: var(--color-text-normal); margin-bottom: var(--space-xs);">
                                     {{ TIME_SAVINGS_MONTH_HOURS_FMT or monatsersparnis_stunden or qw_hours_total }} <span style="font-size: 20px; font-weight: 400;">Std.</span>
                                 </div>
                                 <div style="font-size: 13px; font-weight: 500; color: var(--color-text-normal); margin-bottom: 4px;">
-                                    Zeitersparnis/Monat
+                                    {{ ui("kpi_time_savings_month", "Zeitersparnis/Monat") }}
                                 </div>
                                 <div style="font-size: 11px; color: var(--color-text-muted);">
-                                    bei Umsetzung der Empfehlungen
+                                    {{ ui("kpi_recommendations_note", "bei Umsetzung der Empfehlungen") }}
                                 </div>
                             </div>
                             <div style="text-align: center;">
@@ -6037,10 +6037,10 @@
                                     → BC
                                 </div>
                                 <div style="font-size: 13px; font-weight: 500; color: var(--color-text-normal); margin-bottom: 4px;">
-                                    ROI-Details
+                                    {{ ui("kpi_roi_details", "ROI-Details") }}
                                 </div>
                                 <div style="font-size: 11px; color: var(--color-text-muted);">
-                                    Payback: {{ PAYBACK_MONTHS_FMT_DE or PAYBACK_MONTHS or 'n/a' }} Monate
+                                    {{ ui("kpi_payback_months", "Amortisation") }}: {{ PAYBACK_MONTHS_FMT_DE or PAYBACK_MONTHS or 'n/a' }} {{ ui("months", "Monate") }}
                                 </div>
                             </div>
                             <div style="text-align: center;">
@@ -6048,7 +6048,7 @@
                                     {{ AI_ACT_RISK_LEVEL or 'minimal' }}
                                 </div>
                                 <div style="font-size: 13px; font-weight: 500; color: var(--color-text-normal); margin-bottom: 4px;">
-                                    AI Act Risiko
+                                    {{ ui("kpi_ai_act_risk", "AI Act Risiko") }}
                                 </div>
                                 <div style="font-size: 11px; color: var(--color-text-muted);">
                                     DSGVO-konforme Empfehlung

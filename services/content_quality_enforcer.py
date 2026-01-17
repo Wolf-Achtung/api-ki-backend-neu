@@ -743,6 +743,79 @@ def apply_hauptleistung_enforcer(sections: dict, hauptleistung: str) -> dict:
 
 
 # =============================================================================
+# P0.1: STRAY PREFIX REMOVER & TEXT HYGIENE
+# =============================================================================
+# Removes leading artifacts like "?" and ensures text hygiene
+
+STRAY_PREFIX_PATTERNS = [
+    # Leading question marks (with or without whitespace)
+    (re.compile(r'^(\s*)\?\s+'), r'\1'),
+    # Leading question marks in paragraphs/list items
+    (re.compile(r'(<p[^>]*>)\s*\?\s+'), r'\1'),
+    (re.compile(r'(<li[^>]*>)\s*\?\s+'), r'\1'),
+    # Multiple leading punctuation artifacts
+    (re.compile(r'^(\s*)[?!.:;,]\s+([A-ZÄÖÜ])'), r'\1\2'),
+]
+
+
+def remove_stray_prefixes(html: str) -> tuple[str, int]:
+    """
+    P0.1: Remove leading artifacts like '?' from text.
+
+    Problem: GPT sometimes generates "? Du kannst..." or "? Sie können..."
+    Solution: Remove the leading "?" and fix the sentence.
+
+    Returns:
+        tuple: (cleaned_html, fix_count)
+    """
+    if not html:
+        return html, 0
+
+    fix_count = 0
+    result = html
+
+    for pattern, replacement in STRAY_PREFIX_PATTERNS:
+        matches = len(pattern.findall(result))
+        if matches > 0:
+            result = pattern.sub(replacement, result)
+            fix_count += matches
+
+    return result, fix_count
+
+
+def apply_stray_prefix_remover(sections: dict) -> dict:
+    """
+    P0.1: Apply stray prefix removal to all text sections.
+    Removes leading '?' and other punctuation artifacts.
+    """
+    total_fixes = 0
+
+    check_sections = [
+        "EXECUTIVE_SUMMARY_HTML", "RECOMMENDATIONS_HTML", "QUICK_WINS_HTML",
+        "ROADMAP_90D_HTML", "ROADMAP_12M_HTML", "GAMECHANGER_HTML",
+        "FOERDERPOTENZIAL_HTML", "RISKS_HTML", "ORG_CHANGE_HTML",
+        "KI_SKILLPLAN_HTML", "BUSINESS_CASE_HTML", "AI_ACT_HTML",
+        "TOOLS_HTML", "DATA_STRATEGY_HTML", "GOVERNANCE_HTML",
+    ]
+
+    for key in check_sections:
+        if key in sections and sections[key]:
+            fixed, count = remove_stray_prefixes(sections[key])
+            if count > 0:
+                sections[key] = fixed
+                total_fixes += count
+                # Update lowercase alias
+                lower_key = key.replace("_HTML", "").lower()
+                if lower_key in sections:
+                    sections[lower_key] = fixed
+
+    if total_fixes > 0:
+        log.info(f"[STRAY-PREFIX] Removed {total_fixes} leading punctuation artifacts")
+
+    return sections
+
+
+# =============================================================================
 # 4. SIEZEN-GUARD EXTENSION: Erweiterte du→Sie Patterns
 # =============================================================================
 
@@ -1479,6 +1552,7 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     Wendet alle Quality Enforcer in der richtigen Reihenfolge an.
 
     Order:
+    0. Stray Prefix Remover (P0.1: entfernt führende "?" und Artefakte)
     1. ROI-Filter (entfernt verbotene ROI-Werte)
     2. Fragment-Repair (repariert unvollständige Sätze)
     3. Extended Siezen (erweiterte du→Sie)
@@ -1497,10 +1571,13 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
         sections: Bereinigtes Dict
     """
     log.info("[QUALITY-ENFORCER] Starting quality enforcement pipeline...")
-    
+
+    # 0. P0.1: Stray Prefix Remover (leading "?" and artifacts)
+    sections = apply_stray_prefix_remover(sections)
+
     # 1. ROI-Filter
     sections = apply_roi_filter(sections)
-    
+
     # 2. Fragment-Repair
     sections = apply_fragment_repair(sections)
     
