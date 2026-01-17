@@ -3640,9 +3640,15 @@ def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse
     for i, qw in enumerate(quick_wins, 1):
         # Escape HTML
         title = html_module.escape(str(qw.get('title', 'Ohne Titel')))
-        # P0.7: Clean "Icon:" text artifacts from icon field
+        # Fix-Batch G: Aggressively clean Icon: artifacts from icon field
         raw_icon = str(qw.get('icon', '◎'))
-        icon = re.sub(r'^Icon:\s*', '', raw_icon, flags=re.IGNORECASE).strip() or '◎'
+        # Remove "Icon:" prefix and any similar patterns
+        icon = re.sub(r'^Icon:\s*', '', raw_icon, flags=re.IGNORECASE).strip()
+        icon = re.sub(r'^Symbol:\s*', '', icon, flags=re.IGNORECASE).strip()
+        icon = re.sub(r'^Emoji:\s*', '', icon, flags=re.IGNORECASE).strip()
+        # If icon is now empty or still contains "Icon", use default
+        if not icon or 'icon' in icon.lower() or len(icon) > 5:
+            icon = '◎'
         time = html_module.escape(str(qw.get('time', 'Unbekannt')))
         engpass = html_module.escape(str(qw.get('engpass', '')))
         description = html_module.escape(str(qw.get('description', '')))
@@ -3655,11 +3661,12 @@ def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse
             raw_zeitersparnis, canonical_rate
         )
 
-        # Steps als nummerierte Liste
+        # Fix-Batch G: Sanitize steps to prevent truncated sentences
         steps_html = '<ol style="margin: 12px 0 12px 20px; padding: 0; color: #065f46;">'
         for step in steps:
-            step_clean = html_module.escape(str(step))
-            steps_html += f'<li style="margin-bottom: 8px; line-height: 1.6;">{step_clean}</li>'
+            step_clean = _sanitize_quickwin_step(str(step))
+            if step_clean:  # Only add non-empty steps
+                steps_html += f'<li style="margin-bottom: 8px; line-height: 1.6;">{html_module.escape(step_clean)}</li>'
         steps_html += '</ol>'
 
         html += f"""
@@ -3802,6 +3809,66 @@ def _calculate_quickwin_savings_display(raw_zeitersparnis: str, canonical_rate: 
 
 
 # =============================================================================
+# Fix-Batch G: Quick Wins Step Sanitizer
+# =============================================================================
+def _sanitize_quickwin_step(step: str) -> str:
+    """
+    Fix-Batch G: Sanitize a Quick Win step to prevent truncated sentences.
+
+    - Fixes known truncation patterns (e.g., "Copy &." → "Copy/Paste")
+    - Ensures steps end properly (not mid-sentence)
+    - Returns empty string if step is unusable
+
+    Args:
+        step: Raw step text
+
+    Returns:
+        Sanitized step text or empty string
+    """
+    if not step or len(step.strip()) < 3:
+        return ""
+
+    result = step.strip()
+
+    # Fix-Batch G: Known truncation fixes
+    known_truncations = [
+        (r'Copy\s*&\.?$', 'Copy/Paste verwenden'),
+        (r'&\.$', '.'),
+        (r'\s+&\s*$', '.'),
+        (r'\s+zu$', '.'),
+        (r'\s+direkt\s+zu$', '.'),
+        (r'\s+mit$', '.'),
+        (r'\s+und$', '.'),
+        (r'\s+oder$', '.'),
+    ]
+
+    for pattern, replacement in known_truncations:
+        result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
+
+    # If step ends with incomplete patterns, try to complete or drop
+    incomplete_endings = [' zu', ' mit', ' und', ' oder', ' der', ' die', ' das', ' ein', ' eine']
+    for ending in incomplete_endings:
+        if result.lower().endswith(ending):
+            # Try to find last sentence boundary
+            last_sentence = max(
+                result.rfind('.', 0, -len(ending)),
+                result.rfind('!', 0, -len(ending)),
+                result.rfind('?', 0, -len(ending))
+            )
+            if last_sentence > 10:
+                result = result[:last_sentence + 1].strip()
+            else:
+                # Can't fix - drop this step
+                return ""
+
+    # Ensure step ends with proper punctuation
+    if result and result[-1] not in '.!?:':
+        result += '.'
+
+    return result
+
+
+# =============================================================================
 # Fix-Batch D: Quick Wins HARD STOP - Suppress Raw JSON
 # =============================================================================
 def _enforce_quickwins_no_raw_json(qw_html: str, branche: str, groesse: str) -> str:
@@ -3863,16 +3930,11 @@ def _enforce_quickwins_no_raw_json(qw_html: str, branche: str, groesse: str) -> 
         log.warning("[QW-HARD-FAIL] Suppressed raw JSON output - generating compact fallback")
         return _generate_quickwins_compact_fallback(qw_html, branche, groesse)
 
-    # If no HTML structure but also no JSON, might be plain text - wrap it
+    # Fix-Batch G: REMOVED soft-fail wrap path - always use compact fallback instead
+    # If no HTML structure and no JSON, generate compact fallback (never wrap raw content)
     if not has_html_structure:
-        log.warning("[QW-SOFT-FAIL] No HTML structure detected - wrapping content")
-        # Wrap in basic container to ensure it renders reasonably
-        return f'''
-<div class="quick-wins-fallback" style="padding: 20px; background: #f8fafc; border-radius: 12px;">
-    <h3 style="color: #1e3a8a; margin-bottom: 16px;">Quick Wins</h3>
-    <div style="color: #374151; line-height: 1.6;">{qw_html}</div>
-</div>
-'''
+        log.info("[QW-FALLBACK] No HTML structure - generating compact fallback")
+        return _generate_quickwins_compact_fallback(qw_html, branche, groesse)
 
     return qw_html
 
