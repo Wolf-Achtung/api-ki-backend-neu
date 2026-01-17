@@ -1698,8 +1698,8 @@ def generate_business_case_report(
         # Generate scenarios (Fix-Batch-2: pass opex for net payback)
         scenarios = generate_scenarios(investment_total, base_monthly_savings, funding_effect, opex_monthly)
 
-        # Generate KPI targets
-        kpi_targets_6m, kpi_targets_12m = generate_kpi_targets(scenarios, baseline_effort_hours)
+        # Generate KPI targets (P0.5: Use capped hours for consistency)
+        kpi_targets_6m, kpi_targets_12m = generate_kpi_targets(scenarios, capped_effort_hours)
 
         # Generate narrative
         narrative_summary = _generate_narrative_summary(
