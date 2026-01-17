@@ -242,7 +242,7 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
       "Beste bisherige Projekte analysieren (2-3h)",
       "Standard-Workflow & Checklisten generieren (3-4h)"
     ],
-    "zeitersparnis": "6-10 h/Monat = 600-1.000€ (bei 100€/h)"
+    "zeitersparnis": "6-10 h/Monat = X€ (bei {{STUNDENSATZ_EUR}}€/h)"
   },
   {
     "title": "Testphase Ihres KI-Fragebogens in erweiterbares MVP",
@@ -256,7 +256,7 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
       "Fragebogen-Varianten mit GPT schärfen (3h)",
       "Standard-Reportstruktur bauen (3h)"
     ],
-    "zeitersparnis": "5-8 h/Monat = 500-800€ (bei 100€/h)"
+    "zeitersparnis": "5-8 h/Monat = X€ (bei {{STUNDENSATZ_EUR}}€/h)"
   },
   {
     "title": "KI-Sicherheitsrichtlinie erstellen",

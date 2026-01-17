@@ -7660,27 +7660,28 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     })
     
     # ===== BLOCK 8: Business Case (NEW!) =====
-    # Investment estimates for business_case_de.md
-    # Conservative estimates based on company size
+    # Fix-Batch-1: Use canonical OPEX defaults from business_case_engine_v2
+    # These are MONTHLY values, consistent with canonical business case
     try:
+        from services.business_case_engine_v2 import OPEX_DEFAULTS_BY_SIZE
+        # CAPEX based on revenue (unchanged)
         umsatz_label = briefing.get("jahresumsatz", "").lower()
         if "mio" in umsatz_label:
             capex_realistisch = 15000
-            opex_realistisch = 3000
         elif any(x in umsatz_label for x in ["500", "1"]):
             capex_realistisch = 8000
-            opex_realistisch = 2000
         else:
             capex_realistisch = 5000
-            opex_realistisch = 1500
+        # OPEX: Use canonical size-based defaults (monthly!)
+        opex_realistisch = OPEX_DEFAULTS_BY_SIZE.get(company_size, 150)
     except Exception:
         capex_realistisch = 5000
-        opex_realistisch = 1500
-    
+        opex_realistisch = 150  # Conservative monthly default
+
     base_vars.update({
         "capex_realistisch_eur": capex_realistisch,
         "capex_konservativ_eur": int(capex_realistisch * 1.3),
-        "opex_realistisch_eur": opex_realistisch,
+        "opex_realistisch_eur": opex_realistisch,  # Now consistent monthly value
         "opex_konservativ_eur": int(opex_realistisch * 1.2),
     })
     
