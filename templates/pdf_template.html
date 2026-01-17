@@ -244,13 +244,11 @@
             page-break-before: auto !important;
             break-before: auto !important;
         }
+        /* P0.4: Keep small atomic elements together (avoid orphaned partial cards) */
         .no-page-break-inside,
-        .card,
         .kpi-card,
         .quick-win-card-new,
         .hero-metric-card,
-        .roadmap-phase,
-        .phase-card,
         .roi-herleitung,
         .roi-explanation-box,
         .foerder-card,
@@ -260,7 +258,14 @@
         .starter-template,
         .datenlucken-box,
         .recommendation-card,
-        .business-case-card,
+        .business-case-card {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        /* P0.4: Larger containers allow breaks to prevent empty pages */
+        .card,
+        .roadmap-phase,
+        .phase-card,
         .content-card,
         .section {
             page-break-inside: auto;
@@ -4968,13 +4973,19 @@
             margin-bottom: 0 !important;
             padding-bottom: 0 !important;
         }
-        /* Tables should never create massive empty space */
+        /* P0.4: Tables should never create massive empty space */
         table {
             page-break-inside: auto !important;
         }
+        /* P0.4: Keep table rows together (avoid row splits) */
         tr {
-            page-break-inside: auto;
-            break-inside: auto;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        /* P0.4: Keep table headers with first rows */
+        thead {
+            display: table-header-group;
+            break-inside: avoid;
         }
         /* Colgroup fixes for column widths */
         colgroup col {
