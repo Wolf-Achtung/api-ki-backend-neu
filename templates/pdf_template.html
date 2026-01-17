@@ -262,6 +262,18 @@
             page-break-inside: avoid;
             break-inside: avoid;
         }
+        /* Fix-Batch F: BC Table orphan protection - prevent single row on page */
+        .business-case-engine-v2 table,
+        .bc-table,
+        table.scenarios-table {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .business-case-engine-v2 tr,
+        .bc-table tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
         /* P0.4: Larger containers allow breaks to prevent empty pages */
         .card,
         .roadmap-phase,

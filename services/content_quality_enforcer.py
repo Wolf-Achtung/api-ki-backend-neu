@@ -176,6 +176,77 @@ def apply_product_name_safety_net(sections: dict) -> dict:
 
 
 # =============================================================================
+# Fix-Batch F: TEXT GLITCH FIXER
+# =============================================================================
+# Known text glitches that appear in reports due to LLM word corruption or
+# unwanted zero values that should be suppressed.
+
+TEXT_GLITCH_REPLACEMENTS = [
+    # (pattern, replacement, description)
+    # Word corruption glitches
+    (r'\bresourceselung\b', 'Ressourcenstaffelung', 'corrupted word'),
+    (r'\bRessourceselung\b', 'Ressourcenstaffelung', 'corrupted word capitalized'),
+    # Zero resource display suppression
+    (r'Ressourcen:\s*0\b', '', 'zero resources'),
+    (r'Ressourcen\s*:\s*0\b', '', 'zero resources with space'),
+    (r'\bRessourcen\s+0\b', '', 'zero resources no colon'),
+    # Empty placeholder patterns
+    (r'Mitarbeiter:\s*0\b', '', 'zero employees'),
+    (r'Mitarbeiter\s*:\s*0\b', '', 'zero employees with space'),
+]
+
+
+def fix_text_glitches(html: str) -> tuple[str, int]:
+    """
+    Fix-Batch F: Fix known text glitches in HTML content.
+
+    Fixes:
+    - "resourceselung" → "Ressourcenstaffelung"
+    - "Ressourcen: 0" → (removed)
+    - Other known glitches
+
+    Returns:
+        tuple: (fixed_html, fix_count)
+    """
+    if not html:
+        return html, 0
+
+    result = html
+    fix_count = 0
+
+    for pattern, replacement, desc in TEXT_GLITCH_REPLACEMENTS:
+        regex = re.compile(pattern, re.IGNORECASE)
+        matches = regex.findall(result)
+        if matches:
+            result = regex.sub(replacement, result)
+            fix_count += len(matches)
+            log.info(f"[GLITCH-FIX] Fixed '{desc}': {len(matches)}x")
+
+    return result, fix_count
+
+
+def apply_text_glitch_fixer(sections: dict) -> dict:
+    """
+    Fix-Batch F: Apply text glitch fixes to all sections.
+
+    Fixes known LLM word corruptions and unwanted zero displays.
+    """
+    total_fixes = 0
+
+    for key, value in sections.items():
+        if isinstance(value, str) and len(value) > 10:
+            fixed, count = fix_text_glitches(value)
+            if count > 0:
+                sections[key] = fixed
+                total_fixes += count
+
+    if total_fixes > 0:
+        log.info(f"[GLITCH-FIX] Total text glitches fixed: {total_fixes}")
+
+    return sections
+
+
+# =============================================================================
 # v14.35.22: OPEN EXAMPLE PAREN FIXER
 # =============================================================================
 # Problem: Report 468 had "(z.B." or "(z. B." at sentence ends without closing
@@ -1614,6 +1685,9 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     # 11. Solo Language Normalizer (v14.35.22) - Replace enterprise terms for solo persona
     if company_size:
         sections = apply_solo_language_normalizer(sections, company_size)
+
+    # 12. Text Glitch Fixer (Fix-Batch F) - Fix known word corruptions and zero displays
+    sections = apply_text_glitch_fixer(sections)
 
     log.info("[QUALITY-ENFORCER] Pipeline complete")
     return sections

@@ -3801,6 +3801,145 @@ def _calculate_quickwin_savings_display(raw_zeitersparnis: str, canonical_rate: 
     return html_module.escape(cleaned) if cleaned else "Zeitersparnis: auf Anfrage"
 
 
+# =============================================================================
+# Fix-Batch D: Quick Wins HARD STOP - Suppress Raw JSON
+# =============================================================================
+def _enforce_quickwins_no_raw_json(qw_html: str, branche: str, groesse: str) -> str:
+    """
+    Fix-Batch D: HARD STOP - Ensure Quick Wins output never contains raw JSON.
+
+    This function acts as a final safety net to prevent raw JSON from leaking
+    into the PDF output. It:
+    1. Checks if output contains JSON markers ("title":, "icon":, etc.)
+    2. If JSON detected, tries to extract and render it properly
+    3. If extraction fails, returns a clean compact fallback
+    4. NEVER returns raw JSON to the PDF
+
+    Args:
+        qw_html: Current Quick Wins HTML output
+        branche: Company branch for fallback rendering
+        groesse: Company size for fallback rendering
+
+    Returns:
+        Clean HTML without raw JSON
+    """
+    if not qw_html:
+        return _fallback_quick_wins_html(branche, groesse)
+
+    # JSON markers that indicate raw JSON leak
+    json_markers = ['"title":', '"icon":', '"engpass":', '"zeitersparnis":', '"steps":']
+    has_json_markers = any(marker in qw_html for marker in json_markers)
+
+    # Valid HTML markers that indicate proper rendering
+    html_markers = ['<div class="quick-win-card"', '<div class="quick-win">', 'class="quick-wins"']
+    has_html_structure = any(marker in qw_html for marker in html_markers)
+
+    # If we have proper HTML structure and no JSON markers, output is clean
+    if has_html_structure and not has_json_markers:
+        return qw_html
+
+    # If JSON markers detected, this is a HARD FAIL - raw JSON is leaking
+    if has_json_markers:
+        log.error("[QW-HARD-FAIL] Raw JSON detected in Quick Wins output - attempting recovery")
+
+        # Try to extract JSON and render it properly
+        try:
+            # Try to find JSON array in the content
+            json_start = qw_html.find('[')
+            json_end = qw_html.rfind(']') + 1
+
+            if json_start >= 0 and json_end > json_start:
+                json_str = qw_html[json_start:json_end]
+                quick_wins_list = _parse_quick_wins_json(json_str)
+
+                if quick_wins_list:
+                    # Successfully extracted JSON - render it properly
+                    log.info("[QW-HARD-FAIL] Recovery successful - rendering %d Quick Wins", len(quick_wins_list))
+                    return _build_quick_wins_html(quick_wins_list, branche=branche, groesse=groesse)
+        except Exception as e:
+            log.warning("[QW-HARD-FAIL] JSON extraction failed: %s", e)
+
+        # Recovery failed - generate compact fallback from any readable content
+        log.warning("[QW-HARD-FAIL] Suppressed raw JSON output - generating compact fallback")
+        return _generate_quickwins_compact_fallback(qw_html, branche, groesse)
+
+    # If no HTML structure but also no JSON, might be plain text - wrap it
+    if not has_html_structure:
+        log.warning("[QW-SOFT-FAIL] No HTML structure detected - wrapping content")
+        # Wrap in basic container to ensure it renders reasonably
+        return f'''
+<div class="quick-wins-fallback" style="padding: 20px; background: #f8fafc; border-radius: 12px;">
+    <h3 style="color: #1e3a8a; margin-bottom: 16px;">Quick Wins</h3>
+    <div style="color: #374151; line-height: 1.6;">{qw_html}</div>
+</div>
+'''
+
+    return qw_html
+
+
+def _generate_quickwins_compact_fallback(raw_content: str, branche: str, groesse: str) -> str:
+    """
+    Fix-Batch D: Generate compact fallback when raw JSON recovery fails.
+
+    Creates a simple 3-item table from any extractable content.
+    This ensures something reasonable shows even when JSON parsing fails.
+
+    Args:
+        raw_content: Raw content that couldn't be parsed
+        branche: Company branch
+        groesse: Company size
+
+    Returns:
+        Compact HTML table with extracted items
+    """
+    import html as html_module
+
+    # Try to extract any title-like content from the raw JSON
+    title_pattern = re.compile(r'"title"\s*:\s*"([^"]+)"', re.IGNORECASE)
+    titles = title_pattern.findall(raw_content)[:3]
+
+    if not titles:
+        # Try to extract any meaningful text
+        text_pattern = re.compile(r'"([^"]{10,100})"')
+        titles = [t for t in text_pattern.findall(raw_content) if not t.startswith('{') and ':' not in t[:10]][:3]
+
+    if not titles:
+        # Complete fallback failure - return error message
+        log.error("[QW-HARD-FAIL] No extractable content - showing error")
+        return _fallback_quick_wins_html(branche, groesse)
+
+    # Generate compact table
+    html = f'''
+<div class="quick-wins-compact" style="margin: 20px 0;">
+    <div style="background: #eff6ff; padding: 12px 16px; border-radius: 8px 8px 0 0; border-bottom: 2px solid #3b82f6;">
+        <strong style="color: #1e40af;">Quick Wins für {html_module.escape(branche)}</strong>
+    </div>
+    <table style="width:100%; border-collapse:collapse; font-size:10pt;">
+        <tbody>
+'''
+
+    for i, title in enumerate(titles, 1):
+        clean_title = html_module.escape(title.strip())
+        html += f'''
+            <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding:12px; width:40px; text-align:center; background:#f0fdf4; font-weight:bold; color:#065f46;">{i}</td>
+                <td style="padding:12px; color:#374151;">{clean_title}</td>
+            </tr>
+'''
+
+    html += '''
+        </tbody>
+    </table>
+    <div style="background: #f8fafc; padding: 8px 16px; border-radius: 0 0 8px 8px; font-size:9pt; color:#6b7280;">
+        <em>Weitere Details auf Anfrage verfügbar</em>
+    </div>
+</div>
+'''
+
+    log.info("[QW-HARD-FAIL] Generated compact fallback with %d items", len(titles))
+    return html
+
+
 def _fallback_quick_wins_html(branche: str, groesse: str) -> str:
     """
     Fallback HTML wenn JSON-Parsing fehlschlägt.
@@ -10860,6 +10999,10 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     if not qw_html:
         log.warning("⚠️ Kein Quick Wins Content, zeige Fallback-HTML")
         qw_html = _fallback_quick_wins_html(branche=qw_branche, groesse=qw_groesse)
+
+    # ========== Fix-Batch D: HARD STOP - Suppress raw JSON in Quick Wins ==========
+    # CRITICAL: Quick Wins must NEVER contain raw JSON in PDF output
+    qw_html = _enforce_quickwins_no_raw_json(qw_html, qw_branche, qw_groesse)
 
     # v8.0: Single-column layout for Quick Wins
     sections["QUICK_WINS_HTML"] = qw_html
