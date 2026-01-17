@@ -7338,10 +7338,11 @@ def _build_feedback_box(feedback_url: str, report_date: str) -> str:
 # -------------------- 🎯 NEW: Estimate hourly rate from revenue ----------------
 def _estimate_hourly_rate_from_revenue(briefing: Dict[str, Any]) -> int:
     """
-    Estimate a realistic hourly rate based on company size and revenue.
-    This is needed because the questionnaire doesn't have a 'stundensatz_eur' field,
-    but we need it for ROI calculations.
-    
+    Estimate a realistic hourly rate based on company size.
+
+    Fix-Batch-2: Now uses canonical HOURLY_RATES_BY_SIZE to prevent rate mismatches.
+    The revenue-based estimation is DEPRECATED - use company size only.
+
     Returns: Estimated hourly rate in EUR
     """
     # First check if there's an explicit hourly rate in the briefing
@@ -7351,41 +7352,30 @@ def _estimate_hourly_rate_from_revenue(briefing: Dict[str, Any]) -> int:
             return int(explicit_rate)
         except (ValueError, TypeError):
             pass
-    
-    # Get company size and revenue
-    size = briefing.get("unternehmensgroesse", "").lower()
-    revenue_label = briefing.get("jahresumsatz", "").lower()
-    
-    # Solo/Freelancer baseline
-    if "solo" in size or "freiberuf" in size or "einzelunt" in size:
-        return 55
-    
-    # Estimate based on revenue bands
-    # Small companies (under 100k)
-    if "unter" in revenue_label and "100" in revenue_label:
-        return 50
-    
-    # 100k-500k range
-    if any(x in revenue_label for x in ["100", "250", "500"]) and "mio" not in revenue_label:
-        return 65
-    
-    # 500k-1M range
-    if "500" in revenue_label or ("1" in revenue_label and "mio" in revenue_label):
-        return 75
-    
-    # 1M-5M range
-    if any(x in revenue_label for x in ["2", "3", "4", "5"]) and "mio" in revenue_label:
-        return 85
-    
-    # 5M+ range
-    if any(x in revenue_label for x in ["10", "20", "50"]) and "mio" in revenue_label:
-        return 95
-    
-    # Default fallback
+
+    # Fix-Batch-2: Use canonical rates from business_case_engine_v2
+    # This ensures consistency across all surfaces
     try:
-        return int(os.getenv("DEFAULT_STUNDENSATZ_EUR", "60"))
-    except (ValueError, TypeError):
-        return 60
+        from services.business_case_engine_v2 import HOURLY_RATES_BY_SIZE, normalize_company_size
+        size = briefing.get("unternehmensgroesse", "team")
+        normalized = normalize_company_size(size)
+        return int(HOURLY_RATES_BY_SIZE.get(normalized, 95))
+    except ImportError:
+        pass
+
+    # Absolute fallback: use canonical values directly
+    size = briefing.get("unternehmensgroesse", "").lower()
+    if "solo" in size or "freiberuf" in size or "einzelunt" in size:
+        return 80  # Canonical solo rate
+    elif "team" in size or "2-10" in size:
+        return 95  # Canonical team rate
+    elif "kmu" in size or "11-100" in size:
+        return 110  # Canonical KMU rate
+    elif "enterprise" in size or ">100" in size:
+        return 130  # Canonical enterprise rate
+
+    # Default: team rate
+    return 95
 
 # -------------------- 🎯 NEW: Build prompt variables ----------------
 def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict[str, Any]:
