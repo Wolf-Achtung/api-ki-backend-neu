@@ -35,6 +35,130 @@ _LEAK_PATTERN = re.compile(
 
 
 # =============================================================================
+# P0.4: Pagebreak Cleanup - Prevent Empty/Low-Value Pages
+# =============================================================================
+# Patterns for detecting pagebreak elements
+_PAGEBREAK_CLASSES = [
+    r'class="[^"]*page-break[^"]*"',
+    r'class="[^"]*chapter-start[^"]*"',
+    r'style="[^"]*page-break-before:\s*always[^"]*"',
+    r'style="[^"]*break-before:\s*page[^"]*"',
+]
+
+# Compiled pattern for pagebreak detection
+_PAGEBREAK_PATTERN = re.compile(
+    r'<div\s+(?:' + '|'.join(_PAGEBREAK_CLASSES) + r')[^>]*>\s*</div>',
+    re.IGNORECASE | re.DOTALL
+)
+
+# Pattern for consecutive pagebreaks (2+ in a row with only whitespace between)
+_CONSECUTIVE_PAGEBREAKS = re.compile(
+    r'(<div\s+class="[^"]*page-break[^"]*"[^>]*>\s*</div>\s*){2,}',
+    re.IGNORECASE | re.DOTALL
+)
+
+# Pattern for empty sections that could cause blank pages
+_EMPTY_SECTION_PATTERNS = [
+    # Empty section with only whitespace
+    re.compile(r'<section[^>]*>\s*</section>', re.IGNORECASE | re.DOTALL),
+    # Section with only empty divs
+    re.compile(r'<section[^>]*>\s*(?:<div[^>]*>\s*</div>\s*)*</section>', re.IGNORECASE | re.DOTALL),
+    # Pagebreak followed immediately by another pagebreak element
+    re.compile(
+        r'(<div\s+class="page-break"[^>]*>\s*</div>)\s*'
+        r'(<(?:div|section)[^>]*(?:chapter|page-break)[^>]*>)',
+        re.IGNORECASE
+    ),
+]
+
+
+def cleanup_pagebreaks(html: str, run_id: str | None = None) -> Tuple[str, int]:
+    """
+    P0.4: Clean up pagebreak artifacts that cause empty or low-value pages.
+
+    Removes:
+    - Consecutive pagebreak divs (keeps only first)
+    - Empty sections that would create blank pages
+    - Orphaned pagebreaks at document start/end
+
+    Args:
+        html: HTML content to clean
+        run_id: Optional run ID for logging
+
+    Returns:
+        Tuple of (cleaned_html, count_removed)
+    """
+    if not html or not isinstance(html, str):
+        return html or "", 0
+
+    result = html
+    removed_count = 0
+
+    try:
+        # Step 1: Remove consecutive pagebreaks (keep only first)
+        def keep_first_pagebreak(match):
+            nonlocal removed_count
+            # Count how many pagebreaks were in the match
+            pagebreaks = re.findall(r'<div\s+class="[^"]*page-break[^"]*"', match.group(0), re.IGNORECASE)
+            if len(pagebreaks) > 1:
+                removed_count += len(pagebreaks) - 1
+            # Return just one pagebreak
+            return '<div class="page-break"></div>'
+
+        result = _CONSECUTIVE_PAGEBREAKS.sub(keep_first_pagebreak, result)
+
+        # Step 2: Remove empty sections
+        for pattern in _EMPTY_SECTION_PATTERNS[:2]:  # First two patterns
+            matches = pattern.findall(result)
+            if matches:
+                removed_count += len(matches)
+                result = pattern.sub('', result)
+
+        # Step 3: Fix pagebreak immediately before another pagebreak element
+        # (removes the first one to avoid double breaks)
+        third_pattern = _EMPTY_SECTION_PATTERNS[2]
+        while True:
+            match = third_pattern.search(result)
+            if not match:
+                break
+            # Keep only the second element (the chapter/section)
+            result = result[:match.start()] + match.group(2) + result[match.end():]
+            removed_count += 1
+
+        # Step 4: Remove pagebreak at very start of body content
+        result = re.sub(
+            r'(<body[^>]*>)\s*<div\s+class="page-break"[^>]*>\s*</div>',
+            r'\1',
+            result,
+            flags=re.IGNORECASE
+        )
+
+        # Step 5: Remove pagebreak at very end before </body>
+        result = re.sub(
+            r'<div\s+class="page-break"[^>]*>\s*</div>\s*(</body>)',
+            r'\1',
+            result,
+            flags=re.IGNORECASE
+        )
+
+        # Step 6: Normalize whitespace around remaining pagebreaks
+        result = re.sub(
+            r'\s*(<div\s+class="page-break"[^>]*>\s*</div>)\s*',
+            r'\n\1\n',
+            result
+        )
+
+        if removed_count > 0:
+            log.info(f"[P0.4] Pagebreak cleanup removed {removed_count} artifacts for run={run_id}")
+
+    except Exception as e:
+        log.error(f"[P0.4] Pagebreak cleanup failed for run={run_id}: {e}", exc_info=True)
+        return html, 0
+
+    return result, removed_count
+
+
+# =============================================================================
 # SPRINT N2.5: Defensive Final Leak Cleanup
 # =============================================================================
 def detect_leak_phrases(html: str) -> List[str]:
@@ -575,6 +699,13 @@ def render(briefing_obj: Any,
     if original_size > 0:
         savings_pct = (1 - new_size / original_size) * 100
         log.info(f"[RENDER] PDF-SLIMDOWN: {original_size}→{new_size} bytes ({savings_pct:.1f}% saved)")
+
+    # =========================================================================
+    # P0.4: Pagebreak cleanup - prevent empty/low-value pages
+    # =========================================================================
+    html, pagebreak_removed = cleanup_pagebreaks(html, run_id=run_id)
+    if pagebreak_removed > 0:
+        log.info(f"[P0.4] Pagebreak cleanup: removed {pagebreak_removed} artifacts for run={run_id}")
 
     # =========================================================================
     # SPRINT N2.5: Final leak phrase safety check (defensive)

@@ -253,6 +253,37 @@ class RecommendationsReport:
         """Count recommendations with high impact."""
         return sum(1 for r in self.recommendations if r.impact_level == "high")
 
+    @property
+    def displayed_count(self) -> int:
+        """P0.6: Count of recommendations that will be displayed (top3 + others)."""
+        return len(self.top_3_recommendations) + len(self.other_recommendations)
+
+    def validate_count_consistency(self) -> Tuple[bool, str]:
+        """
+        P0.6: Validate that the count in summary matches actual recommendations.
+
+        Returns:
+            Tuple of (is_valid, error_message)
+        """
+        actual_count = len(self.recommendations)
+        displayed_count = self.displayed_count
+
+        # Check 1: displayed count matches total
+        if displayed_count != actual_count:
+            return False, f"Displayed count ({displayed_count}) != total ({actual_count})"
+
+        # Check 2: Extract count from summary if present
+        if self.summary:
+            # Pattern: "wurden X konkrete" or "X concrete"
+            count_pattern = re.compile(r'(\d+)\s+(?:konkrete|concrete)', re.IGNORECASE)
+            match = count_pattern.search(self.summary)
+            if match:
+                summary_count = int(match.group(1))
+                if summary_count != actual_count:
+                    return False, f"Summary mentions {summary_count} but actual is {actual_count}"
+
+        return True, ""
+
     def get_recommendation(self, rec_id: str) -> Optional[Recommendation]:
         """Get recommendation by ID."""
         for r in self.recommendations:
@@ -787,6 +818,11 @@ def generate_recommendations_report(
         summary=summary,
         top_3_ids=top_3_ids,
     )
+
+    # P0.6: Validate count consistency
+    is_valid, error = report.validate_count_consistency()
+    if not is_valid:
+        log.warning("[P0.6] Recommendations count mismatch: %s", error)
 
     log.info(
         "[G32] Recommendations Report generated: %d recommendations, top_3=%s",
