@@ -25,7 +25,11 @@ log = logging.getLogger(__name__)
 
 # Fix-Batch H: Import get_label for consistent label localization
 try:
-    from services.i18n import get_label as ui
+    from services.i18n import get_label
+
+    def ui(key: str, lang: str = "de") -> str:
+        """Wrapper to call get_label with proper signature."""
+        return get_label(key, lang)
 except ImportError:
     def ui(key: str, lang: str = "de") -> str:
         """Fallback ui function."""
@@ -333,8 +337,8 @@ def generate_kpi_visuals(
             time_savings = savings_eur / 60
 
     # Fix-Batch H: Labels from ui() for consistent localization
-    roi_label = ui("kpi_roi_details", lang)  # "ROI-Details" in DE
-    payback_label = ui("kpi_payback_months", lang)  # "Amortisation" in DE
+    roi_label = ui("kpi_roi_12m", lang)  # "ROI (12 Monate)" in DE
+    payback_label = ui("kpi_payback_period", lang)  # "Amortisation" in DE
     savings_label = ui("kpi_time_savings_month", lang)  # "Zeitersparnis/Monat" in DE
 
     # Generate KPI bars

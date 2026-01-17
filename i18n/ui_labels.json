@@ -1192,6 +1192,20 @@
     "es": "ROI",
     "it": "ROI"
   },
+  "kpi_roi_12m": {
+    "de": "ROI (12 Monate)",
+    "en": "ROI (12 months)",
+    "fr": "ROI (12 mois)",
+    "es": "ROI (12 meses)",
+    "it": "ROI (12 mesi)"
+  },
+  "kpi_payback_period": {
+    "de": "Amortisation",
+    "en": "Payback Period",
+    "fr": "Période d'amortissement",
+    "es": "Período de amortización",
+    "it": "Periodo di ammortamento"
+  },
   "kpi_payback_progress": {
     "de": "Amortisationsfortschritt",
     "en": "Payback Progress",
