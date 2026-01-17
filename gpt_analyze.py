@@ -3596,6 +3596,9 @@ def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse
     Baut Quick Wins HTML mit TABELLENSTRUKTUR (WeasyPrint-kompatibel).
     Keine Flexbox, keine Grid, keine komplexen Gradients.
 
+    P0.7: € values are now calculated from hours * canonical_rate
+          to ensure consistency with Business Case.
+
     Args:
         quick_wins: List of dicts mit Quick Win Daten
         branche: Branche des Unternehmens (für Context-Banner)
@@ -3605,6 +3608,15 @@ def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse
         str: Komplettes HTML für Quick Wins Section
     """
     import html as html_module
+
+    # P0.7: Get canonical hourly rate for € calculation
+    try:
+        from services.business_case_engine_v2 import get_hourly_rate, normalize_company_size
+        size_normalized = normalize_company_size(groesse)
+        canonical_rate, _ = get_hourly_rate(size_normalized)
+    except Exception:
+        # Fallback to standard rate
+        canonical_rate = 80
 
     # Context-Banner als Tabelle (nur 1x oben)
     html = f"""
@@ -3628,13 +3640,20 @@ def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse
     for i, qw in enumerate(quick_wins, 1):
         # Escape HTML
         title = html_module.escape(str(qw.get('title', 'Ohne Titel')))
-        icon = qw.get('icon', '◎')
+        # P0.7: Clean "Icon:" text artifacts from icon field
+        raw_icon = str(qw.get('icon', '◎'))
+        icon = re.sub(r'^Icon:\s*', '', raw_icon, flags=re.IGNORECASE).strip() or '◎'
         time = html_module.escape(str(qw.get('time', 'Unbekannt')))
         engpass = html_module.escape(str(qw.get('engpass', '')))
         description = html_module.escape(str(qw.get('description', '')))
         mit_ki = html_module.escape(str(qw.get('mit_ki', '')))
         steps = qw.get('steps', [])
-        zeitersparnis = html_module.escape(str(qw.get('zeitersparnis', '')))
+        raw_zeitersparnis = str(qw.get('zeitersparnis', ''))
+
+        # P0.7: Calculate € values from hours using canonical rate
+        zeitersparnis_display = _calculate_quickwin_savings_display(
+            raw_zeitersparnis, canonical_rate
+        )
 
         # Steps als nummerierte Liste
         steps_html = '<ol style="margin: 12px 0 12px 20px; padding: 0; color: #065f46;">'
@@ -3690,10 +3709,10 @@ def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse
             {steps_html}
         </div>
 
-        <!-- Zeitersparnis Footer -->
+        <!-- Zeitersparnis Footer (P0.7: Calculated from canonical rate) -->
         <div style="text-align: right; padding-top: 12px; border-top: 2px solid #e5e7eb;">
             <span style="background: #d1fae5; color: #065f46; font-weight: bold; font-size: 14px; padding: 6px 14px; border-radius: 12px;">
-                <span class="icon icon--success">◆</span> {zeitersparnis}
+                <span class="icon icon--success">◆</span> {zeitersparnis_display}
             </span>
         </div>
 
@@ -3709,6 +3728,77 @@ def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse
 """
 
     return html
+
+
+# =============================================================================
+# P0.7: Quick Wins € Calculation Helper
+# =============================================================================
+def _calculate_quickwin_savings_display(raw_zeitersparnis: str, canonical_rate: int) -> str:
+    """
+    P0.7: Calculate Quick Win savings display from hours using canonical rate.
+
+    Parses hours from zeitersparnis text and calculates € values:
+    - eur_low = hours_low * canonical_rate
+    - eur_high = hours_high * canonical_rate
+
+    Args:
+        raw_zeitersparnis: Raw zeitersparnis text (e.g., "10-15 h/Monat = 800-1.200 €")
+        canonical_rate: Canonical hourly rate in EUR
+
+    Returns:
+        Formatted string like "10-15 h/Monat = 800–1.200 €"
+    """
+    import html as html_module
+
+    if not raw_zeitersparnis:
+        return "Zeitersparnis: auf Anfrage"
+
+    # Try to extract hours range from the text
+    # Pattern: "10-15 h" or "10 bis 15 h" or "10–15h" etc.
+    hours_pattern = re.compile(
+        r'(\d+(?:[.,]\d+)?)\s*[-–bis]+\s*(\d+(?:[.,]\d+)?)\s*(?:h|std|stunden?)',
+        re.IGNORECASE
+    )
+    single_hours_pattern = re.compile(
+        r'(\d+(?:[.,]\d+)?)\s*(?:h|std|stunden?)\s*(?:/\s*(?:monat|mon|m))?',
+        re.IGNORECASE
+    )
+
+    hours_low = None
+    hours_high = None
+
+    # Try range pattern first
+    match = hours_pattern.search(raw_zeitersparnis)
+    if match:
+        hours_low = float(match.group(1).replace(',', '.'))
+        hours_high = float(match.group(2).replace(',', '.'))
+    else:
+        # Try single value pattern
+        single_match = single_hours_pattern.search(raw_zeitersparnis)
+        if single_match:
+            hours_val = float(single_match.group(1).replace(',', '.'))
+            # Create a range around single value
+            hours_low = hours_val * 0.8
+            hours_high = hours_val * 1.2
+
+    # Calculate € values
+    if hours_low is not None and hours_high is not None:
+        eur_low = int(hours_low * canonical_rate)
+        eur_high = int(hours_high * canonical_rate)
+
+        # Format with German number formatting
+        eur_low_fmt = f"{eur_low:,}".replace(",", ".")
+        eur_high_fmt = f"{eur_high:,}".replace(",", ".")
+
+        return f"{int(hours_low)}–{int(hours_high)} h/Monat = {eur_low_fmt}–{eur_high_fmt} €"
+
+    # Fallback: clean and return original, removing any conflicting € values
+    # P0.7: Strip existing € values from LLM text to avoid inconsistency
+    cleaned = re.sub(r'=?\s*[\d.,]+\s*[-–]\s*[\d.,]+\s*€', '', raw_zeitersparnis)
+    cleaned = re.sub(r'=?\s*[\d.,]+\s*€', '', cleaned)
+    cleaned = cleaned.strip().rstrip('=').strip()
+
+    return html_module.escape(cleaned) if cleaned else "Zeitersparnis: auf Anfrage"
 
 
 def _fallback_quick_wins_html(branche: str, groesse: str) -> str:
