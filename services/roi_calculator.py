@@ -3,6 +3,9 @@ from __future__ import annotations
 from typing import Dict, Any, List
 from ._normalize import _briefing_to_dict
 
+# Fix-Batch J2: Import German number formatting
+from services.i18n import format_decimal_de
+
 
 def _estimate_hourly_rate(b: Dict[str, Any]) -> float:
     """
@@ -84,11 +87,12 @@ def calc_roi(
 
 
 def to_html(r: Dict[str, Any]) -> str:
+    """Fix-Batch J2: Use German decimal format for break-even months."""
     if not r:
         return ""
     return f"""<div class="card">
 <strong>Business Case (konservativ)</strong><br>
 Zeitersparnis: <strong>{r['hours']:.0f} h/Monat</strong> · Stundensatz (geschätzt): <strong>{r['hourly_rate']:.0f} €</strong><br>
 Wert: <strong>{r['monthly_value']:.0f} €/Monat</strong> · Investition: <strong>{r['investment']:.0f} €</strong><br>
-Break-even: <strong>{r['break_even_months']:.1f} Monate</strong> · ROI (12 Monate): <strong>{r['roi_12m']:.0f}%</strong>
+Break-even: <strong>{format_decimal_de(r['break_even_months'])} Monate</strong> · ROI (12 Monate): <strong>{r['roi_12m']:.0f}%</strong>
 </div>"""
