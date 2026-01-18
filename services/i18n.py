@@ -269,6 +269,103 @@ def ui_label(key: str, lang: str, default: str = "") -> str:
 
 
 # =============================================================================
+# Fix-Batch J2: GERMAN NUMBER FORMATTING
+# =============================================================================
+# Problem: German reports show English decimal points (3.5) instead of commas (3,5)
+# and EUR values lack thousand separators (1600€ instead of 1.600 €)
+# Solution: Centralized formatting functions for all numeric output
+# =============================================================================
+
+def format_decimal_de(value: float, decimals: int = 1) -> str:
+    """
+    Format a decimal number for German locale.
+
+    Uses comma as decimal separator (German standard).
+
+    Args:
+        value: The numeric value to format
+        decimals: Number of decimal places (default: 1)
+
+    Returns:
+        German-formatted decimal string (e.g., "3,5" instead of "3.5")
+
+    Examples:
+        >>> format_decimal_de(3.5)
+        '3,5'
+        >>> format_decimal_de(12.75, 2)
+        '12,75'
+        >>> format_decimal_de(100.0, 0)
+        '100'
+    """
+    if decimals == 0:
+        return f"{value:.0f}"
+    formatted = f"{value:.{decimals}f}"
+    return formatted.replace(".", ",")
+
+
+def format_eur_de(value: float, decimals: int = 0) -> str:
+    """
+    Format a EUR currency value for German locale.
+
+    Uses:
+    - Dot as thousand separator (German standard)
+    - Comma as decimal separator
+    - Space before € symbol
+
+    Args:
+        value: The EUR amount to format
+        decimals: Number of decimal places (default: 0)
+
+    Returns:
+        German-formatted EUR string (e.g., "1.600 €" instead of "1600€")
+
+    Examples:
+        >>> format_eur_de(1600)
+        '1.600 €'
+        >>> format_eur_de(1234567.89, 2)
+        '1.234.567,89 €'
+        >>> format_eur_de(50)
+        '50 €'
+    """
+    # Format with decimals
+    if decimals > 0:
+        formatted = f"{value:,.{decimals}f}"
+    else:
+        formatted = f"{value:,.0f}"
+
+    # Convert English format to German:
+    # 1,234.56 → 1.234,56
+    # Step 1: Replace comma with temporary placeholder
+    formatted = formatted.replace(",", "_TEMP_")
+    # Step 2: Replace period with comma (decimal)
+    formatted = formatted.replace(".", ",")
+    # Step 3: Replace placeholder with period (thousand)
+    formatted = formatted.replace("_TEMP_", ".")
+
+    return f"{formatted} €"
+
+
+def format_eur_range_de(min_val: float, max_val: float) -> str:
+    """
+    Format a EUR range for German locale.
+
+    Args:
+        min_val: Minimum EUR value
+        max_val: Maximum EUR value
+
+    Returns:
+        German-formatted range string (e.g., "1.200–1.600 €")
+
+    Examples:
+        >>> format_eur_range_de(1200, 1600)
+        '1.200–1.600 €'
+    """
+    min_fmt = format_eur_de(min_val).replace(" €", "")
+    max_fmt = format_eur_de(max_val)
+    return f"{min_fmt}–{max_fmt}"
+
+
+# =============================================================================
 # SELF-CHECK (for development/debugging)
 # =============================================================================
 

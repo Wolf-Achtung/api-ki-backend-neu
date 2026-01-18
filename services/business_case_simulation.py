@@ -54,6 +54,9 @@ from services.business_case_engine_v2 import (
     MAX_PAYBACK_MONTHS,
 )
 
+# Fix-Batch J2: Import German number formatting
+from services.i18n import format_decimal_de
+
 log = logging.getLogger(__name__)
 
 __all__ = [
@@ -932,9 +935,9 @@ def generate_narrative_summary(
         roi_ci = distribution.roi_confidence_interval_80
         parts.append(f"Mit 80% Wahrscheinlichkeit liegt der ROI zwischen {roi_ci[0]:.0f}% und {roi_ci[1]:.0f}%.")
 
-        # Payback
+        # Payback - Fix-Batch J2: Use German decimal format
         pb_ci = distribution.payback_confidence_interval_80
-        parts.append(f"Amortisation: {distribution.payback_p50:.1f} Monate (80% KI: {pb_ci[0]:.1f}-{pb_ci[1]:.1f} Monate).")
+        parts.append(f"Amortisation: {format_decimal_de(distribution.payback_p50)} Monate (80% KI: {format_decimal_de(pb_ci[0])}-{format_decimal_de(pb_ci[1])} Monate).")
 
         # Risk assessment
         if distribution.roi_std > 50:

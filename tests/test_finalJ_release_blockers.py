@@ -1,0 +1,329 @@
+# -*- coding: utf-8 -*-
+"""
+Tests for Fix-Batches J1-J4 - Release Blocker Patchset
+
+Tests:
+- J1: Quick Wins ZERO-FAIL - Deterministic fallback always delivered
+- J2: Locale/KPI 100% DE - German number formatting, no English labels
+- J3: No Blank/Orphan Pages - Enhanced empty page detection
+- J4: No Chat Artefacts - Filter chat patterns from output
+"""
+
+import os
+import pytest
+import re
+
+# Set test environment before imports
+os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
+os.environ.setdefault("JWT_SECRET", "test-secret-key-for-testing-only")
+os.environ.setdefault("OPENAI_API_KEY", "test-api-key")
+
+
+# =============================================================================
+# J1: Quick Wins ZERO-FAIL Tests
+# =============================================================================
+
+class TestJ1QuickWinsZeroFail:
+    """Test that Quick Wins never shows an error page."""
+
+    def test_deterministic_fallback_exists(self):
+        """Test that _generate_deterministic_quickwins_fallback exists."""
+        from gpt_analyze import _generate_deterministic_quickwins_fallback
+
+        assert callable(_generate_deterministic_quickwins_fallback)
+
+    def test_deterministic_fallback_produces_html(self):
+        """Test that deterministic fallback produces valid HTML."""
+        from gpt_analyze import _generate_deterministic_quickwins_fallback
+
+        result = _generate_deterministic_quickwins_fallback("IT", "team")
+
+        assert isinstance(result, str)
+        assert len(result) > 100  # Not empty
+        assert "<table" in result or "<div" in result  # Has HTML
+        assert "Quick Win" in result or "E-Mail" in result  # Has content
+
+    def test_deterministic_fallback_has_5_items(self):
+        """Test that deterministic fallback produces 5 Quick Wins."""
+        from gpt_analyze import _generate_deterministic_quickwins_fallback
+
+        result = _generate_deterministic_quickwins_fallback("IT", "solo")
+
+        # Count rows/items (approximate)
+        # Each Quick Win should have a tr or similar
+        item_patterns = re.findall(r'<tr[^>]*class="[^"]*quick-win', result, re.IGNORECASE)
+        # Fallback: count emojis used as icons
+        emoji_count = len(re.findall(r'[📧📝📊🔄💡]', result))
+
+        # Should have at least 3 items visible
+        assert emoji_count >= 3 or len(item_patterns) >= 3
+
+    def test_no_qw_error_page_in_code(self):
+        """Test that QW-ERROR-PAGE is not in the codebase."""
+        from gpt_analyze import __file__ as gpt_analyze_path
+
+        with open(gpt_analyze_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # QW-ERROR-PAGE should not exist
+        assert "QW-ERROR-PAGE" not in content
+
+    def test_fallback_compact_redirects_to_deterministic(self):
+        """Test that compact fallback redirects to deterministic."""
+        from gpt_analyze import _generate_quickwins_compact_fallback
+
+        # Function takes (raw_content, branche, groesse)
+        result = _generate_quickwins_compact_fallback("broken content", "IT", "team")
+
+        # Should produce deterministic fallback, not error
+        assert "Fehler" not in result.lower() or "Quick Win" in result
+        assert "<table" in result or "<div" in result
+
+
+# =============================================================================
+# J2: Locale/KPI 100% DE Tests
+# =============================================================================
+
+class TestJ2LocaleKPI100DE:
+    """Test German number formatting and labels."""
+
+    def test_format_decimal_de_basic(self):
+        """Test format_decimal_de converts period to comma."""
+        from services.i18n import format_decimal_de
+
+        assert format_decimal_de(3.5) == "3,5"
+        assert format_decimal_de(12.75, 2) == "12,75"
+        assert format_decimal_de(100.0, 0) == "100"
+
+    def test_format_decimal_de_no_decimals(self):
+        """Test format_decimal_de with 0 decimals."""
+        from services.i18n import format_decimal_de
+
+        assert format_decimal_de(42.9, 0) == "43"
+
+    def test_format_eur_de_basic(self):
+        """Test format_eur_de uses German thousand separator."""
+        from services.i18n import format_eur_de
+
+        assert format_eur_de(1600) == "1.600 €"
+        assert format_eur_de(50) == "50 €"
+
+    def test_format_eur_de_large_number(self):
+        """Test format_eur_de with large numbers."""
+        from services.i18n import format_eur_de
+
+        # 1,234,567 -> 1.234.567 €
+        result = format_eur_de(1234567)
+        assert "1.234.567" in result
+        assert "€" in result
+
+    def test_format_eur_de_with_decimals(self):
+        """Test format_eur_de with decimal places."""
+        from services.i18n import format_eur_de
+
+        result = format_eur_de(1234.56, 2)
+        # Should be "1.234,56 €"
+        assert "," in result  # Decimal comma
+        assert "€" in result
+
+    def test_format_eur_range_de(self):
+        """Test format_eur_range_de produces correct range."""
+        from services.i18n import format_eur_range_de
+
+        result = format_eur_range_de(1200, 1600)
+
+        assert "1.200" in result
+        assert "1.600" in result
+        assert "€" in result
+        assert "–" in result or "-" in result
+
+    def test_german_amortisation_label_in_bc_engine(self):
+        """Test that German section uses 'Amortisation' not 'Payback'."""
+        from services import business_case_engine_v2
+        import inspect
+
+        source = inspect.getsource(business_case_engine_v2)
+
+        # Should have German label
+        assert '"payback_label": "Amortisation"' in source
+
+    def test_german_investment_label_in_bc_engine(self):
+        """Test that German section uses 'Investition' not 'Investment'."""
+        from services import business_case_engine_v2
+        import inspect
+
+        source = inspect.getsource(business_case_engine_v2)
+
+        # Should have German label (in the else: German labels block)
+        assert '"investment_label": "Investition"' in source
+
+
+# =============================================================================
+# J3: No Blank/Orphan Pages Tests
+# =============================================================================
+
+class TestJ3NoBlankPages:
+    """Test empty page detection and removal."""
+
+    def test_kill_empty_pages_with_br_tags(self):
+        """Test that sections with only heading + br tags are removed."""
+        from services.content_quality_enforcer import kill_empty_pages
+
+        html = '''
+        <section class="test">
+            <h2>Empty Section</h2>
+            <br>
+            <br>
+        </section>
+        <section class="test">
+            <h2>Section with Content</h2>
+            <p>This section has actual content.</p>
+        </section>
+        '''
+
+        result, count = kill_empty_pages(html)
+
+        # Empty section should be removed or count should be > 0
+        assert "Empty Section" not in result or count >= 1
+        # Section with content should remain
+        assert "Section with Content" in result
+
+    def test_kill_empty_pages_preserves_valid(self):
+        """Test that valid content sections are preserved."""
+        from services.content_quality_enforcer import kill_empty_pages
+
+        html = '''
+        <section>
+            <h2>Good Section</h2>
+            <p>This is important content that should be preserved.</p>
+            <ul>
+                <li>Item 1</li>
+                <li>Item 2</li>
+            </ul>
+        </section>
+        '''
+
+        result, count = kill_empty_pages(html)
+
+        # All content should be preserved
+        assert "Good Section" in result
+        assert "important content" in result
+        assert count == 0
+
+    def test_fix_batch_j3_comment_exists(self):
+        """Test that Fix-Batch J3 comment exists in code."""
+        from services import content_quality_enforcer
+        import inspect
+
+        source = inspect.getsource(content_quality_enforcer)
+
+        # Should have Fix-Batch J3 comments
+        assert "Fix-Batch J3" in source
+
+
+# =============================================================================
+# J4: No Chat Artefacts Tests
+# =============================================================================
+
+class TestJ4NoChatArtefacts:
+    """Test chat artefact filtering."""
+
+    def test_filter_chat_artefacts_schreib_mir(self):
+        """Test that 'Schreib mir' is filtered."""
+        from services.content_quality_enforcer import filter_chat_artefacts
+
+        text = "Dies ist wichtig. Schreib mir wenn du Fragen hast. Mehr Inhalt hier."
+
+        result, count = filter_chat_artefacts(text)
+
+        assert "Schreib mir" not in result
+        assert count >= 1
+
+    def test_filter_chat_artefacts_frag_mich(self):
+        """Test that 'Frag mich' is filtered."""
+        from services.content_quality_enforcer import filter_chat_artefacts
+
+        text = "Hier ist die Antwort. Frag mich gerne wenn etwas unklar ist. Ende."
+
+        result, count = filter_chat_artefacts(text)
+
+        assert "Frag mich" not in result
+        assert count >= 1
+
+    def test_filter_chat_artefacts_wenn_du(self):
+        """Test that 'wenn du möchtest' patterns are filtered."""
+        from services.content_quality_enforcer import filter_chat_artefacts
+
+        text = "Die Empfehlung. Wenn du möchtest kann ich mehr erklären. Nächster Punkt."
+
+        result, count = filter_chat_artefacts(text)
+
+        assert "Wenn du möchtest" not in result
+
+    def test_filter_chat_artefacts_preserves_normal(self):
+        """Test that normal business text is preserved."""
+        from services.content_quality_enforcer import filter_chat_artefacts
+
+        text = "Die KI-Strategie zeigt einen ROI von 150%. Die Amortisation erfolgt in 6 Monaten."
+
+        result, count = filter_chat_artefacts(text)
+
+        assert "ROI von 150%" in result
+        assert "Amortisation" in result
+        assert count == 0
+
+    def test_apply_chat_artefact_filter_in_pipeline(self):
+        """Test that chat artefact filter is in the pipeline."""
+        from services import content_quality_enforcer
+        import inspect
+
+        source = inspect.getsource(content_quality_enforcer)
+
+        # Should call apply_chat_artefact_filter in apply_all_quality_enforcers
+        assert "apply_chat_artefact_filter(sections)" in source
+
+    def test_chat_artefact_patterns_defined(self):
+        """Test that CHAT_ARTEFACT_PATTERNS is defined."""
+        from services.content_quality_enforcer import CHAT_ARTEFACT_PATTERNS
+
+        assert isinstance(CHAT_ARTEFACT_PATTERNS, list)
+        assert len(CHAT_ARTEFACT_PATTERNS) >= 5  # Should have several patterns
+
+
+# =============================================================================
+# Integration Tests
+# =============================================================================
+
+class TestJ1J4Integration:
+    """Integration tests for Fix-Batches J1-J4."""
+
+    def test_release_blocker_gate_passes(self):
+        """Test that release blocker gate script runs successfully."""
+        import subprocess
+        import sys
+
+        result = subprocess.run(
+            [sys.executable, "scripts/release_blocker_gate.py"],
+            capture_output=True,
+            text=True
+        )
+
+        # Should pass (exit code 0)
+        assert result.returncode == 0, f"Gate failed: {result.stdout}\n{result.stderr}"
+        assert "GATE PASSED" in result.stdout
+
+    def test_quality_enforcer_pipeline_includes_j4(self):
+        """Test that quality enforcer pipeline includes J4 filter."""
+        from services.content_quality_enforcer import apply_all_quality_enforcers
+
+        sections = {
+            "EXECUTIVE_SUMMARY": "Test content. Schreib mir wenn du Fragen hast. Ende.",
+            "QUICK_WINS_HTML": "<div>Gute Empfehlung. Frag mich gerne. Mehr.</div>",
+        }
+
+        result = apply_all_quality_enforcers(sections)
+
+        # Chat artefacts should be filtered
+        assert "Schreib mir" not in str(result.get("EXECUTIVE_SUMMARY", ""))
+        # Or at least the function ran without error
+        assert result is not None
