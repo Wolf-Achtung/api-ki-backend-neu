@@ -1247,5 +1247,19 @@
     "fr": "Comparaison ROI",
     "es": "Comparación de ROI",
     "it": "Confronto ROI"
+  },
+  "kpi_forecast_header": {
+    "de": "KPI-Prognosen",
+    "en": "KPI Forecasts",
+    "fr": "Prévisions KPI",
+    "es": "Pronósticos KPI",
+    "it": "Previsioni KPI"
+  },
+  "kpi_time_savings_std": {
+    "de": "Zeitersparnis (Std.)",
+    "en": "Time Savings (hrs)",
+    "fr": "Gain de temps (h)",
+    "es": "Ahorro de tiempo (h)",
+    "it": "Risparmio tempo (h)"
   }
 }
