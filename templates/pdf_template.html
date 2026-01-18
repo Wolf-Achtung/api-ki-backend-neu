@@ -2595,23 +2595,39 @@
             break-inside: avoid;
         }
 
-        /* K3: Risk Matrix robustness */
+        /* K3 + L1: Risk Matrix robustness - NO CLIP / NO TRUNCATION */
         .risk-matrix,
         .risk-matrix-container {
             page-break-inside: avoid;
             break-inside: avoid;
         }
 
-        .risk-matrix table {
+        .risk-matrix table,
+        .risk-matrix-section table {
             width: 100%;
             table-layout: fixed;
+            border-collapse: collapse;
         }
 
+        /* L1: Prevent all text truncation in risk matrix */
         .risk-matrix td,
-        .risk-matrix th {
+        .risk-matrix th,
+        .risk-matrix-section td,
+        .risk-matrix-section th {
             overflow-wrap: anywhere;
             word-wrap: break-word;
+            word-break: break-word;
             hyphens: auto;
+            box-sizing: border-box;
+            overflow: visible !important;  /* L1: Never clip content */
+        }
+
+        /* L1: Extra padding on last column to prevent border cutoff */
+        .risk-matrix td:last-child,
+        .risk-matrix th:last-child,
+        .risk-matrix-section td:last-child,
+        .risk-matrix-section th:last-child {
+            padding-right: 12px;
         }
 
         .tool-card__badge {
@@ -4691,19 +4707,27 @@
             width: 25%;
         }
         /* Risk Matrix specific - 5 column layout */
+        /* L1: Removed max-width constraints that caused truncation */
         .risk-matrix-section table {
             font-size: 9pt !important;
+            table-layout: fixed;
         }
         .risk-matrix-section td,
         .risk-matrix-section th {
             padding: 6px 4px !important;
-            max-width: 120px;
+            /* L1: No max-width to prevent truncation */
         }
         .risk-matrix-section td:last-child,
         .risk-matrix-section th:last-child {
-            max-width: 180px;
-            width: 30%;
+            /* L1: 42% width for last column (description) */
+            width: 42%;
+            padding-right: 10px !important;
         }
+        /* L1: Column widths for Risk Matrix (22/18/18/42 ratio) */
+        .risk-matrix-section colgroup col:nth-child(1) { width: 22%; }
+        .risk-matrix-section colgroup col:nth-child(2) { width: 18%; }
+        .risk-matrix-section colgroup col:nth-child(3) { width: 18%; }
+        .risk-matrix-section colgroup col:nth-child(4) { width: 42%; }
 
         /* ============================================
            FIX 4a: LEERRAUM-OPTIMIERUNG

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Release Blocker Gate - CI Validation for Fix-Batches J1-J4
-==========================================================
+Release Blocker Gate - CI Validation for Fix-Batches J1-J4, K1-K3, L1-L3
+========================================================================
 
 This script performs hard validation checks that must pass before release.
 Exit code 0 = pass, Exit code 1 = fail with specific error messages.
@@ -21,8 +21,14 @@ Hard Greps (must find >= 1 matches = PASS):
 - _generate_deterministic_quickwins_fallback in gpt_analyze.py
 - apply_chat_artefact_filter in content_quality_enforcer.py
 - kill_empty_pages with J3 enhancement
+- K1: Du kannst mir pattern, leading punctuation cleaning
+- K2: kpi_forecast_header label, German Investition label
+- K3: page-break fixes, Starter-Kit CSS
+- L1: Risk Matrix colgroup, table-layout:fixed, overflow-wrap
+- L2: get_label and format_decimal_de in predictive_engine
+- L3: break-inside:avoid in sofort_start_generator
 
-Version: 1.0.0 (Fix-Batches J1-J4)
+Version: 1.1.0 (Fix-Batches J1-J4, K1-K3, L1-L3)
 """
 
 import os
@@ -326,6 +332,104 @@ def main():
     else:
         warnings.append("K3: Risk matrix CSS may be missing")
         print(f"  {YELLOW}⚠{RESET} K3 Risk matrix CSS not found")
+
+    print()
+
+    # ==========================================================================
+    # L1: Risk Matrix NO CLIP / NO TRUNCATION Validation
+    # ==========================================================================
+    print(f"{BOLD}[L1] Risk Matrix NO CLIP / NO TRUNCATION{RESET}")
+
+    # Must have: colgroup in Risk Matrix table
+    passed, count = check_file_contains(
+        base / "services" / "risk_engine_v2.py",
+        r"<colgroup>"
+    )
+    if passed:
+        print(f"  {GREEN}✓{RESET} L1 Risk Matrix colgroup present")
+    else:
+        warnings.append("L1: Risk Matrix colgroup may be missing")
+        print(f"  {YELLOW}⚠{RESET} L1 Risk Matrix colgroup not found")
+
+    # Must have: table-layout:fixed
+    passed, count = check_file_contains(
+        base / "services" / "risk_engine_v2.py",
+        r"table-layout:fixed"
+    )
+    if passed:
+        print(f"  {GREEN}✓{RESET} L1 table-layout:fixed present")
+    else:
+        warnings.append("L1: table-layout:fixed may be missing")
+        print(f"  {YELLOW}⚠{RESET} L1 table-layout:fixed not found")
+
+    # Must have: overflow-wrap in cells
+    passed, count = check_file_contains(
+        base / "services" / "risk_engine_v2.py",
+        r"overflow-wrap:anywhere"
+    )
+    if passed:
+        print(f"  {GREEN}✓{RESET} L1 overflow-wrap present")
+    else:
+        warnings.append("L1: overflow-wrap may be missing")
+        print(f"  {YELLOW}⚠{RESET} L1 overflow-wrap not found")
+
+    print()
+
+    # ==========================================================================
+    # L2: KPI-Forecasts Box i18n Validation
+    # ==========================================================================
+    print(f"{BOLD}[L2] KPI-Forecasts Box i18n{RESET}")
+
+    # Must have: get_label import in predictive_engine
+    passed, count = check_file_contains(
+        base / "services" / "predictive_engine.py",
+        r"from services\.i18n import.*get_label"
+    )
+    if passed:
+        print(f"  {GREEN}✓{RESET} L2 get_label import present")
+    else:
+        warnings.append("L2: get_label import may be missing in predictive_engine")
+        print(f"  {YELLOW}⚠{RESET} L2 get_label import not found")
+
+    # Must have: format_decimal_de import
+    passed, count = check_file_contains(
+        base / "services" / "predictive_engine.py",
+        r"format_decimal_de"
+    )
+    if passed:
+        print(f"  {GREEN}✓{RESET} L2 format_decimal_de present")
+    else:
+        warnings.append("L2: format_decimal_de may be missing in predictive_engine")
+        print(f"  {YELLOW}⚠{RESET} L2 format_decimal_de not found")
+
+    print()
+
+    # ==========================================================================
+    # L3: Orphan Micro-Page Killer Validation
+    # ==========================================================================
+    print(f"{BOLD}[L3] Orphan Micro-Page Killer{RESET}")
+
+    # Must have: break-inside: avoid in sofort_start_generator
+    passed, count = check_file_contains(
+        base / "services" / "sofort_start_generator.py",
+        r"break-inside: avoid"
+    )
+    if passed:
+        print(f"  {GREEN}✓{RESET} L3 break-inside:avoid present")
+    else:
+        warnings.append("L3: break-inside:avoid may be missing in sofort_start_generator")
+        print(f"  {YELLOW}⚠{RESET} L3 break-inside:avoid not found")
+
+    # Must have: page-break-inside: avoid
+    passed, count = check_file_contains(
+        base / "services" / "sofort_start_generator.py",
+        r"page-break-inside: avoid"
+    )
+    if passed:
+        print(f"  {GREEN}✓{RESET} L3 page-break-inside:avoid present")
+    else:
+        warnings.append("L3: page-break-inside:avoid may be missing")
+        print(f"  {YELLOW}⚠{RESET} L3 page-break-inside:avoid not found")
 
     print()
 
