@@ -3944,12 +3944,28 @@ def _enforce_quickwins_no_raw_json(qw_html: str, branche: str, groesse: str) -> 
 
     stripped = qw_html.strip()
 
-    # Fix-Batch A1: Explicit JSON array detection (starts with '[')
-    # This is the primary check - LLM often returns pure JSON
-    is_json_array = stripped.startswith('[') and '"title"' in stripped
+    # Fix-Batch C2: More robust JSON array detection
+    # Check if content starts with '[' and contains common JSON patterns
+    is_json_array = stripped.startswith('[') and (
+        '"title"' in stripped or
+        '"name"' in stripped or
+        '"titel"' in stripped or
+        '": "' in stripped  # Generic JSON key-value pattern
+    )
+
+    # Also check if it's valid JSON structurally (try/except is cheap here)
+    if stripped.startswith('[') and stripped.endswith(']') and not is_json_array:
+        try:
+            import json
+            test_parse = json.loads(stripped[:min(len(stripped), 500)] + ']' if len(stripped) > 500 else stripped)
+            if isinstance(test_parse, list) and len(test_parse) > 0:
+                is_json_array = True
+                log.info("[QW-JSON-DETECT] Detected valid JSON array structure")
+        except:
+            pass  # Not valid JSON, continue with other checks
 
     # JSON markers that indicate raw JSON leak (backup check)
-    json_markers = ['"title":', '"icon":', '"engpass":', '"zeitersparnis":', '"steps":']
+    json_markers = ['"title":', '"icon":', '"engpass":', '"zeitersparnis":', '"steps":', '"name":', '"titel":']
     has_json_markers = any(marker in qw_html for marker in json_markers)
 
     # Valid HTML markers that indicate proper rendering
@@ -3987,11 +4003,23 @@ def _enforce_quickwins_no_raw_json(qw_html: str, branche: str, groesse: str) -> 
         except Exception as e:
             log.error("[QW-JSON-RENDER] ❌ JSON extraction failed: %s", e)
 
-        # Fix-Batch A1: If JSON was clearly present but couldn't be rendered,
+        # Fix-Batch C2: If JSON was clearly present but couldn't be rendered,
         # try to extract titles and build minimal HTML (NOT deterministic fallback)
         log.warning("[QW-JSON-RENDER] Attempting title extraction from JSON")
-        title_pattern = re.compile(r'"title"\s*:\s*"([^"]+)"', re.IGNORECASE)
-        titles = title_pattern.findall(stripped)
+        # Try multiple patterns for title extraction
+        title_patterns = [
+            re.compile(r'"title"\s*:\s*"([^"]+)"', re.IGNORECASE),
+            re.compile(r'"titel"\s*:\s*"([^"]+)"', re.IGNORECASE),
+            re.compile(r'"name"\s*:\s*"([^"]+)"', re.IGNORECASE),
+            re.compile(r'"(?:quick[_-]?win|maßnahme|massnahme)"\s*:\s*"([^"]+)"', re.IGNORECASE),
+        ]
+        titles = []
+        for pattern in title_patterns:
+            found = pattern.findall(stripped)
+            if found:
+                titles.extend(found)
+                log.info("[QW-JSON-RENDER] Found %d titles with pattern: %s", len(found), pattern.pattern[:30])
+        titles = list(dict.fromkeys(titles))[:5]  # Deduplicate, limit to 5
 
         if len(titles) >= 3:
             # Build minimal Quick Wins from extracted titles
@@ -11117,6 +11145,97 @@ def _build_freetext_snippets_html(ans: Dict[str, Any]) -> str:
         "<ul>" + "".join(items) + "</ul>"
         "</section>"
     )
+# -------------------- Fix-Batch C1: Section Regeneration for FAIL-CLOSED ----------------
+# Maps HTML keys back to section names for regeneration
+_HTML_KEY_TO_SECTION_NAME = {
+    "EXECUTIVE_SUMMARY_HTML": "executive_summary",
+    "EXECUTIVE_DECISION_HTML": "executive_decision",
+    "ROADMAP_90D_DECISION_HTML": "roadmap_90d_decision",
+    "GAMECHANGER_DECISION_HTML": "gamechanger_decision",
+    "KI_STACK_SUMMARY_HTML": "ki_stack_summary",
+    "BRANCH_DEEP_DIVE_HTML": "branch_deep_dive",
+}
+
+def _regenerate_section_strict(
+    section_key: str,
+    briefing: Dict[str, Any],
+    scores: Dict[str, Any],
+    strict_suffix: str = "",
+) -> Optional[str]:
+    """
+    Fix-Batch C1: Regenerate a FAIL-CLOSED section with strict prompt.
+
+    Called when zero-leak guard suppresses an executive section due to
+    CRITICAL phrases. Attempts to regenerate with explicit anti-chat instructions.
+
+    Args:
+        section_key: HTML section key (e.g., "EXECUTIVE_SUMMARY_HTML")
+        briefing: Briefing data
+        scores: Score data
+        strict_suffix: Additional prompt suffix with forbidden phrases
+
+    Returns:
+        Regenerated HTML content or None if regeneration fails
+    """
+    # Map HTML key to section name
+    section_name = _HTML_KEY_TO_SECTION_NAME.get(section_key)
+    if not section_name:
+        log.warning("[C1-REGEN] Unknown section key: %s, cannot regenerate", section_key)
+        return None
+
+    log.info("[C1-REGEN] Attempting to regenerate section: %s (from key %s)", section_name, section_key)
+
+    # Use direct LLM call with strict prompt
+    try:
+        from services.prompt_loader import load_prompt
+
+        # Build variables for prompt interpolation
+        size = briefing.get("unternehmensgroesse", "solo")
+        branch = briefing.get("branche", "Dienstleistung")
+
+        prompt_vars = {
+            "BRANCHE": branch,
+            "UNTERNEHMENSGROESSE": size,
+            "SCORES": str(scores),
+            "LANG": briefing.get("lang", "de"),
+        }
+
+        # Load the prompt with interpolation
+        prompt = load_prompt(section_name, lang=briefing.get("lang", "de"), vars_dict=prompt_vars)
+        if not prompt:
+            log.warning("[C1-REGEN] No prompt found for %s", section_name)
+            return None
+
+        # Convert prompt to string if it's a dict
+        if isinstance(prompt, dict):
+            prompt_text = prompt.get("user", "") or prompt.get("prompt", "") or str(prompt)
+        else:
+            prompt_text = str(prompt)
+
+        # Append strict suffix to prevent chat artifacts
+        final_prompt = prompt_text + strict_suffix
+
+        # Call LLM directly
+        llm_params = _llm_params_for(section_name)
+        response = _call_openai(
+            prompt=final_prompt,
+            temperature=llm_params.get("temperature", 0.7),
+            max_tokens=llm_params.get("max_tokens", 2000),
+            section=section_name,
+        )
+
+        if response and len(response.strip()) > 100:
+            log.info("[C1-REGEN] ✅ Successfully regenerated %s (len=%d)", section_name, len(response))
+            return response
+        else:
+            log.warning("[C1-REGEN] ⚠️ Regeneration returned too short content (len=%d)", len(response) if response else 0)
+            return None
+
+    except Exception as e:
+        log.error("[C1-REGEN] ❌ Regeneration failed for %s: %s", section_name, e)
+        return None
+
+
 # -------------------- 🎯 UPDATED: Main composer with prompt system ----------------
 def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict[str, Any]:
     """Generate all content sections - using PARALLEL execution.
@@ -12199,10 +12318,55 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
 
     # === PRECOMMIT ZERO-LEAK GUARD - Run BEFORE ReportValidator/N2-Healing ===
     # Applies hard blacklist to ALL sections (not just executive), with dual-key hygiene
+    # Fix-Batch C1: Added regeneration loop for FAIL-CLOSED sections
+    fail_closed_sections: List[str] = []
     try:
-        from services.zero_leak_engine import precommit_zero_leak_all_sections
+        from services.zero_leak_engine import precommit_zero_leak_all_sections, EXECUTIVE_CRITICAL_PHRASES
         log.info("[%s] 🛡️ Running precommit zero-leak guard on ALL sections...", run_id)
-        sections = precommit_zero_leak_all_sections(sections)
+        sections, fail_closed_sections = precommit_zero_leak_all_sections(sections)
+
+        # Fix-Batch C1: Regenerate FAIL-CLOSED sections with strict prompt
+        if fail_closed_sections:
+            log.warning("[%s] ⚠️ %d sections FAIL-CLOSED, attempting regeneration...", run_id, len(fail_closed_sections))
+            for section_key in fail_closed_sections:
+                regenerated = False
+                for attempt in range(2):  # Max 2 regeneration attempts
+                    log.info("[%s] 🔄 Regenerating %s (attempt %d/2)...", run_id, section_key, attempt + 1)
+                    try:
+                        # Build strict prompt that forbids problematic phrases
+                        forbidden_phrases = ", ".join([f'"{p}"' for p in EXECUTIVE_CRITICAL_PHRASES[:10]])
+                        strict_suffix = f"""
+
+WICHTIG: Du bist ein Report-Generator, KEIN Chat-Assistent.
+VERBOTEN sind folgende Phrasen: {forbidden_phrases}
+Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, keine Meta-Kommentare."""
+
+                        # Regenerate the section
+                        new_content = _regenerate_section_strict(
+                            section_key=section_key,
+                            briefing=answers,
+                            scores=scores,
+                            strict_suffix=strict_suffix,
+                        )
+
+                        if new_content and len(new_content.strip()) > 100:
+                            # Re-check for leaks
+                            from services.zero_leak_engine import apply_blacklist_classified
+                            check_result = apply_blacklist_classified(new_content, section_key)
+                            if not check_result.has_critical:
+                                sections[section_key] = check_result.cleaned_text if check_result.has_benign else new_content
+                                log.info("[%s] ✅ %s regenerated successfully (len=%d)", run_id, section_key, len(sections[section_key]))
+                                regenerated = True
+                                break
+                            else:
+                                log.warning("[%s] ❌ Regenerated %s still has CRITICAL leaks: %s", run_id, section_key, check_result.critical_hits[:2])
+                    except Exception as regen_exc:
+                        log.warning("[%s] ⚠️ Regeneration attempt %d for %s failed: %s", run_id, attempt + 1, section_key, regen_exc)
+
+                if not regenerated:
+                    log.error("[%s] ❌ FAIL: Could not regenerate %s after 2 attempts", run_id, section_key)
+                    # Section remains empty - will trigger P0.2 fallback
+
     except ImportError:
         log.debug("[%s] zero_leak_engine.precommit_zero_leak_all_sections not available", run_id)
     except Exception as exc:

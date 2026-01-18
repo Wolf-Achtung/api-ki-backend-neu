@@ -1024,7 +1024,7 @@ def process_sections_zero_leak(
 
 def precommit_zero_leak_all_sections(
     sections: Dict[str, Any],
-) -> Dict[str, Any]:
+) -> Tuple[Dict[str, Any], List[str]]:
     """
     Pre-commit zero-leak guard for ALL sections.
 
@@ -1035,6 +1035,8 @@ def precommit_zero_leak_all_sections(
     v1.2.0: CRITICAL vs BENIGN classification:
     - CRITICAL hits (prompt/policy/secrets) → FAIL-CLOSED (suppress section)
     - BENIGN hits only (chatbot phrases) → CLEAN-AND-KEEP (remove phrases, keep content)
+
+    Fix-Batch C1: Now returns list of FAIL-CLOSED sections for regeneration.
 
     Features:
     - Runs on ALL section keys, not just EXECUTIVE_SECTIONS
@@ -1047,12 +1049,13 @@ def precommit_zero_leak_all_sections(
         sections: Section dictionary from _generate_content_sections()
 
     Returns:
-        Cleaned sections dictionary
+        Tuple of (cleaned_sections, fail_closed_section_keys)
     """
     cleaned = dict(sections)
     cleaned_count = 0
     total_critical = 0
     total_benign = 0
+    fail_closed_sections: List[str] = []  # Fix-Batch C1: Track FAIL-CLOSED sections
 
     # Process all string sections
     for section_key, content in list(sections.items()):
@@ -1084,6 +1087,8 @@ def precommit_zero_leak_all_sections(
                     cleaned[alias_key] = ""
                 cleaned_count += 1
                 total_critical += len(result.critical_hits)
+                # Fix-Batch C1: Track this section for regeneration
+                fail_closed_sections.append(section_key)
                 continue
 
             elif result.has_benign:
@@ -1153,8 +1158,9 @@ def precommit_zero_leak_all_sections(
 
     if cleaned_count > 0:
         log.info(
-            "[precommit_zero_leak] cleaned=%d sections, critical=%d, benign=%d",
-            cleaned_count, total_critical, total_benign
+            "[precommit_zero_leak] cleaned=%d sections, critical=%d, benign=%d, fail_closed=%d",
+            cleaned_count, total_critical, total_benign, len(fail_closed_sections)
         )
 
-    return cleaned
+    # Fix-Batch C1: Return both cleaned sections and list of FAIL-CLOSED sections
+    return cleaned, fail_closed_sections
