@@ -2554,6 +2554,14 @@
         }
 
         /* === 4.4 STARTER-KIT KOMPAKT === */
+        /* Fix-Batch J3: Prevent orphan pages after starter-kit */
+        .starter-kit,
+        .starter-kit-compact,
+        #starter-kit {
+            page-break-before: auto;
+            page-break-inside: auto;
+        }
+
         .starter-kit__meta {
             display: flex;
             gap: 8px;

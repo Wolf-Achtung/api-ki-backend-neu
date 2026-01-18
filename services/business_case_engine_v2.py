@@ -37,6 +37,9 @@ import re
 from dataclasses import dataclass, field, asdict
 from typing import Any, Dict, List, Optional, Literal, Tuple
 
+# Fix-Batch J2: Import German number formatting
+from services.i18n import format_decimal_de
+
 log = logging.getLogger(__name__)
 
 __all__ = [
@@ -1772,15 +1775,15 @@ def _generate_narrative_summary(
     else:
         parts.append(f"Der Business Case erfordert sorgfältige Abwägung bei {realistic.roi_12m:.0f}% ROI.")
 
-    # Payback
+    # Payback - Fix-Batch J2: Use German decimal format (comma instead of period)
     if realistic.payback_months <= 3:
-        parts.append(f"Die Investition amortisiert sich sehr schnell in nur {realistic.payback_months:.1f} Monaten.")
+        parts.append(f"Die Investition amortisiert sich sehr schnell in nur {format_decimal_de(realistic.payback_months)} Monaten.")
     elif realistic.payback_months <= 6:
-        parts.append(f"Die Amortisation erfolgt innerhalb von {realistic.payback_months:.1f} Monaten.")
+        parts.append(f"Die Amortisation erfolgt innerhalb von {format_decimal_de(realistic.payback_months)} Monaten.")
     elif realistic.payback_months <= 12:
-        parts.append(f"Die Payback-Periode liegt bei {realistic.payback_months:.1f} Monaten.")
+        parts.append(f"Die Amortisation liegt bei {format_decimal_de(realistic.payback_months)} Monaten.")  # Fix-Batch J2: German label
     else:
-        parts.append(f"Die Amortisation dauert mit {realistic.payback_months:.1f} Monaten etwas länger.")
+        parts.append(f"Die Amortisation dauert mit {format_decimal_de(realistic.payback_months)} Monaten etwas länger.")
 
     # Funding effect
     if funding_effect > 0:
@@ -1833,15 +1836,16 @@ def business_case_report_to_html(
             "funding_note": "Funding effect",
         }
     else:
+        # Fix-Batch J2: 100% German labels
         labels = {
             "scenarios_title": "Szenario-Analyse",
             "optimistic": "Optimistisch",
             "realistic": "Realistisch",
             "conservative": "Konservativ",
             "roi_label": "ROI (12M)",
-            "payback_label": "Payback",
+            "payback_label": "Amortisation",  # Fix-Batch J2: German label
             "savings_label": "Monatl. Ersparnis",
-            "investment_label": "Investment",
+            "investment_label": "Investition",  # Fix-Batch J2: German label
             "months": "Monate",
             "kpi_title": "KPI-Ziele",
             "kpi_6m": "6-Monats-Ziele",
