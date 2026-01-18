@@ -1119,6 +1119,7 @@ def business_case_simulation_to_html(
             "high": "High",
         }
     else:
+        # K2: 100% German labels for DE reports
         labels = {
             "title": "Risikoadjustierter Business Case",
             "subtitle": "Monte-Carlo Simulationsanalyse",
@@ -1134,11 +1135,11 @@ def business_case_simulation_to_html(
             "mean": "Mittelwert",
             "std": "Std-Abw.",
             "months": "Monate",
-            "runs": "Simulationslaeufe",
+            "runs": "Simulationsläufe",  # K2: Fix umlaut
             "confidence_80": "80% Konfidenzintervall",
             "assumptions": "Simulationsannahmen",
             "monthly_savings": "Monatl. Ersparnis",
-            "investment": "Investment",
+            "investment": "Investition",  # K2: German label
             "assessment": "Bewertung",
             "vs_realistic": "vs. Realistisches Szenario",
             "variance": "Varianz-Level",

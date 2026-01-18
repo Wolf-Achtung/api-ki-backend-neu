@@ -1969,18 +1969,19 @@ def apply_kpi_consistency_enforcer(sections: dict) -> dict:
 
 
 # =============================================================================
-# Fix-Batch I: EMPTY PAGE KILLER
+# Fix-Batch I + K3: EMPTY PAGE KILLER & LAYOUT HARDENING
 # =============================================================================
 
 def kill_empty_pages(html: str) -> tuple[str, int]:
     """
-    Fix-Batch I + J3: Remove empty page-breaking sections that only have a heading.
+    Fix-Batch I + J3 + K3: Remove empty page-breaking sections.
 
     Empty pages occur when a section div contains only an <h2> or <h3> with
     no substantial content following it.
 
-    Fix-Batch J3 Enhancement:
-    - Also detect sections with only heading + <br> tags as empty
+    K3 Enhancement:
+    - Detect sections with less than 80 chars of actual text content
+    - Remove double page-break combinations
 
     Args:
         html: HTML string to process
@@ -2037,7 +2038,49 @@ def kill_empty_pages(html: str) -> tuple[str, int]:
             removals += 1
         result = re.sub(empty_br_p_pattern, '', result, flags=re.IGNORECASE | re.DOTALL)
 
+    # K3: Remove double page-break combinations (after + before)
+    double_break_pattern = r'(page-break-after:\s*always[^}]*}[^<]*)(page-break-before:\s*always)'
+    if re.search(double_break_pattern, result, re.IGNORECASE | re.DOTALL):
+        log.info("[K3-PAGE-BREAK] Removing double page-break combination")
+        result = re.sub(double_break_pattern, r'\1page-break-before: auto', result, flags=re.IGNORECASE | re.DOTALL)
+        removals += 1
+
     return result, removals
+
+
+def detect_orphan_sections(html: str, min_chars: int = 80) -> list[str]:
+    """
+    K3: Detect sections that have less than min_chars of actual text content.
+
+    These are potential orphan sections that may result in mostly-blank pages.
+
+    Args:
+        html: HTML string to analyze
+        min_chars: Minimum characters for a section to be considered non-orphan
+
+    Returns:
+        List of section identifiers that are potential orphans
+    """
+    orphans = []
+
+    # Find all section/div elements with page-break
+    section_pattern = r'<(section|div)[^>]*(?:class="[^"]*(?:section|chapter)[^"]*"|id="[^"]*")[^>]*>(.*?)</\1>'
+    matches = re.findall(section_pattern, html, re.IGNORECASE | re.DOTALL)
+
+    for tag, content in matches:
+        # Strip HTML tags to get text content
+        text_only = re.sub(r'<[^>]+>', '', content)
+        text_only = re.sub(r'\s+', ' ', text_only).strip()
+
+        if len(text_only) < min_chars:
+            # Extract section identifier
+            id_match = re.search(r'id="([^"]+)"', content)
+            class_match = re.search(r'class="([^"]+)"', content)
+            identifier = id_match.group(1) if id_match else (class_match.group(1) if class_match else "unknown")
+            orphans.append(identifier)
+            log.warning(f"[K3-ORPHAN-DETECT] Section '{identifier}' has only {len(text_only)} chars")
+
+    return orphans
 
 
 def apply_empty_page_killer(sections: dict) -> dict:
@@ -2197,33 +2240,44 @@ def apply_risk_truncation(sections: dict, max_chars: int = 500) -> dict:
 
 
 # =============================================================================
-# Fix-Batch J4: CHAT ARTEFACT FILTER
+# Fix-Batch J4 + K1: CHAT ARTEFACT FILTER
 # =============================================================================
 # Problem: LLM output sometimes contains chat artefacts like "Schreib mir",
 # "Frag mich", "Wenn du..." that are inappropriate for formal reports.
+# K1 Enhancement: Also filter leading punctuation and Du-Ansprache
 # Solution: Filter these patterns from all text sections.
 # =============================================================================
 
 # Chat artefacts that should be removed (German patterns)
+# K1: Extended with more German prompt patterns
 CHAT_ARTEFACT_PATTERNS = [
-    # Direct address patterns
-    r"(?i)schreib\s+mir\b.*?[.!]",
-    r"(?i)frag\s+mich\b.*?[.!]",
-    r"(?i)wenn\s+du\s+(möchtest|willst|brauchst)\b.*?[.!]",
-    r"(?i)sag\s+mir\s+bescheid\b.*?[.!]",
-    r"(?i)lass\s+mich\s+wissen\b.*?[.!]",
-    r"(?i)meld\s+dich\b.*?[.!]",
-    r"(?i)ruf\s+mich\s+an\b.*?[.!]",
-    r"(?i)ich\s+kann\s+dir\s+(helfen|zeigen|erklären)\b.*?[.!]",
-    r"(?i)ich\s+stehe\s+dir\s+zur\s+verfügung\b.*?[.!]",
-    # Du-form patterns (informal)
-    r"(?i)du\s+kannst\s+mich\s+(fragen|kontaktieren)\b.*?[.!]",
-    r"(?i)wenn\s+du\s+fragen\s+hast\b.*?[.!]",
-    r"(?i)falls\s+du\s+(weitere|mehr)\s+infos\s+(brauchst|möchtest)\b.*?[.!]",
+    # K1: Leading punctuation at paragraph/sentence start
+    r"^\?\s*",  # Leading question mark
+    r"^[.]\s*",  # Leading period
+    r"^[–-]\s*(?![0-9])",  # Leading dash (not before numbers)
+    # Direct address patterns (Du-form - informal, must be Sie)
+    r"(?i)\bDu kannst mir\b.*?[.!?]",
+    r"(?i)\bDu kannst\b.*?[.!?]",
+    r"(?i)\bschreib\s+mir\b.*?[.!?]",
+    r"(?i)\bfrag\s+mich\b.*?[.!?]",
+    r"(?i)\bwenn\s+du\s+(möchtest|willst|brauchst)\b.*?[.!?]",
+    r"(?i)\bsag\s+mir\s+bescheid\b.*?[.!?]",
+    r"(?i)\blass\s+mich\s+wissen\b.*?[.!?]",
+    r"(?i)\bmeld\s+dich\b.*?[.!?]",
+    r"(?i)\bruf\s+mich\s+an\b.*?[.!?]",
+    r"(?i)\bich\s+kann\s+dir\s+(helfen|zeigen|erklären)\b.*?[.!?]",
+    r"(?i)\bich\s+stehe\s+dir\s+zur\s+verfügung\b.*?[.!?]",
+    r"(?i)\bdu\s+kannst\s+mich\s+(fragen|kontaktieren)\b.*?[.!?]",
+    r"(?i)\bwenn\s+du\s+fragen\s+hast\b.*?[.!?]",
+    r"(?i)\bfalls\s+du\s+(weitere|mehr)\s+infos\s+(brauchst|möchtest)\b.*?[.!?]",
+    # K1: Additional German prompt patterns
+    r"(?i)\bgerne\s+so\s+konkret\b.*?[.!?]",
+    r"(?i)\bstellen\.\s*$",  # Ends with "stellen."
+    r"(?i)\bz\.\s*B\.\s+Fragen\s+stellen\b.*?[.!?]",
     # Meta-commentary about the chat
-    r"(?i)wie\s+besprochen\b",
-    r"(?i)wie\s+ich\s+dir\s+gesagt\s+habe\b",
-    r"(?i)ich\s+hoffe,\s+das\s+hilft\b",
+    r"(?i)\bwie\s+besprochen\b",
+    r"(?i)\bwie\s+ich\s+dir\s+gesagt\s+habe\b",
+    r"(?i)\bich\s+hoffe,\s+das\s+hilft\b",
     # Emoji clusters (more than 2 consecutive emojis)
     r"[\U0001F300-\U0001F9FF]{3,}",
 ]
@@ -2231,10 +2285,12 @@ CHAT_ARTEFACT_PATTERNS = [
 
 def filter_chat_artefacts(text: str) -> tuple[str, int]:
     """
-    Fix-Batch J4: Remove chat artefacts from text.
+    Fix-Batch J4 + K1: Remove chat artefacts from text.
 
     Filters out LLM chat artefacts like "Schreib mir", "Frag mich", etc.
     that are inappropriate for formal business reports.
+
+    K1 Enhancement: Also removes leading punctuation and Du-Ansprache.
 
     Args:
         text: Text to process
@@ -2249,14 +2305,25 @@ def filter_chat_artefacts(text: str) -> tuple[str, int]:
     result = text
 
     for pattern in CHAT_ARTEFACT_PATTERNS:
-        matches = re.findall(pattern, result)
+        matches = re.findall(pattern, result, re.MULTILINE)
         if matches:
             removals += len(matches)
-            result = re.sub(pattern, '', result)
+            result = re.sub(pattern, '', result, flags=re.MULTILINE)
+
+    # K1: Clean leading punctuation from HTML paragraph content
+    # Pattern: <p>? ... or <p>. ... at start of paragraphs
+    html_leading_punct = r'(<p[^>]*>)\s*([?.\-–])\s*'
+    html_matches = re.findall(html_leading_punct, result)
+    if html_matches:
+        removals += len(html_matches)
+        result = re.sub(html_leading_punct, r'\1', result)
 
     # Clean up double spaces and line breaks from removals
     result = re.sub(r'\s{2,}', ' ', result)
     result = re.sub(r'\n\s*\n\s*\n', '\n\n', result)
+
+    # K1: Remove empty paragraphs after filtering
+    result = re.sub(r'<p[^>]*>\s*</p>', '', result)
 
     if removals > 0:
         log.info(f"[CHAT-ARTEFACT-FILTER] Removed {removals} chat artefacts")
