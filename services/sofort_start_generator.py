@@ -1436,9 +1436,11 @@ def generate_30_tage_challenge_html(company_size: str = "solo") -> str:
 '''
     
     # Tracking-Bereich
+    # L3: Added break-inside:avoid to prevent orphan micro-pages
     html += '''
     <!-- ERFOLGS-TRACKING -->
-    <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 8px; padding: 16px; margin-top: 20px;">
+    <!-- L3: break-inside:avoid prevents orphan micro-page on page 6 -->
+    <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 8px; padding: 16px; margin-top: 20px; break-inside: avoid; page-break-inside: avoid;">
         <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; color: #166534;">
             📊 Ihr Erfolgs-Tracking
         </h3>
@@ -1708,8 +1710,10 @@ def generate_30_tage_challenge_html_v2(
 '''
     
     # Erfolgs-Tracking
+    # L3: Added break-inside:avoid to prevent orphan micro-pages
     html += '''
-    <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 8px; padding: 16px; margin-top: 20px;">
+    <!-- L3: break-inside:avoid prevents orphan micro-page -->
+    <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 8px; padding: 16px; margin-top: 20px; break-inside: avoid; page-break-inside: avoid;">
         <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; color: #166534;">
             📊 Ihr Erfolgs-Tracking
         </h3>

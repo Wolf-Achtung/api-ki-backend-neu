@@ -17,6 +17,9 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
+# L2: Import i18n functions for German labels and number formatting
+from services.i18n import get_label, format_decimal_de
+
 log = logging.getLogger(__name__)
 
 # =============================================================================
@@ -831,13 +834,17 @@ def _generate_risk_trend_html(risk_trend: RiskTrend, lang: str) -> str:
 
 
 def _generate_kpi_table_html(shifts: List[KPIShift], lang: str) -> str:
-    """Generate HTML table for KPI predictions."""
+    """Generate HTML table for KPI predictions.
+
+    L2: Uses i18n labels and German number formatting.
+    """
+    # L2: Use i18n labels instead of hardcoded strings
+    title = get_label("kpi_forecast_header", lang)
+
     if lang == "en":
         headers = ["KPI", "Current", "Predicted", "Trend"]
-        title = "KPI Forecasts"
     else:
         headers = ["KPI", "Aktuell", "Prognose", "Trend"]
-        title = "KPI-Prognosen"
 
     rows = []
     for shift in shifts[:4]:  # Limit to 4 rows
@@ -848,13 +855,23 @@ def _generate_kpi_table_html(shifts: List[KPIShift], lang: str) -> str:
             "▼" if shift.shift_direction == "declining" else "―"
         )
 
+        # L2: Use German number formatting for DE, standard for EN
+        if lang == "de":
+            current_val = format_decimal_de(shift.current_value, 0)
+            predicted_val = format_decimal_de(shift.predicted_value, 0)
+            magnitude_val = format_decimal_de(abs(shift.shift_magnitude), 1)
+        else:
+            current_val = f"{shift.current_value:.0f}"
+            predicted_val = f"{shift.predicted_value:.0f}"
+            magnitude_val = f"{abs(shift.shift_magnitude):.1f}"
+
         rows.append(f"""
         <tr>
             <td style="padding:6px 8px;font-size:11px;">{shift.kpi_name}</td>
-            <td style="padding:6px 8px;font-size:11px;text-align:center;">{shift.current_value:.0f}</td>
-            <td style="padding:6px 8px;font-size:11px;text-align:center;">{shift.predicted_value:.0f}</td>
+            <td style="padding:6px 8px;font-size:11px;text-align:center;">{current_val}</td>
+            <td style="padding:6px 8px;font-size:11px;text-align:center;">{predicted_val}</td>
             <td style="padding:6px 8px;font-size:11px;text-align:center;color:{trend_color};">
-                {trend_symbol} {abs(shift.shift_magnitude):.1f}%
+                {trend_symbol} {magnitude_val}%
             </td>
         </tr>
         """)
