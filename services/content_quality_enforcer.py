@@ -46,6 +46,19 @@ SOLO_TERM_REPLACEMENTS = [
     (r'\bKPI-Dashboard\b', 'Kennzahlen-Übersicht', 'KPI-Dashboard→Kennzahlen-Übersicht'),
     (r'\bProzesslandschaft\b', 'Arbeitsabläufe', 'Prozesslandschaft→Arbeitsabläufe'),
     (r'\bMeilenstein-Planung\b', 'Etappenplanung', 'Meilenstein-Planung→Etappenplanung'),
+    # Fix-Batch C5: Kapazität-Artefakte → Solo-freundliche Alternativen
+    (r'\bKapazität-Training\b', 'Kompetenzaufbau (Training)', 'Kapazität-Training→Kompetenzaufbau'),
+    (r'\bKapazitäts-Training\b', 'Kompetenzaufbau', 'Kapazitäts-Training→Kompetenzaufbau'),
+    (r'\bBelastung des Kapazitäten\b', 'Belastung Ihrer Zeit', 'Kapazitäten-Belastung→Zeit-Belastung'),
+    (r'\bBelastung der Kapazitäten\b', 'Belastung Ihrer Zeit', 'Kapazitäten-Belastung→Zeit-Belastung'),
+    (r'\bKapazitäten benötigen\b', 'Sie benötigen', 'Kapazitäten benötigen→Sie benötigen'),
+    (r'\bKapazitäten erfordern\b', 'Es ist erforderlich', 'Kapazitäten erfordern→Es ist erforderlich'),
+    (r'\bKapazitäten\b', 'Zeitbudget', 'Kapazitäten→Zeitbudget'),
+    (r'\bKapazität\b', 'Zeitbudget', 'Kapazität→Zeitbudget'),
+    # Fix-Batch C3: Remove placeholder text that triggers warnings
+    (r'\bBeispieltext:?\b', '', 'Remove Beispieltext'),
+    (r'\bPlatzhalter:?\b', '', 'Remove Platzhalter'),
+    (r'\bMustertext:?\b', '', 'Remove Mustertext'),
 ]
 
 
@@ -70,13 +83,19 @@ def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
     total_replacements = 0
     sections_touched = 0
 
-    # Sections to process
+    # Sections to process - Fix-Batch C3: Expanded list to cover all content sections
     check_sections = [
-        "EXECUTIVE_SUMMARY_HTML", "RECOMMENDATIONS_HTML", "QUICK_WINS_HTML",
-        "ROADMAP_90D_HTML", "ROADMAP_12M_HTML", "GAMECHANGER_HTML",
+        "EXECUTIVE_SUMMARY_HTML", "EXECUTIVE_DECISION_HTML", "RECOMMENDATIONS_HTML",
+        "QUICK_WINS_HTML", "QUICK_WINS_HTML_LEFT", "QUICK_WINS_HTML_RIGHT",
+        "ROADMAP_90D_HTML", "ROADMAP_90D_DECISION_HTML", "ROADMAP_12M_HTML",
+        "GAMECHANGER_HTML", "GAMECHANGER_DECISION_HTML",
         "FOERDERPOTENZIAL_HTML", "RISKS_HTML", "ORG_CHANGE_HTML",
-        "KI_SKILLPLAN_HTML", "BUSINESS_CASE_HTML", "AI_ACT_HTML",
-        "TOOLS_HTML", "DATA_STRATEGY_HTML", "GOVERNANCE_HTML",
+        "KI_SKILLPLAN_HTML", "BUSINESS_CASE_HTML", "AI_ACT_HTML", "AI_ACT_SUMMARY_HTML",
+        "TOOLS_HTML", "TOOLS_EMPFEHLUNGEN_HTML", "DATA_STRATEGY_HTML", "DATA_READINESS_HTML",
+        "GOVERNANCE_HTML", "STRATEGIE_GOVERNANCE_HTML", "KI_STACK_SUMMARY_HTML",
+        "BRANCH_DEEP_DIVE_HTML", "TOP_3_MASSNAHMEN_HTML", "MONETARISIERUNG_HTML",
+        "TEMPLATES_START_HTML", "KICKOFF_VORLAGE_HTML", "PROMPT_FRAMEWORK_HTML",
+        "TECHNOLOGIE_PROZESSE_HTML", "WETTBEWERB_BENCHMARK_HTML", "UNTERNEHMENSPROFIL_MARKT_HTML",
     ]
 
     for section_key in check_sections:

@@ -2016,31 +2016,54 @@ class ConsistencyEngine:
             return {}
 
         rois: Dict[str, float] = {}
-
-        # Pattern: scenario name followed by ROI value
         import re
 
-        # Look for scenario cards/sections with ROI
-        scenarios = ["optimistic", "optimistisch", "realistic", "realistisch", "conservative", "konservativ"]
+        html_lower = html.lower()
 
-        for scenario in scenarios:
-            # Normalize to English
-            normalized = scenario
-            if scenario == "optimistisch":
-                normalized = "optimistic"
-            elif scenario == "realistisch":
-                normalized = "realistic"
-            elif scenario == "konservativ":
-                normalized = "conservative"
+        # Fix-Batch C4: Improved extraction for scenario cards
+        # The HTML structure has scenario name in a span, ROI in a separate p tag
+        # We need to find each scenario-card and extract ROI from within it
 
-            # Look for ROI near scenario name
-            pattern = rf'{scenario}[^<]*?(\d+(?:[.,]\d+)?)\s*%'
-            match = re.search(pattern, html.lower())
-            if match:
-                try:
-                    rois[normalized] = float(match.group(1).replace(",", "."))
-                except ValueError:
-                    pass
+        # Scenario name mappings (German → English)
+        scenario_map = {
+            "optimistic": "optimistic",
+            "optimistisch": "optimistic",
+            "realistic": "realistic",
+            "realistisch": "realistic",
+            "conservative": "conservative",
+            "konservativ": "conservative",
+        }
+
+        # Strategy 1: Find scenario-cards and extract ROI from each
+        card_pattern = r'class="scenario-card"[^>]*>(.*?)</div>\s*</div>\s*</div>'
+        cards = re.findall(card_pattern, html_lower, re.DOTALL)
+
+        for card_html in cards:
+            # Find which scenario this card belongs to
+            for de_name, en_name in scenario_map.items():
+                if de_name in card_html:
+                    # Extract the first percentage value (ROI is first)
+                    roi_match = re.search(r'(\d+(?:[.,]\d+)?)\s*%', card_html)
+                    if roi_match:
+                        try:
+                            rois[en_name] = float(roi_match.group(1).replace(",", "."))
+                        except ValueError:
+                            pass
+                    break
+
+        # Strategy 2: Fallback - use DOTALL to match across HTML tags
+        if len(rois) < 3:
+            for de_name, en_name in scenario_map.items():
+                if en_name in rois:
+                    continue  # Already found
+                # Allow matching across HTML elements with DOTALL
+                pattern = rf'{de_name}.*?(\d+(?:[.,]\d+)?)\s*%'
+                match = re.search(pattern, html_lower, re.DOTALL)
+                if match:
+                    try:
+                        rois[en_name] = float(match.group(1).replace(",", "."))
+                    except ValueError:
+                        pass
 
         return rois
 
