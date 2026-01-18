@@ -478,3 +478,177 @@ class TestK3PaginationLayout:
         assert "K3" in template
         assert "Starter-Kit" in template
         assert "Risk Matrix" in template
+
+
+# =============================================================================
+# L1: Risk Matrix NO CLIP / NO TRUNCATION Tests
+# =============================================================================
+
+class TestL1RiskMatrixNoClip:
+    """Test L1 Risk Matrix table formatting."""
+
+    def test_risk_matrix_has_colgroup(self):
+        """Test that Risk Matrix table has colgroup for column widths."""
+        from services import risk_engine_v2
+        import inspect
+
+        source = inspect.getsource(risk_engine_v2)
+
+        # Should have colgroup for column width control
+        assert "<colgroup>" in source
+        assert "table-layout:fixed" in source
+
+    def test_risk_matrix_has_section_class(self):
+        """Test that Risk Matrix has risk-matrix-section class."""
+        from services import risk_engine_v2
+        import inspect
+
+        source = inspect.getsource(risk_engine_v2)
+
+        # Should have the CSS class for styling
+        assert "risk-matrix-section" in source
+
+    def test_risk_matrix_has_overflow_wrap(self):
+        """Test that Risk Matrix cells have overflow-wrap."""
+        from services import risk_engine_v2
+        import inspect
+
+        source = inspect.getsource(risk_engine_v2)
+
+        # Should have overflow-wrap to prevent truncation
+        assert "overflow-wrap:anywhere" in source or "word-break:break-word" in source
+
+    def test_l1_comment_in_code(self):
+        """Test that L1 comment exists in risk_engine_v2."""
+        from services import risk_engine_v2
+        import inspect
+
+        source = inspect.getsource(risk_engine_v2)
+
+        assert "L1:" in source
+
+
+# =============================================================================
+# L2: KPI-Forecasts Box i18n Tests
+# =============================================================================
+
+class TestL2KPIForecastsI18n:
+    """Test L2 KPI-Forecasts Box internationalization."""
+
+    def test_predictive_engine_uses_get_label(self):
+        """Test that predictive engine uses get_label for i18n."""
+        from services import predictive_engine
+        import inspect
+
+        source = inspect.getsource(predictive_engine)
+
+        # Should import and use get_label
+        assert "from services.i18n import get_label" in source
+        assert "get_label(" in source
+
+    def test_predictive_engine_uses_format_decimal_de(self):
+        """Test that predictive engine uses format_decimal_de."""
+        from services import predictive_engine
+        import inspect
+
+        source = inspect.getsource(predictive_engine)
+
+        # Should import and use format_decimal_de
+        assert "format_decimal_de" in source
+
+    def test_kpi_forecast_header_label_exists(self):
+        """Test that kpi_forecast_header label exists in i18n."""
+        from services.i18n import get_label
+
+        label_de = get_label("kpi_forecast_header", "de")
+        label_en = get_label("kpi_forecast_header", "en")
+
+        assert label_de == "KPI-Prognosen"
+        assert label_en == "KPI Forecasts"
+
+    def test_l2_comment_in_code(self):
+        """Test that L2 comment exists in predictive_engine."""
+        from services import predictive_engine
+        import inspect
+
+        source = inspect.getsource(predictive_engine)
+
+        assert "L2:" in source
+
+
+# =============================================================================
+# L3: Orphan Micro-Page Killer Tests
+# =============================================================================
+
+class TestL3OrphanMicroPageKiller:
+    """Test L3 Orphan Micro-Page prevention."""
+
+    def test_erfolgs_tracking_has_break_inside_avoid(self):
+        """Test that Erfolgs-Tracking sections have break-inside: avoid."""
+        from services import sofort_start_generator
+        import inspect
+
+        source = inspect.getsource(sofort_start_generator)
+
+        # Should have break-inside: avoid for orphan prevention
+        assert "break-inside: avoid" in source
+        assert "page-break-inside: avoid" in source
+
+    def test_l3_comment_in_code(self):
+        """Test that L3 comment exists in sofort_start_generator."""
+        from services import sofort_start_generator
+        import inspect
+
+        source = inspect.getsource(sofort_start_generator)
+
+        assert "L3:" in source
+
+    def test_gesamt_nach_30_tagen_exists(self):
+        """Test that 'Gesamt nach 30 Tagen' text exists."""
+        from services import sofort_start_generator
+        import inspect
+
+        source = inspect.getsource(sofort_start_generator)
+
+        assert "Gesamt nach 30 Tagen" in source
+
+
+# =============================================================================
+# L1-L3 Integration Tests
+# =============================================================================
+
+class TestL1L3Integration:
+    """Integration tests for Fix-Batches L1-L3."""
+
+    def test_risk_engine_v2_generates_html(self):
+        """Test that risk_engine_v2 generates valid HTML with L1 fixes."""
+        from services.risk_engine_v2 import RiskReport, RiskMatrixEntry, risk_report_to_html
+
+        report = RiskReport(
+            ai_act_class="limited",
+            risk_matrix=[
+                RiskMatrixEntry(
+                    id="risk_1",
+                    title="Leistungsabgrenzungsverzögerung bei Systemintegration",
+                    likelihood=3,
+                    impact=4,
+                    color="high",
+                    description="Test risk with long title",
+                )
+            ]
+        )
+
+        html = risk_report_to_html(report, lang="de")
+
+        # Should have L1 fixes
+        assert "<colgroup>" in html
+        assert "table-layout:fixed" in html
+        assert "overflow-wrap:anywhere" in html
+
+    def test_predictive_engine_formats_numbers_german(self):
+        """Test that predictive engine uses German number formatting."""
+        from services.i18n import format_decimal_de
+
+        # Test German decimal formatting
+        result = format_decimal_de(12.5, 1)
+        assert result == "12,5"  # Comma, not period

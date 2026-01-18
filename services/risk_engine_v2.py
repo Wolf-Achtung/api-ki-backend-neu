@@ -1060,13 +1060,20 @@ def risk_report_to_html(
     html_parts.append('</div>')
 
     # Risk Matrix
+    # L1: Added colgroup for column width control, class for CSS targeting
     if report.risk_matrix:
         html_parts.append(f'''
-        <div class="risk-block matrix-block" style="margin-bottom:20px;">
+        <div class="risk-block matrix-block risk-matrix-section" style="margin-bottom:20px;">
             <p style="margin:0 0 12px 0;font-weight:600;color:#1e293b;">{labels["matrix_title"]}</p>
-            <table class="table-modern" style="width:100%;border-collapse:collapse;font-size:10pt;">
+            <table class="table-modern" style="width:100%;border-collapse:collapse;font-size:10pt;table-layout:fixed;">
+                <colgroup>
+                    <col style="width:50%;">
+                    <col style="width:15%;">
+                    <col style="width:15%;">
+                    <col style="width:20%;">
+                </colgroup>
                 <tr style="background:#f8fafc;">
-                    <td style="padding:8px;font-weight:600;border-bottom:1px solid #e2e8f0;">Risiko</td>
+                    <td style="padding:8px;font-weight:600;border-bottom:1px solid #e2e8f0;overflow-wrap:anywhere;word-break:break-word;">Risiko</td>
                     <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;">L</td>
                     <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;">I</td>
                     <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;">Score</td>
@@ -1076,10 +1083,11 @@ def risk_report_to_html(
         for entry in report.risk_matrix[:6]:
             if isinstance(entry, RiskMatrixEntry):
                 color = RISK_COLORS.get(entry.color, "#6b7280")
+                # L1: Added overflow-wrap, word-break to prevent text truncation
                 html_parts.append(f'''
                 <tr>
-                    <td style="padding:8px;border-bottom:1px solid #f1f5f9;">
-                        <span style="display:inline-block;width:8px;height:8px;background:{color};border-radius:50%;margin-right:6px;"></span>
+                    <td style="padding:8px;border-bottom:1px solid #f1f5f9;overflow-wrap:anywhere;word-break:break-word;hyphens:auto;">
+                        <span style="display:inline-block;width:8px;height:8px;background:{color};border-radius:50%;margin-right:6px;flex-shrink:0;"></span>
                         {entry.title}
                     </td>
                     <td style="padding:8px;text-align:center;border-bottom:1px solid #f1f5f9;">{entry.likelihood}</td>
