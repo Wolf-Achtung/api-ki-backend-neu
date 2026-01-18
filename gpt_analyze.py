@@ -11188,14 +11188,6 @@ def _regenerate_section_strict(
     # Use direct LLM call with strict prompt
     try:
         from services.prompt_loader import load_prompt
-        from services.prompt_enhancer import get_enhanced_prompt
-
-        # Load the base prompt
-        prompt_key = section_name
-        prompt = load_prompt(prompt_key)
-        if not prompt:
-            log.warning("[C1-REGEN] No prompt found for %s", prompt_key)
-            return None
 
         # Build variables for prompt interpolation
         size = briefing.get("unternehmensgroesse", "solo")
@@ -11208,15 +11200,29 @@ def _regenerate_section_strict(
             "LANG": briefing.get("lang", "de"),
         }
 
-        # Enhance prompt with context
-        enhanced = get_enhanced_prompt(prompt, prompt_vars)
+        # Load the prompt with interpolation
+        prompt = load_prompt(section_name, lang=briefing.get("lang", "de"), vars_dict=prompt_vars)
+        if not prompt:
+            log.warning("[C1-REGEN] No prompt found for %s", section_name)
+            return None
+
+        # Convert prompt to string if it's a dict
+        if isinstance(prompt, dict):
+            prompt_text = prompt.get("user", "") or prompt.get("prompt", "") or str(prompt)
+        else:
+            prompt_text = str(prompt)
 
         # Append strict suffix to prevent chat artifacts
-        final_prompt = enhanced + strict_suffix
+        final_prompt = prompt_text + strict_suffix
 
         # Call LLM directly
         llm_params = _llm_params_for(section_name)
-        response = _call_llm(final_prompt, llm_params)
+        response = _call_openai(
+            prompt=final_prompt,
+            temperature=llm_params.get("temperature", 0.7),
+            max_tokens=llm_params.get("max_tokens", 2000),
+            section=section_name,
+        )
 
         if response and len(response.strip()) > 100:
             log.info("[C1-REGEN] ✅ Successfully regenerated %s (len=%d)", section_name, len(response))
