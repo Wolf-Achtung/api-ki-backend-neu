@@ -187,6 +187,48 @@ EXECUTIVE_SECTIONS: List[str] = [
     "BRANCH_DEEP_DIVE_HTML",  # FINAL GO: Add to prevent assistant text
 ]
 
+# =============================================================================
+# Fix-Batch A3: EXECUTIVE_CRITICAL_PHRASES
+# =============================================================================
+# These phrases are CRITICAL (fail-closed) ONLY when found in EXECUTIVE_SECTIONS.
+# They are chat/assistant artifacts that should NEVER appear in executive summaries.
+# In other sections, they remain BENIGN (clean-and-keep).
+EXECUTIVE_CRITICAL_PHRASES: List[str] = [
+    # KI-Assistenz Identifikation
+    "ich bin ein KI-Assistent",
+    "ich bin ein KI-Modell",
+    "als KI-Assistent",
+    "als KI-Modell",
+    "als künstliche Intelligenz",
+    # Hilfsangebote
+    "gerne erkläre ich",
+    "gerne helfe ich",
+    "gern helfe ich",
+    "wie kann ich dir helfen",
+    "wie kann ich Ihnen helfen",
+    "wie kann ich ihnen helfen",
+    "wobei kann ich helfen",
+    "wobei ich dir helfen",
+    "wobei ich Ihnen helfen",
+    # Meta-Kommentare
+    "bitte beschreibe kurz",
+    "bitte beschreiben sie kurz",
+    "ich sehe keine konkrete frage",
+    "ich sehe keine konkrete aufgabe",
+    "ich sehe keine frage",
+    "ich sehe keine aufgabe",
+    "keine konkrete frage",
+    "keine konkrete aufgabe",
+    # English variants
+    "I am an AI assistant",
+    "I'm an AI assistant",
+    "as an AI assistant",
+    "how can I help you",
+    "how may I assist you",
+    "I don't see a specific question",
+    "I don't see a question",
+]
+
 # Dual-key aliases: If we clean EXECUTIVE_SUMMARY_HTML, also clean executive_summary
 DUAL_KEY_ALIASES: Dict[str, str] = {
     "EXECUTIVE_SUMMARY_HTML": "executive_summary",
@@ -309,6 +351,24 @@ def apply_blacklist_classified(text: str, section_name: str = "") -> BlacklistRe
             # Store label instead of actual match (avoid logging secrets)
             critical_hits.extend([f"[{label}]"] * len(matches))
             cleaned = regex_pattern.sub("", cleaned)
+
+    # Fix-Batch A3: Check EXECUTIVE_CRITICAL_PHRASES for executive sections
+    # These are CRITICAL only in EXECUTIVE_SECTIONS (causes fail-closed)
+    is_executive_section = section_name in EXECUTIVE_SECTIONS
+    if is_executive_section:
+        for phrase in EXECUTIVE_CRITICAL_PHRASES:
+            pattern = re.compile(re.escape(phrase), re.IGNORECASE)
+            matches = pattern.findall(cleaned)
+
+            if matches:
+                log.warning(
+                    '[leak_blacklist] EXECUTIVE_CRITICAL phrase="%s" hits=%d section=%s → FAIL-CLOSED',
+                    phrase[:40],
+                    len(matches),
+                    section_name
+                )
+                critical_hits.extend(matches)
+                cleaned = pattern.sub("", cleaned)
 
     # Check BENIGN chatbot phrases
     for phrase in BENIGN_CHATBOT_PHRASES:
