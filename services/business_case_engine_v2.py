@@ -896,8 +896,6 @@ def calculate_roi(annual_savings: float, investment_total: float) -> float:
 
     Formula: ROI = ((annual_savings - investment_total) / investment_total) * 100
 
-    Fix-Batch B1: ROI 0% Guard - Never return 0.0 when savings > 0.
-
     Args:
         annual_savings: Total annual savings in EUR
         investment_total: Total investment in EUR
@@ -905,22 +903,12 @@ def calculate_roi(annual_savings: float, investment_total: float) -> float:
     Returns:
         ROI as percentage (e.g., 150.0 = 150%)
     """
-    # Fix-Batch B1: Use minimum investment instead of returning 0
-    # This prevents division by zero AND ensures ROI is meaningful
-    MIN_INVESTMENT = 100.0  # Minimum 100€ investment assumption
+    # Original behavior: return 0.0 for zero/negative investment
+    # Fix-Batch B1 guard is applied in heal_scenario_consistency() instead
     if investment_total <= 0:
-        log.warning("[B1-ROI-GUARD] Investment ≤0 (%.2f), using minimum %.0f€", investment_total, MIN_INVESTMENT)
-        investment_total = MIN_INVESTMENT
+        return 0.0
 
     roi = ((annual_savings - investment_total) / investment_total) * 100
-
-    # Fix-Batch B1: If savings > 0 but ROI would be 0, ensure minimum positive ROI
-    if annual_savings > 0 and roi <= 0:
-        # At minimum, if we have savings, we should show some positive return
-        min_positive_roi = min(10.0, (annual_savings / max(investment_total, MIN_INVESTMENT)) * 50)
-        log.warning("[B1-ROI-GUARD] ROI ≤0 despite savings>0, setting minimum ROI: %.1f%%", min_positive_roi)
-        roi = max(min_positive_roi, roi)
-
     return max(MIN_ROI, min(MAX_ROI, roi))
 
 
