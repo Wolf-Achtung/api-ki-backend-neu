@@ -1689,11 +1689,14 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     # 12. Text Glitch Fixer (Fix-Batch F) - Fix known word corruptions and zero displays
     sections = apply_text_glitch_fixer(sections)
 
-    # 13. Empty Page Killer (Fix-Batch I) - Remove empty page-breaking sections
+    # 13. Empty Page Killer (Fix-Batch I + J3) - Remove empty page-breaking sections
     sections = apply_empty_page_killer(sections)
 
     # 14. Risk Truncation (Fix-Batch I) - Truncate risk descriptions at sentence boundaries
     sections = apply_risk_truncation(sections)
+
+    # 15. Chat Artefact Filter (Fix-Batch J4) - Remove "Schreib mir", "Frag mich" etc.
+    sections = apply_chat_artefact_filter(sections)
 
     log.info("[QUALITY-ENFORCER] Pipeline complete")
     return sections
@@ -1971,10 +1974,13 @@ def apply_kpi_consistency_enforcer(sections: dict) -> dict:
 
 def kill_empty_pages(html: str) -> tuple[str, int]:
     """
-    Fix-Batch I: Remove empty page-breaking sections that only have a heading.
+    Fix-Batch I + J3: Remove empty page-breaking sections that only have a heading.
 
     Empty pages occur when a section div contains only an <h2> or <h3> with
     no substantial content following it.
+
+    Fix-Batch J3 Enhancement:
+    - Also detect sections with only heading + <br> tags as empty
 
     Args:
         html: HTML string to process
@@ -1997,13 +2003,19 @@ def kill_empty_pages(html: str) -> tuple[str, int]:
         (r'<div[^>]*class="[^"]*section[^"]*"[^>]*>\s*<h[23][^>]*>[^<]+</h[23]>\s*</div>', 'empty div section'),
         # Page-break div with only heading
         (r'<div[^>]*style="[^"]*page-break[^"]*"[^>]*>\s*<h[23][^>]*>[^<]+</h[23]>\s*</div>', 'empty page-break div'),
+        # Fix-Batch J3: Section with heading and only <br> tags
+        (r'<section[^>]*>\s*<h[23][^>]*>[^<]+</h[23]>\s*(?:<br\s*/?\s*>\s*)+</section>', 'section with only br tags'),
+        (r'<div[^>]*class="[^"]*section[^"]*"[^>]*>\s*<h[23][^>]*>[^<]+</h[23]>\s*(?:<br\s*/?\s*>\s*)+</div>', 'div section with only br tags'),
+        # Fix-Batch J3: Section with heading + whitespace + br
+        (r'<(section|div)[^>]*>\s*<h[23][^>]*>[^<]+</h[23]>\s*(?:\s*<br\s*/?\s*>\s*)*\s*</\1>', 'section with heading and br only'),
     ]
 
     for pattern, desc in empty_section_patterns:
         matches = re.findall(pattern, result, re.IGNORECASE | re.DOTALL)
         if matches:
             for match in matches:
-                log.warning(f"[EMPTY-PAGE-KILLER] Removing {desc}: {match[:50]}...")
+                match_str = match if isinstance(match, str) else match[0] if match else ""
+                log.warning(f"[EMPTY-PAGE-KILLER] Removing {desc}: {match_str[:50]}...")
                 removals += 1
             result = re.sub(pattern, '', result, flags=re.IGNORECASE | re.DOTALL)
 
@@ -2015,6 +2027,15 @@ def kill_empty_pages(html: str) -> tuple[str, int]:
             log.warning("[EMPTY-PAGE-KILLER] Removing section with empty paragraphs")
             removals += 1
         result = re.sub(empty_with_p_pattern, '', result, flags=re.IGNORECASE | re.DOTALL)
+
+    # Fix-Batch J3: Remove sections with heading + empty paragraphs + br tags
+    empty_br_p_pattern = r'<(section|div)[^>]*>\s*<h[23][^>]*>[^<]+</h[23]>\s*(?:(?:<p>\s*</p>|<br\s*/?\s*>)\s*)*</\1>'
+    matches = re.findall(empty_br_p_pattern, result, re.IGNORECASE | re.DOTALL)
+    if matches:
+        for _ in matches:
+            log.warning("[EMPTY-PAGE-KILLER] Removing section with empty paragraphs and br tags")
+            removals += 1
+        result = re.sub(empty_br_p_pattern, '', result, flags=re.IGNORECASE | re.DOTALL)
 
     return result, removals
 
@@ -2171,5 +2192,109 @@ def apply_risk_truncation(sections: dict, max_chars: int = 500) -> dict:
 
     if total_truncations > 0:
         log.info(f"[RISK-TRUNCATION] Complete: {total_truncations} descriptions truncated at sentence boundary")
+
+    return sections
+
+
+# =============================================================================
+# Fix-Batch J4: CHAT ARTEFACT FILTER
+# =============================================================================
+# Problem: LLM output sometimes contains chat artefacts like "Schreib mir",
+# "Frag mich", "Wenn du..." that are inappropriate for formal reports.
+# Solution: Filter these patterns from all text sections.
+# =============================================================================
+
+# Chat artefacts that should be removed (German patterns)
+CHAT_ARTEFACT_PATTERNS = [
+    # Direct address patterns
+    r"(?i)schreib\s+mir\b.*?[.!]",
+    r"(?i)frag\s+mich\b.*?[.!]",
+    r"(?i)wenn\s+du\s+(möchtest|willst|brauchst)\b.*?[.!]",
+    r"(?i)sag\s+mir\s+bescheid\b.*?[.!]",
+    r"(?i)lass\s+mich\s+wissen\b.*?[.!]",
+    r"(?i)meld\s+dich\b.*?[.!]",
+    r"(?i)ruf\s+mich\s+an\b.*?[.!]",
+    r"(?i)ich\s+kann\s+dir\s+(helfen|zeigen|erklären)\b.*?[.!]",
+    r"(?i)ich\s+stehe\s+dir\s+zur\s+verfügung\b.*?[.!]",
+    # Du-form patterns (informal)
+    r"(?i)du\s+kannst\s+mich\s+(fragen|kontaktieren)\b.*?[.!]",
+    r"(?i)wenn\s+du\s+fragen\s+hast\b.*?[.!]",
+    r"(?i)falls\s+du\s+(weitere|mehr)\s+infos\s+(brauchst|möchtest)\b.*?[.!]",
+    # Meta-commentary about the chat
+    r"(?i)wie\s+besprochen\b",
+    r"(?i)wie\s+ich\s+dir\s+gesagt\s+habe\b",
+    r"(?i)ich\s+hoffe,\s+das\s+hilft\b",
+    # Emoji clusters (more than 2 consecutive emojis)
+    r"[\U0001F300-\U0001F9FF]{3,}",
+]
+
+
+def filter_chat_artefacts(text: str) -> tuple[str, int]:
+    """
+    Fix-Batch J4: Remove chat artefacts from text.
+
+    Filters out LLM chat artefacts like "Schreib mir", "Frag mich", etc.
+    that are inappropriate for formal business reports.
+
+    Args:
+        text: Text to process
+
+    Returns:
+        Tuple of (cleaned_text, removals_count)
+    """
+    if not text:
+        return text, 0
+
+    removals = 0
+    result = text
+
+    for pattern in CHAT_ARTEFACT_PATTERNS:
+        matches = re.findall(pattern, result)
+        if matches:
+            removals += len(matches)
+            result = re.sub(pattern, '', result)
+
+    # Clean up double spaces and line breaks from removals
+    result = re.sub(r'\s{2,}', ' ', result)
+    result = re.sub(r'\n\s*\n\s*\n', '\n\n', result)
+
+    if removals > 0:
+        log.info(f"[CHAT-ARTEFACT-FILTER] Removed {removals} chat artefacts")
+
+    return result.strip(), removals
+
+
+def apply_chat_artefact_filter(sections: dict) -> dict:
+    """
+    Fix-Batch J4: Apply chat artefact filter to all text sections.
+
+    Args:
+        sections: Dict with all report sections
+
+    Returns:
+        Cleaned sections dict
+    """
+    # All text-bearing sections
+    text_sections = [
+        k for k in sections.keys()
+        if isinstance(sections.get(k), str) and sections.get(k)
+        and (k.endswith('_HTML') or k.islower() or k in [
+            'EXECUTIVE_SUMMARY', 'QUICK_WINS', 'RECOMMENDATIONS',
+            'RISKS', 'STRATEGY', 'ROADMAP', 'executive_summary',
+            'quick_wins', 'recommendations', 'risks', 'strategy', 'roadmap'
+        ])
+    ]
+
+    total_removals = 0
+
+    for key in text_sections:
+        if key in sections and sections[key]:
+            cleaned, count = filter_chat_artefacts(str(sections[key]))
+            if count > 0:
+                sections[key] = cleaned
+                total_removals += count
+
+    if total_removals > 0:
+        log.info(f"[CHAT-ARTEFACT-FILTER] Complete: {total_removals} total artefacts removed")
 
     return sections
