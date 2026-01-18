@@ -1035,21 +1035,10 @@ def heal_scenario_consistency(scenarios: List[ScenarioKPIs]) -> List[ScenarioKPI
         log.warning("[BC_001] Cannot heal scenarios: expected 3, got %d", len(scenarios))
         return scenarios
 
-    # Check if healing is needed
-    is_valid, errors = validate_scenario_consistency(scenarios)
-    if is_valid:
-        return scenarios
-
-    # PLATIN+++ v5.4: CRITICAL errors cannot be healed - need full fallback
-    critical_errors = [e for e in errors if "CRITICAL" in e]
-    if critical_errors:
-        log.error("[BC_001] CRITICAL errors detected - cannot heal: %s", critical_errors)
-        raise ValueError(f"Business case has unhealable CRITICAL errors: {critical_errors}")
-
-    log.info("[BC_001] Healing scenario consistency issues: %s", errors)
-
-    # Fix-Batch B2: First recalculate any scenarios with ROI <= 0
+    # Fix-Batch C4: First recalculate any scenarios with ROI <= 0 BEFORE validation
+    # This allows CRITICAL errors (0% ROI) to be healed instead of raising an exception
     recalculated_scenarios = []
+    needs_recalc = False
     for scenario in scenarios:
         if scenario.roi_12m <= 0 and scenario.monthly_savings > 0:
             # Recalculate ROI from savings and investment
@@ -1057,7 +1046,7 @@ def heal_scenario_consistency(scenarios: List[ScenarioKPIs]) -> List[ScenarioKPI
             investment = max(scenario.investment_total, 100.0)  # Minimum investment
             new_roi = calculate_roi(annual, investment)
             log.warning(
-                "[B2-RECALC] Scenario '%s' had ROI=%.1f%%, recalculated to %.1f%% (annual=%.0f, invest=%.0f)",
+                "[C4-RECALC] Scenario '%s' had ROI=%.1f%%, recalculated to %.1f%% (annual=%.0f, invest=%.0f)",
                 scenario.name, scenario.roi_12m, new_roi, annual, investment
             )
             recalculated_scenarios.append(ScenarioKPIs(
@@ -1067,13 +1056,32 @@ def heal_scenario_consistency(scenarios: List[ScenarioKPIs]) -> List[ScenarioKPI
                 monthly_savings=scenario.monthly_savings,
                 annual_savings=annual,
                 investment_total=investment,
-                notes=scenario.notes or f"ROI neuberechnet (Fix-Batch B2)",
+                notes=scenario.notes or f"ROI neuberechnet (Fix-Batch C4)",
             ))
+            needs_recalc = True
         else:
             recalculated_scenarios.append(scenario)
 
+    # Use recalculated scenarios for further processing
+    if needs_recalc:
+        scenarios = recalculated_scenarios
+        log.info("[C4] Recalculated %d scenarios with 0%% ROI", sum(1 for s in recalculated_scenarios if s.notes and "C4" in s.notes))
+
+    # Check if healing is needed (after recalculation)
+    is_valid, errors = validate_scenario_consistency(scenarios)
+    if is_valid:
+        return scenarios
+
+    # PLATIN+++ v5.4: CRITICAL errors that persist after recalculation cannot be healed
+    critical_errors = [e for e in errors if "CRITICAL" in e]
+    if critical_errors:
+        log.error("[BC_001] CRITICAL errors remain after recalculation - cannot heal: %s", critical_errors)
+        raise ValueError(f"Business case has unhealable CRITICAL errors: {critical_errors}")
+
+    log.info("[BC_001] Healing scenario consistency issues: %s", errors)
+
     # Sort scenarios by ROI (ascending: conservative, realistic, optimistic)
-    sorted_scenarios = sorted(recalculated_scenarios, key=lambda s: s.roi_12m)
+    sorted_scenarios = sorted(scenarios, key=lambda s: s.roi_12m)
 
     # Assign correct labels based on sorted order
     conservative_data = sorted_scenarios[0]
