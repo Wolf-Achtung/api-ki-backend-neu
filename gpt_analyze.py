@@ -4086,15 +4086,17 @@ def _generate_deterministic_quickwins_fallback(branche: str, groesse: str) -> st
 '''
 
     for qw in quickwins:
-        icon = html_module.escape(qw["icon"])
-        title = html_module.escape(qw["title"])
-        time = html_module.escape(qw["time"])
-        description = html_module.escape(qw["description"])
-        ersparnis = html_module.escape(qw["ersparnis"])
+        # Fix-Batch J1: Explicit str() to satisfy mypy type checking
+        icon = html_module.escape(str(qw["icon"]))
+        title = html_module.escape(str(qw["title"]))
+        time = html_module.escape(str(qw["time"]))
+        description = html_module.escape(str(qw["description"]))
+        ersparnis = html_module.escape(str(qw["ersparnis"]))
 
         steps_html = '<ol style="margin: 12px 0 12px 20px; padding: 0; color: #065f46;">'
-        for step in qw["steps"]:
-            steps_html += f'<li style="margin-bottom: 8px; line-height: 1.6;">{html_module.escape(step)}</li>'
+        steps_list = qw["steps"] if isinstance(qw["steps"], list) else [str(qw["steps"])]
+        for step in steps_list:
+            steps_html += f'<li style="margin-bottom: 8px; line-height: 1.6;">{html_module.escape(str(step))}</li>'
         steps_html += '</ol>'
 
         html += f'''
