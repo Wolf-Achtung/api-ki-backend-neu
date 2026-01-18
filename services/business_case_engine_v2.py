@@ -903,6 +903,8 @@ def calculate_roi(annual_savings: float, investment_total: float) -> float:
     Returns:
         ROI as percentage (e.g., 150.0 = 150%)
     """
+    # Original behavior: return 0.0 for zero/negative investment
+    # Fix-Batch B1 guard is applied in heal_scenario_consistency() instead
     if investment_total <= 0:
         return 0.0
 
@@ -1046,8 +1048,32 @@ def heal_scenario_consistency(scenarios: List[ScenarioKPIs]) -> List[ScenarioKPI
 
     log.info("[BC_001] Healing scenario consistency issues: %s", errors)
 
+    # Fix-Batch B2: First recalculate any scenarios with ROI <= 0
+    recalculated_scenarios = []
+    for scenario in scenarios:
+        if scenario.roi_12m <= 0 and scenario.monthly_savings > 0:
+            # Recalculate ROI from savings and investment
+            annual = scenario.annual_savings if scenario.annual_savings > 0 else scenario.monthly_savings * 12
+            investment = max(scenario.investment_total, 100.0)  # Minimum investment
+            new_roi = calculate_roi(annual, investment)
+            log.warning(
+                "[B2-RECALC] Scenario '%s' had ROI=%.1f%%, recalculated to %.1f%% (annual=%.0f, invest=%.0f)",
+                scenario.name, scenario.roi_12m, new_roi, annual, investment
+            )
+            recalculated_scenarios.append(ScenarioKPIs(
+                name=scenario.name,
+                roi_12m=max(new_roi, 10.0),  # Minimum 10% ROI if savings exist
+                payback_months=scenario.payback_months,
+                monthly_savings=scenario.monthly_savings,
+                annual_savings=annual,
+                investment_total=investment,
+                notes=scenario.notes or f"ROI neuberechnet (Fix-Batch B2)",
+            ))
+        else:
+            recalculated_scenarios.append(scenario)
+
     # Sort scenarios by ROI (ascending: conservative, realistic, optimistic)
-    sorted_scenarios = sorted(scenarios, key=lambda s: s.roi_12m)
+    sorted_scenarios = sorted(recalculated_scenarios, key=lambda s: s.roi_12m)
 
     # Assign correct labels based on sorted order
     conservative_data = sorted_scenarios[0]

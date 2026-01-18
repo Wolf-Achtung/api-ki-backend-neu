@@ -228,6 +228,9 @@ TOOL_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
 }
 
 # Funding templates per size
+# Fix-Batch B3: Removed regional funding programs (NRW, BW) that caused false positives
+# Only universal BMWK/federal programs are included here.
+# Regional programs should be handled by funding_engine_v2 with bundesland filter.
 FUNDING_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
     "solo": [
         {
@@ -239,11 +242,11 @@ FUNDING_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
             "application_complexity": "low",
         },
         {
-            "program_id": "nrw_digital",
-            "name": "NRW Digitalförderung",
-            "provider": "NRW",
-            "max_amount": "75.000 €",
-            "fit_reason": "Auch für Solo-Selbstständige zugänglich",
+            "program_id": "unternehmensberater_foerderung",
+            "name": "Förderung unternehmerischen Know-hows",
+            "provider": "BAFA",
+            "max_amount": "4.000 €",
+            "fit_reason": "Beratungsförderung für Gründer und Selbstständige (bundesweit)",
             "application_complexity": "low",
         },
     ],
@@ -257,11 +260,11 @@ FUNDING_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
             "application_complexity": "low",
         },
         {
-            "program_id": "invest_bw",
-            "name": "Invest BW",
-            "provider": "Baden-Württemberg",
-            "max_amount": "100.000 €",
-            "fit_reason": "Innovationsförderung für Teams in BW",
+            "program_id": "digital_jetzt",
+            "name": "Digital Jetzt",
+            "provider": "BMWK",
+            "max_amount": "50.000 €",
+            "fit_reason": "Investitionsförderung für Digitalisierung (bundesweit)",
             "application_complexity": "medium",
         },
     ],
