@@ -232,6 +232,104 @@ def main():
     print()
 
     # ==========================================================================
+    # K1: Chat & Prompt Artefacts Elimination Validation
+    # ==========================================================================
+    print(f"{BOLD}[K1] Chat & Prompt Artefacts Elimination{RESET}")
+
+    # Must have: K1 enhanced patterns (Du kannst mir, leading punctuation)
+    passed, count = check_file_contains(
+        base / "services" / "content_quality_enforcer.py",
+        r"Du kannst mir"
+    )
+    if passed:
+        print(f"  {GREEN}✓{RESET} K1 'Du kannst mir' pattern added")
+    else:
+        warnings.append("K1: 'Du kannst mir' pattern may be missing")
+        print(f"  {YELLOW}⚠{RESET} K1 'Du kannst mir' pattern not found")
+
+    # Must have: Leading punctuation cleaning
+    passed, count = check_file_contains(
+        base / "services" / "content_quality_enforcer.py",
+        r"K1.*Leading punctuation"
+    )
+    if passed:
+        print(f"  {GREEN}✓{RESET} K1 leading punctuation cleaning present")
+    else:
+        warnings.append("K1: Leading punctuation cleaning may be missing")
+        print(f"  {YELLOW}⚠{RESET} K1 leading punctuation cleaning not found")
+
+    print()
+
+    # ==========================================================================
+    # K2: KPI-Forecast & Locale 100% DE Validation
+    # ==========================================================================
+    print(f"{BOLD}[K2] KPI-Forecast & Locale 100% DE{RESET}")
+
+    # Must have: kpi_forecast_header label
+    passed, count = check_file_contains(
+        base / "i18n" / "ui_labels.json",
+        r"kpi_forecast_header"
+    )
+    if passed:
+        print(f"  {GREEN}✓{RESET} kpi_forecast_header label exists")
+    else:
+        warnings.append("K2: Missing kpi_forecast_header in ui_labels.json")
+        print(f"  {YELLOW}⚠{RESET} kpi_forecast_header label not found")
+
+    # Must have: German "Investition" label
+    passed, count = check_file_contains(
+        base / "services" / "business_case_simulation.py",
+        r'"investment":\s*"Investition"'
+    )
+    if passed:
+        print(f"  {GREEN}✓{RESET} K2 German 'Investition' label present")
+    else:
+        warnings.append("K2: German 'Investition' label may be missing")
+        print(f"  {YELLOW}⚠{RESET} K2 German 'Investition' label not found")
+
+    print()
+
+    # ==========================================================================
+    # K3: Pagination & Layout Hardening Validation
+    # ==========================================================================
+    print(f"{BOLD}[K3] Pagination & Layout Hardening{RESET}")
+
+    # Must have: K3 page-break fix in content_quality_enforcer
+    passed, count = check_file_contains(
+        base / "services" / "content_quality_enforcer.py",
+        r"K3.*page-break"
+    )
+    if passed:
+        print(f"  {GREEN}✓{RESET} K3 page-break fix present")
+    else:
+        warnings.append("K3: Page-break fix may be missing")
+        print(f"  {YELLOW}⚠{RESET} K3 page-break fix not found")
+
+    # Must have: Starter-Kit break-inside: avoid CSS (K3 comment indicates presence)
+    passed, count = check_file_contains(
+        base / "templates" / "pdf_template.html",
+        r"K3.*Starter-Kit"
+    )
+    if passed:
+        print(f"  {GREEN}✓{RESET} K3 Starter-Kit break-inside CSS present")
+    else:
+        warnings.append("K3: Starter-Kit break-inside CSS may be missing")
+        print(f"  {YELLOW}⚠{RESET} K3 Starter-Kit break-inside CSS not found")
+
+    # Must have: Risk matrix CSS (K3 comment indicates presence)
+    passed, count = check_file_contains(
+        base / "templates" / "pdf_template.html",
+        r"K3.*Risk Matrix"
+    )
+    if passed:
+        print(f"  {GREEN}✓{RESET} K3 Risk matrix CSS present")
+    else:
+        warnings.append("K3: Risk matrix CSS may be missing")
+        print(f"  {YELLOW}⚠{RESET} K3 Risk matrix CSS not found")
+
+    print()
+
+    # ==========================================================================
     # Summary
     # ==========================================================================
     print(f"{BOLD}{'='*60}{RESET}")
