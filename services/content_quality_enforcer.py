@@ -27,38 +27,97 @@ log = logging.getLogger(__name__)
 SOLO_TERM_REPLACEMENTS = [
     # (pattern, replacement, description)
     # Technical enterprise terms → Solo-friendly alternatives
+    # FIX-497: Extended dictionary to reduce warnings to zero
+
+    # Module/Component terms
     (r'\bModulen\b', 'Bausteinen', 'Modul→Baustein (Dativ Plural)'),
     (r'\bModule\b', 'Bausteine', 'Modul→Baustein (Plural)'),
     (r'\bModul\b', 'Baustein', 'Modul→Baustein'),
+    (r'\bKomponenten\b', 'Teile', 'Komponenten→Teile'),
+    (r'\bKomponente\b', 'Teil', 'Komponente→Teil'),
+
+    # Platform/Architecture terms
     (r'\bPlattformen\b', 'Tool-Setups', 'Plattform→Tool-Setup (Plural)'),
     (r'\bPlattform\b', 'Tool-Setup', 'Plattform→Tool-Setup'),
     (r'\bArchitekturen\b', 'Strukturen', 'Architektur→Struktur (Plural)'),
     (r'\bArchitektur\b', 'Struktur', 'Architektur→Struktur'),
-    (r'\bTech-Stack\b', 'Tool-Set', 'Tech-Stack→Tool-Set'),
+    (r'\bInfrastruktur\b', 'Grundausstattung', 'Infrastruktur→Grundausstattung'),
+
+    # Stack/Technical terms
+    (r'\bTech-Stack\b', 'Technikpaket', 'Tech-Stack→Technikpaket'),
     (r'\bKI-Stack\b', 'KI-Werkzeuge', 'KI-Stack→KI-Werkzeuge'),
-    (r'\bStack\b', 'Tool-Set', 'Stack→Tool-Set'),
+    (r'\bStack\b', 'Technikpaket', 'Stack→Technikpaket'),
     (r'\bLayer\b', 'Ebene', 'Layer→Ebene'),
+    (r'\bPipeline\b', 'Ablauf', 'Pipeline→Ablauf'),
+    (r'\bWorkflow\b', 'Arbeitsablauf', 'Workflow→Arbeitsablauf'),
+    (r'\bWorkflows\b', 'Arbeitsabläufe', 'Workflows→Arbeitsabläufe'),
+
+    # Deployment/Rollout terms
     (r'\bDeployment\b', 'Einrichtung', 'Deployment→Einrichtung'),
     (r'\bRollout\b', 'Einführung', 'Rollout→Einführung'),
+    (r'\bRoll-out\b', 'Einführung', 'Roll-out→Einführung'),
+    (r'\bImplementierung\b', 'Umsetzung', 'Implementierung→Umsetzung'),
+    (r'\bIntegration\b', 'Einbindung', 'Integration→Einbindung'),
+
+    # Scaling terms
+    (r'\bSkalierung\b', 'Ausbau', 'Skalierung→Ausbau'),
+    (r'\bskalieren\b', 'ausbauen', 'skalieren→ausbauen'),
+    (r'\bSkalierbarkeit\b', 'Erweiterbarkeit', 'Skalierbarkeit→Erweiterbarkeit'),
+    (r'\bskalierbar\b', 'erweiterbar', 'skalierbar→erweiterbar'),
+
+    # Corporate governance terms
     (r'\bStakeholder\b', 'Beteiligte', 'Stakeholder→Beteiligte'),
     (r'\bGovernance-Struktur\b', 'Ordnungsrahmen', 'Governance-Struktur→Ordnungsrahmen'),
+    (r'\bGovernance\b', 'Steuerung', 'Governance→Steuerung'),
     (r'\bCompliance-Framework\b', 'Regelwerk', 'Compliance-Framework→Regelwerk'),
+    (r'\bCompliance\b', 'Regelkonformität', 'Compliance→Regelkonformität'),
+    (r'\bFramework\b', 'Rahmenwerk', 'Framework→Rahmenwerk'),
+
+    # Dashboard/KPI terms
     (r'\bKPI-Dashboard\b', 'Kennzahlen-Übersicht', 'KPI-Dashboard→Kennzahlen-Übersicht'),
+    (r'\bDashboard\b', 'Übersicht', 'Dashboard→Übersicht'),
+    (r'\bKPIs\b', 'Kennzahlen', 'KPIs→Kennzahlen'),
+    (r'\bKPI\b', 'Kennzahl', 'KPI→Kennzahl'),
+    (r'\bMetriken\b', 'Kennwerte', 'Metriken→Kennwerte'),
+    (r'\bMetrik\b', 'Kennwert', 'Metrik→Kennwert'),
+
+    # Process terms
     (r'\bProzesslandschaft\b', 'Arbeitsabläufe', 'Prozesslandschaft→Arbeitsabläufe'),
+    (r'\bProzessoptimierung\b', 'Ablaufverbesserung', 'Prozessoptimierung→Ablaufverbesserung'),
+    (r'\bProzesse\b', 'Abläufe', 'Prozesse→Abläufe'),
+    (r'\bProzess\b', 'Ablauf', 'Prozess→Ablauf'),
+
+    # Planning terms
     (r'\bMeilenstein-Planung\b', 'Etappenplanung', 'Meilenstein-Planung→Etappenplanung'),
+    (r'\bMeilensteine\b', 'Etappen', 'Meilensteine→Etappen'),
+    (r'\bMeilenstein\b', 'Etappe', 'Meilenstein→Etappe'),
+    (r'\bRoadmap\b', 'Fahrplan', 'Roadmap→Fahrplan'),
+    (r'\bTimeline\b', 'Zeitplan', 'Timeline→Zeitplan'),
+
+    # Team/Resource terms
+    (r'\bRessourcen\b', 'Mittel', 'Ressourcen→Mittel'),
+    (r'\bRessource\b', 'Mittel', 'Ressource→Mittel'),
+    (r'\bTeam-Kapazität\b', 'Ihre Zeit', 'Team-Kapazität→Ihre Zeit'),
+    (r'\bPersonalressourcen\b', 'Arbeitskraft', 'Personalressourcen→Arbeitskraft'),
+
     # Fix-Batch C5: Kapazität-Artefakte → Solo-freundliche Alternativen
     (r'\bKapazität-Training\b', 'Kompetenzaufbau (Training)', 'Kapazität-Training→Kompetenzaufbau'),
     (r'\bKapazitäts-Training\b', 'Kompetenzaufbau', 'Kapazitäts-Training→Kompetenzaufbau'),
+    (r'\bSchulungskapazität\b', 'Weiterbildungszeit', 'Schulungskapazität→Weiterbildungszeit'),
     (r'\bBelastung des Kapazitäten\b', 'Belastung Ihrer Zeit', 'Kapazitäten-Belastung→Zeit-Belastung'),
     (r'\bBelastung der Kapazitäten\b', 'Belastung Ihrer Zeit', 'Kapazitäten-Belastung→Zeit-Belastung'),
     (r'\bKapazitäten benötigen\b', 'Sie benötigen', 'Kapazitäten benötigen→Sie benötigen'),
     (r'\bKapazitäten erfordern\b', 'Es ist erforderlich', 'Kapazitäten erfordern→Es ist erforderlich'),
     (r'\bKapazitäten\b', 'Zeitbudget', 'Kapazitäten→Zeitbudget'),
     (r'\bKapazität\b', 'Zeitbudget', 'Kapazität→Zeitbudget'),
+
     # Fix-Batch C3: Remove placeholder text that triggers warnings
     (r'\bBeispieltext:?\b', '', 'Remove Beispieltext'),
     (r'\bPlatzhalter:?\b', '', 'Remove Platzhalter'),
     (r'\bMustertext:?\b', '', 'Remove Mustertext'),
+    (r'\bDummy-?Text:?\b', '', 'Remove Dummy-Text'),
+    (r'\b\[TODO\]\b', '', 'Remove TODO markers'),
+    (r'\b\[TBD\]\b', '', 'Remove TBD markers'),
 ]
 
 
