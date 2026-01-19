@@ -10595,17 +10595,20 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
 
             result = _clean_html(result)
 
-            # FIX-502: CRITICAL - Do NOT repair quick_wins JSON responses!
-            # If quick_wins returns JSON (starts with [ or {), preserve it as-is.
-            # The _repair_html function corrupts JSON by trying to "convert to HTML".
+            # FIX-502: CRITICAL - For quick_wins JSON, skip ALL further processing!
+            # The JSON must be preserved exactly as returned by LLM.
+            # Later processing (N4.6 leak detection, 2-pass expand, fallbacks) would corrupt it.
             is_quick_wins_json = (
                 section_name == "quick_wins" and
                 result.strip().startswith(('[', '{'))
             )
 
             if is_quick_wins_json:
-                log.info("[FIX-502] quick_wins returned JSON - skipping html_repair to preserve JSON structure")
-            elif _needs_repair(result):
+                log.info("[FIX-502] quick_wins returned JSON - returning early, skipping ALL further processing")
+                log.info("[FIX-502] JSON preview: %s...", result[:200].replace('\n', ' '))
+                return result  # EARLY RETURN - preserve JSON exactly
+
+            if _needs_repair(result):
                 result = _repair_html(section_name, result)
             
             # 🎯 PLATZHALTER-FIX: Entferne Developer-Wörter die GPT manchmal ausgibt
