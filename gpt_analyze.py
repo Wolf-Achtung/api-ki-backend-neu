@@ -11350,21 +11350,51 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     qw_groesse = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "Unbekannt")
 
     qw_html = None
+    qw_json_valid = False  # FIX-499: Track if JSON was valid
 
-    # v14.35.22: Try simple JSON-to-HTML first (handles ["item1", "item2"] etc.)
-    # This avoids JSON parse errors when LLM returns simple JSON lists
-    simple_json_html = _quick_wins_simple_json_to_html(qw_raw)
-    if simple_json_html:
-        qw_html = simple_json_html
-        log.info("✅ Quick Wins: Simple JSON converted to HTML")
+    # FIX-499: Check if RELEASE_STRICT_MODE is enabled
+    qw_release_strict = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
+
+    # FIX-499 FIX 2A: JSON recognition is FINAL TRUTH
+    # If response starts with '[', it's JSON and must be processed as JSON
+    qw_raw_stripped = qw_raw.strip() if qw_raw else ""
+    is_json_response = qw_raw_stripped.startswith('[') or qw_raw_stripped.startswith('{')
+
+    if is_json_response:
+        log.info("[FIX-499-QW] JSON response detected (starts with '[' or '{')")
+
+        # v14.35.22: Try simple JSON-to-HTML first (handles ["item1", "item2"] etc.)
+        simple_json_html = _quick_wins_simple_json_to_html(qw_raw)
+        if simple_json_html:
+            qw_html = simple_json_html
+            qw_json_valid = True
+            log.info("[FIX-499-QW] ✅ Simple JSON converted to HTML successfully")
+        else:
+            # Try complex JSON parsing (expects full structured objects)
+            quick_wins_list = _parse_quick_wins_json(qw_raw)
+
+            if quick_wins_list:
+                qw_html = _build_quick_wins_html(quick_wins_list, branche=qw_branche, groesse=qw_groesse)
+                qw_json_valid = True
+                log.info("[FIX-499-QW] ✅ Complex JSON parsed and rendered (%d Cards)", len(quick_wins_list))
+            else:
+                # FIX-499: JSON was detected but couldn't be parsed - this is an error, not a fallback situation
+                log.error("[FIX-499-QW] ❌ JSON detected but parsing failed")
+                if qw_release_strict:
+                    # FIX-499 FIX 2C: In strict mode, JSON parse failure = RuntimeError (no fallback)
+                    error_msg = f"[FIX-499-QW] Quick Wins JSON detected but unparseable in STRICT MODE - blocking"
+                    log.error(error_msg)
+                    raise RuntimeError(error_msg)
+                else:
+                    # Non-strict: try to extract minimal content from JSON
+                    log.warning("[FIX-499-QW] ⚠️ Attempting JSON title extraction for non-strict fallback")
+                    qw_html = _generate_quickwins_compact_fallback(qw_raw, qw_branche, qw_groesse)
+                    if qw_html:
+                        qw_json_valid = True  # Mark as valid to prevent further fallback
+
     else:
-        # Try complex JSON parsing (expects full structured objects)
-        quick_wins_list = _parse_quick_wins_json(qw_raw)
-
-        if quick_wins_list:
-            qw_html = _build_quick_wins_html(quick_wins_list, branche=qw_branche, groesse=qw_groesse)
-            log.info("✅ Quick Wins HTML erfolgreich generiert (%d Cards)", len(quick_wins_list))
-        elif qw_raw and "<" in qw_raw:
+        # Not JSON - try HTML processing
+        if qw_raw and "<" in qw_raw:
             # Content looks like HTML (not JSON), process directly
             if _needs_repair(qw_raw):
                 qw_html = _repair_html("quick_wins", qw_raw)
@@ -11374,6 +11404,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
                 # Already valid HTML, just post-process
                 qw_html = _remove_duplicate_context_banners(qw_raw)
                 qw_html = _enforce_quick_win_css_classes(qw_html)
+            log.info("[FIX-499-QW] ✅ HTML content processed")
         elif qw_raw:
             # Raw content but not JSON or HTML - log warning with snippet
             log.warning(
@@ -11381,15 +11412,22 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
                 qw_raw[:120].replace('\n', ' ')
             )
 
-    # Final fallback if no HTML generated
+    # FIX-499 FIX 2C: Final fallback ONLY if JSON was NOT valid
+    # If JSON was valid, fallback is BLOCKED
     if not qw_html:
-        log.warning("⚠️ Kein Quick Wins Content, zeige Fallback-HTML")
-        qw_html = _fallback_quick_wins_html(branche=qw_branche, groesse=qw_groesse)
-        # FIX-498 WP4+WP6: Track fallback usage for metrics truth
-        gate = get_error_gate()
-        if gate:
-            gate.increment_fallback()
-            log.warning("[QW-FALLBACK-TRACKED] Fallback count incremented to %d", gate.fallback_count)
+        if qw_json_valid:
+            # FIX-499: JSON was valid but somehow no HTML - this should not happen
+            log.error("[FIX-499-QW] ❌ JSON was valid but no HTML generated - internal error")
+            if qw_release_strict:
+                raise RuntimeError("[FIX-499-QW] JSON valid but no HTML - blocking in strict mode")
+        else:
+            log.warning("⚠️ Kein Quick Wins Content, zeige Fallback-HTML")
+            qw_html = _fallback_quick_wins_html(branche=qw_branche, groesse=qw_groesse)
+            # FIX-498 WP4+WP6: Track fallback usage for metrics truth
+            gate = get_error_gate()
+            if gate:
+                gate.increment_fallback()
+                log.warning("[QW-FALLBACK-TRACKED] Fallback count incremented to %d", gate.fallback_count)
 
     # ========== Fix-Batch D: HARD STOP - Suppress raw JSON in Quick Wins ==========
     # CRITICAL: Quick Wins must NEVER contain raw JSON in PDF output
@@ -13806,6 +13844,95 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
 
         return False
 
+    # FIX-499: Strict regeneration for ROADMAP_90D_DECISION_HTML
+    def _regenerate_roadmap_90d_strict(context: Dict[str, Any], briefing: Dict[str, Any], max_attempts: int = 2) -> Optional[str]:
+        """
+        FIX-499: Regenerate ROADMAP_90D_DECISION_HTML with strict constraints.
+
+        Must produce:
+        - Exactly 6 bullet points
+        - Each bullet: 1 concrete action
+        - Min 300 chars total
+        - Sie-form, solo-friendly
+        - NO: questions, chat phrases, meta sentences, Rollout/Skalierung/Modul/Stack
+
+        Returns HTML content or None if regeneration fails.
+        """
+        branche = context.get("BRANCHE_LABEL", briefing.get("branche", "Ihrem Unternehmen"))
+
+        ROADMAP_90D_STRICT_PROMPT = f"""Erstellen Sie eine 90-Tage-Roadmap für KI-Einführung in {branche}.
+
+STRENGE REGELN (Pflicht):
+- Genau 6 Bulletpoints in einer <ul>-Liste
+- Jeder Bulletpoint: 1 konkrete, umsetzbare Maßnahme
+- Mindestlänge: 300 Zeichen gesamt
+- Sprache: Sie-Form, für Einzelunternehmer geeignet
+- VERBOTEN: Fragen, Chat-Floskeln, "In diesem Abschnitt...", Rollout, Skalierung, Modul, Stack
+
+FORMAT (exakt):
+<div class="roadmap-90d">
+<h3>Ihre 90-Tage KI-Roadmap</h3>
+<ul>
+<li><strong>Woche 1-2:</strong> [Konkrete Maßnahme]</li>
+<li><strong>Woche 3-4:</strong> [Konkrete Maßnahme]</li>
+<li><strong>Woche 5-6:</strong> [Konkrete Maßnahme]</li>
+<li><strong>Woche 7-8:</strong> [Konkrete Maßnahme]</li>
+<li><strong>Woche 9-10:</strong> [Konkrete Maßnahme]</li>
+<li><strong>Woche 11-12:</strong> [Konkrete Maßnahme]</li>
+</ul>
+</div>
+
+NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
+
+        FORBIDDEN_PATTERNS = [
+            "rollout", "skalierung", "modul", "stack",
+            "in diesem abschnitt", "bitte", "frag", "?",
+            "wie kann ich", "gerne", "natürlich"
+        ]
+
+        for attempt in range(1, max_attempts + 1):
+            try:
+                log.info(f"[FIX-499-ROADMAP-REGEN] Attempt {attempt}/{max_attempts} for ROADMAP_90D_DECISION_HTML")
+
+                response = _call_openai(
+                    prompt=ROADMAP_90D_STRICT_PROMPT,
+                    temperature=0.5,  # Lower for consistency
+                    max_tokens=1500,
+                    section="roadmap_90d_decision_strict",
+                )
+
+                if not response:
+                    log.warning(f"[FIX-499-ROADMAP-REGEN] Attempt {attempt}: Empty response")
+                    continue
+
+                # Validate length
+                if len(response.strip()) < 300:
+                    log.warning(f"[FIX-499-ROADMAP-REGEN] Attempt {attempt}: Too short ({len(response)} < 300)")
+                    continue
+
+                # Check for forbidden patterns
+                lower_response = response.lower()
+                forbidden_found = [p for p in FORBIDDEN_PATTERNS if p in lower_response]
+                if forbidden_found:
+                    log.warning(f"[FIX-499-ROADMAP-REGEN] Attempt {attempt}: Forbidden patterns: {forbidden_found}")
+                    continue
+
+                # Check for required structure (6 <li> elements)
+                li_count = response.count("<li>")
+                if li_count < 5:  # Allow some flexibility (5-6)
+                    log.warning(f"[FIX-499-ROADMAP-REGEN] Attempt {attempt}: Not enough bullets ({li_count} < 5)")
+                    continue
+
+                log.info(f"[FIX-499-ROADMAP-REGEN] ✅ Success on attempt {attempt}: len={len(response)}, bullets={li_count}")
+                return response
+
+            except Exception as e:
+                log.error(f"[FIX-499-ROADMAP-REGEN] Attempt {attempt} failed with error: {e}")
+                continue
+
+        log.error(f"[FIX-499-ROADMAP-REGEN] ❌ All {max_attempts} attempts failed")
+        return None
+
     def _fallback_roadmap_decision_html(context: Dict[str, Any]) -> str:
         """Generate deterministic fallback for ROADMAP_90D_DECISION_HTML."""
         branche = context.get("BRANCHE_LABEL", "Ihrem Unternehmen")
@@ -13864,10 +13991,36 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         "BRANCHE_LABEL": sections.get("BRANCHE_LABEL", answers.get("branche", "Ihrem Unternehmen")),
     }
 
+    # FIX-499: Check if RELEASE_STRICT_MODE is enabled
+    release_strict = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
+
     for section_key, fallback_fn in critical_sections:
         html_content = sections.get(section_key, "")
         if _is_placeholder_or_too_short(html_content):
             reason = "placeholder_pattern" if html_content and len(html_content.strip()) >= 200 else "too_short_or_empty"
+
+            # FIX-499: ROADMAP_90D_DECISION_HTML gets special treatment - regeneration instead of fallback
+            if section_key == "ROADMAP_90D_DECISION_HTML":
+                log.warning(f"[{run_id}] [FIX-499] ROADMAP_90D_DECISION_HTML needs regeneration: reason={reason}, len={len(html_content or '')}")
+
+                regenerated = _regenerate_roadmap_90d_strict(guard_context, answers, max_attempts=2)
+
+                if regenerated and len(regenerated.strip()) >= 300:
+                    sections[section_key] = regenerated
+                    log.info(f"[{run_id}] [FIX-499] ✅ ROADMAP_90D_DECISION_HTML regenerated successfully (len={len(regenerated)})")
+                    continue  # Skip fallback, regeneration succeeded
+                else:
+                    # Regeneration failed
+                    if release_strict:
+                        # FIX-499: In strict mode, HARD FAIL - no fallback allowed
+                        error_msg = f"[{run_id}] [FIX-499] ❌ ROADMAP_90D_DECISION_HTML regeneration failed in STRICT MODE - blocking report"
+                        log.error(error_msg)
+                        raise RuntimeError(error_msg)
+                    else:
+                        # Non-strict: allow fallback for development
+                        log.warning(f"[{run_id}] [FIX-499] ⚠️ ROADMAP_90D_DECISION_HTML regeneration failed, using fallback (non-strict mode)")
+
+            # Default fallback behavior for other sections (or ROADMAP in non-strict after regen failure)
             fallback_html = fallback_fn(guard_context)
             sections[section_key] = fallback_html
             # FIX-498 WP6: Track fallback usage for metrics truth
