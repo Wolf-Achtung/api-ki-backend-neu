@@ -14003,11 +14003,11 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             if section_key == "ROADMAP_90D_DECISION_HTML":
                 log.warning(f"[{run_id}] [FIX-499] ROADMAP_90D_DECISION_HTML needs regeneration: reason={reason}, len={len(html_content or '')}")
 
-                regenerated = _regenerate_roadmap_90d_strict(guard_context, answers, max_attempts=2)
+                regen_result = _regenerate_roadmap_90d_strict(guard_context, answers, max_attempts=2)
 
-                if regenerated and len(regenerated.strip()) >= 300:
-                    sections[section_key] = regenerated
-                    log.info(f"[{run_id}] [FIX-499] ✅ ROADMAP_90D_DECISION_HTML regenerated successfully (len={len(regenerated)})")
+                if regen_result and len(regen_result.strip()) >= 300:
+                    sections[section_key] = regen_result
+                    log.info(f"[{run_id}] [FIX-499] ✅ ROADMAP_90D_DECISION_HTML regenerated successfully (len={len(regen_result)})")
                     continue  # Skip fallback, regeneration succeeded
                 else:
                     # Regeneration failed
