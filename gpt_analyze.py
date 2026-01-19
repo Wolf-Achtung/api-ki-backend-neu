@@ -4048,6 +4048,7 @@ def _generate_quickwins_compact_fallback(raw_content: str, branche: str, groesse
     This ensures something reasonable shows even when JSON parsing fails.
 
     Fix-Batch J1: NEVER show error page - always return deterministic Quick Wins.
+    FIX-498 WP4+WP6: Tracks fallback usage for metrics truth.
 
     Args:
         raw_content: Raw content that couldn't be parsed
@@ -4058,6 +4059,12 @@ def _generate_quickwins_compact_fallback(raw_content: str, branche: str, groesse
         Compact HTML table with extracted items or deterministic fallback
     """
     import html as html_module
+
+    # FIX-498 WP4+WP6: Track fallback usage for metrics truth
+    gate = get_error_gate()
+    if gate:
+        gate.increment_fallback()
+        log.warning("[QW-COMPACT-FALLBACK-TRACKED] Fallback count incremented to %d", gate.fallback_count)
 
     # Try to extract any title-like content from the raw JSON
     title_pattern = re.compile(r'"title"\s*:\s*"([^"]+)"', re.IGNORECASE)
@@ -11378,6 +11385,11 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     if not qw_html:
         log.warning("⚠️ Kein Quick Wins Content, zeige Fallback-HTML")
         qw_html = _fallback_quick_wins_html(branche=qw_branche, groesse=qw_groesse)
+        # FIX-498 WP4+WP6: Track fallback usage for metrics truth
+        gate = get_error_gate()
+        if gate:
+            gate.increment_fallback()
+            log.warning("[QW-FALLBACK-TRACKED] Fallback count incremented to %d", gate.fallback_count)
 
     # ========== Fix-Batch D: HARD STOP - Suppress raw JSON in Quick Wins ==========
     # CRITICAL: Quick Wins must NEVER contain raw JSON in PDF output
@@ -13040,6 +13052,13 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             sections["BC_INVESTMENT_TOTAL"] = bc_report.investment_total
             sections["BC_FUNDING_EFFECT"] = bc_report.funding_effect
 
+            # FIX-498 WP5: Centralize Payback KPI - use BC Engine 2.0 as single source of truth
+            # This ensures cover page and BC section show the same Payback value
+            sections["PAYBACK_MONTHS"] = realistic.payback_months
+            sections["ROI_12M"] = realistic.roi_12m
+            log.info("[%s] [FIX-498-WP5] Centralized KPIs: PAYBACK_MONTHS=%.1f, ROI_12M=%.1f%%",
+                     run_id, realistic.payback_months, realistic.roi_12m)
+
         log.info("[%s] ✅ G30 Business Case Engine 2.0 generated: investment=%.0f€, ROI=%.1f%%, payback=%.1f months",
                  run_id, bc_report.investment_total,
                  realistic.roi_12m if realistic else 0,
@@ -13851,7 +13870,9 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             reason = "placeholder_pattern" if html_content and len(html_content.strip()) >= 200 else "too_short_or_empty"
             fallback_html = fallback_fn(guard_context)
             sections[section_key] = fallback_html
-            log.warning(f"[{run_id}] [P0.2-SECTION-GUARD] Fallback used section={section_key} reason={reason} original_len={len(html_content or '')}")
+            # FIX-498 WP6: Track fallback usage for metrics truth
+            error_gate.increment_fallback()
+            log.warning(f"[{run_id}] [P0.2-SECTION-GUARD] Fallback used section={section_key} reason={reason} original_len={len(html_content or '')} fallback_count={error_gate.fallback_count}")
         else:
             log.debug(f"[{run_id}] [P0.2-SECTION-GUARD] Section OK: {section_key} len={len(html_content)}")
 
