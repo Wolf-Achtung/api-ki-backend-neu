@@ -3664,6 +3664,58 @@
         }
 
         /* ================================================
+           FIX-498 WP1: ICON SIZE GUARDS
+           Prevent oversized/IMAX icons rendering
+           ================================================ */
+        /* Global icon size limits - prevent any icon from exceeding 120px */
+        [class*="icon"],
+        .icon,
+        .svg-icon,
+        .emoji-icon,
+        .hero-icon,
+        .card-icon,
+        .watermark-icon {
+            max-width: 120px !important;
+            max-height: 120px !important;
+        }
+
+        /* SVG icons - ensure proper sizing and stroke */
+        svg[class*="icon"],
+        .icon svg,
+        [class*="card"] svg {
+            max-width: 64px !important;
+            max-height: 64px !important;
+            fill: currentColor;
+            stroke: currentColor;
+        }
+
+        /* Decorative/watermark background icons */
+        .watermark-icon,
+        .bg-icon,
+        .background-icon,
+        [class*="watermark"] {
+            opacity: 0.08 !important;
+            z-index: -1 !important;
+            pointer-events: none !important;
+        }
+
+        /* Emoji size constraints in cards/boxes */
+        .card-emoji,
+        .box-emoji,
+        [class*="card"] > span:first-child,
+        .svg-decorated-box span[style*="font-size"] {
+            max-width: 48px !important;
+            max-height: 48px !important;
+            font-size: 24px !important;
+        }
+
+        /* Override any inline font-size > 80px on emojis */
+        span[style*="font-size"]:not([class*="score"]):not([class*="grade"]):not([class*="value"]) {
+            max-width: 64px;
+            max-height: 64px;
+        }
+
+        /* ================================================
            TAKEAWAY - Content Quality Pack v1.2
            "If you do only one thing:" individual starting point
            ================================================ */
@@ -5303,13 +5355,36 @@
 
         /* ============================================
            v13.0: ANTI-LEERSEITE (Empty Page Prevention)
+           FIX-498 WP2: Enhanced empty page prevention
            ============================================ */
         /* ULTRA-AGGRESSIVE: Prevent empty pages by forcing content flow */
         @media print {
             /* Prevent page breaks that would leave empty pages */
             .section:empty,
             .content-section:empty,
-            div:empty {
+            .chapter:empty,
+            section:empty,
+            div:empty:not(.page-break):not(.phase-marker) {
+                display: none !important;
+                page-break-before: auto !important;
+                break-before: auto !important;
+            }
+
+            /* FIX-498 WP2: Empty chapters should not cause page breaks */
+            .chapter:empty,
+            .section.chapter:empty,
+            section.chapter:empty {
+                page-break-before: auto !important;
+                break-before: auto !important;
+                height: 0 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                display: none !important;
+            }
+
+            /* Sections with only whitespace/empty body */
+            .section-body:empty,
+            .section-body:blank {
                 display: none !important;
             }
 
@@ -5334,6 +5409,13 @@
                 page-break-after: auto !important;
                 margin-bottom: 4px !important;
             }
+        }
+
+        /* FIX-498 WP2: Non-print empty prevention */
+        .chapter:empty,
+        .section:empty,
+        .section-body:empty {
+            display: none !important;
         }
 
         /* ============================================
@@ -6318,22 +6400,24 @@
                 </section>
                 {% endif %}
 
-                <!-- QUICK WINS -->
+                <!-- QUICK WINS - FIX-498 WP2: Conditional render -->
+                {% if QUICK_WINS_HTML and QUICK_WINS_HTML|trim and '<' in QUICK_WINS_HTML %}
                 <section class="section chapter" style="page-break-before: auto;">
                     <div class="section-header">
                         <div class="section-title">
-                            <span class="section-kicker">Schnelle Effekte</span>
+                            <span class="section-kicker">Quick Effects</span>
                             <h2>Quick Wins</h2>
                         </div>
                         <span class="section-pill">
                             <span class="pill-dot"></span>
-                            3–5 Measuren with sofortigem Hebel
+                            3–5 measures with immediate impact
                         </span>
                     </div>
                     <div class="section-body">
                         {{ QUICK_WINS_HTML|safe }}
                     </div>
                 </section>
+                {% endif %}
                 <!-- SPRINT G19: Branch Profile & Market Intelligence -->
                 {% if BRANCH_PROFILE_HTML %}
                 <section class="section chapter" id="branch-profile">
