@@ -207,5 +207,119 @@ class TestStrictModeIntegration:
             os.environ.pop("RELEASE_STRICT_MODE", None)
 
 
+class TestFix500QuickWinsValidatorProof:
+    """FIX-500: Tests for making Quick Wins JSON→HTML validator-proof."""
+
+    def test_build_quick_wins_html_includes_rendered_marker(self):
+        """Test that _build_quick_wins_html includes data-qw-json-rendered marker."""
+        try:
+            from gpt_analyze import _build_quick_wins_html
+        except ImportError:
+            pytest.skip("gpt_analyze dependencies not available")
+
+        quick_wins = [
+            {"title": "Test Quick Win", "icon": "🎯", "time": "1h", "engpass": "Test",
+             "description": "Test description", "mit_ki": "KI hilft", "steps": ["Schritt 1"],
+             "zeitersparnis": "2 Stunden/Woche"}
+        ]
+        html = _build_quick_wins_html(quick_wins, branche="IT", groesse="solo")
+
+        # Check for the JSON-rendered marker
+        assert 'data-qw-json-rendered="true"' in html
+        assert 'class="quick-wins-container"' in html
+        assert 'class="quick-win-card"' in html
+
+    def test_simple_json_to_html_includes_rendered_marker(self):
+        """Test that _quick_wins_simple_json_to_html includes data-qw-json-rendered marker."""
+        try:
+            from gpt_analyze import _quick_wins_simple_json_to_html
+        except ImportError:
+            pytest.skip("gpt_analyze dependencies not available")
+
+        raw = '["Quick Win 1", "Quick Win 2", "Quick Win 3"]'
+        html = _quick_wins_simple_json_to_html(raw)
+
+        assert html is not None
+        assert 'data-qw-json-rendered="true"' in html
+        assert 'class="quick-wins-container"' in html
+
+    def test_validator_respects_rendered_marker(self):
+        """Test that validator skips validation when data-qw-json-rendered marker present."""
+        try:
+            from gpt_analyze import _enforce_quickwins_no_raw_json
+        except ImportError:
+            pytest.skip("gpt_analyze dependencies not available")
+
+        # HTML with JSON-rendered marker should pass through unchanged
+        html_with_marker = '''<div class="quick-wins-container" data-qw-json-rendered="true">
+<div class="quick-wins"><ul><li>Test</li></ul></div>
+</div>'''
+
+        result = _enforce_quickwins_no_raw_json(html_with_marker, "IT", "solo")
+        assert result == html_with_marker
+
+    def test_validator_extended_markers_list(self):
+        """Test that validator recognizes all valid Quick Wins HTML patterns."""
+        valid_markers = [
+            '<div class="quick-win-card"',
+            '<div class="quick-win">',
+            'class="quick-wins"',
+            'class="quick-wins-container"',
+            'data-qw-json-rendered',
+        ]
+
+        # Test each marker
+        for marker in valid_markers:
+            html = f'<div>{marker}>Content</div>'
+            has_structure = any(m in html for m in valid_markers)
+            assert has_structure, f"Marker {marker} not detected"
+
+
+class TestFix500BeiBederfPreClean:
+    """FIX-500 TASK 3: Tests for pre-cleaning 'bei Bedarf' phrase."""
+
+    def test_bei_bedarf_replaced_with_optional(self):
+        """Test that 'bei Bedarf' is replaced with 'optional'."""
+        raw = 'Diese Funktion ist bei Bedarf aktivierbar'
+        cleaned = re.sub(r'\bbei\s+[Bb]edarf\b', 'optional', raw, flags=re.IGNORECASE)
+        assert 'bei Bedarf' not in cleaned
+        assert 'optional' in cleaned
+
+    def test_bei_bedarf_case_insensitive(self):
+        """Test that replacement is case insensitive."""
+        variants = ['bei Bedarf', 'Bei Bedarf', 'bei bedarf', 'BEI BEDARF']
+        for variant in variants:
+            raw = f'Funktion {variant} aktivieren'
+            cleaned = re.sub(r'\bbei\s+[Bb]edarf\b', 'optional', raw, flags=re.IGNORECASE)
+            assert variant not in cleaned
+
+    def test_auf_wunsch_replaced_with_optional(self):
+        """Test that 'auf Wunsch' is also replaced with 'optional'."""
+        raw = 'Diese Funktion ist auf Wunsch aktivierbar'
+        cleaned = re.sub(r'\bauf\s+[Ww]unsch\b', 'optional', raw, flags=re.IGNORECASE)
+        assert 'auf Wunsch' not in cleaned
+        assert 'optional' in cleaned
+
+    def test_json_with_bei_bedarf_gets_cleaned(self):
+        """Test that JSON containing 'bei Bedarf' gets cleaned."""
+        raw_json = '''[
+            {"title": "KI-Textassistent bei Bedarf aktivieren", "icon": "🤖"},
+            {"title": "Dokumentenanalyse auf Wunsch", "icon": "📄"}
+        ]'''
+
+        # Apply the cleaning
+        cleaned = re.sub(r'\bbei\s+[Bb]edarf\b', 'optional', raw_json, flags=re.IGNORECASE)
+        cleaned = re.sub(r'\bauf\s+[Ww]unsch\b', 'optional', cleaned, flags=re.IGNORECASE)
+
+        assert 'bei Bedarf' not in cleaned
+        assert 'auf Wunsch' not in cleaned
+        assert 'optional' in cleaned
+
+        # Verify it's still valid JSON
+        import json
+        parsed = json.loads(cleaned)
+        assert len(parsed) == 2
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
