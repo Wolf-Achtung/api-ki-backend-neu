@@ -13680,6 +13680,25 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     # Execute hard stop validation
     hard_stop_if_invalid(sections, error_gate, persona=persona, run_id=run_id)
 
+    # === FIX-497: Store gate metrics in sections for cover page Quality Summary ===
+    # This ensures the cover page shows actual pipeline metrics, not hardcoded zeros
+    sections["PIPELINE_WARNINGS_COUNT"] = len(error_gate.warnings)
+    sections["PIPELINE_FALLBACK_COUNT"] = error_gate.fallback_count
+    sections["PIPELINE_HEALS_COUNT"] = error_gate.heals_count
+    sections["PIPELINE_LOCATION_REMOVALS"] = error_gate.location_removals
+    sections["PIPELINE_REGEN_CYCLES"] = 0  # Track if regeneration was triggered
+    sections["PIPELINE_LEAK_CLEAN"] = True  # Will be updated by final leak check
+    sections["PIPELINE_GRADE"] = "A" if (
+        len(error_gate.warnings) == 0 and
+        error_gate.fallback_count == 0 and
+        error_gate.heals_count == 0
+    ) else "B" if (
+        len(error_gate.warnings) <= 5 and
+        error_gate.fallback_count <= 2
+    ) else "C"
+    log.info(f"[{run_id}] [FIX-497] Pipeline metrics: warnings={len(error_gate.warnings)}, "
+             f"fallbacks={error_gate.fallback_count}, heals={error_gate.heals_count}, grade={sections['PIPELINE_GRADE']}")
+
     # === SPRINT FIX: Store sections in meta for Golden Gate summary ===
     # Filter sections to only include JSON-serializable string values (HTML sections)
     # This enables /api/report/summary to validate sections_present

@@ -266,6 +266,27 @@
             page-break-inside: avoid;
             break-inside: avoid;
         }
+        /* FIX-497: Global table orphan prevention - all tables and rows */
+        table {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        thead {
+            display: table-header-group;
+        }
+        tfoot {
+            display: table-footer-group;
+        }
+        /* Keep last 2 rows together to prevent orphan single row */
+        tr:last-child,
+        tr:nth-last-child(2) {
+            page-break-before: avoid;
+            break-before: avoid;
+        }
         /* Erlaube Umbruch VOR neuen Haupt-Sections */
         .roadmap-section,
         .business-case-section,
@@ -6654,15 +6675,22 @@
                     </div>
                 </section>
                 <!-- RISKS, GAMECHANGER, RECOMMENDATIONS, FUNDING -->
+                <!-- FIX-497: Conditional render to prevent empty pages -->
+                {% if RISKS_HTML and RISKS_HTML|trim and '<' in RISKS_HTML %}
                 <section class="chapter">
                     {{RISKS_HTML}}
                 </section>
+                {% endif %}
+                {% if GAMECHANGER_HTML and GAMECHANGER_HTML|trim and '<' in GAMECHANGER_HTML %}
                 <section class="chapter">
                     {{GAMECHANGER_HTML}}
                 </section>
+                {% endif %}
+                {% if RECOMMENDATIONS_HTML and RECOMMENDATIONS_HTML|trim and '<' in RECOMMENDATIONS_HTML %}
                 <section class="chapter">
                     {{RECOMMENDATIONS_HTML}}
                 </section>
+                {% endif %}
                 <!-- POINT 3: FUNDING TRUST BLOCK WITH EU BADGE -->
                 {% if FUNDING_TRUST_BLOCK_ENABLED|default(true) %}
                 <div class="funding-trust-block" data-ui="1">
@@ -6704,9 +6732,12 @@
                     </div>
                 </div>
                 {% endif %}
+                <!-- FIX-497: Conditional render to prevent empty pages -->
+                {% if FOERDERPOTENZIAL_HTML and FOERDERPOTENZIAL_HTML|trim and '<' in FOERDERPOTENZIAL_HTML %}
                 <section class="chapter">
                     {{FOERDERPOTENZIAL_HTML}}
                 </section>
+                {% endif %}
                 <!-- SPRINT G19: Funding × Branch Alignment -->
                 <!-- PLATIN+++ v5.4.2: Move to appendix for solo users -->
                 {% if FUNDING_BRANCH_ALIGNMENT_HTML and not COMPACT_REPORT_MODE %}

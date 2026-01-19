@@ -327,6 +327,72 @@ _DEV_PLACEHOLDER_PATTERNS = [
     r"\{\{[A-Z_]+\}\}",  # Unreplaced {{PLACEHOLDER}} patterns
 ]
 
+# =============================================================================
+# FIX-BATCH-497: Code Fence Removal (Zero-Tolerance for Markdown in PDF)
+# =============================================================================
+# Pattern to match markdown code fences that leak into HTML output
+# Matches: ```html, ```json, ```python, ``` (standalone), etc.
+_CODE_FENCE_PATTERN = re.compile(
+    r'```+(?:[a-zA-Z0-9_-]*)?[\s\n]*',  # Opening fence with optional language
+    re.MULTILINE
+)
+
+# Also catch HTML-escaped backticks that might appear
+_ESCAPED_FENCE_PATTERN = re.compile(
+    r'(?:&#96;){3,}|(?:&#x60;){3,}|(?:`){3,}',  # HTML entities or raw backticks
+    re.MULTILINE
+)
+
+
+def strip_code_fences_final(html: str, run_id: str | None = None) -> Tuple[str, int]:
+    """
+    FIX-BATCH-497: Strip all markdown code fences from final HTML.
+
+    This is a hard requirement for premium quality PDFs - no markdown
+    artifacts should ever appear in the final output.
+
+    Args:
+        html: HTML content to clean
+        run_id: Optional run ID for logging
+
+    Returns:
+        Tuple of (cleaned_html, count_removed)
+    """
+    if not html or not isinstance(html, str):
+        return html or "", 0
+
+    result = html
+    removed_count = 0
+
+    try:
+        # Step 1: Remove standard code fences
+        matches = _CODE_FENCE_PATTERN.findall(result)
+        if matches:
+            removed_count += len(matches)
+            result = _CODE_FENCE_PATTERN.sub("", result)
+
+        # Step 2: Remove HTML-escaped fences
+        escaped_matches = _ESCAPED_FENCE_PATTERN.findall(result)
+        if escaped_matches:
+            removed_count += len(escaped_matches)
+            result = _ESCAPED_FENCE_PATTERN.sub("", result)
+
+        # Step 3: Clean up any resulting empty lines or double-newlines
+        result = re.sub(r'\n\s*\n\s*\n', '\n\n', result)
+
+        if removed_count > 0:
+            log.warning(
+                "[FIX-497] Stripped %d code fence artifacts from final HTML (run=%s)",
+                removed_count, run_id
+            )
+
+    except Exception as e:
+        log.error(f"[FIX-497] Code fence removal failed for run={run_id}: {e}")
+        # Return original on error - don't block PDF
+        return html, 0
+
+    return result, removed_count
+
 
 def scrub_development_placeholders(html: str, run_id: str | None = None) -> str:
     """
@@ -706,6 +772,13 @@ def render(briefing_obj: Any,
     html, pagebreak_removed = cleanup_pagebreaks(html, run_id=run_id)
     if pagebreak_removed > 0:
         log.info(f"[P0.4] Pagebreak cleanup: removed {pagebreak_removed} artifacts for run={run_id}")
+
+    # =========================================================================
+    # FIX-BATCH-497: Code fence removal (hard requirement for premium PDF)
+    # =========================================================================
+    html, fences_removed = strip_code_fences_final(html, run_id=run_id)
+    if fences_removed > 0:
+        log.info(f"[FIX-497] Code fence cleanup: removed {fences_removed} artifacts for run={run_id}")
 
     # =========================================================================
     # SPRINT N2.5: Final leak phrase safety check (defensive)

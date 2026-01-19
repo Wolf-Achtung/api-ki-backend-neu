@@ -73,15 +73,23 @@ log.info(f"🔍 Prompt loader initialized: BASE_DIR={BASE_DIR} (exists: {BASE_DI
 _SUPPORTED_EXT = (".md", ".txt", ".json", ".yaml", ".yml")
 
 
-def _interpolate_text(s: str, vars_dict: Optional[Dict[str, Any]]) -> str:
+def _interpolate_text(s: str, vars_dict: Optional[Dict[str, Any]], lang: str = "de") -> str:
     if not isinstance(s, str) or not vars_dict:
         return s
 
     # 🎯 JINJA2-RENDERING: Wenn Jinja2-Tags vorhanden sind, rendere mit Jinja2
     if "{% " in s or "{%" in s:
         try:
-            from jinja2 import Environment, BaseLoader
-            env = Environment(loader=BaseLoader(), autoescape=False)
+            from jinja2 import Environment, FileSystemLoader, ChoiceLoader
+            # FIX-497: Use FileSystemLoader to support {% include %} statements
+            # Load from both language-specific and shared prompt directories
+            prompt_dirs = [
+                str(BASE_DIR / lang),  # Language-specific prompts first
+                str(BASE_DIR / "de"),  # Fallback to German prompts
+                str(BASE_DIR),         # Base prompts directory
+            ]
+            loader = ChoiceLoader([FileSystemLoader(d) for d in prompt_dirs if Path(d).exists()])
+            env = Environment(loader=loader, autoescape=False)
             template = env.from_string(s)
             s = template.render(**vars_dict)
         except Exception as e:
@@ -97,13 +105,13 @@ def _interpolate_text(s: str, vars_dict: Optional[Dict[str, Any]]) -> str:
     return s
 
 
-def _interpolate(obj: Any, vars_dict: Optional[Dict[str, Any]]) -> Any:
+def _interpolate(obj: Any, vars_dict: Optional[Dict[str, Any]], lang: str = "de") -> Any:
     if isinstance(obj, str):
-        return _interpolate_text(obj, vars_dict)
+        return _interpolate_text(obj, vars_dict, lang=lang)
     if isinstance(obj, dict):
-        return {k: _interpolate(v, vars_dict) for k, v in obj.items()}
+        return {k: _interpolate(v, vars_dict, lang=lang) for k, v in obj.items()}
     if isinstance(obj, list):
-        return [_interpolate(v, vars_dict) for v in obj]
+        return [_interpolate(v, vars_dict, lang=lang) for v in obj]
     return obj
 
 
@@ -243,7 +251,8 @@ def load_prompt(section: str, lang: str = "de", vars_dict: Optional[Dict[str, An
     log.info("[prompt_loader] section=%s requested_lang=%s used_lang=%s path=%s",
              section, requested_lang, used_lang, path)
     payload = _read_file(path)
-    return _interpolate(payload, vars_dict)
+    # FIX-497: Pass lang to _interpolate for proper include resolution
+    return _interpolate(payload, vars_dict, lang=used_lang)
 
 
 # =============================================================================
