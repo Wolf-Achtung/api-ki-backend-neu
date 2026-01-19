@@ -10594,7 +10594,18 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 log.warning(f"Contains pre.prompt-template: {has_pre}")
 
             result = _clean_html(result)
-            if _needs_repair(result):
+
+            # FIX-502: CRITICAL - Do NOT repair quick_wins JSON responses!
+            # If quick_wins returns JSON (starts with [ or {), preserve it as-is.
+            # The _repair_html function corrupts JSON by trying to "convert to HTML".
+            is_quick_wins_json = (
+                section_name == "quick_wins" and
+                result.strip().startswith(('[', '{'))
+            )
+
+            if is_quick_wins_json:
+                log.info("[FIX-502] quick_wins returned JSON - skipping html_repair to preserve JSON structure")
+            elif _needs_repair(result):
                 result = _repair_html(section_name, result)
             
             # 🎯 PLATZHALTER-FIX: Entferne Developer-Wörter die GPT manchmal ausgibt
@@ -11471,7 +11482,27 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 
     else:
         # Not JSON - try HTML processing
-        if qw_raw and "<" in qw_raw:
+        # FIX-502: Safety guard - if content actually starts with JSON markers but was
+        # misclassified (e.g., due to leading whitespace issues), route to JSON path
+        if qw_raw and qw_raw.lstrip().startswith(('[', '{')):
+            log.warning("[FIX-502] Content looks like JSON but was in HTML path - re-routing to JSON parse")
+            # Try JSON parsing
+            simple_json_html = _quick_wins_simple_json_to_html(qw_raw)
+            if simple_json_html:
+                qw_html = simple_json_html
+                qw_json_valid = True
+                log.info("[FIX-502] ✅ Re-routed JSON parsed successfully")
+            else:
+                quick_wins_list = _parse_quick_wins_json(qw_raw)
+                if quick_wins_list:
+                    qw_html = _build_quick_wins_html(quick_wins_list, branche=qw_branche, groesse=qw_groesse)
+                    qw_json_valid = True
+                    log.info("[FIX-502] ✅ Re-routed JSON rendered: %d cards", len(quick_wins_list))
+                else:
+                    log.error("[FIX-502] ❌ Re-routed JSON parse failed")
+                    if qw_release_strict:
+                        raise RuntimeError("[FIX-502] JSON detected in HTML path but unparseable - blocking in strict mode")
+        elif qw_raw and "<" in qw_raw:
             # Content looks like HTML (not JSON), process directly
             if _needs_repair(qw_raw):
                 qw_html = _repair_html("quick_wins", qw_raw)
@@ -11485,7 +11516,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             has_marker = 'class="quick-win' in qw_html if qw_html else False
             has_rendered = 'data-qw-json-rendered' in qw_html if qw_html else False
             log.info(
-                "[FIX-501-QW] ✅ HTML content processed: len=%d, has_quick_win_class=%s, has_rendered_marker=%s",
+                "[FIX-502-QW] ✅ HTML content processed: len=%d, has_quick_win_class=%s, has_rendered_marker=%s",
                 len(qw_html) if qw_html else 0, has_marker, has_rendered
             )
         elif qw_raw:
@@ -11514,6 +11545,16 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 
     # ========== Fix-Batch D: HARD STOP - Suppress raw JSON in Quick Wins ==========
     # CRITICAL: Quick Wins must NEVER contain raw JSON in PDF output
+
+    # FIX-502: Diagnostic logging before validator to trace path issues
+    raw_is_json = qw_raw_stripped.startswith(('[', '{')) if qw_raw_stripped else False
+    has_qw_class = 'class="quick-win' in (qw_html or '')
+    has_rendered_marker = 'data-qw-json-rendered="true"' in (qw_html or '')
+    log.info(
+        "[QW-PATH] raw_is_json=%s, qw_json_valid=%s, rendered=%s, has_marker=%s, has_class=%s, len=%d",
+        raw_is_json, qw_json_valid, bool(qw_html), has_rendered_marker, has_qw_class, len(qw_html or '')
+    )
+
     qw_html = _enforce_quickwins_no_raw_json(qw_html, qw_branche, qw_groesse)
 
     # v8.0: Single-column layout for Quick Wins
