@@ -95,8 +95,9 @@ class TestQuickWinsJsonFix:
         result = _quick_wins_simple_json_to_html(raw)
 
         assert result is not None
-        assert 'class="quick-wins"' in result
-        assert '<li>' in result
+        # FIX-501: Check for class substring (may be combined with other classes)
+        assert 'quick-wins' in result
+        assert '<li' in result
         assert 'Quick Win 1' in result
 
     def test_complex_json_to_html_produces_valid_markup(self):
@@ -117,7 +118,8 @@ class TestQuickWinsJsonFix:
         assert len(quick_wins) == 3
 
         html = _build_quick_wins_html(quick_wins, branche="IT", groesse="solo")
-        assert 'class="quick-win-card"' in html
+        # FIX-501: Check for class substring (may be combined: "quick-win quick-win-card")
+        assert 'quick-win-card' in html
 
     def test_validator_recognizes_quick_win_card_class(self):
         """Test that validator recognizes quick-win-card class."""
@@ -226,8 +228,9 @@ class TestFix500QuickWinsValidatorProof:
 
         # Check for the JSON-rendered marker
         assert 'data-qw-json-rendered="true"' in html
-        assert 'class="quick-wins-container"' in html
-        assert 'class="quick-win-card"' in html
+        assert 'quick-wins-container' in html
+        # FIX-501: Check for class substring (may be combined: "quick-win quick-win-card")
+        assert 'quick-win-card' in html
 
     def test_simple_json_to_html_includes_rendered_marker(self):
         """Test that _quick_wins_simple_json_to_html includes data-qw-json-rendered marker."""
@@ -241,7 +244,8 @@ class TestFix500QuickWinsValidatorProof:
 
         assert html is not None
         assert 'data-qw-json-rendered="true"' in html
-        assert 'class="quick-wins-container"' in html
+        # FIX-501: Check for substring (may be combined with other classes)
+        assert 'quick-wins-container' in html
 
     def test_validator_respects_rendered_marker(self):
         """Test that validator skips validation when data-qw-json-rendered marker present."""
