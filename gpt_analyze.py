@@ -12357,8 +12357,16 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 
 
 # -------------------- pipeline (kept from original with minor logging updates) ----------------
-def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, str, Dict[str, Any]]:
-    """Analyze briefing and generate AI report."""
+def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, str, Dict[str, Any], Optional[List[Dict[str, Any]]]]:
+    """Analyze briefing and generate AI report.
+
+    Returns:
+        Tuple of (analysis_id, html, meta, debug_attachments)
+        - analysis_id: ID of the created Analysis record
+        - html: Final rendered HTML
+        - meta: Metadata dict (JSON-safe, stored in DB)
+        - debug_attachments: DEBUG-503D artifacts with bytes (for email only, NOT stored in DB)
+    """
     # === HARD STOP ARCHITECTURE: Initialize error gate ===
     error_gate = ReportErrorGate(run_id=run_id)
     set_error_gate(error_gate)  # Make available to worker threads
@@ -14519,7 +14527,8 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     db.refresh(an)
     
     log.info("[%s] ✅ Analysis created (v5.4.3-PLATIN+++): id=%s", run_id, an.id)
-    return an.id, result["html"], result.get("meta", {})
+    # Return 4 values: debug_attachments contains bytes for email (NOT stored in DB)
+    return an.id, result["html"], result.get("meta", {}), result.get("debug_attachments")
 
 # -------------------- briefing summary for admin ----------------
 def _build_briefing_summary_html(br: Briefing, rep: Report, user_email: str) -> str:
@@ -14651,8 +14660,13 @@ def _extract_scores_from_report(rep: Report) -> Dict[str, int]:
         return default_scores
 
 
-def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str], pdf_bytes: Optional[bytes], run_id: str, meta: Optional[Dict[str, Any]] = None) -> None:
-    """Send emails via Resend API"""
+def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str], pdf_bytes: Optional[bytes], run_id: str, meta: Optional[Dict[str, Any]] = None, debug_attachments: Optional[List[Dict[str, Any]]] = None) -> None:
+    """Send emails via Resend API.
+
+    Args:
+        debug_attachments: DEBUG-503D artifacts (with bytes) for admin email.
+                          Passed separately to avoid storing bytes in DB.
+    """
     # Global Email Kill-Switch
     if os.getenv("DISABLE_EMAILS", "").lower() in ("1", "true", "yes", "on"):
         log.info("[%s] 📧 Emails disabled via DISABLE_EMAILS=1. Skipping user/admin email send.", run_id)
@@ -14691,16 +14705,17 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
         log.warning("[%s] ⚠️ Could not create briefing JSON attachment: %s", run_id, str(e))
 
     # DEBUG-503D: Attach debug artifacts when DEBUG_RENDER=1
-    if meta and meta.get("debug_503d_attachments"):
+    # NOTE: debug_attachments is passed as a parameter (contains bytes), NOT read from meta
+    # This ensures bytes are never stored in meta which gets persisted to Postgres JSONB
+    if debug_attachments:
         try:
-            debug_attachments = meta["debug_503d_attachments"]
             for att in debug_attachments:
                 attachments_admin.append(att)
             total_debug_bytes = sum(len(a.get("content", b"")) for a in debug_attachments)
             log.info(
-                "[%s] [DEBUG-503D][MAIL] attaching 4 artifacts: "
+                "[%s] [DEBUG-503D][MAIL] attaching %d artifacts: "
                 "quick_wins_block.html, risk_matrix_block.html, payback_mentions.txt, quick_wins_keys.json "
-                "(total_bytes=%d)", run_id, total_debug_bytes
+                "(total_bytes=%d)", run_id, len(debug_attachments), total_debug_bytes
             )
         except Exception as debug_exc:
             log.warning("[%s] ⚠️ Could not attach DEBUG-503D artifacts: %s", run_id, str(debug_exc))
@@ -14787,7 +14802,8 @@ def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = 
         log.info("[%s] 🚀 Starting analysis v5.4.3-PLATIN+++ for briefing_id=%s (worker mode)", run_id, briefing_id)
 
         # Core analysis pipeline
-        an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
+        # debug_attachments contains bytes for email - NOT stored in DB (would cause JSON serialize error)
+        an_id, html, meta, debug_attachments = analyze_briefing(db, briefing_id, run_id=run_id)
 
         br = db.get(Briefing, briefing_id)
         if not br:
@@ -14869,7 +14885,8 @@ def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = 
         db.refresh(rep)
 
         # Send notification emails
-        _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id, meta=meta)
+        # Pass debug_attachments (bytes) directly - NOT stored in DB/meta
+        _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id, meta=meta, debug_attachments=debug_attachments)
 
         log.info("[%s] ✅ Pipeline complete for briefing_id=%s", run_id, briefing_id)
 
@@ -14893,7 +14910,8 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
     rep: Optional[Report] = None
     try:
         log.info("[%s] 🚀 Starting analysis v5.4.3-PLATIN+++ for briefing_id=%s", run_id, briefing_id)
-        an_id, html, meta = analyze_briefing(db, briefing_id, run_id=run_id)
+        # debug_attachments contains bytes for email - NOT stored in DB (would cause JSON serialize error)
+        an_id, html, meta, debug_attachments = analyze_briefing(db, briefing_id, run_id=run_id)
         br = db.get(Briefing, briefing_id)
         rep = Report(
             user_id=br.user_id if br else None, 
@@ -14968,7 +14986,8 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
         db.commit()
         db.refresh(rep)
 
-        _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id, meta=meta)
+        # Pass debug_attachments (bytes) directly - NOT stored in DB/meta
+        _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id, meta=meta, debug_attachments=debug_attachments)
 
     except Exception as exc:
         log.error("[%s] ❌ Analysis failed: %s", run_id, exc, exc_info=True)

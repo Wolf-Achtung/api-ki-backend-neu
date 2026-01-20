@@ -23,7 +23,7 @@ from services.html_sanitizer import sanitize_en_locale_tokens
 from services.lang_utils import normalize_lang
 from services.i18n import ui as ui_factory
 from services.locale_rewriter import apply_locale_v2
-from services.debug_503d import build_debug_503d_attachments, is_debug_render_enabled
+from services.debug_503d import build_debug_503d_attachments, build_debug_503d_summary, is_debug_render_enabled
 
 log = logging.getLogger(__name__)
 
@@ -838,7 +838,11 @@ def render(briefing_obj: Any,
     # =========================================================================
     # DEBUG-503D: Build debug attachments when DEBUG_RENDER=1
     # Collect right before return, after all post-processing, when FINAL HTML is ready.
+    # IMPORTANT: Raw bytes are returned separately - they must NEVER be stored in meta
+    # (Postgres JSONB can't serialize bytes objects).
     # =========================================================================
+    debug_attachments_for_email = None  # Will hold bytes for email, NOT persisted to DB
+
     if is_debug_render_enabled():
         # Build canonical KPIs dict for payback mentions
         canonical_kpis = {
@@ -855,7 +859,13 @@ def render(briefing_obj: Any,
         )
 
         if debug_attachments:
-            meta["debug_503d_attachments"] = debug_attachments
+            # Store ONLY JSON-safe summary in meta (for DB persistence)
+            # Contains: filenames, sizes, sha256 hashes, previews - NO raw bytes
+            meta["debug_503d_summary"] = build_debug_503d_summary(debug_attachments)
+
+            # Return raw bytes separately for email attachments (NOT stored in DB)
+            debug_attachments_for_email = debug_attachments
+
             log.info(f"[DEBUG-503D] Collected {len(debug_attachments)} debug artifacts for admin email")
 
-    return {"html": html, "meta": meta or {}}
+    return {"html": html, "meta": meta or {}, "debug_attachments": debug_attachments_for_email}
