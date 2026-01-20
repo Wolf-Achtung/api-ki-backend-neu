@@ -282,7 +282,7 @@ def _build_quick_wins_keys_json(sections: Dict[str, Any]) -> str:
     """
     keys_to_check = ["QUICK_WINS_HTML", "QUICK_WINS_HTML_LEFT", "QUICK_WINS_HTML_RIGHT", "quick_wins"]
 
-    result = {}
+    result: Dict[str, Any] = {}
 
     for key in keys_to_check:
         value = sections.get(key, "")
