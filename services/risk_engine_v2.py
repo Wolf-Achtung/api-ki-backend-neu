@@ -1063,6 +1063,7 @@ def risk_report_to_html(
     # L1: Added colgroup for column width control, class for CSS targeting
     # FIX-503B: Changed to table-layout:auto for better text wrapping in WeasyPrint
     if report.risk_matrix:
+        html_parts.append('<!-- DEBUG-ANCHOR: RISK_MATRIX_START -->')
         html_parts.append(f'''
         <div class="risk-block matrix-block risk-matrix-section" style="margin-bottom:20px;">
             <p style="margin:0 0 12px 0;font-weight:600;color:#1e293b;">{labels["matrix_title"]}</p>
@@ -1099,6 +1100,7 @@ def risk_report_to_html(
                 ''')
 
         html_parts.append('</table></div>')
+        html_parts.append('<!-- DEBUG-ANCHOR: RISK_MATRIX_END -->')
 
     # Consolidated Score Block
     html_parts.append(f'''
