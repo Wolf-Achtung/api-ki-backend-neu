@@ -4923,6 +4923,89 @@
         }
 
         /* ============================================
+           DCL: DECISION CONFIDENCE LAYER CARD
+           ============================================ */
+        .confidence-card {
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            border: 1px solid #86efac;
+            border-left: 4px solid #16a34a;
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin-bottom: var(--space-lg);
+            page-break-inside: avoid;
+        }
+        .confidence-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #bbf7d0;
+        }
+        .confidence-icon {
+            font-size: 20pt;
+        }
+        .confidence-title {
+            flex: 1;
+            font-size: 14pt;
+            font-weight: 600;
+            color: #14532d;
+            margin: 0;
+        }
+        .confidence-date {
+            font-size: 9pt;
+            color: var(--color-text-muted);
+        }
+        .confidence-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .confidence-block {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 6px;
+            padding: 10px 12px;
+        }
+        .confidence-block h4 {
+            font-size: 10pt;
+            font-weight: 600;
+            color: #166534;
+            margin: 0 0 6px 0;
+        }
+        .confidence-list {
+            margin: 0;
+            padding-left: 16px;
+            font-size: 9pt;
+            line-height: 1.5;
+            color: var(--color-text-base);
+        }
+        .confidence-list li {
+            margin-bottom: 3px;
+        }
+        .confidence-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            font-size: 9pt;
+            margin-bottom: 6px;
+        }
+        .checkbox-checked {
+            color: #16a34a;
+            font-size: 12pt;
+        }
+        .confidence-note {
+            font-size: 8.5pt;
+            color: var(--color-text-muted);
+            font-style: italic;
+            margin-top: 4px;
+        }
+        @media print {
+            .confidence-card {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* ============================================
            v11.0: QUICK WIN CARDS
            ============================================ */
         .quick-win-card {
@@ -6349,6 +6432,11 @@
                         </h3>
                         {{ EXECUTIVE_DECISION_HTML|safe }}
                     </div>
+                    {% endif %}
+
+                    <!-- DCL: Decision Confidence Layer - Entscheidungssicherheit & Datengrundlage -->
+                    {% if DECISION_CONFIDENCE_HTML and DECISION_CONFIDENCE_HTML|trim %}
+                    {{ DECISION_CONFIDENCE_HTML|safe }}
                     {% endif %}
 
                     <!-- Continue Note - Modern Info Callout -->
