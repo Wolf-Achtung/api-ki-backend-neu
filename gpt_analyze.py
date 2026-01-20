@@ -14651,7 +14651,7 @@ def _extract_scores_from_report(rep: Report) -> Dict[str, int]:
         return default_scores
 
 
-def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str], pdf_bytes: Optional[bytes], run_id: str) -> None:
+def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str], pdf_bytes: Optional[bytes], run_id: str, meta: Optional[Dict[str, Any]] = None) -> None:
     """Send emails via Resend API"""
     # Global Email Kill-Switch
     if os.getenv("DISABLE_EMAILS", "").lower() in ("1", "true", "yes", "on"):
@@ -14689,7 +14689,22 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
         log.info("[%s] 📎 Added briefing JSON attachment for admin (%d bytes)", run_id, len(bjson))
     except Exception as e:
         log.warning("[%s] ⚠️ Could not create briefing JSON attachment: %s", run_id, str(e))
-    
+
+    # DEBUG-503D: Attach debug artifacts when DEBUG_RENDER=1
+    if meta and meta.get("debug_503d_attachments"):
+        try:
+            debug_attachments = meta["debug_503d_attachments"]
+            for att in debug_attachments:
+                attachments_admin.append(att)
+            total_debug_bytes = sum(len(a.get("content", b"")) for a in debug_attachments)
+            log.info(
+                "[%s] [DEBUG-503D][MAIL] attaching 4 artifacts: "
+                "quick_wins_block.html, risk_matrix_block.html, payback_mentions.txt, quick_wins_keys.json "
+                "(total_bytes=%d)", run_id, total_debug_bytes
+            )
+        except Exception as debug_exc:
+            log.warning("[%s] ⚠️ Could not attach DEBUG-503D artifacts: %s", run_id, str(debug_exc))
+
     # Send to user
     try:
         user_email = None
@@ -14854,7 +14869,7 @@ def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = 
         db.refresh(rep)
 
         # Send notification emails
-        _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id)
+        _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id, meta=meta)
 
         log.info("[%s] ✅ Pipeline complete for briefing_id=%s", run_id, briefing_id)
 
@@ -14952,9 +14967,9 @@ def run_async(briefing_id: int, email: Optional[str] = None) -> None:
         db.add(rep)
         db.commit()
         db.refresh(rep)
-        
-        _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id)
-        
+
+        _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id, meta=meta)
+
     except Exception as exc:
         log.error("[%s] ❌ Analysis failed: %s", run_id, exc, exc_info=True)
         if rep and hasattr(rep, "status"):
