@@ -711,7 +711,7 @@ class ReportValidator:
     SECTION_KEY_MAP: Dict[str, str] = {
         "executive_summary": "EXECUTIVE_SUMMARY_HTML",
         "business_case": "BUSINESS_CASE_HTML",
-        "quick_wins": "quick_wins",
+        "quick_wins": "QUICK_WINS_HTML",  # FIX-503B: Use HTML key, not text key
         "roadmap_90d": "roadmap_90d",
         "roadmap_12m": "roadmap_12m",
         "strategie_governance": "strategie_governance",
@@ -1064,6 +1064,16 @@ class ReportValidator:
         """
         for logical_name in self.MIN_SECTION_LENGTH_WORDS.keys():
             section_key = self.SECTION_KEY_MAP.get(logical_name, logical_name)
+
+            # FIX-503B: Quick Wins fallback logic
+            # If QUICK_WINS_HTML not found, try quick_wins text key
+            if logical_name == "quick_wins" and section_key not in self.sections:
+                fallback_keys = ["quick_wins", "QUICK_WINS_HTML_LEFT", "QUICK_WINS_HTML_RIGHT"]
+                for fallback in fallback_keys:
+                    if fallback in self.sections and self.sections.get(fallback):
+                        section_key = fallback
+                        break
+
             if section_key not in self.sections:
                 continue
             content = self.sections.get(section_key)
