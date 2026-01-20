@@ -1714,6 +1714,7 @@ PAYBACK_ENFORCE_SECTIONS = [
 ]
 
 # Patterns that indicate scenario/range context (should NOT be replaced)
+# FIX-503C: Enhanced range detection to avoid replacing legitimate ranges
 PAYBACK_SCENARIO_PATTERNS = [
     r'(?:konservativ|vorsichtig|pessimistisch)',
     r'(?:optimistisch|best.?case)',
@@ -1721,6 +1722,10 @@ PAYBACK_SCENARIO_PATTERNS = [
     r'P\s*(?:50|80|90)',
     r'Szenario',
     r'(?:bis|–|-)\s*\d+(?:[.,]\d+)?\s*(?:Monate|months)',  # Range like "3-6 Monate"
+    r'\d+(?:[.,]\d+)?\s*[–\-]\s*\d+(?:[.,]\d+)?\s*(?:Monate|months)',  # "3-9 Monate" or "3–9 Monate"
+    r'(?:zwischen|von)\s+\d+(?:[.,]\d+)?\s+(?:und|bis)\s+\d+',  # "zwischen 3 und 6" or "von 3 bis 6"
+    r'(?:ca\.|circa|etwa|ungefähr)\s*\d+',  # "ca. 6 Monate" - approximate values
+    r'Simulation',  # Monte Carlo simulation context
 ]
 
 
