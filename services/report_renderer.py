@@ -23,6 +23,7 @@ from services.html_sanitizer import sanitize_en_locale_tokens
 from services.lang_utils import normalize_lang
 from services.i18n import ui as ui_factory
 from services.locale_rewriter import apply_locale_v2
+from services.debug_503d import build_debug_503d_attachments, is_debug_render_enabled
 
 log = logging.getLogger(__name__)
 
@@ -833,5 +834,28 @@ def render(briefing_obj: Any,
     # Add report metadata for PDF footer
     meta["report_id"] = ctx.get("report_id", "")
     meta["report_date"] = ctx.get("report_date", "")
+
+    # =========================================================================
+    # DEBUG-503D: Build debug attachments when DEBUG_RENDER=1
+    # Collect right before return, after all post-processing, when FINAL HTML is ready.
+    # =========================================================================
+    if is_debug_render_enabled():
+        # Build canonical KPIs dict for payback mentions
+        canonical_kpis = {
+            "PAYBACK_MONTHS": sections.get("PAYBACK_MONTHS"),
+            "CAPEX_REALISTISCH_EUR": sections.get("CAPEX_REALISTISCH_EUR"),
+            "OPEX_REALISTISCH_EUR": sections.get("OPEX_REALISTISCH_EUR"),
+            "EINSPARUNG_MONAT_EUR": sections.get("EINSPARUNG_MONAT_EUR"),
+        }
+
+        debug_attachments = build_debug_503d_attachments(
+            final_html=html,
+            sections=sections,
+            canonical_kpis=canonical_kpis
+        )
+
+        if debug_attachments:
+            meta["debug_503d_attachments"] = debug_attachments
+            log.info(f"[DEBUG-503D] Collected {len(debug_attachments)} debug artifacts for admin email")
 
     return {"html": html, "meta": meta or {}}
