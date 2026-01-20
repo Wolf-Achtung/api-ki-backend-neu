@@ -1695,6 +1695,154 @@ def apply_location_validator(sections: dict, bundesland: str) -> dict:
     
     log.info(f"[LOCATION-VALIDATOR] Complete: {total_removals} total removals")
     return sections
+# =============================================================================
+# FIX-503B: CANONICAL PAYBACK ENFORCER
+# =============================================================================
+# Replaces inconsistent Payback/Amortisation values in LLM-generated text
+# with the canonical value from business case calculation.
+
+# Sections where Payback values should be enforced
+PAYBACK_ENFORCE_SECTIONS = [
+    "BRANCH_DEEP_DIVE_HTML",
+    "TOOLS_BRANCH_ALIGNMENT_HTML",
+    "TOOLS_EMPFEHLUNGEN_HTML",
+    "BUSINESS_CASE_HTML",
+    "EXECUTIVE_SUMMARY_HTML",
+    "GAMECHANGER_HTML",
+    "RECOMMENDATIONS_HTML",
+    "ROADMAP_12M_HTML",
+]
+
+# Patterns that indicate scenario/range context (should NOT be replaced)
+PAYBACK_SCENARIO_PATTERNS = [
+    r'(?:konservativ|vorsichtig|pessimistisch)',
+    r'(?:optimistisch|best.?case)',
+    r'(?:realistisch|baseline)',
+    r'P\s*(?:50|80|90)',
+    r'Szenario',
+    r'(?:bis|–|-)\s*\d+(?:[.,]\d+)?\s*(?:Monate|months)',  # Range like "3-6 Monate"
+]
+
+
+def _is_scenario_context(text: str, match_start: int, context_chars: int = 100) -> bool:
+    """Check if a payback match is within a scenario/range context."""
+    # Get surrounding context
+    start = max(0, match_start - context_chars)
+    end = min(len(text), match_start + context_chars)
+    context = text[start:end].lower()
+
+    for pattern in PAYBACK_SCENARIO_PATTERNS:
+        if re.search(pattern, context, re.IGNORECASE):
+            return True
+    return False
+
+
+def apply_canonical_payback_enforcer(sections: dict) -> dict:
+    """
+    FIX-503B: Replace inconsistent Payback values with canonical value.
+
+    Extracts canonical payback from sections['PAYBACK_MONTHS'] and replaces
+    any standalone payback assertions in LLM text that differ significantly.
+
+    Does NOT replace:
+    - Values in scenario/range context (P50, konservativ, optimistisch, etc.)
+    - Values that are within 20% of canonical (rounding differences)
+
+    Args:
+        sections: Dict with all report sections
+
+    Returns:
+        sections: Dict with enforced canonical payback values
+    """
+    # Get canonical payback value
+    canonical_raw = sections.get("PAYBACK_MONTHS")
+    if not canonical_raw:
+        log.debug("[PAYBACK-ENFORCER] No PAYBACK_MONTHS in sections, skipping")
+        return sections
+
+    try:
+        canonical = float(str(canonical_raw).replace(",", "."))
+    except (ValueError, TypeError):
+        log.warning(f"[PAYBACK-ENFORCER] Invalid PAYBACK_MONTHS: {canonical_raw}")
+        return sections
+
+    if canonical <= 0:
+        log.debug("[PAYBACK-ENFORCER] Canonical payback is 0 or negative, skipping")
+        return sections
+
+    # Format canonical value for German locale
+    canonical_de = f"{canonical:.1f}".replace(".", ",")
+    if canonical_de.endswith(",0"):
+        canonical_de = canonical_de[:-2]  # "3,0" -> "3"
+
+    # Pattern to find Payback/Amortisation mentions with numeric values
+    # Matches: "Payback 9 Monate", "Amortisation: 12,5 Monate", "Payback von 6 Monaten"
+    payback_pattern = re.compile(
+        r'((?:Payback|Amortisation|Amortisierung|payback period)[:\s]+(?:von\s+)?)'
+        r'(\d+(?:[.,]\d+)?)\s*(Monate?|months?|Monaten)',
+        re.IGNORECASE
+    )
+
+    total_replacements = 0
+    sections_touched = 0
+
+    for section_key in PAYBACK_ENFORCE_SECTIONS:
+        content = sections.get(section_key)
+        if not content or not isinstance(content, str):
+            continue
+
+        section_replacements = 0
+        modified_content = content
+
+        # Find all matches and process from end to preserve positions
+        matches = list(payback_pattern.finditer(modified_content))
+
+        for match in reversed(matches):
+            prefix = match.group(1)
+            value_str = match.group(2)
+            suffix = match.group(3)
+
+            # Parse the found value
+            try:
+                found_value = float(value_str.replace(",", "."))
+            except ValueError:
+                continue
+
+            # Skip if within 20% of canonical (rounding/formatting differences)
+            if abs(found_value - canonical) / max(canonical, 0.1) <= 0.20:
+                continue
+
+            # Skip if in scenario context
+            if _is_scenario_context(modified_content, match.start()):
+                log.debug(f"[PAYBACK-ENFORCER] Skipping scenario context: {match.group(0)}")
+                continue
+
+            # Replace with canonical value
+            replacement = f"{prefix}{canonical_de} {suffix}"
+            modified_content = (
+                modified_content[:match.start()] +
+                replacement +
+                modified_content[match.end():]
+            )
+            section_replacements += 1
+            log.info(
+                f"[PAYBACK-ENFORCER] {section_key}: Replaced '{match.group(0)}' -> '{replacement}'"
+            )
+
+        if section_replacements > 0:
+            sections[section_key] = modified_content
+            sections_touched += 1
+            total_replacements += section_replacements
+
+    if total_replacements > 0:
+        log.info(
+            f"[PAYBACK-ENFORCER] Enforced canonical payback ({canonical_de} Monate) "
+            f"in {sections_touched} sections, {total_replacements} replacements"
+        )
+
+    return sections
+
+
 def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesland: str = "", company_size: str = "") -> dict:
 
     """
@@ -1753,6 +1901,9 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
 
     # 8. KPI Consistency Enforcement (v14.35.19+)
     sections = apply_kpi_consistency_enforcer(sections)
+
+    # 8.5 FIX-503B: Canonical Payback Enforcer - Replace LLM hallucinated payback values
+    sections = apply_canonical_payback_enforcer(sections)
 
     # 9. Product Name Safety Net (v14.35.21) - LAST STEP (seatbelt)
     sections = apply_product_name_safety_net(sections)

@@ -1,0 +1,65 @@
+# FIX-503A Log Snippets from Run 498
+# Extracted patterns relevant to the four issues
+
+# =============================================================================
+# 1. QUICK WINS RENDERING
+# =============================================================================
+
+# JSON to HTML conversion (SUCCESS):
+# [timestamp] Simple JSON converted to HTML (3 items...)
+# [timestamp] has_marker=True, has_class=True, len=458
+
+# Validator warning (FAIL - wrong key measured):
+# [timestamp] SECTION_TOO_SHORT quick_wins: 15 Wörter (min: 30)
+
+# FIX-498 WP2 context:
+# [timestamp] [FIX-498] Quick Wins conditional render check
+# [timestamp] QUICK_WINS_HTML present and valid: True
+
+# =============================================================================
+# 2. PAYBACK CANONICAL
+# =============================================================================
+
+# Canonical KPIs set correctly:
+# [timestamp] [P0.1] Centralized KPIs: PAYBACK_MONTHS=3.5, ROI_12M=165%
+
+# Simulation shows different value:
+# [timestamp] [G34] Business Case Simulation complete: Payback P50=6.1 months
+
+# Consistency Engine FAIL:
+# [timestamp] [G22] Consistency: FAIL grade D score 65.0
+# [timestamp] [KPI_002] Payback-Zeiträume weichen stark voneinander ab
+
+# Template binding (correct):
+# [timestamp] [P0.1] Template bindings: PAYBACK=3,5
+
+# =============================================================================
+# 3. RISK MATRIX TABLE WRAP
+# =============================================================================
+
+# Table inline styles applied:
+# [timestamp] [TABLE-INLINE-STYLES] RISKS_HTML: inline styles applied
+# [timestamp] [G29] Risk Engine 2.0 generated: score=75.0, grade=C
+
+# =============================================================================
+# 4. METRICS UNIFICATION
+# =============================================================================
+
+# Pipeline metrics (shows 0 warnings):
+# [timestamp] [FIX-497] Pipeline metrics: warnings=0, fallbacks=0, heals=0, grade=A
+
+# But Validator shows 70 warnings:
+# [timestamp] [Validator] Validation warnings: 70, errors: 0
+
+# Consistency Engine shows FAIL:
+# [timestamp] [G22] Consistency: FAIL grade D score 65.0
+
+# =============================================================================
+# KEY INSIGHT: Two separate warning systems not aggregated
+# =============================================================================
+#
+# 1. error_gate.warnings (Pipeline) = 0  -> used for PIPELINE_GRADE
+# 2. ReportValidator.errors (Content) = 70 -> NOT in PIPELINE_GRADE
+# 3. ConsistencyEngine.issues (G22) = grade D -> NOT in PIPELINE_GRADE
+#
+# Result: grade=A displayed while 70+ actual issues exist
