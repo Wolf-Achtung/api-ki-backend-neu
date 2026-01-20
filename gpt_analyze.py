@@ -13926,6 +13926,50 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
              f"total_warnings={total_warnings}, fallbacks={pipeline_fallbacks}, heals={pipeline_heals}, "
              f"consistency={consistency_grade}, grade={unified_grade}")
 
+    # ==========================================================================
+    # FIX-503C: Zero Tolerance Gating Logic
+    # ==========================================================================
+    # If RELEASE_STRICT_MODE=1: Fail hard on any quality issues
+    # Otherwise: Degrade badge/score visibly but allow generation
+    release_strict_mode = os.getenv("RELEASE_STRICT_MODE", "0") == "1"
+
+    # Determine quality status
+    has_quality_issues = total_warnings > 0 or consistency_grade in ("D", "F")
+    has_critical_issues = validator_criticals > 0 or consistency_grade == "F"
+
+    if release_strict_mode:
+        if has_critical_issues:
+            log.error(f"[{run_id}] [FIX-503C] ❌ RELEASE_STRICT_MODE: BLOCKED - "
+                      f"critical_errors={validator_criticals}, consistency={consistency_grade}")
+            raise ValueError(f"Release Strict Mode: Report blocked due to {validator_criticals} critical errors "
+                             f"and consistency grade {consistency_grade}")
+        elif has_quality_issues:
+            log.warning(f"[{run_id}] [FIX-503C] ⚠️ RELEASE_STRICT_MODE: Quality issues detected - "
+                        f"warnings={total_warnings}, consistency={consistency_grade}")
+            # In strict mode with warnings, set grade to C (no PLATIN++)
+            sections["PIPELINE_GRADE"] = "C"
+            sections["RELEASE_QUALITY_STATUS"] = "DEGRADED"
+            log.info(f"[{run_id}] [FIX-503C] Grade degraded to C due to quality issues")
+    else:
+        # Non-strict mode: Just log and set status
+        if has_quality_issues:
+            sections["RELEASE_QUALITY_STATUS"] = "WARNINGS_PRESENT"
+            log.info(f"[{run_id}] [FIX-503C] Non-strict mode: {total_warnings} warnings, "
+                     f"consistency={consistency_grade} - continuing with grade={unified_grade}")
+        else:
+            sections["RELEASE_QUALITY_STATUS"] = "CLEAN"
+
+    # Store quality summary for cover page
+    sections["QUALITY_SUMMARY"] = {
+        "total_warnings": total_warnings,
+        "validator_warnings": validator_warnings,
+        "pipeline_warnings": pipeline_warnings,
+        "consistency_grade": consistency_grade,
+        "unified_grade": sections.get("PIPELINE_GRADE", unified_grade),
+        "strict_mode": release_strict_mode,
+        "status": sections.get("RELEASE_QUALITY_STATUS", "UNKNOWN"),
+    }
+
     # === SPRINT FIX: Store sections in meta for Golden Gate summary ===
     # Filter sections to only include JSON-serializable string values (HTML sections)
     # This enables /api/report/summary to validate sections_present

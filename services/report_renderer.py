@@ -665,6 +665,17 @@ def render(briefing_obj: Any,
     log.info(f"🎨 Rendering report {run_id} with {len(sections)} sections (lang={lang})")
     log.debug(f"Sections available: {list(sections.keys())}")
 
+    # FIX-503C: Debug logging for QUICK_WINS_HTML to trace rendering issues
+    qw_html = sections.get("QUICK_WINS_HTML", "")
+    qw_html_left = sections.get("QUICK_WINS_HTML_LEFT", "")
+    qw_html_right = sections.get("QUICK_WINS_HTML_RIGHT", "")
+    log.info(f"[FIX-503C] QUICK_WINS_HTML: len={len(qw_html) if qw_html else 0}, "
+             f"has_content={bool(qw_html and '<' in str(qw_html))}, "
+             f"preview={str(qw_html)[:150] if qw_html else 'EMPTY'}...")
+    if qw_html_left or qw_html_right:
+        log.info(f"[FIX-503C] QUICK_WINS_HTML_LEFT: len={len(qw_html_left) if qw_html_left else 0}, "
+                 f"QUICK_WINS_HTML_RIGHT: len={len(qw_html_right) if qw_html_right else 0}")
+
     html = env.get_template(tpl_name).render(**ctx)
 
     # Save debug HTML for troubleshooting
