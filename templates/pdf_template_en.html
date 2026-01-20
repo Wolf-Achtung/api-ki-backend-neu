@@ -6402,6 +6402,7 @@
 
                 <!-- QUICK WINS - FIX-498 WP2: Conditional render -->
                 {% if QUICK_WINS_HTML and QUICK_WINS_HTML|trim and '<' in QUICK_WINS_HTML %}
+                <!-- DEBUG-ANCHOR: QUICK_WINS_DETAIL_START -->
                 <section class="section chapter" style="page-break-before: auto;">
                     <div class="section-header">
                         <div class="section-title">
@@ -6417,6 +6418,7 @@
                         {{ QUICK_WINS_HTML|safe }}
                     </div>
                 </section>
+                <!-- DEBUG-ANCHOR: QUICK_WINS_DETAIL_END -->
                 {% endif %}
                 <!-- SPRINT G19: Branch Profile & Market Intelligence -->
                 {% if BRANCH_PROFILE_HTML %}
