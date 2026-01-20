@@ -378,3 +378,173 @@ class TestTemplateMode:
         json_att = next(a for a in attachments if a["filename"] == "debug_503d_quick_wins_keys.json")
         data = json.loads(json_att["content"].decode("utf-8"))
         assert data["template_mode"] == "NONE"
+
+
+class TestDebug503DSummaryJsonSerializable:
+    """Tests for DEBUG-503D JSON serialization safety (prevents bytes-in-JSONB crash)."""
+
+    @pytest.fixture
+    def sample_html_with_anchors(self):
+        """Sample HTML with debug anchors."""
+        return """
+<!DOCTYPE html>
+<html>
+<body>
+    <!-- DEBUG-ANCHOR: QUICK_WINS_DETAIL_START -->
+    <div class="quick-win">Test Quick Win</div>
+    <!-- DEBUG-ANCHOR: QUICK_WINS_DETAIL_END -->
+    <!-- DEBUG-ANCHOR: RISK_MATRIX_START -->
+    <table><tr><td>Risk</td></tr></table>
+    <!-- DEBUG-ANCHOR: RISK_MATRIX_END -->
+    <p>Payback: 6 Monate</p>
+</body>
+</html>
+"""
+
+    @pytest.fixture
+    def sample_sections(self):
+        """Sample sections dict."""
+        return {
+            "QUICK_WINS_HTML": '<div class="quick-win">Content</div>',
+            "QUICK_WINS_HTML_LEFT": "",
+            "QUICK_WINS_HTML_RIGHT": "",
+            "quick_wins": "[]",
+            "PAYBACK_MONTHS": 6.5,
+        }
+
+    @patch.dict(os.environ, {"DEBUG_RENDER": "1"})
+    def test_debug_503d_summary_is_json_serializable(self, sample_html_with_anchors, sample_sections):
+        """
+        Test that build_debug_503d_summary returns JSON-serializable data.
+
+        This is the CRITICAL test for DEBUG-503D Hotfix:
+        - build_debug_503d_attachments returns bytes (for email)
+        - build_debug_503d_summary returns JSON-safe metadata (for DB storage)
+        - The summary must be serializable to prevent "bytes not JSON serializable" error
+        """
+        from services.debug_503d import build_debug_503d_attachments, build_debug_503d_summary
+
+        # Build attachments (contains bytes)
+        attachments = build_debug_503d_attachments(
+            final_html=sample_html_with_anchors,
+            sections=sample_sections,
+            canonical_kpis={"PAYBACK_MONTHS": 6.5}
+        )
+
+        assert len(attachments) == 4, "Should have 4 debug attachments"
+
+        # Build summary (should be JSON-safe)
+        summary = build_debug_503d_summary(attachments)
+
+        # CRITICAL: This must not raise TypeError
+        try:
+            json_str = json.dumps(summary)
+        except TypeError as e:
+            pytest.fail(f"Summary is NOT JSON-serializable: {e}")
+
+        # Verify summary structure
+        assert "artifact_count" in summary
+        assert summary["artifact_count"] == 4
+        assert "artifacts" in summary
+        assert len(summary["artifacts"]) == 4
+        assert "total_bytes" in summary
+        assert "captured_at" in summary
+
+        # Verify each artifact has expected fields
+        for artifact in summary["artifacts"]:
+            assert "filename" in artifact
+            assert "size_bytes" in artifact
+            assert "sha256" in artifact
+            assert "mimetype" in artifact
+            # size_bytes should be an int
+            assert isinstance(artifact["size_bytes"], int)
+            # sha256 should be a string (hex)
+            assert isinstance(artifact["sha256"], str)
+            assert len(artifact["sha256"]) == 64  # SHA256 hex is 64 chars
+
+    @patch.dict(os.environ, {"DEBUG_RENDER": "1"})
+    def test_meta_with_summary_is_json_serializable(self, sample_html_with_anchors, sample_sections):
+        """
+        Test that the meta dict containing debug_503d_summary is JSON-serializable.
+
+        This simulates the actual flow where meta is stored in Analysis.meta (Postgres JSONB).
+        """
+        from services.debug_503d import build_debug_503d_attachments, build_debug_503d_summary
+
+        attachments = build_debug_503d_attachments(
+            final_html=sample_html_with_anchors,
+            sections=sample_sections,
+            canonical_kpis={"PAYBACK_MONTHS": 6.5}
+        )
+
+        # Simulate what report_renderer.py does
+        meta = {
+            "scores": {"overall": 75},
+            "report_id": "test-123",
+            "debug_503d_summary": build_debug_503d_summary(attachments)
+        }
+
+        # This is what would fail with the old code (debug_503d_attachments with bytes)
+        # It must pass now (debug_503d_summary without bytes)
+        try:
+            json_str = json.dumps(meta)
+            parsed = json.loads(json_str)
+        except TypeError as e:
+            pytest.fail(f"Meta dict is NOT JSON-serializable: {e}")
+
+        # Verify round-trip
+        assert parsed["debug_503d_summary"]["artifact_count"] == 4
+
+    @patch.dict(os.environ, {"DEBUG_RENDER": "1"})
+    def test_attachments_contain_bytes_but_summary_does_not(self, sample_html_with_anchors, sample_sections):
+        """
+        Test that attachments contain bytes (for email) but summary does not (for DB).
+
+        This verifies the separation of concerns:
+        - attachments: passed to email function, contain actual bytes
+        - summary: stored in DB meta, contains only metadata strings/numbers
+        """
+        from services.debug_503d import build_debug_503d_attachments, build_debug_503d_summary
+
+        attachments = build_debug_503d_attachments(
+            final_html=sample_html_with_anchors,
+            sections=sample_sections,
+            canonical_kpis={"PAYBACK_MONTHS": 6.5}
+        )
+
+        # Attachments SHOULD contain bytes (this is for email)
+        for att in attachments:
+            assert "content" in att
+            assert isinstance(att["content"], bytes), f"Attachment {att['filename']} content should be bytes"
+
+        # Summary should NOT contain bytes
+        summary = build_debug_503d_summary(attachments)
+
+        def check_no_bytes(obj, path="root"):
+            """Recursively check that no bytes objects exist in the structure."""
+            if isinstance(obj, bytes):
+                pytest.fail(f"Found bytes at {path}")
+            elif isinstance(obj, dict):
+                for k, v in obj.items():
+                    check_no_bytes(v, f"{path}.{k}")
+            elif isinstance(obj, list):
+                for i, v in enumerate(obj):
+                    check_no_bytes(v, f"{path}[{i}]")
+
+        check_no_bytes(summary)
+
+    @patch.dict(os.environ, {"DEBUG_RENDER": "0"})
+    def test_summary_empty_when_disabled(self, sample_html_with_anchors, sample_sections):
+        """Test that summary is empty when DEBUG_RENDER is disabled."""
+        from services.debug_503d import build_debug_503d_attachments, build_debug_503d_summary
+
+        attachments = build_debug_503d_attachments(
+            final_html=sample_html_with_anchors,
+            sections=sample_sections,
+            canonical_kpis={}
+        )
+
+        assert len(attachments) == 0
+
+        summary = build_debug_503d_summary(attachments)
+        assert summary == {}
