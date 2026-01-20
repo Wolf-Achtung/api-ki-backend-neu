@@ -1153,6 +1153,9 @@ class ReportValidator:
             candidates.append((key_raw, self.sections.get(key_raw)))
         if "QUICK_WINS_HTML" in self.sections:
             candidates.append(("QUICK_WINS_HTML", self.sections.get("QUICK_WINS_HTML")))
+        # FIX-503B: Also check legacy "quick_wins" key for backwards compatibility
+        if "quick_wins" in self.sections and ("quick_wins", self.sections.get("quick_wins")) not in candidates:
+            candidates.append(("quick_wins", self.sections.get("quick_wins")))
 
         for section_name, content in candidates:
             if not isinstance(content, str) or not content:
