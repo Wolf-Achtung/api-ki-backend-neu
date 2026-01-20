@@ -13660,6 +13660,10 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         for err in warning_errors[:5]:  # Only log first 5 warnings
             log.warning(f"[{run_id}]   [{err.category}] {err.section}: {err.message}")
 
+    # FIX-503B: Store validator warning count for unified metrics
+    sections["_VALIDATOR_WARNING_COUNT"] = len(warning_errors)
+    sections["_VALIDATOR_CRITICAL_COUNT"] = len(critical_errors)
+
     if not is_valid:
         # Phase 2: Quality Gate NOW ENABLED - blocks reports with critical errors
         # Set to False only for debugging/testing
@@ -13864,24 +13868,63 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     # Execute hard stop validation
     hard_stop_if_invalid(sections, error_gate, persona=persona, run_id=run_id)
 
-    # === FIX-497: Store gate metrics in sections for cover page Quality Summary ===
-    # This ensures the cover page shows actual pipeline metrics, not hardcoded zeros
-    sections["PIPELINE_WARNINGS_COUNT"] = len(error_gate.warnings)
-    sections["PIPELINE_FALLBACK_COUNT"] = error_gate.fallback_count
-    sections["PIPELINE_HEALS_COUNT"] = error_gate.heals_count
+    # === FIX-497 + FIX-503B: Store unified quality metrics in sections ===
+    # FIX-503B: Now includes validator warnings + consistency grade for truthful metrics
+
+    # Pipeline metrics (generation-time)
+    pipeline_warnings = len(error_gate.warnings)
+    pipeline_fallbacks = error_gate.fallback_count
+    pipeline_heals = error_gate.heals_count
+
+    # Validator metrics (content quality) - FIX-503B
+    validator_warnings = sections.get("_VALIDATOR_WARNING_COUNT", 0)
+    validator_criticals = sections.get("_VALIDATOR_CRITICAL_COUNT", 0)
+
+    # Consistency metrics (G22)
+    consistency_grade = sections.get("_CONSISTENCY_GRADE", "A")
+
+    # Total warnings = pipeline + validator
+    total_warnings = pipeline_warnings + validator_warnings
+
+    # Store individual metrics
+    sections["PIPELINE_WARNINGS_COUNT"] = pipeline_warnings
+    sections["PIPELINE_FALLBACK_COUNT"] = pipeline_fallbacks
+    sections["PIPELINE_HEALS_COUNT"] = pipeline_heals
     sections["PIPELINE_LOCATION_REMOVALS"] = error_gate.location_removals
-    sections["PIPELINE_REGEN_CYCLES"] = 0  # Track if regeneration was triggered
-    sections["PIPELINE_LEAK_CLEAN"] = True  # Will be updated by final leak check
-    sections["PIPELINE_GRADE"] = "A" if (
-        len(error_gate.warnings) == 0 and
-        error_gate.fallback_count == 0 and
-        error_gate.heals_count == 0
-    ) else "B" if (
-        len(error_gate.warnings) <= 5 and
-        error_gate.fallback_count <= 2
-    ) else "C"
-    log.info(f"[{run_id}] [FIX-497] Pipeline metrics: warnings={len(error_gate.warnings)}, "
-             f"fallbacks={error_gate.fallback_count}, heals={error_gate.heals_count}, grade={sections['PIPELINE_GRADE']}")
+    sections["PIPELINE_REGEN_CYCLES"] = 0
+    sections["PIPELINE_LEAK_CLEAN"] = True
+
+    # FIX-503B: Additional unified metrics
+    sections["VALIDATOR_WARNINGS_COUNT"] = validator_warnings
+    sections["TOTAL_WARNINGS_COUNT"] = total_warnings
+    sections["CONSISTENCY_GRADE"] = consistency_grade
+
+    # FIX-503B: Unified grade calculation considering ALL quality signals
+    # Grade A: No warnings, no fallbacks, consistency A/B
+    # Grade B: Few warnings, minimal fallbacks, consistency A/B/C
+    # Grade C: Has issues that need attention
+    if (
+        total_warnings == 0 and
+        pipeline_fallbacks == 0 and
+        pipeline_heals == 0 and
+        consistency_grade in ("A", "B")
+    ):
+        unified_grade = "A"
+    elif (
+        total_warnings <= 10 and
+        pipeline_fallbacks <= 2 and
+        consistency_grade in ("A", "B", "C")
+    ):
+        unified_grade = "B"
+    else:
+        unified_grade = "C"
+
+    sections["PIPELINE_GRADE"] = unified_grade
+
+    log.info(f"[{run_id}] [FIX-503B] Unified quality metrics: "
+             f"pipeline_warnings={pipeline_warnings}, validator_warnings={validator_warnings}, "
+             f"total_warnings={total_warnings}, fallbacks={pipeline_fallbacks}, heals={pipeline_heals}, "
+             f"consistency={consistency_grade}, grade={unified_grade}")
 
     # === SPRINT FIX: Store sections in meta for Golden Gate summary ===
     # Filter sections to only include JSON-serializable string values (HTML sections)
