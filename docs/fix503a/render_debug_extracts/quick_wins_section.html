@@ -1,0 +1,33 @@
+<!--
+FIX-503A: Quick Wins Section Extract
+Source: templates/pdf_template.html:6660-6678
+
+This is the ACTUAL Quick Wins section that renders QUICK_WINS_HTML.
+Located around page 16 in the PDF.
+-->
+
+<!-- QUICK WINS - FIX-498 WP2: Conditional render -->
+{% if QUICK_WINS_HTML and QUICK_WINS_HTML|trim and '<' in QUICK_WINS_HTML %}
+<section class="section chapter" style="page-break-before: auto;">
+    <div class="section-header">
+        <div class="section-title">
+            <span class="section-kicker">Schnelle Effekte</span>
+            <br/>
+            <h2>Quick Wins</h2>
+        </div>
+        <span class="section-pill">
+            <span class="pill-dot"></span>
+            3–5 Maßnahmen mit sofortigem Hebel
+        </span>
+    </div>
+    <div class="section-body">
+        {{ QUICK_WINS_HTML|safe }}
+    </div>
+</section>
+{% endif %}
+
+<!--
+ISSUE: Validator checks "quick_wins" (text list) but template renders "QUICK_WINS_HTML" (HTML)
+FIX: Update SECTION_KEY_MAP in report_validator.py:714
+     "quick_wins": "QUICK_WINS_HTML"
+-->

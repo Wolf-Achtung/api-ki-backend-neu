@@ -1,0 +1,58 @@
+<!--
+FIX-503A: Risk Matrix Table Extract
+Source: services/risk_engine_v2.py:1062-1099
+
+This table has word-wrap issues due to:
+1. table-layout: fixed
+2. colgroup with fixed widths
+3. WeasyPrint PDF renderer limitations
+-->
+
+<div class="risk-block matrix-block risk-matrix-section" style="margin-bottom:20px;">
+    <p style="margin:0 0 12px 0;font-weight:600;color:#1e293b;">Risiko-Matrix</p>
+
+    <!-- PROBLEM: table-layout:fixed causes truncation -->
+    <table class="table-modern" style="width:100%;border-collapse:collapse;font-size:10pt;table-layout:fixed;">
+        <colgroup>
+            <col style="width:50%;">  <!-- Risiko column - often truncated -->
+            <col style="width:15%;">  <!-- L column -->
+            <col style="width:15%;">  <!-- I column -->
+            <col style="width:20%;">  <!-- Score column -->
+        </colgroup>
+        <tr style="background:#f8fafc;">
+            <td style="padding:8px;font-weight:600;border-bottom:1px solid #e2e8f0;overflow-wrap:anywhere;word-break:break-word;">Risiko</td>
+            <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;">L</td>
+            <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;">I</td>
+            <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;">Score</td>
+        </tr>
+
+        <!-- Example row with truncation issue -->
+        <tr>
+            <!-- CURRENT (truncates): -->
+            <td style="padding:8px;border-bottom:1px solid #f1f5f9;overflow-wrap:anywhere;word-break:break-word;hyphens:auto;">
+                <span style="display:inline-block;width:8px;height:8px;background:#f59e0b;border-radius:50%;margin-right:6px;flex-shrink:0;"></span>
+                Datennutzungsrichtlinien  <!-- Gets cut to "Datennutzungsrichtlin..." -->
+            </td>
+            <td style="padding:8px;text-align:center;border-bottom:1px solid #f1f5f9;">3</td>
+            <td style="padding:8px;text-align:center;border-bottom:1px solid #f1f5f9;">4</td>
+            <td style="padding:8px;text-align:center;border-bottom:1px solid #f1f5f9;font-weight:600;color:#f59e0b;">12</td>
+        </tr>
+    </table>
+</div>
+
+<!--
+FIX OPTIONS:
+
+1. Remove table-layout:fixed:
+   <table style="...;table-layout:auto;">
+
+2. Add white-space:normal and overflow:visible to td:
+   <td style="...;white-space:normal;overflow:visible;">
+
+3. Add CSS for print media:
+   @media print {
+       .risk-matrix-section td {
+           white-space: pre-wrap !important;
+       }
+   }
+-->
