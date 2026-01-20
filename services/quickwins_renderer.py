@@ -161,3 +161,206 @@ def format_eur_range(eur_low: float, eur_high: float) -> str:
     eur_low_fmt = f"{int(eur_low):,}".replace(",", ".")
     eur_high_fmt = f"{int(eur_high):,}".replace(",", ".")
     return f"{eur_low_fmt}–{eur_high_fmt} €"
+
+
+# =============================================================================
+# FIX-504 TASK 4: QuickWins LEFT_ONLY Full-Width Layout Enhancement
+# =============================================================================
+# When template_mode=LEFT_ONLY, enhance the layout to use full page width
+# with a 2-column card grid for better visual presentation.
+
+QUICKWINS_FULLWIDTH_CSS = """
+<style>
+/* FIX-504: QuickWins full-width premium layout */
+.quickwins-fullwidth-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    width: 100%;
+}
+.quickwins-fullwidth-grid .quick-win-card,
+.quickwins-fullwidth-grid .quick-win-card-new {
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+@media print {
+    .quickwins-fullwidth-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+"""
+
+
+def detect_quickwins_template_mode(sections: dict) -> str:
+    """
+    FIX-504: Detect QuickWins template mode based on section content.
+
+    Returns:
+        "LEFT_RIGHT" if both columns have content
+        "LEFT_ONLY" if only left column has content
+        "FULL" if only QUICK_WINS_HTML has content
+        "NONE" if no QuickWins content
+    """
+    right_len = len(str(sections.get("QUICK_WINS_HTML_RIGHT", "") or ""))
+    left_len = len(str(sections.get("QUICK_WINS_HTML_LEFT", "") or ""))
+    full_len = len(str(sections.get("QUICK_WINS_HTML", "") or ""))
+
+    if right_len > 0:
+        return "LEFT_RIGHT"
+    elif left_len > 0:
+        return "LEFT_ONLY"
+    elif full_len > 0:
+        return "FULL"
+    else:
+        return "NONE"
+
+
+def count_quickwin_cards(html: str) -> int:
+    """
+    FIX-504: Count the number of QuickWin cards in HTML.
+
+    Counts elements with class="quick-win-card" or similar.
+
+    Args:
+        html: QuickWins HTML content
+
+    Returns:
+        Number of QuickWin cards found
+    """
+    if not html:
+        return 0
+
+    # Count by card class patterns
+    card_patterns = [
+        r'class="quick-win-card"',
+        r'class="quick-win-card-new"',
+        r'class="[^"]*quick-win[^"]*"',
+        r'<div[^>]*data-quickwin',
+    ]
+
+    total = 0
+    for pattern in card_patterns:
+        matches = re.findall(pattern, html, re.IGNORECASE)
+        if matches:
+            total = max(total, len(matches))
+
+    # Fallback: count by heading patterns if no cards found
+    if total == 0:
+        h3_matches = re.findall(r'<h3[^>]*>.*?</h3>', html, re.DOTALL | re.IGNORECASE)
+        total = len(h3_matches)
+
+    return total
+
+
+def enhance_quickwins_for_fullwidth(html: str, min_cards: int = 4) -> str:
+    """
+    FIX-504 TASK 4: Enhance QuickWins HTML for full-width premium layout.
+
+    When in LEFT_ONLY mode (right column empty), this wraps the QuickWins
+    content in a 2-column grid layout for better visual presentation.
+
+    Args:
+        html: Original QuickWins HTML
+        min_cards: Minimum expected cards (logs warning if fewer)
+
+    Returns:
+        Enhanced HTML with full-width premium layout
+    """
+    if not html or not html.strip():
+        return html
+
+    card_count = count_quickwin_cards(html)
+    log.info(f"[QUICKWINS-FULLWIDTH] Found {card_count} QuickWin cards")
+
+    if card_count < min_cards:
+        log.warning(
+            f"[QUICKWINS-FULLWIDTH] Only {card_count} QuickWins found, "
+            f"expected at least {min_cards} for premium layout"
+        )
+
+    # Check if already wrapped in a grid container
+    if 'quickwins-fullwidth-grid' in html:
+        log.debug("[QUICKWINS-FULLWIDTH] Already enhanced, skipping")
+        return html
+
+    # Add CSS and wrap content in grid container
+    enhanced = QUICKWINS_FULLWIDTH_CSS
+
+    # Find the main container or wrap the content
+    # Look for existing container patterns
+    container_patterns = [
+        (r'(<div[^>]*class="[^"]*quick-wins-container[^"]*"[^>]*>)', r'\1'),
+        (r'(<div[^>]*class="[^"]*quickwins[^"]*"[^>]*>)', r'\1'),
+    ]
+
+    wrapped = False
+    for pattern, _ in container_patterns:
+        if re.search(pattern, html, re.IGNORECASE):
+            # Add grid class to existing container
+            html = re.sub(
+                pattern,
+                r'\1<div class="quickwins-fullwidth-grid">',
+                html,
+                count=1,
+                flags=re.IGNORECASE
+            )
+            # Need to close the grid div before the container closes
+            # Find matching closing div
+            html = re.sub(r'(</div>\s*)$', r'</div>\1', html, count=1)
+            wrapped = True
+            break
+
+    if not wrapped:
+        # Wrap entire content in grid
+        enhanced += f'<div class="quickwins-fullwidth-grid">\n{html}\n</div>'
+    else:
+        enhanced += html
+
+    log.info("[QUICKWINS-FULLWIDTH] Enhanced QuickWins for full-width layout")
+    return enhanced
+
+
+def apply_quickwins_fullwidth_enhancement(sections: dict) -> dict:
+    """
+    FIX-504 TASK 4: Apply QuickWins full-width enhancement when LEFT_ONLY mode.
+
+    Automatically detects template mode and applies premium layout enhancement
+    when the right column is empty (LEFT_ONLY mode).
+
+    Args:
+        sections: Dict with all report sections
+
+    Returns:
+        Sections with enhanced QuickWins layout
+    """
+    template_mode = detect_quickwins_template_mode(sections)
+    log.info(f"[QUICKWINS-FULLWIDTH] Detected template_mode={template_mode}")
+
+    # Only enhance for LEFT_ONLY or FULL mode (no split columns)
+    if template_mode not in ("LEFT_ONLY", "FULL"):
+        log.debug("[QUICKWINS-FULLWIDTH] Skipping - not in full-width mode")
+        return sections
+
+    # Get the QuickWins HTML to enhance
+    qw_key = "QUICK_WINS_HTML"
+    qw_html = sections.get(qw_key, "")
+
+    if not qw_html or not isinstance(qw_html, str):
+        # Try LEFT key
+        qw_key = "QUICK_WINS_HTML_LEFT"
+        qw_html = sections.get(qw_key, "")
+
+    if not qw_html or not isinstance(qw_html, str):
+        log.debug("[QUICKWINS-FULLWIDTH] No QuickWins HTML found")
+        return sections
+
+    # Apply enhancement
+    enhanced = enhance_quickwins_for_fullwidth(qw_html)
+    sections[qw_key] = enhanced
+
+    # Also update the main key if we enhanced LEFT
+    if qw_key == "QUICK_WINS_HTML_LEFT":
+        sections["QUICK_WINS_HTML"] = enhanced
+
+    return sections
