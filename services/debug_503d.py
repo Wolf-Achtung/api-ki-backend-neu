@@ -8,7 +8,12 @@ When DEBUG_RENDER=1, this module builds 4 debug artifacts:
 4. debug_503d_quick_wins_keys.json - Lengths + marker presence for QW keys
 
 These artifacts attach to admin emails for forensic debugging of PDF rendering issues.
+
+IMPORTANT: The raw bytes are passed directly to the email function - they are NEVER
+stored in meta/sections that get persisted to the database (Postgres JSONB can't serialize bytes).
+Only JSON-safe metadata (filenames, sizes, sha256) is stored in meta["debug_503d_summary"].
 """
+import hashlib
 import json
 import logging
 import os
@@ -399,3 +404,83 @@ def build_debug_503d_attachments(
         return []
 
     return attachments
+
+
+def build_debug_503d_summary(attachments: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Build a JSON-serializable summary of debug attachments for database storage.
+
+    This function extracts metadata from debug attachments (which contain bytes)
+    and returns a JSON-safe dict that can be stored in Postgres JSONB fields.
+
+    IMPORTANT: The raw bytes must NEVER be stored in the database.
+    Only this summary is stored in meta["debug_503d_summary"].
+
+    Args:
+        attachments: List of attachment dicts from build_debug_503d_attachments()
+                     Each has: {filename, content (bytes), mimetype}
+
+    Returns:
+        JSON-serializable dict with metadata:
+        {
+            "artifact_count": 4,
+            "artifacts": [
+                {"filename": "...", "size_bytes": 1234, "sha256": "abc123...", "mimetype": "..."},
+                ...
+            ],
+            "total_bytes": 5678,
+            "captured_at": "2024-01-15T12:00:00Z"
+        }
+    """
+    if not attachments:
+        return {}
+
+    from datetime import datetime
+
+    artifacts_meta = []
+    total_bytes = 0
+
+    for att in attachments:
+        content = att.get("content", b"")
+        if isinstance(content, bytes):
+            size = len(content)
+            sha256 = hashlib.sha256(content).hexdigest()
+            # Optional short preview for text files (first 200 chars)
+            preview = None
+            if att.get("mimetype", "").startswith("text/") or att.get("filename", "").endswith((".txt", ".json", ".html")):
+                try:
+                    text = content.decode("utf-8", errors="replace")
+                    preview = text[:200] + ("..." if len(text) > 200 else "")
+                except Exception:
+                    preview = None
+        else:
+            # Already a string (shouldn't happen, but handle gracefully)
+            size = len(str(content))
+            sha256 = hashlib.sha256(str(content).encode("utf-8")).hexdigest()
+            preview = str(content)[:200] + ("..." if len(str(content)) > 200 else "")
+
+        artifact_info: Dict[str, Any] = {
+            "filename": att.get("filename", "unknown"),
+            "size_bytes": size,
+            "sha256": sha256,
+            "mimetype": att.get("mimetype", "application/octet-stream"),
+        }
+        if preview:
+            artifact_info["preview"] = preview
+
+        artifacts_meta.append(artifact_info)
+        total_bytes += size
+
+    result: Dict[str, Any] = {
+        "artifact_count": len(artifacts_meta),
+        "artifacts": artifacts_meta,
+        "total_bytes": total_bytes,
+        "captured_at": datetime.utcnow().isoformat() + "Z",
+    }
+
+    log.info(
+        "[DEBUG-503D] Built JSON-safe summary: %d artifacts, %d total bytes",
+        len(artifacts_meta), total_bytes
+    )
+
+    return result
