@@ -5354,6 +5354,87 @@
         /* ==================== END FIX 3.2 + 3.4 CSS ==================== */
 
         /* ============================================
+           DCL: DECISION CONFIDENCE LAYER CARD
+           ============================================ */
+        .confidence-card {
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            border: 1px solid #86efac;
+            border-left: 4px solid #16a34a;
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin-bottom: var(--space-lg);
+            page-break-inside: avoid;
+        }
+        .confidence-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(22, 163, 74, 0.2);
+        }
+        .confidence-icon {
+            font-size: 20px;
+        }
+        .confidence-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 0;
+            flex: 1;
+        }
+        .confidence-date {
+            font-size: 9pt;
+            color: var(--color-text-muted);
+        }
+        .confidence-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .confidence-block {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 10px 12px;
+            border-radius: 6px;
+        }
+        .confidence-block h4 {
+            font-size: 11px;
+            font-weight: 600;
+            margin: 0 0 6px 0;
+            color: var(--color-text-strong);
+        }
+        .confidence-list {
+            margin: 0;
+            padding-left: 16px;
+            font-size: 9pt;
+            line-height: 1.5;
+            color: var(--color-text-muted);
+        }
+        .confidence-list li {
+            margin-bottom: 2px;
+        }
+        .confidence-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 9pt;
+        }
+        .checkbox-checked {
+            color: #16a34a;
+            font-size: 14px;
+        }
+        .confidence-note {
+            font-size: 8pt;
+            color: var(--color-text-muted);
+            font-style: italic;
+            margin-top: 4px;
+        }
+        @media print {
+            .confidence-card {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* ============================================
            v13.0: ANTI-LEERSEITE (Empty Page Prevention)
            FIX-498 WP2: Enhanced empty page prevention
            ============================================ */
@@ -6131,6 +6212,11 @@
                         </h3>
                         {{ EXECUTIVE_DECISION_HTML|safe }}
                     </div>
+                    {% endif %}
+
+                    <!-- DCL: Decision Confidence Layer - Entscheidungssicherheit & Datengrundlage -->
+                    {% if DECISION_CONFIDENCE_HTML and DECISION_CONFIDENCE_HTML|trim %}
+                    {{ DECISION_CONFIDENCE_HTML|safe }}
                     {% endif %}
 
                     <!-- Continue Note - Modern Info Callout -->
