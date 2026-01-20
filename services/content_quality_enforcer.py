@@ -118,6 +118,47 @@ SOLO_TERM_REPLACEMENTS = [
     (r'\bDummy-?Text:?\b', '', 'Remove Dummy-Text'),
     (r'\b\[TODO\]\b', '', 'Remove TODO markers'),
     (r'\b\[TBD\]\b', '', 'Remove TBD markers'),
+
+    # FIX-504 TASK 3: Additional solo-scale term replacements
+    # Scaling terms (enterprise-scale → solo-scale)
+    (r'\bSkalierungsphase\b', 'Ausbauphase', 'Skalierungsphase→Ausbauphase'),
+    (r'\bSkalierungsstrategie\b', 'Ausbaustrategie', 'Skalierungsstrategie→Ausbaustrategie'),
+    (r'\bSkalierungspotenzial\b', 'Ausbaupotenzial', 'Skalierungspotenzial→Ausbaupotenzial'),
+    (r'\bhochskalieren\b', 'erweitern', 'hochskalieren→erweitern'),
+    (r'\brumskalieren\b', 'anpassen', 'rumskalieren→anpassen'),
+
+    # Additional Stack/Module terms
+    (r'\bTool-Stack\b', 'Tool-Set', 'Tool-Stack→Tool-Set'),
+    (r'\bSoftware-Stack\b', 'Werkzeugpaket', 'Software-Stack→Werkzeugpaket'),
+    (r'\bCloud-Stack\b', 'Cloud-Werkzeuge', 'Cloud-Stack→Cloud-Werkzeuge'),
+    (r'\bModulare\b', 'Flexible', 'Modulare→Flexible'),
+    (r'\bmodularen\b', 'flexiblen', 'modularen→flexiblen'),
+    (r'\bmodularer\b', 'flexibler', 'modularer→flexibler'),
+    (r'\bmodulares\b', 'flexibles', 'modulares→flexibles'),
+
+    # Customer/Scale terms (enterprise claims → solo-appropriate)
+    (r'\b1000\+?\s*Kunden\b', 'neue Mandanten', '1000+ Kunden→neue Mandanten'),
+    (r'\b500\+?\s*Kunden\b', 'zusätzliche Mandanten', '500+ Kunden→zusätzliche Mandanten'),
+    (r'\b100\+?\s*Kunden\b', 'weitere Mandanten', '100+ Kunden→weitere Mandanten'),
+    (r'\bMassenskalierung\b', 'schrittweisen Ausbau', 'Massenskalierung→schrittweisen Ausbau'),
+    (r'\bMassenrollout\b', 'schrittweise Einführung', 'Massenrollout→schrittweise Einführung'),
+    (r'\bgroßflächig\b', 'schrittweise', 'großflächig→schrittweise'),
+    (r'\bflächendeckend\b', 'umfassend', 'flächendeckend→umfassend'),
+
+    # Personnel terms (enterprise → solo)
+    (r'\bTeam-Skalierung\b', 'Kapazitätserweiterung', 'Team-Skalierung→Kapazitätserweiterung'),
+    (r'\bPersonalaufbau\b', 'externe Unterstützung', 'Personalaufbau→externe Unterstützung'),
+    (r'\bMitarbeiteraufbau\b', 'Auslastungsoptimierung', 'Mitarbeiteraufbau→Auslastungsoptimierung'),
+    (r'\bPersonalressourcen\b', 'Ihre Zeit', 'Personalressourcen→Ihre Zeit'),
+    (r'\bTeamressourcen\b', 'Ihre Kapazitäten', 'Teamressourcen→Ihre Kapazitäten'),
+
+    # Infrastructure terms
+    (r'\bInfrastrukturaufbau\b', 'Tool-Einrichtung', 'Infrastrukturaufbau→Tool-Einrichtung'),
+    (r'\bSystem-Landschaft\b', 'Tool-Übersicht', 'System-Landschaft→Tool-Übersicht'),
+    (r'\bSystemlandschaft\b', 'Tool-Übersicht', 'Systemlandschaft→Tool-Übersicht'),
+    (r'\bUnternehmens-IT\b', 'Ihre Technik', 'Unternehmens-IT→Ihre Technik'),
+    (r'\bEnterprise-Lösung\b', 'passende Lösung', 'Enterprise-Lösung→passende Lösung'),
+    (r'\bEnterprise\b', 'professionelle', 'Enterprise→professionelle'),
 ]
 
 
@@ -1910,6 +1951,9 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     # 8.5 FIX-503B: Canonical Payback Enforcer - Replace LLM hallucinated payback values
     sections = apply_canonical_payback_enforcer(sections)
 
+    # 8.6 FIX-504: Kennzahlenblock KPI Enforcer - Fix spacing and enforce canonical values
+    sections = apply_kennzahlenblock_enforcer(sections)
+
     # 9. Product Name Safety Net (v14.35.21) - LAST STEP (seatbelt)
     sections = apply_product_name_safety_net(sections)
 
@@ -2599,3 +2643,433 @@ def apply_chat_artefact_filter(sections: dict) -> dict:
         log.info(f"[CHAT-ARTEFACT-FILTER] Complete: {total_removals} total artefacts removed")
 
     return sections
+
+
+# =============================================================================
+# FIX-504: CANONICAL KENNZAHLENBLOCK KPI ENFORCER
+# =============================================================================
+# Problem: Report-501 shows inconsistent KPIs in Kennzahlenblock:
+# - "Payback11 Monate" (missing space)
+# - "ROI-Rate85%" (missing space)
+# - "Zeitersparnis/Monat210 Std" (missing space)
+# - Values don't match canonical business case values
+#
+# Solution: Targeted enforcer for Kennzahlenblock patterns with spacing normalization
+
+# Patterns that indicate Kennzahlenblock context (not scenario tables)
+KENNZAHLEN_CONTEXT_MARKERS = [
+    r'Business[-\s]?Case\s+Kennzahlen',
+    r'Ihre\s+KI[-\s]?Kennzahlen',
+    r'ROI[-\s]?Übersicht',
+    r'Amortisations[-\s]?Übersicht',
+    r'class="kpi-card"',
+    r'class="kennzahlen"',
+]
+
+# KPI patterns with missing spaces (spacing issues from LLM)
+KPI_SPACING_PATTERNS = [
+    # Payback without space: "Payback11 Monate" or "Payback11Monate"
+    (r'(Payback|Amortisation|Amortisierung)\s*(\d+(?:[,\.]\d+)?)\s*(Monate?|months?|Mon\.?)',
+     r'\1: \2 \3'),
+    # ROI-Rate without space: "ROI-Rate85%" or "ROI-Rate85%auf"
+    (r'(ROI[-\s]?Rate)\s*(\d+(?:[,\.]\d+)?)\s*%\s*',
+     r'\1: \2 % '),
+    # ROI without space: "ROI85%" or "ROI: 85%auf"
+    (r'\bROI\s*:?\s*(\d+(?:[,\.]\d+)?)\s*%\s*(?=auf|\w)',
+     r'ROI: \1 % '),
+    # Zeitersparnis without space: "Zeitersparnis/Monat210 Std"
+    (r'(Zeitersparnis\s*/\s*Monat)\s*(\d+(?:[,\.]\d+)?)\s*(Std\.?|Stunden?|h)',
+     r'\1: \2 \3'),
+    # Generic time savings: "Zeitersparnis210Std"
+    (r'(Zeitersparnis)\s*(\d+(?:[,\.]\d+)?)\s*(Std\.?|Stunden?|h)',
+     r'\1: \2 \3'),
+    # AI Act Risiko without space: "AI Act RisikoMittel"
+    (r'(AI\s*Act\s*Risiko)\s*(minimal|gering|mittel|hoch|Hochrisiko|Niedrigrisiko)',
+     r'\1: \2'),
+    # General label:value patterns without colon/space
+    (r'(Payback|ROI|Amortisation)\s*:?\s*(\d)', r'\1: \2'),
+]
+
+
+def fix_kennzahlen_spacing(html: str) -> tuple[str, int]:
+    """
+    FIX-504 TASK 2: Fix missing spaces in Kennzahlenblock KPI patterns.
+
+    Fixes patterns like:
+    - "Payback11 Monate" → "Payback: 11 Monate"
+    - "ROI-Rate85%" → "ROI-Rate: 85 %"
+    - "Zeitersparnis/Monat210 Std" → "Zeitersparnis/Monat: 210 Std"
+    - "AI Act RisikoMittel" → "AI Act Risiko: Mittel"
+
+    Args:
+        html: HTML content to fix
+
+    Returns:
+        Tuple of (fixed_html, fix_count)
+    """
+    if not html:
+        return html, 0
+
+    result = html
+    fix_count = 0
+
+    for pattern, replacement in KPI_SPACING_PATTERNS:
+        regex = re.compile(pattern, re.IGNORECASE)
+        matches = regex.findall(result)
+        if matches:
+            result = regex.sub(replacement, result)
+            fix_count += len(matches)
+            log.debug(f"[KPI-SPACING] Fixed pattern '{pattern[:30]}...': {len(matches)}x")
+
+    # Additional cleanup: multiple colons/spaces
+    result = re.sub(r':\s*:\s*', ': ', result)
+    result = re.sub(r'\s{2,}', ' ', result)
+
+    return result, fix_count
+
+
+def enforce_kennzahlenblock_kpis(html: str, canonical_kpis: dict) -> tuple[str, int]:
+    """
+    FIX-504 TASK 1: Enforce canonical KPI values in Kennzahlenblock only.
+
+    Targets specific Kennzahlenblock patterns and replaces with canonical values.
+    Does NOT affect scenario tables or Monte Carlo simulation sections.
+
+    Args:
+        html: HTML content with potential KPI inconsistencies
+        canonical_kpis: Dict with canonical values:
+            - PAYBACK_MONTHS: canonical payback period
+            - ROI_PLANWERT or roi_12m: canonical ROI percentage
+            - monatsersparnis_stunden: canonical monthly time savings
+            - AI_ACT_RISK_LEVEL: canonical AI Act risk level
+
+    Returns:
+        Tuple of (enforced_html, enforcement_count)
+    """
+    if not html or not canonical_kpis:
+        return html, 0
+
+    result = html
+    enforcements = 0
+
+    # Get canonical values
+    canonical_payback = canonical_kpis.get("PAYBACK_MONTHS")
+    canonical_roi = canonical_kpis.get("ROI_PLANWERT") or canonical_kpis.get("roi_12m")
+    canonical_time_savings = canonical_kpis.get("monatsersparnis_stunden")
+    canonical_ai_risk = canonical_kpis.get("AI_ACT_RISK_LEVEL")
+
+    # Format canonical payback for German locale
+    if canonical_payback is not None:
+        try:
+            pb_val = float(str(canonical_payback).replace(",", "."))
+            pb_de = f"{pb_val:.1f}".replace(".", ",")
+            if pb_de.endswith(",0"):
+                pb_de = pb_de[:-2]
+
+            # Pattern: standalone Payback mentions (not in scenario context)
+            # "Payback: 11 Monate" or "Payback11 Monate" or "Amortisation: 9,5 Monate"
+            payback_pattern = re.compile(
+                r'((?:Payback|Amortisation|Amortisierung)[:\s]+)(\d+(?:[,\.]\d+)?)\s*(Monate?)',
+                re.IGNORECASE
+            )
+
+            def replace_payback(match):
+                nonlocal enforcements
+                prefix = match.group(1)
+                found_val = match.group(2)
+                suffix = match.group(3)
+
+                # Parse found value
+                try:
+                    found_float = float(found_val.replace(",", "."))
+                    # Skip if within 20% of canonical (allow rounding)
+                    if abs(found_float - pb_val) / max(pb_val, 0.1) <= 0.20:
+                        return match.group(0)
+
+                    # Check if in scenario context
+                    match_pos = match.start()
+                    context_start = max(0, match_pos - 100)
+                    context = result[context_start:match_pos].lower()
+                    if any(kw in context for kw in ['szenario', 'konservativ', 'optimistisch', 'p50', 'p80', 'p90', 'simulation']):
+                        return match.group(0)
+
+                    enforcements += 1
+                    log.info(f"[KENNZAHLEN-KPI] Payback: '{found_val}' → '{pb_de}'")
+                    return f"{prefix.rstrip()}: {pb_de} {suffix}"
+                except (ValueError, TypeError):
+                    return match.group(0)
+
+            result = payback_pattern.sub(replace_payback, result)
+        except (ValueError, TypeError) as e:
+            log.warning(f"[KENNZAHLEN-KPI] Invalid PAYBACK_MONTHS: {canonical_payback} - {e}")
+
+    # Format canonical ROI
+    if canonical_roi is not None:
+        try:
+            roi_val = float(str(canonical_roi).replace(",", "."))
+            roi_str = f"{int(roi_val)}" if roi_val == int(roi_val) else f"{roi_val:.0f}"
+
+            # Pattern: ROI percentage mentions
+            # "ROI: 85%" or "ROI-Rate: 200%" or "ROI-Rate85%"
+            roi_pattern = re.compile(
+                r'(ROI[-\s]?(?:Rate)?[:\s]+)(\d+(?:[,\.]\d+)?)\s*%',
+                re.IGNORECASE
+            )
+
+            def replace_roi(match):
+                nonlocal enforcements
+                prefix = match.group(1)
+                found_val = match.group(2)
+
+                try:
+                    found_float = float(found_val.replace(",", "."))
+                    # Skip if within 20% of canonical
+                    if abs(found_float - roi_val) / max(roi_val, 0.1) <= 0.20:
+                        return match.group(0)
+
+                    # Check if in scenario context
+                    match_pos = match.start()
+                    context_start = max(0, match_pos - 100)
+                    context = result[context_start:match_pos].lower()
+                    if any(kw in context for kw in ['szenario', 'konservativ', 'optimistisch', 'p50', 'p80', 'p90', 'simulation']):
+                        return match.group(0)
+
+                    enforcements += 1
+                    log.info(f"[KENNZAHLEN-KPI] ROI: '{found_val}%' → '{roi_str}%'")
+                    return f"{prefix.rstrip()}: {roi_str} %"
+                except (ValueError, TypeError):
+                    return match.group(0)
+
+            result = roi_pattern.sub(replace_roi, result)
+        except (ValueError, TypeError) as e:
+            log.warning(f"[KENNZAHLEN-KPI] Invalid ROI: {canonical_roi} - {e}")
+
+    # Format canonical time savings
+    if canonical_time_savings is not None:
+        try:
+            ts_val = float(str(canonical_time_savings).replace(",", "."))
+            ts_str = f"{int(ts_val)}" if ts_val == int(ts_val) else f"{ts_val:.0f}"
+
+            # Pattern: Zeitersparnis mentions
+            # "Zeitersparnis/Monat: 210 Std" or "Zeitersparnis/Monat210 Std"
+            time_pattern = re.compile(
+                r'(Zeitersparnis\s*/\s*Monat[:\s]+)(\d+(?:[,\.]\d+)?)\s*(Std\.?|Stunden?|h)',
+                re.IGNORECASE
+            )
+
+            def replace_time(match):
+                nonlocal enforcements
+                prefix = match.group(1)
+                found_val = match.group(2)
+                suffix = match.group(3)
+
+                try:
+                    found_float = float(found_val.replace(",", "."))
+                    # Skip if within 30% of canonical (time savings can vary more)
+                    if abs(found_float - ts_val) / max(ts_val, 0.1) <= 0.30:
+                        return match.group(0)
+
+                    enforcements += 1
+                    log.info(f"[KENNZAHLEN-KPI] Zeitersparnis: '{found_val}' → '{ts_str}'")
+                    return f"{prefix.rstrip()}: {ts_str} {suffix}"
+                except (ValueError, TypeError):
+                    return match.group(0)
+
+            result = time_pattern.sub(replace_time, result)
+        except (ValueError, TypeError) as e:
+            log.warning(f"[KENNZAHLEN-KPI] Invalid time savings: {canonical_time_savings} - {e}")
+
+    return result, enforcements
+
+
+def apply_kennzahlenblock_enforcer(sections: dict) -> dict:
+    """
+    FIX-504: Apply Kennzahlenblock KPI enforcement to all relevant sections.
+
+    Two-pass approach:
+    1. First pass: Fix spacing issues (Payback11 → Payback: 11)
+    2. Second pass: Enforce canonical values where significantly different
+
+    Args:
+        sections: Dict with all report sections
+
+    Returns:
+        Sections with enforced canonical KPI values and fixed spacing
+    """
+    # Build canonical KPIs dict from sections
+    canonical_kpis = {
+        "PAYBACK_MONTHS": sections.get("PAYBACK_MONTHS"),
+        "ROI_PLANWERT": sections.get("ROI_PLANWERT"),
+        "roi_12m": sections.get("roi_12m"),
+        "monatsersparnis_stunden": sections.get("monatsersparnis_stunden"),
+        "AI_ACT_RISK_LEVEL": sections.get("AI_ACT_RISK_LEVEL"),
+    }
+
+    # Sections to process (includes Kennzahlenblock-containing sections)
+    kpi_sections = [
+        "EXECUTIVE_SUMMARY_HTML", "executive_summary",
+        "BUSINESS_CASE_HTML", "business_case",
+        "RECOMMENDATIONS_HTML", "recommendations",
+        "GAMECHANGER_HTML", "gamechanger",
+        "QUICK_WINS_HTML", "quick_wins",
+        "HERO_HTML", "hero",
+        # LLM-generated text sections that may contain KPI summaries
+        "BRANCH_DEEP_DIVE_HTML",
+        "TOOLS_EMPFEHLUNGEN_HTML",
+    ]
+
+    total_spacing_fixes = 0
+    total_enforcements = 0
+
+    for key in kpi_sections:
+        content = sections.get(key)
+        if not content or not isinstance(content, str):
+            continue
+
+        # Pass 1: Fix spacing
+        content, spacing_fixes = fix_kennzahlen_spacing(content)
+        total_spacing_fixes += spacing_fixes
+
+        # Pass 2: Enforce canonical values
+        content, enforcements = enforce_kennzahlenblock_kpis(content, canonical_kpis)
+        total_enforcements += enforcements
+
+        if spacing_fixes > 0 or enforcements > 0:
+            sections[key] = content
+
+    if total_spacing_fixes > 0:
+        log.info(f"[KENNZAHLEN-KPI] Fixed {total_spacing_fixes} spacing issues")
+    if total_enforcements > 0:
+        log.info(f"[KENNZAHLEN-KPI] Enforced {total_enforcements} canonical KPI values")
+
+    return sections
+
+
+# =============================================================================
+# FIX-504 TASK 5: RELEASE_STRICT_MODE PREPARATION
+# =============================================================================
+# Utilities to check warning levels before enabling strict mode.
+# Goal: warnings=0 (or only known acceptable warnings via whitelist)
+
+# Known acceptable warnings that should not block strict mode
+STRICT_MODE_ACCEPTABLE_WARNINGS = [
+    # These are informational, not quality issues
+    r"\[SOLO-LANGUAGE\].*replaced_terms",  # Term replacements are fixes, not warnings
+    r"\[KPI-ENFORCER\].*Fixed.*inconsistent",  # Fixed values are good
+    r"\[KENNZAHLEN-KPI\].*Fixed",  # Fixed spacing/values are good
+    r"\[PAYBACK-ENFORCER\].*Enforced",  # Enforced values are good
+]
+
+# Critical warnings that MUST be fixed before strict mode
+STRICT_MODE_BLOCKING_PATTERNS = [
+    r"SIZE_MISMATCH",  # Persona/size mismatch
+    r"PERSONA_LEAK",  # Wrong persona detected
+    r"LLM_HALLUCINATION",  # Hallucinated content
+    r"CRITICAL_ERROR",  # Critical quality issues
+    r"JSON.*unparseable",  # JSON parsing failures
+    r"FALLBACK.*triggered",  # Fallback content used
+]
+
+
+def check_strict_mode_readiness(warnings: list[str], blocking_threshold: int = 0) -> dict:
+    """
+    FIX-504 TASK 5: Check if the report is ready for RELEASE_STRICT_MODE.
+
+    Analyzes warnings to determine if strict mode can be safely enabled.
+
+    Args:
+        warnings: List of warning messages from the current report
+        blocking_threshold: Maximum number of blocking warnings allowed (default 0)
+
+    Returns:
+        Dict with:
+            - ready: bool - True if strict mode can be enabled
+            - blocking_count: int - Number of blocking warnings
+            - acceptable_count: int - Number of acceptable warnings
+            - blocking_warnings: list - List of blocking warning messages
+            - summary: str - Human-readable summary
+    """
+    blocking_warnings = []
+    acceptable_warnings = []
+    other_warnings = []
+
+    for warning in warnings:
+        warning_str = str(warning)
+
+        # Check if it's a blocking pattern
+        is_blocking = any(
+            re.search(pattern, warning_str, re.IGNORECASE)
+            for pattern in STRICT_MODE_BLOCKING_PATTERNS
+        )
+
+        if is_blocking:
+            blocking_warnings.append(warning_str)
+            continue
+
+        # Check if it's acceptable
+        is_acceptable = any(
+            re.search(pattern, warning_str, re.IGNORECASE)
+            for pattern in STRICT_MODE_ACCEPTABLE_WARNINGS
+        )
+
+        if is_acceptable:
+            acceptable_warnings.append(warning_str)
+        else:
+            other_warnings.append(warning_str)
+
+    blocking_count = len(blocking_warnings)
+    ready = blocking_count <= blocking_threshold
+
+    summary_parts = [
+        f"STRICT_MODE_READINESS: {'✅ READY' if ready else '❌ NOT READY'}",
+        f"  Blocking warnings: {blocking_count}",
+        f"  Acceptable warnings: {len(acceptable_warnings)}",
+        f"  Other warnings: {len(other_warnings)}",
+    ]
+
+    if blocking_warnings:
+        summary_parts.append("  Blocking issues:")
+        for bw in blocking_warnings[:5]:  # Show first 5
+            summary_parts.append(f"    - {bw[:100]}...")
+        if len(blocking_warnings) > 5:
+            summary_parts.append(f"    ... and {len(blocking_warnings) - 5} more")
+
+    summary = "\n".join(summary_parts)
+
+    log.info(f"[STRICT-MODE-CHECK] {summary}")
+
+    return {
+        "ready": ready,
+        "blocking_count": blocking_count,
+        "acceptable_count": len(acceptable_warnings),
+        "other_count": len(other_warnings),
+        "blocking_warnings": blocking_warnings,
+        "acceptable_warnings": acceptable_warnings,
+        "other_warnings": other_warnings,
+        "summary": summary,
+    }
+
+
+def get_strict_mode_status() -> dict:
+    """
+    FIX-504 TASK 5: Get current RELEASE_STRICT_MODE status.
+
+    Returns:
+        Dict with:
+            - enabled: bool - True if strict mode is currently enabled
+            - recommended: bool - True if strict mode should be enabled
+            - reason: str - Explanation
+    """
+    import os
+
+    strict_mode = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
+
+    return {
+        "enabled": strict_mode,
+        "env_var": os.getenv("RELEASE_STRICT_MODE", "not set"),
+        "description": (
+            "RELEASE_STRICT_MODE=1 enables zero-tolerance quality gating. "
+            "Reports with critical warnings will be blocked. "
+            "Only enable when warnings have been significantly reduced."
+        ),
+    }
