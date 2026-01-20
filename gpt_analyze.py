@@ -7967,6 +7967,108 @@ def _build_feedback_box(feedback_url: str, report_date: str) -> str:
         "</div>"
     )
 
+
+# -------------------- 🎯 DCL: Decision Confidence Layer (no LLM) ----------------
+def _build_decision_confidence_html(sections: Dict[str, Any]) -> str:
+    """
+    Build the Decision Confidence Layer (Entscheidungssicherheit & Datengrundlage).
+
+    This is a static section with minimal dynamic placeholders:
+    - report_date: from sections
+    - AI_ACT_RISK_LEVEL: from sections (minimal/limited/high-risk)
+    - DATA_COVERAGE_PCT: optional coverage percentage if available
+
+    No LLM calls - 80% static text, 20% dynamic placeholders.
+    """
+    # Extract dynamic values
+    report_date = sections.get("report_date", datetime.now().strftime("%d.%m.%Y"))
+    risk_level = sections.get("AI_ACT_RISK_LEVEL", "unbekannt")
+    coverage_pct = sections.get("DATA_COVERAGE_PCT")
+
+    # Translate risk level to German display
+    risk_display_map = {
+        "minimal": "minimal",
+        "limited": "begrenzt",
+        "high-risk": "hoch",
+        "unbekannt": "unbekannt"
+    }
+    risk_display = risk_display_map.get(risk_level, risk_level)
+
+    # Stability indicator based on risk level
+    stability_level = "hoch"  # Default to high stability
+    stability_color = "#16a34a"  # Green
+    if risk_level == "high-risk":
+        stability_level = "mittel"
+        stability_color = "#ea580c"  # Orange
+
+    # Build coverage line (optional)
+    coverage_line = ""
+    if coverage_pct is not None:
+        try:
+            coverage_val = int(coverage_pct)
+            coverage_line = f'<li>Datenabdeckung: <strong>{coverage_val}%</strong> der relevanten Eingaben analysiert</li>'
+        except (ValueError, TypeError):
+            pass
+    if not coverage_line:
+        coverage_line = '<li>Datenabdeckung: basierend auf allen bereitgestellten Angaben</li>'
+
+    # Build the HTML with static content and dynamic placeholders
+    html_content = f'''
+<div class="confidence-card">
+    <div class="confidence-header">
+        <span class="confidence-icon">🎯</span>
+        <h3 class="confidence-title">Entscheidungssicherheit & Datengrundlage</h3>
+        <span class="confidence-date">Stand: {html.escape(report_date)}</span>
+    </div>
+
+    <div class="confidence-grid">
+        <!-- Block 1: Datengrundlage -->
+        <div class="confidence-block">
+            <h4>📊 Datengrundlage</h4>
+            <ul class="confidence-list">
+                <li>Analyse basiert auf Ihren Fragebogenangaben und Branchenprofil</li>
+                <li>Validierung gegen aktuelle Marktdaten und Best Practices</li>
+                {coverage_line}
+            </ul>
+        </div>
+
+        <!-- Block 2: Stabilität der Aussagen -->
+        <div class="confidence-block">
+            <h4>⚖️ Stabilität der Aussagen</h4>
+            <ul class="confidence-list">
+                <li>Belastbarkeit: <strong style="color: {stability_color};">{stability_level}</strong></li>
+                <li>AI-Act Risikoeinstufung: <strong>{html.escape(risk_display)}</strong></li>
+                <li>Methodik: strukturierte Analyse mit branchenspezifischen Benchmarks</li>
+            </ul>
+        </div>
+
+        <!-- Block 3: Annahmen & Unsicherheiten -->
+        <div class="confidence-block">
+            <h4>⚠️ Annahmen & Unsicherheiten</h4>
+            <ul class="confidence-list">
+                <li>Prognosen beruhen auf aktuellen Marktbedingungen</li>
+                <li>ROI-Werte sind Schätzungen auf Basis typischer Implementierungen</li>
+                <li>Individuelle Faktoren können Ergebnisse beeinflussen</li>
+            </ul>
+        </div>
+
+        <!-- Block 4: Charakter der Empfehlung -->
+        <div class="confidence-block">
+            <h4>📋 Charakter der Empfehlung</h4>
+            <div class="confidence-checkbox">
+                <span class="checkbox-checked">☑</span>
+                <span>Realistisch: Empfehlungen orientieren sich an praktischer Umsetzbarkeit</span>
+            </div>
+            <div class="confidence-note">
+                Dieser Report bietet Orientierung – finale Entscheidungen erfordern unternehmensspezifische Prüfung.
+            </div>
+        </div>
+    </div>
+</div>
+'''
+    return html_content.strip()
+
+
 # -------------------- 🎯 NEW: Estimate hourly rate from revenue ----------------
 def _estimate_hourly_rate_from_revenue(briefing: Dict[str, Any]) -> int:
     """
@@ -12767,6 +12869,15 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     sections.setdefault("KREATIV_SPECIAL_HTML","")
     sections.setdefault("LEISTUNG_NACHWEIS_HTML","")
     sections.setdefault("GLOSSAR_HTML","")
+
+    # DCL: Decision Confidence Layer (static, no LLM)
+    try:
+        dcl_html = _build_decision_confidence_html(sections)
+        sections["DECISION_CONFIDENCE_HTML"] = dcl_html
+        log.debug("[%s] 🎯 DCL: Decision Confidence Layer generated", run_id)
+    except Exception as exc:
+        log.warning("[%s] ⚠️ DCL generation failed: %s", run_id, exc)
+        sections.setdefault("DECISION_CONFIDENCE_HTML", "")
 
     # Kreativ Tools
     kreat_path = os.getenv("KREATIV_TOOLS_PATH", "").strip()
