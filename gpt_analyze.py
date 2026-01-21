@@ -12617,6 +12617,19 @@ def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, s
     log.info("[%s] 🎨 Generating content sections with %s...", run_id, "PROMPT SYSTEM" if USE_PROMPT_SYSTEM else "legacy prompts")
     sections = _generate_content_sections(briefing=answers, scores=scores)
 
+    # === FIX-509-B: GLOBAL ZERO-LEAK PHRASE PRE-CLEANUP ===
+    # Must run BEFORE zero-leak detection to prevent regeneration/fallback
+    # Replaces "bei Bedarf"→"optional", "auf Wunsch"→"optional", removes "wie kann ich dir helfen"
+    try:
+        from services.content_quality_enforcer import apply_zero_leak_phrase_cleanup
+        log.info("[%s] 🧹 Running FIX-509-B zero-leak phrase pre-cleanup...", run_id)
+        sections = apply_zero_leak_phrase_cleanup(sections)
+    except ImportError:
+        log.debug("[%s] apply_zero_leak_phrase_cleanup not available (FIX-509-B)", run_id)
+    except Exception as exc:
+        log.warning("[%s] ⚠️ FIX-509-B phrase pre-cleanup failed: %s", run_id, exc)
+    # === END FIX-509-B ===
+
     # === PRECOMMIT ZERO-LEAK GUARD - Run BEFORE ReportValidator/N2-Healing ===
     # Applies hard blacklist to ALL sections (not just executive), with dual-key hygiene
     # Fix-Batch C1: Added regeneration loop for FAIL-CLOSED sections
