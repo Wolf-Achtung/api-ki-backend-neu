@@ -147,8 +147,8 @@ class TestPaybackCanonicalEnforcement:
 class TestRiskMatrixTableWrap:
     """FIX 3: Risk Matrix tables should not truncate text."""
 
-    def test_risk_matrix_uses_table_layout_auto(self):
-        """Risk Matrix HTML should use table-layout:auto for proper text wrapping."""
+    def test_risk_matrix_uses_table_layout_fixed(self):
+        """Risk Matrix HTML should use table-layout:fixed for WeasyPrint-proof layout (FIX-506 TASK 4)."""
         from services.risk_engine_v2 import risk_report_to_html, RiskReport, RiskMatrixEntry
 
         report = RiskReport(
@@ -178,9 +178,9 @@ class TestRiskMatrixTableWrap:
 
         html = risk_report_to_html(report)
 
-        # Should use table-layout:auto
-        assert "table-layout:auto" in html, \
-            "Risk Matrix should use table-layout:auto for text wrapping"
+        # FIX-506 TASK 4: Should use table-layout:fixed for WeasyPrint-proof layout
+        assert "table-layout:fixed" in html, \
+            "Risk Matrix should use table-layout:fixed for WeasyPrint compatibility"
 
         # FIX-506: Now uses word-wrap:break-word instead of overflow-wrap:anywhere
         # to prevent ugly header word breaks while still allowing content to wrap
