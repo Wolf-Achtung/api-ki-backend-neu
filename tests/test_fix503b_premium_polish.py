@@ -182,9 +182,10 @@ class TestRiskMatrixTableWrap:
         assert "table-layout:auto" in html, \
             "Risk Matrix should use table-layout:auto for text wrapping"
 
-        # Should have overflow-wrap and word-break
-        assert "overflow-wrap:anywhere" in html, \
-            "Risk Matrix should have overflow-wrap:anywhere"
+        # FIX-506: Now uses word-wrap:break-word instead of overflow-wrap:anywhere
+        # to prevent ugly header word breaks while still allowing content to wrap
+        assert "word-wrap:break-word" in html or "overflow-wrap:anywhere" in html, \
+            "Risk Matrix should have word wrapping for content cells"
         assert "white-space:normal" in html, \
             "Risk Matrix should have white-space:normal"
 

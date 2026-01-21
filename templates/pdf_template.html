@@ -2630,17 +2630,21 @@
             border-collapse: collapse;
         }
 
-        /* L1: Prevent all text truncation in risk matrix */
+        /* L1: Prevent all text truncation in risk matrix content cells */
+        /* FIX-506: Removed overflow-wrap:anywhere to prevent ugly header breaks */
         .risk-matrix td,
-        .risk-matrix th,
-        .risk-matrix-section td,
-        .risk-matrix-section th {
-            overflow-wrap: anywhere;
+        .risk-matrix-section td {
             word-wrap: break-word;
-            word-break: break-word;
             hyphens: auto;
             box-sizing: border-box;
             overflow: visible !important;  /* L1: Never clip content */
+        }
+
+        /* FIX-506: Header cells use normal wrapping to prevent mid-word breaks */
+        .risk-matrix th,
+        .risk-matrix-section th {
+            white-space: nowrap;
+            box-sizing: border-box;
         }
 
         /* L1: Extra padding on last column to prevent border cutoff */

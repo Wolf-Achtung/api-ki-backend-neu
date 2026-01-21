@@ -70,61 +70,61 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
     <tbody>
       <tr>
         <td>Gesamt</td>
-        <td>{{score_gesamt}}</td>
+        <td>{{score_gesamt|default(0)}}</td>
         <td>65</td>
         <td>82</td>
         <td>
           <!-- automatisch ableitbar -->
-          {% if score_gesamt > 82 %}stark über Branchenniveau
-          {% elif score_gesamt > 65 %}über Branchenniveau
+          {% if (score_gesamt|default(0)) > 82 %}stark über Branchenniveau
+          {% elif (score_gesamt|default(0)) > 65 %}über Branchenniveau
           {% else %}unter Branchendurchschnitt{% endif %}
         </td>
       </tr>
 
       <tr>
         <td>Befähigung</td>
-        <td>{{score_befaehigung}}</td>
+        <td>{{score_befaehigung|default(0)}}</td>
         <td>68</td>
         <td>85</td>
         <td>
-          {% if score_befaehigung > 85 %}stark über Branchenniveau
-          {% elif score_befaehigung > 68 %}über Branchenniveau
+          {% if (score_befaehigung|default(0)) > 85 %}stark über Branchenniveau
+          {% elif (score_befaehigung|default(0)) > 68 %}über Branchenniveau
           {% else %}unter Branchendurchschnitt{% endif %}
         </td>
       </tr>
 
       <tr>
         <td>Governance</td>
-        <td>{{score_governance}}</td>
+        <td>{{score_governance|default(0)}}</td>
         <td>58</td>
         <td>78</td>
         <td>
-          {% if score_governance > 78 %}stark über Branchenniveau
-          {% elif score_governance > 58 %}über Branchenniveau
+          {% if (score_governance|default(0)) > 78 %}stark über Branchenniveau
+          {% elif (score_governance|default(0)) > 58 %}über Branchenniveau
           {% else %}unter Branchendurchschnitt{% endif %}
         </td>
       </tr>
 
       <tr>
         <td>Sicherheit</td>
-        <td>{{score_sicherheit}}</td>
+        <td>{{score_sicherheit|default(0)}}</td>
         <td>62</td>
         <td>80</td>
         <td>
-          {% if score_sicherheit > 80 %}stark über Branchenniveau
-          {% elif score_sicherheit > 62 %}über Branchenniveau
+          {% if (score_sicherheit|default(0)) > 80 %}stark über Branchenniveau
+          {% elif (score_sicherheit|default(0)) > 62 %}über Branchenniveau
           {% else %}unter Branchendurchschnitt{% endif %}
         </td>
       </tr>
 
       <tr>
         <td>Wertschöpfung</td>
-        <td>{{score_nutzen}}</td>
+        <td>{{score_nutzen|default(0)}}</td>
         <td>70</td>
         <td>88</td>
         <td>
-          {% if score_nutzen > 88 %}stark über Branchenniveau
-          {% elif score_nutzen > 70 %}über Branchenniveau
+          {% if (score_nutzen|default(0)) > 88 %}stark über Branchenniveau
+          {% elif (score_nutzen|default(0)) > 70 %}über Branchenniveau
           {% else %}unter Branchendurchschnitt{% endif %}
         </td>
       </tr>
@@ -137,17 +137,17 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
     entsprechend hohes Verbesserungspotenzial:
   </p>
   <ul>
-    {% if score_befaehigung < 68 %}
-      <li><strong>Befähigung:</strong> deutlicher Rückstand gegenüber dem Branchen-Ø ({{score_befaehigung}} vs. 68).</li>
+    {% if (score_befaehigung|default(0)) < 68 %}
+      <li><strong>Befähigung:</strong> deutlicher Rückstand gegenüber dem Branchen-Ø ({{score_befaehigung|default(0)}} vs. 68).</li>
     {% endif %}
-    {% if score_governance < 58 %}
-      <li><strong>Governance:</strong> deutlicher Rückstand gegenüber dem Branchen-Ø ({{score_governance}} vs. 58).</li>
+    {% if (score_governance|default(0)) < 58 %}
+      <li><strong>Governance:</strong> deutlicher Rückstand gegenüber dem Branchen-Ø ({{score_governance|default(0)}} vs. 58).</li>
     {% endif %}
-    {% if score_sicherheit < 62 %}
-      <li><strong>Sicherheit:</strong> deutlicher Rückstand gegenüber dem Branchen-Ø ({{score_sicherheit}} vs. 62).</li>
+    {% if (score_sicherheit|default(0)) < 62 %}
+      <li><strong>Sicherheit:</strong> deutlicher Rückstand gegenüber dem Branchen-Ø ({{score_sicherheit|default(0)}} vs. 62).</li>
     {% endif %}
-    {% if score_nutzen < 70 %}
-      <li><strong>Wertschöpfung:</strong> deutlicher Rückstand gegenüber dem Branchen-Ø ({{score_nutzen}} vs. 70).</li>
+    {% if (score_nutzen|default(0)) < 70 %}
+      <li><strong>Wertschöpfung:</strong> deutlicher Rückstand gegenüber dem Branchen-Ø ({{score_nutzen|default(0)}} vs. 70).</li>
     {% endif %}
   </ul>
 
@@ -157,17 +157,17 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
     Fundament für weitere Entwicklung dienen:
   </p>
   <ul>
-    {% if score_befaehigung > 68 %}
-      <li><strong>Befähigung:</strong> erkennbarer Vorsprung vor dem Branchendurchschnitt ({{score_befaehigung}} vs. 68).</li>
+    {% if (score_befaehigung|default(0)) > 68 %}
+      <li><strong>Befähigung:</strong> erkennbarer Vorsprung vor dem Branchendurchschnitt ({{score_befaehigung|default(0)}} vs. 68).</li>
     {% endif %}
-    {% if score_governance > 58 %}
-      <li><strong>Governance:</strong> erkennbarer Vorsprung vor dem Branchendurchschnitt ({{score_governance}} vs. 58).</li>
+    {% if (score_governance|default(0)) > 58 %}
+      <li><strong>Governance:</strong> erkennbarer Vorsprung vor dem Branchendurchschnitt ({{score_governance|default(0)}} vs. 58).</li>
     {% endif %}
-    {% if score_sicherheit > 62 %}
-      <li><strong>Sicherheit:</strong> erkennbarer Vorsprung vor dem Branchendurchschnitt ({{score_sicherheit}} vs. 62).</li>
+    {% if (score_sicherheit|default(0)) > 62 %}
+      <li><strong>Sicherheit:</strong> erkennbarer Vorsprung vor dem Branchendurchschnitt ({{score_sicherheit|default(0)}} vs. 62).</li>
     {% endif %}
-    {% if score_nutzen > 70 %}
-      <li><strong>Wertschöpfung:</strong> erkennbarer Vorsprung vor dem Branchendurchschnitt ({{score_nutzen}} vs. 70).</li>
+    {% if (score_nutzen|default(0)) > 70 %}
+      <li><strong>Wertschöpfung:</strong> erkennbarer Vorsprung vor dem Branchendurchschnitt ({{score_nutzen|default(0)}} vs. 70).</li>
     {% endif %}
   </ul>
 
@@ -209,9 +209,9 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
 
   <p>
     <strong>Strategischer Zielkorridor:</strong>
-    {% if score_gesamt >= 80 %}
+    {% if (score_gesamt|default(0)) >= 80 %}
       Richtung Top 5 % der Branche.
-    {% elif score_gesamt >= 60 %}
+    {% elif (score_gesamt|default(0)) >= 60 %}
       Richtung Top 10 % der Branche.
     {% else %}
       Richtung Top 25 % – Schwerpunkt auf Stabilisierung und strukturierter Weiterentwicklung.

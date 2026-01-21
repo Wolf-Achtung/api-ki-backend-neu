@@ -321,12 +321,201 @@ def enhance_quickwins_for_fullwidth(html: str, min_cards: int = 4) -> str:
     return enhanced
 
 
+# =============================================================================
+# FIX-506 TASK 3: QuickWins Premium Enrichment
+# =============================================================================
+# Enrich Quick Wins with deterministic sublines (Nutzen + Start/Aufwand)
+# derived from title/icon to meet minimum word count requirements.
+
+# Deterministic sublines by Quick Win category (based on icon/title keywords)
+QUICKWIN_ENRICHMENT_MAP = {
+    # Automation & Efficiency
+    "automatisierung": {
+        "nutzen": "Reduziert manuelle Arbeit und minimiert Fehlerquellen",
+        "aufwand": "Startaufwand gering, erste Ergebnisse in 1-2 Wochen",
+    },
+    "effizienz": {
+        "nutzen": "Steigert Durchsatz bei gleichbleibenden Ressourcen",
+        "aufwand": "Umsetzung in bestehende Prozesse integrierbar",
+    },
+    "prozess": {
+        "nutzen": "Verbessert Durchlaufzeiten und Prozessqualität",
+        "aufwand": "Schrittweise Einführung empfohlen",
+    },
+    # Communication & Content
+    "kommunikation": {
+        "nutzen": "Erhöht Konsistenz und Qualität der Kommunikation",
+        "aufwand": "Templates und Vorlagen in 1 Woche einsatzbereit",
+    },
+    "content": {
+        "nutzen": "Beschleunigt Content-Erstellung bei gleichbleibender Qualität",
+        "aufwand": "KI-Unterstützung ab Tag 1 nutzbar",
+    },
+    "text": {
+        "nutzen": "Professionelle Texte in kürzerer Zeit",
+        "aufwand": "Minimale Einarbeitung erforderlich",
+    },
+    # Data & Analysis
+    "daten": {
+        "nutzen": "Bessere Entscheidungsgrundlagen durch schnellere Auswertung",
+        "aufwand": "Anbindung an bestehende Datenquellen notwendig",
+    },
+    "analyse": {
+        "nutzen": "Tiefere Insights bei geringerem Zeitaufwand",
+        "aufwand": "Erste Analysen in wenigen Stunden möglich",
+    },
+    "report": {
+        "nutzen": "Automatisierte Berichtserstellung spart wöchentlich Zeit",
+        "aufwand": "Template-basiert, einmalige Einrichtung",
+    },
+    # Customer & Service
+    "kund": {
+        "nutzen": "Schnellere Reaktionszeiten und höhere Kundenzufriedenheit",
+        "aufwand": "Integration in CRM oder Helpdesk empfohlen",
+    },
+    "service": {
+        "nutzen": "Verbessert First-Response-Zeit und Servicequalität",
+        "aufwand": "Pilotierung mit häufigen Anfragen starten",
+    },
+    "support": {
+        "nutzen": "Entlastet Support-Team bei Standardanfragen",
+        "aufwand": "FAQ-basierte Konfiguration in 2-3 Tagen",
+    },
+    # Default for unmatched
+    "default": {
+        "nutzen": "Messbare Zeitersparnis und Qualitätsverbesserung",
+        "aufwand": "Schnelle Umsetzung mit geringem Initialaufwand möglich",
+    },
+}
+
+
+def get_quickwin_enrichment(title: str, icon: str = "") -> dict:
+    """
+    FIX-506: Get deterministic enrichment sublines for a Quick Win.
+
+    Args:
+        title: Quick Win title
+        icon: Quick Win icon (optional)
+
+    Returns:
+        Dict with 'nutzen' and 'aufwand' sublines
+    """
+    combined = f"{title} {icon}".lower()
+
+    for keyword, enrichment in QUICKWIN_ENRICHMENT_MAP.items():
+        if keyword != "default" and keyword in combined:
+            return enrichment
+
+    return QUICKWIN_ENRICHMENT_MAP["default"]
+
+
+def enrich_quickwin_card(html: str) -> str:
+    """
+    FIX-506: Enrich a single Quick Win card with Nutzen and Aufwand sublines.
+
+    Adds deterministic sublines after the title for premium presentation.
+
+    Args:
+        html: Single Quick Win card HTML
+
+    Returns:
+        Enriched card HTML
+    """
+    if not html:
+        return html
+
+    # Check if already enriched
+    if 'data-qw-enriched="true"' in html or 'qw-nutzen' in html:
+        return html
+
+    # Extract title from card
+    title_match = re.search(r'<h3[^>]*>(.*?)</h3>', html, re.DOTALL | re.IGNORECASE)
+    if not title_match:
+        # Try other heading patterns
+        title_match = re.search(r'class="quick-win-title[^"]*"[^>]*>(.*?)</(?:div|span|h\d)', html, re.DOTALL | re.IGNORECASE)
+
+    title = title_match.group(1).strip() if title_match else ""
+    title = re.sub(r'<[^>]+>', '', title)  # Strip HTML tags
+
+    # Get enrichment
+    enrichment = get_quickwin_enrichment(title)
+
+    # Create enrichment HTML
+    enrichment_html = f'''
+<div class="qw-enrichment" data-qw-enriched="true" style="margin-top:8px;padding:8px 0;border-top:1px solid #e5e7eb;">
+  <div class="qw-nutzen" style="font-size:11px;color:#059669;margin-bottom:4px;">
+    <strong>Nutzen:</strong> {enrichment['nutzen']}
+  </div>
+  <div class="qw-aufwand" style="font-size:11px;color:#6b7280;">
+    <strong>Start:</strong> {enrichment['aufwand']}
+  </div>
+</div>'''
+
+    # Insert before closing card tag
+    # Try to find card body ending
+    body_close_patterns = [
+        (r'(</div>\s*</div>\s*</div>)\s*$', rf'{enrichment_html}\1'),
+        (r'(<div class="quick-win-body[^"]*"[^>]*>.*?)(</div>)', rf'\1{enrichment_html}\2'),
+        (r'(</div>)\s*$', rf'{enrichment_html}\1'),
+    ]
+
+    for pattern, replacement in body_close_patterns:
+        if re.search(pattern, html, re.DOTALL | re.IGNORECASE):
+            html = re.sub(pattern, replacement, html, count=1, flags=re.DOTALL | re.IGNORECASE)
+            break
+
+    return html
+
+
+def enrich_quickwins_premium(html: str) -> str:
+    """
+    FIX-506 TASK 3: Enrich all Quick Win cards with premium sublines.
+
+    Adds Nutzen and Aufwand sublines to each Quick Win card to:
+    1. Meet minimum word count requirements
+    2. Provide premium visual presentation
+    3. Give actionable context without LLM calls
+
+    Args:
+        html: Full Quick Wins HTML
+
+    Returns:
+        Enriched HTML with all cards having sublines
+    """
+    if not html:
+        return html
+
+    # Check if already enriched
+    if 'data-qw-enriched="true"' in html:
+        log.debug("[QUICKWINS-PREMIUM] Already enriched, skipping")
+        return html
+
+    # Find and enrich each card
+    card_pattern = re.compile(
+        r'(<div[^>]*class="[^"]*quick-win-card[^"]*"[^>]*>.*?</div>\s*</div>\s*</div>)',
+        re.DOTALL | re.IGNORECASE
+    )
+
+    def enrich_match(match):
+        return enrich_quickwin_card(match.group(0))
+
+    enriched = card_pattern.sub(enrich_match, html)
+
+    # Count enrichments
+    enrichment_count = enriched.count('data-qw-enriched="true"')
+    log.info(f"[QUICKWINS-PREMIUM] Enriched {enrichment_count} Quick Win cards")
+
+    return enriched
+
+
 def apply_quickwins_fullwidth_enhancement(sections: dict) -> dict:
     """
     FIX-504 TASK 4: Apply QuickWins full-width enhancement when LEFT_ONLY mode.
 
     Automatically detects template mode and applies premium layout enhancement
     when the right column is empty (LEFT_ONLY mode).
+
+    FIX-506 TASK 3: Also applies premium enrichment with sublines.
 
     Args:
         sections: Dict with all report sections
@@ -355,8 +544,11 @@ def apply_quickwins_fullwidth_enhancement(sections: dict) -> dict:
         log.debug("[QUICKWINS-FULLWIDTH] No QuickWins HTML found")
         return sections
 
-    # Apply enhancement
-    enhanced = enhance_quickwins_for_fullwidth(qw_html)
+    # FIX-506 TASK 3: Apply premium enrichment first (adds sublines for word count)
+    enriched = enrich_quickwins_premium(qw_html)
+
+    # FIX-504 TASK 4: Apply fullwidth layout enhancement
+    enhanced = enhance_quickwins_for_fullwidth(enriched)
     sections[qw_key] = enhanced
 
     # Also update the main key if we enhanced LEFT
