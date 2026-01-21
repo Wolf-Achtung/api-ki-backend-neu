@@ -510,14 +510,15 @@ class TestL1RiskMatrixNoClip:
         assert "risk-matrix-section" in source
 
     def test_risk_matrix_has_overflow_wrap(self):
-        """Test that Risk Matrix cells have overflow-wrap."""
+        """Test that Risk Matrix cells have word wrapping to prevent truncation."""
         from services import risk_engine_v2
         import inspect
 
         source = inspect.getsource(risk_engine_v2)
 
-        # Should have overflow-wrap to prevent truncation
-        assert "overflow-wrap:anywhere" in source or "word-break:break-word" in source
+        # FIX-506: Now uses word-wrap:break-word instead of overflow-wrap:anywhere
+        # to prevent ugly header word breaks while still wrapping content
+        assert "word-wrap:break-word" in source or "overflow-wrap:anywhere" in source or "word-break:break-word" in source
 
     def test_l1_comment_in_code(self):
         """Test that L1 comment exists in risk_engine_v2."""
@@ -645,7 +646,8 @@ class TestL1L3Integration:
         assert "<colgroup>" in html
         # FIX-503B: Changed to table-layout:auto for better text wrapping in WeasyPrint
         assert "table-layout:auto" in html
-        assert "overflow-wrap:anywhere" in html
+        # FIX-506: Now uses word-wrap:break-word instead of overflow-wrap:anywhere
+        assert "word-wrap:break-word" in html or "overflow-wrap:anywhere" in html
 
     def test_predictive_engine_formats_numbers_german(self):
         """Test that predictive engine uses German number formatting."""
