@@ -4,30 +4,38 @@
 
 <!--
 ###############################################################################
-##                    CANONICAL KPI CONTRACT (STRICT)                        ##
+##                    STRICT CANONICAL CONTRACT                              ##
 ###############################################################################
 
 You MUST NOT:
-- invent, estimate or round KPI values
-- use example numbers (e.g., "6-10 h/Monat")
-- use ranges for time savings (e.g., "6–10 Stunden")
-- use "z. B.", "typischerweise", "etwa", "ca."
-- restate KPIs in alternative wording
+- invent, estimate or restate KPI values
+- use example numbers, ranges or scenarios
+- include conversational phrases
+- explain ROI/Payback with numbers
+- use time estimates like "6-10 h/Monat"
 
-You MAY ONLY:
-- reference provided canonical variables: {{monatsersparnis_stunden}}, {{STUNDENSATZ_EUR}}
-- use "siehe Business Case" for detailed KPI references
-- explain QUALITATIVE benefits WITHOUT inventing numbers
+You MAY:
+- reference canonical KPIs symbolically ("laut Business Case")
+- explain logic and implications WITHOUT numbers
+- defer numeric details explicitly to Business Case
 
-If a KPI is missing: say "siehe Business Case" or leave field empty.
+If a number is required:
+→ write: "siehe Business Case"
 
-BANNED PATTERNS (hard fail in STRICT_MODE):
-- "z. B."
+HARD BLACKLIST (Fail-Closed):
+- "wie kann ich dir helfen" / "wie kann ich helfen"
+- "bei Bedarf"
+- "z. B." / "z.B."
+- "angenommen"
 - "typischerweise"
 - "etwa"
 - "ca."
-- "6–10" or any invented range
-- "bei Bedarf"
+- "Rollout"
+- "Skalierung"
+- "Modul"
+- "Stack"
+- "1000+"
+- Any invented time range (e.g., "6–10 h/Monat")
 
 ###############################################################################
 -->
@@ -131,22 +139,22 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
 - Budget: Skalierbare Lösungen
 {% endif %}
 
-## JSON-FORMAT — BALANCIERT!
+## JSON-FORMAT — VEREINFACHT (FIX-506)
+
+**ACCEPTANCE CRITERIA:**
+- ≥ 40 Wörter pro Quick Win (insgesamt über alle Felder)
+- KEINE Zahlen, KEINE Zeitangaben
+- Wirtschaftliche Effekte immer → "siehe Business Case"
 
 ```json
 [
   {
     "title": "[Aktion] für {{hauptleistung}} (max 60 Zeichen)",
     "icon": "🎯",
-    "engpass": "Ihr konkreter Zeitfresser/Pain Point aus ZEITERSPARNIS_PRIORITAET",
-    "description": "In Ihrem Kerngeschäft besteht das Problem... 2-3 Sätze.",
-    "mit_ki": "Für diese Leistung hilft KI konkret durch... Welche Tools? 2-3 Sätze.",
-    "steps": [
-      "Konkreter Schritt 1 mit Tool-Namen",
-      "Konkreter Schritt 2 mit messbarem Ergebnis",
-      "Konkreter Schritt 3 zur Validierung"
-    ],
-    "zeitersparnis": "{{monatsersparnis_stunden}} Std./Monat (bei {{STUNDENSATZ_EUR}}€/h)"
+    "problem": "Welcher Engpass besteht konkret? Beschreibe den Pain Point aus ZEITERSPARNIS_PRIORITAET in 2-3 Sätzen.",
+    "wirkung": "Konkreter Nutzen OHNE Zahlen: Was verbessert sich qualitativ? 2-3 Sätze über die Wirkung auf Arbeitsqualität, Konsistenz, Entlastung.",
+    "umsetzung": "1–2 klare Schritte zur Umsetzung, Tool-Namen nennen, aber KEINE Zeitschätzungen.",
+    "hinweis": "Wirtschaftliche Effekte siehe Business Case"
   }
 ]
 ```
@@ -211,13 +219,16 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
 
 - [ ] Valides JSON (keine trailing commas, escaped quotes)
 - [ ] 3-5 Quick Wins im Array
-- [ ] Jeder Quick Win hat alle 7 Felder: title, icon, engpass, description, mit_ki, steps, zeitersparnis
+- [ ] Jeder Quick Win hat alle 6 Felder: title, icon, problem, wirkung, umsetzung, hinweis
 - [ ] Icons sind Emojis (nicht Text)
-- [ ] steps ist Array mit 3-5 Strings
 - [ ] Keine HTML-Tags im JSON
 - [ ] Quick Win #1 zitiert ZEITERSPARNIS_PRIORITAET
 - [ ] Tool-Namen sind KONKRET (nicht "KI-Tools")
 - [ ] Guardrails werden beachten (falls vorhanden)
+- [ ] **≥ 40 Wörter pro Quick Win (insgesamt)**
+- [ ] **KEINE Zahlen in problem/wirkung/umsetzung**
+- [ ] **KEINE Zeitangaben oder Stundenangaben**
+- [ ] hinweis verweist auf Business Case
 
 ### ⚠️ HAUPTLEISTUNG BALANCIERTE CHECKS:
 - [ ] Quick Win #1: title UND description referenzieren {{hauptleistung}} (2x)
@@ -256,48 +267,33 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
 
 ---
 
-## BEISPIEL (Beratungsbranche)
+## BEISPIEL (Beratungsbranche) — NEUES FORMAT
 
 ```json
 [
   {
     "title": "Ablauf-Blueprint für Ihre KI-Beratungsprojekte",
     "icon": "🎯",
-    "engpass": "Entwicklung und Optimierung von Abläufen",
-    "description": "Aktuell strukturieren Sie jeden Beratungsablauf (Fragebogen, Auswertung, Report) neu und optimieren ad hoc – das kostet viel Denk- und Dokumentationszeit.",
-    "mit_ki": "ChatGPT Plus erstellt mit Ihnen einen wiederverwendbaren Standard-Workflow inkl. Checklisten und Textbausteinen, den Sie nur noch leicht je Kunde anpassen.",
-    "steps": [
-      "ChatGPT Plus buchen (20€/Monat)",
-      "Beste bisherige Projekte analysieren",
-      "Standard-Workflow & Checklisten generieren"
-    ],
-    "zeitersparnis": "{{monatsersparnis_stunden}} Std./Monat (bei {{STUNDENSATZ_EUR}}€/h)"
+    "problem": "Aktuell strukturieren Sie jeden Beratungsablauf – Fragebogen, Auswertung, Report – individuell neu und optimieren ad hoc. Das kostet erhebliche Denk- und Dokumentationszeit und führt zu inkonsistenten Ergebnissen zwischen verschiedenen Projekten.",
+    "wirkung": "Mit einem standardisierten Workflow entstehen konsistente Beratungsergebnisse. Wiederverwendbare Checklisten und Textbausteine reduzieren den Aufwand bei Neuprojekten erheblich. Die Qualität steigt durch bewährte Prozessschritte.",
+    "umsetzung": "ChatGPT Plus nutzen, um aus Ihren besten bisherigen Projekten einen wiederverwendbaren Standard-Workflow mit Checklisten und Textbausteinen zu generieren.",
+    "hinweis": "Wirtschaftliche Effekte siehe Business Case"
   },
   {
     "title": "Testphase Ihres KI-Fragebogens in erweiterbares MVP",
     "icon": "🚀",
-    "engpass": "das Projekt mit der Beratung von Unternehmen zur Integration von KI",
-    "description": "Sie testen das Angebot manuell, Auswertung und Reports entstehen jedes Mal neu und sind noch nicht als Produktpaket definiert.",
-    "mit_ki": "Sie nutzen ChatGPT Plus, um feste Fragebogen-Varianten, Auswertungslogik und Report-Templates zu erstellen und als schlankes Online-MVP zu standardisieren.",
-    "steps": [
-      "Beste Testfälle clustern (Kundentypen definieren)",
-      "Fragebogen-Varianten mit GPT schärfen",
-      "Standard-Reportstruktur bauen"
-    ],
-    "zeitersparnis": "{{monatsersparnis_stunden}} Std./Monat (bei {{STUNDENSATZ_EUR}}€/h)"
+    "problem": "Sie testen das Angebot manuell, Auswertung und Reports entstehen jedes Mal neu. Das Produktpaket ist noch nicht definiert, was die Wiederholbarkeit und Skalierbarkeit Ihres Angebots einschränkt.",
+    "wirkung": "Feste Fragebogen-Varianten und Report-Templates schaffen ein standardisiertes Produktpaket. Die Auswertungslogik wird reproduzierbar. Neue Kunden erhalten schneller professionelle Ergebnisse.",
+    "umsetzung": "Beste Testfälle clustern und Kundentypen definieren. Fragebogen-Varianten mit GPT schärfen und Standard-Reportstruktur aufbauen.",
+    "hinweis": "Wirtschaftliche Effekte siehe Business Case"
   },
   {
     "title": "KI-Sicherheitsrichtlinie erstellen",
     "icon": "🔒",
-    "engpass": "Security-Score 45/100 (Handlungsbedarf)",
-    "description": "Ohne klare Sicherheitsregeln riskieren Sie Datenschutzverletzungen bei der KI-Nutzung.",
-    "mit_ki": "Claude Pro hilft Ihnen, eine kompakte Richtlinie zu erstellen: Welche Daten dürfen in KI-Tools? Welche Tools sind freigegeben?",
-    "steps": [
-      "Datenklassifikation erstellen",
-      "Tool-Freigabeliste definieren",
-      "Prüfregeln dokumentieren"
-    ],
-    "zeitersparnis": "Risikominimierung + Compliance"
+    "problem": "Ohne klare Sicherheitsregeln riskieren Sie Datenschutzverletzungen bei der KI-Nutzung. Mitarbeiter wissen nicht, welche Daten in welche Tools eingegeben werden dürfen.",
+    "wirkung": "Eine kompakte Richtlinie schafft Klarheit über erlaubte Datenverarbeitung. Freigabelisten verhindern unbeabsichtigte Datenschutzverletzungen. Das Compliance-Risiko sinkt spürbar.",
+    "umsetzung": "Datenklassifikation erstellen, Tool-Freigabeliste definieren, Prüfregeln dokumentieren – Claude Pro unterstützt bei der Formulierung.",
+    "hinweis": "Risikominimierung und Compliance-Absicherung"
   }
 ]
 ```
