@@ -198,20 +198,24 @@ def _check_quickwins_markers(html: str) -> List[Violation]:
     """Check that QuickWins section has proper render markers."""
     violations = []
 
-    # Find QuickWins section
+    # Find QuickWins section - capture full tag AND content
+    # Group 1: opening tag, Group 2: content
     quickwins_patterns = [
-        re.compile(r'<section[^>]*(?:id|data-section)=["\']quick[_-]?wins["\'][^>]*>(.*?)</section>', re.IGNORECASE | re.DOTALL),
-        re.compile(r'<section[^>]*(?:id|data-section)=["\']schnellgewinne["\'][^>]*>(.*?)</section>', re.IGNORECASE | re.DOTALL),
-        re.compile(r'<div[^>]*class=["\'][^"\']*quick[_-]?wins[^"\']*["\'][^>]*>(.*?)</div>', re.IGNORECASE | re.DOTALL),
+        re.compile(r'(<section[^>]*(?:id|data-section)=["\']quick[_-]?wins["\'][^>]*>)(.*?)</section>', re.IGNORECASE | re.DOTALL),
+        re.compile(r'(<section[^>]*(?:id|data-section)=["\']schnellgewinne["\'][^>]*>)(.*?)</section>', re.IGNORECASE | re.DOTALL),
+        re.compile(r'(<div[^>]*class=["\'][^"\']*quick[_-]?wins[^"\']*["\'][^>]*>)(.*?)</div>', re.IGNORECASE | re.DOTALL),
     ]
 
     for pattern in quickwins_patterns:
-        matches = pattern.findall(html)
-        for content in matches:
+        for match in pattern.finditer(html):
+            opening_tag = match.group(1)
+            content = match.group(2)
+            full_section = opening_tag + content
+
             # Check if content has JSON-like structure without markers
             if _RAW_JSON_PATTERN.search(content):
-                # Has JSON - must have marker
-                if not _QUICKWIN_MARKER_PATTERN.search(content):
+                # Has JSON - must have marker (check both tag AND content)
+                if not _QUICKWIN_MARKER_PATTERN.search(full_section):
                     violations.append(Violation(
                         type=ViolationType.QUICKWINS_NO_MARKER,
                         message="QuickWins section contains JSON-like content without render marker",
