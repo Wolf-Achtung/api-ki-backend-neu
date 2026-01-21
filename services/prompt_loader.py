@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-"""Prompt Loader (Gold‑Standard+)
+"""Prompt Loader (Gold‑Standard+ / FIX-505)
 Exports a single API expected by gpt_analyze.py:
 
     load_prompt(section: str, lang: str = "de", vars_dict: dict | None = None) -> str | dict
@@ -12,21 +12,48 @@ Features
 - Fallbacks: .md/.txt/.json/.yaml|.yml
 - Safe variable interpolation for {{var}} and ${var} in text and structured prompts
 - No hard runtime deps beyond stdlib (yaml is optional)
+
+FIX-505 Additions:
+- Cycle detection for Jinja2 includes (prevents infinite recursion)
+- STRICT_MODE support (no fallback to simple substitution when enabled)
+- Enhanced logging with [FIX-505] prefix for diagnostics
 """
 
 import json
 import os
 import re
 import logging
+import contextvars
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-__all__ = ["load_prompt", "clear_prompt_cache", "get_prompt_info", "diagnose_prompt_system"]
+__all__ = [
+    "load_prompt", "clear_prompt_cache", "get_prompt_info", "diagnose_prompt_system",
+    "PromptIncludeCycleError", "check_prompt_cycles"
+]
 
 log = logging.getLogger(__name__)
 
 DEFAULT_LANG = os.getenv("PROMPTS_DEFAULT_LANG", "de")
+
+# FIX-505: STRICT_MODE flag - no fallback to simple substitution when enabled
+RELEASE_STRICT_MODE = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
+
+# FIX-505: Contextvar for tracking include stack (thread-safe)
+_include_stack: contextvars.ContextVar[List[str]] = contextvars.ContextVar('include_stack', default=[])
+
+
+class PromptIncludeCycleError(RuntimeError):
+    """FIX-505: Raised when a cycle is detected in prompt includes."""
+
+    def __init__(self, chain: List[str], section: str):
+        self.chain = chain
+        self.section = section
+        chain_str = " -> ".join(chain)
+        super().__init__(
+            f"[FIX-505][PROMPT][CYCLE] Cycle detected in section={section}: {chain_str}"
+        )
 
 # =============================================================================
 # Multilingual v1: EN alias mapping (German section names → English filenames)
@@ -73,14 +100,80 @@ log.info(f"🔍 Prompt loader initialized: BASE_DIR={BASE_DIR} (exists: {BASE_DI
 _SUPPORTED_EXT = (".md", ".txt", ".json", ".yaml", ".yml")
 
 
-def _interpolate_text(s: str, vars_dict: Optional[Dict[str, Any]], lang: str = "de") -> str:
+class CycleDetectingLoader:
+    """
+    FIX-505: Jinja2 Loader wrapper that detects include cycles.
+
+    This loader wraps the standard FileSystemLoader and tracks the include stack
+    using a contextvar to detect cycles before they cause recursion depth errors.
+    """
+
+    def __init__(self, loaders, section: str):
+        from jinja2 import ChoiceLoader
+        self._inner_loader = ChoiceLoader(loaders)
+        self._section = section
+
+    def get_source(self, environment, template_name: str):
+        """Get template source, checking for cycles first."""
+        # Get current include stack
+        stack = _include_stack.get()
+
+        # Check for cycle
+        if template_name in stack:
+            cycle_chain = stack + [template_name]
+            log.error(
+                "[FIX-505][PROMPT][CYCLE] section=%s chain=%s",
+                self._section,
+                " -> ".join(cycle_chain)
+            )
+            raise PromptIncludeCycleError(cycle_chain, self._section)
+
+        # Push to stack
+        new_stack = stack + [template_name]
+        _include_stack.set(new_stack)
+
+        try:
+            source, filename, uptodate = self._inner_loader.get_source(environment, template_name)
+            return source, filename, uptodate
+        finally:
+            # Pop from stack (restore previous state)
+            _include_stack.set(stack)
+
+    def list_templates(self):
+        return self._inner_loader.list_templates()
+
+
+def _interpolate_text(
+    s: str,
+    vars_dict: Optional[Dict[str, Any]],
+    lang: str = "de",
+    section: str = "unknown",
+    strict_mode: Optional[bool] = None,
+) -> str:
+    """
+    Interpolate variables in text, with Jinja2 support and cycle detection.
+
+    FIX-505 Enhancements:
+    - Cycle detection for Jinja2 includes
+    - STRICT_MODE: no fallback on Jinja2 errors
+    - Enhanced logging with [FIX-505] prefix
+    """
     if not isinstance(s, str) or not vars_dict:
         return s
 
+    # Determine strict mode
+    is_strict = strict_mode if strict_mode is not None else RELEASE_STRICT_MODE
+
     # 🎯 JINJA2-RENDERING: Wenn Jinja2-Tags vorhanden sind, rendere mit Jinja2
     if "{% " in s or "{%" in s:
+        log.debug(
+            "[FIX-505][PROMPT] render start section=%s lang=%s strict=%d",
+            section, lang, int(is_strict)
+        )
+
         try:
-            from jinja2 import Environment, FileSystemLoader, ChoiceLoader
+            from jinja2 import Environment, FileSystemLoader
+
             # FIX-497: Use FileSystemLoader to support {% include %} statements
             # Load from both language-specific and shared prompt directories
             prompt_dirs = [
@@ -88,12 +181,65 @@ def _interpolate_text(s: str, vars_dict: Optional[Dict[str, Any]], lang: str = "
                 str(BASE_DIR / "de"),  # Fallback to German prompts
                 str(BASE_DIR),         # Base prompts directory
             ]
-            loader = ChoiceLoader([FileSystemLoader(d) for d in prompt_dirs if Path(d).exists()])
+            loaders = [FileSystemLoader(d) for d in prompt_dirs if Path(d).exists()]
+
+            # FIX-505: Use cycle-detecting loader
+            loader = CycleDetectingLoader(loaders, section)
+
+            # Reset include stack for this render
+            _include_stack.set([])
+
             env = Environment(loader=loader, autoescape=False)
             template = env.from_string(s)
-            s = template.render(**vars_dict)
+            rendered = template.render(**vars_dict)
+
+            # Count includes for logging
+            include_count = s.count("{% include")
+            log.info(
+                "[FIX-505][PROMPT] render ok section=%s bytes=%d includes=%d",
+                section, len(rendered), include_count
+            )
+
+            s = rendered
+
+        except PromptIncludeCycleError:
+            # Re-raise cycle errors - these should always fail
+            raise
+
+        except RecursionError as e:
+            # RecursionError indicates a cycle we didn't catch
+            log.error(
+                "[FIX-505][PROMPT][CYCLE] section=%s recursion_error=%s",
+                section, str(e)[:100]
+            )
+            if is_strict:
+                raise RuntimeError(
+                    f"[FIX-505][PROMPT] STRICT_MODE: Jinja2 recursion error in section={section}. "
+                    f"This indicates a template cycle that must be fixed."
+                ) from e
+            else:
+                log.warning(
+                    "[FIX-505][PROMPT][FALLBACK] section=%s reason=RecursionError",
+                    section
+                )
+
         except Exception as e:
-            log.warning(f"⚠️ Jinja2 rendering failed, falling back to simple substitution: {e}")
+            error_msg = str(e)[:200]
+            log.error(
+                "[FIX-505][PROMPT] Jinja2 error section=%s error=%s",
+                section, error_msg
+            )
+
+            if is_strict:
+                raise RuntimeError(
+                    f"[FIX-505][PROMPT] STRICT_MODE: Jinja2 rendering failed for section={section}. "
+                    f"Error: {error_msg}"
+                ) from e
+            else:
+                log.warning(
+                    "[FIX-505][PROMPT][FALLBACK] section=%s reason=%s",
+                    section, error_msg
+                )
 
     # {{ key }} style (simple substitution for non-Jinja2 cases or after Jinja2 rendering)
     def _repl_curly(m: re.Match) -> str:
@@ -105,14 +251,146 @@ def _interpolate_text(s: str, vars_dict: Optional[Dict[str, Any]], lang: str = "
     return s
 
 
-def _interpolate(obj: Any, vars_dict: Optional[Dict[str, Any]], lang: str = "de") -> Any:
+def _interpolate(
+    obj: Any,
+    vars_dict: Optional[Dict[str, Any]],
+    lang: str = "de",
+    section: str = "unknown",
+    strict_mode: Optional[bool] = None,
+) -> Any:
+    """
+    Recursively interpolate variables in text, dicts, and lists.
+
+    FIX-505: Now passes section and strict_mode for proper error handling.
+    """
     if isinstance(obj, str):
-        return _interpolate_text(obj, vars_dict, lang=lang)
+        return _interpolate_text(obj, vars_dict, lang=lang, section=section, strict_mode=strict_mode)
     if isinstance(obj, dict):
-        return {k: _interpolate(v, vars_dict, lang=lang) for k, v in obj.items()}
+        return {k: _interpolate(v, vars_dict, lang=lang, section=section, strict_mode=strict_mode) for k, v in obj.items()}
     if isinstance(obj, list):
-        return [_interpolate(v, vars_dict, lang=lang) for v in obj]
+        return [_interpolate(v, vars_dict, lang=lang, section=section, strict_mode=strict_mode) for v in obj]
     return obj
+
+
+def check_prompt_cycles(base_dir: Optional[Path] = None, langs: Optional[List[str]] = None) -> Dict[str, Any]:
+    """
+    FIX-505: Preflight check for prompt template cycles.
+
+    Scans all prompt files for {% include %} statements and builds a dependency graph,
+    then checks for cycles without actually rendering templates.
+
+    Args:
+        base_dir: Base prompt directory (defaults to BASE_DIR)
+        langs: Languages to check (defaults to ["de", "en"])
+
+    Returns:
+        Dict with:
+        - cycles: List of detected cycles (each is a list of template names)
+        - warnings: List of warning messages
+        - graph: Dependency graph for debugging
+    """
+    import re
+
+    base = base_dir or BASE_DIR
+    check_langs = langs or ["de", "en"]
+
+    result = {
+        "cycles": [],
+        "warnings": [],
+        "graph": {},
+        "checked_files": 0,
+    }
+
+    include_pattern = re.compile(r'{%\s*include\s+["\']([^"\']+)["\']')
+
+    # Patterns to strip before searching for includes (documentation/examples)
+    strip_patterns = [
+        # Remove {% raw %}...{% endraw %} blocks
+        re.compile(r'{%\s*raw\s*%}.*?{%\s*endraw\s*%}', re.DOTALL),
+        # Remove HTML comments <!-- ... -->
+        re.compile(r'<!--.*?-->', re.DOTALL),
+        # Remove markdown code blocks ```...```
+        re.compile(r'```.*?```', re.DOTALL),
+    ]
+
+    for lang in check_langs:
+        lang_dir = base / lang
+        if not lang_dir.exists():
+            result["warnings"].append(f"Language directory not found: {lang_dir}")
+            continue
+
+        # Build dependency graph
+        deps: Dict[str, Set[str]] = {}
+
+        for prompt_file in lang_dir.glob("*.md"):
+            result["checked_files"] += 1
+            try:
+                content = prompt_file.read_text(encoding="utf-8")
+
+                # Strip documentation blocks before finding includes
+                # This prevents false positives from example code in comments
+                stripped_content = content
+                for strip_pat in strip_patterns:
+                    stripped_content = strip_pat.sub('', stripped_content)
+
+                includes = include_pattern.findall(stripped_content)
+
+                file_key = f"{lang}/{prompt_file.name}"
+                deps[file_key] = set()
+
+                for inc in includes:
+                    # Normalize include path
+                    inc_key = f"{lang}/{inc}" if "/" not in inc else inc
+                    deps[file_key].add(inc_key)
+
+            except Exception as e:
+                result["warnings"].append(f"Error reading {prompt_file}: {e}")
+
+        result["graph"][lang] = {k: list(v) for k, v in deps.items()}
+
+        # Detect cycles using DFS
+        def find_cycles(node: str, visited: Set[str], path: List[str]) -> Optional[List[str]]:
+            if node in path:
+                cycle_start = path.index(node)
+                return path[cycle_start:] + [node]
+
+            if node in visited:
+                return None
+
+            visited.add(node)
+            path.append(node)
+
+            for neighbor in deps.get(node, set()):
+                cycle = find_cycles(neighbor, visited, path)
+                if cycle:
+                    return cycle
+
+            path.pop()
+            return None
+
+        visited: Set[str] = set()
+        for node in deps:
+            if node not in visited:
+                cycle = find_cycles(node, visited, [])
+                if cycle:
+                    result["cycles"].append(cycle)
+                    log.error(
+                        "[FIX-505][PROMPT][CYCLE-PREFLIGHT] Detected cycle: %s",
+                        " -> ".join(cycle)
+                    )
+
+    if result["cycles"]:
+        log.error(
+            "[FIX-505][PROMPT][CYCLE-PREFLIGHT] Found %d cycle(s) in prompt templates!",
+            len(result["cycles"])
+        )
+    else:
+        log.info(
+            "[FIX-505][PROMPT][CYCLE-PREFLIGHT] No cycles detected in %d prompt files",
+            result["checked_files"]
+        )
+
+    return result
 
 
 @lru_cache(maxsize=64)
@@ -252,7 +530,8 @@ def load_prompt(section: str, lang: str = "de", vars_dict: Optional[Dict[str, An
              section, requested_lang, used_lang, path)
     payload = _read_file(path)
     # FIX-497: Pass lang to _interpolate for proper include resolution
-    return _interpolate(payload, vars_dict, lang=used_lang)
+    # FIX-505: Pass section for cycle detection and strict mode handling
+    return _interpolate(payload, vars_dict, lang=used_lang, section=section)
 
 
 # =============================================================================
