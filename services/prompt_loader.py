@@ -240,8 +240,11 @@ def _interpolate_text(
             # FIX-505: Use cycle-detecting loader
             cycle_loader = CycleDetectingLoader(loaders, section)
 
-            # Reset include stack for this render
-            _set_include_stack([])
+            # Reset include stack for this render and add main template
+            # This ensures the initial template is tracked for cycle detection
+            # when it's included recursively (e.g., a.md -> b.md -> a.md)
+            main_template_name = f"{section}.md"
+            _set_include_stack([main_template_name])
 
             # Type ignore needed because CycleDetectingLoader implements BaseLoader
             # interface but doesn't inherit from it (duck typing)
@@ -269,21 +272,17 @@ def _interpolate_text(
             raise
 
         except RecursionError as e:
-            # RecursionError indicates a cycle we didn't catch
+            # RecursionError indicates a cycle we didn't catch proactively
+            # FIX-505: Cycles should ALWAYS fail, even in non-strict mode
+            # (fallback is for minor template errors, not infinite recursion)
             log.error(
                 "[FIX-505][PROMPT][CYCLE] section=%s recursion_error=%s",
                 section, str(e)[:100]
             )
-            if is_strict:
-                raise RuntimeError(
-                    f"[FIX-505][PROMPT] STRICT_MODE: Jinja2 recursion error in section={section}. "
-                    f"This indicates a template cycle that must be fixed."
-                ) from e
-            else:
-                log.warning(
-                    "[FIX-505][PROMPT][FALLBACK] section=%s reason=RecursionError",
-                    section
-                )
+            raise RuntimeError(
+                f"[FIX-505][PROMPT] Jinja2 recursion error in section={section}. "
+                f"This indicates a template cycle that must be fixed."
+            ) from e
 
         except Exception as e:
             error_msg = str(e)[:200]
