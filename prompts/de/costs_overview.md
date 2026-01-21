@@ -43,7 +43,7 @@ Developer:
 
      ZIEL:
        - Am Ende soll ein CFO oder Geschäftsführender glasklar verstehen:
-           1) Welche Kostenblöcke in seiner Branche typischerweise auftreten.
+           1) Welche Kostenblöcke in seiner Branche in der Regel auftreten.
            2) Wie sich die Unternehmensgröße auf die Kostenstruktur auswirkt.
            3) Wo realistische Einspar- und Konsolidierungspotenziale liegen.
 

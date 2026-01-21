@@ -87,14 +87,14 @@ REGELN:
     <li>
       <strong>Arbeitsroutinen vereinheitlichen:</strong>
       KI muss an klaren Stellen in den branchentypischen Workflows eingesetzt werden
-      – etwa bei wiederkehrenden Analysen, Dokumentationen, Qualitätskontrollen oder
+      – wie bei wiederkehrenden Analysen, Dokumentationen, Qualitätskontrollen oder
       inhaltlichen Entwürfen. Einheitliche Vorlagen und klare Input-Regeln senken
       Fehlerquoten und steigern die Verlässlichkeit.
     </li>
     <li>
       <strong>Rollen &amp; Verantwortlichkeiten klären:</strong>
       {% if COMPANY_SIZE == "solo" %}
-        Eine klare persönliche Aufteilung der „Hüte“ – z. B. Erstellung, Prüfung, Freigabe –
+        Eine klare persönliche Aufteilung der „Hüte" – wie Erstellung, Prüfung, Freigabe –
         schafft Fokus und Kontrolle.
       {% elif COMPANY_SIZE == "team" %}
         Eine eindeutige Rollenverteilung (Teamlead, KI-Owner, Review-Rolle) vermeidet
