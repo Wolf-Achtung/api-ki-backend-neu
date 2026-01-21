@@ -164,12 +164,13 @@ class TestQuickWinsSimplifiedFormat:
         # There should be no invented time ranges
         assert not matches, f"Found invented time ranges: {matches}"
 
-    def test_min_40_words_requirement_documented(self, project_root):
-        """Quick Wins should document ≥40 words per Quick Win requirement."""
+    def test_min_words_requirement_documented(self, project_root):
+        """Quick Wins should document word count requirement (≥120 words premium or ≥40 words base)."""
         content = (project_root / "prompts/de/quick_wins.md").read_text()
 
-        # Check for the word count requirement
-        assert "40 Wörter" in content or "≥ 40" in content
+        # Check for the word count requirement (120 for premium, or 40 for base)
+        # FIX-506 TASK 1: Updated to ≥120 words per Quick Win
+        assert "120 Wörter" in content or "≥ 120" in content or "40 Wörter" in content or "≥ 40" in content
 
 
 class TestDecisionPromptsHaveCanonicalContract:
@@ -224,3 +225,77 @@ class TestHardBlacklist:
         for prompt_name in ["executive_decision.md", "roadmap_90d_decision.md", "gamechanger_decision.md"]:
             content = (project_root / f"prompts/de/{prompt_name}").read_text()
             assert "HARD BLACKLIST" in content, f"{prompt_name} missing HARD BLACKLIST"
+
+
+class TestTruncationCleanup:
+    """FIX-506 TASK 5: Tests for post-truncation template phrase cleanup."""
+
+    def test_cleanup_truncation_artifacts_import(self):
+        """Verify cleanup_truncation_artifacts function can be imported."""
+        from services.content_quality_enforcer import cleanup_truncation_artifacts
+        assert callable(cleanup_truncation_artifacts)
+
+    def test_cleanup_removes_partial_placeholder(self):
+        """Cleanup removes incomplete 'Platzhalter' at end."""
+        from services.content_quality_enforcer import cleanup_truncation_artifacts
+        html = "<p>Some content here Platzhalter"
+        result = cleanup_truncation_artifacts(html)
+        assert not result.endswith("Platzhalter")
+
+    def test_cleanup_removes_partial_beispiel(self):
+        """Cleanup removes incomplete 'Beispiel' at end."""
+        from services.content_quality_enforcer import cleanup_truncation_artifacts
+        html = "<p>Text content Beispiel"
+        result = cleanup_truncation_artifacts(html)
+        assert not result.endswith("Beispiel")
+
+    def test_cleanup_closes_unclosed_tags(self):
+        """Cleanup closes unclosed HTML tags."""
+        from services.content_quality_enforcer import cleanup_truncation_artifacts
+        html = "<p>Some content"
+        result = cleanup_truncation_artifacts(html)
+        # Should have closing tag added
+        assert "</p>" in result
+
+    def test_cleanup_preserves_valid_html(self):
+        """Cleanup preserves valid HTML without modification."""
+        from services.content_quality_enforcer import cleanup_truncation_artifacts
+        html = "<p>Valid content</p><div>More content</div>"
+        result = cleanup_truncation_artifacts(html)
+        assert result == html
+
+    def test_safe_html_truncate_import(self):
+        """Verify safe_html_truncate function can be imported."""
+        from services.content_quality_enforcer import safe_html_truncate
+        assert callable(safe_html_truncate)
+
+    def test_safe_html_truncate_respects_limit(self):
+        """safe_html_truncate respects character limit."""
+        from services.content_quality_enforcer import safe_html_truncate
+        html = "<p>This is a test paragraph with more than fifty characters in it for testing purposes.</p>"
+        result = safe_html_truncate(html, max_chars=50)
+        assert len(result) <= 60  # Allow some tolerance for cleanup
+
+
+class TestQuickWinsPremiumWordCount:
+    """FIX-506 TASK 1: Tests for Quick Wins premium word count requirement."""
+
+    @pytest.fixture
+    def project_root(self):
+        """Get project root directory."""
+        return Path(__file__).parent.parent
+
+    def test_premium_word_count_documented(self, project_root):
+        """Quick Wins documents ≥120 words requirement."""
+        content = (project_root / "prompts/de/quick_wins.md").read_text()
+        assert "120 Wörter" in content or "≥ 120" in content
+
+    def test_field_word_count_documented(self, project_root):
+        """Quick Wins documents ≥30 words per field requirement."""
+        content = (project_root / "prompts/de/quick_wins.md").read_text()
+        assert "30 Wörter" in content or "≥30" in content
+
+    def test_acceptance_criteria_premium(self, project_root):
+        """Quick Wins has PREMIUM QUALITY acceptance criteria."""
+        content = (project_root / "prompts/de/quick_wins.md").read_text()
+        assert "PREMIUM QUALITY" in content

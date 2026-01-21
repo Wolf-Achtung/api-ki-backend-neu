@@ -139,22 +139,31 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
 - Budget: Skalierbare Lösungen
 {% endif %}
 
-## JSON-FORMAT — VEREINFACHT (FIX-506)
+## JSON-FORMAT — PREMIUM QUALITY (FIX-506)
 
-**ACCEPTANCE CRITERIA:**
-- ≥ 40 Wörter pro Quick Win (insgesamt über alle Felder)
+**ACCEPTANCE CRITERIA (STRIKT!):**
+- ≥ 120 Wörter pro Quick Win (insgesamt über alle Felder)
+- ≥ 30 Wörter pro Feld (problem, wirkung, umsetzung)
 - KEINE Zahlen, KEINE Zeitangaben
 - Wirtschaftliche Effekte immer → "siehe Business Case"
+
+**FELD-ANFORDERUNGEN:**
+| Feld | Min. Wörter | Inhalt |
+|------|-------------|--------|
+| problem | ≥30 | Konkreter Pain Point mit Kontext, Symptome, Auswirkung |
+| wirkung | ≥30 | Qualitative Verbesserungen, Entlastung, Konsistenz |
+| umsetzung | ≥30 | Schritte mit Tool-Namen, Reihenfolge, Best Practices |
+| hinweis | ≥10 | Verweis auf Business Case |
 
 ```json
 [
   {
     "title": "[Aktion] für {{hauptleistung}} (max 60 Zeichen)",
     "icon": "🎯",
-    "problem": "Welcher Engpass besteht konkret? Beschreibe den Pain Point aus ZEITERSPARNIS_PRIORITAET in 2-3 Sätzen.",
-    "wirkung": "Konkreter Nutzen OHNE Zahlen: Was verbessert sich qualitativ? 2-3 Sätze über die Wirkung auf Arbeitsqualität, Konsistenz, Entlastung.",
-    "umsetzung": "1–2 klare Schritte zur Umsetzung, Tool-Namen nennen, aber KEINE Zeitschätzungen.",
-    "hinweis": "Wirtschaftliche Effekte siehe Business Case"
+    "problem": "Welcher Engpass besteht konkret? Beschreibe den Pain Point aus ZEITERSPARNIS_PRIORITAET detailliert in 3-4 Sätzen. Zeige die Symptome auf: Welche Arbeitsschritte dauern zu lange? Welche Qualitätsprobleme entstehen? Welche Frustration verursacht der aktuelle Zustand?",
+    "wirkung": "Konkreter Nutzen OHNE Zahlen in 3-4 Sätzen: Was verbessert sich qualitativ an der Arbeitsqualität? Wie verändert sich die Konsistenz? Welche mentale Entlastung entsteht? Wie wirkt sich die Lösung auf Kundeninteraktionen aus?",
+    "umsetzung": "Detaillierte Schritte zur Umsetzung in 3-4 Sätzen: Mit welchem Tool beginnen? Welche Vorbereitung ist nötig? Wie sieht der erste konkrete Schritt aus? Was ist der typische Ablauf nach Einrichtung? KEINE Zeitschätzungen.",
+    "hinweis": "Wirtschaftliche Effekte siehe Business Case – dort finden Sie ROI, Payback und Einsparungen."
   }
 ]
 ```
@@ -215,7 +224,7 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
 - Beratung: Claude Pro + Perplexity Pro
 - Marketing: Jasper (49€/Monat), Midjourney (10€/Monat)
 
-## QUALITY-CHECKS (VOR OUTPUT PRÜFEN!) — HAUPTLEISTUNG VALIDIERUNG!
+## QUALITY-CHECKS (VOR OUTPUT PRÜFEN!) — PREMIUM QUALITY!
 
 - [ ] Valides JSON (keine trailing commas, escaped quotes)
 - [ ] 3-5 Quick Wins im Array
@@ -224,11 +233,12 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
 - [ ] Keine HTML-Tags im JSON
 - [ ] Quick Win #1 zitiert ZEITERSPARNIS_PRIORITAET
 - [ ] Tool-Namen sind KONKRET (nicht "KI-Tools")
-- [ ] Guardrails werden beachten (falls vorhanden)
-- [ ] **≥ 40 Wörter pro Quick Win (insgesamt)**
+- [ ] Guardrails werden beachtet (falls vorhanden)
+- [ ] **≥ 120 Wörter pro Quick Win (insgesamt über alle Felder)**
+- [ ] **≥ 30 Wörter pro Feld (problem, wirkung, umsetzung)**
 - [ ] **KEINE Zahlen in problem/wirkung/umsetzung**
 - [ ] **KEINE Zeitangaben oder Stundenangaben**
-- [ ] hinweis verweist auf Business Case
+- [ ] hinweis verweist auf Business Case mit vollständigem Satz
 
 ### ⚠️ HAUPTLEISTUNG BALANCIERTE CHECKS:
 - [ ] Quick Win #1: title UND description referenzieren {{hauptleistung}} (2x)
@@ -267,33 +277,33 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
 
 ---
 
-## BEISPIEL (Beratungsbranche) — NEUES FORMAT
+## BEISPIEL (Beratungsbranche) — PREMIUM QUALITY FORMAT
 
 ```json
 [
   {
     "title": "Ablauf-Blueprint für Ihre KI-Beratungsprojekte",
     "icon": "🎯",
-    "problem": "Aktuell strukturieren Sie jeden Beratungsablauf – Fragebogen, Auswertung, Report – individuell neu und optimieren ad hoc. Das kostet erhebliche Denk- und Dokumentationszeit und führt zu inkonsistenten Ergebnissen zwischen verschiedenen Projekten.",
-    "wirkung": "Mit einem standardisierten Workflow entstehen konsistente Beratungsergebnisse. Wiederverwendbare Checklisten und Textbausteine reduzieren den Aufwand bei Neuprojekten erheblich. Die Qualität steigt durch bewährte Prozessschritte.",
-    "umsetzung": "ChatGPT Plus nutzen, um aus Ihren besten bisherigen Projekten einen wiederverwendbaren Standard-Workflow mit Checklisten und Textbausteinen zu generieren.",
-    "hinweis": "Wirtschaftliche Effekte siehe Business Case"
+    "problem": "Aktuell strukturieren Sie jeden Beratungsablauf – Fragebogen, Auswertung, Report – individuell neu und optimieren ad hoc. Das kostet erhebliche Denk- und Dokumentationszeit und führt zu inkonsistenten Ergebnissen zwischen verschiedenen Projekten. Jedes neue Mandat beginnt praktisch bei Null, obwohl viele Schritte sich wiederholen. Die fehlende Standardisierung erschwert auch die Qualitätskontrolle und macht es schwieriger, Best Practices systematisch einzusetzen.",
+    "wirkung": "Mit einem standardisierten Workflow entstehen konsistente Beratungsergebnisse, die Ihre Reputation stärken. Wiederverwendbare Checklisten und Textbausteine reduzieren den Aufwand bei Neuprojekten erheblich und geben Ihnen mehr Zeit für wertschöpfende Beratung. Die Qualität steigt durch bewährte Prozessschritte, und Sie können neue Mitarbeiter schneller einarbeiten. Zudem erleichtert die Dokumentation die kontinuierliche Verbesserung Ihrer Methodik.",
+    "umsetzung": "Beginnen Sie mit ChatGPT Plus und analysieren Sie Ihre drei erfolgreichsten bisherigen Projekte auf gemeinsame Muster. Extrahieren Sie daraus einen wiederverwendbaren Standard-Workflow mit Checklisten und Textbausteinen. Testen Sie den Workflow bei einem neuen Projekt und verfeinern Sie ihn basierend auf praktischen Erfahrungen. Dokumentieren Sie Abweichungen und Verbesserungen für künftige Iterationen.",
+    "hinweis": "Wirtschaftliche Effekte und konkrete Einsparungen finden Sie im Business Case – dort sind ROI und Payback-Zeitraum ausgewiesen."
   },
   {
     "title": "Testphase Ihres KI-Fragebogens in erweiterbares MVP",
     "icon": "🚀",
-    "problem": "Sie testen das Angebot manuell, Auswertung und Reports entstehen jedes Mal neu. Das Produktpaket ist noch nicht definiert, was die Wiederholbarkeit und Skalierbarkeit Ihres Angebots einschränkt.",
-    "wirkung": "Feste Fragebogen-Varianten und Report-Templates schaffen ein standardisiertes Produktpaket. Die Auswertungslogik wird reproduzierbar. Neue Kunden erhalten schneller professionelle Ergebnisse.",
-    "umsetzung": "Beste Testfälle clustern und Kundentypen definieren. Fragebogen-Varianten mit GPT schärfen und Standard-Reportstruktur aufbauen.",
-    "hinweis": "Wirtschaftliche Effekte siehe Business Case"
+    "problem": "Sie testen das Angebot manuell, Auswertung und Reports entstehen jedes Mal neu. Das Produktpaket ist noch nicht definiert, was die Wiederholbarkeit und Skalierbarkeit Ihres Angebots einschränkt. Ohne klare Produktstruktur fällt es schwer, Preise zu kommunizieren und Erwartungen zu managen. Jeder Kunde erhält ein leicht anderes Ergebnis, was die Vergleichbarkeit und Ihre Positionierung als Experte erschwert.",
+    "wirkung": "Feste Fragebogen-Varianten und Report-Templates schaffen ein standardisiertes Produktpaket mit klarem Wertversprechen. Die Auswertungslogik wird reproduzierbar und ermöglicht konsistente Qualität bei jedem Kunden. Neue Kunden erhalten schneller professionelle Ergebnisse, und Sie können Ihr Angebot klarer kommunizieren. Die Produktisierung erleichtert auch spätere Preisanpassungen und Upselling-Möglichkeiten.",
+    "umsetzung": "Analysieren Sie Ihre bisherigen Testfälle und clustern Sie diese nach Kundentypen und Branchen. Definieren Sie für jeden Cluster eine spezifische Fragebogen-Variante und schärfen Sie diese mit GPT. Erstellen Sie eine Standard-Reportstruktur mit anpassbaren Modulen. Dokumentieren Sie den Prozess, damit Sie bei Bedarf schnell iterieren können.",
+    "hinweis": "Wirtschaftliche Effekte und Skalierungspotenziale finden Sie im Business Case mit konkreten ROI-Berechnungen."
   },
   {
-    "title": "KI-Sicherheitsrichtlinie erstellen",
+    "title": "KI-Sicherheitsrichtlinie für Ihr Kerngeschäft",
     "icon": "🔒",
-    "problem": "Ohne klare Sicherheitsregeln riskieren Sie Datenschutzverletzungen bei der KI-Nutzung. Mitarbeiter wissen nicht, welche Daten in welche Tools eingegeben werden dürfen.",
-    "wirkung": "Eine kompakte Richtlinie schafft Klarheit über erlaubte Datenverarbeitung. Freigabelisten verhindern unbeabsichtigte Datenschutzverletzungen. Das Compliance-Risiko sinkt spürbar.",
-    "umsetzung": "Datenklassifikation erstellen, Tool-Freigabeliste definieren, Prüfregeln dokumentieren – Claude Pro unterstützt bei der Formulierung.",
-    "hinweis": "Risikominimierung und Compliance-Absicherung"
+    "problem": "Ohne klare Sicherheitsregeln riskieren Sie Datenschutzverletzungen bei der KI-Nutzung, was zu Reputationsschäden und rechtlichen Konsequenzen führen kann. Es fehlt Klarheit, welche Daten in welche Tools eingegeben werden dürfen und welche Informationen als sensibel gelten. Diese Unsicherheit führt entweder zu übervorsichtiger Vermeidung von KI-Tools oder zu unbewusstem Risikoverhalten. Eine dokumentierte Richtlinie schafft die Grundlage für verantwortungsvolle KI-Nutzung.",
+    "wirkung": "Eine kompakte, praxisnahe Richtlinie schafft Klarheit über erlaubte Datenverarbeitung und definiert klare Grenzen. Freigabelisten für Tools und Datentypen verhindern unbeabsichtigte Datenschutzverletzungen im Alltag. Das Compliance-Risiko sinkt spürbar, und Sie können gegenüber Kunden und Partnern Ihre verantwortungsvolle KI-Nutzung nachweisen. Die Richtlinie bildet auch die Basis für künftige Zertifizierungen.",
+    "umsetzung": "Erstellen Sie zunächst eine einfache Datenklassifikation mit drei Stufen: öffentlich, intern, vertraulich. Definieren Sie dann eine Tool-Freigabeliste, die festlegt, welche KI-Tools für welche Datenklassen zugelassen sind. Dokumentieren Sie die Prüfregeln in einem kurzen Dokument – Claude Pro unterstützt bei der verständlichen Formulierung. Führen Sie die Richtlinie mit einer kurzen Schulung ein.",
+    "hinweis": "Risikominimierung und Compliance-Absicherung sind Teil der Gesamtbewertung im Business Case."
   }
 ]
 ```

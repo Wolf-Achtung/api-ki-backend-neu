@@ -12097,7 +12097,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             sections["hero"] = ""
             sections["HERO_HTML"] = ""
 
-    # ========== GLOBAL AGGRESSIVE TRUNCATION (v10.0) ==========
+    # ========== GLOBAL AGGRESSIVE TRUNCATION (v10.0 + FIX-506 TASK 5) ==========
     # Apply to ALL major content sections FIRST
     truncation_targets = [
         "RISKS_HTML", "GAMECHANGER_HTML", "FOERDERPOTENZIAL_HTML", "RECOMMENDATIONS_HTML",
@@ -12106,12 +12106,26 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         "MONETARISIERUNG_HTML", "KI_SKILLPLAN_HTML", "QUICK_WINS_HTML"
     ]
     log.info("[GLOBAL-TRUNCATION] Starting aggressive truncation for %d sections", len(truncation_targets))
+
+    # FIX-506 TASK 5: Import cleanup function for post-truncation artifacts
+    try:
+        from services.content_quality_enforcer import cleanup_truncation_artifacts
+        _cleanup_available = True
+    except ImportError:
+        _cleanup_available = False
+        log.warning("[GLOBAL-TRUNCATION] cleanup_truncation_artifacts not available")
+
     for key in truncation_targets:
         html = sections.get(key, "")
         if html and len(html) > 200:
             try:
                 original_len = len(html)
                 truncated = _aggressive_text_truncation(html)
+
+                # FIX-506 TASK 5: Clean up truncation artifacts to prevent TEMPLATE_PHRASE hits
+                if _cleanup_available:
+                    truncated = cleanup_truncation_artifacts(truncated)
+
                 sections[key] = truncated
                 delta = len(truncated) - original_len
                 if delta != 0:
