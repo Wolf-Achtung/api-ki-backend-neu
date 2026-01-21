@@ -176,13 +176,14 @@ class TestTask3SoloTermReplacements:
         assert "Modul" not in result["EXECUTIVE_SUMMARY_HTML"]
 
     def test_1000_plus_kunden_replacement(self):
-        """Test '1000+ Kunden' -> 'neue Mandanten'."""
+        """Test '1000+ Kunden' -> solo-appropriate phrasing (FIX-509-A)."""
         from services.content_quality_enforcer import apply_solo_language_normalizer
 
         sections = {"ROADMAP_12M_HTML": "Ziel: 1000+ Kunden erreichen"}
         result = apply_solo_language_normalizer(sections, "solo")
 
-        assert "neue Mandanten" in result["ROADMAP_12M_HTML"]
+        # FIX-509-A: Now uses "deutlich mehr Mandate ohne linearen Zeitaufwand"
+        assert "Mandate" in result["ROADMAP_12M_HTML"]
         assert "1000" not in result["ROADMAP_12M_HTML"]
 
     def test_no_replacement_for_non_solo(self):
@@ -407,7 +408,8 @@ class TestIntegration:
 
         # Solo-friendly terms should be present
         assert "Ausbau" in content
-        assert "Mandanten" in content
+        # FIX-509-A: Now uses "Mandate" instead of "Mandanten"
+        assert "Mandate" in content
         assert "Baustein" in content or "Technikpaket" in content
         assert "Einführung" in content
 
