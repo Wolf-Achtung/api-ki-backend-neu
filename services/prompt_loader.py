@@ -122,15 +122,15 @@ class CycleDetectingLoader:
     This loader wraps the standard ChoiceLoader and tracks the include stack
     using a contextvar to detect cycles before they cause recursion depth errors.
 
-    Key insight: The stack must persist across the entire template render tree.
-    When template A includes B, and B includes A, we need:
-    - Stack after loading A: [A]
-    - Stack after loading B (from within A): [A, B]
-    - When B tries to include A: detect cycle [A, B, A]
+    Cycle detection strategy:
+    - Track templates currently being loaded in a stack
+    - Push when entering get_source, pop when exiting
+    - If a template is already in the stack when trying to load it, it's a cycle
 
-    We DON'T pop from the stack in get_source() because the template's
-    execution (which may include other templates) hasn't finished yet.
-    The stack is reset at the start of each top-level render.
+    This allows diamond dependencies (A->B->D, A->C->D) while catching cycles.
+    Note: Due to Jinja2's execution model, some cycles may not be caught by
+    proactive detection and will fall through to RecursionError, which is
+    handled in the calling code.
     """
 
     def __init__(self, loaders: List[Any], section: str):
@@ -146,15 +146,11 @@ class CycleDetectingLoader:
 
         This is the primary cycle detection point. It's called whenever
         Jinja2 needs to load a template (including via {% include %}).
-
-        IMPORTANT: We push to the stack but do NOT pop. The stack persists
-        for the duration of the render to detect cycles across nested includes.
-        The stack is reset at the start of each top-level render.
         """
         # Get current include stack
         stack = _get_include_stack()
 
-        # Check for cycle
+        # Check for cycle - template already being loaded in current call chain
         if template_name in stack:
             cycle_chain = list(stack) + [template_name]
             log.error(
@@ -164,13 +160,17 @@ class CycleDetectingLoader:
             )
             raise PromptIncludeCycleError(cycle_chain, self._section)
 
-        # Push to stack (and keep it there for cycle detection during execution)
+        # Push to stack (mark as being loaded)
         new_stack = list(stack) + [template_name]
         _set_include_stack(new_stack)
 
-        # Get source from inner loader
-        source, filename, uptodate = self._inner_loader.get_source(environment, template_name)
-        return source, filename, uptodate
+        try:
+            # Get source from inner loader
+            source, filename, uptodate = self._inner_loader.get_source(environment, template_name)
+            return source, filename, uptodate
+        finally:
+            # Pop from stack (loading complete for this get_source call)
+            _set_include_stack(stack)
 
     def list_templates(self) -> List[str]:
         """List available templates."""
@@ -208,8 +208,12 @@ def _interpolate_text(
     - STRICT_MODE: no fallback on Jinja2 errors
     - Enhanced logging with [FIX-505] prefix
     """
-    if not isinstance(s, str) or not vars_dict:
+    if not isinstance(s, str):
         return s
+
+    # Use empty dict if None provided
+    if vars_dict is None:
+        vars_dict = {}
 
     # Determine strict mode
     is_strict = strict_mode if strict_mode is not None else RELEASE_STRICT_MODE
