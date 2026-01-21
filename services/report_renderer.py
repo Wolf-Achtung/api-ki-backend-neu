@@ -836,6 +836,72 @@ def render(briefing_obj: Any,
     meta["report_date"] = ctx.get("report_date", "")
 
     # =========================================================================
+    # FIX-505: HTML Contract Validation (STRICT_MODE aware)
+    # Validates final HTML against quality contract before PDF generation.
+    # In STRICT_MODE: fails hard on violations. Otherwise: logs and continues.
+    # =========================================================================
+    try:
+        from services.html_contract import (
+            html_contract_validate,
+            ContractViolationError,
+        )
+
+        # Get sections list for validation
+        section_keys = [k.replace("_HTML", "").lower() for k in sections.keys() if k.endswith("_HTML")]
+
+        contract_result = html_contract_validate(
+            html=html,
+            sections=section_keys,
+            allow_repair=True,  # Allow one repair attempt
+        )
+
+        if contract_result.passed:
+            log.info(
+                "[FIX-505][HTML-CONTRACT] PASS violations=0 warnings=%d bytes=%d run=%s",
+                contract_result.warning_count, len(html), run_id
+            )
+        else:
+            # Non-STRICT mode: log but continue
+            log.warning(
+                "[FIX-505][HTML-CONTRACT] FAIL violations=%d critical=%d run=%s "
+                "(continuing in non-strict mode)",
+                len(contract_result.violations),
+                contract_result.critical_count,
+                run_id
+            )
+
+        # Store contract result in meta for debugging
+        if meta is None:
+            meta = {}
+        meta["html_contract_result"] = {
+            "passed": contract_result.passed,
+            "critical_count": contract_result.critical_count,
+            "warning_count": contract_result.warning_count,
+            "repair_attempted": contract_result.repair_attempted,
+            "repair_successful": contract_result.repair_successful,
+        }
+
+    except ContractViolationError as e:
+        # STRICT_MODE violation - re-raise to abort PDF generation
+        log.error(
+            "[FIX-505][HTML-CONTRACT] FAIL-CLOSED strict=1 violations=%d run=%s",
+            e.result.critical_count, run_id
+        )
+        # Add debug attachments from contract error
+        if meta is None:
+            meta = {}
+        meta["html_contract_error"] = {
+            "violations": [v.to_dict() for v in e.result.violations[:10]],
+            "critical_count": e.result.critical_count,
+        }
+        raise
+    except ImportError:
+        log.debug("[FIX-505][HTML-CONTRACT] Module not available, skipping validation")
+    except Exception as e:
+        # Never block PDF on contract check errors (defensive)
+        log.warning("[FIX-505][HTML-CONTRACT] Validation error (continuing): %s", str(e)[:100])
+
+    # =========================================================================
     # DEBUG-503D: Build debug attachments when DEBUG_RENDER=1
     # Collect right before return, after all post-processing, when FINAL HTML is ready.
     # IMPORTANT: Raw bytes are returned separately - they must NEVER be stored in meta
