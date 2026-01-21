@@ -41,7 +41,22 @@ DEFAULT_LANG = os.getenv("PROMPTS_DEFAULT_LANG", "de")
 RELEASE_STRICT_MODE = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
 
 # FIX-505: Contextvar for tracking include stack (thread-safe)
-_include_stack: contextvars.ContextVar[List[str]] = contextvars.ContextVar('include_stack', default=[])
+# Note: Using a factory function to avoid mutable default issues
+_include_stack: contextvars.ContextVar[List[str]] = contextvars.ContextVar('include_stack')
+
+
+def _get_include_stack() -> List[str]:
+    """Get current include stack, initializing if needed."""
+    try:
+        return _include_stack.get()
+    except LookupError:
+        _include_stack.set([])
+        return []
+
+
+def _set_include_stack(stack: List[str]) -> None:
+    """Set current include stack."""
+    _include_stack.set(stack)
 
 
 class PromptIncludeCycleError(RuntimeError):
@@ -104,23 +119,44 @@ class CycleDetectingLoader:
     """
     FIX-505: Jinja2 Loader wrapper that detects include cycles.
 
-    This loader wraps the standard FileSystemLoader and tracks the include stack
+    This loader wraps the standard ChoiceLoader and tracks the include stack
     using a contextvar to detect cycles before they cause recursion depth errors.
+
+    Key insight: The stack must persist across the entire template render tree.
+    When template A includes B, and B includes A, we need:
+    - Stack after loading A: [A]
+    - Stack after loading B (from within A): [A, B]
+    - When B tries to include A: detect cycle [A, B, A]
+
+    We DON'T pop from the stack in get_source() because the template's
+    execution (which may include other templates) hasn't finished yet.
+    The stack is reset at the start of each top-level render.
     """
 
-    def __init__(self, loaders, section: str):
+    def __init__(self, loaders: List[Any], section: str):
         from jinja2 import ChoiceLoader
         self._inner_loader = ChoiceLoader(loaders)
         self._section = section
+        # Copy required attributes from BaseLoader for compatibility
+        self.has_source_access = getattr(self._inner_loader, 'has_source_access', True)
 
-    def get_source(self, environment, template_name: str):
-        """Get template source, checking for cycles first."""
+    def get_source(self, environment: Any, template_name: str) -> tuple:
+        """
+        Get template source, checking for cycles first.
+
+        This is the primary cycle detection point. It's called whenever
+        Jinja2 needs to load a template (including via {% include %}).
+
+        IMPORTANT: We push to the stack but do NOT pop. The stack persists
+        for the duration of the render to detect cycles across nested includes.
+        The stack is reset at the start of each top-level render.
+        """
         # Get current include stack
-        stack = _include_stack.get()
+        stack = _get_include_stack()
 
         # Check for cycle
         if template_name in stack:
-            cycle_chain = stack + [template_name]
+            cycle_chain = list(stack) + [template_name]
             log.error(
                 "[FIX-505][PROMPT][CYCLE] section=%s chain=%s",
                 self._section,
@@ -128,19 +164,33 @@ class CycleDetectingLoader:
             )
             raise PromptIncludeCycleError(cycle_chain, self._section)
 
-        # Push to stack
-        new_stack = stack + [template_name]
-        _include_stack.set(new_stack)
+        # Push to stack (and keep it there for cycle detection during execution)
+        new_stack = list(stack) + [template_name]
+        _set_include_stack(new_stack)
 
-        try:
-            source, filename, uptodate = self._inner_loader.get_source(environment, template_name)
-            return source, filename, uptodate
-        finally:
-            # Pop from stack (restore previous state)
-            _include_stack.set(stack)
+        # Get source from inner loader
+        source, filename, uptodate = self._inner_loader.get_source(environment, template_name)
+        return source, filename, uptodate
 
-    def list_templates(self):
+    def list_templates(self) -> List[str]:
+        """List available templates."""
         return self._inner_loader.list_templates()
+
+    def load(self, environment: Any, name: str, globals: Optional[Dict[str, Any]] = None) -> Any:
+        """
+        Load a template.
+
+        Delegates to Jinja2's standard template loading, which will call
+        our get_source() method where cycle detection happens.
+        """
+        # Get the source (this is where cycle detection happens)
+        source, filename, uptodate = self.get_source(environment, name)
+
+        # Compile and return the template
+        code = environment.compile(source, name, filename)
+        return environment.template_class.from_code(
+            environment, code, globals or {}, uptodate
+        )
 
 
 def _interpolate_text(
@@ -184,12 +234,20 @@ def _interpolate_text(
             loaders = [FileSystemLoader(d) for d in prompt_dirs if Path(d).exists()]
 
             # FIX-505: Use cycle-detecting loader
-            loader = CycleDetectingLoader(loaders, section)
+            cycle_loader = CycleDetectingLoader(loaders, section)
 
             # Reset include stack for this render
-            _include_stack.set([])
+            _set_include_stack([])
 
-            env = Environment(loader=loader, autoescape=False)
+            # Type ignore needed because CycleDetectingLoader implements BaseLoader
+            # interface but doesn't inherit from it (duck typing)
+            # FIX-505: Disable template cache to ensure cycle detection works
+            # (otherwise cached templates bypass get_source and our detection)
+            env = Environment(
+                loader=cycle_loader,  # type: ignore[arg-type]
+                autoescape=False,
+                cache_size=0,  # Disable cache to ensure get_source is called each time
+            )
             template = env.from_string(s)
             rendered = template.render(**vars_dict)
 
@@ -294,12 +352,11 @@ def check_prompt_cycles(base_dir: Optional[Path] = None, langs: Optional[List[st
     base = base_dir or BASE_DIR
     check_langs = langs or ["de", "en"]
 
-    result = {
-        "cycles": [],
-        "warnings": [],
-        "graph": {},
-        "checked_files": 0,
-    }
+    # Properly typed result structure
+    cycles_list: List[List[str]] = []
+    warnings_list: List[str] = []
+    graph_dict: Dict[str, Dict[str, List[str]]] = {}
+    checked_files_count: int = 0
 
     include_pattern = re.compile(r'{%\s*include\s+["\']([^"\']+)["\']')
 
@@ -316,14 +373,14 @@ def check_prompt_cycles(base_dir: Optional[Path] = None, langs: Optional[List[st
     for lang in check_langs:
         lang_dir = base / lang
         if not lang_dir.exists():
-            result["warnings"].append(f"Language directory not found: {lang_dir}")
+            warnings_list.append(f"Language directory not found: {lang_dir}")
             continue
 
         # Build dependency graph
         deps: Dict[str, Set[str]] = {}
 
         for prompt_file in lang_dir.glob("*.md"):
-            result["checked_files"] += 1
+            checked_files_count += 1
             try:
                 content = prompt_file.read_text(encoding="utf-8")
 
@@ -344,9 +401,9 @@ def check_prompt_cycles(base_dir: Optional[Path] = None, langs: Optional[List[st
                     deps[file_key].add(inc_key)
 
             except Exception as e:
-                result["warnings"].append(f"Error reading {prompt_file}: {e}")
+                warnings_list.append(f"Error reading {prompt_file}: {e}")
 
-        result["graph"][lang] = {k: list(v) for k, v in deps.items()}
+        graph_dict[lang] = {k: list(v) for k, v in deps.items()}
 
         # Detect cycles using DFS
         def find_cycles(node: str, visited: Set[str], path: List[str]) -> Optional[List[str]]:
@@ -373,24 +430,29 @@ def check_prompt_cycles(base_dir: Optional[Path] = None, langs: Optional[List[st
             if node not in visited:
                 cycle = find_cycles(node, visited, [])
                 if cycle:
-                    result["cycles"].append(cycle)
+                    cycles_list.append(cycle)
                     log.error(
                         "[FIX-505][PROMPT][CYCLE-PREFLIGHT] Detected cycle: %s",
                         " -> ".join(cycle)
                     )
 
-    if result["cycles"]:
+    if cycles_list:
         log.error(
             "[FIX-505][PROMPT][CYCLE-PREFLIGHT] Found %d cycle(s) in prompt templates!",
-            len(result["cycles"])
+            len(cycles_list)
         )
     else:
         log.info(
             "[FIX-505][PROMPT][CYCLE-PREFLIGHT] No cycles detected in %d prompt files",
-            result["checked_files"]
+            checked_files_count
         )
 
-    return result
+    return {
+        "cycles": cycles_list,
+        "warnings": warnings_list,
+        "graph": graph_dict,
+        "checked_files": checked_files_count,
+    }
 
 
 @lru_cache(maxsize=64)
