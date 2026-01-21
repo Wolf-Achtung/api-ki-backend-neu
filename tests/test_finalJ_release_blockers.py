@@ -496,8 +496,8 @@ class TestL1RiskMatrixNoClip:
 
         # Should have colgroup for column width control
         assert "<colgroup>" in source
-        # FIX-503B: Changed to table-layout:auto for better text wrapping in WeasyPrint
-        assert "table-layout:auto" in source
+        # FIX-506 TASK 4: Changed to table-layout:fixed for WeasyPrint-proof layout
+        assert "table-layout:fixed" in source
 
     def test_risk_matrix_has_section_class(self):
         """Test that Risk Matrix has risk-matrix-section class."""
@@ -644,8 +644,8 @@ class TestL1L3Integration:
 
         # Should have L1 fixes
         assert "<colgroup>" in html
-        # FIX-503B: Changed to table-layout:auto for better text wrapping in WeasyPrint
-        assert "table-layout:auto" in html
+        # FIX-506 TASK 4: Changed to table-layout:fixed for WeasyPrint-proof layout
+        assert "table-layout:fixed" in html
         # FIX-506: Now uses word-wrap:break-word instead of overflow-wrap:anywhere
         assert "word-wrap:break-word" in html or "overflow-wrap:anywhere" in html
 
