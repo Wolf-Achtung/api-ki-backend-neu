@@ -164,7 +164,7 @@ KMU-MODUS - VERBOTEN:
   <ul>
     <li>
       <strong>Formular- oder Fragebogen-Tool</strong> –
-      zur strukturierten Erfassung von Kundendaten und Antworten, etwa über Online-Formulare
+      zur strukturierten Erfassung von Kundendaten und Antworten, wie über Online-Formulare
       mit klaren Skalen und offenen Feldern. Für Solo-Setups reicht eine kompakte Lösung;
       Teams und KMU profitieren von Mehrnutzerfähigkeit und einfachen Auswertungsmöglichkeiten.
     </li>
@@ -182,7 +182,7 @@ KMU-MODUS - VERBOTEN:
     <li>
       <strong>Branchenspezifische Fach-Tools</strong> –
       je nach {{BRANCH_CONTEXT_LABEL}} können zusätzliche Lösungen sinnvoll sein,
-      z.B. für Terminplanung, Dokumentenfreigaben oder Fachanalysen.
+      wie für Terminplanung, Dokumentenfreigaben oder Fachanalysen.
       Diese sollten den Stack ergänzen, nicht verkomplizieren.
     </li>
   </ul>
@@ -303,7 +303,7 @@ KMU-MODUS - VERBOTEN:
           Reduziert manuelle Zwischenschritte, stärkt Sicherheit und Qualität und macht
           den Gesamtprozess erweiterbar – besonders relevant für wachsende Teams und KMU.
         </td>
-        <td>ab etwa 60 Tagen</td>
+        <td>ab rund 60 Tagen</td>
       </tr>
     </tbody>
   </table>

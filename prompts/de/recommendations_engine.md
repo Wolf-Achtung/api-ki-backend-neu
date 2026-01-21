@@ -204,7 +204,7 @@ Auswahl basierend auf:
 
 ```json
 {
-  "summary": "Für Ihr mittelständisches Produktionsunternehmen wurden 7 priorisierte Handlungsempfehlungen identifiziert. Der Fokus liegt auf Tool-Implementierung, Risiko-Mitigation und Förder-Nutzung mit einer Gesamtinvestition von ca. 25.000€.",
+  "summary": "Für Ihr mittelständisches Produktionsunternehmen wurden 7 priorisierte Handlungsempfehlungen identifiziert. Der Fokus liegt auf Tool-Implementierung, Risiko-Mitigation und Förder-Nutzung mit einer Gesamtinvestition von rund 25.000€.",
   "top_3_ids": ["rec1", "rec2", "rec4"],
   "recommendations": [
     {
