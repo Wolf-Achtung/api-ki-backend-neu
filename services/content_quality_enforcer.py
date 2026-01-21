@@ -137,9 +137,7 @@ SOLO_TERM_REPLACEMENTS = [
     (r'\bmodulares\b', 'flexibles', 'modulares→flexibles'),
 
     # Customer/Scale terms (enterprise claims → solo-appropriate)
-    (r'\b1000\+?\s*Kunden\b', 'neue Mandanten', '1000+ Kunden→neue Mandanten'),
-    (r'\b500\+?\s*Kunden\b', 'zusätzliche Mandanten', '500+ Kunden→zusätzliche Mandanten'),
-    (r'\b100\+?\s*Kunden\b', 'weitere Mandanten', '100+ Kunden→weitere Mandanten'),
+    # NOTE: 1000+/500+/100+ Kunden patterns moved to FIX-509-A section below
     (r'\bMassenskalierung\b', 'schrittweisen Ausbau', 'Massenskalierung→schrittweisen Ausbau'),
     (r'\bMassenrollout\b', 'schrittweise Einführung', 'Massenrollout→schrittweise Einführung'),
     (r'\bgroßflächig\b', 'schrittweise', 'großflächig→schrittweise'),
@@ -162,6 +160,22 @@ SOLO_TERM_REPLACEMENTS = [
     (r'\bden\s+Kollegen\b', 'dem Netzwerk', 'den Kollegen→dem Netzwerk'),
     (r'\bdie\s+Kollegen\b', 'das Netzwerk', 'die Kollegen→das Netzwerk'),
 
+    # FIX-509-A: Solo-Scale Narrative Cleanup
+    # Eliminate scaling narratives that don't fit solo profiles
+    # "1000+ Kunden" → "deutlich mehr Mandate ohne linearen Zeitaufwand"
+    (r'\b1000\+?\s*Kunden\b', 'deutlich mehr Mandate ohne linearen Zeitaufwand', 'FIX-509-A: 1000+ Kunden→mehr Mandate'),
+    (r'\bErweiterung\s+auf\s+1000\+?\s*Kunden\b', 'deutlich mehr Mandate ohne linearen Zeitaufwand', 'FIX-509-A: Erweiterung auf 1000+'),
+    (r'\b500\+?\s*Kunden\b', 'mehr Mandate ohne Mehraufwand', 'FIX-509-A: 500+ Kunden→mehr Mandate'),
+    (r'\b100\+?\s*Kunden\b', 'weitere Mandanten', 'FIX-509-A: 100+ Kunden→weitere Mandanten'),
+    # "internationale Expansion" → "schrittweise Markterweiterung"
+    (r'\binternationale\s+Expansion\b', 'schrittweise Markterweiterung', 'FIX-509-A: internationale Expansion'),
+    (r'\bInternationale\s+Expansion\b', 'Schrittweise Markterweiterung', 'FIX-509-A: Internationale Expansion'),
+    (r'\bglobale\s+Expansion\b', 'schrittweise Markterweiterung', 'FIX-509-A: globale Expansion'),
+    (r'\bweltweite\s+Expansion\b', 'schrittweise Markterweiterung', 'FIX-509-A: weltweite Expansion'),
+    # "Plattform" already handled above, but add more specific patterns
+    (r'\bPlattform-Skalierung\b', 'Produkt-Ausbau', 'FIX-509-A: Plattform-Skalierung'),
+    (r'\bPlattformwachstum\b', 'Produktwachstum', 'FIX-509-A: Plattformwachstum'),
+
     # Infrastructure terms
     (r'\bInfrastrukturaufbau\b', 'Tool-Einrichtung', 'Infrastrukturaufbau→Tool-Einrichtung'),
     (r'\bSystem-Landschaft\b', 'Tool-Übersicht', 'System-Landschaft→Tool-Übersicht'),
@@ -170,6 +184,94 @@ SOLO_TERM_REPLACEMENTS = [
     (r'\bEnterprise-Lösung\b', 'passende Lösung', 'Enterprise-Lösung→passende Lösung'),
     (r'\bEnterprise\b', 'professionelle', 'Enterprise→professionelle'),
 ]
+
+
+# =============================================================================
+# FIX-509-B: ZERO-LEAK PHRASE KILL (GLOBAL & DETERMINISTIC)
+# =============================================================================
+# These phrases trigger regeneration/fallback and must be eliminated BEFORE
+# zero-leak detection runs. Applied to ALL sections, not just solo.
+
+ZERO_LEAK_PHRASE_REPLACEMENTS = [
+    # (pattern, replacement, description)
+    # "bei Bedarf" → "optional"
+    (r'\bbei\s+Bedarf\b', 'optional', 'FIX-509-B: bei Bedarf→optional'),
+    (r'\bBei\s+Bedarf\b', 'Optional', 'FIX-509-B: Bei Bedarf→Optional'),
+    # "auf Wunsch" → "optional"
+    (r'\bauf\s+Wunsch\b', 'optional', 'FIX-509-B: auf Wunsch→optional'),
+    (r'\bAuf\s+Wunsch\b', 'Optional', 'FIX-509-B: Auf Wunsch→Optional'),
+    # "wie kann ich dir helfen" → remove completely
+    (r'\bwie\s+kann\s+ich\s+dir\s+helfen\b', '', 'FIX-509-B: wie kann ich dir helfen→remove'),
+    (r'\bWie\s+kann\s+ich\s+dir\s+helfen\b', '', 'FIX-509-B: Wie kann ich dir helfen→remove'),
+    (r'\bwie\s+kann\s+ich\s+Ihnen\s+helfen\b', '', 'FIX-509-B: wie kann ich Ihnen helfen→remove'),
+    (r'\bWie\s+kann\s+ich\s+Ihnen\s+helfen\b', '', 'FIX-509-B: Wie kann ich Ihnen helfen→remove'),
+    # Additional conversational phrases that trigger leaks
+    (r'\bwas\s+kann\s+ich\s+für\s+Sie\s+tun\b', '', 'FIX-509-B: was kann ich für Sie tun→remove'),
+    (r'\bWas\s+kann\s+ich\s+für\s+Sie\s+tun\b', '', 'FIX-509-B: Was kann ich für Sie tun→remove'),
+    (r'\bgerne\s+helfe\s+ich\b', '', 'FIX-509-B: gerne helfe ich→remove'),
+    (r'\bGerne\s+helfe\s+ich\b', '', 'FIX-509-B: Gerne helfe ich→remove'),
+]
+
+
+def apply_zero_leak_phrase_cleanup(sections: dict) -> dict:
+    """
+    FIX-509-B: Global pre-clean step to eliminate phrases that trigger
+    regeneration/fallback. Runs BEFORE zero-leak detection.
+
+    This is applied to ALL LLM-generated sections regardless of company size.
+
+    Args:
+        sections: Dict with all report sections
+
+    Returns:
+        sections: Cleaned dict with leak phrases replaced
+    """
+    total_replacements = 0
+    sections_touched = 0
+
+    # All LLM-generated sections that might contain leak phrases
+    check_sections = [
+        "EXECUTIVE_SUMMARY_HTML", "EXECUTIVE_DECISION_HTML", "RECOMMENDATIONS_HTML",
+        "QUICK_WINS_HTML", "QUICK_WINS_HTML_LEFT", "QUICK_WINS_HTML_RIGHT",
+        "ROADMAP_90D_HTML", "ROADMAP_90D_DECISION_HTML", "ROADMAP_12M_HTML",
+        "GAMECHANGER_HTML", "GAMECHANGER_DECISION_HTML",
+        "FOERDERPOTENZIAL_HTML", "RISKS_HTML", "ORG_CHANGE_HTML",
+        "KI_SKILLPLAN_HTML", "BUSINESS_CASE_HTML", "AI_ACT_HTML", "AI_ACT_SUMMARY_HTML",
+        "TOOLS_HTML", "TOOLS_EMPFEHLUNGEN_HTML", "DATA_STRATEGY_HTML", "DATA_READINESS_HTML",
+        "GOVERNANCE_HTML", "STRATEGIE_GOVERNANCE_HTML", "KI_STACK_SUMMARY_HTML",
+        "BRANCH_DEEP_DIVE_HTML", "TOP_3_MASSNAHMEN_HTML", "MONETARISIERUNG_HTML",
+        "TEMPLATES_START_HTML", "KICKOFF_VORLAGE_HTML", "PROMPT_FRAMEWORK_HTML",
+        "TECHNOLOGIE_PROZESSE_HTML", "WETTBEWERB_BENCHMARK_HTML", "UNTERNEHMENSPROFIL_MARKT_HTML",
+    ]
+
+    for section_name in check_sections:
+        content = sections.get(section_name)
+        if not content or not isinstance(content, str):
+            continue
+
+        section_replacements = 0
+        for pattern, replacement, desc in ZERO_LEAK_PHRASE_REPLACEMENTS:
+            try:
+                new_content, count = re.subn(pattern, replacement, content, flags=re.IGNORECASE)
+                if count > 0:
+                    content = new_content
+                    section_replacements += count
+                    log.debug(f"[ZERO-LEAK-CLEANUP] {section_name}: {desc} ({count}x)")
+            except re.error as e:
+                log.warning(f"[ZERO-LEAK-CLEANUP] Regex error for '{pattern}': {e}")
+
+        if section_replacements > 0:
+            # Clean up any resulting double spaces
+            content = re.sub(r'\s{2,}', ' ', content)
+            content = re.sub(r'\s+([.,;:!?])', r'\1', content)  # Fix space before punctuation
+            sections[section_name] = content
+            total_replacements += section_replacements
+            sections_touched += 1
+
+    if total_replacements > 0:
+        log.info(f"[ZERO-LEAK-CLEANUP] Completed: {total_replacements} replacements in {sections_touched} sections")
+
+    return sections
 
 
 def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
@@ -2678,7 +2780,38 @@ KENNZAHLEN_CONTEXT_MARKERS = [
 
 # KPI patterns with missing spaces (spacing issues from LLM)
 # FIX-506: Enhanced patterns to handle Report-504 specific glitches
+# FIX-509-C: Final hardening for Kennzahlenblock typography
 KPI_SPACING_PATTERNS = [
+    # ==========================================================================
+    # FIX-509-C: PRIORITY PATTERNS - Must enforce LABEL: TEXT format
+    # ==========================================================================
+
+    # "ROI-Ratesiehe Business Case" → "ROI-Rate: siehe Business Case"
+    (r'(ROI[-\s]?Rate)\s*siehe\s+(Business\s*Case|Simulation)',
+     r'\1: siehe \2'),
+    # "ROI-Ratesiehe" → "ROI-Rate: siehe"
+    (r'(ROI[-\s]?Rate)\s*siehe\b',
+     r'\1: siehe'),
+    # "Payback (Monate)siehe Business Case" → "Payback (Monate): siehe Business Case"
+    (r'(Payback\s*\(Monate?\))\s*siehe\s+(Business\s*Case|Simulation)',
+     r'\1: siehe \2'),
+    # "Payback (Monate)siehe" → "Payback (Monate): siehe"
+    (r'(Payback\s*\(Monate?\))\s*siehe\b',
+     r'\1: siehe'),
+    # "Paybacksiehe" → "Payback: siehe"
+    (r'(Payback)\s*siehe\b',
+     r'\1: siehe'),
+    # "AI Act RisikoMittel" → "AI Act Risiko: Mittel"
+    (r'(AI\s*Act\s*Risiko)\s*(minimal|gering|mittel|hoch|Hochrisiko|Niedrigrisiko|Minimal|Gering|Mittel|Hoch)',
+     r'\1: \2'),
+    # "AI-Act-RisikoMittel" variant → "AI-Act-Risiko: Mittel"
+    (r'(AI[-\s]Act[-\s]Risiko)\s*(minimal|gering|mittel|hoch|Hochrisiko|Niedrigrisiko|Minimal|Gering|Mittel|Hoch)',
+     r'\1: \2'),
+
+    # ==========================================================================
+    # Standard KPI spacing patterns
+    # ==========================================================================
+
     # Payback without space: "Payback11 Monate" or "Payback11Monate" or "Payback11 Mon."
     (r'(Payback|Amortisation|Amortisierung)\s*(\d+(?:[,\.]\d+)?)\s*(Monate?|months?|Mon\.?)',
      r'\1: \2 \3'),
@@ -2699,19 +2832,10 @@ KPI_SPACING_PATTERNS = [
     # Generic time savings: "Zeitersparnis210Std"
     (r'(Zeitersparnis)\s*(\d+(?:[,\.]\d+)?)\s*(Std\.?|Stunden?|h)',
      r'\1: \2 \3'),
-    # AI Act Risiko without space: "AI Act RisikoMittel" or "AI Act RisikoHoch"
-    (r'(AI\s*Act\s*Risiko)\s*(minimal|gering|mittel|hoch|Hochrisiko|Niedrigrisiko|Minimal|Gering|Mittel|Hoch)',
-     r'\1: \2'),
-    # FIX-506 TASK 2: New patterns for "siehe" suffix glitches
-    # "ROI-Ratesiehe" or "ROI-Rate165%siehe" → "ROI-Rate: siehe" or "ROI-Rate: 165 % – siehe"
+    # "ROI-Rate165%siehe" → "ROI-Rate: 165 % – siehe"
     (r'(ROI[-\s]?Rate)\s*(\d+(?:[,\.]\d+)?)\s*%?\s*siehe\b',
      r'\1: \2 % – siehe'),
-    (r'(ROI[-\s]?Rate)\s*siehe\b',
-     r'\1: siehe'),
-    # "Payback (Monate)siehe" → "Payback (Monate): siehe"
-    (r'(Payback\s*(?:\(Monate?\))?)\s*siehe\b',
-     r'\1: siehe'),
-    # "Payback11siehe" → "Payback: 11 – siehe"
+    # "Payback11siehe" → "Payback: 11 Monate – siehe"
     (r'(Payback|Amortisation)\s*(\d+(?:[,\.]\d+)?)\s*(?:Monate?)?\s*siehe\b',
      r'\1: \2 Monate – siehe'),
     # General label:value patterns without colon/space
