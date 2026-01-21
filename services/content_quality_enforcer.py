@@ -2667,24 +2667,30 @@ KENNZAHLEN_CONTEXT_MARKERS = [
 ]
 
 # KPI patterns with missing spaces (spacing issues from LLM)
+# FIX-506: Enhanced patterns to handle Report-504 specific glitches
 KPI_SPACING_PATTERNS = [
-    # Payback without space: "Payback11 Monate" or "Payback11Monate"
+    # Payback without space: "Payback11 Monate" or "Payback11Monate" or "Payback11 Mon."
     (r'(Payback|Amortisation|Amortisierung)\s*(\d+(?:[,\.]\d+)?)\s*(Monate?|months?|Mon\.?)',
      r'\1: \2 \3'),
+    # ROI-Rate with suffix: "ROI-Rate165%nach 24 Monaten" → "ROI-Rate: 165 % (nach 24 Monaten)"
+    (r'(ROI[-\s]?Rate)\s*(\d+(?:[,\.]\d+)?)\s*%\s*(nach\s+\d+\s+Monat(?:en?)?)',
+     r'\1: \2 % (\3)'),
     # ROI-Rate without space: "ROI-Rate85%" or "ROI-Rate85%auf"
-    (r'(ROI[-\s]?Rate)\s*(\d+(?:[,\.]\d+)?)\s*%\s*',
+    (r'(ROI[-\s]?Rate)\s*(\d+(?:[,\.]\d+)?)\s*%\s*(?![(\w])',
+     r'\1: \2 %'),
+    (r'(ROI[-\s]?Rate)\s*(\d+(?:[,\.]\d+)?)\s*%\s*(?=auf)',
      r'\1: \2 % '),
     # ROI without space: "ROI85%" or "ROI: 85%auf"
     (r'\bROI\s*:?\s*(\d+(?:[,\.]\d+)?)\s*%\s*(?=auf|\w)',
      r'ROI: \1 % '),
-    # Zeitersparnis without space: "Zeitersparnis/Monat210 Std"
+    # Zeitersparnis with glued unit: "Zeitersparnis/Monat180 Std." or "Zeitersparnis/Monat210Std"
     (r'(Zeitersparnis\s*/\s*Monat)\s*(\d+(?:[,\.]\d+)?)\s*(Std\.?|Stunden?|h)',
      r'\1: \2 \3'),
     # Generic time savings: "Zeitersparnis210Std"
     (r'(Zeitersparnis)\s*(\d+(?:[,\.]\d+)?)\s*(Std\.?|Stunden?|h)',
      r'\1: \2 \3'),
-    # AI Act Risiko without space: "AI Act RisikoMittel"
-    (r'(AI\s*Act\s*Risiko)\s*(minimal|gering|mittel|hoch|Hochrisiko|Niedrigrisiko)',
+    # AI Act Risiko without space: "AI Act RisikoMittel" or "AI Act RisikoHoch"
+    (r'(AI\s*Act\s*Risiko)\s*(minimal|gering|mittel|hoch|Hochrisiko|Niedrigrisiko|Minimal|Gering|Mittel|Hoch)',
      r'\1: \2'),
     # General label:value patterns without colon/space
     (r'(Payback|ROI|Amortisation)\s*:?\s*(\d)', r'\1: \2'),

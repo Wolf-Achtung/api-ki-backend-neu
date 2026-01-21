@@ -279,10 +279,17 @@ def _market_insights_box(items: List[Dict[str, str]]) -> str:
 
 # --- TAVILY INTEGRATION ---
 
-def _tavily_funding_search(bundesland: str, branche: str, days: int = 90) -> List[Dict[str, str]]:
-    """Live-Suche nach Förderprogrammen via Tavily API."""
+def _tavily_funding_search(bundesland: str, branche: str, days: int = 90, report_year: int = None) -> List[Dict[str, str]]:
+    """Live-Suche nach Förderprogrammen via Tavily API.
+
+    FIX-506: report_year parameter replaces hardcoded 2025.
+    """
     if not os.getenv("TAVILY_API_KEY"):
         return []
+
+    # FIX-506: Use report_year or current year instead of hardcoded 2025
+    from datetime import datetime
+    year = report_year or datetime.now().year
 
     # Build targeted query
     query_parts = ["Förderprogramme", "KI", "Digitalisierung", "KMU"]
@@ -290,7 +297,7 @@ def _tavily_funding_search(bundesland: str, branche: str, days: int = 90) -> Lis
         query_parts.append(bundesland)
     if branche:
         query_parts.append(branche)
-    query_parts.append("2025")
+    query_parts.append(str(year))
 
     query = " ".join(query_parts)
     log.info("🔍 Tavily funding search: %s", query)
@@ -303,10 +310,17 @@ def _tavily_funding_search(bundesland: str, branche: str, days: int = 90) -> Lis
         log.warning("⚠️ Tavily funding search failed: %s", exc)
         return []
 
-def _tavily_tools_search(branche: str, use_cases: List[str], days: int = 60) -> List[Dict[str, str]]:
-    """Live-Suche nach KI-Tools via Tavily API."""
+def _tavily_tools_search(branche: str, use_cases: List[str], days: int = 60, report_year: int = None) -> List[Dict[str, str]]:
+    """Live-Suche nach KI-Tools via Tavily API.
+
+    FIX-506: report_year parameter replaces hardcoded 2025.
+    """
     if not os.getenv("TAVILY_API_KEY"):
         return []
+
+    # FIX-506: Use report_year or current year instead of hardcoded 2025
+    from datetime import datetime
+    year = report_year or datetime.now().year
 
     # Build targeted query
     query_parts = ["KI Tools", "AI Software"]
@@ -314,7 +328,7 @@ def _tavily_tools_search(branche: str, use_cases: List[str], days: int = 60) -> 
         query_parts.append(branche)
     if use_cases:
         query_parts.extend(use_cases[:2])  # Max 2 use cases
-    query_parts.append("2025")
+    query_parts.append(str(year))
 
     query = " ".join(query_parts)
     log.info("🔍 Tavily tools search: %s", query)
@@ -525,6 +539,17 @@ def run_research(answers: Dict[str, Any]) -> Dict[str, Any]:
     use_cases = answers.get("anwendungsfaelle", []) or []
     lang = answers.get("LANG") or answers.get("lang") or "de"
 
+    # FIX-506: Extract report_year from report_date or use current year
+    from datetime import datetime
+    report_date = answers.get("report_date") or ""
+    try:
+        # Try to parse year from report_date (formats: "Januar 2026", "2026-01-15", etc.)
+        import re
+        year_match = re.search(r'20\d{2}', str(report_date))
+        report_year = int(year_match.group()) if year_match else datetime.now().year
+    except (ValueError, AttributeError):
+        report_year = datetime.now().year
+
     kws = _kw(answers)
     tools: List[Dict[str, str]] = []
     funding: List[Dict[str, str]] = []
@@ -543,16 +568,16 @@ def run_research(answers: Dict[str, Any]) -> Dict[str, Any]:
             # N3: Use Any type to accommodate different return types (List and Tuple)
             futures: Dict[str, Future[Any]] = {}
 
-            # 1. Tavily for Tools
+            # 1. Tavily for Tools (FIX-506: pass report_year)
             if os.getenv("TAVILY_API_KEY"):
                 futures["tavily_tools"] = executor.submit(
-                    _tavily_tools_search, branche, use_cases
+                    _tavily_tools_search, branche, use_cases, 60, report_year
                 )
 
-            # 2. Tavily for Funding
+            # 2. Tavily for Funding (FIX-506: pass report_year)
             if os.getenv("TAVILY_API_KEY"):
                 futures["tavily_funding"] = executor.submit(
-                    _tavily_funding_search, bundesland, branche
+                    _tavily_funding_search, bundesland, branche, 90, report_year
                 )
 
             # 3. Perplexity for Market Insights (N3-01: with retry + lang)
