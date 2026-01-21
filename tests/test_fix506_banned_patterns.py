@@ -93,32 +93,32 @@ class TestBannedPatternsNotInOutput:
             assert not matches, f"Found banned pattern '{pattern}' in tools_empfehlungen.md: {matches}"
 
 
-class TestCanonicalKPIContractHeaders:
-    """Tests that Canonical KPI Contract headers are present."""
+class TestCanonicalContractHeaders:
+    """Tests that Canonical Contract headers are present."""
 
     @pytest.fixture
     def project_root(self):
         """Get project root directory."""
         return Path(__file__).parent.parent
 
-    def test_quick_wins_has_kpi_contract(self, project_root):
-        """quick_wins.md has Canonical KPI Contract header."""
+    def test_quick_wins_has_contract(self, project_root):
+        """quick_wins.md has STRICT CANONICAL CONTRACT header."""
         content = (project_root / "prompts/de/quick_wins.md").read_text()
-        assert "CANONICAL KPI CONTRACT" in content
+        assert "STRICT CANONICAL CONTRACT" in content
 
-    def test_business_case_has_kpi_contract(self, project_root):
+    def test_business_case_has_contract(self, project_root):
         """business_case.md has Canonical KPI Contract header."""
         content = (project_root / "prompts/de/business_case.md").read_text()
-        assert "CANONICAL KPI CONTRACT" in content
+        assert "CANONICAL KPI CONTRACT" in content or "STRICT CANONICAL CONTRACT" in content
 
-    def test_gamechanger_has_kpi_contract(self, project_root):
+    def test_gamechanger_has_contract(self, project_root):
         """gamechanger.md has Canonical KPI Contract header."""
         content = (project_root / "prompts/de/gamechanger.md").read_text()
-        assert "CANONICAL KPI CONTRACT" in content
+        assert "CANONICAL KPI CONTRACT" in content or "STRICT CANONICAL CONTRACT" in content
 
 
-class TestQuickWinsNoInventedNumbers:
-    """Tests that Quick Wins don't have invented time/hour ranges."""
+class TestQuickWinsSimplifiedFormat:
+    """Tests that Quick Wins use the new simplified format (FIX-506)."""
 
     @pytest.fixture
     def project_root(self):
@@ -133,20 +133,94 @@ class TestQuickWinsNoInventedNumbers:
         assert '"time": "6-10' not in content
         assert '"time": "5-8' not in content
 
-    def test_zeitersparnis_uses_variable(self, project_root):
-        """Quick Wins zeitersparnis should use canonical variable."""
+    def test_has_new_simplified_fields(self, project_root):
+        """Quick Wins should have new simplified fields: problem, wirkung, umsetzung, hinweis."""
         content = (project_root / "prompts/de/quick_wins.md").read_text()
 
-        # Check that zeitersparnis uses the canonical variable
-        assert "{{monatsersparnis_stunden}}" in content
+        # Check for the new field names in format section
+        assert '"problem":' in content
+        assert '"wirkung":' in content
+        assert '"umsetzung":' in content
+        assert '"hinweis":' in content
 
-    def test_no_invented_hour_ranges_in_steps(self, project_root):
-        """Quick Wins steps should not have invented time estimates like (2-3h)."""
+    def test_hinweis_references_business_case(self, project_root):
+        """Quick Wins hinweis should reference Business Case."""
         content = (project_root / "prompts/de/quick_wins.md").read_text()
 
-        # Pattern for invented time ranges in steps
+        # Check that hinweis references Business Case
+        assert "siehe Business Case" in content
+
+    def test_no_invented_hour_ranges(self, project_root):
+        """Quick Wins should not have invented time estimates like (2-3h) or 6-10 h/Monat."""
+        content = (project_root / "prompts/de/quick_wins.md").read_text()
+
+        # Remove comment blocks to check only active content
+        content_no_comments = re.sub(r'<!--.*?-->', '', content, flags=re.DOTALL)
+
+        # Pattern for invented time ranges
         invented_time_pattern = r'\(\d+-\d+h\)'
-        matches = re.findall(invented_time_pattern, content)
+        matches = re.findall(invented_time_pattern, content_no_comments)
 
         # There should be no invented time ranges
-        assert not matches, f"Found invented time ranges in steps: {matches}"
+        assert not matches, f"Found invented time ranges: {matches}"
+
+    def test_min_40_words_requirement_documented(self, project_root):
+        """Quick Wins should document ≥40 words per Quick Win requirement."""
+        content = (project_root / "prompts/de/quick_wins.md").read_text()
+
+        # Check for the word count requirement
+        assert "40 Wörter" in content or "≥ 40" in content
+
+
+class TestDecisionPromptsHaveCanonicalContract:
+    """Tests that decision prompts have STRICT CANONICAL CONTRACT."""
+
+    @pytest.fixture
+    def project_root(self):
+        """Get project root directory."""
+        return Path(__file__).parent.parent
+
+    def test_executive_decision_has_contract(self, project_root):
+        """executive_decision.md has STRICT CANONICAL CONTRACT."""
+        content = (project_root / "prompts/de/executive_decision.md").read_text()
+        assert "STRICT CANONICAL CONTRACT" in content
+
+    def test_roadmap_90d_decision_has_contract(self, project_root):
+        """roadmap_90d_decision.md has STRICT CANONICAL CONTRACT."""
+        content = (project_root / "prompts/de/roadmap_90d_decision.md").read_text()
+        assert "STRICT CANONICAL CONTRACT" in content
+
+    def test_gamechanger_decision_has_contract(self, project_root):
+        """gamechanger_decision.md has STRICT CANONICAL CONTRACT."""
+        content = (project_root / "prompts/de/gamechanger_decision.md").read_text()
+        assert "STRICT CANONICAL CONTRACT" in content
+
+    def test_ki_stack_summary_has_contract(self, project_root):
+        """ki_stack_summary.md has STRICT CANONICAL CONTRACT."""
+        content = (project_root / "prompts/de/ki_stack_summary.md").read_text()
+        assert "STRICT CANONICAL CONTRACT" in content
+
+    def test_branch_deep_dive_has_contract(self, project_root):
+        """branch_deep_dive.md has STRICT CANONICAL CONTRACT."""
+        content = (project_root / "prompts/de/branch_deep_dive.md").read_text()
+        assert "STRICT CANONICAL CONTRACT" in content
+
+
+class TestHardBlacklist:
+    """Tests that hard blacklist phrases are documented in prompts."""
+
+    @pytest.fixture
+    def project_root(self):
+        """Get project root directory."""
+        return Path(__file__).parent.parent
+
+    def test_quick_wins_has_hard_blacklist(self, project_root):
+        """quick_wins.md has HARD BLACKLIST section."""
+        content = (project_root / "prompts/de/quick_wins.md").read_text()
+        assert "HARD BLACKLIST" in content or "Fail-Closed" in content
+
+    def test_decision_prompts_have_hard_blacklist(self, project_root):
+        """Decision prompts have HARD BLACKLIST section."""
+        for prompt_name in ["executive_decision.md", "roadmap_90d_decision.md", "gamechanger_decision.md"]:
+            content = (project_root / f"prompts/de/{prompt_name}").read_text()
+            assert "HARD BLACKLIST" in content, f"{prompt_name} missing HARD BLACKLIST"
