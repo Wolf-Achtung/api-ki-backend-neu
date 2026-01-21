@@ -152,6 +152,16 @@ SOLO_TERM_REPLACEMENTS = [
     (r'\bPersonalressourcen\b', 'Ihre Zeit', 'Personalressourcen→Ihre Zeit'),
     (r'\bTeamressourcen\b', 'Ihre Kapazitäten', 'Teamressourcen→Ihre Kapazitäten'),
 
+    # FIX-506 TASK 3: Additional solo-scale sanitizer terms
+    # Kollegen → Netzwerk/Partner (solo has no colleagues)
+    (r'\bKollegen\b', 'Partner', 'Kollegen→Partner'),
+    (r'\bKollegin\b', 'Partnerin', 'Kollegin→Partnerin'),
+    (r'\bKolleg(?:innen|en)\s+und\s+Kolleg(?:innen|en)\b', 'Netzwerkpartner', 'Kollegen und Kollegen→Netzwerkpartner'),
+    (r'\bMit\s+Kollegen\b', 'Mit Partnern', 'Mit Kollegen→Mit Partnern'),
+    (r'\bIhre\s+Kollegen\b', 'Ihr Netzwerk', 'Ihre Kollegen→Ihr Netzwerk'),
+    (r'\bden\s+Kollegen\b', 'dem Netzwerk', 'den Kollegen→dem Netzwerk'),
+    (r'\bdie\s+Kollegen\b', 'das Netzwerk', 'die Kollegen→das Netzwerk'),
+
     # Infrastructure terms
     (r'\bInfrastrukturaufbau\b', 'Tool-Einrichtung', 'Infrastrukturaufbau→Tool-Einrichtung'),
     (r'\bSystem-Landschaft\b', 'Tool-Übersicht', 'System-Landschaft→Tool-Übersicht'),
@@ -2692,6 +2702,18 @@ KPI_SPACING_PATTERNS = [
     # AI Act Risiko without space: "AI Act RisikoMittel" or "AI Act RisikoHoch"
     (r'(AI\s*Act\s*Risiko)\s*(minimal|gering|mittel|hoch|Hochrisiko|Niedrigrisiko|Minimal|Gering|Mittel|Hoch)',
      r'\1: \2'),
+    # FIX-506 TASK 2: New patterns for "siehe" suffix glitches
+    # "ROI-Ratesiehe" or "ROI-Rate165%siehe" → "ROI-Rate: siehe" or "ROI-Rate: 165 % – siehe"
+    (r'(ROI[-\s]?Rate)\s*(\d+(?:[,\.]\d+)?)\s*%?\s*siehe\b',
+     r'\1: \2 % – siehe'),
+    (r'(ROI[-\s]?Rate)\s*siehe\b',
+     r'\1: siehe'),
+    # "Payback (Monate)siehe" → "Payback (Monate): siehe"
+    (r'(Payback\s*(?:\(Monate?\))?)\s*siehe\b',
+     r'\1: siehe'),
+    # "Payback11siehe" → "Payback: 11 – siehe"
+    (r'(Payback|Amortisation)\s*(\d+(?:[,\.]\d+)?)\s*(?:Monate?)?\s*siehe\b',
+     r'\1: \2 Monate – siehe'),
     # General label:value patterns without colon/space
     (r'(Payback|ROI|Amortisation)\s*:?\s*(\d)', r'\1: \2'),
 ]
@@ -3079,3 +3101,120 @@ def get_strict_mode_status() -> dict:
             "Only enable when warnings have been significantly reduced."
         ),
     }
+
+
+# =============================================================================
+# FIX-506 TASK 5: POST-TRUNCATION TEMPLATE PHRASE CLEANUP
+# =============================================================================
+# When content gets truncated, it might create partial template phrases
+# that trigger TEMPLATE_PHRASE warnings in the validator.
+# This function cleans up such fragments.
+
+# Template phrase fragments that might be created by truncation
+TRUNCATION_PHRASE_CLEANUP = [
+    # Partial template phrases that might appear after truncation
+    (r'Platzhalter\s*$', ''),  # Incomplete "Platzhalter für X"
+    (r'Beispiel\s*$', ''),  # Incomplete "Beispiel-X"
+    (r'TODO\s*$', ''),  # Incomplete TODO
+    (r'TBD\s*$', ''),  # Incomplete TBD
+    (r'Hier\s+könnten\s*$', ''),  # Incomplete "Hier könnten Sie"
+    (r'An\s+dieser\s+Stelle\s*$', ''),  # Incomplete phrase
+    (r'bitte\s+konkretisieren\s*$', ''),  # Incomplete instruction
+    (r'hier\s+weiter\s*$', ''),  # Incomplete "hier weiter ausformulieren"
+    (r'nach\s+Bedarf\s*$', ''),  # Incomplete "nach Bedarf anpassen"
+    (r'Konkret\w*\s+hier\s*$', ''),  # Incomplete "Konkret X hier einfügen"
+    # Unclosed HTML tags that might trigger issues
+    (r'<\w+[^>]*$', ''),  # Unclosed opening tag at end
+    (r'<[^>]*$', ''),  # Partial tag at end
+]
+
+
+def cleanup_truncation_artifacts(html: str) -> str:
+    """
+    FIX-506 TASK 5: Clean up artifacts that might be created by truncation.
+
+    When content is truncated (cut at character/word limits), it might:
+    1. Create partial template phrases that trigger TEMPLATE_PHRASE warnings
+    2. Leave unclosed HTML tags
+    3. Create sentence fragments
+
+    This function cleans up such artifacts.
+
+    Args:
+        html: HTML content that may have been truncated
+
+    Returns:
+        Cleaned HTML with truncation artifacts removed
+    """
+    if not html or len(html) < 10:
+        return html
+
+    result = html
+    cleanups = 0
+
+    # Apply cleanup patterns
+    for pattern, replacement in TRUNCATION_PHRASE_CLEANUP:
+        new_result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
+        if new_result != result:
+            cleanups += 1
+            result = new_result
+
+    # Close any unclosed tags (simple heuristic)
+    # Count open tags vs close tags for common elements
+    for tag in ['p', 'div', 'span', 'li', 'ul', 'ol', 'strong', 'em', 'td', 'tr', 'table']:
+        open_count = len(re.findall(f'<{tag}[^>]*>', result, re.IGNORECASE))
+        close_count = len(re.findall(f'</{tag}>', result, re.IGNORECASE))
+        # Add missing close tags at the end
+        if open_count > close_count:
+            diff = open_count - close_count
+            result += f'</{tag}>' * diff
+            cleanups += diff
+
+    if cleanups > 0:
+        log.info(f"[TRUNCATION-CLEANUP] Cleaned {cleanups} truncation artifacts")
+
+    return result
+
+
+def safe_html_truncate(html: str, max_chars: int = 10000) -> str:
+    """
+    FIX-506 TASK 5: Safely truncate HTML content without creating artifacts.
+
+    Unlike simple slicing, this function:
+    1. Respects sentence boundaries
+    2. Ensures HTML tags are properly closed
+    3. Removes template phrase fragments
+    4. Maintains valid HTML structure
+
+    Args:
+        html: HTML content to truncate
+        max_chars: Maximum character limit
+
+    Returns:
+        Safely truncated HTML
+    """
+    if not html or len(html) <= max_chars:
+        return html
+
+    # First, try to find a good sentence boundary
+    truncated = html[:max_chars]
+
+    # Find last complete sentence
+    last_sentence_end = -1
+    for match in re.finditer(r'[.!?](?:\s|<|$)', truncated):
+        last_sentence_end = match.end()
+
+    # If we found a sentence boundary in the second half, use it
+    if last_sentence_end > max_chars * 0.5:
+        truncated = truncated[:last_sentence_end]
+    else:
+        # Fall back to last HTML tag boundary
+        last_tag_end = truncated.rfind('>')
+        if last_tag_end > max_chars * 0.5:
+            truncated = truncated[:last_tag_end + 1]
+
+    # Clean up any artifacts
+    truncated = cleanup_truncation_artifacts(truncated)
+
+    log.info(f"[SAFE-TRUNCATE] Reduced {len(html)} -> {len(truncated)} chars")
+    return truncated

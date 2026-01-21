@@ -1062,20 +1062,21 @@ def risk_report_to_html(
     # Risk Matrix
     # L1: Added colgroup for column width control, class for CSS targeting
     # FIX-503B: Changed to table-layout:auto for better text wrapping in WeasyPrint
+    # FIX-506 TASK 4: Enhanced WeasyPrint-proof CSS to prevent table overflow/clipping
     if report.risk_matrix:
         html_parts.append('<!-- DEBUG-ANCHOR: RISK_MATRIX_START -->')
         html_parts.append(f'''
-        <div class="risk-block matrix-block risk-matrix-section" style="margin-bottom:20px;">
+        <div class="risk-block matrix-block risk-matrix-section" style="margin-bottom:20px;max-width:100%;overflow:visible;">
             <p style="margin:0 0 12px 0;font-weight:600;color:#1e293b;">{labels["matrix_title"]}</p>
-            <table class="table-modern" style="width:100%;border-collapse:collapse;font-size:10pt;table-layout:auto;">
+            <table class="table-modern risk-matrix-table" style="width:100%;max-width:100%;border-collapse:collapse;font-size:10pt;table-layout:fixed;">
                 <colgroup>
-                    <col style="width:50%;">
+                    <col style="width:45%;">
                     <col style="width:15%;">
                     <col style="width:15%;">
-                    <col style="width:20%;">
+                    <col style="width:25%;">
                 </colgroup>
                 <tr style="background:#f8fafc;">
-                    <td style="padding:8px;font-weight:600;border-bottom:1px solid #e2e8f0;white-space:normal;">Risiko</td>
+                    <td style="padding:8px;font-weight:600;border-bottom:1px solid #e2e8f0;white-space:normal;overflow-wrap:break-word;word-break:break-word;">Risiko</td>
                     <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;white-space:nowrap;">L</td>
                     <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;white-space:nowrap;">I</td>
                     <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;white-space:nowrap;">Score</td>
@@ -1087,11 +1088,12 @@ def risk_report_to_html(
                 color = RISK_COLORS.get(entry.color, "#6b7280")
                 # L1: Added overflow-wrap, word-break to prevent text truncation
                 # FIX-503B: Added white-space:normal and overflow:visible for WeasyPrint
+                # FIX-506 TASK 4: Enhanced CSS for WeasyPrint table cell wrapping
                 html_parts.append(f'''
                 <tr>
-                    <td style="padding:8px;border-bottom:1px solid #f1f5f9;word-wrap:break-word;hyphens:auto;white-space:normal;">
-                        <span style="display:inline-block;width:8px;height:8px;background:{color};border-radius:50%;margin-right:6px;flex-shrink:0;"></span>
-                        {entry.title}
+                    <td style="padding:8px;border-bottom:1px solid #f1f5f9;word-wrap:break-word;overflow-wrap:break-word;word-break:break-word;hyphens:auto;white-space:normal;max-width:0;">
+                        <span style="display:inline-block;width:8px;height:8px;background:{color};border-radius:50%;margin-right:6px;flex-shrink:0;vertical-align:middle;"></span>
+                        <span style="word-wrap:break-word;overflow-wrap:break-word;">{entry.title}</span>
                     </td>
                     <td style="padding:8px;text-align:center;border-bottom:1px solid #f1f5f9;">{entry.likelihood}</td>
                     <td style="padding:8px;text-align:center;border-bottom:1px solid #f1f5f9;">{entry.impact}</td>
