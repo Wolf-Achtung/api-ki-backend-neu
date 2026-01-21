@@ -1,5 +1,36 @@
-# Quick Wins - JSON Output v8.1
+# Quick Wins - JSON Output v8.2
 <!-- Problem #7 FIX: Hauptleistung als Analyse-Kern -->
+<!-- FIX-506: Canonical KPI Contract -->
+
+<!--
+###############################################################################
+##                    CANONICAL KPI CONTRACT (STRICT)                        ##
+###############################################################################
+
+You MUST NOT:
+- invent, estimate or round KPI values
+- use example numbers (e.g., "6-10 h/Monat")
+- use ranges for time savings (e.g., "6–10 Stunden")
+- use "z. B.", "typischerweise", "etwa", "ca."
+- restate KPIs in alternative wording
+
+You MAY ONLY:
+- reference provided canonical variables: {{monatsersparnis_stunden}}, {{STUNDENSATZ_EUR}}
+- use "siehe Business Case" for detailed KPI references
+- explain QUALITATIVE benefits WITHOUT inventing numbers
+
+If a KPI is missing: say "siehe Business Case" or leave field empty.
+
+BANNED PATTERNS (hard fail in STRICT_MODE):
+- "z. B."
+- "typischerweise"
+- "etwa"
+- "ca."
+- "6–10" or any invented range
+- "bei Bedarf"
+
+###############################################################################
+-->
 
 <!--
 ###############################################################################
@@ -107,16 +138,15 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
   {
     "title": "[Aktion] für {{hauptleistung}} (max 60 Zeichen)",
     "icon": "🎯",
-    "time": "6-10 h/Monat",
     "engpass": "Ihr konkreter Zeitfresser/Pain Point aus ZEITERSPARNIS_PRIORITAET",
     "description": "In Ihrem Kerngeschäft besteht das Problem... 2-3 Sätze.",
     "mit_ki": "Für diese Leistung hilft KI konkret durch... Welche Tools? 2-3 Sätze.",
     "steps": [
-      "Konkreter Schritt 1 mit Zeitangabe (z.B. 30min)",
-      "Konkreter Schritt 2 mit Tool-Namen",
-      "Konkreter Schritt 3 mit messbarem Ergebnis"
+      "Konkreter Schritt 1 mit Tool-Namen",
+      "Konkreter Schritt 2 mit messbarem Ergebnis",
+      "Konkreter Schritt 3 zur Validierung"
     ],
-    "zeitersparnis": "6-10 h/Monat = 600-1.000€ (bei {{STUNDENSATZ_EUR}}€/h)"
+    "zeitersparnis": "{{monatsersparnis_stunden}} Std./Monat (bei {{STUNDENSATZ_EUR}}€/h)"
   }
 ]
 ```
@@ -181,7 +211,7 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
 
 - [ ] Valides JSON (keine trailing commas, escaped quotes)
 - [ ] 3-5 Quick Wins im Array
-- [ ] Jeder Quick Win hat alle 8 Felder: title, icon, time, engpass, description, mit_ki, steps, zeitersparnis
+- [ ] Jeder Quick Win hat alle 7 Felder: title, icon, engpass, description, mit_ki, steps, zeitersparnis
 - [ ] Icons sind Emojis (nicht Text)
 - [ ] steps ist Array mit 3-5 Strings
 - [ ] Keine HTML-Tags im JSON
@@ -233,42 +263,39 @@ Analysiere die Unternehmensdaten und erstelle 3-5 Quick Wins als **JSON Array** 
   {
     "title": "Ablauf-Blueprint für Ihre KI-Beratungsprojekte",
     "icon": "🎯",
-    "time": "6-10 h/Monat",
     "engpass": "Entwicklung und Optimierung von Abläufen",
     "description": "Aktuell strukturieren Sie jeden Beratungsablauf (Fragebogen, Auswertung, Report) neu und optimieren ad hoc – das kostet viel Denk- und Dokumentationszeit.",
     "mit_ki": "ChatGPT Plus erstellt mit Ihnen einen wiederverwendbaren Standard-Workflow inkl. Checklisten und Textbausteinen, den Sie nur noch leicht je Kunde anpassen.",
     "steps": [
-      "ChatGPT Plus buchen (15 Min, 20€/Monat)",
-      "Beste bisherige Projekte analysieren (2-3h)",
-      "Standard-Workflow & Checklisten generieren (3-4h)"
+      "ChatGPT Plus buchen (20€/Monat)",
+      "Beste bisherige Projekte analysieren",
+      "Standard-Workflow & Checklisten generieren"
     ],
-    "zeitersparnis": "6-10 h/Monat = X€ (bei {{STUNDENSATZ_EUR}}€/h)"
+    "zeitersparnis": "{{monatsersparnis_stunden}} Std./Monat (bei {{STUNDENSATZ_EUR}}€/h)"
   },
   {
     "title": "Testphase Ihres KI-Fragebogens in erweiterbares MVP",
     "icon": "🚀",
-    "time": "5-8 h/Monat",
     "engpass": "das Projekt mit der Beratung von Unternehmen zur Integration von KI",
     "description": "Sie testen das Angebot manuell, Auswertung und Reports entstehen jedes Mal neu und sind noch nicht als Produktpaket definiert.",
     "mit_ki": "Sie nutzen ChatGPT Plus, um feste Fragebogen-Varianten, Auswertungslogik und Report-Templates zu erstellen und als schlankes Online-MVP zu standardisieren.",
     "steps": [
-      "Beste Testfälle clustern (2h, typische Kundentypen definieren)",
-      "Fragebogen-Varianten mit GPT schärfen (3h)",
-      "Standard-Reportstruktur bauen (3h)"
+      "Beste Testfälle clustern (Kundentypen definieren)",
+      "Fragebogen-Varianten mit GPT schärfen",
+      "Standard-Reportstruktur bauen"
     ],
-    "zeitersparnis": "5-8 h/Monat = X€ (bei {{STUNDENSATZ_EUR}}€/h)"
+    "zeitersparnis": "{{monatsersparnis_stunden}} Std./Monat (bei {{STUNDENSATZ_EUR}}€/h)"
   },
   {
     "title": "KI-Sicherheitsrichtlinie erstellen",
     "icon": "🔒",
-    "time": "2h Setup",
     "engpass": "Security-Score 45/100 (Handlungsbedarf)",
     "description": "Ohne klare Sicherheitsregeln riskieren Sie Datenschutzverletzungen bei der KI-Nutzung.",
     "mit_ki": "Claude Pro hilft Ihnen, eine kompakte Richtlinie zu erstellen: Welche Daten dürfen in KI-Tools? Welche Tools sind freigegeben?",
     "steps": [
-      "Datenklassifikation erstellen (1h)",
-      "Tool-Freigabeliste definieren (30min)",
-      "Prüfregeln dokumentieren (30min)"
+      "Datenklassifikation erstellen",
+      "Tool-Freigabeliste definieren",
+      "Prüfregeln dokumentieren"
     ],
     "zeitersparnis": "Risikominimierung + Compliance"
   }

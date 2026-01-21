@@ -140,7 +140,7 @@ VERBOTEN:
 
     <li><strong>Art.&nbsp;6 – Hochrisiko-Systeme:</strong>
       KI-Systeme, die wesentliche Grundrechte berühren, unterliegen strengen Pflichten
-      (Datenqualität, Protokollierung, Governance). Für {{HAUPTLEISTUNG}} typischerweise
+      (Datenqualität, Protokollierung, Governance). Für {{HAUPTLEISTUNG}} in der Regel
       nicht zutreffend – außer in Branchen wie Gesundheit, Finanzen, Verwaltung.</li>
 
     <li><strong>Art.&nbsp;50 – Transparenzpflichten:</strong>
