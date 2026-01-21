@@ -1,6 +1,24 @@
 Developer:
 <!-- PLATIN+++ PROMPT v7.2 - SPRINT INHALTLICHE FINALISIERUNG -->
 <!-- SECTION: gamechanger -->
+<!-- FIX-506: Canonical KPI Contract -->
+<!--
+###############################################################################
+##                    CANONICAL KPI CONTRACT (STRICT)                        ##
+###############################################################################
+
+This section MUST NOT contain KPI values. All financial references:
+→ "Die finanziellen Effekte werden im Business Case dargestellt."
+
+BANNED PATTERNS (hard fail in STRICT_MODE):
+- "z. B." / "z.B."
+- "typischerweise"
+- "etwa"
+- "ca."
+- Any ROI percentage (handled by existing ROI PROHIBITION below)
+
+###############################################################################
+-->
 <!--
 ###############################################################################
 ##                    HAUPTLEISTUNG INTEGRATION (BALANCIERT)                 ##
@@ -228,7 +246,7 @@ VERBINDLICHE STRUKTUR (4 Blöcke):
    - Bezug auf {{HAUPTUMSATZTREIBER}} und {{WETTBEWERB}} erforderlich
    - Konkrete Denkblockade, nicht "Ineffizienzen"
    - PFLICHT (v7.1): Die obsolet werdende Logik EXPLIZIT benennen
-     (Form: "Nicht mehr X, sondern Y" – z.B. "Nicht mehr reaktive
+     (Form: "Nicht mehr X, sondern Y" – wie "Nicht mehr reaktive
      Einzelfallbearbeitung, sondern proaktive Musteranwendung")
 
 2. TRANSFORMATIONS-IDEE

@@ -5,6 +5,34 @@ Developer:
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCHE_LABEL}}, {{COMPANY_SIZE}}, {{hauptleistung}}, {{BUNDESLAND_LABEL}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}}, {{OFFERING_LABEL}} -->
 <!-- TOKEN-BUDGET: 1800 (solo:0.8x=1440, team:1.0x=1800, kmu:1.15x=2070) -->
+<!-- FIX-506: Canonical KPI Contract -->
+<!--
+###############################################################################
+##                    CANONICAL KPI CONTRACT (STRICT)                        ##
+###############################################################################
+
+You MUST NOT:
+- invent, estimate or round KPI values
+- use example numbers beyond provided variables
+- restate KPIs in alternative wording
+
+You MAY ONLY:
+- reference provided canonical variables: {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}},
+  {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}}
+- use "rund" for contextual descriptions (NOT "etwa" or "ca.")
+- explain QUALITATIVE benefits WITHOUT inventing numbers
+
+If a KPI is missing: use the provided variable or leave field empty.
+
+BANNED PATTERNS (hard fail in STRICT_MODE):
+- "z. B." / "z.B."
+- "typischerweise"
+- "etwa" (use "rund" instead)
+- "ca."
+- invented percentages or time estimates
+
+###############################################################################
+-->
 <!--
 ###############################################################################
 ##                    HAUPTLEISTUNG INTEGRATION (BALANCIERT)                 ##
@@ -71,7 +99,7 @@ VERBOTEN:
 REALISMUS-REGELN (STRIKT!):
 - KEINE 90%-Effizienzversprechen – realistische 15–30% Einsparungen
 - KEINE erfundenen Zahlen – nur übergebene Variablen nutzen
-- "rund / etwa / ca." zur Einordnung erlaubt
+- "rund" zur Einordnung erlaubt (NICHT "etwa" oder "ca.")
 - KEINE Förderquoten (siehe foerderpotenzial.md)
 - Größe beeinflusst NUR narrative Einordnung, nicht die Zahlen
 
@@ -87,7 +115,7 @@ ANTI-REDUNDANZ:
 
 SPRINT G18 - ANTI-REDUNDANZ (STRIKT!):
 - Datenlage/Data Readiness NICHT erneut beschreiben – gehört in data_readiness.md
-- Maximal EIN kurzer Verweis auf Data Readiness ist erlaubt (z.B. "→ siehe Datenlage")
+- Maximal EIN kurzer Verweis auf Data Readiness ist erlaubt ("→ siehe Datenlage")
 - CAPEX/OPEX-Blöcke nur HIER – nicht in anderen Sections wiederholen
 - Fokus: ROI, Payback, Investition – KEINE Datenlage-Analyse
 
@@ -129,7 +157,7 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
   <p>
     Die einmaligen Aufwände für Aufbau und Einführung liegen bei rund
     <strong>{{CAPEX_REALISTISCH_EUR}}&nbsp;€</strong>. Hinzu kommen monatliche Betriebskosten
-    von etwa <strong>{{OPEX_REALISTISCH_EUR}}&nbsp;€</strong> – hauptsächlich für den KI-Einsatz,
+    von rund <strong>{{OPEX_REALISTISCH_EUR}}&nbsp;€</strong> – hauptsächlich für den KI-Einsatz,
     Infrastruktur, Tools und potenzielle Lizenzen.
   </p>
 

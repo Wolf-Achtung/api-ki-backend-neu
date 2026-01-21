@@ -139,7 +139,7 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
   <h3>2. Wie Fördermittel den Business Case verbessern können</h3>
   <p>
     Programme in {{BUNDESLAND_LABEL}} und auf Bundesebene bezuschussen förderfähige Investitionskosten.
-    Zuschussquoten liegen typischerweise bei <strong>30–50&nbsp;%</strong> der anerkannten Kosten.
+    Zuschussquoten liegen in der Regel bei <strong>30–50&nbsp;%</strong> der anerkannten Kosten.
   </p>
   <ul>
     <li><strong>Kürzere Amortisation:</strong> Durch geringeren Eigenanteil verkürzt sich die Amortisationsdauer.</li>

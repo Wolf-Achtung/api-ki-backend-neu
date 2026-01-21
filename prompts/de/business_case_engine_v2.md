@@ -164,7 +164,7 @@ Jedes Szenario enthält:
 **notes**: Kurze Erklärung des Szenarios (max. 100 Zeichen)
 
 ### kpi_targets_6m
-6-Monats-Ziele (ca. 60% des 12-Monats-Potenzials):
+6-Monats-Ziele (rund 60% des 12-Monats-Potenzials):
 - `roi`: ROI nach 6 Monaten (%)
 - `time_savings_hours`: Eingesparte Stunden pro Monat
 - `monthly_savings`: Monatliche Ersparnis in EUR
