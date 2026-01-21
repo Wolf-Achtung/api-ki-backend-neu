@@ -1075,10 +1075,10 @@ def risk_report_to_html(
                     <col style="width:20%;">
                 </colgroup>
                 <tr style="background:#f8fafc;">
-                    <td style="padding:8px;font-weight:600;border-bottom:1px solid #e2e8f0;overflow-wrap:anywhere;word-break:break-word;white-space:normal;">Risiko</td>
-                    <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;">L</td>
-                    <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;">I</td>
-                    <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;">Score</td>
+                    <td style="padding:8px;font-weight:600;border-bottom:1px solid #e2e8f0;white-space:normal;">Risiko</td>
+                    <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;white-space:nowrap;">L</td>
+                    <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;white-space:nowrap;">I</td>
+                    <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;white-space:nowrap;">Score</td>
                 </tr>
         ''')
 
@@ -1089,7 +1089,7 @@ def risk_report_to_html(
                 # FIX-503B: Added white-space:normal and overflow:visible for WeasyPrint
                 html_parts.append(f'''
                 <tr>
-                    <td style="padding:8px;border-bottom:1px solid #f1f5f9;overflow-wrap:anywhere;word-break:break-word;hyphens:auto;white-space:normal;overflow:visible;">
+                    <td style="padding:8px;border-bottom:1px solid #f1f5f9;word-wrap:break-word;hyphens:auto;white-space:normal;">
                         <span style="display:inline-block;width:8px;height:8px;background:{color};border-radius:50%;margin-right:6px;flex-shrink:0;"></span>
                         {entry.title}
                     </td>
