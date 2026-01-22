@@ -14362,10 +14362,15 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             "wie kann ich", "gerne", "natürlich"
         ]
 
-        # FIX-510: Word-boundary patterns for question-related terms
+        # FIX-513: Precise CTA patterns for question-related terms
+        # Goal: "typische Aufgaben, Fragen und Dokumente" is ALLOWED
+        # Only block chat-style CTAs like "Haben Sie Fragen?"
         FORBIDDEN_REGEX_PATTERNS = [
-            (r'\bfrage\b', 'frage'),      # "Frage" as standalone word
-            (r'\bfragen\b', 'fragen'),    # "Fragen" as standalone word
+            (r'(?i)\b(haben|hast)\s+(sie|du)\s+fragen\b', 'haben_sie_fragen'),
+            (r'(?i)\bfragen\s+sie\s+(uns|mich|gerne)\b', 'fragen_sie_uns'),
+            (r'(?i)\bbei\s+fragen\b', 'bei_fragen'),
+            (r'(?i)\bfür\s+fragen\b', 'für_fragen'),
+            (r'(?i)\bihre\s+fragen\b', 'ihre_fragen'),
             (r'\bfrag\b', 'frag'),        # "frag" as standalone (chat command)
             (r'\bfragst\b', 'fragst'),    # "fragst" - du-form
             (r'\bquestions?\b', 'question'),  # English patterns

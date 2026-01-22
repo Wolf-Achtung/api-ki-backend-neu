@@ -103,12 +103,13 @@ class TestQuickWinsValidation:
 
     def test_quickwins_with_class_marker_passes(self):
         """Test: QuickWins with class="quick-win" passes."""
+        # FIX-513: Block must be >= 300 chars with at least 1 quick-win item
         html = """
         <section id="quick_wins">
             <h2>Quick Wins</h2>
             <ul>
-                <li class="quick-win">First win</li>
-                <li class="quick-win">Second win</li>
+                <li class="quick-win">First win: Automatisierung der Dateneingabe spart erhebliche Zeit und Ressourcen im täglichen Betrieb des Unternehmens</li>
+                <li class="quick-win">Second win: KI-gestützte Textverarbeitung beschleunigt die Dokumentenerstellung und reduziert Fehler signifikant</li>
             </ul>
         </section>
         """
@@ -396,9 +397,13 @@ class TestUtilityFunctions:
 
     def test_validate_quick_wins_rendered_true(self):
         """Test: validate_quick_wins_rendered returns True for proper HTML."""
+        # FIX-513: Block must be >= 300 chars with at least 1 quick-win item
         html = """
         <section id="quick_wins">
-            <ul><li class="quick-win">Win</li></ul>
+            <ul>
+                <li class="quick-win">Automatisierung der Dateneingabe spart erhebliche Zeit und Ressourcen im täglichen Betrieb des Unternehmens</li>
+                <li class="quick-win">KI-gestützte Textverarbeitung beschleunigt die Dokumentenerstellung und reduziert Fehler signifikant im Workflow</li>
+            </ul>
         </section>
         """
         assert validate_quick_wins_rendered(html)
@@ -471,7 +476,8 @@ class TestLoggingFormat:
         html_contract_validate(html, strict_mode=False)
 
         log_messages = [r.message for r in caplog.records]
-        assert any("[FIX-505][HTML-CONTRACT]" in msg for msg in log_messages)
+        # FIX-513 updated PASS log pattern
+        assert any("[HTML-CONTRACT]" in msg and "PASS" in msg for msg in log_messages)
 
     def test_fail_log_format(self, caplog):
         """Test: FAIL log has correct format."""
