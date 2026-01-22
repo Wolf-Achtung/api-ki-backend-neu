@@ -468,17 +468,32 @@ def _perplexity_competitor_analysis(
     - Short Query Mode for finance/beratung + EN
     - 2-stage retry mechanism
     - Returns (results, success_flag)
+
+    FIX-511 CHANGE 3:
+    - Dynamic year instead of hardcoded 2025
+    - Clear endpoint/model logging
     """
     if not os.getenv("PERPLEXITY_API_KEY"):
         return [], False
 
-    topic = f"Wettbewerber und Marktführer KI-Lösungen {branche} Deutschland 2025"
+    # FIX-511 CHANGE 3: Use dynamic year instead of hardcoded 2025
+    current_year = datetime.now(timezone.utc).year
+    topic = f"Wettbewerber und Marktführer KI-Lösungen {branche} Deutschland {current_year}"
 
     # N3-01: Short Query Mode for finance/beratung with EN language
     branche_lower = branche.lower() if branche else ""
     if lang == "en" and any(b in branche_lower for b in SHORT_QUERY_BRANCHES):
         topic = shorten_query(topic)
         log.info("[N3-01] Short Query Mode activated for competitor analysis (EN)")
+
+    # FIX-511 CHANGE 3: Clear endpoint/model logging for transparency
+    pplx_endpoint = os.getenv("PPLX_ENDPOINT", "https://api.perplexity.ai/chat/completions")
+    pplx_model = os.getenv("PERPLEXITY_MODEL") or os.getenv("PPLX_MODEL", "sonar-pro")
+    query_preview = topic[:120] + "..." if len(topic) > 120 else topic
+    log.info(
+        "[PERPLEXITY] endpoint=%s model=%s year=%d query=\"%s\"",
+        pplx_endpoint, pplx_model, current_year, query_preview
+    )
 
     log.info("🔍 Perplexity competitor analysis: %s", topic)
 
@@ -789,14 +804,17 @@ def _market_fallback_html() -> str:
     Generates fallback HTML when no market insights are available.
 
     SPRINT G14-B: Expanded to 3 substantive paragraphs for better content quality.
+    FIX-511: Dynamic year instead of hardcoded 2025.
     """
-    return '''
+    # FIX-511: Use dynamic year
+    current_year = datetime.now(timezone.utc).year
+    return f'''
 <div class="research-fallback market-fallback">
   <p><strong>Markt-Insights:</strong></p>
   <p>Aktuell keine spezifischen Markt-Insights verfügbar. Der KI-Markt entwickelt sich
      dynamisch – relevante Trends und Wettbewerbsinformationen sollten regelmäßig
      über Branchenpublikationen und Fachmedien verfolgt werden.</p>
-  <p><strong>Aktuelle Markttrends 2025:</strong> Generative KI wird zunehmend in
+  <p><strong>Aktuelle Markttrends {current_year}:</strong> Generative KI wird zunehmend in
      Geschäftsprozessen eingesetzt. Besonders gefragt sind Lösungen für
      Dokumentenverarbeitung, Kundenkommunikation und Prozessautomatisierung.
      KMU profitieren von sinkenden Einstiegskosten und benutzerfreundlichen
