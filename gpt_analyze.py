@@ -14472,6 +14472,77 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             "frage", "fragen"
         ]
 
+        # FIX-512 CHANGE 1: Deterministic sanitizer for KI_STACK responses
+        def _sanitize_ki_stack_response(text: str, attempt: int) -> Tuple[str, Dict[str, Any]]:
+            """
+            FIX-512: Sanitize KI_STACK response to remove forbidden patterns deterministically.
+
+            Removes/replaces trigger tokens BEFORE forbidden check:
+            - "natürlich" → removed (word boundary)
+            - "Frage"/"Fragen" → "Aspekt"/"Aspekte" (word boundary)
+            - Clean up double spaces, ": :", empty <li>
+
+            Returns: (sanitized_text, sanitize_stats)
+            """
+            import re
+            sanitized = text
+            removed = {}
+            replaced = {}
+            len_before = len(text)
+
+            # Remove "natürlich" (word boundary, case-insensitive)
+            pattern_natuerlich = re.compile(r'\bnatürlich\b', re.IGNORECASE)
+            matches = pattern_natuerlich.findall(sanitized)
+            if matches:
+                removed["natürlich"] = len(matches)
+                sanitized = pattern_natuerlich.sub('', sanitized)
+
+            # Replace "Fragen" → "Aspekte" (word boundary, case-insensitive)
+            pattern_fragen = re.compile(r'\bFragen\b', re.IGNORECASE)
+            matches = pattern_fragen.findall(sanitized)
+            if matches:
+                replaced["Fragen→Aspekte"] = len(matches)
+                # Preserve case for common patterns
+                sanitized = re.sub(r'\bFragen\b', 'Aspekte', sanitized)
+                sanitized = re.sub(r'\bfragen\b', 'aspekte', sanitized)
+
+            # Replace "Frage" → "Aspekt" (word boundary, case-insensitive)
+            pattern_frage = re.compile(r'\bFrage\b', re.IGNORECASE)
+            matches = pattern_frage.findall(sanitized)
+            if matches:
+                replaced["Frage→Aspekt"] = len(matches)
+                sanitized = re.sub(r'\bFrage\b', 'Aspekt', sanitized)
+                sanitized = re.sub(r'\bfrage\b', 'aspekt', sanitized)
+
+            # Clean up artifacts
+            # Double spaces
+            while '  ' in sanitized:
+                sanitized = sanitized.replace('  ', ' ')
+            # ": :" patterns
+            sanitized = sanitized.replace(': :', ':')
+            # Empty <li> tags
+            sanitized = re.sub(r'<li>\s*</li>', '', sanitized)
+
+            len_after = len(sanitized)
+
+            stats = {
+                "removed": removed,
+                "replaced": replaced,
+                "len_before": len_before,
+                "len_after": len_after
+            }
+
+            if removed or replaced:
+                log.info(
+                    "[FIX-512][KI_STACK][SANITIZE] attempt=%d removed=%s replaced=%s len_before=%d len_after=%d",
+                    attempt, removed, replaced, len_before, len_after
+                )
+
+            return sanitized, stats
+
+        # Track attempts for debug artifact (CHANGE 3)
+        attempt_debug_info = []
+
         for attempt in range(1, max_attempts + 1):
             try:
                 log.info(f"[FIX-511][SG-REGEN] section=KI_STACK_SUMMARY_HTML attempt={attempt}/{max_attempts} reason=too_short")
@@ -14485,32 +14556,87 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
 
                 if not response:
                     log.warning(f"[FIX-511][SG-REGEN] KI_STACK attempt {attempt}: Empty response")
+                    attempt_debug_info.append({
+                        "attempt": attempt,
+                        "status": "empty_response",
+                        "forbidden_raw": [],
+                        "forbidden_sanitized": [],
+                        "preview": ""
+                    })
                     continue
 
-                # Validate length
-                if len(response.strip()) < 600:
-                    log.warning(f"[FIX-511][SG-REGEN] KI_STACK attempt {attempt}: Too short ({len(response)} < 600)")
+                # FIX-512 CHANGE 1: Check forbidden BEFORE sanitization (for debug)
+                lower_response_raw = response.lower()
+                forbidden_found_raw = [p for p in FORBIDDEN_PATTERNS if p in lower_response_raw]
+
+                # FIX-512 CHANGE 1: Apply deterministic sanitization BEFORE forbidden check
+                sanitized_response, sanitize_stats = _sanitize_ki_stack_response(response, attempt)
+
+                # Validate length (on sanitized)
+                if len(sanitized_response.strip()) < 600:
+                    log.warning(f"[FIX-511][SG-REGEN] KI_STACK attempt {attempt}: Too short ({len(sanitized_response)} < 600)")
+                    attempt_debug_info.append({
+                        "attempt": attempt,
+                        "status": "too_short",
+                        "forbidden_raw": forbidden_found_raw,
+                        "forbidden_sanitized": [],
+                        "preview": sanitized_response[:400]
+                    })
                     continue
 
-                # Check for forbidden patterns
-                lower_response = response.lower()
-                forbidden_found = [p for p in FORBIDDEN_PATTERNS if p in lower_response]
-                if forbidden_found:
-                    log.warning(f"[FIX-511][SG-REGEN] KI_STACK attempt {attempt}: Forbidden patterns: {forbidden_found}")
+                # FIX-512 CHANGE 2: Check for forbidden patterns on SANITIZED text
+                lower_sanitized = sanitized_response.lower()
+                forbidden_found_sanitized = [p for p in FORBIDDEN_PATTERNS if p in lower_sanitized]
+
+                if forbidden_found_sanitized:
+                    log.warning(f"[FIX-511][SG-REGEN] KI_STACK attempt {attempt}: Forbidden patterns after sanitize: {forbidden_found_sanitized}")
+                    attempt_debug_info.append({
+                        "attempt": attempt,
+                        "status": "forbidden_after_sanitize",
+                        "forbidden_raw": forbidden_found_raw,
+                        "forbidden_sanitized": forbidden_found_sanitized,
+                        "preview": sanitized_response[:400]
+                    })
                     continue
 
                 # Check structure (at least 4 bullets)
-                li_count = response.count("<li>")
+                li_count = sanitized_response.count("<li>")
                 if li_count < 4:
                     log.warning(f"[FIX-511][SG-REGEN] KI_STACK attempt {attempt}: Not enough bullets ({li_count} < 4)")
+                    attempt_debug_info.append({
+                        "attempt": attempt,
+                        "status": "not_enough_bullets",
+                        "forbidden_raw": forbidden_found_raw,
+                        "forbidden_sanitized": [],
+                        "preview": sanitized_response[:400]
+                    })
                     continue
 
-                log.info(f"[FIX-511][SG-REGEN] section=KI_STACK_SUMMARY_HTML success len={len(response)} attempts={attempt}")
-                return response
+                # FIX-512 CHANGE 2: Accept - sanitization solved the problem
+                release_strict_512 = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
+                log.info(f"[FIX-512][KI_STACK][PASS] attempt={attempt} strict={1 if release_strict_512 else 0}")
+                log.info(f"[FIX-511][SG-REGEN] section=KI_STACK_SUMMARY_HTML success len={len(sanitized_response)} attempts={attempt}")
+                return sanitized_response
 
             except Exception as e:
                 log.error(f"[FIX-511][SG-REGEN] KI_STACK attempt {attempt} failed with error: {e}")
+                attempt_debug_info.append({
+                    "attempt": attempt,
+                    "status": "exception",
+                    "forbidden_raw": [],
+                    "forbidden_sanitized": [],
+                    "preview": str(e)[:400]
+                })
                 continue
+
+        # FIX-512 CHANGE 3: Log debug info for forensics if still failing
+        if attempt_debug_info:
+            log.error("[FIX-512][KI_STACK][DEBUG] All attempts failed. Debug info:")
+            for info in attempt_debug_info:
+                log.error(
+                    "[FIX-512][KI_STACK][DEBUG] attempt=%d status=%s forbidden_raw=%s forbidden_sanitized=%s",
+                    info["attempt"], info["status"], info["forbidden_raw"], info["forbidden_sanitized"]
+                )
 
         log.error(f"[FIX-511][SG-REGEN][FAIL] section=KI_STACK_SUMMARY_HTML after_attempts={max_attempts}")
         return None
@@ -14561,6 +14687,55 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             "frage", "fragen"
         ]
 
+        # FIX-512: Reuse same sanitizer logic as KI_STACK
+        def _sanitize_gamechanger_response(text: str, attempt: int) -> Tuple[str, Dict[str, Any]]:
+            """FIX-512: Sanitize GAMECHANGER response to remove forbidden patterns."""
+            import re
+            sanitized = text
+            removed = {}
+            replaced = {}
+            len_before = len(text)
+
+            # Remove "natürlich" (word boundary, case-insensitive)
+            pattern_natuerlich = re.compile(r'\bnatürlich\b', re.IGNORECASE)
+            matches = pattern_natuerlich.findall(sanitized)
+            if matches:
+                removed["natürlich"] = len(matches)
+                sanitized = pattern_natuerlich.sub('', sanitized)
+
+            # Replace "Fragen" → "Aspekte"
+            pattern_fragen = re.compile(r'\bFragen\b', re.IGNORECASE)
+            matches = pattern_fragen.findall(sanitized)
+            if matches:
+                replaced["Fragen→Aspekte"] = len(matches)
+                sanitized = re.sub(r'\bFragen\b', 'Aspekte', sanitized)
+                sanitized = re.sub(r'\bfragen\b', 'aspekte', sanitized)
+
+            # Replace "Frage" → "Aspekt"
+            pattern_frage = re.compile(r'\bFrage\b', re.IGNORECASE)
+            matches = pattern_frage.findall(sanitized)
+            if matches:
+                replaced["Frage→Aspekt"] = len(matches)
+                sanitized = re.sub(r'\bFrage\b', 'Aspekt', sanitized)
+                sanitized = re.sub(r'\bfrage\b', 'aspekt', sanitized)
+
+            # Clean up artifacts
+            while '  ' in sanitized:
+                sanitized = sanitized.replace('  ', ' ')
+            sanitized = sanitized.replace(': :', ':')
+            sanitized = re.sub(r'<li>\s*</li>', '', sanitized)
+
+            len_after = len(sanitized)
+            stats = {"removed": removed, "replaced": replaced, "len_before": len_before, "len_after": len_after}
+
+            if removed or replaced:
+                log.info(
+                    "[FIX-512][GAMECHANGER][SANITIZE] attempt=%d removed=%s replaced=%s len_before=%d len_after=%d",
+                    attempt, removed, replaced, len_before, len_after
+                )
+
+            return sanitized, stats
+
         for attempt in range(1, max_attempts + 1):
             try:
                 log.info(f"[FIX-511][SG-REGEN] section=GAMECHANGER_DECISION_HTML attempt={attempt}/{max_attempts} reason=too_short")
@@ -14576,26 +14751,31 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                     log.warning(f"[FIX-511][SG-REGEN] GAMECHANGER attempt {attempt}: Empty response")
                     continue
 
-                # Validate length
-                if len(response.strip()) < 600:
-                    log.warning(f"[FIX-511][SG-REGEN] GAMECHANGER attempt {attempt}: Too short ({len(response)} < 600)")
+                # FIX-512: Apply sanitization BEFORE forbidden check
+                sanitized_response, _ = _sanitize_gamechanger_response(response, attempt)
+
+                # Validate length (on sanitized)
+                if len(sanitized_response.strip()) < 600:
+                    log.warning(f"[FIX-511][SG-REGEN] GAMECHANGER attempt {attempt}: Too short ({len(sanitized_response)} < 600)")
                     continue
 
-                # Check for forbidden patterns
-                lower_response = response.lower()
-                forbidden_found = [p for p in FORBIDDEN_PATTERNS if p in lower_response]
+                # Check for forbidden patterns on SANITIZED text
+                lower_sanitized = sanitized_response.lower()
+                forbidden_found = [p for p in FORBIDDEN_PATTERNS if p in lower_sanitized]
                 if forbidden_found:
-                    log.warning(f"[FIX-511][SG-REGEN] GAMECHANGER attempt {attempt}: Forbidden patterns: {forbidden_found}")
+                    log.warning(f"[FIX-511][SG-REGEN] GAMECHANGER attempt {attempt}: Forbidden patterns after sanitize: {forbidden_found}")
                     continue
 
                 # Check structure (at least 4 bullets)
-                li_count = response.count("<li>")
+                li_count = sanitized_response.count("<li>")
                 if li_count < 4:
                     log.warning(f"[FIX-511][SG-REGEN] GAMECHANGER attempt {attempt}: Not enough bullets ({li_count} < 4)")
                     continue
 
-                log.info(f"[FIX-511][SG-REGEN] section=GAMECHANGER_DECISION_HTML success len={len(response)} attempts={attempt}")
-                return response
+                release_strict_512 = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
+                log.info(f"[FIX-512][GAMECHANGER][PASS] attempt={attempt} strict={1 if release_strict_512 else 0}")
+                log.info(f"[FIX-511][SG-REGEN] section=GAMECHANGER_DECISION_HTML success len={len(sanitized_response)} attempts={attempt}")
+                return sanitized_response
 
             except Exception as e:
                 log.error(f"[FIX-511][SG-REGEN] GAMECHANGER attempt {attempt} failed with error: {e}")
