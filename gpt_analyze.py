@@ -6664,6 +6664,57 @@ EXPAND_ELIGIBLE_SECTIONS = [
     "unternehmensprofil_markt",
 ]
 
+# FIX-511 CHANGE 1: Healable leak phrases that can be deterministically replaced
+# These phrases appear frequently in LLM output but can be safely replaced with "optional"
+# without needing regeneration or PLATIN fallback
+HEALABLE_LEAK_PHRASES = {
+    "bei bedarf": "optional",
+    "wenn sie möchten": "optional",
+    "falls gewünscht": "optional",
+}
+
+
+def _sanitize_healable_leaks(content: str, section_name: str) -> Tuple[str, Dict[str, int]]:
+    """
+    FIX-511 CHANGE 1: Deterministically sanitize healable leak phrases.
+
+    Replaces common leak phrases with safe alternatives BEFORE leak detection.
+    This prevents unnecessary regeneration and PLATIN fallback for phrases
+    that can be trivially fixed.
+
+    Args:
+        content: HTML content to sanitize
+        section_name: Name of section for logging
+
+    Returns:
+        Tuple of (sanitized_content, replacements_dict)
+        where replacements_dict maps phrase -> count replaced
+    """
+    if not content:
+        return content, {}
+
+    sanitized = content
+    replacements = {}
+    pre_len = len(content)
+
+    for phrase, replacement in HEALABLE_LEAK_PHRASES.items():
+        # Case-insensitive replacement
+        import re
+        pattern = re.compile(re.escape(phrase), re.IGNORECASE)
+        matches = pattern.findall(sanitized)
+        if matches:
+            replacements[phrase] = len(matches)
+            sanitized = pattern.sub(replacement, sanitized)
+
+    if replacements:
+        post_len = len(sanitized)
+        log.info(
+            "[FIX-511][LEAK-SAN] section=%s replaced=%s count=%d pre_len=%d post_len=%d",
+            section_name, replacements, sum(replacements.values()), pre_len, post_len
+        )
+
+    return sanitized, replacements
+
 
 def _detect_leak_phrases(content: str) -> List[str]:
     """
@@ -10727,43 +10778,77 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
 
             # =========================================================================
             # N4.6 Zero-Leak Policy: Detect and regenerate if leaks found
+            # FIX-511 CHANGE 1: First try deterministic sanitization for healable leaks
             # =========================================================================
-            detected_leaks = _detect_leak_phrases(result)
-            if detected_leaks:
-                log.warning(
-                    "[N4.6] 🚨 Leak phrases detected in %s: %s – regenerating with strict mode",
-                    section_name,
-                    detected_leaks[:3],  # Log first 3 for brevity
-                )
-                # Try regeneration with strict anti-leak directive
-                regenerated = _regenerate_without_leaks(section_name, prompt_text, llm)
 
-                # Check if regenerated content is still leaky
-                regenerated_leaks = _detect_leak_phrases(regenerated)
-                if not regenerated_leaks and regenerated:
-                    log.info("[N4.6] ✅ Regeneration successful – no leaks in %s", section_name)
-                    result = regenerated
-                else:
-                    # PLATIN+++ v5.4: If still leaky, use PLATIN fallback instead of stripping
-                    # Rationale: Stripped content is often broken/incoherent - full fallback is better
-                    log.warning(
-                        "[N4.6] ⚠️ Regeneration still has leaks in %s – using PLATIN fallback (not stripping)",
-                        section_name
+            # FIX-511: First sanitize healable leaks deterministically
+            result, sanitize_replacements = _sanitize_healable_leaks(result, section_name)
+
+            # Now detect remaining leaks
+            detected_leaks = _detect_leak_phrases(result)
+
+            if detected_leaks:
+                # FIX-511: Check if remaining leaks are all healable (shouldn't happen after sanitize, but safety check)
+                healable_leak_set = set(HEALABLE_LEAK_PHRASES.keys())
+                remaining_leak_set = set(leak.lower() for leak in detected_leaks)
+
+                if remaining_leak_set.issubset(healable_leak_set):
+                    # All remaining leaks are healable - sanitize again and accept
+                    result, extra_replacements = _sanitize_healable_leaks(result, section_name)
+                    sanitize_replacements.update(extra_replacements)
+                    healed_list = list(remaining_leak_set)
+                    log.info(
+                        "[FIX-511][LEAK-SAN] healed_leaks=%s accepted_without_fallback=true",
+                        healed_list
                     )
-                    fallback_content = _get_fallback_content(section_name, briefing, scores)
-                    if fallback_content:
-                        log.info("[N4.6] ✅ PLATIN fallback used for %s", section_name)
-                        result = fallback_content
+                else:
+                    # Non-healable leaks detected - use regeneration path
+                    log.warning(
+                        "[N4.6] 🚨 Leak phrases detected in %s: %s – regenerating with strict mode",
+                        section_name,
+                        detected_leaks[:3],  # Log first 3 for brevity
+                    )
+                    # Try regeneration with strict anti-leak directive
+                    regenerated = _regenerate_without_leaks(section_name, prompt_text, llm)
+
+                    # FIX-511: Sanitize regenerated content too
+                    regenerated, _ = _sanitize_healable_leaks(regenerated, section_name)
+
+                    # Check if regenerated content is still leaky
+                    regenerated_leaks = _detect_leak_phrases(regenerated)
+                    if not regenerated_leaks and regenerated:
+                        log.info("[N4.6] ✅ Regeneration successful – no leaks in %s", section_name)
+                        result = regenerated
                     else:
-                        # Last resort: strip only if no fallback available
-                        log.warning("[N4.6] No fallback for %s, stripping leaks as last resort", section_name)
-                        for leak in detected_leaks:
-                            import re as _re_leak
-                            pattern = _re_leak.compile(
-                                r'[^.!?]*' + _re_leak.escape(leak) + r'[^.!?]*[.!?]',
-                                _re_leak.IGNORECASE
-                            )
-                            result = pattern.sub('', result)
+                        # FIX-511: In STRICT mode, NO PLATIN fallback allowed for N4.6 leaks
+                        release_strict_n46 = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
+
+                        if release_strict_n46:
+                            # FIX-511: STRICT MODE - fail closed, no fallback
+                            error_msg = f"[FIX-511][N4.6] ❌ Section {section_name} still has leaks after regeneration+sanitize in STRICT MODE - blocking"
+                            log.error(error_msg)
+                            log.error("[FIX-511][N4.6] Remaining leaks: %s", regenerated_leaks)
+                            raise RuntimeError(error_msg)
+
+                        # Non-strict: PLATIN fallback allowed
+                        log.warning(
+                            "[N4.6] ⚠️ Regeneration still has leaks in %s – using PLATIN fallback (not stripping)",
+                            section_name
+                        )
+                        fallback_content = _get_fallback_content(section_name, briefing, scores)
+                        if fallback_content:
+                            log.info("[N4.6] ✅ PLATIN fallback used for %s", section_name)
+                            result = fallback_content
+                        else:
+                            # Last resort: strip only if no fallback available
+                            log.warning("[N4.6] No fallback for %s, stripping leaks as last resort", section_name)
+                            for leak in detected_leaks:
+                                import re as _re_leak
+                                pattern = _re_leak.compile(
+                                    r'[^.!?]*' + _re_leak.escape(leak) + r'[^.!?]*[.!?]',
+                                    _re_leak.IGNORECASE
+                                )
+                                result = pattern.sub('', result)
 
             # PLATIN+ Minimalumfang prüfen (dynamisch nach Section-Typ)
             # WICHTIG: Werte sind jetzt in WÖRTERN, nicht Zeichen!
@@ -14341,6 +14426,184 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
         log.error(f"[FIX-499-ROADMAP-REGEN] ❌ All {max_attempts} attempts failed")
         return None
 
+    # FIX-511 CHANGE 2: Regeneration function for KI_STACK_SUMMARY_HTML
+    def _regenerate_ki_stack_strict(context: Dict[str, Any], briefing: Dict[str, Any], max_attempts: int = 2) -> Optional[str]:
+        """
+        FIX-511: Regenerate KI_STACK_SUMMARY_HTML with strict constraints.
+
+        Must produce:
+        - Min 600 chars
+        - At least 4 bullet points OR 2 paragraphs + 1 bullet list
+        - No codefences
+        - No chat artifacts
+
+        Returns HTML content or None if regeneration fails.
+        """
+        branche = context.get("BRANCHE_LABEL", briefing.get("branche", "Ihrem Unternehmen"))
+
+        KI_STACK_STRICT_PROMPT = f"""Erstellen Sie eine KI-Stack-Empfehlung für {branche}.
+
+STRENGE REGELN (Pflicht):
+- Mindestens 6 konkrete Tool-Empfehlungen als Bulletpoints
+- Jeder Punkt: Tool-Kategorie + konkreter Einsatzzweck
+- Mindestlänge: 600 Zeichen gesamt
+- Sprache: Sie-Form, für Einzelunternehmer geeignet
+- VERBOTEN: Fragen, Chat-Floskeln, "Hier ist...", Code-Blöcke, Markdown
+
+FORMAT (exakt):
+<div class="ki-stack-summary">
+<h3>Empfohlener KI-Stack – Übersicht</h3>
+<ul>
+<li><strong>Textverarbeitung:</strong> [Konkrete Empfehlung]</li>
+<li><strong>Dokumentenanalyse:</strong> [Konkrete Empfehlung]</li>
+<li><strong>Prozessautomatisierung:</strong> [Konkrete Empfehlung]</li>
+<li><strong>Datenvisualisierung:</strong> [Konkrete Empfehlung]</li>
+<li><strong>Qualitätssicherung:</strong> [Konkrete Empfehlung]</li>
+<li><strong>Wissensmanagement:</strong> [Konkrete Empfehlung]</li>
+</ul>
+<p><em>Abschließende Empfehlung zur Tool-Auswahl.</em></p>
+</div>
+
+NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
+
+        FORBIDDEN_PATTERNS = [
+            "hier ist", "hier sind", "wie kann ich",
+            "gerne", "natürlich", "?", "```",
+            "frage", "fragen"
+        ]
+
+        for attempt in range(1, max_attempts + 1):
+            try:
+                log.info(f"[FIX-511][SG-REGEN] section=KI_STACK_SUMMARY_HTML attempt={attempt}/{max_attempts} reason=too_short")
+
+                response = _call_openai(
+                    prompt=KI_STACK_STRICT_PROMPT,
+                    temperature=0.5,
+                    max_tokens=1500,
+                    section="ki_stack_summary_strict",
+                )
+
+                if not response:
+                    log.warning(f"[FIX-511][SG-REGEN] KI_STACK attempt {attempt}: Empty response")
+                    continue
+
+                # Validate length
+                if len(response.strip()) < 600:
+                    log.warning(f"[FIX-511][SG-REGEN] KI_STACK attempt {attempt}: Too short ({len(response)} < 600)")
+                    continue
+
+                # Check for forbidden patterns
+                lower_response = response.lower()
+                forbidden_found = [p for p in FORBIDDEN_PATTERNS if p in lower_response]
+                if forbidden_found:
+                    log.warning(f"[FIX-511][SG-REGEN] KI_STACK attempt {attempt}: Forbidden patterns: {forbidden_found}")
+                    continue
+
+                # Check structure (at least 4 bullets)
+                li_count = response.count("<li>")
+                if li_count < 4:
+                    log.warning(f"[FIX-511][SG-REGEN] KI_STACK attempt {attempt}: Not enough bullets ({li_count} < 4)")
+                    continue
+
+                log.info(f"[FIX-511][SG-REGEN] section=KI_STACK_SUMMARY_HTML success len={len(response)} attempts={attempt}")
+                return response
+
+            except Exception as e:
+                log.error(f"[FIX-511][SG-REGEN] KI_STACK attempt {attempt} failed with error: {e}")
+                continue
+
+        log.error(f"[FIX-511][SG-REGEN][FAIL] section=KI_STACK_SUMMARY_HTML after_attempts={max_attempts}")
+        return None
+
+    # FIX-511 CHANGE 2: Regeneration function for GAMECHANGER_DECISION_HTML
+    def _regenerate_gamechanger_strict(context: Dict[str, Any], briefing: Dict[str, Any], max_attempts: int = 2) -> Optional[str]:
+        """
+        FIX-511: Regenerate GAMECHANGER_DECISION_HTML with strict constraints.
+
+        Must produce:
+        - Min 600 chars
+        - At least 4 bullet points OR 2 paragraphs + 1 bullet list
+        - No codefences
+        - No chat artifacts
+
+        Returns HTML content or None if regeneration fails.
+        """
+        branche = context.get("BRANCHE_LABEL", briefing.get("branche", "Ihrem Unternehmen"))
+
+        GAMECHANGER_STRICT_PROMPT = f"""Erstellen Sie strategische KI-Optionen (Gamechanger-Potenziale) für {branche}.
+
+STRENGE REGELN (Pflicht):
+- Mindestens 6 strategische Optionen als Bulletpoints
+- Jeder Punkt: Strategie-Name + konkreter Nutzen
+- Mindestlänge: 600 Zeichen gesamt
+- Sprache: Sie-Form, für Einzelunternehmer geeignet
+- VERBOTEN: Fragen, Chat-Floskeln, "Hier ist...", Code-Blöcke, Markdown
+
+FORMAT (exakt):
+<div class="gamechanger-decision">
+<h3>Strategische KI-Optionen – Gamechanger-Potenziale</h3>
+<ul>
+<li><strong>Automatisierte Kundeninteraktion:</strong> [Konkreter Nutzen für {branche}]</li>
+<li><strong>Prädiktive Analysen:</strong> [Konkreter Nutzen]</li>
+<li><strong>Content-Automatisierung:</strong> [Konkreter Nutzen]</li>
+<li><strong>Prozessoptimierung:</strong> [Konkreter Nutzen]</li>
+<li><strong>Wettbewerbsanalyse:</strong> [Konkreter Nutzen]</li>
+<li><strong>Personalisierung:</strong> [Konkreter Nutzen]</li>
+</ul>
+<p><em>Abschließende Empfehlung zum strategischen Differenzierungspotenzial.</em></p>
+</div>
+
+NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
+
+        FORBIDDEN_PATTERNS = [
+            "hier ist", "hier sind", "wie kann ich",
+            "gerne", "natürlich", "?", "```",
+            "frage", "fragen"
+        ]
+
+        for attempt in range(1, max_attempts + 1):
+            try:
+                log.info(f"[FIX-511][SG-REGEN] section=GAMECHANGER_DECISION_HTML attempt={attempt}/{max_attempts} reason=too_short")
+
+                response = _call_openai(
+                    prompt=GAMECHANGER_STRICT_PROMPT,
+                    temperature=0.5,
+                    max_tokens=1500,
+                    section="gamechanger_decision_strict",
+                )
+
+                if not response:
+                    log.warning(f"[FIX-511][SG-REGEN] GAMECHANGER attempt {attempt}: Empty response")
+                    continue
+
+                # Validate length
+                if len(response.strip()) < 600:
+                    log.warning(f"[FIX-511][SG-REGEN] GAMECHANGER attempt {attempt}: Too short ({len(response)} < 600)")
+                    continue
+
+                # Check for forbidden patterns
+                lower_response = response.lower()
+                forbidden_found = [p for p in FORBIDDEN_PATTERNS if p in lower_response]
+                if forbidden_found:
+                    log.warning(f"[FIX-511][SG-REGEN] GAMECHANGER attempt {attempt}: Forbidden patterns: {forbidden_found}")
+                    continue
+
+                # Check structure (at least 4 bullets)
+                li_count = response.count("<li>")
+                if li_count < 4:
+                    log.warning(f"[FIX-511][SG-REGEN] GAMECHANGER attempt {attempt}: Not enough bullets ({li_count} < 4)")
+                    continue
+
+                log.info(f"[FIX-511][SG-REGEN] section=GAMECHANGER_DECISION_HTML success len={len(response)} attempts={attempt}")
+                return response
+
+            except Exception as e:
+                log.error(f"[FIX-511][SG-REGEN] GAMECHANGER attempt {attempt} failed with error: {e}")
+                continue
+
+        log.error(f"[FIX-511][SG-REGEN][FAIL] section=GAMECHANGER_DECISION_HTML after_attempts={max_attempts}")
+        return None
+
     def _fallback_roadmap_decision_html(context: Dict[str, Any]) -> str:
         """Generate deterministic fallback for ROADMAP_90D_DECISION_HTML."""
         branche = context.get("BRANCHE_LABEL", "Ihrem Unternehmen")
@@ -14428,7 +14691,49 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                         # Non-strict: allow fallback for development
                         log.warning(f"[{run_id}] [FIX-499] ⚠️ ROADMAP_90D_DECISION_HTML regeneration failed, using fallback (non-strict mode)")
 
-            # Default fallback behavior for other sections (or ROADMAP in non-strict after regen failure)
+            # FIX-511 CHANGE 2: KI_STACK_SUMMARY_HTML gets regeneration instead of fallback
+            elif section_key == "KI_STACK_SUMMARY_HTML":
+                log.warning(f"[{run_id}] [FIX-511][SG-REGEN] section=KI_STACK_SUMMARY_HTML reason={reason} len={len(html_content or '')}")
+
+                regen_result = _regenerate_ki_stack_strict(guard_context, answers, max_attempts=2)
+
+                if regen_result and len(regen_result.strip()) >= 600:
+                    sections[section_key] = regen_result
+                    log.info(f"[{run_id}] [FIX-511][SG-REGEN] ✅ KI_STACK_SUMMARY_HTML regenerated successfully (len={len(regen_result)})")
+                    continue  # Skip fallback, regeneration succeeded
+                else:
+                    # Regeneration failed
+                    if release_strict:
+                        # FIX-511: In strict mode, HARD FAIL - no fallback allowed
+                        error_msg = f"[{run_id}] [FIX-511][SG-REGEN][FAIL] section=KI_STACK_SUMMARY_HTML after_attempts=2 strict=1 - blocking report"
+                        log.error(error_msg)
+                        raise RuntimeError(error_msg)
+                    else:
+                        # Non-strict: allow fallback for development
+                        log.warning(f"[{run_id}] [FIX-511][SG-REGEN][FAIL] section=KI_STACK_SUMMARY_HTML after_attempts=2 strict=0 - using fallback")
+
+            # FIX-511 CHANGE 2: GAMECHANGER_DECISION_HTML gets regeneration instead of fallback
+            elif section_key == "GAMECHANGER_DECISION_HTML":
+                log.warning(f"[{run_id}] [FIX-511][SG-REGEN] section=GAMECHANGER_DECISION_HTML reason={reason} len={len(html_content or '')}")
+
+                regen_result = _regenerate_gamechanger_strict(guard_context, answers, max_attempts=2)
+
+                if regen_result and len(regen_result.strip()) >= 600:
+                    sections[section_key] = regen_result
+                    log.info(f"[{run_id}] [FIX-511][SG-REGEN] ✅ GAMECHANGER_DECISION_HTML regenerated successfully (len={len(regen_result)})")
+                    continue  # Skip fallback, regeneration succeeded
+                else:
+                    # Regeneration failed
+                    if release_strict:
+                        # FIX-511: In strict mode, HARD FAIL - no fallback allowed
+                        error_msg = f"[{run_id}] [FIX-511][SG-REGEN][FAIL] section=GAMECHANGER_DECISION_HTML after_attempts=2 strict=1 - blocking report"
+                        log.error(error_msg)
+                        raise RuntimeError(error_msg)
+                    else:
+                        # Non-strict: allow fallback for development
+                        log.warning(f"[{run_id}] [FIX-511][SG-REGEN][FAIL] section=GAMECHANGER_DECISION_HTML after_attempts=2 strict=0 - using fallback")
+
+            # Default fallback behavior for other sections (or after regen failure in non-strict mode)
             fallback_html = fallback_fn(guard_context)
             sections[section_key] = fallback_html
             # FIX-498 WP6: Track fallback usage for metrics truth
