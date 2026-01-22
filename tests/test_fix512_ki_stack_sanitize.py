@@ -1,12 +1,13 @@
 """
 FIX-512: KI_STACK_SUMMARY Strict-Blocker Elimination Tests
 
-Tests for the deterministic sanitizer that removes/replaces forbidden patterns
+Tests for the deterministic sanitizer that removes CTA lines and forbidden patterns
 BEFORE the forbidden check, preventing STRICT mode failures.
 
-Trigger patterns observed:
-- "natürlich" → removed
-- "Frage"/"Fragen" → replaced with "Aspekt"/"Aspekte"
+Key changes in FIX-512:
+- CHANGE 1/3: Context-aware regex patterns (not substring) for Frage/Fragen detection
+- CHANGE 2/3: CTA-line removal sanitizer that removes entire sentences
+- CHANGE 3/3: Write debug files to /tmp/ on failure
 """
 import pytest
 import re
@@ -35,9 +36,64 @@ class TestFix512_SanitizerFunctionExists:
         source = _read_gpt_analyze_source()
         assert "def _sanitize_gamechanger_response" in source
 
+    def test_check_forbidden_patterns_function_exists(self):
+        """_check_forbidden_patterns should be defined for context-aware checking."""
+        source = _read_gpt_analyze_source()
+        assert "def _check_forbidden_patterns" in source
 
-class TestFix512_SanitizerLogic:
-    """Tests for the sanitizer removal/replacement logic."""
+
+class TestFix512_ContextAwarePatterns:
+    """Tests for CHANGE 1/3: Context-aware regex patterns."""
+
+    def test_forbidden_substring_patterns_exists(self):
+        """FORBIDDEN_SUBSTRING_PATTERNS should be defined."""
+        source = _read_gpt_analyze_source()
+        assert "FORBIDDEN_SUBSTRING_PATTERNS" in source
+
+    def test_forbidden_regex_patterns_exists(self):
+        """FORBIDDEN_REGEX_PATTERNS should be defined."""
+        source = _read_gpt_analyze_source()
+        assert "FORBIDDEN_REGEX_PATTERNS" in source
+
+    def test_regex_patterns_for_frage_context(self):
+        """Regex patterns should check 'frage/fragen' in CTA context only."""
+        source = _read_gpt_analyze_source()
+
+        # Find the KI_STACK regen function
+        func_match = re.search(
+            r'def _regenerate_ki_stack_strict.*?def _regenerate_gamechanger',
+            source,
+            re.DOTALL
+        )
+        assert func_match is not None
+        func_source = func_match.group()
+
+        # Should have context-aware patterns for "fragen"
+        assert 'haben\\s+sie\\s+fragen' in func_source
+        assert 'wenn\\s+sie\\s+fragen\\s+haben' in func_source
+        assert 'fragen\\s+sie' in func_source
+
+    def test_no_standalone_frage_substring_check(self):
+        """Should NOT have standalone 'frage'/'fragen' as substring (causes false positives)."""
+        source = _read_gpt_analyze_source()
+
+        # Find the FORBIDDEN_SUBSTRING_PATTERNS list
+        match = re.search(
+            r'FORBIDDEN_SUBSTRING_PATTERNS\s*=\s*\[(.*?)\]',
+            source,
+            re.DOTALL
+        )
+        assert match is not None
+        patterns_source = match.group(1)
+
+        # Should NOT contain standalone "frage" or "fragen" as substring pattern
+        # These would cause false positives on "Fragestellung"
+        assert '"frage"' not in patterns_source.lower()
+        assert '"fragen"' not in patterns_source.lower()
+
+
+class TestFix512_CTALineRemoval:
+    """Tests for CHANGE 2/3: CTA-line removal sanitizer."""
 
     def test_sanitizer_removes_natuerlich(self):
         """Sanitizer should remove 'natürlich' (word boundary)."""
@@ -54,10 +110,30 @@ class TestFix512_SanitizerLogic:
 
         # Should have pattern for natürlich
         assert r'\bnatürlich\b' in func_source
-        assert 'removed["natürlich"]' in func_source
+        assert 'removed_words["natürlich"]' in func_source
 
-    def test_sanitizer_replaces_frage_with_aspekt(self):
-        """Sanitizer should replace 'Frage' with 'Aspekt'."""
+    def test_sanitizer_has_cta_line_patterns(self):
+        """Sanitizer should have CTA line removal patterns."""
+        source = _read_gpt_analyze_source()
+
+        # Find the sanitizer function
+        func_match = re.search(
+            r'def _sanitize_ki_stack_response.*?return sanitized, stats',
+            source,
+            re.DOTALL
+        )
+        assert func_match is not None
+        func_source = func_match.group()
+
+        # Should have CTA line patterns
+        assert "cta_line_patterns" in func_source
+        # Check for presence of key CTA phrases (patterns use \s+ not .*)
+        assert "fragen\\s+haben" in func_source.lower()
+        assert "kontaktieren\\s+sie" in func_source.lower()
+        assert "zur\\s+verf" in func_source.lower()  # verfügung after lowercasing
+
+    def test_sanitizer_tracks_removed_lines(self):
+        """Sanitizer should track removed_lines in stats."""
         source = _read_gpt_analyze_source()
 
         func_match = re.search(
@@ -68,25 +144,7 @@ class TestFix512_SanitizerLogic:
         assert func_match is not None
         func_source = func_match.group()
 
-        # Should have replacement logic
-        assert "Frage→Aspekt" in func_source
-        assert "'Aspekt'" in func_source
-
-    def test_sanitizer_replaces_fragen_with_aspekte(self):
-        """Sanitizer should replace 'Fragen' with 'Aspekte'."""
-        source = _read_gpt_analyze_source()
-
-        func_match = re.search(
-            r'def _sanitize_ki_stack_response.*?return sanitized, stats',
-            source,
-            re.DOTALL
-        )
-        assert func_match is not None
-        func_source = func_match.group()
-
-        # Should have replacement logic
-        assert "Fragen→Aspekte" in func_source
-        assert "'Aspekte'" in func_source
+        assert "removed_lines" in func_source
 
 
 class TestFix512_SanitizerRunsBeforeForbiddenCheck:
@@ -98,7 +156,7 @@ class TestFix512_SanitizerRunsBeforeForbiddenCheck:
 
         # Find the KI_STACK regen function loop
         func_match = re.search(
-            r'def _regenerate_ki_stack_strict.*?return None',
+            r'def _regenerate_ki_stack_strict.*?def _regenerate_gamechanger',
             source,
             re.DOTALL
         )
@@ -137,21 +195,38 @@ class TestFix512_LogPatterns:
         source = _read_gpt_analyze_source()
         assert "[FIX-512][GAMECHANGER][PASS]" in source
 
+    def test_forbidden_log_pattern_ki_stack(self):
+        """[FIX-512][KI-STACK][FORBIDDEN] log pattern for snippet logging."""
+        source = _read_gpt_analyze_source()
+        assert "[FIX-512][KI-STACK][FORBIDDEN]" in source
+
 
 class TestFix512_DebugArtifact:
-    """Tests for debug artifact on failure."""
+    """Tests for CHANGE 3/3: Debug file output on failure."""
 
     def test_debug_log_on_failure(self):
         """[FIX-512][KI_STACK][DEBUG] should log on all attempts failed."""
         source = _read_gpt_analyze_source()
         assert "[FIX-512][KI_STACK][DEBUG]" in source
 
+    def test_debug_file_write_ki_stack(self):
+        """Should write debug file to /tmp/debug_512_ki_stack_attemptN.html."""
+        source = _read_gpt_analyze_source()
+        assert "debug_512_ki_stack_attempt" in source
+        assert "/tmp/debug_512_ki_stack_attempt" in source
+
+    def test_debug_file_write_gamechanger(self):
+        """Should write debug file to /tmp/debug_512_gamechanger_attemptN.html."""
+        source = _read_gpt_analyze_source()
+        assert "debug_512_gamechanger_attempt" in source
+        assert "/tmp/debug_512_gamechanger_attempt" in source
+
     def test_debug_info_includes_forbidden_raw(self):
         """Debug info should include forbidden_raw."""
         source = _read_gpt_analyze_source()
         # Look in the KI_STACK function
         func_match = re.search(
-            r'def _regenerate_ki_stack_strict.*?return None',
+            r'def _regenerate_ki_stack_strict.*?def _regenerate_gamechanger',
             source,
             re.DOTALL
         )
@@ -163,13 +238,25 @@ class TestFix512_DebugArtifact:
         """Debug info should include forbidden_sanitized."""
         source = _read_gpt_analyze_source()
         func_match = re.search(
-            r'def _regenerate_ki_stack_strict.*?return None',
+            r'def _regenerate_ki_stack_strict.*?def _regenerate_gamechanger',
             source,
             re.DOTALL
         )
         assert func_match is not None
         func_source = func_match.group()
         assert "forbidden_sanitized" in func_source
+
+    def test_attempt_responses_tracked(self):
+        """Raw responses should be tracked for debug file output."""
+        source = _read_gpt_analyze_source()
+        func_match = re.search(
+            r'def _regenerate_ki_stack_strict.*?def _regenerate_gamechanger',
+            source,
+            re.DOTALL
+        )
+        assert func_match is not None
+        func_source = func_match.group()
+        assert "attempt_responses" in func_source
 
 
 class TestFix512_SanitizerUnitTests:
@@ -195,25 +282,36 @@ class TestFix512_SanitizerUnitTests:
             result = pattern.sub('', text)
             assert "natürlich" not in result.lower(), f"Should be removed: {text}"
 
-    def test_frage_replacement_regex(self):
-        """Test regex pattern for Frage→Aspekt replacement."""
+    def test_cta_line_removal_regex(self):
+        """Test CTA line removal regex patterns."""
         import re
 
-        # Simulate the replacement logic
-        text = "Die wichtigste Frage ist, welche Fragen zu klären sind."
+        # Pattern for "wenn sie fragen haben" line
+        pattern = re.compile(r'(?i)[^.!?\n]*\bwenn\s+sie\s+fragen\s+haben\b[^.!?\n]*[.!?\n]?')
 
-        # Replace Fragen first (longer match)
-        text = re.sub(r'\bFragen\b', 'Aspekte', text)
-        text = re.sub(r'\bfragen\b', 'aspekte', text)
+        text = "Die Lösung ist einfach. Wenn Sie Fragen haben, kontaktieren Sie uns. Weitere Infos folgen."
+        result = pattern.sub('', text)
 
-        # Then replace Frage
-        text = re.sub(r'\bFrage\b', 'Aspekt', text)
-        text = re.sub(r'\bfrage\b', 'aspekt', text)
+        assert "Wenn Sie Fragen haben" not in result
+        assert "Die Lösung ist einfach" in result
+        assert "Weitere Infos folgen" in result
 
-        assert "Frage" not in text
-        assert "Fragen" not in text
-        assert "Aspekt" in text
-        assert "Aspekte" in text
+    def test_fragestellung_not_matched_by_context_regex(self):
+        """Fragestellung should NOT be matched by context-aware regex."""
+        import re
+
+        # Context-aware patterns should NOT match "Fragestellung"
+        patterns = [
+            (r'\bhaben\s+sie\s+fragen\b', 'haben sie fragen'),
+            (r'\bwenn\s+sie\s+fragen\s+haben\b', 'wenn sie fragen haben'),
+            (r'\bfragen\s+sie\b', 'fragen sie'),
+        ]
+
+        text = "Die zentrale Fragestellung betrifft drei Aspekte."
+
+        for regex_pattern, name in patterns:
+            match = re.search(regex_pattern, text, re.IGNORECASE)
+            assert match is None, f"Pattern '{name}' should NOT match 'Fragestellung'"
 
     def test_double_space_cleanup(self):
         """Test double space cleanup."""
@@ -234,27 +332,53 @@ class TestFix512_SanitizerUnitTests:
         assert "<li>Content</li>" in result
 
 
-class TestFix512_ForbiddenCheckOnSanitized:
-    """Tests that forbidden check uses sanitized text."""
+class TestFix512_ForbiddenCheckFunction:
+    """Tests for _check_forbidden_patterns function."""
 
-    def test_forbidden_check_uses_sanitized_variable(self):
-        """Forbidden check should use sanitized_response, not response."""
+    def test_check_forbidden_patterns_uses_substring_patterns(self):
+        """_check_forbidden_patterns should check FORBIDDEN_SUBSTRING_PATTERNS."""
         source = _read_gpt_analyze_source()
 
-        # Find the KI_STACK function
+        # Find the _check_forbidden_patterns function
         func_match = re.search(
-            r'def _regenerate_ki_stack_strict.*?return None',
+            r'def _check_forbidden_patterns\(text.*?return forbidden_found',
             source,
             re.DOTALL
         )
         assert func_match is not None
         func_source = func_match.group()
 
-        # Should have: lower_sanitized = sanitized_response.lower()
-        assert "lower_sanitized = sanitized_response.lower()" in func_source
+        assert "FORBIDDEN_SUBSTRING_PATTERNS" in func_source
 
-        # Forbidden check should use lower_sanitized
-        assert "for p in FORBIDDEN_PATTERNS if p in lower_sanitized" in func_source
+    def test_check_forbidden_patterns_uses_regex_patterns(self):
+        """_check_forbidden_patterns should check FORBIDDEN_REGEX_PATTERNS."""
+        source = _read_gpt_analyze_source()
+
+        # Find the _check_forbidden_patterns function
+        func_match = re.search(
+            r'def _check_forbidden_patterns\(text.*?return forbidden_found',
+            source,
+            re.DOTALL
+        )
+        assert func_match is not None
+        func_source = func_match.group()
+
+        assert "FORBIDDEN_REGEX_PATTERNS" in func_source
+
+    def test_check_forbidden_patterns_logs_snippets(self):
+        """_check_forbidden_patterns should log snippets for each match."""
+        source = _read_gpt_analyze_source()
+
+        # Find the _check_forbidden_patterns function
+        func_match = re.search(
+            r'def _check_forbidden_patterns\(text.*?return forbidden_found',
+            source,
+            re.DOTALL
+        )
+        assert func_match is not None
+        func_source = func_match.group()
+
+        assert "snippet" in func_source
 
 
 class TestFix512_MustNotHappenPatterns:
@@ -269,7 +393,7 @@ class TestFix512_MustNotHappenPatterns:
 
         # But there should also be debug logging before it
         func_match = re.search(
-            r'def _regenerate_ki_stack_strict.*?return None',
+            r'def _regenerate_ki_stack_strict.*?def _regenerate_gamechanger',
             source,
             re.DOTALL
         )
@@ -278,6 +402,30 @@ class TestFix512_MustNotHappenPatterns:
 
         # Debug should appear before final FAIL
         debug_pos = func_source.find("[FIX-512][KI_STACK][DEBUG]")
+        fail_pos = func_source.find("[FIX-511][SG-REGEN][FAIL]")
+
+        assert debug_pos != -1, "Debug pattern should exist"
+        assert fail_pos != -1, "Fail pattern should exist"
+        assert debug_pos < fail_pos, "Debug should come before fail"
+
+    def test_gamechanger_fail_pattern_with_debug(self):
+        """GAMECHANGER should also have debug before fail."""
+        source = _read_gpt_analyze_source()
+
+        # The FAIL pattern should still exist
+        assert "[FIX-511][SG-REGEN][FAIL] section=GAMECHANGER_DECISION_HTML" in source
+
+        # Find the GAMECHANGER function
+        func_match = re.search(
+            r'def _regenerate_gamechanger_strict.*?def _fallback_roadmap',
+            source,
+            re.DOTALL
+        )
+        assert func_match is not None
+        func_source = func_match.group()
+
+        # Debug should appear before final FAIL
+        debug_pos = func_source.find("[FIX-512][GAMECHANGER][DEBUG]")
         fail_pos = func_source.find("[FIX-511][SG-REGEN][FAIL]")
 
         assert debug_pos != -1, "Debug pattern should exist"
