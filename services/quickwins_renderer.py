@@ -508,6 +508,136 @@ def enrich_quickwins_premium(html: str) -> str:
     return enriched
 
 
+# =============================================================================
+# FIX-510 CHANGE 2: QuickWins Premium Renderer
+# =============================================================================
+# Renders FIX-506 JSON format (title, icon, problem, wirkung, umsetzung, hinweis)
+# to rich HTML cards that meet >=30 word requirements.
+
+def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL") -> Optional[str]:
+    """
+    FIX-510 CHANGE 2: Premium renderer for FIX-506 QuickWins JSON format.
+
+    Converts JSON with fields (title, icon, problem, wirkung, umsetzung, hinweis)
+    to rich HTML cards with sufficient word count (>=30 words).
+
+    Args:
+        raw_json: JSON string with QuickWins array
+        template_mode: "LEFT_ONLY", "FULL", etc.
+
+    Returns:
+        Rich HTML string or None if parsing fails
+    """
+    import json
+    import html as html_module
+
+    if not raw_json or not raw_json.strip():
+        return None
+
+    try:
+        # Parse JSON
+        cleaned = raw_json.strip()
+
+        # Remove markdown code fences
+        if cleaned.startswith("```"):
+            match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', cleaned)
+            if match:
+                cleaned = match.group(1).strip()
+            else:
+                cleaned = re.sub(r'^```(?:json)?\s*', '', cleaned)
+                cleaned = re.sub(r'\s*```$', '', cleaned)
+
+        # Extract array
+        match = re.search(r'(\[[\s\S]*\])', cleaned)
+        if match:
+            cleaned = match.group(1)
+
+        data = json.loads(cleaned)
+
+        if not isinstance(data, list) or len(data) == 0:
+            return None
+
+        # Build premium cards
+        cards_html = []
+        total_words = 0
+
+        for i, qw in enumerate(data):
+            if not isinstance(qw, dict):
+                continue
+
+            title = html_module.escape(str(qw.get("title", f"Quick Win {i+1}")).strip())
+            icon = str(qw.get("icon", "🎯")).strip()
+            problem = html_module.escape(str(qw.get("problem", "")).strip())
+            wirkung = html_module.escape(str(qw.get("wirkung", "")).strip())
+            umsetzung = html_module.escape(str(qw.get("umsetzung", "")).strip())
+            hinweis = html_module.escape(str(qw.get("hinweis", "siehe Business Case")).strip())
+
+            # Count words for this card
+            card_text = f"{title} {problem} {wirkung} {umsetzung} {hinweis}"
+            card_words = len(card_text.split())
+            total_words += card_words
+
+            # Build rich card HTML
+            card_html = f'''
+<div class="quick-win quick-win-card-premium" data-qw-json-rendered="true" data-qw-premium="true" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:16px;break-inside:avoid;page-break-inside:avoid;">
+    <div class="quick-win-header" style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <span class="quick-win-icon" style="font-size:24px;flex-shrink:0;">{icon}</span>
+        <h4 class="quick-win-title" style="margin:0;font-size:14px;font-weight:600;color:#1e293b;line-height:1.3;">{title}</h4>
+    </div>
+    <div class="quick-win-body" style="font-size:12px;line-height:1.5;color:#475569;">
+        <div class="quick-win-problem" style="margin-bottom:10px;padding:10px;background:#fef2f2;border-radius:8px;border-left:3px solid #ef4444;">
+            <strong style="color:#dc2626;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Problem:</strong>
+            <p style="margin:4px 0 0 0;">{problem}</p>
+        </div>
+        <div class="quick-win-wirkung" style="margin-bottom:10px;padding:10px;background:#f0fdf4;border-radius:8px;border-left:3px solid #22c55e;">
+            <strong style="color:#16a34a;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Wirkung:</strong>
+            <p style="margin:4px 0 0 0;">{wirkung}</p>
+        </div>
+        <div class="quick-win-umsetzung" style="margin-bottom:10px;padding:10px;background:#eff6ff;border-radius:8px;border-left:3px solid #3b82f6;">
+            <strong style="color:#2563eb;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Umsetzung:</strong>
+            <p style="margin:4px 0 0 0;">{umsetzung}</p>
+        </div>
+        <div class="quick-win-hinweis" style="font-size:11px;color:#6b7280;font-style:italic;padding-top:8px;border-top:1px solid #e5e7eb;">
+            💡 {hinweis}
+        </div>
+    </div>
+</div>'''
+            cards_html.append(card_html)
+
+        if not cards_html:
+            return None
+
+        # Determine if full-width mode (2-column grid for LEFT_ONLY)
+        if template_mode == "LEFT_ONLY":
+            wrapper_class = "quickwins-premium-container quickwins-fullwidth-grid"
+            wrapper_style = "display:grid;grid-template-columns:repeat(2, 1fr);gap:16px;width:100%;"
+        else:
+            wrapper_class = "quickwins-premium-container quick-wins"
+            wrapper_style = "width:100%;"
+
+        # Build final HTML
+        html_out = f'''<div class="{wrapper_class}" data-qw-json-rendered="true" data-qw-premium="true" style="{wrapper_style}">
+{"".join(cards_html)}
+</div>'''
+
+        # Log for debugging (FIX-510 requirement)
+        has_marker = 'data-qw-json-rendered="true"' in html_out
+        has_class = 'class="quick-win' in html_out
+        log.info(
+            "[FIX-510-QW] premium_render items=%d words=%d mode=%s has_marker=%d has_class=%d",
+            len(cards_html), total_words, template_mode, has_marker, has_class
+        )
+
+        return html_out
+
+    except json.JSONDecodeError as e:
+        log.debug("[FIX-510-QW] JSON parse failed: %s", e)
+        return None
+    except Exception as e:
+        log.warning("[FIX-510-QW] Premium render failed: %s", e)
+        return None
+
+
 def apply_quickwins_fullwidth_enhancement(sections: dict) -> dict:
     """
     FIX-504 TASK 4: Apply QuickWins full-width enhancement when LEFT_ONLY mode.

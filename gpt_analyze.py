@@ -165,6 +165,11 @@ from services.ai_act_module import (
     ai_act_harmonize,
     validate_ai_act_persona_compliance,
 )
+# FIX-510 CHANGE 2: Import premium QuickWins renderer
+from services.quickwins_renderer import (
+    render_quickwins_premium_json,
+    detect_quickwins_template_mode,
+)
 
 # ==================== PHASE 4: LIVE DATA INTEGRATION ====================
 try:
@@ -11544,9 +11549,23 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     if is_json_response:
         log.info("[FIX-499-QW] JSON response detected (starts with '[' or '{')")
 
-        # v14.35.22: Try simple JSON-to-HTML first (handles ["item1", "item2"] etc.)
-        simple_json_html = _quick_wins_simple_json_to_html(qw_raw)
-        if simple_json_html:
+        # FIX-510 CHANGE 2: Detect template mode for premium renderer
+        qw_template_mode = detect_quickwins_template_mode(sections)
+        log.info("[FIX-510-QW] Detected template_mode=%s", qw_template_mode)
+
+        # FIX-510 CHANGE 2: Try premium renderer FIRST (handles FIX-506 JSON format with rich fields)
+        premium_html = render_quickwins_premium_json(qw_raw, qw_template_mode)
+        if premium_html:
+            qw_html = premium_html
+            qw_json_valid = True
+            has_marker = 'class="quick-win' in qw_html
+            has_rendered = 'data-qw-json-rendered' in qw_html
+            log.info(
+                "[FIX-510-QW] ✅ Premium JSON→HTML: len=%d, has_quick_win_class=%s, has_rendered_marker=%s, mode=%s",
+                len(qw_html), has_marker, has_rendered, qw_template_mode
+            )
+        # Fallback: Try simple JSON-to-HTML (handles ["item1", "item2"] etc.)
+        elif (simple_json_html := _quick_wins_simple_json_to_html(qw_raw)):
             qw_html = simple_json_html
             qw_json_valid = True
             # FIX-501: Log marker presence for debugging
@@ -11591,9 +11610,14 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         # misclassified (e.g., due to leading whitespace issues), route to JSON path
         if qw_raw and qw_raw.lstrip().startswith(('[', '{')):
             log.warning("[FIX-502] Content looks like JSON but was in HTML path - re-routing to JSON parse")
-            # Try JSON parsing
-            simple_json_html = _quick_wins_simple_json_to_html(qw_raw)
-            if simple_json_html:
+            # FIX-510: Try premium renderer first in re-route path
+            qw_template_mode_reroute = detect_quickwins_template_mode(sections)
+            premium_html_reroute = render_quickwins_premium_json(qw_raw, qw_template_mode_reroute)
+            if premium_html_reroute:
+                qw_html = premium_html_reroute
+                qw_json_valid = True
+                log.info("[FIX-510-502] ✅ Re-routed Premium JSON→HTML: mode=%s", qw_template_mode_reroute)
+            elif (simple_json_html := _quick_wins_simple_json_to_html(qw_raw)):
                 qw_html = simple_json_html
                 qw_json_valid = True
                 log.info("[FIX-502] ✅ Re-routed JSON parsed successfully")
@@ -14244,10 +14268,22 @@ FORMAT (exakt):
 
 NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
 
-        FORBIDDEN_PATTERNS = [
+        # FIX-510: Use word-boundary regex for "frag" patterns to avoid false positives
+        # "infrage", "infragestellen", "fraglich" should NOT trigger forbidden
+        # Only actual question-like patterns should trigger
+        FORBIDDEN_SUBSTRING_PATTERNS = [
             "rollout", "skalierung", "modul", "stack",
-            "in diesem abschnitt", "bitte", "frag", "?",
+            "in diesem abschnitt", "bitte", "?",
             "wie kann ich", "gerne", "natürlich"
+        ]
+
+        # FIX-510: Word-boundary patterns for question-related terms
+        FORBIDDEN_REGEX_PATTERNS = [
+            (r'\bfrage\b', 'frage'),      # "Frage" as standalone word
+            (r'\bfragen\b', 'fragen'),    # "Fragen" as standalone word
+            (r'\bfrag\b', 'frag'),        # "frag" as standalone (chat command)
+            (r'\bfragst\b', 'fragst'),    # "fragst" - du-form
+            (r'\bquestions?\b', 'question'),  # English patterns
         ]
 
         for attempt in range(1, max_attempts + 1):
@@ -14270,9 +14306,21 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                     log.warning(f"[FIX-499-ROADMAP-REGEN] Attempt {attempt}: Too short ({len(response)} < 300)")
                     continue
 
-                # Check for forbidden patterns
+                # Check for forbidden substring patterns
                 lower_response = response.lower()
-                forbidden_found = [p for p in FORBIDDEN_PATTERNS if p in lower_response]
+                forbidden_found = [p for p in FORBIDDEN_SUBSTRING_PATTERNS if p in lower_response]
+
+                # FIX-510: Check regex patterns with word boundaries
+                for pattern, name in FORBIDDEN_REGEX_PATTERNS:
+                    match = re.search(pattern, lower_response, re.IGNORECASE)
+                    if match:
+                        # Log context for debugging (±40 chars)
+                        start = max(0, match.start() - 40)
+                        end = min(len(response), match.end() + 40)
+                        match_context = response[start:end].replace('\n', ' ')
+                        log.info(f"[FIX-510-ROADMAP] forbidden_hit pattern={pattern} context=\"...{match_context}...\"")
+                        forbidden_found.append(name)
+
                 if forbidden_found:
                     log.warning(f"[FIX-499-ROADMAP-REGEN] Attempt {attempt}: Forbidden patterns: {forbidden_found}")
                     continue

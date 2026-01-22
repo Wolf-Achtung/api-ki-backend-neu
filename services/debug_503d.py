@@ -321,7 +321,47 @@ def _build_quick_wins_keys_json(sections: Dict[str, Any]) -> str:
     from datetime import datetime
     result["captured_at"] = datetime.utcnow().isoformat() + "Z"
 
+    # FIX-510 CHANGE 3: Add runtime LLM config for audit trail
+    result["runtime_llm_config"] = _get_runtime_llm_config()
+
     return json.dumps(result, indent=2, ensure_ascii=False)
+
+
+def _get_runtime_llm_config() -> Dict[str, Any]:
+    """
+    FIX-510 CHANGE 3: Get runtime LLM configuration for debug/audit.
+
+    Returns dict with model/endpoint info so we can verify what was actually used.
+    """
+    import os
+
+    config = {
+        # OpenAI config
+        "openai_model": os.getenv("OPENAI_MODEL", "gpt-4o"),
+        "openai_base_url": os.getenv("OPENAI_BASE_URL", "default"),
+        "openai_timeout_connect": os.getenv("OPENAI_TIMEOUT_CONNECT", "30"),
+        "openai_timeout_read": os.getenv("OPENAI_TIMEOUT_READ", "120"),
+
+        # Perplexity config
+        "perplexity_model": os.getenv("PERPLEXITY_MODEL", "sonar-medium-online"),
+        "perplexity_base_url": os.getenv("PERPLEXITY_BASE_URL", "https://api.perplexity.ai"),
+        "perplexity_endpoint": os.getenv("PERPLEXITY_ENDPOINT", "/chat/completions"),
+
+        # Runtime flags
+        "release_strict_mode": os.getenv("RELEASE_STRICT_MODE", "0"),
+        "debug_render": os.getenv("DEBUG_RENDER", "0"),
+    }
+
+    # Log the config (FIX-510 requirement)
+    log.info(
+        "[FIX-510][CONFIG] Perplexity endpoint=%s model=%s | OpenAI model=%s | STRICT=%s",
+        config["perplexity_base_url"] + config["perplexity_endpoint"],
+        config["perplexity_model"],
+        config["openai_model"],
+        config["release_strict_mode"]
+    )
+
+    return config
 
 
 def build_debug_503d_attachments(
