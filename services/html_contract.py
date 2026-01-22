@@ -396,6 +396,7 @@ def _attempt_llm_repair(
         for v in violations[:5]  # Limit to 5 violations
     ])
 
+    # FIX-512 CHANGE 2: Hardened prompt with explicit NO markdown/code fences instruction
     prompt = f"""Fix the following HTML issues:
 
 {violation_desc}
@@ -403,15 +404,21 @@ def _attempt_llm_repair(
 HTML to repair (first 5000 chars):
 {html[:5000]}
 
-Return ONLY the repaired HTML, no explanations. Keep the same structure and content,
-just fix the formatting issues. Remove any code fences, ensure QuickWins have proper
-HTML structure, and fix any unclosed tags."""
+CRITICAL RULES:
+- Return ONLY raw HTML. No ``` fences. No markdown. No explanations.
+- Keep the same structure and content, just fix formatting issues.
+- Remove any code fences (``` markers).
+- Ensure QuickWins have proper HTML structure.
+- Fix any unclosed tags.
+
+OUTPUT: Raw HTML only, starting with < and ending with >. No text before or after."""
 
     try:
         repaired = openai_request_simple(
             section=section,
             prompt=prompt,
-            system_prompt="You are an HTML repair assistant. Fix formatting issues and return clean HTML only.",
+            # FIX-512: Hardened system prompt
+            system_prompt="You are an HTML repair assistant. Return ONLY clean HTML. Never use markdown, code fences, or explanations. Output raw HTML only.",
             max_tokens=8000,
         )
         return repaired
@@ -535,6 +542,22 @@ def html_contract_validate(
         if result.critical_count > 0:
             llm_repaired = _attempt_llm_repair(html, all_violations)
             if llm_repaired:
+                # FIX-512 CHANGE 1: Strip code fences AFTER LLM repair, BEFORE re-validation
+                llm_repaired_before = llm_repaired
+                llm_repaired = strip_code_fences_final(llm_repaired)
+
+                # Count how many code fences were removed
+                fence_count_before = len(_CODE_FENCE_PATTERN.findall(llm_repaired_before))
+                fence_count_before += len(_ORHTML_PATTERN.findall(llm_repaired_before))
+                fence_count_after = len(_CODE_FENCE_PATTERN.findall(llm_repaired))
+                fence_count_after += len(_ORHTML_PATTERN.findall(llm_repaired))
+                fences_removed = fence_count_before - fence_count_after
+
+                log.info(
+                    "[FIX-512][HTML-CONTRACT] stripped_code_fences_after_repair removed=%d",
+                    fences_removed
+                )
+
                 recheck = html_contract_validate(
                     llm_repaired,
                     sections=sections,

@@ -894,6 +894,13 @@ def render(briefing_obj: Any,
             "violations": [v.to_dict() for v in e.result.violations[:10]],
             "critical_count": e.result.critical_count,
         }
+        # FIX-512 CHANGE 3: Store debug attachments for admin email
+        if e.debug_attachments:
+            meta["html_contract_debug_attachments"] = e.debug_attachments
+            log.info(
+                "[FIX-512][HTML-CONTRACT] debug_attachments stored: keys=%s",
+                list(e.debug_attachments.keys())
+            )
         raise
     except ImportError:
         log.debug("[FIX-505][HTML-CONTRACT] Module not available, skipping validation")
