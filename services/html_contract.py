@@ -79,6 +79,7 @@ class ViolationType(Enum):
     MISSING_HEADING = "missing_heading"
     UNCLOSED_TAG = "unclosed_tag"
     QUICKWINS_NO_MARKER = "quickwins_no_marker"
+    QUICKWINS_EMPTY = "quick_wins_empty"  # FIX-513: Non-Empty Guard
 
 
 @dataclass
@@ -149,10 +150,21 @@ class ContractViolationError(RuntimeError):
 _CODE_FENCE_PATTERN = re.compile(r'```+[a-zA-Z]*|```+', re.MULTILINE)
 _ORHTML_PATTERN = re.compile(r'orhtml|```html', re.IGNORECASE)
 _RAW_JSON_PATTERN = re.compile(r'\{[\s]*"[^"]+"\s*:\s*(?:\[|{|")', re.MULTILINE)
+# FIX-513: Word-boundary check for quick-win class (not exact string)
 _QUICKWIN_MARKER_PATTERN = re.compile(
-    r'class=["\'][^"\']*quick-win[^"\']*["\']|data-qw-json-rendered=["\']true["\']',
+    r'data-qw-json-rendered=["\']true["\']',
     re.IGNORECASE
 )
+# FIX-513: Word-boundary regex for class containing "quick-win"
+_QUICKWIN_CLASS_PATTERN = re.compile(
+    r'class=["\'][^"\']*\bquick-win\b[^"\']*["\']',
+    re.IGNORECASE
+)
+# FIX-513: Debug anchors for QuickWins block extraction
+_QUICKWIN_DEBUG_START = '<!-- DEBUG-503D: QUICK_WINS_START -->'
+_QUICKWIN_DEBUG_END = '<!-- DEBUG-503D: QUICK_WINS_END -->'
+# FIX-513: Minimum block length for non-empty guard
+_QUICKWIN_MIN_BLOCK_LEN = 300
 _HEADING_PATTERN = re.compile(r'<h[1-6][^>]*>.*?</h[1-6]>', re.IGNORECASE | re.DOTALL)
 _SECTION_PATTERN = re.compile(
     r'<section[^>]*(?:id|data-section)=["\']([^"\']+)["\'][^>]*>(.*?)</section>',
@@ -195,11 +207,63 @@ def _check_code_fences(html: str) -> List[Violation]:
 
 
 def _check_quickwins_markers(html: str) -> List[Violation]:
-    """Check that QuickWins section has proper render markers."""
+    """
+    FIX-513: Check that QuickWins section has proper render markers.
+
+    Acceptance conditions (any ONE is sufficient to pass):
+    - data-qw-json-rendered="true" marker present
+    - class attribute contains word-boundary match for "quick-win"
+
+    Also checks Non-Empty Guard (P3):
+    - At least 1 quick-win item (word-boundary class match)
+    - Block length >= _QUICKWIN_MIN_BLOCK_LEN (300 chars)
+    """
     violations = []
 
-    # Find QuickWins section - capture full tag AND content
-    # Group 1: opening tag, Group 2: content
+    # FIX-513: Extract QuickWins block using debug anchors if available
+    qw_block = html
+    if _QUICKWIN_DEBUG_START in html and _QUICKWIN_DEBUG_END in html:
+        start_idx = html.find(_QUICKWIN_DEBUG_START)
+        end_idx = html.find(_QUICKWIN_DEBUG_END)
+        if start_idx < end_idx:
+            qw_block = html[start_idx:end_idx + len(_QUICKWIN_DEBUG_END)]
+
+    # FIX-513: Check for marker OR word-boundary class match
+    has_marker = bool(_QUICKWIN_MARKER_PATTERN.search(qw_block))
+    has_quick_win_wordclass = bool(_QUICKWIN_CLASS_PATTERN.search(qw_block))
+
+    # Count quick-win items (word-boundary class matches)
+    count_quick_win = len(_QUICKWIN_CLASS_PATTERN.findall(qw_block))
+    block_len = len(qw_block)
+
+    log.info(
+        "[FIX-513][HTML-CONTRACT] quick_wins_check block_len=%d has_marker=%s "
+        "has_quick_win_wordclass=%s count_quick_win=%d",
+        block_len, has_marker, has_quick_win_wordclass, count_quick_win
+    )
+
+    # FIX-513 P1: If marker or word-boundary class is present, QuickWins is rendered
+    if has_marker or has_quick_win_wordclass:
+        # FIX-513 P3: Non-Empty Guard - must have at least 1 item and sufficient length
+        if count_quick_win < 1:
+            violations.append(Violation(
+                type=ViolationType.QUICKWINS_EMPTY,
+                message=f"QuickWins has marker/class but no quick-win items (count={count_quick_win})",
+                section="quick_wins_empty",
+                context=qw_block[:200],
+                critical=True,
+            ))
+        elif block_len < _QUICKWIN_MIN_BLOCK_LEN:
+            violations.append(Violation(
+                type=ViolationType.QUICKWINS_EMPTY,
+                message=f"QuickWins block too short ({block_len} < {_QUICKWIN_MIN_BLOCK_LEN})",
+                section="quick_wins_empty",
+                context=qw_block[:200],
+                critical=True,
+            ))
+        return violations  # Pass - QuickWins is rendered
+
+    # Fallback: Check via section patterns (old behavior for non-premium renders)
     quickwins_patterns = [
         re.compile(r'(<section[^>]*(?:id|data-section)=["\']quick[_-]?wins["\'][^>]*>)(.*?)</section>', re.IGNORECASE | re.DOTALL),
         re.compile(r'(<section[^>]*(?:id|data-section)=["\']schnellgewinne["\'][^>]*>)(.*?)</section>', re.IGNORECASE | re.DOTALL),
@@ -214,8 +278,8 @@ def _check_quickwins_markers(html: str) -> List[Violation]:
 
             # Check if content has JSON-like structure without markers
             if _RAW_JSON_PATTERN.search(content):
-                # Has JSON - must have marker (check both tag AND content)
-                if not _QUICKWIN_MARKER_PATTERN.search(full_section):
+                # Has JSON - must have marker
+                if not _QUICKWIN_MARKER_PATTERN.search(full_section) and not _QUICKWIN_CLASS_PATTERN.search(full_section):
                     violations.append(Violation(
                         type=ViolationType.QUICKWINS_NO_MARKER,
                         message="QuickWins section contains JSON-like content without render marker",
@@ -226,9 +290,9 @@ def _check_quickwins_markers(html: str) -> List[Violation]:
             elif '<li' not in content.lower() and '<p' not in content.lower():
                 # No list items or paragraphs - might be empty or broken
                 violations.append(Violation(
-                    type=ViolationType.EMPTY_SECTION,
+                    type=ViolationType.QUICKWINS_EMPTY,
                     message="QuickWins section appears to have no rendered content",
-                    section="quick_wins",
+                    section="quick_wins_empty",
                     context=content[:200],
                     critical=True,
                 ))
@@ -498,7 +562,7 @@ def html_contract_validate(
     if result.critical_count == 0:
         result.passed = True
         log.info(
-            "[FIX-505][HTML-CONTRACT] PASS violations=0 warnings=%d bytes=%d",
+            "[FIX-513][HTML-CONTRACT] PASS violations=0 warnings=%d bytes=%d repair_llm_used=0",
             result.warning_count, result.html_bytes
         )
         return result
@@ -539,7 +603,8 @@ def html_contract_validate(
                     return result
 
         # Phase 2: LLM repair (if deterministic didn't fully fix)
-        if result.critical_count > 0:
+        # FIX-513 P2: STRICT mode MUST NOT use LLM repair (deterministic only)
+        if result.critical_count > 0 and not is_strict:
             llm_repaired = _attempt_llm_repair(html, all_violations)
             if llm_repaired:
                 # FIX-512 CHANGE 1: Strip code fences AFTER LLM repair, BEFORE re-validation
