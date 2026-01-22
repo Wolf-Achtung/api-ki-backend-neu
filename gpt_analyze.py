@@ -14317,8 +14317,8 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                         # Log context for debugging (±40 chars)
                         start = max(0, match.start() - 40)
                         end = min(len(response), match.end() + 40)
-                        context = response[start:end].replace('\n', ' ')
-                        log.info(f"[FIX-510-ROADMAP] forbidden_hit pattern={pattern} context=\"...{context}...\"")
+                        match_context = response[start:end].replace('\n', ' ')
+                        log.info(f"[FIX-510-ROADMAP] forbidden_hit pattern={pattern} context=\"...{match_context}...\"")
                         forbidden_found.append(name)
 
                 if forbidden_found:
