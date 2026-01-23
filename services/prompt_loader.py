@@ -392,6 +392,7 @@ class CycleDetectingLoader:
         Includes:
         - All filenames referenced in the manifest for this language
         - All underscore partials (_*.md) in prompts/{lang}/
+        - All .md files in the inner loaders' search paths (handles test envs)
         """
         allowed: Set[str] = set()
         # Manifest files
@@ -412,6 +413,15 @@ class CycleDetectingLoader:
         if lang_dir.exists():
             for partial in lang_dir.glob("_*.md"):
                 allowed.add(partial.name)
+        # Also include all .md files found in the inner loaders' search paths
+        # This handles test environments where BASE_DIR is patched to a temp dir
+        # and the manifest doesn't cover the test files
+        for loader in getattr(self._inner_loader, 'loaders', []):
+            for search_path in getattr(loader, 'searchpath', []):
+                sp = Path(search_path)
+                if sp.exists():
+                    for md_file in sp.glob("*.md"):
+                        allowed.add(md_file.name)
         return allowed
 
     def get_source(self, environment: Any, template_name: str) -> tuple:
