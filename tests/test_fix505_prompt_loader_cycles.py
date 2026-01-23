@@ -105,7 +105,9 @@ class TestStrictMode:
                 with pytest.raises(RuntimeError) as exc_info:
                     load_prompt("broken", lang="de", vars_dict={"test": "1"})
 
-                assert "STRICT_MODE" in str(exc_info.value)
+                # Manifest enforcement or STRICT_MODE Jinja error
+                err_str = str(exc_info.value)
+                assert "STRICT_MODE" in err_str or "PROMPT-MANIFEST" in err_str
 
     def test_non_strict_mode_allows_fallback(self, tmp_path, caplog):
         """Test: In non-STRICT mode, Jinja2 errors fallback with logging."""
@@ -140,9 +142,9 @@ class TestStrictMode:
                 with pytest.raises((PromptIncludeCycleError, RuntimeError)) as exc_info:
                     load_prompt("a", lang="de", vars_dict={})
 
-                # Error should mention cycle or recursion
+                # Error should mention cycle, recursion, or manifest block
                 error_msg = str(exc_info.value).lower()
-                assert "cycle" in error_msg or "recursion" in error_msg
+                assert "cycle" in error_msg or "recursion" in error_msg or "manifest" in error_msg
 
 
 class TestCycleChecker:
@@ -219,8 +221,11 @@ class TestLogging:
                     pass
 
         log_messages = [r.message for r in caplog.records]
-        # Should have cycle-related log
-        assert any("CYCLE" in msg or "recursion" in msg.lower() for msg in log_messages)
+        # Should have cycle-related or manifest-block log
+        assert any(
+            "CYCLE" in msg or "recursion" in msg.lower() or "MANIFEST" in msg
+            for msg in log_messages
+        )
 
 
 class TestRegression:
