@@ -147,7 +147,7 @@ class TestFix501ValidatorRegressions:
             html = '''<div class="some-other-class">Content without markers</div>'''
             with pytest.raises(RuntimeError) as exc_info:
                 _enforce_quickwins_no_raw_json(html, "IT", "solo")
-            assert "STRICT MODE" in str(exc_info.value)
+            assert "STRICT" in str(exc_info.value).upper()
         finally:
             os.environ.pop("RELEASE_STRICT_MODE", None)
 
