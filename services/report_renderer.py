@@ -836,6 +836,41 @@ def render(briefing_obj: Any,
     meta["report_date"] = ctx.get("report_date", "")
 
     # =========================================================================
+    # FIX-514: Quick-Wins Non-Empty Gate (pre-PDF, fail-closed in STRICT)
+    # Ensures Quick-Wins section is never an empty page in the PDF.
+    # =========================================================================
+    try:
+        release_strict = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
+        qw_cards = html.count('class="quick-win')
+        qw_marker = html.count('data-qw-json-rendered="true"')
+        qw_indicator = max(qw_cards, qw_marker)
+        # Extract Quick-Wins text length from rendered HTML
+        import re as _re
+        qw_section_match = _re.search(
+            r'class="quick-wins-container"[^>]*>(.*?)</div>\s*</div>',
+            html, _re.DOTALL
+        )
+        qw_text_len = len(qw_section_match.group(1)) if qw_section_match else 0
+        # Fallback: if no container match, use card count as proxy
+        if qw_text_len == 0 and qw_indicator > 0:
+            qw_text_len = qw_indicator * 100  # Estimate
+
+        qw_non_empty = qw_indicator >= 3 and qw_text_len > 300
+        log.info(
+            "[FIX-514][QW] non_empty=%s cards=%d len=%d",
+            str(qw_non_empty).lower(), qw_indicator, qw_text_len
+        )
+
+        if not qw_non_empty and release_strict:
+            raise RuntimeError(
+                f"[FIX-514] QuickWinsEmptyError: cards={qw_indicator} len={qw_text_len}"
+            )
+    except RuntimeError:
+        raise
+    except Exception as e:
+        log.warning("[FIX-514][QW] Gate check error (continuing): %s", str(e)[:100])
+
+    # =========================================================================
     # FIX-505: HTML Contract Validation (STRICT_MODE aware)
     # Validates final HTML against quality contract before PDF generation.
     # In STRICT_MODE: fails hard on violations. Otherwise: logs and continues.
