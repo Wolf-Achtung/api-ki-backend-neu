@@ -8367,6 +8367,29 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         # Ensure HAUPTLEISTUNG is available in both cases
         "hauptleistung": hauptleistung,  # lowercase for Jinja2
     })
+
+    # FIX-QW-PROMPT-STABILIZE CHANGE 2: SAFE context fields (deterministic, no LLM)
+    try:
+        from services.prompt_enhancer import sanitize_for_prompt
+        _safe_zeitersparnis = sanitize_for_prompt(zeitersparnis_prioritaet) if zeitersparnis_prioritaet else ""
+        _safe_ki_projekte = sanitize_for_prompt(ki_projekte) if ki_projekte else ""
+        _safe_vision = sanitize_for_prompt(vision_3_jahre) if vision_3_jahre else ""
+        base_vars.update({
+            "ZEITERSPARNIS_PRIORITAET_SAFE": _safe_zeitersparnis,
+            "KI_PROJEKTE_SAFE": _safe_ki_projekte,
+            "VISION_3_JAHRE_SAFE": _safe_vision,
+        })
+        log.info(
+            "[FIX-QW-PROMPT][SAFE] zeitersparnis_len=%d ki_projekte_len=%d vision_len=%d",
+            len(_safe_zeitersparnis), len(_safe_ki_projekte), len(_safe_vision)
+        )
+    except Exception as _safe_err:
+        log.warning("[FIX-QW-PROMPT][SAFE] sanitize failed: %s", _safe_err)
+        base_vars.update({
+            "ZEITERSPARNIS_PRIORITAET_SAFE": "",
+            "KI_PROJEKTE_SAFE": "",
+            "VISION_3_JAHRE_SAFE": "",
+        })
     
     # ===== BLOCK 4: Resources =====
     # Budget and time availability
