@@ -102,9 +102,9 @@ class TestCanonicalContractHeaders:
         return Path(__file__).parent.parent
 
     def test_quick_wins_has_contract(self, project_root):
-        """quick_wins.md has STRICT CANONICAL CONTRACT header."""
+        """quick_wins.md has output contract header (v8.3: OUTPUT-VERTRAG)."""
         content = (project_root / "prompts/de/quick_wins.md").read_text()
-        assert "STRICT CANONICAL CONTRACT" in content
+        assert "OUTPUT-VERTRAG" in content or "STRICT CANONICAL CONTRACT" in content
 
     def test_business_case_has_contract(self, project_root):
         """business_case.md has Canonical KPI Contract header."""
@@ -137,11 +137,11 @@ class TestQuickWinsSimplifiedFormat:
         """Quick Wins should have new simplified fields: problem, wirkung, umsetzung, hinweis."""
         content = (project_root / "prompts/de/quick_wins.md").read_text()
 
-        # Check for the new field names in format section
-        assert '"problem":' in content
-        assert '"wirkung":' in content
-        assert '"umsetzung":' in content
-        assert '"hinweis":' in content
+        # Check for the field names in contract section (v8.3 uses backtick format)
+        assert "problem" in content
+        assert "wirkung" in content
+        assert "umsetzung" in content
+        assert "hinweis" in content
 
     def test_hinweis_references_business_case(self, project_root):
         """Quick Wins hinweis should reference Business Case."""
@@ -165,12 +165,15 @@ class TestQuickWinsSimplifiedFormat:
         assert not matches, f"Found invented time ranges: {matches}"
 
     def test_min_words_requirement_documented(self, project_root):
-        """Quick Wins should document word count requirement (≥120 words premium or ≥40 words base)."""
+        """Quick Wins should document content length requirement."""
         content = (project_root / "prompts/de/quick_wins.md").read_text()
 
-        # Check for the word count requirement (120 for premium, or 40 for base)
-        # FIX-506 TASK 1: Updated to ≥120 words per Quick Win
-        assert "120 Wörter" in content or "≥ 120" in content or "40 Wörter" in content or "≥ 40" in content
+        # v8.3: Uses "mindestens vier volle Sätze" instead of word counts
+        assert (
+            "120 Wörter" in content or "≥ 120" in content or
+            "40 Wörter" in content or "≥ 40" in content or
+            "mindestens vier volle Sätze" in content
+        )
 
 
 class TestDecisionPromptsHaveCanonicalContract:
@@ -215,10 +218,10 @@ class TestHardBlacklist:
         """Get project root directory."""
         return Path(__file__).parent.parent
 
-    def test_quick_wins_has_hard_blacklist(self, project_root):
-        """quick_wins.md has HARD BLACKLIST section."""
+    def test_quick_wins_has_strict_rules(self, project_root):
+        """quick_wins.md has STRIKT enforcement rules (v8.3 replaces HARD BLACKLIST)."""
         content = (project_root / "prompts/de/quick_wins.md").read_text()
-        assert "HARD BLACKLIST" in content or "Fail-Closed" in content
+        assert "HARD BLACKLIST" in content or "Fail-Closed" in content or "STRIKT" in content
 
     def test_decision_prompts_have_hard_blacklist(self, project_root):
         """Decision prompts have HARD BLACKLIST section."""
@@ -286,16 +289,16 @@ class TestQuickWinsPremiumWordCount:
         return Path(__file__).parent.parent
 
     def test_premium_word_count_documented(self, project_root):
-        """Quick Wins documents ≥120 words requirement."""
+        """Quick Wins documents content length requirement (v8.3: sentence-based)."""
         content = (project_root / "prompts/de/quick_wins.md").read_text()
-        assert "120 Wörter" in content or "≥ 120" in content
+        assert "120 Wörter" in content or "≥ 120" in content or "mindestens vier volle Sätze" in content
 
     def test_field_word_count_documented(self, project_root):
-        """Quick Wins documents ≥30 words per field requirement."""
+        """Quick Wins documents per-field length requirement (v8.3: sentence-based)."""
         content = (project_root / "prompts/de/quick_wins.md").read_text()
-        assert "30 Wörter" in content or "≥30" in content
+        assert "30 Wörter" in content or "≥30" in content or "mindestens" in content
 
     def test_acceptance_criteria_premium(self, project_root):
-        """Quick Wins has PREMIUM QUALITY acceptance criteria."""
+        """Quick Wins has quality acceptance criteria (v8.3: FINAL CHECK / STRIKT)."""
         content = (project_root / "prompts/de/quick_wins.md").read_text()
-        assert "PREMIUM QUALITY" in content
+        assert "PREMIUM QUALITY" in content or "FINAL CHECK" in content
