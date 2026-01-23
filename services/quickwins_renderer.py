@@ -686,3 +686,199 @@ def apply_quickwins_fullwidth_enhancement(sections: dict) -> dict:
         sections["QUICK_WINS_HTML"] = enhanced
 
     return sections
+
+
+# =============================================================================
+# FIX-512: QuickWins Deterministic Normalization (Text/Bullets → HTML)
+# =============================================================================
+# Kill-switch for STRICT blocker: instead of aborting on missing HTML structure,
+# deterministically normalize plain-text/bullets/bare-HTML to valid QW HTML.
+
+_BULLET_PATTERN = re.compile(r'^\s*(?:[-•*]|\d+[.)]\s)', re.MULTILINE)
+
+
+def _extract_items_from_text(raw: str) -> list:
+    """
+    FIX-512: Extract meaningful items from plain-text/bullet content.
+
+    Returns list of stripped item strings.
+    """
+    lines = raw.strip().splitlines()
+    items = []
+    for line in lines:
+        # Strip bullet/number prefix
+        cleaned = re.sub(r'^\s*(?:[-•*]|\d+[.)]\s*)\s*', '', line).strip()
+        # Skip empty or too-short lines
+        if cleaned and len(cleaned) >= 10:
+            items.append(cleaned)
+    # If no bullet items found, try splitting by sentence-like chunks
+    if not items:
+        for line in lines:
+            stripped = line.strip()
+            if stripped and len(stripped) >= 10:
+                items.append(stripped)
+    return items
+
+
+def _render_items_as_html(items: list) -> str:
+    """
+    FIX-512: Render extracted items as Quick Wins HTML list.
+    """
+    import html as html_module
+
+    li_items = []
+    for item in items[:6]:
+        escaped = html_module.escape(item)
+        li_items.append(
+            f'  <li class="quick-win" data-qw-json-rendered="true">{escaped}</li>'
+        )
+
+    inner = "\n".join(li_items)
+    return (
+        f'<div class="quick-wins-container" data-qw-json-rendered="true">\n'
+        f'<ul class="quick-wins-list">\n{inner}\n</ul>\n'
+        f'</div>'
+    )
+
+
+def _inject_markers_into_html(html_content: str) -> str:
+    """
+    FIX-512: Inject class="quick-win" and data-qw-json-rendered markers into
+    existing HTML that lacks them.
+    """
+    modified = html_content
+
+    # Inject container wrapper if no quick-wins-container
+    if 'quick-wins-container' not in modified:
+        modified = (
+            f'<div class="quick-wins-container" data-qw-json-rendered="true">\n'
+            f'{modified}\n</div>'
+        )
+    elif 'data-qw-json-rendered' not in modified:
+        # Add marker to existing container
+        modified = modified.replace(
+            'class="quick-wins-container"',
+            'class="quick-wins-container" data-qw-json-rendered="true"',
+            1
+        )
+
+    # Inject class="quick-win" on <li> or card divs if missing
+    if 'class="quick-win' not in modified:
+        # Try to add to <li> elements
+        modified = re.sub(
+            r'<li(?![^>]*class=)([^>]*)>',
+            r'<li class="quick-win"\1>',
+            modified,
+            count=6
+        )
+        # If still no quick-win class (no <li>s), try <div> items
+        if 'class="quick-win' not in modified:
+            modified = re.sub(
+                r'<div(?![^>]*class=)([^>]*)>',
+                r'<div class="quick-win"\1>',
+                modified,
+                count=1
+            )
+
+    return modified
+
+
+def normalize_quickwins_to_html(raw: str, strict: bool = False) -> tuple:
+    """
+    FIX-512: Deterministic QuickWins normalization (Text/Bullets → HTML).
+
+    Converts any raw Quick Wins content (JSON, bare HTML, plain text/bullets)
+    into valid HTML with class="quick-win" and data-qw-json-rendered="true".
+
+    Args:
+        raw: Raw Quick Wins content (JSON, HTML, or plain text)
+        strict: If True and normalization fails, raise RuntimeError
+
+    Returns:
+        Tuple of (normalized_html, meta_dict) where meta_dict contains:
+        - path: "JSON" | "HTML" | "TEXT_BULLETS"
+        - items: number of items found
+        - has_marker: bool
+        - has_class: bool
+        - len: output length
+    """
+    if not raw or not raw.strip():
+        if strict:
+            raise RuntimeError(
+                "[QW-NORMALIZE] ❌ unable to normalize quick_wins to HTML in STRICT mode "
+                "(reason=empty_input)"
+            )
+        return "", {"path": "EMPTY", "items": 0, "has_marker": False, "has_class": False, "len": 0}
+
+    stripped = raw.strip()
+    path = "UNKNOWN"
+    result_html = ""
+
+    # --- Path 1: JSON (starts with [ or {) ---
+    if stripped.startswith(('[', '{')):
+        path = "JSON"
+        rendered = render_quickwins_premium_json(stripped)
+        if rendered:
+            result_html = rendered
+        else:
+            # Try simpler JSON extraction
+            import json
+            try:
+                cleaned = stripped
+                if cleaned.startswith("```"):
+                    cleaned = re.sub(r'^```(?:json)?\s*', '', cleaned)
+                    cleaned = re.sub(r'\s*```$', '', cleaned)
+                data = json.loads(cleaned)
+                if isinstance(data, list) and len(data) > 0:
+                    items_text = []
+                    for item in data:
+                        if isinstance(item, dict):
+                            title = item.get("title") or item.get("titel") or item.get("name", "")
+                            if title:
+                                items_text.append(str(title))
+                    if items_text:
+                        result_html = _render_items_as_html(items_text)
+            except (json.JSONDecodeError, TypeError, KeyError):
+                pass
+
+    # --- Path 2: HTML (contains tags) ---
+    elif '<' in stripped and '>' in stripped and re.search(r'<\w+[\s>]', stripped):
+        path = "HTML"
+        result_html = _inject_markers_into_html(stripped)
+
+    # --- Path 3: Plain text / bullets ---
+    if not result_html:
+        if path == "UNKNOWN":
+            path = "TEXT_BULLETS"
+        items = _extract_items_from_text(stripped)
+        if items:
+            result_html = _render_items_as_html(items)
+
+    # --- Validate result ---
+    has_marker = 'data-qw-json-rendered="true"' in result_html
+    has_class = 'class="quick-win' in result_html
+
+    # Count items
+    item_count = result_html.count('class="quick-win')
+
+    meta = {
+        "path": path,
+        "items": item_count,
+        "has_marker": has_marker,
+        "has_class": has_class,
+        "len": len(result_html),
+    }
+
+    # STRICT validation
+    if strict and (item_count < 3 or len(result_html) < 250):
+        raise RuntimeError(
+            f"[QW-NORMALIZE] ❌ unable to normalize quick_wins to HTML in STRICT mode "
+            f"(reason=insufficient_content items={item_count} len={len(result_html)})"
+        )
+
+    log.info(
+        "[FIX-512-QW] normalize path=%s items=%d has_marker=%s has_class=%s len=%d",
+        path, item_count, has_marker, has_class, len(result_html)
+    )
+
+    return result_html, meta

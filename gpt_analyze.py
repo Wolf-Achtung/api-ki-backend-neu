@@ -169,6 +169,7 @@ from services.ai_act_module import (
 from services.quickwins_renderer import (
     render_quickwins_premium_json,
     detect_quickwins_template_mode,
+    normalize_quickwins_to_html,
 )
 
 # ==================== PHASE 4: LIVE DATA INTEGRATION ====================
@@ -4079,26 +4080,23 @@ def _enforce_quickwins_no_raw_json(qw_html: str, branche: str, groesse: str) -> 
             log.info("[QW-JSON-RENDER] ✅ Built %d Quick Wins from extracted titles", len(minimal_qw))
             return _build_quick_wins_html(minimal_qw, branche=branche, groesse=groesse)
 
-        # Last resort for JSON that couldn't be parsed - use compact fallback with extracted content
-        # FIX-500: In STRICT mode, this is a hard error - no fallback allowed
+        # FIX-512: Instead of STRICT blocker, normalize the content deterministically
         release_strict = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
-        if release_strict:
-            error_msg = "[QW-FALLBACK] ❌ JSON present but unparseable in STRICT MODE - blocking"
-            log.error(error_msg)
-            raise RuntimeError(error_msg)
-        log.warning("[QW-FALLBACK] JSON present but unparseable - using compact fallback")
+        log.info("[FIX-512] JSON unparseable - attempting deterministic normalization (strict=%s)", release_strict)
+        normalized, meta = normalize_quickwins_to_html(qw_html, strict=release_strict)
+        if normalized:
+            return normalized
+        log.warning("[QW-FALLBACK] JSON unparseable, normalization empty - using compact fallback")
         return _generate_quickwins_compact_fallback(qw_html, branche, groesse)
 
-    # Fix-Batch G: REMOVED soft-fail wrap path - always use compact fallback instead
-    # If no HTML structure and no JSON, generate compact fallback (never wrap raw content)
+    # Fix-Batch G / FIX-512: If no HTML structure, normalize deterministically
     if not has_html_structure:
-        # FIX-500: In STRICT mode, this is a hard error - no fallback allowed
         release_strict = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
-        if release_strict:
-            error_msg = "[QW-FALLBACK] ❌ No HTML structure in STRICT MODE - blocking"
-            log.error(error_msg)
-            raise RuntimeError(error_msg)
-        log.info("[QW-FALLBACK] No HTML structure - generating compact fallback")
+        log.info("[FIX-512] No HTML structure - attempting deterministic normalization (strict=%s)", release_strict)
+        normalized, meta = normalize_quickwins_to_html(qw_html, strict=release_strict)
+        if normalized:
+            return normalized
+        log.info("[QW-FALLBACK] Normalization empty - generating compact fallback")
         return _generate_quickwins_compact_fallback(qw_html, branche, groesse)
 
     return qw_html
