@@ -12275,10 +12275,22 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
                         )
                         continue  # Skip this key, keep original
 
+                # FIX-515 TASK 1: Cap truncation at max 50% cut to prevent extreme shrinking
+                trunc_pct = (1 - len(truncated) / original_len) * 100 if original_len > 0 else 0
+                if trunc_pct > 50:
+                    log.warning(
+                        "[FIX-515][TRUNC] REVERTED section=%s before=%d after=%d delta=%d pct=%.0f%% (>50%% cap)",
+                        key, original_len, len(truncated), len(truncated) - original_len, trunc_pct
+                    )
+                    continue  # Skip: too aggressive
+
                 sections[key] = truncated
                 delta = len(truncated) - original_len
                 if delta != 0:
-                    log.info(f"[GLOBAL-TRUNCATION] {key}: {original_len} -> {len(truncated)} chars (delta: {delta})")
+                    log.info(
+                        "[FIX-515][TRUNC] section=%s before=%d after=%d delta=%d pct=%.0f%%",
+                        key, original_len, len(truncated), delta, trunc_pct
+                    )
             except Exception as e:
                 log.warning(f"[GLOBAL-TRUNCATION] {key} failed: {e}")
 
