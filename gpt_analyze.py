@@ -1476,6 +1476,30 @@ ENABLE_REPAIR_HTML = (os.getenv("ENABLE_REPAIR_HTML", "1") in ("1", "true", "TRU
 USE_INTERNAL_RESEARCH = (os.getenv("RESEARCH_PROVIDER", "hybrid") != "disabled")
 ENABLE_AI_ACT_SECTION = (os.getenv("ENABLE_AI_ACT_SECTION", "1") in ("1", "true", "TRUE", "yes", "YES"))
 USE_PROMPT_SYSTEM = (os.getenv("USE_PROMPT_SYSTEM", "1") in ("1", "true", "TRUE", "yes", "YES"))
+# STATE-AUDIT-517A: Debug trace for prompt section propagation
+DEBUG_PROMPT_TRACE = (os.getenv("DEBUG_PROMPT_TRACE", "0") in ("1", "true", "TRUE"))
+# STATE-AUDIT-517A: Thread-safe collector for prompt trace data (per-run)
+import threading as _threading_517a
+_prompt_trace_lock = _threading_517a.Lock()
+_prompt_trace_data: Dict[str, Any] = {}
+
+
+def _record_prompt_trace(prompt_key: str, section_arg: str, rendered_bytes: int,
+                         includes: list, interpolate_section: str, engine: str) -> None:
+    """STATE-AUDIT-517A: Record prompt trace entry for meta injection."""
+    if not DEBUG_PROMPT_TRACE:
+        return
+    entry = {
+        "section_arg": section_arg,
+        "rendered_bytes": rendered_bytes,
+        "includes": includes,
+        "interpolate_section": interpolate_section,
+        "engine": engine,
+    }
+    with _prompt_trace_lock:
+        _prompt_trace_data[prompt_key] = entry
+
+
 # Initialize PromptEnhancer (einmal beim App-Start) - NEU!
 if USE_PROMPT_SYSTEM:
     try:
@@ -10714,7 +10738,30 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
             
             # 3. Interpolation
             from services.prompt_loader import _interpolate
+            # STATE-AUDIT-517A: PROMPT-TRACE diagnostic (before _interpolate call)
+            if DEBUG_PROMPT_TRACE:
+                _has_jinja = "{%" in (enhanced_prompt if isinstance(enhanced_prompt, str) else "")
+                log.warning(
+                    "[PROMPT-TRACE] key=%s section_arg=<MISSING> lang=%s "
+                    "manifest=%s template_engine=%s enhanced_bytes=%d",
+                    prompt_key, prompt_lang,
+                    bool(prompt_key),
+                    "jinja" if _has_jinja else "simple",
+                    len(enhanced_prompt) if isinstance(enhanced_prompt, str) else 0,
+                )
             prompt_text = _interpolate(enhanced_prompt, vars_dict)
+
+            # STATE-AUDIT-517A: Record prompt trace after interpolation
+            if DEBUG_PROMPT_TRACE:
+                _has_jinja_post = "{%" in (enhanced_prompt if isinstance(enhanced_prompt, str) else "")
+                _record_prompt_trace(
+                    prompt_key=prompt_key,
+                    section_arg="<NOT_PASSED>",  # ROOT CAUSE: section not passed to _interpolate
+                    rendered_bytes=len(prompt_text) if isinstance(prompt_text, str) else 0,
+                    includes=[],  # Would need to extract from enhanced_prompt
+                    interpolate_section="unknown",  # This is what _interpolate receives (default)
+                    engine="jinja" if _has_jinja_post else "simple",
+                )
 
             # 3b. Spezieller Förder-Kontext aus foerderprogramme.md
             # v4.15.0: Skip for English reports (Germany-specific funding)
@@ -13946,6 +13993,14 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     log.info(f"[{run_id}] 🔍 Applying size-inappropriate content filter...")
     sections = filter_all_sections(sections, answers)
 
+    # STATE-AUDIT-517A: Inject prompt_trace into sections for meta
+    if DEBUG_PROMPT_TRACE:
+        with _prompt_trace_lock:
+            if _prompt_trace_data:
+                sections["_prompt_trace"] = dict(_prompt_trace_data)
+                log.info("[%s] [PROMPT-TRACE] injected %d trace entries into meta", run_id, len(_prompt_trace_data))
+                _prompt_trace_data.clear()
+
     # === SPRINT N2: VALIDATE AND HEAL - Wolf 2025-12 ===
     # New flow: validate_and_heal() replaces leaked content BEFORE rendering
     log.info(f"[{run_id}] 🔍 Running report validation with N2 healing...")
@@ -13972,6 +14027,86 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     sections["_VALIDATOR_CRITICAL_COUNT"] = len(critical_errors)
 
     if not is_valid:
+        # STATE-AUDIT-517A: Generate debug_517 artifacts BEFORE quality gate raise
+        # Ensures diagnostics are available even when report is blocked
+        _debug_render = os.getenv("DEBUG_RENDER", "0") in ("1", "true", "TRUE")
+        if _debug_render or DEBUG_PROMPT_TRACE:
+            try:
+                import re as _re_517
+                _short_section_errors = [
+                    e for e in validation_errors
+                    if e.category == "SECTION_TOO_SHORT" and e.severity == "CRITICAL"
+                ]
+                if _short_section_errors:
+                    # Build debug_517_short_sections.json
+                    _debug_517_entries = []
+                    for err in _short_section_errors:
+                        _sec_key = err.section
+                        _sec_content = sections.get(_sec_key, "")
+                        _text_raw = _re_517.sub(r"<[^>]+>", "", _sec_content).strip() if isinstance(_sec_content, str) else ""
+                        _words_raw = len(_text_raw.split()) if _text_raw else 0
+                        # Determine min_words from error message
+                        _min_match = _re_517.search(r"Minimum.*?:\s*(\d+)", err.message)
+                        _min_words = int(_min_match.group(1)) if _min_match else 0
+                        # Get LLM params for this section
+                        _llm_info = _llm_params_for(_sec_key)
+                        _debug_517_entries.append({
+                            "key": _sec_key,
+                            "min_words": _min_words,
+                            "words_raw": _words_raw,
+                            "words_after_clean": _words_raw,
+                            "words_after_enforcer": _words_raw,
+                            "words_after_validator_strip": _words_raw,
+                            "prompt_key_used": _sec_key,
+                            "llm_model": _llm_info.get("model", "unknown"),
+                            "max_tokens": _llm_info.get("max_tokens", 0),
+                            "finish_reason": "unknown",
+                            "content_preview": _text_raw[:200] if _text_raw else "",
+                        })
+
+                    # Write JSON artifact
+                    _artifact_dir = Path("/tmp")
+                    _json_path = _artifact_dir / "debug_517_short_sections.json"
+                    _json_path.write_text(
+                        json.dumps(_debug_517_entries, indent=2, ensure_ascii=False),
+                        encoding="utf-8"
+                    )
+                    log.info("[%s] [STATE-AUDIT-517A] wrote %s (%d entries)",
+                             run_id, _json_path, len(_debug_517_entries))
+
+                    # Build debug_517_short_sections_excerpt.html
+                    _html_parts = ["<html><body><h2>STATE-AUDIT-517A: Short Section Excerpts</h2>\n"]
+                    for entry in _debug_517_entries:
+                        _sec_key = entry["key"]
+                        _sec_html = sections.get(_sec_key, "") or ""
+                        _preview = _re_517.sub(r"<[^>]+>", "", _sec_html).strip()[:400] if isinstance(_sec_html, str) else ""
+                        _html_parts.append(f"<!--BEGIN {_sec_key}-->\n")
+                        _html_parts.append(f"<h3>{_sec_key} ({entry['words_raw']} words, min {entry['min_words']})</h3>\n")
+                        _html_parts.append(f"<pre>{_preview}</pre>\n")
+                        _html_parts.append(f"<details><summary>Full HTML</summary><code>{(_sec_html or '')[:2000]}</code></details>\n")
+                        _html_parts.append(f"<!--END {_sec_key}-->\n")
+                    _html_parts.append("</body></html>")
+                    _html_path = _artifact_dir / "debug_517_short_sections_excerpt.html"
+                    _html_path.write_text("".join(_html_parts), encoding="utf-8")
+                    log.info("[%s] [STATE-AUDIT-517A] wrote %s", run_id, _html_path)
+
+                    # Attach to debug_attachments for admin email
+                    if "debug_attachments" not in sections:
+                        sections["_debug_517_artifacts"] = []
+                    sections.setdefault("_debug_517_artifacts", [])
+                    sections["_debug_517_artifacts"].append({
+                        "filename": "debug_517_short_sections.json",
+                        "content": _json_path.read_bytes(),
+                        "content_type": "application/json",
+                    })
+                    sections["_debug_517_artifacts"].append({
+                        "filename": "debug_517_short_sections_excerpt.html",
+                        "content": _html_path.read_bytes(),
+                        "content_type": "text/html",
+                    })
+            except Exception as _debug_exc:
+                log.warning("[%s] [STATE-AUDIT-517A] debug artifact generation failed: %s", run_id, _debug_exc)
+
         # Phase 2: Quality Gate NOW ENABLED - blocks reports with critical errors
         # Set to False only for debugging/testing
         HARD_QUALITY_GATE_ENABLED = True  # ENABLED: Strict mode active
