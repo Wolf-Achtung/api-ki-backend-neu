@@ -783,7 +783,7 @@ def _inject_markers_into_html(html_content: str) -> str:
     return modified
 
 
-def normalize_quickwins_to_html(raw: str, strict: bool = False) -> tuple:
+def normalize_quickwins_to_html(raw: str, strict: bool = False) -> tuple[str, dict]:
     """
     FIX-512: Deterministic QuickWins normalization (Text/Bullets → HTML).
 
