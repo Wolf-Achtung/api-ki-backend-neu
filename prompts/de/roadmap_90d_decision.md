@@ -19,17 +19,11 @@ You MAY:
 If a number is required:
 → write: "siehe Business Case / Simulation"
 
-HARD BLACKLIST (Fail-Closed):
-- "wie kann ich dir helfen" / "wie kann ich helfen"
-- "bei Bedarf"
-- "z. B." / "z.B."
-- "angenommen"
-- "typischerweise"
-- "Rollout"
-- "Skalierung"
-- "Modul"
-- "Stack"
-- "1000+"
+DE-PRIMED EXCLUSION (Fail-Closed):
+- Keine Gesprächs-/Assistenzsprache, keine Fragen, keine Anrede, keine Meta-Kommentare.
+- Keine Optionalitätsfloskeln oder Beispiel-/Abkürzungsmarker.
+- Keine Technik-/Produktlaunch-Terminologie.
+- Keine erfundenen oder wiederholten KPI-Zahlen; wenn Zahl nötig: "siehe Business Case / Simulation".
 
 ###############################################################################
 -->
@@ -37,7 +31,8 @@ AUSGABEREGEL (zwingend): Schreibe ausschließlich deklarative Berichtssätze. Ke
 
 STARTFORMAT: Beginne mit einem neutralen Substantivsatz (wie „Der aktuelle Zustand…", „Die empfohlene Vorgehensweise…", „Der strategische Rahmen…").
 
-NICHT ERLAUBT: „wie kann ich helfen", „ich sehe keine frage", „beschreibe dein anliegen", „du hast noch keine frage", „bitte", „frage", „nachricht".
+AUSGABEREGEL (zwingend):
+Nur neutrale Berichtssprache. Keine Chat-/Dialog-Floskeln, keine Fragen, keine Meta-Kommentare.
 
 WICHTIG: Verwenden Sie keine Anrede, keine Fragen, keine Assistenz- oder Chat-Formulierungen. Keine Meta-Kommentare über fehlende Eingaben. Schreiben Sie ausschließlich in neutraler Berichtssprache.
 
@@ -86,7 +81,6 @@ Fokus: Was muss entschieden werden, nicht was gemacht werden könnte.
 
 STRUKTUR (exakt einhalten):
 
-```html
 <div class="roadmap-decision">
   <p><strong>90-Tage-Umsetzungs-Roadmap – Entscheidungsfassung</strong></p>
 
@@ -114,7 +108,6 @@ STRUKTUR (exakt einhalten):
     <li><strong>Stop-Regel:</strong> [Wann wird Erweiterung nicht empfohlen]</li>
   </ul>
 </div>
-```
 
 STOP-REGELN (Beispiele zur Orientierung):
 - "Kein messbarer Zeitgewinn nach 14 Tagen → vereinfachen oder stoppen"
@@ -135,4 +128,4 @@ STRIKTE AUSGABEREGEL (verbindlich):
 - Jeder Bullet muss sofort umsetzbar formuliert sein, nicht als Template
 
 GUARDRAIL (zwingend):
-Keine Assistenz- oder Chat-Formulierungen (z. B. „wie kann ich helfen", „gerne erkläre ich"). Verwenden Sie ausschließlich Berichtssprache.
+Keine Assistenz-/Dialog-Sprache, keine Fragen, keine Imperative, keine Meta-Kommentare. Ausschließlich neutrale Berichtssprache.
