@@ -12260,6 +12260,21 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
                 if _cleanup_available:
                     truncated = cleanup_truncation_artifacts(truncated)
 
+                # FIX-514 CHANGE 1: Truncation guard for ROADMAP_12M_HTML
+                # Never let truncation drop word count below minimum (600 for solo)
+                if key == "ROADMAP_12M_HTML":
+                    import re as _re_trunc
+                    stripped_text = _re_trunc.sub(r'<[^>]+>', '', truncated)
+                    word_count = len(stripped_text.split())
+                    min_words = 600  # solo minimum (strictest threshold)
+                    if word_count < min_words:
+                        log.warning(
+                            "[FIX-514][TRUNCATION-GUARD] Reverted truncation for %s "
+                            "(would_drop_below_min_words: %d < %d)",
+                            key, word_count, min_words
+                        )
+                        continue  # Skip this key, keep original
+
                 sections[key] = truncated
                 delta = len(truncated) - original_len
                 if delta != 0:
