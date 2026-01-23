@@ -46,8 +46,14 @@ log = logging.getLogger(__name__)
 RELEASE_STRICT_MODE = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
 
 # Default timeouts (seconds)
-DEFAULT_CONNECT_TIMEOUT = float(os.getenv("OPENAI_CONNECT_TIMEOUT", "10"))
-DEFAULT_READ_TIMEOUT = float(os.getenv("OPENAI_READ_TIMEOUT", "120"))
+# FIX-514: Accept both OPENAI_TIMEOUT_CONNECT and OPENAI_CONNECT_TIMEOUT env vars
+DEFAULT_CONNECT_TIMEOUT = float(
+    os.getenv("OPENAI_TIMEOUT_CONNECT", os.getenv("OPENAI_CONNECT_TIMEOUT", "10"))
+)
+# FIX-514: Accept both OPENAI_TIMEOUT_READ and OPENAI_READ_TIMEOUT, default 180
+DEFAULT_READ_TIMEOUT = float(
+    os.getenv("OPENAI_TIMEOUT_READ", os.getenv("OPENAI_READ_TIMEOUT", "180"))
+)
 EXPAND_READ_TIMEOUT = float(os.getenv("OPENAI_TIMEOUT_READ_EXPAND", "300"))
 REPAIR_READ_TIMEOUT = float(os.getenv("OPENAI_TIMEOUT_READ_REPAIR", "300"))
 
@@ -316,6 +322,14 @@ def openai_request(
     read_timeout = read_timeout_s if read_timeout_s is not None else default_read
     timeout_tuple = (connect_timeout, read_timeout)
 
+    # FIX-514: Definitive timeout log (single source of truth)
+    source_env = "OPENAI_TIMEOUT_READ_EXPAND" if read_timeout == EXPAND_READ_TIMEOUT else "OPENAI_TIMEOUT_READ"
+    model = payload.get("model", "unknown")
+    log.info(
+        "[FIX-514][OPENAI] section=%s model=%s timeout=(connect=%d,read=%d) source_env=%s",
+        section, model, int(connect_timeout), int(read_timeout), source_env
+    )
+
     # Build URL and headers
     url = f"{api_base.rstrip('/')}/v1/chat/completions"
     headers = {"Content-Type": "application/json"}
@@ -324,8 +338,6 @@ def openai_request(
         headers["api-key"] = api_key
     else:
         headers["Authorization"] = f"Bearer {api_key}"
-
-    model = payload.get("model", "unknown")
 
     response = OpenAIResponse(
         success=False,

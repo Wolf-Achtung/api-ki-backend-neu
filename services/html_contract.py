@@ -570,6 +570,11 @@ def html_contract_validate(
             str(result.repair_llm_used).lower(), result.deterministic_repairs,
             result.warning_count, result.html_bytes
         )
+        log.info(
+            "[FIX-514][CONTRACT] PASS repair_llm_used=%s deterministic_repairs=%d violations=%d",
+            str(result.repair_llm_used).lower(), result.deterministic_repairs,
+            result.critical_count
+        )
         return result
 
     # Validation failed - log violations
@@ -660,7 +665,8 @@ def html_contract_validate(
             "debug_qw_repair_llm_gate.json": json.dumps(result.to_dict(), indent=2),
         }
         log.error(
-            "[HTML-CONTRACT] FAIL-CLOSED repair_llm_used=true in STRICT mode"
+            "[FIX-514][CONTRACT] FAIL strict_no_repair_llm violations=%d",
+            result.critical_count
         )
         raise ContractViolationError(
             "[HTML-CONTRACT] STRICT_MODE: repair_llm_used=true is not allowed",
