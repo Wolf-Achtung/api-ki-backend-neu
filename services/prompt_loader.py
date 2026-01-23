@@ -20,6 +20,7 @@ FIX-505 Additions:
 """
 
 import hashlib
+import inspect
 import json
 import os
 import re
@@ -42,6 +43,9 @@ DEFAULT_LANG = os.getenv("PROMPTS_DEFAULT_LANG", "de")
 
 # FIX-505: STRICT_MODE flag - no fallback to simple substitution when enabled
 RELEASE_STRICT_MODE = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
+
+# STATE-AUDIT-517A: Debug trace for section propagation forensics
+DEBUG_PROMPT_TRACE = os.getenv("DEBUG_PROMPT_TRACE", "0") in ("1", "true", "TRUE")
 
 # FIX-505: Contextvar for tracking include stack (thread-safe)
 # Note: Using a factory function to avoid mutable default issues
@@ -521,6 +525,21 @@ def _interpolate_text(
             "[FIX-517][PROMPT][SECTION] section=unknown — "
             "Pass section=<prompt_key> to render_prompt for usage+cycle tracking"
         )
+        # STATE-AUDIT-517A: Log caller info for forensics
+        if DEBUG_PROMPT_TRACE:
+            try:
+                _frames = inspect.stack()[:4]  # Limit to 4 frames
+                _caller_info = " <- ".join(
+                    f"{f.filename.split('/')[-1]}:{f.lineno}:{f.function}"
+                    for f in _frames[1:3]  # Skip self, show 2 callers
+                )
+            except Exception:
+                _caller_info = "<unavailable>"
+            log.error(
+                "[PROMPT-TRACE][ERROR] section=unknown caller=%s "
+                "key_hint=<unknown> text_bytes=%d has_jinja=%s",
+                _caller_info, len(s), "{%" in s,
+            )
         if RELEASE_STRICT_MODE:
             raise ValueError(msg)
         else:
