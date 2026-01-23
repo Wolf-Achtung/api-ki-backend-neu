@@ -10749,7 +10749,7 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                     "jinja" if _has_jinja else "simple",
                     len(enhanced_prompt) if isinstance(enhanced_prompt, str) else 0,
                 )
-            prompt_text = _interpolate(enhanced_prompt, vars_dict)
+            prompt_text = _interpolate(enhanced_prompt, vars_dict, lang=prompt_lang, section=prompt_key)
 
             # STATE-AUDIT-517A: Record prompt trace after interpolation
             if DEBUG_PROMPT_TRACE:
@@ -10937,6 +10937,7 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 "risks": 800,                 # PLATIN+: 800 Wörter
                 "recommendations": 800,       # PLATIN+: 800 Wörter
                 "gamechanger": 700,           # PLATIN+: 700 Wörter
+                "tools_empfehlungen": 80,     # FIX-517B: solo-min safety net (align with validator)
                 "unternehmensprofil_markt": 600,  # N4.6: Added for 2-pass expand
             }
             min_words = platin_min_words.get(section_name, 10)
