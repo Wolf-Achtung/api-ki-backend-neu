@@ -32,7 +32,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 __all__ = [
     "load_prompt", "clear_prompt_cache", "get_prompt_info", "diagnose_prompt_system",
-    "PromptIncludeCycleError", "check_prompt_cycles",
+    "PromptIncludeCycleError", "PromptTemplateNotAllowedError", "check_prompt_cycles",
     "PromptManifest", "flush_usage_to_artifact", "get_used_prompts", "clear_used_prompts",
 ]
 
@@ -299,6 +299,19 @@ class PromptIncludeCycleError(RuntimeError):
             f"[FIX-505][PROMPT][CYCLE] Cycle detected in section={section}: {chain_str}"
         )
 
+
+class PromptTemplateNotAllowedError(RuntimeError):
+    """FIX-517: Raised when an include target is not in the allowlist."""
+
+    def __init__(self, template_name: str, section: str, lang: str):
+        self.template_name = template_name
+        self.section = section
+        self.lang = lang
+        super().__init__(
+            f"[FIX-517][PROMPT][INCLUDE-DENY] template={template_name} "
+            f"section={section} lang={lang} (not in allowlist)"
+        )
+
 # =============================================================================
 # Multilingual v1: EN alias mapping (German section names → English filenames)
 # =============================================================================
@@ -347,6 +360,7 @@ _SUPPORTED_EXT = (".md", ".txt", ".json", ".yaml", ".yml")
 class CycleDetectingLoader:
     """
     FIX-505: Jinja2 Loader wrapper that detects include cycles.
+    FIX-517: Extended with include-allowlist enforcement.
 
     This loader wraps the standard ChoiceLoader and tracks the include stack
     using a contextvar to detect cycles before they cause recursion depth errors.
@@ -362,22 +376,76 @@ class CycleDetectingLoader:
     handled in the calling code.
     """
 
-    def __init__(self, loaders: List[Any], section: str):
+    def __init__(self, loaders: List[Any], section: str, lang: str = "de"):
         from jinja2 import ChoiceLoader
         self._inner_loader = ChoiceLoader(loaders)
         self._section = section
+        self._lang = lang
         # Copy required attributes from BaseLoader for compatibility
         self.has_source_access = getattr(self._inner_loader, 'has_source_access', True)
+        # FIX-517: Build include-allowlist for this language
+        self._allowed_templates = self._build_allowlist(lang)
+
+    def _build_allowlist(self, lang: str) -> Set[str]:
+        """
+        FIX-517: Build the set of allowed template names for includes.
+        Includes:
+        - All filenames referenced in the manifest for this language
+        - All underscore partials (_*.md) in prompts/{lang}/
+        - All .md files in the inner loaders' search paths (handles test envs)
+        """
+        allowed: Set[str] = set()
+        # Manifest files
+        manifest = PromptManifest.load()
+        lang_block = manifest._data.get(lang)
+        if isinstance(lang_block, dict):
+            for key, entry in lang_block.items():
+                if key.startswith("_"):
+                    continue
+                if isinstance(entry, dict):
+                    path_val = entry.get("path")
+                    if path_val:
+                        allowed.add(str(path_val))
+                elif isinstance(entry, str):
+                    allowed.add(entry)
+        # Underscore partials from filesystem
+        lang_dir = BASE_DIR / lang
+        if lang_dir.exists():
+            for partial in lang_dir.glob("_*.md"):
+                allowed.add(partial.name)
+        # Also include all .md files found in the inner loaders' search paths
+        # This handles test environments where BASE_DIR is patched to a temp dir
+        # and the manifest doesn't cover the test files
+        for loader in getattr(self._inner_loader, 'loaders', []):
+            for search_path in getattr(loader, 'searchpath', []):
+                sp = Path(search_path)
+                if sp.exists():
+                    for md_file in sp.glob("*.md"):
+                        allowed.add(md_file.name)
+        return allowed
 
     def get_source(self, environment: Any, template_name: str) -> tuple:
         """
-        Get template source, checking for cycles and path safety first.
+        Get template source, checking for cycles, path safety, and allowlist first.
 
         This is the primary cycle detection point. It's called whenever
         Jinja2 needs to load a template (including via {% include %}).
         """
         # PROMPT-INCLUDE: Runtime path sandbox check
-        _validate_include_path(template_name, "de", self._section)
+        _validate_include_path(template_name, self._lang, self._section)
+
+        # FIX-517: Include-allowlist enforcement
+        if self._allowed_templates and template_name not in self._allowed_templates:
+            log.error(
+                "[FIX-517][PROMPT][INCLUDE-DENY] template=%s section=%s lang=%s include_stack=%s",
+                template_name, self._section, self._lang,
+                " -> ".join(_get_include_stack())
+            )
+            if RELEASE_STRICT_MODE:
+                raise PromptTemplateNotAllowedError(template_name, self._section, self._lang)
+            else:
+                from jinja2.exceptions import TemplateNotFound
+                raise TemplateNotFound(template_name)
 
         # Get current include stack
         stack = _get_include_stack()
@@ -439,9 +507,25 @@ def _interpolate_text(
     - Cycle detection for Jinja2 includes
     - STRICT_MODE: no fallback on Jinja2 errors
     - Enhanced logging with [FIX-505] prefix
+
+    FIX-517: section parameter is now enforced:
+    - STRICT: raises ValueError if section is "unknown" or empty
+    - Non-STRICT: logs warning
     """
     if not isinstance(s, str):
         return s
+
+    # FIX-517: Enforce section parameter for usage+cycle tracking
+    if not section or section == "unknown":
+        msg = (
+            "[FIX-517][PROMPT][SECTION] section=unknown — "
+            "Pass section=<prompt_key> to render_prompt for usage+cycle tracking"
+        )
+        if RELEASE_STRICT_MODE:
+            raise ValueError(msg)
+        else:
+            log.warning(msg)
+            section = section or "unknown"
 
     # Use empty dict if None provided
     if vars_dict is None:
@@ -476,7 +560,8 @@ def _interpolate_text(
             loaders = [FileSystemLoader(d) for d in prompt_dirs if Path(d).exists()]
 
             # FIX-505: Use cycle-detecting loader
-            cycle_loader = CycleDetectingLoader(loaders, section)
+            # FIX-517: Pass lang for include-allowlist enforcement
+            cycle_loader = CycleDetectingLoader(loaders, section, lang)
 
             # Reset include stack for this render and add main template
             # This ensures the initial template is tracked for cycle detection

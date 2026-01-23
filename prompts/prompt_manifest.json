@@ -877,6 +877,38 @@
           }
         }
       }
+    },
+    "ki_stack_summary": {
+      "title": "KI-Stack Übersicht",
+      "path": "ki_stack_summary.md",
+      "purpose": "KI-Stack Summary Card",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "branch_deep_dive": {
+      "title": "Branch Deep-Dive",
+      "path": "branch_deep_dive.md",
+      "purpose": "Branch Deep-Dive Analyse",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "exec_snapshot": {
+      "title": "Executive Snapshot",
+      "path": "exec_snapshot.md",
+      "purpose": "Kurzfassung Executive",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "top_3_massnahmen": {
+      "title": "Top-3-Maßnahmen",
+      "path": "top_3_massnahmen.md",
+      "purpose": "Die drei wichtigsten Maßnahmen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
     }
   },
   "en": {
@@ -1763,6 +1795,38 @@
           }
         }
       }
+    },
+    "ki_stack_summary": {
+      "title": "AI Stack Overview",
+      "path": "ki_stack_summary.md",
+      "purpose": "AI stack summary card",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "branch_deep_dive": {
+      "title": "Branch Deep-Dive",
+      "path": "branch_deep_dive.md",
+      "purpose": "Branch deep-dive analysis",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "exec_snapshot": {
+      "title": "Executive Snapshot",
+      "path": "exec_snapshot.md",
+      "purpose": "Executive short summary",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "top_3_massnahmen": {
+      "title": "Top 3 Measures",
+      "path": "top_3_massnahmen.md",
+      "purpose": "Top three priority measures",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
     }
   }
 }
