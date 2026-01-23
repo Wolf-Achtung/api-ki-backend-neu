@@ -19,18 +19,21 @@ FIX-505 Additions:
 - Enhanced logging with [FIX-505] prefix for diagnostics
 """
 
+import hashlib
 import json
 import os
 import re
 import logging
 import contextvars
+import threading
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 __all__ = [
     "load_prompt", "clear_prompt_cache", "get_prompt_info", "diagnose_prompt_system",
-    "PromptIncludeCycleError", "check_prompt_cycles"
+    "PromptIncludeCycleError", "check_prompt_cycles",
+    "PromptManifest", "flush_usage_to_artifact", "get_used_prompts", "clear_used_prompts",
 ]
 
 log = logging.getLogger(__name__)
@@ -57,6 +60,232 @@ def _get_include_stack() -> List[str]:
 def _set_include_stack(stack: List[str]) -> None:
     """Set current include stack."""
     _include_stack.set(stack)
+
+
+# =============================================================================
+# PROMPT-MANIFEST: Single Source of Truth for prompt file resolution
+# =============================================================================
+
+class PromptManifest:
+    """Cached singleton for prompt_manifest.json resolution."""
+
+    _instance: Optional["PromptManifest"] = None
+    _lock = threading.Lock()
+
+    def __init__(self) -> None:
+        self._data: Dict[str, Any] = {}
+        self._loaded = False
+
+    @classmethod
+    def load(cls) -> "PromptManifest":
+        """Load manifest once (cached singleton)."""
+        if cls._instance is not None and cls._instance._loaded:
+            return cls._instance
+        with cls._lock:
+            if cls._instance is not None and cls._instance._loaded:
+                return cls._instance
+            inst = cls()
+            manifest_path = BASE_DIR / "prompt_manifest.json"
+            if manifest_path.exists():
+                try:
+                    data = json.loads(manifest_path.read_text(encoding="utf-8"))
+                    inst._data = data if isinstance(data, dict) else {}
+                except Exception as exc:
+                    log.error("[PROMPT-MANIFEST][ERROR] failed to parse manifest: %s", exc)
+                    inst._data = {}
+            else:
+                log.error("[PROMPT-MANIFEST][ERROR] manifest not found at %s", manifest_path)
+                inst._data = {}
+            inst._loaded = True
+            cls._instance = inst
+            return inst
+
+    def resolve(self, section: str, lang: str) -> Optional[str]:
+        """
+        Resolve section+lang to a relative path (e.g. 'executive_summary.md').
+        Returns None if section is not in manifest for the given lang.
+        """
+        lang_block = self._data.get(lang)
+        if not isinstance(lang_block, dict):
+            return None
+        entry = lang_block.get(section)
+        if isinstance(entry, dict):
+            path_val = entry.get("path")
+            return str(path_val) if path_val is not None else None
+        if isinstance(entry, str):
+            return entry
+        return None
+
+    def has_section(self, section: str, lang: str) -> bool:
+        """Check if section exists in manifest for lang."""
+        lang_block = self._data.get(lang)
+        if not isinstance(lang_block, dict):
+            return False
+        return section in lang_block
+
+    def get_allowed_includes(self, lang: str) -> Optional[List[str]]:
+        """Get allowed_includes list from manifest if defined."""
+        lang_block = self._data.get(lang)
+        if isinstance(lang_block, dict):
+            includes = lang_block.get("_allowed_includes")
+            if isinstance(includes, list):
+                return includes
+        # Global level
+        includes = self._data.get("_allowed_includes")
+        if isinstance(includes, list):
+            return includes
+        return None
+
+    @classmethod
+    def reset(cls) -> None:
+        """Reset singleton (for testing)."""
+        cls._instance = None
+
+
+# =============================================================================
+# PROMPT-USAGE: Track what was rendered during this process
+# =============================================================================
+
+_usage_lock = threading.Lock()
+_used_prompts: List[Dict[str, Any]] = []
+
+
+def _record_usage(
+    section: str, lang: str, path: str, content_bytes: int,
+    content: str, includes: List[str]
+) -> None:
+    """Record a prompt usage entry."""
+    sha = hashlib.sha256(content.encode("utf-8")).hexdigest()[:16]
+    entry = {
+        "section": section,
+        "lang": lang,
+        "path": path,
+        "bytes": content_bytes,
+        "sha256": sha,
+        "includes": includes,
+    }
+    with _usage_lock:
+        _used_prompts.append(entry)
+
+
+def flush_usage_to_artifact() -> Optional[str]:
+    """
+    Write usage data to artifacts/prompt_usage_last.json.
+    Returns the path written, or None on error.
+    """
+    with _usage_lock:
+        entries = list(_used_prompts)
+    if not entries:
+        return None
+    artifact_dir = Path(__file__).resolve().parent.parent / "artifacts"
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    out_path = artifact_dir / "prompt_usage_last.json"
+    try:
+        out_path.write_text(json.dumps(entries, indent=2, ensure_ascii=False), encoding="utf-8")
+        log.info("[PROMPT-USAGE] wrote %s entries=%d", out_path, len(entries))
+        return str(out_path)
+    except Exception as exc:
+        log.error("[PROMPT-USAGE] failed to write artifact: %s", exc)
+        return None
+
+
+def get_used_prompts() -> List[Dict[str, Any]]:
+    """Get current usage list (for testing/inspection)."""
+    with _usage_lock:
+        return list(_used_prompts)
+
+
+def clear_used_prompts() -> None:
+    """Clear usage list (for testing)."""
+    with _usage_lock:
+        _used_prompts.clear()
+
+
+# =============================================================================
+# PROMPT-JINJA: Pre-scan for forbidden Jinja tags
+# =============================================================================
+
+_FORBIDDEN_JINJA_TAGS = re.compile(
+    r"{%[-\s]*(extends|import|from|macro|call|filter)\b",
+    re.IGNORECASE,
+)
+
+
+def _prescan_jinja_tags(template_text: str, section: str) -> None:
+    """
+    Pre-scan template for forbidden Jinja2 tags.
+    Raises RuntimeError in STRICT mode, logs warning otherwise.
+    Only {% include %} and {% raw %} are allowed.
+    """
+    match = _FORBIDDEN_JINJA_TAGS.search(template_text)
+    if match:
+        tag = match.group(1)
+        msg = f"[PROMPT-JINJA][BLOCK] forbidden tag='{tag}' in section={section}"
+        log.error(msg)
+        if RELEASE_STRICT_MODE:
+            raise RuntimeError(msg)
+
+
+# =============================================================================
+# PROMPT-INCLUDE: Path sandbox validation
+# =============================================================================
+
+_INCLUDE_PATTERN = re.compile(r'{%[-\s]*include\s+["\']([^"\']+)["\']')
+
+
+def _validate_include_path(include_target: str, lang: str, section: str) -> bool:
+    """
+    Validate that an include path is safe:
+    - Must be a string literal (already guaranteed by regex)
+    - No '..' components
+    - No absolute paths
+    - No backslashes
+    - Must resolve within prompts/<lang>/
+    Returns True if valid, raises/logs on invalid.
+    """
+    if ".." in include_target:
+        msg = f"[PROMPT-INCLUDE][BLOCK] illegal include='{include_target}' reason=path_traversal (..) section={section}"
+        log.error(msg)
+        if RELEASE_STRICT_MODE:
+            raise RuntimeError(msg)
+        return False
+    if include_target.startswith("/") or include_target.startswith("\\"):
+        msg = f"[PROMPT-INCLUDE][BLOCK] illegal include='{include_target}' reason=absolute_path section={section}"
+        log.error(msg)
+        if RELEASE_STRICT_MODE:
+            raise RuntimeError(msg)
+        return False
+    if "\\" in include_target:
+        msg = f"[PROMPT-INCLUDE][BLOCK] illegal include='{include_target}' reason=backslash section={section}"
+        log.error(msg)
+        if RELEASE_STRICT_MODE:
+            raise RuntimeError(msg)
+        return False
+
+    # Check manifest allowlist if available
+    manifest = PromptManifest.load()
+    allowed = manifest.get_allowed_includes(lang)
+    if allowed is not None and include_target not in allowed:
+        msg = f"[PROMPT-INCLUDE][BLOCK] illegal include='{include_target}' reason=not_in_allowlist section={section}"
+        log.error(msg)
+        if RELEASE_STRICT_MODE:
+            raise RuntimeError(msg)
+        return False
+
+    log.debug("[PROMPT-INCLUDE] allow include='%s' section=%s", include_target, section)
+    return True
+
+
+def _prescan_includes(template_text: str, lang: str, section: str) -> List[str]:
+    """
+    Pre-scan all {% include %} targets, validate each, return list of includes.
+    """
+    includes: List[str] = []
+    for match in _INCLUDE_PATTERN.finditer(template_text):
+        target = match.group(1)
+        _validate_include_path(target, lang, section)
+        includes.append(target)
+    return includes
 
 
 class PromptIncludeCycleError(RuntimeError):
@@ -142,11 +371,14 @@ class CycleDetectingLoader:
 
     def get_source(self, environment: Any, template_name: str) -> tuple:
         """
-        Get template source, checking for cycles first.
+        Get template source, checking for cycles and path safety first.
 
         This is the primary cycle detection point. It's called whenever
         Jinja2 needs to load a template (including via {% include %}).
         """
+        # PROMPT-INCLUDE: Runtime path sandbox check
+        _validate_include_path(template_name, "de", self._section)
+
         # Get current include stack
         stack = _get_include_stack()
 
@@ -224,6 +456,12 @@ def _interpolate_text(
             "[FIX-505][PROMPT] render start section=%s lang=%s strict=%d",
             section, lang, int(is_strict)
         )
+
+        # PROMPT-JINJA: Pre-scan for forbidden tags (extends/import/macro/etc.)
+        _prescan_jinja_tags(s, section)
+
+        # PROMPT-INCLUDE: Pre-scan and validate include paths
+        include_list = _prescan_includes(s, lang, section)
 
         try:
             from jinja2 import Environment, FileSystemLoader
@@ -483,23 +721,70 @@ def _resolve_section_path(section: str, lang: str, _tried_alias: bool = False) -
     """
     Resolve section name to file path.
 
+    PROMPT-MANIFEST enforcement:
+    - Always resolves via PromptManifest first (Single Source of Truth).
+    - In STRICT mode: fail-closed if section not in manifest.
+    - Non-strict: falls back to extension scanning with warning.
+
     Multilingual v1: For lang=en, tries ALIASES_EN mapping before fallback.
     This ensures German-named sections find their English equivalents.
     """
+    # --- PROMPT-MANIFEST resolution (primary) ---
+    pm = PromptManifest.load()
+    rel_path = pm.resolve(section, lang)
+    if rel_path:
+        p = (BASE_DIR / lang / rel_path).resolve()
+        if p.exists():
+            log.info(
+                "[PROMPT-MANIFEST] ok section=%s lang=%s path=%s",
+                section, lang, rel_path
+            )
+            return p, lang
+        else:
+            log.error(
+                "[PROMPT-MANIFEST][ERROR] missing file path=%s section=%s lang=%s",
+                p, section, lang
+            )
+            if RELEASE_STRICT_MODE:
+                raise RuntimeError(
+                    f"[PROMPT-MANIFEST][ERROR] missing file path={p} "
+                    f"section={section} lang={lang}"
+                )
+    elif not pm.has_section(section, lang):
+        # Section not in manifest at all
+        if RELEASE_STRICT_MODE and not _tried_alias:
+            # In STRICT: try alias first before failing
+            if lang == "en":
+                alias = ALIASES_EN.get(section)
+                if alias and alias != section:
+                    result = _resolve_section_path(alias, lang, _tried_alias=True)
+                    if result[0]:
+                        return result
+            log.error(
+                "[PROMPT-MANIFEST][ERROR] unknown section=%s lang=%s",
+                section, lang
+            )
+            raise RuntimeError(
+                f"[PROMPT-MANIFEST][ERROR] unknown section={section} lang={lang} "
+                f"(not in manifest, STRICT mode)"
+            )
+
+    # --- Legacy fallback (non-STRICT only) ---
+    # Also used by _read_manifest-based legacy path
     manifest = _read_manifest(lang)
     if isinstance(manifest, dict):
         rel = manifest.get(section)
         if isinstance(rel, str):
             p = (BASE_DIR / lang / rel).resolve()
             if p.exists():
-                log.debug(f"✅ Found prompt via manifest: {p}")
+                log.debug("Found prompt via legacy manifest: %s", p)
                 return p, lang
 
-    # try common extensions
+    # try common extensions (non-STRICT fallback)
     for ext in _SUPPORTED_EXT:
         p = (BASE_DIR / lang / f"{section}{ext}").resolve()
         if p.exists():
-            log.debug(f"✅ Found prompt: {p}")
+            log.debug("Found prompt via extension scan: %s", p)
             return p, lang
 
     # =========================================================================
@@ -596,7 +881,23 @@ def load_prompt(section: str, lang: str = "de", vars_dict: Optional[Dict[str, An
     payload = _read_file(path)
     # FIX-497: Pass lang to _interpolate for proper include resolution
     # FIX-505: Pass section for cycle detection and strict mode handling
-    return _interpolate(payload, vars_dict, lang=used_lang, section=section)
+    result = _interpolate(payload, vars_dict, lang=used_lang, section=section)
+
+    # PROMPT-USAGE: Record what was rendered
+    content_str = result if isinstance(result, str) else json.dumps(result, ensure_ascii=False)
+    # Scan raw payload for includes (before rendering expanded them)
+    raw_text = payload if isinstance(payload, str) else ""
+    includes_found = _INCLUDE_PATTERN.findall(raw_text)
+    _record_usage(
+        section=section,
+        lang=used_lang,
+        path=str(path.relative_to(BASE_DIR)) if path.is_relative_to(BASE_DIR) else str(path),
+        content_bytes=len(content_str),
+        content=content_str,
+        includes=includes_found,
+    )
+
+    return result
 
 
 # =============================================================================
