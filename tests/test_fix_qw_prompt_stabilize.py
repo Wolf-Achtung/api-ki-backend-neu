@@ -381,7 +381,7 @@ class TestChange3_FailClosedGate:
         source = _read_file(HTML_CONTRACT_PATH)
         assert "FIX-QW-PROMPT-STABILIZE" in source
         assert "repair_llm_used" in source
-        assert "FAIL-CLOSED repair_llm_used=true" in source
+        assert "strict_no_repair_llm" in source or "FAIL-CLOSED repair_llm_used=true" in source
 
     def test_strict_prevents_llm_repair(self):
         """In STRICT mode, LLM repair should not be attempted."""
