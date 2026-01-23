@@ -137,7 +137,7 @@ ZIEL: 90-Tage-Roadmap als Abfolge von ENTSCHEIDUNGEN (nicht Tool-Einführungen).
 SPRACHSHIFT v6.0 — ENTSCHEIDUNGEN STATT IMPLEMENTIERUNGEN:
 =============================================================================
 
-Die Roadmap ist KEINE To-do-Liste für Tool-Rollouts.
+Die Roadmap ist KEINE To-do-Liste für Tool-Auswahl und -Nutzung.
 Die Roadmap ist eine Abfolge von bewussten Entscheidungen.
 
 VERBOTENE FORMULIERUNGEN → ERSETZUNGEN:
@@ -183,7 +183,7 @@ WICHTIG: Bei Unterschreitung wird Section abgelehnt!
 
 BOOSTER-SEKTIONEN (NEU - SPRINT G17.R):
 - Solo: KPI-Tracking & Mini-Dashboard Setup, Micro-Change-Management
-- Team: Team-Kommunikation & Rollout-Rituale, Dokumentation & Wissensspeicher
+- Team: Team-Kommunikation & Umsetzungsrituale, Dokumentation & Wissensspeicher
 - KMU: Change-Kommunikation auf Führungsebene, KPI-Framework für Arbeitsbereiche
 
 PHASEN-STRUKTUR (CONTENT QUALITY PACK v7.0 + PHASE 3 INDIVIDUALISIERUNG):
@@ -202,7 +202,7 @@ PHASE 0 (Woche 1–2): [INDIVIDUELL: Bezug zu {{hauptleistung}}]
 → Beispiel Briefing 369: "Phase 0: Fragebogen-Analyse Setup (Woche 1-2)"
 → Referenz: "Beginnen Sie mit dem 'Startpunkt in 30 Minuten' aus der Zusammenfassung."
 → 3 Bullets: MIT BEZUG zu {{hauptleistung}}, {{KI_GUARDRAILS}}
-→ VERBOTEN: "Minimal-Stack" ohne Kontext!
+→ VERBOTEN: "Minimal-Setup" ohne Kontext!
 
 PHASE 1 (Woche 3–5): [INDIVIDUELL: Bezug zu {{ZEITERSPARNIS_PRIORITAET}}]
 → Überschrift DYNAMISCH: "Phase 1: [Bezug zu {{ZEITERSPARNIS_PRIORITAET}}] Entlastung"
@@ -239,7 +239,7 @@ FORMAT v7.0 (STRIKT):
 
 ANTI-REDUNDANZ (STRIKT!):
 - Quick Wins wurden in quick_wins.md beschrieben → NICHT wiederholen
-- Tools wurden in tools_empfehlungen.md beschrieben → nur referenzieren (→ siehe KI-Stack)
+- Tools wurden in tools_empfehlungen.md beschrieben → nur referenzieren (→ siehe KI-Werkzeuge)
 - Change-Management in org_change.md → Querverweis nutzen
 - Hier: WIE und WANN, nicht WAS
 
@@ -454,7 +454,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     <li><strong>Skalierbarkeit:</strong> Dokumentierte Workflows für {{VISION_3_JAHRE}}</li>
   </ul>
 
-  <h3>Team-Kommunikation & Rollout-Rituale</h3>
+  <h3>Team-Kommunikation & Umsetzungsrituale</h3>
   <p>
     Die erfolgreiche KI-Einführung im Bereich erfordert strukturierte Kommunikation und
     wiederkehrende Formate, die Akzeptanz und Kompetenzaufbau fördern. Etablieren Sie
@@ -544,29 +544,29 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     <li>SOPs für KI-Workflows dokumentieren</li>
     <li>QS-Prozess etablieren: Input → KI → Prüfung gemäß {{KI_GUARDRAILS}} → Freigabe</li>
     <li>Styleguide und Qualitätskriterien festlegen</li>
-    <li>Schulungskonzept für Rollout auf weitere Bereiche entwickeln</li>
+    <li>Schulungskonzept für Ausweitung auf weitere Bereiche entwickeln</li>
     <li>KPIs definieren: Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}}, Qualität</li>
   </ul>
   <p><strong>Meilenstein:</strong> SOPs dokumentiert, Schulungskonzept fertig, KPIs definiert.</p>
 
-  <h3>Phase 3: Rollout-Entscheidung Richtung {{VISION_3_JAHRE}} (Woche 11–13)</h3>
-  <p><strong>Ziel:</strong> Rollout-Entscheidung und Erweiterungsplan Richtung {{VISION_3_JAHRE}}.</p>
+  <h3>Phase 3: Ausweitungsentscheidung Richtung {{VISION_3_JAHRE}} (Woche 11–13)</h3>
+  <p><strong>Ziel:</strong> Ausweitungsentscheidung und Erweiterungsplan Richtung {{VISION_3_JAHRE}}.</p>
   <ul>
     <li>Business-Case-Validierung anhand Pilotdaten</li>
     <li>Lessons Learned aus dem Pilot zusammenfassen</li>
-    <li>Entscheidung: Rollout Richtung {{VISION_3_JAHRE}}? Ja/Nein/Anpassungen?</li>
-    {% if ki_projekte %}<li>Geplantes Projekt <em>{{ki_projekte}}</em> für unternehmensweiten Rollout evaluieren</li>{% endif %}
+    <li>Entscheidung: Ausweitung Richtung {{VISION_3_JAHRE}}? Ja/Nein/Anpassungen?</li>
+    {% if ki_projekte %}<li>Geplantes Projekt <em>{{ki_projekte}}</em> für unternehmensweite Ausweitung evaluieren</li>{% endif %}
     <li>Priorisiertes Backlog für Erweiterung erstellen</li>
     <li>Ressourcenplanung für Weg zu {{VISION_3_JAHRE}} vorbereiten</li>
   </ul>
-  <p><strong>Meilenstein:</strong> Management-Entscheidung Richtung {{VISION_3_JAHRE}} getroffen, Rollout-Plan steht.</p>
+  <p><strong>Meilenstein:</strong> Management-Entscheidung Richtung {{VISION_3_JAHRE}} getroffen, Ausbauplan steht.</p>
 
   <h3>Erwartete Effekte nach 90 Tagen</h3>
   <ul>
     <li><strong>Zeitersparnis:</strong> 30–50% bei {{ZEITERSPARNIS_PRIORITAET}} im Pilotbereich</li>
     <li><strong>Qualität:</strong> Standardisierte Prozesse, dokumentierte Qualitätskriterien</li>
     <li><strong>Governance:</strong> {{KI_GUARDRAILS}} als klare Regeln, Verantwortlichkeiten dokumentiert</li>
-    <li><strong>Skalierbarkeit:</strong> Erprobte SOPs für Rollout Richtung {{VISION_3_JAHRE}}</li>
+    <li><strong>Skalierbarkeit:</strong> Erprobte SOPs für Ausweitung Richtung {{VISION_3_JAHRE}}</li>
     <li><strong>Business Case:</strong> Validierte ROI auf Basis echter Pilotdaten</li>
     <li><strong>Entscheidungsgrundlage:</strong> Fundierte Basis für {{VISION_3_JAHRE}}-Entscheidung</li>
   </ul>
@@ -596,7 +596,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     Transparenz ist der Schlüssel zu nachhaltigem Management-Support.</li>
     <li><strong>Erfolgsgeschichten nutzen:</strong> Dokumentieren Sie konkrete Erfolge
     aus dem Pilotbereich mit messbaren Zahlen. Diese „Proof Points" sind Ihre beste
-    Argumentationsgrundlage für die Rollout-Entscheidung.</li>
+    Argumentationsgrundlage für die Ausweitungsentscheidung.</li>
   </ul>
 
   <h3>KPI-Framework für Arbeitsbereiche</h3>
@@ -668,6 +668,6 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
   <p class="small muted">
     Nutzen Sie das <strong>Starter Kit</strong>, um Phase 1 technisch umzusetzen (→ siehe Starter Kit).
     Diese Roadmap verweist auf Quick Wins (→ siehe Sofortmaßnahmen) und
-    Tools (→ siehe KI-Stack). Details zum Change-Management → siehe Veränderungsfähigkeit.
+    Tools (→ siehe KI-Werkzeuge). Details zum Change-Management → siehe Veränderungsfähigkeit.
   </p>
 </section>
