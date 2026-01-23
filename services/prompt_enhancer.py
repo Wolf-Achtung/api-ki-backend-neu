@@ -45,6 +45,75 @@ log = logging.getLogger(__name__)
 
 
 # =============================================================================
+# FIX-QW-PROMPT-STABILIZE: Deterministic Prompt Sanitizer
+# =============================================================================
+
+# Regex patterns for sanitize_for_prompt
+_CODE_FENCE_RE = re.compile(r'`{3,}[a-zA-Z]*\n?|`{3,}')
+_DIGIT_FRAGMENT_RE = re.compile(
+    r'\b\d+[\.,]?\d*\s*(?:€|EUR|Euro|%|h/(?:Monat|Woche|Tag)|Stunden?|Minuten?|Tage?|Monate?|Jahre?|Wochen?)(?:\b|(?=\s|$|[.,;:!?]))',
+    re.IGNORECASE
+)
+_BARE_DIGITS_RE = re.compile(r'\b\d+(?:[\.,]\d+)?\b')
+_CORPORATE_WORDING_REPLACEMENTS: List[tuple] = [
+    (re.compile(r'\bRollout\b', re.IGNORECASE), 'Einführung'),
+    (re.compile(r'\bSkalierung\b', re.IGNORECASE), 'Ausbau'),
+    (re.compile(r'\bModul\b', re.IGNORECASE), 'Baustein'),
+    (re.compile(r'\bStack\b', re.IGNORECASE), 'Tool-Set'),
+    (re.compile(r'\b1000\+\b'), ''),
+    (re.compile(r'\bca\.\s*', re.IGNORECASE), ''),
+    (re.compile(r'\betwa\s+', re.IGNORECASE), ''),
+    (re.compile(r'\btypischerweise\s*', re.IGNORECASE), ''),
+    (re.compile(r'\bangenommen\s*', re.IGNORECASE), ''),
+    (re.compile(r'\bz\.\s*B\.', re.IGNORECASE), 'optional'),
+]
+
+
+def sanitize_for_prompt(text: str) -> str:
+    """
+    FIX-QW-PROMPT-STABILIZE CHANGE 2: Deterministic prompt sanitizer.
+
+    Removes/neutralizes content that could cause the LLM to echo
+    numbers, time ranges, or corporate jargon in its JSON output.
+
+    Specifically:
+    - Removes backticks/code-fence markers
+    - Removes digits and time/price fragments
+    - Replaces corporate wording with simple terms
+
+    Args:
+        text: Raw user input text (e.g. zeitersparnis_prioritaet)
+
+    Returns:
+        Sanitized text safe for prompt injection (no digits, no jargon)
+    """
+    if not text or not text.strip():
+        return ""
+
+    result = text.strip()
+
+    # Step 1: Remove code fences
+    result = _CODE_FENCE_RE.sub('', result)
+
+    # Step 2: Remove digit+unit fragments (e.g. "10 Stunden", "500€", "6-10 h/Monat")
+    result = _DIGIT_FRAGMENT_RE.sub('', result)
+
+    # Step 3: Remove remaining bare digits
+    result = _BARE_DIGITS_RE.sub('', result)
+
+    # Step 4: Corporate wording replacements
+    for pattern, replacement in _CORPORATE_WORDING_REPLACEMENTS:
+        result = pattern.sub(replacement, result)
+
+    # Step 5: Clean up whitespace artifacts
+    result = re.sub(r'\s{2,}', ' ', result)
+    result = re.sub(r'\s+([.,;:!?])', r'\1', result)
+    result = result.strip()
+
+    return result
+
+
+# =============================================================================
 # SPRINT G2.4: KURZLABEL-SYSTEM für Redundanzabbau
 # =============================================================================
 
