@@ -14065,7 +14065,8 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
                         })
 
                     # Write JSON artifact
-                    _artifact_dir = Path("/tmp")
+                    from pathlib import Path as _Path517
+                    _artifact_dir = _Path517("/tmp")
                     _json_path = _artifact_dir / "debug_517_short_sections.json"
                     _json_path.write_text(
                         json.dumps(_debug_517_entries, indent=2, ensure_ascii=False),
