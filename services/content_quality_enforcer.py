@@ -2088,6 +2088,12 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     # 15. Chat Artefact Filter (Fix-Batch J4) - Remove "Schreib mir", "Frag mich" etc.
     sections = apply_chat_artefact_filter(sections)
 
+    # 16. FIX-514: Forbidden-Token Scrub (Rollout/Skalierung/Stack in decision+stack sections)
+    sections = apply_forbidden_token_scrub(sections)
+
+    # 17. FIX-514: Placeholder Scrub (remove "Platzhalter" from recommendations)
+    sections = apply_placeholder_scrub(sections)
+
     log.info("[QUALITY-ENFORCER] Pipeline complete")
     return sections
 
@@ -3342,3 +3348,86 @@ def safe_html_truncate(html: str, max_chars: int = 10000) -> str:
 
     log.info(f"[SAFE-TRUNCATE] Reduced {len(html)} -> {len(truncated)} chars")
     return truncated
+
+
+# =============================================================================
+# FIX-514 CHANGE 2: Forbidden-Token Scrub (ROADMAP_90D_DECISION + KI_STACK_SUMMARY)
+# =============================================================================
+
+_FORBIDDEN_SCRUB_RULES: dict = {
+    "ROADMAP_90D_DECISION_HTML": [
+        (re.compile(r'\bRollout\b', re.IGNORECASE), "Einführung"),
+        (re.compile(r'\bSkalierung\b', re.IGNORECASE), "Ausbau"),
+        (re.compile(r'\bAudit[\s-]?Trail\b', re.IGNORECASE), "Nachvollziehbarkeit"),
+    ],
+    "KI_STACK_SUMMARY_HTML": [
+        (re.compile(r'\bTech[\s-]?Stack\b', re.IGNORECASE), "Tool-Set"),
+        (re.compile(r'\bStack\b', re.IGNORECASE), "Tool-Set"),
+    ],
+}
+
+
+def apply_forbidden_token_scrub(sections: dict) -> dict:
+    """
+    FIX-514 CHANGE 2: Deterministic forbidden-token scrub for specific sections.
+
+    Replaces priming-risk tokens (Rollout, Skalierung, Audit-Trail, Stack)
+    in ROADMAP_90D_DECISION_HTML and KI_STACK_SUMMARY_HTML.
+    """
+    for key, rules in _FORBIDDEN_SCRUB_RULES.items():
+        html = sections.get(key, "")
+        if not html:
+            continue
+
+        counts: dict = {}
+        for pattern, replacement in rules:
+            result, n = pattern.subn(replacement, html)
+            if n > 0:
+                token_name = pattern.pattern.replace(r'\b', '').replace('[\\s-]?', '-').lower()
+                counts[token_name] = counts.get(token_name, 0) + n
+                html = result
+
+        if counts:
+            sections[key] = html
+            log.info(
+                "[FIX-514][FORBIDDEN-SCRUB] key=%s replaced=%s",
+                key, counts
+            )
+
+    return sections
+
+
+# =============================================================================
+# FIX-514 CHANGE 3: Placeholder Scrub (RECOMMENDATIONS_HTML)
+# =============================================================================
+
+_PLACEHOLDER_LINE_PATTERN = re.compile(
+    r'<(?:p|li|div)[^>]*>[^<]*\bPlatzhalter\b[^<]*</(?:p|li|div)>',
+    re.IGNORECASE
+)
+_PLACEHOLDER_WORD_PATTERN = re.compile(r'\bPlatzhalter\b', re.IGNORECASE)
+
+
+def apply_placeholder_scrub(sections: dict) -> dict:
+    """
+    FIX-514 CHANGE 3: Remove lines/blocks containing 'Platzhalter' from
+    RECOMMENDATIONS_HTML. Prevents STRICT template_phrase hits.
+    """
+    key = "RECOMMENDATIONS_HTML"
+    html = sections.get(key, "")
+    if not html or "platzhalter" not in html.lower():
+        return sections
+
+    # Remove entire <p>/<li>/<div> blocks containing "Platzhalter"
+    result, removed = _PLACEHOLDER_LINE_PATTERN.subn("", html)
+
+    # If word still present (e.g. in inline text), replace with neutral term
+    if _PLACEHOLDER_WORD_PATTERN.search(result):
+        result, extra = _PLACEHOLDER_WORD_PATTERN.subn("konkreter Vorschlag", result)
+        removed += extra
+
+    if removed > 0:
+        sections[key] = result
+        log.info("[FIX-514][PLACEHOLDER-SCRUB] removed_blocks=%d", removed)
+
+    return sections
