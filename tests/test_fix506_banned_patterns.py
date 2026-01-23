@@ -224,10 +224,12 @@ class TestHardBlacklist:
         assert "HARD BLACKLIST" in content or "Fail-Closed" in content or "STRIKT" in content
 
     def test_decision_prompts_have_hard_blacklist(self, project_root):
-        """Decision prompts have HARD BLACKLIST section."""
+        """Decision prompts have HARD BLACKLIST or DE-PRIMED EXCLUSION section."""
         for prompt_name in ["executive_decision.md", "roadmap_90d_decision.md", "gamechanger_decision.md"]:
             content = (project_root / f"prompts/de/{prompt_name}").read_text()
-            assert "HARD BLACKLIST" in content, f"{prompt_name} missing HARD BLACKLIST"
+            assert "HARD BLACKLIST" in content or "DE-PRIMED EXCLUSION" in content, (
+                f"{prompt_name} missing HARD BLACKLIST / DE-PRIMED EXCLUSION"
+            )
 
 
 class TestTruncationCleanup:
