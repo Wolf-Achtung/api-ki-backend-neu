@@ -825,7 +825,8 @@ def heal_text_block(
     if healed and healed[-1] not in ".!?":
         healed += "."
 
-    if healed != t:
+    # FIX-515: Only log as healed if content actually changed (skip whitespace-only diffs)
+    if healed.strip() != t.strip():
         log.info(f"[TEXT-HEALING] Healed ({domain}): '{t[:40]}...' -> '{healed[:40]}...'")
 
     return healed

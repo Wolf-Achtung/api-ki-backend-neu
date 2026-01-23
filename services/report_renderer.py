@@ -916,6 +916,17 @@ def render(briefing_obj: Any,
             "repair_successful": contract_result.repair_successful,
         }
 
+        # FIX-515 TASK 4: One-line Strict Summary
+        if contract_result.passed:
+            _qw_cards_515 = html.count('class="quick-win')
+            _qw_nonempty_515 = 1 if _qw_cards_515 >= 3 else 0
+            _repair_llm_515 = 1 if getattr(contract_result, 'repair_llm_used', False) else 0
+            log.info(
+                "[FIX-515][STRICT-READY] contract_pass=1 repair_llm_used=%d "
+                "quickwins_nonempty=%d warnings_total=%d",
+                _repair_llm_515, _qw_nonempty_515, contract_result.warning_count
+            )
+
     except ContractViolationError as e:
         # STRICT_MODE violation - re-raise to abort PDF generation
         log.error(

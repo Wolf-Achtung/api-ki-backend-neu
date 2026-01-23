@@ -701,7 +701,7 @@ def build_segments_snapshot(days: int = 90, force: bool = False) -> Dict[str, Se
     entries = get_recent_feedback(days=days)
 
     if not entries:
-        log.warning("No feedback entries found for segment analysis")
+        log.info("No feedback entries found - skipping segment analysis")
         return {}
 
     # Aggregate by segment
