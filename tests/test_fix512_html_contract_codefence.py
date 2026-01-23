@@ -37,7 +37,7 @@ class TestFix512_CodeFenceStripping:
 
         # Find the Phase 2 LLM repair section
         llm_repair_match = re.search(
-            r'# Phase 2: LLM repair.*?repair successful \(LLM\)',
+            r'# Phase 2: LLM repair.*?repair_llm_used=true',
             source,
             re.DOTALL
         )
@@ -58,7 +58,7 @@ class TestFix512_CodeFenceStripping:
 
         # Find the Phase 2 LLM repair section
         llm_repair_match = re.search(
-            r'# Phase 2: LLM repair.*?repair successful \(LLM\)',
+            r'# Phase 2: LLM repair.*?repair_llm_used=true',
             source,
             re.DOTALL
         )
@@ -79,7 +79,7 @@ class TestFix512_CodeFenceStripping:
 
         # Find the Phase 2 section
         llm_repair_match = re.search(
-            r'# Phase 2: LLM repair.*?repair successful \(LLM\)',
+            r'# Phase 2: LLM repair.*?repair_llm_used=true',
             source,
             re.DOTALL
         )

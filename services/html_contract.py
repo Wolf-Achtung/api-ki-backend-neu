@@ -112,6 +112,8 @@ class ContractResult:
     warning_count: int = 0
     repair_attempted: bool = False
     repair_successful: bool = False
+    repair_llm_used: bool = False  # FIX-QW-PROMPT-STABILIZE: track LLM repair usage
+    deterministic_repairs: int = 0  # FIX-QW-PROMPT-STABILIZE: count deterministic fixes
     html_bytes: int = 0
     sections_checked: int = 0
 
@@ -123,6 +125,8 @@ class ContractResult:
             "warning_count": self.warning_count,
             "repair_attempted": self.repair_attempted,
             "repair_successful": self.repair_successful,
+            "repair_llm_used": self.repair_llm_used,
+            "deterministic_repairs": self.deterministic_repairs,
             "html_bytes": self.html_bytes,
             "sections_checked": self.sections_checked,
         }
@@ -562,7 +566,8 @@ def html_contract_validate(
     if result.critical_count == 0:
         result.passed = True
         log.info(
-            "[FIX-513][HTML-CONTRACT] PASS violations=0 warnings=%d bytes=%d repair_llm_used=0",
+            "[HTML-CONTRACT] PASS repair_llm_used=%s deterministic_repairs=%d warnings=%d bytes=%d",
+            str(result.repair_llm_used).lower(), result.deterministic_repairs,
             result.warning_count, result.html_bytes
         )
         return result
@@ -581,6 +586,7 @@ def html_contract_validate(
 
         # Phase 1: Deterministic repair
         repaired_html, fixes = _attempt_deterministic_repair(html, all_violations)
+        result.deterministic_repairs = fixes
 
         if fixes > 0:
             # Re-validate after deterministic repair
@@ -597,9 +603,13 @@ def html_contract_validate(
                 result.critical_count = recheck.critical_count
                 result.warning_count = recheck.warning_count
                 result.repair_successful = recheck.passed
+                result.deterministic_repairs = fixes
 
                 if recheck.passed:
-                    log.info("[FIX-505][HTML-CONTRACT] repair successful (deterministic)")
+                    log.info(
+                        "[HTML-CONTRACT] PASS repair_llm_used=false deterministic_repairs=%d",
+                        fixes
+                    )
                     return result
 
         # Phase 2: LLM repair (if deterministic didn't fully fix)
@@ -607,6 +617,7 @@ def html_contract_validate(
         if result.critical_count > 0 and not is_strict:
             llm_repaired = _attempt_llm_repair(html, all_violations)
             if llm_repaired:
+                result.repair_llm_used = True
                 # FIX-512 CHANGE 1: Strip code fences AFTER LLM repair, BEFORE re-validation
                 llm_repaired_before = llm_repaired
                 llm_repaired = strip_code_fences_final(llm_repaired)
@@ -636,8 +647,26 @@ def html_contract_validate(
                     result.critical_count = recheck.critical_count
                     result.warning_count = recheck.warning_count
                     result.repair_successful = True
-                    log.info("[FIX-505][HTML-CONTRACT] repair successful (LLM)")
+                    result.repair_llm_used = True
+                    log.info(
+                        "[HTML-CONTRACT] PASS repair_llm_used=true deterministic_repairs=%d",
+                        result.deterministic_repairs
+                    )
                     return result
+
+    # FIX-QW-PROMPT-STABILIZE: Fail-closed gate — repair_llm_used MUST be false in STRICT
+    if is_strict and result.repair_llm_used:
+        debug_attachments = {
+            "debug_qw_repair_llm_gate.json": json.dumps(result.to_dict(), indent=2),
+        }
+        log.error(
+            "[HTML-CONTRACT] FAIL-CLOSED repair_llm_used=true in STRICT mode"
+        )
+        raise ContractViolationError(
+            "[HTML-CONTRACT] STRICT_MODE: repair_llm_used=true is not allowed",
+            result=result,
+            debug_attachments=debug_attachments,
+        )
 
     # Final failure handling
     if is_strict and result.critical_count > 0:
