@@ -33,7 +33,7 @@ VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>
 <!-- WORD_MINIMUM_TEAM: 600 -->
 <!-- WORD_MINIMUM_KMU: 700 -->
 <!--
-ZIEL: 12-Monats-Roadmap als strategische Entscheidungskette (nicht Tool-Rollout).
+ZIEL: 12-Monats-Roadmap als strategische Entscheidungskette (nicht Tool-Umsetzungsplan).
 
 =============================================================================
 SPRACHSHIFT v6.0 — ENTSCHEIDUNGEN STATT IMPLEMENTIERUNGEN:
@@ -60,7 +60,7 @@ LESBARKEIT (v6.1 NEU):
 MINDESTLÄNGE (STRIKT VERPFLICHTEND!):
 - Solo: mind. 500 Wörter (inkl. Q1-Q4 Phasen)
 - Team: mind. 600 Wörter (inkl. Rollen und Standards)
-- KMU: mind. 700 Wörter (inkl. 5-Dimensionen-Rollout)
+- KMU: mind. 700 Wörter (inkl. 5-Dimensionen-Ausbau)
 
 WICHTIG: Diese Mindestlängen sind verpflichtend und werden validiert!
 
@@ -73,7 +73,7 @@ KURZLABELS (VERPFLICHTEND!):
 STRUKTUR NACH GRÖSSE (max 3 Hauptabschnitte):
 - Solo: Zeitbasierte Phasen (Q1, Q2, Q3-4)
 - Team: Zeitbasierte Phasen mit Rollen
-- KMU: Block-Struktur (Tech, Data, Org, Product, Compliance) + Rollout
+- KMU: Block-Struktur (Tech, Data, Org, Product, Compliance) + Ausweitung
 
 LEITENTSCHEIDUNGEN PRO QUARTAL (v6.1 NEU - implizit verankern, nicht als Überschrift):
 - Q1: "Fundament vor Fläche" – Qualität der Basis sichern
@@ -96,7 +96,7 @@ ANTI-REDUNDANZ (STRIKT!):
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: eigene Workflows, Self-Review, persönliche Routine
 - team: KI-Koordinator, gemeinsame Standards, Review-Runden
-- kmu: Fachbereiche, Governance-Board, Rollout-Plan, Compliance
+- kmu: Fachbereiche, Governance-Board, Ausbauplan, Compliance
 
 SPRINT G5 - PERSONA HARD-GUARDS (STRIKT!):
 {% if COMPANY_SIZE == "solo" %}
@@ -172,14 +172,14 @@ Aufbauend auf den ersten 90 Tagen – Fokus auf Erweiterung im Team.
 **🎯 Meilenstein Jahresende:** Nachweisbarer ROI, Roadmap 2.0 steht.
 
 {% else %}
-Aufbauend auf den ersten 90 Tagen – professioneller Rollout über 5 Dimensionen.
+Aufbauend auf den ersten 90 Tagen – professioneller Ausbau über 5 Dimensionen.
 
 ### Dimension 1: Technologie (Q1–Q2)
-- Tool-Stack finalisieren (Lizenzen, Zugänge, Integrationen)
+- Tool-Set finalisieren (Lizenzen, Zugänge, Integrationen)
 - Datenschnittstellen zu bestehenden Systemen prüfen
 - Technische Dokumentation erstellen
 
-**🎯 Meilenstein:** Tech-Stack stabil, Integrationen funktionsfähig.
+**🎯 Meilenstein:** Tool-Set stabil, Integrationen funktionsfähig.
 
 ### Dimension 2: Daten (Q1–Q2)
 - Relevante Datenquellen identifizieren und anbinden
@@ -190,13 +190,13 @@ Aufbauend auf den ersten 90 Tagen – professioneller Rollout über 5 Dimensione
 
 ### Dimension 3: Organisation (Q2–Q3)
 - KI-Verantwortliche in jedem Fachbereich benennen
-- Schulungskonzept ausrollen
+- Schulungskonzept für alle Bereiche umsetzen
 - Governance-Board etablieren (Quartalsweise Review)
 
 **🎯 Meilenstein:** Klare Verantwortlichkeiten, geschulte Mitarbeitende.
 
 ### Dimension 4: Produkt/Prozess (Q2–Q4)
-- Rollout auf 2–3 weitere Fachbereiche nach Pilot-Erfolg
+- Ausweitung auf 2–3 weitere Fachbereiche nach Pilot-Erfolg
 - Standard Operating Procedures (SOPs) für alle KI-Prozesse
 - Wirkungsmessung pro Bereich (Zeit, Kosten, Qualität)
 
@@ -214,7 +214,7 @@ Aufbauend auf den ersten 90 Tagen – professioneller Rollout über 5 Dimensione
 - Budget-Planung für Jahr 2
 - Roadmap 2.0 mit Erweiterungszielen
 
-**🎯 Meilenstein Jahresende:** Board-Entscheidung für Jahr 2, Rollout-Plan steht.
+**🎯 Meilenstein Jahresende:** Board-Entscheidung für Jahr 2, Ausbauplan steht.
 {% endif %}
 
 ---
@@ -223,14 +223,12 @@ Aufbauend auf den ersten 90 Tagen – professioneller Rollout über 5 Dimensione
 
 <!-- ZERO-LEAK POLICY (N4.6) -->
 <!--
-VERBOTEN – NIEMALS VERWENDEN:
-- Keine Fragen an den Leser ("Haben Sie Fragen?", "Möchten Sie mehr erfahren?")
-- Keine Aufforderungen ("Wenn Sie möchten...", "Kontaktieren Sie uns...")
-- Keine Assistenten-Sprache ("Ich kann Ihnen helfen...", "Gerne erkläre ich...")
-- Keine Angebote ("Bei Bedarf...", "Falls gewünscht...")
-- Keine interaktiven Elemente ("Klicken Sie hier...", "Wählen Sie...")
-- Keine Platzhalter ("[Hier einfügen]", "{{VARIABLE}}" außer definierten)
-- Keine Meta-Kommentare ("Dieser Abschnitt...", "Im Folgenden...")
+DE-PRIMED EXCLUSION (Fail-Closed):
+- Keine Gesprächs-/Assistenzsprache, keine Fragen, keine Anrede, keine Meta-Kommentare.
+- Keine Optionalitätsfloskeln oder Beispiel-/Abkürzungsmarker.
+- Keine Technik-/Produktlaunch-Terminologie.
+- Keine interaktiven Elemente oder Platzhalter (außer definierten Template-Variablen).
+- Keine Aufforderungen oder Handlungs-CTAs.
 
 Der Output ist ein FINALER REPORT-ABSCHNITT, kein Gespräch.
 -->
