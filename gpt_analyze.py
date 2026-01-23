@@ -171,6 +171,10 @@ from services.quickwins_renderer import (
     detect_quickwins_template_mode,
     normalize_quickwins_to_html,
 )
+from services.openai_retry import (
+    DEFAULT_READ_TIMEOUT as OPENAI_RETRY_READ_TIMEOUT,
+    EXPAND_READ_TIMEOUT as OPENAI_RETRY_EXPAND_TIMEOUT,
+)
 
 # ==================== PHASE 4: LIVE DATA INTEGRATION ====================
 try:
@@ -1918,26 +1922,26 @@ def _call_openai(
         # as it's no longer supported. Stop sequences are still used for Anthropic models
         # via the anthropic_client.py module.
 
-        # v14.35.22: Section-aware timeout for heavy/expand calls
-        # Heavy sections get extended timeout (150s) to avoid read timeouts
+        # FIX-514: Section-aware timeout - always use ENV-derived timeouts (never LLM_TIMEOUT)
         is_heavy_section = False
         if section:
-            # Check explicit allowlist or _expand suffix
             is_heavy_section = (
                 section in HEAVY_SECTIONS or
                 section.endswith("_expand") or
                 section.endswith("_repair")
             )
 
-        request_timeout = OPENAI_TIMEOUT_READ_EXPAND if is_heavy_section else OPENAI_TIMEOUT
+        # FIX-514: Use openai_retry-derived timeouts (OPENAI_TIMEOUT_READ / _EXPAND)
+        request_timeout = OPENAI_RETRY_EXPAND_TIMEOUT if is_heavy_section else OPENAI_RETRY_READ_TIMEOUT
+        source_env = "OPENAI_TIMEOUT_READ_EXPAND" if is_heavy_section else "OPENAI_TIMEOUT_READ"
 
-        if is_heavy_section:
-            log.info(
-                "[OpenAI] using extended read timeout=%ds for section=%s model=%s",
-                request_timeout,
-                section,
-                model,
-            )
+        log.info(
+            "[FIX-514][OPENAI] section=%s model=%s timeout=(connect=10,read=%d) source_env=%s",
+            section or "default",
+            model,
+            int(request_timeout),
+            source_env,
+        )
 
         # v14.35.22: Safe retry for models that reject max_tokens (e.g., gpt-5.1)
         # If we get 400 with "max_tokens unsupported", retry with max_completion_tokens only
