@@ -916,15 +916,23 @@ def render(briefing_obj: Any,
             "repair_successful": contract_result.repair_successful,
         }
 
-        # FIX-515 TASK 4: One-line Strict Summary
+        # FIX-517C: One-line Strict Summary with unified warning count
         if contract_result.passed:
             _qw_cards_515 = html.count('class="quick-win')
             _qw_nonempty_515 = 1 if _qw_cards_515 >= 3 else 0
             _repair_llm_515 = 1 if getattr(contract_result, 'repair_llm_used', False) else 0
+            # FIX-517C: Use unified total (pipeline + validator) not just contract warnings
+            _pipeline_warnings = sections.get("PIPELINE_WARNINGS_COUNT", 0)
+            _validator_warnings = sections.get("VALIDATOR_WARNINGS_COUNT", 0)
+            _total_warnings = _pipeline_warnings + _validator_warnings + contract_result.warning_count
+            _grade = sections.get("PIPELINE_GRADE", "?")
             log.info(
                 "[FIX-515][STRICT-READY] contract_pass=1 repair_llm_used=%d "
-                "quickwins_nonempty=%d warnings_total=%d",
-                _repair_llm_515, _qw_nonempty_515, contract_result.warning_count
+                "quickwins_nonempty=%d pipeline_warnings=%d validator_warnings=%d "
+                "warnings_total=%d grade=%s",
+                _repair_llm_515, _qw_nonempty_515,
+                _pipeline_warnings, _validator_warnings,
+                _total_warnings, _grade
             )
 
     except ContractViolationError as e:

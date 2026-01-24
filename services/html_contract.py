@@ -80,6 +80,7 @@ class ViolationType(Enum):
     UNCLOSED_TAG = "unclosed_tag"
     QUICKWINS_NO_MARKER = "quickwins_no_marker"
     QUICKWINS_EMPTY = "quick_wins_empty"  # FIX-513: Non-Empty Guard
+    CHAT_ARTIFACT = "chat_artifact"  # FIX-517C: Questionnaire/chat leaks
 
 
 @dataclass
@@ -248,11 +249,11 @@ def _check_quickwins_markers(html: str) -> List[Violation]:
 
     # FIX-513 P1: If marker or word-boundary class is present, QuickWins is rendered
     if has_marker or has_quick_win_wordclass:
-        # FIX-513 P3: Non-Empty Guard - must have at least 1 item and sufficient length
-        if count_quick_win < 1:
+        # FIX-517C: Non-Empty Guard - must have at least 2 items and sufficient length
+        if count_quick_win < 2:
             violations.append(Violation(
                 type=ViolationType.QUICKWINS_EMPTY,
-                message=f"QuickWins has marker/class but no quick-win items (count={count_quick_win})",
+                message=f"QuickWins has marker/class but insufficient items (count={count_quick_win}, min=2)",
                 section="quick_wins_empty",
                 context=qw_block[:200],
                 critical=True,
@@ -411,6 +412,32 @@ def _check_raw_json_artifacts(html: str) -> List[Violation]:
     return violations
 
 
+# FIX-517C: Chat/questionnaire artifact patterns (forbidden in final output)
+_CHAT_ARTIFACT_PATTERNS = [
+    re.compile(r'Wobei kann ich (dir|Ihnen) helfen', re.IGNORECASE),
+    re.compile(r'Bitte nenne[n]? kurz', re.IGNORECASE),
+]
+
+
+def _check_chat_artifacts(html: str) -> List[Violation]:
+    """FIX-517C: Check for chat/questionnaire artifacts that leaked into output."""
+    violations = []
+
+    for pattern in _CHAT_ARTIFACT_PATTERNS:
+        for match in pattern.finditer(html):
+            line_num = html[:match.start()].count('\n') + 1
+            context = html[max(0, match.start() - 30):match.end() + 70]
+            violations.append(Violation(
+                type=ViolationType.CHAT_ARTIFACT,
+                message=f"Chat artifact at line {line_num}: '{match.group()}'",
+                line=line_num,
+                context=context,
+                critical=True,
+            ))
+
+    return violations
+
+
 # =============================================================================
 # REPAIR FUNCTIONS
 # =============================================================================
@@ -435,6 +462,22 @@ def _attempt_deterministic_repair(html: str, violations: List[Violation]) -> Tup
                     "[FIX-505][HTML-CONTRACT] Deterministic repair: removed %d code fences",
                     count
                 )
+        elif violation.type == ViolationType.CHAT_ARTIFACT:
+            # FIX-517C: Remove chat artifact lines deterministically
+            for pattern in _CHAT_ARTIFACT_PATTERNS:
+                # Remove the entire line containing the artifact
+                result, count = re.subn(
+                    r'[^\n]*' + pattern.pattern + r'[^\n]*\n?',
+                    '',
+                    result,
+                    flags=re.IGNORECASE
+                )
+                if count > 0:
+                    fixes_applied += count
+                    log.info(
+                        "[FIX-517C][HTML-CONTRACT] Deterministic repair: removed %d chat artifacts",
+                        count
+                    )
 
     return result, fixes_applied
 
@@ -557,6 +600,7 @@ def html_contract_validate(
     all_violations.extend(_check_empty_sections(html, sections))
     all_violations.extend(_check_html_sanity(html))
     all_violations.extend(_check_raw_json_artifacts(html))
+    all_violations.extend(_check_chat_artifacts(html))  # FIX-517C
 
     result.violations = all_violations
     result.critical_count = sum(1 for v in all_violations if v.critical)

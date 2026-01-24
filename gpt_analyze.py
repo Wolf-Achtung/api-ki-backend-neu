@@ -6697,6 +6697,7 @@ HEALABLE_LEAK_PHRASES = {
     "bei bedarf": "optional",
     "wenn sie möchten": "optional",
     "falls gewünscht": "optional",
+    "wählen sie": "festlegen",  # FIX-517C: Roadmap leak de-priming
 }
 
 
@@ -8787,7 +8788,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
 
   <h3>4. Nächste Schritte für die Förderprüfung</h3>
   <ol>
-    <li><strong>Programmauswahl:</strong> Wählen Sie 1–2 Programme aus, die zu <strong>{branche}</strong>,
+    <li><strong>Programmauswahl:</strong> Prüfen Sie 1–2 Programme, die zu <strong>{branche}</strong>,
       <strong>{size_label}</strong> und <strong>{hauptleistung or "Ihrem Vorhaben"}</strong> passen. Prüfen Sie dabei
       sowohl Landes- als auch Bundesprogramme sowie mögliche EU-Förderungen.</li>
     <li><strong>Projektbeschreibung:</strong> Erstellen Sie eine kompakte Projektbeschreibung mit Zielen, Maßnahmen,
@@ -10025,7 +10026,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
 
   <h4>Erster Schritt in den nächsten 90 Tagen</h4>
   <p>
-    Wählen Sie einen priorisierten Teilprozess aus und stabilisieren Sie ihn mit KI-Vorlagen und
+    Identifizieren Sie einen priorisierten Teilprozess und stabilisieren Sie ihn mit KI-Vorlagen und
     Review-Schritten als Mini-Pilot. Dokumentieren Sie die Ergebnisse und sammeln Sie Feedback,
     um den Prozess kontinuierlich zu verbessern.
   </p>
