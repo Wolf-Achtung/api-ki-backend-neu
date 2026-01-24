@@ -922,8 +922,8 @@ def render(briefing_obj: Any,
             _qw_nonempty_515 = 1 if _qw_cards_515 >= 3 else 0
             _repair_llm_515 = 1 if getattr(contract_result, 'repair_llm_used', False) else 0
             # FIX-517C: Use unified total (pipeline + validator) not just contract warnings
-            _pipeline_warnings = sections.get("PIPELINE_WARNINGS_COUNT", 0)
-            _validator_warnings = sections.get("VALIDATOR_WARNINGS_COUNT", 0)
+            _pipeline_warnings = int(sections.get("PIPELINE_WARNINGS_COUNT", 0) or 0)
+            _validator_warnings = int(sections.get("VALIDATOR_WARNINGS_COUNT", 0) or 0)
             _total_warnings = _pipeline_warnings + _validator_warnings + contract_result.warning_count
             _grade = sections.get("PIPELINE_GRADE", "?")
             log.info(

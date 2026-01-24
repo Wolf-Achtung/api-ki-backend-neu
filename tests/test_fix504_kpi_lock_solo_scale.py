@@ -266,21 +266,21 @@ class TestTask4QuickWinsFullWidthLayout:
         """Test that enhancement adds CSS for full-width layout."""
         from services.quickwins_renderer import enhance_quickwins_for_fullwidth
 
-        html = '<div class="quick-win-card">Card 1</div>'
+        html = '<div class="quick-win-card">Card 1</div><div class="quick-win-card">Card 2</div>'
         result = enhance_quickwins_for_fullwidth(html)
 
-        assert "quickwins-fullwidth-grid" in result
-        assert "grid-template-columns" in result
+        assert "quickwins-fullwidth-table" in result
+        assert "table-layout:fixed" in result
 
     def test_enhance_quickwins_no_double_wrap(self):
         """Test that already enhanced HTML is not double-wrapped."""
         from services.quickwins_renderer import enhance_quickwins_for_fullwidth
 
-        html = '<div class="quickwins-fullwidth-grid"><div class="quick-win-card">Card</div></div>'
+        html = '<table class="quickwins-fullwidth-table"><tr><td><div class="quick-win-card">Card</div></td></tr></table>'
         result = enhance_quickwins_for_fullwidth(html)
 
-        # Should not add another grid wrapper
-        assert result.count("quickwins-fullwidth-grid") == 1
+        # Should not add another table wrapper
+        assert result.count("quickwins-fullwidth-table") == 1
 
     def test_apply_enhancement_only_for_fullwidth_modes(self):
         """Test that enhancement only applies for LEFT_ONLY/FULL modes."""
@@ -293,16 +293,16 @@ class TestTask4QuickWinsFullWidthLayout:
             "QUICK_WINS_HTML_RIGHT": "<div>Right</div>",
         }
         result = apply_quickwins_fullwidth_enhancement(sections.copy())
-        assert "quickwins-fullwidth-grid" not in result.get("QUICK_WINS_HTML", "")
+        assert "quickwins-fullwidth-table" not in result.get("QUICK_WINS_HTML", "")
 
-        # FULL mode - should enhance
+        # FULL mode - should enhance (adds CSS block)
         sections_full = {
             "QUICK_WINS_HTML": "<div>Content</div>",
             "QUICK_WINS_HTML_LEFT": "",
             "QUICK_WINS_HTML_RIGHT": "",
         }
         result = apply_quickwins_fullwidth_enhancement(sections_full)
-        assert "quickwins-fullwidth-grid" in result.get("QUICK_WINS_HTML", "")
+        assert "quickwins-fullwidth-table" in result.get("QUICK_WINS_HTML", "")
 
 
 class TestTask5StrictModePreparation:
