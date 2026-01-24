@@ -8562,7 +8562,43 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     for _sc, _dim, _desc in _dim_scores_sorted[:3]:
         _risk_bullets.append(f"• {_dim} ({_sc}/100): {_desc}")
     base_vars["TOP_RISKS"] = "\n".join(_risk_bullets)
-    
+
+    # ===== FIX-520 TASK 1: Ensure required prompt vars exist (STRICT-safe) =====
+    # Prevents Legacy-Fallback for data_readiness, foerderpotenzial,
+    # ki_aktivitaeten_ziele, transparency_box prompts.
+    _FIX520_DEFAULT = "keine Angabe"
+
+    # Short labels from generate_short_labels (BRANCH_CONTEXT_LABEL etc.)
+    base_vars.setdefault("BRANCH_CORE_LABEL", short_labels.get("BRANCH_CORE_LABEL", branche))
+    base_vars.setdefault("BRANCH_CONTEXT_LABEL", short_labels.get("BRANCH_CONTEXT_LABEL", branche))
+    base_vars.setdefault("BRANCH_SHORT_LABEL", short_labels.get("BRANCH_SHORT_LABEL", branche))
+    base_vars.setdefault("OFFERING_LABEL", short_labels.get("OFFERING_LABEL", hauptleistung))
+
+    # Label fields derived from briefing (Patch03 stores them in briefing dict)
+    base_vars.setdefault("AUTOMATISIERUNGSGRAD_LABEL",
+                         briefing.get("AUTOMATISIERUNGSGRAD_LABEL") or briefing.get("automatisierungsgrad") or _FIX520_DEFAULT)
+    base_vars.setdefault("DATENQUELLEN_LABELS",
+                         briefing.get("DATENQUELLEN_LABELS") or briefing.get("datenquellen") or _FIX520_DEFAULT)
+    base_vars.setdefault("PROZESSE_PAPIERLOS_LABEL",
+                         briefing.get("PROZESSE_PAPIERLOS_LABEL") or briefing.get("prozesse_papierlos") or _FIX520_DEFAULT)
+    base_vars.setdefault("REGULIERTE_BRANCHE_LABELS",
+                         briefing.get("REGULIERTE_BRANCHE_LABELS") or briefing.get("regulierte_branche") or _FIX520_DEFAULT)
+    base_vars.setdefault("IT_INFRASTRUKTUR_LABEL",
+                         briefing.get("IT_INFRASTRUKTUR_LABEL") or briefing.get("it_infrastruktur") or _FIX520_DEFAULT)
+    base_vars.setdefault("VORHANDENE_TOOLS_LABELS",
+                         briefing.get("VORHANDENE_TOOLS_LABELS") or briefing.get("vorhandene_tools") or _FIX520_DEFAULT)
+
+    # TOOLS_AKTUELL: used by ki_aktivitaeten_ziele prompt
+    base_vars.setdefault("TOOLS_AKTUELL",
+                         briefing.get("VORHANDENE_TOOLS_LABELS") or briefing.get("vorhandene_tools") or _FIX520_DEFAULT)
+
+    # FOERDERPROGRAMME_HTML: not available at prompt-build time (generated later in pipeline)
+    base_vars.setdefault("FOERDERPROGRAMME_HTML", "")
+
+    # Lowercase aliases for prompts that use them
+    base_vars.setdefault("labels", base_vars.get("DATENQUELLEN_LABELS", _FIX520_DEFAULT))
+    base_vars.setdefault("data_sources", base_vars.get("DATENQUELLEN_LABELS", _FIX520_DEFAULT))
+
     # ===== BLOCK 10: JSON Dumps =====
     # Complex data structures for advanced prompts
     base_vars.update({
@@ -10727,13 +10763,13 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
     # v7.0 DEBUG: Log which path is being used for quick_wins
     # =========================================================================
     if section_name == "quick_wins":
-        log.warning("=" * 80)
-        log.warning("🔍 QUICK_WINS DEBUG START")
-        log.warning(f"USE_PROMPT_SYSTEM={USE_PROMPT_SYSTEM}")
-        log.warning(f"prompt_key={prompt_key}")
-        log.warning(f"_prompt_enhancer initialized: {bool(_prompt_enhancer)}")
-        log.warning(f"Briefing has zeitersparnis_prioritaet: {bool(briefing.get('zeitersparnis_prioritaet', ''))}")
-        log.warning(f"Briefing has ki_projekte: {bool(briefing.get('ki_projekte', ''))}")
+        log.info("=" * 80)
+        log.info("🔍 QUICK_WINS DEBUG START")
+        log.info(f"USE_PROMPT_SYSTEM={USE_PROMPT_SYSTEM}")
+        log.info(f"prompt_key={prompt_key}")
+        log.info(f"_prompt_enhancer initialized: {bool(_prompt_enhancer)}")
+        log.info(f"Briefing has zeitersparnis_prioritaet: {bool(briefing.get('zeitersparnis_prioritaet', ''))}")
+        log.info(f"Briefing has ki_projekte: {bool(briefing.get('ki_projekte', ''))}")
 
     if USE_PROMPT_SYSTEM and prompt_key and _prompt_enhancer:
         try:
@@ -11093,9 +11129,9 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {min_words} Wörter):
 
             # v7.0 DEBUG: Log success end for quick_wins
             if section_name == "quick_wins":
-                log.warning("✅ QUICK_WINS: PromptEnhancer path completed successfully!")
-                log.warning("🔍 QUICK_WINS DEBUG END")
-                log.warning("=" * 80)
+                log.info("✅ QUICK_WINS: PromptEnhancer path completed successfully!")
+                log.info("🔍 QUICK_WINS DEBUG END")
+                log.info("=" * 80)
 
             return result
 
@@ -11371,14 +11407,14 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
 
     # v7.0 DEBUG: Log legacy response for quick_wins
     if section_name == "quick_wins":
-        log.warning(f"🤖 LEGACY GPT response length: {len(out)}")
-        log.warning(f"LEGACY response starts: {out[:500]}...")
+        log.info(f"🤖 LEGACY GPT response length: {len(out)}")
+        log.info(f"LEGACY response starts: {out[:500]}...")
         has_div = '<div class="quick-win">' in out
         has_blockquote = '<blockquote>' in out
-        log.warning(f"Contains div.quick-win: {has_div}")
-        log.warning(f"Contains blockquote: {has_blockquote}")
-        log.warning("🔍 QUICK_WINS DEBUG END")
-        log.warning("=" * 80)
+        log.info(f"Contains div.quick-win: {has_div}")
+        log.info(f"Contains blockquote: {has_blockquote}")
+        log.info("🔍 QUICK_WINS DEBUG END")
+        log.info("=" * 80)
 
     out = _clean_html(out)
     if _needs_repair(out):
