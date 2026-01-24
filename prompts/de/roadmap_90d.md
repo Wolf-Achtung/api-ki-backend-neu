@@ -451,7 +451,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     <li><strong>Qualität:</strong> Einheitliche Ergebnisse durch gemeinsame Standards</li>
     <li><strong>Compliance:</strong> {{KI_GUARDRAILS}} systematisch in Team-Reviews geprüft</li>
     <li><strong>Zusammenarbeit:</strong> Etablierte Review-Routinen</li>
-    <li><strong>Skalierbarkeit:</strong> Dokumentierte Workflows für {{VISION_3_JAHRE}}</li>
+    <li><strong>Übertragbarkeit:</strong> Dokumentierte Workflows für {{VISION_3_JAHRE}}</li>
   </ul>
 
   <h3>Team-Kommunikation & Umsetzungsrituale</h3>
@@ -519,7 +519,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
   <h3>Phase 0: KI-Pilot-Setup (Woche 1–2)</h3>
   <p><strong>Ziel:</strong> Pilotbereich für {{hauptleistung}} definieren und Grundlagen schaffen.</p>
   <ul>
-    <li>Pilotbereich auswählen (hoher Entlastungspotenzial bei {{ZEITERSPARNIS_PRIORITAET}})</li>
+    <li>Pilotbereich festlegen (hoher Entlastungspotenzial bei {{ZEITERSPARNIS_PRIORITAET}})</li>
     <li>KI-Verantwortliche:n benennen</li>
     <li>Governance-Grundregeln festlegen: {{KI_GUARDRAILS}} als Leitplanken</li>
     <li>Zugänge für Pilotbereich einrichten und dokumentieren</li>
@@ -538,8 +538,8 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
   </ul>
   <p><strong>Meilenstein:</strong> Pilotbereich nutzt KI für Ihr Kerngeschäft, messbare Entlastung bei {{ZEITERSPARNIS_PRIORITAET}}.</p>
 
-  <h3>Phase 2: Skalierbare SOPs etablieren (Woche 6–10)</h3>
-  <p><strong>Ziel:</strong> Skalierbare Prozesse für diese Leistung etablieren.</p>
+  <h3>Phase 2: Standardisierte SOPs etablieren (Woche 6–10)</h3>
+  <p><strong>Ziel:</strong> Wiederholbare Prozesse für diese Leistung etablieren.</p>
   <ul>
     <li>SOPs für KI-Workflows dokumentieren</li>
     <li>QS-Prozess etablieren: Input → KI → Prüfung gemäß {{KI_GUARDRAILS}} → Freigabe</li>
@@ -566,7 +566,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     <li><strong>Zeitersparnis:</strong> 30–50% bei {{ZEITERSPARNIS_PRIORITAET}} im Pilotbereich</li>
     <li><strong>Qualität:</strong> Standardisierte Prozesse, dokumentierte Qualitätskriterien</li>
     <li><strong>Governance:</strong> {{KI_GUARDRAILS}} als klare Regeln, Verantwortlichkeiten dokumentiert</li>
-    <li><strong>Skalierbarkeit:</strong> Erprobte SOPs für Ausweitung Richtung {{VISION_3_JAHRE}}</li>
+    <li><strong>Übertragbarkeit:</strong> Erprobte SOPs für Ausweitung Richtung {{VISION_3_JAHRE}}</li>
     <li><strong>Business Case:</strong> Validierte ROI auf Basis echter Pilotdaten</li>
     <li><strong>Entscheidungsgrundlage:</strong> Fundierte Basis für {{VISION_3_JAHRE}}-Entscheidung</li>
   </ul>
@@ -660,7 +660,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     {% elif COMPANY_SIZE == "team" %}
     Starten Sie mit klar abgegrenzten Pilotaufgaben im Bereich. Etablieren Sie Peer-Reviews als festen Bestandteil des Workflows. Sammeln Sie Feedback systematisch und passen Sie Vorlagen basierend auf konkreten Erfahrungen an.
     {% else %}
-    Begrenzen Sie den initialen Pilotbereich auf unkritische Prozesse. Definieren Sie klare Eskalationswege bei unerwarteten Ergebnissen. Führen Sie regelmäßige Retrospektiven durch und skalieren Sie erst nach validierter Qualität in weitere Bereiche.
+    Begrenzen Sie den initialen Pilotbereich auf unkritische Prozesse. Definieren Sie klare Eskalationswege bei unerwarteten Ergebnissen. Führen Sie regelmäßige Retrospektiven durch und weiten Sie erst nach validierter Qualität auf weitere Bereiche aus.
     {% endif %}
   </p>
 

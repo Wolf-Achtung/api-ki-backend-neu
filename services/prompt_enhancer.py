@@ -1717,7 +1717,7 @@ Nutze den Strategischen Kontext wie folgt:
 ## Roadmap-Regeln basierend auf Strategischem Kontext
 
 - **In den ersten 90 Tagen:** Fokus auf Quick Wins und operative Entlastung basierend auf den genannten "Zeitfressern & Prozess-Pain-Points".
-- **Im 6–12 Monatszeitraum:** Maßnahmen wählen, die das Zielbild ("Vision 2–3 Jahre") und die "Strategischen Prioritäten" systematisch vorbereiten.
+- **Im 6–12 Monatszeitraum:** Maßnahmen festlegen, die das Zielbild ("Vision 2–3 Jahre") und die "Strategischen Prioritäten" systematisch vorbereiten.
 - **Falls Geschäftsmodell-Ideen angegeben wurden:** zeige konkret, wie sie getestet und validiert werden können (MVP, Pilotkunden, Experimente).
 - **Laufende oder geplante KI-Projekte:** integriere sie sinnvoll in die Roadmap, vermeide Doppelarbeit.
 - **Wichtigste Leistung / Hauptprodukt:** alle Roadmap-Maßnahmen sollten letztlich diesen Kernprozess stärken oder effizienter machen.
