@@ -10840,7 +10840,8 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                     "[FIX-RECO][PROMPT-CONTRACT] unresolved_placeholders=%s section=%s",
                     _unique_placeholders, section_name
                 )
-                if RELEASE_STRICT_MODE:
+                _release_strict_reco = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
+                if _release_strict_reco:
                     raise RuntimeError(
                         f"[FIX-RECO][PROMPT-CONTRACT] Unresolved placeholders in prompt "
                         f"for section={section_name}: {_unique_placeholders}. "
