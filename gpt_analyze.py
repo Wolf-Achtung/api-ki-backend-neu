@@ -8526,16 +8526,42 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "score_value": scores.get("value", 0),
         "score_enablement": scores.get("enablement", 0),
         "score_overall": scores.get("overall", 0),
-        
+
         # German variants (prompts)
         "score_sicherheit": scores.get("security", 0),
         "score_nutzen": scores.get("value", 0),
         "score_befaehigung": scores.get("enablement", 0),
         "score_gesamt": scores.get("overall", 0),
-        
+
         # Special alias for PDF template
         "score_wertschoepfung": scores.get("value", 0),  # Alias for score_value in template
     })
+
+    # ===== FIX-RECO-P0 TASK 1: Uppercase aliases + TOP_RISKS derivation =====
+    # Prevents unresolved {SCORE_GOVERNANCE} and {TOP_RISKS} in LLM output
+    _gov_score = scores.get("governance", 0)
+    _sec_score = scores.get("security", 0)
+    _val_score = scores.get("value", 0)
+    _ena_score = scores.get("enablement", 0)
+    base_vars["SCORE_GOVERNANCE"] = base_vars.get("score_governance") or base_vars.get("score_rating", str(_gov_score))
+    base_vars["SCORE_SECURITY"] = str(_sec_score)
+    base_vars["SCORE_VALUE"] = str(_val_score)
+    base_vars["SCORE_ENABLEMENT"] = str(_ena_score)
+    base_vars["SCORE_OVERALL"] = str(scores.get("overall", 0))
+
+    # TOP_RISKS: Derive 3 risk bullets from weakest score dimensions
+    _risk_bullets = []
+    _dim_scores = [
+        (_gov_score, "Governance", "Fehlende Richtlinien und Verantwortlichkeiten für KI-Einsatz"),
+        (_sec_score, "Sicherheit", "Unzureichender Datenschutz und IT-Sicherheitsstandards"),
+        (_val_score, "Wertschöpfung", "Ungenutztes Potenzial bei Automatisierung und Effizienz"),
+        (_ena_score, "Befähigung", "Mangelnde KI-Kompetenz und fehlende Schulungsstrukturen"),
+    ]
+    # Sort by score ascending (weakest first)
+    _dim_scores_sorted = sorted(_dim_scores, key=lambda x: x[0])
+    for _sc, _dim, _desc in _dim_scores_sorted[:3]:
+        _risk_bullets.append(f"• {_dim} ({_sc}/100): {_desc}")
+    base_vars["TOP_RISKS"] = "\n".join(_risk_bullets)
     
     # ===== BLOCK 10: JSON Dumps =====
     # Complex data structures for advanced prompts
@@ -10803,6 +10829,31 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 log.warning(f"Contains 'PLATIN+++ v7.0': {has_v7_marker}")
                 log.warning(f"Contains '<div class=\"quick-win\">': {has_div_quick_win}")
 
+            # FIX-RECO-P0 TASK 2: Prompt Interpolation Contract (Fail-Fast vor OpenAI)
+            # Scan rendered prompt for unresolved {UPPERCASE_PLACEHOLDER} patterns
+            import re as _re_reco
+            _unresolved_pattern = _re_reco.compile(r'\{([A-Z][A-Z0-9_]+)\}')
+            _unresolved_matches = _unresolved_pattern.findall(prompt_text if isinstance(prompt_text, str) else "")
+            if _unresolved_matches:
+                _unique_placeholders = sorted(set(_unresolved_matches))
+                log.error(
+                    "[FIX-RECO][PROMPT-CONTRACT] unresolved_placeholders=%s section=%s",
+                    _unique_placeholders, section_name
+                )
+                _release_strict_reco = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
+                if _release_strict_reco:
+                    raise RuntimeError(
+                        f"[FIX-RECO][PROMPT-CONTRACT] Unresolved placeholders in prompt "
+                        f"for section={section_name}: {_unique_placeholders}. "
+                        f"Add missing vars to _build_prompt_vars() or fix the prompt template."
+                    )
+                else:
+                    log.warning(
+                        "[FIX-RECO][PROMPT-CONTRACT] Non-STRICT: continuing with %d "
+                        "unresolved placeholders in section=%s",
+                        len(_unique_placeholders), section_name
+                    )
+
             # 4. LLM-Aufruf mit bereits definierten Parametern (llm defined before try block)
             result = _call_llm_for_section(
                 section_key=section_name,
@@ -10825,6 +10876,26 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 log.warning(f"Contains pre.prompt-template: {has_pre}")
 
             result = _clean_html(result)
+
+            # FIX-RECO-P0: Post-generation placeholder scrub
+            # Replace any {UPPERCASE_PLACEHOLDER} patterns in LLM output with actual values
+            if result and isinstance(result, str):
+                def _reco_replace_placeholder(m: "re.Match[str]") -> str:
+                    key = m.group(1)
+                    # Try exact key, then lowercase variant
+                    val = vars_dict.get(key) or vars_dict.get(key.lower())
+                    if val is not None:
+                        return str(val)
+                    # Remove unresolvable placeholders entirely
+                    return ""
+                _result_before = result
+                result = _re_reco.sub(r'\{([A-Z][A-Z0-9_]+)\}', _reco_replace_placeholder, result)
+                if result != _result_before:
+                    _removed_count = _result_before.count("{") - result.count("{")
+                    log.info(
+                        "[FIX-RECO][OUTPUT-SCRUB] Replaced/removed %d curly-brace placeholders in section=%s",
+                        max(_removed_count, 1), section_name
+                    )
 
             # FIX-502: CRITICAL - For quick_wins JSON, skip ALL further processing!
             # The JSON must be preserved exactly as returned by LLM.
