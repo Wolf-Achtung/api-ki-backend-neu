@@ -171,22 +171,24 @@ def format_eur_range(eur_low: float, eur_high: float) -> str:
 
 QUICKWINS_FULLWIDTH_CSS = """
 <style>
-/* FIX-504: QuickWins full-width premium layout */
-.quickwins-fullwidth-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
+/* FIX-517C: QuickWins full-width premium layout (WeasyPrint-safe, no CSS Grid) */
+.quickwins-fullwidth-table {
     width: 100%;
+    border-collapse: separate;
+    border-spacing: 16px;
+    table-layout: fixed;
 }
-.quickwins-fullwidth-grid .quick-win-card,
-.quickwins-fullwidth-grid .quick-win-card-new {
+.quickwins-fullwidth-table td {
+    vertical-align: top;
+    width: 50%;
+    padding: 0;
+}
+.quickwins-fullwidth-table .quick-win-card,
+.quickwins-fullwidth-table .quick-win-card-new {
     break-inside: avoid;
     page-break-inside: avoid;
-}
-@media print {
-    .quickwins-fullwidth-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 </style>
 """
@@ -279,45 +281,37 @@ def enhance_quickwins_for_fullwidth(html: str, min_cards: int = 4) -> str:
             f"expected at least {min_cards} for premium layout"
         )
 
-    # Check if already wrapped in a grid container
-    if 'quickwins-fullwidth-grid' in html:
+    # FIX-517C: Check if already wrapped in a table container
+    if 'quickwins-fullwidth-table' in html:
         log.debug("[QUICKWINS-FULLWIDTH] Already enhanced, skipping")
         return html
 
-    # Add CSS and wrap content in grid container
+    # FIX-517C: Use table layout for WeasyPrint compatibility
     enhanced = QUICKWINS_FULLWIDTH_CSS
 
-    # Find the main container or wrap the content
-    # Look for existing container patterns
-    container_patterns = [
-        (r'(<div[^>]*class="[^"]*quick-wins-container[^"]*"[^>]*>)', r'\1'),
-        (r'(<div[^>]*class="[^"]*quickwins[^"]*"[^>]*>)', r'\1'),
-    ]
+    # Extract individual card elements for 2-column distribution
+    # Split by card opening tags, then reconstruct each card block
+    card_split_pattern = re.compile(
+        r'(?=<div[^>]*class="[^"]*quick-win(?:-card|-card-new)\b)',
+        re.IGNORECASE
+    )
+    cards = [c for c in card_split_pattern.split(html) if c.strip() and 'quick-win' in c.lower()]
 
-    wrapped = False
-    for pattern, _ in container_patterns:
-        if re.search(pattern, html, re.IGNORECASE):
-            # Add grid class to existing container
-            html = re.sub(
-                pattern,
-                r'\1<div class="quickwins-fullwidth-grid">',
-                html,
-                count=1,
-                flags=re.IGNORECASE
-            )
-            # Need to close the grid div before the container closes
-            # Find matching closing div
-            html = re.sub(r'(</div>\s*)$', r'</div>\1', html, count=1)
-            wrapped = True
-            break
-
-    if not wrapped:
-        # Wrap entire content in grid
-        enhanced += f'<div class="quickwins-fullwidth-grid">\n{html}\n</div>'
+    if len(cards) >= 2:
+        mid = (len(cards) + 1) // 2
+        left_col = "\n".join(cards[:mid])
+        right_col = "\n".join(cards[mid:])
+        enhanced += f'''<table class="quickwins-fullwidth-table" style="width:100%;border-collapse:separate;border-spacing:16px;table-layout:fixed;">
+<tr>
+<td style="vertical-align:top;width:50%;">{left_col}</td>
+<td style="vertical-align:top;width:50%;">{right_col}</td>
+</tr>
+</table>'''
     else:
+        # Not enough cards for 2-column, use single column
         enhanced += html
 
-    log.info("[QUICKWINS-FULLWIDTH] Enhanced QuickWins for full-width layout")
+    log.info("[QUICKWINS-FULLWIDTH] Enhanced QuickWins for full-width table layout")
     return enhanced
 
 
@@ -607,16 +601,24 @@ def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL") ->
         if not cards_html:
             return None
 
-        # Determine if full-width mode (2-column grid for LEFT_ONLY)
-        if template_mode == "LEFT_ONLY":
-            wrapper_class = "quickwins-premium-container quickwins-fullwidth-grid"
-            wrapper_style = "display:grid;grid-template-columns:repeat(2, 1fr);gap:16px;width:100%;"
+        # FIX-517C: WeasyPrint-safe layout (table instead of CSS Grid)
+        if template_mode == "LEFT_ONLY" and len(cards_html) >= 2:
+            # 2-column table layout for full-width mode
+            mid = (len(cards_html) + 1) // 2
+            left_col = "".join(cards_html[:mid])
+            right_col = "".join(cards_html[mid:])
+            html_out = f'''<div class="quickwins-premium-container quick-wins" data-qw-json-rendered="true" data-qw-premium="true" style="width:100%;">
+<table class="quickwins-fullwidth-table" style="width:100%;border-collapse:separate;border-spacing:16px;table-layout:fixed;">
+<tr>
+<td style="vertical-align:top;width:50%;">{left_col}</td>
+<td style="vertical-align:top;width:50%;">{right_col}</td>
+</tr>
+</table>
+</div>'''
         else:
             wrapper_class = "quickwins-premium-container quick-wins"
             wrapper_style = "width:100%;"
-
-        # Build final HTML
-        html_out = f'''<div class="{wrapper_class}" data-qw-json-rendered="true" data-qw-premium="true" style="{wrapper_style}">
+            html_out = f'''<div class="{wrapper_class}" data-qw-json-rendered="true" data-qw-premium="true" style="{wrapper_style}">
 {"".join(cards_html)}
 </div>'''
 

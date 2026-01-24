@@ -134,8 +134,9 @@ class TestFix510_PremiumRendererLeftOnly:
         result = render_quickwins_premium_json(json_input, "LEFT_ONLY")
 
         assert result is not None
-        assert "grid-template-columns" in result, "Should have grid layout"
-        assert "repeat(2, 1fr)" in result, "Should have 2-column grid"
+        # FIX-517C: With only 1 card, LEFT_ONLY uses single-column (table needs >= 2 cards)
+        assert 'data-qw-json-rendered="true"' in result, "Should have render marker"
+        assert "quick-win" in result, "Should have quick-win class"
 
     def test_left_only_mode_has_fullwidth_class(self):
         """LEFT_ONLY mode should have fullwidth grid class."""
@@ -153,7 +154,8 @@ class TestFix510_PremiumRendererLeftOnly:
         result = render_quickwins_premium_json(json_input, "LEFT_ONLY")
 
         assert result is not None
-        assert "quickwins-fullwidth-grid" in result, "Should have fullwidth grid class"
+        # FIX-517C: With 1 card, no table layout (needs >= 2); check render marker instead
+        assert 'data-qw-json-rendered="true"' in result, "Should have render marker"
 
 
 class TestFix510_PremiumRendererWordCount:

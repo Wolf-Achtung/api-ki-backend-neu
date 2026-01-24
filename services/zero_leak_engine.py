@@ -147,6 +147,12 @@ BENIGN_CHATBOT_PHRASES: List[str] = [
     "dann werde ich antworten",
     "wobei ich dir helfen soll",
     "wobei ich ihnen helfen soll",
+    # FIX-517C: Chat/questionnaire artifact phrases
+    "wobei kann ich dir helfen",
+    "wobei kann ich Ihnen helfen",
+    "wobei kann ich ihnen helfen",
+    "bitte nenne kurz",
+    "bitte nennen sie kurz",
     # English assistant phrases
     "how can I help you",
     "how may I assist you",
