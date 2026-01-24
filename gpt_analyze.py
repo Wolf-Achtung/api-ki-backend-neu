@@ -8563,42 +8563,6 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         _risk_bullets.append(f"• {_dim} ({_sc}/100): {_desc}")
     base_vars["TOP_RISKS"] = "\n".join(_risk_bullets)
 
-    # ===== FIX-520 TASK 1: Ensure required prompt vars exist (STRICT-safe) =====
-    # Prevents Legacy-Fallback for data_readiness, foerderpotenzial,
-    # ki_aktivitaeten_ziele, transparency_box prompts.
-    _FIX520_DEFAULT = "keine Angabe"
-
-    # Short labels from generate_short_labels (BRANCH_CONTEXT_LABEL etc.)
-    base_vars.setdefault("BRANCH_CORE_LABEL", short_labels.get("BRANCH_CORE_LABEL", branche))
-    base_vars.setdefault("BRANCH_CONTEXT_LABEL", short_labels.get("BRANCH_CONTEXT_LABEL", branche))
-    base_vars.setdefault("BRANCH_SHORT_LABEL", short_labels.get("BRANCH_SHORT_LABEL", branche))
-    base_vars.setdefault("OFFERING_LABEL", short_labels.get("OFFERING_LABEL", hauptleistung))
-
-    # Label fields derived from briefing (Patch03 stores them in briefing dict)
-    base_vars.setdefault("AUTOMATISIERUNGSGRAD_LABEL",
-                         briefing.get("AUTOMATISIERUNGSGRAD_LABEL") or briefing.get("automatisierungsgrad") or _FIX520_DEFAULT)
-    base_vars.setdefault("DATENQUELLEN_LABELS",
-                         briefing.get("DATENQUELLEN_LABELS") or briefing.get("datenquellen") or _FIX520_DEFAULT)
-    base_vars.setdefault("PROZESSE_PAPIERLOS_LABEL",
-                         briefing.get("PROZESSE_PAPIERLOS_LABEL") or briefing.get("prozesse_papierlos") or _FIX520_DEFAULT)
-    base_vars.setdefault("REGULIERTE_BRANCHE_LABELS",
-                         briefing.get("REGULIERTE_BRANCHE_LABELS") or briefing.get("regulierte_branche") or _FIX520_DEFAULT)
-    base_vars.setdefault("IT_INFRASTRUKTUR_LABEL",
-                         briefing.get("IT_INFRASTRUKTUR_LABEL") or briefing.get("it_infrastruktur") or _FIX520_DEFAULT)
-    base_vars.setdefault("VORHANDENE_TOOLS_LABELS",
-                         briefing.get("VORHANDENE_TOOLS_LABELS") or briefing.get("vorhandene_tools") or _FIX520_DEFAULT)
-
-    # TOOLS_AKTUELL: used by ki_aktivitaeten_ziele prompt
-    base_vars.setdefault("TOOLS_AKTUELL",
-                         briefing.get("VORHANDENE_TOOLS_LABELS") or briefing.get("vorhandene_tools") or _FIX520_DEFAULT)
-
-    # FOERDERPROGRAMME_HTML: not available at prompt-build time (generated later in pipeline)
-    base_vars.setdefault("FOERDERPROGRAMME_HTML", "")
-
-    # Lowercase aliases for prompts that use them
-    base_vars.setdefault("labels", base_vars.get("DATENQUELLEN_LABELS", _FIX520_DEFAULT))
-    base_vars.setdefault("data_sources", base_vars.get("DATENQUELLEN_LABELS", _FIX520_DEFAULT))
-
     # ===== BLOCK 10: JSON Dumps =====
     # Complex data structures for advanced prompts
     base_vars.update({
@@ -8654,6 +8618,42 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     short_labels = generate_short_labels(briefing, lang=briefing_lang)
     branch_core_label = short_labels.get("BRANCH_CORE_LABEL", branche)
     offering_label = short_labels.get("OFFERING_LABEL", "")
+
+    # ===== FIX-520 TASK 1: Ensure required prompt vars exist (STRICT-safe) =====
+    # Prevents Legacy-Fallback for data_readiness, foerderpotenzial,
+    # ki_aktivitaeten_ziele, transparency_box prompts.
+    _FIX520_DEFAULT = "keine Angabe"
+
+    # Short labels from generate_short_labels (BRANCH_CONTEXT_LABEL etc.)
+    base_vars.setdefault("BRANCH_CORE_LABEL", short_labels.get("BRANCH_CORE_LABEL", branche))
+    base_vars.setdefault("BRANCH_CONTEXT_LABEL", short_labels.get("BRANCH_CONTEXT_LABEL", branche))
+    base_vars.setdefault("BRANCH_SHORT_LABEL", short_labels.get("BRANCH_SHORT_LABEL", branche))
+    base_vars.setdefault("OFFERING_LABEL", short_labels.get("OFFERING_LABEL", hauptleistung))
+
+    # Label fields derived from briefing (Patch03 stores them in briefing dict)
+    base_vars.setdefault("AUTOMATISIERUNGSGRAD_LABEL",
+                         briefing.get("AUTOMATISIERUNGSGRAD_LABEL") or briefing.get("automatisierungsgrad") or _FIX520_DEFAULT)
+    base_vars.setdefault("DATENQUELLEN_LABELS",
+                         briefing.get("DATENQUELLEN_LABELS") or briefing.get("datenquellen") or _FIX520_DEFAULT)
+    base_vars.setdefault("PROZESSE_PAPIERLOS_LABEL",
+                         briefing.get("PROZESSE_PAPIERLOS_LABEL") or briefing.get("prozesse_papierlos") or _FIX520_DEFAULT)
+    base_vars.setdefault("REGULIERTE_BRANCHE_LABELS",
+                         briefing.get("REGULIERTE_BRANCHE_LABELS") or briefing.get("regulierte_branche") or _FIX520_DEFAULT)
+    base_vars.setdefault("IT_INFRASTRUKTUR_LABEL",
+                         briefing.get("IT_INFRASTRUKTUR_LABEL") or briefing.get("it_infrastruktur") or _FIX520_DEFAULT)
+    base_vars.setdefault("VORHANDENE_TOOLS_LABELS",
+                         briefing.get("VORHANDENE_TOOLS_LABELS") or briefing.get("vorhandene_tools") or _FIX520_DEFAULT)
+
+    # TOOLS_AKTUELL: used by ki_aktivitaeten_ziele prompt
+    base_vars.setdefault("TOOLS_AKTUELL",
+                         briefing.get("VORHANDENE_TOOLS_LABELS") or briefing.get("vorhandene_tools") or _FIX520_DEFAULT)
+
+    # FOERDERPROGRAMME_HTML: not available at prompt-build time (generated later in pipeline)
+    base_vars.setdefault("FOERDERPROGRAMME_HTML", "")
+
+    # Lowercase aliases for prompts that use them
+    base_vars.setdefault("labels", base_vars.get("DATENQUELLEN_LABELS", _FIX520_DEFAULT))
+    base_vars.setdefault("data_sources", base_vars.get("DATENQUELLEN_LABELS", _FIX520_DEFAULT))
 
     # 🎯 Size-Erkennung (solo/team/kmu) wie im Briefing spezifiziert
     size_raw = (briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse") or "").lower()
