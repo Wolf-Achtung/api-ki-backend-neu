@@ -1219,10 +1219,35 @@ class ReportValidator:
                     # Only report first leak per section
                     break
 
+    @staticmethod
+    def _term_hit(term: str, text: str) -> bool:
+        """
+        FIX-517C TASK 3: Word-boundary matching for SIZE_MISMATCH terms.
+
+        Uses \\b word-boundary regex instead of simple substring `in` check.
+        This prevents false positives like "Engine" matching "Engineering".
+
+        Args:
+            term: The forbidden term to search for
+            text: The text content to search in
+
+        Returns:
+            True if term is found as a standalone word/phrase
+        """
+        # Escape regex metacharacters in term, then wrap with word boundaries
+        escaped = re.escape(term)
+        # Special case: "Engine" must NOT match "Engineering"
+        # re.escape preserves the term, \b handles word boundaries correctly
+        pattern = r'\b' + escaped + r'\b'
+        return bool(re.search(pattern, text, re.IGNORECASE))
+
     def _check_size_specific_issues(self) -> None:
         """
         SPRINT N: Enhanced size-specific validation with HARD_STOP support.
         Checks for forbidden terms and triggers CRITICAL errors when configured.
+
+        FIX-517C: Uses _term_hit() with word-boundary matching to avoid
+        false positives (e.g. "Engine" in "Engineering").
         """
         # Normalize company_size
         size_key = self.company_size.lower() if self.company_size else "kmu"
@@ -1240,9 +1265,8 @@ class ReportValidator:
         for section_name, content in self.sections.items():
             if not isinstance(content, str):
                 continue
-            lower = content.lower()
             for term in forbidden_terms:
-                if term.lower() in lower:
+                if self._term_hit(term, content):
                     # SPRINT N: Use CRITICAL severity if HARD_STOP is enabled
                     severity = "CRITICAL" if self.HARD_STOP_ON_SIZE_MISMATCH else "WARNING"
                     self.errors.append(

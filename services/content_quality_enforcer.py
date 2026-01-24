@@ -66,7 +66,12 @@ SOLO_TERM_REPLACEMENTS = [
     (r'\bskalierbar\b', 'erweiterbar', 'skalierbar→erweiterbar'),
 
     # Corporate governance terms
+    (r'\bStakeholdern\b', 'Beteiligten', 'Stakeholdern→Beteiligten (Dativ)'),
+    (r'\bStakeholders\b', 'Beteiligte', 'Stakeholders→Beteiligte (EN Plural)'),
     (r'\bStakeholder\b', 'Beteiligte', 'Stakeholder→Beteiligte'),
+    (r'\bAudit-Trail\b', 'Prüfpfad', 'Audit-Trail→Prüfpfad'),
+    (r'\bRoadmap-Engine\b', 'Roadmap-Ansatz', 'Roadmap-Engine→Roadmap-Ansatz'),
+    (r'\bEngine\b(?!ering)', 'Ansatz', 'Engine→Ansatz (nicht Engineering)'),
     (r'\bGovernance-Struktur\b', 'Ordnungsrahmen', 'Governance-Struktur→Ordnungsrahmen'),
     (r'\bGovernance\b', 'Steuerung', 'Governance→Steuerung'),
     (r'\bCompliance-Framework\b', 'Regelwerk', 'Compliance-Framework→Regelwerk'),
@@ -2027,7 +2032,10 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     """
     log.info("[QUALITY-ENFORCER] Starting quality enforcement pipeline...")
 
-    # 0. P0.1: Stray Prefix Remover (leading "?" and artifacts)
+    # 0. FIX-517C: Universal Template Phrase Scrub (ALL personas, BEFORE validation)
+    sections = scrub_template_phrases_all_sections(sections)
+
+    # 0.5 P0.1: Stray Prefix Remover (leading "?" and artifacts)
     sections = apply_stray_prefix_remover(sections)
 
     # 1. ROI-Filter
@@ -3429,5 +3437,100 @@ def apply_placeholder_scrub(sections: dict) -> dict:
     if removed > 0:
         sections[key] = result
         log.info("[FIX-514][PLACEHOLDER-SCRUB] removed_blocks=%d", removed)
+
+    return sections
+
+
+# =============================================================================
+# FIX-517C TASK 1: Universal Template Phrase Scrubber (ALL sections, ALL personas)
+# =============================================================================
+# Deterministic removal of template/placeholder patterns BEFORE validation.
+# This prevents false STRICT template_phrase hits from LLM-generated artifacts.
+
+_TEMPLATE_PHRASE_PATTERNS = [
+    # Bracketed placeholders: [Platzhalter: ...], [TODO: ...], [TBD], [TEMPLATE]
+    (re.compile(r'\[Platzhalter(?::\s*[^\]]*?)?\]', re.IGNORECASE), ''),
+    (re.compile(r'\[TODO(?::\s*[^\]]*?)?\]', re.IGNORECASE), ''),
+    (re.compile(r'\[TBD\]', re.IGNORECASE), ''),
+    (re.compile(r'\[TEMPLATE\]', re.IGNORECASE), ''),
+    (re.compile(r'\[Beispieltext(?::\s*[^\]]*?)?\]', re.IGNORECASE), ''),
+    (re.compile(r'\[Mustertext(?::\s*[^\]]*?)?\]', re.IGNORECASE), ''),
+    # Mustache/Jinja-style template variables: {{variable}}, {{ variable }}
+    (re.compile(r'\{\{\s*\w+\s*\}\}'), ''),
+    # German template instructions that LLMs sometimes leave in
+    (re.compile(r'\bHier steht Ihr Text\b', re.IGNORECASE), ''),
+    (re.compile(r'\bFügen Sie hier[^.]*ein\.?', re.IGNORECASE), ''),
+    (re.compile(r'\bBitte ersetzen Sie[^.]*\.?', re.IGNORECASE), ''),
+    (re.compile(r'\bLorem ipsum[^.]*\.?', re.IGNORECASE), ''),
+    # Explicit "Platzhalter" / "Beispieltext" / "Mustertext" as inline words (all sections)
+    (re.compile(r'\bPlatzhalter\b', re.IGNORECASE), 'konkreter Vorschlag'),
+    (re.compile(r'\bBeispieltext\b', re.IGNORECASE), ''),
+    (re.compile(r'\bMustertext\b', re.IGNORECASE), ''),
+    (re.compile(r'\bDummy-?Text\b', re.IGNORECASE), ''),
+]
+
+# All LLM-generated sections to scrub
+_TEMPLATE_SCRUB_SECTIONS = [
+    "EXECUTIVE_SUMMARY_HTML", "EXECUTIVE_DECISION_HTML", "RECOMMENDATIONS_HTML",
+    "QUICK_WINS_HTML", "QUICK_WINS_HTML_LEFT", "QUICK_WINS_HTML_RIGHT",
+    "ROADMAP_90D_HTML", "ROADMAP_90D_DECISION_HTML", "ROADMAP_12M_HTML",
+    "GAMECHANGER_HTML", "GAMECHANGER_DECISION_HTML",
+    "FOERDERPOTENZIAL_HTML", "RISKS_HTML", "ORG_CHANGE_HTML",
+    "KI_SKILLPLAN_HTML", "BUSINESS_CASE_HTML", "AI_ACT_HTML", "AI_ACT_SUMMARY_HTML",
+    "TOOLS_HTML", "TOOLS_EMPFEHLUNGEN_HTML", "DATA_STRATEGY_HTML", "DATA_READINESS_HTML",
+    "GOVERNANCE_HTML", "STRATEGIE_GOVERNANCE_HTML", "KI_STACK_SUMMARY_HTML",
+    "BRANCH_DEEP_DIVE_HTML", "TOP_3_MASSNAHMEN_HTML", "MONETARISIERUNG_HTML",
+    "TEMPLATES_START_HTML", "KICKOFF_VORLAGE_HTML", "PROMPT_FRAMEWORK_HTML",
+    "TECHNOLOGIE_PROZESSE_HTML", "WETTBEWERB_BENCHMARK_HTML", "UNTERNEHMENSPROFIL_MARKT_HTML",
+]
+
+
+def scrub_template_phrases_all_sections(sections: dict) -> dict:
+    """
+    FIX-517C TASK 1: Universal template phrase scrubber.
+
+    Removes placeholder/template artifacts from ALL LLM-generated sections
+    regardless of persona. Runs BEFORE validation to prevent false STRICT hits.
+
+    Patterns removed:
+    - [Platzhalter: ...], [TODO: ...], [TBD], [TEMPLATE]
+    - {{variable}} mustache-style placeholders
+    - German template instructions ("Hier steht Ihr Text", "Fügen Sie hier...")
+    - Standalone "Platzhalter", "Beispieltext", "Mustertext" words
+
+    Returns:
+        sections: Cleaned dict
+    """
+    total_removals = 0
+    sections_touched = 0
+
+    for section_key in _TEMPLATE_SCRUB_SECTIONS:
+        content = sections.get(section_key)
+        if not content or not isinstance(content, str):
+            continue
+
+        section_removals = 0
+        modified = content
+
+        for pattern, replacement in _TEMPLATE_PHRASE_PATTERNS:
+            new_text, count = pattern.subn(replacement, modified)
+            if count > 0:
+                modified = new_text
+                section_removals += count
+
+        if section_removals > 0:
+            # Clean up resulting double spaces and empty tags
+            modified = re.sub(r'\s{2,}', ' ', modified)
+            modified = re.sub(r'\s+([.,;:!?])', r'\1', modified)
+            modified = re.sub(r'<(p|li|div)[^>]*>\s*</(p|li|div)>', '', modified)
+            sections[section_key] = modified
+            sections_touched += 1
+            total_removals += section_removals
+
+    if total_removals > 0:
+        log.info(
+            "[FIX-517C][TEMPLATE-SCRUB] removed=%d template phrases in %d sections",
+            total_removals, sections_touched
+        )
 
     return sections

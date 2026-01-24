@@ -14004,8 +14004,9 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
                 _prompt_trace_data.clear()
 
     # === SPRINT N2: VALIDATE AND HEAL - Wolf 2025-12 ===
-    # New flow: validate_and_heal() replaces leaked content BEFORE rendering
-    log.info(f"[{run_id}] 🔍 Running report validation with N2 healing...")
+    # FIX-517C TASK 4: Two-stage validation (raw = pre-final-enforcer, final = post-final-enforcer)
+    # Stage 1 (RAW): validate BEFORE final enforcer pass → truthful pre-cleanup metrics
+    log.info(f"[{run_id}] 🔍 Running RAW validation (pre-final-enforcer) with N2 healing...")
     is_valid, validation_errors, healed_count = validate_and_heal(sections, answers)
 
     if healed_count > 0:
@@ -14020,11 +14021,14 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         for err in critical_errors:
             log.error(f"[{run_id}]   [{err.category}] {err.section}: {err.message}")
     if warning_errors:
-        log.warning(f"[{run_id}] ⚠️ Validation warnings: {len(warning_errors)}")
+        log.warning(f"[{run_id}] ⚠️ RAW validation warnings: {len(warning_errors)}")
         for err in warning_errors[:5]:  # Only log first 5 warnings
             log.warning(f"[{run_id}]   [{err.category}] {err.section}: {err.message}")
 
-    # FIX-503B: Store validator warning count for unified metrics
+    # FIX-517C: Store RAW (pre-final-enforcer) counts for diagnostics
+    sections["_VALIDATOR_RAW_WARNING_COUNT"] = len(warning_errors)
+    sections["_VALIDATOR_RAW_CRITICAL_COUNT"] = len(critical_errors)
+    # Legacy keys updated after final validation below
     sections["_VALIDATOR_WARNING_COUNT"] = len(warning_errors)
     sections["_VALIDATOR_CRITICAL_COUNT"] = len(critical_errors)
 
@@ -14455,6 +14459,40 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         log.info(f"[{run_id}] [QUALITY-ENFORCER-RENDER] Applied FINAL quality fixes before render, company_size={company_size_render}")
     except Exception as e:
         log.warning(f"[{run_id}] [QUALITY-ENFORCER-RENDER] Failed: {e}")
+
+    # =========================================================================
+    # FIX-517C TASK 4: Stage 2 (FINAL) validation — post-final-enforcer
+    # This gives the truthful STRICT-readiness metrics (after all enforcers ran)
+    # =========================================================================
+    try:
+        log.info(f"[{run_id}] 🔍 Running FINAL validation (post-enforcer) for STRICT-readiness...")
+        _final_valid, _final_errors, _final_healed = validate_and_heal(sections, answers)
+        _final_critical = [e for e in _final_errors if e.severity == "CRITICAL"]
+        _final_warnings = [e for e in _final_errors if e.severity == "WARNING"]
+
+        # Update legacy keys with FINAL counts (used by STRICT-readiness gate)
+        sections["_VALIDATOR_WARNING_COUNT"] = len(_final_warnings)
+        sections["_VALIDATOR_CRITICAL_COUNT"] = len(_final_critical)
+        # Store explicit FINAL keys for diagnostics
+        sections["_VALIDATOR_FINAL_WARNING_COUNT"] = len(_final_warnings)
+        sections["_VALIDATOR_FINAL_CRITICAL_COUNT"] = len(_final_critical)
+
+        _raw_w = sections.get("_VALIDATOR_RAW_WARNING_COUNT", 0)
+        _raw_c = sections.get("_VALIDATOR_RAW_CRITICAL_COUNT", 0)
+        _delta_w = int(_raw_w) - len(_final_warnings)
+        _delta_c = int(_raw_c) - len(_final_critical)
+        log.info(
+            f"[{run_id}] [FIX-517C][TWO-STAGE] RAW: {_raw_c}C/{_raw_w}W → "
+            f"FINAL: {len(_final_critical)}C/{len(_final_warnings)}W "
+            f"(enforcer fixed: {_delta_c}C/{_delta_w}W)"
+        )
+
+        if _final_warnings:
+            for err in _final_warnings[:3]:
+                log.info(f"[{run_id}]   [FINAL-W] [{err.category}] {err.section}: {err.message}")
+    except Exception as e:
+        log.warning(f"[{run_id}] [FIX-517C][TWO-STAGE] Final validation failed: {e}")
+
     log.info("=" * 80)
 
     # =========================================================================
