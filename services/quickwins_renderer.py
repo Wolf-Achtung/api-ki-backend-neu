@@ -290,11 +290,12 @@ def enhance_quickwins_for_fullwidth(html: str, min_cards: int = 4) -> str:
     enhanced = QUICKWINS_FULLWIDTH_CSS
 
     # Extract individual card elements for 2-column distribution
-    card_pattern = re.compile(
-        r'(<div[^>]*class="[^"]*quick-win(?:-card|-card-new)[^"]*"[^>]*>.*?</div>\s*</div>)',
-        re.DOTALL | re.IGNORECASE
+    # Split by card opening tags, then reconstruct each card block
+    card_split_pattern = re.compile(
+        r'(?=<div[^>]*class="[^"]*quick-win(?:-card|-card-new)\b)',
+        re.IGNORECASE
     )
-    cards = card_pattern.findall(html)
+    cards = [c for c in card_split_pattern.split(html) if c.strip() and 'quick-win' in c.lower()]
 
     if len(cards) >= 2:
         mid = (len(cards) + 1) // 2
