@@ -207,7 +207,8 @@ def get_company_size_bucket(value: str) -> str:
     Returns:
         Bucket name: "solo" | "small_team" | "kmu"
     """
-    return normalize_company_size(value)["bucket"]
+    result = normalize_company_size(value)["bucket"]
+    return str(result)  # Explicit cast for mypy
 
 
 # =============================================================================
