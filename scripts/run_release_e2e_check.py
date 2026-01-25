@@ -276,6 +276,79 @@ def submit_profile_to_api(profile_data: Dict, base_url: str) -> Dict[str, Any]:
 
 
 # =============================================================================
+# FIX-523A: PROMPT HYGIENE PREFLIGHT CHECK
+# =============================================================================
+
+def run_prompt_hygiene_preflight() -> tuple[bool, str]:
+    """
+    FIX-523A: Run prompt audit as preflight check before E2E tests.
+
+    Returns:
+        Tuple of (passed, message)
+    """
+    log.info("-" * 78)
+    log.info("FIX-523A: PROMPT HYGIENE PREFLIGHT CHECK")
+    log.info("-" * 78)
+
+    try:
+        # Import the audit module
+        audit_script = PROJECT_ROOT / "scripts" / "prompt_audit_523a.py"
+        if not audit_script.exists():
+            return True, "Audit script not found, skipping preflight"
+
+        # Run audit
+        import subprocess
+        result = subprocess.run(
+            [sys.executable, str(audit_script), "--json-only"],
+            capture_output=True,
+            text=True,
+            cwd=str(PROJECT_ROOT),
+            timeout=60,
+        )
+
+        # Check for critical violations in output
+        if result.returncode != 0:
+            # Parse JSON output to count violations
+            try:
+                output_lines = result.stdout.strip().split('\n')
+                for line in output_lines:
+                    if line.startswith('{'):
+                        data = json.loads(line)
+                        total = data.get("total_violations", 0)
+                        critical_types = ["CODE_FENCE", "CHAT_PHRASE", "EXPLICIT_BLACKLIST"]
+                        critical_count = sum(
+                            data.get("by_type", {}).get(t, 0)
+                            for t in critical_types
+                        )
+                        if critical_count > 0:
+                            msg = f"FAIL: {critical_count} critical violations (CODE_FENCE/CHAT_PHRASE/BLACKLIST)"
+                            log.error(f"[FIX-523A] {msg}")
+                            return False, msg
+                        else:
+                            msg = f"PASS: {total} violations (none critical)"
+                            log.info(f"[FIX-523A] {msg}")
+                            return True, msg
+            except json.JSONDecodeError:
+                pass
+
+            msg = f"WARN: Audit returned exit code {result.returncode}"
+            log.warning(f"[FIX-523A] {msg}")
+            return True, msg  # Non-critical, continue
+
+        log.info("[FIX-523A] PASS: No critical prompt violations")
+        return True, "PASS: No critical prompt violations"
+
+    except subprocess.TimeoutExpired:
+        msg = "WARN: Audit timed out, skipping"
+        log.warning(f"[FIX-523A] {msg}")
+        return True, msg
+    except Exception as e:
+        msg = f"WARN: Audit error: {str(e)[:100]}"
+        log.warning(f"[FIX-523A] {msg}")
+        return True, msg  # Non-critical error, continue
+
+
+# =============================================================================
 # VALIDATION LOGIC
 # =============================================================================
 
@@ -390,6 +463,7 @@ def validate_profile(
 def run_e2e_tests(
     base_url: Optional[str] = None,
     mock_mode: bool = True,
+    skip_prompt_preflight: bool = False,
 ) -> E2ETestSuite:
     """
     Run E2E tests for all gold profiles.
@@ -397,6 +471,7 @@ def run_e2e_tests(
     Args:
         base_url: API base URL (required for live mode)
         mock_mode: If True, use mock responses instead of live API
+        skip_prompt_preflight: If True, skip prompt hygiene preflight check
 
     Returns:
         E2ETestSuite with all results
@@ -411,6 +486,18 @@ def run_e2e_tests(
     if base_url:
         log.info(f"Base URL: {base_url}")
     log.info("")
+
+    # FIX-523A: Run prompt hygiene preflight check
+    if not skip_prompt_preflight:
+        preflight_passed, preflight_msg = run_prompt_hygiene_preflight()
+        if not preflight_passed:
+            # Create a synthetic failed result for the preflight
+            preflight_result = ProfileTestResult(profile_id="prompt_hygiene_preflight")
+            preflight_result.add_fail(preflight_msg)
+            preflight_result.finalize()
+            suite.add_result(preflight_result)
+            # Continue with tests but suite will show FAIL
+        log.info("")
 
     for profile_config in GOLD_PROFILES:
         profile_id = str(profile_config["id"])
@@ -510,6 +597,11 @@ def main():
         action="store_true",
         help="Use live API mode",
     )
+    parser.add_argument(
+        "--skip-prompt-preflight",
+        action="store_true",
+        help="FIX-523A: Skip prompt hygiene preflight check",
+    )
     args = parser.parse_args()
 
     mock_mode = not args.live
@@ -517,6 +609,7 @@ def main():
     suite = run_e2e_tests(
         base_url=args.base_url,
         mock_mode=mock_mode,
+        skip_prompt_preflight=args.skip_prompt_preflight,
     )
 
     # Exit code based on result
