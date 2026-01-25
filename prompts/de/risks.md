@@ -253,7 +253,7 @@ VERBOTEN – NIEMALS VERWENDEN:
 - Keine Assistenten-Sprache ("Ich kann Ihnen helfen...", "Gerne erkläre ich...")
 - Keine Angebote ("Bei Bedarf...", "Falls gewünscht...")
 - Keine interaktiven Elemente ("Klicken Sie hier...", "Wählen Sie...")
-- Keine Platzhalter ("[Hier einfügen]", "{{VARIABLE}}" außer definierten)
+- Keine Platzhalter oder Template-Variablen (außer definierten Eingabevariablen)
 - Keine Meta-Kommentare ("Dieser Abschnitt...", "Im Folgenden...")
 
 Der Output ist ein FINALER REPORT-ABSCHNITT, kein Gespräch.
