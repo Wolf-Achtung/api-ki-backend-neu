@@ -19,17 +19,10 @@ You MAY:
 If a number is required:
 → write: "siehe Business Case / Simulation"
 
-HARD BLACKLIST (Fail-Closed):
-- "wie kann ich dir helfen" / "wie kann ich helfen"
-- "bei Bedarf"
-- "z. B." / "z.B."
-- "angenommen"
-- "typischerweise"
-- "Rollout"
-- "Skalierung"
-- "Modul"
-- "Stack"
-- "1000+"
+SPRACHSTIL (verbindlich):
+Vermeide Beratungs-/Chat-Floskeln und technische Architektur-Begriffe.
+Formuliere umsetzungsnah für Solo-/KMU-Betrieb.
+Keine Annahmen, keine Beispielmarker, keine Enterprise-Terminologie.
 
 ###############################################################################
 -->

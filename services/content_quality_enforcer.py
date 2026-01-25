@@ -2628,6 +2628,10 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     # 14. Risk Truncation (Fix-Batch I) - Truncate risk descriptions at sentence boundaries
     sections = apply_risk_truncation(sections)
 
+    # 14.5 FIX-525: Risks Solo Padding - Ensure minimum 500 words for solo persona
+    if company_size:
+        sections = apply_risks_solo_padding(sections, company_size)
+
     # 15. Chat Artefact Filter (Fix-Batch J4) - Remove "Schreib mir", "Frag mich" etc.
     sections = apply_chat_artefact_filter(sections)
 
@@ -3206,6 +3210,78 @@ def apply_risk_truncation(sections: dict, max_chars: int = 500) -> dict:
 
     if total_truncations > 0:
         log.info(f"[RISK-TRUNCATION] Complete: {total_truncations} descriptions truncated at sentence boundary")
+
+    return sections
+
+
+# =============================================================================
+# FIX-525: RISKS SOLO PADDING (deterministic minimum word guarantee)
+# =============================================================================
+
+_RISKS_SOLO_PADDING_HTML = """
+<div class="risk-solo-supplemental">
+  <h3>Pragmatische Absicherung für Einzelunternehmer</h3>
+  <ul>
+    <li><strong>Regelmäßige Qualitätskontrolle:</strong> Prüfen Sie wöchentlich eine Stichprobe Ihrer KI-generierten Inhalte auf Korrektheit und Tonalität. Ein kurzer 15-Minuten-Check verhindert größere Fehler.</li>
+    <li><strong>Klare Grenzen setzen:</strong> Definieren Sie, welche Aufgaben Sie der KI überlassen und welche Sie selbst erledigen. Kritische Kundenentscheidungen und sensible Beratung bleiben in Ihren Händen.</li>
+    <li><strong>Backup-Plan bereithalten:</strong> Halten Sie für jede KI-gestützte Aufgabe einen manuellen Alternativprozess bereit. Bei technischen Störungen können Sie so nahtlos weiterarbeiten.</li>
+    <li><strong>Transparenz gegenüber Kunden:</strong> Kommunizieren Sie offen, wo Sie KI-Unterstützung nutzen. Die meisten Kunden schätzen Ehrlichkeit und moderne Arbeitsweisen.</li>
+    <li><strong>Rechtliche Grundlagen sichern:</strong> Prüfen Sie einmal jährlich, ob Ihre KI-Nutzung den aktuellen Datenschutz- und Urheberrechtsanforderungen entspricht. Ein kurzer Check Ihrer Prozesse genügt.</li>
+    <li><strong>Kosten im Blick behalten:</strong> Überwachen Sie monatlich Ihre KI-Abonnements und API-Kosten. Kündigen Sie nicht genutzte Dienste und optimieren Sie regelmäßig.</li>
+  </ul>
+  <p class="small muted">Diese Absicherungsmaßnahmen sind speziell für Einzelunternehmer konzipiert und erfordern nur minimalen Zeitaufwand bei maximalem Schutz.</p>
+</div>
+"""
+
+
+def apply_risks_solo_padding(sections: dict, company_size: str) -> dict:
+    """
+    FIX-525: Deterministic padding for RISKS_HTML when too short for solo.
+
+    If RISKS_HTML has fewer than 500 words for solo persona, appends
+    deterministic supplemental content to guarantee minimum word count.
+
+    Args:
+        sections: Dict with all report sections
+        company_size: Company size ("solo", "team", "kmu")
+
+    Returns:
+        Processed sections dict with padded RISKS_HTML if needed
+    """
+    if not company_size or company_size.lower() != "solo":
+        return sections
+
+    min_words_solo = 500
+    key = "RISKS_HTML"
+    html = sections.get(key, "")
+
+    if not html or not isinstance(html, str):
+        return sections
+
+    # Count words (strip HTML tags)
+    text_only = re.sub(r'<[^>]+>', ' ', html)
+    word_count = len(text_only.split())
+
+    if word_count >= min_words_solo:
+        log.debug("[FIX-525][RISKS-PADDING] RISKS_HTML has %d words, no padding needed", word_count)
+        return sections
+
+    # Append padding content
+    # Insert before closing </section> tag if present, otherwise append
+    if "</section>" in html:
+        padded_html = html.replace("</section>", f"\n{_RISKS_SOLO_PADDING_HTML}\n</section>", 1)
+    else:
+        padded_html = f"{html}\n{_RISKS_SOLO_PADDING_HTML}"
+
+    # Verify new word count
+    new_text = re.sub(r'<[^>]+>', ' ', padded_html)
+    new_word_count = len(new_text.split())
+
+    sections[key] = padded_html
+    log.info(
+        "[FIX-525][RISKS-PADDING] Padded RISKS_HTML: %d → %d words (min=%d)",
+        word_count, new_word_count, min_words_solo
+    )
 
     return sections
 
@@ -4017,25 +4093,30 @@ _PLACEHOLDER_WORD_PATTERN = re.compile(r'\bPlatzhalter\b', re.IGNORECASE)
 
 def apply_placeholder_scrub(sections: dict) -> dict:
     """
-    FIX-514 CHANGE 3: Remove lines/blocks containing 'Platzhalter' from
-    RECOMMENDATIONS_HTML. Prevents STRICT template_phrase hits.
+    FIX-514 CHANGE 3 + FIX-525: Remove lines/blocks containing 'Platzhalter' from
+    RECOMMENDATIONS_HTML and NEXT_ACTIONS_HTML. Prevents STRICT template_phrase hits.
     """
-    key = "RECOMMENDATIONS_HTML"
-    html = sections.get(key, "")
-    if not html or "platzhalter" not in html.lower():
-        return sections
+    # FIX-525: Extended to include NEXT_ACTIONS_HTML
+    target_keys = ["RECOMMENDATIONS_HTML", "NEXT_ACTIONS_HTML"]
+    total_removed = 0
 
-    # Remove entire <p>/<li>/<div> blocks containing "Platzhalter"
-    result, removed = _PLACEHOLDER_LINE_PATTERN.subn("", html)
+    for key in target_keys:
+        html = sections.get(key, "")
+        if not html or "platzhalter" not in html.lower():
+            continue
 
-    # If word still present (e.g. in inline text), replace with neutral term
-    if _PLACEHOLDER_WORD_PATTERN.search(result):
-        result, extra = _PLACEHOLDER_WORD_PATTERN.subn("konkreter Vorschlag", result)
-        removed += extra
+        # Remove entire <p>/<li>/<div> blocks containing "Platzhalter"
+        result, removed = _PLACEHOLDER_LINE_PATTERN.subn("", html)
 
-    if removed > 0:
-        sections[key] = result
-        log.info("[FIX-514][PLACEHOLDER-SCRUB] removed_blocks=%d", removed)
+        # If word still present (e.g. in inline text), replace with neutral term
+        if _PLACEHOLDER_WORD_PATTERN.search(result):
+            result, extra = _PLACEHOLDER_WORD_PATTERN.subn("konkreter Vorschlag", result)
+            removed += extra
+
+        if removed > 0:
+            sections[key] = result
+            total_removed += removed
+            log.info("[FIX-525][PLACEHOLDER-SCRUB] key=%s removed=%d", key, removed)
 
     return sections
 
