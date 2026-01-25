@@ -12432,13 +12432,16 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
                         continue  # Skip this key, keep original
 
                 # FIX-515 TASK 1: Cap truncation at max 50% cut to prevent extreme shrinking
+                # FIX-52x: Instead of reverting, cap at 50% (keep at least half)
                 trunc_pct = (1 - len(truncated) / original_len) * 100 if original_len > 0 else 0
                 if trunc_pct > 50:
-                    log.warning(
-                        "[FIX-515][TRUNC] REVERTED section=%s before=%d after=%d delta=%d pct=%.0f%% (>50%% cap)",
-                        key, original_len, len(truncated), len(truncated) - original_len, trunc_pct
+                    # Cap to 50% of original instead of reverting
+                    min_len = int(original_len * 0.5)
+                    truncated = html[:min_len]
+                    log.info(
+                        "[FIX-52x][TRUNC] capped_to_half section=%s before=%d target=%d effective=%d",
+                        key, original_len, len(truncated), min_len
                     )
-                    continue  # Skip: too aggressive
 
                 sections[key] = truncated
                 delta = len(truncated) - original_len
@@ -14583,6 +14586,12 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         # Store explicit FINAL keys for diagnostics
         sections["_VALIDATOR_FINAL_WARNING_COUNT"] = len(_final_warnings)
         sections["_VALIDATOR_FINAL_CRITICAL_COUNT"] = len(_final_critical)
+
+        # FIX-52x: Store full warning list for debug attachment
+        sections["_VALIDATOR_WARNING_LIST"] = [
+            f"[{e.severity}][{e.category}] {e.section}: {e.message}"
+            for e in _final_errors if e.severity in ("WARNING", "CRITICAL")
+        ]
 
         _raw_w = sections.get("_VALIDATOR_RAW_WARNING_COUNT", 0)
         _raw_c = sections.get("_VALIDATOR_RAW_CRITICAL_COUNT", 0)
