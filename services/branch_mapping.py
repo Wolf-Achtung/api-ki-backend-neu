@@ -2,13 +2,17 @@
 """
 Sprint G19.1-MAP: Frontend-Branch to Engine Mapping
 
-Maps the 12 frontend dropdown branch values to the 11 branch profiles
-in branch_profile_engine.py (G19+G19.1).
+Maps the 13 frontend dropdown branch values (canonical per formbuilder_de_SINGLE_FULL.js)
+to the 11 branch profiles in branch_profile_engine.py (G19+G19.1).
 
 The mapping chain:
   Frontend-Value → BRANCH_MAPPING → Branch-Engine-Key
 
-Version: 1.0.0 (Sprint G19.1-MAP)
+13 Canonical branches:
+  marketing, beratung, it, finanzen, handel, bildung, verwaltung,
+  gesundheit, bau, medien, industrie, logistik, gastronomie
+
+Version: 1.1.0 (FIX-BRANCH-13)
 """
 from __future__ import annotations
 
@@ -22,17 +26,34 @@ log = logging.getLogger(__name__)
 # =============================================================================
 
 # Frontend dropdown "value" attributes → internal Branch-Keys from branch_profile_engine.py
+# FIX-BRANCH-13: 13 canonical values from formbuilder_de_SINGLE_FULL.js
 BRANCH_MAPPING: Dict[str, str] = {
+    # =========================================================================
+    # CANONICAL 13 FORM VALUES (formbuilder_de_SINGLE_FULL.js)
+    # =========================================================================
+    "marketing": "marketing",
+    "beratung": "beratung",
+    "it": "it",
+    "finanzen": "finanzen",
+    "handel": "handel",
+    "bildung": "bildung",
+    "verwaltung": "verwaltung",
+    "gesundheit": "gesundheit",
+    "bau": "bauwesen_architektur",
+    "medien": "marketing",  # Medien & Kreativwirtschaft → marketing profile
+    "industrie": "industrie",
+    "logistik": "transport_logistik",
+    "gastronomie": "handel",  # FIX-BRANCH-13: Gastronomie → handel (B2C/Operations-similar)
+    # =========================================================================
+    # LEGACY VALUES (backwards compatibility with existing data)
+    # =========================================================================
     "marketing_werbung": "marketing",
     "beratung_dienstleistungen": "beratung",
     "it_software": "it",
     "finanzen_versicherungen": "finanzen",
     "handel_ecommerce": "handel",
-    "bildung": "bildung",
-    "verwaltung": "verwaltung",
     "gesundheit_pflege": "gesundheit",
     "bauwesen_architektur": "bauwesen_architektur",
-    # Medien & Kreativwirtschaft maps to marketing profile
     "medien_kreativwirtschaft": "marketing",
     "industrie_produktion": "industrie",
     "transport_logistik": "transport_logistik",
@@ -42,93 +63,121 @@ BRANCH_MAPPING: Dict[str, str] = {
 # SYNONYMS FOR LEGACY DATA / ALTERNATE FORMATS
 # =============================================================================
 
-# Text synonyms (labels, alt-data) → frontend value keys
+# Text synonyms (labels, alt-data) → frontend value keys (canonical or legacy)
+# FIX-BRANCH-13: All synonyms now map to canonical 13 form values where possible
 BRANCH_SYNONYMS: Dict[str, str] = {
+    # =========================================================================
+    # GASTRONOMIE & TOURISMUS (FIX-BRANCH-13: new canonical branch)
+    # =========================================================================
+    "gastronomie": "gastronomie",
+    "gastronomie & tourismus": "gastronomie",
+    "gastronomie und tourismus": "gastronomie",
+    "tourismus": "gastronomie",
+    "hotel": "gastronomie",
+    "hotellerie": "gastronomie",
+    "restaurant": "gastronomie",
+    "gastgewerbe": "gastronomie",
+    "gastro": "gastronomie",
+    "hospitality": "gastronomie",
+    "tourism": "gastronomie",
+    "catering": "gastronomie",
+    "eventgastronomie": "gastronomie",
+    "reise": "gastronomie",
+    "reisen": "gastronomie",
+    "travel": "gastronomie",
+    # =========================================================================
     # German labels with & and spaces
-    "marketing & werbung": "marketing_werbung",
-    "marketing und werbung": "marketing_werbung",
-    "beratung & dienstleistungen": "beratung_dienstleistungen",
-    "beratung und dienstleistungen": "beratung_dienstleistungen",
-    "it & software": "it_software",
-    "it und software": "it_software",
-    "finanzen & versicherungen": "finanzen_versicherungen",
-    "finanzen und versicherungen": "finanzen_versicherungen",
-    "handel & e-commerce": "handel_ecommerce",
-    "handel und e-commerce": "handel_ecommerce",
-    "handel & ecommerce": "handel_ecommerce",
-    "gesundheit & pflege": "gesundheit_pflege",
-    "gesundheit und pflege": "gesundheit_pflege",
-    "medien & kreativwirtschaft": "medien_kreativwirtschaft",
-    "medien und kreativwirtschaft": "medien_kreativwirtschaft",
-    "industrie & produktion": "industrie_produktion",
-    "industrie und produktion": "industrie_produktion",
-    "transport & logistik": "transport_logistik",
-    "transport und logistik": "transport_logistik",
-    "bauwesen & architektur": "bauwesen_architektur",
-    "bauwesen und architektur": "bauwesen_architektur",
-    # Short forms and English variants
-    "bau": "bauwesen_architektur",
-    "construction": "bauwesen_architektur",
-    "architecture": "bauwesen_architektur",
-    "architektur": "bauwesen_architektur",
+    # =========================================================================
+    "marketing & werbung": "marketing",
+    "marketing und werbung": "marketing",
+    "beratung & dienstleistungen": "beratung",
+    "beratung und dienstleistungen": "beratung",
+    "it & software": "it",
+    "it und software": "it",
+    "finanzen & versicherungen": "finanzen",
+    "finanzen und versicherungen": "finanzen",
+    "handel & e-commerce": "handel",
+    "handel und e-commerce": "handel",
+    "handel & ecommerce": "handel",
+    "gesundheit & pflege": "gesundheit",
+    "gesundheit und pflege": "gesundheit",
+    "medien & kreativwirtschaft": "medien",
+    "medien und kreativwirtschaft": "medien",
+    "industrie & produktion": "industrie",
+    "industrie und produktion": "industrie",
+    "transport & logistik": "logistik",
+    "transport und logistik": "logistik",
+    "bauwesen & architektur": "bau",
+    "bauwesen und architektur": "bau",
+    # =========================================================================
+    # Legacy underscore format mappings (for backwards compatibility)
+    # =========================================================================
+    "marketing_werbung": "marketing",
+    "beratung_dienstleistungen": "beratung",
+    "it_software": "it",
+    "finanzen_versicherungen": "finanzen",
+    "handel_ecommerce": "handel",
+    "gesundheit_pflege": "gesundheit",
+    "medien_kreativwirtschaft": "medien",
+    "industrie_produktion": "industrie",
+    "transport_logistik": "logistik",
+    "bauwesen_architektur": "bau",
+    # =========================================================================
+    # Short forms and English variants (map to canonical 13 values)
+    # =========================================================================
+    "construction": "bau",
+    "architecture": "bau",
+    "architektur": "bau",
     "public_sector": "verwaltung",
     "public sector": "verwaltung",
     "public": "verwaltung",
     "government": "verwaltung",
     "behoerde": "verwaltung",
     "behörde": "verwaltung",
-    "logistik": "transport_logistik",
-    "transport": "transport_logistik",
-    "logistics": "transport_logistik",
-    "spedition": "transport_logistik",
-    "media": "medien_kreativwirtschaft",
-    "creative": "medien_kreativwirtschaft",
-    "kreativ": "medien_kreativwirtschaft",
-    # Direct engine keys (passthrough)
-    "marketing": "marketing_werbung",
-    "beratung": "beratung_dienstleistungen",
-    "it": "it_software",
-    "finanzen": "finanzen_versicherungen",
-    "handel": "handel_ecommerce",
-    "gesundheit": "gesundheit_pflege",
-    "industrie": "industrie_produktion",
-    # Legacy/alternate formats
-    "consulting": "beratung_dienstleistungen",
-    "dienstleistung": "beratung_dienstleistungen",
-    "dienstleistungen": "beratung_dienstleistungen",
-    "software": "it_software",
-    "tech": "it_software",
-    "technologie": "it_software",
-    "finance": "finanzen_versicherungen",
-    "banking": "finanzen_versicherungen",
-    "versicherung": "finanzen_versicherungen",
-    "retail": "handel_ecommerce",
-    "ecommerce": "handel_ecommerce",
-    "e-commerce": "handel_ecommerce",
-    "einzelhandel": "handel_ecommerce",
-    "health": "gesundheit_pflege",
-    "healthcare": "gesundheit_pflege",
-    "medizin": "gesundheit_pflege",
-    "pharma": "gesundheit_pflege",
-    "pflege": "gesundheit_pflege",
+    "transport": "logistik",
+    "logistics": "logistik",
+    "spedition": "logistik",
+    "media": "medien",
+    "creative": "medien",
+    "kreativ": "medien",
+    # =========================================================================
+    # Legacy/alternate formats (map to canonical 13 values)
+    # =========================================================================
+    "consulting": "beratung",
+    "dienstleistung": "beratung",
+    "dienstleistungen": "beratung",
+    "software": "it",
+    "tech": "it",
+    "technologie": "it",
+    "finance": "finanzen",
+    "banking": "finanzen",
+    "versicherung": "finanzen",
+    "retail": "handel",
+    "ecommerce": "handel",
+    "e-commerce": "handel",
+    "einzelhandel": "handel",
+    "health": "gesundheit",
+    "healthcare": "gesundheit",
+    "medizin": "gesundheit",
+    "pharma": "gesundheit",
+    "pflege": "gesundheit",
     "education": "bildung",
     "training": "bildung",
     "schule": "bildung",
     "hochschule": "bildung",
-    "manufacturing": "industrie_produktion",
-    "produktion": "industrie_produktion",
-    "fertigung": "industrie_produktion",
-    "werbung": "marketing_werbung",
-    "agentur": "marketing_werbung",
-    "medien": "medien_kreativwirtschaft",
-    "immobilien": "bauwesen_architektur",
-    "real_estate": "bauwesen_architektur",
-    "real estate": "bauwesen_architektur",
-    "baugewerbe": "bauwesen_architektur",
-    "warehousing": "transport_logistik",
-    "lager": "transport_logistik",
-    "supply_chain": "transport_logistik",
-    "supply chain": "transport_logistik",
+    "manufacturing": "industrie",
+    "produktion": "industrie",
+    "fertigung": "industrie",
+    "werbung": "marketing",
+    "agentur": "marketing",
+    "immobilien": "bau",
+    "real_estate": "bau",
+    "real estate": "bau",
+    "baugewerbe": "bau",
+    "warehousing": "logistik",
+    "lager": "logistik",
+    "supply_chain": "logistik",
+    "supply chain": "logistik",
     "kommune": "verwaltung",
     "oeffentlich": "verwaltung",
     "öffentlich": "verwaltung",
@@ -276,22 +325,26 @@ def get_frontend_branch_options() -> list[tuple[str, str]]:
     """
     Return list of (value, label) tuples for frontend dropdown.
 
+    FIX-BRANCH-13: Returns the 13 canonical form values from formbuilder_de_SINGLE_FULL.js.
+    These are the exact values used in the questionnaire form.
+
     Returns:
         List of (value, label) tuples for HTML select options
     """
     return [
-        ("marketing_werbung", "Marketing & Werbung"),
-        ("beratung_dienstleistungen", "Beratung & Dienstleistungen"),
-        ("it_software", "IT & Software"),
-        ("finanzen_versicherungen", "Finanzen & Versicherungen"),
-        ("handel_ecommerce", "Handel & E-Commerce"),
+        ("marketing", "Marketing & Werbung"),
+        ("beratung", "Beratung & Dienstleistungen"),
+        ("it", "IT & Software"),
+        ("finanzen", "Finanzen & Versicherungen"),
+        ("handel", "Handel & E-Commerce"),
         ("bildung", "Bildung"),
         ("verwaltung", "Verwaltung"),
-        ("gesundheit_pflege", "Gesundheit & Pflege"),
-        ("bauwesen_architektur", "Bauwesen & Architektur"),
-        ("medien_kreativwirtschaft", "Medien & Kreativwirtschaft"),
-        ("industrie_produktion", "Industrie & Produktion"),
-        ("transport_logistik", "Transport & Logistik"),
+        ("gesundheit", "Gesundheit & Pflege"),
+        ("bau", "Bauwesen & Architektur"),
+        ("medien", "Medien & Kreativwirtschaft"),
+        ("industrie", "Industrie & Produktion"),
+        ("logistik", "Transport & Logistik"),
+        ("gastronomie", "Gastronomie & Tourismus"),
     ]
 
 
