@@ -115,15 +115,17 @@ class TestSoloTermReplacements:
         assert 'Bausteine' in result['EXECUTIVE_SUMMARY_HTML']
         assert 'Module' not in result['EXECUTIVE_SUMMARY_HTML']
 
-    def test_rollout_replacement(self):
-        """Test Rollout -> Einführung replacement."""
+    def test_rollout_removal(self):
+        """Test Rollout is REMOVED (FIX-526: not replaced, removed entirely)."""
         from services.content_quality_enforcer import apply_solo_language_normalizer
 
         sections = {'EXECUTIVE_SUMMARY_HTML': 'Der Rollout erfolgt schrittweise.'}
         result = apply_solo_language_normalizer(sections, 'solo')
 
-        assert 'Einführung' in result['EXECUTIVE_SUMMARY_HTML']
+        # FIX-526: Rollout is removed entirely, not replaced with Einführung
         assert 'Rollout' not in result['EXECUTIVE_SUMMARY_HTML']
+        # Should not have double spaces after removal
+        assert '  ' not in result['EXECUTIVE_SUMMARY_HTML']
 
     def test_skalierung_replacement(self):
         """Test Skalierung -> Ausbau replacement."""

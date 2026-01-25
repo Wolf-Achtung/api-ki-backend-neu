@@ -760,11 +760,79 @@ class ReportValidator:
     SMART_MODE_ENABLED = True  # Enable warning de-duplication and bundling
     MAX_WARNINGS_PER_CATEGORY = 3  # Max warnings shown per category before bundling
 
+    # FIX-526: Shadow/Raw section keys that should be excluded when HTML version exists
+    # These are lowercase/raw keys that duplicate the canonical *_HTML versions
+    SHADOW_KEY_TO_HTML_MAP: Dict[str, str] = {
+        "quick_wins": "QUICK_WINS_HTML",
+        "business_case": "BUSINESS_CASE_HTML",
+        "risks": "RISKS_HTML",
+        "executive_summary": "EXECUTIVE_SUMMARY_HTML",
+        "recommendations": "RECOMMENDATIONS_HTML",
+        "roadmap_90d": "ROADMAP_90D_HTML",
+        "roadmap_12m": "ROADMAP_12M_HTML",
+        "gamechanger": "GAMECHANGER_HTML",
+        "tools_empfehlungen": "TOOLS_EMPFEHLUNGEN_HTML",
+        "next_actions": "NEXT_ACTIONS_HTML",
+        "ki_stack_summary": "KI_STACK_SUMMARY_HTML",
+        "pilot_plan": "PILOT_PLAN_HTML",
+    }
+
     def __init__(self, sections: Dict[str, Any], meta: Dict[str, Any]) -> None:
         self.sections = sections or {}
         self.meta = meta or {}
         self.errors: List[ValidationError] = []
         self.company_size: str = self.meta.get("unternehmensgroesse", "unbekannt")
+        # FIX-526: Build canonical view excluding shadow sections
+        self._canonical_sections: Optional[Dict[str, Any]] = None
+        self._excluded_shadow_keys: Optional[set] = None
+
+    def _build_canonical_view(self) -> Tuple[Dict[str, Any], set]:
+        """
+        FIX-526: Build canonical view of sections for validation.
+
+        When both a shadow/raw key (e.g., 'risks') and its HTML version
+        (e.g., 'RISKS_HTML') exist, only the HTML version is canonical.
+
+        This prevents false-positive REDUNDANCY_DETECTED and SECTION_TOO_SHORT
+        warnings for shadow/raw duplicates.
+
+        Returns:
+            Tuple of (canonical_sections_dict, excluded_shadow_keys_set)
+        """
+        canonical = {}
+        excluded = set()
+
+        for key, value in self.sections.items():
+            # Check if this is a shadow key with existing HTML version
+            html_key = self.SHADOW_KEY_TO_HTML_MAP.get(key)
+            if html_key and html_key in self.sections:
+                # HTML version exists → exclude this shadow key
+                excluded.add(key)
+                continue
+            canonical[key] = value
+
+        if excluded:
+            log.info(
+                "[VALIDATOR][FIX-526] canonical_keys=%d excluded_shadow=%s",
+                len(canonical),
+                sorted(excluded)
+            )
+
+        return canonical, excluded
+
+    @property
+    def canonical_sections(self) -> Dict[str, Any]:
+        """FIX-526: Get canonical sections view (excludes shadow/raw duplicates)."""
+        if self._canonical_sections is None:
+            self._canonical_sections, self._excluded_shadow_keys = self._build_canonical_view()
+        return self._canonical_sections
+
+    @property
+    def excluded_shadow_keys(self) -> set:
+        """FIX-526: Get set of excluded shadow keys."""
+        if self._excluded_shadow_keys is None:
+            self._canonical_sections, self._excluded_shadow_keys = self._build_canonical_view()
+        return self._excluded_shadow_keys
 
     # ------------------------------------------------------------------
     # SPRINT G14-C: Smart Mode - Warning De-Duplication & Bundling
@@ -1130,7 +1198,8 @@ class ReportValidator:
                 )
 
     def _check_template_phrases(self) -> None:
-        for section_name, content in self.sections.items():
+        # FIX-526: Use canonical_sections to avoid duplicate warnings for shadow keys
+        for section_name, content in self.canonical_sections.items():
             if not isinstance(content, str):
                 continue
             for phrase in self.TEMPLATE_PHRASES:
@@ -1262,7 +1331,8 @@ class ReportValidator:
         if not forbidden_terms:
             return
 
-        for section_name, content in self.sections.items():
+        # FIX-526: Use canonical_sections to avoid duplicate warnings for shadow keys
+        for section_name, content in self.canonical_sections.items():
             if not isinstance(content, str):
                 continue
             for term in forbidden_terms:
@@ -1746,7 +1816,8 @@ class ReportValidator:
         # Collect all sentences from all sections
         sentence_occurrences: Dict[str, List[str]] = {}  # normalized → list of sections
 
-        for section_name, content in self.sections.items():
+        # FIX-526: Use canonical_sections to avoid false-positive redundancy from shadow keys
+        for section_name, content in self.canonical_sections.items():
             if not isinstance(content, str) or not content:
                 continue
 
