@@ -200,15 +200,17 @@ class TestTask3SoloTermReplacements:
         result = apply_solo_language_normalizer(sections.copy(), "")
         assert "Skalierung" in result["EXECUTIVE_SUMMARY_HTML"]
 
-    def test_rollout_replacement(self):
-        """Test 'Rollout' -> 'Einführung'."""
+    def test_rollout_removal(self):
+        """Test 'Rollout' is REMOVED (FIX-526: not replaced, removed entirely)."""
         from services.content_quality_enforcer import apply_solo_language_normalizer
 
         sections = {"ROADMAP_90D_HTML": "Der Rollout startet in Q1."}
         result = apply_solo_language_normalizer(sections, "solo")
 
-        assert "Einführung" in result["ROADMAP_90D_HTML"]
+        # FIX-526: Rollout is removed entirely, not replaced with Einführung
         assert "Rollout" not in result["ROADMAP_90D_HTML"]
+        # Should not have double spaces after removal
+        assert "  " not in result["ROADMAP_90D_HTML"]
 
 
 class TestTask4QuickWinsFullWidthLayout:
@@ -411,7 +413,9 @@ class TestIntegration:
         # FIX-509-A: Now uses "Mandate" instead of "Mandanten"
         assert "Mandate" in content
         assert "Baustein" in content or "Technikpaket" in content
-        assert "Einführung" in content
+        # FIX-526: Rollout is REMOVED (not replaced with Einführung)
+        # No double spaces after removal
+        assert "  " not in content
 
 
 class TestEdgeCases:
