@@ -8270,30 +8270,60 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # Core company information needed across all prompts
     # Both uppercase and lowercase variants for compatibility
 
-    # Map unternehmensgroesse to COMPANY_SIZE for roadmap/gamechanger prompts
-    # Frontend V2 sends: "1", "2–10" (en-dash), "11–100" (en-dash)
-    # Prompts use: "solo", "team", "kmu"
-    size_raw = str(briefing.get("unternehmensgroesse", "1")).strip().lower()
-    size_map = {
-        # Frontend V2 values (primary) - what the questionnaire sends
-        "1": "solo",       # 1 (Solo-Selbstständig/Freiberuflich)
-        "2–10": "team",    # 2–10 (Kleines Team) - en-dash U+2013
-        "2-10": "team",    # 2-10 (Kleines Team) - hyphen fallback
-        "11–100": "kmu",   # 11–100 (KMU) - en-dash U+2013
-        "11-100": "kmu",   # 11-100 (KMU) - hyphen fallback
-        # Legacy/normalized values (backward compatibility)
-        "solo": "solo",
-        "klein": "team",
-        "kmu": "kmu",
-        "team": "team",
-        # Additional legacy variants
-        "freiberufler": "solo",
-        "freelancer": "solo",
-        "small": "team",
-        "medium": "kmu",
-        "sme": "kmu",
+    # -------------------------------------------------------------------------
+    # FIX-BRANCH-13: Use canonical normalizers for branch and company size
+    # -------------------------------------------------------------------------
+    from services.branch_mapping import map_frontend_branch_to_engine
+    from services.company_size_normalizer import normalize_company_size
+
+    # Extract raw input values
+    branche_raw = briefing.get("branche", "")
+    unternehmensgroesse_raw = briefing.get("unternehmensgroesse", "1")
+    country = briefing.get("country", briefing.get("land", "Deutschland"))
+    bundesland_raw = briefing.get("bundesland", "")
+    hauptleistung_raw = briefing.get("hauptleistung", "")
+
+    # Normalize branch using canonical 13-branch mapping
+    branche_engine_key = map_frontend_branch_to_engine(branche_raw)
+
+    # Normalize company size using En-Dash robust normalizer
+    size_info = normalize_company_size(str(unternehmensgroesse_raw))
+    company_size_bucket = size_info["bucket"]
+    company_size_min = size_info["min"]
+    company_size_max = size_info["max"]
+
+    # Map bucket to legacy COMPANY_SIZE values for prompts
+    bucket_to_prompt = {"solo": "solo", "small_team": "team", "kmu": "kmu"}
+    company_size = bucket_to_prompt.get(company_size_bucket, "team")
+
+    # -------------------------------------------------------------------------
+    # FIX-BRANCH-13 TASK 3: Log core input fields before prompt rendering
+    # -------------------------------------------------------------------------
+    log.info(
+        "[FIX-BRANCH-13][CORE-INPUTS] branche_raw=%s branche_engine_key=%s "
+        "unternehmensgroesse_raw=%s company_size_bucket=%s "
+        "country=%s bundesland=%s hauptleistung_len=%d",
+        branche_raw,
+        branche_engine_key,
+        unternehmensgroesse_raw,
+        company_size_bucket,
+        country,
+        bundesland_raw,
+        len(hauptleistung_raw) if hauptleistung_raw else 0,
+    )
+
+    # Store in meta for debugging/auditing
+    briefing["_meta_core_inputs"] = {
+        "branche_raw": branche_raw,
+        "branche_engine_key": branche_engine_key,
+        "unternehmensgroesse_raw": str(unternehmensgroesse_raw),
+        "company_size_bucket": company_size_bucket,
+        "company_size_min": company_size_min,
+        "company_size_max": company_size_max,
+        "country": country,
+        "bundesland": bundesland_raw,
+        "hauptleistung_len": len(hauptleistung_raw) if hauptleistung_raw else 0,
     }
-    company_size = size_map.get(size_raw, "team")  # Fallback to "team" if unknown
     
     # Derive size_label (human-readable label for size)
     size_label = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
@@ -8318,26 +8348,34 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         compact_report_mode = (company_size in ["solo", "team"])
 
     # Phase 1B Fix: Normalize branche_label for capitalization
-    branche_raw = briefing.get("BRANCHE_LABEL") or briefing.get("branche", "")
+    branche_label_src = briefing.get("BRANCHE_LABEL") or branche_raw
     # Capitalize first letter if all lowercase (e.g., "beratung" → "Beratung")
-    if branche_raw and branche_raw[0].islower():
-        branche_label = branche_raw.capitalize()
+    if branche_label_src and branche_label_src[0].islower():
+        branche_label = branche_label_src.capitalize()
     else:
-        branche_label = branche_raw
+        branche_label = branche_label_src
 
     base_vars.update({
-        "BRANCHE": briefing.get("branche", ""),
+        "BRANCHE": branche_raw,
         "branche": branche_label,  # Use normalized version
         "BRANCHE_LABEL": branche_label,  # Use normalized version
-        "UNTERNEHMENSGROESSE": briefing.get("unternehmensgroesse", ""),
-        "unternehmensgroesse": briefing.get("unternehmensgroesse", ""),
+        # FIX-BRANCH-13: Add engine key for branch-specific logic
+        "BRANCHE_ENGINE_KEY": branche_engine_key,
+        "branche_engine_key": branche_engine_key,
+        "UNTERNEHMENSGROESSE": str(unternehmensgroesse_raw),
+        "unternehmensgroesse": str(unternehmensgroesse_raw),
         "UNTERNEHMENSGROESSE_LABEL": size_label,
         "size_label": size_label,  # Consistent key for size-sensitive prompts
         "COMPANY_SIZE": company_size,  # For roadmap_90d.md and gamechanger.md
+        # FIX-BRANCH-13: Add detailed company size info
+        "COMPANY_SIZE_BUCKET": company_size_bucket,
+        "company_size_bucket": company_size_bucket,
+        "COMPANY_SIZE_MIN": company_size_min,
+        "COMPANY_SIZE_MAX": company_size_max,
         "COMPACT_REPORT_MODE": compact_report_mode,  # PLATIN+++ v5.4.3: Compact for solo+klein
-        "BUNDESLAND_LABEL": briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", ""),
-        "bundesland": briefing.get("bundesland", ""),
-        "HAUPTLEISTUNG": briefing.get("hauptleistung", ""),
+        "BUNDESLAND_LABEL": briefing.get("BUNDESLAND_LABEL") or bundesland_raw,
+        "bundesland": bundesland_raw,
+        "HAUPTLEISTUNG": hauptleistung_raw,
         "JAHRESUMSATZ_LABEL": briefing.get("JAHRESUMSATZ_LABEL", briefing.get("jahresumsatz", "")),
         "INVESTITIONSBUDGET": briefing.get("investitionsbudget", ""),  # For gamechanger.md
     })
