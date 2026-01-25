@@ -33,7 +33,7 @@ VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>
 <!-- WORD_MINIMUM_TEAM: 600 -->
 <!-- WORD_MINIMUM_KMU: 700 -->
 <!--
-ZIEL: 12-Monats-Roadmap als strategische Entscheidungskette (nicht Tool-Umsetzungsplan).
+ZIEL: 12-Monats-Fahrplan als strategische Entscheidungskette (nicht Tool-Umsetzungsplan).
 
 =============================================================================
 SPRACHSHIFT v6.0 — ENTSCHEIDUNGEN STATT IMPLEMENTIERUNGEN:
@@ -115,7 +115,7 @@ KMU-MODUS - VERBOTEN:
 {% endif %}
 -->
 
-## 12-Monats-Roadmap für {{OFFERING_LABEL}}
+## 12-Monats-Fahrplan für {{OFFERING_LABEL}}
 
 {% if COMPANY_SIZE == "solo" %}
 Aufbauend auf den ersten 90 Tagen – Fokus auf nachhaltige Integration und Erweiterung.
