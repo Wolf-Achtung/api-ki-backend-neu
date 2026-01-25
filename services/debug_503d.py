@@ -431,10 +431,25 @@ def build_debug_503d_attachments(
         })
         total_bytes += len(qw_keys_bytes)
 
+        # 5. FIX-52x: Full validator warnings for strict blockers
+        warnings_list = sections.get("_VALIDATOR_WARNING_LIST", [])
+        if isinstance(warnings_list, list):
+            warnings_payload = "\n".join(warnings_list) if warnings_list else "(none)"
+        else:
+            warnings_payload = "(none)"
+        warnings_bytes = warnings_payload.encode("utf-8")
+        attachments.append({
+            "filename": "debug_52x_validator_warnings.txt",
+            "content": warnings_bytes,
+            "mimetype": "text/plain"
+        })
+        total_bytes += len(warnings_bytes)
+
         # Log the collection (must appear in Railway logs)
         log.info(
-            "[DEBUG-503D][MAIL] attaching 4 artifacts: "
-            "quick_wins_block.html, risk_matrix_block.html, payback_mentions.txt, quick_wins_keys.json "
+            "[DEBUG-503D][MAIL] attaching 5 artifacts: "
+            "quick_wins_block.html, risk_matrix_block.html, payback_mentions.txt, "
+            "quick_wins_keys.json, validator_warnings.txt "
             "(total_bytes=%d)",
             total_bytes
         )
