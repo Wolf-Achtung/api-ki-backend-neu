@@ -56,7 +56,7 @@ KMU: 6 Tool-Cluster mit je 2-3 Beispielen (min. 250 Wörter!):
 2. Fachbereichsspezifische Tools für {{OFFERING_LABEL}}
 3. Reporting/BI-Integration
 4. Compliance & Governance
-5. Rollout & Schulung
+5. Einführung & Schulung
 6. Responsible AI & Governance Tools (SPRINT G17.S – PFLICHT!)
 {% endif %}
 
