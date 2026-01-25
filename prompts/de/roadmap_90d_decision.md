@@ -79,40 +79,31 @@ INHALTLICHE GRUNDLAGE:
 Verdichte die bestehenden Roadmap-Inhalte. Erfinde nichts Neues.
 Fokus: Was muss entschieden werden, nicht was gemacht werden könnte.
 
-STRUKTUR (exakt einhalten):
+STRUKTUR (exakt einhalten, HTML ONLY):
 
-<div class="roadmap-decision">
-  <p><strong>90-Tage-Umsetzungs-Roadmap – Entscheidungsfassung</strong></p>
+Outer: div.roadmap-decision
 
-  <p><strong>Phase 1 (0–30 Tage): Fundament</strong></p>
-  <ul>
-    <li><strong>Ziel:</strong> [1 Satz, messbar]</li>
-    <li><strong>Umsetzung:</strong> [Max. 2-3 konkrete Schritte]</li>
-    <li><strong>Erfolgskriterium:</strong> [1 klares, prüfbares Kriterium]</li>
-    <li><strong>Stop-Regel:</strong> [Wann wird Phase abgebrochen/pausiert]</li>
-  </ul>
+Titel: p > strong "90-Tage-Umsetzungs-Roadmap – Entscheidungsfassung"
 
-  <p><strong>Phase 2 (31–60 Tage): Pilotierung</strong></p>
-  <ul>
-    <li><strong>Ziel:</strong> [1 Satz, messbar]</li>
-    <li><strong>Umsetzung:</strong> [Max. 2-3 konkrete Schritte]</li>
-    <li><strong>Erfolgskriterium:</strong> [1 klares, prüfbares Kriterium]</li>
-    <li><strong>Stop-Regel:</strong> [Wann wird Phase abgebrochen/pausiert]</li>
-  </ul>
+Dann 3 Phasen-Blöcke:
+- Phase 1 (0–30 Tage): Fundament
+- Phase 2 (31–60 Tage): Pilotierung
+- Phase 3 (61–90 Tage): Entscheidung
 
-  <p><strong>Phase 3 (61–90 Tage): Entscheidung</strong></p>
-  <ul>
-    <li><strong>Ziel:</strong> [1 Satz, messbar]</li>
-    <li><strong>Umsetzung:</strong> [Max. 2-3 konkrete Schritte]</li>
-    <li><strong>Erfolgskriterium:</strong> [1 klares, prüfbares Kriterium]</li>
-    <li><strong>Stop-Regel:</strong> [Wann wird Erweiterung nicht empfohlen]</li>
-  </ul>
-</div>
+Pro Phase:
+- p > strong mit Phasenname
+- ul mit exakt 4 li in dieser Reihenfolge:
+  - Ziel: ein messbarer Satz
+  - Umsetzung: zwei bis drei konkrete Schritte
+  - Erfolgskriterium: ein klares, prüfbares Kriterium
+  - Stop-Regel: wann wird Phase abgebrochen oder pausiert
 
-STOP-REGELN (Beispiele zur Orientierung):
-- "Kein messbarer Zeitgewinn nach 14 Tagen → vereinfachen oder stoppen"
-- "Qualitätsprobleme >20% → zurück zu manueller Prüfung"
-- "Keine Akzeptanz im Alltag → Pilotierung abbrechen"
+Jede Zeile nach dem Label ist ein vollständiger, konkreter Satz. Keine Platzhalter, keine Template-Marker.
+
+STOP-REGELN (Orientierung für konkrete Formulierungen):
+- Bei fehlendem messbarem Zeitgewinn nach zwei Wochen: vereinfachen oder stoppen
+- Bei Qualitätsproblemen über zwanzig Prozent: zurück zu manueller Prüfung
+- Bei fehlender Akzeptanz im Alltag: Pilotierung abbrechen
 
 STIL:
 - Distanziert-professionell
