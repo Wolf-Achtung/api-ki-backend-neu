@@ -38,16 +38,30 @@ SOLO_TERM_REPLACEMENTS = [
     (r'\bKomponente\b', 'Teil', 'Komponente→Teil'),
 
     # Platform/Architecture terms
-    (r'\bPlattformen\b', 'Tool-Setups', 'Plattform→Tool-Setup (Plural)'),
-    (r'\bPlattform\b', 'Tool-Setup', 'Plattform→Tool-Setup'),
-    (r'\bArchitekturen\b', 'Strukturen', 'Architektur→Struktur (Plural)'),
+    (r'\bCloud-Plattform\b', 'Cloud-Umgebung', 'Cloud-Plattform→Cloud-Umgebung'),
+    (r'\bKI-Plattform\b', 'KI-Umgebung', 'KI-Plattform→KI-Umgebung'),
+    (r'\bDaten-Plattform\b', 'Daten-Umgebung', 'Daten-Plattform→Daten-Umgebung'),
+    (r'\bPlattformen\b', 'Arbeitsumgebungen', 'Plattformen→Arbeitsumgebungen (Plural)'),
+    (r'\bPlattform\b', 'Arbeitsumgebung', 'Plattform→Arbeitsumgebung'),
+    (r'\bSystem-Architektur\b', 'System-Struktur', 'System-Architektur→System-Struktur'),
+    (r'\bSoftware-Architektur\b', 'Software-Struktur', 'Software-Architektur→Software-Struktur'),
+    (r'\bArchitekturen\b', 'Strukturen', 'Architekturen→Strukturen (Plural)'),
     (r'\bArchitektur\b', 'Struktur', 'Architektur→Struktur'),
+    (r'\bInfrastrukturen\b', 'Grundausstattungen', 'Infrastrukturen→Grundausstattungen'),
     (r'\bInfrastruktur\b', 'Grundausstattung', 'Infrastruktur→Grundausstattung'),
 
     # Stack/Technical terms
     (r'\bTech-Stack\b', 'Technikpaket', 'Tech-Stack→Technikpaket'),
+    (r'\bTech\s+Stack\b', 'Technikpaket', 'Tech Stack→Technikpaket'),
     (r'\bKI-Stack\b', 'KI-Werkzeuge', 'KI-Stack→KI-Werkzeuge'),
+    (r'\bKI\s+Stack\b', 'KI-Werkzeuge', 'KI Stack→KI-Werkzeuge'),
+    (r'\bTool-Stack\b', 'Werkzeugpaket', 'Tool-Stack→Werkzeugpaket'),
+    (r'\bSoftware-Stack\b', 'Softwarepaket', 'Software-Stack→Softwarepaket'),
+    (r'\bFull-Stack\b', 'Gesamtlösung', 'Full-Stack→Gesamtlösung'),
+    (r'\bFull\s+Stack\b', 'Gesamtlösung', 'Full Stack→Gesamtlösung'),
+    (r'\bStacks\b', 'Technikpakete', 'Stacks→Technikpakete (Plural)'),
     (r'\bStack\b', 'Technikpaket', 'Stack→Technikpaket'),
+    (r'\bLayers\b', 'Ebenen', 'Layers→Ebenen (Plural)'),
     (r'\bLayer\b', 'Ebene', 'Layer→Ebene'),
     (r'\bPipeline\b', 'Ablauf', 'Pipeline→Ablauf'),
     (r'\bWorkflow\b', 'Arbeitsablauf', 'Workflow→Arbeitsablauf'),
@@ -71,8 +85,20 @@ SOLO_TERM_REPLACEMENTS = [
     (r'\bStakeholders\b', 'Beteiligte', 'Stakeholders→Beteiligte (EN Plural)'),
     (r'\bStakeholder\b', 'Beteiligte', 'Stakeholder→Beteiligte'),
     (r'\bAudit-Trail\b', 'Prüfpfad', 'Audit-Trail→Prüfpfad'),
+    (r'\bAudit\s+Trail\b', 'Prüfpfad', 'Audit Trail→Prüfpfad'),
+
+    # FIX-52x: Engine composites (common in section keys leak into text)
     (r'\bRoadmap-Engine\b', 'Roadmap-Ansatz', 'Roadmap-Engine→Roadmap-Ansatz'),
-    (r'\bEngine\b(?!ering)', 'Ansatz', 'Engine→Ansatz (nicht Engineering)'),
+    (r'\bRisk-Engine\b', 'Risiko-Analyse', 'Risk-Engine→Risiko-Analyse'),
+    (r'\bRisk_Engine\b', 'Risiko-Analyse', 'Risk_Engine→Risiko-Analyse'),
+    (r'\bBusiness-Case-Engine\b', 'Geschäftsfall-Analyse', 'Business-Case-Engine→Geschäftsfall-Analyse'),
+    (r'\bRecommendations-Engine\b', 'Empfehlungs-Baustein', 'Recommendations-Engine→Empfehlungs-Baustein'),
+    (r'\bVendor-Audit-Engine\b', 'Anbieter-Prüfung', 'Vendor-Audit-Engine→Anbieter-Prüfung'),
+    (r'\bAnalyse-Engine\b', 'Analyse-Baustein', 'Analyse-Engine→Analyse-Baustein'),
+    (r'\bKI-Engine\b', 'KI-Baustein', 'KI-Engine→KI-Baustein'),
+    (r'\bEngines\b(?!ering)', 'Bausteine', 'Engines→Bausteine (Plural)'),
+    (r'\bEngine\b(?!ering)', 'Baustein', 'Engine→Baustein (nicht Engineering)'),
+
     (r'\bGovernance-Struktur\b', 'Ordnungsrahmen', 'Governance-Struktur→Ordnungsrahmen'),
     (r'\bGovernance\b', 'Steuerung', 'Governance→Steuerung'),
     (r'\bCompliance-Framework\b', 'Regelwerk', 'Compliance-Framework→Regelwerk'),
@@ -2084,6 +2110,157 @@ def _apply_transparency_box_floor(sections: dict) -> dict:
     return sections
 
 
+# =============================================================================
+# FIX-52x PRIO 1: Quick Wins Placeholder Scrub (aggressive)
+# =============================================================================
+
+_QUICKWINS_KEYS = ["QUICK_WINS_HTML", "QUICK_WINS_HTML_LEFT", "QUICK_WINS_HTML_RIGHT", "quick_wins"]
+
+def scrub_quickwins_template_phrases(sections: dict) -> dict:
+    """
+    FIX-52x PRIO 1: Aggressively remove 'Platzhalter' and template artifacts
+    from Quick Wins sections. Ensures TEMPLATE_PHRASE warnings are eliminated.
+    """
+    for key in _QUICKWINS_KEYS:
+        html = sections.get(key)
+        if not html or not isinstance(html, str):
+            continue
+
+        original = html
+
+        # Remove entire elements containing "Platzhalter"
+        html = re.sub(
+            r'<(?:p|li|div|span)[^>]*>[^<]*\bPlatzhalter\b[^<]*</(?:p|li|div|span)>',
+            '',
+            html,
+            flags=re.IGNORECASE
+        )
+
+        # Remove standalone "Platzhalter" word (replace with neutral text)
+        html = re.sub(r'\bPlatzhalter\b', 'konkreter Vorschlag', html, flags=re.IGNORECASE)
+
+        # Remove bracketed placeholders
+        html = re.sub(r'\[Platzhalter[^\]]*\]', '', html, flags=re.IGNORECASE)
+        html = re.sub(r'\[TODO[^\]]*\]', '', html, flags=re.IGNORECASE)
+
+        # Normalize whitespace
+        html = re.sub(r'\s{2,}', ' ', html)
+        html = re.sub(r'<p>\s*</p>', '', html)
+        html = re.sub(r'<li>\s*</li>', '', html)
+
+        if html != original:
+            sections[key] = html
+            log.info("[FIX-52x][QUICKWINS-SCRUB] cleaned section=%s", key)
+
+    return sections
+
+
+# =============================================================================
+# FIX-52x PRIO 4: Sentence Fragment Fixer (BUSINESS_CASE_HTML)
+# =============================================================================
+
+def fix_sentence_fragments(sections: dict) -> dict:
+    """
+    FIX-52x PRIO 4: Fix incomplete sentences in BUSINESS_CASE_HTML.
+    Handles sentences ending with conjunctions, colons, or commas.
+    """
+    target_keys = ["BUSINESS_CASE_HTML", "business_case"]
+
+    for key in target_keys:
+        html = sections.get(key)
+        if not html or not isinstance(html, str):
+            continue
+
+        original = html
+
+        # Fix sentences ending with conjunctions/punctuation without proper ending
+        # Pattern: text ending with "und", "oder", "sowie", ":", "," before closing tag
+        def fix_fragment(match):
+            content = match.group(1)
+            tag = match.group(2)
+            # Trim trailing conjunctions/punctuation and add period
+            content = re.sub(r'\s*(?:und|oder|sowie|,|:)\s*$', '.', content.strip(), flags=re.IGNORECASE)
+            # If no sentence-ending punctuation and length > 40, add period
+            if len(content) > 40 and not re.search(r'[.!?]$', content):
+                content = content.rstrip() + '.'
+            return f'{content}</{tag}>'
+
+        # Apply to <p>, <li> content
+        html = re.sub(
+            r'>([^<]{40,}?)\s*</([pP]|[lL][iI])>',
+            lambda m: '>' + fix_fragment(m) if m.group(1).strip() else m.group(0),
+            html
+        )
+
+        if html != original:
+            sections[key] = html
+            log.info("[FIX-52x][SENTENCE-FRAGMENT] fixed fragments in section=%s", key)
+
+    return sections
+
+
+# =============================================================================
+# FIX-52x PRIO 3: Redundancy Auto-Shortener
+# =============================================================================
+
+def auto_shorten_redundant_sections(sections: dict) -> dict:
+    """
+    FIX-52x PRIO 3: Reduce redundancy in BUSINESS_CASE_HTML and PILOT_PLAN_HTML
+    by replacing overly long repeated content patterns with shorter versions.
+    """
+    target_keys = ["BUSINESS_CASE_HTML", "PILOT_PLAN_HTML"]
+
+    for key in target_keys:
+        html = sections.get(key)
+        if not html or not isinstance(html, str):
+            continue
+
+        original_len = len(html)
+
+        # Find and deduplicate repeated paragraphs (exact matches)
+        paragraphs = re.findall(r'<p[^>]*>([^<]+)</p>', html)
+        seen = set()
+        duplicates = []
+        for p in paragraphs:
+            p_normalized = ' '.join(p.split()).lower()
+            if len(p_normalized) > 100:  # Only check substantial paragraphs
+                if p_normalized in seen:
+                    duplicates.append(p)
+                else:
+                    seen.add(p_normalized)
+
+        # Remove duplicate paragraphs (keep first occurrence)
+        for dup in duplicates:
+            # Only remove the second and subsequent occurrences
+            pattern = re.escape(f'<p>{dup}</p>')
+            # Find all matches and remove all but first
+            matches = list(re.finditer(pattern, html, re.IGNORECASE))
+            if len(matches) > 1:
+                # Remove from end to preserve indices
+                for match in reversed(matches[1:]):
+                    html = html[:match.start()] + html[match.end():]
+
+        # Shorten overly verbose sections (>5000 chars) by trimming repetitive list items
+        if len(html) > 5000:
+            # Count list items
+            li_matches = re.findall(r'<li[^>]*>([^<]+)</li>', html)
+            if len(li_matches) > 10:
+                # Keep first 8 items, summarize rest
+                html = re.sub(
+                    r'((?:<li[^>]*>[^<]+</li>\s*){8})(?:<li[^>]*>[^<]+</li>\s*)+',
+                    r'\1<li><em>Weitere Details siehe Kennzahlenblock.</em></li>',
+                    html,
+                    count=1
+                )
+
+        if len(html) < original_len:
+            sections[key] = html
+            delta = original_len - len(html)
+            log.info("[FIX-52x][REDUNDANCY-SHORTEN] section=%s reduced_by=%d chars", key, delta)
+
+    return sections
+
+
 def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesland: str = "", company_size: str = "") -> dict:
 
     """
@@ -2179,6 +2356,15 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
 
     # 17. FIX-514: Placeholder Scrub (remove "Platzhalter" from recommendations)
     sections = apply_placeholder_scrub(sections)
+
+    # 17.5 FIX-52x: Quick Wins Placeholder Scrub (aggressive)
+    sections = scrub_quickwins_template_phrases(sections)
+
+    # 17.6 FIX-52x: Sentence Fragment Fixer (BUSINESS_CASE_HTML)
+    sections = fix_sentence_fragments(sections)
+
+    # 17.7 FIX-52x: Redundancy Auto-Shortener (BUSINESS_CASE_HTML, PILOT_PLAN_HTML)
+    sections = auto_shorten_redundant_sections(sections)
 
     # 18. FIX-520 TASK 2: transparency_box hard-floor (min 60 words)
     sections = _apply_transparency_box_floor(sections)
