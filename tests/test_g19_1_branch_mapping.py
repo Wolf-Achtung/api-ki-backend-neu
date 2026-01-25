@@ -239,12 +239,22 @@ class TestNormalization:
 class TestMappingData:
     """Tests for mapping data completeness."""
 
-    def test_branch_mapping_has_12_entries(self):
-        """Verify BRANCH_MAPPING has exactly 12 frontend entries."""
+    def test_branch_mapping_has_canonical_entries(self):
+        """Verify BRANCH_MAPPING has all 13 canonical + legacy entries."""
         from services.branch_mapping import BRANCH_MAPPING
 
-        assert len(BRANCH_MAPPING) == 12, \
-            f"BRANCH_MAPPING should have 12 entries, has {len(BRANCH_MAPPING)}"
+        # FIX-BRANCH-13: Now 23 entries (13 canonical + 10 legacy)
+        assert len(BRANCH_MAPPING) >= 13, \
+            f"BRANCH_MAPPING should have at least 13 entries, has {len(BRANCH_MAPPING)}"
+
+        # Verify all 13 canonical values are present
+        canonical_13 = [
+            "marketing", "beratung", "it", "finanzen", "handel", "bildung",
+            "verwaltung", "gesundheit", "bau", "medien", "industrie",
+            "logistik", "gastronomie",
+        ]
+        for branch in canonical_13:
+            assert branch in BRANCH_MAPPING, f"Canonical branch '{branch}' missing from BRANCH_MAPPING"
 
     def test_all_engine_keys_are_valid(self):
         """Verify all mapped engine keys exist in branch_profile_engine."""
@@ -304,8 +314,8 @@ class TestHelperFunctions:
 
         options = get_frontend_branch_options()
 
-        # Should return 12 options
-        assert len(options) == 12, f"Expected 12 options, got {len(options)}"
+        # FIX-BRANCH-13: Should return 13 options (canonical form values)
+        assert len(options) == 13, f"Expected 13 options, got {len(options)}"
 
         # Each option should be a (value, label) tuple
         for option in options:
@@ -314,8 +324,10 @@ class TestHelperFunctions:
             value, label = option
             assert isinstance(value, str), f"Value should be string: {value}"
             assert isinstance(label, str), f"Label should be string: {label}"
-            assert "_" in value or value == "bildung" or value == "verwaltung", \
-                f"Value should use underscores: {value}"
+
+        # Verify gastronomie is included (FIX-BRANCH-13)
+        values = [opt[0] for opt in options]
+        assert "gastronomie" in values, "gastronomie should be in frontend options"
 
 
 # =============================================================================
