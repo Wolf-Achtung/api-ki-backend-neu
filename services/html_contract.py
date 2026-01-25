@@ -778,6 +778,81 @@ def strip_code_fences_final(html: str) -> str:
     return result
 
 
+def normalize_typos_and_entities(html: str) -> str:
+    """
+    FIX-523A: Normalize HTML entities and typographic quotes.
+
+    This function normalizes:
+    1. HTML entities: &nbsp; → space, &uuml; → ü, &ouml; → ö, etc.
+    2. Typographic quotes: „" → " (straight double quotes)
+    3. Typographic single quotes: '' → ' (straight single quotes)
+
+    Args:
+        html: Raw HTML string
+
+    Returns:
+        Normalized HTML string
+
+    Note:
+        Call this BEFORE final validation to ensure clean output.
+    """
+    if not html:
+        return html
+
+    result = html
+
+    # 1. Common HTML entities → Unicode
+    entity_map = {
+        "&nbsp;": " ",
+        "&amp;": "&",
+        "&lt;": "<",
+        "&gt;": ">",
+        "&quot;": '"',
+        "&apos;": "'",
+        # German umlauts
+        "&auml;": "ä",
+        "&ouml;": "ö",
+        "&uuml;": "ü",
+        "&Auml;": "Ä",
+        "&Ouml;": "Ö",
+        "&Uuml;": "Ü",
+        "&szlig;": "ß",
+        # Common punctuation
+        "&ndash;": "–",
+        "&mdash;": "—",
+        "&hellip;": "…",
+        "&euro;": "€",
+        "&copy;": "©",
+        "&reg;": "®",
+        "&trade;": "™",
+    }
+
+    for entity, char in entity_map.items():
+        result = result.replace(entity, char)
+
+    # 2. Typographic double quotes → straight
+    # German opening „ (U+201E) and closing " (U+201C)
+    result = result.replace("„", '"')
+    result = result.replace(""", '"')
+    result = result.replace(""", '"')  # U+201D closing quote
+
+    # 3. Typographic single quotes → straight
+    result = result.replace("'", "'")  # U+2018 left single
+    result = result.replace("'", "'")  # U+2019 right single
+    result = result.replace("‚", "'")  # U+201A single low-9
+
+    # 4. Numeric HTML entities (common ones)
+    # &#160; = non-breaking space
+    result = re.sub(r'&#160;', ' ', result)
+    # &#8211; = en-dash
+    result = re.sub(r'&#8211;', '–', result)
+    # &#8212; = em-dash
+    result = re.sub(r'&#8212;', '—', result)
+
+    log.debug("[FIX-523A][HTML-CONTRACT] normalize_typos_and_entities applied")
+    return result
+
+
 def validate_quick_wins_rendered(html: str) -> bool:
     """
     Check if QuickWins section is properly rendered.

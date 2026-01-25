@@ -77,15 +77,20 @@ INHALTLICHE VERDICHTUNG (nutze nur vorhandene Konzepte):
 - "Tool-Zoo / Ad-hoc-Prompts ohne Standards" = No-Go
 - Stop-Regel: max. 2 parallele Initiativen; nach 14 Tagen ohne messbaren Effekt = vereinfachen oder stoppen
 
-OUTPUT-FORMAT (exakt einhalten, ohne Markdown/Codeblöcke):
-<div class="exec-decision-box">
-  <p><strong>Ihre Entscheidung in 3 Punkten</strong></p>
-  <ul>
-    <li><strong>Tun:</strong> [Ein konkreter Standard-Workflow, der sofort umsetzbar ist]</li>
-    <li><strong>Lassen:</strong> [Was Sie ab sofort nicht mehr tun sollten]</li>
-    <li><strong>Risiko & Stop-Signal:</strong> [Wann Sie stoppen und vereinfachen müssen]</li>
-  </ul>
-</div>
+OUTPUT (HTML ONLY, exakt einhalten):
+
+Genau ein Outer-Container: div.exec-decision-box
+
+Reihenfolge:
+- p > strong: "Ihre Entscheidung in 3 Punkten"
+- ul mit genau 3 li
+
+Jeder li startet mit strong Label und danach ein vollständiger Satz:
+- "Tun:" — ein konkreter Standard-Workflow, der sofort umsetzbar ist
+- "Lassen:" — was Sie ab sofort nicht mehr tun sollten
+- "Risiko & Stop-Signal:" — wann Sie stoppen und vereinfachen müssen
+
+Keine eckigen Klammern, keine geschweiften Klammern, keine Platzhalter-Wörter.
 
 STIL:
 - Distanziert-professionell, wie ein externer Gutachter

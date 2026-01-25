@@ -39,15 +39,9 @@ ZIEL: 12-Monats-Roadmap als strategische Entscheidungskette (nicht Tool-Umsetzun
 SPRACHSHIFT v6.0 — ENTSCHEIDUNGEN STATT IMPLEMENTIERUNGEN:
 =============================================================================
 
-VERBOTENE FORMULIERUNGEN → ERSETZUNGEN:
-❌ "Einführung / Implementierung"  → ✅ "Festlegung / Definition / Abgrenzung"
-❌ "Tool ausrollen"                → ✅ "Standards etablieren"
-❌ "System integrieren"            → ✅ "Verantwortlichkeiten klären"
-❌ "Workflow automatisieren"       → ✅ "Entscheidungsrahmen schaffen"
-❌ "Digitalisierung vorantreiben"  → ✅ "Prioritäten setzen"
-
-Die Roadmap zeigt WELCHE ENTSCHEIDUNGEN zu treffen sind,
-nicht WELCHE TOOLS einzuführen sind.
+SPRACHSHIFT (verbindlich):
+Roadmap als Entscheidungskette formulieren, nicht als Implementierungsplan.
+Formulierungen beziehen sich auf Rahmen, Grenzen, Kriterien – nicht auf Produktnamen oder Rollout-Schritte.
 
 LESBARKEIT (v6.1 NEU):
 - Maximal EIN abstrakter Gedanke pro Absatz
