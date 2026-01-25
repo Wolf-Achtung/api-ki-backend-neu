@@ -80,7 +80,7 @@ class TestDebug503DAttachments:
 
     @patch.dict(os.environ, {"DEBUG_RENDER": "1"})
     def test_returns_4_attachments(self, sample_html_with_anchors, sample_sections, sample_canonical_kpis):
-        """Test that build_debug_503d_attachments returns exactly 4 attachments."""
+        """Test that build_debug_503d_attachments returns exactly 5 attachments."""
         from services.debug_503d import build_debug_503d_attachments
 
         attachments = build_debug_503d_attachments(
@@ -89,7 +89,7 @@ class TestDebug503DAttachments:
             canonical_kpis=sample_canonical_kpis
         )
 
-        assert len(attachments) == 4, f"Expected 4 attachments, got {len(attachments)}"
+        assert len(attachments) == 5, f"Expected 5 attachments, got {len(attachments)}"
 
     @patch.dict(os.environ, {"DEBUG_RENDER": "1"})
     def test_correct_filenames(self, sample_html_with_anchors, sample_sections, sample_canonical_kpis):
@@ -107,6 +107,7 @@ class TestDebug503DAttachments:
             "debug_503d_risk_matrix_block.html",
             "debug_503d_payback_mentions.txt",
             "debug_503d_quick_wins_keys.json",
+            "debug_52x_validator_warnings.txt",
         ]
 
         actual_filenames = [att["filename"] for att in attachments]
@@ -431,7 +432,7 @@ class TestDebug503DSummaryJsonSerializable:
             canonical_kpis={"PAYBACK_MONTHS": 6.5}
         )
 
-        assert len(attachments) == 4, "Should have 4 debug attachments"
+        assert len(attachments) == 5, "Should have 5 debug attachments"
 
         # Build summary (should be JSON-safe)
         summary = build_debug_503d_summary(attachments)
