@@ -3930,14 +3930,45 @@ def safe_html_truncate(html: str, max_chars: int = 10000) -> str:
 # FIX-514 CHANGE 2: Forbidden-Token Scrub (ROADMAP_90D_DECISION + KI_STACK_SUMMARY)
 # =============================================================================
 
+# FIX-523A: Extended forbidden token scrub rules for all relevant sections
 _FORBIDDEN_SCRUB_RULES: dict = {
     "ROADMAP_90D_DECISION_HTML": [
         (re.compile(r'\bRollout\b', re.IGNORECASE), "Einführung"),
+        (re.compile(r'\bRoll-out\b', re.IGNORECASE), "Einführung"),
         (re.compile(r'\bSkalierung\b', re.IGNORECASE), "Ausbau"),
+        (re.compile(r'\bskalieren\b', re.IGNORECASE), "ausbauen"),
         (re.compile(r'\bAudit[\s-]?Trail\b', re.IGNORECASE), "Nachvollziehbarkeit"),
+        (re.compile(r'\bTech[\s-]?Stack\b', re.IGNORECASE), "Tool-Set"),
+        (re.compile(r'\bTool[\s-]?Stack\b', re.IGNORECASE), "Tool-Set"),
+        (re.compile(r'\bStack\b', re.IGNORECASE), "Tool-Set"),
     ],
     "KI_STACK_SUMMARY_HTML": [
         (re.compile(r'\bTech[\s-]?Stack\b', re.IGNORECASE), "Tool-Set"),
+        (re.compile(r'\bTool[\s-]?Stack\b', re.IGNORECASE), "Tool-Set"),
+        (re.compile(r'\bStack\b', re.IGNORECASE), "Tool-Set"),
+        (re.compile(r'\bRollout\b', re.IGNORECASE), "Einführung"),
+        (re.compile(r'\bSkalierung\b', re.IGNORECASE), "Ausbau"),
+    ],
+    # FIX-523A: Extended to ROADMAP_12M_HTML
+    "ROADMAP_12M_HTML": [
+        (re.compile(r'\bRollout\b', re.IGNORECASE), "Einführung"),
+        (re.compile(r'\bRoll-out\b', re.IGNORECASE), "Einführung"),
+        (re.compile(r'\bSkalierung\b', re.IGNORECASE), "Ausbau"),
+        (re.compile(r'\bskalieren\b', re.IGNORECASE), "ausbauen"),
+        (re.compile(r'\bTech[\s-]?Stack\b', re.IGNORECASE), "Tool-Set"),
+        (re.compile(r'\bTool[\s-]?Stack\b', re.IGNORECASE), "Tool-Set"),
+        (re.compile(r'\bStack\b', re.IGNORECASE), "Tool-Set"),
+    ],
+    # FIX-523A: Also clean ROADMAP_90D_HTML (non-decision variant)
+    "ROADMAP_90D_HTML": [
+        (re.compile(r'\bRollout\b', re.IGNORECASE), "Einführung"),
+        (re.compile(r'\bSkalierung\b', re.IGNORECASE), "Ausbau"),
+        (re.compile(r'\bTech[\s-]?Stack\b', re.IGNORECASE), "Tool-Set"),
+        (re.compile(r'\bStack\b', re.IGNORECASE), "Tool-Set"),
+    ],
+    "PILOT_PLAN_HTML": [
+        (re.compile(r'\bRollout\b', re.IGNORECASE), "Einführung"),
+        (re.compile(r'\bSkalierung\b', re.IGNORECASE), "Ausbau"),
         (re.compile(r'\bStack\b', re.IGNORECASE), "Tool-Set"),
     ],
 }
@@ -4035,6 +4066,13 @@ _TEMPLATE_PHRASE_PATTERNS = [
     (re.compile(r'\bBeispieltext\b', re.IGNORECASE), ''),
     (re.compile(r'\bMustertext\b', re.IGNORECASE), ''),
     (re.compile(r'\bDummy-?Text\b', re.IGNORECASE), ''),
+    # FIX-523A: Chat phrases that leak into output (NEXT_ACTIONS, LEAD_WETTBEWERB)
+    (re.compile(r'\bBitte geben Sie mir das[^.]*\.?', re.IGNORECASE), ''),
+    (re.compile(r'\bBitte geben Sie mir[^.]*\.?', re.IGNORECASE), ''),
+    (re.compile(r'\bWelchen Wettbewerb[^.?]*[.?]?', re.IGNORECASE), ''),
+    (re.compile(r'\bWelche Wettbewerber[^.?]*[.?]?', re.IGNORECASE), ''),
+    (re.compile(r'\bKönnen Sie mir[^.?]*[.?]?', re.IGNORECASE), ''),
+    (re.compile(r'\bMöchten Sie[^.?]*[.?]?', re.IGNORECASE), ''),
 ]
 
 # All LLM-generated sections to scrub
@@ -4050,6 +4088,9 @@ _TEMPLATE_SCRUB_SECTIONS = [
     "BRANCH_DEEP_DIVE_HTML", "TOP_3_MASSNAHMEN_HTML", "MONETARISIERUNG_HTML",
     "TEMPLATES_START_HTML", "KICKOFF_VORLAGE_HTML", "PROMPT_FRAMEWORK_HTML",
     "TECHNOLOGIE_PROZESSE_HTML", "WETTBEWERB_BENCHMARK_HTML", "UNTERNEHMENSPROFIL_MARKT_HTML",
+    # FIX-523A: Added for template_phrase warnings
+    "NEXT_ACTIONS_HTML", "LEAD_WETTBEWERB", "LEAD_EXEC", "LEAD_KPI", "LEAD_QW",
+    "LEAD_ROADMAP_90", "LEAD_ROADMAP_12", "LEAD_BUSINESS", "LEAD_BUSINESS_DETAIL",
 ]
 
 
