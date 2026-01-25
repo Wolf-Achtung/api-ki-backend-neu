@@ -3221,15 +3221,38 @@ def apply_risk_truncation(sections: dict, max_chars: int = 500) -> dict:
 _RISKS_SOLO_PADDING_HTML = """
 <div class="risk-solo-supplemental">
   <h3>Pragmatische Absicherung für Einzelunternehmer</h3>
+  <p>Als Einzelunternehmer tragen Sie die volle Verantwortung für den Einsatz von KI-Werkzeugen in Ihrem Geschäft. Die folgenden Absicherungsmaßnahmen helfen Ihnen, typische Risiken zu minimieren und gleichzeitig die Vorteile der KI-Unterstützung voll auszuschöpfen. Jede Maßnahme ist bewusst schlank gehalten und lässt sich ohne großen Zeitaufwand in Ihren Alltag integrieren.</p>
+
+  <h4>Qualitätssicherung und Kontrolle</h4>
   <ul>
-    <li><strong>Regelmäßige Qualitätskontrolle:</strong> Prüfen Sie wöchentlich eine Stichprobe Ihrer KI-generierten Inhalte auf Korrektheit und Tonalität. Ein kurzer 15-Minuten-Check verhindert größere Fehler.</li>
-    <li><strong>Klare Grenzen setzen:</strong> Definieren Sie, welche Aufgaben Sie der KI überlassen und welche Sie selbst erledigen. Kritische Kundenentscheidungen und sensible Beratung bleiben in Ihren Händen.</li>
-    <li><strong>Backup-Plan bereithalten:</strong> Halten Sie für jede KI-gestützte Aufgabe einen manuellen Alternativprozess bereit. Bei technischen Störungen können Sie so nahtlos weiterarbeiten.</li>
-    <li><strong>Transparenz gegenüber Kunden:</strong> Kommunizieren Sie offen, wo Sie KI-Unterstützung nutzen. Die meisten Kunden schätzen Ehrlichkeit und moderne Arbeitsweisen.</li>
-    <li><strong>Rechtliche Grundlagen sichern:</strong> Prüfen Sie einmal jährlich, ob Ihre KI-Nutzung den aktuellen Datenschutz- und Urheberrechtsanforderungen entspricht. Ein kurzer Check Ihrer Prozesse genügt.</li>
-    <li><strong>Kosten im Blick behalten:</strong> Überwachen Sie monatlich Ihre KI-Abonnements und API-Kosten. Kündigen Sie nicht genutzte Dienste und optimieren Sie regelmäßig.</li>
+    <li><strong>Wöchentliche Stichprobenprüfung:</strong> Prüfen Sie jede Woche mindestens drei bis fünf KI-generierte Inhalte auf Korrektheit, Tonalität und fachliche Richtigkeit. Ein kurzer 15-Minuten-Check am Freitagnachmittag verhindert, dass sich systematische Fehler einschleichen. Dokumentieren Sie auffällige Muster, um Ihre Prompts kontinuierlich zu verbessern.</li>
+    <li><strong>Vor-Versand-Kontrolle bei Kundenkommunikation:</strong> Lesen Sie jede KI-unterstützte E-Mail oder jeden Bericht vor dem Versand noch einmal durch. Achten Sie besonders auf Namen, Zahlen und spezifische Kundendetails. Diese abschließende Prüfung dauert nur wenige Minuten und schützt Ihre professionelle Reputation.</li>
+    <li><strong>Feedback-Schleife einrichten:</strong> Bitten Sie gelegentlich vertrauenswürdige Kunden oder Kollegen um Feedback zu Ihren KI-unterstützten Inhalten. Externe Perspektiven helfen, blinde Flecken zu erkennen und die Qualität kontinuierlich zu steigern.</li>
   </ul>
-  <p class="small muted">Diese Absicherungsmaßnahmen sind speziell für Einzelunternehmer konzipiert und erfordern nur minimalen Zeitaufwand bei maximalem Schutz.</p>
+
+  <h4>Verantwortlichkeiten und Grenzen</h4>
+  <ul>
+    <li><strong>Klare Aufgabentrennung definieren:</strong> Legen Sie schriftlich fest, welche Aufgaben Sie der KI überlassen und welche Sie selbst erledigen. Kritische Kundenentscheidungen, sensible Beratungsgespräche und rechtlich relevante Dokumente sollten immer in Ihren Händen bleiben. Die KI unterstützt bei Routine und Vorbereitung.</li>
+    <li><strong>Eskalationskriterien festlegen:</strong> Bestimmen Sie klare Kriterien, wann Sie von KI-Unterstützung auf manuelle Bearbeitung wechseln. Bei ungewöhnlichen Anfragen, Beschwerden oder komplexen Sonderfällen ist menschliches Urteilsvermögen unverzichtbar.</li>
+    <li><strong>Entscheidungshoheit behalten:</strong> Nutzen Sie KI als Werkzeug zur Entscheidungsvorbereitung, nicht als Entscheidungsträger. Sie tragen die Verantwortung für alle Geschäftsentscheidungen und sollten KI-Vorschläge stets kritisch prüfen.</li>
+  </ul>
+
+  <h4>Technische Absicherung</h4>
+  <ul>
+    <li><strong>Backup-Prozesse bereithalten:</strong> Halten Sie für jede KI-gestützte Aufgabe einen manuellen Alternativprozess bereit. Bei technischen Störungen, API-Ausfällen oder Wartungsarbeiten können Sie so nahtlos weiterarbeiten. Testen Sie diese Backup-Prozesse vierteljährlich.</li>
+    <li><strong>Zugangsdaten sicher verwalten:</strong> Speichern Sie API-Schlüssel und Zugangsdaten in einem Passwort-Manager. Teilen Sie diese niemals per E-Mail oder Messenger. Ändern Sie Passwörter bei Verdacht auf unbefugten Zugriff sofort.</li>
+    <li><strong>Regelmäßige Updates durchführen:</strong> Halten Sie Ihre KI-Werkzeuge und Browser auf dem aktuellen Stand. Sicherheitsupdates schließen bekannte Schwachstellen und schützen Ihre Geschäftsdaten.</li>
+  </ul>
+
+  <h4>Rechtliche und finanzielle Absicherung</h4>
+  <ul>
+    <li><strong>Datenschutz-Check durchführen:</strong> Prüfen Sie einmal jährlich, ob Ihre KI-Nutzung den aktuellen Datenschutz- und Urheberrechtsanforderungen entspricht. Achten Sie besonders auf die Verarbeitung von Kundendaten und die Nutzung urheberrechtlich geschützter Inhalte als Trainingsinput.</li>
+    <li><strong>Transparenz gegenüber Kunden:</strong> Kommunizieren Sie offen, wo Sie KI-Unterstützung nutzen. Die meisten Kunden schätzen Ehrlichkeit und moderne Arbeitsweisen. Eine kurze Information in Ihren AGB oder auf Ihrer Website schafft Vertrauen.</li>
+    <li><strong>Kosten überwachen:</strong> Überwachen Sie monatlich Ihre KI-Abonnements und API-Kosten. Kündigen Sie nicht genutzte Dienste zeitnah. Setzen Sie Kostenlimits bei nutzungsbasierten Diensten, um Überraschungen zu vermeiden.</li>
+    <li><strong>Haftungsfragen klären:</strong> Informieren Sie sich über Ihre Haftung bei KI-generierten Fehlern. Im Zweifelsfall konsultieren Sie einen Rechtsanwalt, um Ihre Geschäftsbedingungen entsprechend anzupassen.</li>
+  </ul>
+
+  <p class="small muted">Diese Absicherungsmaßnahmen sind speziell für Einzelunternehmer konzipiert und erfordern nur minimalen Zeitaufwand bei maximalem Schutz. Passen Sie die Maßnahmen an Ihre spezifische Situation an und überprüfen Sie sie halbjährlich auf Aktualität.</p>
 </div>
 """
 

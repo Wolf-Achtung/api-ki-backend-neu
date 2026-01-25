@@ -42,7 +42,7 @@ You MAY:
 If a number is required:
 → write: "siehe Business Case / Simulation"
 
-SPRACHSTIL (verbindlich):
+DE-PRIMED EXCLUSION (Fail-Closed):
 Vermeide Beratungs-/Chat-Floskeln und technische Architektur-Begriffe.
 Formuliere umsetzungsnah für Solo-/KMU-Betrieb.
 Keine Annahmen, keine Beispielmarker, keine Enterprise-Terminologie.
