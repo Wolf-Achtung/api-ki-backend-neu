@@ -3252,7 +3252,7 @@ _RISKS_SOLO_PADDING_HTML = """
     <li><strong>Haftungsfragen klären:</strong> Informieren Sie sich über Ihre Haftung bei KI-generierten Fehlern. Im Zweifelsfall konsultieren Sie einen Rechtsanwalt, um Ihre Geschäftsbedingungen entsprechend anzupassen.</li>
   </ul>
 
-  <p class="small muted">Diese Absicherungsmaßnahmen sind speziell für Einzelunternehmer konzipiert und erfordern nur minimalen Zeitaufwand bei maximalem Schutz. Passen Sie die Maßnahmen an Ihre spezifische Situation an und überprüfen Sie sie halbjährlich auf Aktualität.</p>
+  <p class="small muted">Diese Absicherungsmaßnahmen sind speziell für Einzelunternehmer konzipiert und erfordern nur minimalen Zeitaufwand bei maximalem Schutz. Passen Sie die Maßnahmen an Ihre spezifische Situation an und überprüfen Sie sie halbjährlich auf Aktualität. Ein strukturierter Ansatz bei der Risikominimierung zahlt sich langfristig aus und schafft eine solide Grundlage für nachhaltiges Wachstum mit KI-Unterstützung in Ihrem Geschäftsalltag.</p>
 </div>
 """
 
