@@ -445,9 +445,9 @@ class TestDebug503DSummaryJsonSerializable:
 
         # Verify summary structure
         assert "artifact_count" in summary
-        assert summary["artifact_count"] == 4
+        assert summary["artifact_count"] == 5
         assert "artifacts" in summary
-        assert len(summary["artifacts"]) == 4
+        assert len(summary["artifacts"]) == 5
         assert "total_bytes" in summary
         assert "captured_at" in summary
 
@@ -494,7 +494,7 @@ class TestDebug503DSummaryJsonSerializable:
             pytest.fail(f"Meta dict is NOT JSON-serializable: {e}")
 
         # Verify round-trip
-        assert parsed["debug_503d_summary"]["artifact_count"] == 4
+        assert parsed["debug_503d_summary"]["artifact_count"] == 5
 
     @patch.dict(os.environ, {"DEBUG_RENDER": "1"})
     def test_attachments_contain_bytes_but_summary_does_not(self, sample_html_with_anchors, sample_sections):
