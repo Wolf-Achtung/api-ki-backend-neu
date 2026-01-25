@@ -390,7 +390,7 @@ def apply_blacklist_classified(text: str, section_name: str = "") -> BlacklistRe
         # --- FIX-52x: strip prompt-echo prefix lines before critical scan ---
         cleaned, stripped = _strip_prompt_echo_prefix(cleaned, EXECUTIVE_CRITICAL_PHRASES)
         if stripped > 0:
-            logger.info(f"[FIX-52x][ZERO-LEAK] stripped_prompt_echo_lines={stripped} section={section_name} (prefix_only=True)")
+            log.info(f"[FIX-52x][ZERO-LEAK] stripped_prompt_echo_lines={stripped} section={section_name} (prefix_only=True)")
 
         for phrase in EXECUTIVE_CRITICAL_PHRASES:
             pattern = re.compile(re.escape(phrase), re.IGNORECASE)
