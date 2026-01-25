@@ -70,10 +70,16 @@ SOLO_TERM_REPLACEMENTS = [
 
     # Deployment/Rollout terms
     (r'\bDeployment\b', 'Einrichtung', 'Deployment→Einrichtung'),
-    (r'\bRollout\b', 'Einführung', 'Rollout→Einführung'),
-    (r'\bRoll-out\b', 'Einführung', 'Roll-out→Einführung'),
+    # FIX-526: Rollout → REMOVE entirely (not replace) per user feedback
+    (r'\bRollout\b', '', 'FIX-526: Rollout→ENTFERNEN'),
+    (r'\bRoll-out\b', '', 'FIX-526: Roll-out→ENTFERNEN'),
+    (r'\bRollouts\b', '', 'FIX-526: Rollouts→ENTFERNEN'),
     (r'\bImplementierung\b', 'Umsetzung', 'Implementierung→Umsetzung'),
     (r'\bIntegration\b', 'Einbindung', 'Integration→Einbindung'),
+
+    # FIX-526: Baukasten → Vorlagenpaket (forbidden for solo per user feedback)
+    (r'\bBaukästen\b', 'Vorlagenpakete', 'FIX-526: Baukästen→Vorlagenpakete'),
+    (r'\bBaukasten\b', 'Vorlagenpaket', 'FIX-526: Baukasten→Vorlagenpaket'),
 
     # Scaling terms
     (r'\bSkalierung\b', 'Ausbau', 'Skalierung→Ausbau'),
@@ -341,6 +347,7 @@ def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
     sections_touched = 0
 
     # Sections to process - Fix-Batch C3: Expanded list to cover all content sections
+    # FIX-526: Added NEXT_ACTIONS_HTML, PILOT_PLAN_HTML
     check_sections = [
         "EXECUTIVE_SUMMARY_HTML", "EXECUTIVE_DECISION_HTML", "RECOMMENDATIONS_HTML",
         "QUICK_WINS_HTML", "QUICK_WINS_HTML_LEFT", "QUICK_WINS_HTML_RIGHT",
@@ -353,6 +360,7 @@ def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
         "BRANCH_DEEP_DIVE_HTML", "TOP_3_MASSNAHMEN_HTML", "MONETARISIERUNG_HTML",
         "TEMPLATES_START_HTML", "KICKOFF_VORLAGE_HTML", "PROMPT_FRAMEWORK_HTML",
         "TECHNOLOGIE_PROZESSE_HTML", "WETTBEWERB_BENCHMARK_HTML", "UNTERNEHMENSPROFIL_MARKT_HTML",
+        "NEXT_ACTIONS_HTML", "PILOT_PLAN_HTML",
     ]
 
     for section_key in check_sections:
@@ -370,6 +378,9 @@ def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
                 section_replacements += matches
 
         if section_replacements > 0:
+            # FIX-526: Clean up double-spaces from removals (e.g., "Rollout" → "")
+            modified_content = re.sub(r'\s{2,}', ' ', modified_content)
+            modified_content = re.sub(r'\s+([.,;:!?])', r'\1', modified_content)  # Fix space before punctuation
             sections[section_key] = modified_content
             sections_touched += 1
             total_replacements += section_replacements
@@ -390,6 +401,78 @@ def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
             raise RuntimeError(f"[FIX-52x][SOLO-LEAK] forbidden terms remain after rewrite: {still}")
 
     return sections
+
+
+def apply_solo_language_to_briefing(briefing: dict, company_size: str) -> dict:
+    """
+    FIX-526 P2: Early-stage SOLO scrubbing for user free-text fields.
+
+    Applies SOLO_TERM_REPLACEMENTS to user-provided briefing fields BEFORE
+    they are used in prompts. This prevents forbidden terms from being
+    "baked into" the LLM context.
+
+    Target fields:
+    - vision_3_jahre
+    - hauptleistung
+    - strategische_ziele
+    - ki_vision
+    - herausforderungen
+    - stärken
+    - etc.
+
+    Args:
+        briefing: Dict with user-provided briefing data
+        company_size: Company size ("solo", "team", "kmu")
+
+    Returns:
+        Sanitized briefing dict
+    """
+    if not company_size or company_size.lower() != "solo":
+        return briefing
+
+    if not briefing:
+        return briefing
+
+    # Fields to scrub early
+    early_scrub_fields = [
+        "vision_3_jahre", "hauptleistung", "strategische_ziele",
+        "ki_vision", "herausforderungen", "stärken", "schwächen",
+        "zielgruppe", "wettbewerber", "usp", "geschäftsmodell",
+        "ki_erfahrung", "bisherige_ki_nutzung", "freitext_notizen",
+        "branche_beschreibung", "angebot_beschreibung",
+    ]
+
+    total_replacements = 0
+    result = dict(briefing)
+
+    for field in early_scrub_fields:
+        value = result.get(field)
+        if not value or not isinstance(value, str):
+            continue
+
+        modified = value
+        field_replacements = 0
+
+        for pattern, replacement, desc in SOLO_TERM_REPLACEMENTS:
+            matches = len(re.findall(pattern, modified, re.IGNORECASE))
+            if matches > 0:
+                modified = re.sub(pattern, replacement, modified, flags=re.IGNORECASE)
+                field_replacements += matches
+
+        if field_replacements > 0:
+            # Clean up double-spaces from removals
+            modified = re.sub(r'\s{2,}', ' ', modified)
+            modified = re.sub(r'\s+([.,;:!?])', r'\1', modified)
+            result[field] = modified
+            total_replacements += field_replacements
+
+    if total_replacements > 0:
+        log.info(
+            "[FIX-526][SOLO-BRIEFING] early_scrub: %d replacements in briefing fields",
+            total_replacements
+        )
+
+    return result
 
 
 # =============================================================================

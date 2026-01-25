@@ -219,11 +219,43 @@ def _strip_prompt_echo_prefix(text: str, phrases: List[str]) -> tuple:
     return text, removed
 
 
+# =============================================================================
+# FIX-526 P3: DETERMINISTIC PRESCRUB PHRASES
+# =============================================================================
+# These phrases are deterministically scrubbed BEFORE the critical scan.
+# They are template/prompt leaks that should be cleaned without triggering FAIL-CLOSED.
+# This prevents unnecessary regeneration cycles for recoverable template artifacts.
+DETERMINISTIC_PRESCRUB_PHRASES: List[str] = [
+    # Template prompt echoes
+    "bitte beschreibe kurz",
+    "bitte beschreiben sie kurz",
+    "Bitte beschreibe kurz",
+    "Bitte beschreiben Sie kurz",
+    "bitte beschreib kurz",
+    # Context requests that slip through
+    "beschreibe kurz dein anliegen",
+    "beschreiben sie kurz ihr anliegen",
+    # Template markers
+    "Beispiel-Workflow",
+    "Beispiel-Ablauf",
+    "Platzhalter",
+    # Chat introduction artifacts
+    "Hier ist",
+    "Natürlich,",
+    "Natürlich!",
+    "Selbstverständlich,",
+    "Selbstverständlich!",
+    "Gerne!",
+    "Gerne,",
+]
+
+
 # Fix-Batch A3: EXECUTIVE_CRITICAL_PHRASES
 # =============================================================================
 # These phrases are CRITICAL (fail-closed) ONLY when found in EXECUTIVE_SECTIONS.
 # They are chat/assistant artifacts that should NEVER appear in executive summaries.
 # In other sections, they remain BENIGN (clean-and-keep).
+# FIX-526: "bitte beschreibe kurz" moved to DETERMINISTIC_PRESCRUB_PHRASES (scrub before fail-closed)
 EXECUTIVE_CRITICAL_PHRASES: List[str] = [
     # KI-Assistenz Identifikation
     "ich bin ein KI-Assistent",
@@ -241,9 +273,7 @@ EXECUTIVE_CRITICAL_PHRASES: List[str] = [
     "wobei kann ich helfen",
     "wobei ich dir helfen",
     "wobei ich Ihnen helfen",
-    # Meta-Kommentare
-    "bitte beschreibe kurz",
-    "bitte beschreiben sie kurz",
+    # Meta-Kommentare (FIX-526: "bitte beschreibe kurz" moved to prescrub)
     "ich sehe keine konkrete frage",
     "ich sehe keine konkrete aufgabe",
     "ich sehe keine frage",
@@ -350,7 +380,32 @@ def apply_blacklist_classified(text: str, section_name: str = "") -> BlacklistRe
 
     critical_hits: List[str] = []
     benign_hits: List[str] = []
+    prescrub_count: int = 0
     cleaned = text
+
+    # FIX-526 P3: Deterministic prescrub - remove template phrases BEFORE critical scan
+    # This prevents FAIL-CLOSED for recoverable template artifacts
+    for phrase in DETERMINISTIC_PRESCRUB_PHRASES:
+        pattern = re.compile(re.escape(phrase), re.IGNORECASE)
+        matches = pattern.findall(cleaned)
+        if matches:
+            cleaned = pattern.sub("", cleaned)
+            prescrub_count += len(matches)
+            log.debug(
+                '[zero-leak-prescrub] phrase="%s" hits=%d section=%s (no fail-closed)',
+                phrase[:30],
+                len(matches),
+                section_name or "unknown"
+            )
+
+    if prescrub_count > 0:
+        # Clean up double spaces from removals
+        cleaned = re.sub(r'\s{2,}', ' ', cleaned)
+        log.info(
+            "[FIX-526][PRESCRUB] Removed %d template phrases from %s (no fail-closed triggered)",
+            prescrub_count,
+            section_name or "unknown"
+        )
 
     # Check CRITICAL string patterns first
     for phrase in CRITICAL_LEAK_PATTERNS:
