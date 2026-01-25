@@ -110,7 +110,7 @@ class TestRisksSoloMinimumWords:
 
     def test_full_pipeline_ensures_risks_minimum(self):
         """Test that full quality enforcement ensures risks minimum for solo."""
-        from services.content_quality_enforcer import enforce_content_quality
+        from services.content_quality_enforcer import apply_all_quality_enforcers
 
         sections = {
             "RISKS_HTML": """
@@ -122,7 +122,7 @@ class TestRisksSoloMinimumWords:
             "EXECUTIVE_SUMMARY_HTML": "<p>Summary</p>",
         }
 
-        result = enforce_content_quality(
+        result = apply_all_quality_enforcers(
             sections=sections,
             hauptleistung="KI-Beratung",
             bundesland="Bayern",
