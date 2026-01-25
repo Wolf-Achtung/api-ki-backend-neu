@@ -63,6 +63,7 @@ SOLO_TERM_REPLACEMENTS = [
     (r'\bStack\b', 'Technikpaket', 'Stack→Technikpaket'),
     (r'\bLayers\b', 'Ebenen', 'Layers→Ebenen (Plural)'),
     (r'\bLayer\b', 'Ebene', 'Layer→Ebene'),
+    (r'\bPipelines\b', 'Abläufe', 'Pipelines→Abläufe (Plural)'),
     (r'\bPipeline\b', 'Ablauf', 'Pipeline→Ablauf'),
     (r'\bWorkflow\b', 'Arbeitsablauf', 'Workflow→Arbeitsablauf'),
     (r'\bWorkflows\b', 'Arbeitsabläufe', 'Workflows→Arbeitsabläufe'),
@@ -2261,6 +2262,284 @@ def auto_shorten_redundant_sections(sections: dict) -> dict:
     return sections
 
 
+# =============================================================================
+# FIX-52x FINAL POLISH: Comprehensive Template Phrase Stripper
+# =============================================================================
+
+# Comprehensive list of template phrases that should never appear in output
+_FINAL_TEMPLATE_PHRASES = [
+    # German placeholders
+    r'\bPlatzhalter\b',
+    r'\[Platzhalter[^\]]*\]',
+    r'\[TODO[^\]]*\]',
+    r'\[FIXME[^\]]*\]',
+    r'\[XXX[^\]]*\]',
+    r'\[INSERT[^\]]*\]',
+    r'\[EINFÜGEN[^\]]*\]',
+    # Template markers
+    r'\{\{[^}]+\}\}',  # Jinja2 double braces
+    r'\{%[^%]+%\}',    # Jinja2 blocks
+    r'\$\{[^}]+\}',    # Shell-style vars
+    # Prompt echo patterns
+    r'^Erstelle\s+(?:mir\s+)?(?:einen?\s+)?(?:detaillierten?\s+)?(?:Abschnitt|Text|Analyse)',
+    r'^Schreibe?\s+(?:mir\s+)?(?:einen?\s+)?(?:detaillierten?\s+)?',
+    r'^Generiere\s+(?:mir\s+)?',
+    r'^Verfasse\s+(?:mir\s+)?',
+    r'^Formuliere\s+(?:mir\s+)?',
+    # Meta instructions that leaked
+    r'^\s*Hinweis:\s*Dieser\s+Text',
+    r'^\s*Anweisung:',
+    r'^\s*Prompt:',
+    r'^\s*Aufgabe:',
+    # Common LLM artifacts
+    r'(?i)\bals\s+KI(?:-Assistent)?\b',
+    r'(?i)\bals\s+Sprachmodell\b',
+    r'(?i)\bich\s+(?:kann|darf)\s+(?:nicht|keine)\b.*?(?:rechtliche|medizinische)\s+Beratung',
+]
+
+def strip_template_phrases_final(sections: dict) -> dict:
+    """
+    FIX-52x FINAL POLISH PRIO 1: Comprehensive final cleanup of ALL template
+    phrases across ALL sections. This runs as the LAST step in the pipeline.
+    """
+    import re as regex_module
+
+    total_fixes = 0
+
+    for key, value in list(sections.items()):
+        if not isinstance(value, str) or not value.strip():
+            continue
+        if key.startswith('_'):  # Skip internal keys
+            continue
+
+        original = value
+        html = value
+
+        for pattern in _FINAL_TEMPLATE_PHRASES:
+            try:
+                # For line-anchored patterns, process line by line
+                if pattern.startswith('^'):
+                    lines = html.split('\n')
+                    new_lines = []
+                    for line in lines:
+                        stripped = line.strip()
+                        # Remove HTML tags for matching
+                        text_only = regex_module.sub(r'<[^>]+>', '', stripped)
+                        if not regex_module.search(pattern, text_only, regex_module.IGNORECASE):
+                            new_lines.append(line)
+                    html = '\n'.join(new_lines)
+                else:
+                    # For inline patterns, replace with empty string
+                    html = regex_module.sub(pattern, '', html, flags=regex_module.IGNORECASE)
+            except regex_module.error:
+                continue  # Skip invalid patterns
+
+        # Clean up resulting empty elements
+        html = regex_module.sub(r'<p[^>]*>\s*</p>', '', html)
+        html = regex_module.sub(r'<li[^>]*>\s*</li>', '', html)
+        html = regex_module.sub(r'<div[^>]*>\s*</div>', '', html)
+        html = regex_module.sub(r'\s{3,}', '  ', html)
+
+        if html != original:
+            sections[key] = html
+            total_fixes += 1
+
+    if total_fixes > 0:
+        log.info("[FIX-52x][FINAL-TEMPLATE-STRIP] cleaned %d sections", total_fixes)
+
+    return sections
+
+
+# =============================================================================
+# FIX-52x FINAL POLISH: Paragraph Deduplication
+# =============================================================================
+
+def _dedupe_long_paragraphs(sections: dict) -> dict:
+    """
+    FIX-52x FINAL POLISH PRIO 3: Remove duplicate long paragraphs (>150 chars)
+    that appear multiple times within the same section or across sections.
+    """
+    import re as regex_module
+
+    # Track seen paragraphs globally across all sections
+    global_seen = {}  # normalized_text -> (first_section, first_occurrence)
+    total_removed = 0
+
+    for key, value in list(sections.items()):
+        if not isinstance(value, str) or not value.strip():
+            continue
+        if key.startswith('_'):
+            continue
+
+        html = value
+
+        # Find all paragraphs with their positions
+        para_pattern = r'<p[^>]*>([^<]{150,})</p>'
+        matches = list(regex_module.finditer(para_pattern, html))
+
+        removals = []
+        for match in matches:
+            content = match.group(1)
+            # Normalize: lowercase, collapse whitespace
+            normalized = ' '.join(content.lower().split())
+
+            if normalized in global_seen:
+                # This is a duplicate - mark for removal
+                removals.append((match.start(), match.end()))
+            else:
+                global_seen[normalized] = (key, match.start())
+
+        # Remove duplicates from end to preserve indices
+        for start, end in reversed(removals):
+            html = html[:start] + html[end:]
+            total_removed += 1
+
+        if removals:
+            sections[key] = html
+
+    if total_removed > 0:
+        log.info("[FIX-52x][DEDUPE-PARAGRAPHS] removed %d duplicate paragraphs", total_removed)
+
+    return sections
+
+
+# =============================================================================
+# FIX-52x FINAL POLISH: Trailing Fragment Stripper
+# =============================================================================
+
+def strip_trailing_sentence_fragments(sections: dict) -> dict:
+    """
+    FIX-52x FINAL POLISH PRIO 4: Remove short trailing fragments that look
+    like incomplete sentences at the end of sections.
+
+    Patterns:
+    - Trailing text <30 chars without proper sentence ending
+    - Orphaned conjunctions: "und", "oder", "sowie", "aber"
+    - Dangling colons or commas at end
+    """
+    import re as regex_module
+
+    total_fixes = 0
+
+    for key, value in list(sections.items()):
+        if not isinstance(value, str) or not value.strip():
+            continue
+        if key.startswith('_'):
+            continue
+
+        original = value
+        html = value
+
+        # Pattern 1: Short trailing content after last complete sentence
+        # Match: complete sentence followed by short fragment
+        def fix_trailing(m):
+            full_content = m.group(0)
+            tag_name = m.group(1)
+
+            # Find the last proper sentence ending
+            sentences = regex_module.split(r'([.!?])\s+', full_content)
+            if len(sentences) >= 3:  # At least one complete sentence
+                # Check if trailing part is short fragment
+                trailing = sentences[-1] if sentences[-1] else ''
+                trailing_text = regex_module.sub(r'<[^>]+>', '', trailing).strip()
+
+                if len(trailing_text) < 30 and not regex_module.search(r'[.!?]$', trailing_text):
+                    # Remove trailing fragment, keep sentence ending
+                    proper_end = ''.join(sentences[:-1])
+                    if proper_end and not proper_end.rstrip().endswith(('.', '!', '?')):
+                        proper_end = proper_end.rstrip() + '.'
+                    return proper_end + f'</{tag_name}>'
+
+            return full_content
+
+        # Apply to closing p/div/li tags
+        html = regex_module.sub(
+            r'>([^<]{50,})</([pP]|div|DIV|[lL][iI])>',
+            fix_trailing,
+            html
+        )
+
+        # Pattern 2: Remove dangling conjunctions at very end
+        html = regex_module.sub(
+            r'\s+(?:und|oder|sowie|aber|denn|weil)\s*</([pP]|div|[lL][iI])>',
+            r'.</\1>',
+            html,
+            flags=regex_module.IGNORECASE
+        )
+
+        # Pattern 3: Remove trailing colons/commas before close tag
+        html = regex_module.sub(
+            r'\s*[,:]\s*</([pP]|div|[lL][iI])>',
+            r'.</\1>',
+            html
+        )
+
+        if html != original:
+            sections[key] = html
+            total_fixes += 1
+
+    if total_fixes > 0:
+        log.info("[FIX-52x][TRAILING-FRAGMENT] fixed %d sections", total_fixes)
+
+    return sections
+
+
+# =============================================================================
+# FIX-52x FINAL POLISH: Final Solo Term Rewrite (runs LAST)
+# =============================================================================
+
+def apply_solo_terms_final(sections: dict, company_size: str) -> dict:
+    """
+    FIX-52x FINAL POLISH PRIO 2: Apply solo term replacements as the ABSOLUTE
+    LAST step in the pipeline, after all LLM outputs are finalized.
+
+    This ensures no enterprise terms leak through from any source.
+    """
+    if company_size != "solo":
+        return sections
+
+    import re as regex_module
+
+    total_replacements = 0
+
+    for key, value in list(sections.items()):
+        if not isinstance(value, str) or not value.strip():
+            continue
+        if key.startswith('_'):
+            continue
+
+        original = value
+        text = value
+
+        for pattern, replacement, desc in SOLO_TERM_REPLACEMENTS:
+            try:
+                new_text, count = regex_module.subn(pattern, replacement, text, flags=regex_module.IGNORECASE)
+                if count > 0:
+                    text = new_text
+                    total_replacements += count
+            except regex_module.error:
+                continue
+
+        if text != original:
+            sections[key] = text
+
+    if total_replacements > 0:
+        log.info("[FIX-52x][FINAL-SOLO-TERMS] applied %d replacements", total_replacements)
+
+    # STRICT mode check for remaining forbidden terms
+    if os.getenv("RELEASE_STRICT_MODE") == "1":
+        forbidden = ["Skalierung", "Stakeholder", "Audit-Trail", "Audit Trail",
+                     "Stack", "Tech-Stack", "Full-Stack", "Rollout", "Deployment",
+                     "Pipeline", "Framework", "Dashboard", "KPI", "Modul", "Engine"]
+        all_text = " ".join(str(v) for v in sections.values() if isinstance(v, str))
+        still = [t for t in forbidden if regex_module.search(r'\b' + regex_module.escape(t) + r'\b', all_text, regex_module.IGNORECASE)]
+        if still:
+            # Log warning but don't raise - this is informational
+            log.warning("[FIX-52x][SOLO-LEAK-CHECK] terms still present after final rewrite: %s", still)
+
+    return sections
+
+
 def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesland: str = "", company_size: str = "") -> dict:
 
     """
@@ -2335,7 +2614,8 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     # 10. Open Example Paren Fixer (v14.35.22) - Fix "(z.B." incomplete patterns
     sections = apply_open_example_paren_fixer(sections)
 
-    # 11. Solo Language Normalizer (v14.35.22) - Replace enterprise terms for solo persona
+    # 11. Solo Language Normalizer (v14.35.22) - FIRST PASS enterprise term replacement
+    # NOTE: A final pass runs at the very end to catch any terms introduced by later steps
     if company_size:
         sections = apply_solo_language_normalizer(sections, company_size)
 
@@ -2369,7 +2649,27 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     # 18. FIX-520 TASK 2: transparency_box hard-floor (min 60 words)
     sections = _apply_transparency_box_floor(sections)
 
-    log.info("[QUALITY-ENFORCER] Pipeline complete")
+    # =========================================================================
+    # FIX-52x FINAL POLISH: These steps run LAST to catch any artifacts
+    # introduced by earlier LLM-powered or template-based steps
+    # =========================================================================
+
+    # 19. FIX-52x: Deduplicate long identical paragraphs (PRIO 3)
+    sections = _dedupe_long_paragraphs(sections)
+
+    # 20. FIX-52x: Strip trailing sentence fragments (PRIO 4)
+    sections = strip_trailing_sentence_fragments(sections)
+
+    # 21. FIX-52x: Final comprehensive template phrase cleanup (PRIO 1)
+    sections = strip_template_phrases_final(sections)
+
+    # 22. FIX-52x: FINAL solo term replacement (PRIO 2) - ABSOLUTE LAST STEP
+    # This catches any enterprise terms that may have been introduced by
+    # earlier steps (LLM outputs, template expansions, etc.)
+    if company_size:
+        sections = apply_solo_terms_final(sections, company_size)
+
+    log.info("[QUALITY-ENFORCER] Pipeline complete (FIX-52x final polish applied)")
     return sections
 
 
