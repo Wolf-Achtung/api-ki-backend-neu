@@ -140,14 +140,9 @@ SPRACHSHIFT v6.0 — ENTSCHEIDUNGEN STATT IMPLEMENTIERUNGEN:
 Die Roadmap ist KEINE To-do-Liste für Tool-Auswahl und -Nutzung.
 Die Roadmap ist eine Abfolge von bewussten Entscheidungen.
 
-VERBOTENE FORMULIERUNGEN → ERSETZUNGEN:
-❌ "Einführung eines KI-Tools"     → ✅ "Festlegung, welche Aufgaben automatisiert werden"
-❌ "Tool implementieren"           → ✅ "Grenzen des KI-Einsatzes definieren"
-❌ "KI-System einrichten"          → ✅ "Entscheidungsrahmen für KI-Nutzung schaffen"
-❌ "Automatisierung aufsetzen"     → ✅ "Kriterien für Automatisierung festlegen"
-❌ "Workflow digitalisieren"       → ✅ "Abgrenzung zwischen manuell und automatisiert"
-❌ "Software ausrollen"            → ✅ "Standards für den Einsatz etablieren"
-❌ "Integration durchführen"       → ✅ "Schnittstellen-Verantwortlichkeiten klären"
+SPRACHSHIFT (verbindlich):
+Roadmap als Entscheidungskette formulieren, nicht als Implementierungsplan.
+Formulierungen beziehen sich auf Rahmen, Grenzen, Kriterien – nicht auf Produktnamen oder Rollout-Schritte.
 
 TONALITÄT:
 - Entscheidungsorientiert, nicht technisch
