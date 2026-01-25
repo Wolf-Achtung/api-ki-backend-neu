@@ -12382,6 +12382,106 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     # 12-Monats-Roadmap
     sections["roadmap_12m"] = sections.get("ROADMAP_12M_HTML", "")
 
+    # ════════════════════════════════════════════════════════════════════════════
+    # FIX-523A: ROADMAP_12M Length Guard with Regeneration
+    # ════════════════════════════════════════════════════════════════════════════
+    # If roadmap_12m is too short for solo context, regenerate up to 2 times
+    _roadmap_12m_content = sections.get("ROADMAP_12M_HTML", "")
+    _roadmap_12m_size = briefing.get("UNTERNEHMENSGROESSE", "").lower() if isinstance(briefing, dict) else ""
+    _roadmap_12m_min_words = 600 if _roadmap_12m_size in ("solo", "einzelperson", "") else 500
+
+    if _roadmap_12m_content:
+        import re as _re_r12m
+        _r12m_text = _re_r12m.sub(r'<[^>]+>', '', _roadmap_12m_content).strip()
+        _r12m_word_count = len(_r12m_text.split())
+
+        if _r12m_word_count < _roadmap_12m_min_words:
+            log.warning(
+                "[FIX-523A][ROADMAP12M] too_short detected words=%d min=%d → regen attempt=1/2",
+                _r12m_word_count, _roadmap_12m_min_words
+            )
+
+            # Build regeneration prompt
+            _r12m_vars = _build_prompt_vars(briefing, scores)
+            _r12m_lang = briefing.get("lang", "de") if isinstance(briefing, dict) else "de"
+            _r12m_release_strict = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
+
+            _r12m_regen_success = False
+            for _r12m_attempt in range(1, 3):  # max 2 attempts
+                try:
+                    # Load base prompt and add extension instruction
+                    _r12m_base_prompt = load_prompt("roadmap_12m", lang=_r12m_lang, vars_dict=_r12m_vars)
+                    _r12m_extend_instruction = f"""
+
+WICHTIG - MINDESTLÄNGE NICHT ERREICHT:
+Der vorherige Output hatte nur {_r12m_word_count} Wörter, Minimum sind {_roadmap_12m_min_words} Wörter.
+
+ERWEITERUNGSANFORDERUNGEN:
+- Erweitere auf {_roadmap_12m_min_words}–{_roadmap_12m_min_words + 300} Wörter
+- Mindestens 10–12 Bulletpoints insgesamt
+- Clustere nach Monaten (0–3, 3–6, 6–12)
+- Nur HTML ausgeben, keine Rückfragen, keine Erklärungen
+- KEINE Code-Fences (```)
+"""
+                    _r12m_full_prompt = _r12m_base_prompt + _r12m_extend_instruction
+
+                    _r12m_params = _llm_params_for("roadmap_12m")
+                    _r12m_sys = "Du bist Strategie-Berater. Antworte nur mit HTML." if _r12m_lang == "de" else "You are a strategy consultant. Reply only with HTML."
+
+                    _r12m_response = _call_llm_for_section(
+                        section_key="roadmap_12m_regen",
+                        prompt=_r12m_full_prompt,
+                        system_prompt=_r12m_sys,
+                        temperature=0.4,  # Lower for more consistent output
+                        max_tokens=min(_r12m_params.get("max_tokens", 2500), 3000),
+                        model=_r12m_params.get("model", "gpt-4o-mini"),
+                    )
+
+                    if _r12m_response:
+                        _r12m_new_text = _re_r12m.sub(r'<[^>]+>', '', _r12m_response).strip()
+                        _r12m_new_word_count = len(_r12m_new_text.split())
+
+                        if _r12m_new_word_count >= _roadmap_12m_min_words:
+                            # Success - update sections
+                            sections["ROADMAP_12M_HTML"] = _r12m_response
+                            sections["roadmap_12m"] = _r12m_response
+                            _r12m_regen_success = True
+                            log.info(
+                                "[FIX-523A][ROADMAP12M] regen_success words=%d attempt=%d",
+                                _r12m_new_word_count, _r12m_attempt
+                            )
+                            break
+                        else:
+                            log.warning(
+                                "[FIX-523A][ROADMAP12M] regen attempt=%d still_short words=%d min=%d",
+                                _r12m_attempt, _r12m_new_word_count, _roadmap_12m_min_words
+                            )
+                    else:
+                        log.warning("[FIX-523A][ROADMAP12M] regen attempt=%d empty_response", _r12m_attempt)
+
+                except Exception as _r12m_exc:
+                    log.error("[FIX-523A][ROADMAP12M] regen attempt=%d error=%s", _r12m_attempt, _r12m_exc)
+
+            # Handle regeneration failure
+            if not _r12m_regen_success:
+                if _r12m_release_strict:
+                    log.error("[FIX-523A][ROADMAP12M][STRICT] regen_failed → abort")
+                    raise RuntimeError(
+                        f"[FIX-523A][ROADMAP12M] STRICT_MODE: Regeneration failed after 2 attempts "
+                        f"(words={_r12m_word_count} < min={_roadmap_12m_min_words})"
+                    )
+                else:
+                    # Non-strict: Use deterministic fallback
+                    log.warning("[FIX-523A][ROADMAP12M] regen_failed → using fallback template")
+                    _r12m_fallback = _get_fallback_content("roadmap_12m", briefing, scores)
+                    if _r12m_fallback:
+                        sections["ROADMAP_12M_HTML"] = _r12m_fallback
+                        sections["roadmap_12m"] = _r12m_fallback
+                        log.info("[FIX-523A][ROADMAP12M] fallback applied words=%d",
+                                len(_re_r12m.sub(r'<[^>]+>', '', _r12m_fallback).split()))
+
+    # ════════════════════════════════════════════════════════════════════════════
+
     # Business Case / Governance / Org / Tools / Förderpotenzial
     # Sprint G6.4: Inject pre-calculated Business Case Table into BUSINESS_CASE_HTML
     bc_table = briefing.get("BUSINESS_CASE_TABLE_HTML", "")

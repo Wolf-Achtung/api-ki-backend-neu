@@ -187,7 +187,7 @@ SIZE-AWARE VERANTWORTLICHKEITEN:
       {% else %}
       <li><strong>Zeitersparnis:</strong> 30-50% bei {{ZEITERSPARNIS_PRIORITAET}} im Pilotbereich</li>
       <li><strong>Governance:</strong> {{KI_GUARDRAILS}} als SOPs dokumentiert</li>
-      <li><strong>Skalierbarkeit:</strong> Templates für Rollout vorbereitet</li>
+      <li><strong>Erweiterbarkeit:</strong> Templates für Einführung vorbereitet</li>
       {% endif %}
     </ul>
   </div>
