@@ -194,6 +194,31 @@ EXECUTIVE_SECTIONS: List[str] = [
 ]
 
 # =============================================================================
+# --- FIX-52x: strip prompt-echo chat phrases at the very beginning only ---
+def _strip_prompt_echo_prefix(text: str, phrases: List[str]) -> tuple:
+    """
+    Remove prompt-echo phrases that appear only in the first ~400 chars / 6 lines.
+    These are artifacts where the LLM echoes parts of the prompt at the start.
+    Returns (cleaned_text, count_of_removed_lines).
+    """
+    if not text:
+        return text, 0
+    head = text[:400]  # only inspect prefix to avoid hiding real content issues
+    removed = 0
+    for ph in phrases:
+        if ph.lower() in head.lower():
+            # remove the whole line containing the phrase within the prefix
+            lines = text.splitlines()
+            new_lines = []
+            for i, ln in enumerate(lines):
+                if i <= 6 and ph.lower() in ln.lower():
+                    removed += 1
+                    continue
+                new_lines.append(ln)
+            text = "\n".join(new_lines)
+    return text, removed
+
+
 # Fix-Batch A3: EXECUTIVE_CRITICAL_PHRASES
 # =============================================================================
 # These phrases are CRITICAL (fail-closed) ONLY when found in EXECUTIVE_SECTIONS.
@@ -362,6 +387,11 @@ def apply_blacklist_classified(text: str, section_name: str = "") -> BlacklistRe
     # These are CRITICAL only in EXECUTIVE_SECTIONS (causes fail-closed)
     is_executive_section = section_name in EXECUTIVE_SECTIONS
     if is_executive_section:
+        # --- FIX-52x: strip prompt-echo prefix lines before critical scan ---
+        cleaned, stripped = _strip_prompt_echo_prefix(cleaned, EXECUTIVE_CRITICAL_PHRASES)
+        if stripped > 0:
+            log.info(f"[FIX-52x][ZERO-LEAK] stripped_prompt_echo_lines={stripped} section={section_name} (prefix_only=True)")
+
         for phrase in EXECUTIVE_CRITICAL_PHRASES:
             pattern = re.compile(re.escape(phrase), re.IGNORECASE)
             matches = pattern.findall(cleaned)

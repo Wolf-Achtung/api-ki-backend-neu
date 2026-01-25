@@ -13,6 +13,7 @@ Fixes:
 Wird nach SIEZEN-GUARD aufgerufen, vor Validation.
 """
 
+import os
 import re
 import logging
 
@@ -188,6 +189,18 @@ SOLO_TERM_REPLACEMENTS = [
     (r'\bUnternehmens-IT\b', 'Ihre Technik', 'Unternehmens-IT→Ihre Technik'),
     (r'\bEnterprise-Lösung\b', 'passende Lösung', 'Enterprise-Lösung→passende Lösung'),
     (r'\bEnterprise\b', 'professionelle', 'Enterprise→professionelle'),
+
+    # --- FIX-52x: hard leaks observed in Report-520 ---
+    # Skalierung plural/genitive forms
+    (r'\bSkalierungen\b', 'Erweiterungen', 'FIX-52x: Skalierungen→Erweiterungen'),
+
+    # Audit-Trail space variant
+    (r'\bAudit\s+Trail\b', 'Prüfpfad', 'FIX-52x: Audit Trail→Prüfpfad'),
+
+    # Stack variants with space instead of hyphen
+    (r'\bKI\s+Stack\b', 'KI-Werkzeuge', 'FIX-52x: KI Stack→KI-Werkzeuge'),
+    (r'\bTech\s+Stack\b', 'Technikpaket', 'FIX-52x: Tech Stack→Technikpaket'),
+    (r'\bFull[-\s]?Stack\b', 'End-to-End', 'FIX-52x: Full-Stack→End-to-End'),
 ]
 
 
@@ -340,6 +353,14 @@ def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
             total_replacements,
             sections_touched
         )
+
+    # --- FIX-52x: STRICT safety net for remaining solo persona leaks ---
+    if os.getenv("RELEASE_STRICT_MODE") == "1":
+        forbidden = ["Skalierung", "Stakeholder", "Audit-Trail", "Audit Trail", "Stack", "Tech-Stack", "Full-Stack"]
+        all_text = " ".join(str(v) for v in sections.values() if isinstance(v, str))
+        still = [t for t in forbidden if t.lower() in all_text.lower()]
+        if still:
+            raise RuntimeError(f"[FIX-52x][SOLO-LEAK] forbidden terms remain after rewrite: {still}")
 
     return sections
 
