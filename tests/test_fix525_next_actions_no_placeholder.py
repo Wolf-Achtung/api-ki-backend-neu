@@ -66,7 +66,7 @@ class TestNextActionsNoPlaceholder:
 
     def test_full_pipeline_removes_platzhalter(self):
         """Test that full quality enforcement pipeline removes Platzhalter."""
-        from services.content_quality_enforcer import enforce_content_quality
+        from services.content_quality_enforcer import apply_all_quality_enforcers
 
         sections = {
             "NEXT_ACTIONS_HTML": """
@@ -81,7 +81,7 @@ class TestNextActionsNoPlaceholder:
             "EXECUTIVE_SUMMARY_HTML": "<p>Summary</p>",
         }
 
-        result = enforce_content_quality(
+        result = apply_all_quality_enforcers(
             sections=sections,
             hauptleistung="KI-Beratung",
             bundesland="Bayern",
