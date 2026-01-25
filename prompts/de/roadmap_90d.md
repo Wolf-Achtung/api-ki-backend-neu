@@ -13,7 +13,7 @@ DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
 Sie darf MAXIMAL 3x in der gesamten Roadmap erscheinen!
 
 **ALLOWED LOCATIONS (choose ONLY 3):**
-1. ✅ Im h2-Titel: "90-Tage-Roadmap für {{hauptleistung}}" (1x)
+1. ✅ Im h2-Titel: "90-Tage-Fahrplan für {{hauptleistung}}" (1x)
 2. ✅ Opening goal statement (1x)
 3. ✅ ONE milestone OR Success metrics (1x)
 
@@ -259,7 +259,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
 -->
 
 <section class="section roadmap-90d">
-  <h2>90-Tage-Roadmap für {{hauptleistung}}</h2>
+  <h2>90-Tage-Fahrplan für {{hauptleistung}}</h2>
   <!-- PHASE 3: hauptleistung statt OFFERING_LABEL verwenden -->
 
   <p>

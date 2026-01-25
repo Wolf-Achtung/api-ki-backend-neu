@@ -2628,6 +2628,10 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     # 14. Risk Truncation (Fix-Batch I) - Truncate risk descriptions at sentence boundaries
     sections = apply_risk_truncation(sections)
 
+    # 14.5 FIX-525: Risks Solo Padding - Ensure minimum 500 words for solo persona
+    if company_size:
+        sections = apply_risks_solo_padding(sections, company_size)
+
     # 15. Chat Artefact Filter (Fix-Batch J4) - Remove "Schreib mir", "Frag mich" etc.
     sections = apply_chat_artefact_filter(sections)
 
@@ -3206,6 +3210,101 @@ def apply_risk_truncation(sections: dict, max_chars: int = 500) -> dict:
 
     if total_truncations > 0:
         log.info(f"[RISK-TRUNCATION] Complete: {total_truncations} descriptions truncated at sentence boundary")
+
+    return sections
+
+
+# =============================================================================
+# FIX-525: RISKS SOLO PADDING (deterministic minimum word guarantee)
+# =============================================================================
+
+_RISKS_SOLO_PADDING_HTML = """
+<div class="risk-solo-supplemental">
+  <h3>Pragmatische Absicherung für Einzelunternehmer</h3>
+  <p>Als Einzelunternehmer tragen Sie die volle Verantwortung für den Einsatz von KI-Werkzeugen in Ihrem Geschäft. Die folgenden Absicherungsmaßnahmen helfen Ihnen, typische Risiken zu minimieren und gleichzeitig die Vorteile der KI-Unterstützung voll auszuschöpfen. Jede Maßnahme ist bewusst schlank gehalten und lässt sich ohne großen Zeitaufwand in Ihren Alltag integrieren.</p>
+
+  <h4>Qualitätssicherung und Kontrolle</h4>
+  <ul>
+    <li><strong>Wöchentliche Stichprobenprüfung:</strong> Prüfen Sie jede Woche mindestens drei bis fünf KI-generierte Inhalte auf Korrektheit, Tonalität und fachliche Richtigkeit. Ein kurzer 15-Minuten-Check am Freitagnachmittag verhindert, dass sich systematische Fehler einschleichen. Dokumentieren Sie auffällige Muster, um Ihre Prompts kontinuierlich zu verbessern.</li>
+    <li><strong>Vor-Versand-Kontrolle bei Kundenkommunikation:</strong> Lesen Sie jede KI-unterstützte E-Mail oder jeden Bericht vor dem Versand noch einmal durch. Achten Sie besonders auf Namen, Zahlen und spezifische Kundendetails. Diese abschließende Prüfung dauert nur wenige Minuten und schützt Ihre professionelle Reputation.</li>
+    <li><strong>Feedback-Schleife einrichten:</strong> Bitten Sie gelegentlich vertrauenswürdige Kunden oder Kollegen um Feedback zu Ihren KI-unterstützten Inhalten. Externe Perspektiven helfen, blinde Flecken zu erkennen und die Qualität kontinuierlich zu steigern.</li>
+  </ul>
+
+  <h4>Verantwortlichkeiten und Grenzen</h4>
+  <ul>
+    <li><strong>Klare Aufgabentrennung definieren:</strong> Legen Sie schriftlich fest, welche Aufgaben Sie der KI überlassen und welche Sie selbst erledigen. Kritische Kundenentscheidungen, sensible Beratungsgespräche und rechtlich relevante Dokumente sollten immer in Ihren Händen bleiben. Die KI unterstützt bei Routine und Vorbereitung.</li>
+    <li><strong>Eskalationskriterien festlegen:</strong> Bestimmen Sie klare Kriterien, wann Sie von KI-Unterstützung auf manuelle Bearbeitung wechseln. Bei ungewöhnlichen Anfragen, Beschwerden oder komplexen Sonderfällen ist menschliches Urteilsvermögen unverzichtbar.</li>
+    <li><strong>Entscheidungshoheit behalten:</strong> Nutzen Sie KI als Werkzeug zur Entscheidungsvorbereitung, nicht als Entscheidungsträger. Sie tragen die Verantwortung für alle Geschäftsentscheidungen und sollten KI-Vorschläge stets kritisch prüfen.</li>
+  </ul>
+
+  <h4>Technische Absicherung</h4>
+  <ul>
+    <li><strong>Backup-Prozesse bereithalten:</strong> Halten Sie für jede KI-gestützte Aufgabe einen manuellen Alternativprozess bereit. Bei technischen Störungen, API-Ausfällen oder Wartungsarbeiten können Sie so nahtlos weiterarbeiten. Testen Sie diese Backup-Prozesse vierteljährlich.</li>
+    <li><strong>Zugangsdaten sicher verwalten:</strong> Speichern Sie API-Schlüssel und Zugangsdaten in einem Passwort-Manager. Teilen Sie diese niemals per E-Mail oder Messenger. Ändern Sie Passwörter bei Verdacht auf unbefugten Zugriff sofort.</li>
+    <li><strong>Regelmäßige Updates durchführen:</strong> Halten Sie Ihre KI-Werkzeuge und Browser auf dem aktuellen Stand. Sicherheitsupdates schließen bekannte Schwachstellen und schützen Ihre Geschäftsdaten.</li>
+  </ul>
+
+  <h4>Rechtliche und finanzielle Absicherung</h4>
+  <ul>
+    <li><strong>Datenschutz-Check durchführen:</strong> Prüfen Sie einmal jährlich, ob Ihre KI-Nutzung den aktuellen Datenschutz- und Urheberrechtsanforderungen entspricht. Achten Sie besonders auf die Verarbeitung von Kundendaten und die Nutzung urheberrechtlich geschützter Inhalte als Trainingsinput.</li>
+    <li><strong>Transparenz gegenüber Kunden:</strong> Kommunizieren Sie offen, wo Sie KI-Unterstützung nutzen. Die meisten Kunden schätzen Ehrlichkeit und moderne Arbeitsweisen. Eine kurze Information in Ihren AGB oder auf Ihrer Website schafft Vertrauen.</li>
+    <li><strong>Kosten überwachen:</strong> Überwachen Sie monatlich Ihre KI-Abonnements und API-Kosten. Kündigen Sie nicht genutzte Dienste zeitnah. Setzen Sie Kostenlimits bei nutzungsbasierten Diensten, um Überraschungen zu vermeiden.</li>
+    <li><strong>Haftungsfragen klären:</strong> Informieren Sie sich über Ihre Haftung bei KI-generierten Fehlern. Im Zweifelsfall konsultieren Sie einen Rechtsanwalt, um Ihre Geschäftsbedingungen entsprechend anzupassen.</li>
+  </ul>
+
+  <p class="small muted">Diese Absicherungsmaßnahmen sind speziell für Einzelunternehmer konzipiert und erfordern nur minimalen Zeitaufwand bei maximalem Schutz. Passen Sie die Maßnahmen an Ihre spezifische Situation an und überprüfen Sie sie halbjährlich auf Aktualität. Ein strukturierter Ansatz bei der Risikominimierung zahlt sich langfristig aus und schafft eine solide Grundlage für nachhaltiges Wachstum mit KI-Unterstützung in Ihrem Geschäftsalltag.</p>
+</div>
+"""
+
+
+def apply_risks_solo_padding(sections: dict, company_size: str) -> dict:
+    """
+    FIX-525: Deterministic padding for RISKS_HTML when too short for solo.
+
+    If RISKS_HTML has fewer than 500 words for solo persona, appends
+    deterministic supplemental content to guarantee minimum word count.
+
+    Args:
+        sections: Dict with all report sections
+        company_size: Company size ("solo", "team", "kmu")
+
+    Returns:
+        Processed sections dict with padded RISKS_HTML if needed
+    """
+    if not company_size or company_size.lower() != "solo":
+        return sections
+
+    min_words_solo = 500
+    key = "RISKS_HTML"
+    html = sections.get(key, "")
+
+    if not html or not isinstance(html, str):
+        return sections
+
+    # Count words (strip HTML tags)
+    text_only = re.sub(r'<[^>]+>', ' ', html)
+    word_count = len(text_only.split())
+
+    if word_count >= min_words_solo:
+        log.debug("[FIX-525][RISKS-PADDING] RISKS_HTML has %d words, no padding needed", word_count)
+        return sections
+
+    # Append padding content
+    # Insert before closing </section> tag if present, otherwise append
+    if "</section>" in html:
+        padded_html = html.replace("</section>", f"\n{_RISKS_SOLO_PADDING_HTML}\n</section>", 1)
+    else:
+        padded_html = f"{html}\n{_RISKS_SOLO_PADDING_HTML}"
+
+    # Verify new word count
+    new_text = re.sub(r'<[^>]+>', ' ', padded_html)
+    new_word_count = len(new_text.split())
+
+    sections[key] = padded_html
+    log.info(
+        "[FIX-525][RISKS-PADDING] Padded RISKS_HTML: %d → %d words (min=%d)",
+        word_count, new_word_count, min_words_solo
+    )
 
     return sections
 
@@ -4017,25 +4116,30 @@ _PLACEHOLDER_WORD_PATTERN = re.compile(r'\bPlatzhalter\b', re.IGNORECASE)
 
 def apply_placeholder_scrub(sections: dict) -> dict:
     """
-    FIX-514 CHANGE 3: Remove lines/blocks containing 'Platzhalter' from
-    RECOMMENDATIONS_HTML. Prevents STRICT template_phrase hits.
+    FIX-514 CHANGE 3 + FIX-525: Remove lines/blocks containing 'Platzhalter' from
+    RECOMMENDATIONS_HTML and NEXT_ACTIONS_HTML. Prevents STRICT template_phrase hits.
     """
-    key = "RECOMMENDATIONS_HTML"
-    html = sections.get(key, "")
-    if not html or "platzhalter" not in html.lower():
-        return sections
+    # FIX-525: Extended to include NEXT_ACTIONS_HTML
+    target_keys = ["RECOMMENDATIONS_HTML", "NEXT_ACTIONS_HTML"]
+    total_removed = 0
 
-    # Remove entire <p>/<li>/<div> blocks containing "Platzhalter"
-    result, removed = _PLACEHOLDER_LINE_PATTERN.subn("", html)
+    for key in target_keys:
+        html = sections.get(key, "")
+        if not html or "platzhalter" not in html.lower():
+            continue
 
-    # If word still present (e.g. in inline text), replace with neutral term
-    if _PLACEHOLDER_WORD_PATTERN.search(result):
-        result, extra = _PLACEHOLDER_WORD_PATTERN.subn("konkreter Vorschlag", result)
-        removed += extra
+        # Remove entire <p>/<li>/<div> blocks containing "Platzhalter"
+        result, removed = _PLACEHOLDER_LINE_PATTERN.subn("", html)
 
-    if removed > 0:
-        sections[key] = result
-        log.info("[FIX-514][PLACEHOLDER-SCRUB] removed_blocks=%d", removed)
+        # If word still present (e.g. in inline text), replace with neutral term
+        if _PLACEHOLDER_WORD_PATTERN.search(result):
+            result, extra = _PLACEHOLDER_WORD_PATTERN.subn("konkreter Vorschlag", result)
+            removed += extra
+
+        if removed > 0:
+            sections[key] = result
+            total_removed += removed
+            log.info("[FIX-525][PLACEHOLDER-SCRUB] key=%s removed=%d", key, removed)
 
     return sections
 

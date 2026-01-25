@@ -83,7 +83,7 @@ STRUKTUR (exakt einhalten, HTML ONLY):
 
 Outer: div.roadmap-decision
 
-Titel: p > strong "90-Tage-Umsetzungs-Roadmap – Entscheidungsfassung"
+Titel: p > strong "90-Tage-Fahrplan – Entscheidungsfassung"
 
 Dann 3 Phasen-Blöcke:
 - Phase 1 (0–30 Tage): Fundament
