@@ -2756,6 +2756,26 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     if company_size:
         sections = apply_solo_terms_final(sections, company_size)
 
+    # =========================================================================
+    # FIX-527: Report Facts Integration
+    # =========================================================================
+
+    # 23. FIX-527: Collect open inputs (markers) and generate OPEN_INPUTS_HTML
+    try:
+        from services.report_facts import collect_open_inputs, validate_no_platzhalter_text
+        open_inputs, open_inputs_html = collect_open_inputs(sections)
+        if open_inputs_html:
+            sections["OPEN_INPUTS_HTML"] = open_inputs_html
+            sections["_OPEN_INPUTS_COUNT"] = len(open_inputs)
+
+        # 24. FIX-527: Validate no "Platzhalter" text in report
+        platzhalter_ok, platzhalter_violations = validate_no_platzhalter_text(sections)
+        sections["_PLATZHALTER_AUDIT_PASS"] = platzhalter_ok
+        if not platzhalter_ok:
+            log.warning("[FIX-527] Platzhalter text found: %s", platzhalter_violations)
+    except ImportError:
+        log.debug("[FIX-527] report_facts module not available, skipping")
+
     log.info("[QUALITY-ENFORCER] Pipeline complete (FIX-52x final polish applied)")
     return sections
 
