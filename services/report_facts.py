@@ -374,7 +374,240 @@ def validate_no_platzhalter_text(sections: Dict[str, Any]) -> Tuple[bool, List[s
 
 
 # =============================================================================
+# FIX-529: FORBIDDEN TEXT VALIDATION (TBD/Lorem/???)
+# =============================================================================
+
+# Forbidden text patterns that should never appear in final output
+FORBIDDEN_TEXT_PATTERNS = [
+    (re.compile(r'\?\?\?'), "???"),
+    (re.compile(r'\bTBD\b', re.IGNORECASE), "TBD"),
+    (re.compile(r'\bLorem\s+ipsum\b', re.IGNORECASE), "Lorem ipsum"),
+    (re.compile(r'\bXXX\b'), "XXX"),
+    (re.compile(r'\bTODO\b', re.IGNORECASE), "TODO"),
+    (re.compile(r'\bFIXME\b', re.IGNORECASE), "FIXME"),
+    (re.compile(r'\[hier\s+einfügen\]', re.IGNORECASE), "[hier einfügen]"),
+    (re.compile(r'\[insert\s+here\]', re.IGNORECASE), "[insert here]"),
+    (re.compile(r'\bplaceholder\b', re.IGNORECASE), "placeholder"),
+    (re.compile(r'<beispiel>', re.IGNORECASE), "<beispiel>"),
+    (re.compile(r'\$\{[^}]+\}'), "${...}"),  # Template variable leak
+]
+
+
+def validate_no_forbidden_text(sections: Dict[str, Any]) -> Tuple[bool, List[str]]:
+    """
+    FIX-529: Validate that forbidden text patterns don't appear in final output.
+
+    Forbidden patterns include:
+    - "???" - unresolved placeholder
+    - "TBD" - to be determined
+    - "Lorem ipsum" - sample text
+    - "XXX" / "TODO" / "FIXME" - development markers
+    - "[hier einfügen]" / "[insert here]" - insertion markers
+    - "${...}" - template variable leaks
+
+    Args:
+        sections: Dict with all report sections
+
+    Returns:
+        Tuple of (passed, list_of_violations)
+    """
+    violations: List[str] = []
+
+    for section_key, content in sections.items():
+        if not content or not isinstance(content, str):
+            continue
+        if not (section_key.endswith("_HTML") or section_key.endswith("_html")):
+            continue
+
+        # Skip OPEN_INPUTS section (markers are expected there)
+        if "OPEN_INPUTS" in section_key.upper():
+            continue
+
+        for pattern, label in FORBIDDEN_TEXT_PATTERNS:
+            matches = pattern.findall(content)
+            if matches:
+                violations.append(f"[{section_key}] Found '{label}' {len(matches)}x")
+
+    passed = len(violations) == 0
+
+    if passed:
+        log.info("[FIX-529][FORBIDDEN-TEXT] PASS: No forbidden text found")
+    else:
+        log.warning("[FIX-529][FORBIDDEN-TEXT] FAIL: %s", violations)
+
+    return passed, violations
+
+
+# =============================================================================
+# FIX-529: IMPROVED OPEN INPUTS HTML GENERATION
+# =============================================================================
+
+def generate_open_inputs_html(open_inputs: List[OpenInput]) -> str:
+    """
+    FIX-529: Generate styled "Offene Inputs" page HTML.
+
+    Creates a professional-looking table page with:
+    - Clear header explaining purpose
+    - Styled table with all markers
+    - Pill-styled marker display
+
+    Args:
+        open_inputs: List of OpenInput objects
+
+    Returns:
+        HTML string for the open inputs section
+    """
+    if not open_inputs:
+        return ""
+
+    rows = []
+    for inp in open_inputs:
+        section_display = inp.section_id.replace("_HTML", "").replace("_", " ").title()
+        rows.append(f"""
+            <tr>
+                <td><span class="marker-pill">⟦{inp.key}⟧</span></td>
+                <td class="label-cell">{inp.label}</td>
+                <td class="hint-cell">{inp.hint or "—"}</td>
+                <td class="section-cell">{section_display}</td>
+            </tr>
+        """)
+
+    html = f"""
+    <section class="open-inputs chapter" id="open-inputs">
+        <h2>Offene Inputs</h2>
+        <p class="section-intro">
+            Die folgenden Informationen werden noch benötigt, um den Report zu vervollständigen.
+            Bitte ergänzen Sie die markierten Stellen im Briefing.
+        </p>
+
+        <table class="open-inputs-table">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">Marker</th>
+                    <th style="width: 30%;">Was fehlt?</th>
+                    <th style="width: 35%;">Hinweis</th>
+                    <th style="width: 20%;">Sektion</th>
+                </tr>
+            </thead>
+            <tbody>
+                {"".join(rows)}
+            </tbody>
+        </table>
+
+        <p class="section-footer muted small">
+            Gefundene Marker: {len(open_inputs)} | Nach Ergänzung der Daten wird der Report automatisch aktualisiert.
+        </p>
+    </section>
+    """
+
+    return html
+
+
+def collect_and_render_open_inputs(sections: Dict[str, Any]) -> Tuple[List[OpenInput], str]:
+    """
+    FIX-529: Collect markers and generate styled HTML.
+
+    Combines collect_open_inputs() with generate_open_inputs_html().
+
+    Args:
+        sections: Dict with all report sections
+
+    Returns:
+        Tuple of (list_of_OpenInput, styled_html)
+    """
+    open_inputs, _ = collect_open_inputs(sections)
+
+    if not open_inputs:
+        return [], ""
+
+    html = generate_open_inputs_html(open_inputs)
+
+    log.info(
+        "[FIX-529][OPEN-INPUTS] Generated styled page with %d markers",
+        len(open_inputs)
+    )
+
+    return open_inputs, html
+
+
+# =============================================================================
+# FIX-529: MARKER CSS STYLES
+# =============================================================================
+
+MARKER_CSS = """
+/* FIX-529: Open Inputs Marker Styling */
+.marker-pill {
+    display: inline-block;
+    padding: 2pt 6pt;
+    background: var(--color-card-alert, #FEF3C7);
+    border: 1px solid var(--color-warning, #F59E0B);
+    border-radius: var(--radius-pill, 999px);
+    font-family: var(--font-mono, monospace);
+    font-size: var(--font-small, 9pt);
+    color: var(--color-warning, #92400e);
+    white-space: nowrap;
+}
+
+.open-inputs-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: var(--space-md, 16pt) 0;
+}
+
+.open-inputs-table th,
+.open-inputs-table td {
+    padding: var(--space-sm, 8pt);
+    border: 1px solid var(--color-border, #E5E7EB);
+    text-align: left;
+    vertical-align: top;
+}
+
+.open-inputs-table th {
+    background: var(--color-bg-light, #F9FAFB);
+    font-weight: 600;
+    font-size: var(--font-small, 9pt);
+}
+
+.open-inputs-table .label-cell {
+    font-weight: 500;
+}
+
+.open-inputs-table .hint-cell {
+    color: var(--color-text-secondary, #6B7280);
+    font-size: var(--font-small, 9pt);
+}
+
+.open-inputs-table .section-cell {
+    color: var(--color-text-muted, #9CA3AF);
+    font-size: var(--font-small, 9pt);
+}
+
+.section-intro {
+    margin-bottom: var(--space-md, 16pt);
+    color: var(--color-text-secondary, #6B7280);
+}
+
+.section-footer {
+    margin-top: var(--space-md, 16pt);
+}
+
+/* Inline marker in content */
+.inline-marker {
+    display: inline;
+    padding: 1pt 4pt;
+    background: var(--color-card-alert, #FEF3C7);
+    border-radius: 3pt;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.9em;
+}
+"""
+
+
+# =============================================================================
 # INITIALIZATION
 # =============================================================================
 
-log.info("[FIX-527] report_facts module loaded: ReportFacts, audit_payback_consistency, collect_open_inputs")
+log.info(
+    "[FIX-527/529] report_facts module loaded: ReportFacts, audit_payback_consistency, "
+    "collect_open_inputs, validate_no_platzhalter_text, validate_no_forbidden_text"
+)
