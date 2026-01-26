@@ -292,14 +292,14 @@ def ensure_complete_sentences_html(html_content: str) -> str:
     if not html_content:
         return html_content
 
-    def process_text_node(match: re.Match) -> str:
-        open_tag = match.group(1)
-        inner = match.group(2)
-        close_tag = match.group(3)
+    def process_text_node(match: re.Match[str]) -> str:
+        open_tag: str = match.group(1)
+        inner: str = match.group(2)
+        close_tag: str = match.group(3)
 
         # Skip if contains nested HTML
         if '<' in inner and '>' in inner:
-            return match.group(0)
+            return str(match.group(0))
 
         processed = ensure_complete_sentences(inner)
         return f"{open_tag}{processed}{close_tag}"
