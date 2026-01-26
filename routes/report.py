@@ -54,19 +54,44 @@ async def ping() -> Dict[str, str]:
 # FIX-529: Solo Compact Report Endpoint
 # ---------------------------------------------------------------------------
 
-class SoloCompactRequest(BaseModel):
-    """Request model for solo-compact report generation."""
+class ReportVariantRequest(BaseModel):
+    """Request model for report generation with variant selection.
+
+    FIX-529: Supports auto-detection based on company_size.
+
+    Variants:
+    - standard: Full report (default for non-solo)
+    - solo_compact: 12-16 page report for solo/freelancers (default for solo)
+    - team_compact: Compact version for small teams
+    - kmu_compact: Compact version for SMEs
+    - auto: Auto-detect based on company_size (default)
+    """
     briefing_id: int = Field(ge=0)
-    variant: str = Field(default="solo_compact", description="Report variant: solo_compact")
+    variant: str = Field(
+        default="auto",
+        description="Report variant: standard | solo_compact | team_compact | kmu_compact | auto"
+    )
+    company_size: str | None = Field(
+        default=None,
+        description="Company size for auto-detection (optional, fetched from briefing if not provided)"
+    )
+
+
+# Backwards compatibility alias
+SoloCompactRequest = ReportVariantRequest
 
 
 @router.post("/solo-compact")
-async def generate_solo_compact(payload: SoloCompactRequest) -> Dict[str, Any]:
+async def generate_solo_compact(payload: ReportVariantRequest) -> Dict[str, Any]:
     """
-    FIX-529: Generate a solo-compact report (12-16 pages).
+    FIX-529: Generate a report with variant selection and auto-detection.
 
-    Solo-compact reports are condensed versions specifically designed for
-    solo/freelance users. They include:
+    Endpoint supports automatic variant detection based on company_size:
+    - variant=auto (default): company_size=solo -> solo_compact, else -> standard
+    - variant=solo_compact: Force 12-16 page solo-compact report
+    - variant=standard: Force full report
+
+    Solo-compact reports (12-16 pages) include:
     - Cover + Executive Summary (2-3 pages)
     - Scorecard with Readiness, Risks, ROI (1 page)
     - Quick Wins (max 5, 2 pages)
@@ -76,34 +101,40 @@ async def generate_solo_compact(payload: SoloCompactRequest) -> Dict[str, Any]:
     - Open Inputs (if any) (1 page)
     - Appendix (1 page)
 
-    Total: 12-16 pages (hard gate).
-
     Args:
-        payload: SoloCompactRequest with briefing_id and variant
+        payload: ReportVariantRequest with briefing_id, variant, and optional company_size
 
     Returns:
-        dict: {"ok": True, "report_type": "solo_compact"}
+        dict: {"ok": True, "report_type": "<resolved_variant>", "briefing_id": <id>}
     """
     try:
         from gpt_analyze import run_async
+        from services.solo_compact_engine import determine_report_variant
     except Exception as exc:
         raise HTTPException(
             status_code=503,
             detail=f"Analyzer unavailable: {exc.__class__.__name__}: {exc}",
         ) from exc
 
+    # FIX-529: Auto-detect variant if not explicitly set
+    # If company_size not provided in request, it will be fetched in run_async from briefing
+    resolved_variant = determine_report_variant(
+        variant=payload.variant,
+        company_size=payload.company_size,
+    )
+    resolved_variant_str = resolved_variant.value
+
     log.info(
-        "[FIX-529] Solo-compact report requested: briefing_id=%d variant=%s",
-        payload.briefing_id, payload.variant
+        "[FIX-529] Report requested: briefing_id=%d requested_variant=%s resolved_variant=%s company_size=%s",
+        payload.briefing_id, payload.variant, resolved_variant_str, payload.company_size or "(from briefing)"
     )
 
-    # Pass variant to the analyzer
-    # The analyzer will use this to apply solo_compact_engine processing
+    # Pass resolved variant to the analyzer
     try:
         if asyncio.iscoroutinefunction(run_async):
             await run_async(
                 payload.briefing_id,
-                report_variant=payload.variant,  # type: ignore
+                report_variant=resolved_variant_str,
             )
         else:
             loop = asyncio.get_event_loop()
@@ -111,19 +142,24 @@ async def generate_solo_compact(payload: SoloCompactRequest) -> Dict[str, Any]:
                 None,
                 lambda: run_async(
                     payload.briefing_id,
-                    report_variant=payload.variant,
+                    report_variant=resolved_variant_str,
                 )
             )
     except TypeError:
         # Fallback: run_async might not support report_variant yet
         log.warning("[FIX-529] run_async doesn't support report_variant, using default")
         if asyncio.iscoroutinefunction(run_async):
-            await run_async(payload.briefing_id)  # type: ignore
+            await run_async(payload.briefing_id)
         else:
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(None, lambda: run_async(payload.briefing_id))
 
-    return {"ok": True, "report_type": payload.variant, "briefing_id": payload.briefing_id}
+    return {
+        "ok": True,
+        "report_type": resolved_variant_str,
+        "briefing_id": payload.briefing_id,
+        "auto_detected": payload.variant == "auto",
+    }
 
 
 # NOTE: We use /by-id/{id} instead of /{id} to prevent routing conflicts.
@@ -147,47 +183,81 @@ async def generate(payload: Dict[str, Any]) -> Dict[str, Any]:
     """
     Generate a report by triggering GPT analysis.
 
+    FIX-529: Now supports report_variant parameter with auto-detection.
+
     Thin wrapper that defers heavy imports until the endpoint is called.
     Avoids router import failures when optional modules are temporarily broken.
 
     Args:
-        payload: Flexible dict containing briefing_id and optional parameters
-                 (answers, lang, email, etc.)
+        payload: Flexible dict containing:
+            - briefing_id (required): int
+            - variant (optional): "auto" | "standard" | "solo_compact" | "team_compact" | "kmu_compact"
+            - company_size (optional): Used for auto-detection if variant="auto"
+            - email (optional): str
+            - answers, lang, etc.
 
     Returns:
-        dict: {"ok": True} on successful queue
+        dict: {"ok": True, "report_type": "<resolved_variant>"}
 
     Raises:
         HTTPException 503: Analyzer module unavailable
     """
     try:
         from gpt_analyze import run_async  # lazy import to prevent router mount failures
+        from services.solo_compact_engine import determine_report_variant
     except Exception as exc:  # pragma: no cover
         raise HTTPException(
             status_code=503,
             detail=f"Analyzer unavailable: {exc.__class__.__name__}: {exc}",
         ) from exc
 
+    # Extract parameters
+    briefing_id = payload.get("briefing_id", 0)
+    variant = payload.get("variant", "auto")
+    company_size = payload.get("company_size")
+    email = payload.get("email")
+
+    # FIX-529: Auto-detect variant based on company_size
+    resolved_variant = determine_report_variant(variant, company_size)
+    resolved_variant_str = resolved_variant.value
+
+    log.info(
+        "[FIX-529] /generate: briefing_id=%s variant=%s -> %s",
+        briefing_id, variant, resolved_variant_str
+    )
+
     # Support sync/async implementations transparently
-    # Note: run_async returns None, it's a fire-and-forget operation
-    # It expects briefing_id as int, not a dict
     try:
-        briefing_id = payload.get("briefing_id", 0)
         if asyncio.iscoroutinefunction(run_async):
-            await run_async(briefing_id)  # type: ignore[func-returns-value]
+            await run_async(
+                briefing_id,
+                email=email,
+                report_variant=resolved_variant_str,
+            )
+        else:
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(
+                None,
+                lambda: run_async(
+                    briefing_id,
+                    email=email,
+                    report_variant=resolved_variant_str,
+                )
+            )
+    except TypeError:
+        # Fallback: run_async might not support new parameters
+        log.warning("[FIX-529] run_async fallback: trying without report_variant")
+        if asyncio.iscoroutinefunction(run_async):
+            await run_async(briefing_id)
         else:
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(None, lambda: run_async(briefing_id))
-    except (TypeError, KeyError):
-        # Fall back - try with payload directly if it's already an int
-        fallback_id = payload if isinstance(payload, int) else 0
-        if asyncio.iscoroutinefunction(run_async):
-            await run_async(fallback_id)  # type: ignore[func-returns-value]
-        else:
-            loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, lambda: run_async(fallback_id))
 
-    return {"ok": True}
+    return {
+        "ok": True,
+        "report_type": resolved_variant_str,
+        "auto_detected": variant == "auto",
+    }
 
 
 # ---------------------------------------------------------------------------
