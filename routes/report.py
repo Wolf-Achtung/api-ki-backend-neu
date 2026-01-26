@@ -111,7 +111,7 @@ async def generate_solo_compact(payload: SoloCompactRequest) -> Dict[str, Any]:
                 None,
                 lambda: run_async(
                     payload.briefing_id,
-                    report_variant=payload.variant,  # type: ignore
+                    report_variant=payload.variant,
                 )
             )
     except TypeError:
