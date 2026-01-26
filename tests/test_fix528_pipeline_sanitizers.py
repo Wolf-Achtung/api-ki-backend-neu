@@ -222,18 +222,19 @@ class TestSanitizeAllSections:
         assert stats["sections_processed"] >= 1
 
     def test_fallback_mode(self):
-        """Test that fallback mode triggers sentence completion."""
+        """Test that fallback mode triggers sentence completion for HTML content."""
         from services.pipeline_sanitizers import sanitize_all_sections
 
-        # Need at least 50 chars for processing
+        # Need at least 50 chars for processing, and HTML tags for sentence completion
+        # ensure_complete_sentences_html only processes <p> and <li> tags
         sections = {
-            "RECOMMENDATIONS_HTML": "Wir empfehlen die folgenden Massnahmen fuer Ihr Unternehmen zur Verbesserung",
+            "RECOMMENDATIONS_HTML": "<p>Wir empfehlen die folgenden Massnahmen fuer Ihr Unternehmen zur Verbesserung der</p>",
         }
 
         result, stats = sanitize_all_sections(sections, fallback_triggered=True)
 
-        # In fallback mode, sentence should be completed with period
-        assert result["RECOMMENDATIONS_HTML"].endswith(".")
+        # In fallback mode with HTML, sentence inside <p> should be completed
+        assert result["RECOMMENDATIONS_HTML"].endswith(".</p>")
 
 
 class TestIntegration:
