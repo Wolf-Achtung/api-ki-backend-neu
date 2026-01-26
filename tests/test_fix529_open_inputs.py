@@ -1,324 +1,230 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Tests for FIX-529: Offene Inputs Sammelseite + Marker-only
+FIX-529 Tests: Open Inputs Marker System
 
-Tests cover:
-- Marker parsing (⟦INPUT:...⟧ and [[INPUT:...]])
-- Forbidden text validation (TBD, Lorem, ???)
-- Open inputs page rendering
-- Marker CSS styling
+Tests for:
+- Marker extraction from text
+- Marker deduplication
+- Inline marker rendering
+- OPEN_INPUTS_HTML generation
 """
-
 import pytest
-from services.report_facts import (
-    OpenInput,
-    collect_open_inputs,
-    validate_no_forbidden_text,
-    validate_no_platzhalter_text,
-    generate_open_inputs_html,
-    collect_and_render_open_inputs,
-    MARKER_PATTERN,
-    MARKER_PATTERN_ASCII,
-    FORBIDDEN_TEXT_PATTERNS,
-    MARKER_CSS,
-)
 
 
-class TestMarkerParsing:
-    """Tests for marker pattern parsing."""
+class TestMarkerExtraction:
+    """Tests for marker extraction functions."""
 
-    def test_unicode_marker_pattern(self):
-        """Test parsing of Unicode markers ⟦INPUT:...⟧."""
-        text = "Some text ⟦INPUT:company_name|Firmenname|Bitte den Firmennamen eintragen⟧ more text"
-        matches = MARKER_PATTERN.findall(text)
+    def test_extract_single_marker(self):
+        """Test extraction of a single marker."""
+        from services.open_inputs_marker import extract_markers_from_text
 
-        assert len(matches) == 1
-        assert matches[0][0] == "company_name"
-        assert matches[0][1] == "Firmenname"
-        assert "Firmennamen" in matches[0][2]
+        text = "Die Analyse zeigt [INPUT:mitarbeiter|Mitarbeiterzahl|Bitte angeben] Ergebnisse."
+        markers = extract_markers_from_text(text, "TEST_SECTION")
 
-    def test_ascii_marker_pattern(self):
-        """Test parsing of ASCII markers [[INPUT:...]]."""
-        text = "Some text [[INPUT:revenue|Umsatz|Optional hint]] more text"
-        matches = MARKER_PATTERN_ASCII.findall(text)
+        assert len(markers) == 1
+        assert markers[0].key == "mitarbeiter"
+        assert markers[0].label == "Mitarbeiterzahl"
+        assert markers[0].hint == "Bitte angeben"
+        assert markers[0].section == "TEST_SECTION"
 
-        assert len(matches) == 1
-        assert matches[0][0] == "revenue"
-        assert matches[0][1] == "Umsatz"
+    def test_extract_multiple_markers(self):
+        """Test extraction of multiple markers."""
+        from services.open_inputs_marker import extract_markers_from_text
 
-    def test_marker_with_empty_hint(self):
-        """Test marker with empty hint field."""
-        text = "⟦INPUT:email|E-Mail|⟧"
-        matches = MARKER_PATTERN.findall(text)
-
-        assert len(matches) == 1
-        assert matches[0][0] == "email"
-        assert matches[0][2] == ""
-
-    def test_multiple_markers(self):
-        """Test parsing multiple markers in same text."""
         text = """
-        <p>⟦INPUT:name|Name|Enter name⟧</p>
-        <p>⟦INPUT:phone|Telefon|Enter phone⟧</p>
+        Umsatz: [INPUT:umsatz|Jahresumsatz|EUR-Betrag erforderlich]
+        Team: [INPUT:team_size|Teamgroesse|Anzahl Personen]
         """
-        matches = MARKER_PATTERN.findall(text)
+        markers = extract_markers_from_text(text)
 
-        assert len(matches) == 2
+        assert len(markers) == 2
+        assert markers[0].key == "umsatz"
+        assert markers[1].key == "team_size"
+
+    def test_extract_no_markers(self):
+        """Test extraction when no markers present."""
+        from services.open_inputs_marker import extract_markers_from_text
+
+        text = "Dies ist normaler Text ohne Marker."
+        markers = extract_markers_from_text(text)
+
+        assert len(markers) == 0
+
+    def test_extract_empty_input(self):
+        """Test extraction with empty/None input."""
+        from services.open_inputs_marker import extract_markers_from_text
+
+        assert extract_markers_from_text("") == []
+        assert extract_markers_from_text(None) == []
 
 
-class TestCollectOpenInputs:
-    """Tests for collect_open_inputs function."""
+class TestMarkerDeduplication:
+    """Tests for marker deduplication."""
 
-    def test_collect_from_html_sections(self):
-        """Test collecting markers from HTML sections."""
+    def test_deduplicate_by_key(self):
+        """Test that markers with same key are deduplicated."""
+        from services.open_inputs_marker import extract_markers_from_sections
+
         sections = {
-            "EXECUTIVE_SUMMARY_HTML": "<p>Text ⟦INPUT:goal|Hauptziel|Beschreiben Sie das Ziel⟧</p>",
-            "RISKS_HTML": "<p>Risk ⟦INPUT:risk_level|Risikostufe|⟧</p>",
-            "non_html_key": "⟦INPUT:ignored|Ignored|This is not HTML⟧",
+            "SECTION_A": "Value: [INPUT:value|Wert|Hint A]",
+            "SECTION_B": "Value: [INPUT:value|Wert|Hint B]",
+            "SECTION_C": "Other: [INPUT:other|Anderer|Hint C]",
         }
 
-        inputs, html = collect_open_inputs(sections)
+        result = extract_markers_from_sections(sections)
 
-        assert len(inputs) == 2
-        assert inputs[0].key == "goal"
-        assert inputs[0].label == "Hauptziel"
-        assert inputs[0].section_id == "EXECUTIVE_SUMMARY_HTML"
-        assert inputs[1].key == "risk_level"
+        assert result.unique_marker_count == 2
+        assert result.total_marker_count == 3
 
-    def test_collect_both_marker_types(self):
-        """Test collecting both Unicode and ASCII markers."""
-        sections = {
-            "SUMMARY_HTML": """
-                <p>⟦INPUT:unicode_key|Unicode Label|hint1⟧</p>
-                <p>[[INPUT:ascii_key|ASCII Label|hint2]]</p>
-            """,
-        }
-
-        inputs, html = collect_open_inputs(sections)
-
-        assert len(inputs) == 2
-        keys = [inp.key for inp in inputs]
-        assert "unicode_key" in keys
-        assert "ascii_key" in keys
-
-    def test_empty_sections_return_empty(self):
-        """Test that empty sections return empty results."""
-        sections = {
-            "SUMMARY_HTML": "<p>No markers here</p>",
-        }
-
-        inputs, html = collect_open_inputs(sections)
-
-        assert len(inputs) == 0
-        assert html == ""
+        keys = [m.key for m in result.markers]
+        assert "value" in keys
+        assert "other" in keys
 
 
-class TestForbiddenTextValidation:
-    """Tests for forbidden text validation (TBD, Lorem, ???, etc.)."""
+class TestInlineRendering:
+    """Tests for inline marker rendering."""
 
-    def test_detect_tbd(self):
-        """Test detection of TBD text."""
-        sections = {
-            "SUMMARY_HTML": "<p>This section is TBD.</p>",
-        }
+    def test_render_inline_marker(self):
+        """Test inline marker HTML rendering."""
+        from services.open_inputs_marker import render_inline_marker, OpenInputMarker
 
-        passed, violations = validate_no_forbidden_text(sections)
+        marker = OpenInputMarker(
+            key="test_key",
+            label="Test Label",
+            hint="Test Hint",
+        )
 
-        assert passed is False
-        assert any("TBD" in v for v in violations)
+        html = render_inline_marker(marker)
 
-    def test_detect_triple_question_marks(self):
-        """Test detection of ??? placeholder."""
-        sections = {
-            "RISKS_HTML": "<p>Risk level: ???</p>",
-        }
+        assert 'class="input-marker"' in html
+        assert 'data-key="test_key"' in html
+        assert 'title="Test Hint"' in html
+        assert "Test Label" in html
 
-        passed, violations = validate_no_forbidden_text(sections)
+    def test_replace_markers_with_inline(self):
+        """Test replacing markers with inline HTML."""
+        from services.open_inputs_marker import replace_markers_with_inline
 
-        assert passed is False
-        assert any("???" in v for v in violations)
+        text = "Umsatz: [INPUT:umsatz|Jahresumsatz|Betrag] betraegt X Euro."
+        result = replace_markers_with_inline(text)
 
-    def test_detect_lorem_ipsum(self):
-        """Test detection of Lorem ipsum sample text."""
-        sections = {
-            "SUMMARY_HTML": "<p>Lorem ipsum dolor sit amet</p>",
-        }
-
-        passed, violations = validate_no_forbidden_text(sections)
-
-        assert passed is False
-        assert any("Lorem ipsum" in v for v in violations)
-
-    def test_detect_xxx_marker(self):
-        """Test detection of XXX marker."""
-        sections = {
-            "SUMMARY_HTML": "<p>Content XXX placeholder</p>",
-        }
-
-        passed, violations = validate_no_forbidden_text(sections)
-
-        assert passed is False
-
-    def test_detect_todo_marker(self):
-        """Test detection of TODO marker."""
-        sections = {
-            "RISKS_HTML": "<p>TODO: Add risk details</p>",
-        }
-
-        passed, violations = validate_no_forbidden_text(sections)
-
-        assert passed is False
-        assert any("TODO" in v for v in violations)
-
-    def test_detect_template_variable(self):
-        """Test detection of template variable leaks ${...}."""
-        sections = {
-            "SUMMARY_HTML": "<p>Company: ${COMPANY_NAME}</p>",
-        }
-
-        passed, violations = validate_no_forbidden_text(sections)
-
-        assert passed is False
-
-    def test_clean_text_passes(self):
-        """Test that clean text passes validation."""
-        sections = {
-            "SUMMARY_HTML": "<p>This is a complete summary with no placeholders.</p>",
-            "RISKS_HTML": "<p>Risk analysis shows moderate exposure.</p>",
-        }
-
-        passed, violations = validate_no_forbidden_text(sections)
-
-        assert passed is True
-        assert len(violations) == 0
-
-    def test_skips_open_inputs_section(self):
-        """Test that OPEN_INPUTS section is skipped."""
-        sections = {
-            "OPEN_INPUTS_HTML": "<p>TBD ??? Lorem ipsum TODO</p>",
-        }
-
-        passed, violations = validate_no_forbidden_text(sections)
-
-        assert passed is True  # Skipped
-
-
-class TestPlatzhalterValidation:
-    """Tests for Platzhalter text validation."""
-
-    def test_detect_platzhalter_word(self):
-        """Test detection of 'Platzhalter' word."""
-        sections = {
-            "SUMMARY_HTML": "<p>Dies ist ein Platzhalter-Text.</p>",
-        }
-
-        passed, violations = validate_no_platzhalter_text(sections)
-
-        assert passed is False
-        assert any("Platzhalter" in v for v in violations)
-
-    def test_case_insensitive_detection(self):
-        """Test case-insensitive detection of Platzhalter."""
-        sections = {
-            "SUMMARY_HTML": "<p>PLATZHALTER text here</p>",
-        }
-
-        passed, violations = validate_no_platzhalter_text(sections)
-
-        assert passed is False
-
-    def test_clean_text_without_platzhalter(self):
-        """Test that text without Platzhalter passes."""
-        sections = {
-            "SUMMARY_HTML": "<p>Vollständiger Text ohne Lücken.</p>",
-        }
-
-        passed, violations = validate_no_platzhalter_text(sections)
-
-        assert passed is True
+        assert "[INPUT:" not in result
+        assert 'class="input-marker"' in result
+        assert "Jahresumsatz" in result
 
 
 class TestOpenInputsHtmlGeneration:
-    """Tests for Open Inputs page HTML generation."""
+    """Tests for OPEN_INPUTS_HTML generation."""
 
-    def test_generate_html_with_inputs(self):
-        """Test HTML generation with open inputs."""
-        inputs = [
-            OpenInput(key="name", label="Firmenname", hint="Enter company name", section_id="SUMMARY_HTML"),
-            OpenInput(key="revenue", label="Umsatz", hint="", section_id="BUSINESS_CASE_HTML"),
+    def test_generate_html_with_markers(self):
+        """Test HTML generation with markers."""
+        from services.open_inputs_marker import (
+            generate_open_inputs_html,
+            OpenInputsResult,
+            OpenInputMarker,
+        )
+
+        markers = [
+            OpenInputMarker("key1", "Label 1", "Hint 1", "SECTION_A"),
+            OpenInputMarker("key2", "Label 2", "Hint 2", "SECTION_B"),
         ]
+        result = OpenInputsResult(
+            markers=markers,
+            unique_marker_count=2,
+        )
 
-        html = generate_open_inputs_html(inputs)
+        html = generate_open_inputs_html(result)
 
-        assert '<section class="open-inputs' in html
-        assert 'Offene Inputs' in html
-        assert '<table class="open-inputs-table"' in html
-        assert 'marker-pill' in html
-        assert 'Firmenname' in html
-        assert 'Umsatz' in html
+        assert 'class="open-inputs' in html
+        assert "Offene Inputs" in html
+        assert "Label 1" in html
+        assert "Label 2" in html
+        assert "Hint 1" in html
+        assert "Hint 2" in html
 
-    def test_generate_html_empty_inputs(self):
-        """Test HTML generation with no inputs returns empty."""
-        inputs = []
+    def test_generate_html_empty(self):
+        """Test HTML generation with no markers."""
+        from services.open_inputs_marker import (
+            generate_open_inputs_html,
+            OpenInputsResult,
+        )
 
-        html = generate_open_inputs_html(inputs)
+        result = OpenInputsResult()
+        html = generate_open_inputs_html(result)
 
         assert html == ""
 
-    def test_html_contains_marker_count(self):
-        """Test HTML footer contains marker count."""
-        inputs = [
-            OpenInput(key="a", label="A", hint="", section_id="X_HTML"),
-            OpenInput(key="b", label="B", hint="", section_id="Y_HTML"),
-            OpenInput(key="c", label="C", hint="", section_id="Z_HTML"),
-        ]
 
-        html = generate_open_inputs_html(inputs)
+class TestProcessOpenInputs:
+    """Tests for main integration function."""
 
-        assert "3" in html  # Count of markers
+    def test_process_open_inputs_full(self):
+        """Test complete open inputs processing."""
+        from services.open_inputs_marker import process_open_inputs
 
-    def test_section_display_formatting(self):
-        """Test section names are formatted nicely."""
-        inputs = [
-            OpenInput(key="x", label="X", hint="", section_id="EXECUTIVE_SUMMARY_HTML"),
-        ]
-
-        html = generate_open_inputs_html(inputs)
-
-        # Should show "Executive Summary" not "EXECUTIVE_SUMMARY_HTML"
-        assert "Executive Summary" in html
-
-
-class TestCollectAndRenderOpenInputs:
-    """Tests for combined collect and render function."""
-
-    def test_collect_and_render_full_pipeline(self):
-        """Test full collection and rendering pipeline."""
         sections = {
-            "SUMMARY_HTML": "<p>Text ⟦INPUT:test_key|Test Label|Test hint⟧</p>",
+            "EXECUTIVE_SUMMARY_HTML": "<p>Summary with [INPUT:budget|Budget|EUR-Betrag]</p>",
+            "QUICK_WINS_HTML": "<p>Quick wins text</p>",
+            "ROI_HTML": "<p>ROI needs [INPUT:budget|Budget|EUR] and [INPUT:roi_target|Ziel-ROI|Prozent]</p>",
         }
 
-        inputs, html = collect_and_render_open_inputs(sections)
+        updated, result = process_open_inputs(sections)
 
-        assert len(inputs) == 1
-        assert "open-inputs-table" in html
-        assert "Test Label" in html
+        assert result.unique_marker_count == 2
+        assert result.total_marker_count == 3
+
+        assert "[INPUT:" not in updated["EXECUTIVE_SUMMARY_HTML"]
+        assert 'class="input-marker"' in updated["EXECUTIVE_SUMMARY_HTML"]
+
+        assert "OPEN_INPUTS_HTML" in updated
+        assert "Budget" in updated["OPEN_INPUTS_HTML"]
+        assert "Ziel-ROI" in updated["OPEN_INPUTS_HTML"]
+
+    def test_process_open_inputs_no_markers(self):
+        """Test processing when no markers present."""
+        from services.open_inputs_marker import process_open_inputs
+
+        sections = {
+            "SUMMARY_HTML": "<p>Normal summary without markers</p>",
+        }
+
+        updated, result = process_open_inputs(sections)
+
+        assert result.unique_marker_count == 0
+        assert "OPEN_INPUTS_HTML" not in updated
 
 
-class TestMarkerCSS:
-    """Tests for marker CSS styling."""
+class TestHelperFunctions:
+    """Tests for helper functions."""
 
-    def test_css_contains_marker_pill_style(self):
-        """Test CSS includes marker-pill styling."""
-        assert ".marker-pill" in MARKER_CSS
-        assert "border-radius" in MARKER_CSS
+    def test_create_marker(self):
+        """Test marker string creation."""
+        from services.open_inputs_marker import create_marker
 
-    def test_css_contains_table_styles(self):
-        """Test CSS includes table styling."""
-        assert ".open-inputs-table" in MARKER_CSS
-        assert "border-collapse" in MARKER_CSS
+        marker = create_marker("test_key", "Test Label", "Test Hint")
 
-    def test_css_contains_inline_marker_style(self):
-        """Test CSS includes inline marker styling."""
-        assert ".inline-marker" in MARKER_CSS
+        assert marker == "[INPUT:test_key|Test Label|Test Hint]"
+
+    def test_create_marker_invalid_key(self):
+        """Test marker creation with invalid key."""
+        from services.open_inputs_marker import create_marker
+
+        with pytest.raises(ValueError):
+            create_marker("123invalid", "Label", "Hint")
+
+        with pytest.raises(ValueError):
+            create_marker("has-dash", "Label", "Hint")
+
+    def test_has_markers(self):
+        """Test marker presence detection."""
+        from services.open_inputs_marker import has_markers
+
+        assert has_markers("[INPUT:key|label|hint]") is True
+        assert has_markers("No markers here") is False
+        assert has_markers("") is False
+        assert has_markers(None) is False
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

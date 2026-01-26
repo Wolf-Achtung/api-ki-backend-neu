@@ -37,6 +37,72 @@ class ReportType(Enum):
     STANDARD = "standard"
     SOLO_COMPACT = "solo_compact"
     TEAM_COMPACT = "team_compact"
+    KMU_COMPACT = "kmu_compact"
+    AUTO = "auto"
+
+
+# =============================================================================
+# FIX-529: AUTO-DETECTION LOGIC
+# =============================================================================
+
+# Company sizes that map to solo_compact
+SOLO_SIZE_IDENTIFIERS = {
+    "solo", "1", "freiberufler", "freelancer", "einzelunternehmer",
+    "selbststaendig", "selbständig", "solopreneur", "einpersonen",
+}
+
+
+def determine_report_variant(
+    variant: str | None,
+    company_size: str | None,
+) -> ReportType:
+    """
+    FIX-529: Determine the correct report variant based on input and company size.
+
+    Selection rule:
+    - If variant is explicitly set (not 'auto' or None) -> use that variant
+    - If variant is 'auto' or None:
+        - company_size == solo -> solo_compact
+        - otherwise -> standard
+
+    Args:
+        variant: Requested variant (None, 'auto', or specific variant)
+        company_size: Company size from briefing
+
+    Returns:
+        ReportType enum value
+    """
+    # Normalize inputs
+    variant_lower = str(variant).lower().strip() if variant else "auto"
+    size_lower = str(company_size).lower().strip() if company_size else ""
+
+    # If explicit variant requested (not auto), use it
+    if variant_lower and variant_lower != "auto":
+        try:
+            return ReportType(variant_lower)
+        except ValueError:
+            log.warning(
+                "[FIX-529] Unknown variant '%s', falling back to auto-detection",
+                variant
+            )
+            variant_lower = "auto"
+
+    # Auto-detection based on company_size
+    is_solo = any(identifier in size_lower for identifier in SOLO_SIZE_IDENTIFIERS)
+
+    if is_solo:
+        log.info(
+            "[FIX-529] Auto-detected solo_compact for company_size='%s'",
+            company_size
+        )
+        return ReportType.SOLO_COMPACT
+
+    # Default to standard
+    log.info(
+        "[FIX-529] Auto-detected standard for company_size='%s'",
+        company_size
+    )
+    return ReportType.STANDARD
 
 
 # =============================================================================
@@ -44,15 +110,17 @@ class ReportType(Enum):
 # =============================================================================
 
 # Section order for solo-compact reports (minimal set)
+# FIX-529: Updated structure with Umsetzungszeitraum after Exec Summary
 SOLO_COMPACT_SECTIONS = [
-    "COVER_HTML",
-    "EXECUTIVE_SUMMARY_HTML",
-    "SCORE_DRIVERS_HTML",
-    "QUICK_WINS_HTML",
-    "ROADMAP_90D_HTML",
-    "RISKS_LIGHT_HTML",
-    "TOOLING_LIGHT_HTML",
-    "OPEN_INPUTS_HTML",  # Conditional - only if markers exist
+    "COVER_HTML",                    # Page 1: Deckblatt
+    "EXECUTIVE_SUMMARY_HTML",        # Pages 2-3: Exec Summary
+    "UMSETZUNGSZEITRAUM_HTML",       # Inline after Exec Summary (same page)
+    "SCORE_DRIVERS_HTML",            # Page 4: Score-Treiber
+    "QUICK_WINS_HTML",               # Pages 5-6: Quick Wins (max 5)
+    "ROADMAP_90D_HTML",              # Page 7: 90-Tage Roadmap
+    "RISKS_LIGHT_HTML",              # Page 8: Risiken Light (Top 5)
+    "TOOLING_LIGHT_HTML",            # Page 9: Tooling Light (Top 5)
+    "OPEN_INPUTS_HTML",              # Page 10: Optional - nur wenn Marker vorhanden
 ]
 
 # Sections to EXCLUDE from solo-compact
@@ -88,14 +156,80 @@ SOLO_COMPACT_WORD_LIMITS = {
 # Page limits per section
 SOLO_COMPACT_PAGE_LIMITS = {
     "COVER_HTML": 1,
-    "EXECUTIVE_SUMMARY_HTML": 2,
+    "EXECUTIVE_SUMMARY_HTML": 2,   # Includes Umsetzungszeitraum inline
+    "UMSETZUNGSZEITRAUM_HTML": 0,  # Inline block, no separate page
     "SCORE_DRIVERS_HTML": 1,
     "QUICK_WINS_HTML": 2,
-    "ROADMAP_90D_HTML": 2,
+    "ROADMAP_90D_HTML": 1,         # FIX-529: Reduced to 1 page for solo
     "RISKS_LIGHT_HTML": 1,
     "TOOLING_LIGHT_HTML": 1,
     "OPEN_INPUTS_HTML": 1,
 }
+
+
+# =============================================================================
+# FIX-529: UMSETZUNGSZEITRAUM BLOCK
+# =============================================================================
+
+def generate_umsetzungszeitraum_html(
+    sections: Dict[str, Any],
+    estimated_weeks: int | None = None,
+) -> str:
+    """
+    FIX-529: Generate the Umsetzungszeitraum (Implementation Timeline) block.
+
+    This block appears inline after the Executive Summary and provides
+    a quick overview of the recommended implementation timeline.
+
+    Args:
+        sections: Current sections dict (to extract timeline info if present)
+        estimated_weeks: Override for estimated weeks (default: auto-detect)
+
+    Returns:
+        HTML string for the Umsetzungszeitraum block
+    """
+    # Try to extract timeline from existing sections
+    if estimated_weeks is None:
+        # Default based on typical solo implementation
+        estimated_weeks = 12  # 90 days / 7 = ~12-13 weeks
+
+        # Check if ROADMAP_90D has duration info
+        roadmap = sections.get("ROADMAP_90D_HTML", "") or sections.get("ROADMAP_HTML", "")
+        if "90" in str(roadmap) or "3 Monate" in str(roadmap):
+            estimated_weeks = 12
+        elif "60" in str(roadmap) or "2 Monate" in str(roadmap):
+            estimated_weeks = 8
+        elif "30" in str(roadmap) or "1 Monat" in str(roadmap):
+            estimated_weeks = 4
+
+    # Timeline display
+    if estimated_weeks <= 4:
+        timeline_text = "ca. 4 Wochen"
+        timeline_label = "Schnellstart"
+    elif estimated_weeks <= 8:
+        timeline_text = "ca. 8 Wochen"
+        timeline_label = "Standard"
+    else:
+        timeline_text = "ca. 12 Wochen"
+        timeline_label = "Umfassend"
+
+    html = f'''
+    <div class="umsetzungszeitraum-block">
+        <div class="timeline-header">
+            <span class="timeline-icon">&#9201;</span>
+            <h4>Empfohlener Umsetzungszeitraum</h4>
+        </div>
+        <div class="timeline-content">
+            <span class="timeline-duration">{timeline_text}</span>
+            <span class="timeline-label">({timeline_label})</span>
+        </div>
+        <p class="timeline-note">
+            Basierend auf Ihren Angaben und typischen Solo-Unternehmer-Projekten.
+        </p>
+    </div>
+    '''
+
+    return html
 
 
 @dataclass
@@ -452,17 +586,23 @@ def process_for_solo_compact(
     # Step 2: Map to light sections
     processed = map_to_light_sections(filtered, config)
 
-    # Step 3: Generate TOC
+    # Step 3: FIX-529: Generate Umsetzungszeitraum block
+    if "UMSETZUNGSZEITRAUM_HTML" not in processed:
+        umsetzungszeitraum = generate_umsetzungszeitraum_html(processed)
+        processed["UMSETZUNGSZEITRAUM_HTML"] = umsetzungszeitraum
+        log.info("[FIX-529] Generated UMSETZUNGSZEITRAUM_HTML block")
+
+    # Step 4: Generate TOC
     toc_html = generate_compact_toc(processed)
     if toc_html:
         processed["TOC_HTML"] = toc_html
 
-    # Step 4: Mark as solo-compact
+    # Step 5: Mark as solo-compact
     processed["REPORT_TYPE"] = "solo_compact"
     processed["REPORT_TYPE_LABEL"] = "Kurzreport Solo"
 
     log.info(
-        "[FIX-528] Solo-compact processing complete: %d sections, TOC=%s",
+        "[FIX-529] Solo-compact processing complete: %d sections, TOC=%s",
         len(processed), "yes" if toc_html else "no"
     )
 
