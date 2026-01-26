@@ -1334,3 +1334,257 @@ def sanitize_sections_dict(sections: dict, truthy_env: Optional[bool] = True, la
         else:
             out[k] = v
     return out
+
+
+# =============================================================================
+# FIX-530: HTML Entity Sanitization (Rendering Bugs)
+# =============================================================================
+# Goal: No visible HTML entities (&uuml;, &amp;, &bdquo;, etc.) in final output
+# Exception: URLs with & querystrings are allowed
+
+# Pattern to detect HTML entities (excluding URL querystrings)
+HTML_ENTITY_PATTERN = re.compile(r'&([a-z]{2,8});', re.IGNORECASE)
+
+# Allowed entities (common ones that might appear in URLs or are intentional)
+ALLOWED_ENTITIES = {
+    'amp',  # & in URLs
+    'nbsp',  # Non-breaking space (sometimes intentional)
+    'lt', 'gt',  # < > (sometimes needed for display)
+}
+
+
+def unescape_html_entities(text: str) -> str:
+    """
+    FIX-530: Convert HTML entities to actual characters.
+
+    Converts entities like &uuml; to ü, &amp; to & (except in URLs),
+    &bdquo; to „, etc.
+
+    Args:
+        text: Text with potential HTML entities
+
+    Returns:
+        Text with entities converted to actual characters
+    """
+    if not text or not isinstance(text, str):
+        return text or ""
+
+    # First pass: Use Python's html.unescape for standard entities
+    result = html.unescape(text)
+
+    # Handle numeric entities that html.unescape might miss
+    # &#x prefix (hex) and &#prefix (decimal)
+    result = re.sub(r'&#x([0-9a-fA-F]+);', lambda m: chr(int(m.group(1), 16)), result)
+    result = re.sub(r'&#(\d+);', lambda m: chr(int(m.group(1))), result)
+
+    return result
+
+
+def sanitize_double_escaped_entities(text: str) -> str:
+    """
+    FIX-530: Fix double-escaped entities like &amp;uuml; → ü
+
+    Sometimes entities get double-escaped in the pipeline:
+    - &amp;uuml; should become ü
+    - &amp;amp; should become &
+
+    Args:
+        text: Text with potential double-escaped entities
+
+    Returns:
+        Text with double-escaping fixed
+    """
+    if not text or not isinstance(text, str):
+        return text or ""
+
+    # Pattern for double-escaped entities: &amp;entity;
+    double_escape_pattern = re.compile(r'&amp;([a-z]{2,8});', re.IGNORECASE)
+
+    # Keep iterating until no more double escapes
+    max_iterations = 3  # Safety limit
+    for _ in range(max_iterations):
+        if '&amp;' not in text:
+            break
+        # Convert &amp;entity; to &entity; then unescape
+        text = double_escape_pattern.sub(r'&\1;', text)
+        text = unescape_html_entities(text)
+
+    return text
+
+
+def validate_no_visible_entities(html_content: str) -> tuple[bool, list[str]]:
+    """
+    FIX-530: Validate that no visible HTML entities remain in final output.
+
+    Gate check: &[a-z]{2,6}; should not appear (except in URLs with querystrings).
+
+    Args:
+        html_content: Final HTML content
+
+    Returns:
+        Tuple of (passed, list_of_found_entities)
+    """
+    if not html_content:
+        return True, []
+
+    found_entities = []
+
+    # Find all entity-like patterns
+    for match in HTML_ENTITY_PATTERN.finditer(html_content):
+        entity_name = match.group(1).lower()
+
+        # Skip allowed entities
+        if entity_name in ALLOWED_ENTITIES:
+            continue
+
+        # Check if it's in a URL context (href="...&entity;..." or src="...")
+        # Look at surrounding context
+        start = max(0, match.start() - 50)
+        context = html_content[start:match.end() + 10]
+
+        # If in URL attribute, allow &amp; and similar
+        if 'href=' in context or 'src=' in context or 'url(' in context:
+            if entity_name == 'amp':
+                continue
+
+        found_entities.append(f"&{entity_name};")
+
+    passed = len(found_entities) == 0
+
+    if passed:
+        log.debug("[FIX-530][ENTITY-GATE] PASS: No visible entities found")
+    else:
+        # Deduplicate
+        unique_entities = list(set(found_entities))[:10]  # Limit to 10
+        log.warning(
+            "[FIX-530][ENTITY-GATE] FAIL: Found %d visible entities: %s",
+            len(found_entities), unique_entities
+        )
+
+    return passed, list(set(found_entities))
+
+
+def apply_entity_sanitization(html_content: str) -> tuple[str, int]:
+    """
+    FIX-530: Apply full entity sanitization pipeline.
+
+    Steps:
+    1. Fix double-escaped entities
+    2. Unescape remaining entities
+    3. Validate result
+
+    Args:
+        html_content: HTML to sanitize
+
+    Returns:
+        Tuple of (sanitized_html, count_of_entities_fixed)
+    """
+    if not html_content:
+        return "", 0
+
+    original = html_content
+    result = html_content
+
+    # Step 1: Fix double-escaped entities
+    result = sanitize_double_escaped_entities(result)
+
+    # Step 2: Unescape any remaining entities
+    result = unescape_html_entities(result)
+
+    # Count how many entities were fixed
+    original_entities = len(HTML_ENTITY_PATTERN.findall(original))
+    result_entities = len(HTML_ENTITY_PATTERN.findall(result))
+    fixed_count = original_entities - result_entities
+
+    if fixed_count > 0:
+        log.info("[FIX-530][ENTITY-SANITIZE] Fixed %d HTML entities", fixed_count)
+
+    return result, fixed_count
+
+
+# =============================================================================
+# FIX-530: CSS Fixes for Bullets and Overlaps (as injectable CSS)
+# =============================================================================
+
+FIX_530_CSS = """
+/* FIX-530: Fix broken bullets on Datengrundlage page (word-per-line issue) */
+.datengrundlage-section li,
+.data-basis li,
+.grundlagen li {
+    display: list-item !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+/* FIX-530: Fix text overlap in risk/quality boxes */
+.risk-card,
+.risk-box,
+.quality-box,
+.risiko-box,
+.colored-box {
+    min-height: auto !important;
+    height: auto !important;
+    padding: var(--space-sm, 8pt) var(--space-md, 16pt) !important;
+    overflow: visible !important;
+    overflow-wrap: anywhere;
+    word-wrap: break-word;
+}
+
+/* Ensure cards don't have fixed heights that cause overlap */
+.risk-card p,
+.risk-box p,
+.quality-box p {
+    margin-bottom: var(--space-xs, 4pt);
+    line-height: 1.5;
+}
+
+/* Fix for flex containers that might cause squishing */
+.risk-grid,
+.quality-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md, 16pt);
+}
+
+/* Ensure list items don't get squeezed */
+ul, ol {
+    padding-left: var(--space-lg, 24pt);
+}
+
+ul li, ol li {
+    padding-left: var(--space-xs, 4pt);
+    margin-bottom: var(--space-xs, 4pt);
+    line-height: 1.6;
+}
+
+/* Fix inline code blocks that might cause layout issues */
+code, .code {
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* Prevent tables from overflowing */
+table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+td, th {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+"""
+
+
+def get_fix_530_css() -> str:
+    """
+    FIX-530: Get CSS fixes for bullets and overlaps.
+
+    Returns injectable CSS for the PDF template.
+    """
+    return FIX_530_CSS
+
+
+log.info("[FIX-530] HTML entity sanitization + CSS fixes loaded")
