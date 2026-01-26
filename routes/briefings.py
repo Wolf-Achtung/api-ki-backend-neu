@@ -187,6 +187,7 @@ async def submit_briefing(
 @router.get("/{briefing_id}")
 async def get_briefing_status(
     briefing_id: int,
+    request: Request,
     db: Session = Depends(get_db)
 ) -> dict:
     """
@@ -197,10 +198,11 @@ async def get_briefing_status(
 
     Args:
         briefing_id: The briefing ID returned from /submit
+        request: FastAPI request for building URLs
         db: Database session
 
     Returns:
-        dict: Status with timestamps and error info if failed
+        dict: Status with timestamps, report_url (if done), and error info (if failed)
     """
     from models import Briefing
 
@@ -220,6 +222,12 @@ async def get_briefing_status(
         "processing_at": briefing.processing_at.isoformat() if briefing.processing_at else None,
         "done_at": briefing.done_at.isoformat() if briefing.done_at else None,
     }
+
+    # Include report URLs when done
+    if briefing.status == "done":
+        base_url = str(request.base_url).rstrip("/")
+        response["report_url"] = f"{base_url}/api/report/html/{briefing_id}"
+        response["pdf_url"] = f"{base_url}/api/report/pdf/{briefing_id}"
 
     # Include error only if failed
     if briefing.status == "failed" and briefing.error:
