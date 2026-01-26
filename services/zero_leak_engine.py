@@ -53,7 +53,8 @@ CRITICAL_LEAK_PATTERNS: List[str] = [
     "I must not",
     "I cannot disclose",
     "I can't disclose",
-    "prompt injection",
+    # NOTE: "prompt injection" moved to ALLOWED_SECURITY_TERMS (FIX-529) - legitimate security term
+    # "prompt injection",
     "jailbreak",
     # NOTE: "chain-of-thought" moved to BENIGN (v1.2.1) - appears in legitimate strategy text
     "function call",
@@ -91,6 +92,46 @@ CRITICAL_LEAK_REGEX: List[Tuple[Pattern, str]] = [
     (re.compile(r"\bsk-ant-[A-Za-z0-9]{16,}\b"), "Anthropic_API_Key"),
     # Generic secret patterns with key-like structure
     (re.compile(r"\b[A-Za-z0-9_]*(SECRET|KEY|TOKEN)[A-Za-z0-9_]*\s*[=:]\s*['\"][A-Za-z0-9+/=]{20,}['\"]", re.IGNORECASE), "Exposed_Secret"),
+]
+
+# =============================================================================
+# FIX-529: ALLOWED SECURITY TERMS - Legitimate in risk/security context
+# =============================================================================
+# These terms are legitimate security terminology that should NOT trigger
+# blacklist detection when appearing in risk analysis, AI Act compliance,
+# or security awareness sections.
+#
+# Context: These terms describe real security risks that users need to know about.
+# Blocking them would prevent accurate security communication.
+
+ALLOWED_SECURITY_TERMS: List[str] = [
+    # Security attack vectors (legitimate to discuss in risk context)
+    "prompt injection",
+    "Prompt-Injection",
+    "Prompt Injection",
+    "injection attack",
+    "Injection-Angriff",
+    # Data security terms
+    "data exfiltration",
+    "Datenexfiltration",
+    # AI security terms
+    "adversarial attack",
+    "model poisoning",
+    # Access control terms
+    "privilege escalation",
+    "unauthorized access",
+]
+
+# Sections where security terms are explicitly allowed
+SECURITY_CONTEXT_SECTIONS: List[str] = [
+    "RISKS_HTML",
+    "RISKS_LIGHT_HTML",
+    "RISK_ENGINE_HTML",
+    "RISK_ENGINE_V3_HTML",
+    "AI_ACT_HTML",
+    "SECURITY_HTML",
+    "DATA_SECURITY_HTML",
+    "COMPLIANCE_HTML",
 ]
 
 # =============================================================================

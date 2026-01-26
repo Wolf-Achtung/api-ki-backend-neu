@@ -10894,14 +10894,15 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
             log.info("✅ Using enhanced prompt for %s (with context)", section_name)
 
             # v7.0 DEBUG: Log prompt details for quick_wins
+            # FIX-529: Changed from WARNING to DEBUG for logging hygiene
             if section_name == "quick_wins":
-                log.warning("🔍 PromptEnhancer path SUCCEEDED for quick_wins")
-                log.warning(f"Prompt length: {len(prompt_text)}")
-                log.warning(f"Prompt starts with: {prompt_text[:300]}...")
+                log.debug("PromptEnhancer path SUCCEEDED for quick_wins")
+                log.debug(f"Prompt length: {len(prompt_text)}")
+                log.debug(f"Prompt starts with: {prompt_text[:300]}...")
                 has_v7_marker = "PLATIN+++ v7.0" in prompt_text
                 has_div_quick_win = '<div class="quick-win">' in prompt_text
-                log.warning(f"Contains 'PLATIN+++ v7.0': {has_v7_marker}")
-                log.warning(f"Contains '<div class=\"quick-win\">': {has_div_quick_win}")
+                log.debug(f"Contains 'PLATIN+++ v7.0': {has_v7_marker}")
+                log.debug(f"Contains '<div class=\"quick-win\">': {has_div_quick_win}")
 
             # FIX-RECO-P0 TASK 2: Prompt Interpolation Contract (Fail-Fast vor OpenAI)
             # Scan rendered prompt for unresolved {UPPERCASE_PLACEHOLDER} patterns
@@ -10939,15 +10940,16 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
             ) or ""
 
             # v7.0 DEBUG: Log GPT response for quick_wins
+            # FIX-529: Changed from WARNING to DEBUG for logging hygiene
             if section_name == "quick_wins":
-                log.warning(f"🤖 GPT response length: {len(result)}")
-                log.warning(f"Response starts: {result[:500]}...")
+                log.debug(f"GPT response length: {len(result)}")
+                log.debug(f"Response starts: {result[:500]}...")
                 has_div = '<div class="quick-win">' in result
                 has_blockquote = '<blockquote>' in result
                 has_pre = '<pre class="prompt-template">' in result
-                log.warning(f"Contains div.quick-win: {has_div}")
-                log.warning(f"Contains blockquote: {has_blockquote}")
-                log.warning(f"Contains pre.prompt-template: {has_pre}")
+                log.debug(f"Contains div.quick-win: {has_div}")
+                log.debug(f"Contains blockquote: {has_blockquote}")
+                log.debug(f"Contains pre.prompt-template: {has_pre}")
 
             result = _clean_html(result)
 
@@ -11202,9 +11204,10 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {min_words} Wörter):
     # ---------------- Fallback: Legacy-hardcoded Prompts ----------------
     # v7.0 PHASE 3: Upgraded to hyper-personalization using 5 Goldnuggets
     # v7.0 DEBUG: Log when legacy path is used
+    # FIX-529: Changed from WARNING to INFO for logging hygiene
     if section_name == "quick_wins":
-        log.warning("⚠️  QUICK_WINS: USING LEGACY FALLBACK PROMPTS (lines 5086+)")
-        log.warning("This means PromptEnhancer either failed, returned empty, or wasn't available")
+        log.info("QUICK_WINS: Using legacy fallback prompts")
+        log.info("PromptEnhancer either failed, returned empty, or wasn't available")
     branche = briefing.get("branche", "Unternehmen")
     hauptleistung = briefing.get("hauptleistung", "")
     unternehmensgroesse = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse") or ""
@@ -11429,10 +11432,11 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
     }
     
     # v7.0 DEBUG: Log the legacy prompt being used for quick_wins
+    # FIX-529: Changed from WARNING to DEBUG for logging hygiene
     if section_name == "quick_wins":
         legacy_prompt = prompts.get(section_name, "")
-        log.warning(f"🔍 LEGACY prompt length: {len(legacy_prompt)}")
-        log.warning(f"LEGACY prompt starts: {legacy_prompt[:300]}...")
+        log.debug(f"LEGACY prompt length: {len(legacy_prompt)}")
+        log.debug(f"LEGACY prompt starts: {legacy_prompt[:300]}...")
 
     out = _call_llm_for_section(
         section_key=section_name,

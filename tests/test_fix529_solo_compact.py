@@ -23,6 +23,47 @@ class TestSoloCompactEngine:
         assert ReportType.STANDARD.value == "standard"
         assert ReportType.SOLO_COMPACT.value == "solo_compact"
         assert ReportType.TEAM_COMPACT.value == "team_compact"
+        assert ReportType.KMU_COMPACT.value == "kmu_compact"
+        assert ReportType.AUTO.value == "auto"
+
+    def test_determine_variant_auto_solo(self):
+        """Test auto-detection selects solo_compact for solo users."""
+        from services.solo_compact_engine import determine_report_variant, ReportType
+
+        # Test various solo identifiers
+        assert determine_report_variant("auto", "solo") == ReportType.SOLO_COMPACT
+        assert determine_report_variant("auto", "Solo") == ReportType.SOLO_COMPACT
+        assert determine_report_variant("auto", "1") == ReportType.SOLO_COMPACT
+        assert determine_report_variant("auto", "freiberufler") == ReportType.SOLO_COMPACT
+        assert determine_report_variant("auto", "Freelancer") == ReportType.SOLO_COMPACT
+        assert determine_report_variant("auto", "Einzelunternehmer") == ReportType.SOLO_COMPACT
+        assert determine_report_variant(None, "solo") == ReportType.SOLO_COMPACT
+
+    def test_determine_variant_auto_non_solo(self):
+        """Test auto-detection selects standard for non-solo users."""
+        from services.solo_compact_engine import determine_report_variant, ReportType
+
+        assert determine_report_variant("auto", "team") == ReportType.STANDARD
+        assert determine_report_variant("auto", "kmu") == ReportType.STANDARD
+        assert determine_report_variant("auto", "enterprise") == ReportType.STANDARD
+        assert determine_report_variant("auto", None) == ReportType.STANDARD
+        assert determine_report_variant(None, None) == ReportType.STANDARD
+
+    def test_determine_variant_explicit(self):
+        """Test explicit variant selection overrides auto-detection."""
+        from services.solo_compact_engine import determine_report_variant, ReportType
+
+        # Explicit standard even for solo user
+        assert determine_report_variant("standard", "solo") == ReportType.STANDARD
+
+        # Explicit solo_compact even for team user
+        assert determine_report_variant("solo_compact", "team") == ReportType.SOLO_COMPACT
+
+        # Explicit team_compact
+        assert determine_report_variant("team_compact", "solo") == ReportType.TEAM_COMPACT
+
+        # Explicit kmu_compact
+        assert determine_report_variant("kmu_compact", "team") == ReportType.KMU_COMPACT
 
     def test_solo_compact_sections_defined(self):
         """Test that solo compact sections are defined."""
@@ -215,6 +256,39 @@ class TestTocGeneration:
         assert "Quick Wins" not in toc  # Empty section excluded
 
 
+class TestUmsetzungszeitraumBlock:
+    """Tests for Umsetzungszeitraum block generation."""
+
+    def test_generates_umsetzungszeitraum_html(self):
+        """Test that Umsetzungszeitraum HTML is generated."""
+        from services.solo_compact_engine import generate_umsetzungszeitraum_html
+
+        html = generate_umsetzungszeitraum_html({})
+
+        assert "umsetzungszeitraum-block" in html
+        assert "Umsetzungszeitraum" in html
+        assert "Wochen" in html
+
+    def test_umsetzungszeitraum_timeline_variants(self):
+        """Test different timeline variants based on estimated weeks."""
+        from services.solo_compact_engine import generate_umsetzungszeitraum_html
+
+        # 4 weeks - Schnellstart
+        html_4w = generate_umsetzungszeitraum_html({}, estimated_weeks=4)
+        assert "4 Wochen" in html_4w
+        assert "Schnellstart" in html_4w
+
+        # 8 weeks - Standard
+        html_8w = generate_umsetzungszeitraum_html({}, estimated_weeks=8)
+        assert "8 Wochen" in html_8w
+        assert "Standard" in html_8w
+
+        # 12 weeks - Umfassend
+        html_12w = generate_umsetzungszeitraum_html({}, estimated_weeks=12)
+        assert "12 Wochen" in html_12w
+        assert "Umfassend" in html_12w
+
+
 class TestProcessForSoloCompact:
     """Tests for main processing function."""
 
@@ -280,17 +354,29 @@ class TestSoloCompactEndpoint:
     """Tests for solo-compact API endpoint."""
 
     def test_endpoint_model(self):
-        """Test SoloCompactRequest model."""
-        from routes.report import SoloCompactRequest
+        """Test ReportVariantRequest model."""
+        pytest.importorskip("fastapi", reason="fastapi not installed in test env")
+        from routes.report import ReportVariantRequest, SoloCompactRequest
 
-        # Test default values
-        request = SoloCompactRequest(briefing_id=123)
+        # Test default values - now defaults to "auto"
+        request = ReportVariantRequest(briefing_id=123)
         assert request.briefing_id == 123
-        assert request.variant == "solo_compact"
+        assert request.variant == "auto"
+        assert request.company_size is None
 
-        # Test custom variant
-        request2 = SoloCompactRequest(briefing_id=456, variant="custom")
-        assert request2.variant == "custom"
+        # Test explicit variant
+        request2 = ReportVariantRequest(briefing_id=456, variant="solo_compact")
+        assert request2.variant == "solo_compact"
+
+        # Test with company_size for auto-detection
+        request3 = ReportVariantRequest(briefing_id=789, variant="auto", company_size="solo")
+        assert request3.variant == "auto"
+        assert request3.company_size == "solo"
+
+        # Backwards compatibility alias
+        alias_request = SoloCompactRequest(briefing_id=100)
+        assert alias_request.briefing_id == 100
+        assert alias_request.variant == "auto"
 
 
 if __name__ == "__main__":

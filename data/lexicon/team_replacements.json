@@ -1,0 +1,24 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Team-scale term adjustments - FIX-529",
+    "purpose": "Adjust enterprise terminology for small team contexts",
+    "target_persona": "team"
+  },
+  "replacements": [
+    {"pattern": "\\bEnterprise-Architektur\\b", "replacement": "Team-Struktur", "description": "Enterprise-Architektur->Team-Struktur"},
+    {"pattern": "\\bUnternehmensweite\\b", "replacement": "Teamweite", "description": "Unternehmensweite->Teamweite"},
+    {"pattern": "\\bUnternehmensweit\\b", "replacement": "Teamweit", "description": "Unternehmensweit->Teamweit"},
+    {"pattern": "\\bKonzernweit\\b", "replacement": "Teamweit", "description": "Konzernweit->Teamweit"},
+    {"pattern": "\\bStakeholder-Management\\b", "replacement": "Team-Koordination", "description": "Stakeholder-Management->Team-Koordination"},
+    {"pattern": "\\bChange-Management\\b", "replacement": "Aenderungssteuerung", "description": "Change-Management->Aenderungssteuerung"},
+    {"pattern": "\\bProjekt-Portfolio\\b", "replacement": "Projektliste", "description": "Projekt-Portfolio->Projektliste"},
+    {"pattern": "\\bPortfolio\\b", "replacement": "Projektsammlung", "description": "Portfolio->Projektsammlung"},
+    {"pattern": "\\bOrganisationsebene\\b", "replacement": "Teamebene", "description": "Organisationsebene->Teamebene"},
+    {"pattern": "\\bGeschäftsführung\\b", "replacement": "Teamleitung", "description": "Geschaeftsfuehrung->Teamleitung"},
+    {"pattern": "\\bVorstand\\b", "replacement": "Leitung", "description": "Vorstand->Leitung"},
+    {"pattern": "\\bC-Level\\b", "replacement": "Fuehrungsebene", "description": "C-Level->Fuehrungsebene"},
+    {"pattern": "\\bBudgetverantwortliche\\b", "replacement": "Budgetinhaber", "description": "Budgetverantwortliche->Budgetinhaber"},
+    {"pattern": "\\bAbteilungsleiter\\b", "replacement": "Teamleiter", "description": "Abteilungsleiter->Teamleiter"}
+  ]
+}
