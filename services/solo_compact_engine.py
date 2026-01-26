@@ -223,10 +223,10 @@ def _create_light_section(content: str, max_words: int, title: str) -> str:
 
     # Find good truncation point (after complete HTML element)
     # Count words while preserving HTML structure
-    result = []
+    result: List[str] = []
     word_count = 0
     in_tag = False
-    current_word = []
+    current_word: List[str] = []
 
     for char in content:
         if char == '<':
