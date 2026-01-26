@@ -61,6 +61,42 @@ DEFAULT_POLL_TIMEOUT = 300  # seconds (5 minutes)
 TERMINAL_STATUSES = {"done", "failed", "error", "skipped"}
 
 
+def normalize_base_url(url: str) -> str:
+    """
+    Normalize the base URL for consistent API calls.
+
+    - Removes trailing slashes
+    - Ensures scheme is present (defaults to https for non-localhost)
+    - Strips whitespace
+
+    Args:
+        url: Raw URL input
+
+    Returns:
+        Normalized URL string
+    """
+    url = url.strip().rstrip("/")
+
+    # Add scheme if missing
+    if not url.startswith(("http://", "https://")):
+        # Use http for localhost, https otherwise
+        if "localhost" in url or "127.0.0.1" in url:
+            url = f"http://{url}"
+        else:
+            url = f"https://{url}"
+
+    return url
+
+
+def mask_token(token: str | None) -> str:
+    """Mask a token for safe logging (show first 4 chars only)."""
+    if not token:
+        return "(none)"
+    if len(token) <= 8:
+        return "****"
+    return f"{token[:4]}...****"
+
+
 # =============================================================================
 # FIXTURE LOADING
 # =============================================================================
@@ -112,7 +148,7 @@ def get_api_client(base_url: str, service_token: Optional[str] = None) -> httpx.
 
     if service_token:
         headers["X-Service-Token"] = service_token
-        log.debug("Using service token authentication")
+        log.info("Using service token authentication: %s", mask_token(service_token))
 
     return httpx.Client(
         base_url=base_url,
@@ -286,10 +322,14 @@ def main() -> int:
         logging.getLogger().setLevel(logging.DEBUG)
 
     # Configuration from args or environment
-    base_url = args.base_url or os.getenv("API_BASE_URL", DEFAULT_API_BASE)
+    raw_base_url = args.base_url or os.getenv("API_BASE_URL", DEFAULT_API_BASE)
+    base_url = normalize_base_url(raw_base_url)
     service_token = args.service_token or os.getenv("SERVICE_TOKEN")
     poll_interval = args.interval or int(os.getenv("POLL_INTERVAL", DEFAULT_POLL_INTERVAL))
     poll_timeout = args.timeout or int(os.getenv("POLL_TIMEOUT", DEFAULT_POLL_TIMEOUT))
+
+    log.info("Configuration: base_url=%s, token=%s, poll=%ds/%ds",
+             base_url, mask_token(service_token), poll_interval, poll_timeout)
 
     try:
         # Load fixture
@@ -327,7 +367,9 @@ def main() -> int:
 
                 if final_status.get("status") == "done":
                     result["report_url"] = get_report_url(briefing_id, base_url)
+                    result["pdf_url"] = f"{base_url}/api/report/pdf/{briefing_id}"
                     log.info("Report ready: %s", result["report_url"])
+                    log.info("PDF ready: %s", result["pdf_url"])
                 elif final_status.get("status") == "failed":
                     result["error"] = final_status.get("error")
                     log.error("Report generation failed: %s", result["error"])
@@ -345,6 +387,8 @@ def main() -> int:
             print(f"\nBriefing ID: {briefing_id}")
             if result.get("report_url"):
                 print(f"Report URL: {result['report_url']}")
+            if result.get("pdf_url"):
+                print(f"PDF URL: {result['pdf_url']}")
 
         return 0
 
