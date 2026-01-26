@@ -2610,10 +2610,16 @@ def apply_solo_terms_final(sections: dict, company_size: str) -> dict:
         log.info("[FIX-52x][FINAL-SOLO-TERMS] applied %d replacements", total_replacements)
 
     # STRICT mode check for remaining forbidden terms
+    # FIX-529: Extended forbidden terms list for solo persona
     if os.getenv("RELEASE_STRICT_MODE") == "1":
-        forbidden = ["Skalierung", "Stakeholder", "Audit-Trail", "Audit Trail",
-                     "Stack", "Tech-Stack", "Full-Stack", "Rollout", "Deployment",
-                     "Pipeline", "Framework", "Dashboard", "KPI", "Modul", "Engine"]
+        forbidden = [
+            # Technical terms (should be replaced, not just removed)
+            "Skalierung", "Stakeholder", "Audit-Trail", "Audit Trail",
+            "Stack", "Tech-Stack", "Full-Stack", "Rollout", "Deployment",
+            "Pipeline", "Framework", "Dashboard", "KPI", "Modul", "Engine",
+            # FIX-529: Additional forbidden terms per briefing
+            "Architektur", "Layer", "KPI-Dashboard", "Workflow",
+        ]
         all_text = " ".join(str(v) for v in sections.values() if isinstance(v, str))
         still = [t for t in forbidden if regex_module.search(r'\b' + regex_module.escape(t) + r'\b', all_text, regex_module.IGNORECASE)]
         if still:

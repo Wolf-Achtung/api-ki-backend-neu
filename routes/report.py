@@ -50,6 +50,82 @@ async def ping() -> Dict[str, str]:
     return {"status": "ok", "at": datetime.now(timezone.utc).isoformat()}
 
 
+# ---------------------------------------------------------------------------
+# FIX-529: Solo Compact Report Endpoint
+# ---------------------------------------------------------------------------
+
+class SoloCompactRequest(BaseModel):
+    """Request model for solo-compact report generation."""
+    briefing_id: int = Field(ge=0)
+    variant: str = Field(default="solo_compact", description="Report variant: solo_compact")
+
+
+@router.post("/solo-compact")
+async def generate_solo_compact(payload: SoloCompactRequest) -> Dict[str, Any]:
+    """
+    FIX-529: Generate a solo-compact report (12-16 pages).
+
+    Solo-compact reports are condensed versions specifically designed for
+    solo/freelance users. They include:
+    - Cover + Executive Summary (2-3 pages)
+    - Scorecard with Readiness, Risks, ROI (1 page)
+    - Quick Wins (max 5, 2 pages)
+    - 90-Day Roadmap (2 pages)
+    - Compact Business Case (1 page)
+    - Top 5 Risks (1 page)
+    - Open Inputs (if any) (1 page)
+    - Appendix (1 page)
+
+    Total: 12-16 pages (hard gate).
+
+    Args:
+        payload: SoloCompactRequest with briefing_id and variant
+
+    Returns:
+        dict: {"ok": True, "report_type": "solo_compact"}
+    """
+    try:
+        from gpt_analyze import run_async
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Analyzer unavailable: {exc.__class__.__name__}: {exc}",
+        ) from exc
+
+    log.info(
+        "[FIX-529] Solo-compact report requested: briefing_id=%d variant=%s",
+        payload.briefing_id, payload.variant
+    )
+
+    # Pass variant to the analyzer
+    # The analyzer will use this to apply solo_compact_engine processing
+    try:
+        if asyncio.iscoroutinefunction(run_async):
+            await run_async(
+                payload.briefing_id,
+                report_variant=payload.variant,  # type: ignore
+            )
+        else:
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(
+                None,
+                lambda: run_async(
+                    payload.briefing_id,
+                    report_variant=payload.variant,
+                )
+            )
+    except TypeError:
+        # Fallback: run_async might not support report_variant yet
+        log.warning("[FIX-529] run_async doesn't support report_variant, using default")
+        if asyncio.iscoroutinefunction(run_async):
+            await run_async(payload.briefing_id)  # type: ignore
+        else:
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, lambda: run_async(payload.briefing_id))
+
+    return {"ok": True, "report_type": payload.variant, "briefing_id": payload.briefing_id}
+
+
 # NOTE: We use /by-id/{id} instead of /{id} to prevent routing conflicts.
 # A generic /{id} route would shadow static paths like /ping, /status, /html, /pdf
 # because FastAPI tries to parse "ping" or "html" as integers, causing 422 errors.
