@@ -1,0 +1,533 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+FIX-528: Pipeline Sanitizers - Post-Processing Functions
+
+This module provides post-processing functions for the report generation pipeline.
+These functions should be applied:
+1. After LLM output
+2. After html_repair fallback
+3. After OpenAI 502 recovery
+
+Functions:
+- decode_html_entities(): Convert HTML entities to actual characters
+- ensure_complete_sentences(): Ensure text ends with complete sentences
+- validate_entity_free(): Validation gate for entity-free output
+
+Usage:
+    from services.pipeline_sanitizers import (
+        decode_html_entities,
+        ensure_complete_sentences,
+        apply_post_llm_sanitization,
+    )
+
+    # After LLM output
+    content = apply_post_llm_sanitization(content, section_name="exec_summary")
+
+    # After html_repair
+    content = decode_html_entities(content)
+    content = ensure_complete_sentences(content)
+
+Version: 1.0.0 (FIX-528)
+"""
+from __future__ import annotations
+
+import html
+import logging
+import re
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple
+
+log = logging.getLogger(__name__)
+
+
+# =============================================================================
+# FIX-528: HTML ENTITY DECODING
+# =============================================================================
+
+# Common HTML entities that should be decoded
+ENTITY_MAP = {
+    '&uuml;': 'ü',
+    '&Uuml;': 'Ü',
+    '&auml;': 'ä',
+    '&Auml;': 'Ä',
+    '&ouml;': 'ö',
+    '&Ouml;': 'Ö',
+    '&szlig;': 'ß',
+    '&bdquo;': '„',
+    '&ldquo;': '"',
+    '&rdquo;': '"',
+    '&lsquo;': ''',
+    '&rsquo;': ''',
+    '&ndash;': '–',
+    '&mdash;': '—',
+    '&euro;': '€',
+    '&nbsp;': ' ',
+    '&hellip;': '…',
+    '&bull;': '•',
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&apos;': "'",
+}
+
+# Pattern to detect HTML entities
+ENTITY_PATTERN = re.compile(r'&([a-zA-Z]{2,8}|#\d{1,6}|#x[0-9a-fA-F]{1,6});')
+
+
+def decode_html_entities(text: str, preserve_html_structure: bool = True) -> str:
+    """
+    FIX-528: Decode HTML entities to actual characters.
+
+    Converts entities like &uuml; to ü, &amp; to &, &bdquo; to „, etc.
+    This should be applied after LLM output and after html_repair.
+
+    Args:
+        text: Text with potential HTML entities
+        preserve_html_structure: If True, preserves valid HTML tags
+
+    Returns:
+        Text with entities converted to actual characters
+
+    Example:
+        >>> decode_html_entities("F&uuml;r Ihre &bdquo;Daten&ldquo;")
+        'Für Ihre „Daten"'
+    """
+    if not text or not isinstance(text, str):
+        return text or ""
+
+    # Track if we had entities
+    original = text
+    result = text
+
+    # Step 1: Fix double-escaped entities first (e.g., &amp;uuml; -> &uuml; -> ü)
+    # This can happen when content is escaped multiple times
+    max_iterations = 3
+    for _ in range(max_iterations):
+        if '&amp;' not in result:
+            break
+        # Convert &amp;entity; to &entity;
+        result = re.sub(r'&amp;([a-zA-Z]{2,8});', r'&\1;', result)
+
+    # Step 2: Use Python's html.unescape for comprehensive entity handling
+    result = html.unescape(result)
+
+    # Step 3: Handle numeric entities that might have been missed
+    result = re.sub(r'&#x([0-9a-fA-F]+);', lambda m: chr(int(m.group(1), 16)), result)
+    result = re.sub(r'&#(\d+);', lambda m: chr(int(m.group(1))), result)
+
+    # Log if entities were decoded
+    if result != original:
+        entity_count = len(ENTITY_PATTERN.findall(original)) - len(ENTITY_PATTERN.findall(result))
+        if entity_count > 0:
+            log.info("[FIX-528][ENTITY-DECODE] Decoded %d HTML entities", entity_count)
+
+    return result
+
+
+def validate_entity_free(text: str) -> Tuple[bool, List[str]]:
+    """
+    FIX-528: Validate that no visible HTML entities remain.
+
+    Gate check for final output. Entities like &[a-z]{2,6}; should not appear
+    in rendered text (except in URLs with query strings).
+
+    Args:
+        text: Text to validate
+
+    Returns:
+        Tuple of (passed, list_of_found_entities)
+    """
+    if not text:
+        return True, []
+
+    found_entities = []
+
+    # Find all entity-like patterns
+    for match in ENTITY_PATTERN.finditer(text):
+        entity = match.group(0)
+
+        # Check context - skip if in URL (href/src attribute)
+        start = max(0, match.start() - 50)
+        context = text[start:match.end() + 10]
+
+        # Allow &amp; in URLs
+        if ('href=' in context or 'src=' in context or 'url(' in context):
+            if entity == '&amp;':
+                continue
+
+        found_entities.append(entity)
+
+    passed = len(found_entities) == 0
+
+    if not passed:
+        unique = list(set(found_entities))[:10]
+        log.warning("[FIX-528][ENTITY-GATE] Found %d entities: %s", len(found_entities), unique)
+
+    return passed, list(set(found_entities))
+
+
+# =============================================================================
+# FIX-528: SENTENCE COMPLETION
+# =============================================================================
+
+# Sentence-ending punctuation
+SENTENCE_ENDS = {'.', '!', '?'}
+
+# Words that indicate incomplete sentences (German)
+INCOMPLETE_END_WORDS = {
+    # Articles
+    'der', 'die', 'das', 'den', 'dem', 'des',
+    'ein', 'eine', 'einer', 'eines', 'einem', 'einen',
+    # Prepositions
+    'mit', 'bei', 'für', 'auf', 'von', 'zu', 'zur', 'zum',
+    'in', 'im', 'ins', 'an', 'am', 'ans', 'aus', 'nach',
+    'durch', 'über', 'unter', 'ohne', 'gegen', 'zwischen',
+    # Conjunctions
+    'und', 'oder', 'aber', 'sowie', 'dass', 'weil', 'wenn',
+    'ob', 'falls', 'damit', 'sodass', 'indem', 'wobei',
+    # Pronouns
+    'sie', 'ihnen', 'ihr', 'ihre', 'ihren', 'sich',
+    'dies', 'diese', 'dieser', 'dieses',
+    # Adverbs
+    'auch', 'nur', 'noch', 'so', 'als', 'bereits', 'ca',
+}
+
+
+def ensure_complete_sentences(text: str, min_words: int = 5) -> str:
+    """
+    FIX-528: Ensure text ends with complete sentences.
+
+    This function is critical after OpenAI 502 fallback or html_repair,
+    where content might be truncated mid-sentence.
+
+    Strategy:
+    1. Check if text ends with sentence-ending punctuation
+    2. If not, check if last word indicates incomplete sentence
+    3. If incomplete, trim to last complete sentence boundary
+    4. If still incomplete, add ellipsis or period
+
+    Args:
+        text: Text to process
+        min_words: Minimum words to keep (prevents over-trimming)
+
+    Returns:
+        Text ending with complete sentence
+
+    Example:
+        >>> ensure_complete_sentences("Dies ist ein Test für die")
+        'Dies ist ein Test.'
+        >>> ensure_complete_sentences("Dies ist ein Test.")
+        'Dies ist ein Test.'
+    """
+    if not text or not isinstance(text, str):
+        return text or ""
+
+    text = text.strip()
+    if not text:
+        return ""
+
+    # Check if already ends with sentence punctuation
+    if text[-1] in SENTENCE_ENDS:
+        return text
+
+    # Get words for analysis
+    words = text.split()
+    if len(words) < min_words:
+        # Too short - just add period
+        return text + "."
+
+    last_word = words[-1].lower().rstrip('.,;:!?')
+
+    # Check if last word indicates incomplete sentence
+    is_incomplete = last_word in INCOMPLETE_END_WORDS
+
+    if is_incomplete:
+        # Find last sentence boundary
+        last_period = text.rfind('.')
+        last_excl = text.rfind('!')
+        last_quest = text.rfind('?')
+
+        # Find the latest sentence end
+        best_end = max(last_period, last_excl, last_quest)
+
+        if best_end > len(text) // 3:  # Only trim if boundary is in latter 2/3
+            trimmed = text[:best_end + 1].strip()
+            if len(trimmed.split()) >= min_words:
+                log.info(
+                    "[FIX-528][SENTENCE-COMPLETE] Trimmed incomplete ending: '%s' -> '%s'",
+                    text[-30:], trimmed[-30:]
+                )
+                return trimmed
+
+        # No good boundary - try comma cut
+        last_comma = text.rfind(',')
+        if last_comma > len(text) // 2:
+            trimmed = text[:last_comma].strip() + "."
+            if len(trimmed.split()) >= min_words:
+                log.info(
+                    "[FIX-528][SENTENCE-COMPLETE] Comma-cut: '%s' -> '%s'",
+                    text[-30:], trimmed[-30:]
+                )
+                return trimmed
+
+    # Fallback: add period
+    return text.rstrip('.,;:') + "."
+
+
+def ensure_complete_sentences_html(html_content: str) -> str:
+    """
+    FIX-528: Apply sentence completion to HTML content.
+
+    Processes text nodes in HTML (paragraphs, list items) to ensure
+    complete sentences.
+
+    Args:
+        html_content: HTML content to process
+
+    Returns:
+        HTML with complete sentences
+    """
+    if not html_content:
+        return html_content
+
+    def process_text_node(match: re.Match[str]) -> str:
+        open_tag: str = match.group(1)
+        inner: str = match.group(2)
+        close_tag: str = match.group(3)
+
+        # Skip if contains nested HTML
+        if '<' in inner and '>' in inner:
+            return str(match.group(0))
+
+        processed = ensure_complete_sentences(inner)
+        return f"{open_tag}{processed}{close_tag}"
+
+    result = html_content
+
+    # Process paragraphs
+    result = re.sub(
+        r'(<p[^>]*>)([^<]{10,})(</p>)',
+        process_text_node,
+        result,
+        flags=re.IGNORECASE
+    )
+
+    # Process list items
+    result = re.sub(
+        r'(<li[^>]*>)([^<]{10,})(</li>)',
+        process_text_node,
+        result,
+        flags=re.IGNORECASE
+    )
+
+    return result
+
+
+# =============================================================================
+# FIX-528: COMBINED SANITIZATION PIPELINE
+# =============================================================================
+
+@dataclass
+class SanitizationResult:
+    """Result of sanitization pipeline."""
+    content: str
+    entities_decoded: int
+    sentences_fixed: int
+    warnings: List[str]
+
+
+def apply_post_llm_sanitization(
+    content: str,
+    section_name: str = "",
+    decode_entities: bool = True,
+    complete_sentences: bool = True,
+    is_html: bool = True,
+) -> SanitizationResult:
+    """
+    FIX-528: Apply full post-LLM sanitization pipeline.
+
+    This should be called after:
+    1. Normal LLM output
+    2. html_repair fallback
+    3. OpenAI 502 recovery
+
+    Pipeline:
+    1. Decode HTML entities
+    2. Ensure complete sentences
+    3. Validate output
+
+    Args:
+        content: Content to sanitize
+        section_name: Section name for logging
+        decode_entities: Whether to decode HTML entities
+        complete_sentences: Whether to ensure complete sentences
+        is_html: Whether content is HTML (affects sentence processing)
+
+    Returns:
+        SanitizationResult with processed content and stats
+    """
+    if not content:
+        return SanitizationResult(
+            content="",
+            entities_decoded=0,
+            sentences_fixed=0,
+            warnings=[],
+        )
+
+    result = content
+    entities_decoded = 0
+    sentences_fixed = 0
+    warnings: List[str] = []
+
+    # Step 1: Decode HTML entities
+    if decode_entities:
+        before_entity_count = len(ENTITY_PATTERN.findall(result))
+        result = decode_html_entities(result)
+        after_entity_count = len(ENTITY_PATTERN.findall(result))
+        entities_decoded = before_entity_count - after_entity_count
+
+    # Step 2: Ensure complete sentences
+    if complete_sentences:
+        original = result
+        if is_html:
+            result = ensure_complete_sentences_html(result)
+        else:
+            result = ensure_complete_sentences(result)
+
+        if result != original:
+            sentences_fixed = 1
+
+    # Step 3: Validate
+    entity_passed, entity_violations = validate_entity_free(result)
+    if not entity_passed:
+        warnings.append(f"Remaining entities: {entity_violations[:5]}")
+
+    # Logging
+    if entities_decoded > 0 or sentences_fixed > 0:
+        log.info(
+            "[FIX-528][SANITIZE] section=%s entities=%d sentences=%d warnings=%d",
+            section_name or "unknown",
+            entities_decoded,
+            sentences_fixed,
+            len(warnings)
+        )
+
+    return SanitizationResult(
+        content=result,
+        entities_decoded=entities_decoded,
+        sentences_fixed=sentences_fixed,
+        warnings=warnings,
+    )
+
+
+def apply_post_fallback_sanitization(
+    content: str,
+    section_name: str = "",
+    retry_count: int = 0,
+    fallback_used: bool = False,
+) -> str:
+    """
+    FIX-528: Specialized sanitization for fallback/recovery scenarios.
+
+    Called after html_repair or OpenAI 502 recovery.
+
+    Args:
+        content: Content to sanitize
+        section_name: Section name for logging
+        retry_count: Number of retries before success/fallback
+        fallback_used: Whether fallback was triggered
+
+    Returns:
+        Sanitized content
+    """
+    if not content:
+        return ""
+
+    log.info(
+        "[FIX-528][POST-FALLBACK] section=%s retry_count=%d fallback=%s",
+        section_name, retry_count, fallback_used
+    )
+
+    # Apply full sanitization pipeline
+    result = apply_post_llm_sanitization(
+        content,
+        section_name=section_name,
+        decode_entities=True,
+        complete_sentences=True,
+        is_html=True,
+    )
+
+    return result.content
+
+
+# =============================================================================
+# FIX-528: SECTION-LEVEL SANITIZATION
+# =============================================================================
+
+def sanitize_all_sections(
+    sections: Dict[str, Any],
+    fallback_triggered: bool = False,
+) -> Tuple[Dict[str, Any], Dict[str, int]]:
+    """
+    FIX-528: Apply sanitization to all HTML sections.
+
+    Args:
+        sections: Dict of section_key -> content
+        fallback_triggered: Whether fallback was used (applies stricter checks)
+
+    Returns:
+        Tuple of (sanitized_sections, stats)
+    """
+    sanitized = dict(sections)
+    stats = {
+        'entities_decoded': 0,
+        'sentences_fixed': 0,
+        'sections_processed': 0,
+    }
+
+    for key, value in sections.items():
+        if not isinstance(value, str):
+            continue
+
+        # Only process HTML sections
+        if not (key.endswith('_HTML') or key.endswith('_html')):
+            continue
+
+        # Skip very short content
+        if len(value) < 50:
+            continue
+
+        result = apply_post_llm_sanitization(
+            value,
+            section_name=key,
+            decode_entities=True,
+            complete_sentences=fallback_triggered,  # Only fix sentences if fallback
+            is_html=True,
+        )
+
+        sanitized[key] = result.content
+        stats['entities_decoded'] += result.entities_decoded
+        stats['sentences_fixed'] += result.sentences_fixed
+        stats['sections_processed'] += 1
+
+    if stats['entities_decoded'] > 0 or stats['sentences_fixed'] > 0:
+        log.info(
+            "[FIX-528][SECTION-SANITIZE] processed=%d entities=%d sentences=%d",
+            stats['sections_processed'],
+            stats['entities_decoded'],
+            stats['sentences_fixed']
+        )
+
+    return sanitized, stats
+
+
+# =============================================================================
+# INITIALIZATION
+# =============================================================================
+
+log.info(
+    "[FIX-528] pipeline_sanitizers loaded: decode_html_entities, "
+    "ensure_complete_sentences, apply_post_llm_sanitization, sanitize_all_sections"
+)

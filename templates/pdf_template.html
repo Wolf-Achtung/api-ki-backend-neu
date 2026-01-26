@@ -6163,6 +6163,187 @@
             page-break-inside: auto !important;
             break-inside: auto !important;
         }
+
+        /* ============================================
+           FIX-528: LAYOUT STABILITY FIXES
+           Prevents text overlap in Final-Check boxes,
+           Quality blocks, and other containers
+           ============================================ */
+
+        /* FIX-528: Final-Check box overflow prevention */
+        .final-check-intro,
+        .exec-final-check,
+        .final-check-box {
+            min-height: auto !important;
+            height: auto !important;
+            overflow: visible !important;
+            page-break-inside: auto;
+        }
+
+        .final-check-intro p,
+        .exec-final-check p,
+        .final-check-decisions li {
+            line-height: 1.35 !important;
+            margin-bottom: var(--space-xs);
+            overflow-wrap: break-word;
+        }
+
+        .final-check-decisions {
+            margin: 0;
+            padding-left: var(--space-md);
+        }
+
+        .final-check-decisions li {
+            break-inside: avoid;
+            margin-bottom: 6pt;
+        }
+
+        /* FIX-528: Quality/Transparency block overflow fix */
+        .quality-block,
+        .transparency-block,
+        .quality-box,
+        .risk-box,
+        .colored-box,
+        .info-box,
+        .alert-box {
+            min-height: auto !important;
+            height: auto !important;
+            overflow: visible !important;
+            padding: var(--space-sm) var(--space-md);
+            box-sizing: border-box;
+        }
+
+        .quality-block p,
+        .quality-box p,
+        .risk-box p,
+        .colored-box p {
+            line-height: 1.35;
+            margin-bottom: var(--space-xs);
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+
+        /* FIX-528: Consistent line-height for all text containers */
+        .card p,
+        .card li,
+        .section p,
+        .section li {
+            line-height: 1.3;
+        }
+
+        /* FIX-528: Bullet list improvements - prevent word-per-line */
+        ul, ol {
+            margin-left: var(--space-md);
+            padding-left: var(--space-md);
+        }
+
+        ul li, ol li {
+            break-inside: avoid;
+            line-height: 1.35;
+            margin-bottom: 4pt;
+            white-space: normal;
+            word-break: normal;
+            overflow-wrap: break-word;
+        }
+
+        /* FIX-528: Flow layout instead of absolute positioning */
+        .flex-container,
+        .grid-container {
+            position: relative;
+            overflow: visible;
+        }
+
+        /* ============================================
+           FIX-528: OPEN INPUTS PAGE STYLING
+           Styles for the "Offene Inputs" collection page
+           ============================================ */
+
+        .open-inputs {
+            page-break-before: auto;
+            padding: var(--space-lg);
+        }
+
+        .open-inputs h2 {
+            font-size: 18pt;
+            color: var(--color-brand-primary);
+            margin-bottom: var(--space-md);
+            border-bottom: 2px solid var(--color-brand-primary);
+            padding-bottom: var(--space-xs);
+        }
+
+        .open-inputs .section-intro {
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-md);
+            font-size: var(--font-body);
+            line-height: 1.5;
+        }
+
+        /* Open Inputs table */
+        .open-inputs-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: var(--space-md) 0;
+            font-size: var(--font-small);
+        }
+
+        .open-inputs-table th,
+        .open-inputs-table td {
+            padding: var(--space-sm);
+            border: 1px solid var(--color-border);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .open-inputs-table th {
+            background: var(--color-bg-light);
+            font-weight: 600;
+            font-size: 9pt;
+            color: var(--color-text-strong);
+        }
+
+        .open-inputs-table .label-cell {
+            font-weight: 500;
+        }
+
+        .open-inputs-table .hint-cell {
+            color: var(--color-text-secondary);
+            font-size: 9pt;
+        }
+
+        .open-inputs-table .section-cell {
+            color: var(--color-text-muted);
+            font-size: 8.5pt;
+        }
+
+        /* Marker pill styling */
+        .marker-pill {
+            display: inline-block;
+            padding: 2pt 6pt;
+            background: var(--color-card-alert);
+            border: 1px solid var(--color-warning);
+            border-radius: 999px;
+            font-family: var(--font-mono);
+            font-size: 8pt;
+            color: #92400e;
+            white-space: nowrap;
+        }
+
+        /* Inline marker in content */
+        .inline-marker {
+            display: inline;
+            padding: 1pt 4pt;
+            background: var(--color-card-alert);
+            border-radius: 3pt;
+            font-family: var(--font-mono);
+            font-size: 0.9em;
+        }
+
+        .open-inputs .section-footer {
+            margin-top: var(--space-md);
+            color: var(--color-text-muted);
+            font-size: 8pt;
+        }
+
     </style>
 </head>
 <body>

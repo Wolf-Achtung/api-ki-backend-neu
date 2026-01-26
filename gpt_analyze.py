@@ -12931,8 +12931,21 @@ ERWEITERUNGSANFORDERUNGEN:
 
 
 # -------------------- pipeline (kept from original with minor logging updates) ----------------
-def analyze_briefing(db: Session, briefing_id: int, run_id: str) -> tuple[int, str, Dict[str, Any], Optional[List[Dict[str, Any]]]]:
+def analyze_briefing(
+    db: Session,
+    briefing_id: int,
+    run_id: str,
+    report_variant: Optional[str] = None,
+) -> tuple[int, str, Dict[str, Any], Optional[List[Dict[str, Any]]]]:
     """Analyze briefing and generate AI report.
+
+    FIX-529: Added report_variant parameter for solo_compact support.
+
+    Args:
+        db: Database session
+        briefing_id: ID of the briefing to analyze
+        run_id: Unique run identifier for logging
+        report_variant: Optional report variant ("solo_compact", "standard")
 
     Returns:
         Tuple of (analysis_id, html, meta, debug_attachments)
@@ -14709,6 +14722,23 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         log.warning(f"[{run_id}] [QUALITY-ENFORCER-RENDER] Failed: {e}")
 
     # =========================================================================
+    # FIX-528: PIPELINE SANITIZATION (decode HTML entities + complete sentences)
+    # Applied after quality enforcer, before final validation
+    # =========================================================================
+    try:
+        from services.pipeline_sanitizers import sanitize_all_sections
+        fallback_triggered = error_gate.fallback_count > 0 if error_gate else False
+        sections, sanitize_stats = sanitize_all_sections(sections, fallback_triggered=fallback_triggered)
+        if sanitize_stats.get("entities_decoded", 0) > 0 or sanitize_stats.get("sentences_fixed", 0) > 0:
+            log.info(
+                f"[{run_id}] [FIX-528][SANITIZE] Applied pipeline sanitization: "
+                f"entities={sanitize_stats.get('entities_decoded', 0)}, "
+                f"sentences={sanitize_stats.get('sentences_fixed', 0)}"
+            )
+    except Exception as e:
+        log.warning(f"[{run_id}] [FIX-528][SANITIZE] Pipeline sanitization failed: {e}")
+
+    # =========================================================================
     # FIX-517C TASK 4: Stage 2 (FINAL) validation — post-final-enforcer
     # This gives the truthful STRICT-readiness metrics (after all enforcers ran)
     # =========================================================================
@@ -15613,6 +15643,22 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
         else:
             log.debug(f"[{run_id}] [P0.2-SECTION-GUARD] Section OK: {section_key} len={len(html_content)}")
 
+    # =========================================================================
+    # FIX-529: SOLO COMPACT PROCESSING
+    # If report_variant is solo_compact, apply condensed section filtering
+    # =========================================================================
+    if report_variant == "solo_compact":
+        try:
+            from services.solo_compact_engine import process_for_solo_compact, validate_page_count
+            log.info(f"[{run_id}] [FIX-529] Applying solo_compact processing...")
+            sections, solo_config = process_for_solo_compact(sections, company_size=persona)
+            log.info(
+                f"[{run_id}] [FIX-529][SOLO-COMPACT] Processed: "
+                f"{len(sections)} sections remaining, report_type={sections.get('REPORT_TYPE')}"
+            )
+        except Exception as e:
+            log.warning(f"[{run_id}] [FIX-529][SOLO-COMPACT] Processing failed: {e} - using standard report")
+
     result = render(
         br,
         run_id=run_id,
@@ -16265,15 +16311,32 @@ def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = 
         raise
 
 
-def run_async(briefing_id: int, email: Optional[str] = None) -> None:
+def run_async(
+    briefing_id: int,
+    email: Optional[str] = None,
+    report_variant: Optional[str] = None,
+) -> None:
+    """
+    Main entry point for asynchronous report generation.
+
+    FIX-529: Added report_variant parameter for solo_compact support.
+
+    Args:
+        briefing_id: ID of the briefing to analyze
+        email: Optional email for delivery
+        report_variant: Optional report variant ("solo_compact", "standard")
+    """
     run_id = f"run-{uuid.uuid4().hex[:8]}"
 
     db = core_db.SessionLocal()
     rep: Optional[Report] = None
     try:
-        log.info("[%s] 🚀 Starting analysis v5.4.3-PLATIN+++ for briefing_id=%s", run_id, briefing_id)
+        variant_label = f" variant={report_variant}" if report_variant else ""
+        log.info("[%s] 🚀 Starting analysis v5.4.3-PLATIN+++ for briefing_id=%s%s", run_id, briefing_id, variant_label)
         # debug_attachments contains bytes for email - NOT stored in DB (would cause JSON serialize error)
-        an_id, html, meta, debug_attachments = analyze_briefing(db, briefing_id, run_id=run_id)
+        an_id, html, meta, debug_attachments = analyze_briefing(
+            db, briefing_id, run_id=run_id, report_variant=report_variant
+        )
         br = db.get(Briefing, briefing_id)
         rep = Report(
             user_id=br.user_id if br else None, 
