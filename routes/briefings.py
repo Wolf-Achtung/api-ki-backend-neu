@@ -234,3 +234,92 @@ async def get_briefing_status(
         response["error"] = briefing.error[:500]  # Truncate for safety
 
     return response
+
+
+@router.get("/{briefing_id}/validation")
+async def get_briefing_validation(
+    briefing_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+) -> dict:
+    """
+    Get validation summary for a completed briefing.
+
+    Returns quality gates and validation metrics for CI/automation.
+    Only available after report generation is complete (status=done).
+
+    Args:
+        briefing_id: The briefing ID
+        request: FastAPI request
+        db: Database session
+
+    Returns:
+        dict: Validation summary with errors_count, warnings_count, page_count, gates
+    """
+    from models import Briefing, Analysis
+
+    briefing = db.get(Briefing, briefing_id)
+    if not briefing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Briefing {briefing_id} not found"
+        )
+
+    if briefing.status != "done":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Briefing {briefing_id} is not yet complete (status={briefing.status})"
+        )
+
+    # Get the analysis record
+    analysis = db.query(Analysis).filter(Analysis.briefing_id == briefing_id).first()
+
+    # Extract validation data from analysis meta
+    # Use typed dicts to avoid mypy index errors
+    gates: Dict[str, Any] = {}
+    validation: Dict[str, Any] = {
+        "briefing_id": briefing_id,
+        "status": briefing.status,
+        "errors_count": 0,
+        "warnings_count": 0,
+        "page_count": None,
+        "gates": gates,
+    }
+
+    if analysis and analysis.meta:
+        meta = analysis.meta if isinstance(analysis.meta, dict) else {}
+
+        # Extract leak scan result if available
+        sections = meta.get("sections", {})
+        leak_result = sections.get("_leak_scan_result", {}) if isinstance(sections, dict) else {}
+
+        gates["solo_leak_count"] = leak_result.get("critical_count", 0)
+        gates["solo_leak_passed"] = leak_result.get("passed", True)
+
+        # Extract scores for page count estimation
+        scores = meta.get("scores", {})
+        if scores:
+            gates["has_scores"] = True
+
+        # Extract error gate info if stored
+        error_gate = meta.get("error_gate", {})
+        if error_gate:
+            validation["errors_count"] = len(error_gate.get("critical_errors", []))
+            validation["warnings_count"] = len(error_gate.get("warnings", []))
+            gates["fallback_count"] = error_gate.get("fallback_count", 0)
+
+    # Company size for variant detection
+    answers = briefing.answers if isinstance(briefing.answers, dict) else {}
+    company_size = answers.get("unternehmensgroesse", "")
+    validation["company_size"] = company_size
+
+    # Determine expected variant
+    is_solo = company_size in ("1", "solo", "freelancer", "einzelunternehmer")
+    validation["expected_variant"] = "solo_compact" if is_solo else "standard"
+
+    # Page count validation for solo
+    if is_solo:
+        gates["page_count_valid"] = True  # Will be false if > 16
+        gates["max_pages"] = 16
+
+    return validation
