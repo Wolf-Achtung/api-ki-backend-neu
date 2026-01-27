@@ -1,0 +1,284 @@
+name: Report Smoke Tests
+
+# P2: Automated report generation and quality gate validation
+# Generates Solo/Team/KMU reports and validates quality gates
+
+on:
+  # Run on PR to catch regressions
+  pull_request:
+    branches: [main]
+  # Run nightly for regression monitoring
+  schedule:
+    - cron: '0 2 * * *'  # 2 AM UTC daily
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      fixtures:
+        description: 'Fixtures to generate (comma-separated, or "all")'
+        required: false
+        default: 'all'
+
+env:
+  PYTHON_VERSION: '3.11'
+  ARTIFACTS_DIR: 'artifacts'
+
+jobs:
+  # =========================================================================
+  # Job 1: Unit Tests (Fast, always run)
+  # =========================================================================
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest httpx
+
+      - name: Run unit tests
+        run: |
+          python -m pytest tests/test_automation_env.py tests/test_leak_kill.py tests/test_final_check_wrap.py -v --tb=short
+
+  # =========================================================================
+  # Job 2: Generate Reports (Integration, requires deployed backend)
+  # =========================================================================
+  generate-reports:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: unit-tests  # Only run if unit tests pass
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install httpx
+
+      - name: Resolve API base URL
+        id: resolve-url
+        run: |
+          # Fallback chain: API_BASE_URL > BACKEND_BASE > SMOKE_BASE_URL
+          if [ -n "${{ vars.API_BASE_URL }}" ]; then
+            echo "API_BASE_URL=${{ vars.API_BASE_URL }}" >> $GITHUB_ENV
+          elif [ -n "${{ vars.BACKEND_BASE }}" ]; then
+            echo "API_BASE_URL=${{ vars.BACKEND_BASE }}" >> $GITHUB_ENV
+          elif [ -n "${{ secrets.BACKEND_BASE }}" ]; then
+            echo "API_BASE_URL=${{ secrets.BACKEND_BASE }}" >> $GITHUB_ENV
+          else
+            echo "::error ::No API URL configured. Set API_BASE_URL or BACKEND_BASE"
+            exit 2
+          fi
+
+      - name: Resolve service token
+        id: resolve-token
+        run: |
+          # Fallback chain: SERVICE_TOKEN > SMOKE_AUTH_TOKEN
+          if [ -n "${{ secrets.SERVICE_TOKEN }}" ]; then
+            echo "SERVICE_TOKEN=${{ secrets.SERVICE_TOKEN }}" >> $GITHUB_ENV
+            echo "::notice ::Using SERVICE_TOKEN"
+          elif [ -n "${{ secrets.SMOKE_AUTH_TOKEN }}" ]; then
+            echo "SERVICE_TOKEN=${{ secrets.SMOKE_AUTH_TOKEN }}" >> $GITHUB_ENV
+            echo "::notice ::Using SMOKE_AUTH_TOKEN as fallback"
+          else
+            echo "::error ::No service token configured. Set SERVICE_TOKEN or SMOKE_AUTH_TOKEN secret"
+            exit 3
+          fi
+
+      - name: Create artifacts directory
+        run: mkdir -p ${{ env.ARTIFACTS_DIR }}
+
+      - name: Generate Solo-Compact Report
+        id: solo
+        run: |
+          echo "::group::Generating Solo-Compact Report"
+          python scripts/submit_fixture.py fixtures/solo_freelancer.json \
+            --poll --timeout 300 --download-pdf ${{ env.ARTIFACTS_DIR }} --output-json \
+            > ${{ env.ARTIFACTS_DIR }}/solo_result.json 2>&1 || true
+          cat ${{ env.ARTIFACTS_DIR }}/solo_result.json
+          echo "::endgroup::"
+
+          # Check exit status
+          if grep -q '"final_status": "done"' ${{ env.ARTIFACTS_DIR }}/solo_result.json 2>/dev/null; then
+            echo "solo_status=success" >> $GITHUB_OUTPUT
+          else
+            echo "solo_status=failed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate Team Report
+        id: team
+        run: |
+          echo "::group::Generating Team Report"
+          python scripts/submit_fixture.py fixtures/team_startup.json \
+            --poll --timeout 300 --download-pdf ${{ env.ARTIFACTS_DIR }} --output-json \
+            > ${{ env.ARTIFACTS_DIR }}/team_result.json 2>&1 || true
+          cat ${{ env.ARTIFACTS_DIR }}/team_result.json
+          echo "::endgroup::"
+
+          if grep -q '"final_status": "done"' ${{ env.ARTIFACTS_DIR }}/team_result.json 2>/dev/null; then
+            echo "team_status=success" >> $GITHUB_OUTPUT
+          else
+            echo "team_status=failed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate KMU Report
+        id: kmu
+        run: |
+          echo "::group::Generating KMU Report"
+          python scripts/submit_fixture.py fixtures/kmu_mittelstand.json \
+            --poll --timeout 300 --download-pdf ${{ env.ARTIFACTS_DIR }} --output-json \
+            > ${{ env.ARTIFACTS_DIR }}/kmu_result.json 2>&1 || true
+          cat ${{ env.ARTIFACTS_DIR }}/kmu_result.json
+          echo "::endgroup::"
+
+          if grep -q '"final_status": "done"' ${{ env.ARTIFACTS_DIR }}/kmu_result.json 2>/dev/null; then
+            echo "kmu_status=success" >> $GITHUB_OUTPUT
+          else
+            echo "kmu_status=failed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports-${{ github.run_number }}
+          path: ${{ env.ARTIFACTS_DIR }}/
+          retention-days: 14
+
+      - name: Generate summary
+        run: |
+          {
+            echo "## 📊 Report Generation Summary"
+            echo ""
+            echo "| Fixture | Status | Briefing ID |"
+            echo "|---------|--------|-------------|"
+
+            for result in ${{ env.ARTIFACTS_DIR }}/*_result.json; do
+              fixture=$(basename "$result" _result.json)
+              if [ -f "$result" ]; then
+                status=$(jq -r '.final_status // "unknown"' "$result" 2>/dev/null || echo "error")
+                bid=$(jq -r '.briefing_id // "N/A"' "$result" 2>/dev/null || echo "N/A")
+                if [ "$status" = "done" ]; then
+                  echo "| $fixture | ✅ $status | $bid |"
+                else
+                  echo "| $fixture | ❌ $status | $bid |"
+                fi
+              else
+                echo "| $fixture | ❌ missing | N/A |"
+              fi
+            done
+
+            echo ""
+            echo "### 📁 Artifacts"
+            echo ""
+            ls -la ${{ env.ARTIFACTS_DIR }}/ || echo "No artifacts found"
+            echo ""
+            echo "**Run:** #${{ github.run_number }}"
+            echo "**Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          } >> $GITHUB_STEP_SUMMARY
+
+  # =========================================================================
+  # Job 3: Quality Gates Validation
+  # =========================================================================
+  validate-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: generate-reports
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: reports-${{ github.run_number }}
+          path: ${{ env.ARTIFACTS_DIR }}/
+
+      - name: Validate Solo-Compact gates
+        id: solo-gates
+        run: |
+          echo "::group::Validating Solo-Compact Quality Gates"
+
+          RESULT_FILE="${{ env.ARTIFACTS_DIR }}/solo_result.json"
+          GATES_PASSED=true
+
+          if [ ! -f "$RESULT_FILE" ]; then
+            echo "::error ::Solo result file not found"
+            echo "solo_gates=failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # Check status is done
+          STATUS=$(jq -r '.final_status // "unknown"' "$RESULT_FILE")
+          if [ "$STATUS" != "done" ]; then
+            echo "::error ::Solo report did not complete: status=$STATUS"
+            GATES_PASSED=false
+          fi
+
+          # Check validation if available
+          if jq -e '.validation' "$RESULT_FILE" > /dev/null 2>&1; then
+            LEAK_COUNT=$(jq -r '.validation.gates.solo_leak_count // 0' "$RESULT_FILE")
+            if [ "$LEAK_COUNT" != "0" ]; then
+              echo "::error ::Solo leak count is $LEAK_COUNT (must be 0)"
+              GATES_PASSED=false
+            else
+              echo "::notice ::Solo leak count: 0 ✅"
+            fi
+          fi
+
+          echo "::endgroup::"
+
+          if [ "$GATES_PASSED" = "true" ]; then
+            echo "solo_gates=passed" >> $GITHUB_OUTPUT
+          else
+            echo "solo_gates=failed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate quality summary
+        run: |
+          {
+            echo "## 🔍 Quality Gates Summary"
+            echo ""
+            echo "| Gate | Status |"
+            echo "|------|--------|"
+            echo "| Solo Leak Count = 0 | ${{ steps.solo-gates.outputs.solo_gates == 'passed' && '✅ Passed' || '❌ Failed' }} |"
+            echo "| Solo Report Generated | ${{ needs.generate-reports.outputs.solo_status == 'success' && '✅ Passed' || '❌ Failed' }} |"
+            echo ""
+          } >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if gates not passed
+        if: steps.solo-gates.outputs.solo_gates == 'failed'
+        run: |
+          echo "::error ::Quality gates failed!"
+          exit 1
+
+  # =========================================================================
+  # Job 4: Notify on Failure (Nightly only)
+  # =========================================================================
+  notify-failure:
+    runs-on: ubuntu-latest
+    needs: [generate-reports, validate-gates]
+    if: failure() && github.event_name == 'schedule'
+
+    steps:
+      - name: Send failure notification
+        run: |
+          echo "::error ::Nightly report smoke tests failed!"
+          echo "Check the workflow run for details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # TODO: Add email notification using ADMIN_NOTIFY_EMAIL
