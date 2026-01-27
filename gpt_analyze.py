@@ -15714,9 +15714,8 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                 # TODO: Enable hard gate once lexicon coverage is complete
                 leak_gate_strict = os.environ.get("LEAK_GATE_STRICT", "0") == "1"
                 if leak_gate_strict:
-                    error_gate.record_warning(
-                        "LEAK-KILL",
-                        f"SOLO_LEAK_COUNT={leak_result.critical_count} - report failed validation"
+                    error_gate.add_warning(
+                        f"[LEAK-KILL] SOLO_LEAK_COUNT={leak_result.critical_count} - report failed validation"
                     )
                     raise RuntimeError(
                         f"[LEAK-KILL] Solo report failed leak validation: "
