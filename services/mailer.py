@@ -53,9 +53,13 @@ class Mailer:
         logger = logging.getLogger(__name__)
         api_key = os.getenv("RESEND_API_KEY")
 
-        if not api_key or not self.s.mail.from_email:
-            logger.warning(f"❌ Resend config missing: api_key={bool(api_key)}, from_email={self.s.mail.from_email}")
-            # Fallback zu SMTP
+        if not api_key:
+            logger.warning("❌ RESEND_API_KEY not set - falling back to SMTP")
+            await self._send_smtp(to=to, subject=subject, text=text, html=html)
+            return
+
+        if not self.s.mail.from_email:
+            logger.warning("❌ RESEND_FROM/from_email not set - falling back to SMTP")
             await self._send_smtp(to=to, subject=subject, text=text, html=html)
             return
 
@@ -71,44 +75,90 @@ class Mailer:
         if html:
             body["html"] = html
 
-        async with httpx.AsyncClient(timeout=30) as client:
-            r = await client.post(
-                "https://api.resend.com/emails",
-                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-                content=json.dumps(body),
-            )
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                r = await client.post(
+                    "https://api.resend.com/emails",
+                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                    content=json.dumps(body),
+                )
 
-            # Log vollständige Response
-            try:
-                response_data = r.json()
-                logger.info(f"✅ Resend Response [{r.status_code}]: {json.dumps(response_data, ensure_ascii=False)}")
+                # Log response
+                try:
+                    response_data = r.json()
+                    logger.info(f"✅ Resend Response [{r.status_code}]: {json.dumps(response_data, ensure_ascii=False)}")
 
-                # Warne bei Sandbox-Modus
-                if "id" in response_data:
-                    email_id = response_data["id"]
-                    logger.info(f"📬 Email ID: {email_id}")
-                    if email_id.startswith("test_") or "sandbox" in email_id.lower():
-                        logger.warning("⚠️  WARNUNG: Resend könnte im SANDBOX-Modus laufen! E-Mail wird möglicherweise NICHT zugestellt.")
-                        logger.warning(f"   Stelle sicher, dass '{to}' als Test-Empfänger bei Resend registriert ist.")
-            except Exception as e:
-                logger.warning(f"⚠️  Konnte Resend-Response nicht parsen: {e}")
-                logger.info(f"   Raw response: {r.text}")
+                    # Check for sandbox mode warning
+                    if "id" in response_data:
+                        email_id = response_data["id"]
+                        logger.info(f"📬 Email ID: {email_id}")
+                        if email_id.startswith("test_") or "sandbox" in email_id.lower():
+                            logger.warning("⚠️  WARNUNG: Resend könnte im SANDBOX-Modus laufen!")
+                            logger.warning(f"   E-Mail an '{to}' wird möglicherweise NICHT zugestellt.")
 
-            r.raise_for_status()
+                    # Check for error in response
+                    if r.status_code >= 400:
+                        error_msg = response_data.get("message", response_data.get("error", "Unknown error"))
+                        logger.error(f"❌ Resend API error: {error_msg}")
+                        raise Exception(f"Resend API error: {error_msg}")
+
+                except json.JSONDecodeError:
+                    logger.warning(f"⚠️  Konnte Resend-Response nicht parsen: {r.text}")
+                    if r.status_code >= 400:
+                        raise Exception(f"Resend API error: {r.status_code} - {r.text}")
+
+                r.raise_for_status()
+                logger.info(f"✅ Email erfolgreich gesendet an {to}")
+
+        except httpx.TimeoutException:
+            logger.error(f"❌ Resend timeout sending email to {to}")
+            raise Exception("Email service timeout")
+        except httpx.HTTPStatusError as e:
+            logger.error(f"❌ Resend HTTP error: {e.response.status_code} - {e.response.text}")
+            raise Exception(f"Email service error: {e.response.status_code}")
+        except Exception as e:
+            logger.error(f"❌ Resend error: {str(e)}")
+            raise
 
     async def _send_smtp(self, to: str, subject: str, text: str, html: Optional[str] = None) -> None:
+        # Validate SMTP config
+        if not self.s.mail.host:
+            logger.error("❌ SMTP_HOST not configured - cannot send email")
+            raise Exception("SMTP not configured: missing SMTP_HOST")
+
+        from_addr = self.s.mail.from_email or self.s.mail.user
+        if not from_addr:
+            logger.error("❌ SMTP_FROM/SMTP_USER not configured - cannot send email")
+            raise Exception("SMTP not configured: missing from address")
+
         msg = MIMEText(html or text, "html" if html else "plain", "utf-8")
         msg["Subject"] = subject
-        msg["From"] = f"{self.s.mail.from_name or ''} <{self.s.mail.from_email or (self.s.mail.user or '')}>"
+        msg["From"] = f"{self.s.mail.from_name or 'KI-Sicherheit.jetzt'} <{from_addr}>"
         msg["To"] = to
 
+        logger.info(f"📧 SMTP: Sending email FROM={from_addr} TO={to} via {self.s.mail.host}:{self.s.mail.port}")
+
         def _sync_send():
-            with smtplib.SMTP(self.s.mail.host or "", self.s.mail.port, timeout=self.s.mail.timeout) as smtp:
-                if self.s.mail.starttls:
-                    smtp.starttls()
-                if self.s.mail.user and self.s.mail.password:
-                    smtp.login(self.s.mail.user, self.s.mail.password)
-                smtp.sendmail(self.s.mail.from_email or self.s.mail.user or "", [to], msg.as_string())
+            try:
+                with smtplib.SMTP(self.s.mail.host, self.s.mail.port, timeout=self.s.mail.timeout) as smtp:
+                    if self.s.mail.starttls:
+                        smtp.starttls()
+                    if self.s.mail.user and self.s.mail.password:
+                        smtp.login(self.s.mail.user, self.s.mail.password)
+                    smtp.sendmail(from_addr, [to], msg.as_string())
+                    logger.info(f"✅ SMTP: Email erfolgreich gesendet an {to}")
+            except smtplib.SMTPAuthenticationError as e:
+                logger.error(f"❌ SMTP authentication failed: {e}")
+                raise Exception(f"SMTP authentication failed: {e}")
+            except smtplib.SMTPRecipientsRefused as e:
+                logger.error(f"❌ SMTP recipient refused: {e}")
+                raise Exception(f"SMTP recipient refused: {e}")
+            except smtplib.SMTPException as e:
+                logger.error(f"❌ SMTP error: {e}")
+                raise Exception(f"SMTP error: {e}")
+            except Exception as e:
+                logger.error(f"❌ SMTP unexpected error: {e}")
+                raise
 
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, _sync_send)
