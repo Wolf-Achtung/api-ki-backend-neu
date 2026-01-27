@@ -252,7 +252,7 @@ class AppSettings(BaseSettings):
                 host=os.getenv("SMTP_HOST"),
                 port=int(os.getenv("SMTP_PORT", "587")),
                 user=os.getenv("SMTP_USER"),
-                password=os.getenv("SMTP_PASSWORD"),
+                password=os.getenv("SMTP_PASSWORD") or os.getenv("SMTP_PASS"),
                 starttls=get_bool("SMTP_STARTTLS", True),
                 timeout=int(os.getenv("SMTP_TIMEOUT", "30")),
             ),
