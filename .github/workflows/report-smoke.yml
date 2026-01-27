@@ -118,13 +118,16 @@ jobs:
         id: solo
         run: |
           echo "::group::Generating Solo-Compact Report"
+          # JSON to file, logs to stderr (visible in CI console)
+          # Note: Do NOT use 2>&1 - keep streams separate for clean JSON
           python scripts/submit_fixture.py fixtures/solo_freelancer.json \
             --poll --timeout 300 --download-pdf ${{ env.ARTIFACTS_DIR }} --output-json \
-            > ${{ env.ARTIFACTS_DIR }}/solo_result.json 2>&1 || true
-          cat ${{ env.ARTIFACTS_DIR }}/solo_result.json
+            > ${{ env.ARTIFACTS_DIR }}/solo_result.json && EXIT_CODE=0 || EXIT_CODE=$?
+
+          echo "Exit code: $EXIT_CODE"
           echo "::endgroup::"
 
-          # Check exit status
+          # Check if report completed successfully (use grep, not jq, for robustness)
           if grep -q '"final_status": "done"' ${{ env.ARTIFACTS_DIR }}/solo_result.json 2>/dev/null; then
             echo "solo_status=success" >> $GITHUB_OUTPUT
           else
@@ -137,8 +140,9 @@ jobs:
           echo "::group::Generating Team Report"
           python scripts/submit_fixture.py fixtures/team_startup.json \
             --poll --timeout 300 --download-pdf ${{ env.ARTIFACTS_DIR }} --output-json \
-            > ${{ env.ARTIFACTS_DIR }}/team_result.json 2>&1 || true
-          cat ${{ env.ARTIFACTS_DIR }}/team_result.json
+            > ${{ env.ARTIFACTS_DIR }}/team_result.json && EXIT_CODE=0 || EXIT_CODE=$?
+
+          echo "Exit code: $EXIT_CODE"
           echo "::endgroup::"
 
           if grep -q '"final_status": "done"' ${{ env.ARTIFACTS_DIR }}/team_result.json 2>/dev/null; then
@@ -153,8 +157,9 @@ jobs:
           echo "::group::Generating KMU Report"
           python scripts/submit_fixture.py fixtures/kmu_mittelstand.json \
             --poll --timeout 300 --download-pdf ${{ env.ARTIFACTS_DIR }} --output-json \
-            > ${{ env.ARTIFACTS_DIR }}/kmu_result.json 2>&1 || true
-          cat ${{ env.ARTIFACTS_DIR }}/kmu_result.json
+            > ${{ env.ARTIFACTS_DIR }}/kmu_result.json && EXIT_CODE=0 || EXIT_CODE=$?
+
+          echo "Exit code: $EXIT_CODE"
           echo "::endgroup::"
 
           if grep -q '"final_status": "done"' ${{ env.ARTIFACTS_DIR }}/kmu_result.json 2>/dev/null; then
@@ -181,8 +186,11 @@ jobs:
             for result in ${{ env.ARTIFACTS_DIR }}/*_result.json; do
               fixture=$(basename "$result" _result.json)
               if [ -f "$result" ]; then
-                status=$(jq -r '.final_status // "unknown"' "$result" 2>/dev/null || echo "error")
-                bid=$(jq -r '.briefing_id // "N/A"' "$result" 2>/dev/null || echo "N/A")
+                # Try jq first, fall back to grep for robustness
+                status=$(jq -r '.final_status // "unknown"' "$result" 2>/dev/null) || \
+                  status=$(grep -o '"final_status": "[^"]*"' "$result" | head -1 | cut -d'"' -f4 || echo "error")
+                bid=$(jq -r '.briefing_id // "N/A"' "$result" 2>/dev/null) || \
+                  bid=$(grep -o '"briefing_id": [0-9]*' "$result" | head -1 | grep -o '[0-9]*' || echo "N/A")
                 if [ "$status" = "done" ]; then
                   echo "| $fixture | ✅ $status | $bid |"
                 else
@@ -234,22 +242,26 @@ jobs:
             exit 1
           fi
 
-          # Check status is done
-          STATUS=$(jq -r '.final_status // "unknown"' "$RESULT_FILE")
-          if [ "$STATUS" != "done" ]; then
+          # Check status is done (use grep for robustness, jq as backup)
+          if grep -q '"final_status": "done"' "$RESULT_FILE" 2>/dev/null; then
+            echo "::notice ::Solo report completed successfully ✅"
+          else
+            STATUS=$(grep -o '"final_status": "[^"]*"' "$RESULT_FILE" | head -1 | cut -d'"' -f4 || echo "unknown")
             echo "::error ::Solo report did not complete: status=$STATUS"
             GATES_PASSED=false
           fi
 
-          # Check validation if available
-          if jq -e '.validation' "$RESULT_FILE" > /dev/null 2>&1; then
-            LEAK_COUNT=$(jq -r '.validation.gates.solo_leak_count // 0' "$RESULT_FILE")
+          # Check validation if available (look for solo_leak_count)
+          if grep -q '"solo_leak_count"' "$RESULT_FILE" 2>/dev/null; then
+            LEAK_COUNT=$(grep -o '"solo_leak_count": [0-9]*' "$RESULT_FILE" | head -1 | grep -o '[0-9]*' || echo "0")
             if [ "$LEAK_COUNT" != "0" ]; then
               echo "::error ::Solo leak count is $LEAK_COUNT (must be 0)"
               GATES_PASSED=false
             else
               echo "::notice ::Solo leak count: 0 ✅"
             fi
+          else
+            echo "::notice ::No leak validation data in result (validation endpoint may not be available)"
           fi
 
           echo "::endgroup::"
