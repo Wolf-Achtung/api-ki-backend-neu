@@ -275,13 +275,15 @@ async def get_briefing_validation(
     analysis = db.query(Analysis).filter(Analysis.briefing_id == briefing_id).first()
 
     # Extract validation data from analysis meta
-    validation = {
+    # Use typed dicts to avoid mypy index errors
+    gates: Dict[str, Any] = {}
+    validation: Dict[str, Any] = {
         "briefing_id": briefing_id,
         "status": briefing.status,
         "errors_count": 0,
         "warnings_count": 0,
         "page_count": None,
-        "gates": {},
+        "gates": gates,
     }
 
     if analysis and analysis.meta:
@@ -291,20 +293,20 @@ async def get_briefing_validation(
         sections = meta.get("sections", {})
         leak_result = sections.get("_leak_scan_result", {}) if isinstance(sections, dict) else {}
 
-        validation["gates"]["solo_leak_count"] = leak_result.get("critical_count", 0)
-        validation["gates"]["solo_leak_passed"] = leak_result.get("passed", True)
+        gates["solo_leak_count"] = leak_result.get("critical_count", 0)
+        gates["solo_leak_passed"] = leak_result.get("passed", True)
 
         # Extract scores for page count estimation
         scores = meta.get("scores", {})
         if scores:
-            validation["gates"]["has_scores"] = True
+            gates["has_scores"] = True
 
         # Extract error gate info if stored
         error_gate = meta.get("error_gate", {})
         if error_gate:
             validation["errors_count"] = len(error_gate.get("critical_errors", []))
             validation["warnings_count"] = len(error_gate.get("warnings", []))
-            validation["gates"]["fallback_count"] = error_gate.get("fallback_count", 0)
+            gates["fallback_count"] = error_gate.get("fallback_count", 0)
 
     # Company size for variant detection
     answers = briefing.answers if isinstance(briefing.answers, dict) else {}
@@ -317,7 +319,7 @@ async def get_briefing_validation(
 
     # Page count validation for solo
     if is_solo:
-        validation["gates"]["page_count_valid"] = True  # Will be false if > 16
-        validation["gates"]["max_pages"] = 16
+        gates["page_count_valid"] = True  # Will be false if > 16
+        gates["max_pages"] = 16
 
     return validation
