@@ -12982,7 +12982,26 @@ def analyze_briefing(
         answers = normalize_answers(raw_answers)
     except Exception:
         pass
-    
+
+    # =========================================================================
+    # FIX-529: AUTO-DETECT REPORT VARIANT BASED ON COMPANY SIZE
+    # If report_variant is None or "auto", determine based on unternehmensgroesse
+    # =========================================================================
+    from services.solo_compact_engine import determine_report_variant, ReportType
+    unternehmensgroesse_for_variant = answers.get("unternehmensgroesse", "")
+    input_variant = report_variant  # Save original for logging
+    resolved_variant = determine_report_variant(report_variant, unternehmensgroesse_for_variant)
+    report_variant = resolved_variant.value  # Convert enum to string
+    reason = "explicit" if input_variant and input_variant.lower() not in (None, "auto", "") else "company_size_auto"
+    log.info(
+        "[%s] [FIX-529] variant_resolved=%s reason=%s (input_variant=%s, company_size=%s)",
+        run_id,
+        report_variant,
+        reason,
+        input_variant or "None",
+        unternehmensgroesse_for_variant or "unknown",
+    )
+
     # ============================================================
     # NUCLEAR FIX: Apply _fix_typos to ALL string fields
     # Fix both: answers dict AND briefing object br
@@ -15662,6 +15681,56 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             )
         except Exception as e:
             log.warning(f"[{run_id}] [FIX-529][SOLO-COMPACT] Processing failed: {e} - using standard report")
+
+        # =====================================================================
+        # P0 LEAK-KILL: Apply lexicon and validate for Team/KMU leaks
+        # SOLO_LEAK_COUNT must be 0 for solo_compact reports
+        # =====================================================================
+        try:
+            from services.solo_leak_scanner import apply_solo_lexicon_and_validate, LeakSeverity
+            log.info(f"[{run_id}] [LEAK-KILL] Running Leak-Kill pipeline for solo_compact...")
+
+            sections, leak_result = apply_solo_lexicon_and_validate(sections, company_size="solo")
+
+            # Store leak scan results in sections for later inspection
+            sections["_leak_scan_result"] = {
+                "total_count": leak_result.total_count,
+                "critical_count": leak_result.critical_count,
+                "warning_count": leak_result.warning_count,
+                "passed": leak_result.passed,
+                "sections_scanned": leak_result.sections_scanned,
+            }
+
+            if not leak_result.passed:
+                # Log detailed leak information
+                log.error(
+                    f"[{run_id}] [LEAK-KILL] ❌ SOLO_LEAK_COUNT={leak_result.critical_count} (must be 0)"
+                )
+                for leak in leak_result.leaks[:5]:  # Log first 5 leaks
+                    log.error(f"[{run_id}] [LEAK-KILL]   - {leak}")
+
+                # P0 Hard Gate: In strict mode, fail the report
+                # For now, log warning but allow report to proceed (soft gate)
+                # TODO: Enable hard gate once lexicon coverage is complete
+                leak_gate_strict = os.environ.get("LEAK_GATE_STRICT", "0") == "1"
+                if leak_gate_strict:
+                    error_gate.record_warning(
+                        "LEAK-KILL",
+                        f"SOLO_LEAK_COUNT={leak_result.critical_count} - report failed validation"
+                    )
+                    raise RuntimeError(
+                        f"[LEAK-KILL] Solo report failed leak validation: "
+                        f"{leak_result.critical_count} critical leaks detected"
+                    )
+            else:
+                log.info(f"[{run_id}] [LEAK-KILL] ✅ SOLO_LEAK_COUNT=0 - report passed")
+
+        except ImportError:
+            log.debug(f"[{run_id}] [LEAK-KILL] solo_leak_scanner not available")
+        except RuntimeError:
+            raise  # Re-raise hard gate failures
+        except Exception as e:
+            log.warning(f"[{run_id}] [LEAK-KILL] Scan failed: {e} - continuing without leak validation")
 
     result = render(
         br,

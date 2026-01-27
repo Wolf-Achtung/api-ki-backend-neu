@@ -6234,6 +6234,67 @@
             max-width: 100%;
         }
 
+        /* P0-FINAL-CHECK-WRAP: Robust icon+text row layout (Checklist/Final-Check boxes) */
+        .final-check-row {
+            display: grid;
+            grid-template-columns: 24px minmax(0, 1fr);
+            column-gap: 10px;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+        .final-check-row .icon,
+        .final-check-row .check-icon {
+            flex-shrink: 0;
+            width: 24px;
+            text-align: center;
+        }
+        .final-check-text {
+            min-width: 0;
+            overflow-wrap: anywhere;
+            word-wrap: break-word;
+            hyphens: auto;
+        }
+
+        /* P0-FINAL-CHECK-WRAP: Flex variant for simpler layouts */
+        .final-check-flex-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .final-check-flex-row > :first-child {
+            flex-shrink: 0;
+        }
+        .final-check-flex-row > :last-child {
+            flex: 1;
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+
+        /* P0-FINAL-CHECK-WRAP: Fix for confidence-checkbox (existing pattern) */
+        .confidence-checkbox {
+            min-width: 0;
+        }
+        .confidence-checkbox > span:last-child,
+        .confidence-checkbox > div:last-child {
+            min-width: 0;
+            overflow-wrap: anywhere;
+            word-wrap: break-word;
+        }
+
+        /* P0-FINAL-CHECK-WRAP: Fix foerder-checklist items */
+        .foerder-checklist-item {
+            align-items: flex-start;
+        }
+        .foerder-content {
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+        .foerder-content p,
+        .foerder-content strong {
+            overflow-wrap: anywhere;
+            word-wrap: break-word;
+        }
+
         /* FIX-529: Quote/Zitat overflow handling */
         .final-check-intro blockquote,
         .final-check-box blockquote,
