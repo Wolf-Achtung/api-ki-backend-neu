@@ -5613,6 +5613,110 @@
         }
 
         /* ============================================
+           FIX-528/529: LAYOUT STABILITY FIXES
+           Prevents text overlap in Final-Check boxes,
+           Quality blocks, and other containers
+           ============================================ */
+
+        /* Final-Check box overflow prevention with Grid/Flex fixes */
+        .final-check-intro,
+        .exec-final-check,
+        .final-check-box {
+            min-height: auto !important;
+            height: auto !important;
+            overflow: visible !important;
+            page-break-inside: auto;
+            box-sizing: border-box;
+            max-width: 100%;
+        }
+
+        .final-check-intro p,
+        .exec-final-check p,
+        .final-check-decisions li {
+            line-height: 1.35 !important;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            word-break: break-word;
+            hyphens: auto;
+        }
+
+        /* P0-FINAL-CHECK-WRAP: Robust icon+text row layout */
+        .final-check-row {
+            display: grid;
+            grid-template-columns: 24px minmax(0, 1fr);
+            column-gap: 10px;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+        .final-check-row .icon,
+        .final-check-row .check-icon {
+            flex-shrink: 0;
+            width: 24px;
+            text-align: center;
+        }
+        .final-check-text {
+            min-width: 0;
+            overflow-wrap: anywhere;
+            word-wrap: break-word;
+            hyphens: auto;
+        }
+
+        /* P0-FINAL-CHECK-WRAP: Flex variant */
+        .final-check-flex-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .final-check-flex-row > :first-child {
+            flex-shrink: 0;
+        }
+        .final-check-flex-row > :last-child {
+            flex: 1;
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+
+        /* P0-FINAL-CHECK-WRAP: Fix for confidence-checkbox */
+        .confidence-checkbox {
+            min-width: 0;
+        }
+        .confidence-checkbox > span:last-child,
+        .confidence-checkbox > div:last-child {
+            min-width: 0;
+            overflow-wrap: anywhere;
+            word-wrap: break-word;
+        }
+
+        /* P0-FINAL-CHECK-WRAP: Fix foerder-checklist items */
+        .foerder-checklist-item {
+            align-items: flex-start;
+        }
+        .foerder-content {
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+        .foerder-content p,
+        .foerder-content strong {
+            overflow-wrap: anywhere;
+            word-wrap: break-word;
+        }
+
+        /* Quality/Transparency block overflow fix */
+        .quality-block,
+        .transparency-block,
+        .quality-box,
+        .risk-box,
+        .colored-box,
+        .info-box,
+        .alert-box {
+            min-height: auto !important;
+            height: auto !important;
+            overflow: visible !important;
+            box-sizing: border-box;
+            max-width: 100%;
+        }
+
+        /* ============================================
            DESIGN-OPTIMIERUNG: INFO-BOXEN / CALLOUTS
            ============================================ */
 
