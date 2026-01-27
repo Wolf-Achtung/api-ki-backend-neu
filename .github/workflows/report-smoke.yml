@@ -73,14 +73,21 @@ jobs:
 
       - name: Resolve API base URL
         id: resolve-url
+        env:
+          VAR_API_BASE_URL: ${{ vars.API_BASE_URL }}
+          VAR_BACKEND_BASE: ${{ vars.BACKEND_BASE }}
+          SECRET_BACKEND_BASE: ${{ secrets.BACKEND_BASE }}
         run: |
           # Fallback chain: API_BASE_URL > BACKEND_BASE > SMOKE_BASE_URL
-          if [ -n "${{ vars.API_BASE_URL }}" ]; then
-            echo "API_BASE_URL=${{ vars.API_BASE_URL }}" >> $GITHUB_ENV
-          elif [ -n "${{ vars.BACKEND_BASE }}" ]; then
-            echo "API_BASE_URL=${{ vars.BACKEND_BASE }}" >> $GITHUB_ENV
-          elif [ -n "${{ secrets.BACKEND_BASE }}" ]; then
-            echo "API_BASE_URL=${{ secrets.BACKEND_BASE }}" >> $GITHUB_ENV
+          if [ -n "$VAR_API_BASE_URL" ]; then
+            echo "API_BASE_URL=$VAR_API_BASE_URL" >> $GITHUB_ENV
+            echo "::notice ::Using vars.API_BASE_URL"
+          elif [ -n "$VAR_BACKEND_BASE" ]; then
+            echo "API_BASE_URL=$VAR_BACKEND_BASE" >> $GITHUB_ENV
+            echo "::notice ::Using vars.BACKEND_BASE"
+          elif [ -n "$SECRET_BACKEND_BASE" ]; then
+            echo "API_BASE_URL=$SECRET_BACKEND_BASE" >> $GITHUB_ENV
+            echo "::notice ::Using secrets.BACKEND_BASE"
           else
             echo "::error ::No API URL configured. Set API_BASE_URL or BACKEND_BASE"
             exit 2
@@ -88,13 +95,16 @@ jobs:
 
       - name: Resolve service token
         id: resolve-token
+        env:
+          SECRET_SERVICE_TOKEN: ${{ secrets.SERVICE_TOKEN }}
+          SECRET_SMOKE_AUTH_TOKEN: ${{ secrets.SMOKE_AUTH_TOKEN }}
         run: |
           # Fallback chain: SERVICE_TOKEN > SMOKE_AUTH_TOKEN
-          if [ -n "${{ secrets.SERVICE_TOKEN }}" ]; then
-            echo "SERVICE_TOKEN=${{ secrets.SERVICE_TOKEN }}" >> $GITHUB_ENV
+          if [ -n "$SECRET_SERVICE_TOKEN" ]; then
+            echo "SERVICE_TOKEN=$SECRET_SERVICE_TOKEN" >> $GITHUB_ENV
             echo "::notice ::Using SERVICE_TOKEN"
-          elif [ -n "${{ secrets.SMOKE_AUTH_TOKEN }}" ]; then
-            echo "SERVICE_TOKEN=${{ secrets.SMOKE_AUTH_TOKEN }}" >> $GITHUB_ENV
+          elif [ -n "$SECRET_SMOKE_AUTH_TOKEN" ]; then
+            echo "SERVICE_TOKEN=$SECRET_SMOKE_AUTH_TOKEN" >> $GITHUB_ENV
             echo "::notice ::Using SMOKE_AUTH_TOKEN as fallback"
           else
             echo "::error ::No service token configured. Set SERVICE_TOKEN or SMOKE_AUTH_TOKEN secret"
