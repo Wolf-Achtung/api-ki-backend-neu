@@ -3,23 +3,26 @@
 """
 scripts/submit_fixture.py - Submit JSON fixtures for report generation
 
+P1 Automation Script: Robust, CI-compatible fixture submission.
+
 Usage:
     python scripts/submit_fixture.py fixtures/solo_freelancer.json
     python scripts/submit_fixture.py fixtures/solo_freelancer.json --poll
-    python scripts/submit_fixture.py fixtures/solo_freelancer.json --poll --timeout 300
+    python scripts/submit_fixture.py fixtures/solo_freelancer.json --poll --download-pdf artifacts/
+    python scripts/submit_fixture.py fixtures/solo_freelancer.json --poll --output-json
 
-This script:
-1. Reads a JSON fixture file
-2. Authenticates using service token or env vars
-3. POSTs to /api/briefings/submit
-4. Returns briefing_id
-5. Optionally polls until report is done
+Exit Codes:
+    0 = Success (done)
+    2 = Usage error / fixture invalid
+    3 = Authentication failed
+    4 = Timeout waiting for completion
+    5 = Server returned failed status
 
-Environment Variables:
-    API_BASE_URL: Base URL of the API (default: http://localhost:8000)
-    SERVICE_TOKEN: Service token for authentication (format: scope:secret)
-    POLL_INTERVAL: Seconds between status checks (default: 2)
-    POLL_TIMEOUT: Max seconds to wait for completion (default: 300)
+Environment Variables (with fallback chain):
+    API_BASE_URL / BACKEND_BASE / SMOKE_BASE_URL (default: http://localhost:8000)
+    SERVICE_TOKEN / SMOKE_AUTH_TOKEN (required for remote)
+    POLL_INTERVAL (default: 2)
+    POLL_TIMEOUT (default: 300)
 """
 from __future__ import annotations
 
@@ -38,8 +41,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 try:
     import httpx
 except ImportError:
-    print("ERROR: httpx not installed. Run: pip install httpx")
-    sys.exit(1)
+    print("ERROR: httpx not installed. Run: pip install httpx", file=sys.stderr)
+    sys.exit(2)
 
 # Configure logging
 logging.basicConfig(
@@ -48,6 +51,16 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S"
 )
 log = logging.getLogger(__name__)
+
+# =============================================================================
+# EXIT CODES (P1 Requirement)
+# =============================================================================
+
+EXIT_SUCCESS = 0
+EXIT_USAGE_ERROR = 2
+EXIT_AUTH_FAILED = 3
+EXIT_TIMEOUT = 4
+EXIT_SERVER_FAILED = 5
 
 # =============================================================================
 # CONFIGURATION
@@ -60,6 +73,51 @@ DEFAULT_POLL_TIMEOUT = 300  # seconds (5 minutes)
 # Terminal status values
 TERMINAL_STATUSES = {"done", "failed", "error", "skipped"}
 
+# Required fixture fields (minimal validation)
+REQUIRED_FIXTURE_FIELDS = ["answers"]
+
+
+# =============================================================================
+# ENV HELPERS (P1: Fallback Chain)
+# =============================================================================
+
+def get_api_base_url(cli_value: Optional[str] = None) -> str:
+    """
+    Get API base URL with fallback chain.
+
+    Priority: CLI arg > API_BASE_URL > BACKEND_BASE > SMOKE_BASE_URL > default
+    """
+    if cli_value:
+        return cli_value
+
+    # Fallback chain per P1 spec
+    for env_var in ["API_BASE_URL", "BACKEND_BASE", "SMOKE_BASE_URL"]:
+        value = os.getenv(env_var)
+        if value:
+            log.debug("Using %s from env: %s", env_var, value)
+            return value
+
+    return DEFAULT_API_BASE
+
+
+def get_service_token(cli_value: Optional[str] = None) -> Optional[str]:
+    """
+    Get service token with fallback chain.
+
+    Priority: CLI arg > SERVICE_TOKEN > SMOKE_AUTH_TOKEN
+    """
+    if cli_value:
+        return cli_value
+
+    # Fallback chain per P1 spec
+    for env_var in ["SERVICE_TOKEN", "SMOKE_AUTH_TOKEN"]:
+        value = os.getenv(env_var)
+        if value:
+            log.debug("Using %s from env", env_var)
+            return value
+
+    return None
+
 
 def normalize_base_url(url: str) -> str:
     """
@@ -68,12 +126,6 @@ def normalize_base_url(url: str) -> str:
     - Removes trailing slashes
     - Ensures scheme is present (defaults to https for non-localhost)
     - Strips whitespace
-
-    Args:
-        url: Raw URL input
-
-    Returns:
-        Normalized URL string
     """
     url = url.strip().rstrip("/")
 
@@ -98,12 +150,12 @@ def mask_token(token: str | None) -> str:
 
 
 # =============================================================================
-# FIXTURE LOADING
+# FIXTURE LOADING & VALIDATION
 # =============================================================================
 
 def load_fixture(fixture_path: str) -> Dict[str, Any]:
     """
-    Load a fixture JSON file.
+    Load and validate a fixture JSON file.
 
     Args:
         fixture_path: Path to the fixture JSON file
@@ -113,14 +165,27 @@ def load_fixture(fixture_path: str) -> Dict[str, Any]:
 
     Raises:
         FileNotFoundError: If fixture doesn't exist
-        json.JSONDecodeError: If fixture is invalid JSON
+        ValueError: If fixture is invalid
     """
     path = Path(fixture_path)
     if not path.exists():
         raise FileNotFoundError(f"Fixture not found: {fixture_path}")
 
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON in {fixture_path}: {e}")
+
+    # Validate required fields
+    for field in REQUIRED_FIXTURE_FIELDS:
+        if field not in data:
+            raise ValueError(f"Fixture missing required field: {field}")
+
+    # Validate answers has company size or similar
+    answers = data.get("answers", {})
+    if not answers.get("unternehmensgroesse") and not answers.get("company_size"):
+        log.warning("Fixture has no company size field - will use defaults")
 
     log.info("Loaded fixture: %s", data.get("fixture_id", path.stem))
     return data
@@ -133,13 +198,6 @@ def load_fixture(fixture_path: str) -> Dict[str, Any]:
 def get_api_client(base_url: str, service_token: Optional[str] = None) -> httpx.Client:
     """
     Create an HTTP client with authentication headers.
-
-    Args:
-        base_url: API base URL
-        service_token: Optional service token for auth
-
-    Returns:
-        Configured httpx.Client
     """
     headers = {
         "Content-Type": "application/json",
@@ -147,7 +205,9 @@ def get_api_client(base_url: str, service_token: Optional[str] = None) -> httpx.
     }
 
     if service_token:
+        # Support both header formats
         headers["X-Service-Token"] = service_token
+        headers["Authorization"] = f"Bearer {service_token}"
         log.info("Using service token authentication: %s", mask_token(service_token))
 
     return httpx.Client(
@@ -163,16 +223,6 @@ def submit_briefing(
 ) -> Dict[str, Any]:
     """
     Submit a briefing to the API.
-
-    Args:
-        client: HTTP client
-        fixture: Fixture data containing answers
-
-    Returns:
-        API response with briefing_id
-
-    Raises:
-        httpx.HTTPStatusError: If submission fails
     """
     payload = {
         "lang": fixture.get("lang", "de"),
@@ -197,17 +247,26 @@ def get_briefing_status(
 ) -> Dict[str, Any]:
     """
     Get the current status of a briefing.
-
-    Args:
-        client: HTTP client
-        briefing_id: The briefing ID to check
-
-    Returns:
-        Status dict with status, timestamps, etc.
     """
     response = client.get(f"/api/briefings/{briefing_id}")
     response.raise_for_status()
     return response.json()
+
+
+def get_validation_summary(
+    client: httpx.Client,
+    briefing_id: int,
+) -> Optional[Dict[str, Any]]:
+    """
+    Get validation summary for a briefing (if available).
+    """
+    try:
+        response = client.get(f"/api/briefings/{briefing_id}/validation")
+        if response.status_code == 200:
+            return response.json()
+    except Exception:
+        pass
+    return None
 
 
 def poll_until_done(
@@ -218,18 +277,6 @@ def poll_until_done(
 ) -> Dict[str, Any]:
     """
     Poll briefing status until it reaches a terminal state.
-
-    Args:
-        client: HTTP client
-        briefing_id: The briefing ID to poll
-        interval: Seconds between polls
-        timeout: Maximum seconds to wait
-
-    Returns:
-        Final status dict
-
-    Raises:
-        TimeoutError: If timeout exceeded
     """
     start_time = time.time()
     last_status = None
@@ -258,6 +305,47 @@ def poll_until_done(
         time.sleep(interval)
 
 
+def download_pdf(
+    client: httpx.Client,
+    briefing_id: int,
+    output_dir: str,
+    fixture_id: str,
+) -> Optional[str]:
+    """
+    Download the PDF for a briefing.
+
+    Args:
+        client: HTTP client
+        briefing_id: Briefing ID
+        output_dir: Directory to save PDF
+        fixture_id: Fixture ID for filename
+
+    Returns:
+        Path to downloaded PDF or None if failed
+    """
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    pdf_filename = f"{fixture_id}_{briefing_id}.pdf"
+    pdf_path = output_path / pdf_filename
+
+    log.info("Downloading PDF to %s...", pdf_path)
+
+    try:
+        response = client.get(f"/api/report/pdf/{briefing_id}")
+        response.raise_for_status()
+
+        with open(pdf_path, "wb") as f:
+            f.write(response.content)
+
+        log.info("PDF saved: %s (%d bytes)", pdf_path, len(response.content))
+        return str(pdf_path)
+
+    except Exception as e:
+        log.error("Failed to download PDF: %s", e)
+        return None
+
+
 def get_report_url(briefing_id: int, base_url: str) -> str:
     """Generate the report URL for a briefing."""
     return f"{base_url}/api/report/html/{briefing_id}"
@@ -270,9 +358,20 @@ def get_report_url(briefing_id: int, base_url: str) -> str:
 def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description="Submit JSON fixtures for report generation",
+        description="Submit JSON fixtures for report generation (P1 Automation)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__,
+        epilog="""
+Exit Codes:
+  0 = Success (done)
+  2 = Usage error / fixture invalid
+  3 = Authentication failed
+  4 = Timeout waiting for completion
+  5 = Server returned failed status
+
+Environment Variables (with fallback):
+  API_BASE_URL / BACKEND_BASE / SMOKE_BASE_URL
+  SERVICE_TOKEN / SMOKE_AUTH_TOKEN
+""",
     )
     parser.add_argument(
         "fixture",
@@ -298,17 +397,23 @@ def main() -> int:
     parser.add_argument(
         "--base-url",
         default=None,
-        help=f"API base URL (default: {DEFAULT_API_BASE})",
+        help="API base URL (overrides env vars)",
     )
     parser.add_argument(
         "--service-token",
         default=None,
-        help="Service token for authentication",
+        help="Service token for authentication (overrides env vars)",
+    )
+    parser.add_argument(
+        "--download-pdf",
+        metavar="DIR",
+        default=None,
+        help="Download PDF to specified directory",
     )
     parser.add_argument(
         "--output-json",
         action="store_true",
-        help="Output result as JSON (for scripting)",
+        help="Output result as JSON (for CI/scripting)",
     )
     parser.add_argument(
         "-v", "--verbose",
@@ -321,34 +426,51 @@ def main() -> int:
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    # Configuration from args or environment
-    raw_base_url = args.base_url or os.getenv("API_BASE_URL", DEFAULT_API_BASE)
+    # Configuration with fallback chains (P1)
+    raw_base_url = get_api_base_url(args.base_url)
     base_url = normalize_base_url(raw_base_url)
-    service_token = args.service_token or os.getenv("SERVICE_TOKEN")
-    poll_interval = args.interval or int(os.getenv("POLL_INTERVAL", DEFAULT_POLL_INTERVAL))
-    poll_timeout = args.timeout or int(os.getenv("POLL_TIMEOUT", DEFAULT_POLL_TIMEOUT))
+    service_token = get_service_token(args.service_token)
+    poll_interval = args.interval or int(os.getenv("POLL_INTERVAL", str(DEFAULT_POLL_INTERVAL)))
+    poll_timeout = args.timeout or int(os.getenv("POLL_TIMEOUT", str(DEFAULT_POLL_TIMEOUT)))
 
     log.info("Configuration: base_url=%s, token=%s, poll=%ds/%ds",
              base_url, mask_token(service_token), poll_interval, poll_timeout)
 
+    # Warn if no token for remote URL
+    if not service_token and "localhost" not in base_url and "127.0.0.1" not in base_url:
+        log.warning("No SERVICE_TOKEN set for remote URL - auth may fail")
+
     try:
-        # Load fixture
-        fixture = load_fixture(args.fixture)
+        # Load and validate fixture
+        try:
+            fixture = load_fixture(args.fixture)
+        except (FileNotFoundError, ValueError) as e:
+            log.error("Fixture error: %s", e)
+            return EXIT_USAGE_ERROR
+
+        fixture_id = fixture.get("fixture_id", Path(args.fixture).stem)
 
         # Create client
         client = get_api_client(base_url, service_token)
 
         # Submit briefing
-        submit_result = submit_briefing(client, fixture)
+        try:
+            submit_result = submit_briefing(client, fixture)
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code in (401, 403):
+                log.error("Authentication failed: %s", e.response.text[:200])
+                return EXIT_AUTH_FAILED
+            raise
+
         briefing_id = submit_result.get("briefing_id")
 
         if not briefing_id:
             log.error("No briefing_id in response: %s", submit_result)
-            return 1
+            return EXIT_SERVER_FAILED
 
-        result = {
+        result: Dict[str, Any] = {
             "briefing_id": briefing_id,
-            "fixture_id": fixture.get("fixture_id"),
+            "fixture_id": fixture_id,
             "expected_variant": fixture.get("expected_variant"),
             "submit_status": submit_result.get("status"),
         }
@@ -370,40 +492,65 @@ def main() -> int:
                     result["pdf_url"] = f"{base_url}/api/report/pdf/{briefing_id}"
                     log.info("Report ready: %s", result["report_url"])
                     log.info("PDF ready: %s", result["pdf_url"])
+
+                    # Download PDF if requested
+                    if args.download_pdf:
+                        pdf_path = download_pdf(
+                            client, briefing_id, args.download_pdf, fixture_id
+                        )
+                        if pdf_path:
+                            result["pdf_local_path"] = pdf_path
+
+                    # Get validation summary if available
+                    validation = get_validation_summary(client, briefing_id)
+                    if validation:
+                        result["validation"] = validation
+
                 elif final_status.get("status") == "failed":
                     result["error"] = final_status.get("error")
                     log.error("Report generation failed: %s", result["error"])
-                    return 1
+                    if args.output_json:
+                        print(json.dumps(result, indent=2))
+                    return EXIT_SERVER_FAILED
 
             except TimeoutError as e:
                 log.error(str(e))
                 result["error"] = "timeout"
-                return 1
+                if args.output_json:
+                    print(json.dumps(result, indent=2))
+                return EXIT_TIMEOUT
 
         # Output
         if args.output_json:
             print(json.dumps(result, indent=2))
         else:
-            print(f"\nBriefing ID: {briefing_id}")
+            print(f"\n{'='*50}")
+            print(f"Briefing ID: {briefing_id}")
+            print(f"Fixture: {fixture_id}")
+            if result.get("final_status"):
+                print(f"Status: {result['final_status']}")
             if result.get("report_url"):
                 print(f"Report URL: {result['report_url']}")
             if result.get("pdf_url"):
                 print(f"PDF URL: {result['pdf_url']}")
+            if result.get("pdf_local_path"):
+                print(f"PDF Local: {result['pdf_local_path']}")
+            print(f"{'='*50}\n")
 
-        return 0
+        return EXIT_SUCCESS
 
-    except FileNotFoundError as e:
-        log.error(str(e))
-        return 1
     except httpx.HTTPStatusError as e:
+        if e.response.status_code in (401, 403):
+            log.error("Authentication failed: %s", e.response.text[:200])
+            return EXIT_AUTH_FAILED
         log.error("HTTP error: %s %s - %s",
                   e.response.status_code,
                   e.response.reason_phrase,
                   e.response.text[:200])
-        return 1
+        return EXIT_SERVER_FAILED
     except Exception as e:
         log.exception("Unexpected error: %s", e)
-        return 1
+        return EXIT_SERVER_FAILED
 
 
 if __name__ == "__main__":
