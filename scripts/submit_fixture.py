@@ -205,9 +205,9 @@ def get_api_client(base_url: str, service_token: Optional[str] = None) -> httpx.
     }
 
     if service_token:
-        # Support both header formats
+        # Use X-Service-Token header ONLY (not Authorization: Bearer)
+        # Authorization: Bearer is for JWT user tokens, not service tokens
         headers["X-Service-Token"] = service_token
-        headers["Authorization"] = f"Bearer {service_token}"
         log.info("Using service token authentication: %s", mask_token(service_token))
 
     return httpx.Client(
