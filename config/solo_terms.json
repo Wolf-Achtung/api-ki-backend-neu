@@ -1,0 +1,185 @@
+{
+  "_comment": "Solo-Terminologie-Mapping: Blacklist → Whitelist für Solo-Reports",
+  "_version": "1.0.0",
+  "_description": "Ersetzt Enterprise-Begriffe durch Solo-freundliche Alternativen",
+
+  "replacements": {
+    "Stakeholder": "wichtige Personen",
+    "stakeholder": "wichtige Personen",
+    "Stakeholdern": "wichtigen Personen",
+    "Stakeholders": "wichtiger Personen",
+
+    "Governance": "Leitplanken",
+    "governance": "Leitplanken",
+    "Governance-Framework": "Grundregeln",
+    "Governance-Prozess": "Abstimmungsregeln",
+    "Governance-Struktur": "Regelwerk",
+
+    "Roadmap": "Plan",
+    "roadmap": "Plan",
+    "Roadmaps": "Pläne",
+
+    "KI-Stack": "Werkzeugkasten",
+    "KI-Stacks": "Werkzeugkästen",
+    "Tech-Stack": "Werkzeugkasten",
+    "Stack": "Werkzeugkasten",
+
+    "Skalierung": "Wachstum",
+    "skalieren": "wachsen",
+    "skalierbar": "erweiterbar",
+    "Skalierbarkeit": "Erweiterbarkeit",
+
+    "Architektur": "Aufbau",
+    "architektur": "Aufbau",
+    "Systemarchitektur": "Systemaufbau",
+    "IT-Architektur": "IT-Aufbau",
+
+    "Operating Model": "Arbeitsweise",
+    "operating model": "Arbeitsweise",
+
+    "Change Management": "Einführung und Umstellung",
+    "Change-Management": "Einführung und Umstellung",
+    "change management": "Einführung und Umstellung",
+
+    "Rollout": "Einführung",
+    "rollout": "Einführung",
+    "Roll-out": "Einführung",
+
+    "RACI": "Zuständigkeiten",
+    "RACI-Matrix": "Zuständigkeitsliste",
+
+    "Executive": "Entscheider",
+    "executive": "Entscheider",
+    "Executive Summary": "Kurzfassung",
+    "Executive-Summary": "Kurzfassung",
+
+    "Audit": "Prüfung",
+    "audit": "Prüfung",
+    "Audits": "Prüfungen",
+    "Audit-Trail": "Protokoll",
+
+    "Umsetzungspartner": "Dienstleister",
+    "Implementierungspartner": "Dienstleister",
+
+    "Abteilung": "Arbeitsbereich",
+    "Abteilungen": "Arbeitsbereiche",
+    "abteilungsübergreifend": "bereichsübergreifend",
+
+    "Team": "Sie",
+    "Teams": "Ihre Kapazitäten",
+    "Projektteam": "Projektkapazität",
+    "Projektteams": "Projektkapazitäten",
+
+    "Mitarbeiter": "Sie",
+    "Mitarbeitern": "Ihnen",
+    "Mitarbeitende": "Sie",
+    "Mitarbeitenden": "Ihnen",
+
+    "KPI-Dashboard": "Erfolgsmessung",
+    "KPI": "Kennzahl",
+    "KPIs": "Kennzahlen",
+
+    "Layer": "Ebene",
+    "layer": "Ebene",
+    "Layers": "Ebenen",
+
+    "Plattform": "Lösung",
+    "plattform": "Lösung",
+    "Plattformen": "Lösungen",
+
+    "Enterprise": "Unternehmens",
+    "enterprise": "Unternehmens",
+    "Enterprise-Lösung": "professionelle Lösung",
+
+    "Onboarding": "Einarbeitung",
+    "onboarding": "Einarbeitung",
+
+    "Pipeline": "Ablauf",
+    "pipeline": "Ablauf",
+    "Pipelines": "Abläufe",
+
+    "Workflow": "Arbeitsablauf",
+    "workflow": "Arbeitsablauf",
+    "Workflows": "Arbeitsabläufe",
+
+    "Framework": "Rahmenwerk",
+    "framework": "Rahmenwerk",
+    "Frameworks": "Rahmenwerke",
+
+    "Best Practice": "bewährte Vorgehensweise",
+    "Best Practices": "bewährte Vorgehensweisen",
+    "best practice": "bewährte Vorgehensweise",
+
+    "Use Case": "Anwendungsfall",
+    "Use-Case": "Anwendungsfall",
+    "Use Cases": "Anwendungsfälle",
+    "Use-Cases": "Anwendungsfälle",
+
+    "Deployment": "Bereitstellung",
+    "deployment": "Bereitstellung",
+
+    "Integration": "Einbindung",
+    "Integrationen": "Einbindungen",
+
+    "Compliance": "Regelkonformität",
+    "compliance": "Regelkonformität",
+    "Compliance-Anforderungen": "rechtliche Anforderungen",
+
+    "Assessment": "Bewertung",
+    "assessments": "Bewertungen"
+  },
+
+  "blacklist_headlines": [
+    "Stakeholder",
+    "Governance",
+    "Operating Model",
+    "RACI",
+    "Executive",
+    "Change Management",
+    "Audit",
+    "Enterprise",
+    "Deployment",
+    "Pipeline",
+    "Framework",
+    "Skalierung",
+    "Architektur",
+    "Rollout"
+  ],
+
+  "whitelist_preferred": [
+    "Sie",
+    "Ihr",
+    "Ihre",
+    "Plan",
+    "Werkzeugkasten",
+    "Leitplanken",
+    "Prüfung",
+    "Einführung",
+    "Aufbau",
+    "Wachstum",
+    "Arbeitsweise",
+    "Arbeitsablauf",
+    "Lösung",
+    "Dienstleister",
+    "Kennzahl",
+    "Erfolgsmessung"
+  ],
+
+  "context_aware_rules": [
+    {
+      "pattern": "\\bTeam\\b(?!s? (dahinter|unterstützt))",
+      "replacement": "Sie",
+      "description": "Team → Sie, außer in bestimmten Kontexten"
+    },
+    {
+      "pattern": "Ihr Team",
+      "replacement": "Sie",
+      "description": "Ihr Team → Sie für Solo"
+    },
+    {
+      "pattern": "das Team",
+      "replacement": "Sie",
+      "description": "das Team → Sie für Solo"
+    }
+  ]
+}
