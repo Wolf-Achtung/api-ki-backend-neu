@@ -8272,8 +8272,9 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
 
     # -------------------------------------------------------------------------
     # FIX-BRANCH-13: Use canonical normalizers for branch and company size
+    # FIX-BRANCH-UNMAPPED: Track unknown branches with branch_unmapped flag
     # -------------------------------------------------------------------------
-    from services.branch_mapping import map_frontend_branch_to_engine
+    from services.branch_mapping import map_frontend_branch_with_status
     from services.company_size_normalizer import normalize_company_size
 
     # Extract raw input values
@@ -8283,8 +8284,18 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     bundesland_raw = briefing.get("bundesland", "")
     hauptleistung_raw = briefing.get("hauptleistung", "")
 
-    # Normalize branch using canonical 13-branch mapping
-    branche_engine_key = map_frontend_branch_to_engine(branche_raw)
+    # Normalize branch using canonical 13-branch mapping with status tracking
+    branch_result = map_frontend_branch_with_status(branche_raw)
+    branche_engine_key = branch_result.canonical
+    branch_unmapped = branch_result.unmapped
+
+    # FIX-BRANCH-UNMAPPED: Log warning if branch was not recognized
+    if branch_unmapped:
+        log.warning(
+            "[FIX-BRANCH-UNMAPPED] Unknown branch '%s' → fallback='%s'. "
+            "Consider adding to BRANCH_SYNONYMS in services/branch_mapping.py",
+            branche_raw, branche_engine_key
+        )
 
     # Normalize company size using En-Dash robust normalizer
     size_info = normalize_company_size(str(unternehmensgroesse_raw))
@@ -8313,9 +8324,12 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     )
 
     # Store in meta for debugging/auditing
+    # FIX-BRANCH-UNMAPPED: Include branch_unmapped flag
     briefing["_meta_core_inputs"] = {
         "branche_raw": branche_raw,
         "branche_engine_key": branche_engine_key,
+        "branch_unmapped": branch_unmapped,
+        "branch_match_type": branch_result.match_type,
         "unternehmensgroesse_raw": str(unternehmensgroesse_raw),
         "company_size_bucket": company_size_bucket,
         "company_size_min": company_size_min,
@@ -8362,6 +8376,9 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         # FIX-BRANCH-13: Add engine key for branch-specific logic
         "BRANCHE_ENGINE_KEY": branche_engine_key,
         "branche_engine_key": branche_engine_key,
+        # FIX-BRANCH-UNMAPPED: Track unknown branches
+        "BRANCH_UNMAPPED": branch_unmapped,
+        "branch_unmapped": branch_unmapped,
         "UNTERNEHMENSGROESSE": str(unternehmensgroesse_raw),
         "unternehmensgroesse": str(unternehmensgroesse_raw),
         "UNTERNEHMENSGROESSE_LABEL": size_label,

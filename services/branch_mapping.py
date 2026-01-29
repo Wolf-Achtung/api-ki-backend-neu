@@ -12,14 +12,37 @@ The mapping chain:
   marketing, beratung, it, finanzen, handel, bildung, verwaltung,
   gesundheit, bau, medien, industrie, logistik, gastronomie
 
-Version: 1.1.0 (FIX-BRANCH-13)
+Version: 1.2.0 (FIX-BRANCH-UNMAPPED)
 """
 from __future__ import annotations
 
 import logging
-from typing import Dict
+from dataclasses import dataclass
+from typing import Dict, Optional
 
 log = logging.getLogger(__name__)
+
+
+# =============================================================================
+# BRANCH MAPPING RESULT (FIX-BRANCH-UNMAPPED)
+# =============================================================================
+
+@dataclass
+class BranchMappingResult:
+    """
+    Result of branch mapping with metadata about the mapping process.
+
+    FIX-BRANCH-UNMAPPED: Includes flag to indicate unmapped/unknown input.
+    """
+    canonical: str          # The canonical engine branch key
+    original: str           # The original input value
+    match_type: str         # How it was matched: 'direct', 'synonym', 'alias', 'fallback'
+    unmapped: bool = False  # True if original was not found, fallback was used
+
+    @property
+    def branch(self) -> str:
+        """Alias for canonical (backwards compatibility)."""
+        return self.canonical
 
 # =============================================================================
 # FRONTEND → ENGINE MAPPING
@@ -311,6 +334,120 @@ def map_frontend_branch_to_engine(raw_value: str) -> str:
     return "beratung"
 
 
+def map_frontend_branch_with_status(raw_value: str) -> BranchMappingResult:
+    """
+    Map a frontend branch value with full metadata about the mapping.
+
+    FIX-BRANCH-UNMAPPED: Returns a BranchMappingResult that includes:
+    - canonical: The mapped engine branch key
+    - original: The input value
+    - match_type: How it was matched ('direct', 'synonym', 'normalized', 'key', 'engine', 'alias', 'fallback')
+    - unmapped: True if the input was unknown and fallback was used
+
+    Args:
+        raw_value: Raw branch value from frontend
+
+    Returns:
+        BranchMappingResult with full metadata
+
+    Example:
+        >>> result = map_frontend_branch_with_status("unknown_branch")
+        >>> result.canonical
+        "beratung"
+        >>> result.unmapped
+        True
+    """
+    if not raw_value:
+        log.debug("[G19.1-MAP-STATUS] Empty branch value, defaulting to 'beratung'")
+        return BranchMappingResult(
+            canonical="beratung",
+            original=raw_value or "",
+            match_type="fallback",
+            unmapped=True
+        )
+
+    # 1) Direct match on frontend value key
+    key = raw_value.strip().lower()
+    if key in BRANCH_MAPPING:
+        result = BRANCH_MAPPING[key]
+        log.debug("[G19.1-MAP-STATUS] Direct match: '%s' → '%s'", raw_value, result)
+        return BranchMappingResult(
+            canonical=result,
+            original=raw_value,
+            match_type="direct",
+            unmapped=False
+        )
+
+    # 2) Match via synonym
+    norm = raw_value.strip().lower()
+    if norm in BRANCH_SYNONYMS:
+        mapped_frontend_key = BRANCH_SYNONYMS[norm]
+        result = BRANCH_MAPPING.get(mapped_frontend_key, "beratung")
+        log.debug("[G19.1-MAP-STATUS] Synonym match: '%s' → '%s'", raw_value, result)
+        return BranchMappingResult(
+            canonical=result,
+            original=raw_value,
+            match_type="synonym",
+            unmapped=False
+        )
+
+    # 3) Match via normalized form
+    norm2 = _normalize(raw_value)
+    if norm2 in BRANCH_SYNONYMS:
+        mapped_frontend_key = BRANCH_SYNONYMS[norm2]
+        result = BRANCH_MAPPING.get(mapped_frontend_key, "beratung")
+        log.debug("[G19.1-MAP-STATUS] Normalized match: '%s' → '%s'", raw_value, result)
+        return BranchMappingResult(
+            canonical=result,
+            original=raw_value,
+            match_type="normalized",
+            unmapped=False
+        )
+
+    # 4) Try underscore-normalized key format
+    norm_key = _normalize_to_key(raw_value)
+    if norm_key in BRANCH_MAPPING:
+        result = BRANCH_MAPPING[norm_key]
+        log.debug("[G19.1-MAP-STATUS] Key-normalized match: '%s' → '%s'", raw_value, result)
+        return BranchMappingResult(
+            canonical=result,
+            original=raw_value,
+            match_type="key",
+            unmapped=False
+        )
+
+    # 5) Check if raw value is already an engine key
+    from services.branch_profile_engine import BRANCH_MATURITY_DATA, BRANCH_ALIASES
+    if key in BRANCH_MATURITY_DATA:
+        log.debug("[G19.1-MAP-STATUS] Already engine key: '%s'", raw_value)
+        return BranchMappingResult(
+            canonical=key,
+            original=raw_value,
+            match_type="engine",
+            unmapped=False
+        )
+
+    # 6) Try branch_profile_engine's own alias resolution
+    if key in BRANCH_ALIASES:
+        result = BRANCH_ALIASES[key]
+        log.debug("[G19.1-MAP-STATUS] Engine alias match: '%s' → '%s'", raw_value, result)
+        return BranchMappingResult(
+            canonical=result,
+            original=raw_value,
+            match_type="alias",
+            unmapped=False
+        )
+
+    # 7) Fallback - FIX-BRANCH-UNMAPPED: Set unmapped=True
+    log.warning("[G19.1-MAP-STATUS] Unknown branch '%s', defaulting to 'beratung' (unmapped=True)", raw_value)
+    return BranchMappingResult(
+        canonical="beratung",
+        original=raw_value,
+        match_type="fallback",
+        unmapped=True
+    )
+
+
 def get_all_supported_branches() -> list[str]:
     """
     Return list of all supported internal branch keys.
@@ -348,12 +485,42 @@ def get_frontend_branch_options() -> list[tuple[str, str]]:
     ]
 
 
+def is_branch_known(raw_value: str) -> bool:
+    """
+    Check if a branch value is known/recognized.
+
+    FIX-BRANCH-UNMAPPED: Quick check without full mapping.
+
+    Args:
+        raw_value: Branch value to check
+
+    Returns:
+        True if branch is recognized, False if it would use fallback
+    """
+    result = map_frontend_branch_with_status(raw_value)
+    return not result.unmapped
+
+
+def get_canonical_branches() -> list[str]:
+    """
+    Return list of the 13 canonical branch keys.
+
+    These are the official values from formbuilder_de_SINGLE_FULL.js.
+    """
+    return [
+        "marketing", "beratung", "it", "finanzen", "handel",
+        "bildung", "verwaltung", "gesundheit", "bau", "medien",
+        "industrie", "logistik", "gastronomie"
+    ]
+
+
 # =============================================================================
 # MODULE INITIALIZATION
 # =============================================================================
 
 log.info(
-    "[G19.1-MAP] Branch Mapping loaded - %d frontend values, %d synonyms",
+    "[G19.1-MAP] Branch Mapping loaded - %d frontend values, %d synonyms, %d canonicals",
     len(BRANCH_MAPPING),
     len(BRANCH_SYNONYMS),
+    len(get_canonical_branches()),
 )
