@@ -1987,6 +1987,70 @@ Nutze den Strategischen Kontext wie folgt:
 """
         return instructions
 
+    def _build_tools_whitelist_context(self, briefing_data: Dict[str, Any]) -> str:
+        """
+        Build tools whitelist context for tools_empfehlungen prompt.
+
+        FIX-TOOL-WHITELIST: Injects allowed tool categories and considers
+        vorhandene_tools (user's existing tools).
+
+        Args:
+            briefing_data: Complete briefing data
+
+        Returns:
+            Formatted tools context for prompt injection
+        """
+        try:
+            from services.tool_whitelist import get_tools_context_for_prompt
+        except ImportError:
+            log.warning("[TOOL-WHITELIST] Could not import tool_whitelist module")
+            return ""
+
+        # Get company size
+        company_size = briefing_data.get("COMPANY_SIZE", "").lower() or "team"
+        if not company_size or company_size not in ("solo", "team", "kmu"):
+            ug = str(briefing_data.get("unternehmensgroesse", "")).lower()
+            if "solo" in ug or "1" == ug or "freiberuf" in ug:
+                company_size = "solo"
+            elif "2-10" in ug or "2–10" in ug or "klein" in ug:
+                company_size = "team"
+            else:
+                company_size = "kmu"
+
+        # Get branch
+        branch = briefing_data.get("branche_engine_key", "") or briefing_data.get("branche", "")
+
+        # Get vorhandene_tools
+        vorhandene_tools = (
+            briefing_data.get("VORHANDENE_TOOLS_LABELS", "")
+            or briefing_data.get("vorhandene_tools", "")
+            or ""
+        )
+
+        # Get language
+        lang_raw = briefing_data.get("lang", "") or briefing_data.get("LANG", "") or "de"
+        lang = "en" if str(lang_raw).lower().startswith("en") else "de"
+
+        try:
+            context = get_tools_context_for_prompt(
+                size=company_size,
+                branch=branch,
+                vorhandene_tools=vorhandene_tools,
+                lang=lang
+            )
+
+            if context:
+                log.debug(
+                    "[TOOL-WHITELIST] Injected tools context: size=%s branch=%s vorhandene=%d chars",
+                    company_size, branch, len(vorhandene_tools)
+                )
+                return f"\n{context}\n\n---\n\n"
+
+        except Exception as e:
+            log.warning("[TOOL-WHITELIST] Failed to build tools context: %s", e)
+
+        return ""
+
     def enhance_prompt(self, prompt_name: str, briefing_data: Dict[str, Any]) -> str:
         """
         Load a prompt and inject context.
@@ -1996,7 +2060,8 @@ Nutze den Strategischen Kontext wie folgt:
         2. Injects strategic context block into ALL prompts (from user freetext answers)
         3. Builds additional context block from branch/size contexts (for whitelisted prompts)
         4. Applies roadmap constraints for roadmap prompts
-        5. Returns the enhanced prompt
+        5. FIX-TOOL-WHITELIST: Injects tools whitelist for tools_empfehlungen
+        6. Returns the enhanced prompt
 
         Args:
             prompt_name: Name of the prompt (e.g., 'quick_wins')
@@ -2083,9 +2148,16 @@ Nutze den Strategischen Kontext wie folgt:
             # Reduces redundancy by telling LLM to use compact labels
             short_label_instructions = self._build_short_label_instructions(briefing_data)
 
-            # Combine: strategic block + alignment + guardrails + short-labels
+            # === STEP 1e: Add tools whitelist context (FIX-TOOL-WHITELIST) ===
+            # For tools_empfehlungen, inject allowed categories and vorhandene_tools
+            tools_whitelist_context = ""
+            if prompt_name == "tools_empfehlungen":
+                tools_whitelist_context = self._build_tools_whitelist_context(briefing_data)
+
+            # Combine: strategic block + alignment + guardrails + short-labels + tools whitelist
             full_context_injection = (
-                strategic_block + alignment_instructions + guardrails_instructions + short_label_instructions
+                strategic_block + alignment_instructions + guardrails_instructions +
+                short_label_instructions + tools_whitelist_context
             )
 
             # Find the best injection point: after Developer comment, before HTML
