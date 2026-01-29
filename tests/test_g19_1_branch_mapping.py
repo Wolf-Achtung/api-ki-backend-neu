@@ -451,3 +451,82 @@ class TestBranchAliasesSync:
         for key in g19_1_keys:
             assert key in BRANCH_ALIASES, \
                 f"G19.1 branch '{key}' should be in BRANCH_ALIASES"
+
+
+# =============================================================================
+# FIX-BRANCH-UNMAPPED: Tests for branch_unmapped flag
+# =============================================================================
+
+class TestBranchUnmappedFlag:
+    """Tests for FIX-BRANCH-UNMAPPED: unknown branches get flagged."""
+
+    def test_known_branch_not_unmapped(self):
+        """Known branches should have unmapped=False."""
+        from services.branch_mapping import map_frontend_branch_with_status
+
+        # Test canonical values
+        for canonical in ["marketing", "beratung", "it", "finanzen", "gastronomie"]:
+            result = map_frontend_branch_with_status(canonical)
+            assert result.unmapped is False, f"'{canonical}' should not be unmapped"
+            assert result.canonical == canonical or result.match_type == "direct"
+
+    def test_synonym_not_unmapped(self):
+        """Synonym matches should have unmapped=False."""
+        from services.branch_mapping import map_frontend_branch_with_status
+
+        synonyms = [
+            ("Gastronomie & Tourismus", "handel"),
+            ("consulting", "beratung"),
+            ("healthcare", "gesundheit"),
+            ("construction", "bauwesen_architektur"),
+        ]
+        for raw, expected in synonyms:
+            result = map_frontend_branch_with_status(raw)
+            assert result.unmapped is False, f"Synonym '{raw}' should not be unmapped"
+            assert result.canonical == expected, f"'{raw}' should map to '{expected}'"
+
+    def test_unknown_branch_is_unmapped(self):
+        """Unknown branches should have unmapped=True and fallback to beratung."""
+        from services.branch_mapping import map_frontend_branch_with_status
+
+        unknowns = ["unknown_xyz", "foobar_industry", "random_text_123"]
+        for unknown in unknowns:
+            result = map_frontend_branch_with_status(unknown)
+            assert result.unmapped is True, f"Unknown '{unknown}' should be unmapped"
+            assert result.canonical == "beratung", f"Unknown '{unknown}' should fallback to beratung"
+            assert result.match_type == "fallback"
+            assert result.original == unknown
+
+    def test_empty_branch_is_unmapped(self):
+        """Empty/whitespace-only branches should have unmapped=True."""
+        from services.branch_mapping import map_frontend_branch_with_status
+
+        empties = ["", "   ", None]
+        for empty in empties:
+            result = map_frontend_branch_with_status(empty or "")
+            assert result.unmapped is True, f"Empty input should be unmapped"
+            assert result.canonical == "beratung"
+
+    def test_is_branch_known_function(self):
+        """Test the is_branch_known helper function."""
+        from services.branch_mapping import is_branch_known
+
+        # Known branches
+        assert is_branch_known("beratung") is True
+        assert is_branch_known("gastronomie") is True
+        assert is_branch_known("Gastronomie & Tourismus") is True
+        assert is_branch_known("it") is True
+
+        # Unknown branches
+        assert is_branch_known("unknown_xyz") is False
+        assert is_branch_known("") is False
+        assert is_branch_known("foobar") is False
+
+    def test_branch_mapping_result_properties(self):
+        """Test BranchMappingResult dataclass properties."""
+        from services.branch_mapping import map_frontend_branch_with_status
+
+        result = map_frontend_branch_with_status("marketing")
+        assert result.branch == result.canonical  # .branch is alias for .canonical
+        assert result.original == "marketing"
+        assert result.match_type in ("direct", "synonym", "normalized", "key", "engine", "alias", "fallback")

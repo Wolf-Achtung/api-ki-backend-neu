@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 import yaml
 
@@ -374,6 +374,261 @@ def get_whitelist_prompt_block(size: str, branch: Optional[str] = None, lang: st
         lines.append(f"- {item}")
 
     return "\n".join(lines)
+
+
+# =============================================================================
+# FIX-TOOL-WHITELIST: POST-PROCESSOR WITH VORHANDENE_TOOLS
+# =============================================================================
+
+import re
+
+
+def parse_vorhandene_tools(raw_value: Optional[str]) -> List[str]:
+    """
+    Parse vorhandene_tools string from form input.
+
+    Handles comma-separated, semicolon-separated, and newline-separated values.
+
+    Args:
+        raw_value: Raw string from form (e.g., "ChatGPT, Notion, Slack")
+
+    Returns:
+        List of normalized tool names
+    """
+    if not raw_value:
+        return []
+
+    # Normalize separators
+    value = raw_value.strip()
+    value = re.sub(r'[;|\n]+', ',', value)
+
+    # Split and clean
+    tools = [t.strip().lower() for t in value.split(',') if t.strip()]
+    return tools
+
+
+def postprocess_tools_empfehlungen(
+    html: str,
+    size: str,
+    branch: Optional[str] = None,
+    vorhandene_tools: Optional[str] = None,
+    lang: str = "de"
+) -> Dict[str, Any]:
+    """
+    Post-process tools_empfehlungen HTML to validate and enhance recommendations.
+
+    FIX-TOOL-WHITELIST: Integrates whitelist validation with vorhandene_tools
+    consideration.
+
+    Args:
+        html: Generated tools_empfehlungen HTML
+        size: Company size (solo, team, kmu)
+        branch: Optional branch for branch-specific tools
+        vorhandene_tools: User's existing tools (comma-separated string)
+        lang: Language (de/en)
+
+    Returns:
+        Dict with:
+        - processed_html: Enhanced/validated HTML
+        - validation_issues: List of issues found
+        - already_has: Tools user already has (from vorhandene_tools)
+        - recommended_categories: Categories recommended for this size
+        - blacklist_violations: Any blacklisted terms found
+    """
+    result: Dict[str, Any] = {
+        "processed_html": html,
+        "validation_issues": [],
+        "already_has": [],
+        "recommended_categories": [],
+        "blacklist_violations": [],
+        "meta": {
+            "size": size,
+            "branch": branch,
+            "vorhandene_tools_count": 0,
+        }
+    }
+
+    if not html:
+        result["validation_issues"].append({
+            "type": "empty_content",
+            "message": "Tools-Empfehlungen section is empty",
+            "severity": "warning"
+        })
+        return result
+
+    # 1. Parse existing tools
+    existing_tools = parse_vorhandene_tools(vorhandene_tools)
+    result["meta"]["vorhandene_tools_count"] = len(existing_tools)
+
+    # 2. Get recommended categories for this size
+    recommended = get_recommended_tools(size, branch, lang)
+    result["recommended_categories"] = [r["id"] for r in recommended]
+
+    # 3. Check for blacklisted tools/terms
+    blacklist = get_blacklist()
+    html_lower = html.lower()
+    for term in blacklist:
+        if term.lower() in html_lower:
+            result["blacklist_violations"].append({
+                "term": term,
+                "message": f"Blacklisted term '{term}' found in recommendations",
+                "severity": "warning"
+            })
+
+    # 4. Check if recommended tools are already owned
+    for tool in existing_tools:
+        if tool in html_lower:
+            result["already_has"].append({
+                "tool": tool,
+                "message": f"User already has '{tool}' - consider de-emphasizing",
+                "severity": "info"
+            })
+
+    # 5. Add note if user already has many tools
+    if len(existing_tools) >= 5:
+        log.info(
+            "[TOOL-WHITELIST] User has %d existing tools - recommendations should focus on integration",
+            len(existing_tools)
+        )
+        result["meta"]["focus_integration"] = True
+
+    # 6. Log summary
+    log.info(
+        "[TOOL-WHITELIST] Post-processed tools_empfehlungen: "
+        "size=%s branch=%s vorhandene=%d blacklist_violations=%d already_has=%d",
+        size, branch, len(existing_tools),
+        len(result["blacklist_violations"]),
+        len(result["already_has"])
+    )
+
+    return result
+
+
+def get_tools_context_for_prompt(
+    size: str,
+    branch: Optional[str] = None,
+    vorhandene_tools: Optional[str] = None,
+    lang: str = "de"
+) -> str:
+    """
+    Generate a context block for tools_empfehlungen prompt injection.
+
+    This includes:
+    - Whitelist of allowed tool categories
+    - User's existing tools to avoid redundant recommendations
+    - Size-specific recommendations
+
+    Args:
+        size: Company size
+        branch: Optional branch
+        vorhandene_tools: User's existing tools
+        lang: Language
+
+    Returns:
+        Formatted string for prompt injection
+    """
+    lines = []
+
+    # 1. Get whitelist block
+    whitelist_block = get_whitelist_prompt_block(size, branch, lang)
+    lines.append(whitelist_block)
+
+    # 2. Add existing tools context
+    existing = parse_vorhandene_tools(vorhandene_tools)
+    if existing:
+        lines.append("")
+        if lang == "en":
+            lines.append("## User's Existing Tools")
+            lines.append("The user already uses these tools (do not recommend as 'new'):")
+        else:
+            lines.append("## Bereits vorhandene Tools des Nutzers")
+            lines.append("Der Nutzer verwendet bereits diese Tools (nicht als 'neu' empfehlen):")
+
+        for tool in existing[:10]:  # Limit to 10
+            lines.append(f"- {tool}")
+
+        if len(existing) > 10:
+            lines.append(f"- ... und {len(existing) - 10} weitere")
+
+        lines.append("")
+        if lang == "en":
+            lines.append("Focus recommendations on: integration, optimization, or complementary tools.")
+        else:
+            lines.append("Fokussiere Empfehlungen auf: Integration, Optimierung, oder ergänzende Tools.")
+
+    return "\n".join(lines)
+
+
+def validate_tools_section(
+    html: str,
+    size: str,
+    branch: Optional[str] = None
+) -> Tuple[bool, List[Dict[str, Any]]]:
+    """
+    Validate a tools section against the whitelist.
+
+    Args:
+        html: Tools section HTML
+        size: Company size
+        branch: Optional branch
+
+    Returns:
+        Tuple of (is_valid, list of issues)
+    """
+    issues: List[Dict[str, Any]] = []
+
+    if not html:
+        return False, [{"type": "empty", "message": "Section is empty", "severity": "error"}]
+
+    # Check for blacklist violations
+    blacklist = get_blacklist()
+    html_lower = html.lower()
+
+    for term in blacklist:
+        if term.lower() in html_lower:
+            issues.append({
+                "type": "blacklist",
+                "term": term,
+                "message": f"Blacklisted term '{term}' found",
+                "severity": "warning"
+            })
+
+    # Check content length
+    text_only = re.sub(r'<[^>]+>', '', html)
+    word_count = len(text_only.split())
+
+    min_words = {"solo": 50, "team": 80, "kmu": 100}.get(size.lower(), 60)
+    if word_count < min_words:
+        issues.append({
+            "type": "too_short",
+            "word_count": word_count,
+            "min_required": min_words,
+            "message": f"Content too short ({word_count} words, min {min_words})",
+            "severity": "warning"
+        })
+
+    # Check for specific tool mentions (should have at least some)
+    tool_patterns = [
+        r'ChatGPT|Claude|Copilot|Gemini',
+        r'Notion|Asana|Trello|Monday',
+        r'Slack|Teams|Discord',
+        r'Make\.com|Zapier|n8n',
+    ]
+    tool_mentions = 0
+    for pattern in tool_patterns:
+        if re.search(pattern, html, re.IGNORECASE):
+            tool_mentions += 1
+
+    if tool_mentions < 2:
+        issues.append({
+            "type": "low_specificity",
+            "tool_mentions": tool_mentions,
+            "message": "Few specific tool mentions - consider adding concrete recommendations",
+            "severity": "info"
+        })
+
+    is_valid = not any(i["severity"] == "error" for i in issues)
+    return is_valid, issues
 
 
 # =============================================================================
