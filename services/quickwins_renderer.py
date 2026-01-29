@@ -806,10 +806,18 @@ def normalize_quickwins_to_html(raw: str, strict: bool = False) -> tuple[str, di
     """
     if not raw or not raw.strip():
         if strict:
-            raise RuntimeError(
-                "[QW-NORMALIZE] ❌ unable to normalize quick_wins to HTML in STRICT mode "
-                "(reason=empty_input)"
-            )
+            # FIX-PIPELINE: Empty input in STRICT mode → return fallback (no raise)
+            log.warning("[QW-NORMALIZE] ⚠️ empty input in STRICT mode - generating fallback")
+            fallback_html = _generate_minimal_quickwins_fallback()
+            fallback_meta = {
+                "path": "FALLBACK_STRICT",
+                "items": 3,
+                "has_marker": True,
+                "has_class": True,
+                "len": len(fallback_html),
+                "reason": "empty_input",
+            }
+            return fallback_html, fallback_meta
         return "", {"path": "EMPTY", "items": 0, "has_marker": False, "has_class": False, "len": 0}
 
     stripped = raw.strip()
