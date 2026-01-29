@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import yaml
 
@@ -113,7 +113,7 @@ def reload_config() -> Dict[str, Any]:
 def get_categories() -> Dict[str, Dict[str, Any]]:
     """Get all tool categories."""
     config = _load_config()
-    return config.get("categories", {})
+    return cast(Dict[str, Dict[str, Any]], config.get("categories", {}))
 
 
 def get_category(category_id: str) -> Optional[Dict[str, Any]]:
@@ -144,7 +144,7 @@ def get_size_profile(size: str) -> Dict[str, Any]:
     elif size_lower in ("1", "einzelunternehmer"):
         size_lower = "solo"
 
-    return profiles.get(size_lower, profiles.get("solo", {}))
+    return cast(Dict[str, Any], profiles.get(size_lower, profiles.get("solo", {})))
 
 
 def get_branch_additions(branch: str) -> Dict[str, Any]:
@@ -159,7 +159,7 @@ def get_branch_additions(branch: str) -> Dict[str, Any]:
     """
     config = _load_config()
     additions = config.get("branch_additions", {})
-    return additions.get(branch.lower(), {})
+    return cast(Dict[str, Any], additions.get(branch.lower(), {}))
 
 
 def get_recommended_tools(
@@ -245,7 +245,7 @@ def get_data_classification(lang: str = "de") -> Dict[str, Dict[str, Any]]:
 def get_blacklist() -> List[str]:
     """Get list of tools/practices NOT to recommend."""
     config = _load_config()
-    return config.get("blacklist", [])
+    return cast(List[str], config.get("blacklist", []))
 
 
 def is_tool_allowed(tool_name: str, size: str) -> bool:
