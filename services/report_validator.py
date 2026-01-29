@@ -83,6 +83,26 @@ except ImportError:
 
     SECTION_MIN_WORDS = None
 
+# FIX-SOLO-VEREINFACHUNG: Import Solo simplifier for terminology checks
+try:
+    from services.solo_simplifier import (
+        validate_solo_content,
+        is_solo_size,
+        get_blacklist_headlines,
+    )
+    _HAS_SOLO_SIMPLIFIER = True
+except ImportError:
+    _HAS_SOLO_SIMPLIFIER = False
+
+    def validate_solo_content(content: str, section_name: Optional[str] = None) -> Tuple[bool, List[Dict[str, Any]]]:
+        return True, []
+
+    def is_solo_size(size: str) -> bool:
+        return "solo" in str(size).lower() or "1" in str(size)
+
+    def get_blacklist_headlines() -> List[str]:
+        return []
+
 log = logging.getLogger(__name__)
 
 __all__ = [
@@ -998,6 +1018,7 @@ class ReportValidator:
         self._check_quick_wins_prompt_leaks()
         self._check_generic_llm_leaks()  # Sprint N1: ChatGPT standard response detection
         self._check_size_specific_issues()
+        self._check_solo_terminology()  # FIX-SOLO-VEREINFACHUNG: Blacklist check
         self._check_redundancy()  # Sprint G2.4
         self._check_ai_act_sections()  # Sprint G7
         self._check_tools_section()  # Sprint B2-C
@@ -1354,6 +1375,58 @@ class ReportValidator:
                             ),
                         )
                     )
+
+    def _check_solo_terminology(self) -> None:
+        """
+        FIX-SOLO-VEREINFACHUNG: Extended Solo terminology validation.
+
+        Uses the solo_simplifier service to check for blacklist terms
+        in headlines (CRITICAL) and body text (WARNING).
+
+        This is separate from _check_size_specific_issues which uses
+        a static SIZE_FORBIDDEN list. This method uses the comprehensive
+        blacklist from config/solo_terms.json.
+        """
+        if not _HAS_SOLO_SIMPLIFIER:
+            return
+
+        # Only check for Solo reports
+        if not is_solo_size(self.company_size):
+            return
+
+        blacklist_terms = get_blacklist_headlines()
+        if not blacklist_terms:
+            return
+
+        # Check each section
+        for section_name, content in self.canonical_sections.items():
+            if not isinstance(content, str):
+                continue
+
+            # Use solo_simplifier validation
+            is_valid, violations = validate_solo_content(content, section_name)
+
+            for violation in violations:
+                severity = violation.get("severity", "WARNING").upper()
+                # Headlines are CRITICAL, body is WARNING
+                if severity == "ERROR":
+                    severity = "CRITICAL"
+
+                self.errors.append(
+                    ValidationError(
+                        severity=severity,
+                        category="SOLO_TERMINOLOGY",
+                        section=section_name,
+                        message=(
+                            f"Solo-Blacklist: '{violation.get('term', 'unknown')}' "
+                            f"gefunden in {section_name}"
+                        ),
+                        details=(
+                            f"Kontext: {violation.get('context', '')[:80]}... "
+                            f"→ Ersetzung aus solo_terms.json empfohlen"
+                        ),
+                    )
+                )
 
     def _check_ai_act_sections(self) -> None:
         """
