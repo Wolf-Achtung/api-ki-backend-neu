@@ -330,7 +330,7 @@ def reduce_redundancy(
         Tuple of (processed_sections, stats)
     """
     stats = RedundancyStats()
-    result = {}
+    result: Dict[str, str] = {}
     seen_fingerprints: Dict[str, str] = {}  # fingerprint -> first section
 
     # Process sections in order (earlier sections have priority)
@@ -447,7 +447,7 @@ def enforce_roi_rules(sections: Dict[str, str]) -> Tuple[Dict[str, str], int]:
     Returns:
         Tuple of (processed_sections, violations_fixed)
     """
-    result = {}
+    result: Dict[str, str] = {}
     violations_fixed = 0
 
     for section_name, html in sections.items():
@@ -561,14 +561,14 @@ def trim_incomplete_sentences(html: str) -> Tuple[str, int]:
         return content
 
     # Process paragraphs
-    def process_p(m: re.Match) -> str:
-        full_tag = m.group(0)
-        content = m.group(1)
+    def process_p(m: re.Match[str]) -> str:
+        full_tag: str = m.group(0)
+        content: str = m.group(1)
         trimmed = trim_block_content(content)
         return full_tag.replace(content, trimmed)
 
     result = re.sub(r"(<p[^>]*>)(.*?)(</p>)",
-                    lambda m: m.group(1) + trim_block_content(m.group(2)) + m.group(3),
+                    lambda m: str(m.group(1)) + trim_block_content(str(m.group(2))) + str(m.group(3)),
                     html, flags=re.DOTALL)
 
     if fragments_trimmed > 0:
@@ -609,7 +609,7 @@ def enforce_payback_consistency(
     Returns:
         Tuple of (processed_sections, fixes_applied)
     """
-    result = {}
+    result: Dict[str, str] = {}
     fixes_applied = 0
 
     # Track "Payback Progress 100%" occurrences
@@ -708,7 +708,7 @@ def apply_segment_budget(
     budgets = SEGMENT_BUDGETS.get(segment, SEGMENT_BUDGETS["team"])
     default_budget = budgets.get("_default", 1500)
 
-    result = {}
+    result: Dict[str, str] = {}
     sections_trimmed = 0
 
     for section_name, html in sections.items():
@@ -753,14 +753,14 @@ def apply_segment_budget(
 
         # Strategy 3: Truncate long paragraphs
         if len(processed) > budget:
-            def truncate_long_p(m: re.Match) -> str:
-                content = m.group(2)
+            def truncate_long_p(m: re.Match[str]) -> str:
+                content: str = str(m.group(2))
                 if len(content) > 500:
                     # Find sentence boundary around 400 chars
                     end_pos = content.rfind(".", 300, 450)
                     if end_pos > 0:
-                        return m.group(1) + content[:end_pos + 1] + m.group(3)
-                return m.group(0)
+                        return str(m.group(1)) + content[:end_pos + 1] + str(m.group(3))
+                return str(m.group(0))
 
             processed = re.sub(
                 r"(<p[^>]*>)(.*?)(</p>)",
