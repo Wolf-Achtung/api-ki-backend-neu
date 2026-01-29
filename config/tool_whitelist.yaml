@@ -1,0 +1,414 @@
+# =============================================================================
+# TOOL WHITELIST CONFIGURATION
+# FIX-HAUPTLEISTUNG-FIRST: Tool categories for tools_empfehlungen section
+# =============================================================================
+# This file defines allowed tool CATEGORIES (not brand names) for the
+# KI-Stack recommendations. The LLM should only recommend tools from these
+# categories, never specific brand names.
+#
+# Structure:
+# - categories: Tool category definitions with descriptions
+# - size_profiles: Which categories are recommended per company size
+# - branch_additions: Additional categories per branch (optional)
+# =============================================================================
+
+version: "1.0.0"
+
+# =============================================================================
+# TOOL CATEGORIES (produktneutral - keine Markennamen!)
+# =============================================================================
+categories:
+  # -------------------------------------------------------------------------
+  # FOUNDATION / BASIS
+  # -------------------------------------------------------------------------
+  ki_assistent:
+    id: "ki_assistent"
+    label_de: "KI-Assistent (Text/Chat)"
+    label_en: "AI Assistant (Text/Chat)"
+    description_de: "Allzweck-KI für Texte, Entwürfe, Zusammenfassungen"
+    description_en: "General-purpose AI for text, drafts, summaries"
+    use_cases:
+      - "E-Mail-Entwürfe"
+      - "Textzusammenfassungen"
+      - "Brainstorming"
+      - "Recherche-Unterstützung"
+    compliance_note: "AVV/DPA erforderlich, Training-Opt-out prüfen"
+
+  wissensspeicher:
+    id: "wissensspeicher"
+    label_de: "Wissens-/Dokumentenspeicher"
+    label_en: "Knowledge/Document Repository"
+    description_de: "Zentrale Ablage für Templates, Prompts, Best Practices"
+    description_en: "Central storage for templates, prompts, best practices"
+    use_cases:
+      - "Prompt-Bibliothek"
+      - "Template-Verwaltung"
+      - "Wissensarchiv"
+    compliance_note: "Zugriffsrechte und Versionierung einrichten"
+
+  aufgabenverwaltung:
+    id: "aufgabenverwaltung"
+    label_de: "Aufgaben-/Projektmanagement"
+    label_en: "Task/Project Management"
+    description_de: "Planung von Aufgaben, Deadlines, Zuständigkeiten"
+    description_en: "Planning tasks, deadlines, responsibilities"
+    use_cases:
+      - "Aufgabenlisten"
+      - "Projektplanung"
+      - "Deadlines tracken"
+
+  # -------------------------------------------------------------------------
+  # CORE PROCESS / KERNPROZESS
+  # -------------------------------------------------------------------------
+  formular_tool:
+    id: "formular_tool"
+    label_de: "Formular-/Fragebogen-Tool"
+    label_en: "Form/Survey Tool"
+    description_de: "Strukturierte Erfassung von Daten und Feedback"
+    description_en: "Structured capture of data and feedback"
+    use_cases:
+      - "Kundenbefragungen"
+      - "Bedarfsanalysen"
+      - "Feedback-Erfassung"
+
+  auswertung_reporting:
+    id: "auswertung_reporting"
+    label_de: "Auswertungs-/Berichtswerkzeug"
+    label_en: "Analysis/Reporting Tool"
+    description_de: "KI-gestützte Datenanalyse und Report-Erstellung"
+    description_en: "AI-powered data analysis and report generation"
+    use_cases:
+      - "Datenvisualisierung"
+      - "KI-Analyse"
+      - "Report-Generierung"
+
+  automation:
+    id: "automation"
+    label_de: "Automatisierungs-Tool"
+    label_en: "Automation Tool"
+    description_de: "Workflow-Automatisierung und Integration"
+    description_en: "Workflow automation and integration"
+    use_cases:
+      - "Prozessautomatisierung"
+      - "Datenintegration"
+      - "Trigger-basierte Workflows"
+    compliance_note: "Secrets-Handling, Logging einrichten"
+
+  # -------------------------------------------------------------------------
+  # COMMUNICATION / KOMMUNIKATION
+  # -------------------------------------------------------------------------
+  transkription:
+    id: "transkription"
+    label_de: "Transkription/Meeting-Notizen"
+    label_en: "Transcription/Meeting Notes"
+    description_de: "Audio-zu-Text, Meeting-Zusammenfassungen"
+    description_en: "Audio-to-text, meeting summaries"
+    use_cases:
+      - "Meeting-Protokolle"
+      - "Interview-Transkripte"
+      - "Sprachnotizen"
+    compliance_note: "Einwilligung erforderlich, Aufbewahrungsfristen beachten"
+
+  email_kommunikation:
+    id: "email_kommunikation"
+    label_de: "E-Mail-/Kommunikationsassistent"
+    label_en: "Email/Communication Assistant"
+    description_de: "KI-Unterstützung für E-Mails und Korrespondenz"
+    description_en: "AI support for emails and correspondence"
+    use_cases:
+      - "E-Mail-Vorlagen"
+      - "Antwort-Entwürfe"
+      - "Tonalitätsprüfung"
+
+  # -------------------------------------------------------------------------
+  # CONTENT & DESIGN
+  # -------------------------------------------------------------------------
+  bild_design:
+    id: "bild_design"
+    label_de: "Bild-/Design-Generator"
+    label_en: "Image/Design Generator"
+    description_de: "KI-Bildgenerierung für Marketing und Design"
+    description_en: "AI image generation for marketing and design"
+    use_cases:
+      - "Social-Media-Grafiken"
+      - "Präsentationsbilder"
+      - "Mockups"
+    compliance_note: "IP/Urheberrecht beachten, keine Kundendesigns hochladen"
+
+  content_erstellung:
+    id: "content_erstellung"
+    label_de: "Content-Erstellungs-Tool"
+    label_en: "Content Creation Tool"
+    description_de: "Unterstützung bei Blog, Social Media, Marketing"
+    description_en: "Support for blog, social media, marketing"
+    use_cases:
+      - "Blog-Artikel"
+      - "Social-Media-Posts"
+      - "Newsletter"
+
+  # -------------------------------------------------------------------------
+  # GOVERNANCE & COMPLIANCE
+  # -------------------------------------------------------------------------
+  audit_trail:
+    id: "audit_trail"
+    label_de: "Audit-Trail-/Protokollierungs-Tool"
+    label_en: "Audit Trail/Logging Tool"
+    description_de: "Nachvollziehbarkeit von KI-Entscheidungen"
+    description_en: "Traceability of AI decisions"
+    use_cases:
+      - "Entscheidungsprotokoll"
+      - "Qualitätsaudits"
+      - "Compliance-Nachweise"
+
+  versionierung:
+    id: "versionierung"
+    label_de: "Versionierungs-/Änderungsdoku"
+    label_en: "Version Control/Change Documentation"
+    description_de: "Verwaltung von Prompt-Versionen und Konfigurationen"
+    description_en: "Management of prompt versions and configurations"
+    use_cases:
+      - "Prompt-Versionen"
+      - "Modell-Änderungen"
+      - "Konfigurationshistorie"
+
+  review_workflow:
+    id: "review_workflow"
+    label_de: "Review-/Freigabe-Workflow"
+    label_en: "Review/Approval Workflow"
+    description_de: "Qualitätsprüfung vor Freigabe von KI-Outputs"
+    description_en: "Quality check before releasing AI outputs"
+    use_cases:
+      - "Vier-Augen-Prinzip"
+      - "Peer-Reviews"
+      - "Freigabeprozesse"
+
+  # -------------------------------------------------------------------------
+  # BRANCH-SPECIFIC / BRANCHENSPEZIFISCH
+  # -------------------------------------------------------------------------
+  terminplanung:
+    id: "terminplanung"
+    label_de: "Terminplanungs-Tool"
+    label_en: "Appointment Scheduling Tool"
+    description_de: "Online-Terminbuchung und Kalenderverwaltung"
+    description_en: "Online booking and calendar management"
+    use_cases:
+      - "Kundentermine"
+      - "Ressourcenplanung"
+      - "Buchungsportale"
+
+  crm:
+    id: "crm"
+    label_de: "CRM-/Kundenverwaltung"
+    label_en: "CRM/Customer Management"
+    description_de: "Kundenbeziehungsmanagement mit KI-Unterstützung"
+    description_en: "Customer relationship management with AI support"
+    use_cases:
+      - "Kundendaten"
+      - "Verkaufspipeline"
+      - "Kontakthistorie"
+
+  dms:
+    id: "dms"
+    label_de: "Dokumentenmanagement-System"
+    label_en: "Document Management System"
+    description_de: "Strukturierte Dokumentenablage und -suche"
+    description_en: "Structured document storage and search"
+    use_cases:
+      - "Vertragsarchiv"
+      - "Dokumentensuche"
+      - "Versionierung"
+
+  risiko_compliance:
+    id: "risiko_compliance"
+    label_de: "Risiko-/Compliance-Tool"
+    label_en: "Risk/Compliance Tool"
+    description_de: "Regulatorische Überwachung und Risikoanalyse"
+    description_en: "Regulatory monitoring and risk analysis"
+    use_cases:
+      - "Risikomonitoring"
+      - "Compliance-Prüfung"
+      - "Meldewesenberichte"
+
+# =============================================================================
+# SIZE PROFILES: Which categories per company size
+# =============================================================================
+size_profiles:
+  solo:
+    max_tools: 5
+    required:
+      - ki_assistent
+      - wissensspeicher
+      - aufgabenverwaltung
+    optional:
+      - formular_tool
+      - automation
+      - audit_trail
+    forbidden:
+      - risiko_compliance  # Too complex for solo
+    governance_level: "minimal"  # 1-page policy
+
+  team:
+    max_tools: 7
+    required:
+      - ki_assistent
+      - wissensspeicher
+      - aufgabenverwaltung
+      - audit_trail
+    optional:
+      - formular_tool
+      - auswertung_reporting
+      - automation
+      - transkription
+      - review_workflow
+    governance_level: "basic"  # Clear roles, peer reviews
+
+  kmu:
+    max_tools: 10
+    required:
+      - ki_assistent
+      - wissensspeicher
+      - aufgabenverwaltung
+      - audit_trail
+      - versionierung
+      - review_workflow
+    optional:
+      - formular_tool
+      - auswertung_reporting
+      - automation
+      - transkription
+      - dms
+      - risiko_compliance
+    governance_level: "structured"  # Formal processes, 4-eyes
+
+# =============================================================================
+# BRANCH ADDITIONS: Extra categories per branch
+# =============================================================================
+branch_additions:
+  marketing:
+    add:
+      - bild_design
+      - content_erstellung
+    priority: content_erstellung
+
+  beratung:
+    add:
+      - terminplanung
+      - transkription
+    priority: formular_tool
+
+  it:
+    add:
+      - versionierung
+      - automation
+    priority: automation
+
+  finanzen:
+    add:
+      - risiko_compliance
+      - dms
+    priority: risiko_compliance
+    compliance_note: "BAIT/VAIT/MaRisk beachten"
+
+  handel:
+    add:
+      - crm
+      - automation
+    priority: crm
+
+  bildung:
+    add:
+      - transkription
+      - content_erstellung
+    priority: transkription
+
+  verwaltung:
+    add:
+      - dms
+      - audit_trail
+    priority: dms
+
+  gesundheit:
+    add:
+      - terminplanung
+      - dms
+    priority: terminplanung
+    compliance_note: "Patientendaten = rot, besondere DSGVO-Anforderungen"
+
+  bau:
+    add:
+      - dms
+      - aufgabenverwaltung
+    priority: dms
+
+  medien:
+    add:
+      - bild_design
+      - content_erstellung
+    priority: bild_design
+
+  industrie:
+    add:
+      - automation
+      - auswertung_reporting
+    priority: automation
+
+  logistik:
+    add:
+      - automation
+      - auswertung_reporting
+    priority: automation
+
+  gastronomie:
+    add:
+      - terminplanung
+      - crm
+    priority: terminplanung
+
+# =============================================================================
+# DATA CLASSIFICATION (for Whitelist in reports)
+# =============================================================================
+data_classification:
+  green:
+    label_de: "GRÜN - Öffentlich/unbedenklich"
+    label_en: "GREEN - Public/safe"
+    allowed: true
+    examples:
+      - "Website-Texte"
+      - "Generische Prompts ohne Kundendaten"
+      - "Öffentliche Brancheninfos"
+      - "Allgemeine Templates"
+
+  yellow:
+    label_de: "GELB - Intern, nicht vertraulich"
+    label_en: "YELLOW - Internal, not confidential"
+    allowed: "with_conditions"
+    conditions:
+      - "Nur in Business-Tier mit AVV"
+      - "Training-Opt-out aktiviert"
+      - "Keine personenbezogenen Daten"
+    examples:
+      - "Interne Prozessdokumentation"
+      - "Anonymisierte Beispiele"
+      - "Template-Entwürfe"
+
+  red:
+    label_de: "ROT - Vertraulich/personenbezogen"
+    label_en: "RED - Confidential/personal data"
+    allowed: false
+    examples:
+      - "Kundendaten (Namen, E-Mails)"
+      - "Verträge und Angebote"
+      - "Gesundheitsdaten"
+      - "Finanzdaten"
+      - "Passwörter/API-Keys"
+
+# =============================================================================
+# BLACKLIST: Tools/practices NOT to recommend
+# =============================================================================
+blacklist:
+  - "Private/Free Accounts ohne AVV"
+  - "Unbekannte Browser-Extensions"
+  - "Tools ohne Lösch-/Retention-Steuerung"
+  - "Copy/Paste von ROT-Daten in öffentliche Chats"
+  - "Shadow AI ohne Dokumentation"
+  - "Tools ohne SSO/Teamverwaltung (für team/kmu)"

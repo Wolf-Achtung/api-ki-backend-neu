@@ -208,6 +208,63 @@ def _shorten_hauptleistung(text: str, max_len: int = 80) -> str:
     return txt.rstrip(" ,;") + "…"
 
 
+def _generate_hauptleistung_synonyme(text: str, lang: str = "de") -> str:
+    """
+    Generate synonym phrases for hauptleistung to enable natural variation.
+
+    FIX-HAUPTLEISTUNG-FIRST: Provides alternatives to avoid repetition.
+    Returns comma-separated synonyms that can be used interchangeably.
+    """
+    if not text or text == "—":
+        if lang == "en":
+            return "your core service, your main offering, this service"
+        return "Ihr Kerngeschäft, Ihre Hauptleistung, dieser Service"
+
+    # German synonyms
+    if lang == "de":
+        return f'"{text}", Ihr Kerngeschäft, diese Leistung, Ihr Angebot'
+    # English synonyms
+    return f'"{text}", your core service, this offering, your business'
+
+
+def _generate_hauptleistung_workflow_hint(text: str, lang: str = "de") -> str:
+    """
+    Generate a brief workflow hint based on hauptleistung.
+
+    FIX-HAUPTLEISTUNG-FIRST: Provides context for typical workflow steps.
+    """
+    if not text or text == "—":
+        if lang == "en":
+            return "typical daily tasks and customer interactions"
+        return "typische Alltagsaufgaben und Kundeninteraktionen"
+
+    # Extract key action words (verbs/nouns) from hauptleistung
+    keywords = []
+    action_indicators_de = ["beratung", "entwicklung", "erstellung", "analyse", "verkauf",
+                            "training", "coaching", "design", "planung", "umsetzung",
+                            "service", "support", "management", "produktion"]
+    action_indicators_en = ["consulting", "development", "creation", "analysis", "sales",
+                            "training", "coaching", "design", "planning", "implementation",
+                            "service", "support", "management", "production"]
+
+    text_lower = text.lower()
+    indicators = action_indicators_de if lang == "de" else action_indicators_en
+
+    for indicator in indicators:
+        if indicator in text_lower:
+            keywords.append(indicator)
+
+    if not keywords:
+        if lang == "en":
+            return f"the core steps of '{text[:50]}...'" if len(text) > 50 else f"the core steps of '{text}'"
+        return f"die Kernschritte von '{text[:50]}...'" if len(text) > 50 else f"die Kernschritte von '{text}'"
+
+    # Build workflow hint from found keywords
+    if lang == "de":
+        return f"Arbeitsschritte rund um {', '.join(keywords[:3])}"
+    return f"workflow steps around {', '.join(keywords[:3])}"
+
+
 def normalize_answers(answers: Dict[str, Any]) -> Dict[str, Any]:
     out = dict(answers or {})
 
@@ -269,6 +326,14 @@ def normalize_answers(answers: Dict[str, Any]) -> Dict[str, Any]:
 
     out["HAUPTLEISTUNG"] = out.get("hauptleistung", "") or "—"
     out["HAUPTLEISTUNG_SHORT"] = _shorten_hauptleistung(out["HAUPTLEISTUNG"])
+    # FIX-HAUPTLEISTUNG-FIRST: Add synonym and workflow hint derivatives
+    report_lang = str(out.get("lang", "") or out.get("sprache", "") or "de").lower()[:2]
+    out["HAUPTLEISTUNG_SYNONYME"] = _generate_hauptleistung_synonyme(
+        out["HAUPTLEISTUNG"], lang=report_lang
+    )
+    out["HAUPTLEISTUNG_WORKFLOW_HINT"] = _generate_hauptleistung_workflow_hint(
+        out["HAUPTLEISTUNG"], lang=report_lang
+    )
     out["IT_INFRASTRUKTUR_LABEL"] = IT_INFRASTRUKTUR_LABELS.get(
         out.get("it_infrastruktur", ""),
         out.get("it_infrastruktur", "") or "—",
