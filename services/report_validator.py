@@ -241,6 +241,28 @@ class ReportValidator:
         "Schritt 3 – integriere die Methode in den bestehenden Alltag",
     ]
 
+    # FIX-LEAK-OPTION-A: Sections where "hier einfügen" is allowed
+    # (within codeblocks or [[...]] syntax only)
+    TEMPLATE_SECTIONS_WHITELIST = [
+        "prompt_framework",
+        "templates_start",
+        "kickoff_vorlage",
+        "ai_policy_mini",
+        "ki_policy",
+        "policy_template",
+        "prompt_template",
+    ]
+
+    # FIX-LEAK-OPTION-A: Phrases that need special handling
+    # (allowed in template sections within codeblocks/[[...]])
+    PLACEHOLDER_PHRASES_CONTROLLED = [
+        "hier einfügen",
+        "hier einsetzen",
+        "hier ergänzen",
+        "hier beschreiben",
+        "hier eintragen",
+    ]
+
     # SPRINT N1: Generic LLM response leaks - ChatGPT/GPT "standard answers"
     # These indicate the LLM didn't understand the task or returned default responses
     # Case-insensitive matching, triggers CRITICAL error → PLATIN fallback
@@ -1219,21 +1241,95 @@ class ReportValidator:
                 )
 
     def _check_template_phrases(self) -> None:
+        """
+        Check for template phrases that shouldn't appear in final reports.
+
+        FIX-LEAK-OPTION-A: "hier einfügen" and similar phrases are allowed
+        in template sections (prompt_framework, templates_start, etc.)
+        ONLY within codeblocks (```) or placeholder syntax ([[...]]).
+        """
         # FIX-526: Use canonical_sections to avoid duplicate warnings for shadow keys
         for section_name, content in self.canonical_sections.items():
             if not isinstance(content, str):
                 continue
+
+            # Normalize section name for whitelist check
+            section_key = section_name.lower().replace("_html", "").replace("-", "_")
+
             for phrase in self.TEMPLATE_PHRASES:
-                if phrase in content:
-                    self.errors.append(
-                        ValidationError(
-                            severity="WARNING",
-                            category="TEMPLATE_PHRASE",
-                            section=section_name,
-                            message=f"Template-Phrase noch enthalten: '{phrase}'",
-                            details="Bitte durch individuellen Text ersetzen.",
+                if phrase not in content:
+                    continue
+
+                # FIX-LEAK-OPTION-A: Special handling for controlled placeholders
+                is_controlled = any(p in phrase.lower() for p in self.PLACEHOLDER_PHRASES_CONTROLLED)
+                is_whitelisted_section = any(ws in section_key for ws in self.TEMPLATE_SECTIONS_WHITELIST)
+
+                if is_controlled and is_whitelisted_section:
+                    # Check if phrase is within codeblock or [[...]] - if so, allow it
+                    if self._is_phrase_in_protected_context(content, phrase):
+                        log.debug(
+                            "[LEAK-OPTION-A] Allowed '%s' in protected context in %s",
+                            phrase, section_name
                         )
+                        continue  # Allow this - it's in a codeblock or [[...]]
+
+                self.errors.append(
+                    ValidationError(
+                        severity="WARNING",
+                        category="TEMPLATE_PHRASE",
+                        section=section_name,
+                        message=f"Template-Phrase noch enthalten: '{phrase}'",
+                        details="Bitte durch individuellen Text ersetzen.",
                     )
+                )
+
+    def _is_phrase_in_protected_context(self, content: str, phrase: str) -> bool:
+        """
+        FIX-LEAK-OPTION-A: Check if phrase is within a protected context.
+
+        Protected contexts are:
+        - Codeblocks (``` ... ```)
+        - Placeholder syntax ([[...]])
+
+        Returns True if ALL occurrences of the phrase are in protected contexts.
+        """
+        import re
+
+        # Find all occurrences of the phrase
+        phrase_lower = phrase.lower()
+        content_lower = content.lower()
+
+        # Find all codeblock ranges
+        codeblock_pattern = r'```[\s\S]*?```|<code>[\s\S]*?</code>|<pre>[\s\S]*?</pre>'
+        codeblock_ranges = []
+        for match in re.finditer(codeblock_pattern, content_lower):
+            codeblock_ranges.append((match.start(), match.end()))
+
+        # Find all [[...]] ranges
+        placeholder_pattern = r'\[\[[\s\S]*?\]\]'
+        for match in re.finditer(placeholder_pattern, content_lower):
+            codeblock_ranges.append((match.start(), match.end()))
+
+        # Check if all occurrences of the phrase are within protected ranges
+        pos = 0
+        while True:
+            idx = content_lower.find(phrase_lower, pos)
+            if idx == -1:
+                break
+
+            # Check if this occurrence is within any protected range
+            in_protected = False
+            for start, end in codeblock_ranges:
+                if start <= idx < end:
+                    in_protected = True
+                    break
+
+            if not in_protected:
+                return False  # Found unprotected occurrence
+
+            pos = idx + 1
+
+        return True  # All occurrences are protected
 
     def _check_quick_wins_prompt_leaks(self) -> None:
         """Sucht nach typischen Prompt-Anweisungen in der Quick-Wins-Section."""

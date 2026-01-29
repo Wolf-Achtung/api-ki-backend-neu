@@ -46,10 +46,14 @@ class ReportType(Enum):
 # =============================================================================
 
 # Company sizes that map to solo_compact
+# FIX-COMPANY-SIZE: Extended identifiers for robust matching
 SOLO_SIZE_IDENTIFIERS = {
-    "solo", "1", "freiberufler", "freelancer", "einzelunternehmer",
+    "solo", "freiberufler", "freelancer", "einzelunternehmer",
     "selbststaendig", "selbständig", "solopreneur", "einpersonen",
 }
+
+# Exact matches that should trigger solo (avoiding substring issues with "1" in "11-100")
+SOLO_SIZE_EXACT = {"1", "solo"}
 
 
 def determine_report_variant(
@@ -65,6 +69,8 @@ def determine_report_variant(
         - company_size == solo -> solo_compact
         - otherwise -> standard
 
+    FIX-COMPANY-SIZE: Handles "1" | "2-10" | "2–10" | "11-100" from frontend.
+
     Args:
         variant: Requested variant (None, 'auto', or specific variant)
         company_size: Company size from briefing
@@ -75,6 +81,9 @@ def determine_report_variant(
     # Normalize inputs
     variant_lower = str(variant).lower().strip() if variant else "auto"
     size_lower = str(company_size).lower().strip() if company_size else ""
+
+    # Normalize dashes (en-dash, em-dash → regular dash)
+    size_normalized = size_lower.replace("–", "-").replace("—", "-")
 
     # If explicit variant requested (not auto), use it
     if variant_lower and variant_lower != "auto":
@@ -87,7 +96,15 @@ def determine_report_variant(
             )
             variant_lower = "auto"
 
-    # Auto-detection based on company_size
+    # FIX-COMPANY-SIZE: Check exact matches first (avoids "1" matching "11-100")
+    if size_normalized in SOLO_SIZE_EXACT:
+        log.info(
+            "[FIX-529] Auto-detected solo_compact via exact match for company_size='%s'",
+            company_size
+        )
+        return ReportType.SOLO_COMPACT
+
+    # Auto-detection based on company_size substring identifiers
     is_solo = any(identifier in size_lower for identifier in SOLO_SIZE_IDENTIFIERS)
 
     if is_solo:
