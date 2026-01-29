@@ -150,7 +150,7 @@ class TestFix512StrictMode:
 
         assert meta["path"] == "FALLBACK_STRICT"
         assert meta["items"] == 3
-        assert meta["reason"] == "insufficient_content"
+        assert meta["reason"] == "empty_input"  # Different from insufficient_content
         assert 'class="quick-win"' in html
         assert 'data-qw-json-rendered="true"' in html
 
