@@ -94,7 +94,7 @@ try:
 except ImportError:
     _HAS_SOLO_SIMPLIFIER = False
 
-    def validate_solo_content(content: str, section_name: Optional[str] = None) -> Tuple[bool, List[Any]]:
+    def validate_solo_content(content: str, section_name: Optional[str] = None) -> Tuple[bool, List[Dict[str, Any]]]:
         return True, []
 
     def is_solo_size(size: str) -> bool:

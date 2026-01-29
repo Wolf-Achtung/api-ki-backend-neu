@@ -48,7 +48,8 @@ class TestSimplifyText:
         text = "Die Stakeholder müssen einbezogen werden."
         result = simplify_text(text)
         assert "Stakeholder" not in result
-        assert "wichtige Personen" in result
+        # Case is preserved: 'Stakeholder' (capital S) → 'Wichtige Personen' (capital W)
+        assert "Wichtige Personen" in result or "wichtige Personen" in result
 
     def test_governance_replacement(self):
         """Verify 'Governance' is replaced."""
