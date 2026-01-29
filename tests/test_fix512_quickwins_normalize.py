@@ -135,30 +135,39 @@ class TestFix512HtmlMarkerInjection:
 
 
 class TestFix512StrictMode:
-    """Test STRICT mode behavior."""
+    """Test STRICT mode behavior.
 
-    def test_strict_empty_raises_qw_normalize(self):
-        """STRICT mode + empty input → raise with [QW-NORMALIZE] prefix."""
+    FIX-PIPELINE: STRICT mode no longer raises RuntimeError.
+    Instead, it returns fallback HTML to ensure pipeline stability.
+    """
+
+    def test_strict_empty_returns_fallback(self):
+        """STRICT mode + empty input → returns fallback HTML (no raise)."""
         from services.quickwins_renderer import normalize_quickwins_to_html
 
-        with pytest.raises(RuntimeError) as exc_info:
-            normalize_quickwins_to_html("", strict=True)
+        # FIX-PIPELINE: No more RuntimeError - returns fallback instead
+        html, meta = normalize_quickwins_to_html("", strict=True)
 
-        assert "[QW-NORMALIZE]" in str(exc_info.value)
-        assert "[QW-FALLBACK]" not in str(exc_info.value)
+        assert meta["path"] == "FALLBACK_STRICT"
+        assert meta["items"] == 3
+        assert meta["reason"] == "insufficient_content"
+        assert 'class="quick-win"' in html
+        assert 'data-qw-json-rendered="true"' in html
 
-    def test_strict_garbage_raises_qw_normalize(self):
-        """STRICT mode + garbage (too few items) → raise with [QW-NORMALIZE]."""
+    def test_strict_garbage_returns_fallback(self):
+        """STRICT mode + garbage (too few items) → returns fallback HTML (no raise)."""
         from services.quickwins_renderer import normalize_quickwins_to_html
 
-        with pytest.raises(RuntimeError) as exc_info:
-            normalize_quickwins_to_html("ab\ncd\n", strict=True)
+        # FIX-PIPELINE: No more RuntimeError - returns fallback instead
+        html, meta = normalize_quickwins_to_html("ab\ncd\n", strict=True)
 
-        assert "[QW-NORMALIZE]" in str(exc_info.value)
-        assert "[QW-FALLBACK]" not in str(exc_info.value)
+        assert meta["path"] == "FALLBACK_STRICT"
+        assert meta["items"] == 3
+        assert meta["reason"] == "insufficient_content"
+        assert 'class="quick-win"' in html
 
-    def test_strict_valid_bullets_no_raise(self):
-        """STRICT mode + valid bullets → no error, valid HTML returned."""
+    def test_strict_valid_bullets_no_fallback(self):
+        """STRICT mode + valid bullets → no error, valid HTML returned (not fallback)."""
         from services.quickwins_renderer import normalize_quickwins_to_html
 
         raw = (
@@ -172,6 +181,7 @@ class TestFix512StrictMode:
         html, meta = normalize_quickwins_to_html(raw, strict=True)
 
         assert meta["items"] >= 4
+        assert meta["path"] != "FALLBACK_STRICT"  # Should NOT be fallback
         assert 'class="quick-win"' in html
         assert 'data-qw-json-rendered="true"' in html
 
