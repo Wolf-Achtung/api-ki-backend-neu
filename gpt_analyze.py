@@ -15756,9 +15756,13 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     #        E=incomplete sentences, F=payback consistency, G=segment budget
     # =========================================================================
     try:
+        import json as _json_healer
+        from typing import cast, Literal as _Literal
+
         # Map company_size to healer segment (klein → team)
         healer_segment_map = {"solo": "solo", "klein": "team", "team": "team", "kmu": "kmu"}
-        healer_segment = healer_segment_map.get(persona, "team")  # type: ignore[arg-type]
+        healer_segment_raw = healer_segment_map.get(persona, "team")
+        healer_segment = cast(_Literal["solo", "team", "kmu"], healer_segment_raw)
 
         # Get canonical payback months for consistency check (Fix F)
         canonical_payback = answers.get("PAYBACK_MONTHS")
@@ -15771,7 +15775,7 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
 
         healing_result = heal_report_html(
             sections=sections,
-            segment=healer_segment,  # type: ignore[arg-type]
+            segment=healer_segment,
             canonical_payback_months=canonical_payback,
         )
 
@@ -15787,8 +15791,8 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             f"F={healing_result.payback_fixes}, G={healing_result.sections_budget_trimmed})"
         )
 
-        # Store healing stats for metadata/debugging
-        sections["_healer_stats"] = {
+        # Store healing stats for metadata/debugging (as JSON string for Dict[str, str] compatibility)
+        sections["_healer_stats"] = _json_healer.dumps({
             "total_fixes": healing_result.total_fixes,
             "template_phrases_removed": healing_result.template_phrases_removed,
             "persona_replacements": healing_result.persona_replacements,
@@ -15798,7 +15802,7 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             "payback_fixes": healing_result.payback_fixes,
             "sections_budget_trimmed": healing_result.sections_budget_trimmed,
             "segment": healer_segment,
-        }
+        })
 
     except ImportError:
         log.debug(f"[{run_id}] [HEALER] report_healer not available")
