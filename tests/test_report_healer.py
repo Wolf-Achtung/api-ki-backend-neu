@@ -400,28 +400,112 @@ class TestSoloTermReplacements:
             assert term in SOLO_TERM_REPLACEMENTS, f"Missing term: {term}"
 
 
-class TestNonStringValueRobustness:
-    """Tests for robustness against non-string values in sections."""
+class TestRecursiveTypeSafeHealing:
+    """Tests for type-safe recursive healing (lists/dicts preserved)."""
 
-    def test_heal_report_html_handles_float_values(self):
-        """heal_report_html should not crash on float values."""
+    def test_walk_preserves_list(self):
+        """_walk should preserve list type, only transform string leaves."""
+        from services.report_healer import _walk
+
+        input_data = ["<p>Text</p>", "<p>More</p>"]
+        result = _walk(input_data, lambda s: s.upper())
+
+        assert isinstance(result, list)
+        assert result == ["<P>TEXT</P>", "<P>MORE</P>"]
+
+    def test_walk_preserves_dict(self):
+        """_walk should preserve dict type, only transform string values."""
+        from services.report_healer import _walk
+
+        input_data = {"a": "<p>Text</p>", "b": "<p>More</p>"}
+        result = _walk(input_data, lambda s: s.upper())
+
+        assert isinstance(result, dict)
+        assert result == {"a": "<P>TEXT</P>", "b": "<P>MORE</P>"}
+
+    def test_walk_preserves_nested_structure(self):
+        """_walk should preserve nested list/dict structures."""
+        from services.report_healer import _walk
+
+        input_data = {
+            "items": ["<p>One</p>", "<p>Two</p>"],
+            "nested": {"inner": "<p>Deep</p>"},
+        }
+        result = _walk(input_data, lambda s: s.replace("<p>", "<div>").replace("</p>", "</div>"))
+
+        assert isinstance(result, dict)
+        assert isinstance(result["items"], list)
+        assert isinstance(result["nested"], dict)
+        assert result["items"] == ["<div>One</div>", "<div>Two</div>"]
+        assert result["nested"]["inner"] == "<div>Deep</div>"
+
+    def test_walk_preserves_non_string_values(self):
+        """_walk should leave int/float/bool/None unchanged."""
+        from services.report_healer import _walk
+
+        input_data = {
+            "count": 42,
+            "ratio": 3.5,
+            "enabled": True,
+            "missing": None,
+        }
+        result = _walk(input_data, lambda s: s.upper())
+
+        assert result["count"] == 42
+        assert result["ratio"] == 3.5
+        assert result["enabled"] is True
+        assert result["missing"] is None
+
+    def test_heal_report_html_preserves_list_values(self):
+        """heal_report_html should preserve list values, not convert to str."""
         from services.report_healer import heal_report_html
 
         sections = {
-            "a": "<p>Wobei kann ich dir helfen?</p>",  # Valid prompt pattern
-            "b": 3.5,  # float value
-            "c": None,  # None value
+            "QUICK_WINS_HTML": ["<p>Win 1</p>", "<p>Win 2</p>"],
+            "score": 85,
         }
 
-        # Should not raise exception
-        result = heal_report_html(sections, "solo")  # type: ignore[arg-type]
+        result = heal_report_html(sections, "team")
 
-        # "a" should be cleaned (prompt artifact removed)
-        assert "Wobei kann ich dir helfen" not in result.sections.get("a", "")
-        # "b" should be converted to string
-        assert result.sections.get("b") == "3.5"
-        # "c" should be empty string
-        assert result.sections.get("c") == ""
+        # List should remain a list
+        assert isinstance(result.sections.get("QUICK_WINS_HTML"), list)
+        # Int should remain int
+        assert result.sections.get("score") == 85
+
+    def test_heal_report_html_preserves_dict_values(self):
+        """heal_report_html should preserve nested dict values."""
+        from services.report_healer import heal_report_html
+
+        sections = {
+            "METADATA": {"version": "1.0", "lang": "de"},
+            "CONTENT_HTML": "<p>Content</p>",
+        }
+
+        result = heal_report_html(sections, "team")
+
+        # Dict should remain a dict
+        assert isinstance(result.sections.get("METADATA"), dict)
+        assert result.sections["METADATA"]["version"] == "1.0"
+
+    def test_heal_report_html_heals_strings_in_list(self):
+        """heal_report_html should heal string values inside lists."""
+        from services.report_healer import heal_report_html
+
+        sections = {
+            "ITEMS_HTML": [
+                "<p>Wobei kann ich dir helfen?</p>",
+                "<p>Real content</p>",
+            ],
+        }
+
+        result = heal_report_html(sections, "solo")
+
+        items = result.sections.get("ITEMS_HTML")
+        assert isinstance(items, list)
+        # Prompt artifact should be removed from first item
+        assert "Wobei kann ich" not in items[0]
+        # Real content preserved
+        assert "Real content" in items[1]
 
     def test_heal_report_html_handles_mixed_types(self):
         """heal_report_html should handle dict with mixed value types."""
@@ -429,61 +513,23 @@ class TestNonStringValueRobustness:
 
         sections = {
             "HTML_SECTION": "<p>Real HTML content</p>",
-            "score": 85,  # int
-            "ratio": 0.75,  # float
-            "enabled": True,  # bool
-            "missing": None,  # None
+            "score": 85,
+            "ratio": 0.75,
+            "enabled": True,
+            "missing": None,
+            "items": ["<p>A</p>", "<p>B</p>"],
         }
 
         # Should not raise exception
-        result = heal_report_html(sections, "team")  # type: ignore[arg-type]
+        result = heal_report_html(sections, "team")
 
-        # Original HTML should be preserved
+        # Types preserved
         assert "Real HTML content" in result.sections.get("HTML_SECTION", "")
-        # int converted to string
-        assert result.sections.get("score") == "85"
-        # float converted to string
-        assert result.sections.get("ratio") == "0.75"
-        # bool converted to string
-        assert result.sections.get("enabled") == "true"
-        # None converted to empty string
-        assert result.sections.get("missing") == ""
-
-    def test_heal_report_html_handles_nan_and_inf(self):
-        """heal_report_html should handle NaN and Inf float values."""
-        import math
-        from services.report_healer import heal_report_html
-
-        sections = {
-            "nan_value": float("nan"),
-            "inf_value": float("inf"),
-            "neg_inf": float("-inf"),
-            "normal": "<p>Normal content</p>",
-        }
-
-        # Should not raise exception
-        result = heal_report_html(sections, "kmu")  # type: ignore[arg-type]
-
-        # NaN/Inf should become empty strings
-        assert result.sections.get("nan_value") == ""
-        assert result.sections.get("inf_value") == ""
-        assert result.sections.get("neg_inf") == ""
-
-    def test_to_text_helper(self):
-        """_to_text should safely convert any value to string."""
-        from services.report_healer import _to_text
-
-        assert _to_text(None) == ""
-        assert _to_text("hello") == "hello"
-        assert _to_text(42) == "42"
-        assert _to_text(3.5) == "3.5"
-        assert _to_text(True) == "true"
-        assert _to_text(False) == "false"
-        assert _to_text([]) == ""
-        assert _to_text(["a", "b"]) == "a b"
-        assert _to_text({}) == ""
-        assert _to_text(float("nan")) == ""
-        assert _to_text(float("inf")) == ""
+        assert result.sections.get("score") == 85
+        assert result.sections.get("ratio") == 0.75
+        assert result.sections.get("enabled") is True
+        assert result.sections.get("missing") is None
+        assert isinstance(result.sections.get("items"), list)
 
 
 class TestPaybackMonatenPattern:
@@ -558,3 +604,234 @@ class TestPaybackMonatenPattern:
                 assert match is not None, f"Should match: {text}"
             else:
                 assert match is None, f"Should not match: {text}"
+
+
+class TestParsePaybackMonths:
+    """Tests for parse_payback_months function."""
+
+    def test_parse_float(self):
+        """Parse float value."""
+        from decimal import Decimal
+        from services.report_healer import parse_payback_months
+
+        assert parse_payback_months(3.5) == Decimal("3.5")
+        assert parse_payback_months(4.0) == Decimal("4")
+
+    def test_parse_int(self):
+        """Parse integer value."""
+        from decimal import Decimal
+        from services.report_healer import parse_payback_months
+
+        assert parse_payback_months(3) == Decimal("3")
+        assert parse_payback_months(12) == Decimal("12")
+
+    def test_parse_string_dot(self):
+        """Parse string with dot decimal."""
+        from decimal import Decimal
+        from services.report_healer import parse_payback_months
+
+        assert parse_payback_months("3.5") == Decimal("3.5")
+
+    def test_parse_string_comma(self):
+        """Parse string with comma decimal (German format)."""
+        from decimal import Decimal
+        from services.report_healer import parse_payback_months
+
+        assert parse_payback_months("3,5") == Decimal("3.5")
+
+    def test_parse_string_with_monate(self):
+        """Parse string like '3.5 Monate'."""
+        from decimal import Decimal
+        from services.report_healer import parse_payback_months
+
+        assert parse_payback_months("3.5 Monate") == Decimal("3.5")
+        assert parse_payback_months("3,5 Monaten") == Decimal("3.5")
+
+    def test_parse_none(self):
+        """Parse None returns None."""
+        from services.report_healer import parse_payback_months
+
+        assert parse_payback_months(None) is None
+
+    def test_parse_nan_inf(self):
+        """Parse NaN/Inf returns None."""
+        from services.report_healer import parse_payback_months
+
+        assert parse_payback_months(float("nan")) is None
+        assert parse_payback_months(float("inf")) is None
+
+    def test_parse_decimal_passthrough(self):
+        """Parse Decimal returns same Decimal."""
+        from decimal import Decimal
+        from services.report_healer import parse_payback_months
+
+        d = Decimal("3.5")
+        assert parse_payback_months(d) == d
+
+
+class TestFormatPaybackDe:
+    """Tests for format_payback_de function."""
+
+    def test_format_decimal(self):
+        """Format Decimal to German format."""
+        from decimal import Decimal
+        from services.report_healer import format_payback_de
+
+        assert format_payback_de(Decimal("3.5")) == "3,5"
+        assert format_payback_de(Decimal("4.0")) == "4,0"
+
+    def test_format_float(self):
+        """Format float to German format."""
+        from services.report_healer import format_payback_de
+
+        assert format_payback_de(3.5) == "3,5"
+        assert format_payback_de(4.0) == "4,0"
+
+    def test_format_int(self):
+        """Format int to German format."""
+        from services.report_healer import format_payback_de
+
+        assert format_payback_de(3) == "3,0"
+
+    def test_format_none(self):
+        """Format None returns empty string."""
+        from services.report_healer import format_payback_de
+
+        assert format_payback_de(None) == ""
+
+    def test_format_custom_decimals(self):
+        """Format with custom decimal places."""
+        from services.report_healer import format_payback_de
+
+        assert format_payback_de(3.567, decimals=2) == "3,57"
+        assert format_payback_de(3.5, decimals=0) == "4"
+
+    def test_format_nan_inf(self):
+        """Format NaN/Inf returns empty string."""
+        from services.report_healer import format_payback_de
+
+        assert format_payback_de(float("nan")) == ""
+        assert format_payback_de(float("inf")) == ""
+
+
+class TestHealFinalHtml:
+    """Tests for heal_final_html POST-render function."""
+
+    def test_removes_prompt_artifacts(self):
+        """heal_final_html should remove prompt artifacts."""
+        from services.report_healer import heal_final_html
+
+        html = """<html>
+            <p>Wie kann ich Ihnen heute helfen?</p>
+            <p>Real report content here.</p>
+        </html>"""
+
+        result = heal_final_html(html, "team")
+
+        assert "Wie kann ich" not in result
+        assert "Real report content" in result
+
+    def test_normalizes_payback_decimal(self):
+        """heal_final_html should normalize 3.5 → 3,5."""
+        from services.report_healer import heal_final_html
+
+        html = "<p>Payback: 3.5 Monate.</p>"
+
+        result = heal_final_html(html, "team")
+
+        assert "3,5 Monate" in result
+        assert "3.5 Monate" not in result
+
+    def test_removes_duplicate_progress_100(self):
+        """heal_final_html should remove duplicate Progress 100%."""
+        from services.report_healer import heal_final_html
+
+        html = """<html>
+            <p>Progress: 100%</p>
+            <p>Some content</p>
+            <p>Progress: 100%</p>
+        </html>"""
+
+        result = heal_final_html(html, "team")
+
+        # Should have at most one occurrence
+        assert result.count("Progress: 100%") <= 1
+
+    def test_handles_empty_string(self):
+        """heal_final_html should handle empty string."""
+        from services.report_healer import heal_final_html
+
+        assert heal_final_html("", "team") == ""
+        assert heal_final_html(None, "team") == ""  # type: ignore
+
+    def test_preserves_valid_content(self):
+        """heal_final_html should preserve valid content."""
+        from services.report_healer import heal_final_html
+
+        html = """<html>
+            <h1>Report Title</h1>
+            <p>This is valid content with proper formatting.</p>
+            <ul>
+                <li>Item 1</li>
+                <li>Item 2</li>
+            </ul>
+        </html>"""
+
+        result = heal_final_html(html, "team")
+
+        assert "<h1>Report Title</h1>" in result
+        assert "valid content" in result
+        assert "<li>Item 1</li>" in result
+
+    def test_handles_monaten_decimal(self):
+        """heal_final_html should normalize 'Monaten' decimal format."""
+        from services.report_healer import heal_final_html
+
+        html = "<p>Die Amortisation erfolgt in 3.5 Monaten.</p>"
+
+        result = heal_final_html(html, "team")
+
+        assert "3,5 Monaten" in result
+        assert "3.5 Monaten" not in result
+
+
+class TestHealingResultStats:
+    """Tests for HealingResult.stats property."""
+
+    def test_stats_property(self):
+        """HealingResult.stats should return dict of counts."""
+        from services.report_healer import heal_report_html
+
+        sections = {
+            "HTML_SECTION": "<p>Wobei kann ich dir helfen? Stack und Architektur.</p>",
+        }
+
+        result = heal_report_html(sections, "solo")
+
+        stats = result.stats
+        assert isinstance(stats, dict)
+        assert "total_fixes" in stats
+        assert "template_phrases_removed" in stats
+        assert "persona_replacements" in stats
+
+    def test_total_fixes_sum(self):
+        """total_fixes should be sum of all fix counts."""
+        from services.report_healer import heal_report_html
+
+        sections = {
+            "HTML": "<p>3.5 Monate Payback mit Stakeholder.</p>",
+        }
+
+        result = heal_report_html(sections, "solo")
+
+        # Total should equal sum of parts
+        expected_total = (
+            result.template_phrases_removed +
+            result.persona_replacements +
+            (result.redundancy_stats.blocks_removed if result.redundancy_stats else 0) +
+            result.roi_violations_fixed +
+            result.fragments_trimmed +
+            result.payback_fixes +
+            result.sections_budget_trimmed
+        )
+        assert result.total_fixes == expected_total
