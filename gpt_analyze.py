@@ -117,6 +117,7 @@ from field_registry import fields  # added by Patch03
 from models import Analysis, Briefing, Report, User
 from services.report_renderer import render
 from services.text_healing import heal_all_text_blocks, heal_text_block
+from services.report_healer import heal_report_html  # FIX-A-G: Report healing pipeline
 from services.pdf_client import render_pdf_from_html, build_footer_template
 from services.icon_system import (
     replace_emojis_with_icons,
@@ -15747,6 +15748,65 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             raise  # Re-raise hard gate failures
         except Exception as e:
             log.warning(f"[{run_id}] [LEAK-KILL] Scan failed: {e} - continuing without leak validation")
+
+    # =========================================================================
+    # FIX-A-G: REPORT HEALER - Sanitize and heal sections before rendering
+    # Runs AFTER all LLM content generation, BEFORE template rendering
+    # Fixes: A=template phrases, B=persona language, C=redundancy, D=ROI rules,
+    #        E=incomplete sentences, F=payback consistency, G=segment budget
+    # =========================================================================
+    try:
+        # Map company_size to healer segment (klein → team)
+        healer_segment_map = {"solo": "solo", "klein": "team", "team": "team", "kmu": "kmu"}
+        healer_segment = healer_segment_map.get(persona, "team")  # type: ignore[arg-type]
+
+        # Get canonical payback months for consistency check (Fix F)
+        canonical_payback = answers.get("PAYBACK_MONTHS")
+        if canonical_payback and isinstance(canonical_payback, (int, float)):
+            canonical_payback = float(canonical_payback)
+        else:
+            canonical_payback = None
+
+        log.info(f"[{run_id}] [HEALER] Running report_healer: segment={healer_segment}, payback={canonical_payback}")
+
+        healing_result = heal_report_html(
+            sections=sections,
+            segment=healer_segment,  # type: ignore[arg-type]
+            canonical_payback_months=canonical_payback,
+        )
+
+        # Replace sections with healed version
+        sections = healing_result.sections
+
+        # Log healing stats
+        log.info(
+            f"[{run_id}] [HEALER] ✅ Completed: total_fixes={healing_result.total_fixes} "
+            f"(A={healing_result.template_phrases_removed}, B={healing_result.persona_replacements}, "
+            f"C={healing_result.redundancy_stats.blocks_removed if healing_result.redundancy_stats else 0}, "
+            f"D={healing_result.roi_violations_fixed}, E={healing_result.fragments_trimmed}, "
+            f"F={healing_result.payback_fixes}, G={healing_result.sections_budget_trimmed})"
+        )
+
+        # Store healing stats for metadata/debugging
+        sections["_healer_stats"] = {
+            "total_fixes": healing_result.total_fixes,
+            "template_phrases_removed": healing_result.template_phrases_removed,
+            "persona_replacements": healing_result.persona_replacements,
+            "redundancy_blocks_removed": healing_result.redundancy_stats.blocks_removed if healing_result.redundancy_stats else 0,
+            "roi_violations_fixed": healing_result.roi_violations_fixed,
+            "fragments_trimmed": healing_result.fragments_trimmed,
+            "payback_fixes": healing_result.payback_fixes,
+            "sections_budget_trimmed": healing_result.sections_budget_trimmed,
+            "segment": healer_segment,
+        }
+
+    except ImportError:
+        log.debug(f"[{run_id}] [HEALER] report_healer not available")
+    except Exception as e:
+        log.warning(f"[{run_id}] [HEALER] ⚠️ Report healing failed: {e} - continuing without healing")
+    # =========================================================================
+    # END FIX-A-G: REPORT HEALER
+    # =========================================================================
 
     result = render(
         br,
