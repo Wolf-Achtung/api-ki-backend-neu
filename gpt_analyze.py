@@ -117,7 +117,7 @@ from field_registry import fields  # added by Patch03
 from models import Analysis, Briefing, Report, User
 from services.report_renderer import render
 from services.text_healing import heal_all_text_blocks, heal_text_block
-from services.report_healer import heal_report_html, heal_final_html  # FIX-A-G: Report healing pipeline
+from services.report_healer import heal_report_html, heal_final_html, format_payback_de  # FIX-A-G: Report healing pipeline
 from services.pdf_client import render_pdf_from_html, build_footer_template
 from services.icon_system import (
     replace_emojis_with_icons,
@@ -14213,7 +14213,7 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             '{CAPEX_REALISTISCH_EUR}': str(int(bc.get('CAPEX_REALISTISCH_EUR', 6000))),
             '{OPEX_REALISTISCH_EUR}': str(int(bc.get('OPEX_REALISTISCH_EUR', 120))),
             '{EINSPARUNG_MONAT_EUR}': str(int(bc.get('EINSPARUNG_MONAT_EUR', 4500))),
-            '{PAYBACK_MONTHS}': str(round(bc.get('PAYBACK_MONTHS', 2.9), 1)),
+            '{PAYBACK_MONTHS}': format_payback_de(bc.get('PAYBACK_MONTHS', 2.9)),  # German decimal: "3,5"
             '{ROI_12M}': f"{bc.get('ROI_12M', 0):.1f}",  # ROI_12M ist bereits in % (z.B. 200.0)
             '{ROI_12M_EUR}': str(int(bc.get('ROI_12M_EUR', 0))),
             '{ROI_12M_LOW}': f"{sections.get('ROI_12M_LOW', 0):.1f}",
@@ -14222,15 +14222,15 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             '{EINSPARUNG_MONAT_EUR_HIGH}': str(int(sections.get('EINSPARUNG_MONAT_EUR_HIGH', 0))),
             '{OPEX_REALISTISCH_EUR_LOW}': str(int(sections.get('OPEX_REALISTISCH_EUR_LOW', 0))),
             '{OPEX_REALISTISCH_EUR_HIGH}': str(int(sections.get('OPEX_REALISTISCH_EUR_HIGH', 0))),
-            '{PAYBACK_MONTHS_PESSIMISTIC}': str(round(sections.get('PAYBACK_MONTHS_PESSIMISTIC', 0), 1)),
-            '{PAYBACK_MONTHS_OPTIMISTIC}': str(round(sections.get('PAYBACK_MONTHS_OPTIMISTIC', 0), 1)),
+            '{PAYBACK_MONTHS_PESSIMISTIC}': format_payback_de(sections.get('PAYBACK_MONTHS_PESSIMISTIC', 0)),  # German decimal
+            '{PAYBACK_MONTHS_OPTIMISTIC}': format_payback_de(sections.get('PAYBACK_MONTHS_OPTIMISTIC', 0)),  # German decimal
             '{COMPANY_SIZE}': sections.get('COMPANY_SIZE', 'team'),  # Use mapped value from sections
             '{qw_hours_total}': str(qw_hours),
             # Double-brace patterns (Jinja2-style that GPT may use)
             '{{CAPEX_REALISTISCH_EUR}}': str(int(bc.get('CAPEX_REALISTISCH_EUR', 6000))),
             '{{OPEX_REALISTISCH_EUR}}': str(int(bc.get('OPEX_REALISTISCH_EUR', 120))),
             '{{EINSPARUNG_MONAT_EUR}}': str(int(bc.get('EINSPARUNG_MONAT_EUR', 4500))),
-            '{{PAYBACK_MONTHS}}': str(round(bc.get('PAYBACK_MONTHS', 2.9), 1)),
+            '{{PAYBACK_MONTHS}}': format_payback_de(bc.get('PAYBACK_MONTHS', 2.9)),  # German decimal: "3,5"
             '{{ROI_12M}}': f"{bc.get('ROI_12M', 0):.1f}",  # ROI_12M ist bereits in % (z.B. 200.0)
             '{{ROI_12M_LOW}}': f"{sections.get('ROI_12M_LOW', 0):.1f}",
             '{{ROI_12M_HIGH}}': f"{sections.get('ROI_12M_HIGH', 0):.1f}",
@@ -14238,8 +14238,8 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             '{{EINSPARUNG_MONAT_EUR_HIGH}}': str(int(sections.get('EINSPARUNG_MONAT_EUR_HIGH', 0))),
             '{{OPEX_REALISTISCH_EUR_LOW}}': str(int(sections.get('OPEX_REALISTISCH_EUR_LOW', 0))),
             '{{OPEX_REALISTISCH_EUR_HIGH}}': str(int(sections.get('OPEX_REALISTISCH_EUR_HIGH', 0))),
-            '{{PAYBACK_MONTHS_PESSIMISTIC}}': str(round(sections.get('PAYBACK_MONTHS_PESSIMISTIC', 0), 1)),
-            '{{PAYBACK_MONTHS_OPTIMISTIC}}': str(round(sections.get('PAYBACK_MONTHS_OPTIMISTIC', 0), 1)),
+            '{{PAYBACK_MONTHS_PESSIMISTIC}}': format_payback_de(sections.get('PAYBACK_MONTHS_PESSIMISTIC', 0)),  # German decimal
+            '{{PAYBACK_MONTHS_OPTIMISTIC}}': format_payback_de(sections.get('PAYBACK_MONTHS_OPTIMISTIC', 0)),  # German decimal
             '{{qw_hours_total}}': str(qw_hours),
             '{{ qw_hours_total }}': str(qw_hours),
         }
@@ -16662,7 +16662,7 @@ def _fix_exec_placeholders(html_block: str, scores: Dict[str, Any], sections: Di
         "CAPEX_REALISTISCH_EUR": str(int(sections.get("CAPEX_REALISTISCH_EUR", 6000) or 6000)),
         "OPEX_REALISTISCH_EUR": str(int(sections.get("OPEX_REALISTISCH_EUR", 120) or 120)),
         "EINSPARUNG_MONAT_EUR": str(int(sections.get("EINSPARUNG_MONAT_EUR", 4500) or 4500)),
-        "PAYBACK_MONTHS": str(round(float(sections.get("PAYBACK_MONTHS", 2.9) or 2.9), 1)),
+        "PAYBACK_MONTHS": format_payback_de(sections.get("PAYBACK_MONTHS", 2.9)),  # German decimal: "3,5"
         "ROI_12M": f"{float(sections.get('ROI_12M', 0) or 0):.1f}",  # Bereits in % (z.B. 200.0)
         "ROI_12M_LOW": f"{float(sections.get('ROI_12M_LOW', 0) or 0):.1f}",
         "ROI_12M_HIGH": f"{float(sections.get('ROI_12M_HIGH', 0) or 0):.1f}",
@@ -16670,8 +16670,8 @@ def _fix_exec_placeholders(html_block: str, scores: Dict[str, Any], sections: Di
         "EINSPARUNG_MONAT_EUR_HIGH": str(int(sections.get("EINSPARUNG_MONAT_EUR_HIGH", 0) or 0)),
         "OPEX_REALISTISCH_EUR_LOW": str(int(sections.get("OPEX_REALISTISCH_EUR_LOW", 0) or 0)),
         "OPEX_REALISTISCH_EUR_HIGH": str(int(sections.get("OPEX_REALISTISCH_EUR_HIGH", 0) or 0)),
-        "PAYBACK_MONTHS_PESSIMISTIC": str(round(float(sections.get("PAYBACK_MONTHS_PESSIMISTIC", 0) or 0), 1)),
-        "PAYBACK_MONTHS_OPTIMISTIC": str(round(float(sections.get("PAYBACK_MONTHS_OPTIMISTIC", 0) or 0), 1)),
+        "PAYBACK_MONTHS_PESSIMISTIC": format_payback_de(sections.get("PAYBACK_MONTHS_PESSIMISTIC", 0)),  # German decimal
+        "PAYBACK_MONTHS_OPTIMISTIC": format_payback_de(sections.get("PAYBACK_MONTHS_OPTIMISTIC", 0)),  # German decimal
         "qw_hours_total": str(sections.get("qw_hours_total", 36)),
     }
 

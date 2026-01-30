@@ -288,3 +288,98 @@ class TestHealerImportInPipeline:
         from services.report_healer import BOILERPLATE_PATTERNS, PAYBACK_PATTERNS_DE
         assert len(BOILERPLATE_PATTERNS) >= 20  # Should have comprehensive patterns
         assert len(PAYBACK_PATTERNS_DE) >= 5  # Should have payback patterns
+
+
+class TestPaybackDecimalRegressionFix:
+    """
+    Regression tests for FIX: Payback 3.5 → 3,5 (German decimal format).
+
+    ROOT CAUSE: str(round(value, 1)) produces "3.5" (English format),
+    but German reports must use "3,5" (comma as decimal separator).
+
+    FIX: Use format_payback_de() instead of str(round(..., 1)).
+    """
+
+    def test_format_payback_de_produces_german_format(self) -> None:
+        """format_payback_de should produce German decimal format."""
+        from services.report_healer import format_payback_de
+
+        # float inputs
+        assert format_payback_de(3.5) == "3,5"
+        assert format_payback_de(2.9) == "2,9"
+        assert format_payback_de(4.0) == "4,0"
+        assert format_payback_de(0.0) == "0,0"
+
+        # int inputs
+        assert format_payback_de(3) == "3,0"
+        assert format_payback_de(0) == "0,0"
+
+        # None returns empty string
+        assert format_payback_de(None) == ""
+
+    def test_no_english_decimal_before_monate_after_heal(self) -> None:
+        """After healing, no English decimal should appear before Monate/Monaten."""
+        import re
+        from services.report_healer import heal_report_html
+
+        # Input with English decimal format
+        sections = {
+            "BUSINESS_CASE_HTML": "<p>Payback: 3.5 Monate</p>",
+            "EXECUTIVE_SUMMARY_HTML": "<p>Amortisation in 2.5 Monaten</p>",
+            "QUICK_WINS_HTML": "<p>ROI nach 4.0 Monate erreicht</p>",
+        }
+
+        result = heal_report_html(sections, "team")
+
+        # Pattern: digit.digit followed by space and Monat(e|en)
+        english_decimal_pattern = re.compile(r'\d+\.\d+\s+Monat(?:e|en)?')
+
+        for key, html in result.sections.items():
+            if key.startswith("_"):
+                continue  # Skip metadata keys
+            match = english_decimal_pattern.search(html)
+            assert match is None, (
+                f"English decimal format found in {key}: {match.group() if match else ''}"
+            )
+
+    def test_no_english_decimal_after_heal_final_html(self) -> None:
+        """heal_final_html should also normalize English decimals."""
+        import re
+        from services.report_healer import heal_final_html
+
+        html = """
+        <html>
+            <p>Payback: 3.5 Monate</p>
+            <p>Die Amortisation erfolgt in 2.9 Monaten.</p>
+            <p>Nach 4.0 Monate ist der ROI erreicht.</p>
+        </html>
+        """
+
+        result = heal_final_html(html, "team")
+
+        # No English decimal before Monate/Monaten
+        english_decimal_pattern = re.compile(r'\d+\.\d+\s+Monat(?:e|en)?')
+        match = english_decimal_pattern.search(result)
+        assert match is None, f"English decimal format found: {match.group() if match else ''}"
+
+        # German format should be present
+        assert "3,5 Monate" in result
+        assert "2,9 Monaten" in result
+
+    def test_canonical_payback_uses_german_format(self) -> None:
+        """Canonical payback normalization should use German format."""
+        from services.report_healer import heal_report_html
+
+        sections = {
+            "BUSINESS_CASE_HTML": "<p>Payback: 6 Monate</p>",
+        }
+
+        # Normalize to canonical value of 3.5 months
+        result = heal_report_html(sections, "team", canonical_payback_months=3.5)
+
+        bc_html = result.sections.get("BUSINESS_CASE_HTML", "")
+
+        # German format should be used
+        assert "3,5 Monate" in bc_html
+        # English format should NOT be present
+        assert "3.5 Monate" not in bc_html
