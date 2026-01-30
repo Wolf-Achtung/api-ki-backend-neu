@@ -398,3 +398,163 @@ class TestSoloTermReplacements:
         required_terms = ["Stakeholder", "Architektur", "Stack", "Dashboard"]
         for term in required_terms:
             assert term in SOLO_TERM_REPLACEMENTS, f"Missing term: {term}"
+
+
+class TestNonStringValueRobustness:
+    """Tests for robustness against non-string values in sections."""
+
+    def test_heal_report_html_handles_float_values(self):
+        """heal_report_html should not crash on float values."""
+        from services.report_healer import heal_report_html
+
+        sections = {
+            "a": "<p>Wobei kann ich dir helfen?</p>",  # Valid prompt pattern
+            "b": 3.5,  # float value
+            "c": None,  # None value
+        }
+
+        # Should not raise exception
+        result = heal_report_html(sections, "solo")  # type: ignore[arg-type]
+
+        # "a" should be cleaned (prompt artifact removed)
+        assert "Wobei kann ich dir helfen" not in result.sections.get("a", "")
+        # "b" should be converted to string
+        assert result.sections.get("b") == "3.5"
+        # "c" should be empty string
+        assert result.sections.get("c") == ""
+
+    def test_heal_report_html_handles_mixed_types(self):
+        """heal_report_html should handle dict with mixed value types."""
+        from services.report_healer import heal_report_html
+
+        sections = {
+            "HTML_SECTION": "<p>Real HTML content</p>",
+            "score": 85,  # int
+            "ratio": 0.75,  # float
+            "enabled": True,  # bool
+            "missing": None,  # None
+        }
+
+        # Should not raise exception
+        result = heal_report_html(sections, "team")  # type: ignore[arg-type]
+
+        # Original HTML should be preserved
+        assert "Real HTML content" in result.sections.get("HTML_SECTION", "")
+        # int converted to string
+        assert result.sections.get("score") == "85"
+        # float converted to string
+        assert result.sections.get("ratio") == "0.75"
+        # bool converted to string
+        assert result.sections.get("enabled") == "true"
+        # None converted to empty string
+        assert result.sections.get("missing") == ""
+
+    def test_heal_report_html_handles_nan_and_inf(self):
+        """heal_report_html should handle NaN and Inf float values."""
+        import math
+        from services.report_healer import heal_report_html
+
+        sections = {
+            "nan_value": float("nan"),
+            "inf_value": float("inf"),
+            "neg_inf": float("-inf"),
+            "normal": "<p>Normal content</p>",
+        }
+
+        # Should not raise exception
+        result = heal_report_html(sections, "kmu")  # type: ignore[arg-type]
+
+        # NaN/Inf should become empty strings
+        assert result.sections.get("nan_value") == ""
+        assert result.sections.get("inf_value") == ""
+        assert result.sections.get("neg_inf") == ""
+
+    def test_to_text_helper(self):
+        """_to_text should safely convert any value to string."""
+        from services.report_healer import _to_text
+
+        assert _to_text(None) == ""
+        assert _to_text("hello") == "hello"
+        assert _to_text(42) == "42"
+        assert _to_text(3.5) == "3.5"
+        assert _to_text(True) == "true"
+        assert _to_text(False) == "false"
+        assert _to_text([]) == ""
+        assert _to_text(["a", "b"]) == "a b"
+        assert _to_text({}) == ""
+        assert _to_text(float("nan")) == ""
+        assert _to_text(float("inf")) == ""
+
+
+class TestPaybackMonatenPattern:
+    """Tests for payback pattern handling 'Monaten' suffix."""
+
+    def test_normalizes_monaten_decimal(self):
+        """Should normalize '3.5 Monaten' to '3,5 Monaten'."""
+        from services.report_healer import enforce_payback_consistency
+
+        sections = {
+            "SECTION": "<p>Die Amortisation erfolgt in 3.5 Monaten.</p>",
+        }
+
+        result, fixes = enforce_payback_consistency(sections)
+
+        # Should have comma instead of dot
+        assert "3,5 Monaten" in result["SECTION"]
+        assert "3.5 Monaten" not in result["SECTION"]
+        assert fixes >= 1
+
+    def test_normalizes_all_month_variants(self):
+        """Should normalize Monat, Monate, and Monaten."""
+        from services.report_healer import enforce_payback_consistency
+
+        sections = {
+            "A": "<p>Payback: 1.5 Monat</p>",
+            "B": "<p>Payback: 2.5 Monate</p>",
+            "C": "<p>Payback: 3.5 Monaten</p>",
+        }
+
+        result, fixes = enforce_payback_consistency(sections)
+
+        assert "1,5 Monat" in result["A"]
+        assert "2,5 Monate" in result["B"]
+        assert "3,5 Monaten" in result["C"]
+        # No English decimals left
+        assert "1.5 Monat" not in result["A"]
+        assert "2.5 Monate" not in result["B"]
+        assert "3.5 Monaten" not in result["C"]
+
+    def test_normalizes_wochen_variants(self):
+        """Should normalize Woche and Wochen."""
+        from services.report_healer import enforce_payback_consistency
+
+        sections = {
+            "A": "<p>Dauer: 1.5 Woche</p>",
+            "B": "<p>Dauer: 2.5 Wochen</p>",
+        }
+
+        result, fixes = enforce_payback_consistency(sections)
+
+        assert "1,5 Woche" in result["A"]
+        assert "2,5 Wochen" in result["B"]
+
+    def test_payback_decimal_pattern_matches_monaten(self):
+        """PAYBACK_DECIMAL_PATTERN should match 'Monaten'."""
+        from services.report_healer import PAYBACK_DECIMAL_PATTERN
+
+        # Test various patterns
+        test_cases = [
+            ("3.5 Monate", True),
+            ("3.5 Monaten", True),
+            ("3.5 Monat", True),
+            ("2.5 Wochen", True),
+            ("1.5 Woche", True),
+            ("normale Monate", False),  # no decimal
+        ]
+
+        for text, should_match in test_cases:
+            match = PAYBACK_DECIMAL_PATTERN.search(text)
+            if should_match:
+                assert match is not None, f"Should match: {text}"
+            else:
+                assert match is None, f"Should not match: {text}"
