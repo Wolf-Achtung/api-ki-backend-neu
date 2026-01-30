@@ -117,7 +117,7 @@ from field_registry import fields  # added by Patch03
 from models import Analysis, Briefing, Report, User
 from services.report_renderer import render
 from services.text_healing import heal_all_text_blocks, heal_text_block
-from services.report_healer import heal_report_html  # FIX-A-G: Report healing pipeline
+from services.report_healer import heal_report_html, heal_final_html  # FIX-A-G: Report healing pipeline
 from services.pdf_client import render_pdf_from_html, build_footer_template
 from services.icon_system import (
     replace_emojis_with_icons,
@@ -15825,6 +15825,21 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             "sections": serializable_sections,  # Store sections for summary gate
         }
     )
+
+    # =========================================================================
+    # FIX-A-G: POST-RENDER SAFETY NET (heal artifacts created during rendering)
+    # =========================================================================
+    try:
+        if result and isinstance(result, str):
+            result = heal_final_html(
+                result,
+                segment=healer_segment,
+                canonical_payback_months=canonical_payback,
+            )
+            log.info(f"[{run_id}] [HEALER-POST] Applied post-render healing")
+    except Exception as e:
+        log.warning(f"[{run_id}] [HEALER-POST] Post-render healing failed: {e} - continuing with original")
+    # END FIX-A-G: POST-RENDER SAFETY NET
 
     # === G17.3: Extract Fine-Tuning Signals ===
     if FT_SIGNAL_EXTRACTION_ENABLED and extract_llm_signals and accumulate_signals:
