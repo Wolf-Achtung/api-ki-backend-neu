@@ -37,6 +37,9 @@ __all__ = [
     "apply_segment_budget",
     "HealingResult",
     "BOILERPLATE_PATTERNS",
+    "PAYBACK_PATTERNS_DE",
+    "BoilerplatePattern",
+    "PaybackPattern",
 ]
 
 # =============================================================================
@@ -52,55 +55,190 @@ class BoilerplatePattern:
     description: str = ""
 
 
-# Registry of known boilerplate/prompt artifacts
+# =============================================================================
+# BOILERPLATE_PATTERNS_DE - Comprehensive German Pattern Registry
+# =============================================================================
+
+# Registry of known boilerplate/prompt artifacts (BOILERPLATE_PATTERNS_DE)
 BOILERPLATE_PATTERNS: List[BoilerplatePattern] = [
-    # Prompt artifacts - match paragraph containing the phrase
+    # -------------------------------------------------------------------------
+    # A) Prompt-/Chat-Blöcke
+    # -------------------------------------------------------------------------
     BoilerplatePattern(
-        pattern=r"<p[^>]*>\s*Wobei kann ich dir helfen\?[^<]*</p>",
+        pattern=r'(?is)<div[^>]*class="heading[^"]*heading-h1"[^>]*>.*?(?:Wie|Wobei)\s+kann\s+ich.*?</div>',
         action="drop",
-        description="Prompt artifact: 'Wobei kann ich dir helfen?'"
+        description="PROMPT_HELP_H1_BLOCK: Chat-UI heading block"
     ),
     BoilerplatePattern(
-        pattern=r"<p[^>]*>\s*Wie kann ich helfen\?[^<]*</p>",
+        pattern=r'(?is)<p>\s*(?:Wie|Wobei)\s+kann\s+ich\s+(?:Ihnen|dir)\s+(?:heute\s+)?helfen\?[^<]*</p>(?:\s*<ul>.*?</ul>)?',
         action="drop",
-        description="Prompt artifact: 'Wie kann ich helfen?'"
+        description="PROMPT_HELP_P_PLUS_LIST: Prompt question with optional list"
     ),
     BoilerplatePattern(
-        pattern=r"<p[^>]*>\s*Bitte beschreibe kurz[^<]*</p>",
+        pattern=r'(?is)<p[^>]*>\s*Bitte\s+beschreibe?\s+kurz[:\s]*[^<]*</p>(?:\s*<(?:ul|ol)>.*?</(?:ul|ol)>)?',
         action="drop",
-        description="Prompt artifact: 'Bitte beschreibe kurz'"
+        description="PROMPT_DESCRIBE_BLOCK: 'Bitte beschreibe kurz' with list"
     ),
     BoilerplatePattern(
-        pattern=r"Bitte beschreibe kurz[:\s]*(?:<ul>.*?</ul>|<ol>.*?</ol>)",
+        pattern=r'(?is)<div[^>]*class="[^"]*(?:chat-input|prompt-box|input-area)[^"]*"[^>]*>.*?</div>',
         action="drop",
-        description="Prompt artifact with bullet list"
-    ),
-    # Placeholder texts
-    BoilerplatePattern(
-        pattern=r"<p>\s*Platzhalter[^<]*</p>",
-        action="drop",
-        description="Placeholder paragraph"
+        description="CHAT_INPUT_DIV: Chat input container"
     ),
     BoilerplatePattern(
-        pattern=r"\[Platzhalter[^\]]*\]",
+        pattern=r'(?is)<textarea[^>]*>.*?</textarea>',
         action="drop",
-        description="Placeholder in brackets"
+        description="TEXTAREA_BLOCK: Any textarea element"
+    ),
+
+    # -------------------------------------------------------------------------
+    # B) Platzhalter in eckigen Klammern
+    # -------------------------------------------------------------------------
+    BoilerplatePattern(
+        pattern=r'(?is)\[(?:\s*(?:platzhalter|hier\s+einf\u00fcgen|your\s+text|insert|placeholder|name|firma|datum|kundenname|firmenname)[^\]]*)\]',
+        action="drop",
+        description="BRACKET_PLACEHOLDER_GENERIC: Generic bracket placeholders"
     ),
     BoilerplatePattern(
-        pattern=r"<p>\s*\[hier einfügen[^\]]*\]\s*</p>",
+        pattern=r'(?i)<p>\s*\[[^\]]{0,60}\]\s*</p>',
         action="drop",
-        description="'hier einfügen' placeholder"
-    ),
-    # LLM instruction leaks
-    BoilerplatePattern(
-        pattern=r"<p>\s*(?:Hinweis|Note):\s*(?:Dies ist|This is) (?:ein|a) (?:Beispiel|example)[^<]*</p>",
-        action="drop",
-        description="Example note leak"
+        description="BRACKET_PLACEHOLDER_P: Paragraph with only bracket placeholder"
     ),
     BoilerplatePattern(
-        pattern=r"<p>\s*\[(?:TODO|FIXME|XXX)[^\]]*\]\s*</p>",
+        pattern=r'(?i)\[___+\]',
         action="drop",
-        description="TODO/FIXME placeholder"
+        description="BRACKET_UNDERLINE: [___] fill-in placeholder"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?i)\[\.\.\.\]',
+        action="drop",
+        description="BRACKET_ELLIPSIS: [...] placeholder"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?i)_{3,}',
+        action="drop",
+        description="BARE_UNDERLINE: ___ fill-in blank"
+    ),
+
+    # -------------------------------------------------------------------------
+    # C) Unreplaced Template-Tokens
+    # -------------------------------------------------------------------------
+    BoilerplatePattern(
+        pattern=r'(?s)\{\{\s*[^}]+\s*\}\}',
+        action="drop",
+        description="JINJA_MUSTACHE_TOKEN: {{variable}} tokens"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?s)\{%\s*[^%]+\s*%\}',
+        action="drop",
+        description="JINJA_BLOCK_TOKEN: {% block %} tokens"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?i)\$\{[^}]+\}',
+        action="drop",
+        description="DOLLAR_BRACE_TOKEN: ${variable} tokens"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?i)<%[^%]+%>',
+        action="drop",
+        description="ERB_TOKEN: <% erb %> tokens"
+    ),
+
+    # -------------------------------------------------------------------------
+    # D) LLM Instruction/Meta Leaks
+    # -------------------------------------------------------------------------
+    BoilerplatePattern(
+        pattern=r'(?is)<p>\s*(?:Hinweis|Note|Anmerkung):\s*(?:Dies|Das|This)\s+ist\s+(?:ein|a|nur\s+ein)\s+(?:Beispiel|Example|Muster|Template)[^<]*</p>',
+        action="drop",
+        description="EXAMPLE_NOTE_LEAK: 'This is an example' notes"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?is)<p>\s*\[(?:TODO|FIXME|XXX|TBD|DRAFT|WIP)[^\]]*\]\s*</p>',
+        action="drop",
+        description="TODO_MARKER: [TODO] placeholders"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?is)<!--\s*(?:TODO|FIXME|XXX|NOTE|DRAFT)[^>]*-->',
+        action="drop",
+        description="HTML_COMMENT_TODO: HTML comment TODOs"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?is)<p>\s*\*\*(?:INTERNAL|DRAFT|DO\s+NOT\s+PUBLISH)[^*]*\*\*\s*</p>',
+        action="drop",
+        description="INTERNAL_MARKER: **INTERNAL** markers"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?is)<p>\s*(?:SYSTEM|ASSISTANT|USER):\s*[^<]*</p>',
+        action="drop",
+        description="ROLE_PREFIX_LEAK: SYSTEM:/ASSISTANT:/USER: prefixes"
+    ),
+
+    # -------------------------------------------------------------------------
+    # E) Navigation/UI Artifacts
+    # -------------------------------------------------------------------------
+    BoilerplatePattern(
+        pattern=r'(?is)<nav[^>]*>.*?</nav>',
+        action="drop",
+        description="NAV_BLOCK: Navigation blocks"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?is)<(?:button|input)[^>]*(?:type="(?:submit|button)")?[^>]*>.*?</(?:button|input)>',
+        action="drop",
+        description="BUTTON_INPUT: Button/input elements"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?is)<a[^>]*(?:href="#"|onclick)[^>]*>(?:Zur\u00fcck|Back|Weiter|Next|Abbrechen|Cancel)</a>',
+        action="drop",
+        description="NAV_LINK: Navigation links"
+    ),
+
+    # -------------------------------------------------------------------------
+    # F) Empty/Whitespace Containers
+    # -------------------------------------------------------------------------
+    BoilerplatePattern(
+        pattern=r'(?s)<p>\s*</p>',
+        action="drop",
+        description="EMPTY_P: Empty paragraphs"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?s)<div[^>]*>\s*</div>',
+        action="drop",
+        description="EMPTY_DIV: Empty divs"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?s)<span[^>]*>\s*</span>',
+        action="drop",
+        description="EMPTY_SPAN: Empty spans"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?s)<li>\s*</li>',
+        action="drop",
+        description="EMPTY_LI: Empty list items"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?s)<ul>\s*</ul>',
+        action="drop",
+        description="EMPTY_UL: Empty unordered lists"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?s)<ol>\s*</ol>',
+        action="drop",
+        description="EMPTY_OL: Empty ordered lists"
+    ),
+
+    # -------------------------------------------------------------------------
+    # G) Duplicate/Repeated Boilerplate
+    # -------------------------------------------------------------------------
+    BoilerplatePattern(
+        pattern=r'(?is)(<p>[^<]{50,}</p>)\s*\1',
+        action="replace",
+        replacement=r'\1',
+        description="CONSECUTIVE_DUP_P: Consecutive duplicate paragraphs"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?is)(<li>[^<]{30,}</li>)\s*\1',
+        action="replace",
+        replacement=r'\1',
+        description="CONSECUTIVE_DUP_LI: Consecutive duplicate list items"
     ),
 ]
 
@@ -578,19 +716,100 @@ def trim_incomplete_sentences(html: str) -> Tuple[str, int]:
 
 
 # =============================================================================
-# FIX F: PAYBACK CONSISTENCY
+# FIX F: PAYBACK CONSISTENCY (PAYBACK_PATTERNS_DE)
 # =============================================================================
 
-# Pattern to match various payback formats
+@dataclass
+class PaybackPattern:
+    """Definition for a payback normalization pattern."""
+    id: str
+    pattern: str
+    action: Literal["normalize", "remove", "flag"]
+    replacement: str = ""
+    description: str = ""
+
+
+# PAYBACK_PATTERNS_DE - Comprehensive German Payback Pattern Registry
+PAYBACK_PATTERNS_DE: List[PaybackPattern] = [
+    # -------------------------------------------------------------------------
+    # Decimal Normalization (3.5 → 3,5)
+    # -------------------------------------------------------------------------
+    PaybackPattern(
+        id="PAYBACK_DECIMAL_DOT_TO_COMMA_MONTHS",
+        pattern=r'(?i)(\d+)\.(\d+)\s*(Monate?)',
+        action="normalize",
+        replacement=r'\1,\2 \3',
+        description="Convert 3.5 Monate → 3,5 Monate"
+    ),
+    PaybackPattern(
+        id="PAYBACK_DECIMAL_DOT_TO_COMMA_WEEKS",
+        pattern=r'(?i)(\d+)\.(\d+)\s*(Wochen?)',
+        action="normalize",
+        replacement=r'\1,\2 \3',
+        description="Convert 2.5 Wochen → 2,5 Wochen"
+    ),
+
+    # -------------------------------------------------------------------------
+    # Progress Label Detection
+    # -------------------------------------------------------------------------
+    PaybackPattern(
+        id="PAYBACK_PROGRESS_LABEL_SPAN",
+        pattern=r'(?is)<span[^>]*>\s*Payback\s+Progress[:\s]*(\d+(?:[.,]\d+)?)\s*%?\s*</span>',
+        action="flag",
+        description="Payback Progress span (track for duplicate removal)"
+    ),
+    PaybackPattern(
+        id="PAYBACK_PROGRESS_INLINE",
+        pattern=r'(?i)Payback\s+Progress[:\s]+(\d+(?:[.,]\d+)?)\s*%',
+        action="flag",
+        description="Payback Progress inline (track for duplicate removal)"
+    ),
+    PaybackPattern(
+        id="PROGRESS_100_STANDALONE",
+        pattern=r'(?i)Progress[:\s]+100\s*%',
+        action="flag",
+        description="Progress: 100% standalone (track for duplicate removal)"
+    ),
+
+    # -------------------------------------------------------------------------
+    # Payback Value Extraction
+    # -------------------------------------------------------------------------
+    PaybackPattern(
+        id="PAYBACK_COLON_VALUE",
+        pattern=r'(?i)Payback[:\s]+(\d+(?:[.,]\d+)?)\s*(?:Monate?|Wochen?|months?|weeks?)',
+        action="flag",
+        description="Payback: X Monate format"
+    ),
+    PaybackPattern(
+        id="AMORTISATION_VALUE",
+        pattern=r'(?i)Amortisation(?:szeit)?[:\s]+(\d+(?:[.,]\d+)?)\s*(?:Monate?|Wochen?)',
+        action="flag",
+        description="Amortisation(szeit): X Monate format"
+    ),
+    PaybackPattern(
+        id="PAYBACK_PERIOD_VALUE",
+        pattern=r'(?i)(\d+(?:[.,]\d+)?)\s*(?:Monate?|Wochen?)\s+(?:Payback|Amortisation)',
+        action="flag",
+        description="X Monate Payback format"
+    ),
+]
+
+# Compiled patterns for payback extraction
 PAYBACK_PATTERNS = [
     re.compile(r"Payback[:\s]+(\d+(?:[.,]\d+)?)\s*(?:Monate?|months?)", re.IGNORECASE),
-    re.compile(r"Amortisation[:\s]+(\d+(?:[.,]\d+)?)\s*(?:Monate?|months?)", re.IGNORECASE),
+    re.compile(r"Amortisation(?:szeit)?[:\s]+(\d+(?:[.,]\d+)?)\s*(?:Monate?|months?)", re.IGNORECASE),
     re.compile(r"(\d+(?:[.,]\d+)?)\s*(?:Monate?|months?)\s+(?:Payback|Amortisation)", re.IGNORECASE),
 ]
 
 # Pattern for "Payback Progress 100%" duplicates
 PAYBACK_PROGRESS_PATTERN = re.compile(
     r"(?:Payback\s+)?Progress[:\s]+100\s*%",
+    re.IGNORECASE
+)
+
+# Pattern for decimal dot to comma normalization
+PAYBACK_DECIMAL_PATTERN = re.compile(
+    r"(\d+)\.(\d+)\s*(Monate?|Wochen?)",
     re.IGNORECASE
 )
 
@@ -601,6 +820,11 @@ def enforce_payback_consistency(
 ) -> Tuple[Dict[str, str], int]:
     """
     Fix F: Enforce payback consistency and remove duplicates.
+
+    Applies:
+    1. Decimal normalization: 3.5 Monate → 3,5 Monate (German format)
+    2. Duplicate "Payback Progress 100%" removal (keep first occurrence)
+    3. Canonical payback value normalization if provided
 
     Args:
         sections: Dict of section_name -> HTML content
@@ -622,7 +846,19 @@ def enforce_payback_consistency(
 
         processed = html
 
-        # Remove duplicate "Payback Progress 100%" (keep first)
+        # Step 1: Normalize decimal format (3.5 → 3,5)
+        decimal_matches = list(PAYBACK_DECIMAL_PATTERN.finditer(processed))
+        if decimal_matches:
+            # Replace from end to preserve positions
+            for m in reversed(decimal_matches):
+                old_val = m.group(0)
+                new_val = PAYBACK_DECIMAL_PATTERN.sub(r'\1,\2 \3', old_val)
+                if old_val != new_val:
+                    processed = processed[:m.start()] + new_val + processed[m.end():]
+                    fixes_applied += 1
+                    log.debug("[FIX-F] Normalized decimal: %s → %s", old_val, new_val)
+
+        # Step 2: Remove duplicate "Payback Progress 100%" (keep first)
         if "Progress" in processed and "100" in processed:
             matches = list(PAYBACK_PROGRESS_PATTERN.finditer(processed))
             if len(matches) > 1 or (matches and progress_seen):
@@ -634,7 +870,7 @@ def enforce_payback_consistency(
             if matches and not progress_seen:
                 progress_seen = True
 
-        # Normalize payback format if canonical value provided
+        # Step 3: Normalize payback format if canonical value provided
         if canonical_payback_months is not None:
             canonical_str = f"{canonical_payback_months:.1f}".replace(".", ",") + " Monate"
             for pattern in PAYBACK_PATTERNS:
@@ -926,7 +1162,8 @@ def heal_report_html(
 # =============================================================================
 
 log.info(
-    "[HEALER] Report Healer loaded - %d boilerplate patterns, %d SOLO term replacements",
+    "[HEALER] Report Healer loaded - %d boilerplate patterns, %d payback patterns, %d SOLO term replacements",
     len(BOILERPLATE_PATTERNS),
+    len(PAYBACK_PATTERNS_DE),
     len(SOLO_TERM_REPLACEMENTS)
 )
