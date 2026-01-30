@@ -20,9 +20,10 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import math
 import re
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Literal, Optional, Pattern, Set, Tuple
+from typing import Any, Dict, List, Literal, Optional, Pattern, Set, Tuple, Union
 
 log = logging.getLogger(__name__)
 
@@ -41,6 +42,93 @@ __all__ = [
     "BoilerplatePattern",
     "PaybackPattern",
 ]
+
+
+# =============================================================================
+# HELPER: Safe String Coercion
+# =============================================================================
+
+def _to_text(value: Any) -> str:
+    """
+    Safely convert any value to string for regex operations.
+
+    Args:
+        value: Any value (str, int, float, None, list, dict, etc.)
+
+    Returns:
+        String representation, never raises
+    """
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, bool):
+        return str(value).lower()
+    if isinstance(value, float):
+        # Handle NaN and Inf safely
+        if math.isnan(value) or math.isinf(value):
+            return ""
+        return str(value)
+    if isinstance(value, (int,)):
+        return str(value)
+    if isinstance(value, (list, tuple)):
+        # Join list items, recursively converting each
+        return " ".join(_to_text(item) for item in value if item is not None)
+    if isinstance(value, dict):
+        # For dicts, return empty - they shouldn't be in HTML content
+        return ""
+    # Fallback: try str(), but catch any errors
+    try:
+        return str(value)
+    except Exception:
+        return ""
+
+
+def _coerce_sections_to_str(sections: Dict[str, Any]) -> Dict[str, str]:
+    """
+    Coerce all section values to strings for safe regex processing.
+
+    Skips internal metadata keys (starting with _) that aren't HTML content.
+    Logs warnings for non-string values.
+
+    Args:
+        sections: Dict with potentially mixed value types
+
+    Returns:
+        Dict with all values as strings
+    """
+    result: Dict[str, str] = {}
+
+    for key, value in sections.items():
+        # Skip internal metadata keys - preserve as-is converted to string
+        if key.startswith("_"):
+            if isinstance(value, str):
+                result[key] = value
+            elif isinstance(value, dict):
+                # Metadata dicts - convert to JSON-like string for preservation
+                import json
+                try:
+                    result[key] = json.dumps(value, ensure_ascii=False)
+                except Exception:
+                    result[key] = str(value)
+            else:
+                result[key] = _to_text(value)
+            continue
+
+        # For HTML content keys, coerce to string
+        if isinstance(value, str):
+            result[key] = value
+        elif value is None:
+            result[key] = ""
+        else:
+            # Log warning for unexpected types in HTML sections
+            log.warning(
+                "[HEALER] Non-string value in section '%s': type=%s, converting to str",
+                key, type(value).__name__
+            )
+            result[key] = _to_text(value)
+
+    return result
 
 # =============================================================================
 # FIX A: TEMPLATE_PHRASE PATTERNS (Boilerplate Registry)
@@ -736,14 +824,14 @@ PAYBACK_PATTERNS_DE: List[PaybackPattern] = [
     # -------------------------------------------------------------------------
     PaybackPattern(
         id="PAYBACK_DECIMAL_DOT_TO_COMMA_MONTHS",
-        pattern=r'(?i)(\d+)\.(\d+)\s*(Monate?)',
+        pattern=r'(?i)(\d+)\.(\d+)\s*(Monat(?:e|en)?)',
         action="normalize",
         replacement=r'\1,\2 \3',
-        description="Convert 3.5 Monate → 3,5 Monate"
+        description="Convert 3.5 Monate/Monaten → 3,5 Monate/Monaten"
     ),
     PaybackPattern(
         id="PAYBACK_DECIMAL_DOT_TO_COMMA_WEEKS",
-        pattern=r'(?i)(\d+)\.(\d+)\s*(Wochen?)',
+        pattern=r'(?i)(\d+)\.(\d+)\s*(Woche(?:n)?)',
         action="normalize",
         replacement=r'\1,\2 \3',
         description="Convert 2.5 Wochen → 2,5 Wochen"
@@ -776,29 +864,29 @@ PAYBACK_PATTERNS_DE: List[PaybackPattern] = [
     # -------------------------------------------------------------------------
     PaybackPattern(
         id="PAYBACK_COLON_VALUE",
-        pattern=r'(?i)Payback[:\s]+(\d+(?:[.,]\d+)?)\s*(?:Monate?|Wochen?|months?|weeks?)',
+        pattern=r'(?i)Payback[:\s]+(\d+(?:[.,]\d+)?)\s*(?:Monat(?:e|en)?|Woche(?:n)?|months?|weeks?)',
         action="flag",
-        description="Payback: X Monate format"
+        description="Payback: X Monate/Monaten format"
     ),
     PaybackPattern(
         id="AMORTISATION_VALUE",
-        pattern=r'(?i)Amortisation(?:szeit)?[:\s]+(\d+(?:[.,]\d+)?)\s*(?:Monate?|Wochen?)',
+        pattern=r'(?i)Amortisation(?:szeit)?[:\s]+(\d+(?:[.,]\d+)?)\s*(?:Monat(?:e|en)?|Woche(?:n)?)',
         action="flag",
-        description="Amortisation(szeit): X Monate format"
+        description="Amortisation(szeit): X Monate/Monaten format"
     ),
     PaybackPattern(
         id="PAYBACK_PERIOD_VALUE",
-        pattern=r'(?i)(\d+(?:[.,]\d+)?)\s*(?:Monate?|Wochen?)\s+(?:Payback|Amortisation)',
+        pattern=r'(?i)(\d+(?:[.,]\d+)?)\s*(?:Monat(?:e|en)?|Woche(?:n)?)\s+(?:Payback|Amortisation)',
         action="flag",
-        description="X Monate Payback format"
+        description="X Monate/Monaten Payback format"
     ),
 ]
 
 # Compiled patterns for payback extraction
 PAYBACK_PATTERNS = [
-    re.compile(r"Payback[:\s]+(\d+(?:[.,]\d+)?)\s*(?:Monate?|months?)", re.IGNORECASE),
-    re.compile(r"Amortisation(?:szeit)?[:\s]+(\d+(?:[.,]\d+)?)\s*(?:Monate?|months?)", re.IGNORECASE),
-    re.compile(r"(\d+(?:[.,]\d+)?)\s*(?:Monate?|months?)\s+(?:Payback|Amortisation)", re.IGNORECASE),
+    re.compile(r"Payback[:\s]+(\d+(?:[.,]\d+)?)\s*(?:Monat(?:e|en)?|months?)", re.IGNORECASE),
+    re.compile(r"Amortisation(?:szeit)?[:\s]+(\d+(?:[.,]\d+)?)\s*(?:Monat(?:e|en)?|months?)", re.IGNORECASE),
+    re.compile(r"(\d+(?:[.,]\d+)?)\s*(?:Monat(?:e|en)?|months?)\s+(?:Payback|Amortisation)", re.IGNORECASE),
 ]
 
 # Pattern for "Payback Progress 100%" duplicates
@@ -807,9 +895,9 @@ PAYBACK_PROGRESS_PATTERN = re.compile(
     re.IGNORECASE
 )
 
-# Pattern for decimal dot to comma normalization
+# Pattern for decimal dot to comma normalization (handles Monat, Monate, Monaten, Woche, Wochen)
 PAYBACK_DECIMAL_PATTERN = re.compile(
-    r"(\d+)\.(\d+)\s*(Monate?|Wochen?)",
+    r"(\d+)\.(\d+)\s*(Monat(?:e|en)?|Woche(?:n)?)",
     re.IGNORECASE
 )
 
@@ -1056,7 +1144,7 @@ class HealingResult:
 # =============================================================================
 
 def heal_report_html(
-    sections: Dict[str, str],
+    sections: Dict[str, Any],
     segment: Literal["solo", "team", "kmu"],
     *,
     canonical_payback_months: Optional[float] = None,
@@ -1075,7 +1163,7 @@ def heal_report_html(
     7. apply_segment_budget (Fix G)
 
     Args:
-        sections: Dict of section_name -> HTML content
+        sections: Dict of section_name -> HTML content (non-strings are coerced)
         segment: Target segment (solo, team, kmu)
         canonical_payback_months: Optional canonical payback value
         skip_fixes: Set of fix letters to skip (e.g., {"A", "C"})
@@ -1084,7 +1172,11 @@ def heal_report_html(
         HealingResult with processed sections and statistics
     """
     skip = skip_fixes or set()
-    result = HealingResult(sections=dict(sections))
+
+    # ROBUSTNESS: Coerce all section values to strings before processing
+    # This prevents crashes from float/int/None/list values in sections
+    coerced_sections = _coerce_sections_to_str(sections)
+    result = HealingResult(sections=coerced_sections)
 
     log.info(
         "[HEALER] Starting heal_report_html: segment=%s, sections=%d, skip=%s",
@@ -1093,49 +1185,70 @@ def heal_report_html(
 
     # Fix A: Template phrases
     if "A" not in skip:
-        for section_name, html in result.sections.items():
-            if html:
-                processed, count = sanitize_template_phrases(html)
-                result.sections[section_name] = processed
-                result.template_phrases_removed += count
+        for section_name, html in list(result.sections.items()):
+            if html and isinstance(html, str):
+                try:
+                    processed, count = sanitize_template_phrases(html)
+                    result.sections[section_name] = processed
+                    result.template_phrases_removed += count
+                except Exception as e:
+                    log.warning("[FIX-A] Error in section '%s': %s - skipping", section_name, e)
 
     # Fix B: Persona language
     if "B" not in skip:
-        for section_name, html in result.sections.items():
-            if html:
-                processed, count = enforce_persona_language(html, segment)
-                result.sections[section_name] = processed
-                result.persona_replacements += count
+        for section_name, html in list(result.sections.items()):
+            if html and isinstance(html, str):
+                try:
+                    processed, count = enforce_persona_language(html, segment)
+                    result.sections[section_name] = processed
+                    result.persona_replacements += count
+                except Exception as e:
+                    log.warning("[FIX-B] Error in section '%s': %s - skipping", section_name, e)
 
     # Fix C: Redundancy reduction
     if "C" not in skip:
-        result.sections, result.redundancy_stats = reduce_redundancy(result.sections)
+        try:
+            result.sections, result.redundancy_stats = reduce_redundancy(result.sections)
+        except Exception as e:
+            log.warning("[FIX-C] Error in redundancy reduction: %s - skipping", e)
 
     # Fix E: Incomplete sentences (before D to clean up content)
     if "E" not in skip:
-        for section_name, html in result.sections.items():
-            if html:
-                processed, count = trim_incomplete_sentences(html)
-                result.sections[section_name] = processed
-                result.fragments_trimmed += count
+        for section_name, html in list(result.sections.items()):
+            if html and isinstance(html, str):
+                try:
+                    processed, count = trim_incomplete_sentences(html)
+                    result.sections[section_name] = processed
+                    result.fragments_trimmed += count
+                except Exception as e:
+                    log.warning("[FIX-E] Error in section '%s': %s - skipping", section_name, e)
 
     # Fix D: ROI rules
     if "D" not in skip:
-        result.sections, result.roi_violations_fixed = enforce_roi_rules(result.sections)
+        try:
+            result.sections, result.roi_violations_fixed = enforce_roi_rules(result.sections)
+        except Exception as e:
+            log.warning("[FIX-D] Error in ROI rules: %s - skipping", e)
 
     # Fix F: Payback consistency
     if "F" not in skip:
-        result.sections, result.payback_fixes = enforce_payback_consistency(
-            result.sections,
-            canonical_payback_months
-        )
+        try:
+            result.sections, result.payback_fixes = enforce_payback_consistency(
+                result.sections,
+                canonical_payback_months
+            )
+        except Exception as e:
+            log.warning("[FIX-F] Error in payback consistency: %s - skipping", e)
 
     # Fix G: Segment budget
     if "G" not in skip:
-        result.sections, result.sections_budget_trimmed = apply_segment_budget(
-            result.sections,
-            segment
-        )
+        try:
+            result.sections, result.sections_budget_trimmed = apply_segment_budget(
+                result.sections,
+                segment
+            )
+        except Exception as e:
+            log.warning("[FIX-G] Error in segment budget: %s - skipping", e)
 
     # Add healing flag to sections meta
     result.sections["_redundancy_healed"] = "true"
