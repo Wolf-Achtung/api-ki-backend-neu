@@ -15848,8 +15848,9 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                     "sections_failed": error_gate.sections_failed,
                 }
 
-            # Get predictive output if available
-            predictive_output = sections.get("_predictive_output")
+            # Get predictive output if available (must be dict or None for type safety)
+            _predictive_raw = sections.get("_predictive_output")
+            predictive_output: Optional[Dict[str, Any]] = _predictive_raw if isinstance(_predictive_raw, dict) else None
 
             # Get segment stats if available
             segment_stats = None
