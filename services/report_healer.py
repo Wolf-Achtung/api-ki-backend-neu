@@ -14,7 +14,7 @@ Fixes implemented:
 - Fix F: Payback consistency & duplicate removal
 - Fix G: Segment budget logic for report shortening
 
-Version: 1.0.0 (FIX-A-G)
+Version: 1.1.0 (FIX-A-G + Type-Safe Recursive Healing)
 """
 from __future__ import annotations
 
@@ -23,12 +23,14 @@ import logging
 import math
 import re
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Literal, Optional, Pattern, Set, Tuple, Union
+from decimal import Decimal, InvalidOperation
+from typing import Any, Callable, Dict, List, Literal, Optional, Set, Tuple, TypeVar, Union
 
 log = logging.getLogger(__name__)
 
 __all__ = [
     "heal_report_html",
+    "heal_final_html",
     "sanitize_template_phrases",
     "enforce_persona_language",
     "reduce_redundancy",
@@ -36,6 +38,8 @@ __all__ = [
     "trim_incomplete_sentences",
     "enforce_payback_consistency",
     "apply_segment_budget",
+    "parse_payback_months",
+    "format_payback_de",
     "HealingResult",
     "BOILERPLATE_PATTERNS",
     "PAYBACK_PATTERNS_DE",
@@ -45,90 +49,192 @@ __all__ = [
 
 
 # =============================================================================
-# HELPER: Safe String Coercion
+# HELPER: Type-Safe Recursive Healing (NO str() conversion for list/dict)
 # =============================================================================
 
-def _to_text(value: Any) -> str:
+T = TypeVar("T")
+
+
+def _walk(obj: Any, fn_string: Callable[[str], str]) -> Any:
     """
-    Safely convert any value to string for regex operations.
+    Recursively traverse data structure and apply fn_string only to string leaves.
+
+    Preserves types: list stays list, dict stays dict, numbers stay numbers.
+    Only string values are transformed via fn_string.
 
     Args:
-        value: Any value (str, int, float, None, list, dict, etc.)
+        obj: Any value (str, list, dict, int, float, None, etc.)
+        fn_string: Function to apply to string values
 
     Returns:
-        String representation, never raises
+        Transformed structure with same types, only strings modified
+    """
+    if isinstance(obj, str):
+        return fn_string(obj)
+    elif isinstance(obj, list):
+        return [_walk(item, fn_string) for item in obj]
+    elif isinstance(obj, tuple):
+        return tuple(_walk(item, fn_string) for item in obj)
+    elif isinstance(obj, dict):
+        return {k: _walk(v, fn_string) for k, v in obj.items()}
+    else:
+        # int, float, bool, None, etc. - return unchanged
+        return obj
+
+
+def _is_html_section_key(key: str) -> bool:
+    """
+    Check if a key represents an HTML section (vs metadata/numeric field).
+
+    HTML sections are healed; metadata/numbers are preserved as-is.
+    """
+    # Internal metadata keys start with _
+    if key.startswith("_"):
+        return False
+    # Known HTML section patterns
+    html_patterns = ("_HTML", "_html", "HTML_")
+    if any(p in key for p in html_patterns):
+        return True
+    # Known non-HTML keys (numbers, metadata)
+    non_html_keys = {
+        "PAYBACK_MONTHS", "ROI_12M", "CAPEX_REALISTISCH_EUR", "OPEX_REALISTISCH_EUR",
+        "EINSPARUNG_MONAT_EUR", "score_governance", "score_sicherheit", "score_nutzen",
+        "score_wertschoepfung", "score_befaehigung", "score_gesamt", "LANG",
+        "report_date", "report_year", "BUILD_ID", "COMPACT_REPORT_MODE", "COMPANY_SIZE",
+    }
+    if key in non_html_keys:
+        return False
+    # Default: treat as potentially containing text that needs healing
+    return True
+
+
+def _extract_string_sections(sections: Dict[str, Any]) -> Dict[str, str]:
+    """
+    Extract only the top-level string sections for redundancy/budget processing.
+
+    Used by Fix C and Fix G which operate on flat Dict[str, str].
+    Preserves structure but only returns actual string values.
+    """
+    result: Dict[str, str] = {}
+    for key, value in sections.items():
+        if isinstance(value, str) and _is_html_section_key(key):
+            result[key] = value
+    return result
+
+
+def _merge_healed_sections(
+    original: Dict[str, Any],
+    healed_strings: Dict[str, str]
+) -> Dict[str, Any]:
+    """
+    Merge healed string sections back into original structure.
+    """
+    result = dict(original)
+    for key, value in healed_strings.items():
+        result[key] = value
+    return result
+
+
+# =============================================================================
+# PAYBACK: Parsing and German Formatting
+# =============================================================================
+
+# Regex to extract payback number from various formats
+_PAYBACK_EXTRACT_RE = re.compile(
+    r"(\d+)[.,](\d+)|\b(\d+)\b",
+    re.IGNORECASE
+)
+
+
+def parse_payback_months(value: Any) -> Optional[Decimal]:
+    """
+    Parse payback months from various formats to Decimal.
+
+    Accepts:
+    - float/int: 3.5, 4
+    - strings: "3.5", "3,5", "3,5 Monate", "innerhalb von 3.5 Monaten"
+
+    Returns:
+        Decimal value or None if parsing fails
+    """
+    if value is None:
+        return None
+
+    # Handle numeric types directly
+    if isinstance(value, (int, float)):
+        if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+            return None
+        try:
+            return Decimal(str(value))
+        except InvalidOperation:
+            return None
+
+    if isinstance(value, Decimal):
+        return value
+
+    if not isinstance(value, str):
+        return None
+
+    # Clean string: replace comma with dot for parsing
+    cleaned = value.strip().replace(",", ".")
+
+    # Try direct conversion first
+    try:
+        return Decimal(cleaned)
+    except InvalidOperation:
+        pass
+
+    # Extract number from text like "3.5 Monaten" or "innerhalb von 3,5 Monaten"
+    match = _PAYBACK_EXTRACT_RE.search(cleaned)
+    if match:
+        if match.group(1) and match.group(2):
+            # Decimal number: "3.5" or "3,5" (already converted to "3.5")
+            try:
+                return Decimal(f"{match.group(1)}.{match.group(2)}")
+            except InvalidOperation:
+                pass
+        elif match.group(3):
+            # Integer: "3"
+            try:
+                return Decimal(match.group(3))
+            except InvalidOperation:
+                pass
+
+    return None
+
+
+def format_payback_de(value: Union[Decimal, float, int, None], decimals: int = 1) -> str:
+    """
+    Format payback value to German format (comma as decimal separator).
+
+    Args:
+        value: Numeric value to format
+        decimals: Number of decimal places (default 1)
+
+    Returns:
+        German formatted string like "3,5" or empty string if value is None
     """
     if value is None:
         return ""
-    if isinstance(value, str):
-        return value
-    if isinstance(value, bool):
-        return str(value).lower()
-    if isinstance(value, float):
-        # Handle NaN and Inf safely
-        if math.isnan(value) or math.isinf(value):
-            return ""
-        return str(value)
-    if isinstance(value, (int,)):
-        return str(value)
-    if isinstance(value, (list, tuple)):
-        # Join list items, recursively converting each
-        return " ".join(_to_text(item) for item in value if item is not None)
-    if isinstance(value, dict):
-        # For dicts, return empty - they shouldn't be in HTML content
-        return ""
-    # Fallback: try str(), but catch any errors
+
     try:
-        return str(value)
-    except Exception:
-        return ""
-
-
-def _coerce_sections_to_str(sections: Dict[str, Any]) -> Dict[str, str]:
-    """
-    Coerce all section values to strings for safe regex processing.
-
-    Skips internal metadata keys (starting with _) that aren't HTML content.
-    Logs warnings for non-string values.
-
-    Args:
-        sections: Dict with potentially mixed value types
-
-    Returns:
-        Dict with all values as strings
-    """
-    result: Dict[str, str] = {}
-
-    for key, value in sections.items():
-        # Skip internal metadata keys - preserve as-is converted to string
-        if key.startswith("_"):
-            if isinstance(value, str):
-                result[key] = value
-            elif isinstance(value, dict):
-                # Metadata dicts - convert to JSON-like string for preservation
-                import json
-                try:
-                    result[key] = json.dumps(value, ensure_ascii=False)
-                except Exception:
-                    result[key] = str(value)
-            else:
-                result[key] = _to_text(value)
-            continue
-
-        # For HTML content keys, coerce to string
-        if isinstance(value, str):
-            result[key] = value
-        elif value is None:
-            result[key] = ""
+        # Convert to Decimal for precise formatting
+        if isinstance(value, float):
+            if math.isnan(value) or math.isinf(value):
+                return ""
+            dec_value = Decimal(str(value))
+        elif isinstance(value, int):
+            dec_value = Decimal(value)
+        elif isinstance(value, Decimal):
+            dec_value = value
         else:
-            # Log warning for unexpected types in HTML sections
-            log.warning(
-                "[HEALER] Non-string value in section '%s': type=%s, converting to str",
-                key, type(value).__name__
-            )
-            result[key] = _to_text(value)
+            return ""
 
-    return result
+        # Format with specified decimals and replace dot with comma
+        formatted = f"{float(dec_value):.{decimals}f}"
+        return formatted.replace(".", ",")
+    except (InvalidOperation, ValueError):
+        return ""
 
 # =============================================================================
 # FIX A: TEMPLATE_PHRASE PATTERNS (Boilerplate Registry)
@@ -1116,7 +1222,7 @@ def apply_segment_budget(
 @dataclass
 class HealingResult:
     """Result of the healing pipeline."""
-    sections: Dict[str, str]
+    sections: Dict[str, Any]  # Preserves original types (list, dict, etc.)
     template_phrases_removed: int = 0
     persona_replacements: int = 0
     redundancy_stats: Optional[RedundancyStats] = None
@@ -1138,122 +1244,247 @@ class HealingResult:
             self.sections_budget_trimmed
         )
 
+    @property
+    def stats(self) -> Dict[str, int]:
+        """Return stats as dict for logging/metadata."""
+        return {
+            "total_fixes": self.total_fixes,
+            "template_phrases_removed": self.template_phrases_removed,
+            "persona_replacements": self.persona_replacements,
+            "redundancy_blocks_removed": self.redundancy_stats.blocks_removed if self.redundancy_stats else 0,
+            "roi_violations_fixed": self.roi_violations_fixed,
+            "fragments_trimmed": self.fragments_trimmed,
+            "payback_fixes": self.payback_fixes,
+            "sections_budget_trimmed": self.sections_budget_trimmed,
+        }
+
 
 # =============================================================================
-# MAIN HEALING PIPELINE
+# MAIN HEALING PIPELINE (PRE-RENDER)
 # =============================================================================
+
+def _apply_fix_a_recursive(value: Any) -> Tuple[Any, int]:
+    """Apply Fix A (template phrases) recursively to string leaves."""
+    count = 0
+
+    def heal_string(s: str) -> str:
+        nonlocal count
+        if not s or not s.strip():
+            return s
+        try:
+            result, c = sanitize_template_phrases(s)
+            count += c
+            return result
+        except Exception as e:
+            log.warning("[FIX-A] Error healing string: %s", e)
+            return s
+
+    healed = _walk(value, heal_string)
+    return healed, count
+
+
+def _apply_fix_b_recursive(value: Any, segment: Literal["solo", "team", "kmu"]) -> Tuple[Any, int]:
+    """Apply Fix B (persona language) recursively to string leaves."""
+    count = 0
+
+    def heal_string(s: str) -> str:
+        nonlocal count
+        if not s or not s.strip():
+            return s
+        try:
+            result, c = enforce_persona_language(s, segment)
+            count += c
+            return result
+        except Exception as e:
+            log.warning("[FIX-B] Error healing string: %s", e)
+            return s
+
+    healed = _walk(value, heal_string)
+    return healed, count
+
+
+def _apply_fix_e_recursive(value: Any) -> Tuple[Any, int]:
+    """Apply Fix E (incomplete sentences) recursively to string leaves."""
+    count = 0
+
+    def heal_string(s: str) -> str:
+        nonlocal count
+        if not s or not s.strip():
+            return s
+        try:
+            result, c = trim_incomplete_sentences(s)
+            count += c
+            return result
+        except Exception as e:
+            log.warning("[FIX-E] Error healing string: %s", e)
+            return s
+
+    healed = _walk(value, heal_string)
+    return healed, count
+
+
+def _apply_fix_f_recursive(value: Any, canonical_payback: Optional[Decimal]) -> Tuple[Any, int]:
+    """Apply Fix F (payback consistency) recursively to string leaves."""
+    count = 0
+    canonical_float = float(canonical_payback) if canonical_payback else None
+
+    def heal_string(s: str) -> str:
+        nonlocal count
+        if not s or not s.strip():
+            return s
+        try:
+            # Apply decimal normalization
+            processed = s
+            decimal_matches = list(PAYBACK_DECIMAL_PATTERN.finditer(processed))
+            if decimal_matches:
+                for m in reversed(decimal_matches):
+                    old_val = m.group(0)
+                    new_val = PAYBACK_DECIMAL_PATTERN.sub(r'\1,\2 \3', old_val)
+                    if old_val != new_val:
+                        processed = processed[:m.start()] + new_val + processed[m.end():]
+                        count += 1
+            return processed
+        except Exception as e:
+            log.warning("[FIX-F] Error healing string: %s", e)
+            return s
+
+    healed = _walk(value, heal_string)
+    return healed, count
+
 
 def heal_report_html(
     sections: Dict[str, Any],
     segment: Literal["solo", "team", "kmu"],
     *,
-    canonical_payback_months: Optional[float] = None,
+    canonical_payback_months: Optional[Union[float, Decimal, str]] = None,
     skip_fixes: Optional[Set[str]] = None
 ) -> HealingResult:
     """
-    Main healing pipeline for report HTML.
+    Main healing pipeline for report HTML (PRE-RENDER).
+
+    TYPE-SAFE: Recursively heals string leaves while preserving list/dict structures.
+    Does NOT convert list/dict to strings.
 
     Runs all fixes A-G in sequence:
-    1. sanitize_template_phrases (Fix A)
-    2. enforce_persona_language (Fix B)
-    3. reduce_redundancy (Fix C)
-    4. trim_incomplete_sentences (Fix E)
-    5. enforce_roi_rules (Fix D)
-    6. enforce_payback_consistency (Fix F)
-    7. apply_segment_budget (Fix G)
+    1. sanitize_template_phrases (Fix A) - recursive on all string leaves
+    2. enforce_persona_language (Fix B) - recursive on all string leaves
+    3. reduce_redundancy (Fix C) - on top-level HTML string sections only
+    4. trim_incomplete_sentences (Fix E) - recursive on all string leaves
+    5. enforce_roi_rules (Fix D) - on top-level HTML string sections only
+    6. enforce_payback_consistency (Fix F) - recursive on all string leaves
+    7. apply_segment_budget (Fix G) - on top-level HTML string sections only
 
     Args:
-        sections: Dict of section_name -> HTML content (non-strings are coerced)
+        sections: Dict of section_name -> content (preserves types: list, dict, etc.)
         segment: Target segment (solo, team, kmu)
-        canonical_payback_months: Optional canonical payback value
+        canonical_payback_months: Optional canonical payback value (float, Decimal, or str)
         skip_fixes: Set of fix letters to skip (e.g., {"A", "C"})
 
     Returns:
-        HealingResult with processed sections and statistics
+        HealingResult with processed sections (same structure, types preserved)
     """
     skip = skip_fixes or set()
 
-    # ROBUSTNESS: Coerce all section values to strings before processing
-    # This prevents crashes from float/int/None/list values in sections
-    coerced_sections = _coerce_sections_to_str(sections)
-    result = HealingResult(sections=coerced_sections)
+    # Parse canonical payback to Decimal for consistent handling
+    canonical_payback = parse_payback_months(canonical_payback_months)
+
+    # Start with a copy of the original sections (preserves types!)
+    healed_sections: Dict[str, Any] = dict(sections)
+    result = HealingResult(sections=healed_sections)
 
     log.info(
-        "[HEALER] Starting heal_report_html: segment=%s, sections=%d, skip=%s",
+        "[HEALER] Starting heal_report_html (type-safe): segment=%s, sections=%d, skip=%s",
         segment, len(sections), skip
     )
 
-    # Fix A: Template phrases
+    # Fix A: Template phrases - RECURSIVE on all string leaves
     if "A" not in skip:
-        for section_name, html in list(result.sections.items()):
-            if html and isinstance(html, str):
+        for key in list(healed_sections.keys()):
+            if _is_html_section_key(key):
                 try:
-                    processed, count = sanitize_template_phrases(html)
-                    result.sections[section_name] = processed
+                    healed_sections[key], count = _apply_fix_a_recursive(healed_sections[key])
                     result.template_phrases_removed += count
                 except Exception as e:
-                    log.warning("[FIX-A] Error in section '%s': %s - skipping", section_name, e)
+                    log.warning("[FIX-A] Error in section '%s': %s - skipping", key, e)
 
-    # Fix B: Persona language
+    # Fix B: Persona language - RECURSIVE on all string leaves
     if "B" not in skip:
-        for section_name, html in list(result.sections.items()):
-            if html and isinstance(html, str):
+        for key in list(healed_sections.keys()):
+            if _is_html_section_key(key):
                 try:
-                    processed, count = enforce_persona_language(html, segment)
-                    result.sections[section_name] = processed
+                    healed_sections[key], count = _apply_fix_b_recursive(healed_sections[key], segment)
                     result.persona_replacements += count
                 except Exception as e:
-                    log.warning("[FIX-B] Error in section '%s': %s - skipping", section_name, e)
+                    log.warning("[FIX-B] Error in section '%s': %s - skipping", key, e)
 
-    # Fix C: Redundancy reduction
+    # Fix C: Redundancy reduction - on FLAT string sections only
     if "C" not in skip:
         try:
-            result.sections, result.redundancy_stats = reduce_redundancy(result.sections)
+            string_sections = _extract_string_sections(healed_sections)
+            if string_sections:
+                healed_strings, result.redundancy_stats = reduce_redundancy(string_sections)
+                healed_sections = _merge_healed_sections(healed_sections, healed_strings)
         except Exception as e:
             log.warning("[FIX-C] Error in redundancy reduction: %s - skipping", e)
 
-    # Fix E: Incomplete sentences (before D to clean up content)
+    # Fix E: Incomplete sentences - RECURSIVE on all string leaves
     if "E" not in skip:
-        for section_name, html in list(result.sections.items()):
-            if html and isinstance(html, str):
+        for key in list(healed_sections.keys()):
+            if _is_html_section_key(key):
                 try:
-                    processed, count = trim_incomplete_sentences(html)
-                    result.sections[section_name] = processed
+                    healed_sections[key], count = _apply_fix_e_recursive(healed_sections[key])
                     result.fragments_trimmed += count
                 except Exception as e:
-                    log.warning("[FIX-E] Error in section '%s': %s - skipping", section_name, e)
+                    log.warning("[FIX-E] Error in section '%s': %s - skipping", key, e)
 
-    # Fix D: ROI rules
+    # Fix D: ROI rules - on FLAT string sections only
     if "D" not in skip:
         try:
-            result.sections, result.roi_violations_fixed = enforce_roi_rules(result.sections)
+            string_sections = _extract_string_sections(healed_sections)
+            if string_sections:
+                healed_strings, result.roi_violations_fixed = enforce_roi_rules(string_sections)
+                healed_sections = _merge_healed_sections(healed_sections, healed_strings)
         except Exception as e:
             log.warning("[FIX-D] Error in ROI rules: %s - skipping", e)
 
-    # Fix F: Payback consistency
+    # Fix F: Payback consistency - RECURSIVE decimal normalization + FLAT for dedup/canonical
     if "F" not in skip:
-        try:
-            result.sections, result.payback_fixes = enforce_payback_consistency(
-                result.sections,
-                canonical_payback_months
-            )
-        except Exception as e:
-            log.warning("[FIX-F] Error in payback consistency: %s - skipping", e)
+        # Step 1: Recursive decimal normalization on all string leaves (handles nested lists/dicts)
+        for key in list(healed_sections.keys()):
+            if _is_html_section_key(key):
+                try:
+                    healed_sections[key], count = _apply_fix_f_recursive(healed_sections[key], canonical_payback)
+                    result.payback_fixes += count
+                except Exception as e:
+                    log.warning("[FIX-F] Error in section '%s': %s - skipping", key, e)
 
-    # Fix G: Segment budget
+        # Step 2: Flat section processing for duplicate progress removal and canonical replacement
+        try:
+            string_sections = _extract_string_sections(healed_sections)
+            if string_sections:
+                canonical_float = float(canonical_payback) if canonical_payback else None
+                healed_strings, flat_fixes = enforce_payback_consistency(string_sections, canonical_float)
+                healed_sections = _merge_healed_sections(healed_sections, healed_strings)
+                result.payback_fixes += flat_fixes
+        except Exception as e:
+            log.warning("[FIX-F] Error in payback consistency (flat): %s - skipping", e)
+
+    # Fix G: Segment budget - on FLAT string sections only
     if "G" not in skip:
         try:
-            result.sections, result.sections_budget_trimmed = apply_segment_budget(
-                result.sections,
-                segment
-            )
+            string_sections = _extract_string_sections(healed_sections)
+            if string_sections:
+                healed_strings, result.sections_budget_trimmed = apply_segment_budget(string_sections, segment)
+                healed_sections = _merge_healed_sections(healed_sections, healed_strings)
         except Exception as e:
             log.warning("[FIX-G] Error in segment budget: %s - skipping", e)
 
     # Add healing flag to sections meta
-    result.sections["_redundancy_healed"] = "true"
-    result.sections["_healer_version"] = "1.0.0"
-    result.sections["_healer_segment"] = segment
+    healed_sections["_redundancy_healed"] = "true"
+    healed_sections["_healer_version"] = "1.1.0"
+    healed_sections["_healer_segment"] = segment
+
+    result.sections = healed_sections
 
     log.info(
         "[HEALER] Completed: total_fixes=%d (A=%d, B=%d, C=%d, D=%d, E=%d, F=%d, G=%d)",
@@ -1266,6 +1497,93 @@ def heal_report_html(
         result.payback_fixes,
         result.sections_budget_trimmed
     )
+
+    return result
+
+
+# =============================================================================
+# POST-RENDER HEALING (Safety Net for Final HTML)
+# =============================================================================
+
+def heal_final_html(
+    html: str,
+    segment: Literal["solo", "team", "kmu"] = "team",
+    *,
+    canonical_payback_months: Optional[Union[float, Decimal, str]] = None,
+) -> str:
+    """
+    POST-RENDER safety net: Heal the final rendered HTML string.
+
+    This is a CONSERVATIVE healing pass that runs AFTER template rendering.
+    It catches artifacts that were generated during rendering (e.g., from lists).
+
+    Only applies safe fixes that won't break HTML structure:
+    - Fix A: Template/prompt artifacts removal
+    - Fix F: Payback decimal normalization (3.5 → 3,5)
+    - Consecutive duplicate removal (conservative)
+
+    Args:
+        html: Final rendered HTML string
+        segment: Target segment (for logging)
+        canonical_payback_months: Optional canonical payback value
+
+    Returns:
+        Healed HTML string
+    """
+    if not html or not isinstance(html, str):
+        return html or ""
+
+    canonical_payback = parse_payback_months(canonical_payback_months)
+    result = html
+    fixes_applied = 0
+
+    log.info("[HEALER-POST] Starting heal_final_html: len=%d, segment=%s", len(html), segment)
+
+    # Fix A: Remove prompt/template artifacts
+    try:
+        for bp in BOILERPLATE_PATTERNS:
+            try:
+                pattern = re.compile(bp.pattern, re.IGNORECASE | re.DOTALL)
+                matches = pattern.findall(result)
+                if matches:
+                    fixes_applied += len(matches)
+                    if bp.action == "drop":
+                        result = pattern.sub("", result)
+                    else:  # replace
+                        result = pattern.sub(bp.replacement, result)
+            except re.error:
+                pass
+    except Exception as e:
+        log.warning("[HEALER-POST] Fix A error: %s", e)
+
+    # Fix F: Payback decimal normalization (3.5 Monat* → 3,5 Monat*)
+    try:
+        decimal_matches = list(PAYBACK_DECIMAL_PATTERN.finditer(result))
+        if decimal_matches:
+            for m in reversed(decimal_matches):
+                old_val = m.group(0)
+                new_val = PAYBACK_DECIMAL_PATTERN.sub(r'\1,\2 \3', old_val)
+                if old_val != new_val:
+                    result = result[:m.start()] + new_val + result[m.end():]
+                    fixes_applied += 1
+    except Exception as e:
+        log.warning("[HEALER-POST] Fix F error: %s", e)
+
+    # Remove duplicate "Progress 100%" (keep first)
+    try:
+        matches = list(PAYBACK_PROGRESS_PATTERN.finditer(result))
+        if len(matches) > 1:
+            for m in reversed(matches[1:]):
+                result = result[:m.start()] + result[m.end():]
+                fixes_applied += 1
+    except Exception as e:
+        log.warning("[HEALER-POST] Progress dedup error: %s", e)
+
+    # Clean up empty paragraphs left behind
+    result = re.sub(r"<p>\s*</p>", "", result)
+    result = re.sub(r"\n{3,}", "\n\n", result)
+
+    log.info("[HEALER-POST] Completed: fixes_applied=%d, len=%d→%d", fixes_applied, len(html), len(result))
 
     return result
 
