@@ -8,8 +8,10 @@ Provides:
 - Cached loading of i18n/ui_labels.json
 - get_label(key, lang) for retrieving translated labels
 - ui(lang) Jinja2-compatible wrapper for templates
+- get_label_for_segment(key, lang, segment) for segment-aware labels (SOLO Final Polish)
+- ui_for_segment(lang, segment) for segment-aware Jinja2 wrapper
 
-Version: 1.0.0 (Multilingual v1)
+Version: 1.1.0 (Multilingual v1 + SOLO Final Polish)
 """
 from __future__ import annotations
 
@@ -266,6 +268,117 @@ def ui_label(key: str, lang: str, default: str = "") -> str:
         Translated label string
     """
     return get_label(key, lang=lang, default=default if default else None)
+
+
+# =============================================================================
+# SEGMENT-AWARE LABEL GETTER (SOLO Final Polish Briefing)
+# =============================================================================
+
+# Canonical segment values
+_VALID_SEGMENTS = {"SOLO", "TEAM", "KMU"}
+
+
+def get_label_for_segment(
+    key: str,
+    lang: str,
+    segment: Optional[str] = None,
+    fallback: str = "de",
+    default: Optional[str] = None
+) -> str:
+    """
+    Get a translated UI label with segment-aware fallback.
+
+    For SOLO segment, tries segment-specific key first (e.g., key_solo),
+    then falls back to the standard key.
+
+    This allows templates to use simplified SOLO terminology:
+    - toc_item_summary_solo → "Kurzfassung & Bewertung" (instead of "Executive Summary & Kurzurteil")
+    - governance_label_solo → "Spielregeln" (instead of "Governance")
+
+    Lookup cascade:
+    1. key + "_" + segment.lower() (e.g., "toc_item_summary_solo")
+    2. key (standard fallback)
+    3. fallback language
+    4. default or key
+
+    Args:
+        key: Base label key (e.g., "toc_item_summary", "governance_label")
+        lang: Language code (will be normalized)
+        segment: Segment identifier (SOLO, TEAM, KMU). None = no segment override.
+        fallback: Fallback language if requested lang not available (default: "de")
+        default: Optional default value if key not found
+
+    Returns:
+        Translated label string, potentially segment-specific
+
+    Examples:
+        >>> get_label_for_segment("toc_item_summary", "de", segment="SOLO")
+        'Kurzfassung & Bewertung'
+        >>> get_label_for_segment("toc_item_summary", "de", segment="TEAM")
+        'Executive Summary & Kurzurteil'
+        >>> get_label_for_segment("governance_label", "de", segment="SOLO")
+        'Spielregeln'
+    """
+    # Normalize segment
+    segment_norm = None
+    if segment:
+        segment_upper = segment.strip().upper()
+        if segment_upper in _VALID_SEGMENTS:
+            segment_norm = segment_upper
+        else:
+            log.debug("[i18n] Unknown segment '%s', using standard label", segment)
+
+    # For SOLO segment, try segment-specific key first
+    if segment_norm == "SOLO":
+        solo_key = f"{key}_solo"
+        labels = load_labels()
+
+        if solo_key in labels:
+            result = get_label(solo_key, lang=lang, fallback=fallback, default=None)
+            if result and result != solo_key:
+                log.debug("[i18n] Using SOLO-specific label: %s → %s", key, result)
+                return result
+
+    # Fall back to standard key
+    return get_label(key, lang=lang, fallback=fallback, default=default)
+
+
+def ui_for_segment(lang: str, segment: Optional[str] = None) -> Callable[..., str]:
+    """
+    Create a Jinja2-compatible segment-aware label getter.
+
+    Usage in report_renderer.py:
+        ctx["ui"] = ui_for_segment(lang, segment)
+
+    Usage in templates:
+        {{ ui("toc_item_summary") }}  # Returns SOLO-specific if segment is SOLO
+        {{ ui("governance_label") }}   # Returns "Spielregeln" for SOLO
+
+    Args:
+        lang: Language code for this template context
+        segment: Optional segment identifier (SOLO, TEAM, KMU)
+
+    Returns:
+        Callable that takes (key, default=None) and returns segment-appropriate label
+    """
+    lang_norm = normalize_lang(lang, default="de")
+
+    # Normalize segment once
+    segment_norm = None
+    if segment:
+        segment_upper = segment.strip().upper()
+        if segment_upper in _VALID_SEGMENTS:
+            segment_norm = segment_upper
+
+    def _get(key: str, default: Optional[str] = None) -> str:
+        return get_label_for_segment(
+            key,
+            lang=lang_norm,
+            segment=segment_norm,
+            default=default
+        )
+
+    return _get
 
 
 # =============================================================================
