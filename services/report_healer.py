@@ -540,6 +540,46 @@ BOILERPLATE_PATTERNS: List[BoilerplatePattern] = [
         description="PROMPT_QUESTION_BITTE_BESCHREIBE: '? Bitte beschreibe kurz' paragraph"
     ),
 
+    # -----------------------------------------------------------------
+    # TASK 3 (SOLO Final Polish): "Bitte nenne kurz" Leak Patterns
+    # -----------------------------------------------------------------
+    # A14) "Bitte nenne kurz" + list block
+    BoilerplatePattern(
+        pattern=r'(?is)<p[^>]*>\s*Bitte\s+nenne?\s+kurz[:\s]*[^<]*</p>(?:\s*<(?:ul|ol)[^>]*>.*?</(?:ul|ol)>)?',
+        action="drop",
+        description="PROMPT_BITTE_NENNE_BLOCK: 'Bitte nenne kurz' with list"
+    ),
+    # A14b) Standalone "Bitte nenne kurz:" without HTML
+    BoilerplatePattern(
+        pattern=r'(?im)^\s*Bitte\s+nenne?\s+kurz\s*:?\s*$',
+        action="drop",
+        description="PROMPT_BITTE_NENNE_STANDALONE: Standalone 'Bitte nenne kurz:'"
+    ),
+    # A14c) "Bitte nennen Sie kurz" (formal variant)
+    BoilerplatePattern(
+        pattern=r'(?is)<p[^>]*>\s*Bitte\s+nennen\s+Sie\s+kurz[:\s]*[^<]*</p>(?:\s*<(?:ul|ol)[^>]*>.*?</(?:ul|ol)>)?',
+        action="drop",
+        description="PROMPT_BITTE_NENNEN_SIE_BLOCK: 'Bitte nennen Sie kurz' with list"
+    ),
+    # A15) Combined "Wobei kann ich helfen? Bitte nenne kurz:" pattern
+    BoilerplatePattern(
+        pattern=r'(?is)<p[^>]*>\s*(?:Wobei|Wie)\s+kann\s+ich\s+(?:dir\s+)?helfen\?\s*Bitte\s+nenne?\s+kurz\s*:?\s*</p>\s*(?:<(?:ul|ol)[^>]*>.*?</(?:ul|ol)>)?',
+        action="drop",
+        description="PROMPT_WOBEI_BITTE_NENNE_BLOCK: 'Wobei kann ich helfen? Bitte nenne kurz:' + list"
+    ),
+    # A15b) Text-only fallback for "Bitte nenne kurz"
+    BoilerplatePattern(
+        pattern=r'(?i)\bBitte\s+nenne?\s+kurz\s*:?\s*(?:\n|$)',
+        action="drop",
+        description="PROMPT_BITTE_NENNE_TEXT: 'Bitte nenne kurz:' text-only"
+    ),
+    # A15c) "? Bitte nenne kurz" with leading question mark
+    BoilerplatePattern(
+        pattern=r'(?is)<p[^>]*>\s*\?\s*Bitte\s+nenne?\s+kurz[^<]*</p>',
+        action="drop",
+        description="PROMPT_QUESTION_BITTE_NENNE: '? Bitte nenne kurz' paragraph"
+    ),
+
     # -------------------------------------------------------------------------
     # B) Platzhalter in eckigen Klammern
     # -------------------------------------------------------------------------
@@ -1035,6 +1075,7 @@ def _enforce_solo_blacklist(html: str) -> Tuple[str, int]:
 
     result = html
     fixes_applied = 0
+    replacement_log: list[str] = []  # TASK 5: Track replacements for detailed logging
 
     for term in SOLO_BLACKLIST_TERMS:
         # Case-insensitive search for the term
@@ -1048,6 +1089,7 @@ def _enforce_solo_blacklist(html: str) -> Tuple[str, int]:
 
             if not fallback:
                 fixes_applied += 1
+                replacement_log.append(f"REMOVED: '{matched}'")
                 return ""
 
             # Determine case pattern of the matched term
@@ -1064,6 +1106,7 @@ def _enforce_solo_blacklist(html: str) -> Tuple[str, int]:
                 replacement = fallback
 
             fixes_applied += 1
+            replacement_log.append(f"'{matched}' → '{replacement}'")
             log.debug(
                 "[FIX-B-BLACKLIST] Replaced SOLO blacklist term '%s' with '%s'",
                 matched, replacement
@@ -1077,7 +1120,12 @@ def _enforce_solo_blacklist(html: str) -> Tuple[str, int]:
     result = re.sub(r'<p>\s*</p>', '', result)
 
     if fixes_applied > 0:
-        log.info("[FIX-B-BLACKLIST] Applied %d SOLO blacklist fixes", fixes_applied)
+        # TASK 5: Enhanced logging with detailed replacement summary
+        log.info(
+            "[FIX-B-BLACKLIST] Applied %d SOLO blacklist fixes: %s",
+            fixes_applied,
+            "; ".join(replacement_log[:5]) + ("..." if len(replacement_log) > 5 else "")
+        )
 
     return result, fixes_applied
 
