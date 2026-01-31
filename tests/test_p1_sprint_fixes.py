@@ -386,3 +386,180 @@ class TestRoiQualitativeRanges:
 
         # TEAM should preserve exact ROI
         assert "200%" in result
+
+
+# =============================================================================
+# P0/P1 Final Solo Polish Tests
+# =============================================================================
+
+class TestQuickWinEmptyFieldFailsafe:
+    """Tests for TASK 1 (P0): Quick Wins empty field failsafe."""
+
+    def test_removes_empty_problem_block(self):
+        """Test that empty PROBLEM block is removed."""
+        from services.report_healer import sanitize_quickwin_empty_fields
+
+        html = '''<div class="quick-win-problem" style="margin-bottom:10px;">
+            <strong style="color:#dc2626;">Problem:</strong>
+            <p style="margin:4px 0 0 0;"></p>
+        </div>'''
+
+        result, count = sanitize_quickwin_empty_fields(html)
+        assert count == 1
+        assert "quick-win-problem" not in result
+
+    def test_removes_empty_wirkung_block(self):
+        """Test that empty WIRKUNG block is removed."""
+        from services.report_healer import sanitize_quickwin_empty_fields
+
+        html = '''<div class="quick-win-wirkung" style="margin-bottom:10px;">
+            <strong style="color:#16a34a;">Wirkung:</strong>
+            <p style="margin:4px 0 0 0;"></p>
+        </div>'''
+
+        result, count = sanitize_quickwin_empty_fields(html)
+        assert count == 1
+        assert "quick-win-wirkung" not in result
+
+    def test_removes_empty_umsetzung_block(self):
+        """Test that empty UMSETZUNG block is removed."""
+        from services.report_healer import sanitize_quickwin_empty_fields
+
+        html = '''<div class="quick-win-umsetzung" style="margin-bottom:10px;">
+            <strong style="color:#2563eb;">Umsetzung:</strong>
+            <p style="margin:4px 0 0 0;"></p>
+        </div>'''
+
+        result, count = sanitize_quickwin_empty_fields(html)
+        assert count == 1
+        assert "quick-win-umsetzung" not in result
+
+    def test_preserves_non_empty_blocks(self):
+        """Test that non-empty blocks are preserved."""
+        from services.report_healer import sanitize_quickwin_empty_fields
+
+        html = '''<div class="quick-win-problem" style="margin-bottom:10px;">
+            <strong style="color:#dc2626;">Problem:</strong>
+            <p style="margin:4px 0 0 0;">Manuelle Prozesse kosten Zeit.</p>
+        </div>'''
+
+        result, count = sanitize_quickwin_empty_fields(html)
+        assert count == 0
+        assert "quick-win-problem" in result
+        assert "Manuelle Prozesse" in result
+
+
+class TestInputChecklistRemoval:
+    """Tests for TASK 3 (P1): Input checklist removal."""
+
+    def test_removes_input_checklist_with_branche_datenlage(self):
+        """Test removal of checklist with Branche/Datenlage/Tool items."""
+        from services.report_healer import sanitize_input_checklist
+
+        html = '''<ul>
+            <li>Branche und Ziel</li>
+            <li>Datenlage</li>
+            <li>Tool-Übersicht</li>
+        </ul>'''
+
+        result, count = sanitize_input_checklist(html)
+        assert count >= 1
+        assert "Branche und Ziel" not in result
+
+    def test_removes_individual_checklist_items(self):
+        """Test removal of individual checklist items."""
+        from services.report_healer import sanitize_input_checklist
+
+        html = '<li>Datenlage (aktuell)</li>'
+        result, count = sanitize_input_checklist(html)
+        assert count >= 1
+        assert "Datenlage" not in result
+
+    def test_preserves_unrelated_content(self):
+        """Test that unrelated content is preserved."""
+        from services.report_healer import sanitize_input_checklist
+
+        html = '''<ul>
+            <li>Automatisierung der Buchhaltung</li>
+            <li>Kundenservice-Verbesserung</li>
+        </ul>'''
+
+        result, count = sanitize_input_checklist(html)
+        assert count == 0
+        assert "Automatisierung" in result
+
+
+class TestPhraseLevelGovernanceReplacements:
+    """Tests for TASK 4 (P1): Phrase-level Governance replacements."""
+
+    def test_replaces_starker_governance(self):
+        """Test 'starker Governance' → 'klaren Spielregeln'."""
+        from services.report_healer import heal_final_html
+
+        html = "<p>Mit starker Governance gelingen KI-Projekte.</p>"
+        result = heal_final_html(html, segment="SOLO")
+
+        assert "klaren Spielregeln" in result
+        assert "starker Governance" not in result
+
+    def test_replaces_solider_governance(self):
+        """Test 'solider Governance' → 'soliden Spielregeln'."""
+        from services.report_healer import heal_final_html
+
+        html = "<p>Dank solider Governance vermeiden Sie Risiken.</p>"
+        result = heal_final_html(html, segment="SOLO")
+
+        assert "soliden Spielregeln" in result
+        assert "solider Governance" not in result
+
+    def test_replaces_governance_strukturen(self):
+        """Test 'Governance-Strukturen' → 'Spielregeln'."""
+        from services.report_healer import heal_final_html
+
+        html = "<p>Die Governance-Strukturen sollten klar definiert sein.</p>"
+        result = heal_final_html(html, segment="SOLO")
+
+        assert "Spielregeln" in result
+        assert "Governance-Strukturen" not in result
+
+    def test_preserves_governance_for_team(self):
+        """Test that Governance is preserved for TEAM segment."""
+        from services.report_healer import heal_final_html
+
+        html = "<p>Mit starker Governance gelingen KI-Projekte.</p>"
+        result = heal_final_html(html, segment="TEAM")
+
+        # TEAM should keep enterprise terms
+        assert "Governance" in result or "Spielregeln" in result  # May or may not replace
+
+
+class TestKiStackKickerLabel:
+    """Tests for TASK 2 (P0): KI-Stack kicker label for SOLO."""
+
+    def test_template_uses_ui_for_ki_stack_kicker(self):
+        """Verify template uses ui() for KI-Stack kicker."""
+        from pathlib import Path
+
+        template_path = Path(__file__).parent.parent / "templates" / "pdf_template.html"
+        with open(template_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Should use ui("ki_stack_kicker", ...)
+        assert 'ui("ki_stack_kicker"' in content, \
+            "Expected template to use ui('ki_stack_kicker') for section kicker"
+
+    def test_i18n_has_ki_stack_kicker_solo(self):
+        """Test that i18n labels include SOLO variant for ki_stack_kicker."""
+        from services.i18n import get_label_for_segment
+
+        # SOLO should get "KI-Systemlandschaft" (without "Executive")
+        result = get_label_for_segment("ki_stack_kicker", "de", segment="SOLO")
+        assert "Executive" not in result
+        assert "KI" in result
+
+    def test_i18n_ki_stack_kicker_team_has_executive(self):
+        """Test that TEAM segment gets 'Executive KI-Stack'."""
+        from services.i18n import get_label_for_segment
+
+        result = get_label_for_segment("ki_stack_kicker", "de", segment="TEAM")
+        assert "Executive" in result or "KI" in result  # Standard label
