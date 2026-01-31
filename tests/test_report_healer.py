@@ -835,3 +835,499 @@ class TestHealingResultStats:
             result.sections_budget_trimmed
         )
         assert result.total_fixes == expected_total
+
+
+# =============================================================================
+# TASK 1: Wobei soll/kann ich prompt removal (Testuser-Ready Fixes)
+# =============================================================================
+
+class TestTask1WobeiPromptRemoval:
+    """Tests for TASK 1: Robust removal of 'Wobei soll/kann ich' prompt artifacts."""
+
+    def test_removes_wobei_soll_ich_dich_mit_strong_und_ol(self):
+        """Remove 'Wobei soll ich dich unterstützen?' block with <strong> and <ol>."""
+        from services.report_healer import sanitize_template_phrases
+
+        html = """<div>
+            <p><strong>Wobei soll ich dich unterstützen?</strong></p>
+            <ol>
+                <li>Bei der Analyse deiner Daten</li>
+                <li>Bei der Erstellung von Reports</li>
+                <li>Bei der Optimierung von Prozessen</li>
+            </ol>
+            <p>Echter Inhalt hier.</p>
+        </div>"""
+
+        result, count = sanitize_template_phrases(html)
+
+        assert "Wobei soll ich" not in result
+        assert "unterstützen" not in result
+        assert "Bei der Analyse" not in result
+        assert "Echter Inhalt hier" in result
+        assert count >= 1
+
+    def test_removes_wobei_kann_ich_dir_unterstutzen_mit_ul(self):
+        """Remove 'Wobei kann ich dir unterstützen?' block with <ul>."""
+        from services.report_healer import sanitize_template_phrases
+
+        html = """<section>
+            <p>Wobei kann ich dir unterstützen?</p>
+            <ul>
+                <li>Datenanalyse</li>
+                <li>Prozessoptimierung</li>
+            </ul>
+            <p>Wichtiger Inhalt.</p>
+        </section>"""
+
+        result, count = sanitize_template_phrases(html)
+
+        assert "Wobei kann ich" not in result
+        assert "Datenanalyse" not in result
+        assert "Wichtiger Inhalt" in result
+
+    def test_removes_wobei_soll_ich_ihnen_helfen(self):
+        """Remove 'Wobei soll ich Ihnen helfen?' (formal)."""
+        from services.report_healer import sanitize_template_phrases
+
+        html = """<p><strong>Wobei soll ich Ihnen helfen?</strong></p>
+            <ol><li>Item 1</li></ol>
+            <p>Inhalt.</p>"""
+
+        result, count = sanitize_template_phrases(html)
+
+        assert "Wobei soll ich Ihnen" not in result
+        assert "helfen" not in result or "Inhalt" in result
+
+    def test_removes_standalone_wobei_question(self):
+        """Remove standalone 'Wobei soll ich...' question without list."""
+        from services.report_healer import sanitize_template_phrases
+
+        html = """<p><strong>Wobei soll ich dich unterstützen?</strong></p>
+            <p>Nächster Absatz.</p>"""
+
+        result, count = sanitize_template_phrases(html)
+
+        assert "Wobei soll ich" not in result
+        assert "Nächster Absatz" in result
+
+    def test_heal_final_html_removes_wobei_prompt_leak(self):
+        """heal_final_html should remove Wobei prompt leaks."""
+        from services.report_healer import heal_final_html
+
+        html = """<html>
+            <h1>Report</h1>
+            <p><strong>Wobei soll ich dich unterstützen?</strong></p>
+            <ol>
+                <li>Frage 1</li>
+                <li>Frage 2</li>
+            </ol>
+            <p>Der eigentliche Report-Inhalt beginnt hier.</p>
+        </html>"""
+
+        result = heal_final_html(html, "team")
+
+        assert "Wobei soll ich" not in result
+        assert "Frage 1" not in result
+        assert "Report-Inhalt" in result
+
+
+# =============================================================================
+# TASK 2: SOLO Blacklist Enforcement (Testuser-Ready Fixes)
+# =============================================================================
+
+class TestTask2SoloBlacklistEnforcement:
+    """Tests for TASK 2: SOLO blacklist enforcement with hard replacement."""
+
+    def test_enforce_persona_replaces_governance(self):
+        """SOLO should replace 'Governance' with simple alternative."""
+        from services.report_healer import enforce_persona_language
+
+        html = "<p>Die Governance muss klar definiert sein.</p>"
+        result, count = enforce_persona_language(html, "solo")
+
+        assert "Governance" not in result
+        assert count >= 1
+
+    def test_enforce_persona_replaces_executive(self):
+        """SOLO should replace 'Executive' with simple alternative."""
+        from services.report_healer import enforce_persona_language
+
+        html = "<p>Executive Summary und Executive Board.</p>"
+        result, count = enforce_persona_language(html, "solo")
+
+        assert "Executive" not in result
+        assert count >= 1
+
+    def test_enforce_persona_replaces_all_blacklist_terms(self):
+        """SOLO should replace ALL blacklist terms."""
+        from services.report_healer import enforce_persona_language, SOLO_BLACKLIST_TERMS
+
+        # Create HTML with all blacklist terms
+        terms_html = " ".join([f"<p>{term} im Text.</p>" for term in SOLO_BLACKLIST_TERMS[:5]])
+
+        result, count = enforce_persona_language(terms_html, "solo")
+
+        # Check none of the terms remain
+        for term in SOLO_BLACKLIST_TERMS[:5]:
+            assert term not in result, f"Blacklist term '{term}' should be replaced"
+
+        assert count >= 5
+
+    def test_enforce_persona_preserves_case(self):
+        """Replacements should preserve case (uppercase start)."""
+        from services.report_healer import enforce_persona_language
+
+        html = "<p>Governance und governance.</p>"
+        result, count = enforce_persona_language(html, "solo")
+
+        assert "Governance" not in result
+        assert "governance" not in result
+        assert count >= 2
+
+    def test_no_blacklist_enforcement_for_team(self):
+        """TEAM segment should not have blacklist enforcement."""
+        from services.report_healer import enforce_persona_language
+
+        html = "<p>Governance und Stakeholder bleiben hier.</p>"
+        result, count = enforce_persona_language(html, "team")
+
+        assert "Governance" in result
+        assert "Stakeholder" in result
+        assert count == 0
+
+    def test_no_blacklist_enforcement_for_kmu(self):
+        """KMU segment should not have blacklist enforcement."""
+        from services.report_healer import enforce_persona_language
+
+        html = "<p>Enterprise Framework und Compliance.</p>"
+        result, count = enforce_persona_language(html, "kmu")
+
+        assert "Enterprise" in result
+        assert "Framework" in result
+        assert "Compliance" in result
+        assert count == 0
+
+    def test_heal_report_html_enforces_solo_blacklist(self):
+        """heal_report_html should enforce SOLO blacklist across all sections."""
+        from services.report_healer import heal_report_html
+
+        sections = {
+            "RECOMMENDATIONS_HTML": "<p>Die Governance erfordert ein Framework.</p>",
+            "QUICK_WINS_HTML": "<p>Executive Rollout für Enterprise.</p>",
+        }
+
+        result = heal_report_html(sections, "solo")
+
+        for section_name in ["RECOMMENDATIONS_HTML", "QUICK_WINS_HTML"]:
+            content = result.sections[section_name]
+            assert "Governance" not in content
+            assert "Framework" not in content
+            assert "Executive" not in content
+            assert "Enterprise" not in content
+
+
+# =============================================================================
+# TASK 3: Business-Case Label Localization (Testuser-Ready Fixes)
+# =============================================================================
+
+class TestTask3BusinessCaseLabelLocalization:
+    """Tests for TASK 3: English → German business-case label localization."""
+
+    def test_localize_payback_progress(self):
+        """Localize 'Payback Progress' to German."""
+        from services.report_healer import localize_business_case_labels_de
+
+        html = "<span>Payback Progress: 75%</span>"
+        result, count = localize_business_case_labels_de(html)
+
+        assert "Payback Progress" not in result
+        assert "Amortisations-Fortschritt" in result
+        assert count >= 1
+
+    def test_localize_time_savings_hours(self):
+        """Localize 'Time Savings (Hours)' to German."""
+        from services.report_healer import localize_business_case_labels_de
+
+        html = "<td>Time Savings (Hours)</td><td>40</td>"
+        result, count = localize_business_case_labels_de(html)
+
+        assert "Time Savings (Hours)" not in result
+        assert "Zeitersparnis" in result
+
+    def test_localize_monthly_savings(self):
+        """Localize 'Monthly Savings' to German."""
+        from services.report_healer import localize_business_case_labels_de
+
+        html = "<p>Monthly Savings: €2,400</p>"
+        result, count = localize_business_case_labels_de(html)
+
+        assert "Monthly Savings" not in result
+        assert "Monatliche Einsparung" in result
+
+    def test_localize_all_english_bc_labels(self):
+        """Localize all common English BC labels to German."""
+        from services.report_healer import localize_business_case_labels_de
+
+        html = """<table>
+            <tr><td>Payback Progress</td><td>80%</td></tr>
+            <tr><td>Time Savings (Hours)</td><td>40</td></tr>
+            <tr><td>Monthly Savings</td><td>€2,400</td></tr>
+            <tr><td>Annual Savings</td><td>€28,800</td></tr>
+        </table>"""
+
+        result, count = localize_business_case_labels_de(html)
+
+        assert "Payback Progress" not in result
+        assert "Time Savings" not in result
+        assert "Monthly Savings" not in result
+        assert "Annual Savings" not in result
+        assert count >= 4
+
+    def test_heal_final_html_localizes_bc_labels(self):
+        """heal_final_html should localize BC labels by default."""
+        from services.report_healer import heal_final_html
+
+        html = """<html>
+            <p>Payback Progress: 100%</p>
+            <p>Time Savings Hours: 40</p>
+        </html>"""
+
+        result = heal_final_html(html, "team", localize_labels=True)
+
+        assert "Payback Progress" not in result
+        assert "Amortisations-Fortschritt" in result
+
+    def test_heal_final_html_skip_localization(self):
+        """heal_final_html can skip localization if requested."""
+        from services.report_healer import heal_final_html
+
+        html = "<p>Payback Progress: 100%</p>"
+
+        result = heal_final_html(html, "team", localize_labels=False)
+
+        # Should still have English labels
+        assert "Payback Progress" in result
+
+
+# =============================================================================
+# TASK 4: Quality Gate Smoke-Checks (Testuser-Ready Fixes)
+# =============================================================================
+
+class TestTask4QualityGate:
+    """Tests for TASK 4: Quality gate smoke-checks."""
+
+    def test_quality_gate_detects_wobei_prompt_leak(self):
+        """Quality gate should detect 'Wobei soll ich' prompt leaks."""
+        from services.report_healer import run_quality_gate
+
+        html = "<p>Wobei soll ich dich unterstützen?</p><p>Real content.</p>"
+
+        result = run_quality_gate(html, "team")
+
+        assert not result.passed
+        assert len(result.prompt_leaks) >= 1
+        assert "Wobei soll ich" in result.prompt_leaks
+
+    def test_quality_gate_detects_wobei_kann_ich_leak(self):
+        """Quality gate should detect 'Wobei kann ich' prompt leaks."""
+        from services.report_healer import run_quality_gate
+
+        html = "<p>Wobei kann ich dir helfen?</p>"
+
+        result = run_quality_gate(html, "team")
+
+        assert not result.passed
+        assert len(result.prompt_leaks) >= 1
+
+    def test_quality_gate_detects_english_decimal_format(self):
+        """Quality gate should detect English decimal format (3.5 Monate)."""
+        from services.report_healer import run_quality_gate
+
+        html = "<p>Amortisation in 3.5 Monaten.</p>"
+
+        result = run_quality_gate(html, "team")
+
+        assert not result.passed
+        assert len(result.english_decimals) >= 1
+
+    def test_quality_gate_passes_german_decimal_format(self):
+        """Quality gate should pass German decimal format (3,5 Monate)."""
+        from services.report_healer import run_quality_gate
+
+        html = "<p>Amortisation in 3,5 Monaten.</p>"
+
+        result = run_quality_gate(html, "team")
+
+        # Should pass (no English decimals)
+        assert len(result.english_decimals) == 0
+
+    def test_quality_gate_detects_solo_blacklist_hits(self):
+        """Quality gate should detect SOLO blacklist hits for SOLO segment."""
+        from services.report_healer import run_quality_gate
+
+        html = "<p>Die Governance erfordert ein Framework.</p>"
+
+        result = run_quality_gate(html, "solo")
+
+        assert not result.passed
+        assert len(result.solo_blacklist_hits) >= 2
+        assert "Governance" in result.solo_blacklist_hits
+        assert "Framework" in result.solo_blacklist_hits
+
+    def test_quality_gate_no_solo_blacklist_for_team(self):
+        """Quality gate should NOT check SOLO blacklist for TEAM segment."""
+        from services.report_healer import run_quality_gate
+
+        html = "<p>Die Governance erfordert ein Framework.</p>"
+
+        result = run_quality_gate(html, "team")
+
+        # SOLO blacklist should not apply to TEAM
+        assert len(result.solo_blacklist_hits) == 0
+
+    def test_quality_gate_detects_english_bc_labels(self):
+        """Quality gate should detect English BC labels."""
+        from services.report_healer import run_quality_gate
+
+        html = "<p>Payback Progress: 80%. Monthly Savings: €2400.</p>"
+
+        result = run_quality_gate(html, "team", check_bc_labels=True)
+
+        assert not result.passed
+        assert "Payback Progress" in result.business_case_english_labels
+        assert "Monthly Savings" in result.business_case_english_labels
+
+    def test_quality_gate_passes_clean_html(self):
+        """Quality gate should pass for clean HTML with no violations."""
+        from services.report_healer import run_quality_gate
+
+        html = """<html>
+            <h1>KI-Status Report</h1>
+            <p>Amortisation in 3,5 Monaten.</p>
+            <p>Monatliche Einsparung: €2.400</p>
+        </html>"""
+
+        result = run_quality_gate(html, "team", check_bc_labels=True)
+
+        assert result.passed
+        assert result.total_violations == 0
+
+    def test_quality_gate_strict_mode_raises_exception(self):
+        """Quality gate should raise exception in strict mode."""
+        from services.report_healer import run_quality_gate, ReportQualityError
+
+        html = "<p>Wobei soll ich dich unterstützen?</p>"
+
+        with pytest.raises(ReportQualityError) as exc_info:
+            run_quality_gate(html, "team", strict=True)
+
+        assert "Quality gate failed" in str(exc_info.value)
+
+    def test_quality_gate_result_to_dict(self):
+        """QualityGateResult.to_dict should return proper structure."""
+        from services.report_healer import run_quality_gate
+
+        html = "<p>Wobei soll ich dich unterstützen? Payback Progress: 80%</p>"
+
+        result = run_quality_gate(html, "team")
+        result_dict = result.to_dict()
+
+        assert "passed" in result_dict
+        assert "total_violations" in result_dict
+        assert "prompt_leaks" in result_dict
+        assert result_dict["passed"] is False
+        assert result_dict["total_violations"] >= 1
+
+    def test_integration_heal_final_html_then_quality_gate(self):
+        """After heal_final_html, quality gate should pass."""
+        from services.report_healer import heal_final_html, run_quality_gate
+
+        dirty_html = """<html>
+            <p><strong>Wobei soll ich dich unterstützen?</strong></p>
+            <ol><li>Frage 1</li></ol>
+            <p>Amortisation in 3.5 Monaten.</p>
+            <p>Payback Progress: 100%</p>
+            <p>Echter Inhalt hier.</p>
+        </html>"""
+
+        # First heal
+        healed_html = heal_final_html(dirty_html, "team", localize_labels=True)
+
+        # Then check quality
+        qg_result = run_quality_gate(healed_html, "team", check_bc_labels=True)
+
+        # Should pass after healing
+        assert qg_result.passed, f"Quality gate should pass after healing: {qg_result.to_dict()}"
+        assert "Wobei soll ich" not in healed_html
+        assert "3.5 Monaten" not in healed_html
+        assert "Payback Progress" not in healed_html
+
+
+# =============================================================================
+# Integration Tests: Full Pipeline with All Tasks
+# =============================================================================
+
+class TestFullPipelineIntegration:
+    """Integration tests verifying all tasks work together."""
+
+    def test_full_solo_pipeline_removes_all_violations(self):
+        """Full SOLO pipeline should remove all violations."""
+        from services.report_healer import heal_report_html, heal_final_html, run_quality_gate
+
+        sections = {
+            "EXECUTIVE_SUMMARY_HTML": """
+                <p><strong>Wobei soll ich dich unterstützen?</strong></p>
+                <ol><li>Hilfe 1</li></ol>
+                <p>Die Governance erfordert ein Framework.</p>
+            """,
+            "BUSINESS_CASE_HTML": """
+                <p>Payback Progress: 80%</p>
+                <p>Amortisation in 3.5 Monaten.</p>
+            """,
+        }
+
+        # Step 1: Pre-render healing
+        pre_result = heal_report_html(sections, "solo")
+
+        # Step 2: Simulate render (just concatenate for test)
+        rendered = "\n".join(str(v) for v in pre_result.sections.values() if isinstance(v, str))
+
+        # Step 3: Post-render healing
+        final_html = heal_final_html(rendered, "solo", localize_labels=True)
+
+        # Step 4: Quality gate
+        qg_result = run_quality_gate(final_html, "solo", check_bc_labels=True)
+
+        # Verify all violations removed
+        assert "Wobei soll ich" not in final_html
+        assert "Governance" not in final_html
+        assert "Framework" not in final_html
+        assert "3.5 Monaten" not in final_html
+        assert "Payback Progress" not in final_html
+        assert qg_result.passed, f"Quality gate should pass: {qg_result.to_dict()}"
+
+    def test_payback_remains_german_formatted(self):
+        """Payback should remain in German format (3,5) - regression test."""
+        from services.report_healer import heal_final_html
+
+        html = "<p>Amortisation in 3,5 Monaten.</p>"
+
+        result = heal_final_html(html, "team")
+
+        # Should NOT change German format
+        assert "3,5 Monaten" in result
+        # Should NOT have English format
+        assert "3.5 Monaten" not in result
+
+    def test_payback_english_to_german_conversion(self):
+        """English decimal (3.5) should convert to German (3,5)."""
+        from services.report_healer import heal_final_html
+
+        html = "<p>Amortisation in 3.5 Monaten.</p>"
+
+        result = heal_final_html(html, "team")
+
+        # Should convert to German format
+        assert "3,5 Monaten" in result
+        # Should NOT have English format
+        assert "3.5 Monaten" not in result
