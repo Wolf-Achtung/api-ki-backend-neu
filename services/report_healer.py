@@ -1589,9 +1589,9 @@ def sanitize_payback_progress_labels(html: str) -> Tuple[str, int]:
         log.debug("[TASK4] Replaced %d 'Payback Progress 100%%' → 'Payback: erreicht'", count_100)
 
     # Step 2: Replace remaining "Payback Progress X%" → "Payback-Fortschritt: X"
-    def replace_progress_percent(m: re.Match) -> str:
+    def replace_progress_percent(m: re.Match[str]) -> str:
         nonlocal fixes_applied
-        text = m.group(0)
+        text: str = m.group(0)
         # Extract the number
         num_match = re.search(r'(\d+(?:[.,]\d+)?)', text)
         if num_match:
