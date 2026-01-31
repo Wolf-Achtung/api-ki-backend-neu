@@ -301,3 +301,194 @@ class TestFullPipelineNoForbiddenStrings:
         # Note: Some violations might remain if they weren't fully healed
         assert len(qg.prompt_leaks) == 0, f"Prompt leaks: {qg.prompt_leaks}"
         assert len(qg.solo_blacklist_hits) == 0, f"Blacklist hits: {qg.solo_blacklist_hits}"
+
+
+# =============================================================================
+# FINAL FIX Tests (Briefing: Payback Progress split spans, Executive Summary, Governance)
+# =============================================================================
+
+class TestSanitizePaybackProgressHandlesSplitSpans:
+    """Tests for TASK 1: Payback Progress with split spans."""
+
+    def test_sanitize_payback_progress_handles_split_spans(self):
+        """Handle <span>Payback Progress</span><span>100%</span>."""
+        from services.report_healer import sanitize_payback_progress_labels
+
+        html = "<span>Payback Progress</span><span>100%</span>"
+
+        result, count = sanitize_payback_progress_labels(html)
+
+        assert "Payback Progress" not in result
+        assert "%" not in result
+        assert "Payback: erreicht" in result or "Payback-Status" in result
+        assert count >= 1
+
+    def test_sanitize_payback_progress_split_with_whitespace(self):
+        """Handle split spans with whitespace between tags."""
+        from services.report_healer import sanitize_payback_progress_labels
+
+        html = "<span>Payback Progress</span>  <span>100%</span>"
+
+        result, count = sanitize_payback_progress_labels(html)
+
+        assert "Payback Progress" not in result
+        assert "%" not in result
+
+    def test_sanitize_payback_progress_split_partial_value(self):
+        """Handle split spans with partial value (e.g., 75%)."""
+        from services.report_healer import sanitize_payback_progress_labels
+
+        html = "<span>Payback Progress</span><span>75%</span>"
+
+        result, count = sanitize_payback_progress_labels(html)
+
+        assert "Payback Progress" not in result
+        assert "75%" not in result
+        assert "%" not in result
+
+    def test_heal_final_html_removes_split_span_payback_progress(self):
+        """heal_final_html handles split span Payback Progress."""
+        from services.report_healer import heal_final_html
+
+        html = """<html>
+            <div>
+                <span class="label">Payback Progress</span>
+                <span class="value">100%</span>
+            </div>
+        </html>"""
+
+        result = heal_final_html(html, "solo")
+
+        assert "Payback Progress" not in result
+        assert "100%" not in result
+
+
+class TestHealFinalHtmlReplacesExecutiveSummaryPhraseSolo:
+    """Tests for TASK 2: Executive Summary phrase replacement in SOLO."""
+
+    def test_heal_final_html_replaces_executive_summary_phrase_solo(self):
+        """Replace 'Executive Summary & Kurzurteil' → 'Kurzfassung & Bewertung'."""
+        from services.report_healer import heal_final_html
+
+        html = """<html>
+            <h1>Executive Summary & Kurzurteil</h1>
+            <p>Inhalt hier.</p>
+        </html>"""
+
+        result = heal_final_html(html, "solo")
+
+        assert "Executive Summary" not in result
+        assert "Kurzfassung" in result
+
+    def test_heal_final_html_replaces_executive_summary_allcaps_solo(self):
+        """Replace 'EXECUTIVE SUMMARY' → 'KURZFASSUNG'."""
+        from services.report_healer import heal_final_html
+
+        html = """<html>
+            <h1>EXECUTIVE SUMMARY</h1>
+            <p>Inhalt hier.</p>
+        </html>"""
+
+        result = heal_final_html(html, "solo")
+
+        assert "EXECUTIVE SUMMARY" not in result
+        assert "KURZFASSUNG" in result
+
+    def test_heal_final_html_keeps_executive_for_team(self):
+        """TEAM segment should keep 'Executive Summary'."""
+        from services.report_healer import heal_final_html
+
+        html = "<h1>Executive Summary</h1>"
+
+        result = heal_final_html(html, "team")
+
+        # TEAM segment should NOT replace Executive Summary
+        assert "Executive Summary" in result
+
+
+class TestHealFinalHtmlReplacesGovernanceAllCapsSolo:
+    """Tests for TASK 3: Governance/GOVERNANCE replacement in SOLO."""
+
+    def test_heal_final_html_replaces_governance_all_caps_solo(self):
+        """Replace 'GOVERNANCE' → 'SPIELREGELN' in SOLO."""
+        from services.report_healer import heal_final_html
+
+        html = """<html>
+            <h2>GOVERNANCE</h2>
+            <p>Module und Prozesse.</p>
+        </html>"""
+
+        result = heal_final_html(html, "solo")
+
+        assert "GOVERNANCE" not in result
+        assert "Governance" not in result
+        assert "SPIELREGELN" in result or "Spielregeln" in result
+
+    def test_heal_final_html_replaces_governance_titlecase_solo(self):
+        """Replace 'Governance' → 'Spielregeln' in SOLO."""
+        from services.report_healer import heal_final_html
+
+        html = """<html>
+            <p>Die Governance ist wichtig.</p>
+        </html>"""
+
+        result = heal_final_html(html, "solo")
+
+        assert "Governance" not in result
+        assert "Spielregeln" in result
+
+    def test_heal_final_html_replaces_governance_in_module_label(self):
+        """Replace 'GOVERNANCE' in module labels in SOLO."""
+        from services.report_healer import heal_final_html
+
+        html = """<html>
+            <div class="module">
+                <span class="label">GOVERNANCE</span>
+                <span class="content">Beschreibung</span>
+            </div>
+        </html>"""
+
+        result = heal_final_html(html, "solo")
+
+        assert "GOVERNANCE" not in result
+
+
+class TestFullPipelineFinalHtmlNoForbiddenStringsSolo:
+    """Integration test for full pipeline with all forbidden strings."""
+
+    def test_full_pipeline_final_html_has_no_forbidden_strings_solo(self):
+        """Final HTML after healing has no forbidden strings for SOLO."""
+        from services.report_healer import heal_final_html
+        import re
+
+        # Simulated final HTML with all problematic patterns
+        final_html = """<html>
+            <h1>EXECUTIVE SUMMARY</h1>
+            <h2>Executive Summary & Kurzurteil</h2>
+            <div class="governance">
+                <h3>GOVERNANCE</h3>
+                <p>Governance policies apply.</p>
+            </div>
+            <div class="payback">
+                <span>Payback Progress</span><span>100%</span>
+            </div>
+            <p>Payback Progress: 75%</p>
+        </html>"""
+
+        # Heal
+        healed = heal_final_html(final_html, "SOLO")
+
+        # Forbidden patterns (case-insensitive)
+        forbidden_patterns = [
+            r'Payback\s*Progress',
+            r'Executive\s*Summary',
+            r'\bGovernance\b',
+        ]
+
+        for pattern in forbidden_patterns:
+            matches = re.findall(pattern, healed, re.IGNORECASE)
+            assert len(matches) == 0, f"Forbidden pattern '{pattern}' still in output: {matches}"
+
+        # No % in Payback context
+        assert "100%" not in healed
+        assert "75%" not in healed
