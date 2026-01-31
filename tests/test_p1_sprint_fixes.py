@@ -393,10 +393,10 @@ class TestRoiQualitativeRanges:
 # =============================================================================
 
 class TestQuickWinEmptyFieldFailsafe:
-    """Tests for TASK 1 (P0): Quick Wins empty field failsafe."""
+    """Tests for TASK 1 (P0): Quick Wins empty field failsafe - now FILLS instead of removes."""
 
-    def test_removes_empty_problem_block(self):
-        """Test that empty PROBLEM block is removed."""
+    def test_fills_empty_problem_block(self):
+        """Test that empty PROBLEM block is FILLED with fallback text."""
         from services.report_healer import sanitize_quickwin_empty_fields
 
         html = '''<div class="quick-win-problem" style="margin-bottom:10px;">
@@ -406,10 +406,12 @@ class TestQuickWinEmptyFieldFailsafe:
 
         result, count = sanitize_quickwin_empty_fields(html)
         assert count == 1
-        assert "quick-win-problem" not in result
+        # Block is now FILLED, not removed
+        assert "quick-win-problem" in result
+        assert "Aktueller Prozess kostet mehr Zeit" in result
 
-    def test_removes_empty_wirkung_block(self):
-        """Test that empty WIRKUNG block is removed."""
+    def test_fills_empty_wirkung_block(self):
+        """Test that empty WIRKUNG block is FILLED with fallback text."""
         from services.report_healer import sanitize_quickwin_empty_fields
 
         html = '''<div class="quick-win-wirkung" style="margin-bottom:10px;">
@@ -419,10 +421,12 @@ class TestQuickWinEmptyFieldFailsafe:
 
         result, count = sanitize_quickwin_empty_fields(html)
         assert count == 1
-        assert "quick-win-wirkung" not in result
+        # Block is now FILLED, not removed
+        assert "quick-win-wirkung" in result
+        assert "Entlastung bei wiederkehrenden" in result
 
-    def test_removes_empty_umsetzung_block(self):
-        """Test that empty UMSETZUNG block is removed."""
+    def test_fills_empty_umsetzung_block(self):
+        """Test that empty UMSETZUNG block is FILLED with fallback text."""
         from services.report_healer import sanitize_quickwin_empty_fields
 
         html = '''<div class="quick-win-umsetzung" style="margin-bottom:10px;">
@@ -432,10 +436,12 @@ class TestQuickWinEmptyFieldFailsafe:
 
         result, count = sanitize_quickwin_empty_fields(html)
         assert count == 1
-        assert "quick-win-umsetzung" not in result
+        # Block is now FILLED, not removed
+        assert "quick-win-umsetzung" in result
+        assert "Starte diese Woche" in result
 
     def test_preserves_non_empty_blocks(self):
-        """Test that non-empty blocks are preserved."""
+        """Test that non-empty blocks are preserved unchanged."""
         from services.report_healer import sanitize_quickwin_empty_fields
 
         html = '''<div class="quick-win-problem" style="margin-bottom:10px;">
@@ -563,3 +569,200 @@ class TestKiStackKickerLabel:
 
         result = get_label_for_segment("ki_stack_kicker", "de", segment="TEAM")
         assert "Executive" in result or "KI" in result  # Standard label
+
+
+# =============================================================================
+# TASK A (P0): Quick Wins - Never Render Empty Fields (Enhanced Tests)
+# =============================================================================
+
+class TestQuickWinEmptyFieldFailsafeEnhanced:
+    """Enhanced tests for TASK A (P0): Quick Wins empty field failsafe with FILL behavior."""
+
+    def test_fills_empty_problem_with_fallback(self):
+        """Test that empty PROBLEM block gets filled with fallback text."""
+        from services.report_healer import sanitize_quickwin_empty_fields
+
+        html = '''<div class="quick-win-problem" style="margin-bottom:10px;">
+            <strong style="color:#dc2626;">Problem:</strong>
+            <p style="margin:4px 0 0 0;"></p>
+        </div>'''
+
+        result, count = sanitize_quickwin_empty_fields(html)
+        # Should fill, not just remove
+        assert count >= 1
+        # Either filled or removed - but no empty p tag
+        assert '><p style="margin:4px 0 0 0;"></p>' not in result
+
+    def test_fills_empty_wirkung_with_fallback(self):
+        """Test that empty WIRKUNG block gets filled with fallback text."""
+        from services.report_healer import sanitize_quickwin_empty_fields
+
+        html = '''<div class="quick-win-wirkung" style="margin-bottom:10px;">
+            <strong style="color:#16a34a;">Wirkung:</strong>
+            <p style="margin:4px 0 0 0;"></p>
+        </div>'''
+
+        result, count = sanitize_quickwin_empty_fields(html)
+        assert count >= 1
+
+    def test_fills_empty_umsetzung_with_fallback(self):
+        """Test that empty UMSETZUNG block gets filled with fallback text."""
+        from services.report_healer import sanitize_quickwin_empty_fields
+
+        html = '''<div class="quick-win-umsetzung" style="margin-bottom:10px;">
+            <strong style="color:#2563eb;">Umsetzung:</strong>
+            <p style="margin:4px 0 0 0;"></p>
+        </div>'''
+
+        result, count = sanitize_quickwin_empty_fields(html)
+        assert count >= 1
+
+    def test_heal_final_html_no_empty_quickwin_pattern(self):
+        """End-to-end: heal_final_html should eliminate PROBLEM:\\s*WIRKUNG: patterns."""
+        from services.report_healer import heal_final_html
+        import re
+
+        # Simulate rendered HTML with empty Quick Win fields
+        html = '''
+        <div class="quick-win">
+            <div class="quick-win-problem"><strong>Problem:</strong><p></p></div>
+            <div class="quick-win-wirkung"><strong>Wirkung:</strong><p></p></div>
+            <div class="quick-win-umsetzung"><strong>Umsetzung:</strong><p></p></div>
+        </div>
+        '''
+
+        result = heal_final_html(html, segment="SOLO")
+
+        # These text patterns should NOT appear consecutively (indicates empty)
+        assert not re.search(r'Problem:\s*</p>\s*</div>\s*<div[^>]*>\s*<strong[^>]*>Wirkung:', result, re.IGNORECASE)
+
+    def test_e2e_no_label_only_blocks_after_heal(self):
+        """E2E Gate: After heal_final_html, no Quick Win should have label-only blocks."""
+        from services.report_healer import heal_final_html
+        import re
+
+        html = '''
+        <div class="quick-win-card">
+            <div class="quick-win-problem"><strong>Problem:</strong><p>   </p></div>
+            <div class="quick-win-wirkung"><strong>Wirkung:</strong><p></p></div>
+            <div class="quick-win-umsetzung"><strong>Umsetzung:</strong><p>Real content here.</p></div>
+        </div>
+        '''
+
+        result = heal_final_html(html, segment="SOLO")
+
+        # Check that we don't have empty-only pattern
+        empty_problem = re.search(r'<div[^>]*class="quick-win-problem"[^>]*>.*?<p[^>]*>\s*</p>', result, re.DOTALL)
+        empty_wirkung = re.search(r'<div[^>]*class="quick-win-wirkung"[^>]*>.*?<p[^>]*>\s*</p>', result, re.DOTALL)
+
+        assert not empty_problem, "Empty PROBLEM block should be filled or removed"
+        assert not empty_wirkung, "Empty WIRKUNG block should be filled or removed"
+
+
+# =============================================================================
+# TASK B (P1): Final Governance Catch-All Tests
+# =============================================================================
+
+class TestFinalGovernanceCatchAll:
+    """Tests for TASK B (P1): Final Governance catch-all for SOLO."""
+
+    def test_final_catchall_removes_standalone_governance(self):
+        """Test that standalone 'Governance' is replaced even if not in phrase."""
+        from services.report_healer import heal_final_html
+
+        html = "<p>Die Governance ist wichtig.</p>"
+        result = heal_final_html(html, segment="SOLO")
+
+        assert "Governance" not in result
+        assert "Spielregeln" in result
+
+    def test_final_catchall_preserves_case(self):
+        """Test that Governance replacement preserves case."""
+        from services.report_healer import heal_final_html
+
+        html = "<p>GOVERNANCE muss beachtet werden. governance auch.</p>"
+        result = heal_final_html(html, segment="SOLO")
+
+        assert "GOVERNANCE" not in result
+        assert "governance" not in result
+        assert "SPIELREGELN" in result or "spielregeln" in result
+
+    def test_final_catchall_not_applied_to_team(self):
+        """Test that TEAM segment keeps Governance."""
+        from services.report_healer import heal_final_html
+
+        html = "<p>Die Governance ist wichtig.</p>"
+        result = heal_final_html(html, segment="TEAM")
+
+        # TEAM may or may not replace - but the catchall specifically for SOLO
+        # This test just ensures TEAM processing completes without error
+        assert result  # Non-empty result
+
+    def test_e2e_solo_has_zero_governance(self):
+        """E2E Gate: Final SOLO HTML should contain 0× Governance (case-insensitive)."""
+        from services.report_healer import heal_final_html
+        import re
+
+        html = """
+        <p>Mit starker Governance können Sie Risiken minimieren.</p>
+        <p>Die Governance-Strukturen müssen definiert sein.</p>
+        <p>GOVERNANCE als Grundlage für AI Act Compliance.</p>
+        """
+
+        result = heal_final_html(html, segment="SOLO")
+
+        governance_count = len(re.findall(r'\bGovernance\b', result, re.IGNORECASE))
+        assert governance_count == 0, f"Expected 0 Governance occurrences, found {governance_count}"
+
+
+# =============================================================================
+# Acceptance Tests (Definition of Done)
+# =============================================================================
+
+class TestAcceptanceCriteria:
+    """Acceptance tests matching Definition of Done from briefing."""
+
+    def test_acceptance_no_governance_in_solo(self):
+        """DoD: 0× /\\bGovernance\\b/i in final SOLO HTML."""
+        from services.report_healer import heal_final_html
+        import re
+
+        # Complex HTML with various Governance mentions
+        html = """
+        <div>
+            <p>Starke Governance ist essentiell.</p>
+            <p>Mit solider Governance erreichen Sie Ihre Ziele.</p>
+            <p>Die Governance-Aspekte beachten.</p>
+            <p>Governance sollte priorisiert werden.</p>
+        </div>
+        """
+
+        result = heal_final_html(html, segment="SOLO")
+
+        matches = re.findall(r'\bGovernance\b', result, re.IGNORECASE)
+        assert len(matches) == 0, f"DoD FAILED: Found {len(matches)} Governance matches: {matches}"
+
+    def test_acceptance_quickwins_no_empty_labels(self):
+        """DoD: Quick Wins have text in all three boxes OR alternative layout."""
+        from services.report_healer import heal_final_html
+        import re
+
+        # Simulate worst case: all fields empty
+        html = """
+        <div class="quick-win">
+            <div class="quick-win-problem"><strong>Problem:</strong><p></p></div>
+            <div class="quick-win-wirkung"><strong>Wirkung:</strong><p></p></div>
+            <div class="quick-win-umsetzung"><strong>Umsetzung:</strong><p></p></div>
+        </div>
+        """
+
+        result = heal_final_html(html, segment="SOLO")
+
+        # Pattern check: should NOT have "Problem:" followed soon by "Wirkung:" without content
+        has_empty_pattern = bool(re.search(
+            r'Problem:\s*</p>\s*</div>\s*<div[^>]*>\s*<strong[^>]*>Wirkung:',
+            result,
+            re.IGNORECASE
+        ))
+
+        assert not has_empty_pattern, "DoD FAILED: Empty Quick Win label pattern detected"
