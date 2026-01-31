@@ -1114,24 +1114,31 @@ def sanitize_roi_for_solo(html: str) -> Tuple[str, int]:
 # TASK 1 (P0 Final Solo Polish): Quick Wins Empty Field Failsafe
 # =============================================================================
 
-# Patterns to detect Quick Win blocks with empty content
+# Deterministic fallback texts for Quick Win fields (SOLO-appropriate, German)
+QUICKWIN_FALLBACK_TEXTS_DE = {
+    "problem": "Aktueller Prozess kostet mehr Zeit als nötig.",
+    "wirkung": "Spürbare Entlastung bei wiederkehrenden Aufgaben.",
+    "umsetzung": "Starte diese Woche mit einem kleinen Pilotprojekt.",
+}
+
+# Patterns to detect Quick Win blocks with empty content (multiple approaches)
 QUICKWIN_EMPTY_BLOCK_PATTERNS = [
-    # Pattern: <div class="quick-win-problem" ...><strong>...</strong><p></p></div>
+    # Pattern 1: <div class="quick-win-problem" ...><strong>...</strong><p></p></div>
     (
         r'<div\s+class="quick-win-problem"[^>]*>\s*<strong[^>]*>[^<]*</strong>\s*<p[^>]*>\s*</p>\s*</div>',
-        "Problem"
+        "Problem (empty p)"
     ),
-    # Pattern: <div class="quick-win-wirkung" ...><strong>...</strong><p></p></div>
+    # Pattern 2: <div class="quick-win-wirkung" ...><strong>...</strong><p></p></div>
     (
         r'<div\s+class="quick-win-wirkung"[^>]*>\s*<strong[^>]*>[^<]*</strong>\s*<p[^>]*>\s*</p>\s*</div>',
-        "Wirkung"
+        "Wirkung (empty p)"
     ),
-    # Pattern: <div class="quick-win-umsetzung" ...><strong>...</strong><p></p></div>
+    # Pattern 3: <div class="quick-win-umsetzung" ...><strong>...</strong><p></p></div>
     (
         r'<div\s+class="quick-win-umsetzung"[^>]*>\s*<strong[^>]*>[^<]*</strong>\s*<p[^>]*>\s*</p>\s*</div>',
-        "Umsetzung"
+        "Umsetzung (empty p)"
     ),
-    # Alternative pattern with whitespace-only paragraph
+    # Pattern 4: Whitespace-only paragraphs
     (
         r'<div\s+class="quick-win-problem"[^>]*>\s*<strong[^>]*>[^<]*</strong>\s*<p[^>]*>\s+</p>\s*</div>',
         "Problem (whitespace)"
@@ -1146,50 +1153,136 @@ QUICKWIN_EMPTY_BLOCK_PATTERNS = [
     ),
 ]
 
+# Text-level patterns that indicate empty Quick Win fields (found in PDF extraction)
+QUICKWIN_EMPTY_TEXT_PATTERNS = [
+    # Pattern: "Problem:" immediately followed by "Wirkung:" (no content between)
+    r'Problem:\s*(?:</(?:strong|p|div)>\s*)*(?:<(?:strong|p|div)[^>]*>\s*)*Wirkung:',
+    # Pattern: "Wirkung:" immediately followed by "Umsetzung:" (no content between)
+    r'Wirkung:\s*(?:</(?:strong|p|div)>\s*)*(?:<(?:strong|p|div)[^>]*>\s*)*Umsetzung:',
+    # Pattern: "PROBLEM:" followed by "WIRKUNG:" (uppercase variant)
+    r'PROBLEM:\s*(?:</(?:strong|p|div)>\s*)*(?:<(?:strong|p|div)[^>]*>\s*)*WIRKUNG:',
+    # Pattern: "WIRKUNG:" followed by "UMSETZUNG:" (uppercase variant)
+    r'WIRKUNG:\s*(?:</(?:strong|p|div)>\s*)*(?:<(?:strong|p|div)[^>]*>\s*)*UMSETZUNG:',
+]
+
+
+def _fill_empty_quickwin_paragraph(match: re.Match, field: str) -> str:
+    """
+    Replace an empty Quick Win paragraph with deterministic fallback content.
+
+    Args:
+        match: The regex match object for the empty block
+        field: Field name (problem, wirkung, umsetzung)
+
+    Returns:
+        The matched HTML with filled content
+    """
+    original: str = match.group(0)
+    fallback = QUICKWIN_FALLBACK_TEXTS_DE.get(field, "")
+
+    if not fallback:
+        return original  # No fallback available, keep as is
+
+    # Replace empty <p></p> or <p>   </p> with filled content
+    filled = re.sub(
+        r'(<p[^>]*>)\s*(</p>)',
+        rf'\1{fallback}\2',
+        original,
+        flags=re.IGNORECASE | re.DOTALL
+    )
+
+    return filled
+
 
 def sanitize_quickwin_empty_fields(html: str) -> Tuple[str, int]:
     """
-    TASK 1 (P0 Final Solo Polish): Remove Quick Win blocks with empty PROBLEM/WIRKUNG/UMSETZUNG.
+    TASK A (P0): Fix Quick Wins empty field detection - Never Render Empty Fields.
 
-    This is a failsafe for cases where enforce_quickwins_complete didn't catch empty fields.
-    Detects HTML patterns like:
-    <div class="quick-win-problem"><strong>Problem:</strong><p></p></div>
+    This failsafe runs AFTER rendering and AFTER segment budget trimming.
+    It detects and FILLS (not just removes) empty PROBLEM/WIRKUNG/UMSETZUNG blocks.
 
-    And removes them entirely to prevent rendering empty boxes.
+    Detection methods:
+    1. HTML structure: Empty <p></p> tags within quick-win-* divs
+    2. Text patterns: "Problem:" immediately followed by "Wirkung:" without content
+
+    Action:
+    - First attempt: Fill empty blocks with deterministic fallback text
+    - If still empty after fill: Remove the entire block
 
     Args:
         html: HTML content to process
 
     Returns:
-        Tuple of (processed_html, removals_count)
+        Tuple of (processed_html, modifications_count)
     """
     if not html:
         return html, 0
 
     result = html
-    removal_count = 0
+    modification_count = 0
 
+    # PHASE 1: Fill empty blocks with fallback content
+    fill_patterns = [
+        (r'(<div\s+class="quick-win-problem"[^>]*>\s*<strong[^>]*>[^<]*</strong>\s*<p[^>]*>)\s*(</p>\s*</div>)',
+         "problem"),
+        (r'(<div\s+class="quick-win-wirkung"[^>]*>\s*<strong[^>]*>[^<]*</strong>\s*<p[^>]*>)\s*(</p>\s*</div>)',
+         "wirkung"),
+        (r'(<div\s+class="quick-win-umsetzung"[^>]*>\s*<strong[^>]*>[^<]*</strong>\s*<p[^>]*>)\s*(</p>\s*</div>)',
+         "umsetzung"),
+    ]
+
+    for pattern, field in fill_patterns:
+        try:
+            fallback = QUICKWIN_FALLBACK_TEXTS_DE.get(field, "")
+            if fallback:
+                regex = re.compile(pattern, re.IGNORECASE | re.DOTALL)
+                matches = regex.findall(result)
+                if matches:
+                    # Replace empty with filled: (prefix)(suffix) -> prefix + fallback + suffix
+                    result = regex.sub(rf'\1{fallback}\2', result)
+                    modification_count += len(matches)
+                    log.info(
+                        "[QUICKWIN-FAILSAFE] Filled %d empty %s block(s) with fallback",
+                        len(matches), field
+                    )
+        except re.error as e:
+            log.warning("[QUICKWIN-FAILSAFE] Fill regex error for %s: %s", field, e)
+
+    # PHASE 2: Remove any remaining empty blocks that couldn't be filled
     for pattern, field_name in QUICKWIN_EMPTY_BLOCK_PATTERNS:
         try:
             regex = re.compile(pattern, re.IGNORECASE | re.DOTALL)
             matches = regex.findall(result)
             if matches:
-                removal_count += len(matches)
+                modification_count += len(matches)
                 result = regex.sub("", result)
-                log.debug(
-                    "[QUICKWIN-FAILSAFE] Removed %d empty %s block(s)",
+                log.warning(
+                    "[QUICKWIN-FAILSAFE] Removed %d unfillable empty %s block(s)",
                     len(matches), field_name
                 )
         except re.error as e:
-            log.warning("[QUICKWIN-FAILSAFE] Regex error for %s: %s", field_name, e)
+            log.warning("[QUICKWIN-FAILSAFE] Removal regex error for %s: %s", field_name, e)
 
-    if removal_count > 0:
+    # PHASE 3: Detect text-level patterns (post-render diagnostic)
+    for pattern in QUICKWIN_EMPTY_TEXT_PATTERNS:
+        try:
+            if re.search(pattern, result, re.IGNORECASE | re.DOTALL):
+                log.error(
+                    "[QUICKWIN-FAILSAFE] CRITICAL: Empty field text pattern still detected: %s",
+                    pattern[:50]
+                )
+                # This is a diagnostic - the actual fix should have happened above
+                modification_count += 1
+        except re.error:
+            pass
+
+    if modification_count > 0:
         log.info(
-            "[QUICKWIN-FAILSAFE] Removed %d empty Quick Win field blocks",
-            removal_count
+            "[QUICKWIN-FAILSAFE] Total modifications: %d",
+            modification_count
         )
 
-    return result, removal_count
+    return result, modification_count
 
 
 # =============================================================================
@@ -2671,6 +2764,30 @@ def heal_final_html(
         fixes_applied += checklist_fixes
     except Exception as e:
         log.warning("[HEALER-POST] Input checklist removal error: %s", e)
+
+    # TASK B (P1): Final Governance catch-all for SOLO (absolute last safety net)
+    if segment_lower == "solo":
+        try:
+            # Final regex catch-all: replace any remaining \bGovernance\b with Spielregeln
+            governance_pattern = re.compile(r'\bGovernance\b', re.IGNORECASE)
+            governance_matches = governance_pattern.findall(result)
+            if governance_matches:
+                def governance_replace(m: re.Match) -> str:
+                    matched = m.group(0)
+                    if matched.isupper():
+                        return "SPIELREGELN"
+                    elif matched.islower():
+                        return "spielregeln"
+                    else:
+                        return "Spielregeln"
+                result = governance_pattern.sub(governance_replace, result)
+                fixes_applied += len(governance_matches)
+                log.warning(
+                    "[HEALER-POST] FINAL CATCHALL: Replaced %d remaining 'Governance' instances for SOLO",
+                    len(governance_matches)
+                )
+        except Exception as e:
+            log.warning("[HEALER-POST] Final Governance catch-all error: %s", e)
 
     # Remove duplicate "Progress 100%" (keep first) - legacy pattern
     try:
