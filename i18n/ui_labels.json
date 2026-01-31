@@ -1342,5 +1342,19 @@
     "fr": "Aperçu des indicateurs",
     "es": "Resumen de indicadores",
     "it": "Panoramica indicatori"
+  },
+  "ki_stack_kicker": {
+    "de": "Executive KI-Stack",
+    "en": "Executive AI Stack",
+    "fr": "Stack IA Exécutif",
+    "es": "Stack IA Ejecutivo",
+    "it": "Stack IA Esecutivo"
+  },
+  "ki_stack_kicker_solo": {
+    "de": "KI-Systemlandschaft",
+    "en": "AI System Landscape",
+    "fr": "Paysage système IA",
+    "es": "Panorama de sistemas IA",
+    "it": "Panorama sistemi IA"
   }
 }
