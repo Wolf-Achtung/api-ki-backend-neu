@@ -37,11 +37,14 @@ __all__ = [
     "enforce_roi_rules",
     "trim_incomplete_sentences",
     "enforce_payback_consistency",
+    "sanitize_payback_progress_labels",
     "apply_segment_budget",
     "parse_payback_months",
     "format_payback_de",
     "localize_business_case_labels_de",
     "run_quality_gate",
+    "canonicalize_segment",
+    "normalize_section_keys",
     "QualityGateResult",
     "ReportQualityError",
     "HealingResult",
@@ -86,6 +89,83 @@ def _walk(obj: Any, fn_string: Callable[[str], str]) -> Any:
     else:
         # int, float, bool, None, etc. - return unchanged
         return obj
+
+
+# =============================================================================
+# TASK 1: Segment Canonicalization
+# =============================================================================
+
+# Segment synonyms mapping to canonical values
+_SEGMENT_SYNONYMS: Dict[str, str] = {
+    # SOLO variants
+    "solo": "SOLO",
+    "SOLO": "SOLO",
+    "einzel": "SOLO",
+    "einzelunternehmer": "SOLO",
+    "freiberuf": "SOLO",
+    "freiberufler": "SOLO",
+    "selbstständig": "SOLO",
+    "selbständig": "SOLO",
+    "solopreneur": "SOLO",
+    "freelancer": "SOLO",
+    # TEAM variants
+    "team": "TEAM",
+    "TEAM": "TEAM",
+    "klein": "TEAM",
+    "kleinunternehmen": "TEAM",
+    "startup": "TEAM",
+    "small": "TEAM",
+    # KMU variants
+    "kmu": "KMU",
+    "KMU": "KMU",
+    "sme": "KMU",
+    "SME": "KMU",
+    "mittelstand": "KMU",
+    "mittelständisch": "KMU",
+    "medium": "KMU",
+}
+
+
+def canonicalize_segment(segment: str) -> Literal["SOLO", "TEAM", "KMU"]:
+    """
+    TASK 1: Canonicalize segment identifier to uppercase standard form.
+
+    Accepts various segment synonyms and returns canonical form:
+    - "solo", "SOLO", "einzel", "freiberuf" → "SOLO"
+    - "team", "TEAM", "klein", "startup" → "TEAM"
+    - "kmu", "KMU", "sme", "mittelstand" → "KMU"
+
+    Default: "TEAM" if unrecognized.
+
+    Args:
+        segment: Raw segment identifier (any case/synonym)
+
+    Returns:
+        Canonical segment: "SOLO", "TEAM", or "KMU"
+    """
+    if not segment:
+        log.warning("[SEGMENT] Empty segment provided, defaulting to TEAM")
+        return "TEAM"
+
+    # Clean and normalize input
+    cleaned = segment.strip().lower()
+
+    # Look up in synonyms map
+    canonical = _SEGMENT_SYNONYMS.get(cleaned)
+    if canonical:
+        if cleaned != canonical.lower():
+            log.debug("[SEGMENT] Canonicalized '%s' → '%s'", segment, canonical)
+        return canonical  # type: ignore
+
+    # Try partial match for compound terms
+    for synonym, canon in _SEGMENT_SYNONYMS.items():
+        if synonym in cleaned or cleaned in synonym:
+            log.debug("[SEGMENT] Partial match '%s' → '%s'", segment, canon)
+            return canon  # type: ignore
+
+    # Default to TEAM
+    log.warning("[SEGMENT] Unknown segment '%s', defaulting to TEAM", segment)
+    return "TEAM"
 
 
 def _is_html_section_key(key: str) -> bool:
@@ -139,6 +219,74 @@ def _merge_healed_sections(
     for key, value in healed_strings.items():
         result[key] = value
     return result
+
+
+# =============================================================================
+# TASK 5: Section Key Normalization & Redundant Key Dropping
+# =============================================================================
+
+# Keys that are redundant when more specific versions exist
+_REDUNDANT_KEY_RULES: List[Tuple[str, str, List[str]]] = [
+    # (key_to_drop, required_key_for_drop, segments_to_apply)
+    # Drop pilot_plan_html if roadmap_90d_html exists (for SOLO and TEAM)
+    ("pilot_plan_html", "roadmap_90d_html", ["SOLO", "TEAM"]),
+    ("PILOT_PLAN_HTML", "ROADMAP_90D_HTML", ["SOLO", "TEAM"]),
+    # Drop roadmap_html if roadmap_90d_html exists (all segments)
+    ("roadmap_html", "roadmap_90d_html", ["SOLO", "TEAM", "KMU"]),
+    ("ROADMAP_HTML", "ROADMAP_90D_HTML", ["SOLO", "TEAM", "KMU"]),
+]
+
+
+def normalize_section_keys(
+    sections: Dict[str, Any],
+    segment: Literal["SOLO", "TEAM", "KMU"]
+) -> Tuple[Dict[str, Any], List[str]]:
+    """
+    TASK 5: Normalize section keys and drop redundant ones.
+
+    - Normalizes keys to case-insensitive comparison
+    - Drops redundant keys based on segment rules:
+      - pilot_plan_html dropped if roadmap_90d_html exists (SOLO, TEAM)
+      - roadmap_html dropped if roadmap_90d_html exists (all segments)
+
+    Args:
+        sections: Original sections dict
+        segment: Canonical segment (SOLO, TEAM, KMU)
+
+    Returns:
+        Tuple of (normalized_sections, dropped_keys)
+    """
+    result = dict(sections)
+    dropped_keys: List[str] = []
+
+    # Build case-insensitive lookup
+    lower_key_map: Dict[str, str] = {k.lower(): k for k in sections.keys()}
+
+    for key_to_drop, required_key, applicable_segments in _REDUNDANT_KEY_RULES:
+        # Check if this rule applies to current segment
+        if segment not in applicable_segments:
+            continue
+
+        # Check if both keys exist (case-insensitive)
+        drop_key_lower = key_to_drop.lower()
+        required_key_lower = required_key.lower()
+
+        if drop_key_lower in lower_key_map and required_key_lower in lower_key_map:
+            actual_drop_key = lower_key_map[drop_key_lower]
+            actual_required_key = lower_key_map[required_key_lower]
+
+            # Only drop if required key has non-empty content
+            required_content = result.get(actual_required_key)
+            if required_content and (isinstance(required_content, str) and len(required_content) > 50):
+                if actual_drop_key in result:
+                    del result[actual_drop_key]
+                    dropped_keys.append(actual_drop_key)
+                    log.info(
+                        "[TASK5] Dropped redundant key '%s' (segment=%s, '%s' exists)",
+                        actual_drop_key, segment, actual_required_key
+                    )
+
+    return result, dropped_keys
 
 
 # =============================================================================
@@ -303,6 +451,27 @@ BOILERPLATE_PATTERNS: List[BoilerplatePattern] = [
         pattern=r'(?is)<p[^>]*>\s*Bitte\s+beschreibe?\s+kurz[:\s]*[^<]*</p>(?:\s*<(?:ul|ol)>.*?</(?:ul|ol)>)?',
         action="drop",
         description="PROMPT_DESCRIBE_BLOCK: 'Bitte beschreibe kurz' with list"
+    ),
+    # -----------------------------------------------------------------
+    # TASK 3: "Wobei kann ich helfen? Bitte beschreibe kurz:" Block
+    # -----------------------------------------------------------------
+    # A6) Block pattern: <p>Wobei kann ich (dir) helfen? Bitte beschreibe kurz:</p><ul/ol>...</ul/ol>
+    BoilerplatePattern(
+        pattern=r'(?is)<p[^>]*>\s*Wobei\s+kann\s+ich\s+(?:dir\s+)?helfen\?\s*(?:Bitte\s+beschreib(?:e|en)\s+kurz:?)?\s*</p>\s*(?:<(?:ul|ol)[^>]*>.*?</(?:ul|ol)>)?',
+        action="drop",
+        description="PROMPT_WOBEI_HELFEN_BLOCK: 'Wobei kann ich helfen? Bitte beschreibe kurz:' + list"
+    ),
+    # A7) Text-only fallback without HTML wrapper
+    BoilerplatePattern(
+        pattern=r'(?i)\bWobei\s+kann\s+ich\s+(?:dir\s+)?helfen\?\s*(?:Bitte\s+beschreib(?:e|en)\s+kurz:?)?\b',
+        action="drop",
+        description="PROMPT_WOBEI_HELFEN_TEXT: 'Wobei kann ich helfen?' text-only fallback"
+    ),
+    # A8) Extended patterns for various prompt formats
+    BoilerplatePattern(
+        pattern=r'(?is)<p[^>]*>\s*(?:Wie|Wobei)\s+kann\s+ich\s+(?:dir|Ihnen|euch)?\s*(?:dabei\s+)?(?:helfen|unterstützen|assistieren)\?[^<]*</p>\s*(?:<(?:ul|ol)[^>]*>.*?</(?:ul|ol)>)?',
+        action="drop",
+        description="PROMPT_KANN_ICH_EXTENDED: Extended 'Wie/Wobei kann ich helfen' patterns"
     ),
     BoilerplatePattern(
         pattern=r'(?is)<div[^>]*class="[^"]*(?:chat-input|prompt-box|input-area)[^"]*"[^>]*>.*?</div>',
@@ -528,13 +697,28 @@ SOLO_TERM_REPLACEMENTS: Dict[str, str] = {
     "Stakeholder": "Beteiligte",
     "Audit-Trail": "Protokoll",
     "Audit Trail": "Protokoll",
-    "Governance": "Leitplanken",
+    "Audit": "Prüfung",
+    "Audits": "Prüfungen",
+    "Governance": "Spielregeln",
     "Compliance": "Regelkonformität",
     "Policy": "Richtlinie",
     "Rollout": "Einführung",
     "Deployment": "Bereitstellung",
+    # TASK 2: Additional terms from validator warnings
+    "Executive": "Kurzfassung",
+    "Executive Summary": "Kurzfassung",
+    "executive": "kurzfassung",
+    "Layer": "Ebene",
+    "Layers": "Ebenen",
+    "layer": "ebene",
+    "Plattform": "Lösung",
+    "Plattformen": "Lösungen",
+    "plattform": "lösung",
+    "Baukasten": "Werkzeugkasten",
+    "baukasten": "werkzeugkasten",
     # KPI/Dashboard terms
     "KPI-Dashboard": "Kennzahlen-Übersicht",
+    "kpi-dashboard": "kennzahlen-übersicht",
     "Dashboard": "Übersicht",
     "Metriken": "Kennzahlen",
     "Analytics": "Auswertungen",
@@ -543,7 +727,8 @@ SOLO_TERM_REPLACEMENTS: Dict[str, str] = {
     "Orchestrierung": "Koordination",
     "Skalierung": "Wachstum",
     "skalierbar": "erweiterbar",
-    "Enterprise": "Unternehmens",
+    "Enterprise": "größere Firma",
+    "enterprise": "größere firma",
     "enterprise-grade": "professionell",
     # Team/Org terms
     "Team-Meeting": "Besprechung",
@@ -557,34 +742,51 @@ SOLO_TERM_REPLACEMENTS_EXTENDED: Dict[str, str] = {
     # Additional mappings from TASK 2 specification
     "Governance": "Spielregeln",
     "governance": "spielregeln",
-    "Executive": "Inhaber:in",
-    "executive": "Inhaber:in",
+    "Executive": "Kurzfassung",
+    "executive": "kurzfassung",
+    "Executive Summary": "Kurzfassung",
+    "executive summary": "kurzfassung",
     "Audit": "Prüfung",
     "audit": "prüfung",
     "Audits": "Prüfungen",
+    "Audit-Trail": "Protokoll",
+    "audit-trail": "protokoll",
     "Rollout": "Einführung",
     "rollout": "einführung",
     "Layer": "Ebene",
     "layer": "ebene",
     "Layers": "Ebenen",
-    "Enterprise": "größere Unternehmen",
-    "enterprise": "größere Unternehmen",
+    "Enterprise": "größere Firma",
+    "enterprise": "größere firma",
     "Blueprint": "Vorlage",
-    "blueprint": "Vorlage",
+    "blueprint": "vorlage",
     "Blueprints": "Vorlagen",
     "Framework": "Vorgehensrahmen",
-    "framework": "Vorgehensrahmen",
+    "framework": "vorgehensrahmen",
     "Frameworks": "Vorgehensrahmen",
     "KPI-Dashboard": "Kennzahlen-Übersicht",
-    "kpi-dashboard": "Kennzahlen-Übersicht",
+    "kpi-dashboard": "kennzahlen-übersicht",
     "Operating Model": "Arbeitsmodell",
-    "operating model": "Arbeitsmodell",
+    "operating model": "arbeitsmodell",
     "Compliance": "Regelkonformität",
-    "compliance": "Regelkonformität",
+    "compliance": "regelkonformität",
+    # TASK 2: Additional terms from validator warnings
+    "Architektur": "Aufbau",
+    "architektur": "aufbau",
+    "Stakeholder": "Beteiligte",
+    "stakeholder": "beteiligte",
+    "Plattform": "Lösung",
+    "plattform": "lösung",
+    "Skalierung": "Wachstum",
+    "skalierung": "wachstum",
+    "Engine": "Modul",
+    "engine": "modul",
+    "Baukasten": "Werkzeugkasten",
+    "baukasten": "werkzeugkasten",
     # Additional enterprise terms
-    "Konzern": "größeres Unternehmen",
-    "konzern": "größeres Unternehmen",
-    "Konzerne": "größere Unternehmen",
+    "Konzern": "größere Firma",
+    "konzern": "größere firma",
+    "Konzerne": "größere Firmen",
 }
 
 # SOLO Blacklist Terms (TASK 2: Hard blacklist for SOLO segment)
@@ -609,22 +811,28 @@ SOLO_BLACKLIST_TERMS: List[str] = [
 
 # Fallback replacements for blacklist terms that slip through
 SOLO_BLACKLIST_FALLBACKS: Dict[str, str] = {
-    "Governance": "Leitplanken",
-    "Executive": "Leitung",
-    "Audit": "Check",
+    "Governance": "Spielregeln",
+    "Executive": "Kurzfassung",
+    "Audit": "Prüfung",
     "Rollout": "Einführung",
     "Layer": "Ebene",
-    "Enterprise": "",  # Remove entirely
-    "Blueprint": "Plan",
+    "Enterprise": "größere Firma",
+    "Blueprint": "Vorlage",
     "KPI-Dashboard": "Kennzahlen-Übersicht",
-    "Operating Model": "Arbeitsweise",
-    "Compliance": "Vorgaben",
+    "Operating Model": "Arbeitsmodell",
+    "Compliance": "Regelkonformität",
     "Stakeholder": "Beteiligte",
     "Architektur": "Aufbau",
-    "Framework": "Methode",
+    "Framework": "Vorgehensrahmen",
     "Pipeline": "Ablauf",
     "Deployment": "Bereitstellung",
-    "Konzern": "",  # Remove entirely
+    "Konzern": "größere Firma",
+    # TASK 2: Additional fallbacks
+    "Plattform": "Lösung",
+    "Skalierung": "Wachstum",
+    "Engine": "Modul",
+    "Baukasten": "Werkzeugkasten",
+    "Audit-Trail": "Protokoll",
 }
 
 # Patterns to remove entirely for SOLO (too complex)
@@ -1331,6 +1539,99 @@ def enforce_payback_consistency(
 
 
 # =============================================================================
+# TASK 4: Payback Progress Label Sanitization (% removal + deduplication)
+# =============================================================================
+
+# Pattern to match "Payback Progress 100%" in various forms
+_PAYBACK_PROGRESS_100_PATTERN = re.compile(
+    r'Payback\s+Progress\s*:?\s*100\s*%',
+    re.IGNORECASE
+)
+
+# Pattern to match any "Payback Progress X%" label
+_PAYBACK_PROGRESS_PERCENT_PATTERN = re.compile(
+    r'Payback\s+Progress\s*:?\s*\d+(?:[.,]\d+)?\s*%',
+    re.IGNORECASE
+)
+
+# Pattern to find payback progress spans/divs for deduplication
+_PAYBACK_PROGRESS_SPAN_PATTERN = re.compile(
+    r'<span[^>]*>\s*Payback\s+Progress\s*:?\s*(\d+(?:[.,]\d+)?)\s*%\s*</span>',
+    re.IGNORECASE | re.DOTALL
+)
+
+
+def sanitize_payback_progress_labels(html: str) -> Tuple[str, int]:
+    """
+    TASK 4: Sanitize Payback Progress labels.
+
+    1. Replace "Payback Progress 100%" → "Payback: erreicht"
+    2. Replace "Payback Progress X%" → "Payback-Fortschritt: X" (no %)
+    3. Remove duplicate payback progress labels (keep first occurrence)
+
+    Args:
+        html: HTML content to sanitize
+
+    Returns:
+        Tuple of (sanitized_html, fixes_applied)
+    """
+    if not html:
+        return html, 0
+
+    result = html
+    fixes_applied = 0
+
+    # Step 1: Replace "Payback Progress 100%" with "Payback: erreicht"
+    if _PAYBACK_PROGRESS_100_PATTERN.search(result):
+        count_100 = len(_PAYBACK_PROGRESS_100_PATTERN.findall(result))
+        result = _PAYBACK_PROGRESS_100_PATTERN.sub("Payback: erreicht", result)
+        fixes_applied += count_100
+        log.debug("[TASK4] Replaced %d 'Payback Progress 100%%' → 'Payback: erreicht'", count_100)
+
+    # Step 2: Replace remaining "Payback Progress X%" → "Payback-Fortschritt: X"
+    def replace_progress_percent(m: re.Match[str]) -> str:
+        nonlocal fixes_applied
+        text: str = m.group(0)
+        # Extract the number
+        num_match = re.search(r'(\d+(?:[.,]\d+)?)', text)
+        if num_match:
+            value = num_match.group(1)
+            fixes_applied += 1
+            # Convert 100 to "erreicht"
+            if value == "100":
+                return "Payback: erreicht"
+            return f"Payback-Fortschritt: {value}"
+        return text
+
+    result = _PAYBACK_PROGRESS_PERCENT_PATTERN.sub(replace_progress_percent, result)
+
+    # Step 3: Remove duplicate payback progress labels (keep first)
+    # Find all span-wrapped payback labels
+    spans = list(_PAYBACK_PROGRESS_SPAN_PATTERN.finditer(result))
+    if len(spans) > 1:
+        # Keep first, remove rest (process in reverse to maintain positions)
+        for span in reversed(spans[1:]):
+            result = result[:span.start()] + result[span.end():]
+            fixes_applied += 1
+            log.debug("[TASK4] Removed duplicate payback progress span")
+
+    # Also deduplicate "Payback: erreicht" if it appears multiple times
+    erreicht_pattern = re.compile(r'Payback:\s*erreicht', re.IGNORECASE)
+    erreicht_matches = list(erreicht_pattern.finditer(result))
+    if len(erreicht_matches) > 1:
+        # Keep first, remove rest
+        for m in reversed(erreicht_matches[1:]):
+            result = result[:m.start()] + result[m.end():]
+            fixes_applied += 1
+            log.debug("[TASK4] Removed duplicate 'Payback: erreicht'")
+
+    if fixes_applied > 0:
+        log.info("[TASK4] Applied %d payback progress label fixes", fixes_applied)
+
+    return result, fixes_applied
+
+
+# =============================================================================
 # FIX G: SEGMENT BUDGET LOGIC
 # =============================================================================
 
@@ -1604,7 +1905,7 @@ def _apply_fix_f_recursive(value: Any, canonical_payback: Optional[Decimal]) -> 
 
 def heal_report_html(
     sections: Dict[str, Any],
-    segment: Literal["solo", "team", "kmu"],
+    segment: Literal["solo", "team", "kmu", "SOLO", "TEAM", "KMU"],
     *,
     canonical_payback_months: Optional[Union[float, Decimal, str]] = None,
     skip_fixes: Optional[Set[str]] = None
@@ -1615,18 +1916,21 @@ def heal_report_html(
     TYPE-SAFE: Recursively heals string leaves while preserving list/dict structures.
     Does NOT convert list/dict to strings.
 
-    Runs all fixes A-G in sequence:
-    1. sanitize_template_phrases (Fix A) - recursive on all string leaves
-    2. enforce_persona_language (Fix B) - recursive on all string leaves
-    3. reduce_redundancy (Fix C) - on top-level HTML string sections only
-    4. trim_incomplete_sentences (Fix E) - recursive on all string leaves
-    5. enforce_roi_rules (Fix D) - on top-level HTML string sections only
-    6. enforce_payback_consistency (Fix F) - recursive on all string leaves
-    7. apply_segment_budget (Fix G) - on top-level HTML string sections only
+    Runs all fixes A-G in sequence (UPDATED ORDER - TASK 6):
+    1. TASK 1: canonicalize_segment() - normalize segment to SOLO/TEAM/KMU
+    2. TASK 5: normalize_section_keys() - drop redundant keys (pilot_plan, roadmap)
+    3. sanitize_template_phrases (Fix A) - recursive on all string leaves
+    4. enforce_persona_language (Fix B) - recursive on all string leaves
+    5. reduce_redundancy (Fix C) - on top-level HTML string sections only
+    6. enforce_roi_rules (Fix D) - on top-level HTML string sections only
+    7. enforce_payback_consistency (Fix F) - recursive on all string leaves
+    8. TASK 4: sanitize_payback_progress_labels() - remove % from payback labels
+    9. apply_segment_budget (Fix G) - on top-level HTML string sections only
+    10. trim_incomplete_sentences (Fix E) - AFTER budget to catch fragments (TASK 6)
 
     Args:
         sections: Dict of section_name -> content (preserves types: list, dict, etc.)
-        segment: Target segment (solo, team, kmu)
+        segment: Target segment (solo, team, kmu) - any case/synonym accepted
         canonical_payback_months: Optional canonical payback value (float, Decimal, or str)
         skip_fixes: Set of fix letters to skip (e.g., {"A", "C"})
 
@@ -1634,6 +1938,11 @@ def heal_report_html(
         HealingResult with processed sections (same structure, types preserved)
     """
     skip = skip_fixes or set()
+
+    # TASK 1: Canonicalize segment at the very beginning
+    canonical_segment = canonicalize_segment(segment)
+    # For internal use, convert to lowercase for existing logic compatibility
+    segment_lower: Literal["solo", "team", "kmu"] = canonical_segment.lower()  # type: ignore
 
     # Parse canonical payback to Decimal for consistent handling
     canonical_payback = parse_payback_months(canonical_payback_months)
@@ -1643,9 +1952,18 @@ def heal_report_html(
     result = HealingResult(sections=healed_sections)
 
     log.info(
-        "[HEALER] Starting heal_report_html (type-safe): segment=%s, sections=%d, skip=%s",
-        segment, len(sections), skip
+        "[HEALER] Starting heal_report_html (type-safe): segment=%s (canonical=%s), sections=%d, skip=%s",
+        segment, canonical_segment, len(sections), skip
     )
+
+    # TASK 5: Normalize section keys and drop redundant ones BEFORE other processing
+    if "KEYS" not in skip:
+        try:
+            healed_sections, dropped_keys = normalize_section_keys(healed_sections, canonical_segment)
+            if dropped_keys:
+                log.info("[TASK5] Dropped %d redundant keys: %s", len(dropped_keys), dropped_keys)
+        except Exception as e:
+            log.warning("[TASK5] Error in key normalization: %s - skipping", e)
 
     # Fix A: Template phrases - RECURSIVE on all string leaves
     if "A" not in skip:
@@ -1662,7 +1980,7 @@ def heal_report_html(
         for key in list(healed_sections.keys()):
             if _is_html_section_key(key):
                 try:
-                    healed_sections[key], count = _apply_fix_b_recursive(healed_sections[key], segment)
+                    healed_sections[key], count = _apply_fix_b_recursive(healed_sections[key], segment_lower)
                     result.persona_replacements += count
                 except Exception as e:
                     log.warning("[FIX-B] Error in section '%s': %s - skipping", key, e)
@@ -1676,16 +1994,6 @@ def heal_report_html(
                 healed_sections = _merge_healed_sections(healed_sections, healed_strings)
         except Exception as e:
             log.warning("[FIX-C] Error in redundancy reduction: %s - skipping", e)
-
-    # Fix E: Incomplete sentences - RECURSIVE on all string leaves
-    if "E" not in skip:
-        for key in list(healed_sections.keys()):
-            if _is_html_section_key(key):
-                try:
-                    healed_sections[key], count = _apply_fix_e_recursive(healed_sections[key])
-                    result.fragments_trimmed += count
-                except Exception as e:
-                    log.warning("[FIX-E] Error in section '%s': %s - skipping", key, e)
 
     # Fix D: ROI rules - on FLAT string sections only
     if "D" not in skip:
@@ -1719,20 +2027,41 @@ def heal_report_html(
         except Exception as e:
             log.warning("[FIX-F] Error in payback consistency (flat): %s - skipping", e)
 
+    # TASK 4: Sanitize payback progress labels (remove %, deduplicate)
+    if "F" not in skip:  # Part of Fix F family
+        for key in list(healed_sections.keys()):
+            if _is_html_section_key(key) and isinstance(healed_sections[key], str):
+                try:
+                    healed_sections[key], count = sanitize_payback_progress_labels(healed_sections[key])
+                    result.payback_fixes += count
+                except Exception as e:
+                    log.warning("[TASK4] Error in section '%s': %s - skipping", key, e)
+
     # Fix G: Segment budget - on FLAT string sections only
     if "G" not in skip:
         try:
             string_sections = _extract_string_sections(healed_sections)
             if string_sections:
-                healed_strings, result.sections_budget_trimmed = apply_segment_budget(string_sections, segment)
+                healed_strings, result.sections_budget_trimmed = apply_segment_budget(string_sections, segment_lower)
                 healed_sections = _merge_healed_sections(healed_sections, healed_strings)
         except Exception as e:
             log.warning("[FIX-G] Error in segment budget: %s - skipping", e)
 
+    # Fix E: Incomplete sentences - RECURSIVE on all string leaves
+    # TASK 6: Moved AFTER Fix G (Segment Budget) to catch fragments from budget trimming
+    if "E" not in skip:
+        for key in list(healed_sections.keys()):
+            if _is_html_section_key(key):
+                try:
+                    healed_sections[key], count = _apply_fix_e_recursive(healed_sections[key])
+                    result.fragments_trimmed += count
+                except Exception as e:
+                    log.warning("[FIX-E] Error in section '%s': %s - skipping", key, e)
+
     # Add healing flag to sections meta
     healed_sections["_redundancy_healed"] = "true"
-    healed_sections["_healer_version"] = "1.1.0"
-    healed_sections["_healer_segment"] = segment
+    healed_sections["_healer_version"] = "1.2.0"  # Bumped version for TASK 1-6 changes
+    healed_sections["_healer_segment"] = canonical_segment  # Use canonical form
 
     result.sections = healed_sections
 
@@ -1757,7 +2086,7 @@ def heal_report_html(
 
 def heal_final_html(
     html: str,
-    segment: Literal["solo", "team", "kmu"] = "team",
+    segment: Literal["solo", "team", "kmu", "SOLO", "TEAM", "KMU"] = "team",
     *,
     canonical_payback_months: Optional[Union[float, Decimal, str]] = None,
     localize_labels: bool = True,
@@ -1774,11 +2103,12 @@ def heal_final_html(
     - Fix B: SOLO blacklist enforcement (for SOLO segment)
     - Fix F: Payback decimal normalization (3.5 → 3,5)
     - TASK 3: Business-case label localization (English → German)
+    - TASK 4: Payback Progress label sanitization (remove %, deduplicate)
     - Consecutive duplicate removal (conservative)
 
     Args:
         html: Final rendered HTML string
-        segment: Target segment (for segment-specific healing)
+        segment: Target segment (for segment-specific healing) - any case accepted
         canonical_payback_months: Optional canonical payback value
         localize_labels: If True, localize English BC labels to German
         run_quality_check: If True, log quality gate results (no exception)
@@ -1789,11 +2119,15 @@ def heal_final_html(
     if not html or not isinstance(html, str):
         return html or ""
 
+    # TASK 1: Canonicalize segment
+    canonical_segment = canonicalize_segment(segment)
+    segment_lower: Literal["solo", "team", "kmu"] = canonical_segment.lower()  # type: ignore
+
     canonical_payback = parse_payback_months(canonical_payback_months)
     result = html
     fixes_applied = 0
 
-    log.info("[HEALER-POST] Starting heal_final_html: len=%d, segment=%s", len(html), segment)
+    log.info("[HEALER-POST] Starting heal_final_html: len=%d, segment=%s (canonical=%s)", len(html), segment, canonical_segment)
 
     # Fix A: Remove prompt/template artifacts (TASK 1 - robust patterns)
     try:
@@ -1814,7 +2148,7 @@ def heal_final_html(
         log.warning("[HEALER-POST] Fix A error: %s", e)
 
     # Fix B: SOLO blacklist enforcement (TASK 2)
-    if segment == "solo":
+    if segment_lower == "solo":
         try:
             result, blacklist_fixes = _enforce_solo_blacklist(result)
             fixes_applied += blacklist_fixes
@@ -1834,6 +2168,13 @@ def heal_final_html(
     except Exception as e:
         log.warning("[HEALER-POST] Fix F error: %s", e)
 
+    # TASK 4: Sanitize payback progress labels (remove %, deduplicate)
+    try:
+        result, payback_label_fixes = sanitize_payback_progress_labels(result)
+        fixes_applied += payback_label_fixes
+    except Exception as e:
+        log.warning("[HEALER-POST] TASK4 payback label error: %s", e)
+
     # TASK 3: Business-case label localization
     if localize_labels:
         try:
@@ -1842,7 +2183,7 @@ def heal_final_html(
         except Exception as e:
             log.warning("[HEALER-POST] Label localization error: %s", e)
 
-    # Remove duplicate "Progress 100%" (keep first)
+    # Remove duplicate "Progress 100%" (keep first) - legacy pattern
     try:
         matches = list(PAYBACK_PROGRESS_PATTERN.finditer(result))
         if len(matches) > 1:
@@ -1861,7 +2202,7 @@ def heal_final_html(
     # TASK 4: Optional quality gate check (logs only, no exception)
     if run_quality_check:
         try:
-            qg_result = run_quality_gate(result, segment, strict=False)
+            qg_result = run_quality_gate(result, segment_lower, strict=False)
             if not qg_result.passed:
                 log.warning(
                     "[HEALER-POST] Quality gate violations remaining: %s",
