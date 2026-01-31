@@ -6640,7 +6640,7 @@
                             {% set gov_level = 'excellent' if gov_score >= 80 else 'good' if gov_score >= 65 else 'medium' if gov_score >= 50 else 'low' %}
                             {% set gov_color = '#22c55e' if gov_level == 'excellent' else '#84cc16' if gov_level == 'good' else '#eab308' if gov_level == 'medium' else '#ef4444' %}
                             <div class="dimension-card-modern" data-level="{{ gov_level }}" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
-                                <div class="dimension-label" style="font-size: 8pt; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-bottom: 8px; font-weight: 600;">Governance</div>
+                                <div class="dimension-label" style="font-size: 8pt; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-bottom: 8px; font-weight: 600;">{{ ui("governance_label", "Governance") }}</div>
                                 <div class="dimension-score" style="font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 8px; color: {{ gov_color }};">{{ gov_score }}</div>
                                 <div class="dimension-bar" style="height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
                                     <div class="dimension-bar-fill" style="width: {{ gov_score }}%; height: 100%; border-radius: 3px; background: {{ gov_color }};"></div>
@@ -6780,22 +6780,20 @@
                     </div>
 
                     <!-- FINAL CHECK with prominent actions - v5.4.4 Visual Upgrade -->
+                    <!-- TASK A FIX: Using p.final-check-item instead of flex spans for WeasyPrint word-wrap compatibility -->
                     {% if FINAL_CHECK_INTRO or FINAL_CHECK_DECISIONS %}
-                    <div style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); color: white; padding: 24px; border-radius: 16px; margin-bottom: 24px; box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);">
+                    <div class="final-check-box" style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); color: white; padding: 24px; border-radius: 16px; margin-bottom: 24px; box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);">
                         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
                             <span style="font-size: 28px; line-height: 1;">🚀</span>
                             <h3 style="font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -0.02em;">Final-Check</h3>
                         </div>
                         {% if FINAL_CHECK_INTRO %}
-                        <p style="margin: 0 0 20px 0; font-size: 15px; line-height: 1.6; opacity: 0.95;">{{ FINAL_CHECK_INTRO }}</p>
+                        <p style="margin: 0 0 20px 0; font-size: 15px; line-height: 1.6; opacity: 0.95; word-wrap: break-word; overflow-wrap: break-word;">{{ FINAL_CHECK_INTRO }}</p>
                         {% endif %}
                         {% if FINAL_CHECK_DECISIONS %}
-                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div class="final-check-list" style="display: flex; flex-direction: column; gap: 12px;">
                             {% for decision in FINAL_CHECK_DECISIONS %}
-                            <div style="display: flex; align-items: flex-start; gap: 12px; background: rgba(255, 255, 255, 0.15); padding: 14px 18px; border-radius: 10px; border-left: 4px solid rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px);">
-                                <span style="font-size: 18px; font-weight: 700; color: rgba(255, 255, 255, 0.9); min-width: 24px;">•</span>
-                                <span style="font-size: 15px; line-height: 1.5; color: rgba(255, 255, 255, 0.95);">{{ decision }}</span>
-                            </div>
+                            <p class="final-check-item" style="display: block; background: rgba(255, 255, 255, 0.15); padding: 14px 18px; border-radius: 10px; border-left: 4px solid rgba(255, 255, 255, 0.4); margin: 0; font-size: 15px; line-height: 1.5; color: rgba(255, 255, 255, 0.95); word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">• {{ decision }}</p>
                             {% endfor %}
                         </div>
                         {% endif %}
@@ -7731,7 +7729,7 @@
                 <section class="section chapter">
                     <div class="section-header">
                         <div class="section-title">
-                            <span class="section-kicker">Governance</span>
+                            <span class="section-kicker">{{ ui("governance_section_kicker", "Governance") }}</span>
                             <br/>
                             <h2>AI Mini-Policy</h2>
                         </div>

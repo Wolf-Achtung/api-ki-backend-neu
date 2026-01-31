@@ -977,6 +977,108 @@ BUSINESS_CASE_LABEL_LOCALIZATION_DE: Dict[str, str] = {
 }
 
 
+# =============================================================================
+# TASK D (P1 optional): ROI as Ranges/Qualitative for SOLO
+# =============================================================================
+# For SOLO segment, convert exact ROI % values to qualitative ranges
+# to avoid overly precise numbers that may seem unrealistic.
+
+# ROI value ranges and their qualitative descriptions (German)
+ROI_QUALITATIVE_RANGES_DE = [
+    (300, "sehr hoch (über 300%)"),
+    (200, "hoch (200-300%)"),
+    (150, "gut (150-200%)"),
+    (100, "solide (100-150%)"),
+    (50, "moderat (50-100%)"),
+    (0, "gering (unter 50%)"),
+]
+
+
+def format_roi_span(roi_value: float, lang: str = "de") -> str:
+    """
+    TASK D: Convert exact ROI % to qualitative range/span.
+
+    For SOLO segment, replaces exact ROI numbers with ranges
+    to make the numbers more approachable and realistic.
+
+    Args:
+        roi_value: ROI as percentage (e.g., 200.0 for 200%)
+        lang: Language code (currently only 'de' supported)
+
+    Returns:
+        Qualitative ROI description like "hoch (200-300%)"
+
+    Examples:
+        >>> format_roi_span(250.0)
+        'hoch (200-300%)'
+        >>> format_roi_span(75.0)
+        'moderat (50-100%)'
+    """
+    if lang != "de":
+        # For non-German, return the numeric value for now
+        return f"{roi_value:.0f}%"
+
+    for threshold, description in ROI_QUALITATIVE_RANGES_DE:
+        if roi_value >= threshold:
+            return description
+
+    return "gering (unter 50%)"
+
+
+def sanitize_roi_for_solo(html: str) -> Tuple[str, int]:
+    """
+    TASK D: Convert exact ROI % values to qualitative ranges in SOLO HTML.
+
+    Finds patterns like "ROI: 250%" or "ROI von 200%" and replaces
+    with qualitative descriptions for SOLO.
+
+    Args:
+        html: HTML content to process
+
+    Returns:
+        Tuple of (processed_html, replacements_count)
+
+    Example patterns matched:
+        - "ROI: 200%"
+        - "ROI von 150%"
+        - "200% ROI"
+        - "ROI 12M: 180%"
+    """
+    if not html:
+        return html, 0
+
+    result = html
+    replacement_count = 0
+
+    # Pattern for ROI followed by percentage
+    roi_patterns = [
+        # "ROI: 200%" or "ROI von 200%" or "ROI 200%"
+        (r'ROI[\s:]*(?:von\s+)?(\d+(?:[.,]\d+)?)\s*%', r'ROI: {qual}'),
+        # "200% ROI" - percentage before ROI
+        (r'(\d+(?:[.,]\d+)?)\s*%\s*ROI', r'{qual} ROI'),
+        # "ROI 12M: 200%" - with 12M suffix
+        (r'ROI\s*(?:12M|12\s*M)[\s:]*(\d+(?:[.,]\d+)?)\s*%', r'ROI 12M: {qual}'),
+    ]
+
+    for pattern, replacement_template in roi_patterns:
+        matches = list(re.finditer(pattern, result, re.IGNORECASE))
+        for match in reversed(matches):  # Process in reverse to maintain positions
+            try:
+                roi_str = match.group(1).replace(',', '.')
+                roi_val = float(roi_str)
+                qual = format_roi_span(roi_val)
+                replacement = replacement_template.format(qual=qual)
+                result = result[:match.start()] + replacement + result[match.end():]
+                replacement_count += 1
+            except (ValueError, IndexError):
+                continue
+
+    if replacement_count > 0:
+        log.info("[TASK-D] SOLO ROI: Converted %d exact ROI values to qualitative ranges", replacement_count)
+
+    return result, replacement_count
+
+
 def enforce_persona_language(
     html: str,
     segment: Literal["solo", "team", "kmu"]
@@ -2356,6 +2458,14 @@ def heal_final_html(
             fixes_applied += label_fixes
         except Exception as e:
             log.warning("[HEALER-POST] Label localization error: %s", e)
+
+    # TASK D: ROI as qualitative ranges for SOLO (P1 optional)
+    if segment_lower == "solo":
+        try:
+            result, roi_fixes = sanitize_roi_for_solo(result)
+            fixes_applied += roi_fixes
+        except Exception as e:
+            log.warning("[HEALER-POST] TASK-D ROI sanitization error: %s", e)
 
     # Remove duplicate "Progress 100%" (keep first) - legacy pattern
     try:
