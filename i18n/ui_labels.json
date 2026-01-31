@@ -1261,5 +1261,86 @@
     "fr": "Gain de temps (h)",
     "es": "Ahorro de tiempo (h)",
     "it": "Risparmio tempo (h)"
+  },
+  "_solo_labels_meta": {
+    "description": "SOLO-specific labels for simplified terminology (Briefing: SOLO Final Polish)",
+    "usage": "Use get_label_for_segment(key, lang, segment='SOLO') or append _solo to key"
+  },
+  "toc_item_summary_solo": {
+    "de": "Kurzfassung & Bewertung",
+    "en": "Summary & Assessment",
+    "fr": "Résumé & évaluation",
+    "es": "Resumen & evaluación",
+    "it": "Riepilogo & valutazione"
+  },
+  "governance_label_solo": {
+    "de": "Spielregeln",
+    "en": "Ground Rules",
+    "fr": "Règles du jeu",
+    "es": "Reglas del juego",
+    "it": "Regole del gioco"
+  },
+  "governance_section_kicker_solo": {
+    "de": "Spielregeln",
+    "en": "Ground Rules",
+    "fr": "Règles du jeu",
+    "es": "Reglas del juego",
+    "it": "Regole del gioco"
+  },
+  "executive_label_solo": {
+    "de": "Kurzfassung",
+    "en": "Summary",
+    "fr": "Résumé",
+    "es": "Resumen",
+    "it": "Riepilogo"
+  },
+  "compliance_label_solo": {
+    "de": "Regelkonformität",
+    "en": "Compliance",
+    "fr": "Conformité",
+    "es": "Cumplimiento",
+    "it": "Conformità"
+  },
+  "audit_label_solo": {
+    "de": "Prüfung",
+    "en": "Review",
+    "fr": "Examen",
+    "es": "Revisión",
+    "it": "Revisione"
+  },
+  "rollout_label_solo": {
+    "de": "Einführung",
+    "en": "Introduction",
+    "fr": "Introduction",
+    "es": "Introducción",
+    "it": "Introduzione"
+  },
+  "framework_label_solo": {
+    "de": "Vorgehensrahmen",
+    "en": "Approach",
+    "fr": "Approche",
+    "es": "Enfoque",
+    "it": "Approccio"
+  },
+  "stakeholder_label_solo": {
+    "de": "Beteiligte",
+    "en": "Participants",
+    "fr": "Participants",
+    "es": "Participantes",
+    "it": "Partecipanti"
+  },
+  "enterprise_label_solo": {
+    "de": "größere Firma",
+    "en": "larger company",
+    "fr": "grande entreprise",
+    "es": "empresa grande",
+    "it": "grande azienda"
+  },
+  "kpi_dashboard_label_solo": {
+    "de": "Kennzahlen-Übersicht",
+    "en": "Key Figures Overview",
+    "fr": "Aperçu des indicateurs",
+    "es": "Resumen de indicadores",
+    "it": "Panoramica indicatori"
   }
 }
