@@ -158,9 +158,11 @@ class TestReportHealerIntegration:
 
         sections = {"TEST_HTML": "<p>Test content</p>"}
 
-        for segment in ["solo", "team", "kmu"]:
+        # Segments are canonicalized to uppercase (TASK 1: Segment Canonicalization)
+        segment_mapping = {"solo": "SOLO", "team": "TEAM", "kmu": "KMU"}
+        for segment, canonical in segment_mapping.items():
             result = heal_report_html(sections, segment)  # type: ignore[arg-type]
-            assert result.sections.get("_healer_segment") == segment
+            assert result.sections.get("_healer_segment") == canonical
 
     def test_healer_idempotent_in_pipeline(self) -> None:
         """Running healer twice should produce same result."""

@@ -329,7 +329,8 @@ class TestHealReportHtmlPipeline:
         # Verify all fixes applied
         assert result.total_fixes >= 0
         assert "_redundancy_healed" in result.sections
-        assert result.sections["_healer_segment"] == "solo"
+        # TASK 1: Segment is now stored in canonical uppercase form
+        assert result.sections["_healer_segment"] == "SOLO"
 
     def test_skip_fixes(self):
         """Can skip specific fixes."""
@@ -1087,26 +1088,31 @@ class TestTask3BusinessCaseLabelLocalization:
         """heal_final_html should localize BC labels by default."""
         from services.report_healer import heal_final_html
 
+        # Note: Payback Progress 100% is handled by TASK 4 (becomes "Payback: erreicht")
+        # Use Payback Progress without 100% to test localization
         html = """<html>
-            <p>Payback Progress: 100%</p>
+            <p>Monthly Savings: 2000</p>
             <p>Time Savings Hours: 40</p>
         </html>"""
 
         result = heal_final_html(html, "team", localize_labels=True)
 
-        assert "Payback Progress" not in result
-        assert "Amortisations-Fortschritt" in result
+        assert "Monthly Savings" not in result
+        assert "Time Savings Hours" not in result
+        assert "Monatliche Einsparung" in result or "Zeitersparnis" in result
 
     def test_heal_final_html_skip_localization(self):
         """heal_final_html can skip localization if requested."""
         from services.report_healer import heal_final_html
 
-        html = "<p>Payback Progress: 100%</p>"
+        # Note: Payback Progress 100% is handled by TASK 4 (becomes "Payback: erreicht")
+        # Use Monthly Savings to test skip localization properly
+        html = "<p>Monthly Savings: 2000</p>"
 
         result = heal_final_html(html, "team", localize_labels=False)
 
-        # Should still have English labels
-        assert "Payback Progress" in result
+        # Should still have English labels when localization is skipped
+        assert "Monthly Savings" in result
 
 
 # =============================================================================
