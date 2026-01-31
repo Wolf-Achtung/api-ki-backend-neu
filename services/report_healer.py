@@ -795,13 +795,19 @@ SOLO_TERM_REPLACEMENTS: Dict[str, str] = {
 
 # Extended SOLO term replacements (TASK 2: Comprehensive mapping)
 SOLO_TERM_REPLACEMENTS_EXTENDED: Dict[str, str] = {
+    # TASK 2 (FINAL FIX): Phrase-level mappings (must come first for priority)
+    "Executive Summary & Kurzurteil": "Kurzfassung & Bewertung",
+    "Executive Summary und Kurzurteil": "Kurzfassung und Bewertung",
+    "EXECUTIVE SUMMARY": "KURZFASSUNG",
+    "Executive Summary": "Kurzfassung",
+    "executive summary": "kurzfassung",
     # Additional mappings from TASK 2 specification
     "Governance": "Spielregeln",
     "governance": "spielregeln",
+    "GOVERNANCE": "SPIELREGELN",
     "Executive": "Kurzfassung",
     "executive": "kurzfassung",
-    "Executive Summary": "Kurzfassung",
-    "executive summary": "kurzfassung",
+    "EXECUTIVE": "KURZFASSUNG",
     "Audit": "Prüfung",
     "audit": "prüfung",
     "Audits": "Prüfungen",
@@ -1627,6 +1633,22 @@ _PAYBACK_PROGRESS_SPAN_PATTERN = re.compile(
     re.IGNORECASE | re.DOTALL
 )
 
+# TASK 1 (FINAL FIX): Pattern for split-span Payback Progress
+# Matches: <span>Payback Progress</span><span>100%</span> and variants
+_PAYBACK_PROGRESS_SPLIT_SPAN_PATTERN = re.compile(
+    r'Payback\s*Progress\s*'                      # Label
+    r'(?:</[^>]+>\s*<[^>]+>\s*)*'                  # Zero or more closing/opening tags
+    r'(\d{1,3})\s*%',                             # Value with %
+    re.IGNORECASE | re.DOTALL
+)
+
+# Pattern for split-span with full HTML wrapper (more precise)
+_PAYBACK_PROGRESS_SPLIT_SPAN_FULL_PATTERN = re.compile(
+    r'<span[^>]*>\s*Payback\s*Progress\s*</span>\s*'  # Label in span
+    r'<span[^>]*>\s*(\d{1,3})\s*%?\s*</span>',        # Value in separate span
+    re.IGNORECASE | re.DOTALL
+)
+
 
 def sanitize_payback_progress_labels(html: str) -> Tuple[str, int]:
     """
@@ -1647,6 +1669,26 @@ def sanitize_payback_progress_labels(html: str) -> Tuple[str, int]:
 
     result = html
     fixes_applied = 0
+
+    # TASK 1 (FINAL FIX): Step 0: Handle split-span Payback Progress first
+    # Pattern: <span>Payback Progress</span><span>100%</span>
+    def replace_split_span(m: re.Match[str]) -> str:
+        nonlocal fixes_applied
+        value = m.group(1)
+        fixes_applied += 1
+        if value == "100":
+            log.debug("[TASK1-FINAL] Replaced split-span 'Payback Progress 100%%' → 'Payback: erreicht'")
+            return "Payback: erreicht"
+        log.debug("[TASK1-FINAL] Replaced split-span 'Payback Progress %s%%' → 'Payback-Fortschritt: %s'", value, value)
+        return f"Payback-Fortschritt: {value}"
+
+    # First try full span pattern (more precise)
+    if _PAYBACK_PROGRESS_SPLIT_SPAN_FULL_PATTERN.search(result):
+        result = _PAYBACK_PROGRESS_SPLIT_SPAN_FULL_PATTERN.sub(replace_split_span, result)
+
+    # Then try generic split pattern
+    if _PAYBACK_PROGRESS_SPLIT_SPAN_PATTERN.search(result):
+        result = _PAYBACK_PROGRESS_SPLIT_SPAN_PATTERN.sub(replace_split_span, result)
 
     # Step 1: Replace "Payback Progress 100%" with "Payback: erreicht"
     if _PAYBACK_PROGRESS_100_PATTERN.search(result):
@@ -1691,6 +1733,15 @@ def sanitize_payback_progress_labels(html: str) -> Tuple[str, int]:
             result = result[:m.start()] + result[m.end():]
             fixes_applied += 1
             log.debug("[TASK4] Removed duplicate 'Payback: erreicht'")
+
+    # TASK 1 (FINAL FIX): Step 4: Replace any remaining standalone "Payback Progress" labels
+    # This catches edge cases where the label exists without a value
+    remaining_pp = re.compile(r'Payback\s+Progress(?!\s*-?\s*Fortschritt)', re.IGNORECASE)
+    if remaining_pp.search(result):
+        count_remaining = len(remaining_pp.findall(result))
+        result = remaining_pp.sub("Payback-Status", result)
+        fixes_applied += count_remaining
+        log.debug("[TASK1-FINAL] Replaced %d remaining 'Payback Progress' → 'Payback-Status'", count_remaining)
 
     if fixes_applied > 0:
         log.info("[TASK4] Applied %d payback progress label fixes", fixes_applied)
@@ -2214,9 +2265,17 @@ def heal_final_html(
     except Exception as e:
         log.warning("[HEALER-POST] Fix A error: %s", e)
 
-    # Fix B: SOLO blacklist enforcement (TASK 2)
+    # Fix B: SOLO blacklist enforcement (TASK 2 + TASK 3 FINAL FIX)
     if segment_lower == "solo":
         try:
+            # TASK 2 (FINAL FIX): First apply phrase-level replacements
+            for phrase, replacement in SOLO_TERM_REPLACEMENTS_EXTENDED.items():
+                if phrase in result:
+                    result = result.replace(phrase, replacement)
+                    fixes_applied += 1
+                    log.debug("[HEALER-POST] Replaced phrase '%s' → '%s'", phrase, replacement)
+
+            # Then apply term-level blacklist enforcement
             result, blacklist_fixes = _enforce_solo_blacklist(result)
             fixes_applied += blacklist_fixes
         except Exception as e:
