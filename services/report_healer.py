@@ -45,6 +45,10 @@ __all__ = [
     "run_quality_gate",
     "canonicalize_segment",
     "normalize_section_keys",
+    "sanitize_quickwin_empty_fields",
+    "sanitize_input_checklist",
+    "format_roi_span",
+    "sanitize_roi_for_solo",
     "QualityGateResult",
     "ReportQualityError",
     "HealingResult",
@@ -835,13 +839,40 @@ SOLO_TERM_REPLACEMENTS: Dict[str, str] = {
 
 # Extended SOLO term replacements (TASK 2: Comprehensive mapping)
 SOLO_TERM_REPLACEMENTS_EXTENDED: Dict[str, str] = {
+    # TASK 4 (P1 Final Solo Polish): Phrase-level Governance replacements
+    # MUST come FIRST - before simple "Governance" → "Spielregeln" replacement
+    "starker Governance": "klaren Spielregeln",
+    "starke Governance": "klare Spielregeln",
+    "starken Governance": "klaren Spielregeln",
+    "solider Governance": "soliden Spielregeln",
+    "solide Governance": "solide Spielregeln",
+    "soliden Governance": "soliden Spielregeln",
+    "guter Governance": "guten Spielregeln",
+    "gute Governance": "gute Spielregeln",
+    "guten Governance": "guten Spielregeln",
+    "robuster Governance": "klaren Spielregeln",
+    "robuste Governance": "klare Spielregeln",
+    "robusten Governance": "klaren Spielregeln",
+    "effektiver Governance": "wirksamen Spielregeln",
+    "effektive Governance": "wirksame Spielregeln",
+    "effektiven Governance": "wirksamen Spielregeln",
+    "mit Governance": "mit Spielregeln",
+    "zur Governance": "zu den Spielregeln",
+    "der Governance": "der Spielregeln",
+    "einer Governance": "klarer Spielregeln",
+    "die Governance": "die Spielregeln",
+    "Governance-Aspekte": "Spielregeln",
+    "Governance-Strukturen": "Spielregeln",
+    "Governance-Prozesse": "Arbeitsabläufe",
+    "Governance-Framework": "Spielregelwerk",
+    "Governance-Modell": "Regelwerk",
     # TASK 2 (FINAL FIX): Phrase-level mappings (must come first for priority)
     "Executive Summary & Kurzurteil": "Kurzfassung & Bewertung",
     "Executive Summary und Kurzurteil": "Kurzfassung und Bewertung",
     "EXECUTIVE SUMMARY": "KURZFASSUNG",
     "Executive Summary": "Kurzfassung",
     "executive summary": "kurzfassung",
-    # Additional mappings from TASK 2 specification
+    # Additional mappings from TASK 2 specification (simple terms AFTER phrases)
     "Governance": "Spielregeln",
     "governance": "spielregeln",
     "GOVERNANCE": "SPIELREGELN",
@@ -1077,6 +1108,166 @@ def sanitize_roi_for_solo(html: str) -> Tuple[str, int]:
         log.info("[TASK-D] SOLO ROI: Converted %d exact ROI values to qualitative ranges", replacement_count)
 
     return result, replacement_count
+
+
+# =============================================================================
+# TASK 1 (P0 Final Solo Polish): Quick Wins Empty Field Failsafe
+# =============================================================================
+
+# Patterns to detect Quick Win blocks with empty content
+QUICKWIN_EMPTY_BLOCK_PATTERNS = [
+    # Pattern: <div class="quick-win-problem" ...><strong>...</strong><p></p></div>
+    (
+        r'<div\s+class="quick-win-problem"[^>]*>\s*<strong[^>]*>[^<]*</strong>\s*<p[^>]*>\s*</p>\s*</div>',
+        "Problem"
+    ),
+    # Pattern: <div class="quick-win-wirkung" ...><strong>...</strong><p></p></div>
+    (
+        r'<div\s+class="quick-win-wirkung"[^>]*>\s*<strong[^>]*>[^<]*</strong>\s*<p[^>]*>\s*</p>\s*</div>',
+        "Wirkung"
+    ),
+    # Pattern: <div class="quick-win-umsetzung" ...><strong>...</strong><p></p></div>
+    (
+        r'<div\s+class="quick-win-umsetzung"[^>]*>\s*<strong[^>]*>[^<]*</strong>\s*<p[^>]*>\s*</p>\s*</div>',
+        "Umsetzung"
+    ),
+    # Alternative pattern with whitespace-only paragraph
+    (
+        r'<div\s+class="quick-win-problem"[^>]*>\s*<strong[^>]*>[^<]*</strong>\s*<p[^>]*>\s+</p>\s*</div>',
+        "Problem (whitespace)"
+    ),
+    (
+        r'<div\s+class="quick-win-wirkung"[^>]*>\s*<strong[^>]*>[^<]*</strong>\s*<p[^>]*>\s+</p>\s*</div>',
+        "Wirkung (whitespace)"
+    ),
+    (
+        r'<div\s+class="quick-win-umsetzung"[^>]*>\s*<strong[^>]*>[^<]*</strong>\s*<p[^>]*>\s+</p>\s*</div>',
+        "Umsetzung (whitespace)"
+    ),
+]
+
+
+def sanitize_quickwin_empty_fields(html: str) -> Tuple[str, int]:
+    """
+    TASK 1 (P0 Final Solo Polish): Remove Quick Win blocks with empty PROBLEM/WIRKUNG/UMSETZUNG.
+
+    This is a failsafe for cases where enforce_quickwins_complete didn't catch empty fields.
+    Detects HTML patterns like:
+    <div class="quick-win-problem"><strong>Problem:</strong><p></p></div>
+
+    And removes them entirely to prevent rendering empty boxes.
+
+    Args:
+        html: HTML content to process
+
+    Returns:
+        Tuple of (processed_html, removals_count)
+    """
+    if not html:
+        return html, 0
+
+    result = html
+    removal_count = 0
+
+    for pattern, field_name in QUICKWIN_EMPTY_BLOCK_PATTERNS:
+        try:
+            regex = re.compile(pattern, re.IGNORECASE | re.DOTALL)
+            matches = regex.findall(result)
+            if matches:
+                removal_count += len(matches)
+                result = regex.sub("", result)
+                log.debug(
+                    "[QUICKWIN-FAILSAFE] Removed %d empty %s block(s)",
+                    len(matches), field_name
+                )
+        except re.error as e:
+            log.warning("[QUICKWIN-FAILSAFE] Regex error for %s: %s", field_name, e)
+
+    if removal_count > 0:
+        log.info(
+            "[QUICKWIN-FAILSAFE] Removed %d empty Quick Win field blocks",
+            removal_count
+        )
+
+    return result, removal_count
+
+
+# =============================================================================
+# TASK 3 (P1 Final Solo Polish): Input Checklist Removal
+# =============================================================================
+
+# Patterns to detect input checklist prompts (often leaked into output)
+INPUT_CHECKLIST_PATTERNS = [
+    # Pattern: <ul> containing items like "Branche und Ziel", "Datenlage", "Tool-Übersicht"
+    (
+        r'<ul[^>]*>\s*(?:<li[^>]*>[^<]*(?:Branche\s+und\s+Ziel|Datenlage|Tool-Übersicht|Zielgruppe)[^<]*</li>\s*)+</ul>',
+        "Input checklist with Branche/Datenlage/Tool items"
+    ),
+    # Alternative: <ol> version
+    (
+        r'<ol[^>]*>\s*(?:<li[^>]*>[^<]*(?:Branche\s+und\s+Ziel|Datenlage|Tool-Übersicht|Zielgruppe)[^<]*</li>\s*)+</ol>',
+        "Input checklist (ordered) with Branche/Datenlage/Tool items"
+    ),
+    # Standalone items (if list structure is different)
+    (
+        r'<li[^>]*>\s*(?:Branche\s+und\s+Ziel(?:\s*\([^)]*\))?)\s*</li>',
+        "Branche und Ziel item"
+    ),
+    (
+        r'<li[^>]*>\s*(?:Datenlage(?:\s*\([^)]*\))?)\s*</li>',
+        "Datenlage item"
+    ),
+    (
+        r'<li[^>]*>\s*(?:Tool-Übersicht(?:\s*\([^)]*\))?)\s*</li>',
+        "Tool-Übersicht item"
+    ),
+]
+
+
+def sanitize_input_checklist(html: str) -> Tuple[str, int]:
+    """
+    TASK 3 (P1 Final Solo Polish): Remove input checklist prompts from HTML.
+
+    Detects and removes leaked input checklists that contain items like:
+    - Branche und Ziel
+    - Datenlage
+    - Tool-Übersicht
+
+    These are input prompts that should not appear in the final PDF.
+
+    Args:
+        html: HTML content to process
+
+    Returns:
+        Tuple of (processed_html, removals_count)
+    """
+    if not html:
+        return html, 0
+
+    result = html
+    removal_count = 0
+
+    for pattern, description in INPUT_CHECKLIST_PATTERNS:
+        try:
+            regex = re.compile(pattern, re.IGNORECASE | re.DOTALL)
+            matches = regex.findall(result)
+            if matches:
+                removal_count += len(matches)
+                result = regex.sub("", result)
+                log.debug(
+                    "[INPUT-CHECKLIST] Removed %d occurrence(s): %s",
+                    len(matches), description
+                )
+        except re.error as e:
+            log.warning("[INPUT-CHECKLIST] Regex error for %s: %s", description, e)
+
+    if removal_count > 0:
+        log.info(
+            "[INPUT-CHECKLIST] Removed %d input checklist item(s)",
+            removal_count
+        )
+
+    return result, removal_count
 
 
 def enforce_persona_language(
@@ -2466,6 +2657,20 @@ def heal_final_html(
             fixes_applied += roi_fixes
         except Exception as e:
             log.warning("[HEALER-POST] TASK-D ROI sanitization error: %s", e)
+
+    # TASK 1 (P0 Final Solo Polish): Quick Wins empty field failsafe
+    try:
+        result, quickwin_fixes = sanitize_quickwin_empty_fields(result)
+        fixes_applied += quickwin_fixes
+    except Exception as e:
+        log.warning("[HEALER-POST] Quick Wins empty field failsafe error: %s", e)
+
+    # TASK 3 (P1 Final Solo Polish): Remove input checklist under Strategische Empfehlungen
+    try:
+        result, checklist_fixes = sanitize_input_checklist(result)
+        fixes_applied += checklist_fixes
+    except Exception as e:
+        log.warning("[HEALER-POST] Input checklist removal error: %s", e)
 
     # Remove duplicate "Progress 100%" (keep first) - legacy pattern
     try:
